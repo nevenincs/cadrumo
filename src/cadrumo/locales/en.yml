@@ -641,6 +641,30 @@ application:
         registry_missing_requested_modelos: 'The registry root is missing requested
           modelo definitions: %{modelos}.'
         unsupported_casilla_data_type: 'Unsupported registry casilla data type: %{data_type}.'
+  flows:
+    errors:
+      answer_target_not_visible: 'Flow {flow_id} cannot record an answer for {page_key}:
+        that question is not currently visible.'
+      checkpoint_unavailable_mode: Flow {flow_id} does not offer save-and-exit in
+        mode {mode}; its {answered_count} answers live in this session only.
+      copy_locale_key_unresolved: Display copy key {ref} is not present in the locale
+        catalogue.
+      copy_ref_unresolved: Copy source {kind} resolved no text for reference {ref}.
+      copy_source_duplicate: A copy source resolver is already registered for kind
+        {kind}.
+      copy_source_locale_builtin: The locale-key copy source is built in and cannot
+        be re-registered.
+      copy_source_unregistered: application.flows.errors.copy_source_unregistered
+      jump_target_not_visible: application.flows.errors.jump_target_not_visible
+      reset_target_unknown: application.flows.errors.reset_target_unknown
+      scripted_answer_rejected: application.flows.errors.scripted_answer_rejected
+      scripted_queue_overflow: application.flows.errors.scripted_queue_overflow
+      scripted_queue_underflow: application.flows.errors.scripted_queue_underflow
+      submit_blocked: application.flows.errors.submit_blocked
+      unknown_repeating_group: application.flows.errors.unknown_repeating_group
+      validator_id_blank: application.flows.errors.validator_id_blank
+      validator_id_duplicate: application.flows.errors.validator_id_duplicate
+      validator_id_unknown: application.flows.errors.validator_id_unknown
   inventory:
     service:
       errors:
@@ -947,6 +971,8 @@ application:
         %{period}; complete these profile facts first: %{missing}.'
       profile_readiness_profile_missing: No persisted active profile exists for this
         modelo work target; create or repair the profile before continuing.
+      profile_readiness_setup_incomplete: Profile setup is incomplete; finish the
+        setup flow before working on modelos.
       recipient_decryption_failed: The recipient-encrypted package could not be decrypted;
         the key does not match or the package was tampered with.
       recipient_encryption_invalid_key: The recipient's public key is not a well-formed
@@ -1007,7 +1033,6 @@ application:
         window is open.'
       workflow_input_mismatch: Workflow input request does not match the calculation
         revision.
-      profile_readiness_setup_incomplete: 'Profile setup is incomplete; finish the setup flow before working on modelos.'
     findings:
       art20_reduccion_next_action: Verify whether your other non-work income excluding
         exempt income for the year does not exceed 6500 EUR; if it does not, declare
@@ -5187,6 +5212,7 @@ errors:
     error_financial_transactions_transaction: A transaction-catalogue error occurred.
     error_financial_usage_ratios_usage_ratio: A usage-ratio error occurred.
     error_fixture_provisioning: The test fixtures could not be provisioned.
+    error_flow: errors.error.error_flow
     error_invoice_link_inconsistency: The link left the invoice and transaction catalogues
       out of sync. Reconcile both catalogues manually.
     error_invoice_validation: An invoice record failed validation.
@@ -5547,6 +5573,8 @@ errors:
       transaction ownership is invalid.'
     internal_cli_unexpected_boundary: The command failed due to an unexpected internal
       error, not a stored-data problem. Inspect the diagnostic logs to see what failed.
+    internal_flow_copy_resolution: errors.internal.internal_flow_copy_resolution
+    internal_flow_validator_registry: errors.internal.internal_flow_validator_registry
     internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
       close the active session before re-entering.'
     internal_master_key_type: 'Internal error: master-key operation received a value
@@ -5751,6 +5779,11 @@ errors:
     refused_financial_usage_ratios_censo_mismatch: A saved home-office usage ratio
       disagrees with the censo, which is the binding legal source. Align it with the
       censo value.
+    refused_flow_answer: errors.refused.refused_flow_answer
+    refused_flow_checkpoint: errors.refused.refused_flow_checkpoint
+    refused_flow_navigation: errors.refused.refused_flow_navigation
+    refused_flow_submit: errors.refused.refused_flow_submit
+    refused_flow_unsupported_console: errors.refused.refused_flow_unsupported_console
     refused_google_impersonation: IAM refused to mint an impersonated token for the
       target service account. Grant it roles/iam.serviceAccountTokenCreator.
     refused_google_non_interactive: Google login needs an interactive terminal with
@@ -5983,6 +6016,55 @@ filing:
     out_of_range: Value out of allowed range
     required_missing: Required field missing
     schema_mismatch: Mismatch with expected schema
+flows:
+  compare_select:
+    candidate: '{label} (source: {provenance})'
+    defer_label: Decide this later
+  confirm:
+    'no': 'No'
+    'yes': 'Yes'
+  errors:
+    checkpoint_store_missing: Flow {flow_id} offers save-and-exit in mode {mode},
+      but no checkpoint store is wired, so the run was refused instead of losing your
+      answers.
+    tui_abandoned: Flow {flow_id} was closed in mode {mode} before it was submitted
+      or saved; nothing was recorded.
+    unsupported_console: This console cannot host interactive questions. Run the flow
+      from a real terminal, or drive it with a scripted answer file.
+  progress:
+    current_answer: 'Current answer: {value}'
+    failure_mode: 'Watch out: {text}'
+    format_hint: 'Format: {hint}'
+    page_header: Question {position} of {total} — section {section}
+  review:
+    action_edit: Edit an answer
+    action_prompt: What do you want to do?
+    action_restart: Start over
+    action_save_exit: Save and exit
+    action_submit: Submit
+    column_answer: Answer
+    column_question: Question
+    column_registered: On record
+    column_status: Status
+    edit_not_editable: Question {page_key} can no longer be edited.
+    edit_unknown: There is no question numbered {number}.
+    edit_which: 'Which question number do you want to edit? '
+    header: Review — {answered} questions answered.
+    header_tui: 'Review — {answered} answered, {remaining} required still open, ready
+      to submit: {eligible}'
+    orphan_marker: (no longer asked)
+    reset_stale_confirm: Question {page_key} is no longer asked. Clear its stored
+      answer?
+    reset_stale_done: Cleared the stored answer for {page_key}.
+    restart_confirm: Start over and discard every answer?
+    row: '{number}. {page_key} — status: {status}'
+    save_unavailable: Save and exit is not available in mode {mode}; finish the flow
+      in one sitting.
+  tui:
+    button_back: Back
+    button_next: Next
+    button_review: Review
+    header: '{flow} — question {position} of {total}, section {section}'
 live:
   errors:
     expediente_not_found: AEAT declaration register did not return the requested expediente.
@@ -6296,6 +6378,8 @@ wizard:
     question_prefix: Question %{q_n} of %{q_total}
     section_header: 'Step %{section_n} of %{section_total}: %{title}'
   setup:
+    actividad:
+      title: Economic activity and censo
     capabilities:
       cloud-evidence-upload:
         prompt: Allow uploading sensitive evidence to cloud LLM providers? (off by
@@ -6334,6 +6418,8 @@ wizard:
       title: Enrollment
     errors:
       missing_required_flags: 'Missing required flags for --quiet wizard run: %{missing}'
+    familia:
+      title: Family situation
     family:
       family-descendants-eu-eea-deduction:
         prompt: EU/EEA descendants in family-unit deduction
@@ -6540,6 +6626,8 @@ wizard:
         help: 'First taxpayer sex: H = male, M = female.'
       third-party-transactions-above-347-threshold:
         help: Third-party transactions exceed Modelo 347 threshold
+    identidad:
+      title: Identity
     intro: 'Guided tax profile setup
 
       This prepares the local profile the app uses for ledger work and tax-form checks.
@@ -6641,6 +6729,8 @@ wizard:
       third-party-transactions-above-347-threshold:
         prompt: Third-party transactions exceed Modelo 347 threshold
       title: Modelo obligations
+    preferencias:
+      title: Preferences and capabilities
     profile:
       activity:
         prompt: Business activity (plain text is fine; use the IAE heading if you

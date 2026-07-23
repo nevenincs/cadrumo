@@ -29,8 +29,8 @@ def _scripted_answers_for_individual_declaration() -> deque[str]:
     """Build a scripted answer set for an individual taxation profile.
 
     The order matches the declared question order in ``SETUP_FLOW``:
-    the taxpayer-type section is walked first, so ``entity-type``
-    fixes the natural-person path before the IRPF-personal sections.
+    the identidad section is walked first, so ``entity-type`` fixes the
+    natural-person path before every later phase's gated questions.
     Conditional spouse questions tied to ``taxation_type == "2"`` are
     skipped by the runtime, so they do NOT appear in the deque. The
     ``activity`` question is visible here because the declared IRPF
@@ -39,35 +39,27 @@ def _scripted_answers_for_individual_declaration() -> deque[str]:
 
     return deque(
         [
-            # ── taxpayer type ──────────────────────
+            # -- identidad --
             "natural_person",  # entity-type
             # legal-entity-form SKIPPED (conditional on entity-type == legal_entity)
-            "actividad_economica,capital_inmobiliario",  # irpf-income-categories
-            "",  # incn-prior-12-months (optional, blank — natural person doesn't gate Modelo 202)
-            # new-entity-first-two-profit-periods SKIPPED (conditional on entity-type == legal_entity)
-            # ── profile ────────────────────────────
             "12345678Z",  # tax-id
             "Operator",  # name
             "Doe",  # surnames
-            "Software development",  # activity (visible: has actividad_economica)
+            # legal-name SKIPPED (conditional on entity-type == legal_entity)
+            # -- residence --
+            "resident_irpf",  # fiscal-residency
+            # country-of-fiscal-residence + representante-fiscal-* SKIPPED
+            # (conditional on fiscal-residency == non_resident_irnr).
+            "madrid",  # tax-residence-ccaa (visible: resident)
             "28001",  # address-postcode
+            # -- actividad --
+            "actividad_economica,capital_inmobiliario",  # irpf-income-categories
+            "Software development",  # activity (visible: has actividad_economica)
             "",  # activity-start-date (optional, left blank)
-            "1",  # taxation-type (individual, visible: natural person)
-            "en",  # output-language
-            # ── taxpayer biographic (visible: natural person) ──
-            "",  # taxpayer-sex
-            "",  # taxpayer-marital-status
-            "soltero",  # situacion-familiar (Art. 82 LIRPF axis, contract)
-            # taxpayer-marriage-date SKIPPED (conditional on marital-status == CASADO)
-            "",  # taxpayer-birth-date
-            "",  # taxpayer-disability-grade
-            "",  # taxpayer-death-date
-            # ── spouse (joint taxation condition NOT satisfied) ──
-            # every spouse question is joint-gated; none is asked here
-            # ── family (visible: natural person) ────
-            "false",  # family-descendants-eu-eea-deduction
-            "false",  # family-minor-children-in-unit
-            # ── IVA ────────────────────────────────
+            "",  # incn-prior-12-months (optional, blank; natural person does not gate Modelo 202)
+            # new-entity-first-two-profit-periods + ley-49-2002 quartet SKIPPED
+            # (conditional on entity-type == legal_entity / sin-fines form)
+            # -- IVA --
             "GENERAL",  # iva-regime
             "false",  # iva-roi-enrolled
             "false",  # iva-oss-enrolled
@@ -76,10 +68,22 @@ def _scripted_answers_for_individual_declaration() -> deque[str]:
             "false",  # iva-sii-enrolled
             "false",  # iva-redeme-enrolled
             "false",  # iva-intracommunity-operations-exceed-50000-eur
-            # ── enrollment ─────────────────────────
+            # -- enrollment --
             "false",  # enrollment-large-company
             "false",  # enrollment-public-administration-budget-gt-6000000
-            # ── obligations ────────────────────────
+            # -- familia --
+            "1",  # taxation-type (individual, visible: natural person)
+            "",  # taxpayer-sex
+            "",  # taxpayer-marital-status
+            "soltero",  # situacion-familiar (Art. 82 LIRPF axis, contract)
+            # taxpayer-marriage-date SKIPPED (conditional on marital-status == CASADO)
+            "",  # taxpayer-birth-date
+            "",  # taxpayer-disability-grade
+            "",  # taxpayer-death-date
+            # spouse questions joint-gated; none asked for an individual declaration
+            "false",  # family-descendants-eu-eea-deduction
+            "false",  # family-minor-children-in-unit
+            # -- obligations --
             "false",  # has-employees
             "false",  # pays-professionals-with-retencion
             "false",  # art109-activity-income-withholding-ge-70pct
@@ -93,16 +97,11 @@ def _scripted_answers_for_individual_declaration() -> deque[str]:
             "false",  # third-party-transactions-above-347-threshold
             "false",  # bienes-extranjero-above-threshold
             "false",  # monedas-virtuales-extranjero-above-threshold
-            # ── residence (non-resident axis #197) ────────────
-            "resident_irpf",  # fiscal-residency
-            # country-of-fiscal-residence + representante-fiscal-* SKIPPED
-            # (conditional on fiscal-residency == non_resident_irnr).
-            "madrid",  # tax-residence-ccaa (visible: resident)
-            # ── capabilities ───────────────────────
+            # -- preferencias --
+            "en",  # output-language
             "false",  # cloud-evidence-upload
             "true",  # llm-vision
             "true",  # google-export
-            # ── notes ──────────────────────────────
             "",  # notes
         ],
     )
@@ -182,26 +181,37 @@ def test_run_flow_walks_joint_taxation_spouse_questions() -> None:
 
     answers_deque: deque[str] = deque(
         [
-            # ── taxpayer type ──────────────────────
+            # -- identidad --
             "natural_person",  # entity-type
-            # legal-entity-form SKIPPED (conditional on entity-type == legal_entity)
-            "actividad_economica,trabajo",  # irpf-income-categories
-            "",  # incn-prior-12-months (optional)
-            # new-entity-first-two-profit-periods SKIPPED (conditional on entity-type == legal_entity)
-            # ── profile ────────────────────────────
             "12345678Z",  # tax-id
             "Operator",  # name
             "Doe",  # surnames
-            "Software development",  # activity (visible: has actividad_economica)
+            # -- residence --
+            "resident_irpf",  # fiscal-residency
+            "madrid",  # tax-residence-ccaa
             "28001",  # address-postcode
-            "",  # activity-start-date (optional, left blank)
+            # -- actividad --
+            "actividad_economica,trabajo",  # irpf-income-categories
+            "Software development",  # activity (visible: has actividad_economica)
+            "",  # activity-start-date (optional)
+            "",  # incn-prior-12-months (optional)
+            # -- IVA --
+            "GENERAL",  # iva-regime
+            "false",  # iva-roi-enrolled
+            "false",  # iva-oss-enrolled
+            "false",  # iva-group-member-enrolled
+            "false",  # iva-group-dominant-entity-enrolled
+            "false",  # iva-sii-enrolled
+            "false",  # iva-redeme-enrolled
+            "false",  # iva-intracommunity-operations-exceed-50000-eur
+            # -- enrollment --
+            "false",  # enrollment-large-company
+            "false",  # enrollment-public-administration-budget-gt-6000000
+            # -- familia --
             "2",  # taxation-type (joint, visible: natural person)
-            "en",  # output-language
-            # ── taxpayer biographic (visible: natural person) ──
             "",  # taxpayer-sex
             "",  # taxpayer-marital-status
             "soltero",  # situacion-familiar (Art. 82 LIRPF axis, contract)
-            # taxpayer-marriage-date SKIPPED (conditional on marital-status == CASADO)
             "",  # taxpayer-birth-date
             "",  # taxpayer-disability-grade
             "",  # taxpayer-death-date
@@ -217,16 +227,7 @@ def test_run_flow_walks_joint_taxation_spouse_questions() -> None:
             # spouse-eu-eea-country SKIPPED
             "false",  # family-descendants-eu-eea-deduction
             "false",  # family-minor-children-in-unit
-            "GENERAL",  # iva-regime
-            "false",  # iva-roi-enrolled
-            "false",  # iva-oss-enrolled
-            "false",  # iva-group-member-enrolled
-            "false",  # iva-group-dominant-entity-enrolled
-            "false",  # iva-sii-enrolled
-            "false",  # iva-redeme-enrolled
-            "false",  # iva-intracommunity-operations-exceed-50000-eur
-            "false",  # enrollment-large-company
-            "false",  # enrollment-public-administration-budget-gt-6000000
+            # -- obligations --
             "false",  # has-employees
             "false",  # pays-professionals-with-retencion
             "false",  # art109-activity-income-withholding-ge-70pct
@@ -235,14 +236,12 @@ def test_run_flow_walks_joint_taxation_spouse_questions() -> None:
             "",  # modelo-111-no-retenciones-periods
             "directa_normal",  # irpf-estimation-regime
             "general",  # irpf-special-regime (visible: natural person)
-            # irpf-special-regime-start-date SKIPPED (conditional on impatriado)
             "false",  # does-intracomunitario
             "false",  # third-party-transactions-above-347-threshold
             "false",  # bienes-extranjero-above-threshold
             "false",  # monedas-virtuales-extranjero-above-threshold
-            "resident_irpf",  # fiscal-residency (#197 non-resident axis)
-            # country-of-fiscal-residence + representante-fiscal-* SKIPPED (resident)
-            "madrid",  # tax-residence-ccaa
+            # -- preferencias --
+            "en",  # output-language
             "false",  # cloud-evidence-upload
             "true",  # llm-vision
             "true",  # google-export

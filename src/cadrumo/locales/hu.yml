@@ -664,6 +664,29 @@ application:
           a kért modell definíciók: %{modelos}.'
         unsupported_casilla_data_type: 'Nem támogatott nyilvántartási casilla adattípus:
           %{data_type}.'
+  flows:
+    errors:
+      answer_target_not_visible: 'A(z) {flow_id} folyamat nem tud választ rögzíteni
+        a(z) {page_key} kérdéshez: az a kérdés jelenleg nem látható.'
+      checkpoint_unavailable_mode: A(z) {flow_id} folyamat {mode} módban nem kínál
+        mentés és kilépés lehetőséget; a(z) {answered_count} válasz csak ebben a munkamenetben
+        él.
+      copy_locale_key_unresolved: A(z) {ref} szövegkulcs nem szerepel a nyelvi katalógusban.
+      copy_ref_unresolved: A(z) {kind} szövegforrás nem adott vissza szöveget a(z)
+        {ref} hivatkozásra.
+      copy_source_duplicate: A(z) {kind} típushoz már van regisztrált szövegforrás-feloldó.
+      copy_source_locale_builtin: application.flows.errors.copy_source_locale_builtin
+      copy_source_unregistered: application.flows.errors.copy_source_unregistered
+      jump_target_not_visible: application.flows.errors.jump_target_not_visible
+      reset_target_unknown: application.flows.errors.reset_target_unknown
+      scripted_answer_rejected: application.flows.errors.scripted_answer_rejected
+      scripted_queue_overflow: application.flows.errors.scripted_queue_overflow
+      scripted_queue_underflow: application.flows.errors.scripted_queue_underflow
+      submit_blocked: application.flows.errors.submit_blocked
+      unknown_repeating_group: application.flows.errors.unknown_repeating_group
+      validator_id_blank: application.flows.errors.validator_id_blank
+      validator_id_duplicate: application.flows.errors.validator_id_duplicate
+      validator_id_unknown: application.flows.errors.validator_id_unknown
   inventory:
     service:
       errors:
@@ -976,6 +999,8 @@ application:
         modellhez; előbb töltse ki ezeket a profiladatokat: %{missing}.'
       profile_readiness_profile_missing: Nincs perzisztált aktív profil ehhez a modell
         munkához; folytatás előtt hozza létre vagy javítsa a profilt.
+      profile_readiness_setup_incomplete: A profil beállítása nincs befejezve; fejezd
+        be a beállítási folyamatot, mielőtt modelókkal dolgoznál.
       recipient_decryption_failed: A címzett számára titkosított csomagot nem sikerült
         megfejteni; a kulcs nem megfelelő, vagy a csomagot módosították.
       recipient_encryption_invalid_key: A címzett nyilvános kulcsa nem egy érvényes
@@ -1045,7 +1070,6 @@ application:
         benyújtottnak, amikor a kötelezettségi ablak nyitva van.'
       workflow_input_mismatch: A munkafolyamat bemeneti kérelme nem egyezik a számítási
         revízióval.
-      profile_readiness_setup_incomplete: 'A profil beállítása nincs befejezve; fejezd be a beállítási folyamatot, mielőtt modelókkal dolgoznál.'
     findings:
       art20_reduccion_next_action: Ellenőrizze, hogy a nem munkából származó egyéb
         jövedelme a mentes jövedelem nélkül az adóévben nem haladja-e meg a 6500 EUR-t;
@@ -5483,6 +5507,7 @@ errors:
     error_financial_transactions_transaction: Tranzakció-katalógus hiba történt.
     error_financial_usage_ratios_usage_ratio: Használati arány hiba történt.
     error_fixture_provisioning: A tesztfixture-öket nem sikerült kiosztani.
+    error_flow: errors.error.error_flow
     error_invoice_link_inconsistency: A kapcsolás a számla- és tranzakció-katalógusokat
       szinkronon kívülre hozta. Egyeztesse manuálisan mindkét katalógust.
     error_invoice_validation: Egy számla-rekord nem ment át az érvényesítésen.
@@ -5848,6 +5873,8 @@ errors:
     internal_cli_unexpected_boundary: A parancs váratlan belső hiba miatt hiúsult
       meg, nem tárolt adatokkal kapcsolatos probléma miatt. Nézze meg a diagnosztikai
       naplókat, hogy mi hiúsult meg.
+    internal_flow_copy_resolution: errors.internal.internal_flow_copy_resolution
+    internal_flow_validator_registry: errors.internal.internal_flow_validator_registry
     internal_master_key_reentrant: 'Belső hiba: a mesterkulcs-szolgáltató reentráns
       módon lett meghívva; zárja be az aktív munkamenetet, mielőtt újra belépne.'
     internal_master_key_type: 'Belső hiba: a mesterkulcs-művelet hibás típusú értéket
@@ -6055,6 +6082,11 @@ errors:
       vagy összeg) nem ment át az érvényesítésen.
     refused_financial_usage_ratios_censo_mismatch: Egy mentett otthoni irodahasználati
       arány eltér a censotól, amely a kötelező jogi forrás. Igazítsa a censo értékéhez.
+    refused_flow_answer: errors.refused.refused_flow_answer
+    refused_flow_checkpoint: errors.refused.refused_flow_checkpoint
+    refused_flow_navigation: errors.refused.refused_flow_navigation
+    refused_flow_submit: errors.refused.refused_flow_submit
+    refused_flow_unsupported_console: errors.refused.refused_flow_unsupported_console
     refused_google_impersonation: Az IAM megtagadta a megszemélyesített token kiállítását
       a cél szolgáltatásfiók számára. Adja meg neki a roles/iam.serviceAccountTokenCreator
       szerepkört.
@@ -6290,6 +6322,55 @@ filing:
     out_of_range: Az érték kívül esik az engedélyezett tartományon.
     required_missing: Kötelező mező hiányzik.
     schema_mismatch: Eltérés a várt sémától.
+flows:
+  compare_select:
+    candidate: '{label} (forrás: {provenance})'
+    defer_label: Eldöntöm később
+  confirm:
+    'no': Nem
+    'yes': Igen
+  errors:
+    checkpoint_store_missing: A(z) {flow_id} folyamat a(z) {mode} módban felkínálja
+      a mentés és kilépés lehetőségét, de nincs bekötve ellenőrzőpont-tároló, ezért
+      a futás elutasításra került, hogy a válaszaid ne vesszenek el.
+    tui_abandoned: A(z) {flow_id} folyamatot {mode} módban bezárták a beküldés vagy
+      mentés előtt; semmi sem került rögzítésre.
+    unsupported_console: Ez a konzol nem tud interaktív kérdéseket megjeleníteni.
+      Indítsd a folyamatot valódi terminálból, vagy vezéreld szkriptelt válaszfájllal.
+  progress:
+    current_answer: 'Jelenlegi válasz: {value}'
+    failure_mode: 'Figyelem: {text}'
+    format_hint: 'Formátum: {hint}'
+    page_header: '{position}. kérdés a(z) {total} közül — {section} szakasz'
+  review:
+    action_edit: Válasz szerkesztése
+    action_prompt: Mit szeretnél tenni?
+    action_restart: Újrakezdés
+    action_save_exit: Mentés és kilépés
+    action_submit: Beküldés
+    column_answer: Válasz
+    column_question: Kérdés
+    column_registered: Rögzítve
+    column_status: Állapot
+    edit_not_editable: A(z) {page_key} kérdés már nem szerkeszthető.
+    edit_unknown: Nincs {number} sorszámú kérdés.
+    edit_which: 'Melyik sorszámú kérdést szeretnéd szerkeszteni? '
+    header: Áttekintés — {answered} megválaszolt kérdés.
+    header_tui: 'Áttekintés — {answered} megválaszolva, {remaining} kötelező még nyitva,
+      beküldésre kész: {eligible}'
+    orphan_marker: (már nem kérdezzük)
+    reset_stale_confirm: A(z) {page_key} kérdést már nem tesszük fel. Törlöd a hozzá
+      tárolt választ?
+    reset_stale_done: A(z) {page_key} tárolt válasza törölve.
+    restart_confirm: Újrakezded, és eldobod az összes választ?
+    row: '{number}. {page_key} — állapot: {status}'
+    save_unavailable: A mentés és kilépés nem érhető el {mode} módban; fejezd be a
+      folyamatot egy ülésben.
+  tui:
+    button_back: Vissza
+    button_next: Tovább
+    button_review: Áttekintés
+    header: '{flow} — {position}. kérdés a(z) {total} közül, {section} szakasz'
 live:
   errors:
     expediente_not_found: Az AEAT nyilatkozat-nyilvántartás nem adta vissza a kért
@@ -6629,6 +6710,8 @@ wizard:
     question_prefix: '%{q_n}. kérdés / %{q_total}'
     section_header: '%{section_n}. lépés / %{section_total}: %{title}'
   setup:
+    actividad:
+      title: Gazdasági tevékenység és censo
     capabilities:
       cloud-evidence-upload:
         prompt: Engedélyezi az érzékeny bizonylatok feltöltését felhő LLM-szolgáltatókhoz?
@@ -6669,6 +6752,8 @@ wizard:
     errors:
       missing_required_flags: 'Hiányzó kötelező kapcsolók a --quiet módú futtatáshoz:
         %{missing}'
+    familia:
+      title: Családi helyzet
     family:
       family-descendants-eu-eea-deduction:
         prompt: EU/EEE leszármazottak a családi egység levonásban
@@ -6886,6 +6971,8 @@ wizard:
         help: 'Az első adózó neme: H = férfi, M = nő.'
       third-party-transactions-above-347-threshold:
         help: Harmadik féllel folytatott ügyletek meghaladják a Modelo 347 küszöbértékét
+    identidad:
+      title: Személyazonosság
     intro: 'Irányított adóügyi profil-beállítás
 
       Ez előkészíti a helyi profilt, amelyet az alkalmazás a könyveléshez és az adóűrlap-ellenőrzésekhez
@@ -6989,6 +7076,8 @@ wizard:
       third-party-transactions-above-347-threshold:
         prompt: Harmadik féllel folytatott ügyletek meghaladják a Modelo 347 küszöbértékét
       title: Modelo kötelezettségek
+    preferencias:
+      title: Beállítások és képességek
     profile:
       activity:
         prompt: Gazdasági tevékenység (egyszerű szöveg is megfelelő; használja az

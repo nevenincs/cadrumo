@@ -716,6 +716,30 @@ application:
           definiciones de modelo solicitadas: %{modelos}.'
         unsupported_casilla_data_type: 'Tipo de dato de casilla del registro no admitido:
           %{data_type}.'
+  flows:
+    errors:
+      answer_target_not_visible: 'El flujo {flow_id} no puede registrar una respuesta
+        para {page_key}: esa pregunta no está visible ahora mismo.'
+      checkpoint_unavailable_mode: El flujo {flow_id} no ofrece guardar y salir en
+        el modo {mode}; sus {answered_count} respuestas solo existen en esta sesión.
+      copy_locale_key_unresolved: La clave de texto {ref} no existe en el catálogo
+        de traducciones.
+      copy_ref_unresolved: La fuente de texto {kind} no resolvió ningún texto para
+        la referencia {ref}.
+      copy_source_duplicate: Ya hay un resolutor de fuente de texto registrado para
+        el tipo {kind}.
+      copy_source_locale_builtin: application.flows.errors.copy_source_locale_builtin
+      copy_source_unregistered: application.flows.errors.copy_source_unregistered
+      jump_target_not_visible: application.flows.errors.jump_target_not_visible
+      reset_target_unknown: application.flows.errors.reset_target_unknown
+      scripted_answer_rejected: application.flows.errors.scripted_answer_rejected
+      scripted_queue_overflow: application.flows.errors.scripted_queue_overflow
+      scripted_queue_underflow: application.flows.errors.scripted_queue_underflow
+      submit_blocked: application.flows.errors.submit_blocked
+      unknown_repeating_group: application.flows.errors.unknown_repeating_group
+      validator_id_blank: application.flows.errors.validator_id_blank
+      validator_id_duplicate: application.flows.errors.validator_id_duplicate
+      validator_id_unknown: application.flows.errors.validator_id_unknown
   inventory:
     service:
       errors:
@@ -1046,6 +1070,8 @@ application:
         %{filing_year} %{period}; completa antes estos datos de perfil: %{missing}.'
       profile_readiness_profile_missing: No existe un perfil activo persistido para
         este trabajo de modelo; crea o repara el perfil antes de continuar.
+      profile_readiness_setup_incomplete: La configuración del perfil está incompleta;
+        termina el asistente de configuración antes de trabajar con modelos.
       recipient_decryption_failed: No se ha podido descifrar el paquete cifrado para
         el destinatario; la clave no coincide o el paquete ha sido manipulado.
       recipient_encryption_invalid_key: La clave pública del destinatario no es una
@@ -1115,7 +1141,6 @@ application:
         abierta.'
       workflow_input_mismatch: La solicitud de entrada del flujo de trabajo no coincide
         con la revisión de cálculo.
-      profile_readiness_setup_incomplete: 'La configuración del perfil está incompleta; termina el asistente de configuración antes de trabajar con modelos.'
     findings:
       art20_reduccion_next_action: Verifique si sus otras rentas distintas de las
         del trabajo excluidas las exentas del ejercicio no superan 6500 EUR; en ese
@@ -5578,6 +5603,7 @@ errors:
     error_financial_usage_ratios_usage_ratio: Se produjo un error en los porcentajes
       de uso.
     error_fixture_provisioning: No se pudieron preparar los datos de prueba.
+    error_flow: errors.error.error_flow
     error_invoice_link_inconsistency: El enlace entre catálogos dejó la factura y
       la transacción desincronizadas. Revisa ambos catálogos manualmente.
     error_invoice_validation: Un registro de factura no superó la validación.
@@ -5973,6 +5999,8 @@ errors:
     internal_cli_unexpected_boundary: El comando falló por un error interno inesperado,
       no por un problema de datos almacenados. Consulte los registros de diagnóstico
       para ver qué falló.
+    internal_flow_copy_resolution: errors.internal.internal_flow_copy_resolution
+    internal_flow_validator_registry: errors.internal.internal_flow_validator_registry
     internal_master_key_reentrant: 'Error interno: el proveedor de clave maestra se
       invocó de forma reentrante; cierra la sesión activa antes de volver a entrar.'
     internal_master_key_type: 'Error interno: la operación de clave maestra recibió
@@ -6191,6 +6219,11 @@ errors:
     refused_financial_usage_ratios_censo_mismatch: Un porcentaje de uso de oficina
       en casa guardado no coincide con el censo, que es la fuente legal vinculante.
       Alinéalo con el valor del censo.
+    refused_flow_answer: errors.refused.refused_flow_answer
+    refused_flow_checkpoint: errors.refused.refused_flow_checkpoint
+    refused_flow_navigation: errors.refused.refused_flow_navigation
+    refused_flow_submit: errors.refused.refused_flow_submit
+    refused_flow_unsupported_console: errors.refused.refused_flow_unsupported_console
     refused_google_impersonation: IAM ha rechazado emitir un token de suplantación
       para la cuenta de servicio de destino. Concédale el rol roles/iam.serviceAccountTokenCreator.
     refused_google_non_interactive: El inicio de sesión de Google necesita un terminal
@@ -6439,6 +6472,55 @@ filing:
     out_of_range: Valor fuera de rango permitido
     required_missing: Falta campo obligatorio
     schema_mismatch: Discrepancia con el esquema esperado
+flows:
+  compare_select:
+    candidate: '{label} (origen: {provenance})'
+    defer_label: Decidir esto más tarde
+  confirm:
+    'no': 'No'
+    'yes': Sí
+  errors:
+    checkpoint_store_missing: El flujo {flow_id} ofrece guardar y salir en el modo
+      {mode}, pero no hay ningún almacén de puntos de guardado conectado, así que
+      la ejecución se ha rechazado en lugar de perder tus respuestas.
+    tui_abandoned: El flujo {flow_id} se cerró en el modo {mode} antes de enviarlo
+      o guardarlo; no se ha registrado nada.
+    unsupported_console: Esta consola no puede mostrar preguntas interactivas. Ejecuta
+      el flujo desde un terminal real o guíalo con un archivo de respuestas.
+  progress:
+    current_answer: 'Respuesta actual: {value}'
+    failure_mode: 'Atención: {text}'
+    format_hint: flows.progress.format_hint
+    page_header: flows.progress.page_header
+  review:
+    action_edit: Editar una respuesta
+    action_prompt: ¿Qué quieres hacer?
+    action_restart: Empezar de nuevo
+    action_save_exit: Guardar y salir
+    action_submit: Enviar
+    column_answer: Respuesta
+    column_question: Pregunta
+    column_registered: Registrado
+    column_status: Estado
+    edit_not_editable: La pregunta {page_key} ya no se puede editar.
+    edit_unknown: No existe ninguna pregunta con el número {number}.
+    edit_which: '¿Qué número de pregunta quieres editar? '
+    header: Revisión — {answered} preguntas respondidas.
+    header_tui: 'Revisión — {answered} respondidas, {remaining} obligatorias pendientes,
+      listo para enviar: {eligible}'
+    orphan_marker: (ya no se pregunta)
+    reset_stale_confirm: La pregunta {page_key} ya no se plantea. ¿Borrar su respuesta
+      guardada?
+    reset_stale_done: Se ha borrado la respuesta guardada de {page_key}.
+    restart_confirm: ¿Empezar de nuevo y descartar todas las respuestas?
+    row: '{number}. {page_key} — estado: {status}'
+    save_unavailable: Guardar y salir no está disponible en el modo {mode}; completa
+      el flujo de una sola vez.
+  tui:
+    button_back: Atrás
+    button_next: Siguiente
+    button_review: Revisión
+    header: '{flow} — pregunta {position} de {total}, sección {section}'
 live:
   errors:
     expediente_not_found: No se encontró el expediente solicitado en la AEAT.
@@ -6762,6 +6844,8 @@ wizard:
     question_prefix: Pregunta %{q_n} de %{q_total}
     section_header: 'Paso %{section_n} de %{section_total}: %{title}'
   setup:
+    actividad:
+      title: Actividad económica y censo
     capabilities:
       cloud-evidence-upload:
         prompt: ¿Permitir subir evidencia sensible a proveedores LLM en la nube? (desactivado
@@ -6800,6 +6884,8 @@ wizard:
       title: Inscripción
     errors:
       missing_required_flags: 'Faltan banderas requeridas para --quiet: %{missing}'
+    familia:
+      title: Situación familiar
     family:
       family-descendants-eu-eea-deduction:
         prompt: Descendientes UE/EEE en deducción de unidad familiar
@@ -7012,6 +7098,8 @@ wizard:
         help: 'Sexo del primer declarante: H = hombre, M = mujer.'
       third-party-transactions-above-347-threshold:
         help: Operaciones con terceros superan el umbral del Modelo 347
+    identidad:
+      title: Identidad
     intro: 'Configuración guiada del perfil tributario
 
 
@@ -7120,6 +7208,8 @@ wizard:
       third-party-transactions-above-347-threshold:
         prompt: Operaciones con terceros superan el umbral del Modelo 347
       title: Obligaciones
+    preferencias:
+      title: Preferencias y capacidades
     profile:
       activity:
         prompt: Actividad económica (texto normal; usa el epígrafe IAE si lo conoces)
