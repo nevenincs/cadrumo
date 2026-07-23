@@ -326,6 +326,13 @@ cannot fail except as a domain defect. A domain flow whose typed model
 carries construction-time validators (the taxpayer profile's
 impatriado-date, non-resident-country, and representante checks) may
 not wire its commit path until those checks are registered flow-scope.
+The preferred implementation is a single flow-scope validator that
+RE-RUNS the real domain construction over the staged answers and maps
+the per-field failures through the domain's error-to-key mapping into
+typed verdicts: the model validators stay the single authority and no
+invariant is ever restated, so drift is structurally impossible.
+Mapped verdicts carry catalogue keys and redacted context only — the
+raw model message never rides through.
 `answers_model` remains the typed hand-off shape and the definition
 fingerprint component, nothing more.
 
