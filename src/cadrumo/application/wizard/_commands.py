@@ -3,8 +3,8 @@
 ``build_wizard_command(flow)`` returns a Typer-compatible callable
 whose signature is composed at construction time from the flow's
 questions plus three fixed mode flags (``--profile``,
-``--quiet``, ``--accept-defaults``). The closure walks the flow
-against a ``Prompter`` and persists the typed answers.
+``--quiet``, ``--accept-defaults``). The closure runs the flow and
+persists the typed answers.
 
 Flag derivation per question kind:
 
@@ -17,12 +17,18 @@ Flag derivation per question kind:
 * ``CHECKBOX`` → repeated ``--<question-id>`` option that accumulates
   a ``list[str]``.
 
-An interactive walk prompts through
-:meth:`~cadrumo.application.wizard.QuestionaryPrompter.from_ambient_app_session`,
-so the prompts render against whatever IO the ambient ``prompt_toolkit``
-app session declares. Outside such a session — every production ``aeat``
-invocation — that session declares no IO, so the prompter binds to
-process stdio and applies the full non-TTY / no-console refusal.
+An interactive walk projects the one-shot wizard catalogue into a
+substrate :class:`~cadrumo.application.flows.FlowDefinition`
+(via :func:`~cadrumo.application.flows.flow_definition_from_wizard_flow`)
+and drives it through an injected frontend runner: the full-screen
+Textual frontend where the host supports it, degrading to the line-mode
+frontend otherwise, and refusing instructively on a non-interactive
+host. The application default renders the line frontend (a same-layer
+``application.flows`` primitive); the CLI entrypoint injects the
+capability-selecting runner that reaches the full-screen inbound adapter.
+The committed answers are then replayed through the same scripted
+projection the ``--quiet`` / ``--accept-defaults`` paths use, so the
+persisted typed model is produced identically regardless of frontend.
 """
 
 from __future__ import annotations
@@ -30,7 +36,7 @@ from __future__ import annotations
 import inspect
 import typing
 from collections import deque
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated
 
@@ -48,18 +54,83 @@ import typer._click.types
 from pydantic import BaseModel, ValidationError
 from pydantic_core import ErrorDetails
 
+from ...core.flows import CheckpointAvailability, FlowMode
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
+from ..flows import (
+    FlowDefinition,
+    FlowPage,
+    FlowState,
+    FlowUnsupportedConsoleError,
+    LineFlowFrontend,
+    flow_definition_from_wizard_flow,
+)
 from ._catalogue import SETUP_FLOW
 from ._errors import WizardMissingFlagError
 from ._models import WizardFlow, WizardQuestion, WizardWidget
 from ._persistence import WizardPersistMode
 from ._prompter import (
     CanonicalAnswerPrompter,
-    QuestionaryPrompter,
     WizardEditUnsupportedConsoleError,
     WizardUnsupportedConsoleError,
 )
 from ._runner import run_flow
+
+#: Which substrate :class:`FlowMode` each wizard verb drives. ``create``
+#: registers a fresh profile, ``edit`` modifies an existing one.
+_FLOW_MODE_BY_WIZARD_MODE: dict[WizardPersistMode, FlowMode] = {
+    "create": FlowMode.CREATE,
+    "edit": FlowMode.MODIFY,
+}
+
+#: Checkpoint posture for the setup flow in this slice. Save-and-resume
+#: (facts-as-checkpoint) is a separate step; declaring UNAVAILABLE for both
+#: modes makes the substrate refuse a save loudly rather than offer one it
+#: cannot honour — the honest posture until the checkpoint create path lands.
+_SETUP_CHECKPOINT: dict[FlowMode, CheckpointAvailability] = {
+    FlowMode.CREATE: CheckpointAvailability.UNAVAILABLE,
+    FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
+}
+
+
+# KWARGS-RATIONALE-flow-runner: keyword-only frontend seam injected by the caller.
+class InteractiveFlowRunner(typing.Protocol):
+    """Drive one interactive flow run to a submitted state.
+
+    The application default renders the line-mode frontend (a same-layer
+    ``application.flows`` primitive). The CLI entrypoint injects a
+    capability-selecting runner that reaches the full-screen Textual
+    frontend (an inbound adapter the application layer must not import
+    directly), so the paged flow is the operator-facing default while the
+    application stays free of an inbound-adapter dependency.
+    """
+
+    def __call__(
+        self,
+        definition: FlowDefinition,
+        *,
+        mode: FlowMode,
+        registered_values: Mapping[str, str] | None,
+    ) -> FlowState:
+        """Run ``definition`` in ``mode`` and return the final flow state."""
+        ...
+
+
+def _line_mode_interactive_runner(
+    definition: FlowDefinition,
+    *,
+    mode: FlowMode,
+    registered_values: Mapping[str, str] | None = None,
+) -> FlowState:
+    """Default runner: the line-mode frontend over the one flow engine.
+
+    The line frontend carries no registered-value column, so on-record
+    values are surfaced only through the full-screen review table when the
+    entrypoint injects the capability-selecting runner; the degradation
+    tier walks the same engine, validation, and submit gate.
+    """
+    del registered_values
+    state, _projection = LineFlowFrontend(definition).run(mode=mode)
+    return state
 
 
 def _choice(values: list[str], *, case_sensitive: bool = True) -> typer._click.types.ParamType:
@@ -799,6 +870,133 @@ def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile
     return merged_values or patched_values
 
 
+def _all_question_ids(flow: WizardFlow) -> frozenset[str]:
+    """Return every question id declared by the flow."""
+    return frozenset(question.id for section in flow.sections for question in section.questions)
+
+
+def _seed_flow_definition(definition: FlowDefinition, seed_by_page_id: Mapping[str, str]) -> FlowDefinition:
+    """Return a copy of ``definition`` with page defaults seeded from a value map.
+
+    The seeded value becomes each page's render-time prefill (the
+    descriptor default the frontend shows before the operator types),
+    never a committed answer — the engine's answer map still records only
+    what the operator actually confirms, which is what the patch-scope
+    (``supplied_question_ids``) derivation relies on.
+    """
+    if not seed_by_page_id:
+        return definition
+    new_sections = []
+    for section in definition.sections:
+        new_items = tuple(
+            item.model_copy(update={"default": seed_by_page_id[item.id]})
+            if isinstance(item, FlowPage) and item.id in seed_by_page_id
+            else item
+            for item in section.items
+        )
+        new_sections.append(section.model_copy(update={"items": new_items}))
+    return definition.model_copy(update={"sections": tuple(new_sections)})
+
+
+def _on_record_path_values(profile_id: str) -> dict[str, str]:
+    """Read the active profile's on-record facts as a schema-path value map."""
+    from ..user_profile import profile_storage_session, record_to_path_values
+    from ..workflow import workflow_state_repository
+
+    with profile_storage_session(profile_id):
+        record = workflow_state_repository().load().active_profile_record()
+    return record_to_path_values(record)
+
+
+def _prepare_interactive_flow(
+    flow: WizardFlow,
+    canonical: Mapping[str, str],
+    *,
+    mode: WizardPersistMode,
+    profile_id: str,
+) -> tuple[FlowDefinition, Mapping[str, str] | None]:
+    """Bridge the wizard flow to a seeded flow definition for interactive rendering.
+
+    ``create`` seeds page prefills from the collected canonical values
+    (the environment / explicit output-language, chiefly) and surfaces no
+    registered column. ``edit`` seeds prefills from the profile's
+    on-record values and also returns them as ``registered_values`` keyed
+    by page id (the bridge keeps question ids as page keys and the setup
+    flow has no repeating groups), so the review table renders each
+    on-record value beside the staged answer.
+    """
+    definition = flow_definition_from_wizard_flow(flow, checkpoint=_SETUP_CHECKPOINT)
+    if mode == "create":
+        return _seed_flow_definition(definition, dict(canonical)), None
+
+    record_values = _on_record_path_values(profile_id)
+    registered_values: dict[str, str] = {}
+    seed_by_page_id: dict[str, str] = {}
+    for section in flow.sections:
+        for question in section.questions:
+            if question.profile_key is not None and question.profile_key in record_values:
+                on_record = record_values[question.profile_key]
+                registered_values[question.id] = on_record
+                seed_by_page_id[question.id] = on_record
+    seed_by_page_id.update(canonical)
+    return _seed_flow_definition(definition, seed_by_page_id), registered_values
+
+
+def _run_interactive_flow(
+    flow: WizardFlow,
+    canonical: Mapping[str, str],
+    *,
+    mode: WizardPersistMode,
+    profile_id: str,
+    profile_name: str,
+    interactive_flow_runner: InteractiveFlowRunner,
+) -> tuple[BaseModel, frozenset[str]]:
+    """Render the paged flow, then project its answers into the typed model.
+
+    Drives the injected frontend runner (full-screen TUI where the host
+    supports it, line mode otherwise) to a submitted flow state, then
+    replays the engine's committed answers through the same scripted
+    projection the non-interactive paths use, so the persisted typed
+    model is produced identically regardless of frontend. ``edit`` scopes
+    the write to the pages the operator actually answered; ``create``
+    writes the full set.
+    """
+    definition, registered_values = _prepare_interactive_flow(flow, canonical, mode=mode, profile_id=profile_id)
+    try:
+        final_state = interactive_flow_runner(
+            definition,
+            mode=_FLOW_MODE_BY_WIZARD_MODE[mode],
+            registered_values=registered_values,
+        )
+    except (FlowUnsupportedConsoleError, WizardUnsupportedConsoleError) as exc:
+        # The shared no-console message points at `profile create`, which
+        # reads as a destructive replacement when an operator hit it via
+        # `profile edit`; re-raise an edit-specific hint that names the
+        # non-interactive `profile edit` patch form instead.
+        if mode == "edit":
+            raise WizardEditUnsupportedConsoleError(
+                translated_message="wizard.errors.unsupported_console_edit",
+                context={"profile_name": profile_name},
+            ) from exc
+        raise WizardUnsupportedConsoleError(
+            translated_message="wizard.errors.unsupported_console",
+        ) from exc
+
+    committed = dict(final_state.answers)
+    if mode == "edit":
+        supplied_question_ids = frozenset(committed)
+        force_visible = supplied_question_ids
+    else:
+        supplied_question_ids = _all_question_ids(flow)
+        force_visible = frozenset()
+    answers = run_flow(
+        flow,
+        _scripted_from_canonical(flow, dict(committed), force_visible=force_visible),
+        force_visible=force_visible,
+    )
+    return answers, supplied_question_ids
+
+
 def _run_full_flow(
     flow: WizardFlow,
     canonical: dict[str, str],
@@ -808,6 +1006,7 @@ def _run_full_flow(
     profile_name: str,
     profile_id: str,
     mode: WizardPersistMode,
+    interactive_flow_runner: InteractiveFlowRunner = _line_mode_interactive_runner,
     explicit_question_ids: frozenset[str] = frozenset(),
 ) -> dict[str, str]:
     """Walk the full wizard flow and persist the resulting answer set.
@@ -855,34 +1054,29 @@ def _run_full_flow(
             _scripted_from_canonical(flow, canonical, force_visible=explicit_question_ids),
             force_visible=explicit_question_ids,
         )
+        supplied_question_ids = _all_question_ids(flow)
     elif accept_defaults:
         answers = run_flow(
             flow,
             _scripted_from_canonical(flow, canonical, force_visible=explicit_question_ids),
             force_visible=explicit_question_ids,
         )
+        supplied_question_ids = _all_question_ids(flow)
     else:
-        active = QuestionaryPrompter.from_ambient_app_session()
-        try:
-            answers = run_flow(flow, active, defaults=canonical)
-        except WizardUnsupportedConsoleError as exc:
-            # The shared no-console message points at `profile create`,
-            # which is correct for `create` but reads as a destructive
-            # replacement when an operator hit it via `profile edit`.
-            # Re-raise an edit-specific hint that names the
-            # non-interactive `profile edit` patch form instead.
-            if mode == "edit":
-                raise WizardEditUnsupportedConsoleError(
-                    translated_message="wizard.errors.unsupported_console_edit",
-                    context={"profile_name": profile_name},
-                ) from exc
-            raise
+        answers, supplied_question_ids = _run_interactive_flow(
+            flow,
+            canonical,
+            mode=mode,
+            profile_id=profile_id,
+            profile_name=profile_name,
+            interactive_flow_runner=interactive_flow_runner,
+        )
 
-    # `create` writes the full answer set. An interactive `edit`
-    # re-walks every visible question, so the full answer set is the
-    # operator's confirmed intent.
+    # `create` writes the full answer set. An interactive `edit` writes a
+    # patch scoped to the pages the operator actually answered
+    # (``supplied_question_ids``); the full serialisation here feeds the
+    # filing-baseline survival check and the success payload.
     profile_values = serialise_answers(flow, answers)
-    supplied_question_ids = frozenset(question.id for section in flow.sections for question in section.questions)
     if mode == "create":
         missing_baseline = _missing_filing_baseline_flags(flow, answers)
         if missing_baseline:
@@ -1088,6 +1282,7 @@ def _run_wizard_persistence_path(
     accept_defaults: bool,
     profile_name: str,
     profile_id: str,
+    interactive_flow_runner: InteractiveFlowRunner,
 ) -> dict[str, str]:
     """Dispatch to patch-edit or full-flow persistence."""
     non_interactive = quiet or accept_defaults
@@ -1102,6 +1297,7 @@ def _run_wizard_persistence_path(
         profile_name=profile_name,
         profile_id=profile_id,
         mode=mode,
+        interactive_flow_runner=interactive_flow_runner,
         explicit_question_ids=frozenset(explicit_flags),
     )
 
@@ -1232,6 +1428,7 @@ def _execute_wizard_command(
     mode: WizardPersistMode,
     *,
     kwargs: dict[str, object],
+    interactive_flow_runner: InteractiveFlowRunner,
 ) -> None:
     """Run the wizard command body after Typer has parsed dynamic flags."""
     profile_name = _require_profile_name(flow, kwargs.pop("profile_name"))
@@ -1253,6 +1450,7 @@ def _execute_wizard_command(
             accept_defaults=accept_defaults,
             profile_name=profile_name,
             profile_id=profile_id,
+            interactive_flow_runner=interactive_flow_runner,
         )
     except ValidationError as exc:
         raise _wizard_validation_bad(flow, exc) from exc
@@ -1269,7 +1467,12 @@ def _execute_wizard_command(
     )
 
 
-def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callable[..., None]:
+def build_wizard_command(
+    flow: WizardFlow,
+    *,
+    mode: WizardPersistMode,
+    interactive_flow_runner: InteractiveFlowRunner | None = None,
+) -> Callable[..., None]:
     """Return a Typer-compatible callable that runs ``flow``.
 
     The returned closure carries one parameter per question in the
@@ -1281,10 +1484,17 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
     name that has none. Both refusals fire before the wizard prompts,
     so an operator is never walked through 40-odd questions only to
     have the persistence step reject the work.
+
+    ``interactive_flow_runner`` is the frontend seam an interactive walk
+    renders through; it defaults to the line-mode frontend so the
+    application layer stays self-sufficient, and the CLI entrypoint
+    injects the capability-selecting runner that reaches the full-screen
+    Textual frontend.
     """
     question_params = _question_parameters(flow)
     mode_params = _mode_parameters(flow)
     parameters = (*mode_params, *question_params)
+    runner = interactive_flow_runner or _line_mode_interactive_runner
 
     def _command(**kwargs: object) -> None:
         import contextlib
@@ -1303,7 +1513,7 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
             # default. The override unwinds when the command returns.
             _enter_requested_output_language(kwargs, _language_stack)
             try:
-                _execute_wizard_command(flow, mode, kwargs=kwargs)
+                _execute_wizard_command(flow, mode, kwargs=kwargs, interactive_flow_runner=runner)
             except CadrumoError as exc:
                 # Pre-render translated_message INSIDE the override so the
                 # error boundary's renderer (which runs after the ExitStack
@@ -1331,5 +1541,6 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
 
 __all__ = [
     "SETUP_FLOW",
+    "InteractiveFlowRunner",
     "build_wizard_command",
 ]
