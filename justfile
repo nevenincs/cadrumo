@@ -28,7 +28,7 @@ doctor:
 # capability surfaces: the Playwright browser binary now; Ollama + the vision model
 # are guided by `just doctor` (run `ollama pull <model>` per its remediation rows).
 provision: env-playwright
-    @echo "Playwright Chromium installed. For on-host LLM vision, run 'ollama serve' and 'ollama pull qwen2.5vl:3b' (see 'just doctor')."
+    @echo "Playwright Chromium + chrome channel provisioned (verify with 'just playwright-doctor'). For on-host LLM vision, run 'ollama serve' and 'ollama pull qwen2.5vl:3b' (see 'just doctor')."
 
 # Additively install runtime, workbook, and dev dependencies into the current
 # venv. This is intentionally not an exact sync: it repairs missing packages and
@@ -133,10 +133,29 @@ env-pip-check:
 env-pip-check:
     uv pip check --python .venv/bin/python
 
-# Provision the Playwright Chromium browser binary (the post-install step that
-# `uv sync` does not perform; the AEAT sede live-capture paths need it).
+# Provision both browser channels the codebase needs (the post-install step
+# `uv sync` does not perform). Bundled Chromium: some tests launch it directly
+# regardless of the configured channel. The `chrome` channel: AEAT browser
+# automation is pinned to `channel: "chrome"` by ADR 2026-04-12-playwright-anti-
+# bot-adr (anti-bot fingerprint reasons; bundled Chromium is the explicit
+# fallback only if system Chrome breaks). Playwright does NOT download a private
+# copy of Chrome for the `chrome` channel — it installs/detects the SYSTEM
+# Google Chrome. On Linux this shells out to the OS package manager and
+# typically needs root/apt access; a non-root Linux box may need
+# `google-chrome-stable` pre-installed by an administrator, or rerun this
+# recipe with elevation. Verify the result with `just playwright-doctor`.
 env-playwright:
     uv run --no-sync playwright install chromium
+    uv run --no-sync playwright install chrome
+
+# Verify the local environment is correctly provisioned with the CONFIGURED
+# Playwright browser channel (per `cadrumo_browser_channel`, default `chrome`)
+# and its dependencies, per ADR 2026-04-12-playwright-anti-bot-adr. Performs a
+# real headless launch-and-close of that channel (never hardcodes "chrome" —
+# reads the live setting) and prints the exact remediation command on failure.
+# Exits non-zero when the environment cannot satisfy the configured channel.
+playwright-doctor:
+    uv run --no-sync python -m dev.env.playwright_doctor
 
 # Start the background vaultspec-rag HTTP service daemon on loopback port 8766.
 env-rag-start:
