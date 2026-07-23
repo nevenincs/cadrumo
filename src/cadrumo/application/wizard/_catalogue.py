@@ -310,6 +310,16 @@ _IDENTIDAD_SECTION = WizardSection(
     title=tr("wizard.setup.identidad.title"),
     questions=(
         WizardQuestion(
+            id="output-language",
+            profile_key="preferences.output_language",
+            widget=WizardWidget.SELECT,
+            prompt=tr("wizard.setup.profile.output-language.prompt"),
+            choices=_OUTPUT_LANGUAGE_CHOICES,
+            default="es",
+            required=False,
+            answer_type=str,
+        ),
+        WizardQuestion(
             id="entity-type",
             profile_key="taxpayer_type.entity_type",
             widget=WizardWidget.SELECT,
@@ -967,16 +977,6 @@ _PREFERENCIAS_SECTION = WizardSection(
     id="preferencias",
     title=tr("wizard.setup.preferencias.title"),
     questions=(
-        WizardQuestion(
-            id="output-language",
-            profile_key="preferences.output_language",
-            widget=WizardWidget.SELECT,
-            prompt=tr("wizard.setup.profile.output-language.prompt"),
-            choices=_OUTPUT_LANGUAGE_CHOICES,
-            default="es",
-            required=False,
-            answer_type=str,
-        ),
         _confirm(
             "cloud-evidence-upload",
             "capabilities.cloud_evidence_upload",

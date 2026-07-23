@@ -40,6 +40,7 @@ def _scripted_answers_for_individual_declaration() -> deque[str]:
     return deque(
         [
             # -- identidad --
+            "en",  # output-language (first page of the flow)
             "natural_person",  # entity-type
             # legal-entity-form SKIPPED (conditional on entity-type == legal_entity)
             "12345678Z",  # tax-id
@@ -98,13 +99,27 @@ def _scripted_answers_for_individual_declaration() -> deque[str]:
             "false",  # bienes-extranjero-above-threshold
             "false",  # monedas-virtuales-extranjero-above-threshold
             # -- preferencias --
-            "en",  # output-language
             "false",  # cloud-evidence-upload
             "true",  # llm-vision
             "true",  # google-export
             "",  # notes
         ],
     )
+
+
+def test_output_language_is_the_first_page_of_the_flow() -> None:
+    """The operator chooses the output language before anything else renders.
+
+    The language question must open the flow so the chosen locale can be
+    activated for the remainder of the walk; it therefore heads the first
+    section and appears nowhere else.
+    """
+    first_section = SETUP_FLOW.sections[0]
+    first_question = first_section.questions[0]
+    assert first_question.id == "output-language"
+    assert first_question.profile_key == "preferences.output_language"
+    all_ids = [question.id for section in SETUP_FLOW.sections for question in section.questions]
+    assert all_ids.count("output-language") == 1
 
 
 def test_run_flow_collects_visible_questions_in_order() -> None:
@@ -182,6 +197,7 @@ def test_run_flow_walks_joint_taxation_spouse_questions() -> None:
     answers_deque: deque[str] = deque(
         [
             # -- identidad --
+            "en",  # output-language (first page of the flow)
             "natural_person",  # entity-type
             "12345678Z",  # tax-id
             "Operator",  # name
@@ -241,7 +257,6 @@ def test_run_flow_walks_joint_taxation_spouse_questions() -> None:
             "false",  # bienes-extranjero-above-threshold
             "false",  # monedas-virtuales-extranjero-above-threshold
             # -- preferencias --
-            "en",  # output-language
             "false",  # cloud-evidence-upload
             "true",  # llm-vision
             "true",  # google-export
