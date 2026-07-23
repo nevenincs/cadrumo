@@ -10,6 +10,18 @@ related:
   - '[[2026-07-23-tui-wizard-substrate-research]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
+<!-- RETIRED: S24 -->
+
 # `tui-wizard-substrate` plan
 
 ## Wave `W01` - Core contracts and flow engine
@@ -86,7 +98,6 @@ Define the per-mode checkpoint port and the resume projection that rebuilds Flow
 
 Move the profile create and edit CLI wiring and the modelo work wizard onto the engine, then retire the one-shot runner and prompter surfaces atomically with their consumers per the no-legacy rule.
 
-- [ ] `W03.P08.S24` - Rewire the wizard Typer command factory so interactive invocations drive the engine through the frontends and non-interactive flags drive it directly, preserving flag derivation and patch semantics; `src/cadrumo/application/wizard/_commands.py`.
 - [ ] `W03.P08.S25` - Migrate the modelo work wizard consumer onto the engine frontends; `src/cadrumo/entrypoints/cli/_modelo_work_wizard_cli.py`.
 - [ ] `W03.P08.S26` - Retire the one-shot runner and prompter surfaces with every consumer moved in one atomic explicit-path commit, running collect-only clean immediately before the commit and regenerating apidocs stubs in the same commit; `src/cadrumo/application/wizard/`.
 
