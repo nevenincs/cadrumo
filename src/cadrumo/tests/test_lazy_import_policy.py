@@ -400,10 +400,10 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
     ),
     UnsanctionedClass.APPLICATION_DEFERRAL: frozenset(
         {
-            # flow-substrate bridge -> legacy wizard catalogue: deferred so the
-            # domain-blind substrate facade stays importable without the wizard
-            # surface during the migration window; no cycle exists, and the
-            # edge dies with the W03 one-shot-wizard retirement.
+            # flow-substrate bridge -> one-shot wizard catalogue: deferred so
+            # the domain-blind substrate facade stays importable without the
+            # wizard surface; no cycle exists. Delete this entry when the
+            # one-shot wizard surface and the bridge are retired.
             ImportEdge("application.flows._bridge", "application.wizard"),
             # buckets event-history repository ports-inversion:
             # deferred consumers now reach the concrete repository at its
@@ -792,7 +792,9 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
 # baseline (the modelos_work_units/participation_index catalogue-repository
 # consolidation, the corpus_search/mcp/user_profile deferrals introduced by
 # intervening commits) were swept into their classified buckets in one pass.
-_ALLOWLIST_EDGE_CEILING: int = 477  # +2 flow TUI screen->app cycle breaks, +1 flows._bridge->wizard migration-window deferral (was 474).
+_ALLOWLIST_EDGE_CEILING: int = (
+    477  # +2 flow TUI screen->app cycle breaks, +1 flows._bridge->wizard migration-window deferral (was 474).
+)
 
 
 def _cadrumo_relative(dotted: str) -> str:
