@@ -1222,3 +1222,22 @@ class ConfigProfileDescendienteRemoveResult(OutputSchema):
     profile: str
     removed_index: int
     total: int
+
+
+class CensoFileFactPayload(OutputSchema):
+    """One candidate censal fact projected from the G313 certificate.
+
+    ``source`` carries the non-official artefact provenance token, never
+    an AEAT-verified stamp.
+    """
+
+    path: str
+    value: str
+    source: str
+
+
+class CensoFileIngestResult(OutputSchema):
+    """Result of ``config profile censo file``: previewed or enrolled facts."""
+
+    applied: bool
+    facts: tuple[CensoFileFactPayload, ...] = ()
