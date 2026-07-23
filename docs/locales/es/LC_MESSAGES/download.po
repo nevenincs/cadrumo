@@ -196,8 +196,8 @@ msgstr ""
 "público"
 
 #: ../../download.md:81
-msgid "macOS (Apple silicon and Intel)"
-msgstr "macOS (Apple silicon e Intel)"
+msgid "macOS (Apple silicon)"
+msgstr "macOS (Apple silicon)"
 
 #: ../../download.md:82 ../../download.md:85
 msgid "Homebrew formula"

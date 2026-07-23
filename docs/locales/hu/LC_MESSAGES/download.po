@@ -195,8 +195,8 @@ msgid "Release page artifact; Scoop bucket at public launch"
 msgstr "Kiadási oldal műtárgya; Scoop bucket a nyilvános indulásnál"
 
 #: ../../download.md:81
-msgid "macOS (Apple silicon and Intel)"
-msgstr "macOS (Apple silicon és Intel)"
+msgid "macOS (Apple silicon)"
+msgstr "macOS (Apple silicon)"
 
 #: ../../download.md:82 ../../download.md:85
 msgid "Homebrew formula"
