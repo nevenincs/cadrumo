@@ -15,6 +15,12 @@ Consumers import from this facade only.
 
 from __future__ import annotations
 
+from ._checkpoint import (
+    CheckpointStore,
+    checkpoint_available,
+    discard_checkpoint,
+    save_checkpoint,
+)
 from ._copy import (
     ChoiceCopy,
     CopySourceResolver,
@@ -61,6 +67,7 @@ from ._errors import (
     FlowSubmitError,
     FlowValidatorRegistryError,
 )
+from ._resume import resume_flow
 from ._review import ReviewProjection, ReviewRow, assert_submit_eligible, review
 from ._scripted import run_scripted_flow
 from ._validators import (
@@ -79,6 +86,7 @@ from ._validators import (
 __all__ = [
     "SECTION_VERDICT_PREFIX",
     "AnswerValidator",
+    "CheckpointStore",
     "ChoiceCopy",
     "CopyRef",
     "CopySourceResolver",
@@ -109,6 +117,8 @@ __all__ = [
     "assemble_page_copy",
     "assert_submit_eligible",
     "back_page",
+    "checkpoint_available",
+    "discard_checkpoint",
     "iter_flow_conditions",
     "jump_to",
     "next_page",
@@ -123,9 +133,11 @@ __all__ = [
     "resolve_cross_field_validator",
     "resolve_optional_copy",
     "restart_flow",
+    "resume_flow",
     "review",
     "run_answer_validation",
     "run_scripted_flow",
+    "save_checkpoint",
     "set_instance_count",
     "start_flow",
     "validate_widget_shape",
