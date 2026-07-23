@@ -5990,6 +5990,7 @@ errors:
     submission_preflight_error_findings: Draft has {finding_count} ERROR-severity
       finding(s); resolve them before submission.
     unsupported_currency: The currency code provided is not supported.
+    refused_flow_run_abandoned: 'The guided flow was cancelled before completion; nothing was submitted.'
   snapshot:
     ambiguous_revision_selection: 'More than one registry revision matches modelo
       %{modelo_id}: %{candidate_ids}.'
@@ -6074,6 +6075,7 @@ flows:
     checkbox_required: 'Select at least one option.'
     checkbox_unknown: 'Unknown option - accepted values: %{choices}.'
     invalid_integer: 'Enter a whole number.'
+    unexpected_app_type: 'The interactive screen is not attached to a flow application.'
   progress:
     current_answer: 'Current answer: {value}'
     failure_mode: 'Watch out: {text}'
@@ -6081,6 +6083,7 @@ flows:
     page_header: Question {position} of {total} — section {section}
     required: 'Required'
     optional: 'Optional'
+    current_answer_secret: 'Current answer: (hidden)'
   review:
     action_edit: Edit an answer
     action_prompt: What do you want to do?
@@ -6114,6 +6117,13 @@ flows:
     button_next: Next
     button_review: Review
     header: '{flow} — question {position} of {total}, section {section}'
+    binding_back: 'Back'
+    binding_review: 'Review'
+    binding_reset: 'Reset'
+    binding_restart: 'Restart'
+    binding_save_exit: 'Save and exit'
+    binding_return: 'Return'
+    binding_submit: 'Submit'
 live:
   errors:
     expediente_not_found: AEAT declaration register did not return the requested expediente.

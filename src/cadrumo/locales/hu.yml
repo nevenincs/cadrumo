@@ -6299,6 +6299,7 @@ errors:
     submission_preflight_error_findings: A tervezetben {finding_count} ERROR súlyosságú
       megállapítás van; javítsa ezeket benyújtás előtt.
     unsupported_currency: A megadott devizakód nem támogatott.
+    refused_flow_run_abandoned: 'A folyamat a befejezés előtt megszakadt; semmi sem került beküldésre.'
   snapshot:
     ambiguous_revision_selection: 'Egynél több nyilvántartási revízió illeszkedik
       a(z) %{modelo_id} modellhez: %{candidate_ids}.'
@@ -6384,6 +6385,7 @@ flows:
       mentés előtt; semmi sem került rögzítésre.
     unsupported_console: Ez a konzol nem tud interaktív kérdéseket megjeleníteni.
       Indítsd a folyamatot valódi terminálból, vagy vezéreld szkriptelt válaszfájllal.
+    unexpected_app_type: 'Az interaktív képernyő nem kapcsolódik folyamat-alkalmazáshoz.'
   progress:
     current_answer: 'Jelenlegi válasz: {value}'
     failure_mode: 'Figyelem: {text}'
@@ -6391,6 +6393,7 @@ flows:
     optional: Nem kötelező
     page_header: '{position}. kérdés a(z) {total} közül — {section} szakasz'
     required: Kötelező
+    current_answer_secret: 'Jelenlegi válasz: (rejtett)'
   review:
     action_edit: Válasz szerkesztése
     action_prompt: Mit szeretnél tenni?
@@ -6425,6 +6428,13 @@ flows:
     button_next: Tovább
     button_review: Áttekintés
     header: '{flow} — {position}. kérdés a(z) {total} közül, {section} szakasz'
+    binding_back: 'Vissza'
+    binding_review: 'Áttekintés'
+    binding_reset: 'Visszaállítás'
+    binding_restart: 'Újraindítás'
+    binding_save_exit: 'Mentés és kilépés'
+    binding_return: 'Vissza a kérdésekhez'
+    binding_submit: 'Beküldés'
 live:
   errors:
     expediente_not_found: Az AEAT nyilatkozat-nyilvántartás nem adta vissza a kért
