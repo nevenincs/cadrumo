@@ -15,10 +15,6 @@ class FlowError(CadrumoError):
     """Base class for every flow-substrate error."""
 
 
-class FlowDefinitionError(FlowError):
-    """Raised when a flow definition is structurally invalid at build time."""
-
-
 class FlowValidatorRegistryError(FlowError):
     """Raised on a blank, duplicate, or unknown validator-id registration or lookup."""
 
@@ -61,7 +57,6 @@ __all__ = [
     "FlowAnswerError",
     "FlowCheckpointError",
     "FlowCopyResolutionError",
-    "FlowDefinitionError",
     "FlowError",
     "FlowNavigationError",
     "FlowSubmitError",

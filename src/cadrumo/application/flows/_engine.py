@@ -77,6 +77,11 @@ class FlowState(BaseModel):
     outlived a gating change. ``instance_counts`` holds the live
     instance count per repeating group, seeded from the group's
     ``count_from`` answer and adjustable from review.
+
+    Immutability convention: ``frozen=True`` blocks field reassignment;
+    the dict-typed fields are additionally never mutated in place —
+    every transition builds fresh containers and returns a
+    ``model_copy``. Callers must follow the same convention.
     """
 
     model_config = STRICT_FROZEN_CONFIG

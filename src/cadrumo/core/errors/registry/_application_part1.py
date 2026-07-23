@@ -1047,17 +1047,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.flows._errors.FlowDefinitionError",
-        ErrorCode(
-            code="INTERNAL_FLOW_DEFINITION",
-            category=ErrorCategory.INTERNAL,
-            message_key="errors.internal.internal_flow_definition",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.application.flows._errors.FlowValidatorRegistryError",
         ErrorCode(
             code="INTERNAL_FLOW_VALIDATOR_REGISTRY",
