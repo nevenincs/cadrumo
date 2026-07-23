@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from rich.text import Text
 from textual.app import ComposeResult
 from textual.binding import Binding, BindingsMap
 from textual.containers import Horizontal, Vertical, VerticalScroll
@@ -26,19 +27,21 @@ from textual.widgets import (
     Footer,
     Input,
     Label,
+    OptionList,
     ProgressBar,
     RadioButton,
     RadioSet,
-    SelectionList,
     Static,
 )
-from textual.widgets.selection_list import Selection
+from textual.widgets.option_list import Option
 
 from cadrumo.application.flows import assemble_page_copy, validate_widget_shape, visible_sequence
 from cadrumo.core.flows import DEFER_TOKEN, FlowWidgetKind
 from cadrumo.core.i18n import tr
 
 if TYPE_CHECKING:
+    from textual.events import Key
+
     from cadrumo.application.flows import ChoiceCopy, PageCopy, VisiblePage
 
     from ._app import FlowTuiApp
@@ -241,48 +244,55 @@ class QuestionScreen(Screen[None]):
             area.mount(radio)
             radio.focus()
             return
-        if widget_kind in {FlowWidgetKind.SELECT, FlowWidgetKind.COMPARE_SELECT}:
-            buttons = [
-                RadioButton(self._choice_label(choice), value=choice.value == current, name=choice.value)
-                for choice in copy.choices
-            ]
-            if widget_kind is FlowWidgetKind.COMPARE_SELECT:
-                buttons.append(
-                    RadioButton(
-                        tr("flows.compare_select.defer_label"),
-                        value=current == DEFER_TOKEN,
-                        name=DEFER_TOKEN,
-                    ),
-                )
-            radio = RadioSet(*buttons)
-            area.mount(radio)
-            radio.focus()
-            return
-        # CHECKBOX
-        tokens = {token for token in current.split(",") if token}
-        selection = SelectionList[str](
-            *[Selection(self._choice_label(choice), choice.value, choice.value in tokens) for choice in copy.choices],
-        )
-        area.mount(selection)
-        selection.focus()
+        # SELECT / COMPARE_SELECT / CHECKBOX all render as one conventional
+        # numbered list — full-width rows, one option per line, never a
+        # horizontal rail. The kind only changes the glyph ([ ]/[x] vs
+        # ( )/(•)) and whether a choice stages or commits-and-advances.
+        option_list = OptionList(*self._choice_options(copy, widget_kind, current))
+        area.mount(option_list)
+        option_list.focus()
+
+    def _choice_options(self, copy: PageCopy, widget_kind: FlowWidgetKind, current: str) -> list[Option]:
+        selected = {token for token in current.split(",") if token} if widget_kind is FlowWidgetKind.CHECKBOX else None
+        options: list[Option] = []
+        for index, choice in enumerate(copy.choices, start=1):
+            is_selected = choice.value in selected if selected is not None else choice.value == current
+            options.append(Option(self._option_prompt(index, choice, widget_kind, chosen=is_selected), id=choice.value))
+        if widget_kind is FlowWidgetKind.COMPARE_SELECT:
+            options.append(
+                Option(
+                    self._defer_prompt(len(copy.choices) + 1, chosen=current == DEFER_TOKEN),
+                    id=DEFER_TOKEN,
+                ),
+            )
+        return options
 
     @staticmethod
-    def _choice_label(choice: ChoiceCopy) -> str:
-        """The rendered label for one choice: title, provenance, and description.
+    def _glyph(widget_kind: FlowWidgetKind, *, chosen: bool) -> str:
+        if widget_kind is FlowWidgetKind.CHECKBOX:
+            return "[x]" if chosen else "[ ]"
+        return "(•)" if chosen else "( )"
 
-        A COMPARE_SELECT candidate frames its provenance (where the value came
-        from — the reason that widget exists); every widget kind renders the
-        choice's description as a muted second line when the domain supplied
-        one, so a described option no longer shows only its bare label.
+    def _option_prompt(self, number: int, choice: ChoiceCopy, widget_kind: FlowWidgetKind, *, chosen: bool) -> Text:
+        """A two-line option: numbered glyph + label, then a muted detail line.
+
+        Line two carries the provenance (COMPARE_SELECT — the reason that
+        widget exists) and the description when present, indented under the
+        label. It is always emitted (blank when empty) so the row height is
+        reserved and an incoming domain description never reflows the list.
         """
-        title = choice.label
-        if choice.provenance:
-            title = tr("flows.compare_select.candidate", label=choice.label, provenance=choice.provenance)
-        if choice.description:
-            # Beside the label, muted — kept on one line so it survives the
-            # single-line RadioButton/Selection label rendering.
-            title = f"{title}  [dim]{choice.description}[/dim]"
-        return title
+        text = Text(f"{number}. {self._glyph(widget_kind, chosen=chosen)} {choice.label}")
+        details = [detail for detail in (choice.provenance, choice.description) if detail]
+        text.append("\n   ")
+        text.append(" · ".join(details) if details else " ", style="dim")
+        return text
+
+    def _defer_prompt(self, number: int, *, chosen: bool) -> Text:
+        glyph = "(•)" if chosen else "( )"
+        text = Text(f"{number}. {glyph} {tr('flows.compare_select.defer_label')}")
+        text.append("\n   ")
+        text.append(" ", style="dim")
+        return text
 
     # ── intents ─────────────────────────────────────────────────────────
 
@@ -300,16 +310,58 @@ class QuestionScreen(Screen[None]):
         self.flow_app.commit_answer(event.value)
 
     def on_radio_set_changed(self, event: RadioSet.Changed) -> None:
+        # Only the CONFIRM page still mounts a RadioSet (yes / no).
         if event.pressed.name:
             self.flow_app.commit_answer(event.pressed.name)
 
-    def on_selection_list_selected_changed(self, event: SelectionList.SelectedChanged) -> None:
-        # CHECKBOX stages every toggle (commit without advancing) so a
-        # second selection is not cut off by an immediate page exit; the
-        # page advances only on an explicit Next / escape / review intent,
-        # matching the module comment's "navigation away is the page exit".
-        selected = ",".join(str(value) for value in event.selection_list.selected)
-        self.flow_app.commit_answer(selected, advance=False)
+    def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
+        """Enter on the highlighted row toggles (CHECKBOX) or chooses (SELECT)."""
+        if event.option.id is not None:
+            self._activate_choice(event.option.id)
+
+    def on_key(self, event: Key) -> None:
+        """Digit keys 1-9 toggle/choose the numbered row of a choice list."""
+        if not event.key.isdigit() or event.key == "0":
+            return
+        option_lists = self.query_one("#widget-area", Vertical).query(OptionList)
+        if not option_lists:
+            return
+        option_list = option_lists.first()
+        index = int(event.key) - 1
+        if 0 <= index < option_list.option_count:
+            event.stop()
+            option_id = option_list.get_option_at_index(index).id
+            if option_id is not None:
+                self._activate_choice(option_id)
+
+    def _activate_choice(self, value: str) -> None:
+        entry = self.flow_app.cursor_entry()
+        if entry is None:
+            return
+        if entry.page.widget is FlowWidgetKind.CHECKBOX:
+            # Toggle in the current selection, keep choice order, and STAGE
+            # (commit without advancing) so a second selection is not cut off
+            # by an immediate page exit; the hook fires per toggle and the
+            # glyph updates in place without re-mounting the list.
+            copy = assemble_page_copy(entry.page)
+            selected = {token for token in self.flow_app.state.answers.get(entry.key, "").split(",") if token}
+            selected.symmetric_difference_update({value})
+            ordered = ",".join(choice.value for choice in copy.choices if choice.value in selected)
+            self.flow_app.commit_answer(ordered, advance=False)
+            self._refresh_checkbox_glyphs(entry, copy)
+            return
+        # SELECT / COMPARE_SELECT: a choice commits and advances.
+        self.flow_app.commit_answer(value)
+
+    def _refresh_checkbox_glyphs(self, entry: VisiblePage, copy: PageCopy) -> None:
+        """Repaint each row's glyph after a toggle, preserving focus/highlight."""
+        option_list = self.query_one("#widget-area", Vertical).query_one(OptionList)
+        selected = {token for token in self.flow_app.state.answers.get(entry.key, "").split(",") if token}
+        for index, choice in enumerate(copy.choices, start=1):
+            option_list.replace_option_prompt_at_index(
+                index - 1,
+                self._option_prompt(index, choice, FlowWidgetKind.CHECKBOX, chosen=choice.value in selected),
+            )
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "btn-back":

@@ -25,7 +25,7 @@ from typing import TYPE_CHECKING
 import pytest
 import yaml
 from pydantic import BaseModel
-from textual.widgets import Button, DataTable, Input, Label, ProgressBar, RadioButton, SelectionList, Static
+from textual.widgets import Button, DataTable, Input, Label, OptionList, ProgressBar, Static
 
 from .....application.flows import (
     CopyRef,
@@ -215,8 +215,8 @@ async def _answer_all_required(pilot: Pilot[None], app: FlowTuiApp) -> None:
     """Walk the flow answering both required pages through the widgets."""
     await pilot.press(*"ada")
     await pilot.click("#btn-next")
-    app.screen.query_one("#widget-area").query_one("RadioSet").focus()
-    await pilot.press("enter")
+    # p_kind is a SELECT: choose the first numbered option (digit key).
+    await pilot.press("1")
     await pilot.pause()
 
 
@@ -576,11 +576,10 @@ def _gate_definition() -> FlowDefinition:
 async def test_checkbox_page_stages_two_selections_under_one_key() -> None:
     app = FlowTuiApp(_checkbox_definition(), mode=FlowMode.MODIFY, registered_values={})
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
-        selection = app.screen.query_one("#widget-area").query_one(SelectionList)
-        selection.focus()
-        await pilot.press("space")  # toggle the first choice
-        await pilot.press("down")
-        await pilot.press("space")  # toggle the second choice
+        await pilot.pause()
+        # Digit keys toggle the numbered rows of the checkbox list.
+        await pilot.press("1")  # toggle the first choice
+        await pilot.press("2")  # toggle the second choice
         await pilot.pause()
 
         # Both selections land under the one page key, and the page does not
@@ -759,30 +758,41 @@ def _choice_definition(widget: FlowWidgetKind, *, provenance: bool = False) -> F
     )
 
 
+def _option_prompts(app: FlowTuiApp) -> str:
+    """The rendered prompt text of every option in the mounted choice list."""
+    option_list = app.screen.query_one("#widget-area").query_one(OptionList)
+    return "\n".join(str(option_list.get_option_at_index(index).prompt) for index in range(option_list.option_count))
+
+
 @pytest.mark.asyncio
-async def test_select_renders_each_choice_description() -> None:
+async def test_select_renders_a_numbered_list_with_descriptions() -> None:
     app = FlowTuiApp(_choice_definition(FlowWidgetKind.SELECT), mode=FlowMode.MODIFY, registered_values={})
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
-        labels = " ".join(str(button.label) for button in app.screen.query(RadioButton))
+        text = _option_prompts(app)
 
-        # The described choices' description text reaches the rendered labels.
-        assert "DESC-TEXT" in labels
+        # Numbered single-choice rows (unselected radio glyph) with the
+        # domain description on the reserved second line.
+        assert "1. ( ) " in text
+        assert "2. ( ) " in text
+        assert "DESC-TEXT" in text
 
 
 @pytest.mark.asyncio
-async def test_checkbox_renders_each_choice_description() -> None:
+async def test_checkbox_renders_a_numbered_list_with_descriptions() -> None:
     app = FlowTuiApp(_choice_definition(FlowWidgetKind.CHECKBOX), mode=FlowMode.MODIFY, registered_values={})
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
-        selection = app.screen.query_one("#widget-area").query_one(SelectionList)
-        rendered = " ".join(str(selection.get_option_at_index(index).prompt) for index in range(selection.option_count))
+        text = _option_prompts(app)
 
-        assert "DESC-TEXT" in rendered
+        # Numbered multi-select rows carry the checkbox glyph, unticked.
+        assert "1. [ ] " in text
+        assert "2. [ ] " in text
+        assert "DESC-TEXT" in text
 
 
 @pytest.mark.asyncio
-async def test_compare_select_renders_provenance_and_description() -> None:
+async def test_compare_select_renders_provenance_and_a_final_defer_row() -> None:
     app = FlowTuiApp(
         _choice_definition(FlowWidgetKind.COMPARE_SELECT, provenance=True),
         mode=FlowMode.MODIFY,
@@ -790,12 +800,14 @@ async def test_compare_select_renders_provenance_and_description() -> None:
     )
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
-        labels = " ".join(str(button.label) for button in app.screen.query(RadioButton))
+        text = _option_prompts(app)
 
-        # Provenance is the reason COMPARE_SELECT exists; both it and the
-        # description reach the rendered candidate labels.
-        assert "PROV-TEXT" in labels
-        assert "DESC-TEXT" in labels
+        # Provenance is the reason COMPARE_SELECT exists; it and the
+        # description reach the numbered candidate rows, and the defer arm is
+        # the final numbered row (two candidates, then row 3).
+        assert "PROV-TEXT" in text
+        assert "DESC-TEXT" in text
+        assert "3. ( ) " in text
 
 
 @pytest.mark.asyncio
@@ -914,11 +926,34 @@ async def test_reentering_an_answered_select_from_review_does_not_auto_advance()
         await pilot.press("enter")  # jump back into the answered SELECT page
         await pilot.pause()
 
-        # Textual posts no RadioSet.Changed on mount, so re-entering an
+        # The OptionList fires no selection on mount, so re-entering an
         # answered SELECT neither re-commits nor auto-advances past it.
         assert not _on_review(app)
         assert app.state.cursor == "p_kind"
         assert app.state.answers["p_kind"] == before
+
+
+@pytest.mark.asyncio
+async def test_checkbox_digit_toggle_updates_the_glyph_in_place() -> None:
+    app = FlowTuiApp(_checkbox_definition(), mode=FlowMode.MODIFY, registered_values={})
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.pause()
+        text = _option_prompts(app)
+        assert "1. [ ] " in text  # both unticked to start
+        assert "2. [ ] " in text
+
+        await pilot.press("1")  # toggle row 1 on
+        await pilot.pause()
+        text = _option_prompts(app)
+        assert "1. [x] " in text  # row 1 glyph flipped in place
+        assert "2. [ ] " in text  # row 2 untouched
+
+        await pilot.press("2")  # toggle row 2 on
+        await pilot.pause()
+        text = _option_prompts(app)
+        assert "1. [x] " in text  # row 1 still ticked
+        assert "2. [x] " in text  # row 2 flipped in place
+        assert set(app.state.answers["p_multi"].split(",")) == {"c1", "c2"}
 
 
 _ABANDONED_RUN_SCRIPT = """
