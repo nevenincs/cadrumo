@@ -91,6 +91,11 @@ dependencies = [
   # localise AEAT timestamps to Europe/Madrid).
   "tzdata>=2026.2 ; sys_platform == 'win32'",
   "xlrd>=2.0.1,<3",
+  # Full-screen TUI framework for the paged flow frontend (screens, focus,
+  # reactive widgets, headless Pilot test driver). MIT; depends on rich
+  # (shared pin above) and not on prompt_toolkit, so the line-mode and
+  # full-screen stacks stay independent.
+  "textual>=8.2.8,<9",
 ]
 
 [project.scripts]
