@@ -118,8 +118,8 @@ def _reserved_token_offenders(flat_leaves: dict[str, str]) -> list[str]:
     strips them from the interpolation map, so a catalogue token named after
     either is permanently unfillable regardless of what a call site passes.
     """
-    from cadrumo.core.i18n import extract_placeholders
-    from cadrumo.locales import RESERVED_INTERPOLATION_TOKENS
+    from ..core.i18n import extract_placeholders
+    from ..locales import RESERVED_INTERPOLATION_TOKENS
 
     return sorted(
         key

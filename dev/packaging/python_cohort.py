@@ -18,6 +18,20 @@ from packaging.requirements import Requirement
 
 _UTF_8: Final[str] = "utf-8"
 _MANIFEST_NAME: Final[str] = "python-cohort.json"
+_BUILD_TREE_SOURCE_DIR: Final[str] = "src"
+COHORT_STAMPED_WHEEL_DATA_PATHS: Final[frozenset[str]] = frozenset(
+    {"cadrumo/_data/registry/aeat-validation-verdict.json"},
+)
+"""Wheel-relative data members a cohort build stamps in beyond the tracked source set.
+
+``_stamp_bundled_verdict_into_build_tree`` writes the install-stable registry
+verdict into the extracted build tree before ``uv build``, so a cohort wheel
+carries one data member that no tracked source path can account for. The wheel
+payload check derives its expectation from tracked sources, so it must union
+this set for a cohort wheel — a plain ``uv build`` wheel is never stamped and
+stays strictly tracked-only. Pinned against a real stamp by
+``test_cohort_stamped_paths.py`` so it cannot drift from what the build writes.
+"""
 _DISTRIBUTIONS: Final[tuple[str, ...]] = (
     "cadrumo",
     "cadrumo-data-manuals",
@@ -249,7 +263,7 @@ def source_snapshot_drift(repo_root: Path) -> tuple[str, ...]:
     return tuple(line for line in completed.stdout.splitlines() if line.strip())
 
 
-def _stamp_bundled_verdict_into_build_tree(build_root: Path) -> None:
+def _stamp_bundled_verdict_into_build_tree(build_root: Path) -> str:
     """Stamp the install-stable registry-validation verdict into the wheel tree.
 
     Written before ``uv build`` so the cadrumo wheel ships
@@ -260,12 +274,17 @@ def _stamp_bundled_verdict_into_build_tree(build_root: Path) -> None:
     install-stable (relative-path + size + version) key matches at runtime. The
     verdict certifies only that the build validated this release's immutable
     tree green; a fingerprint or version mismatch at runtime re-validates fully.
+
+    Returns:
+        The wheel-relative path of the stamped member, as the archive carries it.
     """
     from cadrumo import __version__
     from cadrumo.domain.calculations.registry import stamp_bundled_registry_verdict
 
-    registry_root = build_root / "src" / "cadrumo" / "_data" / "registry" / "aeat"
-    stamp_bundled_registry_verdict(registry_root, package_version=__version__)
+    source_root = build_root / _BUILD_TREE_SOURCE_DIR
+    registry_root = source_root / "cadrumo" / "_data" / "registry" / "aeat"
+    written = stamp_bundled_registry_verdict(registry_root, package_version=__version__)
+    return written.relative_to(source_root.resolve()).as_posix()
 
 
 def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:

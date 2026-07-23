@@ -23,7 +23,12 @@ from typing import Any, Final
 from packaging.requirements import Requirement
 
 from .installed_tax_oracle import run_installed_tax_oracle
-from .python_cohort import assert_installed_cohort, digest_install_target, load_python_cohort
+from .python_cohort import (
+    COHORT_STAMPED_WHEEL_DATA_PATHS,
+    assert_installed_cohort,
+    digest_install_target,
+    load_python_cohort,
+)
 
 _UTF_8: Final[str] = "utf-8"
 _REPRESENTATIVE_DATA_LEAVES = (
@@ -1075,7 +1080,11 @@ def main(argv: list[str] | None = None) -> int:
     data_wheel_official = cohort.official_wheel
     companion_wheels = (data_wheel_manuals, data_wheel_official)
     print("using supplied complete wheel cohort", flush=True)
-    _assert_wheel_contains_tracked_data(repo_root, wheel)
+    _assert_wheel_contains_tracked_data(
+        repo_root,
+        wheel,
+        _expected_wheel_data_paths(repo_root) | COHORT_STAMPED_WHEEL_DATA_PATHS,
+    )
     _assert_wheel_metadata_matches_pyproject(repo_root, wheel)
     cohort_version = _assert_complete_wheel_cohort(
         wheel,
