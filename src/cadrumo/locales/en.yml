@@ -654,17 +654,25 @@ application:
         {kind}.
       copy_source_locale_builtin: The locale-key copy source is built in and cannot
         be re-registered.
-      copy_source_unregistered: application.flows.errors.copy_source_unregistered
-      jump_target_not_visible: application.flows.errors.jump_target_not_visible
-      reset_target_unknown: application.flows.errors.reset_target_unknown
-      scripted_answer_rejected: application.flows.errors.scripted_answer_rejected
-      scripted_queue_overflow: application.flows.errors.scripted_queue_overflow
-      scripted_queue_underflow: application.flows.errors.scripted_queue_underflow
-      submit_blocked: application.flows.errors.submit_blocked
-      unknown_repeating_group: application.flows.errors.unknown_repeating_group
-      validator_id_blank: application.flows.errors.validator_id_blank
-      validator_id_duplicate: application.flows.errors.validator_id_duplicate
-      validator_id_unknown: application.flows.errors.validator_id_unknown
+      copy_source_unregistered: No copy source resolver is registered for kind {kind},
+        required by reference {ref}.
+      jump_target_not_visible: 'Flow {flow_id} cannot jump to {page_key}: that question
+        is not currently visible.'
+      reset_target_unknown: Flow {flow_id} has no question or stored answer named
+        {page_key} to reset.
+      scripted_answer_rejected: 'The scripted answer for {page_key} was rejected by
+        validation: {message_keys}.'
+      scripted_queue_overflow: The scripted run used {consumed_count} answers and
+        finished with {remaining_count} unused; the script does not match the flow.
+      scripted_queue_underflow: The scripted run ran out of answers at required question
+        {page_key}, after {consumed_count} answers.
+      submit_blocked: 'Flow {flow_id} cannot be submitted: {blocking_count} blocking
+        findings and {required_remaining} required questions are still open.'
+      unknown_repeating_group: Flow {flow_id} declares no repeating group named {group_id}.
+      validator_id_blank: A flow validator must be registered under a non-empty id.
+      validator_id_duplicate: A flow validator is already registered under id {validator_id}.
+      validator_id_unknown: No flow validator is registered under id {validator_id};
+        {registered_count} validators are registered.
   inventory:
     service:
       errors:
@@ -5212,7 +5220,7 @@ errors:
     error_financial_transactions_transaction: A transaction-catalogue error occurred.
     error_financial_usage_ratios_usage_ratio: A usage-ratio error occurred.
     error_fixture_provisioning: The test fixtures could not be provisioned.
-    error_flow: errors.error.error_flow
+    error_flow: The guided flow failed.
     error_invoice_link_inconsistency: The link left the invoice and transaction catalogues
       out of sync. Reconcile both catalogues manually.
     error_invoice_validation: An invoice record failed validation.
@@ -5573,8 +5581,10 @@ errors:
       transaction ownership is invalid.'
     internal_cli_unexpected_boundary: The command failed due to an unexpected internal
       error, not a stored-data problem. Inspect the diagnostic logs to see what failed.
-    internal_flow_copy_resolution: errors.internal.internal_flow_copy_resolution
-    internal_flow_validator_registry: errors.internal.internal_flow_validator_registry
+    internal_flow_copy_resolution: 'Internal error: the guided flow could not resolve
+      its display copy.'
+    internal_flow_validator_registry: 'Internal error: the guided flow validator registry
+      rejected the operation.'
     internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
       close the active session before re-entering.'
     internal_master_key_type: 'Internal error: master-key operation received a value
@@ -5779,11 +5789,12 @@ errors:
     refused_financial_usage_ratios_censo_mismatch: A saved home-office usage ratio
       disagrees with the censo, which is the binding legal source. Align it with the
       censo value.
-    refused_flow_answer: errors.refused.refused_flow_answer
-    refused_flow_checkpoint: errors.refused.refused_flow_checkpoint
-    refused_flow_navigation: errors.refused.refused_flow_navigation
-    refused_flow_submit: errors.refused.refused_flow_submit
-    refused_flow_unsupported_console: errors.refused.refused_flow_unsupported_console
+    refused_flow_answer: The guided flow refused the answer.
+    refused_flow_checkpoint: The guided flow refused the save-and-resume operation.
+    refused_flow_navigation: The guided flow refused the navigation request.
+    refused_flow_submit: The guided flow refused the submission.
+    refused_flow_unsupported_console: The guided flow cannot run because this console
+      cannot host interactive questions.
     refused_google_impersonation: IAM refused to mint an impersonated token for the
       target service account. Grant it roles/iam.serviceAccountTokenCreator.
     refused_google_non_interactive: Google login needs an interactive terminal with
