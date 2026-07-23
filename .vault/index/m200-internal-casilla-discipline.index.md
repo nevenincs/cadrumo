@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m200-internal-casilla-discipline'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-06-03-m200-internal-casilla-discipline-P01-S01]]'
   - '[[2026-06-03-m200-internal-casilla-discipline-P01-S02]]'

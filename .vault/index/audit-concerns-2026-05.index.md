@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#audit-concerns-2026-05'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-05-08-audit-concerns-2026-05-adr]]'
   - '[[2026-05-08-audit-concerns-2026-05-plan]]'

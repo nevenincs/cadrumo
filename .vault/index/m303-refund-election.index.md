@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m303-refund-election'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-06-24-m303-refund-election-adr]]'
   - '[[2026-07-10-m303-refund-election-research]]'

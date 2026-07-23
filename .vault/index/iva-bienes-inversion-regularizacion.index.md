@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#iva-bienes-inversion-regularizacion'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-07-01-iva-bienes-inversion-regularizacion-adr]]'
   - '[[2026-07-01-iva-bienes-inversion-regularizacion-research]]'

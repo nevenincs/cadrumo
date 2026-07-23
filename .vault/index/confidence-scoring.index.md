@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#confidence-scoring'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-04-21-confidence-scoring-review-audit]]'
 ---

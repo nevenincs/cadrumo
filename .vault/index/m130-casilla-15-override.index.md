@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m130-casilla-15-override'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-05-27-m130-casilla-15-override-S218]]'
   - '[[2026-06-04-m130-casilla-15-override-adr]]'

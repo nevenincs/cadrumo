@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#config-cli-profile-surface'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-05-07-config-cli-profile-surface-adr]]'
   - '[[2026-06-04-config-cli-profile-surface-research]]'

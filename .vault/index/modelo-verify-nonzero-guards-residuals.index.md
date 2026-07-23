@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-verify-nonzero-guards-residuals'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-07-01-modelo-verify-nonzero-guards-residuals-P01-S01]]'
   - '[[2026-07-01-modelo-verify-nonzero-guards-residuals-P02-S02]]'

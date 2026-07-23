@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-130-relation-regression'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-05-19-modelo-130-relation-regression-W01-P02-S01]]'
   - '[[2026-05-19-modelo-130-relation-regression-W01-P02-S02]]'

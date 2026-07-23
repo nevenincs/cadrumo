@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#importlinter-test-carveout'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-07-08-importlinter-test-carveout-adr]]'
   - '[[2026-07-10-importlinter-test-carveout-research]]'

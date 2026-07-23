@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#hexagonal-port-wiring'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-06-01-hexagonal-port-wiring-plan]]'
   - '[[2026-06-04-hexagonal-port-wiring-adr]]'

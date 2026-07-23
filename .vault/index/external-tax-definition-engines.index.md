@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#external-tax-definition-engines'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-05-03-external-tax-definition-engines-reference]]'
 ---

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#deterministic-output-replay-substrate'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-06-30-deterministic-output-replay-substrate-adr]]'
   - '[[2026-06-30-deterministic-output-replay-substrate-research]]'

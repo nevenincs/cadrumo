@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#codebase-monolith-decomposition'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-06-05-codebase-monolith-decomposition-W01-P01-S01]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W01-P01-S02]]'

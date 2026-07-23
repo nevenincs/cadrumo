@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#category-assignment'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-04-18-category-assignment-cli-adr]]'
   - '[[2026-04-18-category-assignment-cli-plan]]'

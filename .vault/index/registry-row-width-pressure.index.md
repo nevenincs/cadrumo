@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-row-width-pressure'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-06-04-registry-row-width-pressure-P01-S01]]'
   - '[[2026-06-04-registry-row-width-pressure-P02-S02]]'

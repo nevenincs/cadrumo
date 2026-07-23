@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cadrumo-cli-executable'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-07-12-cadrumo-cli-executable-adr]]'
   - '[[2026-07-12-cadrumo-cli-executable-audit]]'

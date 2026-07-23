@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-m123-fragmentation'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-06-02-registry-m123-fragmentation-audit]]'
   - '[[2026-06-02-registry-m123-fragmentation-code-review-audit]]'

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-036-census-sync'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-06-03-modelo-036-census-sync-adr]]'
   - '[[2026-06-04-modelo-036-census-sync-research]]'

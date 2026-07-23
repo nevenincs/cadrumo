@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-project-0505-fix'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-05-27-modelo-project-0505-fix-S220]]'
   - '[[2026-06-04-modelo-project-0505-fix-adr]]'
