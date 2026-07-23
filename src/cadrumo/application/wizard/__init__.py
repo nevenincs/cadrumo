@@ -37,6 +37,14 @@ from . import _compiler as _compiler
 from ._catalogue import WIZARD_FLOWS
 from ._commands import build_wizard_command
 from ._errors import WizardAnswerQueueUnderflowError, WizardValidationError
+from ._models import (
+    WizardChoice,
+    WizardCondition,
+    WizardFlow,
+    WizardQuestion,
+    WizardSection,
+    WizardVisibility,
+)
 from ._persistence import project_answers
 from ._prompter import CanonicalAnswerPrompter, Prompter, QuestionaryPrompter, WizardUnsupportedConsoleError
 from ._status import (
@@ -53,10 +61,16 @@ __all__ = [
     "Prompter",
     "QuestionaryPrompter",
     "WizardAnswerQueueUnderflowError",
+    "WizardChoice",
+    "WizardCondition",
+    "WizardFlow",
+    "WizardQuestion",
+    "WizardSection",
     "WizardStatusError",
     "WizardStatusReport",
     "WizardUnsupportedConsoleError",
     "WizardValidationError",
+    "WizardVisibility",
     "build_wizard_command",
     "build_wizard_status",
     "load_active_taxpayer_profile",
