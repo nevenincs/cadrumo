@@ -40,6 +40,7 @@ from ....core.flows import (
     FlowMode,
     FlowWidgetKind,
 )
+from ....core.i18n import tr
 from .. import (
     CopyRef,
     FlowCheckpointError,
@@ -47,6 +48,7 @@ from .. import (
     FlowCondition,
     FlowDefinition,
     FlowPage,
+    FlowRunAbandonedError,
     FlowSection,
     FlowState,
     FlowUnsupportedConsoleError,
@@ -274,6 +276,48 @@ def test_stale_orphan_reset_from_review_unblocks_submission() -> None:
     assert "p_dep" not in state.answers
     assert state.answers["p_gate"] == "beta"
     assert projection.submit_eligible
+
+
+def test_secret_answer_is_masked_in_the_reprompt_header_and_never_captured() -> None:
+    # One required SECRET page. Answer it, then from review edit it (submit is
+    # highlighted first, so one down selects 'edit'), pick row 1, and re-enter
+    # it: the re-ask renders the page header, whose current-answer line is the
+    # only place a committed value could reach the terminal. Masking must emit
+    # a fixed marker there, so the raw secret never appears in captured output
+    # even though it lives in the engine state.
+    definition = _definition(
+        (FlowSection(id="s", title=_copy(), items=(_page("p_secret", widget=FlowWidgetKind.SECRET),)),),
+    )
+    buffer = StringIO()
+    with create_pipe_input() as pipe:
+        pipe.send_text(f"hunter2\r{_DOWN}\r1\rhunter2\r\r")
+        frontend = LineFlowFrontend(definition, input=pipe, output=PlainTextOutput(buffer))
+        state, _ = frontend.run(mode=FlowMode.MODIFY)
+
+    captured = buffer.getvalue()
+    assert state.answers["p_secret"] == "hunter2"  # noqa: S105 - test fixture secret, not a credential
+    # Pair the assertion: prove the header actually re-rendered the answered
+    # page (its position marker present) AND that the current-answer line
+    # rendered the masked marker, THEN assert the raw secret is absent — an
+    # absence check against an empty or wrong capture would pass vacuously.
+    assert tr("flows.progress.page_header", position=1, total=1, section="s") in captured
+    assert tr("flows.progress.current_answer_secret") in captured
+    assert "hunter2" not in captured
+
+
+def test_ctrl_c_on_a_required_prompt_raises_a_typed_abandonment() -> None:
+    # A required page with no cancel path would re-prompt forever on a blank;
+    # unsafe_ask surfaces the Ctrl-C as a KeyboardInterrupt that the frontend
+    # boundary maps to a typed, translated abandonment instead of swallowing
+    # it into a silent re-prompt.
+    definition = _definition((FlowSection(id="s", title=_copy(), items=(_page("p_a"),)),))
+    with create_pipe_input() as pipe:
+        pipe.send_text("\x03")  # Ctrl-C
+        frontend = LineFlowFrontend(definition, input=pipe, output=_memory_output())
+        with pytest.raises(FlowRunAbandonedError) as excinfo:
+            frontend.run(mode=FlowMode.MODIFY)
+
+    assert excinfo.value.translated_message == "errors.refused.refused_flow_run_abandoned"
 
 
 def test_uninjected_frontend_refuses_non_tty_console() -> None:

@@ -33,7 +33,7 @@ from ...core.flows import DEFER_TOKEN, FlowMode, FlowWidgetKind, PageStatus
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ._checkpoint import CheckpointStore, checkpoint_available, save_checkpoint
-from ._copy import PageCopy, assemble_page_copy
+from ._copy import PageCopy, assemble_page_copy, resolve_optional_copy
 from ._definition import FlowDefinition
 from ._engine import (
     SECTION_VERDICT_PREFIX,
@@ -48,7 +48,7 @@ from ._engine import (
     start_flow,
     visible_sequence,
 )
-from ._errors import FlowCheckpointError, FlowUnsupportedConsoleError
+from ._errors import FlowCheckpointError, FlowRunAbandonedError, FlowUnsupportedConsoleError
 from ._review import ReviewProjection, assert_submit_eligible, review
 
 if TYPE_CHECKING:
@@ -141,7 +141,9 @@ class LineFlowFrontend:
                 context={"flow_id": self._definition.id, "mode": mode.value},
             )
         state = resume_state if resume_state is not None else start_flow(self._definition, mode=mode)
-        self._emit(tr(f"flows.{self._definition.id}.intro"))
+        intro = resolve_optional_copy(self._definition.intro)
+        if intro is not None:
+            self._emit(intro)
 
         while True:
             state = self._walk_unanswered(state)
@@ -202,7 +204,13 @@ class LineFlowFrontend:
             self._emit(tr("flows.progress.failure_mode", text=failure_mode))
         current = state.answers.get(entry.key)
         if current:
-            self._emit(tr("flows.progress.current_answer", value=current))
+            # A SECRET page's committed value must never reach the terminal
+            # or a captured session log; render a fixed masked marker while
+            # the raw answer stays only in the engine state.
+            if entry.page.widget is FlowWidgetKind.SECRET:
+                self._emit(tr("flows.progress.current_answer_secret"))
+            else:
+                self._emit(tr("flows.progress.current_answer", value=current))
         requirement_key = "flows.progress.required" if entry.page.required else "flows.progress.optional"
         self._emit(tr(requirement_key))
 
@@ -213,19 +221,21 @@ class LineFlowFrontend:
             match entry.page.widget:
                 case FlowWidgetKind.TEXT | FlowWidgetKind.INTEGER:
                     return self._stringify(
-                        questionary.text(prompt, default=default, input=self._input, output=self._output).ask(),
+                        self._ask(questionary.text(prompt, default=default, input=self._input, output=self._output)),
                     )
                 case FlowWidgetKind.SECRET:
                     return self._stringify(
-                        questionary.password(prompt, input=self._input, output=self._output).ask(),
+                        self._ask(questionary.password(prompt, input=self._input, output=self._output)),
                     )
                 case FlowWidgetKind.CONFIRM:
-                    result = questionary.confirm(
-                        prompt,
-                        default=default.strip().lower() in {"true", "yes", "1", "y"},
-                        input=self._input,
-                        output=self._output,
-                    ).ask()
+                    result = self._ask(
+                        questionary.confirm(
+                            prompt,
+                            default=default.strip().lower() in {"true", "yes", "1", "y"},
+                            input=self._input,
+                            output=self._output,
+                        ),
+                    )
                     if result is True:
                         return "true"
                     if result is False:
@@ -233,17 +243,19 @@ class LineFlowFrontend:
                     return self._stringify(result)
                 case FlowWidgetKind.PATH:
                     return self._stringify(
-                        questionary.path(prompt, default=default, input=self._input, output=self._output).ask(),
+                        self._ask(questionary.path(prompt, default=default, input=self._input, output=self._output)),
                     )
                 case FlowWidgetKind.SELECT:
                     return self._stringify(
-                        questionary.select(
-                            prompt,
-                            choices=self._render_choices(copy),
-                            default=default or None,
-                            input=self._input,
-                            output=self._output,
-                        ).ask(),
+                        self._ask(
+                            questionary.select(
+                                prompt,
+                                choices=self._render_choices(copy),
+                                default=default or None,
+                                input=self._input,
+                                output=self._output,
+                            ),
+                        ),
                     )
                 case FlowWidgetKind.COMPARE_SELECT:
                     choices = self._render_choices(copy)
@@ -251,21 +263,25 @@ class LineFlowFrontend:
                         questionary.Choice(title=tr("flows.compare_select.defer_label"), value=DEFER_TOKEN),
                     )
                     return self._stringify(
-                        questionary.select(
-                            prompt,
-                            choices=choices,
-                            default=default or None,
-                            input=self._input,
-                            output=self._output,
-                        ).ask(),
+                        self._ask(
+                            questionary.select(
+                                prompt,
+                                choices=choices,
+                                default=default or None,
+                                input=self._input,
+                                output=self._output,
+                            ),
+                        ),
                     )
                 case FlowWidgetKind.CHECKBOX:
-                    result = questionary.checkbox(
-                        prompt,
-                        choices=self._render_choices(copy),
-                        input=self._input,
-                        output=self._output,
-                    ).ask()
+                    result = self._ask(
+                        questionary.checkbox(
+                            prompt,
+                            choices=self._render_choices(copy),
+                            input=self._input,
+                            output=self._output,
+                        ),
+                    )
                     if result is None:
                         return ""
                     return ",".join(str(item) for item in result)
@@ -295,6 +311,9 @@ class LineFlowFrontend:
     def _review_round(self, state: FlowState) -> tuple[str, FlowState, bool]:
         projection = review(self._definition, state)
         self._emit(tr("flows.review.header", answered=projection.answered_count))
+        prompts = {
+            entry.key: assemble_page_copy(entry.page).prompt for entry in visible_sequence(self._definition, state)
+        }
         rows_by_number: dict[str, str] = {}
         for number, row in enumerate(projection.rows, start=1):
             rows_by_number[str(number)] = row.key
@@ -302,7 +321,10 @@ class LineFlowFrontend:
                 tr(
                     "flows.review.row",
                     number=number,
-                    page_key=row.key,
+                    # Resolved prompt copy where the page is visible; a
+                    # non-visible stale orphan keeps its raw key, exactly as
+                    # the full-screen review table renders it.
+                    page_key=prompts.get(row.key, row.key),
                     status=row.status.value,
                 ),
             )
@@ -322,12 +344,14 @@ class LineFlowFrontend:
         actions.append(questionary.Choice(title=tr("flows.review.action_restart"), value=_REVIEW_ACTION_RESTART))
 
         action = self._stringify(
-            questionary.select(
-                tr("flows.review.action_prompt"),
-                choices=actions,
-                input=self._input,
-                output=self._output,
-            ).ask(),
+            self._ask(
+                questionary.select(
+                    tr("flows.review.action_prompt"),
+                    choices=actions,
+                    input=self._input,
+                    output=self._output,
+                ),
+            ),
         )
         if action == _REVIEW_ACTION_SUBMIT:
             return action, state, True
@@ -344,21 +368,25 @@ class LineFlowFrontend:
             save_checkpoint(self._definition, state, self._store)
             return action, state, True
         if action == _REVIEW_ACTION_RESTART:
-            confirmed = questionary.confirm(
-                tr("flows.review.restart_confirm"),
-                default=False,
-                input=self._input,
-                output=self._output,
-            ).ask()
+            confirmed = self._ask(
+                questionary.confirm(
+                    tr("flows.review.restart_confirm"),
+                    default=False,
+                    input=self._input,
+                    output=self._output,
+                ),
+            )
             if confirmed is True:
                 return action, restart_flow(self._definition, state), False
             return action, state, False
         target_number = self._stringify(
-            questionary.text(
-                tr("flows.review.edit_which"),
-                input=self._input,
-                output=self._output,
-            ).ask(),
+            self._ask(
+                questionary.text(
+                    tr("flows.review.edit_which"),
+                    input=self._input,
+                    output=self._output,
+                ),
+            ),
         ).strip()
         target_key = rows_by_number.get(target_number)
         if target_key is None:
@@ -390,6 +418,24 @@ class LineFlowFrontend:
         state = jump_to(self._definition, state, target_key)
         state = self._ask_page(state, entry)
         return action, state, False
+
+    def _ask(self, question: questionary.Question) -> object:
+        """Run one prompt to an answer, mapping Ctrl-C to a typed abandonment.
+
+        ``unsafe_ask`` (unlike ``ask``) re-raises ``KeyboardInterrupt``
+        instead of swallowing it into a silent ``None`` and printing an
+        untranslated "Cancelled by user" to ``sys.stdout``; the frontend
+        catches it at this single boundary and refuses with a typed,
+        translated error so a required page can be abandoned rather than
+        re-prompting forever with no cancel path.
+        """
+        try:
+            return question.unsafe_ask()
+        except KeyboardInterrupt as exc:
+            raise FlowRunAbandonedError(
+                translated_message="errors.refused.refused_flow_run_abandoned",
+                context={"flow_id": self._definition.id},
+            ) from exc
 
     def _emit(self, text: str) -> None:
         """Write one operator-facing line to the device the prompts render on."""

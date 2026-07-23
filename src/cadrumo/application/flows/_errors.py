@@ -43,6 +43,16 @@ class FlowCopyResolutionError(FlowError):
     """Raised when a copy reference cannot be resolved against its declared source."""
 
 
+class FlowRunAbandonedError(FlowError):
+    """Raised when the operator abandons a line-mode prompt loop (Ctrl-C).
+
+    The line frontend prompts through ``unsafe_ask`` so a ``KeyboardInterrupt``
+    surfaces at the frontend boundary as a typed, translated refusal instead
+    of being swallowed into a silent re-prompt with no cancel path. Context
+    carries flow metadata only — never a raw operator answer.
+    """
+
+
 class FlowUnsupportedConsoleError(FlowError):
     """Raised when the host terminal cannot host an interactive flow frontend.
 
@@ -59,6 +69,7 @@ __all__ = [
     "FlowCopyResolutionError",
     "FlowError",
     "FlowNavigationError",
+    "FlowRunAbandonedError",
     "FlowSubmitError",
     "FlowUnsupportedConsoleError",
     "FlowValidatorRegistryError",

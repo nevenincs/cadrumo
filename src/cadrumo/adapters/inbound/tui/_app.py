@@ -28,6 +28,11 @@ from cadrumo.application.flows import (
     FlowCheckpointError as _FlowCheckpointError,
 )
 from cadrumo.application.flows import (
+    FlowError as _FlowError,
+)
+from cadrumo.application.flows import (
+    FlowPage,
+    FlowRepeatingGroup,
     ReviewProjection,
     answer,
     assert_submit_eligible,
@@ -43,7 +48,7 @@ from cadrumo.application.flows import (
     start_flow,
     visible_sequence,
 )
-from cadrumo.core.flows import FlowMode, PageStatus
+from cadrumo.core.flows import REPEATING_INSTANCE_SEPARATOR, FlowMode, FlowWidgetKind, PageStatus
 
 from ._question_screen import QuestionScreen
 from ._review_screen import ReviewScreen
@@ -89,6 +94,10 @@ class FlowTuiApp(App[None]):
         self.definition = definition
         self.state: FlowState = resume_state if resume_state is not None else start_flow(definition, mode=mode)
         self._store = checkpoint_store
+        self._widget_by_page_id: dict[str, FlowWidgetKind] = _collect_page_widgets(definition)
+        """Widget kind per declared page id, so an answer's echo can be
+        masked when the page collects a secret regardless of which zone
+        renders it (question body, page header, review answer column)."""
         self.registered_values: dict[str, str] = dict(registered_values or {})
         """Domain-supplied display values currently on record, keyed by page
         key — rendered verbatim in the review table's registered column so
@@ -109,14 +118,36 @@ class FlowTuiApp(App[None]):
                 return entry
         return None
 
+    def is_secret_page(self, page_key: str) -> bool:
+        """Whether the page a key addresses collects a secret answer.
+
+        Repeating-instance keys (``<group>#<index>.<page-id>``) resolve to
+        their declared page id; a plain key is the page id itself.
+        """
+        base = page_key.rsplit(".", 1)[-1] if REPEATING_INSTANCE_SEPARATOR in page_key else page_key
+        return self._widget_by_page_id.get(base) is FlowWidgetKind.SECRET
+
     # ── intents ─────────────────────────────────────────────────────────
 
-    def commit_answer(self, raw: str) -> None:
-        """Commit the answer for the cursor page, then advance or re-render."""
+    def commit_answer(self, raw: str, *, advance: bool = True) -> None:
+        """Commit the answer for the cursor page.
+
+        ``advance`` distinguishes the two commit shapes: an Input page
+        commits-then-advances (``advance=True``), while a multi-select
+        CHECKBOX stages every toggle in place (``advance=False``) so a
+        second selection is not cut off by an immediate page exit — the
+        page advances only on an explicit Next / escape / review intent.
+        A staging commit still refreshes the echo and verdict zones so
+        the operator sees the toggle land, but never re-mounts the widget
+        area (which would discard the in-progress selection and focus).
+        """
         entry = self.cursor_entry()
         if entry is None:
             return
         self.state = answer(self.definition, self.state, entry.key, raw)
+        if not advance:
+            self._refresh_answer_zones()
+            return
         if entry.key in self.state.verdicts:
             self._rerender_question()
             return
@@ -202,7 +233,17 @@ class FlowTuiApp(App[None]):
         if not checkpoint_available(self.definition, self.state.mode):
             self._rerender_review()
             return
-        assert self._store is not None  # guaranteed by the constructor fail-fast
+        if self._store is None:
+            # The constructor fail-fast makes this unreachable when
+            # checkpointing is available; the typed refusal is the
+            # defence-in-depth backstop (mirroring the line frontend),
+            # never a silent no-save exit — and it survives ``python -O``,
+            # where a bare assert would vanish and reach ``save_checkpoint``
+            # with ``None``.
+            raise _FlowCheckpointError(
+                translated_message="flows.errors.checkpoint_store_missing",
+                context={"flow_id": self.definition.id, "mode": self.state.mode.value},
+            )
         save_checkpoint(self.definition, self.state, self._store)
         self.final_state = self.state
         self.final_projection = review(self.definition, self.state)
@@ -220,10 +261,43 @@ class FlowTuiApp(App[None]):
         if isinstance(screen, QuestionScreen):
             screen.render_page()
 
+    def _refresh_answer_zones(self) -> None:
+        screen = self.screen
+        if isinstance(screen, QuestionScreen):
+            screen.refresh_answer_zones()
+
     def _rerender_review(self) -> None:
         screen = self.screen
         if isinstance(screen, ReviewScreen):
             screen.render_review()
+
+
+def require_flow_app(app: object) -> FlowTuiApp:
+    """Narrow a screen's ``self.app`` to the owning :class:`FlowTuiApp`.
+
+    The runtime object is always the owning app; a typed refusal (rather
+    than a bare ``assert`` that ``python -O`` strips) keeps the guard loud
+    if a screen is ever mounted under a foreign app.
+    """
+    if not isinstance(app, FlowTuiApp):
+        raise _FlowError(
+            translated_message="flows.errors.unexpected_app_type",
+            context={"expected": FlowTuiApp.__name__, "actual": type(app).__name__},
+        )
+    return app
+
+
+def _collect_page_widgets(definition: FlowDefinition) -> dict[str, FlowWidgetKind]:
+    """Map every declared page id to its widget kind (repeating pages included)."""
+    widgets: dict[str, FlowWidgetKind] = {}
+    for section in definition.sections:
+        for item in section.items:
+            if isinstance(item, FlowPage):
+                widgets[item.id] = item.widget
+            elif isinstance(item, FlowRepeatingGroup):
+                for page in item.pages:
+                    widgets[page.id] = page.widget
+    return widgets
 
 
 def run_flow_tui(
@@ -256,4 +330,4 @@ def run_flow_tui(
     return app.final_state, app.final_projection
 
 
-__all__ = ["FlowTuiApp", "run_flow_tui"]
+__all__ = ["FlowTuiApp", "require_flow_app", "run_flow_tui"]

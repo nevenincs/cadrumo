@@ -26,15 +26,16 @@ Assertions read the resolver's own returned strings and error message
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
+import yaml
 
 from ....core.flows import CopyRefKind, FlowWidgetKind
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
-from ....core.i18n import tr
 from .. import (
     CopyRef,
     FlowChoice,
@@ -89,12 +90,36 @@ def _schema_ref(ref: str) -> CopyRef:
     return CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=ref)
 
 
+def _catalogue_leaf(key: str) -> str:
+    """Read a locale leaf straight from the bundled catalogue on disk.
+
+    Independent of ``resolve_copy`` / ``tr`` (the code under test), so an
+    equality assertion against it proves the resolver reached the shipped
+    catalogue rather than merely agreeing with itself.
+    """
+    import cadrumo
+
+    from ....core.i18n import output_language
+
+    root = Path(cadrumo.__file__).parent / "locales"
+    catalogue = yaml.safe_load((root / f"{output_language()}.yml").read_text(encoding="utf-8"))
+    leaf: object = catalogue
+    for segment in key.split("."):
+        assert isinstance(leaf, dict)
+        leaf = leaf[segment]
+    assert isinstance(leaf, str)
+    return leaf
+
+
 def test_locale_key_resolves_against_the_real_catalogue() -> None:
     ref = CopyRef(kind=CopyRefKind.LOCALE_KEY, ref=_REAL_LOCALE_KEY)
     resolved = resolve_copy(ref)
 
-    # Resolves through the canonical tr catalogue, not a raw key leak.
-    assert resolved == tr(_REAL_LOCALE_KEY)
+    # Equality is against the catalogue read independently from disk (not
+    # ``tr``, the resolver's own path), so the check fails if the resolver
+    # stops reaching the catalogue; the second line keeps the load-bearing
+    # raw-key-leak guard.
+    assert resolved == _catalogue_leaf(_REAL_LOCALE_KEY)
     assert resolved != _REAL_LOCALE_KEY
 
 

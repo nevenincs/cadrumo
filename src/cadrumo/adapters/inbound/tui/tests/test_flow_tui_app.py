@@ -25,16 +25,19 @@ from typing import TYPE_CHECKING
 import pytest
 import yaml
 from pydantic import BaseModel
-from textual.widgets import Button, DataTable, Input
+from textual.widgets import Button, DataTable, Input, SelectionList, Static
 
 from .....application.flows import (
     CopyRef,
     FlowCheckpointError,
     FlowChoice,
+    FlowCondition,
     FlowDefinition,
     FlowPage,
     FlowSection,
+    answer,
     page_status,
+    start_flow,
 )
 from .....core.flows import (
     CheckpointAvailability,
@@ -43,7 +46,7 @@ from .....core.flows import (
     FlowWidgetKind,
     PageStatus,
 )
-from .....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, override_locales_root
+from .....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, override_locales_root, tr
 from .. import FlowTuiApp, run_flow_tui
 
 if TYPE_CHECKING:
@@ -457,6 +460,198 @@ def test_a_mode_declaring_checkpointing_unavailable_constructs_without_a_store()
     app = FlowTuiApp(_definition(), mode=FlowMode.MODIFY)
 
     assert app.state.mode is FlowMode.MODIFY
+
+
+# ── checkbox, secret, stale-orphan, and select-revisit coverage ──────────────
+
+
+def _checkbox_definition() -> FlowDefinition:
+    """One required CHECKBOX page carrying three choices."""
+    return FlowDefinition(
+        id="flows.test.checkbox",
+        title=_copy(),
+        description=_copy(),
+        sections=(
+            FlowSection(
+                id="s1",
+                title=_copy(),
+                items=(
+                    FlowPage(
+                        id="p_multi",
+                        widget=FlowWidgetKind.CHECKBOX,
+                        prompt=_copy(),
+                        choices=(
+                            FlowChoice(value="c1", label=_copy()),
+                            FlowChoice(value="c2", label=_copy()),
+                            FlowChoice(value="c3", label=_copy()),
+                        ),
+                        answer_type=str,
+                    ),
+                ),
+            ),
+        ),
+        answers_model=_Answers,
+        checkpoint={
+            FlowMode.CREATE: CheckpointAvailability.UNAVAILABLE,
+            FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
+        },
+    )
+
+
+def _secret_definition() -> FlowDefinition:
+    """A required SECRET page followed by an optional text page."""
+    return FlowDefinition(
+        id="flows.test.secret",
+        title=_copy(),
+        description=_copy(),
+        sections=(
+            FlowSection(
+                id="s1",
+                title=_copy(),
+                items=(
+                    FlowPage(id="p_secret", widget=FlowWidgetKind.SECRET, prompt=_copy(), answer_type=str),
+                    FlowPage(id="p_after", widget=FlowWidgetKind.TEXT, prompt=_copy(), answer_type=str, required=False),
+                ),
+            ),
+        ),
+        answers_model=_Answers,
+        checkpoint={
+            FlowMode.CREATE: CheckpointAvailability.UNAVAILABLE,
+            FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
+        },
+    )
+
+
+def _gate_definition() -> FlowDefinition:
+    """A SELECT gate and a text page visible only while the gate is 'alpha'."""
+    return FlowDefinition(
+        id="flows.test.gate",
+        title=_copy(),
+        description=_copy(),
+        sections=(
+            FlowSection(
+                id="s1",
+                title=_copy(),
+                items=(
+                    FlowPage(
+                        id="p_gate",
+                        widget=FlowWidgetKind.SELECT,
+                        prompt=_copy(),
+                        choices=(FlowChoice(value="alpha", label=_copy()), FlowChoice(value="beta", label=_copy())),
+                        answer_type=str,
+                    ),
+                    FlowPage(
+                        id="p_dep",
+                        widget=FlowWidgetKind.TEXT,
+                        prompt=_copy(),
+                        answer_type=str,
+                        visible_when=FlowCondition(page_id="p_gate", equals="alpha"),
+                    ),
+                ),
+            ),
+        ),
+        answers_model=_Answers,
+        checkpoint={
+            FlowMode.CREATE: CheckpointAvailability.UNAVAILABLE,
+            FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
+        },
+    )
+
+
+@pytest.mark.asyncio
+async def test_checkbox_page_stages_two_selections_under_one_key() -> None:
+    app = FlowTuiApp(_checkbox_definition(), mode=FlowMode.MODIFY, registered_values={})
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        selection = app.screen.query_one("#widget-area").query_one(SelectionList)
+        selection.focus()
+        await pilot.press("space")  # toggle the first choice
+        await pilot.press("down")
+        await pilot.press("space")  # toggle the second choice
+        await pilot.pause()
+
+        # Both selections land under the one page key, and the page does not
+        # advance on a toggle — staging, not commit-then-move.
+        assert set(app.state.answers["p_multi"].split(",")) == {"c1", "c2"}
+        assert app.state.cursor == "p_multi"
+        assert not _on_review(app)
+
+
+@pytest.mark.asyncio
+async def test_secret_answer_is_masked_in_the_echo_and_the_review_table() -> None:
+    app = FlowTuiApp(_secret_definition(), mode=FlowMode.MODIFY, registered_values={})
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.press(*"hunter2")
+        await pilot.click("#btn-next")  # commit the secret, advance to p_after
+        await pilot.click("#btn-back")  # back to p_secret so its echo re-renders
+
+        assert app.state.answers["p_secret"] == "hunter2"  # noqa: S105 - test fixture secret, not a credential
+        masked = tr("flows.progress.current_answer_secret")
+        echo = str(app.screen.query_one("#answer-echo", Static).render())
+        # Pair the assertion: first prove the echo zone actually rendered the
+        # masked marker (a non-empty, correct surface), THEN prove the raw
+        # secret is absent — an absence check is only meaningful against a
+        # proven-present surface.
+        assert masked
+        assert masked in echo
+        assert "hunter2" not in echo
+        # The re-mounted secret Input is blank, never pre-filled with the secret.
+        assert app.screen.query_one("#widget-area").query_one(Input).value == ""
+
+        await pilot.press("f2")
+        rows = _review_rows(app)
+        # The secret's review row genuinely rendered (present with a status
+        # glyph), its answer column carries the masked marker, and only then
+        # is the raw secret asserted absent.
+        assert "p_secret" in rows
+        assert rows["p_secret"][0]  # status glyph column populated
+        assert rows["p_secret"][2] == masked
+        assert "hunter2" not in rows["p_secret"][2]
+
+
+@pytest.mark.asyncio
+async def test_stale_orphan_reset_arm_of_edit_from_review_clears_the_answer() -> None:
+    definition = _gate_definition()
+    # Flip the gate after answering its dependent so the dependent is an
+    # invisible stale orphan on resume.
+    stale = start_flow(definition, mode=FlowMode.MODIFY)
+    stale = answer(definition, stale, "p_gate", "alpha")
+    stale = answer(definition, stale, "p_dep", "detail")
+    stale = answer(definition, stale, "p_gate", "beta")
+    assert "p_dep" in stale.stale
+
+    app = FlowTuiApp(definition, mode=FlowMode.MODIFY, resume_state=stale, registered_values={})
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.press("f2")
+        assert _on_review(app)
+
+        table = app.screen.query_one("#review-table", DataTable)
+        table.move_cursor(row=table.get_row_index("p_dep"))
+        await pilot.press("enter")  # select the stale orphan -> confirmed reset arm
+        await pilot.pause()
+
+        assert "p_dep" not in app.state.answers
+        assert "p_dep" not in app.state.stale
+        assert _on_review(app)  # the reset resolves the row in place
+
+
+@pytest.mark.asyncio
+async def test_reentering_an_answered_select_from_review_does_not_auto_advance() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await _answer_all_required(pilot, app)
+        before = app.state.answers["p_kind"]
+        await pilot.press("f2")
+
+        table = app.screen.query_one("#review-table", DataTable)
+        table.move_cursor(row=table.get_row_index("p_kind"))
+        await pilot.press("enter")  # jump back into the answered SELECT page
+        await pilot.pause()
+
+        # Textual posts no RadioSet.Changed on mount, so re-entering an
+        # answered SELECT neither re-commits nor auto-advances past it.
+        assert not _on_review(app)
+        assert app.state.cursor == "p_kind"
+        assert app.state.answers["p_kind"] == before
 
 
 _ABANDONED_RUN_SCRIPT = """
