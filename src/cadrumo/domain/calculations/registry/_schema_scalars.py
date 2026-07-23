@@ -65,7 +65,8 @@ def _validate_nif_string(value: object) -> object:
     try:
         return validate_spanish_tax_id(value)
     except IdentityError as exc:
-        raise RegistryValidationError(f"invalid NIF / NIE / CIF identifier: {exc}") from exc
+        detail = exc.translated_message or str(exc)
+        raise RegistryValidationError(f"invalid NIF / NIE / CIF identifier: {detail}") from exc
 
 
 NifString = Annotated[str, BeforeValidator(_validate_nif_string)]
