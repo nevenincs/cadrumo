@@ -6414,6 +6414,7 @@ errors:
     submission_preflight_error_findings: L'esborrany té {finding_count} incidència(es)
       de severitat ERROR; resol-les abans de presentar.
     unsupported_currency: El codi de moneda indicat no és compatible.
+    refused_flow_run_abandoned: 'El flux guiat es va cancel·lar abans de completar-se; no es va presentar res.'
   snapshot:
     ambiguous_revision_selection: 'Més d''una revisió del registre coincideix amb
       el model %{modelo_id}: %{candidate_ids}.'
@@ -6502,6 +6503,7 @@ flows:
       o desar-lo; no s'ha registrat res.
     unsupported_console: Aquesta consola no pot mostrar preguntes interactives. Executa
       el flux des d'un terminal real o guia'l amb un fitxer de respostes.
+    unexpected_app_type: 'La pantalla interactiva no està associada a una aplicació de flux.'
   progress:
     current_answer: 'Resposta actual: {value}'
     failure_mode: 'Compte: {text}'
@@ -6509,6 +6511,7 @@ flows:
     optional: Opcional
     page_header: Pregunta {position} de {total} — secció {section}
     required: Obligatori
+    current_answer_secret: 'Resposta actual: (oculta)'
   review:
     action_edit: Edita una resposta
     action_prompt: Què vols fer?
@@ -6542,6 +6545,13 @@ flows:
     button_next: Següent
     button_review: Revisió
     header: '{flow} — pregunta {position} de {total}, secció {section}'
+    binding_back: 'Anterior'
+    binding_review: 'Resum'
+    binding_reset: 'Restableix'
+    binding_restart: 'Reinicia'
+    binding_save_exit: 'Desa i surt'
+    binding_return: 'Torna'
+    binding_submit: 'Presenta'
 live:
   errors:
     expediente_not_found: No s'ha trobat l'expedient sol.licitat a l'AEAT.

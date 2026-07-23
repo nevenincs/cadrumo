@@ -6450,6 +6450,7 @@ errors:
     submission_preflight_error_findings: El borrador tiene {finding_count} incidencia(s)
       de severidad ERROR; resuélvelas antes de presentar.
     unsupported_currency: El código de moneda indicado no es compatible.
+    refused_flow_run_abandoned: 'El flujo guiado se canceló antes de completarse; no se presentó nada.'
   snapshot:
     ambiguous_revision_selection: 'Más de una revisión del registro coincide con el
       modelo %{modelo_id}: %{candidate_ids}.'
@@ -6537,6 +6538,7 @@ flows:
       o guardarlo; no se ha registrado nada.
     unsupported_console: Esta consola no puede mostrar preguntas interactivas. Ejecuta
       el flujo desde un terminal real o guíalo con un archivo de respuestas.
+    unexpected_app_type: 'La pantalla interactiva no está asociada a una aplicación de flujo.'
   progress:
     current_answer: 'Respuesta actual: {value}'
     failure_mode: 'Atención: {text}'
@@ -6544,6 +6546,7 @@ flows:
     optional: Opcional
     page_header: Pregunta {position} de {total} — sección {section}
     required: Obligatorio
+    current_answer_secret: 'Respuesta actual: (oculta)'
   review:
     action_edit: Editar una respuesta
     action_prompt: ¿Qué quieres hacer?
@@ -6577,6 +6580,13 @@ flows:
     button_next: Siguiente
     button_review: Revisión
     header: '{flow} — pregunta {position} de {total}, sección {section}'
+    binding_back: 'Anterior'
+    binding_review: 'Resumen'
+    binding_reset: 'Restablecer'
+    binding_restart: 'Reiniciar'
+    binding_save_exit: 'Guardar y salir'
+    binding_return: 'Volver'
+    binding_submit: 'Presentar'
 live:
   errors:
     expediente_not_found: No se encontró el expediente solicitado en la AEAT.
