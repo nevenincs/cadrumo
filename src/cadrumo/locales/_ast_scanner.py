@@ -49,6 +49,7 @@ _DYNAMIC_TRANSLATION_ROOTS = frozenset(
         "application",
         "cli",
         "errors",
+        "flows",
         "profile",
         "sheets",
         "topic",
