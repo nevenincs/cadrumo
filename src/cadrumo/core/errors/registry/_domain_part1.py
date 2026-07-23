@@ -778,6 +778,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.censo._certificado.CertificadoCensalError",
+        ErrorCode(
+            code="ERROR_CERTIFICADO_CENSAL",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_certificado_censal",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.censo._certificado.CertificadoCensalParseError",
+        ErrorCode(
+            code="FAIL_CERTIFICADO_CENSAL_PARSE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_certificado_censal_parse",
+            default_suggestion="aeat config profile edit",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.justificante._errors.JustificanteError",
         ErrorCode(
             code="ERROR_JUSTIFICANTE",

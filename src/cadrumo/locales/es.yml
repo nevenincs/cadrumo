@@ -3455,6 +3455,9 @@ cli:
       tax_residence_ccaa_help: Comunidad autónoma de residencia fiscal
     list:
       help: Listar todos los perfiles registrados y marcar el activo
+      setup_incomplete_notice: '%{count} perfil(es) aún están completando la configuración
+        y todavía no están listos para presentar: %{labels}. Reanuda la configuración
+        para poder trabajarlos.'
     passphrase:
       change:
         help: Cambia la contraseña del almacén de secretos tras verificar la actual.
@@ -4892,6 +4895,9 @@ cli:
       help: Genera el calendario de plazos para el perfil activo en la ventana de
         fechas indicada. Aplica festivos y desplazamientos de día hábil. Local; nunca
         contacta con AEAT.
+      setup_incomplete_notice: 'Se excluyeron del calendario %{count} perfil(es) que
+        aún están completando la configuración; todavía no están listos para presentar:
+        %{labels}.'
       shift:
         business_day: Día hábil
         calendar_unavailable: Calendario no disponible
@@ -5523,6 +5529,10 @@ errors:
     unsupported_op: 'Operador de fórmula no admitido: %{op}.'
   censo:
     bucket_id_blank: El servicio de sincronización censal requiere un bucket de perfil.
+    certificado_extraction_unpinned: La lectura del certificado emitido aún no está
+      soportada; introduce los datos censales manualmente.
+    certificado_not_a_pdf: El archivo proporcionado no es un PDF; se esperaba el Certificado
+      de Situación Censal descargado de la Sede.
   error:
     error_access_gate_submission: La política de control de acceso rechazó una operación
       de envío.
@@ -5558,6 +5568,8 @@ errors:
       están incompletas o son contradictorias.
     error_categories: Se produjo un error en las categorías de gasto.
     error_categories_validation: Un registro de categoría no superó la validación.
+    error_certificado_censal: La operación con el Certificado de Situación Censal
+      ha fallado.
     error_config_boundary: El comando de configuración encontró un error interno inesperado.
     error_corpus_search: No se pudo completar la búsqueda local en el corpus.
     error_deadlines_deadline: Se produjo un error en el cálculo de plazos.
@@ -5782,6 +5794,8 @@ errors:
     fail_browser_evasion: No se pudo aplicar la configuración de evasión del navegador.
     fail_browser_session_browser: Se produjo un error en la sesión del navegador.
     fail_browser_validation: Los parámetros del navegador no superaron la validación.
+    fail_certificado_censal_parse: No se ha podido leer el documento del Certificado
+      de Situación Censal.
     fail_declaracion_parse: No se pudo interpretar el PDF como una declaración.
     fail_export: Se produjo un error al exportar hacia la AEAT.
     fail_export_format: El borrador de la declaración no se pudo serializar al formato

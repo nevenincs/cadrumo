@@ -3430,6 +3430,9 @@ cli:
       tax_residence_ccaa_help: Comunitat autònoma de residència fiscal
     list:
       help: Llistar tots els perfils registrats i marcar l'actiu
+      setup_incomplete_notice: '%{count} perfil(s) encara estan completant la configuració
+        i encara no estan preparats per presentar: %{labels}. Reprèn la configuració
+        per poder treballar-hi.'
     passphrase:
       change:
         help: Canvia la contrasenya del magatzem de secrets després de verificar l'actual.
@@ -4858,6 +4861,9 @@ cli:
       help: Genera el calendari de terminis per al perfil actiu a la finestra de dates
         indicada. Aplica festius i desplaçaments de dia hàbil. Local; mai contacta
         amb AEAT.
+      setup_incomplete_notice: 'S''han exclòs del calendari %{count} perfil(s) que
+        encara estan completant la configuració; encara no estan preparats per presentar:
+        %{labels}.'
       shift:
         business_day: Dia hàbil
         calendar_unavailable: Calendari no disponible
@@ -5483,6 +5489,10 @@ errors:
     unsupported_op: 'Operador de fórmula no ames: %{op}.'
   censo:
     bucket_id_blank: El servei de sincronització censal requereix un bucket de perfil.
+    certificado_extraction_unpinned: La lectura del certificat emès encara no està
+      suportada; introdueix les dades censals manualment.
+    certificado_not_a_pdf: El fitxer proporcionat no és un PDF; s'esperava el Certificado
+      de Situación Censal descarregat de la Seu.
   error:
     error_access_gate_submission: La política de control d'accés ha rebutjat una operació
       d'enviament.
@@ -5517,6 +5527,8 @@ errors:
       són incompletes o contradictòries.
     error_categories: S'ha produït un error en les categories de despesa.
     error_categories_validation: Un registre de categoria no ha superat la validació.
+    error_certificado_censal: L'operació amb el Certificado de Situación Censal ha
+      fallat.
     error_config_boundary: L'ordre de configuració ha trobat un error intern inesperat.
     error_corpus_search: No s'ha pogut completar la cerca local al corpus.
     error_deadlines_deadline: S'ha produït un error en el càlcul de terminis.
@@ -5744,6 +5756,8 @@ errors:
     fail_browser_evasion: No s'ha pogut aplicar la configuració d'evasió del navegador.
     fail_browser_session_browser: S'ha produït un error en la sessió del navegador.
     fail_browser_validation: Els paràmetres del navegador no han superat la validació.
+    fail_certificado_censal_parse: No s'ha pogut llegir el document del Certificado
+      de Situación Censal.
     fail_declaracion_parse: No s'ha pogut interpretar el PDF com una declaració.
     fail_export: S'ha produït un error en exportar cap a l'AEAT.
     fail_export_format: L'esborrany de la declaració no s'ha pogut serialitzar al

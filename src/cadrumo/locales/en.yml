@@ -3194,6 +3194,8 @@ cli:
       tax_residence_ccaa_help: Autonomous community of tax residence
     list:
       help: List every registered profile and mark the active one
+      setup_incomplete_notice: '%{count} profile(s) are still completing setup and
+        are not yet ready for filing: %{labels}. Resume setup to make them workable.'
     passphrase:
       change:
         help: Rotate the file secret store passphrase after verifying the current
@@ -4529,6 +4531,8 @@ cli:
       help: Render the deadline calendar for the active profile across the supplied
         date window. Applies festivos and business-day shifts. Local-only; never contacts
         AEAT.
+      setup_incomplete_notice: 'Excluded %{count} profile(s) still completing setup
+        from the calendar; they are not yet ready for filing: %{labels}.'
       shift:
         business_day: Business day
         calendar_unavailable: Calendar unavailable
@@ -5134,6 +5138,10 @@ errors:
     unsupported_op: 'Unsupported formula operator: %{op}.'
   censo:
     bucket_id_blank: The censo sync service requires a profile bucket.
+    certificado_extraction_unpinned: Reading the issued certificate layout is not
+      yet supported; enter the censal facts manually instead.
+    certificado_not_a_pdf: The supplied file is not a PDF; expected the Certificado
+      de Situación Censal downloaded from Sede.
   error:
     error_access_gate_submission: The access-gate policy rejected a submission operation.
     error_access_gate_submission_preflight: Access-gate preflight rejected a write
@@ -5166,6 +5174,7 @@ errors:
       incomplete or contradictory.
     error_categories: An error occurred in the expense categories.
     error_categories_validation: A category record failed validation.
+    error_certificado_censal: Certificado de Situación Censal operation failed.
     error_config_boundary: The config command encountered an unexpected internal error.
     error_corpus_search: The on-host corpus search could not be completed.
     error_deadlines_deadline: An error occurred in the deadline calculation.
@@ -5367,6 +5376,8 @@ errors:
     fail_browser_evasion: Browser evasion setup could not be applied.
     fail_browser_session_browser: A browser session error occurred.
     fail_browser_validation: The browser parameters failed validation.
+    fail_certificado_censal_parse: Could not read the Certificado de Situación Censal
+      document.
     fail_declaracion_parse: The PDF could not be parsed into a declaration.
     fail_export: An error occurred while exporting to the AEAT.
     fail_export_format: The filing draft could not be serialized to the BOE format
