@@ -229,6 +229,19 @@ therefore the *incremental-facts* model, not a separate draft store:
   in-progress setup the frontend offers resume-or-discard; discard erases
   through the same lifecycle authority. Checkpoint diagnostics carry
   counts, never answer values.
+- **Checkpoint lifecycle ownership.** Save is frontend-owned (the
+  affordance lives where the operator acts); **completion-discard is
+  domain-owned**: the domain flow erases the in-progress run through
+  `discard_checkpoint` only AFTER its `on_complete` persistence
+  succeeds — under the incremental-facts model this is the same
+  lifecycle transition that clears the setup-incomplete state. A
+  frontend MUST NOT discard at submit: the frontend cannot observe
+  domain persistence success, and a discard-before-persist failure
+  window would destroy the operator's only copy. Frontend-initiated
+  discard exists solely for explicit operator intents (declining the
+  resume offer). A crash between domain persistence and discard leaves
+  at worst a stale checkpoint that resume re-validates against the
+  completed record.
 - **Per-mode checkpoint ruling.** The checkpoint port is chosen
   *per flow mode* by the domain; facts-as-checkpoint does NOT mandate
   incremental persistence for every mode. The distinction is the safety
@@ -301,6 +314,20 @@ so the engine's definition model must keep feeding all three unchanged.
 Existing flow-level consistency checks (the `verify_setup_answers`
 cross-field gate) re-home into the substrate's flow-scope validator slot
 — preserved and migrated, never dropped in consolidation.
+
+**Completeness-by-construction (typed-answers enforcement).** The
+substrate never runs `answers_model` validation itself: a raw model
+error is library prose (the localization-leak class) and mapping it to
+operator copy is domain knowledge. Instead, every model-boundary
+cross-field invariant the domain's typed answers model enforces at
+construction MUST also be registered as a flow-scope validator, so the
+review surface is the complete gate and post-review model construction
+cannot fail except as a domain defect. A domain flow whose typed model
+carries construction-time validators (the taxpayer profile's
+impatriado-date, non-resident-country, and representante checks) may
+not wire its commit path until those checks are registered flow-scope.
+`answers_model` remains the typed hand-off shape and the definition
+fingerprint component, nothing more.
 
 **Route-through constraints** (binding on every domain flow consuming the
 substrate, confirmed by the grounding map): `on_complete` and every
