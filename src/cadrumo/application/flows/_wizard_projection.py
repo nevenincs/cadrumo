@@ -1,4 +1,4 @@
-"""Bridge: project the existing wizard catalogue into flow definitions.
+"""One-way projection of the wizard catalogue into flow definitions.
 
 The one-shot wizard catalogue (:mod:`cadrumo.application.wizard`)
 remains the authoring source of the setup questions: it keeps feeding
@@ -76,7 +76,7 @@ def _page(question: WizardQuestion) -> FlowPage:
     # The one-shot catalogue declares several closed sets as TEXT
     # questions carrying choices (free text validated against the set).
     # The substrate's page model renders a closed set as a selectable
-    # list, never free text, so the bridge upgrades those to SELECT —
+    # list, never free text, so the projection upgrades those to SELECT —
     # same accepted values, same blank-optional semantics.
     widget = FlowWidgetKind(question.widget.value)
     if widget is FlowWidgetKind.TEXT and question.choices:

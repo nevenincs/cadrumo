@@ -13,7 +13,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.application.flows._bridge
+   cadrumo.application.flows._capability
    cadrumo.application.flows._checkpoint
    cadrumo.application.flows._copy
    cadrumo.application.flows._definition
@@ -24,3 +24,4 @@ Submodules
    cadrumo.application.flows._review
    cadrumo.application.flows._scripted
    cadrumo.application.flows._validators
+   cadrumo.application.flows._wizard_projection
