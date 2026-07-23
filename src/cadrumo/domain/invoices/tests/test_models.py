@@ -8,6 +8,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.core.identity import IdentityError
+
 from ...iva import EUMemberState, InvoiceKind, IvaRateKind, OssIossRegime, TransactionKind
 from .._enums import IvaRate, PaymentStatus, iva_rate_percentage, numeric_iva_rate_percentages
 from .._models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
@@ -398,11 +400,14 @@ def test_invoice_validates_spanish_tax_id_for_es_country() -> None:
     """ES counterparties must pass NIF/NIE/CIF validation."""
     # "INVALID" has 7 chars → tax-id shape gate rejects it before any
     # checksum runs. IdentityError inherits from ValueError, so pydantic
-    # wraps the raise into ValidationError at the model boundary. Pin
-    # both the wrapping class and the underlying message substring so the
-    # contract surface is stable.
-    with pytest.raises(ValidationError, match=r"tax identifier must be 9 characters long"):
+    # wraps the raise into ValidationError at the model boundary. Pin the
+    # wrapping class and the wrapped IdentityError's localisation key (never
+    # rendered prose) so the operator-facing message stays localisable.
+    with pytest.raises(ValidationError) as excinfo:
         _valid_invoice(counterparty_country="ES", counterparty_tax_id="INVALID")
+    wrapped = excinfo.value.errors()[0]["ctx"]["error"]
+    assert isinstance(wrapped, IdentityError)
+    assert wrapped.translated_message == "errors.identity.tax_id_invalid_length"
 
 
 def test_invoice_validates_iva_prefix_for_non_es_country() -> None:

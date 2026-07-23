@@ -3254,15 +3254,18 @@ cli:
         state_help: Whether to enable (on) or disable (off) the capability.
         state_label: state
       censo:
-        apply_help: Overwrite the profile with censo values reported by AEAT
+        apply_help: Enroll the parsed censal facts onto the active profile (default
+          is preview only).
         compare_help: Compare AEAT censo and this profile field by field
         dropped_fields_notice: 'AEAT''s censo no longer reports fields your last snapshot
           carried: {dropped_fields}. If you did not change or close these registrations,
           this may be a partial pull — re-run the censo pull or re-enter the values;
           the home-office deduction ratio may stop resolving.'
-        file_help: cli.config.profile.censo.file_help
-        file_option_help: cli.config.profile.censo.file_option_help
-        help: Sync AEAT 036 censo data with this profile
+        file_help: Read a downloaded Certificado de Situación Censal and preview or
+          enroll its censal facts.
+        file_option_help: Path to the Certificado de Situación Censal PDF downloaded
+          from Sede (procedure G313).
+        help: Censal artefact ingestion for the active profile.
         non_official_notice: Certificate-derived facts are operator-supplied evidence,
           never AEAT-verified; the censo enrolment stays at the non-official tier.
         pull_help: Pull your latest censo from AEAT into this profile's snapshot store.
@@ -5495,6 +5498,8 @@ errors:
       {expected}, got {got}.'
     cif_check_letter_mismatch_kind: 'CIF check letter is incorrect (kind {kind}):
       expected {expected}, got {got}.'
+    cif_control_char_invalid: The CIF check character in {candidate} must be a digit
+      or an uppercase letter, not {got}.
     cif_invalid_shape: '{candidate} is not shaped like a CIF: a CIF is a leading letter
       (A-H, J, N, P-S, U, V or W) followed by 7 digits and a check character.'
     document_empty: The identity document is empty.
@@ -5506,6 +5511,12 @@ errors:
       letter must be {expected}, not {got}. Correct the NIF to {digits}{expected}.'
     nif_invalid_shape: '{candidate} is not shaped like a NIF: a NIF is 8 digits followed
       by a check letter.'
+    tax_id_invalid_length: A Spanish tax identifier must be 9 characters long; {candidate}
+      has {length}. Enter a NIF, NIE or CIF (a leading character, 7 or 8 digits and
+      a check character).
+    tax_id_unrecognised_leader: '{candidate} does not start with a recognised tax-identifier
+      character ({leader}). A NIF starts with a digit or K/L/M, a NIE with X, Y or
+      Z, and a CIF with A-H, J, N, P-S, U, V or W.'
     validate_expects_str: Identity validation expects a text value; got {got_type}.
   integrity:
     integrity_active_profile_pointer: The active-profile pointer is invalid; repair

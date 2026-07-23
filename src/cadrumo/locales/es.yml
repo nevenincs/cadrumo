@@ -5921,6 +5921,8 @@ errors:
       se esperaba {expected}, se obtuvo {got}.'
     cif_check_letter_mismatch_kind: 'La letra de control del CIF es incorrecta (tipo
       {kind}): se esperaba {expected}, se obtuvo {got}.'
+    cif_control_char_invalid: El carácter de control del CIF en {candidate} debe ser
+      un dígito o una letra mayúscula, no {got}.
     cif_invalid_shape: '{candidate} no tiene la forma de un CIF: un CIF es una letra
       inicial (A-H, J, N, P-S, U, V o W) seguida de 7 dígitos y un carácter de control.'
     document_empty: El documento de identidad está vacío.
@@ -5932,6 +5934,12 @@ errors:
       la letra de control debe ser {expected}, no {got}. Corrige el NIF a {digits}{expected}.'
     nif_invalid_shape: '{candidate} no tiene la forma de un NIF: un NIF son 8 dígitos
       seguidos de una letra de control.'
+    tax_id_invalid_length: Un identificador fiscal español debe tener 9 caracteres;
+      {candidate} tiene {length}. Introduce un NIF, NIE o CIF (un carácter inicial,
+      7 u 8 dígitos y un carácter de control).
+    tax_id_unrecognised_leader: '{candidate} no empieza por un carácter de identificador
+      fiscal reconocido ({leader}). Un NIF empieza por un dígito o K/L/M, un NIE por
+      X, Y o Z, y un CIF por A-H, J, N, P-S, U, V o W.'
     validate_expects_str: La validación de identidad espera un valor de texto; se
       obtuvo {got_type}.
   integrity:

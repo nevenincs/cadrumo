@@ -5885,6 +5885,8 @@ errors:
       s''esperava {expected}, s''ha obtingut {got}.'
     cif_check_letter_mismatch_kind: 'La lletra de control del CIF és incorrecta (tipus
       {kind}): s''esperava {expected}, s''ha obtingut {got}.'
+    cif_control_char_invalid: El caràcter de control del CIF a {candidate} ha de ser
+      un dígit o una lletra majúscula, no {got}.
     cif_invalid_shape: '{candidate} no té la forma d''un CIF: un CIF és una lletra
       inicial (A-H, J, N, P-S, U, V o W) seguida de 7 dígits i un caràcter de control.'
     document_empty: El document d'identitat és buit.
@@ -5898,6 +5900,12 @@ errors:
       a {digits}{expected}.'
     nif_invalid_shape: '{candidate} no té la forma d''un NIF: un NIF són 8 dígits
       seguits d''una lletra de control.'
+    tax_id_invalid_length: Un identificador fiscal espanyol ha de tenir 9 caràcters;
+      {candidate} en té {length}. Introdueix un NIF, NIE o CIF (un caràcter inicial,
+      7 o 8 dígits i un caràcter de control).
+    tax_id_unrecognised_leader: '{candidate} no comença per un caràcter d''identificador
+      fiscal reconegut ({leader}). Un NIF comença per un dígit o K/L/M, un NIE per
+      X, Y o Z, i un CIF per A-H, J, N, P-S, U, V o W.'
     validate_expects_str: La validació d'identitat espera un valor de text; s'ha obtingut
       {got_type}.
   integrity:
