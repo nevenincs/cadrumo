@@ -6068,11 +6068,19 @@ flows:
       or saved; nothing was recorded.
     unsupported_console: This console cannot host interactive questions. Run the flow
       from a real terminal, or drive it with a scripted answer file.
+    blank_required: 'This field is required - enter a value.'
+    invalid_confirm: 'Answer yes or no.'
+    select_unknown: 'Choose one of the accepted values: %{choices}.'
+    checkbox_required: 'Select at least one option.'
+    checkbox_unknown: 'Unknown option - accepted values: %{choices}.'
+    invalid_integer: 'Enter a whole number.'
   progress:
     current_answer: 'Current answer: {value}'
     failure_mode: 'Watch out: {text}'
     format_hint: 'Format: {hint}'
     page_header: Question {position} of {total} — section {section}
+    required: 'Required'
+    optional: 'Optional'
   review:
     action_edit: Edit an answer
     action_prompt: What do you want to do?
@@ -6097,6 +6105,10 @@ flows:
     row: '{number}. {page_key} — status: {status}'
     save_unavailable: Save and exit is not available in mode {mode}; finish the flow
       in one sitting.
+    required_unanswered: 'Required question %{page_key} is unanswered.'
+    page_invalid: 'Question %{page_key} has an invalid answer.'
+    page_stale: 'Question %{page_key} needs revisiting - an earlier answer changed.'
+    page_deferred: 'Question %{page_key} is deferred - decide before submitting.'
   tui:
     button_back: Back
     button_next: Next
