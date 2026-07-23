@@ -728,18 +728,30 @@ application:
         la referencia {ref}.
       copy_source_duplicate: Ya hay un resolutor de fuente de texto registrado para
         el tipo {kind}.
-      copy_source_locale_builtin: application.flows.errors.copy_source_locale_builtin
-      copy_source_unregistered: application.flows.errors.copy_source_unregistered
-      jump_target_not_visible: application.flows.errors.jump_target_not_visible
-      reset_target_unknown: application.flows.errors.reset_target_unknown
-      scripted_answer_rejected: application.flows.errors.scripted_answer_rejected
-      scripted_queue_overflow: application.flows.errors.scripted_queue_overflow
-      scripted_queue_underflow: application.flows.errors.scripted_queue_underflow
-      submit_blocked: application.flows.errors.submit_blocked
-      unknown_repeating_group: application.flows.errors.unknown_repeating_group
-      validator_id_blank: application.flows.errors.validator_id_blank
-      validator_id_duplicate: application.flows.errors.validator_id_duplicate
-      validator_id_unknown: application.flows.errors.validator_id_unknown
+      copy_source_locale_builtin: La fuente de texto basada en claves de locale está
+        integrada y no se puede volver a registrar.
+      copy_source_unregistered: No hay ningún resolutor de fuente de texto registrado
+        para el tipo {kind}, que exige la referencia {ref}.
+      jump_target_not_visible: 'El flujo {flow_id} no puede saltar a {page_key}: esa
+        pregunta no está visible ahora mismo.'
+      reset_target_unknown: El flujo {flow_id} no tiene ninguna pregunta ni respuesta
+        guardada llamada {page_key} que reiniciar.
+      scripted_answer_rejected: 'La respuesta programada para {page_key} fue rechazada
+        por la validación: {message_keys}.'
+      scripted_queue_overflow: La ejecución programada usó {consumed_count} respuestas
+        y terminó con {remaining_count} sin usar; el guion no coincide con el flujo.
+      scripted_queue_underflow: La ejecución programada se quedó sin respuestas en
+        la pregunta obligatoria {page_key}, tras {consumed_count} respuestas.
+      submit_blocked: 'El flujo {flow_id} no se puede enviar: quedan {blocking_count}
+        hallazgos bloqueantes y {required_remaining} preguntas obligatorias sin responder.'
+      unknown_repeating_group: El flujo {flow_id} no declara ningún grupo repetible
+        llamado {group_id}.
+      validator_id_blank: Un validador de flujo debe registrarse con un identificador
+        no vacío.
+      validator_id_duplicate: Ya hay un validador de flujo registrado con el identificador
+        {validator_id}.
+      validator_id_unknown: No hay ningún validador de flujo registrado con el identificador
+        {validator_id}; hay {registered_count} validadores registrados.
   inventory:
     service:
       errors:
@@ -5603,7 +5615,7 @@ errors:
     error_financial_usage_ratios_usage_ratio: Se produjo un error en los porcentajes
       de uso.
     error_fixture_provisioning: No se pudieron preparar los datos de prueba.
-    error_flow: errors.error.error_flow
+    error_flow: El flujo guiado falló.
     error_invoice_link_inconsistency: El enlace entre catálogos dejó la factura y
       la transacción desincronizadas. Revisa ambos catálogos manualmente.
     error_invoice_validation: Un registro de factura no superó la validación.
@@ -5999,8 +6011,10 @@ errors:
     internal_cli_unexpected_boundary: El comando falló por un error interno inesperado,
       no por un problema de datos almacenados. Consulte los registros de diagnóstico
       para ver qué falló.
-    internal_flow_copy_resolution: errors.internal.internal_flow_copy_resolution
-    internal_flow_validator_registry: errors.internal.internal_flow_validator_registry
+    internal_flow_copy_resolution: 'Error interno: el flujo guiado no pudo resolver
+      sus textos de presentación.'
+    internal_flow_validator_registry: 'Error interno: el registro de validadores del
+      flujo guiado rechazó la operación.'
     internal_master_key_reentrant: 'Error interno: el proveedor de clave maestra se
       invocó de forma reentrante; cierra la sesión activa antes de volver a entrar.'
     internal_master_key_type: 'Error interno: la operación de clave maestra recibió
@@ -6219,11 +6233,12 @@ errors:
     refused_financial_usage_ratios_censo_mismatch: Un porcentaje de uso de oficina
       en casa guardado no coincide con el censo, que es la fuente legal vinculante.
       Alinéalo con el valor del censo.
-    refused_flow_answer: errors.refused.refused_flow_answer
-    refused_flow_checkpoint: errors.refused.refused_flow_checkpoint
-    refused_flow_navigation: errors.refused.refused_flow_navigation
-    refused_flow_submit: errors.refused.refused_flow_submit
-    refused_flow_unsupported_console: errors.refused.refused_flow_unsupported_console
+    refused_flow_answer: El flujo guiado rechazó la respuesta.
+    refused_flow_checkpoint: El flujo guiado rechazó la operación de guardar y reanudar.
+    refused_flow_navigation: El flujo guiado rechazó la petición de navegación.
+    refused_flow_submit: El flujo guiado rechazó el envío.
+    refused_flow_unsupported_console: El flujo guiado no puede ejecutarse porque esta
+      consola no puede mostrar preguntas interactivas.
     refused_google_impersonation: IAM ha rechazado emitir un token de suplantación
       para la cuenta de servicio de destino. Concédale el rol roles/iam.serviceAccountTokenCreator.
     refused_google_non_interactive: El inicio de sesión de Google necesita un terminal
@@ -6490,8 +6505,8 @@ flows:
   progress:
     current_answer: 'Respuesta actual: {value}'
     failure_mode: 'Atención: {text}'
-    format_hint: flows.progress.format_hint
-    page_header: flows.progress.page_header
+    format_hint: 'Formato: {hint}'
+    page_header: Pregunta {position} de {total} — sección {section}
   review:
     action_edit: Editar una respuesta
     action_prompt: ¿Qué quieres hacer?

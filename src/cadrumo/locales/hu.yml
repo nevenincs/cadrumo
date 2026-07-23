@@ -675,18 +675,29 @@ application:
       copy_ref_unresolved: A(z) {kind} szövegforrás nem adott vissza szöveget a(z)
         {ref} hivatkozásra.
       copy_source_duplicate: A(z) {kind} típushoz már van regisztrált szövegforrás-feloldó.
-      copy_source_locale_builtin: application.flows.errors.copy_source_locale_builtin
-      copy_source_unregistered: application.flows.errors.copy_source_unregistered
-      jump_target_not_visible: application.flows.errors.jump_target_not_visible
-      reset_target_unknown: application.flows.errors.reset_target_unknown
-      scripted_answer_rejected: application.flows.errors.scripted_answer_rejected
-      scripted_queue_overflow: application.flows.errors.scripted_queue_overflow
-      scripted_queue_underflow: application.flows.errors.scripted_queue_underflow
-      submit_blocked: application.flows.errors.submit_blocked
-      unknown_repeating_group: application.flows.errors.unknown_repeating_group
-      validator_id_blank: application.flows.errors.validator_id_blank
-      validator_id_duplicate: application.flows.errors.validator_id_duplicate
-      validator_id_unknown: application.flows.errors.validator_id_unknown
+      copy_source_locale_builtin: A nyelvikulcs-alapú szövegforrás beépített, nem
+        regisztrálható újra.
+      copy_source_unregistered: Nincs regisztrált szövegforrás-feloldó a(z) {kind}
+        típushoz, amelyet a(z) {ref} hivatkozás igényel.
+      jump_target_not_visible: 'A(z) {flow_id} folyamat nem tud a(z) {page_key} kérdésre
+        ugrani: az a kérdés jelenleg nem látható.'
+      reset_target_unknown: A(z) {flow_id} folyamatban nincs {page_key} nevű kérdés
+        vagy tárolt válasz, amit vissza lehetne állítani.
+      scripted_answer_rejected: 'A(z) {page_key} kérdéshez adott szkriptelt választ
+        az ellenőrzés elutasította: {message_keys}.'
+      scripted_queue_overflow: A szkriptelt futás {consumed_count} választ használt
+        fel, és {remaining_count} maradt kihasználatlanul; a szkript nem illik a folyamathoz.
+      scripted_queue_underflow: A szkriptelt futás {consumed_count} válasz után kifogyott
+        a válaszokból a(z) {page_key} kötelező kérdésnél.
+      submit_blocked: 'A(z) {flow_id} folyamat nem küldhető be: {blocking_count} blokkoló
+        megállapítás és {required_remaining} kötelező kérdés van még nyitva.'
+      unknown_repeating_group: A(z) {flow_id} folyamat nem deklarál {group_id} nevű
+        ismétlődő csoportot.
+      validator_id_blank: Egy folyamat-ellenőrzőt nem üres azonosítóval kell regisztrálni.
+      validator_id_duplicate: Már van regisztrált folyamat-ellenőrző {validator_id}
+        azonosítóval.
+      validator_id_unknown: Nincs {validator_id} azonosítójú folyamat-ellenőrző regisztrálva;
+        összesen {registered_count} ellenőrző van regisztrálva.
   inventory:
     service:
       errors:
@@ -5507,7 +5518,7 @@ errors:
     error_financial_transactions_transaction: Tranzakció-katalógus hiba történt.
     error_financial_usage_ratios_usage_ratio: Használati arány hiba történt.
     error_fixture_provisioning: A tesztfixture-öket nem sikerült kiosztani.
-    error_flow: errors.error.error_flow
+    error_flow: A vezetett folyamat hibára futott.
     error_invoice_link_inconsistency: A kapcsolás a számla- és tranzakció-katalógusokat
       szinkronon kívülre hozta. Egyeztesse manuálisan mindkét katalógust.
     error_invoice_validation: Egy számla-rekord nem ment át az érvényesítésen.
@@ -5873,8 +5884,10 @@ errors:
     internal_cli_unexpected_boundary: A parancs váratlan belső hiba miatt hiúsult
       meg, nem tárolt adatokkal kapcsolatos probléma miatt. Nézze meg a diagnosztikai
       naplókat, hogy mi hiúsult meg.
-    internal_flow_copy_resolution: errors.internal.internal_flow_copy_resolution
-    internal_flow_validator_registry: errors.internal.internal_flow_validator_registry
+    internal_flow_copy_resolution: 'Belső hiba: a vezetett folyamat nem tudta feloldani
+      a megjelenítendő szövegeit.'
+    internal_flow_validator_registry: 'Belső hiba: a vezetett folyamat ellenőrző-nyilvántartása
+      elutasította a műveletet.'
     internal_master_key_reentrant: 'Belső hiba: a mesterkulcs-szolgáltató reentráns
       módon lett meghívva; zárja be az aktív munkamenetet, mielőtt újra belépne.'
     internal_master_key_type: 'Belső hiba: a mesterkulcs-művelet hibás típusú értéket
@@ -6082,11 +6095,13 @@ errors:
       vagy összeg) nem ment át az érvényesítésen.
     refused_financial_usage_ratios_censo_mismatch: Egy mentett otthoni irodahasználati
       arány eltér a censotól, amely a kötelező jogi forrás. Igazítsa a censo értékéhez.
-    refused_flow_answer: errors.refused.refused_flow_answer
-    refused_flow_checkpoint: errors.refused.refused_flow_checkpoint
-    refused_flow_navigation: errors.refused.refused_flow_navigation
-    refused_flow_submit: errors.refused.refused_flow_submit
-    refused_flow_unsupported_console: errors.refused.refused_flow_unsupported_console
+    refused_flow_answer: A vezetett folyamat elutasította a választ.
+    refused_flow_checkpoint: A vezetett folyamat elutasította a mentés és folytatás
+      műveletet.
+    refused_flow_navigation: A vezetett folyamat elutasította a navigációs kérést.
+    refused_flow_submit: A vezetett folyamat elutasította a beküldést.
+    refused_flow_unsupported_console: A vezetett folyamat nem futtatható, mert ez
+      a konzol nem tud interaktív kérdéseket megjeleníteni.
     refused_google_impersonation: Az IAM megtagadta a megszemélyesített token kiállítását
       a cél szolgáltatásfiók számára. Adja meg neki a roles/iam.serviceAccountTokenCreator
       szerepkört.

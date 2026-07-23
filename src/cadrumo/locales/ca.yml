@@ -722,18 +722,32 @@ application:
         {ref}.
       copy_source_duplicate: Ja hi ha un resolutor de font de text registrat per al
         tipus {kind}.
-      copy_source_locale_builtin: application.flows.errors.copy_source_locale_builtin
-      copy_source_unregistered: application.flows.errors.copy_source_unregistered
-      jump_target_not_visible: application.flows.errors.jump_target_not_visible
-      reset_target_unknown: application.flows.errors.reset_target_unknown
-      scripted_answer_rejected: application.flows.errors.scripted_answer_rejected
-      scripted_queue_overflow: application.flows.errors.scripted_queue_overflow
-      scripted_queue_underflow: application.flows.errors.scripted_queue_underflow
-      submit_blocked: application.flows.errors.submit_blocked
-      unknown_repeating_group: application.flows.errors.unknown_repeating_group
-      validator_id_blank: application.flows.errors.validator_id_blank
-      validator_id_duplicate: application.flows.errors.validator_id_duplicate
-      validator_id_unknown: application.flows.errors.validator_id_unknown
+      copy_source_locale_builtin: La font de text basada en claus de locale és integrada
+        i no es pot tornar a registrar.
+      copy_source_unregistered: No hi ha cap resolutor de font de text registrat per
+        al tipus {kind}, que exigeix la referència {ref}.
+      jump_target_not_visible: 'El flux {flow_id} no pot saltar a {page_key}: aquesta
+        pregunta no és visible ara mateix.'
+      reset_target_unknown: El flux {flow_id} no té cap pregunta ni resposta desada
+        anomenada {page_key} per reiniciar.
+      scripted_answer_rejected: 'La resposta programada per a {page_key} ha estat
+        rebutjada per la validació: {message_keys}.'
+      scripted_queue_overflow: L'execució programada ha fet servir {consumed_count}
+        respostes i ha acabat amb {remaining_count} sense fer servir; el guió no coincideix
+        amb el flux.
+      scripted_queue_underflow: L'execució programada s'ha quedat sense respostes
+        a la pregunta obligatòria {page_key}, després de {consumed_count} respostes.
+      submit_blocked: 'El flux {flow_id} no es pot enviar: queden {blocking_count}
+        troballes bloquejants i {required_remaining} preguntes obligatòries sense
+        respondre.'
+      unknown_repeating_group: El flux {flow_id} no declara cap grup repetible anomenat
+        {group_id}.
+      validator_id_blank: Un validador de flux s'ha de registrar amb un identificador
+        no buit.
+      validator_id_duplicate: Ja hi ha un validador de flux registrat amb l'identificador
+        {validator_id}.
+      validator_id_unknown: No hi ha cap validador de flux registrat amb l'identificador
+        {validator_id}; hi ha {registered_count} validadors registrats.
   inventory:
     service:
       errors:
@@ -5562,7 +5576,7 @@ errors:
     error_financial_usage_ratios_usage_ratio: S'ha produït un error en els percentatges
       d'ús.
     error_fixture_provisioning: No s'han pogut preparar les dades de prova.
-    error_flow: errors.error.error_flow
+    error_flow: El flux guiat ha fallat.
     error_invoice_link_inconsistency: L'enllaç ha deixat la factura i la transacció
       dessincronitzades. Revisa tots dos catàlegs manualment.
     error_invoice_validation: Un registre de factura no ha superat la validació.
@@ -5962,8 +5976,10 @@ errors:
     internal_cli_unexpected_boundary: L'ordre ha fallat per un error intern inesperat,
       no per un problema de dades emmagatzemades. Consulteu els registres de diagnòstic
       per veure què ha fallat.
-    internal_flow_copy_resolution: errors.internal.internal_flow_copy_resolution
-    internal_flow_validator_registry: errors.internal.internal_flow_validator_registry
+    internal_flow_copy_resolution: 'Error intern: el flux guiat no ha pogut resoldre
+      els seus textos de presentació.'
+    internal_flow_validator_registry: 'Error intern: el registre de validadors del
+      flux guiat ha rebutjat l''operació.'
     internal_master_key_reentrant: 'Error intern: el proveïdor de la clau mestra s''ha
       invocat de manera reentrant; tanca la sessió activa abans de tornar a entrar-hi.'
     internal_master_key_type: 'Error intern: l''operació de clau mestra ha rebut un
@@ -6181,11 +6197,12 @@ errors:
     refused_financial_usage_ratios_censo_mismatch: Un percentatge d'ús d'oficina a
       casa desat no coincideix amb el cens, que és la font legal vinculant. Alinea'l
       amb el valor del cens.
-    refused_flow_answer: errors.refused.refused_flow_answer
-    refused_flow_checkpoint: errors.refused.refused_flow_checkpoint
-    refused_flow_navigation: errors.refused.refused_flow_navigation
-    refused_flow_submit: errors.refused.refused_flow_submit
-    refused_flow_unsupported_console: errors.refused.refused_flow_unsupported_console
+    refused_flow_answer: El flux guiat ha rebutjat la resposta.
+    refused_flow_checkpoint: El flux guiat ha rebutjat l'operació de desar i reprendre.
+    refused_flow_navigation: El flux guiat ha rebutjat la petició de navegació.
+    refused_flow_submit: El flux guiat ha rebutjat l'enviament.
+    refused_flow_unsupported_console: El flux guiat no es pot executar perquè aquesta
+      consola no pot mostrar preguntes interactives.
     refused_google_impersonation: IAM ha rebutjat emetre un testimoni de suplantació
       per al compte de servei de destinació. Concediu-li el rol roles/iam.serviceAccountTokenCreator.
     refused_google_non_interactive: L'inici de sessió de Google necessita un terminal
@@ -6452,7 +6469,7 @@ flows:
   progress:
     current_answer: 'Resposta actual: {value}'
     failure_mode: 'Compte: {text}'
-    format_hint: flows.progress.format_hint
+    format_hint: 'Format esperat: {hint}'
     page_header: Pregunta {position} de {total} — secció {section}
   review:
     action_edit: Edita una resposta
