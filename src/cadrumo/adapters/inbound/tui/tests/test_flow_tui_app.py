@@ -1,0 +1,546 @@
+"""Pilot-driven behaviour tests for the full-screen flow frontend.
+
+Every test drives the real :class:`FlowTuiApp` through Textual's headless
+Pilot over a real :class:`FlowDefinition` built from the substrate's own
+public models, and asserts against widget ids, engine state, and
+``PageStatus`` / ``CheckpointAvailability`` members — never rendered
+prose, which is locale data and would make the assertion tautological.
+
+Two seams are real, not test doubles. Page copy resolves through the
+sanctioned locale-root override against a fixture catalogue, so the copy
+assembler runs its production locale-key path; the checkpoint port is
+implemented by a JSON-file store whose persisted bytes the save-and-exit
+tests read back, so the port is exercised end to end rather than
+observed through a recording spy.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import subprocess
+import sys
+from typing import TYPE_CHECKING
+
+import pytest
+import yaml
+from pydantic import BaseModel
+from textual.widgets import Button, DataTable, Input
+
+from .....application.flows import (
+    CopyRef,
+    FlowCheckpointError,
+    FlowChoice,
+    FlowDefinition,
+    FlowPage,
+    FlowSection,
+    page_status,
+)
+from .....core.flows import (
+    CheckpointAvailability,
+    CopyRefKind,
+    FlowMode,
+    FlowWidgetKind,
+    PageStatus,
+)
+from .....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, override_locales_root
+from .. import FlowTuiApp, run_flow_tui
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator, Mapping
+    from pathlib import Path
+
+    from textual.pilot import Pilot
+
+pytestmark = [
+    pytest.mark.unit,
+    pytest.mark.hex_inbound_adapter,
+]
+
+_COPY_REF = "flows.test.copy"
+_COPY_CATALOGUE: dict[str, object] = {"flows": {"test": {"copy": "Dato solicitado"}}}
+
+_TERMINAL_SIZE = (140, 60)
+"""Wide enough that every zone of the question page is on-screen, so a
+Pilot click resolves to the button it names rather than to whatever the
+80x24 default left visible."""
+
+_REGISTERED_VALUES: dict[str, str] = {
+    "p_name": "ADA LOVELACE (registro)",
+    "p_kind": "beta",
+}
+
+
+class _Answers(BaseModel):
+    """Trivial answers model; only the type identity is consumed."""
+
+
+class _JsonFileCheckpointStore:
+    """A real :class:`CheckpointStore` persisting answers to one JSON file.
+
+    Not a recording double: the tests assert against the bytes this
+    store wrote and read back, so the save-and-exit path is proven to
+    have reached persistence rather than merely to have been called.
+    """
+
+    def __init__(self, root: Path) -> None:
+        self._root = root
+
+    def _path(self, flow_id: str) -> Path:
+        return self._root / f"{flow_id}.json"
+
+    def save(self, flow_id: str, answers: Mapping[str, str]) -> None:
+        self._path(flow_id).write_text(json.dumps(dict(answers), sort_keys=True), encoding="utf-8")
+
+    def load(self, flow_id: str) -> Mapping[str, str] | None:
+        path = self._path(flow_id)
+        if not path.is_file():
+            return None
+        loaded: dict[str, str] = json.loads(path.read_text(encoding="utf-8"))
+        return loaded
+
+    def discard(self, flow_id: str) -> None:
+        self._path(flow_id).unlink(missing_ok=True)
+
+
+@pytest.fixture(autouse=True)
+def _flow_copy_catalogue(tmp_path_factory: pytest.TempPathFactory) -> Iterator[None]:
+    """Point copy resolution at a fixture catalogue carrying the test refs.
+
+    Copy resolution refuses an unresolvable locale key rather than
+    rendering a blank, and the shipped catalogues carry copy for the
+    real domain flows only. The sanctioned locale-root override supplies
+    the refs this module's definition declares, so the assembler runs
+    its production locale-key path without a test string entering the
+    packaged resources.
+    """
+    root = tmp_path_factory.mktemp("flow-tui-locales")
+    payload = yaml.safe_dump(_COPY_CATALOGUE, allow_unicode=True)
+    for language in SUPPORTED_OUTPUT_LANGUAGES:
+        (root / f"{language}.yml").write_text(payload, encoding="utf-8")
+    with override_locales_root(root):
+        yield
+
+
+def _copy() -> CopyRef:
+    return CopyRef(kind=CopyRefKind.LOCALE_KEY, ref=_COPY_REF)
+
+
+def _definition() -> FlowDefinition:
+    """One section, three pages: text, closed choice, optional text."""
+    return FlowDefinition(
+        id="flows.test.tui",
+        title=_copy(),
+        description=_copy(),
+        sections=(
+            FlowSection(
+                id="s1",
+                title=_copy(),
+                items=(
+                    FlowPage(id="p_name", widget=FlowWidgetKind.TEXT, prompt=_copy(), answer_type=str),
+                    FlowPage(
+                        id="p_kind",
+                        widget=FlowWidgetKind.SELECT,
+                        prompt=_copy(),
+                        choices=(
+                            FlowChoice(value="alpha", label=_copy()),
+                            FlowChoice(value="beta", label=_copy()),
+                        ),
+                        answer_type=str,
+                    ),
+                    FlowPage(
+                        id="p_note",
+                        widget=FlowWidgetKind.TEXT,
+                        prompt=_copy(),
+                        answer_type=str,
+                        required=False,
+                    ),
+                ),
+            ),
+        ),
+        answers_model=_Answers,
+        checkpoint={
+            FlowMode.CREATE: CheckpointAvailability.AVAILABLE,
+            FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
+        },
+    )
+
+
+def _app(
+    *,
+    mode: FlowMode = FlowMode.MODIFY,
+    checkpoint_store: _JsonFileCheckpointStore | None = None,
+) -> FlowTuiApp:
+    return FlowTuiApp(
+        _definition(),
+        mode=mode,
+        checkpoint_store=checkpoint_store,
+        registered_values=_REGISTERED_VALUES,
+    )
+
+
+def _on_review(app: FlowTuiApp) -> bool:
+    """Whether the review screen (its data table) is the active screen."""
+    return bool(app.screen.query("#review-table"))
+
+
+def _review_rows(app: FlowTuiApp) -> dict[str, list[str]]:
+    """The review table's rendered cells keyed by page key."""
+    table = app.screen.query_one("#review-table", DataTable)
+    return {
+        str(row_key.value): [str(cell) for cell in table.get_row(row_key)]
+        for row_key in table.rows
+        if row_key.value is not None
+    }
+
+
+async def _answer_all_required(pilot: Pilot[None], app: FlowTuiApp) -> None:
+    """Walk the flow answering both required pages through the widgets."""
+    await pilot.press(*"ada")
+    await pilot.click("#btn-next")
+    app.screen.query_one("#widget-area").query_one("RadioSet").focus()
+    await pilot.press("enter")
+    await pilot.pause()
+
+
+# ── click-driven navigation ─────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_next_button_commits_the_pending_input_before_advancing() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        # The page under test is an Input page, so 'next' must take the
+        # commit-then-advance arm rather than the committed-widget arm.
+        assert app.screen.query_one("#widget-area").query_one(Input).value == ""
+
+        await pilot.press(*"ada")
+        assert app.state.answers.get("p_name") is None  # uncommitted keystrokes
+
+        await pilot.click("#btn-next")
+
+        assert app.state.answers["p_name"] == "ada"
+        assert app.state.cursor == "p_kind"
+
+
+@pytest.mark.asyncio
+async def test_next_button_holds_the_page_when_the_commit_is_invalid() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.click("#btn-next")  # blank on an unconditionally required page
+
+        assert "p_name" not in app.state.answers
+        assert app.state.cursor == "p_name"
+        assert page_status(app.state, "p_name") is PageStatus.INVALID
+
+
+@pytest.mark.asyncio
+async def test_back_button_returns_the_cursor_to_the_previous_page() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.press(*"ada")
+        await pilot.click("#btn-next")
+        assert app.state.cursor == "p_kind"
+
+        await pilot.click("#btn-back")
+
+        assert app.state.cursor == "p_name"
+
+
+@pytest.mark.asyncio
+async def test_review_button_opens_the_review_screen() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        assert not _on_review(app)
+
+        await pilot.click("#btn-review")
+
+        assert _on_review(app)
+
+
+# ── the review table ────────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_review_table_renders_the_registered_value_beside_the_answer() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await _answer_all_required(pilot, app)
+        await pilot.press("f2")
+
+        rows = _review_rows(app)
+
+        assert set(rows) == {"p_name", "p_kind", "p_note"}
+        assert rows["p_name"][2] == app.state.answers["p_name"]
+        assert rows["p_name"][3] == _REGISTERED_VALUES["p_name"]
+        assert rows["p_kind"][3] == _REGISTERED_VALUES["p_kind"]
+        # A page the domain supplied no registered value for renders blank,
+        # never a placeholder the operator could read as a record.
+        assert rows["p_note"][3] == ""
+
+
+@pytest.mark.asyncio
+async def test_review_table_status_glyph_is_a_function_of_page_status() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await _answer_all_required(pilot, app)
+        await pilot.press("f2")
+
+        rows = _review_rows(app)
+        glyph_by_key = {key: cells[0] for key, cells in rows.items()}
+        status_by_key = {key: page_status(app.state, key) for key in rows}
+
+        assert set(status_by_key.values()) == {PageStatus.ANSWERED, PageStatus.UNANSWERED}
+        for left in rows:
+            for right in rows:
+                assert (glyph_by_key[left] == glyph_by_key[right]) is (status_by_key[left] == status_by_key[right])
+
+
+@pytest.mark.asyncio
+async def test_review_row_selection_jumps_the_cursor_to_that_page() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await _answer_all_required(pilot, app)
+        await pilot.press("f2")
+        assert _on_review(app)
+
+        table = app.screen.query_one("#review-table", DataTable)
+        table.move_cursor(row=table.get_row_index("p_note"))
+        await pilot.press("enter")
+
+        assert app.state.cursor == "p_note"
+        assert not _on_review(app)
+
+
+# ── submit gating ───────────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_submit_is_disabled_and_inert_while_a_required_page_is_unanswered() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.press("f2")
+
+        assert app.screen.query_one("#btn-submit", Button).disabled is True
+
+        await pilot.press("s")  # the review screen's submit binding
+        await pilot.pause()
+
+        assert app.final_state is None
+        assert app.final_projection is None
+        assert _on_review(app)
+
+
+@pytest.mark.asyncio
+async def test_submit_enabled_once_eligible_exits_with_the_final_projection() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await _answer_all_required(pilot, app)
+        await pilot.press("f2")
+
+        assert app.screen.query_one("#btn-submit", Button).disabled is False
+
+        await pilot.click("#btn-submit")
+        await pilot.pause()
+
+    assert app.final_state is not None
+    assert app.final_state.answers["p_name"] == "ada"
+    assert app.final_projection is not None
+    assert app.final_projection.submit_eligible is True
+    assert app.saved_and_exited is False
+
+
+# ── key bindings ────────────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_escape_routes_to_the_back_intent() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.press(*"ada")
+        await pilot.click("#btn-next")
+
+        await pilot.press("escape")
+
+        assert app.state.cursor == "p_name"
+
+
+@pytest.mark.asyncio
+async def test_f2_routes_to_the_review_intent_and_escape_leaves_it() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.press("f2")
+        assert _on_review(app)
+
+        await pilot.press("escape")
+
+        assert not _on_review(app)
+
+
+@pytest.mark.asyncio
+async def test_ctrl_r_resets_the_cursor_page_answer() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.press(*"ada")
+        await pilot.click("#btn-next")
+        await pilot.press("escape")
+        assert app.state.answers["p_name"] == "ada"
+
+        await pilot.press("ctrl+r")
+
+        assert "p_name" not in app.state.answers
+        assert page_status(app.state, "p_name") is PageStatus.UNANSWERED
+
+
+@pytest.mark.asyncio
+async def test_ctrl_n_restarts_the_flow_from_the_first_page() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await _answer_all_required(pilot, app)
+        assert app.state.answers
+
+        await pilot.press("ctrl+n")
+
+        assert app.state.answers == {}
+        assert app.state.cursor == "p_name"
+        assert not _on_review(app)
+
+
+@pytest.mark.asyncio
+async def test_ctrl_s_persists_through_the_checkpoint_store_and_exits(tmp_path: Path) -> None:
+    store = _JsonFileCheckpointStore(tmp_path)
+    app = _app(mode=FlowMode.CREATE, checkpoint_store=store)
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.press(*"ada")
+        await pilot.click("#btn-next")
+
+        await pilot.press("ctrl+s")
+        await pilot.pause()
+
+    assert store.load("flows.test.tui") == {"p_name": "ada"}
+    assert app.saved_and_exited is True
+    assert app.final_state is not None
+    assert app.final_projection is not None
+
+
+@pytest.mark.asyncio
+async def test_ctrl_s_is_inert_in_a_mode_declaring_checkpointing_unavailable(tmp_path: Path) -> None:
+    store = _JsonFileCheckpointStore(tmp_path)
+    app = _app(mode=FlowMode.MODIFY, checkpoint_store=store)
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.press(*"ada")
+        await pilot.click("#btn-next")
+
+        await pilot.press("ctrl+s")
+        await pilot.pause()
+
+        assert store.load("flows.test.tui") is None
+        assert app.saved_and_exited is False
+        assert app.final_state is None
+        assert app.is_running
+
+
+# ── checkpoint honesty and abandoned runs ───────────────────────────────────
+
+
+def test_declared_checkpointing_without_a_store_refuses_at_construction() -> None:
+    with pytest.raises(FlowCheckpointError):
+        FlowTuiApp(_definition(), mode=FlowMode.CREATE)
+
+
+def test_declared_checkpointing_without_a_store_refuses_before_the_run_starts() -> None:
+    with pytest.raises(FlowCheckpointError):
+        run_flow_tui(_definition(), mode=FlowMode.CREATE)
+
+
+def test_a_mode_declaring_checkpointing_unavailable_constructs_without_a_store() -> None:
+    app = FlowTuiApp(_definition(), mode=FlowMode.MODIFY)
+
+    assert app.state.mode is FlowMode.MODIFY
+
+
+_ABANDONED_RUN_SCRIPT = """
+import sys
+from pathlib import Path
+
+from pydantic import BaseModel
+
+from cadrumo.adapters.inbound.tui import run_flow_tui
+from cadrumo.application.flows import (
+    CopyRef,
+    FlowCheckpointError,
+    FlowDefinition,
+    FlowPage,
+    FlowSection,
+)
+from cadrumo.core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
+from cadrumo.core.i18n import override_locales_root
+
+
+class _Answers(BaseModel):
+    pass
+
+
+copy = CopyRef(kind=CopyRefKind.LOCALE_KEY, ref="flows.test.copy")
+definition = FlowDefinition(
+    id="flows.test.abandoned",
+    title=copy,
+    description=copy,
+    sections=(
+        FlowSection(
+            id="s1",
+            title=copy,
+            items=(FlowPage(id="p_name", widget=FlowWidgetKind.TEXT, prompt=copy, answer_type=str),),
+        ),
+    ),
+    answers_model=_Answers,
+    checkpoint={
+        FlowMode.CREATE: CheckpointAvailability.UNAVAILABLE,
+        FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
+    },
+)
+
+with override_locales_root(Path(sys.argv[1])):
+    try:
+        run_flow_tui(definition, mode=FlowMode.MODIFY)
+    except FlowCheckpointError:
+        print("REFUSED_ABANDONED_RUN")
+        sys.exit(0)
+print("RETURNED_WITHOUT_REFUSAL")
+sys.exit(1)
+"""
+
+
+def test_run_flow_tui_raises_on_a_run_abandoned_without_submit_or_save(
+    tmp_path: Path,
+    tmp_path_factory: pytest.TempPathFactory,
+) -> None:
+    """A real headless run that quits without submitting must not return.
+
+    ``run_flow_tui`` drives ``App.run`` itself, so the abandonment is
+    reproduced in an owned subprocess: Textual's headless driver plus its
+    screenshot timer quit the application exactly as an
+    operator abandoning the run would, and the frontend must refuse
+    rather than hand back a value that reads as a completed flow.
+    """
+    locales_root = tmp_path_factory.mktemp("abandoned-locales")
+    payload = yaml.safe_dump(_COPY_CATALOGUE, allow_unicode=True)
+    for language in SUPPORTED_OUTPUT_LANGUAGES:
+        (locales_root / f"{language}.yml").write_text(payload, encoding="utf-8")
+
+    completed = subprocess.run(  # noqa: S603 - fixed argv, owned local interpreter
+        [sys.executable, "-c", _ABANDONED_RUN_SCRIPT, str(locales_root)],
+        capture_output=True,
+        text=True,
+        timeout=180,
+        check=False,
+        env={
+            **os.environ,
+            "TEXTUAL_DRIVER": "textual.drivers.headless_driver:HeadlessDriver",
+            "TEXTUAL_SCREENSHOT": "1",
+            "TEXTUAL_SCREENSHOT_LOCATION": str(tmp_path),
+        },
+    )
+
+    assert completed.returncode == 0, completed.stdout + completed.stderr
+    assert "REFUSED_ABANDONED_RUN" in completed.stdout
