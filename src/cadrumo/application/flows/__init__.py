@@ -15,6 +15,7 @@ Consumers import from this facade only.
 
 from __future__ import annotations
 
+from ._bridge import flow_definition_from_wizard_flow
 from ._checkpoint import (
     CheckpointStore,
     checkpoint_available,
@@ -123,6 +124,7 @@ __all__ = [
     "back_page",
     "checkpoint_available",
     "discard_checkpoint",
+    "flow_definition_from_wizard_flow",
     "iter_flow_conditions",
     "jump_to",
     "next_page",
