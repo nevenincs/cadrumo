@@ -98,7 +98,7 @@ Define the per-mode checkpoint port and the resume projection that rebuilds Flow
 
 Move the profile create and edit CLI wiring and the modelo work wizard onto the engine, then retire the one-shot runner and prompter surfaces atomically with their consumers per the no-legacy rule.
 
-- [ ] `W03.P08.S25` - Migrate the modelo work wizard consumer onto the engine frontends; `src/cadrumo/entrypoints/cli/_modelo_work_wizard_cli.py`.
+- [x] `W03.P08.S25` - Migrate the modelo work wizard consumer onto the engine frontends; `src/cadrumo/entrypoints/cli/_modelo_work_wizard_cli.py`.
 - [ ] `W03.P08.S26` - Retire the one-shot runner and prompter surfaces with every consumer moved in one atomic explicit-path commit, running collect-only clean immediately before the commit and regenerating apidocs stubs in the same commit; `src/cadrumo/application/wizard/`.
 
 ### Phase `W03.P09` - Parity gates and documentation
