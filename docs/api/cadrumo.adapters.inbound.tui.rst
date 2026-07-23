@@ -16,3 +16,4 @@ Submodules
    cadrumo.adapters.inbound.tui._app
    cadrumo.adapters.inbound.tui._question_screen
    cadrumo.adapters.inbound.tui._review_screen
+   cadrumo.adapters.inbound.tui._select

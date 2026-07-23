@@ -15,7 +15,7 @@ Consumers import from this facade only.
 
 from __future__ import annotations
 
-from ._bridge import flow_definition_from_wizard_flow
+from ._wizard_projection import flow_definition_from_wizard_flow
 from ._capability import detect_frontend_capability
 from ._checkpoint import (
     CheckpointStore,
