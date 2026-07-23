@@ -1195,10 +1195,61 @@ def _refuse_foral_ccaa(canonical: dict[str, str], explicit_flags: dict[str, str]
     try:
         parse_tax_region(ccaa_token)
     except ForalRegimeError as foral_exc:
-        raise typer.BadParameter(
-            tr("profile.errors.foral_regime", tax_region=foral_exc.value),
-            param_hint="'--tax-residence-ccaa'",
-        ) from foral_exc
+        # Re-raise the domain refusal so the whole line renders through the
+        # localized CadrumoError boundary (translated_message + suggestion),
+        # instead of English Click ``Usage`` chrome around a localized body.
+        foral_exc.suggestion = _FORAL_REFUSAL_SUGGESTION
+        raise foral_exc
+
+
+_FORAL_REFUSAL_SUGGESTION = "aeat config profile create NAME --tax-residence-ccaa <ccaa>"
+
+
+# ``SetupAnswers`` field names whose free-text value fails an ISO-8601 date or
+# a decimal validator. Keyed on the pydantic error ``loc`` leaf so the raw
+# English validator ``msg`` never reaches operator output.
+_WIZARD_INVALID_DATE_FIELDS: frozenset[str] = frozenset(
+    {
+        "taxpayer_marriage_date",
+        "activity_start_date",
+        "ley_49_2002_option_date",
+        "ley_49_2002_renunciation_date",
+        "irpf_special_regime_start_date",
+    }
+)
+_WIZARD_INVALID_DECIMAL_FIELDS: frozenset[str] = frozenset(
+    {
+        "incn_prior_12_months",
+        "objective_estimation_modulos_module_1_units",
+        "objective_estimation_modulos_module_2_units",
+        "objective_estimation_modulos_module_3_units",
+        "objective_estimation_modulos_module_4_units",
+        "objective_estimation_modulos_module_5_units",
+        "objective_estimation_modulos_module_6_units",
+        "objective_estimation_modulos_module_7_units",
+    }
+)
+_WIZARD_ERROR_FIELD_KEYS: dict[str, str] = {
+    **{field: "wizard.errors.invalid_date" for field in _WIZARD_INVALID_DATE_FIELDS},
+    **{field: "wizard.errors.invalid_decimal" for field in _WIZARD_INVALID_DECIMAL_FIELDS},
+}
+
+# Cross-field model-validator refusals report an empty ``loc``, so they are
+# routed on the stable pydantic error ``type`` (a ``PydanticCustomError`` token
+# raised by ``SetupAnswers``). Each maps to its localized detail key plus the
+# primary and condition fields whose flags fill the message.
+_WIZARD_ERROR_TYPE_KEYS: dict[str, tuple[str, str, str]] = {
+    "spouse_tax_id_required_joint": (
+        "wizard.errors.spouse_tax_id_required_joint",
+        "spouse_tax_id",
+        "taxation_type",
+    ),
+    "eu_eea_country_required": (
+        "wizard.errors.eu_eea_country_required",
+        "spouse_eu_eea_country",
+        "spouse_eu_eea_resident",
+    ),
+}
 
 
 def _wizard_field_flags(flow: WizardFlow) -> dict[str, str]:
@@ -1231,42 +1282,62 @@ def _validation_location_flag(location: tuple[object, ...], field_flags: dict[st
     return ".".join(path)
 
 
-def _first_flag_mentioned(message: str, field_flags: dict[str, str]) -> str | None:
-    """Infer the failing flag from a model-level validation message."""
-    positions: list[tuple[int, str]] = []
-    for field_name, flag_name in field_flags.items():
-        match = re.search(rf"\b{re.escape(field_name)}\b", message)
-        if match is not None:
-            positions.append((match.start(), flag_name))
-    if not positions:
-        return None
-    return min(positions, key=lambda item: item[0])[1]
+def _validation_leaf_field(location: tuple[object, ...]) -> str:
+    """Return the trailing model field name from a pydantic location tuple."""
+    for part in reversed(location):
+        if isinstance(part, str) and part != "__root__":
+            return part
+    return ""
 
 
-def _format_wizard_validation_error(flow: WizardFlow, item: ErrorDetails) -> tuple[str, str | None]:
-    """Render one pydantic validation entry as ``--flag: message`` text."""
+def _stringify_wizard_error_input(value: object) -> str:
+    """Render the rejected input value for the ``got`` message context."""
+    if value is None:
+        return ""
+    return str(value)
+
+
+def _format_wizard_validation_error(flow: WizardFlow, item: ErrorDetails) -> tuple[str | None, str | None]:
+    """Render one pydantic validation entry as a localized detail plus its flag.
+
+    The detail is built entirely from a translation-key mapping: cross-field
+    model-validator refusals route on the stable pydantic error ``type``, and
+    free-text date/decimal value errors route on the failing field's ``loc``
+    leaf. The raw pydantic ``msg`` (library English) is never spliced into
+    operator output. An entry with no mapped key returns a ``None`` detail so
+    the caller falls back to the localized generic message; the failing flag is
+    still returned for the ``param_hint``.
+    """
     field_flags = _wizard_field_flags(flow)
-    raw_message = str(item.get("msg", "")).removeprefix("Value error, ").strip()
-    rendered_message = _replace_validation_field_names(raw_message, field_flags)
-    raw_location = tuple(item.get("loc", ()))
-    field_path = _validation_location_flag(raw_location, field_flags)
-    inferred_flag = field_path or _first_flag_mentioned(raw_message, field_flags)
-    if inferred_flag:
-        if rendered_message.startswith(f"{inferred_flag} "):
-            return rendered_message, inferred_flag
-        return f"{inferred_flag}: {rendered_message}", inferred_flag
-    return rendered_message, None
+    error_type = str(item.get("type", ""))
+    cross_field = _WIZARD_ERROR_TYPE_KEYS.get(error_type)
+    if cross_field is not None:
+        key, primary_field, condition_field = cross_field
+        primary_flag = field_flags.get(primary_field, primary_field)
+        condition_flag = field_flags.get(condition_field, condition_field)
+        return tr(key, flag=primary_flag, condition_flag=condition_flag), primary_flag
+
+    location = tuple(item.get("loc", ()))
+    field_flag = _validation_location_flag(location, field_flags) or None
+    if error_type == "value_error":
+        field_key = _WIZARD_ERROR_FIELD_KEYS.get(_validation_leaf_field(location))
+        if field_key is not None:
+            got = _stringify_wizard_error_input(item.get("input"))
+            return tr(field_key, flag=field_flag or _validation_leaf_field(location), got=got), field_flag
+    return None, field_flag
 
 
 def _wizard_validation_bad(flow: WizardFlow, error: ValidationError) -> typer.BadParameter:
     """Convert leaked wizard answer validation into a specific CLI refusal."""
     rendered = [_format_wizard_validation_error(flow, item) for item in error.errors()]
-    details = "; ".join(message for message, _flag in rendered)
-    message = tr(
-        "application.wizard.errors.command_input_invalid",
-        details=details or tr("application.wizard.errors.command_input_invalid_fallback"),
+    mapped_details = [detail for detail, _flag in rendered if detail is not None]
+    details = (
+        "; ".join(mapped_details)
+        if mapped_details
+        else tr("application.wizard.errors.command_input_invalid_fallback")
     )
-    first_flag = next((flag for _message, flag in rendered if flag), None)
+    message = tr("application.wizard.errors.command_input_invalid", details=details)
+    first_flag = next((flag for _detail, flag in rendered if flag), None)
     if first_flag is not None:
         return typer.BadParameter(message, param_hint=f"'{first_flag}'")
     return typer.BadParameter(message)

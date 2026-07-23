@@ -405,17 +405,20 @@ class QuestionaryPrompter:
         return _stringify(result)
 
     def _ask_integer(self, prompt: str, default: str | None) -> str:
-        def _is_integer(raw: str) -> bool:
+        def _validate_integer(raw: str) -> bool | str:
             try:
                 int(raw.strip())
             except ValueError:
-                return False
+                # questionary renders a non-``True`` return as the inline
+                # validation message, so return the localized text rather than
+                # letting its built-in English "Invalid input" surface.
+                return tr("wizard.errors.invalid_integer", prompt_key=prompt, raw=raw)
             return True
 
         result = questionary.text(
             prompt,
             default=default or "",
-            validate=_is_integer,
+            validate=_validate_integer,
             input=self._input,
             output=self._output,
         ).ask()

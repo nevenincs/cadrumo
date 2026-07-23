@@ -528,3 +528,52 @@ def test_profile_create_refuses_foral_tax_residence_with_concierto_economico_red
     # each token independently so the legal citation is definitely present.
     assert "12/2002" in output, f"Expected 12/2002 (Ley 12/2002) in foral refusal; got: {output!r}"
     assert expected_url in output, f"Expected foral URL {expected_url!r} in refusal; got: {output!r}"
+
+
+def test_profile_create_foral_refusal_renders_localized_error_document_in_json_mode() -> None:
+    """The foral refusal arrives as the shared-spine error document, not Click chrome.
+
+    Under ``--format json`` the refusal must route through the localized
+    CadrumoError boundary — a registered ``REFUSED_PROFILE_FORAL_REGIME``
+    error document — rather than a Click ``Usage`` box wrapping a localized
+    body. This is the operator-reported localization gap for foral CCAA.
+    """
+    import json
+
+    result = invoke_cached_cli(
+        (
+            "--format",
+            "json",
+            "config",
+            "profile",
+            "create",
+            "lourdes",
+            "--quiet",
+            "--accept-defaults",
+            "--entity-type",
+            "natural_person",
+            "--name",
+            "Lourdes",
+            "--surnames",
+            "Foral",
+            "--tax-id",
+            "44444444A",
+            "--activity",
+            "traductora",
+            "--tax-residence-ccaa",
+            "pais_vasco",
+        ),
+    )
+
+    assert result.exit_code == 2, result.output
+    output = result.output or ""
+    assert "Usage:" not in output, f"Click usage chrome leaked into JSON refusal: {output!r}"
+    assert "Traceback" not in output
+    document = next((json.loads(line) for line in output.splitlines() if line.strip().startswith("{")), None)
+    assert document is not None, f"no JSON error document in output: {output!r}"
+    error = document["error"]
+    assert error["code"] == "REFUSED_PROFILE_FORAL_REGIME"
+    assert error["category"] == "REFUSED"
+    # The rendered message is the localized foral body (legal citation present),
+    # proving translated_message resolved rather than a bare English fallback.
+    assert "12/2002" in str(error["message"])

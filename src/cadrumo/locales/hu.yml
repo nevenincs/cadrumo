@@ -6771,6 +6771,10 @@ wizard:
 
       Vagy futtassa újra az irányított szerkesztést interaktív terminál-munkamenetből:
       aeat config profile edit %{profile_name}'
+    invalid_date: 'Érvénytelen dátum a következőhöz: %{flag}: %{got}. Használj ISO-8601 formátumot (ÉÉÉÉ-HH-NN).'
+    invalid_decimal: 'Érvénytelen tizedes szám a következőhöz: %{flag}: %{got}. Használj pontot tizedeselválasztóként.'
+    spouse_tax_id_required_joint: 'A(z) %{flag} kötelező, ha a(z) %{condition_flag} együttes adózás.'
+    eu_eea_country_required: 'A(z) %{flag} kötelező, ha a(z) %{condition_flag} EU- vagy EGT-tartózkodást jelöl.'
   other:
     description: Egyéb konfigurációs lehetőségek
     section:
@@ -7429,6 +7433,9 @@ wizard:
       spouse_consistency_ok: 'Közös adóbevallás: a házastárs adatai összhangban vannak.'
       tax_id_present: 'Adóazonosítás: ellenőrzi, hogy a profil tartalmaz-e DNI, NIE,
         NIF vagy CIF azonosítót.'
+      impatriado_requires_start_date: 'Impatrióta rendszer: a különleges rendszer kezdő dátuma kötelező. Add meg a kezdő dátumot.'
+      non_resident_requires_country: 'Nem rezidens IRNR: az adóügyi illetőség szerinti ország kötelező. Add meg az illetőség szerinti országot.'
+      non_resident_requires_representante: 'Nem rezidens IRNR: adóügyi képviselő kötelező. Add meg a képviselő NIF-jét és nevét.'
   test:
     description: Tesztelje a konfigurációt és a csatlakozást
     example:
