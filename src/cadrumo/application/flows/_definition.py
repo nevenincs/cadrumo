@@ -273,11 +273,15 @@ class FlowDefinition(BaseModel):
 
     @property
     def fingerprint(self) -> str:
-        """Stable content fingerprint used by resume to detect definition change.
+        """Stable content identity of the declarative definition.
 
-        Hashes the declarative content only; the ``answers_model`` type
-        is identified by its qualified name so two builds of the same
-        definition fingerprint identically.
+        A convenience identity for callers that want to label or compare
+        definitions (diagnostics, caching). Resume deliberately does
+        NOT consume it: definition change is detected by re-validating
+        every persisted answer against the current definition, so no
+        fingerprint is ever stored. Hashes the declarative content only;
+        the ``answers_model`` type is identified by its qualified name
+        so two builds of the same definition fingerprint identically.
         """
         payload = self.model_dump(mode="python", exclude={"answers_model"})
         payload["answers_model"] = f"{self.answers_model.__module__}.{self.answers_model.__qualname__}"

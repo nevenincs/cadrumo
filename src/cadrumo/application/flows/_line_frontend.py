@@ -29,7 +29,7 @@ from typing import TYPE_CHECKING
 
 import questionary
 
-from ...core.flows import DEFER_TOKEN, FlowMode, FlowWidgetKind
+from ...core.flows import DEFER_TOKEN, FlowMode, FlowWidgetKind, PageStatus
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ._checkpoint import CheckpointStore, checkpoint_available, save_checkpoint
@@ -42,11 +42,13 @@ from ._engine import (
     answer,
     jump_to,
     next_page,
+    page_status,
+    reset_page,
     restart_flow,
     start_flow,
     visible_sequence,
 )
-from ._errors import FlowUnsupportedConsoleError
+from ._errors import FlowCheckpointError, FlowUnsupportedConsoleError
 from ._review import ReviewProjection, assert_submit_eligible, review
 
 if TYPE_CHECKING:
@@ -123,11 +125,21 @@ class LineFlowFrontend:
         ``resume_state`` continues a projection built by ``resume_flow``;
         otherwise the run starts fresh. The walk prompts every visible
         unanswered page in order, then enters the review loop until the
-        operator submits (or saves and exits, which raises no error and
-        returns the un-submittable state with its projection for the
-        caller to persist through the checkpoint port).
+        operator submits, or saves and exits — the save is performed
+        HERE, through the checkpoint port, before the state is returned;
+        the caller never re-persists (single writer).
+
+        A mode whose definition declares checkpointing AVAILABLE demands
+        an injected store: refusing up front is what keeps the
+        save-and-exit affordance honest — a mis-wired frontend must
+        never offer a save it cannot perform and then silently discard.
         """
         self.ensure_interactive_environment()
+        if checkpoint_available(self._definition, mode) and self._store is None:
+            raise FlowCheckpointError(
+                translated_message="flows.errors.checkpoint_store_missing",
+                context={"flow_id": self._definition.id, "mode": mode.value},
+            )
         state = resume_state if resume_state is not None else start_flow(self._definition, mode=mode)
         self._emit(tr(f"flows.{self._definition.id}.intro"))
 
@@ -320,8 +332,16 @@ class LineFlowFrontend:
         if action == _REVIEW_ACTION_SUBMIT:
             return action, state, True
         if action == _REVIEW_ACTION_SAVE_EXIT:
-            if self._store is not None:
-                save_checkpoint(self._definition, state, self._store)
+            # ``run`` refused at start when an available mode lacked a
+            # store, so reaching this arm without one is unreachable by
+            # construction; the refusal below is the defence-in-depth
+            # backstop, never a silent no-save exit.
+            if self._store is None:
+                raise FlowCheckpointError(
+                    translated_message="flows.errors.checkpoint_store_missing",
+                    context={"flow_id": self._definition.id, "mode": state.mode.value},
+                )
+            save_checkpoint(self._definition, state, self._store)
             return action, state, True
         if action == _REVIEW_ACTION_RESTART:
             confirmed = questionary.confirm(
@@ -349,6 +369,22 @@ class LineFlowFrontend:
             None,
         )
         if entry is None:
+            # A stale orphan — an answer whose page a gating change or a
+            # shrunk group removed from the visible sequence — cannot be
+            # re-asked, but it must stay resolvable: the recovery
+            # affordance is a confirmed reset that clears the orphaned
+            # answer, unblocking submission without silent loss.
+            if page_status(state, target_key) is PageStatus.STALE:
+                confirmed = questionary.confirm(
+                    tr("flows.review.reset_stale_confirm", page_key=target_key),
+                    default=False,
+                    input=self._input,
+                    output=self._output,
+                ).ask()
+                if confirmed is True:
+                    state = reset_page(self._definition, state, target_key)
+                    self._emit(tr("flows.review.reset_stale_done", page_key=target_key))
+                return action, state, False
             self._emit(tr("flows.review.edit_not_editable", page_key=target_key))
             return action, state, False
         state = jump_to(self._definition, state, target_key)
