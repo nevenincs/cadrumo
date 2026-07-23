@@ -31,8 +31,10 @@ the flag probe (e.g. ``--format`` with no value) renders text.
 
 from __future__ import annotations
 
+import re
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
+from contextvars import ContextVar
 from typing import NoReturn
 
 import click
@@ -48,6 +50,17 @@ from ...core.errors import (
 _ABORTED_EXIT_CODE = 1
 _KEYBOARD_INTERRUPT_EXIT_CODE = 130
 
+#: The raw argv slice of the active invocation, captured by
+#: :func:`run_standalone_with_error_contract` so parse-time handling can read the
+#: operator's ``--format`` and ``--language`` tokens even when no command context
+#: resolved (a bad root option, a Choice failure whose ``BadParameter`` carries no
+#: ``ctx``) and even under a test runner where ``sys.argv`` is the harness's own.
+_INVOCATION_ARGV: ContextVar[tuple[str, ...] | None] = ContextVar("cadrumo_cli_invocation_argv", default=None)
+
+_CHOICE_DETAIL_RE = re.compile(r"'([^']*)'\s+is not one of\s+(?P<accepted>.+?)\.?\s*$")
+_NO_SUCH_COMMAND_RE = re.compile(r"No such command '([^']+)'")
+_FIRST_QUOTED_RE = re.compile(r"'([^']+)'")
+
 
 def _vendored_exceptions() -> tuple[type[BaseException], type[BaseException], type[BaseException]]:
     """Return (ClickException, UsageError, Abort) from Typer's vendored fork."""
@@ -56,18 +69,130 @@ def _vendored_exceptions() -> tuple[type[BaseException], type[BaseException], ty
     return ty_exceptions.ClickException, ty_exceptions.UsageError, ty_exceptions.Abort
 
 
+def _invocation_argv() -> list[str]:
+    """Return the active invocation's argv slice.
+
+    Falls back to ``sys.argv[1:]`` when no invocation captured its argv (a
+    direct call outside :func:`run_standalone_with_error_contract`).
+    """
+    captured = _INVOCATION_ARGV.get()
+    return list(captured) if captured is not None else list(sys.argv[1:])
+
+
 def _json_requested_for(exc: BaseException) -> bool:
     """Return whether the failed invocation asked for JSON output.
 
     Prefers the parse-time context the exception carries (``exc.ctx`` on
     usage errors — the live stack is already unwound by the time the
-    terminal handler runs); falls back to a raw argv probe for crashes
-    that carry no context.
+    terminal handler runs); falls back to the captured invocation argv for
+    failures that carry no context (a Choice ``BadParameter`` with no ``ctx``,
+    a bad root option, or a crash before dispatch).
     """
     ctx = getattr(exc, "ctx", None)
     if ctx is not None and context_chain_requests_json(ctx):
         return True
-    return argv_requests_json(sys.argv[1:])
+    return argv_requests_json(_invocation_argv())
+
+
+def _parse_time_output_language() -> str:
+    """Resolve the output language knowable at parse time.
+
+    An explicit ``--language`` / ``--lang`` / ``--output-language`` token on the
+    invocation is the most specific operator intent and wins; otherwise the i18n
+    layer's own env-then-profile-then-default chain resolves the language. The
+    argv token is honoured directly because the root callback's settings
+    override is already torn down by the time this terminal handler runs, and a
+    Choice ``BadParameter`` carries no context to walk.
+    """
+    from ...core.i18n import output_language
+    from ._language_argv import language_from_argv
+
+    explicit = language_from_argv(_invocation_argv())
+    if explicit is not None:
+        return explicit
+    return output_language()
+
+
+def _has_base(exc: BaseException, name: str) -> bool:
+    """Return whether ``exc``'s class or any base is named ``name``.
+
+    Matches by MRO class name so both Click runtimes (upstream ``click`` and
+    Typer's vendored fork) are recognised without importing either exception
+    module.
+    """
+    return any(base.__name__ == name for base in type(exc).__mro__)
+
+
+def _parameter_hint(exc: BaseException) -> str | None:
+    """Return the operator-facing parameter/option hint for ``exc``, if any."""
+    param = getattr(exc, "param", None)
+    ctx = getattr(exc, "ctx", None)
+    if param is not None:
+        try:
+            hint = param.get_error_hint(ctx)
+        except Exception:  # get_error_hint is best-effort structured detail
+            hint = None
+        if hint:
+            return str(hint).strip("'")
+    param_hint = getattr(exc, "param_hint", None)
+    if param_hint:
+        return str(param_hint).strip("'")
+    return None
+
+
+def _first_quoted(detail: str) -> str | None:
+    """Return the first single-quoted token in ``detail``, if any."""
+    match = _FIRST_QUOTED_RE.search(detail)
+    return match.group(1) if match is not None else None
+
+
+def _localise_parse_failure(exc: BaseException, detail: str, locale: str) -> tuple[str, dict[str, str]] | None:
+    """Render a click parse failure as a localised message plus structured facts.
+
+    Returns ``(message, context)`` for the click-generated argv-parse failures
+    whose native message is English (missing argument, unknown option, an
+    invalid Choice value, an unknown command), or ``None`` to preserve the
+    exception's own message verbatim. A ``BadParameter`` raised by a command
+    callback already carries a localised, purpose-built message (rendered by
+    ``tr`` at the raise site), so only the click-internal structured patterns are
+    re-keyed here — a generic value refusal is left untouched. The offending
+    option/parameter, value, and accepted-value set ride in ``context`` so the
+    refusal names the accepted set the CLI-boundary contract requires, and the
+    message renders in the parse-time-resolved ``locale``.
+    """
+    from ...core.i18n import tr
+
+    if _has_base(exc, "MissingParameter"):
+        parameter = _parameter_hint(exc) or _first_quoted(detail) or ""
+        facts = _drop_empty({"parameter": parameter})
+        return tr("cli.common.errors.parse_missing_argument", locale=locale, parameter=parameter), facts
+    option_name = getattr(exc, "option_name", None)
+    if option_name and (_has_base(exc, "NoSuchOption") or _has_base(exc, "BadOptionUsage")):
+        facts = {"option": str(option_name)}
+        possibilities = getattr(exc, "possibilities", None)
+        if possibilities:
+            facts["suggestions"] = ", ".join(str(candidate) for candidate in possibilities)
+        message = tr("cli.common.errors.parse_unknown_option", locale=locale, option=facts["option"])
+        return message, facts
+    choice = _CHOICE_DETAIL_RE.search(detail)
+    if choice is not None:
+        accepted = ", ".join(match.group(1) for match in _FIRST_QUOTED_RE.finditer(choice.group("accepted")))
+        facts = _drop_empty(
+            {"value": choice.group(1), "accepted": accepted, "parameter": _parameter_hint(exc)},
+        )
+        message = tr("cli.common.errors.parse_invalid_choice", locale=locale, value=choice.group(1), accepted=accepted)
+        return message, facts
+    unknown_command = _NO_SUCH_COMMAND_RE.search(detail)
+    if unknown_command is not None:
+        command = unknown_command.group(1)
+        message = tr("cli.common.errors.parse_unknown_command", locale=locale, command=command)
+        return message, {"command": command}
+    return None
+
+
+def _drop_empty(facts: dict[str, str | None]) -> dict[str, str]:
+    """Return ``facts`` with empty values removed."""
+    return {key: value for key, value in facts.items() if value}
 
 
 def _render_click_exception_text(exc: BaseException) -> None:
@@ -90,15 +215,36 @@ def _emit_click_exception(exc: BaseException) -> NoReturn:
     """Emit a Click/usage failure honouring the JSON error contract."""
     exit_code = int(getattr(exc, "exit_code", _ABORTED_EXIT_CODE))
     if _json_requested_for(exc):
-        from ._errors import CliRefusedBoundaryError, active_profile_label_for_error, write_stderr
+        from ._errors import active_profile_label_for_error, write_stderr
 
-        format_message = getattr(exc, "format_message", None)
-        message = str(format_message()) if callable(format_message) else str(exc)
-        boundary = CliRefusedBoundaryError(message)
+        boundary = _build_parse_time_refusal(exc)
         write_stderr(render_error_json(boundary, active_profile=active_profile_label_for_error()))
     else:
         _render_click_exception_text(exc)
     sys.exit(exit_code)
+
+
+def _build_parse_time_refusal(exc: BaseException) -> object:
+    """Build the localised, structured refusal for a JSON-mode parse failure.
+
+    A click-generated argv-parse failure (missing argument, unknown option,
+    invalid Choice value, unknown command) is re-keyed to a localised refusal
+    that carries the parse failure's structured facts (offending option/param,
+    value, and — for a Choice — the accepted-value set) in ``context`` and
+    renders in the parse-time-resolved output language. Any other click failure
+    keeps its own message verbatim: a callback-raised ``BadParameter`` already
+    carries a purpose-built localised message, so re-keying it would discard the
+    more specific text.
+    """
+    from ._errors import CliRefusedBoundaryError
+
+    format_message = getattr(exc, "format_message", None)
+    detail = str(format_message()) if callable(format_message) else str(exc)
+    localised = _localise_parse_failure(exc, detail, _parse_time_output_language())
+    if localised is None:
+        return CliRefusedBoundaryError(detail)
+    message, context = localised
+    return CliRefusedBoundaryError(message, context=context or None)
 
 
 def _emit_crash(exc: Exception) -> NoReturn:
@@ -127,7 +273,11 @@ def _emit_abort() -> NoReturn:
     sys.exit(_ABORTED_EXIT_CODE)
 
 
-def run_standalone_with_error_contract(dispatch: Callable[[], object]) -> NoReturn:
+def run_standalone_with_error_contract(
+    dispatch: Callable[[], object],
+    *,
+    argv: Sequence[str] | None = None,
+) -> NoReturn:
     """Run a non-standalone Click dispatch with JSON-aware terminal handling.
 
     ``dispatch`` must call the underlying ``main`` with
@@ -136,7 +286,14 @@ def run_standalone_with_error_contract(dispatch: Callable[[], object]) -> NoRetu
     standalone exit semantics: a normal return exits 0, an explicit
     ``typer.Exit`` (surfaced as the non-standalone integer return) exits
     with its code, ``KeyboardInterrupt`` exits 130.
+
+    ``argv`` is the raw invocation argv slice. It is captured for the duration
+    of the dispatch so parse-time handling can read the operator's ``--format``
+    and ``--language`` tokens even when the failure carries no command context;
+    it defaults to ``sys.argv[1:]`` for a console launch.
     """
+    captured = tuple(argv) if argv is not None else tuple(sys.argv[1:])
+    token = _INVOCATION_ARGV.set(captured)
     vendored_click_exception, _vendored_usage, vendored_abort = _vendored_exceptions()
     try:
         result = dispatch()
@@ -148,6 +305,8 @@ def run_standalone_with_error_contract(dispatch: Callable[[], object]) -> NoRetu
         sys.exit(_KEYBOARD_INTERRUPT_EXIT_CODE)
     except Exception as exc:
         _emit_crash(exc)
+    finally:
+        _INVOCATION_ARGV.reset(token)
     # Non-standalone dispatch RETURNS an explicit Exit's code as an int
     # (typer _main: `except Exit: ... return e.exit_code`); a successful
     # callback chain returns None. Mirror standalone exit semantics.

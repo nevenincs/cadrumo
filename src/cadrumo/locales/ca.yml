@@ -3102,6 +3102,10 @@ cli:
       period_unrecognised: 'Període ''{raw}'' no reconegut. Useu un testimoni AEAT:
         1T-4T (trimestres), 0A (anual), 01-12 (mesos), i indiqueu l''any amb --year
         (p. ex. --period 1T --year 2024).'
+      parse_unknown_option: 'Opció desconeguda ''{option}''.'
+      parse_unknown_command: 'Ordre desconeguda ''{command}''.'
+      parse_invalid_choice: 'Valor no vàlid ''{value}''. Tria entre: {accepted}.'
+      parse_missing_argument: 'Falta l''argument obligatori {parameter}.'
   config:
     app_help: Gestionar configuració local i diagnòstics
     auth:
@@ -5421,6 +5425,7 @@ errors:
     auth_storage_master_key_unavailable: No s'ha pogut obtenir la clau mestra de cap
       proveïdor. Comprova l'anell de claus o la frase de contrasenya de la còpia de
       seguretat.
+    clave_movil_identity_checksum: 'L''identificador de Cl@ve Móvil té una forma vàlida però la seva lletra de control no coincideix amb els dígits. Revisa l''última lletra del document i torna-ho a provar.'
   calc:
     age_at_year_end_no_filing_year: 'Error intern: el càlcul de l''edat a final d''exercici
       no té exercici de declaració.'
@@ -6512,6 +6517,7 @@ flows:
     page_header: Pregunta {position} de {total} — secció {section}
     required: Obligatori
     current_answer_secret: 'Resposta actual: (oculta)'
+    legal_ref: 'Base legal: %{ref} — %{label}'
   review:
     action_edit: Edita una resposta
     action_prompt: Què vols fer?

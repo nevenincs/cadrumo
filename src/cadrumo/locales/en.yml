@@ -2894,6 +2894,10 @@ cli:
       period_unrecognised: 'Unrecognized period ''{raw}''. Use an AEAT token: 1T-4T
         (quarters), 0A (annual), 01-12 (months), and supply the year with --year (e.g.
         --period 1T --year 2024).'
+      parse_unknown_option: 'Unknown option ''{option}''.'
+      parse_unknown_command: 'Unknown command ''{command}''.'
+      parse_invalid_choice: 'Invalid value ''{value}''. Choose from: {accepted}.'
+      parse_missing_argument: 'Missing required argument {parameter}.'
   config:
     app_help: Manage local configuration and diagnostics
     auth:
@@ -5076,6 +5080,7 @@ errors:
       your 24-word recovery code.
     auth_storage_master_key_unavailable: The master key could not be acquired from
       any provider. Check the keychain or the file-fallback passphrase.
+    clave_movil_identity_checksum: 'The Cl@ve Móvil identifier has a valid shape but its checksum letter does not match its digits. Check the final letter on your document and try again.'
   calc:
     age_at_year_end_no_filing_year: 'Internal error: age-at-year-end calculation has
       no filing year.'
@@ -6084,6 +6089,7 @@ flows:
     required: 'Required'
     optional: 'Optional'
     current_answer_secret: 'Current answer: (hidden)'
+    legal_ref: 'Legal basis: %{ref} — %{label}'
   review:
     action_edit: Edit an answer
     action_prompt: What do you want to do?

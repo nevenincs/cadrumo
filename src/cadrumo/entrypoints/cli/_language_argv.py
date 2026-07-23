@@ -37,30 +37,47 @@ def _normalise_supported_language_for_argv(value: str) -> str | None:
     return None
 
 
-def _language_from_argv(argv: list[str]) -> str | None:
-    """Extract a supported ``--language`` / ``--lang`` value from a raw argv slice.
+_LANGUAGE_FLAGS: tuple[str, ...] = ("--language", "--lang", "--output-language")
+_LANGUAGE_FLAG_PREFIXES: tuple[str, ...] = ("--language=", "--lang=", "--output-language=")
 
-    Reads the operator-typed ``--language LANG`` / ``--lang LANG`` and the
-    ``--language=LANG`` / ``--lang=LANG`` spliced forms without constructing the
-    Typer app. Returns the supported, normalised language code when one is
-    supplied, otherwise ``None``.
+
+def _language_from_argv(argv: list[str]) -> str | None:
+    """Extract a supported language value from a raw argv slice.
+
+    Reads the operator-typed ``--language LANG`` / ``--lang LANG`` /
+    ``--output-language LANG`` and their ``--flag=LANG`` spliced forms without
+    constructing the Typer app. ``--output-language`` is not a registered Typer
+    option, but a parse-time refusal naming it must still render in the language
+    the operator asked for, so the raw pre-parse recognises the spelling.
+    Returns the supported, normalised language code when one is supplied,
+    otherwise ``None``.
     """
     index = 0
     while index < len(argv):
         token = argv[index]
-        if token in ("--language", "--lang"):
+        if token in _LANGUAGE_FLAGS:
             if index + 1 < len(argv):
                 normalised = _normalise_supported_language_for_argv(argv[index + 1])
                 if normalised is not None:
                     return normalised
             index += 2
             continue
-        if token.startswith("--language=") or token.startswith("--lang="):
+        if token.startswith(_LANGUAGE_FLAG_PREFIXES):
             normalised = _normalise_supported_language_for_argv(token.split("=", 1)[1])
             if normalised is not None:
                 return normalised
         index += 1
     return None
+
+
+def language_from_argv(argv: list[str]) -> str | None:
+    """Public accessor for the raw-argv language pre-parse.
+
+    Terminal error handling resolves the parse-time output language from the
+    invocation argv before any command context exists; it reads that resolution
+    through this facade rather than the private helper.
+    """
+    return _language_from_argv(argv)
 
 
 def apply_language_argv_to_environment(argv: list[str]) -> None:
@@ -81,4 +98,4 @@ def apply_language_argv_to_environment(argv: list[str]) -> None:
         os.environ[OUTPUT_LANGUAGE_ENV_VAR] = language
 
 
-__all__ = ["apply_language_argv_to_environment"]
+__all__ = ["apply_language_argv_to_environment", "language_from_argv"]

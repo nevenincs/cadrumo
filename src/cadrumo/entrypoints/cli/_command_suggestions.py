@@ -35,6 +35,7 @@ never trigger a loader.
 
 from __future__ import annotations
 
+import sys
 from collections.abc import Callable
 from typing import Any, override
 
@@ -200,8 +201,11 @@ class CadrumoTyperGroup(TyperGroup):
             return super().main(*args, standalone_mode=False, **kwargs)
         from ._terminal_errors import run_standalone_with_error_contract
 
+        raw_argv = kwargs.get("args")
+        invocation_argv = list(raw_argv) if raw_argv is not None else sys.argv[1:]
         return run_standalone_with_error_contract(
             lambda: super(CadrumoTyperGroup, self).main(*args, standalone_mode=False, **kwargs),
+            argv=invocation_argv,
         )
 
     @override
