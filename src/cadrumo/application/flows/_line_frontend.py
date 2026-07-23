@@ -261,7 +261,10 @@ class LineFlowFrontend:
                 case FlowWidgetKind.COMPARE_SELECT:
                     choices = self._render_choices(copy)
                     choices.append(
-                        questionary.Choice(title=tr("flows.compare_select.defer_label"), value=DEFER_TOKEN),
+                        questionary.Choice(
+                            title=f"{len(choices) + 1}. {tr('flows.compare_select.defer_label')}",
+                            value=DEFER_TOKEN,
+                        ),
                     )
                     return self._stringify(
                         self._ask(
@@ -293,11 +296,15 @@ class LineFlowFrontend:
 
     def _render_choices(self, copy: PageCopy) -> list[questionary.Choice]:
         rendered: list[questionary.Choice] = []
-        for choice in copy.choices:
+        for number, choice in enumerate(copy.choices, start=1):
             title = choice.label
             if choice.provenance:
                 title = tr("flows.compare_select.candidate", label=choice.label, provenance=choice.provenance)
-            rendered.append(questionary.Choice(title=title, value=choice.value, description=choice.description))
+            # Number every row so "item 3" names the same choice on both
+            # frontends (the full-screen list is numbered identically).
+            rendered.append(
+                questionary.Choice(title=f"{number}. {title}", value=choice.value, description=choice.description),
+            )
         return rendered
 
     def _render_section_blocks(self, state: FlowState) -> FlowState:

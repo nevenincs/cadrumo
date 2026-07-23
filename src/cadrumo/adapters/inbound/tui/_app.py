@@ -94,8 +94,9 @@ class FlowTuiApp(App[None]):
     #page-legal-zone { color: $text-muted; text-style: italic; margin: 0 0 1 0; }
     #widget-area { margin: 1 0; height: auto; }
     #widget-area Input { border: tall $accent; }
-    #widget-area RadioSet, #widget-area SelectionList { border: round $panel; padding: 0 1; height: auto; }
+    #widget-area RadioSet, #widget-area OptionList { border: round $panel; padding: 0 1; height: auto; width: 100%; }
     #widget-area RadioButton { height: auto; }
+    #widget-area OptionList > .option-list--option { padding: 0 1; }
     #live-validation { color: $error; margin: 0; }
     #answer-echo { color: $success; text-style: bold; margin: 0; }
     #commit-verdicts { color: $error; margin: 0; }
