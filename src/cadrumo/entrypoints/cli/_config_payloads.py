@@ -64,11 +64,18 @@ class ProfilePointerPayload(OutputSchema):
     facts stay under
     :class:`ProfileFactPayload` in the
     profile-show envelope.
+
+    ``status`` mirrors the manifest lifecycle marker
+    (:class:`~cadrumo.domain.user_profile.UserProfileStatus` value) so the
+    listing distinguishes a workable ``active`` profile from a
+    ``setup_incomplete`` one still completing its interactive setup — the
+    latter is listed and resumable but not yet workable.
     """
 
     name: str
     bucket_id: str
     active: bool
+    status: str
 
 
 class ProfileIssuePayload(OutputSchema):

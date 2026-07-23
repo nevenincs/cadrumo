@@ -6,12 +6,15 @@ through :class:`BucketEventHistoryRepository`.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 import click
 import typer
 
 from ....application.operator_surface import build_help_document as _build_help_document
 from ....application.operator_surface import render_help_text as _render_help_text
 from ....application.wizard import build_wizard_command as _build_wizard_command
+from ....application.workflow import ProfileBucketPointer as _ProfileBucketPointer
 from ....application.workflow import ProfileLabelAmbiguousError as _ProfileLabelAmbiguousError
 from ....application.workflow import read_profile_bucket as _read_profile_bucket
 from ....application.workflow import resolve_profile_bucket as _resolve_profile_bucket
@@ -21,6 +24,8 @@ from ....core.errors import CadrumoError as _CadrumoError
 from ....core.external_constants import OutputLanguage as _OutputLanguage
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n import tr
+from ....core.json_contract import Notice as _Notice
+from ....core.json_contract import NoticeSeverity as _NoticeSeverity
 from ....core.logging import get_logger as _get_logger
 from ....core.wizard_catalogue import get_setup_flow as _get_setup_flow
 from .._command_suggestions import CadrumoTyperGroup as _CadrumoTyperGroup
@@ -191,6 +196,32 @@ def _atomic_create_profile(*, display_name, facts, profile_id: str | None = None
     return profile_id
 
 
+def _profile_setup_incomplete_notices(pointers: Sequence[_ProfileBucketPointer]) -> list[_Notice]:
+    """Build the non-blocking advisory for profiles still completing setup.
+
+    A ``SETUP_INCOMPLETE`` profile is live and resumable but not workable,
+    so the listing surfaces it through the typed Notice channel — never a
+    bespoke advisory payload field. Returns an empty list when no profile
+    is mid-setup, so a fully-onboarded listing carries no notice.
+    """
+    if not pointers:
+        return []
+    labels = ", ".join(sorted(pointer.label for pointer in pointers))
+    return [
+        _Notice(
+            severity=_NoticeSeverity.INFO,
+            code="config.profile.setup_incomplete",
+            message=tr(
+                "cli.config.list.setup_incomplete_notice",
+                count=len(pointers),
+                labels=labels,
+            ),
+            suggestion="aeat config profile status",
+            context={"count": str(len(pointers)), "labels": labels},
+        ),
+    ]
+
+
 @profile_app.command("list", help=tr("cli.config.list.help"))
 def config_list(
     ctx: typer.Context,
@@ -212,6 +243,7 @@ def config_list(
     """
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.workflow import list_profile_buckets
+    from ....domain.user_profile import UserProfileStatus
     from .._config_payloads import ConfigListResult, ProfilePointerPayload
 
     active = _resolve_active_bucket_id()
@@ -225,6 +257,7 @@ def config_list(
                 name=pointer.label,
                 bucket_id=pointer.bucket_id,
                 active=pointer.bucket_id == active,
+                status=pointer.status.value,
             )
             for pointer in rows
         ],
@@ -235,8 +268,17 @@ def config_list(
         lines = [f"active_profile\t{active_label or '<none>'}"]
         for pointer in rows:
             marker = "*" if pointer.bucket_id == active else " "
-            lines.append(f"{marker}\t{pointer.label}")
-    _emit_envelope(ctx, command="config.profile.list", result=result, lines=lines)
+            # The trailing status token keys on the stable machine value so a
+            # ``setup_incomplete`` profile (listed and resumable, but not yet
+            # workable) is never rendered indistinguishably from a workable
+            # ``active`` one.
+            lines.append(f"{marker}\t{pointer.label}\t{pointer.status.value}")
+    # An incomplete profile is visible but not workable; surface that as a
+    # non-blocking advisory on the typed Notice channel rather than a silent
+    # active-looking row (per the CLI-notice diagnostic contract).
+    incomplete = [pointer for pointer in rows if pointer.status is UserProfileStatus.SETUP_INCOMPLETE]
+    notices = _profile_setup_incomplete_notices(incomplete)
+    _emit_envelope(ctx, command="config.profile.list", result=result, lines=lines, notices=notices)
 
 
 @profile_app.command("show", help=tr("cli.config.profile.show_help"))
