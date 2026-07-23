@@ -19,7 +19,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ...core.flows import FlowMode
-from ._definition import FlowDefinition
+from ._definition import FlowDefinition, FlowRepeatingGroup
 from ._engine import FlowState, start_flow, visible_sequence
 from ._validators import run_answer_validation
 
@@ -81,8 +81,6 @@ def _seed_counts(
     canonical: str,
     counts: dict[str, int],
 ) -> None:
-    from ._definition import FlowRepeatingGroup
-
     for section in definition.sections:
         for item in section.items:
             if isinstance(item, FlowRepeatingGroup) and item.count_from == page_key:
