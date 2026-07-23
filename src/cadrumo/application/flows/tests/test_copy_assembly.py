@@ -12,10 +12,13 @@ unregister verb. This module registers only ``SCHEMA_FIELD`` resolvers,
 each scoped to its own reference namespace and returning ``None`` outside
 it, so it coexists with any other ``SCHEMA_FIELD`` registrant (the modelo
 work wizard registers one under the ``modelo-work:`` namespace) without
-collision. It never registers ``TERMINOLOGY_CONCEPT``, which no production
-code registers either, so that kind stays genuinely resolver-less for the
-unregistered-kind refusal. Registration happens at module scope because
-the sibling flow test modules touch no copy sources.
+collision. The unregistered-kind refusal owns its precondition directly:
+a fixture snapshots whatever resolvers a chosen kind carries, clears them
+for the duration, and restores on teardown, so the case never silently
+depends on a production namespace never registering that kind (the
+profile setup flow is specified to register ``TERMINOLOGY_CONCEPT`` at
+import time). Registration happens at module scope because the sibling
+flow test modules touch no copy sources.
 
 Assertions read the resolver's own returned strings and error message
 *keys*, never localized prose.
@@ -23,9 +26,14 @@ Assertions read the resolver's own returned strings and error message
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import pytest
 
 from ....core.flows import CopyRefKind, FlowWidgetKind
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 from ....core.i18n import tr
 from .. import (
     CopyRef,
@@ -98,16 +106,37 @@ def test_unresolvable_locale_key_refuses_loudly() -> None:
     assert excinfo.value.translated_message == "application.flows.errors.copy_locale_key_unresolved"
 
 
-def test_kind_without_a_registered_resolver_refuses() -> None:
-    # No production or test code registers TERMINOLOGY_CONCEPT.
-    ref = CopyRef(kind=CopyRefKind.TERMINOLOGY_CONCEPT, ref="tema-anything")
+@pytest.fixture
+def _kind_with_no_resolvers() -> Iterator[CopyRefKind]:
+    """Guarantee a copy kind carries zero resolvers for the test's duration.
+
+    The unregistered-resolver refusal must not depend on any production
+    namespace never registering a resolver for a given kind — the profile
+    setup flow is specified to register ``TERMINOLOGY_CONCEPT``. The test
+    owns the empty state directly: snapshot whatever resolvers the kind
+    holds in the real registry, clear them, and restore on teardown. This
+    is genuine registry-state setup, not a behaviour double.
+    """
+    from .._copy import _SOURCE_RESOLVERS
+
+    kind = CopyRefKind.TERMINOLOGY_CONCEPT
+    saved = _SOURCE_RESOLVERS.pop(kind, None)
+    try:
+        yield kind
+    finally:
+        if saved is not None:
+            _SOURCE_RESOLVERS[kind] = saved
+
+
+def test_kind_without_a_registered_resolver_refuses(_kind_with_no_resolvers: CopyRefKind) -> None:
+    ref = CopyRef(kind=_kind_with_no_resolvers, ref="tema-anything")
     with pytest.raises(FlowCopyResolutionError) as excinfo:
         resolve_copy(ref)
 
     assert excinfo.value.translated_message == "application.flows.errors.copy_source_unregistered"
     context = excinfo.value.context
     assert context is not None
-    assert context["kind"] == CopyRefKind.TERMINOLOGY_CONCEPT.value
+    assert context["kind"] == _kind_with_no_resolvers.value
 
 
 def test_registered_resolvers_present_but_none_match_refuses() -> None:
