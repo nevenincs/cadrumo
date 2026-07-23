@@ -22,6 +22,17 @@ from ._errors import FlowSubmitError
 from ._validators import ValidationVerdict, resolve_cross_field_validator
 
 
+_PAGE_BADGE_LOCALE_KEYS: tuple[str, ...] = (
+    "flows.progress.required",
+    "flows.progress.optional",
+)
+"""Static declaration of the required/optional badge catalogue keys.
+
+Frontends select between the pair at render time through a variable
+``tr()`` call, which the locale usage scanner cannot see; declaring the
+keys here keeps the authored catalogue leaves recognised as live."""
+
+
 class ReviewRow(BaseModel):
     """One page's entry on the review surface."""
 
