@@ -1,10 +1,10 @@
 """Bridge: project the existing wizard catalogue into flow definitions.
 
 The one-shot wizard catalogue (:mod:`cadrumo.application.wizard`)
-remains the authoring source of the setup questions during the
-migration window: it keeps feeding the ``compile_profile_keys``
-projection and the ``register_wizard_catalogue`` /
-``register_project_answers`` core slots exactly as before. This module
+remains the authoring source of the setup questions: it keeps feeding
+the ``compile_profile_keys`` projection and the
+``register_wizard_catalogue`` / ``register_project_answers`` core slots
+exactly as before. This module
 adds the one-way projection from that vocabulary into the substrate's
 :class:`FlowDefinition` so the engine and its frontends can drive the
 same questions without a second authored catalogue — one source, two

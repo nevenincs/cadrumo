@@ -1,6 +1,6 @@
 """The full-page question screen: one page, all its zones, live validation.
 
-Renders the fixed zones of the ADR's page model — header (flow title,
+Renders the fixed zones of the full-page question model — header (flow title,
 position, section), body (prompt, grounding help, required badge, format
 hint, failure modes, input widget, live validation line, current-answer
 echo), footer (key bindings) — for whichever page the engine's cursor
