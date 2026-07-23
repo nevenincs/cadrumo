@@ -15,6 +15,15 @@ Consumers import from this facade only.
 
 from __future__ import annotations
 
+from ._copy import (
+    ChoiceCopy,
+    CopySourceResolver,
+    PageCopy,
+    assemble_page_copy,
+    register_copy_source,
+    resolve_copy,
+    resolve_optional_copy,
+)
 from ._definition import (
     CopyRef,
     FlowChoice,
@@ -53,6 +62,7 @@ from ._errors import (
     FlowValidatorRegistryError,
 )
 from ._review import ReviewProjection, ReviewRow, assert_submit_eligible, review
+from ._scripted import run_scripted_flow
 from ._validators import (
     AnswerValidator,
     CrossFieldValidator,
@@ -69,7 +79,9 @@ from ._validators import (
 __all__ = [
     "SECTION_VERDICT_PREFIX",
     "AnswerValidator",
+    "ChoiceCopy",
     "CopyRef",
+    "CopySourceResolver",
     "CrossFieldValidator",
     "FlowAnswerError",
     "FlowCheckpointError",
@@ -88,11 +100,13 @@ __all__ = [
     "FlowSubmitError",
     "FlowValidatorRegistryError",
     "FlowVisibility",
+    "PageCopy",
     "ReviewProjection",
     "ReviewRow",
     "ValidationVerdict",
     "VisiblePage",
     "answer",
+    "assemble_page_copy",
     "assert_submit_eligible",
     "back_page",
     "iter_flow_conditions",
@@ -101,13 +115,17 @@ __all__ = [
     "page_status",
     "redact_answer_context",
     "register_answer_validator",
+    "register_copy_source",
     "register_cross_field_validator",
     "reset_page",
     "resolve_answer_validator",
+    "resolve_copy",
     "resolve_cross_field_validator",
+    "resolve_optional_copy",
     "restart_flow",
     "review",
     "run_answer_validation",
+    "run_scripted_flow",
     "set_instance_count",
     "start_flow",
     "validate_widget_shape",
