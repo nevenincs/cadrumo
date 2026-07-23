@@ -3380,6 +3380,8 @@ cli:
       tax_residence_ccaa_help: Az adóilletékesség autonóm közössége.
     list:
       help: Minden regisztrált profil listázása és az aktív megjelölése.
+      setup_incomplete_notice: '%{count} profil még a beállítást fejezi be, és még
+        nem áll készen a bevallásra: %{labels}. Folytassa a beállítást a használatukhoz.'
     passphrase:
       change:
         help: A titoktár jelszavának cseréje a jelenlegi ellenőrzése után.
@@ -4811,6 +4813,8 @@ cli:
       help: A határidő-naptár megjelenítése az aktív profilhoz a megadott dátumablakon
         belül. Festivos és munkanapszámítás alkalmazásával. Csak helyi; soha nem lép
         kapcsolatba az AEAT-tal.
+      setup_incomplete_notice: '%{count} profil, amely még a beállítást fejezi be,
+        kimaradt a naptárból; még nem áll készen a bevallásra: %{labels}.'
       shift:
         business_day: Munkanap
         calendar_unavailable: Naptár nem elérhető
@@ -5435,6 +5439,10 @@ errors:
     unsupported_op: 'Nem támogatott képletoperátor: %{op}.'
   censo:
     bucket_id_blank: A censo-szinkronizálási szolgáltatáshoz profil-bucket szükséges.
+    certificado_extraction_unpinned: A kiállított tanúsítvány beolvasása még nem támogatott;
+      add meg a censal adatokat kézzel.
+    certificado_not_a_pdf: A megadott fájl nem PDF; a Sede-ről letöltött Certificado
+      de Situación Censal szükséges.
   error:
     error_access_gate_submission: A hozzáférési kapu szabályzata elutasított egy benyújtási
       műveletet.
@@ -5468,6 +5476,7 @@ errors:
       vagy ellentmondásosak.
     error_categories: Hiba történt a kiadáskategóriákban.
     error_categories_validation: Egy kategória-rekord nem ment át az érvényesítésen.
+    error_certificado_censal: A Certificado de Situación Censal művelet meghiúsult.
     error_config_boundary: A konfigurációs parancs váratlan belső hibát észlelt.
     error_corpus_search: A helyi korpuszkeresés nem fejeződött be.
     error_deadlines_deadline: Hiba történt a határidő-számítás során.
@@ -5663,6 +5672,8 @@ errors:
     fail_browser_evasion: A böngésző-kijátszás beállítása nem alkalmazható.
     fail_browser_session_browser: A böngésző-munkamenet böngészőjét nem sikerült elindítani.
     fail_browser_validation: A böngésző-munkamenet paraméterei nem mentek át az érvényesítésen.
+    fail_certificado_censal_parse: Nem sikerült beolvasni a Certificado de Situación
+      Censal dokumentumot.
     fail_declaracion_parse: A bevallás fájlját nem sikerült elemezni.
     fail_export: Az exportálás meghiúsult.
     fail_export_format: A kért exportformátum nem támogatott.
