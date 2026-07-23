@@ -100,8 +100,10 @@ class BucketEventType(StrEnum):
     PROFILE_IMPORTED = "profile.imported"
     PROFILE_ACTIVATED = "profile.activated"
     PROFILE_SETUP_COMPLETED = "profile.setup.completed"
-    # 036 censo live-sync against the sede Mis Datos Censales endpoint
-    CENSO_REFRESHED = "profile.censo.refreshed"
+    # 036 censo cotejo: dormant until re-enrolled with a live emission
+    # site at the cotejo artefact-apply reconciliation. The live-refresh
+    # scrape against the sede Mis Datos Censales endpoint was retired and
+    # its snapshot substrate deleted, so no refresh event remains.
     CENSO_APPLIED = "profile.censo.applied"
     CENSO_DEPENDENT_STAMPED_STALE = "modelo.censo.dependent_stamped_stale"
     MODELO_LEDGER_DEPENDENT_STAMPED_STALE = "modelo.ledger.dependent_stamped_stale"
@@ -111,9 +113,8 @@ class BucketEventType(StrEnum):
     # files a 036 — AEAT is the authority. These
     # events record the operator's declaration so downstream profile
     # state and stale-cascade logic can react. Distinct prefix
-    # ``modelo.036.declaration.*`` separates them from the existing
-    # mirror events (``profile.censo.refreshed/applied``) authored
-    # for the live-read pipeline.
+    # ``modelo.036.declaration.*`` separates them from the
+    # ``profile.censo.applied`` cotejo mirror event.
     CENSO_DECLARATION_ALTA = "modelo.036.declaration.alta"
     CENSO_DECLARATION_MODIFICACION = "modelo.036.declaration.modificacion"
     CENSO_DECLARATION_BAJA = "modelo.036.declaration.baja"
