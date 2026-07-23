@@ -110,26 +110,26 @@ Build the renderer-agnostic substrate core: closed enums, FlowDefinition contrac
 
 Declare the substrate's closed value sets and typed transition intents in core, extending the widget taxonomy with the repeating-group and compare-select kinds and the page-status set.
 
-- [ ] `W01.P01.S01` - Declare the substrate closed value sets (widget kinds including repeating-group and compare-select, page status including stale and deferred, flow mode, checkpoint availability) as StrEnums; `src/cadrumo/core/flows.py`.
-- [ ] `W01.P01.S02` - Pin the enum member sets and StrEnum token contract with real-behavior tests; `src/cadrumo/core/tests/test_flows_enums.py`.
+- [x] `W01.P01.S01` - Declare the substrate closed value sets (widget kinds including repeating-group and compare-select, page status including stale and deferred, flow mode, checkpoint availability) as StrEnums; `src/cadrumo/core/flows.py`.
+- [x] `W01.P01.S02` - Pin the enum member sets and StrEnum token contract with real-behavior tests; `src/cadrumo/core/tests/test_flows_enums.py`.
 
 ### Phase `W01.P02` - FlowDefinition contract models
 
 Author the strict frozen definition family with copy references, branching predicates, repeating groups, and the section-exit plus flow-scope validator slots, preserving continuity with the existing descriptor vocabulary and the three registration projections.
 
-- [ ] `W01.P02.S03` - Author the strict frozen FlowDefinition family (flow, section, page, choice, copy-reference, branching predicate, repeating group, compare-select) with build-time validators for unique ids, forward-only references, and reference-not-literal copy slots; `src/cadrumo/application/flows/_definition.py`.
-- [ ] `W01.P02.S04` - Port the widget validators and add the typed validator slots (per-answer, section-exit, flow-scope) returning i18n message keys with redacted diagnostics; `src/cadrumo/application/flows/_validators.py`.
+- [x] `W01.P02.S03` - Author the strict frozen FlowDefinition family (flow, section, page, choice, copy-reference, branching predicate, repeating group, compare-select) with build-time validators for unique ids, forward-only references, and reference-not-literal copy slots; `src/cadrumo/application/flows/_definition.py`.
+- [x] `W01.P02.S04` - Port the widget validators and add the typed validator slots (per-answer, section-exit, flow-scope) returning i18n message keys with redacted diagnostics; `src/cadrumo/application/flows/_validators.py`.
 - [ ] `W01.P02.S05` - Bridge the existing wizard catalogue vocabulary into FlowDefinition while keeping the compile_profile_keys projection and the register_wizard_catalogue and register_project_answers core slots fed unchanged; `src/cadrumo/application/flows/_bridge.py`.
-- [ ] `W01.P02.S06` - Prove the definition contract with build-time validator tests covering duplicate ids, non-forward references, literal-copy refusal, and repeating-group shape; `src/cadrumo/application/flows/tests/test_definition.py`.
+- [x] `W01.P02.S06` - Prove the definition contract with build-time validator tests covering duplicate ids, non-forward references, literal-copy refusal, and repeating-group shape; `src/cadrumo/application/flows/tests/test_definition.py`.
 
 ### Phase `W01.P03` - FlowEngine state machine
 
 Implement the immutable FlowState and the pure transition engine covering answer, navigation, jump, reset, restart, staleness, deferral, and the review projection, with exhaustive transition tests.
 
-- [ ] `W01.P03.S07` - Implement the immutable FlowState and the pure transition engine (answer, next, back, jump, reset, restart) with per-transition visibility recompute and staleness marking; `src/cadrumo/application/flows/_engine.py`.
-- [ ] `W01.P03.S08` - Implement the review projection (per-question status glyph set, jump targets, submit eligibility requiring all required valid and zero stale) and the deferred-status surfacing; `src/cadrumo/application/flows/_review.py`.
-- [ ] `W01.P03.S09` - Cover complete navigation scenarios (back, jump, gating-answer change marks dependents stale, reset, restart, repeating-group instances, deferral) with engine transition tests; `src/cadrumo/application/flows/tests/test_engine.py`.
-- [ ] `W01.P03.S10` - Expose the substrate public facade with an explicit __all__ consumed only via top-level re-exports; `src/cadrumo/application/flows/__init__.py`.
+- [x] `W01.P03.S07` - Implement the immutable FlowState and the pure transition engine (answer, next, back, jump, reset, restart) with per-transition visibility recompute and staleness marking; `src/cadrumo/application/flows/_engine.py`.
+- [x] `W01.P03.S08` - Implement the review projection (per-question status glyph set, jump targets, submit eligibility requiring all required valid and zero stale) and the deferred-status surfacing; `src/cadrumo/application/flows/_review.py`.
+- [x] `W01.P03.S09` - Cover complete navigation scenarios (back, jump, gating-answer change marks dependents stale, reset, restart, repeating-group instances, deferral) with engine transition tests; `src/cadrumo/application/flows/tests/test_engine.py`.
+- [x] `W01.P03.S10` - Expose the substrate public facade with an explicit __all__ consumed only via top-level re-exports; `src/cadrumo/application/flows/__init__.py`.
 
 ## Wave `W02` - Frontends and copy assembly
 

@@ -258,10 +258,20 @@ stream. Verdicts relevant to the substrate:
   `ProfileSchemaDefinition` before persistence, and the pointer file has
   a single reentrant transacted writer
   (`active_profile_pointer_transaction`); delete is soft-tombstone,
-  never hard-delete. (4) Two parallel `TaxpayerProfile` derivation paths
-  already exist (`load_active_taxpayer_profile` in `_status.py` vs
-  `taxpayer_profile_from_mapping`) — a pre-existing drift risk the
-  substrate must not widen with a third. The locale map also confirms
+  never hard-delete. (4) The `TaxpayerProfile` derivation surface is one
+  layered coercion path, not two parallel ones:
+  `load_active_taxpayer_profile` (`_status.py`) delegates through
+  `projection_for_taxpayer` into `taxpayer_profile_from_mapping`. One
+  genuine bypass did exist — `application/state_projection.py` built the
+  model from a selector-keyed mapping while the authority feeds path
+  keys, and `taxpayer_profile_from_mapping` reads a mix of both key
+  spaces (the fiscal-address family via its `model_selectors` alias) —
+  silently blanking the aliased family on one path and dropping
+  path-keyed facts on the other. Fixed under the profile-setup-flow
+  plan (commit `bc794c9699`): the authority's record branch now merges
+  both key spaces disjoint-by-construction and the state projection
+  delegates to it, locked by real-behavior regressions. The substrate
+  must not add a derivation path of its own. The locale map also confirms
   the `profile` root is allowlisted in `_DYNAMIC_TRANSLATION_ROOTS`
   (dynamic keys invisible to static scanning — scaffold/audit must run
   explicitly on any question set change) and that `tema-profile.toml` is
