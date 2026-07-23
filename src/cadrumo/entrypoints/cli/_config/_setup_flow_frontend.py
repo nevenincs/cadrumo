@@ -9,7 +9,9 @@ runner built here is injected into
 :func:`~cadrumo.application.wizard.build_wizard_command` so the paged flow
 is the operator-facing default in a capable terminal.
 
-Selection tiers:
+Selection tiers, classified by the flow substrate's own
+:func:`~cadrumo.application.flows.detect_frontend_capability` (the single
+probe authority — never re-derived here):
 
 * FULL_SCREEN — a capable interactive console hosts the full-screen
   :func:`~cadrumo.adapters.inbound.tui.run_flow_tui`.
@@ -19,18 +21,10 @@ Selection tiers:
 * NON_INTERACTIVE — a piped / no-console host cannot host either
   frontend, so the run refuses with the flow substrate's translated
   no-console error, which the wizard maps to its create / edit hint.
-
-The capability probe is a THIN LOCAL SEAM. The campaign's substrate
-stream is landing ``detect_frontend_capability`` (in
-``cadrumo.application.flows``) and ``select_flow_frontend`` (in
-``cadrumo.adapters.inbound.tui``); when those symbols reach HEAD this
-module's local ``_FrontendCapability`` / ``_detect_capability`` /
-``_select_and_run`` collapse to a one-line delegation to them.
 """
 
 from __future__ import annotations
 
-from enum import StrEnum
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -38,41 +32,6 @@ if TYPE_CHECKING:
 
     from ....application.flows import FlowDefinition, FlowState
     from ....core.flows import FlowMode
-
-
-class _FrontendCapability(StrEnum):
-    """The three rendering tiers a host can support.
-
-    Neutral local mirror of the incoming
-    ``cadrumo.core.flows.FrontendCapability`` contract; kept minimal so
-    the swap to the shipped enum is mechanical.
-    """
-
-    FULL_SCREEN = "full_screen"
-    LINE = "line"
-    NON_INTERACTIVE = "non_interactive"
-
-
-def _detect_capability(definition: FlowDefinition) -> _FrontendCapability:
-    """Classify the current host's flow-rendering capability.
-
-    LOCAL SEAM: reuses the flow substrate's own console probe (the
-    line-mode frontend's ``ensure_interactive_environment``, the sanctioned
-    non-TTY / Windows-no-console detection) to separate an interactive
-    console from a piped / no-console host. The FULL_SCREEN vs LINE
-    distinction (a terminal that hosts basic prompts but not a full-screen
-    application) awaits the substrate stream's Textual-aware
-    ``detect_frontend_capability``; until then a capable console is treated
-    as full-screen and LINE is reachable only when the shipped contract
-    lands.
-    """
-    from ....application.flows import FlowUnsupportedConsoleError, LineFlowFrontend
-
-    try:
-        LineFlowFrontend(definition).ensure_interactive_environment()
-    except FlowUnsupportedConsoleError:
-        return _FrontendCapability.NON_INTERACTIVE
-    return _FrontendCapability.FULL_SCREEN
 
 
 def run_setup_flow_frontend(
@@ -88,12 +47,17 @@ def run_setup_flow_frontend(
             full-screen nor the line frontend; the wizard command maps
             this to its create / edit no-console hint.
     """
-    from ....application.flows import FlowUnsupportedConsoleError, LineFlowFrontend
+    from ....application.flows import (
+        FlowUnsupportedConsoleError,
+        LineFlowFrontend,
+        detect_frontend_capability,
+    )
+    from ....core.flows import FrontendCapability
 
-    capability = _detect_capability(definition)
-    if capability is _FrontendCapability.NON_INTERACTIVE:
+    capability = detect_frontend_capability()
+    if capability is FrontendCapability.NON_INTERACTIVE:
         raise FlowUnsupportedConsoleError(translated_message="flows.errors.unsupported_console")
-    if capability is _FrontendCapability.LINE:
+    if capability is FrontendCapability.LINE:
         state, _projection = LineFlowFrontend(definition).run(mode=mode)
         return state
 
