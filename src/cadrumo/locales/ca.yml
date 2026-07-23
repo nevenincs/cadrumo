@@ -709,6 +709,31 @@ application:
           de model sol.licitades: %{modelos}.'
         unsupported_casilla_data_type: 'Tipus de dada de casella del registre no admès:
           %{data_type}.'
+  flows:
+    errors:
+      answer_target_not_visible: 'El flux {flow_id} no pot registrar cap resposta
+        per a {page_key}: aquesta pregunta no és visible ara mateix.'
+      checkpoint_unavailable_mode: El flux {flow_id} no ofereix desar i sortir en
+        el mode {mode}; les seves {answered_count} respostes només existeixen en aquesta
+        sessió.
+      copy_locale_key_unresolved: La clau de text {ref} no existeix al catàleg de
+        traduccions.
+      copy_ref_unresolved: La font de text {kind} no ha resolt cap text per a la referència
+        {ref}.
+      copy_source_duplicate: Ja hi ha un resolutor de font de text registrat per al
+        tipus {kind}.
+      copy_source_locale_builtin: application.flows.errors.copy_source_locale_builtin
+      copy_source_unregistered: application.flows.errors.copy_source_unregistered
+      jump_target_not_visible: application.flows.errors.jump_target_not_visible
+      reset_target_unknown: application.flows.errors.reset_target_unknown
+      scripted_answer_rejected: application.flows.errors.scripted_answer_rejected
+      scripted_queue_overflow: application.flows.errors.scripted_queue_overflow
+      scripted_queue_underflow: application.flows.errors.scripted_queue_underflow
+      submit_blocked: application.flows.errors.submit_blocked
+      unknown_repeating_group: application.flows.errors.unknown_repeating_group
+      validator_id_blank: application.flows.errors.validator_id_blank
+      validator_id_duplicate: application.flows.errors.validator_id_duplicate
+      validator_id_unknown: application.flows.errors.validator_id_unknown
   inventory:
     service:
       errors:
@@ -1040,6 +1065,8 @@ application:
         %{period}; completa abans aquestes dades de perfil: %{missing}.'
       profile_readiness_profile_missing: No existeix cap perfil actiu persistit per
         a aquest treball de model; crea o repara el perfil abans de continuar.
+      profile_readiness_setup_incomplete: La configuració del perfil està incompleta;
+        acaba l'assistent de configuració abans de treballar amb models.
       recipient_decryption_failed: No s'ha pogut desxifrar el paquet xifrat per al
         destinatari; la clau no coincideix o el paquet ha estat manipulat.
       recipient_encryption_invalid_key: La clau pública del destinatari no és una
@@ -1106,7 +1133,6 @@ application:
         per marcar com a presentat quan la finestra d''obligació sigui oberta.'
       workflow_input_mismatch: La sol·licitud d'entrada del flux de treball no coincideix
         amb la revisió de càlcul.
-      profile_readiness_setup_incomplete: 'La configuració del perfil està incompleta; acaba l''assistent de configuració abans de treballar amb models.'
     findings:
       art20_reduccion_next_action: Verifiqueu si les vostres altres rendes diferents
         de les del treball excloses les exemptes de l'exercici no superen 6500 EUR;
@@ -5536,6 +5562,7 @@ errors:
     error_financial_usage_ratios_usage_ratio: S'ha produït un error en els percentatges
       d'ús.
     error_fixture_provisioning: No s'han pogut preparar les dades de prova.
+    error_flow: errors.error.error_flow
     error_invoice_link_inconsistency: L'enllaç ha deixat la factura i la transacció
       dessincronitzades. Revisa tots dos catàlegs manualment.
     error_invoice_validation: Un registre de factura no ha superat la validació.
@@ -5935,6 +5962,8 @@ errors:
     internal_cli_unexpected_boundary: L'ordre ha fallat per un error intern inesperat,
       no per un problema de dades emmagatzemades. Consulteu els registres de diagnòstic
       per veure què ha fallat.
+    internal_flow_copy_resolution: errors.internal.internal_flow_copy_resolution
+    internal_flow_validator_registry: errors.internal.internal_flow_validator_registry
     internal_master_key_reentrant: 'Error intern: el proveïdor de la clau mestra s''ha
       invocat de manera reentrant; tanca la sessió activa abans de tornar a entrar-hi.'
     internal_master_key_type: 'Error intern: l''operació de clau mestra ha rebut un
@@ -6152,6 +6181,11 @@ errors:
     refused_financial_usage_ratios_censo_mismatch: Un percentatge d'ús d'oficina a
       casa desat no coincideix amb el cens, que és la font legal vinculant. Alinea'l
       amb el valor del cens.
+    refused_flow_answer: errors.refused.refused_flow_answer
+    refused_flow_checkpoint: errors.refused.refused_flow_checkpoint
+    refused_flow_navigation: errors.refused.refused_flow_navigation
+    refused_flow_submit: errors.refused.refused_flow_submit
+    refused_flow_unsupported_console: errors.refused.refused_flow_unsupported_console
     refused_google_impersonation: IAM ha rebutjat emetre un testimoni de suplantació
       per al compte de servei de destinació. Concediu-li el rol roles/iam.serviceAccountTokenCreator.
     refused_google_non_interactive: L'inici de sessió de Google necessita un terminal
@@ -6400,6 +6434,55 @@ filing:
     out_of_range: Valor fora de rang permès
     required_missing: Falta camp obligatori
     schema_mismatch: Discrepància amb l'esquema esperat
+flows:
+  compare_select:
+    candidate: '{label} (origen: {provenance})'
+    defer_label: Decidir-ho més tard
+  confirm:
+    'no': 'No'
+    'yes': Sí
+  errors:
+    checkpoint_store_missing: El flux {flow_id} ofereix desar i sortir en el mode
+      {mode}, però no hi ha cap magatzem de punts de desada connectat, de manera que
+      l'execució s'ha rebutjat en lloc de perdre les teves respostes.
+    tui_abandoned: El flux {flow_id} s'ha tancat en el mode {mode} abans d'enviar-lo
+      o desar-lo; no s'ha registrat res.
+    unsupported_console: Aquesta consola no pot mostrar preguntes interactives. Executa
+      el flux des d'un terminal real o guia'l amb un fitxer de respostes.
+  progress:
+    current_answer: 'Resposta actual: {value}'
+    failure_mode: 'Compte: {text}'
+    format_hint: flows.progress.format_hint
+    page_header: Pregunta {position} de {total} — secció {section}
+  review:
+    action_edit: Edita una resposta
+    action_prompt: Què vols fer?
+    action_restart: Torna a començar
+    action_save_exit: Desa i surt
+    action_submit: Envia
+    column_answer: Resposta
+    column_question: Pregunta
+    column_registered: Registrat
+    column_status: Estat
+    edit_not_editable: La pregunta {page_key} ja no es pot editar.
+    edit_unknown: No hi ha cap pregunta amb el número {number}.
+    edit_which: 'Quin número de pregunta vols editar? '
+    header: Revisió — {answered} preguntes respostes.
+    header_tui: 'Revisió — {answered} respostes, {remaining} obligatòries pendents,
+      a punt per enviar: {eligible}'
+    orphan_marker: (ja no es pregunta)
+    reset_stale_confirm: La pregunta {page_key} ja no es planteja. Vols esborrar-ne
+      la resposta desada?
+    reset_stale_done: S'ha esborrat la resposta desada de {page_key}.
+    restart_confirm: Vols tornar a començar i descartar totes les respostes?
+    row: '{number}. {page_key} — estat: {status}'
+    save_unavailable: Desar i sortir no està disponible en el mode {mode}; completa
+      el flux d'una sola vegada.
+  tui:
+    button_back: Enrere
+    button_next: Següent
+    button_review: Revisió
+    header: '{flow} — pregunta {position} de {total}, secció {section}'
 live:
   errors:
     expediente_not_found: No s'ha trobat l'expedient sol.licitat a l'AEAT.
@@ -6722,6 +6805,8 @@ wizard:
     question_prefix: Pregunta %{q_n} de %{q_total}
     section_header: 'Pas %{section_n} de %{section_total}: %{title}'
   setup:
+    actividad:
+      title: Activitat econòmica i cens
     capabilities:
       cloud-evidence-upload:
         prompt: Voleu permetre pujar evidència sensible a proveïdors LLM al núvol?
@@ -6760,6 +6845,8 @@ wizard:
       title: Inscripció
     errors:
       missing_required_flags: 'Falten paràmetres requerits per a --quiet: %{missing}'
+    familia:
+      title: Situació familiar
     family:
       family-descendants-eu-eea-deduction:
         prompt: Descendents UE/EEE en deducció d'unitat familiar
@@ -6967,6 +7054,8 @@ wizard:
         help: 'Sexe del primer declarant: H = home, M = dona.'
       third-party-transactions-above-347-threshold:
         help: Operacions amb tercers superen el llindar del Modelo 347
+    identidad:
+      title: Identitat
     intro: 'Configuració guiada del perfil tributari
 
 
@@ -7074,6 +7163,8 @@ wizard:
       third-party-transactions-above-347-threshold:
         prompt: Operacions amb tercers superen el llindar del Modelo 347
       title: Obligacions
+    preferencias:
+      title: Preferències i capacitats
     profile:
       activity:
         prompt: Activitat econòmica (text normal; usa l'epígraf IAE si el coneixes)
