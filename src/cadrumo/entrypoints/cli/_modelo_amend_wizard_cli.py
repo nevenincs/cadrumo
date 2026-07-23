@@ -22,9 +22,8 @@ an export file itself, mirroring how ``work wizard`` hands off to
 
 A real interactive terminal is required by default. Prompting runs through the
 application layer's canonical :class:`~application.wizard.QuestionaryPrompter`
-and the dynamic-prompt helper :func:`_modelo_work_wizard_cli._ask_wizard_text`,
-so this wizard, the calculation-draft wizard, and the profile setup wizard all
-share one console-support detection and one translated refusal.
+with the local dynamic-prompt helper below, sharing the prompter's
+console-support detection and translated refusal.
 """
 
 from __future__ import annotations
@@ -69,12 +68,29 @@ from ._modelo_work_options import (
     _WorkUnitIdArg,
     _YearOpt,
 )
-from ._modelo_work_wizard_cli import _ask_wizard_text
 
 if TYPE_CHECKING:
     from ...domain.modelos import CalculationRevision, ModeloRecord, WorkUnit
 
 __all__ = ["register_amend_wizard_commands"]
+
+
+def _ask_wizard_text(prompter: QuestionaryPrompter, prompt: str, *, help_text: str | None) -> str:
+    """Ask one dynamic free-text wizard question, showing ``help_text`` above it.
+
+    The console-support check runs first, so an unsupported host refuses cleanly
+    rather than rendering guidance for a question it can never ask.
+
+    The help line rides on the prompt string rather than a bare ``print``
+    because the prompt is not written to stdout: it is rendered on the
+    prompter's own output device (the terminal in production, whatever an
+    embedding host declares otherwise). Printing help to stdout would interleave
+    operator prose with the ``--format json`` envelope and leave it unparseable
+    for a machine caller, which is the one thing stdout owes the agent operator.
+    """
+    prompter.ensure_interactive_environment()
+    rendered = f"{help_text}\n{prompt}" if help_text else prompt
+    return prompter.ask_text(rendered)
 
 
 @dataclass(frozen=True, slots=True)
