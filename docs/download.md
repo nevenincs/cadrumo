@@ -78,7 +78,7 @@ channel's install command from that day.
 * - Windows (x86-64)
   - Scoop package
   - Release page artifact; Scoop bucket at public launch
-* - macOS (Apple silicon and Intel)
+* - macOS (Apple silicon)
   - Homebrew formula
   - Release page artifact; Homebrew tap at public launch
 * - Linux (x86-64 and arm64)
