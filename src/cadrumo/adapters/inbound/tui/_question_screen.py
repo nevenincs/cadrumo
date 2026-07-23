@@ -18,9 +18,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from textual.app import ComposeResult
-from textual.containers import Vertical, VerticalScroll
+from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.screen import Screen
-from textual.widgets import Footer, Input, Label, RadioButton, RadioSet, SelectionList, Static
+from textual.widgets import Button, Footer, Input, Label, RadioButton, RadioSet, SelectionList, Static
 from textual.widgets.selection_list import Selection
 
 from cadrumo.application.flows import assemble_page_copy, validate_widget_shape, visible_sequence
@@ -60,6 +60,10 @@ class QuestionScreen(Screen[None]):
             yield Static("", id="live-validation")
             yield Static("", id="answer-echo")
             yield Static("", id="commit-verdicts")
+            with Horizontal(id="nav-buttons"):
+                yield Button(tr("flows.tui.button_back"), id="btn-back")
+                yield Button(tr("flows.tui.button_next"), id="btn-next", variant="primary")
+                yield Button(tr("flows.tui.button_review"), id="btn-review")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -197,6 +201,19 @@ class QuestionScreen(Screen[None]):
         # commit-then-move contract.
         selected = ",".join(str(value) for value in event.selection_list.selected)
         self.flow_app.commit_answer(selected)
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "btn-back":
+            self.flow_app.action_back()
+        elif event.button.id == "btn-next":
+            self.flow_app.action_next()
+        elif event.button.id == "btn-review":
+            self.flow_app.action_go_review()
+
+    def current_input_value(self) -> str | None:
+        """The uncommitted text of the mounted Input, if this page has one."""
+        inputs = self.query_one("#widget-area", Vertical).query(Input)
+        return inputs.first().value if inputs else None
 
     def action_go_back(self) -> None:
         self.flow_app.action_back()

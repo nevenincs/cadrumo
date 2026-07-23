@@ -21,6 +21,9 @@ from typing import TYPE_CHECKING
 
 from textual.app import App
 
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
 from cadrumo.application.flows import (
     FlowCheckpointError as _FlowCheckpointError,
 )
@@ -75,6 +78,7 @@ class FlowTuiApp(App[None]):
         mode: FlowMode,
         checkpoint_store: CheckpointStore | None = None,
         resume_state: FlowState | None = None,
+        registered_values: Mapping[str, str] | None = None,
     ) -> None:
         super().__init__()
         if checkpoint_available(definition, mode) and checkpoint_store is None:
@@ -85,6 +89,10 @@ class FlowTuiApp(App[None]):
         self.definition = definition
         self.state: FlowState = resume_state if resume_state is not None else start_flow(definition, mode=mode)
         self._store = checkpoint_store
+        self.registered_values: dict[str, str] = dict(registered_values or {})
+        """Domain-supplied display values currently on record, keyed by page
+        key — rendered verbatim in the review table's registered column so
+        the operator sees the in-flow answer beside the persisted fact."""
         self.final_state: FlowState | None = None
         self.final_projection: ReviewProjection | None = None
         self.saved_and_exited = False
@@ -122,6 +130,27 @@ class FlowTuiApp(App[None]):
 
     def action_back(self) -> None:
         self.state = back_page(self.definition, self.state)
+        self._rerender_question()
+
+    def action_next(self) -> None:
+        """Advance via the clickable next affordance.
+
+        A page holding an Input commits its current text first (the
+        natural click-next expectation); committed-widget pages simply
+        advance — their answers already landed on selection.
+        """
+        screen = self.screen
+        if isinstance(screen, QuestionScreen):
+            pending = screen.current_input_value()
+            if pending is not None:
+                self.commit_answer(pending)
+                return
+        advanced = next_page(self.definition, self.state)
+        if advanced.cursor == self.state.cursor and self._at_last_visible_page():
+            self.state = advanced
+            self.action_go_review()
+            return
+        self.state = advanced
         self._rerender_question()
 
     def action_go_review(self) -> None:
@@ -203,6 +232,7 @@ def run_flow_tui(
     mode: FlowMode,
     checkpoint_store: CheckpointStore | None = None,
     resume_state: FlowState | None = None,
+    registered_values: Mapping[str, str] | None = None,
 ) -> tuple[FlowState, ReviewProjection]:
     """Run the full-screen frontend to completion and return the outcome.
 
@@ -210,7 +240,13 @@ def run_flow_tui(
     save-and-exit; a run abandoned without either raises so callers
     never mistake an aborted flow for a completed one.
     """
-    app = FlowTuiApp(definition, mode=mode, checkpoint_store=checkpoint_store, resume_state=resume_state)
+    app = FlowTuiApp(
+        definition,
+        mode=mode,
+        checkpoint_store=checkpoint_store,
+        resume_state=resume_state,
+        registered_values=registered_values,
+    )
     app.run()
     if app.final_state is None or app.final_projection is None:
         raise _FlowCheckpointError(
