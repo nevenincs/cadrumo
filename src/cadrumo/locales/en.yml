@@ -1007,6 +1007,7 @@ application:
         window is open.'
       workflow_input_mismatch: Workflow input request does not match the calculation
         revision.
+      profile_readiness_setup_incomplete: 'Profile setup is incomplete; finish the setup flow before working on modelos.'
     findings:
       art20_reduccion_next_action: Verify whether your other non-work income excluding
         exempt income for the year does not exceed 6500 EUR; if it does not, declare

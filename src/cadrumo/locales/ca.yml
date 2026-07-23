@@ -1106,6 +1106,7 @@ application:
         per marcar com a presentat quan la finestra d''obligació sigui oberta.'
       workflow_input_mismatch: La sol·licitud d'entrada del flux de treball no coincideix
         amb la revisió de càlcul.
+      profile_readiness_setup_incomplete: 'La configuració del perfil està incompleta; acaba l''assistent de configuració abans de treballar amb models.'
     findings:
       art20_reduccion_next_action: Verifiqueu si les vostres altres rendes diferents
         de les del treball excloses les exemptes de l'exercici no superen 6500 EUR;
