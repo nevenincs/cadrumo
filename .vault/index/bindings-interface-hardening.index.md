@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#bindings-interface-hardening'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-06-14-bindings-interface-hardening-adr]]'
   - '[[2026-06-14-bindings-interface-hardening-reference]]'

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#binding-source-kind-taxonomy-unification'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-06-26-binding-source-kind-taxonomy-unification-P01-S01]]'
   - '[[2026-06-26-binding-source-kind-taxonomy-unification-P01-S02]]'

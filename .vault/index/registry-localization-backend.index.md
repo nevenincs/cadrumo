@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-localization-backend'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-06-08-registry-localization-backend-P01-S01]]'
   - '[[2026-06-08-registry-localization-backend-P01-S02]]'

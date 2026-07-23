@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#adr-code-reconciliation'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-07-17-adr-code-reconciliation-audit]]'
 ---

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m714-limite-conjunto-irpf'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-06-15-m714-limite-conjunto-irpf-adr]]'
   - '[[2026-06-15-m714-limite-conjunto-irpf-research]]'

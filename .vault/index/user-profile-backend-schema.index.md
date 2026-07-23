@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#user-profile-backend-schema'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-05-07-user-profile-backend-schema-adr]]'
   - '[[2026-05-07-user-profile-backend-schema-audit]]'

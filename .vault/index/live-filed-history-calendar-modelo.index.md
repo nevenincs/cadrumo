@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#live-filed-history-calendar-modelo'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-06-12-live-filed-history-calendar-modelo-code-review-audit]]'
 ---

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#exception-restructure'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-05-09-exception-restructure-adr]]'
   - '[[2026-05-09-exception-restructure-phase-1-plan]]'

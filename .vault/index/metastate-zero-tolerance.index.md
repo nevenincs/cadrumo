@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#metastate-zero-tolerance'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-06-01-metastate-zero-tolerance-adr]]'
   - '[[2026-06-01-metastate-zero-tolerance-research]]'

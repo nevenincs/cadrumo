@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#testing-framework'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-05-13-testing-framework-tautology-audit]]'
 ---

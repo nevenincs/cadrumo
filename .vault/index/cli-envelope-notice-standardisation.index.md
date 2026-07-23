@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-envelope-notice-standardisation'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-06-10-cli-envelope-notice-standardisation-adr]]'
   - '[[2026-06-10-cli-envelope-notice-standardisation-exec]]'

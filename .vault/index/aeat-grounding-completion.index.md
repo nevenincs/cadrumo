@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#aeat-grounding-completion'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-06-14-aeat-grounding-completion-W01-P01-S01]]'
   - '[[2026-06-14-aeat-grounding-completion-adr]]'

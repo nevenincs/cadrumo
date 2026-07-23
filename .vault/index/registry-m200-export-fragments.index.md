@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-m200-export-fragments'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-06-02-registry-m200-export-fragments-code-review-audit]]'
 ---

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#corpus-data-hydration'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-05-01-corpus-data-hydration-adr]]'
   - '[[2026-05-01-corpus-data-hydration-exec]]'
@@ -26,6 +26,7 @@ related:
   - '[[2026-05-01-corpus-data-hydration-research]]'
   - '[[2026-05-01-corpus-data-hydration-review-audit]]'
   - '[[2026-05-02-corpus-data-hydration-final-closure-exec]]'
+  - '[[2026-07-21-corpus-data-hydration-audit]]'
 ---
 
 # `corpus-data-hydration` feature index
@@ -41,6 +42,7 @@ Auto-generated index of all documents tagged with `#corpus-data-hydration`.
 ### audit
 
 - `2026-05-01-corpus-data-hydration-review-audit` - `corpus-data-hydration` Code Review
+- `2026-07-21-corpus-data-hydration-audit` - `corpus-data-hydration` audit: Supported-period official corpus completion
 
 ### exec
 

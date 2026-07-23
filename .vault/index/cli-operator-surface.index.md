@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-operator-surface'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-06-10-cli-operator-crud-matrix-audit]]'
   - '[[2026-06-10-cli-operator-surface-W01-P01-S01]]'

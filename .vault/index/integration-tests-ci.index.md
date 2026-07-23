@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#integration-tests-ci'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-04-21-integration-tests-ci-adr]]'
   - '[[2026-04-21-integration-tests-ci-plan]]'

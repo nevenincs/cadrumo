@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#hexagonal-port-necessity'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-05-31-hexagonal-port-necessity-audit]]'
 ---

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-200-bin-continuity'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-06-24-modelo-200-bin-continuity-adr]]'
   - '[[2026-07-10-modelo-200-bin-continuity-research]]'

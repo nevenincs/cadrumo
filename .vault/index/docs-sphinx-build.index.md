@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#docs-sphinx-build'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-05-30-docs-sphinx-build-adr]]'
   - '[[2026-06-04-docs-sphinx-build-research]]'

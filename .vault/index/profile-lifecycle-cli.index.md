@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#profile-lifecycle-cli'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-23'
+modified: '2026-07-23'
 related:
   - '[[2026-05-16-profile-lifecycle-cli-P02-S18]]'
   - '[[2026-05-16-profile-lifecycle-cli-P02-S19]]'
