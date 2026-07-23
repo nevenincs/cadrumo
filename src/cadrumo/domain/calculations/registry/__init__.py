@@ -191,6 +191,10 @@ from ._casilla_membership import (
     declared_casilla_ids,
     undeclared_casilla_ids,
 )
+from ._profile_grounding import (
+    ProfileKeyGrounding,
+    build_profile_grounding_index,
+)
 from ._censo_modelos import (
     CENSO_MODELO_ERROR_CODES,
     CENSO_MODELO_EVENT_KINDS,
@@ -539,6 +543,8 @@ __all__ = [
     "CensoModeloFoundationLogFields",
     "CensoModeloFoundationResult",
     "CensoModeloOwnership",
+    "ProfileKeyGrounding",
+    "build_profile_grounding_index",
     "CensoModeloRole",
     "ConstructDefinition",
     "ConstructId",
