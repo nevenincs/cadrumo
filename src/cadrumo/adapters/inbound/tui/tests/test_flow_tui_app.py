@@ -776,9 +776,7 @@ async def test_checkbox_renders_each_choice_description() -> None:
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
         selection = app.screen.query_one("#widget-area").query_one(SelectionList)
-        rendered = " ".join(
-            str(selection.get_option_at_index(index).prompt) for index in range(selection.option_count)
-        )
+        rendered = " ".join(str(selection.get_option_at_index(index).prompt) for index in range(selection.option_count))
 
         assert "DESC-TEXT" in rendered
 
@@ -826,6 +824,74 @@ async def test_rebuild_for_locale_reassembles_copy_under_the_new_language(
 
                 # The engine state is untouched; every zone re-assembles, so the
                 # prompt re-resolves under the newly-activated language.
+                assert "es-copy" in str(app.screen.query_one("#page-prompt", Label).render())
+    finally:
+        if saved is None:
+            os.environ.pop(OUTPUT_LANGUAGE_ENV_VAR, None)
+        else:
+            os.environ[OUTPUT_LANGUAGE_ENV_VAR] = saved
+        clear_output_language_cache()
+
+
+@pytest.mark.asyncio
+async def test_on_answer_committed_receives_the_page_key_and_committed_value() -> None:
+    received: list[tuple[str, str]] = []
+    app = FlowTuiApp(
+        _definition(),
+        mode=FlowMode.MODIFY,
+        registered_values={},
+        on_answer_committed=lambda key, value: received.append((key, value)),
+    )
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.press(*"ada")
+        await pilot.click("#btn-next")
+        await pilot.pause()
+
+    assert ("p_name", "ada") in received
+
+
+@pytest.mark.asyncio
+async def test_locale_switch_hook_renders_the_next_page_under_the_new_language(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> None:
+    root = tmp_path_factory.mktemp("hook-locales")
+    for language in SUPPORTED_OUTPUT_LANGUAGES:
+        payload = yaml.safe_dump({"flows": {"test": {"copy": f"{language}-copy"}}}, allow_unicode=True)
+        (root / f"{language}.yml").write_text(payload, encoding="utf-8")
+
+    holder: dict[str, FlowTuiApp] = {}
+
+    def _switch_to_spanish(page_key: str, _value: str) -> None:
+        if page_key == "p_name":
+            os.environ[OUTPUT_LANGUAGE_ENV_VAR] = "es"
+            clear_output_language_cache()
+            holder["app"].rebuild_for_locale()
+
+    saved = os.environ.get(OUTPUT_LANGUAGE_ENV_VAR)
+    try:
+        os.environ[OUTPUT_LANGUAGE_ENV_VAR] = "en"
+        clear_output_language_cache()
+        with override_locales_root(root):
+            app = FlowTuiApp(
+                _definition(),
+                mode=FlowMode.MODIFY,
+                registered_values={},
+                on_answer_committed=_switch_to_spanish,
+            )
+            holder["app"] = app
+            async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+                await pilot.pause()
+                assert "en-copy" in str(app.screen.query_one("#page-prompt", Label).render())
+
+                await pilot.press(*"ada")
+                await pilot.click("#btn-next")
+                await pilot.pause()
+
+                # The commit fired the hook (activate Spanish + rebuild); the
+                # walk advanced, and the page now renders under the newly
+                # activated language — the mid-walk language switch the
+                # operator's language-first feature needs.
+                assert app.state.cursor == "p_kind"
                 assert "es-copy" in str(app.screen.query_one("#page-prompt", Label).render())
     finally:
         if saved is None:
