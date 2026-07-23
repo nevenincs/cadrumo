@@ -102,6 +102,11 @@ def test_widget_mapping_is_value_identical_except_text_with_choices_upgrades() -
         page_widget = pages[qid].widget
         if question.widget.value == FlowWidgetKind.TEXT.value and question.choices:
             assert page_widget is FlowWidgetKind.SELECT, qid
+            # The upgrade narrows free text to set membership; the value
+            # set must carry over exactly, or an operator could no longer
+            # answer a value the wizard accepted. A count-only check would
+            # miss a value-set drift, so assert the sets themselves.
+            assert {choice.value for choice in pages[qid].choices} == {choice.value for choice in question.choices}, qid
         else:
             assert page_widget.value == question.widget.value, qid
 
@@ -115,7 +120,11 @@ def test_taxation_type_text_with_choices_upgrades_to_select() -> None:
     assert questions["taxation-type"].widget.value == FlowWidgetKind.TEXT.value
     assert questions["taxation-type"].choices
     assert pages["taxation-type"].widget is FlowWidgetKind.SELECT
-    assert len(pages["taxation-type"].choices) == len(questions["taxation-type"].choices)
+    # Value-set equality (not a mere count) so a future value-set drift on
+    # this upgraded question is caught rather than silently accepted.
+    assert {choice.value for choice in pages["taxation-type"].choices} == {
+        choice.value for choice in questions["taxation-type"].choices
+    }
 
 
 def test_single_condition_visibility_carries_over_one_to_one() -> None:

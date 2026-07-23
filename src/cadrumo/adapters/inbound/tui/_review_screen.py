@@ -21,6 +21,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from textual.app import ComposeResult
+from textual.binding import Binding
 from textual.screen import Screen
 from textual.widgets import Button, DataTable, Footer, Static
 
@@ -44,10 +45,10 @@ class ReviewScreen(Screen[None]):
     """Clickable summary of every question with its current and registered data."""
 
     BINDINGS = [
-        ("escape", "back_to_question", "Volver"),
-        ("s", "submit_flow", "Presentar"),
-        ("ctrl+s", "save_exit", "Guardar y salir"),
-        ("ctrl+n", "restart_flow", "Reiniciar"),
+        Binding("escape", "back_to_question", tr("flows.tui.binding_return")),
+        Binding("s", "submit_flow", tr("flows.tui.binding_submit")),
+        Binding("ctrl+s", "save_exit", tr("flows.tui.binding_save_exit")),
+        Binding("ctrl+n", "restart_flow", tr("flows.tui.binding_restart")),
     ]
 
     def compose(self) -> ComposeResult:
@@ -70,11 +71,9 @@ class ReviewScreen(Screen[None]):
 
     @property
     def flow_app(self) -> FlowTuiApp:
-        from ._app import FlowTuiApp as _App
+        from ._app import require_flow_app
 
-        app = self.app
-        assert isinstance(app, _App)
-        return app
+        return require_flow_app(self.app)
 
     def render_review(self) -> None:
         app = self.flow_app
@@ -95,9 +94,9 @@ class ReviewScreen(Screen[None]):
             if not row.jumpable:
                 prompt = f"{prompt} {tr('flows.review.orphan_marker')}".strip()
             table.add_row(
-                _STATUS_GLYPHS[row.status],
+                _STATUS_GLYPHS.get(row.status, "?"),
                 prompt or row.key,
-                app.state.answers.get(row.key, ""),
+                self._answer_cell(app, row.key),
                 app.registered_values.get(row.key, ""),
                 key=row.key,
             )
@@ -111,6 +110,19 @@ class ReviewScreen(Screen[None]):
         self.query_one("#review-save-note", Static).update(save_note)
         self.query_one("#btn-submit", Button).disabled = not projection.submit_eligible
         table.focus()
+
+    @staticmethod
+    def _answer_cell(app: FlowTuiApp, page_key: str) -> str:
+        """The answer-column cell, masked when the page collects a secret.
+
+        A SECRET page's committed value must never appear in the review
+        table (or a captured session log); the masked marker renders in
+        its place while the raw answer stays only in the engine state.
+        """
+        answer = app.state.answers.get(page_key, "")
+        if answer and app.is_secret_page(page_key):
+            return tr("flows.progress.current_answer_secret")
+        return answer
 
     def _prompts_by_key(self, app: FlowTuiApp) -> dict[str, str]:
         """Resolved prompt copy per visible page key (orphans keep their key)."""

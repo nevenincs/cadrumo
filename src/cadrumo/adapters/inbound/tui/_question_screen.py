@@ -18,6 +18,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from textual.app import ComposeResult
+from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Button, Footer, Input, Label, RadioButton, RadioSet, SelectionList, Static
@@ -41,11 +42,11 @@ class QuestionScreen(Screen[None]):
     """Renders the cursor page and forwards answer intents to the app driver."""
 
     BINDINGS = [
-        ("escape", "go_back", "Anterior"),
-        ("f2", "go_review", "Resumen"),
-        ("ctrl+r", "reset_page", "Restablecer"),
-        ("ctrl+n", "restart_flow", "Reiniciar"),
-        ("ctrl+s", "save_exit", "Guardar y salir"),
+        Binding("escape", "go_back", tr("flows.tui.binding_back")),
+        Binding("f2", "go_review", tr("flows.tui.binding_review")),
+        Binding("ctrl+r", "reset_page", tr("flows.tui.binding_reset")),
+        Binding("ctrl+n", "restart_flow", tr("flows.tui.binding_restart")),
+        Binding("ctrl+s", "save_exit", tr("flows.tui.binding_save_exit")),
     ]
 
     def compose(self) -> ComposeResult:
@@ -71,13 +72,12 @@ class QuestionScreen(Screen[None]):
 
     @property
     def flow_app(self) -> FlowTuiApp:
-        # CAST-FREE: `self.app` is typed as App[Any]; the runtime object is
-        # always the owning FlowTuiApp. Narrowed via assert for the checker.
-        from ._app import FlowTuiApp as _App
+        # `self.app` is typed as App[Any]; the runtime object is always the
+        # owning FlowTuiApp. The typed accessor narrows for the checker and,
+        # unlike a bare assert, keeps a loud typed refusal under ``python -O``.
+        from ._app import require_flow_app
 
-        app = self.app
-        assert isinstance(app, _App)
-        return app
+        return require_flow_app(self.app)
 
     def render_page(self) -> None:
         """(Re)render every zone for the page the engine cursor addresses."""
@@ -114,14 +114,44 @@ class QuestionScreen(Screen[None]):
         )
         failure_lines = "\n".join(tr("flows.progress.failure_mode", text=text) for text in copy.failure_modes)
         self.query_one("#page-failure-modes", Static).update(failure_lines)
+        self.query_one("#answer-echo", Static).update(self._answer_echo_text(app, entry))
+        self.query_one("#commit-verdicts", Static).update(self._commit_verdicts_text(app, entry))
+        self.query_one("#live-validation", Static).update("")
+
+    @staticmethod
+    def _answer_echo_text(app: FlowTuiApp, entry: VisiblePage) -> str:
+        """The current-answer echo line, masked when the page is a secret.
+
+        A SECRET page's committed value must never reach a rendered zone
+        (or a captured session log): the echo renders a fixed masked
+        marker instead of the raw answer, even though the answer itself
+        lives in the engine state.
+        """
         current = app.state.answers.get(entry.key)
-        self.query_one("#answer-echo", Static).update(
-            tr("flows.progress.current_answer", value=current) if current else "",
-        )
+        if not current:
+            return ""
+        if entry.page.widget is FlowWidgetKind.SECRET:
+            return tr("flows.progress.current_answer_secret")
+        return tr("flows.progress.current_answer", value=current)
+
+    @staticmethod
+    def _commit_verdicts_text(app: FlowTuiApp, entry: VisiblePage) -> str:
         verdicts = app.state.verdicts.get(entry.key, ())
-        self.query_one("#commit-verdicts", Static).update(
-            "\n".join(tr(v.message_key, **v.context) for v in verdicts if v.message_key),
-        )
+        return "\n".join(tr(v.message_key, **v.context) for v in verdicts if v.message_key)
+
+    def refresh_answer_zones(self) -> None:
+        """Refresh the echo and verdict zones without re-mounting the widget.
+
+        A staging CHECKBOX toggle commits through the engine but must keep
+        the live SelectionList mounted and focused so the next selection
+        lands; only the derived echo/verdict/live zones are recomputed.
+        """
+        app = self.flow_app
+        entry = app.cursor_entry()
+        if entry is None:
+            return
+        self.query_one("#answer-echo", Static).update(self._answer_echo_text(app, entry))
+        self.query_one("#commit-verdicts", Static).update(self._commit_verdicts_text(app, entry))
         self.query_one("#live-validation", Static).update("")
 
     def _mount_widget(self, app: FlowTuiApp, entry: VisiblePage, copy: PageCopy) -> None:
@@ -196,11 +226,12 @@ class QuestionScreen(Screen[None]):
             self.flow_app.commit_answer(event.pressed.name)
 
     def on_selection_list_selected_changed(self, event: SelectionList.SelectedChanged) -> None:
-        # CHECKBOX commits on every toggle so the echo/live zones track;
-        # navigation away is the page exit, matching the engine's
-        # commit-then-move contract.
+        # CHECKBOX stages every toggle (commit without advancing) so a
+        # second selection is not cut off by an immediate page exit; the
+        # page advances only on an explicit Next / escape / review intent,
+        # matching the module comment's "navigation away is the page exit".
         selected = ",".join(str(value) for value in event.selection_list.selected)
-        self.flow_app.commit_answer(selected)
+        self.flow_app.commit_answer(selected, advance=False)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "btn-back":

@@ -43,6 +43,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
+from uuid import uuid4
 
 import typer
 from pydantic import BaseModel
@@ -100,24 +101,35 @@ class _ModeloWizardAnswers(BaseModel):
 
 _COPY_NAMESPACE = "modelo-work"
 
-_DYNAMIC_COPY: dict[str, str] = {}
-"""Per-run registry-derived copy table the registered resolver serves.
+_ACTIVE_RUNS: dict[str, dict[str, str]] = {}
+"""Per-run registry-derived copy tables, keyed by an opaque run token.
 
-Keys are namespaced ``modelo-work:<step-key>:<facet>`` references; values
-are the registry snapshot's localized labels and help. Populated when a
-run projects its discovered steps into a flow definition; the resolver
+Each wizard invocation owns one table for its whole lifetime. Every
+reference embeds its run token (``modelo-work:<run-token>:<step-key>:<facet>``),
+so the registered resolver reads only the addressed run's table: two
+interleaved runs in one process (the ``cadrumo-mcp`` host is exactly such
+a host) never clear each other's entries, and each table is dropped at
+its own run end rather than accumulating for the process lifetime. Values
+are the registry snapshot's localized labels and help; the resolver
 returns ``None`` outside the namespace so other domains' schema-field
 resolvers get their turn.
 """
 
 
 def _resolve_modelo_wizard_copy(ref: str) -> str | None:
-    if not ref.startswith(f"{_COPY_NAMESPACE}:"):
+    prefix = f"{_COPY_NAMESPACE}:"
+    if not ref.startswith(prefix):
         return None
-    return _DYNAMIC_COPY.get(ref)
+    run_token, _, _ = ref[len(prefix) :].partition(":")
+    table = _ACTIVE_RUNS.get(run_token)
+    return table.get(ref) if table is not None else None
 
 
 register_copy_source(CopyRefKind.SCHEMA_FIELD, _resolve_modelo_wizard_copy)
+
+
+def _copy_ref_id(run_token: str, step: _WizardStep, facet: str) -> str:
+    return f"{_COPY_NAMESPACE}:{run_token}:{_page_key(step)}:{facet}"
 
 
 @dataclass(frozen=True, slots=True)
@@ -228,7 +240,32 @@ def run_modelo_work_wizard(
         steps = _outstanding_wizard_steps(unit)
     except RegistrySnapshotError as exc:
         raise deps.bad_parameter_from_error(exc) from exc
-    prompted = list(_run_wizard_steps(steps, fresh_copy_table=True))
+
+    run_token = uuid4().hex
+    _ACTIVE_RUNS[run_token] = {}
+    try:
+        _drive_wizard_calculation(
+            deps=deps,
+            ctx=ctx,
+            unit=unit,
+            steps=steps,
+            actor=actor,
+            run_token=run_token,
+        )
+    finally:
+        _ACTIVE_RUNS.pop(run_token, None)
+
+
+def _drive_wizard_calculation(
+    *,
+    deps: _WizardDeps,
+    ctx: typer.Context,
+    unit: WorkUnit,
+    steps: tuple[_WizardStep, ...],
+    actor: str | None,
+    run_token: str,
+) -> None:
+    prompted = list(_run_wizard_steps(steps, run_token=run_token))
 
     for _attempt in range(_MAX_MISSING_INPUT_RETRIES):
         casilla_overrides = [f"{step.key}={value}" for step, value in prompted if step.channel == "casilla"]
@@ -263,7 +300,7 @@ def run_modelo_work_wizard(
             follow_up = _follow_up_step_for_missing_input(exc)
             if follow_up is None:
                 raise deps.bad_parameter_from_error(exc) from exc
-            answer = _run_wizard_steps((follow_up,), fresh_copy_table=False)
+            answer = _run_wizard_steps((follow_up,), run_token=run_token)
             prompted.extend(answer)
             continue
         except (
@@ -505,23 +542,23 @@ def _page_key(step: _WizardStep) -> str:
 def _definition_from_steps(
     steps: tuple[_WizardStep, ...],
     *,
-    fresh_copy_table: bool,
+    run_token: str,
 ) -> FlowDefinition:
     """Project the discovered registry steps into a one-section flow definition.
 
     Each step becomes a free-text page whose prompt and help are
-    schema-field references into the per-run copy table this module's
-    registered resolver serves; the rendered strings are the registry
-    snapshot's localized labels, so the definition itself carries no
-    prose. ``fresh_copy_table`` clears the table at the start of a run;
-    follow-up single-question rounds append to it.
+    schema-field references into the addressed run's copy table this
+    module's registered resolver serves; the rendered strings are the
+    registry snapshot's localized labels, so the definition itself carries
+    no prose. Every reference embeds ``run_token`` so the run owns its
+    entries; follow-up single-question rounds append to the same run
+    table.
     """
-    if fresh_copy_table:
-        _DYNAMIC_COPY.clear()
+    table = _ACTIVE_RUNS[run_token]
     pages: list[FlowPage] = []
     for step in steps:
-        prompt_ref = f"{_COPY_NAMESPACE}:{_page_key(step)}:prompt"
-        _DYNAMIC_COPY[prompt_ref] = tr(
+        prompt_ref = _copy_ref_id(run_token, step, "prompt")
+        table[prompt_ref] = tr(
             "cli.app.modelo.work.wizard_prompt",
             number=step.number,
             label=step.label,
@@ -529,8 +566,8 @@ def _definition_from_steps(
         )
         help_ref: str | None = None
         if step.help_text:
-            help_ref = f"{_COPY_NAMESPACE}:{_page_key(step)}:help"
-            _DYNAMIC_COPY[help_ref] = step.help_text
+            help_ref = _copy_ref_id(run_token, step, "help")
+            table[help_ref] = step.help_text
         pages.append(
             FlowPage(
                 id=_page_key(step),
@@ -558,7 +595,7 @@ def _definition_from_steps(
 def _run_wizard_steps(
     steps: tuple[_WizardStep, ...],
     *,
-    fresh_copy_table: bool,
+    run_token: str,
 ) -> tuple[tuple[_WizardStep, str], ...]:
     """Walk the outstanding steps through the line-mode flow frontend.
 
@@ -571,7 +608,7 @@ def _run_wizard_steps(
     """
     if not steps:
         return ()
-    definition = _definition_from_steps(steps, fresh_copy_table=fresh_copy_table)
+    definition = _definition_from_steps(steps, run_token=run_token)
     frontend = LineFlowFrontend(definition)
     state, _projection = frontend.run(mode=FlowMode.CREATE)
     return tuple((step, (state.answers.get(_page_key(step)) or "").strip()) for step in steps)

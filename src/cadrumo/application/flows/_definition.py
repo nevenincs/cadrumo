@@ -195,6 +195,9 @@ class FlowSection(BaseModel):
 class FlowDefinition(BaseModel):
     """The top-level descriptor for one paged flow surface.
 
+    ``intro`` is an optional opening-copy slot the line-mode frontend
+    renders before the first page; ``None`` is a definition-level decision
+    that the flow opens with no preamble, never a silent humanised key.
     ``checkpoint`` is the per-mode declaration: ``UNAVAILABLE`` is the
     declared no-op arm the frontend must surface honestly.
     ``flow_validator_ids`` name registered flow-scope cross-field
@@ -207,6 +210,7 @@ class FlowDefinition(BaseModel):
     id: str = Field(min_length=1)
     title: CopyRef
     description: CopyRef
+    intro: CopyRef | None = None
     sections: tuple[FlowSection, ...] = Field(min_length=1)
     answers_model: type[BaseModel]
     checkpoint: dict[FlowMode, CheckpointAvailability]
