@@ -31,26 +31,31 @@ CopySourceResolver = Callable[[str], "str | None"]
 
 _UNRESOLVED_SENTINEL = "\x00cadrumo-flows-copy-unresolved\x00"
 
-_SOURCE_RESOLVERS: dict[CopyRefKind, CopySourceResolver] = {}
+_SOURCE_RESOLVERS: dict[CopyRefKind, list[CopySourceResolver]] = {}
 
 
 def register_copy_source(kind: CopyRefKind, resolver: CopySourceResolver) -> None:
-    """Register the resolver for a non-locale copy source kind.
+    """Register a resolver for a non-locale copy source kind.
 
-    ``LOCALE_KEY`` is built in and may not be overridden; a second
-    registration for the same kind is refused so each source has
-    exactly one owner.
+    ``LOCALE_KEY`` is built in and may not be overridden. A kind may
+    carry several resolvers — distinct domains legitimately serve
+    disjoint reference namespaces of the same kind (profile schema
+    fields and modelo casilla labels are both ``SCHEMA_FIELD``) — and
+    resolution tries them in registration order, first non-``None``
+    winning. Registering the same resolver object twice is refused so
+    an accidental double import surfaces loudly.
     """
     if kind is CopyRefKind.LOCALE_KEY:
         raise FlowCopyResolutionError(
             translated_message="application.flows.errors.copy_source_locale_builtin",
         )
-    if kind in _SOURCE_RESOLVERS:
+    resolvers = _SOURCE_RESOLVERS.setdefault(kind, [])
+    if any(existing is resolver for existing in resolvers):
         raise FlowCopyResolutionError(
             translated_message="application.flows.errors.copy_source_duplicate",
             context={"kind": kind.value},
         )
-    _SOURCE_RESOLVERS[kind] = resolver
+    resolvers.append(resolver)
 
 
 def resolve_copy(ref: CopyRef) -> str:
@@ -63,19 +68,20 @@ def resolve_copy(ref: CopyRef) -> str:
                 context={"ref": ref.ref},
             )
         return rendered
-    resolver = _SOURCE_RESOLVERS.get(ref.kind)
-    if resolver is None:
+    resolvers = _SOURCE_RESOLVERS.get(ref.kind)
+    if not resolvers:
         raise FlowCopyResolutionError(
             translated_message="application.flows.errors.copy_source_unregistered",
             context={"kind": ref.kind.value, "ref": ref.ref},
         )
-    rendered = resolver(ref.ref)
-    if rendered is None:
-        raise FlowCopyResolutionError(
-            translated_message="application.flows.errors.copy_ref_unresolved",
-            context={"kind": ref.kind.value, "ref": ref.ref},
-        )
-    return rendered
+    for resolver in resolvers:
+        rendered = resolver(ref.ref)
+        if rendered is not None:
+            return rendered
+    raise FlowCopyResolutionError(
+        translated_message="application.flows.errors.copy_ref_unresolved",
+        context={"kind": ref.kind.value, "ref": ref.ref, "resolver_count": len(resolvers)},
+    )
 
 
 def resolve_optional_copy(ref: CopyRef | None) -> str | None:
