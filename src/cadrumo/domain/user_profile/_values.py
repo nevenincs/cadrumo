@@ -92,9 +92,17 @@ def _coerce_profile_fact_value(value: object) -> object:
 
 
 class UserProfileStatus(StrEnum):
-    """Lifecycle status for a live profile root."""
+    """Lifecycle status for a live profile root.
+
+    ``SETUP_INCOMPLETE`` marks a profile minted at the start of the
+    interactive setup flow whose answer set is still being collected: it
+    is live (listed, resumable, its tax id reserved against duplicates)
+    but not workable — modelo work is refused until setup completes and
+    the record transitions to ``ACTIVE`` via :meth:`UserProfileRecord.complete_setup`.
+    """
 
     ACTIVE = "active"
+    SETUP_INCOMPLETE = "setup_incomplete"
     TOMBSTONED = "tombstoned"
 
 
@@ -168,11 +176,31 @@ class UserProfileRecord(BaseModel):
     def _validate_lifecycle(self) -> UserProfileRecord:
         if self.created_at > self.updated_at:
             raise UserProfileValidationError("created_at must be before or equal to updated_at")
-        if self.status is UserProfileStatus.ACTIVE and self.removed_at is not None:
-            raise UserProfileValidationError("active profiles must not carry removed_at")
+        if self.status is not UserProfileStatus.TOMBSTONED and self.removed_at is not None:
+            raise UserProfileValidationError(f"{self.status.value} profiles must not carry removed_at")
         if self.status is UserProfileStatus.TOMBSTONED and self.removed_at is None:
             raise UserProfileValidationError("tombstoned profiles must carry removed_at")
         return self
+
+    def complete_setup(self, *, completed_at: datetime | None = None) -> UserProfileRecord:
+        """Return an ``ACTIVE`` copy of a ``SETUP_INCOMPLETE`` profile root.
+
+        The one-way transition out of the interactive setup flow: fires at
+        the flow's final commit after flow-scope validation, never before.
+        Refuses any other source status so a tombstoned or already-active
+        record cannot be laundered through the setup transition.
+        """
+        if self.status is not UserProfileStatus.SETUP_INCOMPLETE:
+            raise UserProfileValidationError(
+                f"complete_setup requires a setup_incomplete profile; got {self.status.value}",
+            )
+        instant = completed_at or utc_now()
+        return self.model_copy(
+            update={
+                "status": UserProfileStatus.ACTIVE,
+                "updated_at": instant,
+            },
+        )
 
     def tombstone(self, *, removed_at: datetime | None = None) -> UserProfileRecord:
         """Return a tombstoned :class:`UserProfileRecord` copy of the live profile root."""
