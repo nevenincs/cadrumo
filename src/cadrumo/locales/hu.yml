@@ -1045,6 +1045,7 @@ application:
         benyújtottnak, amikor a kötelezettségi ablak nyitva van.'
       workflow_input_mismatch: A munkafolyamat bemeneti kérelme nem egyezik a számítási
         revízióval.
+      profile_readiness_setup_incomplete: 'A profil beállítása nincs befejezve; fejezd be a beállítási folyamatot, mielőtt modelókkal dolgoznál.'
     findings:
       art20_reduccion_next_action: Ellenőrizze, hogy a nem munkából származó egyéb
         jövedelme a mentes jövedelem nélkül az adóévben nem haladja-e meg a 6500 EUR-t;

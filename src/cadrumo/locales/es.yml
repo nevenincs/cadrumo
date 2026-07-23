@@ -1115,6 +1115,7 @@ application:
         abierta.'
       workflow_input_mismatch: La solicitud de entrada del flujo de trabajo no coincide
         con la revisión de cálculo.
+      profile_readiness_setup_incomplete: 'La configuración del perfil está incompleta; termina el asistente de configuración antes de trabajar con modelos.'
     findings:
       art20_reduccion_next_action: Verifique si sus otras rentas distintas de las
         del trabajo excluidas las exentas del ejercicio no superan 6500 EUR; en ese
