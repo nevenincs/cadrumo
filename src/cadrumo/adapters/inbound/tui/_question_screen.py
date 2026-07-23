@@ -18,10 +18,20 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from textual.app import ComposeResult
-from textual.binding import Binding
+from textual.binding import Binding, BindingsMap
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.screen import Screen
-from textual.widgets import Button, Footer, Input, Label, RadioButton, RadioSet, SelectionList, Static
+from textual.widgets import (
+    Button,
+    Footer,
+    Input,
+    Label,
+    ProgressBar,
+    RadioButton,
+    RadioSet,
+    SelectionList,
+    Static,
+)
 from textual.widgets.selection_list import Selection
 
 from cadrumo.application.flows import assemble_page_copy, validate_widget_shape, visible_sequence
@@ -29,7 +39,7 @@ from cadrumo.core.flows import DEFER_TOKEN, FlowWidgetKind
 from cadrumo.core.i18n import tr
 
 if TYPE_CHECKING:
-    from cadrumo.application.flows import PageCopy, VisiblePage
+    from cadrumo.application.flows import ChoiceCopy, PageCopy, VisiblePage
 
     from ._app import FlowTuiApp
 
@@ -41,22 +51,29 @@ _TEXTUAL_INPUT_WIDGETS = frozenset(
 class QuestionScreen(Screen[None]):
     """Renders the cursor page and forwards answer intents to the app driver."""
 
+    # Keys and actions only: descriptions are resolved at runtime in
+    # ``on_mount`` (``_localize_bindings``), never here — a ``tr`` call at
+    # class-definition time would freeze the footer to the import-time
+    # language, wrong for a mid-walk language switch or consecutive runs
+    # under different profile languages in one process.
     BINDINGS = [
-        Binding("escape", "go_back", tr("flows.tui.binding_back")),
-        Binding("f2", "go_review", tr("flows.tui.binding_review")),
-        Binding("ctrl+r", "reset_page", tr("flows.tui.binding_reset")),
-        Binding("ctrl+n", "restart_flow", tr("flows.tui.binding_restart")),
-        Binding("ctrl+s", "save_exit", tr("flows.tui.binding_save_exit")),
+        Binding("escape", "go_back", ""),
+        Binding("f2", "go_review", ""),
+        Binding("ctrl+r", "reset_page", ""),
+        Binding("ctrl+n", "restart_flow", ""),
+        Binding("ctrl+s", "save_exit", ""),
     ]
 
     def compose(self) -> ComposeResult:
         yield Static(id="flow-header")
+        yield ProgressBar(id="flow-progress", show_eta=False)
         with VerticalScroll(id="page-body"):
             yield Label("", id="page-prompt")
             yield Static("", id="page-badge")
             yield Static("", id="page-help")
             yield Static("", id="page-format-hint")
             yield Static("", id="page-failure-modes")
+            yield Static("", id="page-legal-zone")
             yield Vertical(id="widget-area")
             yield Static("", id="live-validation")
             yield Static("", id="answer-echo")
@@ -64,11 +81,33 @@ class QuestionScreen(Screen[None]):
             with Horizontal(id="nav-buttons"):
                 yield Button(tr("flows.tui.button_back"), id="btn-back")
                 yield Button(tr("flows.tui.button_next"), id="btn-next", variant="primary")
-                yield Button(tr("flows.tui.button_review"), id="btn-review")
+                # The review affordance is made loud: a key hint on the label
+                # and a distinct variant so the operator finds the path to the
+                # summary and submit, not only the footer binding.
+                yield Button(f"{tr('flows.tui.button_review')} (F2)", id="btn-review", variant="warning")
         yield Footer()
 
     def on_mount(self) -> None:
+        self._localize_bindings()
         self.render_page()
+
+    def _localize_bindings(self) -> None:
+        """Resolve the footer binding descriptions under the active language.
+
+        Rebuilt at mount (and re-run on a locale rebuild, which re-pushes a
+        fresh screen) so the footer tracks the runtime language rather than
+        the language active when this module was imported.
+        """
+        self._bindings = BindingsMap(
+            [
+                Binding("escape", "go_back", tr("flows.tui.binding_back")),
+                Binding("f2", "go_review", tr("flows.tui.binding_review")),
+                Binding("ctrl+r", "reset_page", tr("flows.tui.binding_reset")),
+                Binding("ctrl+n", "restart_flow", tr("flows.tui.binding_restart")),
+                Binding("ctrl+s", "save_exit", tr("flows.tui.binding_save_exit")),
+            ],
+        )
+        self.refresh_bindings()
 
     @property
     def flow_app(self) -> FlowTuiApp:
@@ -103,20 +142,40 @@ class QuestionScreen(Screen[None]):
                 section=entry.section_id,
             ),
         )
+        self.query_one("#flow-progress", ProgressBar).update(total=len(sequence), progress=position + 1)
+        # The bordered question panel carries the section as its title so the
+        # operator always sees which part of the flow they are in.
+        self.query_one("#page-body", VerticalScroll).border_title = entry.section_id
 
     def _render_body(self, app: FlowTuiApp, entry: VisiblePage, copy: PageCopy) -> None:
         self.query_one("#page-prompt", Label).update(copy.prompt)
         badge_key = "flows.progress.required" if entry.page.required else "flows.progress.optional"
         self.query_one("#page-badge", Static).update(tr(badge_key))
-        self.query_one("#page-help", Static).update(copy.help or "")
-        self.query_one("#page-format-hint", Static).update(
-            tr("flows.progress.format_hint", hint=copy.format_hint) if copy.format_hint else "",
+        # Every optional zone collapses (display off) when its content is
+        # absent, so an unpopulated page shows no labelled void or reserved
+        # blank row; the zone reappears the moment the domain supplies copy.
+        self._set_zone("#page-help", copy.help or "")
+        self._set_zone(
+            "#page-format-hint",
+            f"▸ {tr('flows.progress.format_hint', hint=copy.format_hint)}" if copy.format_hint else "",
         )
-        failure_lines = "\n".join(tr("flows.progress.failure_mode", text=text) for text in copy.failure_modes)
-        self.query_one("#page-failure-modes", Static).update(failure_lines)
+        self._set_zone(
+            "#page-failure-modes",
+            "\n".join(tr("flows.progress.failure_mode", text=text) for text in copy.failure_modes),
+        )
+        self._set_zone(
+            "#page-legal-zone",
+            "\n".join(f"{ref.ref} — {ref.label}" if ref.label else ref.ref for ref in copy.legal_zone),
+        )
         self.query_one("#answer-echo", Static).update(self._answer_echo_text(app, entry))
         self.query_one("#commit-verdicts", Static).update(self._commit_verdicts_text(app, entry))
         self.query_one("#live-validation", Static).update("")
+
+    def _set_zone(self, selector: str, content: str) -> None:
+        """Update a collapsible zone, hiding it entirely when its content is empty."""
+        zone = self.query_one(selector, Static)
+        zone.update(content)
+        zone.display = bool(content)
 
     @staticmethod
     def _answer_echo_text(app: FlowTuiApp, entry: VisiblePage) -> str:
@@ -130,9 +189,12 @@ class QuestionScreen(Screen[None]):
         current = app.state.answers.get(entry.key)
         if not current:
             return ""
-        if entry.page.widget is FlowWidgetKind.SECRET:
-            return tr("flows.progress.current_answer_secret")
-        return tr("flows.progress.current_answer", value=current)
+        marker = (
+            tr("flows.progress.current_answer_secret")
+            if entry.page.widget is FlowWidgetKind.SECRET
+            else tr("flows.progress.current_answer", value=current)
+        )
+        return f"✓ {marker}"
 
     @staticmethod
     def _commit_verdicts_text(app: FlowTuiApp, entry: VisiblePage) -> str:
@@ -180,12 +242,10 @@ class QuestionScreen(Screen[None]):
             radio.focus()
             return
         if widget_kind in {FlowWidgetKind.SELECT, FlowWidgetKind.COMPARE_SELECT}:
-            buttons = []
-            for choice in copy.choices:
-                title = choice.label
-                if choice.provenance:
-                    title = tr("flows.compare_select.candidate", label=choice.label, provenance=choice.provenance)
-                buttons.append(RadioButton(title, value=choice.value == current, name=choice.value))
+            buttons = [
+                RadioButton(self._choice_label(choice), value=choice.value == current, name=choice.value)
+                for choice in copy.choices
+            ]
             if widget_kind is FlowWidgetKind.COMPARE_SELECT:
                 buttons.append(
                     RadioButton(
@@ -201,10 +261,28 @@ class QuestionScreen(Screen[None]):
         # CHECKBOX
         tokens = {token for token in current.split(",") if token}
         selection = SelectionList[str](
-            *[Selection(choice.label, choice.value, choice.value in tokens) for choice in copy.choices],
+            *[Selection(self._choice_label(choice), choice.value, choice.value in tokens) for choice in copy.choices],
         )
         area.mount(selection)
         selection.focus()
+
+    @staticmethod
+    def _choice_label(choice: ChoiceCopy) -> str:
+        """The rendered label for one choice: title, provenance, and description.
+
+        A COMPARE_SELECT candidate frames its provenance (where the value came
+        from — the reason that widget exists); every widget kind renders the
+        choice's description as a muted second line when the domain supplied
+        one, so a described option no longer shows only its bare label.
+        """
+        title = choice.label
+        if choice.provenance:
+            title = tr("flows.compare_select.candidate", label=choice.label, provenance=choice.provenance)
+        if choice.description:
+            # Beside the label, muted — kept on one line so it survives the
+            # single-line RadioButton/Selection label rendering.
+            title = f"{title}  [dim]{choice.description}[/dim]"
+        return title
 
     # ── intents ─────────────────────────────────────────────────────────
 
@@ -215,7 +293,7 @@ class QuestionScreen(Screen[None]):
         if entry is None:
             return
         _canonical, verdict = validate_widget_shape(entry.page, event.value)
-        hint = "" if verdict.ok else tr(verdict.message_key or "", **verdict.context)
+        hint = "" if verdict.ok else f"✗ {tr(verdict.message_key or '', **verdict.context)}"
         self.query_one("#live-validation", Static).update(hint)
 
     def on_input_submitted(self, event: Input.Submitted) -> None:

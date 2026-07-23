@@ -25,7 +25,7 @@ from typing import TYPE_CHECKING
 import pytest
 import yaml
 from pydantic import BaseModel
-from textual.widgets import Button, DataTable, Input, SelectionList, Static
+from textual.widgets import Button, DataTable, Input, Label, ProgressBar, RadioButton, SelectionList, Static
 
 from .....application.flows import (
     CopyRef,
@@ -33,6 +33,7 @@ from .....application.flows import (
     FlowChoice,
     FlowCondition,
     FlowDefinition,
+    FlowLegalRef,
     FlowPage,
     FlowSection,
     answer,
@@ -46,7 +47,13 @@ from .....core.flows import (
     FlowWidgetKind,
     PageStatus,
 )
-from .....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, override_locales_root, tr
+from .....core.i18n import (
+    OUTPUT_LANGUAGE_ENV_VAR,
+    SUPPORTED_OUTPUT_LANGUAGES,
+    clear_output_language_cache,
+    override_locales_root,
+    tr,
+)
 from .. import FlowTuiApp, run_flow_tui
 
 if TYPE_CHECKING:
@@ -61,7 +68,14 @@ pytestmark = [
 ]
 
 _COPY_REF = "flows.test.copy"
-_COPY_CATALOGUE: dict[str, object] = {"flows": {"test": {"copy": "Dato solicitado"}}}
+_COPY_CATALOGUE: dict[str, object] = {
+    "flows": {
+        "test": {"copy": "Dato solicitado", "desc": "DESC-TEXT", "prov": "PROV-TEXT"},
+        # A candidate frame that interpolates both slots, so the COMPARE_SELECT
+        # provenance is observable in the rendered label under the fixture root.
+        "compare_select": {"candidate": "{label} :: {provenance}"},
+    },
+}
 
 _TERMINAL_SIZE = (140, 60)
 """Wide enough that every zone of the question page is on-screen, so a
@@ -125,8 +139,8 @@ def _flow_copy_catalogue(tmp_path_factory: pytest.TempPathFactory) -> Iterator[N
         yield
 
 
-def _copy() -> CopyRef:
-    return CopyRef(kind=CopyRefKind.LOCALE_KEY, ref=_COPY_REF)
+def _copy(ref: str = _COPY_REF) -> CopyRef:
+    return CopyRef(kind=CopyRefKind.LOCALE_KEY, ref=ref)
 
 
 def _definition() -> FlowDefinition:
@@ -188,12 +202,12 @@ def _on_review(app: FlowTuiApp) -> bool:
 
 
 def _review_rows(app: FlowTuiApp) -> dict[str, list[str]]:
-    """The review table's rendered cells keyed by page key."""
+    """The review table's rendered cells keyed by page key (section headings skipped)."""
     table = app.screen.query_one("#review-table", DataTable)
     return {
         str(row_key.value): [str(cell) for cell in table.get_row(row_key)]
         for row_key in table.rows
-        if row_key.value is not None
+        if row_key.value is not None and not str(row_key.value).startswith("\x00section\x00")
     }
 
 
@@ -632,6 +646,193 @@ async def test_stale_orphan_reset_arm_of_edit_from_review_clears_the_answer() ->
         assert "p_dep" not in app.state.answers
         assert "p_dep" not in app.state.stale
         assert _on_review(app)  # the reset resolves the row in place
+
+
+def _legal_definition() -> FlowDefinition:
+    """A page carrying a two-citation legal-provenance zone."""
+    return FlowDefinition(
+        id="flows.test.legal",
+        title=_copy(),
+        description=_copy(),
+        sections=(
+            FlowSection(
+                id="s1",
+                title=_copy(),
+                items=(
+                    FlowPage(
+                        id="p_legal",
+                        widget=FlowWidgetKind.TEXT,
+                        prompt=_copy(),
+                        legal_zone=(
+                            FlowLegalRef(ref="ley-35-2006:art-27", label=_copy()),
+                            FlowLegalRef(ref="ley-35-2006:art-28"),
+                        ),
+                        answer_type=str,
+                    ),
+                ),
+            ),
+        ),
+        answers_model=_Answers,
+        checkpoint={
+            FlowMode.CREATE: CheckpointAvailability.UNAVAILABLE,
+            FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
+        },
+    )
+
+
+@pytest.mark.asyncio
+async def test_progress_bar_tracks_the_visible_position() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        bar = app.screen.query_one("#flow-progress", ProgressBar)
+        assert bar.total == 3  # the definition has three visible pages
+        assert bar.progress == 1  # cursor on the first page
+
+        await pilot.press(*"ada")
+        await pilot.click("#btn-next")
+
+        assert app.screen.query_one("#flow-progress", ProgressBar).progress == 2
+
+
+@pytest.mark.asyncio
+async def test_legal_zone_renders_the_citations_in_the_question_panel() -> None:
+    app = FlowTuiApp(_legal_definition(), mode=FlowMode.MODIFY, registered_values={})
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.pause()
+        zone = app.screen.query_one("#page-legal-zone", Static)
+        content = str(zone.render())
+
+        # The zone is shown and carries both citation ref tokens (data,
+        # rendered verbatim); the labelled one and the bare one both appear.
+        assert zone.display is True
+        assert "ley-35-2006:art-27" in content
+        assert "ley-35-2006:art-28" in content
+
+
+@pytest.mark.asyncio
+async def test_legal_zone_is_hidden_when_the_page_declares_none() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.pause()
+        # The three-page definition declares no legal zone, so the zone is
+        # collapsed rather than framing an empty gap.
+        assert app.screen.query_one("#page-legal-zone", Static).display is False
+
+
+def _described_choice(value: str, *, provenance: bool = False) -> FlowChoice:
+    return FlowChoice(
+        value=value,
+        label=_copy(),
+        description=_copy("flows.test.desc"),
+        provenance=_copy("flows.test.prov") if provenance else None,
+    )
+
+
+def _choice_definition(widget: FlowWidgetKind, *, provenance: bool = False) -> FlowDefinition:
+    return FlowDefinition(
+        id="flows.test.choices",
+        title=_copy(),
+        description=_copy(),
+        sections=(
+            FlowSection(
+                id="s1",
+                title=_copy(),
+                items=(
+                    FlowPage(
+                        id="p_choice",
+                        widget=widget,
+                        prompt=_copy(),
+                        choices=(
+                            _described_choice("a", provenance=provenance),
+                            _described_choice("b", provenance=provenance),
+                        ),
+                        answer_type=str,
+                    ),
+                ),
+            ),
+        ),
+        answers_model=_Answers,
+        checkpoint={
+            FlowMode.CREATE: CheckpointAvailability.UNAVAILABLE,
+            FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
+        },
+    )
+
+
+@pytest.mark.asyncio
+async def test_select_renders_each_choice_description() -> None:
+    app = FlowTuiApp(_choice_definition(FlowWidgetKind.SELECT), mode=FlowMode.MODIFY, registered_values={})
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.pause()
+        labels = " ".join(str(button.label) for button in app.screen.query(RadioButton))
+
+        # The described choices' description text reaches the rendered labels.
+        assert "DESC-TEXT" in labels
+
+
+@pytest.mark.asyncio
+async def test_checkbox_renders_each_choice_description() -> None:
+    app = FlowTuiApp(_choice_definition(FlowWidgetKind.CHECKBOX), mode=FlowMode.MODIFY, registered_values={})
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.pause()
+        selection = app.screen.query_one("#widget-area").query_one(SelectionList)
+        rendered = " ".join(
+            str(selection.get_option_at_index(index).prompt) for index in range(selection.option_count)
+        )
+
+        assert "DESC-TEXT" in rendered
+
+
+@pytest.mark.asyncio
+async def test_compare_select_renders_provenance_and_description() -> None:
+    app = FlowTuiApp(
+        _choice_definition(FlowWidgetKind.COMPARE_SELECT, provenance=True),
+        mode=FlowMode.MODIFY,
+        registered_values={},
+    )
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.pause()
+        labels = " ".join(str(button.label) for button in app.screen.query(RadioButton))
+
+        # Provenance is the reason COMPARE_SELECT exists; both it and the
+        # description reach the rendered candidate labels.
+        assert "PROV-TEXT" in labels
+        assert "DESC-TEXT" in labels
+
+
+@pytest.mark.asyncio
+async def test_rebuild_for_locale_reassembles_copy_under_the_new_language(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> None:
+    root = tmp_path_factory.mktemp("rebuild-locales")
+    for language in SUPPORTED_OUTPUT_LANGUAGES:
+        payload = yaml.safe_dump({"flows": {"test": {"copy": f"{language}-copy"}}}, allow_unicode=True)
+        (root / f"{language}.yml").write_text(payload, encoding="utf-8")
+
+    saved = os.environ.get(OUTPUT_LANGUAGE_ENV_VAR)
+    try:
+        os.environ[OUTPUT_LANGUAGE_ENV_VAR] = "en"
+        clear_output_language_cache()
+        with override_locales_root(root):
+            app = FlowTuiApp(_definition(), mode=FlowMode.MODIFY, registered_values={})
+            async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+                await pilot.pause()
+                assert "en-copy" in str(app.screen.query_one("#page-prompt", Label).render())
+
+                os.environ[OUTPUT_LANGUAGE_ENV_VAR] = "es"
+                clear_output_language_cache()
+                app.rebuild_for_locale()
+                await pilot.pause()
+
+                # The engine state is untouched; every zone re-assembles, so the
+                # prompt re-resolves under the newly-activated language.
+                assert "es-copy" in str(app.screen.query_one("#page-prompt", Label).render())
+    finally:
+        if saved is None:
+            os.environ.pop(OUTPUT_LANGUAGE_ENV_VAR, None)
+        else:
+            os.environ[OUTPUT_LANGUAGE_ENV_VAR] = saved
+        clear_output_language_cache()
 
 
 @pytest.mark.asyncio

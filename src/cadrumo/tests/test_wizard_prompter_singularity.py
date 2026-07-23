@@ -17,11 +17,15 @@ structural prevented it, and nothing prevented a fourth.
 
 This gate is that structural prevention. Three rules, recomputed from the
 real ``ast`` module every run against the production tree (test modules
-excluded), with NO stored baseline and NO allowlist:
+excluded), with NO stored baseline and NO per-violation allowlist:
 
-1. ``questionary`` and runtime ``prompt_toolkit`` imports appear only in
-   ``_prompter.py``. Type-only imports under ``TYPE_CHECKING`` are exempt:
-   they annotate, they never construct a prompt.
+1. ``questionary`` and runtime ``prompt_toolkit`` imports appear only in the
+   sanctioned prompt/console surfaces: the wizard ``_prompter.py`` and the
+   flow substrate's ``_line_frontend.py`` / ``_capability.py`` (see
+   :data:`FLOW_SUBSTRATE_PROMPT_MODULES` — the deliberately-coexisting
+   migration surfaces, enrolled as canonical owners, not muted violations).
+   Type-only imports under ``TYPE_CHECKING`` are exempt: they annotate, they
+   never construct a prompt.
 2. Outside the ``application/wizard`` package, ``QuestionaryPrompter`` is
    reached only through ``QuestionaryPrompter.from_ambient_app_session()``
    -- never bare-constructed, never subclassed. That classmethod owns the
@@ -61,6 +65,26 @@ if TYPE_CHECKING:
 CANONICAL_PROMPTER_MODULE = "application/wizard/_prompter.py"
 """The one production module that may import questionary and own a prompter."""
 
+FLOW_SUBSTRATE_PROMPT_MODULES = frozenset(
+    {
+        "application/flows/_line_frontend.py",
+        "application/flows/_capability.py",
+    },
+)
+"""The paged-flow substrate's own prompt/console surfaces, sanctioned for rule 1.
+
+The flow substrate ships a second, deliberately-coexisting interactive
+surface during the wizard-to-flow migration: ``_line_frontend.py`` is its
+line-mode prompter (questionary over injectable ``prompt_toolkit`` IO), and
+``_capability.py`` owns the SINGLE console-capability probe both the line
+frontend and the frontend selector consult (``prompt_toolkit`` only, no
+``questionary`` — it classifies a host, it never prompts). Rule 1 exempts
+these two by name for the same reason it exempts the wizard prompter: they
+are canonical owners of a prompting/console concern, not a hand-copied
+drift copy. Rules 2 and 3 still bind them fully — neither constructs
+``QuestionaryPrompter`` nor declares an ``ask``/``ask_text`` class — so the
+drift this gate exists to catch stays structurally impossible."""
+
 WIZARD_PACKAGE_PARTS = ("application", "wizard")
 """Package that owns the prompter; rule 2 governs every module outside it."""
 
@@ -81,6 +105,15 @@ ASK_METHODS = frozenset({"ask", "ask_text"})
 
 def _is_canonical_prompter(path: Path) -> bool:
     return aeat_relative(path) == CANONICAL_PROMPTER_MODULE
+
+
+def _is_sanctioned_prompt_library_module(path: Path) -> bool:
+    """Whether a module may import a prompting/console library (rule 1 exemption).
+
+    The wizard prompter and the flow substrate's line frontend / capability
+    probe are the sanctioned owners; every other production module is bound.
+    """
+    return _is_canonical_prompter(path) or aeat_relative(path) in FLOW_SUBSTRATE_PROMPT_MODULES
 
 
 def _is_inside_wizard_package(path: Path) -> bool:
@@ -251,12 +284,13 @@ def test_questionary_is_imported_only_by_the_canonical_prompter(source_tree_ast:
         violation
         for path, tree in _production_modules(source_tree_ast)
         for violation in prompter_library_import_violations(
-            repo_relative(path), tree, is_canonical=_is_canonical_prompter(path)
+            repo_relative(path), tree, is_canonical=_is_sanctioned_prompt_library_module(path)
         )
     ]
 
     assert violations == [], (
-        "questionary/prompt_toolkit must be imported by the canonical prompter alone:\n" + "\n".join(violations)
+        "questionary/prompt_toolkit must be imported only by the sanctioned prompt surfaces "
+        "(the wizard prompter and the flow substrate's line frontend / capability probe):\n" + "\n".join(violations)
     )
 
 

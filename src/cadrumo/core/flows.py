@@ -104,6 +104,21 @@ class CopyRefKind(StrEnum):
     TERMINOLOGY_CONCEPT = "terminology_concept"
 
 
+class FrontendCapability(StrEnum):
+    """How richly the host can present an interactive flow.
+
+    ``FULL_SCREEN`` hosts the Textual app; ``LINE`` degrades to the
+    sequential line-mode frontend when a TTY exists but a full-screen
+    buffer cannot start; ``NON_INTERACTIVE`` names a host that cannot
+    prompt at all (piped / redirected / dumb terminal), where an
+    interactive frontend must refuse rather than block.
+    """
+
+    FULL_SCREEN = "full_screen"
+    LINE = "line"
+    NON_INTERACTIVE = "non_interactive"
+
+
 class FlowIntentKind(StrEnum):
     """Closed set of operator intents a frontend may dispatch at the engine."""
 
@@ -126,5 +141,6 @@ __all__ = [
     "FlowIntentKind",
     "FlowMode",
     "FlowWidgetKind",
+    "FrontendCapability",
     "PageStatus",
 ]

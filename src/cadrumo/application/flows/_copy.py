@@ -100,6 +100,21 @@ class ChoiceCopy(BaseModel):
     provenance: str | None = None
 
 
+class LegalRefCopy(BaseModel):
+    """Resolved copy for one legal citation on the provenance zone.
+
+    ``ref`` is the registry legal-ref token, carried through verbatim;
+    ``label`` is the resolved display text, or ``None`` when the citation
+    declared no label. The pairing is structured, not pre-rendered prose —
+    how a ``ref``/``label`` pair reads on screen is the frontend's concern.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    ref: str
+    label: str | None = None
+
+
 class PageCopy(BaseModel):
     """The fully-assembled display bundle for one page.
 
@@ -114,6 +129,7 @@ class PageCopy(BaseModel):
     help: str | None = None
     format_hint: str | None = None
     failure_modes: tuple[str, ...] = ()
+    legal_zone: tuple[LegalRefCopy, ...] = ()
     choices: tuple[ChoiceCopy, ...] = ()
 
 
@@ -124,6 +140,10 @@ def assemble_page_copy(page: FlowPage) -> PageCopy:
         help=resolve_optional_copy(page.help),
         format_hint=resolve_optional_copy(page.format_hint),
         failure_modes=tuple(resolve_copy(ref) for ref in page.failure_modes),
+        legal_zone=tuple(
+            LegalRefCopy(ref=legal_ref.ref, label=resolve_optional_copy(legal_ref.label))
+            for legal_ref in page.legal_zone
+        ),
         choices=tuple(
             ChoiceCopy(
                 value=choice.value,
@@ -139,6 +159,7 @@ def assemble_page_copy(page: FlowPage) -> PageCopy:
 __all__ = [
     "ChoiceCopy",
     "CopySourceResolver",
+    "LegalRefCopy",
     "PageCopy",
     "assemble_page_copy",
     "register_copy_source",

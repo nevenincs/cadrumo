@@ -48,12 +48,15 @@ from uuid import uuid4
 import typer
 from pydantic import BaseModel
 
+from ...adapters.inbound.tui import select_flow_frontend
 from ...application.flows import (
     CopyRef,
     FlowDefinition,
     FlowPage,
+    FlowRunAbandonedError,
     FlowSection,
     LineFlowFrontend,
+    detect_frontend_capability,
     register_copy_source,
 )
 from ...application.modelo import (
@@ -597,20 +600,40 @@ def _run_wizard_steps(
     *,
     run_token: str,
 ) -> tuple[tuple[_WizardStep, str], ...]:
-    """Walk the outstanding steps through the line-mode flow frontend.
+    """Walk the outstanding steps through the interactive flow frontend.
 
-    A work unit with no outstanding manual input needs no interactive
-    console at all — the frontend is never constructed for an empty step
-    set, so a ``--format json`` scripted caller with nothing left to
-    fill in never hits the non-interactive refusal. Values are read back
-    off the engine state per page key; a page the operator left blank
-    reads as the empty string, exactly as the one-shot prompt did.
+    The frontend is the full-screen Textual app where the host can host
+    it, degrading to the line-mode frontend where it cannot; the choice is
+    the shared :func:`select_flow_frontend` primitive over
+    :func:`detect_frontend_capability`, so every consumer selects in one
+    place. A work unit with no outstanding manual input needs no
+    interactive console at all — nothing is constructed for an empty step
+    set, so a ``--format json`` scripted caller with nothing left to fill
+    in never hits the non-interactive refusal. Values are read back off the
+    engine state per page key; a page the operator left blank reads as the
+    empty string, exactly as the one-shot prompt did.
     """
     if not steps:
         return ()
     definition = _definition_from_steps(steps, run_token=run_token)
-    frontend = LineFlowFrontend(definition)
-    state, _projection = frontend.run(mode=FlowMode.CREATE)
+    frontend = select_flow_frontend(
+        definition,
+        mode=FlowMode.CREATE,
+        capability=detect_frontend_capability(),
+    )
+    if isinstance(frontend, LineFlowFrontend):
+        state, _projection = frontend.run(mode=FlowMode.CREATE)
+    else:
+        frontend.run()
+        if frontend.final_state is None:
+            # Textual returned without a submit or save-and-exit: the
+            # operator abandoned the run. Refuse with the typed abandonment
+            # rather than committing a partially-answered calculation.
+            raise FlowRunAbandonedError(
+                translated_message="errors.refused.refused_flow_run_abandoned",
+                context={"flow_id": definition.id},
+            )
+        state = frontend.final_state
     return tuple((step, (state.answers.get(_page_key(step)) or "").strip()) for step in steps)
 
 

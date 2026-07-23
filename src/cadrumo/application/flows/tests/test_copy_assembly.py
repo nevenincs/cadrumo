@@ -40,6 +40,7 @@ from .. import (
     CopyRef,
     FlowChoice,
     FlowCopyResolutionError,
+    FlowLegalRef,
     FlowPage,
     assemble_page_copy,
     register_copy_source,
@@ -210,6 +211,28 @@ def test_assemble_page_copy_composes_every_slot_including_choices() -> None:
     assert choice.label == "CHOICE-LABEL"
     assert choice.description == "CHOICE-DESC"
     assert choice.provenance == "CHOICE-PROV"
+
+
+def test_assemble_page_copy_resolves_the_legal_zone() -> None:
+    page = FlowPage(
+        id="p_legal",
+        widget=FlowWidgetKind.TEXT,
+        prompt=_schema_ref("schema-test:prompt"),
+        legal_zone=(
+            FlowLegalRef(ref="ley-35-2006:art-27", label=_schema_ref("schema-test:help")),
+            FlowLegalRef(ref="ley-35-2006:art-28"),
+        ),
+        answer_type=str,
+    )
+    copy = assemble_page_copy(page)
+
+    # The label CopyRef resolves through the assembler; a citation without a
+    # label passes its ref through with label None. The ref token itself is
+    # data, carried verbatim.
+    assert [(entry.ref, entry.label) for entry in copy.legal_zone] == [
+        ("ley-35-2006:art-27", "HELP-COPY"),
+        ("ley-35-2006:art-28", None),
+    ]
 
 
 def test_registering_the_same_callable_twice_refuses() -> None:
