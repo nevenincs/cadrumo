@@ -5795,6 +5795,8 @@ errors:
       {expected} volt a várt, de {got} érkezett.'
     cif_check_letter_mismatch_kind: 'A CIF ellenőrző betűje helytelen (típus: {kind}):
       {expected} volt a várt, de {got} érkezett.'
+    cif_control_char_invalid: A(z) {candidate} CIF ellenőrző karakterének számjegynek
+      vagy nagybetűnek kell lennie, nem {got}.
     cif_invalid_shape: 'A(z) {candidate} nem CIF-formátumú: a CIF vezető betűből (A-H,
       J, N, P-S, U, V vagy W) áll, amelyet 7 számjegy és egy ellenőrző karakter követ.'
     document_empty: Az azonosítóokmány üres.
@@ -5808,6 +5810,12 @@ errors:
       erre: {digits}{expected}.'
     nif_invalid_shape: 'A(z) {candidate} nem NIF-formátumú: a NIF 8 számjegyből és
       egy ellenőrző betűből áll.'
+    tax_id_invalid_length: A spanyol adóazonosítónak 9 karakter hosszúnak kell lennie;
+      a(z) {candidate} {length} karakteres. Adj meg egy NIF-, NIE- vagy CIF-számot
+      (egy kezdő karakter, 7 vagy 8 számjegy és egy ellenőrző karakter).
+    tax_id_unrecognised_leader: A(z) {candidate} nem ismert adóazonosító-karakterrel
+      kezdődik ({leader}). A NIF számjeggyel vagy K/L/M betűvel, a NIE X, Y vagy Z
+      betűvel, a CIF pedig A-H, J, N, P-S, U, V vagy W betűvel kezdődik.
     validate_expects_str: Az azonosítóérvényesítés szöveges értéket vár; {got_type}
       érkezett.
   integrity:
