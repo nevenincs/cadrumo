@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 
 from ....domain.deadlines import (
@@ -13,6 +15,7 @@ from ...wizard import _catalogue as _wizard_catalogue  # noqa: F401  (registrati
 from .. import (
     facts_to_values,
     projection_for_taxpayer,
+    record_to_path_values,
     record_to_values,
 )
 
@@ -183,3 +186,57 @@ def test_crypto_abroad_threshold_projects_to_taxpayer_profile() -> None:
     assert "obligations.monedas_virtuales_extranjero_above_threshold" not in values
     assert profile.bienes_extranjero_above_threshold is False
     assert profile.monedas_virtuales_extranjero_above_threshold is True
+
+
+def test_projection_for_taxpayer_populates_selector_aliased_direct_reads() -> None:
+    """Selector-aliased fields must survive the record projection.
+
+    ``taxpayer_profile_from_mapping`` reads the fiscal-address family at its
+    declared ``model_selectors`` alias (``address.cadastral_reference``,
+    ``address.is_habitual_vivienda``) while the wizard projection resolves
+    path keys. The record branch must therefore feed BOTH key spaces; a
+    path-only projection silently blanks this family.
+    """
+    record = UserProfileRecord(
+        profile_id="11111111-1111-4111-8111-111111111111",
+        display_name="Operator",
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="contact.fiscal_address_cadastral_reference", value="9872023VH5797S0001WX"),
+            UserProfileFact(path="contact.fiscal_address_is_habitual_vivienda", value=True),
+            UserProfileFact(path="taxpayer_type.incn_prior_12_months", value="50000.00"),
+        ),
+    )
+    profile = projection_for_taxpayer(record)
+    # Selector-aliased direct reads.
+    assert profile.fiscal_address_cadastral_reference == "9872023VH5797S0001WX"
+    assert profile.fiscal_address_is_habitual_vivienda is True
+    # Path-keyed direct read carried by the same merged mapping.
+    assert profile.incn_prior_12_months == Decimal("50000.00")
+    # Path-keyed typed projection unaffected by the selector overlay.
+    assert profile.tax_id == "12345678Z"
+
+
+def test_projection_for_taxpayer_is_the_single_state_projection_authority() -> None:
+    """A record and its selector-keyed flat projection coerce identically.
+
+    Guards the delegation chain (workflow state projection ->
+    ``projection_for_taxpayer`` -> ``taxpayer_profile_from_mapping``): a
+    consumer that forks off with a bare selector-keyed mapping must still
+    land on the same ``TaxpayerProfile`` for the fields both key spaces
+    carry, so a future divergence between the record path and a flat-map
+    caller fails here loudly.
+    """
+    record = UserProfileRecord(
+        profile_id="11111111-1111-4111-8111-111111111111",
+        display_name="Operator",
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="withholding.has_employees", value=True),
+            UserProfileFact(path="contact.fiscal_address_is_habitual_vivienda", value=True),
+        ),
+    )
+    via_record = projection_for_taxpayer(record)
+    via_merged_mapping = projection_for_taxpayer(dict(record_to_path_values(record)) | record_to_values(record))
+    assert via_record == via_merged_mapping
