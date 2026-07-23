@@ -3050,6 +3050,10 @@ cli:
       period_unrecognised: 'Ismeretlen időszak: ''{raw}''. Használjon AEAT tokent:
         1T-4T (negyedévek), 0A (éves), 01-12 (hónapok), és adja meg az évet a --year
         kapcsolóval (pl. --period 1T --year 2024).'
+      parse_unknown_option: 'Ismeretlen kapcsoló: ''{option}''.'
+      parse_unknown_command: 'Ismeretlen parancs: ''{command}''.'
+      parse_invalid_choice: 'Érvénytelen érték: ''{value}''. Válasszon ezek közül: {accepted}.'
+      parse_missing_argument: 'Hiányzik a kötelező argumentum: {parameter}.'
   config:
     app_help: Helyi konfiguráció és diagnosztika kezelése.
     auth:
@@ -5369,6 +5373,7 @@ errors:
       szavas helyreállítási kódoddal.
     auth_storage_master_key_unavailable: A főkulcsot egyetlen szolgáltatótól sem sikerült
       beszerezni. Ellenőrizze a kulcstárat vagy a fájl-tartalék jelmondat.
+    clave_movil_identity_checksum: 'A Cl@ve Móvil azonosító alakja érvényes, de az ellenőrző betűje nem egyezik a számjegyekkel. Ellenőrizze az okmány utolsó betűjét, és próbálja újra.'
   calc:
     age_at_year_end_no_filing_year: 'Belső hiba: az életkor-számítás nem rendelkezik
       bevallási évvel.'
@@ -6394,6 +6399,7 @@ flows:
     page_header: '{position}. kérdés a(z) {total} közül — {section} szakasz'
     required: Kötelező
     current_answer_secret: 'Jelenlegi válasz: (rejtett)'
+    legal_ref: 'Jogalap: %{ref} — %{label}'
   review:
     action_edit: Válasz szerkesztése
     action_prompt: Mit szeretnél tenni?

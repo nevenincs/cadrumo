@@ -13,6 +13,7 @@ from ......application.user_profile import profile_create_storage_span
 from ......application.workflow import workflow_state_repository
 from ......core import AuthProviderKind
 from ......core.config import Settings
+from ......core.i18n import tr
 from ......domain.calculations.registry import RegistryValidationError, RemoteOperation, assert_remote_operation_allowed
 from ......tests.secure_sql import isolated_runtime_profile
 from ......tests.user_profile import register_minimal_profile
@@ -96,9 +97,21 @@ def test_identity_classification_rejects_checksum_invalid_identity(identity: str
     carry a shape the provider supports but a letter no real document does.
     The shape-only gate accepted them and deferred the failure to the live AEAT
     portal; the checksum gate refuses the operator's typo at configuration time.
+
+    The refusal carries a ``translated_message`` key (rendered in the operator's
+    output language, never an English literal) and preserves the caught identity
+    error's localised detail in ``context`` rather than flattening it to
+    ``str(exc)``.
     """
-    with pytest.raises(ClaveMovilConfigurationError, match=r"checksum"):
+    with pytest.raises(ClaveMovilConfigurationError) as excinfo:
         _classify_identity(identity)
+    error = excinfo.value
+    assert error.translated_message == "errors.auth.clave_movil_identity_checksum"
+    resolved = tr(error.translated_message)
+    assert error.translated_message not in resolved
+    assert error.context is not None
+    detail = error.context["detail"]
+    assert isinstance(detail, str) and detail
 
 
 def test_attempt_context_uses_profile_storage_and_redacts_identity_values() -> None:

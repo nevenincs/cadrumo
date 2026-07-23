@@ -3123,6 +3123,10 @@ cli:
       period_unrecognised: 'Periodo ''{raw}'' no reconocido. Use un token AEAT: 1T-4T
         (trimestres), 0A (anual), 01-12 (meses), e indique el año con --year (p. ej.
         --period 1T --year 2024).'
+      parse_unknown_option: 'Opción desconocida ''{option}''.'
+      parse_unknown_command: 'Orden desconocida ''{command}''.'
+      parse_invalid_choice: 'Valor no válido ''{value}''. Elige entre: {accepted}.'
+      parse_missing_argument: 'Falta el argumento obligatorio {parameter}.'
   config:
     app_help: Gestionar configuración local y diagnósticos
     auth:
@@ -5460,6 +5464,7 @@ errors:
       recover con tu código de recuperación de 24 palabras.
     auth_storage_master_key_unavailable: No se pudo obtener la clave maestra de ningún
       proveedor. Comprueba el llavero o la frase de contraseña de la copia de seguridad.
+    clave_movil_identity_checksum: 'El identificador de Cl@ve Móvil tiene una forma válida pero su letra de control no coincide con los dígitos. Revisa la última letra del documento e inténtalo de nuevo.'
   calc:
     age_at_year_end_no_filing_year: 'Error interno: el cálculo de edad a fin de ejercicio
       no tiene ejercicio de declaración.'
@@ -6547,6 +6552,7 @@ flows:
     page_header: Pregunta {position} de {total} — sección {section}
     required: Obligatorio
     current_answer_secret: 'Respuesta actual: (oculta)'
+    legal_ref: 'Base legal: %{ref} — %{label}'
   review:
     action_edit: Editar una respuesta
     action_prompt: ¿Qué quieres hacer?
