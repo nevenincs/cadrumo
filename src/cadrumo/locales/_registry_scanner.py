@@ -11,6 +11,8 @@ walking; the registry is a TOML surface and shares no traversal machinery.
 
 from __future__ import annotations
 
+from ..domain.categories import load_category_profile_registry
+
 
 def scan_registry_keys() -> set[str]:
     """Return every locale key declared in the category profile registry.
@@ -21,8 +23,6 @@ def scan_registry_keys() -> set[str]:
     Returns:
         The dotted translation keys declared across every year-keyed registry.
     """
-    from ..domain.categories import load_category_profile_registry
-
     keys: set[str] = set()
     for profiles in load_category_profile_registry().values():
         for profile in profiles.values():
