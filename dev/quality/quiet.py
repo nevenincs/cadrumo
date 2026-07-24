@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
+from typing import TextIO
 
 
 def main() -> int:
@@ -28,12 +29,39 @@ def main() -> int:
         sys.stderr.write("quiet_ok.py: no command given\n")
         return 2
 
-    result = subprocess.run(command, capture_output=True, text=True, check=False)
+    # Decode explicitly: `text=True` alone uses the locale preferred encoding,
+    # which on a Windows console is cp1252. Ruff and lint-imports emit UTF-8
+    # (box drawing, arrows, accented source excerpts), so the reader thread
+    # died on the first non-cp1252 byte, left stdout as None, and turned a
+    # clean gate into a bogus failure.
+    result = subprocess.run(
+        command,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+    )
 
     if result.returncode != 0:
-        sys.stdout.write(result.stdout)
-        sys.stderr.write(result.stderr)
+        # Mirror of the decode note above: a cp1252 console cannot encode the
+        # tool's UTF-8 replay either, so the replay itself raised instead of
+        # showing the failure it was invoked to surface.
+        _write_replay(sys.stdout, result.stdout)
+        _write_replay(sys.stderr, result.stderr)
     return result.returncode
+
+
+def _write_replay(stream: TextIO, text: str | None) -> None:
+    """Replay captured tool output without tripping a narrow console encoding."""
+    if not text:
+        return
+    encoding = stream.encoding or ""
+    if encoding.lower().replace("-", "") != "utf8":
+        stream.buffer.write(text.encode("utf-8", "replace"))
+        stream.flush()
+        return
+    stream.write(text)
 
 
 if __name__ == "__main__":
