@@ -24,7 +24,9 @@ if TYPE_CHECKING:
     from ...domain.contribuyente import DescendantInfo
 
 from ...core.flows import REPEATING_INSTANCE_SEPARATOR
+from ...core.parsing import parse_iso8601_date
 from ...core.setup_answers import register_project_answers as _register_project_answers
+from ...core.time import today_madrid
 from ..user_profile import (
     register_active_profile,
     set_active_fields,
@@ -277,13 +279,34 @@ def _discapacidad_grade(raw: str) -> Literal[0, 33, 65] | None:
             return None
 
 
+def _safe_adoption_date(birth_raw: str, adoption_raw: str | None) -> str | None:
+    """Return the adoption token only when it is a valid pair with birth.
+
+    A cross-field adoption invariant (adoption >= birth, adoption <= today)
+    is surfaced as a review verdict before submit, but the checkpoint
+    (save-and-exit) persist path runs no flow validators, so an out-of-order
+    adoption date could still reach this projection. Dropping the invalid
+    optional token here keeps the checkpoint write from raising a raw
+    ``DescendantInfo`` model error; the review verdict still blocks the final
+    submit until the operator corrects it.
+    """
+    if not adoption_raw:
+        return None
+    birth = parse_iso8601_date(birth_raw) if birth_raw else None
+    adoption = parse_iso8601_date(adoption_raw)
+    if birth is None or adoption is None or adoption < birth or adoption > today_madrid():
+        return None
+    return adoption_raw
+
+
 def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
     """Reconstruct one ``DescendantInfo`` from an instance's canonical answers.
 
     Blank optional answers fall back to the record's own defaults
     (convivencia defaults to cohabiting, custodia to sole custody, the
     integer supplements to zero); the ISO date strings are coerced by the
-    record's own field validators.
+    record's own field validators. An out-of-order adoption date is dropped
+    (see :func:`_safe_adoption_date`) so a checkpoint save never raw-raises.
     """
     from ...domain.contribuyente import DescendantInfo
 
@@ -291,7 +314,7 @@ def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
     gastos = row.get("gastos-guarderia") or ""
     return DescendantInfo(
         birth_date=row["birth-date"],
-        adoption_date=row.get("adoption-date") or None,
+        adoption_date=_safe_adoption_date(row["birth-date"], row.get("adoption-date")),
         discapacidad_grado=_discapacidad_grade(row.get("discapacidad", "")),
         convive_con_contribuyente=row.get("convivencia", "") != "false",
         custodia_compartida=row.get("custodia-compartida", "") == "true",
