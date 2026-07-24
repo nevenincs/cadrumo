@@ -5650,10 +5650,6 @@ errors:
     internal_profile_project_answers_not_registered: 'Internal error: project_answers
       has not been registered at application startup.'
     internal_profile_registration: 'Internal error: profile could not be registered.'
-    internal_wizard_answer_queue_overflow: 'Internal error: the wizard closed with
-      unconsumed canonical answers.'
-    internal_wizard_answer_queue_underflow: 'Internal error: the wizard asked for
-      more canonical answers than the non-interactive invocation supplied.'
     internal_wizard_catalogue_already_registered: 'Internal error: the wizard catalogue
       was registered a second time with different objects.'
     internal_wizard_catalogue_not_registered: 'Internal error: the wizard catalogue

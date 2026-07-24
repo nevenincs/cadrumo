@@ -5955,10 +5955,6 @@ errors:
     internal_profile_project_answers_not_registered: 'Belső hiba: a project_answers
       nincs regisztrálva az alkalmazás indításakor.'
     internal_profile_registration: 'Belső hiba: a profil regisztrálása sikertelen.'
-    internal_wizard_answer_queue_overflow: 'Belső hiba: a varázsló fel nem használt
-      kanonikus válaszokkal zárult.'
-    internal_wizard_answer_queue_underflow: 'Belső hiba: a varázsló több kanonikus
-      választ kért, mint amennyit a nem interaktív futtatás megadott.'
     internal_wizard_catalogue_already_registered: 'Belső hiba: a varázsló-katalógus
       másodszor is regisztrálva lett, eltérő objektumokkal.'
     internal_wizard_catalogue_not_registered: 'Belső hiba: a varázsló-katalógus nincs

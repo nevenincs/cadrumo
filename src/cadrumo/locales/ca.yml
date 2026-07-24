@@ -6050,10 +6050,6 @@ errors:
     internal_profile_project_answers_not_registered: 'Error intern: les respostes
       del projecte de perfil no estan registrades.'
     internal_profile_registration: 'Error intern: no s''ha pogut registrar el perfil.'
-    internal_wizard_answer_queue_overflow: 'Error intern: l''assistent s''ha tancat
-      amb respostes canòniques sense consumir.'
-    internal_wizard_answer_queue_underflow: 'Error intern: l''assistent ha demanat
-      més respostes canòniques de les proporcionades per la invocació no interactiva.'
     internal_wizard_catalogue_already_registered: 'Error intern: el catàleg de l''assistent
       ja està registrat.'
     internal_wizard_catalogue_not_registered: 'Error intern: el catàleg de l''assistent
