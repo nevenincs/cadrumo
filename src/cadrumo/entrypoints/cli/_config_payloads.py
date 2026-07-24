@@ -260,6 +260,46 @@ class ConfigSwitchResult(OutputSchema):
     active_profile: str
 
 
+@register_schema("config.login")
+class ConfigLoginResult(OutputSchema):
+    """JSON envelope for ``aeat config login``.
+
+    Reports the authenticated profile's immutable identity, its operator
+    label, the custody backend that performed the unwrap, and the two
+    session deadlines. ``session_persisted`` is ``False`` on a host with no
+    usable OS keychain, where the login is process-scoped only.
+    ``already_authenticated`` marks the idempotent no-op that resumed a
+    still-valid session without re-prompting, and
+    ``closed_previous_profile`` names the profile a cross-profile handover
+    signed out. No passphrase, key material, or session-key bytes enter
+    this payload.
+    """
+
+    profile_id: str
+    active_profile: str
+    backend_kind: str
+    authenticated_at: str
+    idle_deadline: str
+    absolute_deadline: str
+    session_persisted: bool
+    already_authenticated: bool
+    closed_previous_profile: str | None = None
+
+
+@register_schema("config.logout")
+class ConfigLogoutResult(OutputSchema):
+    """JSON envelope for ``aeat config logout``.
+
+    Reports which profile the strong close signed out, or ``None`` when
+    nothing was signed in. ``already_logged_out`` marks that idempotent
+    no-op, so a retry is distinguishable from a first close without
+    parsing prose.
+    """
+
+    logged_out_profile: str | None = None
+    already_logged_out: bool
+
+
 @register_schema("config.passphrase.change")
 class ConfigPassphraseChangeResult(OutputSchema):
     """JSON envelope for ``aeat config passphrase change``.

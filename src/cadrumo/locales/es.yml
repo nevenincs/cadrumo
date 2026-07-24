@@ -3481,6 +3481,22 @@ cli:
       setup_incomplete_notice: '%{count} perfil(es) aún están completando la configuración
         y todavía no están listos para presentar: %{labels}. Reanuda la configuración
         para poder trabajarlos.'
+    login:
+      help: Autentica un perfil e inicia una sesión reanudable
+      name_help: UUID o etiqueta exacta del perfil; omítelo para usar el perfil seleccionado
+      notices:
+        already_authenticated: Este perfil ya tiene la sesión iniciada; se reanudó
+          la sesión existente sin cambios.
+        closed_previous_session: Se cerró la sesión del perfil anterior antes de iniciar
+          esta.
+        session_not_persisted: No hay un almacén de claves del sistema utilizable,
+          así que la sesión no se puede guardar; este inicio de sesión solo vale para
+          el comando actual.
+    logout:
+      help: Cierra la sesión del perfil y borra su puntero local
+      notices:
+        already_logged_out: Ningún perfil tenía la sesión iniciada; no hay nada que
+          cerrar.
     passphrase:
       change:
         help: Cambia la contraseña del almacén de secretos tras verificar la actual.

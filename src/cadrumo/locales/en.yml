@@ -3217,6 +3217,20 @@ cli:
       help: List every registered profile and mark the active one
       setup_incomplete_notice: '%{count} profile(s) are still completing setup and
         are not yet ready for filing: %{labels}. Resume setup to make them workable.'
+    login:
+      help: Authenticate a profile and start a resumable session
+      name_help: Profile UUID or exact label to log in; omit to use the selected profile
+      notices:
+        already_authenticated: This profile is already logged in; the existing session
+          was resumed unchanged.
+        closed_previous_session: The previously logged-in profile was signed out before
+          this login.
+        session_not_persisted: No usable OS keychain found, so the session cannot
+          be saved; this login applies to the current command only.
+    logout:
+      help: Close the profile session and clear its local pointer
+      notices:
+        already_logged_out: No profile was logged in; nothing to close.
     passphrase:
       change:
         help: Rotate the file secret store passphrase after verifying the current

@@ -3406,6 +3406,21 @@ cli:
       help: Minden regisztrált profil listázása és az aktív megjelölése.
       setup_incomplete_notice: '%{count} profil még a beállítást fejezi be, és még
         nem áll készen a bevallásra: %{labels}. Folytassa a beállítást a használatukhoz.'
+    login:
+      help: Profil hitelesítése és folytatható munkamenet indítása
+      name_help: A profil UUID-ja vagy pontos címkéje; hagyd el a kiválasztott profil
+        használatához
+      notices:
+        already_authenticated: Ez a profil már be van jelentkezve; a meglévő munkamenet
+          változatlanul folytatódott.
+        closed_previous_session: A korábban bejelentkezett profil munkamenete lezárult
+          a bejelentkezés előtt.
+        session_not_persisted: Nincs használható rendszerkulcstár, ezért a munkamenet
+          nem menthető; ez a bejelentkezés csak a jelenlegi parancsra érvényes.
+    logout:
+      help: A profil munkamenetének lezárása és helyi mutatójának törlése
+      notices:
+        already_logged_out: Egyetlen profil sem volt bejelentkezve; nincs mit lezárni.
     passphrase:
       change:
         help: A titoktár jelszavának cseréje a jelenlegi ellenőrzése után.

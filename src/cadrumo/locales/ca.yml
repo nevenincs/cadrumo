@@ -3456,6 +3456,21 @@ cli:
       setup_incomplete_notice: '%{count} perfil(s) encara estan completant la configuració
         i encara no estan preparats per presentar: %{labels}. Reprèn la configuració
         per poder treballar-hi.'
+    login:
+      help: Autentica un perfil i inicia una sessió reprenible
+      name_help: UUID o etiqueta exacta del perfil; omet-lo per usar el perfil seleccionat
+      notices:
+        already_authenticated: Aquest perfil ja té la sessió iniciada; s'ha repres
+          la sessió existent sense canvis.
+        closed_previous_session: S'ha tancat la sessió del perfil anterior abans d'iniciar
+          aquesta.
+        session_not_persisted: No hi ha cap magatzem de claus del sistema utilitzable,
+          així que la sessió no es pot desar; aquest inici de sessió només val per
+          a l'ordre actual.
+    logout:
+      help: Tanca la sessió del perfil i esborra el seu punter local
+      notices:
+        already_logged_out: Cap perfil tenia la sessió iniciada; no hi ha res a tancar.
     passphrase:
       change:
         help: Canvia la contrasenya del magatzem de secrets després de verificar l'actual.
