@@ -64,7 +64,20 @@ editing catalogues by hand.
 The three open service steps are reported blocked by this host's broken Windows
 credential store, with eighteen failing cases all traced to the same operating
 system error. The blocked-by-environment conclusion is correct. The
-characterisation is not, in two ways that would mislead the next reader.
+characterisation is not, in three ways that would mislead the next reader.
+
+The first correction is to the cause, and it is the one that matters most,
+because "the machine's credential store is broken" invites someone to try to fix
+a machine that is healthy. It is not broken. The agent harness reaches this host
+over SSH in Windows session 0, and public-key authentication mints an S4U token
+that carries no credentials, so the credential read returns the logon-session
+error for the harness and only for the harness. The credential service is
+running, its hive is loaded, and an interactive credential listing exits cleanly
+with an empty per-logon set. The correct statement is that these cases are
+blocked by the harness's logon context, not by the workstation, and that the
+application is NOT degraded for a real interactive user. The practical
+consequence is that the three steps are verifiable by the operator in a single
+interactive run rather than waiting on any repair.
 
 The count is nineteen, not eighteen. A serial run with markers stated explicitly,
 across the persisted-session roundtrip suite, the login-session application suite,
@@ -86,11 +99,36 @@ assert against a persisted session that was deliberately never written. The
 credential store is the root cause; the traceback never says so because production
 handled it.
 
-The remediation is to the record rather than the code: state nineteen, and state
-that five reach failure through the graceful-degradation branch rather than a
-raised error, so a later reader does not mistake the gap for an unexplained
-defect. No defect was found hiding behind the environment attribution, which was
-the specific risk this review was asked to probe.
+The remediation is to the record rather than the code: state nineteen, state the
+harness logon context rather than a broken machine, and state that five reach
+failure through the graceful-degradation branch rather than a raised error, so a
+later reader does not mistake the gap for an unexplained defect. No defect was
+found hiding behind the environment attribution, which was the specific risk this
+review was asked to probe.
+
+### closure-commit-absorbed-a-peer-change | medium | The campaign's own S11-S14 closure swept an unrelated agent's uncommitted work
+
+The commit that closed this campaign's verb-registration and hard-cut steps also
+carried an unrelated agent's uncommitted change to the operator-surface contract
+module into its SHA. The content is intact and correct at HEAD; only the
+attribution is wrong, and no product defect follows from it.
+
+It is recorded because it is precisely the class of process failure a
+fresh-context review exists to surface, and because it is the second such
+incident in this session: this reviewer's own audit and execution-record edits
+were swept into an unrelated peer commit a few hours earlier. Two independent
+occurrences in one evening is a pattern rather than an accident.
+
+The mechanism is the one the explicit-pathspec rule names: in a shared worktree
+the index routinely holds several campaigns' staged work, so a commit that does
+not name its paths takes whatever is staged. The rule already forbids it. What
+this pair of incidents adds is evidence that the failure is recurring under
+current practice rather than theoretical, and that its victims only discover it
+by accident afterwards, because a swept change looks identical to a correctly
+landed one at HEAD.
+
+No remediation is proposed here beyond the existing rule. The finding is the
+recurrence.
 
 ### plan-row-names-a-path-that-does-not-exist | low | The verb-removal step scopes a curated help surface at the wrong location
 
@@ -210,11 +248,13 @@ here that would have shipped unnoticed, it is taxpayer-facing, and it belongs to
 the documentation step rather than becoming a new one, because that step is
 already open and this is the unfinished half of its own scope.
 
-Correct the environment-blocked record to say nineteen rather than eighteen, and
-to state that five of those reach failure through the production
+Correct the environment-blocked record on all three counts: nineteen rather than
+eighteen, the harness logon context rather than a broken workstation credential
+store, and five of the nineteen reaching failure through the production
 graceful-degradation branch rather than a raised operating system error. No code
-change; the correction prevents a later reader from reading five unexplained
-failures as a concealed defect.
+change. The cause correction is the load-bearing one, because it changes the
+remedy from repairing a machine to running the three steps once interactively,
+and because the application is not degraded for a real user.
 
 Correct the verb-removal step row to name the operator help surface at its real
 location under the application layer. No code change; the sweep was performed
