@@ -135,11 +135,11 @@ def test_profile_create_provisions_file_custody_and_unlock_reopens_it(tmp_path: 
     assert manifest["key_schedule"] == "bucket-dek-v1"
     assert (tmp_path / "keystore" / bucket_id / "bucket.dek.json").is_file()
 
-    logged_out = _run_cadrumo(tmp_path, ("config", "profile", "logout"))
+    logged_out = _run_cadrumo(tmp_path, ("config", "logout"))
     assert logged_out.returncode == 0, _combined_output(logged_out)
     assert "logged_out_profile" in logged_out.stdout
 
-    switched = _run_cadrumo(tmp_path, ("config", "switch", "custody"))
+    switched = _run_cadrumo(tmp_path, ("config", "login", "custody"))
     assert switched.returncode == 0, _combined_output(switched)
     assert "active_profile\tcustody" in switched.stdout
 
@@ -180,7 +180,7 @@ def test_profile_logout_is_the_only_strong_logout_before_switch(tmp_path: Path) 
     )
     assert created.returncode == 0, _combined_output(created)
 
-    logged_out = _run_cadrumo(tmp_path, ("config", "profile", "logout"))
+    logged_out = _run_cadrumo(tmp_path, ("config", "logout"))
     assert logged_out.returncode == 0, _combined_output(logged_out)
     assert "logged_out_profile\t" in logged_out.stdout
 
@@ -188,17 +188,17 @@ def test_profile_logout_is_the_only_strong_logout_before_switch(tmp_path: Path) 
     assert removed_lock.returncode != 0
     assert "No such command 'lock'" in _combined_output(removed_lock)
 
-    missing_default = _run_cadrumo(tmp_path, ("config", "switch"))
+    missing_default = _run_cadrumo(tmp_path, ("config", "login"))
     assert missing_default.returncode != 0
     assert "No active profile" in _combined_output(missing_default) or "active profile" in _combined_output(
         missing_default,
     )
 
-    switched_by_name = _run_cadrumo(tmp_path, ("config", "switch", "custody"))
+    switched_by_name = _run_cadrumo(tmp_path, ("config", "login", "custody"))
     assert switched_by_name.returncode == 0, _combined_output(switched_by_name)
     assert "active_profile\tcustody" in switched_by_name.stdout
 
-    switched_default = _run_cadrumo(tmp_path, ("config", "switch"))
+    switched_default = _run_cadrumo(tmp_path, ("config", "login"))
     assert switched_default.returncode == 0, _combined_output(switched_default)
     assert "active_profile\tcustody" in switched_default.stdout
 
@@ -288,12 +288,24 @@ def test_config_passphrase_change_round_trips_file_custody(tmp_path: Path) -> No
 
 
 def test_config_help_exposes_first_class_custody_verbs(tmp_path: Path) -> None:
-    """The accepted custody verbs are mounted under the config root."""
+    """The accepted custody verbs are mounted under the config root.
 
-    for verb in ("switch", "passphrase", "recover", "recovery"):
+    ``login`` and ``logout`` are the canonical profile-session doors. The
+    retired ``switch`` spelling is asserted absent in the same pass, because
+    the cutover was a deletion rather than a rename: an alias or a hidden
+    registration would satisfy a mounted-verb check while reinstating the
+    second door the one-verb rule removed.
+    """
+
+    for verb in ("login", "logout", "passphrase", "recover", "recovery"):
         help_result = _run_cadrumo(tmp_path, ("config", verb, "--help"))
         assert help_result.returncode == 0, _combined_output(help_result)
         assert verb in _combined_output(help_result)
+
+    retired_verb = "switch"
+    retired = _run_cadrumo(tmp_path, ("config", retired_verb, "--help"))
+    assert retired.returncode != 0
+    assert f"No such command '{retired_verb}'" in _combined_output(retired)
 
 
 def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: Path) -> None:
@@ -452,7 +464,11 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
         f"pointer default should not write to alpha; counts before={before}, after={after_pointer}"
     )
 
-    # Env-override precedence: CADRUMO_ACTIVE_PROFILE wins over the pointer.
+    # The environment is INERT: a stale exported CADRUMO_ACTIVE_PROFILE naming
+    # alpha must not redirect the write, so it still lands in the pointer's
+    # beta. This is the write-side half of the retired env precedence, and it
+    # is asserted rather than deleted because a selection mechanism that
+    # silently redirected WRITES is the failure worth guarding against.
     env_write = _run_cadrumo(
         tmp_path,
         ("config", "auth", "configure", "--provider", "clave_movil"),
@@ -461,14 +477,31 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
     assert env_write.returncode == 0, _combined_output(env_write)
     assert "No active profile" not in _combined_output(env_write)
     after_env = _auth_event_counts()
-    assert after_env[alpha_id] == after_pointer[alpha_id] + 1, (
-        f"env override should resolve to alpha; counts before={after_pointer}, after={after_env}"
+    assert after_env[beta_id] == after_pointer[beta_id] + 1, (
+        f"a set environment variable must not displace the pointer; counts before={after_pointer}, after={after_env}"
     )
-    assert after_env[beta_id] == after_pointer[beta_id], (
-        f"env override should not write to beta; counts before={after_pointer}, after={after_env}"
+    assert after_env[alpha_id] == after_pointer[alpha_id], (
+        f"a set environment variable must not redirect the write to alpha; "
+        f"counts before={after_pointer}, after={after_env}"
     )
 
-    # Explicit-flag precedence: --profile wins over env override.
+    # Flag precedence: --profile IS the surviving override and does win.
+    flag_write = _run_cadrumo(
+        tmp_path,
+        ("--profile", "alpha", "config", "auth", "configure", "--provider", "clave_movil"),
+    )
+    assert flag_write.returncode == 0, _combined_output(flag_write)
+    assert "No active profile" not in _combined_output(flag_write)
+    after_flag = _auth_event_counts()
+    assert after_flag[alpha_id] == after_env[alpha_id] + 1, (
+        f"--profile should resolve to alpha; counts before={after_env}, after={after_flag}"
+    )
+    assert after_flag[beta_id] == after_env[beta_id], (
+        f"--profile should not write to beta; counts before={after_env}, after={after_flag}"
+    )
+
+    # The flag still decides even while a contradicting variable is exported:
+    # --profile names beta, the environment names alpha, and beta wins.
     explicit_write = _run_cadrumo(
         tmp_path,
         ("--profile", "beta", "config", "auth", "configure", "--provider", "clave_movil"),
@@ -477,11 +510,11 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
     assert explicit_write.returncode == 0, _combined_output(explicit_write)
     assert "No active profile" not in _combined_output(explicit_write)
     after_explicit = _auth_event_counts()
-    assert after_explicit[beta_id] == after_env[beta_id] + 1, (
-        f"--profile flag should resolve to beta; counts before={after_env}, after={after_explicit}"
+    assert after_explicit[beta_id] == after_flag[beta_id] + 1, (
+        f"--profile flag should resolve to beta; counts before={after_flag}, after={after_explicit}"
     )
-    assert after_explicit[alpha_id] == after_env[alpha_id], (
-        f"--profile flag should not write to alpha; counts before={after_env}, after={after_explicit}"
+    assert after_explicit[alpha_id] == after_flag[alpha_id], (
+        f"--profile flag should not write to alpha; counts before={after_flag}, after={after_explicit}"
     )
 
 
