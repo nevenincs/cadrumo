@@ -61,6 +61,14 @@ class FlowTuiApp(App[None]):
     """Full-screen projection of one flow run."""
 
     CSS = """
+    QuestionScreen, ReviewScreen { align-horizontal: center; }
+    Button {
+        height: 1;
+        border: none;
+        padding: 0 2;
+        min-width: 12;
+    }
+    Button:focus { text-style: bold reverse; }
     #flow-header {
         dock: top;
         height: 1;
@@ -75,9 +83,10 @@ class FlowTuiApp(App[None]):
         border: round $primary;
         border-title-color: $accent;
         border-title-style: bold;
-        padding: 1 2;
+        padding: 1 3;
         margin: 1 2;
-        max-width: 100;
+        width: 96;
+        max-width: 100%;
         height: auto;
     }
     #page-prompt { text-style: bold; margin: 0 0 1 0; }
@@ -100,8 +109,8 @@ class FlowTuiApp(App[None]):
     #live-validation { color: $error; margin: 0; }
     #answer-echo { color: $success; text-style: bold; margin: 0; }
     #commit-verdicts { color: $error; margin: 0; }
-    #nav-buttons { height: auto; align-horizontal: right; margin: 1 0 0 0; }
-    #nav-buttons Button { min-width: 16; margin: 0 0 0 2; }
+    #nav-buttons { height: 1; align-horizontal: right; margin: 1 0 0 0; }
+    #nav-buttons Button { margin: 0 0 0 2; }
     #review-header {
         dock: top;
         height: 1;
@@ -111,10 +120,10 @@ class FlowTuiApp(App[None]):
         text-style: bold;
         padding: 0 2;
     }
-    #review-table { border: round $primary; margin: 1 2; height: auto; }
-    #review-blocking { color: $error; border: round $error; padding: 0 1; margin: 1 2; }
+    #review-table { border: round $primary; margin: 1 2; height: auto; width: 96; max-width: 100%; }
+    #review-blocking { color: $error; border: round $error; padding: 0 1; margin: 1 2; width: 96; max-width: 100%; }
     #review-save-note { color: $warning; margin: 0 2; }
-    #btn-submit { dock: bottom; min-width: 16; margin: 1 2; }
+    #btn-submit { dock: bottom; margin: 1 2; }
     """
 
     def __init__(
