@@ -238,3 +238,88 @@ def test_link_refuses_operator_invoice_add_id_instructively() -> None:
     assert "invoice catalogue create" in lowered, linked.output
     assert "evidenc" in lowered, linked.output
     assert "traceback" not in lowered, linked.output
+
+
+def test_check_reports_zero_link_inconsistencies_on_a_consistent_bucket() -> None:
+    """A bucket whose invoice links agree reports the channel as empty.
+
+    The link-integrity channel is period-independent, so it appears on the
+    no-period audit branch alongside the readiness issues.
+    """
+
+    result = _invoke(["--format", "json", "app", "ledger", "check"])
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["result"]["link_inconsistencies"] == []
+    assert payload["result"]["ready"] is True
+    assert payload["notices"] == []
+
+
+def test_check_reports_a_one_sided_invoice_link(tmp_path: Path) -> None:
+    """A half-written link is surfaced as a row, a warning notice, and ready=false.
+
+    The link writer commits both catalogues together, so this state is no
+    longer reachable through the CLI; it is reproduced here at the repository
+    boundary to prove the operator can discover the drift if it ever arises
+    (from an interrupted pre-atomic write, or an out-of-band edit).
+    """
+    from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+    from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+    from ....domain.transactions import TransactionCatalogue
+
+    added = _invoke(
+        [
+            "app", "ledger", "add",
+            "--date", "2026-03-10", "--amount", "121.00",
+            "--direction", "OUTGOING", "--description", "Supplier payment B12345674",
+            "--idempotency-key", "check-link-drift",
+        ],
+    )  # fmt: skip
+    assert added.exit_code == 0, added.output
+    transaction_id = _line_value(added.output, "ID")
+
+    created = _invoke(
+        [
+            "app", "ledger", "invoice", "catalogue", "create",
+            "--kind", "received",
+            "--counterparty-nif", "B12345674",
+            "--counterparty-name", "Proveedor SL",
+            "--invoice-number", "2026-0143",
+            "--invoice-date", "2026-03-10",
+            "--taxable-base", "100.00", "--iva-rate", "21",
+        ],
+    )  # fmt: skip
+    assert created.exit_code == 0, created.output
+    invoice_id = _line_value(created.output, "invoice_id")
+
+    linked = _invoke(["app", "ledger", "link", transaction_id, "--invoice-id", invoice_id])
+    assert linked.exit_code == 0, linked.output
+
+    # Drop the transaction side of the link, leaving the invoice citing it.
+    bucket_id = "11111111-1111-4111-8111-111111111111"
+    transactions_repo = TransactionCatalogueRepository(bucket_id=bucket_id)
+    catalogue = transactions_repo.load()
+    linked_transaction = catalogue.get(transaction_id)
+    assert linked_transaction is not None
+    unlinked = linked_transaction.model_copy(update={"invoice_id": None})
+    transactions_repo.save(TransactionCatalogue.from_transactions([unlinked]))
+    invoice = InvoiceCatalogueRepository(bucket_id=bucket_id).load().get(invoice_id)
+    assert invoice is not None
+    assert invoice.linked_transaction_ids == (transaction_id,)
+
+    result = _invoke(["--format", "json", "app", "ledger", "check"])
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    rows = payload["result"]["link_inconsistencies"]
+    assert rows == [
+        {"invoice_id": invoice_id, "transaction_id": transaction_id, "direction": "invoice-only"},
+    ]
+    assert payload["result"]["ready"] is False
+    codes = [notice["code"] for notice in payload["notices"]]
+    assert "ledger.check.link_inconsistency" in codes
+    notice = next(item for item in payload["notices"] if item["code"] == "ledger.check.link_inconsistency")
+    assert notice["severity"] == "warning"
+    assert notice["suggestion"] == "aeat app ledger link"
+    assert notice["context"] == {"link_inconsistency_count": "1"}

@@ -391,15 +391,44 @@ def _register_ledger_categories_command(app: typer.Typer) -> None:
         )
 
 
+def _link_inconsistency_notices(rows: list[dict[str, object]]) -> list[Notice]:
+    """Return the warning notice for one-sided invoice links, or nothing.
+
+    The rows themselves are primary result data on the check payload; this is
+    the incidental diagnostic that tells the operator the association is
+    untrustworthy and names the verb that repairs it. Re-running ``link`` for
+    the reported pair rewrites both sides in one commit.
+    """
+    if not rows:
+        return []
+    return [
+        Notice(
+            severity=NoticeSeverity.WARNING,
+            code="ledger.check.link_inconsistency",
+            message=tr(
+                "cli.ledger.check.link_inconsistency_notice",
+                link_count=len(rows),
+                default=(
+                    f"{len(rows)} invoice link(s) disagree between the invoice and transaction "
+                    f"catalogues; the affected invoice association cannot be trusted."
+                ),
+            ),
+            suggestion="aeat app ledger link",
+            context={"link_inconsistency_count": str(len(rows))},
+        ),
+    ]
+
+
 def _register_ledger_check_command(app: typer.Typer) -> None:
     @app.command(
         "check",
         help=tr(
             "cli.ledger.check.help",
             default=(
-                "Probe ledger transactions in the addressed bucket (defaults to the active "
-                "profile bucket) and report anomaly rows aggregated across every period a "
-                "transaction touches. Local-only; never contacts AEAT."
+                "Probe ledger transactions in the addressed profile (defaults to the active "
+                "profile) and report anomaly rows aggregated across every period a "
+                "transaction touches, plus any invoice link the invoice and transaction "
+                "catalogues disagree about. Local-only; never contacts AEAT."
             ),
         ),
     )
@@ -420,7 +449,8 @@ def _register_ledger_check_command(app: typer.Typer) -> None:
             help=tr("cli.ledger.check.year_help", default="Filing year for --period (e.g. 2024)."),
         ),
     ) -> None:
-        """Surface ledger anomalies for the addressed bucket without mutating state."""
+        """Surface ledger anomalies and broken invoice links without mutating state."""
+        from ...application.invoices import verify_invoice_repository_links
         from ...application.ledger import LedgerPreflightIssue, preflight_transaction_catalogue
         from ._ledger_payloads import LedgerCheckResult
 
@@ -430,6 +460,14 @@ def _register_ledger_check_command(app: typer.Typer) -> None:
             transaction_repository = _tx_repo(_state())
         bucket_id = transaction_repository.bucket_id
         catalogue = transaction_repository.load()
+        # Link integrity is a whole-bucket property of the two catalogues, not a
+        # per-period readiness fact, so it is resolved once and reported by every
+        # branch below regardless of the --period narrowing.
+        link_rows = [row.model_dump(mode="json") for row in verify_invoice_repository_links(bucket_id=bucket_id)]
+        link_lines = [
+            f"link_inconsistency\t{row['invoice_id']}\t{row['transaction_id']}\t{row['direction']}" for row in link_rows
+        ]
+        link_notices = _link_inconsistency_notices(link_rows)
         canonical_period = _optional_canonical_period(period, year=year)
         if canonical_period is not None:
             report = preflight_transaction_catalogue(
@@ -438,27 +476,32 @@ def _register_ledger_check_command(app: typer.Typer) -> None:
                 transactions=catalogue,
             )
             period_label = str(canonical_period)
+            ready = report.ready and not link_rows
             payload = {
                 "bucket_id": bucket_id,
                 "periods": [period_label],
                 "checked_transaction_count": report.checked_transaction_count,
                 "issues": [issue.model_dump(mode="json") for issue in report.issues],
-                "ready": report.ready,
+                "link_inconsistencies": link_rows,
+                "ready": ready,
             }
             lines = [
                 f"bucket\t{bucket_id}",
                 f"periods\t{period_label}",
                 f"checked\t{report.checked_transaction_count}",
                 f"issues\t{len(report.issues)}",
-                f"ready\t{str(report.ready).lower()}",
+                f"link_inconsistencies\t{len(link_rows)}",
+                f"ready\t{str(ready).lower()}",
             ]
             for issue in report.issues:
                 lines.append(f"issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}")
+            lines.extend(link_lines)
             _emit_envelope(
                 ctx,
                 command="ledger.check",
                 result=LedgerCheckResult.model_validate(payload),
                 lines=lines,
+                notices=link_notices,
             )
             return
 
@@ -471,25 +514,30 @@ def _register_ledger_check_command(app: typer.Typer) -> None:
         )
 
         if not years:
+            ready = not link_rows
             payload = {
                 "bucket_id": bucket_id,
                 "periods": [],
                 "checked_transaction_count": 0,
                 "issues": [],
-                "ready": True,
+                "link_inconsistencies": link_rows,
+                "ready": ready,
             }
             lines = [
                 f"bucket\t{bucket_id}",
                 "periods\t",
                 "checked\t0",
                 "issues\t0",
-                "ready\ttrue",
+                f"link_inconsistencies\t{len(link_rows)}",
+                f"ready\t{str(ready).lower()}",
             ]
+            lines.extend(link_lines)
             _emit_envelope(
                 ctx,
                 command="ledger.check",
                 result=LedgerCheckResult.model_validate(payload),
                 lines=lines,
+                notices=link_notices,
             )
             return
 
@@ -507,27 +555,32 @@ def _register_ledger_check_command(app: typer.Typer) -> None:
                 aggregated_issues.append(issue)
                 aggregated_payload_issues.append(issue.model_dump(mode="json"))
 
+        ready = not aggregated_issues and not link_rows
         payload = {
             "bucket_id": bucket_id,
             "periods": [str(year) for year in years],
             "checked_transaction_count": checked_total,
             "issues": aggregated_payload_issues,
-            "ready": not aggregated_issues,
+            "link_inconsistencies": link_rows,
+            "ready": ready,
         }
         lines = [
             f"bucket\t{bucket_id}",
             f"periods\t{','.join(str(year) for year in years)}",
             f"checked\t{checked_total}",
             f"issues\t{len(aggregated_issues)}",
-            f"ready\t{str(not aggregated_issues).lower()}",
+            f"link_inconsistencies\t{len(link_rows)}",
+            f"ready\t{str(ready).lower()}",
         ]
         for issue in aggregated_issues:
             lines.append(f"issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}")
+        lines.extend(link_lines)
         _emit_envelope(
             ctx,
             command="ledger.check",
             result=LedgerCheckResult.model_validate(payload),
             lines=lines,
+            notices=link_notices,
         )
 
 

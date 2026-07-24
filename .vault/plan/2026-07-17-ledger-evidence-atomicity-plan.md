@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#ledger-evidence-atomicity'
 date: '2026-07-17'
-modified: '2026-07-24'
+modified: '2026-07-25'
 tier: L2
 related:
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
@@ -54,6 +54,15 @@ Move the evidence and replay payload schemas, locales, help and risk metadata, a
 - [x] `P04.S13` - Migrate the four locale catalogues for the ledger evidence and audit families through the locales CLI; `src/cadrumo/locales/en.yml`.
 - [x] `P04.S14` - Regenerate the operator how-to and reference pages for ledger evidence from the frozen live surface; `docs/how-to/ledger-evidence.md`.
 - [x] `P04.S15` - Prove the removed replay and evidence-patch spellings are absent from every source and generated surface; `src/cadrumo/entrypoints/cli/tests/test_root_grammar_invariants.py`.
+
+### Phase `P05` - Close-review atomicity remediation
+
+Close the high finding from the close honesty review: make the invoice-link success path a single committed unit of work, prove it with a forced-failure gate, expose the dormant link-consistency detector to the operator, and correct the split writer docstrings that still describe the removed split-then-patch path.
+
+- [ ] `P05.S18` - Route the invoice-link success path through the co-commit write authority so the invoice catalogue and the transaction catalogue diff land in one apply_batch transaction, replacing the two independently-committed saves; `src/cadrumo/application/invoices/_linking.py`.
+- [ ] `P05.S19` - Prove the composed write is one unit of work with real adapters, gated on a recorder asserting zero commits between the two catalogue writes, an anti-tautology counterpart asserting the pre-fix split shape does commit between them, and a mid-batch revision conflict leaving neither catalogue linked; `src/cadrumo/application/invoices/tests/test_linking_atomicity.py`.
+- [ ] `P05.S20` - Expose the dormant link-consistency detector on the existing ledger check verb as a typed period-independent result channel with a warning notice and a false readiness verdict, gated on a CLI test reproducing a one-sided link and asserting the row, the notice contract, and ready false; `src/cadrumo/entrypoints/cli/_ledger_read_cli.py, src/cadrumo/entrypoints/cli/_ledger_payloads.py, src/cadrumo/entrypoints/cli/tests/test_ledger_link_check_verbs.py`.
+- [ ] `P05.S21` - Correct the apply_evidence_split and apply_evidence_classification docstrings to describe the single classified-children writer that ships instead of the removed split-then-patch path, gated on the API stub drift check staying clean; `src/cadrumo/application/ledger/_llm_classification.py`.
 
 ## Description
 

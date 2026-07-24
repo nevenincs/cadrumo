@@ -275,7 +275,10 @@ def link_manual_transaction_invoice(
     It never touches purchase evidence or attachments: evidence mutation is
     reserved for :func:`attach_manual_transaction_evidence`. Every rejection
     fires before any catalogue write, so a refused link leaves the transaction,
-    invoice catalogue, and event history unchanged.
+    invoice catalogue, and event history unchanged. The accepted path is
+    equally all-or-nothing: both catalogues are co-committed in one
+    secure-object batch, so no failure can leave one side citing the other
+    without being cited back.
 
     Returns an
     :class:`~cadrumo.application.invoices.InvoiceTransactionLinkResult`.

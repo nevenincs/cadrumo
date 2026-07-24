@@ -1058,6 +1058,23 @@ class LedgerPreflightIssuePayload(OutputSchema):
     detail: str = ""
 
 
+class LedgerLinkInconsistencyPayload(OutputSchema):
+    """One one-sided invoice/transaction link found by the check verb.
+
+    Mirrors :class:`~cadrumo.domain.invoices.LinkInconsistency`. ``direction``
+    names which catalogue cites the other without being cited back:
+    ``invoice-only`` when the invoice carries the transaction in its
+    ``linked_transaction_ids`` but the transaction's ``invoice_id`` does not
+    point back, ``transaction-only`` for the reverse. Either way the two
+    catalogues disagree about a link and the association cannot be trusted
+    until the operator re-runs ``link``.
+    """
+
+    invoice_id: str
+    transaction_id: str
+    direction: str
+
+
 @register_schema("ledger.check")
 class LedgerCheckResult(OutputSchema):
     """JSON envelope for ``aeat app ledger check``.
@@ -1066,12 +1083,20 @@ class LedgerCheckResult(OutputSchema):
     ledger touches.  It aggregates
     :func:`preflight_transaction_catalogue` issue rows
     into a bucket-level readiness verdict without mutating transactions.
+
+    ``link_inconsistencies`` is the second, period-independent channel: the
+    one-sided invoice/transaction links
+    :func:`~cadrumo.application.invoices.verify_invoice_repository_links`
+    reports over the whole bucket. ``ready`` is false when either channel is
+    non-empty, because a disagreeing link makes the affected rows' invoice
+    association untrustworthy just as a missing fact does.
     """
 
     bucket_id: str
     periods: list[str]
     checked_transaction_count: int
     issues: list[LedgerPreflightIssuePayload]
+    link_inconsistencies: list[LedgerLinkInconsistencyPayload] = []
     ready: bool
 
 
