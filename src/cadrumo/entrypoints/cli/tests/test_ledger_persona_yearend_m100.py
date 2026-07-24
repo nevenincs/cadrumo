@@ -165,7 +165,7 @@ def test_annual_income_and_expense_picture_must_be_summed_by_hand(tmp_path: Path
     _import_corpus()
     rules = _oracle_rules()
 
-    # Bulk-classify the full-corpus business rows against the oracle. --from-csv
+    # Bulk-classify the full-corpus business rows against the oracle. --file
     # carries classification + category only, so non-MIXED rows go in one pass.
     rows = _list_rows()
     lines = ["transaction_id,classification,category_id"]
@@ -188,7 +188,7 @@ def test_annual_income_and_expense_picture_must_be_summed_by_hand(tmp_path: Path
     classify_csv = tmp_path / "yearend-classifications.csv"
     classify_csv.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
-    classified = _invoke(["--format", "json", "app", "ledger", "classify", "--from-csv", str(classify_csv)])
+    classified = _invoke(["--format", "json", "app", "ledger", "classify", "--file", str(classify_csv)])
     assert classified.exit_code == 0, classified.output
     applied = json.loads(classified.output)["result"]["applied"]
     assert applied == len(classified_ids), (applied, len(classified_ids))

@@ -3995,22 +3995,21 @@ cli:
       category_help: Deductible-expense category id (expense transactions only; income
         needs no category)
       classification_help: Business classification state for the transaction
-      classification_required: --classification is required when --from-csv is not
-        provided.
+      classification_required: --classification is required when --file is not provided.
       counterparty_eu_member_state_help: EU member state or Northern Ireland IVA prefix
         of the counterparty (ISO 3166-1 alpha-2 lowercase, e.g. de or xi); required
         with --iva-category intra_community_supply, prohibited with export_third_country_zero_rated
         or export_assimilated_zero_rated
       evidence_acknowledged_help: Acknowledge that reading evidence with a cloud provider
         uploads it off your machine (required by the consent gate).
-      from_csv_exclusive: --from-csv cannot be combined with a transaction id or --classification.
-      from_csv_help: Path to a CSV file with columns transaction_id, classification[,
+      file_exclusive: --file cannot be combined with a transaction id or --classification.
+      file_help: Path to a CSV file with columns transaction_id, classification[,
         category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
         iva_category, irpf_category].
-      from_csv_not_found: 'CSV file not found: %{path}'
+      file_not_found: 'CSV file not found: %{path}'
       help: Classify one ledger transaction in the active profile
       id_help: Ledger transaction id to classify
-      id_required: A transaction id is required when --from-csv is not provided.
+      id_required: A transaction id is required when --file is not provided.
       irpf_category_help: 'IRPF category id. Use aeat app ledger categories. Net-paid
         professional invoices use actividad_economica; net-paid rent uses arrendamiento_local/arrendamiento_vivienda_afecto.
         Royalties/SGAE: Art. 25.4 can be capital mobiliario when the taxpayer is not
@@ -4023,8 +4022,8 @@ cli:
       iva_rate_help: IVA rate as a decimal, for example 0.21
       llm_classified_by_label: classified-by
       llm_confidence_label: confidence
-      llm_exclusive: --llm cannot be combined with --classification or --from-csv;
-        the manual path is the explicit operator override.
+      llm_exclusive: --llm cannot be combined with --classification or --file; the
+        manual path is the explicit operator override.
       llm_failed: 'LLM classification failed: {reason}'
       llm_help: Ask a local LLM provider (claude/antigravity/codex) to classify the
         transaction; preview by default, persist with --apply.

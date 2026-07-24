@@ -135,7 +135,7 @@ workflow; keep the census facts in your profile correct first - see
 
 ## Classify many rows from CSV
 
-For bulk review, `classify --from-csv` reads a CSV with columns
+For bulk review, `classify --file` reads a CSV with columns
 `transaction_id`, `classification`, and optional classification facts such as
 `category_id`, `business_pct`, `usage_ratio_id`, taxable-base and IVA columns,
 `iva_category`, and `irpf_category`. Prepare a narrow CSV holding only the rows

@@ -4290,22 +4290,21 @@ cli:
       category_help: Id de categoria de despesa deduïble (només moviments de despesa;
         els ingressos no necessiten categoria)
       classification_help: Estat de classificació professional del moviment
-      classification_required: --classification és obligatori quan no s'usa --from-csv.
+      classification_required: --classification és obligatori quan no s'usa --file.
       counterparty_eu_member_state_help: Estat membre de la UE o prefix IVA d'Irlanda
         del Nord de la contrapart (ISO 3166-1 alfa-2 minúscules, p. ex. de o xi);
         obligatori amb --iva-category intra_community_supply, prohibit amb export_third_country_zero_rated
         o export_assimilated_zero_rated
       evidence_acknowledged_help: Confirma que llegir l'evidència amb un proveïdor
         al núvol la puja fora del teu equip (ho exigeix la verificació de consentiment).
-      from_csv_exclusive: --from-csv no pot combinar-se amb un id de transacció ni
-        --classification.
-      from_csv_help: Ruta a un fitxer CSV amb columnes transaction_id, classification[,
+      file_exclusive: --file no pot combinar-se amb un id de transacció ni --classification.
+      file_help: Ruta a un fitxer CSV amb columnes transaction_id, classification[,
         category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
         iva_category, irpf_category].
-      from_csv_not_found: 'Fitxer CSV no trobat: %{path}'
+      file_not_found: 'Fitxer CSV no trobat: %{path}'
       help: Classificar un moviment del llibre al perfil actiu
       id_help: Id del moviment del llibre a classificar
-      id_required: Cal un id de transacció quan no s'usa --from-csv.
+      id_required: Cal un id de transacció quan no s'usa --file.
       irpf_category_help: 'Id de categoria d''IRPF. Usa aeat app ledger categories.
         Factures professionals cobrades netes usen actividad_economica; lloguers pagats
         nets usen arrendamiento_local/arrendamiento_vivienda_afecto. Royalties/SGAE:
@@ -4318,8 +4317,8 @@ cli:
       iva_rate_help: Tipus d'IVA com a decimal, per exemple 0.21
       llm_classified_by_label: classificat-per
       llm_confidence_label: confiança
-      llm_exclusive: --llm no es pot combinar amb --classification ni --from-csv;
-        la ruta manual es l'anul-lació explícita de l'operador.
+      llm_exclusive: --llm no es pot combinar amb --classification ni --file; la ruta
+        manual es l'anul-lació explícita de l'operador.
       llm_failed: 'La classificació per LLM ha fallat: {reason}'
       llm_help: Demana a un proveïdor LLM local (claude/antigravity/codex) que classifiqui
         la transacció; vista prèvia per defecte, persisteix amb --apply.

@@ -6413,7 +6413,7 @@
         "cli-option:aeat app ledger classify:--classification",
         "cli-option:aeat app ledger classify:--counterparty-eu-member-state",
         "cli-option:aeat app ledger classify:--evidence-acknowledged",
-        "cli-option:aeat app ledger classify:--from-csv",
+        "cli-option:aeat app ledger classify:--file",
         "cli-option:aeat app ledger classify:--irpf-category",
         "cli-option:aeat app ledger classify:--iva-amount",
         "cli-option:aeat app ledger classify:--iva-category",

@@ -195,5 +195,5 @@ are validated elsewhere against AEAT worked examples, not invented here.
 - `bbva-business-eur.csv` · `caixabank-personal.csv` · `revolut-multi.csv` ·
   `n26-savings.csv` — raw bank exports.
 - `ground-truth.manifest.json` — the oracle.
-- `classify/*.csv` — derived bulk `classify --from-csv` inputs (ref→facts),
+- `classify/*.csv` — derived bulk `classify --file` inputs (ref→facts),
   used by operator-journey tests after id resolution.

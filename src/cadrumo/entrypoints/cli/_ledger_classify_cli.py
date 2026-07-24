@@ -27,27 +27,27 @@ def ledger_classify_bulk_csv(
     transaction_repository: _TransactionRepo,
     transaction_id: str | None,
     classification: BusinessClassification | None,
-    from_csv: str,
+    file: str,
     actor: str | None,
 ) -> None:
     if transaction_id is not None or classification is not None:
         raise _bad(
             tr(
-                "cli.ledger.classify.from_csv_exclusive",
-                default="--from-csv cannot be combined with a transaction id or --classification.",
+                "cli.ledger.classify.file_exclusive",
+                default="--file cannot be combined with a transaction id or --classification.",
             ),
         )
-    csv_path = Path(from_csv)
+    csv_path = Path(file)
     if not csv_path.exists():
         raise _bad(
-            tr("cli.ledger.classify.from_csv_not_found", path=from_csv, default=f"CSV file not found: {from_csv}"),
+            tr("cli.ledger.classify.file_not_found", path=file, default=f"CSV file not found: {file}"),
         )
     csv_text = csv_path.read_text(encoding="utf-8")
     result = _bulk_classify(
         bucket_id=transaction_repository.bucket_id,
         csv_text=csv_text,
         actor=actor or resolve_active_bucket_id() or "operator",
-        source_command="aeat app ledger classify --from-csv",
+        source_command="aeat app ledger classify --file",
         transaction_repository=transaction_repository
         if isinstance(transaction_repository, TransactionCatalogueRepository)
         else None,
@@ -112,14 +112,14 @@ def require_single_ledger_classification_request(
         raise _bad(
             tr(
                 "cli.ledger.classify.id_required",
-                default="A transaction id is required when --from-csv is not provided.",
+                default="A transaction id is required when --file is not provided.",
             ),
         )
     if classification is None:
         raise _bad(
             tr(
                 "cli.ledger.classify.classification_required",
-                default="--classification is required when --from-csv is not provided.",
+                default="--classification is required when --file is not provided.",
             ),
         )
     if not is_classified(classification):

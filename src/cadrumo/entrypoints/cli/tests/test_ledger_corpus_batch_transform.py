@@ -37,7 +37,7 @@ def test_batch_transform_recategorize_relabel_reallocate_at_scale(tmp_path: Path
 
     recat_csv = tmp_path / "recategorize.csv"
     recat_csv.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    res = _invoke(["--format", "json", "app", "ledger", "classify", "--from-csv", str(recat_csv)])
+    res = _invoke(["--format", "json", "app", "ledger", "classify", "--file", str(recat_csv)])
     assert res.exit_code == 0, res.output
     payload = json.loads(res.output)["result"]
     assert payload["applied"] == len(targeted), payload
@@ -56,7 +56,7 @@ def test_batch_transform_recategorize_relabel_reallocate_at_scale(tmp_path: Path
     realloc += [f"{tx_id},MIXED,0.60" for tx_id in mixed_ids]
     realloc_csv = tmp_path / "reallocate.csv"
     realloc_csv.write_text("\n".join(realloc) + "\n", encoding="utf-8")
-    res2 = _invoke(["--format", "json", "app", "ledger", "classify", "--from-csv", str(realloc_csv)])
+    res2 = _invoke(["--format", "json", "app", "ledger", "classify", "--file", str(realloc_csv)])
     assert res2.exit_code == 0, res2.output
     payload2 = json.loads(res2.output)["result"]
     assert payload2["applied"] == len(mixed_ids), payload2

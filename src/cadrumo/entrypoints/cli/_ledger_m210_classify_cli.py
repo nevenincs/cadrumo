@@ -84,7 +84,7 @@ class M210LedgerClassifyOptions:
         llm_requested: bool,
         read_evidence: bool,
         saturate: bool,
-        from_csv: str | None,
+        file: str | None,
         auto_split: bool,
     ) -> None:
         """Keep explicit M210 evidence separate from LLM and CSV classification."""
@@ -92,7 +92,7 @@ class M210LedgerClassifyOptions:
             return
         if llm_requested or read_evidence or saturate or auto_split:
             raise _bad(tr("cli.ledger.classify.m210_explicit_direct_only"))
-        if from_csv is not None:
+        if file is not None:
             raise _bad(tr("cli.ledger.classify.m210_explicit_direct_only"))
 
     def to_income_classification(

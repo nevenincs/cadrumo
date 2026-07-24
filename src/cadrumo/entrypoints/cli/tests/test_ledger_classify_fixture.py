@@ -1,10 +1,10 @@
-"""Derived classify --from-csv fixture: drift guard + apply journey.
+"""Derived classify --file fixture: drift guard + apply journey.
 
 The committed ``classify/*.classify.csv`` fixtures pair each corpus row's
 content-addressed id with the oracle classification. This module (1) regenerates
 the expected rows from the corpus + oracle and asserts byte-equality with the
 committed fixture (so corpus drift fails loudly), and (2) drives the fixture
-through ``ledger classify --from-csv`` and asserts every row is applied.
+through ``ledger classify --file`` and asserts every row is applied.
 """
 
 from __future__ import annotations
@@ -90,7 +90,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 def test_classify_fixture_applies_through_bulk_classify(_isolated_backend: None) -> None:
     imported = _invoke(["app", "ledger", "import", str(_CORPUS / _ACCOUNT), "--provider", "csv"])
     assert imported.exit_code == 0, imported.output
-    result = _invoke(["--format", "json", "app", "ledger", "classify", "--from-csv", str(_FIXTURE)])
+    result = _invoke(["--format", "json", "app", "ledger", "classify", "--file", str(_FIXTURE)])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
     expected_rows = len(_FIXTURE.read_text(encoding="utf-8").strip().splitlines()) - 1

@@ -1,10 +1,10 @@
-# Derived `classify --from-csv` oracle inputs
+# Derived `classify --file` oracle inputs
 
 These CSVs are **derived**, not hand-authored: each row pairs a corpus
 transaction's content-addressed `transaction_id` with the classification the
 ground-truth oracle (`../ground-truth.manifest.json`) assigns to it. They are the
 batch-classification companion to the corpus and feed
-`aeat app ledger classify --from-csv`.
+`aeat app ledger classify --file`.
 
 - `bbva-business-eur.classify.csv` — `transaction_id,classification,category_id`
   for every non-MIXED row of `../bbva-business-eur.csv` (MIXED rows are omitted

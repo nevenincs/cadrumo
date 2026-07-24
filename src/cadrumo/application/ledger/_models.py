@@ -741,7 +741,7 @@ class LedgerExportCommand(BaseModel):
 
 
 class BulkClassifyRow(BaseModel):
-    """One row from a ``ledger classify --from-csv`` CSV input file.
+    """One row from a ``ledger classify --file`` CSV input file.
 
     Required columns: ``transaction_id``, ``classification``.
     Optional columns: ``category_id``, ``business_pct``, ``usage_ratio_id``,
@@ -769,7 +769,7 @@ class BulkClassifyRow(BaseModel):
 
 
 class BulkClassifyFailure(BaseModel):
-    """One failed row from a ``ledger classify --from-csv`` operation."""
+    """One failed row from a ``ledger classify --file`` operation."""
 
     model_config = _STRICT_FROZEN
 
@@ -779,7 +779,7 @@ class BulkClassifyFailure(BaseModel):
 
 
 class BulkClassifyResult(BaseModel):
-    """Aggregate result for a ``ledger classify --from-csv`` operation.
+    """Aggregate result for a ``ledger classify --file`` operation.
 
     Uses partial-success semantics matching the ledger import pattern:
     all parseable rows that pass validation are applied; failures are

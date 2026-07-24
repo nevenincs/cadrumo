@@ -410,7 +410,7 @@ class LedgerClassifySingleResult(_LedgerMutationResult):
 
 
 class LedgerClassifyBulkResult(OutputSchema):
-    """JSON result for the bulk ``aeat app ledger classify --from-csv`` path.
+    """JSON result for the bulk ``aeat app ledger classify --file`` path.
 
     A discriminated branch of the single ``classify`` CLI leaf; it shares the
     leaf's registered ``ledger.classify`` command key (the conformance gate maps

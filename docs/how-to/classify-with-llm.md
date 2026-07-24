@@ -273,8 +273,8 @@ Inspect a transaction and its history at any time:
 ## Limits and batch alternatives
 
 The LLM path is single-transaction only; it cannot be combined with
-`--from-csv` or manual `--classification` flags. For bulk work use the
-CSV-based manual path (`aeat app ledger classify --from-csv
+`--file` or manual `--classification` flags. For bulk work use the
+CSV-based manual path (`aeat app ledger classify --file
 ./classifications.csv`) or deterministic stored rules (`aeat app ledger rule
 add` then `rule apply --dry-run` then `rule apply`); both are covered in
 [Classify transactions](classify-transactions.md).

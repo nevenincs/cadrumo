@@ -4323,22 +4323,18 @@ cli:
       category_help: Id de categoría de gasto deducible (solo movimientos de gasto;
         los ingresos no necesitan categoría)
       classification_help: Estado de clasificación profesional del movimiento
-      classification_required: --classification es obligatorio cuando no se usa --from-csv.
+      classification_required: --classification es obligatorio cuando no se usa --file.
       counterparty_eu_member_state_help: Estado miembro de la UE o prefijo IVA de
         Irlanda del Norte de la contraparte (ISO 3166-1 alfa-2 minúsculas, p. ej.
         de o xi); obligatorio con --iva-category intra_community_supply, prohibido
         con export_third_country_zero_rated o export_assimilated_zero_rated
       evidence_acknowledged_help: Confirma que leer la evidencia con un proveedor
         en la nube la sube fuera de tu equipo (lo exige la verificación de consentimiento).
-      from_csv_exclusive: --from-csv no puede combinarse con un id de transacción
-        ni --classification.
-      from_csv_help: Ruta a un archivo CSV con columnas transaction_id, classification[,
-        category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
-        iva_category, irpf_category].
-      from_csv_not_found: 'Archivo CSV no encontrado: %{path}'
+      file_exclusive: --file no puede combinarse con un id de transacción ni --classification.
+      file_not_found: 'Archivo CSV no encontrado: %{path}'
       help: Clasificar un movimiento del libro en el perfil activo
       id_help: Id del movimiento del libro a clasificar
-      id_required: Se requiere un id de transacción cuando no se usa --from-csv.
+      id_required: Se requiere un id de transacción cuando no se usa --file.
       irpf_category_help: 'Id de categoría de IRPF. Usa aeat app ledger categories.
         Facturas profesionales cobradas netas usan actividad_economica; alquileres
         pagados netos usan arrendamiento_local/arrendamiento_vivienda_afecto. Royalties/SGAE:
@@ -4352,8 +4348,8 @@ cli:
       iva_rate_help: Tipo de IVA como decimal, por ejemplo 0.21
       llm_classified_by_label: clasificado-por
       llm_confidence_label: confianza
-      llm_exclusive: --llm no puede combinarse con --classification ni --from-csv;
-        la ruta manual es la anulación explícita del operador.
+      llm_exclusive: --llm no puede combinarse con --classification ni --file; la
+        ruta manual es la anulación explícita del operador.
       llm_failed: 'La clasificación por LLM falló: {reason}'
       llm_help: Pide a un proveedor LLM local (claude/antigravity/codex) que clasifique
         la transacción; vista previa por defecto, persiste con --apply.
@@ -4421,6 +4417,7 @@ cli:
       vision_model_help: Sustituye el modelo de visión local de Ollama para leer una
         factura escaneada o en imagen (p. ej. qwen2.5vl:7b); por defecto usa el modelo
         configurado.
+      file_help: 'Ruta a un archivo CSV con columnas transaction_id, classification[, category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount, iva_category, irpf_category].'
     doclink:
       actor_help: Etiqueta del operador.
       help: Descarga un enlace de documento de Drive y guarda sus bytes como evidencia

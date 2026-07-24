@@ -123,7 +123,7 @@ def test_autonoma_closes_1t_2025_end_to_end(tmp_path: Path) -> None:
     # --- Classify the quarter's business income + expenses ----------------
     # A classify CSV is built resolving each Q1 row against the oracle,
     # restricted to non-MIXED, non-gated rows (MIXED needs --business-pct, which
-    # --from-csv does not carry; gated/personal rows are left out of scope).
+    # --file does not carry; gated/personal rows are left out of scope).
     classify_lines = ["transaction_id,classification,category_id"]
     expected: dict[str, str] = {}
     for row in q1_rows:
@@ -149,7 +149,7 @@ def test_autonoma_closes_1t_2025_end_to_end(tmp_path: Path) -> None:
     classify_csv = tmp_path / "autonoma-1t-classifications.csv"
     classify_csv.write_text("\n".join(classify_lines) + "\n", encoding="utf-8")
 
-    bulk = _invoke(["--format", "json", "app", "ledger", "classify", "--from-csv", str(classify_csv)])
+    bulk = _invoke(["--format", "json", "app", "ledger", "classify", "--file", str(classify_csv)])
     assert bulk.exit_code == 0, bulk.output
     bulk_result = json.loads(bulk.output)["result"]
     # TESTIMONIAL: bulk classify reports total/applied/skipped/failures — a
@@ -163,7 +163,7 @@ def test_autonoma_closes_1t_2025_end_to_end(tmp_path: Path) -> None:
         assert by_id.get(tx_id, {}).get("business_classification") == classification, tx_id
 
     # --- Classify one MIXED home-office expense the long way ---------------
-    # `--from-csv` can't carry the business proportion, so mixed-use rows are
+    # `--file` can't carry the business proportion, so mixed-use rows are
     # classified one at a time with --business-pct, picking the Q1 fibra
     # internet line (oracle business_pct 0.30).
     internet = None
