@@ -210,12 +210,12 @@ packaging-smoke-source:
 # after a corpus PDF changes. The sidecars are load-bearing for registry
 # evidence validation, so re-run this and commit the regenerated JSON.
 regenerate-corpus-text:
-    @uv run --no-sync python -m dev.packaging.extract_manual_corpus_text
+    @uv run --no-sync python -m dev.corpus.extract_manual_corpus_text
 
 # Freshness gate: fail (without writing) when any committed corpus-text sidecar
 # is stale or missing against its source PDF.
 check-corpus-text:
-    @uv run --no-sync python -m dev.packaging.extract_manual_corpus_text --check
+    @uv run --no-sync python -m dev.corpus.extract_manual_corpus_text --check
 
 # Construct the temporary Python wheel cohort once for the current smoke campaign.
 # The immutable release-cohort builder replaces this transitional constructor.
