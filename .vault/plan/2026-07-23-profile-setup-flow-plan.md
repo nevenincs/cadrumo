@@ -184,9 +184,9 @@ Land the net-new descendant repeating group emitting the exact established fact 
 
 Wire the compare-select reconciliation of flow answers against the parsed G313 fact set with defer-as-divergence, notices, and the reconciled CENSO_APPLIED emission.
 
-- [ ] `W03.P08.S26` - Build the cotejo compare-select reconciliation of flow answers against the parsed G313 fact set with keep, adopt, and defer decisions; `src/cadrumo/application/wizard/`.
-- [ ] `W03.P08.S27` - Persist deferred divergences as typed facts at commit and surface warning notices on later profile reads; `src/cadrumo/application/user_profile/`.
-- [ ] `W03.P08.S28` - Emit CENSO_APPLIED at cotejo artefact-apply and pin the emission site in the event contract test; `src/cadrumo/application/user_profile/`.
+- [x] `W03.P08.S26` - Build the cotejo compare-select reconciliation of flow answers against the parsed G313 fact set with keep, adopt, and defer decisions; `src/cadrumo/application/wizard/`.
+- [x] `W03.P08.S27` - Persist deferred divergences as typed facts at commit and surface warning notices on later profile reads; `src/cadrumo/application/user_profile/`.
+- [x] `W03.P08.S28` - Emit CENSO_APPLIED at cotejo artefact-apply and pin the emission site in the event contract test; `src/cadrumo/application/user_profile/`.
 
 ## Wave `W04` - Hardening and close
 
