@@ -35,10 +35,10 @@ from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  
 from .._modelo import _resolve_work_unit_for_cli
 from .._modelo_work_wizard_cli import (
     _ACTIVE_RUNS,
-    _WizardStep,
     _definition_from_steps,
     _outstanding_wizard_steps,
     _page_key,
+    _WizardStep,
 )
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
 from ._modelo_work_ux_support import _create_m130_work_unit

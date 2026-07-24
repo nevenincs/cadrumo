@@ -27,7 +27,6 @@ from typing import Union
 from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
-from ...core.hashing import sha256_hex
 from ...core.flows import (
     DEFER_TOKEN,
     CheckpointAvailability,
@@ -35,6 +34,7 @@ from ...core.flows import (
     FlowMode,
     FlowWidgetKind,
 )
+from ...core.hashing import sha256_hex
 
 _CHOICE_WIDGETS = frozenset(
     {FlowWidgetKind.SELECT, FlowWidgetKind.CHECKBOX, FlowWidgetKind.COMPARE_SELECT},
