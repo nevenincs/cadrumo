@@ -28,7 +28,7 @@ from .._commands import _SAVE_EXIT_RESUME_CODE, _emit_save_exit_notice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_SAVE_EXIT_MESSAGE = tr("application.wizard.notices.setup_saved_resume_later")
+_SAVE_EXIT_MESSAGE = tr("application.wizard.notices.setup_saved_resume_later", name="probe-profile")
 
 
 @pytest.fixture

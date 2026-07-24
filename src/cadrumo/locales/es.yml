@@ -1552,6 +1552,9 @@ application:
         instantánea de perfil es más reciente de lo que admite esta aplicación.
       unsupported_bundle_schema_version: La versión del esquema del paquete no es
         compatible con esta versión de la aplicación.
+    notices:
+      censo_divergences_open: '{count} dato(s) del perfil siguen difiriendo del Certificado
+        de Situación Censal y quedan sin resolver: {axes}.'
   verification:
     errors:
       missing_binding_values: La verificación del registro requiere valores de vinculación
@@ -1592,6 +1595,8 @@ application:
         para este perfil. Las deducciones autonómicas y el tramo autonómico de la
         escala se calculan para %{ccaa}. Use --tax-residence-ccaa para elegir otra
         comunidad.
+      modify_descendants_via_door: Los descendientes no forman parte de la edición
+        del perfil. Gestiónalos con '{command}'.
       modify_no_resume: 'Los cambios en modo edición solo quedan preparados: salir
         sin enviar los descarta; guardar y reanudar solo está disponible al crear
         el perfil.'
@@ -3140,8 +3145,13 @@ cli:
           están selladas). Use 'status' para la lectura sin conexión.
         clear_help: Retirar la configuración de apoderado
         configure:
+          no_console_hint: 'La configuración interactiva del apoderamiento requiere
+            una consola. Configúrelo de forma no interactiva con: aeat config auth
+            apoderado configure --represented-nif NIF --scope SCOPE.'
           represented_nif_help: NIF de la parte representada
           scope_help: Tokens de ámbito (se pueden repetir)
+          scope_required: 'No se ha indicado ningún ámbito. Añada --scope con uno
+            o varios de: %{codes}.'
         configure_help: Establecer la configuración de apoderado activa
         help: Gestionar la configuración de apoderado
         scope:
@@ -6210,6 +6220,8 @@ errors:
     refused_access_gate_live_read_not_enabled: El acceso de lectura en vivo a la AEAT
       está desactivado. Esta operación no puede contactar con la AEAT en la configuración
       actual.
+    refused_apoderado_invalid_represented_nif: El identificador fiscal del representado
+      no es un NIF, NIE o CIF válido.
     refused_apoderado_live_check_unavailable: La comprobación en vivo de apoderamientos
       no está disponible o falló el contacto con la AEAT.
     refused_apoderado_not_configured: No hay ningún apoderado configurado. Configura
@@ -7022,6 +7034,18 @@ wizard:
             label: H - hombre
           m:
             label: M - mujer
+    cotejo:
+      adopt:
+        label: Adoptar el valor del certificado
+        provenance: Certificado de Situación Censal (evidencia no oficial)
+      compare:
+        help: Conserva tu respuesta, adopta el valor del certificado o aplázalo para
+          decidir más tarde.
+        prompt: Este dato difiere del certificado. ¿Qué valor conservas?
+      keep:
+        label: Conservar mi respuesta
+        provenance: Tu respuesta del asistente
+      title: Cotejo con el Certificado de Situación Censal
     descendientes:
       adoption-date:
         before_birth: La fecha de adopción no puede ser anterior a la fecha de nacimiento.

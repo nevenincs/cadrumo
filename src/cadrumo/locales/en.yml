@@ -1424,6 +1424,9 @@ application:
         is newer than this application supports.
       unsupported_bundle_schema_version: The bundle schema version is not supported
         by this application version.
+    notices:
+      censo_divergences_open: '{count} profile field(s) still diverge from the Certificado
+        de Situación Censal and remain unresolved: {axes}.'
   verification:
     errors:
       missing_binding_values: Registry verification requires external binding values.
@@ -1459,6 +1462,8 @@ application:
       ccaa_defaulted: No comunidad autónoma was chosen, so %{ccaa} was assumed for
         this profile. Autonomic deductions and the autonomic part of the tax scale
         are calculated for %{ccaa}. Set --tax-residence-ccaa to use a different comunidad.
+      modify_descendants_via_door: Descendants are not part of profile edit. Manage
+        them with '{command}'.
       modify_no_resume: Changes in modify mode are staged only — leaving without submitting
         discards them; save-and-resume is available on profile create only.
       setup_saved_resume_later: 'Saved. Resume anytime with: aeat config profile create
@@ -2910,8 +2915,12 @@ cli:
           'status' for the offline read.
         clear_help: Retire the apoderado configuration
         configure:
+          no_console_hint: 'Interactive apoderado configuration needs a console. Configure
+            non-interactively with: aeat config auth apoderado configure --represented-nif
+            NIF --scope SCOPE.'
           represented_nif_help: NIF of the represented party
           scope_help: Scope tokens (can be repeated)
+          scope_required: 'No scope provided. Pass --scope with one or more of: %{codes}.'
         configure_help: Set active apoderado configuration
         help: Manage apoderado configuration
         scope:
@@ -5770,6 +5779,8 @@ errors:
       is the AEAT justificante and not a different document, and that it is not corrupt.
     refused_access_gate_live_read_not_enabled: Live-read access to the AEAT is disabled.
       This operation cannot contact the AEAT under the current configuration.
+    refused_apoderado_invalid_represented_nif: The represented party's tax identifier
+      is not a valid NIF, NIE, or CIF.
     refused_apoderado_live_check_unavailable: The live check of representatives is
       unavailable, or contact with the AEAT failed.
     refused_apoderado_not_configured: No representative is configured. Configure the
@@ -6547,6 +6558,17 @@ wizard:
             label: H - male
           m:
             label: M - female
+    cotejo:
+      adopt:
+        label: Adopt the certificate value
+        provenance: Certificado de Situación Censal (non-official evidence)
+      compare:
+        help: Keep your answer, adopt the certificate value, or defer to decide later.
+        prompt: This field differs from the certificate. Which value do you keep?
+      keep:
+        label: Keep my answer
+        provenance: Your setup answer
+      title: Cross-check with your censo certificate
     descendientes:
       adoption-date:
         before_birth: The adoption date cannot be earlier than the date of birth.
