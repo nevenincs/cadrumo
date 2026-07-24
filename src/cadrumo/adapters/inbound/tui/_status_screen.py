@@ -84,7 +84,14 @@ class StatusRecoveryView:
 
 @dataclass(frozen=True, slots=True)
 class StatusPageData:
-    """The full read-only view-model rendered by :class:`StatusApp`."""
+    """The full read-only view-model rendered by :class:`StatusApp`.
+
+    Masking is a render-side invariant today: a ``StatusFactRow`` still
+    carries its raw value and the screen substitutes the mask token when the
+    row is masked. Should a genuinely secret-bearing zone ever be added, the
+    direction is to redact at build time so the secret never enters the
+    view-model at all, rather than relying on render-side substitution.
+    """
 
     active_profile_label: str | None = None
     facts: tuple[StatusFactRow, ...] = ()
@@ -203,7 +210,11 @@ class StatusApp(App[None]):
             tr("flows.status.profiles.column.active"),
         )
         for index, row in enumerate(self._data.profiles):
-            status_label = tr(_PROFILE_STATUS_KEYS.get(row.status, "flows.status.profiles.status.active"))
+            # An unmapped lifecycle token renders as its raw value, never a
+            # reassuring "active" label: a future status member must not be
+            # silently misreported as healthy on a status surface.
+            status_key = _PROFILE_STATUS_KEYS.get(row.status)
+            status_label = tr(status_key) if status_key is not None else row.status
             marker = _ACTIVE_MARKER if row.active else ""
             table.add_row(row.label, status_label, marker, key=f"profile-{index}")
 
