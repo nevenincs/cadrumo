@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core.config import load_settings, override_settings
+from ....core.config import SecretStoreBackend, load_settings, override_settings
 from ....domain.buckets import BucketEvent, BucketEventObjectType, BucketEventType
 from ....tests.secure_sql import isolated_runtime_profile
 from .._custody import (
@@ -139,7 +139,7 @@ def test_custody_mutation_succeeds_when_the_audit_trail_is_unreachable(tmp_path:
     with override_settings(
         cadrumo_local_storage_root=storage_root,
         cadrumo_active_profile=bucket_id,
-        cadrumo_secret_store_backend="file",  # noqa: S106 - backend selector, not a credential
+        cadrumo_secret_store_backend=SecretStoreBackend.FILE,
         cadrumo_secret_store_dir=secret_store_dir,
         cadrumo_secret_passphrase=passphrase,
     ):
