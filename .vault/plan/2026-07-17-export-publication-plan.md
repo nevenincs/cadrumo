@@ -13,6 +13,7 @@ related:
   - '[[2026-07-17-cli-authority-verb-conformance-audit]]'
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
   - '[[2026-07-17-export-publication-audit]]'
+  - '[[2026-07-17-export-publication-adr]]'
 ---
 
 # `export-publication` plan
