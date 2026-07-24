@@ -3,13 +3,23 @@ tags:
   - '#plan'
   - '#protected-browser-certificate-auth'
 date: '2026-07-16'
-modified: '2026-07-17'
+modified: '2026-07-24'
 tier: L2
 related:
   - '[[2026-07-16-protected-browser-certificate-auth-adr]]'
   - '[[2026-07-16-protected-browser-certificate-auth-research]]'
   - '[[2026-07-16-protected-browser-certificate-auth-audit]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `protected-browser-certificate-auth` plan
 
@@ -37,7 +47,7 @@ Close every provider-owned context and browser deterministically across failures
 Replace synthetic proof coverage with the strongest credential-free real behavior available, retain the external live oracle, and close only after repository-wide gates.
 
 - [x] `P03.S07` - Replace synthetic decisive proof and lifecycle coverage with credential-free real browser and process behavior while retaining the external live protected oracle; `src/cadrumo/adapters/outbound/aeat/auth/tests; src/cadrumo/adapters/outbound/aeat/browser/tests`.
-- [ ] `P03.S08` - Run repository-wide quality Vault documentation packaging and CI-equivalent gates and resolve the formal audit; `.vault/audit/2026-07-16-protected-browser-certificate-auth-audit.md; repository`.
+- [x] `P03.S08` - Run repository-wide quality Vault documentation packaging and CI-equivalent gates and resolve the formal audit; `.vault/audit/2026-07-16-protected-browser-certificate-auth-audit.md; repository`.
 
 ## Description
 
