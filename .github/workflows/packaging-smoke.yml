@@ -93,8 +93,8 @@ jobs:
         run: |
           ( while true; do echo "[resources $(date -u +%H:%M:%S)] $(df -h --output=avail / | tail -1 | tr -d ' ') free disk, $(free -m | sed -n 2p | awk '{print $7}') MiB avail mem"; sleep 60; done ) &
           sampler=$!
-          just packaging-smoke-ci
-          status=$?
+          status=0
+          just packaging-smoke-ci || status=$?
           kill "$sampler" 2>/dev/null || true
           exit "$status"
 
