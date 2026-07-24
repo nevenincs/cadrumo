@@ -93,7 +93,9 @@ def test_adopt_commit_persists_provenance_stamped_fact_and_one_event(schema: Pro
             ),
         )
         state = apply_cotejo(state, adopted=adopted, divergences=())
-        assert _fact_source(state, schema, _ACTIVITY_PATH, "Consultoria informatica") == PROVENANCE_SOURCE_CENSO_ARTEFACT
+        assert (
+            _fact_source(state, schema, _ACTIVITY_PATH, "Consultoria informatica") == PROVENANCE_SOURCE_CENSO_ARTEFACT
+        )
         assert _censo_applied_count() == 1
 
 
@@ -200,3 +202,36 @@ def test_apply_emits_exactly_one_event_regardless_of_fact_count(schema: ProfileS
         # Three fact writes (one adopted + two divergence rows across six
         # subpath writes), but exactly one apply-commit event.
         assert _censo_applied_count() == 1
+
+
+def test_adopt_all_clears_pre_existing_open_divergences(schema: ProfileSchemaDefinition) -> None:
+    """A file-door adopt-all replaces the divergence namespace deliberately.
+
+    Declaring zero deferred means a full reconciliation: any divergence a
+    prior cotejo left open cannot coherently remain standing after an
+    adopt-all apply, so the namespace-replace clears it — intentional
+    semantics, pinned here directly rather than inferred from the re-cotejo
+    case. Each apply-commit still marks exactly one event.
+    """
+    from ....domain.censo import ActividadLocalCertificada, CertificadoSituacionCensal, censo_facts_from_certificado
+
+    with profile_create_storage_span(_PROFILE_ID) as routing_profile_id:
+        state = _register(schema, routing_profile_id)
+        state = apply_cotejo(
+            state,
+            adopted=(),
+            divergences=(CensoDivergence(axis=_ACTIVITY_PATH, artefact_value="Consultoria informatica"),),
+        )
+        assert len(open_censo_divergences(state.active_profile_record(schema=schema))) == 1
+
+        certificado = CertificadoSituacionCensal(
+            domicilio_fiscal="Calle Mayor 1, 28013 Madrid",
+            condicion_residencia="Residente",
+            actividades=(ActividadLocalCertificada(descripcion="Consultoria informatica", epigrafe_iae="899"),),
+        )
+        state = apply_cotejo(state, adopted=censo_facts_from_certificado(certificado), divergences=())
+
+        record = state.active_profile_record(schema=schema)
+        assert open_censo_divergences(record) == ()
+        assert censo_divergence_notice(record) is None
+        assert _censo_applied_count() == 2

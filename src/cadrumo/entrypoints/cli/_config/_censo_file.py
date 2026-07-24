@@ -6,11 +6,13 @@ The one file-transport door for the Certificado de Situación Censal
 retired with the live censo scrape and returns only under a future
 accepted ADR). Parsing routes through the inbound censo adapter — today
 structure-only, so every document meets an instructive refusal — and the
-projected candidate facts route through the SAME manual-enrolment write
-path the wizard uses (:func:`~cadrumo.application.user_profile.set_active_fields`;
-no parallel write route). Preview is the default posture; ``--apply``
-enrolls, always at the non-official artefact evidence tier, so the
-calendar's ``censo.enrolment_unverified`` advisory is unaffected.
+``--apply`` commit routes through the single cotejo apply authority
+(:func:`~cadrumo.application.user_profile.apply_cotejo`, which delegates
+to the manual-enrolment write path and emits exactly one
+``CENSO_APPLIED`` per apply-commit; no parallel write route). Preview is
+the default posture; ``--apply`` enrolls, always at the non-official
+artefact evidence tier, so the calendar's ``censo.enrolment_unverified``
+advisory is unaffected.
 """
 
 from __future__ import annotations
@@ -82,13 +84,14 @@ def censo_file(
         # single apply authority (never a parallel ``set_active_fields``
         # write) so a censal artefact-apply always emits exactly one
         # ``CENSO_APPLIED`` event, at the non-official evidence tier.
+        # Declaring zero deferred means the namespace-replace clears every
+        # pre-existing open divergence: a full adopt-all reconciliation
+        # cannot coherently leave a prior deferral standing.
         repository = workflow_state_repository()
         state = repository.load()
         repository.save(apply_cotejo(state, adopted=facts, divergences=()))
 
-    rows = tuple(
-        CensoFileFactPayload(path=fact.path, value=str(fact.value), source=fact.source) for fact in facts
-    )
+    rows = tuple(CensoFileFactPayload(path=fact.path, value=str(fact.value), source=fact.source) for fact in facts)
     result = CensoFileIngestResult(applied=apply, facts=rows)
     lines = [f"applied\t{str(apply).lower()}"]
     lines.extend(f"fact\t{row.path}\t{row.value}" for row in rows)
