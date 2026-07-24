@@ -1,0 +1,102 @@
+# Cadrumo download-channel descriptor — the single source of truth for the
+# stable, version-agnostic facts about each install channel (channel identity,
+# platform, install-command template, package/marketplace/bucket/tap names, and
+# availability state).
+#
+# This file is NOT hand-rendered into docs/download.md: run
+#   uv run --no-sync python -m dev.docs.download_matrix generate
+# to inject the generated table + install commands into the marker zone in
+# docs/download.md, and
+#   uv run --no-sync python -m dev.docs.download_matrix --check
+# as the drift gate. See dev/docs/download_matrix.py.
+#
+# What lives WHERE (do not duplicate a fact across sources of truth):
+#   - stable channel facts (this file): channel id, platform, install commands,
+#     package / marketplace / bucket / tap names, availability state.
+#   - artifact-kind taxonomy: ArtifactKind in dev/packaging/cohort_manifest.py.
+#     Every ArtifactKind must be surfaced by exactly one channel's
+#     `artifact_kinds`; the parity gate in dev/docs/tests/test_download_matrix.py
+#     fails when a cohort kind has no documented channel row.
+#   - version + filenames + sha256 (release-time only): the cohort manifest.
+#
+# `availability`:
+#   - "available"      the channel is publicly live; the generated zone renders
+#                      its literal install command block.
+#   - "public_launch"  the channel is not yet publicly live (beta stance): the
+#                      generated zone renders the "at public launch" framing and
+#                      withholds the literal install command until passing
+#                      distribution evidence lands (see
+#                      dev/docs/tests/test_distribution_claims.py). Flip to
+#                      "available" in the same change that lands the evidence.
+
+schema_version = 1
+
+[[channel]]
+id = "python"
+title = "Python package"
+platform = "Any platform with Python 3.13+"
+artifact_kinds = ["python-wheel", "python-sdist", "python-manifest"]
+availability = "public_launch"
+package = "cadrumo"
+registry = "PyPI"
+install_commands = [
+  "pip install cadrumo",
+  "uv tool install cadrumo",
+  "uvx --from cadrumo aeat",
+]
+
+[[channel]]
+id = "scoop"
+title = "Scoop package"
+platform = "Windows (x86-64)"
+artifact_kinds = ["scoop-manifest"]
+availability = "public_launch"
+package = "cadrumo"
+registry = "Scoop bucket"
+bucket = "cadrumo"
+bucket_repo = "nevenincs/scoop-cadrumo"
+install_commands = [
+  "scoop bucket add cadrumo https://github.com/nevenincs/scoop-cadrumo",
+  "scoop install cadrumo",
+]
+
+[[channel]]
+id = "homebrew"
+title = "Homebrew formula"
+platform = "macOS (Apple silicon), Linux (x86-64 and arm64)"
+artifact_kinds = ["homebrew-formula"]
+availability = "public_launch"
+package = "cadrumo"
+registry = "Homebrew tap"
+tap = "nevenincs/cadrumo"
+install_commands = [
+  "brew tap nevenincs/cadrumo",
+  "brew install nevenincs/cadrumo",
+]
+
+[[channel]]
+id = "claude-plugin"
+title = "Claude plugin"
+platform = "Claude Code, Claude Desktop, Claude Cowork"
+artifact_kinds = ["claude-plugin", "claude-marketplace"]
+availability = "public_launch"
+package = "cadrumo@neve"
+registry = "neve marketplace"
+marketplace = "neve"
+marketplace_source = "nevenincs/neve-marketplace"
+install_commands = [
+  "/plugin marketplace add nevenincs/neve-marketplace",
+  "/plugin install cadrumo@neve",
+]
+
+[[channel]]
+id = "mcpb"
+title = "Claude Desktop extension (MCPB)"
+platform = "Claude Desktop"
+artifact_kinds = ["mcpb"]
+availability = "public_launch"
+package = "cadrumo"
+registry = "Claude Desktop extension listing"
+# The MCPB bundle is a single file installed by opening it in Claude Desktop,
+# not a registry command; the release-page artifact is the acquisition path.
+install_commands = []

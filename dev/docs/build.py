@@ -22,6 +22,8 @@ if str(_ROOT_FOR_DIRECT_INVOCATION) not in sys.path:
 
 from dev.docs.apidocs import ApiStubManager
 from dev.docs.cli_reference import generate_cli_reference
+from dev.docs.download_matrix import descriptor_path as _download_descriptor_path
+from dev.docs.download_matrix import inject_download_matrix
 
 if TYPE_CHECKING:
     from dev.docs.pagefind_index import InjectCallback
@@ -38,6 +40,7 @@ class DocBuildPlan:
     full_build_required: bool
     api_scaffold_required: bool = False
     cli_reference_required: bool = False
+    download_matrix_required: bool = False
 
 
 def _repo_root() -> Path:
@@ -162,11 +165,20 @@ def planned_doc_targets(repo_root: Path, paths: list[Path]) -> DocBuildPlan:
     api_scaffold_required = False
     source_modules: list[tuple[str, bool]] = []
     cli_reference_required = False
+    download_matrix_required = False
+    download_descriptor_rel = _download_descriptor_path(repo_root).relative_to(repo_root)
+    download_page = docs_root / "download.md"
 
     for rel_path in paths:
         absolute = repo_root / rel_path
         if rel_path == Path("docs/conf.py"):
             full_build_required = True
+        elif rel_path == download_descriptor_rel:
+            # The download-channel descriptor is the source of the generated zone
+            # in docs/download.md; a descriptor edit must re-inject that zone and
+            # rebuild the page (mirroring how a CLI source edit regenerates the
+            # CLI reference).
+            download_matrix_required = True
         elif rel_path.parts[:1] == ("docs",) and rel_path.suffix in DOC_SUFFIXES and absolute.is_file():
             targets.append(absolute)
         elif _is_documentable_source(rel_path):
@@ -196,6 +208,8 @@ def planned_doc_targets(repo_root: Path, paths: list[Path]) -> DocBuildPlan:
             )
             if target.is_file()
         )
+    if download_matrix_required and download_page.is_file():
+        targets.append(download_page)
 
     seen: set[Path] = set()
     unique_targets: list[Path] = []
@@ -210,6 +224,7 @@ def planned_doc_targets(repo_root: Path, paths: list[Path]) -> DocBuildPlan:
         full_build_required=full_build_required,
         api_scaffold_required=api_scaffold_required,
         cli_reference_required=cli_reference_required,
+        download_matrix_required=download_matrix_required,
     )
 
 
@@ -590,6 +605,8 @@ def build_docs(
                 ApiStubManager(src_cadrumo=repo_root / "src" / "cadrumo", docs_api=temp_docs_root / "api").scaffold()
             if plan.cli_reference_required:
                 generate_cli_reference(temp_docs_root)
+            if plan.download_matrix_required:
+                inject_download_matrix(temp_docs_root)
             temp_targets = _targets_for_docs_root(docs_root, temp_docs_root, targets)
             if not temp_targets:
                 print("No existing documentation targets remained after temporary generation.", flush=True)
