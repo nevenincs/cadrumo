@@ -427,9 +427,10 @@ def _prompt_selection(
     return _selected_rows(amendable=amendable, unit=unit, state=state)
 
 
+# KWARGS-ANY-RATIONALE-prompt-row: heterogeneous casilla registry rows
 def _selection_definition(
     *,
-    amendable: tuple[Any, ...],  # KWARGS-ANY-RATIONALE-prompt-row: heterogeneous casilla registry rows
+    amendable: tuple[Any, ...],
     baseline_revision: CalculationRevision,
     unit: WorkUnit,
     run_token: str,
@@ -484,9 +485,10 @@ def _selection_definition(
     )
 
 
+# KWARGS-ANY-RATIONALE-prompt-row: heterogeneous casilla registry rows
 def _selected_rows(
     *,
-    amendable: tuple[Any, ...],  # KWARGS-ANY-RATIONALE-prompt-row: heterogeneous casilla registry rows
+    amendable: tuple[Any, ...],
     unit: WorkUnit,
     state: FlowState,
 ) -> tuple[Any, ...]:
@@ -559,9 +561,10 @@ def _prompt_values_kind_reason(
     return tuple(corrections), amendment_kind, reason
 
 
+# KWARGS-ANY-RATIONALE-prompt-row: heterogeneous casilla registry rows
 def _values_kind_reason_definition(
     *,
-    selected: tuple[Any, ...],  # KWARGS-ANY-RATIONALE-prompt-row: heterogeneous casilla registry rows
+    selected: tuple[Any, ...],
     baseline_revision: CalculationRevision,
     modelo: str,
     period: Period,

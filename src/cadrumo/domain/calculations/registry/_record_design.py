@@ -512,14 +512,21 @@ _COMPACT_PDF_CRLF_ROW_RE = re.compile(
 )
 _NARRATIVE_PDF_ROW_RE = re.compile(
     r"^\s*(?P<start>\d+)(?:\s*[-\u2013]\s*(?P<end>\d+))?\s+"
-    r"(?P<type>Alfanum[eé]rico|Alfab[eé]tico|Num[eé]rico|[-\u2013]+)\s*"
+    r"(?P<type>Alfanum[eé]rico|Alfab[eé]tico|Num[eé]rico|Alphanumeric|Alphabetic|Numeric|Blank|[-\u2013]+)\s*"
     r"(?P<text>.*)$",
     re.IGNORECASE,
 )
 _PDF_PAGE_RECORD_RE = re.compile(r"^P[áa]g\s+(?P<page>\d+)\s+DISE[ÑN]O DE REGISTRO\b", re.IGNORECASE)
 _PDF_RECORD_HEADING_RE = re.compile(
-    r"^(?:[A-Z]\.?\s*-?\s*)?(?:TIPO DE REGISTRO|Tipo de registro)\s+"
+    r"^(?:[A-Z]\.?\s*-?\s*)?(?:TIPO DE REGISTRO|Tipo de registro|RECORD TYPE|Record [Tt]ype)\s+"
     r"(?P<record>\d+)\s*:\s*(?P<title>.+)$",
+    re.IGNORECASE,
+)
+#: English AEAT record-design translations also head a record with the reversed
+#: word order "TYPE <n> RECORD: <title>" (observed in the modelo 604 ATF English
+#: appendix), distinct from the "RECORD TYPE <n>: <title>" order above.
+_PDF_RECORD_HEADING_REVERSED_RE = re.compile(
+    r"^(?:[A-Z]\.?\s*-?\s*)?TYPE\s+(?P<record>\d+)\s+RECORD\s*:\s*(?P<title>.+)$",
     re.IGNORECASE,
 )
 
@@ -871,14 +878,14 @@ def _parse_pdf_row(line: str, source_row: int) -> _PdfRow | None:
 
 def _normalise_pdf_type_code(value: str) -> str:
     normalised = value.strip(" .").lower()
-    if set(normalised) <= {"-", "\u2013"}:
+    if set(normalised) <= {"-", "\u2013"} or normalised == "blank":
         return "Blancos"
+    if normalised.startswith(("alfanum", "alphanum")):
+        return "Alfanumérico"
+    if normalised.startswith(("alfab", "alphab")):
+        return "Alfabético"
     if normalised.startswith("num"):
         return "Numérico"
-    if normalised.startswith("alfanum"):
-        return "Alfanumérico"
-    if normalised.startswith("alfab"):
-        return "Alfabético"
     return value.strip()
 
 
@@ -890,7 +897,7 @@ def _pdf_page_name(line: str) -> str | None:
 
 
 def _pdf_record_heading_name(line: str) -> str | None:
-    match = _PDF_RECORD_HEADING_RE.match(line)
+    match = _PDF_RECORD_HEADING_RE.match(line) or _PDF_RECORD_HEADING_REVERSED_RE.match(line)
     if match is None:
         return None
     title = _normalise_pdf_sheet_name(match.group("title"))
@@ -903,7 +910,9 @@ def _is_pdf_header(line: str) -> bool:
         ("POSICIONES" in normalised or "POSICIÓN" in normalised)
         and "NATURALEZA" in normalised
         and "DESCRIPCI" in normalised
-    ) or ("Nº POSIC" in normalised and "LON" in normalised and "TIPO" in normalised and "DESCRIPCI" in normalised)
+    ) or (
+        "Nº POSIC" in normalised and "LON" in normalised and "TIPO" in normalised and "DESCRIPCI" in normalised
+    ) or ("POSITIONS" in normalised and "NATURE" in normalised and "DESCRIPTION" in normalised)
 
 
 def _is_pdf_footer(line: str) -> bool:
@@ -1034,9 +1043,28 @@ def _extract_visual_chart_fragments(page: _PdfPageSnapshot) -> list[_VisualChart
     return fragments
 
 
+def _is_black_fill(fill: object | None) -> bool:
+    """Return whether a pdfplumber rect ``fill`` value is opaque black.
+
+    pdfplumber reports a rect's ``non_stroking_color`` in whatever colour
+    space the source PDF declared: a bare grayscale float (``0.0`` is
+    black), an RGB triple (``(0.0, 0.0, 0.0)``), or a named/indexed
+    colourspace string the geometry-only chart extractor does not attempt
+    to resolve. Both numeric shapes are checked so a rule ruled in RGB
+    (observed in the AEAT modelo 038 record-design PDF) is not silently
+    excluded from the visual-chart grid the way a bare ``fill == 0.0``
+    comparison would exclude it.
+    """
+    if isinstance(fill, int | float):
+        return fill == 0.0
+    if isinstance(fill, tuple) and fill and all(isinstance(component, int | float) for component in fill):
+        return all(component == 0.0 for component in fill)
+    return False
+
+
 def _visual_chart_grid(page: _PdfPageSnapshot) -> tuple[float, float, tuple[_PdfRect, ...]] | None:
     horizontal_rules = tuple(
-        rect for rect in page.rects if rect.fill == 0.0 and rect.height <= 2.0 and rect.width >= 8.0
+        rect for rect in page.rects if _is_black_fill(rect.fill) and rect.height <= 2.0 and rect.width >= 8.0
     )
     full_width_rules = tuple(rect for rect in horizontal_rules if rect.width > 700.0)
     if not full_width_rules:

@@ -381,6 +381,10 @@ def descendant_answers_from_record(record: UserProfileRecord | None) -> dict[str
     :func:`~cadrumo.application.wizard._checkpoint_store.checkpoint_facts_from_answers`
     reconstructs an identical fact set: an absent optional field stays absent
     on both legs, never coerced to a stored default.
+
+    Args:
+        record: The :class:`UserProfileRecord` whose descendant facts are
+            re-projected into repeating-group answers, or ``None``.
     """
     if record is None:
         return {}

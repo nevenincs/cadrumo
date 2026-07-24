@@ -10,7 +10,7 @@ complement shipped by the command-bearing ``cadrumo`` wheel.
 Whole-tree, runtime, and aggregate corpus-binary ceilings are independent. Their
 exact partition prevents the physical wheel split from hiding logical product
 growth. Real-wheel ownership and compressed package-index caps are proved by the
-packaging gates. Raising any source ceiling requires reviewed ADR authority.
+packaging gates. Raising any source ceiling requires reviewed architecture-decision authority.
 No mocks or skips.
 """
 
@@ -35,14 +35,14 @@ _DATA_ROOT = SRC_CADRUMO / "_data"
 _CORPUS_BINARY_SUFFIXES = (".docx", ".pdf", ".xls", ".xlsm", ".xlsx", ".zip")
 
 # Approved whole-tree ceiling after complete supported-period corpus hydration.
-# Raising it requires reviewed ADR authority. Mebibytes keep source-slice units
+# Raising it requires reviewed architecture-decision authority. Mebibytes keep source-slice units
 # distinct from the companions' decimal 100 MB compressed-artifact cap.
 _DATA_SIZE_BUDGET_MIB = 625
 _DATA_SIZE_BUDGET_BYTES = _DATA_SIZE_BUDGET_MIB * 1024 * 1024
 
 # Slice ceilings are aggregate source-tree controls, not per-wheel file caps.
 # The runtime guard makes command-bearing payload growth visible even if the
-# corpus-binary slice shrinks. Raising either requires reviewed ADR authority.
+# corpus-binary slice shrinks. Raising either requires reviewed architecture-decision authority.
 _RUNTIME_DATA_BUDGET_MIB = 270
 _RUNTIME_DATA_BUDGET_BYTES = _RUNTIME_DATA_BUDGET_MIB * 1024 * 1024
 _CORPUS_BINARY_BUDGET_MIB = 380
@@ -104,7 +104,7 @@ def test_data_tree_within_declared_budget() -> None:
     actual_mib = actual_bytes / 1024 / 1024
     assert actual_bytes <= _DATA_SIZE_BUDGET_BYTES, (
         f"src/cadrumo/_data is {actual_mib:.1f} MiB, over the {_DATA_SIZE_BUDGET_MIB} MiB declared data budget. "
-        "Remove dead or non-shipped data, or obtain reviewed ADR authority for warranted growth. "
+        "Remove dead or non-shipped data, or obtain reviewed architecture-decision authority for warranted growth. "
         "Repartitioning alone cannot reduce the logical whole-tree total."
     )
 
@@ -135,7 +135,7 @@ def test_corpus_binary_slice_within_companion_budget() -> None:
     corpus_mib = corpus_binary / 1024 / 1024
     assert corpus_binary <= _CORPUS_BINARY_BUDGET_BYTES, (
         f"the aggregate corpus-binary (cadrumo-data-* companions) _data slice is {corpus_mib:.1f} MiB, over the "
-        f"{_CORPUS_BINARY_BUDGET_MIB} MiB slice ceiling. Remove superseded binaries or obtain reviewed ADR authority "
+        f"{_CORPUS_BINARY_BUDGET_MIB} MiB slice ceiling. Remove superseded binaries or obtain reviewed architecture-decision authority "
         "for warranted aggregate growth. Repartitioning may restore per-wheel distributability, but it cannot reduce "
         "this aggregate slice."
     )

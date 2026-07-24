@@ -4,6 +4,13 @@
     "_note": "Each site is a test file reaching a foreign package's private submodule to exercise an internal helper, evaluator, repository factory, or module-private constant/cache by name. Grouped by owning package below for readability; the gate reads the flat 'sites' list.",
     "sites": [
       {
+        "importer_path": "src/cadrumo/tests/locales_root_fixture.py",
+        "lineno": 16,
+        "target_mod": "cadrumo.core.i18n._render",
+        "imported_names": ["_I18N_LOCALES_ROOT"],
+        "reason": "White-box test-support fixture setting the private catalogue-redirection ContextVar to point locale resolution at a fixture root. The module's own docstring states this fixture is the ONLY setter by design, keeping the production surface free of test-hook overrides; the ContextVar is deliberately private and not a public facade candidate."
+      },
+      {
         "importer_path": "src/cadrumo/adapters/outbound/aeat/export/_formats/tests/test_record_specs.py",
         "lineno": 28,
         "target_mod": "cadrumo.domain.calculations.registry._export",

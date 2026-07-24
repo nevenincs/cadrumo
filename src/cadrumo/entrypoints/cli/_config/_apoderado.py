@@ -175,11 +175,8 @@ def apoderado_configure(
             # scope set, never bare "value required" -- the CLI gate is the
             # operator's first instructive surface.
             raise _CliRefusedBoundaryError(
-                tr(
-                    "cli.config.auth.apoderado.configure.scope_required",
-                    default="No scope provided. Pass --scope with one or more of: %{codes}.",
-                    codes=", ".join(sorted(svc.catalogue.code_set())),
-                ),
+                translated_message="cli.config.auth.apoderado.configure.scope_required",
+                context={"codes": ", ".join(sorted(svc.catalogue.code_set()))},
             )
 
     try:
@@ -192,10 +189,7 @@ def apoderado_configure(
         # Both transports commit through the service's single identity
         # authority; the raw identifier never enters the refusal context.
         raise _CliRefusedBoundaryError(
-            tr(
-                "errors.refused.refused_apoderado_invalid_represented_nif",
-                default="The represented party's tax identifier is not a valid NIF, NIE, or CIF.",
-            ),
+            translated_message="errors.refused.refused_apoderado_invalid_represented_nif",
         ) from exc
 
     from .._config_payloads import ApoderadoConfigureResult
@@ -239,14 +233,7 @@ def _collect_apoderado_answers_interactively(
         )
     except FlowUnsupportedConsoleError as exc:
         raise _CliRefusedBoundaryError(
-            tr(
-                "cli.config.auth.apoderado.configure.no_console_hint",
-                default=(
-                    "Interactive apoderado configuration needs a console. Configure "
-                    "non-interactively with: aeat config auth apoderado configure "
-                    "--represented-nif NIF --scope SCOPE."
-                ),
-            ),
+            translated_message="cli.config.auth.apoderado.configure.no_console_hint",
         ) from exc
     return apoderado_answers_from_state(state)
 

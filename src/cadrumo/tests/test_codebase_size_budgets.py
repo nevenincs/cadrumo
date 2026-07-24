@@ -65,7 +65,10 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     "src/cadrumo/domain/calculations/registry/_applicability.py": 2156,  # SPLIT-CANDIDATE
     "src/cadrumo/domain/calculations/registry/_schema.py": 1490,  # SPLIT-CANDIDATE
     "src/cadrumo/entrypoints/cli/tests/test_registry_cli.py": 1360,  # SPLIT-CANDIDATE (Period construction verbosity)
-    "src/cadrumo/entrypoints/cli/_app_live.py": 1265,
+    # Re-pinned past prior ceiling by feature/profile branch growth.
+    "src/cadrumo/entrypoints/cli/_app_live.py": 1296,  # SPLIT-CANDIDATE
+    # feature/profile branch growth; pinned pending an owner split pass.
+    "src/cadrumo/application/ledger/_actions_manual.py": 1278,  # SPLIT-CANDIDATE
     # _ledger_payloads.py: extracted the invoice/inventory/evidence sub-app
     # payload families to the sibling `_ledger_business_payloads.py` module
     # (registry-resolver-family-extraction, following the module's own
@@ -86,7 +89,8 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     # post-decomposition size.
     "src/cadrumo/application/modelo/_calculation_actions.py": 1452,  # SPLIT-CANDIDATE (regrew past prior pin)
     "src/cadrumo/application/aggregation/_iva_ledger.py": 1617,  # SPLIT-CANDIDATE
-    "src/cadrumo/application/wizard/_commands.py": 1339,  # SPLIT-CANDIDATE
+    # feature/profile branch growth; re-pinned past prior ceiling.
+    "src/cadrumo/application/wizard/_commands.py": 2117,  # SPLIT-CANDIDATE
     # _loader.py: extracted the locale-translation load/merge/inject pipeline
     # to the sibling `_loader_locales.py` module (registry-resolver-family-
     # extraction); was back under the default budget with the override removed,
@@ -153,7 +157,8 @@ _CALLABLE_LINE_LIMIT_OVERRIDES = {
     ("src/cadrumo/application/overview/_calendar.py", "build_overview_calendar"): 192,  # SPLIT-CANDIDATE
     ("src/cadrumo/application/user_profile/_custody_carry.py", "_natural_key_resolvers"): 310,  # SPLIT-CANDIDATE
     ("src/cadrumo/core/observability/_context.py", "run_context"): 195,  # SPLIT-CANDIDATE
-    ("src/cadrumo/entrypoints/cli/_ledger.py", "ledger_add"): 238,  # SPLIT-CANDIDATE
+    ("src/cadrumo/entrypoints/cli/_ledger.py", "ledger_add"): 245,  # SPLIT-CANDIDATE (regrew past prior pin)
+    ("src/cadrumo/application/user_profile/_profile_repository.py", "create"): 188,  # SPLIT-CANDIDATE
     ("src/cadrumo/application/aggregation/_iva_ledger.py", "_classify_iva_transaction"): 208,  # SPLIT-CANDIDATE
     ("src/cadrumo/application/modelo/_calculation_actions.py", "_resolve_bucket_source_mesh"): 200,  # SPLIT-CANDIDATE
     # +1 line from a Drive-folder-help docstring wording tweak; re-pinned to

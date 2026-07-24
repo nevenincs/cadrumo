@@ -17,6 +17,7 @@ import pytest
 
 from ....core import Period
 from ....core.aggregation import BindingSourceKind
+from ....core.config import override_settings
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     BindingId,
@@ -407,12 +408,16 @@ def test_cross_casilla_invariant_violated_message_is_localised() -> None:
     must contain the predicate_id and expression as rendered by the locale
     catalogue (not a raw f-string).
     """
-    predicate, finding = _predicate_finding(
-        predicate_id="test-cross-casilla-001",
-        legal_ref="irpf:art1",
-        expression=f'all_nonzero(["{_PREDICATE_REQUIRED_LEFT_CASILLA}","{_PREDICATE_REQUIRED_RIGHT_CASILLA}"])',
-        casilla_values={_PREDICATE_REQUIRED_LEFT_CASILLA: Decimal(0), _PREDICATE_REQUIRED_RIGHT_CASILLA: Decimal(0)},
-    )
+    with override_settings(cadrumo_output_language="en"):
+        predicate, finding = _predicate_finding(
+            predicate_id="test-cross-casilla-001",
+            legal_ref="irpf:art1",
+            expression=f'all_nonzero(["{_PREDICATE_REQUIRED_LEFT_CASILLA}","{_PREDICATE_REQUIRED_RIGHT_CASILLA}"])',
+            casilla_values={
+                _PREDICATE_REQUIRED_LEFT_CASILLA: Decimal(0),
+                _PREDICATE_REQUIRED_RIGHT_CASILLA: Decimal(0),
+            },
+        )
 
     # The message must contain the predicate_id and expression (from the locale template).
     assert "test-cross-casilla-001" in finding.message
@@ -453,12 +458,13 @@ def test_registry_snapshot_unresolved_finding_is_localised() -> None:
     work_unit = _minimal_work_unit(modelo="999", period="0A", filing_year=2026)
     target = _minimal_calculation_revision(work_unit)
 
-    findings, _resolved, _missing = _collect_revision_verification_findings(
-        work_unit=work_unit,
-        target=target,
-        profile=_resident_profile(),
-        transaction_repository=None,
-    )
+    with override_settings(cadrumo_output_language="en"):
+        findings, _resolved, _missing = _collect_revision_verification_findings(
+            work_unit=work_unit,
+            target=target,
+            profile=_resident_profile(),
+            transaction_repository=None,
+        )
 
     assert len(findings) == 1
     finding = findings[0]

@@ -13,7 +13,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "active_profile\tdocs-sequence-sandbox\n*\tdocs-sequence-sandbox\n"
+      "text": "active_profile\tdocs-sequence-sandbox\n*\tdocs-sequence-sandbox\tactive\n"
     },
     {
       "argv": [
