@@ -88,6 +88,21 @@ _GOOGLE_ERROR_SUFFIXES: tuple[str, ...] = (
     "auth_failed",
 )
 
+# The `cli.config.profile.bundle_flow.*` copy slots referenced by the profile
+# bundle interactive flow (`entrypoints.cli._config._profile_bundle_flow`).
+# The references are CopyRef string literals resolved by the flow substrate's
+# render-time copy assembler, so the static AST scanner cannot see them; this
+# bounded enumeration is what keeps scaffold from stripping the entries.
+_PROFILE_BUNDLE_FLOW_COPY_SLOTS: tuple[str, ...] = (
+    "export_section_title",
+    "import_section_title",
+    "transport_prompt",
+    "transport_encrypted_label",
+    "transport_encrypted_description",
+    "transport_cleartext_label",
+    "transport_cleartext_description",
+)
+
 
 def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     """Construct the registration tuple at import time.
@@ -214,6 +229,11 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             description="flows.status.profiles.status.* (status-page profile lifecycle labels)",
             key_factory=lambda v: f"flows.status.profiles.status.{v}",
             values=tuple(m.value for m in UserProfileStatus),
+        ),
+        FStringKeyRegistration(
+            description="cli.config.profile.bundle_flow.* (profile bundle interactive-flow CopyRef copy)",
+            key_factory=lambda v: f"cli.config.profile.bundle_flow.{v}",
+            values=_PROFILE_BUNDLE_FLOW_COPY_SLOTS,
         ),
     )
 
