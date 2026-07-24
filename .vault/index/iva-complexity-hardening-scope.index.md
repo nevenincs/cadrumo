@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#iva-complexity-hardening-scope'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-07-01-iva-complexity-hardening-scope-adr]]'
   - '[[2026-07-01-iva-complexity-hardening-scope-research]]'

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#live-iva-compensation-wallet'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-05-19-live-iva-compensation-wallet-W01-P02-S05]]'
   - '[[2026-05-19-live-iva-compensation-wallet-W01-P02-S06]]'

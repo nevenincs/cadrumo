@@ -54,6 +54,7 @@ from ...domain.user_profile import (
     UserProfileError,
     UserProfileFact,
     UserProfileRecord,
+    UserProfileStatus,
     load_user_profile_schema,
 )
 from . import (
@@ -319,6 +320,7 @@ def register_active_profile(
     schema: ProfileSchemaDefinition | None = None,
     enforce_unique_tax_id: bool = True,
     routing_profile_id: str | None = None,
+    status: UserProfileStatus = UserProfileStatus.ACTIVE,
 ) -> WorkflowState:
     """Atomically register a new profile and make it the active one.
 
@@ -339,6 +341,11 @@ def register_active_profile(
             already carries the same tax id.
         routing_profile_id: When set, wires a cross-bucket routing entry so
             the new profile can inherit data from an existing bucket.
+        status: The birth lifecycle state — ``ACTIVE`` (default) for a
+            complete registration, ``SETUP_INCOMPLETE`` for the
+            interactive setup flow's early mint, which reserves the tax id
+            while modelo work stays refused until
+            :func:`complete_setup_with_lifecycle_span` lands.
 
     This function is a thin
     :class:`~cadrumo.application.workflow.WorkflowState` coordinator: the
@@ -365,6 +372,7 @@ def register_active_profile(
             profile_id=profile_id,
             enforce_unique_tax_id=enforce_unique_tax_id,
             routing_profile_id=routing_profile_id,
+            status=status,
         )
         from ..workflow import utc_now
 
@@ -471,6 +479,25 @@ def reactivate_profile_with_lifecycle_span(profile_id: str) -> UserProfileRecord
     """
     with _profile_mutation_span(profile_id), profile_storage_session(profile_id):
         aggregate = ProfileRepository().reactivate(profile_id)
+    return aggregate.record
+
+
+def complete_setup_with_lifecycle_span(profile_id: str) -> UserProfileRecord:
+    """Complete a ``SETUP_INCOMPLETE`` profile inside an application-owned bucket session.
+
+    The interactive setup flow's final-commit transition: opens the
+    profile's storage session and delegates the atomic cross-store flip
+    (encrypted record → ``ACTIVE`` with the ``PROFILE_SETUP_COMPLETED``
+    event, then the plaintext manifest mirror) to
+    :meth:`~cadrumo.application.user_profile.ProfileRepository.complete_setup`.
+    Reuses that single-writer arm rather than re-implementing the
+    transition, so the two stores never drift.
+
+    Returns the activated
+    :class:`~cadrumo.domain.user_profile.UserProfileRecord`.
+    """
+    with _profile_mutation_span(profile_id), profile_storage_session(profile_id):
+        aggregate = ProfileRepository().complete_setup(profile_id)
     return aggregate.record
 
 
@@ -824,6 +851,7 @@ def rename_profile(
 __all__ = [
     "ProfileLogoutOverrideError",
     "build_lifecycle_service",
+    "complete_setup_with_lifecycle_span",
     "delete_profile_with_lifecycle_span",
     "fact_value",
     "logout_active_profile",

@@ -1,0 +1,146 @@
+"""Widget-shape validation coverage for the DATE and DECIMAL kinds.
+
+The tests drive ``validate_widget_shape`` through the public
+``cadrumo.application.flows`` facade over real :class:`FlowPage` records
+and assert on the structural outcome — the canonical token, the verdict
+``ok`` flag, the i18n message *key*, and the redacted context — never on
+localized prose, and never leaking the raw answer into the diagnostic.
+The DATE and DECIMAL blank policy mirrors INTEGER: an unconditionally
+required page refuses blank, a gated or optional page accepts it.
+"""
+
+from __future__ import annotations
+
+import pytest
+
+from ....core.flows import CopyRefKind, FlowWidgetKind
+from .. import CopyRef, FlowCondition, FlowPage, validate_widget_shape
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_GATE = FlowCondition(page_id="earlier", equals="x")
+
+
+def _copy(ref: str = "flows.test.copy") -> CopyRef:
+    return CopyRef(kind=CopyRefKind.LOCALE_KEY, ref=ref)
+
+
+def _page(
+    *,
+    widget: FlowWidgetKind,
+    required: bool = True,
+    visible_when: FlowCondition | None = None,
+) -> FlowPage:
+    return FlowPage(
+        id="probe",
+        widget=widget,
+        prompt=_copy(),
+        required=required,
+        visible_when=visible_when,
+        answer_type=str,
+    )
+
+
+# ── DATE ─────────────────────────────────────────────────────────────────────
+
+
+def test_date_accepts_iso_and_canonicalises_to_the_iso_string() -> None:
+    canonical, verdict = validate_widget_shape(_page(widget=FlowWidgetKind.DATE), "2026-01-05")
+
+    assert verdict.ok
+    assert canonical == "2026-01-05"
+
+
+def test_date_strips_surrounding_whitespace_before_parsing() -> None:
+    canonical, verdict = validate_widget_shape(_page(widget=FlowWidgetKind.DATE), "  2026-01-05  ")
+
+    assert verdict.ok
+    assert canonical == "2026-01-05"
+
+
+@pytest.mark.parametrize("raw", ["2026-1-5", "2026-13-01", "2026-02-30", "05/01/2026", "not-a-date"])
+def test_date_rejects_non_iso_or_impossible_values(raw: str) -> None:
+    """Non-zero-padded, out-of-range, and day-first forms all fail the ISO shape."""
+    canonical, verdict = validate_widget_shape(_page(widget=FlowWidgetKind.DATE), raw)
+
+    assert not verdict.ok
+    assert verdict.message_key == "flows.errors.invalid_date"
+    assert canonical == ""
+    # Only the page id rides the context; the raw answer never leaks.
+    assert verdict.context == {"page_id": "probe"}
+
+
+def test_date_rejects_blank_when_unconditionally_required() -> None:
+    _canonical, verdict = validate_widget_shape(_page(widget=FlowWidgetKind.DATE), "  ")
+
+    assert not verdict.ok
+    assert verdict.message_key == "flows.errors.blank_required"
+
+
+def test_date_accepts_blank_when_optional() -> None:
+    canonical, verdict = validate_widget_shape(_page(widget=FlowWidgetKind.DATE, required=False), "")
+
+    assert verdict.ok
+    assert canonical == ""
+
+
+def test_date_accepts_blank_when_gated() -> None:
+    canonical, verdict = validate_widget_shape(_page(widget=FlowWidgetKind.DATE, visible_when=_GATE), "")
+
+    assert verdict.ok
+    assert canonical == ""
+
+
+# ── DECIMAL ──────────────────────────────────────────────────────────────────
+
+
+def test_decimal_accepts_and_preserves_significant_trailing_zeros() -> None:
+    canonical, verdict = validate_widget_shape(_page(widget=FlowWidgetKind.DECIMAL), "1.50")
+
+    assert verdict.ok
+    # Trailing zeros are significant for an amount: canonicalisation keeps them.
+    assert canonical == "1.50"
+
+
+def test_decimal_strips_whitespace_and_normalises_the_sign() -> None:
+    canonical, verdict = validate_widget_shape(_page(widget=FlowWidgetKind.DECIMAL), "  +1.5  ")
+
+    assert verdict.ok
+    assert canonical == "1.5"
+
+
+@pytest.mark.parametrize("raw", ["1,5", "abc", "1.2.3", ""])
+def test_decimal_rejects_non_decimal_tokens(raw: str) -> None:
+    page = _page(widget=FlowWidgetKind.DECIMAL)
+    canonical, verdict = validate_widget_shape(page, raw)
+
+    assert not verdict.ok
+    assert canonical == ""
+    # A blank on a required page is the blank refusal; a malformed token is
+    # the invalid-decimal refusal — both keyed, neither leaking the raw.
+    expected_key = "flows.errors.blank_required" if raw == "" else "flows.errors.invalid_decimal"
+    assert verdict.message_key == expected_key
+    assert verdict.context == {"page_id": "probe"}
+
+
+@pytest.mark.parametrize("raw", ["NaN", "Infinity", "-Infinity"])
+def test_decimal_rejects_non_finite_values(raw: str) -> None:
+    """``NaN`` / infinities parse under Decimal but an amount must be finite."""
+    _canonical, verdict = validate_widget_shape(_page(widget=FlowWidgetKind.DECIMAL), raw)
+
+    assert not verdict.ok
+    assert verdict.message_key == "flows.errors.invalid_decimal"
+
+
+def test_decimal_accepts_blank_when_optional() -> None:
+    canonical, verdict = validate_widget_shape(_page(widget=FlowWidgetKind.DECIMAL, required=False), "")
+
+    assert verdict.ok
+    assert canonical == ""
+
+
+def test_decimal_accepts_blank_when_gated() -> None:
+    canonical, verdict = validate_widget_shape(_page(widget=FlowWidgetKind.DECIMAL, visible_when=_GATE), "")
+
+    assert verdict.ok
+    assert canonical == ""

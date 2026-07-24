@@ -75,9 +75,18 @@ Run the guided wizard when you're setting up a profile for the first time:
 ```{cli-sequence} profile-setup-interactive-create
 ```
 
-The wizard asks the questions described in this guide. Prompt labels follow the
-selected output language, while official AEAT terms and stable command tokens
-remain recognizable across languages.
+The wizard is a full-page, question-by-question walk. Answer one page, move to
+the next; go back to change an earlier answer at any time. The first page asks
+for your output language — answer it and the rest of the wizard renders in the
+language you chose. The pages then walk your identity, fiscal residence,
+economic activity, IVA, enrollment, family situation (including your
+descendientes), recurring obligations, and service preferences, ending on a
+review page that shows every answer before anything is committed. Questions are
+conditional: the wizard only asks what applies to the answers you already gave.
+
+Each page explains its choices and shows the expected format for dates,
+amounts, and identifiers, and refuses an invalid value on the spot — a
+malformed date or tax identifier never reaches your stored profile.
 
 The wizard prompts for your master-key passphrase before it stores
 anything. For unattended runs, see
@@ -85,6 +94,22 @@ anything. For unattended runs, see
 
 Use `--language en`, `es`, `ca`, or `hu` for one command. A profile can also
 store its default output language.
+
+(save-and-resume)=
+### Save now, finish later
+
+Stop a first-time setup at any point and keep what you answered. Choose *save
+and exit* on any page: every answer you gave is already stored, and the profile
+stays marked as setup-incomplete. `aeat config profile list` flags an
+incomplete profile so you can spot it later.
+
+Resume by running the same create command again with the same profile name.
+The wizard picks up where you left off with your earlier answers in place.
+Answer the remaining pages and confirm the review page to complete setup — the
+profile then becomes active and ready for `aeat app` commands.
+
+Descendientes are the one exception on resume: the wizard asks for them again
+so the set you confirm is always complete and current.
 
 Use flags with `--quiet` when you want a repeatable, scriptable setup, passing
 the entity type, tax id, name, and surnames to `aeat config profile create`. The
@@ -252,6 +277,57 @@ This is a guide, not the authority. The tool decides applicability from the full
 profile and the registry rules. To see what applies to your profile, use
 [Choose which modelo to file](choose-modelo.md).
 
+(modify-your-profile)=
+## Modify your profile
+
+Re-run the wizard over an existing profile to change its facts:
+
+```{cli-sequence} profile-setup-edit-wizard
+```
+
+Edit mode walks the same pages with your current answers in place. Change what
+you need, then confirm the review page. Nothing is written until you confirm:
+edits stay staged during the walk, and an interrupted edit discards them all.
+There is no save-and-exit in edit mode — finish the walk in one sitting. The
+tool tells you both things at the end of every interactive edit, so an edit
+never silently half-applies.
+
+Descendientes are not part of profile edit. Manage them with the
+[descendiente command](#manage-your-descendants) below — the edit summary
+reminds you of this every time.
+
+For a scripted change, pass `--quiet` with only the flags you want to change;
+every fact you don't name stays as it was.
+
+(manage-your-descendants)=
+## Manage your descendants
+
+Descendientes drive the *mínimo por descendientes* in the annual Renta.
+Declare them during first-time setup; manage them afterwards with the
+`descendiente` command.
+
+Open the paged descendant editor:
+
+```{cli-sequence} profile-setup-descendiente-door
+```
+
+The editor shows your declared descendientes, lets you change any answer, add
+one, or reduce the count, and commits the complete set when you confirm.
+Reducing the count removes the descendientes beyond it — the stored set always
+matches exactly what you confirmed.
+
+Script the same changes with the flag verbs:
+
+```{cli-sequence} profile-setup-descendiente-verbs
+```
+
+`add` takes one `--descendiente` per child as `KEY=VALUE` pairs separated by
+commas. `NACIMIENTO` (birth date, `AAAA-MM-DD`) is required; `ADOPCION`,
+`DISCAPACIDAD` (`0`, `33`, or `65`), `CONVIVENCIA`, `CUSTODIA`,
+`MESES_TRABAJO` (`0`–`12`), `GASTOS_GUARDERIA`, and `NIF` are optional. A
+descendiente without a tax identifier is fine — leave `NIF` out. `remove`
+takes the position from `list`, counting from `0`.
+
 ## Maintain your profile
 
 The following steps edit a fact, rename the profile, duplicate it, delete the
@@ -263,8 +339,9 @@ duplicate, and export the profile to a portable JSON file:
 
 What each step does:
 
-- **Edit** changes only the flags you pass. Run `show`, `status`, or `validate`
-  again after editing.
+- **Edit** re-runs the wizard, or changes only the flags you pass with
+  `--quiet` — see [Modify your profile](#modify-your-profile). Run `show`,
+  `status`, or `validate` again after editing.
 - **Rename** changes only the visible label; the active-profile pointer follows
   it.
 - **Duplicate** starts a second profile from the same facts. The second name you

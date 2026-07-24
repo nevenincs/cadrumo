@@ -20,9 +20,11 @@ from ....domain.user_profile import (
     ProfileSchemaValidationError,
     UserProfileFact,
     UserProfileStatus,
+    UserProfileValidationError,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
+    CompleteSetupCommand,
     DuplicateProfileCommand,
     EditProfileFieldCommand,
     ProfileLifecycleService,
@@ -525,3 +527,66 @@ def test_validator_surfaces_missing_required_field_as_issue(schema: ProfileSchem
     assert len(report.issues) >= 1
     severities = {issue.severity.value for issue in report.issues}
     assert "error" in severities
+
+
+def test_register_setup_incomplete_persists_the_status(
+    secure_objects: SecureObjectRepository,
+    schema: ProfileSchemaDefinition,
+) -> None:
+    service = _service(secure_objects, schema)
+    service.register(
+        RegisterProfileCommand(
+            profile_id=_PROFILE_BUCKET_ID,
+            display_name="Mid-setup",
+            facts=_all_required_facts(schema),
+            status=UserProfileStatus.SETUP_INCOMPLETE,
+        ),
+    )
+    record = service.read(_PROFILE_BUCKET_ID)
+    assert record.status is UserProfileStatus.SETUP_INCOMPLETE
+    listed = service.list_profiles().profiles
+    assert [row.status for row in listed] == [UserProfileStatus.SETUP_INCOMPLETE]
+
+
+def test_register_refuses_a_tombstoned_birth() -> None:
+    with pytest.raises(ValueError, match="registered tombstoned"):
+        RegisterProfileCommand(
+            profile_id=_PROFILE_BUCKET_ID,
+            display_name="Dead on arrival",
+            status=UserProfileStatus.TOMBSTONED,
+        )
+
+
+def test_complete_setup_activates_and_emits_the_transition_event(
+    secure_objects: SecureObjectRepository,
+    schema: ProfileSchemaDefinition,
+) -> None:
+    service = _service(secure_objects, schema)
+    service.register(
+        RegisterProfileCommand(
+            profile_id=_PROFILE_BUCKET_ID,
+            display_name="Mid-setup",
+            facts=_all_required_facts(schema),
+            status=UserProfileStatus.SETUP_INCOMPLETE,
+        ),
+    )
+    result = service.complete_setup(CompleteSetupCommand(profile_id=_PROFILE_BUCKET_ID))
+    assert result.profile.status is UserProfileStatus.ACTIVE
+    catalogue = BucketEventHistoryRepository(objects=secure_objects).load()
+    assert BucketEventType.PROFILE_SETUP_COMPLETED in {event.event_type for event in catalogue.events.values()}
+
+
+def test_complete_setup_refuses_an_active_profile(
+    secure_objects: SecureObjectRepository,
+    schema: ProfileSchemaDefinition,
+) -> None:
+    service = _service(secure_objects, schema)
+    service.register(
+        RegisterProfileCommand(
+            profile_id=_PROFILE_BUCKET_ID,
+            display_name="Complete",
+            facts=_all_required_facts(schema),
+        ),
+    )
+    with pytest.raises(UserProfileValidationError):
+        service.complete_setup(CompleteSetupCommand(profile_id=_PROFILE_BUCKET_ID))

@@ -767,28 +767,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.wizard._errors.WizardAnswerQueueUnderflowError",
-        ErrorCode(
-            code="INTERNAL_WIZARD_ANSWER_QUEUE_UNDERFLOW",
-            category=ErrorCategory.INTERNAL,
-            message_key="errors.internal.internal_wizard_answer_queue_underflow",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.wizard._errors.WizardAnswerQueueOverflowError",
-        ErrorCode(
-            code="INTERNAL_WIZARD_ANSWER_QUEUE_OVERFLOW",
-            category=ErrorCategory.INTERNAL,
-            message_key="errors.internal.internal_wizard_answer_queue_overflow",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.application.wizard._errors.WizardMissingFlagError",
         ErrorCode(
             code="REFUSED_WIZARD_MISSING_FLAG",
@@ -822,7 +800,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.wizard._prompter.WizardUnsupportedConsoleError",
+        "cadrumo.application.wizard._errors.WizardUnsupportedConsoleError",
         ErrorCode(
             code="REFUSED_WIZARD_UNSUPPORTED_CONSOLE",
             category=ErrorCategory.REFUSED,
@@ -838,7 +816,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.wizard._prompter.WizardEditUnsupportedConsoleError",
+        "cadrumo.application.wizard._errors.WizardEditUnsupportedConsoleError",
         ErrorCode(
             code="REFUSED_WIZARD_EDIT_UNSUPPORTED_CONSOLE",
             category=ErrorCategory.REFUSED,
@@ -1031,6 +1009,105 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.ERROR,
             message_key="errors.error.modelo_work_selector",
             default_suggestion="aeat app modelo work --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.flows._errors.FlowError",
+        ErrorCode(
+            code="ERROR_FLOW",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_flow",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.flows._errors.FlowValidatorRegistryError",
+        ErrorCode(
+            code="INTERNAL_FLOW_VALIDATOR_REGISTRY",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.internal_flow_validator_registry",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.flows._errors.FlowNavigationError",
+        ErrorCode(
+            code="REFUSED_FLOW_NAVIGATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_flow_navigation",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.flows._errors.FlowAnswerError",
+        ErrorCode(
+            code="REFUSED_FLOW_ANSWER",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_flow_answer",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.flows._errors.FlowSubmitError",
+        ErrorCode(
+            code="REFUSED_FLOW_SUBMIT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_flow_submit",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.flows._errors.FlowCheckpointError",
+        ErrorCode(
+            code="REFUSED_FLOW_CHECKPOINT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_flow_checkpoint",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.flows._errors.FlowCopyResolutionError",
+        ErrorCode(
+            code="INTERNAL_FLOW_COPY_RESOLUTION",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.internal_flow_copy_resolution",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.flows._errors.FlowUnsupportedConsoleError",
+        ErrorCode(
+            code="REFUSED_FLOW_UNSUPPORTED_CONSOLE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_flow_unsupported_console",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.flows._errors.FlowRunAbandonedError",
+        ErrorCode(
+            code="REFUSED_FLOW_RUN_ABANDONED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_flow_run_abandoned",
+            default_suggestion=None,
             retryable=False,
             runbook_id=None,
         ),

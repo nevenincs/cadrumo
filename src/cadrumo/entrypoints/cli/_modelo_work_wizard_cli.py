@@ -21,21 +21,21 @@ registry formula engine already populate them, exactly as a bare
 surface a bare calculate call would otherwise reject with a bindings-missing
 refusal.
 
-A real interactive terminal is required: the prompting itself is the
-application layer's canonical :class:`~application.wizard.QuestionaryPrompter`,
-the same prompter the profile setup wizard drives, so the non-TTY /
-Windows-no-console detection and the translated
-:class:`~application.wizard.WizardUnsupportedConsoleError` are that one
-implementation rather than a re-derived copy of it.
+A real interactive terminal is required: the prompting is the flow
+substrate's line-mode frontend
+(:class:`~cadrumo.application.flows.LineFlowFrontend`) over the one flow
+engine, so the non-TTY / Windows-no-console detection and the translated
+refusal are the substrate's single implementation rather than a
+re-derived copy of it, and the operator gets the engine's review surface
+(re-edit by number, restart, submit) before any value is committed.
 
-Only the prompt *copy* differs from the setup wizard: the casilla number and
-label come from the resolved registry snapshot, not a static
-translation-catalogue key, so this module does not build the wizard package's
-``WizardQuestion`` model — that model's ``prompt`` field is a static
-``Translatable`` key with no interpolation support, the wrong shape for a
-runtime-discovered casilla label. The rendered string goes to
-:meth:`~application.wizard.QuestionaryPrompter.ask_text` instead, which is the
-same plain-text primitive ``ask`` dispatches a ``TEXT`` widget onto.
+The prompt *copy* comes from the resolved registry snapshot — a casilla
+number and label, not a static translation-catalogue key — so each
+discovered question is projected into a :class:`FlowDefinition` page
+whose copy slots are schema-field references resolved by this module's
+registered copy source against the per-run registry-derived table. The
+definition carries references only; the registry stays the copy
+authority.
 """
 
 from __future__ import annotations
@@ -43,9 +43,22 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
+from uuid import uuid4
 
 import typer
+from pydantic import BaseModel
 
+from ...adapters.inbound.tui import select_flow_frontend
+from ...application.flows import (
+    CopyRef,
+    FlowDefinition,
+    FlowPage,
+    FlowRunAbandonedError,
+    FlowSection,
+    LineFlowFrontend,
+    detect_frontend_capability,
+    register_copy_source,
+)
 from ...application.modelo import (
     CalculationRegistryUnavailableError,
     Modelo100BorradorBindingError,
@@ -57,8 +70,9 @@ from ...application.modelo import (
     registry_bindings_for_scope,
     registry_casillas_for_registry_scope,
 )
-from ...application.wizard import QuestionaryPrompter
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.external_constants import OutputLanguage
+from ...core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ...core.i18n import output_language, tr
 from ...core.json_contract import Notice
 from ...domain.calculations.registry import InputKind, RegistrySnapshotError, RegistryValidationError
@@ -82,22 +96,43 @@ if TYPE_CHECKING:
     from ...domain.modelos import WorkUnit
 
 
-def _ask_wizard_text(prompter: QuestionaryPrompter, prompt: str, *, help_text: str | None) -> str:
-    """Ask one dynamic free-text wizard question, showing ``help_text`` above it.
+class _ModeloWizardAnswers(BaseModel):
+    """Empty typed shell: the wizard reads answers off the flow state directly."""
 
-    The console-support check runs first, so an unsupported host refuses cleanly
-    rather than rendering guidance for a question it can never ask.
+    model_config = STRICT_FROZEN_CONFIG
 
-    The help line rides on the prompt string rather than a bare ``print``
-    because the prompt is not written to stdout: it is rendered on the
-    prompter's own output device (the terminal in production, whatever an
-    embedding host declares otherwise). Printing help to stdout would interleave
-    operator prose with the ``--format json`` envelope and leave it unparseable
-    for a machine caller, which is the one thing stdout owes the agent operator.
-    """
-    prompter.ensure_interactive_environment()
-    rendered = f"{help_text}\n{prompt}" if help_text else prompt
-    return prompter.ask_text(rendered)
+
+_COPY_NAMESPACE = "modelo-work"
+
+_ACTIVE_RUNS: dict[str, dict[str, str]] = {}
+"""Per-run registry-derived copy tables, keyed by an opaque run token.
+
+Each wizard invocation owns one table for its whole lifetime. Every
+reference embeds its run token (``modelo-work:<run-token>:<step-key>:<facet>``),
+so the registered resolver reads only the addressed run's table: two
+interleaved runs in one process (the ``cadrumo-mcp`` host is exactly such
+a host) never clear each other's entries, and each table is dropped at
+its own run end rather than accumulating for the process lifetime. Values
+are the registry snapshot's localized labels and help; the resolver
+returns ``None`` outside the namespace so other domains' schema-field
+resolvers get their turn.
+"""
+
+
+def _resolve_modelo_wizard_copy(ref: str) -> str | None:
+    prefix = f"{_COPY_NAMESPACE}:"
+    if not ref.startswith(prefix):
+        return None
+    run_token, _, _ = ref[len(prefix) :].partition(":")
+    table = _ACTIVE_RUNS.get(run_token)
+    return table.get(ref) if table is not None else None
+
+
+register_copy_source(CopyRefKind.SCHEMA_FIELD, _resolve_modelo_wizard_copy)
+
+
+def _copy_ref_id(run_token: str, step: _WizardStep, facet: str) -> str:
+    return f"{_COPY_NAMESPACE}:{run_token}:{_page_key(step)}:{facet}"
 
 
 @dataclass(frozen=True, slots=True)
@@ -204,12 +239,36 @@ def run_modelo_work_wizard(
         bucket_id=bucket_id,
     )
 
-    active_prompter = QuestionaryPrompter.from_ambient_app_session()
     try:
         steps = _outstanding_wizard_steps(unit)
     except RegistrySnapshotError as exc:
         raise deps.bad_parameter_from_error(exc) from exc
-    prompted = list(_run_wizard_steps(active_prompter, steps))
+
+    run_token = uuid4().hex
+    _ACTIVE_RUNS[run_token] = {}
+    try:
+        _drive_wizard_calculation(
+            deps=deps,
+            ctx=ctx,
+            unit=unit,
+            steps=steps,
+            actor=actor,
+            run_token=run_token,
+        )
+    finally:
+        _ACTIVE_RUNS.pop(run_token, None)
+
+
+def _drive_wizard_calculation(
+    *,
+    deps: _WizardDeps,
+    ctx: typer.Context,
+    unit: WorkUnit,
+    steps: tuple[_WizardStep, ...],
+    actor: str | None,
+    run_token: str,
+) -> None:
+    prompted = list(_run_wizard_steps(steps, run_token=run_token))
 
     for _attempt in range(_MAX_MISSING_INPUT_RETRIES):
         casilla_overrides = [f"{step.key}={value}" for step, value in prompted if step.channel == "casilla"]
@@ -244,7 +303,7 @@ def run_modelo_work_wizard(
             follow_up = _follow_up_step_for_missing_input(exc)
             if follow_up is None:
                 raise deps.bad_parameter_from_error(exc) from exc
-            answer = _run_wizard_steps(active_prompter, (follow_up,))
+            answer = _run_wizard_steps((follow_up,), run_token=run_token)
             prompted.extend(answer)
             continue
         except (
@@ -479,28 +538,103 @@ def _profile_resolved_binding_ids(unit: WorkUnit) -> frozenset[str]:
         return frozenset()
 
 
-def _run_wizard_steps(
-    prompter: QuestionaryPrompter,
-    steps: tuple[_WizardStep, ...],
-) -> tuple[tuple[_WizardStep, str], ...]:
-    """Ask ``prompter`` one question per outstanding step, in order.
+def _page_key(step: _WizardStep) -> str:
+    return f"{step.channel}:{step.key}"
 
-    A work unit with no outstanding manual input needs no interactive
-    console at all — the loop body never runs, so a ``--format json``
-    scripted caller with nothing left to fill in never hits the
-    non-interactive refusal.
+
+def _definition_from_steps(
+    steps: tuple[_WizardStep, ...],
+    *,
+    run_token: str,
+) -> FlowDefinition:
+    """Project the discovered registry steps into a one-section flow definition.
+
+    Each step becomes a free-text page whose prompt and help are
+    schema-field references into the addressed run's copy table this
+    module's registered resolver serves; the rendered strings are the
+    registry snapshot's localized labels, so the definition itself carries
+    no prose. Every reference embeds ``run_token`` so the run owns its
+    entries; follow-up single-question rounds append to the same run
+    table.
     """
-    answers: list[tuple[_WizardStep, str]] = []
+    table = _ACTIVE_RUNS[run_token]
+    pages: list[FlowPage] = []
     for step in steps:
-        prompt_text = tr(
+        prompt_ref = _copy_ref_id(run_token, step, "prompt")
+        table[prompt_ref] = tr(
             "cli.app.modelo.work.wizard_prompt",
             number=step.number,
             label=step.label,
             default="Casilla {number} ({label})",
         )
-        raw = _ask_wizard_text(prompter, prompt_text, help_text=step.help_text)
-        answers.append((step, raw.strip()))
-    return tuple(answers)
+        help_ref: str | None = None
+        if step.help_text:
+            help_ref = _copy_ref_id(run_token, step, "help")
+            table[help_ref] = step.help_text
+        pages.append(
+            FlowPage(
+                id=_page_key(step),
+                widget=FlowWidgetKind.TEXT,
+                prompt=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=prompt_ref),
+                help=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=help_ref) if help_ref else None,
+                required=False,
+                answer_type=str,
+            ),
+        )
+    help_key = CopyRef(kind=CopyRefKind.LOCALE_KEY, ref="cli.app.modelo.work.wizard_help")
+    return FlowDefinition(
+        id="modelo-work-wizard",
+        title=help_key,
+        description=help_key,
+        sections=(FlowSection(id="manual-inputs", title=help_key, items=tuple(pages)),),
+        answers_model=_ModeloWizardAnswers,
+        checkpoint={
+            FlowMode.CREATE: CheckpointAvailability.UNAVAILABLE,
+            FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
+        },
+    )
+
+
+def _run_wizard_steps(
+    steps: tuple[_WizardStep, ...],
+    *,
+    run_token: str,
+) -> tuple[tuple[_WizardStep, str], ...]:
+    """Walk the outstanding steps through the interactive flow frontend.
+
+    The frontend is the full-screen Textual app where the host can host
+    it, degrading to the line-mode frontend where it cannot; the choice is
+    the shared :func:`select_flow_frontend` primitive over
+    :func:`detect_frontend_capability`, so every consumer selects in one
+    place. A work unit with no outstanding manual input needs no
+    interactive console at all — nothing is constructed for an empty step
+    set, so a ``--format json`` scripted caller with nothing left to fill
+    in never hits the non-interactive refusal. Values are read back off the
+    engine state per page key; a page the operator left blank reads as the
+    empty string, exactly as the one-shot prompt did.
+    """
+    if not steps:
+        return ()
+    definition = _definition_from_steps(steps, run_token=run_token)
+    frontend = select_flow_frontend(
+        definition,
+        mode=FlowMode.CREATE,
+        capability=detect_frontend_capability(),
+    )
+    if isinstance(frontend, LineFlowFrontend):
+        state, _projection = frontend.run(mode=FlowMode.CREATE)
+    else:
+        frontend.run()
+        if frontend.final_state is None:
+            # Textual returned without a submit or save-and-exit: the
+            # operator abandoned the run. Refuse with the typed abandonment
+            # rather than committing a partially-answered calculation.
+            raise FlowRunAbandonedError(
+                translated_message="errors.refused.refused_flow_run_abandoned",
+                context={"flow_id": definition.id},
+            )
+        state = frontend.final_state
+    return tuple((step, (state.answers.get(_page_key(step)) or "").strip()) for step in steps)
 
 
 def _emit_wizard_result(

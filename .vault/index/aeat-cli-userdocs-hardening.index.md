@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#aeat-cli-userdocs-hardening'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-06-04-aeat-cli-userdocs-hardening-W01-P01-S01]]'
   - '[[2026-06-04-aeat-cli-userdocs-hardening-W01-P01-S02]]'

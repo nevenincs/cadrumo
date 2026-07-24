@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#atomic-relocation-coordination'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-05-31-atomic-relocation-coordination-adr]]'
   - '[[2026-05-31-atomic-relocation-coordination-audit]]'

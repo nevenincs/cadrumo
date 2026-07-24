@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#docs-navigability'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-06-01-docs-navigability-plan]]'
   - '[[2026-06-04-docs-navigability-adr]]'

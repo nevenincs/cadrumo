@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#prorrata-art105-cinco-interrupted'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-07-07-prorrata-art105-cinco-interrupted-adr]]'
   - '[[2026-07-10-prorrata-art105-cinco-interrupted-research]]'

@@ -16,6 +16,7 @@ Submodules
    cadrumo.application.auth._acquisition_lock
    cadrumo.application.auth._actions
    cadrumo.application.auth._apoderado
+   cadrumo.application.auth._apoderado_flow
    cadrumo.application.auth._catalogue
    cadrumo.application.auth._certificate_secret_backend
    cadrumo.application.auth._certificate_sources

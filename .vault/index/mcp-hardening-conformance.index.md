@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#mcp-hardening-conformance'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-07-08-mcp-hardening-conformance-audit]]'
   - '[[2026-07-09-mcp-hardening-conformance-audit]]'

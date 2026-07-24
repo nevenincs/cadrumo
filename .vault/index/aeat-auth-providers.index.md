@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#aeat-auth-providers'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-04-18-auth-provider-abstraction-adr]]'
 ---

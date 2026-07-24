@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#legal-grounding-centralization'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-06-14-legal-grounding-centralization-P01-S01]]'
   - '[[2026-06-14-legal-grounding-centralization-P01-S02]]'

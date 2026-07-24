@@ -55,6 +55,18 @@ class ApoderadoConfigurationNotSetError(CadrumoError):
     """Raised when status or check runs without a configured apoderado."""
 
 
+class ApoderadoRepresentedNifInvalidError(CadrumoError):
+    """Raised when ``configure`` receives an invalid represented-party tax id.
+
+    Both the flag-driven and the paged-flow transports commit through
+    :meth:`ApoderadoService.configure`, which validates the represented
+    party's identifier through the canonical
+    :func:`cadrumo.core.identity.validate_identity` authority. The raised
+    error carries NO raw identifier in its context -- the value is
+    identity-sensitive and must never leak into a diagnostic.
+    """
+
+
 class ApoderadoLiveCheckUnavailableError(CadrumoError):
     """Raised when the live-read path is not yet wired or AEAT contact fails."""
 
@@ -183,8 +195,23 @@ class ApoderadoService:
     ) -> ApoderadoConfiguration:
         """Persist apoderado config and return the resulting :class:`ApoderadoConfiguration`.
 
-        Validates and dedups scopes against the catalogue.
+        Validates the represented party's tax identifier through the
+        canonical :func:`cadrumo.core.identity.validate_identity` authority
+        (the single validation law both the flag path and the paged flow
+        commit through), then validates and dedups scopes against the
+        catalogue.
+
+        :raises ApoderadoRepresentedNifInvalidError: When ``represented_nif``
+            is not a valid NIF, NIE, or CIF.
         """
+        from ...core.identity import IdentityError, validate_identity
+
+        try:
+            validate_identity(represented_nif)
+        except IdentityError as exc:
+            raise ApoderadoRepresentedNifInvalidError(
+                "represented party tax identifier is not a valid NIF, NIE, or CIF",
+            ) from exc
         granted = parse_scope_tokens(scope_tokens, self._catalogue)
         config = ApoderadoConfiguration(
             bucket_id=bucket_id,
@@ -226,6 +253,7 @@ __all__ = [
     "ApoderadoConfiguration",
     "ApoderadoConfigurationNotSetError",
     "ApoderadoLiveCheckUnavailableError",
+    "ApoderadoRepresentedNifInvalidError",
     "ApoderadoService",
     "ApoderadoStatus",
 ]

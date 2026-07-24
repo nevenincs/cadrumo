@@ -664,6 +664,40 @@ application:
           a kért modell definíciók: %{modelos}.'
         unsupported_casilla_data_type: 'Nem támogatott nyilvántartási casilla adattípus:
           %{data_type}.'
+  flows:
+    errors:
+      answer_target_not_visible: 'A(z) {flow_id} folyamat nem tud választ rögzíteni
+        a(z) {page_key} kérdéshez: az a kérdés jelenleg nem látható.'
+      checkpoint_unavailable_mode: A(z) {flow_id} folyamat {mode} módban nem kínál
+        mentés és kilépés lehetőséget; a(z) {answered_count} válasz csak ebben a munkamenetben
+        él.
+      copy_locale_key_unresolved: A(z) {ref} szövegkulcs nem szerepel a nyelvi katalógusban.
+      copy_ref_unresolved: A(z) {kind} szövegforrás nem adott vissza szöveget a(z)
+        {ref} hivatkozásra.
+      copy_source_duplicate: A(z) {kind} típushoz már van regisztrált szövegforrás-feloldó.
+      copy_source_locale_builtin: A nyelvikulcs-alapú szövegforrás beépített, nem
+        regisztrálható újra.
+      copy_source_unregistered: Nincs regisztrált szövegforrás-feloldó a(z) {kind}
+        típushoz, amelyet a(z) {ref} hivatkozás igényel.
+      jump_target_not_visible: 'A(z) {flow_id} folyamat nem tud a(z) {page_key} kérdésre
+        ugrani: az a kérdés jelenleg nem látható.'
+      reset_target_unknown: A(z) {flow_id} folyamatban nincs {page_key} nevű kérdés
+        vagy tárolt válasz, amit vissza lehetne állítani.
+      scripted_answer_rejected: 'A(z) {page_key} kérdéshez adott szkriptelt választ
+        az ellenőrzés elutasította: {message_keys}.'
+      scripted_queue_overflow: A szkriptelt futás {consumed_count} választ használt
+        fel, és {remaining_count} maradt kihasználatlanul; a szkript nem illik a folyamathoz.
+      scripted_queue_underflow: A szkriptelt futás {consumed_count} válasz után kifogyott
+        a válaszokból a(z) {page_key} kötelező kérdésnél.
+      submit_blocked: 'A(z) {flow_id} folyamat nem küldhető be: {blocking_count} blokkoló
+        megállapítás és {required_remaining} kötelező kérdés van még nyitva.'
+      unknown_repeating_group: A(z) {flow_id} folyamat nem deklarál {group_id} nevű
+        ismétlődő csoportot.
+      validator_id_blank: Egy folyamat-ellenőrzőt nem üres azonosítóval kell regisztrálni.
+      validator_id_duplicate: Már van regisztrált folyamat-ellenőrző {validator_id}
+        azonosítóval.
+      validator_id_unknown: Nincs {validator_id} azonosítójú folyamat-ellenőrző regisztrálva;
+        összesen {registered_count} ellenőrző van regisztrálva.
   inventory:
     service:
       errors:
@@ -976,6 +1010,8 @@ application:
         modellhez; előbb töltse ki ezeket a profiladatokat: %{missing}.'
       profile_readiness_profile_missing: Nincs perzisztált aktív profil ehhez a modell
         munkához; folytatás előtt hozza létre vagy javítsa a profilt.
+      profile_readiness_setup_incomplete: A profil beállítása nincs befejezve; fejezd
+        be a beállítási folyamatot, mielőtt modelókkal dolgoznál.
       recipient_decryption_failed: A címzett számára titkosított csomagot nem sikerült
         megfejteni; a kulcs nem megfelelő, vagy a csomagot módosították.
       recipient_encryption_invalid_key: A címzett nyilvános kulcsa nem egy érvényes
@@ -1440,6 +1476,9 @@ application:
         ez az alkalmazás nem támogatja.
       unsupported_bundle_schema_version: A csomag sémaverziója nem támogatott ebben
         az alkalmazásverzióban.
+    notices:
+      censo_divergences_open: '{count} profiladat továbbra is eltér a Certificado
+        de Situación Censal tanúsítványtól és megoldatlan: {axes}.'
   verification:
     errors:
       missing_binding_values: A registry-ellenőrzéshez külső kötési értékek szükségesek.
@@ -1476,6 +1515,13 @@ application:
         lett feltételezve. Az autonóm levonások és az adótábla autonóm része %{ccaa}
         alapján kerül kiszámításra. A --tax-residence-ccaa kapcsolóval választhat
         másik közösséget.
+      modify_descendants_via_door: A leszármazottak nem részei a profil szerkesztésének.
+        Kezeld őket a(z) '{command}' paranccsal.
+      modify_no_resume: A módosítások szerkesztő módban csak előkészülnek — küldés
+        nélkül kilépve elvesznek; mentés és folytatás csak profil-létrehozáskor érhető
+        el.
+      setup_saved_resume_later: 'Elmentve. Bármikor folytathatod: aeat config profile
+        create %{name}'
     output_labels:
       active_profile: active_profile
       next: Következő
@@ -3008,6 +3054,11 @@ cli:
       draft_id_not_found: A(z) %{draft_id} azonosítójú piszkozat nem található
       invalid_iso_date: 'Érvénytelen dátumformátum a(z) %{label} mezőhöz: %{raw}.
         ISO 8601 (ÉÉÉÉ-HH-NN) szükséges.'
+      parse_invalid_choice: 'Érvénytelen érték: ''{value}''. Válasszon ezek közül:
+        {accepted}.'
+      parse_missing_argument: 'Hiányzik a kötelező argumentum: {parameter}.'
+      parse_unknown_command: 'Ismeretlen parancs: ''{command}''.'
+      parse_unknown_option: 'Ismeretlen kapcsoló: ''{option}''.'
       period_empty: Az adóidőszak nem lehet üres.
       period_missing_year: A(z) '{token}' --period értékhez év szükséges ennél a parancsnál.
         Adja meg a --year kapcsolót (pl. --period {token} --year 2024).
@@ -3022,8 +3073,13 @@ cli:
           zárva). Használja a 'status' parancsot az offline olvasáshoz.
         clear_help: Az apoderado-konfiguráció megszüntetése.
         configure:
+          no_console_hint: 'Az apoderamiento interaktív beállításához konzol szükséges.
+            Állítsa be nem interaktív módon: aeat config auth apoderado configure
+            --represented-nif NIF --scope SCOPE.'
           represented_nif_help: A képviselt fél NIF-je.
           scope_help: Hatóköri tokenek (ismételhető).
+          scope_required: 'Nincs megadva hatókör. Adja meg a --scope kapcsolót az
+            alábbiak közül eggyel vagy többel: %{codes}.'
         configure_help: Aktív apoderado-konfiguráció beállítása.
         help: Apoderado-konfiguráció kezelése.
         scope:
@@ -3344,6 +3400,8 @@ cli:
       tax_residence_ccaa_help: Az adóilletékesség autonóm közössége.
     list:
       help: Minden regisztrált profil listázása és az aktív megjelölése.
+      setup_incomplete_notice: '%{count} profil még a beállítást fejezi be, és még
+        nem áll készen a bevallásra: %{labels}. Folytassa a beállítást a használatukhoz.'
     passphrase:
       change:
         help: A titoktár jelszavának cseréje a jelenlegi ellenőrzése után.
@@ -3388,6 +3446,17 @@ cli:
         inspect_help: Megjeleníti egy lezárt archívum fejlécét visszafejtés vagy visszaállítás
           nélkül.
         inspect_path_help: A lezárt archívum útvonala.
+      bundle_flow:
+        export_section_title: Profilcsomag exportálása
+        import_section_title: Profilcsomag importálása
+        transport_cleartext_description: Titkosítatlan JSON-t ír érzékeny pénzügyi
+          adatokkal; csak helyi vagy érintetti hozzáférési célra — soha ne küldd el,
+          ne szinkronizáld, ne továbbítsd.
+        transport_cleartext_label: Titkosítatlan (csak helyi/SAR)
+        transport_encrypted_description: A csomag AEAD-titkosítása jelmondattal; gépek
+          közötti átvitelhez biztonságos.
+        transport_encrypted_label: Titkosított (ajánlott)
+        transport_prompt: Hogyan írjuk ki a csomagot?
       capabilities:
         capability_help: A be- vagy kikapcsolandó szolgáltatás.
         capability_label: képesség
@@ -3403,15 +3472,22 @@ cli:
         state_help: A képesség engedélyezése (on) vagy letiltása (off).
         state_label: állapot
       censo:
-        apply_help: Az AEAT által jelentett nyilvántartási értékekkel felülírja a
-          profilt.
+        apply_help: 'A beolvasott censal adatok rögzítése az aktív profilban (alapértelmezés:
+          csak előnézet).'
         compare_help: Az AEAT nyilvántartás és a profil mezőnkénti összehasonlítása.
         dropped_fields_notice: 'Az AEAT censo már nem tartalmaz olyan mezőket, amelyek
           a legutóbbi pillanatfelvételben szerepeltek: {dropped_fields}. Ha nem változtattad
           meg és nem szüntetted meg ezeket a bejegyzéseket, előfordulhat, hogy részleges
           letöltés történt: futtasd újra a censo letöltést, vagy add meg ismét az
           értékeket; az otthoni iroda levonási aránya nem biztos, hogy feloldódik.'
-        help: Az AEAT 036-os nyilvántartási adatok szinkronizálása ezzel a profillal.
+        file_help: Beolvas egy letöltött Certificado de Situación Censal dokumentumot,
+          és előnézi vagy rögzíti a censal adatokat.
+        file_option_help: A Sede-ről letöltött Certificado de Situación Censal PDF
+          elérési útja (G313 eljárás).
+        help: Censal dokumentumok beolvasása az aktív profilhoz.
+        non_official_notice: A tanúsítványból származó adatok az operátor által szolgáltatott
+          bizonyítékok, sosem AEAT által ellenőrzöttek; a censal nyilvántartás nem
+          hivatalos szinten marad.
         pull_help: Letölti a legfrissebb censo-t az AEAT-tól e profil pillanatkép-tárolójába.
         refresh_help: A legfrissebb nyilvántartás letöltése az AEAT-ból és pillanatkép
           mentése.
@@ -3468,6 +3544,8 @@ cli:
       export_passphrase_prompt: 'A csomag jelmondata (legalább 8 karakter): '
       export_passphrase_too_short: A profilexport passphrase legalább 8 karakter hosszú
         legyen.
+      export_requires_destination: Add meg a --to ÚTVONAL célhelyet a csomagnak, vagy
+        futtasd interaktív terminálban, és a program bekéri.
       export_requires_transport: Használd az --encrypt kapcsolót titkosított átviteli
         csomaghoz, vagy a --cleartext-local kapcsolót csak helyi/SAR JSON-hoz.
       export_sensitivity_warning: 'Ez a csomag NINCS titkosítva, és érzékeny pénzügyi
@@ -3520,6 +3598,8 @@ cli:
         mezőkkel: %{missing_flags}.'
       import_passphrase_prompt: 'A csomag jelmondata: '
       import_path_help: A profilcsomag fájljának elérési útja.
+      import_requires_path: Add meg a csomag ÚTVONAL argumentumát, vagy futtasd interaktív
+        terminálban, és a program bekéri.
       import_uuid_collision: A csomagban lévő UUID ütközik egy meglévő profillal.
       logout_help: Az aktív tárolási munkamenet bezárása, a memóriában lévő kulcsok
         törlése, a bucket-motorok lezárása és a helyi mutató törlése.
@@ -4775,6 +4855,8 @@ cli:
       help: A határidő-naptár megjelenítése az aktív profilhoz a megadott dátumablakon
         belül. Festivos és munkanapszámítás alkalmazásával. Csak helyi; soha nem lép
         kapcsolatba az AEAT-tal.
+      setup_incomplete_notice: '%{count} profil, amely még a beállítást fejezi be,
+        kimaradt a naptárból; még nem áll készen a bevallásra: %{labels}.'
       shift:
         business_day: Munkanap
         calendar_unavailable: Naptár nem elérhető
@@ -5322,6 +5404,9 @@ errors:
       szavas helyreállítási kódoddal.
     auth_storage_master_key_unavailable: A főkulcsot egyetlen szolgáltatótól sem sikerült
       beszerezni. Ellenőrizze a kulcstárat vagy a fájl-tartalék jelmondat.
+    clave_movil_identity_checksum: A Cl@ve Móvil azonosító alakja érvényes, de az
+      ellenőrző betűje nem egyezik a számjegyekkel. Ellenőrizze az okmány utolsó betűjét,
+      és próbálja újra.
   calc:
     age_at_year_end_no_filing_year: 'Belső hiba: az életkor-számítás nem rendelkezik
       bevallási évvel.'
@@ -5399,6 +5484,10 @@ errors:
     unsupported_op: 'Nem támogatott képletoperátor: %{op}.'
   censo:
     bucket_id_blank: A censo-szinkronizálási szolgáltatáshoz profil-bucket szükséges.
+    certificado_extraction_unpinned: A kiállított tanúsítvány beolvasása még nem támogatott;
+      add meg a censal adatokat kézzel.
+    certificado_not_a_pdf: A megadott fájl nem PDF; a Sede-ről letöltött Certificado
+      de Situación Censal szükséges.
   error:
     error_access_gate_submission: A hozzáférési kapu szabályzata elutasított egy benyújtási
       műveletet.
@@ -5432,6 +5521,7 @@ errors:
       vagy ellentmondásosak.
     error_categories: Hiba történt a kiadáskategóriákban.
     error_categories_validation: Egy kategória-rekord nem ment át az érvényesítésen.
+    error_certificado_censal: A Certificado de Situación Censal művelet meghiúsult.
     error_config_boundary: A konfigurációs parancs váratlan belső hibát észlelt.
     error_corpus_search: A helyi korpuszkeresés nem fejeződött be.
     error_deadlines_deadline: Hiba történt a határidő-számítás során.
@@ -5482,6 +5572,7 @@ errors:
     error_financial_transactions_transaction: Tranzakció-katalógus hiba történt.
     error_financial_usage_ratios_usage_ratio: Használati arány hiba történt.
     error_fixture_provisioning: A tesztfixture-öket nem sikerült kiosztani.
+    error_flow: A vezetett folyamat hibára futott.
     error_invoice_link_inconsistency: A kapcsolás a számla- és tranzakció-katalógusokat
       szinkronon kívülre hozta. Egyeztesse manuálisan mindkét katalógust.
     error_invoice_validation: Egy számla-rekord nem ment át az érvényesítésen.
@@ -5626,6 +5717,8 @@ errors:
     fail_browser_evasion: A böngésző-kijátszás beállítása nem alkalmazható.
     fail_browser_session_browser: A böngésző-munkamenet böngészőjét nem sikerült elindítani.
     fail_browser_validation: A böngésző-munkamenet paraméterei nem mentek át az érvényesítésen.
+    fail_certificado_censal_parse: Nem sikerült beolvasni a Certificado de Situación
+      Censal dokumentumot.
     fail_declaracion_parse: A bevallás fájlját nem sikerült elemezni.
     fail_export: Az exportálás meghiúsult.
     fail_export_format: A kért exportformátum nem támogatott.
@@ -5740,6 +5833,8 @@ errors:
       {expected} volt a várt, de {got} érkezett.'
     cif_check_letter_mismatch_kind: 'A CIF ellenőrző betűje helytelen (típus: {kind}):
       {expected} volt a várt, de {got} érkezett.'
+    cif_control_char_invalid: A(z) {candidate} CIF ellenőrző karakterének számjegynek
+      vagy nagybetűnek kell lennie, nem {got}.
     cif_invalid_shape: 'A(z) {candidate} nem CIF-formátumú: a CIF vezető betűből (A-H,
       J, N, P-S, U, V vagy W) áll, amelyet 7 számjegy és egy ellenőrző karakter követ.'
     document_empty: Az azonosítóokmány üres.
@@ -5753,6 +5848,12 @@ errors:
       erre: {digits}{expected}.'
     nif_invalid_shape: 'A(z) {candidate} nem NIF-formátumú: a NIF 8 számjegyből és
       egy ellenőrző betűből áll.'
+    tax_id_invalid_length: A spanyol adóazonosítónak 9 karakter hosszúnak kell lennie;
+      a(z) {candidate} {length} karakteres. Adj meg egy NIF-, NIE- vagy CIF-számot
+      (egy kezdő karakter, 7 vagy 8 számjegy és egy ellenőrző karakter).
+    tax_id_unrecognised_leader: A(z) {candidate} nem ismert adóazonosító-karakterrel
+      kezdődik ({leader}). A NIF számjeggyel vagy K/L/M betűvel, a NIE X, Y vagy Z
+      betűvel, a CIF pedig A-H, J, N, P-S, U, V vagy W betűvel kezdődik.
     validate_expects_str: Az azonosítóérvényesítés szöveges értéket vár; {got_type}
       érkezett.
   integrity:
@@ -5847,6 +5948,10 @@ errors:
     internal_cli_unexpected_boundary: A parancs váratlan belső hiba miatt hiúsult
       meg, nem tárolt adatokkal kapcsolatos probléma miatt. Nézze meg a diagnosztikai
       naplókat, hogy mi hiúsult meg.
+    internal_flow_copy_resolution: 'Belső hiba: a vezetett folyamat nem tudta feloldani
+      a megjelenítendő szövegeit.'
+    internal_flow_validator_registry: 'Belső hiba: a vezetett folyamat ellenőrző-nyilvántartása
+      elutasította a műveletet.'
     internal_master_key_reentrant: 'Belső hiba: a mesterkulcs-szolgáltató reentráns
       módon lett meghívva; zárja be az aktív munkamenetet, mielőtt újra belépne.'
     internal_master_key_type: 'Belső hiba: a mesterkulcs-művelet hibás típusú értéket
@@ -5860,10 +5965,6 @@ errors:
     internal_profile_project_answers_not_registered: 'Belső hiba: a project_answers
       nincs regisztrálva az alkalmazás indításakor.'
     internal_profile_registration: 'Belső hiba: a profil regisztrálása sikertelen.'
-    internal_wizard_answer_queue_overflow: 'Belső hiba: a varázsló fel nem használt
-      kanonikus válaszokkal zárult.'
-    internal_wizard_answer_queue_underflow: 'Belső hiba: a varázsló több kanonikus
-      választ kért, mint amennyit a nem interaktív futtatás megadott.'
     internal_wizard_catalogue_already_registered: 'Belső hiba: a varázsló-katalógus
       másodszor is regisztrálva lett, eltérő objektumokkal.'
     internal_wizard_catalogue_not_registered: 'Belső hiba: a varázsló-katalógus nincs
@@ -5986,6 +6087,8 @@ errors:
     refused_access_gate_live_read_not_enabled: Az AEAT élő olvasási hozzáférés le
       van tiltva. Ez a művelet az aktuális konfiguráció alatt nem léphet kapcsolatba
       az AEAT-tal.
+    refused_apoderado_invalid_represented_nif: A képviselt fél adóazonosítója nem
+      érvényes NIF, NIE vagy CIF.
     refused_apoderado_live_check_unavailable: A képviselők élő ellenőrzése nem érhető
       el, vagy az AEAT-tal való kapcsolat meghiúsult.
     refused_apoderado_not_configured: Nincs konfigurálva képviselő. Mielőtt ellenőrizné
@@ -6054,6 +6157,15 @@ errors:
       vagy összeg) nem ment át az érvényesítésen.
     refused_financial_usage_ratios_censo_mismatch: Egy mentett otthoni irodahasználati
       arány eltér a censotól, amely a kötelező jogi forrás. Igazítsa a censo értékéhez.
+    refused_flow_answer: A vezetett folyamat elutasította a választ.
+    refused_flow_checkpoint: A vezetett folyamat elutasította a mentés és folytatás
+      műveletet.
+    refused_flow_navigation: A vezetett folyamat elutasította a navigációs kérést.
+    refused_flow_run_abandoned: A folyamat a befejezés előtt megszakadt; semmi sem
+      került beküldésre.
+    refused_flow_submit: A vezetett folyamat elutasította a beküldést.
+    refused_flow_unsupported_console: A vezetett folyamat nem futtatható, mert ez
+      a konzol nem tud interaktív kérdéseket megjeleníteni.
     refused_google_impersonation: Az IAM megtagadta a megszemélyesített token kiállítását
       a cél szolgáltatásfiók számára. Adja meg neki a roles/iam.serviceAccountTokenCreator
       szerepkört.
@@ -6289,6 +6401,118 @@ filing:
     out_of_range: Az érték kívül esik az engedélyezett tartományon.
     required_missing: Kötelező mező hiányzik.
     schema_mismatch: Eltérés a várt sémától.
+flows:
+  compare_select:
+    candidate: '{label} (forrás: {provenance})'
+    defer_label: Eldöntöm később
+  confirm:
+    'no': Nem
+    'yes': Igen
+  errors:
+    blank_required: Ez a mező kötelező - adj meg egy értéket.
+    checkbox_required: Válassz legalább egy lehetőséget.
+    checkbox_unknown: 'Ismeretlen lehetőség - elfogadott értékek: %{choices}.'
+    checkpoint_store_missing: A(z) {flow_id} folyamat a(z) {mode} módban felkínálja
+      a mentés és kilépés lehetőségét, de nincs bekötve ellenőrzőpont-tároló, ezért
+      a futás elutasításra került, hogy a válaszaid ne vesszenek el.
+    invalid_confirm: Válaszolj igennel vagy nemmel.
+    invalid_date: Add meg a dátumot ÉÉÉÉ-HH-NN formátumban (például 2026-05-14).
+    invalid_decimal: Add meg az összeget tizedesponttal (például 1234.56).
+    invalid_integer: Adj meg egy egész számot.
+    select_unknown: 'Válassz az elfogadott értékek közül: %{choices}.'
+    tui_abandoned: A(z) {flow_id} folyamatot {mode} módban bezárták a beküldés vagy
+      mentés előtt; semmi sem került rögzítésre.
+    unexpected_app_type: Az interaktív képernyő nem kapcsolódik folyamat-alkalmazáshoz.
+    unsupported_console: Ez a konzol nem tud interaktív kérdéseket megjeleníteni.
+      Indítsd a folyamatot valódi terminálból, vagy vezéreld szkriptelt válaszfájllal.
+  progress:
+    current_answer: 'Jelenlegi válasz: {value}'
+    current_answer_secret: 'Jelenlegi válasz: (rejtett)'
+    failure_mode: 'Figyelem: {text}'
+    format_hint: 'Formátum: {hint}'
+    legal_ref: 'Jogalap: %{ref} — %{label}'
+    optional: Nem kötelező
+    page_header: '{position}. kérdés a(z) {total} közül — {section} szakasz'
+    required: Kötelező
+  review:
+    action_edit: Válasz szerkesztése
+    action_prompt: Mit szeretnél tenni?
+    action_restart: Újrakezdés
+    action_save_exit: Mentés és kilépés
+    action_submit: Beküldés
+    column_answer: Válasz
+    column_question: Kérdés
+    column_registered: Rögzítve
+    column_status: Állapot
+    edit_not_editable: A(z) {page_key} kérdés már nem szerkeszthető.
+    edit_unknown: Nincs {number} sorszámú kérdés.
+    edit_which: 'Melyik sorszámú kérdést szeretnéd szerkeszteni? '
+    header: Áttekintés — {answered} megválaszolt kérdés.
+    header_tui: 'Áttekintés — {answered} megválaszolva, {remaining} kötelező még nyitva,
+      beküldésre kész: {eligible}'
+    orphan_marker: (már nem kérdezzük)
+    page_deferred: A %{page_key} kérdés elhalasztva - döntés szükséges a beküldés
+      előtt.
+    page_invalid: A %{page_key} kérdés válasza érvénytelen.
+    page_stale: Nézd át a %{page_key} kérdést - egy korábbi válasz megváltozott.
+    required_unanswered: A kötelező %{page_key} kérdés megválaszolatlan.
+    reset_stale_confirm: A(z) {page_key} kérdést már nem tesszük fel. Törlöd a hozzá
+      tárolt választ?
+    reset_stale_done: A(z) {page_key} tárolt válasza törölve.
+    restart_confirm: Újrakezded, és eldobod az összes választ?
+    row: '{number}. {page_key} — állapot: {status}'
+    save_unavailable: A mentés és kilépés nem érhető el {mode} módban; fejezd be a
+      folyamatot egy ülésben.
+  status:
+    auth:
+      certificate_source: Tanúsítvány forrása
+      login_not_ready: nem ellenőrzött
+      login_ready: kész
+      provider: Szolgáltató
+      provider_none: nincs beállítva
+      status: Hozzáférés
+      subject: Alany
+    binding_quit: Kilépés
+    masked_value: (rejtett)
+    profile:
+      column:
+        field: Mező
+        value: Érték
+      none: Nincs aktív profil.
+    profiles:
+      column:
+        active: Aktív
+        label: Profil
+        status: Állapot
+      none: Nincsenek regisztrált profilok.
+      status:
+        active: aktív
+        setup_incomplete: beállítás befejezetlen
+        tombstoned: törölve
+    recovery:
+      commands_title: Műveletek (másold és futtasd)
+      enrolled: aktiválva
+      fingerprint: Ujjlenyomat
+      not_enrolled: nincs aktiválva
+      state: Helyreállítási kód
+    section:
+      auth: Hitelesítés
+      profile: Aktív profil
+      profiles: Profilok
+      recovery: Helyreállítás
+    title: Állapot
+  tui:
+    binding_back: Vissza
+    binding_reset: Visszaállítás
+    binding_restart: Újraindítás
+    binding_return: Vissza a kérdésekhez
+    binding_review: Áttekintés
+    binding_save_exit: Mentés és kilépés
+    binding_submit: Beküldés
+    button_back: Vissza
+    button_next: Tovább
+    button_review: Áttekintés
+    header: '{flow} — {position}. kérdés a(z) {total} közül, {section} szakasz'
 live:
   errors:
     expediente_not_found: Az AEAT nyilatkozat-nyilvántartás nem adta vissza a kért
@@ -6588,7 +6812,13 @@ wizard:
       lehetőségek: %{choices}.'
     checkbox_without_choices: A(z) %{prompt_key} kérdésnél nincsenek jelölőnégyzet-lehetőségek
       megadva.
+    eu_eea_country_required: A(z) %{flag} kötelező, ha a(z) %{condition_flag} EU-
+      vagy EGT-tartózkodást jelöl.
     invalid_confirm: 'Érvénytelen logikai válasz a következőhöz: %{prompt_key}: %{raw}.'
+    invalid_date: 'Érvénytelen dátum a következőhöz: %{flag}: %{got}. Használj ISO-8601
+      formátumot (ÉÉÉÉ-HH-NN).'
+    invalid_decimal: 'Érvénytelen tizedes szám a következőhöz: %{flag}: %{got}. Használj
+      pontot tizedeselválasztóként.'
     invalid_integer: 'Érvénytelen egész szám a következőhöz: %{prompt_key}: %{raw}.'
     invalid_postcode: 'Érvénytelen irányítószám a következőhöz: %{prompt_key}: %{raw}.
       A spanyol irányítószám 5 jegyű (01-52 tartományKód, majd három számjegy).'
@@ -6598,6 +6828,8 @@ wizard:
       lehetőségek: %{choices}.'
     select_without_choices: A(z) %{prompt_key} kérdésnél nincsenek legördülő-lehetőségek
       megadva.
+    spouse_tax_id_required_joint: A(z) %{flag} kötelező, ha a(z) %{condition_flag}
+      együttes adózás.
     unsupported_console: 'Az irányított beállítás interaktív terminált igényel, ez
       a futtatás azonban nem rendelkezik ilyennel. Még semmi nem lett mentve.
 
@@ -6628,6 +6860,8 @@ wizard:
     question_prefix: '%{q_n}. kérdés / %{q_total}'
     section_header: '%{section_n}. lépés / %{section_total}: %{title}'
   setup:
+    actividad:
+      title: Gazdasági tevékenység és censo
     capabilities:
       cloud-evidence-upload:
         prompt: Engedélyezi az érzékeny bizonylatok feltöltését felhő LLM-szolgáltatókhoz?
@@ -6644,12 +6878,18 @@ wizard:
       disability-grade:
         choices:
           33-64:
+            description: Elismert 33–64%-os fogyatékosság — növeli a személyi minimumot.
             label: Fogyatékossági fokozat 33%-tól 64%-ig
           65-plus:
+            description: Elismert 65%-os vagy nagyobb fogyatékosság — nagyobb személyiminimum-növekedés.
             label: Fogyatékossági fokozat 65% vagy magasabb
           assistance-or-mobility:
+            description: Igazolt harmadik személy segítségének szükségessége vagy
+              csökkent mozgásképesség — asszisztencia-növekményt ad.
             label: Harmadik személy segítsége vagy korlátozott mozgásképesség
           judicial-incapacity:
+            description: Bíróság által megállapított cselekvőképtelenség — a tanúsított
+              foktól függetlenül 65%+ként kezelendő.
             label: Bírói cselekvőképesség-korlátozás vagy azzal egyenértékű
       sex:
         choices:
@@ -6657,6 +6897,58 @@ wizard:
             label: H - férfi
           m:
             label: M - nő
+    cotejo:
+      adopt:
+        label: A tanúsítvány értékének átvétele
+        provenance: Certificado de Situación Censal (nem hivatalos bizonyíték)
+      compare:
+        help: Tartsa meg a válaszát, vegye át a tanúsítvány értékét, vagy halassza
+          el a döntést.
+        prompt: Ez az adat eltér a tanúsítványtól. Melyik értéket tartja meg?
+      keep:
+        label: A saját válaszom megtartása
+        provenance: Az Ön beállítási válasza
+      title: Összevetés a Certificado de Situación Censal tanúsítvánnyal
+    descendientes:
+      adoption-date:
+        before_birth: Az örökbefogadás dátuma nem lehet korábbi a születési dátumnál.
+        in_future: Az örökbefogadás dátuma nem lehet jövőbeli.
+        prompt: Örökbefogadás dátuma (hagyja üresen, ha nem örökbefogadott)
+      birth-date:
+        prompt: Születési dátum
+      convivencia:
+        prompt: Ez a leszármazó Önnel él?
+      count:
+        help: 'Számolja meg a gyermekeket, akik után igénybe veheti a leszármazók
+          utáni minimumot (LIRPF 58. cikk): 25 év alattiak (vagy bármely életkorú
+          fogyatékos), akik Önnel élnek.'
+        prompt: Hány leszármazót (gyermeket) szeretne bevallani?
+      custodia-compartida:
+        prompt: A felügyeletet megosztja a másik szülővel?
+      discapacidad:
+        choices:
+          '0':
+            label: Nincs fogyatékosság
+          '33':
+            label: 33%–64%
+          '65':
+            label: 65% vagy több
+        prompt: Fogyatékosság mértéke
+      gastos-guarderia:
+        help: Engedélyezett bölcsődének fizetett összegek (LIRPF 81/A. cikk), amelyek
+          növelik az anyasági levonást; egész euró.
+        invalid_negative: A bölcsődei költség nem lehet negatív; adjon meg 0-t vagy
+          pozitív összeget euróban (LIRPF 81 bis cikk).
+        prompt: Az adóévben fizetett bölcsődei költségek (euró)
+      meses-madre-trabajo:
+        help: 'Az anyasági levonáshoz (LIRPF 81. cikk): hónapok (0–12), amikor az
+          anya tb-járulékot fizetett a 3 év alatti gyermek mellett.'
+        invalid_range: Adjon meg egész számú hónapot %{minimum} és %{maximum} között
+          (LIRPF 81. cikk).
+        prompt: Hónapok, amíg az anya dolgozott a 3 év alatti gyermek mellett (adóév)
+      nif:
+        prompt: A leszármazó adószáma (NIF/NIE) (hagyja üresen, ha nincs)
+      title: Leszármazók
     description: Adóbevallási felkészültséget szolgáló beállítási varázsló az operátor
       számára
     enrollment:
@@ -6668,6 +6960,8 @@ wizard:
     errors:
       missing_required_flags: 'Hiányzó kötelező kapcsolók a --quiet módú futtatáshoz:
         %{missing}'
+    familia:
+      title: Családi helyzet
     family:
       family-descendants-eu-eea-deduction:
         prompt: EU/EEE leszármazottak a családi egység levonásban
@@ -6885,6 +7179,15 @@ wizard:
         help: 'Az első adózó neme: H = férfi, M = nő.'
       third-party-transactions-above-347-threshold:
         help: Harmadik féllel folytatott ügyletek meghaladják a Modelo 347 küszöbértékét
+    format:
+      amount-eur: Összeg euróban, tizedesponttal, pl. 50000.00.
+      date-iso: Dátum ÉÉÉÉ-HH-NN formátumban, pl. 2024-03-01.
+      postcode: 'Spanyol irányítószám: 5 számjegy, pl. 28001.'
+      tax-id: 'NIF/DNI: 8 számjegy + betű (12345678Z) · NIE: X/Y/Z + 7 számjegy +
+        betű (X1234567L) · céges NIF: betű + 7 számjegy + ellenőrző (B12345674).'
+      units-count: Egész szám, pl. 2.
+    identidad:
+      title: Személyazonosság
     intro: 'Irányított adóügyi profil-beállítás
 
       Ez előkészíti a helyi profilt, amelyet az alkalmazás a könyveléshez és az adóűrlap-ellenőrzésekhez
@@ -6928,10 +7231,16 @@ wizard:
       irpf-estimation-regime:
         choices:
           directa-normal:
+            description: 'Normál közvetlen becslés: valós bevétel szerinti teljes
+              könyvelés — 600 000 EUR forgalom felett kötelező.'
             label: Közvetlen becslés, normál
           directa-simplificada:
+            description: 'Egyszerűsített közvetlen becslés: valós bevétel egyszerűsített
+              könyveléssel — a legtöbb egyéni vállalkozó szokásos választása.'
             label: Közvetlen becslés, egyszerűsített
           objetiva:
+            description: 'Objektív becslés (modulok): az adó a tevékenységi mutatókból
+              számítódik, csak a felsorolt tevékenységekre.'
             label: Objektív becslés (módszerek)
         help: A gazdasági tevékenység nettó jövedelmének meghatározási módja; meghatározza,
           hogy Modelo 130 vagy 131 alkalmazandó-e
@@ -6988,6 +7297,8 @@ wizard:
       third-party-transactions-above-347-threshold:
         prompt: Harmadik féllel folytatott ügyletek meghaladják a Modelo 347 küszöbértékét
       title: Modelo kötelezettségek
+    preferencias:
+      title: Beállítások és képességek
     profile:
       activity:
         prompt: Gazdasági tevékenység (egyszerű szöveg is megfelelő; használja az
@@ -7002,15 +7313,25 @@ wizard:
       iva-regime:
         choices:
           exento:
+            description: 'IVA-mentes tevékenység (oktatás, egészségügy, biztosítás…):
+              nem számít fel és nem von le IVA-t.'
             label: Mentes
           general:
+            description: 'Általános IVA: az értékesítésre IVA-t számít fel, a beszerzések
+              IVA-ja levonható, negyedéves Modelo 303.'
             label: Általános adózási rend
           reagp:
+            description: 'Mezőgazdasági, állattenyésztési és halászati különös szabályozás
+              (REAGP): átalány-kompenzáció IVA-bevallás helyett.'
             label: Mezőgazdaság, állattenyésztés és halászat különleges adózási rendje
               (REAGP)
           recargo-equivalencia:
+            description: 'Kiskereskedőknek: a beszállító felárat számít fel, és ön
+              nem nyújt be IVA-bevallást erre a tevékenységre.'
             label: Egyenértékűségi pótlék
           simplificado:
+            description: Modul-alapú egyszerűsített IVA a jogosult tevékenységekhez
+              (az objektív becsléshez kapcsolódik).
             label: Egyszerűsített adózási rend
       legal-name:
         help: Jogi személyeknél ez az exportfejlécekben használt adózási név. Különbözik
@@ -7085,8 +7406,12 @@ wizard:
       fiscal-residency:
         choices:
           non-resident-irnr:
+            description: 'Nem rezidens: csak a spanyol forrású jövedelem adózik IRNR
+              szerint (Modelo 210), és adóügyi képviselő lehet szükséges.'
             label: Nem rezidens – IRNR (RDLeg 5/2004)
           resident-irpf:
+            description: 'Spanyol adóügyi illetőség (183+ nap vagy érdekközpont):
+              világjövedelem IRPF szerint.'
             label: Spanyolországban szokásos lakóhellyel rendelkező – IRPF
         prompt: Adóügyi illetőségi kategória
       representante-fiscal-nif:
@@ -7097,6 +7422,9 @@ wizard:
       tax-residence-ccaa:
         prompt: Adóügyi illetékességi autonóm közösség
       title: Adóügyi illetőség
+    review:
+      registered-non-official-suffix: ' (censal tanúsítványból — az AEAT által nem
+        ellenőrzött)'
     spouse:
       spouse-birth-date:
         prompt: Házastárs születési dátuma
@@ -7132,8 +7460,12 @@ wizard:
               adózás elérhető (LIRPF 82. cikk 1. bek. 2. pont)
             label: Bejegyzett élettársi kapcsolat
           separado-divorciado:
+            description: Különvált vagy elvált — közös adózás csak a családi egységben
+              lévő gyermekekkel lehetséges.
             label: Elvált vagy különélő
           soltero:
+            description: Egyedülálló, özvegy vagy elvált bejegyzett élettárs nélkül
+              — egyéni adózás, közös csak egyszülős családként gyermekkel.
             label: Egyedülálló
         help: 'Családi állapot a LIRPF 82. cikke értelmében: meghatározza, hogy elérhető-e
           az együttes adózás, és melyik családi egység típus alkalmazandó.'
@@ -7166,10 +7498,16 @@ wizard:
       entity-type:
         choices:
           attribution-entity:
+            description: 'Jövedelem-hozzárendelési entitás (comunidad de bienes, sociedad
+              civil): a jövedelem a tagoknak tulajdonítható.'
             label: Jövedelemattribúciós szervezet
           legal-entity:
+            description: Társaság vagy szervezet (SL, SA, egyesület…), amely társasági
+              adó (IS) szerint adózik.
             label: Jogi személy (társaság)
           natural-person:
+            description: Magánszemély (egyéni vállalkozó vagy magánszemély), aki IRPF
+              szerint adózik.
             label: Természetes személy
         help: Természetes személy (IRPF), jogi személy (Impuesto sobre Sociedades)
           vagy jövedelemattribúciós szervezet
@@ -7182,16 +7520,25 @@ wizard:
       irpf-income-categories:
         choices:
           actividad-economica:
+            description: Önálló gazdasági vagy szakmai tevékenység — negyedéves Modelo
+              130 és IVA kötelezettségekkel jár.
             label: Gazdasági tevékenység
           capital-inmobiliario:
+            description: Ingatlan-bérbeadásból származó jövedelem.
             label: Ingatlanvagyon-jövedelem (bérbeadás)
           capital-mobiliario:
+            description: 'Tőkejövedelem: kamat, osztalék és egyéb befektetési jövedelem.'
             label: Ingóvagyon-jövedelem
           ganancias-patrimoniales:
+            description: Eszközértékesítésből származó nyereség vagy veszteség (részvény,
+              ingatlan, kripto).
             label: Tőkenyereség
           pension:
+            description: Nyugdíj — az IRPF-ben munkajövedelemként adózik.
             label: Nyugdíj
           trabajo:
+            description: 'Munkajövedelem: munkáltatótól vagy társadalombiztosítástól
+              származó bér vagy nyugdíj.'
             label: Munkaviszonyból származó jövedelem
         help: Válassza ki az összes IRPF jövedelemkategóriát; csak a gazdasági tevékenység
           vált ki Modelo 130/131 kötelezettséget
@@ -7207,8 +7554,12 @@ wizard:
           sal:
             label: Munkavállalói tulajdonú részvénytársaság (S.A.L.)
           sin-fines-lucrativos:
+            description: 'Nonprofit szervezet (Ley 49/2002): választhatja a lentebb
+              kérdezett különös adószabályozást.'
             label: Nonprofit szervezet
           sl:
+            description: 'Sociedad Limitada: a szokásos kisvállalati forma, minimum
+              tőke 3000 EUR.'
             label: Korlátolt felelősségű társaság (S.L.)
           sll:
             label: Munkavállalói tulajdonú korlátolt felelősségű társaság (S.L.L.)
@@ -7241,34 +7592,17 @@ wizard:
       title: Adózói típus
     title: Beállítási varázsló
     verifier:
-      activity_present: 'Gazdasági tevékenység: ellenőrzi, hogy a profil tartalmaz-e
-        tevékenységet.'
-      eu_eea_country_missing: 'Házastárs lakóhelye: EU vagy EGT lakóhelyet jelölt
-        meg, de az ország hiányzik. Adja meg a lakóhely országát.'
-      eu_eea_country_ok: 'Házastárs lakóhelye: az EU vagy EGT szerinti lakóhely országa
-        összhangban van.'
-      joint_taxation_situacion_familiar_ok: 'Családi helyzet: a közös adóbevallás
-        összhangban van a bevallott családi helyzettel.'
-      joint_taxation_situacion_familiar_refused: 'Családi helyzet: a közös adóbevallás
-        nem engedélyezett nem bejegyzett élettársi kapcsolat esetén (LIRPF 82.1.2°
-        cikkely). Módosítsa a családi helyzetet, vagy válassza az egyéni adózást.'
-      monoparental_requires_hijos_ok: 'Egyszülős családi egység: a kiskorú gyermekekkel
-        kapcsolatos követelmény teljesítve.'
+      impatriado_requires_start_date: 'Impatrióta rendszer: a különleges rendszer
+        kezdő dátuma kötelező. Add meg a kezdő dátumot.'
       monoparental_requires_hijos_warning: 'Egyszülős családi egység: az egyszülős
         egységként való közös adóbevallás (LIRPF 82.1.2° cikkely) kiskorú gyermekeket
         igényel a családi egységben. Eltartott gyermekek nélkül a közös bevallás nem
         lehetséges ennél a családi helyzetnél. Engedélyezze az eltartott kiskorú gyermekek
         opciót, vagy váltson egyéni adózásra.'
-      obligations_consistency_ok: 'Forrásadó-kötelezettségek: a forrásadóra vonatkozó
-        válaszok összhangban vannak.'
-      obligations_inconsistent: 'Forrásadó-kötelezettségek: szakmai forrásadót jelölt
-        meg, de nem jelezte, hogy forrásadóval fizet szakembereknek. Ellenőrizze ezeket
-        az adatokat.'
-      spouse_consistency_missing: 'Közös adóbevallás: a házastárs adóazonosítója hiányzik.
-        Adja meg a közös bevalláshoz.'
-      spouse_consistency_ok: 'Közös adóbevallás: a házastárs adatai összhangban vannak.'
-      tax_id_present: 'Adóazonosítás: ellenőrzi, hogy a profil tartalmaz-e DNI, NIE,
-        NIF vagy CIF azonosítót.'
+      non_resident_requires_country: 'Nem rezidens IRNR: az adóügyi illetőség szerinti
+        ország kötelező. Add meg az illetőség szerinti országot.'
+      non_resident_requires_representante: 'Nem rezidens IRNR: adóügyi képviselő kötelező.
+        Add meg a képviselő NIF-jét és nevét.'
   test:
     description: Tesztelje a konfigurációt és a csatlakozást
     example:

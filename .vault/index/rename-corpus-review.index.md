@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#rename-corpus-review'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-04-18-rename-corpus-review-adr-audit]]'
   - '[[2026-04-18-rename-corpus-review-final-code-review-audit]]'
