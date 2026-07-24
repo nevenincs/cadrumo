@@ -13,5 +13,23 @@ from __future__ import annotations
 
 from ._app import FlowTuiApp, run_flow_tui
 from ._select import select_flow_frontend
+from ._status_screen import (
+    StatusApp,
+    StatusAuthView,
+    StatusFactRow,
+    StatusPageData,
+    StatusProfileRow,
+    StatusRecoveryView,
+)
 
-__all__ = ["FlowTuiApp", "run_flow_tui", "select_flow_frontend"]
+__all__ = [
+    "FlowTuiApp",
+    "StatusApp",
+    "StatusAuthView",
+    "StatusFactRow",
+    "StatusPageData",
+    "StatusProfileRow",
+    "StatusRecoveryView",
+    "run_flow_tui",
+    "select_flow_frontend",
+]
