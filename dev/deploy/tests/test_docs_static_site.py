@@ -2,15 +2,20 @@
 
 from __future__ import annotations
 
+import json
+import urllib.error
 from pathlib import Path
 
 import pytest
 from dev.deploy.docs_static_site import (
+    _DOWNLOAD_LATEST_SCHEMA,
+    _DOWNLOAD_LATEST_STATIC_PATH,
     CANONICAL_DOCS_BASE_URL,
     _language_build_command,
     _language_build_environment,
     _language_site_url,
     _localized_languages,
+    _refresh_download_latest,
     _validate_language_roots,
 )
 from dev.docs.i18n import TARGET_LANGUAGES
@@ -94,3 +99,73 @@ def test_validate_language_roots_refuses_an_empty_pagefind_index(tmp_path: Path)
         chunk.write_bytes(b"")
     with pytest.raises(SystemExit, match="no substantive Pagefind index data"):
         _validate_language_roots(tmp_path)
+
+
+class _FakeResponse:
+    """Minimal context-manager HTTP response for the download-latest fetch."""
+
+    def __init__(self, body: bytes) -> None:
+        self._body = body
+
+    def __enter__(self) -> _FakeResponse:
+        return self
+
+    def __exit__(self, *exc: object) -> bool:
+        return False
+
+    def read(self) -> bytes:
+        return self._body
+
+
+def _patch_urlopen(monkeypatch: pytest.MonkeyPatch, result: object) -> None:
+    """Point the module's urlopen at a canned body or exception."""
+
+    def fake_urlopen(request: object, timeout: float | None = None) -> _FakeResponse:
+        if isinstance(result, Exception):
+            raise result
+        assert isinstance(result, bytes)
+        return _FakeResponse(result)
+
+    monkeypatch.setattr("dev.deploy.docs_static_site.urllib.request.urlopen", fake_urlopen)
+
+
+def _download_latest_path(repo_root: Path) -> Path:
+    return repo_root.joinpath(*_DOWNLOAD_LATEST_STATIC_PATH)
+
+
+def test_refresh_download_latest_writes_a_valid_payload(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A valid latest-release payload is written into docs/_static."""
+    body = json.dumps({"schema_name": _DOWNLOAD_LATEST_SCHEMA, "version": "9.9.9", "assets": []}).encode("utf-8")
+    _patch_urlopen(monkeypatch, body)
+    _refresh_download_latest(tmp_path)
+    written = _download_latest_path(tmp_path)
+    assert written.is_file()
+    assert json.loads(written.read_bytes())["schema_name"] == _DOWNLOAD_LATEST_SCHEMA
+
+
+def test_refresh_download_latest_degrades_on_network_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """No release yet / network error degrades silently: no raise, no file."""
+    _patch_urlopen(monkeypatch, urllib.error.URLError("no release"))
+    _refresh_download_latest(tmp_path)  # must not raise
+    assert not _download_latest_path(tmp_path).exists()
+
+
+def test_refresh_download_latest_degrades_on_unexpected_payload(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A body that is not the expected schema (e.g. a 404 page) degrades silently."""
+    _patch_urlopen(monkeypatch, b"<html>not found</html>")
+    _refresh_download_latest(tmp_path)  # must not raise
+    assert not _download_latest_path(tmp_path).exists()
+
+
+def test_refresh_download_latest_degrades_on_write_failure(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A local write failure (permissions/disk) degrades silently, honouring 'never raises'."""
+    body = json.dumps({"schema_name": _DOWNLOAD_LATEST_SCHEMA, "version": "9.9.9", "assets": []}).encode("utf-8")
+    _patch_urlopen(monkeypatch, body)
+
+    def raise_oserror(self: Path, data: bytes) -> int:
+        raise OSError("disk full")
+
+    monkeypatch.setattr(Path, "write_bytes", raise_oserror)
+    _refresh_download_latest(tmp_path)  # must not raise despite the write failure

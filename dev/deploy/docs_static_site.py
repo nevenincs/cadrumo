@@ -147,8 +147,12 @@ def _refresh_download_latest(repo_root: Path) -> None:
     if not isinstance(payload, dict) or payload.get("schema_name") != _DOWNLOAD_LATEST_SCHEMA:
         print("download-latest.json was not the expected payload; serving the offline channel table.", flush=True)
         return
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_bytes(body)
+    try:
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(body)
+    except OSError as exc:
+        print(f"download-latest.json could not be written ({exc}); serving the offline channel table.", flush=True)
+        return
     print(f"Refreshed {destination.relative_to(repo_root)} from the latest release.", flush=True)
 
 
