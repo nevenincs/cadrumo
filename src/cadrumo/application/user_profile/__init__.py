@@ -119,6 +119,8 @@ if TYPE_CHECKING:
     from ._bundle_export import (
         PreparedProfileExport,
         ProfileBundleExportPurpose,
+        ProfileBundleExportReconcileFailure,
+        ProfileBundleExportReconciliation,
         ProfileBundleExportRequest,
         ProfileBundleExportResult,
         ProfileBundleExportTarget,
@@ -329,6 +331,8 @@ _LAZY_EXPORTS: dict[str, str] = {
             (
                 "PreparedProfileExport",
                 "ProfileBundleExportPurpose",
+                "ProfileBundleExportReconcileFailure",
+                "ProfileBundleExportReconciliation",
                 "ProfileBundleExportRequest",
                 "ProfileBundleExportResult",
                 "ProfileBundleExportTarget",
@@ -479,6 +483,8 @@ __all__ = [
     "PreparedProfileExport",
     "ProfileAlreadyRegisteredError",
     "ProfileBundleExportPurpose",
+    "ProfileBundleExportReconcileFailure",
+    "ProfileBundleExportReconciliation",
     "ProfileBundleExportRequest",
     "ProfileBundleExportResult",
     "ProfileBundleExportTarget",

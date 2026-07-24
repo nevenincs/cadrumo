@@ -19,6 +19,7 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+from datetime import timedelta
 from pathlib import Path
 from textwrap import dedent
 
@@ -40,7 +41,10 @@ from .. import (
     reconcile_prepared_exports,
 )
 from .._bundle_export import _STAGED_TEMP_SUFFIX
-from .._bundle_export_operation import ProfileBundleExportJournalRepository
+from .._bundle_export_operation import (
+    ProfileBundleExportJournalRepository,
+    ProfileBundleExportOperationStatus,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -200,9 +204,10 @@ def test_crash_before_replace_reconciles_as_prepared_with_no_completion_event(tm
         assert not destination.exists()
         assert _export_events(bucket_id) == ()
 
-        reconciled = reconcile_prepared_exports()
-        assert len(reconciled) == 1
-        assert reconciled[0].operation_id == prepared_before[0].operation_id
+        outcome = reconcile_prepared_exports()
+        assert outcome.failures == ()
+        assert len(outcome.reconciled) == 1
+        assert outcome.reconciled[0].operation_id == prepared_before[0].operation_id
         assert not staged.exists()
         assert not destination.exists()
         assert repository.prepared() == ()
@@ -231,8 +236,9 @@ def test_crash_after_replace_reconciles_to_a_completed_event_via_the_content_dig
         # No premature event yet: the crash was before the event write.
         assert _export_events(bucket_id) == ()
 
-        reconciled = reconcile_prepared_exports()
-        assert len(reconciled) == 1
+        outcome = reconcile_prepared_exports()
+        assert outcome.failures == ()
+        assert len(outcome.reconciled) == 1
         assert destination.exists()
         assert repository.list() == ()
         # The digest-matched publication is completed: the owed event is emitted.
@@ -251,11 +257,12 @@ def test_reconcile_completion_is_idempotent_for_a_published_operation(tmp_path: 
         assert crashed.returncode == _CRASH_EXIT_CODE, (crashed.stdout, crashed.stderr)
 
         first = reconcile_prepared_exports()
-        assert len(first) == 1
+        assert len(first.reconciled) == 1
         assert len(_export_events(bucket_id)) == 1
         # A second reconcile has no journal left to act on and emits nothing new.
         second = reconcile_prepared_exports()
-        assert second == ()
+        assert second.reconciled == ()
+        assert second.failures == ()
         assert len(_export_events(bucket_id)) == 1
 
 
@@ -279,9 +286,10 @@ def test_digest_matched_reconcile_leaves_no_cleartext_staged_temp(tmp_path: Path
         assert len(repository.prepared()) == 1
         events_before = len(_export_events(bucket_id))
 
-        reconciled = reconcile_prepared_exports()
+        outcome = reconcile_prepared_exports()
 
-        assert len(reconciled) == 1
+        assert outcome.failures == ()
+        assert len(outcome.reconciled) == 1
         assert repository.list() == ()
         assert len(_export_events(bucket_id)) == events_before + 1
         assert destination.exists()
@@ -429,6 +437,85 @@ def test_a_later_export_emits_the_owed_event_for_a_crash_published_bundle(tmp_pa
         assert crashed_destination.is_file()
 
 
+def _write_corrupt_journal(repository: ProfileBundleExportJournalRepository, journal_id: str) -> Path:
+    """Write a real unparseable journal file, as a torn write would leave."""
+    path = repository.path_for(journal_id)
+    path.write_text("{not valid json", encoding="utf-8")
+    return path
+
+
+def test_a_corrupt_journal_does_not_starve_the_healthy_operation_behind_it(tmp_path: Path) -> None:
+    # Isolation contract: journals are walked in start-time order, so a corrupt
+    # record ordered ahead of a healthy one used to abort the whole sweep and
+    # leave the healthy operation's cleartext staged temp on disk forever. The
+    # corrupt journal must be reported, not silently skipped, and must not
+    # prevent the healthy operation from being reconciled.
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _create_profile()
+        destination = tmp_path / "portable.json"
+
+        prepared = prepare_profile_export(_request(destination))
+        staged = Path(prepared.staged_path)
+        repository = ProfileBundleExportJournalRepository()
+        corrupt_id = "c" * 64
+        corrupt_path = _write_corrupt_journal(repository, corrupt_id)
+        assert staged.is_file()
+
+        outcome = reconcile_prepared_exports()
+
+        # The healthy operation reconciled despite the corrupt journal.
+        assert len(outcome.reconciled) == 1
+        assert outcome.reconciled[0].operation_id == prepared.operation.operation_id
+        assert not staged.exists()
+        # The corrupt journal is reported by id, with nothing known about its
+        # destination, and is left on disk rather than quietly deleted.
+        assert len(outcome.failures) == 1
+        assert outcome.failures[0].journal_id == corrupt_id
+        assert outcome.failures[0].destination is None
+        assert outcome.failures[0].reason == "ProfileBundleExportJournalCorruptError"
+        assert corrupt_path.is_file()
+
+
+def test_an_unfinalisable_operation_does_not_starve_the_one_behind_it(tmp_path: Path) -> None:
+    # The other isolation half, and the realistic one: a profile deleted after
+    # its export crashed leaves a COMPLETED journal whose owed audit event can
+    # never be written. That operation must be isolated and reported, keeping
+    # its journal for a later retry, while every other operation still recovers.
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _create_profile()
+        destination = tmp_path / "portable.json"
+
+        prepared = prepare_profile_export(_request(destination))
+        staged = Path(prepared.staged_path)
+        repository = ProfileBundleExportJournalRepository()
+        stranded = prepared.operation.model_copy(
+            update={
+                "operation_id": "a" * 64,
+                "status": ProfileBundleExportOperationStatus.COMPLETED,
+                "profile_id": "00000000-0000-4000-8000-000000000000",
+                "destination": str(tmp_path / "stranded.json"),
+                "staged_path": str(tmp_path / f"stranded.json.1.abcdef12{_STAGED_TEMP_SUFFIX}"),
+                "started_at": prepared.operation.started_at - timedelta(minutes=5),
+                "updated_at": prepared.operation.updated_at - timedelta(minutes=5),
+            },
+        )
+        repository.save(stranded)
+        # Ordered ahead of the healthy operation, so an aborting sweep would
+        # never reach the healthy one.
+        assert repository.list()[0].operation_id == stranded.operation_id
+
+        outcome = reconcile_prepared_exports()
+
+        assert len(outcome.reconciled) == 1
+        assert outcome.reconciled[0].operation_id == prepared.operation.operation_id
+        assert not staged.exists()
+        assert len(outcome.failures) == 1
+        assert outcome.failures[0].journal_id == stranded.operation_id
+        assert outcome.failures[0].destination == stranded.destination
+        # Kept for a later retry rather than dropped.
+        assert repository.load(stranded.operation_id).operation_id == stranded.operation_id
+
+
 def test_reconcile_skips_a_prepared_operation_whose_target_lock_is_held(tmp_path: Path) -> None:
     from ....core.locks import exclusive_file_lock
 
@@ -445,16 +532,18 @@ def test_reconcile_skips_a_prepared_operation_whose_target_lock_is_held(tmp_path
         # A live export holds the destination lock across its whole publication.
         # Reconcile must not touch this in-flight operation.
         with exclusive_file_lock(destination):
-            reconciled = reconcile_prepared_exports()
+            outcome = reconcile_prepared_exports()
 
-        assert reconciled == ()
+        # A held target lock is a healthy in-flight export: a skip, not a failure.
+        assert outcome.reconciled == ()
+        assert outcome.failures == ()
         assert staged.exists()
         assert len(repository.prepared()) == 1
 
         # Once the lock is released, the same operation reconciles normally.
         cleared = reconcile_prepared_exports()
-        assert len(cleared) == 1
-        assert cleared[0].operation_id == prepared.operation.operation_id
+        assert len(cleared.reconciled) == 1
+        assert cleared.reconciled[0].operation_id == prepared.operation.operation_id
         assert not staged.exists()
         assert not destination.exists()
 

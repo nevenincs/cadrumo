@@ -119,6 +119,35 @@ def derive_export_operation_id(
     return digest.hexdigest()
 
 
+class UnreadableExportJournal(BaseModel):
+    """One journal file the repository could not turn into an operation.
+
+    Carries the file's own identifier and the refusing error's class name rather
+    than its message: the id is what an operator needs to find the file, and the
+    class name is a stable machine-readable reason that carries no journal
+    contents.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    journal_id: str = Field(min_length=1)
+    reason: str = Field(min_length=1)
+
+
+class ProfileBundleExportJournalScan(BaseModel):
+    """Every journal the repository could read, and every one it could not."""
+
+    model_config = _STRICT_FROZEN
+
+    operations: tuple[ProfileBundleExportOperation, ...]
+    unreadable: tuple[UnreadableExportJournal, ...]
+
+
+def _journal_order(operation: ProfileBundleExportOperation) -> tuple[datetime, str]:
+    """Order journals by start time then identifier, stable across both walks."""
+    return (operation.started_at, operation.operation_id)
+
+
 class ProfileBundleExportJournalError(CadrumoError):
     """Base failure for profile-export journal persistence and validation."""
 
@@ -209,12 +238,40 @@ class ProfileBundleExportJournalRepository:
         """Load JSON journals ordered by start time then operation identifier.
 
         Non-JSON files are ignored. Corruption in a selected ``*.json`` journal
-        propagates rather than being skipped.
+        propagates rather than being skipped; :meth:`scan` is the isolating
+        counterpart for callers that must survive one bad journal.
         """
+        operations = tuple(self.load(path.stem) for path in self._journal_paths())
+        return tuple(sorted(operations, key=_journal_order))
+
+    def scan(self) -> ProfileBundleExportJournalScan:
+        """Load every readable journal, reporting the unreadable ones separately.
+
+        The isolating counterpart to :meth:`list`. A journal that is corrupt,
+        schema-invalid, identity-mismatched, or unreadable does not abort the
+        walk and does not disappear either: it is reported in
+        ``unreadable`` so the caller can surface it rather than silently
+        skipping a record that may still describe cleartext bytes on disk.
+        """
+        operations: list[ProfileBundleExportOperation] = []
+        unreadable: list[UnreadableExportJournal] = []
+        for path in self._journal_paths():
+            try:
+                operations.append(self.load(path.stem))
+            except ProfileBundleExportJournalError as exc:
+                unreadable.append(
+                    UnreadableExportJournal(journal_id=path.stem, reason=type(exc).__name__),
+                )
+        return ProfileBundleExportJournalScan(
+            operations=tuple(sorted(operations, key=_journal_order)),
+            unreadable=tuple(sorted(unreadable, key=lambda item: item.journal_id)),
+        )
+
+    def _journal_paths(self) -> tuple[Path, ...]:
+        """Return every journal file path, empty when no journal root exists."""
         if not self._validate_existing_root():
             return ()
-        operations = tuple(self.load(path.stem) for path in self._root.glob("*.json"))
-        return tuple(sorted(operations, key=lambda item: (item.started_at, item.operation_id)))
+        return tuple(self._root.glob("*.json"))
 
     def prepared(self) -> tuple[ProfileBundleExportOperation, ...]:
         """Return journals still in the ``PREPARED`` (unpublished) state."""
@@ -296,7 +353,9 @@ __all__ = [
     "ProfileBundleExportJournalError",
     "ProfileBundleExportJournalNotFoundError",
     "ProfileBundleExportJournalRepository",
+    "ProfileBundleExportJournalScan",
     "ProfileBundleExportOperation",
     "ProfileBundleExportOperationStatus",
+    "UnreadableExportJournal",
     "derive_export_operation_id",
 ]
