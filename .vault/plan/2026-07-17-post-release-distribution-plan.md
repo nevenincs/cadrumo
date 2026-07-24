@@ -15,7 +15,6 @@ related:
   - '[[2026-07-17-post-release-distribution-audit]]'
 ---
 
-
 # `post-release-distribution` plan
 
 ### Phase `P01` - Prove local channel artifacts in real acquisition environments
