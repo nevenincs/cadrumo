@@ -2183,6 +2183,20 @@ cli:
           nif_iva o tgvi).'
         view_help: Muestra una observación de verificación guardada
       year_help: Ejercicio de presentación
+    maintenance:
+      help: Recupera el estado local que ha dejado una operación interrumpida.
+      profile_bundle_reconcile_help: Limpia las exportaciones de perfil que un fallo
+        dejó a medias, eliminando cualquier archivo temporal sin cifrar y registrando
+        los eventos de auditoría pendientes.
+      reconcile_cleared_info: Se han limpiado {count} exportación(es) de perfil interrumpidas.
+        Se ha eliminado cualquier archivo temporal sin cifrar y las exportaciones
+        ya escritas en disco han recibido su registro de auditoría pendiente.
+      reconcile_failures_warning: No se han podido limpiar {count} exportación(es)
+        de perfil interrumpidas y se han conservado para un intento posterior. Puede
+        quedar en disco un archivo temporal sin cifrar por cada una. Vuelve a ejecutar
+        este comando cuando se resuelva la causa.
+      reconcile_none_info: No se ha encontrado ninguna exportación de perfil interrumpida.
+        Ninguna ejecución anterior ha dejado nada pendiente.
     modelo:
       aggregate:
         counterpart_observation_help: Objeto JSON CounterpartObservation. El valor
@@ -6426,8 +6440,8 @@ errors:
     refused_profile_login_throttled: Demasiados intentos de inicio de sesión fallidos.
       Espera %{seconds} segundos antes de volver a ejecutar `aeat config login`.
     refused_profile_logout_override: El cierre de sesión no puede cambiar un perfil
-      activo seleccionado mediante --profile o CADRUMO_ACTIVE_PROFILE. Elimina la
-      selección explícita y vuelve a intentarlo.
+      activo seleccionado mediante --profile. Quita la opción --profile y vuelve a
+      intentarlo.
     refused_profile_not_configured: La verificación de la declaración de la Renta
       necesita un perfil de residencia fiscal. Completa el perfil antes de continuar.
     refused_profile_not_found: No existe ningún perfil con el identificador indicado.

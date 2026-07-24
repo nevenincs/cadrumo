@@ -2112,6 +2112,20 @@ cli:
           tgvi elvárt).'
         view_help: Mentett ellenőrzési megfigyelés megjelenítése.
       year_help: Benyújtási év.
+    maintenance:
+      help: Helyreállítja a megszakadt művelet után maradt helyi állapotot.
+      profile_bundle_reconcile_help: Kitakarítja az összeomlás miatt félbemaradt profilcsomag-exportokat,
+        eltávolítva a visszamaradt titkosítatlan ideiglenes fájlokat és rögzítve az
+        elmaradt naplóbejegyzéseket.
+      reconcile_cleared_info: '{count} félbemaradt profilcsomag-export kitakarítva.
+        A visszamaradt titkosítatlan ideiglenes fájlok törölve lettek, a lemezre már
+        kiírt exportok pedig megkapták a hiányzó naplóbejegyzésüket.'
+      reconcile_failures_warning: '{count} félbemaradt profilcsomag-exportot nem sikerült
+        kitakarítani, ezért későbbi újrapróbálkozásra megmaradtak. Mindegyikhez maradhat
+        a lemezen egy titkosítatlan ideiglenes fájl. Futtasd újra ezt a parancsot,
+        ha az ok elhárult.'
+      reconcile_none_info: Nem található félbemaradt profilcsomag-export. Korábbi
+        futás nem hagyott hátra semmit.
     modelo:
       aggregate:
         counterpart_observation_help: JSON CounterpartObservation objektum. A source_kind
@@ -6278,9 +6292,8 @@ errors:
       Használjon FIFO-t, súlyozott átlagárat vagy átlagköltséget.
     refused_profile_login_throttled: Túl sok sikertelen bejelentkezési kísérlet. Várj
       %{seconds} másodpercet, mielőtt újra futtatnád az `aeat config login` parancsot.
-    refused_profile_logout_override: A kijelentkezés nem módosíthat --profile vagy
-      CADRUMO_ACTIVE_PROFILE használatával kiválasztott aktív profilt. Távolítsa el
-      a felülbírálást, majd próbálja újra.
+    refused_profile_logout_override: A kijelentkezés nem módosíthat --profile használatával
+      kiválasztott aktív profilt. Hagyja el a --profile kapcsolót, majd próbálja újra.
     refused_profile_not_configured: A RENTA-ellenőrzéshez adóügyi illetőségi profil
       szükséges. A folytatás előtt töltse ki a profilt.
     refused_profile_not_found: Nem létezik profil a megadott azonosítóval.

@@ -82,6 +82,11 @@ COMMAND_RISK: dict[str, CommandRiskDeclaration] = {
     "app.live.verify.nif_iva": CommandRiskDeclaration(),
     "app.live.verify.tgvi": CommandRiskDeclaration(),
     "app.live.verify.view": CommandRiskDeclaration(),
+    # Reconciliation irreversibly deletes a crashed export's leftover cleartext
+    # staged file. That deletion is the whole point (those bytes must not sit on
+    # disk), but it is still an unrecoverable local delete, so it is declared
+    # destructive rather than classified on the recovery intent behind it.
+    "app.maintenance.profile_bundle_reconcile": CommandRiskDeclaration(destructive=True),
     "config.auth.apoderado.check": CommandRiskDeclaration(),
     "config.auth.apoderado.clear": CommandRiskDeclaration(destructive=True),
     "config.auth.apoderado.configure": CommandRiskDeclaration(),

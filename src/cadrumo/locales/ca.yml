@@ -2171,6 +2171,20 @@ cli:
           nif_iva o tgvi).'
         view_help: Mostra una observació de verificació desada
       year_help: Exercici de presentació
+    maintenance:
+      help: Recupera l'estat local que ha deixat una operació interrompuda.
+      profile_bundle_reconcile_help: Neteja les exportacions de perfil que una fallada
+        va deixar a mitges, eliminant qualsevol fitxer temporal sense xifrar i registrant
+        els esdeveniments d'auditoria pendents.
+      reconcile_cleared_info: S'han netejat {count} exportació(ns) de perfil interrompudes.
+        S'ha eliminat qualsevol fitxer temporal sense xifrar i les exportacions ja
+        escrites al disc han rebut el seu registre d'auditoria pendent.
+      reconcile_failures_warning: No s'han pogut netejar {count} exportació(ns) de
+        perfil interrompudes i s'han conservat per a un intent posterior. Pot quedar
+        al disc un fitxer temporal sense xifrar per a cadascuna. Torna a executar
+        aquesta ordre quan es resolgui la causa.
+      reconcile_none_info: No s'ha trobat cap exportació de perfil interrompuda. Cap
+        execució anterior no ha deixat res pendent.
     modelo:
       aggregate:
         counterpart_observation_help: Objecte JSON CounterpartObservation; repeteix
@@ -6390,8 +6404,8 @@ errors:
     refused_profile_login_throttled: Massa intents d'inici de sessió fallits. Espera
       %{seconds} segons abans de tornar a executar `aeat config login`.
     refused_profile_logout_override: El tancament de sessió no pot canviar un perfil
-      actiu seleccionat mitjançant --profile o CADRUMO_ACTIVE_PROFILE. Elimina la
-      selecció explícita i torna-ho a provar.
+      actiu seleccionat mitjançant --profile. Treu l'opció --profile i torna-ho a
+      provar.
     refused_profile_not_configured: La verificació de la declaració de la Renda necessita
       un perfil de residència fiscal. Completa el perfil abans de continuar.
     refused_profile_not_found: No existeix cap perfil amb l'identificador indicat.
