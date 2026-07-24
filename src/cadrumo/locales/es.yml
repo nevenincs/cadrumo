@@ -4257,6 +4257,9 @@ cli:
       actor_help: Nombre del operador registrado en el evento del bucket
       attachment_help: Id de adjunto seguro a enlazar con el movimiento; repetir para
         varios adjuntos
+      finalized_revision_stale: Justificante adjuntado, pero el Modelo %{modelo} %{filing_year}
+        %{period} ya se habia finalizado antes de que existiera este justificante.
+        Vuelve a calcularlo para que el justificante llegue a un nuevo borrador.
       help: Adjuntar objetos de evidencia segura a un movimiento del libro. Crea antes
         un id de justificante de factura de compra con 'aeat app ledger evidence add
         PATH'.

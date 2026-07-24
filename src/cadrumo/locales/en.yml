@@ -3931,6 +3931,9 @@ cli:
       actor_help: Operator name recorded on the bucket event
       attachment_help: Secure attachment id to link to the transaction; repeat for
         multiple attachments
+      finalized_revision_stale: Evidence attached, but Modelo %{modelo} %{filing_year}
+        %{period} was already finalized before this evidence existed. Recalculate
+        it so the evidence reaches a new draft.
       help: Attach secure evidence objects to one ledger transaction. Create a purchase
         invoice evidence id first with 'aeat app ledger evidence add PATH'.
       id_help: Ledger transaction id to attach evidence to

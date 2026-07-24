@@ -4168,6 +4168,9 @@ cli:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
       attachment_help: A tranzakcióhoz csatolandó biztonságos melléklet azonosítója;
         több melléklet esetén ismételje meg.
+      finalized_revision_stale: A bizonylat csatolva, de a(z) %{modelo} %{filing_year}
+        %{period} nyomtatvany mar veglegesitve lett a bizonylat letrejotte elott.
+        Szamold ujra, hogy a bizonylat bekeruljon egy uj piszkozatba.
       help: Biztonságos bizonyítékobjektumok csatolása egyetlen főkönyvi tranzakcióhoz.
         Vásárlásiszámla-bizonyíték azonosítója előbb a 'aeat app ledger evidence add
         PATH' paranccsal hozható létre.
