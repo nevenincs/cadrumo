@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import contextlib
+import http.server
 import json
-import urllib.error
+import threading
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -101,71 +104,78 @@ def test_validate_language_roots_refuses_an_empty_pagefind_index(tmp_path: Path)
         _validate_language_roots(tmp_path)
 
 
-class _FakeResponse:
-    """Minimal context-manager HTTP response for the download-latest fetch."""
+class _StaticResponseHandler(http.server.BaseHTTPRequestHandler):
+    """Serve one fixed status/body for every request; overridden per server instance."""
 
-    def __init__(self, body: bytes) -> None:
-        self._body = body
+    response_status = 200
+    response_body = b""
 
-    def __enter__(self) -> _FakeResponse:
-        return self
+    def do_GET(self) -> None:
+        self.send_response(self.response_status)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(self.response_body)
 
-    def __exit__(self, *exc: object) -> bool:
-        return False
-
-    def read(self) -> bytes:
-        return self._body
+    def log_message(self, format: str, *args: object) -> None:
+        return  # silence per-request access logging in test output
 
 
-def _patch_urlopen(monkeypatch: pytest.MonkeyPatch, result: object) -> None:
-    """Point the module's urlopen at a canned body or exception."""
+@contextlib.contextmanager
+def _serving(*, status: int = 200, body: bytes = b"") -> Iterator[str]:
+    """Run a real localhost HTTP server for the duration of the block; yield its URL."""
+    handler_cls = type("_Handler", (_StaticResponseHandler,), {"response_status": status, "response_body": body})
+    server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler_cls)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        host, port = server.server_address[0], server.server_address[1]
+        yield f"http://{host}:{port}/download-latest.json"
+    finally:
+        server.shutdown()
+        thread.join()
+        server.server_close()
 
-    def fake_urlopen(request: object, timeout: float | None = None) -> _FakeResponse:
-        if isinstance(result, Exception):
-            raise result
-        assert isinstance(result, bytes)
-        return _FakeResponse(result)
 
-    monkeypatch.setattr("dev.deploy.docs_static_site.urllib.request.urlopen", fake_urlopen)
+def _closed_port_url() -> str:
+    """Return a URL to a localhost port with nothing listening, for a real connection failure."""
+    with _serving() as url:
+        pass
+    return url  # the server above is torn down; the port is now refused
 
 
 def _download_latest_path(repo_root: Path) -> Path:
     return repo_root.joinpath(*_DOWNLOAD_LATEST_STATIC_PATH)
 
 
-def test_refresh_download_latest_writes_a_valid_payload(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_refresh_download_latest_writes_a_valid_payload(tmp_path: Path) -> None:
     """A valid latest-release payload is written into docs/_static."""
     body = json.dumps({"schema_name": _DOWNLOAD_LATEST_SCHEMA, "version": "9.9.9", "assets": []}).encode("utf-8")
-    _patch_urlopen(monkeypatch, body)
-    _refresh_download_latest(tmp_path)
+    with _serving(body=body) as url:
+        _refresh_download_latest(tmp_path, source_url=url)
     written = _download_latest_path(tmp_path)
     assert written.is_file()
     assert json.loads(written.read_bytes())["schema_name"] == _DOWNLOAD_LATEST_SCHEMA
 
 
-def test_refresh_download_latest_degrades_on_network_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_refresh_download_latest_degrades_on_network_error(tmp_path: Path) -> None:
     """No release yet / network error degrades silently: no raise, no file."""
-    _patch_urlopen(monkeypatch, urllib.error.URLError("no release"))
-    _refresh_download_latest(tmp_path)  # must not raise
+    _refresh_download_latest(tmp_path, source_url=_closed_port_url())  # must not raise
     assert not _download_latest_path(tmp_path).exists()
 
 
-def test_refresh_download_latest_degrades_on_unexpected_payload(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_refresh_download_latest_degrades_on_unexpected_payload(tmp_path: Path) -> None:
     """A body that is not the expected schema (e.g. a 404 page) degrades silently."""
-    _patch_urlopen(monkeypatch, b"<html>not found</html>")
-    _refresh_download_latest(tmp_path)  # must not raise
+    with _serving(body=b"<html>not found</html>") as url:
+        _refresh_download_latest(tmp_path, source_url=url)  # must not raise
     assert not _download_latest_path(tmp_path).exists()
 
 
-def test_refresh_download_latest_degrades_on_write_failure(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """A local write failure (permissions/disk) degrades silently, honouring 'never raises'."""
+def test_refresh_download_latest_degrades_on_write_failure(tmp_path: Path) -> None:
+    """A local write failure (a path component is a plain file, not a directory) degrades silently."""
     body = json.dumps({"schema_name": _DOWNLOAD_LATEST_SCHEMA, "version": "9.9.9", "assets": []}).encode("utf-8")
-    _patch_urlopen(monkeypatch, body)
-
-    def raise_oserror(self: Path, data: bytes) -> int:
-        raise OSError("disk full")
-
-    monkeypatch.setattr(Path, "write_bytes", raise_oserror)
-    _refresh_download_latest(tmp_path)  # must not raise despite the write failure
+    # `docs/_static/download-latest.json` requires `docs/` to be a directory; making it a
+    # plain file forces a real OSError (NotADirectoryError) out of destination.parent.mkdir.
+    (tmp_path / "docs").write_text("not a directory", encoding="utf-8")
+    with _serving(body=body) as url:
+        _refresh_download_latest(tmp_path, source_url=url)  # must not raise despite the write failure
+    assert not _download_latest_path(tmp_path).exists()
