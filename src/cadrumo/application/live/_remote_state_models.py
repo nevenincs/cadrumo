@@ -23,14 +23,23 @@ from ...core import Period
 from ._errors import LiveIvaAcquisitionFailureMode
 
 
-class FiledDataCaptureReport(BaseModel):
-    """Read-only filed-declaration capture report."""
+class FiledCaptureEvidenceTally(BaseModel):
+    """What one filed-declaration capture produced, counted and referenced.
+
+    Every filed-declaration capture report — single, bulk, and source-scoped —
+    reports the same tally: how many observations were captured, where their
+    encrypted stores and artefacts live, how much justificante and
+    filing-evidence metadata was enrolled (including conflicts), and how many
+    casillas and calculation observations came back.
+
+    Declared once so the three reports cannot drift apart. A counter added to
+    one report but forgotten on another would leave that capture path silently
+    under-reporting its own evidence, which is precisely the divergence a
+    single declaration prevents.
+    """
 
     model_config = ConfigDict(frozen=True)
 
-    output_root: str
-    modelo: str
-    year: int
     captured_count: int
     observation_paths: tuple[str, ...]
     artefact_refs: tuple[str, ...]
@@ -43,6 +52,14 @@ class FiledDataCaptureReport(BaseModel):
     casilla_count: int
     calculation_observation_count: int
     calculation_observation_keys: tuple[str, ...]
+
+
+class FiledDataCaptureReport(FiledCaptureEvidenceTally):
+    """Read-only filed-declaration capture report."""
+
+    output_root: str
+    modelo: str
+    year: int
 
 
 class FiledDataCaptureFailureRow(BaseModel):
@@ -58,28 +75,14 @@ class FiledDataCaptureFailureRow(BaseModel):
     message: str
 
 
-class BulkFiledDataCaptureReport(BaseModel):
+class BulkFiledDataCaptureReport(FiledCaptureEvidenceTally):
     """Read-only bulk filed-declaration capture report."""
-
-    model_config = ConfigDict(frozen=True)
 
     output_root: str
     modelos: tuple[str, ...]
     year_from: int
     year_to: int
-    captured_count: int
     failed_count: int
-    observation_paths: tuple[str, ...]
-    artefact_refs: tuple[str, ...]
-    justificante_metadata_count: int = 0
-    justificante_csvs: tuple[str, ...] = ()
-    filing_evidence_stamped_count: int = 0
-    filing_record_ids: tuple[str, ...] = ()
-    filing_evidence_conflict_count: int = 0
-    filing_evidence_conflict_record_ids: tuple[str, ...] = ()
-    casilla_count: int
-    calculation_observation_count: int
-    calculation_observation_keys: tuple[str, ...]
     failures: tuple[FiledDataCaptureFailureRow, ...] = ()
 
 
@@ -109,27 +112,13 @@ class ExpedientesBulkCaptureReport(BaseModel):
     failures: tuple[ExpedientesBulkCaptureFailureRow, ...] = ()
 
 
-class SourceFiledDataCaptureReport(BaseModel):
+class SourceFiledDataCaptureReport(FiledCaptureEvidenceTally):
     """Read-only source-observation capture report for one target filing."""
-
-    model_config = ConfigDict(frozen=True)
 
     output_root: str
     target_modelo: str
     target_year: int
     target_period: Period
-    captured_count: int
-    observation_paths: tuple[str, ...]
-    artefact_refs: tuple[str, ...]
-    justificante_metadata_count: int = 0
-    justificante_csvs: tuple[str, ...] = ()
-    filing_evidence_stamped_count: int = 0
-    filing_record_ids: tuple[str, ...] = ()
-    filing_evidence_conflict_count: int = 0
-    filing_evidence_conflict_record_ids: tuple[str, ...] = ()
-    casilla_count: int
-    calculation_observation_count: int
-    calculation_observation_keys: tuple[str, ...]
 
 
 class IvaWalletCaptureReport(BaseModel):
