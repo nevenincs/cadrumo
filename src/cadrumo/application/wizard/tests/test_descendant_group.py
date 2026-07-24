@@ -33,11 +33,20 @@ from ...flows import (
     FlowPage,
     FlowSection,
     answer,
+    resolve_cross_field_validator,
     start_flow,
     visible_sequence,
 )
 from .. import attach_descendant_group, descendant_facts_from_answers
-from .._descendant_group import DESCENDANT_GROUP, DESCENDANTS_COUNT_PAGE
+from .._descendant_group import (
+    _ADOPTION_BEFORE_BIRTH_LOCALE_KEY,
+    _ADOPTION_IN_FUTURE_LOCALE_KEY,
+    _GASTOS_INVALID_NEGATIVE_LOCALE_KEY,
+    _MESES_INVALID_RANGE_LOCALE_KEY,
+    DESCENDANT_ADOPTION_VALIDATOR_ID,
+    DESCENDANT_GROUP,
+    DESCENDANTS_COUNT_PAGE,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -202,6 +211,92 @@ def test_attach_descendant_group_splices_count_then_group_into_familia() -> None
     familia = next(section for section in attached.sections if section.id == "familia")
     assert familia.items[-2] is DESCENDANTS_COUNT_PAGE
     assert familia.items[-1] is DESCENDANT_GROUP
+
+
+def _one_descendant_state(definition: FlowDefinition):
+    state = start_flow(definition, mode=FlowMode.CREATE)
+    state = answer(definition, state, "entity-type", EntityType.NATURAL_PERSON.value)
+    state = answer(definition, state, "descendientes-count", "1")
+    return answer(definition, state, "descendientes#0.birth-date", "2022-01-01")
+
+
+def test_meses_out_of_range_refuses_as_a_verdict_and_valid_commits() -> None:
+    definition = _probe_definition()
+    state = _one_descendant_state(definition)
+
+    rejected = answer(definition, state, "descendientes#0.meses-madre-trabajo", "15")
+    assert [v.message_key for v in rejected.verdicts["descendientes#0.meses-madre-trabajo"]] == [
+        _MESES_INVALID_RANGE_LOCALE_KEY
+    ]
+    assert "descendientes#0.meses-madre-trabajo" not in rejected.answers
+
+    committed = answer(definition, state, "descendientes#0.meses-madre-trabajo", "6")
+    assert committed.answers["descendientes#0.meses-madre-trabajo"] == "6"
+
+
+def test_negative_gastos_refuses_as_a_verdict() -> None:
+    definition = _probe_definition()
+    state = _one_descendant_state(definition)
+
+    rejected = answer(definition, state, "descendientes#0.gastos-guarderia", "-5")
+    assert [v.message_key for v in rejected.verdicts["descendientes#0.gastos-guarderia"]] == [
+        _GASTOS_INVALID_NEGATIVE_LOCALE_KEY
+    ]
+    assert "descendientes#0.gastos-guarderia" not in rejected.answers
+
+
+def test_adoption_before_birth_refuses_at_flow_scope() -> None:
+    validator = resolve_cross_field_validator(DESCENDANT_ADOPTION_VALIDATOR_ID)
+    verdicts = validator(
+        {
+            "descendientes#0.birth-date": "2020-05-10",
+            "descendientes#0.adoption-date": "2010-01-01",
+        },
+    )
+    assert [v.message_key for v in verdicts if not v.ok] == [_ADOPTION_BEFORE_BIRTH_LOCALE_KEY]
+
+
+def test_adoption_in_future_refuses_at_flow_scope() -> None:
+    validator = resolve_cross_field_validator(DESCENDANT_ADOPTION_VALIDATOR_ID)
+    verdicts = validator(
+        {
+            "descendientes#0.birth-date": "2020-05-10",
+            "descendientes#0.adoption-date": "2999-01-01",
+        },
+    )
+    assert [v.message_key for v in verdicts if not v.ok] == [_ADOPTION_IN_FUTURE_LOCALE_KEY]
+
+
+def test_valid_adoption_pair_passes_flow_scope() -> None:
+    validator = resolve_cross_field_validator(DESCENDANT_ADOPTION_VALIDATOR_ID)
+    verdicts = validator(
+        {
+            "descendientes#0.birth-date": "2015-03-01",
+            "descendientes#0.adoption-date": "2016-06-01",
+        },
+    )
+    assert all(v.ok for v in verdicts)
+
+
+def test_attach_descendant_group_names_the_adoption_flow_validator() -> None:
+    base = FlowDefinition(
+        id="descendant-flowval",
+        title=_ref("probe.title"),
+        description=_ref("probe.description"),
+        sections=(FlowSection(id="familia", title=_ref("probe.familia.title"), items=(_entity_type_page(),)),),
+        answers_model=_ProbeAnswers,
+        checkpoint={
+            FlowMode.CREATE: CheckpointAvailability.AVAILABLE,
+            FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
+        },
+    )
+    attached = attach_descendant_group(base)
+    assert attached.flow_validator_ids.count(DESCENDANT_ADOPTION_VALIDATOR_ID) == 1
+
+    # Idempotent on the flow validator id: a definition already naming it is
+    # not given a duplicate.
+    pre_named = base.model_copy(update={"flow_validator_ids": (DESCENDANT_ADOPTION_VALIDATOR_ID,)})
+    assert attach_descendant_group(pre_named).flow_validator_ids.count(DESCENDANT_ADOPTION_VALIDATOR_ID) == 1
 
 
 def test_attach_descendant_group_refuses_without_a_familia_section() -> None:

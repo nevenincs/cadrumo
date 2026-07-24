@@ -29,8 +29,12 @@ frozen page literals below, never at a ``tr()`` call site.
 
 from __future__ import annotations
 
-from ...core.flows import CopyRefKind, FlowWidgetKind
+from collections.abc import Mapping
+
+from ...core.flows import REPEATING_INSTANCE_SEPARATOR, CopyRefKind, FlowWidgetKind
 from ...core.identity import IdentityError, validate_identity
+from ...core.parsing import parse_iso8601_date
+from ...core.time import today_madrid
 from ...domain.deadlines import EntityType
 from ..flows import (
     CopyRef,
@@ -41,6 +45,7 @@ from ..flows import (
     FlowRepeatingGroup,
     ValidationVerdict,
     register_answer_validator,
+    register_cross_field_validator,
 )
 
 _FAMILIA_SECTION_ID = "familia"
@@ -77,6 +82,18 @@ DESCENDANT_PAGE_IDS: tuple[str, ...] = (
 #: Registered id of the per-answer descendant-NIF validator.
 DESCENDANT_NIF_VALIDATOR_ID = "descendant-nif"
 
+#: Registered id of the per-answer descendant meses-madre-trabajo range validator.
+DESCENDANT_MESES_VALIDATOR_ID = "descendant-meses-range"
+
+#: Registered id of the per-answer descendant gastos-guardería sign validator.
+DESCENDANT_GASTOS_VALIDATOR_ID = "descendant-gastos-nonneg"
+
+#: Registered id of the flow-scope descendant adoption-date cross-field validator.
+DESCENDANT_ADOPTION_VALIDATOR_ID = "descendant-adoption-dates"
+
+_MESES_MIN = 0
+_MESES_MAX = 12
+
 # --- copy references (new wizard.setup.descendientes.* locale keys) ---------
 
 _GROUP_TITLE_LOCALE_KEY = "wizard.setup.descendientes.title"
@@ -95,6 +112,15 @@ _MESES_MADRE_TRABAJO_HELP_LOCALE_KEY = "wizard.setup.descendientes.meses-madre-t
 _GASTOS_GUARDERIA_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia.prompt"
 _GASTOS_GUARDERIA_HELP_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia.help"
 _NIF_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.nif.prompt"
+
+# Verdict message keys minted for the constraint guards below (the range,
+# sign, and adoption-order refusals). Reused generic keys were checked
+# first: the closest existing leaves (cli.config.descendiente.*) carry
+# CLI-flag-specific prose, so wizard-namespace keys are minted here.
+_MESES_INVALID_RANGE_LOCALE_KEY = "wizard.setup.descendientes.meses-madre-trabajo.invalid_range"
+_GASTOS_INVALID_NEGATIVE_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia.invalid_negative"
+_ADOPTION_BEFORE_BIRTH_LOCALE_KEY = "wizard.setup.descendientes.adoption-date.before_birth"
+_ADOPTION_IN_FUTURE_LOCALE_KEY = "wizard.setup.descendientes.adoption-date.in_future"
 
 # Format hints reuse the shared wizard.setup.format.* keys already shipped
 # by the format-hint decorator; the NIF failure verdict reuses the existing
@@ -123,6 +149,10 @@ DESCENDANT_LOCALE_KEYS: tuple[str, ...] = (
     _GASTOS_GUARDERIA_PROMPT_LOCALE_KEY,
     _GASTOS_GUARDERIA_HELP_LOCALE_KEY,
     _NIF_PROMPT_LOCALE_KEY,
+    _MESES_INVALID_RANGE_LOCALE_KEY,
+    _GASTOS_INVALID_NEGATIVE_LOCALE_KEY,
+    _ADOPTION_BEFORE_BIRTH_LOCALE_KEY,
+    _ADOPTION_IN_FUTURE_LOCALE_KEY,
 )
 
 
@@ -150,6 +180,80 @@ def _validate_descendant_nif(page: FlowPage, canonical: str) -> ValidationVerdic
 
 
 register_answer_validator(DESCENDANT_NIF_VALIDATOR_ID, _validate_descendant_nif)
+
+
+def _validate_meses_range(page: FlowPage, canonical: str) -> ValidationVerdict:
+    """Refuse a months-worked answer outside the Art. 81 LIRPF 0-12 range.
+
+    The value has already passed INTEGER shape validation, so a non-blank
+    token parses; blank (optional) passes. Surfacing the range as a verdict
+    keeps a value like ``15`` out of the answer map entirely, so it never
+    reaches the persistence-boundary construction of
+    :class:`~cadrumo.domain.contribuyente.DescendantInfo` (whose ``le=12``
+    field constraint stays as defence-in-depth).
+    """
+    if not canonical:
+        return ValidationVerdict.passed()
+    if not (_MESES_MIN <= int(canonical) <= _MESES_MAX):
+        return ValidationVerdict.failed(
+            _MESES_INVALID_RANGE_LOCALE_KEY,
+            page_id=page.id,
+            minimum=_MESES_MIN,
+            maximum=_MESES_MAX,
+        )
+    return ValidationVerdict.passed()
+
+
+def _validate_gastos_nonneg(page: FlowPage, canonical: str) -> ValidationVerdict:
+    """Refuse a negative guardería expense (Art. 81 bis LIRPF; euros >= 0).
+
+    Blank (optional) passes; a parsed negative amount refuses as a verdict
+    so it never reaches the ``ge=0`` model constraint at persist.
+    """
+    if not canonical:
+        return ValidationVerdict.passed()
+    if int(canonical) < 0:
+        return ValidationVerdict.failed(_GASTOS_INVALID_NEGATIVE_LOCALE_KEY, page_id=page.id)
+    return ValidationVerdict.passed()
+
+
+register_answer_validator(DESCENDANT_MESES_VALIDATOR_ID, _validate_meses_range)
+register_answer_validator(DESCENDANT_GASTOS_VALIDATOR_ID, _validate_gastos_nonneg)
+
+
+def _validate_descendant_adoption_dates(answers: Mapping[str, str]) -> tuple[ValidationVerdict, ...]:
+    """Flow-scope guard for the per-instance adoption-vs-birth date invariants.
+
+    Adoption-vs-birth is a cross-field rule (two pages inside one instance),
+    so it cannot be a per-answer validator: this scans every descendant
+    instance in the answer map and refuses an adoption date earlier than the
+    birth date or in the future. Both are enforced as review verdicts before
+    persist; the same invariants stay as ``DescendantInfo`` model validators
+    for defence-in-depth. Values are canonical ISO strings (DATE-shape
+    validated), so parsing succeeds; a page id and instance index are the
+    only context — never the raw date.
+    """
+    verdicts: list[ValidationVerdict] = []
+    today = today_madrid()
+    prefix_root = f"{DESCENDANTS_GROUP_ID}{REPEATING_INSTANCE_SEPARATOR}"
+    for key, raw in answers.items():
+        if not key.startswith(prefix_root) or not key.endswith(f".{_ADOPTION_DATE_PAGE_ID}") or not raw:
+            continue
+        instance = key[len(prefix_root) :].split(".", 1)[0]
+        birth_raw = answers.get(f"{prefix_root}{instance}.{_BIRTH_DATE_PAGE_ID}", "")
+        adoption = parse_iso8601_date(raw)
+        if adoption is None:
+            continue
+        if adoption > today:
+            verdicts.append(ValidationVerdict.failed(_ADOPTION_IN_FUTURE_LOCALE_KEY, instance=instance))
+            continue
+        birth = parse_iso8601_date(birth_raw) if birth_raw else None
+        if birth is not None and adoption < birth:
+            verdicts.append(ValidationVerdict.failed(_ADOPTION_BEFORE_BIRTH_LOCALE_KEY, instance=instance))
+    return tuple(verdicts) if verdicts else (ValidationVerdict.passed(),)
+
+
+register_cross_field_validator(DESCENDANT_ADOPTION_VALIDATOR_ID, _validate_descendant_adoption_dates)
 
 
 # The count question is gated to a natural person: only an IRPF-personal
@@ -226,6 +330,7 @@ _DESCENDANT_PAGES: tuple[FlowPage, ...] = (
         format_hint=_locale_ref(_FORMAT_UNITS_LOCALE_KEY),
         required=False,
         answer_type=int,
+        answer_validator_ids=(DESCENDANT_MESES_VALIDATOR_ID,),
     ),
     FlowPage(
         id=_GASTOS_GUARDERIA_PAGE_ID,
@@ -235,6 +340,7 @@ _DESCENDANT_PAGES: tuple[FlowPage, ...] = (
         format_hint=_locale_ref(_FORMAT_AMOUNT_LOCALE_KEY),
         required=False,
         answer_type=int,
+        answer_validator_ids=(DESCENDANT_GASTOS_VALIDATOR_ID,),
     ),
     FlowPage(
         id=_NIF_PAGE_ID,
@@ -261,9 +367,11 @@ def attach_descendant_group(definition: FlowDefinition) -> FlowDefinition:
 
     Appends the count-source page and the repeating group to the familia
     section, in that order, so the substrate's count-source validator sees
-    the INTEGER count page before the group that names it. Raises when the
-    familia section is absent -- a silent no-op would drop the whole
-    descendant surface.
+    the INTEGER count page before the group that names it, and names the
+    flow-scope adoption-date cross-field validator on the definition so a
+    bad adoption date blocks submit. Raises when the familia section is
+    absent -- a silent no-op would drop the whole descendant surface.
+    Idempotent on the flow validator id: re-applying does not duplicate it.
     """
     sections = []
     attached = False
@@ -281,15 +389,23 @@ def attach_descendant_group(definition: FlowDefinition) -> FlowDefinition:
         raise ValueError(
             f"attach_descendant_group: definition {definition.id!r} has no {_FAMILIA_SECTION_ID!r} section",
         )
-    return definition.model_copy(update={"sections": tuple(sections)})
+    flow_validator_ids = definition.flow_validator_ids
+    if DESCENDANT_ADOPTION_VALIDATOR_ID not in flow_validator_ids:
+        flow_validator_ids = (*flow_validator_ids, DESCENDANT_ADOPTION_VALIDATOR_ID)
+    return definition.model_copy(
+        update={"sections": tuple(sections), "flow_validator_ids": flow_validator_ids},
+    )
 
 
 __all__ = [
     "DESCENDANTS_COUNT_PAGE",
     "DESCENDANTS_COUNT_PAGE_ID",
     "DESCENDANTS_GROUP_ID",
+    "DESCENDANT_ADOPTION_VALIDATOR_ID",
+    "DESCENDANT_GASTOS_VALIDATOR_ID",
     "DESCENDANT_GROUP",
     "DESCENDANT_LOCALE_KEYS",
+    "DESCENDANT_MESES_VALIDATOR_ID",
     "DESCENDANT_NIF_VALIDATOR_ID",
     "DESCENDANT_PAGE_IDS",
     "attach_descendant_group",
