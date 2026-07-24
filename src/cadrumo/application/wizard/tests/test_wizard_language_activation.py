@@ -27,9 +27,10 @@ from ....core.config import override_settings
 from ....core.flows import FlowMode
 from ....core.i18n import OUTPUT_LANGUAGE_ENV_VAR, clear_output_language_cache, output_language, tr
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...flows import FlowDefinition, FlowState, run_scripted_flow
+from ...flows import FlowDefinition, FlowState
 from .._catalogue import SETUP_FLOW
 from .._commands import _build_mid_walk_language_activation, build_wizard_command
+from ._support import scripted_run_over_setup_definition
 from .test_setup_runtime import _scripted_answers_for_individual_declaration
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -119,7 +120,7 @@ def _capturing_runner(tokens: Sequence[str], recorder: dict[str, object]):
             recorder["switched"] = on_language_activated("output-language", "en")
             recorder["language_after"] = output_language()
             recorder["non_language"] = on_language_activated("spouse-tax-id", "44444444A")
-        state, _projection = run_scripted_flow(definition, tokens, mode=mode)
+        state, _projection = scripted_run_over_setup_definition(definition, tokens, mode=mode)
         return state
 
     return _runner

@@ -41,6 +41,7 @@ from .. import ProfileFactsCheckpointStore
 from .._catalogue import SETUP_FLOW
 from .._commands import _SETUP_CHECKPOINT, _resolve_profile_id_for_mode, build_wizard_command
 from .._persistence import WizardPersistMode
+from ._support import scripted_run_over_setup_definition
 from .test_setup_runtime import _scripted_answers_for_individual_declaration
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -202,7 +203,7 @@ def _submit_runner(tokens: Sequence[str]):
 
     def _runner(definition, *, mode, registered_values=None, on_language_activated=None, checkpoint_store=None):
         del registered_values, on_language_activated, checkpoint_store
-        state, _projection = run_scripted_flow(definition, tokens, mode=mode)
+        state, _projection = scripted_run_over_setup_definition(definition, tokens, mode=mode)
         return state
 
     return _runner
@@ -218,7 +219,7 @@ def _save_exit_runner(tokens: Sequence[str]):
 
     def _runner(definition, *, mode, registered_values=None, on_language_activated=None, checkpoint_store=None):
         del registered_values, on_language_activated
-        state, _projection = run_scripted_flow(definition, tokens, mode=mode)
+        state, _projection = scripted_run_over_setup_definition(definition, tokens, mode=mode)
         assert checkpoint_store is not None
         save_checkpoint(definition, state, checkpoint_store)
         return state
