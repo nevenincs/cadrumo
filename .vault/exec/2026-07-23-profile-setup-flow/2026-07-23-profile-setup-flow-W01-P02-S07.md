@@ -46,4 +46,3 @@ touched by this Step (owner triage per the full-tree-gate discipline).
 The schema.toml per-field `legal_refs` are the complementary grounding
 source; the flow-layer copy assembler merges both when it renders the
 legal zone (a W03 Step).
-

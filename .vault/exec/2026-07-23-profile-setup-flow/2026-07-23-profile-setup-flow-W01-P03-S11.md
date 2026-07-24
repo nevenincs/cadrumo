@@ -48,4 +48,3 @@ lazy-import-gate reds are peer-owned (flows/tui) plus two pre-existing
 locales edges - owner-triaged. The representantes axis is deliberately
 NOT auto-mapped (legal-representative vs IRNR representante fiscal
 conflation risk); it surfaces display-only in the cotejo.
-

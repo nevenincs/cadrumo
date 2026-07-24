@@ -43,4 +43,3 @@ obtainable; no usable credentials): the per-tax decomposition of
 "situación tributaria" and the PDF layout. The specimen remains on the
 operator-ask list, deliverable only through the encrypted evidence
 path.
-

@@ -42,4 +42,3 @@ implementation per the no-parallel-authority discipline.
 If a future substrate change loosens a copy slot to a bare string, the
 strict-config pydantic models make that a visible contract change, not
 a silent drift.
-

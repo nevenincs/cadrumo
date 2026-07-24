@@ -581,8 +581,175 @@ audit edges were removed. Focused reference, dangling, and body-link checks are
 clean, while the protected plan and execution records remain open and
 unpopulated.
 
+### architecture-plaintext-storage-fallback-resolution | low | Fresh authentication has no implicit plaintext storage-state source
+
+`BrowserSession.create_context()` now accepts only an explicit in-memory
+`storage_state` mapping and a provisioner. The `storage_state_path` parameter and
+the `Profile.storage_state_path` fallback are gone, so no caller can reach a
+plaintext cookie file by omitting an argument. `_build_context_kwargs()` sets
+`storage_state` only when the caller passed one, and `_storage_state_source()`
+reports `inline` or `none` — there is no third source to report. Exact search
+finds no remaining `storage_state_path` filesystem input on the browser
+boundary; every surviving use of that identifier is the logical encrypted
+secure-object key described by the sibling persistence-drift resolution.
+
+### lifecycle-clave-persist-failure-leak-resolution | low | Both Clave persistence-failure branches close their locally owned resources
+
+`ClaveMovilAuthProvider._persist_fresh_session()` and the matching
+`ClavePermanenteAuthProvider` helper wrap metadata construction and the
+encrypted save in one `try`. The failure branch invalidates the partial secure
+object inside its own suppressed `try` so a secondary cleanup fault cannot mask
+the persist exception, then closes the local context and browser session through
+the shared bounded helpers and re-raises. Each helper's boolean result decides
+whether the provider retains the reference, so a close that times out stays
+retryable through the mandatory later `close()` instead of orphaning Chromium.
+
+### lifecycle-certificate-context-teardown-resolution | low | Certificate teardown is bounded, retryable, and non-masking
+
+`AeatAuthenticator._drop_context()` and `_teardown_failed_attempt()` route
+through `close_owned_browser_context()` and `close_owned_browser_session()` in
+the shared lifecycle module. Both apply `cadrumo_browser_close_timeout_ms` via
+`asyncio.wait_for`, catch the broad exception surface rather than only the
+Playwright error type, log, and return a boolean instead of raising — so a hung
+or non-Playwright close can neither block the browser-session close nor replace
+the original storage-capture exception. The context reference is cleared only
+when the close actually completed, so a failed teardown remains retryable. The
+certificate provider and the two Clave providers now share one implementation.
+
+### lifecycle-concurrent-close-barrier-resolution | low | One barrier serializes closers and bars newly admitted work
+
+`_CloseIntentBarrier` replaces the ad-hoc `_closing` flag and drain latch. Close
+callers are counted under a state lock and hold a gate for the whole teardown
+sequence, so a second closer cannot pass while the first is still tearing down,
+and the no-close-intent event is set only when the last closer exits. `work()`
+waits for that event and re-checks the closing predicate after acquiring the
+gate, so a probe cannot register against a momentarily reset latch. All three
+providers construct the barrier and route public authentication, verification,
+and teardown through it, which also closes the separate Clave ownership finding.
+
+### final-gate-repository-wide-conformance | medium | Owner-distinguished gate run: the campaign surface is green, three peer campaigns are red
+
+The repository-wide gate pass for this feature ran on 2026-07-24. Green:
+pytest collection across the whole product tree (13,508 tests collected, zero
+collection errors); the focused campaign suite for the outbound auth and browser
+trees (208 passed, no skips, no live-marked cases selected); repository-wide
+`ruff check` after this pass repaired it; `ruff format --check` and `ruff check`
+scoped to the 146 files of the outbound AEAT adapter tree; the registry verify
+command across all 73 modelos; the non-fixing full Vault check; and the
+test-framework ratchets for discovery, markers, skip/xfail, mock, monkeypatch,
+broad raises, bare except, and tautology drift.
+
+Red, and owned elsewhere. The layered-architecture import contract is broken by
+three edges from `cadrumo.application.user_profile._login_session` into
+`cadrumo.adapters.persistence.storage`, one of them into the private `_zeroise`
+submodule. Type checking reports 199 diagnostics, of which 194 sit in
+`src/cadrumo/core/tests/test_session_absolute_minutes_setting.py`, one in
+`_login_session.py`, and four `unresolved-attribute` in
+`src/cadrumo/domain/calculations/registry/_queries.py`. The generated API
+reference has drifted by one missing stub for `_login_session` and one stale
+parent. A source-hygiene ratchet fails on a docstring in
+`src/cadrumo/domain/user_profile/tests/test_portable_export_schema.py:82` that
+names a plan Step identifier. Every one of these signatures was introduced by a
+live peer campaign — profile login-session and the roundtrip-hardening lane —
+and none touches the certificate-auth surface. They were reported to their
+owners rather than patched, per the rule against editing an active peer
+campaign's files to make a closeout gate pass.
+
+This feature therefore cannot claim the plan's unqualified "full pytest, style,
+format, type, import, registry, documentation, Vault, and GitHub CI gates pass"
+sentence at close. The honest claim is narrower and is the one recorded here.
+
+### final-gate-format-and-packaging-scope | low | Two named gates are out of this feature's reach and are recorded rather than claimed
+
+`ruff format --check` reports 54 files repository-wide that would be
+reformatted, spanning archived and active Vault markdown and eight unrelated
+source and tooling modules, including one that is the live surface of an active
+peer campaign. None is in the outbound AEAT adapter tree, which is fully
+formatted. The drift is a consequence of the ruff 0.16.0 lock bump rather than
+any campaign's authorship, and reformatting it would rewrite peer files for no
+correctness gain, so it is left to a repository-wide mechanical pass. The format
+gate is also absent from the per-push CI static job, which runs style, relative
+imports, import architecture, and types.
+
+The packaging smoke lanes and the semgrep regression rules were not run. The
+packaging lanes build release cohorts and live in separate dispatch-gated
+workflows, not the per-push wall; semgrep requires the Unix `resource` module
+and cannot execute on this workstation. Neither is claimed as passing.
+
+### final-gate-workstation-environment-staleness | medium | A missing core dependency had silently disabled the modelo CLI and the whole documentation gate
+
+The nitpicky Sphinx build failed at the CLI-reference generator with an
+import-failure fallback detected across the `aeat app modelo` subtree. The cause
+was environmental, not architectural: `textual` became a core project dependency
+on 2026-07-23 and the shared workstation environment was never re-synced, so
+`cadrumo.adapters.inbound.tui` could not import and the modelo command group
+degraded to the localized unavailable-command placeholder. Because every gate in
+this worktree runs with `--no-sync`, the degradation was invisible to any
+command that did not exercise the modelo tree, and it had been present for a
+day. The exact locked version was installed and the subtree recovered its 23
+subcommands. Two lessons are recorded rather than codified: an import-failure
+fallback that presents as ordinary help text hides a hard dependency failure
+behind a polite refusal, and a `--no-sync` gate discipline needs a dependency
+freshness check to stay honest.
+
+### final-gate-runner-encoding-defect-resolution | low | The quiet gate runner reported a fabricated failure on a narrow console
+
+`dev/quality/quiet.py` ran every wrapped gate with `text=True` and no explicit
+encoding, so the subprocess reader thread decoded tool output with the Windows
+locale codepage and raised on the first UTF-8 byte. The captured stdout was then
+`None` and the replay itself raised a `TypeError`, so `just check-format`
+reported a failure caused entirely by the harness, with no drift list attached.
+The encode side had the mirror fault. The runner now decodes UTF-8 with
+replacement and writes the failure replay through the byte buffer when the
+console encoding is narrower, so a wrapped gate reports the tool's real verdict.
+This was found by running the gates this Step mandates and is repaired here
+because the defect made one of them unrunnable rather than merely red.
+
+### final-honesty-verify-package-close-typeguard | low | The remaining duck-typed close is a fail-closed assertion, not a compatibility path
+
+A fresh reader sweeping for the decision's "every `getattr(..., "close", None)`
+compatibility path are deleted" clause will find one surviving occurrence at
+`src/cadrumo/adapters/outbound/aeat/verify/__init__.py:156`. It is examined and
+cleared: `_is_verify_browser_session_like` is a `TypeGuard` narrowing helper that
+requires both `create_context` and `close` to be present, and
+`_build_default_browser_session` raises `_BrowserAdapterTypeError` when the guard
+fails. It tolerates nothing and calls nothing optionally, so it upholds the
+mandatory-close contract rather than weakening it. It is recorded so the next
+sweep does not re-open it.
+
+### final-honesty-live-oracle-scope | low | The external oracle is exact and fail-closed but never runs by default, by design
+
+`test_authenticator_live.py` asserts that both the assertion target URL and the
+observed final URL equal the canonical protected-resource constant, that the
+response succeeded, and that the parsed identity matches the session identity.
+After live opt-in, absent certificate configuration fails the test rather than
+skipping it. The module carries the live marker, so the default suite deselects
+it and no default run exercises real AEAT. That is the intended safety posture,
+not a coverage gap: the credential-free real HTTP and Playwright boundary is what
+proves the predicate in CI, and the oracle is the separate AEAT acceptance proof.
+The feature performs no submission; it builds, validates, verifies, and exports
+only.
+
+### final-honesty-ratchet-scan-file-race | low | One ratchet error was concurrent peer file churn, not a defect
+
+A first ratchet run reported six errors rooted in a `FileNotFoundError` for
+`src/cadrumo/application/wizard/tests/test_monoparental_reduccion.py`. That path
+is neither tracked nor present, and an immediate re-run was clean, so a peer
+agent deleted the file between the marker gate's tree walk and its read. The
+underlying robustness gap is real but small: the gate's per-path read assumes the
+tree is stable for the duration of a scan, which is not true in this shared
+worktree. No change was made; the observation is recorded for whoever next
+triages an unreproducible ratchet error.
+
 ## Recommendations
 
 Resolve every critical, high, or medium finding before publication. Retain low
 findings only when they are explicitly evidenced as non-blocking and do not
 reintroduce a parallel authority or compatibility path.
+
+The certificate-auth surface itself is clear. The two medium findings that
+remain open at this close are not owned by this feature: the repository-wide
+conformance finding is a set of peer-campaign regressions reported to their
+owners, and the environment-staleness finding is a workstation condition already
+repaired. Publication of this feature is not blocked by either, but a
+repository-wide green claim is, until the peer lanes land their fixes.

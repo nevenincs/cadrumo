@@ -48,4 +48,3 @@ Count correction over the staged spec prose: 16 shape pages (8+8), not
 `test_frontend_parity.py` hangs headless (Textual Pilot under
 asyncio.run) and the bundle-flow WIP is missing its 36 cli.* keys —
 both substrate/bundle-lane surfaces.
-

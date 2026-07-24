@@ -29,9 +29,17 @@ related:
   - '[[2026-07-23-profile-setup-flow-W03-P06-S21]]'
   - '[[2026-07-23-profile-setup-flow-W03-P06-S22]]'
   - '[[2026-07-23-profile-setup-flow-W03-P07-S23]]'
+  - '[[2026-07-23-profile-setup-flow-W03-P07-S24]]'
+  - '[[2026-07-23-profile-setup-flow-W03-P07-S25]]'
   - '[[2026-07-23-profile-setup-flow-W03-P07-S34]]'
   - '[[2026-07-23-profile-setup-flow-W03-P07-S35]]'
   - '[[2026-07-23-profile-setup-flow-W03-P07-S36]]'
+  - '[[2026-07-23-profile-setup-flow-W03-P08-S26]]'
+  - '[[2026-07-23-profile-setup-flow-W03-P08-S27]]'
+  - '[[2026-07-23-profile-setup-flow-W03-P08-S28]]'
+  - '[[2026-07-23-profile-setup-flow-W04-P09-S29]]'
+  - '[[2026-07-23-profile-setup-flow-W04-P09-S30]]'
+  - '[[2026-07-23-profile-setup-flow-W04-P09-S31]]'
   - '[[2026-07-23-profile-setup-flow-adr]]'
   - '[[2026-07-23-profile-setup-flow-integration-shape-audit]]'
   - '[[2026-07-23-profile-setup-flow-page-catalogue-mapping-reference]]'
@@ -78,9 +86,17 @@ Auto-generated index of all documents tagged with `#profile-setup-flow`.
 - `2026-07-23-profile-setup-flow-W03-P06-S21` - Implement modify-mode FlowState staging with the atomic persist_patch diff commit and the declared per-mode no-op checkpoint
 - `2026-07-23-profile-setup-flow-W03-P06-S22` - Surface modify-mode save-and-exit unavailability with an explicit message and a loud staged-edit discard on interruption
 - `2026-07-23-profile-setup-flow-W03-P07-S23` - Add the descendant repeating group emitting the exact renta_family.descendiente fact shape and aggregates through descendant_facts_from_list, descendant NIFs validated by core.identity
+- `2026-07-23-profile-setup-flow-W03-P07-S24` - Convert the descendiente and repair verbs into deep-link doors into the flow and delete their bespoke prompt loops in the same change
+- `2026-07-23-profile-setup-flow-W03-P07-S25` - Convert the apoderado verb into a door that hosts the flow pages while routing writes to the ApoderadoService namespace, never profile facts
 - `2026-07-23-profile-setup-flow-W03-P07-S34` - Migrate the non-interactive quiet and accept-defaults walks onto run_scripted_flow with one shared definition builder and one coercer, preserving force-visible law and localized refusal surfaces
 - `2026-07-23-profile-setup-flow-W03-P07-S35` - Splice attach_descendant_group into the shared setup definition builder with the count page defaulting to zero descendants, pinning the group live on both frontends
 - `2026-07-23-profile-setup-flow-W03-P07-S36` - Route interactive-edit descendant answers through the edit persist seam with count-shrink clearing, or gate the descendant group out of modify mode until that seam exists, closing the silent-no-op-on-write gap
+- `2026-07-23-profile-setup-flow-W03-P08-S26` - Build the cotejo compare-select reconciliation of flow answers against the parsed G313 fact set with keep, adopt, and defer decisions
+- `2026-07-23-profile-setup-flow-W03-P08-S27` - Persist deferred divergences as typed facts at commit and surface warning notices on later profile reads
+- `2026-07-23-profile-setup-flow-W03-P08-S28` - Emit CENSO_APPLIED at cotejo artefact-apply and pin the emission site in the event contract test
+- `2026-07-23-profile-setup-flow-W04-P09-S29` - Add roundtrip plus anti-tautology coverage for divergence facts, the setup-incomplete state, and resume projection
+- `2026-07-23-profile-setup-flow-W04-P09-S30` - Verify the portable-export shape against the compatibility lifecycle for every schema addition
+- `2026-07-23-profile-setup-flow-W04-P09-S31` - Author the user-facing setup-flow documentation through the documentation workflow with command conformance green
 
 ### plan
 

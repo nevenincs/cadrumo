@@ -42,4 +42,3 @@ Content coverage beyond the reverse index's reach (pages grounded only
 by schema refs) is data-complete; any page carrying neither source
 correctly renders no legal zone. Approved-concept gating means a future
 page citing an unapproved concept fails loudly at render, per design.
-

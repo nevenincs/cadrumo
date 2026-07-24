@@ -45,4 +45,3 @@ scaffold alongside the W03 page catalogue.
 If the W03 pages end up citing a concept absent from the approved set,
 the copy assembler's loud unresolved-ref refusal makes that a visible
 authoring failure, not a silent gap.
-

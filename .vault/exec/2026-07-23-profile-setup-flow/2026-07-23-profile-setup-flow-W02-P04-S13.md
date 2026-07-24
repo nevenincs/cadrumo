@@ -46,4 +46,3 @@ coordinator's locale executor; three flows.* placeholder-mismatch
 warnings in scaffold --check are that stream's to clear. The flow
 constructs at import, which re-proves every visible_when target
 resolves to an earlier question under the new order.
-
