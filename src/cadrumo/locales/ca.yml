@@ -1584,6 +1584,8 @@ application:
         %{ccaa} per a aquest perfil. Les deduccions autonòmiques i el tram autonòmic
         de l'escala es calculen per a %{ccaa}. Feu servir --tax-residence-ccaa per
         triar una altra comunitat.
+      modify_no_resume: application.wizard.notices.modify_no_resume
+      setup_saved_resume_later: application.wizard.notices.setup_saved_resume_later
     output_labels:
       active_profile: Perfil actiu
       next: Següent
@@ -3483,6 +3485,17 @@ cli:
         inspect_help: Mostra la capçalera d'un arxiu segellat sense desxifrar-lo ni
           restaurar-lo.
         inspect_path_help: Camí de l'arxiu segellat.
+      bundle_flow:
+        export_section_title: Exporta el paquet de perfil
+        import_section_title: Importa el paquet de perfil
+        transport_cleartext_description: Escriu JSON sense xifrar amb dades financeres
+          sensibles; només per a ús local o d'accés de l'interessat — no l'enviïs
+          per correu, ni el sincronitzis, ni el transfereixis.
+        transport_cleartext_label: Text clar (només local/SAR)
+        transport_encrypted_description: Xifra el paquet (AEAD) amb una frase de contrasenya;
+          segur per transferir-lo entre equips.
+        transport_encrypted_label: Xifrat (recomanat)
+        transport_prompt: Com s'ha d'escriure el paquet?
       capabilities:
         capability_help: Servei que es vol activar o desactivar.
         capability_label: capacitat
@@ -3566,6 +3579,8 @@ cli:
       export_passphrase_prompt: 'Frase de contrasenya del paquet (mínim 8 caràcters): '
       export_passphrase_too_short: La frase de contrasenya d'exportació del perfil
         ha de tenir almenys 8 caràcters.
+      export_requires_destination: Indica --to RUTA com a destinació del paquet, o
+        executa l'ordre en un terminal interactiu perquè se't pregunti.
       export_requires_transport: Usa --encrypt per a un paquet xifrat de transferència,
         o --cleartext-local només per a JSON local/SAR.
       export_sensitivity_warning: 'Aquest paquet NO està xifrat i conté dades financeres
@@ -3619,6 +3634,8 @@ cli:
         amb aquests camps: %{missing_flags}.'
       import_passphrase_prompt: 'Frase de contrasenya del paquet: '
       import_path_help: Ruta al fitxer del paquet de perfil
+      import_requires_path: Indica l'argument RUTA del paquet, o executa l'ordre en
+        un terminal interactiu perquè se't pregunti.
       import_uuid_collision: El UUID del paquet entra en conflicte amb un perfil existent.
       logout_help: Tanca la sessió d'emmagatzematge activa, descarta les claus en
         memòria, allibera els motors del bucket i neteja el punter local

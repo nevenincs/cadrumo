@@ -1459,6 +1459,8 @@ application:
       ccaa_defaulted: No comunidad autónoma was chosen, so %{ccaa} was assumed for
         this profile. Autonomic deductions and the autonomic part of the tax scale
         are calculated for %{ccaa}. Set --tax-residence-ccaa to use a different comunidad.
+      modify_no_resume: application.wizard.notices.modify_no_resume
+      setup_saved_resume_later: application.wizard.notices.setup_saved_resume_later
     output_labels:
       active_profile: Active profile
       next: Next
@@ -3243,6 +3245,17 @@ cli:
         inspect_help: Show a sealed archive's header without decrypting or restoring
           it.
         inspect_path_help: Path to the sealed archive.
+      bundle_flow:
+        export_section_title: Export profile bundle
+        import_section_title: Import profile bundle
+        transport_cleartext_description: Write unencrypted JSON containing sensitive
+          financial data; local or subject-access handling only — never email, sync,
+          or transfer it.
+        transport_cleartext_label: Cleartext (local/SAR only)
+        transport_encrypted_description: AEAD-encrypt the bundle with a passphrase;
+          safe for transfer between machines.
+        transport_encrypted_label: Encrypted (recommended)
+        transport_prompt: How should the bundle be written?
       capabilities:
         capability_help: Service capability to opt in or out of.
         capability_label: capability
@@ -3324,6 +3337,8 @@ cli:
       export_passphrase_prompt: 'Bundle passphrase (min 8 characters): '
       export_passphrase_too_short: The profile export passphrase must be at least
         8 characters.
+      export_requires_destination: Provide --to PATH for the bundle destination, or
+        run in an interactive terminal to be prompted.
       export_requires_transport: Use --encrypt for an encrypted transfer bundle, or
         --cleartext-local for local/SAR JSON only.
       export_sensitivity_warning: 'This bundle is UNENCRYPTED and contains sensitive
@@ -3375,6 +3390,8 @@ cli:
         %{missing_flags}.'
       import_passphrase_prompt: 'Bundle passphrase: '
       import_path_help: Path to the profile bundle file
+      import_requires_path: Provide the bundle PATH argument, or run in an interactive
+        terminal to be prompted.
       import_uuid_collision: The UUID in the bundle conflicts with an existing profile.
       logout_help: Close the active storage session, discard in-memory keys, dispose
         bucket engines, and clear the local pointer
