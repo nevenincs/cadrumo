@@ -111,8 +111,9 @@ def _capturing_runner(tokens: Sequence[str], recorder: dict[str, object]):
         mode: FlowMode,
         registered_values: object = None,
         on_language_activated: object = None,
+        checkpoint_store: object = None,
     ) -> FlowState:
-        del registered_values
+        del registered_values, checkpoint_store
         recorder["activator"] = on_language_activated
         if callable(on_language_activated):
             recorder["switched"] = on_language_activated("output-language", "en")

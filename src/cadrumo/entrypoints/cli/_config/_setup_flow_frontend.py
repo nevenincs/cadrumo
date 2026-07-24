@@ -31,7 +31,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
 
     from ....adapters.inbound.tui import FlowTuiApp
-    from ....application.flows import FlowDefinition, FlowState
+    from ....application.flows import CheckpointStore, FlowDefinition, FlowState
     from ....core.flows import FlowMode
 
 
@@ -59,6 +59,7 @@ def run_setup_flow_frontend(
     mode: FlowMode,
     registered_values: Mapping[str, str] | None,
     on_language_activated: Callable[[str, str], bool] | None = None,
+    checkpoint_store: CheckpointStore | None = None,
 ) -> FlowState:
     """Drive ``definition`` on the best frontend the host supports.
 
@@ -68,6 +69,10 @@ def run_setup_flow_frontend(
     when the ``output-language`` page is committed, so the remaining pages
     render in the chosen language. It is ``None`` when an explicit flag or the
     environment already pins the language, in which case no hook is wired.
+
+    ``checkpoint_store`` backs create-mode save-and-exit; both frontends
+    honour it identically when the definition declares checkpointing
+    AVAILABLE for ``mode``.
 
     Raises:
         FlowUnsupportedConsoleError: When the host can host neither the
@@ -87,6 +92,7 @@ def run_setup_flow_frontend(
     if capability is FrontendCapability.LINE:
         state, _projection = LineFlowFrontend(
             definition,
+            checkpoint_store=checkpoint_store,
             on_answer_committed=_line_committed_callback(on_language_activated),
         ).run(mode=mode)
         return state
@@ -94,7 +100,12 @@ def run_setup_flow_frontend(
     from ....adapters.inbound.tui import run_flow_tui
 
     if on_language_activated is None:
-        state, _projection = run_flow_tui(definition, mode=mode, registered_values=registered_values)
+        state, _projection = run_flow_tui(
+            definition,
+            mode=mode,
+            registered_values=registered_values,
+            checkpoint_store=checkpoint_store,
+        )
         return state
 
     return _run_full_screen_with_locale_hook(
@@ -102,6 +113,7 @@ def run_setup_flow_frontend(
         mode=mode,
         registered_values=registered_values,
         on_language_activated=on_language_activated,
+        checkpoint_store=checkpoint_store,
     )
 
 
@@ -111,6 +123,7 @@ def _run_full_screen_with_locale_hook(
     mode: FlowMode,
     registered_values: Mapping[str, str] | None,
     on_language_activated: Callable[[str, str], bool],
+    checkpoint_store: CheckpointStore | None = None,
 ) -> FlowState:
     """Run the full-screen frontend with the mid-walk locale-switch hook wired.
 
@@ -118,7 +131,7 @@ def _run_full_screen_with_locale_hook(
     language so the mounted screen (its footer bindings included) re-resolves
     under the new locale. The app handle arrives through ``on_app_ready``, so
     the runner keeps ownership of the app lifecycle and its abandoned-run
-    guard.
+    guard. ``checkpoint_store`` backs create-mode save-and-exit.
     """
     from ....adapters.inbound.tui import run_flow_tui
 
@@ -132,6 +145,7 @@ def _run_full_screen_with_locale_hook(
         definition,
         mode=mode,
         registered_values=registered_values,
+        checkpoint_store=checkpoint_store,
         on_answer_committed=_committed,
         on_app_ready=lambda app: holder.__setitem__("app", app),
     )
