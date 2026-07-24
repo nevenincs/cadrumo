@@ -170,7 +170,14 @@ def test_envelope_omits_modify_notice_when_not_requested(
     assert _MODIFY_NO_RESUME_CODE not in codes
 
 
+@pytest.mark.parametrize(
+    ("profile_language", "foreign_language"),
+    [("en", "es"), ("es", "en")],
+    ids=["en-profile", "es-profile"],
+)
 def test_interactive_edit_command_surfaces_the_staging_honesty_notice(
+    profile_language: str,
+    foreign_language: str,
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
@@ -181,32 +188,38 @@ def test_interactive_edit_command_surfaces_the_staging_honesty_notice(
     who never pressed save still learns staged edits are discarded on an
     interrupted modify.
 
-    Language provenance is the sharp half of the assertion: the created
-    profile chooses ``en`` on the flow's first page, and the profile is the
+    Language provenance is the sharp half of the assertion: the profile
+    chooses its language on the flow's first page, and the profile is the
     output-language authority for every later command, so the notice must
-    render in ``en`` — the profile's language — and specifically NOT in the
-    ambient process default. The expected strings are computed at use time
+    render in the PROFILE's language and specifically NOT in the other
+    locale. Both directions are pinned — the ``es-profile`` case is the
+    operator's originally reported shape (a Spanish profile must never see
+    the English notice). The expected strings are computed at use time
     under explicit overrides; an import-time constant renders in whatever
     locale happens to be ambient at collection and asserts the wrong
     authority.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        create_tokens = list(_scripted_answers_for_individual_declaration())
+        create_tokens = _tokens_with_substitutions(
+            _scripted_answers_for_individual_declaration(),
+            activity="Software development",
+            output_language=profile_language,
+        )
         _invoke_interactive("create", create_tokens, ["operator"])
         capsys.readouterr()
 
         edit_tokens = _tokens_with_substitutions(
             _scripted_answers_for_individual_declaration(),
             activity="Barbería",
-            output_language="en",
+            output_language=profile_language,
         )
         _invoke_interactive("edit", edit_tokens, ["operator"])
         output = capsys.readouterr().out
 
-    with override_settings(cadrumo_output_language="en"):
+    with override_settings(cadrumo_output_language=profile_language):
         profile_language_message = tr("application.wizard.notices.modify_no_resume")
-    with override_settings(cadrumo_output_language="es"):
-        default_language_message = tr("application.wizard.notices.modify_no_resume")
+    with override_settings(cadrumo_output_language=foreign_language):
+        foreign_language_message = tr("application.wizard.notices.modify_no_resume")
 
     assert profile_language_message in output
-    assert default_language_message not in output
+    assert foreign_language_message not in output
