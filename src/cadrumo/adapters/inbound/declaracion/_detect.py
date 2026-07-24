@@ -19,11 +19,16 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from ..pdf import EJERCICIO_LABEL, MODELO_LABEL
 from ._parsers import extract_pages_text
 from ._schema import TemplateRevision
 
-_HEADER_MODELO_RE = re.compile(r"Modelo\s*[:\-]?\s*(?P<modelo>\d{3}[A-Z]?)", re.IGNORECASE)
-_HEADER_EJERCICIO_RE = re.compile(r"Ejercicio\s*[:\-]?\s*(?P<ejercicio>\d{4})", re.IGNORECASE)
+# AEAT renders the header stamp in the sede UI language the filer used, so both
+# labels accept the Spanish and English wording. Both searches are bounded to
+# the page-1/2 header span below, which keeps the English "Form" alternative
+# from matching ordinary prose elsewhere in the document.
+_HEADER_MODELO_RE = re.compile(rf"{MODELO_LABEL}\s*[:\-]?\s*(?P<modelo>\d{{3}}[A-Z]?)", re.IGNORECASE)
+_HEADER_EJERCICIO_RE = re.compile(rf"{EJERCICIO_LABEL}\s*[:\-]?\s*(?P<ejercicio>\d{{4}})", re.IGNORECASE)
 # Real AEAT declaraciones print ``Aprobado por Orden HAC/{number}/{año}`` on
 # the footer; when present it pins the template revision precisely. Absent,
 # we fall back to a ``{ejercicio}.01`` sentinel.

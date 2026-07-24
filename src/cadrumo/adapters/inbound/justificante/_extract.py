@@ -40,6 +40,9 @@ from ....domain.justificante import (
     JustificanteParseError,
 )
 from ..pdf import (
+    EJERCICIO_LABEL,
+    MODELO_LABEL,
+    PRESENTADOR_NIF_LABEL,
     parse_spanish_decimal,
     sha256_file,
     source_pdf_reference_path,
@@ -89,8 +92,9 @@ _CSV_FALLBACK_RE = re.compile(r"\bCSV\s*[=:]\s*([A-Z0-9]{8,24})\b", re.IGNORECAS
 _MODELO_RE = re.compile(
     # Spanish "Modelo <N>" or English "Form <N>" (English-language
     # AEAT receipts use the latter). Both layouts also accept
-    # uppercase ("MODELO <code>" / "FORM <code>").
-    r"(?:Modelo|Form)\s*[:\-]?\s*([0-9]{3}[A-Z]?)",
+    # uppercase ("MODELO <code>" / "FORM <code>"). The label alternation is
+    # shared with the declaración adapter, which parses the same receipts.
+    rf"{MODELO_LABEL}\s*[:\-]?\s*([0-9]{{3}}[A-Z]?)",
     re.IGNORECASE,
 )
 
@@ -120,7 +124,7 @@ _PERIOD_POSITIONAL_RE = re.compile(
 _EJERCICIO_RE = re.compile(
     # Spanish "Ejercicio <year>" or English "Financial year <year>"
     # (English-language M390/2021 captured live).
-    r"(?:Ejercicio|Financial\s+year)\s*[:\-]?\s*([0-9]{4})",
+    rf"{EJERCICIO_LABEL}\s*[:\-]?\s*([0-9]{{4}})",
     re.IGNORECASE,
 )
 # Some annual informativas (M190 "Resumen anual") print the ejercicio
@@ -143,20 +147,16 @@ _NIF_RE = re.compile(
     # The shape constraint excludes the word "PRESENTADOR" that the
     # ``NIF Presentador: <value>`` register-printed shape places after
     # the label.
-    r"NIF\s*(?:Presentador)?\s*[:\-]?\s*"
-    r"([A-Z\d]\d{7}[A-Z\d])",
+    rf"{PRESENTADOR_NIF_LABEL}\s*[:\-]?\s*([A-Z\d]\d{{7}}[A-Z\d])",
     re.IGNORECASE,
 )
 # Legacy 2021 modelos (iText 2.1.4 producer) print value-then-label
 # in column-split layout, so the NIF value precedes the
 # ``NIF Presentador:`` label after pdfplumber's left-right
-# traversal.
-# English-language receipts use "Tax identification number(NIF)of
-# filer:" as the label; the inverted form catches both.
+# traversal. The label alternation (Spanish or English render) is shared
+# with the declaración adapter, which parses the same receipt family.
 _NIF_INVERTED_RE = re.compile(
-    r"\b([A-Z\d]\d{7}[A-Z\d])\s+"
-    r"(?:NIF(?:\s+Presentador)?|Tax\s+identification\s+number\s*\(NIF\))"
-    r"\s*[:\-]?",
+    rf"\b([A-Z\d]\d{{7}}[A-Z\d])\s+{PRESENTADOR_NIF_LABEL}\s*[:\-]?",
     re.IGNORECASE,
 )
 _PRESENTATION_ID_RE = re.compile(

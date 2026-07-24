@@ -63,6 +63,40 @@ on the line". Multi-token textual values (e.g. ``"La Rioja"``) need a
 richer bbox-anchored primitive instead.
 """
 
+# AEAT serves the SAME receipt template in Spanish or English depending on the
+# sede UI language the filer used, so the label printed beside the presentador's
+# NIF is render-dependent while the value beside it is not. Both inbound receipt
+# adapters must therefore anchor on either rendering, and they anchor on this one
+# fragment so a newly-observed rendering is added in a single place.
+#
+# pdfplumber lifts the English label with no spaces around the parenthetical
+# ("Tax identification number(NIF)of filer:"), so every internal separator is
+# optional. The trailing "of filer" is optional too: it is present on the
+# value-then-label column layout and absent from some flat renderings.
+#
+# This fragment matches the LABEL only. It deliberately carries no value class,
+# so composing patterns keep their own tax-id shape constraint — widening the
+# accepted renderings must never widen the accepted NIF.
+PRESENTADOR_NIF_LABEL = r"(?:NIF(?:\s*Presentador)?|Tax\s*identification\s*number\s*\(\s*NIF\s*\)(?:\s*of\s*filer)?)"
+"""Non-capturing alternation of AEAT's Spanish and English presentador-NIF labels.
+
+Matches ``NIF``, ``NIF Presentador``, and the English-render
+``Tax identification number(NIF)of filer`` (with or without the trailing
+``of filer``, and tolerant of pdfplumber's missing separators around the
+parenthetical). Carries no capture group and no tax-id value class, so a caller
+composes it with its own value pattern and separator expectations.
+"""
+
+# The same Spanish/English render split applies to the two header stamps that
+# identify WHICH filing a receipt is: the form code and the tax year. An
+# English-render receipt prints "FORM 390" and "Financial year 2021" where the
+# Spanish one prints "Modelo 390" and "Ejercicio 2021".
+MODELO_LABEL = r"(?:Modelo|Form)"
+"""Non-capturing alternation of AEAT's Spanish and English form-code labels."""
+
+EJERCICIO_LABEL = r"(?:Ejercicio|Financial\s*year)"
+"""Non-capturing alternation of AEAT's Spanish and English tax-year labels."""
+
 _WHITESPACE_RE = re.compile(r"\s")
 
 
