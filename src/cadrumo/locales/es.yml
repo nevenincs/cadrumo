@@ -6609,6 +6609,10 @@ flows:
         label: Perfil
         status: Estado
       none: No hay perfiles registrados.
+      status:
+        active: activo
+        setup_incomplete: configuración incompleta
+        tombstoned: eliminado
     recovery:
       commands_title: Acciones (copiar y ejecutar)
       enrolled: activado

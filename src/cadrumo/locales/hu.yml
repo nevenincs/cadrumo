@@ -6457,6 +6457,10 @@ flows:
         label: Profil
         status: Állapot
       none: Nincsenek regisztrált profilok.
+      status:
+        active: aktív
+        setup_incomplete: beállítás befejezetlen
+        tombstoned: törölve
     recovery:
       commands_title: Műveletek (másold és futtasd)
       enrolled: aktiválva
