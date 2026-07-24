@@ -4,6 +4,10 @@ No mocks: a throwaway stub interpreter script emits a controlled
 ``importlib.metadata``-shaped distribution JSON and is passed to
 :func:`assert_installed_matches_constraints` as the installed interpreter, so the
 subprocess enumeration path runs exactly as it does against a real venv python.
+
+Environment markers are exercised deterministically on any platform by phrasing
+them relative to the running ``sys.platform``: a ``THIS``-platform marker is
+always active here and an ``OTHER``-platform marker never is.
 """
 
 from __future__ import annotations
@@ -12,7 +16,7 @@ import json
 import os
 import stat
 import sys
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 import pytest
@@ -26,16 +30,31 @@ from dev.packaging.constraint_effect import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
+# Phrased against the running platform so the marker evaluation is deterministic
+# on Windows, Linux, and macOS alike.
+_THIS_PLATFORM = sys.platform
+_OTHER_PLATFORM = "linux" if sys.platform != "linux" else "darwin"
+
 # A constraint closure shaped like a real ``uv export``: mandatory (marker-free)
-# rows, a comment, a blank line, and platform-gated rows carrying markers.
+# rows, a comment, a blank line, an active platform-gated row (marker true here),
+# and a foreign-platform row (marker false here).
 _CONSTRAINT_LINES: tuple[str, ...] = (
     "# Runtime dependency closure pinned from the tested uv.lock.",
     "",
     "anyio==4.11.0",
     "click==8.3.0",
     "pydantic==2.12.4",
-    "colorama==0.4.6 ; sys_platform == 'win32'",
-    "jeepney==0.9.0 ; sys_platform == 'linux'",
+    f"activehere==1.0.0 ; sys_platform == '{_THIS_PLATFORM}'",
+    f"foreignonly==9.9.9 ; sys_platform == '{_OTHER_PLATFORM}'",
+)
+
+# One name pinned under two mutually exclusive markers. Only the running
+# platform's version is active; the old union behaviour would have accepted
+# either version.
+_DUAL_MARKER_LINES: tuple[str, ...] = (
+    "anyio==4.11.0",
+    f"dualpin==1.0.0 ; sys_platform == '{_THIS_PLATFORM}'",
+    f"dualpin==2.0.0 ; sys_platform == '{_OTHER_PLATFORM}'",
 )
 
 
@@ -54,7 +73,12 @@ def _stub_interpreter(tmp_path: Path, distributions: Mapping[str, str]) -> Path:
     return script
 
 
-def _run_against_stub(tmp_path: Path, distributions: Mapping[str, str]) -> None:
+def _run_against_stub(
+    tmp_path: Path,
+    distributions: Mapping[str, str],
+    *,
+    constraint_lines: Sequence[str] = _CONSTRAINT_LINES,
+) -> None:
     """Drive the real assertion against a stub interpreter emitting ``distributions``."""
     script = _stub_interpreter(tmp_path, distributions)
     # A tiny launcher interpreter: a shell/py shim would couple to the platform,
@@ -73,20 +97,33 @@ def _run_against_stub(tmp_path: Path, distributions: Mapping[str, str]) -> None:
             encoding="utf-8",
         )
         launcher.chmod(launcher.stat().st_mode | stat.S_IXUSR | stat.S_IRUSR)
-    assert_installed_matches_constraints(launcher, _CONSTRAINT_LINES)
+    assert_installed_matches_constraints(launcher, constraint_lines)
 
 
-def test_passing_case_matches_every_mandatory_pin(tmp_path: Path) -> None:
-    """An installed set at the exact pins, missing only a foreign-platform row, passes."""
+def test_passing_case_matches_every_active_pin(tmp_path: Path) -> None:
+    """An installed set at the exact active pins, without any foreign row, passes."""
     installed = {
         "anyio": "4.11.0",
         "click": "8.3.0",
         "pydantic": "2.12.4",
-        # colorama present at its pin (this is the win32 gated row); jeepney is
-        # a linux-only gated row and is legitimately absent here.
-        "colorama": "0.4.6",
+        # The active (this-platform) gated row must be present at its pin.
+        "activehere": "1.0.0",
         # An unconstrained extra distribution is ignored, not flagged.
         "cadrumo": "0.2.1",
+    }
+    _run_against_stub(tmp_path, installed)
+
+
+def test_foreign_platform_row_is_ignored_even_when_installed(tmp_path: Path) -> None:
+    """A row whose marker is false here constrains nothing, present or not."""
+    installed = {
+        "anyio": "4.11.0",
+        "click": "8.3.0",
+        "pydantic": "2.12.4",
+        "activehere": "1.0.0",
+        # foreignonly's marker is false here; installed at an off-pin version, it
+        # must NOT be flagged, because this platform's closure does not pin it.
+        "foreignonly": "0.0.1",
     }
     _run_against_stub(tmp_path, installed)
 
@@ -97,6 +134,7 @@ def test_drifted_version_is_named_with_expected_and_actual(tmp_path: Path) -> No
         "anyio": "4.11.0",
         "click": "8.2.0",  # drifted: pinned to 8.3.0
         "pydantic": "2.12.4",
+        "activehere": "1.0.0",
     }
     with pytest.raises(ConstraintDriftError) as excinfo:
         _run_against_stub(tmp_path, installed)
@@ -114,6 +152,7 @@ def test_missing_mandatory_distribution_is_reported(tmp_path: Path) -> None:
     installed = {
         "anyio": "4.11.0",
         "click": "8.3.0",
+        "activehere": "1.0.0",
         # pydantic (mandatory) omitted entirely.
     }
     with pytest.raises(ConstraintDriftError) as excinfo:
@@ -123,23 +162,75 @@ def test_missing_mandatory_distribution_is_reported(tmp_path: Path) -> None:
     assert "actual <missing>" in message
 
 
-def test_gated_row_absence_is_tolerated_but_drift_when_present_is_refused(tmp_path: Path) -> None:
-    """A marker-gated distribution is conditional: absent tolerated, present-drift refused."""
-    drifted_gated = {
+def test_active_gated_distribution_missing_on_its_own_platform_is_refused(tmp_path: Path) -> None:
+    """A gated row active here is mandatory: its absence fails (not tolerated)."""
+    installed = {
         "anyio": "4.11.0",
         "click": "8.3.0",
         "pydantic": "2.12.4",
-        "colorama": "0.4.5",  # gated (win32) but installed at the wrong pin
+        # activehere's marker holds on this platform, so it must be installed;
+        # under the retired if-installed heuristic its absence was tolerated.
     }
     with pytest.raises(ConstraintDriftError) as excinfo:
-        _run_against_stub(tmp_path, drifted_gated)
-    assert "colorama" in str(excinfo.value)
+        _run_against_stub(tmp_path, installed)
+    message = str(excinfo.value)
+    assert "activehere" in message
+    assert "actual <missing>" in message
+
+
+def test_active_gated_distribution_present_at_wrong_pin_is_refused(tmp_path: Path) -> None:
+    """An active gated distribution installed at the wrong version is refused."""
+    installed = {
+        "anyio": "4.11.0",
+        "click": "8.3.0",
+        "pydantic": "2.12.4",
+        "activehere": "1.0.1",  # active gated row, wrong pin
+    }
+    with pytest.raises(ConstraintDriftError) as excinfo:
+        _run_against_stub(tmp_path, installed)
+    assert "activehere" in str(excinfo.value)
+
+
+def test_mutually_exclusive_marker_accepts_only_the_active_version(tmp_path: Path) -> None:
+    """Only the version whose marker holds is accepted; the old union would pass.
+
+    ``dualpin`` is pinned to 1.0.0 (this platform) and 2.0.0 (another). The
+    installed 2.0.0 is the OTHER platform's pin; the marker-union behaviour would
+    have accepted it, but marker evaluation accepts only 1.0.0 here.
+    """
+    installed = {
+        "anyio": "4.11.0",
+        "dualpin": "2.0.0",  # the foreign-platform pin
+    }
+    with pytest.raises(ConstraintDriftError) as excinfo:
+        _run_against_stub(tmp_path, installed, constraint_lines=_DUAL_MARKER_LINES)
+    message = str(excinfo.value)
+    assert "dualpin" in message
+    assert "expected 1.0.0" in message
+    assert "actual 2.0.0" in message
+
+
+def test_mutually_exclusive_marker_accepts_the_active_version(tmp_path: Path) -> None:
+    """The version whose marker holds on this platform passes."""
+    installed = {
+        "anyio": "4.11.0",
+        "dualpin": "1.0.0",  # this platform's pin
+    }
+    _run_against_stub(tmp_path, installed, constraint_lines=_DUAL_MARKER_LINES)
 
 
 def test_parse_rejects_a_non_pinned_row() -> None:
     """A loose (non ``==``) requirement can never pass silently through the gate."""
     with pytest.raises(ConstraintDriftError):
         parse_constraint_lines(("anyio>=4.0",))
+
+
+def test_parse_evaluates_markers_against_the_running_platform() -> None:
+    """The parsed map keeps only rows whose marker holds here."""
+    pins = parse_constraint_lines(_CONSTRAINT_LINES)
+    assert "activehere" in pins
+    assert "foreignonly" not in pins
+    assert pins["activehere"].versions == frozenset({"1.0.0"})
 
 
 def test_name_normalisation_follows_pep_503() -> None:
