@@ -190,11 +190,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "output.write_text",
     ): "registry verification report export through the registry service",
     (
-        "src/cadrumo/locales/_modelo_manager.py",
-        "_write_translation_path",
-        "path.write_text",
-    ): "modelo locale translation writer updates non-financial registry-localised text",
-    (
         "src/cadrumo/locales/manager.py",
         "scaffold",
         "open",

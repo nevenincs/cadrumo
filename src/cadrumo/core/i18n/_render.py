@@ -419,7 +419,7 @@ _I18N_LOCALES_ROOT: ContextVar[Path | None] = ContextVar("cadrumo_i18n_locales_r
 
 
 @contextmanager
-def override_locales_root(root: Path) -> Iterator[None]:
+def _override_locales_root(root: Path) -> Iterator[None]:
     """Resolve catalogues from ``root`` instead of the packaged resources.
 
     The renderer's miss semantics — an absent key and a key-echo value are
@@ -568,7 +568,6 @@ __all__ = [
     "UnmatchedPlaceholderError",
     "extract_placeholders",
     "output_language",
-    "override_locales_root",
     "register_profile_language_resolver",
     "tr",
 ]
