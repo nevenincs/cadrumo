@@ -6587,6 +6587,40 @@ flows:
     row: '{number}. {page_key} — estado: {status}'
     save_unavailable: Guardar y salir no está disponible en el modo {mode}; completa
       el flujo de una sola vez.
+  status:
+    auth:
+      certificate_source: Origen del certificado
+      login_not_ready: sin verificar
+      login_ready: listo
+      provider: Proveedor
+      provider_none: sin configurar
+      status: Acceso
+      subject: Titular
+    binding_quit: Salir
+    masked_value: (oculto)
+    profile:
+      column:
+        field: Campo
+        value: Valor
+      none: No hay ningún perfil activo.
+    profiles:
+      column:
+        active: Activo
+        label: Perfil
+        status: Estado
+      none: No hay perfiles registrados.
+    recovery:
+      commands_title: Acciones (copiar y ejecutar)
+      enrolled: activado
+      fingerprint: Huella
+      not_enrolled: no activado
+      state: Código de recuperación
+    section:
+      auth: Autenticación
+      profile: Perfil activo
+      profiles: Perfiles
+      recovery: Recuperación
+    title: Estado
   tui:
     binding_back: Anterior
     binding_reset: Restablecer
@@ -7197,7 +7231,7 @@ wizard:
       postcode: 'Código postal español: 5 cifras, p. ej. 28001.'
       tax-id: 'NIF/DNI: 8 cifras + letra (12345678Z) · NIE: X/Y/Z + 7 cifras + letra
         (X1234567L) · NIF de entidad: letra + 7 cifras + control (B12345674).'
-      units-count: 'Número entero de unidades, p. ej. 2.'
+      units-count: Número entero de unidades, p. ej. 2.
     identidad:
       title: Identidad
     intro: 'Configuración guiada del perfil tributario

@@ -6435,6 +6435,40 @@ flows:
     row: '{number}. {page_key} — állapot: {status}'
     save_unavailable: A mentés és kilépés nem érhető el {mode} módban; fejezd be a
       folyamatot egy ülésben.
+  status:
+    auth:
+      certificate_source: Tanúsítvány forrása
+      login_not_ready: nem ellenőrzött
+      login_ready: kész
+      provider: Szolgáltató
+      provider_none: nincs beállítva
+      status: Hozzáférés
+      subject: Alany
+    binding_quit: Kilépés
+    masked_value: (rejtett)
+    profile:
+      column:
+        field: Mező
+        value: Érték
+      none: Nincs aktív profil.
+    profiles:
+      column:
+        active: Aktív
+        label: Profil
+        status: Állapot
+      none: Nincsenek regisztrált profilok.
+    recovery:
+      commands_title: Műveletek (másold és futtasd)
+      enrolled: aktiválva
+      fingerprint: Ujjlenyomat
+      not_enrolled: nincs aktiválva
+      state: Helyreállítási kód
+    section:
+      auth: Hitelesítés
+      profile: Aktív profil
+      profiles: Profilok
+      recovery: Helyreállítás
+    title: Állapot
   tui:
     binding_back: Vissza
     binding_reset: Visszaállítás
@@ -7067,7 +7101,7 @@ wizard:
       postcode: 'Spanyol irányítószám: 5 számjegy, pl. 28001.'
       tax-id: 'NIF/DNI: 8 számjegy + betű (12345678Z) · NIE: X/Y/Z + 7 számjegy +
         betű (X1234567L) · céges NIF: betű + 7 számjegy + ellenőrző (B12345674).'
-      units-count: 'Egész szám, pl. 2.'
+      units-count: Egész szám, pl. 2.
     identidad:
       title: Személyazonosság
     intro: 'Irányított adóügyi profil-beállítás

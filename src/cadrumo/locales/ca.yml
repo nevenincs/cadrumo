@@ -6552,6 +6552,40 @@ flows:
     row: '{number}. {page_key} — estat: {status}'
     save_unavailable: Desar i sortir no està disponible en el mode {mode}; completa
       el flux d'una sola vegada.
+  status:
+    auth:
+      certificate_source: Origen del certificat
+      login_not_ready: sense verificar
+      login_ready: a punt
+      provider: Proveïdor
+      provider_none: sense configurar
+      status: Accés
+      subject: Titular
+    binding_quit: Surt
+    masked_value: (ocult)
+    profile:
+      column:
+        field: Camp
+        value: Valor
+      none: No hi ha cap perfil actiu.
+    profiles:
+      column:
+        active: Actiu
+        label: Perfil
+        status: Estat
+      none: No hi ha perfils registrats.
+    recovery:
+      commands_title: Accions (copiar i executar)
+      enrolled: activat
+      fingerprint: Empremta
+      not_enrolled: no activat
+      state: Codi de recuperació
+    section:
+      auth: Autenticació
+      profile: Perfil actiu
+      profiles: Perfils
+      recovery: Recuperació
+    title: Estat
   tui:
     binding_back: Anterior
     binding_reset: Restableix
@@ -7157,7 +7191,7 @@ wizard:
       postcode: 'Codi postal espanyol: 5 xifres, p. ex. 28001.'
       tax-id: 'NIF/DNI: 8 xifres + lletra (12345678Z) · NIE: X/Y/Z + 7 xifres + lletra
         (X1234567L) · NIF d''entitat: lletra + 7 xifres + control (B12345674).'
-      units-count: 'Nombre enter d''unitats, p. ex. 2.'
+      units-count: Nombre enter d'unitats, p. ex. 2.
     identidad:
       title: Identitat
     intro: 'Configuració guiada del perfil tributari
