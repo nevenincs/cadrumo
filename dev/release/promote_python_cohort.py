@@ -116,7 +116,7 @@ def assert_pypi_destinations_absent(cohort: PythonCohort) -> None:
     """Fail before upload when any destination already owns the cohort version."""
     for project in _PYPI_PROJECTS:
         url = f"https://pypi.org/pypi/{project}/{cohort.version}/json"
-        request = urllib.request.Request(  # noqa: S310 - fixed HTTPS PyPI endpoint.
+        request = urllib.request.Request(  # fixed HTTPS PyPI endpoint.
             url,
             headers={"Accept": "application/json"},
         )

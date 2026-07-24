@@ -446,7 +446,7 @@ def wait_for_cdp(port: int, *, timeout_seconds: float = 60.0, poll_seconds: floa
     last_error = "no response"
     while time.monotonic() < deadline:
         try:
-            with urllib.request.urlopen(url, timeout=5) as response:  # noqa: S310 - fixed loopback CDP endpoint
+            with urllib.request.urlopen(url, timeout=5) as response:  # fixed loopback CDP endpoint
                 return json.loads(response.read().decode(_UTF_8))
         except (urllib.error.URLError, TimeoutError, ConnectionError, json.JSONDecodeError, OSError) as exc:
             last_error = str(exc)
