@@ -28,6 +28,7 @@ related:
   - '[[2026-07-17-all-profile-reset-P04-S20]]'
   - '[[2026-07-17-all-profile-reset-P04-S21]]'
   - '[[2026-07-17-all-profile-reset-P04-S22]]'
+  - '[[2026-07-17-all-profile-reset-P04-S23]]'
   - '[[2026-07-17-all-profile-reset-P04-S24]]'
   - '[[2026-07-17-all-profile-reset-P04-S25]]'
   - '[[2026-07-17-all-profile-reset-P05-S26]]'
@@ -74,6 +75,7 @@ Auto-generated index of all documents tagged with `#all-profile-reset`.
 - `2026-07-17-all-profile-reset-P03-S15` - Prove target discovery includes live, tombstoned, and dangling-pointer buckets but excludes cold defaults
 - `2026-07-17-all-profile-reset-P03-S16` - Prove every reset phase boundary resumes honestly in a fresh child process
 - `2026-07-17-all-profile-reset-P03-S17` - Prove sorted locking, writer pauses, reset exclusion, retention recheck, and renewed confirmation with real processes
+- `2026-07-17-all-profile-reset-P04-S23` - Prove switching and strong logout through real persisted custody state
 - `2026-07-17-all-profile-reset-P04-S18` - Restrict config switch to UUIDs and exact labels including canonical sandbox labels and reject bare sandbox names
 - `2026-07-17-all-profile-reset-P04-S19` - Remove the config profile sandbox use registration and execution path without an alias
 - `2026-07-17-all-profile-reset-P04-S20` - Replace flat scoped reset registration with the config reset command group
