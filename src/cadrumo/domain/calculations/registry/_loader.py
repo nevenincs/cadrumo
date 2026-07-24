@@ -908,12 +908,10 @@ def _discover_revision_sources(revisions_dir: Path) -> tuple[ModeloRevisionSourc
     sources: list[ModeloRevisionSource] = []
     for path in sorted(revisions_dir.glob("*.toml")):
         rev_data = freeze_toml(read_toml(path, error_factory=RegistryLoadError))
-        file_revisions = rev_data.get("revisions")
-        if not isinstance(file_revisions, dict) or not file_revisions:
+        file_revisions = _as_toml_table(rev_data.get("revisions"))
+        if not file_revisions:
             raise RegistryLoadError(f"{path}: revision file must declare [revisions.<id>]")
         for revision_id in sorted(file_revisions):
-            if not isinstance(revision_id, str):
-                raise RegistryLoadError(f"{path}: revision key must be a string")
             sources.append(
                 ModeloRevisionSource(
                     revision_id=revision_id,
