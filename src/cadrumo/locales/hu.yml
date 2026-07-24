@@ -6891,6 +6891,8 @@ wizard:
             label: M - nő
     descendientes:
       adoption-date:
+        before_birth: Az örökbefogadás dátuma nem lehet korábbi a születési dátumnál.
+        in_future: Az örökbefogadás dátuma nem lehet jövőbeli.
         prompt: Örökbefogadás dátuma (hagyja üresen, ha nem örökbefogadott)
       birth-date:
         prompt: Születési dátum
@@ -6915,10 +6917,14 @@ wizard:
       gastos-guarderia:
         help: Engedélyezett bölcsődének fizetett összegek (LIRPF 81/A. cikk), amelyek
           növelik az anyasági levonást; egész euró.
+        invalid_negative: A bölcsődei költség nem lehet negatív; adjon meg 0-t vagy
+          pozitív összeget euróban (LIRPF 81 bis cikk).
         prompt: Az adóévben fizetett bölcsődei költségek (euró)
       meses-madre-trabajo:
         help: 'Az anyasági levonáshoz (LIRPF 81. cikk): hónapok (0–12), amikor az
           anya tb-járulékot fizetett a 3 év alatti gyermek mellett.'
+        invalid_range: Adjon meg egész számú hónapot %{minimum} és %{maximum} között
+          (LIRPF 81. cikk).
         prompt: Hónapok, amíg az anya dolgozott a 3 év alatti gyermek mellett (adóév)
       nif:
         prompt: A leszármazó adószáma (NIF/NIE) (hagyja üresen, ha nincs)
@@ -7566,21 +7572,8 @@ wizard:
       title: Adózói típus
     title: Beállítási varázsló
     verifier:
-      activity_present: 'Gazdasági tevékenység: ellenőrzi, hogy a profil tartalmaz-e
-        tevékenységet.'
-      eu_eea_country_missing: 'Házastárs lakóhelye: EU vagy EGT lakóhelyet jelölt
-        meg, de az ország hiányzik. Adja meg a lakóhely országát.'
-      eu_eea_country_ok: 'Házastárs lakóhelye: az EU vagy EGT szerinti lakóhely országa
-        összhangban van.'
       impatriado_requires_start_date: 'Impatrióta rendszer: a különleges rendszer
         kezdő dátuma kötelező. Add meg a kezdő dátumot.'
-      joint_taxation_situacion_familiar_ok: 'Családi helyzet: a közös adóbevallás
-        összhangban van a bevallott családi helyzettel.'
-      joint_taxation_situacion_familiar_refused: 'Családi helyzet: a közös adóbevallás
-        nem engedélyezett nem bejegyzett élettársi kapcsolat esetén (LIRPF 82.1.2°
-        cikkely). Módosítsa a családi helyzetet, vagy válassza az egyéni adózást.'
-      monoparental_requires_hijos_ok: 'Egyszülős családi egység: a kiskorú gyermekekkel
-        kapcsolatos követelmény teljesítve.'
       monoparental_requires_hijos_warning: 'Egyszülős családi egység: az egyszülős
         egységként való közös adóbevallás (LIRPF 82.1.2° cikkely) kiskorú gyermekeket
         igényel a családi egységben. Eltartott gyermekek nélkül a közös bevallás nem
@@ -7590,16 +7583,6 @@ wizard:
         ország kötelező. Add meg az illetőség szerinti országot.'
       non_resident_requires_representante: 'Nem rezidens IRNR: adóügyi képviselő kötelező.
         Add meg a képviselő NIF-jét és nevét.'
-      obligations_consistency_ok: 'Forrásadó-kötelezettségek: a forrásadóra vonatkozó
-        válaszok összhangban vannak.'
-      obligations_inconsistent: 'Forrásadó-kötelezettségek: szakmai forrásadót jelölt
-        meg, de nem jelezte, hogy forrásadóval fizet szakembereknek. Ellenőrizze ezeket
-        az adatokat.'
-      spouse_consistency_missing: 'Közös adóbevallás: a házastárs adóazonosítója hiányzik.
-        Adja meg a közös bevalláshoz.'
-      spouse_consistency_ok: 'Közös adóbevallás: a házastárs adatai összhangban vannak.'
-      tax_id_present: 'Adóazonosítás: ellenőrzi, hogy a profil tartalmaz-e DNI, NIE,
-        NIF vagy CIF azonosítót.'
   test:
     description: Tesztelje a konfigurációt és a csatlakozást
     example:
