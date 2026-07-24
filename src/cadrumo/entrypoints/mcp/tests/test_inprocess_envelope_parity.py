@@ -320,9 +320,11 @@ def _advertised_request_shape(input_schema: dict[str, object]) -> dict[str, obje
     required = input_schema["required"]
     assert isinstance(properties, dict)
     assert isinstance(required, list)
+    required_names = [name for name in required if isinstance(name, str)]
+    assert len(required_names) == len(required), f"non-string entries in advertised 'required': {required!r}"
     return {
         "properties": {name: _without_prose(schema) for name, schema in properties.items()},
-        "required": sorted(required),
+        "required": sorted(required_names),
     }
 
 

@@ -405,8 +405,11 @@ def test_cross_casilla_invariant_violated_message_is_localised() -> None:
 
     The predicate expression ``all_nonzero(["0001","0002"])`` fails when
     both casillas are zero, producing a BLOCKING_RULE finding. The message
-    must contain the predicate_id and expression as rendered by the locale
-    catalogue (not a raw f-string).
+    must carry the interpolated predicate_id and expression, must not be the
+    raw locale key, and must vary with the operator's output language — the
+    three properties that distinguish a catalogue-routed string from a raw
+    f-string. Asserting catalogue prose verbatim is deliberately avoided so
+    the contract survives a translation edit.
     """
     with override_settings(cadrumo_output_language="en"):
         predicate, finding = _predicate_finding(
@@ -422,8 +425,30 @@ def test_cross_casilla_invariant_violated_message_is_localised() -> None:
     # The message must contain the predicate_id and expression (from the locale template).
     assert "test-cross-casilla-001" in finding.message
     assert predicate.expression in finding.message
+    # Must not be the raw locale key surfaced as a self-referencing fallback.
+    assert finding.message != "application.modelo.findings.cross_casilla_invariant_violated"
     # Must not be the old raw f-string format with repr apostrophes around predicate_id.
-    assert "violated: " in finding.message
+    assert "'test-cross-casilla-001'" not in finding.message
+
+    # A catalogue-routed message renders differently per operator language; a
+    # hardcoded f-string would render identically in both.
+    rendered_by_language: dict[str, str] = {}
+    for language in ("es", "en"):
+        with override_settings(cadrumo_output_language=language):
+            _, localised = _predicate_finding(
+                predicate_id="test-cross-casilla-001",
+                legal_ref="irpf:art1",
+                expression=predicate.expression,
+                casilla_values={
+                    _PREDICATE_REQUIRED_LEFT_CASILLA: Decimal(0),
+                    _PREDICATE_REQUIRED_RIGHT_CASILLA: Decimal(0),
+                },
+            )
+        rendered_by_language[language] = localised.message
+        # Interpolation survives in every language.
+        assert "test-cross-casilla-001" in localised.message
+        assert predicate.expression in localised.message
+    assert rendered_by_language["es"] != rendered_by_language["en"]
 
 
 def test_cross_casilla_invariant_next_action_is_localised() -> None:
@@ -453,25 +478,34 @@ def test_registry_snapshot_unresolved_finding_is_localised() -> None:
 
     Modelo '999' is not in the registry; the function must return a single
     BLOCKING_RULE finding whose message is rendered via tr() and contains the
-    modelo, filing_year, and period interpolation tokens.
+    modelo, filing_year, and period interpolation tokens. The message must
+    also vary with the operator's output language; catalogue prose is
+    deliberately not asserted verbatim so a translation edit cannot red this
+    contract.
     """
     work_unit = _minimal_work_unit(modelo="999", period="0A", filing_year=2026)
     target = _minimal_calculation_revision(work_unit)
 
-    with override_settings(cadrumo_output_language="en"):
-        findings, _resolved, _missing = _collect_revision_verification_findings(
-            work_unit=work_unit,
-            target=target,
-            profile=_resident_profile(),
-            transaction_repository=None,
-        )
+    rendered_by_language: dict[str, str] = {}
+    for language in ("es", "en"):
+        with override_settings(cadrumo_output_language=language):
+            findings, _resolved, _missing = _collect_revision_verification_findings(
+                work_unit=work_unit,
+                target=target,
+                profile=_resident_profile(),
+                transaction_repository=None,
+            )
 
-    assert len(findings) == 1
-    finding = findings[0]
-    assert "999" in finding.message
-    assert "2026" in finding.message
-    assert "0A" in finding.message
-    assert "could not be resolved" in finding.message
+        assert len(findings) == 1
+        finding = findings[0]
+        assert "999" in finding.message
+        assert "2026" in finding.message
+        assert "0A" in finding.message
+        # Must not be the raw locale key surfaced as a self-referencing fallback.
+        assert finding.message != "application.modelo.findings.registry_snapshot_unresolved"
+        rendered_by_language[language] = finding.message
+
+    assert rendered_by_language["es"] != rendered_by_language["en"]
 
 
 # ---------------------------------------------------------------------------

@@ -156,6 +156,13 @@ def _read_manifest_version(repo_root: Path) -> str:
 
 
 _MCPB_MANIFEST_PATH: Final = Path("packaging/mcpb/manifest.json")
+# The checked-in MCPB manifest version is a dead placeholder: packaging/mcpb/
+# build.py stamps the real cohort version over it at build time, so the tracked
+# literal carries a clearly-synthetic sentinel. The version gate requires the
+# sentinel exactly (a real-looking literal would masquerade as an authority),
+# and the built bundle's stamped version is bound to the cohort by
+# check_generated_surface_versions instead.
+_MCPB_MANIFEST_VERSION_SENTINEL: Final = "0.0.0"
 
 REQUIRED_DISTRIBUTION_ROWS: Final[tuple[str, ...]] = (
     "claude-code-plugin",
@@ -202,17 +209,23 @@ def check_version_surfaces_agree(repo_root: Path) -> ReadinessCheck:
     expected_pins = tuple(
         f"{distribution}=={pyproject_version}" for distribution in PRODUCT_IDENTITY.companion_distributions
     )
-    versions = {version for _relative, version in project_versions} | {init_version, manifest_version, mcpb_version}
-    passed = len(versions) == 1 and bool(pyproject_version) and observed_pins == expected_pins
+    versions = {version for _relative, version in project_versions} | {init_version, manifest_version}
+    # The checked-in MCPB manifest never carries the release version: build.py
+    # stamps the cohort version over it, so the tracked literal must be the
+    # synthetic sentinel. Anything else is a stale hand-stamped authority.
+    mcpb_sentinel_ok = mcpb_version == _MCPB_MANIFEST_VERSION_SENTINEL
+    passed = len(versions) == 1 and bool(pyproject_version) and observed_pins == expected_pins and mcpb_sentinel_ok
     surfaces = " ".join(f"{relative}={version!r}" for relative, version in project_versions)
     detail = (
         f"{surfaces} init={init_version!r} manifest={manifest_version!r} "
-        f"mcpb={mcpb_version!r} mcpb_args={mcpb_args!r} pins={observed_pins!r}"
+        f"mcpb={mcpb_version!r} (expected sentinel {_MCPB_MANIFEST_VERSION_SENTINEL!r}; "
+        "build.py stamps the real version) "
+        f"mcpb_args={mcpb_args!r} pins={observed_pins!r}"
     )
     if passed:
         detail = (
-            "all release authorities, the .mcpb bundle, and mandatory exact companion "
-            f"dependencies agree on {pyproject_version!r}"
+            "all release authorities and mandatory exact companion dependencies agree on "
+            f"{pyproject_version!r}; the .mcpb manifest carries its build-stamped sentinel"
         )
     return ReadinessCheck("version-surfaces-agree", "blocking", passed, detail)
 
@@ -238,27 +251,35 @@ def check_changelog_is_ready(repo_root: Path) -> ReadinessCheck:
 
 
 def check_no_open_release_blockers(
-    *, repo_slug: str = "nevenincs/cadrumo", gh_executable: str | None = None
+    *, repo_slug: str = "nevenincs/cadrumo", gh_executable: str | None = None, strict: bool = False
 ) -> ReadinessCheck:
     """Confirm no open GitHub issue carries the `priority:P0-blocker` label.
 
-    Advisory: degrades gracefully (reported, non-blocking) when `gh` is
-    absent, unauthenticated, or the network is unreachable, since this check
-    depends on live external state rather than repository content.
+    When `strict` is False (a local/advisory run) this degrades gracefully
+    (reported, non-blocking) when `gh` is absent, unauthenticated, the network
+    is unreachable, or the output is not JSON, since it depends on live external
+    state rather than repository content.
+
+    When `strict` is True (the Gate-2 publish path, which HAS network and must
+    not promote past a blocker it could not see) an inability to DETERMINE the
+    blocker state is itself blocking: a fail-open advisory there would let the
+    gate pass while blind. The escalation is only for *cannot-determine*; a
+    successful query that finds open blockers is blocking in both modes.
 
     `gh_executable` accepts an explicit resolved path (used by tests to
     exercise a real, non-mocked stub executable without depending on the
     host platform's PATH/PATHEXT executable-resolution rules); production
     callers resolve the real `gh` via `shutil.which`.
     """
+    undetermined_severity = "blocking" if strict else "advisory"
+
+    def _undetermined(detail: str) -> ReadinessCheck:
+        prefix = "cannot determine blocker state: " if strict else ""
+        return ReadinessCheck("no-open-release-blockers", undetermined_severity, False, f"{prefix}{detail}")
+
     resolved_gh = gh_executable if gh_executable is not None else shutil.which("gh")
     if resolved_gh is None:
-        return ReadinessCheck(
-            "no-open-release-blockers",
-            "advisory",
-            False,
-            "gh unavailable: not found on PATH",
-        )
+        return _undetermined("gh unavailable: not found on PATH")
     try:
         result = subprocess.run(
             [
@@ -280,28 +301,13 @@ def check_no_open_release_blockers(
             timeout=_GH_TIMEOUT_SECONDS,
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
-        return ReadinessCheck(
-            "no-open-release-blockers",
-            "advisory",
-            False,
-            f"gh unavailable: {exc}",
-        )
+        return _undetermined(f"gh unavailable: {exc}")
     if result.returncode != 0:
-        return ReadinessCheck(
-            "no-open-release-blockers",
-            "advisory",
-            False,
-            f"gh issue list failed (rc={result.returncode}): {result.stderr.strip()[:200]}",
-        )
+        return _undetermined(f"gh issue list failed (rc={result.returncode}): {result.stderr.strip()[:200]}")
     try:
         issues = json.loads(result.stdout or "[]")
     except json.JSONDecodeError:
-        return ReadinessCheck(
-            "no-open-release-blockers",
-            "advisory",
-            False,
-            "gh returned non-JSON output",
-        )
+        return _undetermined("gh returned non-JSON output")
     if issues:
         titles = ", ".join(f"#{i['number']} {i['title']}" for i in issues[:5])
         return ReadinessCheck(
@@ -483,8 +489,9 @@ def check_generated_surface_versions(
     Each channel generator embeds the version (and, for Scoop/Homebrew, the exact
     artifact SHA-256s) at build time. A stale embedded value would ship an
     install surface pointing at the wrong release under the right tag, so this
-    parses the three real formats - the Scoop JSON manifest, the Homebrew Ruby
-    formula, and the marketplace plugin JSON inside its zip - and refuses with a
+    parses the four real formats - the Scoop JSON manifest, the Homebrew Ruby
+    formula, the marketplace plugin JSON inside its zip, and the stamped
+    ``manifest.json`` inside the built ``.mcpb`` bundle - and refuses with a
     per-surface enumeration when any embedded value drifts from the cohort.
     """
     name = "generated-surface-versions"
@@ -532,6 +539,8 @@ def check_generated_surface_versions(
         market_zips = sorted(cohort_root.glob("claude/cadrumo-marketplace-*.zip"))
         if not market_zips:
             failures.append("marketplace zip is absent")
+        elif len(market_zips) > 1:
+            failures.append(f"multiple marketplace zips present, cannot bind one: {[z.name for z in market_zips]}")
         else:
             with zipfile.ZipFile(market_zips[0]) as archive:
                 plugin = json.loads(archive.read("plugins/cadrumo/.claude-plugin/plugin.json"))
@@ -540,10 +549,31 @@ def check_generated_surface_versions(
     except (OSError, zipfile.BadZipFile, json.JSONDecodeError, KeyError) as exc:
         failures.append(f"marketplace plugin manifest unreadable: {exc}")
 
+    try:
+        # The tracked packaging/mcpb/manifest.json carries only the build-stamped
+        # sentinel; the BUILT bundle is where the real version lives, so bind it
+        # to the cohort here (the counterpart of the sentinel rule in
+        # check_version_surfaces_agree).
+        mcpb_bundles = sorted(cohort_root.glob("mcpb/cadrumo-*.mcpb"))
+        if not mcpb_bundles:
+            failures.append("mcpb bundle is absent")
+        elif len(mcpb_bundles) > 1:
+            failures.append(f"multiple mcpb bundles present, cannot bind one: {[b.name for b in mcpb_bundles]}")
+        else:
+            with zipfile.ZipFile(mcpb_bundles[0]) as archive:
+                mcpb_manifest = json.loads(archive.read("manifest.json"))
+            if str(mcpb_manifest.get("version")) != version:
+                failures.append(f"mcpb stamped version {mcpb_manifest.get('version')!r} != cohort {version!r}")
+    except (OSError, zipfile.BadZipFile, json.JSONDecodeError, KeyError) as exc:
+        failures.append(f"mcpb bundle manifest unreadable: {exc}")
+
     if failures:
         return ReadinessCheck(name, "blocking", False, "; ".join(failures))
     return ReadinessCheck(
-        name, "blocking", True, f"scoop, homebrew, and marketplace all bind cohort version {version} and digests"
+        name,
+        "blocking",
+        True,
+        f"scoop, homebrew, marketplace, and mcpb all bind cohort version {version} and digests",
     )
 
 
@@ -574,9 +604,15 @@ def build_report(
             evidence_directory=evidence_directory,
         ),
         check_generated_surface_versions(root, cohort_directory=cohort_directory),
+        check_latest_packaging_smoke_evidence(root),
     ]
     if not skip_network:
-        checks.append(check_no_open_release_blockers(gh_executable=gh_executable))
+        # The Gate-2 publish path runs against a promoted cohort directory and has
+        # network: there, an inability to determine the blocker state is blocking,
+        # not advisory, so the gate cannot promote past a P0 blocker it could not see.
+        checks.append(
+            check_no_open_release_blockers(gh_executable=gh_executable, strict=cohort_directory is not None),
+        )
     return ReadinessReport(checks=tuple(checks))
 
 

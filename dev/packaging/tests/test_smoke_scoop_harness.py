@@ -148,7 +148,7 @@ foreach ($name in @('Stop-ProcessesUnderPath', 'Invoke-ScoopUninstallWithRetry')
 $env:Path = '{scoop_bin_dir}' + [System.IO.Path]::PathSeparator + $env:Path
 $ErrorActionPreference = 'Stop'
 $retryArguments = @{{
-    PackageName = 'cadrumo-s20-acquisition'
+    PackageName = 'cadrumo-scoop-acquisition'
     AppRoot = '{app_root}'
     ExtraArguments = @('--purge')
     SettleSeconds = 0
@@ -273,7 +273,7 @@ def test_uninstall_retry_reruns_until_windows_releases_the_handle(tmp_path: Path
     interpreter = _interpreter()
     if interpreter is None:
         return  # structural contract asserted above; no interpreter on this host
-    app_root = tmp_path / "apps" / "cadrumo-s20-acquisition"
+    app_root = tmp_path / "apps" / "cadrumo-scoop-acquisition"
     (app_root / "0.2.1").mkdir(parents=True)
     scoop_bin_dir = tmp_path / "scoop"
     _write_scripted_scoop(scoop_bin_dir, app_root, succeed_on_attempt=3)
@@ -292,7 +292,7 @@ def test_uninstall_retry_stays_fail_loud_when_the_app_never_releases(tmp_path: P
     interpreter = _interpreter()
     if interpreter is None:
         return  # structural contract asserted above; no interpreter on this host
-    app_root = tmp_path / "apps" / "cadrumo-s20-acquisition"
+    app_root = tmp_path / "apps" / "cadrumo-scoop-acquisition"
     (app_root / "0.2.1").mkdir(parents=True)
     scoop_bin_dir = tmp_path / "scoop"
     _write_scripted_scoop(scoop_bin_dir, app_root, succeed_on_attempt=99)

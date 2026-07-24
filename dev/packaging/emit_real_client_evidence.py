@@ -19,17 +19,75 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Final
+from typing import Any, Final
 
 from dev.packaging._acquire_common import capture_owned_server_launch
 from dev.packaging.cohort_manifest import load_release_cohort
+from dev.packaging.desktop_capture import collect_seed_secrets
 from dev.packaging.distribution_evidence_emit import _mcp_evidence_from_mapping, emit_client_evidence
 from dev.packaging.evidence import AcquisitionIdentity, ClientIdentity, DestinationIdentity
 from dev.packaging.installed_mcp_oracle import isolated_mcp_environment
 
 _DEFAULT_DISTRIBUTION_EVIDENCE_DIR: Final[Path] = Path("var/distribution-install-readiness")
 _UTF_8: Final[str] = "utf-8"
+
+# A real-client session summary is a handful of short status fields
+# (connected, status, tool_called, model, ...). Anything token-shaped or an
+# email address is operator-supplied content that must not ship verbatim into a
+# published claude-*.json row. The length floor mirrors
+# ``desktop_capture.collect_seed_secrets``.
+_SECRET_MIN_LENGTH: Final[int] = 32
+_EMAIL_PATTERN: Final[re.Pattern[str]] = re.compile(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}")
+
+
+class RealClientSessionError(RuntimeError):
+    """Raised when the operator-supplied session JSON carries secret-shaped content."""
+
+
+def _iter_strings(value: Any) -> Iterator[str]:
+    """Yield every string leaf in an arbitrarily nested JSON structure.
+
+    Dict KEYS are yielded alongside values: a session JSON key is operator-typed
+    text that can itself be secret-shaped or carry an email, so it must face the
+    same refusals as a value.
+    """
+    if isinstance(value, str):
+        yield value
+    elif isinstance(value, dict):
+        for key, item in value.items():
+            if isinstance(key, str):
+                yield key
+            yield from _iter_strings(item)
+    elif isinstance(value, (list, tuple)):
+        for item in value:
+            yield from _iter_strings(item)
+
+
+def assert_session_carries_no_secret(session_path: Path, session: object) -> None:
+    """Refuse a session summary that carries a token-shaped string or an email.
+
+    The session JSON ships verbatim into a published ``claude-*.json`` row, so it
+    is scanned before minting. It reuses the ``collect_seed_secrets`` long-string
+    heuristic (any value >= 32 chars is treated as a secret) and additionally
+    walks every nested string — dict KEYS as well as values — refusing a
+    token-length string or an email address wherever it appears.
+
+    Raises:
+        RealClientSessionError: On the first secret-shaped value found.
+    """
+    long_values = collect_seed_secrets(session_path)
+    nested_long = tuple(text for text in _iter_strings(session) if len(text) >= _SECRET_MIN_LENGTH)
+    emails = tuple(text for text in _iter_strings(session) if _EMAIL_PATTERN.search(text))
+    if long_values or nested_long or emails:
+        raise RealClientSessionError(
+            "the real-client session JSON carries secret-shaped content (a token-length string or an email "
+            "address) and cannot ship verbatim into a published claude-* evidence row. Keep the session summary "
+            "to short, non-sensitive status fields (e.g. connected, status, tool_called, model), and redact any "
+            "token or personal identifier before emitting evidence.",
+        )
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -58,6 +116,7 @@ def main(argv: list[str] | None = None) -> int:
     cohort = load_release_cohort(args.release_cohort_dir)
     mcp_evidence = _mcp_evidence_from_mapping(json.loads(args.protocol_oracle.read_text(encoding=_UTF_8)))
     real_client_session = json.loads(args.real_client_session.read_text(encoding=_UTF_8))
+    assert_session_carries_no_secret(args.real_client_session, real_client_session)
 
     work = args.launch_work_dir.resolve()
     work.mkdir(parents=True, exist_ok=True)

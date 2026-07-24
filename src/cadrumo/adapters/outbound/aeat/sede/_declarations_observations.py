@@ -480,10 +480,16 @@ def _verify_submitted_file_context(
     }
     for parsed in parsed_fields:
         field = fields_by_id.get(parsed.field_id)
-        if field is None or field.kind != CasillaFieldKind.DRAFT or field.draft_attribute not in expected:
+        draft_attribute = None if field is None else field.draft_attribute
+        if (
+            field is None
+            or field.kind != CasillaFieldKind.DRAFT
+            or draft_attribute is None
+            or draft_attribute not in expected
+        ):
             continue
         observed = "" if parsed.value is None else str(parsed.value)
-        if observed != expected[field.draft_attribute]:
+        if observed != expected[draft_attribute]:
             raise SedeParseError(
                 f"submitted-file field {parsed.field_id!r} does not match declaration {declaration.expediente_id!r}",
             )

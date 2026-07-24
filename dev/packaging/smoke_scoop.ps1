@@ -347,8 +347,19 @@ function Invoke-InstalledOracle {
     $mcpState = Join-Path $OutputDir "mcp-state"
     $mcpWork = Join-Path $OutputDir "mcp-work"
 
+    # The Scoop manifest's pre_install pinned the transitive closure through
+    # `uv pip install --constraint constraints.txt`; assert the venv it produced
+    # actually landed on those pins before the tax oracle mints evidence on it.
+    # The constraints file was written into the app dir beside the venv.
+    $constraints = (Resolve-Path (Join-Path $Prefix "constraints.txt")).Path
+
     Push-Location $RepoRoot
     try {
+        Invoke-Native -FilePath $python -ArgumentList @(
+            "-m", "dev.packaging.constraint_effect",
+            "--python", $python,
+            "--constraints", $constraints
+        ) -OutputPath (Join-Path $OutputDir "constraint-effect.log")
         Invoke-Native -FilePath $python -ArgumentList @(
             "-m", "dev.packaging.installed_tax_oracle",
             "--cli", $AeatCommand,
@@ -420,8 +431,10 @@ function Invoke-HostSmoke {
         Get-ChildItem -LiteralPath $appsRoot -Directory | ForEach-Object { $_.Name }
     )
     $preexistingScoopPersistEntries = @(
-        Get-ChildItem -LiteralPath $persistEntriesRoot -Directory |
-            ForEach-Object { $_.Name }
+        if (Test-Path -LiteralPath $persistEntriesRoot -PathType Container) {
+            Get-ChildItem -LiteralPath $persistEntriesRoot -Directory |
+                ForEach-Object { $_.Name }
+        }
     )
     $uvWasInstalled = Test-Path -LiteralPath (Join-Path $uvRoot "current")
     $pythonWasInstalled = Test-Path -LiteralPath (Join-Path $pythonRoot "current")
@@ -637,11 +650,13 @@ function Invoke-HostSmoke {
             throw "cleanup retained Scoop apps installed by the smoke run: $($retainedNewApps -join ', ')"
         }
         $retainedNewPersistEntries = @(
-            Get-ChildItem -LiteralPath $persistEntriesRoot -Directory |
-                Where-Object {
-                    $preexistingScoopPersistEntries -notcontains $_.Name
-                } |
-                ForEach-Object { $_.Name }
+            if (Test-Path -LiteralPath $persistEntriesRoot -PathType Container) {
+                Get-ChildItem -LiteralPath $persistEntriesRoot -Directory |
+                    Where-Object {
+                        $preexistingScoopPersistEntries -notcontains $_.Name
+                    } |
+                    ForEach-Object { $_.Name }
+            }
         )
         if ($retainedNewPersistEntries.Count -gt 0) {
             throw (

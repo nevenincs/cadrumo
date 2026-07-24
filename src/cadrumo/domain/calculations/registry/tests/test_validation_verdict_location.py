@@ -84,7 +84,7 @@ def test_read_verdict_returns_none_when_absent(tmp_path: Path) -> None:
 def test_certify_then_matching_key_is_certified(tmp_path: Path) -> None:
     root = tmp_path / "registry" / "aeat"
     key = compute_verdict_key(
-        registry_fingerprints=(("a.toml", 1, 2),),
+        registry_fingerprints=(("a.toml", 1, 2, "digest-a"),),
         source_evidence_fingerprints=(("b.pdf", 3, 4),),
         package_version="1.2.3",
     )
@@ -106,14 +106,20 @@ def test_mismatched_key_is_not_certified_and_deletes_the_stale_verdict(tmp_path:
 
 
 def test_compute_verdict_key_is_sensitive_to_every_input() -> None:
-    reg = (("a.toml", 1, 2),)
+    reg = (("a.toml", 1, 2, "digest-a"),)
     src = (("b.pdf", 3, 4),)
     key = compute_verdict_key(registry_fingerprints=reg, source_evidence_fingerprints=src, package_version="1.0.0")
     assert key != compute_verdict_key(
         registry_fingerprints=reg, source_evidence_fingerprints=src, package_version="1.0.1"
     )
     assert key != compute_verdict_key(
-        registry_fingerprints=(("a.toml", 1, 3),),
+        registry_fingerprints=(("a.toml", 1, 3, "digest-a"),),
+        source_evidence_fingerprints=src,
+        package_version="1.0.0",
+    )
+    # A same-size, same-mtime content change re-keys via the digest slot alone.
+    assert key != compute_verdict_key(
+        registry_fingerprints=(("a.toml", 1, 2, "digest-b"),),
         source_evidence_fingerprints=src,
         package_version="1.0.0",
     )
@@ -122,9 +128,11 @@ def test_compute_verdict_key_is_sensitive_to_every_input() -> None:
         source_evidence_fingerprints=(("b.pdf", 9, 4),),
         package_version="1.0.0",
     )
-    # A tuple moving between the two groups must not collide (group label mixed in).
+    # A tuple moving between the two groups must not collide (group label mixed
+    # in). The registry copy carries the empty bundled-tree digest so its hashed
+    # byte stream matches the source-evidence tuple's exactly but for the label.
     swapped = compute_verdict_key(
-        registry_fingerprints=(("b.pdf", 3, 4),),
+        registry_fingerprints=(("b.pdf", 3, 4, ""),),
         source_evidence_fingerprints=(("a.toml", 1, 2),),
         package_version="1.0.0",
     )

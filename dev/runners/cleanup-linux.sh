@@ -7,7 +7,7 @@
 # and MUST always exit 0 - a cleanup failure must never redden a green build.
 #
 # What it does, in order: purge stale _work/_temp entries; prune per-run lane
-# roots (cadrumo-s2* / cadrumo-claude-* / oracle-emit-work) older than 24h;
+# roots (cadrumo-homebrew* / cadrumo-scoop* / cadrumo-claude-* / oracle-emit-work) older than 24h;
 # purge var/ residue in the reused checkout (evidence dirs <7d exempt); bound
 # the uv / pip / npm speed caches; docker hygiene against the host daemon the
 # smoke's nested containers share (dangling images, stopped containers,
@@ -21,7 +21,7 @@
 set +e   # never abort the hook; each step guards itself.
 
 # --- constants -------------------------------------------------------------
-LANE_GLOBS=(cadrumo-s2 cadrumo-claude oracle-emit-work)
+LANE_GLOBS=(cadrumo-homebrew cadrumo-scoop cadrumo-claude oracle-emit-work)
 LANE_MAX_AGE_MIN=$((24 * 60))
 EVIDENCE_EXEMPT="distribution-install-readiness"
 EVIDENCE_KEEP_MIN=$((7 * 24 * 60))

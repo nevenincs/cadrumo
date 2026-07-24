@@ -29,6 +29,12 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 from dev.packaging.python_cohort import PythonCohort, load_python_cohort  # noqa: E402
+from dev.packaging.uv_constraints import (  # noqa: E402
+    export_runtime_constraints,
+    render_constraints_file,
+)
+
+from cadrumo.agent import PRODUCT_AUTHOR_NAME  # noqa: E402
 
 _MANIFEST = _HERE / "manifest.json"
 _UTF_8: Final[str] = "utf-8"
@@ -94,14 +100,23 @@ from cadrumo.entrypoints.mcp import main
 if __name__ == "__main__":
     main()
 """
+#: The oldest uv release whose ``uv sync`` honours ``[tool.uv]
+#: constraint-dependencies``. uv added constraint dependencies to
+#: ``pyproject.toml`` in 0.2.28 (uv changelog 0.2.x, "Add constraint dependencies
+#: to pyproject.toml", PR #5248). Below this floor ``uv sync`` silently ignores
+#: the pinned closure and resolves whatever the index serves, so the bundled
+#: constraint pins would not apply. The first-launch bootstrap refuses below it.
+_MIN_UV_VERSION: Final[str] = "0.2.28"
+
 # The self-healing bootstrap launched by ``uv run --no-project`` (``src/server.py``).
 # On the first launch it provisions the bundle-local ``.venv`` once (``uv sync``),
 # recording the cohort digest in a marker; every launch then execs that provisioned
 # interpreter directly on ``src/_serve.py``, so no session after the first pays uv's
 # project resolution. A marker keyed by the cohort digest re-provisions after a
 # version upgrade; the digest-pin verification in ``_serve.py`` remains the final
-# guard against serving a mismatched cohort.
-_BOOTSTRAP_SOURCE: Final[str] = """\
+# guard against serving a mismatched cohort. The minimum-uv floor is injected from
+# ``_MIN_UV_VERSION`` so the generated source carries the literal floor.
+_BOOTSTRAP_SOURCE: Final[str] = f"""\
 from __future__ import annotations
 
 import os
@@ -114,6 +129,7 @@ _BUNDLE = Path(__file__).resolve().parents[1]
 _VENV = _BUNDLE / ".venv"
 _MARKER = _VENV / ".cadrumo-cohort"
 _SERVE = _BUNDLE / "src" / "_serve.py"
+_MIN_UV_VERSION = "{_MIN_UV_VERSION}"
 
 
 def _cohort_digest():
@@ -133,10 +149,45 @@ def _is_provisioned(python):
         return False
 
 
+def _uv_version_triple(uv):
+    completed = subprocess.run(
+        [uv, "--version"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if completed.returncode != 0:
+        raise SystemExit("Cadrumo MCP could not determine the installed uv version")
+    tokens = completed.stdout.split()
+    raw = tokens[1] if len(tokens) >= 2 else ""
+    try:
+        return tuple(int(part) for part in raw.split(".")[:3])
+    except ValueError:
+        raise SystemExit(
+            "Cadrumo MCP could not parse the installed uv version: "
+            + repr(completed.stdout.strip())
+        )
+
+
+def _require_min_uv(uv):
+    floor = tuple(int(part) for part in _MIN_UV_VERSION.split("."))
+    installed = _uv_version_triple(uv)
+    if installed < floor:
+        shown = ".".join(str(part) for part in installed)
+        raise SystemExit(
+            "Cadrumo MCP requires uv >= " + _MIN_UV_VERSION + " but found uv " + shown
+            + ". uv sync honours the pinned dependency closure "
+            "([tool.uv] constraint-dependencies) only from " + _MIN_UV_VERSION
+            + "; an older uv would silently ignore the pins and resolve an untested "
+            "closure. Upgrade uv and relaunch."
+        )
+
+
 def _provision():
     uv = shutil.which("uv")
     if uv is None:
         raise SystemExit("uv is required to provision the Cadrumo MCP environment on first launch")
+    _require_min_uv(uv)
     result = subprocess.run(
         [uv, "sync", "--directory", str(_BUNDLE)],
         capture_output=True,
@@ -200,6 +251,13 @@ def load_manifest() -> dict[str, object]:
     missing = [key for key in required if key not in data]
     if missing:
         raise ManifestError(f"manifest.json missing required fields: {', '.join(missing)}")
+    author = data["author"]
+    if not isinstance(author, dict) or author.get("name") != PRODUCT_AUTHOR_NAME:
+        observed = author.get("name") if isinstance(author, dict) else author
+        raise ManifestError(
+            "manifest.json author.name must be the derived product author "
+            f"'{PRODUCT_AUTHOR_NAME}', got {observed!r}",
+        )
     if data["manifest_version"] != "0.4":
         raise ManifestError("manifest.json must use MCPB manifest_version 0.4")
     server = data["server"]
@@ -236,6 +294,8 @@ def stamped_manifest(cohort: PythonCohort) -> dict[str, object]:
     """Bind the bundle manifest to one canonical product-wheel cohort."""
     data = load_manifest()
     data["version"] = cohort.version
+    author = cast("dict[str, object]", data["author"])
+    author["name"] = PRODUCT_AUTHOR_NAME
     server = cast("dict[str, object]", data["server"])
     mcp_config = cast("dict[str, object]", server["mcp_config"])
     env = cast("dict[str, object]", mcp_config["env"])
@@ -248,8 +308,22 @@ def stamped_manifest(cohort: PythonCohort) -> dict[str, object]:
     return data
 
 
-def runtime_pyproject(cohort: PythonCohort) -> str:
-    """Render the UV project that resolves product packages from embedded wheels."""
+def runtime_pyproject(
+    cohort: PythonCohort,
+    *,
+    constraint_lines: tuple[str, ...] | None = None,
+) -> str:
+    """Render the UV project that resolves product packages from embedded wheels.
+
+    The first-launch ``uv sync`` resolves the product wheels' transitive
+    dependencies. ``uv sync`` has no constraints-file flag, so the pinned
+    closure exported from the tested ``uv.lock`` is embedded as
+    ``[tool.uv] constraint-dependencies`` here, the mechanism ``uv sync``
+    honours during resolution. The same closure is also staged as a
+    ``constraints.txt`` file in the bundle for transparency.
+    """
+    if constraint_lines is None:
+        constraint_lines = export_runtime_constraints(repo_root=_REPO_ROOT)
     filenames = dict(
         zip(
             _DISTRIBUTIONS,
@@ -264,6 +338,7 @@ def runtime_pyproject(cohort: PythonCohort) -> str:
             f'  "cadrumo-data-official=={cohort.version}",',
         ),
     )
+    constraints = "\n".join(f'  "{line}",' for line in constraint_lines)
     sources = "\n".join(f'{name} = {{ path = "artifacts/{filenames[name]}" }}' for name in _DISTRIBUTIONS)
     return (
         "[project]\n"
@@ -273,6 +348,10 @@ def runtime_pyproject(cohort: PythonCohort) -> str:
         'requires-python = ">=3.13,<3.14"\n'
         "dependencies = [\n"
         f"{dependencies}\n"
+        "]\n\n"
+        "[tool.uv]\n"
+        "constraint-dependencies = [\n"
+        f"{constraints}\n"
         "]\n\n"
         "[tool.uv.sources]\n"
         f"{sources}\n"
@@ -289,12 +368,17 @@ def _stage_bundle(stage: Path, cohort: PythonCohort) -> None:
         shutil.copy2(wheel, destination)
         if not filecmp.cmp(wheel, destination, shallow=False):
             raise ManifestError(f"staged wheel bytes drifted: {wheel}")
+    constraint_lines = export_runtime_constraints(repo_root=_REPO_ROOT)
     (stage / "manifest.json").write_text(
         json.dumps(stamped_manifest(cohort), indent=2, ensure_ascii=False) + "\n",
         encoding=_UTF_8,
     )
+    (stage / "constraints.txt").write_text(
+        render_constraints_file(constraint_lines, min_uv_version=_MIN_UV_VERSION),
+        encoding=_UTF_8,
+    )
     (stage / "pyproject.toml").write_text(
-        runtime_pyproject(cohort),
+        runtime_pyproject(cohort, constraint_lines=constraint_lines),
         encoding=_UTF_8,
     )
     (server / "server.py").write_text(_BOOTSTRAP_SOURCE, encoding=_UTF_8)

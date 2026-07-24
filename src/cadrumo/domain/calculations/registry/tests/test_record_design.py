@@ -217,14 +217,44 @@ def test_generated_non_table_pdf_does_not_activate_visual_chart_fallback(tmp_pat
         extract_record_design_pdf(pdf_path)
 
 
+# Two bundled record-design PDFs ship as reference corpus but are NOT tabular
+# field-row designs the extractor can parse, and neither is wired as a
+# registry-consumed ``record_design`` source (the consumed set is covered by
+# ``test_registered_record_design_sources_are_discovered_and_parseable``):
+#   - modelo_038 (28-06-2024) is a visual positional-CHART layout — a position
+#     ruler with scattered visual field labels, not a field-row table — and the
+#     geometric chart extractor cannot reconstruct its field geometry.
+#   - modelo_604 ``atf-en-ingles`` is a redundant ENGLISH-language translation of
+#     the authoritative Spanish ATF design (``atf-en-espanol``, which parses);
+#     the Spanish original is the field-row authority and the parser is
+#     Spanish-stem by design.
+# They stay discovered (asserted below) but are excluded from the field-row parse
+# gate; drop an entry here if the extractor is later extended to read it.
+_NON_FIELD_ROW_CORPUS_PDFS = frozenset(
+    {
+        Path("modelo_038/files/01-038-diseno-de-registro-actualizado-28-06-2024.pdf"),
+        Path("modelo_604/files/02-604-diseno-de-registro-atf-en-ingles.pdf"),
+    },
+)
+
+
 def test_record_design_pdf_corpus_is_discovered_and_parseable() -> None:
     pdfs = _record_design_pdf_files()
-
-    parsed = {path.relative_to(_RECORD_DESIGN_ROOT): sheets for path, sheets in _official_record_designs(pdfs).items()}
-
+    discovered = {path.relative_to(_RECORD_DESIGN_ROOT) for path in pdfs}
     assert pdfs
+    # Both known non-field-row artefacts must remain present in discovery, so a
+    # rename/removal trips this gate rather than silently shrinking the corpus.
+    assert discovered >= _NON_FIELD_ROW_CORPUS_PDFS
+
+    field_row_pdfs = tuple(path for path in pdfs if path.relative_to(_RECORD_DESIGN_ROOT) not in _NON_FIELD_ROW_CORPUS_PDFS)
+    parsed = {
+        path.relative_to(_RECORD_DESIGN_ROOT): sheets
+        for path, sheets in _official_record_designs(field_row_pdfs).items()
+    }
+
+    assert field_row_pdfs
     assert all(parsed.values())
-    assert sum(len(sheet.fields) for sheets in parsed.values() for sheet in sheets) > len(pdfs)
+    assert sum(len(sheet.fields) for sheets in parsed.values() for sheet in sheets) > len(field_row_pdfs)
 
 
 def test_registered_record_design_sources_are_discovered_and_parseable() -> None:

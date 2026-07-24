@@ -32,6 +32,7 @@ from .._loader import (
 from ._loader_directory_mode_support import (
     _COMPLETENESS_CASILLA_0001,
     _COMPLETENESS_CASILLA_0002,
+    _MAX_LOCALE_TOML_FRAGMENT_LINES,
     _MAX_SINGLE_FILE_MODELO_LINES,
     _MAX_TOML_FRAGMENT_LINES,
     _MAX_TOML_ROW_CHARS,
@@ -710,19 +711,6 @@ def test_locale_translation_fragments_reject_duplicate_keys(tmp_path: Path) -> N
         load_modelo_directory(tmp_path / "localized")
 
 
-# M100 2025 locale catalogues (en/ca/hu) grew past the fragment ceiling during
-# the el/la elision + contraction sweep (e370cb8ee4, fbfc37731f, 23570aa347):
-# data-shaped translation-leaf growth across every M100 casilla label/help key
-# for the revision, not structural complexity. Mirrors the sibling override in
-# test_registry_reviewability.py. Pinned per-file pending an owner split of
-# the locale catalogue by casilla section.
-_FRAGMENT_LINE_LIMIT_OVERRIDES = {
-    "100/revisions/2025/locales/ca.toml": 2300,  # SPLIT-CANDIDATE (locale data growth)
-    "100/revisions/2025/locales/en.toml": 2300,  # SPLIT-CANDIDATE (locale data growth)
-    "100/revisions/2025/locales/hu.toml": 2300,  # SPLIT-CANDIDATE (locale data growth)
-}
-
-
 def test_committed_registry_toml_files_stay_reviewable() -> None:
     """Registry TOML files must not regress toward monolithic artifacts."""
 
@@ -738,9 +726,12 @@ def test_committed_registry_toml_files_stay_reviewable() -> None:
             oversized_single_file_modelos.append(
                 f"{relative_path}: {len(lines)} lines > {_MAX_SINGLE_FILE_MODELO_LINES}",
             )
-        fragment_ceiling = _FRAGMENT_LINE_LIMIT_OVERRIDES.get(relative_path, _MAX_TOML_FRAGMENT_LINES)
-        if len(lines) > fragment_ceiling:
-            oversized_fragments.append(f"{relative_path}: {len(lines)} lines > {fragment_ceiling}")
+        # Locale catalogues are CLI-managed aggregate translation surfaces (one
+        # file per language, never hand-split) and get a wider documented cap;
+        # structural calculation fragments stay under the tighter gate.
+        fragment_cap = _MAX_LOCALE_TOML_FRAGMENT_LINES if "/locales/" in relative_path else _MAX_TOML_FRAGMENT_LINES
+        if len(lines) > fragment_cap:
+            oversized_fragments.append(f"{relative_path}: {len(lines)} lines > {fragment_cap}")
         for line_number, line in enumerate(lines, start=1):
             if len(line) <= _MAX_TOML_ROW_CHARS:
                 continue
