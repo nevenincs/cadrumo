@@ -35,6 +35,8 @@ the four-locale copy is authored through the locales CLI.
 
 from __future__ import annotations
 
+import re
+import unicodedata
 from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
@@ -78,6 +80,27 @@ COTEJO_LOCALE_KEYS: tuple[str, ...] = (
     _ADOPT_LABEL_LOCALE_KEY,
     _ADOPT_PROVENANCE_LOCALE_KEY,
 )
+
+
+_COMBINING_MARK_RE = re.compile(r"[̀-ͯ]")
+_WHITESPACE_RE = re.compile(r"\s+")
+
+
+def _canonical(text: str) -> str:
+    """Canonical comparison form for cotejo disagreement detection.
+
+    The sole live axis today is free-form Spanish prose the operator types
+    against text extracted from a PDF, so a bare ``==`` spawns a false
+    divergence page on a case, accent, or whitespace variant
+    (``"Consultoria informatica"`` vs ``"CONSULTORÍA  INFORMÁTICA "``). This
+    folds accents (NFKD + combining-mark strip), case-folds, and collapses
+    every internal/edge whitespace run to a single space so only a GENUINE
+    difference reconciles. It is a comparison key only — never persisted;
+    the adopted / kept values are always the verbatim originals.
+    """
+    normalised = unicodedata.normalize("NFKD", text)
+    without_marks = _COMBINING_MARK_RE.sub("", normalised)
+    return _WHITESPACE_RE.sub(" ", without_marks.casefold()).strip()
 
 
 def _locale_ref(key: str) -> CopyRef:
@@ -132,7 +155,7 @@ def cotejo_axes(
             continue
         flow_value = answers.get(question.id)
         artefact_value = str(fact.value)
-        if not flow_value or flow_value == artefact_value:
+        if not flow_value or _canonical(flow_value) == _canonical(artefact_value):
             continue
         axes.append(
             CotejoAxis(
@@ -225,8 +248,11 @@ def cotejo_outcome(
     :class:`~cadrumo.application.user_profile.CensoDivergence` recording the
     unadopted evidence; or the KEEP (flow-answer) value / anything else →
     the operator retained their own answer, so nothing is written here (the
-    answer already stands at its own path). Returns
-    ``(adopted_facts, divergences)`` for
+    answer already stands at its own path). The adopt discrimination uses
+    the SAME canonical fold (:func:`_canonical`) as the disagreement
+    detection, so a keep decision on a value that only differs from the
+    certificate by case / accent / whitespace can never be misrouted to a
+    spurious adopt. Returns ``(adopted_facts, divergences)`` for
     :func:`~cadrumo.application.user_profile.apply_cotejo` to commit.
     """
     from ...domain.user_profile import UserProfileFact
@@ -236,12 +262,12 @@ def cotejo_outcome(
     divergences: list[CensoDivergence] = []
     for axis in cotejo_axes(flow, certificado, answers):
         decision = cotejo_answers.get(axis.page_id)
-        if decision == axis.artefact_value:
-            adopted.append(UserProfileFact(path=axis.domain_key, value=axis.artefact_value, source=axis.source))
-        elif decision == DEFER_TOKEN:
+        if decision == DEFER_TOKEN:
             divergences.append(
                 CensoDivergence(axis=axis.domain_key, artefact_value=axis.artefact_value, source=axis.source),
             )
+        elif decision is not None and _canonical(decision) == _canonical(axis.artefact_value):
+            adopted.append(UserProfileFact(path=axis.domain_key, value=axis.artefact_value, source=axis.source))
     return tuple(adopted), tuple(divergences)
 
 

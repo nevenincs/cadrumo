@@ -152,6 +152,33 @@ def test_recotejo_clears_stale_divergence_rows_the_fresh_set_omits(schema: Profi
         assert [(row.axis, row.artefact_value) for row in open_rows] == [("contact.fiscal_address", "Calle Nueva 7")]
 
 
+def test_adopt_all_shape_emits_one_event_the_file_door_routing(schema: ProfileSchemaDefinition) -> None:
+    """The ``censo file --apply`` door is the adopt-all shape of this authority.
+
+    Every mapped censo fact adopted, none deferred — the exact call the door
+    makes (``apply_cotejo(state, adopted=facts, divergences=())``). One
+    ``CENSO_APPLIED`` marks the artefact-apply, and each adopted fact carries
+    the non-official provenance token.
+    """
+    from ....domain.censo import ActividadLocalCertificada, CertificadoSituacionCensal, censo_facts_from_certificado
+
+    certificado = CertificadoSituacionCensal(
+        domicilio_fiscal="Calle Mayor 1, 28013 Madrid",
+        condicion_residencia="Residente",
+        actividades=(ActividadLocalCertificada(descripcion="Consultoria informatica", epigrafe_iae="899"),),
+    )
+    facts = censo_facts_from_certificado(certificado)
+    assert facts  # the adopt-all set the door persists
+    with profile_create_storage_span(_PROFILE_ID) as routing_profile_id:
+        state = _register(schema, routing_profile_id)
+        state = apply_cotejo(state, adopted=facts, divergences=())
+        record = state.active_profile_record(schema=schema)
+        assert record is not None
+        adopted_sources = {fact.source for fact in record.facts if fact.source == PROVENANCE_SOURCE_CENSO_ARTEFACT}
+        assert adopted_sources == {PROVENANCE_SOURCE_CENSO_ARTEFACT}
+        assert _censo_applied_count() == 1
+
+
 def test_apply_emits_exactly_one_event_regardless_of_fact_count(schema: ProfileSchemaDefinition) -> None:
     """The apply-commit marker is one CENSO_APPLIED, never one per fact."""
     with profile_create_storage_span(_PROFILE_ID) as routing_profile_id:
