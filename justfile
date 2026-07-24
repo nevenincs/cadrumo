@@ -387,6 +387,14 @@ test-integration:
     @uv run --no-sync pytest -q -m "integration and not serial"
     @uv run --no-sync pytest -q -m "integration and serial and not perf" -n0
 
+# Run BOTH lanes in sequence and report them separately. The default pytest
+# invocation is pinned to the unit lane by addopts, so `just test-unit` green
+# says nothing about the ~3k integration tests; this is the recipe to reach for
+# before claiming a suite is clean.
+test-both-lanes:
+    @just test-unit
+    @just test-integration
+
 # Run only the serial (isolation-sensitive) integration lane, no xdist workers.
 test-integration-serial:
     @uv run --no-sync pytest -q -m "integration and serial and not perf" -n0
