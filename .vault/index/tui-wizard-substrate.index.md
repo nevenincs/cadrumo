@@ -3,18 +3,33 @@ generated: true
 tags:
   - '#index'
   - '#tui-wizard-substrate'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-07-23-tui-wizard-substrate-W01-P01-S01]]'
   - '[[2026-07-23-tui-wizard-substrate-W01-P01-S02]]'
   - '[[2026-07-23-tui-wizard-substrate-W01-P02-S03]]'
   - '[[2026-07-23-tui-wizard-substrate-W01-P02-S04]]'
+  - '[[2026-07-23-tui-wizard-substrate-W01-P02-S05]]'
   - '[[2026-07-23-tui-wizard-substrate-W01-P02-S06]]'
   - '[[2026-07-23-tui-wizard-substrate-W01-P03-S07]]'
   - '[[2026-07-23-tui-wizard-substrate-W01-P03-S08]]'
   - '[[2026-07-23-tui-wizard-substrate-W01-P03-S09]]'
   - '[[2026-07-23-tui-wizard-substrate-W01-P03-S10]]'
+  - '[[2026-07-23-tui-wizard-substrate-W02-P04-S11]]'
+  - '[[2026-07-23-tui-wizard-substrate-W02-P04-S12]]'
+  - '[[2026-07-23-tui-wizard-substrate-W02-P04-S13]]'
+  - '[[2026-07-23-tui-wizard-substrate-W02-P05-S14]]'
+  - '[[2026-07-23-tui-wizard-substrate-W02-P05-S15]]'
+  - '[[2026-07-23-tui-wizard-substrate-W02-P05-S16]]'
+  - '[[2026-07-23-tui-wizard-substrate-W02-P05-S17]]'
+  - '[[2026-07-23-tui-wizard-substrate-W02-P06-S18]]'
+  - '[[2026-07-23-tui-wizard-substrate-W02-P06-S19]]'
+  - '[[2026-07-23-tui-wizard-substrate-W02-P06-S20]]'
+  - '[[2026-07-23-tui-wizard-substrate-W03-P07-S21]]'
+  - '[[2026-07-23-tui-wizard-substrate-W03-P07-S22]]'
+  - '[[2026-07-23-tui-wizard-substrate-W03-P07-S23]]'
+  - '[[2026-07-23-tui-wizard-substrate-W03-P08-S25]]'
   - '[[2026-07-23-tui-wizard-substrate-adr]]'
   - '[[2026-07-23-tui-wizard-substrate-plan]]'
   - '[[2026-07-23-tui-wizard-substrate-research]]'
@@ -41,6 +56,21 @@ Auto-generated index of all documents tagged with `#tui-wizard-substrate`.
 - `2026-07-23-tui-wizard-substrate-W01-P03-S08` - Implement the review projection (per-question status glyph set, jump targets, submit eligibility requiring all required valid and zero stale) and the deferred-status surfacing
 - `2026-07-23-tui-wizard-substrate-W01-P03-S09` - Cover complete navigation scenarios (back, jump, gating-answer change marks dependents stale, reset, restart, repeating-group instances, deferral) with engine transition tests
 - `2026-07-23-tui-wizard-substrate-W01-P03-S10` - Expose the substrate public facade with an explicit __all__ consumed only via top-level re-exports
+- `2026-07-23-tui-wizard-substrate-W03-P08-S25` - Migrate the modelo work wizard consumer onto the engine frontends
+- `2026-07-23-tui-wizard-substrate-W01-P02-S05` - Bridge the existing wizard catalogue vocabulary into FlowDefinition while keeping the compile_profile_keys projection and the register_wizard_catalogue and register_project_answers core slots fed unchanged
+- `2026-07-23-tui-wizard-substrate-W02-P04-S11` - Build the sequential line-mode frontend over the engine, absorbing the questionary prompter role and retaining the translated unsupported-console refusal and IO-injection contract
+- `2026-07-23-tui-wizard-substrate-W02-P04-S12` - Build the scripted intent driver preserving the canonical-answer underflow and overflow drift detection
+- `2026-07-23-tui-wizard-substrate-W02-P04-S13` - Drive the line-mode frontend headlessly through pipe input and assert prompt, validation, and refusal behavior
+- `2026-07-23-tui-wizard-substrate-W02-P05-S14` - Add the textual dependency (MIT, verified conflict-free) and refresh the lockfile
+- `2026-07-23-tui-wizard-substrate-W02-P05-S15` - Build the full-screen application shell and the question-page screen with the fixed zones (header progress, prompt, help, badge, format hint, widget, live validation line, answer echo, keybinding footer)
+- `2026-07-23-tui-wizard-substrate-W02-P05-S16` - Build the review screen with per-question status glyphs, jump-to-edit, and the submit gate wired to the engine's review projection
+- `2026-07-23-tui-wizard-substrate-W02-P05-S17` - Cover full-screen navigation, live validation, and review-submit scenarios headlessly with the Textual Pilot driver
+- `2026-07-23-tui-wizard-substrate-W02-P06-S18` - Implement the render-time copy assembler resolving i18n keys and typed schema and locale references, refusing literal strings and unresolvable references loudly
+- `2026-07-23-tui-wizard-substrate-W02-P06-S19` - Scaffold the new help, format-hint, and failure-mode key namespaces across all four catalogues through the locales CLI, never hand-editing the yml files
+- `2026-07-23-tui-wizard-substrate-W02-P06-S20` - Prove copy resolution against real schema and locale sources including the four-locale parity of the new namespaces
+- `2026-07-23-tui-wizard-substrate-W03-P07-S21` - Define the per-mode checkpoint port protocol with the declared no-op arm and the frontend honesty surface (save-and-exit disabled with an explicit message when checkpointing is unavailable)
+- `2026-07-23-tui-wizard-substrate-W03-P07-S22` - Implement the resume projection rebuilding FlowState from persisted canonical values with current-definition re-validation, stale landing for mismatches, and cursor at first unanswered visible question
+- `2026-07-23-tui-wizard-substrate-W03-P07-S23` - Prove resume re-validation, definition-change stale landing, loud no-op discard, and count-only diagnostics
 
 ### plan
 
