@@ -21,7 +21,7 @@ Submodules
    cadrumo.application.wizard._persistence
    cadrumo.application.wizard._prompter
    cadrumo.application.wizard._runner
+   cadrumo.application.wizard._setup_legal_validators
    cadrumo.application.wizard._status
    cadrumo.application.wizard._translations
-   cadrumo.application.wizard._verifier
    cadrumo.application.wizard._widgets
