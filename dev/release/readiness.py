@@ -156,6 +156,13 @@ def _read_manifest_version(repo_root: Path) -> str:
 
 
 _MCPB_MANIFEST_PATH: Final = Path("packaging/mcpb/manifest.json")
+# The checked-in MCPB manifest version is a dead placeholder: packaging/mcpb/
+# build.py stamps the real cohort version over it at build time, so the tracked
+# literal carries a clearly-synthetic sentinel. The version gate requires the
+# sentinel exactly (a real-looking literal would masquerade as an authority),
+# and the built bundle's stamped version is bound to the cohort by
+# check_generated_surface_versions instead.
+_MCPB_MANIFEST_VERSION_SENTINEL: Final = "0.0.0"
 
 REQUIRED_DISTRIBUTION_ROWS: Final[tuple[str, ...]] = (
     "claude-code-plugin",
@@ -202,17 +209,23 @@ def check_version_surfaces_agree(repo_root: Path) -> ReadinessCheck:
     expected_pins = tuple(
         f"{distribution}=={pyproject_version}" for distribution in PRODUCT_IDENTITY.companion_distributions
     )
-    versions = {version for _relative, version in project_versions} | {init_version, manifest_version, mcpb_version}
-    passed = len(versions) == 1 and bool(pyproject_version) and observed_pins == expected_pins
+    versions = {version for _relative, version in project_versions} | {init_version, manifest_version}
+    # The checked-in MCPB manifest never carries the release version: build.py
+    # stamps the cohort version over it, so the tracked literal must be the
+    # synthetic sentinel. Anything else is a stale hand-stamped authority.
+    mcpb_sentinel_ok = mcpb_version == _MCPB_MANIFEST_VERSION_SENTINEL
+    passed = len(versions) == 1 and bool(pyproject_version) and observed_pins == expected_pins and mcpb_sentinel_ok
     surfaces = " ".join(f"{relative}={version!r}" for relative, version in project_versions)
     detail = (
         f"{surfaces} init={init_version!r} manifest={manifest_version!r} "
-        f"mcpb={mcpb_version!r} mcpb_args={mcpb_args!r} pins={observed_pins!r}"
+        f"mcpb={mcpb_version!r} (expected sentinel {_MCPB_MANIFEST_VERSION_SENTINEL!r}; "
+        "build.py stamps the real version) "
+        f"mcpb_args={mcpb_args!r} pins={observed_pins!r}"
     )
     if passed:
         detail = (
-            "all release authorities, the .mcpb bundle, and mandatory exact companion "
-            f"dependencies agree on {pyproject_version!r}"
+            "all release authorities and mandatory exact companion dependencies agree on "
+            f"{pyproject_version!r}; the .mcpb manifest carries its build-stamped sentinel"
         )
     return ReadinessCheck("version-surfaces-agree", "blocking", passed, detail)
 
@@ -483,8 +496,9 @@ def check_generated_surface_versions(
     Each channel generator embeds the version (and, for Scoop/Homebrew, the exact
     artifact SHA-256s) at build time. A stale embedded value would ship an
     install surface pointing at the wrong release under the right tag, so this
-    parses the three real formats - the Scoop JSON manifest, the Homebrew Ruby
-    formula, and the marketplace plugin JSON inside its zip - and refuses with a
+    parses the four real formats - the Scoop JSON manifest, the Homebrew Ruby
+    formula, the marketplace plugin JSON inside its zip, and the stamped
+    ``manifest.json`` inside the built ``.mcpb`` bundle - and refuses with a
     per-surface enumeration when any embedded value drifts from the cohort.
     """
     name = "generated-surface-versions"
@@ -540,10 +554,29 @@ def check_generated_surface_versions(
     except (OSError, zipfile.BadZipFile, json.JSONDecodeError, KeyError) as exc:
         failures.append(f"marketplace plugin manifest unreadable: {exc}")
 
+    try:
+        # The tracked packaging/mcpb/manifest.json carries only the build-stamped
+        # sentinel; the BUILT bundle is where the real version lives, so bind it
+        # to the cohort here (the counterpart of the sentinel rule in
+        # check_version_surfaces_agree).
+        mcpb_bundles = sorted(cohort_root.glob("mcpb/cadrumo-*.mcpb"))
+        if not mcpb_bundles:
+            failures.append("mcpb bundle is absent")
+        else:
+            with zipfile.ZipFile(mcpb_bundles[0]) as archive:
+                mcpb_manifest = json.loads(archive.read("manifest.json"))
+            if str(mcpb_manifest.get("version")) != version:
+                failures.append(f"mcpb stamped version {mcpb_manifest.get('version')!r} != cohort {version!r}")
+    except (OSError, zipfile.BadZipFile, json.JSONDecodeError, KeyError) as exc:
+        failures.append(f"mcpb bundle manifest unreadable: {exc}")
+
     if failures:
         return ReadinessCheck(name, "blocking", False, "; ".join(failures))
     return ReadinessCheck(
-        name, "blocking", True, f"scoop, homebrew, and marketplace all bind cohort version {version} and digests"
+        name,
+        "blocking",
+        True,
+        f"scoop, homebrew, marketplace, and mcpb all bind cohort version {version} and digests",
     )
 
 

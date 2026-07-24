@@ -1,10 +1,11 @@
 """Real-behavior tests for the generated-surface version/digest readiness check.
 
-Builds a minimal cohort carrying the three real generated-surface formats (the
-Scoop JSON manifest, the Homebrew Ruby formula, and the marketplace plugin JSON
-inside its zip) and drives ``check_generated_surface_versions`` end to end - no
-mocks, real parsing of each format on disk. Each test mutates one embedded value
-and asserts the per-surface failure is named.
+Builds a minimal cohort carrying the four real generated-surface formats (the
+Scoop JSON manifest, the Homebrew Ruby formula, the marketplace plugin JSON
+inside its zip, and the stamped manifest inside the ``.mcpb`` bundle) and drives
+``check_generated_surface_versions`` end to end - no mocks, real parsing of each
+format on disk. Each test mutates one embedded value and asserts the
+per-surface failure is named.
 """
 
 from __future__ import annotations
@@ -34,12 +35,14 @@ def _cohort(
     homebrew_version: str | None = None,
     homebrew_sha: str | None = None,
     marketplace_version: str | None = None,
+    mcpb_version: str | None = None,
 ) -> Path:
     """Materialise a cohort's version/digest surfaces; any override introduces drift."""
     (root / "python").mkdir(parents=True)
     (root / "scoop").mkdir()
     (root / "homebrew" / "Formula").mkdir(parents=True)
     (root / "claude").mkdir()
+    (root / "mcpb").mkdir()
 
     (root / "release-cohort.json").write_text(json.dumps({"version": version}), encoding="utf-8")
     (root / "python" / "python-cohort.json").write_text(
@@ -80,6 +83,8 @@ def _cohort(
             "plugins/cadrumo/.claude-plugin/plugin.json",
             json.dumps({"version": marketplace_version or version}),
         )
+    with zipfile.ZipFile(root / "mcpb" / f"cadrumo-{version}.mcpb", "w") as archive:
+        archive.writestr("manifest.json", json.dumps({"version": mcpb_version or version}))
     return root
 
 
@@ -122,6 +127,14 @@ def test_marketplace_version_drift_is_named(tmp_path: Path) -> None:
     check = check_generated_surface_versions(tmp_path, cohort_directory=cohort)
     assert not check.passed
     assert "marketplace plugin version" in check.detail
+
+
+def test_mcpb_stamped_version_drift_is_named(tmp_path: Path) -> None:
+    """A ``.mcpb`` bundle whose stamped manifest version drifts from the cohort fails."""
+    cohort = _cohort(tmp_path / "cohort", mcpb_version="6.6.6")
+    check = check_generated_surface_versions(tmp_path, cohort_directory=cohort)
+    assert not check.passed
+    assert "mcpb stamped version" in check.detail
 
 
 def test_missing_cohort_surfaces_fail_closed(tmp_path: Path) -> None:
