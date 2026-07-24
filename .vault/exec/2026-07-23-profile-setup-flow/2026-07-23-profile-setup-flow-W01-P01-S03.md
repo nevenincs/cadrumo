@@ -40,4 +40,3 @@ event-emission contract and orchestration suites 11/11.
 Discard of an abandoned incomplete profile needs no new arm: the
 existing remove (soft tombstone) plus bucket-directory erase composition
 covers it; the wizard door wires it in the W03 create-mode Step.
-

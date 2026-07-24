@@ -55,4 +55,3 @@ structurally tested), an explicit CLI discard affordance (rides the
 entrada routing page step), and one queued locale key
 (`application.wizard.notices.setup_saved_resume_later`) for the
 coordinator's lane.
-

@@ -42,4 +42,3 @@ by the sibling Steps; `_refuse_duplicate_tax_id` already treats every
 non-tombstoned profile as live, so a setup-incomplete profile reserves
 its tax id with no change - to be pinned by a repository test in the
 early-mint Step.
-

@@ -55,4 +55,3 @@ render slot is a substrate-contract decision in flight. Peer-owned gate
 reds at landing time (lazy-import, import-hygiene, prompter-singularity
 coordinates all in substrate-stream files) are owner-triaged, not this
 Step's surface.
-

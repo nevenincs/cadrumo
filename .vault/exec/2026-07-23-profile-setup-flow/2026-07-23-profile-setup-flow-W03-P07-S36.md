@@ -9,39 +9,6 @@ related:
   - "[[2026-07-23-profile-setup-flow-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace profile-setup-flow with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S36 and 2026-07-23-profile-setup-flow-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Route interactive-edit descendant answers through the edit persist seam with count-shrink clearing, or gate the descendant group out of modify mode until that seam exists, closing the silent-no-op-on-write gap and ## Scope
-
-- `src/cadrumo/application/wizard/_persistence.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Route interactive-edit descendant answers through the edit persist seam with count-shrink clearing, or gate the descendant group out of modify mode until that seam exists, closing the silent-no-op-on-write gap
 
 ## Scope
@@ -61,8 +28,6 @@ related:
 Landed as `9a21970bc8`. The edit persist seam full-implementation was assessed UNBOUNDED and gated instead: modify-mode seeding cannot instantiate the repeating group, because the modify frontend seeds render-time page defaults over a fresh `start_flow` state while instance pages are generated dynamically from the group count rather than being static items the default-seed mechanism can reach; the `resume_state` channel that would carry a `resume_flow`-built state exists on the line frontend but is not plumbed through the capability-selecting entrypoint runner. Rendering the group unseeded in modify would show existing descendants as an empty group whose commit, via the namespace-replacing clearing guard, would silently erase them. The gate is safe and honest, and the create-mode resume seeding it depends on is proven by round-trip test. The `pytest src/cadrumo/application/wizard src/cadrumo/application/flows` gate is 400 passed / 0 failed; ruff clean; collect-only clean.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 - Branch decision (gate vs full seam): the DECISION FRAMEWORK's full-seam preconditions are unmet within the modify model. The clearing guard fires whenever the count page carries an answer; the line frontend's full walk answers the count page at its zero default, so a full seam without instance seeding would wipe existing descendants. Correct instance seeding needs the resume walk, which the ADR excludes from modify and which is not wired through the entrypoint frontend runner. Gate is the ADR-sanctioned safe arm.
 - One net-new locale key: `application.wizard.notices.modify_descendants_via_door` with a `{command}` placeholder, referenced through `tr(..., default=..., command=...)` so the code renders standalone; the four-locale copy belongs to the catalogue lane.

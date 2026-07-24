@@ -46,4 +46,3 @@ state-projection suite 20/20 green.
 The still-open composition question between `domain/contribuyente`
 family math and the derived-fact injectors is out of this Step's scope
 and remains a flagged prerequisite for the descendant/family Steps only.
-

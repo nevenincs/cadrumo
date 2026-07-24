@@ -37,4 +37,3 @@ The scaffold run also regenerates the substrate stream's flows/tui
 stubs (17 files); left uncommitted for that stream's sweep - the
 generated-reference discipline says regenerate-never-hand-edit, and
 committing them belongs to the module owner's landing.
-

@@ -56,4 +56,3 @@ RATIFIED (non-interactive patch edits stage nothing); enriching the
 substrate's save-unavailable copy relayed to the substrate stream.
 Three coordinated-transient keys queue to the serialized locale lane
 with this commit as their consumer.
-

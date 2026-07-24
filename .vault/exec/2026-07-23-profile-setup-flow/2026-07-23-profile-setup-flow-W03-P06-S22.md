@@ -33,4 +33,3 @@ frontend paths, never on key existence alone.
 
 Gate run performed as one landing with S21 because the projection and
 the honesty notices share the interactive-edit preparation seam.
-

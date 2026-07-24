@@ -51,4 +51,3 @@ readiness verb, so a verdict special-case would duplicate that concern.
 Known parallel-run flake: locale parity + audit gates fail under -n
 auto and pass sequentially (loader-cache race, per the standing
 re-run-before-blaming discipline).
-
