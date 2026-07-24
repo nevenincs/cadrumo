@@ -15,6 +15,10 @@ related:
   - '[[2026-07-24-profile-login-session-W01-P03-S07]]'
   - '[[2026-07-24-profile-login-session-W02-P04-S08]]'
   - '[[2026-07-24-profile-login-session-W02-P04-S09]]'
+  - '[[2026-07-24-profile-login-session-W02-P05-S11]]'
+  - '[[2026-07-24-profile-login-session-W02-P05-S12]]'
+  - '[[2026-07-24-profile-login-session-W02-P05-S13]]'
+  - '[[2026-07-24-profile-login-session-W03-P06-S14]]'
   - '[[2026-07-24-profile-login-session-W03-P06-S15]]'
   - '[[2026-07-24-profile-login-session-adr]]'
   - '[[2026-07-24-profile-login-session-plan]]'
@@ -42,6 +46,10 @@ Auto-generated index of all documents tagged with `#profile-login-session`.
 - `2026-07-24-profile-login-session-W01-P03-S07` - Implement the per-bucket failed-login throttle sidecar (plaintext counts and timestamps only, exponential 2^n seconds capped at 60, evaluated before any Argon2id derivation, counter reset on success and on logout) with the wait surfaced in the refusal context, verified by tests driving consecutive failures through the real file backend and asserting the enforced delays and the reset
 - `2026-07-24-profile-login-session-W02-P04-S08` - Build the login orchestration service (pointer transaction, optional NAME selection through the existing UUID-or-label resolver, backend authentication by unwrap, session-key mint, record persistence) that is idempotent-guarded for a still-valid same-profile session and closes the previous session with a Notice when the target differs, verified by application-layer tests over real storage covering first login, valid-session no-op retry, and cross-profile handover
 - `2026-07-24-profile-login-session-W02-P04-S09` - Extend logout_active_profile to the full strong close (seal and zeroise the live session, delete the persisted record and its keychain entry, release the bucket lockfile, clear the pointer) while staying idempotent when already logged out, verified by tests proving both artefacts are gone after logout and a second logout is a clean no-op
+- `2026-07-24-profile-login-session-W02-P05-S11` - Register aeat config login (bootstrap-exempt, optional NAME argument, --secrets-stdin strict-JSON passphrase channel) and aeat config logout with envelope identifiers config.login and config.logout and the uniform result payloads, verified by documented-command and JSON-schema conformance plus direct invocation tests
+- `2026-07-24-profile-login-session-W02-P05-S12` - Wire every new refusal and advisory through the typed error registry and Notice channel (expired-session, not-logged-in, throttle-wait, no-keychain persistence warning, cross-profile handover, idempotent no-op) and land all locale keys through the locales CLI in every catalogue, verified by the locale parity and translation-honesty gates plus the notice-conformance gate
+- `2026-07-24-profile-login-session-W02-P05-S13` - Land the end-to-end CLI session lifecycle test (login, decrypting command without prompt in a fresh process, clock-driven idle expiry refusal, re-login, absolute-cap refusal, logout idempotence) using real processes and real storage with no mocks, gate is the module green plus zero prompts observed on the resumed invocation
+- `2026-07-24-profile-login-session-W03-P06-S14` - Delete the switch command and config profile logout registrations and every removed spelling from the write-policy allowlist, error-registry default_suggestion fields, next_action builders, curated operator help, envelope identifiers, operator-harness documents, and MCP mirrors, verified by rg sweeps returning zero hits for the removed spellings plus the operator-harness drift gate green
 - `2026-07-24-profile-login-session-W03-P06-S15` - Sever the environment source for cadrumo_active_profile so the field is populated only by --profile and override_settings, retarget the logout override refusal to the per-invocation --profile case, and sweep every string or doc naming CADRUMO_ACTIVE_PROFILE as an operating mechanism, verified by a settings test proving the env var no longer selects a profile and the existing override-refusal tests retargeted green
 
 ### plan

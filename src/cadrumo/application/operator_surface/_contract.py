@@ -73,6 +73,7 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
             "agent",
             "quickfile",
             "diagnostics",
+            "maintenance",
         ),
     ),
 )
@@ -108,7 +109,6 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
             "rename",
             "export",
             "import",
-            "logout",
             "status",
             "descendiente",
             "history",
@@ -405,6 +405,18 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         ),
         service_owner="cadrumo.application.diagnostics_run_health",
         commands=("run-health", "runs", "latency", "errors", "llm-usage", "telemetry"),
+        mutability=OperatorMutability.LOCAL_STATE_MUTATING,
+    ),
+    MountedCommandFamily(
+        domain=MountedCommandDomain.MAINTENANCE,
+        root=RootSurfaceName.APP,
+        child="maintenance",
+        operator_question=(
+            "recover local state an interrupted operation left behind, including a "
+            "profile-bundle export whose crash left an unencrypted staged file on disk"
+        ),
+        service_owner="cadrumo.application.user_profile",
+        commands=("profile-bundle-reconcile",),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
 )

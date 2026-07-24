@@ -10,16 +10,6 @@ related:
   - '[[2026-07-24-profile-login-session-research]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 # `profile-login-session` plan
 
 ## Wave `W01` - Session core infrastructure
@@ -64,9 +54,9 @@ Compose the W01 substrate into the login orchestration (select, authenticate, mi
 
 Register `aeat config login` and `aeat config logout`, wire every refusal through the typed error registry and Notice channel, and land the locale keys through the locales CLI with full four-catalogue parity.
 
-- [ ] `W02.P05.S11` - Register aeat config login (bootstrap-exempt, optional NAME argument, --secrets-stdin strict-JSON passphrase channel) and aeat config logout with envelope identifiers config.login and config.logout and the uniform result payloads, verified by documented-command and JSON-schema conformance plus direct invocation tests; `src/cadrumo/entrypoints/cli/_config/_custody.py, src/cadrumo/entrypoints/cli/_config/__init__.py`.
-- [ ] `W02.P05.S12` - Wire every new refusal and advisory through the typed error registry and Notice channel (expired-session, not-logged-in, throttle-wait, no-keychain persistence warning, cross-profile handover, idempotent no-op) and land all locale keys through the locales CLI in every catalogue, verified by the locale parity and translation-honesty gates plus the notice-conformance gate; `src/cadrumo/entrypoints/cli, src/cadrumo/locales (via python -m cadrumo.locales)`.
-- [ ] `W02.P05.S13` - Land the end-to-end CLI session lifecycle test (login, decrypting command without prompt in a fresh process, clock-driven idle expiry refusal, re-login, absolute-cap refusal, logout idempotence) using real processes and real storage with no mocks, gate is the module green plus zero prompts observed on the resumed invocation; `src/cadrumo/entrypoints/cli/tests/test_profile_login_session_lifecycle.py`.
+- [x] `W02.P05.S11` - Register aeat config login (bootstrap-exempt, optional NAME argument, --secrets-stdin strict-JSON passphrase channel) and aeat config logout with envelope identifiers config.login and config.logout and the uniform result payloads, verified by documented-command and JSON-schema conformance plus direct invocation tests; `src/cadrumo/entrypoints/cli/_config/_custody.py, src/cadrumo/entrypoints/cli/_config/__init__.py`.
+- [x] `W02.P05.S12` - Wire every new refusal and advisory through the typed error registry and Notice channel (expired-session, not-logged-in, throttle-wait, no-keychain persistence warning, cross-profile handover, idempotent no-op) and land all locale keys through the locales CLI in every catalogue, verified by the locale parity and translation-honesty gates plus the notice-conformance gate; `src/cadrumo/entrypoints/cli, src/cadrumo/locales (via python -m cadrumo.locales)`.
+- [x] `W02.P05.S13` - Land the end-to-end CLI session lifecycle test (login, decrypting command without prompt in a fresh process, clock-driven idle expiry refusal, re-login, absolute-cap refusal, logout idempotence) using real processes and real storage with no mocks, gate is the module green plus zero prompts observed on the resumed invocation; `src/cadrumo/entrypoints/cli/tests/test_profile_login_session_lifecycle.py`.
 
 ## Wave `W03` - Hard cutover, override retirement, and conformance
 
@@ -76,7 +66,7 @@ Delete `switch` and `config profile logout`, retire the CADRUMO_ACTIVE_PROFILE e
 
 Hard-cut the retired doors: delete `switch` and `config profile logout` with the full unscanned-surface hand-sweep, and sever the CADRUMO_ACTIVE_PROFILE environment source while preserving the in-process override channel for --profile and tests.
 
-- [ ] `W03.P06.S14` - Delete the switch command and config profile logout registrations and every removed spelling from the write-policy allowlist, error-registry default_suggestion fields, next_action builders, curated operator help, envelope identifiers, operator-harness documents, and MCP mirrors, verified by rg sweeps returning zero hits for the removed spellings plus the operator-harness drift gate green; `src/cadrumo/entrypoints/cli/_config/_custody.py, src/cadrumo/entrypoints/cli/_config/__init__.py, src/cadrumo/application/storage_write_policy.py, src/cadrumo/entrypoints/cli/operator_surface/_help.py, src/cadrumo/_data/agent`.
+- [x] `W03.P06.S14` - Delete the switch command and config profile logout registrations and every removed spelling from the write-policy allowlist, error-registry default_suggestion fields, next_action builders, curated operator help, envelope identifiers, operator-harness documents, and MCP mirrors, verified by rg sweeps returning zero hits for the removed spellings plus the operator-harness drift gate green; `src/cadrumo/entrypoints/cli/_config/_custody.py, src/cadrumo/entrypoints/cli/_config/__init__.py, src/cadrumo/application/storage_write_policy.py, src/cadrumo/entrypoints/cli/operator_surface/_help.py, src/cadrumo/_data/agent`.
 - [x] `W03.P06.S15` - Sever the environment source for cadrumo_active_profile so the field is populated only by --profile and override_settings, retarget the logout override refusal to the per-invocation --profile case, and sweep every string or doc naming CADRUMO_ACTIVE_PROFILE as an operating mechanism, verified by a settings test proving the env var no longer selects a profile and the existing override-refusal tests retargeted green; `src/cadrumo/core/config.py, src/cadrumo/core/_bucket_pointer_io.py, src/cadrumo/application/user_profile/_orchestration.py`.
 
 ### Phase `W03.P07` - Documentation and campaign close gates
