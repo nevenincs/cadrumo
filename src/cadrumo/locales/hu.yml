@@ -6388,6 +6388,11 @@ errors:
         használt.
       schema_mismatch: A(z) %{namespace} biztonságos objektum névtér a(z) %{expected}
         sémához van regisztrálva, de a hívó a(z) %{schema_version} sémát használta.
+      schema_upgrade_path_missing: 'Nincs sémafrissítési útvonal a(z) {namespace}
+        névtérhez: hiányzik egy frissítő a(z) {missing_from_version} verziótól a(z)
+        {expected} felé.'
+      schema_upgrader_already_registered: A(z) {namespace} névtérhez már regisztrálva
+        van sémafrissítő a(z) {from_version} verziótól.
       schema_version_from_future: A(z) {namespace} névtér tárolt sémaverziója ({schema_version})
         újabb, mint amit ez az alkalmazás támogat (legfeljebb {expected}); nem olvasható.
       schema_version_unsupported: A(z) {namespace} névtér tárolt sémaverziója ({schema_version})

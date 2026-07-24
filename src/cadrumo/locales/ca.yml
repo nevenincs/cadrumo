@@ -6505,6 +6505,11 @@ errors:
         amb sensibilitat %{expected}, però el cridador ha usat %{classification}.
       schema_mismatch: L'espai de noms d'objecte segur %{namespace} està registrat
         amb esquema %{expected}, però el cridador ha usat l'esquema %{schema_version}.
+      schema_upgrade_path_missing: 'No hi ha ruta d''actualització d''esquema per
+        a l''espai de noms {namespace}: falta un actualitzador des de la versió {missing_from_version}
+        cap a {expected}.'
+      schema_upgrader_already_registered: Ja hi ha un actualitzador d'esquema registrat
+        per a l'espai de noms {namespace} des de la versió {from_version}.
       schema_version_from_future: La versió d'esquema emmagatzemada {schema_version}
         de l'espai de noms {namespace} és més recent del que admet aquesta aplicació
         (fins a {expected}); no es pot llegir.

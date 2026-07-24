@@ -6077,6 +6077,10 @@ errors:
         for sensitivity %{expected}, but the caller used %{classification}.
       schema_mismatch: Secure-object namespace %{namespace} is registered for schema
         %{expected}, but the caller used schema %{schema_version}.
+      schema_upgrade_path_missing: 'No schema upgrade path for namespace {namespace}:
+        an upgrader from version {missing_from_version} toward {expected} is missing.'
+      schema_upgrader_already_registered: A schema upgrader is already registered
+        for namespace {namespace} from version {from_version}.
       schema_version_from_future: Stored schema version {schema_version} for namespace
         {namespace} is newer than this application supports (up to {expected}); it
         cannot be read.

@@ -6541,6 +6541,11 @@ errors:
         está registrado con sensibilidad %{expected}, pero el llamador usó %{classification}.
       schema_mismatch: El espacio de nombres de objeto seguro %{namespace} está registrado
         con esquema %{expected}, pero el llamador usó el esquema %{schema_version}.
+      schema_upgrade_path_missing: 'No hay ruta de actualización de esquema para el
+        espacio de nombres {namespace}: falta un actualizador desde la versión {missing_from_version}
+        hacia {expected}.'
+      schema_upgrader_already_registered: Ya hay un actualizador de esquema registrado
+        para el espacio de nombres {namespace} desde la versión {from_version}.
       schema_version_from_future: La versión de esquema almacenada {schema_version}
         del espacio de nombres {namespace} es más reciente de lo que admite esta aplicación
         (hasta {expected}); no se puede leer.
