@@ -130,6 +130,31 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             values=tuple(m.value for m in IrpfEstimationRegime),
         ),
         FStringKeyRegistration(
+            description="wizard.setup.taxpayer-type.entity-type.choices.*.description",
+            key_factory=lambda v: f"wizard.setup.taxpayer-type.entity-type.choices.{_hyphen(v)}.description",
+            values=tuple(m.value for m in EntityType),
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.taxpayer-type.irpf-income-categories.choices.*.description",
+            key_factory=lambda v: f"wizard.setup.taxpayer-type.irpf-income-categories.choices.{_hyphen(v)}.description",
+            values=tuple(m.value for m in IrpfIncomeCategory),
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.obligations.irpf-estimation-regime.choices.*.description",
+            key_factory=lambda v: f"wizard.setup.obligations.irpf-estimation-regime.choices.{_hyphen(v)}.description",
+            values=tuple(m.value for m in IrpfEstimationRegime),
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.residence.fiscal-residency.choices.*.description",
+            key_factory=lambda v: f"wizard.setup.residence.fiscal-residency.choices.{_hyphen(v)}.description",
+            values=tuple(m.value for m in FiscalResidency),
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.taxpayer-type.legal-entity-form.choices.*.description (curated subset)",
+            key_factory=lambda v: f"wizard.setup.taxpayer-type.legal-entity-form.choices.{_hyphen(v)}.description",
+            values=("sl", "sin_fines_lucrativos"),
+        ),
+        FStringKeyRegistration(
             description="wizard.setup.obligations.irpf-special-regime.choices.*.label",
             key_factory=lambda v: f"wizard.setup.obligations.irpf-special-regime.choices.{_hyphen(v)}.label",
             values=tuple(m.value for m in IrpfSpecialRegime),

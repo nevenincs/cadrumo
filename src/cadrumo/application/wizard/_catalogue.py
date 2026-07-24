@@ -86,22 +86,27 @@ _IVA_CHOICES: tuple[WizardChoice, ...] = (
     WizardChoice(
         value=_DEFAULT_IVA_REGIME,
         label=tr("wizard.setup.profile.iva-regime.choices.general.label"),
+        description=tr("wizard.setup.profile.iva-regime.choices.general.description"),
     ),
     WizardChoice(
         value=IVARegime.SIMPLIFICADO.value,
         label=tr("wizard.setup.profile.iva-regime.choices.simplificado.label"),
+        description=tr("wizard.setup.profile.iva-regime.choices.simplificado.description"),
     ),
     WizardChoice(
         value=IVARegime.RECARGO_EQUIVALENCIA.value,
         label=tr("wizard.setup.profile.iva-regime.choices.recargo-equivalencia.label"),
+        description=tr("wizard.setup.profile.iva-regime.choices.recargo-equivalencia.description"),
     ),
     WizardChoice(
         value=IVARegime.REAGP.value,
         label=tr("wizard.setup.profile.iva-regime.choices.reagp.label"),
+        description=tr("wizard.setup.profile.iva-regime.choices.reagp.description"),
     ),
     WizardChoice(
         value=IVARegime.EXENTO.value,
         label=tr("wizard.setup.profile.iva-regime.choices.exento.label"),
+        description=tr("wizard.setup.profile.iva-regime.choices.exento.description"),
     ),
 )
 
@@ -110,14 +115,24 @@ _ENTITY_TYPE_CHOICES: tuple[WizardChoice, ...] = tuple(
     WizardChoice(
         value=member.value,
         label=tr(f"wizard.setup.taxpayer-type.entity-type.choices.{member.value.replace('_', '-')}.label"),
+        description=tr(f"wizard.setup.taxpayer-type.entity-type.choices.{member.value.replace('_', '-')}.description"),
     )
     for member in EntityType
 )
+
+# Only the forms whose choice carries curated explainer copy; the rest render
+# label-only (an unlisted member must never mint an unresolvable description ref).
+_DESCRIBED_LEGAL_ENTITY_FORMS = frozenset({"sl", "sin_fines_lucrativos"})
 
 _LEGAL_ENTITY_FORM_CHOICES: tuple[WizardChoice, ...] = tuple(
     WizardChoice(
         value=member.value,
         label=tr(f"wizard.setup.taxpayer-type.legal-entity-form.choices.{member.value.replace('_', '-')}.label"),
+        description=(
+            tr(f"wizard.setup.taxpayer-type.legal-entity-form.choices.{member.value.replace('_', '-')}.description")
+            if member.value in _DESCRIBED_LEGAL_ENTITY_FORMS
+            else None
+        ),
     )
     for member in LegalEntityForm
 )
@@ -126,6 +141,9 @@ _IRPF_INCOME_CATEGORY_CHOICES: tuple[WizardChoice, ...] = tuple(
     WizardChoice(
         value=member.value,
         label=tr(f"wizard.setup.taxpayer-type.irpf-income-categories.choices.{member.value.replace('_', '-')}.label"),
+        description=tr(
+            f"wizard.setup.taxpayer-type.irpf-income-categories.choices.{member.value.replace('_', '-')}.description",
+        ),
     )
     for member in IrpfIncomeCategory
 )
@@ -134,6 +152,9 @@ _IRPF_ESTIMATION_REGIME_CHOICES: tuple[WizardChoice, ...] = tuple(
     WizardChoice(
         value=member.value,
         label=tr(f"wizard.setup.obligations.irpf-estimation-regime.choices.{member.value.replace('_', '-')}.label"),
+        description=tr(
+            f"wizard.setup.obligations.irpf-estimation-regime.choices.{member.value.replace('_', '-')}.description",
+        ),
     )
     for member in IrpfEstimationRegime
 )
@@ -156,6 +177,7 @@ _FISCAL_RESIDENCY_CHOICES: tuple[WizardChoice, ...] = tuple(
     WizardChoice(
         value=member.value,
         label=tr(f"wizard.setup.residence.fiscal-residency.choices.{member.value.replace('_', '-')}.label"),
+        description=tr(f"wizard.setup.residence.fiscal-residency.choices.{member.value.replace('_', '-')}.description"),
     )
     for member in FiscalResidency
 )
@@ -245,10 +267,12 @@ _SITUACION_FAMILIAR_CHOICES: tuple[WizardChoice, ...] = (
     WizardChoice(
         value=SituacionFamiliar.SOLTERO.value,
         label=tr("wizard.setup.taxpayer.situacion-familiar.choices.soltero.label"),
+        description=tr("wizard.setup.taxpayer.situacion-familiar.choices.soltero.description"),
     ),
     WizardChoice(
         value=SituacionFamiliar.SEPARADO_DIVORCIADO.value,
         label=tr("wizard.setup.taxpayer.situacion-familiar.choices.separado-divorciado.label"),
+        description=tr("wizard.setup.taxpayer.situacion-familiar.choices.separado-divorciado.description"),
     ),
 )
 
@@ -256,18 +280,22 @@ _DISABILITY_GRADE_CHOICES: tuple[WizardChoice, ...] = (
     WizardChoice(
         value=RentaDisabilityGrade.GE_33_LT_65.value,
         label=tr("wizard.setup.codes.disability-grade.choices.33-64.label"),
+        description=tr("wizard.setup.codes.disability-grade.choices.33-64.description"),
     ),
     WizardChoice(
         value=RentaDisabilityGrade.GE_65.value,
         label=tr("wizard.setup.codes.disability-grade.choices.65-plus.label"),
+        description=tr("wizard.setup.codes.disability-grade.choices.65-plus.description"),
     ),
     WizardChoice(
         value=RentaDisabilityGrade.JUDICIAL_INCAPACITY.value,
         label=tr("wizard.setup.codes.disability-grade.choices.judicial-incapacity.label"),
+        description=tr("wizard.setup.codes.disability-grade.choices.judicial-incapacity.description"),
     ),
     WizardChoice(
         value=RentaDisabilityGrade.ASSISTANCE_OR_REDUCED_MOBILITY.value,
         label=tr("wizard.setup.codes.disability-grade.choices.assistance-or-mobility.label"),
+        description=tr("wizard.setup.codes.disability-grade.choices.assistance-or-mobility.description"),
     ),
 )
 
