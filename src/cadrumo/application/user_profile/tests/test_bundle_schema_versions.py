@@ -12,7 +12,7 @@ from ....domain.user_profile import (
     UserProfileRecord,
 )
 from .._bundle import (
-    BUNDLE_SCHEMA_VERSION,
+    SUPPORTED_BUNDLE_SCHEMA_VERSIONS,
     UnsupportedBundleSchemaVersionError,
     deserialize_profile_bundle,
 )
@@ -33,6 +33,10 @@ def _profile() -> UserProfileRecord:
     )
 
 
+def test_supported_bundle_schema_versions_is_only_current_v3() -> None:
+    assert frozenset({3}) == SUPPORTED_BUNDLE_SCHEMA_VERSIONS
+
+
 def test_deserialize_profile_bundle_refuses_v2_shape() -> None:
     bundle = UserProfilePortableExport(
         bundle_schema_version=2,
@@ -44,4 +48,4 @@ def test_deserialize_profile_bundle_refuses_v2_shape() -> None:
         deserialize_profile_bundle(bundle, target_bucket_id=_BUCKET_ID)
 
     assert "bundle_schema_version 2 is not supported" in str(excinfo.value)
-    assert f"supported version: {BUNDLE_SCHEMA_VERSION}" in str(excinfo.value)
+    assert "supported versions: [3]" in str(excinfo.value)

@@ -12,7 +12,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import UTF_8_ENCODING
 from ...domain.user_profile import UserProfilePortableExport, UserProfileValidationError
 from ._bundle import (
-    BUNDLE_SCHEMA_VERSION,
+    SUPPORTED_BUNDLE_SCHEMA_VERSIONS,
     UnsupportedBundleSchemaVersionError,
     validate_bundle_payload,
 )
@@ -96,7 +96,7 @@ def decrypt_profile_bundle_with_passphrase(
         raise EncryptedProfileBundleError(
             "encrypted profile-bundle envelope declares the wrong payload model",
         )
-    if envelope.payload_schema_version != BUNDLE_SCHEMA_VERSION:
+    if envelope.payload_schema_version not in SUPPORTED_BUNDLE_SCHEMA_VERSIONS:
         raise EncryptedProfileBundleError(
             "encrypted profile-bundle envelope declares an unsupported payload schema",
         )

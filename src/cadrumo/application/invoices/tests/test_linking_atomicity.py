@@ -29,6 +29,7 @@ from sqlalchemy.engine import Engine
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.errors import SecureObjectRevisionConflictError
+from ....core import LinkInconsistencyDirection
 from ....domain.invoices import (
     Invoice,
     InvoiceCatalogue,
@@ -244,7 +245,7 @@ def test_one_sided_link_on_disk_is_reported_as_inconsistent(tmp_path: Path) -> N
         assert len(inconsistencies) == 1
         assert inconsistencies[0].invoice_id == invoice.invoice_id
         assert inconsistencies[0].transaction_id == transaction.transaction_id
-        assert inconsistencies[0].direction == "invoice-only"
+        assert inconsistencies[0].direction is LinkInconsistencyDirection.INVOICE_ONLY
 
 
 def _seed(bucket_id: str) -> tuple[Invoice, Transaction]:

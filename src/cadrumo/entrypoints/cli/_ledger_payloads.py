@@ -36,7 +36,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ...core import Period
+from ...core import LinkInconsistencyDirection, Period
 from ._ledger_business_payloads import (
     BusinessInvoiceListResult,
     BusinessInvoiceRecordPayload,
@@ -1068,11 +1068,16 @@ class LedgerLinkInconsistencyPayload(OutputSchema):
     point back, ``transaction-only`` for the reverse. Either way the two
     catalogues disagree about a link and the association cannot be trusted
     until the operator re-runs ``link``.
+
+    ``direction`` stays typed as the core
+    :class:`~cadrumo.core.LinkInconsistencyDirection` all the way to the
+    operator boundary, so the closed value set is validated here rather than
+    degrading to a free-form string on the way out.
     """
 
     invoice_id: str
     transaction_id: str
-    direction: str
+    direction: LinkInconsistencyDirection
 
 
 @register_schema("ledger.check")

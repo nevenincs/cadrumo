@@ -827,7 +827,12 @@ def _profile_unavailable_check(health: ActiveProfileHealth) -> DiagnosticCheck:
         name="profile.readiness",
         status="warn",
         summary=tr("cli.diagnostics.summary.profile_none", default="No profile configured"),
-        next_action="aeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>",
+        # Read the already-computed next action rather than re-hardcoding a
+        # create-profile suggestion here: assess_active_profile_health
+        # distinguishes "no profile registered" from "a profile exists but
+        # none is active" and suggests login, not a second create, for the
+        # latter.
+        next_action=health.next_action,
     )
 
 
@@ -916,7 +921,15 @@ def _profile_check(
             name="profile.readiness",
             status="warn",
             summary=tr("cli.diagnostics.summary.profile_none"),
-            next_action="aeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>",
+            # Prefer the health projection's next action (login vs create,
+            # depending on whether a profile is registered but inactive) over
+            # a hardcoded create-profile suggestion; only fall back when no
+            # health snapshot was supplied.
+            next_action=(
+                profile_health.next_action
+                if profile_health is not None
+                else "aeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>"
+            ),
         )
     unset_findings = _unset_profile_key_findings(state)
     if not report.profile_ready:

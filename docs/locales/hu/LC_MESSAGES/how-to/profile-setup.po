@@ -96,13 +96,14 @@ msgstr ""
 
 #: ../../how-to/profile-setup.md:36
 msgid ""
-"Switching changes which local ledger, modelo drafts, and filing markers "
-"`aeat app` commands use. The switch verb is `aeat config switch`, not `aeat "
-"config profile switch`."
+"Logging in changes which local ledger, modelo drafts, and filing markers "
+"`aeat app` commands use. The login verb is `aeat config login`, not "
+"`aeat config profile login`."
 msgstr ""
-"A váltás megváltoztatja, melyik helyi főkönyvet, modelo-piszkozatot és "
-"benyújtási jelölőt használják az `aeat app` parancsok. A váltó ige az `aeat "
-"config switch`, nem az `aeat config profile switch`."
+"A bejelentkezés megváltoztatja, melyik helyi főkönyvet, "
+"modelo-piszkozatot és benyújtási jelölőt használják az `aeat app` "
+"parancsok. A bejelentkezési ige az `aeat config login`, nem az `aeat "
+"config profile login`."
 
 #: ../../how-to/profile-setup.md:40
 msgid "Decide your facts before you start"
@@ -787,14 +788,14 @@ msgstr ""
 
 #: ../../how-to/profile-setup.md:291
 msgid ""
-"Sign out without deleting the profile using `aeat config profile logout`. "
-"Logout closes the active storage session, discards its in-memory keys, "
-"disposes the bucket engines, and clears the local active-profile pointer:"
+"Sign out without deleting the profile using `aeat config logout`. Logout "
+"closes the active storage session, discards its in-memory keys, disposes "
+"the bucket engines, and clears the local active-profile pointer:"
 msgstr ""
-"Jelentkezzen ki a profil törlése nélkül az `aeat config profile logout` "
-"paranccsal. A kijelentkezés lezárja az aktív tárolási munkamenetet, eldobja "
-"a memóriában lévő kulcsait, megszünteti a bucket-motorokat, és törli a helyi"
-" aktív-profil mutatót:"
+"Jelentkezzen ki a profil törlése nélkül az `aeat config logout` "
+"paranccsal. A kijelentkezés lezárja az aktív tárolási munkamenetet, "
+"eldobja a memóriában lévő kulcsait, megszünteti a bucket-motorokat, és "
+"törli a helyi aktív-profil mutatót:"
 
 #: ../../how-to/profile-setup.md:299
 msgid "Choose your service capabilities"

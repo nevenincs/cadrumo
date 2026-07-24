@@ -60,9 +60,10 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     # that split put it back under the default budget. The WP10 core-complexity
     # decomposition (1110a630d1) then split its remaining hotspot callables into
     # named helpers, taking it 1219 -> 1277: the added lines are helper
-    # signatures and docstrings, and radon reports no callable above C. Pinned
-    # at the post-decomposition size.
-    "src/cadrumo/adapters/persistence/storage/sql/secure_objects.py": 1277,  # SPLIT-CANDIDATE
+    # signatures and docstrings, and radon reports no callable above C. Restoring
+    # the schema-lineage ceiling wording on two iteration docstrings took it
+    # 1277 -> 1279. Pinned at that size.
+    "src/cadrumo/adapters/persistence/storage/sql/secure_objects.py": 1279,  # SPLIT-CANDIDATE
     # M143/M156/M185/M186/M490/M604/M763/M848 applicability-rule enrollment
     # (data-shaped dict literal growth); SPLIT-CANDIDATE: extract the rule
     # table into per-family submodules during the next applicability pass.
@@ -118,8 +119,10 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     "src/cadrumo/application/auth/_operator.py": 1575,  # SPLIT-CANDIDATE
     # The _delete_locked decomposition into named private helpers (f764cc53de)
     # took this module 1219 -> 1295, its first override. The only callable radon
-    # still rates C is import_ (11). Pinned at the post-decomposition size.
-    "src/cadrumo/application/bucket_maintenance/_service.py": 1295,  # SPLIT-CANDIDATE
+    # still rates C is import_ (11). Restoring the sealed-archive durability floor
+    # and the range-gate rationale it pins took it 1295 -> 1312. Pinned at that
+    # size.
+    "src/cadrumo/application/bucket_maintenance/_service.py": 1312,  # SPLIT-CANDIDATE
     # The WP11 workflow decomposition (d5a365ae08) took this module from exactly
     # the default budget (1250) to 1292, its first override, by extracting the
     # engine's stage helpers. Pinned at the post-decomposition size.

@@ -34,6 +34,9 @@ from __future__ import annotations
 
 from ....domain.justificante import PdfModeloImportError
 from ._label_regex import (
+    EJERCICIO_LABEL,
+    MODELO_LABEL,
+    PRESENTADOR_NIF_LABEL,
     SPANISH_AMOUNT_GROUP,
     TEXT_VALUE_GROUP,
     LabelHit,
@@ -50,6 +53,9 @@ from ._shared import ExtractedCasilla
 from ._utils import sha256_file, source_pdf_reference_path
 
 __all__ = [
+    "EJERCICIO_LABEL",
+    "MODELO_LABEL",
+    "PRESENTADOR_NIF_LABEL",
     "SPANISH_AMOUNT_GROUP",
     "TEXT_VALUE_GROUP",
     "ExtractedCasilla",

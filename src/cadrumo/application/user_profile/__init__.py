@@ -105,6 +105,7 @@ if TYPE_CHECKING:
         UserProfileStatus,
     )
     from ._bundle import (
+        SUPPORTED_BUNDLE_SCHEMA_VERSIONS,
         UnsupportedBundleSchemaVersionError,
         deserialize_profile_bundle,
         serialize_profile_bundle,
@@ -126,6 +127,7 @@ if TYPE_CHECKING:
         ProfileBundleExportTarget,
         ProfileBundleExportTransport,
         bundle_data_categories,
+        bundle_excluded_data_categories,
         export_profile_bundle,
         prepare_profile_export,
         publish_prepared_export,
@@ -320,6 +322,7 @@ _LAZY_EXPORTS: dict[str, str] = {
         (
             "._bundle",
             (
+                "SUPPORTED_BUNDLE_SCHEMA_VERSIONS",
                 "UnsupportedBundleSchemaVersionError",
                 "deserialize_profile_bundle",
                 "serialize_profile_bundle",
@@ -338,6 +341,7 @@ _LAZY_EXPORTS: dict[str, str] = {
                 "ProfileBundleExportTarget",
                 "ProfileBundleExportTransport",
                 "bundle_data_categories",
+                "bundle_excluded_data_categories",
                 "export_profile_bundle",
                 "prepare_profile_export",
                 "publish_prepared_export",
@@ -461,6 +465,7 @@ __all__ = [
     "CENSO_DIVERGENCE_NOTICE_CODE",
     "CENSO_DIVERGENCE_PREFIX",
     "CENSO_SOURCE_TAG",
+    "SUPPORTED_BUNDLE_SCHEMA_VERSIONS",
     "TAX_ID_FACT_PATH",
     "USER_PROFILE_SNAPSHOT_NAMESPACE",
     "USER_PROFILE_VALUE_NAMESPACE",
@@ -524,6 +529,7 @@ __all__ = [
     "apply_cotejo",
     "build_lifecycle_service",
     "bundle_data_categories",
+    "bundle_excluded_data_categories",
     "carried_namespace_definitions",
     "censo_divergence_notice",
     "change_passphrase",

@@ -51,8 +51,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import httpx
-
 from ..external_constants import UTF_8_ENCODING
 
 if TYPE_CHECKING:
@@ -111,6 +109,14 @@ class HttpTelemetrySink:
         """
         if not self._endpoint:
             return
+        # Imported lazily for cold start, not for a cycle: this package is
+        # reached from ``core.config`` (for ``TelemetryTier``), which every CLI
+        # surface imports, so a module-scope ``import httpx`` made ``aeat
+        # --version`` pay ~0.7s for an HTTP client it never constructs -- this
+        # transport is opt-in and ``emit_telemetry_event`` never builds it by
+        # default. The cost lands only on a configured remote emission.
+        import httpx
+
         try:
             response = httpx.post(
                 self._endpoint,

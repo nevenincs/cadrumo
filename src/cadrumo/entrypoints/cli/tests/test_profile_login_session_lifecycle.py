@@ -1,15 +1,15 @@
 """End-to-end profile session lifecycle over the real CLI entrypoint.
 
-Real subprocesses, real storage, real custody: each step below spawns a
-fresh interpreter running the production ``main()`` against a per-test
-storage root, so "a later process resumes without prompting" is observed
-rather than simulated. No mocks, stubs, or monkeypatching, and no verb is
-driven through an in-process shortcut.
+Real subprocesses, real storage, real custody: every invocation below
+spawns a fresh interpreter running the production ``main()`` against a
+per-test storage root, so "a later process resumes without prompting" is
+observed rather than simulated. No mocks, stubs, or monkeypatching, and no
+verb is driven through an in-process shortcut.
 
 The suite deliberately does NOT assume the host can custody a session
-key. ``aeat config login`` reports ``session_persisted`` per the ADR's
-degradation rule: a host with no usable OS keychain mints no persisted
-artefact and logs in for that process only. Both branches are real
+key. ``aeat config login`` reports ``session_persisted`` per the
+documented degradation rule: a host with no usable OS keychain mints no
+persisted artefact and logs in for that process only. Both branches are real
 product behaviour, so the load-bearing assertion here is the COUPLING —
 the envelope's ``session_persisted`` claim must match what is actually on
 disk, and the follow-on process must behave the way that claim implies
@@ -34,7 +34,7 @@ from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_PASSPHRASE = "lifecycle-session-passphrase"  # noqa: S105 - test-only custody secret
+_PASSPHRASE = "lifecycle-session-passphrase"  # noqa: S105
 
 #: Harness that runs the production entrypoint against a scoped storage
 #: root. ``with_passphrase`` decides whether the sanctioned headless

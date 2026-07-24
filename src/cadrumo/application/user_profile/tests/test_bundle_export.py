@@ -41,6 +41,7 @@ from .._bundle_export_contracts import (
     _CATEGORY_BY_BUNDLE_FIELD,
     _ENVELOPE_METADATA_BUNDLE_FIELDS,
     bundle_data_categories,
+    bundle_excluded_data_categories,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -379,3 +380,48 @@ def test_export_journal_directory_is_owner_only_on_posix(tmp_path: Path) -> None
     assert tmp_path / "buckets" not in root.parents
     if os.name != "nt":
         assert stat.S_IMODE(root.stat().st_mode) == 0o700
+
+
+def test_the_archive_reports_what_it_omits_not_only_what_it_carries(tmp_path: Path) -> None:
+    # The structured custody profile leaves whole namespaces in encrypted
+    # storage, so a response listing only carried categories overstates itself.
+    # Both sets must derive from the one coverage manifest the serializer wrote.
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _create_profile()
+        destination = tmp_path / "subject-access.json"
+        result = export_profile_bundle(
+            _request(destination, purpose=ProfileBundleExportPurpose.SUBJECT_ACCESS),
+        )
+        bundle = UserProfilePortableExport.model_validate_json(destination.read_text(encoding="utf-8"))
+
+        excluded = bundle_excluded_data_categories(bundle)
+        assert result.excluded_data_categories == excluded
+        assert excluded == tuple(
+            f"secure_object_namespace:{namespace}" for namespace in bundle.coverage_manifest.excluded_namespaces
+        )
+        # Non-vacuity: the structured archive really does omit namespaces, so
+        # this is a live disclosure gap rather than an empty formality.
+        assert excluded != ()
+        # Carried and omitted are disjoint: no category may be claimed as both.
+        assert set(excluded).isdisjoint(result.data_categories)
+
+
+def test_the_omitted_set_names_full_custody_namespaces_the_archive_cannot_carry() -> None:
+    # Pure derivation over a real manifest, pinning the direction of the two
+    # helpers so a future edit cannot swap carried for excluded and still pass.
+    record = UserProfileRecord.model_construct(profile_id="p", display_name="P", facts=())
+    bundle = UserProfilePortableExport.model_construct(
+        bundle_schema_version=3,
+        profile=record,
+        coverage_manifest=CoverageManifest(
+            carried_namespaces=("cadrumo.ledger.transactions",),
+            excluded_namespaces=("cadrumo.evidence.attachments.blobs",),
+        ),
+    )
+
+    carried = bundle_data_categories(bundle)
+    excluded = bundle_excluded_data_categories(bundle)
+
+    assert "secure_object_namespace:cadrumo.ledger.transactions" in carried
+    assert "secure_object_namespace:cadrumo.evidence.attachments.blobs" not in carried
+    assert excluded == ("secure_object_namespace:cadrumo.evidence.attachments.blobs",)

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 import os
 import shutil
 from pathlib import Path
@@ -16,6 +15,7 @@ from dev.deploy.docs_static_site import (
     _authenticated_account_id,
     _aws_base_command,
     _endpoint_response,
+    _invalidate_distribution_paths,
     _repo_root,
     _require_human_publish_environment,
     _required_executable,
@@ -146,37 +146,7 @@ def _sync_site(
 
 def _invalidate_site(aws: str, repo_root: Path, distribution_id: str) -> None:
     """Invalidate the published landing paths and wait for completion."""
-    created = _run(
-        [
-            *_aws_base_command(aws),
-            "cloudfront",
-            "create-invalidation",
-            "--distribution-id",
-            distribution_id,
-            "--paths",
-            *_INVALIDATION_PATHS,
-            "--output",
-            "json",
-        ],
-        cwd=repo_root,
-    )
-    try:
-        invalidation_id = json.loads(created.stdout)["Invalidation"]["Id"]
-    except (KeyError, TypeError, json.JSONDecodeError) as exc:
-        raise SystemExit("CloudFront did not return an invalidation ID.") from exc
-    _run(
-        [
-            *_aws_base_command(aws),
-            "cloudfront",
-            "wait",
-            "invalidation-completed",
-            "--distribution-id",
-            distribution_id,
-            "--id",
-            invalidation_id,
-        ],
-        cwd=repo_root,
-    )
+    _invalidate_distribution_paths(aws, repo_root, distribution_id, _INVALIDATION_PATHS)
 
 
 def _verify_public_delivery(target: DeploymentTarget) -> None:

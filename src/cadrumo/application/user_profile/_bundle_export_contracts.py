@@ -14,9 +14,15 @@ static hand-maintained list that silently drifts from what the bundle contains.
 The field-to-label mapping is still authored here, so it is held exhaustive by
 construction: every serialized field must be mapped to a category, declared
 envelope metadata, or declared carried-namespace derived, and an unclassified
-field refuses rather than dropping out of the disclosed set. That refusal is
-what lets the subject-access response claim to list every personal-data
-category held for the profile.
+field refuses rather than dropping out of the disclosed set.
+
+That refusal makes the CARRIED set complete, which is not the same as the
+archive being complete. The bundle ships under the structured custody profile,
+so whole namespaces -- attachment blobs, purchase invoice evidence, the bucket
+event history -- are deliberately left in encrypted storage. A right-of-access
+response listing only what it carries would therefore still overstate itself,
+so :func:`bundle_excluded_data_categories` derives the omitted set from the
+same coverage manifest and the two are always presented together.
 
 The sealed recovery archive is a separate confidentiality and restoration
 surface and is deliberately absent here.
@@ -123,8 +129,34 @@ class ProfileBundleExportTarget(BaseModel):
         return str(self.destination.expanduser().resolve(strict=False))
 
 
+class ProfileBundleExportReconcileFailure(BaseModel):
+    """One crash-recovery operation the reconciliation sweep could not finalise.
+
+    ``destination`` is ``None`` when the journal itself could not be read, so
+    nothing is known about it beyond its identifier. ``reason`` is the refusing
+    error's class name -- stable, machine-readable, and carrying no journal
+    contents onto an operator-facing surface.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    journal_id: str = Field(min_length=1)
+    destination: str | None = None
+    reason: str = Field(min_length=1)
+
+
 class ProfileBundleExportResult(BaseModel):
-    """Published profile-bundle identity and presentation metadata."""
+    """Published profile-bundle identity and presentation metadata.
+
+    ``data_categories`` and ``excluded_data_categories`` are stated together on
+    purpose: the first alone reads as a completeness claim the structured
+    custody profile does not support.
+
+    ``reconcile_failures`` carries whatever the pre-publication crash-recovery
+    sweep could not finalise. It rides the result rather than being logged and
+    dropped, because a journal left behind may still describe cleartext bundle
+    bytes on disk and the operator running the export is the one who needs told.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -135,6 +167,8 @@ class ProfileBundleExportResult(BaseModel):
     purpose: ProfileBundleExportPurpose
     transport: ProfileBundleExportTransport
     data_categories: tuple[str, ...]
+    excluded_data_categories: tuple[str, ...] = ()
+    reconcile_failures: tuple[ProfileBundleExportReconcileFailure, ...] = ()
 
 
 def bundle_data_categories(bundle: UserProfilePortableExport) -> tuple[str, ...]:
@@ -168,6 +202,26 @@ def bundle_data_categories(bundle: UserProfilePortableExport) -> tuple[str, ...]
     return (*schema_categories, *carried)
 
 
+def bundle_excluded_data_categories(bundle: UserProfilePortableExport) -> tuple[str, ...]:
+    """Derive the personal-data categories a bundle deliberately OMITS.
+
+    The portable bundle defaults to the structured custody profile, so every
+    full-custody-only namespace -- attachment blobs and manifests, purchase
+    invoice evidence, evidence bundles, apoderado authorisations, the bucket
+    event history -- is left in encrypted storage rather than written into the
+    cleartext archive. Those omissions are real and correct, but a
+    right-of-access response that lists only what it CARRIES states a
+    completeness it does not have.
+
+    This is the counterpart of :func:`bundle_data_categories`, derived from the
+    same coverage manifest the serializer already computes, so the two sets
+    cannot drift from what the bundle actually did.
+    """
+    return tuple(
+        f"{_CARRIED_NAMESPACE_CATEGORY_PREFIX}{namespace}" for namespace in bundle.coverage_manifest.excluded_namespaces
+    )
+
+
 def _refuse_unclassified_bundle_fields(field_names: tuple[str, ...]) -> None:
     """Refuse a bundle schema field carrying no declared disclosure classification."""
     unclassified = tuple(
@@ -189,9 +243,11 @@ def _refuse_unclassified_bundle_fields(field_names: tuple[str, ...]) -> None:
 
 __all__ = [
     "ProfileBundleExportPurpose",
+    "ProfileBundleExportReconcileFailure",
     "ProfileBundleExportRequest",
     "ProfileBundleExportResult",
     "ProfileBundleExportTarget",
     "ProfileBundleExportTransport",
     "bundle_data_categories",
+    "bundle_excluded_data_categories",
 ]

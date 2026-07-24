@@ -17,9 +17,9 @@ from dev.packaging.smoke_core import (
     _assert_complete_wheel_cohort,
     _build_companion_wheels,
     _build_wheel,
+    _commit_defined_build_root,
     _configured_corpus_binary_suffixes,
     _expected_wheel_data_paths,
-    _head_extract,
     _is_corpus_source_binary,
     _run,
     _tracked_source_data_paths,
@@ -39,6 +39,12 @@ _REVIEW_FOUND_PATHS = {
 }
 
 
+# The dirty-tree branch of `_commit_defined_build_root` extracts roughly forty
+# thousand files before any build starts, measured at three minutes on the
+# Windows build host. CI checks out clean and never pays it, but the shared
+# factory worktree always does, and the 300 s project ceiling would kill the
+# worker mid-extraction with an opaque "node down" instead of a result.
+@pytest.mark.timeout(900)
 def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_path: Path) -> None:
     """Build the wheel and prove tracked-data parity against companion ownership."""
     uv = shutil.which("uv")
@@ -48,12 +54,13 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
     split_owned = {path for path in tracked if "/tests/" not in path and _is_corpus_source_binary(path, suffixes)}
     assert split_owned >= _REVIEW_FOUND_PATHS
 
-    # Build every artifact from a pristine HEAD tree, never the working tree:
-    # the expectations above come from `git ls-files` at HEAD, and in the shared
-    # factory worktree a tree build can snapshot a torn peer edit, producing an
-    # artifact that corresponds to no commit and failing this test as if it were
-    # a packaging regression (issue 613). One extraction serves all three builds.
-    build_root = _head_extract(_REPO_ROOT, tmp_path)
+    # Build every artifact from a tree that corresponds to a commit, never from
+    # a dirty working tree: the expectations above come from `git ls-files` at
+    # HEAD, and in the shared factory worktree a tree build can snapshot a torn
+    # peer edit, producing an artifact that matches no commit and failing this
+    # test as if it were a packaging regression (issue 613). On a clean checkout
+    # this is the tree itself, so CI pays nothing. One root serves all six builds.
+    build_root = _commit_defined_build_root(_REPO_ROOT, tmp_path / "build-source")
 
     wheel = _build_wheel(_REPO_ROOT, tmp_path, uv, build_root=build_root)
     with zipfile.ZipFile(wheel) as archive:
@@ -144,13 +151,14 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
     assert cohort.sha256 == digests
 
 
-def test_head_extract_excludes_uncommitted_working_tree_state(tmp_path: Path) -> None:
-    """The extract carries committed content only, never the dirty working tree.
+def test_commit_defined_build_root_excludes_uncommitted_working_tree_state(tmp_path: Path) -> None:
+    """A dirty tree yields a HEAD extract; a clean tree is used directly.
 
-    This is the property the payload build above depends on. If the extractor
-    degraded into a working-tree copy, uncommitted peer edits would flow into
-    the artifacts and the build would be compared against HEAD-derived
-    expectations, which is the torn-snapshot failure issue 613 observed live.
+    This is the property the payload build above depends on. If the resolver
+    degraded into always returning the working tree, uncommitted peer edits
+    would flow into the artifacts while the expectations still came from HEAD,
+    which is the torn-snapshot failure issue 613 observed live. If it always
+    extracted, CI would pay three minutes per run for a byte-identical copy.
 
     Exercised against a real throwaway repository rather than this one: the
     property is about Git, and archiving the full corpus tree to assert it
@@ -166,14 +174,18 @@ def test_head_extract_excludes_uncommitted_working_tree_state(tmp_path: Path) ->
     _run(["git", "add", "committed.txt", "packaging/kept.txt"], cwd=origin)
     _run(["git", "commit", "--quiet", "-m", "probe commit"], cwd=origin)
 
+    # Clean tree: the tree already IS the commit, so it is used as-is.
+    assert _commit_defined_build_root(origin, tmp_path / "clean-work") == origin
+
     # Dirty the tree exactly as a mid-sweep peer would: one edit to a tracked
     # file and one entirely new untracked file.
     (origin / "committed.txt").write_text("TORN EDIT\n", encoding="utf-8")
     (origin / "untracked.txt").write_text("never committed\n", encoding="utf-8")
 
-    extract_root = _head_extract(origin, tmp_path / "work")
+    build_root = _commit_defined_build_root(origin, tmp_path / "dirty-work")
 
-    extracted = {path.relative_to(extract_root).as_posix() for path in extract_root.rglob("*") if path.is_file()}
+    assert build_root != origin
+    extracted = {path.relative_to(build_root).as_posix() for path in build_root.rglob("*") if path.is_file()}
     assert extracted == {"committed.txt", "packaging/kept.txt"}, sorted(extracted)
-    assert (extract_root / "committed.txt").read_text(encoding="utf-8") == "committed content\n"
-    assert not (extract_root / ".git").exists()
+    assert (build_root / "committed.txt").read_text(encoding="utf-8") == "committed content\n"
+    assert not (build_root / ".git").exists()

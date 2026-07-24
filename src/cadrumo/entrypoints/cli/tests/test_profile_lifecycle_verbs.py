@@ -1,4 +1,4 @@
-"""CLI surface tests for `aeat config profile {show, create, edit, status, repair}` and switch.
+"""CLI surface tests for `aeat config profile {show, create, edit, status, repair}` and login.
 
 The per-bucket rename / import / delete / no-active-session navigation tests
 that exercise the same surface live in the sibling
@@ -166,21 +166,21 @@ def test_config_profile_create_second_profile_uses_requested_identity_while_firs
     assert "activities.description\talpha-design" not in beta_show.output
 
 
-def test_config_switch_activates_existing_profile() -> None:
+def test_config_login_activates_existing_profile() -> None:
     seed("operator")
     seed("spouse")
-    result = _invoke_config(("switch", "operator"))
+    result = _invoke_config(("login", "operator"))
     assert result.exit_code == 0, result.output
     assert "active_profile\toperator" in result.output
 
 
-def test_config_switch_refuses_unknown_profile() -> None:
-    result = _invoke_config(("switch", "ghost"))
+def test_config_login_refuses_unknown_profile() -> None:
+    result = _invoke_config(("login", "ghost"))
     assert result.exit_code != 0
 
 
 def test_config_unlock_is_no_longer_a_command() -> None:
-    """``config unlock`` was hard-renamed to ``config switch``.
+    """``config unlock`` was hard-renamed, and its successor renamed again to ``config login``.
 
     The rename leaves no alias, synonym, or deprecation shadow: the retired
     spelling must resolve to a click ``No such command`` parse failure, not a
@@ -192,10 +192,10 @@ def test_config_unlock_is_no_longer_a_command() -> None:
     assert "No such command 'unlock'" in result.output
 
 
-def test_config_switch_reports_manifest_without_profile_record_through_lifecycle_boundary() -> None:
+def test_config_login_reports_manifest_without_profile_record_through_lifecycle_boundary() -> None:
     stage_bucket_manifest("operator", label="operator")
 
-    result = _invoke_config(("switch", "operator"))
+    result = _invoke_config(("login", "operator"))
 
     assert result.exit_code == 2, result.output
     assert "Profile record was not found in the active bucket" in result.output
@@ -365,8 +365,8 @@ def test_config_profile_edit_refuses_missing_profile_without_creating_bucket() -
     assert read_profile_bucket("ghost") is None
 
 
-def test_config_switch_emits_profile_activated_event() -> None:
-    """`config switch` records a typed PROFILE_ACTIVATED event in the
+def test_config_login_emits_profile_activated_event() -> None:
+    """`config login` records a typed PROFILE_ACTIVATED event in the
     bucket-event-history catalogue so downstream auditors can replay
     the activation timeline. Distinct from PROFILE_SELECTED (which
     captures workflow-state-level selection).
@@ -380,7 +380,7 @@ def test_config_switch_emits_profile_activated_event() -> None:
     seed("operator")
     pointer = read_profile_bucket("operator")
     assert pointer is not None
-    result = _invoke_config(("switch", "operator"))
+    result = _invoke_config(("login", "operator"))
     assert result.exit_code == 0, result.output
 
     # The bucket-event-history catalogue is encrypted; reading it requires an
@@ -457,7 +457,7 @@ def test_config_profile_list_excludes_a_tombstoned_profile() -> None:
     assert "<none>" in result.output
 
 
-def test_config_switch_refuses_a_tombstoned_profile() -> None:
+def test_config_login_refuses_a_tombstoned_profile() -> None:
     """Unlocking a tombstoned profile is refused, not silently activated.
 
     Closes the leak where activation made a deleted profile the active
@@ -468,7 +468,7 @@ def test_config_switch_refuses_a_tombstoned_profile() -> None:
 
     seed("operator")
     assert _invoke_profile_app(("delete", "operator", "--yes")).exit_code == 0
-    result = _invoke_config(("switch", "operator"))
+    result = _invoke_config(("login", "operator"))
     assert result.exit_code != 0, result.output
     # The tombstoned profile was not made active.
     assert resolve_active_bucket_id() is None
@@ -569,17 +569,17 @@ def test_config_profile_duplicate_target_token_is_the_addressable_label() -> Non
 def test_config_profile_duplicate_target_token_is_switchable() -> None:
     """A duplicated profile is switchable by its positional TARGET token.
 
-    Companion to the delete-by-token contract: ``switch`` must also
+    Companion to the delete-by-token contract: ``login`` must also
     resolve the duplicate by the same token used to create it, so an
     operator who ran ``duplicate operator operator-copy`` can return to
-    it with ``switch operator-copy``.
+    it with ``login operator-copy``.
     """
     seed("operator")
 
     duplicated = _invoke_profile_app(("duplicate", "operator", "operator-copy"))
     assert duplicated.exit_code == 0, duplicated.output
 
-    switched = _invoke_config(("switch", "operator-copy"))
+    switched = _invoke_config(("login", "operator-copy"))
     assert switched.exit_code == 0, switched.output
     assert "active_profile\toperator-copy" in switched.output
 

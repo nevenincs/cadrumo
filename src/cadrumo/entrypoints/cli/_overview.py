@@ -609,7 +609,7 @@ def overview_calendar(
     raw_values = record_to_values(record) if record is not None else None
     bucket_id = current.active_profile_bucket_id()
     if bucket_id is None:
-        raise _bad(tr("cli.config.errors.no_active_profile"))
+        raise _no_active_profile_refusal()
     workflow_profile = _profile_to_taxpayer(current)
     evidence_notices: list[Notice] = []
     live_events, live_notice = _local_live_calendar_events(bucket_id, rng, expected_tax_id=workflow_profile.tax_id)
@@ -920,7 +920,7 @@ def overview_backlog(
     raw_values = record_to_values(record) if record is not None else None
     bucket_id = current.active_profile_bucket_id()
     if bucket_id is None:
-        raise _bad(tr("cli.config.errors.no_active_profile"))
+        raise _no_active_profile_refusal()
     work_units, work_units_notice = _local_modelo_work_units(bucket_id)
     backlog = build_overview_backlog(
         _profile_to_taxpayer(current),

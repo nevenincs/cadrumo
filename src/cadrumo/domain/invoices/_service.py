@@ -14,11 +14,11 @@ independent argument. Persisted cross-catalogue workflows belong in
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Literal
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import LinkInconsistencyDirection
 from ...core.identity import TransactionId
 from ...core.logging import get_logger
 from ..iva import InvoiceKind
@@ -71,14 +71,15 @@ class LinkInconsistency(BaseModel):
     Attributes:
         invoice_id: Identifier of the invoice involved in the bad link.
         transaction_id: Identifier of the transaction involved.
-        direction: Which side cites the other without being cited back.
+        direction: Which side cites the other without being cited back, as a
+            :class:`LinkInconsistencyDirection` member.
     """
 
     model_config = _STRICT_FROZEN
 
     invoice_id: str = Field(min_length=1)
     transaction_id: TransactionId
-    direction: Literal["invoice-only", "transaction-only"]
+    direction: LinkInconsistencyDirection
 
 
 def find_invoice(catalogue: InvoiceCatalogue, invoice_id: str) -> Invoice | None:
@@ -260,7 +261,7 @@ def verify_link_consistency(
                     LinkInconsistency(
                         invoice_id=invoice.invoice_id,
                         transaction_id=tx_id,
-                        direction="invoice-only",
+                        direction=LinkInconsistencyDirection.INVOICE_ONLY,
                     ),
                 )
     for transaction in transactions.values():
@@ -272,7 +273,7 @@ def verify_link_consistency(
                 LinkInconsistency(
                     invoice_id=transaction.invoice_id,
                     transaction_id=transaction.transaction_id,
-                    direction="transaction-only",
+                    direction=LinkInconsistencyDirection.TRANSACTION_ONLY,
                 ),
             )
     inconsistencies.sort(key=lambda item: (item.invoice_id, item.transaction_id))

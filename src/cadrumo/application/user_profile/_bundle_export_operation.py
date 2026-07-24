@@ -83,6 +83,7 @@ class ProfileBundleExportOperation(BaseModel):
     transport: ProfileBundleExportTransport
     bundle_schema_version: int = Field(ge=1)
     data_categories: tuple[str, ...]
+    excluded_data_categories: tuple[str, ...] = ()
     started_at: datetime
     updated_at: datetime
     event_occurred_at: datetime
@@ -185,6 +186,16 @@ class ProfileBundleExportJournalRepository:
         """Return the ``profile-export-operations`` directory under storage."""
         return self._root
 
+    @property
+    def lock_target(self) -> Path:
+        """Return the sidecar target guarding every journal write.
+
+        Exposed alongside :attr:`root` because it is a real coordination point
+        of this repository, not an implementation detail: holding it is how a
+        caller (or a crash-window proof) makes a concurrent journal write wait.
+        """
+        return self._lock_target
+
     def path_for(self, operation_id: str) -> Path:
         """Return the journal path for one validated operation identifier."""
         _validate_operation_id(operation_id)
@@ -258,6 +269,12 @@ class ProfileBundleExportJournalRepository:
         for path in self._journal_paths():
             try:
                 operations.append(self.load(path.stem))
+            except ProfileBundleExportJournalNotFoundError:
+                # A peer export completing between the directory walk and this
+                # load deleted its own journal. That is a healthy success, not
+                # an unreadable record: reporting it would tell the operator an
+                # unencrypted file may remain when nothing was left behind.
+                continue
             except ProfileBundleExportJournalError as exc:
                 unreadable.append(
                     UnreadableExportJournal(journal_id=path.stem, reason=type(exc).__name__),

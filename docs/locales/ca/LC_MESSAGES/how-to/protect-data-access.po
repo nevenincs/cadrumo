@@ -263,22 +263,22 @@ msgstr "Tanca la sessió del perfil actiu"
 
 #: ../../how-to/protect-data-access.md:118
 msgid ""
-"Use `aeat config profile logout` when you finish working with a profile. "
-"Logout closes the active storage session, discards in-memory key material, "
+"Run `aeat config logout` when you finish working with a profile. Logout "
+"closes the active storage session, discards in-memory key material, "
 "disposes the bucket engines, and clears the active-profile selection:"
 msgstr ""
-"Fes servir `aeat config profile logout` quan acabis de treballar amb un "
-"perfil. El tancament de sessió tanca la sessió d'emmagatzematge activa, "
-"descarta el material de claus en memòria, elimina els motors de bucket i "
-"esborra la selecció del perfil actiu:"
+"Executa `aeat config logout` quan acabis de treballar amb un perfil. El "
+"tancament de sessió tanca la sessió d'emmagatzematge activa, descarta el "
+"material de claus en memòria, elimina els motors de bucket i esborra la "
+"selecció del perfil actiu:"
 
 #: ../../how-to/protect-data-access.md:126
 msgid ""
-"Nothing in the profile is deleted. Select it again with `aeat config switch "
+"Nothing in the profile is deleted. Log in again with `aeat config login "
 "<name>` when you return."
 msgstr ""
-"No se suprimeix res del perfil. Torna a seleccionar-lo amb `aeat config "
-"switch <name>` quan tornis."
+"No se suprimeix res del perfil. Torna a iniciar la sessió amb `aeat "
+"config login <name>` quan tornis."
 
 #: ../../how-to/protect-data-access.md:129
 msgid "Reset local state (last resort)"

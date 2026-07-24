@@ -108,7 +108,7 @@
       "argv": [
         "aeat",
         "config",
-        "switch",
+        "login",
         "bruno-real"
       ],
       "captures": [],
@@ -117,7 +117,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "active_profile\tbruno-real\n"
+      "text": "active_profile\tbruno-real\nprofile_id\t<profile-id>\nidle_deadline\t2026-04-01T09:15:00+00:00\nabsolute_deadline\t2026-04-01T13:00:00+00:00\nNo usable OS keychain found, so the session cannot be saved; this login applies to the current command only.\n"
     },
     {
       "argv": [

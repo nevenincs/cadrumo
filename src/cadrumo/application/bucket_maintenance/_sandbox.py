@@ -21,7 +21,7 @@ The service delegates every write to an existing primitive
   source bucket is opened read-only (a lifecycle-service ``read``) and is
   never written to, so seeding cannot mutate main state.
 - :func:`~application.user_profile.select_profile_with_lifecycle_span`
-  activates a named sandbox as the current session (``config switch``'s
+  activates a named sandbox as the current session (``config login``'s
   primitive).
 - :class:`~application.bucket_maintenance.BucketMaintenanceService`.delete
   composes the existing soft-tombstone-then-hard-erase primitives to discard

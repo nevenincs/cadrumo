@@ -26,7 +26,7 @@ _PROFILE_BOUND_VERB_CASES = (
     ("config profile delete operator --yes", False),
     ("config profile duplicate operator operator-copy", False),
     ("config profile rename operator renamed", False),
-    ("config switch operator", False),
+    ("config login operator", False),
     ("app ledger list", False),
     ("app registry legal view ley-37-1992:art-99", False),
 )
@@ -186,7 +186,7 @@ def test_bootstrap_exemption_short_circuits_route_policy(tmp_path: Path) -> None
 
 def test_read_only_and_recovery_verbs_do_not_trigger_write_policy(tmp_path: Path) -> None:
     decision = inspect_storage_write_policy(
-        "config switch does-not-exist",
+        "config login does-not-exist",
         bootstrap_exempt=False,
         settings=Settings(cadrumo_local_storage_root=tmp_path),
     )

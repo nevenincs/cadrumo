@@ -55,6 +55,7 @@ Submodules
    cadrumo.core._google_credential_source
    cadrumo.core._hex
    cadrumo.core._iban
+   cadrumo.core._invoice_link
    cadrumo.core._irnr
    cadrumo.core._ledger_sort
    cadrumo.core._modelo
@@ -75,6 +76,7 @@ Submodules
    cadrumo.core.atomic_write
    cadrumo.core.auth_session_keys
    cadrumo.core.click_context
+   cadrumo.core.compatibility_lifecycle
    cadrumo.core.config
    cadrumo.core.env_io
    cadrumo.core.external_constants

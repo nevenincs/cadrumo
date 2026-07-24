@@ -45,6 +45,7 @@ from ....domain.calculations.registry import (
     casillas_by_id,
 )
 from ..pdf import (
+    PRESENTADOR_NIF_LABEL,
     SPANISH_AMOUNT_GROUP,
     TEXT_VALUE_GROUP,
     ExtractedCasilla,
@@ -70,14 +71,22 @@ _PdfWord = dict[str, Any]
 _logger = get_logger(__name__)
 _INPUT_PDF_SOURCE_LABEL = "<input-pdf>"
 
+# AEAT tax-id shape: a natural-person NIF/NIE or a legal-entity CIF. Held here
+# as one fragment so the label-order variants below cannot drift apart, and so
+# accepting a new label rendering can never widen the accepted value.
+_TAX_ID_GROUP = r"(?P<tax_id>(?:[A-Z][0-9]{7}[0-9A-Z]|[0-9]{8}[A-Z]))"
+
 _TAX_ID_RE = re.compile(
-    r"\bNIF(?:\s+Presentador)?\s*[:\-]\s*(?P<tax_id>(?:[A-Z][0-9]{7}[0-9A-Z]|[0-9]{8}[A-Z]))\b",
+    rf"\b{PRESENTADOR_NIF_LABEL}\s*[:\-]\s*{_TAX_ID_GROUP}\b",
     re.IGNORECASE,
 )
-# 2021-2022 corpus PDFs use an inverted layout where the tax ID appears on the
-# line immediately before the "NIF Presentador:" label rather than after it.
+# 2021-2022 corpus PDFs use a column-split layout where pdfplumber's left-right
+# traversal lifts the tax ID onto the line immediately BEFORE its label rather
+# than after it. The leading word boundary keeps the value class from matching
+# the tail of a longer alphanumeric run (the expediente/referencia number
+# "202139013520268G" ends in a NIF-shaped "13520268G").
 _TAX_ID_BEFORE_LABEL_RE = re.compile(
-    r"(?P<tax_id>(?:[A-Z][0-9]{7}[0-9A-Z]|[0-9]{8}[A-Z]))\s*\n\s*NIF\s+Presentador\s*:",
+    rf"\b{_TAX_ID_GROUP}\s*\n\s*{PRESENTADOR_NIF_LABEL}\s*[:\-]",
     re.IGNORECASE,
 )
 _PERIOD_RE = re.compile(

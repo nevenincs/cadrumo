@@ -262,22 +262,22 @@ msgstr "Kijelentkezés az aktív profilból"
 
 #: ../../how-to/protect-data-access.md:118
 msgid ""
-"Use `aeat config profile logout` when you finish working with a profile. "
-"Logout closes the active storage session, discards in-memory key material, "
+"Run `aeat config logout` when you finish working with a profile. Logout "
+"closes the active storage session, discards in-memory key material, "
 "disposes the bucket engines, and clears the active-profile selection:"
 msgstr ""
-"Használja az `aeat config profile logout` parancsot, amikor befejezi a "
-"munkát egy profillal. A kijelentkezés lezárja az aktív tárolási "
-"munkamenetet, eldobja a memóriában lévő kulcsanyagot, megszünteti a bucket-"
-"motorokat, és törli az aktív-profil kiválasztást:"
+"Futtassa az `aeat config logout` parancsot, amikor befejezi a munkát egy "
+"profillal. A kijelentkezés lezárja az aktív tárolási munkamenetet, "
+"eldobja a memóriában lévő kulcsanyagot, megszünteti a bucket-motorokat, "
+"és törli az aktív-profil kiválasztást:"
 
 #: ../../how-to/protect-data-access.md:126
 msgid ""
-"Nothing in the profile is deleted. Select it again with `aeat config switch "
+"Nothing in the profile is deleted. Log in again with `aeat config login "
 "<name>` when you return."
 msgstr ""
-"A profilban semmi nem törlődik. Válassza ki újra az `aeat config switch "
-"<name>` paranccsal, amikor visszatér."
+"A profilban semmi nem törlődik. Jelentkezzen be újra az `aeat config "
+"login <name>` paranccsal, amikor visszatér."
 
 #: ../../how-to/protect-data-access.md:129
 msgid "Reset local state (last resort)"

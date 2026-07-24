@@ -4,7 +4,6 @@
       "argv": [
         "aeat",
         "config",
-        "profile",
         "logout"
       ],
       "captures": [],
@@ -13,7 +12,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "logged_out_profile\t<profile-id>\nLogout closed the active storage session, discarded in-memory key material, disposed bucket engines, and cleared the active-profile pointer. Run aeat config switch NAME before another profile-bound command.\n"
+      "text": "logged_out_profile\t<profile-id>\n"
     },
     {
       "argv": [

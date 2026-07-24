@@ -111,13 +111,14 @@ msgstr ""
 
 #: ../../how-to/troubleshooting.md:44
 msgid ""
-"Switch to the right profile with `aeat config switch <profile-name>` - "
-"[Set up your taxpayer profile](profile-setup.md) covers creating and "
-"switching profiles."
+"Log in to the right profile with `aeat config login <profile-name>` - "
+"[Set up your taxpayer profile](profile-setup.md) covers creating "
+"profiles and moving between them."
 msgstr ""
-"Canvia al perfil correcte amb `aeat config switch <profile-name>`: "
-"[Configura el teu perfil de contribuent](profile-setup.md) tracta la creació "
-"i el canvi de perfils."
+"Inicia la sessió al perfil correcte amb `aeat config login "
+"<profile-name>`: [Configura el teu perfil de "
+"contribuent](profile-setup.md) tracta la creació de perfils i com passar "
+"d'un a l'altre."
 
 #: ../../how-to/troubleshooting.md:46
 msgid "A calculation refuses because the ledger is not ready"
@@ -459,15 +460,15 @@ msgstr ""
 
 #: ../../how-to/troubleshooting.md:196
 msgid ""
-"Both `participation` verbs read the active profile's encrypted bucket, so"
-" they need an unlocked profile session. If either refuses with `No hay "
-"una sesion de bucket activa`, switch to the profile first with `aeat "
-"config switch <profile-name>`."
+"Both `participation` verbs read the active profile's encrypted bucket, "
+"so they need an unlocked profile session. If either refuses with `No hay "
+"una sesion de bucket activa`, log in to the profile first with `aeat "
+"config login <profile-name>`."
 msgstr ""
 "Tots dos verbs de `participation` llegeixen el bucket xifrat del perfil "
-"actiu, de manera que necessiten una sessió de perfil desbloquejada. Si algun "
-"es nega amb `No hay una sesion de bucket activa`, canvia primer al perfil "
-"amb `aeat config switch <profile-name>`."
+"actiu, de manera que necessiten una sessió de perfil desbloquejada. Si "
+"algun es nega amb `No hay una sesion de bucket activa`, inicia primer la "
+"sessió al perfil amb `aeat config login <profile-name>`."
 
 #: ../../how-to/troubleshooting.md:198
 msgid ""

@@ -170,6 +170,27 @@ def _head_extract(repo_root: Path, work_dir: Path) -> Path:
     return extract_root
 
 
+def _commit_defined_build_root(repo_root: Path, work_dir: Path) -> Path:
+    """Return a build root guaranteed to correspond to HEAD, extracting only if needed.
+
+    On a clean checkout the working tree IS HEAD, so extracting it would copy
+    roughly forty thousand files (measured at three minutes on the Windows
+    build host) to produce a byte-identical tree. CI checks out clean, so the
+    common case pays nothing. In the shared factory worktree a peer sweep makes
+    the tree diverge from every commit, and that is exactly when a tree build
+    can snapshot a torn edit, so there the extraction is worth its cost.
+    """
+    dirty = _run(["git", "status", "--porcelain"], cwd=repo_root, env=_git_env(repo_root)).stdout.strip()
+    if not dirty:
+        return repo_root
+    print(
+        f"working tree carries {len(dirty.splitlines())} uncommitted path(s); "
+        "building from a pristine HEAD extract so the artifacts correspond to a commit",
+        flush=True,
+    )
+    return _head_extract(repo_root, work_dir)
+
+
 def _wsl_path_from_windows_gitdir(gitdir: str) -> Path | None:
     """Translate a Windows gitdir pointer for WSL-mounted worktrees."""
     if os.name == "nt":

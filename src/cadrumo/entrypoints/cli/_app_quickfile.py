@@ -28,8 +28,12 @@ from ...core import Period, PeriodError, RefundElection
 from ...core.i18n import tr
 from ...core.json_contract import Notice
 from ._app_quickfile_payloads import QuickfileResultPayload
-from ._common import _emit_envelope, _profile_to_taxpayer, activate_subcommand_output_language
-from ._errors import CliRefusedBoundaryError
+from ._common import (
+    _emit_envelope,
+    _no_active_profile_refusal,
+    _profile_to_taxpayer,
+    activate_subcommand_output_language,
+)
 from ._modelo_cli_support import (
     OutputLanguageOpt,
     unsupported_local_work_period_refusal,
@@ -52,7 +56,7 @@ def _require_active_profile() -> str:
 
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
-        raise CliRefusedBoundaryError(translated_message="cli.config.errors.no_active_profile")
+        raise _no_active_profile_refusal()
     return bucket_id
 
 

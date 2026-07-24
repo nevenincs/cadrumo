@@ -424,6 +424,15 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             # wizard surface; no cycle exists. Delete this entry when the
             # one-shot wizard surface and the projection are retired.
             ImportEdge("application.flows._wizard_projection", "application.wizard"),
+            # login -> orchestration: a genuine cycle break. Orchestration
+            # imports close_profile_session_artefacts from the login module,
+            # so login cannot reach orchestration's selection and
+            # activation-event primitives at module level. Login composes
+            # them rather than re-implementing them, so the edge is real and
+            # the deferral is the only way to spell it. Delete this entry if
+            # the shared session-teardown primitive is relocated to a third
+            # module both packages can import eagerly.
+            ImportEdge("application.user_profile._login_session", "application.user_profile._orchestration"),
             # buckets event-history repository ports-inversion:
             # deferred consumers now reach the concrete repository at its
             # persistence-adapter home (was a domain.buckets deferral).
@@ -833,7 +842,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
     UnsanctionedClass.DOMAIN_CYCLE_BREAK: 50,
     UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 168,
     UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 37,
-    UnsanctionedClass.APPLICATION_DEFERRAL: 522,
+    UnsanctionedClass.APPLICATION_DEFERRAL: 527,
 }
 
 # Ceiling on the total number of allowlisted edges. Editing the allowlist to add
@@ -843,7 +852,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
 # state_projection, censo_sync, the profile repository and binding readiness --
 # all since promoted to module scope or retired), so the declared set is now
 # exactly what the tree actually does.
-_ALLOWLIST_EDGE_CEILING: int = 477
+_ALLOWLIST_EDGE_CEILING: int = 478
 
 
 def _cadrumo_relative(dotted: str) -> str:

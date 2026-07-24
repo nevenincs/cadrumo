@@ -55,10 +55,19 @@ _COLD_START_SAMPLES = 3
 # Modules that must stay out of ``sys.modules`` after a state-free CLI
 # surface runs. The registry parse is the headline cost; the heavy
 # command modules are the eager-import vector that used to drag it in.
+#
+# ``httpx`` is here because guarding only the registry vector let a second,
+# unwatched one grow: ``core.config`` imports ``TelemetryTier`` from
+# ``core.telemetry``, whose facade eagerly imported the optional HTTP sink,
+# whose module-scope ``import httpx`` (plus ``asyncio``) cost ~0.7s on EVERY
+# surface -- including ``--version``, which never emits telemetry. The sink
+# now imports it inside ``send``. This entry keeps that door shut: an
+# outbound HTTP client must never be imported to print a version string.
 _FORBIDDEN_MODULE_PREFIXES = (
     "cadrumo.domain.calculations.registry",
     "cadrumo.application.workflow",
     "cadrumo.application.overview",
+    "httpx",
 )
 _FORBIDDEN_COMMAND_MODULES = (
     "cadrumo.entrypoints.cli._overview",

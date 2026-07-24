@@ -16,6 +16,7 @@ production rather than only from the harness.
 
 from __future__ import annotations
 
+import contextlib
 import os
 import subprocess
 import sys
@@ -27,6 +28,7 @@ import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.storage.sql import dispose_engine
+from ....core.locks import exclusive_file_lock
 from ....domain.buckets import BucketEvent, BucketEventType
 from ....domain.user_profile import UserProfilePortableExport
 from ....tests.cli_runner import invoke_cached_cli
@@ -568,3 +570,155 @@ def test_same_target_export_is_excluded_while_the_target_lock_is_held(tmp_path: 
         combined = f"{blocked.stdout}\n{blocked.stderr}".lower()
         assert "lock" in combined
         assert not destination.exists()
+
+
+_PREPARE_ONLY_HARNESS = _SETTINGS_PREAMBLE + dedent(
+    """
+    from cadrumo.application.user_profile import (
+        ProfileBundleExportPurpose,
+        ProfileBundleExportRequest,
+        ProfileBundleExportTransport,
+        prepare_profile_export,
+    )
+
+    destination = Path(sys.argv[2])
+    prepare_profile_export(
+        ProfileBundleExportRequest(
+            profile_name="subject",
+            destination=destination,
+            purpose=ProfileBundleExportPurpose.PORTABLE_TRANSFER,
+            transport=ProfileBundleExportTransport.CLEARTEXT_LOCAL,
+        ),
+    )
+    os._exit(91)
+    """,
+)
+
+
+def _spawn_prepare_child(root: Path, destination: Path) -> subprocess.Popen[str]:
+    return subprocess.Popen(  # noqa: S603 - fixed interpreter and repository-owned harness
+        [sys.executable, "-c", _PREPARE_ONLY_HARNESS, str(root), str(destination)],
+        cwd=Path.cwd(),
+        env=_child_env(root),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+
+
+def _cleartext_temps(directory: Path) -> list[Path]:
+    """Every staged cleartext file, including the hardened writer's inner temp.
+
+    The inner temp does NOT end in the staged suffix, so a plain
+    ``*.export-tmp`` sweep is blind to it -- the exact blindness this helper
+    exists to remove from the assertions below.
+    """
+    return sorted(path for path in directory.iterdir() if _STAGED_TEMP_SUFFIX in path.name)
+
+
+def test_the_prepare_child_really_reaches_staging_when_nothing_blocks_it(tmp_path: Path) -> None:
+    # Non-vacuity control for the kill test below: the same harness, unblocked,
+    # must genuinely journal AND stage. Without this, a kill test that finds no
+    # cleartext proves nothing -- the child might never have got that far.
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        _create_profile()
+        dispose_engine()
+        destination = tmp_path / "portable.json"
+
+        child = _spawn_prepare_child(storage_root, destination)
+        assert child.wait(timeout=120) == _CRASH_EXIT_CODE
+
+        repository = ProfileBundleExportJournalRepository()
+        assert len(repository.prepared()) == 1
+        assert _cleartext_temps(tmp_path) != []
+
+
+def test_a_crash_before_the_journal_lands_leaves_no_unreachable_cleartext(tmp_path: Path) -> None:
+    # The pre-journal window. Staging used to run BEFORE the journal was
+    # written, so a crash in between left a full cleartext bundle on disk with
+    # no journal naming it -- unreachable by a journal-driven sweep forever.
+    # Holding the journal repository lock widens that window to the whole life
+    # of the child, which is then hard-killed inside it.
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        _create_profile()
+        dispose_engine()
+        destination = tmp_path / "portable.json"
+        repository = ProfileBundleExportJournalRepository()
+        repository.root.mkdir(parents=True, exist_ok=True)
+
+        with exclusive_file_lock(repository.lock_target):
+            child = _spawn_prepare_child(storage_root, destination)
+            with contextlib.suppress(subprocess.TimeoutExpired):
+                child.wait(timeout=25)
+            child.kill()
+            child.wait(timeout=60)
+
+        # Nothing was journalled, so nothing may have been staged either.
+        assert repository.list() == ()
+        assert _cleartext_temps(tmp_path) == []
+        assert not destination.exists()
+
+
+def test_reconcile_removes_the_hardened_writers_own_inner_temp(tmp_path: Path) -> None:
+    # The hardened writer stages through an inner sibling and unlinks it in a
+    # finally, which a hard kill never runs. That file holds the whole cleartext
+    # bundle and does NOT end in the staged suffix, so the orphan guard used to
+    # reject it and recovery could never reach it.
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _create_profile()
+        destination = tmp_path / "portable.json"
+
+        prepared = prepare_profile_export(_request(destination))
+        staged = Path(prepared.staged_path)
+        # Exactly what a kill mid-write leaves behind, byte-for-byte.
+        inner_temp = staged.with_name(f"{staged.name}.4242.deadbeef.tmp")
+        inner_temp.write_bytes(staged.read_bytes())
+        assert UserProfilePortableExport.model_validate_json(inner_temp.read_text(encoding="utf-8"))
+
+        outcome = reconcile_prepared_exports()
+
+        assert outcome.failures == ()
+        assert len(outcome.reconciled) == 1
+        assert not staged.exists()
+        assert not inner_temp.exists()
+        assert _cleartext_temps(tmp_path) == []
+
+
+class _RepositoryWithAVanishingJournal(ProfileBundleExportJournalRepository):
+    """Reproduce the state a peer's completion leaves mid-scan.
+
+    A peer export finishing between the directory walk and the load deletes its
+    own journal, so the walk yields a path whose file is already gone. Only the
+    walk is pinned here: the real :meth:`scan` classification, the real
+    :meth:`load`, and the real filesystem all run, and the journal really is
+    absent rather than being reported absent by a stand-in.
+    """
+
+    def __init__(self, *, vanished: Path) -> None:
+        super().__init__()
+        self._vanished = vanished
+
+    def _journal_paths(self) -> tuple[Path, ...]:
+        return (*super()._journal_paths(), self._vanished)
+
+
+def test_a_journal_that_vanishes_mid_scan_is_a_skip_not_a_failure(tmp_path: Path) -> None:
+    # Reporting a peer's normal completion as a failure would tell the operator
+    # an unencrypted file may remain when nothing at all was left behind.
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _create_profile()
+        base = ProfileBundleExportJournalRepository()
+        prepared = prepare_profile_export(_request(tmp_path / "portable.json"))
+        vanished = base.path_for("f" * 64)
+        assert not vanished.exists()
+        repository = _RepositoryWithAVanishingJournal(vanished=vanished)
+        # The walk really does hand scan() a path with no file behind it.
+        assert vanished in repository._journal_paths()
+
+        outcome = reconcile_prepared_exports(journal=repository)
+
+        assert outcome.failures == ()
+        assert len(outcome.reconciled) == 1
+        assert outcome.reconciled[0].operation_id == prepared.operation.operation_id

@@ -10,6 +10,7 @@ import pytest
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....core import LinkInconsistencyDirection
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus, verify_link_consistency
 from ....domain.iva import InvoiceKind
 from ....domain.transactions import (
@@ -81,7 +82,7 @@ def test_consistency_query_reports_one_sided_transaction_link() -> None:
     assert len(inconsistencies) == 1
     assert inconsistencies[0].invoice_id == invoice.invoice_id
     assert inconsistencies[0].transaction_id == transaction.transaction_id
-    assert inconsistencies[0].direction == "transaction-only"
+    assert inconsistencies[0].direction is LinkInconsistencyDirection.TRANSACTION_ONLY
 
 
 def test_repository_consistency_query_binds_both_catalogues_to_requested_bucket(tmp_path: Path) -> None:

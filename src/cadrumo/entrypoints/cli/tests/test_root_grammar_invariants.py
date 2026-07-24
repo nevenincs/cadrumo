@@ -244,7 +244,7 @@ def test_config_profile_sandbox_use_door_is_unmounted() -> None:
     """`config profile sandbox use` was removed with no alias.
 
     `switch` is the single accepted selector; a sandbox is entered by its
-    canonical `sandbox:<name>` label through `config switch`. The second
+    canonical `sandbox:<name>` label through `config login`. The second
     selection door must not resolve."""
 
     result = invoke_cached_cli(["config", "profile", "sandbox", "use", "anything"])
@@ -256,7 +256,7 @@ def test_config_profile_sandbox_use_door_is_unmounted() -> None:
 def test_config_profile_use_bare_name_selector_is_unmounted() -> None:
     """The retired bare-name `config profile use` selector does not resolve.
 
-    Profile selection is `config switch NAME` (UUID or exact label); no
+    Profile selection is `config login NAME` (UUID or exact label); no
     `config profile use` verb is mounted."""
 
     result = invoke_cached_cli(["config", "profile", "use", "anything"])
