@@ -68,6 +68,48 @@ def read_secrets_stdin[SecretsModelT: BaseModel](model: type[SecretsModelT]) -> 
         ) from exc
 
 
+def _stdin_is_a_real_console() -> bool:
+    """Return whether stdin is a genuine console, not merely a character device.
+
+    ``isatty()`` is necessary but NOT sufficient on Windows. Both the ``NUL``
+    device and a console-less host (a ``DETACHED_PROCESS`` spawn) report
+    ``isatty() == True`` and ``GetFileType() == FILE_TYPE_CHAR`` while no
+    console input queue exists behind them — so ``msvcrt.getwch()``, which
+    :func:`getpass.getpass` calls on win32, BLOCKS FOREVER rather than
+    returning or raising. A prompt that hangs is worse than one that refuses,
+    and the operator has no way to tell the two apart.
+
+    ``GetConsoleMode`` succeeds only for a real console handle and fails with
+    ``ERROR_INVALID_HANDLE`` for both non-console cases, which discriminates
+    them exactly. This is verified by probe rather than assumed: on this
+    platform a real console returns mode ``0x1f7``, while ``NUL`` and a
+    detached host both fail.
+
+    Fails CLOSED. When the check cannot be completed the answer is "not a
+    console", because the whole point is to never reach a promptable-looking
+    channel that cannot actually be typed into. On non-win32, ``isatty()`` is
+    trusted: :func:`getpass.unix_getpass` opens the terminal device itself and
+    surfaces a real failure instead of blocking.
+    """
+    if sys.platform != "win32":
+        return True
+    try:
+        import ctypes
+        import msvcrt
+        from ctypes import wintypes
+
+        # TYPE-IGNORE-RATIONALE-PLATFORM-WINDOWS-CTYPES:
+        # get_osfhandle and WinDLL are Windows-only, absent from cross-platform stubs.
+        handle = msvcrt.get_osfhandle(sys.stdin.fileno())  # type: ignore[attr-defined]
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)  # type: ignore[attr-defined]
+        kernel32.GetConsoleMode.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD)]
+        kernel32.GetConsoleMode.restype = wintypes.BOOL
+        mode = wintypes.DWORD()
+        return bool(kernel32.GetConsoleMode(wintypes.HANDLE(handle), ctypes.byref(mode)))
+    except (OSError, ValueError, AttributeError, ImportError):
+        return False
+
+
 def write_to_controlling_terminal(text: str) -> None:
     """Write ``text`` directly to the controlling terminal, never a redirected stream.
 
@@ -76,8 +118,14 @@ def write_to_controlling_terminal(text: str) -> None:
     and MUST NOT ride stdout (a redirected stdout, a JSON envelope, or a log
     would serialize the secret). Refuses cleanly when no interactive terminal
     is attached, mirroring :func:`prompt_secret_no_echo`.
+
+    The console check is load-bearing here, not merely defensive: opening
+    ``CONOUT$`` SUCCEEDS against a console-less host, so a candidate recovery
+    code would be written to a phantom console the operator never sees while
+    the verb reported success — and the words are shown exactly once and are
+    unrecoverable afterwards.
     """
-    if not sys.stdin.isatty():
+    if not sys.stdin.isatty() or not _stdin_is_a_real_console():
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.custody.errors.non_interactive_secret_required",
         )
@@ -98,7 +146,9 @@ def prompt_secret_no_echo(prompt: str) -> str:
     ``prompt`` is the already-localised prompt text (callers pass ``tr(...)`` so
     the catalogue key stays statically discoverable). The typed value is never
     echoed: when echo suppression cannot be guaranteed this refuses
-    (``REFUSED``, exit 2) rather than degrading to a visible read.
+    (``REFUSED``, exit 2) rather than degrading to a visible read, and when the
+    channel is not a real console it refuses rather than reaching a prompt that
+    would block forever (see :func:`_stdin_is_a_real_console`).
 
     :func:`getpass.getpass` silently falls back to an *echoing* read
     (``fallback_getpass``) whenever it cannot control the terminal — on Windows
@@ -114,7 +164,7 @@ def prompt_secret_no_echo(prompt: str) -> str:
     :func:`warnings.catch_warnings` is not thread-safe, which is sound here: this
     is a blocking interactive read on a single-threaded CLI process.
     """
-    if not sys.stdin.isatty():
+    if not sys.stdin.isatty() or not _stdin_is_a_real_console():
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.custody.errors.non_interactive_secret_required",
         )
