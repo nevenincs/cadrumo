@@ -47,7 +47,7 @@ from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
 from .. import _surface_for_import_failure
 from .._errors import CliCommandGroupUnavailableError, decorate_typer_app
 
-pytestmark = [pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 #: The end-to-end guards spawn the real entry point in a fresh interpreter;
 #: the classification guards exercise pure in-process logic.

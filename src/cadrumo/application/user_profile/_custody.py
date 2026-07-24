@@ -22,7 +22,12 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from ...adapters.persistence.storage import RecoveryVerificationError, SecretStoreError
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ...adapters.persistence.storage import (
+    RecoveryVerificationError,
+    SecretStoreError,
+    StorageValidationError,
+)
 from ...adapters.persistence.storage.master_key import (
     FileFallbackMasterKeyProvider,
     RecoveryEnrollmentOutcome,
@@ -34,7 +39,7 @@ from ...adapters.persistence.storage.master_key import (
     recovery_status,
     recovery_verify,
 )
-from ...core import STRICT_FROZEN_CONFIG
+from ...core import STRICT_FROZEN_CONFIG, resolve_active_bucket_id
 from ...core.config import Settings, load_settings
 from ...core.logging import get_logger
 from ...core.time import now as utc_now
@@ -154,10 +159,6 @@ def _emit_custody_event(
     already-durable custody mutation, and would make the recovery path depend
     on the very access it exists to restore. Any other failure still raises.
     """
-    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ...adapters.persistence.storage import StorageValidationError
-    from ...core import resolve_active_bucket_id
-
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
         _log.debug("custody audit event %s not recorded: no active profile", event_type.value)
@@ -196,7 +197,6 @@ def _emit_custody_event(
 def _mark_active_profile_recovery_enrolled(settings: Settings) -> None:
     """Mirror recovery enrollment into the active profile manifest."""
     from ...adapters.persistence.storage.bucket import bucket_paths, read_manifest, write_manifest
-    from ...core import resolve_active_bucket_id
 
     active_profile = resolve_active_bucket_id()
     if active_profile is None:
