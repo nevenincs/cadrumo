@@ -88,6 +88,24 @@ An agent used the drive correctly to avoid committing a peer's uncommitted facad
 
 The correction is one line of sequencing that the drive's description does not state: **apply to the working tree first, stage to the index second.** The rule documents the index mechanics without saying when the tree edit belongs, and index-first is the natural reading of a procedure whose headline step is `--cached`. Applied in the wrong order, the remedy for an attribution problem manufactures an availability problem, which is strictly worse than the defect it prevents.
 
+### own-only-patch-is-reconstructed-not-extracted | high | A marker grep cannot establish that a patch is own-only, and the formatter is not scoped to your hunks
+
+The apply-cached drive depends on building a patch containing only your own edits. That patch is **reconstructed by hand** from a HEAD copy, not extracted by any tool, so its correctness rests entirely on the author correctly identifying which working-tree lines are theirs. Two things defeat the obvious way of checking that.
+
+A marker grep is not sufficient. An agent building an own-only patch for a ledger actions module searched the diff for the peer's principal symbol, got no hits, and nearly concluded the diff was clean. Reading the complete diff instead showed two unrelated peer lines — an em-dash correction and a flag rename from a `--from-csv` spelling to `--file` — that no symbol search would have surfaced. Peer edits do not reliably contain a greppable marker; incidental fixes are exactly the shape that has none.
+
+The formatter compounds this, and this is the part that is easy to miss: a formatter rewrites the **whole file**, not your hunks. On a contended file it can move or reformat lines a peer authored, and those reformatted peer lines then sit in the working tree indistinguishable from the author's own state. A reconstruction that trusts "what changed since HEAD is mine" therefore absorbs formatter-driven changes to lines the author never wrote, and the own-only patch quietly stops being own-only.
+
+Evidence strength, stated honestly because it differs between the two halves: the desync half is confirmed by incident — a formatter re-sorted a staged import and widened the tree-inconsistency window described above. The peer-line-absorption half is reasoned from the mechanism rather than observed; in that incident the formatter re-sorted only the author's own import and left the peer's already-sorted line untouched. It is recorded as a hazard with one confirmed half, not as two incidents.
+
+### the-two-techniques-are-not-interchangeable | medium | Each protects one side and exposes the other
+
+The two available commit techniques fail in opposite directions, which is why neither can be a default for every case.
+
+The apply-cached drive protects the peer's content and risks an inconsistent working tree: it stages without touching the tree, so a half-applied two-sided change leaves the tree broken for everyone until the author mirrors it. A pathspec commit keeps the tree consistent — it commits exactly what is on disk — and risks swallowing peer lines, because what is on disk includes the peer's uncommitted edits.
+
+A same-session instance of the pathspec direction is commit `2781ef0dc6`, whose sweep required two follow-up corrections. The choice between the techniques is therefore conditional on one fact, established by reading the file's working diff before the first edit: peer content present means the drive, peer content absent means a pathspec. Reaching for either reflexively is the error.
+
 ### bare-pytest-path-is-not-a-verification | medium | The default marker expression silently selects nothing
 
 The default pytest configuration pins a marker expression selecting only the unit lane. Invoking `pytest <path>` against an integration-marked module therefore matches nothing and exits successfully, reporting "no tests ran" rather than any failure.
@@ -96,9 +114,13 @@ This produced a would-be false green three separate times in one session while a
 
 ## Recommendations
 
-Treat `git diff -- <file>` before the first edit as the branch point rather than a formality. If it shows content that is not yours, the file is entangled and the tool must change; if it is clean, a pathspec commit is correct and sufficient.
+Treat `git diff -- <file>` before the first edit as the branch point rather than a formality, and read it whole. If it shows content that is not yours, the file is entangled and the tool must change; if it is clean, a pathspec commit is correct and sufficient.
 
-For an entangled file, use the apply-cached gated drive documented in `uncommitted-wip-is-not-orphaned`: write the committed version aside with `git show HEAD:<path>`, apply only your own edits to that copy, diff it into a HEAD-anchored own-edits-only patch, stage it with `git apply --cached` so the peer's live working-tree state is untouched, verify the staged diff carries zero foreign markers, then commit the verified index.
+The two techniques are not interchangeable and neither is a safe default. The drive protects the peer's content and exposes the working tree; a pathspec commit protects the working tree and exposes the peer's content. One fact decides between them — whether the file currently carries peer edits — and that fact is only available from a full read of its diff.
+
+For an entangled file, use the apply-cached gated drive documented in `uncommitted-wip-is-not-orphaned`: write the committed version aside with `git show HEAD:<path>`, apply only your own edits to that copy, diff it into a HEAD-anchored own-edits-only patch, stage it with `git apply --cached` so the peer's live working-tree state is untouched, verify the staged diff, then commit the verified index.
+
+Read the **complete** working-tree diff before reconstructing that patch, and read the complete staged diff before committing it. Do not substitute a grep for the peer's symbol or for any other marker: peer edits frequently carry no greppable marker at all — an incidental typo correction or a flag rename has none — and a formatter rewrites the whole file rather than your hunks, so peer lines it has moved or reformatted will sit in your tree looking exactly like your own work. Any line you did not author is a peer line and belongs reverted in the scratch copy before the patch is built. The own-only patch is reconstructed by hand, not extracted by a tool, so nothing but a full read establishes that it is own-only.
 
 The drive's final step is a **bare commit with no pathspec**, and this is the part that has repeatedly gone wrong. A pathspec naming an apply-cached path discards the carefully-verified index and re-reads the working tree, which is the sweep the drive exists to prevent — so the drive is silently defeated at its last step by the command that feels like the safe one. There is no case in which a pathspec over an apply-cached path is correct. Four prior incidents of exactly this shape are on record from earlier sessions, one of them with the index already staged perfectly, which is what makes it worth stating as an absolute rather than a caution.
 
