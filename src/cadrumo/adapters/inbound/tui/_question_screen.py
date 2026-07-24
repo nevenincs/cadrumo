@@ -47,7 +47,14 @@ if TYPE_CHECKING:
     from ._app import FlowTuiApp
 
 _TEXTUAL_INPUT_WIDGETS = frozenset(
-    {FlowWidgetKind.TEXT, FlowWidgetKind.SECRET, FlowWidgetKind.INTEGER, FlowWidgetKind.PATH},
+    {
+        FlowWidgetKind.TEXT,
+        FlowWidgetKind.SECRET,
+        FlowWidgetKind.INTEGER,
+        FlowWidgetKind.PATH,
+        FlowWidgetKind.DATE,
+        FlowWidgetKind.DECIMAL,
+    },
 )
 
 

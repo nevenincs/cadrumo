@@ -679,6 +679,88 @@ def _legal_definition() -> FlowDefinition:
     )
 
 
+def test_run_flow_tui_hands_the_constructed_app_to_on_app_ready() -> None:
+    """The runner passes its one constructed app to ``on_app_ready`` before running it.
+
+    A caller capturing the handle (to drive ``rebuild_for_locale`` from an
+    answer hook) must receive the exact instance the runner then runs and
+    reads ``final_state`` from — not a second app the caller builds itself,
+    which would duplicate the abandoned-run guard. The callback aborts with
+    a sentinel so the assertion runs before ``app.run()`` opens a terminal:
+    the handle is a fully-constructed :class:`FlowTuiApp` for the definition,
+    whose ``final_state`` is still ``None`` because the run has not started —
+    proving the pre-run passthrough of the runner's own single app instance.
+    """
+
+    class _AbortRunError(Exception):
+        """Sentinel raised from the hook to abort before the interactive run."""
+
+    captured: dict[str, FlowTuiApp] = {}
+
+    def _capture(app: FlowTuiApp) -> None:
+        captured["ready"] = app
+        raise _AbortRunError
+
+    with pytest.raises(_AbortRunError):
+        run_flow_tui(
+            _definition(),
+            mode=FlowMode.MODIFY,
+            registered_values=_REGISTERED_VALUES,
+            on_app_ready=_capture,
+        )
+
+    ready = captured["ready"]
+    assert isinstance(ready, FlowTuiApp)
+    assert ready.definition.id == "flows.test.tui"
+    # The hook fires after construction and before the run, so the runner has
+    # not yet produced (or read) a final_state on this very instance.
+    assert ready.final_state is None
+
+
+def _date_definition() -> FlowDefinition:
+    """One required DATE page mounting a single-line Input."""
+    return FlowDefinition(
+        id="flows.test.date",
+        title=_copy(),
+        description=_copy(),
+        sections=(
+            FlowSection(
+                id="s1",
+                title=_copy(),
+                items=(FlowPage(id="p_date", widget=FlowWidgetKind.DATE, prompt=_copy(), answer_type=str),),
+            ),
+        ),
+        answers_model=_Answers,
+        checkpoint={
+            FlowMode.CREATE: CheckpointAvailability.UNAVAILABLE,
+            FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
+        },
+    )
+
+
+@pytest.mark.asyncio
+async def test_date_page_live_validation_flags_a_bad_date_then_clears_on_a_good_one() -> None:
+    app = FlowTuiApp(_date_definition(), mode=FlowMode.MODIFY, registered_values={})
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.pause()
+        # A DATE page mounts a single-line Input (tier-one live validation runs
+        # per keystroke through the same widget-shape validator the commit uses).
+        field = app.screen.query_one("#widget-area").query_one(Input)
+
+        await pilot.press(*"2026-13-01")  # an impossible month: fails the ISO shape
+        await pilot.pause()
+        bad_hint = str(app.screen.query_one("#live-validation", Static).render())
+        assert bad_hint.startswith("✗")  # the shape error is shown live, non-blocking
+
+        field.value = "2026-01-05"  # replace with a valid ISO date
+        await pilot.pause()
+
+        # The live line clears the moment the shape passes; the answer is still
+        # uncommitted (live validation never writes engine state).
+        assert str(app.screen.query_one("#live-validation", Static).render()) == ""
+        assert "p_date" not in app.state.answers
+
+
 @pytest.mark.asyncio
 async def test_progress_bar_tracks_the_visible_position() -> None:
     app = _app()

@@ -189,6 +189,28 @@ def test_failing_verdict_reprompts_in_place_then_accepts_valid() -> None:
     assert projection.submit_eligible
 
 
+def test_date_failing_verdict_reprompts_in_place_then_accepts_valid() -> None:
+    definition = _definition(
+        (FlowSection(id="s", title=_copy(), items=(_page("p_date", widget=FlowWidgetKind.DATE),)),),
+    )
+    # A non-ISO date fails the shape and re-prompts in place; the ISO form commits.
+    state, projection = _run(definition, "2026-13-01\r2026-01-05\r\r", mode=FlowMode.MODIFY)
+
+    assert dict(state.answers) == {"p_date": "2026-01-05"}
+    assert projection.submit_eligible
+
+
+def test_decimal_failing_verdict_reprompts_in_place_then_accepts_valid() -> None:
+    definition = _definition(
+        (FlowSection(id="s", title=_copy(), items=(_page("p_amount", widget=FlowWidgetKind.DECIMAL),)),),
+    )
+    # A comma-separated amount fails the shape and re-prompts; the dot form commits.
+    state, projection = _run(definition, "1,5\r1.50\r\r", mode=FlowMode.MODIFY)
+
+    assert dict(state.answers) == {"p_amount": "1.50"}
+    assert projection.submit_eligible
+
+
 def test_review_edit_by_number_reasks_a_page() -> None:
     definition = _definition(
         (

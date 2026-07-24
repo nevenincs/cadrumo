@@ -7,8 +7,10 @@ emit these members, never raw strings.
 
 ``FlowWidgetKind`` carries the input-primitive taxonomy forward from the
 one-shot wizard's widget set unchanged (token-identical values) and adds
-``COMPARE_SELECT``, the substrate-generic candidate-comparison page.
-Repeating groups are a structural construct of the flow definition (a
+``COMPARE_SELECT``, the substrate-generic candidate-comparison page, plus
+``DATE`` and ``DECIMAL``, the shape-validated single-line inputs for
+ISO-8601 dates and Decimal amounts. Repeating groups are a structural
+construct of the flow definition (a
 sub-page group instantiated N times), not an input primitive, so they do
 not appear here.
 """
@@ -44,6 +46,8 @@ class FlowWidgetKind(StrEnum):
     CHECKBOX = "checkbox"
     PATH = "path"
     INTEGER = "integer"
+    DATE = "date"
+    DECIMAL = "decimal"
     COMPARE_SELECT = "compare_select"
 
 

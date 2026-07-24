@@ -11,19 +11,22 @@ answers never enter diagnostics.
 Domain flows register their validators by id at import time and name
 those ids on the :class:`FlowDefinition`; the registries reject
 duplicate ids so a validator has exactly one owner. Widget-level shape
-validation (blank/choice/integer/path canonicalisation) is built in and
-runs before any registered per-answer validator.
+validation (blank/choice/integer/date/decimal/path canonicalisation) is
+built in and runs before any registered per-answer validator.
 """
 
 from __future__ import annotations
 
+import decimal
 from collections.abc import Callable, Mapping
+from decimal import Decimal
 from pathlib import Path
 
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.flows import DEFER_TOKEN, FlowWidgetKind
+from ...core.parsing import parse_date
 from ._definition import FlowPage
 from ._errors import FlowValidatorRegistryError
 
@@ -133,6 +136,14 @@ def validate_widget_shape(page: FlowPage, raw: str) -> tuple[str, ValidationVerd
     validators were: a blank fails only for an *unconditionally*
     required page (``required`` and no ``visible_when``); a gated or
     optional page accepts blank as the undeclared state.
+
+    A ``DATE`` page carries its canonical answer as the ISO-8601 string
+    (``YYYY-MM-DD``) and a ``DECIMAL`` page as the ``str(Decimal)`` form:
+    both keep ``answer_type = str`` on the page rather than widening the
+    :class:`FlowPage` answer-type union to ``date`` / ``Decimal``. The
+    shape validation here is the sole guarantee the stored token parses,
+    so the consuming domain re-parses the canonical string with the same
+    core parser it validated against.
     """
     match page.widget:
         case FlowWidgetKind.TEXT | FlowWidgetKind.SECRET:
@@ -149,6 +160,10 @@ def validate_widget_shape(page: FlowPage, raw: str) -> tuple[str, ValidationVerd
             return _validate_path(page, raw)
         case FlowWidgetKind.INTEGER:
             return _validate_integer(page, raw)
+        case FlowWidgetKind.DATE:
+            return _validate_date(page, raw)
+        case FlowWidgetKind.DECIMAL:
+            return _validate_decimal(page, raw)
 
 
 def _blank_allowed(page: FlowPage) -> bool:
@@ -238,6 +253,50 @@ def _validate_integer(page: FlowPage, raw: str) -> tuple[str, ValidationVerdict]
         parsed = int(text)
     except ValueError:
         return "", ValidationVerdict.failed("flows.errors.invalid_integer", page_id=page.id, raw=raw)
+    return str(parsed), ValidationVerdict.passed()
+
+
+def _validate_date(page: FlowPage, raw: str) -> tuple[str, ValidationVerdict]:
+    """Validate an ISO-8601 (``YYYY-MM-DD``) date, canonicalising to the ISO string.
+
+    The blank policy is identical to :func:`_validate_integer`. A
+    non-blank token is parsed through the canonical core
+    :func:`~cadrumo.core.parsing.parse_date` under the ``"none"``
+    error policy, so a malformed date returns a failing *verdict* rather
+    than letting a :exc:`ValueError` escape the pure validator. The
+    failure context carries only ``page_id`` — never the raw answer.
+    """
+    text = raw.strip()
+    if not text:
+        if _blank_allowed(page):
+            return "", ValidationVerdict.passed()
+        return "", ValidationVerdict.failed("flows.errors.blank_required", page_id=page.id)
+    parsed = parse_date(text, fmt="iso8601", on_error="none")
+    if parsed is None:
+        return "", ValidationVerdict.failed("flows.errors.invalid_date", page_id=page.id)
+    return parsed.isoformat(), ValidationVerdict.passed()
+
+
+def _validate_decimal(page: FlowPage, raw: str) -> tuple[str, ValidationVerdict]:
+    """Validate a :class:`~decimal.Decimal` amount, canonicalising to ``str(Decimal)``.
+
+    The blank policy is identical to :func:`_validate_integer`. A
+    non-blank token must parse as a finite ``Decimal``; ``NaN`` and the
+    infinities parse under :class:`~decimal.Decimal` but are rejected
+    because an amount is a finite quantity. The failure context carries
+    only ``page_id`` — never the raw answer.
+    """
+    text = raw.strip()
+    if not text:
+        if _blank_allowed(page):
+            return "", ValidationVerdict.passed()
+        return "", ValidationVerdict.failed("flows.errors.blank_required", page_id=page.id)
+    try:
+        parsed = Decimal(text)
+    except decimal.InvalidOperation:
+        return "", ValidationVerdict.failed("flows.errors.invalid_decimal", page_id=page.id)
+    if not parsed.is_finite():
+        return "", ValidationVerdict.failed("flows.errors.invalid_decimal", page_id=page.id)
     return str(parsed), ValidationVerdict.passed()
 
 

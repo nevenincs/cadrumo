@@ -39,6 +39,8 @@ def test_flow_widget_kind_members_and_tokens() -> None:
         "CHECKBOX": "checkbox",
         "PATH": "path",
         "INTEGER": "integer",
+        "DATE": "date",
+        "DECIMAL": "decimal",
         "COMPARE_SELECT": "compare_select",
     }
 
