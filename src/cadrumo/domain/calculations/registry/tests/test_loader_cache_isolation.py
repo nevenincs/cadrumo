@@ -466,6 +466,20 @@ def test_synthetic_tmp_path_root_disk_cache_stays_disabled_under_pytest(tmp_path
     than the resolved package-bundled root, this call must never write a disk
     pickle -- the #44 isolation invariant for exactly the kind of root a test
     can mutate mid-run.
+
+    Isolated onto a test-owned cache directory via
+    ``CADRUMO_REGISTRY_DISK_CACHE_DIR``, for the same reason the sibling
+    exclusive-state tests above are: with no override,
+    ``registry_disk_cache_dir()`` resolves to the host-shared OS temp directory,
+    where every sibling xdist worker and every concurrent pytest invocation on
+    the host legitimately writes its own bundled-root pickle AND prunes the
+    others past the retained-entry ceiling. A before/after snapshot of that
+    directory therefore measures the whole host, not this call: a foreign
+    create or evict lands between the two globs and fails the assertion while
+    the code under test behaved correctly. A test-owned directory makes the
+    invariant exact -- it must be empty on both sides, since the synthetic root
+    is the only thing loaded inside the block. The real filesystem and the real
+    write path are still exercised; only the directory is test-owned.
     """
     registry_root = tmp_path / "registry" / "aeat"
     (registry_root / "legal").mkdir(parents=True)
@@ -477,9 +491,16 @@ def test_synthetic_tmp_path_root_disk_cache_stays_disabled_under_pytest(tmp_path
     )
     assert is_bundled_registry_root(registry_root.resolve()) is False
 
-    before = _bundled_registry_disk_cache_files()
-    modelos, _catalogues = load_registry_tree(registry_root)
-    assert {modelo.id for modelo in modelos} == {"999"}
+    isolated_cache_dir = tmp_path / "registry-disk-cache"
+    isolated_cache_dir.mkdir()
+    with scoped_env_var(REGISTRY_DISK_CACHE_DIR_ENV_VAR, str(isolated_cache_dir)):
+        before = _bundled_registry_disk_cache_files(isolated_cache_dir)
+        assert before == set(), "the test-owned cache directory must start empty for the assertion below to bite"
 
-    after = _bundled_registry_disk_cache_files()
-    assert after == before, "a mutable/synthetic root must never write a disk pickle under pytest"
+        modelos, _catalogues = load_registry_tree(registry_root)
+        assert {modelo.id for modelo in modelos} == {"999"}
+
+        after = _bundled_registry_disk_cache_files(isolated_cache_dir)
+        assert after == set(), (
+            f"a mutable/synthetic root must never write a disk pickle under pytest, found {sorted(after)}"
+        )
