@@ -173,8 +173,11 @@ def test_workflow_row_count_prose_matches_the_required_distribution_set() -> Non
 def test_validate_runs_the_open_blocker_check_over_the_network() -> None:
     """Gate 2 drops --skip-network so the readiness gate's open-P0-blocker check runs here."""
     validate = _document()["jobs"]["validate"]
-    # issues:read is granted so the gh-backed blocker query is authoritative, not
-    # degraded-to-advisory by a missing scope.
+    # issues:read is granted so the gh-backed blocker query can succeed here.
+    # Authority against a failed/blind query comes from the readiness gate's
+    # strict mode on the cohort-dir path (cannot-determine -> blocking), verified
+    # in test_readiness; a granted scope alone does not make a fail-open advisory
+    # authoritative.
     assert validate["permissions"].get("issues") == "read"
 
     steps = validate["steps"]

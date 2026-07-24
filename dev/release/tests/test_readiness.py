@@ -384,6 +384,54 @@ def test_no_open_release_blockers_is_advisory_when_gh_not_installed(tmp_path: Pa
     assert "not found on PATH" in check.detail
 
 
+def test_no_open_release_blockers_strict_blocks_when_gh_cannot_determine(tmp_path: Path) -> None:
+    """On the Gate-2 (strict) path, an unresolvable gh is a blocking cannot-determine, not advisory."""
+    missing = tmp_path / "definitely-not-gh"
+
+    check = readiness.check_no_open_release_blockers(gh_executable=str(missing), strict=True)
+
+    assert check.passed is False
+    assert check.severity == "blocking"
+    assert "cannot determine blocker state" in check.detail
+
+
+def test_no_open_release_blockers_strict_still_passes_on_clean_query(tmp_path: Path) -> None:
+    """Strict mode escalates only cannot-determine; a successful empty query still passes."""
+    bin_dir = tmp_path / "bin"
+    script = _write_probe_gh(bin_dir, issues_json="[]")
+
+    check = readiness.check_no_open_release_blockers(gh_executable=str(script), strict=True)
+
+    assert check.passed is True
+
+
+def test_build_report_makes_the_blocker_check_strict_on_the_cohort_dir_path(tmp_path: Path) -> None:
+    """A cohort-dir (Gate-2) run escalates a blind blocker query to a blocking failure."""
+    root = _make_repo_root(tmp_path)
+    missing_gh = tmp_path / "definitely-not-gh"
+    cohort_dir = tmp_path / "promoted-cohort"
+    cohort_dir.mkdir()
+
+    report = readiness.build_report(root, gh_executable=str(missing_gh), cohort_directory=cohort_dir)
+
+    blocker = next((c for c in report.checks if c.name == "no-open-release-blockers"), None)
+    assert blocker is not None
+    assert blocker.severity == "blocking"
+    assert "cannot determine blocker state" in blocker.detail
+
+
+def test_build_report_leaves_the_blocker_check_advisory_without_a_cohort_dir(tmp_path: Path) -> None:
+    """A local (no cohort-dir) run keeps the blind blocker query advisory, not blocking."""
+    root = _make_repo_root(tmp_path)
+    missing_gh = tmp_path / "definitely-not-gh"
+
+    report = readiness.build_report(root, gh_executable=str(missing_gh))
+
+    blocker = next((c for c in report.checks if c.name == "no-open-release-blockers"), None)
+    assert blocker is not None
+    assert blocker.severity == "advisory"
+
+
 def test_build_report_blocks_without_complete_distribution_evidence(tmp_path: Path) -> None:
     """Version parity alone cannot authorize a release with no installed evidence."""
     root = _make_repo_root(tmp_path)
