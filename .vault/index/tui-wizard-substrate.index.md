@@ -32,6 +32,7 @@ related:
   - '[[2026-07-23-tui-wizard-substrate-W03-P08-S25]]'
   - '[[2026-07-23-tui-wizard-substrate-W03-P08-S26]]'
   - '[[2026-07-23-tui-wizard-substrate-W03-P08-S31]]'
+  - '[[2026-07-23-tui-wizard-substrate-W03-P09-S27]]'
   - '[[2026-07-23-tui-wizard-substrate-W03-P09-S28]]'
   - '[[2026-07-23-tui-wizard-substrate-W03-P09-S29]]'
   - '[[2026-07-23-tui-wizard-substrate-W03-P09-S30]]'
@@ -79,6 +80,7 @@ Auto-generated index of all documents tagged with `#tui-wizard-substrate`.
 - `2026-07-23-tui-wizard-substrate-W03-P07-S23` - Prove resume re-validation, definition-change stale landing, loud no-op discard, and count-only diagnostics
 - `2026-07-23-tui-wizard-substrate-W03-P08-S26` - Retire the one-shot runner and prompter surfaces with every consumer moved in one atomic explicit-path commit, running collect-only clean immediately before the commit and regenerating apidocs stubs in the same commit
 - `2026-07-23-tui-wizard-substrate-W03-P08-S31` - Migrate the amend wizard consumer onto the engine frontends, removing its local one-shot prompt helper
+- `2026-07-23-tui-wizard-substrate-W03-P09-S27` - Land the parity regression proving the scripted, line-mode, and full-screen paths produce identical answers and validation verdicts for a shared definition
 - `2026-07-23-tui-wizard-substrate-W03-P09-S28` - Run the locale parity, translation honesty, and scaffold check gates green for the substrate key namespaces
 - `2026-07-23-tui-wizard-substrate-W03-P09-S29` - Run the docs build and documented-command conformance gates green, with owner triage recorded for any unrelated peer failures
 - `2026-07-23-tui-wizard-substrate-W03-P09-S30` - Run the full src collect-only and suite gates with owner-distinguished triage of the results
