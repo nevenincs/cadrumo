@@ -178,7 +178,7 @@ Land the net-new descendant repeating group emitting the exact established fact 
 - [x] `W03.P07.S25` - Convert the apoderado verb into a door that hosts the flow pages while routing writes to the ApoderadoService namespace, never profile facts; `src/cadrumo/entrypoints/cli/_config/_apoderado.py`.
 - [x] `W03.P07.S34` - Migrate the non-interactive quiet and accept-defaults walks onto run_scripted_flow with one shared definition builder and one coercer, preserving force-visible law and localized refusal surfaces; `src/cadrumo/application/wizard/_commands.py`.
 - [x] `W03.P07.S35` - Splice attach_descendant_group into the shared setup definition builder with the count page defaulting to zero descendants, pinning the group live on both frontends; `src/cadrumo/application/wizard/_commands.py`.
-- [ ] `W03.P07.S36` - Route interactive-edit descendant answers through the edit persist seam with count-shrink clearing, or gate the descendant group out of modify mode until that seam exists, closing the silent-no-op-on-write gap; `src/cadrumo/application/wizard/_persistence.py`.
+- [x] `W03.P07.S36` - Route interactive-edit descendant answers through the edit persist seam with count-shrink clearing, or gate the descendant group out of modify mode until that seam exists, closing the silent-no-op-on-write gap; `src/cadrumo/application/wizard/_persistence.py`.
 
 ### Phase `W03.P08` - Cotejo censal phase
 
@@ -198,7 +198,7 @@ Roundtrip and anti-tautology coverage for the new persistence surfaces, parity a
 
 - [ ] `W04.P09.S29` - Add roundtrip plus anti-tautology coverage for divergence facts, the setup-incomplete state, and resume projection; `src/cadrumo/application/user_profile/tests/`.
 - [ ] `W04.P09.S30` - Verify the portable-export shape against the compatibility lifecycle for every schema addition; `src/cadrumo/domain/user_profile/_portable_export.py`.
-- [ ] `W04.P09.S31` - Author the user-facing setup-flow documentation through the documentation workflow with command conformance green; `docs/how-to/`.
+- [x] `W04.P09.S31` - Author the user-facing setup-flow documentation through the documentation workflow with command conformance green; `docs/how-to/`.
 - [ ] `W04.P09.S33` - Run the fresh-context campaign-close honesty review and persist the close audit with every surfaced item tracked; `.vault/audit/`.
 
 ## Description
