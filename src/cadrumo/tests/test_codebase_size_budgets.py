@@ -17,7 +17,7 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     "src/cadrumo/application/modelo/tests/test_export.py": 1585,  # SPLIT-CANDIDATE
     # SPLIT-CANDIDATE
     "src/cadrumo/domain/calculations/registry/tests/test_loader_directory_mode.py": 1380,
-    "src/cadrumo/domain/calculations/registry/_workbook_parity.py": 1292,  # SPLIT-CANDIDATE (+13: call-time parity Settings deferral, 219ed57a6e)
+    "src/cadrumo/domain/calculations/registry/_workbook_parity.py": 1298,  # SPLIT-CANDIDATE (+6: sys.platform guard so ty resolves winreg only on win32)
     # Extracted the IRNR/M210 formula-op evaluator family to the sibling
     # `_formula_runtime_irnr.py` module and the shared error types + numeric
     # accessor to `_formula_runtime_ops.py` (registry-resolver-family-extraction),
