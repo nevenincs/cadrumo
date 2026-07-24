@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#r7-state-scale'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-05-27-r7-state-scale-audit]]'
 ---

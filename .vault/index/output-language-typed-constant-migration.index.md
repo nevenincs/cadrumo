@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#output-language-typed-constant-migration'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-06-01-output-language-typed-constant-migration-adr]]'
   - '[[2026-06-04-output-language-typed-constant-migration-research]]'

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#vat-rate-shadow-sweep'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-05-06-vat-rate-shadow-sweep-audit]]'
 ---

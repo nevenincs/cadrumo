@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#browser-leak'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-04-16-chromium-leak-research]]'
   - '[[2026-04-17-browser-leak-adr-audit]]'

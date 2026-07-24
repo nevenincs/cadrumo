@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#docs-lifecycle-tutorials'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-07-13-docs-lifecycle-tutorials-P01-S01]]'
   - '[[2026-07-13-docs-lifecycle-tutorials-P01-S02]]'

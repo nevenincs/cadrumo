@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#kent-cli-roleplay'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-04-24-operator-cli-roleplay-audit]]'
 ---
