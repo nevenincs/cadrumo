@@ -3284,6 +3284,8 @@ cli:
       invalid_value: 'Valor no vàlid per a %{name}: %{value}'
       no_active_profile: No hi ha cap perfil actiu. Executa 'aeat config profile create
         NAME --tax-id <NIF>' primer.
+      no_active_profile_registered: No hi ha cap perfil actiu. Executa 'aeat config
+        login NAME' per activar un perfil registrat.
       profile_session_absent: No has iniciat la sessió. Executa `aeat config login`
         per desbloquejar el teu perfil.
       profile_session_expired: La teva sessió de perfil ha caducat. Executa `aeat
@@ -3627,6 +3629,10 @@ cli:
       export_passphrase_prompt: 'Frase de contrasenya del paquet (mínim 8 caràcters): '
       export_passphrase_too_short: La frase de contrasenya d'exportació del perfil
         ha de tenir almenys 8 caràcters.
+      export_reconcile_incomplete_warning: No s'han pogut netejar {count} exportació(ns)
+        de perfil interrompudes d'una execució anterior. Pot quedar al disc un fitxer
+        temporal sense xifrar per a cadascuna. Executa 'aeat app maintenance profile-bundle-reconcile'
+        quan es resolgui la causa.
       export_requires_destination: Indica --to RUTA com a destinació del paquet, o
         executa l'ordre en un terminal interactiu perquè se't pregunti.
       export_requires_transport: Usa --encrypt per a un paquet xifrat de transferència,
@@ -3778,11 +3784,11 @@ cli:
         usage_help: Informar de l'espai en disc d'un sandbox, o de tots alhora.
         usage_name_help: Nom del sandbox (sense el prefix); ometre per informar de
           tots.
-      sar_catalogue_info: Aquest arxiu conté totes les categories de dades personals
-        del perfil. Les categories exactes figuren al camp data_categories d'aquesta
-        resposta i al seu context llegible per màquina. Els bytes de les proves adjuntes
-        i les captures d'AEAT resten en emmagatzematge xifrat; utilitzeu l'arxiu de
-        recuperació xifrat per incloure'ls.
+      sar_catalogue_info: 'Aquest arxiu conté les categories de dades personals indicades
+        al camp data_categories d''aquesta resposta. No és tot el que es conserva
+        del perfil: les categories d''excluded_data_categories romanen a l''emmagatzematge
+        xifrat i no són en aquest fitxer. Fes servir l''arxiu de recuperació xifrat
+        per obtenir-les.'
       sar_help: 'Exporta totes les dades personals d''un perfil com a arxiu d''accés
         de l''interessat (RGPD): el paquet portàtil del perfil.'
       show:
@@ -4218,6 +4224,7 @@ cli:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       attachment_help: Id d'adjunt segur a enllaçar amb el moviment; repetir per a
         diversos adjunts
+      finalized_revision_stale: cli.ledger.attach.finalized_revision_stale
       help: Adjuntar objectes d'evidència segura a un moviment del llibre. Crea abans
         un id de justificant de factura de compra amb 'aeat app ledger evidence add
         PATH'.
@@ -6503,12 +6510,11 @@ errors:
         amb sensibilitat %{expected}, però el cridador ha usat %{classification}.
       schema_mismatch: L'espai de noms d'objecte segur %{namespace} està registrat
         amb esquema %{expected}, però el cridador ha usat l'esquema %{schema_version}.
+      schema_upgrade_path_missing: errors.storage.namespace.schema_upgrade_path_missing
+      schema_upgrader_already_registered: errors.storage.namespace.schema_upgrader_already_registered
       schema_version_from_future: La versió d'esquema emmagatzemada {schema_version}
         de l'espai de noms {namespace} és més recent del que admet aquesta aplicació
         (fins a {expected}); no es pot llegir.
-      schema_version_unsupported: La versió d'esquema emmagatzemada {schema_version}
-        de l'espai de noms {namespace} no és compatible; aquesta aplicació requereix
-        la versió {expected}.
       unknown_classification: 'L''espai de noms d''objectes segurs %{namespace} conté
         una sensibilitat desconeguda: %{classification}.'
       unregistered: L'espai de noms d'objecte segur %{namespace} no està registrat

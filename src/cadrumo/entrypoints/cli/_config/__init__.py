@@ -29,7 +29,7 @@ from ....core.json_contract import NoticeSeverity as _NoticeSeverity
 from ....core.logging import get_logger as _get_logger
 from ....core.wizard_catalogue import get_setup_flow as _get_setup_flow
 from .._command_suggestions import CadrumoTyperGroup as _CadrumoTyperGroup
-from .._common import _emit_envelope
+from .._common import _emit_envelope, _no_active_profile_refusal
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from .._errors import command_error_boundary as _command_error_boundary
@@ -343,9 +343,7 @@ def config_profile_show(
     else:
         pointer = _resolve_active_profile_pointer()
         if pointer is None:
-            raise _CliRefusedBoundaryError(
-                translated_message="cli.config.errors.no_active_profile",
-            )
+            raise _no_active_profile_refusal()
     try:
         record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
     except ProfileNotFoundError as exc:
@@ -539,9 +537,7 @@ def config_profile_preflight(
 
     pointer = _resolve_active_profile_pointer()
     if pointer is None:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.errors.no_active_profile",
-        )
+        raise _no_active_profile_refusal()
     try:
         record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
     except ProfileNotFoundError as exc:
@@ -667,9 +663,7 @@ def config_profile_validate(
     else:
         pointer = _resolve_active_profile_pointer()
         if pointer is None:
-            raise _CliRefusedBoundaryError(
-                translated_message="cli.config.errors.no_active_profile",
-            )
+            raise _no_active_profile_refusal()
     try:
         record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
     except ProfileNotFoundError as exc:

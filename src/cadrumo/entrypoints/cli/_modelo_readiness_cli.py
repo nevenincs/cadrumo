@@ -14,7 +14,7 @@ from ...core import Period, PeriodError
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.user_profile import ProfileNotFoundError
-from ._common import _emit_envelope
+from ._common import _emit_envelope, _no_active_profile_refusal
 from ._errors import CliRefusedBoundaryError
 from ._modelo_cli_support import unsupported_local_work_period_refusal
 from ._modelo_payloads import (
@@ -114,7 +114,7 @@ def _readiness_report(request: ModeloReadinessRequest):
     from ...core.i18n import tr as _tr
 
     if resolve_active_bucket_id() is None:
-        raise CliRefusedBoundaryError(_tr("cli.config.errors.no_active_profile"))
+        raise _no_active_profile_refusal()
     try:
         projection = build_operator_state_projection(modelo_readiness_requests=(request,))
     except ProfileNotFoundError as exc:

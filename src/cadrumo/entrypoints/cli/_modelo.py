@@ -269,11 +269,10 @@ def _require_active_profile() -> None:
     already gives.
     """
     from ...core import resolve_active_bucket_id
-    from ...core.i18n import tr as _tr
-    from ._errors import CliRefusedBoundaryError
+    from ._common import _no_active_profile_refusal
 
     if resolve_active_bucket_id() is None:
-        raise CliRefusedBoundaryError(_tr("cli.config.errors.no_active_profile"))
+        raise _no_active_profile_refusal()
 
 
 def _guard_foral_profile_ccaa() -> None:

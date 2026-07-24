@@ -25,7 +25,7 @@ import typer
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
-from .._common import _emit_envelope
+from .._common import _emit_envelope, _no_active_profile_refusal
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
@@ -71,7 +71,7 @@ def _resolve_target_pointer(
         return resolve_profile_by_label(name)
     pointer = resolve_active_profile_pointer()
     if pointer is None:
-        raise _CliRefusedBoundaryError(translated_message="cli.config.errors.no_active_profile")
+        raise _no_active_profile_refusal()
     return pointer
 
 

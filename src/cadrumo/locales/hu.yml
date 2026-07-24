@@ -3229,6 +3229,8 @@ cli:
       invalid_value: 'Érvénytelen érték a(z) %{name} mezőhöz: %{value}'
       no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create
         NÉV --tax-id <NIF/CIF/DNI/NIE>`.'
+      no_active_profile_registered: 'Nincs aktív profil. Futtassa: `aeat config login
+        NÉV` egy regisztrált profil aktiválásához.'
       profile_session_absent: Nem vagy bejelentkezve. Futtasd az `aeat config login`
         parancsot a profilod feloldásához.
       profile_session_expired: A profil-munkameneted lejárt. Futtasd az `aeat config
@@ -3579,6 +3581,10 @@ cli:
       export_passphrase_prompt: 'A csomag jelmondata (legalább 8 karakter): '
       export_passphrase_too_short: A profilexport passphrase legalább 8 karakter hosszú
         legyen.
+      export_reconcile_incomplete_warning: Egy korábbi futásból {count} félbemaradt
+        profilcsomag-exportot nem sikerült kitakarítani. Mindegyikhez maradhat a lemezen
+        egy titkosítatlan ideiglenes fájl. Futtasd az 'aeat app maintenance profile-bundle-reconcile'
+        parancsot, ha az ok elhárult.
       export_requires_destination: Add meg a --to ÚTVONAL célhelyet a csomagnak, vagy
         futtasd interaktív terminálban, és a program bekéri.
       export_requires_transport: Használd az --encrypt kapcsolót titkosított átviteli
@@ -3734,11 +3740,11 @@ cli:
           az összesé egyszerre.
         usage_name_help: A homokozó neve (előtag nélkül); hagyja üresen az összes
           jelentéséhez.
-      sar_catalogue_info: Ez az archívum a profilhoz tárolt összes személyesadat-kategóriát
-        tartalmazza. A pontos kategóriák e válasz data_categories mezőjében és annak
-        géppel olvasható kontextusában szerepelnek. A csatolt bizonyítékok bájtjai
-        és az AEAT-lekérések titkosított tárolóban maradnak; ezek beemeléséhez használja
-        a titkosított helyreállítási archívumot.
+      sar_catalogue_info: 'Ez az archívum a válasz data_categories mezőjében felsorolt
+        személyesadat-kategóriákat tartalmazza. Nem tartalmaz mindent, amit a profilról
+        tárolunk: az excluded_data_categories kategóriái titkosított tárolóban maradnak,
+        és nincsenek ebben a fájlban. Ezek megszerzéséhez használd a titkosított helyreállítási
+        archívumot.'
       sar_help: A profilhoz tárolt összes személyes adat exportálása GDPR hozzáférési
         archívumként (a hordozható profilcsomag).
       show:
@@ -4160,6 +4166,7 @@ cli:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
       attachment_help: A tranzakcióhoz csatolandó biztonságos melléklet azonosítója;
         több melléklet esetén ismételje meg.
+      finalized_revision_stale: cli.ledger.attach.finalized_revision_stale
       help: Biztonságos bizonyítékobjektumok csatolása egyetlen főkönyvi tranzakcióhoz.
         Vásárlásiszámla-bizonyíték azonosítója előbb a 'aeat app ledger evidence add
         PATH' paranccsal hozható létre.
@@ -6386,10 +6393,10 @@ errors:
         használt.
       schema_mismatch: A(z) %{namespace} biztonságos objektum névtér a(z) %{expected}
         sémához van regisztrálva, de a hívó a(z) %{schema_version} sémát használta.
+      schema_upgrade_path_missing: errors.storage.namespace.schema_upgrade_path_missing
+      schema_upgrader_already_registered: errors.storage.namespace.schema_upgrader_already_registered
       schema_version_from_future: A(z) {namespace} névtér tárolt sémaverziója ({schema_version})
         újabb, mint amit ez az alkalmazás támogat (legfeljebb {expected}); nem olvasható.
-      schema_version_unsupported: A(z) {namespace} névtér tárolt sémaverziója ({schema_version})
-        nem támogatott; ez az alkalmazás a(z) {expected} verziót igényli.
       unknown_classification: 'A(z) %{namespace} biztonságos objektum névtér ismeretlen
         érzékenységet tartalmaz: %{classification}.'
       unregistered: A(z) %{namespace} biztonságos objektum névtér nincs regisztrálva

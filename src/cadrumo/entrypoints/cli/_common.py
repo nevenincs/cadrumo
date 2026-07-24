@@ -259,9 +259,23 @@ def _no_active_profile_refusal() -> Exception:
     cold-start command path — ledger, modelo work, overview — raises
     this same translated refusal so first-contact guidance is
     consistent across the CLI surface.
+
+    The suggested next command distinguishes "no profile registered at
+    all" (suggest create) from "at least one profile is registered but
+    none is active" (suggest login), so an operator who has already
+    created a profile and merely logged out is never told to create a
+    second one. ``list_profile_buckets`` reads only manifest files and
+    never unlocks a bucket, so this check is cheap.
     """
+    from ...application.workflow import list_profile_buckets
     from ._errors import CliRefusedBoundaryError
 
+    # Each branch calls tr() with a literal key so the locale scaffold's
+    # static discovery can find both keys; a single tr(variable) call would
+    # be invisible to that AST-literal scan and the second key would never
+    # get scaffolded across the four catalogues.
+    if list_profile_buckets():
+        return CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile_registered"))
     return CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
 
 

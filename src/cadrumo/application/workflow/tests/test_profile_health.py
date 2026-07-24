@@ -69,6 +69,36 @@ def test_active_profile_health_reports_missing_profile_record(tmp_path: Path) ->
     assert health.next_action == "aeat config repair profile --clear-active --yes"
 
 
+def test_active_profile_health_none_status_suggests_create_when_no_profile_is_registered(
+    tmp_path: Path,
+) -> None:
+    """A genuinely empty storage root offers to create a profile, not log in to one."""
+    with override_settings(
+        cadrumo_local_storage_root=tmp_path / "empty-storage-root",
+        cadrumo_active_profile=None,
+    ):
+        health = assess_active_profile_health()
+
+    assert health.active_profile is None
+    assert health.status == "none"
+    assert health.next_action == "aeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>"
+
+
+def test_active_profile_health_none_status_suggests_login_when_a_profile_is_registered(
+    tmp_path: Path,
+) -> None:
+    """A registered-but-inactive profile is pointed at login, never a second create."""
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label=_PROFILE_LABEL),
+        override_settings(cadrumo_active_profile=None),
+    ):
+        health = assess_active_profile_health()
+
+    assert health.active_profile is None
+    assert health.status == "none"
+    assert health.next_action == "aeat config login NAME"
+
+
 def test_profile_repair_clears_only_degraded_pointer(tmp_path: Path) -> None:
     with isolated_runtime_profile(
         tmp_path=tmp_path,

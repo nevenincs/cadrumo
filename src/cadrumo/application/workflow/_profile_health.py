@@ -44,7 +44,7 @@ from ..user_profile import (
 )
 from ._models import WorkflowState
 from ._persistence import workflow_state_repository
-from ._profile_bucket_scan import resolve_profile_bucket
+from ._profile_bucket_scan import list_profile_buckets, resolve_profile_bucket
 
 ProfileHealthStatus = Literal[
     "none",
@@ -100,6 +100,21 @@ _MANIFEST_HEALTH_EXCEPTIONS = (
 )
 
 
+def _no_active_profile_next_action() -> str:
+    """Return the operator-facing next action when no profile is active.
+
+    Distinguishes "no profile registered at all" (suggest create) from "at
+    least one profile is registered but none is active" (suggest login), so
+    an operator who has already created a profile and merely logged out is
+    never told to create a second one. ``list_profile_buckets`` reads only
+    manifest files and never unlocks a bucket, so this check is cheap and
+    safe to run on every no-active-profile status projection.
+    """
+    if list_profile_buckets():
+        return "aeat config login NAME"
+    return "aeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>"
+
+
 def assess_active_profile_health(state: WorkflowState | None = None) -> ActiveProfileHealth:
     """Return a redacted, non-secret :class:`ActiveProfileHealth` projection for the active profile."""
     settings = load_settings()
@@ -113,7 +128,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
             source=source,
             status="none",
             profile_total_keys=total_keys,
-            next_action="aeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>",
+            next_action=_no_active_profile_next_action(),
         )
 
     try:
