@@ -72,6 +72,14 @@ The reviewer this misleads is the one behaving correctly. Scanning frontmatter d
 
 The scaffolding verb's `--date` override is legitimate for reconstructing a genuinely older record. Using it for visual tidiness against sibling rows is not.
 
+### apply-cached-applied-index-first-breaks-the-tree | high | The mitigation for capture can itself cause a fleet-wide outage
+
+`git apply --cached` stages hunks **without touching the working tree**, which is exactly the property that preserves a peer's live edits. It is also a trap: after that step the index carries the change and the working tree does not, and the working tree is what every other agent imports, runs, and reads.
+
+An agent used the drive correctly to avoid committing a peer's uncommitted facade-module work, and the peer's work was preserved perfectly. But the change was two-sided — a facade export plus its consumer — and the index was staged before the same lines were mirrored into the working tree. The tree therefore spent a window with the consumer switched over and the export missing, in a module reached transitively by every command surface. Three agents reported the repository broken, and at least two re-attributed their own unrelated failures to it. A formatter then re-sorted the staged import and widened the window.
+
+The correction is one line of sequencing that the drive's description does not state: **apply to the working tree first, stage to the index second.** The rule documents the index mechanics without saying when the tree edit belongs, and index-first is the natural reading of a procedure whose headline step is `--cached`. Applied in the wrong order, the remedy for an attribution problem manufactures an availability problem, which is strictly worse than the defect it prevents.
+
 ### bare-pytest-path-is-not-a-verification | medium | The default marker expression silently selects nothing
 
 The default pytest configuration pins a marker expression selecting only the unit lane. Invoking `pytest <path>` against an integration-marked module therefore matches nothing and exits successfully, reporting "no tests ran" rather than any failure.
@@ -85,6 +93,8 @@ Treat `git diff -- <file>` before the first edit as the branch point rather than
 For an entangled file, use the apply-cached gated drive documented in `uncommitted-wip-is-not-orphaned`: write the committed version aside with `git show HEAD:<path>`, apply only your own edits to that copy, diff it into a HEAD-anchored own-edits-only patch, stage it with `git apply --cached` so the peer's live working-tree state is untouched, verify the staged diff carries zero foreign markers, then commit the verified index.
 
 The drive's final step is a **bare commit with no pathspec**, and this is the part that has repeatedly gone wrong. A pathspec naming an apply-cached path discards the carefully-verified index and re-reads the working tree, which is the sweep the drive exists to prevent — so the drive is silently defeated at its last step by the command that feels like the safe one. There is no case in which a pathspec over an apply-cached path is correct. Four prior incidents of exactly this shape are on record from earlier sessions, one of them with the index already staged perfectly, which is what makes it worth stating as an absolute rather than a caution.
+
+Sequence the drive as working tree first, index second. Apply your edits to the working tree, confirm the tree is self-consistent and importable, and only then stage the HEAD-anchored own-only patch with `git apply --cached`. Staging first leaves the tree carrying half of a two-sided change for as long as the drive takes, and the tree is the surface every other agent is running against.
 
 A bare commit is only safe when the index holds nothing but your own staged work, and in this worktree that condition frequently does not hold — the shared index routinely carries dozens of peer-staged files. When a file is genuinely entangled AND the index carries peer-staged paths, no git primitive is clean: a pathspec sweeps the peer's working-tree lines, and a bare commit sweeps the peer's staged files. In that situation the correct move is to **serialize** — commit unrelated clean files by pathspec first, then let each owner land its own entangled file in turn — rather than pick the less-bad command.
 
