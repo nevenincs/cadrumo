@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#real-pdf-fixture-corpus'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-04-21-real-pdf-fixture-corpus-adr]]'
   - '[[2026-04-21-real-pdf-fixture-corpus-plan]]'

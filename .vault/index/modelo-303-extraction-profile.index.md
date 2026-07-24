@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-303-extraction-profile'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-06-04-modelo-303-extraction-profile-adr]]'
   - '[[2026-06-04-modelo-303-extraction-profile-research]]'

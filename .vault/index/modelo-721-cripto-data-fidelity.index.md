@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-721-cripto-data-fidelity'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-06-02-modelo-721-cripto-data-fidelity-adr]]'
   - '[[2026-06-02-modelo-721-cripto-data-fidelity-research]]'

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#profile-bucket-lifecycle'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-05-14-profile-bucket-lifecycle-adr]]'
   - '[[2026-06-04-profile-bucket-lifecycle-research]]'

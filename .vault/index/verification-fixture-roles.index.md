@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#verification-fixture-roles'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-06-01-verification-fixture-roles-adr]]'
   - '[[2026-06-01-verification-fixture-roles-plan]]'

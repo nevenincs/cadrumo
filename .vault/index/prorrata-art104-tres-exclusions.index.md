@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#prorrata-art104-tres-exclusions'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-07-07-prorrata-art104-tres-exclusions-adr]]'
   - '[[2026-07-10-prorrata-art104-tres-exclusions-research]]'

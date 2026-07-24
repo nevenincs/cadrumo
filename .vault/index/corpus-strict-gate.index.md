@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#corpus-strict-gate'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-05-27-corpus-strict-gate-S01]]'
   - '[[2026-06-04-corpus-strict-gate-adr]]'

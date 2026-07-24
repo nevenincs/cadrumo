@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m721-informativa-criptomonedas'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-05-27-m721-informativa-criptomonedas-research]]'
 ---

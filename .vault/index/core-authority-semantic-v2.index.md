@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#core-authority-semantic-v2'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-05-31-core-authority-semantic-v2-reference]]'
 ---
