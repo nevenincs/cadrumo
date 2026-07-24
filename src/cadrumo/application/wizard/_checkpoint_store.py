@@ -50,7 +50,17 @@ def checkpoint_facts_from_answers(flow: WizardFlow, answers: Mapping[str, str]) 
     so an unanswered page never writes an empty fact. The answers are
     already engine-validated canonical tokens, so no re-validation runs
     here.
+
+    The descendant repeating group's instance answers
+    (``descendientes#<index>.<page>``) are not profile-bound questions;
+    they project separately through
+    :func:`~cadrumo.application.wizard._persistence.descendant_facts_from_answers`
+    into the ``renta_family.descendiente.{n}.*`` fact shape and its
+    derived aggregates, appended here so the descendant surface persists
+    through the one checkpoint writer alongside every other answer.
     """
+    from ._persistence import descendant_facts_from_answers
+
     facts: list[UserProfileFact] = []
     for section in flow.sections:
         for question in section.questions:
@@ -59,6 +69,7 @@ def checkpoint_facts_from_answers(flow: WizardFlow, answers: Mapping[str, str]) 
             value = answers.get(question.id)
             if value:
                 facts.append(UserProfileFact(path=question.profile_key, value=value))
+    facts.extend(UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_answers(answers))
     return tuple(facts)
 
 

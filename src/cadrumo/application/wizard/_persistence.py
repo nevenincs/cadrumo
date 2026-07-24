@@ -16,16 +16,25 @@ from __future__ import annotations
 
 from collections.abc import Collection, Mapping
 from pathlib import Path
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel
 
+if TYPE_CHECKING:
+    from ...domain.contribuyente import DescendantInfo
+
+from ...core.flows import REPEATING_INSTANCE_SEPARATOR
 from ...core.setup_answers import register_project_answers as _register_project_answers
 from ..user_profile import (
     register_active_profile,
     set_active_fields,
 )
 from ..workflow import WorkflowInputMismatchError, WorkflowState
+from ._descendant_group import (
+    DESCENDANT_PAGE_IDS,
+    DESCENDANTS_COUNT_PAGE_ID,
+    DESCENDANTS_GROUP_ID,
+)
 from ._models import WizardFlow, WizardQuestion
 
 WizardPersistMode = Literal["create", "edit"]
@@ -247,10 +256,87 @@ def _parse_canonical(question: WizardQuestion, raw: str) -> object:
     return raw
 
 
+def _instance_count(raw: str) -> int:
+    """Parse the descendant count answer, clamping malformed input to zero."""
+    try:
+        return max(0, int(raw)) if raw else 0
+    except ValueError:
+        return 0
+
+
+def _discapacidad_grade(raw: str) -> Literal[0, 33, 65] | None:
+    """Narrow a discapacidad answer token to the closed grade set."""
+    match raw:
+        case "0":
+            return 0
+        case "33":
+            return 33
+        case "65":
+            return 65
+        case _:
+            return None
+
+
+def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
+    """Reconstruct one ``DescendantInfo`` from an instance's canonical answers.
+
+    Blank optional answers fall back to the record's own defaults
+    (convivencia defaults to cohabiting, custodia to sole custody, the
+    integer supplements to zero); the ISO date strings are coerced by the
+    record's own field validators.
+    """
+    from ...domain.contribuyente import DescendantInfo
+
+    meses = row.get("meses-madre-trabajo") or ""
+    gastos = row.get("gastos-guarderia") or ""
+    return DescendantInfo(
+        birth_date=row["birth-date"],
+        adoption_date=row.get("adoption-date") or None,
+        discapacidad_grado=_discapacidad_grade(row.get("discapacidad", "")),
+        convive_con_contribuyente=row.get("convivencia", "") != "false",
+        custodia_compartida=row.get("custodia-compartida", "") == "true",
+        meses_madre_trabajo_2024=int(meses) if meses else 0,
+        gastos_guarderia_euros=int(gastos) if gastos else 0,
+        nif=row.get("nif") or None,
+    )
+
+
+def descendant_facts_from_answers(answers: Mapping[str, str]) -> list[tuple[str, str]]:
+    """Project the descendant repeating-group answers into profile facts.
+
+    The setup flow's descendant repeating group keys each instance answer
+    as ``descendientes#<index>.<page-id>``. This reads the live instance
+    count from the count page, reconstructs one
+    :class:`~cadrumo.domain.contribuyente.DescendantInfo` per index, and
+    delegates to
+    :func:`~cadrumo.domain.contribuyente.descendant_facts_from_list` so the
+    emitted ``renta_family.descendiente.{n}.*`` paths and the derived
+    aggregates are the single canonical projection the
+    ``_minimo_descendientes_facts`` injector and the registry selectors
+    consume. Returns an empty list when the group was never reached (the
+    count page carries no answer), so a descendant-free profile writes no
+    descendant fact.
+    """
+    if DESCENDANTS_COUNT_PAGE_ID not in answers:
+        return []
+    from ...domain.contribuyente import descendant_facts_from_list
+
+    count = _instance_count(answers.get(DESCENDANTS_COUNT_PAGE_ID, ""))
+    descendientes: list[DescendantInfo] = []
+    for index in range(count):
+        prefix = f"{DESCENDANTS_GROUP_ID}{REPEATING_INSTANCE_SEPARATOR}{index}"
+        row = {page_id: answers.get(f"{prefix}.{page_id}", "") for page_id in DESCENDANT_PAGE_IDS}
+        if not row["birth-date"]:
+            continue
+        descendientes.append(_descendant_from_row(row))
+    return descendant_facts_from_list(descendientes)
+
+
 _register_project_answers(project_answers)
 
 __all__ = [
     "WizardPersistMode",
+    "descendant_facts_from_answers",
     "persist_answers",
     "persist_patch",
     "profile_values_from_patch",
