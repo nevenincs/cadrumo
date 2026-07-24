@@ -32,6 +32,8 @@ from cadrumo.core import STRICT_FROZEN_CONFIG
 from cadrumo.core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from cadrumo.core.i18n import tr
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
 _LOCALES = ("en", "es", "ca", "hu")
 _SENTINEL = "\x00flows-localization-unresolved\x00"
 _KEY_PATTERN = re.compile(r"[\"'](flows\.[a-z0-9_.]+)[\"']")
@@ -51,8 +53,6 @@ def _referenced_flow_keys() -> frozenset[str]:
     return frozenset(keys)
 
 
-@pytest.mark.unit
-@pytest.mark.hex_application
 def test_every_referenced_flow_key_resolves_in_all_locales() -> None:
     """No substrate/TUI translation key may fall back to humanised English."""
     keys = _referenced_flow_keys()
@@ -66,8 +66,6 @@ def test_every_referenced_flow_key_resolves_in_all_locales() -> None:
     assert not missing, "flow keys missing from locale catalogues:\n" + "\n".join(missing)
 
 
-@pytest.mark.unit
-@pytest.mark.hex_application
 def test_no_flows_leaf_is_a_self_referencing_placeholder() -> None:
     """A leaf whose value equals its own key is a scaffold echo, not a translation.
 
@@ -123,8 +121,6 @@ def _single_required_text_flow() -> FlowDefinition:
     )
 
 
-@pytest.mark.unit
-@pytest.mark.hex_application
 def test_engine_validation_failure_renders_localized() -> None:
     """A real invalid commit produces a verdict whose key resolves per locale.
 

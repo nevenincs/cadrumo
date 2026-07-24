@@ -56,16 +56,16 @@ from .....core.i18n import (
 )
 from .. import FlowTuiApp, run_flow_tui
 
+pytestmark = [
+    pytest.mark.unit,
+    pytest.mark.hex_inbound_adapter,
+]
+
 if TYPE_CHECKING:
     from collections.abc import Iterator, Mapping
     from pathlib import Path
 
     from textual.pilot import Pilot
-
-pytestmark = [
-    pytest.mark.unit,
-    pytest.mark.hex_inbound_adapter,
-]
 
 _COPY_REF = "flows.test.copy"
 _COPY_CATALOGUE: dict[str, object] = {

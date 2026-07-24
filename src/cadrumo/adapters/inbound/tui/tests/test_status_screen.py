@@ -33,13 +33,13 @@ from .. import (
 )
 from .._status_screen import _RECOVERY_COMMANDS
 
-if TYPE_CHECKING:
-    from collections.abc import Iterator
-
 pytestmark = [
     pytest.mark.unit,
     pytest.mark.hex_inbound_adapter,
 ]
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 _TERMINAL_SIZE = (140, 60)
 

@@ -34,6 +34,8 @@ import yaml
 
 from ....core.flows import CopyRefKind, FlowWidgetKind
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
 if TYPE_CHECKING:
     from collections.abc import Iterator
 from .. import (
@@ -46,8 +48,6 @@ from .. import (
     register_copy_source,
     resolve_copy,
 )
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 # A real bundled locale key present in the shipped catalogue.
 _REAL_LOCALE_KEY = "wizard.setup.title"
@@ -98,11 +98,9 @@ def _catalogue_leaf(key: str) -> str:
     equality assertion against it proves the resolver reached the shipped
     catalogue rather than merely agreeing with itself.
     """
-    import cadrumo
-
     from ....core.i18n import output_language
 
-    root = Path(cadrumo.__file__).parent / "locales"
+    root = Path(__file__).resolve().parents[3] / "locales"
     catalogue = yaml.safe_load((root / f"{output_language()}.yml").read_text(encoding="utf-8"))
     leaf: object = catalogue
     for segment in key.split("."):
