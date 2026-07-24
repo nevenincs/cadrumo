@@ -196,5 +196,8 @@ def test_collect_convenio_fingerprints_covers_every_treaty_file() -> None:
     fingerprints = collect_convenio_fingerprints(bundled_path("registry", "aeat"))
     paths = {Path(entry[0]).name for entry in fingerprints}
     assert {"es-gb.toml", "es-ma.toml", "es-ar.toml", "es-de.toml"} <= paths
-    # Fingerprints carry (path, size, mtime) so a treaty content edit re-keys the cache.
-    assert all(len(entry) == 3 and entry[1] > 0 for entry in fingerprints)
+    # Fingerprints carry (path, size, mtime_ns, content_digest) so a treaty
+    # content edit re-keys the cache even when (size, mtime_ns) collide; the
+    # digest slot is empty here because the bundled tree is read-only package
+    # data exempt from content hashing.
+    assert all(len(entry) == 4 and entry[1] > 0 for entry in fingerprints)

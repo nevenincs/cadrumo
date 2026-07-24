@@ -52,8 +52,13 @@ from ._schema import ModeloDefinition, RegistryCatalogues
 CompiledRegistryPayload = tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]
 """The compiled registry payload: every :class:`ModeloDefinition` plus the shared catalogues."""
 
-FingerprintTuples = tuple[tuple[str, int, int], ...]
-"""``(path, size, mtime_ns)`` tuples, exactly as the loader collects them for the cache key."""
+FingerprintTuples = tuple[tuple[str, int, int, str], ...]
+"""``(path, size, mtime_ns, content_digest)`` tuples, exactly as the loader collects them for the cache key.
+
+The digest is empty for directory entries and bundled-tree files (read-only
+package data); mutable-tree TOML files carry a content hash so a same-size,
+same-mtime rewrite still re-keys the cache.
+"""
 
 _COMPILED_CACHE_SCHEMA_VERSION = b"compiled-registry-v1"
 _CACHE_FILENAME_PREFIX = "cadrumo_registry_"
@@ -170,17 +175,17 @@ def _registry_disk_cache_key(
     content hash of the loader/compiler/schema source (so a code change that
     alters compiled semantics invalidates the cache even without a manual version
     bump), (3) the registry root path, and (4) the per-TOML tree fingerprints
-    (path, size, mtime_ns). ``loader_code_fingerprint`` is injected for test
-    isolation; production always uses :data:`_LOADER_CODE_FINGERPRINT`.
+    (path, size, mtime_ns, content_digest). ``loader_code_fingerprint`` is
+    injected for test isolation; production always uses
+    :data:`_LOADER_CODE_FINGERPRINT`.
     """
     hasher = hashlib.sha256()
     hasher.update(_REGISTRY_TREE_CACHE_SCHEMA_VERSION.encode("utf-8"))
     hasher.update(loader_code_fingerprint.encode("utf-8"))
     hasher.update(root.encode("utf-8"))
     for item in fingerprints:
-        hasher.update(item[0].encode("utf-8"))
-        hasher.update(str(item[1]).encode("utf-8"))
-        hasher.update(str(item[2]).encode("utf-8"))
+        for part in item:
+            hasher.update(str(part).encode("utf-8"))
     return hasher.hexdigest()
 
 

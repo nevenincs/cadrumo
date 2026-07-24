@@ -29,6 +29,7 @@ from pydantic import Field, field_validator, model_validator
 from ....core import ConvenioOverrideKind, TipoRentaIrnr, freeze_toml, read_toml
 from ._errors import RegistryLoadError, RegistryValidationError
 from ._ids import LegalRefId
+from ._loader_cache import toml_file_fingerprint
 from ._schema_base import RegistryModel
 
 _ZERO = Decimal("0")
@@ -230,21 +231,19 @@ def load_convenio_authority(treaties_dir: Path) -> ConvenioAuthority:
     return ConvenioAuthority(treaties=treaties)
 
 
-def collect_convenio_fingerprints(root: Path) -> tuple[tuple[str, int, int], ...]:
-    """Return ``(path, size, mtime_ns)`` fingerprints for every ``treaties/*.toml``.
+def collect_convenio_fingerprints(root: Path) -> tuple[tuple[str, int, int, str], ...]:
+    """Return ``(path, size, mtime_ns, content_digest)`` fingerprints for every ``treaties/*.toml``.
 
     Folded into the authority-level cache key so a treaty content edit (which
     does not bump the parent directory mtime the registry-tree walk observes)
     invalidates the compiled authority, per ``aeat-registry-authority-flow``.
+    Shares the loader's per-file fingerprint so a mutable-tree treaty rewrite
+    that collides on ``(size, mtime_ns)`` still re-keys via the content digest.
     """
     treaties_dir = root.resolve() / "treaties"
     if not treaties_dir.is_dir():
         return ()
-    fingerprints: list[tuple[str, int, int]] = []
-    for path in sorted(treaties_dir.glob("*.toml")):
-        stat = path.stat()
-        fingerprints.append((str(path.resolve()), stat.st_size, stat.st_mtime_ns))
-    return tuple(fingerprints)
+    return tuple(toml_file_fingerprint(path.resolve()) for path in sorted(treaties_dir.glob("*.toml")))
 
 
 def validate_convenio_legal_refs(
