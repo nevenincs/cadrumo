@@ -41,6 +41,7 @@ from typing import TYPE_CHECKING
 
 import typer
 
+from ....application.workflow import ProfileBucketPointer
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....domain.contribuyente import DescendantInfo
@@ -50,7 +51,6 @@ from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
 if TYPE_CHECKING:
     from ....application.flows import FlowDefinition, FlowState
-    from ....application.workflow import ProfileBucketPointer
 
 descendiente_app = typer.Typer(
     name="descendiente",

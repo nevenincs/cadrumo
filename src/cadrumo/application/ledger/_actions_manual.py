@@ -1236,7 +1236,7 @@ def _classification_fields(
         # real "why" behind the decision and takes precedence; the
         # invoking command name remains the fallback for classification
         # paths that carry no operator-supplied reason (e.g. bulk
-        # `--from-csv` rows with no `notes` column).
+        # `--file` rows with no `notes` column).
         "classification_reason": command.notes or command.source_command,
         "classification_confidence": Decimal("1"),
     }
