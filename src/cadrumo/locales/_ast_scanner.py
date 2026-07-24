@@ -39,10 +39,14 @@ _KEY_PATTERN_PREFIX_MIN_PARTS = 2
 """A discovered f-string key prefix must carry at least two dotted
 segments before the dynamic tail (e.g. ``cli.registry.metrics``)."""
 
-_KEY_LITERAL_RE = re.compile(r"^\w+(?:\.\w+)+$", re.UNICODE)
-"""A literal that qualifies as a translation-key prefix: word chars and
-dots only, at least two dotted segments, no whitespace, slashes,
-operators, or punctuation."""
+_KEY_LITERAL_RE = re.compile(r"^[\w-]+(?:\.[\w-]+)+$", re.UNICODE)
+"""A literal that qualifies as a translation-key prefix: word chars,
+hyphens, and dots only, at least two dotted segments, no whitespace,
+slashes, operators, or other punctuation. Hyphens are first-class key
+characters — the wizard page catalogue keys segments by hyphenated page
+ids (``wizard.setup.format.tax-id``), and a hyphen-blind shape check
+leaves every such key invisible to the scanner even when it is declared
+in a ``*_LOCALE_KEY`` constant."""
 
 _DYNAMIC_TRANSLATION_ROOTS = frozenset(
     {

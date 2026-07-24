@@ -7452,6 +7452,9 @@ wizard:
       tax-residence-ccaa:
         prompt: Comunitat autònoma de residència fiscal
       title: Residència fiscal
+    review:
+      registered-non-official-suffix: ' (del certificat censal — no verificat per
+        l''AEAT)'
     spouse:
       spouse-birth-date:
         prompt: Data de naixement del cònjuge
