@@ -51,6 +51,17 @@ _PUBLISHING_JOBS: Final[frozenset[str]] = frozenset({"publish"})
 # deliberately NOT treated as a command position for the same reason: the only
 # three backticks in the workflow are documentation prose, and it uses `$( )`
 # rather than legacy backtick substitution for real command expansion.
+#
+# SCOPE BOUNDARY, for anyone widening this scan beyond `publish-release.yml`:
+# the four packaging workflows (smoke, scoop, homebrew, claude) each call
+# `gh release create` once, and every one of those is machine EVIDENCE TRANSPORT,
+# not publication -- it mints a per-run draft carrying rows, cohorts, and sealed
+# manifests, and never a release. They are benign and must be pinned as such
+# rather than silencing the pattern, which would re-open the hole this gate
+# closes. The discriminators are `--draft` together with an `evidence-*` tag
+# prefix and an "EVIDENCE (non-release)" title; a real publication carries a
+# `v$VERSION` tag and no `--draft`. Widen by exempting on that evidence shape,
+# never by loosening the verb patterns below.
 _COMMAND_POSITION: Final[str] = r"(?:^|[;&|]|\$\()[ \t]*"
 
 _PUBLISH_RUN_PATTERNS: Final[tuple[re.Pattern[str], ...]] = (
