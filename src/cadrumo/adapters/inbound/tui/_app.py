@@ -227,7 +227,7 @@ class FlowTuiApp(App[None]):
         self.state = advanced
         self._rerender_question()
 
-    def action_back(self) -> None:
+    def navigate_back(self) -> None:
         self.state = back_page(self.definition, self.state)
         self._rerender_question()
 

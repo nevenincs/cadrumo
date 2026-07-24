@@ -119,7 +119,7 @@ def test_str_equality_contract_is_load_bearing() -> None:
     assert FlowMode.CREATE == "create"
     assert FlowWidgetKind.COMPARE_SELECT == "compare_select"
     lookup = {PageStatus.STALE: "x"}
-    assert lookup["stale"] == "x"
+    assert lookup[PageStatus("stale")] == "x"
 
 
 def test_reserved_constants() -> None:

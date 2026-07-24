@@ -88,7 +88,7 @@ def _page(
     page_id: str,
     *,
     widget: FlowWidgetKind = FlowWidgetKind.TEXT,
-    answer_type: type = str,
+    answer_type: type[str] | type[bool] | type[int] | type[Path] = str,
     choices: tuple[FlowChoice, ...] = (),
     visible_when: object | None = None,
     required: bool = True,
@@ -104,11 +104,11 @@ def _page(
     )
 
 
-def _section(section_id: str, items: tuple[object, ...], **kwargs: object) -> FlowSection:
-    return FlowSection(id=section_id, title=_copy(), items=items, **kwargs)  # type: ignore[arg-type]
+def _section(section_id: str, items: tuple[FlowPage | FlowRepeatingGroup, ...]) -> FlowSection:
+    return FlowSection(id=section_id, title=_copy(), items=items)  # type: ignore[arg-type]
 
 
-def _definition(sections: tuple[FlowSection, ...], **kwargs: object) -> FlowDefinition:
+def _definition(sections: tuple[FlowSection, ...]) -> FlowDefinition:
     return FlowDefinition(
         id="flows.test.flow",
         title=_copy(),
@@ -116,7 +116,6 @@ def _definition(sections: tuple[FlowSection, ...], **kwargs: object) -> FlowDefi
         sections=sections,
         answers_model=_Answers,
         checkpoint=dict(_FULL_CHECKPOINT),
-        **kwargs,  # type: ignore[arg-type]
     )
 
 

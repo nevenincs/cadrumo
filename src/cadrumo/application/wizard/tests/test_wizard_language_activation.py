@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import contextlib
 import os
-from collections.abc import Iterator, Sequence
+from collections.abc import Callable, Iterator, Sequence
 from pathlib import Path
 
 import pytest
@@ -121,7 +121,7 @@ def _capturing_runner(tokens: Sequence[str], recorder: dict[str, object]):
         *,
         mode: FlowMode,
         registered_values: object = None,
-        on_language_activated: object = None,
+        on_language_activated: Callable[[str, str], bool] | None = None,
         checkpoint_store: object = None,
     ) -> FlowState:
         del registered_values, checkpoint_store

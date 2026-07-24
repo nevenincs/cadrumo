@@ -18,6 +18,7 @@ validator is registered exactly once at module import under a
 from __future__ import annotations
 
 from collections.abc import Mapping
+from pathlib import Path
 
 import pytest
 from pydantic import BaseModel
@@ -40,6 +41,7 @@ from .. import (
     FlowPage,
     FlowRepeatingGroup,
     FlowSection,
+    FlowState,
     FlowSubmitError,
     ValidationVerdict,
     answer,
@@ -90,7 +92,7 @@ def _page(
     page_id: str,
     *,
     widget: FlowWidgetKind = FlowWidgetKind.TEXT,
-    answer_type: type = str,
+    answer_type: type[str] | type[bool] | type[int] | type[Path] = str,
     choices: tuple[FlowChoice, ...] = (),
     visible_when: FlowCondition | None = None,
     required: bool = True,
@@ -110,7 +112,7 @@ def _choice(value: str, *, provenance: CopyRef | None = None) -> FlowChoice:
     return FlowChoice(value=value, label=_copy(), provenance=provenance)
 
 
-def _definition(sections: tuple[FlowSection, ...], **kwargs: object) -> FlowDefinition:
+def _definition(sections: tuple[FlowSection, ...]) -> FlowDefinition:
     return FlowDefinition(
         id="flows.test.flow",
         title=_copy(),
@@ -118,11 +120,10 @@ def _definition(sections: tuple[FlowSection, ...], **kwargs: object) -> FlowDefi
         sections=sections,
         answers_model=_Answers,
         checkpoint=dict(_FULL_CHECKPOINT),
-        **kwargs,  # type: ignore[arg-type]
     )
 
 
-def _visible_keys(definition: FlowDefinition, state: object) -> list[str]:
+def _visible_keys(definition: FlowDefinition, state: FlowState) -> list[str]:
     return [entry.key for entry in visible_sequence(definition, state)]  # type: ignore[arg-type]
 
 

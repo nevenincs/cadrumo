@@ -105,7 +105,8 @@ def _catalogue_leaf(key: str) -> str:
     leaf: object = catalogue
     for segment in key.split("."):
         assert isinstance(leaf, dict)
-        leaf = leaf[segment]
+        row: dict[str, object] = {str(node_key): node_value for node_key, node_value in leaf.items()}
+        leaf = row[segment]
     assert isinstance(leaf, str)
     return leaf
 

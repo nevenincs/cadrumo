@@ -35,6 +35,7 @@ from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  
 from .._modelo import _resolve_work_unit_for_cli
 from .._modelo_work_wizard_cli import (
     _ACTIVE_RUNS,
+    _WizardStep,
     _definition_from_steps,
     _outstanding_wizard_steps,
     _page_key,
@@ -74,7 +75,7 @@ def _invoke(args: list[str]):
     return invoke_cached_cli(args)
 
 
-def _scripted_manual_answers(work_unit_id: str) -> list[tuple[str, str]]:
+def _scripted_manual_answers(work_unit_id: str) -> list[tuple[_WizardStep, str]]:
     """Walk the wizard's outstanding manual pages through the scripted substrate.
 
     Reproduces exactly what the wizard does — resolve the unit, discover its
@@ -100,7 +101,10 @@ def _scripted_manual_answers(work_unit_id: str) -> list[tuple[str, str]]:
             tokens = ["0"] * len(steps)
             state, projection = run_scripted_flow(definition, tokens, mode=FlowMode.CREATE)
             assert projection.submit_eligible
-            return [(step, (state.answers.get(_page_key(step)) or "").strip()) for step in steps]
+            answers: list[tuple[_WizardStep, str]] = []
+            for step in steps:
+                answers.append((step, (state.answers.get(_page_key(step)) or "").strip()))
+            return answers
         finally:
             _ACTIVE_RUNS.pop(run_token, None)
 

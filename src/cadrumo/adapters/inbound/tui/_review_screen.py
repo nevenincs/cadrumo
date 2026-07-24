@@ -18,7 +18,7 @@ own validators).
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from textual.app import ComposeResult
 from textual.binding import Binding, BindingsMap
@@ -63,6 +63,7 @@ class ReviewScreen(Screen[None]):
         Binding("ctrl+n", "restart_flow", ""),
     ]
 
+    @override
     def compose(self) -> ComposeResult:
         yield Static(id="review-header")
         yield DataTable(id="review-table", cursor_type="row")

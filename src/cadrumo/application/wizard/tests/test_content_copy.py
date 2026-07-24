@@ -7,7 +7,7 @@ import pytest
 from ....core.config import override_settings
 from ....core.flows import CheckpointAvailability, FlowMode, FlowWidgetKind
 from ....core.i18n import tr
-from ...flows import answer, assemble_page_copy, flow_definition_from_wizard_flow, start_flow
+from ...flows import FlowPage, answer, assemble_page_copy, flow_definition_from_wizard_flow, start_flow
 from .._catalogue import SETUP_FLOW
 from .._format_hints import PAGE_FORMAT_HINTS, PAGE_WIDGET_KINDS, attach_format_hints
 
@@ -66,12 +66,11 @@ def test_decision_pages_carry_choice_explainers() -> None:
 
 def test_format_hints_attach_to_exactly_the_mapped_pages() -> None:
     definition = _definition()
-    hinted = {
-        item.id: item.format_hint.ref
-        for section in definition.sections
-        for item in section.items
-        if getattr(item, "format_hint", None) is not None
-    }
+    hinted: dict[str, str] = {}
+    for section in definition.sections:
+        for item in section.items:
+            if isinstance(item, FlowPage) and item.format_hint is not None:
+                hinted[item.id] = item.format_hint.ref
     assert hinted == dict(PAGE_FORMAT_HINTS)
 
 
@@ -84,12 +83,11 @@ def test_widget_kinds_assigned_to_exactly_the_mapped_pages() -> None:
     """
     definition = _definition()
     shape_widgets = {FlowWidgetKind.DATE, FlowWidgetKind.DECIMAL}
-    assigned = {
-        item.id: item.widget
-        for section in definition.sections
-        for item in section.items
-        if getattr(item, "widget", None) in shape_widgets
-    }
+    assigned: dict[str, FlowWidgetKind] = {}
+    for section in definition.sections:
+        for item in section.items:
+            if isinstance(item, FlowPage) and item.widget in shape_widgets:
+                assigned[item.id] = item.widget
     assert assigned == dict(PAGE_WIDGET_KINDS)
 
 
@@ -104,6 +102,7 @@ def test_shape_widget_pages_stay_valid_non_choice_pages() -> None:
     }
     assert set(overridden) == set(PAGE_WIDGET_KINDS)
     for page_id, page in overridden.items():
+        assert isinstance(page, FlowPage), page_id
         assert page.answer_type is str, page_id
         assert page.choices == (), page_id
 
@@ -147,6 +146,7 @@ def test_tax_id_page_copy_carries_the_identity_hint_in_spanish() -> None:
     page = next(
         item for section in definition.sections for item in section.items if getattr(item, "id", "") == "tax-id"
     )
+    assert isinstance(page, FlowPage)
     with override_settings(cadrumo_output_language="es"):
         copy = assemble_page_copy(page)
     assert copy.format_hint, "tax-id page must carry a resolved format hint"

@@ -368,9 +368,14 @@ def test_language_override_sites_match_the_sanctioned_inventory() -> None:
         tree = ast.parse(module.read_text(encoding="utf-8"), filename=rel)
         functions = [func for func in ast.walk(tree) if isinstance(func, ast.FunctionDef | ast.AsyncFunctionDef)]
 
-        def _innermost_site(node: ast.AST, rel_path: str = rel, funcs: list = functions) -> tuple[str, str]:
+        def _innermost_site(
+            node: ast.AST,
+            rel_path: str = rel,
+            funcs: list[ast.FunctionDef | ast.AsyncFunctionDef] = functions,
+        ) -> tuple[str, str]:
             # Attribute the call to its INNERMOST enclosing function so a
             # nested closure is not double-counted under its parent.
+            assert isinstance(node, ast.Call)
             containing = [func for func in funcs if func.lineno <= node.lineno <= (func.end_lineno or func.lineno)]
             if containing:
                 return (rel_path, max(containing, key=lambda f: f.lineno).name)

@@ -5,6 +5,7 @@ from collections.abc import Sequence
 
 from pydantic import BaseModel, ConfigDict
 
+from ....core.flows import FlowMode
 from ...flows import FlowDefinition, FlowState, ReviewProjection, run_scripted_flow, start_flow, visible_sequence
 from .. import DESCENDANTS_COUNT_PAGE_ID
 
@@ -17,7 +18,7 @@ def scripted_run_over_setup_definition(
     definition: FlowDefinition,
     tokens: Sequence[str],
     *,
-    mode,
+    mode: FlowMode,
 ) -> tuple[FlowState, ReviewProjection]:
     """Run a scripted walk over the live setup definition, defaulting the count page.
 

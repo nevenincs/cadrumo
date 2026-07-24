@@ -35,9 +35,12 @@ import re
 import sys
 from collections.abc import Callable, Sequence
 from contextvars import ContextVar
-from typing import NoReturn
+from typing import TYPE_CHECKING, NoReturn
 
 import click
+
+if TYPE_CHECKING:
+    from ._errors import CliRefusedBoundaryError
 
 from ...core.click_context import argv_requests_json, context_chain_requests_json
 from ...core.errors import (
@@ -224,7 +227,7 @@ def _emit_click_exception(exc: BaseException) -> NoReturn:
     sys.exit(exit_code)
 
 
-def _build_parse_time_refusal(exc: BaseException) -> object:
+def _build_parse_time_refusal(exc: BaseException) -> CliRefusedBoundaryError:
     """Build the localised, structured refusal for a JSON-mode parse failure.
 
     A click-generated argv-parse failure (missing argument, unknown option,

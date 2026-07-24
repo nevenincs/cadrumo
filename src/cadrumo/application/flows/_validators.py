@@ -21,6 +21,7 @@ import decimal
 from collections.abc import Callable, Mapping
 from decimal import Decimal
 from pathlib import Path
+from typing import TypeVar
 
 from pydantic import BaseModel, Field
 
@@ -87,7 +88,10 @@ def resolve_cross_field_validator(validator_id: str) -> CrossFieldValidator:
     return _resolve(_CROSS_FIELD_VALIDATORS, validator_id)
 
 
-def _register(registry: dict[str, object], validator_id: str, validator: object) -> None:
+_ValidatorT = TypeVar("_ValidatorT")
+
+
+def _register(registry: dict[str, _ValidatorT], validator_id: str, validator: _ValidatorT) -> None:
     if not validator_id:
         raise FlowValidatorRegistryError(
             translated_message="application.flows.errors.validator_id_blank",
@@ -100,7 +104,7 @@ def _register(registry: dict[str, object], validator_id: str, validator: object)
     registry[validator_id] = validator
 
 
-def _resolve(registry: Mapping[str, object], validator_id: str) -> object:
+def _resolve(registry: Mapping[str, _ValidatorT], validator_id: str) -> _ValidatorT:
     validator = registry.get(validator_id)
     if validator is None:
         raise FlowValidatorRegistryError(

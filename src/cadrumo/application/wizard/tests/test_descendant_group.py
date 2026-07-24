@@ -32,6 +32,7 @@ from ...flows import (
     FlowDefinition,
     FlowPage,
     FlowSection,
+    FlowState,
     answer,
     resolve_cross_field_validator,
     start_flow,
@@ -103,7 +104,7 @@ def _probe_definition() -> FlowDefinition:
     )
 
 
-def _visible_keys(definition: FlowDefinition, state) -> set[str]:
+def _visible_keys(definition: FlowDefinition, state: FlowState) -> set[str]:
     return {entry.key for entry in visible_sequence(definition, state)}
 
 

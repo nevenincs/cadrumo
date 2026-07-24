@@ -28,7 +28,7 @@ from ....core.external_constants import (
     PROVENANCE_SOURCE_CENSO_ARTEFACT,
     PROVENANCE_SOURCE_MANUAL_CLI,
 )
-from ....core.i18n import tr
+from ....core.i18n import Translatable, tr
 from ....domain.deadlines import IVARegime
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, new_profile_id
 from .._catalogue import SETUP_FLOW
@@ -122,19 +122,19 @@ def _secret_only_flow() -> WizardFlow:
     """
     return WizardFlow(
         id="secretprobe",
-        title="wizard.secretprobe.title",
-        description="wizard.secretprobe.description",
+        title=Translatable("wizard.secretprobe.title"),
+        description=Translatable("wizard.secretprobe.description"),
         answers_model=_SecretAnswers,
         sections=(
             WizardSection(
                 id="s",
-                title="wizard.secretprobe.section",
+                title=Translatable("wizard.secretprobe.section"),
                 questions=(
                     WizardQuestion(
                         id="api-token",
                         profile_key="preferences.api_token",
                         widget=WizardWidget.SECRET,
-                        prompt="wizard.secretprobe.api-token.prompt",
+                        prompt=Translatable("wizard.secretprobe.api-token.prompt"),
                         choices=(),
                         answer_type=str,
                     ),
