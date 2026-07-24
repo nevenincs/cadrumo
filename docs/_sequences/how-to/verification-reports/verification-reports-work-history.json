@@ -91,21 +91,6 @@
     {
       "argv": [
         "aeat",
-        "config",
-        "switch",
-        "docs-sequence-sandbox"
-      ],
-      "captures": [],
-      "envelope": null,
-      "envelope_source": null,
-      "exit_code": 0,
-      "kind": "setup",
-      "stderr_text": null,
-      "text": "active_profile\tdocs-sequence-sandbox\n"
-    },
-    {
-      "argv": [
-        "aeat",
         "--format",
         "json",
         "app",
