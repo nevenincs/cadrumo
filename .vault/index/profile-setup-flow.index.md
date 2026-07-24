@@ -40,11 +40,13 @@ related:
   - '[[2026-07-23-profile-setup-flow-W04-P09-S29]]'
   - '[[2026-07-23-profile-setup-flow-W04-P09-S30]]'
   - '[[2026-07-23-profile-setup-flow-W04-P09-S31]]'
+  - '[[2026-07-23-profile-setup-flow-W04-P09-S37]]'
   - '[[2026-07-23-profile-setup-flow-adr]]'
   - '[[2026-07-23-profile-setup-flow-integration-shape-audit]]'
   - '[[2026-07-23-profile-setup-flow-page-catalogue-mapping-reference]]'
   - '[[2026-07-23-profile-setup-flow-plan]]'
   - '[[2026-07-23-profile-setup-flow-setup-flow-design-hypothesis-research]]'
+  - '[[2026-07-24-profile-setup-flow-close-honesty-review-audit]]'
 ---
 
 # `profile-setup-flow` feature index
@@ -60,6 +62,7 @@ Auto-generated index of all documents tagged with `#profile-setup-flow`.
 ### audit
 
 - `2026-07-23-profile-setup-flow-integration-shape-audit` - `profile-setup-flow` audit: `taxpayer profile integration shape and ADR grounding audit`
+- `2026-07-24-profile-setup-flow-close-honesty-review-audit` - `profile-setup-flow` audit: `Close honesty review`
 
 ### exec
 
@@ -97,6 +100,7 @@ Auto-generated index of all documents tagged with `#profile-setup-flow`.
 - `2026-07-23-profile-setup-flow-W04-P09-S29` - Add roundtrip plus anti-tautology coverage for divergence facts, the setup-incomplete state, and resume projection
 - `2026-07-23-profile-setup-flow-W04-P09-S30` - Verify the portable-export shape against the compatibility lifecycle for every schema addition
 - `2026-07-23-profile-setup-flow-W04-P09-S31` - Author the user-facing setup-flow documentation through the documentation workflow with command conformance green
+- `2026-07-23-profile-setup-flow-W04-P09-S37` - Add the AST gate asserting every tr(CONSTANT) call site's constant name carries the locale-key naming convention, closing the scanner-invisible-constant concealment class repo-wide
 
 ### plan
 

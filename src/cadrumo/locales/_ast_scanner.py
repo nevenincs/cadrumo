@@ -19,9 +19,20 @@ past that contract:
   key selection for application policies that return translation keys
   to a later caller instead of calling :func:`tr` locally.
 
-Both findings feed into
+These findings feed into
 :meth:`locales.manager.LocaleManager.get_codebase_keys` so the
 parity audit covers programmatic emissions and dynamic namespaces.
+
+A fourth surface is a structural HAZARD rather than a discovery gap:
+``tr(SOME_CONSTANT)`` where ``SOME_CONSTANT`` is a bare, ALL-CAPS
+constant reference that does NOT carry the ``_LOCALE_KEY``/``_LOCALE_KEYS``
+suffix. Neither the literal-argument resolver nor the constant-declaration
+resolver above finds it, so the key is invisible to every downstream
+audit — a missing catalogue entry, a typo, or an orphaned key on that
+site raises nothing. :func:`find_tr_constant_naming_violations` is a
+repo-wide structural gate (not a key-discovery feed) that holds every
+call site to the same naming contract the declaration side already
+enforces.
 """
 
 from __future__ import annotations
@@ -153,11 +164,21 @@ def _extract_locale_constant_keys(tree: ast.AST) -> set[str]:
     return findings
 
 
+_LOCALE_KEY_CONSTANT_SUFFIXES: tuple[str, str] = ("_LOCALE_KEY", "_LOCALE_KEYS")
+"""Naming convention every module-level locale-key constant must carry.
+
+Shared by :func:`_declares_locale_key_constant` (does this ASSIGNMENT declare
+a locale-key registry?) and :func:`find_tr_constant_naming_violations` (does
+this ``tr(CONSTANT)`` CALL SITE reference one?) so the two halves of the
+contract — the declaration and the use — are held to one naming rule rather
+than two independently-maintained copies that could drift apart."""
+
+
 def _declares_locale_key_constant(target: ast.expr) -> bool:
     """Return True when ``target`` names an explicit locale-key registry."""
     if not isinstance(target, ast.Name):
         return False
-    return target.id.endswith(("_LOCALE_KEY", "_LOCALE_KEYS"))
+    return target.id.endswith(_LOCALE_KEY_CONSTANT_SUFFIXES)
 
 
 def _collect_dotted_literals(node: ast.expr | None, findings: set[str]) -> None:
@@ -371,8 +392,8 @@ def _concat_prefix_marker(argument: ast.expr) -> str | None:
     return f"{literal}.*"
 
 
-def _iter_parseable_python_modules(root: Path) -> Iterator[ast.Module]:
-    """Yield parseable Python ASTs under ``root`` for locale discovery."""
+def _iter_parseable_python_modules(root: Path) -> Iterator[tuple[Path, ast.Module]]:
+    """Yield ``(path, tree)`` pairs of parseable Python ASTs under ``root``."""
     for module in root.rglob("*.py"):
         if module.name in {"test_parity.py", "manager.py", "_ast_scanner.py"}:
             continue
@@ -384,7 +405,7 @@ def _iter_parseable_python_modules(root: Path) -> Iterator[ast.Module]:
             _log.debug("locale ast scan: skipping %s (%s)", module, exc)
             continue
         try:
-            yield ast.parse(source, filename=str(module))
+            yield module, ast.parse(source, filename=str(module))
         except SyntaxError as exc:
             _log.debug("locale ast scan: parse failure %s (%s)", module, exc)
 
@@ -400,7 +421,7 @@ def scan_source_tree(root: Path) -> set[str]:
     entry exists under each declared namespace prefix.
     """
     findings: set[str] = set()
-    for tree in _iter_parseable_python_modules(root):
+    for _module, tree in _iter_parseable_python_modules(root):
         findings.update(_extract_error_constructor_keys(tree))
         findings.update(_extract_locale_constant_keys(tree))
     return findings
@@ -416,10 +437,74 @@ def scan_namespace_markers(root: Path) -> set[str]:
     its prefix.
     """
     findings: set[str] = set()
-    for tree in _iter_parseable_python_modules(root):
+    for _module, tree in _iter_parseable_python_modules(root):
         findings.update(_extract_fstring_prefixes(tree))
         findings.update(_extract_concat_prefixes(tree))
     return findings
 
 
-__all__ = ["scan_namespace_markers", "scan_source_tree"]
+_UPPER_CONSTANT_NAME_RE = re.compile(r"^[A-Z][A-Z0-9_]*$")
+"""Python constant-naming shape: all-uppercase letters, digits, underscores."""
+
+
+def tr_constant_naming_violations_in_tree(tree: ast.AST) -> Iterator[tuple[int, str]]:
+    """Yield ``(lineno, constant_name)`` for a scanner-invisible ``tr(CONSTANT)`` site.
+
+    The regex/AST scanners above resolve a ``tr(...)``/``t(...)`` call site's
+    key two ways: a literal string argument (:func:`_dotted_literal_value`), or
+    a bare reference to a module-level constant whose OWN NAME ends in
+    ``_LOCALE_KEY``/``_LOCALE_KEYS`` (:func:`_extract_locale_constant_keys`,
+    keyed on :func:`_declares_locale_key_constant`). A third shape slips past
+    both: ``tr(SOME_CONSTANT)`` where ``SOME_CONSTANT`` is plainly a
+    module/class-level constant by its ALL-CAPS shape, but its name carries
+    none of the required suffixes. Neither resolver finds it — the call site
+    is not a literal, and the constant's declaration is invisible to
+    :func:`_declares_locale_key_constant` because its name does not match.
+    The key becomes entirely invisible to the coverage/parity audit: a typo,
+    an orphaned removal, or a missing catalogue entry on that key raises
+    nothing, because the scanner never knew the key existed.
+
+    This closes the gap by holding the CALL SITE to the same naming contract
+    the DECLARATION side already enforces: any argument that looks like a
+    constant reference (``^[A-Z][A-Z0-9_]*$``) must carry a
+    :data:`_LOCALE_KEY_CONSTANT_SUFFIXES` suffix. A lowercase or mixed-case
+    name (a local variable, loop variable, or function parameter) is a
+    genuinely dynamic runtime value, not a static constant, and is out of
+    scope for this check — the same distinction the naming-convention rule
+    itself draws.
+    """
+    tr_names = _translation_call_names(tree)
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        if _callee_name(node.func) not in tr_names:
+            continue
+        if not node.args:
+            continue
+        first = node.args[0]
+        if not isinstance(first, ast.Name):
+            continue
+        if not _UPPER_CONSTANT_NAME_RE.match(first.id):
+            continue
+        if first.id.endswith(_LOCALE_KEY_CONSTANT_SUFFIXES):
+            continue
+        yield node.lineno, first.id
+
+
+def find_tr_constant_naming_violations(root: Path) -> list[str]:
+    """Walk ``root`` for `.py` files and return formatted naming violations.
+
+    Each returned entry is a ``path:line: 'CONSTANT_NAME'`` string naming a
+    ``tr(CONSTANT_NAME)``/``t(CONSTANT_NAME)`` call site whose constant does
+    not carry the ``_LOCALE_KEY``/``_LOCALE_KEYS`` suffix required for the
+    declaration-side scanner to resolve it. See
+    :func:`tr_constant_naming_violations_in_tree` for the full rationale.
+    """
+    violations: list[str] = []
+    for module, tree in _iter_parseable_python_modules(root):
+        for lineno, name in tr_constant_naming_violations_in_tree(tree):
+            violations.append(f"{module}:{lineno}: {name!r}")
+    return violations
+
+
+__all__ = ["find_tr_constant_naming_violations", "scan_namespace_markers", "scan_source_tree"]

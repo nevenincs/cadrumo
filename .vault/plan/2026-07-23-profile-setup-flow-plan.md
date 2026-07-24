@@ -3,13 +3,23 @@ tags:
   - '#plan'
   - '#profile-setup-flow'
 date: '2026-07-23'
-modified: '2026-07-24'
+modified: '2026-07-25'
 tier: L3
 related:
   - '[[2026-07-23-profile-setup-flow-adr]]'
   - '[[2026-07-23-profile-setup-flow-setup-flow-design-hypothesis-research]]'
   - '[[2026-07-23-profile-setup-flow-integration-shape-audit]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 <!-- RETIRED: S32 -->
 
@@ -110,7 +120,7 @@ Roundtrip and anti-tautology coverage for the new persistence surfaces, parity a
 - [x] `W04.P09.S30` - Verify the portable-export shape against the compatibility lifecycle for every schema addition; `src/cadrumo/domain/user_profile/_portable_export.py`.
 - [x] `W04.P09.S31` - Author the user-facing setup-flow documentation through the documentation workflow with command conformance green; `docs/how-to/`.
 - [ ] `W04.P09.S33` - Run the fresh-context campaign-close honesty review and persist the close audit with every surfaced item tracked; `.vault/audit/`.
-- [ ] `W04.P09.S37` - Add the AST gate asserting every tr(CONSTANT) call site's constant name carries the locale-key naming convention, closing the scanner-invisible-constant concealment class repo-wide; `src/cadrumo/locales/tests/`.
+- [x] `W04.P09.S37` - Add the AST gate asserting every tr(CONSTANT) call site's constant name carries the locale-key naming convention, closing the scanner-invisible-constant concealment class repo-wide; `src/cadrumo/locales/tests/`.
 
 ## Description
 
