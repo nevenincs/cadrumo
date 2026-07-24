@@ -37,7 +37,7 @@ import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from ....adapters.persistence.profile.justificante import JustificanteRepository
-from ....application.flows import FlowAnswerError, run_scripted_flow
+from ....application.flows import FlowAnswerError, FlowPage, run_scripted_flow
 from ....application.modelo import get_filing_record
 from ....application.user_profile import profile_storage_session
 from ....core import Period, resolve_active_bucket_id
@@ -231,6 +231,7 @@ def _scripted_amend(
     assert bucket_id is not None
     with profile_storage_session(bucket_id):
         unit = _resolve_work_unit_for_cli(work_unit_id=work_unit_id)
+        assert unit.current_filing_record_id is not None
         baseline = get_filing_record(unit.current_filing_record_id)
         casilla_rows = _baseline_casilla_rows(unit)
         baseline_revision = load_calculation_revision(baseline.calculation_revision_id)
@@ -317,6 +318,7 @@ def _permitted_kind_choice_values(
     assert bucket_id is not None
     with profile_storage_session(bucket_id):
         unit = _resolve_work_unit_for_cli(work_unit_id=work_unit_id)
+        assert unit.current_filing_record_id is not None
         baseline = get_filing_record(unit.current_filing_record_id)
         casilla_rows = _baseline_casilla_rows(unit)
         baseline_revision = load_calculation_revision(baseline.calculation_revision_id)
@@ -338,6 +340,7 @@ def _permitted_kind_choice_values(
                 for page in section.items
                 if page.id == _KIND_PAGE_ID
             )
+            assert isinstance(kind_page, FlowPage)
             return tuple(choice.value for choice in kind_page.choices)
         finally:
             _ACTIVE_RUNS.pop(run_token, None)
@@ -600,6 +603,7 @@ def test_amend_wizard_blank_selection_yields_no_corrections() -> None:
     assert bucket_id is not None
     with profile_storage_session(bucket_id):
         unit = _resolve_work_unit_for_cli(work_unit_id=work_unit_id)
+        assert unit.current_filing_record_id is not None
         baseline = get_filing_record(unit.current_filing_record_id)
         casilla_rows = _baseline_casilla_rows(unit)
         baseline_revision = load_calculation_revision(baseline.calculation_revision_id)

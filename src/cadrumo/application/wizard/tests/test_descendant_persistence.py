@@ -19,7 +19,7 @@ from pathlib import Path
 import pytest
 
 from ....core.flows import FlowMode
-from ....domain.user_profile import new_profile_id
+from ....domain.user_profile import UserProfileFactValue, new_profile_id
 from ....tests.secure_sql import isolated_profile_storage_root
 from ...flows import flow_definition_from_wizard_flow, resume_flow, run_scripted_flow
 from ...user_profile import profile_storage_session, record_to_path_values
@@ -159,7 +159,7 @@ def test_count_zero_clears_every_descendant_row(_backend: Path) -> None:
 # ── (d) resume seeding: facts re-project, resume re-instantiates ────
 
 
-def _descendant_facts(answers: dict[str, str]) -> dict[str, str]:
+def _descendant_facts(answers: dict[str, str]) -> dict[str, UserProfileFactValue]:
     """The descendant slice of a checkpoint fact projection, path -> value."""
     return {
         fact.path: fact.value

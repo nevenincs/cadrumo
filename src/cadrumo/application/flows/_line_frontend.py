@@ -291,7 +291,7 @@ class LineFlowFrontend:
                             output=self._output,
                         ),
                     )
-                    if result is None:
+                    if not isinstance(result, list):
                         return ""
                     return ",".join(str(item) for item in result)
         except _NO_CONSOLE_ERRORS as exc:

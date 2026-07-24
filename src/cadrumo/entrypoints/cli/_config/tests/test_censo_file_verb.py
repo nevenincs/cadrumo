@@ -18,7 +18,7 @@ def _invoke_with_artefact(tmp_path: Path, payload: bytes):
     return invoke_cached_cli(["--format", "json", "config", "profile", "censo", "file", "--file", str(artefact)])
 
 
-def _stderr_document(result) -> dict:
+def _stderr_document(result) -> dict[str, dict[str, str]]:
     """Extract the JSON error document from stderr (line-scanned: logging may interleave)."""
     stderr = result.stderr if result.stderr_bytes is not None else ""
     for line in stderr.splitlines():

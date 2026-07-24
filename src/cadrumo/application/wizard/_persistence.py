@@ -313,9 +313,13 @@ def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
 
     meses = row.get("meses-madre-trabajo") or ""
     gastos = row.get("gastos-guarderia") or ""
+    birth_date = parse_iso8601_date(row["birth-date"])
+    assert birth_date is not None
+    adoption_token = _safe_adoption_date(row["birth-date"], row.get("adoption-date"))
+    adoption_date = parse_iso8601_date(adoption_token) if adoption_token else None
     return DescendantInfo(
-        birth_date=row["birth-date"],
-        adoption_date=_safe_adoption_date(row["birth-date"], row.get("adoption-date")),
+        birth_date=birth_date,
+        adoption_date=adoption_date,
         discapacidad_grado=_discapacidad_grade(row.get("discapacidad", "")),
         convive_con_contribuyente=row.get("convivencia", "") != "false",
         custodia_compartida=row.get("custodia-compartida", "") == "true",

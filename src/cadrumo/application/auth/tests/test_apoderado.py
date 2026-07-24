@@ -11,7 +11,7 @@ from ....core.config import Settings, override_settings
 from ....core.flows import FlowMode
 from ....domain.auth.apoderamientos import UnknownScopeError
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, isolated_two_bucket_runtime
-from ...flows import run_scripted_flow
+from ...flows import FlowPage, run_scripted_flow
 from .._apoderado import (
     ApoderadoLiveCheckUnavailableError,
     ApoderadoRepresentedNifInvalidError,
@@ -268,8 +268,12 @@ class TestApoderadoFlowDoor:
         svc = ApoderadoService(settings=isolated_settings)
         definition = build_apoderado_flow_definition(svc.catalogue)
         pages = {page.id: page for section in definition.sections for page in section.items}
-        assert pages[REPRESENTED_NIF_PAGE_ID].domain_key is None
-        assert pages[SCOPES_PAGE_ID].domain_key is None
+        represented_page = pages[REPRESENTED_NIF_PAGE_ID]
+        scopes_page = pages[SCOPES_PAGE_ID]
+        assert isinstance(represented_page, FlowPage)
+        assert isinstance(scopes_page, FlowPage)
+        assert represented_page.domain_key is None
+        assert scopes_page.domain_key is None
 
     def test_malformed_represented_nif_is_rejected_before_commit(self, isolated_settings: Settings) -> None:
         """A bad represented-party tax id fails the identity validator, so the scripted walk refuses."""

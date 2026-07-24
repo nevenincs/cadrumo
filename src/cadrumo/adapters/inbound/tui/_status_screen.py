@@ -19,6 +19,7 @@ key-like fact can never appear on screen (or in a captured session log).
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import override
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding, BindingsMap
@@ -150,6 +151,7 @@ class StatusApp(App[None]):
         super().__init__()
         self._data = data
 
+    @override
     def compose(self) -> ComposeResult:
         yield Static(id="status-header")
         with VerticalScroll(id="status-body"):

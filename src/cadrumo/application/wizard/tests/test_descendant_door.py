@@ -29,7 +29,7 @@ from ....domain.contribuyente import (
 from ....domain.user_profile import new_profile_id
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from ...flows import FlowSubmitError, run_scripted_flow
+from ...flows import FlowPage, FlowSubmitError, run_scripted_flow
 from ...user_profile import (
     profile_create_storage_span,
     profile_storage_session,
@@ -95,6 +95,7 @@ def test_door_definition_adopts_the_group_and_carries_the_adoption_validator() -
     assert definition.id == DESCENDANT_DOOR_FLOW_ID
     (section,) = definition.sections
     count_page, group = section.items
+    assert isinstance(count_page, FlowPage)
     assert count_page.id == DESCENDANTS_COUNT_PAGE_ID
     # The entity-type visibility gate is stripped: the door has no entity-type
     # page, and a dangling gate would fail the definition's earlier-page check.

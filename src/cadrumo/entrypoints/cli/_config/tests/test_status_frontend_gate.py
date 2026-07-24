@@ -17,9 +17,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import click
 import pytest
 import typer
+import typer.core
 
 from .....tests.cli_runner import invoke_cached_cli
 from .....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401
@@ -35,7 +35,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _ctx_with_format(format_name: str) -> typer.Context:
-    ctx = typer.Context(click.Command("status"))
+    ctx = typer.Context(typer.core.TyperCommand("status"))
     ctx.ensure_object(dict)["format"] = format_name
     return ctx
 

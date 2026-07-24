@@ -165,6 +165,15 @@ if TYPE_CHECKING:
         RenameProfileCommand,
     )
     from ._completeness import iva_regime_required
+    from ._cotejo_apply import (
+        CENSO_DIVERGENCE_NOTICE_CODE,
+        CENSO_DIVERGENCE_PREFIX,
+        CensoDivergence,
+        apply_cotejo,
+        censo_divergence_notice,
+        divergence_facts,
+        open_censo_divergences,
+    )
     from ._custody import (
         CustodyPassphraseChangeResult,
         CustodyRecoverResult,

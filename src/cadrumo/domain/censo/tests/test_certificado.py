@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TypedDict, Unpack
+
 import pytest
 from pydantic import ValidationError
 
@@ -15,8 +17,26 @@ from .. import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _certificado(**overrides: object) -> CertificadoSituacionCensal:
-    payload: dict[str, object] = {
+class _CertificadoFields(TypedDict):
+    domicilio_fiscal: str
+    condicion_residencia: str
+    representantes_nif: tuple[str, ...]
+    situacion_tributaria: tuple[str, ...]
+    actividades: tuple[ActividadLocalCertificada, ...]
+    obligaciones_periodicas: tuple[str, ...]
+
+
+class _CertificadoOverrides(TypedDict, total=False):
+    domicilio_fiscal: str
+    condicion_residencia: str
+    representantes_nif: tuple[str, ...]
+    situacion_tributaria: tuple[str, ...]
+    actividades: tuple[ActividadLocalCertificada, ...]
+    obligaciones_periodicas: tuple[str, ...]
+
+
+def _certificado(**overrides: Unpack[_CertificadoOverrides]) -> CertificadoSituacionCensal:
+    payload: _CertificadoFields = {
         "domicilio_fiscal": "Calle Mayor 1, 28001 Madrid",
         "condicion_residencia": "Residente",
         "representantes_nif": ("12345678Z",),

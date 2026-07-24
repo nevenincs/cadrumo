@@ -15,7 +15,7 @@ persisted fact paths; no localized prose is asserted.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from pathlib import Path
 
 import pytest
@@ -27,7 +27,10 @@ from ....domain.buckets import BucketEventType
 from ....domain.user_profile import UserProfileStatus, new_profile_id
 from ....tests.secure_sql import isolated_profile_storage_root
 from ...flows import (
+    CheckpointStore,
     FlowCheckpointError,
+    FlowDefinition,
+    FlowState,
     checkpoint_available,
     flow_definition_from_wizard_flow,
     resume_flow,
@@ -39,7 +42,12 @@ from ...user_profile import profile_storage_session, record_to_path_values
 from ...workflow import read_profile_bucket, workflow_state_repository
 from .. import ProfileFactsCheckpointStore
 from .._catalogue import SETUP_FLOW
-from .._commands import _SETUP_CHECKPOINT, _resolve_profile_id_for_mode, build_wizard_command
+from .._commands import (
+    _SETUP_CHECKPOINT,
+    InteractiveFlowRunner,
+    _resolve_profile_id_for_mode,
+    build_wizard_command,
+)
 from .._persistence import WizardPersistMode
 from ._support import scripted_run_over_setup_definition
 from .test_setup_runtime import _scripted_answers_for_individual_declaration
@@ -191,7 +199,7 @@ def test_resume_flow_carries_a_definition_drift_orphan_as_stale(_backend: Path) 
 # ── command wiring: save-exit (a), submit completion (d), resume (e), discard (f)
 
 
-def _invoke_interactive(mode: WizardPersistMode, runner, args: Sequence[str]) -> None:
+def _invoke_interactive(mode: WizardPersistMode, runner: InteractiveFlowRunner, args: Sequence[str]) -> None:
     command = build_wizard_command(SETUP_FLOW, mode=mode, interactive_flow_runner=runner)
     app = typer.Typer()
     app.command()(command)
@@ -201,7 +209,14 @@ def _invoke_interactive(mode: WizardPersistMode, runner, args: Sequence[str]) ->
 def _submit_runner(tokens: Sequence[str]):
     """Runner that walks the flow to a submitted state (the operator submits)."""
 
-    def _runner(definition, *, mode, registered_values=None, on_language_activated=None, checkpoint_store=None):
+    def _runner(
+        definition: FlowDefinition,
+        *,
+        mode: FlowMode,
+        registered_values: Mapping[str, str] | None = None,
+        on_language_activated: Callable[[str, str], bool] | None = None,
+        checkpoint_store: CheckpointStore | None = None,
+    ) -> FlowState:
         del registered_values, on_language_activated, checkpoint_store
         state, _projection = scripted_run_over_setup_definition(definition, tokens, mode=mode)
         return state
@@ -217,7 +232,14 @@ def _save_exit_runner(tokens: Sequence[str]):
     operator picks save-and-exit at review instead of submit.
     """
 
-    def _runner(definition, *, mode, registered_values=None, on_language_activated=None, checkpoint_store=None):
+    def _runner(
+        definition: FlowDefinition,
+        *,
+        mode: FlowMode,
+        registered_values: Mapping[str, str] | None = None,
+        on_language_activated: Callable[[str, str], bool] | None = None,
+        checkpoint_store: CheckpointStore | None = None,
+    ) -> FlowState:
         del registered_values, on_language_activated
         state, _projection = scripted_run_over_setup_definition(definition, tokens, mode=mode)
         assert checkpoint_store is not None

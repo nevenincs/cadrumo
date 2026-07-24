@@ -404,7 +404,9 @@ def test_invoice_validates_spanish_tax_id_for_es_country() -> None:
     # rendered prose) so the operator-facing message stays localisable.
     with pytest.raises(ValidationError) as excinfo:
         _valid_invoice(counterparty_country="ES", counterparty_tax_id="INVALID")
-    wrapped = excinfo.value.errors()[0]["ctx"]["error"]
+    error_detail = excinfo.value.errors()[0]
+    assert "ctx" in error_detail
+    wrapped = error_detail["ctx"]["error"]
     assert isinstance(wrapped, IdentityError)
     assert wrapped.translated_message == "errors.identity.tax_id_invalid_length"
 

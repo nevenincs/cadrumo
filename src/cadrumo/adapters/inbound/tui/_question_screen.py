@@ -15,7 +15,7 @@ when the answer is submitted.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from rich.text import Text
 from textual.app import ComposeResult
@@ -73,6 +73,7 @@ class QuestionScreen(Screen[None]):
         Binding("ctrl+s", "save_exit", ""),
     ]
 
+    @override
     def compose(self) -> ComposeResult:
         yield Static(id="flow-header")
         yield ProgressBar(id="flow-progress", show_eta=False)
@@ -371,7 +372,7 @@ class QuestionScreen(Screen[None]):
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "btn-back":
-            self.flow_app.action_back()
+            self.flow_app.navigate_back()
         elif event.button.id == "btn-next":
             self.flow_app.action_next()
         elif event.button.id == "btn-review":
@@ -383,7 +384,7 @@ class QuestionScreen(Screen[None]):
         return inputs.first().value if inputs else None
 
     def action_go_back(self) -> None:
-        self.flow_app.action_back()
+        self.flow_app.navigate_back()
 
     def action_go_review(self) -> None:
         self.flow_app.action_go_review()

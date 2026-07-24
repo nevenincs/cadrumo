@@ -112,7 +112,9 @@ def test_joint_non_married_without_children_fails() -> None:
         failure = next(v for v in verdicts if not v.ok)
         assert failure.message_key == _MONOPARENTAL_KEY
         assert failure.context["check"] == "monoparental_requires_hijos"
-        assert "situacion_familiar" in failure.context["fields"]
+        fields = failure.context["fields"]
+        assert isinstance(fields, list)
+        assert "situacion_familiar" in fields
 
 
 def test_joint_non_married_with_children_passes() -> None:

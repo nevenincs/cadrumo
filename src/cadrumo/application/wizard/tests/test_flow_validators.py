@@ -23,9 +23,11 @@ from ....core.flows import (
 )
 from ...flows import (
     CopyRef,
+    CrossFieldValidator,
     FlowDefinition,
     FlowPage,
     FlowSection,
+    ValidationVerdict,
     resolve_cross_field_validator,
 )
 from .. import (
@@ -59,24 +61,26 @@ _PAGE_DOMAIN_KEYS: dict[str, str] = {
 
 
 @pytest.fixture(scope="module")
-def validator():
+def validator() -> CrossFieldValidator:
     return build_taxpayer_projection_validator(_PAGE_DOMAIN_KEYS)
 
 
-def _checks(verdicts) -> set[str]:
+def _checks(verdicts: tuple[ValidationVerdict, ...]) -> set[str]:
     return {str(verdict.context["check"]) for verdict in verdicts if not verdict.ok}
 
 
-def test_impatriado_without_start_date_yields_verdict(validator) -> None:
+def test_impatriado_without_start_date_yields_verdict(validator: CrossFieldValidator) -> None:
     """An IMPATRIADO election with no start date surfaces its typed verdict row."""
     verdicts = validator({"irpf-special-regime": "impatriado"})
     assert "impatriado_requires_start_date" in _checks(verdicts)
     row = next(v for v in verdicts if not v.ok and v.context["check"] == "impatriado_requires_start_date")
     assert row.message_key == _VERIFIER_KEYS["impatriado_requires_start_date"]
-    assert "special_regime_start_date" in row.context["fields"]
+    fields = row.context["fields"]
+    assert isinstance(fields, list)
+    assert "special_regime_start_date" in fields
 
 
-def test_non_resident_without_country_yields_verdict(validator) -> None:
+def test_non_resident_without_country_yields_verdict(validator: CrossFieldValidator) -> None:
     """A NON_RESIDENT_IRNR residency with no country surfaces its typed verdict row."""
     verdicts = validator({"fiscal-residency": "non_resident_irnr"})
     assert "non_resident_requires_country" in _checks(verdicts)
@@ -84,7 +88,7 @@ def test_non_resident_without_country_yields_verdict(validator) -> None:
     assert row.message_key == _VERIFIER_KEYS["non_resident_requires_country"]
 
 
-def test_non_resident_without_representante_yields_verdict(validator) -> None:
+def test_non_resident_without_representante_yields_verdict(validator: CrossFieldValidator) -> None:
     """A non-EU/EEA non-resident with no fiscal representative surfaces its verdict row."""
     verdicts = validator(
         {
@@ -96,10 +100,12 @@ def test_non_resident_without_representante_yields_verdict(validator) -> None:
     assert "non_resident_requires_representante" in checks
     row = next(v for v in verdicts if not v.ok and v.context["check"] == "non_resident_requires_representante")
     assert row.message_key == _VERIFIER_KEYS["non_resident_requires_representante"]
-    assert "representante_fiscal_nif" in row.context["fields"]
+    fields = row.context["fields"]
+    assert isinstance(fields, list)
+    assert "representante_fiscal_nif" in fields
 
 
-def test_valid_answer_set_passes(validator) -> None:
+def test_valid_answer_set_passes(validator: CrossFieldValidator) -> None:
     """A fully-specified EU non-resident constructs cleanly — one passing verdict."""
     verdicts = validator(
         {
@@ -110,14 +116,14 @@ def test_valid_answer_set_passes(validator) -> None:
     assert all(verdict.ok for verdict in verdicts)
 
 
-def test_verdict_context_never_carries_raw_model_message(validator) -> None:
+def test_verdict_context_never_carries_raw_model_message(validator: CrossFieldValidator) -> None:
     """The redacted verdict context exposes only the check token and field names."""
     verdicts = validator({"irpf-special-regime": "impatriado"})
     row = next(v for v in verdicts if not v.ok)
     assert set(row.context) <= {"check", "fields"}
 
 
-def test_instance_scoped_answers_are_excluded(validator) -> None:
+def test_instance_scoped_answers_are_excluded(validator: CrossFieldValidator) -> None:
     """Repeating-group instance keys never enter the top-level taxpayer projection."""
     instance_key = f"descendientes{REPEATING_INSTANCE_SEPARATOR}0.nif"
     verdicts = validator({instance_key: "12345678Z"})

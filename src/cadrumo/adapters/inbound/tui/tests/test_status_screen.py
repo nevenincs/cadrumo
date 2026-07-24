@@ -127,7 +127,7 @@ def _populated_data() -> StatusPageData:
     )
 
 
-def _all_cell_text(table: DataTable) -> list[str]:
+def _all_cell_text(table: DataTable[str]) -> list[str]:
     return [str(cell) for index in range(table.row_count) for cell in table.get_row_at(index)]
 
 

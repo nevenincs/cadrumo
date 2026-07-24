@@ -1232,7 +1232,7 @@ def _finish_interactive_create(
     committed: Mapping[str, str],
     *,
     profile_id: str,
-    checkpoint_store: CheckpointStore,
+    checkpoint_store: ProfileFactsCheckpointStore,
 ) -> dict[str, str]:
     """Complete or leave-incomplete an interactive create after the walk returns.
 
@@ -1356,7 +1356,7 @@ def _run_full_flow(
         # was minted early and its facts persisted through the store, so a
         # save-and-exit needs no further write and a submit completes the
         # setup. Every other route falls through to the shared span below.
-        if mode == "create" and checkpoint_store is not None:
+        if mode == "create" and isinstance(checkpoint_store, ProfileFactsCheckpointStore):
             return _finish_interactive_create(
                 flow,
                 answers,
