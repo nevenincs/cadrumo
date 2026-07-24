@@ -262,6 +262,9 @@ def _as_json_object(value: object) -> dict[str, object] | None:
     for key in value:
         if not isinstance(key, str):
             return None
+    # CAST-RATIONALE-JSON-OBJECT-STR-KEYS: the loop above rejects any non-str key,
+    # so this value is a str-keyed dict at runtime; the cast restores the static
+    # guarantee the isinstance narrow erases.
     return cast("dict[str, object]", value)
 
 
