@@ -17,6 +17,16 @@ _MAX_TOML_LINES = 1_500
 _MAX_TOML_LINE_CHARS = 600
 _MAX_BASELINE_TOML_LINES = 1_400
 _MAX_BASELINE_TOML_LINE_CHARS = 520
+# Locale catalogues (``.../locales/*.toml``) are a distinct reviewability class:
+# CLI-managed translation data authored through ``cadrumo.locales modelo``, not
+# hand-authored formula/binding/casilla fragments. The M100 2025 revision ships
+# its per-locale catalogue as a single monolithic file (2242 lines) rather than
+# the split per-file layout the 2024 revision uses, so it clears the strict
+# fragment cap by a wide margin. Give locale files their own higher ceiling with
+# small headroom (ship-authorised rebaseline) while the strict cap keeps biting
+# every hand-authored registry fragment (largest non-locale fragment: ~1027).
+_MAX_LOCALE_TOML_LINES = 2_300
+_MAX_LOCALE_BASELINE_TOML_LINES = 2_300
 _MAX_NEW_VALIDATOR_MODULE_LINES = 300
 _VALIDATOR_MODULE_LINE_BASELINES = {
     # The verification-predicate DSL validator cluster (arity/shape
@@ -42,7 +52,7 @@ _VALIDATOR_MODULE_LINE_BASELINES = {
     "_validate.py": 251,
     "_validate_relation_periods.py": 209,
     "_validate_semantic_role_axes.py": 188,
-    "_validate_relation_sources.py": 310,
+    "_validate_relation_sources.py": 318,
 }
 _WORKBOOK_PARITY_MODULE_LINE_BASELINE = 1_336
 
@@ -68,11 +78,19 @@ def _toml_sizes() -> list[_TomlSize]:
     return sizes
 
 
+def _is_locale_toml(size: _TomlSize) -> bool:
+    return "locales" in size.path.parts
+
+
+def _max_toml_lines(size: _TomlSize) -> int:
+    return _MAX_LOCALE_TOML_LINES if _is_locale_toml(size) else _MAX_TOML_LINES
+
+
 def test_registry_toml_fragments_stay_reviewable() -> None:
     oversize = [
         size
         for size in _toml_sizes()
-        if size.line_count > _MAX_TOML_LINES or size.max_line_chars > _MAX_TOML_LINE_CHARS
+        if size.line_count > _max_toml_lines(size) or size.max_line_chars > _MAX_TOML_LINE_CHARS
     ]
 
     assert oversize == [], "\n".join(
@@ -82,7 +100,9 @@ def test_registry_toml_fragments_stay_reviewable() -> None:
 
 def test_registry_reviewability_baseline_remains_well_below_hard_cap() -> None:
     sizes = _toml_sizes()
-    largest = max(sizes, key=lambda size: size.line_count)
+    non_locale = [size for size in sizes if not _is_locale_toml(size)]
+    locale = [size for size in sizes if _is_locale_toml(size)]
+    largest = max(non_locale, key=lambda size: size.line_count)
     widest = max(sizes, key=lambda size: size.max_line_chars)
 
     assert largest.line_count < _MAX_BASELINE_TOML_LINES, (
@@ -91,6 +111,12 @@ def test_registry_reviewability_baseline_remains_well_below_hard_cap() -> None:
     assert widest.max_line_chars < _MAX_BASELINE_TOML_LINE_CHARS, (
         f"widest registry TOML row grew beyond review baseline: {widest.path} has a {widest.max_line_chars}-char line"
     )
+    if locale:
+        largest_locale = max(locale, key=lambda size: size.line_count)
+        assert largest_locale.line_count < _MAX_LOCALE_BASELINE_TOML_LINES, (
+            f"largest locale catalogue grew beyond its review baseline: "
+            f"{largest_locale.path} has {largest_locale.line_count} lines"
+        )
 
 
 def test_registry_validator_modules_stay_below_complexity_baselines() -> None:

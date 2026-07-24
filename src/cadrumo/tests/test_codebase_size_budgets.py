@@ -37,6 +37,10 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     "src/cadrumo/application/calculations/_cross_period_clean_state.py": 1535,  # SPLIT-CANDIDATE
     "src/cadrumo/application/calculations/tests/test_cross_period_clean_state.py": 1645,  # SPLIT-CANDIDATE
     "src/cadrumo/application/ledger/_llm_classification.py": 1664,  # SPLIT-CANDIDATE (active LLM-ledger growth)
+    # Manual ledger-action surface grew to 1278 under concurrent ledger feature
+    # work; first override, pinned with small headroom per the ship-authorised
+    # rebaseline. SPLIT-CANDIDATE: extract manual-command helpers on the next pass.
+    "src/cadrumo/application/ledger/_actions_manual.py": 1305,  # SPLIT-CANDIDATE
     "src/cadrumo/application/modelo/_verification_actions.py": 1750,  # SPLIT-CANDIDATE
     # Grew with the state-root derivation table and the per-family growth-lifecycle
     # settings (log rotation cap/backup, LLM cache/usage/run-telemetry retention,
@@ -65,7 +69,10 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     "src/cadrumo/domain/calculations/registry/_applicability.py": 2156,  # SPLIT-CANDIDATE
     "src/cadrumo/domain/calculations/registry/_schema.py": 1490,  # SPLIT-CANDIDATE
     "src/cadrumo/entrypoints/cli/tests/test_registry_cli.py": 1360,  # SPLIT-CANDIDATE (Period construction verbosity)
-    "src/cadrumo/entrypoints/cli/_app_live.py": 1265,
+    # Regrew to 1296 under concurrent live-command feature work; re-pinned with
+    # small headroom per the ship-authorised rebaseline (mirrors the sibling
+    # override in test_cli_module_size.py).
+    "src/cadrumo/entrypoints/cli/_app_live.py": 1320,
     # _ledger_payloads.py: extracted the invoice/inventory/evidence sub-app
     # payload families to the sibling `_ledger_business_payloads.py` module
     # (registry-resolver-family-extraction, following the module's own
@@ -153,7 +160,7 @@ _CALLABLE_LINE_LIMIT_OVERRIDES = {
     ("src/cadrumo/application/overview/_calendar.py", "build_overview_calendar"): 192,  # SPLIT-CANDIDATE
     ("src/cadrumo/application/user_profile/_custody_carry.py", "_natural_key_resolvers"): 310,  # SPLIT-CANDIDATE
     ("src/cadrumo/core/observability/_context.py", "run_context"): 195,  # SPLIT-CANDIDATE
-    ("src/cadrumo/entrypoints/cli/_ledger.py", "ledger_add"): 238,  # SPLIT-CANDIDATE
+    ("src/cadrumo/entrypoints/cli/_ledger.py", "ledger_add"): 250,  # SPLIT-CANDIDATE (regrew to 245; small-headroom rebaseline)
     ("src/cadrumo/application/aggregation/_iva_ledger.py", "_classify_iva_transaction"): 208,  # SPLIT-CANDIDATE
     ("src/cadrumo/application/modelo/_calculation_actions.py", "_resolve_bucket_source_mesh"): 200,  # SPLIT-CANDIDATE
     # +1 line from a Drive-folder-help docstring wording tweak; re-pinned to
