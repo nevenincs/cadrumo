@@ -32,6 +32,7 @@ _MARKDOWN_SUFFIX = ".md"
 if TYPE_CHECKING:
     from ._skill_metadata import SkillMetadata
     from ._workspace import (
+        PRODUCT_AUTHOR_NAME,
         MarketplaceManifest,
         PluginManifest,
         WorkspaceManifest,
@@ -126,6 +127,7 @@ def iter_skill_metadata() -> Iterator[SkillMetadata]:
 
 
 __all__ = [
+    "PRODUCT_AUTHOR_NAME",
     "MarketplaceManifest",
     "PluginManifest",
     "WorkspaceManifest",
@@ -143,9 +145,11 @@ __all__ = [
 
 
 def __getattr__(name: str) -> object:
-    # Lazy re-export of the workspace/plugin/marketplace materialisers to avoid
-    # an import cycle: _workspace imports the iterators from this package.
+    # Lazy re-export of the workspace/plugin/marketplace materialisers and the
+    # shared product-author constant to avoid an import cycle: _workspace imports
+    # the iterators from this package.
     if name in {
+        "PRODUCT_AUTHOR_NAME",
         "MarketplaceManifest",
         "PluginManifest",
         "WorkspaceManifest",
