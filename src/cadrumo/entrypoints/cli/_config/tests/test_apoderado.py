@@ -157,6 +157,89 @@ def test_apoderado_happy_path_against_active_profile(_per_bucket_backend: Path) 
     assert "cleared\tTrue" in clear.output
 
 
+def _create_active_profile() -> None:
+    create = invoke_typer_app(
+        root_app,
+        [
+            "config",
+            "profile",
+            "create",
+            "myco",
+            "--quiet",
+            "--tax-id",
+            "12345678Z",
+            "--entity-type",
+            "natural_person",
+            "--name",
+            "MyCo",
+            "--surnames",
+            "Operator",
+            "--activity",
+            "design",
+            "--iva-regime",
+            "GENERAL",
+        ],
+    )
+    assert create.exit_code == 0, f"create failed: {create.output}"
+
+
+def test_apoderado_configure_without_nif_refuses_naming_the_flags(_per_bucket_backend: Path) -> None:
+    """The interactive door under a non-interactive host names the recovery flags.
+
+    Invoked without ``--represented-nif`` the verb opens the paged flow; the
+    test runner is a non-interactive host, so the door refuses -- and the
+    refusal must name ``--represented-nif`` (the real recovery), not the
+    generic scripted-answer-file copy.
+    """
+    from .....adapters.persistence.storage.sql.engine import dispose_engine
+
+    _create_active_profile()
+    dispose_engine()
+
+    result = invoke_typer_app(root_app, ["config", "auth", "apoderado", "configure", "--scope", "RENT"])
+    assert result.exit_code != 0, result.output
+    assert "Traceback" not in result.output, result.output
+    assert "--represented-nif" in result.output, result.output
+
+
+def test_apoderado_configure_without_scope_lists_the_accepted_codes(_per_bucket_backend: Path) -> None:
+    """A missing --scope refuses by enumerating the accepted catalogue codes."""
+    from .....adapters.persistence.storage.sql.engine import dispose_engine
+
+    _create_active_profile()
+    dispose_engine()
+
+    result = invoke_typer_app(
+        root_app,
+        ["config", "auth", "apoderado", "configure", "--represented-nif", "87654321X"],
+    )
+    assert result.exit_code != 0, result.output
+    assert "Traceback" not in result.output, result.output
+    # The refusal enumerates the accepted set (never a bare "value required").
+    assert "RENT" in result.output, result.output
+    assert "GENERALNT" in result.output, result.output
+
+
+def test_apoderado_configure_rejects_invalid_nif_on_the_flags_path(_per_bucket_backend: Path) -> None:
+    """The flags path validates the represented NIF through the same identity authority.
+
+    A malformed ``--represented-nif`` refuses (parity with the interactive
+    page validator) and never echoes the raw value.
+    """
+    from .....adapters.persistence.storage.sql.engine import dispose_engine
+
+    _create_active_profile()
+    dispose_engine()
+
+    result = invoke_typer_app(
+        root_app,
+        ["config", "auth", "apoderado", "configure", "--represented-nif", "NOTANIF", "--scope", "RENT"],
+    )
+    assert result.exit_code != 0, result.output
+    assert "Traceback" not in result.output, result.output
+    assert "NOTANIF" not in result.output, f"raw represented NIF leaked: {result.output!r}"
+
+
 def test_apoderado_configure_leaves_profile_facts_untouched(_per_bucket_backend: Path) -> None:
     """Configuring apoderado writes only to the ApoderadoService namespace.
 

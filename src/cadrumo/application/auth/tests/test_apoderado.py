@@ -14,6 +14,7 @@ from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, i
 from ...flows import run_scripted_flow
 from .._apoderado import (
     ApoderadoLiveCheckUnavailableError,
+    ApoderadoRepresentedNifInvalidError,
     ApoderadoService,
 )
 from .._apoderado_flow import (
@@ -60,10 +61,10 @@ class TestConfigure:
         svc = ApoderadoService(settings=isolated_settings)
         config = svc.configure(
             bucket_id=_APODERADO_BUCKET_ID,
-            represented_nif="B12345678",
+            represented_nif="12345678Z",
             scope_tokens=("IVA", "RENT"),
         )
-        assert config.represented_nif == "B12345678"
+        assert config.represented_nif == "12345678Z"
         assert config.granted_scopes == ("IVA", "RENT")
         assert config.catalogue_version.startswith("2026")
 
@@ -71,7 +72,7 @@ class TestConfigure:
         svc = ApoderadoService(settings=isolated_settings)
         config = svc.configure(
             bucket_id=_APODERADO_BUCKET_ID,
-            represented_nif="B1",
+            represented_nif="12345678Z",
             scope_tokens=("IVA", "RENT", "IVA"),
         )
         assert config.granted_scopes == ("IVA", "RENT")
@@ -80,17 +81,33 @@ class TestConfigure:
         svc = ApoderadoService(settings=isolated_settings)
         config = svc.configure(
             bucket_id=_APODERADO_BUCKET_ID,
-            represented_nif="B1",
+            represented_nif="12345678Z",
             scope_tokens=("ALL",),
         )
         assert set(config.granted_scopes) == svc.catalogue.code_set()
+
+    def test_configure_rejects_invalid_represented_nif(self, isolated_settings: Settings) -> None:
+        """A malformed represented-party tax id refuses through the single identity authority.
+
+        The refusal must not leak the raw identifier: the typed error carries
+        no candidate value in its context.
+        """
+        svc = ApoderadoService(settings=isolated_settings)
+        with pytest.raises(ApoderadoRepresentedNifInvalidError) as excinfo:
+            svc.configure(
+                bucket_id=_APODERADO_BUCKET_ID,
+                represented_nif="NOTANIF",
+                scope_tokens=("RENT",),
+            )
+        assert "NOTANIF" not in str(excinfo.value)
+        assert not excinfo.value.context
 
     def test_configure_rejects_unknown_scope(self, isolated_settings: Settings) -> None:
         svc = ApoderadoService(settings=isolated_settings)
         with pytest.raises(UnknownScopeError):
             svc.configure(
                 bucket_id=_APODERADO_BUCKET_ID,
-                represented_nif="B1",
+                represented_nif="12345678Z",
                 scope_tokens=("BOGUS",),
             )
 
@@ -99,7 +116,7 @@ class TestConfigure:
         with pytest.raises(UnknownScopeError, match="comma"):
             svc.configure(
                 bucket_id=_APODERADO_BUCKET_ID,
-                represented_nif="B1",
+                represented_nif="12345678Z",
                 scope_tokens=("IVA,RENT",),
             )
 
@@ -107,18 +124,18 @@ class TestConfigure:
         svc = ApoderadoService(settings=isolated_settings)
         svc.configure(
             bucket_id=_APODERADO_BUCKET_ID,
-            represented_nif="B1",
+            represented_nif="12345678Z",
             scope_tokens=("IVA",),
         )
         new_config = svc.configure(
             bucket_id=_APODERADO_BUCKET_ID,
-            represented_nif="B2",
+            represented_nif="87654321X",
             scope_tokens=("RENT",),
         )
-        assert new_config.represented_nif == "B2"
+        assert new_config.represented_nif == "87654321X"
         assert new_config.granted_scopes == ("RENT",)
         status = svc.status(bucket_id=_APODERADO_BUCKET_ID)
-        assert status.represented_nif == "B2"
+        assert status.represented_nif == "87654321X"
 
 
 class TestStatusAfterConfigure:
@@ -126,12 +143,12 @@ class TestStatusAfterConfigure:
         svc = ApoderadoService(settings=isolated_settings)
         svc.configure(
             bucket_id=_APODERADO_BUCKET_ID,
-            represented_nif="B12345678",
+            represented_nif="12345678Z",
             scope_tokens=("IVA", "CENSO"),
         )
         status = svc.status(bucket_id=_APODERADO_BUCKET_ID)
         assert status.configured is True
-        assert status.represented_nif == "B12345678"
+        assert status.represented_nif == "12345678Z"
         assert status.granted_scopes == ("IVA", "CENSO")
 
 
@@ -140,7 +157,7 @@ class TestClear:
         svc = ApoderadoService(settings=isolated_settings)
         svc.configure(
             bucket_id=_APODERADO_BUCKET_ID,
-            represented_nif="B1",
+            represented_nif="12345678Z",
             scope_tokens=("IVA",),
         )
         cleared = svc.clear(bucket_id=_APODERADO_BUCKET_ID)
@@ -167,7 +184,7 @@ class TestCheck:
         svc = ApoderadoService(settings=isolated_settings)
         svc.configure(
             bucket_id=_APODERADO_BUCKET_ID,
-            represented_nif="B1",
+            represented_nif="12345678Z",
             scope_tokens=("IVA",),
         )
         with pytest.raises(ApoderadoLiveCheckUnavailableError):
@@ -190,22 +207,22 @@ class TestBucketIsolation:
             secondary_bucket_id=_SECONDARY_PROFILE_BUCKET_ID,
         ) as runtime:
             primary_svc = ApoderadoService(settings=runtime.primary.settings)
-            primary_svc.configure(bucket_id=runtime.primary.bucket_id, represented_nif="NIF-A", scope_tokens=("IVA",))
+            primary_svc.configure(bucket_id=runtime.primary.bucket_id, represented_nif="12345678Z", scope_tokens=("IVA",))
 
             with runtime.switch_to_secondary():
                 secondary_svc = ApoderadoService()
                 secondary_svc.configure(
                     bucket_id=runtime.secondary.bucket_id,
-                    represented_nif="NIF-B",
+                    represented_nif="87654321X",
                     scope_tokens=("RENT",),
                 )
                 b = secondary_svc.status(bucket_id=runtime.secondary.bucket_id)
 
             a = primary_svc.status(bucket_id=runtime.primary.bucket_id)
 
-        assert a.represented_nif == "NIF-A"
+        assert a.represented_nif == "12345678Z"
         assert a.granted_scopes == ("IVA",)
-        assert b.represented_nif == "NIF-B"
+        assert b.represented_nif == "87654321X"
         assert b.granted_scopes == ("RENT",)
         assert (runtime.primary.storage_root / "buckets" / runtime.primary.bucket_id / "db" / "cadrumo.db").is_file()
         assert (runtime.primary.storage_root / "buckets" / runtime.secondary.bucket_id / "db" / "cadrumo.db").is_file()
@@ -282,10 +299,10 @@ class TestSettingsRouting:
         ):
             config = svc.configure(
                 bucket_id=isolated_profile.bucket_id,
-                represented_nif="B12345678",
+                represented_nif="12345678Z",
                 scope_tokens=("IVA",),
             )
 
         assert config.bucket_id == isolated_profile.bucket_id
-        assert svc.status(bucket_id=isolated_profile.bucket_id).represented_nif == "B12345678"
+        assert svc.status(bucket_id=isolated_profile.bucket_id).represented_nif == "12345678Z"
         assert not (wrong_root / "buckets" / isolated_profile.bucket_id / "db" / "cadrumo.db").exists()

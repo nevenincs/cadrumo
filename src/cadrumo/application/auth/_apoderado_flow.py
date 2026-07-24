@@ -85,6 +85,10 @@ class ApoderadoFlowAnswers(BaseModel):
     declared ``answers_model``. ``scopes`` is the CHECKBOX page's canonical
     comma-joined token string; :func:`apoderado_answers_from_state` splits it
     into the scope-token tuple :meth:`ApoderadoService.configure` validates.
+
+    The substrate never validates answers against this model: it is a
+    declarative slot only, and ``ApoderadoService.configure`` remains the
+    single validation and persistence authority for both transports.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -100,12 +104,16 @@ def _locale_ref(key: str) -> CopyRef:
 def _validate_represented_nif(page: FlowPage, canonical: str) -> ValidationVerdict:
     """Validate the represented party's tax id through the canonical identity authority.
 
-    The represented party may be a natural person (NIF / NIE) or a legal
-    entity (CIF), so the check is the full
-    :func:`cadrumo.core.identity.validate_identity` authority -- the same
-    one the wizard identity pages bind, never a second implementation. A
-    malformed value returns the ``wizard.errors.invalid_tax_id`` verdict
-    carrying only the page id; the raw answer never enters the diagnostic.
+    This is an early-refusal courtesy over the SAME law
+    ``ApoderadoService.configure`` enforces at commit
+    (:func:`cadrumo.core.identity.validate_identity`): the represented party
+    may be a natural person (NIF / NIE) or a legal entity (CIF), so the check
+    is the full authority -- the same one the wizard identity pages bind,
+    never a second implementation. The service is the single guaranteed gate;
+    this validator surfaces the failure in-page before the walk reaches
+    review. A malformed value returns the ``wizard.errors.invalid_tax_id``
+    verdict carrying only the page id; the raw answer never enters the
+    diagnostic.
     """
     if not canonical:
         return ValidationVerdict.passed()
