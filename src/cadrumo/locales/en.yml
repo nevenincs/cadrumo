@@ -6123,6 +6123,40 @@ flows:
     row: '{number}. {page_key} — status: {status}'
     save_unavailable: Save and exit is not available in mode {mode}; finish the flow
       in one sitting.
+  status:
+    auth:
+      certificate_source: Certificate source
+      login_not_ready: not verified
+      login_ready: ready
+      provider: Provider
+      provider_none: not configured
+      status: Access
+      subject: Subject
+    binding_quit: Quit
+    masked_value: (hidden)
+    profile:
+      column:
+        field: Field
+        value: Value
+      none: No active profile.
+    profiles:
+      column:
+        active: Active
+        label: Profile
+        status: Status
+      none: No registered profiles.
+    recovery:
+      commands_title: Actions (copy and run)
+      enrolled: enrolled
+      fingerprint: Fingerprint
+      not_enrolled: not enrolled
+      state: Recovery code
+    section:
+      auth: Authentication
+      profile: Active profile
+      profiles: Profiles
+      recovery: Recovery
+    title: Status
   tui:
     binding_back: Back
     binding_reset: Reset
@@ -6717,7 +6751,7 @@ wizard:
       postcode: 'Spanish postcode: 5 digits, e.g. 28001.'
       tax-id: 'NIF/DNI: 8 digits + letter (12345678Z) · NIE: X/Y/Z + 7 digits + letter
         (X1234567L) · Company NIF: letter + 7 digits + check (B12345674).'
-      units-count: 'Whole number of units, e.g. 2.'
+      units-count: Whole number of units, e.g. 2.
     identidad:
       title: Identity
     intro: 'Guided tax profile setup
