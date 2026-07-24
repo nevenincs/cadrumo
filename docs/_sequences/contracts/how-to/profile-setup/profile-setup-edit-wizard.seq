@@ -1,0 +1,2 @@
+@step Re-run the wizard over an existing profile to change its facts.
+@static aeat config profile edit my-profile

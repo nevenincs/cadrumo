@@ -191,6 +191,10 @@ from ._casilla_membership import (
     declared_casilla_ids,
     undeclared_casilla_ids,
 )
+from ._profile_grounding import (
+    ProfileKeyGrounding,
+    build_profile_grounding_index,
+)
 from ._censo_modelos import (
     CENSO_MODELO_ERROR_CODES,
     CENSO_MODELO_EVENT_KINDS,
@@ -642,6 +646,7 @@ __all__ = [
     "ParsedExportPayload",
     "PayerFact",
     "PeriodSelector",
+    "ProfileKeyGrounding",
     "ProfilePredicateDefinition",
     "RecordDesignField",
     "RecordDesignSheet",
@@ -735,6 +740,7 @@ __all__ = [
     "build_censo_modelo_foundation_contract",
     "build_diseno_coverage_report",
     "build_model_law_coverage_ledger",
+    "build_profile_grounding_index",
     "build_snapshot",
     "build_support_matrix",
     "bundled_authority",

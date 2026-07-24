@@ -21,7 +21,7 @@ from ....domain.modelos import (
     upsert_calculation_revision,
     upsert_work_unit,
 )
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import IvaWalletDecisionRepository
 from ...user_profile import UserProfileLifecycleRepository
@@ -652,3 +652,23 @@ def test_visible_target_ensure_refuses_reused_pre_activity_m303_before_rename(tm
 
         assert "pre-activity period" in str(excinfo.value)
         assert tuple(work_repository.load().values()) == (work_unit,)
+
+
+def test_create_work_unit_service_refuses_a_setup_incomplete_profile(tmp_path: Path) -> None:
+    """A mid-setup profile is refused on status alone, even with a filing-ready fact set."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID):
+        _store_ready_profile(_OPERATOR_PROFILE_ID, activity_start_date=date(2025, 1, 1))
+        repository = UserProfileLifecycleRepository(bucket_id=_OPERATOR_PROFILE_ID)
+        record = repository.load(_OPERATOR_PROFILE_ID)
+        repository.save(record.model_copy(update={"status": UserProfileStatus.SETUP_INCOMPLETE}))
+
+        with pytest.raises(ModeloProfileReadinessError) as excinfo:
+            create_work_unit(
+                bucket_id=_OPERATOR_PROFILE_ID,
+                modelo=Modelo.M303.value,
+                filing_year=2025,
+                period=Period.from_year_and_code(2025, "1T"),
+                revision_id=_M303_REVISION,
+                clock=_NOW,
+            )
+        assert "setup_incomplete" in str(excinfo.value.translated_message)

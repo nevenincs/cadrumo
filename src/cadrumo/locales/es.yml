@@ -716,6 +716,42 @@ application:
           definiciones de modelo solicitadas: %{modelos}.'
         unsupported_casilla_data_type: 'Tipo de dato de casilla del registro no admitido:
           %{data_type}.'
+  flows:
+    errors:
+      answer_target_not_visible: 'El flujo {flow_id} no puede registrar una respuesta
+        para {page_key}: esa pregunta no está visible ahora mismo.'
+      checkpoint_unavailable_mode: El flujo {flow_id} no ofrece guardar y salir en
+        el modo {mode}; sus {answered_count} respuestas solo existen en esta sesión.
+      copy_locale_key_unresolved: La clave de texto {ref} no existe en el catálogo
+        de traducciones.
+      copy_ref_unresolved: La fuente de texto {kind} no resolvió ningún texto para
+        la referencia {ref}.
+      copy_source_duplicate: Ya hay un resolutor de fuente de texto registrado para
+        el tipo {kind}.
+      copy_source_locale_builtin: La fuente de texto basada en claves de locale está
+        integrada y no se puede volver a registrar.
+      copy_source_unregistered: No hay ningún resolutor de fuente de texto registrado
+        para el tipo {kind}, que exige la referencia {ref}.
+      jump_target_not_visible: 'El flujo {flow_id} no puede saltar a {page_key}: esa
+        pregunta no está visible ahora mismo.'
+      reset_target_unknown: El flujo {flow_id} no tiene ninguna pregunta ni respuesta
+        guardada llamada {page_key} que reiniciar.
+      scripted_answer_rejected: 'La respuesta programada para {page_key} fue rechazada
+        por la validación: {message_keys}.'
+      scripted_queue_overflow: La ejecución programada usó {consumed_count} respuestas
+        y terminó con {remaining_count} sin usar; el guion no coincide con el flujo.
+      scripted_queue_underflow: La ejecución programada se quedó sin respuestas en
+        la pregunta obligatoria {page_key}, tras {consumed_count} respuestas.
+      submit_blocked: 'El flujo {flow_id} no se puede enviar: quedan {blocking_count}
+        hallazgos bloqueantes y {required_remaining} preguntas obligatorias sin responder.'
+      unknown_repeating_group: El flujo {flow_id} no declara ningún grupo repetible
+        llamado {group_id}.
+      validator_id_blank: Un validador de flujo debe registrarse con un identificador
+        no vacío.
+      validator_id_duplicate: Ya hay un validador de flujo registrado con el identificador
+        {validator_id}.
+      validator_id_unknown: No hay ningún validador de flujo registrado con el identificador
+        {validator_id}; hay {registered_count} validadores registrados.
   inventory:
     service:
       errors:
@@ -1046,6 +1082,8 @@ application:
         %{filing_year} %{period}; completa antes estos datos de perfil: %{missing}.'
       profile_readiness_profile_missing: No existe un perfil activo persistido para
         este trabajo de modelo; crea o repara el perfil antes de continuar.
+      profile_readiness_setup_incomplete: La configuración del perfil está incompleta;
+        termina el asistente de configuración antes de trabajar con modelos.
       recipient_decryption_failed: No se ha podido descifrar el paquete cifrado para
         el destinatario; la clave no coincide o el paquete ha sido manipulado.
       recipient_encryption_invalid_key: La clave pública del destinatario no es una
@@ -1514,6 +1552,9 @@ application:
         instantánea de perfil es más reciente de lo que admite esta aplicación.
       unsupported_bundle_schema_version: La versión del esquema del paquete no es
         compatible con esta versión de la aplicación.
+    notices:
+      censo_divergences_open: '{count} dato(s) del perfil siguen difiriendo del Certificado
+        de Situación Censal y quedan sin resolver: {axes}.'
   verification:
     errors:
       missing_binding_values: La verificación del registro requiere valores de vinculación
@@ -1554,6 +1595,13 @@ application:
         para este perfil. Las deducciones autonómicas y el tramo autonómico de la
         escala se calculan para %{ccaa}. Use --tax-residence-ccaa para elegir otra
         comunidad.
+      modify_descendants_via_door: Los descendientes no forman parte de la edición
+        del perfil. Gestiónalos con '{command}'.
+      modify_no_resume: 'Los cambios en modo edición solo quedan preparados: salir
+        sin enviar los descarta; guardar y reanudar solo está disponible al crear
+        el perfil.'
+      setup_saved_resume_later: 'Guardado. Reanuda cuando quieras con: aeat config
+        profile create %{name}'
     output_labels:
       active_profile: Perfil activo
       next: Siguiente
@@ -3079,6 +3127,10 @@ cli:
       draft_id_not_found: ID de borrador %{draft_id} no encontrado
       invalid_iso_date: 'Formato de fecha inválido para %{label}: %{raw}. Se requiere
         ISO 8601 (AAAA-MM-DD).'
+      parse_invalid_choice: 'Valor no válido ''{value}''. Elige entre: {accepted}.'
+      parse_missing_argument: Falta el argumento obligatorio {parameter}.
+      parse_unknown_command: Orden desconocida '{command}'.
+      parse_unknown_option: Opción desconocida '{option}'.
       period_empty: El periodo fiscal no puede estar vacío
       period_missing_year: El token de periodo '{token}' necesita un año en este comando.
         Añada --year (p. ej. --period {token} --year 2024).
@@ -3093,8 +3145,13 @@ cli:
           están selladas). Use 'status' para la lectura sin conexión.
         clear_help: Retirar la configuración de apoderado
         configure:
+          no_console_hint: 'La configuración interactiva del apoderamiento requiere
+            una consola. Configúrelo de forma no interactiva con: aeat config auth
+            apoderado configure --represented-nif NIF --scope SCOPE.'
           represented_nif_help: NIF de la parte representada
           scope_help: Tokens de ámbito (se pueden repetir)
+          scope_required: 'No se ha indicado ningún ámbito. Añada --scope con uno
+            o varios de: %{codes}.'
         configure_help: Establecer la configuración de apoderado activa
         help: Gestionar la configuración de apoderado
         scope:
@@ -3417,6 +3474,9 @@ cli:
       tax_residence_ccaa_help: Comunidad autónoma de residencia fiscal
     list:
       help: Listar todos los perfiles registrados y marcar el activo
+      setup_incomplete_notice: '%{count} perfil(es) aún están completando la configuración
+        y todavía no están listos para presentar: %{labels}. Reanuda la configuración
+        para poder trabajarlos.'
     passphrase:
       change:
         help: Cambia la contraseña del almacén de secretos tras verificar la actual.
@@ -3462,6 +3522,17 @@ cli:
         inspect_help: Muestra la cabecera de un archivo sellado sin descifrarlo ni
           restaurarlo.
         inspect_path_help: Ruta del archivo sellado.
+      bundle_flow:
+        export_section_title: Exportar el paquete de perfil
+        import_section_title: Importar el paquete de perfil
+        transport_cleartext_description: Escribe JSON sin cifrar con datos financieros
+          sensibles; solo para uso local o de acceso del interesado — nunca lo envíes
+          por correo, lo sincronices ni lo transfieras.
+        transport_cleartext_label: Texto claro (solo local/SAR)
+        transport_encrypted_description: Cifra el paquete (AEAD) con una frase de
+          contraseña; seguro para transferirlo entre equipos.
+        transport_encrypted_label: Cifrado (recomendado)
+        transport_prompt: ¿Cómo se debe escribir el paquete?
       capabilities:
         capability_help: Servicio que se quiere activar o desactivar.
         capability_label: capacidad
@@ -3477,15 +3548,22 @@ cli:
         state_help: Si activar (on) o desactivar (off) la capacidad.
         state_label: estado
       censo:
-        apply_help: Sobrescribe el perfil con los valores censales comunicados por
-          AEAT
+        apply_help: Registra los datos censales analizados en el perfil activo (por
+          defecto solo previsualiza).
         compare_help: Compara campo a campo el censo AEAT con este perfil
         dropped_fields_notice: 'El censo de la AEAT ya no incluye campos que tenia
           tu última instantánea: {dropped_fields}. Si no has cambiado ni dado de baja
           estos datos, puede tratarse de una descarga parcial: vuelve a ejecutar la
           descarga del censo o reintroduce los valores; la proporción de afectación
           de la vivienda podria dejar de resolverse.'
-        help: Sincroniza el censo 036 de AEAT con este perfil
+        file_help: Lee un Certificado de Situación Censal descargado y previsualiza
+          o registra sus datos censales.
+        file_option_help: Ruta al PDF del Certificado de Situación Censal descargado
+          de la Sede (trámite G313).
+        help: Ingesta de artefactos censales para el perfil activo.
+        non_official_notice: Los datos derivados del certificado son evidencia aportada
+          por el operador, nunca verificada por la AEAT; el alta censal permanece
+          en el nivel no oficial.
         pull_help: Descarga tu censo más reciente de AEAT al almacén de instantáneas
           de este perfil.
         refresh_help: Descarga de AEAT el último censo y guarda un snapshot
@@ -3540,6 +3618,8 @@ cli:
       export_passphrase_prompt: 'Frase de contraseña del paquete (mínimo 8 caracteres): '
       export_passphrase_too_short: La frase de contraseña de exportación del perfil
         debe tener al menos 8 caracteres.
+      export_requires_destination: Indica --to RUTA como destino del paquete, o ejecuta
+        el comando en un terminal interactivo para que se te pregunte.
       export_requires_transport: Usa --encrypt para un paquete cifrado de transferencia,
         o --cleartext-local solo para JSON local/SAR.
       export_sensitivity_warning: 'Este paquete NO está cifrado y contiene datos financieros
@@ -3592,6 +3672,8 @@ cli:
         con estos campos: %{missing_flags}.'
       import_passphrase_prompt: 'Frase de contraseña del paquete: '
       import_path_help: Ruta al archivo del paquete de perfil
+      import_requires_path: Indica el argumento RUTA del paquete, o ejecuta el comando
+        en un terminal interactivo para que se te pregunte.
       import_uuid_collision: El UUID del paquete entra en conflicto con un perfil
         existente.
       logout_help: Cierra la sesión de almacenamiento activa, descarta las claves
@@ -4854,6 +4936,9 @@ cli:
       help: Genera el calendario de plazos para el perfil activo en la ventana de
         fechas indicada. Aplica festivos y desplazamientos de día hábil. Local; nunca
         contacta con AEAT.
+      setup_incomplete_notice: 'Se excluyeron del calendario %{count} perfil(es) que
+        aún están completando la configuración; todavía no están listos para presentar:
+        %{labels}.'
       shift:
         business_day: Día hábil
         calendar_unavailable: Calendario no disponible
@@ -5409,6 +5494,9 @@ errors:
       recover con tu código de recuperación de 24 palabras.
     auth_storage_master_key_unavailable: No se pudo obtener la clave maestra de ningún
       proveedor. Comprueba el llavero o la frase de contraseña de la copia de seguridad.
+    clave_movil_identity_checksum: El identificador de Cl@ve Móvil tiene una forma
+      válida pero su letra de control no coincide con los dígitos. Revisa la última
+      letra del documento e inténtalo de nuevo.
   calc:
     age_at_year_end_no_filing_year: 'Error interno: el cálculo de edad a fin de ejercicio
       no tiene ejercicio de declaración.'
@@ -5485,6 +5573,10 @@ errors:
     unsupported_op: 'Operador de fórmula no admitido: %{op}.'
   censo:
     bucket_id_blank: El servicio de sincronización censal requiere un bucket de perfil.
+    certificado_extraction_unpinned: La lectura del certificado emitido aún no está
+      soportada; introduce los datos censales manualmente.
+    certificado_not_a_pdf: El archivo proporcionado no es un PDF; se esperaba el Certificado
+      de Situación Censal descargado de la Sede.
   error:
     error_access_gate_submission: La política de control de acceso rechazó una operación
       de envío.
@@ -5520,6 +5612,8 @@ errors:
       están incompletas o son contradictorias.
     error_categories: Se produjo un error en las categorías de gasto.
     error_categories_validation: Un registro de categoría no superó la validación.
+    error_certificado_censal: La operación con el Certificado de Situación Censal
+      ha fallado.
     error_config_boundary: El comando de configuración encontró un error interno inesperado.
     error_corpus_search: No se pudo completar la búsqueda local en el corpus.
     error_deadlines_deadline: Se produjo un error en el cálculo de plazos.
@@ -5577,6 +5671,7 @@ errors:
     error_financial_usage_ratios_usage_ratio: Se produjo un error en los porcentajes
       de uso.
     error_fixture_provisioning: No se pudieron preparar los datos de prueba.
+    error_flow: El flujo guiado falló.
     error_invoice_link_inconsistency: El enlace entre catálogos dejó la factura y
       la transacción desincronizadas. Revisa ambos catálogos manualmente.
     error_invoice_validation: Un registro de factura no superó la validación.
@@ -5743,6 +5838,8 @@ errors:
     fail_browser_evasion: No se pudo aplicar la configuración de evasión del navegador.
     fail_browser_session_browser: Se produjo un error en la sesión del navegador.
     fail_browser_validation: Los parámetros del navegador no superaron la validación.
+    fail_certificado_censal_parse: No se ha podido leer el documento del Certificado
+      de Situación Censal.
     fail_declaracion_parse: No se pudo interpretar el PDF como una declaración.
     fail_export: Se produjo un error al exportar hacia la AEAT.
     fail_export_format: El borrador de la declaración no se pudo serializar al formato
@@ -5861,6 +5958,8 @@ errors:
       se esperaba {expected}, se obtuvo {got}.'
     cif_check_letter_mismatch_kind: 'La letra de control del CIF es incorrecta (tipo
       {kind}): se esperaba {expected}, se obtuvo {got}.'
+    cif_control_char_invalid: El carácter de control del CIF en {candidate} debe ser
+      un dígito o una letra mayúscula, no {got}.
     cif_invalid_shape: '{candidate} no tiene la forma de un CIF: un CIF es una letra
       inicial (A-H, J, N, P-S, U, V o W) seguida de 7 dígitos y un carácter de control.'
     document_empty: El documento de identidad está vacío.
@@ -5872,6 +5971,12 @@ errors:
       la letra de control debe ser {expected}, no {got}. Corrige el NIF a {digits}{expected}.'
     nif_invalid_shape: '{candidate} no tiene la forma de un NIF: un NIF son 8 dígitos
       seguidos de una letra de control.'
+    tax_id_invalid_length: Un identificador fiscal español debe tener 9 caracteres;
+      {candidate} tiene {length}. Introduce un NIF, NIE o CIF (un carácter inicial,
+      7 u 8 dígitos y un carácter de control).
+    tax_id_unrecognised_leader: '{candidate} no empieza por un carácter de identificador
+      fiscal reconocido ({leader}). Un NIF empieza por un dígito o K/L/M, un NIE por
+      X, Y o Z, y un CIF por A-H, J, N, P-S, U, V o W.'
     validate_expects_str: La validación de identidad espera un valor de texto; se
       obtuvo {got_type}.
   integrity:
@@ -5972,6 +6077,10 @@ errors:
     internal_cli_unexpected_boundary: El comando falló por un error interno inesperado,
       no por un problema de datos almacenados. Consulte los registros de diagnóstico
       para ver qué falló.
+    internal_flow_copy_resolution: 'Error interno: el flujo guiado no pudo resolver
+      sus textos de presentación.'
+    internal_flow_validator_registry: 'Error interno: el registro de validadores del
+      flujo guiado rechazó la operación.'
     internal_master_key_reentrant: 'Error interno: el proveedor de clave maestra se
       invocó de forma reentrante; cierra la sesión activa antes de volver a entrar.'
     internal_master_key_type: 'Error interno: la operación de clave maestra recibió
@@ -5985,10 +6094,6 @@ errors:
     internal_profile_project_answers_not_registered: 'Error interno: las respuestas
       del proyecto de perfil no están registradas.'
     internal_profile_registration: 'Error interno: no se pudo registrar el perfil.'
-    internal_wizard_answer_queue_overflow: 'Error interno: el asistente se cerró con
-      respuestas canónicas sin consumir.'
-    internal_wizard_answer_queue_underflow: 'Error interno: el asistente solicitó
-      más respuestas canónicas de las proporcionadas por la ejecución no interactiva.'
     internal_wizard_catalogue_already_registered: 'Error interno: el catálogo del
       asistente ya está registrado.'
     internal_wizard_catalogue_not_registered: 'Error interno: el catálogo del asistente
@@ -6115,6 +6220,8 @@ errors:
     refused_access_gate_live_read_not_enabled: El acceso de lectura en vivo a la AEAT
       está desactivado. Esta operación no puede contactar con la AEAT en la configuración
       actual.
+    refused_apoderado_invalid_represented_nif: El identificador fiscal del representado
+      no es un NIF, NIE o CIF válido.
     refused_apoderado_live_check_unavailable: La comprobación en vivo de apoderamientos
       no está disponible o falló el contacto con la AEAT.
     refused_apoderado_not_configured: No hay ningún apoderado configurado. Configura
@@ -6190,6 +6297,14 @@ errors:
     refused_financial_usage_ratios_censo_mismatch: Un porcentaje de uso de oficina
       en casa guardado no coincide con el censo, que es la fuente legal vinculante.
       Alinéalo con el valor del censo.
+    refused_flow_answer: El flujo guiado rechazó la respuesta.
+    refused_flow_checkpoint: El flujo guiado rechazó la operación de guardar y reanudar.
+    refused_flow_navigation: El flujo guiado rechazó la petición de navegación.
+    refused_flow_run_abandoned: El flujo guiado se canceló antes de completarse; no
+      se presentó nada.
+    refused_flow_submit: El flujo guiado rechazó el envío.
+    refused_flow_unsupported_console: El flujo guiado no puede ejecutarse porque esta
+      consola no puede mostrar preguntas interactivas.
     refused_google_impersonation: IAM ha rechazado emitir un token de suplantación
       para la cuenta de servicio de destino. Concédale el rol roles/iam.serviceAccountTokenCreator.
     refused_google_non_interactive: El inicio de sesión de Google necesita un terminal
@@ -6438,6 +6553,118 @@ filing:
     out_of_range: Valor fuera de rango permitido
     required_missing: Falta campo obligatorio
     schema_mismatch: Discrepancia con el esquema esperado
+flows:
+  compare_select:
+    candidate: '{label} (origen: {provenance})'
+    defer_label: Decidir esto más tarde
+  confirm:
+    'no': 'No'
+    'yes': Sí
+  errors:
+    blank_required: 'Este campo es obligatorio: introduce un valor.'
+    checkbox_required: Selecciona al menos una opción.
+    checkbox_unknown: 'Opción desconocida; valores aceptados: %{choices}.'
+    checkpoint_store_missing: El flujo {flow_id} ofrece guardar y salir en el modo
+      {mode}, pero no hay ningún almacén de puntos de guardado conectado, así que
+      la ejecución se ha rechazado en lugar de perder tus respuestas.
+    invalid_confirm: Responde sí o no.
+    invalid_date: Introduce una fecha con el formato AAAA-MM-DD (por ejemplo 2026-05-14).
+    invalid_decimal: Introduce un importe con punto decimal (por ejemplo 1234.56).
+    invalid_integer: Introduce un número entero.
+    select_unknown: 'Elige uno de los valores aceptados: %{choices}.'
+    tui_abandoned: El flujo {flow_id} se cerró en el modo {mode} antes de enviarlo
+      o guardarlo; no se ha registrado nada.
+    unexpected_app_type: La pantalla interactiva no está asociada a una aplicación
+      de flujo.
+    unsupported_console: Esta consola no puede mostrar preguntas interactivas. Ejecuta
+      el flujo desde un terminal real o guíalo con un archivo de respuestas.
+  progress:
+    current_answer: 'Respuesta actual: {value}'
+    current_answer_secret: 'Respuesta actual: (oculta)'
+    failure_mode: 'Atención: {text}'
+    format_hint: 'Formato: {hint}'
+    legal_ref: 'Base legal: %{ref} — %{label}'
+    optional: Opcional
+    page_header: Pregunta {position} de {total} — sección {section}
+    required: Obligatorio
+  review:
+    action_edit: Editar una respuesta
+    action_prompt: ¿Qué quieres hacer?
+    action_restart: Empezar de nuevo
+    action_save_exit: Guardar y salir
+    action_submit: Enviar
+    column_answer: Respuesta
+    column_question: Pregunta
+    column_registered: Registrado
+    column_status: Estado
+    edit_not_editable: La pregunta {page_key} ya no se puede editar.
+    edit_unknown: No existe ninguna pregunta con el número {number}.
+    edit_which: '¿Qué número de pregunta quieres editar? '
+    header: Revisión — {answered} preguntas respondidas.
+    header_tui: 'Revisión — {answered} respondidas, {remaining} obligatorias pendientes,
+      listo para enviar: {eligible}'
+    orphan_marker: (ya no se pregunta)
+    page_deferred: 'La pregunta %{page_key} está aplazada: decide antes de presentar.'
+    page_invalid: La pregunta %{page_key} tiene una respuesta no válida.
+    page_stale: 'Revisa la pregunta %{page_key}: cambió una respuesta anterior.'
+    required_unanswered: La pregunta obligatoria %{page_key} está sin responder.
+    reset_stale_confirm: La pregunta {page_key} ya no se plantea. ¿Borrar su respuesta
+      guardada?
+    reset_stale_done: Se ha borrado la respuesta guardada de {page_key}.
+    restart_confirm: ¿Empezar de nuevo y descartar todas las respuestas?
+    row: '{number}. {page_key} — estado: {status}'
+    save_unavailable: Guardar y salir no está disponible en el modo {mode}; completa
+      el flujo de una sola vez.
+  status:
+    auth:
+      certificate_source: Origen del certificado
+      login_not_ready: sin verificar
+      login_ready: listo
+      provider: Proveedor
+      provider_none: sin configurar
+      status: Acceso
+      subject: Titular
+    binding_quit: Salir
+    masked_value: (oculto)
+    profile:
+      column:
+        field: Campo
+        value: Valor
+      none: No hay ningún perfil activo.
+    profiles:
+      column:
+        active: Activo
+        label: Perfil
+        status: Estado
+      none: No hay perfiles registrados.
+      status:
+        active: activo
+        setup_incomplete: configuración incompleta
+        tombstoned: eliminado
+    recovery:
+      commands_title: Acciones (copiar y ejecutar)
+      enrolled: activado
+      fingerprint: Huella
+      not_enrolled: no activado
+      state: Código de recuperación
+    section:
+      auth: Autenticación
+      profile: Perfil activo
+      profiles: Perfiles
+      recovery: Recuperación
+    title: Estado
+  tui:
+    binding_back: Anterior
+    binding_reset: Restablecer
+    binding_restart: Reiniciar
+    binding_return: Volver
+    binding_review: Resumen
+    binding_save_exit: Guardar y salir
+    binding_submit: Presentar
+    button_back: Atrás
+    button_next: Siguiente
+    button_review: Revisión
+    header: '{flow} — pregunta {position} de {total}, sección {section}'
 live:
   errors:
     expediente_not_found: No se encontró el expediente solicitado en la AEAT.
@@ -6730,7 +6957,12 @@ wizard:
     checkbox_unknown: 'Valor no reconocido para %{prompt_key}: %{raw}. Opciones válidas:
       %{choices}.'
     checkbox_without_choices: La pregunta %{prompt_key} no declara opciones para checkbox.
+    eu_eea_country_required: '%{flag} es obligatorio cuando %{condition_flag} indica
+      residencia en la UE o el EEE.'
     invalid_confirm: 'Respuesta booleana no válida para %{prompt_key}: %{raw}.'
+    invalid_date: 'Fecha no válida para %{flag}: %{got}. Usa el formato ISO-8601 (AAAA-MM-DD).'
+    invalid_decimal: 'Número decimal no válido para %{flag}: %{got}. Usa el punto
+      como separador decimal.'
     invalid_integer: 'Entero no válido para %{prompt_key}: %{raw}.'
     invalid_postcode: 'Código postal no válido para %{prompt_key}: %{raw}. Un código
       postal español tiene 5 dígitos (código de provincia 01-52 seguido de tres dígitos).'
@@ -6738,6 +6970,8 @@ wizard:
     select_unknown: 'Valor no reconocido para %{prompt_key}: %{raw}. Opciones válidas:
       %{choices}.'
     select_without_choices: La pregunta %{prompt_key} no declara opciones para select.
+    spouse_tax_id_required_joint: '%{flag} es obligatorio cuando %{condition_flag}
+      es tributación conjunta.'
     unsupported_console: "El asistente guiado necesita una terminal interactiva, y\
       \ esta ejecución no la tiene.\nTodavía no se ha guardado nada.\n\nPuedes terminar\
       \ de crear este perfil de dos maneras:\n \n1. Ejecuta el comando otra vez desde\
@@ -6761,6 +6995,8 @@ wizard:
     question_prefix: Pregunta %{q_n} de %{q_total}
     section_header: 'Paso %{section_n} de %{section_total}: %{title}'
   setup:
+    actividad:
+      title: Actividad económica y censo
     capabilities:
       cloud-evidence-upload:
         prompt: ¿Permitir subir evidencia sensible a proveedores LLM en la nube? (desactivado
@@ -6777,12 +7013,20 @@ wizard:
       disability-grade:
         choices:
           33-64:
+            description: Discapacidad reconocida del 33% al 64% — incrementa el mínimo
+              personal.
             label: Discapacidad del 33% al 64%
           65-plus:
+            description: Discapacidad reconocida del 65% o más — mayor incremento
+              del mínimo personal.
             label: Discapacidad del 65% o superior
           assistance-or-mobility:
+            description: Necesidad acreditada de ayuda de terceros o movilidad reducida
+              — añade el incremento por asistencia.
             label: Ayuda de terceros o movilidad reducida
           judicial-incapacity:
+            description: Incapacidad declarada judicialmente — se asimila al 65%+
+              con independencia del grado certificado.
             label: Incapacidad judicial o equivalente
       sex:
         choices:
@@ -6790,6 +7034,58 @@ wizard:
             label: H - hombre
           m:
             label: M - mujer
+    cotejo:
+      adopt:
+        label: Adoptar el valor del certificado
+        provenance: Certificado de Situación Censal (evidencia no oficial)
+      compare:
+        help: Conserva tu respuesta, adopta el valor del certificado o aplázalo para
+          decidir más tarde.
+        prompt: Este dato difiere del certificado. ¿Qué valor conservas?
+      keep:
+        label: Conservar mi respuesta
+        provenance: Tu respuesta del asistente
+      title: Cotejo con el Certificado de Situación Censal
+    descendientes:
+      adoption-date:
+        before_birth: La fecha de adopción no puede ser anterior a la fecha de nacimiento.
+        in_future: La fecha de adopción no puede ser futura.
+        prompt: Fecha de adopción (deje en blanco si no es adoptado)
+      birth-date:
+        prompt: Fecha de nacimiento
+      convivencia:
+        prompt: ¿Este descendiente convive con usted?
+      count:
+        help: 'Cuente los hijos que pueden dar derecho al mínimo por descendientes
+          (art. 58 LIRPF): menores de 25 años (o cualquier edad con discapacidad)
+          que convivan con usted.'
+        prompt: ¿Cuántos descendientes (hijos) quiere declarar?
+      custodia-compartida:
+        prompt: ¿La custodia es compartida con el otro progenitor?
+      discapacidad:
+        choices:
+          '0':
+            label: Sin discapacidad
+          '33':
+            label: Del 33% al 64%
+          '65':
+            label: 65% o más
+        prompt: Grado de discapacidad
+      gastos-guarderia:
+        help: Importes pagados a una guardería o centro de educación infantil autorizado
+          (art. 81 bis LIRPF) que incrementan la deducción por maternidad; euros enteros.
+        invalid_negative: Los gastos de guardería no pueden ser negativos; introduzca
+          0 o un importe positivo en euros (art. 81 bis LIRPF).
+        prompt: Gastos de guardería pagados en el año de declaración (euros)
+      meses-madre-trabajo:
+        help: 'Para la deducción por maternidad (art. 81 LIRPF): meses (0-12) en que
+          la madre cotizó a la Seguridad Social con el hijo menor de 3 años.'
+        invalid_range: Introduzca un número entero de meses entre %{minimum} y %{maximum}
+          (art. 81 LIRPF).
+        prompt: Meses que la madre trabajó con el hijo menor de 3 años (año de declaración)
+      nif:
+        prompt: NIF/NIE del descendiente (deje en blanco si no tiene)
+      title: Descendientes
     description: Asistente de configuración para preparar las declaraciones
     enrollment:
       enrollment-large-company:
@@ -6799,6 +7095,8 @@ wizard:
       title: Inscripción
     errors:
       missing_required_flags: 'Faltan banderas requeridas para --quiet: %{missing}'
+    familia:
+      title: Situación familiar
     family:
       family-descendants-eu-eea-deduction:
         prompt: Descendientes UE/EEE en deducción de unidad familiar
@@ -7011,6 +7309,15 @@ wizard:
         help: 'Sexo del primer declarante: H = hombre, M = mujer.'
       third-party-transactions-above-347-threshold:
         help: Operaciones con terceros superan el umbral del Modelo 347
+    format:
+      amount-eur: Importe en euros con punto decimal, p. ej. 50000.00.
+      date-iso: Fecha en formato AAAA-MM-DD, p. ej. 2024-03-01.
+      postcode: 'Código postal español: 5 cifras, p. ej. 28001.'
+      tax-id: 'NIF/DNI: 8 cifras + letra (12345678Z) · NIE: X/Y/Z + 7 cifras + letra
+        (X1234567L) · NIF de entidad: letra + 7 cifras + control (B12345674).'
+      units-count: Número entero de unidades, p. ej. 2.
+    identidad:
+      title: Identidad
     intro: 'Configuración guiada del perfil tributario
 
 
@@ -7059,10 +7366,16 @@ wizard:
       irpf-estimation-regime:
         choices:
           directa-normal:
+            description: 'Estimación directa normal: contabilidad por ingresos reales
+              con libros completos — obligatoria por encima de 600.000 EUR.'
             label: Estimación directa normal
           directa-simplificada:
+            description: 'Estimación directa simplificada: ingresos reales con libros
+              simplificados — la opción habitual para la mayoría de autónomos.'
             label: Estimación directa simplificada
           objetiva:
+            description: 'Estimación objetiva (módulos): el rendimiento se calcula
+              por indicadores de la actividad, solo para actividades incluidas.'
             label: Estimación objetiva (módulos)
         help: Cómo se determina el rendimiento neto de la actividad económica; selecciona
           Modelo 130 o 131
@@ -7119,6 +7432,8 @@ wizard:
       third-party-transactions-above-347-threshold:
         prompt: Operaciones con terceros superan el umbral del Modelo 347
       title: Obligaciones
+    preferencias:
+      title: Preferencias y capacidades
     profile:
       activity:
         prompt: Actividad económica (texto normal; usa el epígrafe IAE si lo conoces)
@@ -7132,14 +7447,24 @@ wizard:
       iva-regime:
         choices:
           exento:
+            description: 'Actividad exenta de IVA (educación, sanidad, seguros…):
+              no repercute ni deduce IVA.'
             label: Exento
           general:
+            description: 'IVA general: repercute IVA en ventas, deduce IVA soportado
+              y presenta el Modelo 303 trimestral.'
             label: Régimen general
           reagp:
+            description: 'Régimen especial de agricultura, ganadería y pesca (REAGP):
+              compensación a tanto alzado en lugar de declaraciones de IVA.'
             label: Régimen especial de la agricultura, ganadería y pesca (REAGP)
           recargo-equivalencia:
+            description: 'Para comercio minorista: el proveedor aplica un recargo
+              adicional y usted no presenta declaraciones de IVA por esa actividad.'
             label: Recargo de equivalencia
           simplificado:
+            description: Régimen simplificado por módulos para actividades acogidas
+              (vinculado a la estimación objetiva).
             label: Régimen simplificado
       legal-name:
         help: Para personas jurídicas, este es el nombre fiscal usado en cabeceras
@@ -7213,8 +7538,12 @@ wizard:
       fiscal-residency:
         choices:
           non-resident-irnr:
+            description: 'No residente: solo tributa la renta de fuente española,
+              por IRNR (Modelo 210), y puede requerirse representante fiscal.'
             label: No residente — IRNR (RDLeg 5/2004)
           resident-irpf:
+            description: 'Residente fiscal en España (183+ días o centro de intereses):
+              renta mundial por IRPF.'
             label: Residente habitual en España — IRPF
         prompt: Categoría de residencia fiscal
       representante-fiscal-nif:
@@ -7224,6 +7553,9 @@ wizard:
       tax-residence-ccaa:
         prompt: Comunidad autónoma de residencia fiscal
       title: Residencia fiscal
+    review:
+      registered-non-official-suffix: ' (del certificado censal — no verificado por
+        la AEAT)'
     spouse:
       spouse-birth-date:
         prompt: Fecha de nacimiento del cónyuge
@@ -7260,8 +7592,12 @@ wizard:
               disponible (Art. 82.1.2°)
             label: Pareja de hecho registrada
           separado-divorciado:
+            description: Separado legalmente o divorciado — la tributación conjunta
+              solo es posible con hijos en su unidad familiar.
             label: Separado/a o divorciado/a
           soltero:
+            description: Soltero, viudo o divorciado sin pareja registrada — tributación
+              individual, o conjunta solo como familia monoparental con hijos.
             label: Soltero/a
         help: 'Situación familiar a efectos del Art. 82 LIRPF: determina si puede
           optarse por la declaración conjunta y qué unidad familiar aplica.'
@@ -7294,10 +7630,16 @@ wizard:
       entity-type:
         choices:
           attribution-entity:
+            description: 'Una entidad en atribución de rentas (comunidad de bienes,
+              sociedad civil): las rentas se atribuyen a sus miembros.'
             label: Entidad en atribución de rentas
           legal-entity:
+            description: Una sociedad u organización (SL, SA, asociación…) que tributa
+              por el Impuesto sobre Sociedades.
             label: Persona jurídica (sociedad)
           natural-person:
+            description: Una persona física (autónomo o particular) que tributa por
+              IRPF.
             label: Persona física
         help: Persona física (IRPF), persona jurídica (Impuesto sobre Sociedades)
           o entidad en atribución de rentas
@@ -7311,16 +7653,28 @@ wizard:
       irpf-income-categories:
         choices:
           actividad-economica:
+            description: Actividad económica o profesional por cuenta propia — activa
+              el Modelo 130 trimestral y las obligaciones de IVA.
             label: Actividad económica
           capital-inmobiliario:
+            description: 'Rendimientos del capital inmobiliario: alquileres de inmuebles
+              de su propiedad.'
             label: Rendimientos del capital inmobiliario
           capital-mobiliario:
+            description: 'Rendimientos del capital mobiliario: intereses, dividendos
+              y otras rentas de inversiones.'
             label: Rendimientos del capital mobiliario
           ganancias-patrimoniales:
+            description: Ganancias o pérdidas patrimoniales por venta de activos (acciones,
+              inmuebles, criptomonedas).
             label: Ganancias patrimoniales
           pension:
+            description: Pensiones — tributan como rendimientos del trabajo en el
+              IRPF.
             label: Pensión
           trabajo:
+            description: 'Rendimientos del trabajo: salario o pensión de un empleador
+              o de la Seguridad Social.'
             label: Rendimientos del trabajo
         help: Selecciona cada categoría de renta IRPF que tengas; solo la actividad
           económica obliga al Modelo 130/131
@@ -7336,8 +7690,12 @@ wizard:
           sal:
             label: Sociedad Anónima Laboral (S.A.L.)
           sin-fines-lucrativos:
+            description: 'Entidad sin fines lucrativos (Ley 49/2002): puede optar
+              al régimen fiscal especial que se pregunta más abajo.'
             label: Entidad sin fines lucrativos
           sl:
+            description: 'Sociedad Limitada: la forma societaria habitual para pymes,
+              capital mínimo 3.000 EUR.'
             label: Sociedad de responsabilidad limitada (S.L.)
           sll:
             label: Sociedad Limitada Laboral (S.L.L.)
@@ -7367,34 +7725,17 @@ wizard:
       title: Tipo de contribuyente
     title: Asistente de configuración
     verifier:
-      activity_present: 'Actividad económica: comprobación de que el perfil declara
-        una actividad.'
-      eu_eea_country_missing: 'Residencia del cónyuge: has indicado residencia en
-        la UE o el EEE pero falta el país. Añade el país de residencia.'
-      eu_eea_country_ok: 'Residencia del cónyuge: el país de residencia en la UE o
-        el EEE es coherente.'
-      joint_taxation_situacion_familiar_ok: 'Situación familiar: la declaración conjunta
-        es compatible con la situación familiar declarada.'
-      joint_taxation_situacion_familiar_refused: 'Situación familiar: la declaración
-        conjunta no está permitida para pareja de hecho no registrada (Art. 82.1.2°
-        LIRPF). Cambia la situación familiar o elige tributación individual.'
-      monoparental_requires_hijos_ok: 'Unidad familiar monoparental: requisitos de
-        hijos a cargo verificados.'
+      impatriado_requires_start_date: 'Régimen de impatriados: la fecha de inicio
+        del régimen especial es obligatoria. Añade la fecha de inicio.'
       monoparental_requires_hijos_warning: 'Unidad familiar monoparental: la tributación
         conjunta como monoparental (Art. 82.1.2° LIRPF) requiere hijos menores a cargo
         en la unidad familiar. Sin hijos a cargo, la declaración conjunta no es posible
         para esta situación familiar. Activa «hijos menores a cargo» o cambia a tributación
         individual.'
-      obligations_consistency_ok: 'Obligaciones de retención: las respuestas sobre
-        retenciones son coherentes.'
-      obligations_inconsistent: 'Obligaciones de retención: has declarado retenciones
-        profesionales pero no que pagues a profesionales con retención. Revisa estos
-        datos.'
-      spouse_consistency_missing: 'Tributación conjunta: falta la identificación fiscal
-        del cónyuge. Añádela para poder presentar en conjunto.'
-      spouse_consistency_ok: 'Tributación conjunta: los datos del cónyuge son coherentes.'
-      tax_id_present: 'Identificación fiscal: comprobación de que el perfil tiene
-        un DNI, NIE, NIF o CIF.'
+      non_resident_requires_country: 'No residente IRNR: el país de residencia fiscal
+        es obligatorio. Añade el país de residencia.'
+      non_resident_requires_representante: 'No residente IRNR: es obligatorio un representante
+        fiscal. Añade el NIF y el nombre del representante.'
   test:
     description: Prueba tu configuración y conectividad
     example:

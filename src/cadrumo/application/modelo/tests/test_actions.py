@@ -411,12 +411,16 @@ def test_cross_casilla_invariant_violated_message_is_localised() -> None:
     f-string. Asserting catalogue prose verbatim is deliberately avoided so
     the contract survives a translation edit.
     """
-    predicate, finding = _predicate_finding(
-        predicate_id="test-cross-casilla-001",
-        legal_ref="irpf:art1",
-        expression=f'all_nonzero(["{_PREDICATE_REQUIRED_LEFT_CASILLA}","{_PREDICATE_REQUIRED_RIGHT_CASILLA}"])',
-        casilla_values={_PREDICATE_REQUIRED_LEFT_CASILLA: Decimal(0), _PREDICATE_REQUIRED_RIGHT_CASILLA: Decimal(0)},
-    )
+    with override_settings(cadrumo_output_language="en"):
+        predicate, finding = _predicate_finding(
+            predicate_id="test-cross-casilla-001",
+            legal_ref="irpf:art1",
+            expression=f'all_nonzero(["{_PREDICATE_REQUIRED_LEFT_CASILLA}","{_PREDICATE_REQUIRED_RIGHT_CASILLA}"])',
+            casilla_values={
+                _PREDICATE_REQUIRED_LEFT_CASILLA: Decimal(0),
+                _PREDICATE_REQUIRED_RIGHT_CASILLA: Decimal(0),
+            },
+        )
 
     # The message must contain the predicate_id and expression (from the locale template).
     assert "test-cross-casilla-001" in finding.message

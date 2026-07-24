@@ -182,7 +182,7 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
         issue=219,
         capability=("A Modelo 130 draft is built through a guided wizard instead of hand-writing casilla-code JSON."),
         test_module="src/cadrumo/entrypoints/cli/tests/test_modelo_work_wizard.py",
-        test_function="test_wizard_drives_m130_draft_through_full_prompt_sequence",
+        test_function="test_wizard_scripted_path_walks_the_manual_sequence_and_lands_the_m130_draft",
     ),
     AcceptanceWallEntry(
         issue=217,
@@ -204,7 +204,7 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
             "An Autoliquidacion Rectificativa IVA correction on Modelo 303 files through the guided amend wizard."
         ),
         test_module="src/cadrumo/entrypoints/cli/tests/test_modelo_amend_wizard.py",
-        test_function="test_amend_wizard_files_m303_autoliquidacion_rectificativa",
+        test_function="test_amend_wizard_scripted_sequence_files_m303_rectificativa",
     ),
     AcceptanceWallEntry(
         internal_reference="amend-wizard-complementaria (wall #419 capability/test split)",
@@ -212,7 +212,7 @@ ACCEPTANCE_WALL_CATALOGUE: tuple[AcceptanceWallEntry, ...] = (
             "A complementaria correction on an AEAT-attested Modelo 130 filing runs through the guided amend wizard."
         ),
         test_module="src/cadrumo/entrypoints/cli/tests/test_modelo_amend_wizard.py",
-        test_function="test_amend_wizard_drives_full_prompt_sequence_and_files_correction",
+        test_function="test_amend_wizard_scripted_sequence_files_m130_complementaria",
     ),
     AcceptanceWallEntry(
         issue=425,

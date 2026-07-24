@@ -331,17 +331,14 @@ def _build_workspace_summary(*, bucket_id: str | None) -> ProjectionWorkspaceSum
 def _taxpayer_profile_from_state(state: WorkflowState) -> TaxpayerProfile:
     """Project the active profile record into an :class:`TaxpayerProfile`.
 
-    Mirrors the CLI ``_profile_to_taxpayer`` helper from the
-    :class:`~cadrumo.application.workflow.WorkflowState` active record so the
-    deadline engine receives the same profile shape every surface would
-    compute.
+    Delegates to :func:`~cadrumo.application.user_profile.projection_for_taxpayer`,
+    the single fact-to-taxpayer projection authority, so the deadline engine
+    receives exactly the profile shape every other surface computes.
     """
-    from ..domain.deadlines import taxpayer_profile_from_mapping
-    from .user_profile import record_to_values
+    from .user_profile import projection_for_taxpayer
 
     record = state.active_profile_record()
-    raw = record_to_values(record) if record is not None else {}
-    return taxpayer_profile_from_mapping(raw, tax_id_default="00000000T")
+    return projection_for_taxpayer(record if record is not None else {})
 
 
 def build_pending_obligations(

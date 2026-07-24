@@ -36,7 +36,7 @@ from ...domain.calculations.registry import (
 )
 from ...domain.deadlines import EntityType, IrpfIncomeCategory
 from ...domain.modelos import WorkUnit
-from ...domain.user_profile import ProfileNotFoundError, UserProfileRecord
+from ...domain.user_profile import ProfileNotFoundError, UserProfileRecord, UserProfileStatus
 from ..user_profile import (
     ProfilePreflightReport,
     ProfilePreflightRequirement,
@@ -451,6 +451,16 @@ def require_profile_ready_for_modelo_work(
             context={"bucket_id": bucket_id},
             suggestion="aeat config profile create NAME",
         ) from exc
+    if record.status is UserProfileStatus.SETUP_INCOMPLETE:
+        # A profile minted by the interactive setup flow is live (listed,
+        # resumable, its tax id reserved) but not workable: its answer set
+        # has not passed the flow's final cross-field validation, so no
+        # filing-grade modelo work may build on it.
+        raise ModeloProfileReadinessError(
+            translated_message="application.modelo.errors.profile_readiness_setup_incomplete",
+            context={"bucket_id": bucket_id, "modelo": modelo},
+            suggestion="aeat config profile create NAME",
+        )
     applicability_first = enforce_applicability and modelo.strip() in _PRE_ACTIVITY_LIFECYCLE_MODELOS
     if applicability_first:
         _require_modelo_applicable_for_local_work(

@@ -88,6 +88,21 @@ _GOOGLE_ERROR_SUFFIXES: tuple[str, ...] = (
     "auth_failed",
 )
 
+# The `cli.config.profile.bundle_flow.*` copy slots referenced by the profile
+# bundle interactive flow (`entrypoints.cli._config._profile_bundle_flow`).
+# The references are CopyRef string literals resolved by the flow substrate's
+# render-time copy assembler, so the static AST scanner cannot see them; this
+# bounded enumeration is what keeps scaffold from stripping the entries.
+_PROFILE_BUNDLE_FLOW_COPY_SLOTS: tuple[str, ...] = (
+    "export_section_title",
+    "import_section_title",
+    "transport_prompt",
+    "transport_encrypted_label",
+    "transport_encrypted_description",
+    "transport_cleartext_label",
+    "transport_cleartext_description",
+)
+
 
 def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     """Construct the registration tuple at import time.
@@ -107,6 +122,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
         IrpfSpecialRegime,
         LegalEntityForm,
     )
+    from ..domain.user_profile import UserProfileStatus
 
     return (
         FStringKeyRegistration(
@@ -128,6 +144,31 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             description="wizard.setup.obligations.irpf-estimation-regime.choices.*.label",
             key_factory=lambda v: f"wizard.setup.obligations.irpf-estimation-regime.choices.{_hyphen(v)}.label",
             values=tuple(m.value for m in IrpfEstimationRegime),
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.taxpayer-type.entity-type.choices.*.description",
+            key_factory=lambda v: f"wizard.setup.taxpayer-type.entity-type.choices.{_hyphen(v)}.description",
+            values=tuple(m.value for m in EntityType),
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.taxpayer-type.irpf-income-categories.choices.*.description",
+            key_factory=lambda v: f"wizard.setup.taxpayer-type.irpf-income-categories.choices.{_hyphen(v)}.description",
+            values=tuple(m.value for m in IrpfIncomeCategory),
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.obligations.irpf-estimation-regime.choices.*.description",
+            key_factory=lambda v: f"wizard.setup.obligations.irpf-estimation-regime.choices.{_hyphen(v)}.description",
+            values=tuple(m.value for m in IrpfEstimationRegime),
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.residence.fiscal-residency.choices.*.description",
+            key_factory=lambda v: f"wizard.setup.residence.fiscal-residency.choices.{_hyphen(v)}.description",
+            values=tuple(m.value for m in FiscalResidency),
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.taxpayer-type.legal-entity-form.choices.*.description (curated subset)",
+            key_factory=lambda v: f"wizard.setup.taxpayer-type.legal-entity-form.choices.{_hyphen(v)}.description",
+            values=("sl", "sin_fines_lucrativos"),
         ),
         FStringKeyRegistration(
             description="wizard.setup.obligations.irpf-special-regime.choices.*.label",
@@ -183,6 +224,16 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             description="cli.config.google.errors.* (_GOOGLE_ERROR_KEY_SUFFIX refusal frames)",
             key_factory=lambda v: f"cli.config.google.errors.{v}",
             values=_GOOGLE_ERROR_SUFFIXES,
+        ),
+        FStringKeyRegistration(
+            description="flows.status.profiles.status.* (status-page profile lifecycle labels)",
+            key_factory=lambda v: f"flows.status.profiles.status.{v}",
+            values=tuple(m.value for m in UserProfileStatus),
+        ),
+        FStringKeyRegistration(
+            description="cli.config.profile.bundle_flow.* (profile bundle interactive-flow CopyRef copy)",
+            key_factory=lambda v: f"cli.config.profile.bundle_flow.{v}",
+            values=_PROFILE_BUNDLE_FLOW_COPY_SLOTS,
         ),
     )
 

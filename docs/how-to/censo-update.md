@@ -72,6 +72,35 @@ place of `docs-sequence-sandbox`:
 Copy each value from your Modelo 036 copy or the AEAT sede exactly. Do not
 guess a regime or a start date.
 
+(import-certificado-situacion-censal)=
+## Import a Certificado de Situación Censal
+
+The sede issues a *Certificado de Situación Censal* (procedure G313) that
+states your census facts as AEAT holds them. Download it yourself from the
+sede, then read it into your profile from the file. The first step previews;
+the second records:
+
+```{cli-sequence} censo-update-certificado-file
+```
+
+The command previews the census facts the certificate carries without writing
+anything. Add `--apply` to record them onto the active profile.
+
+Facts recorded this way carry a *non-official evidence* marker: they came from
+a document you supplied, not from an AEAT-confirmed read, so profile views show
+their provenance and the filing calendar's `censo.enrolment_unverified`
+warning still applies. Where a certificate value disagrees with an answer you
+gave in setup, the profile keeps a record of the divergence and
+`aeat config profile show` warns you until you resolve it.
+
+```{note}
+Reading the certificate's contents is not yet active: the command currently
+refuses every document while layout coverage for AEAT-issued certificates is
+being completed, and tells you so. Until then, enter the facts by hand as
+described above — the command's interface is stable and this page applies
+unchanged once reading activates.
+```
+
 ## Record a Modelo 036 filing done outside Cadrumo
 
 If you file a Modelo 036 alta, modificacion, or baja in AEAT's sede, record

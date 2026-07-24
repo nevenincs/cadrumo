@@ -690,14 +690,39 @@ def _overview_calendar_all_profiles(
     today = today_madrid()
     buckets = list_profile_buckets()
     active_buckets = {bid: ptr for bid, ptr in buckets.items() if ptr.status is UserProfileStatus.ACTIVE}
+    setup_incomplete = sorted(
+        (ptr for ptr in buckets.values() if ptr.status is UserProfileStatus.SETUP_INCOMPLETE),
+        key=lambda ptr: ptr.label,
+    )
 
     all_lines: list[str] = [
         f"from\t{rng.from_date.isoformat()}",
         f"to\t{rng.to_date.isoformat()}",
         f"profiles\t{len(active_buckets)}",
     ]
-    all_calendars: list[dict[str, object]] = []
+    # A setup-incomplete profile is not workable, so it has no filing
+    # calendar — but it must not vanish silently from the multi-profile view.
+    # Name each excluded profile on a stable machine line and surface one
+    # non-blocking advisory on the typed Notice channel.
     all_coverage_notices: list[Notice] = []
+    for pointer in setup_incomplete:
+        all_lines.append(f"profile_setup_incomplete\t{pointer.bucket_id}\t{pointer.label}")
+    if setup_incomplete:
+        _labels = ", ".join(pointer.label for pointer in setup_incomplete)
+        all_coverage_notices.append(
+            Notice(
+                severity=NoticeSeverity.INFO,
+                code="overview.calendar.setup_incomplete",
+                message=tr(
+                    "cli.overview.calendar.setup_incomplete_notice",
+                    count=len(setup_incomplete),
+                    labels=_labels,
+                ),
+                suggestion="aeat config profile status",
+                context={"count": str(len(setup_incomplete)), "labels": _labels},
+            ),
+        )
+    all_calendars: list[dict[str, object]] = []
 
     repository = ProfileRepository()
     for bucket_id, pointer in sorted(active_buckets.items(), key=lambda kv: kv[1].label):

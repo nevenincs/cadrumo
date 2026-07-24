@@ -62,6 +62,7 @@ Submodules
    cadrumo.domain.calculations.registry._parity_tapes
    cadrumo.domain.calculations.registry._period_offset_math
    cadrumo.domain.calculations.registry._period_selector_match
+   cadrumo.domain.calculations.registry._profile_grounding
    cadrumo.domain.calculations.registry._queries
    cadrumo.domain.calculations.registry._query_reports
    cadrumo.domain.calculations.registry._record_design

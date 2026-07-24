@@ -65,3 +65,8 @@ def test_setup_answer_model_rejects_invalid_answer_types() -> None:
     ):
         with pytest.raises(ValidationError, match=message):
             SetupAnswers.model_validate({"tax_id": "00000000T", field_name: invalid_value})
+
+
+def test_setup_answer_model_rejects_an_unknown_situacion_familiar_token() -> None:
+    with pytest.raises(ValidationError, match="situacion_familiar"):
+        SetupAnswers.model_validate({"tax_id": "00000000T", "situacion_familiar": "casadoX"})

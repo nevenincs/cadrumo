@@ -1,0 +1,4 @@
+@step Preview the census facts the downloaded certificate carries.
+@static aeat config profile censo file --file certificado-g313.pdf
+@step Record the certificate's facts onto the active profile.
+@static aeat config profile censo file --file certificado-g313.pdf --apply

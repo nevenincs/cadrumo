@@ -52,18 +52,25 @@ def test_wizard_output_language_flag_constrains_to_supported_set() -> None:
     assert tuple(choice.choices) == tuple(SUPPORTED_OUTPUT_LANGUAGES)
 
 
-def test_wizard_prose_renders_english_under_english_override() -> None:
-    """The wizard title and first prompt render in English under an English override."""
+def test_wizard_prose_localizes_and_resolves_under_both_overrides() -> None:
+    """The wizard title and first prompt resolve and differ across languages.
+
+    Structural assertions only: each key must resolve to authored prose
+    (never its own key echo) in both languages, and the two renderings must
+    differ — proving the descriptor is genuinely localized. The expected
+    strings are never hardcoded, so a catalogue rewording or a catalogue
+    re-sequencing of the first page cannot break the test without breaking
+    the property it pins.
+    """
     with override_settings(cadrumo_output_language="en"):
-        assert tr(_TITLE_KEY) == "Setup wizard"
-        assert tr(_PROMPT_KEY) == "Entity type"
-
-
-def test_wizard_prose_renders_spanish_under_spanish_override() -> None:
-    """The wizard title and first prompt render in Spanish under a Spanish override."""
+        title_en, prompt_en = tr(_TITLE_KEY), tr(_PROMPT_KEY)
     with override_settings(cadrumo_output_language="es"):
-        assert tr(_TITLE_KEY) == "Asistente de configuración"
-        assert tr(_PROMPT_KEY) == "Tipo de entidad"
+        title_es, prompt_es = tr(_TITLE_KEY), tr(_PROMPT_KEY)
+
+    assert title_en != _TITLE_KEY and prompt_en != _PROMPT_KEY
+    assert title_es != _TITLE_KEY and prompt_es != _PROMPT_KEY
+    assert title_en != title_es
+    assert prompt_en != prompt_es
 
 
 @pytest.fixture
@@ -84,6 +91,15 @@ def _clean_install(tmp_path: Path) -> Iterator[None]:
 
 @pytest.mark.usefixtures("_clean_install")
 def test_wizard_prose_defaults_to_spanish() -> None:
-    """A clean install renders the wizard prose in Spanish with no override."""
-    assert tr(_TITLE_KEY) == "Asistente de configuración"
-    assert tr(_PROMPT_KEY) == "Tipo de entidad"
+    """A clean install renders the wizard prose in Spanish with no override.
+
+    The expected renderings are computed under an explicit Spanish override
+    (key identity against the same catalogue), never hardcoded prose, so the
+    assertion pins the DEFAULT-language mechanism rather than a wording.
+    """
+    with override_settings(cadrumo_output_language="es"):
+        expected_title, expected_prompt = tr(_TITLE_KEY), tr(_PROMPT_KEY)
+    clear_output_language_cache()
+
+    assert tr(_TITLE_KEY) == expected_title
+    assert tr(_PROMPT_KEY) == expected_prompt

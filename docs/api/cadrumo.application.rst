@@ -23,6 +23,7 @@ Subpackages
    cadrumo.application.evidence
    cadrumo.application.export
    cadrumo.application.filing
+   cadrumo.application.flows
    cadrumo.application.inventory
    cadrumo.application.invoices
    cadrumo.application.ledger

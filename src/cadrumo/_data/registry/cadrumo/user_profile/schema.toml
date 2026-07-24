@@ -272,6 +272,14 @@ enum_values = ["15", "7", "1"]
 model_selectors = ["censo.elected_withholding_pct"]
 legal_refs = ["ley-35-2006:art-101", "rd-439-2007:art-95", "orden-hac-1425-2025:art-4"]
 
+[[sections.fields]]
+key = "divergencia"
+type = "object"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Cotejo censal divergence rows: one indexed instance per axis the operator deferred at the setup flow's compare-select reconciliation of the Certificado de Situación Censal (G313). Each instance carries axis (the diverging fact's schema path), artefact_value (the certificate's unadopted value), and source (the non-official artefact provenance token). Workflow evidence of unadopted certificate values, surfaced as a read advisory; not a regulatory value and drives no calculation."
+
 [[sections]]
 key = "taxpayer_type"
 title = "Taxpayer entity type and income categories"

@@ -42,10 +42,6 @@ _ALLOWED_DIRECT_OUTPUTS = {
     # Group help fallback: renders the click-generated help text verbatim,
     # not operator data subject to redaction.
     ("entrypoints/cli/_app_diagnostics.py", "typer.echo"),
-    # Wizard progress rides the prompter's injectable prompt_toolkit output
-    # device (headless-testable), not stdout; it renders operator-facing
-    # progress text, never taxpayer data subject to redaction.
-    ("application/wizard/_prompter.py", "write"),
     # Recovery-code display writes directly to the controlling terminal
     # device (CONOUT$ / /dev/tty), deliberately BYPASSING stdout so the
     # candidate mnemonic can never land in a redirected stream, JSON

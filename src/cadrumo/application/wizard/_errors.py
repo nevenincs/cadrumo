@@ -24,12 +24,25 @@ class WizardValidationError(WizardError, CoreValidationError):
     """
 
 
-class WizardAnswerQueueUnderflowError(WizardError):
-    """Raised when a non-interactive answer queue runs empty."""
+class WizardUnsupportedConsoleError(WizardError):
+    """Raised when the host terminal cannot host the interactive setup wizard.
+
+    Raised at the CLI boundary wrapping the flow substrate's console
+    refusal: the wizard-branded class carries the setup-specific
+    recovery suggestion (the non-interactive ``profile create`` flag
+    form) that the substrate's generic refusal cannot know about.
+    """
 
 
-class WizardAnswerQueueOverflowError(WizardError):
-    """Raised when a non-interactive flow leaves canonical answers unconsumed."""
+class WizardEditUnsupportedConsoleError(WizardUnsupportedConsoleError):
+    """No-console refusal raised specifically from the ``profile edit`` flow.
+
+    The base error's recovery suggestion names ``profile create``, which
+    reads as a destructive replacement when an operator hit the
+    no-console state via ``profile edit``. This subclass carries its own
+    registered error code so the trailing recovery suggestion names the
+    non-interactive ``profile edit`` patch form instead.
+    """
 
 
 class WizardMissingFlagError(WizardError):

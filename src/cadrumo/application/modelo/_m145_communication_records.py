@@ -42,6 +42,7 @@ from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import M145_COMMUNICATION_RECORD_NAMESPACE
 from ...core import STRICT_FROZEN_CONFIG, CasillaId, validated_casilla_id_map
 from ...core.decimal import coerce_decimal_strict
+from ...core.errors import resolve_error_message
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, IdentityError, validate_spanish_tax_id
 from ...core.logging import get_logger
@@ -467,7 +468,7 @@ def _value_shape_issue(casilla: CasillaDefinition, value: str) -> str | None:
             try:
                 validate_spanish_tax_id(stripped)
             except IdentityError as exc:
-                return str(exc)
+                return resolve_error_message(exc)
             return None
         case "year":
             if not _FOUR_DIGIT_YEAR_PATTERN.fullmatch(stripped):

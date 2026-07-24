@@ -3,10 +3,11 @@
 The concrete setup flow lives in this package.
 :class:`_models.WizardFlow` descriptors declare the operator-facing sections,
 questions, widgets, visibility gates, and answer model. The command builder
-walks those descriptors through a :class:`_prompter.Prompter` implementation,
-validates raw input with the per-widget canonical-token rules, rebuilds the
-typed :class:`core.setup_answers.SetupAnswers` projection, and persists profile
-facts through the user-profile orchestration layer.
+projects those descriptors onto the flow substrate
+(:mod:`cadrumo.application.flows`) and drives them through its engine and
+frontends, validates raw input with the per-widget canonical-token rules,
+rebuilds the typed :class:`core.setup_answers.SetupAnswers` projection, and
+persists profile facts through the user-profile orchestration layer.
 
 Importing :mod:`application.wizard` intentionally performs the startup
 registrations that downstream layers consume without importing the application
@@ -34,11 +35,66 @@ See Also:
 """
 
 from . import _compiler as _compiler
+from . import _copy_sources as _copy_sources
 from ._catalogue import WIZARD_FLOWS
+from ._checkpoint_store import (
+    ProfileFactsCheckpointStore,
+    checkpoint_answers_from_record,
+    checkpoint_facts_from_answers,
+)
 from ._commands import build_wizard_command
-from ._errors import WizardAnswerQueueUnderflowError, WizardValidationError
-from ._persistence import project_answers
-from ._prompter import CanonicalAnswerPrompter, Prompter, QuestionaryPrompter, WizardUnsupportedConsoleError
+from ._copy_sources import (
+    register_profile_copy_sources,
+    resolve_profile_schema_copy,
+    resolve_profile_terminology_copy,
+)
+from ._cotejo import (
+    COTEJO_LOCALE_KEYS,
+    COTEJO_SECTION_ID,
+    CotejoAxis,
+    attach_cotejo_pages,
+    build_cotejo_pages,
+    cotejo_axes,
+    cotejo_outcome,
+)
+from ._descendant_door import (
+    DESCENDANT_DOOR_LOCALE_KEYS,
+    build_descendant_door,
+    persist_descendant_door_answers,
+)
+from ._descendant_group import (
+    DESCENDANT_GROUP,
+    DESCENDANT_LOCALE_KEYS,
+    DESCENDANT_NIF_VALIDATOR_ID,
+    DESCENDANTS_COUNT_PAGE_ID,
+    DESCENDANTS_GROUP_ID,
+    attach_descendant_group,
+)
+from ._errors import (
+    WizardEditUnsupportedConsoleError,
+    WizardUnsupportedConsoleError,
+    WizardValidationError,
+)
+from ._flow_validators import (
+    TAXPAYER_PROJECTION_VALIDATOR_ID,
+    build_taxpayer_projection_validator,
+    register_taxpayer_projection_validator,
+)
+from ._legal_zone import PageLegalZone, build_flow_legal_zones
+from ._models import (
+    WizardChoice,
+    WizardCondition,
+    WizardFlow,
+    WizardQuestion,
+    WizardSection,
+    WizardVisibility,
+)
+from ._persistence import descendant_facts_from_answers, project_answers
+from ._setup_legal_validators import (
+    SETUP_UNIDAD_FAMILIAR_VALIDATOR_ID,
+    attach_setup_legal_validators,
+    validate_unidad_familiar_conjunta,
+)
 from ._status import (
     WizardStatusError,
     WizardStatusReport,
@@ -48,18 +104,52 @@ from ._status import (
 from ._widgets import validate_widget_answer
 
 __all__ = [
+    "COTEJO_LOCALE_KEYS",
+    "COTEJO_SECTION_ID",
+    "DESCENDANTS_COUNT_PAGE_ID",
+    "DESCENDANTS_GROUP_ID",
+    "DESCENDANT_DOOR_LOCALE_KEYS",
+    "DESCENDANT_GROUP",
+    "DESCENDANT_LOCALE_KEYS",
+    "DESCENDANT_NIF_VALIDATOR_ID",
+    "SETUP_UNIDAD_FAMILIAR_VALIDATOR_ID",
+    "TAXPAYER_PROJECTION_VALIDATOR_ID",
     "WIZARD_FLOWS",
-    "CanonicalAnswerPrompter",
-    "Prompter",
-    "QuestionaryPrompter",
-    "WizardAnswerQueueUnderflowError",
+    "CotejoAxis",
+    "PageLegalZone",
+    "ProfileFactsCheckpointStore",
+    "WizardChoice",
+    "WizardCondition",
+    "WizardEditUnsupportedConsoleError",
+    "WizardFlow",
+    "WizardQuestion",
+    "WizardSection",
     "WizardStatusError",
     "WizardStatusReport",
     "WizardUnsupportedConsoleError",
     "WizardValidationError",
+    "WizardVisibility",
+    "attach_cotejo_pages",
+    "attach_descendant_group",
+    "attach_setup_legal_validators",
+    "build_cotejo_pages",
+    "build_descendant_door",
+    "build_flow_legal_zones",
+    "build_taxpayer_projection_validator",
     "build_wizard_command",
     "build_wizard_status",
+    "checkpoint_answers_from_record",
+    "checkpoint_facts_from_answers",
+    "cotejo_axes",
+    "cotejo_outcome",
+    "descendant_facts_from_answers",
     "load_active_taxpayer_profile",
+    "persist_descendant_door_answers",
     "project_answers",
+    "register_profile_copy_sources",
+    "register_taxpayer_projection_validator",
+    "resolve_profile_schema_copy",
+    "resolve_profile_terminology_copy",
+    "validate_unidad_familiar_conjunta",
     "validate_widget_answer",
 ]

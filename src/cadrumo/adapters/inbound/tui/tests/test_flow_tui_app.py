@@ -1,0 +1,1125 @@
+"""Pilot-driven behaviour tests for the full-screen flow frontend.
+
+Every test drives the real :class:`FlowTuiApp` through Textual's headless
+Pilot over a real :class:`FlowDefinition` built from the substrate's own
+public models, and asserts against widget ids, engine state, and
+``PageStatus`` / ``CheckpointAvailability`` members — never rendered
+prose, which is locale data and would make the assertion tautological.
+
+Two seams are real, not test doubles. Page copy resolves through the
+sanctioned locale-root override against a fixture catalogue, so the copy
+assembler runs its production locale-key path; the checkpoint port is
+implemented by a JSON-file store whose persisted bytes the save-and-exit
+tests read back, so the port is exercised end to end rather than
+observed through a recording spy.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import subprocess
+import sys
+from typing import TYPE_CHECKING
+
+import pytest
+import yaml
+from pydantic import BaseModel
+from textual.widgets import Button, DataTable, Input, Label, OptionList, ProgressBar, Static
+
+from .....application.flows import (
+    CopyRef,
+    FlowCheckpointError,
+    FlowChoice,
+    FlowCondition,
+    FlowDefinition,
+    FlowLegalRef,
+    FlowPage,
+    FlowSection,
+    answer,
+    page_status,
+    start_flow,
+)
+from .....core.flows import (
+    CheckpointAvailability,
+    CopyRefKind,
+    FlowMode,
+    FlowWidgetKind,
+    PageStatus,
+)
+from .....core.i18n import (
+    OUTPUT_LANGUAGE_ENV_VAR,
+    SUPPORTED_OUTPUT_LANGUAGES,
+    clear_output_language_cache,
+    tr,
+)
+from .....tests.locales_root_fixture import locales_root_scope
+from .. import FlowTuiApp, run_flow_tui
+
+pytestmark = [
+    pytest.mark.unit,
+    pytest.mark.hex_inbound_adapter,
+]
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator, Mapping
+    from pathlib import Path
+
+    from textual.pilot import Pilot
+
+_COPY_REF = "flows.test.copy"
+_COPY_CATALOGUE: dict[str, object] = {
+    "flows": {
+        "test": {"copy": "Dato solicitado", "desc": "DESC-TEXT", "prov": "PROV-TEXT"},
+        # A candidate frame that interpolates both slots, so the COMPARE_SELECT
+        # provenance is observable in the rendered label under the fixture root.
+        "compare_select": {"candidate": "{label} :: {provenance}"},
+    },
+}
+
+_TERMINAL_SIZE = (140, 60)
+"""Wide enough that every zone of the question page is on-screen, so a
+Pilot click resolves to the button it names rather than to whatever the
+80x24 default left visible."""
+
+_REGISTERED_VALUES: dict[str, str] = {
+    "p_name": "ADA LOVELACE (registro)",
+    "p_kind": "beta",
+}
+
+
+class _Answers(BaseModel):
+    """Trivial answers model; only the type identity is consumed."""
+
+
+class _JsonFileCheckpointStore:
+    """A real :class:`CheckpointStore` persisting answers to one JSON file.
+
+    Not a recording double: the tests assert against the bytes this
+    store wrote and read back, so the save-and-exit path is proven to
+    have reached persistence rather than merely to have been called.
+    """
+
+    def __init__(self, root: Path) -> None:
+        self._root = root
+
+    def _path(self, flow_id: str) -> Path:
+        return self._root / f"{flow_id}.json"
+
+    def save(self, flow_id: str, answers: Mapping[str, str]) -> None:
+        self._path(flow_id).write_text(json.dumps(dict(answers), sort_keys=True), encoding="utf-8")
+
+    def load(self, flow_id: str) -> Mapping[str, str] | None:
+        path = self._path(flow_id)
+        if not path.is_file():
+            return None
+        loaded: dict[str, str] = json.loads(path.read_text(encoding="utf-8"))
+        return loaded
+
+    def discard(self, flow_id: str) -> None:
+        self._path(flow_id).unlink(missing_ok=True)
+
+
+@pytest.fixture(autouse=True)
+def _flow_copy_catalogue(tmp_path_factory: pytest.TempPathFactory) -> Iterator[None]:
+    """Point copy resolution at a fixture catalogue carrying the test refs.
+
+    Copy resolution refuses an unresolvable locale key rather than
+    rendering a blank, and the shipped catalogues carry copy for the
+    real domain flows only. The sanctioned locale-root override supplies
+    the refs this module's definition declares, so the assembler runs
+    its production locale-key path without a test string entering the
+    packaged resources.
+    """
+    root = tmp_path_factory.mktemp("flow-tui-locales")
+    payload = yaml.safe_dump(_COPY_CATALOGUE, allow_unicode=True)
+    for language in SUPPORTED_OUTPUT_LANGUAGES:
+        (root / f"{language}.yml").write_text(payload, encoding="utf-8")
+    with locales_root_scope(root):
+        yield
+
+
+def _copy(ref: str = _COPY_REF) -> CopyRef:
+    return CopyRef(kind=CopyRefKind.LOCALE_KEY, ref=ref)
+
+
+def _definition() -> FlowDefinition:
+    """One section, three pages: text, closed choice, optional text."""
+    return FlowDefinition(
+        id="flows.test.tui",
+        title=_copy(),
+        description=_copy(),
+        sections=(
+            FlowSection(
+                id="s1",
+                title=_copy(),
+                items=(
+                    FlowPage(id="p_name", widget=FlowWidgetKind.TEXT, prompt=_copy(), answer_type=str),
+                    FlowPage(
+                        id="p_kind",
+                        widget=FlowWidgetKind.SELECT,
+                        prompt=_copy(),
+                        choices=(
+                            FlowChoice(value="alpha", label=_copy()),
+                            FlowChoice(value="beta", label=_copy()),
+                        ),
+                        answer_type=str,
+                    ),
+                    FlowPage(
+                        id="p_note",
+                        widget=FlowWidgetKind.TEXT,
+                        prompt=_copy(),
+                        answer_type=str,
+                        required=False,
+                    ),
+                ),
+            ),
+        ),
+        answers_model=_Answers,
+        checkpoint={
+            FlowMode.CREATE: CheckpointAvailability.AVAILABLE,
+            FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
+        },
+    )
+
+
+def _app(
+    *,
+    mode: FlowMode = FlowMode.MODIFY,
+    checkpoint_store: _JsonFileCheckpointStore | None = None,
+) -> FlowTuiApp:
+    return FlowTuiApp(
+        _definition(),
+        mode=mode,
+        checkpoint_store=checkpoint_store,
+        registered_values=_REGISTERED_VALUES,
+    )
+
+
+def _on_review(app: FlowTuiApp) -> bool:
+    """Whether the review screen (its data table) is the active screen."""
+    return bool(app.screen.query("#review-table"))
+
+
+def _review_rows(app: FlowTuiApp) -> dict[str, list[str]]:
+    """The review table's rendered cells keyed by page key (section headings skipped)."""
+    table = app.screen.query_one("#review-table", DataTable)
+    return {
+        str(row_key.value): [str(cell) for cell in table.get_row(row_key)]
+        for row_key in table.rows
+        if row_key.value is not None and not str(row_key.value).startswith("\x00section\x00")
+    }
+
+
+async def _answer_all_required(pilot: Pilot[None], app: FlowTuiApp) -> None:
+    """Walk the flow answering both required pages through the widgets."""
+    await pilot.press(*"ada")
+    await pilot.click("#btn-next")
+    # p_kind is a SELECT: choose the first numbered option (digit key).
+    await pilot.press("1")
+    await pilot.pause()
+
+
+# ── click-driven navigation ─────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_next_button_commits_the_pending_input_before_advancing() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        # The page under test is an Input page, so 'next' must take the
+        # commit-then-advance arm rather than the committed-widget arm.
+        assert app.screen.query_one("#widget-area").query_one(Input).value == ""
+
+        await pilot.press(*"ada")
+        assert app.state.answers.get("p_name") is None  # uncommitted keystrokes
+
+        await pilot.click("#btn-next")
+
+        assert app.state.answers["p_name"] == "ada"
+        assert app.state.cursor == "p_kind"
+
+
+@pytest.mark.asyncio
+async def test_next_button_holds_the_page_when_the_commit_is_invalid() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.click("#btn-next")  # blank on an unconditionally required page
+
+        assert "p_name" not in app.state.answers
+        assert app.state.cursor == "p_name"
+        assert page_status(app.state, "p_name") is PageStatus.INVALID
+
+
+@pytest.mark.asyncio
+async def test_back_button_returns_the_cursor_to_the_previous_page() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.press(*"ada")
+        await pilot.click("#btn-next")
+        assert app.state.cursor == "p_kind"
+
+        await pilot.click("#btn-back")
+
+        assert app.state.cursor == "p_name"
+
+
+@pytest.mark.asyncio
+async def test_review_button_opens_the_review_screen() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        assert not _on_review(app)
+
+        await pilot.click("#btn-review")
+
+        assert _on_review(app)
+
+
+# ── the review table ────────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_review_table_renders_the_registered_value_beside_the_answer() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await _answer_all_required(pilot, app)
+        await pilot.press("f2")
+
+        rows = _review_rows(app)
+
+        assert set(rows) == {"p_name", "p_kind", "p_note"}
+        assert rows["p_name"][2] == app.state.answers["p_name"]
+        assert rows["p_name"][3] == _REGISTERED_VALUES["p_name"]
+        assert rows["p_kind"][3] == _REGISTERED_VALUES["p_kind"]
+        # A page the domain supplied no registered value for renders blank,
+        # never a placeholder the operator could read as a record.
+        assert rows["p_note"][3] == ""
+
+
+@pytest.mark.asyncio
+async def test_review_table_status_glyph_is_a_function_of_page_status() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await _answer_all_required(pilot, app)
+        await pilot.press("f2")
+
+        rows = _review_rows(app)
+        glyph_by_key = {key: cells[0] for key, cells in rows.items()}
+        status_by_key = {key: page_status(app.state, key) for key in rows}
+
+        assert set(status_by_key.values()) == {PageStatus.ANSWERED, PageStatus.UNANSWERED}
+        for left in rows:
+            for right in rows:
+                assert (glyph_by_key[left] == glyph_by_key[right]) is (status_by_key[left] == status_by_key[right])
+
+
+@pytest.mark.asyncio
+async def test_review_row_selection_jumps_the_cursor_to_that_page() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await _answer_all_required(pilot, app)
+        await pilot.press("f2")
+        assert _on_review(app)
+
+        table = app.screen.query_one("#review-table", DataTable)
+        table.move_cursor(row=table.get_row_index("p_note"))
+        await pilot.press("enter")
+
+        assert app.state.cursor == "p_note"
+        assert not _on_review(app)
+
+
+# ── submit gating ───────────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_submit_is_disabled_and_inert_while_a_required_page_is_unanswered() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.press("f2")
+
+        assert app.screen.query_one("#btn-submit", Button).disabled is True
+
+        await pilot.press("s")  # the review screen's submit binding
+        await pilot.pause()
+
+        assert app.final_state is None
+        assert app.final_projection is None
+        assert _on_review(app)
+
+
+@pytest.mark.asyncio
+async def test_submit_enabled_once_eligible_exits_with_the_final_projection() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await _answer_all_required(pilot, app)
+        await pilot.press("f2")
+
+        assert app.screen.query_one("#btn-submit", Button).disabled is False
+
+        await pilot.click("#btn-submit")
+        await pilot.pause()
+
+    assert app.final_state is not None
+    assert app.final_state.answers["p_name"] == "ada"
+    assert app.final_projection is not None
+    assert app.final_projection.submit_eligible is True
+    assert app.saved_and_exited is False
+
+
+# ── key bindings ────────────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_escape_routes_to_the_back_intent() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.press(*"ada")
+        await pilot.click("#btn-next")
+
+        await pilot.press("escape")
+
+        assert app.state.cursor == "p_name"
+
+
+@pytest.mark.asyncio
+async def test_f2_routes_to_the_review_intent_and_escape_leaves_it() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.press("f2")
+        assert _on_review(app)
+
+        await pilot.press("escape")
+
+        assert not _on_review(app)
+
+
+@pytest.mark.asyncio
+async def test_ctrl_r_resets_the_cursor_page_answer() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.press(*"ada")
+        await pilot.click("#btn-next")
+        await pilot.press("escape")
+        assert app.state.answers["p_name"] == "ada"
+
+        await pilot.press("ctrl+r")
+
+        assert "p_name" not in app.state.answers
+        assert page_status(app.state, "p_name") is PageStatus.UNANSWERED
+
+
+@pytest.mark.asyncio
+async def test_ctrl_n_restarts_the_flow_from_the_first_page() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await _answer_all_required(pilot, app)
+        assert app.state.answers
+
+        await pilot.press("ctrl+n")
+
+        assert app.state.answers == {}
+        assert app.state.cursor == "p_name"
+        assert not _on_review(app)
+
+
+@pytest.mark.asyncio
+async def test_ctrl_s_persists_through_the_checkpoint_store_and_exits(tmp_path: Path) -> None:
+    store = _JsonFileCheckpointStore(tmp_path)
+    app = _app(mode=FlowMode.CREATE, checkpoint_store=store)
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.press(*"ada")
+        await pilot.click("#btn-next")
+
+        await pilot.press("ctrl+s")
+        await pilot.pause()
+
+    assert store.load("flows.test.tui") == {"p_name": "ada"}
+    assert app.saved_and_exited is True
+    assert app.final_state is not None
+    assert app.final_projection is not None
+
+
+@pytest.mark.asyncio
+async def test_ctrl_s_is_inert_in_a_mode_declaring_checkpointing_unavailable(tmp_path: Path) -> None:
+    store = _JsonFileCheckpointStore(tmp_path)
+    app = _app(mode=FlowMode.MODIFY, checkpoint_store=store)
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.press(*"ada")
+        await pilot.click("#btn-next")
+
+        await pilot.press("ctrl+s")
+        await pilot.pause()
+
+        assert store.load("flows.test.tui") is None
+        assert app.saved_and_exited is False
+        assert app.final_state is None
+        assert app.is_running
+
+
+# ── checkpoint honesty and abandoned runs ───────────────────────────────────
+
+
+def test_declared_checkpointing_without_a_store_refuses_at_construction() -> None:
+    with pytest.raises(FlowCheckpointError):
+        FlowTuiApp(_definition(), mode=FlowMode.CREATE)
+
+
+def test_declared_checkpointing_without_a_store_refuses_before_the_run_starts() -> None:
+    with pytest.raises(FlowCheckpointError):
+        run_flow_tui(_definition(), mode=FlowMode.CREATE)
+
+
+def test_a_mode_declaring_checkpointing_unavailable_constructs_without_a_store() -> None:
+    app = FlowTuiApp(_definition(), mode=FlowMode.MODIFY)
+
+    assert app.state.mode is FlowMode.MODIFY
+
+
+# ── checkbox, secret, stale-orphan, and select-revisit coverage ──────────────
+
+
+def _checkbox_definition() -> FlowDefinition:
+    """One required CHECKBOX page carrying three choices."""
+    return FlowDefinition(
+        id="flows.test.checkbox",
+        title=_copy(),
+        description=_copy(),
+        sections=(
+            FlowSection(
+                id="s1",
+                title=_copy(),
+                items=(
+                    FlowPage(
+                        id="p_multi",
+                        widget=FlowWidgetKind.CHECKBOX,
+                        prompt=_copy(),
+                        choices=(
+                            FlowChoice(value="c1", label=_copy()),
+                            FlowChoice(value="c2", label=_copy()),
+                            FlowChoice(value="c3", label=_copy()),
+                        ),
+                        answer_type=str,
+                    ),
+                ),
+            ),
+        ),
+        answers_model=_Answers,
+        checkpoint={
+            FlowMode.CREATE: CheckpointAvailability.UNAVAILABLE,
+            FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
+        },
+    )
+
+
+def _secret_definition() -> FlowDefinition:
+    """A required SECRET page followed by an optional text page."""
+    return FlowDefinition(
+        id="flows.test.secret",
+        title=_copy(),
+        description=_copy(),
+        sections=(
+            FlowSection(
+                id="s1",
+                title=_copy(),
+                items=(
+                    FlowPage(id="p_secret", widget=FlowWidgetKind.SECRET, prompt=_copy(), answer_type=str),
+                    FlowPage(id="p_after", widget=FlowWidgetKind.TEXT, prompt=_copy(), answer_type=str, required=False),
+                ),
+            ),
+        ),
+        answers_model=_Answers,
+        checkpoint={
+            FlowMode.CREATE: CheckpointAvailability.UNAVAILABLE,
+            FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
+        },
+    )
+
+
+def _gate_definition() -> FlowDefinition:
+    """A SELECT gate and a text page visible only while the gate is 'alpha'."""
+    return FlowDefinition(
+        id="flows.test.gate",
+        title=_copy(),
+        description=_copy(),
+        sections=(
+            FlowSection(
+                id="s1",
+                title=_copy(),
+                items=(
+                    FlowPage(
+                        id="p_gate",
+                        widget=FlowWidgetKind.SELECT,
+                        prompt=_copy(),
+                        choices=(FlowChoice(value="alpha", label=_copy()), FlowChoice(value="beta", label=_copy())),
+                        answer_type=str,
+                    ),
+                    FlowPage(
+                        id="p_dep",
+                        widget=FlowWidgetKind.TEXT,
+                        prompt=_copy(),
+                        answer_type=str,
+                        visible_when=FlowCondition(page_id="p_gate", equals="alpha"),
+                    ),
+                ),
+            ),
+        ),
+        answers_model=_Answers,
+        checkpoint={
+            FlowMode.CREATE: CheckpointAvailability.UNAVAILABLE,
+            FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
+        },
+    )
+
+
+@pytest.mark.asyncio
+async def test_checkbox_page_stages_two_selections_under_one_key() -> None:
+    app = FlowTuiApp(_checkbox_definition(), mode=FlowMode.MODIFY, registered_values={})
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.pause()
+        # Digit keys toggle the numbered rows of the checkbox list.
+        await pilot.press("1")  # toggle the first choice
+        await pilot.press("2")  # toggle the second choice
+        await pilot.pause()
+
+        # Both selections land under the one page key, and the page does not
+        # advance on a toggle — staging, not commit-then-move.
+        assert set(app.state.answers["p_multi"].split(",")) == {"c1", "c2"}
+        assert app.state.cursor == "p_multi"
+        assert not _on_review(app)
+
+
+@pytest.mark.asyncio
+async def test_secret_answer_is_masked_in_the_echo_and_the_review_table() -> None:
+    app = FlowTuiApp(_secret_definition(), mode=FlowMode.MODIFY, registered_values={})
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.press(*"hunter2")
+        await pilot.click("#btn-next")  # commit the secret, advance to p_after
+        await pilot.click("#btn-back")  # back to p_secret so its echo re-renders
+
+        assert app.state.answers["p_secret"] == "hunter2"  # noqa: S105 - test fixture secret, not a credential
+        masked = tr("flows.progress.current_answer_secret")
+        echo = str(app.screen.query_one("#answer-echo", Static).render())
+        # Pair the assertion: first prove the echo zone actually rendered the
+        # masked marker (a non-empty, correct surface), THEN prove the raw
+        # secret is absent — an absence check is only meaningful against a
+        # proven-present surface.
+        assert masked
+        assert masked in echo
+        assert "hunter2" not in echo
+        # The re-mounted secret Input is blank, never pre-filled with the secret.
+        assert app.screen.query_one("#widget-area").query_one(Input).value == ""
+
+        await pilot.press("f2")
+        rows = _review_rows(app)
+        # The secret's review row genuinely rendered (present with a status
+        # glyph), its answer column carries the masked marker, and only then
+        # is the raw secret asserted absent.
+        assert "p_secret" in rows
+        assert rows["p_secret"][0]  # status glyph column populated
+        assert rows["p_secret"][2] == masked
+        assert "hunter2" not in rows["p_secret"][2]
+
+
+@pytest.mark.asyncio
+async def test_stale_orphan_reset_arm_of_edit_from_review_clears_the_answer() -> None:
+    definition = _gate_definition()
+    # Flip the gate after answering its dependent so the dependent is an
+    # invisible stale orphan on resume.
+    stale = start_flow(definition, mode=FlowMode.MODIFY)
+    stale = answer(definition, stale, "p_gate", "alpha")
+    stale = answer(definition, stale, "p_dep", "detail")
+    stale = answer(definition, stale, "p_gate", "beta")
+    assert "p_dep" in stale.stale
+
+    app = FlowTuiApp(definition, mode=FlowMode.MODIFY, resume_state=stale, registered_values={})
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.press("f2")
+        assert _on_review(app)
+
+        table = app.screen.query_one("#review-table", DataTable)
+        table.move_cursor(row=table.get_row_index("p_dep"))
+        await pilot.press("enter")  # select the stale orphan -> confirmed reset arm
+        await pilot.pause()
+
+        assert "p_dep" not in app.state.answers
+        assert "p_dep" not in app.state.stale
+        assert _on_review(app)  # the reset resolves the row in place
+
+
+def _legal_definition() -> FlowDefinition:
+    """A page carrying a two-citation legal-provenance zone."""
+    return FlowDefinition(
+        id="flows.test.legal",
+        title=_copy(),
+        description=_copy(),
+        sections=(
+            FlowSection(
+                id="s1",
+                title=_copy(),
+                items=(
+                    FlowPage(
+                        id="p_legal",
+                        widget=FlowWidgetKind.TEXT,
+                        prompt=_copy(),
+                        legal_zone=(
+                            FlowLegalRef(ref="ley-35-2006:art-27", label=_copy()),
+                            FlowLegalRef(ref="ley-35-2006:art-28"),
+                        ),
+                        answer_type=str,
+                    ),
+                ),
+            ),
+        ),
+        answers_model=_Answers,
+        checkpoint={
+            FlowMode.CREATE: CheckpointAvailability.UNAVAILABLE,
+            FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
+        },
+    )
+
+
+def test_run_flow_tui_hands_the_constructed_app_to_on_app_ready() -> None:
+    """The runner passes its one constructed app to ``on_app_ready`` before running it.
+
+    A caller capturing the handle (to drive ``rebuild_for_locale`` from an
+    answer hook) must receive the exact instance the runner then runs and
+    reads ``final_state`` from — not a second app the caller builds itself,
+    which would duplicate the abandoned-run guard. The callback aborts with
+    a sentinel so the assertion runs before ``app.run()`` opens a terminal:
+    the handle is a fully-constructed :class:`FlowTuiApp` for the definition,
+    whose ``final_state`` is still ``None`` because the run has not started —
+    proving the pre-run passthrough of the runner's own single app instance.
+    """
+
+    class _AbortRunError(Exception):
+        """Sentinel raised from the hook to abort before the interactive run."""
+
+    captured: dict[str, FlowTuiApp] = {}
+
+    def _capture(app: FlowTuiApp) -> None:
+        captured["ready"] = app
+        raise _AbortRunError
+
+    with pytest.raises(_AbortRunError):
+        run_flow_tui(
+            _definition(),
+            mode=FlowMode.MODIFY,
+            registered_values=_REGISTERED_VALUES,
+            on_app_ready=_capture,
+        )
+
+    ready = captured["ready"]
+    assert isinstance(ready, FlowTuiApp)
+    assert ready.definition.id == "flows.test.tui"
+    # The hook fires after construction and before the run, so the runner has
+    # not yet produced (or read) a final_state on this very instance.
+    assert ready.final_state is None
+
+
+def _date_definition() -> FlowDefinition:
+    """One required DATE page mounting a single-line Input."""
+    return FlowDefinition(
+        id="flows.test.date",
+        title=_copy(),
+        description=_copy(),
+        sections=(
+            FlowSection(
+                id="s1",
+                title=_copy(),
+                items=(FlowPage(id="p_date", widget=FlowWidgetKind.DATE, prompt=_copy(), answer_type=str),),
+            ),
+        ),
+        answers_model=_Answers,
+        checkpoint={
+            FlowMode.CREATE: CheckpointAvailability.UNAVAILABLE,
+            FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
+        },
+    )
+
+
+@pytest.mark.asyncio
+async def test_date_page_live_validation_flags_a_bad_date_then_clears_on_a_good_one() -> None:
+    app = FlowTuiApp(_date_definition(), mode=FlowMode.MODIFY, registered_values={})
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.pause()
+        # A DATE page mounts a single-line Input (tier-one live validation runs
+        # per keystroke through the same widget-shape validator the commit uses).
+        field = app.screen.query_one("#widget-area").query_one(Input)
+
+        await pilot.press(*"2026-13-01")  # an impossible month: fails the ISO shape
+        await pilot.pause()
+        bad_hint = str(app.screen.query_one("#live-validation", Static).render())
+        assert bad_hint.startswith("✗")  # the shape error is shown live, non-blocking
+
+        field.value = "2026-01-05"  # replace with a valid ISO date
+        await pilot.pause()
+
+        # The live line clears the moment the shape passes; the answer is still
+        # uncommitted (live validation never writes engine state).
+        assert str(app.screen.query_one("#live-validation", Static).render()) == ""
+        assert "p_date" not in app.state.answers
+
+
+@pytest.mark.asyncio
+async def test_progress_bar_tracks_the_visible_position() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        bar = app.screen.query_one("#flow-progress", ProgressBar)
+        assert bar.total == 3  # the definition has three visible pages
+        assert bar.progress == 1  # cursor on the first page
+
+        await pilot.press(*"ada")
+        await pilot.click("#btn-next")
+
+        assert app.screen.query_one("#flow-progress", ProgressBar).progress == 2
+
+
+@pytest.mark.asyncio
+async def test_legal_zone_renders_the_citations_in_the_question_panel() -> None:
+    app = FlowTuiApp(_legal_definition(), mode=FlowMode.MODIFY, registered_values={})
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.pause()
+        zone = app.screen.query_one("#page-legal-zone", Static)
+        content = str(zone.render())
+
+        # The zone is shown and carries both citation ref tokens (data,
+        # rendered verbatim); the labelled one and the bare one both appear.
+        assert zone.display is True
+        assert "ley-35-2006:art-27" in content
+        assert "ley-35-2006:art-28" in content
+
+
+@pytest.mark.asyncio
+async def test_legal_zone_is_hidden_when_the_page_declares_none() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.pause()
+        # The three-page definition declares no legal zone, so the zone is
+        # collapsed rather than framing an empty gap.
+        assert app.screen.query_one("#page-legal-zone", Static).display is False
+
+
+def _described_choice(value: str, *, provenance: bool = False) -> FlowChoice:
+    return FlowChoice(
+        value=value,
+        label=_copy(),
+        description=_copy("flows.test.desc"),
+        provenance=_copy("flows.test.prov") if provenance else None,
+    )
+
+
+def _choice_definition(widget: FlowWidgetKind, *, provenance: bool = False) -> FlowDefinition:
+    return FlowDefinition(
+        id="flows.test.choices",
+        title=_copy(),
+        description=_copy(),
+        sections=(
+            FlowSection(
+                id="s1",
+                title=_copy(),
+                items=(
+                    FlowPage(
+                        id="p_choice",
+                        widget=widget,
+                        prompt=_copy(),
+                        choices=(
+                            _described_choice("a", provenance=provenance),
+                            _described_choice("b", provenance=provenance),
+                        ),
+                        answer_type=str,
+                    ),
+                ),
+            ),
+        ),
+        answers_model=_Answers,
+        checkpoint={
+            FlowMode.CREATE: CheckpointAvailability.UNAVAILABLE,
+            FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
+        },
+    )
+
+
+def _option_prompts(app: FlowTuiApp) -> str:
+    """The rendered prompt text of every option in the mounted choice list."""
+    option_list = app.screen.query_one("#widget-area").query_one(OptionList)
+    return "\n".join(str(option_list.get_option_at_index(index).prompt) for index in range(option_list.option_count))
+
+
+@pytest.mark.asyncio
+async def test_select_renders_a_numbered_list_with_descriptions() -> None:
+    app = FlowTuiApp(_choice_definition(FlowWidgetKind.SELECT), mode=FlowMode.MODIFY, registered_values={})
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.pause()
+        text = _option_prompts(app)
+
+        # Numbered single-choice rows (unselected radio glyph) with the
+        # domain description on the reserved second line.
+        assert "1. ( ) " in text
+        assert "2. ( ) " in text
+        assert "DESC-TEXT" in text
+
+
+@pytest.mark.asyncio
+async def test_checkbox_renders_a_numbered_list_with_descriptions() -> None:
+    app = FlowTuiApp(_choice_definition(FlowWidgetKind.CHECKBOX), mode=FlowMode.MODIFY, registered_values={})
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.pause()
+        text = _option_prompts(app)
+
+        # Numbered multi-select rows carry the checkbox glyph, unticked.
+        assert "1. [ ] " in text
+        assert "2. [ ] " in text
+        assert "DESC-TEXT" in text
+
+
+@pytest.mark.asyncio
+async def test_compare_select_renders_provenance_and_a_final_defer_row() -> None:
+    app = FlowTuiApp(
+        _choice_definition(FlowWidgetKind.COMPARE_SELECT, provenance=True),
+        mode=FlowMode.MODIFY,
+        registered_values={},
+    )
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.pause()
+        text = _option_prompts(app)
+
+        # Provenance is the reason COMPARE_SELECT exists; it and the
+        # description reach the numbered candidate rows, and the defer arm is
+        # the final numbered row (two candidates, then row 3).
+        assert "PROV-TEXT" in text
+        assert "DESC-TEXT" in text
+        assert "3. ( ) " in text
+
+
+@pytest.mark.asyncio
+async def test_rebuild_for_locale_reassembles_copy_under_the_new_language(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> None:
+    root = tmp_path_factory.mktemp("rebuild-locales")
+    for language in SUPPORTED_OUTPUT_LANGUAGES:
+        payload = yaml.safe_dump({"flows": {"test": {"copy": f"{language}-copy"}}}, allow_unicode=True)
+        (root / f"{language}.yml").write_text(payload, encoding="utf-8")
+
+    saved = os.environ.get(OUTPUT_LANGUAGE_ENV_VAR)
+    try:
+        os.environ[OUTPUT_LANGUAGE_ENV_VAR] = "en"
+        clear_output_language_cache()
+        with locales_root_scope(root):
+            app = FlowTuiApp(_definition(), mode=FlowMode.MODIFY, registered_values={})
+            async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+                await pilot.pause()
+                assert "en-copy" in str(app.screen.query_one("#page-prompt", Label).render())
+
+                os.environ[OUTPUT_LANGUAGE_ENV_VAR] = "es"
+                clear_output_language_cache()
+                app.rebuild_for_locale()
+                await pilot.pause()
+
+                # The engine state is untouched; every zone re-assembles, so the
+                # prompt re-resolves under the newly-activated language.
+                assert "es-copy" in str(app.screen.query_one("#page-prompt", Label).render())
+    finally:
+        if saved is None:
+            os.environ.pop(OUTPUT_LANGUAGE_ENV_VAR, None)
+        else:
+            os.environ[OUTPUT_LANGUAGE_ENV_VAR] = saved
+        clear_output_language_cache()
+
+
+@pytest.mark.asyncio
+async def test_on_answer_committed_receives_the_page_key_and_committed_value() -> None:
+    received: list[tuple[str, str]] = []
+    app = FlowTuiApp(
+        _definition(),
+        mode=FlowMode.MODIFY,
+        registered_values={},
+        on_answer_committed=lambda key, value: received.append((key, value)),
+    )
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.press(*"ada")
+        await pilot.click("#btn-next")
+        await pilot.pause()
+
+    assert ("p_name", "ada") in received
+
+
+@pytest.mark.asyncio
+async def test_locale_switch_hook_renders_the_next_page_under_the_new_language(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> None:
+    root = tmp_path_factory.mktemp("hook-locales")
+    for language in SUPPORTED_OUTPUT_LANGUAGES:
+        payload = yaml.safe_dump({"flows": {"test": {"copy": f"{language}-copy"}}}, allow_unicode=True)
+        (root / f"{language}.yml").write_text(payload, encoding="utf-8")
+
+    holder: dict[str, FlowTuiApp] = {}
+
+    def _switch_to_spanish(page_key: str, _value: str) -> None:
+        if page_key == "p_name":
+            os.environ[OUTPUT_LANGUAGE_ENV_VAR] = "es"
+            clear_output_language_cache()
+            holder["app"].rebuild_for_locale()
+
+    saved = os.environ.get(OUTPUT_LANGUAGE_ENV_VAR)
+    try:
+        os.environ[OUTPUT_LANGUAGE_ENV_VAR] = "en"
+        clear_output_language_cache()
+        with locales_root_scope(root):
+            app = FlowTuiApp(
+                _definition(),
+                mode=FlowMode.MODIFY,
+                registered_values={},
+                on_answer_committed=_switch_to_spanish,
+            )
+            holder["app"] = app
+            async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+                await pilot.pause()
+                assert "en-copy" in str(app.screen.query_one("#page-prompt", Label).render())
+
+                await pilot.press(*"ada")
+                await pilot.click("#btn-next")
+                await pilot.pause()
+
+                # The commit fired the hook (activate Spanish + rebuild); the
+                # walk advanced, and the page now renders under the newly
+                # activated language — the mid-walk language switch the
+                # operator's language-first feature needs.
+                assert app.state.cursor == "p_kind"
+                assert "es-copy" in str(app.screen.query_one("#page-prompt", Label).render())
+    finally:
+        if saved is None:
+            os.environ.pop(OUTPUT_LANGUAGE_ENV_VAR, None)
+        else:
+            os.environ[OUTPUT_LANGUAGE_ENV_VAR] = saved
+        clear_output_language_cache()
+
+
+@pytest.mark.asyncio
+async def test_reentering_an_answered_select_from_review_does_not_auto_advance() -> None:
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await _answer_all_required(pilot, app)
+        before = app.state.answers["p_kind"]
+        await pilot.press("f2")
+
+        table = app.screen.query_one("#review-table", DataTable)
+        table.move_cursor(row=table.get_row_index("p_kind"))
+        await pilot.press("enter")  # jump back into the answered SELECT page
+        await pilot.pause()
+
+        # The OptionList fires no selection on mount, so re-entering an
+        # answered SELECT neither re-commits nor auto-advances past it.
+        assert not _on_review(app)
+        assert app.state.cursor == "p_kind"
+        assert app.state.answers["p_kind"] == before
+
+
+@pytest.mark.asyncio
+async def test_checkbox_digit_toggle_updates_the_glyph_in_place() -> None:
+    app = FlowTuiApp(_checkbox_definition(), mode=FlowMode.MODIFY, registered_values={})
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.pause()
+        text = _option_prompts(app)
+        assert "1. [ ] " in text  # both unticked to start
+        assert "2. [ ] " in text
+
+        await pilot.press("1")  # toggle row 1 on
+        await pilot.pause()
+        text = _option_prompts(app)
+        assert "1. [x] " in text  # row 1 glyph flipped in place
+        assert "2. [ ] " in text  # row 2 untouched
+
+        await pilot.press("2")  # toggle row 2 on
+        await pilot.pause()
+        text = _option_prompts(app)
+        assert "1. [x] " in text  # row 1 still ticked
+        assert "2. [x] " in text  # row 2 flipped in place
+        assert set(app.state.answers["p_multi"].split(",")) == {"c1", "c2"}
+
+
+_ABANDONED_RUN_SCRIPT = """
+import sys
+from pathlib import Path
+
+from pydantic import BaseModel
+
+from cadrumo.adapters.inbound.tui import run_flow_tui
+from cadrumo.application.flows import (
+    CopyRef,
+    FlowCheckpointError,
+    FlowDefinition,
+    FlowPage,
+    FlowSection,
+)
+from cadrumo.core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
+from cadrumo.tests.locales_root_fixture import locales_root_scope
+
+
+class _Answers(BaseModel):
+    pass
+
+
+copy = CopyRef(kind=CopyRefKind.LOCALE_KEY, ref="flows.test.copy")
+definition = FlowDefinition(
+    id="flows.test.abandoned",
+    title=copy,
+    description=copy,
+    sections=(
+        FlowSection(
+            id="s1",
+            title=copy,
+            items=(FlowPage(id="p_name", widget=FlowWidgetKind.TEXT, prompt=copy, answer_type=str),),
+        ),
+    ),
+    answers_model=_Answers,
+    checkpoint={
+        FlowMode.CREATE: CheckpointAvailability.UNAVAILABLE,
+        FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
+    },
+)
+
+with locales_root_scope(Path(sys.argv[1])):
+    try:
+        run_flow_tui(definition, mode=FlowMode.MODIFY)
+    except FlowCheckpointError:
+        print("REFUSED_ABANDONED_RUN")
+        sys.exit(0)
+print("RETURNED_WITHOUT_REFUSAL")
+sys.exit(1)
+"""
+
+
+def test_run_flow_tui_raises_on_a_run_abandoned_without_submit_or_save(
+    tmp_path: Path,
+    tmp_path_factory: pytest.TempPathFactory,
+) -> None:
+    """A real headless run that quits without submitting must not return.
+
+    ``run_flow_tui`` drives ``App.run`` itself, so the abandonment is
+    reproduced in an owned subprocess: Textual's headless driver plus its
+    screenshot timer quit the application exactly as an
+    operator abandoning the run would, and the frontend must refuse
+    rather than hand back a value that reads as a completed flow.
+    """
+    locales_root = tmp_path_factory.mktemp("abandoned-locales")
+    payload = yaml.safe_dump(_COPY_CATALOGUE, allow_unicode=True)
+    for language in SUPPORTED_OUTPUT_LANGUAGES:
+        (locales_root / f"{language}.yml").write_text(payload, encoding="utf-8")
+
+    completed = subprocess.run(  # noqa: S603 - fixed argv, owned local interpreter
+        [sys.executable, "-c", _ABANDONED_RUN_SCRIPT, str(locales_root)],
+        capture_output=True,
+        text=True,
+        timeout=180,
+        check=False,
+        env={
+            **os.environ,
+            "TEXTUAL_DRIVER": "textual.drivers.headless_driver:HeadlessDriver",
+            "TEXTUAL_SCREENSHOT": "1",
+            "TEXTUAL_SCREENSHOT_LOCATION": str(tmp_path),
+        },
+    )
+
+    assert completed.returncode == 0, completed.stdout + completed.stderr
+    assert "REFUSED_ABANDONED_RUN" in completed.stdout

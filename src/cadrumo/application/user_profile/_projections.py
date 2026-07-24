@@ -147,10 +147,38 @@ def projection_for_taxpayer(
     from ..wizard import _persistence as _wizard_persistence  # noqa: F401
 
     if isinstance(facts, UserProfileRecord | UserProfileSnapshot):
-        mapping = record_to_path_values(facts)
+        mapping = _merged_taxpayer_values(facts, schema=schema)
     else:
         mapping = {str(key): str(value) for key, value in facts.items() if value is not None}
     return taxpayer_profile_from_mapping(mapping, tax_id_default=tax_id_default, iva_regime_default=iva_regime_default)
+
+
+def _merged_taxpayer_values(
+    record: UserProfileRecord | UserProfileSnapshot,
+    *,
+    schema: ProfileSchemaDefinition | None = None,
+) -> dict[str, str]:
+    """Merge the path-keyed and selector-keyed projections for the taxpayer coercion.
+
+    :func:`~cadrumo.domain.deadlines.taxpayer_profile_from_mapping` reads
+    most fields at their canonical schema path (which is also the key space
+    the wizard's ``project_answers`` resolves questions against), but a
+    field family is read at its declared ``model_selectors`` alias instead
+    (``address.cadastral_reference``, ``address.is_habitual_vivienda``, …).
+    Feeding only one key space silently blanks the other family, so the
+    taxpayer projection carries both: the path projection first, with
+    selector aliases layered alongside. The two key spaces are disjoint for
+    aliased fields and identical for unaliased ones, so no key ever
+    resolves to conflicting values.
+    """
+    mapping = record_to_path_values(record)
+    if isinstance(record, UserProfileRecord):
+        selector_values = record_to_values(record, schema=schema)
+    else:
+        selector_values = snapshot_to_values(record, schema=schema)
+    for key, value in selector_values.items():
+        mapping.setdefault(key, value)
+    return mapping
 
 
 __all__ = [

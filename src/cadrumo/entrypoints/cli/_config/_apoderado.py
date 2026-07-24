@@ -3,8 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 import typer
+
+if TYPE_CHECKING:
+    from ....application.auth import ApoderadoService
 
 from ....application.workflow import ProfileBucketPointer
 from ....core.external_constants import OutputLanguage
@@ -125,13 +129,13 @@ def apoderado_status(
 )
 def apoderado_configure(
     ctx: typer.Context,
-    represented_nif: str = typer.Option(
-        ...,
+    represented_nif: str | None = typer.Option(
+        None,
         "--represented-nif",
         help=tr("cli.config.auth.apoderado.configure.represented_nif_help", default="NIF of the represented party"),
     ),
     scope: list[str] = typer.Option(
-        ...,
+        None,
         "--scope",
         help=tr("cli.config.auth.apoderado.configure.scope_help", default="Scope tokens (can be repeated)"),
     ),
@@ -142,19 +146,53 @@ def apoderado_configure(
         help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
+    """Configure the active profile's apoderado representation.
+
+    When ``--represented-nif`` is supplied the verb configures
+    non-interactively from the flags (the automation and piped-host path).
+    When it is omitted the verb becomes a door hosting the paged apoderado
+    flow: the operator answers the represented-party and scope pages on the
+    best frontend the host supports, and the reviewed answers commit through
+    the same :class:`~cadrumo.application.auth.ApoderadoService`. Either way
+    the write lands only in the apoderado encrypted namespace -- never as a
+    profile fact.
+    """
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import ApoderadoService
+    from ....application.auth import ApoderadoRepresentedNifInvalidError, ApoderadoService
     from ....application.workflow import workflow_state_repository
-    from .._config_payloads import ApoderadoConfigureResult
 
     workflow_state_repository().load()
     pointer = _active_profile_pointer()
     svc = ApoderadoService()
-    result = svc.configure(
-        bucket_id=pointer.bucket_id,
-        represented_nif=represented_nif,
-        scope_tokens=tuple(scope),
-    )
+
+    scope_tokens = tuple(scope or ())
+    if represented_nif is None:
+        resolved_nif, scope_tokens = _collect_apoderado_answers_interactively(svc)
+    else:
+        resolved_nif = represented_nif
+        if not scope_tokens:
+            # A late, catalogue-driven refusal must enumerate the accepted
+            # scope set, never bare "value required" -- the CLI gate is the
+            # operator's first instructive surface.
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.auth.apoderado.configure.scope_required",
+                context={"codes": ", ".join(sorted(svc.catalogue.code_set()))},
+            )
+
+    try:
+        result = svc.configure(
+            bucket_id=pointer.bucket_id,
+            represented_nif=resolved_nif,
+            scope_tokens=scope_tokens,
+        )
+    except ApoderadoRepresentedNifInvalidError as exc:
+        # Both transports commit through the service's single identity
+        # authority; the raw identifier never enters the refusal context.
+        raise _CliRefusedBoundaryError(
+            translated_message="errors.refused.refused_apoderado_invalid_represented_nif",
+        ) from exc
+
+    from .._config_payloads import ApoderadoConfigureResult
 
     payload = result.model_dump(mode="json")
     lines = [
@@ -164,6 +202,40 @@ def apoderado_configure(
     ]
     configure_result = ApoderadoConfigureResult.model_validate(payload)
     _emit_envelope(ctx, command="config.auth.apoderado.configure", result=configure_result, lines=lines)
+
+
+def _collect_apoderado_answers_interactively(
+    svc: ApoderadoService,
+) -> tuple[str, tuple[str, ...]]:
+    """Host the paged apoderado flow and return ``(represented_nif, scope_tokens)``.
+
+    Builds the two-page apoderado :class:`FlowDefinition` from the service's
+    live scope catalogue and runs it on the capability-selecting frontend in
+    ``MODIFY`` mode with no checkpoint store: the answers stage in an
+    in-memory :class:`FlowState` and are handed back for a single commit
+    through the service. A host that cannot present an interactive flow
+    (piped / non-interactive) refuses with an apoderado-specific hint that
+    names the ``--represented-nif`` / ``--scope`` flags -- the real recovery
+    for this verb -- rather than the generic substrate no-console copy.
+    """
+    from ....application.auth import apoderado_answers_from_state, build_apoderado_flow_definition
+    from ....application.flows import FlowUnsupportedConsoleError
+    from ....core.flows import FlowMode
+    from ._setup_flow_frontend import run_setup_flow_frontend
+
+    definition = build_apoderado_flow_definition(svc.catalogue)
+    try:
+        state = run_setup_flow_frontend(
+            definition,
+            mode=FlowMode.MODIFY,
+            registered_values=None,
+            checkpoint_store=None,
+        )
+    except FlowUnsupportedConsoleError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.auth.apoderado.configure.no_console_hint",
+        ) from exc
+    return apoderado_answers_from_state(state)
 
 
 @apoderado_app.command(

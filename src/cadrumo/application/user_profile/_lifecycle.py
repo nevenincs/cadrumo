@@ -36,6 +36,7 @@ from ...domain.user_profile import (
     utc_now,
 )
 from . import (
+    CompleteSetupCommand,
     DuplicateProfileCommand,
     EditProfileFieldCommand,
     ProfileLifecycleResult,
@@ -97,6 +98,7 @@ class ProfileLifecycleService:
             schema_version=self._validator.schema.version,
             profile_id=command.profile_id,
             display_name=command.display_name,
+            status=command.status,
             facts=command.facts,
             created_at=now,
             updated_at=now,
@@ -201,6 +203,50 @@ class ProfileLifecycleService:
             occurred_at=reactivated.updated_at,
         )
         return ProfileLifecycleResult(profile=reactivated, applied_at=reactivated.updated_at)
+
+    def complete_setup(self, command: CompleteSetupCommand) -> ProfileLifecycleResult:
+        """Transition a ``SETUP_INCOMPLETE`` profile to ``ACTIVE`` at setup commit.
+
+        The one-way exit from the interactive setup flow: fires only after
+        flow-scope validation has passed at the flow's final commit. The
+        record's own :meth:`~cadrumo.domain.user_profile.UserProfileRecord.complete_setup`
+        refuses any other source status, so an active or tombstoned profile
+        cannot be laundered through this arm. Emits
+        ``PROFILE_SETUP_COMPLETED`` so the audit trail records when the
+        profile became workable.
+
+        Returns a :class:`ProfileLifecycleResult` with the activated profile.
+        """
+        record = self._repository.load(command.profile_id)
+        completed = record.complete_setup()
+        self._repository.save(completed)
+        self._emit_event(
+            event_type=BucketEventType.PROFILE_SETUP_COMPLETED,
+            object_id=completed.profile_id,
+            occurred_at=completed.updated_at,
+        )
+        return ProfileLifecycleResult(profile=completed, applied_at=completed.updated_at)
+
+    def record_censo_applied(self, profile_id: str, *, adopted_count: int, divergence_count: int) -> None:
+        """Emit the single ``CENSO_APPLIED`` event at a cotejo artefact-apply commit.
+
+        The dormant ``CENSO_APPLIED`` member's live emission site: the setup
+        flow's cotejo phase (or the ``config profile censo file --apply`` door)
+        reconciles a Certificado de Situación Censal against the profile and
+        commits the adopted values plus any deferred divergence rows. Exactly
+        ONE event marks that apply-commit — never one per adopted fact — so the
+        audit trail records that a censal artefact was reconciled onto the
+        profile, at the non-official evidence tier. The per-fact value writes
+        keep emitting their own ``PROFILE_VALUES_UPDATED`` / ``..._CLEARED``
+        events through :meth:`edit_field`; this event is the apply-commit
+        marker layered on top.
+        """
+        self._emit_event(
+            event_type=BucketEventType.CENSO_APPLIED,
+            object_id=profile_id,
+            occurred_at=utc_now(),
+            payload={"adopted_count": str(adopted_count), "divergence_count": str(divergence_count)},
+        )
 
     def rename(self, command: RenameProfileCommand) -> ProfileLifecycleResult:
         """Update a live profile's display label and return a :class:`ProfileLifecycleResult`.

@@ -14,9 +14,12 @@ The tests focus on three load-bearing contracts:
 
 from __future__ import annotations
 
+import re
+
 import pytest
 from pydantic import SecretStr, ValidationError
 
+from .....core.identity import IdentityError
 from .._records import (
     AddressReplacement,
     ArbitraryReplacement,
@@ -100,7 +103,11 @@ _INVALID_REPLACEMENT_CASES: tuple[tuple[str, _ReplacementRecordType, str, str, s
         _REAL_NIE_CANARY,
         "Y0000001Z",
         "taxpayer NIE",
-        r"NIE checksum letter is invalid",
+        # The synthetic-shape validator surfaces the identity failure as a
+        # localisation key on the wrapped IdentityError, not a raw English
+        # literal; assert the key rather than prose so the operator-facing
+        # message stays localisable.
+        "errors.identity.nie_check_letter_mismatch",
     ),
     (
         "name-mixed-case",
@@ -190,13 +197,20 @@ def test_replacement_subclasses_accept_valid_synthetic_values() -> None:
 
 def test_replacement_subclasses_reject_invalid_synthetic_values() -> None:
     for case_id, replacement_cls, real, synthetic, surface_label, expected_message in _INVALID_REPLACEMENT_CASES:
-        with pytest.raises(ValidationError, match=expected_message) as exc_info:
+        with pytest.raises(ValidationError) as exc_info:
             replacement_cls(
                 real=SecretStr(real),
                 synthetic=synthetic,
                 surface_label=surface_label,
             )
-        assert exc_info.value.errors(), case_id
+        errors = exc_info.value.errors()
+        assert errors, case_id
+        if expected_message.startswith("errors.identity."):
+            wrapped = errors[0]["ctx"]["error"]
+            assert isinstance(wrapped, IdentityError), case_id
+            assert wrapped.translated_message == expected_message, case_id
+        else:
+            assert re.search(expected_message, str(exc_info.value)), case_id
 
 
 class TestTokenMapShape:

@@ -33,6 +33,7 @@ from collections.abc import Mapping
 from typing import Any, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic_core import PydanticCustomError
 
 from ..core import STRICT_FROZEN_CONFIG
 from .errors import CoreError, ProfileAnswerTypeError
@@ -723,13 +724,22 @@ class SetupAnswers(BaseModel):
     def _validate_spouse_fields_when_joint(self) -> SetupAnswers:
         renta_declaracion_type_cls = _p().RentaDeclaracionType
         if self.taxation_type == renta_declaracion_type_cls.JOINT and not self.spouse_tax_id:
-            raise ValueError("spouse_tax_id is required when taxation_type is joint (taxation_type='2')")
+            # A stable custom error type (not the generic ``value_error``) lets
+            # the operator-facing boundary route this cross-field refusal to its
+            # own localized message rather than the raw English text below.
+            raise PydanticCustomError(
+                "spouse_tax_id_required_joint",
+                "spouse_tax_id is required when taxation_type is joint (taxation_type='2')",
+            )
         return self
 
     @model_validator(mode="after")
     def _validate_eu_eea_country_when_resident(self) -> SetupAnswers:
         if self.spouse_eu_eea_resident and not self.spouse_eu_eea_country:
-            raise ValueError("spouse_eu_eea_country is required when spouse_eu_eea_resident is true")
+            raise PydanticCustomError(
+                "eu_eea_country_required",
+                "spouse_eu_eea_country is required when spouse_eu_eea_resident is true",
+            )
         return self
 
 

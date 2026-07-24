@@ -16,16 +16,28 @@ from __future__ import annotations
 
 from collections.abc import Collection, Mapping
 from pathlib import Path
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel
 
+if TYPE_CHECKING:
+    from ...domain.contribuyente import DescendantInfo
+    from ...domain.user_profile import UserProfileRecord
+
+from ...core.flows import REPEATING_INSTANCE_SEPARATOR
+from ...core.parsing import parse_iso8601_date
 from ...core.setup_answers import register_project_answers as _register_project_answers
+from ...core.time import today_madrid
 from ..user_profile import (
     register_active_profile,
     set_active_fields,
 )
 from ..workflow import WorkflowInputMismatchError, WorkflowState
+from ._descendant_group import (
+    DESCENDANT_PAGE_IDS,
+    DESCENDANTS_COUNT_PAGE_ID,
+    DESCENDANTS_GROUP_ID,
+)
 from ._models import WizardFlow, WizardQuestion
 
 WizardPersistMode = Literal["create", "edit"]
@@ -247,10 +259,166 @@ def _parse_canonical(question: WizardQuestion, raw: str) -> object:
     return raw
 
 
+def _instance_count(raw: str) -> int:
+    """Parse the descendant count answer, clamping malformed input to zero."""
+    try:
+        return max(0, int(raw)) if raw else 0
+    except ValueError:
+        return 0
+
+
+def _discapacidad_grade(raw: str) -> Literal[0, 33, 65] | None:
+    """Narrow a discapacidad answer token to the closed grade set."""
+    match raw:
+        case "0":
+            return 0
+        case "33":
+            return 33
+        case "65":
+            return 65
+        case _:
+            return None
+
+
+def _safe_adoption_date(birth_raw: str, adoption_raw: str | None) -> str | None:
+    """Return the adoption token only when it is a valid pair with birth.
+
+    A cross-field adoption invariant (adoption >= birth, adoption <= today)
+    is surfaced as a review verdict before submit, but the checkpoint
+    (save-and-exit) persist path runs no flow validators, so an out-of-order
+    adoption date could still reach this projection. Dropping the invalid
+    optional token here keeps the checkpoint write from raising a raw
+    ``DescendantInfo`` model error; the review verdict still blocks the final
+    submit until the operator corrects it.
+    """
+    if not adoption_raw:
+        return None
+    birth = parse_iso8601_date(birth_raw) if birth_raw else None
+    adoption = parse_iso8601_date(adoption_raw)
+    if birth is None or adoption is None or adoption < birth or adoption > today_madrid():
+        return None
+    return adoption_raw
+
+
+def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
+    """Reconstruct one ``DescendantInfo`` from an instance's canonical answers.
+
+    Blank optional answers fall back to the record's own defaults
+    (convivencia defaults to cohabiting, custodia to sole custody, the
+    integer supplements to zero); the ISO date strings are coerced by the
+    record's own field validators. An out-of-order adoption date is dropped
+    (see :func:`_safe_adoption_date`) so a checkpoint save never raw-raises.
+    """
+    from ...domain.contribuyente import DescendantInfo
+
+    meses = row.get("meses-madre-trabajo") or ""
+    gastos = row.get("gastos-guarderia") or ""
+    birth_date = parse_iso8601_date(row["birth-date"])
+    assert birth_date is not None
+    adoption_token = _safe_adoption_date(row["birth-date"], row.get("adoption-date"))
+    adoption_date = parse_iso8601_date(adoption_token) if adoption_token else None
+    return DescendantInfo(
+        birth_date=birth_date,
+        adoption_date=adoption_date,
+        discapacidad_grado=_discapacidad_grade(row.get("discapacidad", "")),
+        convive_con_contribuyente=row.get("convivencia", "") != "false",
+        custodia_compartida=row.get("custodia-compartida", "") == "true",
+        meses_madre_trabajo_2024=int(meses) if meses else 0,
+        gastos_guarderia_euros=int(gastos) if gastos else 0,
+        nif=row.get("nif") or None,
+    )
+
+
+def descendant_facts_from_answers(answers: Mapping[str, str]) -> list[tuple[str, str]]:
+    """Project the descendant repeating-group answers into profile facts.
+
+    The setup flow's descendant repeating group keys each instance answer
+    as ``descendientes#<index>.<page-id>``. This reads the live instance
+    count from the count page, reconstructs one
+    :class:`~cadrumo.domain.contribuyente.DescendantInfo` per index, and
+    delegates to
+    :func:`~cadrumo.domain.contribuyente.descendant_facts_from_list` so the
+    emitted ``renta_family.descendiente.{n}.*`` paths and the derived
+    aggregates are the single canonical projection the
+    ``_minimo_descendientes_facts`` injector and the registry selectors
+    consume. Returns an empty list when the group was never reached (the
+    count page carries no answer), so a descendant-free profile writes no
+    descendant fact.
+    """
+    if DESCENDANTS_COUNT_PAGE_ID not in answers:
+        return []
+    from ...domain.contribuyente import descendant_facts_from_list
+
+    count = _instance_count(answers.get(DESCENDANTS_COUNT_PAGE_ID, ""))
+    descendientes: list[DescendantInfo] = []
+    for index in range(count):
+        prefix = f"{DESCENDANTS_GROUP_ID}{REPEATING_INSTANCE_SEPARATOR}{index}"
+        row = {page_id: answers.get(f"{prefix}.{page_id}", "") for page_id in DESCENDANT_PAGE_IDS}
+        if not row["birth-date"]:
+            continue
+        descendientes.append(_descendant_from_row(row))
+    return descendant_facts_from_list(descendientes)
+
+
+def descendant_answers_from_record(record: UserProfileRecord | None) -> dict[str, str]:
+    """Re-project a record's descendant facts into repeating-group answers.
+
+    The inverse of :func:`descendant_facts_from_answers`: reads the
+    ``renta_family.descendiente.{n}.*`` facts a record carries, reconstructs
+    each :class:`~cadrumo.domain.contribuyente.DescendantInfo` through the
+    canonical :func:`~cadrumo.domain.contribuyente.descendant_list_from_facts`,
+    and emits the ``descendientes-count`` answer plus one
+    ``descendientes#<index>.<page-id>`` answer per populated field. This is the
+    exact page-keyed shape :func:`~cadrumo.application.flows.resume_flow`
+    re-walks to re-instantiate the group: the count answer commits first (the
+    familia section orders the count page before the group), revealing the
+    instance pages the remaining answers then seed against the current
+    definition. Returns an empty map when the record declares no descendants,
+    so a childless profile seeds no group.
+
+    The per-field emission mirrors :func:`_descendant_from_row` exactly, so a
+    save-then-resume round-trip through
+    :func:`~cadrumo.application.wizard._checkpoint_store.checkpoint_facts_from_answers`
+    reconstructs an identical fact set: an absent optional field stays absent
+    on both legs, never coerced to a stored default.
+
+    Args:
+        record: The :class:`UserProfileRecord` whose descendant facts are
+            re-projected into repeating-group answers, or ``None``.
+    """
+    if record is None:
+        return {}
+    from ...domain.contribuyente import descendant_list_from_facts
+    from ..user_profile import record_to_path_values
+
+    descendientes = descendant_list_from_facts(record_to_path_values(record))
+    if not descendientes:
+        return {}
+    answers: dict[str, str] = {DESCENDANTS_COUNT_PAGE_ID: str(len(descendientes))}
+    for index, descendant in enumerate(descendientes):
+        prefix = f"{DESCENDANTS_GROUP_ID}{REPEATING_INSTANCE_SEPARATOR}{index}"
+        answers[f"{prefix}.birth-date"] = descendant.birth_date.isoformat()
+        if descendant.adoption_date is not None:
+            answers[f"{prefix}.adoption-date"] = descendant.adoption_date.isoformat()
+        if descendant.discapacidad_grado is not None:
+            answers[f"{prefix}.discapacidad"] = str(descendant.discapacidad_grado)
+        answers[f"{prefix}.convivencia"] = "true" if descendant.convive_con_contribuyente else "false"
+        answers[f"{prefix}.custodia-compartida"] = "true" if descendant.custodia_compartida else "false"
+        if descendant.meses_madre_trabajo_2024 > 0:
+            answers[f"{prefix}.meses-madre-trabajo"] = str(descendant.meses_madre_trabajo_2024)
+        if descendant.gastos_guarderia_euros > 0:
+            answers[f"{prefix}.gastos-guarderia"] = str(descendant.gastos_guarderia_euros)
+        if descendant.nif is not None:
+            answers[f"{prefix}.nif"] = descendant.nif
+    return answers
+
+
 _register_project_answers(project_answers)
 
 __all__ = [
     "WizardPersistMode",
+    "descendant_answers_from_record",
+    "descendant_facts_from_answers",
     "persist_answers",
     "persist_patch",
     "profile_values_from_patch",

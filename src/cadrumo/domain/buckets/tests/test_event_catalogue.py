@@ -377,8 +377,8 @@ def test_bucket_event_type_includes_bucket_maintenance_kinds() -> None:
 def test_bucket_event_type_includes_censo_declaration_kinds() -> None:
     """Modelo 036 declarative-recording verbs (operator declares an
     alta / modificacion / baja was filed at sede) have dedicated
-    canonical enum slots distinct from the live-read mirror events
-    (``profile.censo.refreshed/applied``). Per the 2026-05-16 workflow
+    canonical enum slots distinct from the ``profile.censo.applied``
+    cotejo mirror event. Per the 2026-05-16 workflow
     redesign contract for cli-workflow-redesign-modelo-036-037-foundation,
     the local app never files a 036; these events record the
     operator's declaration so downstream profile state and

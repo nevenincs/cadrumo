@@ -19,6 +19,7 @@ Subpackages
    cadrumo.domain.buckets
    cadrumo.domain.calculations
    cadrumo.domain.categories
+   cadrumo.domain.censo
    cadrumo.domain.contribuyente
    cadrumo.domain.currency
    cadrumo.domain.deadlines

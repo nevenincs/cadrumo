@@ -44,7 +44,7 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core import IntracomOperationType
-from ...core.errors import CoreValidationError
+from ...core.errors import CoreValidationError, resolve_error_message
 from ...core.identity import IdentityError, validate_spanish_tax_id
 from ...core.parsing import parse_iso8601_date
 from ...domain.invoices import (
@@ -111,7 +111,7 @@ def _validate_counterparty_nif(raw: str, *, country: str) -> str:
             return validate_spanish_tax_id(stripped)
         return validate_iva_number(stripped, country)
     except (IdentityError, InvoiceValidationError) as exc:
-        raise _WizardFieldError(field="counterparty_nif", reason=str(exc)) from exc
+        raise _WizardFieldError(field="counterparty_nif", reason=resolve_error_message(exc)) from exc
 
 
 def _validate_counterparty_name(raw: str) -> str:

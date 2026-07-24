@@ -53,13 +53,35 @@ _ProfileSnapshotHash = Annotated[
 
 
 class RegisterProfileCommand(BaseModel):
-    """Register a new active profile root in the secure DB backend."""
+    """Register a new live profile root in the secure DB backend.
+
+    ``status`` selects the registration arm: ``ACTIVE`` (the default) for
+    a complete registration, ``SETUP_INCOMPLETE`` for the interactive
+    setup flow's early mint (the record is live and its tax id reserved,
+    but modelo work is refused until :class:`CompleteSetupCommand` lands).
+    A tombstoned registration is refused — a profile is never born dead.
+    """
 
     model_config = _STRICT_FROZEN
 
     profile_id: ProfileId
     display_name: str = Field(min_length=1, max_length=160)
     facts: tuple[UserProfileFact, ...] = ()
+    status: UserProfileStatus = UserProfileStatus.ACTIVE
+
+    @model_validator(mode="after")
+    def _refuse_tombstoned_birth(self) -> Self:
+        if self.status is UserProfileStatus.TOMBSTONED:
+            raise ValueError("a profile cannot be registered tombstoned")
+        return self
+
+
+class CompleteSetupCommand(BaseModel):
+    """Transition a ``SETUP_INCOMPLETE`` profile to ``ACTIVE`` at setup commit."""
+
+    model_config = _STRICT_FROZEN
+
+    profile_id: ProfileId
 
 
 class EditProfileFieldCommand(BaseModel):

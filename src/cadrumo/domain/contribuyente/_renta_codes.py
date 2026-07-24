@@ -147,18 +147,21 @@ class FiscalResidency(StrEnum):
 class SituacionFamiliar(StrEnum):
     """Legal family situation for the Art. 82 LIRPF unidad-familiar eligibility test.
 
-    Determines whether conjunta (joint) taxation is available and which
-    unidad familiar variant applies:
+    Determines which of the two Art. 82.1 unidad-familiar modalities a
+    tributación conjunta (joint) declaration may form:
 
-    - ``casado``: married; conjunta available (Art. 82.1.1°).
-    - ``pareja_hecho_registrada``: registered civil partnership in an
-      autonomic registry; conjunta available (Art. 82.1.2°).
-    - ``pareja_hecho_no_registrada``: de-facto couple, not registered;
-      conjunta NOT available.
-    - ``soltero``: single; conjunta only available as monoparental
-      (Art. 82.1.2° second indent) when hijos a cargo present.
-    - ``separado_divorciado``: legally separated or divorced; conjunta
-      only available as monoparental when hijos a cargo present.
+    - ``casado``: married and not legally separated; conjunta available as a
+      couple (Art. 82.1.1ª), with the couple's minor / judicially-incapacitated
+      children if any — children are optional.
+    - ``pareja_hecho_registrada`` / ``pareja_hecho_no_registrada``: a de-facto
+      couple, registered or not. Art. 82.1.2ª keys the second modality on the
+      absence of a *marriage bond* ("cuando no existiera vínculo matrimonial"),
+      which is registration-agnostic: a de-facto couple has no marriage bond,
+      so conjunta is available only as a monoparental unit (one parent with the
+      qualifying children), never as a couple.
+    - ``soltero`` / ``separado_divorciado``: single, or legally separated /
+      divorced; conjunta available only as a monoparental unit (Art. 82.1.2ª)
+      when qualifying children are present.
     """
 
     CASADO = "casado"
@@ -167,31 +170,21 @@ class SituacionFamiliar(StrEnum):
     SOLTERO = "soltero"
     SEPARADO_DIVORCIADO = "separado_divorciado"
 
-    def conjunta_eligible(self) -> bool:
-        """True when this situation permits conjunta taxation."""
-        return self in (
-            SituacionFamiliar.CASADO,
-            SituacionFamiliar.PAREJA_HECHO_REGISTRADA,
-            SituacionFamiliar.SOLTERO,
-            SituacionFamiliar.SEPARADO_DIVORCIADO,
-        )
-
-    def requires_spouse_or_partner(self) -> bool:
-        """True when a spouse / registered partner NIF is required for conjunta."""
-        return self in (
-            SituacionFamiliar.CASADO,
-            SituacionFamiliar.PAREJA_HECHO_REGISTRADA,
-        )
-
     def monoparental_required(self) -> bool:
-        """True for the single-parent situations a monoparental unit requires.
+        """True when conjunta is available only as a monoparental unit.
 
-        Per Art. 82.1.2 LIRPF the monoparental unidad familiar applies to a
-        non-partnered parent, i.e. soltero or separado/divorciado.
+        Per Art. 82.1.2ª LIRPF the monoparental unidad familiar applies
+        whenever no marriage bond exists — legal separation, single, or a
+        de-facto couple whether or not it is registered. The modality is
+        registration-agnostic, and every such situation may opt for conjunta
+        only as a single-parent unit, which requires qualifying children. Only
+        ``CASADO`` (Art. 82.1.1ª, the married couple) may opt as a couple.
         """
         return self in (
             SituacionFamiliar.SOLTERO,
             SituacionFamiliar.SEPARADO_DIVORCIADO,
+            SituacionFamiliar.PAREJA_HECHO_REGISTRADA,
+            SituacionFamiliar.PAREJA_HECHO_NO_REGISTRADA,
         )
 
 

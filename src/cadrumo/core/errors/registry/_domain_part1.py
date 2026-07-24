@@ -646,6 +646,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.auth._apoderado.ApoderadoRepresentedNifInvalidError",
+        ErrorCode(
+            code="REFUSED_APODERADO_INVALID_REPRESENTED_NIF",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_apoderado_invalid_represented_nif",
+            default_suggestion="aeat config auth apoderado configure",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.transactions._errors.TransactionIdPrefixError",
         ErrorCode(
             code="REFUSED_FINANCIAL_LEDGER_TRANSACTION_ID_PREFIX",
@@ -773,6 +784,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_justificante_csv_not_found",
             default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.censo._certificado.CertificadoCensalError",
+        ErrorCode(
+            code="ERROR_CERTIFICADO_CENSAL",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_certificado_censal",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.censo._certificado.CertificadoCensalParseError",
+        ErrorCode(
+            code="FAIL_CERTIFICADO_CENSAL_PARSE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_certificado_censal_parse",
+            default_suggestion="aeat config profile edit",
             retryable=False,
             runbook_id=None,
         ),
