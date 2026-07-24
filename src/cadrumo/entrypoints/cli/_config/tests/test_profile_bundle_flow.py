@@ -427,3 +427,40 @@ async def test_full_screen_app_renders_and_submits_the_export_flow(_bundle_flow_
     assert request.profile_name == "gestor-client"
     assert request.destination == Path("outbundle")
     assert request.encrypt is True
+
+
+# ── non-interactive under-specified refusals ────────────────────────────────
+#
+# The CLI runner's stdin is not a TTY, so an under-specified invocation is
+# classified NON_INTERACTIVE: no flow launches and the command refuses with
+# the typed error document. Assertions are structural (exit code, category,
+# code, command id, and the literal command-string suggestion) — never the
+# localized message prose.
+
+
+def test_non_interactive_export_without_destination_refuses_with_typed_envelope() -> None:
+    import json
+
+    result = invoke_cached_cli(["--format", "json", "config", "profile", "export"])
+
+    assert result.exit_code == 2, result.output
+    document = json.loads(result.stderr)
+    assert document["status"] == "error"
+    assert document["command"] == "config.profile.export"
+    assert document["error"]["category"] == "REFUSED"
+    assert document["error"]["code"] == "REFUSED_CLI_BOUNDARY"
+    assert document["error"]["suggestion"] == "aeat config profile export NAME --to bundle.json --encrypt"
+
+
+def test_non_interactive_import_without_path_refuses_with_typed_envelope() -> None:
+    import json
+
+    result = invoke_cached_cli(["--format", "json", "config", "profile", "import"])
+
+    assert result.exit_code == 2, result.output
+    document = json.loads(result.stderr)
+    assert document["status"] == "error"
+    assert document["command"] == "config.profile.import"
+    assert document["error"]["category"] == "REFUSED"
+    assert document["error"]["code"] == "REFUSED_CLI_BOUNDARY"
+    assert document["error"]["suggestion"] == "aeat config profile import bundle.json"
