@@ -80,6 +80,7 @@ from ._prompter import (
 )
 from ._registered_values import project_registered_values
 from ._runner import run_flow
+from ._setup_legal_validators import attach_setup_legal_validators
 
 #: Which substrate :class:`FlowMode` each wizard verb drives. ``create``
 #: registers a fresh profile, ``edit`` modifies an existing one.
@@ -980,7 +981,9 @@ def _prepare_interactive_flow(
     time — post output-language activation — so the review renders in the
     operator's chosen language.
     """
-    definition = attach_format_hints(flow_definition_from_wizard_flow(flow, checkpoint=_SETUP_CHECKPOINT))
+    definition = attach_setup_legal_validators(
+        attach_format_hints(flow_definition_from_wizard_flow(flow, checkpoint=_SETUP_CHECKPOINT)),
+    )
     if mode == "create":
         return _seed_flow_definition(definition, dict(canonical)), None
 
@@ -1617,6 +1620,7 @@ def _emit_wizard_success(
     next_command: str = _DEFAULT_PROFILE_NEXT_COMMAND,
     ccaa_defaulted: bool = False,
     modify_no_resume: bool = False,
+    modify_no_resume_message: str | None = None,
 ) -> None:
     """Emit the success payload in JSON or tabular CLI form.
 
@@ -1638,6 +1642,14 @@ def _emit_wizard_success(
     envelope of every interactive modify run regardless of whether the
     operator attempted a save — the LOUD, never-silent honesty disclosure
     the persistence model binds modify to.
+
+    ``modify_no_resume_message`` carries the message pre-rendered in the
+    command-level output language. The final envelope is a command-level
+    disclosure, so it must render in the language the command entered with,
+    not a mid-walk output-language switch that shadows it by the time this
+    emit runs; the caller freezes the string before the walk and passes it
+    here. ``None`` falls back to resolving it now (the direct, walk-less
+    callers).
     """
     import typer as _typer
 
@@ -1655,13 +1667,17 @@ def _emit_wizard_success(
             suggestion=next_command,
         )
     ]
-    modify_no_resume_message = tr("application.wizard.notices.modify_no_resume")
+    resolved_modify_no_resume_message = (
+        modify_no_resume_message
+        if modify_no_resume_message is not None
+        else tr("application.wizard.notices.modify_no_resume")
+    )
     if modify_no_resume:
         notices.append(
             Notice(
                 severity=NoticeSeverity.INFO,
                 code=_MODIFY_NO_RESUME_CODE,
-                message=modify_no_resume_message,
+                message=resolved_modify_no_resume_message,
             )
         )
     ccaa_message = tr("application.wizard.notices.ccaa_defaulted", ccaa=CCAA.MADRID.value)
@@ -1701,7 +1717,7 @@ def _emit_wizard_success(
         lines.append(f"{tr('application.wizard.output_labels.active_profile')}\t{profile_name}")
     lines.append(f"{tr('application.wizard.output_labels.next')}\t{next_command}")
     if modify_no_resume:
-        lines.append(modify_no_resume_message)
+        lines.append(resolved_modify_no_resume_message)
     if ccaa_defaulted:
         lines.append(ccaa_message)
     rendered = render_command_output(format_name="text", payload=payload, lines=lines)
@@ -1711,7 +1727,7 @@ def _emit_wizard_success(
 _SAVE_EXIT_RESUME_CODE = "config.profile.create.saved_resume_later"
 
 
-def _emit_save_exit_notice(profile_name: str) -> None:
+def _emit_save_exit_notice(profile_name: str, *, message: str | None = None) -> None:
     """Emit the create-mode save-and-exit disclosure ('saved — resume later').
 
     A save-and-exit leaves the profile ``SETUP_INCOMPLETE``, so no
@@ -1720,6 +1736,10 @@ def _emit_save_exit_notice(profile_name: str) -> None:
     resume command (``config profile create`` re-enters the in-progress
     profile), so the operator is told how to continue rather than left with
     a silent exit.
+
+    ``message`` carries the disclosure pre-rendered in the command-level
+    output language (see :func:`_emit_wizard_success`); ``None`` resolves it
+    now for the direct, walk-less callers.
     """
     import typer as _typer
 
@@ -1727,7 +1747,8 @@ def _emit_save_exit_notice(profile_name: str) -> None:
     from ...core.json_contract import Notice, NoticeSeverity, emit_json_success
 
     resume_command = f"aeat config profile create {profile_name}"
-    message = tr("application.wizard.notices.setup_saved_resume_later")
+    if message is None:
+        message = tr("application.wizard.notices.setup_saved_resume_later")
     notice = Notice(
         severity=NoticeSeverity.INFO,
         code=_SAVE_EXIT_RESUME_CODE,
@@ -1761,6 +1782,14 @@ def _execute_wizard_command(
     explicit_flags: dict[str, str] = dict(canonical)
 
     _seed_output_language_from_environment(canonical)
+    # Freeze the final-envelope disclosure notices in the command-level output
+    # language now, BEFORE the interactive walk can activate a mid-walk
+    # override that shadows this language by the time the envelope is emitted.
+    # The envelope is a command-level disclosure, not walk content, so it must
+    # render in the language the command entered with — the same pre-render
+    # discipline the error path uses for a translated refusal.
+    modify_no_resume_message = tr("application.wizard.notices.modify_no_resume")
+    save_exit_message = tr("application.wizard.notices.setup_saved_resume_later")
     _refuse_foral_ccaa(canonical, explicit_flags)
     # Interactive create is the facts-as-checkpoint path: the store mints
     # the profile early in ``SETUP_INCOMPLETE`` state and persists each
@@ -1790,7 +1819,7 @@ def _execute_wizard_command(
         # the profile stays SETUP_INCOMPLETE for a later resume. Emitting a
         # created/active success here would be a lie, so the command surfaces
         # only the "saved — resume later" info notice.
-        _emit_save_exit_notice(profile_name)
+        _emit_save_exit_notice(profile_name, message=save_exit_message)
         return
     # Every interactive modify run carries the LOUD staged-only disclosure on
     # its final envelope: mid-flow save/resume is unavailable and an
@@ -1809,6 +1838,7 @@ def _execute_wizard_command(
             non_interactive=quiet or accept_defaults,
         ),
         modify_no_resume=interactive_modify,
+        modify_no_resume_message=modify_no_resume_message,
     )
 
 
