@@ -67,8 +67,25 @@ function Remove-Path([string]$Path) {
         Remove-Item $Path -Recurse -Force -ErrorAction Stop
         $script:Freed += $bytes
     } catch {
-        # locked / in-use by a concurrent job: leave it, log, never fail.
-        $script:Notes.Add("skip-locked:$([IO.Path]::GetFileName($Path))")
+        # Remove-Item chokes on >260-char paths, which the packaging-smoke
+        # scratch nests well past (observed 312 chars). robocopy mirrors an
+        # empty dir over the target natively beyond MAX_PATH, clearing the tree
+        # so the next checkout's clean step does not fail and wipe the repo.
+        try {
+            $empty = Join-Path $env:TEMP ("cadrumo-empty-" + [Guid]::NewGuid().ToString('N'))
+            $null = New-Item -ItemType Directory -Force -Path $empty -ErrorAction Stop
+            $null = robocopy $empty $Path /MIR /NFL /NDL /NJH /NJS /NC /NS /NP
+            Remove-Item $Path -Recurse -Force -ErrorAction SilentlyContinue
+            Remove-Item $empty -Recurse -Force -ErrorAction SilentlyContinue
+            if (Test-Path $Path) {
+                $script:Notes.Add("skip-locked:$([IO.Path]::GetFileName($Path))")
+            } else {
+                $script:Freed += $bytes
+            }
+        } catch {
+            # locked / in-use by a concurrent job: leave it, log, never fail.
+            $script:Notes.Add("skip-locked:$([IO.Path]::GetFileName($Path))")
+        }
     }
 }
 
