@@ -141,6 +141,7 @@ from ._recovery_facade import (
     verify_recovery_mnemonic,
 )
 from ._recovery_record import RecoveryRecord
+from ._zeroise import zeroise
 
 __all__ = [
     "ARGON2_MEMORY_COST_KIB",
@@ -227,4 +228,5 @@ __all__ = [
     "wrap_profile_session_dek",
     "write_profile_session",
     "write_wrapped_bucket_dek",
+    "zeroise",
 ]

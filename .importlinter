@@ -373,6 +373,7 @@ ignore_imports =
     cadrumo.application.user_profile._custody -> cadrumo.adapters.**
     cadrumo.application.user_profile._custody_carry -> cadrumo.adapters.**
     cadrumo.application.user_profile._language_resolver -> cadrumo.adapters.**
+    cadrumo.application.user_profile._login_session -> cadrumo.adapters.**
     cadrumo.application.user_profile._orchestration -> cadrumo.adapters.**
     cadrumo.application.user_profile._profile_repository -> cadrumo.adapters.**
     cadrumo.application.user_profile._repository -> cadrumo.adapters.**
