@@ -46,10 +46,14 @@ governing_audit = "2026-07-16-cli-authority-verb-conformance-duplication-authori
 #
 #   * `dev/` is outside `source_root`. The standing runner scans the product
 #     tree only, so the tooling that gates the product has never been measured
-#     by it. A direct run over `dev/` observes 2 clone groups
-#     (packaging/installed_mcp_oracle.py + installed_tax_oracle.py; and
-#     deploy/docs_static_site.py + frontend_static_site.py). They are real and
-#     unrecorded; they are named here rather than left invisible.
+#     by it. A direct run over `dev/` observed 2 clone groups. The CloudFront
+#     invalidate-and-wait pair (deploy/docs_static_site.py +
+#     frontend_static_site.py) was substitutable and is consolidated. The
+#     remaining one is the argparse main() emit tail shared by
+#     packaging/installed_mcp_oracle.py and installed_tax_oracle.py: two
+#     separate console entry points whose only shared tail is
+#     parse-run-dump-print, left as advisory residue. Named here rather than
+#     left invisible, since no scan reaches them.
 #
 #   * jscpd matches token sequences, so duplication whose copies drifted in
 #     STYLE is invisible to it. Five ledger projections carried the same

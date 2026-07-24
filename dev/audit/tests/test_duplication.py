@@ -297,8 +297,17 @@ def test_only_one_jscpd_invocation_exists_in_the_tree() -> None:
     # second invocation.
     exempt = {"dev/audit/duplication.py", "dev/audit/tests/test_duplication.py"}
 
+    # A tracked path may be absent from the working tree while a peer's
+    # deletion is in flight, and this worktree runs many agents at once. A file
+    # that does not exist cannot invoke jscpd, so skipping it costs the gate
+    # nothing; crashing on it would red this gate for whoever happens to run it
+    # mid-deletion.
     builders = [
-        rel for rel in candidates if rel not in exempt and "jscpd@" in (_REPO_ROOT / rel).read_text(encoding="utf-8")
+        rel
+        for rel in candidates
+        if rel not in exempt
+        and (_REPO_ROOT / rel).is_file()
+        and "jscpd@" in (_REPO_ROOT / rel).read_text(encoding="utf-8")
     ]
 
     assert builders == [], f"jscpd must be invoked from exactly one runner; found: {builders}"
