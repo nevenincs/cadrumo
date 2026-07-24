@@ -15,6 +15,7 @@ related:
   - '[[2026-07-24-profile-login-session-W01-P03-S07]]'
   - '[[2026-07-24-profile-login-session-W02-P04-S08]]'
   - '[[2026-07-24-profile-login-session-W02-P04-S09]]'
+  - '[[2026-07-24-profile-login-session-W03-P06-S15]]'
   - '[[2026-07-24-profile-login-session-adr]]'
   - '[[2026-07-24-profile-login-session-plan]]'
   - '[[2026-07-24-profile-login-session-research]]'
@@ -41,6 +42,7 @@ Auto-generated index of all documents tagged with `#profile-login-session`.
 - `2026-07-24-profile-login-session-W01-P03-S07` - Implement the per-bucket failed-login throttle sidecar (plaintext counts and timestamps only, exponential 2^n seconds capped at 60, evaluated before any Argon2id derivation, counter reset on success and on logout) with the wait surfaced in the refusal context, verified by tests driving consecutive failures through the real file backend and asserting the enforced delays and the reset
 - `2026-07-24-profile-login-session-W02-P04-S08` - Build the login orchestration service (pointer transaction, optional NAME selection through the existing UUID-or-label resolver, backend authentication by unwrap, session-key mint, record persistence) that is idempotent-guarded for a still-valid same-profile session and closes the previous session with a Notice when the target differs, verified by application-layer tests over real storage covering first login, valid-session no-op retry, and cross-profile handover
 - `2026-07-24-profile-login-session-W02-P04-S09` - Extend logout_active_profile to the full strong close (seal and zeroise the live session, delete the persisted record and its keychain entry, release the bucket lockfile, clear the pointer) while staying idempotent when already logged out, verified by tests proving both artefacts are gone after logout and a second logout is a clean no-op
+- `2026-07-24-profile-login-session-W03-P06-S15` - Sever the environment source for cadrumo_active_profile so the field is populated only by --profile and override_settings, retarget the logout override refusal to the per-invocation --profile case, and sweep every string or doc naming CADRUMO_ACTIVE_PROFILE as an operating mechanism, verified by a settings test proving the env var no longer selects a profile and the existing override-refusal tests retargeted green
 
 ### plan
 
