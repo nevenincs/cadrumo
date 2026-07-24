@@ -99,6 +99,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     from ..application.wizard import WIZARD_FLOWS
     from ..core.i18n import SUPPORTED_OUTPUT_LANGUAGES
     from ..domain.contribuyente import CCAA
+    from ..domain.user_profile import UserProfileStatus
     from ..domain.deadlines import (
         EntityType,
         FiscalResidency,
@@ -208,6 +209,11 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             description="cli.config.google.errors.* (_GOOGLE_ERROR_KEY_SUFFIX refusal frames)",
             key_factory=lambda v: f"cli.config.google.errors.{v}",
             values=_GOOGLE_ERROR_SUFFIXES,
+        ),
+        FStringKeyRegistration(
+            description="flows.status.profiles.status.* (status-page profile lifecycle labels)",
+            key_factory=lambda v: f"flows.status.profiles.status.{v}",
+            values=tuple(m.value for m in UserProfileStatus),
         ),
     )
 
