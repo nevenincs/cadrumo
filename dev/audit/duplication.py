@@ -30,6 +30,27 @@ The clone COUNT is advisory debt, not a gate: this module always exits 0 and
 the health report renders clones as AMBER. Honest closure is valid evidence
 plus no false green -- not zero clones.
 
+Two limits are deliberate, recorded here so neither is re-derived as a defect:
+
+* **Scope is the product tree.** :data:`_PRODUCT_SOURCE_ROOT` is
+  ``src/cadrumo`` alone, because the governing audit scopes every instrument to
+  "the intended production scope" and the duplication the campaign cares about
+  is duplicate AUTHORITY in shipped code -- a second writer with weaker guards,
+  not two similar-looking dev scripts. ``dev/`` is therefore unmeasured by the
+  standing recipe and by the health report's D2 dimension. It is not
+  unmeasurABLE: pass a different ``source_root`` to scan it on demand, which is
+  how the two clone groups recorded in ``duplication_dispositions.toml`` were
+  found. Widening the default would fold tooling debt into the product number.
+
+* **jscpd matches token sequences.** A concept implemented twice in different
+  syntax is invisible to it, and that is exactly the duplication this project's
+  rules treat as a blocker. Five ledger projections once shared one casilla fold
+  differing only in an accumulator loop versus a comprehension; this runner
+  reported none of them, and flagged their shared import preambles instead. A
+  low percentage from this module means little COPY-PASTE survives. It has never
+  meant little duplication survives, and no change to this module can make it
+  mean that.
+
 See Also:
     :func:`run_duplication_scan`
         The one runner both consumers call.

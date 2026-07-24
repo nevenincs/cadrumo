@@ -1,5 +1,27 @@
 # Duplication dispositions
 #
+# ===========================================================================
+# READ THIS BEFORE QUOTING THE PERCENTAGE
+#
+# jscpd matches TOKEN SEQUENCES. It cannot see one concept implemented twice
+# in different syntax, and that is the duplication this project's rules treat
+# as a BLOCKER ("semantic overlap of one concept across different modules").
+# So `duplicated_pct` below measures textual similarity, not duplication.
+#
+# This is measured, not theoretical. Five ledger projections carried the same
+# casilla fold -- same algorithm, same output type, differing only in an
+# accumulator loop versus a comprehension. jscpd reported NONE of the five,
+# and instead flagged the import preambles those same files share. Most
+# entries in this file are preamble matches. The real cluster was found by
+# reading the concept and was consolidated into
+# `application/aggregation/_grouping.py::fold_casilla_observations`.
+#
+# Therefore: a low percentage here is evidence that little COPY-PASTE
+# survives. It is not evidence that little duplication survives, and it never
+# has been. Semantic duplication needs a reader; this file is the residue of
+# what token matching could reach.
+# ===========================================================================
+#
 # One recorded disposition per clone group jscpd currently observes in the
 # production tree (`src/cadrumo`). The clone COUNT is advisory debt, not an
 # elimination mandate: per ADR 2026-07-15-cli-authority-verb-conformance-adr
@@ -55,13 +77,13 @@ governing_audit = "2026-07-16-cli-authority-verb-conformance-duplication-authori
 #     parse-run-dump-print, left as advisory residue. Named here rather than
 #     left invisible, since no scan reaches them.
 #
-#   * jscpd matches token sequences, so duplication whose copies drifted in
-#     STYLE is invisible to it. Five ledger projections carried the same
-#     casilla fold, differing only in an accumulator loop versus a
-#     comprehension; jscpd reported none of the five and instead flagged their
-#     shared import preambles. Most entries below are preamble matches. Read
-#     this record as "what token matching found", never as the duplication
-#     inventory.
+#     The product-only scope is deliberate, not an oversight: the governing
+#     audit scopes every instrument to "the intended production scope", and
+#     the runner's docstring now says so. `dev/` remains scannable on demand
+#     by passing a different `source_root`, which is how the two groups above
+#     were found.
+#
+#   * Semantic duplication, per the banner at the top of this file.
 
 # `observed_groups` is jscpd's own inventory size for this scan: it equals the
 # sum of `cluster_owned` + `intentional` + `advisory_residue` below. The single

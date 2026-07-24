@@ -1,5 +1,26 @@
 r"""Real-behavior tests for the single duplication runner.
 
+CI DOES NOT RUN THIS MODULE. Read that before trusting it as a gate.
+
+``dev/audit/tests`` is outside ``testpaths`` (``src/cadrumo`` plus one packaging
+file), so the unit lane never collects it, and it is absent from the dev-tree
+lane's explicit path list in ``.github/workflows/ci.yml``. Every test here is
+hand-run. Adding the module to that lane needs Node provisioned in that job,
+because ``_require_npx`` asserts rather than skips, and that cost was weighed
+and declined -- the omission is a decision, not an accident.
+
+What still protects the tree on every push is
+``src/cadrumo/tests/test_dev_audit_report.py``'s
+``test_audit_duplication_reports_the_live_trees_real_duplication_state``: it is
+unit-marked, sits inside ``testpaths``, runs the real jscpd scan, and asserts
+AMBER with a measured count. That is the false-green pin. What lives ONLY here,
+and therefore only runs when a human runs it, is the single-runner pin, the
+dispositions arithmetic check, and the disposition-coverage gate.
+
+A second thing this module cannot see: jscpd matches token sequences, so a
+concept duplicated in different syntax is invisible to it and to every gate
+below. See the banner in ``duplication_dispositions.toml``.
+
 These tests exist because ``dev/audit/report.py`` once reported the duplication
 dimension GREEN ("no clones found") on a tree carrying 65 real clones. The lie
 had two independent causes, and both are pinned here:
