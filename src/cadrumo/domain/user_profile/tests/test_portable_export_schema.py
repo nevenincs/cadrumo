@@ -79,9 +79,9 @@ def _campaign_record() -> UserProfileRecord:
 
 
 def test_portable_export_carries_campaign_schema_additions_at_v3() -> None:
-    """The export subsumes every campaign schema addition with no version bump.
+    """The export subsumes every recent schema addition with no version bump.
 
-    Proves the S30 finding: because ``UserProfilePortableExport`` composes the
+    Because ``UserProfilePortableExport`` composes the
     whole :class:`UserProfileRecord` through the ``profile`` field and pydantic
     serialises it generically, the new divergence facts, descendant facts, and
     the ``SETUP_INCOMPLETE`` status flow through structurally. Under the
