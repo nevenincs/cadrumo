@@ -75,7 +75,7 @@ from ...core.config import load_settings
 from ...core.logging import get_logger
 from ...core.time import now as _now
 from ...domain.user_profile import ProfileNotFoundError, UserProfileError
-from ._profile_pointer_transaction import active_profile_pointer_transaction
+from ._profile_pointer_transaction import ActiveProfilePointerTransaction, active_profile_pointer_transaction
 
 if TYPE_CHECKING:
     from ...adapters.persistence.storage.master_key import MasterKeyProvider
@@ -240,7 +240,7 @@ def resume_active_profile_session(
             storage_root=storage_root,
         )
     finally:
-        from ...adapters.persistence.storage.master_key._zeroise import zeroise
+        from ...adapters.persistence.storage.master_key import zeroise
 
         zeroise(dek_buffer)
 
@@ -294,7 +294,7 @@ def _persist_advanced_idle_deadline(
             type(exc).__name__,
         )
     finally:
-        from ...adapters.persistence.storage.master_key._zeroise import zeroise
+        from ...adapters.persistence.storage.master_key import zeroise
 
         zeroise(key_buffer)
 
@@ -491,7 +491,7 @@ def _authenticate_or_record_failure(
     bucket_id: str,
     storage_root: Path,
     now: datetime,
-    pointer_transaction,
+    pointer_transaction: ActiveProfilePointerTransaction,
     prior_pointer: bytes | None,
 ) -> BucketSession:
     """Unwrap the key material and bind the session for the whole process.
@@ -522,8 +522,8 @@ def _authenticate_or_record_failure(
         UnsecuredMasterKeyProvider,
         load_or_mint_bucket_dek,
         refuse_unsecured_bucket_with_real_profile,
+        zeroise,
     )
-    from ...adapters.persistence.storage.master_key._zeroise import zeroise
 
     try:
         key_bytes = provider.get_master_key()

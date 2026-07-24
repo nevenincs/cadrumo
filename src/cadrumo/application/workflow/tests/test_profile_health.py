@@ -244,5 +244,5 @@ def test_manifest_without_status_is_not_backfilled_from_profile_record(tmp_path:
 
         assert broken.status == "manifest_unreadable"
         assert broken.repairable_by_clearing_pointer is False
-        assert broken.next_action == "unset CADRUMO_ACTIVE_PROFILE or switch to a readable profile"
+        assert broken.next_action == "re-run without --profile, or pass --profile a readable profile"
         assert "status = " not in target.read_text(encoding="utf-8")

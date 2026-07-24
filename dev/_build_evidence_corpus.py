@@ -25,7 +25,7 @@ _MAX_BYTES = 4_000_000
 
 def _api(params: dict[str, str]) -> dict[str, object]:
     url = "https://commons.wikimedia.org/w/api.php?" + urllib.parse.urlencode(params)
-    req = urllib.request.Request(url, headers={"User-Agent": _UA})  # noqa: S310 — https Commons API
+    req = urllib.request.Request(url, headers={"User-Agent": _UA})  # https Commons API
     with urllib.request.urlopen(req, timeout=30) as resp:  # noqa: S310
         return json.loads(resp.read().decode(_UTF_8))
 

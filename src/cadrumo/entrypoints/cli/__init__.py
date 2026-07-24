@@ -29,6 +29,8 @@ import typer
 if TYPE_CHECKING:
     import click
 
+    from ...core import OptionalExtra
+
     # Type-checking-only: gives static consumers of the lazy `command_schema_refs`
     # re-export (below, via `__getattr__`) its real signature without paying the
     # eager registry-parse import cost at runtime -- this line never executes.
@@ -58,8 +60,8 @@ from ._command_suggestions import (
     register_lazy_subcommand as _register_lazy_subcommand,
 )
 from ._common import _FORMAT_TEXT, _emit_envelope
+from ._errors import CliCommandGroupUnavailableError as _CliCommandGroupUnavailableError
 from ._errors import decorate_typer_app as _decorate_typer_app
-from ._errors import write_stderr as _write_stderr
 from ._language_argv import apply_language_argv_to_environment as _apply_language_argv_to_environment
 from ._log_levels import apply_to_root_logger as _apply_to_root_logger
 from ._log_levels import resolve_log_level as _resolve_log_level
@@ -220,7 +222,7 @@ def _normalize_root_active_profile(ctx: typer.Context) -> None:
     """Normalize the ambient active-profile label to its UUID for storage routing.
 
     No explicit ``--profile``: the active profile comes from the
-    ``CADRUMO_ACTIVE_PROFILE`` env override / pointer. Normalize a display-name
+    ``active-profile`` pointer file. Normalize a display-name
     value to its UUID so the core storage-route resolver (UUID-only) resolves it
     — an operator only knows the label, never the UUID. Bootstrap-exempt recovery
     verbs must not read bucket manifests here: they are the surfaces operators use
@@ -329,13 +331,13 @@ def _activate_profile_override(ctx: typer.Context, profile: str) -> None:
 
 
 def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
-    """Normalize a display-name ``CADRUMO_ACTIVE_PROFILE`` to its UUID bucket id.
+    """Normalize a display-name active-profile selection to its UUID bucket id.
 
     An operator addresses a profile by the label they chose at ``profile
     create``; the immutable UUID bucket id is never surfaced to them. When no
     ``--profile`` flag is given, the active profile is resolved from the
-    ``CADRUMO_ACTIVE_PROFILE`` env override (the highest-precedence rung): if that
-    value is a display LABEL rather than a UUID bucket directory, the core
+    ``active-profile`` pointer file: if that value is a display LABEL rather
+    than a UUID bucket directory, the core
     storage-route resolver — which keys directly on ``buckets/<value>`` — would
     hard-miss with a "no registered bucket manifest" refusal on every
     profile-bound command. Resolve the label to its UUID through the single
@@ -399,15 +401,24 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     Three outcomes:
 
     - Bootstrap-exempt verbs (``profile create``, ``profile import``,
-      ``config repair`` family) run without a session — return early.
+      ``config login`` / ``config logout``, ``config repair`` family) run
+      without a session — return early.
     - No active profile resolves — return without opening a session.
       Each non-exempt verb carries its own
       ``resolve_active_bucket_id() is None`` guard that refuses with a
       translated message; opening a session here against an absent
       per-bucket database would pre-empt that cleaner per-verb refusal
       and break the bare-invocation landing card.
-    - An active profile resolves — open its bucket session (unless one
-      is already active) so the verb body can decrypt stored records.
+    - An active profile resolves — RESUME its persisted login session so
+      the verb body can decrypt stored records, or refuse instructively.
+
+    The session is resumed, never implicitly unlocked. This callback used
+    to enter the master-key provider directly, which on the file backend
+    prompted for (or read) the passphrase on EVERY command and on the
+    keyring backend unlocked silently with no authentication gate at all.
+    Authentication is now a deliberate act — ``aeat config login`` — and
+    every other verb either resumes that login's still-valid session or
+    refuses, naming the verb that fixes it.
 
     The per-verb guards remain the primary refusal surface. This root
     callback adds only one fail-closed guard before the verb body: a
@@ -423,7 +434,7 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     this fallback an in-process invocation would be misclassified as
     bare and the session would never open.
     """
-    from ...adapters.persistence.storage import get_master_key_provider, has_active_bucket_session
+    from ...adapters.persistence.storage import has_active_bucket_session
     from ...application.storage_write_policy import inspect_storage_write_policy
     from ...core import resolve_active_bucket_id
     from ._bootstrap_exempt import is_bootstrap_exempt
@@ -461,7 +472,7 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
         return
     if exempt:
         return
-    ctx.with_resource(get_master_key_provider())
+    _resume_profile_session_or_refuse(ctx, active_bucket_id)
     # The active profile's encrypted record is only decryptable once the
     # bucket session above is open. ``output_language()`` is cached, and
     # its cache key (env vars + `.env` mtime) does not vary when a
@@ -472,6 +483,70 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     from ...core.i18n import clear_output_language_cache
 
     clear_output_language_cache()
+
+
+#: Persisted-session refusal reasons that mean "this operator never logged
+#: in", as opposed to "a login existed and has since lapsed". The two get
+#: different operator copy: one is an instruction, the other is news.
+_LOGGED_OUT_REFUSALS: frozenset[str] = frozenset({"absent", "keychain_entry_missing"})
+
+
+def _resume_profile_session_or_refuse(ctx: typer.Context, bucket_id: str) -> None:
+    """Resume the persisted login session, or refuse naming ``aeat config login``.
+
+    Fail-closed: the application resume authority deletes stale artefacts
+    and reports a typed reason, and this callback opens nothing on any
+    refusal branch. The refusal is a BLOCKING failure, so it raises and
+    renders through the stderr error document (which shares the envelope
+    spine and carries the next-verb ``suggestion``) rather than riding the
+    non-blocking ``notices`` channel.
+
+    One sanctioned escape hatch survives: a configured
+    ``CADRUMO_SECRET_PASSPHRASE`` is the headless/CI channel and keeps
+    working process-scoped, needing neither a pointer nor a persisted
+    session — exactly today's file-backend behavior. That is not a bypass:
+    the passphrase IS the authentication factor, supplied non-
+    interactively instead of at a prompt. An operator who has not supplied
+    it — every interactive operator, and every keyring-backend host — meets
+    the gate and must log in.
+    """
+    from ...adapters.persistence.storage import get_master_key_provider
+    from ...application.user_profile import resume_active_profile_session
+    from ._errors import CliRefusedBoundaryError
+
+    refusal = resume_active_profile_session(bucket_id=bucket_id)
+    if refusal is None:
+        return
+    if _headless_secret_channel_active():
+        ctx.with_resource(get_master_key_provider())
+        return
+    reason = str(refusal.value)
+    if reason in _LOGGED_OUT_REFUSALS:
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.errors.profile_session_absent",
+            context={"reason": reason},
+            suggestion="aeat config login",
+        )
+    raise CliRefusedBoundaryError(
+        translated_message="cli.config.errors.profile_session_expired",
+        context={"reason": reason},
+        suggestion="aeat config login",
+    )
+
+
+def _headless_secret_channel_active() -> bool:
+    """Return whether the sanctioned headless secret channel is configured.
+
+    ``CADRUMO_SECRET_PASSPHRASE`` is the project's declared non-interactive
+    secret channel (secrets, never selection — selection stays with
+    ``--profile`` or the pointer). An environment that carries it has
+    already supplied the authentication factor, so the file backend
+    unlocks process-scoped exactly as it does today; an environment that
+    does not meets the login gate.
+    """
+    from ...core.config import load_settings
+
+    return load_settings().cadrumo_secret_passphrase is not None
 
 
 def _is_unregistered_profile_status_probe(verb_path: str | None, active_bucket_id: str) -> bool:
@@ -695,29 +770,71 @@ def _full_invocation_tokens() -> tuple[str, ...]:
     return tuple(sys.argv[1:])
 
 
-def _import_failure_surface(name: str, error: ModuleNotFoundError) -> typer.Typer:
+def _surface_for_import_failure(name: str, error: ModuleNotFoundError) -> typer.Typer:
+    """Classify ``error`` and either degrade gracefully or refuse loudly.
+
+    A command group's module imports lazily, so its failure has to be
+    classified before it can be reported. Exactly one class of failure may be
+    presented as an unavailable command: the missing module belongs to a
+    registered :data:`~core.OPTIONAL_EXTRAS` capability package, which a bare
+    install legitimately omits. The group then answers with a placeholder whose
+    help and refusal both name the extra and its install command.
+
+    Every other missing module is a REQUIRED dependency (or a first-party
+    module) whose absence means a broken installation, so it raises
+    :exc:`CliCommandGroupUnavailableError` here — during command resolution,
+    before any subcommand can be dispatched — rather than degrading. Presenting
+    it as an unavailable command would convert a hard dependency failure into an
+    invisible capability loss: the whole subtree would answer ``--help`` with a
+    plausible placeholder and every subcommand with "no such command", naming no
+    cause. Import failures that are not :exc:`ModuleNotFoundError` at all (a
+    syntax error, a circular import, a module-level bug) never reach this
+    helper; they propagate to the crash boundary unchanged.
+
+    Args:
+        name: The command-group name whose subtree failed to load.
+        error: The import failure raised by the group's module.
+
+    Returns:
+        A placeholder Typer group, only for a registered optional extra.
+
+    Raises:
+        CliCommandGroupUnavailableError: If the missing module is not owned by
+            a registered optional extra.
+    """
+    from ...core import optional_extra_for_module
+
+    missing = _missing_dependency_name(error)
+    extra = optional_extra_for_module(missing)
+    if extra is None:
+        # Redact only the operator-facing value: classification above must see
+        # the real module name, but a module name can carry a profile id.
+        raise _CliCommandGroupUnavailableError(group=name, module=_redact_for_cli_output(missing)) from error
+    return _optional_extra_surface(name, extra)
+
+
+def _optional_extra_surface(name: str, extra: OptionalExtra) -> typer.Typer:
+    """Return the placeholder group for a legitimately-absent optional extra.
+
+    The group's help names the feature and its install command, and invoking it
+    refuses through :exc:`~core.MissingOptionalExtraError` — the canonical
+    optional-extra refusal, which carries the ``pip install`` remedy — so
+    neither surface is a bare "unavailable".
+    """
     failed_app = typer.Typer(
         name=name,
-        help=tr("cli.root.unavailable_app_help"),
+        help=tr("cli.root.unavailable_optional_extra_help", feature=extra.feature, install_hint=extra.install_hint),
         no_args_is_help=False,
         invoke_without_command=True,
     )
 
     @failed_app.callback()
     def _failed() -> None:
-        _emit_startup_import_error(error)
+        from ...core import MissingOptionalExtraError
+
+        raise MissingOptionalExtraError(extra)
 
     return failed_app
-
-
-def _emit_startup_import_error(error: ModuleNotFoundError) -> None:
-    _write_stderr(_startup_import_error_text(error))
-    raise typer.Exit(code=1)
-
-
-def _startup_import_error_text(error: ModuleNotFoundError) -> str:
-    dependency = _redact_for_cli_output(_missing_dependency_name(error))
-    return tr("cli.root.startup_import_error", dependency=dependency) + "\n"
 
 
 def _missing_dependency_name(error: ModuleNotFoundError) -> str:
@@ -779,11 +896,10 @@ _LAZY_COMMAND_MODULES: frozenset[str] = frozenset(
 def _lazy_loader(module_name: str, group_label: str) -> Callable[[], typer.Typer]:
     """Build a deferred factory importing ``module_name``'s ``app`` Typer.
 
-    A :exc:`ModuleNotFoundError` from a missing optional dependency is
-    converted into a failure-surface Typer that refuses cleanly and
-    points the operator at ``aeat config repair`` — the same behaviour
-    the eager startup path produced, now deferred to the first time the
-    subtree is actually invoked.
+    A :exc:`ModuleNotFoundError` is handed to
+    :func:`_surface_for_import_failure`, which degrades to a placeholder group
+    only when the missing module belongs to a registered optional extra and
+    otherwise refuses loudly. Every other import failure propagates untouched.
     """
 
     def _factory() -> typer.Typer:
@@ -795,7 +911,7 @@ def _lazy_loader(module_name: str, group_label: str) -> Callable[[], typer.Typer
             # Module names are constrained to `_LAZY_COMMAND_MODULES`.
             module = import_module(module_name, __name__)  # nosemgrep
         except ModuleNotFoundError as error:
-            return _import_failure_surface(group_label, error)
+            return _surface_for_import_failure(group_label, error)
         return module.app
 
     return _factory
@@ -1041,13 +1157,12 @@ def _metadata_state_isolation(arguments: list[str]) -> Iterator[None]:
         yield
         return
 
-    keys = ("CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_DATABASE_URL", "CADRUMO_ACTIVE_PROFILE")
+    keys = ("CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_DATABASE_URL")
     saved = {key: os.environ.get(key) for key in keys}
     with TemporaryDirectory(prefix="cadrumo-cli-metadata-") as temporary_root:
         root = Path(temporary_root)
         os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = str(root)
         os.environ["CADRUMO_DATABASE_URL"] = f"sqlite:///{(root / 'cadrumo.db').as_posix()}"
-        os.environ["CADRUMO_ACTIVE_PROFILE"] = "metadata"
         try:
             yield
         finally:

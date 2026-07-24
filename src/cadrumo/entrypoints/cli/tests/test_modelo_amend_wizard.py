@@ -335,10 +335,7 @@ def _permitted_kind_choice_values(
                 run_token=run_token,
             )
             kind_page = next(
-                page
-                for section in definition.sections
-                for page in section.items
-                if page.id == _KIND_PAGE_ID
+                page for section in definition.sections for page in section.items if page.id == _KIND_PAGE_ID
             )
             assert isinstance(kind_page, FlowPage)
             return tuple(choice.value for choice in kind_page.choices)

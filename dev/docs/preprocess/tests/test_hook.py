@@ -37,6 +37,10 @@ _REPO_ROOT = Path(__file__).resolve().parents[4]
 _RULE_FILE = _REPO_ROOT / ".vaultragpreprocess.toml"
 _CORPUS = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus"
 _HOOK_COMMAND = "python -m dev.docs.preprocess.hook {path}"
+#: The upstream ``.vaultragpreprocess.toml`` schema major the rule file
+#: declares. Pinned so an upstream migration requirement fails here rather
+#: than silently degrading every index job for this root to zero rules.
+_RULE_SCHEMA_VERSION = 2
 
 
 def _smallest(pattern: str) -> Path:
@@ -49,7 +53,7 @@ def _smallest(pattern: str) -> Path:
 def test_rule_file_is_wellformed_and_targets_the_hook() -> None:
     """Every rule routes a corpus pattern through the hook adapter command."""
     data = tomllib.loads(_RULE_FILE.read_text(encoding="utf-8"))
-    assert data["version"] == 1
+    assert data["version"] == _RULE_SCHEMA_VERSION == 2
     rules = data["rule"]
     assert len(rules) == 5
     for rule in rules:
@@ -65,6 +69,35 @@ def test_rule_file_is_wellformed_and_targets_the_hook() -> None:
         "src/cadrumo/_data/corpus/**/*.xlsm",
         "src/cadrumo/_data/corpus/**/*.xlsx",
     }
+
+
+def test_every_rule_owns_the_code_index_and_versions_its_extractor() -> None:
+    """Schema-2 ownership: corpus text stays in the code index, versioned.
+
+    ``target`` is what admits these suffixes at all (none is a conventional
+    source extension), and ``code`` is the domain the terminology sweep, the
+    golden-query miss-rate runs, and ``_reindex`` all read. A rule's
+    ``extractor_version`` must equal the declared version of the extractor
+    family that owns its suffix, so an extractor bump invalidates the
+    upstream preprocess cache instead of serving stale extractions.
+    """
+    from dev.docs.preprocess._html import HTML_EXTRACTOR_VERSION
+    from dev.docs.preprocess._pdf import PDF_EXTRACTOR_VERSION
+    from dev.docs.preprocess._workbook import WORKBOOK_EXTRACTOR_VERSION
+
+    owning_version = {
+        ".html": HTML_EXTRACTOR_VERSION,
+        ".pdf": PDF_EXTRACTOR_VERSION,
+        ".xls": WORKBOOK_EXTRACTOR_VERSION,
+        ".xlsm": WORKBOOK_EXTRACTOR_VERSION,
+        ".xlsx": WORKBOOK_EXTRACTOR_VERSION,
+    }
+    rules = tomllib.loads(_RULE_FILE.read_text(encoding="utf-8"))["rule"]
+    for rule in rules:
+        pattern = cast(str, rule["pattern"])
+        assert rule["target"] == "code", pattern
+        suffix = Path(pattern).suffix.lower()
+        assert rule["extractor_version"] == owning_version[suffix], pattern
 
 
 def test_every_rule_pattern_matches_committed_sources() -> None:

@@ -36,7 +36,12 @@ from .. import (
     export_profile_bundle,
     profile_storage_session,
 )
-from .._bundle_export_contracts import _CATEGORY_BY_BUNDLE_FIELD, bundle_data_categories
+from .._bundle_export_contracts import (
+    _CARRIED_NAMESPACE_DERIVED_BUNDLE_FIELDS,
+    _CATEGORY_BY_BUNDLE_FIELD,
+    _ENVELOPE_METADATA_BUNDLE_FIELDS,
+    bundle_data_categories,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -174,13 +179,15 @@ def test_data_categories_are_derived_from_serialized_bundle_fields(tmp_path: Pat
 
         expected = bundle_data_categories(bundle)
         assert result.data_categories == expected
-        # Every category traces to a serialized field or a carried namespace, never a static list.
-        schema_categories = {
-            _CATEGORY_BY_BUNDLE_FIELD[field]
-            for field in type(bundle).model_fields
-            if field in _CATEGORY_BY_BUNDLE_FIELD
-        }
-        assert schema_categories <= set(result.data_categories)
+        # Walk the FULL serialized field set, filtering nothing: a field that is
+        # neither mapped nor explicitly classified raises KeyError here rather
+        # than being quietly skipped.
+        for field_name in type(bundle).model_fields:
+            if field_name in _ENVELOPE_METADATA_BUNDLE_FIELDS:
+                continue
+            if field_name in _CARRIED_NAMESPACE_DERIVED_BUNDLE_FIELDS:
+                continue
+            assert _CATEGORY_BY_BUNDLE_FIELD[field_name] in result.data_categories
         assert "profile_identity_and_facts" in result.data_categories
 
 
@@ -196,6 +203,58 @@ def test_carried_registry_namespaces_surface_as_derived_categories() -> None:
     categories = bundle_data_categories(bundle)
     assert "secure_object_namespace:cadrumo.evidence.attachments" in categories
     assert "profile_identity_and_facts" in categories
+
+
+class _BundleWithAnUnclassifiedField(UserProfilePortableExport):
+    """A future portable-bundle schema carrying a field nobody classified.
+
+    Declared as a real pydantic subclass so the derivation walks a genuine
+    ``model_fields`` set containing an unmapped field, exactly as it would the
+    day a field is added to :class:`UserProfilePortableExport` itself.
+    """
+
+    biometric_records: tuple[str, ...] = ()
+
+
+def test_every_portable_bundle_field_carries_a_declared_disclosure_classification() -> None:
+    # Enumerated from the live schema, not from the map: a field added to
+    # UserProfilePortableExport without a classification fails here loudly
+    # instead of silently narrowing the subject-access category set.
+    classified = (
+        set(_CATEGORY_BY_BUNDLE_FIELD) | _ENVELOPE_METADATA_BUNDLE_FIELDS | _CARRIED_NAMESPACE_DERIVED_BUNDLE_FIELDS
+    )
+    schema_fields = set(UserProfilePortableExport.model_fields)
+    assert schema_fields - classified == set()
+    # The three classification sets are disjoint and none names a field the
+    # schema no longer has, so a removed field cannot leave a stale entry.
+    assert classified <= schema_fields
+    assert _ENVELOPE_METADATA_BUNDLE_FIELDS.isdisjoint(_CATEGORY_BY_BUNDLE_FIELD)
+    assert _CARRIED_NAMESPACE_DERIVED_BUNDLE_FIELDS.isdisjoint(_CATEGORY_BY_BUNDLE_FIELD)
+    assert _ENVELOPE_METADATA_BUNDLE_FIELDS.isdisjoint(_CARRIED_NAMESPACE_DERIVED_BUNDLE_FIELDS)
+
+
+def test_an_unclassified_bundle_field_refuses_instead_of_vanishing_from_the_categories() -> None:
+    # Non-tautology proof for the gate above: with a real unmapped field on the
+    # schema the derivation must REFUSE, naming the field. Silently dropping it
+    # is what would let the subject-access notice claim completeness it cannot
+    # back.
+    record = UserProfileRecord.model_construct(profile_id="p", display_name="P", facts=())
+    bundle = _BundleWithAnUnclassifiedField.model_construct(
+        bundle_schema_version=3,
+        profile=record,
+        biometric_records=("iris",),
+    )
+
+    with pytest.raises(ProfileExportError) as refusal:
+        bundle_data_categories(bundle)
+
+    assert refusal.value.context is not None
+    assert refusal.value.context["unclassified_fields"] == "biometric_records"
+    # The same construction over the real schema derives normally, so the
+    # refusal is caused by the unclassified field and not by the shape of the
+    # bundle under test.
+    fully_classified = UserProfilePortableExport.model_construct(bundle_schema_version=3, profile=record)
+    assert "profile_identity_and_facts" in bundle_data_categories(fully_classified)
 
 
 def test_encrypted_transport_decrypts_to_the_canonical_cleartext_bundle(tmp_path: Path) -> None:

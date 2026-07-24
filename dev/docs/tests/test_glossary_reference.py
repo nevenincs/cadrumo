@@ -143,10 +143,7 @@ def test_term_lines_are_declared_surfaces_and_aliases_share_one_entry() -> None:
     # run of 2+ consecutive term lines exists. Guarded on the source so removing
     # every alias does not falsely red this gate.
     source_has_alias = any(
-        len(
-            {t.label for t in section.terms if t.term_status in (TermStatus.PREFERRED, TermStatus.ADMITTED)}
-        )
-        >= 2
+        len({t.label for t in section.terms if t.term_status in (TermStatus.PREFERRED, TermStatus.ADMITTED)}) >= 2
         for concept in handbook.concepts
         if concept.lifecycle is ConceptLifecycle.APPROVED
         for section in concept.languages
@@ -225,9 +222,7 @@ def test_broader_related_relations_render_as_term_cross_references() -> None:
         if ref != concept.concept_id and ref in approved_ids
     )
     rendered_edges = sum(
-        len(re.findall(r":term:`[^`]+`", line))
-        for line in rst.splitlines()
-        if "Related:" in line or "Broader:" in line
+        len(re.findall(r":term:`[^`]+`", line)) for line in rst.splitlines() if "Related:" in line or "Broader:" in line
     )
     assert expected_edges > 0, "no approved->approved relation exists to exercise the renderer"
     assert rendered_edges == expected_edges

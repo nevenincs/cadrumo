@@ -180,7 +180,7 @@ async def close_async_resources(
     *resources: AsyncCloseable | None,
     task_name: str,
     cancellation: asyncio.CancelledError | None = None,
-    primary_error: BaseException | None | _AutoPrimaryException = _AUTO_PRIMARY_EXCEPTION,
+    primary_error: BaseException | _AutoPrimaryException | None = _AUTO_PRIMARY_EXCEPTION,
     close_attempts: int = 1,
 ) -> None:
     """Close every resource without replacing an exception already unwinding.

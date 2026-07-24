@@ -47,16 +47,22 @@ def _strip_just_noise(output: str) -> str:
 
 def run_gate(name: str) -> GateResult:
     """Run a single ``just`` gate recipe, capturing combined output."""
+    # Decode explicitly: `text=True` alone uses the locale preferred encoding,
+    # which on a Windows console is cp1252. The wrapped gates emit UTF-8, so the
+    # reader thread died on the first non-cp1252 byte and the dashboard lost the
+    # whole run rather than reporting the gate's verdict.
     result = subprocess.run(
         ["just", name],
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         check=False,
     )
     return GateResult(
         name=name,
         returncode=result.returncode,
-        output=_strip_just_noise(result.stdout + result.stderr),
+        output=_strip_just_noise((result.stdout or "") + (result.stderr or "")),
     )
 
 
@@ -69,15 +75,30 @@ def main() -> int:
     if not failed:
         return 0
 
-    print(f"check-all: {len(failed)} of {len(results)} gates failed\n")
+    _emit(f"check-all: {len(failed)} of {len(results)} gates failed\n")
     for result in failed:
-        print(f"FAIL  {result.name}")
+        _emit(f"FAIL  {result.name}")
         if result.output:
-            print(result.output)
-        print()
+            _emit(result.output)
+        _emit("")
     if passed:
-        print("passed: " + ", ".join(r.name for r in passed))
+        _emit("passed: " + ", ".join(r.name for r in passed))
     return 1
+
+
+def _emit(line: str) -> None:
+    """Print a dashboard line without tripping a narrow console encoding.
+
+    The replay carries the wrapped tools' UTF-8, which a cp1252 console
+    cannot encode, so printing the dashboard raised instead of reporting
+    which gate failed.
+    """
+    encoding = sys.stdout.encoding or ""
+    if encoding.lower().replace("-", "") != "utf8":
+        sys.stdout.buffer.write(f"{line}\n".encode(errors="replace"))
+        sys.stdout.flush()
+        return
+    print(line)
 
 
 if __name__ == "__main__":

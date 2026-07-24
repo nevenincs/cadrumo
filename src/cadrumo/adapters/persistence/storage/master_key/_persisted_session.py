@@ -28,6 +28,20 @@ require transient immutable ``bytes`` views whose lifetime the garbage
 collector owns — the same best-effort contract
 :class:`BucketSession` documents for the live in-process buffers.
 
+Keychain failures are normalised to :class:`KeyringUnavailableError` on every
+path, including failures raised OUTSIDE the ``keyring`` library's own
+exception hierarchy. A backend can pass the class-level usability probe and
+still fail at call time: the Windows credential store raises
+``win32ctypes.pywin32.pywintypes.error`` (for example ``WinError 1312``, "a
+specified logon session does not exist") from a process whose logon session
+the credential manager cannot reach, and that type derives directly from
+``Exception`` -- it is neither a ``KeyringError`` nor an ``OSError``, so a
+guard naming either lets it escape as a raw traceback. Normalising here is
+what makes the documented degradation reachable: no persisted artefact, a
+process-scoped login, and a warning to the operator. The error type is caught
+structurally rather than imported by name so this module carries no
+platform-specific import.
+
 See Also:
     :class:`~adapters.persistence.storage.master_key.BucketSession`
         The in-process materialisation this persisted record re-opens.
@@ -377,6 +391,12 @@ def store_profile_session_key(*, bucket_id: str, session_key: bytes) -> None:
         roundtrip = keyring.get_password(PROFILE_SESSION_KEYCHAIN_SERVICE, bucket_id)
     except KeyringError as exc:
         raise KeyringUnavailableError(f"OS keychain refused the profile-session key write: {exc}") from exc
+    except KeyringUnavailableError:
+        raise
+    except Exception as exc:
+        raise KeyringUnavailableError(
+            f"OS keychain raised unexpectedly on the profile-session key write: {exc}",
+        ) from exc
     if roundtrip != encoded:
         delete_profile_session_key(bucket_id=bucket_id)
         raise KeyringUnavailableError(
@@ -413,6 +433,12 @@ def load_profile_session_key(*, bucket_id: str) -> bytes | None:
         stored = keyring.get_password(PROFILE_SESSION_KEYCHAIN_SERVICE, bucket_id)
     except KeyringError as exc:
         raise KeyringUnavailableError(f"OS keychain refused the profile-session key read: {exc}") from exc
+    except KeyringUnavailableError:
+        raise
+    except Exception as exc:
+        raise KeyringUnavailableError(
+            f"OS keychain raised unexpectedly on the profile-session key read: {exc}",
+        ) from exc
     if stored is None:
         return None
     try:
@@ -446,14 +472,19 @@ def delete_profile_session_key(*, bucket_id: str) -> None:
         raise StorageValidationError("bucket_id must be non-empty")
     try:
         import keyring
-        from keyring.errors import KeyringError, PasswordDeleteError
+        from keyring.errors import PasswordDeleteError
     except ImportError:
         return
     try:
         keyring.delete_password(PROFILE_SESSION_KEYCHAIN_SERVICE, bucket_id)
     except PasswordDeleteError:
         return
-    except KeyringError as exc:
+    except Exception as exc:
+        # Deliberately broad: a delete that cannot complete must never block
+        # logout, and the backend may raise an OS-level error outside the
+        # keyring hierarchy (see the module note on Windows credential
+        # errors). The on-disk record deletion alone already renders a stale
+        # keychain key useless, so swallowing here loses no security.
         _log.debug(
             "profile-session keychain delete failed bucket_id=%s error_type=%s",
             bucket_id,

@@ -161,11 +161,11 @@ def resolve_profile_bucket(
 ) -> ProfileBucketPointer | None:
     """Resolve a profile identifier that may be a UUID bucket id OR a display label.
 
-    The active-profile precedence chain (``CADRUMO_ACTIVE_PROFILE`` env var, the
-    ``active-profile`` pointer file) and operator input both carry whichever
+    The active-profile precedence chain (the in-process ``--profile``
+    override, the ``active-profile`` pointer file) and operator input both carry whichever
     identifier the operator knows. An operator addresses a profile by the
     label they chose at ``profile create`` — they never see the immutable
-    UUIDv4 bucket id — so ``CADRUMO_ACTIVE_PROFILE=<label>`` is a natural,
+    UUIDv4 bucket id — so ``--profile <label>`` is a natural,
     intended operator action. Resolving the value as a UUID bucket directory
     only would hard-miss on a label (``buckets/<label>`` does not exist),
     refusing every profile-scoped command with a "no manifest" error.

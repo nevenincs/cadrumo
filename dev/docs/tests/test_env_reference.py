@@ -32,9 +32,15 @@ _KEY_RE = re.compile(r"^#?\s*([A-Z][A-Z0-9_]+)=", re.MULTILINE)
 
 
 def _settings_env_names() -> frozenset[str]:
+    """Return the names an environment source can actually populate.
+
+    Keyed on the model's own environment inventory rather than every field,
+    so a field whose environment source has been severed is neither demanded
+    in the template nor reported as a dead knob.
+    """
     from cadrumo.core.config import Settings
 
-    return frozenset(name.upper() for name in Settings.model_fields)
+    return frozenset(Settings.env_var_names())
 
 
 def test_generated_page_is_fresh() -> None:

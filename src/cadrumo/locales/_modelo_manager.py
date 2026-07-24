@@ -956,9 +956,7 @@ def _aligned_table(current: dict[str, str], *, expected_keys: set[str], valid_ke
     from both sets -- is still dropped, as intended.
     """
     would_wipe = sorted(
-        key
-        for key, value in current.items()
-        if value != key and key not in valid_keys and key in expected_keys
+        key for key, value in current.items() if value != key and key not in valid_keys and key in expected_keys
     )
     if would_wipe:
         raise ModeloLocaleError(

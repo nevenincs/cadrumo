@@ -207,7 +207,9 @@ class TestBucketIsolation:
             secondary_bucket_id=_SECONDARY_PROFILE_BUCKET_ID,
         ) as runtime:
             primary_svc = ApoderadoService(settings=runtime.primary.settings)
-            primary_svc.configure(bucket_id=runtime.primary.bucket_id, represented_nif="12345678Z", scope_tokens=("IVA",))
+            primary_svc.configure(
+                bucket_id=runtime.primary.bucket_id, represented_nif="12345678Z", scope_tokens=("IVA",)
+            )
 
             with runtime.switch_to_secondary():
                 secondary_svc = ApoderadoService()

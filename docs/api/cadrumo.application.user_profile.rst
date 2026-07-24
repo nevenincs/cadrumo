@@ -32,6 +32,7 @@ Submodules
    cadrumo.application.user_profile._keys_validation
    cadrumo.application.user_profile._language_resolver
    cadrumo.application.user_profile._lifecycle
+   cadrumo.application.user_profile._login_session
    cadrumo.application.user_profile._orchestration
    cadrumo.application.user_profile._preflight
    cadrumo.application.user_profile._profile_pointer_transaction

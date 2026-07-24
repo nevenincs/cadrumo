@@ -296,8 +296,14 @@ def test_config_help_exposes_first_class_custody_verbs(tmp_path: Path) -> None:
         assert verb in _combined_output(help_result)
 
 
-def test_profile_selection_precedence_uses_explicit_env_then_pointer(tmp_path: Path) -> None:
-    """CLI profile reads resolve explicit name, env override, then pointer default."""
+def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: Path) -> None:
+    """CLI profile reads resolve explicit name, then --profile, then the pointer.
+
+    The environment holds no rung of this chain. A stale exported
+    ``CADRUMO_ACTIVE_PROFILE`` is carried through every invocation below
+    precisely to prove it is inert: selection comes from ``--profile`` or the
+    pointer file, never from the shell.
+    """
 
     first = _run_cadrumo(
         tmp_path,
@@ -358,13 +364,20 @@ def test_profile_selection_precedence_uses_explicit_env_then_pointer(tmp_path: P
     assert pointer_default.returncode == 0, _combined_output(pointer_default)
     assert "display_name\tbeta" in pointer_default.stdout
 
-    env_default = _run_cadrumo(
+    # A set environment variable cannot displace the pointer: the pointer
+    # still selects beta even while the shell names alpha.
+    env_inert = _run_cadrumo(
         tmp_path,
         ("config", "profile", "show"),
         extra_env={"CADRUMO_ACTIVE_PROFILE": alpha_id},
     )
-    assert env_default.returncode == 0, _combined_output(env_default)
-    assert "display_name\talpha" in env_default.stdout
+    assert env_inert.returncode == 0, _combined_output(env_inert)
+    assert "display_name\tbeta" in env_inert.stdout
+
+    # The flag is the selection channel that does win over the pointer.
+    flag_default = _run_cadrumo(tmp_path, ("--profile", "alpha", "config", "profile", "show"))
+    assert flag_default.returncode == 0, _combined_output(flag_default)
+    assert "display_name\talpha" in flag_default.stdout
 
     explicit_name = _run_cadrumo(
         tmp_path,

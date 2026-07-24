@@ -907,12 +907,14 @@ def _pdf_record_heading_name(line: str) -> str | None:
 def _is_pdf_header(line: str) -> bool:
     normalised = line.upper()
     return (
-        ("POSICIONES" in normalised or "POSICIÓN" in normalised)
-        and "NATURALEZA" in normalised
-        and "DESCRIPCI" in normalised
-    ) or (
-        "Nº POSIC" in normalised and "LON" in normalised and "TIPO" in normalised and "DESCRIPCI" in normalised
-    ) or ("POSITIONS" in normalised and "NATURE" in normalised and "DESCRIPTION" in normalised)
+        (
+            ("POSICIONES" in normalised or "POSICIÓN" in normalised)
+            and "NATURALEZA" in normalised
+            and "DESCRIPCI" in normalised
+        )
+        or ("Nº POSIC" in normalised and "LON" in normalised and "TIPO" in normalised and "DESCRIPCI" in normalised)
+        or ("POSITIONS" in normalised and "NATURE" in normalised and "DESCRIPTION" in normalised)
+    )
 
 
 def _is_pdf_footer(line: str) -> bool:

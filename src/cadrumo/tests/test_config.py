@@ -395,22 +395,20 @@ class TestDatabaseUrlDerivation:
 
     def test_active_profile_derives_per_bucket_url(self, tmp_path: Path) -> None:
         """An active profile still derives the per-bucket SQLite URL; the
-        root-level fallback only applies when no bucket resolves."""
+        root-level fallback only applies when no bucket resolves.
+
+        The selection arrives through the in-process channel the ``--profile``
+        flag writes, because no environment source populates it.
+        """
         storage_root = tmp_path / "aeat-state"
         env_path = tmp_path / ".env"
         env_path.write_text(
-            "\n".join(
-                (
-                    f"CADRUMO_LOCAL_STORAGE_ROOT={storage_root.as_posix()}",
-                    "CADRUMO_ACTIVE_PROFILE=acme",
-                ),
-            )
-            + "\n",
+            f"CADRUMO_LOCAL_STORAGE_ROOT={storage_root.as_posix()}\n",
             encoding="utf-8",
         )
 
         with _isolated_aeat_env():
-            settings = self._isolated(env_path)()
+            settings = self._isolated(env_path)(cadrumo_active_profile="acme")
 
         expected = f"sqlite:///{(storage_root / 'buckets' / 'acme' / 'db' / 'cadrumo.db').as_posix()}"
         assert settings.cadrumo_database_url == expected

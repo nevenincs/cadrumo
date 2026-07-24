@@ -143,7 +143,9 @@ def test_interactive_command_threads_a_live_activator_when_unpinned(
     """The interactive command threads a working activator into the frontend runner."""
     tokens = list(_scripted_answers_for_individual_declaration())
     recorder: dict[str, object] = {}
-    command = build_wizard_command(SETUP_FLOW, mode="create", interactive_flow_runner=_capturing_runner(tokens, recorder))
+    command = build_wizard_command(
+        SETUP_FLOW, mode="create", interactive_flow_runner=_capturing_runner(tokens, recorder)
+    )
     app = typer.Typer()
     app.command()(command)
 
@@ -161,7 +163,9 @@ def test_interactive_command_omits_the_activator_when_language_is_flagged(
     """An explicit ``--output-language`` flag means no mid-walk activator is wired."""
     tokens = list(_scripted_answers_for_individual_declaration())
     recorder: dict[str, object] = {}
-    command = build_wizard_command(SETUP_FLOW, mode="create", interactive_flow_runner=_capturing_runner(tokens, recorder))
+    command = build_wizard_command(
+        SETUP_FLOW, mode="create", interactive_flow_runner=_capturing_runner(tokens, recorder)
+    )
     app = typer.Typer()
     app.command()(command)
 

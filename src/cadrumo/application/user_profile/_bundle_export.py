@@ -18,6 +18,11 @@ un-published; every crash window is reconciled without loss:
   ``PROFILE_EXPORTED`` event (idempotently, from the fixed ``event_occurred_at``)
   so no durably-published bundle is ever left without its audit event.
 
+Reconciliation is not an optional maintenance chore: :func:`export_profile_bundle`
+runs it before every publication, so the next export an operator performs -- to
+any destination, for any profile -- is what clears a previous crash's orphan
+journal and its leftover cleartext staged temp.
+
 The sealed recovery archive is a separate surface and is not folded in here.
 """
 
@@ -80,11 +85,14 @@ class PreparedProfileExport:
 def export_profile_bundle(request: ProfileBundleExportRequest) -> ProfileBundleExportResult:
     """Resolve, serialize, atomically publish, and record one profile export.
 
-    Holds one exclusive lock on the resolved target for the whole publication so
-    a concurrent export to the same file is excluded, then composes
-    :func:`prepare_profile_export` and :func:`publish_prepared_export`.
+    Reconciles any crash-interrupted prior publication BEFORE taking this
+    export's target lock (see :func:`_reconcile_crash_orphans_before_publication`),
+    then holds one exclusive lock on the resolved target for the whole
+    publication so a concurrent export to the same file is excluded, and
+    composes :func:`prepare_profile_export` and :func:`publish_prepared_export`.
     """
     journal = ProfileBundleExportJournalRepository()
+    _reconcile_crash_orphans_before_publication(journal)
     try:
         with exclusive_file_lock(request.destination):
             prepared = prepare_profile_export(request, journal=journal)
@@ -96,6 +104,43 @@ def export_profile_bundle(request: ProfileBundleExportRequest) -> ProfileBundleE
             "portable profile export could not publish its destination",
             context={"destination": str(request.destination)},
         ) from exc
+
+
+def _reconcile_crash_orphans_before_publication(
+    journal: ProfileBundleExportJournalRepository,
+) -> None:
+    """Sweep crash-interrupted prior publications before this export begins.
+
+    This is the production trigger for :func:`reconcile_prepared_exports`. The
+    journal repository is one storage-root-wide directory rather than a
+    per-target or per-profile store, so a single sweep here recovers EVERY crash
+    orphan left behind by any profile and any destination -- and the staged temp
+    is a sibling of the operator's own chosen destination, which nothing else
+    ever revisits.
+
+    Running the sweep here, before the target lock, is required rather than
+    merely convenient. The operation id is clock-free and derived from the
+    profile, the resolved target identity, and the purpose, so re-exporting to
+    the same target OVERWRITES the crashed run's journal -- and with it the only
+    record of where that run staged its cleartext ``.export-tmp``. Reconciling
+    first is what keeps those bundle bytes from being stranded on disk
+    indefinitely (``sensitive-financial-data-secure-storage-only``). Reconcile
+    also takes each target lock non-blocking, so it must run BEFORE this export
+    acquires its own destination lock: from inside that lock it would skip the
+    very operation it is here to clear.
+
+    A failure here never fails the new export. The unfinished work stays
+    journalled and is retried on the next publication, whereas refusing to
+    export because some older unrelated operation could not be finalised would
+    let one stale record block every future export.
+    """
+    try:
+        reconcile_prepared_exports(journal=journal)
+    except Exception:
+        get_logger(__name__).warning(
+            "profile export could not reconcile a crash-interrupted prior publication",
+            exc_info=True,
+        )
 
 
 def prepare_profile_export(
@@ -218,6 +263,10 @@ def reconcile_prepared_exports(
     journal: ProfileBundleExportJournalRepository | None = None,
 ) -> tuple[ProfileBundleExportOperation, ...]:
     """Reconcile crash-interrupted exports honestly in a fresh process.
+
+    :func:`export_profile_bundle` calls this before every publication (see
+    :func:`_reconcile_crash_orphans_before_publication`), so recovery happens on
+    the operator's next export rather than waiting for a maintenance verb.
 
     Each operation is reconciled only while holding the SAME per-destination lock
     a live :func:`export_profile_bundle` holds across its whole publication. An
