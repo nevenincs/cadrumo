@@ -51,7 +51,7 @@ _GUARDED_PREDICATE_PATHS: tuple[str, ...] = (
 )
 
 _UNGARDED_PREDICATE_PATHS: tuple[str, ...] = (
-    "config switch does-not-exist",
+    "config login does-not-exist",
     "app registry inspect",
     "app ledger list",
     "app ledger view tx",
@@ -225,7 +225,7 @@ def test_bootstrap_safe_probes_still_run_on_root_fallback_database(tmp_path: Pat
 
 
 def test_config_switch_remains_recovery_path_on_root_fallback_database(tmp_path: Path) -> None:
-    """`config switch` reaches profile resolution instead of the root-fallback guard."""
+    """`config login` reaches profile resolution instead of the root-fallback guard."""
 
     result = _run_cadrumo(tmp_path, ("config", "login", "does-not-exist"))
 

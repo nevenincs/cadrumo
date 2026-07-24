@@ -17,7 +17,7 @@ bucket-session helper that opens and activates a real
    (the ``touch`` contract).
 3. Expire the session and confirm the next repository call refuses
    with ``SessionExpiredError``.
-4. Confirm the expiry refusal names the ``config switch`` recovery
+4. Confirm the expiry refusal names the ``config login`` recovery
    verb — no traceback, no generic catch-all.
 
 No mocks: the expiry is forced by rolling the live session's own idle
@@ -161,8 +161,8 @@ def test_session_lifecycle_full_roundtrip_open_verb_expiry_refusal(_runtime_prof
         _load(repository)
 
 
-def test_expired_session_refusal_names_switch_recovery_verb() -> None:
-    """The expiry refusal renders an operator message naming ``config switch``.
+def test_expired_session_refusal_names_login_recovery_verb() -> None:
+    """The expiry refusal renders an operator message naming ``config login``.
 
     The session lifecycle contract requires the idle-expiry refusal to name a
     recovery verb that actually works. ``SessionExpiredError`` carries
@@ -174,7 +174,7 @@ def test_expired_session_refusal_names_switch_recovery_verb() -> None:
         "the active profile session has expired; run `aeat config login NAME` to re-activate.",
     )
     rendered = str(error)
-    assert "config switch" in rendered
+    assert "config login" in rendered
     assert "expired" in rendered
 
 

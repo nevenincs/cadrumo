@@ -171,7 +171,7 @@ def test_auth_commands_accept_output_language() -> None:
 
 
 def test_config_profile_commands_accept_output_language() -> None:
-    """Every config-profile verb and ``config switch`` accept ``--output-language``."""
+    """Every config-profile verb and ``config login`` accept ``--output-language``."""
     for argv in _CONFIG_PROFILE_COMMANDS:
         _assert_output_language_registered(argv)
 
