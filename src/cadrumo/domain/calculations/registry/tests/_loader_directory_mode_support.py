@@ -19,6 +19,14 @@ _REVISION_HEADER_RE = re.compile(r'^\[\[?revisions\.(?:"([^"]+)"|([A-Za-z0-9_-]+
 _REVISION_FIELD_RE = re.compile(r'^\[\[?revisions\.(?:"[^"]+"|[A-Za-z0-9_-]+)\.([A-Za-z0-9_]+)')
 _MAX_SINGLE_FILE_MODELO_LINES = 2_000
 _MAX_TOML_FRAGMENT_LINES = 1_750
+# Locale catalogues (``<modelo>/revisions/<rev>/locales/<lang>.toml``) are a
+# single CLI-managed aggregate translation surface per language (labels + help),
+# not a hand-splittable calculation fragment: the M100 2025 catalogues reach
+# ~2242 lines because M100 carries the largest casilla set in the registry
+# (~6000 casillas). They are authored only through ``python -m cadrumo.locales``
+# (never hand-split), so they get their own documented cap while structural
+# fragments stay under the tighter ``_MAX_TOML_FRAGMENT_LINES`` gate.
+_MAX_LOCALE_TOML_FRAGMENT_LINES = 2_500
 _MAX_TOML_ROW_CHARS = 600
 _TOML_CASILLA_ID_KEY = "casilla_id"
 _COMPLETENESS_CASILLA_0001: CasillaId = validated_casilla_id(
