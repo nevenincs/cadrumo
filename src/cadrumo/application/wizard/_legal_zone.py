@@ -7,7 +7,8 @@ modelos plus their profile-binding ``legal_refs`` / ``source_refs``). The
 zone is never authored — it is a projection over two authorities the rest
 of the system already owns (the singleton
 :class:`~cadrumo.domain.user_profile.ProfileSchemaDefinition` and the
-validated registry authority), computed once at flow compile.
+validated :class:`ValidatedRegistryAuthority`), computed once at flow
+compile.
 
 A page whose ``domain_key`` is absent from BOTH sources carries no legal
 zone (nothing is invented); a UI-only page with no ``domain_key`` never
@@ -87,7 +88,8 @@ def build_flow_legal_zones(
     """Project every profile-bound page onto its derived legal zone.
 
     Walks the definition's pages, unions each page's schema-declared
-    ``legal_refs`` with the registry reverse-grounding index entry for its
+    ``legal_refs`` with the registry reverse-grounding index entry the
+    supplied :class:`ValidatedRegistryAuthority` resolves for its
     ``domain_key``, and emits a :class:`PageLegalZone` only when the union
     is non-empty. The returned mapping is keyed by page id in walk order.
     """

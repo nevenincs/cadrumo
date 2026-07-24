@@ -10,8 +10,7 @@ from __future__ import annotations
 import importlib.resources  # nosemgrep
 import os
 import re
-from collections.abc import Callable, Iterator, Mapping
-from contextlib import contextmanager
+from collections.abc import Callable, Mapping
 from contextvars import ContextVar
 from functools import lru_cache
 from pathlib import Path
@@ -418,25 +417,6 @@ def _recover_format_placeholder_roots(value: str) -> set[str]:
 _I18N_LOCALES_ROOT: ContextVar[Path | None] = ContextVar("cadrumo_i18n_locales_root", default=None)
 
 
-@contextmanager
-def override_locales_root(root: Path) -> Iterator[None]:
-    """Resolve catalogues from ``root`` instead of the packaged resources.
-
-    The renderer's miss semantics — an absent key and a key-echo value are
-    both misses (:func:`_lookup_translation`) — can only be exercised
-    against a catalogue that carries the defect, and the shipped
-    catalogues are gated echo-free. This override is the sanctioned seam
-    for pointing resolution at a fixture catalogue, mirroring
-    ``override_settings()``; the packaged resources stay the sole source
-    otherwise.
-    """
-    token = _I18N_LOCALES_ROOT.set(root)
-    try:
-        yield
-    finally:
-        _I18N_LOCALES_ROOT.reset(token)
-
-
 def _locale_map(locale: str) -> dict[str, str]:
     override = _I18N_LOCALES_ROOT.get()
     if override is not None:
@@ -568,7 +548,6 @@ __all__ = [
     "UnmatchedPlaceholderError",
     "extract_placeholders",
     "output_language",
-    "override_locales_root",
     "register_profile_language_resolver",
     "tr",
 ]

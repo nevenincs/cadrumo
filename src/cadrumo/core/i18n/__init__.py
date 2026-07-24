@@ -31,7 +31,6 @@ from ._render import (
     clear_output_language_cache,
     extract_placeholders,
     output_language,
-    override_locales_root,
     register_profile_language_resolver,
     tr,
 )
@@ -49,7 +48,6 @@ __all__ = [
     "describe_auth_provider_operator_impact",
     "extract_placeholders",
     "output_language",
-    "override_locales_root",
     "register_profile_language_resolver",
     "tr",
 ]

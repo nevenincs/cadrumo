@@ -75,10 +75,15 @@ def test_terminology_resolver_returns_none_for_unknown_concept() -> None:
 
 
 def test_terminology_resolver_excludes_non_approved_concept() -> None:
-    """A draft/deprecated concept never renders as taxpayer-facing copy."""
+    """A draft/deprecated concept never renders as taxpayer-facing copy.
+
+    The bundled Handbook always carries non-approved concepts — internal
+    machinery concepts are deprecated rather than deleted — so an empty
+    sweep would mean the corpus or the lifecycle read drifted, which this
+    test must surface rather than skip.
+    """
     non_approved = _first_non_approved_concept_id()
-    if non_approved is None:
-        pytest.skip("no non-approved concept in the bundled Handbook")
+    assert non_approved is not None, "the bundled Handbook lost its deprecated internal concepts"
     assert resolve_profile_terminology_copy(f"profile-terminology:{non_approved}") is None
 
 
