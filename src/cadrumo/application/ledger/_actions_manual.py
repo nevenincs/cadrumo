@@ -67,6 +67,7 @@ from ._actions_common import (
     _EventSpec,
     _evidence_event_ids,
     _invoice_repository,
+    _is_evidence_only_command,
     _merge_identifier_tuple,
     _mutation_signature,
     _normalise_attachment_patch_ids,
@@ -585,7 +586,14 @@ def update_manual_transaction(
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
     )
-    if blockers:
+    # An evidence-only attachment cannot disturb a finalized revision (stable
+    # transaction id, unchanged row fingerprint, frozen bundled evidence), so it
+    # is exempt from the write guard - otherwise the documented remedy for an
+    # export evidence refusal would itself be blocked by the calculation that
+    # raised it. The cited revisions are reported back as stale so the operator
+    # is told to recalculate; the exemption never widens past evidence fields.
+    evidence_only = _is_evidence_only_command(command, current)
+    if blockers and not evidence_only:
         _raise_finalized_modelo_blocked(
             operation="ledger transaction update",
             transaction_ids=_transaction_modelo_source_ids(current),
@@ -612,7 +620,12 @@ def update_manual_transaction(
         catalogue=_replace_transaction(catalogue, old_transaction_id=transaction_id, replacement=replacement),
         events=events,
     )
-    return _result(command.bucket_id, replacement, tuple(event.event_id for event in events))
+    return _result(
+        command.bucket_id,
+        replacement,
+        tuple(event.event_id for event in events),
+        stale_finalized_revisions=blockers if evidence_only else (),
+    )
 
 
 def _prepare_manual_transaction_update(

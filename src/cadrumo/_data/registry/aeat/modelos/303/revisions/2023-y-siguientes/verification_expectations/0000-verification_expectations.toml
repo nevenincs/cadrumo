@@ -13,8 +13,13 @@ source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-
 # importacion + compensacion-pendiente-anteriores worked example): "TOTAL
 # CUOTA DEVENGADA: 23.088 euros" (casilla 27), "TOTAL A DEDUCIR: 16.800 euros"
 # (casilla 45), "Diferencia a ingresar: 3.288 euros" (casilla 71) and its own
-# "Casilla 69" resultado line (iva.resultado). See
+# "Casilla 69" resultado line (iva.resultado). The same solucion also states
+# "Diferencia: 6.288 euros" (iva.resultado-regimen-general, form_number 46 =
+# [27]-[45]), graded here too. The five per-casilla leaves the solucion states
+# verbatim (09/11/29/33/37) are grounded on the sibling
+# modelo-303-2023-y-siguientes-reconcile-when-present expectation, which is the
+# contract that enrolls them. See
 # test_m303_2024_regimen_general_manual_worked_example.py and
 # corpus/manual_oracles/modelo-303-2024-regimen-general-recargo-intracomunitaria-importacion.json.
-externally_grounded_casilla_ids = ["27", "45", "71", "iva.resultado"]
+externally_grounded_casilla_ids = ["27", "45", "71", "iva.resultado", "iva.resultado-regimen-general"]
 

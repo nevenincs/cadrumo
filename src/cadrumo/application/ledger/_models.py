@@ -300,13 +300,22 @@ class ManualLedgerTransactionPatch(BaseModel):
 
 
 class ManualLedgerTransactionResult(BaseModel):
-    """Backend result for a persisted manual ledger transaction mutation."""
+    """Backend result for a persisted manual ledger transaction mutation.
+
+    ``stale_finalized_revisions`` is populated only by an evidence-only
+    attachment that landed on a row a finalized revision cites. Those revisions
+    bundled their ledger evidence BEFORE the attachment, so their frozen bundles
+    no longer show the proof the row now carries: the operator must recalculate
+    for the evidence to reach a draft. The field is structured provenance for the
+    caller to project into an operator notice, never a refusal.
+    """
 
     model_config = _STRICT_FROZEN
 
     ref: BucketTransactionRef
     transaction: Transaction
     bucket_event_ids: tuple[str, ...] = ()
+    stale_finalized_revisions: tuple[LedgerRemovalBlocker, ...] = ()
 
 
 class LedgerTransactionPayload(BaseModel):

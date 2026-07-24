@@ -357,6 +357,44 @@ def _catalogue_modelo_source_ids(catalogue: TransactionCatalogue) -> tuple[str, 
     )
 
 
+_EVIDENCE_MUTATION_FIELDS: frozenset[str] = frozenset(
+    {"purchase_invoice_evidence_id", "attachment_ids"},
+)
+
+
+def _is_evidence_only_command(command: ManualLedgerTransactionCommand, current: Transaction) -> bool:
+    """Return whether ``command`` adds evidence provenance and changes nothing else.
+
+    An evidence-only mutation is exempt from the finalized-modelo write guard,
+    because it cannot disturb any finalized revision that cites the row. Three
+    independent project contracts establish that:
+
+    * :func:`~cadrumo.domain.transactions.derive_transaction_id` hashes the
+      provider identity, effective value date, amount, and narrative only, so an
+      evidence-only edit re-derives the SAME id. A finalized revision's
+      ``source_transaction_ids`` citation therefore keeps resolving.
+    * The ledger filing snapshot's fingerprint field set (the canonical
+      "tax facts" of a row) excludes both evidence fields, so ``row_fingerprint``
+      and the revision's ``snapshot_fingerprint`` are unchanged and the revision's
+      :class:`LedgerFilingSnapshot` still reconciles against the live catalogue.
+    * A finalized revision's casilla values and bundled ledger evidence are frozen
+      persisted snapshots; this write touches the transaction catalogue alone.
+
+    The exemption is deliberately the narrowest that unblocks the operator: it
+    requires at least one evidence field to differ AND every other persisted
+    field to match, so a value-affecting edit smuggled alongside an attachment
+    still meets the guard. Adding evidence DOES change what a *later*
+    recalculation would compute (an incoming row with purchase evidence becomes a
+    Renta refund, and a resolved invoice's base/IVA override the row's own), which
+    is why the caller reports the cited revisions as stale rather than silently
+    accepting the write.
+    """
+    command_fields = _command_idempotency_fields(command)
+    current_fields = _transaction_idempotency_fields(current)
+    differing = {name for name, value in command_fields.items() if current_fields[name] != value}
+    return bool(differing) and differing <= _EVIDENCE_MUTATION_FIELDS
+
+
 def _raise_finalized_modelo_blocked(
     *,
     operation: str,
@@ -652,13 +690,18 @@ def _persisted_classified_by(command: ManualLedgerTransactionCommand) -> str:
     return command.classified_by_override or CLASSIFIED_BY_MANUAL
 
 
-def _command_idempotency_projection(command: ManualLedgerTransactionCommand) -> tuple[object, ...]:
-    """Project every persisted field of ``command`` into a positional tuple.
+def _command_idempotency_fields(command: ManualLedgerTransactionCommand) -> dict[str, object]:
+    """Project every persisted field of ``command`` into a name-keyed mapping.
 
     The full-field idempotency contract (``single-subject-mutation-is-idempotent-guarded``)
     requires the no-op match to compare EVERY persisted field. Keeping the field set as one
-    ordered tuple makes a new model field omitted here a single greppable site, paired with
-    :func:`_transaction_idempotency_projection` position-for-position.
+    ordered mapping makes a new model field omitted here a single greppable site, paired with
+    :func:`_transaction_idempotency_fields` key-for-key.
+
+    The mapping is the single source for both consumers:
+    :func:`_command_idempotency_projection` folds it to the positional tuple the
+    idempotency guard compares, and :func:`_is_evidence_only_command` reads it by
+    name to isolate which fields a command would actually change.
 
     Four command fields are deliberately excluded, because none of them is content a
     retry could silently drop:
@@ -678,81 +721,91 @@ def _command_idempotency_projection(command: ManualLedgerTransactionCommand) -> 
     (``Transaction.classified_by``) and is projected through
     :func:`_persisted_classified_by`.
     """
-    return (
-        command.booked_date,
-        command.value_date,
-        command.amount,
-        command.currency,
-        command.counterparty,
-        command.description,
-        command.direction,
-        command.business_classification,
-        command.business_pct,
-        command.category_id,
-        command.taxable_base,
-        command.iva_rate,
-        command.iva_amount,
-        command.iva_category,
-        command.recargo_amount,
-        command.source_jurisdiction,
-        command.counterparty_eu_member_state,
-        command.irpf_category,
-        command.m210_income_classification,
-        command.usage_ratio_id,
-        command.prorrata_reference,
-        command.art_104_tres_exclusion,
-        command.input_classification,
-        command.prorrata_sector_id,
-        command.purchase_invoice_evidence_id,
+    return {
+        "booked_date": command.booked_date,
+        "value_date": command.value_date,
+        "amount": command.amount,
+        "currency": command.currency,
+        "counterparty": command.counterparty,
+        "description": command.description,
+        "direction": command.direction,
+        "business_classification": command.business_classification,
+        "business_pct": command.business_pct,
+        "category_id": command.category_id,
+        "taxable_base": command.taxable_base,
+        "iva_rate": command.iva_rate,
+        "iva_amount": command.iva_amount,
+        "iva_category": command.iva_category,
+        "recargo_amount": command.recargo_amount,
+        "source_jurisdiction": command.source_jurisdiction,
+        "counterparty_eu_member_state": command.counterparty_eu_member_state,
+        "irpf_category": command.irpf_category,
+        "m210_income_classification": command.m210_income_classification,
+        "usage_ratio_id": command.usage_ratio_id,
+        "prorrata_reference": command.prorrata_reference,
+        "art_104_tres_exclusion": command.art_104_tres_exclusion,
+        "input_classification": command.input_classification,
+        "prorrata_sector_id": command.prorrata_sector_id,
+        "purchase_invoice_evidence_id": command.purchase_invoice_evidence_id,
         # tuple[str, ...] compared value-equal, not identity-equal, by tuple equality.
-        command.attachment_ids,
-        command.notes,
-        command.group_label,
-        _persisted_classified_by(command),
-    )
+        "attachment_ids": command.attachment_ids,
+        "notes": command.notes,
+        "group_label": command.group_label,
+        "classified_by": _persisted_classified_by(command),
+    }
 
 
-def _transaction_idempotency_projection(current: Transaction) -> tuple[object, ...]:
-    """Project the stored transaction's persisted fields, aligned with the command projection.
+def _command_idempotency_projection(command: ManualLedgerTransactionCommand) -> tuple[object, ...]:
+    """Fold :func:`_command_idempotency_fields` into the positional idempotency tuple."""
+    return tuple(_command_idempotency_fields(command).values())
+
+
+def _transaction_idempotency_fields(current: Transaction) -> dict[str, object]:
+    """Project the stored transaction's persisted fields, aligned with the command mapping.
 
     The banking-boundary fields read from ``current.raw``; the classification and
-    provenance fields read from the transaction directly — position-for-position with
-    :func:`_command_idempotency_projection`. The trailing ``classified_by`` slot holds
-    the stored stamp, compared against the value a write of the command would persist
+    provenance fields read from the transaction directly — key-for-key with
+    :func:`_command_idempotency_fields`. The ``classified_by`` entry holds the stored
+    stamp, compared against the value a write of the command would persist
     (:func:`_persisted_classified_by`).
     """
     raw = current.raw
-    return (
-        raw.booked_date,
-        raw.value_date,
-        raw.amount,
-        raw.currency,
-        raw.counterparty,
-        raw.description,
-        current.direction,
-        current.business_classification,
-        current.business_pct,
-        current.category_id,
-        current.taxable_base,
-        current.iva_rate,
-        current.iva_amount,
-        current.iva_category,
-        current.recargo_amount,
-        current.source_jurisdiction,
-        current.counterparty_eu_member_state,
-        current.irpf_category,
-        current.m210_income_classification,
-        current.usage_ratio_id,
-        current.prorrata_reference,
-        current.art_104_tres_exclusion,
-        current.input_classification,
-        current.prorrata_sector_id,
-        current.purchase_invoice_evidence_id,
-        current.attachment_ids,
-        current.notes,
-        current.group_label,
-        current.classified_by,
-    )
+    return {
+        "booked_date": raw.booked_date,
+        "value_date": raw.value_date,
+        "amount": raw.amount,
+        "currency": raw.currency,
+        "counterparty": raw.counterparty,
+        "description": raw.description,
+        "direction": current.direction,
+        "business_classification": current.business_classification,
+        "business_pct": current.business_pct,
+        "category_id": current.category_id,
+        "taxable_base": current.taxable_base,
+        "iva_rate": current.iva_rate,
+        "iva_amount": current.iva_amount,
+        "iva_category": current.iva_category,
+        "recargo_amount": current.recargo_amount,
+        "source_jurisdiction": current.source_jurisdiction,
+        "counterparty_eu_member_state": current.counterparty_eu_member_state,
+        "irpf_category": current.irpf_category,
+        "m210_income_classification": current.m210_income_classification,
+        "usage_ratio_id": current.usage_ratio_id,
+        "prorrata_reference": current.prorrata_reference,
+        "art_104_tres_exclusion": current.art_104_tres_exclusion,
+        "input_classification": current.input_classification,
+        "prorrata_sector_id": current.prorrata_sector_id,
+        "purchase_invoice_evidence_id": current.purchase_invoice_evidence_id,
+        "attachment_ids": current.attachment_ids,
+        "notes": current.notes,
+        "group_label": current.group_label,
+        "classified_by": current.classified_by,
+    }
+
+
+def _transaction_idempotency_projection(current: Transaction) -> tuple[object, ...]:
+    """Fold :func:`_transaction_idempotency_fields` into the positional idempotency tuple."""
+    return tuple(_transaction_idempotency_fields(current).values())
 
 
 def _command_matches_current(command: ManualLedgerTransactionCommand, current: Transaction) -> bool:
@@ -873,9 +926,12 @@ def _result(
     bucket_id: str,
     transaction: Transaction,
     bucket_event_ids: tuple[str, ...],
+    *,
+    stale_finalized_revisions: tuple[LedgerRemovalBlocker, ...] = (),
 ) -> ManualLedgerTransactionResult:
     return ManualLedgerTransactionResult(
         ref=BucketTransactionRef(bucket_id=bucket_id, transaction_id=transaction.transaction_id),
         transaction=transaction,
         bucket_event_ids=bucket_event_ids,
+        stale_finalized_revisions=stale_finalized_revisions,
     )

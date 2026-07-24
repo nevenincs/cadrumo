@@ -170,18 +170,23 @@ earlier quarters. For how the tool organises filing work behind the scenes, see
 Export creates the `.boe` file, the format AEAT's upload portal accepts:
 
 ```{cli-sequence} quickstart-export
+:verify: Confirm the export wrote the file after the invoice was linked.
 ```
 
 The tool shows where the file was saved, its size in bytes, and a `file_sha256`
 verification code. Keep this code so you can later confirm you uploaded the
 exact file that was generated.
 
-This example uses a deductible-IVA expense, and export refuses that until the
-purchase invoice is linked as evidence (the message reads `Deductible IVA
-ledger rows require linked purchase invoice evidence`). Attach the invoice
-first, then re-run the export. [Attach invoices and receipts](ledger-evidence.md)
-and [Prepare a Modelo 303 IVA filing](modelo-303.md) walk through the evidence
-workflow end to end.
+This example uses a deductible-IVA expense, so it links the purchase invoice
+before calculating. Export refuses a deducted IVA row that carries no invoice
+(the message reads `Deductible IVA ledger rows require linked purchase invoice
+evidence`).
+
+Link the invoice while you record the expense, before you calculate. A draft
+bundles its evidence when you verify it, so an invoice attached afterwards does
+not reach a draft that is already verified. [Attach invoices and
+receipts](ledger-evidence.md) and [Prepare a Modelo 303 IVA
+filing](modelo-303.md) walk through the evidence workflow end to end.
 
 ## 6. Check what else is due (optional)
 
@@ -214,9 +219,9 @@ After a real filing, record the local filing marker:
 ```{cli-sequence} quickstart-file
 ```
 
-Like export, `work file` needs the deductible-IVA expense's invoice linked as
-evidence first (it refuses with `Deductible IVA ledger rows require linked
-purchase invoice evidence`). Attach the invoice, then record the marker.
+Like export, `work file` refuses a deducted IVA row whose invoice is not linked
+(`Deductible IVA ledger rows require linked purchase invoice evidence`). The
+draft exported above already carries its invoice, so the marker records.
 
 This only records the action on your own computer. It does not contact AEAT.
 To compare your local record with the AEAT receipt, see

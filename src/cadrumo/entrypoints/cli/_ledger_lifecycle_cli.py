@@ -48,9 +48,10 @@ from ...domain.transactions import (
 )
 from ._common import _bad, _emit_envelope, _state, _tx_repo, parse_decimal_amount
 from ._ledger_support import _emit_update_result, _resolve_id
+from ._modelo_rendering import advisory_notice
 
 if TYPE_CHECKING:
-    from ...application.ledger import LLMSplitSuggestion
+    from ...application.ledger import LLMSplitSuggestion, ManualLedgerTransactionResult
     from ._ledger_payloads import LedgerSplitChildIdPayload, LedgerSplitChildProposalPayload
 
 
@@ -134,7 +135,50 @@ def ledger_attach(
         result.bucket_event_ids,
         command="ledger.attach",
         result_cls=LedgerAttachResult,
+        notices=_stale_finalized_revision_notices(result),
     )
+
+
+def _stale_finalized_revision_notices(result: ManualLedgerTransactionResult) -> list[Notice]:
+    """Advise recalculation for every finalized revision citing the attached row.
+
+    A finalized revision bundled its ledger evidence BEFORE this attachment, so
+    its frozen bundle still shows the row without proof — an export or filing
+    gate reading that bundle would refuse again. Naming the recalculate command
+    per cited revision is what turns the attach from a dead end into the next
+    step of the remedy (``aeat-architecture-boundaries``: a refusal, or the
+    advisory standing in for one, lists the way forward).
+    """
+    return [
+        advisory_notice(
+            "ledger.attach.finalized_revision_stale",
+            tr(
+                "cli.ledger.attach.finalized_revision_stale",
+                modelo=blocker.modelo,
+                filing_year=str(blocker.filing_year),
+                period=blocker.period,
+                default=(
+                    f"Evidence attached, but Modelo {blocker.modelo} {blocker.filing_year} "
+                    f"{blocker.period} was already finalized before this evidence existed. "
+                    "Recalculate it so the evidence reaches a new draft."
+                ),
+            ),
+            suggestion=(
+                f"aeat app modelo work calculate --modelo {blocker.modelo} "
+                f"--year {blocker.filing_year} --period {blocker.period}"
+            ),
+            context={
+                "work_unit_id": blocker.work_unit_id,
+                "calculation_revision_id": blocker.calculation_revision_id,
+                "revision_state": blocker.revision_state,
+                "modelo": blocker.modelo,
+                "filing_year": str(blocker.filing_year),
+                "period": blocker.period,
+                "reason": "finalized_revision_predates_evidence",
+            },
+        )
+        for blocker in result.stale_finalized_revisions
+    ]
 
 
 def _sniff_document_mime_type(reference: str, data: bytes) -> str:

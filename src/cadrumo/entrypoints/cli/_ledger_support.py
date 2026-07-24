@@ -24,6 +24,7 @@ from ...application.ledger import (
     resolve_transaction_id,
 )
 from ...core.i18n import tr
+from ...core.json_contract import Notice
 from ...domain.categories import SpendingCategory
 from ...domain.contribuyente import FiscalResidency
 from ...domain.deadlines import IrpfSpecialRegime
@@ -47,8 +48,15 @@ def _emit_update_result(
     *,
     command: str,
     result_cls: type[OutputSchema],
+    notices: list[Notice] | None = None,
 ) -> None:
-    """Emit the canonical single-transaction ledger mutation result."""
+    """Emit the canonical single-transaction ledger mutation result.
+
+    ``notices`` rides the shared envelope notices channel
+    (``cli-notices-are-the-only-diagnostic-channel``); mutation verbs pass any
+    non-blocking advisory here rather than re-modelling it as a bespoke result
+    field.
+    """
     transaction_payload = ledger_transaction_payload(result_transaction)
     review_status = ledger_transaction_review_status(result_transaction)
     result = result_cls.model_validate(
@@ -71,6 +79,7 @@ def _emit_update_result(
             f"{tr('cli.ledger.labels.description')}\t{transaction_payload.description}",
             f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
         ],
+        notices=notices,
     )
 
 

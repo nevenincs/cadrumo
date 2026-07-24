@@ -29,3 +29,19 @@ min_coverage = "0"
 discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+# Five of the reconciled leaves are additionally grounded against an independent
+# AEAT authority: the Manual practico IVA 2024, Cap. 9 "Liquidacion primer
+# trimestre" solucion (pag. 293-294) prints each as its own euro figure - "Total
+# IVA devengado en Ventas interiores y servicios prestados (83.000 x 21%):
+# 17.430 euros" (09), "Adquisiciones intracomunitarias: [(18.000(2) +
+# 3.000(4))] x 21%: 4.410 euros" (11), "Total cuotas soportadas en operaciones
+# interiores: 9.870 euros" (29), "Por cuotas satisfechas en importaciones:
+# (12.000(6) x 21%): 2.520 euros" (33) and "En adquisiciones intracomunitarias:
+# [18.000(2) + 3.000(4)) x 21%]: 4.410 euros" (37). Grounding the leaves and not
+# only the totals on the sibling chain contract closes the compensating-error
+# gap: two offsetting mistakes inside the devengado or deducible sum leave both
+# printed totals correct, so a totals-only oracle stays green while the
+# individual boxes the operator files are wrong. See
+# test_m303_2024_regimen_general_manual_worked_example.py and
+# corpus/manual_oracles/modelo-303-2024-regimen-general-recargo-intracomunitaria-importacion.json.
+externally_grounded_casilla_ids = ["09", "11", "29", "33", "37"]
