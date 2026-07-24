@@ -31,6 +31,12 @@ BUCKET_OUTPUT_LANGUAGE_HINT_FILENAME = "output-language.hint"
 KEYSTORE_DIRNAME = "keystore"
 BUCKET_DEK_FILENAME = "bucket.dek.json"
 PROFILE_SESSION_FILENAME = "session.v1.json"
+LOGIN_THROTTLE_FILENAME = "login-throttle.json"
+#: Directory holding the application-owned config-reset journal. The
+#: application module owns the durable journal itself; the name is declared
+#: here so the on-disk hierarchy has one inventory, and the enrollment gate
+#: pins the two declarations together.
+CONFIG_RESET_JOURNAL_DIRNAME = "reset-operations"
 BLOB_MANIFEST_SCHEMA_VERSION = 1
 SECRET_RECORD_SCHEMA_VERSION = 1
 _SECURE_OBJECTS_TABLE_PATH_KEY = "secure_objects_table"
@@ -1062,6 +1068,20 @@ STORAGE_PATH_DEFINITIONS = (
         segment=PROFILE_SESSION_FILENAME,
     ),
     StoragePathDefinition(
+        key="login_throttle",
+        kind=StoragePathKind.FILE,
+        grammar="<root>/keystore/<bucket_id>/login-throttle.json",
+        owner="cadrumo.adapters.persistence.storage.master_key",
+        segment=LOGIN_THROTTLE_FILENAME,
+    ),
+    StoragePathDefinition(
+        key="config_reset_journal",
+        kind=StoragePathKind.FILE,
+        grammar="<root>/reset-operations/<operation_id>.json",
+        owner="cadrumo.application.config_reset",
+        segment=CONFIG_RESET_JOURNAL_DIRNAME,
+    ),
+    StoragePathDefinition(
         key="secure_objects_table",
         kind=StoragePathKind.LOGICAL_SQL,
         grammar="db://secure_objects/<namespace>/<object_key>",
@@ -1156,6 +1176,7 @@ __all__ = [
     "BUCKET_MANIFEST_FILENAME",
     "CALCULATION_OBSERVATIONS_NAMESPACE",
     "CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE",
+    "CONFIG_RESET_JOURNAL_DIRNAME",
     "DOMAIN_NAMESPACE_DEFINITIONS",
     "GOOGLE_CREDENTIAL_SOURCE_NAMESPACE",
     "GOOGLE_DRIVE_CONFIG_NAMESPACE",
@@ -1179,6 +1200,7 @@ __all__ = [
     "LLM_CACHE_NAMESPACE",
     "LLM_RUN_TELEMETRY_NAMESPACE",
     "LLM_USAGE_NAMESPACE",
+    "LOGIN_THROTTLE_FILENAME",
     "M145_COMMUNICATION_RECORD_NAMESPACE",
     "MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE",
     "MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE",

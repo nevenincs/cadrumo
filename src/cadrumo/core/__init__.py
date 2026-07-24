@@ -143,10 +143,15 @@ from ._tax_domain import TaxDomain
 from ._toml import freeze_toml, freeze_toml_value, parse_toml_text, read_toml, to_str_keyed_dict
 from .compatibility_lifecycle import (
     COMPATIBILITY_REGIME,
+    PERSISTED_FORMATS,
     RELEASED_FORMAT_FLOORS,
     CompatibilityRegime,
+    PersistedFormatClass,
     expected_floor,
     lineage_obligations,
+    misclassified_floor_keys,
+    stale_persisted_format_declarations,
+    undeclared_persisted_formats,
 )
 from .external_constants import M347_THRESHOLD_EUR
 from .product_identity import AEAT_AUTHORITY_SHORT_NAME, PRODUCT_IDENTITY, IdentityReferent, ProductIdentity
@@ -213,6 +218,7 @@ __all__: list[str] = [
     "OFX_EXTRA",
     "OPTIONAL_EXTRAS",
     "OUT_OF_SCOPE_OBLIGATIONS",
+    "PERSISTED_FORMATS",
     "PRODUCT_IDENTITY",
     "RELEASED_FORMAT_FLOORS",
     "STRICT_FROZEN_CONFIG",
@@ -245,6 +251,7 @@ __all__: list[str] = [
     "Period",
     "PeriodError",
     "PeriodKind",
+    "PersistedFormatClass",
     "PostFilingEventKind",
     "ProductIdentity",
     "ProfileSessionRefusalReason",
@@ -278,6 +285,7 @@ __all__: list[str] = [
     "fsync_parent_dir",
     "iban_mod_97",
     "lineage_obligations",
+    "misclassified_floor_keys",
     "modelo_has_codified_amendment_regime",
     "modelo_has_codified_disposition",
     "optional_extra_available",
@@ -297,7 +305,9 @@ __all__: list[str] = [
     "restore_pointer",
     "result_disposition_casilla_ids",
     "result_disposition_is_refund",
+    "stale_persisted_format_declarations",
     "to_str_keyed_dict",
+    "undeclared_persisted_formats",
     "validated_casilla_id",
     "validated_casilla_id_map",
     "write_pointer",

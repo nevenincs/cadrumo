@@ -38,12 +38,10 @@ from pydantic import BaseModel, Field
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.logging import get_logger
+from .._namespace_registry import LOGIN_THROTTLE_FILENAME
 from ._master_key_io import atomic_write_secure_bytes
 
 _log = get_logger(__name__)
-
-LOGIN_THROTTLE_FILENAME = "login-throttle.json"
-"""Sidecar filename inside the per-bucket keystore directory."""
 
 LOGIN_THROTTLE_SCHEMA_VERSION = 1
 """Version stamped on the persisted throttle state."""
