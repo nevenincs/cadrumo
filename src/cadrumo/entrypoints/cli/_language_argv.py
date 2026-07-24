@@ -20,20 +20,20 @@ from __future__ import annotations
 
 import os
 
-from ...core.external_constants import OUTPUT_LANGUAGE_ENV_VAR, SUPPORTED_OUTPUT_LANGUAGES
+from ...core.external_constants import OUTPUT_LANGUAGE_ENV_VAR, SUPPORTED_OUTPUT_LANGUAGES, OutputLanguage
 
 
-def _normalise_supported_language_for_argv(value: str) -> str | None:
-    """Lower-case and trim ``value``; return it only if it is a shipped locale.
+def _normalise_supported_language_for_argv(value: str) -> OutputLanguage | None:
+    """Lower-case and trim ``value``; return its :class:`OutputLanguage` member.
 
     Unsupported values return ``None`` so the canonical Typer ``Choice`` on the
     root callback remains the single authority that refuses an invalid value with
     the accepted-set hint — this pre-parse only forwards a value the catalogue
-    already supports.
+    already supports, hydrated to the typed member at this boundary.
     """
     raw = value.strip().lower()
     if raw in SUPPORTED_OUTPUT_LANGUAGES:
-        return raw
+        return OutputLanguage(raw)
     return None
 
 
@@ -41,7 +41,7 @@ _LANGUAGE_FLAGS: tuple[str, ...] = ("--language", "--lang", "--output-language")
 _LANGUAGE_FLAG_PREFIXES: tuple[str, ...] = ("--language=", "--lang=", "--output-language=")
 
 
-def _language_from_argv(argv: list[str]) -> str | None:
+def _language_from_argv(argv: list[str]) -> OutputLanguage | None:
     """Extract a supported language value from a raw argv slice.
 
     Reads the operator-typed ``--language LANG`` / ``--lang LANG`` /
@@ -49,8 +49,8 @@ def _language_from_argv(argv: list[str]) -> str | None:
     constructing the Typer app. ``--output-language`` is not a registered Typer
     option, but a parse-time refusal naming it must still render in the language
     the operator asked for, so the raw pre-parse recognises the spelling.
-    Returns the supported, normalised language code when one is supplied,
-    otherwise ``None``.
+    Returns the supported language as its :class:`OutputLanguage` member
+    when one is supplied, otherwise ``None``.
     """
     index = 0
     while index < len(argv):
@@ -70,7 +70,7 @@ def _language_from_argv(argv: list[str]) -> str | None:
     return None
 
 
-def language_from_argv(argv: list[str]) -> str | None:
+def language_from_argv(argv: list[str]) -> OutputLanguage | None:
     """Public accessor for the raw-argv language pre-parse.
 
     Terminal error handling resolves the parse-time output language from the
@@ -95,7 +95,7 @@ def apply_language_argv_to_environment(argv: list[str]) -> None:
     """
     language = _language_from_argv(argv)
     if language is not None:
-        os.environ[OUTPUT_LANGUAGE_ENV_VAR] = language
+        os.environ[OUTPUT_LANGUAGE_ENV_VAR] = language.value
 
 
 __all__ = ["apply_language_argv_to_environment", "language_from_argv"]

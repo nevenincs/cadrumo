@@ -51,9 +51,9 @@ from .....core.i18n import (
     OUTPUT_LANGUAGE_ENV_VAR,
     SUPPORTED_OUTPUT_LANGUAGES,
     clear_output_language_cache,
-    override_locales_root,
     tr,
 )
+from .....tests.locales_root_fixture import locales_root_scope
 from .. import FlowTuiApp, run_flow_tui
 
 pytestmark = [
@@ -135,7 +135,7 @@ def _flow_copy_catalogue(tmp_path_factory: pytest.TempPathFactory) -> Iterator[N
     payload = yaml.safe_dump(_COPY_CATALOGUE, allow_unicode=True)
     for language in SUPPORTED_OUTPUT_LANGUAGES:
         (root / f"{language}.yml").write_text(payload, encoding="utf-8")
-    with override_locales_root(root):
+    with locales_root_scope(root):
         yield
 
 
@@ -905,7 +905,7 @@ async def test_rebuild_for_locale_reassembles_copy_under_the_new_language(
     try:
         os.environ[OUTPUT_LANGUAGE_ENV_VAR] = "en"
         clear_output_language_cache()
-        with override_locales_root(root):
+        with locales_root_scope(root):
             app = FlowTuiApp(_definition(), mode=FlowMode.MODIFY, registered_values={})
             async with app.run_test(size=_TERMINAL_SIZE) as pilot:
                 await pilot.pause()
@@ -965,7 +965,7 @@ async def test_locale_switch_hook_renders_the_next_page_under_the_new_language(
     try:
         os.environ[OUTPUT_LANGUAGE_ENV_VAR] = "en"
         clear_output_language_cache()
-        with override_locales_root(root):
+        with locales_root_scope(root):
             app = FlowTuiApp(
                 _definition(),
                 mode=FlowMode.MODIFY,
@@ -1053,7 +1053,7 @@ from cadrumo.application.flows import (
     FlowSection,
 )
 from cadrumo.core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
-from cadrumo.core.i18n import override_locales_root
+from cadrumo.tests.locales_root_fixture import locales_root_scope
 
 
 class _Answers(BaseModel):
@@ -1079,7 +1079,7 @@ definition = FlowDefinition(
     },
 )
 
-with override_locales_root(Path(sys.argv[1])):
+with locales_root_scope(Path(sys.argv[1])):
     try:
         run_flow_tui(definition, mode=FlowMode.MODIFY)
     except FlowCheckpointError:

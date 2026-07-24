@@ -3,7 +3,7 @@
 The paged review surface composes three channels; the flow's entire
 domain contribution to the overview is the ``registered_values`` mapping
 (``page_key -> display string``) this module produces from the active
-profile record. The string IS the contract — the frontend renders it and
+profile record (:class:`UserProfileRecord`). The string IS the contract — the frontend renders it and
 never re-formats it — so every display decision (choice-label resolution,
 the localized yes/no pair, the non-official-evidence suffix) is made here,
 at projection time.
@@ -104,7 +104,7 @@ def project_registered_values(
     flow: WizardFlow,
     record: UserProfileRecord | None,
 ) -> dict[str, str]:
-    """Project the active record into the review overview's page-keyed strings.
+    """Project the active :class:`UserProfileRecord` into the review overview's page-keyed strings.
 
     Every profile-bound page whose fact is on record contributes one entry,
     keyed by the question id, whose value is the display-ready string. When

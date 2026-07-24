@@ -17,6 +17,7 @@ i18n API at test time, never hardcoded prose.
 from __future__ import annotations
 
 import contextlib
+import os
 from collections.abc import Iterator, Sequence
 from pathlib import Path
 
@@ -47,12 +48,21 @@ def _isolated_backend(tmp_path: Path) -> Iterator[Path]:
 
 
 @pytest.fixture
-def _clean_language_env(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    """Guarantee no ambient language pin so the activator is built."""
-    monkeypatch.delenv(OUTPUT_LANGUAGE_ENV_VAR, raising=False)
+def _clean_language_env() -> Iterator[None]:
+    """Guarantee no ambient language pin so the activator is built.
+
+    Removes the real environment variable for the fixture's scope and
+    restores the prior value afterwards — the same environment the
+    production resolver reads, no patching layer in between.
+    """
+    prior = os.environ.pop(OUTPUT_LANGUAGE_ENV_VAR, None)
     clear_output_language_cache()
-    yield
-    clear_output_language_cache()
+    try:
+        yield
+    finally:
+        if prior is not None:
+            os.environ[OUTPUT_LANGUAGE_ENV_VAR] = prior
+        clear_output_language_cache()
 
 
 def test_activator_switches_language_and_next_copy_resolves_in_it(_clean_language_env: None) -> None:

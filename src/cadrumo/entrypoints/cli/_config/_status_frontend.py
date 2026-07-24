@@ -7,8 +7,9 @@ and any non-interactive (piped / dumb-terminal / CI) host fall straight
 through to the existing envelope path. The adapter tier may name Textual
 but must not reach the application layer, so this entry-point module
 gathers the view-model from the application authorities — the active
-profile record, the profile bucket scan, the workflow auth state, and the
-recovery-wrapper status — and injects the assembled
+profile record (:class:`UserProfileRecord`), the profile bucket scan, the
+workflow auth state, and the recovery-wrapper status — masking each fact
+by its declared :class:`SensitivityClass` — and injects the assembled
 :class:`~cadrumo.adapters.inbound.tui.StatusPageData` into the adapter,
 mirroring the setup-wizard frontend seam.
 
@@ -102,16 +103,23 @@ def build_status_page_data() -> StatusPageData:
 
 
 def _guarded_read_errors() -> tuple[type[BaseException], ...]:
-    """The zone-read error surface: the domain base plus filesystem faults.
+    """The zone-read error surface: the domain base plus storage-layer faults.
 
     ``SecretStoreError``, ``StorageValidationError``, ``UserProfileError``, and
     ``WorkflowError`` all derive from ``CadrumoError``, and a torn on-disk read
-    raises ``OSError``. Catching exactly this pair degrades a zone without
-    swallowing a programming error the way a bare ``except Exception`` would.
+    raises ``OSError``. SQLAlchemy additionally wraps a refusal raised inside
+    encrypted-column key resolution (e.g. the no-active-session refusal — a
+    ``CadrumoError``) into its own ``StatementError`` mid-statement, so that
+    wrapper must be guarded too or the exact damaged-host states this page
+    exists for would traceback. Catching exactly this trio degrades a zone
+    without swallowing an arbitrary programming error the way a bare
+    ``except Exception`` would.
     """
+    from sqlalchemy.exc import StatementError
+
     from ....core.errors import CadrumoError
 
-    return (CadrumoError, OSError)
+    return (CadrumoError, OSError, StatementError)
 
 
 def _resolve_active_identity() -> tuple[str | None, str | None]:

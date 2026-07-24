@@ -334,13 +334,14 @@ _COPY_CATALOGUE: dict[str, object] = {
 def _bundle_flow_copy_catalogue(tmp_path_factory: pytest.TempPathFactory):
     import yaml
 
-    from .....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, override_locales_root
+    from .....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
+    from .....tests.locales_root_fixture import locales_root_scope
 
     root = tmp_path_factory.mktemp("bundle-flow-locales")
     payload = yaml.safe_dump(_COPY_CATALOGUE, allow_unicode=True)
     for language in SUPPORTED_OUTPUT_LANGUAGES:
         (root / f"{language}.yml").write_text(payload, encoding="utf-8")
-    with override_locales_root(root):
+    with locales_root_scope(root):
         yield
 
 
