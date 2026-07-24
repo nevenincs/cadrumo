@@ -3,10 +3,11 @@
 The concrete setup flow lives in this package.
 :class:`_models.WizardFlow` descriptors declare the operator-facing sections,
 questions, widgets, visibility gates, and answer model. The command builder
-walks those descriptors through a :class:`_prompter.Prompter` implementation,
-validates raw input with the per-widget canonical-token rules, rebuilds the
-typed :class:`core.setup_answers.SetupAnswers` projection, and persists profile
-facts through the user-profile orchestration layer.
+projects those descriptors onto the flow substrate
+(:mod:`cadrumo.application.flows`) and drives them through its engine and
+frontends, validates raw input with the per-widget canonical-token rules,
+rebuilds the typed :class:`core.setup_answers.SetupAnswers` projection, and
+persists profile facts through the user-profile orchestration layer.
 
 Importing :mod:`application.wizard` intentionally performs the startup
 registrations that downstream layers consume without importing the application
@@ -55,7 +56,11 @@ from ._descendant_group import (
     DESCENDANTS_GROUP_ID,
     attach_descendant_group,
 )
-from ._errors import WizardAnswerQueueUnderflowError, WizardValidationError
+from ._errors import (
+    WizardEditUnsupportedConsoleError,
+    WizardUnsupportedConsoleError,
+    WizardValidationError,
+)
 from ._flow_validators import (
     TAXPAYER_PROJECTION_VALIDATOR_ID,
     build_taxpayer_projection_validator,
@@ -71,13 +76,6 @@ from ._models import (
     WizardVisibility,
 )
 from ._persistence import descendant_facts_from_answers, project_answers
-from ._prompter import (
-    CanonicalAnswerPrompter,
-    Prompter,
-    QuestionaryPrompter,
-    WizardEditUnsupportedConsoleError,
-    WizardUnsupportedConsoleError,
-)
 from ._setup_legal_validators import (
     SETUP_UNIDAD_FAMILIAR_VALIDATOR_ID,
     attach_setup_legal_validators,
@@ -100,12 +98,8 @@ __all__ = [
     "SETUP_UNIDAD_FAMILIAR_VALIDATOR_ID",
     "TAXPAYER_PROJECTION_VALIDATOR_ID",
     "WIZARD_FLOWS",
-    "CanonicalAnswerPrompter",
     "PageLegalZone",
     "ProfileFactsCheckpointStore",
-    "Prompter",
-    "QuestionaryPrompter",
-    "WizardAnswerQueueUnderflowError",
     "WizardChoice",
     "WizardCondition",
     "WizardEditUnsupportedConsoleError",

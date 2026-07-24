@@ -726,7 +726,6 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.verification._verify", "core.resources"),
             ImportEdge("application.wizard._commands", "application.user_profile"),
             ImportEdge("application.wizard._commands", "application.wizard._persistence"),
-            ImportEdge("application.wizard._commands", "application.wizard._runner"),
             ImportEdge("application.wizard._commands", "application.workflow"),
             ImportEdge("application.wizard._commands", "core.click_context"),
             ImportEdge("application.wizard._commands", "core.config"),
@@ -782,7 +781,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
     UnsanctionedClass.DOMAIN_CYCLE_BREAK: 51,
     UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 179,  # +2 flow TUI screen->app cycle breaks (was 177)
     UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 38,  # net +1 atomic_write bootstrap-cycle deferrals (_bucket_pointer_io, corpus_manifest; env_io net-zero, corpus_manifest's save_corpus_manifest site retired its own core.locks edge)
-    UnsanctionedClass.APPLICATION_DEFERRAL: 530,  # +1 flows._wizard_projection->wizard migration-window deferral (was 529)
+    UnsanctionedClass.APPLICATION_DEFERRAL: 530,  # +1 flows._wizard_projection->wizard cycle-break deferral (was 529)
 }
 
 # Ceiling on the total number of allowlisted edges. Editing the allowlist to add
@@ -793,7 +792,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
 # consolidation, the corpus_search/mcp/user_profile deferrals introduced by
 # intervening commits) were swept into their classified buckets in one pass.
 _ALLOWLIST_EDGE_CEILING: int = (
-    477  # +2 flow TUI screen->app cycle breaks, +1 flows._wizard_projection->wizard migration-window deferral (was 474).
+    476  # -1 wizard _commands->_runner (one-shot runner retired), +2 flow TUI screen->app cycle breaks, +1 flows._wizard_projection->wizard cycle-break deferral (was 474).
 )
 
 

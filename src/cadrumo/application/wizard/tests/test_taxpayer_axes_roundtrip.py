@@ -328,11 +328,11 @@ class TestNewEntityFirstTwoProfitPeriodsRoundTrip:
         assert profile.new_entity_first_two_profit_periods is False
 
     def test_full_wizard_runtime_quiet_path_preserves_undeclared(self) -> None:
-        """End-to-end through ``run_flow`` with the scripted prompter and
-        no positively-declared CONFIRM answer for the new-entity flag.
+        """End-to-end through the scripted flow-substrate walk with no
+        positively-declared CONFIRM answer for the new-entity flag.
 
         Exercises the exact code path that BLOCKER 1 broke: the
-        ``--quiet`` scripted prompter feeds ``question.default or ""``
+        ``--quiet`` scripted walk feeds ``question.default or ""``
         for any question the operator did not name. With the
         descriptor's stale ``default="false"`` removed and
         ``validate_confirm`` accepting blank for optional questions,
@@ -340,21 +340,24 @@ class TestNewEntityFirstTwoProfitPeriodsRoundTrip:
         and the projection must reload at ``None``.
         """
 
-        from .._runner import run_flow
-        from ._scripted_prompter import scripted_from_canonical
+        from .._commands import _run_scripted_walk
 
-        # The scripted prompter is driven by an empty canonical dict;
-        # every visible question falls back to its descriptor default
-        # (or blank). The required-flag tax-id and activity must be
-        # seeded explicitly — they are unconditionally required.
+        # The scripted walk is driven by a sparse canonical dict; every
+        # visible question falls back to its descriptor default (or
+        # blank). The required-flag tax-id and activity must be seeded
+        # explicitly — they are unconditionally required.
         canonical: dict[str, str] = {
             "tax-id": "B66012345",
             "activity": "Software development",
             "entity-type": "legal_entity",
             "legal-entity-form": "sl",
         }
-        prompter = scripted_from_canonical(SETUP_FLOW, canonical)
-        answers = run_flow(SETUP_FLOW, prompter)
+        answers = _run_scripted_walk(
+            SETUP_FLOW,
+            canonical,
+            mode="create",
+            explicit_question_ids=frozenset(),
+        )
         assert isinstance(answers, SetupAnswers)
 
         # The new-entity field stays at the undeclared sentinel; never
