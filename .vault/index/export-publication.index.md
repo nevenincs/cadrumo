@@ -21,6 +21,10 @@ related:
   - '[[2026-07-17-export-publication-S13]]'
   - '[[2026-07-17-export-publication-S14]]'
   - '[[2026-07-17-export-publication-S15]]'
+  - '[[2026-07-17-export-publication-S16]]'
+  - '[[2026-07-17-export-publication-S17]]'
+  - '[[2026-07-17-export-publication-S18]]'
+  - '[[2026-07-17-export-publication-S19]]'
   - '[[2026-07-17-export-publication-adr]]'
   - '[[2026-07-17-export-publication-audit]]'
   - '[[2026-07-17-export-publication-plan]]'
@@ -59,6 +63,10 @@ Auto-generated index of all documents tagged with `#export-publication`.
 - `2026-07-17-export-publication-S13` - Make the personal-data category derivation exhaustive by construction so a new portable-bundle schema field cannot silently vanish from the subject-access disclosure, classifying every bundle field as category-mapped, envelope metadata, or carried-namespace derived and refusing an unclassified field, gated on a non-tautological test that enumerates the model's own fields and proves an unmapped field fails
 - `2026-07-17-export-publication-S14` - Isolate each operation inside the export reconciliation sweep so one unreadable or unfinalisable journal cannot starve every later-ordered operation, returning a typed reconciliation that reports the isolated failures rather than swallowing them, gated on a poisoned-journal test proving a healthy operation still reconciles alongside a failing one
 - `2026-07-17-export-publication-S15` - Expose an operator-invocable export reconciliation verb under the app root so a crashed operator who never exports again can still clear the orphan journal and its cleartext staged temporary file, reporting cleared and failed operations through the typed notice channel, gated on a crash-simulating test driven through the CLI runner
+- `2026-07-17-export-publication-S16` - Close the pre-journal crash window so no cleartext bundle can exist on disk without a journal entry naming it, recording the durable operation before staging rather than after, and extending orphan removal to the hardened writer's own inner temporary file whose name the current suffix guard rejects, gated on a hard-killed child crashing inside the widened window with no cleartext surviving
+- `2026-07-17-export-publication-S17` - Make the subject-access completeness claim true by deriving the excluded personal-data categories from the bundle coverage manifest, carrying them beside the included categories through the operation journal and the operator payload, and rewriting the catalogue notice to state both what the archive holds and what it omits, gated on a test asserting the excluded set matches the manifest
+- `2026-07-17-export-publication-S18` - Surface the reconciliation failures the pre-flight sweep discards so the export path an operator actually takes reports a leftover journal that may still describe cleartext bytes, carrying them on the export result and emitting them as a warning notice, gated on a test proving the export envelope warns when a journal cannot be reconciled
+- `2026-07-17-export-publication-S19` - Classify a journal that vanished mid-scan as a skip rather than a failure so a peer process completing normally cannot make the sweep tell an operator that an unencrypted file may remain, gated on a test removing a journal between scan and reconcile
 
 ### plan
 
