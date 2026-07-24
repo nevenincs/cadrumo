@@ -265,6 +265,7 @@ jobs:
     env:
       RELEASE_COHORT_DIR: var/promotion/release-cohort
       EVIDENCE_FINAL_DIR: var/promotion/evidence-final
+      DOWNLOAD_LATEST_DIR: var/promotion/download-latest
       VERSION: ${{ needs.validate.outputs.version }}
       SOURCE_COMMIT: ${{ needs.validate.outputs.source_commit }}
       PACKAGING_RUN_ID: ${{ inputs.packaging_run_id }}
@@ -390,6 +391,38 @@ jobs:
             --target "$SOURCE_COMMIT" \
             --title "Cadrumo v$VERSION" \
             --notes "Immutable tested cohort v$VERSION promoted without rebuild from packaging-smoke run $PACKAGING_RUN_ID."
+
+      # Runtime progressive-enhancement payload for the docs download page
+      # (initDownloadCards in docs/_static/cadrumo-docs.js). This is a read-only
+      # PROJECTION of the SEALED cohort manifest (version, filenames, sha256,
+      # cohort id) plus the just-created release's direct asset URLs — it builds
+      # or regenerates NOTHING. It is emitted into its own directory, run through
+      # the same fail-closed leak-sweep backstop that guards every attached asset,
+      # then attached to the release. The docs deploy (dev/deploy/docs_static_site.py)
+      # pulls it from releases/latest/download/ into docs/_static at its next
+      # publish; the Tier-1 offline channel table is the floor when it is absent.
+      - name: Emit and attach the download-latest.json docs payload
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p "$DOWNLOAD_LATEST_DIR"
+          uv run --frozen python -m dev.docs.download_matrix emit-latest \
+            --cohort-manifest "$RELEASE_COHORT_DIR/release-cohort.json" \
+            --release-base-url "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/releases/download/v$VERSION" \
+            --output "$DOWNLOAD_LATEST_DIR/download-latest.json"
+          # Same fail-closed backstop as the pre-attach sweep: feed this runner's
+          # identity tokens (only non-empty ones; an empty --token matches every
+          # byte) so any residual hostname/username/home-dir residue hard-fails
+          # before this asset can be attached.
+          sweep_tokens=()
+          for tok in "$RUNNER_NAME" "$(hostname 2>/dev/null)" "$(whoami 2>/dev/null)"; do
+            [[ -n "$tok" ]] && sweep_tokens+=(--token "$tok")
+          done
+          uv run --frozen python -m dev.packaging.evidence_release leak-sweep \
+            --directory "$DOWNLOAD_LATEST_DIR" \
+            "${sweep_tokens[@]}"
+          gh release upload "v$VERSION" "$DOWNLOAD_LATEST_DIR/download-latest.json" \
+            --repo "$GITHUB_REPOSITORY" --clobber
 
       - name: Push the Scoop bucket manifest to the public bucket
         env:
