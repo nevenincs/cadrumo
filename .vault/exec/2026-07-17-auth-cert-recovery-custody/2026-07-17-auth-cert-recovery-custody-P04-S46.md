@@ -66,8 +66,14 @@ The predicted `OSError` from `msvcrt.getwch()` did not reproduce. In a
 INDEFINITELY rather than raising. Opening the console input device does not
 discriminate that state either, since it succeeds even when detached. The `OSError`
 guard is retained because the gap is real in the stdlib source, but on this host the
-console-less failure mode is a hang, not an exception. Bounding an interactive secret
-prompt with a timeout is a separate decision and was not taken here.
+console-less failure mode is a hang, not an exception.
+
+Superseded in part by the following Step, which closes the hang at its real cause: the
+interactive check is a false positive for a character device with no console behind
+it. The console-less path is now covered by a regression that fails on timeout, so the
+"not exercised" note above applies only to this Step as landed, not to the module's
+current state. A timeout on the prompt was considered and rejected; detection, not
+duration, was the correct layer.
 
 The echo leak is grounded in stdlib source and in a reproduction of the fallback path
 returning a planted secret. Character-level on-screen echo requires an interactive

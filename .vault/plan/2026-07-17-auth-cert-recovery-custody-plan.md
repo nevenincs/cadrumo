@@ -71,6 +71,7 @@ Cut the passphrase and recovery command grammar over to the landed backend autho
 - [x] `P04.S30` - Prove secure TTY failures and strict bounded secrets-stdin JSON through localized CLI execution; `src/cadrumo/entrypoints/cli/tests/test_tty_error_locale.py`.
 - [x] `P04.S31` - Align bootstrap and repair-policy inventories with the recovery family and flat recover exception; `src/cadrumo/entrypoints/cli/tests/test_repair_policy_coverage.py`.
 - [x] `P04.S46` - Refuse in prompt_secret_no_echo when getpass cannot guarantee echo suppression, guarding the win32 sys.__stdin__ identity precondition, promoting GetPassWarning to a typed refusal, and catching OSError, proven by real-subprocess regressions; `src/cadrumo/entrypoints/cli/_config/_secure_input.py`.
+- [x] `P04.S48` - Discriminate a real console from a bare character device before prompting, so a NUL or console-less stdin refuses instead of blocking forever in msvcrt.getwch, and apply the same precondition to the recovery-code terminal display; `src/cadrumo/entrypoints/cli/_config/_secure_input.py`.
 
 ### Phase `P05` - Certificate and auth CLI door
 

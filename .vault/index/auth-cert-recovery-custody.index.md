@@ -18,6 +18,7 @@ related:
   - '[[2026-07-17-auth-cert-recovery-custody-P04-S30]]'
   - '[[2026-07-17-auth-cert-recovery-custody-P04-S31]]'
   - '[[2026-07-17-auth-cert-recovery-custody-P04-S46]]'
+  - '[[2026-07-17-auth-cert-recovery-custody-P04-S48]]'
   - '[[2026-07-17-auth-cert-recovery-custody-P05-S32]]'
   - '[[2026-07-17-auth-cert-recovery-custody-P05-S33]]'
   - '[[2026-07-17-auth-cert-recovery-custody-P05-S34]]'
@@ -80,6 +81,7 @@ Auto-generated index of all documents tagged with `#auth-cert-recovery-custody`.
 - `2026-07-17-auth-cert-recovery-custody-P08-S44` - DEFERRED until the operator P04 passphrase door commits: make certificate secret set reject the passphrase as an argv value and read it only via the hidden prompt or bounded stdin, reusing the P04 door _secure_input.py bounded-stdin no-echo infrastructure rather than building a parallel secret-input authority, gated on a test proving the passphrase cannot be supplied as an argv value and is read only through hidden prompt or bounded stdin
 - `2026-07-17-auth-cert-recovery-custody-P03-S47` - Emit non-secret bucket events for passphrase change and the recovery-code create, rotate, and recover mutations, degrading the trail to a logged no-op when profile storage is locked so it never gates the mutation
 - `2026-07-17-auth-cert-recovery-custody-P04-S46` - Refuse in prompt_secret_no_echo when getpass cannot guarantee echo suppression, guarding the win32 sys.__stdin__ identity precondition, promoting GetPassWarning to a typed refusal, and catching OSError, proven by real-subprocess regressions
+- `2026-07-17-auth-cert-recovery-custody-P04-S48` - Discriminate a real console from a bare character device before prompting, so a NUL or console-less stdin refuses instead of blocking forever in msvcrt.getwch, and apply the same precondition to the recovery-code terminal display
 - `2026-07-17-auth-cert-recovery-custody-P07-S41` - Thread constructor secret_store: SecretStore|None=None dependency-injection through the secret-store factory, certificate-secret backend, certificate-sources check, and materialisation helpers
 
 ### plan
