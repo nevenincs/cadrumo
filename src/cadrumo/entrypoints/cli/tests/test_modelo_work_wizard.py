@@ -22,16 +22,12 @@ real ledger-seeded income/expense rows.
 from __future__ import annotations
 
 import json
-import sys
 from decimal import Decimal
 
 import pytest
-from prompt_toolkit.application.current import create_app_session
-from prompt_toolkit.input import create_pipe_input
 
 from ....application.flows import run_scripted_flow
 from ....application.user_profile import profile_storage_session
-from ....application.wizard import QuestionaryPrompter, WizardUnsupportedConsoleError
 from ....core import resolve_active_bucket_id
 from ....core.flows import FlowMode
 from ....tests.cli_runner import invoke_cached_cli
@@ -256,47 +252,3 @@ def test_wizard_non_interactive_host_with_steps_refuses_with_the_typed_console_e
     assert "Traceback" not in result.output
     error = json.loads(result.output)["error"]
     assert error["code"] == "REFUSED_FLOW_UNSUPPORTED_CONSOLE"
-
-
-def test_wizard_prompter_translates_a_host_console_failure_that_is_not_an_oserror() -> None:
-    """A Windows no-console host gets the translated refusal, never a raw traceback.
-
-    Reproduces the real condition rather than simulating it. The prompter is
-    built exactly as the wizard command builds it -- through
-    ``from_ambient_app_session`` inside a session declaring only an input -- so
-    the prompt renders against this process's genuine stdout handle. Under a
-    redirected (non-console) stdout, that is precisely the Windows
-    "attached to a terminal, but no console screen buffer" state git-bash
-    produces, and real ``prompt_toolkit`` raises the real
-    :class:`~prompt_toolkit.output.win32.NoConsoleScreenBufferError` from it.
-
-    The regression this pins: that error derives from ``Exception``, *not*
-    ``OSError``, so the CLI's former ``except OSError`` handler could not catch
-    it and the operator saw a raw traceback. The assertion below on the cause's
-    type is what makes an ``OSError``-only handler unable to pass this test
-    again.
-
-    POSIX has no console-screen-buffer concept -- a redirected stdout is simply
-    a valid output there -- so the same call legitimately answers from the pipe
-    instead of refusing. Both branches assert that platform's real behavior.
-    """
-    with create_pipe_input() as pipe:
-        pipe.send_text("42\r")
-        with create_app_session(input=pipe):
-            prompter = QuestionaryPrompter.from_ambient_app_session()
-
-            if sys.platform != "win32":
-                assert prompter.ask_text("Casilla 06 (Retenciones e ingresos a cuenta)") == "42"
-                return
-
-            with pytest.raises(WizardUnsupportedConsoleError) as excinfo:
-                prompter.ask_text("Casilla 06 (Retenciones e ingresos a cuenta)")
-
-    from prompt_toolkit.output.win32 import NoConsoleScreenBufferError
-
-    cause = excinfo.value.__cause__
-    assert isinstance(cause, NoConsoleScreenBufferError), f"expected the real host failure, got {cause!r}"
-    assert not isinstance(cause, OSError), (
-        "NoConsoleScreenBufferError is not an OSError; an `except OSError` handler "
-        "would let it escape to the operator as a raw traceback"
-    )

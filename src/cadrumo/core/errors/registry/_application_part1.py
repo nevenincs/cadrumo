@@ -767,28 +767,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.wizard._errors.WizardAnswerQueueUnderflowError",
-        ErrorCode(
-            code="INTERNAL_WIZARD_ANSWER_QUEUE_UNDERFLOW",
-            category=ErrorCategory.INTERNAL,
-            message_key="errors.internal.internal_wizard_answer_queue_underflow",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.wizard._errors.WizardAnswerQueueOverflowError",
-        ErrorCode(
-            code="INTERNAL_WIZARD_ANSWER_QUEUE_OVERFLOW",
-            category=ErrorCategory.INTERNAL,
-            message_key="errors.internal.internal_wizard_answer_queue_overflow",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.application.wizard._errors.WizardMissingFlagError",
         ErrorCode(
             code="REFUSED_WIZARD_MISSING_FLAG",
@@ -822,7 +800,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.wizard._prompter.WizardUnsupportedConsoleError",
+        "cadrumo.application.wizard._errors.WizardUnsupportedConsoleError",
         ErrorCode(
             code="REFUSED_WIZARD_UNSUPPORTED_CONSOLE",
             category=ErrorCategory.REFUSED,
@@ -838,7 +816,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.wizard._prompter.WizardEditUnsupportedConsoleError",
+        "cadrumo.application.wizard._errors.WizardEditUnsupportedConsoleError",
         ErrorCode(
             code="REFUSED_WIZARD_EDIT_UNSUPPORTED_CONSOLE",
             category=ErrorCategory.REFUSED,
