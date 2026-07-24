@@ -90,3 +90,53 @@ def test_subject_access_request_defaults_to_active_profile(tmp_path: Path) -> No
 
     assert result.exit_code == 0, result.output
     assert out.is_file()
+
+
+def test_the_response_states_what_the_archive_omits_alongside_what_it_holds(tmp_path: Path) -> None:
+    # A right-of-access response that lists only carried categories reads as a
+    # completeness claim the structured custody profile cannot support. The
+    # subject must be told the omissions too, and machine-readably.
+    import json
+
+    _create_profile("subject")
+    destination = tmp_path / "subject-access.json"
+
+    result = _invoke(
+        ["--format", "json", "config", "profile", "subject-access-request", "subject", "--to", str(destination)],
+    )
+
+    assert result.exit_code == 0, result.output
+    envelope = json.loads(result.output)
+    payload = envelope["result"]
+    assert payload["data_categories"] != []
+    # Non-vacuity: the structured archive really does leave namespaces behind.
+    assert payload["excluded_data_categories"] != []
+    assert set(payload["excluded_data_categories"]).isdisjoint(payload["data_categories"])
+
+    catalogue = next(
+        notice
+        for notice in envelope["notices"]
+        if notice["code"] == "config.profile.subject_access_request.data_catalogue"
+    )
+    assert catalogue["context"]["excluded_data_categories"] == ",".join(payload["excluded_data_categories"])
+    assert catalogue["context"]["data_categories"] == ",".join(payload["data_categories"])
+
+
+def test_the_archive_omissions_match_the_bundle_the_command_wrote(tmp_path: Path) -> None:
+    # The reported omissions must come from the bundle's own coverage manifest,
+    # not from a list the CLI keeps, so the two cannot drift.
+    import json
+
+    _create_profile("subject")
+    destination = tmp_path / "subject-access.json"
+
+    result = _invoke(
+        ["--format", "json", "config", "profile", "subject-access-request", "subject", "--to", str(destination)],
+    )
+
+    assert result.exit_code == 0, result.output
+    reported = json.loads(result.output)["result"]["excluded_data_categories"]
+    bundle = UserProfilePortableExport.model_validate_json(destination.read_text(encoding="utf-8"))
+    assert reported == [
+        f"secure_object_namespace:{namespace}" for namespace in bundle.coverage_manifest.excluded_namespaces
+    ]

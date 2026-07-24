@@ -3383,6 +3383,10 @@ cli:
       export_passphrase_prompt: 'Bundle passphrase (min 8 characters): '
       export_passphrase_too_short: The profile export passphrase must be at least
         8 characters.
+      export_reconcile_incomplete_warning: '{count} interrupted profile-bundle export(s)
+        from an earlier run could not be cleared. An unencrypted staged file may remain
+        on disk for each. Run ''aeat app maintenance profile-bundle-reconcile'' once
+        the cause is resolved.'
       export_requires_destination: Provide --to PATH for the bundle destination, or
         run in an interactive terminal to be prompted.
       export_requires_transport: Use --encrypt for an encrypted transfer bundle, or
@@ -3531,11 +3535,11 @@ cli:
         usage_help: Report the on-disk footprint of one sandbox, or every sandbox
           at once.
         usage_name_help: Sandbox name (without the prefix); omit to report every sandbox.
-      sar_catalogue_info: This archive holds every personal-data category kept for
-        the profile. The exact categories are listed in the data_categories field
-        of this response and its machine-readable context. Attachment evidence bytes
-        and AEAT captures stay in encrypted storage; use the encrypted recovery archive
-        to include them.
+      sar_catalogue_info: 'This archive holds the personal-data categories listed
+        in the data_categories field of this response. It is not everything held for
+        the profile: the categories in excluded_data_categories stay in encrypted
+        storage and are not in this file. Use the encrypted recovery archive to obtain
+        those.'
       sar_help: Export all personal data held for a profile as a GDPR right-of-access
         archive (the portable profile bundle).
       show:

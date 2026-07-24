@@ -45,11 +45,13 @@ from ...core.time import now
 from ...domain.user_profile import ProfileExportError, ProfileNotFoundError
 from ._bundle_export_contracts import (
     ProfileBundleExportPurpose,
+    ProfileBundleExportReconcileFailure,
     ProfileBundleExportRequest,
     ProfileBundleExportResult,
     ProfileBundleExportTarget,
     ProfileBundleExportTransport,
     bundle_data_categories,
+    bundle_excluded_data_categories,
 )
 from ._bundle_export_operation import (
     ProfileBundleExportJournalNotFoundError,
@@ -64,6 +66,10 @@ if TYPE_CHECKING:
     from ..workflow import ProfileBucketPointer
 
 _STAGED_TEMP_SUFFIX = ".export-tmp"
+
+# The hardened writer stages through its own inner sibling before the rename;
+# see :func:`_orphan_staged_paths` for why recovery must reach it too.
+_HARDENED_INNER_TEMP_SUFFIX = ".tmp"
 
 # Reconcile takes each target lock non-blocking: a lock a live export already
 # holds means an in-flight publication, not a crash orphan, so reconcile skips
@@ -80,21 +86,6 @@ class PreparedProfileExport:
     pointer: ProfileBucketPointer
     bundle: UserProfilePortableExport
     request: ProfileBundleExportRequest
-
-
-@dataclass(frozen=True)
-class ProfileBundleExportReconcileFailure:
-    """One operation the sweep isolated instead of finalising.
-
-    ``destination`` is ``None`` when the journal itself could not be read, so
-    nothing is known about it beyond its identifier. ``reason`` is the refusing
-    error's class name -- stable, machine-readable, and carrying no journal
-    contents to an operator-facing surface.
-    """
-
-    journal_id: str
-    destination: str | None
-    reason: str
 
 
 @dataclass(frozen=True)
@@ -121,11 +112,12 @@ def export_profile_bundle(request: ProfileBundleExportRequest) -> ProfileBundleE
     composes :func:`prepare_profile_export` and :func:`publish_prepared_export`.
     """
     journal = ProfileBundleExportJournalRepository()
-    _reconcile_crash_orphans_before_publication(journal)
+    reconcile_failures = _reconcile_crash_orphans_before_publication(journal)
     try:
         with exclusive_file_lock(request.destination):
             prepared = prepare_profile_export(request, journal=journal)
-            return publish_prepared_export(prepared, journal=journal)
+            published = publish_prepared_export(prepared, journal=journal)
+            return published.model_copy(update={"reconcile_failures": reconcile_failures})
     except ProfileExportError:
         raise
     except OSError as exc:
@@ -137,7 +129,7 @@ def export_profile_bundle(request: ProfileBundleExportRequest) -> ProfileBundleE
 
 def _reconcile_crash_orphans_before_publication(
     journal: ProfileBundleExportJournalRepository,
-) -> None:
+) -> tuple[ProfileBundleExportReconcileFailure, ...]:
     """Sweep crash-interrupted prior publications before this export begins.
 
     This is the production trigger for :func:`reconcile_prepared_exports`. The
@@ -162,14 +154,20 @@ def _reconcile_crash_orphans_before_publication(
     journalled and is retried on the next publication, whereas refusing to
     export because some older unrelated operation could not be finalised would
     let one stale record block every future export.
+
+    The isolated failures are RETURNED rather than logged and dropped. A journal
+    left behind may still describe cleartext bundle bytes on disk, and the
+    operator running this export is the one who needs told -- the maintenance
+    verb is not the path they are on.
     """
     try:
-        reconcile_prepared_exports(journal=journal)
+        return reconcile_prepared_exports(journal=journal).failures
     except Exception:
         get_logger(__name__).warning(
             "profile export could not reconcile a crash-interrupted prior publication",
             exc_info=True,
         )
+        return ()
 
 
 def prepare_profile_export(
@@ -177,13 +175,22 @@ def prepare_profile_export(
     *,
     journal: ProfileBundleExportJournalRepository | None = None,
 ) -> PreparedProfileExport:
-    """Serialize the bundle to a restrictive staged temp and record PREPARED.
+    """Record the PREPARED journal, THEN stage the bundle to a restrictive temp.
 
-    Serializes the profile bundle, renders the transport payload, stages it to a
-    ``0o600`` sibling temporary file, fsyncs it, and writes a durable
-    ``PREPARED`` operation-state journal before any target replacement. A crash
-    after this call leaves a recoverable ``PREPARED`` record and an orphan
-    staged temp, never a published-looking target.
+    The journal is written BEFORE any cleartext reaches disk, naming the staged
+    path it is about to write. That ordering is the whole crash contract: the
+    reconciliation sweep is journal-driven, so cleartext staged without a
+    journal entry pointing at it would be unreachable by every recovery
+    surface. Staging first left exactly that window -- serialization, category
+    derivation, and a journal write that can wait on the repository lock all
+    sat between the cleartext hitting disk and the record naming it -- and a
+    crash inside it stranded a readable profile bundle that no sweep could ever
+    find (``sensitive-financial-data-secure-storage-only``).
+
+    A crash between the journal write and a completed staging is harmless: the
+    reconciliation finds a ``PREPARED`` operation whose destination does not
+    hold the recorded digest, clears the staged path it names (whether that file
+    exists, is half-written, or was never created), and emits no event.
     """
     from ._orchestration import _profile_export_runtime
 
@@ -195,34 +202,37 @@ def prepare_profile_export(
         bundle = _serialize_export_bundle(pointer.bucket_id)
         payload = _render_export_payload(bundle, request=request)
     payload_bytes = payload.encode(UTF_8_ENCODING)
-    staged_path = _stage_export_tempfile(request.destination, payload_bytes)
-    try:
-        categories = bundle_data_categories(bundle)
-        occurred_at = now().replace(microsecond=0)
-        operation = ProfileBundleExportOperation(
-            operation_id=derive_export_operation_id(
-                profile_id=pointer.bucket_id,
-                target_identity=target.identity,
-                purpose=request.purpose,
-            ),
-            status=ProfileBundleExportOperationStatus.PREPARED,
+    categories = bundle_data_categories(bundle)
+    excluded_categories = bundle_excluded_data_categories(bundle)
+    staged_path = _staged_temp_path(request.destination)
+    occurred_at = now().replace(microsecond=0)
+    operation = ProfileBundleExportOperation(
+        operation_id=derive_export_operation_id(
             profile_id=pointer.bucket_id,
-            display_name=pointer.label,
             target_identity=target.identity,
-            destination=str(request.destination),
-            staged_path=str(staged_path),
-            content_sha256=sha256_hex(payload_bytes),
             purpose=request.purpose,
-            transport=request.transport,
-            bundle_schema_version=bundle.bundle_schema_version,
-            data_categories=categories,
-            started_at=occurred_at,
-            updated_at=occurred_at,
-            event_occurred_at=occurred_at,
-        )
-        repository.save(operation)
+        ),
+        status=ProfileBundleExportOperationStatus.PREPARED,
+        profile_id=pointer.bucket_id,
+        display_name=pointer.label,
+        target_identity=target.identity,
+        destination=str(request.destination),
+        staged_path=str(staged_path),
+        content_sha256=sha256_hex(payload_bytes),
+        purpose=request.purpose,
+        transport=request.transport,
+        bundle_schema_version=bundle.bundle_schema_version,
+        data_categories=categories,
+        excluded_data_categories=excluded_categories,
+        started_at=occurred_at,
+        updated_at=occurred_at,
+        event_occurred_at=occurred_at,
+    )
+    repository.save(operation)
+    try:
+        _stage_export_tempfile(staged_path, payload_bytes)
     except BaseException:
-        staged_path.unlink(missing_ok=True)
+        _discard_prepared_operation(repository, operation)
         raise
     return PreparedProfileExport(
         operation=operation,
@@ -284,6 +294,7 @@ def _result_from_operation(operation: ProfileBundleExportOperation) -> ProfileBu
         purpose=operation.purpose,
         transport=operation.transport,
         data_categories=operation.data_categories,
+        excluded_data_categories=operation.excluded_data_categories,
     )
 
 
@@ -483,24 +494,37 @@ def _render_export_payload(
     return encrypted.model_dump_json(indent=2)
 
 
-def _stage_export_tempfile(destination: Path, data: bytes) -> Path:
-    """Stage ``data`` into a restrictive ``0o600`` sibling of ``destination``.
+def _staged_temp_path(destination: Path) -> Path:
+    """Derive the staged sibling path for ``destination`` without touching disk.
+
+    Deriving the name separately from writing it is what lets the durable
+    journal be recorded BEFORE any cleartext exists, naming the exact path the
+    staging is about to create.
+    """
+    return destination.with_name(f"{destination.name}.{os.getpid()}.{secrets.token_hex(4)}{_STAGED_TEMP_SUFFIX}")
+
+
+def _stage_export_tempfile(staged_path: Path, data: bytes) -> None:
+    """Write ``data`` to the already-journalled ``staged_path`` at ``0o600``.
 
     The write is routed through the sanctioned hardened-tier primitive
     :func:`~cadrumo.core.atomic_write.atomic_write_hardened_bytes` (``O_EXCL`` +
     mode ``0o600`` + fsync + atomic create), which is the reviewed home for
     restrictive file writes -- rather than an ad-hoc ``os.open``/``os.write``.
-    The staged sibling deliberately stays in place (the durable ``PREPARED``
-    journal lands between it and the final replace); :func:`publish_prepared_export`
-    performs the ``os.replace`` from this staged path onto the destination.
+    The staged sibling deliberately stays in place;
+    :func:`publish_prepared_export` performs the ``os.replace`` from it onto the
+    destination.
+
+    That primitive stages through an inner ``<staged_path>.<pid>.<hex>.tmp``
+    sibling of its own and unlinks it on any ordinary failure -- but not on a
+    hard kill, where no ``finally`` runs. Recovery therefore cannot key on this
+    path alone; see :func:`_orphan_staged_paths`.
     """
-    tmp_path = destination.with_name(f"{destination.name}.{os.getpid()}.{secrets.token_hex(4)}{_STAGED_TEMP_SUFFIX}")
     try:
-        atomic_write_hardened_bytes(tmp_path, data)
+        atomic_write_hardened_bytes(staged_path, data)
     except BaseException:
-        tmp_path.unlink(missing_ok=True)
+        staged_path.unlink(missing_ok=True)
         raise
-    return tmp_path
 
 
 def _refuse_link_target(path: Path) -> None:
@@ -516,14 +540,57 @@ def _refuse_link_target(path: Path) -> None:
         )
 
 
-def _remove_orphan_staged_temp(operation: ProfileBundleExportOperation) -> None:
-    """Delete a reconciled operation's orphan staged temp, never its target."""
+def _orphan_staged_paths(operation: ProfileBundleExportOperation) -> tuple[Path, ...]:
+    """Return every cleartext file this operation's staging could have created.
+
+    The journalled staged path is only one of two. The hardened writer stages
+    through its own inner ``<staged_path>.<pid>.<hex>.tmp`` sibling and unlinks
+    it in a ``finally`` -- which never runs under a hard kill, leaving a full
+    cleartext bundle whose name does NOT end in the staged suffix. Keying
+    recovery on the journalled path alone therefore left the hardened writer's
+    own orphans unreachable, so the inner temps are enumerated from the same
+    prefix rather than trusted to clean themselves up.
+
+    The prefix match is done over a directory listing rather than
+    :meth:`~pathlib.Path.glob`, because the operator chooses the destination
+    name and a literal ``[`` in it would otherwise be read as a glob character
+    class and silently match nothing.
+    """
     staged = Path(operation.staged_path)
     if str(staged) == operation.destination or not staged.name.endswith(_STAGED_TEMP_SUFFIX):
-        return
-    if staged.is_symlink():
-        return
-    staged.unlink(missing_ok=True)
+        return ()
+    candidates = [staged]
+    parent = staged.parent
+    if parent.is_dir():
+        inner_prefix = f"{staged.name}."
+        candidates.extend(
+            entry
+            for entry in parent.iterdir()
+            if entry.name.startswith(inner_prefix) and entry.name.endswith(_HARDENED_INNER_TEMP_SUFFIX)
+        )
+    return tuple(path for path in candidates if not path.is_symlink())
+
+
+def _remove_orphan_staged_temp(operation: ProfileBundleExportOperation) -> None:
+    """Delete a reconciled operation's orphan cleartext temps, never its target."""
+    for path in _orphan_staged_paths(operation):
+        path.unlink(missing_ok=True)
+
+
+def _discard_prepared_operation(
+    repository: ProfileBundleExportJournalRepository,
+    operation: ProfileBundleExportOperation,
+) -> None:
+    """Clear a journalled operation whose staging failed before it published.
+
+    Best-effort: anything left behind stays journalled, so the next
+    reconciliation sweep finds and clears it rather than stranding cleartext.
+    """
+    try:
+        _remove_orphan_staged_temp(operation)
+        repository.delete(operation.operation_id)
+    except OSError:
+        get_logger(__name__).debug("profile export could not discard a failed preparation", exc_info=True)
 
 
 def _safe_delete_journal(repository: ProfileBundleExportJournalRepository, operation_id: str) -> None:

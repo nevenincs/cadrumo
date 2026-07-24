@@ -3629,6 +3629,10 @@ cli:
       export_passphrase_prompt: 'Frase de contrasenya del paquet (mínim 8 caràcters): '
       export_passphrase_too_short: La frase de contrasenya d'exportació del perfil
         ha de tenir almenys 8 caràcters.
+      export_reconcile_incomplete_warning: No s'han pogut netejar {count} exportació(ns)
+        de perfil interrompudes d'una execució anterior. Pot quedar al disc un fitxer
+        temporal sense xifrar per a cadascuna. Executa 'aeat app maintenance profile-bundle-reconcile'
+        quan es resolgui la causa.
       export_requires_destination: Indica --to RUTA com a destinació del paquet, o
         executa l'ordre en un terminal interactiu perquè se't pregunti.
       export_requires_transport: Usa --encrypt per a un paquet xifrat de transferència,
@@ -3780,11 +3784,11 @@ cli:
         usage_help: Informar de l'espai en disc d'un sandbox, o de tots alhora.
         usage_name_help: Nom del sandbox (sense el prefix); ometre per informar de
           tots.
-      sar_catalogue_info: Aquest arxiu conté totes les categories de dades personals
-        del perfil. Les categories exactes figuren al camp data_categories d'aquesta
-        resposta i al seu context llegible per màquina. Els bytes de les proves adjuntes
-        i les captures d'AEAT resten en emmagatzematge xifrat; utilitzeu l'arxiu de
-        recuperació xifrat per incloure'ls.
+      sar_catalogue_info: 'Aquest arxiu conté les categories de dades personals indicades
+        al camp data_categories d''aquesta resposta. No és tot el que es conserva
+        del perfil: les categories d''excluded_data_categories romanen a l''emmagatzematge
+        xifrat i no són en aquest fitxer. Fes servir l''arxiu de recuperació xifrat
+        per obtenir-les.'
       sar_help: 'Exporta totes les dades personals d''un perfil com a arxiu d''accés
         de l''interessat (RGPD): el paquet portàtil del perfil.'
       show:

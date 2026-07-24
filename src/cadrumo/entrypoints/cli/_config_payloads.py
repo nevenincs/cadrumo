@@ -837,6 +837,12 @@ class ConfigProfileSubjectAccessRequestResult(OutputSchema):
     personal-data archive. Reports the profile identity, output path, bundle
     schema version, and the machine-readable catalogue of the personal-data
     categories the archive carries so the subject can see what is held.
+
+    ``excluded_data_categories`` is reported alongside, never omitted. The
+    bundle ships under the structured custody profile, so whole namespaces --
+    attachment blobs, purchase invoice evidence, the bucket event history --
+    stay in encrypted storage. Publishing only what the archive carries would
+    make the catalogue read as a completeness claim it cannot support.
     """
 
     profile_id: str
@@ -844,6 +850,7 @@ class ConfigProfileSubjectAccessRequestResult(OutputSchema):
     out: str
     schema_version: int
     data_categories: list[str]
+    excluded_data_categories: list[str] = []
 
 
 @register_schema("config.profile.import")

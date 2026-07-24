@@ -94,6 +94,7 @@ def _resolve_import_passphrase(secrets_stdin: bool) -> str:
 
 
 if TYPE_CHECKING:
+    from ....application.user_profile import ProfileBundleExportReconcileFailure
     from ....domain.buckets import BucketEventType
     from ....domain.user_profile import UserProfilePortableExport, UserProfileRecord
 
@@ -177,9 +178,18 @@ def _register_profile_sar_command(profile_app: typer.Typer) -> None:
             out=str(export.destination),
             schema_version=export.bundle_schema_version,
             data_categories=list(export.data_categories),
+            excluded_data_categories=list(export.excluded_data_categories),
         )
         sensitivity_notice = _build_export_sensitivity_notice(out)
-        catalogue_notice = _build_sar_catalogue_notice(export.data_categories)
+        catalogue_notice = _build_sar_catalogue_notice(
+            export.data_categories,
+            export.excluded_data_categories,
+        )
+        notices = (
+            catalogue_notice,
+            sensitivity_notice,
+            *_reconcile_failure_notices(export.reconcile_failures),
+        )
         _emit_envelope(
             ctx,
             command="config.profile.subject_access_request",
@@ -190,24 +200,32 @@ def _register_profile_sar_command(profile_app: typer.Typer) -> None:
                 f"out\t{out}",
                 f"schema_version\t{export.bundle_schema_version}",
                 f"data_categories\t{','.join(export.data_categories)}",
-                f"INFO\t{catalogue_notice.message}",
-                f"WARNING\t{sensitivity_notice.message}",
+                f"excluded_data_categories\t{','.join(export.excluded_data_categories)}",
+                *(f"{notice.severity.value.upper()}\t{notice.message}" for notice in notices),
             ),
-            notices=(catalogue_notice, sensitivity_notice),
+            notices=notices,
         )
 
 
-def _build_sar_catalogue_notice(data_categories: tuple[str, ...]) -> Notice:
+def _build_sar_catalogue_notice(
+    data_categories: tuple[str, ...],
+    excluded_data_categories: tuple[str, ...],
+) -> Notice:
     """Build the data-catalogue notice for the personal-data categories held.
 
     A GDPR right-of-access response must tell the subject what categories of
     their personal data are held, not only hand over a blob. The authoritative
     category set is the one the export service derives from the bundle schema
     and its carried registry namespaces; this info :class:`Notice` points the
-    subject at that derived ``data_categories`` set (carried on the response and
-    machine-readably in ``context``) rather than re-enumerating a static list
-    the CLI would own and let drift, per
-    ``cli-notices-are-the-only-diagnostic-channel``.
+    subject at both derived sets (carried on the response and machine-readably in
+    ``context``) rather than re-enumerating a static list the CLI would own and
+    let drift, per ``cli-notices-are-the-only-diagnostic-channel``.
+
+    The notice states the omissions rather than claiming completeness. The bundle
+    ships under the structured custody profile, so whole namespaces stay in
+    encrypted storage; asserting the archive holds every category would be a
+    false completeness claim to a data subject, the one reader who cannot check
+    it.
     """
     return Notice(
         severity=NoticeSeverity.INFO,
@@ -215,14 +233,52 @@ def _build_sar_catalogue_notice(data_categories: tuple[str, ...]) -> Notice:
         message=tr(
             "cli.config.profile.sar_catalogue_info",
             default=(
-                "This archive holds every personal-data category kept for the "
-                "profile. The exact categories are listed in the data_categories "
-                "field of this response and its machine-readable context. "
-                "Attachment evidence bytes and AEAT captures stay in encrypted "
-                "storage; use the encrypted recovery archive to include them."
+                "This archive holds the personal-data categories listed in the "
+                "data_categories field of this response. It is not everything held "
+                "for the profile: the categories in excluded_data_categories stay in "
+                "encrypted storage and are not in this file. Use the encrypted "
+                "recovery archive to obtain those."
             ),
         ),
-        context={"data_categories": ",".join(data_categories)},
+        context={
+            "data_categories": ",".join(data_categories),
+            "excluded_data_categories": ",".join(excluded_data_categories),
+        },
+    )
+
+
+def _reconcile_failure_notices(
+    failures: tuple[ProfileBundleExportReconcileFailure, ...],
+) -> tuple[Notice, ...]:
+    """Warn when the pre-publication crash-recovery sweep left a journal behind.
+
+    The export path is the one an operator actually takes, so a leftover journal
+    surfaced only by the maintenance verb would go unseen. Each kept journal may
+    still describe an unencrypted staged file on disk, which is exactly what the
+    sweep exists to remove.
+    """
+    if not failures:
+        return ()
+    return (
+        Notice(
+            severity=NoticeSeverity.WARNING,
+            code="config.profile.export.reconcile_incomplete",
+            message=tr(
+                "cli.config.profile.export_reconcile_incomplete_warning",
+                default=(
+                    "{count} interrupted profile-bundle export(s) from an earlier run "
+                    "could not be cleared. An unencrypted staged file may remain on "
+                    "disk for each. Run 'aeat app maintenance profile-bundle-reconcile' "
+                    "once the cause is resolved."
+                ),
+                count=str(len(failures)),
+            ),
+            suggestion="aeat app maintenance profile-bundle-reconcile",
+            context={
+                "failed_count": str(len(failures)),
+                "journal_ids": ",".join(failure.journal_id for failure in failures),
+            },
+        ),
     )
 
 
@@ -356,6 +412,7 @@ def _register_profile_export_command(profile_app: typer.Typer) -> None:
         else:
             notices = (_build_encrypted_export_notice(out),)
             transport = "passphrase-encrypted"
+        notices = (*notices, *_reconcile_failure_notices(export.reconcile_failures))
 
         export_result = ConfigProfileExportResult(
             profile_id=export.profile_id,

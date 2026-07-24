@@ -3656,6 +3656,10 @@ cli:
       export_passphrase_prompt: 'Frase de contraseña del paquete (mínimo 8 caracteres): '
       export_passphrase_too_short: La frase de contraseña de exportación del perfil
         debe tener al menos 8 caracteres.
+      export_reconcile_incomplete_warning: No se han podido limpiar {count} exportación(es)
+        de perfil interrumpidas de una ejecución anterior. Puede quedar en disco un
+        archivo temporal sin cifrar por cada una. Ejecuta 'aeat app maintenance profile-bundle-reconcile'
+        cuando se resuelva la causa.
       export_requires_destination: Indica --to RUTA como destino del paquete, o ejecuta
         el comando en un terminal interactivo para que se te pregunte.
       export_requires_transport: Usa --encrypt para un paquete cifrado de transferencia,
@@ -3809,11 +3813,11 @@ cli:
         usage_help: Informar del espacio en disco de un sandbox, o de todos a la vez.
         usage_name_help: Nombre del sandbox (sin el prefijo); omitir para informar
           de todos.
-      sar_catalogue_info: Este archivo contiene todas las categorías de datos personales
-        del perfil. Las categorías exactas figuran en el campo data_categories de
-        esta respuesta y en su contexto legible por máquina. Los bytes de las pruebas
-        adjuntas y las capturas de AEAT permanecen en almacenamiento cifrado; utilice
-        el archivo de recuperación cifrado para incluirlos.
+      sar_catalogue_info: 'Este archivo contiene las categorías de datos personales
+        indicadas en el campo data_categories de esta respuesta. No es todo lo que
+        se conserva del perfil: las categorías de excluded_data_categories permanecen
+        en el almacenamiento cifrado y no están en este fichero. Usa el archivo de
+        recuperación cifrado para obtenerlas.'
       sar_help: 'Exporta todos los datos personales de un perfil como archivo de acceso
         del interesado (RGPD): el paquete portátil del perfil.'
       show:
