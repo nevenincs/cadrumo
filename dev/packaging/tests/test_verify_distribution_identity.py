@@ -10,7 +10,9 @@ from pathlib import Path
 import pytest
 
 from dev.packaging.verify_distribution_identity import (
+    ModelFacingDescriptionCheck,
     _labeled_product_description,
+    _model_facing_failure_lines,
     _product_description_observation,
     verify_distribution_identity,
 )
@@ -197,12 +199,16 @@ def test_unapproved_semantic_contradiction_cannot_pass_keyword_claim_checks() ->
     assert all(claim.parity is False for claim in observation.claims)
 
 
-def test_cli_returns_nonzero_and_emits_the_real_failure_report() -> None:
+def test_cli_exits_zero_and_emits_a_passing_report() -> None:
     """The production CLI exits 0 and emits a passing report once all claims carry parity.
 
     After Revision 2 of the S06 copy record expanded every short client-display field to
     all six required claims, the verifier is fully green: namespace, identity, and
     description checks all pass.
+
+    The name states what the assertions check. Its predecessor was named for a
+    non-zero exit while asserting a zero one, so a reader who reddened this gate
+    was told the opposite of what had happened.
     """
     completed = subprocess.run(
         [sys.executable, "-m", "dev.packaging.verify_distribution_identity"],
@@ -229,3 +235,75 @@ def test_verifier_rejects_a_mixed_repository_revision(tmp_path: Path) -> None:
     """One report must never combine an imported package with another source root."""
     with pytest.raises(ValueError, match="same repository revision"):
         verify_distribution_identity(tmp_path)
+
+
+def _model_facing_check(
+    *,
+    sha256: str = "a" * 64,
+    nonempty: bool = True,
+    language_labels_absent: bool = True,
+    surface_counts: dict[str, int] | None = None,
+    compliant: bool = True,
+) -> ModelFacingDescriptionCheck:
+    """Build one model-facing check, defaulting to the compliant shape."""
+    counts = surface_counts if surface_counts is not None else {"argument": 1, "prompt": 1, "resource": 1, "tool": 1}
+    return ModelFacingDescriptionCheck(
+        localization_target=False,
+        surfaces=("MCP tool descriptions",),
+        count=sum(counts.values()),
+        surface_counts=counts,
+        sha256=sha256,
+        expected_sha256="a" * 64,
+        nonempty=nonempty,
+        language_labels_absent=language_labels_absent,
+        compliant=compliant,
+    )
+
+
+def test_a_compliant_model_facing_check_produces_no_failure_lines() -> None:
+    """The detector must stay silent on the passing surface, or its lines mean nothing."""
+    assert _model_facing_failure_lines(_model_facing_check()) == ()
+
+
+def test_a_drifted_digest_names_its_own_pin_constant_and_locator() -> None:
+    """A digest mismatch must tell the reader where the pin lives and what it observed.
+
+    This gate reddens on any CLI verb or option change, so the agents who trip it
+    are usually landing something unrelated to packaging. Before this line existed
+    the verifier exited 1 with empty stderr beside sixteen hundred rows of JSON,
+    and the drift was rediscovered from scratch three times in three days.
+    """
+    observed = "b" * 64
+    expected = "a" * 64
+    lines = _model_facing_failure_lines(
+        _model_facing_check(sha256=observed, compliant=False),
+    )
+
+    assert len(lines) == 1
+    line = lines[0]
+    assert observed in line
+    assert expected in line
+    assert "_EXPECTED_MODEL_FACING_DESCRIPTION_SHA256" in line
+    assert "dev/packaging/verify_distribution_identity.py" in line
+
+
+def test_each_integrity_failure_contributes_its_own_line() -> None:
+    """Blank copy, a leaked language label, and an empty surface are distinct defects.
+
+    They are real defects rather than tripwire drift, so each must be reported
+    separately instead of collapsing into the digest line.
+    """
+    blank = _model_facing_failure_lines(_model_facing_check(nonempty=False, compliant=False))
+    labelled = _model_facing_failure_lines(_model_facing_check(language_labels_absent=False, compliant=False))
+    empty_surface = _model_facing_failure_lines(
+        _model_facing_check(
+            surface_counts={"argument": 1, "prompt": 1, "resource": 1, "tool": 0},
+            compliant=False,
+        ),
+    )
+
+    assert len(blank) == 1
+    assert len(labelled) == 1
+    assert len(empty_surface) == 1
+    assert "tool" in empty_surface[0]
+    assert len({blank[0], labelled[0], empty_surface[0]}) == 3

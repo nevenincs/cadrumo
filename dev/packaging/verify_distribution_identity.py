@@ -215,6 +215,12 @@ _APPROVED_PRODUCT_DESCRIPTION_PAIRS: Final[dict[tuple[str, str], frozenset[tuple
 _EXPECTED_MODEL_FACING_DESCRIPTION_SHA256: Final[str] = (
     "1cdfdd6ebb10e5be7ecb336ffdcd3ede8a7a022690d617ca0decafb85d88a6c0"
 )
+# Self-locator for the drift remedy. The digest above pins a surface that ANY
+# CLI verb or option change moves, so the readers who redden it are usually
+# landing something unrelated to packaging; the failure has to name its own
+# constant or they cannot act on it.
+_PIN_CONSTANT_NAME: Final[str] = "_EXPECTED_MODEL_FACING_DESCRIPTION_SHA256"
+_PIN_LOCATOR: Final[str] = "dev/packaging/verify_distribution_identity.py"
 _PRODUCT_CLAIM_PATTERNS: Final[dict[str, dict[str, tuple[re.Pattern[str], ...]]]] = {
     "capability": {
         "english": (
@@ -490,6 +496,48 @@ class DistributionIdentityReport:
             and all(row.compliant for row in self.product_description_observations)
             and self.model_facing_description_check.compliant
         )
+
+    def failure_lines(self) -> tuple[str, ...]:
+        """Return one actionable line per failed check, empty when the report passes.
+
+        The JSON document carries every observation, but a reader who has just
+        reddened this gate needs to know which projection drifted and what to do
+        about it without parsing sixteen hundred rows. Each line therefore names
+        the drifted surface and, where the remedy is a deliberate re-pin rather
+        than a code fix, the constant that holds the pin.
+        """
+        lines: list[str] = []
+        for row in self.namespace_observations:
+            if not row.compliant:
+                lines.append(
+                    f"harness namespace: {row.surface}/{row.kind} {row.identifier!r} at {row.location} "
+                    f"projects {list(row.projected_identifiers)} without the required "
+                    f"{self.required_harness_prefix!r} prefix",
+                )
+        for parity in self.inventory_parity_checks:
+            if not parity.compliant:
+                missing = sorted(set(parity.expected) - set(parity.observed))
+                unexpected = sorted(set(parity.observed) - set(parity.expected))
+                lines.append(
+                    f"inventory parity: {parity.name} missing={missing} unexpected={unexpected}",
+                )
+        for check in self.product_identity_checks:
+            if not check.compliant:
+                observed = sorted({row.value for row in check.observations if row.value != check.expected})
+                lines.append(
+                    f"product identity: {check.name} expected {check.expected!r} but observed {observed}",
+                )
+        for observation in self.product_description_observations:
+            if not observation.compliant:
+                unmet = sorted(claim.name for claim in observation.claims if not claim.parity)
+                lines.append(
+                    f"product description: {observation.surface} field {observation.field!r} at "
+                    f"{observation.location} is not approved bilingual copy "
+                    f"(english_label={observation.english_label}, spanish_label={observation.spanish_label}, "
+                    f"claims_without_parity={unmet})",
+                )
+        lines.extend(_model_facing_failure_lines(self.model_facing_description_check))
+        return tuple(lines)
 
     def to_document(self) -> dict[str, object]:
         """Return the stable JSON-compatible evidence document."""
@@ -1420,6 +1468,44 @@ def _model_facing_description_check(
     )
 
 
+def _model_facing_failure_lines(check: ModelFacingDescriptionCheck) -> tuple[str, ...]:
+    """Return actionable lines for a failed model-facing description check.
+
+    The three integrity properties are real defects and say so. A bare digest
+    mismatch is different in kind: the pinned inventory is a review tripwire over
+    a surface that every CLI verb or option change legitimately moves, so the
+    remedy is a deliberate re-pin, and the lines below carry both the observed
+    digest and the precondition that makes re-pinning honest.
+    """
+    if check.compliant:
+        return ()
+    lines: list[str] = []
+    if not check.nonempty:
+        lines.append("model-facing descriptions: at least one identifier or description is blank")
+    if not check.language_labels_absent:
+        lines.append(
+            "model-facing descriptions: a language label leaked into model-facing copy, "
+            "which is English-only by design",
+        )
+    missing_surfaces = sorted(surface for surface, count in check.surface_counts.items() if count == 0)
+    if missing_surfaces:
+        lines.append(f"model-facing descriptions: no descriptions projected for surfaces {missing_surfaces}")
+    if check.sha256 != check.expected_sha256:
+        lines.append(
+            "model-facing descriptions: the pinned inventory digest drifted. "
+            f"expected={check.expected_sha256} observed={check.sha256} "
+            f"count={check.count} by_surface={dict(sorted(check.surface_counts.items()))}. "
+            "A growing count usually means a verb or option was added and a shrinking count that one was "
+            "removed. If that change is intended, re-pin "
+            f"{_PIN_CONSTANT_NAME} in {_PIN_LOCATOR} to the observed digest, in the SAME commit as the "
+            "change that moved the surface. Re-pin ONLY from a tree whose description sources are clean "
+            "against HEAD (src/cadrumo/locales, src/cadrumo/entrypoints, src/cadrumo/agent, "
+            "src/cadrumo/_data/agent, packaging/mcpb) - a digest computed over uncommitted work bakes that "
+            "work into a committed gate and is wrong the moment it lands.",
+        )
+    return tuple(lines)
+
+
 def verify_distribution_identity(repo_root: Path | None = None) -> DistributionIdentityReport:
     """Inventory and verify the current distribution identity without mutation."""
     root = (repo_root or Path(__file__).resolve().parents[2]).resolve(strict=True)
@@ -1472,7 +1558,14 @@ def main(argv: list[str] | None = None) -> int:
     if args.output is not None:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(payload, encoding=_UTF_8)
-    return 0 if report.ok else 1
+    if report.ok:
+        return 0
+    # stdout stays the machine document; the human account goes to stderr so a
+    # reader who reddened this gate is told what drifted and what to do, instead
+    # of a bare exit 1 beside sixteen hundred rows of JSON.
+    for line in report.failure_lines():
+        print(line, file=sys.stderr)
+    return 1
 
 
 if __name__ == "__main__":
