@@ -177,7 +177,8 @@ Land the net-new descendant repeating group emitting the exact established fact 
 - [ ] `W03.P07.S24` - Convert the descendiente and repair verbs into deep-link doors into the flow and delete their bespoke prompt loops in the same change; `src/cadrumo/entrypoints/cli/_config/_descendiente.py`.
 - [ ] `W03.P07.S25` - Convert the apoderado verb into a door that hosts the flow pages while routing writes to the ApoderadoService namespace, never profile facts; `src/cadrumo/entrypoints/cli/_config/_apoderado.py`.
 - [x] `W03.P07.S34` - Migrate the non-interactive quiet and accept-defaults walks onto run_scripted_flow with one shared definition builder and one coercer, preserving force-visible law and localized refusal surfaces; `src/cadrumo/application/wizard/_commands.py`.
-- [ ] `W03.P07.S35` - Splice attach_descendant_group into the shared setup definition builder with the count page defaulting to zero descendants, pinning the group live on both frontends; `src/cadrumo/application/wizard/_commands.py`.
+- [x] `W03.P07.S35` - Splice attach_descendant_group into the shared setup definition builder with the count page defaulting to zero descendants, pinning the group live on both frontends; `src/cadrumo/application/wizard/_commands.py`.
+- [ ] `W03.P07.S36` - Route interactive-edit descendant answers through the edit persist seam with count-shrink clearing, or gate the descendant group out of modify mode until that seam exists, closing the silent-no-op-on-write gap; `src/cadrumo/application/wizard/_persistence.py`.
 
 ### Phase `W03.P08` - Cotejo censal phase
 
