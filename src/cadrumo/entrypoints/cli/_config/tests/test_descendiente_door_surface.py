@@ -4,8 +4,8 @@ Drives the real ``cadrumo`` CLI end to end against an isolated real-session
 backend — no mocks. Invoking the group with no subcommand opens the paged
 descendant door; under the non-interactive test host (no controlling terminal)
 the door refuses with the substrate's no-console message rather than crashing,
-proving the callback is wired onto the exact command the S36 gate notice points
-operators at. The flag verbs (``add`` / ``list`` / ``remove``) remain the
+proving the callback is wired onto the exact command the modify-mode
+descendants advisory notice points operators at. The flag verbs (``add`` / ``list`` / ``remove``) remain the
 automation contract and keep behaving after the group gained its door callback.
 """
 

@@ -34,11 +34,11 @@ from .._common import activate_subcommand_output_language as _activate_subcomman
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from .._errors import command_error_boundary as _command_error_boundary
 from ._apoderado import apoderado_app, register_apoderado_commands
-from ._censo_file import register_censo_commands as _register_censo_commands
 from ._auth import auth_app
 from ._auth_diagnostics import auth_diagnostics_app
 from ._bucket_archive import register_bucket_archive_commands
 from ._bucket_history import register_bucket_history_commands
+from ._censo_file import register_censo_commands as _register_censo_commands
 from ._certificate import certificate_app
 from ._collab import register_collab_commands
 from ._custody import register_custody_commands
@@ -437,7 +437,11 @@ def config_profile_show(
     for issue in report.issues:
         lines.append(f"{issue.severity.value}\t{issue.code}\t{issue.path or '-'}\t{issue.message}")
     lines.extend(f"{path}\t{value}" for path, value in sorted(values.items()))
-    _emit_envelope(ctx, command="config.profile.show", result=result, lines=lines)
+    from ....application.user_profile import censo_divergence_notice
+
+    divergence_notice = censo_divergence_notice(record)
+    notices = [divergence_notice] if divergence_notice is not None else []
+    _emit_envelope(ctx, command="config.profile.show", result=result, lines=lines, notices=notices)
     if blocking:
         raise typer.Exit(code=2)
 
