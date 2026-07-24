@@ -85,7 +85,9 @@ def _make_repo_root(tmp_path: Path, *, version: str = "1.2.3") -> Path:
     _write_pyprojects(root, version)
     _write_init(root, version)
     _write_manifest(root, version)
-    _write_mcpb_manifest(root, version)
+    # The tracked MCPB manifest never carries the release version: build.py
+    # stamps it, so the version gate requires the synthetic sentinel.
+    _write_mcpb_manifest(root, readiness._MCPB_MANIFEST_VERSION_SENTINEL)
     (root / "CHANGELOG.md").write_text(
         "# Changelog\n\n## [1.2.3] - 2026-07-04\n\n### Features\n- thing\n", encoding="utf-8"
     )
@@ -103,23 +105,24 @@ def test_version_surfaces_agree_passes_when_all_release_authorities_match(tmp_pa
     assert "2.0.0" in check.detail
 
 
-def test_version_surfaces_agree_fails_when_the_mcpb_bundle_pin_is_stale(tmp_path: Path) -> None:
-    """A stale ``.mcpb`` version or uvx self-install pin reds the release parity gate.
+def test_version_surfaces_agree_fails_when_the_mcpb_manifest_is_not_the_sentinel(tmp_path: Path) -> None:
+    """A real-looking tracked ``.mcpb`` manifest version reds the release parity gate.
 
-    Enrolling the Desktop-Extension bundle in this gate means a release bump that
-    updates every other surface but leaves the bundle pinned to the prior release
-    (so the bundle would self-install a stale ``cadrumo[agent]``) fails loudly.
+    build.py stamps the cohort version over the tracked manifest at build time,
+    so the committed literal must stay the synthetic sentinel: a hand-stamped
+    real version would masquerade as a version authority and rot on the next
+    release bump. The BUILT bundle's stamped version is bound to the cohort by
+    ``check_generated_surface_versions`` instead.
     """
     root = _make_repo_root(tmp_path, version="2.0.0")
-    # Bump every other release surface to 2.1.0, leaving the mcpb bundle at 2.0.0.
-    _write_pyprojects(root, "2.1.0")
-    _write_init(root, "2.1.0")
-    _write_manifest(root, "2.1.0")
+    # A stale hand-stamped literal (the pre-sentinel failure mode).
+    _write_mcpb_manifest(root, "2.0.0")
 
     check = readiness.check_version_surfaces_agree(root)
 
     assert check.passed is False
     assert "mcpb='2.0.0'" in check.detail
+    assert readiness._MCPB_MANIFEST_VERSION_SENTINEL in check.detail
 
 
 def test_project_names_are_canonical_for_root_and_both_companions(tmp_path: Path) -> None:
