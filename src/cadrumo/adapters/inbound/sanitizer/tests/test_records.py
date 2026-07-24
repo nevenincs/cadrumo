@@ -19,8 +19,7 @@ import re
 import pytest
 from pydantic import SecretStr, ValidationError
 
-from cadrumo.core.identity import IdentityError
-
+from .....core.identity import IdentityError
 from .._records import (
     AddressReplacement,
     ArbitraryReplacement,

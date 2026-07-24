@@ -35,15 +35,14 @@ from textual.widgets import (
 )
 from textual.widgets.option_list import Option
 
-from cadrumo.application.flows import assemble_page_copy, validate_widget_shape, visible_sequence
-from cadrumo.core.flows import DEFER_TOKEN, FlowWidgetKind
-from cadrumo.core.i18n import tr
+from ....application.flows import assemble_page_copy, validate_widget_shape, visible_sequence
+from ....core.flows import DEFER_TOKEN, FlowWidgetKind
+from ....core.i18n import tr
 
 if TYPE_CHECKING:
     from textual.events import Key
 
-    from cadrumo.application.flows import ChoiceCopy, PageCopy, VisiblePage
-
+    from ....application.flows import ChoiceCopy, PageCopy, VisiblePage
     from ._app import FlowTuiApp
 
 _TEXTUAL_INPUT_WIDGETS = frozenset(

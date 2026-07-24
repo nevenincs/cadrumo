@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.application.flows import (
+from ....application.flows import (
     CopyRef,
     FlowDefinition,
     FlowPage,
@@ -28,9 +28,9 @@ from cadrumo.application.flows import (
     answer,
     start_flow,
 )
-from cadrumo.core import STRICT_FROZEN_CONFIG
-from cadrumo.core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
-from cadrumo.core.i18n import tr
+from ....core import STRICT_FROZEN_CONFIG
+from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
+from ....core.i18n import tr
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

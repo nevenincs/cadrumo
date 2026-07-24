@@ -8,8 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core.identity import IdentityError
-
+from ....core.identity import IdentityError
 from ...iva import EUMemberState, InvoiceKind, IvaRateKind, OssIossRegime, TransactionKind
 from .._enums import IvaRate, PaymentStatus, iva_rate_percentage, numeric_iva_rate_percentages
 from .._models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id

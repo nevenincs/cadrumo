@@ -25,15 +25,15 @@ from textual.binding import Binding, BindingsMap
 from textual.screen import Screen
 from textual.widgets import Button, DataTable, Footer, Static
 
-from cadrumo.application.flows import (
+from ....application.flows import (
     assemble_page_copy,
     checkpoint_available,
     resolve_copy,
     review,
     visible_sequence,
 )
-from cadrumo.core.flows import PageStatus
-from cadrumo.core.i18n import tr
+from ....core.flows import PageStatus
+from ....core.i18n import tr
 
 if TYPE_CHECKING:
     from ._app import FlowTuiApp

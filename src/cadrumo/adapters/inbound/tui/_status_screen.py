@@ -25,7 +25,7 @@ from textual.binding import Binding, BindingsMap
 from textual.containers import VerticalScroll
 from textual.widgets import DataTable, Footer, Static
 
-from cadrumo.core.i18n import tr
+from ....core.i18n import tr
 
 # Copyable custody / recovery next-step lines. These are literal CLI
 # invocations (command tokens, not operator prose), rendered verbatim so an

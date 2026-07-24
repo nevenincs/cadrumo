@@ -24,13 +24,13 @@ from textual.app import App
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
 
-from cadrumo.application.flows import (
+from ....application.flows import (
     FlowCheckpointError as _FlowCheckpointError,
 )
-from cadrumo.application.flows import (
+from ....application.flows import (
     FlowError as _FlowError,
 )
-from cadrumo.application.flows import (
+from ....application.flows import (
     FlowPage,
     FlowRepeatingGroup,
     ReviewProjection,
@@ -48,13 +48,12 @@ from cadrumo.application.flows import (
     start_flow,
     visible_sequence,
 )
-from cadrumo.core.flows import REPEATING_INSTANCE_SEPARATOR, FlowMode, FlowWidgetKind, PageStatus
-
+from ....core.flows import REPEATING_INSTANCE_SEPARATOR, FlowMode, FlowWidgetKind, PageStatus
 from ._question_screen import QuestionScreen
 from ._review_screen import ReviewScreen
 
 if TYPE_CHECKING:
-    from cadrumo.application.flows import CheckpointStore, FlowDefinition, FlowState, VisiblePage
+    from ....application.flows import CheckpointStore, FlowDefinition, FlowState, VisiblePage
 
 
 class FlowTuiApp(App[None]):
