@@ -183,7 +183,7 @@ export const en: Copy = {
       body: [
         <>
           This website, <strong>cadrumo.neve.md</strong>, and the <strong>neve.md</strong>{' '}
-          domain are published by <strong>Gergely Wootsch</strong>, the individual behind
+          domain are published by <strong>Neve Nincs</strong>, the individual behind
           neve.md and the Cadrumo project, a non-commercial open-source effort. This
           identification is provided in view of Article 10 of Spain’s Ley 34/2002 (LSSI-CE)
           to the extent it applies to a non-commercial project; further identification
@@ -327,6 +327,6 @@ export const en: Copy = {
     disclaimerText:
       "is an independent open-source project (Apache-2.0). It is not affiliated with AEAT and never submits filings; you file through AEAT's official channels and remain responsible for every declaration.",
     legalLink: 'Legal notice, privacy & cookies',
-    copyright: '© 2026 Gergely Wootsch and the cadrumo contributors.',
+    copyright: '© 2026 Neve Nincs and the cadrumo contributors.',
   },
 }

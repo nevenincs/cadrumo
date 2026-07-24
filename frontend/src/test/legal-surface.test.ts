@@ -54,7 +54,7 @@ describe('legal surface', () => {
   it('embeds the non-affiliation disclaimer and publisher identity in the shipped page', () => {
     const html = read('index.html')
     expect(html).toContain('Not affiliated with, endorsed, or approved by the Agencia Estatal')
-    expect(html).toContain('Gergely Wootsch')
+    expect(html).toContain('Neve Nincs')
     expect(html).toContain('NO relation to the Agencia Estatal')
   })
 })
