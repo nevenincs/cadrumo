@@ -48,6 +48,20 @@ from ._copy_sources import (
     resolve_profile_schema_copy,
     resolve_profile_terminology_copy,
 )
+from ._cotejo import (
+    COTEJO_LOCALE_KEYS,
+    COTEJO_SECTION_ID,
+    CotejoAxis,
+    attach_cotejo_pages,
+    build_cotejo_pages,
+    cotejo_axes,
+    cotejo_outcome,
+)
+from ._descendant_door import (
+    DESCENDANT_DOOR_LOCALE_KEYS,
+    build_descendant_door,
+    persist_descendant_door_answers,
+)
 from ._descendant_group import (
     DESCENDANT_GROUP,
     DESCENDANT_LOCALE_KEYS,
@@ -90,14 +104,18 @@ from ._status import (
 from ._widgets import validate_widget_answer
 
 __all__ = [
+    "COTEJO_LOCALE_KEYS",
+    "COTEJO_SECTION_ID",
     "DESCENDANTS_COUNT_PAGE_ID",
     "DESCENDANTS_GROUP_ID",
+    "DESCENDANT_DOOR_LOCALE_KEYS",
     "DESCENDANT_GROUP",
     "DESCENDANT_LOCALE_KEYS",
     "DESCENDANT_NIF_VALIDATOR_ID",
     "SETUP_UNIDAD_FAMILIAR_VALIDATOR_ID",
     "TAXPAYER_PROJECTION_VALIDATOR_ID",
     "WIZARD_FLOWS",
+    "CotejoAxis",
     "PageLegalZone",
     "ProfileFactsCheckpointStore",
     "WizardChoice",
@@ -111,16 +129,22 @@ __all__ = [
     "WizardUnsupportedConsoleError",
     "WizardValidationError",
     "WizardVisibility",
+    "attach_cotejo_pages",
     "attach_descendant_group",
     "attach_setup_legal_validators",
+    "build_cotejo_pages",
+    "build_descendant_door",
     "build_flow_legal_zones",
     "build_taxpayer_projection_validator",
     "build_wizard_command",
     "build_wizard_status",
     "checkpoint_answers_from_record",
     "checkpoint_facts_from_answers",
+    "cotejo_axes",
+    "cotejo_outcome",
     "descendant_facts_from_answers",
     "load_active_taxpayer_profile",
+    "persist_descendant_door_answers",
     "project_answers",
     "register_profile_copy_sources",
     "register_taxpayer_projection_validator",
