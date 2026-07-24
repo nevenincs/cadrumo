@@ -58,6 +58,7 @@ from pydantic_core import ErrorDetails
 from ...core.flows import CheckpointAvailability, FlowMode
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ..flows import (
+    CheckpointStore,
     FlowDefinition,
     FlowPage,
     FlowState,
@@ -66,6 +67,7 @@ from ..flows import (
     flow_definition_from_wizard_flow,
 )
 from ._catalogue import SETUP_FLOW
+from ._checkpoint_store import ProfileFactsCheckpointStore
 from ._errors import WizardMissingFlagError
 from ._format_hints import attach_format_hints
 from ._models import WizardFlow, WizardQuestion, WizardWidget
@@ -84,12 +86,15 @@ _FLOW_MODE_BY_WIZARD_MODE: dict[WizardPersistMode, FlowMode] = {
     "edit": FlowMode.MODIFY,
 }
 
-#: Checkpoint posture for the setup flow in this slice. Save-and-resume
-#: (facts-as-checkpoint) is a separate step; declaring UNAVAILABLE for both
-#: modes makes the substrate refuse a save loudly rather than offer one it
-#: cannot honour — the honest posture until the checkpoint create path lands.
+#: Checkpoint posture for the setup flow (the facts-ARE-the-checkpoint model).
+#: CREATE offers save-and-exit and resume: the profile is minted early in
+#: ``SETUP_INCOMPLETE`` state and every answer persists as an effective-dated
+#: fact through the lifecycle authority, so the encrypted facts themselves are
+#: the checkpoint. MODIFY stays the declared no-op — a live profile must never
+#: hold a half-applied edit set — so the substrate refuses a save loudly rather
+#: than offer one it cannot honour.
 _SETUP_CHECKPOINT: dict[FlowMode, CheckpointAvailability] = {
-    FlowMode.CREATE: CheckpointAvailability.UNAVAILABLE,
+    FlowMode.CREATE: CheckpointAvailability.AVAILABLE,
     FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
 }
 
@@ -113,6 +118,7 @@ class InteractiveFlowRunner(typing.Protocol):
         mode: FlowMode,
         registered_values: Mapping[str, str] | None,
         on_language_activated: Callable[[str, str], bool] | None = None,
+        checkpoint_store: CheckpointStore | None = None,
     ) -> FlowState:
         """Run ``definition`` in ``mode`` and return the final flow state.
 
@@ -122,6 +128,11 @@ class InteractiveFlowRunner(typing.Protocol):
         whether a switch happened so the frontend can re-render. It is
         ``None`` when the existing language chain (an explicit flag or the
         environment) already pins the language for the whole run.
+
+        ``checkpoint_store`` is the create-mode facts-as-checkpoint port: a
+        frontend that declares checkpointing AVAILABLE for ``mode`` honours
+        save-and-exit through it. It is ``None`` in a mode whose definition
+        declares checkpointing UNAVAILABLE.
         """
         ...
 
@@ -151,17 +162,21 @@ def _line_mode_interactive_runner(
     mode: FlowMode,
     registered_values: Mapping[str, str] | None = None,
     on_language_activated: Callable[[str, str], bool] | None = None,
+    checkpoint_store: CheckpointStore | None = None,
 ) -> FlowState:
     """Default runner: the line-mode frontend over the one flow engine.
 
     The line frontend carries no registered-value column, so on-record
     values are surfaced only through the full-screen review table when the
     entrypoint injects the capability-selecting runner; the degradation
-    tier walks the same engine, validation, and submit gate.
+    tier walks the same engine, validation, and submit gate. When the
+    definition declares checkpointing AVAILABLE for ``mode`` the injected
+    ``checkpoint_store`` backs the save-and-exit affordance.
     """
     del registered_values
     state, _projection = LineFlowFrontend(
         definition,
+        checkpoint_store=checkpoint_store,
         on_answer_committed=_activation_only_committed_callback(on_language_activated),
     ).run(mode=mode)
     return state
@@ -984,7 +999,8 @@ def _run_interactive_flow(
     profile_id: str,
     profile_name: str,
     interactive_flow_runner: InteractiveFlowRunner,
-) -> tuple[BaseModel, frozenset[str]]:
+    checkpoint_store: CheckpointStore | None = None,
+) -> tuple[BaseModel, frozenset[str], dict[str, str]]:
     """Render the paged flow, then project its answers into the typed model.
 
     Drives the injected frontend runner (full-screen TUI where the host
@@ -994,13 +1010,27 @@ def _run_interactive_flow(
     model is produced identically regardless of frontend. ``edit`` scopes
     the write to the pages the operator actually answered; ``create``
     writes the full set.
+
+    ``checkpoint_store`` backs create-mode save-and-exit; it is threaded
+    into the runner so the frontend can persist through it. The returned
+    tuple carries the typed answers model, the supplied-question-id scope,
+    and the engine's committed page-keyed answer map (the create-mode
+    completion path persists that map through the same store).
     """
+    if mode == "create" and checkpoint_store is not None:
+        # Resume seed: an in-progress SETUP_INCOMPLETE profile re-projects
+        # its on-record facts to page prefills so the walk continues from
+        # the prior answers. Explicit flags still override a resumed value.
+        resumed = checkpoint_store.load(flow.id)
+        if resumed:
+            canonical = {**dict(resumed), **dict(canonical)}
     definition, registered_values = _prepare_interactive_flow(flow, canonical, mode=mode, profile_id=profile_id)
     try:
         final_state = interactive_flow_runner(
             definition,
             mode=_FLOW_MODE_BY_WIZARD_MODE[mode],
             registered_values=registered_values,
+            checkpoint_store=checkpoint_store,
         )
     except (FlowUnsupportedConsoleError, WizardUnsupportedConsoleError) as exc:
         # The shared no-console message points at `profile create`, which
@@ -1028,7 +1058,49 @@ def _run_interactive_flow(
         _scripted_from_canonical(flow, dict(committed), force_visible=force_visible),
         force_visible=force_visible,
     )
-    return answers, supplied_question_ids
+    return answers, supplied_question_ids, committed
+
+
+def _finish_interactive_create(
+    flow: WizardFlow,
+    answers: BaseModel,
+    committed: Mapping[str, str],
+    *,
+    profile_id: str,
+    checkpoint_store: CheckpointStore,
+) -> dict[str, str]:
+    """Complete or leave-incomplete an interactive create after the walk returns.
+
+    The profile is minted early and its facts persist through the store, so
+    this decides only the terminal transition. A frontend save-and-exit
+    (``save_exit_persisted``) leaves the profile ``SETUP_INCOMPLETE`` — the
+    facts are already saved and the operator resumes later. A submit runs
+    the filing-baseline gate, ensures the answer set is persisted, then
+    flips the profile ``ACTIVE`` through
+    :func:`~cadrumo.application.user_profile.complete_setup_with_lifecycle_span`
+    (emitting ``PROFILE_SETUP_COMPLETED``) — the completion discard: the
+    status flip is what ends resume-eligibility.
+    """
+    from ..user_profile import complete_setup_with_lifecycle_span
+    from ._persistence import serialise_answers
+
+    profile_values = serialise_answers(flow, answers)
+    if checkpoint_store.save_exit_persisted:
+        return profile_values
+
+    missing_baseline = _missing_filing_baseline_flags(flow, answers)
+    if missing_baseline:
+        raise WizardMissingFlagError(
+            translated_message="application.wizard.errors.create_missing_filing_baseline",
+            context={
+                "flow_id": flow.id,
+                "missing": missing_baseline,
+                "missing_flags": _format_missing_flags(missing_baseline),
+            },
+        )
+    checkpoint_store.persist(committed)
+    complete_setup_with_lifecycle_span(profile_id)
+    return profile_values
 
 
 def _run_full_flow(
@@ -1042,6 +1114,7 @@ def _run_full_flow(
     mode: WizardPersistMode,
     interactive_flow_runner: InteractiveFlowRunner = _line_mode_interactive_runner,
     explicit_question_ids: frozenset[str] = frozenset(),
+    checkpoint_store: CheckpointStore | None = None,
 ) -> dict[str, str]:
     """Walk the full wizard flow and persist the resulting answer set.
 
@@ -1052,6 +1125,12 @@ def _run_full_flow(
     operator supplied on a non-interactive command line. Such a
     question is collected even when its ``visible_when`` gate would
     hide it, so an explicitly-given flag value is always honoured.
+
+    ``checkpoint_store`` is supplied only for an interactive ``create``:
+    the facts persist incrementally through it (mint-early, save-and-exit)
+    and completion flips the profile ``ACTIVE``, so that path bypasses the
+    end-of-flow ``register_active_profile`` used by every other persistence
+    route.
     """
     from ..user_profile import (
         profile_create_storage_span,
@@ -1097,14 +1176,27 @@ def _run_full_flow(
         )
         supplied_question_ids = _all_question_ids(flow)
     else:
-        answers, supplied_question_ids = _run_interactive_flow(
+        answers, supplied_question_ids, committed = _run_interactive_flow(
             flow,
             canonical,
             mode=mode,
             profile_id=profile_id,
             profile_name=profile_name,
             interactive_flow_runner=interactive_flow_runner,
+            checkpoint_store=checkpoint_store,
         )
+        # Interactive create is the facts-as-checkpoint path: the profile
+        # was minted early and its facts persisted through the store, so a
+        # save-and-exit needs no further write and a submit completes the
+        # setup. Every other route falls through to the shared span below.
+        if mode == "create" and checkpoint_store is not None:
+            return _finish_interactive_create(
+                flow,
+                answers,
+                committed,
+                profile_id=profile_id,
+                checkpoint_store=checkpoint_store,
+            )
 
     # `create` writes the full answer set. An interactive `edit` writes a
     # patch scoped to the pages the operator actually answered
@@ -1234,12 +1326,22 @@ def _require_profile_name(flow: WizardFlow, raw_profile_name: object) -> str:
 
 
 def _resolve_profile_id_for_mode(flow: WizardFlow, mode: WizardPersistMode, profile_name: str) -> str:
-    """Resolve or mint the immutable profile id for the requested wizard mode."""
-    from ...domain.user_profile import new_profile_id
+    """Resolve or mint the immutable profile id for the requested wizard mode.
+
+    A ``create`` for a label whose profile is ``SETUP_INCOMPLETE`` resolves
+    to that in-progress bucket so the walk RESUMES it rather than refusing
+    as a duplicate — the facts-as-checkpoint re-entry. A label carried by an
+    ``ACTIVE`` profile still refuses (finish then edit), and a genuinely new
+    label mints a fresh id.
+    """
+    from ...domain.user_profile import UserProfileStatus, new_profile_id
     from ..user_profile import refuse_duplicate_label, require_registered_label
     from ..workflow import read_profile_bucket
 
     if mode == "create":
+        pointer = read_profile_bucket(profile_name)
+        if pointer is not None and pointer.status is UserProfileStatus.SETUP_INCOMPLETE:
+            return pointer.bucket_id
         refuse_duplicate_label(profile_name)
         return new_profile_id()
 
@@ -1435,6 +1537,7 @@ def _run_wizard_persistence_path(
     profile_name: str,
     profile_id: str,
     interactive_flow_runner: InteractiveFlowRunner,
+    checkpoint_store: CheckpointStore | None = None,
 ) -> dict[str, str]:
     """Dispatch to patch-edit or full-flow persistence."""
     non_interactive = quiet or accept_defaults
@@ -1451,6 +1554,7 @@ def _run_wizard_persistence_path(
         mode=mode,
         interactive_flow_runner=interactive_flow_runner,
         explicit_question_ids=frozenset(explicit_flags),
+        checkpoint_store=checkpoint_store,
     )
 
 
@@ -1592,6 +1696,14 @@ def _execute_wizard_command(
 
     _seed_output_language_from_environment(canonical)
     _refuse_foral_ccaa(canonical, explicit_flags)
+    # Interactive create is the facts-as-checkpoint path: the store mints
+    # the profile early in ``SETUP_INCOMPLETE`` state and persists each
+    # answered fact through the lifecycle authority, backing save-and-exit.
+    checkpoint_store = (
+        ProfileFactsCheckpointStore(flow, profile_id=profile_id, profile_name=profile_name)
+        if mode == "create" and not (quiet or accept_defaults)
+        else None
+    )
     try:
         profile_values = _run_wizard_persistence_path(
             flow,
@@ -1603,9 +1715,16 @@ def _execute_wizard_command(
             profile_name=profile_name,
             profile_id=profile_id,
             interactive_flow_runner=interactive_flow_runner,
+            checkpoint_store=checkpoint_store,
         )
     except ValidationError as exc:
         raise _wizard_validation_bad(flow, exc) from exc
+    if checkpoint_store is not None and checkpoint_store.save_exit_persisted:
+        # Save-and-exit: the frontend already surfaced the saved state and
+        # the profile stays SETUP_INCOMPLETE for a later resume. Emitting a
+        # created/active success here would be a lie, so the command exits
+        # quietly (a "resume later" notice awaits a locale key).
+        return
     _emit_wizard_success(
         mode,
         profile_name,

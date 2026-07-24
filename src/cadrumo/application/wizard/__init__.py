@@ -36,6 +36,11 @@ See Also:
 from . import _compiler as _compiler
 from . import _copy_sources as _copy_sources
 from ._catalogue import WIZARD_FLOWS
+from ._checkpoint_store import (
+    ProfileFactsCheckpointStore,
+    checkpoint_answers_from_record,
+    checkpoint_facts_from_answers,
+)
 from ._commands import build_wizard_command
 from ._copy_sources import (
     register_profile_copy_sources,
@@ -72,6 +77,7 @@ __all__ = [
     "WIZARD_FLOWS",
     "CanonicalAnswerPrompter",
     "PageLegalZone",
+    "ProfileFactsCheckpointStore",
     "Prompter",
     "QuestionaryPrompter",
     "WizardAnswerQueueUnderflowError",
@@ -89,6 +95,8 @@ __all__ = [
     "build_taxpayer_projection_validator",
     "build_wizard_command",
     "build_wizard_status",
+    "checkpoint_answers_from_record",
+    "checkpoint_facts_from_answers",
     "load_active_taxpayer_profile",
     "project_answers",
     "register_profile_copy_sources",
