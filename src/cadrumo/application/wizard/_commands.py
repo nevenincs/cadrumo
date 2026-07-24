@@ -43,6 +43,7 @@ from typing import TYPE_CHECKING, Annotated
 
 if TYPE_CHECKING:
     from ...core.errors import CadrumoError
+    from ...domain.user_profile import UserProfileRecord
     from ..workflow import WorkflowState
 
 import contextlib
@@ -77,6 +78,7 @@ from ._prompter import (
     WizardEditUnsupportedConsoleError,
     WizardUnsupportedConsoleError,
 )
+from ._registered_values import project_registered_values
 from ._runner import run_flow
 
 #: Which substrate :class:`FlowMode` each wizard verb drives. ``create``
@@ -947,14 +949,13 @@ def _seed_flow_definition(definition: FlowDefinition, seed_by_page_id: Mapping[s
     return definition.model_copy(update={"sections": tuple(new_sections)})
 
 
-def _on_record_path_values(profile_id: str) -> dict[str, str]:
-    """Read the active profile's on-record facts as a schema-path value map."""
-    from ..user_profile import profile_storage_session, record_to_path_values
+def _load_on_record(profile_id: str) -> UserProfileRecord | None:
+    """Load the active profile record for the on-record seed and projection."""
+    from ..user_profile import profile_storage_session
     from ..workflow import workflow_state_repository
 
     with profile_storage_session(profile_id):
-        record = workflow_state_repository().load().active_profile_record()
-    return record_to_path_values(record)
+        return workflow_state_repository().load().active_profile_record()
 
 
 def _prepare_interactive_flow(
@@ -968,25 +969,31 @@ def _prepare_interactive_flow(
 
     ``create`` seeds page prefills from the collected canonical values
     (the environment / explicit output-language, chiefly) and surfaces no
-    registered column. ``edit`` seeds prefills from the profile's
-    on-record values and also returns them as ``registered_values`` keyed
-    by page id (the bridge keeps question ids as page keys and the setup
-    flow has no repeating groups), so the review table renders each
-    on-record value beside the staged answer.
+    registered column. ``edit`` seeds render-time prefills from the
+    profile's on-record TOKEN values (the raw token the operator edits)
+    and, separately, feeds the review table's ``registered_values`` column
+    from the display-ready projection
+    (:func:`~cadrumo.application.wizard._registered_values.project_registered_values`):
+    closed-set tokens render as their choice label, booleans as the
+    localized yes/no pair, and an artefact-sourced fact carries the
+    non-official-evidence suffix. The projection resolves copy at call
+    time — post output-language activation — so the review renders in the
+    operator's chosen language.
     """
     definition = attach_format_hints(flow_definition_from_wizard_flow(flow, checkpoint=_SETUP_CHECKPOINT))
     if mode == "create":
         return _seed_flow_definition(definition, dict(canonical)), None
 
-    record_values = _on_record_path_values(profile_id)
-    registered_values: dict[str, str] = {}
+    from ..user_profile import record_to_path_values
+
+    record = _load_on_record(profile_id)
+    record_values = record_to_path_values(record)
+    registered_values = project_registered_values(flow, record)
     seed_by_page_id: dict[str, str] = {}
     for section in flow.sections:
         for question in section.questions:
             if question.profile_key is not None and question.profile_key in record_values:
-                on_record = record_values[question.profile_key]
-                registered_values[question.id] = on_record
-                seed_by_page_id[question.id] = on_record
+                seed_by_page_id[question.id] = record_values[question.profile_key]
     seed_by_page_id.update(canonical)
     return _seed_flow_definition(definition, seed_by_page_id), registered_values
 
@@ -1600,12 +1607,16 @@ def _ccaa_was_defaulted(
     )
 
 
+_MODIFY_NO_RESUME_CODE = "config.profile.edit.modify_no_resume"
+
+
 def _emit_wizard_success(
     mode: WizardPersistMode,
     profile_name: str,
     *,
     next_command: str = _DEFAULT_PROFILE_NEXT_COMMAND,
     ccaa_defaulted: bool = False,
+    modify_no_resume: bool = False,
 ) -> None:
     """Emit the success payload in JSON or tabular CLI form.
 
@@ -1620,6 +1631,13 @@ def _emit_wizard_success(
     that Madrid was assumed for the profile — so the operator learns the
     autonomic deductions and autonomic tax scale are being computed for
     Madrid rather than the value being applied silently.
+
+    ``modify_no_resume`` requests an ``info``-severity :class:`Notice`
+    stating that mid-flow save/resume is unavailable in modify mode and an
+    interrupted modify discards its staged edits. It rides the final
+    envelope of every interactive modify run regardless of whether the
+    operator attempted a save — the LOUD, never-silent honesty disclosure
+    the persistence model binds modify to.
     """
     import typer as _typer
 
@@ -1637,6 +1655,15 @@ def _emit_wizard_success(
             suggestion=next_command,
         )
     ]
+    modify_no_resume_message = tr("application.wizard.notices.modify_no_resume")
+    if modify_no_resume:
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.INFO,
+                code=_MODIFY_NO_RESUME_CODE,
+                message=modify_no_resume_message,
+            )
+        )
     ccaa_message = tr("application.wizard.notices.ccaa_defaulted", ccaa=CCAA.MADRID.value)
     if ccaa_defaulted:
         notices.append(
@@ -1673,10 +1700,49 @@ def _emit_wizard_success(
     if mode == "create":
         lines.append(f"{tr('application.wizard.output_labels.active_profile')}\t{profile_name}")
     lines.append(f"{tr('application.wizard.output_labels.next')}\t{next_command}")
+    if modify_no_resume:
+        lines.append(modify_no_resume_message)
     if ccaa_defaulted:
         lines.append(ccaa_message)
     rendered = render_command_output(format_name="text", payload=payload, lines=lines)
     _typer.echo(rendered.text)
+
+
+_SAVE_EXIT_RESUME_CODE = "config.profile.create.saved_resume_later"
+
+
+def _emit_save_exit_notice(profile_name: str) -> None:
+    """Emit the create-mode save-and-exit disclosure ('saved — resume later').
+
+    A save-and-exit leaves the profile ``SETUP_INCOMPLETE``, so no
+    created/active success is emitted. Instead an ``info``-severity
+    :class:`Notice` states the setup was saved and its ``suggestion`` is the
+    resume command (``config profile create`` re-enters the in-progress
+    profile), so the operator is told how to continue rather than left with
+    a silent exit.
+    """
+    import typer as _typer
+
+    from ...core.click_context import json_output_requested
+    from ...core.json_contract import Notice, NoticeSeverity, emit_json_success
+
+    resume_command = f"aeat config profile create {profile_name}"
+    message = tr("application.wizard.notices.setup_saved_resume_later")
+    notice = Notice(
+        severity=NoticeSeverity.INFO,
+        code=_SAVE_EXIT_RESUME_CODE,
+        message=message,
+        suggestion=resume_command,
+    )
+    if json_output_requested():
+        emit_json_success(
+            "config.profile.create",
+            {"profile_name": profile_name},
+            notices=[notice],
+            active_profile=None,
+        )
+        return
+    _typer.echo(f"{message}\t{resume_command}")
 
 
 def _execute_wizard_command(
@@ -1722,9 +1788,16 @@ def _execute_wizard_command(
     if checkpoint_store is not None and checkpoint_store.save_exit_persisted:
         # Save-and-exit: the frontend already surfaced the saved state and
         # the profile stays SETUP_INCOMPLETE for a later resume. Emitting a
-        # created/active success here would be a lie, so the command exits
-        # quietly (a "resume later" notice awaits a locale key).
+        # created/active success here would be a lie, so the command surfaces
+        # only the "saved — resume later" info notice.
+        _emit_save_exit_notice(profile_name)
         return
+    # Every interactive modify run carries the LOUD staged-only disclosure on
+    # its final envelope: mid-flow save/resume is unavailable and an
+    # interrupted modify discards its staged edits. Non-interactive patch
+    # edits (`--quiet` / `--accept-defaults`) stage nothing, so the notice is
+    # scoped to the interactive walk.
+    interactive_modify = mode == "edit" and not (quiet or accept_defaults)
     _emit_wizard_success(
         mode,
         profile_name,
@@ -1735,6 +1808,7 @@ def _execute_wizard_command(
             profile_values,
             non_interactive=quiet or accept_defaults,
         ),
+        modify_no_resume=interactive_modify,
     )
 
 
