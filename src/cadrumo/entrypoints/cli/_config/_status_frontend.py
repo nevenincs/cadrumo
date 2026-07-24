@@ -26,7 +26,15 @@ import typer
 from .._common import _format_of
 
 if TYPE_CHECKING:
-    from ....adapters.inbound.tui import StatusFactRow, StatusPageData
+    from ....adapters.inbound.tui import (
+        StatusAuthView,
+        StatusFactRow,
+        StatusPageData,
+        StatusProfileRow,
+        StatusRecoveryView,
+    )
+    from ....application.workflow import WorkflowState
+    from ....core.classification import SensitivityClass
     from ....domain.user_profile import UserProfileRecord
 
 
@@ -72,69 +80,125 @@ def present_status_tui(ctx: typer.Context) -> bool:
 
 
 def build_status_page_data() -> StatusPageData:
-    """Assemble the read-only :class:`StatusPageData` from application authorities."""
-    from ....adapters.inbound.tui import (
-        StatusAuthView,
-        StatusPageData,
-        StatusProfileRow,
-        StatusRecoveryView,
+    """Assemble the read-only :class:`StatusPageData` from application authorities.
+
+    The status page is the surface an operator reaches precisely WHEN their
+    profile is damaged, so it must never traceback: every zone read is guarded
+    independently and degrades to an empty / unavailable projection on failure,
+    so a locked active bucket, an unreadable workflow state, or a corrupt
+    recovery wrapper blanks only its own zone while the others still render.
+    """
+    from ....adapters.inbound.tui import StatusPageData
+
+    active_uuid, active_label = _resolve_active_identity()
+    state = _load_workflow_state()
+    return StatusPageData(
+        active_profile_label=active_label,
+        facts=_build_fact_rows(_read_active_record(state)),
+        profiles=_build_profile_rows(active_uuid),
+        auth=_build_auth_view(state),
+        recovery=_build_recovery_view(),
     )
-    from ....adapters.persistence.storage import SecretStoreError
-    from ....application.user_profile import inspect_recovery_status
-    from ....application.workflow import (
-        list_profile_buckets,
-        read_profile_bucket_by_id,
-        workflow_state_repository,
-    )
+
+
+def _guarded_read_errors() -> tuple[type[BaseException], ...]:
+    """The zone-read error surface: the domain base plus filesystem faults.
+
+    ``SecretStoreError``, ``StorageValidationError``, ``UserProfileError``, and
+    ``WorkflowError`` all derive from ``CadrumoError``, and a torn on-disk read
+    raises ``OSError``. Catching exactly this pair degrades a zone without
+    swallowing a programming error the way a bare ``except Exception`` would.
+    """
+    from ....core.errors import CadrumoError
+
+    return (CadrumoError, OSError)
+
+
+def _resolve_active_identity() -> tuple[str | None, str | None]:
+    """Return the active profile UUID and its display label, degrading to ``None``."""
+    from ....application.workflow import read_profile_bucket_by_id
     from ....core import resolve_active_bucket_id
-    from ....domain.user_profile import UserProfileError
 
-    active_uuid = resolve_active_bucket_id()
-    active_pointer = read_profile_bucket_by_id(active_uuid) if active_uuid else None
-    active_label = active_pointer.label if active_pointer is not None else active_uuid
-
-    state = workflow_state_repository().load()
-    # A locked or corrupt active bucket must not blank the whole surface: the
-    # facts zone degrades to empty while the buckets, auth, and recovery zones
-    # still render from their own authorities.
     try:
-        record = state.active_profile_record()
-    except (SecretStoreError, UserProfileError):
-        record = None
-    facts = _build_fact_rows(record)
+        active_uuid = resolve_active_bucket_id()
+        if not active_uuid:
+            return None, None
+        pointer = read_profile_bucket_by_id(active_uuid)
+    except _guarded_read_errors():
+        return None, None
+    label = pointer.label if pointer is not None else active_uuid
+    return active_uuid, label
 
-    profiles = tuple(
+
+def _load_workflow_state() -> WorkflowState | None:
+    """Load the workflow state, or ``None`` when it cannot be read."""
+    from ....application.workflow import workflow_state_repository
+
+    try:
+        return workflow_state_repository().load()
+    except _guarded_read_errors():
+        return None
+
+
+def _read_active_record(state: WorkflowState | None) -> UserProfileRecord | None:
+    """Read the active profile record, or ``None`` for a locked / absent bucket."""
+    if state is None:
+        return None
+    try:
+        return state.active_profile_record()
+    except _guarded_read_errors():
+        return None
+
+
+def _build_profile_rows(active_uuid: str | None) -> tuple[StatusProfileRow, ...]:
+    """Project the profile bucket scan into rows, degrading to empty on failure."""
+    from ....adapters.inbound.tui import StatusProfileRow
+    from ....application.workflow import list_profile_buckets
+
+    try:
+        pointers = sorted(
+            list_profile_buckets(include_tombstoned=True).values(),
+            key=lambda pointer: pointer.label.casefold(),
+        )
+    except _guarded_read_errors():
+        return ()
+    return tuple(
         StatusProfileRow(
             label=pointer.label,
             status=str(pointer.status.value),
             active=pointer.bucket_id == active_uuid,
         )
-        for pointer in sorted(
-            list_profile_buckets(include_tombstoned=True).values(),
-            key=lambda pointer: pointer.label.casefold(),
-        )
+        for pointer in pointers
     )
 
+
+def _build_auth_view(state: WorkflowState | None) -> StatusAuthView:
+    """Project the workflow auth state, degrading to an empty view when absent."""
+    from ....adapters.inbound.tui import StatusAuthView
+
+    if state is None:
+        return StatusAuthView()
     auth = state.auth
-    auth_view = StatusAuthView(
+    return StatusAuthView(
         provider=auth.provider,
         login_ready=auth.authenticated_at is not None,
         subject=auth.subject,
         certificate_source=auth.active_certificate_source,
     )
 
-    recovery = inspect_recovery_status()
-    recovery_view = StatusRecoveryView(
+
+def _build_recovery_view() -> StatusRecoveryView:
+    """Project the recovery-wrapper status, degrading to not-enrolled on failure."""
+    from ....adapters.inbound.tui import StatusRecoveryView
+    from ....application.user_profile import inspect_recovery_status
+
+    try:
+        recovery = inspect_recovery_status()
+    except _guarded_read_errors():
+        return StatusRecoveryView()
+    return StatusRecoveryView(
         enrolled=recovery.recovery_enrolled,
         fingerprint=recovery.recovery_fingerprint,
-    )
-
-    return StatusPageData(
-        active_profile_label=active_label,
-        facts=facts,
-        profiles=profiles,
-        auth=auth_view,
-        recovery=recovery_view,
     )
 
 
@@ -175,7 +239,7 @@ def _build_fact_rows(record: UserProfileRecord | None) -> tuple[StatusFactRow, .
     return tuple(rows)
 
 
-def _is_masked(*, path: str, label: str, sensitivity: object | None) -> bool:
+def _is_masked(*, path: str, label: str, sensitivity: SensitivityClass | None) -> bool:
     """Decide whether a fact value must be masked on screen."""
     from ....core.classification import SensitivityClass
 
