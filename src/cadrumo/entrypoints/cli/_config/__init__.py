@@ -7,17 +7,13 @@ through :class:`BucketEventHistoryRepository`.
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
 import click
 import typer
 
 from ....application.operator_surface import build_help_document as _build_help_document
 from ....application.operator_surface import render_help_text as _render_help_text
-from ....application.wizard import build_wizard_command as _build_wizard_command
-from ....application.workflow import ProfileBucketPointer as _ProfileBucketPointer
-from ....application.workflow import ProfileLabelAmbiguousError as _ProfileLabelAmbiguousError
-from ....application.workflow import read_profile_bucket as _read_profile_bucket
-from ....application.workflow import resolve_profile_bucket as _resolve_profile_bucket
 from ....core import Period as _Period
 from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....core.errors import CadrumoError as _CadrumoError
@@ -29,10 +25,13 @@ from ....core.json_contract import NoticeSeverity as _NoticeSeverity
 from ....core.logging import get_logger as _get_logger
 from ....core.wizard_catalogue import get_setup_flow as _get_setup_flow
 from .._command_suggestions import CadrumoTyperGroup as _CadrumoTyperGroup
+from .._command_suggestions import LazySubcommand as _LazySubcommand
+from .._command_suggestions import register_lazy_subcommand as _register_lazy_subcommand
 from .._common import _emit_envelope, _no_active_profile_refusal
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from .._errors import command_error_boundary as _command_error_boundary
+from .._errors import decorate_typer_app as _decorate_typer_app
 from ._apoderado import apoderado_app, register_apoderado_commands
 from ._auth import auth_app
 from ._auth_diagnostics import auth_diagnostics_app
@@ -54,21 +53,12 @@ from ._repair_cli import register_repair_maintenance_commands
 from ._repair_profile import register_repair_profile_command
 from ._reset_cli import register_reset_commands
 from ._sandbox import register_sandbox_commands
-from ._setup_flow_frontend import run_setup_flow_frontend as _run_setup_flow_frontend
 from ._status_rendering import unavailable_profile_record_status as _unavailable_profile_record_status
 
-_log = _get_logger(__name__)
+if TYPE_CHECKING:
+    from ....application.workflow import ProfileBucketPointer as _ProfileBucketPointer
 
-_wizard_create_command = _build_wizard_command(
-    _get_setup_flow(),
-    mode="create",
-    interactive_flow_runner=_run_setup_flow_frontend,
-)
-_wizard_edit_command = _build_wizard_command(
-    _get_setup_flow(),
-    mode="edit",
-    interactive_flow_runner=_run_setup_flow_frontend,
-)
+_log = _get_logger(__name__)
 
 app = typer.Typer(
     name="config",
@@ -127,6 +117,9 @@ def _resolve_profile_by_label(name: str):
     :class:`ProfileBucketPointer` carrying the immutable UUID
     ``bucket_id`` and the ``label``.
     """
+    from ....application.workflow import ProfileLabelAmbiguousError as _ProfileLabelAmbiguousError
+    from ....application.workflow import read_profile_bucket as _read_profile_bucket
+
     try:
         pointer = _read_profile_bucket(name)
     except _ProfileLabelAmbiguousError as exc:
@@ -321,6 +314,9 @@ def config_profile_show(
         # resolvable by name so the operator can confirm a delete and
         # read the retained record. The verb renders the tombstoned
         # status; it never reports the profile as a live ``ready`` one.
+        from ....application.workflow import ProfileLabelAmbiguousError as _ProfileLabelAmbiguousError
+        from ....application.workflow import resolve_profile_bucket as _resolve_profile_bucket
+
         try:
             pointer = _resolve_profile_bucket(name, include_tombstoned=True)
         except _ProfileLabelAmbiguousError as exc:
@@ -638,6 +634,8 @@ def config_profile_validate(
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.modelo import modelo_work_profile_baseline_validation_issues
     from ....application.user_profile import ProfileValidationService
+    from ....application.workflow import ProfileLabelAmbiguousError as _ProfileLabelAmbiguousError
+    from ....application.workflow import read_profile_bucket as _read_profile_bucket
     from ....domain.user_profile import ProfileNotFoundError, load_user_profile_schema
 
     if name is not None:
@@ -859,7 +857,50 @@ def config_profile_duplicate(
 # already has a manifest; the `edit` closure refuses a name that has
 # none. The verb — not a runtime-detected pointer — is the authority
 # for the create-vs-edit branch.
-_config_profile_create_callback = profile_app.command(
+#
+# Both are registered as per-LEAF lazy subcommands rather than built at
+# package-import time. `build_wizard_command` reaches
+# `application.wizard` -> `application.workflow` -> `application.filing`
+# -> the justificante PDF adapter, so constructing these two closures
+# eagerly made every other `config` verb — `login` included — pay for the
+# wizard's whole dependency tail before parsing its own arguments.
+# Deferring only the *import* would not have helped: the closures were
+# CONSTRUCTED at module level, so the call kept the tail eager. The
+# construction itself has to move behind the resolution boundary, which
+# is what `LazySubcommand` already provides for groups; `profile` is a
+# `CadrumoTyperGroup`, so the same machinery serves a leaf.
+def _register_lazy_wizard_leaf(name: str, mode: str, **command_kwargs: object) -> None:
+    """Register the `profile` wizard verb `name` as a deferred leaf.
+
+    The factory returns a single-command Typer carrying no callback, which
+    Typer materialises as a plain :class:`click.Command` rather than a
+    group — so the leaf resolves exactly as an eagerly-registered one,
+    having imported the wizard only when the operator asks for it.
+    """
+
+    def _factory() -> typer.Typer:
+        from ....application.wizard import build_wizard_command
+        from ._setup_flow_frontend import run_setup_flow_frontend
+
+        leaf = typer.Typer()
+        # KWARGS-ANY-RATIONALE-TYPER-COMMAND: `command_kwargs` carries the
+        # help/epilog Typer passthrough captured at registration.
+        leaf.command(name, **command_kwargs)(  # type: ignore[arg-type]
+            _command_error_boundary(
+                build_wizard_command(
+                    _get_setup_flow(),
+                    mode=mode,
+                    interactive_flow_runner=run_setup_flow_frontend,
+                ),
+            ),
+        )
+        return leaf
+
+    _register_lazy_subcommand("profile", _LazySubcommand(name, _factory, decorate=_decorate_typer_app))
+
+
+_register_lazy_wizard_leaf(
+    "create",
     "create",
     help=tr(
         "cli.config.profile.create_help",
@@ -873,16 +914,17 @@ _config_profile_create_callback = profile_app.command(
             " --quiet --accept-defaults"
         ),
     ),
-)(_command_error_boundary(_wizard_create_command))
+)
 
 
-_config_profile_edit_callback = profile_app.command(
+_register_lazy_wizard_leaf(
+    "edit",
     "edit",
     help=tr(
         "cli.config.profile.edit_help",
         default="Re-run the wizard against an existing profile; updates values in place.",
     ),
-)(_command_error_boundary(_wizard_edit_command))
+)
 
 
 @profile_app.command(
