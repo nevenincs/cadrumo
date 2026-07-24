@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#tui-wizard-substrate'
 date: '2026-07-23'
-modified: '2026-07-23'
+modified: '2026-07-24'
 tier: L3
 related:
   - '[[2026-07-23-tui-wizard-substrate-adr]]'
@@ -41,7 +41,7 @@ Author the strict frozen definition family with copy references, branching predi
 
 - [x] `W01.P02.S03` - Author the strict frozen FlowDefinition family (flow, section, page, choice, copy-reference, branching predicate, repeating group, compare-select) with build-time validators for unique ids, forward-only references, and reference-not-literal copy slots; `src/cadrumo/application/flows/_definition.py`.
 - [x] `W01.P02.S04` - Port the widget validators and add the typed validator slots (per-answer, section-exit, flow-scope) returning i18n message keys with redacted diagnostics; `src/cadrumo/application/flows/_validators.py`.
-- [ ] `W01.P02.S05` - Bridge the existing wizard catalogue vocabulary into FlowDefinition while keeping the compile_profile_keys projection and the register_wizard_catalogue and register_project_answers core slots fed unchanged; `src/cadrumo/application/flows/_bridge.py`.
+- [x] `W01.P02.S05` - Bridge the existing wizard catalogue vocabulary into FlowDefinition while keeping the compile_profile_keys projection and the register_wizard_catalogue and register_project_answers core slots fed unchanged; `src/cadrumo/application/flows/_bridge.py`.
 - [x] `W01.P02.S06` - Prove the definition contract with build-time validator tests covering duplicate ids, non-forward references, literal-copy refusal, and repeating-group shape; `src/cadrumo/application/flows/tests/test_definition.py`.
 
 ### Phase `W01.P03` - FlowEngine state machine
@@ -61,26 +61,26 @@ Build the interaction adapters over the engine: the line-mode frontend, the scri
 
 Project the engine through a sequential line-mode frontend that absorbs the questionary prompter role and a scripted intent driver that preserves underflow and overflow drift detection, keeping the translated unsupported-console refusal.
 
-- [ ] `W02.P04.S11` - Build the sequential line-mode frontend over the engine, absorbing the questionary prompter role and retaining the translated unsupported-console refusal and IO-injection contract; `src/cadrumo/application/flows/_line_frontend.py`.
-- [ ] `W02.P04.S12` - Build the scripted intent driver preserving the canonical-answer underflow and overflow drift detection; `src/cadrumo/application/flows/_scripted.py`.
-- [ ] `W02.P04.S13` - Drive the line-mode frontend headlessly through pipe input and assert prompt, validation, and refusal behavior; `src/cadrumo/application/flows/tests/test_line_frontend.py`.
+- [x] `W02.P04.S11` - Build the sequential line-mode frontend over the engine, absorbing the questionary prompter role and retaining the translated unsupported-console refusal and IO-injection contract; `src/cadrumo/application/flows/_line_frontend.py`.
+- [x] `W02.P04.S12` - Build the scripted intent driver preserving the canonical-answer underflow and overflow drift detection; `src/cadrumo/application/flows/_scripted.py`.
+- [x] `W02.P04.S13` - Drive the line-mode frontend headlessly through pipe input and assert prompt, validation, and refusal behavior; `src/cadrumo/application/flows/tests/test_line_frontend.py`.
 
 ### Phase `W02.P05` - Textual full-screen frontend
 
 Add the textual dependency and build the full-screen application: question-page screen with the fixed zones, review screen with jump-to-edit, keybindings, and headless Pilot coverage of complete navigation scenarios.
 
-- [ ] `W02.P05.S14` - Add the textual dependency (MIT, verified conflict-free) and refresh the lockfile; `pyproject.toml`.
-- [ ] `W02.P05.S15` - Build the full-screen application shell and the question-page screen with the fixed zones (header progress, prompt, help, badge, format hint, widget, live validation line, answer echo, keybinding footer); `src/cadrumo/adapters/inbound/tui/`.
-- [ ] `W02.P05.S16` - Build the review screen with per-question status glyphs, jump-to-edit, and the submit gate wired to the engine's review projection; `src/cadrumo/adapters/inbound/tui/_review_screen.py`.
-- [ ] `W02.P05.S17` - Cover full-screen navigation, live validation, and review-submit scenarios headlessly with the Textual Pilot driver; `src/cadrumo/adapters/inbound/tui/tests/`.
+- [x] `W02.P05.S14` - Add the textual dependency (MIT, verified conflict-free) and refresh the lockfile; `pyproject.toml`.
+- [x] `W02.P05.S15` - Build the full-screen application shell and the question-page screen with the fixed zones (header progress, prompt, help, badge, format hint, widget, live validation line, answer echo, keybinding footer); `src/cadrumo/adapters/inbound/tui/`.
+- [x] `W02.P05.S16` - Build the review screen with per-question status glyphs, jump-to-edit, and the submit gate wired to the engine's review projection; `src/cadrumo/adapters/inbound/tui/_review_screen.py`.
+- [x] `W02.P05.S17` - Cover full-screen navigation, live validation, and review-submit scenarios headlessly with the Textual Pilot driver; `src/cadrumo/adapters/inbound/tui/tests/`.
 
 ### Phase `W02.P06` - Render-time copy assembler
 
 Resolve every page copy slot by reference against the schema definitions and the four locale catalogues at render time, scaffolding the new help, format-hint, and failure-mode key namespaces through the locales CLI.
 
-- [ ] `W02.P06.S18` - Implement the render-time copy assembler resolving i18n keys and typed schema and locale references, refusing literal strings and unresolvable references loudly; `src/cadrumo/application/flows/_copy.py`.
-- [ ] `W02.P06.S19` - Scaffold the new help, format-hint, and failure-mode key namespaces across all four catalogues through the locales CLI, never hand-editing the yml files; `src/cadrumo/locales/`.
-- [ ] `W02.P06.S20` - Prove copy resolution against real schema and locale sources including the four-locale parity of the new namespaces; `src/cadrumo/application/flows/tests/test_copy_assembly.py`.
+- [x] `W02.P06.S18` - Implement the render-time copy assembler resolving i18n keys and typed schema and locale references, refusing literal strings and unresolvable references loudly; `src/cadrumo/application/flows/_copy.py`.
+- [x] `W02.P06.S19` - Scaffold the new help, format-hint, and failure-mode key namespaces across all four catalogues through the locales CLI, never hand-editing the yml files; `src/cadrumo/locales/`.
+- [x] `W02.P06.S20` - Prove copy resolution against real schema and locale sources including the four-locale parity of the new namespaces; `src/cadrumo/application/flows/tests/test_copy_assembly.py`.
 
 ## Wave `W03` - Checkpoint, migration and gates
 
@@ -90,9 +90,9 @@ Wire the checkpoint port, migrate every existing wizard consumer onto the engine
 
 Define the per-mode checkpoint port and the resume projection that rebuilds FlowState from persisted facts, with the no-op declaration surface and loud-discard honesty constraints.
 
-- [ ] `W03.P07.S21` - Define the per-mode checkpoint port protocol with the declared no-op arm and the frontend honesty surface (save-and-exit disabled with an explicit message when checkpointing is unavailable); `src/cadrumo/application/flows/_checkpoint.py`.
-- [ ] `W03.P07.S22` - Implement the resume projection rebuilding FlowState from persisted canonical values with current-definition re-validation, stale landing for mismatches, and cursor at first unanswered visible question; `src/cadrumo/application/flows/_resume.py`.
-- [ ] `W03.P07.S23` - Prove resume re-validation, definition-change stale landing, loud no-op discard, and count-only diagnostics; `src/cadrumo/application/flows/tests/test_checkpoint_resume.py`.
+- [x] `W03.P07.S21` - Define the per-mode checkpoint port protocol with the declared no-op arm and the frontend honesty surface (save-and-exit disabled with an explicit message when checkpointing is unavailable); `src/cadrumo/application/flows/_checkpoint.py`.
+- [x] `W03.P07.S22` - Implement the resume projection rebuilding FlowState from persisted canonical values with current-definition re-validation, stale landing for mismatches, and cursor at first unanswered visible question; `src/cadrumo/application/flows/_resume.py`.
+- [x] `W03.P07.S23` - Prove resume re-validation, definition-change stale landing, loud no-op discard, and count-only diagnostics; `src/cadrumo/application/flows/tests/test_checkpoint_resume.py`.
 
 ### Phase `W03.P08` - Consumer migration and retirement
 
