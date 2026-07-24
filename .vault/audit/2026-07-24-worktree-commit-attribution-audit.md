@@ -58,6 +58,14 @@ Instance three ran the first direction again and hit the agent who had raised in
 
 Three instances, three agents, one session. That rules out individual carelessness as the explanation.
 
+### nine-day-old-precedent-recovered-by-a-forbidden-command | high | The hazard has previously driven an agent into destructive git
+
+The three captures on 2026-07-24 are not the first. A commit dated 2026-07-15 on the shims-elimination branch is titled "un-sweep peer WIP accidentally committed", naming four step ids, and a stash entry sits on top of it, recorded by git as taken while HEAD was at that commit.
+
+Two things follow. The hazard is nine days older than the session that surfaced it, and nobody carried the lesson forward — which is the argument for this record existing at all rather than the observation living in one agent's transcript. And the recovery reached for `git stash`, which is categorically forbidden in this worktree precisely because it captures every concurrent campaign's work into one blob and strands peers on a partial pop. An agent recovering from a sweep therefore performed a second, more dangerous operation than the one that caused it.
+
+The residue is still present: two stash entries, nine days old, on a branch other than the working branch, holding content nobody has claimed. They must not be dropped — dropping is itself forbidden, and they may hold real work — so the recovery has left a permanent artefact that no one can safely resolve. That cost belongs in any assessment of the hazard's severity: it is not only attribution damage, it has already produced an unresolvable residue and a rule violation.
+
 ### attribution-is-the-loss-not-data | medium | Nothing is destroyed, which is why it goes unnoticed
 
 No capture lost work, stranded a peer, or reddened a gate. Every affected change is present and correct at HEAD, which is why none of the three was caught by any test, review, or checklist.
@@ -101,6 +109,8 @@ A bare commit is only safe when the index holds nothing but your own staged work
 Do not treat a short edit-to-commit window as the remedy. It reduces exposure and does not remove it; one capture in this session occurred inside a window of a few minutes.
 
 Scaffold every execution record with its true authoring date, and let a retroactive record's date differ from its siblings. Where the date is genuinely reconstructed, say so in the record's own prose, which several of these records already did correctly.
+
+Do not reach for `git stash` to recover from a sweep. It is categorically forbidden here, it is more dangerous than the sweep it repairs, and the 2026-07-15 precedent shows it leaves residue nobody can safely resolve afterwards. A sweep loses nothing; the correct response is to record the mis-attribution and move on, not to attempt a repair with a destructive primitive.
 
 Verify a gate in the lane that actually owns it. A run reporting no collected tests is an unverified gate, not a passing one.
 
