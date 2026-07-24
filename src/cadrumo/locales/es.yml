@@ -3276,6 +3276,8 @@ cli:
       data_loss_warning: Anota ahora esta clave de recuperación. AEAT no almacena
         la clave de recuperación en claro y no puede mostrarla otra vez.
       errors:
+        echo_suppression_unavailable: Esta terminal no puede ocultar lo que se escribe,
+          por lo que el secreto quedaría visible en pantalla; use --secrets-stdin.
         new_passphrase_mismatch: La nueva contraseña y su confirmación no coinciden.
         non_interactive_secret_required: Se requiere un secreto pero no hay una terminal
           interactiva; usa --secrets-stdin.

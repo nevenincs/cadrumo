@@ -3253,6 +3253,8 @@ cli:
       data_loss_warning: Anota ara aquesta clau de recuperació. AEAT no desa la clau
         de recuperació en clar i no la pot tornar a mostrar.
       errors:
+        echo_suppression_unavailable: Aquest terminal no pot ocultar el que s'escriu,
+          de manera que el secret quedaria visible a la pantalla; utilitzeu --secrets-stdin.
         new_passphrase_mismatch: La nova contrasenya i la confirmació no coincideixen.
         non_interactive_secret_required: Cal un secret però no hi ha cap terminal
           interactiu; utilitza --secrets-stdin.

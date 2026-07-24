@@ -3199,6 +3199,8 @@ cli:
       data_loss_warning: Jegyezze fel most ezt a helyreállítási kulcsot. Az AEAT nem
         tárolja a nyílt helyreállítási kulcsot, és nem tudja újra megjeleníteni.
       errors:
+        echo_suppression_unavailable: Ez a terminál nem tudja elrejteni a beírt szöveget,
+          így a titok láthatóvá válna a képernyőn; használja a --secrets-stdin kapcsolót.
         new_passphrase_mismatch: Az új passphrase és a megerősítés nem egyezik.
         non_interactive_secret_required: Titok szükséges, de nincs interaktív terminál;
           használja a --secrets-stdin kapcsolót.

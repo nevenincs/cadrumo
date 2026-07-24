@@ -3033,6 +3033,8 @@ cli:
       data_loss_warning: Record this recovery key now. AEAT does not store the plaintext
         recovery key and cannot show it again.
       errors:
+        echo_suppression_unavailable: This terminal cannot suppress echo, so the secret
+          would be visible on screen; use --secrets-stdin instead.
         new_passphrase_mismatch: The new passphrase and confirmation do not match.
         non_interactive_secret_required: A secret is required but no interactive terminal
           is available; use --secrets-stdin.
