@@ -107,7 +107,12 @@ class RegistryQueryService:
             for modelo in self._authority.modelos
             if (year is None or _modelo_covers_year(modelo, year)) and (domain is None or modelo.tax_domain == domain)
         ]
-        return ModeloListReport(modelos=tuple(sorted(rows, key=lambda row: row.code)))
+        # Ordered into a pinned local first: pydantic's generated ``__init__``
+        # accepts a mapping for a nested model, so sorting inline would let that
+        # permissive parameter type flow back into the lambda and widen ``row``
+        # to ``ModeloListRow | Mapping[str, Any]``.
+        ordered: tuple[ModeloListRow, ...] = tuple(sorted(rows, key=lambda row: row.code))
+        return ModeloListReport(modelos=ordered)
 
     def source_inventory(self) -> RegistrySourceInventoryReport:
         """Report every :class:`~core.BindingSourceKind` the committed registry declares, and where.
@@ -140,15 +145,22 @@ class RegistryQueryService:
                             binding_count=count,
                         ),
                     )
-        rows = tuple(
-            RegistrySourceInventoryRow(
-                source_kind=source,
-                sites=tuple(sorted(sites, key=lambda site: (site.modelo, site.revision_id))),
-                total_binding_count=sum(site.binding_count for site in sites),
+        inventory: list[RegistrySourceInventoryRow] = []
+        for source, sites in sites_by_source.items():
+            ordered_sites: tuple[RegistrySourceSite, ...] = tuple(
+                sorted(sites, key=lambda site: (site.modelo, site.revision_id))
             )
-            for source, sites in sites_by_source.items()
+            inventory.append(
+                RegistrySourceInventoryRow(
+                    source_kind=source,
+                    sites=ordered_sites,
+                    total_binding_count=sum(site.binding_count for site in ordered_sites),
+                ),
+            )
+        ordered_rows: tuple[RegistrySourceInventoryRow, ...] = tuple(
+            sorted(inventory, key=lambda row: row.source_kind.value)
         )
-        return RegistrySourceInventoryReport(rows=tuple(sorted(rows, key=lambda row: row.source_kind.value)))
+        return RegistrySourceInventoryReport(rows=ordered_rows)
 
     def support_matrix(self) -> ModeloSupportMatrixReport:
         """Return the registry-wide per-modelo support/capability matrix.
