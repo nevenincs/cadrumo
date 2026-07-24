@@ -574,6 +574,7 @@ def build_report(
             evidence_directory=evidence_directory,
         ),
         check_generated_surface_versions(root, cohort_directory=cohort_directory),
+        check_latest_packaging_smoke_evidence(root),
     ]
     if not skip_network:
         checks.append(check_no_open_release_blockers(gh_executable=gh_executable))

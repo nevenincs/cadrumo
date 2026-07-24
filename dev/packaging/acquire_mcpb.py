@@ -189,10 +189,12 @@ def _exercise_bundle(
         key: _resolve_mcpb_value(value, extension_dir=extracted, user_config=user_config)
         for key, value in server["env"].items()
     }
+    first_launch_env = isolated_mcp_environment(storage_root)
+    first_launch_env.update(resolved_environment)
     _run_concurrent_launches(
         [str(uv), *server_args],
         cwd=run_root,
-        env={**resolved_environment},
+        env=first_launch_env,
         logs=logs,
         timeout=timeout_seconds,
         count=1,

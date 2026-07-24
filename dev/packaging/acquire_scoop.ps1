@@ -69,19 +69,40 @@ function Invoke-Native {
         [Parameter(Mandatory = $true)][string[]]$ArgumentList,
         [string]$OutputPath
     )
-    if ($OutputPath) {
-        $output = @(& $FilePath @ArgumentList 2>&1)
-        $exitCode = $LASTEXITCODE
-        $output | Set-Content -LiteralPath $OutputPath -Encoding UTF8
-        if ($exitCode -ne 0) {
-            $output | Select-Object -Last 200 | ForEach-Object { [Console]::Error.WriteLine([string]$_) }
-            throw "command failed with exit code ${exitCode}: $FilePath $($ArgumentList -join ' ')"
+    # Native stderr is DATA here: uv (invoked by the Scoop manifest's
+    # installer) writes informational lines like "Using CPython ...
+    # interpreter at" to stderr while exiting 0. Under the script-wide
+    # $ErrorActionPreference = "Stop", Windows PowerShell 5.1 turns the FIRST
+    # merged (2>&1) stderr line into a terminating NativeCommandError even
+    # though the command succeeded. Scope Continue around the invocation and
+    # gate success on the exit code alone; the merged output — stderr
+    # included — stays captured for the failure detail, never silenced.
+    $previousPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+        if ($OutputPath) {
+            $output = @(& $FilePath @ArgumentList 2>&1)
+            $exitCode = $LASTEXITCODE
+            $output | ForEach-Object { [string]$_ } |
+                Set-Content -LiteralPath $OutputPath -Encoding UTF8
+            if ($exitCode -ne 0) {
+                $output | Select-Object -Last 200 | ForEach-Object {
+                    [Console]::Error.WriteLine([string]$_)
+                }
+                throw "command failed with exit code ${exitCode}: $FilePath $($ArgumentList -join ' ')"
+            }
+            return
         }
-        return
+
+        & $FilePath @ArgumentList 2>&1 | ForEach-Object {
+            [Console]::Out.WriteLine([string]$_)
+        }
+        if ($LASTEXITCODE -ne 0) {
+            throw "command failed with exit code ${LASTEXITCODE}: $FilePath $($ArgumentList -join ' ')"
+        }
     }
-    & $FilePath @ArgumentList 2>&1 | ForEach-Object { [Console]::Out.WriteLine([string]$_) }
-    if ($LASTEXITCODE -ne 0) {
-        throw "command failed with exit code ${LASTEXITCODE}: $FilePath $($ArgumentList -join ' ')"
+    finally {
+        $ErrorActionPreference = $previousPreference
     }
 }
 
@@ -103,7 +124,17 @@ function Install-ScoopIfRequested {
         return
     }
     if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
-        Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+        # The container child already launches with -ExecutionPolicy Bypass, so
+        # only widen at Process scope; a CurrentUser/machine scope write is
+        # rejected by the Windows container's more-specific pinned policy and
+        # terminates under ErrorActionPreference Stop ("Security error.").
+        try {
+            Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
+        }
+        catch {
+            # The effective policy is already Bypass from the launch flag; a
+            # policy-override refusal here is non-fatal, so continue bootstrap.
+        }
         [Net.ServicePointManager]::SecurityProtocol = (
             [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
         )
@@ -132,6 +163,36 @@ function Get-ScoopCommandPath {
     }
     $shim = (Resolve-Path (Join-Path $ScoopRoot "shims\${CommandName}.cmd")).Path
     return $shim
+}
+
+function Get-ExecutionIdentity {
+    param(
+        [Parameter(Mandatory = $true)][bool]$ContainerChild,
+        [string]$Nonce
+    )
+
+    $runtimeIdentity = [Security.Principal.WindowsIdentity]::GetCurrent().Name
+    $observedContainer = $runtimeIdentity.EndsWith(
+        "\ContainerAdministrator",
+        [System.StringComparison]::OrdinalIgnoreCase
+    )
+    if ($ContainerChild) {
+        if (-not $Nonce) {
+            throw "container child execution requires an orchestration nonce"
+        }
+        if (-not $observedContainer) {
+            throw "container child identity was not observed: $runtimeIdentity"
+        }
+    }
+    elseif ($Nonce) {
+        throw "host execution must not accept a container orchestration nonce"
+    }
+    return @{
+        mode = if ($ContainerChild) { "Container" } else { "Host" }
+        orchestration_nonce = if ($ContainerChild) { $Nonce } else { $null }
+        runtime_identity = $runtimeIdentity
+        container_identity_verified = $observedContainer
+    }
 }
 
 function Assert-InstalledCohortDigests {
@@ -164,6 +225,12 @@ function Assert-InstalledCohortDigests {
             }
             $verified += 1
         }
+    }
+    if ($verified -le 0) {
+        throw (
+            "public reacquisition verified no cohort artifacts under $Prefix against the promoted " +
+            "cohort ($manifestPath); the installed app carries none of the expected wheels; refusing"
+        )
     }
     return $verified
 }
@@ -212,7 +279,8 @@ function Invoke-HostAcquisition {
         [Parameter(Mandatory = $true)][string]$Source,
         [Parameter(Mandatory = $true)][string]$Bucket,
         [Parameter(Mandatory = $true)][string]$Package,
-        [Parameter(Mandatory = $true)][string]$OutputDir
+        [Parameter(Mandatory = $true)][string]$OutputDir,
+        [Parameter(Mandatory = $true)][hashtable]$ExecutionIdentity
     )
     $resolvedCohort = (Resolve-Path $SourceCohort).Path
     New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
@@ -257,6 +325,10 @@ function Invoke-HostAcquisition {
     $evidence = [ordered]@{
         schema             = "cadrumo.packaging.acquire-scoop.v1"
         status             = "passed"
+        mode               = $ExecutionIdentity.mode
+        orchestration_nonce = $ExecutionIdentity.orchestration_nonce
+        runtime_identity   = $ExecutionIdentity.runtime_identity
+        container_identity_verified = $ExecutionIdentity.container_identity_verified
         bucket_source      = $Source
         bucket_name        = $Bucket
         package            = $Package
@@ -334,10 +406,33 @@ function Invoke-ContainerAcquisition {
     if (-not (Test-Path -LiteralPath $evidencePath -PathType Leaf)) {
         throw "Windows container exited without Scoop reacquisition evidence"
     }
+    $evidence = Get-Content -LiteralPath $evidencePath -Raw | ConvertFrom-Json
+    if (
+        $evidence.status -ne "passed" -or
+        $evidence.mode -ne "Container" -or
+        $evidence.orchestration_nonce -ne $nonce -or
+        $evidence.container_identity_verified -ne $true -or
+        -not ([string]$evidence.runtime_identity).EndsWith(
+            "\ContainerAdministrator",
+            [System.StringComparison]::OrdinalIgnoreCase
+        )
+    ) {
+        throw "Windows container reacquisition evidence identity or nonce binding is invalid"
+    }
 }
 
 New-Item -ItemType Directory -Force -Path $EvidenceDir | Out-Null
+$resolvedTopLevelEvidence = (Resolve-Path $EvidenceDir).Path
+foreach ($resultName in ("acquire-scoop-evidence.json", "acquire-scoop-failure.json")) {
+    $resultPath = Join-Path $resolvedTopLevelEvidence $resultName
+    if (Test-Path -LiteralPath $resultPath -PathType Leaf) {
+        Remove-Item -LiteralPath $resultPath -Force
+    }
+}
 try {
+    $executionIdentity = Get-ExecutionIdentity `
+        -ContainerChild ([bool]$InsideContainer) `
+        -Nonce $OrchestrationNonce
     if ($Mode -eq "Container") {
         $dockerPath = Assert-WindowsContainerRuntime
         Invoke-ContainerAcquisition `
@@ -360,7 +455,8 @@ try {
             -Source $BucketSource `
             -Bucket $BucketName `
             -Package $AppName `
-            -OutputDir $EvidenceDir
+            -OutputDir $EvidenceDir `
+            -ExecutionIdentity $executionIdentity
     }
 }
 catch {

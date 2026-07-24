@@ -459,6 +459,7 @@ def wait_for_cdp(port: int, *, timeout_seconds: float = 60.0, poll_seconds: floa
 
 
 _ACTIVATE_PS1: Final[str] = r"""
+$ErrorActionPreference = 'Stop'
 $src = @'
 using System;
 using System.Runtime.InteropServices;
@@ -477,8 +478,8 @@ public static class DesktopActivator {
 }
 '@
 Add-Type -TypeDefinition $src -ErrorAction Stop
-$pid = [DesktopActivator]::Activate($env:CADRUMO_ACTIVATE_AUMID, $env:CADRUMO_ACTIVATE_ARGS)
-Write-Output $pid
+$activatedPid = [DesktopActivator]::Activate($env:CADRUMO_ACTIVATE_AUMID, $env:CADRUMO_ACTIVATE_ARGS)
+Write-Output $activatedPid
 """
 
 

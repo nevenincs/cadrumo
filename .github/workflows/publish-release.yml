@@ -114,6 +114,9 @@ jobs:
     permissions:
       actions: read
       contents: read
+      # Gate 2 runs on a networked runner, so the readiness gate's open-P0-blocker
+      # check runs here (not skipped): the gh-backed issue query needs issues:read.
+      issues: read
     outputs:
       source_commit: ${{ steps.source-run.outputs.source_commit }}
       version: ${{ steps.validate.outputs.version }}
@@ -230,11 +233,15 @@ jobs:
             --github-output "$GITHUB_OUTPUT"
 
       - name: Require the complete blocking distribution evidence set
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           # Point the readiness gate at the DOWNLOADED promotion cohort and the
           # aggregated distribution-evidence rows, not the working-tree defaults
-          # that do not exist on the CI checkout.
-          uv run --frozen python -m dev.release.readiness --json --skip-network \
+          # that do not exist on the CI checkout. This runner has network and a
+          # token, so --skip-network is dropped: the gh-backed open-P0-blocker
+          # check runs here and blocks the promotion on any open release blocker.
+          uv run --frozen python -m dev.release.readiness --json \
             --cohort-dir "$RELEASE_COHORT_DIR" \
             --evidence-dir "$EVIDENCE_DOWNLOAD/rows"
 
@@ -289,7 +296,7 @@ jobs:
           tar -xzf var/promotion/download/cadrumo-release-cohort.tar.gz -C "$RELEASE_COHORT_DIR"
 
       # D8: the published release is self-evidencing — it also carries the
-      # twelve verified rows and the three sealed evidence manifests, so draft
+      # eleven verified rows and the three sealed evidence manifests, so draft
       # GC can never orphan a shipped version's audit trail. Rows re-download
       # through the same verify (hash-checked); manifests are renamed per lane
       # to keep the duplicate-basename guard honest.
@@ -327,9 +334,19 @@ jobs:
       # attaches nothing that has not passed this sweep.
       - name: Leak-sweep every asset before it can be attached
         run: |
+          # Feed the sweep this runner's own identity tokens so the backstop
+          # catches cross-machine hostname/username residue an evidence row
+          # minted on another runner may still carry (home-dir and UNC leaks
+          # are token-independent; hostname/username are not). Only non-empty
+          # tokens are passed — an empty --token would match every byte.
+          sweep_tokens=()
+          for tok in "$RUNNER_NAME" "$(hostname 2>/dev/null)" "$(whoami 2>/dev/null)"; do
+            [[ -n "$tok" ]] && sweep_tokens+=(--token "$tok")
+          done
           uv run --frozen python -m dev.packaging.evidence_release leak-sweep \
             --directory "$EVIDENCE_FINAL_DIR/attach" \
-            --directory "$RELEASE_COHORT_DIR"
+            --directory "$RELEASE_COHORT_DIR" \
+            "${sweep_tokens[@]}"
 
       - name: Publish the three distributions to PyPI via Trusted Publishing (OIDC)
         run: |
@@ -384,14 +401,19 @@ jobs:
             echo "and the CADRUMO_SCOOP_BUCKET_TOKEN secret to publish the Scoop manifest." >&2
             exit 1
           fi
+          # Pass the token as a per-command HTTP auth header (never in the clone
+          # URL): an -c http.extraheader value is not persisted to .git/config, so
+          # no token is written into the runner's on-disk remote.
+          auth="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$SCOOP_TOKEN" | base64 | tr -d '\n')"
           work="$(mktemp -d)"
-          git clone "https://x-access-token:${SCOOP_TOKEN}@github.com/${SCOOP_REPO}.git" "$work"
+          git -c http.extraheader="$auth" clone "https://github.com/${SCOOP_REPO}.git" "$work"
           mkdir -p "$work/bucket"
           cp "$RELEASE_COHORT_DIR/scoop/cadrumo.json" "$work/bucket/cadrumo.json"
           git -C "$work" add -- bucket/cadrumo.json
           git -C "$work" -c user.name="cadrumo-release" -c user.email="release@cadrumo.invalid" \
             commit -m "cadrumo $VERSION"
-          git -C "$work" push
+          git -C "$work" -c http.extraheader="$auth" push
+          rm -rf "$work"
 
       - name: Push the Homebrew formula to the public tap
         env:
@@ -403,14 +425,18 @@ jobs:
             echo "and the CADRUMO_HOMEBREW_TAP_TOKEN secret to publish the Homebrew formula." >&2
             exit 1
           fi
+          # Token rides an -c http.extraheader (never the clone URL) so it is not
+          # persisted into the runner's .git/config remote.
+          auth="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$TAP_TOKEN" | base64 | tr -d '\n')"
           work="$(mktemp -d)"
-          git clone "https://x-access-token:${TAP_TOKEN}@github.com/${TAP_REPO}.git" "$work"
+          git -c http.extraheader="$auth" clone "https://github.com/${TAP_REPO}.git" "$work"
           mkdir -p "$work/Formula"
           cp "$RELEASE_COHORT_DIR/homebrew/Formula/cadrumo.rb" "$work/Formula/cadrumo.rb"
           git -C "$work" add -- Formula/cadrumo.rb
           git -C "$work" -c user.name="cadrumo-release" -c user.email="release@cadrumo.invalid" \
             commit -m "cadrumo $VERSION"
-          git -C "$work" push
+          git -C "$work" -c http.extraheader="$auth" push
+          rm -rf "$work"
 
       # The Claude plugin marketplace is a supported avenue (readiness row set,
       # docs download page), so a release MUST populate it - not only attach the
@@ -433,8 +459,11 @@ jobs:
             echo "no marketplace bundle found in the release cohort" >&2
             exit 1
           fi
+          # Token rides an -c http.extraheader (never the clone URL) so it is not
+          # persisted into the runner's .git/config remote.
+          auth="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$MARKETPLACE_TOKEN" | base64 | tr -d '\n')"
           work="$(mktemp -d)"
-          git clone "https://x-access-token:${MARKETPLACE_TOKEN}@github.com/${MARKETPLACE_REPO}.git" "$work"
+          git -c http.extraheader="$auth" clone "https://github.com/${MARKETPLACE_REPO}.git" "$work"
           staged="$(mktemp -d)"
           unzip -q "$bundle" -d "$staged"
           # Replace the tracked marketplace tree wholesale (preserve .git) so a
@@ -447,5 +476,6 @@ jobs:
           else
             git -C "$work" -c user.name="cadrumo-release" -c user.email="release@cadrumo.invalid" \
               commit -m "cadrumo $VERSION"
-            git -C "$work" push
+            git -C "$work" -c http.extraheader="$auth" push
           fi
+          rm -rf "$work" "$staged"
