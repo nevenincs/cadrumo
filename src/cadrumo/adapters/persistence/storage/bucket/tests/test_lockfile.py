@@ -11,6 +11,7 @@ import textwrap
 import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
+from functools import cache
 from multiprocessing.process import BaseProcess
 from multiprocessing.queues import Queue
 from pathlib import Path
@@ -74,13 +75,62 @@ def _holder_script(bucket_dir: Path, hold_seconds: float, ready_path: Path) -> s
     )
 
 
-def _wait_for_ready(ready_path: Path, *, timeout: float = 5.0) -> None:
-    deadline = time.monotonic() + timeout
+@cache
+def _bare_interpreter_spawn_seconds() -> float:
+    """Return this host's CURRENT cost of spawning a bare interpreter.
+
+    Measured rather than assumed, and measured now rather than at authoring
+    time, so the readiness budget below tracks load instead of encoding one
+    machine's idle speed. Cached: the baseline is a property of the host, not
+    of any single test.
+    """
+    started = time.monotonic()
+    subprocess.run(
+        [sys.executable, "-c", "import sys"],
+        check=True,
+        capture_output=True,
+        timeout=120,
+    )
+    return time.monotonic() - started
+
+
+def _readiness_budget_seconds() -> float:
+    """Return a load-proportional ceiling for a holder to signal readiness.
+
+    This is a HANG GUARD, not a latency assertion -- the same distinction
+    :func:`test_wait_seconds_eventually_acquires` already draws for its own
+    wait, whose budget was widened to 30s after a tight one produced false
+    timeouts unrelated to the contract under test. The readiness wait covers
+    strictly MORE work than that one (a fresh interpreter, the storage-bucket
+    import chain, and a lock acquisition), so a fixed 5s ceiling was the
+    tighter of the two on the heavier operation: on a saturated shared box the
+    holder is descheduled well past it and the test fails for the schedule
+    rather than for the lock contract.
+
+    The floor keeps a quiet machine from deriving an implausibly small budget;
+    the multiple of the measured spawn cost is what carries a loaded one.
+    """
+    return max(30.0, _bare_interpreter_spawn_seconds() * 40.0)
+
+
+def _wait_for_ready(ready_path: Path, process: subprocess.Popen[bytes], *, timeout: float | None = None) -> None:
+    """Block until the holder signals readiness, it dies, or the guard expires.
+
+    Polling the process is what keeps the widened budget safe: a holder that
+    crashed on import would otherwise burn the whole window and then report a
+    timeout, hiding the real cause. Its exit code is surfaced immediately
+    instead.
+    """
+    budget = _readiness_budget_seconds() if timeout is None else timeout
+    deadline = time.monotonic() + budget
     while time.monotonic() < deadline:
         if ready_path.is_file():
             return
+        exit_code = process.poll()
+        if exit_code is not None:
+            raise AssertionError(f"holder subprocess exited with code {exit_code} before signalling readiness")
         time.sleep(0.05)
-    raise AssertionError(f"subprocess did not signal readiness within {timeout}s")
+    raise AssertionError(f"subprocess did not signal readiness within {budget:.1f}s")
 
 
 def _stop_process(process: subprocess.Popen[bytes]) -> None:
@@ -220,7 +270,7 @@ def test_cross_process_busy_detection(tmp_path: Path) -> None:
 
     holder = subprocess.Popen([sys.executable, "-c", script])
     try:
-        _wait_for_ready(ready)
+        _wait_for_ready(ready, holder)
         recorded_pid = int(lock_path(paths).read_text(encoding=UTF_8_ENCODING).strip())
         with pytest.raises(BucketBusyError) as excinfo:
             acquire_lock(paths)
@@ -240,7 +290,7 @@ def test_wait_seconds_eventually_acquires(tmp_path: Path) -> None:
 
     holder = subprocess.Popen([sys.executable, "-c", script])
     try:
-        _wait_for_ready(ready)
+        _wait_for_ready(ready, holder)
         # Holder releases after 0.25s; the waiting acquisition must succeed
         # once it does. The window is a hang guard, not a latency assertion:
         # on a heavily loaded shared box the holder subprocess can be
