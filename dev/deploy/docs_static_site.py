@@ -118,7 +118,7 @@ def _site_build_environment() -> dict[str, str]:
     }
 
 
-def _refresh_download_latest(repo_root: Path) -> None:
+def _refresh_download_latest(repo_root: Path, *, source_url: str = _DOWNLOAD_LATEST_URL) -> None:
     """Pull the latest release's ``download-latest.json`` into ``docs/_static``.
 
     Fetches the version-agnostic latest-release asset (attached by
@@ -127,10 +127,14 @@ def _refresh_download_latest(repo_root: Path) -> None:
     payload. Any failure — no release yet, network error, or an unexpected body
     (e.g. a 404 page) — degrades silently: the offline Tier-1 channel table is the
     floor and the build proceeds. Never raises.
+
+    ``source_url`` defaults to the fixed GitHub release asset URL; tests point it
+    at a local HTTP server to exercise the real ``urlopen`` path against a real
+    socket instead of faking the response.
     """
     destination = repo_root.joinpath(*_DOWNLOAD_LATEST_STATIC_PATH)
-    request = urllib.request.Request(  # noqa: S310 — fixed HTTPS GitHub release URL
-        _DOWNLOAD_LATEST_URL,
+    request = urllib.request.Request(  # noqa: S310 — fixed HTTPS GitHub release URL (or test-supplied local URL)
+        source_url,
         headers={"User-Agent": "cadrumo-docs-delivery"},
     )
     try:
