@@ -324,6 +324,21 @@ _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
     },
 )
 
+#: The ctx-scoped half of the inventory: these sites MUST enter their
+#: override through ``ctx.with_resource(...)`` so the override unwinds with
+#: the command callback. Pinning WHERE they live is not enough — a site that
+#: kept its name but switched to a bare ``with override_settings(...)`` (or
+#: an ExitStack outliving the callback) would silently become post-unwind
+#: exposed while the location tuple stayed green, which is exactly the drift
+#: this gate exists to catch.
+_CTX_SCOPED_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
+    {
+        ("entrypoints/cli/__init__.py", "_root"),
+        ("entrypoints/cli/_common.py", "activate_subcommand_output_language"),
+        ("entrypoints/cli/_config/_custody.py", "_pin_render_language_to_target_bucket"),
+    },
+)
+
 
 def test_language_override_sites_match_the_sanctioned_inventory() -> None:
     """Every production ``override_settings(cadrumo_output_language=...)`` site is pinned.
@@ -337,32 +352,54 @@ def test_language_override_sites_match_the_sanctioned_inventory() -> None:
     """
     import ast
 
+    def _is_language_override_call(node: ast.AST) -> bool:
+        return (
+            isinstance(node, ast.Call)
+            and getattr(node.func, "id", getattr(node.func, "attr", None)) == "override_settings"
+            and any(kw.arg == "cadrumo_output_language" for kw in node.keywords)
+        )
+
     found: set[tuple[str, str]] = set()
+    ctx_wrapped: set[tuple[str, str]] = set()
     for module in _SRC_ROOT.rglob("*.py"):
         rel = module.relative_to(_SRC_ROOT).as_posix()
         if "/tests/" in f"/{rel}" or module.name.startswith("test_"):
             continue
         tree = ast.parse(module.read_text(encoding="utf-8"), filename=rel)
         functions = [func for func in ast.walk(tree) if isinstance(func, ast.FunctionDef | ast.AsyncFunctionDef)]
+
+        def _innermost_site(node: ast.AST, rel_path: str = rel, funcs: list = functions) -> tuple[str, str]:
+            # Attribute the call to its INNERMOST enclosing function so a
+            # nested closure is not double-counted under its parent.
+            containing = [func for func in funcs if func.lineno <= node.lineno <= (func.end_lineno or func.lineno)]
+            if containing:
+                return (rel_path, max(containing, key=lambda f: f.lineno).name)
+            return (rel_path, "<module>")
+
         for node in ast.walk(tree):
+            if _is_language_override_call(node):
+                found.add(_innermost_site(node))
+            # HOW the ctx-scoped sites enter matters, not only WHERE: record
+            # every override call that is a direct argument of a
+            # ``*.with_resource(...)`` call, so a ctx site downgrading to a
+            # bare ``with override_settings(...)`` loses its wrapped mark.
             if (
                 isinstance(node, ast.Call)
-                and getattr(node.func, "id", getattr(node.func, "attr", None)) == "override_settings"
-                and any(kw.arg == "cadrumo_output_language" for kw in node.keywords)
+                and isinstance(node.func, ast.Attribute)
+                and node.func.attr == "with_resource"
             ):
-                # Attribute the call to its INNERMOST enclosing function so a
-                # nested closure is not double-counted under its parent.
-                containing = [
-                    func for func in functions if func.lineno <= node.lineno <= (func.end_lineno or func.lineno)
-                ]
-                if containing:
-                    innermost = max(containing, key=lambda f: f.lineno)
-                    found.add((rel, innermost.name))
-                else:
-                    found.add((rel, "<module>"))
+                for argument in node.args:
+                    if _is_language_override_call(argument):
+                        ctx_wrapped.add(_innermost_site(argument))
+
     assert found == set(_SANCTIONED_LANGUAGE_OVERRIDE_SITES), (
         "production cadrumo_output_language override sites drifted from the "
         f"sanctioned inventory.\nfound: {sorted(found)}\n"
         f"sanctioned: {sorted(_SANCTIONED_LANGUAGE_OVERRIDE_SITES)}\n"
         "A new site must be ctx-scoped or reviewed into the inventory with a reason."
+    )
+    unwrapped = set(_CTX_SCOPED_OVERRIDE_SITES) - ctx_wrapped
+    assert not unwrapped, (
+        "ctx-scoped override sites no longer enter through ctx.with_resource(...) - "
+        f"they have silently become post-callback-unwind exposed: {sorted(unwrapped)}"
     )
