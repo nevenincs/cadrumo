@@ -709,19 +709,33 @@ def _missing_filing_baseline_flags(flow: WizardFlow, answers: BaseModel) -> tupl
     return _missing_profile_filing_baseline_flags(serialise_answers(flow, answers))
 
 
-def _setup_flow_definition(flow: WizardFlow) -> FlowDefinition:
+def _setup_flow_definition(flow: WizardFlow, *, attach_descendants: bool = True) -> FlowDefinition:
     """Bridge and decorate the wizard flow into the shared substrate definition.
 
     The single projected :class:`FlowDefinition` every frontend drives:
-    the substrate bridge, format hints, setup legal validators, and the
-    descendant repeating group applied in one place so the interactive and
-    the non-interactive walks can never diverge on the definition they run.
+    the substrate bridge, format hints, setup legal validators, and -- for
+    CREATE -- the descendant repeating group, applied in one place so the
+    interactive and the non-interactive walks can never diverge on the
+    definition they run.
+
+    ``attach_descendants`` gates the descendant group. It is spliced for
+    CREATE (where the facts-as-checkpoint store seeds and re-seeds the group)
+    and withheld for MODIFY. Modify-mode seeding cannot instantiate the
+    repeating group: the modify frontend seeds render-time page defaults over
+    a fresh :func:`~cadrumo.application.flows.start_flow` state, and instance
+    pages are generated dynamically from the group's count rather than being
+    static items the default-seed mechanism can reach. Rendering the group
+    unseeded would show an operator's existing descendants as an empty group
+    whose commit -- via the namespace-replacing clearing guard -- would then
+    silently erase them. So MODIFY withholds the group and the command
+    surfaces the descendant door instead of a silently-lossy surface.
     """
-    return attach_descendant_group(
-        attach_setup_legal_validators(
-            attach_format_hints(flow_definition_from_wizard_flow(flow, checkpoint=_SETUP_CHECKPOINT)),
-        ),
+    definition = attach_setup_legal_validators(
+        attach_format_hints(flow_definition_from_wizard_flow(flow, checkpoint=_SETUP_CHECKPOINT)),
     )
+    if attach_descendants:
+        definition = attach_descendant_group(definition)
+    return definition
 
 
 def _force_pages_visible(definition: FlowDefinition, page_ids: frozenset[str]) -> FlowDefinition:
@@ -836,7 +850,10 @@ def _run_scripted_walk(
     validates, the substrate refusal stands.
     """
     flow_mode = _FLOW_MODE_BY_WIZARD_MODE[mode]
-    definition = _force_pages_visible(_setup_flow_definition(flow), explicit_question_ids)
+    definition = _force_pages_visible(
+        _setup_flow_definition(flow, attach_descendants=mode == "create"),
+        explicit_question_ids,
+    )
     tokens, intended = _project_scripted_answers(definition, canonical, mode=flow_mode)
     defaults = {
         question.id: question.default or ""
@@ -1093,7 +1110,7 @@ def _prepare_interactive_flow(
     time — post output-language activation — so the review renders in the
     operator's chosen language.
     """
-    definition = _setup_flow_definition(flow)
+    definition = _setup_flow_definition(flow, attach_descendants=mode == "create")
     if mode == "create":
         return _seed_flow_definition(definition, dict(canonical)), None
 
@@ -1722,6 +1739,8 @@ def _ccaa_was_defaulted(
 
 
 _MODIFY_NO_RESUME_CODE = "config.profile.edit.modify_no_resume"
+_MODIFY_DESCENDANTS_DOOR_CODE = "config.profile.edit.descendants_via_door"
+_DESCENDIENTE_DOOR_COMMAND = "aeat config profile descendiente"
 
 
 def _emit_wizard_success(
@@ -1732,6 +1751,8 @@ def _emit_wizard_success(
     ccaa_defaulted: bool = False,
     modify_no_resume: bool = False,
     modify_no_resume_message: str | None = None,
+    modify_descendants_via_door: bool = False,
+    modify_descendants_message: str | None = None,
 ) -> None:
     """Emit the success payload in JSON or tabular CLI form.
 
@@ -1791,6 +1812,24 @@ def _emit_wizard_success(
                 message=resolved_modify_no_resume_message,
             )
         )
+    resolved_modify_descendants_message = (
+        modify_descendants_message
+        if modify_descendants_message is not None
+        else tr(
+            "application.wizard.notices.modify_descendants_via_door",
+            default="Descendants are not part of profile edit. Manage them with '{command}'.",
+            command=_DESCENDIENTE_DOOR_COMMAND,
+        )
+    )
+    if modify_descendants_via_door:
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.INFO,
+                code=_MODIFY_DESCENDANTS_DOOR_CODE,
+                message=resolved_modify_descendants_message,
+                suggestion=_DESCENDIENTE_DOOR_COMMAND,
+            )
+        )
     ccaa_message = tr("application.wizard.notices.ccaa_defaulted", ccaa=CCAA.MADRID.value)
     if ccaa_defaulted:
         notices.append(
@@ -1829,6 +1868,8 @@ def _emit_wizard_success(
     lines.append(f"{tr('application.wizard.output_labels.next')}\t{next_command}")
     if modify_no_resume:
         lines.append(resolved_modify_no_resume_message)
+    if modify_descendants_via_door:
+        lines.append(resolved_modify_descendants_message)
     if ccaa_defaulted:
         lines.append(ccaa_message)
     rendered = render_command_output(format_name="text", payload=payload, lines=lines)
@@ -1900,6 +1941,11 @@ def _execute_wizard_command(
     # render in the language the command entered with — the same pre-render
     # discipline the error path uses for a translated refusal.
     modify_no_resume_message = tr("application.wizard.notices.modify_no_resume")
+    modify_descendants_message = tr(
+        "application.wizard.notices.modify_descendants_via_door",
+        default="Descendants are not part of profile edit. Manage them with '{command}'.",
+        command=_DESCENDIENTE_DOOR_COMMAND,
+    )
     save_exit_message = tr("application.wizard.notices.setup_saved_resume_later")
     _refuse_foral_ccaa(canonical, explicit_flags)
     # Interactive create is the facts-as-checkpoint path: the store mints
@@ -1950,6 +1996,8 @@ def _execute_wizard_command(
         ),
         modify_no_resume=interactive_modify,
         modify_no_resume_message=modify_no_resume_message,
+        modify_descendants_via_door=interactive_modify,
+        modify_descendants_message=modify_descendants_message,
     )
 
 

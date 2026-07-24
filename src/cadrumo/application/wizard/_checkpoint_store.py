@@ -122,12 +122,20 @@ def checkpoint_answers_from_record(flow: WizardFlow, record: UserProfileRecord |
 
     The inverse of :func:`checkpoint_facts_from_answers`: each profile-bound
     question whose ``profile_key`` carries a live fact on the
-    :class:`UserProfileRecord` re-appears keyed by page id (the setup flow
-    has no repeating groups, so page id equals question id). This is the
-    seed :func:`~cadrumo.application.flows.resume_flow` re-validates against
-    the current definition.
+    :class:`UserProfileRecord` re-appears keyed by page id (a top-level setup
+    question's page id equals its question id). The descendant repeating group
+    is re-seeded separately through
+    :func:`~cadrumo.application.wizard._persistence.descendant_answers_from_record`,
+    which emits the ``descendientes-count`` answer plus one
+    ``descendientes#<index>.<page>`` answer per populated field, so a resumed
+    create re-instantiates the group from its persisted
+    ``renta_family.descendiente.*`` facts. This whole map is the seed
+    :func:`~cadrumo.application.flows.resume_flow` re-validates against the
+    current definition (its count answer commits first, revealing the instance
+    pages the rest of the map then seeds).
     """
     from ..user_profile import record_to_path_values
+    from ._persistence import descendant_answers_from_record
 
     values = record_to_path_values(record)
     answers: dict[str, str] = {}
@@ -135,6 +143,7 @@ def checkpoint_answers_from_record(flow: WizardFlow, record: UserProfileRecord |
         for question in section.questions:
             if question.profile_key is not None and question.profile_key in values:
                 answers[question.id] = values[question.profile_key]
+    answers.update(descendant_answers_from_record(record))
     return answers
 
 

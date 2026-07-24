@@ -22,6 +22,7 @@ from pydantic import BaseModel
 
 if TYPE_CHECKING:
     from ...domain.contribuyente import DescendantInfo
+    from ...domain.user_profile import UserProfileRecord
 
 from ...core.flows import REPEATING_INSTANCE_SEPARATOR
 from ...core.parsing import parse_iso8601_date
@@ -355,10 +356,60 @@ def descendant_facts_from_answers(answers: Mapping[str, str]) -> list[tuple[str,
     return descendant_facts_from_list(descendientes)
 
 
+def descendant_answers_from_record(record: UserProfileRecord | None) -> dict[str, str]:
+    """Re-project a record's descendant facts into repeating-group answers.
+
+    The inverse of :func:`descendant_facts_from_answers`: reads the
+    ``renta_family.descendiente.{n}.*`` facts a record carries, reconstructs
+    each :class:`~cadrumo.domain.contribuyente.DescendantInfo` through the
+    canonical :func:`~cadrumo.domain.contribuyente.descendant_list_from_facts`,
+    and emits the ``descendientes-count`` answer plus one
+    ``descendientes#<index>.<page-id>`` answer per populated field. This is the
+    exact page-keyed shape :func:`~cadrumo.application.flows.resume_flow`
+    re-walks to re-instantiate the group: the count answer commits first (the
+    familia section orders the count page before the group), revealing the
+    instance pages the remaining answers then seed against the current
+    definition. Returns an empty map when the record declares no descendants,
+    so a childless profile seeds no group.
+
+    The per-field emission mirrors :func:`_descendant_from_row` exactly, so a
+    save-then-resume round-trip through
+    :func:`~cadrumo.application.wizard._checkpoint_store.checkpoint_facts_from_answers`
+    reconstructs an identical fact set: an absent optional field stays absent
+    on both legs, never coerced to a stored default.
+    """
+    if record is None:
+        return {}
+    from ...domain.contribuyente import descendant_list_from_facts
+    from ..user_profile import record_to_path_values
+
+    descendientes = descendant_list_from_facts(record_to_path_values(record))
+    if not descendientes:
+        return {}
+    answers: dict[str, str] = {DESCENDANTS_COUNT_PAGE_ID: str(len(descendientes))}
+    for index, descendant in enumerate(descendientes):
+        prefix = f"{DESCENDANTS_GROUP_ID}{REPEATING_INSTANCE_SEPARATOR}{index}"
+        answers[f"{prefix}.birth-date"] = descendant.birth_date.isoformat()
+        if descendant.adoption_date is not None:
+            answers[f"{prefix}.adoption-date"] = descendant.adoption_date.isoformat()
+        if descendant.discapacidad_grado is not None:
+            answers[f"{prefix}.discapacidad"] = str(descendant.discapacidad_grado)
+        answers[f"{prefix}.convivencia"] = "true" if descendant.convive_con_contribuyente else "false"
+        answers[f"{prefix}.custodia-compartida"] = "true" if descendant.custodia_compartida else "false"
+        if descendant.meses_madre_trabajo_2024 > 0:
+            answers[f"{prefix}.meses-madre-trabajo"] = str(descendant.meses_madre_trabajo_2024)
+        if descendant.gastos_guarderia_euros > 0:
+            answers[f"{prefix}.gastos-guarderia"] = str(descendant.gastos_guarderia_euros)
+        if descendant.nif is not None:
+            answers[f"{prefix}.nif"] = descendant.nif
+    return answers
+
+
 _register_project_answers(project_answers)
 
 __all__ = [
     "WizardPersistMode",
+    "descendant_answers_from_record",
     "descendant_facts_from_answers",
     "persist_answers",
     "persist_patch",
