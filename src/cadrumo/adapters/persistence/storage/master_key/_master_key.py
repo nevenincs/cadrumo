@@ -41,6 +41,7 @@ import contextlib
 import os
 import secrets
 import sqlite3
+import threading
 from collections.abc import Iterator
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, Protocol, runtime_checkable
@@ -1020,6 +1021,73 @@ def refuse_unsecured_with_real_nif(
         )
 
 
+def _read_master_key_within_budget(
+    provider: KeyringMasterKeyProvider,
+    *,
+    timeout_s: float,
+) -> None:
+    """Read the keychain master key, treating an over-budget read as locked.
+
+    The AUTO backend probes the OS keychain by actually reading the master
+    key. On macOS that read is ``find_generic_password``, and Keychain ACLs
+    are per-binary: a process distinct from the one that minted the item
+    must answer an authorization dialog. A headless, backgrounded, or
+    warm-server context can never show that dialog, so the read blocks
+    forever and the operator sees the command hang with no output.
+
+    An over-budget read raises :class:`MasterKeyKeychainLockedError` rather
+    than :class:`KeyringUnavailableError`, and the distinction is
+    load-bearing. A timed-out read is semantically the LOCKED case -- the
+    backend works and the entry is merely inaccessible -- so it must take
+    the caller's divergence-safe branch, which routes through pre-existing
+    file-fallback artefacts if they exist and refuses if they do not.
+    Reporting it as an unusable backend instead would take the
+    file-fallback branch unconditionally and mint a fresh master key while
+    the real one sits behind the unanswered dialog, silently diverging the
+    two.
+
+    The wait is bounded with a daemon thread rather than a signal alarm
+    (Unix-main-thread only) or a pooled executor (whose workers are joined
+    at interpreter exit, so a thread parked on the dialog would hang
+    process exit -- a hung shell in place of a hung command). The abandoned
+    thread stays blocked on the keychain call until the process ends, which
+    costs one parked thread and no correctness: it holds no lock, and its
+    result is discarded. Bounding elapsed time rather than any platform API
+    keeps this free of a macOS-only import.
+
+    Args:
+        provider: The keyring-backed provider to read through.
+        timeout_s: Wall-clock budget for the read.
+
+    Raises:
+        MasterKeyKeychainLockedError: When the read exceeds ``timeout_s``.
+        Exception: Whatever the underlying read raised, re-raised
+            unchanged so every existing branch keeps its behaviour.
+    """
+    outcome: list[BaseException] = []
+    finished = threading.Event()
+
+    def _read() -> None:
+        try:
+            provider.get_master_key()
+        except BaseException as exc:
+            outcome.append(exc)
+        finally:
+            finished.set()
+
+    threading.Thread(target=_read, name="cadrumo-keyring-probe", daemon=True).start()
+    if not finished.wait(timeout_s):
+        raise MasterKeyKeychainLockedError(
+            f"OS keychain did not answer within {timeout_s:g}s. On macOS this usually means the "
+            "keychain item was minted by a different binary and this process needs an "
+            "authorization dialog that cannot be shown here. Unlock or authorise the keychain in "
+            "a foreground session, or set CADRUMO_SECRET_STORE_BACKEND=file to use the "
+            "passphrase backend explicitly.",
+        )
+    if outcome:
+        raise outcome[0]
+
+
 def get_master_key_provider(
     *,
     backend: str | None = None,
@@ -1083,7 +1151,7 @@ def get_master_key_provider(
         )
     keyring_provider = KeyringMasterKeyProvider()
     try:
-        keyring_provider.get_master_key()
+        _read_master_key_within_budget(keyring_provider, timeout_s=settings.cadrumo_keyring_probe_timeout_s)
         return keyring_provider
     except KeyringUnavailableError as exc:
         # Backend itself is unusable (no-op fail/null backend, package
