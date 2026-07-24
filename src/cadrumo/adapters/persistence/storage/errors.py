@@ -130,7 +130,7 @@ class SessionExpiredError(SecretStoreError):
     The session was opened earlier in the process lifetime but the
     operator did not act before the configured idle-lock window
     elapsed. The session is sealed; the operator must re-activate by
-    running ``aeat config switch NAME`` (or a subsequent
+    running ``aeat config login NAME`` (or a subsequent
     bootstrap-exempt verb that opens a fresh session).
     """
 

@@ -3620,12 +3620,6 @@ cli:
       import_requires_path: Add meg a csomag ÚTVONAL argumentumát, vagy futtasd interaktív
         terminálban, és a program bekéri.
       import_uuid_collision: A csomagban lévő UUID ütközik egy meglévő profillal.
-      logout_help: Az aktív tárolási munkamenet bezárása, a memóriában lévő kulcsok
-        törlése, a bucket-motorok lezárása és a helyi mutató törlése.
-      logout_session_warning: A kijelentkezés bezárta az aktív tárolási munkamenetet,
-        törölte a memóriában lévő kulcsokat, lezárta a bucket-motorokat és törölte
-        az aktív profil mutatóját. Profilhoz kötött parancs előtt futtassa az aeat
-        config switch NAME parancsot.
       no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create
         NÉV --tax-id <NIF/CIF/DNI/NIE>`.'
       preflight_filing_year_help: Bevallási év (négy számjegy).
@@ -3865,10 +3859,6 @@ cli:
         NÉV` a kezdéshez.'
       help: Az aktuális konfigurációs profil készenléti állapotának megjelenítése.
       next_step: 'Következő lépés: `aeat app overview status`'
-    switch:
-      help: Váltson át egy profilra, és tegye aktívvá.
-      name_help: A profil neve, amelyre váltani szeretne. Ha nincs megadva, az aktívprofil-mutató
-        az alapértelmezett.
     unset:
       help: Egy konfigurációs kulcs értékének törlése.
       key_help: A törlendő kulcs.
@@ -4186,8 +4176,11 @@ cli:
     check:
       bucket_id_help: 'Vizsgálandó bucket azonosítója (alapértelmezés: az aktív profil).'
       help: Főkönyvi tranzakciók vizsgálata a megcímzett profilban és rendellenesség-sorok
-        jelentése az összes érintett időszakra összesítve. Csak helyi; soha nem lép
-        kapcsolatba az AEAT-tal.
+        jelentése az összes érintett időszakra összesítve, valamint minden olyan számlakapcsolat
+        jelentése, amelyben a számla- és a tranzakciókatalógus eltér. Csak helyi;
+        soha nem lép kapcsolatba az AEAT-tal.
+      link_inconsistency_notice: '{link_count} számlakapcsolat eltér a számla- és
+        a tranzakciókatalógus között; az érintett számlatársítás nem megbízható.'
       period_help: 'Opcionális bevallási időszak AEAT tokenként: 1T-4T (negyedévek),
         0A (éves), 01-12 (hónapok). A --year kapcsolóval használja, a ledger status
         felülettel egyezően.'
@@ -4787,10 +4780,11 @@ cli:
         profile_duplicate: Profil másolása új azonosítóra.
         profile_history: Az append-only profil eseménytörténet megtekintése.
         profile_list: Profiladatok listázása.
+        profile_login: Bejelentkezés egy profilba, és aktívvá tétele.
+        profile_logout: Az aktív profil munkamenetének lezárása.
         profile_rename: Profil átnevezése és mappájának áthelyezése.
         profile_show: Egy profil adatainak megjelenítése.
         profile_status: Az aktív profil készültségének megjelenítése.
-        profile_switch: Váltás egy profilra, és annak aktívvá tétele.
         reset_resume: Folytat egy befejezetlen visszaállítási műveletet.
         reset_start: Visszafordíthatatlan visszaállítást indít minden helyben tárolt
           profilra.
@@ -5195,9 +5189,8 @@ cli:
     language_help: A kimenet és a súgószöveg nyelve (en, es, ca, hu).
     profile_help: Az aktív profil neve.
     quiet_help: Csak a hibák megjelenítése.
-    startup_import_error: 'Belső hiba: az alkalmazásmodul betöltése sikertelen indításkor
-      (%{dependency}). Futtasd: aeat config repair.'
-    unavailable_app_help: Ez a parancs az aktuális konfigurációban nem érhető el.
+    unavailable_optional_extra_help: 'Nem érhető el: %{feature} a(z) ''%{extra}''
+      opcionális kiegészítőt igényli. Futtasd a parancsot a telepítés módjáért.'
     verbose_help: Részletes kimenet engedélyezése.
     version_help: A verziószám megjelenítése és kilépés.
   topic:
@@ -5738,6 +5731,8 @@ errors:
     fail_browser_validation: A böngésző-munkamenet paraméterei nem mentek át az érvényesítésen.
     fail_certificado_censal_parse: Nem sikerült beolvasni a Certificado de Situación
       Censal dokumentumot.
+    fail_cli_command_group_unavailable: 'A(z) ''%{group}'' parancscsoport nem tölthető
+      be: a szükséges ''%{module}'' modul hiányzik. A telepítés hiányos.'
     fail_declaracion_parse: A bevallás fájlját nem sikerült elemezni.
     fail_export: Az exportálás meghiúsult.
     fail_export_format: A kért exportformátum nem támogatott.

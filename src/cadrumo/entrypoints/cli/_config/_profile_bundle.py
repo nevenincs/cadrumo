@@ -693,12 +693,12 @@ def _build_import_active_switch_notice(target_label: str) -> Notice:
             "cli.config.profile.import_active_switch_info",
             default=(
                 "The imported profile {name} is now the ACTIVE profile; subsequent "
-                "commands operate on it. Run 'aeat config switch <name>' to change "
+                "commands operate on it. Run 'aeat config login <name>' to change "
                 "the active profile."
             ),
             name=target_label,
         ),
-        suggestion=f"aeat config switch {target_label}",
+        suggestion=f"aeat config login {target_label}",
         context={"active_profile": target_label},
     )
 

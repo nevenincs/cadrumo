@@ -704,4 +704,4 @@ def test_import_surfaces_active_profile_switch_info_notice(tmp_path: Path) -> No
         assert switch["severity"] == "info"
         assert "source" in switch["message"]
         assert "active" in switch["message"].lower()
-        assert switch["suggestion"] == "aeat config switch source"
+        assert switch["suggestion"] == "aeat config login source"

@@ -38,7 +38,7 @@ _RECOVERY_COMMANDS: tuple[str, ...] = (
     "aeat config recovery verify",
     "aeat config recover",
     "aeat config passphrase change",
-    "aeat config switch NAME",
+    "aeat config login NAME",
 )
 
 

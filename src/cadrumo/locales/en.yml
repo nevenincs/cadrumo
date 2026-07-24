@@ -3422,11 +3422,6 @@ cli:
       import_requires_path: Provide the bundle PATH argument, or run in an interactive
         terminal to be prompted.
       import_uuid_collision: The UUID in the bundle conflicts with an existing profile.
-      logout_help: Close the active storage session, discard in-memory keys, dispose
-        bucket engines, and clear the local pointer
-      logout_session_warning: Logout closed the active storage session, discarded
-        in-memory key material, disposed bucket engines, and cleared the active-profile
-        pointer. Run aeat config switch NAME before another profile-bound command.
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF/CIF/DNI/NIE>` first.
       preflight_filing_year_help: Four-digit filing year.
@@ -3649,9 +3644,6 @@ cli:
         to get started.
       help: Show the readiness of the current configuration profile
       next_step: 'Next step: `aeat app overview status`'
-    switch:
-      help: Switch to a profile and make it the active one.
-      name_help: Profile name to switch to. Defaults to the active profile pointer.
     unset:
       help: Clear the value of one configuration key
       key_help: Key to clear
@@ -3947,7 +3939,11 @@ cli:
       bucket_id_help: Bucket id to probe (defaults to the active profile).
       help: Probe ledger transactions in the addressed profile (defaults to the active
         profile) and report anomaly rows aggregated across every period a transaction
-        touches. Local-only; never contacts AEAT.
+        touches, plus any invoice link the invoice and transaction catalogues disagree
+        about. Local-only; never contacts AEAT.
+      link_inconsistency_notice: '{link_count} invoice link(s) disagree between the
+        invoice and transaction catalogues; the affected invoice association cannot
+        be trusted.'
       period_help: 'Optional filing period as an AEAT token: 1T-4T (quarters), 0A
         (annual), 01-12 (months). Combine with --year to match ledger status.'
       year_help: Filing year for --period (e.g. 2024).
@@ -4507,10 +4503,11 @@ cli:
         profile_duplicate: Copy a profile to a new id.
         profile_history: Inspect the append-only profile event history.
         profile_list: List profile facts.
+        profile_login: Log in to a profile and make it the active one.
+        profile_logout: Close the active profile session.
         profile_rename: Rename a profile and move its bucket.
         profile_show: Show one profile's facts.
         profile_status: Show active profile readiness.
-        profile_switch: Switch to a profile and make it the active one.
         reset_resume: Continue an incomplete reset operation.
         reset_start: Start a new irreversible reset of every locally stored profile.
         reset_status: Show reset operation status without changing local data.
@@ -4905,9 +4902,8 @@ cli:
     language_help: Language for output and help text (en, es, ca, hu).
     profile_help: Name of the active profile.
     quiet_help: Show errors only.
-    startup_import_error: 'Internal error: application module failed to load at startup
-      (%{dependency}). Run aeat config repair.'
-    unavailable_app_help: This command is not available in the current configuration.
+    unavailable_optional_extra_help: 'Unavailable: %{feature} requires the optional
+      ''%{extra}'' extra. Run the command to see how to install it.'
     verbose_help: Enable detailed output.
     version_help: Show the version number and exit.
   topic:
@@ -5438,6 +5434,8 @@ errors:
     fail_browser_validation: The browser parameters failed validation.
     fail_certificado_censal_parse: Could not read the Certificado de Situación Censal
       document.
+    fail_cli_command_group_unavailable: 'The ''%{group}'' command group could not
+      be loaded: required module ''%{module}'' is missing. This installation is incomplete.'
     fail_declaracion_parse: The PDF could not be parsed into a declaration.
     fail_export: An error occurred while exporting to the AEAT.
     fail_export_format: The filing draft could not be serialized to the BOE format

@@ -471,7 +471,7 @@ def test_config_switch_malformed_target_bucket_dek_uses_target_profile_output_la
     assert alpha_pointer is not None
     assert beta_pointer is not None
 
-    switched_alpha = _invoke(("config", "switch", "alpha"))
+    switched_alpha = _invoke(("config", "login", "alpha"))
     assert switched_alpha.exit_code == 0, switched_alpha.output
     assert resolve_active_bucket_id() == alpha_pointer.bucket_id
     assert (
@@ -494,7 +494,7 @@ def test_config_switch_malformed_target_bucket_dek_uses_target_profile_output_la
 
     with override_settings(cadrumo_output_language=None):
         clear_output_language_cache()
-        result = _invoke(("config", "switch", "beta"))
+        result = _invoke(("config", "login", "beta"))
         clear_output_language_cache()
 
     assert result.exit_code != 0, result.output

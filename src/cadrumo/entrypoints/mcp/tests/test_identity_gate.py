@@ -42,7 +42,7 @@ _SDK_PRESENT = importlib.util.find_spec("mcp") is not None
 _MUTATING_KEY = "ledger.export"
 _MUTATING_TOOL = "cadrumo_ledger_export"
 _IDENTITY_READ_KEY = "overview.status"
-_LOGOUT_KEY = "config.profile.logout"
+_LOGOUT_KEY = "config.logout"
 _LOGOUT_TOOL = tool_name_for_command(_LOGOUT_KEY)
 
 
@@ -98,7 +98,7 @@ def test_a_profile_switch_after_a_console_read_re_arms_the_gate() -> None:
     state = SessionIdentityState()
     state.record_identity_read()  # e.g. a harness.load floor read on session start
     assert identity_gate_refusal(_MUTATING_KEY, state=state) is None  # cleared
-    assert identity_gate_refusal("config.switch", state=state) is None  # switch allowed
+    assert identity_gate_refusal("config.login", state=state) is None  # switch allowed
     assert state.identity_confirmed is False  # ...and re-arms
     assert identity_gate_refusal(_MUTATING_KEY, state=state) is not None  # refused again
 

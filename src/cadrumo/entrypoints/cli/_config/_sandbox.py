@@ -450,7 +450,7 @@ def _register_sandbox_prune_command(app: typer.Typer) -> None:
                     ),
                     names=", ".join(skipped_active),
                 ),
-                suggestion="aeat config switch",
+                suggestion="aeat config login",
             )
             notices = (skipped_notice,)
             lines.append(f"INFO\t{skipped_notice.message}")

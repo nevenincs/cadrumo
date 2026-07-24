@@ -63,7 +63,7 @@ def test_every_class_has_a_registered_code(error_cls: type[BucketError]) -> None
     ("error_cls", "expected_suggestion"),
     (
         pytest.param(NoActiveBucketError, "aeat config profile list", id="no-active-bucket"),
-        pytest.param(BucketLockedError, "aeat config switch NAME", id="bucket-locked"),
+        pytest.param(BucketLockedError, "aeat config login NAME", id="bucket-locked"),
     ),
 )
 def test_default_suggestions_reference_operator_commands(

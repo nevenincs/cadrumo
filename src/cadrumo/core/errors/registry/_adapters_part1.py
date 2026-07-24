@@ -532,7 +532,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_STORAGE_SESSION_EXPIRED",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_storage_session_expired",
-            default_suggestion="aeat config switch NAME",
+            default_suggestion="aeat config login NAME",
             retryable=False,
             runbook_id=None,
         ),

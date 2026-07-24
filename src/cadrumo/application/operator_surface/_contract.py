@@ -44,7 +44,8 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
         owns_operational_workflow=False,
         required_children=(
             "profile",
-            "switch",
+            "login",
+            "logout",
             "passphrase",
             "recover",
             "recovery",
@@ -123,10 +124,19 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
     MountedCommandFamily(
         domain=MountedCommandDomain.CUSTODY,
         root=RootSurfaceName.CONFIG,
-        child="switch",
-        operator_question="switch the active taxpayer profile for profile-bound backend workflows",
+        child="login",
+        operator_question="authenticate a taxpayer profile and start a resumable session",
         service_owner="cadrumo.application.user_profile",
-        commands=("switch",),
+        commands=("login",),
+        mutability=OperatorMutability.LOCAL_STATE_MUTATING,
+    ),
+    MountedCommandFamily(
+        domain=MountedCommandDomain.CUSTODY,
+        root=RootSurfaceName.CONFIG,
+        child="logout",
+        operator_question="close the active taxpayer profile session and clear its pointer",
+        service_owner="cadrumo.application.user_profile",
+        commands=("logout",),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(

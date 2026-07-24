@@ -55,9 +55,9 @@ _CONFIG_PROFILE_COMMANDS = (
     ("config", "profile", "rename"),
     ("config", "profile", "export"),
     ("config", "profile", "import"),
-    ("config", "profile", "logout"),
+    ("config", "logout"),
     ("config", "profile", "status"),
-    ("config", "switch"),
+    ("config", "login"),
 )
 _MODELO_WORK_COMMANDS = (
     ("app", "modelo", "work", "calculate"),

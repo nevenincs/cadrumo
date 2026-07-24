@@ -249,17 +249,6 @@ class ConfigListResult(OutputSchema):
     profiles: list[ProfilePointerPayload]
 
 
-@register_schema("config.switch")
-class ConfigSwitchResult(OutputSchema):
-    """JSON envelope for ``aeat config switch``.
-
-    Reports the profile name that became the active bucket pointer after the
-    workflow-state update; no profile facts are emitted on this mutation.
-    """
-
-    active_profile: str
-
-
 @register_schema("config.login")
 class ConfigLoginResult(OutputSchema):
     """JSON envelope for ``aeat config login``.
@@ -868,20 +857,6 @@ class ConfigProfileImportResult(OutputSchema):
     profile_id: str
     display_name: str
     schema_version: int
-
-
-@register_schema("config.profile.logout")
-class ConfigProfileLogoutResult(OutputSchema):
-    """JSON envelope for ``aeat config profile logout``.
-
-    Confirms which profile's local session was logged out and echoes any
-    remaining active pointer. ``session_warning`` carries local secure-storage
-    advice without exposing session contents.
-    """
-
-    logged_out_profile: str
-    active_profile: str | None = None
-    session_warning: str
 
 
 @register_schema("config.profile.rename")

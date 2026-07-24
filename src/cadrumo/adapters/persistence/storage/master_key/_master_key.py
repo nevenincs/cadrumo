@@ -269,7 +269,7 @@ class KeyringMasterKeyProvider:
         raise MasterKeyMaterialMissingError(
             "OS keychain master key is not provisioned; run "
             "`aeat config profile create NAME` to create and unlock a profile, "
-            "or `aeat config switch NAME` for an existing profile.",
+            "or `aeat config login NAME` for an existing profile.",
         )
 
     def provision_master_key(self) -> bytes:
@@ -844,7 +844,7 @@ def _provider_enter(
     if not bucket_id:
         raise NoActiveBucketError(
             "no active profile resolves; run `aeat config profile create NAME` "
-            "or `aeat config switch NAME` before invoking commands that "
+            "or `aeat config login NAME` before invoking commands that "
             "decrypt stored records.",
         )
 

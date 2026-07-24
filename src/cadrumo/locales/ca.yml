@@ -3669,12 +3669,6 @@ cli:
       import_requires_path: Indica l'argument RUTA del paquet, o executa l'ordre en
         un terminal interactiu perquè se't pregunti.
       import_uuid_collision: El UUID del paquet entra en conflicte amb un perfil existent.
-      logout_help: Tanca la sessió d'emmagatzematge activa, descarta les claus en
-        memòria, allibera els motors del bucket i neteja el punter local
-      logout_session_warning: El tancament de sessió ha tancat l'emmagatzematge actiu,
-        ha descartat les claus en memòria, ha alliberat els motors del bucket i ha
-        netejat el punter del perfil actiu. Executa aeat config switch NAME abans
-        d'una altra ordre que necessiti un perfil.
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF>` first.
       preflight_filing_year_help: Exercici de presentació (quatre dígits).
@@ -3912,10 +3906,6 @@ cli:
         per començar.
       help: Mostrar l'estat del perfil de configuració actiu
       next_step: 'Següent pas: `aeat app overview status`'
-    switch:
-      help: Canvia a un perfil i fes-lo l’actiu.
-      name_help: Nom del perfil al qual canviar. Si s'omet, s'utilitza el punter del
-        perfil actiu.
     unset:
       help: Eliminar el valor assignat a una clau de configuració
       key_help: Clau a netejar
@@ -4242,7 +4232,12 @@ cli:
       bucket_id_help: Id del bucket a examinar (per defecte el perfil actiu).
       help: Examina els moviments del llibre del perfil adreçat (per defecte el perfil
         actiu) i informa de files amb anomalies agregades a través de cada període
-        que els moviments toquin. Local; mai contacta amb AEAT.
+        que els moviments toquin, a més de qualsevol vincle de factura en què el catàleg
+        de factures i el de transaccions no coincideixin. Local; mai contacta amb
+        AEAT.
+      link_inconsistency_notice: '{link_count} vincle(s) de factura no coincideixen
+        entre el catàleg de factures i el de transaccions; l''associació de factura
+        afectada no és fiable.'
       period_help: 'Període de declaració opcional com a testimoni AEAT: 1T-4T (trimestres),
         0A (anual), 01-12 (mesos). Combineu-lo amb --year per coincidir amb ledger
         status.'
@@ -4829,10 +4824,11 @@ cli:
         profile_duplicate: Duplicar un perfil de contribuent existent.
         profile_history: Inspecciona l'historial append-only d'esdeveniments del perfil.
         profile_list: Llistar els perfils de contribuent disponibles.
+        profile_login: Inicia la sessió en un perfil i el converteix en l'actiu.
+        profile_logout: Tanca la sessió del perfil actiu.
         profile_rename: Reanomenar un perfil de contribuent.
         profile_show: Mostrar les dades del perfil actiu.
         profile_status: Mostrar l'estat del perfil actiu.
-        profile_switch: Canvia a un perfil i converteix-lo en l'actiu.
         reset_resume: Reprèn una operació de reinici incompleta.
         reset_start: Inicia un reinici irreversible nou de tots els perfils emmagatzemats
           localment.
@@ -5247,9 +5243,8 @@ cli:
     language_help: Idioma de la sortida i del text d'ajuda (en, es, ca, hu).
     profile_help: Nom del perfil actiu.
     quiet_help: Mostra només els errors.
-    startup_import_error: 'Error intern: el mòdul de l''aplicació no s''ha pogut carregar
-      a l''inici (%{dependency}). Executa aeat config repair.'
-    unavailable_app_help: Aquesta ordre no està disponible en la configuració actual.
+    unavailable_optional_extra_help: 'No disponible: %{feature} requereix l''extra
+      opcional ''%{extra}''. Executa l''ordre per veure com instal·lar-lo.'
     verbose_help: Habilita la sortida detallada.
     version_help: Mostra el número de versió i surt.
   topic:
@@ -5822,6 +5817,9 @@ errors:
     fail_browser_validation: Els paràmetres del navegador no han superat la validació.
     fail_certificado_censal_parse: No s'ha pogut llegir el document del Certificado
       de Situación Censal.
+    fail_cli_command_group_unavailable: 'No s''ha pogut carregar el grup d''ordres
+      ''%{group}'': falta el mòdul requerit ''%{module}''. Aquesta instal·lació és
+      incompleta.'
     fail_declaracion_parse: No s'ha pogut interpretar el PDF com una declaració.
     fail_export: S'ha produït un error en exportar cap a l'AEAT.
     fail_export_format: L'esborrany de la declaració no s'ha pogut serialitzar al

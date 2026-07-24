@@ -64,12 +64,7 @@ BOOTSTRAP_EXEMPT_VERB_PATHS: tuple[str, ...] = (
     "config logout",
     # Custody verbs own their own session / recovery / rewrap flow. The
     # root callback must not pre-open the active bucket session before
-    # these handlers can resolve passphrase or recovery material. The
-    # profile-switch verb opens the target bucket session itself. Logout
-    # must remain pointer-sourced so the root callback does not manufacture
-    # an active-profile override that the application correctly refuses.
-    "config switch",
-    "config profile logout",
+    # these handlers can resolve passphrase or recovery material.
     # Durable reset owns the pointer transaction, target locks, target-scoped
     # auth sessions, and external journal itself. Root bootstrap must not open
     # an active bucket session or manufacture an active-profile override before
