@@ -30,6 +30,12 @@ related:
   - '[[2026-07-23-tui-wizard-substrate-W03-P07-S22]]'
   - '[[2026-07-23-tui-wizard-substrate-W03-P07-S23]]'
   - '[[2026-07-23-tui-wizard-substrate-W03-P08-S25]]'
+  - '[[2026-07-23-tui-wizard-substrate-W03-P08-S26]]'
+  - '[[2026-07-23-tui-wizard-substrate-W03-P08-S31]]'
+  - '[[2026-07-23-tui-wizard-substrate-W03-P09-S28]]'
+  - '[[2026-07-23-tui-wizard-substrate-W03-P09-S29]]'
+  - '[[2026-07-23-tui-wizard-substrate-W03-P09-S30]]'
+  - '[[2026-07-23-tui-wizard-substrate-W03-P09-S32]]'
   - '[[2026-07-23-tui-wizard-substrate-adr]]'
   - '[[2026-07-23-tui-wizard-substrate-plan]]'
   - '[[2026-07-23-tui-wizard-substrate-research]]'
@@ -71,6 +77,12 @@ Auto-generated index of all documents tagged with `#tui-wizard-substrate`.
 - `2026-07-23-tui-wizard-substrate-W03-P07-S21` - Define the per-mode checkpoint port protocol with the declared no-op arm and the frontend honesty surface (save-and-exit disabled with an explicit message when checkpointing is unavailable)
 - `2026-07-23-tui-wizard-substrate-W03-P07-S22` - Implement the resume projection rebuilding FlowState from persisted canonical values with current-definition re-validation, stale landing for mismatches, and cursor at first unanswered visible question
 - `2026-07-23-tui-wizard-substrate-W03-P07-S23` - Prove resume re-validation, definition-change stale landing, loud no-op discard, and count-only diagnostics
+- `2026-07-23-tui-wizard-substrate-W03-P08-S26` - Retire the one-shot runner and prompter surfaces with every consumer moved in one atomic explicit-path commit, running collect-only clean immediately before the commit and regenerating apidocs stubs in the same commit
+- `2026-07-23-tui-wizard-substrate-W03-P08-S31` - Migrate the amend wizard consumer onto the engine frontends, removing its local one-shot prompt helper
+- `2026-07-23-tui-wizard-substrate-W03-P09-S28` - Run the locale parity, translation honesty, and scaffold check gates green for the substrate key namespaces
+- `2026-07-23-tui-wizard-substrate-W03-P09-S29` - Run the docs build and documented-command conformance gates green, with owner triage recorded for any unrelated peer failures
+- `2026-07-23-tui-wizard-substrate-W03-P09-S30` - Run the full src collect-only and suite gates with owner-distinguished triage of the results
+- `2026-07-23-tui-wizard-substrate-W03-P09-S32` - Land the bounded-fstring coverage gate, every dynamic tr or copy-reference site over an enum must carry its registry registration in the same commit, with the three campaign incidents as its seed cases
 
 ### plan
 
