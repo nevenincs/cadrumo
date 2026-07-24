@@ -372,11 +372,11 @@ test-ratchets:
 
 # Run the unit test suite in parallel, ignoring workbook parity tests. Quiet progress; failures shown.
 test-unit:
-    @uv run --no-sync pytest -q -rs -n {{pytest_workers}} --dist=loadfile -m unit --ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity
+    @uv run --no-sync pytest -q -rs -n {{pytest_workers}} --dist=loadfile -m 'unit and not external_tool' --ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity
 
 # Run the unit test suite serially for reruns after a parallel failure.
 test-unit-serial:
-    @uv run --no-sync pytest -q -rs -n0 -m unit --ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity
+    @uv run --no-sync pytest -q -rs -n0 -m 'unit and not external_tool' --ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity
 
 # Run the integration test suite in two lanes: the bulk in parallel (xdist,
 # excluding serial-marked tests), then the isolation-sensitive `serial`-marked
@@ -399,9 +399,12 @@ test-live:
 test-smoke:
     uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_file_flow_calculation.py src/cadrumo/application/modelo/tests/test_file_flow_verify.py src/cadrumo/application/modelo/tests/test_file_flow_filing.py src/cadrumo/application/modelo/tests/test_export.py -v
 
-# Run the LibreOffice workbook parity tests.
+# Run the LibreOffice workbook parity tests. These carry `external_tool` rather
+# than `unit`, so the default `-m 'unit'` in addopts must be overridden here or
+# this lane selects nothing; the explicit path also overrides the addopts
+# --ignore that keeps the directory out of the default lane.
 test-workbook-parity:
-    uv run --no-sync pytest src/cadrumo/domain/calculations/registry/tests/workbook_parity/test_workbook_parity.py
+    uv run --no-sync pytest -m external_tool src/cadrumo/domain/calculations/registry/tests/workbook_parity/test_workbook_parity.py
 
 # Run the unit test suite with coverage report and fail-under check. Quiet progress.
 [unix]

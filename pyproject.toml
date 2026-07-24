@@ -754,6 +754,7 @@ convention = "google"
 "src/cadrumo/entrypoints/cli/tests/test_config_recovery_lifecycle.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_profile_login_session_lifecycle.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_lazy_command_tree.py" = ["S603"]
+"src/cadrumo/entrypoints/cli/tests/test_command_group_import_classification.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_live_read_subgroups.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_root_fallback_write_guard.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_work_calculate_row_flag.py" = ["S603"]
@@ -836,7 +837,7 @@ search_path = ["src", "stubs"]
 testpaths = ["src/cadrumo", "dev/packaging/tests/test_installed_oracles.py"]
 pythonpath = ["src"]
 python_files = ["test_*.py"]
-addopts = "-n auto --dist=loadfile --tb=short -m 'unit' --strict-markers --ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity"
+addopts = "-n auto --dist=loadfile --tb=short -m 'unit and not external_tool' --strict-markers --ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity"
 # Per-test wall ceiling: a deadlocked test fails in minutes with a stack dump
 # instead of wedging the whole run for hours (the CI unit lane sat 3-5.5h
 # wedged with idle workers on every recent run). pytest-timeout picks the
@@ -858,6 +859,7 @@ markers = [
   "docs: documentation build, stubs, and docstring structure verification",
   "serial: isolation-sensitive tests that must run without xdist workers (-n0); they mutate or read process-global state (e.g. the active master-key-provider singleton) and flake under -n auto worker interleaving. Run via the serial pass of `just test-integration`.",
   "perf: performance acceptance gates (CPU-time asserts, wall-clock advisory); excluded from every per-push lane and enrolled explicitly in the dispatch-only ci-full lane, where a quiet machine makes the advisory wall numbers meaningful too.",
+  "external_tool: tests requiring heavy external tooling the dependency set does not install (LibreOffice, for binary .xls conversion and formula recalculation). Carried ALONGSIDE an execution marker, since the marker-integrity contract requires exactly one of {unit, integration, aeat_live}; the default lane selects `unit and not external_tool`, so this marker -- not the path --ignore beside it -- is what holds these tests out. Enrolled explicitly by `just test-workbook-parity`.",
 ]
 
 # ── Coverage (pytest-cov) ────────────────────────────────────────────────────
