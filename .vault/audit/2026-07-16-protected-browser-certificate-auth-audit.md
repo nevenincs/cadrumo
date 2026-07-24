@@ -767,6 +767,31 @@ invocation lost two xdist workers to abrupt termination. Neither is a docs
 defect, but both make this gate unreliable to run locally while many agents share
 the machine.
 
+### final-gate-documentation-sequence-verdict | high | The documentation sequences cite two retired CLI verbs across five user-facing pages
+
+The golden re-check that was in flight when the documentation-gate disposition
+was written has completed, and the divergence is not a stale-capture artifact.
+Ten committed sequences fail to execute at all, across `how-to/filing-spine`,
+`how-to/profile-setup`, `how-to/protect-data-access`, `how-to/troubleshooting`,
+and `how-to/verification-reports`. Seven invoke `aeat config switch`, which the
+CLI answers with "No such command 'switch'", and two invoke `aeat config profile
+logout`, which answers with "No such command 'logout'". The live surface has
+replaced them: profile activation is now `aeat config login NAME` and the session
+close is now `aeat config logout`, one level up from where the guides look for it.
+
+This is a taxpayer-facing break, not internal drift. The published how-to guides
+instruct a reader to run commands the shipped CLI refuses, and the failure is a
+usage error with an exit code rather than a hint naming the replacement. It is
+the exact failure mode the CLI-verb-standard rule anticipates when it requires a
+rename to be swept by hand through the surfaces the automated gates do not scan,
+and the harness-conformance rule for citing only the live CLI surface.
+
+The break belongs to the live profile login-session campaign that performed the
+rename, and its owner has been told. It is recorded at high severity here despite
+being outside this feature because a documentation gate cannot be described as
+merely "owner-distinguished" when what it caught is shipped guidance that does
+not work. Nothing in it touches certificate authentication.
+
 ### final-honesty-semantic-evidence-withdrawn | medium | A dead code index made every semantic sweep in this corpus unfalsifiable
 
 The semantic evidence recorded during the closing gate run is withdrawn, and any
