@@ -49,6 +49,14 @@ from ._dek_wrap import WrappedDek, unwrap_dek, wrap_dek
 from ._errors import MasterKeyReentrantError
 from ._idle_timeout import evaluate_idle
 from ._kdf_params import KdfParams
+from ._login_throttle import (
+    LoginThrottleState,
+    ThrottleEvaluation,
+    evaluate_login_throttle,
+    login_throttle_path,
+    record_login_failure,
+    reset_login_throttle,
+)
 from ._master_key import (
     FileFallbackMasterKeyProvider,
     KeyringMasterKeyProvider,
@@ -113,6 +121,7 @@ __all__ = [
     "FileFallbackMasterKeyProvider",
     "KdfParams",
     "KeyringMasterKeyProvider",
+    "LoginThrottleState",
     "MasterKeyProvider",
     "MasterKeyReentrantError",
     "MintedRecovery",
@@ -124,6 +133,7 @@ __all__ = [
     "RecoveryRecord",
     "RecoveryRecoverOutcome",
     "RecoveryVerifyOutcome",
+    "ThrottleEvaluation",
     "UnsecuredMasterKeyProvider",
     "WrappedDek",
     "WrappedMasterKey",
@@ -137,6 +147,7 @@ __all__ = [
     "derive_kek_with_params",
     "encode_mnemonic",
     "evaluate_idle",
+    "evaluate_login_throttle",
     "exit_provider_session",
     "generate_recovery_key",
     "get_active_master_key",
@@ -145,16 +156,19 @@ __all__ = [
     "load_or_mint_bucket_dek",
     "load_recovery_envelope",
     "load_wrapped_master_key",
+    "login_throttle_path",
     "looks_like_real_tax_id",
     "mint_recovery_envelope",
     "open_session_from_recovery",
     "read_wrapped_bucket_dek",
+    "record_login_failure",
     "recovery_create",
     "recovery_recover",
     "recovery_rotate",
     "recovery_status",
     "recovery_verify",
     "refuse_unsecured_with_real_nif",
+    "reset_login_throttle",
     "save_recovery_envelope",
     "save_wrapped_master_key",
     "suspend_active_session",
