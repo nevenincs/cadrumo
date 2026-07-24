@@ -6520,9 +6520,6 @@ errors:
       schema_version_from_future: La versió d'esquema emmagatzemada {schema_version}
         de l'espai de noms {namespace} és més recent del que admet aquesta aplicació
         (fins a {expected}); no es pot llegir.
-      schema_version_unsupported: La versió d'esquema emmagatzemada {schema_version}
-        de l'espai de noms {namespace} no és compatible; aquesta aplicació requereix
-        la versió {expected}.
       unknown_classification: 'L''espai de noms d''objectes segurs %{namespace} conté
         una sensibilitat desconeguda: %{classification}.'
       unregistered: L'espai de noms d'objecte segur %{namespace} no està registrat

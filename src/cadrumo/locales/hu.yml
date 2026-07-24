@@ -6405,8 +6405,6 @@ errors:
         van sémafrissítő a(z) {from_version} verziótól.
       schema_version_from_future: A(z) {namespace} névtér tárolt sémaverziója ({schema_version})
         újabb, mint amit ez az alkalmazás támogat (legfeljebb {expected}); nem olvasható.
-      schema_version_unsupported: A(z) {namespace} névtér tárolt sémaverziója ({schema_version})
-        nem támogatott; ez az alkalmazás a(z) {expected} verziót igényli.
       unknown_classification: 'A(z) %{namespace} biztonságos objektum névtér ismeretlen
         érzékenységet tartalmaz: %{classification}.'
       unregistered: A(z) %{namespace} biztonságos objektum névtér nincs regisztrálva

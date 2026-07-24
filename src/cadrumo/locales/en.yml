@@ -6091,8 +6091,6 @@ errors:
       schema_version_from_future: Stored schema version {schema_version} for namespace
         {namespace} is newer than this application supports (up to {expected}); it
         cannot be read.
-      schema_version_unsupported: Stored schema version {schema_version} for namespace
-        {namespace} is unsupported; this application requires version {expected}.
       unknown_classification: Secure-object namespace %{namespace} contains unknown
         sensitivity %{classification}.
       unregistered: Secure-object namespace %{namespace} is not registered for runtime

@@ -6556,9 +6556,6 @@ errors:
       schema_version_from_future: La versión de esquema almacenada {schema_version}
         del espacio de nombres {namespace} es más reciente de lo que admite esta aplicación
         (hasta {expected}); no se puede leer.
-      schema_version_unsupported: La versión de esquema almacenada {schema_version}
-        del espacio de nombres {namespace} no es compatible; esta aplicación requiere
-        la versión {expected}.
       unknown_classification: 'El espacio de nombres de objetos seguros %{namespace}
         contiene una sensibilidad desconocida: %{classification}.'
       unregistered: El espacio de nombres de objeto seguro %{namespace} no está registrado
