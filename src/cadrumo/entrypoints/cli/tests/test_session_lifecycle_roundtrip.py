@@ -5,7 +5,7 @@ secure-object repository: every repository call polls the active
 :class:`BucketSession` against its idle deadline, touches it forward
 on success, and raises :class:`SessionExpiredError` once the window
 has elapsed. The CLI error decorator translates that into an operator
-refusal that names ``aeat config switch`` as the recovery verb.
+refusal that names ``aeat config login`` as the recovery verb.
 
 This roundtrip drives the full cycle with real adapters — a real
 bucket-session helper that opens and activates a real
@@ -171,7 +171,7 @@ def test_expired_session_refusal_names_switch_recovery_verb() -> None:
     """
 
     error = SessionExpiredError(
-        "the active profile session has expired; run `aeat config switch NAME` to re-activate.",
+        "the active profile session has expired; run `aeat config login NAME` to re-activate.",
     )
     rendered = str(error)
     assert "config switch" in rendered

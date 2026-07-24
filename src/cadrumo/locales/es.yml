@@ -2183,6 +2183,20 @@ cli:
           nif_iva o tgvi).'
         view_help: Muestra una observación de verificación guardada
       year_help: Ejercicio de presentación
+    maintenance:
+      help: Recupera el estado local que ha dejado una operación interrumpida.
+      profile_bundle_reconcile_help: Limpia las exportaciones de perfil que un fallo
+        dejó a medias, eliminando cualquier archivo temporal sin cifrar y registrando
+        los eventos de auditoría pendientes.
+      reconcile_cleared_info: Se han limpiado {count} exportación(es) de perfil interrumpidas.
+        Se ha eliminado cualquier archivo temporal sin cifrar y las exportaciones
+        ya escritas en disco han recibido su registro de auditoría pendiente.
+      reconcile_failures_warning: No se han podido limpiar {count} exportación(es)
+        de perfil interrumpidas y se han conservado para un intento posterior. Puede
+        quedar en disco un archivo temporal sin cifrar por cada una. Vuelve a ejecutar
+        este comando cuando se resuelva la causa.
+      reconcile_none_info: No se ha encontrado ninguna exportación de perfil interrumpida.
+        Ninguna ejecución anterior ha dejado nada pendiente.
     modelo:
       aggregate:
         counterpart_observation_help: Objeto JSON CounterpartObservation. El valor
@@ -3276,6 +3290,8 @@ cli:
       data_loss_warning: Anota ahora esta clave de recuperación. AEAT no almacena
         la clave de recuperación en claro y no puede mostrarla otra vez.
       errors:
+        echo_suppression_unavailable: Esta terminal no puede ocultar lo que se escribe,
+          por lo que el secreto quedaría visible en pantalla; use --secrets-stdin.
         new_passphrase_mismatch: La nueva contraseña y su confirmación no coinciden.
         non_interactive_secret_required: Se requiere un secreto pero no hay una terminal
           interactiva; usa --secrets-stdin.
@@ -3696,12 +3712,6 @@ cli:
         en un terminal interactivo para que se te pregunte.
       import_uuid_collision: El UUID del paquete entra en conflicto con un perfil
         existente.
-      logout_help: Cierra la sesión de almacenamiento activa, descarta las claves
-        en memoria, libera los motores del bucket y limpia el puntero local
-      logout_session_warning: El cierre de sesión cerró el almacenamiento activo,
-        descartó las claves en memoria, liberó los motores del bucket y limpió el
-        puntero del perfil activo. Ejecuta aeat config switch NAME antes de otro comando
-        que necesite un perfil.
       no_active_profile: No hay un perfil activo. Ejecuta `aeat config profile create
         NAME --tax-id <NIF/CIF/DNI/NIE>` primero.
       preflight_filing_year_help: Ejercicio de presentación (cuatro dígitos).
@@ -3943,10 +3953,6 @@ cli:
         para empezar.
       help: Mostrar el estado del perfil de configuración activo
       next_step: 'Próximo paso: `aeat app overview status`'
-    switch:
-      help: Cambia a un perfil y conviértelo en el activo.
-      name_help: Nombre del perfil al que cambiar. Si se omite, se usa el puntero
-        del perfil activo.
     unset:
       help: Eliminar el valor asignado a una clave de configuración
       key_help: Clave a limpiar
@@ -4275,7 +4281,12 @@ cli:
       bucket_id_help: Id del bucket a examinar (por defecto el perfil activo).
       help: Examina los movimientos del libro del perfil direccionado (por defecto
         el perfil activo) e informa de filas con anomalías agregadas a través de cada
-        período que los movimientos toquen. Local; nunca contacta con AEAT.
+        período que los movimientos toquen, además de cualquier vínculo de factura
+        en el que el catálogo de facturas y el de transacciones no coincidan. Local;
+        nunca contacta con AEAT.
+      link_inconsistency_notice: '{link_count} vínculo(s) de factura no coinciden
+        entre el catálogo de facturas y el de transacciones; la asociación de factura
+        afectada no es fiable.'
       period_help: 'Periodo de declaración opcional como token AEAT: 1T-4T (trimestres),
         0A (anual), 01-12 (meses). Combínalo con --year para coincidir con ledger
         status.'
@@ -4864,10 +4875,11 @@ cli:
         profile_duplicate: Duplicar un perfil de contribuyente existente.
         profile_history: Inspecciona el historial append-only de eventos del perfil.
         profile_list: Listar los perfiles de contribuyente disponibles.
+        profile_login: Inicia sesión en un perfil y lo convierte en el activo.
+        profile_logout: Cierra la sesión del perfil activo.
         profile_rename: Renombrar un perfil de contribuyente.
         profile_show: Mostrar los datos del perfil activo.
         profile_status: Mostrar el estado del perfil activo.
-        profile_switch: Cambia a un perfil y lo convierte en el activo.
         reset_resume: Continúa una operación de reinicio incompleta.
         reset_start: Inicia un nuevo reinicio irreversible de todos los perfiles locales.
         reset_status: Muestra el estado de una operación de reinicio sin modificar
@@ -5287,9 +5299,8 @@ cli:
     language_help: Idioma de la salida y del texto de ayuda (en, es, ca, hu).
     profile_help: Nombre del perfil activo.
     quiet_help: Mostrar solo los errores.
-    startup_import_error: 'Error interno: el módulo de la aplicación no se pudo cargar
-      al inicio (%{dependency}). Ejecuta aeat config repair.'
-    unavailable_app_help: Este comando no está disponible en la configuración actual.
+    unavailable_optional_extra_help: 'No disponible: %{feature} requiere el extra
+      opcional ''%{extra}''. Ejecuta el comando para ver cómo instalarlo.'
     verbose_help: Habilitar salida detallada.
     version_help: Mostrar el número de versión y salir.
   topic:
@@ -5860,6 +5871,8 @@ errors:
     fail_browser_validation: Los parámetros del navegador no superaron la validación.
     fail_certificado_censal_parse: No se ha podido leer el documento del Certificado
       de Situación Censal.
+    fail_cli_command_group_unavailable: 'No se pudo cargar el grupo de comandos ''%{group}'':
+      falta el módulo requerido ''%{module}''. Esta instalación está incompleta.'
     fail_declaracion_parse: No se pudo interpretar el PDF como una declaración.
     fail_export: Se produjo un error al exportar hacia la AEAT.
     fail_export_format: El borrador de la declaración no se pudo serializar al formato
@@ -6427,8 +6440,8 @@ errors:
     refused_profile_login_throttled: Demasiados intentos de inicio de sesión fallidos.
       Espera %{seconds} segundos antes de volver a ejecutar `aeat config login`.
     refused_profile_logout_override: El cierre de sesión no puede cambiar un perfil
-      activo seleccionado mediante --profile o CADRUMO_ACTIVE_PROFILE. Elimina la
-      selección explícita y vuelve a intentarlo.
+      activo seleccionado mediante --profile. Quita la opción --profile y vuelve a
+      intentarlo.
     refused_profile_not_configured: La verificación de la declaración de la Renta
       necesita un perfil de residencia fiscal. Completa el perfil antes de continuar.
     refused_profile_not_found: No existe ningún perfil con el identificador indicado.

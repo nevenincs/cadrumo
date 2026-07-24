@@ -45,11 +45,17 @@ from cadrumo.tests import collection_storage_root
 # after the import block instead of here.
 os.environ.setdefault("CADRUMO_LOCAL_STORAGE_ROOT", str(collection_storage_root()))
 
+from typing import TYPE_CHECKING
+
 import pytest
 
 from cadrumo.tests import register_collection_storage_root_cleanup
+from cadrumo.tests._deselection_hook import apply as _report_deselection
 from cadrumo.tests._marker_hook import apply as _apply_marker_contract
 from cadrumo.tests._worker_count_hook import resolve_auto_num_workers as _resolve_auto_num_workers
+
+if TYPE_CHECKING:
+    from _pytest.terminal import TerminalReporter
 
 register_collection_storage_root_cleanup(collection_storage_root())
 
@@ -62,3 +68,12 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
 def pytest_xdist_auto_num_workers(config: pytest.Config) -> int | None:
     """Delegate to the shared ``CADRUMO_PYTEST_WORKERS`` worker-count resolver."""
     return _resolve_auto_num_workers(config)
+
+
+def pytest_terminal_summary(
+    terminalreporter: TerminalReporter,
+    exitstatus: int,
+    config: pytest.Config,
+) -> None:
+    """Delegate to the shared marker-deselection reporter."""
+    _report_deselection(terminalreporter, exitstatus, config)

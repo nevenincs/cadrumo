@@ -327,8 +327,9 @@ def test_event_failure_keeps_target_published_and_reconcile_emits_pending_event(
         assert len(_export_events(bucket_id)) == event_count_before
 
         # With the event store healthy again, reconcile emits the pending event.
-        reconciled = reconcile_prepared_exports()
-        assert len(reconciled) == 1
+        outcome = reconcile_prepared_exports()
+        assert outcome.failures == ()
+        assert len(outcome.reconciled) == 1
         assert repository.list() == ()
         assert len(_export_events(bucket_id)) == event_count_before + 1
 

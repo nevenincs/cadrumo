@@ -7,8 +7,8 @@ aeat config profile rename bruno-2026 bruno-real
 aeat config profile duplicate bruno-real bruno-copy
 @step Delete the duplicate; deletion is local and irreversible.
 aeat config profile delete bruno-copy --yes
-@step Select the retained profile before exporting it.
-aeat config switch bruno-real
+@step Log in to the retained profile before exporting it.
+aeat config login bruno-real
 @step Export the profile to a portable cleartext JSON file.
 @result aeat --format json config profile export bruno-real --to bruno-real-profile.json --cleartext-local
 @expect result.schema_version == 3

@@ -19,6 +19,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.entrypoints.cli._errors.CliCommandGroupUnavailableError",
+        ErrorCode(
+            code="FAIL_CLI_COMMAND_GROUP_UNAVAILABLE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_cli_command_group_unavailable",
+            default_suggestion="pip install --force-reinstall cadrumo",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.entrypoints.cli._errors.CliRefusedBoundaryError",
         ErrorCode(
             code="REFUSED_CLI_BOUNDARY",

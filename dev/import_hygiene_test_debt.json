@@ -25,13 +25,6 @@
         "reason": "White-box unit test of the private AEAD associated-data builder for sealed-archive crash-window coverage. Internal to the bucket-maintenance service; not a symbol any other package should construct directly."
       },
       {
-        "importer_path": "src/cadrumo/agent/eval/tests/test_live_harness.py",
-        "lineno": 22,
-        "target_mod": "cadrumo.entrypoints.mcp._hitl",
-        "imported_names": ["_LIVE_WRITE_LEAVES"],
-        "reason": "White-box test asserting the private live-write leaf-command set stays empty (permanent live-submission prohibition invariant). The constant is deliberately private; a public export would invite a production caller to branch on it instead of the confirmation-policy API."
-      },
-      {
         "importer_path": "src/cadrumo/agent/tests/test_rule_surface_conformance.py",
         "lineno": 120,
         "target_mod": "cadrumo.entrypoints.cli._command_suggestions",
@@ -137,13 +130,6 @@
         "reason": "White-box test of the private formula-expression evaluator and its private unresolved-dependency exception, exercising the non-blocking unresolved-binding diagnostic channel. Internal formula-runtime primitives, not the public calculate_registry_snapshot entry point."
       },
       {
-        "importer_path": "src/cadrumo/application/review/tests/test_adapters.py",
-        "lineno": 31,
-        "target_mod": "cadrumo.domain.invoices._repository",
-        "imported_names": ["_INVOICE_CATALOGUE_VERSION", "_INVOICE_NAMESPACE", "_INVOICE_OBJECT_KEY"],
-        "reason": "White-box test asserting review-adapter secure-object writes land under the exact private namespace/object-key/schema-version constants the invoice repository itself uses. Internal storage-addressing constants, not a public contract other packages should construct against."
-      },
-      {
         "importer_path": "src/cadrumo/application/tests/test_error_class_registration.py",
         "lineno": 93,
         "target_mod": "cadrumo.application.auth._sessions",
@@ -156,13 +142,6 @@
         "target_mod": "cadrumo.application.auth._diagnostics",
         "imported_names": ["_payload"],
         "reason": "White-box test of the private auth-diagnostics payload builder's except-clause narrowing. Internal diagnostics helper, not a reusable public primitive."
-      },
-      {
-        "importer_path": "src/cadrumo/application/tests/test_error_class_registration.py",
-        "lineno": 227,
-        "target_mod": "cadrumo.application.auth._operator_probes",
-        "imported_names": ["_try_load_certificate_metadata"],
-        "reason": "White-box test of the private certificate-metadata probe's except-clause narrowing (confirms RuntimeError propagates rather than being swallowed). Internal probe helper, not a reusable public primitive."
       },
       {
         "importer_path": "src/cadrumo/application/user_profile/tests/test_custody_store_matrix.py",
@@ -324,20 +303,6 @@
         "target_mod": "cadrumo.application.modelo._verification_actions",
         "imported_names": ["_evaluate_advisory_predicate_fires"],
         "reason": "White-box test of the private advisory-predicate-fires evaluator's except-clause narrowing (InvalidOperation on threshold parse only). Internal verification-predicate helper, not a standalone public entry point."
-      },
-      {
-        "importer_path": "src/cadrumo/tests/test_wizard_locale_and_typed_payloads.py",
-        "lineno": 82,
-        "target_mod": "cadrumo.locales._ast_scanner",
-        "imported_names": ["_DYNAMIC_TRANSLATION_ROOTS"],
-        "reason": "White-box test confirming 'wizard' is registered in the private dynamic-translation-roots set that documents f-string dynamic-dispatch survivors for the locale scanner. Internal scanner configuration, not a public locale-catalogue API."
-      },
-      {
-        "importer_path": "src/cadrumo/tests/test_wizard_locale_and_typed_payloads.py",
-        "lineno": 96,
-        "target_mod": "cadrumo.locales._ast_scanner",
-        "imported_names": ["_extract_fstring_prefixes"],
-        "reason": "White-box test of the private f-string-prefix extraction helper used by the locale AST scanner. Internal scanner primitive, not a public locale-catalogue API."
       },
       {
         "importer_path": "src/cadrumo/tests/test_wizard_locale_and_typed_payloads.py",

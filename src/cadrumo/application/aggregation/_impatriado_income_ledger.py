@@ -64,7 +64,8 @@ from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
 from ._currency_predicates import is_non_eur_without_conversion
 from ._errors import AggregationPeriodError, AggregationValidationError, t
-from ._models import CasillaAggregation, CasillaProvenance
+from ._grouping import fold_casilla_observations
+from ._models import CasillaAggregation
 
 # The Modelo 151 base liquidable general (régimen impatriados, excluida la parte
 # del ahorro). The impatriado income aggregation folds Spanish-source income into
@@ -434,28 +435,11 @@ def _impatriado_base_casilla_aggregation(
     period: Period,
     observations: Sequence[ImpatriadoIncomeObservation],
 ) -> CasillaAggregation:
-    totals: dict[CasillaId, Decimal] = {}
-    grouped: dict[CasillaId, list[ImpatriadoIncomeObservation]] = {}
-    for observation in observations:
-        totals[observation.target_casilla_id] = totals.get(
-            observation.target_casilla_id,
-            Decimal("0"),
-        ) + _computable_impatriado_income_amount(observation)
-        grouped.setdefault(observation.target_casilla_id, []).append(observation)
-    provenance_rows = [
-        CasillaProvenance(
-            casilla_id=casilla,
-            category_id=None,
-            transaction_ids=tuple(sorted(row.transaction_id for row in rows)),
-            subtotal=sum((_computable_impatriado_income_amount(row) for row in rows), start=Decimal("0")),
-        )
-        for casilla, rows in sorted(grouped.items())
-    ]
-    return CasillaAggregation(
+    return fold_casilla_observations(
+        observations,
         modelo=Modelo.M151.value,
         period=period,
-        casilla_values=totals,
-        provenance=tuple(provenance_rows),
+        amount_fn=_computable_impatriado_income_amount,
     )
 
 

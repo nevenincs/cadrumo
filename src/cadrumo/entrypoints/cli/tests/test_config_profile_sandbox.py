@@ -82,7 +82,7 @@ def test_sandbox_create_forks_isolated_bucket_seeded_from_source() -> None:
 
     # The source profile is untouched: switching back shows the original label
     # and the same seeded fact value, never a value written while in the sandbox.
-    switched = _invoke(("config", "switch", "main"))
+    switched = _invoke(("config", "login", "main"))
     assert switched.exit_code == 0, switched.output
     main_shown = _invoke(("config", "profile", "show"))
     assert main_shown.exit_code == 0, main_shown.output
@@ -109,7 +109,7 @@ def test_sandbox_writes_never_appear_on_main_after_switching_back() -> None:
     sandbox_shown = _invoke(("config", "profile", "show"))
     assert "activities.description\tsandbox-experiment" in sandbox_shown.output
 
-    assert _invoke(("config", "switch", "main")).exit_code == 0
+    assert _invoke(("config", "login", "main")).exit_code == 0
     main_shown = _invoke(("config", "profile", "show"))
     assert main_shown.exit_code == 0, main_shown.output
     # The main profile keeps its original value; the sandbox edit never landed here.
@@ -136,7 +136,7 @@ def test_sandbox_list_shows_only_sandbox_labelled_buckets() -> None:
 def test_sandbox_discard_refuses_without_yes() -> None:
     create_profile_via_cli("main")
     assert _invoke(("config", "profile", "sandbox", "create", "temp", "--from-profile", "main")).exit_code == 0
-    assert _invoke(("config", "switch", "main")).exit_code == 0
+    assert _invoke(("config", "login", "main")).exit_code == 0
 
     refused = _invoke(("config", "profile", "sandbox", "discard", "temp"))
     assert refused.exit_code != 0, refused.output
@@ -165,7 +165,7 @@ def test_sandbox_discard_erases_sandbox_and_leaves_main_intact() -> None:
 
     create_profile_via_cli("main")
     assert _invoke(("config", "profile", "sandbox", "create", "throwaway", "--from-profile", "main")).exit_code == 0
-    assert _invoke(("config", "switch", "main")).exit_code == 0
+    assert _invoke(("config", "login", "main")).exit_code == 0
 
     discarded = _invoke(("config", "profile", "sandbox", "discard", "throwaway", "--yes"))
     assert discarded.exit_code == 0, discarded.output
@@ -218,7 +218,7 @@ def test_sandbox_discard_dry_run_previews_without_removing() -> None:
 
     create_profile_via_cli("main")
     assert _invoke(("config", "profile", "sandbox", "create", "preview-me", "--from-profile", "main")).exit_code == 0
-    assert _invoke(("config", "switch", "main")).exit_code == 0
+    assert _invoke(("config", "login", "main")).exit_code == 0
 
     previewed = _invoke(("config", "profile", "sandbox", "discard", "preview-me", "--dry-run"))
     assert previewed.exit_code == 0, previewed.output
@@ -271,7 +271,7 @@ def test_sandbox_prune_dry_run_previews_without_removing() -> None:
     create_profile_via_cli("main")
     assert _invoke(("config", "profile", "sandbox", "create", "alpha", "--from-profile", "main")).exit_code == 0
     assert _invoke(("config", "profile", "sandbox", "create", "beta", "--from-profile", "main")).exit_code == 0
-    assert _invoke(("config", "switch", "main")).exit_code == 0
+    assert _invoke(("config", "login", "main")).exit_code == 0
 
     previewed = _invoke(("config", "profile", "sandbox", "prune", "--dry-run"))
     assert previewed.exit_code == 0, previewed.output
@@ -287,7 +287,7 @@ def test_sandbox_prune_dry_run_previews_without_removing() -> None:
 def test_sandbox_prune_refuses_without_yes_or_dry_run() -> None:
     create_profile_via_cli("main")
     assert _invoke(("config", "profile", "sandbox", "create", "gamma", "--from-profile", "main")).exit_code == 0
-    assert _invoke(("config", "switch", "main")).exit_code == 0
+    assert _invoke(("config", "login", "main")).exit_code == 0
 
     refused = _invoke(("config", "profile", "sandbox", "prune"))
     assert refused.exit_code != 0, refused.output
@@ -300,7 +300,7 @@ def test_sandbox_prune_removes_every_sandbox_and_leaves_real_profile_intact() ->
     create_profile_via_cli("main")
     assert _invoke(("config", "profile", "sandbox", "create", "delta", "--from-profile", "main")).exit_code == 0
     assert _invoke(("config", "profile", "sandbox", "create", "epsilon", "--from-profile", "main")).exit_code == 0
-    assert _invoke(("config", "switch", "main")).exit_code == 0
+    assert _invoke(("config", "login", "main")).exit_code == 0
 
     pruned = _invoke(("config", "profile", "sandbox", "prune", "--yes"))
     assert pruned.exit_code == 0, pruned.output
@@ -364,7 +364,7 @@ def test_sandbox_prune_never_touches_a_non_sandbox_profile() -> None:
 def test_sandbox_archive_refuses_without_yes() -> None:
     create_profile_via_cli("main")
     assert _invoke(("config", "profile", "sandbox", "create", "dormant", "--from-profile", "main")).exit_code == 0
-    assert _invoke(("config", "switch", "main")).exit_code == 0
+    assert _invoke(("config", "login", "main")).exit_code == 0
 
     refused = _invoke(("config", "profile", "sandbox", "archive", "dormant"))
     assert refused.exit_code != 0, refused.output
@@ -397,7 +397,7 @@ def test_sandbox_archive_dry_run_previews_without_moving_it_out_of_the_live_surf
     create_profile_via_cli("main")
     created = _invoke(("config", "profile", "sandbox", "create", "preview-archive", "--from-profile", "main"))
     assert created.exit_code == 0, created.output
-    assert _invoke(("config", "switch", "main")).exit_code == 0
+    assert _invoke(("config", "login", "main")).exit_code == 0
 
     previewed = _invoke(("config", "profile", "sandbox", "archive", "preview-archive", "--dry-run"))
     assert previewed.exit_code == 0, previewed.output
@@ -429,7 +429,7 @@ def test_sandbox_archive_moves_sandbox_off_live_surface_but_data_survives() -> N
     live_pointer = read_profile_bucket("sandbox:sleeper")
     assert live_pointer is not None
     bucket_id = live_pointer.bucket_id
-    assert _invoke(("config", "switch", "main")).exit_code == 0
+    assert _invoke(("config", "login", "main")).exit_code == 0
 
     archived = _invoke(("config", "profile", "sandbox", "archive", "sleeper", "--yes"))
     assert archived.exit_code == 0, archived.output
@@ -470,7 +470,7 @@ def test_sandbox_restore_refuses_a_sandbox_that_was_never_archived() -> None:
     """``restore`` refuses a live (never-archived) sandbox."""
     create_profile_via_cli("main")
     assert _invoke(("config", "profile", "sandbox", "create", "never-dormant", "--from-profile", "main")).exit_code == 0
-    assert _invoke(("config", "switch", "main")).exit_code == 0
+    assert _invoke(("config", "login", "main")).exit_code == 0
 
     refused = _invoke(("config", "profile", "sandbox", "restore", "never-dormant"))
     assert refused.exit_code != 0, refused.output
@@ -484,7 +484,7 @@ def test_sandbox_restore_brings_an_archived_sandbox_back_with_data_intact() -> N
     assert _invoke(("config", "profile", "sandbox", "create", "roundtrip", "--from-profile", "main")).exit_code == 0
     edited = _invoke(("config", "profile", "edit", "sandbox:roundtrip", "--quiet", "--activity", "archived-experiment"))
     assert edited.exit_code == 0, edited.output
-    assert _invoke(("config", "switch", "main")).exit_code == 0
+    assert _invoke(("config", "login", "main")).exit_code == 0
 
     archived = _invoke(("config", "profile", "sandbox", "archive", "roundtrip", "--yes"))
     assert archived.exit_code == 0, archived.output
@@ -500,7 +500,7 @@ def test_sandbox_restore_brings_an_archived_sandbox_back_with_data_intact() -> N
     assert listing.exit_code == 0, listing.output
     assert "sandbox:roundtrip" in listing.output
 
-    assert _invoke(("config", "switch", "sandbox:roundtrip")).exit_code == 0
+    assert _invoke(("config", "login", "sandbox:roundtrip")).exit_code == 0
     restored_shown = _invoke(("config", "profile", "show"))
     assert restored_shown.exit_code == 0, restored_shown.output
     assert "activities.description\tarchived-experiment" in restored_shown.output
@@ -518,7 +518,7 @@ def test_sandbox_archive_then_discard_requires_restore_first() -> None:
     """
     create_profile_via_cli("main")
     assert _invoke(("config", "profile", "sandbox", "create", "one-way", "--from-profile", "main")).exit_code == 0
-    assert _invoke(("config", "switch", "main")).exit_code == 0
+    assert _invoke(("config", "login", "main")).exit_code == 0
 
     assert _invoke(("config", "profile", "sandbox", "archive", "one-way", "--yes")).exit_code == 0
 
@@ -557,9 +557,9 @@ def test_sandbox_usage_with_no_name_reports_every_sandbox_and_a_grand_total() ->
     """``sandbox usage`` with no name reports every sandbox and sums their totals."""
     create_profile_via_cli("main")
     assert _invoke(("config", "profile", "sandbox", "create", "usage-a", "--from-profile", "main")).exit_code == 0
-    assert _invoke(("config", "switch", "main")).exit_code == 0
+    assert _invoke(("config", "login", "main")).exit_code == 0
     assert _invoke(("config", "profile", "sandbox", "create", "usage-b", "--from-profile", "main")).exit_code == 0
-    assert _invoke(("config", "switch", "main")).exit_code == 0
+    assert _invoke(("config", "login", "main")).exit_code == 0
 
     report = _invoke(("config", "profile", "sandbox", "usage"))
     assert report.exit_code == 0, report.output
@@ -584,7 +584,7 @@ def test_sandbox_usage_measures_an_archived_sandbox_without_reactivating_it() ->
     """
     create_profile_via_cli("main")
     assert _invoke(("config", "profile", "sandbox", "create", "dormant", "--from-profile", "main")).exit_code == 0
-    assert _invoke(("config", "switch", "main")).exit_code == 0
+    assert _invoke(("config", "login", "main")).exit_code == 0
     assert _invoke(("config", "profile", "sandbox", "archive", "dormant", "--yes")).exit_code == 0
 
     report = _invoke(("config", "profile", "sandbox", "usage", "dormant"))
@@ -637,7 +637,7 @@ def test_sandbox_merge_ledger_promotes_rows_from_sandbox_into_main() -> None:
     assert created.exit_code == 0, created.output
     sandbox_transaction_id = _add_ledger_transaction(description="Sandbox experiment purchase")
 
-    assert _invoke(("config", "switch", "main")).exit_code == 0
+    assert _invoke(("config", "login", "main")).exit_code == 0
 
     merged = _invoke(
         (
@@ -696,7 +696,7 @@ def test_sandbox_merge_ledger_is_idempotent_on_rerun() -> None:
     _add_ledger_transaction(description="Main baseline row")
     assert _invoke(("config", "profile", "sandbox", "create", "bakeoff", "--from-profile", "main")).exit_code == 0
     _add_ledger_transaction(description="Sandbox row one")
-    assert _invoke(("config", "switch", "main")).exit_code == 0
+    assert _invoke(("config", "login", "main")).exit_code == 0
 
     merge_args = (
         "config",
@@ -726,7 +726,7 @@ def test_sandbox_merge_ledger_is_idempotent_on_rerun() -> None:
 def test_sandbox_merge_refuses_without_yes() -> None:
     create_profile_via_cli("main")
     assert _invoke(("config", "profile", "sandbox", "create", "bakeoff", "--from-profile", "main")).exit_code == 0
-    assert _invoke(("config", "switch", "main")).exit_code == 0
+    assert _invoke(("config", "login", "main")).exit_code == 0
 
     result = _invoke(("config", "profile", "sandbox", "merge", "bakeoff", "--into", "main", "--scope", "ledger"))
     assert result.exit_code != 0
@@ -745,7 +745,7 @@ def test_sandbox_merge_unknown_sandbox_name_refuses() -> None:
 def test_sandbox_merge_unknown_target_profile_refuses() -> None:
     create_profile_via_cli("main")
     assert _invoke(("config", "profile", "sandbox", "create", "bakeoff", "--from-profile", "main")).exit_code == 0
-    assert _invoke(("config", "switch", "main")).exit_code == 0
+    assert _invoke(("config", "login", "main")).exit_code == 0
 
     result = _invoke(
         (
@@ -801,7 +801,7 @@ def test_sandbox_active_indicator_absent_for_a_real_profile() -> None:
     """A command run against a real (non-sandbox) profile carries no sandbox indicator."""
     create_profile_via_cli("main")
     assert _invoke(("config", "profile", "sandbox", "create", "bakeoff", "--from-profile", "main")).exit_code == 0
-    assert _invoke(("config", "switch", "main")).exit_code == 0
+    assert _invoke(("config", "login", "main")).exit_code == 0
 
     shown_json = _invoke(("--format", "json", "config", "profile", "show"))
     assert shown_json.exit_code == 0, shown_json.output
@@ -839,7 +839,7 @@ def test_sandbox_active_indicator_names_the_currently_active_sandbox_after_switc
     assert "sandbox:eta" in shown.output
     assert "sandbox:zeta" not in shown.output
 
-    switched = _invoke(("config", "switch", "sandbox:zeta"))
+    switched = _invoke(("config", "login", "sandbox:zeta"))
     assert switched.exit_code == 0, switched.output
     assert "active_profile\tsandbox:zeta" in switched.output
     shown_after_switch = _invoke(("config", "profile", "show"))
@@ -877,14 +877,14 @@ def test_switch_rejects_a_bare_sandbox_short_name() -> None:
     """
     create_profile_via_cli("main")
     assert _invoke(("config", "profile", "sandbox", "create", "bare", "--from-profile", "main")).exit_code == 0
-    assert _invoke(("config", "switch", "main")).exit_code == 0
+    assert _invoke(("config", "login", "main")).exit_code == 0
 
     # The bare short name (no `sandbox:` prefix) does not resolve to the sandbox.
-    bare = _invoke(("config", "switch", "bare"))
+    bare = _invoke(("config", "login", "bare"))
     assert bare.exit_code != 0
 
     # The canonical label does resolve.
-    canonical = _invoke(("config", "switch", "sandbox:bare"))
+    canonical = _invoke(("config", "login", "sandbox:bare"))
     assert canonical.exit_code == 0, canonical.output
     assert "active_profile\tsandbox:bare" in canonical.output
 
@@ -899,11 +899,11 @@ def test_switch_accepts_a_sandbox_bucket_uuid() -> None:
 
     create_profile_via_cli("main")
     assert _invoke(("config", "profile", "sandbox", "create", "byid", "--from-profile", "main")).exit_code == 0
-    assert _invoke(("config", "switch", "main")).exit_code == 0
+    assert _invoke(("config", "login", "main")).exit_code == 0
 
     pointer = read_profile_bucket("sandbox:byid")
     assert pointer is not None
-    switched = _invoke(("config", "switch", pointer.bucket_id))
+    switched = _invoke(("config", "login", pointer.bucket_id))
     assert switched.exit_code == 0, switched.output
     assert "active_profile\tsandbox:byid" in switched.output
 
@@ -955,7 +955,7 @@ def test_sandbox_active_indicator_absent_when_a_non_active_sandbox_manifest_is_c
     assert _invoke(("config", "profile", "sandbox", "create", "torn", "--from-profile", "main")).exit_code == 0
     live_pointer = read_profile_bucket("sandbox:torn")
     assert live_pointer is not None
-    assert _invoke(("config", "switch", "main")).exit_code == 0
+    assert _invoke(("config", "login", "main")).exit_code == 0
 
     paths = bucket_paths(load_settings().cadrumo_local_storage_root, live_pointer.bucket_id)
     manifest_file = manifest_path(paths)

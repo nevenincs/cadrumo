@@ -433,7 +433,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
                     # summary + next_action already guide the operator.
                     detail=None if missing_active_bucket_session else _compact_exception(exc),
                     next_action=(
-                        profile_health.next_action or "aeat config switch NAME"
+                        profile_health.next_action or "aeat config login NAME"
                         if missing_active_bucket_session
                         else "aeat config repair reset-progress --yes"
                     ),
@@ -962,7 +962,7 @@ def _auth_unavailable_check(health: ActiveProfileHealth) -> DiagnosticCheck:
         name="auth.readiness",
         status="warn",
         summary=tr("cli.diagnostics.summary.auth_state_unreadable"),
-        next_action=health.next_action or "aeat config switch NAME",
+        next_action=health.next_action or "aeat config login NAME",
     )
 
 

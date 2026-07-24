@@ -59,7 +59,8 @@ from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
 from ._currency_predicates import is_non_eur_without_conversion
 from ._errors import AggregationPeriodError, AggregationValidationError, t
-from ._models import CasillaAggregation, CasillaProvenance
+from ._grouping import fold_casilla_observations
+from ._models import CasillaAggregation
 
 # The only casilla M130 deductible-expense aggregation feeds: official box 02
 # ("Gastos"), bound to the ledger renta gasto aggregation. Operator-supplied
@@ -369,27 +370,11 @@ def _gasto_casilla_aggregation(
     period: Period,
     observations: Sequence[RentaGastoObservation],
 ) -> CasillaAggregation:
-    totals: dict[CasillaId, Decimal] = {}
-    grouped: dict[CasillaId, list[RentaGastoObservation]] = {}
-    for observation in observations:
-        totals[observation.target_casilla_id] = (
-            totals.get(observation.target_casilla_id, Decimal("0")) + observation.deductible_amount
-        )
-        grouped.setdefault(observation.target_casilla_id, []).append(observation)
-    provenance_rows = [
-        CasillaProvenance(
-            casilla_id=casilla,
-            category_id=None,
-            transaction_ids=tuple(sorted(row.transaction_id for row in rows)),
-            subtotal=sum((row.deductible_amount for row in rows), start=Decimal("0")),
-        )
-        for casilla, rows in sorted(grouped.items())
-    ]
-    return CasillaAggregation(
+    return fold_casilla_observations(
+        observations,
         modelo=Modelo.M130.value,
         period=period,
-        casilla_values=totals,
-        provenance=tuple(provenance_rows),
+        amount_fn=lambda observation: observation.deductible_amount,
     )
 
 

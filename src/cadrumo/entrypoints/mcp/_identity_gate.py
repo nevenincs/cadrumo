@@ -31,15 +31,15 @@ from ._harness_tools import HARNESS_LOAD_TOOL, WHOAMI_TOOL
 
 #: Verbs that change or clear WHICH taxpayer profile is active. Executing one
 #: re-arms the gate so the NEXT mutating call must re-confirm identity. This is
-#: the closed set of active-identity-changing verbs (switch — which also enters a
+#: the closed set of active-identity-changing verbs (login — which also enters a
 #: sandbox by its canonical ``sandbox:<name>`` label, create-and-activate, or
 #: strong logout), not every ``config profile`` mutation - editing or renaming
 #: the current profile does not change who is active, so it does not re-arm.
 ACTIVE_IDENTITY_CHANGING_COMMANDS: frozenset[str] = frozenset(
     {
-        "config.switch",
+        "config.login",
         "config.profile.create",
-        "config.profile.logout",
+        "config.logout",
     },
 )
 

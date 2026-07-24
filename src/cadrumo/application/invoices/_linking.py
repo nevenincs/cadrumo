@@ -3,7 +3,9 @@
 :func:`link_invoice_transaction_repositories` loads both the
 :class:`InvoiceCatalogue` via :class:`InvoiceCatalogueRepository` and
 the :class:`TransactionCatalogue` via :class:`TransactionCatalogueRepository`,
-applies the bidirectional link, and persists both updated catalogues.
+applies the bidirectional link, and commits both updated catalogues in one
+unit of work through
+:meth:`TransactionCatalogueRepository.save_with_secure_object_writes`.
 """
 
 from __future__ import annotations
@@ -15,11 +17,10 @@ from ...adapters.persistence.profile.transactions import TransactionCatalogueRep
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
-    InvoiceCatalogueRepositoryProtocol,
     InvoiceLinkError,
     link_transaction,
 )
-from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepositoryProtocol, link_invoice
+from ...domain.transactions import TransactionCatalogue, link_invoice
 
 
 class InvoiceTransactionLinkResult(BaseModel):
@@ -77,10 +78,24 @@ def link_invoice_transaction_repositories(
     bucket_id: str,
     invoice_id: str,
     transaction_id: str,
-    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    # rationale: both repositories are concrete because this writer calls the
+    # adapter-only co-commit escape hatches (to_secure_object_write /
+    # save_with_secure_object_writes), absent from the domain protocols.
+    invoice_repository: InvoiceCatalogueRepository | None = None,
+    transaction_repository: TransactionCatalogueRepository | None = None,
 ) -> InvoiceTransactionLinkResult:
-    """Persist a bidirectional invoice link through the backend repositories.
+    """Persist a bidirectional invoice link as one all-or-nothing write.
+
+    Both sides of the link commit together: the updated invoice catalogue is
+    serialised into a
+    :class:`~cadrumo.adapters.persistence.storage.SecureObjectWrite`
+    and handed to
+    :meth:`~cadrumo.adapters.persistence.profile.transactions.TransactionCatalogueRepository.save_with_secure_object_writes`
+    alongside the transaction-catalogue diff, so both land in the single
+    :meth:`~cadrumo.adapters.persistence.storage.SecureObjectRepository.apply_batch`
+    transaction. A crash or error mid-write rolls both back, so the catalogues
+    cannot come to rest in the one-sided state
+    :func:`~cadrumo.domain.invoices.verify_link_consistency` reports.
 
     Returns an :class:`InvoiceTransactionLinkResult` with the updated
     invoice and transaction catalogues after the link is written.
@@ -93,8 +108,10 @@ def link_invoice_transaction_repositories(
         invoice_id=invoice_id,
         transaction_id=transaction_id,
     )
-    invoices_repo.save(result.invoices)
-    transactions_repo.save(result.transactions)
+    transactions_repo.save_with_secure_object_writes(
+        result.transactions,
+        (invoices_repo.to_secure_object_write(result.invoices),),
+    )
     return result
 
 

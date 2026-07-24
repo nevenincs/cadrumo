@@ -976,45 +976,6 @@ def config_profile_rename(
     )
 
 
-@profile_app.command(
-    "logout",
-    help=tr(
-        "cli.config.profile.logout_help",
-        default="Close the active profile storage session and clear its local pointer.",
-    ),
-)
-def config_profile_logout(
-    ctx: typer.Context,
-    output_language: _OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
-) -> None:
-    """Close active storage, discard in-memory keys, and clear the profile pointer."""
-    _activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile import logout_active_profile
-
-    before = logout_active_profile()
-    from .._config_payloads import ConfigProfileLogoutResult
-
-    logout_result = ConfigProfileLogoutResult(
-        logged_out_profile=before or "",
-        active_profile=None,
-        session_warning=tr("cli.config.profile.logout_session_warning"),
-    )
-    _emit_envelope(
-        ctx,
-        command="config.profile.logout",
-        result=logout_result,
-        lines=(
-            f"logged_out_profile\t{before or '<none>'}",
-            tr("cli.config.profile.logout_session_warning"),
-        ),
-    )
-
-
 @profile_app.command("status", help=tr("cli.config.status.help"))
 def config_status(
     ctx: typer.Context,
@@ -1214,11 +1175,7 @@ register_bucket_archive_commands(
     resolve_profile_by_label=_resolve_profile_by_label,
     resolve_active_profile_pointer=_resolve_active_profile_pointer,
 )
-register_custody_commands(
-    app,
-    resolve_active_profile_pointer=_resolve_active_profile_pointer,
-    resolve_profile_by_label=_resolve_profile_by_label,
-)
+register_custody_commands(app)
 register_descendiente_commands(
     profile_app,
     resolve_active_profile_pointer=_resolve_active_profile_pointer,

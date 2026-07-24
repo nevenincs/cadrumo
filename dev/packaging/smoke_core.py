@@ -148,6 +148,28 @@ def _repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
+def _head_extract(repo_root: Path, work_dir: Path) -> Path:
+    """Extract a pristine ``git archive HEAD`` tree to build a lane's artifacts from.
+
+    A working tree may carry uncommitted changes (including registry TOML
+    mid-edits) that a tree-built artifact would sweep into a lane's
+    registry-validation probes, failing them for reasons outside that lane's
+    contract. In the multi-agent factory worktree the failure mode is sharper
+    still: a build can snapshot a torn peer edit, so the artifact corresponds to
+    no commit at all and the lane fails with what looks like a packaging
+    regression. Building from the HEAD archive keeps the proof bound to a
+    defined commit; on a clean checkout (CI) it is identical to the tree.
+    """
+    work_dir.mkdir(parents=True, exist_ok=True)
+    archive = work_dir / "head.zip"
+    extract_root = work_dir / "head"
+    _run(["git", "archive", "--format=zip", "-o", str(archive), "HEAD"], cwd=repo_root, env=_git_env(repo_root))
+    with zipfile.ZipFile(archive) as bundle:
+        bundle.extractall(extract_root)
+    archive.unlink()
+    return extract_root
+
+
 def _wsl_path_from_windows_gitdir(gitdir: str) -> Path | None:
     """Translate a Windows gitdir pointer for WSL-mounted worktrees."""
     if os.name == "nt":
@@ -693,12 +715,20 @@ def _assert_cadrumo_version_output(version: CommandResult, *, context: str) -> N
         raise SystemExit(f"unexpected aeat --version output {context}: {version.stdout!r}")
 
 
-def _build_wheel(repo_root: Path, work_dir: Path, uv: str) -> Path:
-    """Build the Cadrumo wheel into the smoke work directory."""
+def _build_wheel(repo_root: Path, work_dir: Path, uv: str, *, build_root: Path) -> Path:
+    """Build the Cadrumo wheel into the smoke work directory.
+
+    ``build_root`` is the tree the wheel is built FROM and is required rather
+    than defaulted: the expectations below come from ``git ls-files`` at HEAD,
+    so building from a working tree that carries uncommitted peer edits makes
+    artifact and expectation disagree for reasons outside this lane. Pass a
+    :func:`_head_extract` tree. ``repo_root`` stays the real repository, because
+    the tracked-data queries need Git and the extract has no ``.git``.
+    """
     expected_data_paths = _expected_wheel_data_paths(repo_root)
     wheel_dir = work_dir / "wheel"
     wheel_dir.mkdir(parents=True, exist_ok=True)
-    _run([uv, "build", "--wheel", "--out-dir", str(wheel_dir)], cwd=repo_root)
+    _run([uv, "build", "--wheel", "--out-dir", str(wheel_dir)], cwd=build_root)
     wheels = sorted(wheel_dir.glob("cadrumo-*.whl"))
     if len(wheels) != 1:
         raise SystemExit(f"expected exactly one Cadrumo wheel in {wheel_dir}; got {[wheel.name for wheel in wheels]!r}")
@@ -706,14 +736,18 @@ def _build_wheel(repo_root: Path, work_dir: Path, uv: str) -> Path:
     return wheels[0]
 
 
-def _build_companion_wheels(repo_root: Path, work_dir: Path, uv: str) -> tuple[Path, Path]:
-    """Build the two mandatory data companions for a complete local cohort."""
+def _build_companion_wheels(work_dir: Path, uv: str, *, build_root: Path) -> tuple[Path, Path]:
+    """Build the two mandatory data companions for a complete local cohort.
+
+    Built from ``build_root`` for the same reason as :func:`_build_wheel`; pass
+    a :func:`_head_extract` tree so the companions correspond to a commit.
+    """
     out_dir = work_dir / "companion-wheels"
     wheels: list[Path] = []
     for project_name, project_dir, wheel_glob in _DATA_COMPANION_PROJECTS:
         _run(
-            [uv, "build", "--project", str(repo_root / project_dir), "--out-dir", str(out_dir)],
-            cwd=repo_root,
+            [uv, "build", "--project", str(build_root / project_dir), "--out-dir", str(out_dir)],
+            cwd=build_root,
         )
         built = sorted(out_dir.glob(wheel_glob))
         if len(built) != 1:

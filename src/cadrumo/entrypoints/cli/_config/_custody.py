@@ -14,12 +14,10 @@ from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
-from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from ._custody_secret import register_secret_custody_commands
 
 if TYPE_CHECKING:
     from ....application.user_profile import ProfileLoginOutcome
-    from ....application.workflow import ProfileBucketPointer
 
 
 class _LoginSecrets(BaseModel):
@@ -33,13 +31,6 @@ class _LoginSecrets(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     passphrase: SecretStr
-
-
-def select_profile_pointer(pointer: ProfileBucketPointer) -> None:
-    """Select and unlock ``pointer`` through the canonical profile lifecycle span."""
-    from ....application.user_profile import select_profile_with_lifecycle_span
-
-    select_profile_with_lifecycle_span(pointer.bucket_id)
 
 
 def _settings_has_explicit_output_language() -> bool:
@@ -58,15 +49,15 @@ def _settings_has_explicit_output_language() -> bool:
 
 
 def _pin_render_language_to_target_bucket(ctx: typer.Context, *, bucket_id: str) -> None:
-    """Pin the render locale to the failed switch target's bucket hint.
+    """Pin the render locale to the failed login target's bucket hint.
 
-    A switch that cannot unlock its target renders the storage/master-key
-    refusal at the CLI boundary AFTER the lifecycle span has unwound and
-    restored the previous active profile, so the active-profile language
+    A login that cannot unlock its target renders the storage/master-key
+    refusal at the CLI boundary AFTER the pointer transaction has unwound
+    and restored the previous selection, so the active-profile language
     resolver would otherwise localise the target's failure in the SOURCE
     profile's language. The target's output-language hint is a plaintext,
     bucket-local file readable without the (corrupt) DEK, so it can pin the
-    render locale to the target the operator was switching to. Skipped when
+    render locale to the target the operator was logging in to. Skipped when
     the operator supplied an explicit language.
     """
     if _settings_has_explicit_output_language():
@@ -81,84 +72,6 @@ def _pin_render_language_to_target_bucket(ctx: typer.Context, *, bucket_id: str)
         return
     ctx.with_resource(override_settings(cadrumo_output_language=language))
     clear_output_language_cache()
-
-
-def _resolve_switch_target(
-    name: str,
-    *,
-    resolve_profile_by_label: Callable[[str], ProfileBucketPointer],
-) -> ProfileBucketPointer:
-    """Resolve a ``switch`` target from an unambiguous UUID or an exact label.
-
-    ``switch`` is the single accepted profile selector (ADR
-    ``cli-authority-verb-conformance``, Decision 3): it accepts the same
-    identifiers profile and sandbox listing return — the immutable bucket
-    UUID, or the exact operator label, including a sandbox's canonical
-    ``sandbox:<name>`` label. A bare sandbox short name is NOT implicitly
-    namespaced: it carries no ``sandbox:`` prefix, so it matches no sandbox
-    bucket and the label resolver refuses it as an unknown profile — the
-    sandbox namespace check the removed second sandbox-selection door
-    performed is preserved by requiring the canonical label. A live UUID resolves
-    directly; a tombstoned UUID falls through to the label resolver, which
-    refuses it. UUID/label ambiguity or duplicate labels refuse through the
-    injected label resolver's typed selection error.
-    """
-    from ....application.workflow import read_profile_bucket_by_id
-    from ....domain.user_profile import UserProfileStatus
-
-    trimmed = name.strip()
-    if trimmed:
-        by_id = read_profile_bucket_by_id(trimmed)
-        if by_id is not None and by_id.status is not UserProfileStatus.TOMBSTONED:
-            return by_id
-    return resolve_profile_by_label(name)
-
-
-def _register_switch_command(
-    app: typer.Typer,
-    *,
-    resolve_active_profile_pointer: Callable[[], ProfileBucketPointer | None],
-    resolve_profile_by_label: Callable[[str], ProfileBucketPointer],
-) -> None:
-    """Register the operator profile-switch transport command."""
-
-    @app.command("switch", help=tr("cli.config.switch.help"))
-    def config_switch(
-        ctx: typer.Context,
-        name: str | None = typer.Argument(None, help=tr("cli.config.switch.name_help")),
-        output_language: OutputLanguage | None = typer.Option(
-            None,
-            "--output-language",
-            "--language",
-            help=tr("cli.config.auth.output_language_help"),
-        ),
-    ) -> None:
-        """Switch the active profile through the canonical lifecycle span."""
-        _activate_subcommand_output_language(ctx, output_language)
-        if name is None:
-            pointer = resolve_active_profile_pointer()
-            if pointer is None:
-                raise _CliRefusedBoundaryError(
-                    translated_message="cli.config.errors.no_active_profile",
-                )
-        else:
-            pointer = _resolve_switch_target(name, resolve_profile_by_label=resolve_profile_by_label)
-        try:
-            select_profile_pointer(pointer)
-        except SecretStoreError:
-            # The target could not be unlocked (e.g. a corrupt bucket DEK);
-            # render the refusal in the target's own output language.
-            _pin_render_language_to_target_bucket(ctx, bucket_id=pointer.bucket_id)
-            raise
-        from .._config_payloads import ConfigSwitchResult
-
-        result = ConfigSwitchResult(active_profile=pointer.label)
-        _emit_envelope(
-            ctx,
-            command="config.switch",
-            result=result,
-            lines=(f"active_profile\t{pointer.label}",),
-        )
 
 
 def _login_notices(outcome: ProfileLoginOutcome) -> tuple[Notice, ...]:
@@ -233,7 +146,19 @@ def _register_login_command(app: typer.Typer) -> None:
                 """Resolve the passphrase already read from the bounded stdin channel."""
                 return secret
 
-        outcome = login_profile(name=name, passphrase_callback=passphrase_callback)
+        try:
+            outcome = login_profile(name=name, passphrase_callback=passphrase_callback)
+        except SecretStoreError:
+            # The target could not be unlocked (a wrong passphrase, a
+            # corrupt bucket DEK); render the refusal in the target's own
+            # output language rather than the previous selection's. Only a
+            # UUID target resolves a bucket-local hint here -- login owns
+            # label resolution internally and does not surface the resolved
+            # id on the failure path -- and a label simply finds no hint and
+            # falls back to the default resolution.
+            if name is not None:
+                _pin_render_language_to_target_bucket(ctx, bucket_id=name)
+            raise
 
         from .._config_payloads import ConfigLoginResult
 
@@ -310,18 +235,13 @@ def _register_logout_command(app: typer.Typer) -> None:
         )
 
 
-def register_custody_commands(
-    app: typer.Typer,
-    *,
-    resolve_active_profile_pointer: Callable[[], ProfileBucketPointer | None],
-    resolve_profile_by_label: Callable[[str], ProfileBucketPointer],
-) -> None:
-    """Register root-level profile custody commands."""
+def register_custody_commands(app: typer.Typer) -> None:
+    """Register root-level profile custody commands.
+
+    ``login`` owns profile selection end to end (UUID or exact label)
+    through the application resolver, so no pointer or label resolver is
+    injected here any more.
+    """
     _register_login_command(app)
     _register_logout_command(app)
-    _register_switch_command(
-        app,
-        resolve_active_profile_pointer=resolve_active_profile_pointer,
-        resolve_profile_by_label=resolve_profile_by_label,
-    )
     register_secret_custody_commands(app)

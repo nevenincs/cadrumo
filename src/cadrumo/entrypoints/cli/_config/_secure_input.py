@@ -20,6 +20,7 @@ from __future__ import annotations
 import getpass
 import json
 import sys
+import warnings
 
 from pydantic import BaseModel, ValidationError
 
@@ -95,20 +96,52 @@ def prompt_secret_no_echo(prompt: str) -> str:
     """Read one secret from the controlling terminal with echo suppressed.
 
     ``prompt`` is the already-localised prompt text (callers pass ``tr(...)`` so
-    the catalogue key stays statically discoverable). Refuses cleanly
-    (``REFUSED``, exit 2) when stdin is not an interactive terminal rather than
-    letting :func:`getpass.getpass` surface a bare ``EOFError`` to the generic
-    internal boundary. The typed value is never echoed.
+    the catalogue key stays statically discoverable). The typed value is never
+    echoed: when echo suppression cannot be guaranteed this refuses
+    (``REFUSED``, exit 2) rather than degrading to a visible read.
+
+    :func:`getpass.getpass` silently falls back to an *echoing* read
+    (``fallback_getpass``) whenever it cannot control the terminal — on Windows
+    when ``sys.stdin`` has been rebound away from ``sys.__stdin__`` or ``msvcrt``
+    is unavailable, and on POSIX when the descriptor cannot be resolved or
+    ``termios`` refuses. Two guards close that: the ``sys.__stdin__`` identity
+    precondition (checked where the stdlib itself branches on it), and promoting
+    :class:`getpass.GetPassWarning` to an exception, which ``fallback_getpass``
+    emits as its *first* statement — so the refusal fires before any character is
+    read or displayed, covering every fallback route including ones this module
+    cannot predict.
+
+    :func:`warnings.catch_warnings` is not thread-safe, which is sound here: this
+    is a blocking interactive read on a single-threaded CLI process.
     """
     if not sys.stdin.isatty():
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.custody.errors.non_interactive_secret_required",
         )
+    if sys.platform == "win32" and sys.stdin is not sys.__stdin__:
+        # win_getpass dispatches to the echoing fallback on exactly this
+        # condition; isatty() does not detect it. POSIX is excluded because
+        # unix_getpass opens /dev/tty itself and suppresses echo regardless.
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.custody.errors.echo_suppression_unavailable",
+        )
     try:
-        return getpass.getpass(prompt)
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", getpass.GetPassWarning)
+            return getpass.getpass(prompt)
+    except getpass.GetPassWarning as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.custody.errors.echo_suppression_unavailable",
+        ) from exc
     except EOFError as exc:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.custody.errors.non_interactive_secret_required",
+        ) from exc
+    except OSError as exc:
+        # A console-less terminal layer can fail the underlying msvcrt/tty call;
+        # surface this module's own refusal instead of the generic boundary.
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.custody.errors.echo_suppression_unavailable",
         ) from exc
 
 

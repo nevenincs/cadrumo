@@ -79,7 +79,7 @@
     "wizard.setup.residence.ccaa.choices.murcia.label": "Spanish autonomous-community proper name"
   },
   "hu": {
-    "_untranslated_ceiling": 106,
+    "_untranslated_ceiling": 0,
     "application.filing.review.stale_reasons.unknown": "Fallback default that only interpolates the raw reason value with no surrounding prose to translate",
     "application.storage.calc_sheets.engine.guide.title": "Pure title-format template interpolating modelo_title/period/filing_year, no prose to translate",
     "application.storage.calc_sheets.engine.labels.casilla": "'Casilla' is the domain Spanish stem for an AEAT form box, per aeat-spanish-stem-naming; not translated.",

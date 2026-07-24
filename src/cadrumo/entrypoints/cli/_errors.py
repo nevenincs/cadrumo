@@ -44,7 +44,7 @@ import click
 import typer
 from pydantic import ValidationError
 
-from ...core import FormerProductStateError
+from ...core import PRODUCT_IDENTITY, FormerProductStateError
 from ...core.click_context import json_output_requested
 from ...core.errors import (
     CadrumoError,
@@ -67,6 +67,13 @@ _UNDER_TEST: ContextVar[bool] = ContextVar("cadrumo_cli_error_boundary_under_tes
 #: resolves — an argv parse failure — so the field is honestly null there.
 _ACTIVE_COMMAND_ID: ContextVar[str | None] = ContextVar("cadrumo_cli_active_command_id", default=None)
 _WRAPPED_CALLBACKS: dict[int, Callable[..., object]] = {}
+
+#: Remedy offered when a REQUIRED dependency is missing at import time. A
+#: required package is absent only when the installed distribution is
+#: incomplete, so the honest fix is to reinstall it rather than to install an
+#: extra (which would not carry the package) or to run ``config repair`` (which
+#: diagnoses local profile state, never the Python environment).
+_REINSTALL_SUGGESTION: str = f"pip install --force-reinstall {PRODUCT_IDENTITY.distribution}"
 
 
 class _ReconfigurableTextIO(Protocol):
@@ -192,6 +199,42 @@ class CliStoredDataValidationBoundaryError(CadrumoError):
             suggestion="aeat config repair --help",
         )
         self.original_exception: ValidationError = error
+
+
+class CliCommandGroupUnavailableError(CadrumoError):
+    """Raised when a command group cannot be imported and the cause is not an optional extra.
+
+    A command group's module is imported lazily, the first time an operator
+    dispatches into that subtree. When the import fails with a
+    :exc:`ModuleNotFoundError` naming a package outside the
+    :data:`~core.OPTIONAL_EXTRAS` registry, the missing package is a *required*
+    dependency: the installation is incomplete, not merely un-extended.
+
+    Degrading that case to an unavailable-command placeholder would turn a hard
+    dependency failure into an invisible capability loss — the whole subtree
+    would answer every invocation with a plausible refusal while naming no
+    cause. This refusal names the module, the group it broke, and the
+    reinstall remedy instead.
+
+    Attributes:
+        group: The command-group name whose subtree failed to load.
+        module: The missing required module the import named.
+    """
+
+    def __init__(self, *, group: str, module: str) -> None:
+        """Build the refusal for ``group`` failing on required ``module``.
+
+        Args:
+            group: The command-group name whose subtree failed to load.
+            module: The dotted module name the failed import named.
+        """
+        super().__init__(
+            translated_message="errors.fail.fail_cli_command_group_unavailable",
+            context={"group": group, "module": module},
+            suggestion=_REINSTALL_SUGGESTION,
+        )
+        self.group = group
+        self.module = module
 
 
 class CliRefusedBoundaryError(CadrumoError):
@@ -662,6 +705,7 @@ def _project_boundary_error(error: Exception, callback: Callable[..., object]) -
 
 
 __all__ = [
+    "CliCommandGroupUnavailableError",
     "CliRefusedBoundaryError",
     "CliStoredDataValidationBoundaryError",
     "CliValidationBoundaryError",

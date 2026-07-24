@@ -288,11 +288,11 @@ def _build_archive_import_active_switch_notice(bucket_id: str) -> Notice:
             "cli.config.profile.archive.import_active_switch_info",
             default=(
                 "The restored profile is now the ACTIVE profile; subsequent "
-                "commands operate on it. Run 'aeat config switch <name>' to change "
+                "commands operate on it. Run 'aeat config login <name>' to change "
                 "the active profile."
             ),
         ),
-        suggestion="aeat config switch",
+        suggestion="aeat config login",
         context={"active_profile": bucket_id},
     )
 

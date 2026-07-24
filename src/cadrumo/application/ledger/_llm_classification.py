@@ -1219,17 +1219,20 @@ def apply_evidence_split(
 ) -> LLMSplitApplyResult:
     """Apply a reviewed evidence-driven split through the single-writer split path.
 
-    Composes the established single writers rather than re-implementing them
-    (``composition-service-no-parallel-write-path``): first
-    :func:`split_transaction` redistributes the parent into children whose
-    magnitudes sum exactly to the parent, then for each child
-    :func:`update_manual_transaction_fields` stamps the model-selected expense
-    category and IVA category, the registry-DERIVED regulated numbers, the parent
-    invoice's evidence link, and the ``llm:<model>`` provenance.
+    Delegates the whole mutation to the established single writer rather than
+    re-implementing it: :func:`split_transaction_with_classified_children`
+    redistributes the parent into children whose magnitudes sum exactly to the
+    parent and stamps each child's model-selected expense and IVA category, the
+    registry-DERIVED regulated numbers, the parent's inherited evidence link, and
+    the ``llm:<model>`` provenance. This function only translates the reviewed
+    suggestion into that writer's arguments; it performs no write of its own and
+    no follow-up per-child field patch.
 
-    The split path enforces children-sum-to-parent and the non-negative-magnitude
-    invariant; the per-child write enforces the
-    ``gross == taxable_base + iva_amount`` invariant. The LLM never supplies a
+    Because the writer persists the parent transition, every classified child, and
+    all bucket events in one transaction, a child can never come to rest split but
+    unclassified or missing its evidence link. The writer enforces
+    children-sum-to-parent, the non-negative-magnitude invariant, and
+    ``gross == taxable_base + iva_amount`` per child. The LLM never supplies a
     persisted euro amount or regulated number.
 
     Args:
@@ -1335,10 +1338,12 @@ def apply_evidence_classification(
     warranted" verdict), that child already carries the model-selected expense and
     IVA categories and the registry-DERIVED ``taxable_base`` / ``iva_rate`` /
     ``iva_amount`` for the whole gross. This stamps them on the parent through the
-    single-writer :func:`update_manual_transaction_fields`, with the parent invoice's
-    evidence link and the ``llm:<model>`` provenance — exactly the per-child write
-    :func:`apply_evidence_split` performs, but without splitting. The model emits no
-    euro amount or regulated number (``llm-selects-system-derives-tax-numbers``).
+    single-writer :func:`update_manual_transaction_fields` with the ``llm:<model>``
+    provenance — the same values :func:`apply_evidence_split` hands its children,
+    but applied in place to one existing row instead of redistributed across new
+    ones. The parent's own evidence link is preserved verbatim by that write and is
+    never re-set here. The model emits no euro amount or regulated number
+    (``llm-selects-system-derives-tax-numbers``).
 
     Args:
         suggestion: A no-split

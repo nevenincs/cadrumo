@@ -1,4 +1,15 @@
-"""Tests for official AEAT workbook parity backend infrastructure."""
+"""Tests for official AEAT workbook parity backend infrastructure.
+
+These tests drive LibreOffice directly to convert binary ``.xls`` workbooks and
+to recalculate formulas, so they need an external tool the project's dependency
+set does not install. They therefore carry ``external_tool`` alongside ``unit``,
+and the default lane selects ``unit and not external_tool`` -- so the marker,
+not the path ``--ignore``, is what holds them out. The ``--ignore`` beside it is
+belt-and-braces. ``unit`` is retained because the marker-integrity contract
+requires exactly one of ``{unit, integration, aeat_live}`` on every item.
+
+Run them through ``just test-workbook-parity``.
+"""
 
 from __future__ import annotations
 
@@ -35,7 +46,7 @@ from ..._workbook_parity import (
 )
 from .._registry_schema_support import _committed_modelo
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.external_tool, pytest.mark.hex_domain]
 
 _M130_CASILLA_19: CasillaId = validated_casilla_id("19", surface="_M130_CASILLA_19")
 

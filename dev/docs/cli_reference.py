@@ -35,11 +35,12 @@ the lazy-tree subprocess tests) or set the variable before importing
 
 Fallback-surface guard
 ----------------------
-The Cadrumo CLI's :func:`_import_failure_surface` replaces a subtree with a
-stub that emits ``cli.root.unavailable_app_help`` when an optional dependency
-is missing.  :func:`generate_cli_reference` walks the entire tree and asserts
-that no subtree carries that fallback help text, so a missing dependency causes
-the generator to raise rather than silently emitting a degraded reference.
+The Cadrumo CLI's :func:`_optional_extra_surface` replaces a subtree with a
+stub that emits ``cli.root.unavailable_optional_extra_help`` when an optional
+extra is missing.  :func:`generate_cli_reference` walks the entire tree and
+asserts that no subtree carries that fallback help text, so a missing extra
+causes the generator to raise rather than silently emitting a degraded
+reference.  A missing *required* dependency raises during the walk itself.
 
 Accepted-surface contract
 -------------------------
@@ -69,15 +70,15 @@ from cadrumo.entrypoints.schema_surface import (
 if TYPE_CHECKING:
     import click
 
-#: Sentinel text that the CLI's import-failure fallback emits (the rendered
-#: ``cli.root.unavailable_app_help`` string). The generator walks the
-#: materialised tree and raises when any command carries this marker so a
-#: missing optional dependency surfaces as an error rather than a silently
-#: degraded reference page. The marker is the distinctive full phrase rather
-#: than the bare word "unavailable" so it cannot collide with a legitimately
-#: sealed command whose help honestly says it is unavailable (e.g. the
-#: apoderado ``check`` live-read verb).
-_FALLBACK_MARKER: str = "not available in the current configuration"
+#: Sentinel text that the CLI's optional-extra fallback emits (the leading
+#: clause of the rendered ``cli.root.unavailable_optional_extra_help`` string).
+#: The generator walks the materialised tree and raises when any command
+#: carries this marker so a missing optional extra surfaces as an error rather
+#: than a silently degraded reference page. The marker is the distinctive
+#: phrase rather than the bare word "unavailable" so it cannot collide with a
+#: legitimately sealed command whose help honestly says it is unavailable (e.g.
+#: the apoderado ``check`` live-read verb).
+_FALLBACK_MARKER: str = "unavailable: "
 
 #: Group-callback emit sites — keys registered under a group callback rather
 #: than a leaf command.  These are excluded from the per-command reference
@@ -230,9 +231,13 @@ def _force_lazy_imports(app: object) -> None:
 def _assert_no_fallback_surfaces(root: click.Command) -> None:  # type: ignore[name-defined]
     """Walk the tree and raise if any subtree is an import-failure fallback.
 
-    The CLI's :func:`_import_failure_surface` helper replaces a missing
-    optional dependency's subtree with a stub whose help text contains
+    The CLI's :func:`_optional_extra_surface` helper replaces a missing
+    optional extra's subtree with a stub whose help text opens with
     ``"unavailable"``.  A degraded reference is worse than a failed build.
+
+    A missing *required* dependency needs no marker here: the CLI now raises
+    :exc:`CliCommandGroupUnavailableError` during command resolution, so the
+    tree walk fails outright instead of yielding a stub to detect.
 
     Args:
         root: The materialised root Click command (name must be set).

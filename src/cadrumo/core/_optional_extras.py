@@ -38,6 +38,7 @@ __all__ = [
     "MissingOptionalExtraError",
     "OptionalExtra",
     "optional_extra_available",
+    "optional_extra_for_module",
     "require_optional_extra",
 ]
 
@@ -128,6 +129,35 @@ def optional_extra_available(extra: OptionalExtra) -> bool:
         return importlib.util.find_spec(extra.import_name) is not None
     except ModuleNotFoundError:
         return False
+
+
+def optional_extra_for_module(module_name: str) -> OptionalExtra | None:
+    """Return the registered extra that owns ``module_name``, or ``None``.
+
+    Answers the classification question "is this missing module a capability
+    package the operator may legitimately not have installed?" against
+    :data:`OPTIONAL_EXTRAS` — the declared inventory of optionally-absent
+    packages. Any module outside that inventory is a required dependency (or a
+    first-party module), so its absence is a broken installation rather than a
+    configuration choice.
+
+    Matching is on the top-level package so a failed deep import
+    (``playwright.async_api``) attributes to its owning extra. The match is
+    deliberately one-way: a ``ModuleNotFoundError`` raised from *inside* an
+    installed optional package names that package's own missing dependency, does
+    not match the registry, and is therefore classified as a real failure.
+
+    Args:
+        module_name: The dotted module name that failed to import.
+
+    Returns:
+        The owning :class:`OptionalExtra`, or ``None`` when ``module_name``
+        belongs to no registered extra.
+    """
+    root = module_name.split(".", 1)[0]
+    if not root:
+        return None
+    return next((extra for extra in OPTIONAL_EXTRAS if extra.import_name.split(".", 1)[0] == root), None)
 
 
 def require_optional_extra(extra: OptionalExtra) -> None:

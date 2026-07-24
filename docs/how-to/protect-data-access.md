@@ -115,7 +115,7 @@ words are shown once and must be retyped.
 
 ## Log out of the active profile
 
-Use `aeat config profile logout` when you finish working with a profile. Logout
+Run `aeat config logout` when you finish working with a profile. Logout
 closes the active storage session, discards in-memory key material, disposes the
 bucket engines, and clears the active-profile selection:
 
@@ -123,8 +123,8 @@ bucket engines, and clears the active-profile selection:
 :verify: Confirm logout closes the active session without deleting the profile.
 ```
 
-Nothing in the profile is deleted. Select it again with
-`aeat config switch <name>` when you return.
+Nothing in the profile is deleted. Log in again with
+`aeat config login <name>` when you return.
 
 ## Reset local state (last resort)
 

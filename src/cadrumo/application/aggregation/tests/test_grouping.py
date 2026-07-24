@@ -1,14 +1,17 @@
-"""Pin behavioural invariants of the shared group_and_collect_names helper."""
+"""Pin behavioural invariants of the shared grouping and casilla-fold helpers."""
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
 
-from ....core import BindingSourceKind
+from ....core import BindingSourceKind, Modelo, Period
 from ....core.aggregation import RetencionScheme
-from .._grouping import group_and_collect_names
+from ....domain.calculations.registry import validated_casilla_id
+from .._grouping import fold_casilla_observations, group_and_collect_names
+from .._renta_income_ledger import RentaIncomeObservation
 from .._retenciones import RetencionObservation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -165,3 +168,159 @@ def test_group_and_collect_names_identity_subset_of_group_key_is_consistent() ->
     assert names[(_SOURCE_LEDGER, "A")] == "Name From K2"
     assert len(grouped[(_SOURCE_LEDGER, "A", _SCHEME_WORK)]) == 2
     assert len(grouped[(_SOURCE_LEDGER, "A", _SCHEME_RENT)]) == 1
+
+
+# --------------------------------------------------------------------------
+# fold_casilla_observations
+#
+# Driven through the production RentaIncomeObservation model rather than a
+# bespoke test double, so the fold's structural Protocol is exercised against
+# a real ledger observation exactly as the four consumer projections use it.
+# --------------------------------------------------------------------------
+
+_PERIOD = Period.from_year_and_code(2026, "1T")
+_CASILLA_01 = validated_casilla_id("01", surface="test_grouping")
+_CASILLA_02 = validated_casilla_id("02", surface="test_grouping")
+
+
+def _income(transaction_id: str, casilla: str, gross: str, base: str | None = None) -> RentaIncomeObservation:
+    return RentaIncomeObservation(
+        transaction_id=transaction_id,
+        target_casilla_id=casilla,
+        gross_amount=Decimal(gross),
+        taxable_base_amount=None if base is None else Decimal(base),
+        filing_date=date(2026, 2, 1),
+    )
+
+
+def _gross(observation: RentaIncomeObservation) -> Decimal:
+    return observation.gross_amount
+
+
+def test_fold_sums_each_observation_into_its_own_casilla() -> None:
+    aggregation = fold_casilla_observations(
+        (
+            _income("tx-1", _CASILLA_01, "100.00"),
+            _income("tx-2", _CASILLA_01, "50.00"),
+            _income("tx-3", _CASILLA_02, "7.00"),
+        ),
+        modelo=Modelo.M130.value,
+        period=_PERIOD,
+        amount_fn=_gross,
+    )
+
+    assert aggregation.modelo == Modelo.M130.value
+    assert aggregation.period == _PERIOD
+    assert dict(aggregation.casilla_values) == {_CASILLA_01: Decimal("150.00"), _CASILLA_02: Decimal("7.00")}
+
+
+def test_fold_emits_one_provenance_row_per_casilla_in_sorted_order() -> None:
+    aggregation = fold_casilla_observations(
+        (
+            _income("tx-1", _CASILLA_02, "7.00"),
+            _income("tx-2", _CASILLA_01, "100.00"),
+            _income("tx-3", _CASILLA_01, "50.00"),
+        ),
+        modelo=Modelo.M130.value,
+        period=_PERIOD,
+        amount_fn=_gross,
+    )
+
+    assert [row.casilla_id for row in aggregation.provenance] == [_CASILLA_01, _CASILLA_02]
+
+
+def test_fold_sorts_contributing_transaction_ids_within_a_row() -> None:
+    aggregation = fold_casilla_observations(
+        (
+            _income("tx-c", _CASILLA_01, "1.00"),
+            _income("tx-a", _CASILLA_01, "1.00"),
+            _income("tx-b", _CASILLA_01, "1.00"),
+        ),
+        modelo=Modelo.M130.value,
+        period=_PERIOD,
+        amount_fn=_gross,
+    )
+
+    assert tuple(aggregation.provenance[0].transaction_ids) == ("tx-a", "tx-b", "tx-c")
+
+
+def test_fold_provenance_subtotals_reconcile_with_the_casilla_totals() -> None:
+    """A row's subtotal and its casilla total are summed through one accessor.
+
+    A divergence here would mean the operator-facing provenance trace no longer
+    explains the value it sits beside, which is the failure this invariant
+    exists to catch.
+    """
+    aggregation = fold_casilla_observations(
+        (
+            _income("tx-1", _CASILLA_01, "100.00"),
+            _income("tx-2", _CASILLA_01, "50.00"),
+            _income("tx-3", _CASILLA_02, "7.00"),
+        ),
+        modelo=Modelo.M130.value,
+        period=_PERIOD,
+        amount_fn=_gross,
+    )
+
+    for row in aggregation.provenance:
+        assert row.subtotal == aggregation.casilla_values[row.casilla_id]
+
+
+def test_fold_leaves_category_id_unset_because_it_groups_on_the_casilla_axis_alone() -> None:
+    """This fold has exactly one grouping axis.
+
+    The Modelo 100 first-slice expense projection buckets by casilla AND
+    spending category and emits a populated ``category_id``; it therefore keeps
+    its own fold rather than routing here. Pinning ``category_id is None``
+    keeps that distinction observable.
+    """
+    aggregation = fold_casilla_observations(
+        (_income("tx-1", _CASILLA_01, "100.00"),),
+        modelo=Modelo.M130.value,
+        period=_PERIOD,
+        amount_fn=_gross,
+    )
+
+    assert all(row.category_id is None for row in aggregation.provenance)
+
+
+def test_fold_routes_every_amount_through_the_callers_accessor() -> None:
+    """The amount accessor is load-bearing, not decorative.
+
+    The same observations folded through the IVA-exclusive taxable base must
+    produce different totals than the gross accessor, so a fold that ignored
+    ``amount_fn`` and read a fixed attribute would fail here.
+    """
+    observations = (
+        _income("tx-1", _CASILLA_01, "121.00", base="100.00"),
+        _income("tx-2", _CASILLA_01, "60.50", base="50.00"),
+    )
+
+    gross_total = fold_casilla_observations(
+        observations,
+        modelo=Modelo.M130.value,
+        period=_PERIOD,
+        amount_fn=_gross,
+    ).casilla_values[_CASILLA_01]
+    base_total = fold_casilla_observations(
+        observations,
+        modelo=Modelo.M130.value,
+        period=_PERIOD,
+        amount_fn=lambda observation: observation.taxable_base_amount or observation.gross_amount,
+    ).casilla_values[_CASILLA_01]
+
+    assert gross_total == Decimal("181.50")
+    assert base_total == Decimal("150.00")
+
+
+def test_fold_of_no_observations_yields_an_empty_aggregation() -> None:
+    aggregation = fold_casilla_observations(
+        (),
+        modelo=Modelo.M151.value,
+        period=_PERIOD,
+        amount_fn=_gross,
+    )
+
+    assert dict(aggregation.casilla_values) == {}
+    assert tuple(aggregation.provenance) == ()
+    assert aggregation.modelo == Modelo.M151.value

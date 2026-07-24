@@ -82,6 +82,35 @@ class PreparedProfileExport:
     request: ProfileBundleExportRequest
 
 
+@dataclass(frozen=True)
+class ProfileBundleExportReconcileFailure:
+    """One operation the sweep isolated instead of finalising.
+
+    ``destination`` is ``None`` when the journal itself could not be read, so
+    nothing is known about it beyond its identifier. ``reason`` is the refusing
+    error's class name -- stable, machine-readable, and carrying no journal
+    contents to an operator-facing surface.
+    """
+
+    journal_id: str
+    destination: str | None
+    reason: str
+
+
+@dataclass(frozen=True)
+class ProfileBundleExportReconciliation:
+    """Outcome of one reconciliation sweep across every export journal.
+
+    ``reconciled`` are the operations the sweep resolved and cleared;
+    ``failures`` are the ones it isolated and left journalled for a later
+    attempt. An operation skipped because a live export holds its target lock is
+    in neither: it is healthy in-flight work, not a failure.
+    """
+
+    reconciled: tuple[ProfileBundleExportOperation, ...]
+    failures: tuple[ProfileBundleExportReconcileFailure, ...]
+
+
 def export_profile_bundle(request: ProfileBundleExportRequest) -> ProfileBundleExportResult:
     """Resolve, serialize, atomically publish, and record one profile export.
 
@@ -261,20 +290,30 @@ def _result_from_operation(operation: ProfileBundleExportOperation) -> ProfileBu
 def reconcile_prepared_exports(
     *,
     journal: ProfileBundleExportJournalRepository | None = None,
-) -> tuple[ProfileBundleExportOperation, ...]:
+) -> ProfileBundleExportReconciliation:
     """Reconcile crash-interrupted exports honestly in a fresh process.
 
     :func:`export_profile_bundle` calls this before every publication (see
-    :func:`_reconcile_crash_orphans_before_publication`), so recovery happens on
-    the operator's next export rather than waiting for a maintenance verb.
+    :func:`_reconcile_crash_orphans_before_publication`), and the operator can
+    invoke it directly, so recovery happens on the next export or on demand.
+
+    Every operation is isolated. One journal that cannot be read, or one
+    operation that cannot be finalised -- a profile deleted after its crash, a
+    destination on a volume that has gone away -- is recorded in ``failures``
+    and the walk continues, so a single bad record can never starve every
+    later-ordered operation of its recovery. A failed operation keeps its
+    journal, so the next sweep retries it. Failures are reported rather than
+    swallowed: a journal left behind may still describe cleartext bundle bytes
+    on disk, which is precisely what an operator needs told.
 
     Each operation is reconciled only while holding the SAME per-destination lock
     a live :func:`export_profile_bundle` holds across its whole publication. An
     operation whose target lock cannot be acquired without waiting is an in-flight
-    export, not a crash orphan, and is skipped -- so a reconcile running
-    concurrently with a live same-target export can never unlink its live staged
-    temp or delete its journal (which would fail the live ``os.replace``). Under
-    the lock the operation is re-read and resolved by state:
+    export, not a crash orphan, and is skipped (a skip, not a failure) -- so a
+    reconcile running concurrently with a live same-target export can never
+    unlink its live staged temp or delete its journal (which would fail the live
+    ``os.replace``). Under the lock the operation is re-read and resolved by
+    state:
 
     - ``COMPLETED`` (replace already landed): the durably-published bundle is
       missing only its audit trail, so the ``PROFILE_EXPORTED`` event is emitted
@@ -289,31 +328,68 @@ def reconcile_prepared_exports(
       an artifact that was never durably published.
     """
     repository = journal or ProfileBundleExportJournalRepository()
+    scan = repository.scan()
     reconciled: list[ProfileBundleExportOperation] = []
-    for operation in repository.list():
-        destination = Path(operation.destination)
-        if not destination.parent.exists():
-            # No live export can be staging beside a missing parent directory, so
-            # no target lock is needed. A COMPLETED operation was durably
-            # published before the target was later moved away and still owes its
-            # audit event; a PREPARED one never published and is a bare orphan.
-            _finalise_reconciled_operation(repository, operation, published=_is_completed(operation))
-            reconciled.append(operation)
-            continue
+    failures = [
+        ProfileBundleExportReconcileFailure(
+            journal_id=unreadable.journal_id,
+            destination=None,
+            reason=unreadable.reason,
+        )
+        for unreadable in scan.unreadable
+    ]
+    for operation in scan.operations:
         try:
-            with exclusive_file_lock(destination, timeout=_RECONCILE_LOCK_TIMEOUT_S):
-                current = _reload_operation(repository, operation.operation_id)
-                if current is None:
-                    continue
-                published = _is_completed(current) or _destination_matches_digest(
-                    destination,
-                    current.content_sha256,
-                )
-                _finalise_reconciled_operation(repository, current, published=published)
-                reconciled.append(current)
-        except LockAcquisitionError:
+            current = _reconcile_one_operation(repository, operation)
+        except Exception as exc:
+            get_logger(__name__).warning(
+                "profile export reconciliation could not finalise one operation",
+                exc_info=True,
+            )
+            failures.append(
+                ProfileBundleExportReconcileFailure(
+                    journal_id=operation.operation_id,
+                    destination=operation.destination,
+                    reason=type(exc).__name__,
+                ),
+            )
             continue
-    return tuple(reconciled)
+        if current is not None:
+            reconciled.append(current)
+    return ProfileBundleExportReconciliation(reconciled=tuple(reconciled), failures=tuple(failures))
+
+
+def _reconcile_one_operation(
+    repository: ProfileBundleExportJournalRepository,
+    operation: ProfileBundleExportOperation,
+) -> ProfileBundleExportOperation | None:
+    """Reconcile exactly one operation, or return ``None`` when it is skipped.
+
+    ``None`` means the operation was deliberately left alone -- its target lock
+    is held by a live export, or its journal cleared between the scan and the
+    lock -- never that it failed. A failure raises, so the caller can isolate it.
+    """
+    destination = Path(operation.destination)
+    if not destination.parent.exists():
+        # No live export can be staging beside a missing parent directory, so
+        # no target lock is needed. A COMPLETED operation was durably
+        # published before the target was later moved away and still owes its
+        # audit event; a PREPARED one never published and is a bare orphan.
+        _finalise_reconciled_operation(repository, operation, published=_is_completed(operation))
+        return operation
+    try:
+        with exclusive_file_lock(destination, timeout=_RECONCILE_LOCK_TIMEOUT_S):
+            current = _reload_operation(repository, operation.operation_id)
+            if current is None:
+                return None
+            published = _is_completed(current) or _destination_matches_digest(
+                destination,
+                current.content_sha256,
+            )
+            _finalise_reconciled_operation(repository, current, published=published)
+            return current
+    except LockAcquisitionError:
+        return None
 
 
 def _is_completed(operation: ProfileBundleExportOperation) -> bool:
@@ -509,6 +585,8 @@ def _emit_export_event(operation: ProfileBundleExportOperation) -> None:
 __all__ = [
     "PreparedProfileExport",
     "ProfileBundleExportPurpose",
+    "ProfileBundleExportReconcileFailure",
+    "ProfileBundleExportReconciliation",
     "ProfileBundleExportRequest",
     "ProfileBundleExportResult",
     "ProfileBundleExportTarget",

@@ -574,7 +574,7 @@ def _inline_command_complexity(span: str) -> int | None:
     ellipsis reference, the version echo). Otherwise the count of option flags
     plus positional arguments beyond the resolved verb path; an option's value
     rides its option and is not counted separately, and leading global options
-    are handled. So a bare verb reference (``aeat config switch``) is 0, a
+    are handled. So a bare verb reference (``aeat config login``) is 0, a
     single-flag or single-argument mention (``aeat app modelo describe 303``,
     ``aeat config auth configure --file``) is 1, and a real command
     (``aeat app modelo export --modelo 130 --output ./x.boe``) is 2 or more.
@@ -840,8 +840,8 @@ def test_live_introspection_matches_reality() -> None:
     assert "payable-invoice" in flagged[0]
     # ...while a live leaf with a genuine positional argument stays accepted.
     live_with_positional = _CitedCommand(
-        raw="aeat config switch myprofile",
-        verb_tokens=("config", "switch", "myprofile"),
+        raw="aeat config login myprofile",
+        verb_tokens=("config", "login", "myprofile"),
         cited_options=(),
         has_positional_token=True,
     )
@@ -1079,7 +1079,7 @@ def test_no_new_inline_aeat_command_spans_in_user_docs() -> None:
     readability complaint. An inline ``aeat ...`` span carrying two or more
     option/argument tokens is a violation, remediated the same way (render through
     a ``{cli-sequence}`` directive, or ``@static`` where hermetic execution is
-    impossible). Bare verb references (``aeat config switch``) and single
+    impossible). Bare verb references (``aeat config login``) and single
     flag/argument mentions stay legal. Ratchets DOWN from a committed per-page
     baseline, the same discipline as the fence gate, so it never reds the tree
     during the parallel conversion.
@@ -1126,7 +1126,7 @@ def test_inline_span_detector_catches_line_wrapped_commands() -> None:
     # (a bare verb, a single-flag reference) never merge across the paragraph
     # breaks into a spurious 2+-token span.
     with_fence = (
-        "Bare `aeat config switch` here.\n\n"
+        "Bare `aeat config login` here.\n\n"
         "```bash\naeat app modelo export --modelo 130 --output ./x.boe\n```\n\n"
         "A single flag `aeat config auth configure --file` there.\n"
     )

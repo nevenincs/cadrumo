@@ -46,7 +46,7 @@ _IDENTITY_SCENARIO = _SCENARIOS_DIR / "identidad_perfil.toml"
 # A genuine modelo-130 mutating verb, a profile-switching verb (re-arms the gate),
 # and an identity-read verb - all resolvable registry command keys.
 _MUTATING = "modelo.work.create"
-_SWITCH = "config.switch"
+_SWITCH = "config.login"
 _IDENTITY_READ_VERB = "config.profile.status"
 
 # The two console identity-read tool names (they carry no registry command key).

@@ -158,3 +158,54 @@ def test_unexpected_boundary_suggests_log_inspection_not_integrity_repair() -> N
     envelope = build_error_envelope(boundary)
     assert envelope.suggestion == "aeat config repair logs"
     assert "integrity" not in (envelope.suggestion or "")
+
+
+def test_terminal_boundary_logs_the_traceback_for_a_genuine_crash(
+    caplog: pytest.LogCaptureFixture,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The terminal boundary writes the traceback it tells the operator to read.
+
+    ``_emit_crash`` renders an INTERNAL envelope whose message directs the
+    operator to the diagnostic logs. Before this line existed it logged
+    nothing, so an isolated run left two DEBUG lines and no traceback, and
+    triage had to patch the emitter in-process to see the failure at all.
+    """
+    from .._terminal_errors import _emit_crash
+
+    with (
+        caplog.at_level(logging.ERROR, logger="cadrumo.entrypoints.cli._terminal_errors"),
+        pytest.raises(SystemExit),
+    ):
+        _emit_crash(RuntimeError("a genuine internal defect"))
+    capsys.readouterr()
+
+    crashes = [record for record in caplog.records if "unexpected exception" in record.message]
+    assert crashes, [record.message for record in caplog.records]
+    assert crashes[0].exc_info is not None
+    assert crashes[0].exc_info[0] is RuntimeError
+
+
+def test_terminal_boundary_logs_no_traceback_for_a_typed_refusal(
+    caplog: pytest.LogCaptureFixture,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A typed refusal reaching the terminal boundary must not log a traceback.
+
+    Command resolution raises already-classified refusals outside any callback
+    boundary. Logging their tracebacks would make ``aeat config repair logs``
+    echo an operator-actionable condition back as if it were a live crash --
+    the same mis-render the command boundary avoids.
+    """
+    from .._terminal_errors import _emit_crash
+
+    with (
+        caplog.at_level(logging.ERROR, logger="cadrumo.entrypoints.cli._terminal_errors"),
+        pytest.raises(SystemExit),
+    ):
+        _emit_crash(_ProbeRefusal("no active bucket session; run switch"))
+    capsys.readouterr()
+
+    assert not any("unexpected exception" in record.message for record in caplog.records), [
+        record.message for record in caplog.records
+    ]

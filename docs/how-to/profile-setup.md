@@ -33,9 +33,9 @@ lists the profiles, adds a second one, and switches the active context to it.
 :verify: Confirm you can list profiles, add a second taxpayer, and switch the active context to it.
 ```
 
-Switching changes which local ledger, modelo drafts, and filing markers `aeat
-app` commands use. The switch verb is `aeat config switch`, not `aeat config
-profile switch`.
+Logging in changes which local ledger, modelo drafts, and filing markers `aeat
+app` commands use. The login verb is `aeat config login`, not `aeat config
+profile login`.
 
 ## Decide your facts before you start
 
@@ -365,7 +365,7 @@ A portable profile file contains taxpayer data, including the tax identifier,
 activity, and local filing history. Store it as sensitive tax data, and don't
 attach it to a support request unless you've removed personal details.
 
-Sign out without deleting the profile using `aeat config profile logout`.
+Sign out without deleting the profile using `aeat config logout`.
 Logout closes the active storage session, discards its in-memory keys, disposes
 the bucket engines, and clears the local active-profile pointer:
 

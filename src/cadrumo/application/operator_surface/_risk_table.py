@@ -82,6 +82,11 @@ COMMAND_RISK: dict[str, CommandRiskDeclaration] = {
     "app.live.verify.nif_iva": CommandRiskDeclaration(),
     "app.live.verify.tgvi": CommandRiskDeclaration(),
     "app.live.verify.view": CommandRiskDeclaration(),
+    # Reconciliation irreversibly deletes a crashed export's leftover cleartext
+    # staged file. That deletion is the whole point (those bytes must not sit on
+    # disk), but it is still an unrecoverable local delete, so it is declared
+    # destructive rather than classified on the recovery intent behind it.
+    "app.maintenance.profile_bundle_reconcile": CommandRiskDeclaration(destructive=True),
     "config.auth.apoderado.check": CommandRiskDeclaration(),
     "config.auth.apoderado.clear": CommandRiskDeclaration(destructive=True),
     "config.auth.apoderado.configure": CommandRiskDeclaration(),
@@ -137,7 +142,6 @@ COMMAND_RISK: dict[str, CommandRiskDeclaration] = {
     "config.profile.export": CommandRiskDeclaration(handoff=True),
     "config.profile.import": CommandRiskDeclaration(),
     "config.profile.list": CommandRiskDeclaration(),
-    "config.profile.logout": CommandRiskDeclaration(destructive=True),
     "config.profile.preflight": CommandRiskDeclaration(),
     "config.profile.rename": CommandRiskDeclaration(),
     "config.profile.sandbox.archive": CommandRiskDeclaration(),
@@ -176,7 +180,8 @@ COMMAND_RISK: dict[str, CommandRiskDeclaration] = {
     "config.recovery.rotate": CommandRiskDeclaration(destructive=True),
     "config.recovery.status": CommandRiskDeclaration(),
     "config.recovery.verify": CommandRiskDeclaration(),
-    "config.switch": CommandRiskDeclaration(),
+    "config.login": CommandRiskDeclaration(),
+    "config.logout": CommandRiskDeclaration(destructive=True),
     # Diagnostics reads run-health, latency, error, and LLM-usage telemetry and
     # flush/inspect the local telemetry store: a mutating family, none destructive
     # (a flush prunes bounded local telemetry, not taxpayer state) and no handoff

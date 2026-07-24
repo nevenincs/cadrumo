@@ -6,7 +6,7 @@ re-activates each in turn and asserts its ledger surfaces only its own rows --
 the operator-facing cross-profile runtime-pegged ledger guarantee.
 
 The active session is opened with ``profile_create_storage_span`` -- the same
-session primitive the ``aeat config switch`` verb drives; re-entering a
+session primitive the ``aeat config login`` verb drives; re-entering a
 span is the in-process equivalent of unlocking the active profile between
 commands.
 """
@@ -92,7 +92,7 @@ def test_two_profiles_keep_independent_ledgers_across_unlocks() -> None:
     # Unlocking a profile reopens its session and surfaces only that profile's
     # ledger -- no bleed-through.
     with profile_create_storage_span(_AUTONOMA_PROFILE_ID):
-        unlocked = invoke_cached_cli(["config", "switch", "autonoma"])
+        unlocked = invoke_cached_cli(["config", "login", "autonoma"])
         assert unlocked.exit_code == 0, unlocked.output
         back = _list_ids()
     assert back == autonoma_ids

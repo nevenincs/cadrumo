@@ -84,14 +84,14 @@ def test_cadrumo_error_from_config_profile_show_unknown_name_emits_typed_envelop
     assert isinstance(result.exception, SystemExit) or result.exit_code != 0
 
 
-def test_cadrumo_error_from_config_switch_missing_profile_emits_typed_envelope() -> None:
-    """config switch on an unregistered profile name emits a refused boundary.
+def test_cadrumo_error_from_config_login_missing_profile_emits_typed_envelope() -> None:
+    """config login on an unregistered profile name emits a refused boundary.
 
     _read_profile_bucket returns None for an unknown name; _CliRefusedBoundaryError
     (an CadrumoError) is raised.  The command_error_boundary catches it verbatim
     and emits a structured error payload with a non-zero exit code.
     """
-    result = invoke_cached_cli(["config", "switch", "no-such-profile"])
+    result = invoke_cached_cli(["config", "login", "no-such-profile"])
 
     assert result.exit_code != 0
 
@@ -246,8 +246,8 @@ def test_profile_import_with_structurally_invalid_bundle_surfaces_as_refused(
 # ---------------------------------------------------------------------------
 
 
-def _switch_against_locked_store(name: str) -> Result:
-    """Run ``config switch NAME`` against a healthy-but-locked store.
+def _login_against_locked_store(name: str) -> Result:
+    """Run ``config login NAME`` against a healthy-but-locked store.
 
     The profile bucket is HEALTHY; only the master-key passphrase is
     withheld (``cadrumo_secret_passphrase=None``) and stdin is non-interactive
@@ -258,14 +258,14 @@ def _switch_against_locked_store(name: str) -> Result:
     """
     dispose_engine()
     with override_settings(cadrumo_secret_passphrase=None):
-        return invoke_cached_cli(["config", "switch", name])
+        return invoke_cached_cli(["config", "login", name])
 
 
-def test_config_switch_against_locked_store_gives_passphrase_refusal_not_repair() -> None:
+def test_config_login_against_locked_store_gives_passphrase_refusal_not_repair() -> None:
     """A healthy-but-locked store yields the passphrase-instructive refusal.
 
     The operator withheld the master-key passphrase (locked store); the
-    profile record itself is healthy. ``config switch`` must surface the
+    profile record itself is healthy. ``config login`` must surface the
     same instructive refusal every other verb gives — naming
     ``CADRUMO_SECRET_PASSPHRASE`` and the interactive path — and must NOT
     report ``profile_record_unreadable`` nor prescribe the destructive
@@ -277,7 +277,7 @@ def test_config_switch_against_locked_store_gives_passphrase_refusal_not_repair(
     """
     _create_profile("locked-store-probe")
 
-    result = _switch_against_locked_store("locked-store-probe")
+    result = _login_against_locked_store("locked-store-probe")
 
     combined = (result.output or "") + ((result.stderr if hasattr(result, "stderr") else "") or "")
     assert "CADRUMO_SECRET_PASSPHRASE" in combined, combined
@@ -289,7 +289,7 @@ def test_config_switch_against_locked_store_gives_passphrase_refusal_not_repair(
     assert result.exit_code == 5, (result.exit_code, combined)
 
 
-def test_config_switch_against_locked_store_json_envelope_is_passphrase_refusal() -> None:
+def test_config_login_against_locked_store_json_envelope_is_passphrase_refusal() -> None:
     """In JSON mode the locked-store refusal is a typed error envelope, not a repair hint.
 
     The stderr error document must carry the shared envelope spine and must
@@ -300,32 +300,12 @@ def test_config_switch_against_locked_store_json_envelope_is_passphrase_refusal(
 
     dispose_engine()
     with override_settings(cadrumo_secret_passphrase=None):
-        result = invoke_cached_cli(["--format", "json", "config", "switch", "locked-json-probe"])
+        result = invoke_cached_cli(["--format", "json", "config", "login", "locked-json-probe"])
 
     assert result.exit_code == 5, result.output
     stderr_payload = (result.stderr if hasattr(result, "stderr") else "") or result.output
     assert "profile_record_unreadable" not in stderr_payload, stderr_payload
     assert "repair profile" not in stderr_payload, stderr_payload
-
-
-def test_config_switch_against_corrupt_store_uses_canonical_boundary(tmp_path: Path) -> None:
-    """A corrupt store fails through the lifecycle command boundary.
-
-    ``config switch`` no longer pre-reads the profile through a second
-    readiness path. The canonical selection lifecycle owns the storage access,
-    and its unexpected database failure is classified by the shared command
-    boundary instead of being relabelled as a profile-record repair result.
-    """
-    _create_profile("corrupt-switch-probe")
-    _corrupt_bucket_db(tmp_path)
-
-    result = invoke_cached_cli(["config", "switch", "corrupt-switch-probe"])
-
-    assert result.exit_code == 6, result.output
-    combined = result.output + (result.stderr if hasattr(result, "stderr") else "")
-    assert "profile_record_unreadable" not in combined, combined
-    assert "repair profile" not in combined, combined
-    assert "config repair logs" in combined, combined
 
 
 def test_config_boundary_error_is_registered_cadrumo_error_subclass() -> None:

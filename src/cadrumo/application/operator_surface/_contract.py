@@ -44,7 +44,8 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
         owns_operational_workflow=False,
         required_children=(
             "profile",
-            "switch",
+            "login",
+            "logout",
             "passphrase",
             "recover",
             "recovery",
@@ -72,6 +73,7 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
             "agent",
             "quickfile",
             "diagnostics",
+            "maintenance",
         ),
     ),
 )
@@ -107,7 +109,6 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
             "rename",
             "export",
             "import",
-            "logout",
             "status",
             "descendiente",
             "history",
@@ -123,10 +124,19 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
     MountedCommandFamily(
         domain=MountedCommandDomain.CUSTODY,
         root=RootSurfaceName.CONFIG,
-        child="switch",
-        operator_question="switch the active taxpayer profile for profile-bound backend workflows",
+        child="login",
+        operator_question="authenticate a taxpayer profile and start a resumable session",
         service_owner="cadrumo.application.user_profile",
-        commands=("switch",),
+        commands=("login",),
+        mutability=OperatorMutability.LOCAL_STATE_MUTATING,
+    ),
+    MountedCommandFamily(
+        domain=MountedCommandDomain.CUSTODY,
+        root=RootSurfaceName.CONFIG,
+        child="logout",
+        operator_question="close the active taxpayer profile session and clear its pointer",
+        service_owner="cadrumo.application.user_profile",
+        commands=("logout",),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(
@@ -395,6 +405,18 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         ),
         service_owner="cadrumo.application.diagnostics_run_health",
         commands=("run-health", "runs", "latency", "errors", "llm-usage", "telemetry"),
+        mutability=OperatorMutability.LOCAL_STATE_MUTATING,
+    ),
+    MountedCommandFamily(
+        domain=MountedCommandDomain.MAINTENANCE,
+        root=RootSurfaceName.APP,
+        child="maintenance",
+        operator_question=(
+            "recover local state an interrupted operation left behind, including a "
+            "profile-bundle export whose crash left an unencrypted staged file on disk"
+        ),
+        service_owner="cadrumo.application.user_profile",
+        commands=("profile-bundle-reconcile",),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
 )

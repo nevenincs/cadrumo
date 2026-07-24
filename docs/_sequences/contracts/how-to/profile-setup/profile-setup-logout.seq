@@ -1,5 +1,5 @@
 @step Sign out of the active profile.
-aeat config profile logout
+aeat config logout
 @step Confirm that no profile remains active.
 @result aeat --format json config profile status
 @expect result.configured == false

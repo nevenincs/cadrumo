@@ -53,7 +53,13 @@ _HEX_MARKERS = frozenset(
 # passes can exclude it (``-m "integration and serial and not perf"``) and the
 # dispatch-only ci-full lane can enrol it explicitly. Its placement policy is
 # pinned by dev/ci/tests/test_perf_gate_policy.py.
-_EXPECTED_CONFIGURED_MARKERS = _EXECUTION_MARKERS | _HEX_MARKERS | {"docs", "serial", "perf"}
+# ``external_tool`` follows the same supplementary-label pattern: the workbook
+# parity module carries it alongside ``unit`` so the default lane can exclude it
+# (``-m "unit and not external_tool"``) while ``just test-workbook-parity``
+# enrols it explicitly. It marks tests needing an external binary the dependency
+# set does not install (LibreOffice), so the marker rather than a path
+# ``--ignore`` is what holds them out of the default lane.
+_EXPECTED_CONFIGURED_MARKERS = _EXECUTION_MARKERS | _HEX_MARKERS | {"docs", "serial", "perf", "external_tool"}
 _LEGACY_READ_MARKER = "live_" + "read"
 _LEGACY_WRITE_MARKER = "live_" + "write"
 _LEGACY_DOMAIN_MARKERS = frozenset(

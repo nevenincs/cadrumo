@@ -252,7 +252,7 @@ def test_switch_surviving_profile_after_deleting_the_active_one(
     seed("alpha")
     seed("beta")
 
-    assert _invoke(("config", "switch", "alpha")).exit_code == 0
+    assert _invoke(("config", "login", "alpha")).exit_code == 0
 
     deleted = _invoke(("config", "profile", "delete", "alpha", "--yes"))
     assert deleted.exit_code == 0, deleted.output
@@ -260,7 +260,7 @@ def test_switch_surviving_profile_after_deleting_the_active_one(
     # The active-profile pointer is now cleared. ``switch`` must still
     # succeed — it is the verb that establishes a session, not one that
     # requires a pre-existing one.
-    switched = _invoke(("config", "switch", "beta"))
+    switched = _invoke(("config", "login", "beta"))
     assert switched.exit_code == 0, switched.output
     assert "active_profile\tbeta" in switched.output
 
@@ -282,10 +282,10 @@ def test_first_switch_from_a_no_active_profile_state_succeeds(
 
     create_profile_via_cli("solo")
 
-    assert _invoke(("config", "profile", "logout")).exit_code == 0
+    assert _invoke(("config", "logout")).exit_code == 0
     assert resolve_active_bucket_id() is None
 
-    switched = _invoke(("config", "switch", "solo"))
+    switched = _invoke(("config", "login", "solo"))
     assert switched.exit_code == 0, switched.output
     assert "active_profile\tsolo" in switched.output
 
@@ -303,7 +303,7 @@ def test_list_and_status_work_from_a_no_active_session_state(
 
     create_profile_via_cli("alpha")
 
-    assert _invoke(("config", "profile", "logout")).exit_code == 0
+    assert _invoke(("config", "logout")).exit_code == 0
 
     listed = _invoke(("config", "profile", "list"))
     assert listed.exit_code == 0, listed.output
@@ -326,7 +326,7 @@ def test_delete_active_profile_states_the_pointer_was_cleared(
 
     create_profile_via_cli("alpha")
 
-    assert _invoke(("config", "switch", "alpha")).exit_code == 0
+    assert _invoke(("config", "login", "alpha")).exit_code == 0
 
     deleted = _invoke(("config", "profile", "delete", "alpha", "--yes"))
     assert deleted.exit_code == 0, deleted.output
@@ -354,7 +354,7 @@ def test_delete_non_active_profile_omits_the_cleared_pointer_notice(
     seed("beta")
     # Make "beta" the active profile (simulating "active after the second
     # create") so delete of inactive "alpha" can be verified.
-    assert _invoke(("config", "switch", "beta")).exit_code == 0
+    assert _invoke(("config", "login", "beta")).exit_code == 0
 
     # ``beta`` is active; delete the inactive ``alpha``.
     deleted = _invoke(("config", "profile", "delete", "alpha", "--yes"))
@@ -377,7 +377,7 @@ def test_delete_unknown_profile_refuses_with_an_unknown_profile_message(
 
     create_profile_via_cli("alpha")
 
-    assert _invoke(("config", "profile", "logout")).exit_code == 0
+    assert _invoke(("config", "logout")).exit_code == 0
 
     refused = _invoke(("config", "profile", "delete", "ghost", "--yes"))
     assert refused.exit_code != 0, refused.output
@@ -402,7 +402,7 @@ def test_delete_valid_profile_with_no_active_session_succeeds(
 
     create_profile_via_cli("alpha")
 
-    assert _invoke(("config", "profile", "logout")).exit_code == 0
+    assert _invoke(("config", "logout")).exit_code == 0
 
     deleted = _invoke(("config", "profile", "delete", "alpha", "--yes"))
     assert deleted.exit_code == 0, deleted.output
@@ -479,11 +479,11 @@ def test_show_tombstoned_profile_is_session_context_independent(
     assert _invoke(("config", "profile", "delete", "alpha", "--yes")).exit_code == 0
 
     # Context 1: ``beta`` session active.
-    assert _invoke(("config", "switch", "beta")).exit_code == 0
+    assert _invoke(("config", "login", "beta")).exit_code == 0
     with_session = _invoke(("config", "profile", "show", "alpha"))
 
     # Context 2: no active session.
-    assert _invoke(("config", "profile", "logout")).exit_code == 0
+    assert _invoke(("config", "logout")).exit_code == 0
     no_session = _invoke(("config", "profile", "show", "alpha"))
 
     # Identical outcome in both session contexts: the tombstoned record

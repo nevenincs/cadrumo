@@ -38,9 +38,9 @@ class BucketValidationError(BucketError):
 class NoActiveBucketError(BucketError):
     """Raised when no active bucket can be resolved.
 
-    The precedence chain is exhausted (no ``--profile`` flag, no
-    ``CADRUMO_ACTIVE_PROFILE`` env, no pointer file), and the process
-    refuses to proceed.
+    The precedence chain is exhausted (no ``--profile`` flag and no
+    pointer file, so nothing is logged in), and the process refuses to
+    proceed.
     """
 
     def __init__(self, detail: str | None = None) -> None:
@@ -102,7 +102,7 @@ class BucketLockedError(BucketError):
     """Raised when an operation requires an unlocked :class:`BucketSession`.
 
     Carries the locked bucket id so the diagnostic can point the
-    operator at ``aeat config switch NAME``.
+    operator at ``aeat config login NAME``.
     """
 
     def __init__(self, *, bucket_id: str) -> None:

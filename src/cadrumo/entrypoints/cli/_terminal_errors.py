@@ -251,10 +251,33 @@ def _build_parse_time_refusal(exc: BaseException) -> CliRefusedBoundaryError:
 
 
 def _emit_crash(exc: Exception) -> NoReturn:
-    """Emit an unexpected failure as the structured crash boundary."""
-    from ._errors import CliUnexpectedBoundaryError, active_profile_label_for_error, write_stderr
+    """Emit a failure that escaped dispatch, preferring its own registered code.
 
-    boundary = CliUnexpectedBoundaryError(exc)
+    Most failures reaching here are genuine crashes and are wrapped in
+    :class:`CliUnexpectedBoundaryError` (INTERNAL, exit 6). A typed
+    :class:`~core.errors.CadrumoError` is different: it is an *expected*,
+    already-classified refusal that simply had no callback boundary to catch it,
+    because it was raised during command resolution rather than inside a command
+    body (the lazy command-group loader is the canonical raiser). Flattening it
+    would discard its registered category, its instructive message, and its
+    remedy, and would report an operator-actionable condition as a program
+    defect. Forward it verbatim instead, with its own exit code.
+    """
+    from ...core.logging import get_logger
+    from ._errors import CliUnexpectedBoundaryError, _unwrap_cadrumo_error, active_profile_label_for_error, write_stderr
+
+    typed = _unwrap_cadrumo_error(exc)
+    if typed is None:
+        # The INTERNAL envelope this path renders tells the operator to consult
+        # the diagnostic logs, so the traceback has to actually be in them;
+        # without this the isolated-run log carried two DEBUG lines and nothing
+        # else, and triage had to patch the emitter in-process to see the crash.
+        # Logged only for the untyped case, mirroring the command boundary in
+        # `_errors.py`: a typed CadrumoError is an expected, already-classified
+        # refusal, and writing its traceback would make `aeat config repair
+        # logs` echo an operator-actionable condition back as a live crash.
+        get_logger(__name__).error("cli terminal boundary: unexpected exception", exc_info=exc)
+    boundary = typed if typed is not None else CliUnexpectedBoundaryError(exc)
     code = get_registered_error_code(boundary)
     payload = (
         render_error_json(boundary, active_profile=active_profile_label_for_error())
