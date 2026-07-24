@@ -25,6 +25,7 @@ related:
   - '[[2026-07-17-auth-cert-recovery-custody-P06-S38]]'
   - '[[2026-07-17-auth-cert-recovery-custody-P06-S39]]'
   - '[[2026-07-17-auth-cert-recovery-custody-P06-S40]]'
+  - '[[2026-07-17-auth-cert-recovery-custody-P07-S41]]'
   - '[[2026-07-17-auth-cert-recovery-custody-P07-S42]]'
   - '[[2026-07-17-auth-cert-recovery-custody-P07-S43]]'
   - '[[2026-07-17-auth-cert-recovery-custody-P08-S44]]'
@@ -53,6 +54,7 @@ Auto-generated index of all documents tagged with `#auth-cert-recovery-custody`.
 - `2026-07-17-auth-cert-recovery-custody-P05-S33` - Prove certificate secret set and remove against real secure storage, including command failure after the secret mutation but before event commit followed by an idempotent retry with one correctly classified event, and reject backend selection, keyring spellings, migration, fallback, and duplicate mutation paths
 - `2026-07-17-auth-cert-recovery-custody-P05-S34` - Require yes for auth reset while keeping auth status and auth test non-destructive
 - `2026-07-17-auth-cert-recovery-custody-P06-S35` - Remove certificate backend selectors from every payload and schema projection while preserving independent master-key keyring custody contracts
+- `2026-07-17-auth-cert-recovery-custody-P07-S41` - Thread constructor secret_store: SecretStore|None=None dependency-injection through the secret-store factory, certificate-secret backend, certificate-sources check, and materialisation helpers
 - `2026-07-17-auth-cert-recovery-custody-P07-S42` - Add an AST recurrence gate, patterned on test_wizard_prompter_singularity.py, that bans module-global _override_* factory state and public override_* setters in production, exempting only the sanctioned core.config.override_settings
 - `2026-07-17-auth-cert-recovery-custody-P07-S43` - Sweep the storage facade and generated API docs for the removed override_secret_store export and update the import-hygiene baseline after the seam removal
 - `2026-07-17-auth-cert-recovery-custody-P04-S22` - Replace config rekey with only config passphrase change and secure input handling
