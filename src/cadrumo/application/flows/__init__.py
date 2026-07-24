@@ -15,7 +15,6 @@ Consumers import from this facade only.
 
 from __future__ import annotations
 
-from ._wizard_projection import flow_definition_from_wizard_flow
 from ._capability import detect_frontend_capability
 from ._checkpoint import (
     CheckpointStore,
@@ -88,6 +87,7 @@ from ._validators import (
     run_answer_validation,
     validate_widget_shape,
 )
+from ._wizard_projection import flow_definition_from_wizard_flow
 
 __all__ = [
     "SECTION_VERDICT_PREFIX",

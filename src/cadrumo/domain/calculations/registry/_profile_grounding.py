@@ -24,8 +24,8 @@ from pydantic import BaseModel, Field
 from ....core import STRICT_FROZEN_CONFIG, Modelo
 from ....core.aggregation import BindingSourceKind
 from ._authority import ValidatedRegistryAuthority
-from ._bindings import _ProfileSelector
 from ._binding_selector_utils import selector_as_dict
+from ._bindings import _ProfileSelector
 from ._schema import DataBindingDefinition
 
 
