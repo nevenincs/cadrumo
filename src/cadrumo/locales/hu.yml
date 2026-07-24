@@ -1512,8 +1512,11 @@ application:
         lett feltételezve. Az autonóm levonások és az adótábla autonóm része %{ccaa}
         alapján kerül kiszámításra. A --tax-residence-ccaa kapcsolóval választhat
         másik közösséget.
-      modify_no_resume: application.wizard.notices.modify_no_resume
-      setup_saved_resume_later: application.wizard.notices.setup_saved_resume_later
+      modify_no_resume: A módosítások szerkesztő módban csak előkészülnek — küldés
+        nélkül kilépve elvesznek; mentés és folytatás csak profil-létrehozáskor érhető
+        el.
+      setup_saved_resume_later: 'Elmentve. Bármikor folytathatod: aeat config profile
+        create %{name}'
     output_labels:
       active_profile: active_profile
       next: Következő
