@@ -100,6 +100,7 @@ from ._optional_extras import (
     MissingOptionalExtraError,
     OptionalExtra,
     optional_extra_available,
+    optional_extra_for_module,
     require_optional_extra,
 )
 from ._period import (
@@ -266,6 +267,7 @@ __all__: list[str] = [
     "modelo_has_codified_amendment_regime",
     "modelo_has_codified_disposition",
     "optional_extra_available",
+    "optional_extra_for_module",
     "parse_toml_text",
     "permitted_amendment_kind_values",
     "pointer_path",

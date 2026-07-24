@@ -251,10 +251,22 @@ def _build_parse_time_refusal(exc: BaseException) -> CliRefusedBoundaryError:
 
 
 def _emit_crash(exc: Exception) -> NoReturn:
-    """Emit an unexpected failure as the structured crash boundary."""
-    from ._errors import CliUnexpectedBoundaryError, active_profile_label_for_error, write_stderr
+    """Emit a failure that escaped dispatch, preferring its own registered code.
 
-    boundary = CliUnexpectedBoundaryError(exc)
+    Most failures reaching here are genuine crashes and are wrapped in
+    :class:`CliUnexpectedBoundaryError` (INTERNAL, exit 6). A typed
+    :class:`~core.errors.CadrumoError` is different: it is an *expected*,
+    already-classified refusal that simply had no callback boundary to catch it,
+    because it was raised during command resolution rather than inside a command
+    body (the lazy command-group loader is the canonical raiser). Flattening it
+    would discard its registered category, its instructive message, and its
+    remedy, and would report an operator-actionable condition as a program
+    defect. Forward it verbatim instead, with its own exit code.
+    """
+    from ._errors import CliUnexpectedBoundaryError, _unwrap_cadrumo_error, active_profile_label_for_error, write_stderr
+
+    typed = _unwrap_cadrumo_error(exc)
+    boundary = typed if typed is not None else CliUnexpectedBoundaryError(exc)
     code = get_registered_error_code(boundary)
     payload = (
         render_error_json(boundary, active_profile=active_profile_label_for_error())

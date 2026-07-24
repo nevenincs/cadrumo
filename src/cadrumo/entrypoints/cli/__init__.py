@@ -816,14 +816,20 @@ def _surface_for_import_failure(name: str, error: ModuleNotFoundError) -> typer.
 def _optional_extra_surface(name: str, extra: OptionalExtra) -> typer.Typer:
     """Return the placeholder group for a legitimately-absent optional extra.
 
-    The group's help names the feature and its install command, and invoking it
-    refuses through :exc:`~core.MissingOptionalExtraError` — the canonical
-    optional-extra refusal, which carries the ``pip install`` remedy — so
-    neither surface is a bare "unavailable".
+    The group's help names the feature and the extra that supplies it, and
+    invoking it refuses through :exc:`~core.MissingOptionalExtraError` — the
+    canonical optional-extra refusal, which carries the exact
+    ``pip install cadrumo[<extra>]`` remedy — so neither surface is a bare
+    "unavailable".
+
+    The help deliberately names the extra rather than the bracketed install
+    command: Typer renders group help through Rich, which parses ``[browser]``
+    as a style tag and silently drops it. The refusal is plain-rendered, so it
+    carries the literal command.
     """
     failed_app = typer.Typer(
         name=name,
-        help=tr("cli.root.unavailable_optional_extra_help", feature=extra.feature, install_hint=extra.install_hint),
+        help=tr("cli.root.unavailable_optional_extra_help", feature=extra.feature, extra=extra.extra),
         no_args_is_help=False,
         invoke_without_command=True,
     )

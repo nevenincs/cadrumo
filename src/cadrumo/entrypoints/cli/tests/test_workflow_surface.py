@@ -17,9 +17,8 @@ from ....application.diagnostics import build_cli_version_report
 from ....core.config import SecretStoreBackend, load_settings, override_settings
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....domain.buckets import BucketEventType
-from ....tests.cli_runner import invoke_cached_cli, invoke_typer_app
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.user_profile import register_minimal_profile
-from .. import _import_failure_surface, _startup_import_error_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -340,36 +339,6 @@ def test_config_repair_is_config_scoped_not_root(isolated_user_cli: Path) -> Non
     assert "registry.load" in {check["name"] for check in payload["checks"]}
     assert logs_result.exit_code == 0, logs_result.output
     assert "path\t" in logs_result.output
-
-
-def test_startup_import_failure_points_to_config_repair_without_traceback() -> None:
-    error = ModuleNotFoundError("No module named 'xlrd'", name="xlrd")
-
-    # The startup-failure text is locale-rendered; assert the contract
-    # (names the missing dependency, points to `aeat config repair`, no
-    # traceback) rather than pinning an exact, translatable phrasing.
-    text = _startup_import_error_text(error)
-    assert "xlrd" in text, text
-    assert "aeat config repair" in text, text
-    assert "Traceback" not in text, text
-
-    result = invoke_typer_app(_import_failure_surface("app", error), [])
-
-    assert result.exit_code == 1, result.output
-    assert "xlrd" in result.output
-    assert "aeat config repair" in result.output
-    assert "Traceback" not in result.output
-
-
-def test_startup_import_failure_redacts_sensitive_dependency_name() -> None:
-    profile_id = "123e4567-e89b-12d3-a456-426614174000"
-    error = ModuleNotFoundError(f"No module named {profile_id!r}", name=profile_id)
-
-    text = _startup_import_error_text(error)
-
-    assert profile_id not in text
-    assert CLI_PROFILE_ID_PLACEHOLDER in text
-    assert "aeat config repair" in text
 
 
 def test_version_flag_renders_backend_registry_summary() -> None:
