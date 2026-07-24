@@ -111,7 +111,7 @@ class SnapshotRepository[TPayload: BaseModel](Protocol):
     def save(self, snapshot: TPayload) -> None: ...
 
 
-type _CanonicalValue = str | int | float | bool | None | list[_CanonicalValue] | dict[str, _CanonicalValue]
+type _CanonicalValue = str | int | float | bool | list[_CanonicalValue] | dict[str, _CanonicalValue] | None
 
 
 def derive_snapshot_id_from_json(parts: dict[str, _CanonicalValue]) -> str:

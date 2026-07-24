@@ -399,15 +399,24 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     Three outcomes:
 
     - Bootstrap-exempt verbs (``profile create``, ``profile import``,
-      ``config repair`` family) run without a session — return early.
+      ``config login`` / ``config logout``, ``config repair`` family) run
+      without a session — return early.
     - No active profile resolves — return without opening a session.
       Each non-exempt verb carries its own
       ``resolve_active_bucket_id() is None`` guard that refuses with a
       translated message; opening a session here against an absent
       per-bucket database would pre-empt that cleaner per-verb refusal
       and break the bare-invocation landing card.
-    - An active profile resolves — open its bucket session (unless one
-      is already active) so the verb body can decrypt stored records.
+    - An active profile resolves — RESUME its persisted login session so
+      the verb body can decrypt stored records, or refuse instructively.
+
+    The session is resumed, never implicitly unlocked. This callback used
+    to enter the master-key provider directly, which on the file backend
+    prompted for (or read) the passphrase on EVERY command and on the
+    keyring backend unlocked silently with no authentication gate at all.
+    Authentication is now a deliberate act — ``aeat config login`` — and
+    every other verb either resumes that login's still-valid session or
+    refuses, naming the verb that fixes it.
 
     The per-verb guards remain the primary refusal surface. This root
     callback adds only one fail-closed guard before the verb body: a
@@ -423,7 +432,7 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     this fallback an in-process invocation would be misclassified as
     bare and the session would never open.
     """
-    from ...adapters.persistence.storage import get_master_key_provider, has_active_bucket_session
+    from ...adapters.persistence.storage import has_active_bucket_session
     from ...application.storage_write_policy import inspect_storage_write_policy
     from ...core import resolve_active_bucket_id
     from ._bootstrap_exempt import is_bootstrap_exempt
@@ -461,7 +470,7 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
         return
     if exempt:
         return
-    ctx.with_resource(get_master_key_provider())
+    _resume_profile_session_or_refuse(ctx, active_bucket_id)
     # The active profile's encrypted record is only decryptable once the
     # bucket session above is open. ``output_language()`` is cached, and
     # its cache key (env vars + `.env` mtime) does not vary when a
@@ -472,6 +481,70 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     from ...core.i18n import clear_output_language_cache
 
     clear_output_language_cache()
+
+
+#: Persisted-session refusal reasons that mean "this operator never logged
+#: in", as opposed to "a login existed and has since lapsed". The two get
+#: different operator copy: one is an instruction, the other is news.
+_LOGGED_OUT_REFUSALS: frozenset[str] = frozenset({"absent", "keychain_entry_missing"})
+
+
+def _resume_profile_session_or_refuse(ctx: typer.Context, bucket_id: str) -> None:
+    """Resume the persisted login session, or refuse naming ``aeat config login``.
+
+    Fail-closed: the application resume authority deletes stale artefacts
+    and reports a typed reason, and this callback opens nothing on any
+    refusal branch. The refusal is a BLOCKING failure, so it raises and
+    renders through the stderr error document (which shares the envelope
+    spine and carries the next-verb ``suggestion``) rather than riding the
+    non-blocking ``notices`` channel.
+
+    One sanctioned escape hatch survives: a configured
+    ``CADRUMO_SECRET_PASSPHRASE`` is the headless/CI channel and keeps
+    working process-scoped, needing neither a pointer nor a persisted
+    session — exactly today's file-backend behavior. That is not a bypass:
+    the passphrase IS the authentication factor, supplied non-
+    interactively instead of at a prompt. An operator who has not supplied
+    it — every interactive operator, and every keyring-backend host — meets
+    the gate and must log in.
+    """
+    from ...adapters.persistence.storage import get_master_key_provider
+    from ...application.user_profile import resume_active_profile_session
+    from ._errors import CliRefusedBoundaryError
+
+    refusal = resume_active_profile_session(bucket_id=bucket_id)
+    if refusal is None:
+        return
+    if _headless_secret_channel_active():
+        ctx.with_resource(get_master_key_provider())
+        return
+    reason = str(refusal.value)
+    if reason in _LOGGED_OUT_REFUSALS:
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.errors.profile_session_absent",
+            context={"reason": reason},
+            suggestion="aeat config login",
+        )
+    raise CliRefusedBoundaryError(
+        translated_message="cli.config.errors.profile_session_expired",
+        context={"reason": reason},
+        suggestion="aeat config login",
+    )
+
+
+def _headless_secret_channel_active() -> bool:
+    """Return whether the sanctioned headless secret channel is configured.
+
+    ``CADRUMO_SECRET_PASSPHRASE`` is the project's declared non-interactive
+    secret channel (secrets, never selection — selection stays with
+    ``--profile`` or the pointer). An environment that carries it has
+    already supplied the authentication factor, so the file backend
+    unlocks process-scoped exactly as it does today; an environment that
+    does not meets the login gate.
+    """
+    from ...core.config import load_settings
+
+    return load_settings().cadrumo_secret_passphrase is not None
 
 
 def _is_unregistered_profile_status_probe(verb_path: str | None, active_bucket_id: str) -> bool:

@@ -365,7 +365,7 @@ def probe_port(bind_host: str, port: int, *, timeout: float = _PROBE_TIMEOUT_SEC
     http_host = _probe_host(bind_host)
     url = f"http://{http_host}:{port}/"
     try:
-        with urllib.request.urlopen(url, timeout=timeout) as response:  # noqa: S310 - fixed localhost scheme
+        with urllib.request.urlopen(url, timeout=timeout) as response:  # fixed localhost scheme
             status = getattr(response, "status", None) or response.getcode()
             body = response.read(_PROBE_READ_BYTES).decode("utf-8", "replace")
     except urllib.error.HTTPError as exc:

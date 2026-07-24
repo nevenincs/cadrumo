@@ -54,6 +54,14 @@ BOOTSTRAP_EXEMPT_VERB_PATHS: tuple[str, ...] = (
     # already active and locked, or before any profile has ever been
     # created.
     "config profile archive inspect",
+    # The profile-session doors. ``login`` IS the authentication gate: it
+    # must run with no session at all, and it is the one verb allowed to
+    # prompt, so the root callback must not resume or refuse ahead of it.
+    # ``logout`` must stay reachable precisely when the session is absent
+    # or expired — refusing it with "run `aeat config login`" would strand
+    # the operator in a loop — and its idempotent no-op needs no session.
+    "config login",
+    "config logout",
     # Custody verbs own their own session / recovery / rewrap flow. The
     # root callback must not pre-open the active bucket session before
     # these handlers can resolve passphrase or recovery material. The

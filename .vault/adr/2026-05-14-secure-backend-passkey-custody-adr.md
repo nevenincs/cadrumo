@@ -3,13 +3,26 @@ tags:
   - '#adr'
   - '#secure-backend-passkey-safety'
 date: '2026-05-14'
-modified: '2026-07-17'
+modified: '2026-07-24'
 related:
   - '[[2026-05-14-secure-backend-passkey-safety-research]]'
   - '[[2026-05-08-secure-storage-legacy-path-audit-reference]]'
+  - '[[2026-07-24-profile-login-session-adr]]'
 ---
 
 # secure-backend-passkey-safety adr: master passkey custody + enrollment ux | (**status:** `accepted`)
+
+## Amendment note (2026-07-24)
+
+Decision 5's OS-keystore session cache (the opt-in `keystore-cache` KEK cache,
+never implemented) is realised and superseded in a stronger form by the accepted
+`2026-07-24-profile-login-session-adr`: a default-on split-knowledge persisted
+session (bucket DEK wrapped under an ephemeral OS-keychain session key, deadlines
+AAD-bound), with an absolute session cap added beside the idle auto-lock and the
+canonical doors `aeat config login` / `aeat config logout`. The `config lock` /
+`config unlock` verbs remain retired per `2026-07-15-cli-authority-verb-conformance-adr`.
+All other decisions here (KDF, enrollment, recovery, copy deck, legal grounding)
+remain authoritative.
 
 ## Problem Statement
 

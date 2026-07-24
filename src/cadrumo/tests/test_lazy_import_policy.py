@@ -847,7 +847,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
     UnsanctionedClass.NAMED_CYCLE_BREAK: 1,
     UnsanctionedClass.PORTS_INVERSION_PENDING: 36,
     UnsanctionedClass.DOMAIN_CYCLE_BREAK: 51,
-    UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 182,  # +2 flow TUI screen->app cycle breaks, +2 master_key login-throttle and persisted profile-session bucket keystore-path deferrals, +1 resumed-session KEK-unavailable refusal (was 177)
+    UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 182,  # +2 master_key login-throttle + persisted profile-session bucket keystore-path deferrals, +2 flow TUI screen->app cycle breaks, +1 resumed-session KEK-unavailable refusal (was 177)
     UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 38,  # net +1 atomic_write bootstrap-cycle deferrals (_bucket_pointer_io, corpus_manifest; env_io net-zero, corpus_manifest's save_corpus_manifest site retired its own core.locks edge)
     UnsanctionedClass.APPLICATION_DEFERRAL: 554,  # +12 profile-setup-flow sites (apoderado identity authority, cotejo notice projection, checkpoint-store lifecycle/projection/repository reach, wizard command facade), +12 login-orchestration sites (was 530)
 }
@@ -859,7 +859,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
 # baseline (the modelos_work_units/participation_index catalogue-repository
 # consolidation, the corpus_search/mcp/user_profile deferrals introduced by
 # intervening commits) were swept into their classified buckets in one pass.
-_ALLOWLIST_EDGE_CEILING: int = 501  # +17 profile-setup-flow edges (apoderado identity authority, cotejo page family and apply projections, checkpoint store and descendant door reach, wizard persistence/registered-values deferrals, locale registry profile-enum enumeration), +2 master_key login-throttle / persisted profile-session bucket deferrals, and +6 login-orchestration edges (was 476).
+_ALLOWLIST_EDGE_CEILING: int = 501  # +2 master_key login-throttle + persisted profile-session bucket deferrals, +19 profile-setup-flow edges: the apoderado identity authority, the cotejo page family and apply projections, the checkpoint store and descendant door reach, the wizard persistence/registered-values deferrals, and the locale registry's profile-enum enumeration, +6 login-orchestration edges (was 474).
 
 
 def _cadrumo_relative(dotted: str) -> str:

@@ -8,35 +8,56 @@
 # Validated by `vaultspec-rag preprocess check` (strict repo gate in
 # dev/docs/preprocess/tests/test_hook.py); trial a single file with
 # `vaultspec-rag preprocess run-one <path>`.
+#
+# Schema version 2 requires every rule to declare its content owner (`target`)
+# and its extractor's cache-invalidation version (`extractor_version`).
+# `target = "code"` keeps the extracted corpus text in the code index that the
+# terminology sweep, the golden-query miss-rate runs, and
+# dev/docs/preprocess/_reindex.py all read (`--type code`); the corpus source
+# suffixes are not conventional code extensions, so these rules are what admit
+# them at all. `extractor_version` mirrors the owning extractor family's
+# declared constant (HTML_EXTRACTOR_VERSION, PDF_EXTRACTOR_VERSION,
+# WORKBOOK_EXTRACTOR_VERSION in dev/docs/preprocess), so bumping an extractor
+# there and here invalidates the upstream preprocess cache.
 
-version = 1
+version = 2
 
 [[rule]]
 pattern = "src/cadrumo/_data/corpus/normatives/html/*.html"
 command = "uv run --no-sync python -m dev.docs.preprocess.hook {path}"
+target = "code"
+extractor_version = "1.0"
 on_error = "skip"
 timeout_s = 120
 
 [[rule]]
 pattern = "src/cadrumo/_data/corpus/**/*.pdf"
 command = "uv run --no-sync python -m dev.docs.preprocess.hook {path}"
+target = "code"
+extractor_version = "1.0"
 on_error = "skip"
 timeout_s = 300
 
 [[rule]]
 pattern = "src/cadrumo/_data/corpus/**/*.xls"
 command = "uv run --no-sync python -m dev.docs.preprocess.hook {path}"
+target = "code"
+extractor_version = "1.0"
 on_error = "skip"
 timeout_s = 300
 
 [[rule]]
 pattern = "src/cadrumo/_data/corpus/**/*.xlsm"
 command = "uv run --no-sync python -m dev.docs.preprocess.hook {path}"
+target = "code"
+extractor_version = "1.0"
 on_error = "skip"
 timeout_s = 300
 
 [[rule]]
 pattern = "src/cadrumo/_data/corpus/**/*.xlsx"
 command = "uv run --no-sync python -m dev.docs.preprocess.hook {path}"
+target = "code"
+extractor_version = "1.0"
 on_error = "skip"
 timeout_s = 300

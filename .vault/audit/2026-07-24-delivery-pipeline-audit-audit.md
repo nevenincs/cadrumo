@@ -7,25 +7,6 @@ modified: '2026-07-24'
 related: []
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace delivery-pipeline-audit with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
 # `delivery-pipeline-audit` audit: `delivery pipeline audit campaign close`
 
 ## Scope
@@ -48,15 +29,6 @@ was fixed before this close. Fix commits: `6ff8badf29`, `4690ddf2a6`,
 `04ef8b3970`, `2d89791816`, `14719d463e`.
 
 ## Findings
-
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
-
-       ### delivery pipeline audit campaign close | {level} | {summary}
-
-     followed by a paragraph carrying the detail. delivery pipeline audit campaign close is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
 
 ### evidence-rows-asserted-not-observed | critical | PASSED evidence rows hardcoded isolation claims and accepted stale captures — FIXED
 
@@ -171,10 +143,6 @@ constraint-effect assertion) were dispatched and land as the campaign's final
 commits.
 
 ## Recommendations
-
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
 
 Release-driver actions before the next publication (from
 evidence-rows-asserted-not-observed): re-run the installed tax and MCP
