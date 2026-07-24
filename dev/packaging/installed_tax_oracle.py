@@ -8,7 +8,6 @@ the calculation response and the persisted public observation surface.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 import re
@@ -93,7 +92,6 @@ class InstalledTaxEvidence:
 
     requested_executable: str
     resolved_executable: str
-    resolved_executable_sha256: str
     version_output: str
     storage_root: str
     work_unit_id: str
@@ -110,15 +108,6 @@ class InstalledTaxEvidence:
     def to_jsonable(self) -> dict[str, Any]:
         """Return a JSON-compatible evidence mapping."""
         return asdict(self)
-
-
-def sha256_file(path: Path) -> str:
-    """Return the hex SHA-256 of a file (stdlib-only, no product coupling)."""
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1 << 16), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def checkout_imports_removed(environment: Mapping[str, str]) -> bool:
@@ -465,7 +454,6 @@ def run_installed_tax_oracle(
     return InstalledTaxEvidence(
         requested_executable=str(requested_cli),
         resolved_executable=str(resolved_cli),
-        resolved_executable_sha256=sha256_file(resolved_cli),
         version_output=version.stdout.strip(),
         storage_root=str(storage_root.resolve()),
         work_unit_id=work_unit_id,

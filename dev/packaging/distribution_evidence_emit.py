@@ -152,16 +152,14 @@ def _assert_oracle_bound_to_cohort(
     The CLI reconstitutes ``tax-evidence.json`` / ``mcp-evidence.json`` a lane
     already produced, then binds a cohort. Without this check the two are
     independent: a capture of a *different* build could be minted against any
-    cohort, and the destination version is merely copied from the cohort. Two
-    real, captured facts pin the capture to the cohort:
-
-    * the installed CLI's ``--version`` output must carry the cohort version, and
-    * the CLI the MCP server actually spawned (``invoked_cli_sha256``, attested
-      from telemetry) must be byte-identical to the CLI the tax oracle
-      version-checked (``resolved_executable_sha256``).
-
-    A mismatch on either is a hard refusal, so a stale or foreign capture can
-    never be laundered into a passing cohort record.
+    cohort, and the destination version is merely copied from the cohort. The
+    installed CLI's ``--version`` output is the captured fact that pins the
+    capture to the cohort: it must carry the cohort version, or the capture is
+    not this cohort's build and minting is refused. The MCP dimension is bound
+    transitively — ``build_installed_oracle_evidence`` requires both oracles, and
+    a lane captures both from one installed cohort run; the MCP telemetry
+    ``invoked_cli_sha256`` is an attested CLI-*path* digest, not a cohort artifact
+    digest, so it cannot bind to the cohort manifest directly.
     """
     version = cohort.manifest.version
     if version not in tax_evidence.version_output:
@@ -169,13 +167,6 @@ def _assert_oracle_bound_to_cohort(
             f"installed CLI version output {tax_evidence.version_output!r} does not carry the "
             f"cohort version {version!r}: the captured oracle is not this cohort's build. "
             "Re-run the installed oracles against the cohort under test before emitting evidence.",
-        )
-    if tax_evidence.resolved_executable_sha256 != mcp_evidence.invoked_cli_sha256:
-        raise EvidenceCohortBindingError(
-            "the CLI the MCP server spawned "
-            f"({mcp_evidence.invoked_cli_sha256!r}) is not the CLI the tax oracle version-checked "
-            f"({tax_evidence.resolved_executable_sha256!r}): the two captures are of different builds. "
-            "Both oracles must run against one installed cohort build before emitting evidence.",
         )
 
 
@@ -445,7 +436,6 @@ def _tax_evidence_from_mapping(data: dict[str, Any]) -> InstalledTaxEvidence:
     return InstalledTaxEvidence(
         requested_executable=data["requested_executable"],
         resolved_executable=data["resolved_executable"],
-        resolved_executable_sha256=data["resolved_executable_sha256"],
         version_output=data["version_output"],
         storage_root=data["storage_root"],
         work_unit_id=data["work_unit_id"],

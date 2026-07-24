@@ -42,7 +42,7 @@ from dev.packaging.evidence import (
     EvidenceStatus,
 )
 from dev.packaging.installed_mcp_oracle import InstalledMcpEvidence, McpCallEvidence
-from dev.packaging.installed_tax_oracle import CommandEvidence, InstalledTaxEvidence, sha256_file
+from dev.packaging.installed_tax_oracle import CommandEvidence, InstalledTaxEvidence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -54,10 +54,6 @@ _SOURCE_REFS = ("aeat-modelo-200-manual-2024",)
 _NOTICE = ("modelo.work.calculate.plazo_vencido_unassessed_preview",)
 _REVISION = "a" * 64
 _COHORT_VERSION = "0.2.1"
-# The real on-disk digest of the interpreter both oracle fixtures stand in for.
-# The tax oracle version-checks this CLI and the MCP oracle spawns it, so the
-# cohort-binding guard requires both fixtures to name the same bytes.
-_CLI_SHA256 = sha256_file(Path(sys.executable))
 
 
 def _release_cohort(root: Path) -> LoadedReleaseCohort:
@@ -126,7 +122,6 @@ def _tax_evidence(cwd: Path, *, version: str = _COHORT_VERSION) -> InstalledTaxE
     return InstalledTaxEvidence(
         requested_executable=sys.executable,
         resolved_executable=sys.executable,
-        resolved_executable_sha256=_CLI_SHA256,
         version_output=version_command.stdout.strip(),
         storage_root=str(cwd / "state"),
         work_unit_id="e" * 64,
@@ -142,13 +137,8 @@ def _tax_evidence(cwd: Path, *, version: str = _COHORT_VERSION) -> InstalledTaxE
     )
 
 
-def _mcp_evidence(*, invoked_cli_sha256: str = _CLI_SHA256) -> InstalledMcpEvidence:
-    """Build installed-MCP oracle evidence with a real cadrumo-mcp exe stand-in.
-
-    ``invoked_cli_sha256`` defaults to the same CLI bytes the tax oracle fixture
-    version-checks, satisfying the same-build binding guard; override it to forge
-    a cross-build mismatch.
-    """
+def _mcp_evidence(*, invoked_cli_sha256: str = "0" * 64) -> InstalledMcpEvidence:
+    """Build installed-MCP oracle evidence with a real cadrumo-mcp exe stand-in."""
     return InstalledMcpEvidence(
         requested_executable=sys.executable,
         resolved_executable=sys.executable,
@@ -459,22 +449,6 @@ def test_version_mismatched_capture_against_cohort_is_refused(tmp_path: Path) ->
             cohort=cohort,
             tax_evidence=_tax_evidence(tmp_path, version="0.1.0"),
             mcp_evidence=_mcp_evidence(),
-            acquisition=_acquisition(),
-            destination=_destination(cohort),
-        )
-
-
-def test_cross_build_cli_digest_mismatch_is_refused(tmp_path: Path) -> None:
-    """A tax capture and MCP capture of different CLI builds cannot be paired."""
-    from dev.packaging.distribution_evidence_emit import EvidenceCohortBindingError
-
-    cohort = _release_cohort(tmp_path / "cohort")
-    with pytest.raises(EvidenceCohortBindingError, match="different builds"):
-        build_installed_oracle_evidence(
-            row_id="python-macos-arm64",
-            cohort=cohort,
-            tax_evidence=_tax_evidence(tmp_path),
-            mcp_evidence=_mcp_evidence(invoked_cli_sha256="b" * 64),
             acquisition=_acquisition(),
             destination=_destination(cohort),
         )
