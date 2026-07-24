@@ -155,3 +155,79 @@ def test_apoderado_happy_path_against_active_profile(_per_bucket_backend: Path) 
     clear = invoke_typer_app(root_app, ["config", "auth", "apoderado", "clear"])
     assert clear.exit_code == 0, f"apoderado clear failed: {clear.output}"
     assert "cleared\tTrue" in clear.output
+
+
+def test_apoderado_configure_leaves_profile_facts_untouched(_per_bucket_backend: Path) -> None:
+    """Configuring apoderado writes only to the ApoderadoService namespace.
+
+    Representation is NOT a profile fact: the door routes writes to the
+    apoderado encrypted namespace, never the taxpayer profile record. This
+    snapshots the active profile's facts before and after a configure and
+    asserts the fact set is byte-identical, so no ``renta_family.*`` /
+    profile fact was minted by the apoderado walk.
+    """
+    from .....adapters.persistence.storage.sql.engine import dispose_engine
+    from .._profile_readiness import _read_profile_record
+
+    create = invoke_typer_app(
+        root_app,
+        [
+            "config",
+            "profile",
+            "create",
+            "myco",
+            "--quiet",
+            "--tax-id",
+            "12345678Z",
+            "--entity-type",
+            "natural_person",
+            "--name",
+            "MyCo",
+            "--surnames",
+            "Operator",
+            "--activity",
+            "design",
+            "--iva-regime",
+            "GENERAL",
+        ],
+    )
+    assert create.exit_code == 0, f"create failed: {create.output}"
+
+    from .....application.workflow import read_profile_bucket
+
+    pointer = read_profile_bucket("myco")
+    assert pointer is not None
+    before = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
+    before_facts = {fact.path: fact.value for fact in before.facts}
+
+    dispose_engine()
+    configure = invoke_typer_app(
+        root_app,
+        [
+            "config",
+            "auth",
+            "apoderado",
+            "configure",
+            "--represented-nif",
+            "87654321X",
+            "--scope",
+            "RENT",
+        ],
+    )
+    assert configure.exit_code == 0, f"apoderado configure failed: {configure.output}"
+
+    dispose_engine()
+    after = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
+    after_facts = {fact.path: fact.value for fact in after.facts}
+    assert after_facts == before_facts, (
+        f"apoderado configure mutated profile facts: "
+        f"added={set(after_facts) - set(before_facts)} removed={set(before_facts) - set(after_facts)}"
+    )
+
+    # The representation landed in the apoderado namespace: the status verb
+    # (which opens the active-profile storage span) reads it back configured.
+    dispose_engine()
+    status = invoke_typer_app(root_app, ["config", "auth", "apoderado", "status"])
+    assert status.exit_code == 0, status.output
+    assert "configured\tTrue" in status.output
+    assert "RENT" in status.output

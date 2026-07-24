@@ -8,11 +8,19 @@ from pathlib import Path
 import pytest
 
 from ....core.config import Settings, override_settings
+from ....core.flows import FlowMode
 from ....domain.auth.apoderamientos import UnknownScopeError
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, isolated_two_bucket_runtime
+from ...flows import run_scripted_flow
 from .._apoderado import (
     ApoderadoLiveCheckUnavailableError,
     ApoderadoService,
+)
+from .._apoderado_flow import (
+    REPRESENTED_NIF_PAGE_ID,
+    SCOPES_PAGE_ID,
+    apoderado_answers_from_state,
+    build_apoderado_flow_definition,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -201,6 +209,63 @@ class TestBucketIsolation:
         assert b.granted_scopes == ("RENT",)
         assert (runtime.primary.storage_root / "buckets" / runtime.primary.bucket_id / "db" / "cadrumo.db").is_file()
         assert (runtime.primary.storage_root / "buckets" / runtime.secondary.bucket_id / "db" / "cadrumo.db").is_file()
+
+
+class TestApoderadoFlowDoor:
+    """The paged apoderado flow walks its pages and commits through the real service."""
+
+    def test_headless_walk_commits_through_the_service(self, isolated_settings: Settings) -> None:
+        """A scripted walk of the door's pages configures the real record.
+
+        Drives the engine headlessly through the door's own
+        ``FlowDefinition`` -- the same definition the interactive frontend
+        renders -- then projects and commits through the real
+        ``ApoderadoService``. The read-back asserts against the service's own
+        status surface, never the flow state's echo.
+        """
+        svc = ApoderadoService(settings=isolated_settings)
+        definition = build_apoderado_flow_definition(svc.catalogue)
+
+        state, _projection = run_scripted_flow(
+            definition,
+            tokens=["87654321X", "RENT,IVA"],
+            mode=FlowMode.MODIFY,
+        )
+        represented_nif, scope_tokens = apoderado_answers_from_state(state)
+        assert represented_nif == "87654321X"
+        # CHECKBOX canonicalises to sorted tokens.
+        assert scope_tokens == ("IVA", "RENT")
+
+        svc.configure(
+            bucket_id=_APODERADO_BUCKET_ID,
+            represented_nif=represented_nif,
+            scope_tokens=scope_tokens,
+        )
+        status = svc.status(bucket_id=_APODERADO_BUCKET_ID)
+        assert status.configured is True
+        assert status.represented_nif == "87654321X"
+        assert status.granted_scopes == ("IVA", "RENT")
+
+    def test_answer_pages_bind_no_profile_domain_key(self, isolated_settings: Settings) -> None:
+        """Every answer page is domain_key-free: no apoderado answer is a profile fact."""
+        svc = ApoderadoService(settings=isolated_settings)
+        definition = build_apoderado_flow_definition(svc.catalogue)
+        pages = {page.id: page for section in definition.sections for page in section.items}
+        assert pages[REPRESENTED_NIF_PAGE_ID].domain_key is None
+        assert pages[SCOPES_PAGE_ID].domain_key is None
+
+    def test_malformed_represented_nif_is_rejected_before_commit(self, isolated_settings: Settings) -> None:
+        """A bad represented-party tax id fails the identity validator, so the scripted walk refuses."""
+        from ...flows import FlowAnswerError
+
+        svc = ApoderadoService(settings=isolated_settings)
+        definition = build_apoderado_flow_definition(svc.catalogue)
+        with pytest.raises(FlowAnswerError):
+            run_scripted_flow(
+                definition,
+                tokens=["NOT-A-NIF", "RENT"],
+                mode=FlowMode.MODIFY,
+            )
 
 
 class TestSettingsRouting:
