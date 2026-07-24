@@ -14,6 +14,7 @@ from pydantic import BaseModel, ConfigDict
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ...core import SecureObjectWrite
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
@@ -83,6 +84,7 @@ def link_invoice_transaction_repositories(
     # save_with_secure_object_writes), absent from the domain protocols.
     invoice_repository: InvoiceCatalogueRepository | None = None,
     transaction_repository: TransactionCatalogueRepository | None = None,
+    extra_writes: tuple[SecureObjectWrite, ...] = (),
 ) -> InvoiceTransactionLinkResult:
     """Persist a bidirectional invoice link as one all-or-nothing write.
 
@@ -107,6 +109,11 @@ def link_invoice_transaction_repositories(
         transaction_repository: The concrete
             :class:`TransactionCatalogueRepository`, constructed for
             ``bucket_id`` when omitted.
+        extra_writes: Further secure-object upserts to commit in the same
+            unit of work as the link, such as the caller's bucket-event
+            history. Treated as opaque: this service commits them atomically
+            with the two catalogues but never inspects or constructs them, so
+            the invoice layer stays free of event-history concerns.
 
     Both repositories are the concrete adapters rather than the domain
     protocols, because this writer calls the co-commit escape hatches the
@@ -125,7 +132,7 @@ def link_invoice_transaction_repositories(
     )
     transactions_repo.save_with_secure_object_writes(
         result.transactions,
-        (invoices_repo.to_secure_object_write(result.invoices),),
+        (invoices_repo.to_secure_object_write(result.invoices), *extra_writes),
     )
     return result
 
