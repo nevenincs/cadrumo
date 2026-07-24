@@ -33,7 +33,7 @@ Every hook, in order:
 
 1. **Stale `_work/_temp`** — the runner clears the current job's temp; crashed
    jobs strand dirs here. Entries older than 24h are removed.
-2. **Per-run lane roots** — `cadrumo-s2*`, `cadrumo-claude-*`, `oracle-emit-work*`
+2. **Per-run lane roots** — `cadrumo-homebrew*`, `cadrumo-scoop*`, `cadrumo-claude-*`, `oracle-emit-work*`
    in `RUNNER_TEMP` and `_work`, older than 24h.
 3. **Reused-checkout `var/`** — the checkout in `_work/<repo>/<repo>` is reused
    by the next job (incremental fetch) and is **left in place**; only its
