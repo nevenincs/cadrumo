@@ -3096,16 +3096,16 @@ cli:
       draft_id_not_found: ID d'esborrany %{draft_id} no trobat
       invalid_iso_date: 'Format de data invàlid per a %{label}: %{raw}. Es requereix
         ISO 8601 (AAAA-MM-DD).'
+      parse_invalid_choice: 'Valor no vàlid ''{value}''. Tria entre: {accepted}.'
+      parse_missing_argument: Falta l'argument obligatori {parameter}.
+      parse_unknown_command: Ordre desconeguda '{command}'.
+      parse_unknown_option: Opció desconeguda '{option}'.
       period_empty: El període fiscal no pot estar buit
       period_missing_year: El testimoni de període '{token}' necessita un any en aquesta
         ordre. Afegiu --year (p. ex. --period {token} --year 2024).
       period_unrecognised: 'Període ''{raw}'' no reconegut. Useu un testimoni AEAT:
         1T-4T (trimestres), 0A (anual), 01-12 (mesos), i indiqueu l''any amb --year
         (p. ex. --period 1T --year 2024).'
-      parse_unknown_option: 'Opció desconeguda ''{option}''.'
-      parse_unknown_command: 'Ordre desconeguda ''{command}''.'
-      parse_invalid_choice: 'Valor no vàlid ''{value}''. Tria entre: {accepted}.'
-      parse_missing_argument: 'Falta l''argument obligatori {parameter}.'
   config:
     app_help: Gestionar configuració local i diagnòstics
     auth:
@@ -5425,7 +5425,9 @@ errors:
     auth_storage_master_key_unavailable: No s'ha pogut obtenir la clau mestra de cap
       proveïdor. Comprova l'anell de claus o la frase de contrasenya de la còpia de
       seguretat.
-    clave_movil_identity_checksum: 'L''identificador de Cl@ve Móvil té una forma vàlida però la seva lletra de control no coincideix amb els dígits. Revisa l''última lletra del document i torna-ho a provar.'
+    clave_movil_identity_checksum: L'identificador de Cl@ve Móvil té una forma vàlida
+      però la seva lletra de control no coincideix amb els dígits. Revisa l'última
+      lletra del document i torna-ho a provar.
   calc:
     age_at_year_end_no_filing_year: 'Error intern: el càlcul de l''edat a final d''exercici
       no té exercici de declaració.'
@@ -6235,6 +6237,8 @@ errors:
     refused_flow_answer: El flux guiat ha rebutjat la resposta.
     refused_flow_checkpoint: El flux guiat ha rebutjat l'operació de desar i reprendre.
     refused_flow_navigation: El flux guiat ha rebutjat la petició de navegació.
+    refused_flow_run_abandoned: El flux guiat es va cancel·lar abans de completar-se;
+      no es va presentar res.
     refused_flow_submit: El flux guiat ha rebutjat l'enviament.
     refused_flow_unsupported_console: El flux guiat no es pot executar perquè aquesta
       consola no pot mostrar preguntes interactives.
@@ -6419,7 +6423,6 @@ errors:
     submission_preflight_error_findings: L'esborrany té {finding_count} incidència(es)
       de severitat ERROR; resol-les abans de presentar.
     unsupported_currency: El codi de moneda indicat no és compatible.
-    refused_flow_run_abandoned: 'El flux guiat es va cancel·lar abans de completar-se; no es va presentar res.'
   snapshot:
     ambiguous_revision_selection: 'Més d''una revisió del registre coincideix amb
       el model %{modelo_id}: %{candidate_ids}.'
@@ -6502,22 +6505,25 @@ flows:
       {mode}, però no hi ha cap magatzem de punts de desada connectat, de manera que
       l'execució s'ha rebutjat en lloc de perdre les teves respostes.
     invalid_confirm: Respon sí o no.
+    invalid_date: Introdueix una data amb el format AAAA-MM-DD (per exemple 2026-05-14).
+    invalid_decimal: Introdueix un import amb punt decimal (per exemple 1234.56).
     invalid_integer: Introdueix un nombre enter.
     select_unknown: 'Tria un dels valors acceptats: %{choices}.'
     tui_abandoned: El flux {flow_id} s'ha tancat en el mode {mode} abans d'enviar-lo
       o desar-lo; no s'ha registrat res.
+    unexpected_app_type: La pantalla interactiva no està associada a una aplicació
+      de flux.
     unsupported_console: Aquesta consola no pot mostrar preguntes interactives. Executa
       el flux des d'un terminal real o guia'l amb un fitxer de respostes.
-    unexpected_app_type: 'La pantalla interactiva no està associada a una aplicació de flux.'
   progress:
     current_answer: 'Resposta actual: {value}'
+    current_answer_secret: 'Resposta actual: (oculta)'
     failure_mode: 'Compte: {text}'
     format_hint: 'Format esperat: {hint}'
+    legal_ref: 'Base legal: %{ref} — %{label}'
     optional: Opcional
     page_header: Pregunta {position} de {total} — secció {section}
     required: Obligatori
-    current_answer_secret: 'Resposta actual: (oculta)'
-    legal_ref: 'Base legal: %{ref} — %{label}'
   review:
     action_edit: Edita una resposta
     action_prompt: Què vols fer?
@@ -6547,17 +6553,17 @@ flows:
     save_unavailable: Desar i sortir no està disponible en el mode {mode}; completa
       el flux d'una sola vegada.
   tui:
+    binding_back: Anterior
+    binding_reset: Restableix
+    binding_restart: Reinicia
+    binding_return: Torna
+    binding_review: Resum
+    binding_save_exit: Desa i surt
+    binding_submit: Presenta
     button_back: Enrere
     button_next: Següent
     button_review: Revisió
     header: '{flow} — pregunta {position} de {total}, secció {section}'
-    binding_back: 'Anterior'
-    binding_review: 'Resum'
-    binding_reset: 'Restableix'
-    binding_restart: 'Reinicia'
-    binding_save_exit: 'Desa i surt'
-    binding_return: 'Torna'
-    binding_submit: 'Presenta'
 live:
   errors:
     expediente_not_found: No s'ha trobat l'expedient sol.licitat a l'AEAT.
@@ -6849,7 +6855,13 @@ wizard:
     checkbox_unknown: 'Valor no reconegut per a %{prompt_key}: %{raw}. Opcions vàlides:
       %{choices}.'
     checkbox_without_choices: La pregunta %{prompt_key} no declara opcions de casella.
+    eu_eea_country_required: '%{flag} és obligatori quan %{condition_flag} indica
+      residència a la UE o a l''EEE.'
     invalid_confirm: 'Resposta booleana no vàlida per a %{prompt_key}: %{raw}.'
+    invalid_date: 'Data no vàlida per a %{flag}: %{got}. Fes servir el format ISO-8601
+      (AAAA-MM-DD).'
+    invalid_decimal: 'Nombre decimal no vàlid per a %{flag}: %{got}. Fes servir el
+      punt com a separador decimal.'
     invalid_integer: 'Enter no vàlid per a %{prompt_key}: %{raw}.'
     invalid_postcode: 'Codi postal no vàlid per a %{prompt_key}: %{raw}. Un codi postal
       espanyol té 5 dígits (codi de província 01-52 seguit de tres dígits).'
@@ -6857,6 +6869,8 @@ wizard:
     select_unknown: 'Valor no reconegut per a %{prompt_key}: %{raw}. Opcions vàlides:
       %{choices}.'
     select_without_choices: La pregunta %{prompt_key} no declara opcions de selecció.
+    spouse_tax_id_required_joint: '%{flag} és obligatori quan %{condition_flag} és
+      tributació conjunta.'
     unsupported_console: "L'assistent guiat necessita un terminal interactiu, i aquesta\
       \ execució no en té.\nEncara no s'ha desat res.\n\nPots acabar de crear aquest\
       \ perfil de dues maneres:\n\n1. Torna a executar l'ordre des d'un terminal interactiu\
@@ -6871,10 +6885,6 @@ wizard:
       \ profile edit %{profile_name} --quiet --<camp> VALOR\n\nO torna a executar\
       \ l'edició guiada des d'una sessió de terminal interactiva:\n  aeat config profile\
       \ edit %{profile_name}"
-    invalid_date: 'Data no vàlida per a %{flag}: %{got}. Fes servir el format ISO-8601 (AAAA-MM-DD).'
-    invalid_decimal: 'Nombre decimal no vàlid per a %{flag}: %{got}. Fes servir el punt com a separador decimal.'
-    spouse_tax_id_required_joint: '%{flag} és obligatori quan %{condition_flag} és tributació conjunta.'
-    eu_eea_country_required: '%{flag} és obligatori quan %{condition_flag} indica residència a la UE o a l''EEE.'
   other:
     description: Altres opcions de configuració
     section:
@@ -6902,12 +6912,20 @@ wizard:
       disability-grade:
         choices:
           33-64:
+            description: Discapacitat reconeguda del 33% al 64% — incrementa el mínim
+              personal.
             label: Discapacitat del 33% al 64%
           65-plus:
+            description: Discapacitat reconeguda del 65% o més — major increment del
+              mínim personal.
             label: Discapacitat del 65% o superior
           assistance-or-mobility:
+            description: Necessitat acreditada d'ajuda de tercers o mobilitat reduïda
+              — afegeix l'increment per assistència.
             label: Ajuda de tercers o mobilitat reduïda
           judicial-incapacity:
+            description: Incapacitat declarada judicialment — s'assimila al 65%+ amb
+              independència del grau certificat.
             label: Incapacitat judicial o equivalent
       sex:
         choices:
@@ -7133,6 +7151,13 @@ wizard:
         help: 'Sexe del primer declarant: H = home, M = dona.'
       third-party-transactions-above-347-threshold:
         help: Operacions amb tercers superen el llindar del Modelo 347
+    format:
+      amount-eur: Import en euros amb punt decimal, p. ex. 50000.00.
+      date-iso: Data en format AAAA-MM-DD, p. ex. 2024-03-01.
+      postcode: 'Codi postal espanyol: 5 xifres, p. ex. 28001.'
+      tax-id: 'NIF/DNI: 8 xifres + lletra (12345678Z) · NIE: X/Y/Z + 7 xifres + lletra
+        (X1234567L) · NIF d''entitat: lletra + 7 xifres + control (B12345674).'
+      units-count: 'Nombre enter d''unitats, p. ex. 2.'
     identidad:
       title: Identitat
     intro: 'Configuració guiada del perfil tributari
@@ -7182,10 +7207,16 @@ wizard:
       irpf-estimation-regime:
         choices:
           directa-normal:
+            description: 'Estimació directa normal: comptabilitat per ingressos reals
+              amb llibres complets — obligatòria per sobre de 600.000 EUR.'
             label: Estimació directa normal
           directa-simplificada:
+            description: 'Estimació directa simplificada: ingressos reals amb llibres
+              simplificats — l''opció habitual per a la majoria d''autònoms.'
             label: Estimació directa simplificada
           objetiva:
+            description: 'Estimació objectiva (mòduls): el rendiment es calcula per
+              indicadors de l''activitat, només per a activitats incloses.'
             label: Estimació objectiva (mòduls)
         help: Com es determina el rendiment net de l'activitat econòmica; selecciona
           Model 130 o 131
@@ -7257,14 +7288,24 @@ wizard:
       iva-regime:
         choices:
           exento:
+            description: 'Activitat exempta d''IVA (educació, sanitat, assegurances…):
+              no repercuteix ni dedueix IVA.'
             label: Exempt/a
           general:
+            description: 'IVA general: repercuteix IVA en vendes, dedueix IVA suportat
+              i presenta el Model 303 trimestral.'
             label: Règim general
           reagp:
+            description: 'Règim especial d''agricultura, ramaderia i pesca (REAGP):
+              compensació a preu fet en lloc de declaracions d''IVA.'
             label: Règim especial de l'agricultura, ramaderia i pesca (REAGP)
           recargo-equivalencia:
+            description: 'Per a comerç minorista: el proveïdor aplica un recàrrec
+              addicional i vostè no presenta declaracions d''IVA per aquesta activitat.'
             label: Recàrrec d'equivalència
           simplificado:
+            description: Règim simplificat per mòduls per a activitats acollides (vinculat
+              a l'estimació objectiva).
             label: Règim simplificat
       legal-name:
         help: Per a persones jurídiques, és el nom fiscal usat a les capçaleres d'exportació.
@@ -7338,8 +7379,12 @@ wizard:
       fiscal-residency:
         choices:
           non-resident-irnr:
+            description: 'No resident: només tributa la renda de font espanyola, per
+              IRNR (Model 210), i pot requerir-se representant fiscal.'
             label: No resident — IRNR (RDLeg 5/2004)
           resident-irpf:
+            description: 'Resident fiscal a Espanya (183+ dies o centre d''interessos):
+              renda mundial per IRPF.'
             label: Resident habitual a Espanya — IRPF
         prompt: Categoria de residència fiscal
       representante-fiscal-nif:
@@ -7384,8 +7429,12 @@ wizard:
               (Art. 82.1.2°)
             label: Parella de fet registrada
           separado-divorciado:
+            description: Separat legalment o divorciat — la tributació conjunta només
+              és possible amb fills a la seva unitat familiar.
             label: Separat/ada o divorciat/ada
           soltero:
+            description: Solter, vidu o divorciat sense parella registrada — tributació
+              individual, o conjunta només com a família monoparental amb fills.
             label: Solter/a
         help: 'Situació familiar a efectes de l''Art. 82 LIRPF: determina si es pot
           optar per la declaració conjunta i quina unitat familiar s''aplica.'
@@ -7418,10 +7467,16 @@ wizard:
       entity-type:
         choices:
           attribution-entity:
+            description: 'Una entitat en atribució de rendes (comunitat de béns, societat
+              civil): les rendes s''atribueixen als seus membres.'
             label: Entitat en atribució de rendes
           legal-entity:
+            description: Una societat o organització (SL, SA, associació…) que tributa
+              per l'Impost sobre Societats.
             label: Persona jurídica (societat)
           natural-person:
+            description: Una persona física (autònom o particular) que tributa per
+              IRPF.
             label: Persona física
         help: Persona física (IRPF), persona jurídica (Impost sobre Societats) o entitat
           en atribució de rendes
@@ -7434,16 +7489,27 @@ wizard:
       irpf-income-categories:
         choices:
           actividad-economica:
+            description: Activitat econòmica o professional per compte propi — activa
+              el Model 130 trimestral i les obligacions d'IVA.
             label: Activitat econòmica
           capital-inmobiliario:
+            description: 'Rendiments del capital immobiliari: lloguers d''immobles
+              de la seva propietat.'
             label: Rendiments del capital immobiliari
           capital-mobiliario:
+            description: 'Rendiments del capital mobiliari: interessos, dividends
+              i altres rendes d''inversions.'
             label: Rendiments del capital mobiliari
           ganancias-patrimoniales:
+            description: Guanys o pèrdues patrimonials per venda d'actius (accions,
+              immobles, criptomonedes).
             label: Guanys patrimonials
           pension:
+            description: Pensions — tributen com a rendiments del treball a l'IRPF.
             label: Pensió
           trabajo:
+            description: 'Rendiments del treball: salari o pensió d''un ocupador o
+              de la Seguretat Social.'
             label: Rendiments del treball
         help: Selecciona cada categoria de renda IRPF que tinguis; només l'activitat
           econòmica obliga al Model 130/131
@@ -7459,8 +7525,12 @@ wizard:
           sal:
             label: Societat Anònima Laboral (S.A.L.)
           sin-fines-lucrativos:
+            description: 'Entitat sense finalitats lucratives (Llei 49/2002): pot
+              optar al règim fiscal especial que es pregunta més avall.'
             label: Entitat sense fins lucratius
           sl:
+            description: 'Societat Limitada: la forma societària habitual per a pimes,
+              capital mínim 3.000 EUR.'
             label: Societat de responsabilitat limitada (S.L.)
           sll:
             label: Societat Limitada Laboral (S.L.L.)
@@ -7496,6 +7566,8 @@ wizard:
         UE o l''EEE però falta el país. Afegeix el país de residència.'
       eu_eea_country_ok: 'Residència del cònjuge: el país de residència a la UE o
         l''EEE és coherent.'
+      impatriado_requires_start_date: 'Règim d''impatriats: la data d''inici del règim
+        especial és obligatòria. Afegeix la data d''inici.'
       joint_taxation_situacion_familiar_ok: 'Situació familiar: la declaració conjunta
         és compatible amb la situació familiar declarada.'
       joint_taxation_situacion_familiar_refused: 'Situació familiar: la declaració
@@ -7508,6 +7580,10 @@ wizard:
         càrrec a la unitat familiar. Sense fills a càrrec, la declaració conjunta
         no és possible per a aquesta situació familiar. Activa «fills menors a càrrec»
         o canvia a tributació individual.'
+      non_resident_requires_country: 'No resident IRNR: el país de residència fiscal
+        és obligatori. Afegeix el país de residència.'
+      non_resident_requires_representante: 'No resident IRNR: cal un representant
+        fiscal. Afegeix el NIF i el nom del representant.'
       obligations_consistency_ok: 'Obligacions de retenció: les respostes sobre retencions
         són coherents.'
       obligations_inconsistent: 'Obligacions de retenció: has declarat retencions
@@ -7518,9 +7594,6 @@ wizard:
       spouse_consistency_ok: 'Tributació conjunta: les dades del cònjuge són coherents.'
       tax_id_present: 'Identificació fiscal: comprovació que el perfil té un NIF o
         NIE.'
-      impatriado_requires_start_date: 'Règim d''impatriats: la data d''inici del règim especial és obligatòria. Afegeix la data d''inici.'
-      non_resident_requires_country: 'No resident IRNR: el país de residència fiscal és obligatori. Afegeix el país de residència.'
-      non_resident_requires_representante: 'No resident IRNR: cal un representant fiscal. Afegeix el NIF i el nom del representant.'
   test:
     description: Prova la configuració i la connectivitat
     example:

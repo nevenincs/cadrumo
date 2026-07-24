@@ -3117,16 +3117,16 @@ cli:
       draft_id_not_found: ID de borrador %{draft_id} no encontrado
       invalid_iso_date: 'Formato de fecha inválido para %{label}: %{raw}. Se requiere
         ISO 8601 (AAAA-MM-DD).'
+      parse_invalid_choice: 'Valor no válido ''{value}''. Elige entre: {accepted}.'
+      parse_missing_argument: Falta el argumento obligatorio {parameter}.
+      parse_unknown_command: Orden desconocida '{command}'.
+      parse_unknown_option: Opción desconocida '{option}'.
       period_empty: El periodo fiscal no puede estar vacío
       period_missing_year: El token de periodo '{token}' necesita un año en este comando.
         Añada --year (p. ej. --period {token} --year 2024).
       period_unrecognised: 'Periodo ''{raw}'' no reconocido. Use un token AEAT: 1T-4T
         (trimestres), 0A (anual), 01-12 (meses), e indique el año con --year (p. ej.
         --period 1T --year 2024).'
-      parse_unknown_option: 'Opción desconocida ''{option}''.'
-      parse_unknown_command: 'Orden desconocida ''{command}''.'
-      parse_invalid_choice: 'Valor no válido ''{value}''. Elige entre: {accepted}.'
-      parse_missing_argument: 'Falta el argumento obligatorio {parameter}.'
   config:
     app_help: Gestionar configuración local y diagnósticos
     auth:
@@ -5464,7 +5464,9 @@ errors:
       recover con tu código de recuperación de 24 palabras.
     auth_storage_master_key_unavailable: No se pudo obtener la clave maestra de ningún
       proveedor. Comprueba el llavero o la frase de contraseña de la copia de seguridad.
-    clave_movil_identity_checksum: 'El identificador de Cl@ve Móvil tiene una forma válida pero su letra de control no coincide con los dígitos. Revisa la última letra del documento e inténtalo de nuevo.'
+    clave_movil_identity_checksum: El identificador de Cl@ve Móvil tiene una forma
+      válida pero su letra de control no coincide con los dígitos. Revisa la última
+      letra del documento e inténtalo de nuevo.
   calc:
     age_at_year_end_no_filing_year: 'Error interno: el cálculo de edad a fin de ejercicio
       no tiene ejercicio de declaración.'
@@ -6270,6 +6272,8 @@ errors:
     refused_flow_answer: El flujo guiado rechazó la respuesta.
     refused_flow_checkpoint: El flujo guiado rechazó la operación de guardar y reanudar.
     refused_flow_navigation: El flujo guiado rechazó la petición de navegación.
+    refused_flow_run_abandoned: El flujo guiado se canceló antes de completarse; no
+      se presentó nada.
     refused_flow_submit: El flujo guiado rechazó el envío.
     refused_flow_unsupported_console: El flujo guiado no puede ejecutarse porque esta
       consola no puede mostrar preguntas interactivas.
@@ -6455,7 +6459,6 @@ errors:
     submission_preflight_error_findings: El borrador tiene {finding_count} incidencia(s)
       de severidad ERROR; resuélvelas antes de presentar.
     unsupported_currency: El código de moneda indicado no es compatible.
-    refused_flow_run_abandoned: 'El flujo guiado se canceló antes de completarse; no se presentó nada.'
   snapshot:
     ambiguous_revision_selection: 'Más de una revisión del registro coincide con el
       modelo %{modelo_id}: %{candidate_ids}.'
@@ -6537,22 +6540,25 @@ flows:
       {mode}, pero no hay ningún almacén de puntos de guardado conectado, así que
       la ejecución se ha rechazado en lugar de perder tus respuestas.
     invalid_confirm: Responde sí o no.
+    invalid_date: Introduce una fecha con el formato AAAA-MM-DD (por ejemplo 2026-05-14).
+    invalid_decimal: Introduce un importe con punto decimal (por ejemplo 1234.56).
     invalid_integer: Introduce un número entero.
     select_unknown: 'Elige uno de los valores aceptados: %{choices}.'
     tui_abandoned: El flujo {flow_id} se cerró en el modo {mode} antes de enviarlo
       o guardarlo; no se ha registrado nada.
+    unexpected_app_type: La pantalla interactiva no está asociada a una aplicación
+      de flujo.
     unsupported_console: Esta consola no puede mostrar preguntas interactivas. Ejecuta
       el flujo desde un terminal real o guíalo con un archivo de respuestas.
-    unexpected_app_type: 'La pantalla interactiva no está asociada a una aplicación de flujo.'
   progress:
     current_answer: 'Respuesta actual: {value}'
+    current_answer_secret: 'Respuesta actual: (oculta)'
     failure_mode: 'Atención: {text}'
     format_hint: 'Formato: {hint}'
+    legal_ref: 'Base legal: %{ref} — %{label}'
     optional: Opcional
     page_header: Pregunta {position} de {total} — sección {section}
     required: Obligatorio
-    current_answer_secret: 'Respuesta actual: (oculta)'
-    legal_ref: 'Base legal: %{ref} — %{label}'
   review:
     action_edit: Editar una respuesta
     action_prompt: ¿Qué quieres hacer?
@@ -6582,17 +6588,17 @@ flows:
     save_unavailable: Guardar y salir no está disponible en el modo {mode}; completa
       el flujo de una sola vez.
   tui:
+    binding_back: Anterior
+    binding_reset: Restablecer
+    binding_restart: Reiniciar
+    binding_return: Volver
+    binding_review: Resumen
+    binding_save_exit: Guardar y salir
+    binding_submit: Presentar
     button_back: Atrás
     button_next: Siguiente
     button_review: Revisión
     header: '{flow} — pregunta {position} de {total}, sección {section}'
-    binding_back: 'Anterior'
-    binding_review: 'Resumen'
-    binding_reset: 'Restablecer'
-    binding_restart: 'Reiniciar'
-    binding_save_exit: 'Guardar y salir'
-    binding_return: 'Volver'
-    binding_submit: 'Presentar'
 live:
   errors:
     expediente_not_found: No se encontró el expediente solicitado en la AEAT.
@@ -6885,7 +6891,12 @@ wizard:
     checkbox_unknown: 'Valor no reconocido para %{prompt_key}: %{raw}. Opciones válidas:
       %{choices}.'
     checkbox_without_choices: La pregunta %{prompt_key} no declara opciones para checkbox.
+    eu_eea_country_required: '%{flag} es obligatorio cuando %{condition_flag} indica
+      residencia en la UE o el EEE.'
     invalid_confirm: 'Respuesta booleana no válida para %{prompt_key}: %{raw}.'
+    invalid_date: 'Fecha no válida para %{flag}: %{got}. Usa el formato ISO-8601 (AAAA-MM-DD).'
+    invalid_decimal: 'Número decimal no válido para %{flag}: %{got}. Usa el punto
+      como separador decimal.'
     invalid_integer: 'Entero no válido para %{prompt_key}: %{raw}.'
     invalid_postcode: 'Código postal no válido para %{prompt_key}: %{raw}. Un código
       postal español tiene 5 dígitos (código de provincia 01-52 seguido de tres dígitos).'
@@ -6893,6 +6904,8 @@ wizard:
     select_unknown: 'Valor no reconocido para %{prompt_key}: %{raw}. Opciones válidas:
       %{choices}.'
     select_without_choices: La pregunta %{prompt_key} no declara opciones para select.
+    spouse_tax_id_required_joint: '%{flag} es obligatorio cuando %{condition_flag}
+      es tributación conjunta.'
     unsupported_console: "El asistente guiado necesita una terminal interactiva, y\
       \ esta ejecución no la tiene.\nTodavía no se ha guardado nada.\n\nPuedes terminar\
       \ de crear este perfil de dos maneras:\n \n1. Ejecuta el comando otra vez desde\
@@ -6907,10 +6920,6 @@ wizard:
       \ indicando el campo a cambiar:\n  aeat config profile edit %{profile_name}\
       \ --quiet --<campo> VALOR\n\nO vuelve a ejecutar la edición guiada desde una\
       \ sesión de terminal interactiva:\n  aeat config profile edit %{profile_name}"
-    invalid_date: 'Fecha no válida para %{flag}: %{got}. Usa el formato ISO-8601 (AAAA-MM-DD).'
-    invalid_decimal: 'Número decimal no válido para %{flag}: %{got}. Usa el punto como separador decimal.'
-    spouse_tax_id_required_joint: '%{flag} es obligatorio cuando %{condition_flag} es tributación conjunta.'
-    eu_eea_country_required: '%{flag} es obligatorio cuando %{condition_flag} indica residencia en la UE o el EEE.'
   other:
     description: Otras opciones de configuración
     section:
@@ -6938,12 +6947,20 @@ wizard:
       disability-grade:
         choices:
           33-64:
+            description: Discapacidad reconocida del 33% al 64% — incrementa el mínimo
+              personal.
             label: Discapacidad del 33% al 64%
           65-plus:
+            description: Discapacidad reconocida del 65% o más — mayor incremento
+              del mínimo personal.
             label: Discapacidad del 65% o superior
           assistance-or-mobility:
+            description: Necesidad acreditada de ayuda de terceros o movilidad reducida
+              — añade el incremento por asistencia.
             label: Ayuda de terceros o movilidad reducida
           judicial-incapacity:
+            description: Incapacidad declarada judicialmente — se asimila al 65%+
+              con independencia del grado certificado.
             label: Incapacidad judicial o equivalente
       sex:
         choices:
@@ -7174,6 +7191,13 @@ wizard:
         help: 'Sexo del primer declarante: H = hombre, M = mujer.'
       third-party-transactions-above-347-threshold:
         help: Operaciones con terceros superan el umbral del Modelo 347
+    format:
+      amount-eur: Importe en euros con punto decimal, p. ej. 50000.00.
+      date-iso: Fecha en formato AAAA-MM-DD, p. ej. 2024-03-01.
+      postcode: 'Código postal español: 5 cifras, p. ej. 28001.'
+      tax-id: 'NIF/DNI: 8 cifras + letra (12345678Z) · NIE: X/Y/Z + 7 cifras + letra
+        (X1234567L) · NIF de entidad: letra + 7 cifras + control (B12345674).'
+      units-count: 'Número entero de unidades, p. ej. 2.'
     identidad:
       title: Identidad
     intro: 'Configuración guiada del perfil tributario
@@ -7224,10 +7248,16 @@ wizard:
       irpf-estimation-regime:
         choices:
           directa-normal:
+            description: 'Estimación directa normal: contabilidad por ingresos reales
+              con libros completos — obligatoria por encima de 600.000 EUR.'
             label: Estimación directa normal
           directa-simplificada:
+            description: 'Estimación directa simplificada: ingresos reales con libros
+              simplificados — la opción habitual para la mayoría de autónomos.'
             label: Estimación directa simplificada
           objetiva:
+            description: 'Estimación objetiva (módulos): el rendimiento se calcula
+              por indicadores de la actividad, solo para actividades incluidas.'
             label: Estimación objetiva (módulos)
         help: Cómo se determina el rendimiento neto de la actividad económica; selecciona
           Modelo 130 o 131
@@ -7299,14 +7329,24 @@ wizard:
       iva-regime:
         choices:
           exento:
+            description: 'Actividad exenta de IVA (educación, sanidad, seguros…):
+              no repercute ni deduce IVA.'
             label: Exento
           general:
+            description: 'IVA general: repercute IVA en ventas, deduce IVA soportado
+              y presenta el Modelo 303 trimestral.'
             label: Régimen general
           reagp:
+            description: 'Régimen especial de agricultura, ganadería y pesca (REAGP):
+              compensación a tanto alzado en lugar de declaraciones de IVA.'
             label: Régimen especial de la agricultura, ganadería y pesca (REAGP)
           recargo-equivalencia:
+            description: 'Para comercio minorista: el proveedor aplica un recargo
+              adicional y usted no presenta declaraciones de IVA por esa actividad.'
             label: Recargo de equivalencia
           simplificado:
+            description: Régimen simplificado por módulos para actividades acogidas
+              (vinculado a la estimación objetiva).
             label: Régimen simplificado
       legal-name:
         help: Para personas jurídicas, este es el nombre fiscal usado en cabeceras
@@ -7380,8 +7420,12 @@ wizard:
       fiscal-residency:
         choices:
           non-resident-irnr:
+            description: 'No residente: solo tributa la renta de fuente española,
+              por IRNR (Modelo 210), y puede requerirse representante fiscal.'
             label: No residente — IRNR (RDLeg 5/2004)
           resident-irpf:
+            description: 'Residente fiscal en España (183+ días o centro de intereses):
+              renta mundial por IRPF.'
             label: Residente habitual en España — IRPF
         prompt: Categoría de residencia fiscal
       representante-fiscal-nif:
@@ -7427,8 +7471,12 @@ wizard:
               disponible (Art. 82.1.2°)
             label: Pareja de hecho registrada
           separado-divorciado:
+            description: Separado legalmente o divorciado — la tributación conjunta
+              solo es posible con hijos en su unidad familiar.
             label: Separado/a o divorciado/a
           soltero:
+            description: Soltero, viudo o divorciado sin pareja registrada — tributación
+              individual, o conjunta solo como familia monoparental con hijos.
             label: Soltero/a
         help: 'Situación familiar a efectos del Art. 82 LIRPF: determina si puede
           optarse por la declaración conjunta y qué unidad familiar aplica.'
@@ -7461,10 +7509,16 @@ wizard:
       entity-type:
         choices:
           attribution-entity:
+            description: 'Una entidad en atribución de rentas (comunidad de bienes,
+              sociedad civil): las rentas se atribuyen a sus miembros.'
             label: Entidad en atribución de rentas
           legal-entity:
+            description: Una sociedad u organización (SL, SA, asociación…) que tributa
+              por el Impuesto sobre Sociedades.
             label: Persona jurídica (sociedad)
           natural-person:
+            description: Una persona física (autónomo o particular) que tributa por
+              IRPF.
             label: Persona física
         help: Persona física (IRPF), persona jurídica (Impuesto sobre Sociedades)
           o entidad en atribución de rentas
@@ -7478,16 +7532,28 @@ wizard:
       irpf-income-categories:
         choices:
           actividad-economica:
+            description: Actividad económica o profesional por cuenta propia — activa
+              el Modelo 130 trimestral y las obligaciones de IVA.
             label: Actividad económica
           capital-inmobiliario:
+            description: 'Rendimientos del capital inmobiliario: alquileres de inmuebles
+              de su propiedad.'
             label: Rendimientos del capital inmobiliario
           capital-mobiliario:
+            description: 'Rendimientos del capital mobiliario: intereses, dividendos
+              y otras rentas de inversiones.'
             label: Rendimientos del capital mobiliario
           ganancias-patrimoniales:
+            description: Ganancias o pérdidas patrimoniales por venta de activos (acciones,
+              inmuebles, criptomonedas).
             label: Ganancias patrimoniales
           pension:
+            description: Pensiones — tributan como rendimientos del trabajo en el
+              IRPF.
             label: Pensión
           trabajo:
+            description: 'Rendimientos del trabajo: salario o pensión de un empleador
+              o de la Seguridad Social.'
             label: Rendimientos del trabajo
         help: Selecciona cada categoría de renta IRPF que tengas; solo la actividad
           económica obliga al Modelo 130/131
@@ -7503,8 +7569,12 @@ wizard:
           sal:
             label: Sociedad Anónima Laboral (S.A.L.)
           sin-fines-lucrativos:
+            description: 'Entidad sin fines lucrativos (Ley 49/2002): puede optar
+              al régimen fiscal especial que se pregunta más abajo.'
             label: Entidad sin fines lucrativos
           sl:
+            description: 'Sociedad Limitada: la forma societaria habitual para pymes,
+              capital mínimo 3.000 EUR.'
             label: Sociedad de responsabilidad limitada (S.L.)
           sll:
             label: Sociedad Limitada Laboral (S.L.L.)
@@ -7540,6 +7610,8 @@ wizard:
         la UE o el EEE pero falta el país. Añade el país de residencia.'
       eu_eea_country_ok: 'Residencia del cónyuge: el país de residencia en la UE o
         el EEE es coherente.'
+      impatriado_requires_start_date: 'Régimen de impatriados: la fecha de inicio
+        del régimen especial es obligatoria. Añade la fecha de inicio.'
       joint_taxation_situacion_familiar_ok: 'Situación familiar: la declaración conjunta
         es compatible con la situación familiar declarada.'
       joint_taxation_situacion_familiar_refused: 'Situación familiar: la declaración
@@ -7552,6 +7624,10 @@ wizard:
         en la unidad familiar. Sin hijos a cargo, la declaración conjunta no es posible
         para esta situación familiar. Activa «hijos menores a cargo» o cambia a tributación
         individual.'
+      non_resident_requires_country: 'No residente IRNR: el país de residencia fiscal
+        es obligatorio. Añade el país de residencia.'
+      non_resident_requires_representante: 'No residente IRNR: es obligatorio un representante
+        fiscal. Añade el NIF y el nombre del representante.'
       obligations_consistency_ok: 'Obligaciones de retención: las respuestas sobre
         retenciones son coherentes.'
       obligations_inconsistent: 'Obligaciones de retención: has declarado retenciones
@@ -7562,9 +7638,6 @@ wizard:
       spouse_consistency_ok: 'Tributación conjunta: los datos del cónyuge son coherentes.'
       tax_id_present: 'Identificación fiscal: comprobación de que el perfil tiene
         un DNI, NIE, NIF o CIF.'
-      impatriado_requires_start_date: 'Régimen de impatriados: la fecha de inicio del régimen especial es obligatoria. Añade la fecha de inicio.'
-      non_resident_requires_country: 'No residente IRNR: el país de residencia fiscal es obligatorio. Añade el país de residencia.'
-      non_resident_requires_representante: 'No residente IRNR: es obligatorio un representante fiscal. Añade el NIF y el nombre del representante.'
   test:
     description: Prueba tu configuración y conectividad
     example:
