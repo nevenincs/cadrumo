@@ -42,7 +42,7 @@ from dev.packaging.evidence import (
     EvidenceStatus,
 )
 from dev.packaging.installed_mcp_oracle import InstalledMcpEvidence, McpCallEvidence
-from dev.packaging.installed_tax_oracle import CommandEvidence, InstalledTaxEvidence
+from dev.packaging.installed_tax_oracle import CommandEvidence, InstalledTaxEvidence, sha256_file
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -53,6 +53,11 @@ _LEGAL_REFS = ("ley-27-2014:art-29",)
 _SOURCE_REFS = ("aeat-modelo-200-manual-2024",)
 _NOTICE = ("modelo.work.calculate.plazo_vencido_unassessed_preview",)
 _REVISION = "a" * 64
+_COHORT_VERSION = "0.2.1"
+# The real on-disk digest of the interpreter both oracle fixtures stand in for.
+# The tax oracle version-checks this CLI and the MCP oracle spawns it, so the
+# cohort-binding guard requires both fixtures to name the same bytes.
+_CLI_SHA256 = sha256_file(Path(sys.executable))
 
 
 def _release_cohort(root: Path) -> LoadedReleaseCohort:
@@ -66,8 +71,8 @@ def _release_cohort(root: Path) -> LoadedReleaseCohort:
         artifacts.append((name, kind, path))
     manifest = create_manifest(
         root=root,
-        version="0.2.1",
-        source=SourceIdentity(commit="c" * 40, tag="v0.2.1"),
+        version=_COHORT_VERSION,
+        source=SourceIdentity(commit="c" * 40, tag=f"v{_COHORT_VERSION}"),
         created_at=datetime(2026, 1, 1, tzinfo=UTC),
         builder=BuildIdentity(
             implementation="dev.packaging.release_cohort",
@@ -107,9 +112,13 @@ def _captured_command(argv: tuple[str, ...], cwd: Path) -> CommandEvidence:
     )
 
 
-def _tax_evidence(cwd: Path) -> InstalledTaxEvidence:
-    """Build installed-CLI oracle evidence from real captured subprocess output."""
-    version = _captured_command((sys.executable, "--version"), cwd)
+def _tax_evidence(cwd: Path, *, version: str = _COHORT_VERSION) -> InstalledTaxEvidence:
+    """Build installed-CLI oracle evidence from real captured subprocess output.
+
+    ``version`` seeds the real ``--version`` transcript so the capture carries the
+    cohort version the binding guard checks; override it to forge a mismatch.
+    """
+    version_command = _captured_command((sys.executable, "-c", f"print('aeat {version}')"), cwd)
     calculate = _captured_command(
         (sys.executable, "-c", f"print('{_TARGET_CASILLA}={_TARGET_VALUE}')"),
         cwd,
@@ -117,7 +126,8 @@ def _tax_evidence(cwd: Path) -> InstalledTaxEvidence:
     return InstalledTaxEvidence(
         requested_executable=sys.executable,
         resolved_executable=sys.executable,
-        version_output=version.stdout.strip(),
+        resolved_executable_sha256=_CLI_SHA256,
+        version_output=version_command.stdout.strip(),
         storage_root=str(cwd / "state"),
         work_unit_id="e" * 64,
         calculation_revision_id=_REVISION,
@@ -127,12 +137,18 @@ def _tax_evidence(cwd: Path) -> InstalledTaxEvidence:
         legal_refs=_LEGAL_REFS,
         source_refs=_SOURCE_REFS,
         notice_codes=_NOTICE,
-        commands=(version, calculate),
+        checkout_imports_removed=True,
+        commands=(version_command, calculate),
     )
 
 
-def _mcp_evidence() -> InstalledMcpEvidence:
-    """Build installed-MCP oracle evidence with a real cadrumo-mcp exe stand-in."""
+def _mcp_evidence(*, invoked_cli_sha256: str = _CLI_SHA256) -> InstalledMcpEvidence:
+    """Build installed-MCP oracle evidence with a real cadrumo-mcp exe stand-in.
+
+    ``invoked_cli_sha256`` defaults to the same CLI bytes the tax oracle fixture
+    version-checks, satisfying the same-build binding guard; override it to forge
+    a cross-build mismatch.
+    """
     return InstalledMcpEvidence(
         requested_executable=sys.executable,
         resolved_executable=sys.executable,
@@ -157,8 +173,10 @@ def _mcp_evidence() -> InstalledMcpEvidence:
                 status="warning",
             ),
         ),
-        invoked_cli_sha256="0" * 64,
-        invoked_cli_sha256_by_command={"modelo.work.calculate": "0" * 64},
+        invoked_cli_sha256=invoked_cli_sha256,
+        invoked_cli_sha256_by_command={"modelo.work.calculate": invoked_cli_sha256},
+        checkout_imports_removed=True,
+        ambient_product_executables_removed=True,
     )
 
 
@@ -423,6 +441,83 @@ def test_emit_client_evidence_writes_flat_record(tmp_path: Path) -> None:
     reloaded = DistributionEvidence.model_validate_json(path.read_text(encoding="utf-8"))
     assert reloaded.row_id == "claude-code-plugin"
     assert reloaded.client is not None
+
+
+def test_version_mismatched_capture_against_cohort_is_refused(tmp_path: Path) -> None:
+    """An oracle captured from a different build cannot be minted against the cohort.
+
+    The cohort is version 0.2.1 but the installed CLI reported 0.1.0, so the
+    capture is not this cohort's build: minting must refuse rather than copy the
+    cohort version onto a foreign capture.
+    """
+    from dev.packaging.distribution_evidence_emit import EvidenceCohortBindingError
+
+    cohort = _release_cohort(tmp_path / "cohort")
+    with pytest.raises(EvidenceCohortBindingError, match="does not carry the cohort version"):
+        build_installed_oracle_evidence(
+            row_id="python-macos-arm64",
+            cohort=cohort,
+            tax_evidence=_tax_evidence(tmp_path, version="0.1.0"),
+            mcp_evidence=_mcp_evidence(),
+            acquisition=_acquisition(),
+            destination=_destination(cohort),
+        )
+
+
+def test_cross_build_cli_digest_mismatch_is_refused(tmp_path: Path) -> None:
+    """A tax capture and MCP capture of different CLI builds cannot be paired."""
+    from dev.packaging.distribution_evidence_emit import EvidenceCohortBindingError
+
+    cohort = _release_cohort(tmp_path / "cohort")
+    with pytest.raises(EvidenceCohortBindingError, match="different builds"):
+        build_installed_oracle_evidence(
+            row_id="python-macos-arm64",
+            cohort=cohort,
+            tax_evidence=_tax_evidence(tmp_path),
+            mcp_evidence=_mcp_evidence(invoked_cli_sha256="b" * 64),
+            acquisition=_acquisition(),
+            destination=_destination(cohort),
+        )
+
+
+def test_cli_refuses_a_version_mismatched_capture_against_the_cohort(tmp_path: Path) -> None:
+    """The reconstitution CLI refuses a foreign capture, closing the mint-against-any-cohort hole."""
+    import json
+
+    cohort_dir = tmp_path / "cohort"
+    _release_cohort(cohort_dir)
+    tax_json = tmp_path / "tax-evidence.json"
+    mcp_json = tmp_path / "mcp-evidence.json"
+    tax_json.write_text(json.dumps(_tax_evidence(tmp_path, version="0.1.0").to_jsonable()), encoding="utf-8")
+    mcp_json.write_text(json.dumps(_mcp_evidence().to_jsonable()), encoding="utf-8")
+    evidence_dir = tmp_path / "distribution-install-readiness"
+
+    from dev.packaging.distribution_evidence_emit import EvidenceCohortBindingError
+
+    with pytest.raises(EvidenceCohortBindingError, match="does not carry the cohort version"):
+        main(
+            [
+                "--row-id",
+                "scoop-windows-x86-64",
+                "--release-cohort-dir",
+                str(cohort_dir),
+                "--tax-evidence",
+                str(tax_json),
+                "--mcp-evidence",
+                str(mcp_json),
+                "--acquisition-mechanism",
+                "scoop",
+                "--acquisition-source",
+                "https://github.com/nevenincs/scoop-cadrumo",
+                "--destination-kind",
+                "scoop-install",
+                "--destination-locator",
+                "C:/scoop/apps/cadrumo",
+                "--distribution-evidence-dir",
+                str(evidence_dir),
+            ],
+        )
+    assert not list(evidence_dir.glob("*.json")) if evidence_dir.exists() else True
 
 
 def test_destination_version_mismatch_is_refused(tmp_path: Path) -> None:

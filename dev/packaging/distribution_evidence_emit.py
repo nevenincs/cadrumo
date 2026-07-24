@@ -137,6 +137,48 @@ def _mcp_observations(mcp_evidence: InstalledMcpEvidence) -> dict[str, Any]:
     }
 
 
+class EvidenceCohortBindingError(RuntimeError):
+    """Raised when an oracle capture is not bound to the release cohort it is minted against."""
+
+
+def _assert_oracle_bound_to_cohort(
+    *,
+    cohort: LoadedReleaseCohort,
+    tax_evidence: InstalledTaxEvidence,
+    mcp_evidence: InstalledMcpEvidence,
+) -> None:
+    """Refuse to mint a record whose oracle capture is not the cohort's build.
+
+    The CLI reconstitutes ``tax-evidence.json`` / ``mcp-evidence.json`` a lane
+    already produced, then binds a cohort. Without this check the two are
+    independent: a capture of a *different* build could be minted against any
+    cohort, and the destination version is merely copied from the cohort. Two
+    real, captured facts pin the capture to the cohort:
+
+    * the installed CLI's ``--version`` output must carry the cohort version, and
+    * the CLI the MCP server actually spawned (``invoked_cli_sha256``, attested
+      from telemetry) must be byte-identical to the CLI the tax oracle
+      version-checked (``resolved_executable_sha256``).
+
+    A mismatch on either is a hard refusal, so a stale or foreign capture can
+    never be laundered into a passing cohort record.
+    """
+    version = cohort.manifest.version
+    if version not in tax_evidence.version_output:
+        raise EvidenceCohortBindingError(
+            f"installed CLI version output {tax_evidence.version_output!r} does not carry the "
+            f"cohort version {version!r}: the captured oracle is not this cohort's build. "
+            "Re-run the installed oracles against the cohort under test before emitting evidence.",
+        )
+    if tax_evidence.resolved_executable_sha256 != mcp_evidence.invoked_cli_sha256:
+        raise EvidenceCohortBindingError(
+            "the CLI the MCP server spawned "
+            f"({mcp_evidence.invoked_cli_sha256!r}) is not the CLI the tax oracle version-checked "
+            f"({tax_evidence.resolved_executable_sha256!r}): the two captures are of different builds. "
+            "Both oracles must run against one installed cohort build before emitting evidence.",
+        )
+
+
 def build_installed_oracle_evidence(
     *,
     row_id: str,
@@ -172,10 +214,14 @@ def build_installed_oracle_evidence(
     Returns:
         A validated, tamper-evident :class:`~dev.packaging.evidence.DistributionEvidence`.
     """
+    _assert_oracle_bound_to_cohort(cohort=cohort, tax_evidence=tax_evidence, mcp_evidence=mcp_evidence)
     commands = tuple(_command_transcript(command) for command in tax_evidence.commands)
     isolation = ExecutionIsolation(
-        checkout_imports_removed=True,
-        ambient_product_executables_removed=True,
+        # Derived from what the oracles actually recorded, not asserted: if a future
+        # refactor stops stripping checkout imports or product executables, the oracle
+        # records False and the evidence schema refuses to mint a PASSED record.
+        checkout_imports_removed=tax_evidence.checkout_imports_removed and mcp_evidence.checkout_imports_removed,
+        ambient_product_executables_removed=mcp_evidence.ambient_product_executables_removed,
         installed_executables=(
             _installed_executable(_CLI_EXECUTABLE_NAME, tax_evidence.resolved_executable),
             _installed_executable(_MCP_EXECUTABLE_NAME, mcp_evidence.resolved_executable),
@@ -285,8 +331,9 @@ def build_client_evidence(
             "proof; an owned launch alone cannot satisfy a real-client claim.",
         )
     isolation = ExecutionIsolation(
-        checkout_imports_removed=True,
-        ambient_product_executables_removed=True,
+        # Derived from the MCP oracle's recorded isolation (see build_installed_oracle_evidence).
+        checkout_imports_removed=mcp_evidence.checkout_imports_removed,
+        ambient_product_executables_removed=mcp_evidence.ambient_product_executables_removed,
         installed_executables=(_installed_executable(_MCP_EXECUTABLE_NAME, mcp_evidence.resolved_executable),),
     )
     observations: dict[str, Any] = {"mcp_oracle": _mcp_observations(mcp_evidence)}
@@ -398,6 +445,7 @@ def _tax_evidence_from_mapping(data: dict[str, Any]) -> InstalledTaxEvidence:
     return InstalledTaxEvidence(
         requested_executable=data["requested_executable"],
         resolved_executable=data["resolved_executable"],
+        resolved_executable_sha256=data["resolved_executable_sha256"],
         version_output=data["version_output"],
         storage_root=data["storage_root"],
         work_unit_id=data["work_unit_id"],
@@ -408,6 +456,7 @@ def _tax_evidence_from_mapping(data: dict[str, Any]) -> InstalledTaxEvidence:
         legal_refs=tuple(data["legal_refs"]),
         source_refs=tuple(data["source_refs"]),
         notice_codes=tuple(data["notice_codes"]),
+        checkout_imports_removed=data["checkout_imports_removed"],
         commands=commands,
     )
 
@@ -448,6 +497,8 @@ def _mcp_evidence_from_mapping(data: dict[str, Any]) -> InstalledMcpEvidence:
         calls=calls,
         invoked_cli_sha256=data["invoked_cli_sha256"],
         invoked_cli_sha256_by_command=dict(data["invoked_cli_sha256_by_command"]),
+        checkout_imports_removed=data["checkout_imports_removed"],
+        ambient_product_executables_removed=data["ambient_product_executables_removed"],
     )
 
 
@@ -497,6 +548,7 @@ def main(argv: list[str] | None = None) -> int:
 
 __all__ = [
     "SDK_CLIENT_NAME",
+    "EvidenceCohortBindingError",
     "build_client_evidence",
     "build_installed_oracle_evidence",
     "emit_client_evidence",
