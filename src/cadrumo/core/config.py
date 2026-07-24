@@ -1055,8 +1055,8 @@ class Settings(CadrumoMcpServingSettings):
            ``--profile`` flag and ``override_settings`` write; no
            environment variable reaches it).
         2. ``<cadrumo_local_storage_root>/active-profile`` plaintext
-           pointer file written by ``profile create`` / ``profile
-           switch``.
+           pointer file written by ``profile create`` / ``config
+           login``.
 
         When neither rung resolves, the field derives a root-level
         fallback at ``sqlite:///<cadrumo_local_storage_root>/cadrumo.db`` so
