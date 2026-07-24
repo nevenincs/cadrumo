@@ -183,10 +183,15 @@ non-interactive flag continuity), sections regroup:
 
 1. **entrada** — engine-level routing page: fresh create / modify / resume
    checkpoint. No profile data.
-2. **identidad** — `entity-type`, `legal-entity-form` (from
-   `taxpayer-type`), `tax-id`, `name`, `surnames`, `legal-name` (from
-   `profile`). Identity is asked FIRST; the entity-type axis gates the rest
-   of the flow, and `tax-id` format validation is per-kind.
+2. **identidad** — `output-language` FIRST (the operator must choose the
+   language before anything else renders in it: the answer activates the
+   chosen locale immediately for the remainder of the walk — a
+   settings-scope override entered at the answer, cache-cleared so the
+   next render resolves in the new language, honoring the
+   activation-precedes-first-render constraint), then `entity-type`,
+   `legal-entity-form` (from `taxpayer-type`), `tax-id`, `name`,
+   `surnames`, `legal-name` (from `profile`). The entity-type axis gates
+   the rest of the flow, and `tax-id` format validation is per-kind.
 3. **residencia** — the current `residence` section moved up:
    `fiscal-residency`, `country-of-fiscal-residence`, representante fiscal,
    `tax-residence-ccaa`. CCAA and residency parameterize downstream phases.
@@ -217,7 +222,9 @@ non-interactive flag continuity), sections regroup:
    consume. Descendant NIFs validate through `cadrumo.core.identity`.
 6. **obligaciones** — the `obligations` section (withholdings, módulos,
    estimation/special regimes, informativas thresholds).
-7. **preferencias** — `output-language`, `capabilities`, `notes`.
+7. **preferencias** — `capabilities`, `notes` (`output-language` moved
+   to the head of the flow — the language choice must precede every
+   localized render).
 8. **cotejo censal y revisión** — the censo cross-reference step (§3), then
    the substrate review screen (every answer, stale-marks surfaced,
    jump-edit), then the single atomic commit through the existing profile
@@ -364,21 +371,28 @@ never a live snapshot:
   flow supplies the implementation, and there is no bespoke checkpoint
   store, no stored cursor, no extension payload (the earlier
   opaque-payload design is superseded by the substrate amendment).
-  - **Create:** the profile record is minted EARLY — as soon as `tax-id`
-    validates (so `_refuse_duplicate_tax_id` fires at genuine minting) —
-    in an explicit SETUP-INCOMPLETE lifecycle state; every subsequent
-    answer persists incrementally as effective-dated `UserProfileFact`
-    rows through `ProfileLifecycleService` (`persist_answers` /
-    `set_active_fields`). The facts themselves are
-    the checkpoint: resume projects facts back to answers, recomputes
-    visibility/validation against the current definition, and derives the
-    cursor as the first unanswered visible question. Discard erases the
-    incomplete profile via the lifecycle authority. The phase-8 commit is
-    the transition OUT of setup-incomplete: flow-scope validators run,
-    and only then may consumers construct a `TaxpayerProfile` — the
-    readiness gate (`require_profile_ready_for_modelo_work`) refuses
-    modelo work on a setup-incomplete profile, so the cross-field legal
-    validators never meet a half-entered fact set.
+  - **Create:** the profile record is minted EARLY — at the first
+    persistence event (a save-and-exit or the submit), whichever comes
+    first — in an explicit SETUP-INCOMPLETE lifecycle state, with
+    `_refuse_duplicate_tax_id` firing at that mint. Answers persist as
+    effective-dated `UserProfileFact` rows through
+    `ProfileLifecycleService` (`persist_answers` / `set_active_fields`).
+    The facts themselves are the checkpoint: resume projects facts back
+    to answers, recomputes visibility/validation against the current
+    definition, and derives the cursor as the first unanswered visible
+    question. Discard erases the incomplete profile via the lifecycle
+    authority. The phase-8 commit is the transition OUT of
+    setup-incomplete: flow-scope validators run, then the atomic
+    `complete_setup` flips record AND manifest together — and only then
+    may consumers construct a `TaxpayerProfile`; the readiness gate
+    refuses modelo work on a setup-incomplete profile, so the
+    cross-field legal validators never meet a half-entered fact set.
+    Refinement path, explicitly conditioned: minting at `tax-id`
+    validation (per-answer, before any save) requires the schema
+    required-field check to defer while the record is SETUP-INCOMPLETE
+    (completion re-enforces it); until that relaxation is designed, a
+    partial mint would fail schema validation, so first-persistence
+    minting is the honest boundary.
   - **Modify:** NO mid-flow persistence. A live, valid profile must never
     hold a half-applied edit set (consumers read it concurrently), so
     modify stages answers in `FlowState` only and commits ONCE at review

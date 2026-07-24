@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#profile-setup-flow'
 date: '2026-07-23'
-modified: '2026-07-23'
+modified: '2026-07-24'
 tier: L3
 related:
   - '[[2026-07-23-profile-setup-flow-adr]]'
@@ -156,18 +156,18 @@ Express the catalogue on the FlowDefinition contract once the tui-wizard-substra
 
 Express the re-sequenced catalogue on the substrate FlowDefinition with copy references only, re-home the verifier checks into flow-scope validators, and bind identity pages to core.identity.
 
-- [ ] `W03.P05.S16` - Express the re-sequenced catalogue on the substrate FlowDefinition with copy-reference slots only, preserving the register_wizard_catalogue and register_project_answers feeds; `src/cadrumo/application/wizard/`.
-- [ ] `W03.P05.S17` - Re-home the verify_setup_answers cross-field checks into flow-scope validators, enrolling section scope where a check's inputs are complete at phase exit; `src/cadrumo/application/wizard/_verifier.py`.
-- [ ] `W03.P05.S18` - Bind the identity pages to the core.identity per-answer validators with per-IdentityDocument format-hint and failure copy references; `src/cadrumo/application/wizard/`.
-- [ ] `W03.P05.S19` - Render the legal-provenance zone from schema legal_refs plus the reverse index with approved-concept references only; `src/cadrumo/application/wizard/`.
+- [x] `W03.P05.S16` - Express the re-sequenced catalogue on the substrate FlowDefinition with copy-reference slots only, preserving the register_wizard_catalogue and register_project_answers feeds; `src/cadrumo/application/wizard/`.
+- [x] `W03.P05.S17` - Re-home the verify_setup_answers cross-field checks into flow-scope validators, enrolling section scope where a check's inputs are complete at phase exit; `src/cadrumo/application/wizard/_verifier.py`.
+- [x] `W03.P05.S18` - Bind the identity pages to the core.identity per-answer validators with per-IdentityDocument format-hint and failure copy references; `src/cadrumo/application/wizard/`.
+- [x] `W03.P05.S19` - Render the legal-provenance zone from schema legal_refs plus the reverse index with approved-concept references only; `src/cadrumo/application/wizard/`.
 
 ### Phase `W03.P06` - Create and modify persistence modes
 
 Implement facts-as-checkpoint create (early mint, incremental facts, derived resume, discard) and staged atomic modify (FlowState staging, persist_patch diff commit, loud no-resume honesty surfaces).
 
-- [ ] `W03.P06.S20` - Implement the create-mode checkpoint port over incremental effective-dated facts with derived-cursor resume and lifecycle discard; `src/cadrumo/application/wizard/_persistence.py`.
-- [ ] `W03.P06.S21` - Implement modify-mode FlowState staging with the atomic persist_patch diff commit and the declared per-mode no-op checkpoint; `src/cadrumo/application/wizard/_commands.py`.
-- [ ] `W03.P06.S22` - Surface modify-mode save-and-exit unavailability with an explicit message and a loud staged-edit discard on interruption; `src/cadrumo/application/wizard/_commands.py`.
+- [x] `W03.P06.S20` - Implement the create-mode checkpoint port over incremental effective-dated facts with derived-cursor resume and lifecycle discard; `src/cadrumo/application/wizard/_persistence.py`.
+- [x] `W03.P06.S21` - Implement modify-mode FlowState staging with the atomic persist_patch diff commit and the declared per-mode no-op checkpoint; `src/cadrumo/application/wizard/_commands.py`.
+- [x] `W03.P06.S22` - Surface modify-mode save-and-exit unavailability with an explicit message and a loud staged-edit discard on interruption; `src/cadrumo/application/wizard/_commands.py`.
 
 ### Phase `W03.P07` - Descendants and satellite doors
 

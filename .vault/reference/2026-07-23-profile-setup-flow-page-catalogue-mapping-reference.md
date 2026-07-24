@@ -143,13 +143,54 @@ locales CLI.
   explicit DEFER choice takes the substrate's deferred status AND
   persists a typed divergence fact at commit.
 
-## Modify-mode registered values
+## Cotejo divergence facts (persisted shape)
 
-`run_flow_tui(registered_values=...)` is fed by
-`record_to_path_values(active_record)` keyed to page keys (identity
-projection: domain_key equals the fact path), so the review table's
-registered-value column shows the on-record value beside the staged
-answer.
+A deferred compare-select decision persists as an effective-dated fact
+in a repeatable schema section (the descendant family is the
+precedent for indexed path families): path
+`censo.divergencia.{n}.axis` (the schema path of the diverging fact),
+`censo.divergencia.{n}.artefact_value` (the certificate's value,
+stringified), `censo.divergencia.{n}.source` (the artefact provenance
+token). The operator's retained answer stays at its own path — the
+divergence rows record only the unadopted evidence. Profile read
+surfaces raise one warning `Notice` when any divergence row exists
+(constructed notice codes live under a dynamic translation root,
+declared up front). Adopting the artefact value later — through the
+flow or `config profile edit` — clears the row through the lifecycle
+authority. Divergence rows ride the standard roundtrip discipline
+(populated non-default fixtures, anti-tautology proof) and the
+portable-export version check.
+
+## Registered-values projection (modify column AND the complete-profile overview)
+
+The review surface's overview presentation composes three existing
+channels; the flow's entire contribution is the `registered_values`
+mapping, so the projection is designed as the load-bearing piece:
+
+- **Coverage**: every profile-bound page of the active record — not
+  only changed pages — keyed by page key (identity projection:
+  domain_key equals the fact path; descendant instances key as
+  `descendientes#i.<page>`).
+- **Display-ready strings, formatted at projection time** (the string
+  IS the contract; the frontend renders, never formats): closed-set
+  tokens resolve to their choice LABELS through the locale catalogue;
+  booleans render as the localized yes/no pair; dates and decimal
+  amounts render in the operator's display convention. Projection runs
+  AFTER output-language activation (the ordering constraint above), so
+  labels resolve in the operator's language.
+- **No pre-masking**: secret pages are supplied normally — the review
+  screen masks both staged and registered values via its widget-kind
+  lookup, and a second masking authority on the projection side could
+  only drift from it.
+- **Nothing richer than the string**: no provenance column, no typed
+  per-row payload — the eligibility authority stays the engine's
+  ReviewProjection, untouched. The one provenance fact worth showing —
+  a registered value derived from the G313 artefact is non-official
+  evidence — is ENCODED INTO the display string as a localized suffix
+  (keyed copy landing in the same commit as the projection that
+  consumes it), applied when the underlying
+  fact carries the artefact provenance token. A typed provenance
+  channel is requested only if the suffix proves insufficient in use.
 
 ## Domain-construction validation at review (flow-scope)
 
@@ -176,6 +217,17 @@ catalogue KEYS plus redacted context only — the raw model message never
 enters a verdict, since library prose is exactly the leak class the
 mapping exists to eradicate.
 
+Known limitation: the validator classifies WHICH invariant fired by
+token-matching the pydantic message internally (the message is then
+discarded). This fails safe — a model wording change collapses the
+specific verdicts into the generic check, never a leak — but the
+collapse is a silent UX regression. Sturdier discriminator when the
+model side is next touched: dedicated exception subtypes or a stable
+machine tag on each cross-field validator's error (pydantic custom
+error `type`), matched by tag instead of prose; the receipt tests
+already pin the three specific classifications, so a silent collapse
+reds them.
+
 ## Checkpoint lifecycle (create mode)
 
 Save is frontend-owned; COMPLETION-DISCARD IS DOMAIN-OWNED: the commit
@@ -193,6 +245,25 @@ operator abandonment: it erases the incomplete profile through the
 lifecycle authority. A crash between persist and the status flip leaves
 at worst a stale resume offer that re-validates against the current
 definition.
+
+## Mid-walk language activation (the answer-commit hook contract)
+
+The activation wiring attaches to the frontends' per-commit observer
+(`on_answer_committed(page_key, committed_value)`), under three binding
+constraints:
+
+- The hook fires after a SUCCESSFUL commit only and BEFORE the frontend
+  advances, so a handler that re-activates the locale and calls
+  `rebuild_for_locale()` renders the next page in the new language with
+  no old-locale flash on the forward path — the two-locale render test
+  verifies this rather than assuming it.
+- The hook also fires per staged checkbox toggle: the handler keys on
+  the language page id and ignores every other commit — reacting
+  generically would re-activate and rebuild on every checkbox tick.
+- The committed value can be SENSITIVE (secret pages fire the hook
+  too): the handler never logs, echoes, persists, or places the raw
+  value in any diagnostic context — the same discipline as
+  `on_complete`, and a hard constraint on any implementation.
 
 ## Output-language activation (binding ordering constraint)
 
