@@ -2997,6 +2997,10 @@ cli:
       invalid_value: 'Invalid value for %{name}: %{value}'
       no_active_profile: No active profile. Run 'aeat config profile create NAME --tax-id
         <NIF/CIF/DNI/NIE>' first.
+      profile_session_absent: You are not logged in. Run `aeat config login` to unlock
+        your profile.
+      profile_session_expired: Your profile session has expired. Run `aeat config
+        login` to sign in again.
       unknown_key: 'Unknown configuration key: %{name}. Run ''aeat config profile
         list'' to see the available keys.'
     get:

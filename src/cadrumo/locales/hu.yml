@@ -3157,6 +3157,10 @@ cli:
       invalid_value: 'Érvénytelen érték a(z) %{name} mezőhöz: %{value}'
       no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create
         NÉV --tax-id <NIF/CIF/DNI/NIE>`.'
+      profile_session_absent: Nem vagy bejelentkezve. Futtasd az `aeat config login`
+        parancsot a profilod feloldásához.
+      profile_session_expired: A profil-munkameneted lejárt. Futtasd az `aeat config
+        login` parancsot az újbóli bejelentkezéshez.
       unknown_key: 'Ismeretlen konfigurációs kulcs: %{name}. Futtassa: `aeat config
         profile list` az elérhető kulcsok megjelenítéséhez.'
     get:
