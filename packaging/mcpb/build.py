@@ -34,6 +34,8 @@ from dev.packaging.uv_constraints import (  # noqa: E402
     render_constraints_file,
 )
 
+from cadrumo.agent import PRODUCT_AUTHOR_NAME  # noqa: E402
+
 _MANIFEST = _HERE / "manifest.json"
 _UTF_8: Final[str] = "utf-8"
 _DISTRIBUTIONS: Final[tuple[str, str, str]] = (
@@ -204,6 +206,13 @@ def load_manifest() -> dict[str, object]:
     missing = [key for key in required if key not in data]
     if missing:
         raise ManifestError(f"manifest.json missing required fields: {', '.join(missing)}")
+    author = data["author"]
+    if not isinstance(author, dict) or author.get("name") != PRODUCT_AUTHOR_NAME:
+        observed = author.get("name") if isinstance(author, dict) else author
+        raise ManifestError(
+            "manifest.json author.name must be the derived product author "
+            f"'{PRODUCT_AUTHOR_NAME}', got {observed!r}",
+        )
     if data["manifest_version"] != "0.4":
         raise ManifestError("manifest.json must use MCPB manifest_version 0.4")
     server = data["server"]
@@ -240,6 +249,8 @@ def stamped_manifest(cohort: PythonCohort) -> dict[str, object]:
     """Bind the bundle manifest to one canonical product-wheel cohort."""
     data = load_manifest()
     data["version"] = cohort.version
+    author = cast("dict[str, object]", data["author"])
+    author["name"] = PRODUCT_AUTHOR_NAME
     server = cast("dict[str, object]", data["server"])
     mcp_config = cast("dict[str, object]", server["mcp_config"])
     env = cast("dict[str, object]", mcp_config["env"])
