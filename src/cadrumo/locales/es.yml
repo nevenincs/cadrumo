@@ -7026,6 +7026,40 @@ wizard:
             label: H - hombre
           m:
             label: M - mujer
+    descendientes:
+      adoption-date:
+        prompt: Fecha de adopción (deje en blanco si no es adoptado)
+      birth-date:
+        prompt: Fecha de nacimiento
+      convivencia:
+        prompt: ¿Este descendiente convive con usted?
+      count:
+        help: 'Cuente los hijos que pueden dar derecho al mínimo por descendientes
+          (art. 58 LIRPF): menores de 25 años (o cualquier edad con discapacidad)
+          que convivan con usted.'
+        prompt: ¿Cuántos descendientes (hijos) quiere declarar?
+      custodia-compartida:
+        prompt: ¿La custodia es compartida con el otro progenitor?
+      discapacidad:
+        choices:
+          '0':
+            label: Sin discapacidad
+          '33':
+            label: Del 33% al 64%
+          '65':
+            label: 65% o más
+        prompt: Grado de discapacidad
+      gastos-guarderia:
+        help: Importes pagados a una guardería o centro de educación infantil autorizado
+          (art. 81 bis LIRPF) que incrementan la deducción por maternidad; euros enteros.
+        prompt: Gastos de guardería pagados en el año de declaración (euros)
+      meses-madre-trabajo:
+        help: 'Para la deducción por maternidad (art. 81 LIRPF): meses (0-12) en que
+          la madre cotizó a la Seguridad Social con el hijo menor de 3 años.'
+        prompt: Meses que la madre trabajó con el hijo menor de 3 años (año de declaración)
+      nif:
+        prompt: NIF/NIE del descendiente (deje en blanco si no tiene)
+      title: Descendientes
     description: Asistente de configuración para preparar las declaraciones
     enrollment:
       enrollment-large-company:
