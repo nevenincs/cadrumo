@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#ledger-evidence-atomicity'
 date: '2026-07-17'
-modified: '2026-07-19'
+modified: '2026-07-24'
 tier: L2
 related:
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
@@ -13,6 +13,7 @@ related:
   - '[[2026-07-17-cli-authority-verb-conformance-audit]]'
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
   - '[[2026-07-17-ledger-evidence-atomicity-audit]]'
+  - '[[2026-07-17-ledger-evidence-atomicity-adr]]'
 ---
 
 # `ledger-evidence-atomicity` plan

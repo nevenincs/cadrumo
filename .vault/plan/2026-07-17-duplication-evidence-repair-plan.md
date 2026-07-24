@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#duplication-evidence-repair'
 date: '2026-07-17'
-modified: '2026-07-19'
+modified: '2026-07-24'
 tier: L1
 related:
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
@@ -12,6 +12,7 @@ related:
   - '[[2026-07-16-cli-authority-verb-conformance-duplication-authority-audit]]'
   - '[[2026-07-17-cli-authority-verb-conformance-audit]]'
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
+  - '[[2026-07-17-duplication-evidence-repair-adr]]'
 ---
 
 # `duplication-evidence-repair` plan

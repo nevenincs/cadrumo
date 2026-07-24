@@ -26,6 +26,7 @@ related:
   - '[[2026-07-17-ledger-evidence-atomicity-adr]]'
   - '[[2026-07-17-ledger-evidence-atomicity-audit]]'
   - '[[2026-07-17-ledger-evidence-atomicity-plan]]'
+  - '[[2026-07-24-ledger-evidence-atomicity-close-honesty-review-audit]]'
 ---
 
 # `ledger-evidence-atomicity` feature index
@@ -41,6 +42,7 @@ Auto-generated index of all documents tagged with `#ledger-evidence-atomicity`.
 ### audit
 
 - `2026-07-17-ledger-evidence-atomicity-audit` - `ledger-evidence-atomicity` audit: `ledger evidence durable-layer continuous-gate review`
+- `2026-07-24-ledger-evidence-atomicity-close-honesty-review-audit` - `ledger-evidence-atomicity` audit: `Close honesty review`
 
 ### exec
 

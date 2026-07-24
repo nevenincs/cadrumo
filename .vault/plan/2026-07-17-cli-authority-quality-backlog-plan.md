@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#cli-authority-quality-backlog'
 date: '2026-07-17'
-modified: '2026-07-19'
+modified: '2026-07-24'
 tier: L2
 related:
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
@@ -13,6 +13,7 @@ related:
   - '[[2026-07-17-cli-authority-verb-conformance-audit]]'
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
   - '[[2026-07-15-distribution-installation-readiness-code-review-audit]]'
+  - '[[2026-07-17-cli-authority-quality-backlog-adr]]'
 ---
 
 # `cli-authority-quality-backlog` plan

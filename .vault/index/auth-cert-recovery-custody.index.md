@@ -32,6 +32,7 @@ related:
   - '[[2026-07-17-auth-cert-recovery-custody-adr]]'
   - '[[2026-07-17-auth-cert-recovery-custody-audit]]'
   - '[[2026-07-17-auth-cert-recovery-custody-plan]]'
+  - '[[2026-07-24-auth-cert-recovery-custody-close-honesty-review-audit]]'
 ---
 
 # `auth-cert-recovery-custody` feature index
@@ -47,6 +48,7 @@ Auto-generated index of all documents tagged with `#auth-cert-recovery-custody`.
 ### audit
 
 - `2026-07-17-auth-cert-recovery-custody-audit` - `auth-cert-recovery-custody` audit: `certificate secret door safety review`
+- `2026-07-24-auth-cert-recovery-custody-close-honesty-review-audit` - `auth-cert-recovery-custody` audit: `close honesty review`
 
 ### exec
 

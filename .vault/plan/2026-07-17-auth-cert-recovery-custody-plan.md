@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#auth-cert-recovery-custody'
 date: '2026-07-17'
-modified: '2026-07-19'
+modified: '2026-07-24'
 tier: L2
 related:
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
@@ -13,6 +13,7 @@ related:
   - '[[2026-07-17-cli-authority-verb-conformance-audit]]'
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
   - '[[2026-07-17-auth-cert-recovery-custody-audit]]'
+  - '[[2026-07-17-auth-cert-recovery-custody-adr]]'
 ---
 
 # `auth-cert-recovery-custody` plan

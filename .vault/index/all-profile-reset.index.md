@@ -40,6 +40,7 @@ related:
   - '[[2026-07-17-all-profile-reset-adr]]'
   - '[[2026-07-17-all-profile-reset-audit]]'
   - '[[2026-07-17-all-profile-reset-plan]]'
+  - '[[2026-07-24-all-profile-reset-close-honesty-review-audit]]'
 ---
 
 # `all-profile-reset` feature index
@@ -55,6 +56,7 @@ Auto-generated index of all documents tagged with `#all-profile-reset`.
 ### audit
 
 - `2026-07-17-all-profile-reset-audit` - `all-profile-reset` audit: `all-profile reset safety closure review`
+- `2026-07-24-all-profile-reset-close-honesty-review-audit` - `all-profile-reset` audit: `all-profile-reset campaign close honesty review`
 
 ### exec
 
