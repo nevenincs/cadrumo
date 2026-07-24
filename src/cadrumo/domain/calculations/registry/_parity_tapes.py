@@ -10,7 +10,7 @@ import re
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Literal, cast
+from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -259,13 +259,12 @@ def _as_json_object(value: object) -> dict[str, object] | None:
     """
     if not isinstance(value, dict):
         return None
-    for key in value:
+    narrowed: dict[str, object] = {}
+    for key, item in value.items():
         if not isinstance(key, str):
             return None
-    # CAST-RATIONALE-JSON-OBJECT-STR-KEYS: the loop above rejects any non-str key,
-    # so this value is a str-keyed dict at runtime; the cast restores the static
-    # guarantee the isinstance narrow erases.
-    return cast("dict[str, object]", value)
+        narrowed[key] = item
+    return narrowed
 
 
 def _diff_paths(left: object, right: object, prefix: str = "") -> tuple[str, ...]:
