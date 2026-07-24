@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#all-profile-reset'
 date: '2026-07-17'
-modified: '2026-07-24'
+modified: '2026-07-25'
 tier: L2
 related:
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
@@ -14,6 +14,16 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
   - '[[2026-07-17-all-profile-reset-adr]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `all-profile-reset` plan
 
@@ -61,6 +71,7 @@ Cut the config reset and sandbox command grammar over to the reset orchestration
 - [x] `P04.S23` - Prove switching and strong logout through real persisted custody state; `src/cadrumo/entrypoints/cli/tests/test_config_custody_profile_lifecycle.py`.
 - [x] `P04.S24` - Prove reset start, status, resume, operation IDs, retention override, reasons, and confirmations across real processes; `src/cadrumo/entrypoints/cli/tests/test_config_reset_lifecycle.py`.
 - [x] `P04.S25` - Require yes for reset start and resume while keeping status non-destructive; `src/cadrumo/entrypoints/cli/tests/test_destructive_verbs_require_yes.py`.
+- [ ] `P04.S32` - Repair the two failing tests in the P04.S23 carried evidence file that a same-day peer commit turned red by retiring the active-profile environment override, so the carried-forward completeness claim rests on green evidence, coordinating with the owner of the environment severance rather than re-implementing the retired mechanism, gated on the module passing in the integration lane; `src/cadrumo/entrypoints/cli/tests/test_config_custody_profile_lifecycle.py`.
 
 ### Phase `P05` - Contract migration for the reset family
 

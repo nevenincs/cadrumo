@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#auth-cert-recovery-custody'
 date: '2026-07-17'
-modified: '2026-07-24'
+modified: '2026-07-25'
 tier: L2
 related:
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
@@ -15,6 +15,16 @@ related:
   - '[[2026-07-17-auth-cert-recovery-custody-audit]]'
   - '[[2026-07-17-auth-cert-recovery-custody-adr]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `auth-cert-recovery-custody` plan
 
@@ -101,6 +111,7 @@ Remove the module-global test-double seam from the production secret-store facto
 The cert-secret door safety review returned PASS with one Low hardening item: certificate secret set accepts the PKCS12 passphrase as an argv value, which lands the secret in the process table and shell history even though the hidden-prompt and stdin default is safe. This phase removes the argv affordance, deferred until the operator P04 passphrase door commits so it reuses that door bounded-stdin no-echo secret-input infrastructure rather than building a parallel authority.
 
 - [x] `P08.S44` - DEFERRED until the operator P04 passphrase door commits: make certificate secret set reject the passphrase as an argv value and read it only via the hidden prompt or bounded stdin, reusing the P04 door _secure_input.py bounded-stdin no-echo infrastructure rather than building a parallel secret-input authority, gated on a test proving the passphrase cannot be supplied as an argv value and is read only through hidden prompt or bounded stdin; `src/cadrumo/entrypoints/cli/_config/_certificate.py`.
+- [ ] `P08.S45` - Perform and persist the independent safety review of the P04 passphrase and recovery CLI door that the close honesty review found was never carried out, covering secure TTY handling, no-echo retype, secrets-stdin bounds, and mnemonic absence from argv, envelopes, logs and help, with the review persisted as a vault audit and every item it surfaces tracked as a Step or formally deferred; `.vault/audit`.
 
 ## Description
 
