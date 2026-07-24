@@ -9,6 +9,8 @@ import re
 import shutil
 import subprocess
 import sys
+import urllib.error
+import urllib.request
 from collections.abc import Sequence
 from dataclasses import dataclass
 from http.client import HTTPException, HTTPSConnection
@@ -38,6 +40,18 @@ _DOCTREE_EXCLUDES = (".doctrees/*", "*/.doctrees/*")
 _ENDPOINT_TIMEOUT_SECONDS = 20
 _LEGACY_DOCS_URL = "https://neve.md/cadrumo/docs"
 _MISSING_DOCS_PATH = "__cadrumo-delivery-missing__.html"
+
+#: The runtime download payload the docs download page enhances with
+#: (``initDownloadCards`` in ``docs/_static/cadrumo-docs.js``). It is attached to
+#: every published GitHub release by ``publish-release.yml`` and pulled — version
+#: agnostically — from the latest release into ``docs/_static`` before the site
+#: build so the served ``_static/download-latest.json`` reflects the current
+#: release. Absent it (no release yet), the offline Tier-1 channel table is the
+#: floor and the site build proceeds unchanged.
+_DOWNLOAD_LATEST_URL = "https://github.com/nevenincs/cadrumo/releases/latest/download/download-latest.json"
+_DOWNLOAD_LATEST_SCHEMA = "cadrumo.download-latest.v1"
+_DOWNLOAD_LATEST_STATIC_PATH = ("docs", "_static", "download-latest.json")
+_DOWNLOAD_LATEST_TIMEOUT_SECONDS = 20
 
 
 @dataclass(frozen=True)
@@ -102,6 +116,40 @@ def _site_build_environment() -> dict[str, str]:
         "CADRUMO_DOCS_JOBS": "1",
         "CADRUMO_DOCS_PAGEFIND_MODE": "pages",
     }
+
+
+def _refresh_download_latest(repo_root: Path) -> None:
+    """Pull the latest release's ``download-latest.json`` into ``docs/_static``.
+
+    Fetches the version-agnostic latest-release asset (attached by
+    ``publish-release.yml``), validates it is the expected schema, and writes it
+    to ``docs/_static/download-latest.json`` so the built site serves a current
+    payload. Any failure — no release yet, network error, or an unexpected body
+    (e.g. a 404 page) — degrades silently: the offline Tier-1 channel table is the
+    floor and the build proceeds. Never raises.
+    """
+    destination = repo_root.joinpath(*_DOWNLOAD_LATEST_STATIC_PATH)
+    request = urllib.request.Request(  # noqa: S310 — fixed HTTPS GitHub release URL
+        _DOWNLOAD_LATEST_URL,
+        headers={"User-Agent": "cadrumo-docs-delivery"},
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=_DOWNLOAD_LATEST_TIMEOUT_SECONDS) as response:  # noqa: S310
+            body = response.read()
+    except (urllib.error.URLError, HTTPException, TimeoutError, OSError) as exc:
+        print(f"download-latest.json unavailable ({exc}); serving the offline channel table.", flush=True)
+        return
+    try:
+        payload = json.loads(body)
+    except json.JSONDecodeError:
+        print("download-latest.json response was not JSON; serving the offline channel table.", flush=True)
+        return
+    if not isinstance(payload, dict) or payload.get("schema_name") != _DOWNLOAD_LATEST_SCHEMA:
+        print("download-latest.json was not the expected payload; serving the offline channel table.", flush=True)
+        return
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_bytes(body)
+    print(f"Refreshed {destination.relative_to(repo_root)} from the latest release.", flush=True)
 
 
 def _build_site(repo_root: Path) -> Path:
@@ -506,6 +554,7 @@ def _publish(aws: str, repo_root: Path) -> int:
     _authenticated_account_id(aws, repo_root)
     target = _stack_target(aws, repo_root)
     _verify_distribution_alias(aws, repo_root, target.distribution_id)
+    _refresh_download_latest(repo_root)
     html_root = _build_site(repo_root)
     _build_language_roots(repo_root, html_root)
     _validate_site_artifacts(html_root)
