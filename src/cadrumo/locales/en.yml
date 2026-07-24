@@ -1459,8 +1459,10 @@ application:
       ccaa_defaulted: No comunidad autónoma was chosen, so %{ccaa} was assumed for
         this profile. Autonomic deductions and the autonomic part of the tax scale
         are calculated for %{ccaa}. Set --tax-residence-ccaa to use a different comunidad.
-      modify_no_resume: application.wizard.notices.modify_no_resume
-      setup_saved_resume_later: application.wizard.notices.setup_saved_resume_later
+      modify_no_resume: Changes in modify mode are staged only — leaving without submitting
+        discards them; save-and-resume is available on profile create only.
+      setup_saved_resume_later: 'Saved. Resume anytime with: aeat config profile create
+        %{name}'
     output_labels:
       active_profile: Active profile
       next: Next

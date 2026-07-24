@@ -1584,8 +1584,11 @@ application:
         %{ccaa} per a aquest perfil. Les deduccions autonòmiques i el tram autonòmic
         de l'escala es calculen per a %{ccaa}. Feu servir --tax-residence-ccaa per
         triar una altra comunitat.
-      modify_no_resume: application.wizard.notices.modify_no_resume
-      setup_saved_resume_later: application.wizard.notices.setup_saved_resume_later
+      modify_no_resume: 'Els canvis en mode edició només queden preparats: sortir
+        sense enviar els descarta; desar i reprendre només està disponible en crear
+        el perfil.'
+      setup_saved_resume_later: 'Desat. Reprèn quan vulguis amb: aeat config profile
+        create %{name}'
     output_labels:
       active_profile: Perfil actiu
       next: Següent
