@@ -162,7 +162,10 @@ _CALLABLE_LINE_LIMIT_OVERRIDES = {
     ("src/cadrumo/application/overview/_calendar.py", "build_overview_calendar"): 192,  # SPLIT-CANDIDATE
     ("src/cadrumo/application/user_profile/_custody_carry.py", "_natural_key_resolvers"): 310,  # SPLIT-CANDIDATE
     ("src/cadrumo/core/observability/_context.py", "run_context"): 195,  # SPLIT-CANDIDATE
-    ("src/cadrumo/entrypoints/cli/_ledger.py", "ledger_add"): 250,  # SPLIT-CANDIDATE (regrew to 245; small-headroom rebaseline)
+    (
+        "src/cadrumo/entrypoints/cli/_ledger.py",
+        "ledger_add",
+    ): 250,  # SPLIT-CANDIDATE (regrew to 245; small-headroom rebaseline)
     ("src/cadrumo/application/user_profile/_profile_repository.py", "create"): 188,  # SPLIT-CANDIDATE
     ("src/cadrumo/application/aggregation/_iva_ledger.py", "_classify_iva_transaction"): 208,  # SPLIT-CANDIDATE
     ("src/cadrumo/application/modelo/_calculation_actions.py", "_resolve_bucket_source_mesh"): 200,  # SPLIT-CANDIDATE

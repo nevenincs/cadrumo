@@ -148,9 +148,7 @@ class BucketSession:
             raise _storage_validation_error("bucket_id must be non-empty")
         if idle_minutes <= 0:
             raise _storage_validation_error("idle_minutes must be a strict positive integer")
-        resolved_absolute_minutes = (
-            DEFAULT_SESSION_ABSOLUTE_MINUTES if absolute_minutes is None else absolute_minutes
-        )
+        resolved_absolute_minutes = DEFAULT_SESSION_ABSOLUTE_MINUTES if absolute_minutes is None else absolute_minutes
         if resolved_absolute_minutes <= 0:
             raise _storage_validation_error("absolute_minutes must be a strict positive integer")
         if len(kek) != _KEK_BYTES:

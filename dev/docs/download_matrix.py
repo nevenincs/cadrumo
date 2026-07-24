@@ -179,10 +179,7 @@ def _install_block(channel: DownloadChannel) -> str:
         commands = "\n".join(channel.install_commands)
         return f"{heading}\n\n```bash\n{commands}\n```\n"
     if channel.availability is Availability.AVAILABLE and not channel.install_commands:
-        return (
-            f"{heading}\n\n"
-            f"Download the release-page artifact and install it through {channel.registry}.\n"
-        )
+        return f"{heading}\n\nDownload the release-page artifact and install it through {channel.registry}.\n"
     return (
         f"{heading}\n\n"
         f"The {channel.registry} opens at public launch; until then, install the "
@@ -221,7 +218,7 @@ def render_zone(descriptor: DownloadDescriptor) -> str:
     # Tier-2 progressive-enhancement mount: initDownloadCards() fills this with
     # the release version and direct asset links when download-latest.json is
     # present, and leaves it empty (this table is the floor) when it is absent.
-    lines.append('<div data-cadrumo-downloads hidden></div>')
+    lines.append("<div data-cadrumo-downloads hidden></div>")
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -235,8 +232,7 @@ def _inject_zone(page_text: str, zone_body: str) -> str:
     end = page_text.find(_ZONE_END)
     if begin == -1 or end == -1 or end < begin:
         raise ValueError(
-            f"docs/download.md is missing the generated marker zone; expected "
-            f"{_ZONE_BEGIN!r} ... {_ZONE_END!r}",
+            f"docs/download.md is missing the generated marker zone; expected {_ZONE_BEGIN!r} ... {_ZONE_END!r}",
         )
     prefix = page_text[:begin]
     suffix = page_text[end + len(_ZONE_END) :]

@@ -246,7 +246,9 @@ def test_record_design_pdf_corpus_is_discovered_and_parseable() -> None:
     # rename/removal trips this gate rather than silently shrinking the corpus.
     assert discovered >= _NON_FIELD_ROW_CORPUS_PDFS
 
-    field_row_pdfs = tuple(path for path in pdfs if path.relative_to(_RECORD_DESIGN_ROOT) not in _NON_FIELD_ROW_CORPUS_PDFS)
+    field_row_pdfs = tuple(
+        path for path in pdfs if path.relative_to(_RECORD_DESIGN_ROOT) not in _NON_FIELD_ROW_CORPUS_PDFS
+    )
     parsed = {
         path.relative_to(_RECORD_DESIGN_ROOT): sheets
         for path, sheets in _official_record_designs(field_row_pdfs).items()

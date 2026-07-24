@@ -288,11 +288,7 @@ def test_only_one_jscpd_invocation_exists_in_the_tree() -> None:
     ).stdout.splitlines()
 
     executable_suffixes = {".py", ".sh", ".bash", ".ps1", ".cmd", ".bat"}
-    candidates = [
-        rel
-        for rel in tracked
-        if Path(rel).name == "justfile" or Path(rel).suffix in executable_suffixes
-    ]
+    candidates = [rel for rel in tracked if Path(rel).name == "justfile" or Path(rel).suffix in executable_suffixes]
 
     # The one canonical runner, and this test itself: it quotes the invocation
     # in a docstring and names the literal it scans for, neither of which is a
@@ -300,9 +296,7 @@ def test_only_one_jscpd_invocation_exists_in_the_tree() -> None:
     exempt = {"dev/audit/duplication.py", "dev/audit/tests/test_duplication.py"}
 
     builders = [
-        rel
-        for rel in candidates
-        if rel not in exempt and "jscpd@" in (_REPO_ROOT / rel).read_text(encoding="utf-8")
+        rel for rel in candidates if rel not in exempt and "jscpd@" in (_REPO_ROOT / rel).read_text(encoding="utf-8")
     ]
 
     assert builders == [], f"jscpd must be invoked from exactly one runner; found: {builders}"

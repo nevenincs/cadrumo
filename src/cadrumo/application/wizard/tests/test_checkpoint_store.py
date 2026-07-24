@@ -89,9 +89,7 @@ def _record_values(bucket_id: str) -> dict[str, str]:
 def _setup_completed_event_count(bucket_id: str) -> int:
     with profile_storage_session(bucket_id):
         catalogue = BucketEventHistoryRepository().load()
-    return sum(
-        1 for event in catalogue.events.values() if event.event_type is BucketEventType.PROFILE_SETUP_COMPLETED
-    )
+    return sum(1 for event in catalogue.events.values() if event.event_type is BucketEventType.PROFILE_SETUP_COMPLETED)
 
 
 # ── declaration (g) ────────────────────────────────────────────────

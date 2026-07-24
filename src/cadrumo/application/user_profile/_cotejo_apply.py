@@ -207,9 +207,7 @@ def apply_cotejo(
     fresh = divergence_facts(divergences)
     fresh_paths = {fact.path for fact in fresh}
     clearing = tuple(
-        UserProfileFact(path=path, value=None)
-        for path in _existing_divergence_paths(record)
-        if path not in fresh_paths
+        UserProfileFact(path=path, value=None) for path in _existing_divergence_paths(record) if path not in fresh_paths
     )
     updated = set_active_fields(state, (*clearing, *tuple(adopted), *fresh))
     build_lifecycle_service(bucket_id=profile_id).record_censo_applied(

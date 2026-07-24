@@ -78,11 +78,7 @@ def test_category_hints_carry_resolved_translations_not_key_fallbacks() -> None:
         hints = _hints()
 
     assert hints, "no spending categories were enumerated"
-    unresolved = sorted(
-        category.value
-        for category, hint in hints.items()
-        if "categories.registry." in hint
-    )
+    unresolved = sorted(category.value for category, hint in hints.items() if "categories.registry." in hint)
     assert not unresolved, (
         f"category hints still contain unresolved registry keys for {unresolved}; "
         "the equality assertion above cannot discriminate while hints render as "

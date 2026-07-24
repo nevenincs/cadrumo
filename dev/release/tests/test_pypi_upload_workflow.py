@@ -43,9 +43,7 @@ def _steps() -> list[Mapping[str, Any]]:
 def _run_surface(job: Mapping[str, Any]) -> str:
     steps = job["steps"]
     assert isinstance(steps, list)
-    return "\n".join(
-        str(step.get("run", "")) for step in steps if isinstance(step, Mapping) and "run" in step
-    )
+    return "\n".join(str(step.get("run", "")) for step in steps if isinstance(step, Mapping) and "run" in step)
 
 
 def test_opt_in_gate_is_the_first_step() -> None:
@@ -64,9 +62,7 @@ def test_reused_workspace_is_cleaned_before_download() -> None:
     """A stale-artifact clean of dist/ precedes the release download step."""
     steps = _steps()
     clean = next(i for i, s in enumerate(steps) if "rm -rf dist" in str(s.get("run", "")))
-    download = next(
-        i for i, s in enumerate(steps) if "gh release download" in str(s.get("run", ""))
-    )
+    download = next(i for i, s in enumerate(steps) if "gh release download" in str(s.get("run", "")))
     assert clean < download
 
 
