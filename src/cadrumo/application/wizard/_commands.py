@@ -67,6 +67,7 @@ from ..flows import (
 )
 from ._catalogue import SETUP_FLOW
 from ._errors import WizardMissingFlagError
+from ._format_hints import attach_format_hints
 from ._models import WizardFlow, WizardQuestion, WizardWidget
 from ._persistence import WizardPersistMode
 from ._prompter import (
@@ -958,7 +959,7 @@ def _prepare_interactive_flow(
     flow has no repeating groups), so the review table renders each
     on-record value beside the staged answer.
     """
-    definition = flow_definition_from_wizard_flow(flow, checkpoint=_SETUP_CHECKPOINT)
+    definition = attach_format_hints(flow_definition_from_wizard_flow(flow, checkpoint=_SETUP_CHECKPOINT))
     if mode == "create":
         return _seed_flow_definition(definition, dict(canonical)), None
 
