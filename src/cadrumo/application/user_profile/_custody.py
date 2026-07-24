@@ -140,7 +140,7 @@ def _emit_custody_event(
     Passphrase rotation and the recovery-code lifecycle govern access to
     everything else the vault holds, so each durable mutation leaves a
     queryable trail an operator (or an investigator after a suspected
-    compromise) can read back through ``aeat config bucket history``.
+    compromise) can read back through ``aeat config profile history``.
 
     ``payload`` MUST carry only non-secret witnesses — the recovery
     fingerprint, the store location. No passphrase, mnemonic, or key
