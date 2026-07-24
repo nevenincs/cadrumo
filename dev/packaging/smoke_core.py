@@ -148,6 +148,27 @@ def _repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
+def _head_extract(repo_root: Path, work_dir: Path) -> Path:
+    """Extract a pristine ``git archive HEAD`` tree to build a lane's artifacts from.
+
+    A working tree may carry uncommitted changes (including registry TOML
+    mid-edits) that a tree-built artifact would sweep into a lane's
+    registry-validation probes, failing them for reasons outside that lane's
+    contract. In the multi-agent factory worktree the failure mode is sharper
+    still: a build can snapshot a torn peer edit, so the artifact corresponds to
+    no commit at all and the lane fails with what looks like a packaging
+    regression. Building from the HEAD archive keeps the proof bound to a
+    defined commit; on a clean checkout (CI) it is identical to the tree.
+    """
+    archive = work_dir / "head.zip"
+    extract_root = work_dir / "head"
+    _run(["git", "archive", "--format=zip", "-o", str(archive), "HEAD"], cwd=repo_root, env=_git_env(repo_root))
+    with zipfile.ZipFile(archive) as bundle:
+        bundle.extractall(extract_root)
+    archive.unlink()
+    return extract_root
+
+
 def _wsl_path_from_windows_gitdir(gitdir: str) -> Path | None:
     """Translate a Windows gitdir pointer for WSL-mounted worktrees."""
     if os.name == "nt":

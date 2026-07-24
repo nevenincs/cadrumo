@@ -63,24 +63,6 @@ print(f"three-wheel-cohort-ok: {root_version}")
 """
 
 
-def _head_extract(repo_root: Path, work_dir: Path) -> Path:
-    """Extract a pristine ``git archive HEAD`` tree to build the lane's wheels from.
-
-    A working tree may carry uncommitted changes (including registry TOML
-    mid-edits) that a tree-built wheel would sweep into this lane's
-    registry-validation probes, failing them for reasons outside the split
-    contract. Building from the HEAD archive keeps the proof clean of
-    uncommitted state; on a clean checkout (CI) it is identical to the tree.
-    """
-    archive = work_dir / "head.zip"
-    extract_root = work_dir / "head"
-    _run(["git", "archive", "--format=zip", "-o", str(archive), "HEAD"], cwd=repo_root)
-    with zipfile.ZipFile(archive) as bundle:
-        bundle.extractall(extract_root)
-    archive.unlink()
-    return extract_root
-
-
 def _build_root_wheel(build_root: Path, work_dir: Path, uv: str) -> Path:
     """Build the command-bearing wheel and assert split-owned binaries stay external."""
     wheel_dir = work_dir / "wheel"

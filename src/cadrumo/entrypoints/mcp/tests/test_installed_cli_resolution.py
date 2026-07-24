@@ -21,12 +21,11 @@ from pathlib import Path
 import pytest
 from dev.packaging.installed_mcp_oracle import run_installed_mcp_oracle
 from dev.packaging.installed_tax_oracle import EXPECTED_LEGAL_REF
-from dev.packaging.smoke_core import _run, _venv_bin, _venv_python
+from dev.packaging.smoke_core import _head_extract, _run, _venv_bin, _venv_python
 from dev.packaging.smoke_pip_core import _create_pip_venv
 from dev.packaging.smoke_split_install import (
     _build_data_wheels,
     _build_root_wheel,
-    _head_extract,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
