@@ -9,6 +9,13 @@ history must not see it): export under ``--encrypt`` collects it via a hidden
 confirm-retype prompt or one bounded strict-JSON ``--secrets-stdin`` object,
 and import auto-detects an encrypted envelope and collects the passphrase the
 same way, through the shared :mod:`._secure_input` channel.
+
+Both verbs carry an interactive mode: when the destination / transport
+(export) or the bundle path (import) is omitted on a host that can prompt,
+the missing answers are collected through the paged flow substrate (see
+:mod:`._profile_bundle_flow`) and acted on by this same canonical path; a
+fully-specified invocation never launches a flow, and a non-interactive
+host keeps its typed refusal.
 """
 
 from __future__ import annotations
@@ -238,8 +245,8 @@ def _register_profile_export_command(profile_app: typer.Typer) -> None:
             None,
             help=tr("cli.config.profile.export_name_help", default="Profile to export; defaults to active."),
         ),
-        out: Path = typer.Option(
-            ...,
+        out: Path | None = typer.Option(
+            None,
             "--to",
             help=tr("cli.config.profile.export_out_help", default="Destination path for the profile bundle."),
         ),
@@ -289,6 +296,29 @@ def _register_profile_export_command(profile_app: typer.Typer) -> None:
         # ``--secrets-stdin`` only carries the encryption passphrase, so it
         # implies the encrypted transport.
         encrypted_mode = encrypt or secrets_stdin
+        if not secrets_stdin and (out is None or (not encrypted_mode and not cleartext_local)):
+            from ._profile_bundle_flow import collect_export_request_interactively, interactive_capability
+
+            capability = interactive_capability()
+            if capability is not None:
+                collected = collect_export_request_interactively(
+                    name=name,
+                    destination=out,
+                    encrypt=encrypt,
+                    cleartext_local=cleartext_local,
+                    capability=capability,
+                )
+                name = collected.profile_name
+                out = collected.destination
+                if not encrypt and not cleartext_local:
+                    encrypt = collected.encrypt
+                    cleartext_local = not collected.encrypt
+                encrypted_mode = encrypt or secrets_stdin
+        if out is None:
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.profile.export_requires_destination",
+                suggestion="aeat config profile export NAME --to bundle.json --encrypt",
+            )
         _validate_export_transport_options(encrypt=encrypted_mode, cleartext_local=cleartext_local)
         passphrase: str | None = None
         if encrypted_mode:
@@ -438,8 +468,8 @@ def _register_profile_import_command(
     )
     def config_profile_import(
         ctx: typer.Context,
-        path: Path = typer.Argument(
-            ...,
+        path: Path | None = typer.Argument(
+            None,
             help=tr("cli.config.profile.import_path_help", default="Path to the profile bundle."),
         ),
         secrets_stdin: bool = typer.Option(
@@ -461,6 +491,18 @@ def _register_profile_import_command(
     ) -> None:
         """Read a portable profile bundle from a JSON file and register it."""
         _activate_subcommand_output_language(ctx, output_language)
+        if path is None:
+            from ._profile_bundle_flow import collect_import_request_interactively, interactive_capability
+
+            capability = interactive_capability()
+            if capability is None:
+                raise _CliRefusedBoundaryError(
+                    translated_message="cli.config.profile.import_requires_path",
+                    suggestion="aeat config profile import bundle.json",
+                )
+            collected = collect_import_request_interactively(label=label, capability=capability)
+            path = collected.path
+            label = collected.label
         from ....application.user_profile import (
             deserialize_profile_bundle,
             missing_filing_baseline_flags,
