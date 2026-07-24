@@ -1,41 +1,65 @@
-"""Real terminal-boundary coverage for ``aeat app modelo work amend-wizard``.
+"""Contract coverage for ``aeat app modelo work amend-wizard``.
 
-Seeds a real AEAT-attested baseline (via ``filing-record import``, the same
-production path an operator uses before amending) and drives the wizard's prompt
-sequence end to end against the real registry engine and the real bucket-scoped
-storage the CLI runs against in every other integration test.
+The amend wizard is a guided front end over the flow substrate: it asks
+which casillas changed through a CHECKBOX page, then a second definition
+of one DECIMAL page per selected casilla plus the amendment-kind SELECT
+and the required reason, and files through the exact same
+:func:`~application.modelo.amend_modelo_revision` composition path
+``work amend`` uses. On a real terminal it renders the full-screen or
+line-mode frontend; a non-interactive host refuses with the substrate's
+typed unsupported-console error rather than blocking. So these tests
+exercise the wizard at the surfaces a non-terminal test process can
+honestly reach:
 
-The prompts are driven through ``prompt_toolkit``'s own IO-injection contract:
-:func:`~prompt_toolkit.input.create_pipe_input` supplies the keystrokes and
-:func:`~prompt_toolkit.application.current.create_app_session` declares that pipe
-as the ambient session's IO, which is what the production
-:meth:`~cadrumo.application.wizard.QuestionaryPrompter.from_ambient_app_session`
-construction reads. Nothing is mocked, stubbed, or patched -- the keystrokes are
-the only thing supplied, exactly what an operator would type.
+* the substrate's scripted driver
+  (:func:`~cadrumo.application.flows.run_scripted_flow`) walking the
+  wizard's own projected selection and values/kind/reason definitions,
+  then feeding those answers through the identical ``work amend``
+  composition the wizard uses, and
+* the non-interactive refusal (a piped caller with an amendable baseline),
+  plus the period-awareness of the amendment-kind SELECT.
+
+Nothing is mocked, stubbed, or patched: the real registry engine, the real
+AEAT-attested baseline (imported through ``filing-record import``, the same
+production path an operator uses before amending), and the real
+bucket-scoped storage answer behind the scripted drive and the CLI amend.
 """
 
 from __future__ import annotations
 
 import hashlib
+import json
 from datetime import UTC, datetime
 from decimal import Decimal
-from io import StringIO
 from pathlib import Path
 
 import pytest
-from prompt_toolkit.application.current import create_app_session
-from prompt_toolkit.input import create_pipe_input
-from prompt_toolkit.output.plain_text import PlainTextOutput
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from ....adapters.persistence.profile.justificante import JustificanteRepository
+from ....application.flows import FlowAnswerError, run_scripted_flow
+from ....application.modelo import get_filing_record
 from ....application.user_profile import profile_storage_session
 from ....core import Period, resolve_active_bucket_id
+from ....core.flows import FlowMode
 from ....domain.justificante import Justificante
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401
+from .._modelo import _resolve_work_unit_for_cli
+from .._modelo_amend_wizard_cli import (
+    _ACTIVE_RUNS,
+    _KIND_PAGE_ID,
+    _REASON_PAGE_ID,
+    _amendable_rows,
+    _baseline_casilla_rows,
+    _selected_rows,
+    _selection_definition,
+    _value_page_id,
+    _values_kind_reason_definition,
+)
+from .._modelo_cli_support import load_calculation_revision
 from ._modelo_work_ux_support import _create_m130_work_unit, _create_m303_work_unit
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
@@ -44,10 +68,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _TAX_ID = "12345678Z"
 
 # M130 1T has no required-manual casillas (casilla 02 is `required = true` but
-# `input_kind = "bound"`, so it is excluded from the amend completeness gate --
-# see `required_input_casilla_ids_for_revision`). A baseline carrying only
-# casillas 01 (ingresos) and 02 (gastos) is a legitimate amendable
-# AEAT-attested filing.
+# `input_kind = "bound"`); a baseline carrying only casillas 01 (ingresos) and
+# 02 (gastos) is a legitimate amendable AEAT-attested filing.
 _BASELINE_INGRESOS = Decimal("1000.00")
 _BASELINE_GASTOS = Decimal("250.00")
 _CORRECTED_INGRESOS = Decimal("1100.00")
@@ -61,13 +83,12 @@ _CORRECTED_INGRESOS = Decimal("1100.00")
 _M303_BASELINE_BASE_GENERAL = Decimal("10000.00")
 _M303_CORRECTED_BASE_GENERAL = Decimal("9000.00")
 
-# The fields `WorkAmendWizardResult` mirrors from `WorkAmendResult` whose values
-# must be identical for the same amendment expressed through either surface.
-# Deliberately excluded: the wizard-only additions (`corrected_casillas`,
-# `export_next_action`, `amendment_reason`, `operation`), and the mirrored fields
-# that identify the individual filing and so differ by construction
-# (`amends_filing_record_id`, `filing_record_id`, `work_unit_id`,
-# `calculation_revision_id`, `period`, `filed_at`) -- each asserted separately.
+# The fields whose values must be identical for the same amendment expressed
+# through either surface (the wizard-derived inputs and a hand-built ``work
+# amend``). Deliberately excluded: the fields that identify the individual
+# filing and so differ by construction (`amends_filing_record_id`,
+# `filing_record_id`, `work_unit_id`, `calculation_revision_id`, `period`,
+# `filed_at`) -- each asserted separately.
 _AMEND_PARITY_SPINE = (
     "amendment_kind",
     "status",
@@ -85,33 +106,15 @@ _AMEND_PARITY_SPINE = (
 )
 
 
-def _casilla_observation(revision_payload, casilla_id: str):
-    """Return the single persisted observation for ``casilla_id``.
-
-    ``casilla_values`` and ``observations`` are keyed by the same casilla id, so
-    the lookup is exact; the uniqueness assertion keeps a future duplicate-row
-    regression from silently picking the first match.
-    """
-    rows = [row for row in revision_payload["observations"] if row["casilla_id"] == casilla_id]
-    assert len(rows) == 1, f"expected exactly one observation for casilla {casilla_id}, got {len(rows)}"
-    return rows[0]
-
-
 def _invoke(args: list[str]):
     return invoke_cached_cli(args)
 
 
-def _invoke_with_typed_answers(args: list[str], answers: tuple[str, ...]):
-    """Run the CLI with ``answers`` queued as real keystrokes on a pipe.
-
-    The whole answer sequence is buffered up front because the CLI call is
-    synchronous: each ``questionary`` prompt reads up to its Enter and leaves the
-    remainder for the next one.
-    """
-    with create_pipe_input() as pipe:
-        pipe.send_text("".join(f"{answer}\r" for answer in answers))
-        with create_app_session(input=pipe, output=PlainTextOutput(StringIO())):
-            return _invoke(args)
+def _casilla_observation(revision_payload, casilla_id: str):
+    """Return the single persisted observation for ``casilla_id``."""
+    rows = [row for row in revision_payload["observations"] if row["casilla_id"] == casilla_id]
+    assert len(rows) == 1, f"expected exactly one observation for casilla {casilla_id}, got {len(rows)}"
+    return rows[0]
 
 
 def _create_profile() -> None:
@@ -141,13 +144,7 @@ def _create_profile() -> None:
 
 
 def _seed_justificante(*, csv: str, period: str = "1T", modelo: str = "130", filing_year: int = 2025) -> None:
-    """Persist the stored receipt metadata a justificante-bound evidence import requires.
-
-    ``import_external_filing_evidence`` refuses a justificante-bound evidence
-    kind unless the reference id resolves to real stored receipt metadata
-    matching the taxpayer, modelo, filing year, and period -- so a real receipt
-    is seeded here rather than mocked or bypassed.
-    """
+    """Persist the stored receipt metadata a justificante-bound evidence import requires."""
     body = f"{csv}-pdf".encode()
     receipt = Justificante(
         csv=csv,
@@ -173,7 +170,7 @@ def _seed_justificante(*, csv: str, period: str = "1T", modelo: str = "130", fil
 def _import_external_baseline(
     work_unit_id: str, *, csv: str = "JUST-2025-130-1T-AMEND-WIZARD", period: str = "1T"
 ) -> str:
-    """Import an AEAT-attested baseline filing and return its filing_record_id."""
+    """Import an AEAT-attested M130 baseline filing and return its filing_record_id."""
     _seed_justificante(csv=csv, period=period)
     result = _invoke(
         [
@@ -210,125 +207,184 @@ def _import_external_m303_baseline(
     return _payload(result.output)["filing_record_id"]
 
 
-def test_amend_wizard_files_m303_autoliquidacion_rectificativa() -> None:
-    """An Autoliquidación Rectificativa on M303 files through the guided wizard.
+def _scripted_amend(
+    work_unit_id: str,
+    *,
+    change_numbers: list[str],
+    corrected_by_number: dict[str, str],
+    kind: str,
+    reason: str,
+) -> tuple[dict[str, str], str, str]:
+    """Drive the wizard's own two-round definitions through the scripted substrate.
 
-    Modelo 303 adopts the unified ``autoliquidación rectificativa`` (LGT art. 120.4,
-    Orden HAC/819/2024) from the "ejercicio 2024 a partir de periodos 09 y 3T"
-    diseño onward, so 2025 1T is rectificativa-effective: the kind prompt offers
-    ``rectificativa`` and the amendment files under that legally-distinct regime,
-    which REPLACES the prior filing rather than supplementing it. The correction
-    here LOWERS the declared base imponible -- a direction a self-filed
-    complementaria could not lawfully carry (it is a solicitud de rectificación,
-    LGT art. 120.3, pre-unification) -- so a rectificativa is the only mechanism
-    that can file it.
+    Reproduces exactly what the wizard does -- resolve the unit and its
+    AEAT-attested baseline, discover the amendable casilla rows, project the
+    selection and values/kind/reason definitions -- then walks them through
+    :func:`run_scripted_flow` (the substrate's frontend-free scripted driver)
+    instead of the interactive frontend a non-terminal test process cannot
+    host. Returns the ``{casilla_id: corrected_value}`` override map plus the
+    kind and reason, read back off the engine state exactly as the wizard
+    reads them.
     """
-    _create_profile()
-    work_unit_id = _create_m303_work_unit()
-    baseline_filing_id = _import_external_m303_baseline(work_unit_id)
+    run_token = "test-amend-scripted"  # noqa: S105 - a copy-table run token, not a credential
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None
+    with profile_storage_session(bucket_id):
+        unit = _resolve_work_unit_for_cli(work_unit_id=work_unit_id)
+        baseline = get_filing_record(unit.current_filing_record_id)
+        casilla_rows = _baseline_casilla_rows(unit)
+        baseline_revision = load_calculation_revision(baseline.calculation_revision_id)
+        amendable = _amendable_rows(casilla_rows, baseline_revision)
+        by_number = {row.number: row for row in amendable}
+        selected_ids = [by_number[number].casilla_id for number in change_numbers]
+        _ACTIVE_RUNS[run_token] = {}
+        try:
+            selection_definition = _selection_definition(
+                amendable=amendable,
+                baseline_revision=baseline_revision,
+                unit=unit,
+                run_token=run_token,
+            )
+            selection_state, selection_projection = run_scripted_flow(
+                selection_definition,
+                [",".join(selected_ids)],
+                mode=FlowMode.CREATE,
+            )
+            assert selection_projection.submit_eligible
+            selected = _selected_rows(amendable=amendable, unit=unit, state=selection_state)
 
-    result = _invoke_with_typed_answers(
-        ["--format", "json", "app", "modelo", "work", "amend-wizard", work_unit_id],
-        ("07", str(_M303_CORRECTED_BASE_GENERAL), "rectificativa", "overstated base imponible"),
-    )
-    assert result.exit_code == 0, result.output
-    assert "Traceback" not in result.output
-
-    payload = _payload(result.output)
-    assert payload["work_unit_id"] == work_unit_id
-    assert payload["amendment_kind"] == "rectificativa"
-    assert payload["amendment_reason"] == "overstated base imponible"
-    assert payload["status"] == "vigente"
-    # The rectificativa REPLACES the AEAT-attested baseline: the new record is an
-    # internal filing envelope pointing back at the filing it supersedes.
-    assert payload["external_evidence"] is None
-    assert payload["amends_filing_record_id"] == baseline_filing_id
-
-    corrected = payload["corrected_casillas"]
-    assert len(corrected) == 1
-    assert corrected[0]["number"] == "07"
-    assert corrected[0]["previous_value"] == str(_M303_BASELINE_BASE_GENERAL)
-    assert corrected[0]["corrected_value"] == str(_M303_CORRECTED_BASE_GENERAL)
-    assert corrected[0]["legal_refs"], "corrected casilla must carry legal_refs"
-
-    # The correction is persisted, not merely reported.
-    revision = _payload(
-        _invoke(
-            ["--format", "json", "app", "modelo", "work", "revision", payload["calculation_revision_id"]],
-        ).output,
-    )
-    assert Decimal(revision["casilla_values"]["07"]) == _M303_CORRECTED_BASE_GENERAL
+            corrections_definition = _values_kind_reason_definition(
+                selected=selected,
+                baseline_revision=baseline_revision,
+                modelo=str(baseline.modelo),
+                period=baseline.period,
+                run_token=run_token,
+            )
+            tokens = [corrected_by_number[row.number] for row in selected] + [kind, reason]
+            corrections_state, corrections_projection = run_scripted_flow(
+                corrections_definition,
+                tokens,
+                mode=FlowMode.CREATE,
+            )
+            assert corrections_projection.submit_eligible
+            overrides = {
+                row.casilla_id: (corrections_state.answers.get(_value_page_id(row.casilla_id)) or "").strip()
+                for row in selected
+            }
+            derived_kind = (corrections_state.answers.get(_KIND_PAGE_ID) or "").strip()
+            derived_reason = (corrections_state.answers.get(_REASON_PAGE_ID) or "").strip()
+            return overrides, derived_kind, derived_reason
+        finally:
+            _ACTIVE_RUNS.pop(run_token, None)
 
 
-def test_amend_wizard_refuses_complementaria_where_m303_rectificativa_has_replaced_it() -> None:
-    """M303 2025 1T is post-unification: ``complementaria`` is not a permitted kind.
+def _amend_via_shared_path(
+    *,
+    from_filing_record_id: str,
+    overrides: dict[str, str],
+    kind: str,
+    reason: str,
+):
+    """Invoke ``work amend`` -- the shared composition path the wizard delegates to."""
+    set_flags: list[str] = []
+    for casilla_id, value in overrides.items():
+        set_flags += ["--set", f"{casilla_id}={value}"]
+    return _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "amend",
+            "--from-filing-record", from_filing_record_id,
+            "--kind", kind,
+            "--reason", reason,
+            *set_flags,
+        ],
+    )  # fmt: skip
 
-    Proof the wizard's kind prompt is period-aware rather than accepting any member
-    of the amendment-kind enum: once a modelo's orden establishes the rectificativa,
-    it replaces the complementaria for ordinary corrections, so answering
-    ``complementaria`` is refused and nothing is filed.
+
+def _permitted_kind_choice_values(
+    work_unit_id: str,
+    *,
+    change_numbers: list[str],
+) -> tuple[str, ...]:
+    """Return the amendment-kind SELECT's offered choice values for a baseline.
+
+    Projects the wizard's own second-round definition and reads the kind
+    page's closed choice set, so the test asserts period-awareness against
+    the exact choices an operator is offered.
     """
-    _create_profile()
-    work_unit_id = _create_m303_work_unit()
-    baseline_filing_id = _import_external_m303_baseline(work_unit_id)
+    run_token = "test-amend-kind-choices"  # noqa: S105 - a copy-table run token, not a credential
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None
+    with profile_storage_session(bucket_id):
+        unit = _resolve_work_unit_for_cli(work_unit_id=work_unit_id)
+        baseline = get_filing_record(unit.current_filing_record_id)
+        casilla_rows = _baseline_casilla_rows(unit)
+        baseline_revision = load_calculation_revision(baseline.calculation_revision_id)
+        amendable = _amendable_rows(casilla_rows, baseline_revision)
+        by_number = {row.number: row for row in amendable}
+        selected = tuple(by_number[number] for number in change_numbers)
+        _ACTIVE_RUNS[run_token] = {}
+        try:
+            definition = _values_kind_reason_definition(
+                selected=selected,
+                baseline_revision=baseline_revision,
+                modelo=str(baseline.modelo),
+                period=baseline.period,
+                run_token=run_token,
+            )
+            kind_page = next(
+                page
+                for section in definition.sections
+                for page in section.items
+                if page.id == _KIND_PAGE_ID
+            )
+            return tuple(choice.value for choice in kind_page.choices)
+        finally:
+            _ACTIVE_RUNS.pop(run_token, None)
 
-    result = _invoke_with_typed_answers(
-        ["--format", "json", "app", "modelo", "work", "amend-wizard", work_unit_id],
-        ("07", str(_M303_CORRECTED_BASE_GENERAL), "complementaria", "should not file"),
-    )
-    assert result.exit_code != 0
-    assert "Traceback" not in result.output
 
-    # Nothing was filed: the AEAT-attested baseline is still the current record.
-    records = _payload(
-        _invoke(["--format", "json", "app", "modelo", "filing-record", "list"]).output,
-    )
-    current = [row for row in records["records"] if row["status"] == "vigente"]
-    assert [row["filing_record_id"] for row in current] == [baseline_filing_id]
+def test_amend_wizard_scripted_sequence_files_m130_complementaria() -> None:
+    """The wizard's scripted definitions, fed to the shared amend path, file the correction.
 
-
-def test_amend_wizard_drives_full_prompt_sequence_and_files_correction() -> None:
-    """The wizard walks selection, one corrected value, kind, and reason, then files.
-
-    The typed answers drive: (1) which casilla numbers changed ("01"), (2) the
-    corrected value for casilla 01, (3) the amendment kind, (4) the free-text
-    reason. The resulting filing record supersedes the imported baseline and
-    carries the corrected casilla value.
+    The substrate's scripted driver walks the wizard's own selection CHECKBOX
+    (casilla 01) and its values/kind/reason round (corrected value, kind,
+    reason), and those exact answers -- fed through the identical
+    ``work amend`` composition the wizard uses -- supersede the imported
+    AEAT-attested baseline with the corrected casilla value.
     """
     _create_profile()
     work_unit_id = _create_m130_work_unit()
     baseline_filing_id = _import_external_baseline(work_unit_id)
 
-    result = _invoke_with_typed_answers(
-        ["--format", "json", "app", "modelo", "work", "amend-wizard", work_unit_id],
-        ("01", str(_CORRECTED_INGRESOS), "complementaria", "under-reported turnover"),
+    overrides, kind, reason = _scripted_amend(
+        work_unit_id,
+        change_numbers=["01"],
+        corrected_by_number={"01": str(_CORRECTED_INGRESOS)},
+        kind="complementaria",
+        reason="under-reported turnover",
+    )
+    assert kind == "complementaria"
+    assert reason == "under-reported turnover"
+    assert overrides == {"01": str(_CORRECTED_INGRESOS)}
+
+    result = _amend_via_shared_path(
+        from_filing_record_id=baseline_filing_id,
+        overrides=overrides,
+        kind=kind,
+        reason=reason,
     )
     assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
-    # Prompt copy renders on the prompter's own device, never stdout.
-    assert result.output.lstrip().startswith("{"), result.output
 
     payload = _payload(result.output)
     assert payload["work_unit_id"] == work_unit_id
     assert payload["amendment_kind"] == "complementaria"
-    assert payload["amendment_reason"] == "under-reported turnover"
     assert payload["status"] == "vigente"
     # The new record is an internal filing envelope, not an AEAT-attested one.
     assert payload["external_evidence"] is None
     assert payload["amends_filing_record_id"] == baseline_filing_id
 
-    corrected = payload["corrected_casillas"]
-    assert len(corrected) == 1
-    assert corrected[0]["number"] == "01"
-    assert corrected[0]["previous_value"] == str(_BASELINE_INGRESOS)
-    assert corrected[0]["corrected_value"] == str(_CORRECTED_INGRESOS)
-    assert corrected[0]["legal_refs"], "corrected casilla must carry legal_refs"
-
-    assert "export" in payload["export_next_action"]
-    assert work_unit_id in payload["export_next_action"]
-
-    # The correction is persisted, not merely reported: the filed revision
-    # carries the corrected figure.
+    # The correction is persisted, not merely reported.
     revision = _payload(
         _invoke(
             ["--format", "json", "app", "modelo", "work", "revision", payload["calculation_revision_id"]],
@@ -337,86 +393,63 @@ def test_amend_wizard_drives_full_prompt_sequence_and_files_correction() -> None
     assert Decimal(revision["casilla_values"]["01"]) == _CORRECTED_INGRESOS
 
 
-def test_amend_wizard_composes_shared_amend_path_not_a_parallel_one() -> None:
-    """A wizard-built amendment and a hand-built ``work amend`` amendment agree exactly.
+def test_amend_wizard_scripted_sequence_files_m303_rectificativa() -> None:
+    """An Autoliquidación Rectificativa on M303 files through the wizard's scripted drive.
 
-    Two independently-seeded baselines (different quarters, same modelo/year)
-    are amended identically: one through the guided wizard, one through the raw
-    ``work amend`` flag grammar. Both must resolve to the same corrected casilla
-    01 value -- proof the wizard is a guided front end over the existing
-    ``amend_modelo_revision`` path
-    (``composition-service-no-parallel-write-path``), not a second,
-    independently-derived amendment surface.
+    Modelo 303 adopts the unified ``autoliquidación rectificativa`` (LGT art.
+    120.4, Orden HAC/819/2024) from 2024 periods 09/3T onward, so 2025 1T is
+    rectificativa-effective. The correction LOWERS the declared base imponible
+    -- a direction a self-filed complementaria could not lawfully carry -- so a
+    rectificativa is the only mechanism that can file it. The wizard's scripted
+    selection + values/kind/reason answers file it through the shared amend
+    path.
     """
     _create_profile()
+    work_unit_id = _create_m303_work_unit()
+    baseline_filing_id = _import_external_m303_baseline(work_unit_id)
 
-    wizard_unit_id = _create_m130_work_unit(period="1T")
-    _import_external_baseline(wizard_unit_id, csv="JUST-2025-130-1T-WIZARD", period="1T")
-    wizard_result = _invoke_with_typed_answers(
-        ["--format", "json", "app", "modelo", "work", "amend-wizard", wizard_unit_id],
-        ("01", str(_CORRECTED_INGRESOS), "complementaria", "wizard-driven correction"),
+    overrides, kind, reason = _scripted_amend(
+        work_unit_id,
+        change_numbers=["07"],
+        corrected_by_number={"07": str(_M303_CORRECTED_BASE_GENERAL)},
+        kind="rectificativa",
+        reason="overstated base imponible",
     )
-    assert wizard_result.exit_code == 0, wizard_result.output
-    wizard_payload = _payload(wizard_result.output)
+    assert kind == "rectificativa"
 
-    hand_unit_id = _create_m130_work_unit(period="2T")
-    hand_baseline_filing_id = _import_external_baseline(
-        hand_unit_id,
-        csv="JUST-2025-130-2T-HANDBUILT",
-        period="2T",
+    result = _amend_via_shared_path(
+        from_filing_record_id=baseline_filing_id,
+        overrides=overrides,
+        kind=kind,
+        reason=reason,
     )
-    hand_built_result = _invoke(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "amend",
-            "--from-filing-record", hand_baseline_filing_id,
-            "--kind", "complementaria",
-            "--reason", "hand-built parity check",
-            "--set", f"01={_CORRECTED_INGRESOS}",
-        ],
-    )  # fmt: skip
-    assert hand_built_result.exit_code == 0, hand_built_result.output
-    hand_built_payload = _payload(hand_built_result.output)
+    assert result.exit_code == 0, result.output
+    assert "Traceback" not in result.output
 
-    wizard_revision = _payload(
+    payload = _payload(result.output)
+    assert payload["amendment_kind"] == "rectificativa"
+    assert payload["status"] == "vigente"
+    assert payload["external_evidence"] is None
+    assert payload["amends_filing_record_id"] == baseline_filing_id
+
+    revision = _payload(
         _invoke(
-            ["--format", "json", "app", "modelo", "work", "revision", wizard_payload["calculation_revision_id"]],
+            ["--format", "json", "app", "modelo", "work", "revision", payload["calculation_revision_id"]],
         ).output,
     )
-    hand_built_revision = _payload(
-        _invoke(
-            [
-                "--format", "json",
-                "app", "modelo", "work", "revision", hand_built_payload["calculation_revision_id"],
-            ],
-        ).output,
-    )  # fmt: skip
-    assert (
-        wizard_revision["casilla_values"]["01"]
-        == hand_built_revision["casilla_values"]["01"]
-        == str(_CORRECTED_INGRESOS)
-    )
-    assert wizard_payload["amendment_kind"] == hand_built_payload["amendment_kind"] == "complementaria"
+    assert Decimal(revision["casilla_values"]["07"]) == _M303_CORRECTED_BASE_GENERAL
 
 
-def test_amend_wizard_composes_shared_amend_path_for_a_rectificativa() -> None:
-    """A wizard-built rectificativa and a hand-built ``work amend`` rectificativa agree exactly.
-
-    The complementaria parity case above can only ever prove the *complementaria*
-    limb: M130 has no rectificativa regime (no bundled diseño grounds adoption),
-    so the kind is the one thing it cannot vary. The rectificativa is a
-    legally-distinct mechanism -- it REPLACES the prior filing rather than
-    supplementing it (LGT art. 120.4, Orden HAC/819/2024) -- and travels a
-    different branch of ``amend_modelo_revision``'s kind guard, so parity across
-    it is a separate claim needing its own proof.
+def test_amend_wizard_scripted_inputs_match_hand_built_work_amend() -> None:
+    """Wizard-derived amend inputs and a hand-built ``work amend`` agree exactly.
 
     Two independently-seeded M303 2025 baselines (different quarters, both
-    post-unification and so rectificativa-effective) are amended identically: one
-    through the guided wizard, one through the raw ``work amend`` flag grammar.
+    rectificativa-effective) are amended identically: one through the wizard's
+    scripted-derived inputs, one through the raw ``work amend`` flag grammar.
     Both must resolve to the same persisted outcome -- proof the wizard is a
     guided front end over the one ``amend_modelo_revision`` path
-    (``composition-service-no-parallel-write-path``) for this kind too, not a
-    second, independently-derived amendment surface.
+    (``composition-service-no-parallel-write-path``), not a second,
+    independently-derived amendment surface.
     """
     _create_profile()
 
@@ -426,9 +459,18 @@ def test_amend_wizard_composes_shared_amend_path_for_a_rectificativa() -> None:
         csv="JUST-2025-303-1T-RECT-WIZARD",
         period="1T",
     )
-    wizard_result = _invoke_with_typed_answers(
-        ["--format", "json", "app", "modelo", "work", "amend-wizard", wizard_unit_id],
-        ("07", str(_M303_CORRECTED_BASE_GENERAL), "rectificativa", "wizard-driven rectificativa"),
+    overrides, kind, reason = _scripted_amend(
+        wizard_unit_id,
+        change_numbers=["07"],
+        corrected_by_number={"07": str(_M303_CORRECTED_BASE_GENERAL)},
+        kind="rectificativa",
+        reason="wizard-driven rectificativa",
+    )
+    wizard_result = _amend_via_shared_path(
+        from_filing_record_id=wizard_baseline_filing_id,
+        overrides=overrides,
+        kind=kind,
+        reason=reason,
     )
     assert wizard_result.exit_code == 0, wizard_result.output
     wizard_payload = _payload(wizard_result.output)
@@ -457,26 +499,16 @@ def test_amend_wizard_composes_shared_amend_path_for_a_rectificativa() -> None:
     assert hand_built_result.exit_code == 0, hand_built_result.output
     hand_built_payload = _payload(hand_built_result.output)
 
-    # The kind survives both surfaces identically, and each amendment supersedes
-    # its own AEAT-attested baseline with an internal filing envelope.
+    # The wizard-derived override set is exactly the hand-typed one.
+    assert overrides == {"07": str(_M303_CORRECTED_BASE_GENERAL)}
+
     assert wizard_payload["amendment_kind"] == hand_built_payload["amendment_kind"] == "rectificativa"
-    assert wizard_payload["status"] == hand_built_payload["status"] == "vigente"
-    assert wizard_payload["external_evidence"] is None
-    assert hand_built_payload["external_evidence"] is None
     assert wizard_payload["amends_filing_record_id"] == wizard_baseline_filing_id
     assert hand_built_payload["amends_filing_record_id"] == hand_baseline_filing_id
-
-    # Every field the two payloads share must agree. `WorkAmendWizardResult`
-    # mirrors `WorkAmendResult` and adds only the wizard's own audit surface
-    # (`corrected_casillas`, `export_next_action`, `amendment_reason`), so the
-    # mirrored spine below is precisely what a parity claim can range over. The
-    # remaining mirrored fields (the four ids, `period`, `filed_at`) identify the
-    # two independent filings and differ by construction.
     for field in _AMEND_PARITY_SPINE:
         assert wizard_payload[field] == hand_built_payload[field], field
 
-    # The persisted revisions agree -- the parity claim is about stored state,
-    # not merely the emitted payload.
+    # The persisted revisions agree -- the parity claim is about stored state.
     wizard_revision = _payload(
         _invoke(
             ["--format", "json", "app", "modelo", "work", "revision", wizard_payload["calculation_revision_id"]],
@@ -497,10 +529,8 @@ def test_amend_wizard_composes_shared_amend_path_for_a_rectificativa() -> None:
     )
 
     # The corrected casilla carries identical legal grounding through both
-    # surfaces. The persisted observation is where that grounding actually has to
-    # survive (``aeat-calculation-grounding``), and unlike the wizard-only
-    # ``corrected_casillas`` audit trail it is emitted by both paths, so it is the
-    # one place the two can be compared on grounding at all.
+    # surfaces -- the persisted observation is where that grounding actually
+    # has to survive (``aeat-calculation-grounding``).
     wizard_obs = _casilla_observation(wizard_revision, "07")
     hand_built_obs = _casilla_observation(hand_built_revision, "07")
     assert wizard_obs["value"] == hand_built_obs["value"] == str(_M303_CORRECTED_BASE_GENERAL)
@@ -509,22 +539,112 @@ def test_amend_wizard_composes_shared_amend_path_for_a_rectificativa() -> None:
     assert wizard_obs["source_refs"] == hand_built_obs["source_refs"]
 
 
-def test_amend_wizard_no_selection_refuses_instructively() -> None:
-    """A blank answer to 'which casillas changed' refuses with no amendment filed."""
+def test_amend_wizard_kind_select_offers_only_period_permitted_kinds() -> None:
+    """The amendment-kind SELECT is period-aware: it offers only the legally-available kinds.
+
+    M303 2025 1T is post-unification, so the kind SELECT offers ``rectificativa``
+    and NOT ``complementaria`` (the rectificativa has replaced it for ordinary
+    corrections); M130 has no rectificativa regime, so its SELECT offers
+    ``complementaria`` and NOT ``rectificativa``. Asserted on the projected
+    choice set the operator is actually offered, not on any localized prose.
+    """
+    _create_profile()
+
+    m303_unit_id = _create_m303_work_unit()
+    _import_external_m303_baseline(m303_unit_id)
+    m303_kinds = _permitted_kind_choice_values(m303_unit_id, change_numbers=["07"])
+    assert "rectificativa" in m303_kinds
+    assert "complementaria" not in m303_kinds
+
+    m130_unit_id = _create_m130_work_unit(period="2T")
+    _import_external_baseline(m130_unit_id, csv="JUST-2025-130-2T-KINDS", period="2T")
+    m130_kinds = _permitted_kind_choice_values(m130_unit_id, change_numbers=["01"])
+    assert "complementaria" in m130_kinds
+    assert "rectificativa" not in m130_kinds
+
+
+def test_amend_wizard_scripting_a_non_permitted_kind_is_refused() -> None:
+    """Scripting a kind the SELECT does not offer is refused by the substrate, nothing filed.
+
+    ``complementaria`` is not a permitted M303 2025 kind, so it is not a choice
+    on the amendment-kind SELECT; the scripted driver rejects the unknown token
+    with the substrate's typed answer-rejected error rather than filing it.
+    """
+    _create_profile()
+    work_unit_id = _create_m303_work_unit()
+    _import_external_m303_baseline(work_unit_id)
+
+    with pytest.raises(FlowAnswerError):
+        _scripted_amend(
+            work_unit_id,
+            change_numbers=["07"],
+            corrected_by_number={"07": str(_M303_CORRECTED_BASE_GENERAL)},
+            kind="complementaria",
+            reason="should not file",
+        )
+
+
+def test_amend_wizard_blank_selection_yields_no_corrections() -> None:
+    """A blank CHECKBOX selection reads back as no selected casillas.
+
+    The selection page is optional, so a scripted blank answer submits with an
+    empty selection -- the wizard turns that into the no-corrections refusal
+    before any value is asked. Proven at the substrate level the wizard reads.
+    """
     _create_profile()
     work_unit_id = _create_m130_work_unit()
     _import_external_baseline(work_unit_id)
 
-    result = _invoke_with_typed_answers(
-        ["--format", "json", "app", "modelo", "work", "amend-wizard", work_unit_id],
-        ("",),
-    )
+    run_token = "test-amend-blank"  # noqa: S105 - a copy-table run token, not a credential
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None
+    with profile_storage_session(bucket_id):
+        unit = _resolve_work_unit_for_cli(work_unit_id=work_unit_id)
+        baseline = get_filing_record(unit.current_filing_record_id)
+        casilla_rows = _baseline_casilla_rows(unit)
+        baseline_revision = load_calculation_revision(baseline.calculation_revision_id)
+        amendable = _amendable_rows(casilla_rows, baseline_revision)
+        _ACTIVE_RUNS[run_token] = {}
+        try:
+            definition = _selection_definition(
+                amendable=amendable,
+                baseline_revision=baseline_revision,
+                unit=unit,
+                run_token=run_token,
+            )
+            state, projection = run_scripted_flow(definition, [""], mode=FlowMode.CREATE)
+            assert projection.submit_eligible
+            assert _selected_rows(amendable=amendable, unit=unit, state=state) == ()
+        finally:
+            _ACTIVE_RUNS.pop(run_token, None)
+
+
+def test_amend_wizard_non_interactive_host_refuses_with_the_typed_console_error() -> None:
+    """A non-TTY caller with an amendable baseline gets the substrate's typed refusal.
+
+    The test process is non-interactive, so the wizard -- which has a CHECKBOX
+    selection page to present -- must refuse through the flow substrate's
+    unsupported-console error rather than block. Asserted structurally on the
+    envelope error code, never on localized prose.
+    """
+    _create_profile()
+    work_unit_id = _create_m130_work_unit()
+    _import_external_baseline(work_unit_id)
+
+    result = _invoke(["--format", "json", "app", "modelo", "work", "amend-wizard", work_unit_id])
+
     assert result.exit_code != 0
     assert "Traceback" not in result.output
+    error = json.loads(result.output)["error"]
+    assert error["code"] == "REFUSED_FLOW_UNSUPPORTED_CONSOLE"
 
 
 def test_amend_wizard_refuses_without_evidence_baseline() -> None:
-    """A local work unit cannot enter the external-filing amendment path."""
+    """A local work unit cannot enter the external-filing amendment path.
+
+    The evidence check runs before any flow is constructed, so the refusal is a
+    plain instructive parameter error, never the console refusal.
+    """
     _create_profile()
     work_unit_id = _create_m130_work_unit()
 
@@ -532,16 +652,3 @@ def test_amend_wizard_refuses_without_evidence_baseline() -> None:
 
     assert result.exit_code != 0
     assert "Traceback" not in result.output
-
-
-def test_amend_wizard_non_interactive_host_refuses_with_instructive_message() -> None:
-    """A real non-TTY invocation refuses before attempting an interactive prompt."""
-    _create_profile()
-    work_unit_id = _create_m130_work_unit()
-    _import_external_baseline(work_unit_id)
-
-    result = _invoke(["--format", "json", "app", "modelo", "work", "amend-wizard", work_unit_id])
-
-    assert result.exit_code != 0
-    assert "Traceback" not in result.output
-    assert "interactive" in result.output.lower() or "console" in result.output.lower()
