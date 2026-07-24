@@ -76,7 +76,13 @@ from ...domain.user_profile import (
     UserProfileValidationError,
     new_profile_id,
 )
-from . import ReactivateProfileCommand, RegisterProfileCommand, RemoveProfileCommand, RenameProfileCommand
+from . import (
+    CompleteSetupCommand,
+    ReactivateProfileCommand,
+    RegisterProfileCommand,
+    RemoveProfileCommand,
+    RenameProfileCommand,
+)
 from ._aggregate import ProfileAggregate
 from ._integrity import verify_profile_integrity
 from ._profile_pointer_transaction import ActiveProfilePointerTransaction, active_profile_pointer_transaction
@@ -209,8 +215,18 @@ class ProfileRepository:
         profile_id: str | None = None,
         enforce_unique_tax_id: bool = True,
         routing_profile_id: str | None = None,
+        status: UserProfileStatus = UserProfileStatus.ACTIVE,
     ) -> ProfileAggregate:
         """Create a new profile as a cross-store unit of work.
+
+        ``status`` selects the birth lifecycle state: ``ACTIVE`` (the
+        default) for a fully-registered profile, ``SETUP_INCOMPLETE`` for
+        the interactive setup flow's early mint (the record is live and
+        its tax id reserved, but modelo work is refused until
+        :meth:`complete_setup` lands). The plaintext manifest mirror and
+        the encrypted record are minted at the same status so the two
+        stores agree from birth; a tombstoned birth is refused by
+        :class:`RegisterProfileCommand`.
 
         ``enforce_unique_tax_id`` (default :data:`True`) refuses a create
         whose tax id is already carried by a live profile — a fresh
@@ -255,6 +271,10 @@ class ProfileRepository:
                 create whose tax id is already carried by a live profile.
             routing_profile_id: Optional routing assertion; must match
                 ``profile_id`` when supplied.
+            status: Birth lifecycle state — ``ACTIVE`` (default) for a
+                complete registration, ``SETUP_INCOMPLETE`` for the setup
+                flow's early mint. Written to both the manifest mirror and
+                the encrypted record so the two stores agree from birth.
 
         Returns:
             The assembled
@@ -329,7 +349,7 @@ class ProfileRepository:
                         recovery_enrolled=False,
                         key_schedule=key_schedule,
                         schema_version=manifest_schema_version,
-                        status=UserProfileStatus.ACTIVE,
+                        status=status,
                     ),
                 )
 
@@ -348,6 +368,7 @@ class ProfileRepository:
                         profile_id=resolved_id,
                         display_name=label,
                         facts=tuple(facts),
+                        status=status,
                     ),
                 )
                 record = result.profile
@@ -639,6 +660,53 @@ class ProfileRepository:
             manifest.model_copy(update={"status": UserProfileStatus.ACTIVE}),
         )
         return aggregate.model_copy(update={"record": reactivated_record, "status": reactivated_record.status})
+
+    # ── complete_setup ─────────────────────────────────────────────
+
+    def complete_setup(self, profile_id: str) -> ProfileAggregate:
+        """Transition a ``SETUP_INCOMPLETE`` profile to ``ACTIVE`` across both stores.
+
+        The one-way exit from the interactive setup flow's early mint,
+        run at the flow's final commit strictly after flow-scope
+        validation and fact persistence. The write order mirrors
+        :meth:`reactivate`: the encrypted record is completed FIRST
+        (emitting ``PROFILE_SETUP_COMPLETED``), the plaintext manifest
+        mirror SECOND. A crash between the two leaves the manifest saying
+        ``setup_incomplete`` over a now-active record — the safe
+        direction, because the readiness gate and every live-surface scan
+        still treat the profile as not-yet-workable until the manifest
+        write lands, exactly the exposure window :meth:`delete` avoids in
+        reverse. The record's own
+        :meth:`~cadrumo.domain.user_profile.UserProfileRecord.complete_setup`
+        refuses any non-incomplete source, so an active or tombstoned
+        profile cannot be laundered through this arm.
+
+        Args:
+            profile_id: The UUID of the setup-incomplete profile.
+
+        Returns:
+            The updated :class:`ProfileAggregate` with active status.
+
+        Raises:
+            UserProfileValidationError: If the record is not currently
+                setup-incomplete.
+            ProfileNotFoundError: If the bucket directory or manifest is
+                absent.
+        """
+        aggregate = self.load(profile_id)
+        # Step 1: complete the encrypted record first (mirrors reactivate).
+        result = self._lifecycle_service(profile_id).complete_setup(
+            CompleteSetupCommand(profile_id=profile_id),
+        )
+        completed_record = result.profile
+        # Step 2: mirror the completion onto the plaintext manifest.
+        paths = bucket_paths(self._root, profile_id)
+        manifest = read_manifest(paths)
+        write_manifest(
+            paths,
+            manifest.model_copy(update={"status": UserProfileStatus.ACTIVE}),
+        )
+        return aggregate.model_copy(update={"record": completed_record, "status": completed_record.status})
 
     # ── select ─────────────────────────────────────────────────────
 

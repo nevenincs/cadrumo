@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-disk-cache-pytest'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-07-07-registry-disk-cache-pytest-adr]]'
   - '[[2026-07-10-registry-disk-cache-pytest-research]]'

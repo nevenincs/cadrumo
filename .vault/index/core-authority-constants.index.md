@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#core-authority-constants'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-05-31-core-authority-constants-reference]]'
 ---

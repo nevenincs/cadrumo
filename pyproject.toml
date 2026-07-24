@@ -3,7 +3,7 @@ name = "cadrumo"
 version = "0.2.1"
 description = "Cadrumo is a deterministic Spanish tax calculation CLI and MCP server that turns local financial records into checked, exportable modelo filing artifacts. Independent software; not affiliated with AEAT."
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.13,<3.14"
 license = "Apache-2.0"
 # Explicit so the wheel/sdist always carry the Apache §4(d) attribution chain
 # (dist-info/licenses/{LICENSE,NOTICE}), independent of hatchling's default
@@ -91,6 +91,11 @@ dependencies = [
   # localise AEAT timestamps to Europe/Madrid).
   "tzdata>=2026.2 ; sys_platform == 'win32'",
   "xlrd>=2.0.1,<3",
+  # Full-screen TUI framework for the paged flow frontend (screens, focus,
+  # reactive widgets, headless Pilot test driver). MIT; depends on rich
+  # (shared pin above) and not on prompt_toolkit, so the line-mode and
+  # full-screen stacks stay independent.
+  "textual>=8.2.8,<9",
 ]
 
 [project.scripts]
@@ -681,6 +686,9 @@ convention = "google"
 # password literal; ruff's S105 heuristic flags the constant name.
 "src/cadrumo/application/overview/_applicability.py" = ["S105"]
 "src/cadrumo/application/wizard/_models.py" = ["S105"]
+# `SECRET`/`DEFER_TOKEN` are widget-kind and canonical-answer tokens, not
+# password literals; ruff's S105 heuristic flags the constant names.
+"src/cadrumo/core/flows.py" = ["S105"]
 "src/cadrumo/core/config.py" = ["S105"]
 "src/cadrumo/adapters/persistence/storage/crypto/tests/test_encrypted_columns.py" = ["S105", "S106"]
 "src/cadrumo/adapters/outbound/fx/_ecb_provider.py" = ["S310"]

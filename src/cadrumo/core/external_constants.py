@@ -445,6 +445,14 @@ CSV_ENCODING_FALLBACK_CHAIN: tuple[str, ...] = ("utf-8-sig", "utf-8", "cp1252", 
 #: Provenance source identifier for facts entered interactively via the CLI.
 PROVENANCE_SOURCE_MANUAL_CLI: Final[str] = "manual_cli"
 
+#: Provenance source identifier for censal facts parsed from an
+#: operator-supplied Certificado de Situación Censal (procedure G313)
+#: artefact. A NON-OFFICIAL evidence tier: the artefact is operator-channel
+#: input, never stamped AEAT-verified, so the overview calendar's
+#: ``censo.enrolment_unverified`` posture is unaffected by facts carrying
+#: this token.
+PROVENANCE_SOURCE_CENSO_ARTEFACT: Final[str] = "censo_artefact_g313"
+
 #: Reserved operator-visible bucket-label prefix identifying a sandbox profile.
 #: A profile whose plaintext manifest label starts with this token is a sandbox:
 #: an isolated, discardable bucket. Declared in the light core layer so the

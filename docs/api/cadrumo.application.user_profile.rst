@@ -24,6 +24,7 @@ Submodules
    cadrumo.application.user_profile._censo_sync
    cadrumo.application.user_profile._commands
    cadrumo.application.user_profile._completeness
+   cadrumo.application.user_profile._cotejo_apply
    cadrumo.application.user_profile._custody
    cadrumo.application.user_profile._custody_carry
    cadrumo.application.user_profile._filing_baseline

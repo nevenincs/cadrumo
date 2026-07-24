@@ -58,11 +58,18 @@ def validate_spanish_tax_id(value: str) -> str:
     """
     normalized = value.strip().upper().replace(" ", "").replace("-", "").replace(".", "")
     if not normalized:
-        raise IdentityError("tax identifier must not be blank")
+        raise IdentityError(
+            "tax identifier is empty",
+            translated_message="errors.identity.document_empty",
+        )
     if len(normalized) == 11 and normalized.startswith("ES"):
         normalized = normalized[2:]
     if len(normalized) != 9:
-        raise IdentityError("tax identifier must be 9 characters long")
+        raise IdentityError(
+            f"tax identifier {normalized!r} must be exactly 9 characters, got {len(normalized)}",
+            translated_message="errors.identity.tax_id_invalid_length",
+            context={"candidate": normalized, "length": len(normalized)},
+        )
 
     leader = normalized[0]
     if leader.isdigit():
@@ -73,7 +80,11 @@ def validate_spanish_tax_id(value: str) -> str:
         return _validate_nie(normalized)
     if leader in _CIF_LEADERS:
         return _validate_cif(normalized)
-    raise IdentityError("tax identifier has an unrecognised leading character")
+    raise IdentityError(
+        f"tax identifier {normalized!r} does not start with a recognised leader {leader!r}",
+        translated_message="errors.identity.tax_id_unrecognised_leader",
+        context={"candidate": normalized, "leader": leader},
+    )
 
 
 def _validate_nif(value: str) -> str:
@@ -81,10 +92,18 @@ def _validate_nif(value: str) -> str:
     digits = value[:8]
     control = value[8]
     if not digits.isdigit() or not control.isalpha():
-        raise IdentityError("NIF must be 8 digits followed by a checksum letter")
+        raise IdentityError(
+            f"tax identifier {value!r} is not shaped like a NIF",
+            translated_message="errors.identity.nif_invalid_shape",
+            context={"candidate": value},
+        )
     expected = nif_check_letter(int(digits))
     if control != expected:
-        raise IdentityError("NIF checksum letter is invalid")
+        raise IdentityError(
+            f"NIF checksum mismatch for {digits}: expected check letter {expected!r}, got {control!r}",
+            translated_message="errors.identity.nif_check_letter_mismatch",
+            context={"digits": digits, "expected": expected, "got": control},
+        )
     return value
 
 
@@ -93,10 +112,18 @@ def _validate_prefixed_nif(value: str) -> str:
     body = value[1:8]
     control = value[8]
     if not body.isdigit() or not control.isalpha():
-        raise IdentityError("prefixed NIF must be a leading K/L/M plus 7 digits and a checksum letter")
+        raise IdentityError(
+            f"tax identifier {value!r} is not shaped like a NIF",
+            translated_message="errors.identity.nif_invalid_shape",
+            context={"candidate": value},
+        )
     expected = nif_check_letter(int(body))
     if control != expected:
-        raise IdentityError("prefixed NIF checksum letter is invalid")
+        raise IdentityError(
+            f"NIF checksum mismatch for {value[:8]}: expected check letter {expected!r}, got {control!r}",
+            translated_message="errors.identity.nif_check_letter_mismatch",
+            context={"digits": value[:8], "expected": expected, "got": control},
+        )
     return value
 
 
@@ -106,11 +133,19 @@ def _validate_nie(value: str) -> str:
     body = value[1:8]
     control = value[8]
     if not body.isdigit() or not control.isalpha():
-        raise IdentityError("NIE must be a leading X/Y/Z plus 7 digits and a checksum letter")
+        raise IdentityError(
+            f"tax identifier {value!r} is not shaped like a NIE",
+            translated_message="errors.identity.nie_invalid_shape",
+            context={"candidate": value},
+        )
     substituted = _NIE_LEADERS[leader] + body
     expected = nif_check_letter(int(substituted))
     if control != expected:
-        raise IdentityError("NIE checksum letter is invalid")
+        raise IdentityError(
+            f"NIE checksum mismatch for {value[:8]}: expected check letter {expected!r}, got {control!r}",
+            translated_message="errors.identity.nie_check_letter_mismatch",
+            context={"body": value[:8], "expected": expected, "got": control},
+        )
     return value
 
 
@@ -120,23 +155,55 @@ def _validate_cif(value: str) -> str:
     digits = value[1:8]
     control = value[8]
     if not digits.isdigit():
-        raise IdentityError("CIF body must be 7 digits")
+        raise IdentityError(
+            f"tax identifier {value!r} is not shaped like a CIF",
+            translated_message="errors.identity.cif_invalid_shape",
+            context={"candidate": value},
+        )
 
     digit_control = _cif_check_value(digits)
     letter_control = _CIF_LETTER_TABLE[digit_control]
 
     if leader in _CIF_LETTER_CONTROL_LEADERS:
         if not control.isalpha() or control != letter_control:
-            raise IdentityError("CIF letter-control checksum is invalid")
+            raise IdentityError(
+                f"CIF checksum mismatch (kind {leader}): expected check letter {letter_control!r}, got {control!r}",
+                translated_message="errors.identity.cif_check_letter_mismatch_kind",
+                context={"kind": leader, "expected": letter_control, "got": control},
+            )
     else:
         if control.isdigit():
             if int(control) != digit_control:
-                raise IdentityError("CIF digit-control checksum is invalid")
+                raise IdentityError(
+                    f"CIF checksum mismatch (kind {leader}): expected {digit_control} or "
+                    f"check letter {letter_control!r}, got {control!r}",
+                    translated_message="errors.identity.cif_check_char_mismatch_mixed",
+                    context={
+                        "kind": leader,
+                        "expected": str(digit_control),
+                        "alt": letter_control,
+                        "got": control,
+                    },
+                )
         elif control.isalpha():
             if control != letter_control:
-                raise IdentityError("CIF letter-control checksum is invalid")
+                raise IdentityError(
+                    f"CIF checksum mismatch (kind {leader}): expected {digit_control} or "
+                    f"check letter {letter_control!r}, got {control!r}",
+                    translated_message="errors.identity.cif_check_char_mismatch_mixed",
+                    context={
+                        "kind": leader,
+                        "expected": str(digit_control),
+                        "alt": letter_control,
+                        "got": control,
+                    },
+                )
         else:
-            raise IdentityError("CIF control character must be a digit or uppercase letter")
+            raise IdentityError(
+                f"CIF checksum control character {control!r} in tax identifier {value!r} must be a digit or letter",
+                translated_message="errors.identity.cif_control_char_invalid",
+                context={"candidate": value, "got": control},
+            )
     return value
 
 

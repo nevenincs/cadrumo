@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-record-design-boundary'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-06-02-registry-record-design-boundary-audit]]'
   - '[[2026-06-02-registry-record-design-boundary-code-review-audit]]'

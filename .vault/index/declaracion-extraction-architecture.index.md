@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#declaracion-extraction-architecture'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-05-21-declaracion-extraction-architecture-W02-P02-S44]]'
   - '[[2026-05-21-declaracion-extraction-architecture-W02-P03-S46]]'

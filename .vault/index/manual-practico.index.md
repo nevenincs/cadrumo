@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#manual-practico'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-04-12-manual-practico-adr]]'
   - '[[2026-04-12-manual-practico-phase-1-review-exec]]'

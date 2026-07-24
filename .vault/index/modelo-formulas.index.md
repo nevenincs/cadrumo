@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-formulas'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-04-17-modelo-formula-ruleset-research]]'
   - '[[2026-04-17-modelo-formulas-adr]]'

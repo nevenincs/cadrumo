@@ -444,3 +444,59 @@ def test_pre_resolution_error_envelope_command_stays_null() -> None:
 
     document = json.loads(render_error_json(LockAcquisitionError()))
     assert document["command"] is None
+
+
+# ---------------------------------------------------------------------------
+# Censo divergence notice on the profile read surface
+# ---------------------------------------------------------------------------
+
+
+def _record_divergence(profile_name: str) -> None:
+    """Persist one open cotejo divergence on the named profile's record."""
+    from .....application.user_profile import CensoDivergence, apply_cotejo, profile_storage_session
+    from .....application.workflow import read_profile_bucket, workflow_state_repository
+
+    pointer = read_profile_bucket(profile_name)
+    assert pointer is not None
+    with profile_storage_session(pointer.bucket_id):
+        workflow_state_repository().update(
+            lambda state: apply_cotejo(
+                state,
+                adopted=(),
+                divergences=(
+                    CensoDivergence(
+                        axis="activities.description",
+                        artefact_value="Consultoría informática",
+                    ),
+                ),
+            ),
+        )
+
+
+def test_profile_show_surfaces_the_open_divergence_notice() -> None:
+    """A profile with an open cotejo divergence warns on `config profile show`."""
+    _create_profile("divergence-probe")
+    _record_divergence("divergence-probe")
+
+    result = invoke_cached_cli(["--format", "json", "config", "profile", "show", "divergence-probe"])
+
+    assert result.exit_code == 0, result.output
+    document = json.loads(result.output)
+    notices = {notice["code"]: notice for notice in document["notices"]}
+    assert "profile.censo.divergences_open" in notices
+    notice = notices["profile.censo.divergences_open"]
+    assert notice["severity"] == "warning"
+    assert str(notice["context"]["count"]) == "1"
+    assert "activities.description" in str(notice["context"]["axes"])
+
+
+def test_profile_show_carries_no_divergence_notice_when_clean() -> None:
+    """A profile with no open divergence shows no censo warning."""
+    _create_profile("clean-probe")
+
+    result = invoke_cached_cli(["--format", "json", "config", "profile", "show", "clean-probe"])
+
+    assert result.exit_code == 0, result.output
+    document = json.loads(result.output)
+    codes = {notice["code"] for notice in document["notices"]}
+    assert "profile.censo.divergences_open" not in codes
