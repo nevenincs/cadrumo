@@ -1,2 +1,6 @@
+:seed: filing-spine-303-ledger
+@step Create the work unit for the filing target.
+@setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
 @step Add or update a friendly display name for the work unit.
-  @static aeat app modelo work rename --modelo 303 --year 2026 --period 1T --name "Q1 VAT draft"
+@result aeat --format json app modelo work rename --modelo 303 --year 2026 --period 1T --name "Q1 VAT draft"
+@expect exit_code == 0

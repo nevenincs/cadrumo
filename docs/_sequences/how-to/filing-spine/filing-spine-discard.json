@@ -1,0 +1,213 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "edit",
+        "docs-sequence-sandbox",
+        "--quiet",
+        "--accept-defaults",
+        "--activity-start-date",
+        "2026-01-01"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "Profile\tdocs-sequence-sandbox\nStatus\tupdated\nNext\taeat app modelo work create\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "import",
+        "fixtures/movimientos-2026-1t.csv",
+        "--provider",
+        "csv"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "Rows\t2\nEntries imported\t2\nSkipped\t0\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "classify",
+        "71a5db2b",
+        "--classification",
+        "BUSINESS",
+        "--taxable-base",
+        "1000",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "210"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "ID\t71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518\nDate\t2026-02-10\nAmount\t1210\nDescription\tCobro factura F-2026-001 servicios de consultoria\nReview status\treviewed\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "classify",
+        "e3eeac5e",
+        "--classification",
+        "BUSINESS",
+        "--category-id",
+        "material_oficina",
+        "--taxable-base",
+        "500",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "105"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "ID\te3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d\nDate\t2026-02-11\nAmount\t605\nDescription\tCompra de material de oficina proveedor local\nReview status\treviewed\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "create",
+        "--modelo",
+        "303",
+        "--year",
+        "2026",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.create",
+        "notices": [],
+        "result": {
+          "applicability_guard_bypassed": false,
+          "bucket_id": "<bucket-id>",
+          "causante_ccaa": null,
+          "created_at": "2026-04-01T09:00:00+00:00",
+          "current_calculation_revision_id": null,
+          "current_filing_record_id": null,
+          "discard_reason": null,
+          "discarded_at": null,
+          "discarded_by": null,
+          "filed_calculation_revision_id": null,
+          "filing_year": 2026,
+          "modelo": "303",
+          "name": "303-2026-1T",
+          "name_applied": null,
+          "operation": "modelo.work.create",
+          "period": {
+            "code": "1T",
+            "filing_year": 2026
+          },
+          "revision_id": "2023-y-siguientes",
+          "short_current_calculation_revision_id": null,
+          "short_filed_calculation_revision_id": null,
+          "short_work_unit_id": "87619640518f",
+          "state": "borrador",
+          "status": "created",
+          "status_message": "New work unit created.",
+          "updated_at": "2026-04-01T09:00:00+00:00",
+          "work_unit_id": "98f076c6ff3f4ab123206dc06d9bf9a6dbfe1d9c0b213ae4483b87619640518f"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "discard",
+        "--modelo",
+        "303",
+        "--year",
+        "2026",
+        "--period",
+        "1T",
+        "--reason",
+        "re-creating with correct revision",
+        "--yes"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.discard",
+        "notices": [],
+        "result": {
+          "bucket_id": "<bucket-id>",
+          "causante_ccaa": null,
+          "created_at": "2026-04-01T09:00:00+00:00",
+          "current_calculation_revision_id": null,
+          "current_filing_record_id": null,
+          "discard_reason": "re-creating with correct revision",
+          "discarded_at": "2026-04-01T09:00:00+00:00",
+          "discarded_by": "docs-sequence-sandbox",
+          "filed_calculation_revision_id": null,
+          "filing_year": 2026,
+          "modelo": "303",
+          "name": "303-2026-1T",
+          "operation": "modelo.work.discard",
+          "period": {
+            "code": "1T",
+            "filing_year": 2026
+          },
+          "revision_id": "2023-y-siguientes",
+          "short_current_calculation_revision_id": null,
+          "short_filed_calculation_revision_id": null,
+          "short_work_unit_id": "87619640518f",
+          "state": "descartado",
+          "updated_at": "2026-04-01T09:00:00+00:00",
+          "work_unit_id": "98f076c6ff3f4ab123206dc06d9bf9a6dbfe1d9c0b213ae4483b87619640518f"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "filing-spine-discard"
+}
