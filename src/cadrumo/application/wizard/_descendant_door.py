@@ -154,6 +154,10 @@ def build_descendant_door(record: UserProfileRecord | None) -> tuple[FlowDefinit
     instance answer against the current definition, so the operator opens on their
     existing descendants. A childless record seeds an empty map and opens on the
     count page's zero default.
+
+    Args:
+        record: The :class:`UserProfileRecord` whose descendant facts seed the
+            resumed flow state, or ``None`` for a childless record.
     """
     definition = build_descendant_door_definition()
     seed = descendant_answers_from_record(record)

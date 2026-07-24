@@ -1107,7 +1107,7 @@ def _seed_flow_definition(definition: FlowDefinition, seed_by_page_id: Mapping[s
 
 
 def _load_on_record(profile_id: str) -> UserProfileRecord | None:
-    """Load the active profile record for the on-record seed and projection."""
+    """Load the active :class:`UserProfileRecord` for the on-record seed and projection."""
     from ..user_profile import profile_storage_session
     from ..workflow import workflow_state_repository
 

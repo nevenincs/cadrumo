@@ -3102,7 +3102,7 @@
                 "hu": "77. mező: a Vámhatóság által megállapított, befizetésre váró import ÁFA."
               },
               "localized_labels": {
-                "ca": "Resultat - IVA a la importació liquidat per la Duana pendent d'ingrés",
+                "ca": "Resultat - IVA a l'importació liquidat per la Duana pendent d'ingrés",
                 "en": "Result - import VAT assessed by Customs pending payment",
                 "hu": "Eredmény - Vámhatóság által megállapított, befizetésre váró import ÁFA"
               },
@@ -3280,14 +3280,18 @@
             {
               "casilla_id": "modulos-iva-epigrafe",
               "input_kind": "manual",
-              "label": "Epígrafe IAE de la actividad en régimen simplificado de IVA (módulos)",
+              "label": "IAE heading of the activity under the simplified VAT regime (módulos)",
               "legal_refs": [
                 "ley-37-1992:art-122",
                 "ley-37-1992:art-123",
                 "orden-hac-1347-2024:anexo-i-iva-instrucciones"
               ],
               "localized_help": {},
-              "localized_labels": {},
+              "localized_labels": {
+                "ca": "Epígraf IAE de l'activitat en règim simplificat d'IVA (mòduls)",
+                "en": "IAE heading of the activity under the simplified VAT regime (módulos)",
+                "hu": "A tevékenység IAE-tételszáma az ÁFA egyszerűsített rendszerében (modulok)"
+              },
               "number": "modulos-iva-epigrafe",
               "required": false,
               "source_refs": [
@@ -3297,14 +3301,18 @@
             {
               "casilla_id": "modulos-iva-1-unidades",
               "input_kind": "manual",
-              "label": "Módulo 1 (Personal empleado): número de unidades",
+              "label": "Módulo 1 (Employed staff): number of units",
               "legal_refs": [
                 "ley-37-1992:art-122",
                 "ley-37-1992:art-123",
                 "orden-hac-1347-2024:anexo-i-iva-instrucciones"
               ],
               "localized_help": {},
-              "localized_labels": {},
+              "localized_labels": {
+                "ca": "Mòdul 1 (Personal empleat): nombre d'unitats",
+                "en": "Módulo 1 (Employed staff): number of units",
+                "hu": "1. modul (Alkalmazott személyzet): egységek száma"
+              },
               "number": "modulos-iva-1-unidades",
               "required": false,
               "source_refs": [
@@ -3314,14 +3322,18 @@
             {
               "casilla_id": "modulos-iva-2-unidades",
               "input_kind": "manual",
-              "label": "Módulo 2 (unidad actividad-específica: distancia recorrida, carga vehículos o superficie del local): número de unidades",
+              "label": "Módulo 2 (activity-specific unit: distance travelled, vehicle load or premises floor area): number of units",
               "legal_refs": [
                 "ley-37-1992:art-122",
                 "ley-37-1992:art-123",
                 "orden-hac-1347-2024:anexo-i-iva-instrucciones"
               ],
               "localized_help": {},
-              "localized_labels": {},
+              "localized_labels": {
+                "ca": "Mòdul 2 (unitat activitat específica: distància recorreguda, càrrega de vehicles o superfície del local): nombre d'unitats",
+                "en": "Módulo 2 (activity-specific unit: distance travelled, vehicle load or premises floor area): number of units",
+                "hu": "2. modul (tevékenységspecifikus egység: megtett távolság, járművek raksúlya vagy a helyiség alapterülete): egységek száma"
+              },
               "number": "modulos-iva-2-unidades",
               "required": false,
               "source_refs": [
@@ -3331,14 +3343,18 @@
             {
               "casilla_id": "modulos-iva-3-unidades",
               "input_kind": "manual",
-              "label": "Módulo 3 (unidad actividad-específica: consumo de energía eléctrica u otra): número de unidades",
+              "label": "Módulo 3 (activity-specific unit: electricity or other energy consumption): number of units",
               "legal_refs": [
                 "ley-37-1992:art-122",
                 "ley-37-1992:art-123",
                 "orden-hac-1347-2024:anexo-i-iva-instrucciones"
               ],
               "localized_help": {},
-              "localized_labels": {},
+              "localized_labels": {
+                "ca": "Mòdul 3 (unitat activitat específica: consum d'energia elèctrica o altra): nombre d'unitats",
+                "en": "Módulo 3 (activity-specific unit: electricity or other energy consumption): number of units",
+                "hu": "3. modul (tevékenységspecifikus egység: villamosenergia- vagy egyéb energiafogyasztás): egységek száma"
+              },
               "number": "modulos-iva-3-unidades",
               "required": false,
               "source_refs": [
@@ -3348,13 +3364,17 @@
             {
               "casilla_id": "modulos-iva-cuota-devengada",
               "input_kind": "computed",
-              "label": "Cuota devengada por operaciones corrientes (Σ unidades módulo × cuota devengada anual por unidad)",
+              "label": "Tax due on ordinary transactions (Σ módulo units × annual tax due per unit)",
               "legal_refs": [
                 "ley-37-1992:art-123",
                 "orden-hac-1347-2024:anexo-i-iva-instrucciones"
               ],
               "localized_help": {},
-              "localized_labels": {},
+              "localized_labels": {
+                "ca": "Quota meritada per operacions corrents (Σ unitats mòdul × quota meritada anual per unitat)",
+                "en": "Tax due on ordinary transactions (Σ módulo units × annual tax due per unit)",
+                "hu": "Folyó ügyletek után keletkezett ÁFA (Σ modulegységek × egységenkénti éves keletkezett ÁFA)"
+              },
               "number": "modulos-iva-cuota-devengada",
               "required": false,
               "source_refs": [
@@ -3364,13 +3384,17 @@
             {
               "casilla_id": "modulos-iva-cuota-derivada",
               "input_kind": "computed",
-              "label": "Cuota derivada del régimen simplificado (mayor de cuota devengada neta de deducibles/forfait, o cuota mínima)",
+              "label": "Tax liability under the simplified regime (the greater of net tax due after deductibles/flat-rate reduction, or the minimum tax liability)",
               "legal_refs": [
                 "ley-37-1992:art-123",
                 "orden-hac-1347-2024:anexo-i-iva-instrucciones"
               ],
               "localized_help": {},
-              "localized_labels": {},
+              "localized_labels": {
+                "ca": "Quota derivada del règim simplificat (major de quota meritada neta de deduïbles/forfet, o quota mínima)",
+                "en": "Tax liability under the simplified regime (the greater of net tax due after deductibles/flat-rate reduction, or the minimum tax liability)",
+                "hu": "Az egyszerűsített rendszerből eredő adó (a levonhatókkal/átalánnyal csökkentett nettó keletkezett ÁFA, vagy a minimális adó közül a nagyobb)"
+              },
               "number": "modulos-iva-cuota-derivada",
               "required": false,
               "source_refs": [

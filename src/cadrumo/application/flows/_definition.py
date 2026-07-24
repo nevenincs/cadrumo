@@ -20,7 +20,6 @@ gates) so existing catalogues migrate by extension.
 
 from __future__ import annotations
 
-import hashlib
 import json
 from pathlib import Path
 from typing import Union
@@ -28,6 +27,7 @@ from typing import Union
 from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
+from ...core.hashing import sha256_hex
 from ...core.flows import (
     DEFER_TOKEN,
     CheckpointAvailability,
@@ -307,7 +307,7 @@ class FlowDefinition(BaseModel):
         payload = self.model_dump(mode="python", exclude={"answers_model"})
         payload["answers_model"] = f"{self.answers_model.__module__}.{self.answers_model.__qualname__}"
         canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=_stable_token)
-        return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+        return sha256_hex(canonical.encode("utf-8"))
 
 
 def _stable_token(value: object) -> str:

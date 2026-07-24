@@ -27,11 +27,11 @@ from .....tests.secure_sql import isolated_profile_storage_root
 from ....cli._config import _status_frontend
 from ....cli._config._status_frontend import present_status_tui
 
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
 if TYPE_CHECKING:
     from collections.abc import Iterator
     from pathlib import Path
-
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _ctx_with_format(format_name: str) -> typer.Context:

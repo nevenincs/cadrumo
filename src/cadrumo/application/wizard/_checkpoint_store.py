@@ -70,6 +70,11 @@ def descendant_clearing_facts(
     partial re-persist. This closes the count-shrink desync where
     ``descendant_list_from_facts`` would otherwise scan orphaned indices the
     count no longer covers.
+
+    Args:
+        record: The :class:`UserProfileRecord` to scan for stale descendant
+            paths, or ``None``.
+        answers: The page-keyed canonical answer map for the current run.
     """
     if record is None or DESCENDANTS_COUNT_PAGE_ID not in answers:
         return ()

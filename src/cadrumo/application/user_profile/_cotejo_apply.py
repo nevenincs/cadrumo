@@ -119,6 +119,10 @@ def open_censo_divergences(record: UserProfileRecord | None) -> tuple[CensoDiver
     never resurfaces, groups the indexed ``censo.divergencia.{n}.*``
     subpaths back into typed rows in index order, and skips any incomplete
     index (a missing axis or artefact value).
+
+    Args:
+        record: The :class:`UserProfileRecord` whose facts are projected for
+            open ``censo.divergencia.*`` rows, or ``None``.
     """
     from ._projections import record_to_path_values
 
@@ -148,6 +152,10 @@ def censo_divergence_notice(record: UserProfileRecord | None) -> Notice | None:
     A non-blocking advisory surfaced on profile reads: it never silently
     resolves an open divergence. Returns ``None`` when no divergence row is
     open so a clean profile carries no notice.
+
+    Args:
+        record: The :class:`UserProfileRecord` whose open divergence rows are
+            summarised into the notice, or ``None``.
     """
     divergences = open_censo_divergences(record)
     if not divergences:
