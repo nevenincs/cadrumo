@@ -261,3 +261,108 @@ def test_required_optional_badge_keys_remain_scanner_visible() -> None:
             "_*_LOCALE_KEYS constant collection regressed (see "
             "locales/_ast_scanner.py._extract_locale_constant_keys)."
         )
+
+
+def test_no_catalogue_leaf_is_a_self_referencing_placeholder() -> None:
+    """A leaf whose value equals its own dotted key is a scaffold echo, repo-wide.
+
+    The catalogue lookup treats ``value == key`` as a miss and falls back to
+    humanised English, so a self-referencing placeholder passes the parity and
+    honesty gates while rendering untranslated for every operator. The class
+    shipped twice: the ``flows.*`` validation leaves were stripped to echoes by
+    a scaffold pass, and ``application.wizard.notices.*`` placeholders reached
+    the branch before value inspection caught them. The assertion is
+    namespace-unscoped on purpose.
+    """
+    import yaml
+
+    total_leaves = 0
+    echoes: list[str] = []
+    for locale in ("en", "es", "ca", "hu"):
+        catalogue = _SRC_ROOT / "locales" / f"{locale}.yml"
+        payload = yaml.safe_load(catalogue.read_text(encoding="utf-8"))
+        for key, value in _flatten_leaves(payload.get(locale, payload)):
+            total_leaves += 1
+            if value == key:
+                echoes.append(f"{locale}:{key}")
+    assert total_leaves > 1000, "catalogue flattening returned implausibly few leaves - the walk regressed"
+    assert not echoes, (
+        "self-referencing placeholder leaves (value == key) found; author real "
+        "values via `python -m cadrumo.locales set`:\n" + "\n".join(echoes)
+    )
+
+
+def _flatten_leaves(node: object, prefix: str = "") -> list[tuple[str, object]]:
+    if not isinstance(node, dict):
+        return [(prefix, node)]
+    leaves: list[tuple[str, object]] = []
+    for key, value in node.items():
+        dotted = f"{prefix}.{key}" if prefix else str(key)
+        leaves.extend(_flatten_leaves(value, dotted))
+    return leaves
+
+
+#: The complete sanctioned inventory of production call sites that override
+#: the output language outside a ctx-scoped settings override: the wizard's
+#: language machinery only - the pre-walk requested-language entry and the
+#: mid-walk activation hook, both feeding one ExitStack whose lifetime spans
+#: the interactive walk. Any new site must be reviewed here with a reason:
+#: an override entered outside a ctx scope keeps rendering AFTER the command
+#: callback unwinds, which is how a notice renders in the wrong language.
+_SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
+    {
+        # Non-ctx-scoped (the wizard's language machinery, one ExitStack
+        # spanning the interactive walk) - the surface the wrong-language
+        # bound was proven against:
+        ("application/wizard/_commands.py", "_enter_requested_output_language"),
+        ("application/wizard/_commands.py", "_activate"),
+        # Ctx-scoped (entered and unwound inside the command callback's
+        # settings scope - safe by construction):
+        ("entrypoints/cli/__init__.py", "_root"),
+        ("entrypoints/cli/_common.py", "activate_subcommand_output_language"),
+        ("entrypoints/cli/_config/_custody.py", "_pin_render_language_to_target_bucket"),
+    },
+)
+
+
+def test_language_override_sites_match_the_sanctioned_inventory() -> None:
+    """Every production ``override_settings(cadrumo_output_language=...)`` site is pinned.
+
+    The wrong-language-notice class is bounded to overrides entered outside a
+    ctx-scoped settings scope; the sweep that established the bound proved the
+    wizard's language machinery is the only such surface. This tripwire keeps
+    that proof current: a future command adding its own language override
+    reds here and gets reviewed for ctx-scoping instead of silently
+    re-introducing post-unwind rendering.
+    """
+    import ast
+
+    found: set[tuple[str, str]] = set()
+    for module in _SRC_ROOT.rglob("*.py"):
+        rel = module.relative_to(_SRC_ROOT).as_posix()
+        if "/tests/" in f"/{rel}" or module.name.startswith("test_"):
+            continue
+        tree = ast.parse(module.read_text(encoding="utf-8"), filename=rel)
+        functions = [func for func in ast.walk(tree) if isinstance(func, ast.FunctionDef | ast.AsyncFunctionDef)]
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.Call)
+                and getattr(node.func, "id", getattr(node.func, "attr", None)) == "override_settings"
+                and any(kw.arg == "cadrumo_output_language" for kw in node.keywords)
+            ):
+                # Attribute the call to its INNERMOST enclosing function so a
+                # nested closure is not double-counted under its parent.
+                containing = [
+                    func for func in functions if func.lineno <= node.lineno <= (func.end_lineno or func.lineno)
+                ]
+                if containing:
+                    innermost = max(containing, key=lambda f: f.lineno)
+                    found.add((rel, innermost.name))
+                else:
+                    found.add((rel, "<module>"))
+    assert found == set(_SANCTIONED_LANGUAGE_OVERRIDE_SITES), (
+        "production cadrumo_output_language override sites drifted from the "
+        f"sanctioned inventory.\nfound: {sorted(found)}\n"
+        f"sanctioned: {sorted(_SANCTIONED_LANGUAGE_OVERRIDE_SITES)}\n"
+        "A new site must be ctx-scoped or reviewed into the inventory with a reason."
+    )
