@@ -6574,6 +6574,10 @@ flows:
         label: Perfil
         status: Estat
       none: No hi ha perfils registrats.
+      status:
+        active: actiu
+        setup_incomplete: configuració incompleta
+        tombstoned: eliminat
     recovery:
       commands_title: Accions (copiar i executar)
       enrolled: activat
