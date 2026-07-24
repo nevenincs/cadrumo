@@ -33,11 +33,6 @@ import pytest
 import yaml
 
 from ....core.flows import CopyRefKind, FlowWidgetKind
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-if TYPE_CHECKING:
-    from collections.abc import Iterator
 from .. import (
     CopyRef,
     FlowChoice,
@@ -48,6 +43,11 @@ from .. import (
     register_copy_source,
     resolve_copy,
 )
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 # A real bundled locale key present in the shipped catalogue.
 _REAL_LOCALE_KEY = "wizard.setup.title"
