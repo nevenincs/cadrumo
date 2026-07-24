@@ -195,6 +195,13 @@ from ._apoderado import (
     ApoderadoService,
     ApoderadoStatus,
 )
+from ._apoderado_flow import (
+    APODERADO_FLOW_ID,
+    APODERADO_FLOW_LOCALE_KEYS,
+    ApoderadoFlowAnswers,
+    apoderado_answers_from_state,
+    build_apoderado_flow_definition,
+)
 from ._certificate_secret_backend import (
     CertificateSecretBackend,
     SecureStorageCertificateSecretBackend,
@@ -291,12 +298,15 @@ from ._sessions import (
 )
 
 __all__ = [
+    "APODERADO_FLOW_ID",
+    "APODERADO_FLOW_LOCALE_KEYS",
     "AUTH_DIAGNOSTIC_PHONE_STATES",
     "AUTH_PROVIDER_CATALOGUE",
     "ActiveAuthProjectionSnapshot",
     "ActiveCertificateCredentials",
     "ApoderadoConfiguration",
     "ApoderadoConfigurationNotSetError",
+    "ApoderadoFlowAnswers",
     "ApoderadoLiveCheckUnavailableError",
     "ApoderadoService",
     "ApoderadoStatus",
@@ -350,8 +360,10 @@ __all__ = [
     "StorageStatePaths",
     "acquire_auth_acquisition_lock",
     "active_auth_projection_span",
+    "apoderado_answers_from_state",
     "auth_acquisition_lock_path",
     "auth_lock_ttl_seconds",
+    "build_apoderado_flow_definition",
     "build_live_auth_preflight_report",
     "check_operator_certificate_sources",
     "clear_auth_acquisition_lock",
