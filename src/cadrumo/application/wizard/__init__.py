@@ -47,6 +47,14 @@ from ._copy_sources import (
     resolve_profile_schema_copy,
     resolve_profile_terminology_copy,
 )
+from ._descendant_group import (
+    DESCENDANT_GROUP,
+    DESCENDANT_LOCALE_KEYS,
+    DESCENDANT_NIF_VALIDATOR_ID,
+    DESCENDANTS_COUNT_PAGE_ID,
+    DESCENDANTS_GROUP_ID,
+    attach_descendant_group,
+)
 from ._errors import WizardAnswerQueueUnderflowError, WizardValidationError
 from ._flow_validators import (
     TAXPAYER_PROJECTION_VALIDATOR_ID,
@@ -62,8 +70,13 @@ from ._models import (
     WizardSection,
     WizardVisibility,
 )
-from ._persistence import project_answers
+from ._persistence import descendant_facts_from_answers, project_answers
 from ._prompter import CanonicalAnswerPrompter, Prompter, QuestionaryPrompter, WizardUnsupportedConsoleError
+from ._setup_legal_validators import (
+    SETUP_UNIDAD_FAMILIAR_VALIDATOR_ID,
+    attach_setup_legal_validators,
+    validate_unidad_familiar_conjunta,
+)
 from ._status import (
     WizardStatusError,
     WizardStatusReport,
@@ -73,6 +86,12 @@ from ._status import (
 from ._widgets import validate_widget_answer
 
 __all__ = [
+    "DESCENDANTS_COUNT_PAGE_ID",
+    "DESCENDANTS_GROUP_ID",
+    "DESCENDANT_GROUP",
+    "DESCENDANT_LOCALE_KEYS",
+    "DESCENDANT_NIF_VALIDATOR_ID",
+    "SETUP_UNIDAD_FAMILIAR_VALIDATOR_ID",
     "TAXPAYER_PROJECTION_VALIDATOR_ID",
     "WIZARD_FLOWS",
     "CanonicalAnswerPrompter",
@@ -91,17 +110,21 @@ __all__ = [
     "WizardUnsupportedConsoleError",
     "WizardValidationError",
     "WizardVisibility",
+    "attach_descendant_group",
+    "attach_setup_legal_validators",
     "build_flow_legal_zones",
     "build_taxpayer_projection_validator",
     "build_wizard_command",
     "build_wizard_status",
     "checkpoint_answers_from_record",
     "checkpoint_facts_from_answers",
+    "descendant_facts_from_answers",
     "load_active_taxpayer_profile",
     "project_answers",
     "register_profile_copy_sources",
     "register_taxpayer_projection_validator",
     "resolve_profile_schema_copy",
     "resolve_profile_terminology_copy",
+    "validate_unidad_familiar_conjunta",
     "validate_widget_answer",
 ]
