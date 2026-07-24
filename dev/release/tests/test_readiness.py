@@ -396,6 +396,20 @@ def test_build_report_blocks_without_complete_distribution_evidence(tmp_path: Pa
     }
 
 
+def test_build_report_wires_in_the_packaging_smoke_evidence_check(tmp_path: Path) -> None:
+    """The advisory packaging-smoke evidence check runs as part of the aggregate report."""
+    root = _make_repo_root(tmp_path)
+
+    report = readiness.build_report(root, skip_network=True)
+
+    smoke = next((c for c in report.checks if c.name == "packaging-smoke-evidence"), None)
+    assert smoke is not None, "packaging-smoke-evidence must be wired into build_report"
+    # Advisory semantics survive the wiring: a fresh root has no smoke run, and an
+    # absent manifest degrades to advisory rather than blocking the whole report.
+    assert smoke.severity == "advisory"
+    assert smoke.name not in {c.name for c in report.blocking_failures}
+
+
 def test_build_report_blocks_on_a_real_version_drift(tmp_path: Path) -> None:
     """A real version-surface drift propagates to the aggregate report as a blocking failure."""
     root = _make_repo_root(tmp_path)
