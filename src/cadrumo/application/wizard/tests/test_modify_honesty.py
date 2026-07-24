@@ -57,7 +57,14 @@ from ...flows import (
     flow_definition_from_wizard_flow,
 )
 from .._catalogue import SETUP_FLOW
-from .._commands import _MODIFY_NO_RESUME_CODE, _SETUP_CHECKPOINT, _emit_wizard_success
+from .._commands import (
+    _MODIFY_DESCENDANTS_DOOR_CODE,
+    _MODIFY_NO_RESUME_CODE,
+    _SETUP_CHECKPOINT,
+    _emit_wizard_success,
+    _setup_flow_definition,
+)
+from .._descendant_group import DESCENDANT_ADOPTION_VALIDATOR_ID, DESCENDANTS_COUNT_PAGE_ID, DESCENDANTS_GROUP_ID
 from .test_setup_flow_frontend import _invoke_interactive, _tokens_with_substitutions
 from .test_setup_runtime import _scripted_answers_for_individual_declaration
 
@@ -168,6 +175,65 @@ def test_envelope_omits_modify_notice_when_not_requested(
     document = json.loads(capsys.readouterr().out)
     codes = {notice["code"] for notice in document["notices"]}
     assert _MODIFY_NO_RESUME_CODE not in codes
+
+
+# ── surface 3: the descendant group is withheld from modify mode ─────────
+
+
+def test_modify_definition_carries_no_descendant_pages() -> None:
+    """MODIFY withholds the descendant group; CREATE splices it in.
+
+    Modify-mode seeding cannot instantiate the repeating group, so rendering
+    it would show an operator's descendants as an empty group whose commit
+    silently erases them. The gate is the mode-aware splice: the CREATE
+    definition carries the count page, the group, and the adoption cross-field
+    validator; the MODIFY definition carries none of them.
+    """
+    create_definition = _setup_flow_definition(SETUP_FLOW, attach_descendants=True)
+    modify_definition = _setup_flow_definition(SETUP_FLOW, attach_descendants=False)
+
+    create_familia = next(section for section in create_definition.sections if section.id == "familia")
+    modify_familia = next(section for section in modify_definition.sections if section.id == "familia")
+    create_ids = {item.id for item in create_familia.items}
+    modify_ids = {item.id for item in modify_familia.items}
+
+    assert {DESCENDANTS_COUNT_PAGE_ID, DESCENDANTS_GROUP_ID} <= create_ids
+    assert DESCENDANT_ADOPTION_VALIDATOR_ID in create_definition.flow_validator_ids
+    assert DESCENDANTS_COUNT_PAGE_ID not in modify_ids
+    assert DESCENDANTS_GROUP_ID not in modify_ids
+    assert DESCENDANT_ADOPTION_VALIDATOR_ID not in modify_definition.flow_validator_ids
+
+
+def test_edit_envelope_carries_descendants_via_door_notice(
+    capsys: pytest.CaptureFixture[str],
+    _json_context: None,
+) -> None:
+    """An interactive modify run points the operator at the descendiente door.
+
+    The group is withheld from modify mode, so the surface can never be
+    silently absent: the final envelope carries an info notice naming the
+    dedicated descendant-management command as its suggestion.
+    """
+    _emit_wizard_success("edit", "probe-profile", modify_descendants_via_door=True)
+
+    document = json.loads(capsys.readouterr().out)
+    codes = {notice["code"]: notice for notice in document["notices"]}
+    assert _MODIFY_DESCENDANTS_DOOR_CODE in codes
+    notice = codes[_MODIFY_DESCENDANTS_DOOR_CODE]
+    assert notice["severity"] == NoticeSeverity.INFO.value
+    assert notice["suggestion"] == "aeat config profile descendiente"
+
+
+def test_create_envelope_omits_descendants_via_door_notice(
+    capsys: pytest.CaptureFixture[str],
+    _json_context: None,
+) -> None:
+    """The door notice is scoped to interactive modify; a create omits it."""
+    _emit_wizard_success("create", "probe-profile", modify_descendants_via_door=False)
+
+    document = json.loads(capsys.readouterr().out)
+    codes = {notice["code"] for notice in document["notices"]}
+    assert _MODIFY_DESCENDANTS_DOOR_CODE not in codes
 
 
 @pytest.mark.parametrize(

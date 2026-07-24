@@ -21,12 +21,13 @@ import pytest
 from ....core.flows import FlowMode
 from ....domain.user_profile import new_profile_id
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...flows import flow_definition_from_wizard_flow, run_scripted_flow
+from ...flows import flow_definition_from_wizard_flow, resume_flow, run_scripted_flow
 from ...user_profile import profile_storage_session, record_to_path_values
 from ...workflow import workflow_state_repository
-from .. import ProfileFactsCheckpointStore, checkpoint_facts_from_answers
+from .. import ProfileFactsCheckpointStore, checkpoint_answers_from_record, checkpoint_facts_from_answers
 from .._catalogue import SETUP_FLOW
-from .._commands import _SETUP_CHECKPOINT
+from .._commands import _SETUP_CHECKPOINT, _setup_flow_definition
+from .._descendant_group import DESCENDANTS_GROUP_ID
 from .test_setup_runtime import _scripted_answers_for_individual_declaration
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -153,3 +154,57 @@ def test_count_zero_clears_every_descendant_row(_backend: Path) -> None:
     after = _record_values(profile_id)
     assert not any(path.startswith("renta_family.descendiente.") for path in after)
     assert after["renta_family.descendientes_count"] == "0"
+
+
+# ── (d) resume seeding: facts re-project, resume re-instantiates ────
+
+
+def _descendant_facts(answers: dict[str, str]) -> dict[str, str]:
+    """The descendant slice of a checkpoint fact projection, path -> value."""
+    return {
+        fact.path: fact.value
+        for fact in checkpoint_facts_from_answers(SETUP_FLOW, answers)
+        if fact.path.startswith("renta_family.descendiente")
+    }
+
+
+def test_resume_seeding_reinstantiates_the_group_and_round_trips(_backend: Path) -> None:
+    """A saved create round-trips its descendants through resume seeding.
+
+    Create two descendants, read the persisted record, re-project it to a
+    page-keyed answer map, and prove the count page plus both instances
+    reappear (the seed gap this closes). ``resume_flow`` re-walks that seed
+    against the full descendant-bearing definition: the count answer commits
+    first, revealing the instance pages the rest of the seed then fills, so
+    the group is re-instantiated with no stale or orphaned answer. Completing
+    from the resumed answers reconstructs an identical descendant fact set.
+    Expected values are the specification (the saved answers), never a copy
+    of the projection output.
+    """
+    profile_id = new_profile_id()
+    store = _store(profile_id)
+    store.save(SETUP_FLOW.id, _baseline_with_two_descendants())
+
+    with profile_storage_session(profile_id):
+        record = workflow_state_repository().load().active_profile_record()
+    seeded = checkpoint_answers_from_record(SETUP_FLOW, record)
+
+    # The projection now carries the count page AND both instances.
+    assert seeded["descendientes-count"] == "2"
+    assert seeded["descendientes#0.birth-date"] == "2023-05-10"
+    assert seeded["descendientes#0.gastos-guarderia"] == "900"
+    assert seeded["descendientes#1.birth-date"] == "2015-03-01"
+    assert seeded["descendientes#1.adoption-date"] == "2016-06-01"
+    assert seeded["descendientes#1.nif"] == "00000000T"
+
+    # resume_flow re-instantiates the group from the seed: the count commits
+    # first, the instances seed against the current definition, none go stale.
+    definition = _setup_flow_definition(SETUP_FLOW)
+    state = resume_flow(definition, seeded, mode=FlowMode.CREATE)
+    assert state.instance_counts.get(DESCENDANTS_GROUP_ID) == 2
+    assert state.answers["descendientes#0.birth-date"] == "2023-05-10"
+    assert state.answers["descendientes#1.adoption-date"] == "2016-06-01"
+    assert not any(key.startswith("descendientes") for key in state.stale)
+
+    # Completing from the resumed answers reconstructs an identical fact set.
+    assert _descendant_facts(dict(state.answers)) == _descendant_facts(_baseline_with_two_descendants())
