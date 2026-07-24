@@ -31,6 +31,14 @@ facade (:class:`MintedRecovery`, :class:`RecoveryRecord`,
 :func:`open_session_from_recovery`). Importing this package does not
 resolve providers, acquire keys, unwrap recovery material, or write
 custody files; callers must invoke the exported operations explicitly.
+
+The persisted cross-process profile session (the ``aeat config login``
+state) is exported through :class:`PersistedProfileSession`,
+:class:`ProfileSessionResumeOutcome`, and the
+:func:`mint_profile_session` / :func:`resume_profile_session` /
+:func:`delete_profile_session` lifecycle, with the failed-login
+throttle riding beside it (:class:`LoginThrottleState`,
+:func:`evaluate_login_throttle`).
 """
 
 from __future__ import annotations
@@ -80,6 +88,23 @@ from ._master_key_derivation import (
     ARGON2_TIME_COST,
     derive_kek_with_params,
 )
+from ._persisted_session import (
+    PROFILE_SESSION_KEYCHAIN_SERVICE,
+    PROFILE_SESSION_SCHEMA_VERSION,
+    PersistedProfileSession,
+    ProfileSessionResumeOutcome,
+    advance_profile_session_idle_deadline,
+    delete_profile_session,
+    delete_profile_session_key,
+    load_profile_session_key,
+    mint_profile_session,
+    profile_session_path,
+    resume_profile_session,
+    store_profile_session_key,
+    unwrap_profile_session_dek,
+    wrap_profile_session_dek,
+    write_profile_session,
+)
 from ._provider_session import exit_provider_session
 from ._recovery import (
     RecoveryKey,
@@ -117,6 +142,8 @@ __all__ = [
     "ARGON2_MEMORY_COST_KIB",
     "ARGON2_PARALLELISM",
     "ARGON2_TIME_COST",
+    "PROFILE_SESSION_KEYCHAIN_SERVICE",
+    "PROFILE_SESSION_SCHEMA_VERSION",
     "BucketSession",
     "FileFallbackMasterKeyProvider",
     "KdfParams",
@@ -126,6 +153,8 @@ __all__ = [
     "MasterKeyReentrantError",
     "MintedRecovery",
     "NoActiveBucketSessionError",
+    "PersistedProfileSession",
+    "ProfileSessionResumeOutcome",
     "RecoveryEnrollmentMode",
     "RecoveryEnrollmentOutcome",
     "RecoveryKey",
@@ -139,11 +168,14 @@ __all__ = [
     "WrappedMasterKey",
     "activate_master_key_provider",
     "activate_session",
+    "advance_profile_session_idle_deadline",
     "atomic_write_secure_bytes",
     "bucket_dek_path",
     "close_active_bucket_session",
     "current_active_bucket_session",
     "decode_mnemonic",
+    "delete_profile_session",
+    "delete_profile_session_key",
     "derive_kek_with_params",
     "encode_mnemonic",
     "evaluate_idle",
@@ -154,12 +186,15 @@ __all__ = [
     "get_master_key_provider",
     "has_active_bucket_session",
     "load_or_mint_bucket_dek",
+    "load_profile_session_key",
     "load_recovery_envelope",
     "load_wrapped_master_key",
     "login_throttle_path",
     "looks_like_real_tax_id",
+    "mint_profile_session",
     "mint_recovery_envelope",
     "open_session_from_recovery",
+    "profile_session_path",
     "read_wrapped_bucket_dek",
     "record_login_failure",
     "recovery_create",
@@ -169,14 +204,19 @@ __all__ = [
     "recovery_verify",
     "refuse_unsecured_with_real_nif",
     "reset_login_throttle",
+    "resume_profile_session",
     "save_recovery_envelope",
     "save_wrapped_master_key",
+    "store_profile_session_key",
     "suspend_active_session",
     "unwrap_dek",
     "unwrap_master_key",
+    "unwrap_profile_session_dek",
     "unwrap_recovery_envelope",
     "verify_recovery_mnemonic",
     "wrap_dek",
     "wrap_master_key",
+    "wrap_profile_session_dek",
+    "write_profile_session",
     "write_wrapped_bucket_dek",
 ]

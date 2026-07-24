@@ -329,6 +329,19 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
                 "adapters.persistence.storage.master_key._master_key_bucket_dek",
                 "adapters.persistence.storage.master_key._dek_wrap",
             ),
+            # login-throttle sidecar keystore-path resolution: the throttle defers
+            # the bucket import because bucket/_manifest imports master_key._kdf_params
+            # at module load (the same cycle _master_key_bucket_dek defers around).
+            ImportEdge(
+                "adapters.persistence.storage.master_key._login_throttle",
+                "adapters.persistence.storage.bucket",
+            ),
+            # persisted profile-session keystore-path resolution: same bucket
+            # module-load cycle as the two siblings above.
+            ImportEdge(
+                "adapters.persistence.storage.master_key._persisted_session",
+                "adapters.persistence.storage.bucket",
+            ),
             ImportEdge("adapters.persistence.storage.master_key._master_key_io", "core.config"),
             ImportEdge("adapters.persistence.storage.master_key._master_key_tax_id", "core.identity"),
             ImportEdge(
@@ -770,7 +783,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
     UnsanctionedClass.NAMED_CYCLE_BREAK: 1,
     UnsanctionedClass.PORTS_INVERSION_PENDING: 36,
     UnsanctionedClass.DOMAIN_CYCLE_BREAK: 51,
-    UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 177,  # +1 calc-sheets apply core.config Settings deferral (1d026764cc)
+    UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 179,  # +2 master_key login-throttle + persisted profile-session bucket keystore-path deferrals
     UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 38,  # net +1 atomic_write bootstrap-cycle deferrals (_bucket_pointer_io, corpus_manifest; env_io net-zero, corpus_manifest's save_corpus_manifest site retired its own core.locks edge)
     UnsanctionedClass.APPLICATION_DEFERRAL: 529,  # +1 ledger._actions_manual->invoices cycle-break (was 528)
 }
@@ -782,7 +795,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
 # baseline (the modelos_work_units/participation_index catalogue-repository
 # consolidation, the corpus_search/mcp/user_profile deferrals introduced by
 # intervening commits) were swept into their classified buckets in one pass.
-_ALLOWLIST_EDGE_CEILING: int = 474  # +1 calc-sheets apply core.config Settings deferral, 1d026764cc (was 473).
+_ALLOWLIST_EDGE_CEILING: int = 476  # +2 master_key login-throttle + persisted profile-session bucket deferrals (was 474).
 
 
 def _cadrumo_relative(dotted: str) -> str:
