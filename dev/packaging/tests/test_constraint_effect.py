@@ -1,6 +1,6 @@
 """Real-behavior offline coverage for the install-time constraint-effect gate.
 
-No mocks: a throwaway stub interpreter script emits a controlled
+No mocks: a throwaway synthetic-metadata interpreter script emits a controlled
 ``importlib.metadata``-shaped distribution JSON and is passed to
 :func:`assert_installed_matches_constraints` as the installed interpreter, so the
 subprocess enumeration path runs exactly as it does against a real venv python.
@@ -58,34 +58,34 @@ _DUAL_MARKER_LINES: tuple[str, ...] = (
 )
 
 
-def _stub_interpreter(tmp_path: Path, distributions: Mapping[str, str]) -> Path:
-    """Write a stub python script that emits the given installed distribution set.
+def _synthetic_metadata_interpreter(tmp_path: Path, distributions: Mapping[str, str]) -> Path:
+    """Write a synthetic python script that emits the given installed distribution set.
 
     The script mirrors the JSON shape the real enumeration one-liner prints, so
     :func:`enumerate_installed_distributions` parses it through the identical
     subprocess path. It is executed by the current interpreter via a shebang-free
-    ``python <script>`` call, so the stub itself needs no execute bit.
+    ``python <script>`` call, so the synthetic script itself needs no execute bit.
     """
     payload = json.dumps(dict(distributions))
-    script = tmp_path / "stub_metadata_interpreter.py"
+    script = tmp_path / "synthetic_metadata_interpreter.py"
     script.write_text(f"print({payload!r})\n", encoding="utf-8")
     script.chmod(script.stat().st_mode | stat.S_IRUSR)
     return script
 
 
-def _run_against_stub(
+def _run_against_synthetic_interpreter(
     tmp_path: Path,
     distributions: Mapping[str, str],
     *,
     constraint_lines: Sequence[str] = _CONSTRAINT_LINES,
 ) -> None:
-    """Drive the real assertion against a stub interpreter emitting ``distributions``."""
-    script = _stub_interpreter(tmp_path, distributions)
+    """Drive the real assertion against a synthetic interpreter emitting ``distributions``."""
+    script = _synthetic_metadata_interpreter(tmp_path, distributions)
     # A tiny launcher interpreter: a shell/py shim would couple to the platform,
     # so instead wrap the real interpreter to run the stub script and ignore the
     # ``-c`` enumeration snippet the helper passes. Realised as an executable
     # script the helper calls as ``python_exe``.
-    launcher = tmp_path / ("stub_python" + (".cmd" if os.name == "nt" else ""))
+    launcher = tmp_path / ("synthetic_python" + (".cmd" if os.name == "nt" else ""))
     if os.name == "nt":
         launcher.write_text(
             f'@echo off\r\n"{sys.executable}" "{script}"\r\n',
@@ -111,7 +111,7 @@ def test_passing_case_matches_every_active_pin(tmp_path: Path) -> None:
         # An unconstrained extra distribution is ignored, not flagged.
         "cadrumo": "0.2.1",
     }
-    _run_against_stub(tmp_path, installed)
+    _run_against_synthetic_interpreter(tmp_path, installed)
 
 
 def test_foreign_platform_row_is_ignored_even_when_installed(tmp_path: Path) -> None:
@@ -125,7 +125,7 @@ def test_foreign_platform_row_is_ignored_even_when_installed(tmp_path: Path) -> 
         # must NOT be flagged, because this platform's closure does not pin it.
         "foreignonly": "0.0.1",
     }
-    _run_against_stub(tmp_path, installed)
+    _run_against_synthetic_interpreter(tmp_path, installed)
 
 
 def test_drifted_version_is_named_with_expected_and_actual(tmp_path: Path) -> None:
@@ -137,7 +137,7 @@ def test_drifted_version_is_named_with_expected_and_actual(tmp_path: Path) -> No
         "activehere": "1.0.0",
     }
     with pytest.raises(ConstraintDriftError) as excinfo:
-        _run_against_stub(tmp_path, installed)
+        _run_against_synthetic_interpreter(tmp_path, installed)
     message = str(excinfo.value)
     assert "click" in message
     assert "expected 8.3.0" in message
@@ -156,7 +156,7 @@ def test_missing_mandatory_distribution_is_reported(tmp_path: Path) -> None:
         # pydantic (mandatory) omitted entirely.
     }
     with pytest.raises(ConstraintDriftError) as excinfo:
-        _run_against_stub(tmp_path, installed)
+        _run_against_synthetic_interpreter(tmp_path, installed)
     message = str(excinfo.value)
     assert "pydantic" in message
     assert "actual <missing>" in message
@@ -172,7 +172,7 @@ def test_active_gated_distribution_missing_on_its_own_platform_is_refused(tmp_pa
         # under the retired if-installed heuristic its absence was tolerated.
     }
     with pytest.raises(ConstraintDriftError) as excinfo:
-        _run_against_stub(tmp_path, installed)
+        _run_against_synthetic_interpreter(tmp_path, installed)
     message = str(excinfo.value)
     assert "activehere" in message
     assert "actual <missing>" in message
@@ -187,7 +187,7 @@ def test_active_gated_distribution_present_at_wrong_pin_is_refused(tmp_path: Pat
         "activehere": "1.0.1",  # active gated row, wrong pin
     }
     with pytest.raises(ConstraintDriftError) as excinfo:
-        _run_against_stub(tmp_path, installed)
+        _run_against_synthetic_interpreter(tmp_path, installed)
     assert "activehere" in str(excinfo.value)
 
 
@@ -203,7 +203,7 @@ def test_mutually_exclusive_marker_accepts_only_the_active_version(tmp_path: Pat
         "dualpin": "2.0.0",  # the foreign-platform pin
     }
     with pytest.raises(ConstraintDriftError) as excinfo:
-        _run_against_stub(tmp_path, installed, constraint_lines=_DUAL_MARKER_LINES)
+        _run_against_synthetic_interpreter(tmp_path, installed, constraint_lines=_DUAL_MARKER_LINES)
     message = str(excinfo.value)
     assert "dualpin" in message
     assert "expected 1.0.0" in message
@@ -216,7 +216,7 @@ def test_mutually_exclusive_marker_accepts_the_active_version(tmp_path: Path) ->
         "anyio": "4.11.0",
         "dualpin": "1.0.0",  # this platform's pin
     }
-    _run_against_stub(tmp_path, installed, constraint_lines=_DUAL_MARKER_LINES)
+    _run_against_synthetic_interpreter(tmp_path, installed, constraint_lines=_DUAL_MARKER_LINES)
 
 
 def test_parse_rejects_a_non_pinned_row() -> None:
