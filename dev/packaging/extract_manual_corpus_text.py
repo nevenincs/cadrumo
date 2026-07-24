@@ -21,6 +21,10 @@ Usage::
 
 The ``--check`` mode exits non-zero when any sidecar is stale or missing
 without writing anything; it is suitable for CI freshness gates.
+
+Operator-run corpus regeneration: run ``just regenerate-corpus-text`` (or the
+``python -m`` form above) after a corpus PDF changes and commit the regenerated
+sidecars; ``just check-corpus-text`` is the freshness gate.
 """
 
 from __future__ import annotations
