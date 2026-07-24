@@ -7493,6 +7493,9 @@ wizard:
       tax-residence-ccaa:
         prompt: Comunidad autónoma de residencia fiscal
       title: Residencia fiscal
+    review:
+      registered-non-official-suffix: ' (del certificado censal — no verificado por
+        la AEAT)'
     spouse:
       spouse-birth-date:
         prompt: Fecha de nacimiento del cónyuge

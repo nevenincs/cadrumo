@@ -7006,6 +7006,8 @@ wizard:
       tax-residence-ccaa:
         prompt: Tax-residence autonomous community
       title: Tax residence
+    review:
+      registered-non-official-suffix: ' (from censal certificate — not AEAT-verified)'
     spouse:
       spouse-birth-date:
         prompt: Spouse birth date

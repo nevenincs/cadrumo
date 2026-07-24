@@ -7362,6 +7362,9 @@ wizard:
       tax-residence-ccaa:
         prompt: Adóügyi illetékességi autonóm közösség
       title: Adóügyi illetőség
+    review:
+      registered-non-official-suffix: ' (censal tanúsítványból — az AEAT által nem
+        ellenőrzött)'
     spouse:
       spouse-birth-date:
         prompt: Házastárs születési dátuma
