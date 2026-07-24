@@ -1927,7 +1927,7 @@ def _emit_save_exit_notice(profile_name: str, *, message: str | None = None) -> 
 
     resume_command = f"aeat config profile create {profile_name}"
     if message is None:
-        message = tr("application.wizard.notices.setup_saved_resume_later")
+        message = tr("application.wizard.notices.setup_saved_resume_later", name=profile_name)
     notice = Notice(
         severity=NoticeSeverity.INFO,
         code=_SAVE_EXIT_RESUME_CODE,
@@ -1973,7 +1973,7 @@ def _execute_wizard_command(
         default="Descendants are not part of profile edit. Manage them with '{command}'.",
         command=_DESCENDIENTE_DOOR_COMMAND,
     )
-    save_exit_message = tr("application.wizard.notices.setup_saved_resume_later")
+    save_exit_message = tr("application.wizard.notices.setup_saved_resume_later", name=profile_name)
     _refuse_foral_ccaa(canonical, explicit_flags)
     # Interactive create is the facts-as-checkpoint path: the store mints
     # the profile early in ``SETUP_INCOMPLETE`` state and persists each

@@ -58,9 +58,9 @@ _DIVERGENCE_SOURCE = "source"
 CENSO_DIVERGENCE_NOTICE_CODE = "profile.censo.divergences_open"
 
 #: Message key for the open-divergence advisory. Declared as a module
-#: constant (dynamic translation root) so the static locale scanner sees it
-#: as live; the four-locale copy is authored through the locales CLI.
-_CENSO_DIVERGENCE_NOTICE_KEY = "application.user_profile.notices.censo_divergences_open"
+#: constant whose name ends in ``_LOCALE_KEY`` so the static locale scanner
+#: enumerates it as live; the four-locale copy is authored through the locales CLI.
+_CENSO_DIVERGENCE_NOTICE_LOCALE_KEY = "application.user_profile.notices.censo_divergences_open"
 
 
 class CensoDivergence(BaseModel):
@@ -157,7 +157,7 @@ def censo_divergence_notice(record: UserProfileRecord | None) -> Notice | None:
         severity=NoticeSeverity.WARNING,
         code=CENSO_DIVERGENCE_NOTICE_CODE,
         message=tr(
-            _CENSO_DIVERGENCE_NOTICE_KEY,
+            _CENSO_DIVERGENCE_NOTICE_LOCALE_KEY,
             default=(
                 "{count} profile field(s) still diverge from the Certificado de Situación Censal "
                 "and remain unresolved: {axes}."

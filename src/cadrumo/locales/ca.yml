@@ -1544,6 +1544,9 @@ application:
         instantània de perfil no és compatible amb aquesta aplicació.
       unsupported_bundle_schema_version: La versió de l'esquema del paquet no és compatible
         amb aquesta versió de l'aplicació.
+    notices:
+      censo_divergences_open: '{count} dada/es del perfil encara difereixen del Certificat
+        de Situació Censal i resten sense resoldre: {axes}.'
   verification:
     errors:
       missing_binding_values: La verificació del registre requereix valors de vinculació
@@ -1584,6 +1587,8 @@ application:
         %{ccaa} per a aquest perfil. Les deduccions autonòmiques i el tram autonòmic
         de l'escala es calculen per a %{ccaa}. Feu servir --tax-residence-ccaa per
         triar una altra comunitat.
+      modify_descendants_via_door: Els descendents no formen part de l'edició del
+        perfil. Gestiona'ls amb '{command}'.
       modify_no_resume: 'Els canvis en mode edició només queden preparats: sortir
         sense enviar els descarta; desar i reprendre només està disponible en crear
         el perfil.'
@@ -3119,8 +3124,13 @@ cli:
           segellades). Feu servir 'status' per a la lectura sense connexió.
         clear_help: Retirar la configuració d'apoderat
         configure:
+          no_console_hint: 'La configuració interactiva de l''apoderament requereix
+            una consola. Configureu-lo de manera no interactiva amb: aeat config auth
+            apoderado configure --represented-nif NIF --scope SCOPE.'
           represented_nif_help: NIF de la part representada
           scope_help: Tokens d'abast (es poden repetir)
+          scope_required: 'No s''ha indicat cap àmbit. Afegiu --scope amb un o més
+            de: %{codes}.'
         configure_help: Establir la configuració d'apoderat activa
         help: Gestionar la configuració d'apoderat
         scope:
@@ -6176,6 +6186,8 @@ errors:
     refused_access_gate_live_read_not_enabled: L'accés de lectura en viu a l'AEAT
       està desactivat. Aquesta operació no pot contactar amb l'AEAT amb la configuració
       actual.
+    refused_apoderado_invalid_represented_nif: L'identificador fiscal del representat
+      no és un NIF, NIE o CIF vàlid.
     refused_apoderado_live_check_unavailable: La comprovació en viu d'apoderaments
       no està disponible o ha fallat el contacte amb l'AEAT.
     refused_apoderado_not_configured: No hi ha cap apoderat configurat. Configura
@@ -6987,6 +6999,18 @@ wizard:
             label: H - home
           m:
             label: M - dona
+    cotejo:
+      adopt:
+        label: Adoptar el valor del certificat
+        provenance: Certificat de Situació Censal (evidència no oficial)
+      compare:
+        help: Conserva la teva resposta, adopta el valor del certificat o ajorna-ho
+          per decidir-ho més tard.
+        prompt: Aquesta dada difereix del certificat. Quin valor conserves?
+      keep:
+        label: Conservar la meva resposta
+        provenance: La teva resposta de l'assistent
+      title: Comprovació amb el Certificat de Situació Censal
     descendientes:
       adoption-date:
         before_birth: La data d'adopció no pot ser anterior a la data de naixement.
