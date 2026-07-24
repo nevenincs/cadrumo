@@ -58,7 +58,8 @@ from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
 from ._currency_predicates import is_non_eur_without_conversion
 from ._errors import AggregationPeriodError, AggregationValidationError, t
-from ._models import CasillaAggregation, CasillaProvenance
+from ._grouping import fold_casilla_observations
+from ._models import CasillaAggregation
 
 # The only casilla income aggregation feeds for M130 actividad económica direct estimation.
 _TARGET_CASILLA_INGRESOS: CasillaId = validated_casilla_id("01", surface="_TARGET_CASILLA_INGRESOS")
@@ -368,28 +369,11 @@ def _m100_income_casilla_aggregation(
     period: Period,
     observations: Sequence[RentaIncomeObservation],
 ) -> CasillaAggregation:
-    totals: dict[CasillaId, Decimal] = {}
-    grouped: dict[CasillaId, list[RentaIncomeObservation]] = {}
-    for observation in observations:
-        totals[observation.target_casilla_id] = totals.get(
-            observation.target_casilla_id,
-            Decimal("0"),
-        ) + _computable_income_amount(observation)
-        grouped.setdefault(observation.target_casilla_id, []).append(observation)
-    provenance_rows = [
-        CasillaProvenance(
-            casilla_id=casilla,
-            category_id=None,
-            transaction_ids=tuple(sorted(row.transaction_id for row in rows)),
-            subtotal=sum((_computable_income_amount(row) for row in rows), start=Decimal("0")),
-        )
-        for casilla, rows in sorted(grouped.items())
-    ]
-    return CasillaAggregation(
+    return fold_casilla_observations(
+        observations,
         modelo=Modelo.M100.value,
         period=period,
-        casilla_values=totals,
-        provenance=tuple(provenance_rows),
+        amount_fn=_computable_income_amount,
     )
 
 
@@ -550,28 +534,11 @@ def _income_casilla_aggregation(
     period: Period,
     observations: Sequence[RentaIncomeObservation],
 ) -> CasillaAggregation:
-    totals: dict[CasillaId, Decimal] = {}
-    provenance_rows: list[CasillaProvenance] = []
-    grouped: dict[CasillaId, list[RentaIncomeObservation]] = {}
-    for observation in observations:
-        totals[observation.target_casilla_id] = totals.get(
-            observation.target_casilla_id, Decimal("0")
-        ) + _computable_income_amount(observation)
-        grouped.setdefault(observation.target_casilla_id, []).append(observation)
-    for casilla, rows in sorted(grouped.items()):
-        provenance_rows.append(
-            CasillaProvenance(
-                casilla_id=casilla,
-                category_id=None,
-                transaction_ids=tuple(sorted(row.transaction_id for row in rows)),
-                subtotal=sum((_computable_income_amount(row) for row in rows), start=Decimal("0")),
-            ),
-        )
-    return CasillaAggregation(
+    return fold_casilla_observations(
+        observations,
         modelo=Modelo.M130.value,
         period=period,
-        casilla_values=totals,
-        provenance=tuple(provenance_rows),
+        amount_fn=_computable_income_amount,
     )
 
 

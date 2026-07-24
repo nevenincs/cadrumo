@@ -41,7 +41,8 @@ from ...domain.transactions import (
 )
 from . import _shared_issue_reasons
 from ._errors import AggregationPeriodError, AggregationValidationError, t
-from ._models import CasillaAggregation, CasillaProvenance
+from ._grouping import fold_casilla_observations
+from ._models import CasillaAggregation
 
 _TARGET_CASILLA_RENDIMIENTOS_INTEGROS: CasillaId = validated_casilla_id(
     "rendimientos_integros",
@@ -401,31 +402,11 @@ def _irnr_gross_income_casilla_aggregation(
     period: Period,
     observations: Sequence[IrnrIncomeObservation],
 ) -> CasillaAggregation:
-    totals: dict[CasillaId, Decimal] = {}
-    grouped: dict[CasillaId, list[IrnrIncomeObservation]] = {}
-    for observation in observations:
-        totals[observation.target_casilla_id] = (
-            totals.get(
-                observation.target_casilla_id,
-                Decimal("0"),
-            )
-            + observation.gross_income_amount
-        )
-        grouped.setdefault(observation.target_casilla_id, []).append(observation)
-    provenance = tuple(
-        CasillaProvenance(
-            casilla_id=casilla_id,
-            category_id=None,
-            transaction_ids=tuple(sorted(observation.transaction_id for observation in rows)),
-            subtotal=sum((observation.gross_income_amount for observation in rows), start=Decimal("0")),
-        )
-        for casilla_id, rows in sorted(grouped.items())
-    )
-    return CasillaAggregation(
+    return fold_casilla_observations(
+        observations,
         modelo=Modelo.M210.value,
         period=period,
-        casilla_values=totals,
-        provenance=provenance,
+        amount_fn=lambda observation: observation.gross_income_amount,
     )
 
 
