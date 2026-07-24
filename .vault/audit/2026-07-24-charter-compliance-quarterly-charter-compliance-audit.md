@@ -35,15 +35,27 @@ The resolved default is Spanish, and the shipped environment template agrees. Th
 
 The audit checklist names this control by its pre-rename environment variable. The variable now carries the product prefix. The checklist item is stale in NAME only; the value and the behaviour are unchanged, and the checklist should be refreshed so a future pass does not read a missing variable as a missing control.
 
-## The four-factor gate: NOT VERIFIABLE
+## The four-factor gate: RETIRED, NOT MISSING
 
-This is the finding. The four-factor gate could not be verified because its DEFINITION could not be located in the tree.
+The first pass could not find the four factors defined anywhere in the tree and reported the axis unverifiable. Reading the charter the audit references resolves it, and the answer is better than a gap: the four-factor gate was DELIBERATELY SUPERSEDED.
 
-A repository-wide sweep across source, documentation, and the decision corpus returns exactly one reference to it: a single line in an unrelated decision record noting that the change did not alter "the 4-factor safety charter". Nothing defines what the four factors ARE. There is no implementation, no test asserting four distinct conditions, and no charter document enumerating them that a search could reach.
+The charter states it directly. Earlier repository history used a four-factor live-submit gate model built from environment variables, typed confirmation, and workflow flags. That history is superseded, and the controlling policy is now simpler and stricter -- live submission is permanently forbidden, with the only acceptable accidental-live-write rate stated as zero.
 
-The scepticism this pass was asked to apply is that a factor which is declared but unenforced is the failure mode -- the shape found elsewhere tonight, where four protected environments existed with zero required reviewers, so the human gate the surrounding text described did not actually exist. The situation here is one step earlier and harder: the gate cannot be tested against its specification because the specification is not discoverable. An unverifiable gate is not the same as a broken one, and it is NOT being reported as a defect in the gate itself. It IS being reported as a gap in the audit's own foundation, because a quarterly control that cannot be checked provides no assurance while appearing on the checklist as though it does.
+So the definition is absent from the tree because the CONCEPT is retired, not because it was lost. A four-factor gate is a mechanism for permitting a dangerous operation under sufficient conditions. The charter abolished the operation outright, which makes the gate meaningless: there is no opt-in path for it to guard. That is strictly stronger than any four-factor construction, and it is consistent with the live-write axis above, where the audit found no live-submission surface exists at all.
 
-The audit issue points at two external tracking items for the underlying rules and acceptance criteria. Those were not read within this pass, so it is possible the four factors are enumerated there and simply never landed in-tree. That possibility does not resolve the gap: a safety control whose definition lives only outside the repository cannot be enforced by any gate inside it.
+The defect is therefore in the AUDIT CHECKLIST, not the product. The checklist instructs a future auditor to confirm the four-factor gate still fires correctly for the opt-in path. There is no opt-in path, and the gate was retired by the very charter the checklist exists to enforce. An auditor following it literally will either report a phantom failure or, worse, conclude that a permitted-submission path ought to exist and go looking for one to verify.
+
+No four factors were invented to close this. Inventing a safety specification and then gating on it would be worse than the gap, because it would look authoritative while resting on nothing. The honest disposition is retirement of the checklist item, which is an operator decision.
+
+## Checklist defects found
+
+Three items in the quarterly checklist are stale against the charter and the tree. Each is small, and each is the kind that becomes a phantom finding a year from now when nobody remembers the context.
+
+The four-factor item asks to verify a retired control, as above. It should be struck rather than reworded, because there is nothing left to verify.
+
+The default-language item names its control by the pre-rename environment variable. The variable now carries the product prefix. The value and behaviour are unchanged; only the name moved. A future pass reading a missing variable could reasonably record a missing control.
+
+The charter-rules item refers to six non-negotiable rules. The charter now enumerates seven, spanning product policy, runtime refusal, absence of an executable live-write path, regression defence, the live-read boundary, documentation alignment, and enforcement through review and audit. An auditor checking six of seven would silently skip one, and there is no way to tell from the checklist which.
 
 ## Recommendations
 
