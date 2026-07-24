@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#profile-setup-flow'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-07-23-profile-setup-flow-W01-P01-S01]]'
   - '[[2026-07-23-profile-setup-flow-W01-P01-S02]]'
@@ -21,6 +21,17 @@ related:
   - '[[2026-07-23-profile-setup-flow-W02-P04-S13]]'
   - '[[2026-07-23-profile-setup-flow-W02-P04-S14]]'
   - '[[2026-07-23-profile-setup-flow-W02-P04-S15]]'
+  - '[[2026-07-23-profile-setup-flow-W03-P05-S16]]'
+  - '[[2026-07-23-profile-setup-flow-W03-P05-S17]]'
+  - '[[2026-07-23-profile-setup-flow-W03-P05-S18]]'
+  - '[[2026-07-23-profile-setup-flow-W03-P05-S19]]'
+  - '[[2026-07-23-profile-setup-flow-W03-P06-S20]]'
+  - '[[2026-07-23-profile-setup-flow-W03-P06-S21]]'
+  - '[[2026-07-23-profile-setup-flow-W03-P06-S22]]'
+  - '[[2026-07-23-profile-setup-flow-W03-P07-S23]]'
+  - '[[2026-07-23-profile-setup-flow-W03-P07-S34]]'
+  - '[[2026-07-23-profile-setup-flow-W03-P07-S35]]'
+  - '[[2026-07-23-profile-setup-flow-W03-P07-S36]]'
   - '[[2026-07-23-profile-setup-flow-adr]]'
   - '[[2026-07-23-profile-setup-flow-integration-shape-audit]]'
   - '[[2026-07-23-profile-setup-flow-page-catalogue-mapping-reference]]'
@@ -59,6 +70,17 @@ Auto-generated index of all documents tagged with `#profile-setup-flow`.
 - `2026-07-23-profile-setup-flow-W02-P04-S13` - Re-sequence SETUP_FLOW sections into the eight-phase spine order with stable question ids, keeping both core registration slots fed and visible_when targets resolving to earlier questions
 - `2026-07-23-profile-setup-flow-W02-P04-S14` - Run the locales scaffold and scaffold --check plus parity and honesty gates over the re-sequenced catalogue
 - `2026-07-23-profile-setup-flow-W02-P04-S15` - Regenerate the api reference stubs and re-verify documented-command conformance after the re-sequence
+- `2026-07-23-profile-setup-flow-W03-P05-S16` - Express the re-sequenced catalogue on the substrate FlowDefinition with copy-reference slots only, preserving the register_wizard_catalogue and register_project_answers feeds
+- `2026-07-23-profile-setup-flow-W03-P05-S17` - Re-home the verify_setup_answers cross-field checks into flow-scope validators, enrolling section scope where a check's inputs are complete at phase exit
+- `2026-07-23-profile-setup-flow-W03-P05-S18` - Bind the identity pages to the core.identity per-answer validators with per-IdentityDocument format-hint and failure copy references
+- `2026-07-23-profile-setup-flow-W03-P05-S19` - Render the legal-provenance zone from schema legal_refs plus the reverse index with approved-concept references only
+- `2026-07-23-profile-setup-flow-W03-P06-S20` - Implement the create-mode checkpoint port over incremental effective-dated facts with derived-cursor resume and lifecycle discard
+- `2026-07-23-profile-setup-flow-W03-P06-S21` - Implement modify-mode FlowState staging with the atomic persist_patch diff commit and the declared per-mode no-op checkpoint
+- `2026-07-23-profile-setup-flow-W03-P06-S22` - Surface modify-mode save-and-exit unavailability with an explicit message and a loud staged-edit discard on interruption
+- `2026-07-23-profile-setup-flow-W03-P07-S23` - Add the descendant repeating group emitting the exact renta_family.descendiente fact shape and aggregates through descendant_facts_from_list, descendant NIFs validated by core.identity
+- `2026-07-23-profile-setup-flow-W03-P07-S34` - Migrate the non-interactive quiet and accept-defaults walks onto run_scripted_flow with one shared definition builder and one coercer, preserving force-visible law and localized refusal surfaces
+- `2026-07-23-profile-setup-flow-W03-P07-S35` - Splice attach_descendant_group into the shared setup definition builder with the count page defaulting to zero descendants, pinning the group live on both frontends
+- `2026-07-23-profile-setup-flow-W03-P07-S36` - Route interactive-edit descendant answers through the edit persist seam with count-shrink clearing, or gate the descendant group out of modify mode until that seam exists, closing the silent-no-op-on-write gap
 
 ### plan
 
