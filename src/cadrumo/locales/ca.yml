@@ -6993,6 +6993,8 @@ wizard:
             label: M - dona
     descendientes:
       adoption-date:
+        before_birth: La data d'adopció no pot ser anterior a la data de naixement.
+        in_future: La data d'adopció no pot ser futura.
         prompt: Data d'adopció (deixi en blanc si no és adoptat)
       birth-date:
         prompt: Data de naixement
@@ -7017,10 +7019,14 @@ wizard:
       gastos-guarderia:
         help: Imports pagats a una llar d'infants o centre d'educació infantil autoritzat
           (art. 81 bis LIRPF) que incrementen la deducció per maternitat; euros sencers.
+        invalid_negative: Les despeses de llar d'infants no poden ser negatives; introduïu
+          0 o un import positiu en euros (art. 81 bis LIRPF).
         prompt: Despeses de llar d'infants pagades en l'any de declaració (euros)
       meses-madre-trabajo:
         help: 'Per a la deducció per maternitat (art. 81 LIRPF): mesos (0-12) en què
           la mare va cotitzar a la Seguretat Social amb el fill menor de 3 anys.'
+        invalid_range: Introduïu un nombre enter de mesos entre %{minimum} i %{maximum}
+          (art. 81 LIRPF).
         prompt: Mesos que la mare va treballar amb el fill menor de 3 anys (any de
           declaració)
       nif:
@@ -7656,21 +7662,8 @@ wizard:
       title: Tipus de contribuent
     title: Auxiliar de configuració
     verifier:
-      activity_present: 'Activitat econòmica: comprovació que el perfil declara una
-        activitat.'
-      eu_eea_country_missing: 'Residència del cònjuge: has indicat residència a la
-        UE o l''EEE però falta el país. Afegeix el país de residència.'
-      eu_eea_country_ok: 'Residència del cònjuge: el país de residència a la UE o
-        l''EEE és coherent.'
       impatriado_requires_start_date: 'Règim d''impatriats: la data d''inici del règim
         especial és obligatòria. Afegeix la data d''inici.'
-      joint_taxation_situacion_familiar_ok: 'Situació familiar: la declaració conjunta
-        és compatible amb la situació familiar declarada.'
-      joint_taxation_situacion_familiar_refused: 'Situació familiar: la declaració
-        conjunta no està permesa per a parella de fet no registrada (Art. 82.1.2°
-        LIRPF). Canvia la situació familiar o tria tributació individual.'
-      monoparental_requires_hijos_ok: 'Unitat familiar monoparental: requisit de fills
-        a càrrec verificat.'
       monoparental_requires_hijos_warning: 'Unitat familiar monoparental: la tributació
         conjunta com a monoparental (Art. 82.1.2° LIRPF) requereix fills menors a
         càrrec a la unitat familiar. Sense fills a càrrec, la declaració conjunta
@@ -7680,16 +7673,6 @@ wizard:
         és obligatori. Afegeix el país de residència.'
       non_resident_requires_representante: 'No resident IRNR: cal un representant
         fiscal. Afegeix el NIF i el nom del representant.'
-      obligations_consistency_ok: 'Obligacions de retenció: les respostes sobre retencions
-        són coherents.'
-      obligations_inconsistent: 'Obligacions de retenció: has declarat retencions
-        professionals però no que paguis a professionals amb retenció. Revisa aquestes
-        dades.'
-      spouse_consistency_missing: 'Tributació conjunta: falta la identificació fiscal
-        del cònjuge. Afegeix-la per poder presentar conjuntament.'
-      spouse_consistency_ok: 'Tributació conjunta: les dades del cònjuge són coherents.'
-      tax_id_present: 'Identificació fiscal: comprovació que el perfil té un NIF o
-        NIE.'
   test:
     description: Prova la configuració i la connectivitat
     example:

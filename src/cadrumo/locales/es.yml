@@ -7028,6 +7028,8 @@ wizard:
             label: M - mujer
     descendientes:
       adoption-date:
+        before_birth: La fecha de adopción no puede ser anterior a la fecha de nacimiento.
+        in_future: La fecha de adopción no puede ser futura.
         prompt: Fecha de adopción (deje en blanco si no es adoptado)
       birth-date:
         prompt: Fecha de nacimiento
@@ -7052,10 +7054,14 @@ wizard:
       gastos-guarderia:
         help: Importes pagados a una guardería o centro de educación infantil autorizado
           (art. 81 bis LIRPF) que incrementan la deducción por maternidad; euros enteros.
+        invalid_negative: Los gastos de guardería no pueden ser negativos; introduzca
+          0 o un importe positivo en euros (art. 81 bis LIRPF).
         prompt: Gastos de guardería pagados en el año de declaración (euros)
       meses-madre-trabajo:
         help: 'Para la deducción por maternidad (art. 81 LIRPF): meses (0-12) en que
           la madre cotizó a la Seguridad Social con el hijo menor de 3 años.'
+        invalid_range: Introduzca un número entero de meses entre %{minimum} y %{maximum}
+          (art. 81 LIRPF).
         prompt: Meses que la madre trabajó con el hijo menor de 3 años (año de declaración)
       nif:
         prompt: NIF/NIE del descendiente (deje en blanco si no tiene)
@@ -7699,21 +7705,8 @@ wizard:
       title: Tipo de contribuyente
     title: Asistente de configuración
     verifier:
-      activity_present: 'Actividad económica: comprobación de que el perfil declara
-        una actividad.'
-      eu_eea_country_missing: 'Residencia del cónyuge: has indicado residencia en
-        la UE o el EEE pero falta el país. Añade el país de residencia.'
-      eu_eea_country_ok: 'Residencia del cónyuge: el país de residencia en la UE o
-        el EEE es coherente.'
       impatriado_requires_start_date: 'Régimen de impatriados: la fecha de inicio
         del régimen especial es obligatoria. Añade la fecha de inicio.'
-      joint_taxation_situacion_familiar_ok: 'Situación familiar: la declaración conjunta
-        es compatible con la situación familiar declarada.'
-      joint_taxation_situacion_familiar_refused: 'Situación familiar: la declaración
-        conjunta no está permitida para pareja de hecho no registrada (Art. 82.1.2°
-        LIRPF). Cambia la situación familiar o elige tributación individual.'
-      monoparental_requires_hijos_ok: 'Unidad familiar monoparental: requisitos de
-        hijos a cargo verificados.'
       monoparental_requires_hijos_warning: 'Unidad familiar monoparental: la tributación
         conjunta como monoparental (Art. 82.1.2° LIRPF) requiere hijos menores a cargo
         en la unidad familiar. Sin hijos a cargo, la declaración conjunta no es posible
@@ -7723,16 +7716,6 @@ wizard:
         es obligatorio. Añade el país de residencia.'
       non_resident_requires_representante: 'No residente IRNR: es obligatorio un representante
         fiscal. Añade el NIF y el nombre del representante.'
-      obligations_consistency_ok: 'Obligaciones de retención: las respuestas sobre
-        retenciones son coherentes.'
-      obligations_inconsistent: 'Obligaciones de retención: has declarado retenciones
-        profesionales pero no que pagues a profesionales con retención. Revisa estos
-        datos.'
-      spouse_consistency_missing: 'Tributación conjunta: falta la identificación fiscal
-        del cónyuge. Añádela para poder presentar en conjunto.'
-      spouse_consistency_ok: 'Tributación conjunta: los datos del cónyuge son coherentes.'
-      tax_id_present: 'Identificación fiscal: comprobación de que el perfil tiene
-        un DNI, NIE, NIF o CIF.'
   test:
     description: Prueba tu configuración y conectividad
     example:
