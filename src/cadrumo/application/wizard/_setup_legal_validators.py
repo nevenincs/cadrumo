@@ -75,6 +75,15 @@ def validate_unidad_familiar_conjunta(answers: Mapping[str, str]) -> tuple[Valid
     monoparental unit, which Art. 82.1.2ª conditions on qualifying children.
     When no minor children are declared in the unit the verdict fails; a
     married (modalidad 1ª) or a child-bearing monoparental declaration passes.
+
+    ``family-minor-children-in-unit`` is the sole qualifying-children proxy the
+    setup flow models. Art. 82.1.1ª(b) also admits adult judicially
+    incapacitated children under prorogated patria potestad into the unit, but
+    the flow collects no field for that case and the registry's conjunta
+    reduction keys on the same minor-children signal, so the hard refusal is
+    exact within the declared data model. Modelling the incapacitated-adult
+    axis later requires widening this predicate and the registry signal
+    together, not relaxing this gate alone.
     """
     if answers.get(_TAXATION_TYPE_PAGE, "") != RentaDeclaracionType.JOINT.value:
         return (ValidationVerdict.passed(),)
