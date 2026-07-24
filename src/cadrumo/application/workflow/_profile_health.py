@@ -135,7 +135,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
             next_action=(
                 "aeat config repair profile --clear-active --yes"
                 if source == "pointer"
-                else "unset CADRUMO_ACTIVE_PROFILE or switch to a readable profile"
+                else "re-run without --profile, or pass --profile a readable profile"
             ),
         )
     registered = registered_pointer is not None
@@ -150,7 +150,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
             next_action=(
                 "aeat config repair profile --clear-active --yes"
                 if source == "pointer"
-                else "unset CADRUMO_ACTIVE_PROFILE or set it to a registered profile"
+                else "re-run without --profile, or pass --profile a registered profile"
             ),
         )
     active_profile = registered_pointer.bucket_id
@@ -172,7 +172,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
             next_action=(
                 "aeat config repair profile --clear-active --yes"
                 if source == "pointer"
-                else "unset CADRUMO_ACTIVE_PROFILE or switch to a readable profile"
+                else "re-run without --profile, or pass --profile a readable profile"
             ),
         )
     try:
@@ -192,7 +192,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
             next_action=(
                 "aeat config repair profile --clear-active --yes"
                 if source == "pointer"
-                else "unset CADRUMO_ACTIVE_PROFILE or switch to a readable profile"
+                else "re-run without --profile, or pass --profile a readable profile"
             ),
         )
     if record is None:
@@ -206,7 +206,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
             next_action=(
                 "aeat config repair profile --clear-active --yes"
                 if source == "pointer"
-                else "unset CADRUMO_ACTIVE_PROFILE or switch to a readable profile"
+                else "re-run without --profile, or pass --profile a readable profile"
             ),
         )
 

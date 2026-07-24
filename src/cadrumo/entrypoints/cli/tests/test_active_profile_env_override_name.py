@@ -1,11 +1,11 @@
-"""Real-operator test: ``CADRUMO_ACTIVE_PROFILE`` accepts the display label.
+"""Real-operator test: the active-profile override accepts the display label.
 
 An operator addresses their profile by the display label they chose at
 ``profile create`` — the immutable UUIDv4 bucket id is never surfaced to them.
-The active-profile env override ``CADRUMO_ACTIVE_PROFILE`` is the highest-precedence
-rung of the active-profile precedence chain, and the canonical ``core.config``
-storage-route resolver keys directly on ``buckets/<value>``. Before the
-entrypoint name→UUID normalization, a label-valued ``CADRUMO_ACTIVE_PROFILE`` made
+The in-process active-profile override (written by ``--profile``) is the
+highest-precedence rung of the active-profile precedence chain, and the canonical
+``core.config`` storage-route resolver keys directly on ``buckets/<value>``. Before
+the entrypoint name→UUID normalization, a label-valued override made
 every profile-bound command hard-miss with a "no registered bucket manifest"
 refusal. This module pins the fixed behaviour by driving the REAL CLI root
 callback (the normalization site) against a REAL profile created through the real
@@ -82,10 +82,10 @@ def _create_profile_and_resolve_uuid() -> str:
 
 
 def test_env_override_by_display_label_resolves_the_profile_bucket() -> None:
-    """``CADRUMO_ACTIVE_PROFILE=<label>`` resolves the operator's bucket (the fixed bug).
+    """``--profile <label>`` resolves the operator's bucket (the fixed bug).
 
     The real operator path: a fresh resolution whose active profile comes from
-    the ``CADRUMO_ACTIVE_PROFILE`` env override set to the LABEL the operator chose.
+    the active-profile override set to the LABEL the operator chose.
     Before the entrypoint normalization this refused with "no registered bucket
     manifest at buckets/<label>"; the root callback now normalizes the label to
     its UUID via the single profile resolver, so a profile-bound command resolves.
@@ -105,7 +105,7 @@ def test_env_override_by_display_label_resolves_the_profile_bucket() -> None:
 
 
 def test_env_override_by_uuid_is_unchanged() -> None:
-    """``CADRUMO_ACTIVE_PROFILE=<uuid>`` resolves through the direct bucket-id route.
+    """``--profile <uuid>`` resolves through the direct bucket-id route.
 
     The UUID fast path is current behavior: normalization only fires when the
     direct UUID-bucket lookup misses, so a UUID-valued override never reaches the
@@ -233,7 +233,7 @@ def test_profile_flag_ambiguous_label_refuses_with_dedicated_key() -> None:
 
 
 def test_env_override_unknown_label_does_not_resolve() -> None:
-    """An ``CADRUMO_ACTIVE_PROFILE`` label matching no live profile does not resolve.
+    """An override label matching no live profile does not resolve.
 
     The normalization no-ops on an unknown label (neither a UUID bucket nor a live
     label); the per-command active-profile guard then refuses rather than silently

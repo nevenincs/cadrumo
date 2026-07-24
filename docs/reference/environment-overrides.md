@@ -25,7 +25,6 @@ the process environment wins over the `.env` file.
 | `AEAT_SEDE_EXPEDIENTES_PATH` | str | (derived) | AEAT Sede path for 'Mis expedientes' — the default post-auth target used by Cl@ve Móvil login and the expedientes reader. |
 | `AEAT_STATUS_DETAIL_URL_TEMPLATE` | str | (derived) | URL path template for an expediente detail page. Must contain '{expediente_id}'. Override only when AEAT changes the corresponding route. |
 | `AEAT_STATUS_NOTIFICACIONES_PATH` | str | (derived) | URL path for the 'Mis notificaciones' listing page. Joined against aeat_base_url. Override only when AEAT changes the corresponding route. |
-| `CADRUMO_ACTIVE_PROFILE` | str | unset | Per-shell override for the active operator profile. When set, wins over the <cadrumo-root>/active-profile pointer file in the active-profile precedence chain. Leave unset for normal installs; the pointer file is the canonical default. |
 | `CADRUMO_ALLOW_UNENCRYPTED` | str | empty | Hostile-named opt-out gate for the unsecured backend. Must be set to the literal '1' (env var: CADRUMO_ALLOW_UNENCRYPTED=1) to use cadrumo_secret_store_backend=unsecured. The unsecured backend is intended for testing / educational / throwaway scenarios only and provides ZERO confidentiality. The substrate refuses to load an operator profile that carries a real NIF/NIE/CIF while running in unsecured mode. |
 | `CADRUMO_ATTACHMENTS_DIR` | Path | (derived) | Root directory for the attachment byte and manifest store |
 | `CADRUMO_AUDIT_DIR` | Path | (derived) | Directory for the governed audit sink (redacted, classification-aware) |
@@ -48,6 +47,7 @@ the process environment wins over the `.env` file.
 | `CADRUMO_BROWSER_VIEWPORT_HEIGHT` | int | `900` | Default Playwright viewport height (px) for AEAT sede sessions |
 | `CADRUMO_BROWSER_VIEWPORT_WIDTH` | int | `1366` | Default Playwright viewport width (px) for AEAT sede sessions |
 | `CADRUMO_BUCKET_DEFAULT_IDLE_LOCK_MINUTES` | int | `15` | Fallback idle-lock window (minutes) when a bucket manifest omits the value |
+| `CADRUMO_BUCKET_DEFAULT_SESSION_ABSOLUTE_MINUTES` | int | `240` | Fallback absolute session-lifetime cap (minutes) when a bucket manifest omits session_absolute_minutes; fixed at login and never refreshed, so a touched-forever session still seals at this cap (default 4 h, 12 h hard ceiling) |
 | `CADRUMO_BUCKET_LOCK_POLL_INTERVAL_S` | float | `0.1` | Polling interval (seconds) for bucket lockfile acquisition retries |
 | `CADRUMO_CALC_SHEETS_RECALC_DELAY_S` | float | `2.0` | Delay (seconds) waiting for Google Sheets server-side recalculation between parity polls |
 | `CADRUMO_CERT_CRITICAL_DAYS` | int | `14` | Critical threshold (days) for the certificate pre-expiry gate: certificates with <= this many days remaining are CRITICAL and must be renewed before authenticated AEAT work continues |

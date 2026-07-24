@@ -18,14 +18,20 @@ from __future__ import annotations
 
 import contextvars
 import logging
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from datetime import date
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Any, override
+from typing import TYPE_CHECKING, Annotated, Any, Final, override
 
 from pydantic import BeforeValidator, Field, SecretStr, field_validator, model_validator
-from pydantic_settings import BaseSettings, DotEnvSettingsSource, PydanticBaseSettingsSource, SettingsConfigDict
+from pydantic_settings import (
+    BaseSettings,
+    DotEnvSettingsSource,
+    EnvSettingsSource,
+    PydanticBaseSettingsSource,
+    SettingsConfigDict,
+)
 from pydantic_settings.sources import EnvPrefixTarget
 
 from . import _config_live_tests as _live_test_config
@@ -153,15 +159,57 @@ the normal settings model.
 """
 
 
+_NON_ENVIRONMENT_SELECTION_NAMES: Final[frozenset[str]] = frozenset({"CADRUMO_ACTIVE_PROFILE"})
+"""Settings names that no environment source may populate.
+
+Profile SELECTION is not an environment concern. ``CADRUMO_ACTIVE_PROFILE``
+was a development override that operators adopted as the operating
+mechanism, which made a shell variable outrank the on-disk pointer and left
+``logout`` unable to clear a selection the application boundary could not
+unset. Selection now has exactly two writers: the ``active-profile`` pointer
+file, and the in-process override channel that ``--profile`` and
+:func:`override_settings` use.
+
+The FIELD survives -- only its environment source is severed -- because the
+in-process channel is how ``--profile`` and tests scope a selection. The
+sanctioned environment surface is ``CADRUMO_SECRET_PASSPHRASE``: secrets,
+never selection.
+"""
+
+
+def _without_severed_names(env_vars: Mapping[str, str | None]) -> dict[str, str | None]:
+    """Drop the names no environment source may populate."""
+    return {
+        name: value
+        for name, value in env_vars.items()
+        if name.upper() not in _LEGACY_PRODUCT_DOTENV_NAMES and name.upper() not in _NON_ENVIRONMENT_SELECTION_NAMES
+    }
+
+
+class _CadrumoEnvSettingsSource(EnvSettingsSource):
+    """Ignore severed names in the process environment.
+
+    The dotenv sibling below filters the same set; both are needed because a
+    name present in either source would otherwise repopulate the field.
+    """
+
+    @override
+    def __call__(self) -> dict[str, Any]:
+        original_env_vars = self.env_vars
+        self.env_vars = _without_severed_names(original_env_vars)
+        try:
+            return super().__call__()
+        finally:
+            self.env_vars = original_env_vars
+
+
 class _CadrumoDotEnvSettingsSource(DotEnvSettingsSource):
     """Ignore former product dotenv keys without relaxing unknown-key checks."""
 
     @override
     def __call__(self) -> dict[str, Any]:
         original_env_vars = self.env_vars
-        self.env_vars = {
-            name: value for name, value in original_env_vars.items() if name.upper() not in _LEGACY_PRODUCT_DOTENV_NAMES
-        }
+        self.env_vars = _without_severed_names(original_env_vars)
         try:
             return super().__call__()
         finally:
@@ -200,8 +248,26 @@ class Settings(CadrumoMcpServingSettings):
         dotenv_settings: PydanticBaseSettingsSource,
         file_secret_settings: PydanticBaseSettingsSource,
     ) -> tuple[PydanticBaseSettingsSource, ...]:
-        """Keep the hard-cut dotenv filter while preserving strict unknown-key validation."""
+        """Keep the hard-cut dotenv filter while preserving strict unknown-key validation.
+
+        Both environment sources are replaced by filtering subclasses so a
+        severed name (see :data:`_NON_ENVIRONMENT_SELECTION_NAMES`) cannot
+        reach the model from the process environment or the dotenv file.
+        ``init_settings`` is deliberately untouched: it is the in-process
+        channel ``--profile`` and :func:`override_settings` write through.
+        """
         assert isinstance(dotenv_settings, DotEnvSettingsSource)
+        assert isinstance(env_settings, EnvSettingsSource)
+        filtered_env_settings = _CadrumoEnvSettingsSource(
+            settings_cls,
+            case_sensitive=env_settings.case_sensitive,
+            env_prefix=env_settings.env_prefix,
+            env_nested_delimiter=env_settings.env_nested_delimiter,
+            env_nested_max_split=env_settings.env_nested_max_split,
+            env_ignore_empty=env_settings.env_ignore_empty,
+            env_parse_none_str=env_settings.env_parse_none_str,
+            env_parse_enums=env_settings.env_parse_enums,
+        )
         env_prefix_target: EnvPrefixTarget
         match dotenv_settings.env_prefix_target:
             case "variable":
@@ -229,8 +295,8 @@ class Settings(CadrumoMcpServingSettings):
             # A sandboxed scope behaves as if no operator dotenv existed
             # (see suppress_operator_dotenv); ambient env vars are the
             # scope owner's concern, so only the dotenv source is dropped.
-            return init_settings, env_settings, file_secret_settings
-        return init_settings, env_settings, filtered_dotenv_settings, file_secret_settings
+            return init_settings, filtered_env_settings, file_secret_settings
+        return init_settings, filtered_env_settings, filtered_dotenv_settings, file_secret_settings
 
     # ── Token Storage ───────────────────────────────────────────────────────
     cadrumo_token_dir: Path = Field(
@@ -574,10 +640,13 @@ class Settings(CadrumoMcpServingSettings):
     cadrumo_active_profile: str | None = Field(
         default=None,
         description=(
-            "Per-shell override for the active operator profile. When set, "
+            "In-process override for the active operator profile, written by "
+            "the --profile flag and by override_settings in tests. When set, "
             "wins over the <cadrumo-root>/active-profile pointer file in the "
-            "active-profile precedence chain. Leave unset for normal "
-            "installs; the pointer file is the canonical default."
+            "active-profile precedence chain. No environment variable "
+            "populates this field: profile selection belongs to the pointer "
+            "file, which 'aeat config login' writes. The pointer file is the "
+            "canonical default."
         ),
     )
     cadrumo_proxy_url: str = Field(
@@ -982,8 +1051,9 @@ class Settings(CadrumoMcpServingSettings):
         Active-profile resolution honours the operator-facing
         precedence chain:
 
-        1. ``self.cadrumo_active_profile`` (from ``CADRUMO_ACTIVE_PROFILE``
-           env var, or an ``override_settings`` block in tests).
+        1. ``self.cadrumo_active_profile`` (the in-process override the
+           ``--profile`` flag and ``override_settings`` write; no
+           environment variable reaches it).
         2. ``<cadrumo_local_storage_root>/active-profile`` plaintext
            pointer file written by ``profile create`` / ``profile
            switch``.
@@ -1154,8 +1224,13 @@ class Settings(CadrumoMcpServingSettings):
 
     @classmethod
     def env_var_names(cls) -> set[str]:
-        """Return the set of environment variable names this model reads."""
-        return {name.upper() for name in cls.model_fields}
+        """Return the set of environment variable names this model reads.
+
+        Severed names are excluded: a field whose environment source has
+        been cut is still a field, but no environment variable reaches it,
+        so listing it here would document a control that does nothing.
+        """
+        return {name.upper() for name in cls.model_fields} - _NON_ENVIRONMENT_SELECTION_NAMES
 
     @staticmethod
     def external_constants() -> ExternalConstants:

@@ -103,8 +103,14 @@ def render_environment_reference() -> str:
     """Render the full generated page from the live settings model."""
     from cadrumo.core.config import Settings
 
+    # Keyed on the model's own environment inventory rather than every field:
+    # a field whose environment source has been severed is still a field, but
+    # no variable reaches it, so an environment reference must not list it.
+    environment_names = Settings.env_var_names()
     rows = []
     for name, field in sorted(Settings.model_fields.items()):
+        if name.upper() not in environment_names:
+            continue
         description = field.description or ""
         rows.append(f"| `{name.upper()}` | {_type_cell(field)} | {_default_cell(field)} | {_escape(description)} |")
     return _HEADER + "\n".join(rows) + "\n" + _FOOTER
