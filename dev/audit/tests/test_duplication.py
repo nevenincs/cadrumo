@@ -24,6 +24,8 @@ import shutil
 import subprocess
 import sys
 import tomllib
+from collections import Counter
+from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
@@ -360,6 +362,37 @@ def _paths_from_group(group: CloneGroup) -> frozenset[str]:
     return frozenset(paths)
 
 
+def _recorded_dispositions() -> Counter[frozenset[str]]:
+    """Count how many clone groups the dispositions file records per file-set."""
+    dispositions_path = _REPO_ROOT / "dev" / "audit" / "duplication_dispositions.toml"
+    dispositions = tomllib.loads(dispositions_path.read_text(encoding="utf-8"))
+    return Counter(_paths_from_where(group["where"]) for group in dispositions["group"])
+
+
+def _uncovered_groups(groups: Sequence[CloneGroup], recorded: Counter[frozenset[str]]) -> list[CloneGroup]:
+    """Return the observed groups exceeding what the record accounts for.
+
+    Coverage is a MULTISET comparison, not set membership. A self-clone names
+    one file twice, so its file-set collapses to a single path; under a plain
+    set membership test any second, unrelated clone group inside that same file
+    matched the first one's entry and passed unseen. Comparing how MANY groups
+    each file-set carries closes that hole while still keying on paths rather
+    than line spans, which drift on every unrelated edit.
+
+    Under-observing is not a failure: a group the record still carries but the
+    scan no longer sees is a landed consolidation, which is progress.
+    """
+    observed = Counter(_paths_from_group(group) for group in groups)
+    surplus = {paths: count - recorded[paths] for paths, count in observed.items() if count > recorded[paths]}
+    uncovered: list[CloneGroup] = []
+    for group in groups:
+        paths = _paths_from_group(group)
+        if surplus.get(paths, 0) > 0:
+            uncovered.append(group)
+            surplus[paths] -= 1
+    return uncovered
+
+
 @pytest.mark.integration
 def test_every_observed_clone_group_has_a_recorded_disposition() -> None:
     """Every clone group the live scan observes must carry a recorded disposition.
@@ -367,12 +400,20 @@ def test_every_observed_clone_group_has_a_recorded_disposition() -> None:
     The plan's own verification criterion -- every observed clone group carries
     an explicit recorded disposition -- had no gate anywhere in the tree; the
     claim could not be checked and could rot silently as consolidations landed.
-    This asserts COVERAGE (each live group's file pair is recorded in the
-    dispositions file), never a COUNT: the clone count is advisory debt per the
-    governing ADR, so a count assertion would fight that ADR and go red on
-    every genuine consolidation. The record is a superset by design -- a group
-    disappearing is progress, not a gate failure -- while a NEW, unrecorded
-    group is exactly what this gate exists to catch.
+    This asserts COVERAGE, never a COUNT of clones: the clone count is advisory
+    debt per the governing ADR, so a clone-count assertion would fight that ADR
+    and go red on every genuine consolidation. The record is a superset by
+    design -- a group disappearing is progress, not a gate failure -- while a
+    NEW, unrecorded group is exactly what this gate exists to catch.
+
+    Coverage is measured per file-set as a MULTISET, not a set. A self-clone
+    names one file twice, so its file-set collapses to a single path; under a
+    plain set membership test any second, entirely unrelated clone group inside
+    that same file matched the first one's entry and passed unseen. Seven of
+    the recorded groups are self-clones, so seven files were unguarded against
+    a new intra-file clone. Comparing how MANY groups each file-set carries
+    closes that hole while still keying on paths rather than line spans, which
+    drift on every unrelated edit.
     """
     _require_npx()
     result = run_duplication_scan(_REPO_ROOT)
@@ -381,13 +422,55 @@ def test_every_observed_clone_group_has_a_recorded_disposition() -> None:
         "if this ever goes clean, update this test rather than deleting it"
     )
 
-    dispositions_path = _REPO_ROOT / "dev" / "audit" / "duplication_dispositions.toml"
-    dispositions = tomllib.loads(dispositions_path.read_text(encoding="utf-8"))
-    recorded = {_paths_from_where(group["where"]) for group in dispositions["group"]}
-
-    uncovered = [group.render() for group in result.groups if _paths_from_group(group) not in recorded]
+    uncovered = [group.render() for group in _uncovered_groups(result.groups, _recorded_dispositions())]
 
     assert not uncovered, (
         "the live scan observed clone group(s) with no recorded disposition in "
         f"duplication_dispositions.toml:\n\n{chr(10).join(uncovered)}"
     )
+
+
+def _self_clone_group(path: str, first: int, second: int) -> CloneGroup:
+    """Build a clone group naming one file twice, in jscpd's console shape."""
+    return CloneGroup(
+        (
+            "Clone found (python):",
+            f" - src/cadrumo/{path} [{first}:1 - {first + 10}:9] (10 lines, 120 tokens)",
+            f"   src/cadrumo/{path} [{second}:1 - {second + 10}:9]",
+        )
+    )
+
+
+@pytest.mark.unit
+def test_a_second_clone_inside_an_already_recorded_file_is_uncovered() -> None:
+    """A new intra-file clone must not inherit another group's disposition.
+
+    Drives the real coverage computation with a real recorded self-clone
+    file-set and one more observed group than the record accounts for. Under
+    the previous set-membership read this returned covered, so this is the
+    regression pinning the multiset semantics.
+    """
+    recorded = _recorded_dispositions()
+    self_clone_sets = sorted((paths for paths in recorded if len(paths) == 1), key=sorted)
+    assert self_clone_sets, "the record is expected to carry at least one self-clone entry"
+    path = next(iter(self_clone_sets[0]))
+    recorded_here = recorded[self_clone_sets[0]]
+
+    at_record = [_self_clone_group(path, 100 * i, 100 * i + 50) for i in range(1, recorded_here + 1)]
+    assert _uncovered_groups(at_record, recorded) == [], "observing exactly what is recorded must be covered"
+
+    one_extra = [*at_record, _self_clone_group(path, 9000, 9500)]
+    surplus = _uncovered_groups(one_extra, recorded)
+    assert len(surplus) == 1, f"one clone group beyond the record must be flagged, got {len(surplus)}"
+
+
+@pytest.mark.unit
+def test_a_landed_consolidation_does_not_fail_the_coverage_read() -> None:
+    """Observing FEWER groups than recorded is progress, not a gate failure.
+
+    The record is a superset by design. This pins the asymmetry, so a future
+    tightening cannot quietly turn the coverage read into the clone-count
+    assertion the governing ADR rules out.
+    """
+    recorded = _recorded_dispositions()
+    assert _uncovered_groups((), recorded) == []

@@ -33,13 +33,31 @@
 
 [meta]
 generated_from = "just audit-duplication (jscpd@4.2.0)"
-observed_groups = 14
-duplicated_pct = "0.09"
-files_analyzed = 1267
+observed_groups = 11
+duplicated_pct = "0.07"
+files_analyzed = 1311
 source_root = "src/cadrumo"
 count_is_advisory = true
 governing_adr = "2026-07-15-cli-authority-verb-conformance-adr"
 governing_audit = "2026-07-16-cli-authority-verb-conformance-duplication-authority-audit"
+
+# What this record does NOT cover, stated so its silence is not read as
+# evidence of absence:
+#
+#   * `dev/` is outside `source_root`. The standing runner scans the product
+#     tree only, so the tooling that gates the product has never been measured
+#     by it. A direct run over `dev/` observes 2 clone groups
+#     (packaging/installed_mcp_oracle.py + installed_tax_oracle.py; and
+#     deploy/docs_static_site.py + frontend_static_site.py). They are real and
+#     unrecorded; they are named here rather than left invisible.
+#
+#   * jscpd matches token sequences, so duplication whose copies drifted in
+#     STYLE is invisible to it. Five ledger projections carried the same
+#     casilla fold, differing only in an accumulator loop versus a
+#     comprehension; jscpd reported none of the five and instead flagged their
+#     shared import preambles. Most entries below are preamble matches. Read
+#     this record as "what token matching found", never as the duplication
+#     inventory.
 
 # `observed_groups` is jscpd's own inventory size for this scan: it equals the
 # sum of `cluster_owned` + `intentional` + `advisory_residue` below. The single
@@ -48,8 +66,8 @@ governing_audit = "2026-07-16-cli-authority-verb-conformance-duplication-authori
 # `observed_groups` plus that one extra, tracked group.
 [summary]
 cluster_owned = 1
-intentional = 6
-advisory_residue = 7
+intentional = 5
+advisory_residue = 5
 actionable = 1
 
 # ---------------------------------------------------------------------------
@@ -69,7 +87,7 @@ rationale = "Distributed LLM-review routing block; the other three instances thi
 [[group]]
 classification = "intentional"
 where = ["domain/calculations/registry/_aeat_nif_iva_oracle.py [22-50]", "domain/calculations/registry/_groi_oracle.py [41-69]"]
-rationale = "ADR intentional non-consolidation: the GROI/NIF oracle pair validates distinct identifier rules; constraint-divergent."
+rationale = "The matched block is the shared import preamble. The behaviour these two oracles share is already consolidated behind _checker_oracle_flow and BaseCheckerOracle; what remains diverges by identifier rule (foreign-EU VIES proxy vs Spanish ROI), so the import list is the whole residue."
 
 [[group]]
 classification = "intentional"
@@ -79,22 +97,17 @@ rationale = "ADR intentional non-consolidation: recipient registry manages autho
 [[group]]
 classification = "intentional"
 where = ["application/aggregation/_renta_gasto_ledger.py [34-49]", "application/aggregation/_renta_income_ledger.py [34-49]"]
-rationale = "Per-family ledger-aggregation resolvers bind distinct binding source kinds (gasto vs income); constraint-divergent per calculation-source-canonical-mechanism."
+rationale = "The matched block is the shared import preamble, not logic. What these modules genuinely shared has already been lifted out (_shared_issue_reasons, _business_proportion, _currency_predicates, and the fold in _grouping); the residue is the import list itself, which cannot be deduplicated without a re-export shim the architecture rules forbid."
 
 [[group]]
 classification = "intentional"
-where = ["application/aggregation/_impatriado_income_ledger.py [40-69]", "application/aggregation/_renta_income_ledger.py [34-63]"]
-rationale = "Per-family ledger-aggregation resolvers bind distinct source kinds (impatriado vs renta income); constraint-divergent per the source-kind taxonomy."
+where = ["application/aggregation/_impatriado_income_ledger.py [40-70]", "application/aggregation/_renta_income_ledger.py [34-64]"]
+rationale = "Import preamble again, plus the issue-reason enum heads. The reason MEMBERS already route through _shared_issue_reasons; each enum stays separate because a projection's reason set is closed over its own legal scope (the impatriado carries BECKHAM_FOREIGN_SOURCE_SEGREGATED, art. 93.2, which must never be constructible for a resident-IRPF projection). Merging them would widen each site's accepted value set."
 
 [[group]]
 classification = "intentional"
 where = ["entrypoints/cli/_modelo_work_revision_payloads.py [49-66]", "entrypoints/cli/_modelo_work_wizard_payloads.py [57-74]"]
 rationale = "Sibling payload models sharing field structure across distinct typed payloads; Typer/schema presentation structure, not one authority."
-
-[[group]]
-classification = "intentional"
-where = ["entrypoints/cli/_modelo_amend_wizard_cli.py [150-172]", "entrypoints/cli/_modelo_work_wizard_cli.py [185-207]"]
-rationale = "Amend-vs-work wizard question-block overlap; ADR intentional interactive-wizard presentation structure."
 
 # ---------------------------------------------------------------------------
 # advisory-residue: low-value duplication left as visible debt (not a mandate)
@@ -114,16 +127,6 @@ rationale = "Sibling calendar-model field blocks share structure; low-value resi
 classification = "advisory-residue"
 where = ["application/modelo/_calculation_source_staging.py [254-267]", "application/modelo/_calculation_source_staging.py [180-193]"]
 rationale = "Repeated source-staging block within one module; low-value residue."
-
-[[group]]
-classification = "advisory-residue"
-where = ["application/live/_remote_state_models.py [71-83]", "application/live/_remote_state_models.py [34-48]"]
-rationale = "Sibling remote-state model field blocks share structure; low-value residue."
-
-[[group]]
-classification = "advisory-residue"
-where = ["application/live/_remote_state_models.py [121-135]", "application/live/_remote_state_models.py [34-48]"]
-rationale = "Second remote-state model field-block overlap; low-value residue."
 
 [[group]]
 classification = "advisory-residue"
