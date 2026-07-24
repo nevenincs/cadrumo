@@ -36,7 +36,6 @@ from __future__ import annotations
 import functools
 import inspect
 import typing
-from collections import deque
 from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated
@@ -60,12 +59,17 @@ from ...core.flows import CheckpointAvailability, FlowMode
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ..flows import (
     CheckpointStore,
+    FlowAnswerError,
     FlowDefinition,
     FlowPage,
     FlowState,
+    FlowSubmitError,
     FlowUnsupportedConsoleError,
     LineFlowFrontend,
     flow_definition_from_wizard_flow,
+    run_scripted_flow,
+    start_flow,
+    visible_sequence,
 )
 from ._catalogue import SETUP_FLOW
 from ._checkpoint_store import ProfileFactsCheckpointStore
@@ -73,13 +77,7 @@ from ._errors import WizardMissingFlagError
 from ._format_hints import attach_format_hints
 from ._models import WizardFlow, WizardQuestion, WizardWidget
 from ._persistence import WizardPersistMode
-from ._prompter import (
-    CanonicalAnswerPrompter,
-    WizardEditUnsupportedConsoleError,
-    WizardUnsupportedConsoleError,
-)
 from ._registered_values import project_registered_values
-from ._runner import run_flow
 from ._setup_legal_validators import attach_setup_legal_validators
 
 #: Which substrate :class:`FlowMode` each wizard verb drives. ``create``
@@ -710,34 +708,145 @@ def _missing_filing_baseline_flags(flow: WizardFlow, answers: BaseModel) -> tupl
     return _missing_profile_filing_baseline_flags(serialise_answers(flow, answers))
 
 
-def _scripted_from_canonical(
+def _setup_flow_definition(flow: WizardFlow) -> FlowDefinition:
+    """Bridge and decorate the wizard flow into the shared substrate definition.
+
+    The single projected :class:`FlowDefinition` every frontend drives:
+    the substrate bridge, format hints, and setup legal validators applied
+    in one place so the interactive and the non-interactive walks can never
+    diverge on the definition they run.
+    """
+    return attach_setup_legal_validators(
+        attach_format_hints(flow_definition_from_wizard_flow(flow, checkpoint=_SETUP_CHECKPOINT)),
+    )
+
+
+def _force_pages_visible(definition: FlowDefinition, page_ids: frozenset[str]) -> FlowDefinition:
+    """Project the named pages as unconditionally visible for one scripted walk.
+
+    An explicitly-supplied flag is an unambiguous declaration of intent, so
+    its gated question must be collected even when its ``visible_when`` gate
+    would otherwise hide it. Stripping the gate on exactly the named pages
+    reproduces the retired runner's ``force_visible`` law: the scripted
+    driver then walks and demands the page like any other visible one, while
+    every other gate keeps governing prompting normally.
+    """
+    if not page_ids:
+        return definition
+    new_sections = []
+    for section in definition.sections:
+        new_items = tuple(
+            item.model_copy(update={"visible_when": None})
+            if isinstance(item, FlowPage) and item.id in page_ids and item.visible_when is not None
+            else item
+            for item in section.items
+        )
+        new_sections.append(section.model_copy(update={"items": new_items}))
+    return definition.model_copy(update={"sections": tuple(new_sections)})
+
+
+def _project_scripted_answers(
+    definition: FlowDefinition,
+    canonical: Mapping[str, str],
+    *,
+    mode: FlowMode,
+) -> tuple[list[str], dict[str, str]]:
+    """Project the canonical dict into the driver's visible-sequence order.
+
+    :func:`~cadrumo.application.flows.run_scripted_flow` consumes an ordered
+    queue, one token per visible page, re-evaluating visibility after each
+    commit. This mirrors that walk over the DEFINITION (so a substrate-only
+    page keeps its true walk position) and emits each page's canonical token,
+    or its descriptor default / blank when the operator supplied none, so the
+    positional queue stays aligned with every gate the driver will observe.
+
+    Returns the ordered token queue plus the same tokens keyed by page id —
+    the intended answer set, used to re-derive the wizard's localized
+    refusal when the substrate rejects an answer or blocks submission.
+    """
+    base = start_flow(definition, mode=mode)
+    answers: dict[str, str] = {}
+    tokens: list[str] = []
+    while True:
+        target = next(
+            (
+                entry
+                for entry in visible_sequence(definition, base.model_copy(update={"answers": dict(answers)}))
+                if entry.key not in answers
+            ),
+            None,
+        )
+        if target is None:
+            return tokens, answers
+        raw = canonical.get(target.key, target.page.default or "")
+        tokens.append(raw)
+        answers[target.key] = raw
+
+
+def _answers_model_from_canonical(flow: WizardFlow, committed: Mapping[str, str]) -> BaseModel:
+    """Coerce a page-keyed committed-answer map into the typed answers model.
+
+    Every visible page commits during a walk (even blank), so a question the
+    walk visited carries a key in ``committed`` and a gate-hidden question is
+    absent. Each present answer is re-validated through its widget validator
+    and parsed into the declared answer type — the exact projection the
+    retired runner applied post-walk — so the persisted typed model is
+    produced identically regardless of the frontend (scripted, line, or
+    full-screen) that produced ``committed``.
+    """
+    from ._persistence import _parse_canonical
+    from ._widgets import validate_widget_answer
+
+    typed: dict[str, object] = {}
+    for section in flow.sections:
+        for question in section.questions:
+            if question.id not in committed:
+                continue
+            validated = validate_widget_answer(question, committed[question.id])
+            typed[question.id.replace("-", "_")] = _parse_canonical(question, validated)
+    return flow.answers_model.model_validate(typed)
+
+
+def _run_scripted_walk(
     flow: WizardFlow,
     canonical: dict[str, str],
     *,
-    force_visible: frozenset[str] = frozenset(),
-) -> CanonicalAnswerPrompter:
-    """Build a non-interactive prompter driven by the canonical-token dict.
+    mode: WizardPersistMode,
+    explicit_question_ids: frozenset[str],
+) -> BaseModel:
+    """Drive a non-interactive walk through the shared flow substrate.
 
-    The scripted answer queue must match ``run_flow``'s question
-    sequence exactly. Visibility is therefore evaluated with the same
-    :func:`_condition_satisfied` predicate the runner uses — including
-    the same ``force_visible`` set — walking answer-by-answer so an
-    intra-section gate sees the earlier answer. A drift between this
-    projection and the runner desyncs the queue and feeds a question
-    the wrong token.
+    Builds the same projected definition the interactive frontends drive,
+    forces every explicitly-supplied gated question visible for this walk,
+    projects the canonical dict into the driver's visible-sequence token
+    order, and runs the scripted intent driver. The committed answers are
+    then coerced through the one projection every frontend shares, so a
+    non-interactive create is answer-for-answer identical to an interactive
+    one.
+
+    The substrate is the sole authority for the persisted answers (parity
+    with the interactive frontends). A substrate refusal — a rejected answer
+    or a blocked submission — is re-surfaced through the wizard's own
+    localized answer-model validation so the operator still reads the precise
+    flag-named date / decimal / cross-field message, not the substrate's
+    generic verdict. That fallback only ever raises; if the model unexpectedly
+    validates, the substrate refusal stands.
     """
-    from ._runner import _condition_satisfied
-
-    answers: deque[str] = deque()
-    running: dict[str, str] = {}
-    for section in flow.sections:
-        for question in section.questions:
-            if not _condition_satisfied(question, running, force_visible=force_visible):
-                continue
-            value = canonical.get(question.id, question.default or "")
-            answers.append(value)
-            running[question.id] = value
-    return CanonicalAnswerPrompter(answers)
+    flow_mode = _FLOW_MODE_BY_WIZARD_MODE[mode]
+    definition = _force_pages_visible(_setup_flow_definition(flow), explicit_question_ids)
+    tokens, intended = _project_scripted_answers(definition, canonical, mode=flow_mode)
+    defaults = {
+        question.id: question.default or ""
+        for section in flow.sections
+        for question in section.questions
+        if question.default is not None
+    }
+    try:
+        state, _projection = run_scripted_flow(definition, tokens, mode=flow_mode, defaults=defaults)
+    except (FlowAnswerError, FlowSubmitError):
+        _answers_model_from_canonical(flow, intended)
+        raise
+    return _answers_model_from_canonical(flow, dict(state.answers))
 
 
 def _canonical_from_flag_value(question: WizardQuestion, value: object) -> str | None:
@@ -981,9 +1090,7 @@ def _prepare_interactive_flow(
     time — post output-language activation — so the review renders in the
     operator's chosen language.
     """
-    definition = attach_setup_legal_validators(
-        attach_format_hints(flow_definition_from_wizard_flow(flow, checkpoint=_SETUP_CHECKPOINT)),
-    )
+    definition = _setup_flow_definition(flow)
     if mode == "create":
         return _seed_flow_definition(definition, dict(canonical)), None
 
@@ -1034,6 +1141,12 @@ def _run_interactive_flow(
         resumed = checkpoint_store.load(flow.id)
         if resumed:
             canonical = {**dict(resumed), **dict(canonical)}
+    # The wizard console-refusal taxonomy is registry-pinned to the retired
+    # line-mode surface and relocated by the substrate-retirement stream; reach
+    # it through this package's own public facade so this module carries no
+    # dependency on that surface's private module.
+    from . import WizardEditUnsupportedConsoleError, WizardUnsupportedConsoleError
+
     definition, registered_values = _prepare_interactive_flow(flow, canonical, mode=mode, profile_id=profile_id)
     try:
         final_state = interactive_flow_runner(
@@ -1057,17 +1170,12 @@ def _run_interactive_flow(
         ) from exc
 
     committed = dict(final_state.answers)
-    if mode == "edit":
-        supplied_question_ids = frozenset(committed)
-        force_visible = supplied_question_ids
-    else:
-        supplied_question_ids = _all_question_ids(flow)
-        force_visible = frozenset()
-    answers = run_flow(
-        flow,
-        _scripted_from_canonical(flow, dict(committed), force_visible=force_visible),
-        force_visible=force_visible,
-    )
+    # An interactive edit patches exactly the pages the operator answered; a
+    # create writes the full set.
+    supplied_question_ids = frozenset(committed) if mode == "edit" else _all_question_ids(flow)
+    # Coerce the engine's committed answers into the typed model through the
+    # one projection every frontend shares — no second walk, no prompter.
+    answers = _answers_model_from_canonical(flow, committed)
     return answers, supplied_question_ids, committed
 
 
@@ -1172,17 +1280,19 @@ def _run_full_flow(
                     "missing_flags": missing_flags,
                 },
             )
-        answers = run_flow(
+        answers = _run_scripted_walk(
             flow,
-            _scripted_from_canonical(flow, canonical, force_visible=explicit_question_ids),
-            force_visible=explicit_question_ids,
+            canonical,
+            mode=mode,
+            explicit_question_ids=explicit_question_ids,
         )
         supplied_question_ids = _all_question_ids(flow)
     elif accept_defaults:
-        answers = run_flow(
+        answers = _run_scripted_walk(
             flow,
-            _scripted_from_canonical(flow, canonical, force_visible=explicit_question_ids),
-            force_visible=explicit_question_ids,
+            canonical,
+            mode=mode,
+            explicit_question_ids=explicit_question_ids,
         )
         supplied_question_ids = _all_question_ids(flow)
     else:
@@ -1525,9 +1635,7 @@ def _wizard_validation_bad(flow: WizardFlow, error: ValidationError) -> typer.Ba
     rendered = [_format_wizard_validation_error(flow, item) for item in error.errors()]
     mapped_details = [detail for detail, _flag in rendered if detail is not None]
     details = (
-        "; ".join(mapped_details)
-        if mapped_details
-        else tr("application.wizard.errors.command_input_invalid_fallback")
+        "; ".join(mapped_details) if mapped_details else tr("application.wizard.errors.command_input_invalid_fallback")
     )
     message = tr("application.wizard.errors.command_input_invalid", details=details)
     first_flag = next((flag for _detail, flag in rendered if flag), None)

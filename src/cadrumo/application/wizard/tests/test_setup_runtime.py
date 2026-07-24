@@ -314,11 +314,11 @@ def test_legal_entity_intra_section_gate_walks_legal_entity_form() -> None:
     same section. A section-wide upfront evaluation hid this question.
     """
 
-    from .._commands import _scripted_from_canonical
+    from ._scripted_prompter import scripted_from_canonical
 
     canonical = _non_interactive_canonical(_LEGAL_ENTITY_FLAGS)
     explicit = frozenset(_LEGAL_ENTITY_FLAGS)
-    prompter = _scripted_from_canonical(SETUP_FLOW, canonical, force_visible=explicit)
+    prompter = scripted_from_canonical(SETUP_FLOW, canonical, force_visible=explicit)
     answers = run_flow(SETUP_FLOW, prompter, force_visible=explicit)
     assert isinstance(answers, SetupAnswers)
     assert prompter.asked.count("legal-entity-form") == 1
@@ -329,11 +329,11 @@ def test_legal_entity_does_not_walk_spouse_or_irpf_personal_questions() -> None:
     """A legal entity is never asked the spouse / personal-IRPF or the
     IRPF income-category questions — they are gated to natural persons."""
 
-    from .._commands import _scripted_from_canonical
+    from ._scripted_prompter import scripted_from_canonical
 
     canonical = _non_interactive_canonical(_LEGAL_ENTITY_FLAGS)
     explicit = frozenset(_LEGAL_ENTITY_FLAGS)
-    prompter = _scripted_from_canonical(SETUP_FLOW, canonical, force_visible=explicit)
+    prompter = scripted_from_canonical(SETUP_FLOW, canonical, force_visible=explicit)
     run_flow(SETUP_FLOW, prompter, force_visible=explicit)
     for hidden in (
         "irpf-income-categories",
@@ -357,7 +357,7 @@ def test_explicit_flag_forces_a_gated_question_visible() -> None:
     it asked because the operator named ``--activity`` on the command
     line (``force_visible``)."""
 
-    from .._commands import _scripted_from_canonical
+    from ._scripted_prompter import scripted_from_canonical
 
     flags = {
         "entity-type": "natural_person",
@@ -367,7 +367,7 @@ def test_explicit_flag_forces_a_gated_question_visible() -> None:
     }
     canonical = _non_interactive_canonical(flags)
     explicit = frozenset(flags)
-    prompter = _scripted_from_canonical(SETUP_FLOW, canonical, force_visible=explicit)
+    prompter = scripted_from_canonical(SETUP_FLOW, canonical, force_visible=explicit)
     answers = run_flow(SETUP_FLOW, prompter, force_visible=explicit)
     assert isinstance(answers, SetupAnswers)
     assert "activity" in prompter.asked
@@ -378,7 +378,7 @@ def test_landlord_without_activity_flag_is_not_asked_for_activity() -> None:
     """A pure landlord (only capital_inmobiliario, no --activity flag)
     is never asked for an economic activity — the gate stays closed."""
 
-    from .._commands import _scripted_from_canonical
+    from ._scripted_prompter import scripted_from_canonical
 
     flags = {
         "entity-type": "natural_person",
@@ -387,7 +387,7 @@ def test_landlord_without_activity_flag_is_not_asked_for_activity() -> None:
     }
     canonical = _non_interactive_canonical(flags)
     explicit = frozenset(flags)
-    prompter = _scripted_from_canonical(SETUP_FLOW, canonical, force_visible=explicit)
+    prompter = scripted_from_canonical(SETUP_FLOW, canonical, force_visible=explicit)
     answers = run_flow(SETUP_FLOW, prompter, force_visible=explicit)
     assert isinstance(answers, SetupAnswers)
     assert "activity" not in prompter.asked
@@ -397,7 +397,7 @@ def test_landlord_without_activity_flag_is_not_asked_for_activity() -> None:
 def test_direct_estimation_profile_is_not_asked_for_modulos_annual_facts() -> None:
     """The módulos annual facts are gated to estimación objetiva only."""
 
-    from .._commands import _scripted_from_canonical
+    from ._scripted_prompter import scripted_from_canonical
 
     flags = {
         "entity-type": "natural_person",
@@ -408,7 +408,7 @@ def test_direct_estimation_profile_is_not_asked_for_modulos_annual_facts() -> No
     }
     canonical = _non_interactive_canonical(flags)
     explicit = frozenset(flags)
-    prompter = _scripted_from_canonical(SETUP_FLOW, canonical, force_visible=explicit)
+    prompter = scripted_from_canonical(SETUP_FLOW, canonical, force_visible=explicit)
     answers = run_flow(SETUP_FLOW, prompter, force_visible=explicit)
     assert isinstance(answers, SetupAnswers)
     assert "objective-estimation-modulos-iae-epigraph" not in prompter.asked
@@ -420,7 +420,7 @@ def test_direct_estimation_profile_is_not_asked_for_modulos_annual_facts() -> No
 def test_objetiva_profile_collects_modulos_annual_facts() -> None:
     """Objective-estimation profiles collect stable annual módulo facts once."""
 
-    from .._commands import _scripted_from_canonical
+    from ._scripted_prompter import scripted_from_canonical
 
     flags = {
         "entity-type": "natural_person",
@@ -435,7 +435,7 @@ def test_objetiva_profile_collects_modulos_annual_facts() -> None:
     }
     canonical = _non_interactive_canonical(flags)
     explicit = frozenset(flags)
-    prompter = _scripted_from_canonical(SETUP_FLOW, canonical, force_visible=explicit)
+    prompter = scripted_from_canonical(SETUP_FLOW, canonical, force_visible=explicit)
     answers = run_flow(SETUP_FLOW, prompter, force_visible=explicit)
     assert isinstance(answers, SetupAnswers)
 
