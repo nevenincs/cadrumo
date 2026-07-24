@@ -147,6 +147,29 @@ scoop-windows-x86-64 evidence row cannot mint and readiness hard-requires
 it, blocking the whole promotion train until a container-mode window is
 scheduled. Fail-closed and correct; operator scheduling item.
 
+### relocation-atomicity-slip | medium | the corpus-sync relocation ran as two commits — RECORDED
+
+The `relocation:sync_aeat_record_design_corpus` move added the `dev/corpus`
+copy while leaving the 545-line duplicate in `dev/packaging` for a two-commit
+window (pathspec omitted the rename source); the follow-up commit completed
+the deletion. No consumer imported the dead copy inside the window, and the
+final state is verified residue-free. Recorded as a process slip against the
+atomic-relocation discipline; the corrective pattern (post-commit duplicate
+sweep) held.
+
+### rulings-batch-close-review | low | fresh-context review passed the batch code-grade — CLOSED WITH FOLLOW-UPS
+
+The independent review of the rulings + identity range verified spec
+conformance, deletion residue, gate liveness, and anti-tautology across all
+sixteen changed test files, and ran the readiness/publish gates green (79
+passed). Its one blocking finding — the D5 identity ruling existed only in the
+tree, contradicting the accepted decision record — is resolved by the D5
+amending ruling now recorded in the delivery-pipeline ADR. Its hardening
+follow-ups (negative test for the manifest author refusal, real-behavior
+execution test for the minimum-uv guard, environment-marker exactness in the
+constraint-effect assertion) were dispatched and land as the campaign's final
+commits.
+
 ## Recommendations
 
 <!-- Actionable recommendations, each tied to a finding above. An

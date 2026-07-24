@@ -162,10 +162,27 @@ promoted to one shared constant (natural home: alongside the existing
 `_PLUGIN_AUTHOR_NAME` derivation, exposed through the owning package facade) so the
 plugin, marketplace, and MCPB surfaces read one declaration.
 `verify_distribution_identity.py` gains a product check asserting the MCPB
-manifest's author equals the derived value. The root pyproject `authors` entry
-"Gergely Wootsch" is ruled a distinct correct fact — the PEP 621 legal
-author/copyright holder under Apache-2.0 — and stays; it is never rewritten to the
-product identity, and the product identity is never written into `authors`.
+manifest's author equals the derived value. The root pyproject `authors` entry is
+ruled a distinct correct fact — the PEP 621 legal author/copyright holder under
+Apache-2.0 — and stays a legal-person fact; it is never rewritten to the product
+identity, and the product identity is never written into `authors`. WHICH
+legal-person name it carries is superseded by D5 below.
+
+**D5 — public legal-person identity is the pseudonym "Neve Nincs"
+(hello@neve.md).** Operator directive issued 2026-07-24 after this record's
+acceptance, recorded here as an amending ruling. Every tracked shipped surface
+that names the legal person — the pyproject `authors` entries (root and both data
+companions), the `NOTICE` files, the privacy policy's responsible party, the
+frontend legal prose, structured data, and copyright lines — carries the
+pseudonym "Neve Nincs" with contact `hello@neve.md` in place of the operator's
+real name, which is now treated as a privacy leak on published surfaces: the
+doc-privacy gate bans the retired name and retired contact address in a
+shipped-surface-scoped sweep (dev scaffolding excluded, where historical records
+legitimately retain it), while the tree-wide machine-identity token guards stay
+unweakened. D4's structural prohibition is unchanged: the PRODUCT identity is
+still never written into `authors`, and the legal-person fact remains distinct —
+only its public name changed. Implemented by the identity-sweep commit tagged
+`chore(identity)` in this batch.
 
 **F1 — install-time constraint-effect assertion.** A shared helper
 `dev/packaging/constraint_effect.py` exposes
