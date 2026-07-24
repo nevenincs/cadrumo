@@ -99,18 +99,18 @@ Define the per-mode checkpoint port and the resume projection that rebuilds Flow
 Move the profile create and edit CLI wiring and the modelo work wizard onto the engine, then retire the one-shot runner and prompter surfaces atomically with their consumers per the no-legacy rule.
 
 - [x] `W03.P08.S25` - Migrate the modelo work wizard consumer onto the engine frontends; `src/cadrumo/entrypoints/cli/_modelo_work_wizard_cli.py`.
-- [ ] `W03.P08.S26` - Retire the one-shot runner and prompter surfaces with every consumer moved in one atomic explicit-path commit, running collect-only clean immediately before the commit and regenerating apidocs stubs in the same commit; `src/cadrumo/application/wizard/`.
-- [ ] `W03.P08.S31` - Migrate the amend wizard consumer onto the engine frontends, removing its local one-shot prompt helper; `src/cadrumo/entrypoints/cli/_modelo_amend_wizard_cli.py`.
+- [x] `W03.P08.S26` - Retire the one-shot runner and prompter surfaces with every consumer moved in one atomic explicit-path commit, running collect-only clean immediately before the commit and regenerating apidocs stubs in the same commit; `src/cadrumo/application/wizard/`.
+- [x] `W03.P08.S31` - Migrate the amend wizard consumer onto the engine frontends, removing its local one-shot prompt helper; `src/cadrumo/entrypoints/cli/_modelo_amend_wizard_cli.py`.
 
 ### Phase `W03.P09` - Parity gates and documentation
 
 Land the interactive-versus-non-interactive parity regression, locale parity and honesty gates, apidocs scaffold, and the full-tree collection gate with owner triage.
 
 - [ ] `W03.P09.S27` - Land the parity regression proving the scripted, line-mode, and full-screen paths produce identical answers and validation verdicts for a shared definition; `src/cadrumo/application/flows/tests/test_frontend_parity.py`.
-- [ ] `W03.P09.S28` - Run the locale parity, translation honesty, and scaffold check gates green for the substrate key namespaces; `src/cadrumo/locales/`.
+- [x] `W03.P09.S28` - Run the locale parity, translation honesty, and scaffold check gates green for the substrate key namespaces; `src/cadrumo/locales/`.
 - [ ] `W03.P09.S29` - Run the docs build and documented-command conformance gates green, with owner triage recorded for any unrelated peer failures; `docs/`.
 - [ ] `W03.P09.S30` - Run the full src collect-only and suite gates with owner-distinguished triage of the results; `src/cadrumo/`.
-- [ ] `W03.P09.S32` - Land the bounded-fstring coverage gate, every dynamic tr or copy-reference site over an enum must carry its registry registration in the same commit, with the three campaign incidents as its seed cases; `src/cadrumo/locales/tests/`.
+- [x] `W03.P09.S32` - Land the bounded-fstring coverage gate, every dynamic tr or copy-reference site over an enum must carry its registry registration in the same commit, with the three campaign incidents as its seed cases; `src/cadrumo/locales/tests/`.
 
 ## Description
 
