@@ -6084,10 +6084,6 @@ errors:
     internal_profile_project_answers_not_registered: 'Error interno: las respuestas
       del proyecto de perfil no están registradas.'
     internal_profile_registration: 'Error interno: no se pudo registrar el perfil.'
-    internal_wizard_answer_queue_overflow: 'Error interno: el asistente se cerró con
-      respuestas canónicas sin consumir.'
-    internal_wizard_answer_queue_underflow: 'Error interno: el asistente solicitó
-      más respuestas canónicas de las proporcionadas por la ejecución no interactiva.'
     internal_wizard_catalogue_already_registered: 'Error interno: el catálogo del
       asistente ya está registrado.'
     internal_wizard_catalogue_not_registered: 'Error interno: el catálogo del asistente
