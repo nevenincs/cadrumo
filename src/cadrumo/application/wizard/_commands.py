@@ -33,6 +33,7 @@ persisted typed model is produced identically regardless of frontend.
 
 from __future__ import annotations
 
+import functools
 import inspect
 import typing
 from collections import deque
@@ -110,9 +111,37 @@ class InteractiveFlowRunner(typing.Protocol):
         *,
         mode: FlowMode,
         registered_values: Mapping[str, str] | None,
+        on_language_activated: Callable[[str, str], bool] | None = None,
     ) -> FlowState:
-        """Run ``definition`` in ``mode`` and return the final flow state."""
+        """Run ``definition`` in ``mode`` and return the final flow state.
+
+        ``on_language_activated`` is the mid-walk output-language activator:
+        fired post-commit for each answered page, it re-activates the output
+        language when the ``output-language`` page is committed and reports
+        whether a switch happened so the frontend can re-render. It is
+        ``None`` when the existing language chain (an explicit flag or the
+        environment) already pins the language for the whole run.
+        """
         ...
+
+
+def _activation_only_committed_callback(
+    on_language_activated: Callable[[str, str], bool] | None,
+) -> Callable[[str, str], None] | None:
+    """Adapt a language activator to the frontend's post-commit callback.
+
+    The line frontend re-assembles every page's copy on render, so the next
+    page renders under the newly-activated language with no further action;
+    the activator's boolean verdict is therefore discarded here. Returns
+    ``None`` when no activator is supplied so the frontend fires no hook.
+    """
+    if on_language_activated is None:
+        return None
+
+    def _committed(page_key: str, value: str) -> None:
+        on_language_activated(page_key, value)
+
+    return _committed
 
 
 def _line_mode_interactive_runner(
@@ -120,6 +149,7 @@ def _line_mode_interactive_runner(
     *,
     mode: FlowMode,
     registered_values: Mapping[str, str] | None = None,
+    on_language_activated: Callable[[str, str], bool] | None = None,
 ) -> FlowState:
     """Default runner: the line-mode frontend over the one flow engine.
 
@@ -129,7 +159,10 @@ def _line_mode_interactive_runner(
     tier walks the same engine, validation, and submit gate.
     """
     del registered_values
-    state, _projection = LineFlowFrontend(definition).run(mode=mode)
+    state, _projection = LineFlowFrontend(
+        definition,
+        on_answer_committed=_activation_only_committed_callback(on_language_activated),
+    ).run(mode=mode)
     return state
 
 
@@ -1130,6 +1163,53 @@ def _enter_requested_output_language(kwargs: dict[str, object], language_stack: 
         language_stack.enter_context(override_settings(cadrumo_output_language=requested_language))
 
 
+def _build_mid_walk_language_activation(
+    kwargs: dict[str, object],
+    language_stack: contextlib.ExitStack,
+) -> Callable[[str, str], bool] | None:
+    """Return a mid-walk output-language activator, or ``None`` when precedence forbids it.
+
+    The interactive setup flow asks for the output language on its first
+    page, so committing that answer should re-render the remaining pages in
+    the chosen language. Precedence guards that: an explicit
+    ``--output-language`` flag or a ``CADRUMO_OUTPUT_LANGUAGE`` environment /
+    settings value already pins the language for the whole run, so the
+    mid-walk answer must not override the existing chain — this returns
+    ``None`` and no hook is wired.
+
+    Otherwise the returned callback, fired post-commit for the
+    ``output-language`` page only, enters a settings override scoped to the
+    remainder of the run (tearing down with ``language_stack``) and reports
+    ``True`` so the caller can re-render the next page under the new language.
+    It reacts to no other page — the hook also fires per staged checkbox
+    toggle, so a handler that re-activated on anything else would rebuild on
+    every tick. The committed value may be a secret page's raw answer, so the
+    callback never logs, echoes, or records it; it inspects the value only for
+    the non-secret ``output-language`` page.
+    """
+    requested = kwargs.get("output_language")
+    if isinstance(requested, str) and requested in SUPPORTED_OUTPUT_LANGUAGES:
+        return None
+    from ...core.config import load_settings
+
+    if "cadrumo_output_language" in load_settings().model_fields_set:
+        return None
+
+    def _activate(page_key: str, value: str) -> bool:
+        if page_key != "output-language":
+            return False
+        if not isinstance(value, str) or value not in SUPPORTED_OUTPUT_LANGUAGES:
+            return False
+        from ...core.config import override_settings
+        from ...core.i18n import clear_output_language_cache
+
+        language_stack.enter_context(override_settings(cadrumo_output_language=value))
+        clear_output_language_cache()
+        return True
+
+    return _activate
+
+
 def _render_error_inside_language_override(exc: CadrumoError) -> None:
     """Freeze a translated Cadrumo error message before locale overrides unwind."""
     translated_key = exc.translated_message
@@ -1583,8 +1663,18 @@ def build_wizard_command(
             # in the requested language rather than falling back to the
             # default. The override unwinds when the command returns.
             _enter_requested_output_language(kwargs, _language_stack)
+            # When neither an explicit flag nor the environment pins the
+            # language, bind a mid-walk activator so answering the first
+            # (output-language) page re-renders the rest of the walk in the
+            # chosen language; the override tears down with this stack.
+            _activate_language = _build_mid_walk_language_activation(kwargs, _language_stack)
+            active_runner = (
+                functools.partial(runner, on_language_activated=_activate_language)
+                if _activate_language is not None
+                else runner
+            )
             try:
-                _execute_wizard_command(flow, mode, kwargs=kwargs, interactive_flow_runner=runner)
+                _execute_wizard_command(flow, mode, kwargs=kwargs, interactive_flow_runner=active_runner)
             except CadrumoError as exc:
                 # Pre-render translated_message INSIDE the override so the
                 # error boundary's renderer (which runs after the ExitStack
