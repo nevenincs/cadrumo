@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 from .python_cohort import (
+    COHORT_STAMPED_WHEEL_DATA_PATHS,
     PythonCohort,
     assert_installed_cohort,
     install_targets,
@@ -15,9 +16,11 @@ from .python_cohort import (
 from .smoke_core import (
     _assert_cadrumo_version_output,
     _assert_installed_data,
+    _assert_wheel_contains_tracked_data,
     _assert_wheel_metadata_matches_pyproject,
     _clean_product_env,
     _executable,
+    _expected_wheel_data_paths,
     _manifest_path,
     _run,
     _validate_frozen_exports,
@@ -114,6 +117,11 @@ def main(argv: list[str] | None = None) -> int:
     cohort = load_python_cohort(args.cohort_dir)
     wheel = cohort.root_wheel
     print("using supplied immutable Python cohort", flush=True)
+    _assert_wheel_contains_tracked_data(
+        repo_root,
+        wheel,
+        _expected_wheel_data_paths(repo_root) | COHORT_STAMPED_WHEEL_DATA_PATHS,
+    )
     _assert_wheel_metadata_matches_pyproject(repo_root, wheel)
 
     print("creating stdlib venv and installing wheel[all] with pip", flush=True)

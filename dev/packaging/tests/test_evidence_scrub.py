@@ -41,8 +41,10 @@ from dev.packaging.evidence import (
 from dev.packaging.evidence_scrub import (
     SCRUBBED_MACHINE_ID,
     SCRUBBED_USER,
+    SCRUBBED_WORKSPACE,
     EvidenceScrubError,
     default_runner_tokens,
+    default_workspace_roots,
     find_residual_leaks,
     scrub_distribution_evidence,
 )
@@ -237,3 +239,68 @@ def test_default_tokens_name_this_machine(tmp_path: Path) -> None:
     # The default-token path is what the emit builders use: a row minted on
     # THIS machine (cwd under this user's home) comes out clean of this user.
     del tmp_path
+
+
+_WIN_WORKSPACE = "D:\\a\\cadrumo\\cadrumo"
+_POSIX_WORKSPACE = "/home/runner/work/cadrumo/cadrumo"
+
+
+def test_windows_workspace_root_is_redacted_tail_preserved(tmp_path: Path) -> None:
+    """A GitHub-hosted Windows workspace prefix vanishes; the evidence tail stays.
+
+    The workspace root carries no home segment and no hostname/username token, so
+    only the workspace scrub can redact it — the token/home passes leave it
+    untouched. The venv/artefact structure below the root IS evidence and must
+    survive verbatim.
+    """
+    evidence = _leaking_evidence(
+        _release_cohort(tmp_path / "cohort"),
+        observations={
+            "workspace_diag": {
+                "resolved_executable": f"{_WIN_WORKSPACE}\\var\\pip-venv\\Scripts\\aeat.exe",
+                "storage_root": f"{_WIN_WORKSPACE}\\var\\tax-oracle-state",
+            },
+        },
+    )
+    scrubbed = scrub_distribution_evidence(evidence, tokens=_TOKENS, workspace_roots=(_WIN_WORKSPACE,))
+    diag = scrubbed.result.observations["workspace_diag"]
+    assert diag["resolved_executable"] == f"{SCRUBBED_WORKSPACE}\\var\\pip-venv\\Scripts\\aeat.exe"
+    assert diag["storage_root"] == f"{SCRUBBED_WORKSPACE}\\var\\tax-oracle-state"
+
+
+def test_posix_workspace_root_redaction_precedes_home_scrub(tmp_path: Path) -> None:
+    """A ``/home/runner/work/...`` workspace root is redacted whole, not half by the home pass."""
+    evidence = _leaking_evidence(
+        _release_cohort(tmp_path / "cohort"),
+        observations={"workspace_diag": {"cwd": f"{_POSIX_WORKSPACE}/var/outside-checkout"}},
+    )
+    scrubbed = scrub_distribution_evidence(evidence, tokens=_TOKENS, workspace_roots=(_POSIX_WORKSPACE,))
+    cwd = scrubbed.result.observations["workspace_diag"]["cwd"]
+    assert cwd == f"{SCRUBBED_WORKSPACE}/var/outside-checkout"
+    assert "runner" not in cwd
+
+
+def test_workspace_root_survives_fails_closed(tmp_path: Path) -> None:
+    """Anti-tautology: an un-normalized workspace root is caught by the detection sweep."""
+    evidence = _leaking_evidence(
+        _release_cohort(tmp_path / "cohort"),
+        observations={"workspace_diag": {"cwd": f"{_WIN_WORKSPACE}\\var\\state"}},
+    )
+    document = evidence.model_dump(mode="json", exclude={"evidence_id"})
+    leaks = find_residual_leaks(document, _TOKENS, workspace_roots=(_WIN_WORKSPACE,))
+    assert any("workspace root" in leak and "workspace_diag" in leak for leak in leaks)
+
+
+def test_default_workspace_roots_reads_ci_env_longest_first(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The default roots come from the runner's CI env, most specific first."""
+    monkeypatch.setenv("GITHUB_WORKSPACE", "/home/runner/work/cadrumo/cadrumo")
+    monkeypatch.setenv("RUNNER_WORKSPACE", "/home/runner/work/cadrumo")
+    roots = default_workspace_roots()
+    assert roots == ("/home/runner/work/cadrumo/cadrumo", "/home/runner/work/cadrumo")
+
+
+def test_default_workspace_roots_empty_without_ci_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Off a CI runner the default workspace-root set is empty, so scrubbing is a no-op."""
+    monkeypatch.delenv("GITHUB_WORKSPACE", raising=False)
+    monkeypatch.delenv("RUNNER_WORKSPACE", raising=False)
+    assert default_workspace_roots() == ()

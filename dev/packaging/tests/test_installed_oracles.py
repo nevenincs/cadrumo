@@ -540,6 +540,8 @@ def test_real_client_emission_cli_mints_a_sanctioned_record(
                 ],
                 "invoked_cli_sha256": "0" * 64,
                 "invoked_cli_sha256_by_command": {"modelo.work.calculate": "0" * 64},
+                "checkout_imports_removed": True,
+                "ambient_product_executables_removed": True,
             }
         ),
         encoding="utf-8",

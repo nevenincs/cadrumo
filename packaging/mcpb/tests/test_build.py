@@ -222,6 +222,11 @@ def test_canonical_cohort_renders_bundle_local_sources(real_cohort: Path) -> Non
     }
     for distribution, wheel in expected.items():
         assert sources[distribution] == {"path": f"artifacts/{wheel.name}"}
+    # The transitive dependency closure is pinned from the tested uv.lock so the
+    # first-launch ``uv sync`` cannot float to a fresh index resolution.
+    constraints = project["tool"]["uv"]["constraint-dependencies"]
+    assert constraints
+    assert all("==" in requirement for requirement in constraints)
 
 
 def test_build_contains_exact_wheels_and_canonical_digest_binding(
@@ -243,6 +248,7 @@ def test_build_contains_exact_wheels_and_canonical_digest_binding(
             f"artifacts/{cohort.root_wheel.name}",
             f"artifacts/{cohort.manuals_wheel.name}",
             f"artifacts/{cohort.official_wheel.name}",
+            "constraints.txt",
             "manifest.json",
             "pyproject.toml",
             "src/_serve.py",
@@ -251,8 +257,15 @@ def test_build_contains_exact_wheels_and_canonical_digest_binding(
         for filename, wheel in expected_wheels.items():
             assert archive.read(f"artifacts/{filename}") == wheel.read_bytes()
         manifest = json.loads(archive.read("manifest.json"))
+        constraints = archive.read("constraints.txt").decode()
         bootstrap = archive.read("src/server.py").decode()
         launcher = archive.read("src/_serve.py").decode()
+    # The staged constraints file pins the transitive closure from the tested lock.
+    constraint_lines = [
+        line for line in constraints.splitlines() if line and not line.startswith("#")
+    ]
+    assert constraint_lines
+    assert all("==" in line for line in constraint_lines)
     expected_sha256 = {
         name: cohort.sha256[name]
         for name in (

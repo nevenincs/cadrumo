@@ -29,6 +29,10 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 from dev.packaging.python_cohort import PythonCohort, load_python_cohort  # noqa: E402
+from dev.packaging.uv_constraints import (  # noqa: E402
+    export_runtime_constraints,
+    render_constraints_file,
+)
 
 _MANIFEST = _HERE / "manifest.json"
 _UTF_8: Final[str] = "utf-8"
@@ -248,8 +252,22 @@ def stamped_manifest(cohort: PythonCohort) -> dict[str, object]:
     return data
 
 
-def runtime_pyproject(cohort: PythonCohort) -> str:
-    """Render the UV project that resolves product packages from embedded wheels."""
+def runtime_pyproject(
+    cohort: PythonCohort,
+    *,
+    constraint_lines: tuple[str, ...] | None = None,
+) -> str:
+    """Render the UV project that resolves product packages from embedded wheels.
+
+    The first-launch ``uv sync`` resolves the product wheels' transitive
+    dependencies. ``uv sync`` has no constraints-file flag, so the pinned
+    closure exported from the tested ``uv.lock`` is embedded as
+    ``[tool.uv] constraint-dependencies`` here, the mechanism ``uv sync``
+    honours during resolution. The same closure is also staged as a
+    ``constraints.txt`` file in the bundle for transparency.
+    """
+    if constraint_lines is None:
+        constraint_lines = export_runtime_constraints(repo_root=_REPO_ROOT)
     filenames = dict(
         zip(
             _DISTRIBUTIONS,
@@ -264,6 +282,7 @@ def runtime_pyproject(cohort: PythonCohort) -> str:
             f'  "cadrumo-data-official=={cohort.version}",',
         ),
     )
+    constraints = "\n".join(f'  "{line}",' for line in constraint_lines)
     sources = "\n".join(f'{name} = {{ path = "artifacts/{filenames[name]}" }}' for name in _DISTRIBUTIONS)
     return (
         "[project]\n"
@@ -273,6 +292,10 @@ def runtime_pyproject(cohort: PythonCohort) -> str:
         'requires-python = ">=3.13,<3.14"\n'
         "dependencies = [\n"
         f"{dependencies}\n"
+        "]\n\n"
+        "[tool.uv]\n"
+        "constraint-dependencies = [\n"
+        f"{constraints}\n"
         "]\n\n"
         "[tool.uv.sources]\n"
         f"{sources}\n"
@@ -289,12 +312,17 @@ def _stage_bundle(stage: Path, cohort: PythonCohort) -> None:
         shutil.copy2(wheel, destination)
         if not filecmp.cmp(wheel, destination, shallow=False):
             raise ManifestError(f"staged wheel bytes drifted: {wheel}")
+    constraint_lines = export_runtime_constraints(repo_root=_REPO_ROOT)
     (stage / "manifest.json").write_text(
         json.dumps(stamped_manifest(cohort), indent=2, ensure_ascii=False) + "\n",
         encoding=_UTF_8,
     )
+    (stage / "constraints.txt").write_text(
+        render_constraints_file(constraint_lines),
+        encoding=_UTF_8,
+    )
     (stage / "pyproject.toml").write_text(
-        runtime_pyproject(cohort),
+        runtime_pyproject(cohort, constraint_lines=constraint_lines),
         encoding=_UTF_8,
     )
     (server / "server.py").write_text(_BOOTSTRAP_SOURCE, encoding=_UTF_8)

@@ -61,3 +61,4 @@ audit_state_gate:
     - "CHANGELOG.md is non-empty and carries no unresolved release-please merge markers"
     - "no open GitHub issue carries the priority:P0-blocker label (advisory when gh is unavailable/unauthenticated)"
     - "the most recent packaging-smoke evidence manifest under var/packaging-smoke, if present, reports ok: true"
+    - "the download-channel matrix is fresh and complete: `python -m dev.docs.download_matrix --check` is clean and every cohort ArtifactKind is surfaced by a documented channel (dev/docs/tests/test_download_matrix.py)"

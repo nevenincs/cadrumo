@@ -15,6 +15,15 @@ from urllib.parse import urlparse
 
 from packaging.requirements import Requirement
 
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+# Append (never insert) the repository root so the real PyPI ``packaging``
+# distribution keeps priority over the repo's ``packaging/`` source directory,
+# while the developer ``dev.packaging`` tooling package still resolves.
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.append(str(_REPO_ROOT))
+
+from dev.packaging.uv_constraints import export_runtime_constraints  # noqa: E402
+
 _DISTRIBUTIONS = (
     ("cadrumo", "cadrumo-*.whl"),
     ("cadrumo-data-manuals", "cadrumo_data_manuals-*.whl"),
@@ -143,14 +152,22 @@ def generate_manifest(
     base_url = _release_base_url(release_base_url, version=version)
     root, manuals, official = artifacts
     _validate_companion_pins(root, manuals, official)
+    constraints_body = "\n".join(export_runtime_constraints(repo_root=_REPO_ROOT))
     python_path = "(Join-Path $dir 'venv\\Scripts\\python.exe')"
     pre_install = [
         "New-Item -ItemType Directory -Force -Path (Join-Path $dir 'state') | Out-Null",
         "$python = (Get-Command python.exe -ErrorAction Stop).Source; "
         "& uv venv (Join-Path $dir 'venv') --python $python; "
         "if ($LASTEXITCODE -ne 0) { throw 'uv venv failed' }",
+        # Pin the transitive dependency closure to the tested uv.lock. A verbatim
+        # here-string keeps every requirement marker (single quotes included)
+        # literal, so the constraints file is written byte-for-byte as exported.
+        "Set-Content -LiteralPath (Join-Path $dir 'constraints.txt') -Value @'\n"
+        f"{constraints_body}\n"
+        "'@ -Encoding ascii",
         f"$root = (Join-Path $dir '{root.path.name}') + '[agent]'; "
-        f"& uv pip install --python {python_path} --no-cache $root "
+        f"& uv pip install --python {python_path} --no-cache "
+        "--constraint (Join-Path $dir 'constraints.txt') $root "
         f"(Join-Path $dir '{manuals.path.name}') (Join-Path $dir '{official.path.name}'); "
         "if ($LASTEXITCODE -ne 0) { throw 'uv pip install failed' }",
         f"& uv pip check --python {python_path}; if ($LASTEXITCODE -ne 0) {{ throw 'uv pip check failed' }}",

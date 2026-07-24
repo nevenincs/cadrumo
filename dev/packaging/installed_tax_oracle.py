@@ -14,6 +14,7 @@ import re
 import secrets
 import subprocess
 import time
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -101,11 +102,24 @@ class InstalledTaxEvidence:
     legal_refs: tuple[str, ...]
     source_refs: tuple[str, ...]
     notice_codes: tuple[str, ...]
+    checkout_imports_removed: bool
     commands: tuple[CommandEvidence, ...]
 
     def to_jsonable(self) -> dict[str, Any]:
         """Return a JSON-compatible evidence mapping."""
         return asdict(self)
+
+
+def checkout_imports_removed(environment: Mapping[str, str]) -> bool:
+    """True when the isolated environment carries no checkout import path.
+
+    The oracle drives an installed executable and must not let the source
+    checkout leak onto the child's import path; :func:`isolated_product_environment`
+    strips ``PYTHONPATH``/``PYTHONHOME`` for exactly that reason. This reads the
+    fact back off the real environment so the emitted evidence records what
+    isolation actually held rather than asserting it unconditionally.
+    """
+    return "PYTHONPATH" not in environment and "PYTHONHOME" not in environment
 
 
 def isolated_product_environment(storage_root: Path) -> dict[str, str]:
@@ -450,6 +464,7 @@ def run_installed_tax_oracle(
         legal_refs=tuple(str(value) for value in target["legal_refs"]),
         source_refs=tuple(str(value) for value in target["source_refs"]),
         notice_codes=tuple(sorted(notice_codes)),
+        checkout_imports_removed=checkout_imports_removed(environment),
         commands=tuple(commands),
     )
 

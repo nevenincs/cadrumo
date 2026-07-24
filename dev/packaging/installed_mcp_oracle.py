@@ -41,6 +41,7 @@ from dev.packaging.installed_tax_oracle import (
     TARGET_CASILLA,
     YEAR,
     assert_grounded_observations,
+    checkout_imports_removed,
     isolated_product_environment,
 )
 
@@ -97,6 +98,8 @@ class InstalledMcpEvidence:
     calls: tuple[McpCallEvidence, ...]
     invoked_cli_sha256: str
     invoked_cli_sha256_by_command: dict[str, str]
+    checkout_imports_removed: bool
+    ambient_product_executables_removed: bool
 
     def to_jsonable(self) -> dict[str, Any]:
         """Return a JSON-compatible evidence mapping."""
@@ -263,6 +266,14 @@ async def _run_protocol(
 ) -> InstalledMcpEvidence:
     environment = isolated_mcp_environment(storage_root)
     environment.update(environment_overrides)
+    # Read the isolation facts back off the real environment the server ran in,
+    # so the emitted evidence records what isolation actually held. isolated_mcp_environment
+    # already raises if a product executable is resolvable on PATH; recompute here so a
+    # PATH-restoring override cannot silently forge a clean isolation claim downstream.
+    imports_removed = checkout_imports_removed(environment)
+    product_executables_removed = all(
+        shutil.which(executable, path=environment["PATH"]) is None for executable in ("aeat", "cadrumo-mcp")
+    )
     params = StdioServerParameters(
         command=str(server),
         args=list(server_args),
@@ -485,6 +496,8 @@ async def _run_protocol(
         calls=tuple(calls),
         invoked_cli_sha256="",
         invoked_cli_sha256_by_command={},
+        checkout_imports_removed=imports_removed,
+        ambient_product_executables_removed=product_executables_removed,
     )
 
 
