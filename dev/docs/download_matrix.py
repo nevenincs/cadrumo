@@ -162,7 +162,7 @@ def load_descriptor(path: Path | None = None) -> DownloadDescriptor:
 def _availability_note(channel: DownloadChannel) -> str:
     """Return the "how you get the current beta" cell for one channel."""
     if channel.availability is Availability.AVAILABLE:
-        return f"Release page artifact; {channel.registry} listing live"
+        return f"Release page artifact; {channel.registry} live"
     return f"Release page artifact; {channel.registry} at public launch"
 
 
@@ -185,7 +185,7 @@ def _install_block(channel: DownloadChannel) -> str:
         )
     return (
         f"{heading}\n\n"
-        f"The {channel.registry} listing opens with the public launch; until then, install the "
+        f"The {channel.registry} opens at public launch; until then, install the "
         f"release-page artifact attached to the latest release.\n"
     )
 
@@ -213,7 +213,7 @@ def render_zone(descriptor: DownloadDescriptor) -> str:
         lines.append(f"  - {_availability_note(channel)}")
     lines.append("```")
     lines.append("")
-    lines.append("Install commands per channel:")
+    lines.append("Per-channel install paths:")
     lines.append("")
     for channel in descriptor.channel:
         lines.append(_install_block(channel).rstrip())
