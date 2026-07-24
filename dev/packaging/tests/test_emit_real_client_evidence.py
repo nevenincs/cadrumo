@@ -55,6 +55,22 @@ def test_email_address_is_refused(tmp_path: Path) -> None:
         assert_session_carries_no_secret(path, session)
 
 
+def test_secret_shaped_dict_key_is_refused(tmp_path: Path) -> None:
+    """A token-length dict KEY is refused, not only a value."""
+    path = tmp_path / "session.json"
+    session = _write(path, {"abcdefghijklmnopqrstuvwxyz0123456789": "present"})
+    with pytest.raises(RealClientSessionError, match="secret-shaped content"):
+        assert_session_carries_no_secret(path, session)
+
+
+def test_email_in_dict_key_is_refused(tmp_path: Path) -> None:
+    """An email address appearing as a dict KEY is refused."""
+    path = tmp_path / "session.json"
+    session = _write(path, {"user@example.com": "connected"})
+    with pytest.raises(RealClientSessionError, match="secret-shaped content"):
+        assert_session_carries_no_secret(path, session)
+
+
 def test_nested_token_is_refused(tmp_path: Path) -> None:
     """A secret buried in a nested structure is still caught."""
     path = tmp_path / "session.json"
