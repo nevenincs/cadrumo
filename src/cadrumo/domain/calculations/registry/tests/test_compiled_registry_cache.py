@@ -34,7 +34,7 @@ from .._loader_cache import REGISTRY_DISK_CACHE_DIR_ENV_VAR
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _bundled_payload() -> tuple[Path, tuple[tuple[str, int, int], ...], CompiledRegistryPayload]:
+def _bundled_payload() -> tuple[Path, tuple[tuple[str, int, int, str], ...], CompiledRegistryPayload]:
     """Compile the real bundled registry once and return its root, fingerprints, and payload."""
     clear_fingerprint_cache()
     root = bundled_path("registry", "aeat").resolve()

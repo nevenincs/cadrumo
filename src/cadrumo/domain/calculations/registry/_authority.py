@@ -260,7 +260,7 @@ def bundled_authority() -> ValidatedRegistryAuthority:
 def _load_authority(
     root: Path,
     source_root: Path,
-    _registry_fingerprint: tuple[tuple[str, int, int], ...],
+    _registry_fingerprint: tuple[tuple[str, int, int, str], ...],
     _source_evidence_fingerprint: tuple[tuple[str, int, int], ...],
 ) -> ValidatedRegistryAuthority:
     modelos, catalogues = load_registry_tree(root)

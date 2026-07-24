@@ -25,12 +25,14 @@ See Also:
 
 from __future__ import annotations
 
+import hashlib
 import tempfile
 from functools import lru_cache
 from pathlib import Path
 
 from ....core.config import load_settings
 from ....core.resources import bundled_path
+from ._errors import RegistryLoadError
 
 REGISTRY_DISK_CACHE_DIR_ENV_VAR = "CADRUMO_REGISTRY_DISK_CACHE_DIR"
 """Environment variable backing :attr:`~core.config.Settings.cadrumo_registry_disk_cache_dir`."""
@@ -79,6 +81,68 @@ def is_bundled_registry_root(resolved: Path) -> bool:
         # install) must never be mistaken for "this is the bundled tree";
         # fail closed to the strict mutable-tree TTL.
         return False
+
+
+def is_bundled_registry_path(path: Path) -> bool:
+    """Whether ``path`` lies inside the package-bundled registry tree.
+
+    Path-containment sibling of :func:`is_bundled_registry_root`, used by the
+    per-file fingerprint to decide whether a content digest must be computed:
+    the bundled tree is read-only package data that is never rewritten during
+    a process's lifetime (the same immutability premise the pytest disk-cache
+    predicate and the longer bundled TTL already rely on), so its files keep
+    the cheap stat-only fingerprint, while any mutable authoring tree -- the
+    only place an in-run rewrite can collide on ``(size, mtime_ns)`` -- pays
+    for the content discriminator. ``path`` must already be resolved. Fails
+    closed to ``False`` (content-sensitive fingerprinting) on any resources
+    boundary failure.
+    """
+    try:
+        return path.is_relative_to(_bundled_registry_root())
+    except (ImportError, OSError, ValueError):
+        return False
+
+
+def toml_file_fingerprint(path: Path) -> tuple[str, int, int, str]:
+    """Return the ``(path, size, mtime_ns, content_digest)`` fingerprint for one registry TOML.
+
+    The shared per-file fingerprint primitive behind the loader's cache keys
+    and the convenio treaty fingerprints. ``(size, mtime_ns)`` alone cannot
+    distinguish two successive writes that produce content of the same byte
+    length within the filesystem's effective mtime resolution (coarse on CI
+    overlay/network filesystems), so a stat-only fingerprint would serve a
+    stale compiled registry after such an edit -- violating the
+    complete-tree-fingerprint invariant of the registry authority flow. The
+    content digest closes that hole; the stat fields remain as the cheap
+    first-order discriminator.
+
+    The package-bundled tree is exempt (empty digest): it is read-only package
+    data never rewritten during a process's lifetime -- the same immutability
+    premise the pytest disk-cache predicate and the longer bundled TTL already
+    encode (:func:`is_bundled_registry_path`) -- and hashing its ~16.5k TOML
+    files (~25 MB) would add ~1.3 s to every cold fingerprint walk for a tree
+    that cannot exhibit the collision.
+    """
+    try:
+        stat = path.stat()
+    except OSError as exc:
+        raise RegistryLoadError(
+            f"{path}: registry TOML could not be fingerprinted; retry after concurrent registry writes settle: {exc}",
+        ) from exc
+    return str(path), stat.st_size, stat.st_mtime_ns, _toml_content_digest(path)
+
+
+def _toml_content_digest(path: Path) -> str:
+    """Return the mutable-tree content discriminator, or ``""`` for bundled files."""
+    if is_bundled_registry_path(path):
+        return ""
+    try:
+        data = path.read_bytes()
+    except OSError as exc:
+        raise RegistryLoadError(
+            f"{path}: registry TOML could not be fingerprinted; retry after concurrent registry writes settle: {exc}",
+        ) from exc
+    return hashlib.blake2b(data, digest_size=16).hexdigest()
 
 
 def _running_under_pytest() -> bool:

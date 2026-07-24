@@ -44,7 +44,7 @@ def test_cache_key_differs_when_loader_code_fingerprint_differs() -> None:
     new key and the pre-change pickle is simply never looked up.
     """
     root = "/registry/root"
-    fingerprints = (("a/b.toml", 10, 123), ("c/d.toml", 20, 456))
+    fingerprints = (("a/b.toml", 10, 123, "digest-a"), ("c/d.toml", 20, 456, "digest-b"))
 
     key_a = _registry_disk_cache_key(root, fingerprints, loader_code_fingerprint="loader-vA")
     key_b = _registry_disk_cache_key(root, fingerprints, loader_code_fingerprint="loader-vB")
