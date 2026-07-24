@@ -278,7 +278,7 @@ def test_only_one_jscpd_invocation_exists_in_the_tree() -> None:
     invocations.
     """
     tracked = subprocess.run(
-        ["git", "ls-files"],
+        ["git", "ls-files"],  # noqa: S607 - git resolved from PATH like every dev gate
         cwd=_REPO_ROOT,
         capture_output=True,
         text=True,
