@@ -12,11 +12,14 @@ environment), parses the pinned rows, and refuses — fail-closed — when any
 constrained distribution is missing or drifted from its pin.
 
 Distribution names are compared under PEP 503 normalisation on both sides.
-Constraint rows carrying an environment marker are conditional: their
-distribution is only required *if installed*, since a universal lock export
-lists platform-gated rows (``jeepney`` on Linux, ``pywin32`` on Windows) that
-legitimately resolve to nothing on the running platform. A marker-free row is
-mandatory: its distribution must be present and exact.
+Environment markers are EVALUATED against the running platform, not treated as
+a mere if-installed hint. A universal lock export lists platform-gated rows
+(``jeepney`` on Linux, ``pywin32`` on Windows) and may pin one name to
+different versions under mutually exclusive markers. A row whose marker is false
+here describes another platform and is ignored. A row whose marker is true here
+(or carries no marker) is ACTIVE: its distribution must be installed at exactly
+that version — so a gated distribution missing on its OWN platform is a
+failure, and only the version whose marker holds is accepted.
 """
 
 from __future__ import annotations
@@ -30,6 +33,8 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
+
+from packaging.markers import InvalidMarker, Marker
 
 _UTF_8: Final[str] = "utf-8"
 
@@ -54,18 +59,18 @@ class ConstraintDriftError(RuntimeError):
 
 @dataclass(frozen=True)
 class ConstraintPin:
-    """One constrained distribution: its normalised name, pins, and requiredness.
+    """One constrained distribution that is ACTIVE on the running platform.
 
-    ``versions`` accumulates every pinned version seen for the name (a universal
-    export may pin one name to different versions under mutually exclusive
-    markers); the installed version must be one of them. ``mandatory`` is true
-    when at least one row for the name carried no environment marker, so the
-    distribution is required on every platform.
+    ``versions`` accumulates the pinned version(s) from every row whose marker
+    holds here (marker-free rows always hold). Because markers are evaluated,
+    mutually exclusive rows contribute only the version whose marker is true, so
+    on any single platform this is normally one version. Every entry in the
+    parsed map is required present: an active distribution missing from the
+    installed set is a failure.
     """
 
     name: str
     versions: frozenset[str]
-    mandatory: bool
 
 
 def normalise_distribution_name(name: str) -> str:
@@ -73,22 +78,37 @@ def normalise_distribution_name(name: str) -> str:
     return _NAME_NORMALISE.sub("-", name.strip().lower())
 
 
+def _marker_is_active(marker_text: str) -> bool:
+    """Return True when ``marker_text`` holds for the running environment.
+
+    An empty marker always holds. An unparseable marker is fail-closed: it
+    raises rather than silently dropping (or silently keeping) the row.
+    """
+    text = marker_text.strip()
+    if not text:
+        return True
+    try:
+        return bool(Marker(text).evaluate())
+    except InvalidMarker as exc:
+        raise ConstraintDriftError(f"constraint row has an invalid environment marker: {text!r}") from exc
+
+
 def parse_constraint_lines(constraint_lines: Sequence[str]) -> dict[str, ConstraintPin]:
     """Parse ``name==version`` rows into a normalised name -> :class:`ConstraintPin` map.
 
-    Blank rows, comment rows, and marker-only continuation rows are ignored, and
-    the environment marker after ``;`` is stripped from the requirement before
-    the version is read. Only bare ``==`` pins are honoured; a non-pinned or
-    compound-specifier row is refused so a loose requirement can never silently
-    pass the effect gate.
+    Blank rows, comment rows, and marker-only continuation rows are ignored. The
+    environment marker after ``;`` is EVALUATED against the running platform: a
+    row whose marker is false describes another platform and is dropped, so it
+    contributes neither a version nor a requiredness. Only bare ``==`` pins are
+    honoured; a non-pinned or compound-specifier row is refused so a loose
+    requirement can never silently pass the effect gate.
     """
     versions: dict[str, set[str]] = {}
-    mandatory: dict[str, bool] = {}
     for raw in constraint_lines:
         stripped = raw.strip()
         if not stripped or stripped.startswith("#"):
             continue
-        requirement, marker_sep, marker = stripped.partition(";")
+        requirement, _marker_sep, marker = stripped.partition(";")
         requirement = requirement.strip()
         if not requirement:
             # A marker-only continuation line carries no requirement to pin.
@@ -100,15 +120,13 @@ def parse_constraint_lines(constraint_lines: Sequence[str]) -> dict[str, Constra
         version = version.strip()
         if not name or not version or any(character in version for character in _VERSION_REJECT):
             raise ConstraintDriftError(f"constraint row is not a single == pin: {stripped!r}")
-        has_marker = bool(marker_sep and marker.strip())
+        if not _marker_is_active(marker):
+            # Another platform's row: not expected in this environment.
+            continue
         versions.setdefault(name, set()).add(version)
-        mandatory[name] = mandatory.get(name, False) or not has_marker
     if not versions:
-        raise ConstraintDriftError("no pinned constraints were parsed from the constraint lines")
-    return {
-        name: ConstraintPin(name=name, versions=frozenset(pins), mandatory=mandatory[name])
-        for name, pins in versions.items()
-    }
+        raise ConstraintDriftError("no active pinned constraints were parsed for this platform")
+    return {name: ConstraintPin(name=name, versions=frozenset(pins)) for name, pins in versions.items()}
 
 
 def enumerate_installed_distributions(python_exe: Path) -> dict[str, str]:
@@ -140,11 +158,13 @@ def enumerate_installed_distributions(python_exe: Path) -> dict[str, str]:
 def assert_installed_matches_constraints(python_exe: Path, constraint_lines: Sequence[str]) -> None:
     """Refuse unless ``python_exe``'s installed set matches the pinned closure.
 
-    Every mandatory (marker-free) constrained distribution must be installed at
-    exactly one of its pinned versions; a marker-gated distribution, when
-    installed, must likewise match. On any drift or missing mandatory
-    distribution a :class:`ConstraintDriftError` is raised enumerating each
-    offending distribution as ``name: expected <pins>, actual <observed>``.
+    Every constrained distribution ACTIVE on the running platform (marker-free,
+    or marker true here) must be installed at exactly one of its active pinned
+    versions — so a gated distribution missing on its own platform fails, and a
+    name pinned under mutually exclusive markers accepts only the version whose
+    marker holds. On any drift or missing active distribution a
+    :class:`ConstraintDriftError` is raised enumerating each offending
+    distribution as ``name: expected <pins>, actual <observed>``.
     """
     pins = parse_constraint_lines(constraint_lines)
     installed = enumerate_installed_distributions(python_exe)
@@ -153,8 +173,7 @@ def assert_installed_matches_constraints(python_exe: Path, constraint_lines: Seq
         expected = ", ".join(sorted(pin.versions))
         actual = installed.get(name)
         if actual is None:
-            if pin.mandatory:
-                problems.append(f"  {name}: expected {expected}, actual <missing>")
+            problems.append(f"  {name}: expected {expected}, actual <missing>")
             continue
         if actual not in pin.versions:
             problems.append(f"  {name}: expected {expected}, actual {actual}")
