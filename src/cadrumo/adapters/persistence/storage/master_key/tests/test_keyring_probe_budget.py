@@ -81,7 +81,7 @@ class TestOverBudgetReadIsLocked:
         provider = _BlockingKeyringProvider()
         try:
             with pytest.raises(MasterKeyKeychainLockedError) as caught:
-                _read_master_key_within_budget(provider, timeout_s=_BUDGET_S)  # type: ignore[arg-type]
+                _read_master_key_within_budget(provider, timeout_s=_BUDGET_S)
         finally:
             provider.released.set()
 
@@ -95,7 +95,7 @@ class TestOverBudgetReadIsLocked:
         provider = _BlockingKeyringProvider()
         try:
             with pytest.raises(MasterKeyKeychainLockedError) as caught:
-                _read_master_key_within_budget(provider, timeout_s=_BUDGET_S)  # type: ignore[arg-type]
+                _read_master_key_within_budget(provider, timeout_s=_BUDGET_S)
         finally:
             provider.released.set()
 
@@ -111,7 +111,7 @@ class TestOverBudgetReadIsLocked:
         started = time.monotonic()
         try:
             with pytest.raises(MasterKeyKeychainLockedError):
-                _read_master_key_within_budget(provider, timeout_s=_BUDGET_S)  # type: ignore[arg-type]
+                _read_master_key_within_budget(provider, timeout_s=_BUDGET_S)
         finally:
             provider.released.set()
         elapsed = time.monotonic() - started
@@ -124,17 +124,17 @@ class TestWithinBudgetIsUnchanged:
     """Reads that complete in time keep their existing behaviour verbatim."""
 
     def test_a_prompt_answered_within_budget_succeeds(self) -> None:
-        _read_master_key_within_budget(_PromptKeyringProvider(0.01), timeout_s=_BUDGET_S)  # type: ignore[arg-type]
+        _read_master_key_within_budget(_PromptKeyringProvider(0.01), timeout_s=_BUDGET_S)
 
     def test_an_unusable_backend_still_reports_unavailable(self) -> None:
         """The bound must not reclassify a genuine backend failure as locked."""
         provider = _RaisingKeyringProvider(KeyringUnavailableError("no usable backend"))
 
         with pytest.raises(KeyringUnavailableError):
-            _read_master_key_within_budget(provider, timeout_s=_BUDGET_S)  # type: ignore[arg-type]
+            _read_master_key_within_budget(provider, timeout_s=_BUDGET_S)
 
     def test_a_locked_keychain_still_reports_locked(self) -> None:
         provider = _RaisingKeyringProvider(MasterKeyKeychainLockedError("keychain locked"))
 
         with pytest.raises(MasterKeyKeychainLockedError):
-            _read_master_key_within_budget(provider, timeout_s=_BUDGET_S)  # type: ignore[arg-type]
+            _read_master_key_within_budget(provider, timeout_s=_BUDGET_S)

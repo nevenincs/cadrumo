@@ -1021,8 +1021,24 @@ def refuse_unsecured_with_real_nif(
         )
 
 
+@runtime_checkable
+class _MasterKeyReader(Protocol):
+    """The single capability the budget guard needs: read the master key.
+
+    Narrower than :class:`MasterKeyProvider` deliberately. The guard calls
+    exactly one method and cares about nothing else, so demanding the full
+    provider contract would overstate the dependency and force callers --
+    including the tests that drive a genuinely blocking read -- to satisfy
+    a session/lifecycle surface the guard never touches.
+    """
+
+    def get_master_key(self) -> bytes:
+        """Return the master key, blocking for as long as the backend does."""
+        ...
+
+
 def _read_master_key_within_budget(
-    provider: KeyringMasterKeyProvider,
+    provider: _MasterKeyReader,
     *,
     timeout_s: float,
 ) -> None:
