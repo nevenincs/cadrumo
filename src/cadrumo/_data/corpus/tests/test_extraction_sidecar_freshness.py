@@ -15,7 +15,7 @@ from dev.docs.preprocess import (
     PreprocessOutput,
 )
 from dev.docs.preprocess._html import HTML_EXTRACTOR_ID, build_outputs
-from dev.packaging.extract_manual_corpus_text import _extract_raw_text, _normalise_corpus_text
+from dev.corpus.extract_manual_corpus_text import _extract_raw_text, _normalise_corpus_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -129,7 +129,7 @@ def test_committed_extraction_sidecars_match_current_sources() -> None:
 def test_manual_pdf_corpus_text_sidecars_exist_and_match_source_sha256() -> None:
     """Every committed manual-PDF corpus text sidecar matches its source PDF bytes.
 
-    Ensures that dev/packaging/extract_manual_corpus_text.py was re-run after
+    Ensures that dev/corpus/extract_manual_corpus_text.py was re-run after
     any corpus PDF changed, so the shipped sidecars are always in sync with
     the source PDFs that _validate_evidence._read_manual_pdf_sidecar reads.
     """
@@ -181,7 +181,7 @@ def test_manual_pdf_corpus_text_sidecars_exist_and_match_source_sha256() -> None
             failures.append(
                 f"{rel_sidecar}: sha256 mismatch for {corpus_path} "
                 f"(stored {stored_sha256[:8]}…, actual {actual_sha256[:8]}…) — "
-                "run: uv run --no-sync python -m dev.packaging.extract_manual_corpus_text"
+                "run: uv run --no-sync python -m dev.corpus.extract_manual_corpus_text"
             )
 
     assert sidecars, f"no manual corpus text sidecars found under {_MANUAL_CORPUS_TEXT_ROOT}"

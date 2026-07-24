@@ -16,8 +16,8 @@ reference the registry declares.
 
 Usage::
 
-    uv run --no-sync python -m dev.packaging.extract_manual_corpus_text
-    uv run --no-sync python -m dev.packaging.extract_manual_corpus_text --check
+    uv run --no-sync python -m dev.corpus.extract_manual_corpus_text
+    uv run --no-sync python -m dev.corpus.extract_manual_corpus_text --check
 
 The ``--check`` mode exits non-zero when any sidecar is stale or missing
 without writing anything; it is suitable for CI freshness gates.
@@ -64,7 +64,7 @@ _UTF_8: Final[str] = "utf-8"
 _SCHEMA_VERSION: Final[int] = 2
 _SIDECAR_SUFFIX: Final[str] = ".corpus_text.json"
 
-# dev/packaging/extract_manual_corpus_text.py is two levels below the repo root.
+# dev/corpus/extract_manual_corpus_text.py is two levels below the repo root.
 _REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
 _CORPUS_ROOT: Final[Path] = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus"
 _SIDECAR_ROOT: Final[Path] = _REPO_ROOT / "src" / "cadrumo" / "_data" / "manual_corpus_text"
@@ -200,7 +200,7 @@ def extract_all(*, check: bool = False) -> int:
         if stale:
             print(
                 f"\n{len(stale)} sidecar(s) stale or missing."
-                " Run: uv run --no-sync python -m dev.packaging.extract_manual_corpus_text",
+                " Run: uv run --no-sync python -m dev.corpus.extract_manual_corpus_text",
                 file=sys.stderr,
             )
             return len(stale)
