@@ -3553,8 +3553,8 @@ cli:
         enabled: activat
         help: Activa o desactiva en aquest perfil els serveis externs (pujada al núvol,
           visió LLM, exportació a Google).
-        no_active_profile: No hi ha cap perfil actiu; selecciona'n un amb 'aeat config
-          switch <nom>' abans de configurar una capacitat.
+        no_active_profile: No hi ha cap perfil actiu; inicia la sessió en un amb 'aeat
+          config login <nom>' abans de configurar una capacitat.
         set_help: Activa o desactiva una capacitat de servei per al perfil actiu.
         show_help: Mostra l'estat resolt de cada capacitat de servei per al perfil
           actiu.

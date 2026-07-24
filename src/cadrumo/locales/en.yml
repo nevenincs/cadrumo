@@ -3309,8 +3309,8 @@ cli:
         enabled: enabled
         help: Opt this profile in or out of external services (cloud upload, LLM vision,
           Google export).
-        no_active_profile: No active profile; select one with 'aeat config profile
-          use <name>' before setting a capability.
+        no_active_profile: No active profile; log in to one with 'aeat config login
+          <name>' before setting a capability.
         set_help: Opt the active profile in or out of one service capability.
         show_help: Show the resolved posture of every service capability for the active
           profile.

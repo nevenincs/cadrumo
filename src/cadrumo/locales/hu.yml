@@ -3503,8 +3503,8 @@ cli:
         enabled: bekapcsolva
         help: Kapcsolja be vagy ki ennél a profilnál a külső szolgáltatásokat (felhőfeltöltés,
           LLM-látás, Google-exportálás).
-        no_active_profile: Nincs aktív profil; válasszon egyet a 'aeat config profile
-          use <név>' paranccsal a képesség beállítása előtt.
+        no_active_profile: Nincs aktív profil; jelentkezzen be egybe az 'aeat config
+          login <név>' paranccsal a képesség beállítása előtt.
         set_help: Be- vagy kikapcsol egy szolgáltatás-képességet az aktív profilhoz.
         show_help: Megjeleníti az aktív profil minden szolgáltatás-képességének feloldott
           állapotát.
