@@ -117,6 +117,7 @@ from ._post_filing_event import (
     classify_post_filing_event_kind,
     post_filing_event_is_actionable,
 )
+from ._profile_session import ProfileSessionRefusalReason
 from ._prorrata_exclusions import (
     ART_104_TRES_AUTO_DERIVED_EXCLUSIONS,
     ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS,
@@ -233,6 +234,7 @@ __all__: list[str] = [
     "PeriodKind",
     "PostFilingEventKind",
     "ProductIdentity",
+    "ProfileSessionRefusalReason",
     "ProrrataProvisionalProvenance",
     "ProrrataRegisterRegime",
     "RefundElection",

@@ -404,6 +404,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.user_profile._login_session.ProfileLoginThrottledError",
+        ErrorCode(
+            code="REFUSED_PROFILE_LOGIN_THROTTLED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_profile_login_throttled",
+            default_suggestion="aeat config login",
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.user_profile._orchestration.ProfileLogoutOverrideError",
         ErrorCode(
             code="REFUSED_PROFILE_LOGOUT_OVERRIDE",

@@ -515,6 +515,7 @@ def test_runtime_tunables_are_settings_not_registry_constants() -> None:
         "cadrumo_file_lock_retry_backoff_s": 0.05,
         "cadrumo_bucket_lock_poll_interval_s": 0.1,
         "cadrumo_bucket_default_idle_lock_minutes": 15,
+        "cadrumo_bucket_default_session_absolute_minutes": 240,
         "cadrumo_auth_clave_movil_lock_buffer_s": 90,
         "cadrumo_auth_certificate_lock_ttl_s": 180,
         "cadrumo_log_stderr_level": "ERROR",

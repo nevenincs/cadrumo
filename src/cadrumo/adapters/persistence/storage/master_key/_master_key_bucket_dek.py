@@ -61,6 +61,21 @@ def idle_minutes_for_bucket(*, storage_root: Path, bucket_id: str, default_minut
     return configured if configured is not None else default_minutes
 
 
+def session_absolute_minutes_for_bucket(*, storage_root: Path, bucket_id: str, default_minutes: int) -> int:
+    """Resolve the absolute session cap from the bucket manifest, falling back to settings."""
+    from ..bucket import MISSING_BUCKET_MANIFEST_MESSAGE, bucket_paths, read_manifest
+    from ..errors import StorageValidationError
+
+    try:
+        manifest = read_manifest(bucket_paths(storage_root, bucket_id))
+    except StorageValidationError as exc:
+        if str(exc) == MISSING_BUCKET_MANIFEST_MESSAGE:
+            return default_minutes
+        raise
+    configured = manifest.session_absolute_minutes
+    return configured if configured is not None else default_minutes
+
+
 def load_or_mint_bucket_dek(
     *,
     kek: bytes,

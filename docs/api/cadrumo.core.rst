@@ -62,6 +62,7 @@ Submodules
    cadrumo.core._optional_extras
    cadrumo.core._period
    cadrumo.core._post_filing_event
+   cadrumo.core._profile_session
    cadrumo.core._prorrata_exclusions
    cadrumo.core._prorrata_register
    cadrumo.core._refund_election
