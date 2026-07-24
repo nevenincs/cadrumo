@@ -1032,9 +1032,13 @@ def export_modelo_revision(
         revision,
         error_type=ModeloExportEvidenceMissingError,
         surface="export",
+        # The linking commands are only half the answer: this revision bundled its
+        # evidence at verify, so attaching now does NOT unblock this export. The
+        # ordering clause is the part that actually works, and the message says why.
         suggestion=(
             "aeat app ledger evidence add PATH; "
-            "aeat app ledger attach TRANSACTION_ID --purchase-invoice-evidence-id EVIDENCE_ID"
+            "aeat app ledger attach TRANSACTION_ID --purchase-invoice-evidence-id EVIDENCE_ID  "
+            "# link BEFORE `aeat app modelo work calculate`"
         ),
     )
     work_unit = wu_repo.load().get(revision.work_unit_id)

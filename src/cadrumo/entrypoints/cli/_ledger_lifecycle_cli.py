@@ -140,14 +140,25 @@ def ledger_attach(
 
 
 def _stale_finalized_revision_notices(result: ManualLedgerTransactionResult) -> list[Notice]:
-    """Advise recalculation for every finalized revision citing the attached row.
+    """Warn that each finalized revision citing this row will not pick the evidence up.
 
-    A finalized revision bundled its ledger evidence BEFORE this attachment, so
-    its frozen bundle still shows the row without proof — an export or filing
-    gate reading that bundle would refuse again. Naming the recalculate command
-    per cited revision is what turns the attach from a dead end into the next
-    step of the remedy (``aeat-architecture-boundaries``: a refusal, or the
-    advisory standing in for one, lists the way forward).
+    A revision bundles its ledger evidence when it is VERIFIED, and that bundle
+    is frozen. An attachment landing afterwards is stored on the ledger row but
+    never reaches the already-verified filing, so an export or filing gate
+    reading the bundle keeps refusing.
+
+    The advisory deliberately names NO recovery verb, because neither candidate
+    works and both were measured rather than assumed: ``work calculate``
+    re-derives the same content-addressed revision id (evidence is not part of
+    that hash) and returns the existing finalized revision untouched, and
+    ``work discard`` is worse than useless — it marks the work unit
+    ``descartado``, and the follow-up ``work create`` re-derives the SAME
+    work-unit id and hands the discarded unit back, permanently stranding that
+    (modelo, filing year, period) target for the profile. Suggesting either
+    would send the operator further from a working filing, so the guidance is
+    the ordering rule that does work: link invoices before calculating
+    (``aeat-architecture-boundaries``: name a real way forward, never a bare
+    refusal — and never a false one).
     """
     return [
         advisory_notice(
@@ -158,14 +169,16 @@ def _stale_finalized_revision_notices(result: ManualLedgerTransactionResult) -> 
                 filing_year=str(blocker.filing_year),
                 period=blocker.period,
                 default=(
-                    f"Evidence attached, but Modelo {blocker.modelo} {blocker.filing_year} "
-                    f"{blocker.period} was already finalized before this evidence existed. "
-                    "Recalculate it so the evidence reaches a new draft."
+                    f"Evidence stored on the ledger row, but Modelo {blocker.modelo} "
+                    f"{blocker.filing_year} {blocker.period} was verified before this evidence "
+                    "existed and keeps the evidence bundle captured then. This filing will not "
+                    "pick it up; recalculating does not change that. Link invoices before "
+                    "running work calculate."
                 ),
             ),
             suggestion=(
-                f"aeat app modelo work calculate --modelo {blocker.modelo} "
-                f"--year {blocker.filing_year} --period {blocker.period}"
+                "aeat app ledger evidence add PATH; aeat app ledger attach TRANSACTION_ID "
+                "--purchase-invoice-evidence-id EVIDENCE_ID  # before `aeat app modelo work calculate`"
             ),
             context={
                 "work_unit_id": blocker.work_unit_id,

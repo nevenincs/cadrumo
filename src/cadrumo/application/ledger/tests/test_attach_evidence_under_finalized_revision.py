@@ -29,6 +29,7 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....application.aggregation import row_fingerprint
 from ....domain.modelos import CalculationRevisionState
 from ....domain.transactions import (
+    BucketTransactionRef,
     BusinessClassification,
     TransactionDirection,
     TransactionValidationError,
@@ -36,8 +37,10 @@ from ....domain.transactions import (
 )
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .. import (
+    LedgerRemovalBlocker,
     ManualLedgerTransactionCommand,
     ManualLedgerTransactionPatch,
+    ManualLedgerTransactionResult,
     attach_manual_transaction_evidence,
     create_manual_transaction,
     update_manual_transaction_fields,
@@ -260,6 +263,47 @@ def test_attach_without_a_finalized_revision_reports_no_stale_revisions(
     )
 
     assert attached.stale_finalized_revisions == ()
+
+
+def test_stale_revision_advisory_names_no_harmful_recovery_verb(profile: TestRuntimeProfile) -> None:
+    # Both plausible recovery verbs were MEASURED against a real stuck profile and
+    # both fail: `work calculate` re-derives the same content-addressed revision id
+    # and returns the finalized revision untouched, and `work discard` marks the
+    # work unit descartado while `work create` re-derives the SAME work-unit id and
+    # returns the discarded unit, stranding the target permanently. The advisory
+    # must therefore never point at either. Asserted on the notice's structured
+    # suggestion, not on localized prose.
+    from ....entrypoints.cli._ledger_lifecycle_cli import _stale_finalized_revision_notices
+
+    blocker = LedgerRemovalBlocker(
+        work_unit_id="ab" * 32,
+        calculation_revision_id="cd" * 32,
+        revision_state=CalculationRevisionState.VERIFICADO_COMPLETO.value,
+        modelo="130",
+        filing_year=2026,
+        period="1T",
+    )
+    transaction_id = _deductible_expense_row(profile, idempotency_key="advisory-shape")
+    stored = _transactions(profile).load().get(transaction_id)
+    assert stored is not None
+    result = ManualLedgerTransactionResult(
+        ref=BucketTransactionRef(bucket_id=_BUCKET, transaction_id=transaction_id),
+        transaction=stored,
+        stale_finalized_revisions=(blocker,),
+    )
+
+    notices = _stale_finalized_revision_notices(result)
+    assert len(notices) == 1
+    suggestion = notices[0].suggestion or ""
+    assert "work discard" not in suggestion
+    assert "work create" not in suggestion
+    # `work calculate` may only appear as the thing to link BEFORE, never as the
+    # action to run now, so the suggestion must not open with it.
+    assert not suggestion.lstrip().startswith("aeat app modelo work calculate")
+    # It must still name the real way forward.
+    assert "ledger attach" in suggestion
+    assert notices[0].context is not None
+    assert notices[0].context["reason"] == "finalized_revision_predates_evidence"
 
 
 def test_evidence_fields_are_not_transaction_identity_or_tax_facts(

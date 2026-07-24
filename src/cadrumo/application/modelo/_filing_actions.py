@@ -365,9 +365,12 @@ def _require_filing_preconditions(
         target,
         error_type=ModeloFilingEvidenceMissingError,
         surface="internal filing",
+        # Same ordering caveat as the export gate: this revision's evidence bundle
+        # was frozen at verify, so a later attach cannot unblock this filing.
         suggestion=(
             "aeat app ledger evidence add PATH; "
-            "aeat app ledger attach TRANSACTION_ID --purchase-invoice-evidence-id EVIDENCE_ID"
+            "aeat app ledger attach TRANSACTION_ID --purchase-invoice-evidence-id EVIDENCE_ID  "
+            "# link BEFORE `aeat app modelo work calculate`"
         ),
     )
     require_profile_ready_for_work_unit(work_unit)
