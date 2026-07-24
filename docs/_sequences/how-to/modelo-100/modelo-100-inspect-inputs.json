@@ -55597,134 +55597,210 @@
           "result_summary": [
             {
               "casilla_id": "0519",
-              "label": "Parte estatal: Mínimo personal y familiar",
-              "localized_labels": {},
+              "label": "State portion: Personal and family minimum",
+              "localized_labels": {
+                "ca": "Part estatal: Mínim personal i familiar",
+                "en": "State portion: Personal and family minimum",
+                "hu": "Állami rész: személyi és családi minimum"
+              },
               "role": "key_figure",
               "value": "5550.00"
             },
             {
               "casilla_id": "0520",
-              "label": "Importe total incrementado o disminuido del mínimo personal y familiar a efectos del cálculo del gravamen autonómico",
-              "localized_labels": {},
+              "label": "Total increased or decreased amount of the personal and family minimum for the regional-tax calculation",
+              "localized_labels": {
+                "ca": "Import total incrementat o disminuït del mínim personal i familiar a efectes del càlcul del gravamen autonòmic",
+                "en": "Total increased or decreased amount of the personal and family minimum for the regional-tax calculation",
+                "hu": "A személyi és családi minimum megnövelt vagy csökkentett teljes összege az autonóm-közösségi adó számítása szempontjából"
+              },
               "role": "key_figure",
               "value": "5550.00"
             },
             {
               "casilla_id": "0521",
-              "label": "Importe del mínimo personal y familiar que forma parte de la base liquidable general a efectos del cálculo del gravamen estatal: la menor de las cantidades consignadas en las casillas [0505] y [051...",
-              "localized_labels": {},
+              "label": "Amount of the personal and family minimum forming part of the general net taxable base for the State-tax calculation: the lower of the amounts entered in boxes [0505] and [051...",
+              "localized_labels": {
+                "ca": "Import del mínim personal i familiar que forma part de la base liquidable general a efectes del càlcul del gravamen estatal: la menor de les quantitats consignades en les caselles [0505] i [051...",
+                "en": "Amount of the personal and family minimum forming part of the general net taxable base for the State-tax calculation: the lower of the amounts entered in boxes [0505] and [051...",
+                "hu": "Az általános nettó adóalap részét képező személyi és családi minimum összege az állami adó számítása szempontjából: a [0505] és [051... rovatokban feltüntetett összegek közül a kisebb"
+              },
               "role": "key_figure",
               "value": "5550.00"
             },
             {
               "casilla_id": "0522",
-              "label": "Importe del mínimo personal y familiar que forma parte de la base liquidable del ahorro a efectos del cálculo del gravamen estatal: la menor de la diferencia ( [0519] - [0521] ) y la casilla [0510]",
-              "localized_labels": {},
+              "label": "Amount of the personal and family minimum forming part of the savings net taxable base for the State-tax calculation: the lower of the difference ([0519] - [0521]) and box [0510]",
+              "localized_labels": {
+                "ca": "Import del mínim personal i familiar que forma part de la base liquidable de l'estalvi a efectes del càlcul del gravamen estatal: la menor de la diferència ( [0519] - [0521] ) i la casella [0510]",
+                "en": "Amount of the personal and family minimum forming part of the savings net taxable base for the State-tax calculation: the lower of the difference ([0519] - [0521]) and box [0510]",
+                "hu": "A megtakarítási nettó adóalap részét képező személyi és családi minimum összege az állami adó számítása szempontjából: a ( [0519] - [0521] ) különbözet és a [0510] rovat közül a kisebb"
+              },
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "0523",
-              "label": "Importe del mínimo personal y familiar que forma parte de la base liquidable general a efectos del cálculo del gravamen autonómico: la menor de las cantidades consignadas en las casillas [0505] y [...",
-              "localized_labels": {},
+              "label": "Amount of the personal and family minimum forming part of the general net taxable base for the regional-tax calculation: the lower of the amounts entered in boxes [0505] and [...",
+              "localized_labels": {
+                "ca": "Import del mínim personal i familiar que forma part de la base liquidable general a efectes del càlcul del gravamen autonòmic: la menor de les quantitats consignades en les caselles [0505] i [...",
+                "en": "Amount of the personal and family minimum forming part of the general net taxable base for the regional-tax calculation: the lower of the amounts entered in boxes [0505] and [...",
+                "hu": "Az általános nettó adóalap részét képező személyi és családi minimum összege az autonóm-közösségi adó számítása szempontjából: a [0505] és [... rovatokban feltüntetett összegek közül a kisebb"
+              },
               "role": "key_figure",
               "value": "5550.00"
             },
             {
               "casilla_id": "0524",
-              "label": "Importe del mínimo personal y familiar que forma parte de la base liquidable del ahorro a efectos del cálculo del gravamen autonómico: la menor de la diferencia ( [0520] - [0523] ) y la casilla [0510]",
-              "localized_labels": {},
+              "label": "Amount of the personal and family minimum forming part of the savings net taxable base for the regional-tax calculation: the lower of the difference ([0520] - [0523]) and box [0510]",
+              "localized_labels": {
+                "ca": "Import del mínim personal i familiar que forma part de la base liquidable de l'estalvi a efectes del càlcul del gravamen autonòmic: la menor de la diferència ( [0520] - [0523] ) i la casella [0510]",
+                "en": "Amount of the personal and family minimum forming part of the savings net taxable base for the regional-tax calculation: the lower of the difference ([0520] - [0523]) and box [0510]",
+                "hu": "A megtakarítási nettó adóalap részét képező személyi és családi minimum összege az autonóm-közösségi adó számítása szempontjából: a ( [0520] - [0523] ) különbözet és a [0510] rovat közül a kisebb"
+              },
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "0432",
-              "label": "Saldo neto de los rendimientos a integrar en la base imponible general y de las imputaciones de renta",
-              "localized_labels": {},
+              "label": "Net balance of income to be included in the general taxable base, and of income imputations",
+              "localized_labels": {
+                "ca": "Saldo net dels rendiments a integrar en la base imposable general i de les imputacions de renda",
+                "en": "Net balance of income to be included in the general taxable base, and of income imputations",
+                "hu": "Az általános adóalapba beszámítandó jövedelmek és a jövedelem-hozzárendelések nettó egyenlege"
+              },
               "role": "key_figure",
               "value": "22000.00"
             },
             {
               "casilla_id": "0435",
-              "label": "Base imponible general",
-              "localized_labels": {},
+              "label": "General taxable base",
+              "localized_labels": {
+                "ca": "Base imposable general",
+                "en": "General taxable base",
+                "hu": "Általános adóalap"
+              },
               "role": "key_figure",
               "value": "22000.00"
             },
             {
               "casilla_id": "0460",
-              "label": "Base imponible del ahorro ( [0424] - [0436] - [0439] - [0440] - [0441] - [0442] - [0443] - [0444] - [0445] - [0447] + [0429] - [0446] - [0449] - [0450] - [0451] - [0452] - [0453] -[0454] - [0455] -...",
-              "localized_labels": {},
+              "label": "Savings taxable base ([0424] - [0436] - [0439] - [0440] - [0441] - [0442] - [0443] - [0444] - [0445] - [0447] + [0429] - [0446] - [0449] - [0450] - [0451] - [0452] - [0453] - [0454] - [0455] -...",
+              "localized_labels": {
+                "ca": "Base imposable de l'estalvi ( [0424] - [0436] - [0439] - [0440] - [0441] - [0442] - [0443] - [0444] - [0445] - [0447] + [0429] - [0446] - [0449] - [0450] - [0451] - [0452] - [0453] -[0454] - [0455] -...",
+                "en": "Savings taxable base ([0424] - [0436] - [0439] - [0440] - [0441] - [0442] - [0443] - [0444] - [0445] - [0447] + [0429] - [0446] - [0449] - [0450] - [0451] - [0452] - [0453] - [0454] - [0455] -...",
+                "hu": "Megtakarítási adóalap ( [0424] - [0436] - [0439] - [0440] - [0441] - [0442] - [0443] - [0444] - [0445] - [0447] + [0429] - [0446] - [0449] - [0450] - [0451] - [0452] - [0453] -[0454] - [0455] -..."
+              },
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "0500",
-              "label": "Base liquidable general",
-              "localized_labels": {},
+              "label": "General net taxable base",
+              "localized_labels": {
+                "ca": "Base liquidable general",
+                "en": "General net taxable base",
+                "hu": "Általános nettó adóalap"
+              },
               "role": "key_figure",
               "value": "22000.00"
             },
             {
               "casilla_id": "0510",
-              "label": "Base liquidable del ahorro",
-              "localized_labels": {},
+              "label": "Savings net taxable base",
+              "localized_labels": {
+                "ca": "Base liquidable de l'estalvi",
+                "en": "Savings net taxable base",
+                "hu": "Megtakarítási nettó adóalap"
+              },
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "0532",
-              "label": "Cuotas correspondientes a la base liquidable general: ( [0532] = [0528] - [0530] ); ( [0533] = [0529] - [0531] ): Parte estatal",
-              "localized_labels": {},
+              "label": "Tax liability corresponding to the general net taxable base: ([0532] = [0528] - [0530]); ([0533] = [0529] - [0531]): State portion",
+              "localized_labels": {
+                "ca": "Quotes corresponents a la base liquidable general: ( [0532] = [0528] - [0530] ); ( [0533] = [0529] - [0531] ): Part estatal",
+                "en": "Tax liability corresponding to the general net taxable base: ([0532] = [0528] - [0530]); ([0533] = [0529] - [0531]): State portion",
+                "hu": "Az általános nettó adóalapnak megfelelő adó: ( [0532] = [0528] - [0530] ); ( [0533] = [0529] - [0531] ): állami rész"
+              },
               "role": "key_figure",
               "value": "1855.50"
             },
             {
               "casilla_id": "0533",
-              "label": "Cuotas correspondientes a la base liquidable general: ( [0532] = [0528] - [0530] ); ( [0533] = [0529] - [0531] ): Parte autonómica",
-              "localized_labels": {},
+              "label": "Tax liability corresponding to the general net taxable base: ([0532] = [0528] - [0530]); ([0533] = [0529] - [0531]): Regional portion",
+              "localized_labels": {
+                "ca": "Quotes corresponents a la base liquidable general: ( [0532] = [0528] - [0530] ); ( [0533] = [0529] - [0531] ): Part autonòmica",
+                "en": "Tax liability corresponding to the general net taxable base: ([0532] = [0528] - [0530]); ([0533] = [0529] - [0531]): Regional portion",
+                "hu": "Az általános nettó adóalapnak megfelelő adó: ( [0532] = [0528] - [0530] ); ( [0533] = [0529] - [0531] ): autonóm-közösségi rész"
+              },
               "role": "key_figure",
               "value": "1651.19"
             },
             {
               "casilla_id": "0545",
-              "label": "Cuota íntegra estatal: Parte estatal",
-              "localized_labels": {},
+              "label": "Gross State tax liability: State portion",
+              "localized_labels": {
+                "ca": "Quota íntegra estatal: Part estatal",
+                "en": "Gross State tax liability: State portion",
+                "hu": "Bruttó állami adó: állami rész"
+              },
               "role": "key_figure",
               "value": "1855.50"
             },
             {
               "casilla_id": "0546",
-              "label": "Cuota íntegra autonómica: Parte autonómica",
-              "localized_labels": {},
+              "label": "Gross regional tax liability: Regional portion",
+              "localized_labels": {
+                "ca": "Quota íntegra autonòmica: Part autonòmica",
+                "en": "Gross regional tax liability: Regional portion",
+                "hu": "Bruttó autonóm-közösségi adó: autonóm-közösségi rész"
+              },
               "role": "key_figure",
               "value": "1651.19"
             },
             {
               "casilla_id": "0570",
-              "label": "Cuota líquida estatal: Parte estatal",
-              "localized_labels": {},
+              "label": "Net State tax liability: State portion",
+              "localized_labels": {
+                "ca": "Quota líquida estatal: Part estatal",
+                "en": "Net State tax liability: State portion",
+                "hu": "Állami nettó adó: állami rész"
+              },
               "role": "key_figure",
               "value": "1855.50"
             },
             {
               "casilla_id": "0571",
-              "label": "Cuota líquida autonómica: Parte autonómica",
-              "localized_labels": {},
+              "label": "Net regional tax liability: Regional portion",
+              "localized_labels": {
+                "ca": "Quota líquida autonòmica: Part autonòmica",
+                "en": "Net regional tax liability: Regional portion",
+                "hu": "Autonóm-közösségi nettó adó: autonóm-közösségi rész"
+              },
               "role": "key_figure",
               "value": "1651.19"
             },
             {
               "casilla_id": "0585",
-              "label": "Cuota liquida estatal incrementada",
-              "localized_labels": {},
+              "label": "Increased net State tax liability",
+              "localized_labels": {
+                "ca": "Quota liquida estatal incrementada",
+                "en": "Increased net State tax liability",
+                "hu": "Megnövelt állami nettó adó"
+              },
               "role": "key_figure",
               "value": "1855.50"
             },
             {
               "casilla_id": "0586",
-              "label": "Cuota liquida autonomica incrementada",
-              "localized_labels": {},
+              "label": "Increased net regional tax liability",
+              "localized_labels": {
+                "ca": "Quota liquida autonòmica incrementada",
+                "en": "Increased net regional tax liability",
+                "hu": "Megnövelt autonóm-közösségi nettó adó"
+              },
               "role": "key_figure",
               "value": "1651.19"
             }
@@ -57014,12 +57090,16 @@
             {
               "casilla_id": "DPNIF_D",
               "input_kind": "bound",
-              "label": "Primer declarante NIF",
+              "label": "First filer's Tax ID (NIF)",
               "legal_refs": [
                 "orden-hac-277-2026:art-3"
               ],
               "localized_help": {},
-              "localized_labels": {},
+              "localized_labels": {
+                "ca": "Primer declarant NIF",
+                "en": "First filer's Tax ID (NIF)",
+                "hu": "Első bevalló adóazonosító száma"
+              },
               "number": "*01",
               "required": true,
               "source_refs": [
@@ -57031,12 +57111,16 @@
             {
               "casilla_id": "DP_APENOM_D",
               "input_kind": "bound",
-              "label": "Primer declarante apellidos y nombre",
+              "label": "First filer's surname and first name",
               "legal_refs": [
                 "orden-hac-277-2026:art-3"
               ],
               "localized_help": {},
-              "localized_labels": {},
+              "localized_labels": {
+                "ca": "Primer declarant cognoms i nom",
+                "en": "First filer's surname and first name",
+                "hu": "Első bevalló családi és utóneve"
+              },
               "number": "*02",
               "required": true,
               "source_refs": [
@@ -57048,12 +57132,16 @@
             {
               "casilla_id": "ZCCAD",
               "input_kind": "bound",
-              "label": "Comunidad autonoma de la declaracion",
+              "label": "Autonomous Community of the return",
               "legal_refs": [
                 "orden-hac-277-2026:art-3"
               ],
               "localized_help": {},
-              "localized_labels": {},
+              "localized_labels": {
+                "ca": "Comunitat autònoma de la declaració",
+                "en": "Autonomous Community of the return",
+                "hu": "A bevallás autonóm közössége"
+              },
               "number": "*70",
               "required": true,
               "source_refs": [
@@ -57065,12 +57153,16 @@
             {
               "casilla_id": "TIPOTRIBUTACION",
               "input_kind": "bound",
-              "label": "Opcion de tributacion elegida",
+              "label": "Chosen taxation option",
               "legal_refs": [
                 "orden-hac-277-2026:art-3"
               ],
               "localized_help": {},
-              "localized_labels": {},
+              "localized_labels": {
+                "ca": "Opció de tributació triada",
+                "en": "Chosen taxation option",
+                "hu": "Választott adózási opció"
+              },
               "number": "*68 *69",
               "required": true,
               "source_refs": [
@@ -57082,12 +57174,16 @@
             {
               "casilla_id": "SEXO_D",
               "input_kind": "bound",
-              "label": "Primer declarante sexo",
+              "label": "First filer's sex",
               "legal_refs": [
                 "orden-hac-277-2026:art-3"
               ],
               "localized_help": {},
-              "localized_labels": {},
+              "localized_labels": {
+                "ca": "Primer declarant sexe",
+                "en": "First filer's sex",
+                "hu": "Első bevalló neme"
+              },
               "number": "*05",
               "required": true,
               "source_refs": [
@@ -57099,12 +57195,16 @@
             {
               "casilla_id": "ECIVIL",
               "input_kind": "bound",
-              "label": "Primer declarante estado civil a 31/12/2025",
+              "label": "First filer's marital status on 31/12/2025",
               "legal_refs": [
                 "orden-hac-277-2026:art-3"
               ],
               "localized_help": {},
-              "localized_labels": {},
+              "localized_labels": {
+                "ca": "Primer declarant estat civil a 31/12/2025",
+                "en": "First filer's marital status on 31/12/2025",
+                "hu": "Első bevalló családi állapota 2025.12.31-én"
+              },
               "number": "*06-09",
               "required": true,
               "source_refs": [
@@ -57116,13 +57216,17 @@
             {
               "casilla_id": "DPFNAC_D",
               "input_kind": "bound",
-              "label": "Primer declarante fecha de nacimiento",
+              "label": "First filer's date of birth",
               "legal_refs": [
                 "ley-35-2006:art-57",
                 "orden-hac-277-2026:art-3"
               ],
               "localized_help": {},
-              "localized_labels": {},
+              "localized_labels": {
+                "ca": "Primer declarant data de naixement",
+                "en": "First filer's date of birth",
+                "hu": "Első bevalló születési dátuma"
+              },
               "number": "*10",
               "required": true,
               "source_refs": [

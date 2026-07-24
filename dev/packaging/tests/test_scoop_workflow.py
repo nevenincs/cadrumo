@@ -93,7 +93,7 @@ def test_scoop_workflow_runs_the_real_container_lifecycle_without_rebuilding() -
     commands = "\n".join(str(step.get("run", "")) for step in steps)
 
     assert "packaging/scoop/generate.py" in generate["run"]
-    assert '--cohort-dir "$env:CADRUMO_S20_ROOT/cohort"' in generate["run"]
+    assert '--cohort-dir "$env:CADRUMO_SCOOP_ROOT/cohort"' in generate["run"]
     assert "$env:RUNNER_TEMP" in initialize["run"]
     assert "$env:GITHUB_RUN_ATTEMPT" in initialize["run"]
     assert "run-context.json" in initialize["run"]
@@ -101,7 +101,7 @@ def test_scoop_workflow_runs_the_real_container_lifecycle_without_rebuilding() -
     assert '"ready=true"' in initialize["run"]
     assert "installed_tax_oracle.py" in stage["run"]
     assert "installed_mcp_oracle.py" in stage["run"]
-    assert "$env:CADRUMO_S20_ROOT/harness/dev/packaging/smoke_scoop.ps1" in smoke["run"]
+    assert "$env:CADRUMO_SCOOP_ROOT/harness/dev/packaging/smoke_scoop.ps1" in smoke["run"]
     assert "-Mode Container" in smoke["run"]
     assert "mcr.microsoft.com/windows/servercore:ltsc2022" in smoke["run"]
     assert "-TimeoutMinutes 60" in smoke["run"]

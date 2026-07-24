@@ -107,10 +107,10 @@ jobs:
           SOURCE_COMMIT: ${{ inputs.source_commit }}
           SOURCE_RUN_ID: ${{ inputs.source_run_id }}
         run: |
-          root="${RUNNER_TEMP}/cadrumo-s24-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${MATRIX_ID}"
+          root="${RUNNER_TEMP}/cadrumo-homebrew-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${MATRIX_ID}"
           rm -rf "$root"
           mkdir -p "$root"
-          echo "CADRUMO_S24_ROOT=$root" >> "$GITHUB_ENV"
+          echo "CADRUMO_HOMEBREW_ROOT=$root" >> "$GITHUB_ENV"
           jq -n \
             --arg source_commit "$SOURCE_COMMIT" \
             --arg source_run_id "$SOURCE_RUN_ID" \
@@ -195,25 +195,25 @@ jobs:
             --expect-workflow ".github/workflows/packaging-smoke.yml" \
             --pattern "cadrumo-python-cohort-linux.tar.gz" \
             --pattern "cadrumo-release-cohort.tar.gz" \
-            --download-dir "$CADRUMO_S24_ROOT/download"
-          mkdir -p "$CADRUMO_S24_ROOT/cohort" "$CADRUMO_S24_ROOT/release-cohort"
-          tar -xzf "$CADRUMO_S24_ROOT/download/cadrumo-python-cohort-linux.tar.gz" \
-            -C "$CADRUMO_S24_ROOT/cohort"
-          tar -xzf "$CADRUMO_S24_ROOT/download/cadrumo-release-cohort.tar.gz" \
-            -C "$CADRUMO_S24_ROOT/release-cohort"
+            --download-dir "$CADRUMO_HOMEBREW_ROOT/download"
+          mkdir -p "$CADRUMO_HOMEBREW_ROOT/cohort" "$CADRUMO_HOMEBREW_ROOT/release-cohort"
+          tar -xzf "$CADRUMO_HOMEBREW_ROOT/download/cadrumo-python-cohort-linux.tar.gz" \
+            -C "$CADRUMO_HOMEBREW_ROOT/cohort"
+          tar -xzf "$CADRUMO_HOMEBREW_ROOT/download/cadrumo-release-cohort.tar.gz" \
+            -C "$CADRUMO_HOMEBREW_ROOT/release-cohort"
 
       - name: Verify and generate the cohort-bound tap snapshot
         run: |
           uv run --no-project --with packaging python -m dev.packaging.python_cohort verify \
-            --cohort-dir "$CADRUMO_S24_ROOT/cohort"
-          version="$(jq -r .version "$CADRUMO_S24_ROOT/cohort/python-cohort.json")"
+            --cohort-dir "$CADRUMO_HOMEBREW_ROOT/cohort"
+          version="$(jq -r .version "$CADRUMO_HOMEBREW_ROOT/cohort/python-cohort.json")"
           uv run --no-project --with packaging python packaging/homebrew/generate.py \
-            --cohort-dir "$CADRUMO_S24_ROOT/cohort" \
+            --cohort-dir "$CADRUMO_HOMEBREW_ROOT/cohort" \
             --lock uv.lock \
             --version "$version" \
             --release-base-url \
               "https://github.com/nevenincs/cadrumo/releases/download/v${version}" \
-            --output-dir "$CADRUMO_S24_ROOT/tap-snapshot"
+            --output-dir "$CADRUMO_HOMEBREW_ROOT/tap-snapshot"
 
       # --retain-install defers the smoke's uninstall/untap: the emit step
       # below hashes the INSTALLED executables (the mint-time isolation
@@ -228,9 +228,9 @@ jobs:
           HOMEBREW_MAKE_JOBS: ${{ matrix.make_jobs }}
         run: |
           uv run --no-project python dev/packaging/smoke_homebrew.py \
-            --formula "$CADRUMO_S24_ROOT/tap-snapshot/Formula/cadrumo.rb" \
-            --cohort-dir "$CADRUMO_S24_ROOT/cohort" \
-            --evidence-dir "$CADRUMO_S24_ROOT/evidence" \
+            --formula "$CADRUMO_HOMEBREW_ROOT/tap-snapshot/Formula/cadrumo.rb" \
+            --cohort-dir "$CADRUMO_HOMEBREW_ROOT/cohort" \
+            --evidence-dir "$CADRUMO_HOMEBREW_ROOT/evidence" \
             --tap-name "cadrumo-smoke/${MATRIX_ID}" \
             --brew "$BREW_PATH" \
             --repo-root "$GITHUB_WORKSPACE" \
@@ -243,23 +243,23 @@ jobs:
         env:
           ROW_ID: ${{ matrix.row_id }}
         run: |
-          tax="$(find "$CADRUMO_S24_ROOT/evidence" -name tax-evidence.json -print -quit)"
-          mcp="$(find "$CADRUMO_S24_ROOT/evidence" -name mcp-evidence.json -print -quit)"
+          tax="$(find "$CADRUMO_HOMEBREW_ROOT/evidence" -name tax-evidence.json -print -quit)"
+          mcp="$(find "$CADRUMO_HOMEBREW_ROOT/evidence" -name mcp-evidence.json -print -quit)"
           if [[ -z "$tax" || -z "$mcp" ]]; then
-            echo "homebrew oracle evidence JSONs not found under $CADRUMO_S24_ROOT/evidence" >&2
+            echo "homebrew oracle evidence JSONs not found under $CADRUMO_HOMEBREW_ROOT/evidence" >&2
             exit 1
           fi
           uv run --no-project --with packaging --with pydantic --with mcp \
             python -m dev.packaging.distribution_evidence_emit \
             --row-id "$ROW_ID" \
-            --release-cohort-dir "$CADRUMO_S24_ROOT/release-cohort" \
+            --release-cohort-dir "$CADRUMO_HOMEBREW_ROOT/release-cohort" \
             --tax-evidence "$tax" \
             --mcp-evidence "$mcp" \
             --acquisition-mechanism brew \
             --acquisition-source "nevenincs/cadrumo" \
             --destination-kind homebrew-cellar \
             --destination-locator "${{ matrix.id }}" \
-            --distribution-evidence-dir "$CADRUMO_S24_ROOT/distribution-install-readiness"
+            --distribution-evidence-dir "$CADRUMO_HOMEBREW_ROOT/distribution-install-readiness"
 
       # Diagnostics must survive the runner workspace: on failure,
       # push the brew-install log and the harness failure detail to the lane's
@@ -276,13 +276,13 @@ jobs:
           MATRIX_ID: ${{ matrix.id }}
         run: |
           staging=$(mktemp -d)
-          install_log="$(find "$CADRUMO_S24_ROOT/evidence" -path '*/logs/brew-install.log' -print -quit 2>/dev/null || true)"
+          install_log="$(find "$CADRUMO_HOMEBREW_ROOT/evidence" -path '*/logs/brew-install.log' -print -quit 2>/dev/null || true)"
           if [ -n "$install_log" ]; then
             cp "$install_log" "$staging/debug-brew-install-${MATRIX_ID}-${GITHUB_RUN_ID}.log"
           fi
-          if [ -d "$CADRUMO_S24_ROOT/evidence" ]; then
+          if [ -d "$CADRUMO_HOMEBREW_ROOT/evidence" ]; then
             tar -czf "$staging/debug-homebrew-diagnostics-${MATRIX_ID}-${GITHUB_RUN_ID}.tar.gz" \
-              -C "$CADRUMO_S24_ROOT" evidence
+              -C "$CADRUMO_HOMEBREW_ROOT" evidence
           fi
           if [ -z "$(ls -A "$staging")" ]; then
             echo "no diagnostics found to upload"
@@ -296,7 +296,7 @@ jobs:
       - name: Clean up the retained Homebrew install
         if: always() && steps.initialize.outputs.ready == 'true'
         run: |
-          state="$(find "$CADRUMO_S24_ROOT/evidence" -name homebrew-cleanup-state.json -print -quit 2>/dev/null || true)"
+          state="$(find "$CADRUMO_HOMEBREW_ROOT/evidence" -name homebrew-cleanup-state.json -print -quit 2>/dev/null || true)"
           if [[ -n "$state" ]]; then
             uv run --no-project python dev/packaging/smoke_homebrew.py --cleanup-state "$state"
           else
@@ -313,14 +313,14 @@ jobs:
           EVIDENCE_TAG: evidence-homebrew-${{ github.run_id }}
           MATRIX_ID: ${{ matrix.id }}
         run: |
-          rows=("$CADRUMO_S24_ROOT"/distribution-install-readiness/*.json)
+          rows=("$CADRUMO_HOMEBREW_ROOT"/distribution-install-readiness/*.json)
           if [ -e "${rows[0]}" ]; then
             gh release upload "$EVIDENCE_TAG" "${rows[@]}" --clobber
           fi
           # The downloaded cohorts already live on the smoke draft; exclude
           # them from the per-leg bundle to avoid duplicate hundred-MB uploads.
           tar --exclude=./cohort --exclude=./release-cohort --exclude=./download \
-            -czf "cadrumo-homebrew-acquisition-${MATRIX_ID}.tar.gz" -C "$CADRUMO_S24_ROOT" .
+            -czf "cadrumo-homebrew-acquisition-${MATRIX_ID}.tar.gz" -C "$CADRUMO_HOMEBREW_ROOT" .
           gh release upload "$EVIDENCE_TAG" "cadrumo-homebrew-acquisition-${MATRIX_ID}.tar.gz" --clobber
 
   # Terminal seal for the ONE homebrew draft: runs only when every matrix leg

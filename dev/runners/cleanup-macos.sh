@@ -6,7 +6,7 @@
 # and MUST always exit 0 - a cleanup failure must never redden a green build.
 #
 # What it does, in order: purge stale _work/_temp entries; prune per-run lane
-# roots (cadrumo-s2* / cadrumo-claude-* / oracle-emit-work) older than 24h;
+# roots (cadrumo-homebrew* / cadrumo-scoop* / cadrumo-claude-* / oracle-emit-work) older than 24h;
 # purge var/ residue in the reused checkout (evidence dirs <7d exempt); bound
 # the uv / pip / npm speed caches; macOS residue - uninstall + untap leftover
 # cadrumo-smoke Homebrew test formulas/taps and brew cleanup; clear stale /tmp
@@ -22,7 +22,7 @@
 set +e
 
 # --- constants -------------------------------------------------------------
-LANE_GLOBS=(cadrumo-s2 cadrumo-claude oracle-emit-work)
+LANE_GLOBS=(cadrumo-homebrew cadrumo-scoop cadrumo-claude oracle-emit-work)
 LANE_MAX_AGE_MIN=$((24 * 60))
 EVIDENCE_EXEMPT="distribution-install-readiness"
 EVIDENCE_KEEP_MIN=$((7 * 24 * 60))

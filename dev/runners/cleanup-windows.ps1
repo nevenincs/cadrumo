@@ -5,7 +5,7 @@
 # and MUST always exit 0 - a cleanup failure must never redden a green build.
 #
 # What it does, in order: purge stale _work/_temp entries; prune per-run lane
-# roots (cadrumo-s2* / cadrumo-claude-* / oracle-emit-work) older than 24h in
+# roots (cadrumo-homebrew* / cadrumo-scoop* / cadrumo-claude-* / oracle-emit-work) older than 24h in
 # RUNNER_TEMP and the checkout var/ tree (evidence dirs exempt); bound the uv /
 # pip / npm speed caches; guarded dangling-only docker hygiene against the host
 # daemon (the two Linux runner containers live here); one audit summary line.
@@ -18,7 +18,7 @@ $ErrorActionPreference = 'Continue'
 $ProgressPreference = 'SilentlyContinue'
 
 # --- constants -------------------------------------------------------------
-$LaneGlobs      = @('cadrumo-s2*', 'cadrumo-claude-*', 'oracle-emit-work*')
+$LaneGlobs      = @('cadrumo-homebrew*', 'cadrumo-scoop*', 'cadrumo-claude-*', 'oracle-emit-work*')
 $LaneMaxAgeHrs  = 24
 $EvidenceExempt = 'distribution-install-readiness'   # keep <7d evidence rows
 $EvidenceKeepHrs = 24 * 7

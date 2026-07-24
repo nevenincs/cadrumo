@@ -14399,22 +14399,34 @@
           "result_summary": [
             {
               "casilla_id": "iva.anual.cuota-devengada-total",
-              "label": "Total cuota IVA devengada anual (repercutido + autorepercutido)",
-              "localized_labels": {},
+              "label": "Total annual VAT due (charged + self-charged)",
+              "localized_labels": {
+                "ca": "Total quota d'IVA meritada anual (repercutit + autorepercutit)",
+                "en": "Total annual VAT due (charged + self-charged)",
+                "hu": "Éves keletkezett ÁFA összesen (felszámított + önmagára terhelt)"
+              },
               "role": "key_figure",
               "value": "1470.00"
             },
             {
               "casilla_id": "iva.anual.cuota-deducible-total",
-              "label": "Total cuota IVA deducible anual (soportado + autorepercutido)",
-              "localized_labels": {},
+              "label": "Total annual deductible VAT (borne + self-charged)",
+              "localized_labels": {
+                "ca": "Total quota d'IVA deduïble anual (suportat + autorepercutit)",
+                "en": "Total annual deductible VAT (borne + self-charged)",
+                "hu": "Éves levonható ÁFA összesen (viselt + önmagára terhelt)"
+              },
               "role": "key_figure",
               "value": "105.00"
             },
             {
               "casilla_id": "iva.anual.resultado-regimen-general",
-              "label": "Resultado anual del regimen general (cuota devengada - cuota deducible)",
-              "localized_labels": {},
+              "label": "Annual result under the standard regime (VAT due minus deductible VAT)",
+              "localized_labels": {
+                "ca": "Resultat anual del règim general (quota meritada - quota deduïble)",
+                "en": "Annual result under the standard regime (VAT due minus deductible VAT)",
+                "hu": "Az általános rendszer éves eredménye (keletkezett ÁFA mínusz levonható ÁFA)"
+              },
               "role": "key_figure",
               "value": "1365.00"
             }
