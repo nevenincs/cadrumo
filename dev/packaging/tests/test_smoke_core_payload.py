@@ -19,6 +19,7 @@ from dev.packaging.smoke_core import (
     _build_wheel,
     _configured_corpus_binary_suffixes,
     _expected_wheel_data_paths,
+    _head_extract,
     _is_corpus_source_binary,
     _run,
     _tracked_source_data_paths,
@@ -47,7 +48,14 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
     split_owned = {path for path in tracked if "/tests/" not in path and _is_corpus_source_binary(path, suffixes)}
     assert split_owned >= _REVIEW_FOUND_PATHS
 
-    wheel = _build_wheel(_REPO_ROOT, tmp_path, uv)
+    # Build every artifact from a pristine HEAD tree, never the working tree:
+    # the expectations above come from `git ls-files` at HEAD, and in the shared
+    # factory worktree a tree build can snapshot a torn peer edit, producing an
+    # artifact that corresponds to no commit and failing this test as if it were
+    # a packaging regression (issue 613). One extraction serves all three builds.
+    build_root = _head_extract(_REPO_ROOT, tmp_path)
+
+    wheel = _build_wheel(_REPO_ROOT, tmp_path, uv, build_root=build_root)
     with zipfile.ZipFile(wheel) as archive:
         members = set(archive.namelist())
     actual_runtime = {name for name in members if name.startswith("cadrumo/_data/") and not name.endswith("/")}
@@ -61,7 +69,7 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
     assert actual_runtime == independently_expected
     assert not {f"cadrumo/_data/corpus/{path.removeprefix(_CORPUS_SOURCE_PREFIX)}" for path in split_owned} & members
 
-    companions = _build_companion_wheels(_REPO_ROOT, tmp_path, uv)
+    companions = _build_companion_wheels(tmp_path, uv, build_root=build_root)
     with (_REPO_ROOT / "pyproject.toml").open("rb") as handle:
         expected_version = tomllib.load(handle)["project"]["version"]
     assert (
@@ -88,7 +96,7 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
         )
         and "/tests/" not in path
     }
-    sdist = _build_sdist(_REPO_ROOT, tmp_path, uv)
+    sdist = _build_sdist(tmp_path, uv, build_root=build_root)
     _assert_sdist_contains_expected_data(sdist, expected_sdist_data)
     assert sdist.stat().st_size < 100 * 1_000_000
 
@@ -97,11 +105,11 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
     companion_sdists_dir = tmp_path / "companion-sdists"
     _run(
         [uv, "build", "--sdist", "--out-dir", str(companion_sdists_dir)],
-        cwd=_REPO_ROOT / "packaging" / "cadrumo_data_manuals",
+        cwd=build_root / "packaging" / "cadrumo_data_manuals",
     )
     _run(
         [uv, "build", "--sdist", "--out-dir", str(companion_sdists_dir)],
-        cwd=_REPO_ROOT / "packaging" / "cadrumo_data_official",
+        cwd=build_root / "packaging" / "cadrumo_data_official",
     )
     manuals_sdist = next(companion_sdists_dir.glob("cadrumo_data_manuals-*.tar.gz"))
     official_sdist = next(companion_sdists_dir.glob("cadrumo_data_official-*.tar.gz"))
@@ -134,3 +142,38 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
     cohort = load_python_cohort(cohort_dir)
     assert cohort.version == expected_version
     assert cohort.sha256 == digests
+
+
+def test_head_extract_excludes_uncommitted_working_tree_state(tmp_path: Path) -> None:
+    """The extract carries committed content only, never the dirty working tree.
+
+    This is the property the payload build above depends on. If the extractor
+    degraded into a working-tree copy, uncommitted peer edits would flow into
+    the artifacts and the build would be compared against HEAD-derived
+    expectations, which is the torn-snapshot failure issue 613 observed live.
+
+    Exercised against a real throwaway repository rather than this one: the
+    property is about Git, and archiving the full corpus tree to assert it
+    costs minutes for no extra discrimination.
+    """
+    origin = tmp_path / "origin"
+    (origin / "packaging").mkdir(parents=True)
+    _run(["git", "init", "--quiet"], cwd=origin)
+    _run(["git", "config", "user.email", "probe@example.invalid"], cwd=origin)
+    _run(["git", "config", "user.name", "probe"], cwd=origin)
+    (origin / "committed.txt").write_text("committed content\n", encoding="utf-8")
+    (origin / "packaging" / "kept.txt").write_text("nested committed\n", encoding="utf-8")
+    _run(["git", "add", "committed.txt", "packaging/kept.txt"], cwd=origin)
+    _run(["git", "commit", "--quiet", "-m", "probe commit"], cwd=origin)
+
+    # Dirty the tree exactly as a mid-sweep peer would: one edit to a tracked
+    # file and one entirely new untracked file.
+    (origin / "committed.txt").write_text("TORN EDIT\n", encoding="utf-8")
+    (origin / "untracked.txt").write_text("never committed\n", encoding="utf-8")
+
+    extract_root = _head_extract(origin, tmp_path / "work")
+
+    extracted = {path.relative_to(extract_root).as_posix() for path in extract_root.rglob("*") if path.is_file()}
+    assert extracted == {"committed.txt", "packaging/kept.txt"}, sorted(extracted)
+    assert (extract_root / "committed.txt").read_text(encoding="utf-8") == "committed content\n"
+    assert not (extract_root / ".git").exists()

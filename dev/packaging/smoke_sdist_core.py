@@ -28,11 +28,19 @@ from .smoke_core import (
 from .smoke_pip_core import _create_pip_venv, _install_targets_with_pip
 
 
-def _build_sdist(repo_root: Path, work_dir: Path, uv: str) -> Path:
-    """Build the Cadrumo source distribution into the smoke work directory."""
+def _build_sdist(work_dir: Path, uv: str, *, build_root: Path) -> Path:
+    """Build the Cadrumo source distribution into the smoke work directory.
+
+    Built from ``build_root`` so the sdist corresponds to a commit rather than
+    to whatever the shared worktree happened to hold; pass a
+    :func:`~dev.packaging.smoke_core._head_extract` tree. This is the lane that
+    caught a torn peer edit live, shipping an sdist whose
+    ``application/aggregation`` import did not resolve against its own
+    ``_source_mesh`` and failing as if it were a packaging regression.
+    """
     sdist_dir = work_dir / "sdist"
     sdist_dir.mkdir(parents=True, exist_ok=True)
-    _run([uv, "build", "--sdist", "--out-dir", str(sdist_dir)], cwd=repo_root)
+    _run([uv, "build", "--sdist", "--out-dir", str(sdist_dir)], cwd=build_root)
     sdists = sorted(sdist_dir.glob("cadrumo-*.tar.gz"))
     if len(sdists) != 1:
         names = [sdist.name for sdist in sdists]
