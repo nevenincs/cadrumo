@@ -40,7 +40,6 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
-import tempfile
 import time
 from pathlib import Path
 
@@ -223,10 +222,19 @@ def test_bundled_tree_fingerprint_cache_survives_past_the_mutable_tree_ttl() -> 
     assert second is first, "the bundled tree's TTL must outlive the strict 1-second mutable-tree window"
 
 
-def _bundled_registry_disk_cache_files(cache_dir: Path | None = None) -> set[Path]:
-    """List every ``cadrumo_registry_*.pkl`` in ``cache_dir`` (default: the real OS temp dir)."""
-    directory = cache_dir if cache_dir is not None else Path(tempfile.gettempdir())
-    return set(directory.glob("cadrumo_registry_*.pkl"))
+def _bundled_registry_disk_cache_files(cache_dir: Path) -> set[Path]:
+    """List every ``cadrumo_registry_*.pkl`` in ``cache_dir``.
+
+    ``cache_dir`` is required, and every caller passes a test-owned directory
+    scoped by ``CADRUMO_REGISTRY_DISK_CACHE_DIR``. It previously defaulted to
+    the real OS temp directory, which is where the loader sends every worker's
+    bundled-root pickle under pytest and which it prunes to the retained-entry
+    ceiling on each write -- so any before/after snapshot taken there measures
+    concurrent xdist workers and sibling pytest invocations on the host rather
+    than the call under test. Keeping the parameter required removes that
+    default rather than leaving it for the next caller to fall into.
+    """
+    return set(cache_dir.glob("cadrumo_registry_*.pkl"))
 
 
 def test_bundled_root_disk_cache_is_shared_across_processes(
