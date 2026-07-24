@@ -220,7 +220,12 @@ class LineFlowFrontend:
         default = current if current is not None else (entry.page.default or "")
         try:
             match entry.page.widget:
-                case FlowWidgetKind.TEXT | FlowWidgetKind.INTEGER:
+                case (
+                    FlowWidgetKind.TEXT
+                    | FlowWidgetKind.INTEGER
+                    | FlowWidgetKind.DATE
+                    | FlowWidgetKind.DECIMAL
+                ):
                     return self._stringify(
                         self._ask(questionary.text(prompt, default=default, input=self._input, output=self._output)),
                     )

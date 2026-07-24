@@ -392,12 +392,23 @@ def run_flow_tui(
     resume_state: FlowState | None = None,
     registered_values: Mapping[str, str] | None = None,
     on_answer_committed: Callable[[str, str], None] | None = None,
+    on_app_ready: Callable[[FlowTuiApp], None] | None = None,
 ) -> tuple[FlowState, ReviewProjection]:
     """Run the full-screen frontend to completion and return the outcome.
 
     Returns the final state and projection after a submit or a
     save-and-exit; a run abandoned without either raises so callers
     never mistake an aborted flow for a completed one.
+
+    ``on_app_ready`` is invoked with the constructed :class:`FlowTuiApp`
+    after construction and before :meth:`FlowTuiApp.run`, so a caller can
+    capture the app handle to drive a frontend affordance — the locale
+    rebuild (:meth:`FlowTuiApp.rebuild_for_locale`) from inside its
+    ``on_answer_committed`` hook — without constructing the app itself and
+    thereby duplicating this runner's abandoned-run guard. The handle is
+    for presentation affordances only: a caller MUST NOT drive the engine
+    (commit answers, navigate, submit) through it; the runner retains sole
+    ownership of the run lifecycle and the abandonment refusal.
     """
     app = FlowTuiApp(
         definition,
@@ -407,6 +418,8 @@ def run_flow_tui(
         registered_values=registered_values,
         on_answer_committed=on_answer_committed,
     )
+    if on_app_ready is not None:
+        on_app_ready(app)
     app.run()
     if app.final_state is None or app.final_projection is None:
         raise _FlowCheckpointError(
