@@ -11,6 +11,7 @@ import venv
 from pathlib import Path
 
 from .python_cohort import (
+    COHORT_STAMPED_WHEEL_DATA_PATHS,
     assert_installed_cohort,
     install_targets,
     load_python_cohort,
@@ -19,8 +20,10 @@ from .smoke_core import (
     _assert_attachment_and_llm_surfaces,
     _assert_cli_smoke,
     _assert_installed_data,
+    _assert_wheel_contains_tracked_data,
     _assert_wheel_metadata_matches_pyproject,
     _executable,
+    _expected_wheel_data_paths,
     _manifest_path,
     _run,
     _validate_frozen_exports,
@@ -130,6 +133,11 @@ def main(argv: list[str] | None = None) -> int:
     cohort = load_python_cohort(args.cohort_dir)
     wheel = cohort.root_wheel
     print("using supplied immutable Python cohort", flush=True)
+    _assert_wheel_contains_tracked_data(
+        repo_root,
+        wheel,
+        _expected_wheel_data_paths(repo_root) | COHORT_STAMPED_WHEEL_DATA_PATHS,
+    )
     _assert_wheel_metadata_matches_pyproject(repo_root, wheel)
 
     print("creating stdlib venv and installing the exact cohort with pip", flush=True)
