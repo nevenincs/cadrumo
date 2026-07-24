@@ -763,6 +763,138 @@ def test_reconcile_file_kind_declaration_m190_catches_casilla_divergence(
     assert "diff\tdecl.retenciones-total\twork_unit=1500.00\tevidence=1000.00" in result.output
 
 
+# --- Modelo 100 (IRPF annual): printed Renta casilla ids ------------------
+#
+# M100 is enrolled in `_DECLARATION_CASILLA_RECONCILE_MODELOS` and declares the
+# LARGEST reconcile scope of any modelo (168 `reconcile_when_present` plus 19
+# computed for the 2024 revision), but until now had no CLI-level coverage at
+# all -- every other enrolled modelo carried a matches/mismatch pair.
+#
+# The 2021-2023 real-corpus specimens under `justificantes/100/` CANNOT seed a
+# clean-match test: they are sanitised to synthetic `1.000,00` amounts and
+# pdfplumber merges the adjacent box number onto the value token, so the
+# extracted Decimals are valid instances but not meaningful figures. Their own
+# parser-boundary test asserts `isinstance(..., Decimal)` only and states that
+# exact-value assertions would be tautological against that artefact. The
+# 2024/2025 fixtures are DR-faithful synthetic specimens built from the bundled
+# AEAT Diseno de Registro field dictionaries, and they print clean stamped
+# values -- the grounding tier the registry profile itself declares
+# (`verification_source = "synthetic_from_aeat_published_text"`).
+
+MODELO_100_DECLARACION_FIXTURE = FIXTURES_DIR / "justificantes" / "100" / "2024-0A.pdf"
+"""DR-faithful synthetic M100 declaracion PDF for ejercicio 2024. Printed values
+are established independently by
+``test_parser_extracts_modelo_100_current_year_profile_targets``
+(``adapters/inbound/declaracion/tests/test_parser_boundary_m100_current_year.py``),
+whose expected map is mirrored from the fixture generator's stamped amounts."""
+
+_M100_2024_REVISION_ID = "2024"
+"""Law-determined registry revision for M100 filing_year=2024, period=0A
+(confirmed via ``authority.snapshot("100", filing_year=2024, period="0A").revision.id``)."""
+
+# The fixture prints 21 casillas; these are the ones the 2024 revision actually
+# reconciles (printed set INTERSECT `reconcile_when_present_casilla_ids`, read
+# from the snapshot's verification policy rather than assumed). The remaining
+# printed casillas are deliberately left un-persisted so both sides are `None`
+# for them -- a legitimate skip. Note both sets matter: a printed casilla that
+# is `computed` but left un-persisted comes back as a `casilla_extra_in_filed`
+# DIFF rather than a skip, so the seed is the union of the two intersections.
+_M100_2024_MATCHING_CASILLA_VALUES: dict[str, Decimal] = {
+    "0180": Decimal("1000.00"),
+    "0218": Decimal("0.00"),
+    "0223": Decimal("0.00"),
+    "0226": Decimal("1000.00"),
+    "0231": Decimal("1000.00"),
+    "0235": Decimal("1000.00"),
+    "0432": Decimal("1000.00"),
+    "0500": Decimal("1000.00"),
+    "0505": Decimal("1000.00"),
+    "0510": Decimal("0.00"),
+    "0545": Decimal("100.00"),
+    "0546": Decimal("100.00"),
+    "0585": Decimal("100.00"),
+    "0586": Decimal("100.00"),
+    "0587": Decimal("200.00"),
+    "0595": Decimal("200.00"),
+    "0604": Decimal("50.00"),
+    "0610": Decimal("150.00"),
+    "0670": Decimal("150.00"),
+}
+
+
+def _seed_m100_work_unit_with_revision(*, casilla_values: dict[str, Decimal]) -> str:
+    return _seed_declaracion_work_unit_with_revision(
+        modelo="100",
+        filing_year=2024,
+        period_code="0A",
+        revision_id=_M100_2024_REVISION_ID,
+        casilla_values=casilla_values,
+    )
+
+
+def test_reconcile_file_kind_declaration_m100_matches_when_computed_agrees(
+    _declaracion_fixture_profile: None,
+) -> None:
+    """Modelo 100: a persisted revision agreeing with the filed declaracion
+    reports a clean `matches` through the real CLI.
+
+    The first end-to-end clean verdict for M100 -- the modelo with the largest
+    reconcile scope was previously proven only by a mismatch case at the
+    application seam, so no run had ever shown the happy path closing.
+    """
+    work_unit_id = _seed_m100_work_unit_with_revision(casilla_values=_M100_2024_MATCHING_CASILLA_VALUES)
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "reconcile",
+            "file",
+            work_unit_id,
+            "--file",
+            str(MODELO_100_DECLARACION_FIXTURE),
+            "--kind",
+            "declaration",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert "source_kind	declaration" in result.output
+    assert "verdict	matches" in result.output
+    assert "diffs	0" in result.output
+
+
+def test_reconcile_file_kind_declaration_m100_catches_casilla_divergence(
+    _declaracion_fixture_profile: None,
+) -> None:
+    """Modelo 100: a computed `0604` disagreeing with the filed declaracion is
+    CAUGHT as a typed casilla diff, not a silent identity `matches`.
+
+    Pairs with the clean-match case above so neither can pass vacuously: this
+    one proves the comparison is live, that one proves it can close.
+    """
+    mismatched = dict(_M100_2024_MATCHING_CASILLA_VALUES)
+    mismatched["0604"] = Decimal("75.00")  # fixture prints 50.00
+    work_unit_id = _seed_m100_work_unit_with_revision(casilla_values=mismatched)
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "reconcile",
+            "file",
+            work_unit_id,
+            "--file",
+            str(MODELO_100_DECLARACION_FIXTURE),
+            "--kind",
+            "declaration",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert "source_kind	declaration" in result.output
+    assert "verdict	mismatches" in result.output
+    assert "diff	0604	work_unit=75.00	evidence=50.00" in result.output
+
+
 def test_reconcile_file_kind_declaration_override_still_catches_wrong_modelo_pdf(
     _declaracion_fixture_profile: None,
 ) -> None:
@@ -795,25 +927,37 @@ def test_reconcile_file_kind_declaration_override_still_catches_wrong_modelo_pdf
 def test_reconcile_file_kind_declaration_refuses_unenrolled_modelo(
     _declaracion_fixture_profile: None,
 ) -> None:
-    """A modelo outside `_DECLARATION_CASILLA_RECONCILE_MODELOS` (e.g. 100)
-    refuses `--kind declaration` cleanly rather than silently degrading to a
-    header-only compare."""
-    work_unit_id = _seed_work_unit(modelo="100", filing_year=2024, period="0A")
+    """A modelo outside `_DECLARATION_CASILLA_RECONCILE_MODELOS` refuses
+    `--kind declaration` on ENROLMENT grounds rather than silently degrading
+    to a header-only compare.
+
+    Modelo 115 is genuinely unenrolled and its own fixture is supplied, so the
+    refusal cannot come from a template or header mismatch. The assertion is
+    the registered error code, not the exit status: this test previously named
+    modelo 100 as the unenrolled example, which stopped being true when 100
+    was enrolled, and it kept passing only because it fed a 303-shaped PDF to
+    a 100 work unit and tripped the wrong-modelo guard instead. A bare
+    non-zero exit cannot tell those two refusals apart.
+    """
+    work_unit_id = _seed_work_unit(modelo="115", filing_year=2024, period="1T")
 
     result = invoke_cached_cli(
         [
+            "--format",
+            "json",
             "app",
             "modelo",
             "reconcile",
             "file",
             work_unit_id,
             "--file",
-            str(MODELO_303_DECLARACION_FIXTURE),
+            str(FIXTURES_DIR / "justificantes" / "115" / "2024-1T.pdf"),
             "--kind",
             "declaration",
         ],
     )
     assert result.exit_code != 0, result.output
+    assert "REFUSED_RECONCILIATION_DECLARATION_SOURCE_UNSUPPORTED" in result.output, result.output
 
 
 def test_reconcile_file_default_kind_is_justificante() -> None:
