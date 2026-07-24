@@ -149,6 +149,15 @@ class BucketEventType(StrEnum):
     AUTH_CERTIFICATE_SOURCE_SECRET_ROTATED = "auth.certificate_source.secret_rotated"  # noqa: S105 - event-type label
     AUTH_CERTIFICATE_SOURCE_SECRET_REMOVED = "auth.certificate_source.secret_removed"  # noqa: S105 - event-type label
 
+    # secret-store custody: passphrase rotation and the recovery-code lifecycle.
+    # Generic custody vocabulary with no AEAT surface, so the stems stay English.
+    # Payloads carry only non-secret witnesses (the recovery fingerprint, the
+    # store location); no passphrase, mnemonic, or key material is ever recorded.
+    CUSTODY_PASSPHRASE_CHANGED = "custody.passphrase.changed"  # noqa: S105 - event-type label, not a secret
+    CUSTODY_RECOVERY_CODE_CREATED = "custody.recovery_code.created"
+    CUSTODY_RECOVERY_CODE_ROTATED = "custody.recovery_code.rotated"
+    CUSTODY_SECRET_STORE_RECOVERED = "custody.secret_store.recovered"  # noqa: S105 - event-type label, not a secret
+
     # ledger transaction lifecycle
     LEDGER_TRANSACTION_CREATED = "ledger.transaction.created"
     LEDGER_TRANSACTION_IMPORTED = "ledger.transaction.imported"

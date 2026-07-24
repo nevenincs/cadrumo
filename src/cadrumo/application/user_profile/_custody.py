@@ -38,8 +38,16 @@ from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings, load_settings
 from ...core.logging import get_logger
 from ...core.time import now as utc_now
+from ...domain.buckets import (
+    BucketEvent,
+    BucketEventObjectType,
+    BucketEventType,
+    append_bucket_event,
+    derive_bucket_event_id,
+)
 
 _RECOVERY_WRAP_FILENAME = "master.recovery.key"
+_CUSTODY_ACTOR = "operator"
 _log = get_logger(__name__)
 
 
@@ -122,6 +130,69 @@ def inspect_recovery_status(settings: Settings | None = None) -> CustodyRecovery
     )
 
 
+def _emit_custody_event(
+    *,
+    event_type: BucketEventType,
+    payload: dict[str, str],
+) -> None:
+    """Append one non-secret custody audit event to the active bucket's history.
+
+    Passphrase rotation and the recovery-code lifecycle govern access to
+    everything else the vault holds, so each durable mutation leaves a
+    queryable trail an operator (or an investigator after a suspected
+    compromise) can read back through ``aeat config bucket history``.
+
+    ``payload`` MUST carry only non-secret witnesses — the recovery
+    fingerprint, the store location. No passphrase, mnemonic, or key
+    material is ever recorded.
+
+    The trail records the mutation; it never gates it. The event history is
+    per-bucket encrypted storage, so it is only reachable while a profile is
+    unlocked — and ``recover_secret_store`` runs precisely when the operator
+    *cannot* unlock one. A missing profile selection or an unready storage
+    runtime therefore degrades to a logged no-op: refusing here would fail an
+    already-durable custody mutation, and would make the recovery path depend
+    on the very access it exists to restore. Any other failure still raises.
+    """
+    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ...adapters.persistence.storage import StorageValidationError
+    from ...core import resolve_active_bucket_id
+
+    bucket_id = resolve_active_bucket_id()
+    if bucket_id is None:
+        _log.debug("custody audit event %s not recorded: no active profile", event_type.value)
+        return
+    occurred_at = utc_now()
+    event = BucketEvent(
+        event_id=derive_bucket_event_id(
+            bucket_id=bucket_id,
+            event_type=event_type,
+            occurred_at=occurred_at,
+            actor=_CUSTODY_ACTOR,
+            object_type=BucketEventObjectType.BUCKET,
+            object_id=bucket_id,
+            payload=payload,
+        ),
+        bucket_id=bucket_id,
+        event_type=event_type,
+        occurred_at=occurred_at,
+        actor=_CUSTODY_ACTOR,
+        object_type=BucketEventObjectType.BUCKET,
+        object_id=bucket_id,
+        payload_version=1,
+        payload=payload,
+    )
+    try:
+        events = BucketEventHistoryRepository()
+        events.save(append_bucket_event(events.load(), event))
+    except StorageValidationError:
+        _log.debug(
+            "custody audit event %s not recorded: profile storage is locked",
+            event_type.value,
+            exc_info=True,
+        )
+
+
 def _mark_active_profile_recovery_enrolled(settings: Settings) -> None:
     """Mirror recovery enrollment into the active profile manifest."""
     from ...adapters.persistence.storage.bucket import bucket_paths, read_manifest, write_manifest
@@ -152,7 +223,12 @@ def create_recovery_code(
     :class:`~cadrumo.adapters.persistence.storage.SecretStoreError` naming the
     rotate path. The plaintext words are never persisted or returned.
     """
-    return _enroll_recovery_code(operation=recovery_create, confirm=confirm, settings=settings)
+    return _enroll_recovery_code(
+        operation=recovery_create,
+        confirm=confirm,
+        settings=settings,
+        event_type=BucketEventType.CUSTODY_RECOVERY_CODE_CREATED,
+    )
 
 
 def rotate_recovery_code(
@@ -166,7 +242,12 @@ def rotate_recovery_code(
     existing enrollment; the prior envelope survives untouched until the
     operator's retype fully verifies the fresh candidate.
     """
-    return _enroll_recovery_code(operation=recovery_rotate, confirm=confirm, settings=settings)
+    return _enroll_recovery_code(
+        operation=recovery_rotate,
+        confirm=confirm,
+        settings=settings,
+        event_type=BucketEventType.CUSTODY_RECOVERY_CODE_ROTATED,
+    )
 
 
 def _enroll_recovery_code(
@@ -174,11 +255,22 @@ def _enroll_recovery_code(
     operation: Callable[..., RecoveryEnrollmentOutcome],
     confirm: Callable[[str], str],
     settings: Settings | None,
+    event_type: BucketEventType,
 ) -> CustodyRecoveryEnrollmentResult:
     resolved = _settings(settings)
     path = recovery_wrap_path(resolved)
     provider = get_master_key_provider(settings_override=resolved)
     outcome = operation(provider=provider, path=path, created_at=utc_now(), confirm=confirm)
+    # The envelope is durably installed here; the audit trail is recorded before
+    # the separate, non-atomic manifest-flag write so a crash between the two
+    # still leaves evidence of the enrollment that actually happened.
+    _emit_custody_event(
+        event_type=event_type,
+        payload={
+            "recovery_fingerprint": outcome.recovery_fingerprint,
+            "rotated": str(outcome.rotated).lower(),
+        },
+    )
     _mark_active_profile_recovery_enrolled(resolved)
     return CustodyRecoveryEnrollmentResult(
         recovery_path=path,
@@ -267,6 +359,10 @@ def change_passphrase(
     new_provider.complete_recovery(master_key)
     with activate_master_key_provider(new_provider):
         pass
+    _emit_custody_event(
+        event_type=BucketEventType.CUSTODY_PASSPHRASE_CHANGED,
+        payload={"secret_store_dir": str(resolved.cadrumo_secret_store_dir)},
+    )
     return CustodyPassphraseChangeResult(
         secret_store_dir=Path(resolved.cadrumo_secret_store_dir),
         changed=True,
@@ -293,6 +389,10 @@ def recover_secret_store(
     recovery_recover(provider=new_provider, path=path, mnemonic=mnemonic)
     with activate_master_key_provider(new_provider):
         pass
+    _emit_custody_event(
+        event_type=BucketEventType.CUSTODY_SECRET_STORE_RECOVERED,
+        payload={"secret_store_dir": str(resolved.cadrumo_secret_store_dir)},
+    )
     return CustodyRecoverResult(
         recovery_path=path,
         secret_store_dir=Path(resolved.cadrumo_secret_store_dir),
