@@ -6991,6 +6991,41 @@ wizard:
             label: H - home
           m:
             label: M - dona
+    descendientes:
+      adoption-date:
+        prompt: Data d'adopció (deixi en blanc si no és adoptat)
+      birth-date:
+        prompt: Data de naixement
+      convivencia:
+        prompt: Aquest descendent conviu amb vostè?
+      count:
+        help: 'Compti els fills que poden donar dret al mínim per descendents (art.
+          58 LIRPF): menors de 25 anys (o qualsevol edat amb discapacitat) que convisquin
+          amb vostè.'
+        prompt: Quants descendents (fills) vol declarar?
+      custodia-compartida:
+        prompt: La custòdia és compartida amb l'altre progenitor?
+      discapacidad:
+        choices:
+          '0':
+            label: Sense discapacitat
+          '33':
+            label: Del 33% al 64%
+          '65':
+            label: 65% o més
+        prompt: Grau de discapacitat
+      gastos-guarderia:
+        help: Imports pagats a una llar d'infants o centre d'educació infantil autoritzat
+          (art. 81 bis LIRPF) que incrementen la deducció per maternitat; euros sencers.
+        prompt: Despeses de llar d'infants pagades en l'any de declaració (euros)
+      meses-madre-trabajo:
+        help: 'Per a la deducció per maternitat (art. 81 LIRPF): mesos (0-12) en què
+          la mare va cotitzar a la Seguretat Social amb el fill menor de 3 anys.'
+        prompt: Mesos que la mare va treballar amb el fill menor de 3 anys (any de
+          declaració)
+      nif:
+        prompt: NIF/NIE del descendent (deixi en blanc si no en té)
+      title: Descendents
     description: Auxiliar de configuració per preparar les declaracions
     enrollment:
       enrollment-large-company:

@@ -6551,6 +6551,39 @@ wizard:
             label: H - male
           m:
             label: M - female
+    descendientes:
+      adoption-date:
+        prompt: Adoption date (leave blank if not adopted)
+      birth-date:
+        prompt: Date of birth
+      convivencia:
+        prompt: Does this descendant live with you?
+      count:
+        help: 'Count children who may give the mínimo por descendientes (Art. 58 LIRPF):
+          under 25 (or any age with a disability) living with you.'
+        prompt: How many descendants (children) do you want to declare?
+      custodia-compartida:
+        prompt: Is custody shared with the other parent?
+      discapacidad:
+        choices:
+          '0':
+            label: No disability
+          '33':
+            label: 33% to 64%
+          '65':
+            label: 65% or more
+        prompt: Disability grade
+      gastos-guarderia:
+        help: Amounts paid to an authorised nursery (Art. 81 bis LIRPF) that increase
+          the maternity deduction; whole euros.
+        prompt: Nursery expenses paid in the filing year (euros)
+      meses-madre-trabajo:
+        help: 'For the maternity deduction (Art. 81 LIRPF): months (0-12) the mother
+          paid Social Security while this child was under 3.'
+        prompt: Months the mother worked while the child was under 3 (filing year)
+      nif:
+        prompt: Descendant's NIF/NIE (leave blank if none)
+      title: Descendants
     description: Operator-facing setup wizard for tax filing readiness
     enrollment:
       enrollment-large-company:

@@ -6889,6 +6889,40 @@ wizard:
             label: H - férfi
           m:
             label: M - nő
+    descendientes:
+      adoption-date:
+        prompt: Örökbefogadás dátuma (hagyja üresen, ha nem örökbefogadott)
+      birth-date:
+        prompt: Születési dátum
+      convivencia:
+        prompt: Ez a leszármazó Önnel él?
+      count:
+        help: 'Számolja meg a gyermekeket, akik után igénybe veheti a leszármazók
+          utáni minimumot (LIRPF 58. cikk): 25 év alattiak (vagy bármely életkorú
+          fogyatékos), akik Önnel élnek.'
+        prompt: Hány leszármazót (gyermeket) szeretne bevallani?
+      custodia-compartida:
+        prompt: A felügyeletet megosztja a másik szülővel?
+      discapacidad:
+        choices:
+          '0':
+            label: Nincs fogyatékosság
+          '33':
+            label: 33%–64%
+          '65':
+            label: 65% vagy több
+        prompt: Fogyatékosság mértéke
+      gastos-guarderia:
+        help: Engedélyezett bölcsődének fizetett összegek (LIRPF 81/A. cikk), amelyek
+          növelik az anyasági levonást; egész euró.
+        prompt: Az adóévben fizetett bölcsődei költségek (euró)
+      meses-madre-trabajo:
+        help: 'Az anyasági levonáshoz (LIRPF 81. cikk): hónapok (0–12), amikor az
+          anya tb-járulékot fizetett a 3 év alatti gyermek mellett.'
+        prompt: Hónapok, amíg az anya dolgozott a 3 év alatti gyermek mellett (adóév)
+      nif:
+        prompt: A leszármazó adószáma (NIF/NIE) (hagyja üresen, ha nincs)
+      title: Leszármazók
     description: Adóbevallási felkészültséget szolgáló beállítási varázsló az operátor
       számára
     enrollment:
