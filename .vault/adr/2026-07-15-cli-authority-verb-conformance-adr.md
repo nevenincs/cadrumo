@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cli-authority-verb-conformance'
 date: '2026-07-15'
-modified: '2026-07-17'
+modified: '2026-07-24'
 related:
   - "[[2026-07-15-cli-authority-verb-conformance-research]]"
   - "[[2026-07-15-cli-authority-verb-conformance-reference]]"
@@ -12,9 +12,20 @@ related:
   - "[[2026-05-14-secure-backend-passkey-custody-adr]]"
   - "[[2026-05-21-profile-state-aggregate-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-evidence-bundle-shape-adr]]"
+  - '[[2026-07-24-profile-login-session-adr]]'
 ---
 
 # `cli-authority-verb-conformance` adr: `Single backend authorities and cost-aware CLI verbs` | (**status:** `accepted`)
+
+## Amendment note (2026-07-24)
+
+The profile-session verb set in Decision 2/3 is amended by the accepted
+`2026-07-24-profile-login-session-adr` under an explicit operator override:
+`aeat config switch NAME` and `aeat config profile logout` are replaced by
+`aeat config login [NAME]` and `aeat config logout`. The strong session-close
+semantics defined here are upheld verbatim by the replacing `logout`; the
+one-verb, no-alias, hard-cutover rule is upheld (`switch` is deleted, not
+aliased). Every other decision in this ADR remains authoritative.
 
 ## Problem Statement
 
