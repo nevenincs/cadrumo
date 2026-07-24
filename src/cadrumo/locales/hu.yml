@@ -6260,6 +6260,8 @@ errors:
       A profil UUID-jával egyértelműsítse.
     refused_profile_lifo_forbidden: A LIFO készletértékelés adózási célból nem megengedett.
       Használjon FIFO-t, súlyozott átlagárat vagy átlagköltséget.
+    refused_profile_login_throttled: Túl sok sikertelen bejelentkezési kísérlet. Várj
+      %{seconds} másodpercet, mielőtt újra futtatnád az `aeat config login` parancsot.
     refused_profile_logout_override: A kijelentkezés nem módosíthat --profile vagy
       CADRUMO_ACTIVE_PROFILE használatával kiválasztott aktív profilt. Távolítsa el
       a felülbírálást, majd próbálja újra.

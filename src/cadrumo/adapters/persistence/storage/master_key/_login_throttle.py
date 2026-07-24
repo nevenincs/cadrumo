@@ -1,0 +1,219 @@
+"""Per-bucket failed-login throttle sidecar.
+
+A plaintext, best-effort rate-limit cache that records only the count of
+consecutive failed authentication attempts and the timestamp of the most
+recent one — never a secret, a passphrase, or any key material. It lives
+beside the wrapped bucket DEK in the separated keystore directory and is
+written through the same hardened atomic writer.
+
+The throttle enforces the ADR Decision 5 backoff: the caller evaluates the
+remaining wait BEFORE running any Argon2id derivation, so the KDF can never
+become a passphrase-testing timing oracle. The required wait after ``n``
+consecutive failures is ``min(2 ** n, 60)`` seconds, measured from
+``last_failure_at`` — so a caller that simply waited the backoff out is
+cleared to retry.
+
+There is deliberately NO permanent lockout: a local-CLI self-DoS is worse
+than throttled retry (NIST SP 800-63B §5.2.2 requires throttling, not
+lockout). For the same reason the sidecar is a *revocable cache*, not an
+authoritative record — a missing, unreadable, or version-mismatched file is
+treated as "no active throttle" and rewritten on the next failure, never a
+hard refusal that could strand the legitimate operator. The counter resets
+to clear on a successful login and on logout.
+
+See Also:
+    :class:`~adapters.persistence.storage.master_key.BucketSession`
+        The unlock session whose authentication attempts this throttle guards.
+"""
+
+from __future__ import annotations
+
+import json
+import math
+from datetime import datetime, timedelta
+from pathlib import Path
+
+from pydantic import BaseModel, Field
+
+from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from .....core.logging import get_logger
+from ._master_key_io import atomic_write_secure_bytes
+
+_log = get_logger(__name__)
+
+LOGIN_THROTTLE_FILENAME = "login-throttle.json"
+"""Sidecar filename inside the per-bucket keystore directory."""
+
+LOGIN_THROTTLE_SCHEMA_VERSION = 1
+"""Version stamped on the persisted throttle state."""
+
+THROTTLE_BACKOFF_CAP_SECONDS = 60
+"""Maximum required wait between consecutive failed attempts."""
+
+# 2 ** 6 == 64 already exceeds the 60 s cap; clamping the exponent keeps the
+# shift bounded no matter how many failures accumulate.
+_MAX_BACKOFF_EXPONENT = 6
+
+
+class LoginThrottleState(BaseModel):
+    """Strict, plaintext throttle state persisted per bucket.
+
+    Carries only a non-negative failure count and the timestamp of the most
+    recent failure. It never holds a passphrase, key, or any other secret.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    schema_version: int = LOGIN_THROTTLE_SCHEMA_VERSION
+    consecutive_failures: int = Field(default=0, ge=0)
+    last_failure_at: datetime | None = None
+
+
+class ThrottleEvaluation(BaseModel):
+    """Typed outcome of a throttle evaluation at a given instant."""
+
+    model_config = _STRICT_FROZEN
+
+    throttled: bool
+    remaining_seconds: int = Field(ge=0)
+    consecutive_failures: int = Field(ge=0)
+
+
+def _required_wait_seconds(consecutive_failures: int) -> int:
+    """Return the exponential-backoff window (seconds) for a failure count.
+
+    Zero failures impose no wait; otherwise the window is
+    ``min(2 ** n, 60)`` with ``n`` the consecutive-failure count.
+    """
+    if consecutive_failures <= 0:
+        return 0
+    exponent = min(consecutive_failures, _MAX_BACKOFF_EXPONENT)
+    return min(1 << exponent, THROTTLE_BACKOFF_CAP_SECONDS)
+
+
+def login_throttle_path(*, storage_root: Path, bucket_id: str) -> Path:
+    """Return the throttle sidecar path inside the bucket keystore directory."""
+    from ..bucket import keystore_path, validate_keystore_separation
+
+    validate_keystore_separation(storage_root, bucket_id)
+    return keystore_path(storage_root, bucket_id) / LOGIN_THROTTLE_FILENAME
+
+
+def _read_state(path: Path) -> LoginThrottleState:
+    """Read the throttle state, treating any unusable file as cleared.
+
+    A missing, unreadable, malformed, or version-mismatched sidecar yields
+    a cleared state so the throttle can never permanently lock the operator
+    out; the next :func:`record_login_failure` rewrites a canonical file.
+    """
+    if not path.is_file():
+        return LoginThrottleState()
+    try:
+        state = LoginThrottleState.model_validate_json(path.read_text(encoding=_UTF_8_ENCODING))
+    except (OSError, ValueError):
+        _log.debug("login throttle sidecar unreadable; treating as cleared path=%s", path)
+        return LoginThrottleState()
+    if state.schema_version != LOGIN_THROTTLE_SCHEMA_VERSION:
+        _log.debug(
+            "login throttle sidecar schema mismatch; treating as cleared version=%s",
+            state.schema_version,
+        )
+        return LoginThrottleState()
+    return state
+
+
+def _write_state(path: Path, state: LoginThrottleState) -> None:
+    """Persist ``state`` atomically with restrictive permissions."""
+    payload = json.dumps(
+        state.model_dump(mode="json"),
+        indent=2,
+        sort_keys=True,
+    ).encode(_UTF_8_ENCODING)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    atomic_write_secure_bytes(path, payload + b"\n")
+
+
+def _evaluate_state(state: LoginThrottleState, now: datetime) -> ThrottleEvaluation:
+    """Evaluate ``state`` at ``now`` without touching disk."""
+    failures = state.consecutive_failures
+    required = _required_wait_seconds(failures)
+    if required == 0 or state.last_failure_at is None:
+        return ThrottleEvaluation(throttled=False, remaining_seconds=0, consecutive_failures=failures)
+    deadline = state.last_failure_at + timedelta(seconds=required)
+    if now >= deadline:
+        return ThrottleEvaluation(throttled=False, remaining_seconds=0, consecutive_failures=failures)
+    remaining = math.ceil((deadline - now).total_seconds())
+    return ThrottleEvaluation(
+        throttled=True,
+        remaining_seconds=max(0, remaining),
+        consecutive_failures=failures,
+    )
+
+
+def evaluate_login_throttle(*, storage_root: Path, bucket_id: str, now: datetime) -> ThrottleEvaluation:
+    """Return the remaining backoff wait for a bucket at ``now``.
+
+    Call this BEFORE any Argon2id derivation. ``remaining_seconds`` is zero
+    (and ``throttled`` is ``False``) whenever the operator is clear to retry.
+
+    Args:
+        storage_root: The Cadrumo storage root owning the bucket keystore.
+        bucket_id: Identifier of the bucket whose throttle to evaluate.
+        now: UTC timestamp at which the evaluation runs.
+
+    Returns:
+        A :class:`ThrottleEvaluation` carrying ``throttled``,
+        ``remaining_seconds``, and the current ``consecutive_failures``.
+    """
+    state = _read_state(login_throttle_path(storage_root=storage_root, bucket_id=bucket_id))
+    return _evaluate_state(state, now)
+
+
+def record_login_failure(*, storage_root: Path, bucket_id: str, now: datetime) -> LoginThrottleState:
+    """Increment the consecutive-failure count and stamp ``now``.
+
+    Args:
+        storage_root: The Cadrumo storage root owning the bucket keystore.
+        bucket_id: Identifier of the bucket whose failure to record.
+        now: UTC timestamp of the failed attempt.
+
+    Returns:
+        The persisted :class:`LoginThrottleState` after the increment.
+    """
+    path = login_throttle_path(storage_root=storage_root, bucket_id=bucket_id)
+    current = _read_state(path)
+    updated = LoginThrottleState(
+        schema_version=LOGIN_THROTTLE_SCHEMA_VERSION,
+        consecutive_failures=current.consecutive_failures + 1,
+        last_failure_at=now,
+    )
+    _write_state(path, updated)
+    return updated
+
+
+def reset_login_throttle(*, storage_root: Path, bucket_id: str) -> None:
+    """Clear the throttle by removing the sidecar (idempotent).
+
+    Called on a successful login and on logout. A missing sidecar is a clean
+    no-op; a removal failure is logged rather than raised so it never breaks
+    the success path — the stale window expires by clock regardless.
+    """
+    path = login_throttle_path(storage_root=storage_root, bucket_id=bucket_id)
+    try:
+        path.unlink(missing_ok=True)
+    except OSError:
+        _log.debug("login throttle sidecar removal failed; window expires by clock path=%s", path)
+
+
+__all__ = [
+    "LOGIN_THROTTLE_FILENAME",
+    "LOGIN_THROTTLE_SCHEMA_VERSION",
+    "THROTTLE_BACKOFF_CAP_SECONDS",
+    "LoginThrottleState",
+    "ThrottleEvaluation",
+    "evaluate_login_throttle",
+    "login_throttle_path",
+    "record_login_failure",
+    "reset_login_throttle",
+]

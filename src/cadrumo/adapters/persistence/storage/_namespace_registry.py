@@ -30,6 +30,7 @@ BUCKET_LOCK_FILENAME = ".lock"
 BUCKET_OUTPUT_LANGUAGE_HINT_FILENAME = "output-language.hint"
 KEYSTORE_DIRNAME = "keystore"
 BUCKET_DEK_FILENAME = "bucket.dek.json"
+PROFILE_SESSION_FILENAME = "session.v1.json"
 BLOB_MANIFEST_SCHEMA_VERSION = 1
 SECRET_RECORD_SCHEMA_VERSION = 1
 _SECURE_OBJECTS_TABLE_PATH_KEY = "secure_objects_table"
@@ -1054,6 +1055,13 @@ STORAGE_PATH_DEFINITIONS = (
         segment=BUCKET_DEK_FILENAME,
     ),
     StoragePathDefinition(
+        key="profile_session",
+        kind=StoragePathKind.FILE,
+        grammar="<root>/keystore/<bucket_id>/session.v1.json",
+        owner="cadrumo.adapters.persistence.storage.master_key",
+        segment=PROFILE_SESSION_FILENAME,
+    ),
+    StoragePathDefinition(
         key="secure_objects_table",
         kind=StoragePathKind.LOGICAL_SQL,
         grammar="db://secure_objects/<namespace>/<object_key>",
@@ -1180,6 +1188,7 @@ __all__ = [
     "PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE",
     "PROFILE_INVENTORY_LEDGER_NAMESPACE",
     "PROFILE_PRORRATA_REGISTER_NAMESPACE",
+    "PROFILE_SESSION_FILENAME",
     "REPAIR_INTEGRITY_DECISION_NAMESPACE",
     "SECRET_RECORD_SCHEMA_VERSION",
     "SECURE_OBJECT_CATALOGUE_KEY",

@@ -74,6 +74,8 @@ def _serialise_manifest(manifest: BucketManifest) -> str:
     lines.append(f"recovery_enrolled = {_format_scalar(manifest.recovery_enrolled)}")
     if manifest.idle_lock_minutes is not None:
         lines.append(f"idle_lock_minutes = {_format_scalar(manifest.idle_lock_minutes)}")
+    if manifest.session_absolute_minutes is not None:
+        lines.append(f"session_absolute_minutes = {_format_scalar(manifest.session_absolute_minutes)}")
     lines.append(f"key_schedule = {_format_scalar(manifest.key_schedule.value)}")
     lines.append(f"schema_version = {_format_scalar(manifest.schema_version)}")
     lines.append(f"status = {_format_scalar(manifest.status.value)}")
@@ -149,6 +151,7 @@ def read_manifest(paths: BucketPaths) -> BucketManifest:
     # the strict pydantic model still rejects unknown keys.
     payload.setdefault("last_unlocked_at", None)
     payload.setdefault("idle_lock_minutes", None)
+    payload.setdefault("session_absolute_minutes", None)
     if "status" not in payload:
         raise manifest_validation_error("bucket manifest is missing required lifecycle status")
     return BucketManifest.model_validate(payload)

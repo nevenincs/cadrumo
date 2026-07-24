@@ -63,10 +63,13 @@ from . import (
     UserProfileLifecycleRepository,
 )
 from ._lifecycle import ProfileLifecycleService
+from ._login_session import close_profile_session_artefacts
 from ._profile_pointer_transaction import active_profile_pointer_transaction
 from ._profile_repository import ProfileRepository
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from ...domain.buckets import BucketEventHistoryRepositoryProtocol
     from ..workflow import WorkflowState
 
@@ -502,7 +505,29 @@ def complete_setup_with_lifecycle_span(profile_id: str) -> UserProfileRecord:
 
 
 def logout_active_profile() -> str | None:
-    """Close the active storage session, clear its pointer, and return its profile.
+    """Strong-close the profile session and return the profile signed out.
+
+    The full teardown, in the order the project-wide lock discipline
+    requires:
+
+    1. seal and zeroise the live
+       :class:`~cadrumo.adapters.persistence.storage.master_key.BucketSession`
+       (key buffers overwritten, engine disposed, ContextVar evicted);
+    2. delete BOTH halves of the persisted session — the on-disk
+       ``session.v1`` record and its OS-keychain session key — and clear the
+       failed-login backoff, through the single
+       :func:`~cadrumo.application.user_profile.close_profile_session_artefacts`
+       authority login itself composes for a cross-profile handover;
+    3. release this process's per-bucket lockfile;
+    4. clear the active-profile pointer.
+
+    Fully idempotent: a second logout, or a logout with nothing signed in,
+    is a clean no-op returning ``None`` — every step tolerates the absent
+    artefact rather than refusing.
+
+    A live session bound to a bucket other than the pointed-to one (a
+    resumed session whose pointer moved) is torn down too, so no profile
+    can survive a logout still holding unlocked key material.
 
     Explicit ``cadrumo_active_profile`` overrides are process-scoped and cannot
     be unset by this application boundary. They are refused before lock
@@ -516,19 +541,45 @@ def logout_active_profile() -> str | None:
     successful pointer-only logout. Provider bookkeeping remains owned by the
     provider context and unwinds idempotently when that context exits.
 
+    Returns:
+        The bucket id signed out, or ``None`` when nothing was signed in.
+
     Raises:
         ProfileLogoutOverrideError: If an explicit active-profile override is
             in force.
     """
+    from ...adapters.persistence.storage.master_key import current_active_bucket_session
+
     override = (load_settings().cadrumo_active_profile or "").strip()
     if override:
         raise ProfileLogoutOverrideError
+    storage_root = load_settings().cadrumo_local_storage_root
     with active_profile_pointer_transaction() as pointer_transaction:
         pointer = pointer_transaction.read()
         before = pointer.bucket_id if pointer is not None else None
+        live_session = current_active_bucket_session()
+        live_bucket_id = live_session.bucket_id if live_session is not None else None
         close_active_bucket_session()
+        for bucket_id in dict.fromkeys(candidate for candidate in (before, live_bucket_id) if candidate):
+            close_profile_session_artefacts(storage_root=storage_root, bucket_id=bucket_id)
+            _release_bucket_lock(storage_root=storage_root, bucket_id=bucket_id)
         pointer_transaction.clear()
         return before
+
+
+def _release_bucket_lock(*, storage_root: Path, bucket_id: str) -> None:
+    """Release this process's per-bucket lockfile (idempotent, best-effort).
+
+    ``release_lock`` already removes the lockfile only when this process
+    owns it, so a foreign or absent lock is untouched. Every structural
+    failure (a torn bucket directory, an invalid id) is swallowed: logout
+    must always converge on the signed-out state rather than strand the
+    operator behind a refusal about a lock they cannot clear.
+    """
+    try:
+        release_lock(bucket_paths(storage_root, bucket_id))
+    except (BucketValidationError, OSError, ValueError):
+        _log.debug("bucket lock release skipped during logout bucket_id=%s", bucket_id, exc_info=True)
 
 
 def refuse_duplicate_label(

@@ -94,6 +94,27 @@ def activate_session(session: BucketSession) -> Iterator[None]:
         _active_session.reset(token)
 
 
+def bind_active_bucket_session(session: BucketSession) -> None:
+    """Bind ``session`` as the active session for the rest of this context.
+
+    The unscoped counterpart of :func:`activate_session`, for the one
+    caller shape that has no enclosing ``with`` block: a persisted profile
+    session resumed at CLI start-up, whose binding must outlive the
+    function that opened it and is evicted explicitly by
+    :func:`close_active_bucket_session` (or by the interpreter-exit hook).
+
+    :func:`activate_session` cannot serve that shape — entering its
+    generator without holding a reference lets the garbage collector
+    finalise it, and the ``finally`` clause then resets the binding out
+    from under the caller. Callers that DO have a scope must keep using
+    :func:`activate_session` so the previous binding is restored on exit.
+
+    Args:
+        session: The unlocked :class:`BucketSession` to bind.
+    """
+    _active_session.set(session)
+
+
 def get_active_master_key() -> bytes:
     """Return the DEK bytes of the currently-active :class:`BucketSession`.
 
@@ -199,6 +220,7 @@ _atexit.register(_close_active_session_at_exit)
 __all__ = [
     "NoActiveBucketSessionError",
     "activate_session",
+    "bind_active_bucket_session",
     "close_active_bucket_session",
     "current_active_bucket_session",
     "get_active_master_key",

@@ -58,8 +58,9 @@ def evaluate_idle(
 
     Returns:
         An :class:`IdleEvaluation` record carrying `expired` and the
-        floor-truncated `remaining_seconds` until the deadline (zero
-        when expired).
+        floor-truncated `remaining_seconds` until the earlier of the idle
+        deadline and the absolute session cap (zero when either has
+        elapsed).
 
     Raises:
         StorageValidationError: When ``configured_minutes`` is not a strict positive integer.
@@ -70,7 +71,9 @@ def evaluate_idle(
     if session.sealed:
         return IdleEvaluation(expired=True, remaining_seconds=0)
 
-    deadline = session.idle_deadline
+    # Enforce both the sliding idle window and the immutable absolute cap: the
+    # session is expired once the earlier of the two deadlines is reached.
+    deadline = min(session.idle_deadline, session.absolute_deadline)
     if now >= deadline:
         return IdleEvaluation(expired=True, remaining_seconds=0)
 

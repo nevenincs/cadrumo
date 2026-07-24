@@ -99,6 +99,17 @@ class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
         gt=0,
         description="Fallback idle-lock window (minutes) when a bucket manifest omits the value",
     )
+    cadrumo_bucket_default_session_absolute_minutes: int = Field(
+        default=240,
+        gt=0,
+        ge=60,
+        le=720,
+        description=(
+            "Fallback absolute session-lifetime cap (minutes) when a bucket manifest omits "
+            "session_absolute_minutes; fixed at login and never refreshed, so a touched-forever "
+            "session still seals at this cap (default 4 h, 12 h hard ceiling)"
+        ),
+    )
     cadrumo_auth_clave_movil_lock_buffer_s: int = Field(
         default=90,
         gt=0,

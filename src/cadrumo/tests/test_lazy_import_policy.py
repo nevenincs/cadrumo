@@ -298,6 +298,12 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("adapters.persistence.profile.usage_ratios", "adapters.persistence.storage.errors"),
             ImportEdge("adapters.persistence.profile.usage_ratios", "adapters.persistence.storage.runtime_repository"),
             ImportEdge("adapters.persistence.storage.blob_store._materialisation", "core.config"),
+            # resumed-session guard: the KEK-unavailable refusal raises the
+            # storage error family, deferred so the session primitive stays
+            # importable from the error registry's own bootstrap.
+            ImportEdge(
+                "adapters.persistence.storage.master_key._bucket_session", "adapters.persistence.storage.errors"
+            ),
             ImportEdge(
                 "adapters.persistence.storage.master_key._bucket_session", "adapters.persistence.storage.sql.engine"
             ),
@@ -333,6 +339,19 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge(
                 "adapters.persistence.storage.master_key._master_key_bucket_dek",
                 "adapters.persistence.storage.master_key._dek_wrap",
+            ),
+            # login-throttle sidecar keystore-path resolution: the throttle defers
+            # the bucket import because bucket/_manifest imports master_key._kdf_params
+            # at module load (the same cycle _master_key_bucket_dek defers around).
+            ImportEdge(
+                "adapters.persistence.storage.master_key._login_throttle",
+                "adapters.persistence.storage.bucket",
+            ),
+            # persisted profile-session keystore-path resolution: same bucket
+            # module-load cycle as the two siblings above.
+            ImportEdge(
+                "adapters.persistence.storage.master_key._persisted_session",
+                "adapters.persistence.storage.bucket",
             ),
             ImportEdge("adapters.persistence.storage.master_key._master_key_io", "core.config"),
             ImportEdge("adapters.persistence.storage.master_key._master_key_tax_id", "core.identity"),
@@ -744,6 +763,16 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.user_profile._language_resolver", "application.workflow"),
             ImportEdge("application.user_profile._language_resolver", "core"),
             ImportEdge("application.user_profile._language_resolver", "core.config"),
+            # login orchestration: the module composes the master-key provider,
+            # the persisted-session record, and the zeroise primitive without
+            # owning crypto, and resolves the target profile through the
+            # workflow reader. Importing application.workflow at module scope
+            # cycles back through filing, so the reach stays function-local.
+            ImportEdge("application.user_profile._login_session", "adapters.persistence.storage.errors"),
+            ImportEdge("application.user_profile._login_session", "adapters.persistence.storage.master_key"),
+            ImportEdge("application.user_profile._login_session", "adapters.persistence.storage.master_key._zeroise"),
+            ImportEdge("application.user_profile._login_session", "application.workflow"),
+            ImportEdge("application.user_profile._login_session", "domain.user_profile"),
             ImportEdge("application.user_profile._orchestration", "adapters.persistence.storage"),
             ImportEdge("application.user_profile._orchestration", "adapters.persistence.storage.errors"),
             ImportEdge("application.user_profile._orchestration", "adapters.persistence.storage.master_key"),
@@ -818,9 +847,9 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
     UnsanctionedClass.NAMED_CYCLE_BREAK: 1,
     UnsanctionedClass.PORTS_INVERSION_PENDING: 36,
     UnsanctionedClass.DOMAIN_CYCLE_BREAK: 51,
-    UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 179,  # +2 flow TUI screen->app cycle breaks (was 177)
+    UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 182,  # +2 flow TUI screen->app cycle breaks, +2 master_key login-throttle and persisted profile-session bucket keystore-path deferrals, +1 resumed-session KEK-unavailable refusal (was 177)
     UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 38,  # net +1 atomic_write bootstrap-cycle deferrals (_bucket_pointer_io, corpus_manifest; env_io net-zero, corpus_manifest's save_corpus_manifest site retired its own core.locks edge)
-    UnsanctionedClass.APPLICATION_DEFERRAL: 542,  # +12 profile-setup-flow sites: apoderado identity authority, cotejo notice projection, checkpoint-store lifecycle/projection/repository reach, wizard command facade (was 530)
+    UnsanctionedClass.APPLICATION_DEFERRAL: 554,  # +12 profile-setup-flow sites (apoderado identity authority, cotejo notice projection, checkpoint-store lifecycle/projection/repository reach, wizard command facade), +12 login-orchestration sites (was 530)
 }
 
 # Ceiling on the total number of allowlisted edges. Editing the allowlist to add
@@ -830,7 +859,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
 # baseline (the modelos_work_units/participation_index catalogue-repository
 # consolidation, the corpus_search/mcp/user_profile deferrals introduced by
 # intervening commits) were swept into their classified buckets in one pass.
-_ALLOWLIST_EDGE_CEILING: int = 493  # +17 profile-setup-flow edges: the apoderado identity authority, the cotejo page family and apply projections, the checkpoint store and descendant door reach, the wizard persistence/registered-values deferrals, and the locale registry's profile-enum enumeration (was 476).
+_ALLOWLIST_EDGE_CEILING: int = 501  # +17 profile-setup-flow edges (apoderado identity authority, cotejo page family and apply projections, checkpoint store and descendant door reach, wizard persistence/registered-values deferrals, locale registry profile-enum enumeration), +2 master_key login-throttle / persisted profile-session bucket deferrals, and +6 login-orchestration edges (was 476).
 
 
 def _cadrumo_relative(dotted: str) -> str:
