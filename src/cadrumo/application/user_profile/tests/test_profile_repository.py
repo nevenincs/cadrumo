@@ -100,6 +100,34 @@ def _create(
         )
 
 
+def _create_setup_incomplete(
+    repository: ProfileRepository,
+    *,
+    label: str,
+    facts: tuple[UserProfileFact, ...],
+):
+    """Mint a profile in the ``SETUP_INCOMPLETE`` birth state.
+
+    Mirrors :func:`_create` but passes the interactive-setup early-mint
+    status so both physical stores are born setup-incomplete.
+    """
+    profile_id = new_profile_id()
+    with profile_create_storage_span(profile_id):
+        return repository.create(
+            label=label,
+            facts=facts,
+            profile_id=profile_id,
+            routing_profile_id=profile_id,
+            status=UserProfileStatus.SETUP_INCOMPLETE,
+        )
+
+
+def _complete_setup(repository: ProfileRepository, profile_id: str):
+    """Wrap ``repository.complete_setup`` in a ``profile_storage_session``."""
+    with profile_storage_session(profile_id):
+        return repository.complete_setup(profile_id)
+
+
 def _load(repository: ProfileRepository, profile_id: str):
     """Wrap ``repository.load`` in a ``profile_storage_session``."""
     with profile_storage_session(profile_id):
@@ -644,6 +672,82 @@ def test_load_surfaces_manifest_status_drift(_backend: Path) -> None:
         'status = "tombstoned"',
     )
     assert 'status = "tombstoned"' in corrupted, "manifest status mutation did not apply"
+    target.write_text(corrupted, encoding="utf-8")
+
+    with pytest.raises(ProfileIntegrityError, match="profile physical stores disagree on lifecycle status"):
+        _load(repository, created.profile_id)
+
+
+def test_setup_incomplete_create_persists_across_both_stores(_backend: Path) -> None:
+    """An early-mint ``SETUP_INCOMPLETE`` create is durable in BOTH stores.
+
+    The interactive setup flow mints the profile before completion and a
+    save-and-exit leaves it setup-incomplete; a resume must read that state
+    back. This pins that the birth status survives a cross-store round trip:
+    the encrypted record AND the plaintext manifest mirror both report
+    ``SETUP_INCOMPLETE`` after a fresh reload, and ``load`` does not raise
+    (the two stores agree).
+    """
+    from ....adapters.persistence.storage.bucket import read_manifest
+
+    repository = ProfileRepository()
+    created = _create_setup_incomplete(repository, label="Mid Setup", facts=_VALID_FACTS)
+    assert created.status is UserProfileStatus.SETUP_INCOMPLETE
+
+    loaded = _load(repository, created.profile_id)
+    assert loaded.status is UserProfileStatus.SETUP_INCOMPLETE
+    assert loaded.record.status is UserProfileStatus.SETUP_INCOMPLETE
+    manifest = read_manifest(bucket_paths(_backend, created.profile_id))
+    assert manifest.status is UserProfileStatus.SETUP_INCOMPLETE
+    # Facts persisted at mint survive untouched.
+    assert loaded.record.facts == _VALID_FACTS
+
+
+def test_complete_setup_flips_both_stores_to_active_atomically(_backend: Path) -> None:
+    """``complete_setup`` transitions record AND manifest to ACTIVE together.
+
+    The setup flow's final commit is the one-way exit from the early mint.
+    Both physical surfaces must read ACTIVE after it, and a subsequent
+    ``load`` must not raise (the stores stay in lock-step). The persisted
+    facts are unchanged by the status flip.
+    """
+    from ....adapters.persistence.storage.bucket import read_manifest
+
+    repository = ProfileRepository()
+    created = _create_setup_incomplete(repository, label="Completing", facts=_VALID_FACTS)
+
+    completed = _complete_setup(repository, created.profile_id)
+    assert completed.status is UserProfileStatus.ACTIVE
+    assert completed.record.status is UserProfileStatus.ACTIVE
+
+    loaded = _load(repository, created.profile_id)
+    assert loaded.status is UserProfileStatus.ACTIVE
+    assert loaded.record.status is UserProfileStatus.ACTIVE
+    manifest = read_manifest(bucket_paths(_backend, created.profile_id))
+    assert manifest.status is UserProfileStatus.ACTIVE
+    assert loaded.record.facts == _VALID_FACTS
+
+
+def test_load_surfaces_setup_incomplete_status_drift(_backend: Path) -> None:
+    """Anti-tautology for the setup-incomplete status field.
+
+    Corrupts one store — the plaintext manifest ``status`` — to claim
+    ``active`` while the encrypted record stays ``setup_incomplete`` (the
+    exact drift a crash between :meth:`complete_setup`'s two writes could
+    leave). ``load`` must raise :class:`ProfileIntegrityError`, proving the
+    status is genuinely read from both persisted surfaces and reconciled,
+    never a constant a tautological test would pass regardless.
+    """
+    repository = ProfileRepository()
+    created = _create_setup_incomplete(repository, label="Incomplete Drift", facts=_VALID_FACTS)
+    assert created.status is UserProfileStatus.SETUP_INCOMPLETE
+
+    target = manifest_path(bucket_paths(_backend, created.profile_id))
+    corrupted = target.read_text(encoding="utf-8").replace(
+        'status = "setup_incomplete"',
+        'status = "active"',
+    )
+    assert 'status = "active"' in corrupted, "manifest status mutation did not apply"
     target.write_text(corrupted, encoding="utf-8")
 
     with pytest.raises(ProfileIntegrityError, match="profile physical stores disagree on lifecycle status"):

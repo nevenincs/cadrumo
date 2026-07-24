@@ -67,6 +67,35 @@ def _baseline_with_two_descendants() -> dict[str, str]:
     return {**_baseline_answers(), **_DESCENDANT_ANSWERS}
 
 
+# A maximal descendant fixture exercising EVERY optional per-instance field
+# and both branches of the always-emitted toggles. Instance 0 populates every
+# optional field (adoption, discapacidad grade 33, custodia-compartida true,
+# meses-madre-trabajo, gastos-guarderia, nif); instance 1 is the "disabled"
+# descendant -- discapacidad grade 65 and convivencia false -- closing the
+# conditional-branch gap (grade 65, the convivencia-false projection branch)
+# a prior review named. Adoption dates are valid pairs (>= birth, <= today).
+_MAXIMAL_DESCENDANT_ANSWERS = {
+    "descendientes-count": "2",
+    "descendientes#0.birth-date": "2020-01-15",
+    "descendientes#0.adoption-date": "2021-03-01",
+    "descendientes#0.discapacidad": "33",
+    "descendientes#0.convivencia": "true",
+    "descendientes#0.custodia-compartida": "true",
+    "descendientes#0.meses-madre-trabajo": "6",
+    "descendientes#0.gastos-guarderia": "1200",
+    "descendientes#0.nif": "00000000T",
+    "descendientes#1.birth-date": "2010-06-06",
+    "descendientes#1.discapacidad": "65",
+    "descendientes#1.convivencia": "false",
+    "descendientes#1.custodia-compartida": "false",
+    "descendientes#1.nif": "00000001R",
+}
+
+
+def _baseline_with_maximal_descendants() -> dict[str, str]:
+    return {**_baseline_answers(), **_MAXIMAL_DESCENDANT_ANSWERS}
+
+
 def _store(profile_id: str) -> ProfileFactsCheckpointStore:
     return ProfileFactsCheckpointStore(SETUP_FLOW, profile_id=profile_id, profile_name="operator")
 
@@ -208,3 +237,76 @@ def test_resume_seeding_reinstantiates_the_group_and_round_trips(_backend: Path)
 
     # Completing from the resumed answers reconstructs an identical fact set.
     assert _descendant_facts(dict(state.answers)) == _descendant_facts(_baseline_with_two_descendants())
+
+
+def test_resume_seeding_round_trips_a_maximal_descendant_fixture(_backend: Path) -> None:
+    """Every optional descendant field survives save -> reload -> resume seeding.
+
+    The prior resume test never set discapacidad, custodia-compartida,
+    meses-madre-trabajo, nor the convivencia-false branch. This maximal
+    fixture populates every optional field on instance 0 and adds a
+    "disabled" instance 1 (grade-65 discapacidad, convivencia false), so the
+    conditional emission branches in ``descendant_answers_from_record`` are
+    all exercised through the real encrypted store. Expected values are the
+    saved specification, never a copy of the projection output.
+    """
+    profile_id = new_profile_id()
+    store = _store(profile_id)
+    answers = _baseline_with_maximal_descendants()
+    store.save(SETUP_FLOW.id, answers)
+
+    with profile_storage_session(profile_id):
+        record = workflow_state_repository().load().active_profile_record()
+    seeded = checkpoint_answers_from_record(SETUP_FLOW, record)
+
+    # Instance 0: every optional field round-trips.
+    assert seeded["descendientes-count"] == "2"
+    assert seeded["descendientes#0.birth-date"] == "2020-01-15"
+    assert seeded["descendientes#0.adoption-date"] == "2021-03-01"
+    assert seeded["descendientes#0.discapacidad"] == "33"
+    assert seeded["descendientes#0.convivencia"] == "true"
+    assert seeded["descendientes#0.custodia-compartida"] == "true"
+    assert seeded["descendientes#0.meses-madre-trabajo"] == "6"
+    assert seeded["descendientes#0.gastos-guarderia"] == "1200"
+    assert seeded["descendientes#0.nif"] == "00000000T"
+    # Instance 1: the disabled (grade-65, non-cohabiting) branch round-trips.
+    assert seeded["descendientes#1.birth-date"] == "2010-06-06"
+    assert seeded["descendientes#1.discapacidad"] == "65"
+    assert seeded["descendientes#1.convivencia"] == "false"
+    assert seeded["descendientes#1.custodia-compartida"] == "false"
+    assert seeded["descendientes#1.nif"] == "00000001R"
+
+    # resume_flow re-instantiates both instances against the current
+    # definition, none stale, and re-completing rebuilds an identical fact set.
+    definition = _setup_flow_definition(SETUP_FLOW)
+    state = resume_flow(definition, seeded, mode=FlowMode.CREATE)
+    assert state.instance_counts.get(DESCENDANTS_GROUP_ID) == 2
+    assert not any(key.startswith("descendientes") for key in state.stale)
+    assert _descendant_facts(dict(state.answers)) == _descendant_facts(answers)
+
+
+def test_resume_then_immediate_save_exit_leaves_the_record_identical(_backend: Path) -> None:
+    """Resume then an immediate save-and-exit with zero re-answers is a no-op.
+
+    Loading the seed, re-instantiating through ``resume_flow``, and saving
+    the resumed answer map without answering anything new must leave every
+    on-record fact byte-identical -- the resume projection is a faithful
+    inverse, so a save-exit that changes nothing persists nothing new. A
+    drift here would mean the round-trip silently rewrote a fact.
+    """
+    profile_id = new_profile_id()
+    store = _store(profile_id)
+    store.save(SETUP_FLOW.id, _baseline_with_maximal_descendants())
+    before = _record_values(profile_id)
+
+    # Resume is offered only while SETUP_INCOMPLETE (the save-exit left it so).
+    seeded = store.load(SETUP_FLOW.id)
+    assert seeded is not None
+    definition = _setup_flow_definition(SETUP_FLOW)
+    state = resume_flow(definition, dict(seeded), mode=FlowMode.CREATE)
+
+    # Immediate save-and-exit with no further answers.
+    store.save(SETUP_FLOW.id, dict(state.answers))
+    after = _record_values(profile_id)
+
+    assert after == before

@@ -15,19 +15,19 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ....core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
+from ....core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT, PROVENANCE_SOURCE_MANUAL_CLI
 from ....core.resources import resources
 from ....domain.buckets import BucketEventType
 from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...workflow import WorkflowState
+from ...workflow import WorkflowState, workflow_state_repository
 from .. import (
     CensoDivergence,
     apply_cotejo,
     censo_divergence_notice,
     open_censo_divergences,
 )
-from .._orchestration import profile_create_storage_span, register_active_profile
+from .._orchestration import profile_create_storage_span, register_active_profile, set_active_fields
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -235,3 +235,74 @@ def test_adopt_all_clears_pre_existing_open_divergences(schema: ProfileSchemaDef
         assert open_censo_divergences(record) == ()
         assert censo_divergence_notice(record) is None
         assert _censo_applied_count() == 2
+
+
+def test_divergence_rows_survive_encrypted_reload_with_strict_equality(schema: ProfileSchemaDefinition) -> None:
+    """Roundtrip: two divergence rows survive a FRESH encrypted-store reload.
+
+    The other defer tests read the in-memory ``WorkflowState`` projection;
+    this one reloads the record afresh through the workflow repository, so
+    the assertion exercises the genuine save -> encrypt -> decrypt -> load
+    boundary. Every subfield of both rows is populated NON-DEFAULT: distinct
+    ``axis`` and ``artefact_value`` per row, and ``source`` set to
+    ``PROVENANCE_SOURCE_MANUAL_CLI`` (the non-default vs the
+    ``CensoDivergence.source`` artefact-token default). A save-drops-subfield
+    regression on ``source`` would re-default the reloaded row to the
+    artefact token and break the strict tuple equality below.
+    """
+    with profile_create_storage_span(_PROFILE_ID) as routing_profile_id:
+        state = _register(schema, routing_profile_id)
+        divergences = (
+            CensoDivergence(
+                axis=_ACTIVITY_PATH,
+                artefact_value="Consultoria informatica",
+                source=PROVENANCE_SOURCE_MANUAL_CLI,
+            ),
+            CensoDivergence(
+                axis="contact.fiscal_address",
+                artefact_value="Calle Mayor 1",
+                source=PROVENANCE_SOURCE_MANUAL_CLI,
+            ),
+        )
+        apply_cotejo(state, adopted=(), divergences=divergences)
+
+        # Fresh reload from the encrypted repository -- not the in-memory state.
+        reloaded = workflow_state_repository().load().active_profile_record()
+        assert open_censo_divergences(reloaded) == divergences
+
+
+def test_divergence_read_is_driven_by_persisted_subfields(schema: ProfileSchemaDefinition) -> None:
+    """Anti-tautology: clearing one persisted subfield strictly changes the read.
+
+    Proves the reconstructed divergence set reflects on-disk facts, never a
+    constant. After persisting two rows, one row's ``artefact_value`` subpath
+    is cleared through the canonical ``value=None`` fact-removal seam (the
+    lowest legitimate write, never a mock); a fresh reload then omits that
+    incomplete index, so the reconstructed set strictly differs. If the read
+    were tautological (hardcoded), the clear would not move it.
+    """
+    with profile_create_storage_span(_PROFILE_ID) as routing_profile_id:
+        state = _register(schema, routing_profile_id)
+        divergences = (
+            CensoDivergence(
+                axis=_ACTIVITY_PATH,
+                artefact_value="Consultoria informatica",
+                source=PROVENANCE_SOURCE_MANUAL_CLI,
+            ),
+            CensoDivergence(
+                axis="contact.fiscal_address",
+                artefact_value="Calle Mayor 1",
+                source=PROVENANCE_SOURCE_MANUAL_CLI,
+            ),
+        )
+        state = apply_cotejo(state, adopted=(), divergences=divergences)
+        before = open_censo_divergences(workflow_state_repository().load().active_profile_record())
+        assert before == divergences
+
+        # Remove index 0's artefact_value subfield via the canonical clearing
+        # fact; index 0 becomes incomplete and drops from the reconstruction.
+        set_active_fields(state, (UserProfileFact(path="censo.divergencia.0.artefact_value", value=None),))
+
+        after = open_censo_divergences(workflow_state_repository().load().active_profile_record())
+        assert after != before
+        assert [row.axis for row in after] == ["contact.fiscal_address"]
