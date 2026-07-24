@@ -251,27 +251,35 @@ def check_changelog_is_ready(repo_root: Path) -> ReadinessCheck:
 
 
 def check_no_open_release_blockers(
-    *, repo_slug: str = "nevenincs/cadrumo", gh_executable: str | None = None
+    *, repo_slug: str = "nevenincs/cadrumo", gh_executable: str | None = None, strict: bool = False
 ) -> ReadinessCheck:
     """Confirm no open GitHub issue carries the `priority:P0-blocker` label.
 
-    Advisory: degrades gracefully (reported, non-blocking) when `gh` is
-    absent, unauthenticated, or the network is unreachable, since this check
-    depends on live external state rather than repository content.
+    When `strict` is False (a local/advisory run) this degrades gracefully
+    (reported, non-blocking) when `gh` is absent, unauthenticated, the network
+    is unreachable, or the output is not JSON, since it depends on live external
+    state rather than repository content.
+
+    When `strict` is True (the Gate-2 publish path, which HAS network and must
+    not promote past a blocker it could not see) an inability to DETERMINE the
+    blocker state is itself blocking: a fail-open advisory there would let the
+    gate pass while blind. The escalation is only for *cannot-determine*; a
+    successful query that finds open blockers is blocking in both modes.
 
     `gh_executable` accepts an explicit resolved path (used by tests to
     exercise a real, non-mocked stub executable without depending on the
     host platform's PATH/PATHEXT executable-resolution rules); production
     callers resolve the real `gh` via `shutil.which`.
     """
+    undetermined_severity = "blocking" if strict else "advisory"
+
+    def _undetermined(detail: str) -> ReadinessCheck:
+        prefix = "cannot determine blocker state: " if strict else ""
+        return ReadinessCheck("no-open-release-blockers", undetermined_severity, False, f"{prefix}{detail}")
+
     resolved_gh = gh_executable if gh_executable is not None else shutil.which("gh")
     if resolved_gh is None:
-        return ReadinessCheck(
-            "no-open-release-blockers",
-            "advisory",
-            False,
-            "gh unavailable: not found on PATH",
-        )
+        return _undetermined("gh unavailable: not found on PATH")
     try:
         result = subprocess.run(
             [
@@ -293,28 +301,13 @@ def check_no_open_release_blockers(
             timeout=_GH_TIMEOUT_SECONDS,
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
-        return ReadinessCheck(
-            "no-open-release-blockers",
-            "advisory",
-            False,
-            f"gh unavailable: {exc}",
-        )
+        return _undetermined(f"gh unavailable: {exc}")
     if result.returncode != 0:
-        return ReadinessCheck(
-            "no-open-release-blockers",
-            "advisory",
-            False,
-            f"gh issue list failed (rc={result.returncode}): {result.stderr.strip()[:200]}",
-        )
+        return _undetermined(f"gh issue list failed (rc={result.returncode}): {result.stderr.strip()[:200]}")
     try:
         issues = json.loads(result.stdout or "[]")
     except json.JSONDecodeError:
-        return ReadinessCheck(
-            "no-open-release-blockers",
-            "advisory",
-            False,
-            "gh returned non-JSON output",
-        )
+        return _undetermined("gh returned non-JSON output")
     if issues:
         titles = ", ".join(f"#{i['number']} {i['title']}" for i in issues[:5])
         return ReadinessCheck(
@@ -546,6 +539,8 @@ def check_generated_surface_versions(
         market_zips = sorted(cohort_root.glob("claude/cadrumo-marketplace-*.zip"))
         if not market_zips:
             failures.append("marketplace zip is absent")
+        elif len(market_zips) > 1:
+            failures.append(f"multiple marketplace zips present, cannot bind one: {[z.name for z in market_zips]}")
         else:
             with zipfile.ZipFile(market_zips[0]) as archive:
                 plugin = json.loads(archive.read("plugins/cadrumo/.claude-plugin/plugin.json"))
@@ -562,6 +557,8 @@ def check_generated_surface_versions(
         mcpb_bundles = sorted(cohort_root.glob("mcpb/cadrumo-*.mcpb"))
         if not mcpb_bundles:
             failures.append("mcpb bundle is absent")
+        elif len(mcpb_bundles) > 1:
+            failures.append(f"multiple mcpb bundles present, cannot bind one: {[b.name for b in mcpb_bundles]}")
         else:
             with zipfile.ZipFile(mcpb_bundles[0]) as archive:
                 mcpb_manifest = json.loads(archive.read("manifest.json"))
@@ -610,7 +607,12 @@ def build_report(
         check_latest_packaging_smoke_evidence(root),
     ]
     if not skip_network:
-        checks.append(check_no_open_release_blockers(gh_executable=gh_executable))
+        # The Gate-2 publish path runs against a promoted cohort directory and has
+        # network: there, an inability to determine the blocker state is blocking,
+        # not advisory, so the gate cannot promote past a P0 blocker it could not see.
+        checks.append(
+            check_no_open_release_blockers(gh_executable=gh_executable, strict=cohort_directory is not None),
+        )
     return ReadinessReport(checks=tuple(checks))
 
 
