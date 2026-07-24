@@ -522,7 +522,7 @@ application:
           d'autenticació.
         dangling_active_profile: El punter de perfil actiu '%{active_profile}' no
           resol a un bucket de perfil registrat. Executa aeat config profile list
-          per inspeccionar els perfils registrats i després aeat config switch NAME
+          per inspeccionar els perfils registrats i després aeat config login NAME
           o aeat config profile create NAME.
         no_active_bucket: No hi ha cap perfil actiu; executa `aeat config profile
           create NAME` abans de configurar l'autenticació.
@@ -621,8 +621,8 @@ application:
         confirmació explícita.
       archive_schema_version_from_future: La versió d'esquema de l'arxiu {archive_schema_version}
         és més recent del que admet aquesta aplicació (fins a {max_supported}).
-      delete_active_bucket: No es pot eliminar el bucket actiu; canvia primer a un
-        altre perfil amb aeat config switch NAME.
+      delete_active_bucket: No es pot eliminar el bucket actiu; inicia primer la sessió
+        en un altre perfil amb aeat config login NAME.
       delete_not_confirmed: Aquesta operació és destructiva. Torna a executar-la amb
         --yes per confirmar.
       import_bucket_collision: Ja existeix un bucket amb l'id {bucket_id}; usa --force-replace
@@ -1510,7 +1510,7 @@ application:
         l'esquema de perfil d'usuari.
       no_active_profile_selected: No hi ha cap perfil actiu seleccionat.
       profile_already_exists: El perfil '%{profile}' ja existeix; executa aeat config
-        switch NAME per activar-lo o aeat config profile delete NAME primer.
+        login NAME per activar-lo o aeat config profile delete NAME primer.
       profile_bucket_directory_removal_failed: No s'ha pogut eliminar el directori
         del perfil.
       profile_create_route_mismatch: La ruta de creació de perfil '%{route}' no coincideix
@@ -3363,7 +3363,7 @@ cli:
         non_interactive: 'L''inici de sessió de Google necessita un terminal interactiu
           amb navegador web, però aquesta ordre s''ha executat de manera no interactiva:
           {detail}'
-        profile_unbound: No hi ha cap perfil actiu. Executa aeat config switch NAME
+        profile_unbound: No hi ha cap perfil actiu. Executa aeat config login NAME
           o indica --profile.
         scope_insufficient: L'accés concedit a Google no inclou els permisos necessaris.
           Executa `aeat config google login` i accepta tots els permisos.
@@ -3524,7 +3524,7 @@ cli:
         help: Fes còpia de seguretat i restaura un perfil com a arxiu segellat i xifrat
           AEAD (el transport de recuperació de custòdia completa).
         import_active_switch_info: El perfil restaurat és ara el perfil ACTIU; les
-          ordres següents hi operen. Executa 'aeat config switch <nom>' per canviar
+          ordres següents hi operen. Executa 'aeat config login <nom>' per canviar
           el perfil actiu.
         import_force_help: Sobreescriu un perfil existent que comparteixi l'identificador
           de bucket de l'arxiu.
@@ -3586,7 +3586,7 @@ cli:
         <NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
       create_help: Inicialitza un perfil actiu nou.
       delete_active_cleared: El perfil eliminat era l'actiu; el punter de perfil actiu
-        s'ha esborrat. Executa aeat config switch NAME o aeat config profile create
+        s'ha esborrat. Executa aeat config login NAME o aeat config profile create
         NAME per tornar a treballar.
       delete_help: Elimina un perfil i el seu estat local; --yes confirma
       delete_name_help: Nom del perfil que vols eliminar
@@ -3666,8 +3666,8 @@ cli:
       history_until_help: Filtrar l'historial a esdeveniments en o abans d'aquesta
         marca ISO-8601 (p. ex. 2026-04-30T23:59:59+00:00)
       import_active_switch_info: El perfil importat {name} ara és el perfil ACTIU;
-        les ordres següents operen sobre ell. Executa 'aeat config switch <name>'
-        per canviar el perfil actiu.
+        les ordres següents operen sobre ell. Executa 'aeat config login <name>' per
+        canviar el perfil actiu.
       import_encrypted_bundle_invalid: No s'ha pogut desxifrar o validar el paquet
         de perfil xifrat. Comprova la frase de contrasenya i el fitxer.
       import_help: Registra un paquet portable de perfil des d'un fitxer
@@ -6119,7 +6119,7 @@ errors:
     locked_storage_bucket_busy: El bucket d'emmagatzematge l'està utilitzant un altre
       procés. Espera que aquest procés acabi i torna-ho a provar.
     locked_storage_bucket_session: Aquesta operació requereix un bucket d'emmagatzematge
-      desbloquejat. Executa `aeat config switch` i torna-ho a provar.
+      desbloquejat. Executa `aeat config login NAME` i torna-ho a provar.
     locked_storage_lock_acquisition: No s'ha pogut obtenir el bloqueig exclusiu de
       fitxer dins del temps d'espera. Un altre procés el reté; espera i torna-ho a
       provar.
@@ -6133,7 +6133,7 @@ errors:
     auth_profile_identity_mismatch: La identitat del perfil actiu no pot ser titular
       de la sessió d'autenticació sol·licitada.
     bootstrap_already_complete: L'arrencada de l'emmagatzematge segur ja està completa.
-      Fes servir aeat config switch NAME per activar un perfil existent o aeat config
+      Fes servir aeat config login NAME per activar un perfil existent o aeat config
       profile create NAME per afegir-ne un altre.
     ledger_preflight: La comprovació prèvia del llibre ha rebutjat l'execució del
       model perquè encara no es pot presentar.
@@ -6206,11 +6206,11 @@ errors:
     modelo_work_selector_revision_conflict: La unitat de treball de modelo seleccionada
       pertany a una altra revisió.
     profile_already_registered: Ja existeix un perfil amb aquest nom. Fes servir aeat
-      config switch NAME per canviar-hi.
+      config login NAME per iniciar-hi la sessió.
     profile_import_collision: L'identificador del perfil importat coincideix amb un
       que ja existeix.
     profile_locked: Aquesta operació requereix un perfil desbloquejat. Executa `aeat
-      config switch` i torna-ho a provar.
+      config login NAME` i torna-ho a provar.
     profile_name_collision: El nom de perfil indicat ja s'està utilitzant. Tria un
       nom diferent.
     reconciliation_cross_bucket: La unitat de treball apuntada pertany a un bucket
@@ -6451,13 +6451,13 @@ errors:
     refused_storage_bucket_no_active: No s'ha pogut determinar cap bucket actiu. Selecciona
       un perfil i torna-ho a provar.
     refused_storage_master_key_no_active_session: El xifratge requereix una sessió
-      activa. Executa `aeat config switch` i torna-ho a provar.
+      activa. Executa `aeat config login NAME` i torna-ho a provar.
     refused_storage_passphrase_too_short: La frase de contrasenya és massa curta.
       Ha de tenir com a mínim 8 caràcters.
     refused_storage_secret_already_exists: Ja existeix un secret amb aquesta clau.
       Fes servir l'opció de sobreescriptura si el vols reemplaçar.
     refused_storage_session_expired: La sessió activa ha caducat per inactivitat.
-      Torna a activar-la amb aeat config switch NAME.
+      Torna a activar-la amb aeat config login NAME.
     refused_storage_unsecured_mode: L'emmagatzematge sense xifrar s'ha sol·licitat
       sense l'habilitació necessària. No és segur per a dades reals.
     refused_taxation_comparison: La comparació tributària conjunta/individual no es
@@ -6530,7 +6530,7 @@ errors:
       cold_bootstrap_explicit_database_refused: L'emmagatzematge d'arrencada en fred
         no pot ometre una ruta de base de dades explícita.
       no_active_session: No hi ha cap sessió de bucket activa. Executa aeat config
-        switch NAME per desbloquejar un perfil.
+        login NAME per desbloquejar un perfil.
       no_detail: No s'ha informat cap detall de preparació.
       not_ready: 'El runtime d''emmagatzematge no està preparat per a emmagatzematge
         vinculat al perfil: %{details}'
@@ -6541,9 +6541,9 @@ errors:
       session_changed: La sessió de bucket activa ha canviat. Torna a desbloquejar
         el perfil de destinació.
       session_expired: La sessió de bucket activa ha caducat. Executa aeat config
-        switch NAME per reactivar el perfil.
+        login NAME per reactivar el perfil.
       session_sealed: La sessió de bucket activa està segellada. Executa aeat config
-        switch NAME per reactivar el perfil.
+        login NAME per reactivar el perfil.
       unsecured_backend: La sessió de bucket activa fa servir el backend no segur.
         L'emmagatzematge de producció vinculat al perfil requereix custòdia de fitxer
         o anell de claus.
