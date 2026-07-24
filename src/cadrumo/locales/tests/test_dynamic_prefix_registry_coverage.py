@@ -1,0 +1,263 @@
+"""Structural gate: every dynamic translation prefix is registry-covered or allowlisted.
+
+The recurring blind spot this gate closes: a ``tr()`` call site that builds
+its key over a *bounded* enumeration at runtime (an f-string like
+``f"flows.status.profiles.status.{status}"`` or a concatenation like
+``tr("cli.registry.metrics." + key)``) is invisible to the literal-key
+scanner. The AST scanner emits a ``<prefix>.*`` namespace marker for such a
+site, and the parity check merely asserts that *at least one* concrete
+catalogue leaf exists under that prefix. That is not enough: if the concrete
+leaves are only ever authored by hand, a catalogue strip (or a new enum member)
+silently drops them, and nothing re-materialises them on scaffold. The
+bounded-enumeration fix is an :class:`FStringKeyRegistration` in
+:mod:`locales._fstring_registry`, whose expanded keys scaffold re-inserts on
+every run.
+
+This gate makes that fix non-optional. Every namespace marker the scanner emits
+across ``src/cadrumo`` MUST be either:
+
+* **(a) registry-covered** — expanded by at least one
+  :class:`FStringKeyRegistration` whose generated concrete keys fall under the
+  marker's prefix; or
+* **(b) explicitly allowlisted** — declared in :data:`OPEN_ENDED_NAMESPACES`
+  below, each entry carrying a stated reason why the value space is not a
+  bounded import-time enumeration (a profile fact path, a registry-driven
+  predicate id, a runtime metric name, and the like).
+
+A marker in neither set reds this gate with an instructive message naming the
+site's prefix and pointing at :mod:`locales._fstring_registry`. The allowlist
+ratchets like the lazy-import policy gate: adding an entry is a reviewed edit
+that must justify why the namespace cannot be registered.
+
+The incident this campaign hit three times is pinned at the bottom: the
+status-page lifecycle labels expand exactly the ``UserProfileStatus`` values,
+and the verdict-factory and required/optional badge keys stay scanner-visible.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+from ...domain.user_profile import UserProfileStatus
+from .._ast_scanner import scan_namespace_markers, scan_source_tree
+from .._fstring_registry import get_registered_keys
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+# The source tree the scanner walks: ``src/cadrumo`` (parents[2] of this file,
+# which sits at ``src/cadrumo/locales/tests/``).
+_SRC_ROOT = Path(__file__).resolve().parents[2]
+
+
+# ---------------------------------------------------------------------------
+# Open-ended namespace allowlist
+# ---------------------------------------------------------------------------
+#
+# Each entry maps a scanner prefix (the ``<prefix>`` of a ``<prefix>.*`` marker,
+# with the trailing ``.*`` stripped) to the reason its value space is NOT a
+# bounded import-time enumeration and therefore cannot be materialised by an
+# FStringKeyRegistration. A bounded namespace does NOT belong here — register it
+# in ``locales/_fstring_registry.py`` instead so scaffold re-inserts its keys.
+#
+# This allowlist ratchets: adding a line is a reviewed edit that must state why
+# the namespace is genuinely open-ended.
+OPEN_ENDED_NAMESPACES: dict[str, str] = {
+    "profile.keys": (
+        "profile.keys.{question.profile_key} — keyed by the wizard question's "
+        "profile fact path (application/wizard/_compiler.py). The fact-path "
+        "space is the open-ended profile schema, not a bounded enum."
+    ),
+    "profile.validation": (
+        "profile.validation.{issue.code} — keyed by profile-readiness issue "
+        "codes surfaced at runtime (application/modelo/_profile_readiness_gate.py). "
+        "Issue codes are raised ad hoc by the readiness gate, not a bounded enum."
+    ),
+    "application.modelo.findings": (
+        "application.modelo.findings.{predicate_id} — keyed by registry "
+        "verification-predicate ids (application/modelo/_verification_predicates.py). "
+        "The predicate set is registry-data-driven per modelo revision, not a "
+        "bounded import-time enum."
+    ),
+    "cli.registry.metrics": (
+        "cli.registry.metrics.{key} — keyed by runtime registry-metric names "
+        "(entrypoints/cli/registry.py). Metric keys are computed from live "
+        "registry state, not a bounded enum."
+    ),
+    "cli.config.auth.apoderado.scope": (
+        "cli.config.auth.apoderado.scope.{code} — keyed by apoderado scope "
+        "catalogue codes (entrypoints/cli/_config/_apoderado.py). The scope "
+        "vocabulary is loaded from data, not a bounded import-time enum."
+    ),
+    "sheets.detalle.headers": (
+        "sheets.detalle.headers.{row_field} — keyed by binding row-field names "
+        "with a tr(..., default=binding.id) fallback "
+        "(application/storage/calc_sheets/_engine.py). The header space is "
+        "binding-driven and the default makes a catalogue leaf optional."
+    ),
+    "topic": (
+        "topic.{slug}.title / topic.{slug}.body — keyed by topic slugs loaded "
+        "from the bundled topic data files (core/topics/__init__.py). Slugs are "
+        "data-driven, not a bounded import-time enum."
+    ),
+    "wizard.errors": (
+        "wizard.errors.{reason} — keyed by ad-hoc reason tokens passed at "
+        "widget-validation call sites (application/wizard/_widgets.py). The "
+        "reason strings are literals chosen per call site, authored directly in "
+        "the catalogues, not a bounded import-time enum."
+    ),
+}
+
+
+def _marker_prefix(marker: str) -> str:
+    """Return the dotted prefix of a ``<prefix>.*`` namespace marker."""
+    return marker.rstrip("*").rstrip(".")
+
+
+def _registry_covers(prefix: str, registered_keys: frozenset[str]) -> bool:
+    """Return True when some registered key falls under ``prefix``.
+
+    A registered key ``K`` falls under ``prefix`` when ``prefix`` is a
+    dot-bounded ancestor path of ``K`` (matching both top-level and
+    wrapper-wrapped placement), i.e. the registration expands into concrete
+    keys inside the marker's namespace.
+    """
+    needle = f".{prefix}."
+    return any(needle in f".{key}." for key in registered_keys)
+
+
+def test_every_dynamic_prefix_is_registry_covered_or_allowlisted() -> None:
+    """No dynamic translation prefix may be bounded-but-unregistered.
+
+    Every ``<prefix>.*`` marker the AST scanner emits across ``src/cadrumo``
+    must be registry-covered (an FStringKeyRegistration expands keys under it)
+    or explicitly allowlisted in ``OPEN_ENDED_NAMESPACES``. A marker in neither
+    set is a bounded dynamic key site with no registration — the exact blind
+    spot that has silently dropped locale leaves three times this campaign.
+    """
+    markers = scan_namespace_markers(_SRC_ROOT)
+    assert markers, (
+        "scan_namespace_markers(src/cadrumo) returned no markers. The namespace "
+        "scanner is broken or misconfigured; fix it rather than passing this gate "
+        "vacuously."
+    )
+
+    registered_keys = frozenset(get_registered_keys())
+    assert registered_keys, (
+        "get_registered_keys() returned an empty set. The f-string registry is "
+        "broken; fix it rather than passing this gate vacuously."
+    )
+
+    uncovered: list[str] = []
+    for marker in sorted(markers):
+        prefix = _marker_prefix(marker)
+        if not prefix:
+            continue
+        if _registry_covers(prefix, registered_keys):
+            continue
+        if prefix in OPEN_ENDED_NAMESPACES:
+            continue
+        uncovered.append(prefix)
+
+    if uncovered:
+        detail = "\n".join(
+            f"  - {prefix!r}: dynamic tr() prefix with no FStringKeyRegistration and no OPEN_ENDED_NAMESPACES entry"
+            for prefix in uncovered
+        )
+        pytest.fail(
+            "Dynamic translation prefix(es) are neither registry-covered nor "
+            "allowlisted:\n"
+            f"{detail}\n\n"
+            "If the tail is a BOUNDED enumeration, add an FStringKeyRegistration "
+            "to src/cadrumo/locales/_fstring_registry.py so scaffold "
+            "re-materialises every concrete key. If the value space is genuinely "
+            "OPEN-ENDED, add a reason-carrying entry to OPEN_ENDED_NAMESPACES in "
+            "this gate stating why it cannot be registered."
+        )
+
+
+def test_allowlist_entries_are_live_and_reasoned() -> None:
+    """Every allowlisted prefix is still emitted and carries a real reason.
+
+    Anti-rot for the ratchet: an ``OPEN_ENDED_NAMESPACES`` entry whose marker no
+    longer appears in the tree is dead weight and must be removed; an entry with
+    an empty reason defeats the purpose of the allowlist.
+    """
+    emitted_prefixes = {_marker_prefix(marker) for marker in scan_namespace_markers(_SRC_ROOT)}
+    registered_keys = frozenset(get_registered_keys())
+
+    stale = sorted(prefix for prefix in OPEN_ENDED_NAMESPACES if prefix not in emitted_prefixes)
+    assert not stale, (
+        f"OPEN_ENDED_NAMESPACES carries prefix(es) the scanner no longer emits; remove the dead entries: {stale}"
+    )
+
+    empty_reasons = sorted(prefix for prefix, reason in OPEN_ENDED_NAMESPACES.items() if not reason.strip())
+    assert not empty_reasons, f"OPEN_ENDED_NAMESPACES entries carry no reason: {empty_reasons}"
+
+    # An allowlisted namespace that has BECOME registry-covered should graduate
+    # out of the allowlist rather than live in both sets.
+    redundant = sorted(prefix for prefix in OPEN_ENDED_NAMESPACES if _registry_covers(prefix, registered_keys))
+    assert not redundant, (
+        "OPEN_ENDED_NAMESPACES prefix(es) are now registry-covered; drop the "
+        f"allowlist entry and rely on the registration: {redundant}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Seed incidents — the three blind-spot fires this campaign already paid for
+# ---------------------------------------------------------------------------
+
+
+def test_status_page_registration_expands_exactly_user_profile_status() -> None:
+    """Incident 3: flows.status.profiles.status.* expands the UserProfileStatus set.
+
+    The status-page lifecycle labels are built by
+    ``f"flows.status.profiles.status.{status.value}"`` and were caught only after
+    a live English render. The registration must expand to exactly the
+    ``UserProfileStatus`` members — no more (dead leaves), no fewer (silent
+    blanks) — so a new lifecycle state cannot ship unlocalised.
+    """
+    registered_keys = get_registered_keys()
+    expanded = {key for key in registered_keys if key.startswith("flows.status.profiles.status.")}
+    expected = {f"flows.status.profiles.status.{member.value}" for member in UserProfileStatus}
+    assert expanded == expected, (
+        "flows.status.profiles.status.* registration is out of sync with "
+        f"UserProfileStatus.\n  registered: {sorted(expanded)}\n  expected:   {sorted(expected)}\n"
+        "Update the registration in src/cadrumo/locales/_fstring_registry.py."
+    )
+
+
+def test_verdict_factory_keys_remain_scanner_visible() -> None:
+    """Incident 1: ValidationVerdict.failed("flows.errors.*") keys stay collected.
+
+    The flow substrate declares its operator-facing message key as the first
+    positional argument to ``ValidationVerdict.failed(...)`` — not a tr() call
+    or a message_key kwarg — so the scanner needs first-class collection or the
+    authored leaves are pruned as orphans. Assert the real verdict keys are in
+    the concrete-key scan.
+    """
+    concrete_keys = scan_source_tree(_SRC_ROOT)
+    for key in ("flows.errors.blank_required", "flows.errors.invalid_confirm"):
+        assert key in concrete_keys, (
+            f"{key!r} is not collected by scan_source_tree — the "
+            "ValidationVerdict.failed() first-positional collection regressed "
+            "(see locales/_ast_scanner.py)."
+        )
+
+
+def test_required_optional_badge_keys_remain_scanner_visible() -> None:
+    """Incident 2: the required/optional badge pair stays collected via its constant.
+
+    The badge keys are selected behind a variable ``tr()`` call the scanner
+    cannot see, so they are centralised in a ``*_LOCALE_KEYS`` constant that the
+    AST constant-registry collector picks up. Assert both keys are in the
+    concrete-key scan so a catalogue strip cannot silently drop them.
+    """
+    concrete_keys = scan_source_tree(_SRC_ROOT)
+    for key in ("flows.progress.required", "flows.progress.optional"):
+        assert key in concrete_keys, (
+            f"{key!r} is not collected by scan_source_tree — the "
+            "_*_LOCALE_KEYS constant collection regressed (see "
+            "locales/_ast_scanner.py._extract_locale_constant_keys)."
+        )
