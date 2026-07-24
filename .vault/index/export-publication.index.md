@@ -17,6 +17,8 @@ related:
   - '[[2026-07-17-export-publication-S09]]'
   - '[[2026-07-17-export-publication-S10]]'
   - '[[2026-07-17-export-publication-S11]]'
+  - '[[2026-07-17-export-publication-S12]]'
+  - '[[2026-07-17-export-publication-S13]]'
   - '[[2026-07-17-export-publication-adr]]'
   - '[[2026-07-17-export-publication-audit]]'
   - '[[2026-07-17-export-publication-plan]]'
@@ -51,6 +53,8 @@ Auto-generated index of all documents tagged with `#export-publication`.
 - `2026-07-17-export-publication-S09` - Regenerate the operator reference pages for portable export and subject access from the frozen live surface
 - `2026-07-17-export-publication-S10` - Gated requirement surfaced by the export durable-layer review, latent until S07 wires both export doors through the shared service: make reconcile_prepared_exports hold the per-destination lock (or a repository lock spanning staged-temp removal and journal delete) per operation, or guarantee the S07 call site runs reconcile only at exclusive startup, so a reconcile concurrent with a live same-target export cannot unlink the live staged temp and spuriously fail os.replace with a ProfileExportError
 - `2026-07-17-export-publication-S11` - Decide and implement whether a crash after os.replace succeeds but before the PROFILE_EXPORTED audit event eventually emits that event: adopt the three-phase journal (PREPARED, then replace plus fsync transitioning to COMPLETED, then emit the event, with reconcile completing a COMPLETED-but-eventless operation), closing the un-audited data-egress window and wiring the currently-dead COMPLETED operation-state enum, a data-egress audit-completeness posture item with limited privacy impact (a local file at the operator own path, not remote transmission), gated on no durably-published bundle lacking a PROFILE_EXPORTED event after reconcile
+- `2026-07-17-export-publication-S12` - Wire the built crash-recovery reconciliation into the production publication path so a crashed export's orphan operation journal and its cleartext staged temporary file are cleared by an operator-reachable code path rather than only by the test harness, choosing the trigger from how the journal and staged temp are actually keyed
+- `2026-07-17-export-publication-S13` - Make the personal-data category derivation exhaustive by construction so a new portable-bundle schema field cannot silently vanish from the subject-access disclosure, classifying every bundle field as category-mapped, envelope metadata, or carried-namespace derived and refusing an unclassified field, gated on a non-tautological test that enumerates the model's own fields and proves an unmapped field fails
 
 ### plan
 
