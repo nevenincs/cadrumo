@@ -5,7 +5,9 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import os
 import shutil
+import stat
 import subprocess
 import sys
 import tomllib
@@ -200,6 +202,58 @@ def test_bootstrap_guards_the_minimum_uv_for_constraint_dependencies(tmp_path: P
     namespace = _load_bootstrap_namespace(tmp_path)
     assert callable(namespace["_require_min_uv"])
     assert callable(namespace["_uv_version_triple"])
+
+
+def test_bootstrap_require_min_uv_refuses_a_below_floor_uv(tmp_path: Path) -> None:
+    """A real uv launcher reporting a below-floor version drives the guard to SystemExit.
+
+    Executing the guard against a launcher that prints ``uv 0.1.0`` proves the
+    version comparison end to end (subprocess + parse + compare), so a ``<``/``>``
+    inversion is detectable: an inverted comparison would stop refusing 0.1.0.
+    """
+    (tmp_path / "src").mkdir(parents=True)
+    namespace = _load_bootstrap_namespace(tmp_path)
+    require_min_uv = cast("Callable[[str], None]", namespace["_require_min_uv"])
+    launcher = tmp_path / ("uv_stub" + (".cmd" if os.name == "nt" else ""))
+    if os.name == "nt":
+        launcher.write_text("@echo off\r\necho uv 0.1.0\r\n", encoding="utf-8")
+    else:
+        launcher.write_text('#!/bin/sh\necho "uv 0.1.0"\n', encoding="utf-8")
+        launcher.chmod(launcher.stat().st_mode | stat.S_IXUSR | stat.S_IRUSR)
+
+    with pytest.raises(SystemExit) as excinfo:
+        require_min_uv(str(launcher))
+    message = str(excinfo.value)
+    assert cast("str", BUILD._MIN_UV_VERSION) in message
+    assert "0.1.0" in message
+
+
+def test_bootstrap_require_min_uv_accepts_an_at_or_above_floor_uv(tmp_path: Path) -> None:
+    """A launcher reporting a version above the floor passes without SystemExit."""
+    (tmp_path / "src").mkdir(parents=True)
+    namespace = _load_bootstrap_namespace(tmp_path)
+    require_min_uv = cast("Callable[[str], None]", namespace["_require_min_uv"])
+    launcher = tmp_path / ("uv_ok" + (".cmd" if os.name == "nt" else ""))
+    if os.name == "nt":
+        launcher.write_text("@echo off\r\necho uv 99.0.0\r\n", encoding="utf-8")
+    else:
+        launcher.write_text('#!/bin/sh\necho "uv 99.0.0"\n', encoding="utf-8")
+        launcher.chmod(launcher.stat().st_mode | stat.S_IXUSR | stat.S_IRUSR)
+
+    require_min_uv(str(launcher))  # must not raise
+
+
+def test_load_manifest_refuses_a_divergent_committed_author(tmp_path: Path) -> None:
+    """The --check template gate refuses a committed author that is not the derived product author."""
+    data = json.loads(Path(cast("Path", BUILD._MANIFEST)).read_text(encoding="utf-8"))
+    author = cast("dict[str, object]", data["author"])
+    author["name"] = "Someone Else"
+    divergent = tmp_path / "manifest.json"
+    divergent.write_text(json.dumps(data), encoding="utf-8")
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(BUILD, "_MANIFEST", divergent)
+        with pytest.raises(BUILD.ManifestError, match="must be the derived product author"):
+            BUILD.load_manifest()
 
 
 def test_constraints_header_states_the_minimum_uv_floor() -> None:
