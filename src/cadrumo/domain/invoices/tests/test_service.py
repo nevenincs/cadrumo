@@ -25,6 +25,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from ....core import LinkInconsistencyDirection
 from .._service import (
     LinkInconsistency,
     ReconciliationSuggestion,
@@ -58,7 +59,7 @@ def test_service_records_accept_64_char_transaction_id() -> None:
     inconsistency = LinkInconsistency(
         transaction_id=_SAMPLE_HEX_64,
         invoice_id="INV-1",
-        direction="invoice-only",
+        direction=LinkInconsistencyDirection.INVOICE_ONLY,
     )
     assert inconsistency.transaction_id == _SAMPLE_HEX_64
 
@@ -89,7 +90,7 @@ def test_service_records_reject_noncanonical_transaction_ids() -> None:
         LinkInconsistency(
             transaction_id="raw-12345",
             invoice_id="INV-1",
-            direction="invoice-only",
+            direction=LinkInconsistencyDirection.INVOICE_ONLY,
         )
 
     # Test LinkInconsistency with too-long transaction_id
@@ -97,7 +98,7 @@ def test_service_records_reject_noncanonical_transaction_ids() -> None:
         LinkInconsistency(
             transaction_id=_SAMPLE_HEX_64 + "x",
             invoice_id="INV-1",
-            direction="transaction-only",
+            direction=LinkInconsistencyDirection.TRANSACTION_ONLY,
         )
 
 
@@ -109,5 +110,5 @@ def test_link_inconsistency_invoice_id_remains_non_empty_required() -> None:
         LinkInconsistency(
             invoice_id="",
             transaction_id=_SAMPLE_HEX_64,
-            direction="invoice-only",
+            direction=LinkInconsistencyDirection.INVOICE_ONLY,
         )

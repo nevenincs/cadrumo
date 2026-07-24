@@ -76,6 +76,7 @@ from ._config_state_root import FormerProductStateError
 from ._google_credential_source import GoogleCredentialSourceKind
 from ._hex import HEX_PATTERN_64, HEX_PATTERN_128
 from ._iban import IBAN_SHAPE_RE, iban_mod_97
+from ._invoice_link import LinkInconsistencyDirection
 from ._irnr import (
     FETCH_GATED_M210_TIPO_RENTA_CODES,
     M210_TIPO_RENTA_CODE_PROJECTION,
@@ -224,6 +225,7 @@ __all__: list[str] = [
     "IntracomOperationType",
     "LedgerSortField",
     "LedgerSortOrder",
+    "LinkInconsistencyDirection",
     "M210GrossIncomeSourceMode",
     "M210PayerMode",
     "MissingOptionalExtraError",

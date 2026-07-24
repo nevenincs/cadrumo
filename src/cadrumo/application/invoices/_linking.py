@@ -97,6 +97,21 @@ def link_invoice_transaction_repositories(
     cannot come to rest in the one-sided state
     :func:`~cadrumo.domain.invoices.verify_link_consistency` reports.
 
+    Args:
+        bucket_id: Profile bucket owning both catalogues.
+        invoice_id: Identifier of the invoice to link.
+        transaction_id: Identifier of the transaction to link, resolved to its
+            canonical catalogue form before linking.
+        invoice_repository: The concrete :class:`InvoiceCatalogueRepository`,
+            constructed for ``bucket_id`` when omitted.
+        transaction_repository: The concrete
+            :class:`TransactionCatalogueRepository`, constructed for
+            ``bucket_id`` when omitted.
+
+    Both repositories are the concrete adapters rather than the domain
+    protocols, because this writer calls the co-commit escape hatches the
+    protocols do not declare.
+
     Returns an :class:`InvoiceTransactionLinkResult` with the updated
     invoice and transaction catalogues after the link is written.
     """

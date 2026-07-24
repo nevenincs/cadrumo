@@ -12,6 +12,7 @@ import pytest
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....application.invoices import link_invoice_transaction_repositories
+from ....core import LinkInconsistencyDirection
 from ....tests.secure_sql import isolated_runtime_profile
 from ...iva import InvoiceKind
 from ...transactions import (
@@ -267,7 +268,7 @@ def test_verify_link_consistency_detects_one_sided_links() -> None:
         TransactionCatalogue.from_transactions([transaction]),
     )
     directions = {item.direction for item in inconsistencies}
-    assert {"invoice-only", "transaction-only"} <= directions
+    assert {LinkInconsistencyDirection.INVOICE_ONLY, LinkInconsistencyDirection.TRANSACTION_ONLY} <= directions
     assert any(item.transaction_id == hex_a for item in inconsistencies)
     assert any(item.transaction_id == transaction.transaction_id for item in inconsistencies)
 

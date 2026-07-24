@@ -46,6 +46,7 @@ from ...domain.categories import (
     SpendingCategory,
     SpendingCategoryFamily,
 )
+from ...domain.invoices import LinkInconsistency
 from ...domain.transactions import Transaction, ledger_irpf_category_catalogue
 from ._common import (
     _bad,
@@ -391,8 +392,13 @@ def _register_ledger_categories_command(app: typer.Typer) -> None:
         )
 
 
-def _link_inconsistency_notices(rows: list[dict[str, object]]) -> list[Notice]:
+def _link_inconsistency_notices(rows: tuple[LinkInconsistency, ...]) -> list[Notice]:
     """Return the warning notice for one-sided invoice links, or nothing.
+
+    Takes the typed :class:`~cadrumo.domain.invoices.LinkInconsistency` rows
+    rather than a serialised mapping, so the closed ``direction`` axis and the
+    identifiers stay typed up to the envelope, mirroring how the readiness
+    issues are carried alongside them.
 
     The rows themselves are primary result data on the check payload; this is
     the incidental diagnostic that tells the operator the association is
@@ -452,7 +458,7 @@ def _register_ledger_check_command(app: typer.Typer) -> None:
         """Surface ledger anomalies and broken invoice links without mutating state."""
         from ...application.invoices import verify_invoice_repository_links
         from ...application.ledger import LedgerPreflightIssue, preflight_transaction_catalogue
-        from ._ledger_payloads import LedgerCheckResult
+        from ._ledger_payloads import LedgerCheckResult, LedgerLinkInconsistencyPayload
 
         if bucket_id_option is not None:
             transaction_repository = TransactionCatalogueRepository(bucket_id=bucket_id_option)
@@ -463,11 +469,23 @@ def _register_ledger_check_command(app: typer.Typer) -> None:
         # Link integrity is a whole-bucket property of the two catalogues, not a
         # per-period readiness fact, so it is resolved once and reported by every
         # branch below regardless of the --period narrowing.
-        link_rows = [row.model_dump(mode="json") for row in verify_invoice_repository_links(bucket_id=bucket_id)]
-        link_lines = [
-            f"link_inconsistency\t{row['invoice_id']}\t{row['transaction_id']}\t{row['direction']}" for row in link_rows
+        link_inconsistencies = verify_invoice_repository_links(bucket_id=bucket_id)
+        # Projected as typed payload rows rather than serialised mappings so the
+        # closed ``direction`` axis reaches the envelope as an enum member; the
+        # strict payload model refuses a bare string here by design.
+        link_rows = [
+            LedgerLinkInconsistencyPayload(
+                invoice_id=row.invoice_id,
+                transaction_id=row.transaction_id,
+                direction=row.direction,
+            )
+            for row in link_inconsistencies
         ]
-        link_notices = _link_inconsistency_notices(link_rows)
+        link_lines = [
+            f"link_inconsistency\t{row.invoice_id}\t{row.transaction_id}\t{row.direction.value}"
+            for row in link_inconsistencies
+        ]
+        link_notices = _link_inconsistency_notices(link_inconsistencies)
         canonical_period = _optional_canonical_period(period, year=year)
         if canonical_period is not None:
             report = preflight_transaction_catalogue(
