@@ -46,6 +46,13 @@ class BusinessInvoiceRecordPayload(OutputSchema):
     site for mutation verbs (defaults to empty for read verbs). The
     ``source_kind`` field carries the persisted ``payable_invoice`` /
     ``collectible_invoice`` taxonomy value selected by ``--kind``.
+
+    ``fx_rate`` / ``fx_rate_date`` mirror the euro-conversion stamp the
+    record carries for a foreign-currency invoice; both are ``None`` for a
+    EUR invoice and for a foreign invoice whose ECB rate could not be
+    resolved (which is withheld from modelo projection rather than declared
+    at face value). Surfacing them keeps the conversion provenance visible
+    on the operator payload instead of dropping it at the CLI boundary.
     """
 
     invoice_id: str
@@ -60,6 +67,8 @@ class BusinessInvoiceRecordPayload(OutputSchema):
     iva_rate: str | None = None
     iva_amount: str
     total_amount: str
+    fx_rate: str | None = None
+    fx_rate_date: str | None = None
     notes: str = ""
     country_code: str | None = None
     eu_iva_id: str | None = None
