@@ -42,6 +42,7 @@ from prompt_toolkit.input import create_pipe_input
 from prompt_toolkit.output.plain_text import PlainTextOutput
 from pydantic import BaseModel
 
+from ....core.config import override_settings
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ....core.i18n import tr
 from ....core.json_contract import NoticeSeverity
@@ -178,8 +179,16 @@ def test_interactive_edit_command_surfaces_the_staging_honesty_notice(
     A profile is created, then re-walked with an edit script; the modify
     run's text output must carry the staging-honesty message so an operator
     who never pressed save still learns staged edits are discarded on an
-    interrupted modify. The output language is held at ``en`` across both
-    walks so the assertion is not sensitive to a mid-walk locale switch.
+    interrupted modify.
+
+    Language provenance is the sharp half of the assertion: the created
+    profile chooses ``en`` on the flow's first page, and the profile is the
+    output-language authority for every later command, so the notice must
+    render in ``en`` — the profile's language — and specifically NOT in the
+    ambient process default. The expected strings are computed at use time
+    under explicit overrides; an import-time constant renders in whatever
+    locale happens to be ambient at collection and asserts the wrong
+    authority.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
         create_tokens = list(_scripted_answers_for_individual_declaration())
@@ -194,4 +203,10 @@ def test_interactive_edit_command_surfaces_the_staging_honesty_notice(
         _invoke_interactive("edit", edit_tokens, ["operator"])
         output = capsys.readouterr().out
 
-    assert _MODIFY_NO_RESUME_MESSAGE in output
+    with override_settings(cadrumo_output_language="en"):
+        profile_language_message = tr("application.wizard.notices.modify_no_resume")
+    with override_settings(cadrumo_output_language="es"):
+        default_language_message = tr("application.wizard.notices.modify_no_resume")
+
+    assert profile_language_message in output
+    assert default_language_message not in output
