@@ -1024,6 +1024,10 @@ def _build_modelo_coverage(reports: Iterable[WorkbookArtefactReport]) -> tuple[W
 
 
 def _detect_excel_com_clsid() -> str | None:
+    import sys
+
+    if sys.platform != "win32":  # narrows winreg to the platform that ships it
+        return None
     try:
         import winreg
 
