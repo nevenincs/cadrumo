@@ -38,7 +38,7 @@ platform = "Any platform with Python 3.13+"
 artifact_kinds = ["python-wheel", "python-sdist", "python-manifest"]
 availability = "public_launch"
 package = "cadrumo"
-registry = "PyPI"
+registry = "PyPI listing"
 install_commands = [
   "pip install cadrumo",
   "uv tool install cadrumo",
@@ -81,7 +81,7 @@ platform = "Claude Code, Claude Desktop, Claude Cowork"
 artifact_kinds = ["claude-plugin", "claude-marketplace"]
 availability = "public_launch"
 package = "cadrumo@neve"
-registry = "neve marketplace"
+registry = "neve marketplace listing"
 marketplace = "neve"
 marketplace_source = "nevenincs/neve-marketplace"
 install_commands = [
@@ -96,7 +96,7 @@ platform = "Claude Desktop"
 artifact_kinds = ["mcpb"]
 availability = "public_launch"
 package = "cadrumo"
-registry = "Claude Desktop extension listing"
+registry = "Claude Desktop extension directory"
 # The MCPB bundle is a single file installed by opening it in Claude Desktop,
 # not a registry command; the release-page artifact is the acquisition path.
 install_commands = []
