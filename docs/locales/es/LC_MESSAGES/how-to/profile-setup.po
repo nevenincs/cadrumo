@@ -97,13 +97,13 @@ msgstr ""
 
 #: ../../how-to/profile-setup.md:36
 msgid ""
-"Switching changes which local ledger, modelo drafts, and filing markers "
-"`aeat app` commands use. The switch verb is `aeat config switch`, not `aeat "
-"config profile switch`."
+"Logging in changes which local ledger, modelo drafts, and filing markers "
+"`aeat app` commands use. The login verb is `aeat config login`, not "
+"`aeat config profile login`."
 msgstr ""
-"El cambio modifica qué ledger, borradores de modelo y marcadores de "
-"presentación locales usan los comandos `aeat app`. El verbo de cambio es "
-"`aeat config switch`, no `aeat config profile switch`."
+"Iniciar sesión modifica qué ledger, borradores de modelo y marcadores de "
+"presentación locales usan los comandos `aeat app`. El verbo de inicio de "
+"sesión es `aeat config login`, no `aeat config profile login`."
 
 #: ../../how-to/profile-setup.md:40
 msgid "Decide your facts before you start"
@@ -788,14 +788,14 @@ msgstr ""
 
 #: ../../how-to/profile-setup.md:291
 msgid ""
-"Sign out without deleting the profile using `aeat config profile logout`. "
-"Logout closes the active storage session, discards its in-memory keys, "
-"disposes the bucket engines, and clears the local active-profile pointer:"
+"Sign out without deleting the profile using `aeat config logout`. Logout "
+"closes the active storage session, discards its in-memory keys, disposes "
+"the bucket engines, and clears the local active-profile pointer:"
 msgstr ""
-"Cierra la sesión sin eliminar el perfil con `aeat config profile logout`. El"
-" cierre de sesión termina la sesión de almacenamiento activa, descarta sus "
-"claves en memoria, libera los motores de bucket y borra el puntero local del"
-" perfil activo:"
+"Cierra la sesión sin eliminar el perfil con `aeat config logout`. El "
+"cierre de sesión termina la sesión de almacenamiento activa, descarta "
+"sus claves en memoria, libera los motores de bucket y borra el puntero "
+"local del perfil activo:"
 
 #: ../../how-to/profile-setup.md:299
 msgid "Choose your service capabilities"
