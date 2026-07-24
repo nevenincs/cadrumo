@@ -32,6 +32,7 @@ from .._loader import (
 from ._loader_directory_mode_support import (
     _COMPLETENESS_CASILLA_0001,
     _COMPLETENESS_CASILLA_0002,
+    _MAX_LOCALE_TOML_FRAGMENT_LINES,
     _MAX_SINGLE_FILE_MODELO_LINES,
     _MAX_TOML_FRAGMENT_LINES,
     _MAX_TOML_ROW_CHARS,
@@ -725,8 +726,12 @@ def test_committed_registry_toml_files_stay_reviewable() -> None:
             oversized_single_file_modelos.append(
                 f"{relative_path}: {len(lines)} lines > {_MAX_SINGLE_FILE_MODELO_LINES}",
             )
-        if len(lines) > _MAX_TOML_FRAGMENT_LINES:
-            oversized_fragments.append(f"{relative_path}: {len(lines)} lines > {_MAX_TOML_FRAGMENT_LINES}")
+        # Locale catalogues are CLI-managed aggregate translation surfaces (one
+        # file per language, never hand-split) and get a wider documented cap;
+        # structural calculation fragments stay under the tighter gate.
+        fragment_cap = _MAX_LOCALE_TOML_FRAGMENT_LINES if "/locales/" in relative_path else _MAX_TOML_FRAGMENT_LINES
+        if len(lines) > fragment_cap:
+            oversized_fragments.append(f"{relative_path}: {len(lines)} lines > {fragment_cap}")
         for line_number, line in enumerate(lines, start=1):
             if len(line) <= _MAX_TOML_ROW_CHARS:
                 continue
