@@ -154,6 +154,15 @@ jobs:
           uv sync
           uv run vaultspec-core install --force
 
+      - name: Provision Node for the duplication scan
+        # The duplication gate shells out to `npx jscpd`; the stock self-hosted
+        # runner image carries no Node, so provision it here rather than depend
+        # on runner-local state. Without it the audit degrades to "duplication
+        # signal unavailable" and test_dev_audit_report reds the suite.
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "20"
+
       - name: Provision Playwright Chromium
         run: just env-playwright
 
