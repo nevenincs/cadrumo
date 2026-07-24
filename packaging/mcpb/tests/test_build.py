@@ -178,6 +178,43 @@ def test_bootstrap_provisioning_state_is_keyed_on_the_cohort_marker(tmp_path: Pa
         assert is_provisioned(venv_python) is False
 
 
+def test_bootstrap_guards_the_minimum_uv_for_constraint_dependencies(tmp_path: Path) -> None:
+    """The first-launch bootstrap refuses a uv older than the pinned-closure floor."""
+    floor = cast("str", BUILD._MIN_UV_VERSION)
+    parts = floor.split(".")
+    assert len(parts) == 3
+    assert all(part.isdigit() for part in parts)
+    triple = tuple(int(part) for part in parts)
+    assert all(isinstance(number, int) for number in triple)
+
+    bootstrap = cast("str", BUILD._BOOTSTRAP_SOURCE)
+    # The generated source carries the literal floor and the version guard.
+    assert f'_MIN_UV_VERSION = "{floor}"' in bootstrap
+    assert '"--version"' in bootstrap
+    assert "_require_min_uv" in bootstrap
+    # The floor check runs before ``uv sync`` so an old uv cannot silently drop
+    # the pinned closure.
+    assert bootstrap.index("_require_min_uv(uv)") < bootstrap.index('"sync"')
+    # The generated source parses and defines the guard as a callable.
+    (tmp_path / "src").mkdir(parents=True)
+    namespace = _load_bootstrap_namespace(tmp_path)
+    assert callable(namespace["_require_min_uv"])
+    assert callable(namespace["_uv_version_triple"])
+
+
+def test_constraints_header_states_the_minimum_uv_floor() -> None:
+    """The staged constraints file names the uv floor the pins depend on."""
+    from dev.packaging.uv_constraints import render_constraints_file
+
+    floor = cast("str", BUILD._MIN_UV_VERSION)
+    rendered = render_constraints_file(("example==1.0.0",), min_uv_version=floor)
+    assert f"Requires uv >= {floor}" in rendered
+    assert "constraint-dependencies" in rendered
+    assert "example==1.0.0" in rendered
+    # Backward-compatible default: no floor line when the caller omits it.
+    assert "Requires uv" not in render_constraints_file(("example==1.0.0",))
+
+
 def test_manifest_declares_only_the_bundle_local_python_runtime() -> None:
     """Unexecuted client/platform rows are not advertised as compatibility."""
     manifest = BUILD.load_manifest()

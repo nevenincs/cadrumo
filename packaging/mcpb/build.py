@@ -100,14 +100,23 @@ from cadrumo.entrypoints.mcp import main
 if __name__ == "__main__":
     main()
 """
+#: The oldest uv release whose ``uv sync`` honours ``[tool.uv]
+#: constraint-dependencies``. uv added constraint dependencies to
+#: ``pyproject.toml`` in 0.2.28 (uv changelog 0.2.x, "Add constraint dependencies
+#: to pyproject.toml", PR #5248). Below this floor ``uv sync`` silently ignores
+#: the pinned closure and resolves whatever the index serves, so the bundled
+#: constraint pins would not apply. The first-launch bootstrap refuses below it.
+_MIN_UV_VERSION: Final[str] = "0.2.28"
+
 # The self-healing bootstrap launched by ``uv run --no-project`` (``src/server.py``).
 # On the first launch it provisions the bundle-local ``.venv`` once (``uv sync``),
 # recording the cohort digest in a marker; every launch then execs that provisioned
 # interpreter directly on ``src/_serve.py``, so no session after the first pays uv's
 # project resolution. A marker keyed by the cohort digest re-provisions after a
 # version upgrade; the digest-pin verification in ``_serve.py`` remains the final
-# guard against serving a mismatched cohort.
-_BOOTSTRAP_SOURCE: Final[str] = """\
+# guard against serving a mismatched cohort. The minimum-uv floor is injected from
+# ``_MIN_UV_VERSION`` so the generated source carries the literal floor.
+_BOOTSTRAP_SOURCE: Final[str] = f"""\
 from __future__ import annotations
 
 import os
@@ -120,6 +129,7 @@ _BUNDLE = Path(__file__).resolve().parents[1]
 _VENV = _BUNDLE / ".venv"
 _MARKER = _VENV / ".cadrumo-cohort"
 _SERVE = _BUNDLE / "src" / "_serve.py"
+_MIN_UV_VERSION = "{_MIN_UV_VERSION}"
 
 
 def _cohort_digest():
@@ -139,10 +149,45 @@ def _is_provisioned(python):
         return False
 
 
+def _uv_version_triple(uv):
+    completed = subprocess.run(
+        [uv, "--version"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if completed.returncode != 0:
+        raise SystemExit("Cadrumo MCP could not determine the installed uv version")
+    tokens = completed.stdout.split()
+    raw = tokens[1] if len(tokens) >= 2 else ""
+    try:
+        return tuple(int(part) for part in raw.split(".")[:3])
+    except ValueError:
+        raise SystemExit(
+            "Cadrumo MCP could not parse the installed uv version: "
+            + repr(completed.stdout.strip())
+        )
+
+
+def _require_min_uv(uv):
+    floor = tuple(int(part) for part in _MIN_UV_VERSION.split("."))
+    installed = _uv_version_triple(uv)
+    if installed < floor:
+        shown = ".".join(str(part) for part in installed)
+        raise SystemExit(
+            "Cadrumo MCP requires uv >= " + _MIN_UV_VERSION + " but found uv " + shown
+            + ". uv sync honours the pinned dependency closure "
+            "([tool.uv] constraint-dependencies) only from " + _MIN_UV_VERSION
+            + "; an older uv would silently ignore the pins and resolve an untested "
+            "closure. Upgrade uv and relaunch."
+        )
+
+
 def _provision():
     uv = shutil.which("uv")
     if uv is None:
         raise SystemExit("uv is required to provision the Cadrumo MCP environment on first launch")
+    _require_min_uv(uv)
     result = subprocess.run(
         [uv, "sync", "--directory", str(_BUNDLE)],
         capture_output=True,
@@ -329,7 +374,7 @@ def _stage_bundle(stage: Path, cohort: PythonCohort) -> None:
         encoding=_UTF_8,
     )
     (stage / "constraints.txt").write_text(
-        render_constraints_file(constraint_lines),
+        render_constraints_file(constraint_lines, min_uv_version=_MIN_UV_VERSION),
         encoding=_UTF_8,
     )
     (stage / "pyproject.toml").write_text(

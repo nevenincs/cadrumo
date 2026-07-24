@@ -83,6 +83,17 @@ def export_runtime_constraints(*, repo_root: Path) -> tuple[str, ...]:
     return tuple(lines)
 
 
-def render_constraints_file(lines: tuple[str, ...]) -> str:
-    """Render the pinned requirement lines as a deterministic pip constraints file."""
-    return _CONSTRAINTS_HEADER + "".join(f"{line}\n" for line in lines)
+def render_constraints_file(lines: tuple[str, ...], *, min_uv_version: str | None = None) -> str:
+    """Render the pinned requirement lines as a deterministic pip constraints file.
+
+    When ``min_uv_version`` is supplied, the header additionally states the
+    minimum uv release whose ``uv sync`` honours the pinned closure, so a reader
+    of the staged file knows the floor the bundle enforces at first launch.
+    """
+    header = _CONSTRAINTS_HEADER
+    if min_uv_version is not None:
+        header += (
+            f"# Requires uv >= {min_uv_version}: uv sync honours [tool.uv] "
+            "constraint-dependencies only from that release; an older uv ignores these pins.\n"
+        )
+    return header + "".join(f"{line}\n" for line in lines)
