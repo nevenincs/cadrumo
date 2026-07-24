@@ -427,7 +427,6 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             # buckets event-history repository ports-inversion:
             # deferred consumers now reach the concrete repository at its
             # persistence-adapter home (was a domain.buckets deferral).
-            ImportEdge("application.auth._operator", "adapters.persistence.profile.buckets"),
             ImportEdge("application.live._justificante", "adapters.persistence.profile.buckets"),
             ImportEdge("application.modelo._iva_wallet_seed", "adapters.persistence.profile.buckets"),
             ImportEdge("application.modelo._reconcile", "adapters.persistence.profile.buckets"),
@@ -452,8 +451,6 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("agent", "agent._skill_metadata"),
             ImportEdge("application.aggregation._source_profile", "application.modelo"),
             ImportEdge("application.aggregation._source_profile", "core.resources"),
-            ImportEdge("application.auth", "adapters.outbound.aeat.auth"),
-            ImportEdge("application.auth", "core.i18n"),
             ImportEdge("application.auth._acquisition_lock", "core"),
             ImportEdge("application.auth._apoderado", "core.config"),
             # apoderado single identity authority: the service defers the
@@ -497,23 +494,18 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("locales._fstring_registry", "domain.user_profile"),
             # certificate-source registry operator verbs mirror
             # the sibling `_operator` deferrals below for the same targets.
-            ImportEdge("application.auth._certificate_sources_operator", "adapters.persistence.profile.buckets"),
-            ImportEdge("application.auth._certificate_sources_operator", "adapters.persistence.storage"),
             ImportEdge("application.auth._certificate_sources_operator", "application.workflow"),
             ImportEdge("application.auth._certificate_sources_operator", "core"),
             ImportEdge("application.auth._certificate_sources_operator", "domain.buckets"),
-            ImportEdge("application.auth._operator", "adapters.persistence.storage"),
             ImportEdge("application.auth._operator", "application.state_projection"),
             ImportEdge("application.auth._operator", "application.user_profile"),
             ImportEdge("application.auth._operator", "application.workflow"),
-            ImportEdge("application.auth._operator", "core"),
             ImportEdge("application.auth._operator", "core.access_gate"),
             ImportEdge("application.auth._operator", "domain.buckets"),
             ImportEdge("application.auth._operator_probes", "adapters.outbound.aeat.auth"),
             ImportEdge("application.auth._operator_probes", "adapters.outbound.aeat.auth.certificate"),
             ImportEdge("application.auth._operator_probes", "application.user_profile"),
             ImportEdge("application.auth._operator_probes", "application.workflow"),
-            ImportEdge("application.auth._operator_scope", "adapters.persistence.storage"),
             ImportEdge("application.auth._operator_scope", "application.user_profile"),
             ImportEdge("application.auth._operator_scope", "core"),
             ImportEdge("application.auth._operator_scope", "core.config"),
@@ -559,9 +551,6 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.calculations._relation_prefill", "domain.calculations.registry"),
             ImportEdge("application.calculations._relation_prefill", "domain.deadlines"),
             ImportEdge("application.calculations._relation_prefill", "domain.user_profile"),
-            ImportEdge("application.config_reset", "application.diagnostics"),
-            ImportEdge("application.config_reset", "application.user_profile"),
-            ImportEdge("application.config_reset", "application.workflow"),
             ImportEdge("application.corpus_search._embed_build", "application.corpus_search._errors"),
             ImportEdge("application.corpus_search._lexical_index", "application.corpus_search._errors"),
             ImportEdge("application.diagnostics", "adapters.outbound.aeat.browser"),
@@ -624,7 +613,6 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.live._justificante", "domain.buckets"),
             ImportEdge("application.live._justificante", "domain.justificante"),
             ImportEdge("application.live._justificante", "domain.modelos"),
-            ImportEdge("application.modelo._binding_readiness", "core.resources"),
             ImportEdge("application.modelo._binding_resolution", "application.aggregation"),
             ImportEdge("application.modelo._borrador_binding", "core.resources"),
             ImportEdge("application.modelo._calculate_input", "application.modelo._action_errors"),
@@ -718,10 +706,8 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.state_projection", "application.modelo"),
             ImportEdge("application.state_projection", "application.user_profile"),
             ImportEdge("application.state_projection", "application.workflow"),
-            ImportEdge("application.state_projection", "core.config"),
             ImportEdge("application.state_projection", "core.resources"),
             ImportEdge("application.state_projection", "domain.calculations.registry"),
-            ImportEdge("application.state_projection", "domain.deadlines"),
             ImportEdge("application.storage.calc_sheets._parity_harness", "adapters.outbound.google"),
             ImportEdge("application.storage_write_policy", "application.modelo"),
             ImportEdge("application.transactions._diagnostics", "core.i18n"),
@@ -742,18 +728,11 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.user_profile._bundle_export", "domain.buckets"),
             ImportEdge("application.user_profile._capabilities", "adapters.persistence.storage"),
             ImportEdge("application.user_profile._capabilities", "application.workflow"),
-            ImportEdge("application.user_profile._censo_sync", "adapters.outbound.aeat.sede"),
-            ImportEdge("application.user_profile._censo_sync", "adapters.persistence.profile.usage_ratios"),
-            ImportEdge("application.user_profile._censo_sync", "application.auth"),
             # censo vivienda-ratio read defers the profile repository/projection
             # imports alongside the sibling deferrals above (product-rename
             # state-boundary follow-up).
             ImportEdge("application.user_profile._censo_sync", "application.user_profile._projections"),
             ImportEdge("application.user_profile._censo_sync", "application.user_profile._repository"),
-            ImportEdge("application.user_profile._censo_sync", "core.access_gate"),
-            ImportEdge("application.user_profile._censo_sync", "core.config"),
-            ImportEdge("application.user_profile._censo_sync", "domain.buckets"),
-            ImportEdge("application.user_profile._censo_sync", "domain.usage_ratios"),
             ImportEdge("application.user_profile._censo_sync", "domain.user_profile"),
             ImportEdge("application.user_profile._custody", "adapters.persistence.storage.bucket"),
             ImportEdge("application.user_profile._custody", "core"),
@@ -764,13 +743,13 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.user_profile._language_resolver", "core"),
             ImportEdge("application.user_profile._language_resolver", "core.config"),
             # login orchestration: the module composes the master-key provider,
-            # the persisted-session record, and the zeroise primitive without
-            # owning crypto, and resolves the target profile through the
-            # workflow reader. Importing application.workflow at module scope
-            # cycles back through filing, so the reach stays function-local.
+            # the persisted-session record, and the zeroise primitive (all
+            # reached through the master_key facade) without owning crypto, and
+            # resolves the target profile through the workflow reader.
+            # Importing application.workflow at module scope cycles back
+            # through filing, so the reach stays function-local.
             ImportEdge("application.user_profile._login_session", "adapters.persistence.storage.errors"),
             ImportEdge("application.user_profile._login_session", "adapters.persistence.storage.master_key"),
-            ImportEdge("application.user_profile._login_session", "adapters.persistence.storage.master_key._zeroise"),
             ImportEdge("application.user_profile._login_session", "application.workflow"),
             ImportEdge("application.user_profile._login_session", "domain.user_profile"),
             ImportEdge("application.user_profile._orchestration", "adapters.persistence.storage"),
@@ -782,10 +761,8 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.user_profile._orchestration", "core"),
             ImportEdge("application.user_profile._orchestration", "core.config"),
             ImportEdge("application.user_profile._orchestration", "domain.buckets"),
-            ImportEdge("application.user_profile._profile_repository", "adapters.persistence.storage.sql.engine"),
             ImportEdge("application.user_profile._profile_repository", "application.user_profile._orchestration"),
             ImportEdge("application.user_profile._profile_repository", "application.workflow"),
-            ImportEdge("application.user_profile._profile_repository", "core"),
             ImportEdge("application.user_profile._profile_repository", "domain.user_profile"),
             ImportEdge("application.user_profile._projections", "application.wizard"),
             ImportEdge("application.user_profile._repository", "adapters.persistence.storage"),
@@ -842,24 +819,31 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
 # consumer->target pair reached from two functions). The ratchet asserts the
 # live per-class site count is <= its ceiling: an increase fails until the
 # ceiling is raised in the same commit; a decrease is free.
+# Every ceiling below sits AT the live count, not above it: a ceiling with slack
+# silently admits that many new deferrals before the ratchet notices, which is
+# how this gate drifted to 84 sites of dead headroom. Adding a site therefore
+# means raising its ceiling by exactly one in the same commit -- that edit is the
+# audit trail. Removing sites is free, and the count should be lowered when it is.
 _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
     UnsanctionedClass.ERROR_REGISTRY_BOOTSTRAP: 4,
     UnsanctionedClass.NAMED_CYCLE_BREAK: 1,
-    UnsanctionedClass.PORTS_INVERSION_PENDING: 36,
-    UnsanctionedClass.DOMAIN_CYCLE_BREAK: 51,
-    UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 182,  # +2 master_key login-throttle + persisted profile-session bucket keystore-path deferrals, +2 flow TUI screen->app cycle breaks, +1 resumed-session KEK-unavailable refusal (was 177)
-    UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 38,  # net +1 atomic_write bootstrap-cycle deferrals (_bucket_pointer_io, corpus_manifest; env_io net-zero, corpus_manifest's save_corpus_manifest site retired its own core.locks edge)
-    UnsanctionedClass.APPLICATION_DEFERRAL: 554,  # +12 profile-setup-flow sites (apoderado identity authority, cotejo notice projection, checkpoint-store lifecycle/projection/repository reach, wizard command facade), +12 login-orchestration sites (was 530)
+    # The ports inversion completed: no live site classifies here any more, so a
+    # non-zero count means a new ports-inversion deferral was introduced.
+    UnsanctionedClass.PORTS_INVERSION_PENDING: 0,
+    UnsanctionedClass.DOMAIN_CYCLE_BREAK: 50,
+    UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 168,
+    UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 37,
+    UnsanctionedClass.APPLICATION_DEFERRAL: 522,
 }
 
 # Ceiling on the total number of allowlisted edges. Editing the allowlist to add
 # an edge must raise this in the same commit; removing edges may lower it freely.
-# Re-baselined to 478 (register-item-D7 ledger reconciliation): 27 new
-# function-local first-party import edges accumulated since the prior 451-edge
-# baseline (the modelos_work_units/participation_index catalogue-repository
-# consolidation, the corpus_search/mcp/user_profile deferrals introduced by
-# intervening commits) were swept into their classified buckets in one pass.
-_ALLOWLIST_EDGE_CEILING: int = 501  # +2 master_key login-throttle + persisted profile-session bucket deferrals, +19 profile-setup-flow edges: the apoderado identity authority, the cotejo page family and apply projections, the checkpoint store and descendant door reach, the wizard persistence/registered-values deferrals, and the locale registry's profile-enum enumeration, +6 login-orchestration edges (was 474).
+# Held equal to the live edge count: 24 entries declaring imports that no longer
+# existed were struck (the auth operator/certificate-sources reach, config_reset,
+# state_projection, censo_sync, the profile repository and binding readiness --
+# all since promoted to module scope or retired), so the declared set is now
+# exactly what the tree actually does.
+_ALLOWLIST_EDGE_CEILING: int = 477
 
 
 def _cadrumo_relative(dotted: str) -> str:
@@ -1136,6 +1120,41 @@ def test_unsanctioned_site_count_ratchet() -> None:
     assert len(live_edges) <= _ALLOWLIST_EDGE_CEILING, (
         f"{len(live_edges)} live unsanctioned edges exceed the declared ceiling "
         f"{_ALLOWLIST_EDGE_CEILING}; add the new edge(s) to _ALLOWLIST and raise the ceiling."
+    )
+
+
+def test_ceilings_carry_no_slack_over_the_live_counts() -> None:
+    """Every ceiling sits AT its live count, so the ratchet fires on the first new site.
+
+    The ``<=`` ratchet above tolerates arbitrary headroom, and headroom is
+    invisible: a ceiling standing 32 above its live count silently admits 32 new
+    deferrals before anything fails, which is precisely how this gate drifted to
+    84 sites of dead slack and 24 allowlist entries naming imports that no longer
+    existed. Pinning ceiling == live makes slack itself the failure, so the
+    numbers cannot quietly stop meaning anything again. Removing a site is still
+    free -- it just has to lower its ceiling in the same commit, exactly as
+    adding one has to raise it.
+    """
+    live_counts: dict[UnsanctionedClass, int] = dict.fromkeys(UnsanctionedClass, 0)
+    sites = _discover_unsanctioned_sites()
+    for site in sites:
+        live_counts[_classify_unsanctioned(site.edge)] += 1
+
+    slack = [
+        f"  {member.name}: ceiling {_SITE_CEILINGS[member]} but only {live_counts[member]} live sites"
+        f" -- set it to {live_counts[member]}"
+        for member in UnsanctionedClass
+        if _SITE_CEILINGS[member] != live_counts[member]
+    ]
+    live_edges = {site.edge for site in sites}
+    if len(live_edges) != _ALLOWLIST_EDGE_CEILING:
+        slack.append(
+            f"  _ALLOWLIST_EDGE_CEILING: {_ALLOWLIST_EDGE_CEILING} but {len(live_edges)} live edges"
+            f" -- set it to {len(live_edges)} and strike the allowlist entries with no live site"
+        )
+    assert not slack, (
+        "Unsanctioned-import ceilings drifted off their live counts. A ceiling with "
+        "headroom admits that many new deferrals before the ratchet notices:\n" + "\n".join(slack)
     )
 
 
