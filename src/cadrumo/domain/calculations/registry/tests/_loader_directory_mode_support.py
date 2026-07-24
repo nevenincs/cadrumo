@@ -180,7 +180,7 @@ def write_fragmented_revision(revision_dir: Path, revision_text: str) -> None:
         block = "".join(lines[start:end])
         field_match = _REVISION_FIELD_RE.match(lines[header_index])
         field = field_match.group(1) if field_match else None
-        if field in _REVISION_SECTION_FIELDS:
+        if field is not None and field in _REVISION_SECTION_FIELDS:
             section_blocks.setdefault(field, []).append(block)
         else:
             scalar_blocks.append(block)

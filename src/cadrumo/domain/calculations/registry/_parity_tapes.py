@@ -10,7 +10,7 @@ import re
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Literal
+from typing import Literal, cast
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -249,19 +249,37 @@ def _stable_tape_dump(tape: ParityTape) -> dict[str, object]:
     return data
 
 
+def _as_json_object(value: object) -> dict[str, object] | None:
+    """Narrow a ``model_dump(mode="json")`` value to a string-keyed dict.
+
+    JSON object keys are always strings, so a dict produced by
+    ``model_dump(mode="json")`` (or ``json.loads``) is always string-keyed in
+    practice; the runtime check restores that static guarantee for the
+    recursive tape diff below.
+    """
+    if not isinstance(value, dict):
+        return None
+    for key in value:
+        if not isinstance(key, str):
+            return None
+    return cast("dict[str, object]", value)
+
+
 def _diff_paths(left: object, right: object, prefix: str = "") -> tuple[str, ...]:
     differences: list[str] = []
-    if isinstance(left, dict) and isinstance(right, dict):
-        keys = sorted(set(left) | set(right))
+    left_object = _as_json_object(left)
+    right_object = _as_json_object(right)
+    if left_object is not None and right_object is not None:
+        keys = sorted(set(left_object) | set(right_object))
         for key in keys:
             next_prefix = f"{prefix}.{key}" if prefix else str(key)
-            if key not in left:
+            if key not in left_object:
                 differences.append(f"{next_prefix}: missing from stored tape")
                 continue
-            if key not in right:
+            if key not in right_object:
                 differences.append(f"{next_prefix}: missing from current tape")
                 continue
-            differences.extend(_diff_paths(left[key], right[key], next_prefix))
+            differences.extend(_diff_paths(left_object[key], right_object[key], next_prefix))
         return tuple(differences)
     if isinstance(left, list) and isinstance(right, list):
         if len(left) != len(right):
