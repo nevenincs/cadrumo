@@ -49,7 +49,7 @@ from dev.packaging.evidence import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Iterator
+    from collections.abc import Iterable, Iterator, Mapping
 
 SCRUBBED_USER: Final[str] = "scrubbed-user"
 SCRUBBED_MACHINE_ID: Final[str] = "scrubbed"
@@ -92,19 +92,19 @@ def default_runner_tokens() -> tuple[str, ...]:
     return tuple(token for token in (platform.node(), getpass.getuser()) if token and len(token) >= 2)
 
 
-def default_workspace_roots() -> tuple[str, ...]:
+def default_workspace_roots(env: Mapping[str, str] | None = None) -> tuple[str, ...]:
     """Return the runner's CI workspace-root paths, most specific first.
 
     The scrub runs on the machine that minted the row, so the checkout/work-tree
     directory it exports is exactly the workspace metadata that must not ship.
     Roots are ordered longest-first so a nested root (``GITHUB_WORKSPACE``) is
     redacted before its parent (``RUNNER_WORKSPACE``).
+
+    ``env`` defaults to the live process environment; callers (and tests) may pass
+    an explicit mapping to read a specific environment without mutating the real one.
     """
-    roots = {
-        value
-        for var in _WORKSPACE_ROOT_ENV_VARS
-        if (value := os.environ.get(var, "").strip()) and len(value) >= 3
-    }
+    source = os.environ if env is None else env
+    roots = {value for var in _WORKSPACE_ROOT_ENV_VARS if (value := source.get(var, "").strip()) and len(value) >= 3}
     return tuple(sorted(roots, key=len, reverse=True))
 
 
