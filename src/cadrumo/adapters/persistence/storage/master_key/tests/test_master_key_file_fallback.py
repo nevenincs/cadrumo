@@ -481,6 +481,90 @@ class TestFileFallbackProvider:
             session.touch(probe_time)
             assert session.idle_deadline == probe_time + timedelta(minutes=3)
 
+    def test_provider_enter_observes_configured_absolute_cap_on_opened_session(self, tmp_path: Path) -> None:
+        settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
+        settings.cadrumo_local_storage_root.mkdir(parents=True, exist_ok=True)
+        provider = FileFallbackMasterKeyProvider(
+            store_dir=settings.cadrumo_secret_store_dir,
+            passphrase_callback=lambda: "correct horse battery staple",
+        )
+        provider.provision_master_key()
+
+        # Mint the per-bucket DEK first, then register the manifest carrying a
+        # session-absolute-cap override that diverges from the settings default.
+        with (
+            override_settings(
+                cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
+                cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
+                cadrumo_secret_store_backend=SecretStoreBackend.FILE,
+            ),
+            activate_master_key_provider(
+                provider,
+                fallback_bucket_id="short-cap",
+                allow_bucket_dek_enrollment=True,
+            ),
+        ):
+            assert get_active_master_key() != provider.get_master_key()
+        _write_registered_bucket(
+            settings.cadrumo_local_storage_root,
+            "short-cap",
+            session_absolute_minutes=90,
+        )
+
+        with (
+            override_settings(
+                cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
+                cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
+                cadrumo_secret_store_backend=SecretStoreBackend.FILE,
+                cadrumo_bucket_default_session_absolute_minutes=240,
+            ),
+            activate_master_key_provider(provider, fallback_bucket_id="short-cap"),
+        ):
+            session = provider._session
+            assert session is not None
+            # The opened session carries the manifest override (90), fixed as
+            # opened_at + cap, not the 240-minute settings default.
+            assert session.absolute_deadline == session.opened_at + timedelta(minutes=90)
+
+    def test_provider_enter_falls_back_to_settings_absolute_cap_default(self, tmp_path: Path) -> None:
+        settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
+        settings.cadrumo_local_storage_root.mkdir(parents=True, exist_ok=True)
+        provider = FileFallbackMasterKeyProvider(
+            store_dir=settings.cadrumo_secret_store_dir,
+            passphrase_callback=lambda: "correct horse battery staple",
+        )
+        provider.provision_master_key()
+
+        with (
+            override_settings(
+                cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
+                cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
+                cadrumo_secret_store_backend=SecretStoreBackend.FILE,
+            ),
+            activate_master_key_provider(
+                provider,
+                fallback_bucket_id="default-cap",
+                allow_bucket_dek_enrollment=True,
+            ),
+        ):
+            assert get_active_master_key() != provider.get_master_key()
+        # Register the bucket with NO absolute-cap override on the manifest.
+        _write_registered_bucket(settings.cadrumo_local_storage_root, "default-cap")
+
+        with (
+            override_settings(
+                cadrumo_local_storage_root=settings.cadrumo_local_storage_root,
+                cadrumo_secret_store_dir=settings.cadrumo_secret_store_dir,
+                cadrumo_secret_store_backend=SecretStoreBackend.FILE,
+                cadrumo_bucket_default_session_absolute_minutes=180,
+            ),
+            activate_master_key_provider(provider, fallback_bucket_id="default-cap"),
+        ):
+            session = provider._session
+            assert session is not None
+            # No manifest override: the settings default (180) flows through.
+            assert session.absolute_deadline == session.opened_at + timedelta(minutes=180)
+
     def test_round_trip_across_provider_instances(self, tmp_path: Path) -> None:
         """A second provider over the same dir + passphrase recovers the same key."""
         first = FileFallbackMasterKeyProvider(

@@ -80,7 +80,11 @@ from ..errors import (
     SecretStoreError,
     UnsecuredModeRefusedError,
 )
-from ._master_key_bucket_dek import idle_minutes_for_bucket, load_or_mint_bucket_dek
+from ._master_key_bucket_dek import (
+    idle_minutes_for_bucket,
+    load_or_mint_bucket_dek,
+    session_absolute_minutes_for_bucket,
+)
 from ._master_key_derivation import (
     ARGON2_MEMORY_COST_KIB,
     ARGON2_PARALLELISM,
@@ -847,11 +851,17 @@ def _provider_enter(
         bucket_id=bucket_id,
         default_minutes=settings.cadrumo_bucket_default_idle_lock_minutes,
     )
+    absolute_minutes = session_absolute_minutes_for_bucket(
+        storage_root=settings.cadrumo_local_storage_root,
+        bucket_id=bucket_id,
+        default_minutes=settings.cadrumo_bucket_default_session_absolute_minutes,
+    )
     session = BucketSession.open(
         bucket_id=bucket_id,
         kek=key_bytes,
         dek=dek_bytes,
         idle_minutes=idle_minutes,
+        absolute_minutes=absolute_minutes,
         opened_at=now(),
         unsecured_backend=isinstance(provider, UnsecuredMasterKeyProvider),
         storage_root=settings.cadrumo_local_storage_root,

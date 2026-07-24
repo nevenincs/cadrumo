@@ -45,6 +45,7 @@ if TYPE_CHECKING:
 
 _KEK_BYTES = 32
 _DEK_BYTES = 32
+DEFAULT_SESSION_ABSOLUTE_MINUTES = 240
 _log = get_logger(__name__)
 
 
@@ -57,12 +58,14 @@ class BucketSession:
     """
 
     __slots__ = (
+        "_absolute_deadline",
         "_bucket_id",
         "_dek_buffer",
         "_engine",
         "_idle_deadline",
         "_idle_window",
         "_kek_buffer",
+        "_opened_at",
         "_sealed",
         "_storage_root",
         "_unsecured_backend",
@@ -76,6 +79,8 @@ class BucketSession:
         dek_buffer: bytearray,
         idle_window: timedelta,
         idle_deadline: datetime,
+        opened_at: datetime,
+        absolute_deadline: datetime,
         unsecured_backend: bool,
         storage_root: Path | None,
     ) -> None:
@@ -85,6 +90,8 @@ class BucketSession:
         self._dek_buffer = dek_buffer
         self._idle_window = idle_window
         self._idle_deadline = idle_deadline
+        self._opened_at = opened_at
+        self._absolute_deadline = absolute_deadline
         self._unsecured_backend = unsecured_backend
         self._sealed = False
         self._engine: Engine | None = None
@@ -98,6 +105,7 @@ class BucketSession:
         dek: bytes,
         idle_minutes: int,
         opened_at: datetime,
+        absolute_minutes: int | None = None,
         unsecured_backend: bool = False,
         storage_root: Path | None = None,
     ) -> BucketSession:
@@ -111,6 +119,13 @@ class BucketSession:
             idle_minutes: Idle-timeout window in minutes; must be a
                 strict positive integer.
             opened_at: UTC timestamp at which the session opened.
+            absolute_minutes: Absolute session-lifetime cap in minutes,
+                fixed at open time as ``opened_at + absolute_minutes``. The
+                cap is immutable for the session's life: :meth:`touch`
+                clamps the sliding idle deadline to it, so a
+                continuously-touched session still seals once the cap is
+                reached. Must be a strict positive integer. ``None`` falls
+                back to :data:`DEFAULT_SESSION_ABSOLUTE_MINUTES`.
             unsecured_backend: When ``True``, the session was opened
                 against an unsecured (non-OS-keychain) backend; callers
                 use this flag to emit appropriate warnings.
@@ -122,25 +137,38 @@ class BucketSession:
             A new :class:`BucketSession` with the provided credentials and TTL.
 
         Raises:
-            StorageValidationError: When ``bucket_id`` is empty, ``idle_minutes`` is not
-                positive, ``kek`` is not 32 bytes, or ``dek`` is not 32 bytes.
+            StorageValidationError: When ``bucket_id`` is empty, ``idle_minutes`` or the
+                resolved ``absolute_minutes`` is not positive, ``kek`` is not 32 bytes, or
+                ``dek`` is not 32 bytes.
         """
         if not bucket_id:
             raise _storage_validation_error("bucket_id must be non-empty")
         if idle_minutes <= 0:
             raise _storage_validation_error("idle_minutes must be a strict positive integer")
+        resolved_absolute_minutes = (
+            DEFAULT_SESSION_ABSOLUTE_MINUTES if absolute_minutes is None else absolute_minutes
+        )
+        if resolved_absolute_minutes <= 0:
+            raise _storage_validation_error("absolute_minutes must be a strict positive integer")
         if len(kek) != _KEK_BYTES:
             raise _storage_validation_error(f"kek must be exactly {_KEK_BYTES} bytes")
         if len(dek) != _DEK_BYTES:
             raise _storage_validation_error(f"dek must be exactly {_DEK_BYTES} bytes")
 
         idle_window = timedelta(minutes=idle_minutes)
+        absolute_deadline = opened_at + timedelta(minutes=resolved_absolute_minutes)
+        # The idle deadline never outlives the absolute cap: clamp the initial
+        # window so a session whose idle window would reach past the cap is born
+        # already bounded by it.
+        idle_deadline = min(opened_at + idle_window, absolute_deadline)
         return cls(
             bucket_id=bucket_id,
             kek_buffer=bytearray(kek),
             dek_buffer=bytearray(dek),
             idle_window=idle_window,
-            idle_deadline=opened_at + idle_window,
+            idle_deadline=idle_deadline,
+            opened_at=opened_at,
+            absolute_deadline=absolute_deadline,
             unsecured_backend=unsecured_backend,
             storage_root=(storage_root.expanduser().resolve(strict=False) if storage_root is not None else None),
         )
@@ -167,6 +195,20 @@ class BucketSession:
         return self._idle_deadline
 
     @property
+    def opened_at(self) -> datetime:
+        """Return the UTC timestamp at which this session opened."""
+        return self._opened_at
+
+    @property
+    def absolute_deadline(self) -> datetime:
+        """Return the immutable absolute session-lifetime cap.
+
+        Fixed at :meth:`open` as ``opened_at + absolute_minutes`` and never
+        refreshed; :meth:`touch` clamps the sliding idle deadline to it.
+        """
+        return self._absolute_deadline
+
+    @property
     def kek(self) -> bytes:
         """Return an immutable view of the live KEK bytes.
 
@@ -189,16 +231,21 @@ class BucketSession:
         return bytes(self._dek_buffer)
 
     def touch(self, now: datetime) -> None:
-        """Reset the idle-timeout deadline to `now + idle_window`."""
+        """Roll the idle deadline forward to `now + idle_window`, clamped to the cap.
+
+        The sliding idle deadline is never advanced past the immutable
+        absolute deadline, so continuous activity within the idle window
+        cannot extend the session beyond its absolute lifetime cap.
+        """
         if self._sealed:
             raise BucketLockedError(bucket_id=self._bucket_id)
-        self._idle_deadline = now + self._idle_window
+        self._idle_deadline = min(now + self._idle_window, self._absolute_deadline)
 
     def is_expired(self, now: datetime) -> bool:
-        """Return whether the idle window has elapsed at `now`."""
+        """Return whether the idle window or the absolute cap has elapsed at `now`."""
         if self._sealed:
             return True
-        return now >= self._idle_deadline
+        return now >= self._idle_deadline or now >= self._absolute_deadline
 
     def acquire_engine(self, settings: Settings) -> Engine:
         """Lazily acquire and register this bucket's engine on first storage access.
@@ -293,4 +340,4 @@ class BucketSession:
             _log.debug("bucket session engine disposal failed error_type=%s", type(exc).__name__)
 
 
-__all__ = ["BucketSession"]
+__all__ = ["DEFAULT_SESSION_ABSOLUTE_MINUTES", "BucketSession"]

@@ -27,6 +27,7 @@ def _write_registered_bucket(
     bucket_id: str,
     *,
     idle_lock_minutes: int | None = None,
+    session_absolute_minutes: int | None = None,
     key_schedule: BucketKeySchedule = BucketKeySchedule.BUCKET_DEK_V1,
 ) -> None:
     paths = provision_bucket_directory(root, bucket_id)
@@ -48,6 +49,7 @@ def _write_registered_bucket(
             ),
             recovery_enrolled=False,
             idle_lock_minutes=idle_lock_minutes,
+            session_absolute_minutes=session_absolute_minutes,
             key_schedule=key_schedule,
             schema_version=1,
             status=UserProfileStatus.ACTIVE,

@@ -86,6 +86,7 @@ class BucketManifest(BaseModel):
     kdf_params: ManifestKdfParams
     recovery_enrolled: bool
     idle_lock_minutes: int | None = Field(default=None, gt=0)
+    session_absolute_minutes: int | None = Field(default=None, gt=0)
     key_schedule: BucketKeySchedule = BucketKeySchedule.BUCKET_DEK_V1
     schema_version: int = Field(ge=1)
     status: UserProfileStatus
