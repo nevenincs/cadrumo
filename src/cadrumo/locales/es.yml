@@ -1592,6 +1592,8 @@ application:
         para este perfil. Las deducciones autonómicas y el tramo autonómico de la
         escala se calculan para %{ccaa}. Use --tax-residence-ccaa para elegir otra
         comunidad.
+      modify_no_resume: application.wizard.notices.modify_no_resume
+      setup_saved_resume_later: application.wizard.notices.setup_saved_resume_later
     output_labels:
       active_profile: Perfil activo
       next: Siguiente
@@ -3507,6 +3509,17 @@ cli:
         inspect_help: Muestra la cabecera de un archivo sellado sin descifrarlo ni
           restaurarlo.
         inspect_path_help: Ruta del archivo sellado.
+      bundle_flow:
+        export_section_title: Exportar el paquete de perfil
+        import_section_title: Importar el paquete de perfil
+        transport_cleartext_description: Escribe JSON sin cifrar con datos financieros
+          sensibles; solo para uso local o de acceso del interesado — nunca lo envíes
+          por correo, lo sincronices ni lo transfieras.
+        transport_cleartext_label: Texto claro (solo local/SAR)
+        transport_encrypted_description: Cifra el paquete (AEAD) con una frase de
+          contraseña; seguro para transferirlo entre equipos.
+        transport_encrypted_label: Cifrado (recomendado)
+        transport_prompt: ¿Cómo se debe escribir el paquete?
       capabilities:
         capability_help: Servicio que se quiere activar o desactivar.
         capability_label: capacidad
@@ -3592,6 +3605,8 @@ cli:
       export_passphrase_prompt: 'Frase de contraseña del paquete (mínimo 8 caracteres): '
       export_passphrase_too_short: La frase de contraseña de exportación del perfil
         debe tener al menos 8 caracteres.
+      export_requires_destination: Indica --to RUTA como destino del paquete, o ejecuta
+        el comando en un terminal interactivo para que se te pregunte.
       export_requires_transport: Usa --encrypt para un paquete cifrado de transferencia,
         o --cleartext-local solo para JSON local/SAR.
       export_sensitivity_warning: 'Este paquete NO está cifrado y contiene datos financieros
@@ -3644,6 +3659,8 @@ cli:
         con estos campos: %{missing_flags}.'
       import_passphrase_prompt: 'Frase de contraseña del paquete: '
       import_path_help: Ruta al archivo del paquete de perfil
+      import_requires_path: Indica el argumento RUTA del paquete, o ejecuta el comando
+        en un terminal interactivo para que se te pregunte.
       import_uuid_collision: El UUID del paquete entra en conflicto con un perfil
         existente.
       logout_help: Cierra la sesión de almacenamiento activa, descarta las claves

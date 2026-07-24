@@ -1512,6 +1512,8 @@ application:
         lett feltételezve. Az autonóm levonások és az adótábla autonóm része %{ccaa}
         alapján kerül kiszámításra. A --tax-residence-ccaa kapcsolóval választhat
         másik közösséget.
+      modify_no_resume: application.wizard.notices.modify_no_resume
+      setup_saved_resume_later: application.wizard.notices.setup_saved_resume_later
     output_labels:
       active_profile: active_profile
       next: Következő
@@ -3431,6 +3433,17 @@ cli:
         inspect_help: Megjeleníti egy lezárt archívum fejlécét visszafejtés vagy visszaállítás
           nélkül.
         inspect_path_help: A lezárt archívum útvonala.
+      bundle_flow:
+        export_section_title: Profilcsomag exportálása
+        import_section_title: Profilcsomag importálása
+        transport_cleartext_description: Titkosítatlan JSON-t ír érzékeny pénzügyi
+          adatokkal; csak helyi vagy érintetti hozzáférési célra — soha ne küldd el,
+          ne szinkronizáld, ne továbbítsd.
+        transport_cleartext_label: Titkosítatlan (csak helyi/SAR)
+        transport_encrypted_description: A csomag AEAD-titkosítása jelmondattal; gépek
+          közötti átvitelhez biztonságos.
+        transport_encrypted_label: Titkosított (ajánlott)
+        transport_prompt: Hogyan írjuk ki a csomagot?
       capabilities:
         capability_help: A be- vagy kikapcsolandó szolgáltatás.
         capability_label: képesség
@@ -3518,6 +3531,8 @@ cli:
       export_passphrase_prompt: 'A csomag jelmondata (legalább 8 karakter): '
       export_passphrase_too_short: A profilexport passphrase legalább 8 karakter hosszú
         legyen.
+      export_requires_destination: Add meg a --to ÚTVONAL célhelyet a csomagnak, vagy
+        futtasd interaktív terminálban, és a program bekéri.
       export_requires_transport: Használd az --encrypt kapcsolót titkosított átviteli
         csomaghoz, vagy a --cleartext-local kapcsolót csak helyi/SAR JSON-hoz.
       export_sensitivity_warning: 'Ez a csomag NINCS titkosítva, és érzékeny pénzügyi
@@ -3570,6 +3585,8 @@ cli:
         mezőkkel: %{missing_flags}.'
       import_passphrase_prompt: 'A csomag jelmondata: '
       import_path_help: A profilcsomag fájljának elérési útja.
+      import_requires_path: Add meg a csomag ÚTVONAL argumentumát, vagy futtasd interaktív
+        terminálban, és a program bekéri.
       import_uuid_collision: A csomagban lévő UUID ütközik egy meglévő profillal.
       logout_help: Az aktív tárolási munkamenet bezárása, a memóriában lévő kulcsok
         törlése, a bucket-motorok lezárása és a helyi mutató törlése.
