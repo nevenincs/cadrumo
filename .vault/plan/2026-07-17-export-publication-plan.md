@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#export-publication'
 date: '2026-07-17'
-modified: '2026-07-24'
+modified: '2026-07-25'
 tier: L1
 related:
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
@@ -15,6 +15,16 @@ related:
   - '[[2026-07-17-export-publication-audit]]'
   - '[[2026-07-17-export-publication-adr]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `export-publication` plan
 
@@ -31,6 +41,8 @@ related:
 - [x] `S11` - Decide and implement whether a crash after os.replace succeeds but before the PROFILE_EXPORTED audit event eventually emits that event: adopt the three-phase journal (PREPARED, then replace plus fsync transitioning to COMPLETED, then emit the event, with reconcile completing a COMPLETED-but-eventless operation), closing the un-audited data-egress window and wiring the currently-dead COMPLETED operation-state enum, a data-egress audit-completeness posture item with limited privacy impact (a local file at the operator own path, not remote transmission), gated on no durably-published bundle lacking a PROFILE_EXPORTED event after reconcile; `src/cadrumo/application/user_profile/_bundle_export.py, src/cadrumo/application/user_profile/tests/test_bundle_export_recovery.py`.
 - [x] `S12` - Wire the built crash-recovery reconciliation into the production publication path so a crashed export's orphan operation journal and its cleartext staged temporary file are cleared by an operator-reachable code path rather than only by the test harness, choosing the trigger from how the journal and staged temp are actually keyed; `src/cadrumo/application/user_profile/_bundle_export.py, src/cadrumo/application/user_profile/tests/test_bundle_export_recovery.py`.
 - [x] `S13` - Make the personal-data category derivation exhaustive by construction so a new portable-bundle schema field cannot silently vanish from the subject-access disclosure, classifying every bundle field as category-mapped, envelope metadata, or carried-namespace derived and refusing an unclassified field, gated on a non-tautological test that enumerates the model's own fields and proves an unmapped field fails; `src/cadrumo/application/user_profile/_bundle_export_contracts.py, src/cadrumo/application/user_profile/tests/test_bundle_export.py`.
+- [x] `S14` - Isolate each operation inside the export reconciliation sweep so one unreadable or unfinalisable journal cannot starve every later-ordered operation, returning a typed reconciliation that reports the isolated failures rather than swallowing them, gated on a poisoned-journal test proving a healthy operation still reconciles alongside a failing one; `src/cadrumo/application/user_profile/_bundle_export.py, src/cadrumo/application/user_profile/_bundle_export_operation.py, src/cadrumo/application/user_profile/tests/test_bundle_export_recovery.py`.
+- [x] `S15` - Expose an operator-invocable export reconciliation verb under the app root so a crashed operator who never exports again can still clear the orphan journal and its cleartext staged temporary file, reporting cleared and failed operations through the typed notice channel, gated on a crash-simulating test driven through the CLI runner; `src/cadrumo/entrypoints/cli/_app_maintenance.py, src/cadrumo/entrypoints/cli/_app_maintenance_payloads.py, src/cadrumo/entrypoints/cli/tests/test_app_maintenance_export_reconcile.py`.
 ## Description
 
 Collapse two CLI-owned export writers onto one durable publication service. Portable profile export and the subject-access request each independently implement serialization, directory creation, publication, and event sequencing from inside the CLI. That is two parallel writers for the same durable artifact, each with its own crash behaviour, and neither with a recoverable preparation state.
