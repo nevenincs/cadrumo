@@ -335,11 +335,15 @@ jobs:
       # attaches nothing that has not passed this sweep.
       - name: Leak-sweep every asset before it can be attached
         run: |
-          # Feed the sweep this runner's own identity tokens so the backstop
-          # catches cross-machine hostname/username residue an evidence row
-          # minted on another runner may still carry (home-dir and UNC leaks
-          # are token-independent; hostname/username are not). Only non-empty
-          # tokens are passed — an empty --token would match every byte.
+          # Coverage note: these are THIS (promotion) runner's own identity
+          # tokens, so the token-based part of the sweep catches only residue
+          # this runner would leave. Residue minted on a DIFFERENT runner is
+          # caught only by the token-INDEPENDENT patterns (home-dir and UNC
+          # paths), which run regardless of --token; another runner's
+          # hostname/username is NOT covered here — the minting-lane runner
+          # names are not enumerable in this workflow, so we do not claim to
+          # catch them. Only non-empty tokens are passed — an empty --token
+          # would match every byte.
           sweep_tokens=()
           for tok in "$RUNNER_NAME" "$(hostname 2>/dev/null)" "$(whoami 2>/dev/null)"; do
             [[ -n "$tok" ]] && sweep_tokens+=(--token "$tok")
@@ -410,10 +414,12 @@ jobs:
             --cohort-manifest "$RELEASE_COHORT_DIR/release-cohort.json" \
             --release-base-url "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/releases/download/v$VERSION" \
             --output "$DOWNLOAD_LATEST_DIR/download-latest.json"
-          # Same fail-closed backstop as the pre-attach sweep: feed this runner's
-          # identity tokens (only non-empty ones; an empty --token matches every
-          # byte) so any residual hostname/username/home-dir residue hard-fails
-          # before this asset can be attached.
+          # Same fail-closed backstop as the pre-attach sweep. Coverage is
+          # token-scoped to THIS runner's identity; home-dir/UNC residue is
+          # caught token-independently, but a different minting runner's
+          # hostname/username is not covered (those names are not enumerable
+          # here). Only non-empty tokens are passed — an empty --token matches
+          # every byte.
           sweep_tokens=()
           for tok in "$RUNNER_NAME" "$(hostname 2>/dev/null)" "$(whoami 2>/dev/null)"; do
             [[ -n "$tok" ]] && sweep_tokens+=(--token "$tok")
