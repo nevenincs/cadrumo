@@ -114,14 +114,13 @@ def _run_full_screen_with_locale_hook(
 ) -> FlowState:
     """Run the full-screen frontend with the mid-walk locale-switch hook wired.
 
-    The hook must call :meth:`FlowTuiApp.rebuild_for_locale` after activating
-    the language so the mounted screen (its footer bindings included)
-    re-resolves under the new locale. That needs the app handle
-    :func:`~cadrumo.adapters.inbound.tui.run_flow_tui` does not surface, so the
-    app is constructed here and driven with the same abandoned-run guard.
+    The hook calls :meth:`FlowTuiApp.rebuild_for_locale` after activating the
+    language so the mounted screen (its footer bindings included) re-resolves
+    under the new locale. The app handle arrives through ``on_app_ready``, so
+    the runner keeps ownership of the app lifecycle and its abandoned-run
+    guard.
     """
-    from ....adapters.inbound.tui import FlowTuiApp
-    from ....application.flows import FlowCheckpointError
+    from ....adapters.inbound.tui import run_flow_tui
 
     holder: dict[str, FlowTuiApp] = {}
 
@@ -129,20 +128,14 @@ def _run_full_screen_with_locale_hook(
         if on_language_activated(page_key, value):
             holder["app"].rebuild_for_locale()
 
-    app = FlowTuiApp(
+    state, _projection = run_flow_tui(
         definition,
         mode=mode,
         registered_values=registered_values,
         on_answer_committed=_committed,
+        on_app_ready=lambda app: holder.__setitem__("app", app),
     )
-    holder["app"] = app
-    app.run()
-    if app.final_state is None:
-        raise FlowCheckpointError(
-            translated_message="flows.errors.tui_abandoned",
-            context={"flow_id": definition.id, "mode": mode.value},
-        )
-    return app.final_state
+    return state
 
 
 __all__ = ["run_setup_flow_frontend"]
