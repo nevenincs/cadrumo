@@ -28,8 +28,7 @@ from ....adapters.persistence.storage.master_key import (
     profile_session_path,
 )
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....core._config_support import SecretStoreBackend
-from ....core.config import load_settings, override_settings
+from ....core.config import SecretStoreBackend, load_settings, override_settings
 from ....core.time import now as _now
 from ....tests.cli_runner import invoke_cached_cli, semantic_cli_output
 from ....tests.secure_sql import isolated_profile_storage_root

@@ -4,7 +4,9 @@ Public surface for at-rest key custody. Re-exports the provider family
 (:class:`MasterKeyProvider`, :class:`KeyringMasterKeyProvider`,
 :class:`FileFallbackMasterKeyProvider`, and
 :class:`UnsecuredMasterKeyProvider`), the
-:func:`get_master_key_provider` resolver, and the
+:func:`get_master_key_provider` resolver together with the
+:obj:`PassphraseCallback` alias naming its passphrase-resolver
+parameter, and the
 :func:`activate_master_key_provider` / :func:`activate_session`
 context managers that bind unlocked key material to the active bucket
 session. :class:`NoActiveBucketSessionError`,
@@ -92,6 +94,7 @@ from ._master_key_derivation import (
     ARGON2_TIME_COST,
     derive_kek_with_params,
 )
+from ._master_key_io import PassphraseCallback
 from ._persisted_session import (
     PROFILE_SESSION_KEYCHAIN_SERVICE,
     PROFILE_SESSION_SCHEMA_VERSION,
@@ -158,6 +161,7 @@ __all__ = [
     "MasterKeyReentrantError",
     "MintedRecovery",
     "NoActiveBucketSessionError",
+    "PassphraseCallback",
     "PersistedProfileSession",
     "ProfileSessionResumeOutcome",
     "RecoveryEnrollmentMode",

@@ -14,11 +14,14 @@ primitives — it owns no crypto and no second write path:
   (:func:`~cadrumo.adapters.persistence.storage.master_key.evaluate_login_throttle`,
   evaluated BEFORE any Argon2id derivation so the key-derivation function
   can never become a passphrase-testing oracle),
-- the master-key provider, whose ``__enter__`` IS the authentication: it
-  unwraps the key material and opens the
-  :class:`~cadrumo.adapters.persistence.storage.master_key.BucketSession`,
-  so a wrong passphrase surfaces as an AEAD failure rather than any
-  comparison of secret strings, and
+- the master-key provider (:class:`MasterKeyProvider`), whose
+  ``get_master_key`` unwrap IS the authentication: the outcome derives
+  solely from AEAD success, so a wrong passphrase surfaces as an unwrap
+  failure rather than any comparison of secret strings. This module then
+  opens the
+  :class:`~cadrumo.adapters.persistence.storage.master_key.BucketSession`
+  itself rather than through the provider's ``with`` block, because a
+  login session must outlive this call, and
 - the session-wrapped-DEK record
   (:func:`~cadrumo.adapters.persistence.storage.master_key.mint_profile_session`
   / :func:`~cadrumo.adapters.persistence.storage.master_key.resume_profile_session`)
@@ -70,16 +73,14 @@ from ...adapters.persistence.storage.master_key import (
 )
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BucketPointer, ProfileSessionRefusalReason
-from ...core._config_support import SecretStoreBackend
-from ...core.config import load_settings
+from ...core.config import SecretStoreBackend, load_settings
 from ...core.logging import get_logger
 from ...core.time import now as _now
 from ...domain.user_profile import ProfileNotFoundError, UserProfileError
 from ._profile_pointer_transaction import ActiveProfilePointerTransaction, active_profile_pointer_transaction
 
 if TYPE_CHECKING:
-    from ...adapters.persistence.storage.master_key import MasterKeyProvider
-    from ...adapters.persistence.storage.master_key._master_key_io import PassphraseCallback
+    from ...adapters.persistence.storage.master_key import MasterKeyProvider, PassphraseCallback
     from ..workflow import ProfileBucketPointer
 
 _log = get_logger(__name__)
