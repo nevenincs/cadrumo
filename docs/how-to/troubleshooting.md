@@ -41,7 +41,7 @@ The wrong profile is active. Each profile keeps its own ledger, calculations, an
 :verify: Confirm the active profile is the one you expect to be working under.
 ```
 
-Switch to the right profile with `aeat config switch <profile-name>` - [Set up your taxpayer profile](profile-setup.md) covers creating and switching profiles.
+Log in to the right profile with `aeat config login <profile-name>` - [Set up your taxpayer profile](profile-setup.md) covers creating profiles and moving between them.
 
 ## A calculation refuses because the ledger is not ready
 
@@ -193,7 +193,7 @@ participation index. Rebuild it first if the lookup appears incomplete:
 
 The index is a derived cross-reference, safe to regenerate at any time: `rebuild` rescans the finalized calculation records and rewrites it. Run it if a participation lookup looks incomplete. Rebuilding changes no ledger or filing data.
 
-Both `participation` verbs read the active profile's encrypted bucket, so they need an unlocked profile session. If either refuses with `No hay una sesion de bucket activa`, switch to the profile first with `aeat config switch <profile-name>`.
+Both `participation` verbs read the active profile's encrypted bucket, so they need an unlocked profile session. If either refuses with `No hay una sesion de bucket activa`, log in to the profile first with `aeat config login <profile-name>`.
 
 When nothing else recovers the problem, and only then, clear the saved progress of interrupted commands. This command is destructive:
 
