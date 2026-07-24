@@ -158,7 +158,7 @@ def apoderado_configure(
     profile fact.
     """
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import ApoderadoService
+    from ....application.auth import ApoderadoRepresentedNifInvalidError, ApoderadoService
     from ....application.workflow import workflow_state_repository
 
     workflow_state_repository().load()
@@ -171,15 +171,32 @@ def apoderado_configure(
     else:
         resolved_nif = represented_nif
         if not scope_tokens:
+            # A late, catalogue-driven refusal must enumerate the accepted
+            # scope set, never bare "value required" -- the CLI gate is the
+            # operator's first instructive surface.
             raise _CliRefusedBoundaryError(
-                translated_message="cli.config.auth.apoderado.configure.scope_help",
+                tr(
+                    "cli.config.auth.apoderado.configure.scope_required",
+                    default="No scope provided. Pass --scope with one or more of: %{codes}.",
+                    codes=", ".join(sorted(svc.catalogue.code_set())),
+                ),
             )
 
-    result = svc.configure(
-        bucket_id=pointer.bucket_id,
-        represented_nif=resolved_nif,
-        scope_tokens=scope_tokens,
-    )
+    try:
+        result = svc.configure(
+            bucket_id=pointer.bucket_id,
+            represented_nif=resolved_nif,
+            scope_tokens=scope_tokens,
+        )
+    except ApoderadoRepresentedNifInvalidError as exc:
+        # Both transports commit through the service's single identity
+        # authority; the raw identifier never enters the refusal context.
+        raise _CliRefusedBoundaryError(
+            tr(
+                "errors.refused.refused_apoderado_invalid_represented_nif",
+                default="The represented party's tax identifier is not a valid NIF, NIE, or CIF.",
+            ),
+        ) from exc
 
     from .._config_payloads import ApoderadoConfigureResult
 
@@ -203,12 +220,12 @@ def _collect_apoderado_answers_interactively(
     ``MODIFY`` mode with no checkpoint store: the answers stage in an
     in-memory :class:`FlowState` and are handed back for a single commit
     through the service. A host that cannot present an interactive flow
-    (piped / non-interactive) refuses with the substrate's no-console copy,
-    which points the operator at the ``--represented-nif`` / ``--scope`` flags.
+    (piped / non-interactive) refuses with an apoderado-specific hint that
+    names the ``--represented-nif`` / ``--scope`` flags -- the real recovery
+    for this verb -- rather than the generic substrate no-console copy.
     """
     from ....application.auth import apoderado_answers_from_state, build_apoderado_flow_definition
     from ....application.flows import FlowUnsupportedConsoleError
-    from ....core.errors import resolve_error_message
     from ....core.flows import FlowMode
     from ._setup_flow_frontend import run_setup_flow_frontend
 
@@ -221,7 +238,16 @@ def _collect_apoderado_answers_interactively(
             checkpoint_store=None,
         )
     except FlowUnsupportedConsoleError as exc:
-        raise _CliRefusedBoundaryError(resolve_error_message(exc)) from exc
+        raise _CliRefusedBoundaryError(
+            tr(
+                "cli.config.auth.apoderado.configure.no_console_hint",
+                default=(
+                    "Interactive apoderado configuration needs a console. Configure "
+                    "non-interactively with: aeat config auth apoderado configure "
+                    "--represented-nif NIF --scope SCOPE."
+                ),
+            ),
+        ) from exc
     return apoderado_answers_from_state(state)
 
 

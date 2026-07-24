@@ -192,6 +192,7 @@ from ._apoderado import (
     ApoderadoConfiguration,
     ApoderadoConfigurationNotSetError,
     ApoderadoLiveCheckUnavailableError,
+    ApoderadoRepresentedNifInvalidError,
     ApoderadoService,
     ApoderadoStatus,
 )
@@ -308,6 +309,7 @@ __all__ = [
     "ApoderadoConfigurationNotSetError",
     "ApoderadoFlowAnswers",
     "ApoderadoLiveCheckUnavailableError",
+    "ApoderadoRepresentedNifInvalidError",
     "ApoderadoService",
     "ApoderadoStatus",
     "AuthAcquisitionLockRecord",

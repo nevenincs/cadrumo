@@ -646,6 +646,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.auth._apoderado.ApoderadoRepresentedNifInvalidError",
+        ErrorCode(
+            code="REFUSED_APODERADO_INVALID_REPRESENTED_NIF",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_apoderado_invalid_represented_nif",
+            default_suggestion="aeat config auth apoderado configure",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.transactions._errors.TransactionIdPrefixError",
         ErrorCode(
             code="REFUSED_FINANCIAL_LEDGER_TRANSACTION_ID_PREFIX",
