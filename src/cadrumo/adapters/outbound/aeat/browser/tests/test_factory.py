@@ -189,6 +189,25 @@ async def test_default_browser_session_reaps_browser_after_real_context_failure(
 
 
 @pytest.mark.asyncio
+async def test_launch_failure_hint_names_the_configured_channel_not_a_hardcoded_one() -> None:
+    """A real missing-binary launch failure must name the CONFIGURED channel's own install command.
+
+    ``msedge-beta`` is a real Playwright channel that is not provisioned on the
+    test workstation, so this forces the genuine 'executable doesn't exist'
+    Playwright driver error the hint keys off, rather than a synthetic message.
+    """
+    settings = Settings(cadrumo_browser_channel="msedge-beta")
+    session = await create_browser_session(settings, _profile("launch-hint"))
+    try:
+        with pytest.raises(BrowserError, match=r"playwright install msedge-beta") as excinfo:
+            await session.create_context()
+        assert "playwright install chromium" not in str(excinfo.value)
+        assert excinfo.value.failure_mode == "browser_launch_failed"
+    finally:
+        await session.close()
+
+
+@pytest.mark.asyncio
 async def test_context_creation_cancellation_reaps_browser_after_real_launch() -> None:
     """Cancellation drains Playwright context work before retained cleanup."""
     loop = asyncio.get_running_loop()

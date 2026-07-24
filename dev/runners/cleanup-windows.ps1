@@ -5,7 +5,7 @@
 # and MUST always exit 0 - a cleanup failure must never redden a green build.
 #
 # What it does, in order: purge stale _work/_temp entries; prune per-run lane
-# roots (cadrumo-s2* / cadrumo-claude-* / oracle-emit-work) older than 24h in
+# roots (cadrumo-homebrew* / cadrumo-scoop* / cadrumo-claude-* / oracle-emit-work) older than 24h in
 # RUNNER_TEMP and the checkout var/ tree (evidence dirs exempt); bound the uv /
 # pip / npm speed caches; guarded dangling-only docker hygiene against the host
 # daemon (the two Linux runner containers live here); one audit summary line.
@@ -18,7 +18,7 @@ $ErrorActionPreference = 'Continue'
 $ProgressPreference = 'SilentlyContinue'
 
 # --- constants -------------------------------------------------------------
-$LaneGlobs      = @('cadrumo-s2*', 'cadrumo-claude-*', 'oracle-emit-work*')
+$LaneGlobs      = @('cadrumo-homebrew*', 'cadrumo-scoop*', 'cadrumo-claude-*', 'oracle-emit-work*')
 $LaneMaxAgeHrs  = 24
 $EvidenceExempt = 'distribution-install-readiness'   # keep <7d evidence rows
 $EvidenceKeepHrs = 24 * 7
@@ -67,8 +67,25 @@ function Remove-Path([string]$Path) {
         Remove-Item $Path -Recurse -Force -ErrorAction Stop
         $script:Freed += $bytes
     } catch {
-        # locked / in-use by a concurrent job: leave it, log, never fail.
-        $script:Notes.Add("skip-locked:$([IO.Path]::GetFileName($Path))")
+        # Remove-Item chokes on >260-char paths, which the packaging-smoke
+        # scratch nests well past (observed 312 chars). robocopy mirrors an
+        # empty dir over the target natively beyond MAX_PATH, clearing the tree
+        # so the next checkout's clean step does not fail and wipe the repo.
+        try {
+            $empty = Join-Path $env:TEMP ("cadrumo-empty-" + [Guid]::NewGuid().ToString('N'))
+            $null = New-Item -ItemType Directory -Force -Path $empty -ErrorAction Stop
+            $null = robocopy $empty $Path /MIR /NFL /NDL /NJH /NJS /NC /NS /NP
+            Remove-Item $Path -Recurse -Force -ErrorAction SilentlyContinue
+            Remove-Item $empty -Recurse -Force -ErrorAction SilentlyContinue
+            if (Test-Path $Path) {
+                $script:Notes.Add("skip-locked:$([IO.Path]::GetFileName($Path))")
+            } else {
+                $script:Freed += $bytes
+            }
+        } catch {
+            # locked / in-use by a concurrent job: leave it, log, never fail.
+            $script:Notes.Add("skip-locked:$([IO.Path]::GetFileName($Path))")
+        }
     }
 }
 

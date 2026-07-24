@@ -13,6 +13,7 @@ from pathlib import Path
 
 import pytest
 from dev.packaging.smoke_core import _build_companion_wheels, _build_wheel, _run
+from dev.packaging.uv_constraints import export_runtime_constraints
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 
@@ -145,21 +146,50 @@ def test_generated_manifest_binds_exact_cohort_and_both_commands(
     assert manifest["persist"] == ["state"]
 
     hooks = manifest["pre_install"]
-    assert len(hooks) == 6
+    assert len(hooks) == 7
     assert "Join-Path $dir 'state'" in hooks[0]
     assert "uv venv" in hooks[1]
-    assert built_cohort.root.name in hooks[2]
-    assert "'[agent]'" in hooks[2]
-    assert built_cohort.manuals.name in hooks[2]
-    assert built_cohort.official.name in hooks[2]
-    assert "uv pip check" in hooks[3]
+    # The transitive dependency closure is pinned from the tested uv.lock: a
+    # constraints file is written to the app dir and fed to uv pip install.
+    assert "Set-Content" in hooks[2]
+    assert "constraints.txt" in hooks[2]
+    assert "==" in hooks[2]
+    assert built_cohort.root.name in hooks[3]
+    assert "'[agent]'" in hooks[3]
+    assert "--constraint (Join-Path $dir 'constraints.txt')" in hooks[3]
+    assert built_cohort.manuals.name in hooks[3]
+    assert built_cohort.official.name in hooks[3]
+    assert "uv pip check" in hooks[4]
     assert sum("$LASTEXITCODE -ne 0" in hook for hook in hooks) == 3
-    for executable, hook in zip(("aeat", "cadrumo-mcp"), hooks[4:], strict=True):
+    for executable, hook in zip(("aeat", "cadrumo-mcp"), hooks[5:], strict=True):
         assert ('if not defined CADRUMO_LOCAL_STORAGE_ROOT set `"CADRUMO_LOCAL_STORAGE_ROOT=$state`"') in hook
         assert f"venv\\Scripts\\{executable}.exe" in hook
         assert "%*" in hook
         assert f"Join-Path $dir '{executable}.cmd'" in hook
         assert "-NoNewline -Encoding ascii" in hook
+
+
+def test_manifest_pins_transitive_closure_from_lock(
+    tmp_path: Path,
+    built_cohort: BuiltCohort,
+) -> None:
+    """The written constraints closure is the exact tested uv.lock export."""
+    output = tmp_path / "manifest.json"
+    _run(
+        [*_generator_command(built_cohort), "--output", str(output)],
+        cwd=_REPO_ROOT,
+    )
+    manifest = json.loads(output.read_text(encoding="utf-8"))
+    write_hook = manifest["pre_install"][2]
+    install_hook = manifest["pre_install"][3]
+
+    expected = export_runtime_constraints(repo_root=_REPO_ROOT)
+    assert expected
+    for line in expected:
+        assert "==" in line
+        assert line in write_hook
+    # The pinned file must actually gate the install, not merely be written.
+    assert "--constraint (Join-Path $dir 'constraints.txt')" in install_hook
 
 
 @pytest.mark.parametrize(

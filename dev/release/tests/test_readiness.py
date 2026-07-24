@@ -85,7 +85,9 @@ def _make_repo_root(tmp_path: Path, *, version: str = "1.2.3") -> Path:
     _write_pyprojects(root, version)
     _write_init(root, version)
     _write_manifest(root, version)
-    _write_mcpb_manifest(root, version)
+    # The tracked MCPB manifest never carries the release version: build.py
+    # stamps it, so the version gate requires the synthetic sentinel.
+    _write_mcpb_manifest(root, readiness._MCPB_MANIFEST_VERSION_SENTINEL)
     (root / "CHANGELOG.md").write_text(
         "# Changelog\n\n## [1.2.3] - 2026-07-04\n\n### Features\n- thing\n", encoding="utf-8"
     )
@@ -103,23 +105,24 @@ def test_version_surfaces_agree_passes_when_all_release_authorities_match(tmp_pa
     assert "2.0.0" in check.detail
 
 
-def test_version_surfaces_agree_fails_when_the_mcpb_bundle_pin_is_stale(tmp_path: Path) -> None:
-    """A stale ``.mcpb`` version or uvx self-install pin reds the release parity gate.
+def test_version_surfaces_agree_fails_when_the_mcpb_manifest_is_not_the_sentinel(tmp_path: Path) -> None:
+    """A real-looking tracked ``.mcpb`` manifest version reds the release parity gate.
 
-    Enrolling the Desktop-Extension bundle in this gate means a release bump that
-    updates every other surface but leaves the bundle pinned to the prior release
-    (so the bundle would self-install a stale ``cadrumo[agent]``) fails loudly.
+    build.py stamps the cohort version over the tracked manifest at build time,
+    so the committed literal must stay the synthetic sentinel: a hand-stamped
+    real version would masquerade as a version authority and rot on the next
+    release bump. The BUILT bundle's stamped version is bound to the cohort by
+    ``check_generated_surface_versions`` instead.
     """
     root = _make_repo_root(tmp_path, version="2.0.0")
-    # Bump every other release surface to 2.1.0, leaving the mcpb bundle at 2.0.0.
-    _write_pyprojects(root, "2.1.0")
-    _write_init(root, "2.1.0")
-    _write_manifest(root, "2.1.0")
+    # A stale hand-stamped literal (the pre-sentinel failure mode).
+    _write_mcpb_manifest(root, "2.0.0")
 
     check = readiness.check_version_surfaces_agree(root)
 
     assert check.passed is False
     assert "mcpb='2.0.0'" in check.detail
+    assert readiness._MCPB_MANIFEST_VERSION_SENTINEL in check.detail
 
 
 def test_project_names_are_canonical_for_root_and_both_companions(tmp_path: Path) -> None:
@@ -381,6 +384,54 @@ def test_no_open_release_blockers_is_advisory_when_gh_not_installed(tmp_path: Pa
     assert "not found on PATH" in check.detail
 
 
+def test_no_open_release_blockers_strict_blocks_when_gh_cannot_determine(tmp_path: Path) -> None:
+    """On the Gate-2 (strict) path, an unresolvable gh is a blocking cannot-determine, not advisory."""
+    missing = tmp_path / "definitely-not-gh"
+
+    check = readiness.check_no_open_release_blockers(gh_executable=str(missing), strict=True)
+
+    assert check.passed is False
+    assert check.severity == "blocking"
+    assert "cannot determine blocker state" in check.detail
+
+
+def test_no_open_release_blockers_strict_still_passes_on_clean_query(tmp_path: Path) -> None:
+    """Strict mode escalates only cannot-determine; a successful empty query still passes."""
+    bin_dir = tmp_path / "bin"
+    script = _write_probe_gh(bin_dir, issues_json="[]")
+
+    check = readiness.check_no_open_release_blockers(gh_executable=str(script), strict=True)
+
+    assert check.passed is True
+
+
+def test_build_report_makes_the_blocker_check_strict_on_the_cohort_dir_path(tmp_path: Path) -> None:
+    """A cohort-dir (Gate-2) run escalates a blind blocker query to a blocking failure."""
+    root = _make_repo_root(tmp_path)
+    missing_gh = tmp_path / "definitely-not-gh"
+    cohort_dir = tmp_path / "promoted-cohort"
+    cohort_dir.mkdir()
+
+    report = readiness.build_report(root, gh_executable=str(missing_gh), cohort_directory=cohort_dir)
+
+    blocker = next((c for c in report.checks if c.name == "no-open-release-blockers"), None)
+    assert blocker is not None
+    assert blocker.severity == "blocking"
+    assert "cannot determine blocker state" in blocker.detail
+
+
+def test_build_report_leaves_the_blocker_check_advisory_without_a_cohort_dir(tmp_path: Path) -> None:
+    """A local (no cohort-dir) run keeps the blind blocker query advisory, not blocking."""
+    root = _make_repo_root(tmp_path)
+    missing_gh = tmp_path / "definitely-not-gh"
+
+    report = readiness.build_report(root, gh_executable=str(missing_gh))
+
+    blocker = next((c for c in report.checks if c.name == "no-open-release-blockers"), None)
+    assert blocker is not None
+    assert blocker.severity == "advisory"
+
+
 def test_build_report_blocks_without_complete_distribution_evidence(tmp_path: Path) -> None:
     """Version parity alone cannot authorize a release with no installed evidence."""
     root = _make_repo_root(tmp_path)
@@ -394,6 +445,20 @@ def test_build_report_blocks_without_complete_distribution_evidence(tmp_path: Pa
         "distribution-evidence-complete",
         "generated-surface-versions",
     }
+
+
+def test_build_report_wires_in_the_packaging_smoke_evidence_check(tmp_path: Path) -> None:
+    """The advisory packaging-smoke evidence check runs as part of the aggregate report."""
+    root = _make_repo_root(tmp_path)
+
+    report = readiness.build_report(root, skip_network=True)
+
+    smoke = next((c for c in report.checks if c.name == "packaging-smoke-evidence"), None)
+    assert smoke is not None, "packaging-smoke-evidence must be wired into build_report"
+    # Advisory semantics survive the wiring: a fresh root has no smoke run, and an
+    # absent manifest degrades to advisory rather than blocking the whole report.
+    assert smoke.severity == "advisory"
+    assert smoke.name not in {c.name for c in report.blocking_failures}
 
 
 def test_build_report_blocks_on_a_real_version_drift(tmp_path: Path) -> None:

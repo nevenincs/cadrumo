@@ -1523,6 +1523,80 @@
     });
   }
 
+  /* ── Download cards (progressive enhancement) ───────────────────────────
+   * The Tier-1 generated table in download.md is the floor: it always renders
+   * the channel matrix offline. When a release publishes download-latest.json
+   * beside this script, initDownloadCards() fetches it and fills the
+   * [data-cadrumo-downloads] mount with the release version and direct asset
+   * links. The file is derived from this script's own src (same-origin,
+   * page-depth-independent, like cliTreeUrl); a fetch failure or absent file
+   * degrades silently and leaves the Tier-1 table untouched. */
+
+  function downloadLatestUrl() {
+    var script = document.querySelector('script[src*="cadrumo-docs.js"]');
+    if (!script || !script.src) return null;
+    try {
+      return new URL("download-latest.json", script.src).href;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function renderDownloadCards(mount, data) {
+    if (!data || !Array.isArray(data.assets) || !data.assets.length) return;
+    while (mount.firstChild) mount.removeChild(mount.firstChild);
+
+    var heading = document.createElement("p");
+    heading.className = "cadrumo-downloads-heading";
+    heading.textContent = "Direct downloads for the latest release" +
+      (data.version ? " (v" + data.version + ")" : "");
+    mount.appendChild(heading);
+
+    var list = document.createElement("ul");
+    list.className = "cadrumo-downloads-list";
+    data.assets.forEach(function (asset) {
+      if (!asset || !asset.filename) return;
+      var item = document.createElement("li");
+      if (asset.url) {
+        var link = document.createElement("a");
+        link.href = asset.url;
+        link.rel = "noopener";
+        link.textContent = asset.filename;
+        item.appendChild(link);
+      } else {
+        item.textContent = asset.filename;
+      }
+      if (asset.kind) {
+        var kind = document.createElement("span");
+        kind.className = "cadrumo-downloads-kind";
+        kind.textContent = " — " + asset.kind;
+        item.appendChild(kind);
+      }
+      list.appendChild(item);
+    });
+    if (!list.childNodes.length) return;
+    mount.appendChild(list);
+    mount.hidden = false;
+  }
+
+  function initDownloadCards() {
+    var mount = document.querySelector("[data-cadrumo-downloads]");
+    if (!mount) return;
+    var url = downloadLatestUrl();
+    if (!url) return;
+    fetch(url, { credentials: "same-origin" })
+      .then(function (response) {
+        return response.ok ? response.json() : null;
+      })
+      .then(function (data) {
+        renderDownloadCards(mount, data);
+      })
+      .catch(function () {
+        /* Absent payload (dev preview or a build without the emit hook): the
+         * Tier-1 table remains the floor. Silently degrade. */
+      });
+  }
+
   // Language switcher: close the native details dropdown on outside click or
   // Escape (progressive enhancement; the disclosure works without script).
   function initLanguageSwitcher() {
@@ -1551,5 +1625,6 @@
     initSearchPage();
     initSequences();
     initHoverHelp();
+    initDownloadCards();
   });
 })();

@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Final
@@ -137,6 +138,44 @@ def _mcp_observations(mcp_evidence: InstalledMcpEvidence) -> dict[str, Any]:
     }
 
 
+class EvidenceCohortBindingError(RuntimeError):
+    """Raised when an oracle capture is not bound to the release cohort it is minted against."""
+
+
+def _assert_oracle_bound_to_cohort(
+    *,
+    cohort: LoadedReleaseCohort,
+    tax_evidence: InstalledTaxEvidence,
+    mcp_evidence: InstalledMcpEvidence,
+) -> None:
+    """Refuse to mint a record whose oracle capture is not the cohort's build.
+
+    The CLI reconstitutes ``tax-evidence.json`` / ``mcp-evidence.json`` a lane
+    already produced, then binds a cohort. Without this check the two are
+    independent: a capture of a *different* build could be minted against any
+    cohort, and the destination version is merely copied from the cohort. The
+    installed CLI's ``--version`` output is the captured fact that pins the
+    capture to the cohort: it must carry the cohort version, or the capture is
+    not this cohort's build and minting is refused. The MCP dimension is bound
+    transitively — ``build_installed_oracle_evidence`` requires both oracles, and
+    a lane captures both from one installed cohort run; the MCP telemetry
+    ``invoked_cli_sha256`` is an attested CLI-*path* digest, not a cohort artifact
+    digest, so it cannot bind to the cohort manifest directly.
+    """
+    version = cohort.manifest.version
+    # Match on a token boundary, not a bare substring: a 0.2.10 or 0.2.1rc1
+    # capture must NOT false-accept against a 0.2.1 cohort. The guards reject an
+    # adjacent version-continuation character (word char or dot) on either side.
+    version_token = re.compile(rf"(?<![\w.]){re.escape(version)}(?![\w.])")
+    if not version_token.search(tax_evidence.version_output):
+        raise EvidenceCohortBindingError(
+            f"installed CLI version output {tax_evidence.version_output!r} does not carry the "
+            f"cohort version {version!r} as a distinct version token: the captured oracle is not "
+            "this cohort's build. Re-run the installed oracles against the cohort under test before "
+            "emitting evidence.",
+        )
+
+
 def build_installed_oracle_evidence(
     *,
     row_id: str,
@@ -172,10 +211,14 @@ def build_installed_oracle_evidence(
     Returns:
         A validated, tamper-evident :class:`~dev.packaging.evidence.DistributionEvidence`.
     """
+    _assert_oracle_bound_to_cohort(cohort=cohort, tax_evidence=tax_evidence, mcp_evidence=mcp_evidence)
     commands = tuple(_command_transcript(command) for command in tax_evidence.commands)
     isolation = ExecutionIsolation(
-        checkout_imports_removed=True,
-        ambient_product_executables_removed=True,
+        # Derived from what the oracles actually recorded, not asserted: if a future
+        # refactor stops stripping checkout imports or product executables, the oracle
+        # records False and the evidence schema refuses to mint a PASSED record.
+        checkout_imports_removed=tax_evidence.checkout_imports_removed and mcp_evidence.checkout_imports_removed,
+        ambient_product_executables_removed=mcp_evidence.ambient_product_executables_removed,
         installed_executables=(
             _installed_executable(_CLI_EXECUTABLE_NAME, tax_evidence.resolved_executable),
             _installed_executable(_MCP_EXECUTABLE_NAME, mcp_evidence.resolved_executable),
@@ -285,8 +328,9 @@ def build_client_evidence(
             "proof; an owned launch alone cannot satisfy a real-client claim.",
         )
     isolation = ExecutionIsolation(
-        checkout_imports_removed=True,
-        ambient_product_executables_removed=True,
+        # Derived from the MCP oracle's recorded isolation (see build_installed_oracle_evidence).
+        checkout_imports_removed=mcp_evidence.checkout_imports_removed,
+        ambient_product_executables_removed=mcp_evidence.ambient_product_executables_removed,
         installed_executables=(_installed_executable(_MCP_EXECUTABLE_NAME, mcp_evidence.resolved_executable),),
     )
     observations: dict[str, Any] = {"mcp_oracle": _mcp_observations(mcp_evidence)}
@@ -375,6 +419,23 @@ def emit_installed_oracle_evidence(
     return write_distribution_evidence(directory, evidence)
 
 
+def _require_isolation_fields(data: dict[str, Any], *, kind: str, fields: tuple[str, ...]) -> None:
+    """Refuse a pre-isolation-recording capture with an instructive re-capture action.
+
+    Evidence JSON captured before the oracle recorded its isolation facts lacks
+    these keys. Rather than die with a raw ``KeyError``, name the missing fields
+    and the re-capture action. This is a hard refusal, not a tolerance branch:
+    an old-shape capture is never minted with defaulted isolation.
+    """
+    missing = [field for field in fields if field not in data]
+    if missing:
+        raise EvidenceCohortBindingError(
+            f"{kind} oracle JSON is missing the isolation field(s) {missing}: this capture predates the "
+            "isolation-fact recording and cannot be minted. Re-run the installed oracles against the cohort "
+            "under test to produce a current capture.",
+        )
+
+
 def _tax_evidence_from_mapping(data: dict[str, Any]) -> InstalledTaxEvidence:
     """Reconstruct installed-CLI oracle evidence from its ``to_jsonable`` mapping.
 
@@ -382,6 +443,7 @@ def _tax_evidence_from_mapping(data: dict[str, Any]) -> InstalledTaxEvidence:
     PowerShell Scoop smoke) can emit the flat record without re-running the
     oracle. Tuple-typed fields arrive as JSON lists and are coerced back.
     """
+    _require_isolation_fields(data, kind="installed CLI", fields=("checkout_imports_removed",))
     commands = tuple(
         CommandEvidence(
             argv=tuple(command["argv"]),
@@ -408,6 +470,7 @@ def _tax_evidence_from_mapping(data: dict[str, Any]) -> InstalledTaxEvidence:
         legal_refs=tuple(data["legal_refs"]),
         source_refs=tuple(data["source_refs"]),
         notice_codes=tuple(data["notice_codes"]),
+        checkout_imports_removed=data["checkout_imports_removed"],
         commands=commands,
     )
 
@@ -420,6 +483,11 @@ def _mcp_evidence_from_mapping(data: dict[str, Any]) -> InstalledMcpEvidence:
     """
     from dev.packaging.installed_mcp_oracle import InstalledMcpEvidence, McpCallEvidence
 
+    _require_isolation_fields(
+        data,
+        kind="installed MCP",
+        fields=("checkout_imports_removed", "ambient_product_executables_removed"),
+    )
     calls = tuple(
         McpCallEvidence(
             tool_name=call["tool_name"],
@@ -448,6 +516,8 @@ def _mcp_evidence_from_mapping(data: dict[str, Any]) -> InstalledMcpEvidence:
         calls=calls,
         invoked_cli_sha256=data["invoked_cli_sha256"],
         invoked_cli_sha256_by_command=dict(data["invoked_cli_sha256_by_command"]),
+        checkout_imports_removed=data["checkout_imports_removed"],
+        ambient_product_executables_removed=data["ambient_product_executables_removed"],
     )
 
 
@@ -497,6 +567,7 @@ def main(argv: list[str] | None = None) -> int:
 
 __all__ = [
     "SDK_CLIENT_NAME",
+    "EvidenceCohortBindingError",
     "build_client_evidence",
     "build_installed_oracle_evidence",
     "emit_client_evidence",

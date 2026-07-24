@@ -120,8 +120,14 @@ def test_validate_promotes_without_rebuild() -> None:
     assert "gh release create" not in surface
 
 
-def test_validate_aggregates_all_twelve_rows_from_authoritative_sources() -> None:
-    """Gate 2 pulls every channel's rows from its own run and re-checks 12/12, no weakening."""
+def test_validate_aggregates_all_eleven_rows_from_authoritative_sources() -> None:
+    """Gate 2 pulls every channel's rows from its own run and re-checks 11/11, no weakening.
+
+    Eleven is the true bound set: ``REQUIRED_DISTRIBUTION_ROWS`` carries exactly
+    3 python + 1 scoop + 3 homebrew + 4 claude-* rows, and Gate 2 aggregates the
+    same partition (packaging smoke draft, scoop, homebrew, and the operator's
+    claude evidence release).
+    """
     validate = _document()["jobs"]["validate"]
     surface = _run_surface(validate)
 
@@ -150,6 +156,45 @@ def test_validate_aggregates_all_twelve_rows_from_authoritative_sources() -> Non
     # The readiness gate still enforces the complete bound row set (no weakening).
     assert "dev.release.readiness" in surface
     assert "--evidence-dir" in surface
+
+
+def test_workflow_row_count_prose_matches_the_required_distribution_set() -> None:
+    """Both Gate-2/Gate-3 row-count comments name the true REQUIRED_DISTRIBUTION_ROWS size."""
+    from dev.release.readiness import REQUIRED_DISTRIBUTION_ROWS
+
+    assert len(REQUIRED_DISTRIBUTION_ROWS) == 11
+    text = _WORKFLOW.read_text(encoding="utf-8")
+    # The stale "twelve" drift is reconciled to the one true count everywhere.
+    assert "twelve" not in text
+    assert "Aggregate all eleven rows" in text
+    assert "eleven verified rows" in text
+
+
+def test_validate_runs_the_open_blocker_check_over_the_network() -> None:
+    """Gate 2 drops --skip-network so the readiness gate's open-P0-blocker check runs here."""
+    validate = _document()["jobs"]["validate"]
+    # issues:read is granted so the gh-backed blocker query can succeed here.
+    # Authority against a failed/blind query comes from the readiness gate's
+    # strict mode on the cohort-dir path (cannot-determine -> blocking), verified
+    # in test_readiness; a granted scope alone does not make a fail-open advisory
+    # authoritative.
+    assert validate["permissions"].get("issues") == "read"
+
+    steps = validate["steps"]
+    assert isinstance(steps, list)
+    readiness_step = next(
+        step
+        for step in steps
+        if isinstance(step, Mapping) and "dev.release.readiness" in str(step.get("run", ""))
+    )
+    # Inspect the executable lines only; a comment may still explain the change.
+    command = "\n".join(line for line in str(readiness_step["run"]).splitlines() if not line.lstrip().startswith("#"))
+    assert "--skip-network" not in command, "Gate 2 must run the networked open-blocker check"
+    assert "dev.release.readiness" in command
+    # The blocker query needs a token; the step provides the workflow token.
+    env = readiness_step.get("env", {})
+    assert isinstance(env, Mapping)
+    assert env.get("GH_TOKEN") == "${{ github.token }}"
 
 
 def test_pypi_ships_the_sealed_cohort_not_the_per_os_smoke_build() -> None:
@@ -191,6 +236,38 @@ def test_external_channel_pushes_refuse_instructively_when_unconfigured() -> Non
     assert "CADRUMO_HOMEBREW_TAP_TOKEN" in surface
 
 
+def test_external_pushes_keep_the_token_out_of_the_persisted_remote() -> None:
+    """Scoop/Homebrew/marketplace push via an -c http.extraheader, never a token-in-URL clone."""
+    surface = _run_surface(_document()["jobs"]["publish"])
+    # No clone embeds the token in the URL (it would persist in .git/config).
+    assert "x-access-token:${SCOOP_TOKEN}@" not in surface
+    assert "x-access-token:${TAP_TOKEN}@" not in surface
+    assert "x-access-token:${MARKETPLACE_TOKEN}@" not in surface
+    # Each channel authenticates via a per-command HTTP header and scrubs its temp
+    # dir right after the push.
+    assert surface.count('http.extraheader="$auth"') >= 6  # clone + push per channel
+    assert surface.count('printf \'x-access-token:%s\'') == 3
+    assert 'rm -rf "$work"' in surface
+    # The refuse-when-empty guards survive.
+    assert "REFUSED: Scoop bucket not configured" in surface
+    assert "REFUSED: Homebrew tap not configured" in surface
+    assert "REFUSED: Claude marketplace not configured" in surface
+
+
+def test_leak_sweep_passes_a_non_empty_runner_token_set() -> None:
+    """The publication leak-sweep feeds this runner's identity tokens, not an empty set."""
+    surface = _run_surface(_document()["jobs"]["publish"])
+    assert "evidence_release leak-sweep" in surface
+    # Real identity tokens are collected and passed; an empty token would match
+    # every byte, so only non-empty ones are forwarded.
+    assert "$RUNNER_NAME" in surface
+    assert "sweep_tokens+=(--token" in surface
+    assert '"${sweep_tokens[@]}"' in surface
+    # Both attach roots are still swept.
+    assert '"$EVIDENCE_FINAL_DIR/attach"' in surface
+    assert '"$RELEASE_COHORT_DIR"' in surface
+
+
 def test_publish_uploads_the_stored_cohort_via_trusted_publishing() -> None:
     """The publish job promotes stored wheels via OIDC Trusted Publishing and a GH release."""
     surface = _run_surface(_document()["jobs"]["publish"])
@@ -203,6 +280,26 @@ def test_publish_uploads_the_stored_cohort_via_trusted_publishing() -> None:
     # per-lane manifests, so draft GC can never orphan a shipped audit trail.
     assert "evidence-manifest-$4.json" in surface
     assert '"$EVIDENCE_FINAL_DIR/attach"' in surface
+
+
+def test_download_latest_payload_is_emitted_swept_and_attached() -> None:
+    """The docs download-latest.json is a projection of the sealed cohort, swept then attached.
+
+    It must (a) be projected from the SEALED cohort manifest (not rebuilt), (b)
+    pass the same fail-closed leak-sweep every attached asset passes, and (c) be
+    uploaded to the just-created release — after ``gh release create``, so the
+    versioned asset URLs it carries are valid.
+    """
+    surface = _run_surface(_document()["jobs"]["publish"])
+    assert "dev.docs.download_matrix emit-latest" in surface
+    # Projected from the sealed cohort manifest, not a rebuild.
+    assert '--cohort-manifest "$RELEASE_COHORT_DIR/release-cohort.json"' in surface
+    # The payload is leak-swept before it is attached.
+    assert surface.count("evidence_release leak-sweep") >= 2
+    assert '--directory "$DOWNLOAD_LATEST_DIR"' in surface
+    # Attached to the release that already exists (emit runs after the create).
+    assert 'gh release upload "v$VERSION" "$DOWNLOAD_LATEST_DIR/download-latest.json"' in surface
+    assert surface.index('gh release create "v$VERSION"') < surface.index("dev.docs.download_matrix emit-latest")
 
 
 def test_github_release_refuses_colliding_asset_basenames() -> None:

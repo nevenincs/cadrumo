@@ -227,6 +227,10 @@ def test_mcpb_launches_from_the_unpacked_extension_through_the_manifest_command(
     assert proof["first_launch_provisioning"] == "passed into bundle .venv"
     assert proof["second_launch_direct_exec"] == "passed with no re-resolution"
     assert proof["concurrent_server_launches"] == "passed"
+    # The provisioned interpreter was asserted against the bundle's pinned
+    # constraint closure before the tax oracle ran, so a lock-drifted install
+    # can never mint client-install evidence.
+    assert proof["constraint_effect"] == "passed against the provisioned bundle interpreter"
     assert proof["bundle_runtime_oracle"] == "passed outside a desktop client"
 
 

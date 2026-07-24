@@ -33,7 +33,7 @@ All three families are licensed under the **SIL Open Font License 1.1**
 
 The banner image, harness illustration, logo, and step icons under
 `src/assets/cadrumo/` are original works of the Cadrumo project,
-Copyright 2026 Gergely Wootsch and the cadrumo contributors, distributed
+Copyright 2026 Neve Nincs and the cadrumo contributors, distributed
 under the repository's Apache License 2.0.
 
 ---

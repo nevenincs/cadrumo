@@ -18,6 +18,7 @@ author wrote, which no defect can falsify.
 """
 
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -41,14 +42,31 @@ def _unresolved(keys: set[str], locale: str) -> set[str]:
     return {key for key in keys if tr(key, locale=locale, default=_SENTINEL) == _SENTINEL}
 
 
+def _as_str_keyed_dict(value: object) -> dict[str, object] | None:
+    """Narrow a loaded YAML catalogue node to a string-keyed dict, or ``None``.
+
+    Locale catalogues are YAML mappings, whose keys are always strings; the
+    runtime check restores that static guarantee for the dotted-key walk
+    below.
+    """
+    if not isinstance(value, dict):
+        return None
+    for key in value:
+        if not isinstance(key, str):
+            return None
+    return cast("dict[str, object]", value)
+
+
 def _leaf_value(catalogue: object, dotted_key: str) -> object:
     """Walk a dotted key through a loaded catalogue and return its leaf value."""
-    node = catalogue
-    for part in dotted_key.split("."):
-        if not isinstance(node, dict) or part not in node:
-            return None
-        node = node[part]
-    return node
+    node = _as_str_keyed_dict(catalogue)
+    if node is None:
+        return None
+    head, _, rest = dotted_key.partition(".")
+    if head not in node:
+        return None
+    value = node[head]
+    return _leaf_value(value, rest) if rest else value
 
 
 @pytest.mark.parametrize("locale", _LOCALES)

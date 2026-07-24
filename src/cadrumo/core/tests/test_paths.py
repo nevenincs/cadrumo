@@ -153,7 +153,9 @@ def test_is_windows_long_path_error_classifies_known_winerrors_for_current_platf
     expected = sys.platform == "win32"
     for winerror in (3, 206):
         exc = OSError(0, "boom")
-        exc.winerror = winerror  # real attribute Windows OSError instances carry
+        # winerror is a real attribute only on the win32 OSError; set it dynamically
+        # so the classifier sees the same payload it reads off a live Windows error.
+        setattr(exc, "winerror", winerror)  # noqa: B010
         assert is_windows_long_path_error(exc) is expected
 
 
@@ -162,7 +164,7 @@ def test_is_windows_long_path_error_rejects_non_long_path_errors() -> None:
     assert is_windows_long_path_error(OSError("generic failure")) is False
 
     exc = OSError(0, "boom")
-    exc.winerror = 5  # real ERROR_ACCESS_DENIED payload
+    setattr(exc, "winerror", 5)  # real ERROR_ACCESS_DENIED payload  # noqa: B010
     assert is_windows_long_path_error(exc) is False
 
 

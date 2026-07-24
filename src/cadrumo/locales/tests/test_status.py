@@ -10,7 +10,7 @@ import pytest
 
 from ...core.external_constants import OutputLanguage
 from ...core.resources import bundled_path
-from ...tests.cli_runner import invoke_typer_app
+from ...tests.cli_runner import invoke_typer_app, semantic_cli_output
 from .._modelo_manager import ModeloLocaleFieldKind, ModeloLocaleManager
 from .._status import CatalogueLeafState, catalogue_status, classify_catalogue_leaf
 from ..cli import app
@@ -236,4 +236,6 @@ def test_status_command_rejects_revision_without_modelo(manager: LocaleManager) 
     result = invoke_typer_app(app, ["status", "--revision", "2020"], obj=manager)
 
     assert result.exit_code != 0
-    assert "--revision requires --modelo" in result.output
+    # Typer force-styles the refusal on GitHub Actions (rich error panel with
+    # ANSI); strip styling so the message matches regardless of the CI terminal.
+    assert "--revision requires --modelo" in semantic_cli_output(result)

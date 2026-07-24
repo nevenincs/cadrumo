@@ -29,8 +29,8 @@ def per_grupo_member_requirement_keys(snapshot: RegistrySnapshot) -> set[tuple[s
     """Return the ``(modelo, filing_year, period)`` keys whose binding declares ``per_grupo_member``.
 
     Args:
-        snapshot: The :class:`RegistrySnapshot` whose ``previous_filing`` bindings
-            are inspected for a ``per_grupo_member`` grouping selector.
+        snapshot: The :class:`RegistrySnapshot` whose revision bindings are scanned
+            for a ``previous_filing`` selector declaring ``grouping = "per_grupo_member"``.
     """
     grouped_binding_ids = {
         binding.id

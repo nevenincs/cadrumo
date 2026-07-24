@@ -24,6 +24,7 @@ from typing import Final
 
 import cadrumo
 from cadrumo.agent import (
+    PRODUCT_AUTHOR_NAME,
     iter_operator_rules,
     iter_personas,
     iter_skill_documents,
@@ -44,6 +45,7 @@ _EXPECTED_PRODUCT_IDENTITY: Final[dict[str, str]] = {
     "mcp_tool_prefix": "cadrumo_",
     "mcp_resource_scheme": "cadrumo://",
     "plugin_identifier": "cadrumo",
+    "mcpb_author": PRODUCT_AUTHOR_NAME,
 }
 _APPROVED_GENERIC_MCP_TOOLS: Final[tuple[str, ...]] = (
     "describe",
@@ -1087,6 +1089,9 @@ def _product_identity_checks(
         if not isinstance(tool, dict) or not isinstance(tool.get("name"), str):
             raise ValueError(f"invalid MCPB tool declaration: {tool!r}")
         mcpb_tool_names.append(tool["name"])
+    mcpb_author = mcpb_manifest.get("author")
+    if not isinstance(mcpb_author, dict) or not isinstance(mcpb_author.get("name"), str):
+        raise ValueError("MCPB manifest author.name is invalid")
 
     plugin_args = plugin_server.get("args")
     marketplace_args = marketplace_server.get("args")
@@ -1227,6 +1232,10 @@ def _product_identity_checks(
                 ),
                 ProductIdentityObservation(surface="mcpb_manifest", value=str(mcpb_manifest.get("name", ""))),
             ),
+        ),
+        _product_check(
+            "mcpb_author",
+            (ProductIdentityObservation(surface="mcpb_manifest", value=str(mcpb_author["name"])),),
         ),
     )
 

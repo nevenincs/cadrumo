@@ -187,7 +187,7 @@ export const ca: Copy = {
       body: [
         <>
           Aquest lloc web, <strong>cadrumo.neve.md</strong>, i el domini{' '}
-          <strong>neve.md</strong> són publicats per <strong>Gergely Wootsch</strong>, la
+          <strong>neve.md</strong> són publicats per <strong>Neve Nincs</strong>, la
           persona física darrere de neve.md i del projecte Cadrumo, una iniciativa de codi
           obert sense ànim comercial. Aquesta identificació es facilita en atenció a
           l&rsquo;article 10 de la Llei 34/2002 (LSSI-CE) en la mesura que sigui aplicable a
@@ -342,6 +342,6 @@ export const ca: Copy = {
     disclaimerText:
       "és un projecte independent de codi obert (Apache-2.0). No està afiliat a l'AEAT i mai presenta declaracions; tu presentes a través dels canals oficials de l'AEAT i continues sent responsable de cada declaració.",
     legalLink: 'Avís legal, privadesa i galetes',
-    copyright: '© 2026 Gergely Wootsch i els contribuïdors de cadrumo.',
+    copyright: '© 2026 Neve Nincs i els contribuïdors de cadrumo.',
   },
 }

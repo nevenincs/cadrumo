@@ -208,11 +208,21 @@ class BrowserSession:
                 exc_info=True,
             )
             # When the failure is a missing browser binary (the post-install
-            # `playwright install` step was skipped), name the exact fix rather
-            # than relaying a bare driver error.
+            # `playwright install` step was skipped), name the exact fix for the
+            # CHANNEL THIS SESSION IS ACTUALLY CONFIGURED WITH — a bare
+            # 'playwright install chromium' hint misdirects an operator running
+            # the default 'chrome' channel to install the wrong browser.
             hint = ""
             if "executable doesn't exist" in str(exc).lower() or "playwright install" in str(exc).lower():
-                hint = " — run 'playwright install chromium' (or 'just provision') to install the browser binary"
+                channel = self.settings.cadrumo_browser_channel
+                if channel == "chrome":
+                    hint = (
+                        " — run 'playwright install chrome' (installs/detects the system "
+                        "Google Chrome; on Linux this needs OS package-manager/root access) "
+                        "or 'just playwright-doctor' to diagnose"
+                    )
+                else:
+                    hint = f" — run 'playwright install {channel}' (or 'just playwright-doctor' to diagnose)"
             raise BrowserError(
                 f"Failed to launch browser: {exc}{hint}",
                 failure_mode=BrowserFailureMode.BROWSER_LAUNCH_FAILED,
