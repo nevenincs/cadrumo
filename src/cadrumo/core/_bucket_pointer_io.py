@@ -147,13 +147,13 @@ def resolve_active_bucket_id() -> str | None:
 
     Precedence, highest wins:
 
-    1. ``Settings.cadrumo_active_profile`` — surfaced from the
-       ``CADRUMO_ACTIVE_PROFILE`` environment variable (or an active
-       :func:`~core.config.override_settings` block in tests).
-       Per-shell override useful for CI, headless invocations, and the
-       CLI ``--profile`` flag.
+    1. ``Settings.cadrumo_active_profile`` — the in-process override
+       written by the CLI ``--profile`` flag, or by an active
+       :func:`~core.config.override_settings` block in tests. No
+       environment variable populates it: profile selection belongs to
+       the pointer file.
     2. ``<cadrumo-root>/active-profile`` plaintext pointer file written by
-       ``profile create`` / ``config switch``. This is the canonical
+       ``profile create`` / ``config login``. This is the canonical
        default for interactive sessions and resolves the chicken-and-egg
        defect where an encrypted state row could not be read without
        first knowing which bucket to unlock.
