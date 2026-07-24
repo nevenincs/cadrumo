@@ -767,6 +767,42 @@ invocation lost two xdist workers to abrupt termination. Neither is a docs
 defect, but both make this gate unreliable to run locally while many agents share
 the machine.
 
+### final-honesty-semantic-evidence-withdrawn | medium | A dead code index made every semantic sweep in this corpus unfalsifiable
+
+The semantic evidence recorded during the closing gate run is withdrawn, and any
+earlier finding in this document that rests on a code-index search should be read
+with the same suspicion.
+
+The vaultspec-rag code index did not contain `src/cadrumo`. Its preprocessing
+config declares a schema version the installed indexer refuses, so every
+code-index job had been failing while the search endpoint kept answering with a
+full page of results drawn from the developer tooling, infrastructure, and
+packaging trees. A sweep for a retired certificate authority therefore returned
+no product-tree hits for a reason that had nothing to do with whether one exists.
+That is the worst shape a gate can take: not an error an operator would notice,
+but a confident green over an unsearched corpus. The failure was diagnosed
+elsewhere in the fleet and is owned by a dedicated repair lane.
+
+The conclusion this Step drew from those sweeps happens to be correct, but it was
+re-established on evidence that can actually fail. Exact multi-variant searches
+across English and Spanish stems find no handshake result or verifier, no
+certificate backend taxonomy or selector, no context marker or annotation, and no
+configurable verification target anywhere in the product tree. The surviving
+lexical matches were each read and cleared: a Cl@ve docstring using "handshake"
+as ordinary prose for a login completing, a shared probe-URL parameter belonging
+to the Cl@ve providers rather than the certificate path, and framework-contract
+uses of "compatibility" in two error modules. `_run_login_probe` navigates the
+module constant directly with no parameter and no override, the persisted
+certificate detail refuses any non-canonical `protected_resource_url` through a
+field validator, and the session store refuses former-product state outright
+rather than reading, moving, re-keying, or adopting it.
+
+The durable lesson is not about this feature. A semantic search that returns
+results is not evidence that the corpus was searched, and this corpus contains
+findings from several passes that cite semantic sweeps as proof of absence. Those
+citations are only as good as the index behind them on the day they ran, and
+nothing in the recorded finding captures which index that was.
+
 ## Recommendations
 
 Resolve every critical, high, or medium finding before publication. Retain low
