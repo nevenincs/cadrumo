@@ -17,16 +17,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from cadrumo.application.flows import FlowUnsupportedConsoleError, LineFlowFrontend
-from cadrumo.core.flows import FrontendCapability
-
+from ....application.flows import FlowUnsupportedConsoleError, LineFlowFrontend
+from ....core.flows import FrontendCapability
 from ._app import FlowTuiApp
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from cadrumo.application.flows import CheckpointStore, FlowDefinition, FlowState
-    from cadrumo.core.flows import FlowMode
+    from ....application.flows import CheckpointStore, FlowDefinition, FlowState
+    from ....core.flows import FlowMode
 
 
 def select_flow_frontend(

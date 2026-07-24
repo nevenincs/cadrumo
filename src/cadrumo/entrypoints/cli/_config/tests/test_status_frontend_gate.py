@@ -54,8 +54,8 @@ def test_non_full_screen_host_falls_through() -> None:
     The gate must then fall through for a text caller on this real host —
     the same decision a piped / CI invocation gets in production.
     """
-    from cadrumo.application.flows import detect_frontend_capability
-    from cadrumo.core.flows import FrontendCapability
+    from .....application.flows import detect_frontend_capability
+    from .....core.flows import FrontendCapability
 
     assert detect_frontend_capability() is not FrontendCapability.FULL_SCREEN
     assert present_status_tui(_ctx_with_format("text")) is False
@@ -71,7 +71,7 @@ def test_presenter_module_exposes_a_read_only_builder() -> None:
 
 
 def test_secret_classed_field_is_masked() -> None:
-    from cadrumo.core.classification import SensitivityClass
+    from .....core.classification import SensitivityClass
 
     assert _status_frontend._is_masked(
         path="identity.tax_id",
@@ -93,7 +93,7 @@ def test_password_or_key_like_field_is_masked(path: str, label: str) -> None:
 
 
 def test_plain_identity_field_is_not_masked() -> None:
-    from cadrumo.core.classification import SensitivityClass
+    from .....core.classification import SensitivityClass
 
     assert not _status_frontend._is_masked(
         path="identity.tax_id",
@@ -141,8 +141,8 @@ def test_build_fact_rows_masks_by_the_real_schema() -> None:
     decision tested here is byte-for-byte the one the operator's screen
     gets.
     """
-    from cadrumo.application.user_profile import profile_storage_session
-    from cadrumo.application.workflow import read_profile_bucket, workflow_state_repository
+    from .....application.user_profile import profile_storage_session
+    from .....application.workflow import read_profile_bucket, workflow_state_repository
 
     _create_profile()
     pointer = read_profile_bucket("operator")
@@ -184,7 +184,7 @@ def test_every_zone_degrades_on_an_empty_storage_root(_empty_storage: Path) -> N
     instead of raising — the crash-safety property the status surface
     promises.
     """
-    from cadrumo.adapters.inbound.tui import StatusPageData
+    from .....adapters.inbound.tui import StatusPageData
 
     data = _status_frontend.build_status_page_data()
     assert isinstance(data, StatusPageData)
