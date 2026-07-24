@@ -37,6 +37,60 @@ _BUILD_RUN_PATTERNS: Final[tuple[re.Pattern[str], ...]] = (
     re.compile(r"\brelease_cohort\b", re.IGNORECASE),
 )
 
+# Jobs permitted to invoke a publish/upload verb. Publication is confined to the
+# single environment-protected job; every other job is read-only.
+_PUBLISHING_JOBS: Final[frozenset[str]] = frozenset({"publish"})
+
+# A publish verb is legitimate inside `_PUBLISHING_JOBS` and forbidden outside it,
+# so unlike the build set this one is scanned per job rather than workflow-wide.
+#
+# These patterns are anchored to a shell COMMAND POSITION -- line start, or after
+# `;`, `&`, `|`, or `$(` -- because the operator-preflight refusal text quotes
+# `gh release create` as prose inside an echoed instruction. An unanchored scan
+# flags that documentation and reds the gate on a false positive. A backtick is
+# deliberately NOT treated as a command position for the same reason: the only
+# three backticks in the workflow are documentation prose, and it uses `$( )`
+# rather than legacy backtick substitution for real command expansion.
+_COMMAND_POSITION: Final[str] = r"(?:^|[;&|]|\$\()[ \t]*"
+
+_PUBLISH_RUN_PATTERNS: Final[tuple[re.Pattern[str], ...]] = (
+    re.compile(rf"{_COMMAND_POSITION}uv\s+publish\b", re.IGNORECASE | re.MULTILINE),
+    re.compile(
+        rf"{_COMMAND_POSITION}(?:python[0-9.]*\s+-m\s+)?twine\s+upload\b",
+        re.IGNORECASE | re.MULTILINE,
+    ),
+    re.compile(
+        rf"{_COMMAND_POSITION}(?:poetry|flit|hatch|pdm)\s+publish\b",
+        re.IGNORECASE | re.MULTILINE,
+    ),
+    re.compile(rf"{_COMMAND_POSITION}npm\s+publish\b", re.IGNORECASE | re.MULTILINE),
+    re.compile(
+        rf"{_COMMAND_POSITION}gh\s+release\s+(?:create|upload|edit|delete)\b",
+        re.IGNORECASE | re.MULTILINE,
+    ),
+    # The Scoop bucket, Homebrew tap, and marketplace channels publish by pushing
+    # a cloned working copy, so a push from any non-publish job is an egress too.
+    re.compile(rf"{_COMMAND_POSITION}git\b[^\n]*?\bpush\b", re.IGNORECASE | re.MULTILINE),
+)
+
+
+def _command_lines(surface: str) -> str:
+    """Drop whole-line shell comments so a commented verb is not read as an invocation.
+
+    Only lines whose first non-whitespace character is ``#`` are dropped. A
+    trailing comment is deliberately left in place: stripping from the first ``#``
+    anywhere would also cut ``${var#prefix}`` parameter expansion and could hide a
+    real invocation behind a quoted ``#``, which is the false-green shape these
+    gates exist to prevent.
+    """
+    return "\n".join(line for line in surface.splitlines() if not line.lstrip().startswith("#"))
+
+
+def _pattern_hits(surface: str, patterns: tuple[re.Pattern[str], ...]) -> list[str]:
+    """Return every denylisted invocation in ``surface``, whitespace-normalised."""
+    cleaned = _command_lines(surface)
+    return [" ".join(match.group(0).split()) for pattern in patterns for match in pattern.finditer(cleaned)]
+
 
 def _document() -> Any:
     return yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
@@ -183,9 +237,7 @@ def test_validate_runs_the_open_blocker_check_over_the_network() -> None:
     steps = validate["steps"]
     assert isinstance(steps, list)
     readiness_step = next(
-        step
-        for step in steps
-        if isinstance(step, Mapping) and "dev.release.readiness" in str(step.get("run", ""))
+        step for step in steps if isinstance(step, Mapping) and "dev.release.readiness" in str(step.get("run", ""))
     )
     # Inspect the executable lines only; a comment may still explain the change.
     command = "\n".join(line for line in str(readiness_step["run"]).splitlines() if not line.lstrip().startswith("#"))
@@ -220,11 +272,137 @@ def test_no_job_ever_builds_or_regenerates_an_artifact() -> None:
     document = _document()
     offenders: dict[str, list[str]] = {}
     for job_name, job in document["jobs"].items():
-        surface = _run_surface(job)
-        hits = [" ".join(m.group(0).split()) for pattern in _BUILD_RUN_PATTERNS for m in pattern.finditer(surface)]
+        hits = _pattern_hits(_run_surface(job), _BUILD_RUN_PATTERNS)
         if hits:
             offenders[job_name] = hits
     assert offenders == {}, f"publication must never build/regenerate: {offenders}"
+
+
+def test_no_non_publish_job_invokes_a_publish_verb() -> None:
+    """Publish/upload verbs are confined to the environment-protected publish job.
+
+    The sibling assertions pin this with exact-substring ``not in`` guards for the
+    two spellings the workflow happens to use today, so a differently-spelled
+    egress in the read-only validate gate -- ``twine upload``, ``poetry publish``,
+    a ``gh release upload``, or a tap ``git push`` -- would slip past both those
+    guards and the parsed-YAML presence checks. This is the structural half.
+    """
+    document = _document()
+    offenders: dict[str, list[str]] = {}
+    for job_name, job in document["jobs"].items():
+        if job_name in _PUBLISHING_JOBS:
+            continue
+        hits = _pattern_hits(_run_surface(job), _PUBLISH_RUN_PATTERNS)
+        if hits:
+            offenders[job_name] = hits
+    assert offenders == {}, f"only {sorted(_PUBLISHING_JOBS)} may publish; found egress in: {offenders}"
+
+
+def test_the_publish_job_is_the_one_that_actually_publishes() -> None:
+    """Anti-vacuity for the confinement scan: the exempted job really does publish.
+
+    Without this, deleting every publish verb from the workflow -- or renaming the
+    publish job -- would leave the confinement test passing over an empty set.
+    """
+    hits = _pattern_hits(_run_surface(_document()["jobs"]["publish"]), _PUBLISH_RUN_PATTERNS)
+    assert len(hits) >= 4, f"expected the real publish surface to carry its egress verbs, saw {hits}"
+
+
+@pytest.mark.parametrize(
+    "forbidden",
+    [
+        "uv build",
+        "python -m build",
+        "python3.12 -m build",
+        "pip wheel .",
+        "poetry build",
+        "hatch build",
+        "pdm build",
+        "flit build",
+        "python setup.py sdist",
+        "python setup.py bdist_wheel",
+        "uv run packaging/cohort/generate.py",
+        "python -m dev.release.release_cohort",
+    ],
+)
+def test_build_detector_flags_every_forbidden_build_spelling(forbidden: str) -> None:
+    """Non-vacuity: each build spelling the denylist claims to bar is really flagged."""
+    assert _pattern_hits(forbidden, _BUILD_RUN_PATTERNS), f"build denylist missed {forbidden!r}"
+
+
+@pytest.mark.parametrize(
+    "forbidden",
+    [
+        "uv publish --trusted-publishing always",
+        "twine upload dist/*",
+        "python -m twine upload dist/*",
+        "poetry publish",
+        "flit publish",
+        "hatch publish",
+        "pdm publish",
+        "npm publish",
+        'gh release create "v$VERSION"',
+        'gh release upload "v$VERSION" file.json',
+        'gh release delete "v$VERSION"',
+        'git -C "$work" -c http.extraheader="$auth" push',
+        "cd tap && git push origin main",
+    ],
+)
+def test_publish_detector_flags_every_forbidden_publish_spelling(forbidden: str) -> None:
+    """Non-vacuity: each egress spelling the denylist claims to bar is really flagged."""
+    assert _pattern_hits(forbidden, _PUBLISH_RUN_PATTERNS), f"publish denylist missed {forbidden!r}"
+
+
+@pytest.mark.parametrize(
+    "benign",
+    [
+        # The workflow's own real promotion verbs must never read as a BUILD.
+        "uv publish --trusted-publishing always",
+        'gh release create "v$VERSION" "${assets[@]}"',
+        'gh release upload "v$VERSION" "$DIR/download-latest.json"',
+        'git -C "$work" -c http.extraheader="$auth" push',
+        'git -c http.extraheader="$auth" clone "https://github.com/${TAP_REPO}.git"',
+        # Ordinary read-only validate-gate work.
+        "uv sync --frozen",
+        "uv run python -m dev.release.readiness",
+        "python -m dev.packaging.evidence_release verify",
+    ],
+)
+def test_build_detector_leaves_publish_and_read_only_verbs_alone(benign: str) -> None:
+    """Negative control: the build denylist must not creep into the promotion verbs.
+
+    Tightening the build patterns until they also match a publish or a checkout
+    would red the workflow's own legitimate promotion steps, so each real egress
+    invocation is pinned here as benign *for the build detector*.
+    """
+    assert _pattern_hits(benign, _BUILD_RUN_PATTERNS) == [], f"build denylist over-matched {benign!r}"
+
+
+@pytest.mark.parametrize(
+    "benign",
+    [
+        # Documentation prose in the preflight refusal text, not an invocation.
+        "them to a release (`gh release create <tag> --draft <row json...>`);",
+        "(`python -m dev.packaging.emit_real_client_evidence ...`) and upload",
+        # A whole-line comment naming a verb is not an invocation.
+        "# gh release create flattens every asset to its basename",
+        # Read-only channel reads and git operations that publish nothing.
+        'gh release view "v$VERSION"',
+        'gh release download "v$VERSION"',
+        'git -c http.extraheader="$auth" clone "https://github.com/${TAP_REPO}.git" "$work"',
+        'git -C "$work" add -- bucket/cadrumo.json',
+        'git -C "$work" diff --cached --quiet',
+        'echo "marketplace already at cadrumo $VERSION; nothing to push"',
+        "uv sync --frozen",
+    ],
+)
+def test_publish_detector_leaves_prose_comments_and_read_only_verbs_alone(benign: str) -> None:
+    """Negative control: quoted prose, comments, and read-only verbs are not egress.
+
+    The command-position anchor and the whole-line comment filter exist for these
+    exact shapes; without them the gate reds on the preflight instruction text.
+    """
+    assert _pattern_hits(benign, _PUBLISH_RUN_PATTERNS) == [], f"publish denylist over-matched {benign!r}"
 
 
 def test_external_channel_pushes_refuse_instructively_when_unconfigured() -> None:
@@ -246,7 +424,7 @@ def test_external_pushes_keep_the_token_out_of_the_persisted_remote() -> None:
     # Each channel authenticates via a per-command HTTP header and scrubs its temp
     # dir right after the push.
     assert surface.count('http.extraheader="$auth"') >= 6  # clone + push per channel
-    assert surface.count('printf \'x-access-token:%s\'') == 3
+    assert surface.count("printf 'x-access-token:%s'") == 3
     assert 'rm -rf "$work"' in surface
     # The refuse-when-empty guards survive.
     assert "REFUSED: Scoop bucket not configured" in surface
