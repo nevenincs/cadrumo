@@ -458,8 +458,22 @@ def _sync_site(aws: str, repo_root: Path, html_root: Path, bucket: str) -> None:
     _run(command, cwd=repo_root)
 
 
-def _invalidate_site(aws: str, repo_root: Path, distribution_id: str) -> None:
-    """Invalidate the published documentation paths and wait for completion."""
+_DOCS_INVALIDATION_PATHS: tuple[str, ...] = ("/docs/*",)
+
+
+def _invalidate_distribution_paths(
+    aws: str,
+    repo_root: Path,
+    distribution_id: str,
+    paths: Sequence[str],
+) -> None:
+    """Invalidate the given published paths on the distribution and wait for completion.
+
+    Shared by both deployment entry points in this package: the docs site
+    invalidates its own subtree, the landing site passes the page set Vite does
+    not content-hash. Only that path list differs, so the create-invalidate,
+    id-extract, and wait-for-completion sequence lives here once.
+    """
     created = _run(
         [
             *_aws_base_command(aws),
@@ -468,7 +482,7 @@ def _invalidate_site(aws: str, repo_root: Path, distribution_id: str) -> None:
             "--distribution-id",
             distribution_id,
             "--paths",
-            "/docs/*",
+            *paths,
             "--output",
             "json",
         ],
@@ -568,7 +582,7 @@ def _publish(aws: str, repo_root: Path) -> int:
     _validate_site_artifacts(html_root)
     _validate_language_roots(html_root)
     _sync_site(aws, repo_root, html_root, target.bucket)
-    _invalidate_site(aws, repo_root, target.distribution_id)
+    _invalidate_distribution_paths(aws, repo_root, target.distribution_id, _DOCS_INVALIDATION_PATHS)
     _verify_public_delivery(target)
     print(f"Published {CANONICAL_DOCS_BASE_URL}/", flush=True)
     return 0
