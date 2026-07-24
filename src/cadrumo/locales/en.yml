@@ -641,6 +641,38 @@ application:
         registry_missing_requested_modelos: 'The registry root is missing requested
           modelo definitions: %{modelos}.'
         unsupported_casilla_data_type: 'Unsupported registry casilla data type: %{data_type}.'
+  flows:
+    errors:
+      answer_target_not_visible: 'Flow {flow_id} cannot record an answer for {page_key}:
+        that question is not currently visible.'
+      checkpoint_unavailable_mode: Flow {flow_id} does not offer save-and-exit in
+        mode {mode}; its {answered_count} answers live in this session only.
+      copy_locale_key_unresolved: Display copy key {ref} is not present in the locale
+        catalogue.
+      copy_ref_unresolved: Copy source {kind} resolved no text for reference {ref}.
+      copy_source_duplicate: A copy source resolver is already registered for kind
+        {kind}.
+      copy_source_locale_builtin: The locale-key copy source is built in and cannot
+        be re-registered.
+      copy_source_unregistered: No copy source resolver is registered for kind {kind},
+        required by reference {ref}.
+      jump_target_not_visible: 'Flow {flow_id} cannot jump to {page_key}: that question
+        is not currently visible.'
+      reset_target_unknown: Flow {flow_id} has no question or stored answer named
+        {page_key} to reset.
+      scripted_answer_rejected: 'The scripted answer for {page_key} was rejected by
+        validation: {message_keys}.'
+      scripted_queue_overflow: The scripted run used {consumed_count} answers and
+        finished with {remaining_count} unused; the script does not match the flow.
+      scripted_queue_underflow: The scripted run ran out of answers at required question
+        {page_key}, after {consumed_count} answers.
+      submit_blocked: 'Flow {flow_id} cannot be submitted: {blocking_count} blocking
+        findings and {required_remaining} required questions are still open.'
+      unknown_repeating_group: Flow {flow_id} declares no repeating group named {group_id}.
+      validator_id_blank: A flow validator must be registered under a non-empty id.
+      validator_id_duplicate: A flow validator is already registered under id {validator_id}.
+      validator_id_unknown: No flow validator is registered under id {validator_id};
+        {registered_count} validators are registered.
   inventory:
     service:
       errors:
@@ -947,6 +979,8 @@ application:
         %{period}; complete these profile facts first: %{missing}.'
       profile_readiness_profile_missing: No persisted active profile exists for this
         modelo work target; create or repair the profile before continuing.
+      profile_readiness_setup_incomplete: Profile setup is incomplete; finish the
+        setup flow before working on modelos.
       recipient_decryption_failed: The recipient-encrypted package could not be decrypted;
         the key does not match or the package was tampered with.
       recipient_encryption_invalid_key: The recipient's public key is not a well-formed
@@ -1390,6 +1424,9 @@ application:
         is newer than this application supports.
       unsupported_bundle_schema_version: The bundle schema version is not supported
         by this application version.
+    notices:
+      censo_divergences_open: '{count} profile field(s) still diverge from the Certificado
+        de Situación Censal and remain unresolved: {axes}.'
   verification:
     errors:
       missing_binding_values: Registry verification requires external binding values.
@@ -1425,6 +1462,12 @@ application:
       ccaa_defaulted: No comunidad autónoma was chosen, so %{ccaa} was assumed for
         this profile. Autonomic deductions and the autonomic part of the tax scale
         are calculated for %{ccaa}. Set --tax-residence-ccaa to use a different comunidad.
+      modify_descendants_via_door: Descendants are not part of profile edit. Manage
+        them with '{command}'.
+      modify_no_resume: Changes in modify mode are staged only — leaving without submitting
+        discards them; save-and-resume is available on profile create only.
+      setup_saved_resume_later: 'Saved. Resume anytime with: aeat config profile create
+        %{name}'
     output_labels:
       active_profile: Active profile
       next: Next
@@ -2854,6 +2897,10 @@ cli:
       draft_id_not_found: Draft ID %{draft_id} not found
       invalid_iso_date: 'Invalid date format for %{label}: %{raw}. ISO 8601 (YYYY-MM-DD)
         is required.'
+      parse_invalid_choice: 'Invalid value ''{value}''. Choose from: {accepted}.'
+      parse_missing_argument: Missing required argument {parameter}.
+      parse_unknown_command: Unknown command '{command}'.
+      parse_unknown_option: Unknown option '{option}'.
       period_empty: Tax period cannot be empty
       period_missing_year: Period token '{token}' needs a year on this command. Add
         --year (e.g. --period {token} --year 2024).
@@ -2868,8 +2915,12 @@ cli:
           'status' for the offline read.
         clear_help: Retire the apoderado configuration
         configure:
+          no_console_hint: 'Interactive apoderado configuration needs a console. Configure
+            non-interactively with: aeat config auth apoderado configure --represented-nif
+            NIF --scope SCOPE.'
           represented_nif_help: NIF of the represented party
           scope_help: Scope tokens (can be repeated)
+          scope_required: 'No scope provided. Pass --scope with one or more of: %{codes}.'
         configure_help: Set active apoderado configuration
         help: Manage apoderado configuration
         scope:
@@ -3164,6 +3215,8 @@ cli:
       tax_residence_ccaa_help: Autonomous community of tax residence
     list:
       help: List every registered profile and mark the active one
+      setup_incomplete_notice: '%{count} profile(s) are still completing setup and
+        are not yet ready for filing: %{labels}. Resume setup to make them workable.'
     passphrase:
       change:
         help: Rotate the file secret store passphrase after verifying the current
@@ -3207,6 +3260,17 @@ cli:
         inspect_help: Show a sealed archive's header without decrypting or restoring
           it.
         inspect_path_help: Path to the sealed archive.
+      bundle_flow:
+        export_section_title: Export profile bundle
+        import_section_title: Import profile bundle
+        transport_cleartext_description: Write unencrypted JSON containing sensitive
+          financial data; local or subject-access handling only — never email, sync,
+          or transfer it.
+        transport_cleartext_label: Cleartext (local/SAR only)
+        transport_encrypted_description: AEAD-encrypt the bundle with a passphrase;
+          safe for transfer between machines.
+        transport_encrypted_label: Encrypted (recommended)
+        transport_prompt: How should the bundle be written?
       capabilities:
         capability_help: Service capability to opt in or out of.
         capability_label: capability
@@ -3222,13 +3286,20 @@ cli:
         state_help: Whether to enable (on) or disable (off) the capability.
         state_label: state
       censo:
-        apply_help: Overwrite the profile with censo values reported by AEAT
+        apply_help: Enroll the parsed censal facts onto the active profile (default
+          is preview only).
         compare_help: Compare AEAT censo and this profile field by field
         dropped_fields_notice: 'AEAT''s censo no longer reports fields your last snapshot
           carried: {dropped_fields}. If you did not change or close these registrations,
           this may be a partial pull — re-run the censo pull or re-enter the values;
           the home-office deduction ratio may stop resolving.'
-        help: Sync AEAT 036 censo data with this profile
+        file_help: Read a downloaded Certificado de Situación Censal and preview or
+          enroll its censal facts.
+        file_option_help: Path to the Certificado de Situación Censal PDF downloaded
+          from Sede (procedure G313).
+        help: Censal artefact ingestion for the active profile.
+        non_official_notice: Certificate-derived facts are operator-supplied evidence,
+          never AEAT-verified; the censo enrolment stays at the non-official tier.
         pull_help: Pull your latest censo from AEAT into this profile's snapshot store.
         refresh_help: Download the latest censo from AEAT and save a snapshot
         show_help: Show the latest censo AEAT reported for this profile
@@ -3281,6 +3352,8 @@ cli:
       export_passphrase_prompt: 'Bundle passphrase (min 8 characters): '
       export_passphrase_too_short: The profile export passphrase must be at least
         8 characters.
+      export_requires_destination: Provide --to PATH for the bundle destination, or
+        run in an interactive terminal to be prompted.
       export_requires_transport: Use --encrypt for an encrypted transfer bundle, or
         --cleartext-local for local/SAR JSON only.
       export_sensitivity_warning: 'This bundle is UNENCRYPTED and contains sensitive
@@ -3332,6 +3405,8 @@ cli:
         %{missing_flags}.'
       import_passphrase_prompt: 'Bundle passphrase: '
       import_path_help: Path to the profile bundle file
+      import_requires_path: Provide the bundle PATH argument, or run in an interactive
+        terminal to be prompted.
       import_uuid_collision: The UUID in the bundle conflicts with an existing profile.
       logout_help: Close the active storage session, discard in-memory keys, dispose
         bucket engines, and clear the local pointer
@@ -4499,6 +4574,8 @@ cli:
       help: Render the deadline calendar for the active profile across the supplied
         date window. Applies festivos and business-day shifts. Local-only; never contacts
         AEAT.
+      setup_incomplete_notice: 'Excluded %{count} profile(s) still completing setup
+        from the calendar; they are not yet ready for filing: %{labels}.'
       shift:
         business_day: Business day
         calendar_unavailable: Calendar unavailable
@@ -5035,6 +5112,9 @@ errors:
       your 24-word recovery code.
     auth_storage_master_key_unavailable: The master key could not be acquired from
       any provider. Check the keychain or the file-fallback passphrase.
+    clave_movil_identity_checksum: The Cl@ve Móvil identifier has a valid shape but
+      its checksum letter does not match its digits. Check the final letter on your
+      document and try again.
   calc:
     age_at_year_end_no_filing_year: 'Internal error: age-at-year-end calculation has
       no filing year.'
@@ -5104,6 +5184,10 @@ errors:
     unsupported_op: 'Unsupported formula operator: %{op}.'
   censo:
     bucket_id_blank: The censo sync service requires a profile bucket.
+    certificado_extraction_unpinned: Reading the issued certificate layout is not
+      yet supported; enter the censal facts manually instead.
+    certificado_not_a_pdf: The supplied file is not a PDF; expected the Certificado
+      de Situación Censal downloaded from Sede.
   error:
     error_access_gate_submission: The access-gate policy rejected a submission operation.
     error_access_gate_submission_preflight: Access-gate preflight rejected a write
@@ -5136,6 +5220,7 @@ errors:
       incomplete or contradictory.
     error_categories: An error occurred in the expense categories.
     error_categories_validation: A category record failed validation.
+    error_certificado_censal: Certificado de Situación Censal operation failed.
     error_config_boundary: The config command encountered an unexpected internal error.
     error_corpus_search: The on-host corpus search could not be completed.
     error_deadlines_deadline: An error occurred in the deadline calculation.
@@ -5190,6 +5275,7 @@ errors:
     error_financial_transactions_transaction: A transaction-catalogue error occurred.
     error_financial_usage_ratios_usage_ratio: A usage-ratio error occurred.
     error_fixture_provisioning: The test fixtures could not be provisioned.
+    error_flow: The guided flow failed.
     error_invoice_link_inconsistency: The link left the invoice and transaction catalogues
       out of sync. Reconcile both catalogues manually.
     error_invoice_validation: An invoice record failed validation.
@@ -5336,6 +5422,8 @@ errors:
     fail_browser_evasion: Browser evasion setup could not be applied.
     fail_browser_session_browser: A browser session error occurred.
     fail_browser_validation: The browser parameters failed validation.
+    fail_certificado_censal_parse: Could not read the Certificado de Situación Censal
+      document.
     fail_declaracion_parse: The PDF could not be parsed into a declaration.
     fail_export: An error occurred while exporting to the AEAT.
     fail_export_format: The filing draft could not be serialized to the BOE format
@@ -5449,6 +5537,8 @@ errors:
       {expected}, got {got}.'
     cif_check_letter_mismatch_kind: 'CIF check letter is incorrect (kind {kind}):
       expected {expected}, got {got}.'
+    cif_control_char_invalid: The CIF check character in {candidate} must be a digit
+      or an uppercase letter, not {got}.
     cif_invalid_shape: '{candidate} is not shaped like a CIF: a CIF is a leading letter
       (A-H, J, N, P-S, U, V or W) followed by 7 digits and a check character.'
     document_empty: The identity document is empty.
@@ -5460,6 +5550,12 @@ errors:
       letter must be {expected}, not {got}. Correct the NIF to {digits}{expected}.'
     nif_invalid_shape: '{candidate} is not shaped like a NIF: a NIF is 8 digits followed
       by a check letter.'
+    tax_id_invalid_length: A Spanish tax identifier must be 9 characters long; {candidate}
+      has {length}. Enter a NIF, NIE or CIF (a leading character, 7 or 8 digits and
+      a check character).
+    tax_id_unrecognised_leader: '{candidate} does not start with a recognised tax-identifier
+      character ({leader}). A NIF starts with a digit or K/L/M, a NIE with X, Y or
+      Z, and a CIF with A-H, J, N, P-S, U, V or W.'
     validate_expects_str: Identity validation expects a text value; got {got_type}.
   integrity:
     integrity_active_profile_pointer: The active-profile pointer is invalid; repair
@@ -5550,6 +5646,10 @@ errors:
       transaction ownership is invalid.'
     internal_cli_unexpected_boundary: The command failed due to an unexpected internal
       error, not a stored-data problem. Inspect the diagnostic logs to see what failed.
+    internal_flow_copy_resolution: 'Internal error: the guided flow could not resolve
+      its display copy.'
+    internal_flow_validator_registry: 'Internal error: the guided flow validator registry
+      rejected the operation.'
     internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
       close the active session before re-entering.'
     internal_master_key_type: 'Internal error: master-key operation received a value
@@ -5563,10 +5663,6 @@ errors:
     internal_profile_project_answers_not_registered: 'Internal error: project_answers
       has not been registered at application startup.'
     internal_profile_registration: 'Internal error: profile could not be registered.'
-    internal_wizard_answer_queue_overflow: 'Internal error: the wizard closed with
-      unconsumed canonical answers.'
-    internal_wizard_answer_queue_underflow: 'Internal error: the wizard asked for
-      more canonical answers than the non-interactive invocation supplied.'
     internal_wizard_catalogue_already_registered: 'Internal error: the wizard catalogue
       was registered a second time with different objects.'
     internal_wizard_catalogue_not_registered: 'Internal error: the wizard catalogue
@@ -5687,6 +5783,8 @@ errors:
       is the AEAT justificante and not a different document, and that it is not corrupt.
     refused_access_gate_live_read_not_enabled: Live-read access to the AEAT is disabled.
       This operation cannot contact the AEAT under the current configuration.
+    refused_apoderado_invalid_represented_nif: The represented party's tax identifier
+      is not a valid NIF, NIE, or CIF.
     refused_apoderado_live_check_unavailable: The live check of representatives is
       unavailable, or contact with the AEAT failed.
     refused_apoderado_not_configured: No representative is configured. Configure the
@@ -5754,6 +5852,14 @@ errors:
     refused_financial_usage_ratios_censo_mismatch: A saved home-office usage ratio
       disagrees with the censo, which is the binding legal source. Align it with the
       censo value.
+    refused_flow_answer: The guided flow refused the answer.
+    refused_flow_checkpoint: The guided flow refused the save-and-resume operation.
+    refused_flow_navigation: The guided flow refused the navigation request.
+    refused_flow_run_abandoned: The guided flow was cancelled before completion; nothing
+      was submitted.
+    refused_flow_submit: The guided flow refused the submission.
+    refused_flow_unsupported_console: The guided flow cannot run because this console
+      cannot host interactive questions.
     refused_google_impersonation: IAM refused to mint an impersonated token for the
       target service account. Grant it roles/iam.serviceAccountTokenCreator.
     refused_google_non_interactive: Google login needs an interactive terminal with
@@ -5988,6 +6094,117 @@ filing:
     out_of_range: Value out of allowed range
     required_missing: Required field missing
     schema_mismatch: Mismatch with expected schema
+flows:
+  compare_select:
+    candidate: '{label} (source: {provenance})'
+    defer_label: Decide this later
+  confirm:
+    'no': 'No'
+    'yes': 'Yes'
+  errors:
+    blank_required: This field is required - enter a value.
+    checkbox_required: Select at least one option.
+    checkbox_unknown: 'Unknown option - accepted values: %{choices}.'
+    checkpoint_store_missing: Flow {flow_id} offers save-and-exit in mode {mode},
+      but no checkpoint store is wired, so the run was refused instead of losing your
+      answers.
+    invalid_confirm: Answer yes or no.
+    invalid_date: Enter a date as YYYY-MM-DD (for example 2026-05-14).
+    invalid_decimal: Enter an amount using a decimal point (for example 1234.56).
+    invalid_integer: Enter a whole number.
+    select_unknown: 'Choose one of the accepted values: %{choices}.'
+    tui_abandoned: Flow {flow_id} was closed in mode {mode} before it was submitted
+      or saved; nothing was recorded.
+    unexpected_app_type: The interactive screen is not attached to a flow application.
+    unsupported_console: This console cannot host interactive questions. Run the flow
+      from a real terminal, or drive it with a scripted answer file.
+  progress:
+    current_answer: 'Current answer: {value}'
+    current_answer_secret: 'Current answer: (hidden)'
+    failure_mode: 'Watch out: {text}'
+    format_hint: 'Format: {hint}'
+    legal_ref: 'Legal basis: %{ref} — %{label}'
+    optional: Optional
+    page_header: Question {position} of {total} — section {section}
+    required: Required
+  review:
+    action_edit: Edit an answer
+    action_prompt: What do you want to do?
+    action_restart: Start over
+    action_save_exit: Save and exit
+    action_submit: Submit
+    column_answer: Answer
+    column_question: Question
+    column_registered: On record
+    column_status: Status
+    edit_not_editable: Question {page_key} can no longer be edited.
+    edit_unknown: There is no question numbered {number}.
+    edit_which: 'Which question number do you want to edit? '
+    header: Review — {answered} questions answered.
+    header_tui: 'Review — {answered} answered, {remaining} required still open, ready
+      to submit: {eligible}'
+    orphan_marker: (no longer asked)
+    page_deferred: Question %{page_key} is deferred - decide before submitting.
+    page_invalid: Question %{page_key} has an invalid answer.
+    page_stale: Question %{page_key} needs revisiting - an earlier answer changed.
+    required_unanswered: Required question %{page_key} is unanswered.
+    reset_stale_confirm: Question {page_key} is no longer asked. Clear its stored
+      answer?
+    reset_stale_done: Cleared the stored answer for {page_key}.
+    restart_confirm: Start over and discard every answer?
+    row: '{number}. {page_key} — status: {status}'
+    save_unavailable: Save and exit is not available in mode {mode}; finish the flow
+      in one sitting.
+  status:
+    auth:
+      certificate_source: Certificate source
+      login_not_ready: not verified
+      login_ready: ready
+      provider: Provider
+      provider_none: not configured
+      status: Access
+      subject: Subject
+    binding_quit: Quit
+    masked_value: (hidden)
+    profile:
+      column:
+        field: Field
+        value: Value
+      none: No active profile.
+    profiles:
+      column:
+        active: Active
+        label: Profile
+        status: Status
+      none: No registered profiles.
+      status:
+        active: active
+        setup_incomplete: setup incomplete
+        tombstoned: deleted
+    recovery:
+      commands_title: Actions (copy and run)
+      enrolled: enrolled
+      fingerprint: Fingerprint
+      not_enrolled: not enrolled
+      state: Recovery code
+    section:
+      auth: Authentication
+      profile: Active profile
+      profiles: Profiles
+      recovery: Recovery
+    title: Status
+  tui:
+    binding_back: Back
+    binding_reset: Reset
+    binding_restart: Restart
+    binding_return: Return
+    binding_review: Review
+    binding_save_exit: Save and exit
+    binding_submit: Submit
+    button_back: Back
+    button_next: Next
+    button_review: Review
+    header: '{flow} — question {position} of {total}, section {section}'
 live:
   errors:
     expediente_not_found: AEAT declaration register did not return the requested expediente.
@@ -6270,7 +6487,12 @@ wizard:
     checkbox_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
       %{choices}.'
     checkbox_without_choices: Question %{prompt_key} declares no checkbox options.
+    eu_eea_country_required: '%{flag} is required when %{condition_flag} indicates
+      EU or EEA residence.'
     invalid_confirm: 'Invalid boolean answer for %{prompt_key}: %{raw}.'
+    invalid_date: 'Invalid date for %{flag}: %{got}. Use ISO-8601 format (YYYY-MM-DD).'
+    invalid_decimal: 'Invalid decimal number for %{flag}: %{got}. Use a dot as the
+      decimal separator.'
     invalid_integer: 'Invalid integer for %{prompt_key}: %{raw}.'
     invalid_postcode: 'Invalid postcode for %{prompt_key}: %{raw}. A Spanish postcode
       is 5 digits (province code 01-52 followed by three digits).'
@@ -6278,6 +6500,8 @@ wizard:
     select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
       %{choices}.'
     select_without_choices: Question %{prompt_key} declares no select options.
+    spouse_tax_id_required_joint: '%{flag} is required when %{condition_flag} is joint
+      taxation.'
     unsupported_console: "The guided setup needs an interactive terminal, and this\
       \ run does not have one.\nNothing has been saved yet.\n\nYou can finish creating\
       \ this profile in one of two ways:\n\n1. Run the command again from an interactive\
@@ -6301,6 +6525,8 @@ wizard:
     question_prefix: Question %{q_n} of %{q_total}
     section_header: 'Step %{section_n} of %{section_total}: %{title}'
   setup:
+    actividad:
+      title: Economic activity and censo
     capabilities:
       cloud-evidence-upload:
         prompt: Allow uploading sensitive evidence to cloud LLM providers? (off by
@@ -6317,12 +6543,20 @@ wizard:
       disability-grade:
         choices:
           33-64:
+            description: Recognised disability of 33% to 64% — increases the personal
+              minimum.
             label: Disability grade 33% to 64%
           65-plus:
+            description: Recognised disability of 65% or more — higher increase to
+              the personal minimum.
             label: Disability grade 65% or higher
           assistance-or-mobility:
+            description: Certified need of third-party assistance or reduced mobility
+              — adds the assistance increase.
             label: Third-party assistance or reduced mobility
           judicial-incapacity:
+            description: Judicially declared incapacity — treated as 65%+ regardless
+              of the certified grade.
             label: Judicial incapacity or equivalent
       sex:
         choices:
@@ -6330,6 +6564,55 @@ wizard:
             label: H - male
           m:
             label: M - female
+    cotejo:
+      adopt:
+        label: Adopt the certificate value
+        provenance: Certificado de Situación Censal (non-official evidence)
+      compare:
+        help: Keep your answer, adopt the certificate value, or defer to decide later.
+        prompt: This field differs from the certificate. Which value do you keep?
+      keep:
+        label: Keep my answer
+        provenance: Your setup answer
+      title: Cross-check with your censo certificate
+    descendientes:
+      adoption-date:
+        before_birth: The adoption date cannot be earlier than the date of birth.
+        in_future: The adoption date cannot be in the future.
+        prompt: Adoption date (leave blank if not adopted)
+      birth-date:
+        prompt: Date of birth
+      convivencia:
+        prompt: Does this descendant live with you?
+      count:
+        help: 'Count children who may give the mínimo por descendientes (Art. 58 LIRPF):
+          under 25 (or any age with a disability) living with you.'
+        prompt: How many descendants (children) do you want to declare?
+      custodia-compartida:
+        prompt: Is custody shared with the other parent?
+      discapacidad:
+        choices:
+          '0':
+            label: No disability
+          '33':
+            label: 33% to 64%
+          '65':
+            label: 65% or more
+        prompt: Disability grade
+      gastos-guarderia:
+        help: Amounts paid to an authorised nursery (Art. 81 bis LIRPF) that increase
+          the maternity deduction; whole euros.
+        invalid_negative: Nursery expenses cannot be negative; enter 0 or a positive
+          amount in euros.
+        prompt: Nursery expenses paid in the filing year (euros)
+      meses-madre-trabajo:
+        help: 'For the maternity deduction (Art. 81 LIRPF): months (0-12) the mother
+          paid Social Security while this child was under 3.'
+        invalid_range: Enter a whole number of months between %{minimum} and %{maximum}.
+        prompt: Months the mother worked while the child was under 3 (filing year)
+      nif:
+        prompt: Descendant's NIF/NIE (leave blank if none)
+      title: Descendants
     description: Operator-facing setup wizard for tax filing readiness
     enrollment:
       enrollment-large-company:
@@ -6339,6 +6622,8 @@ wizard:
       title: Enrollment
     errors:
       missing_required_flags: 'Missing required flags for --quiet wizard run: %{missing}'
+    familia:
+      title: Family situation
     family:
       family-descendants-eu-eea-deduction:
         prompt: EU/EEA descendants in family-unit deduction
@@ -6545,6 +6830,15 @@ wizard:
         help: 'First taxpayer sex: H = male, M = female.'
       third-party-transactions-above-347-threshold:
         help: Third-party transactions exceed Modelo 347 threshold
+    format:
+      amount-eur: Amount in euros with a decimal point, e.g. 50000.00.
+      date-iso: Date as YYYY-MM-DD, e.g. 2024-03-01.
+      postcode: 'Spanish postcode: 5 digits, e.g. 28001.'
+      tax-id: 'NIF/DNI: 8 digits + letter (12345678Z) · NIE: X/Y/Z + 7 digits + letter
+        (X1234567L) · Company NIF: letter + 7 digits + check (B12345674).'
+      units-count: Whole number of units, e.g. 2.
+    identidad:
+      title: Identity
     intro: 'Guided tax profile setup
 
       This prepares the local profile the app uses for ledger work and tax-form checks.
@@ -6587,10 +6881,16 @@ wizard:
       irpf-estimation-regime:
         choices:
           directa-normal:
+            description: Real-income accounting, full books — required above 600.000
+              EUR turnover.
             label: Direct estimation, normal
           directa-simplificada:
+            description: Real-income accounting with simplified books — the usual
+              choice for most autónomos.
             label: Direct estimation, simplified
           objetiva:
+            description: 'Module-based (signos, índices, módulos): tax computed from
+              activity indicators, only for listed activities.'
             label: Objective estimation (módulos)
         help: How economic-activity net income is determined; selects Modelo 130 vs
           131
@@ -6646,6 +6946,8 @@ wizard:
       third-party-transactions-above-347-threshold:
         prompt: Third-party transactions exceed Modelo 347 threshold
       title: Modelo obligations
+    preferencias:
+      title: Preferences and capabilities
     profile:
       activity:
         prompt: Business activity (plain text is fine; use the IAE heading if you
@@ -6660,14 +6962,24 @@ wizard:
       iva-regime:
         choices:
           exento:
+            description: 'IVA-exempt activity (education, healthcare, insurance…):
+              no IVA charged, none deducted.'
             label: Exempt
           general:
+            description: 'Standard IVA: charge IVA on sales, deduct IVA on purchases,
+              file Modelo 303 quarterly.'
             label: General regime
           reagp:
+            description: 'Special regime for agriculture, livestock and fishing (REAGP):
+              flat-rate compensation instead of IVA returns.'
             label: Agriculture, livestock and fishing special regime (REAGP)
           recargo-equivalencia:
+            description: 'For retailers: your supplier charges an extra surcharge
+              and you file no IVA returns for that activity.'
             label: Equivalence surcharge
           simplificado:
+            description: Module-based simplified IVA for eligible activities (linked
+              to estimación objetiva).
             label: Simplified regime
       legal-name:
         help: For legal entities this is the filing name used in entity-style export
@@ -6741,8 +7053,12 @@ wizard:
       fiscal-residency:
         choices:
           non-resident-irnr:
+            description: 'Non-resident: only Spanish-source income is taxed, under
+              IRNR (Modelo 210), and a fiscal representative may be required.'
             label: Non-resident — IRNR (RDLeg 5/2004)
           resident-irpf:
+            description: 'Tax resident in Spain (183+ days or centre of interests):
+              worldwide income under IRPF.'
             label: Habitual resident in Spain — IRPF
         prompt: Fiscal residency category
       representante-fiscal-nif:
@@ -6752,6 +7068,8 @@ wizard:
       tax-residence-ccaa:
         prompt: Tax-residence autonomous community
       title: Tax residence
+    review:
+      registered-non-official-suffix: ' (from censal certificate — not AEAT-verified)'
     spouse:
       spouse-birth-date:
         prompt: Spouse birth date
@@ -6787,8 +7105,12 @@ wizard:
               taxation available (Art. 82.1.2°)
             label: Registered civil partnership
           separado-divorciado:
+            description: Legally separated or divorced — joint taxation is only possible
+              with children in your family unit.
             label: Separated or divorced
           soltero:
+            description: Single, widowed, or divorced without a registered partner
+              — individual taxation, or joint only as a single parent with children.
             label: Single
         help: 'Family situation under Art. 82 LIRPF: determines whether joint taxation
           is available and which family unit variant applies.'
@@ -6821,10 +7143,16 @@ wizard:
       entity-type:
         choices:
           attribution-entity:
+            description: 'An income-attribution entity (comunidad de bienes, sociedad
+              civil): income is attributed to its members.'
             label: Attribution entity
           legal-entity:
+            description: A company or organisation (SL, SA, association…) filing under
+              Impuesto sobre Sociedades.
             label: Legal entity (company)
           natural-person:
+            description: An individual taxpayer (autónomo or private person) filing
+              under IRPF.
             label: Natural person
         help: Natural person (IRPF), legal entity (Impuesto sobre Sociedades), or
           attribution entity
@@ -6836,16 +7164,24 @@ wizard:
       irpf-income-categories:
         choices:
           actividad-economica:
+            description: Self-employed business or professional activity — enables
+              quarterly Modelo 130 and IVA obligations.
             label: Economic activity
           capital-inmobiliario:
+            description: Rental income from real estate you own.
             label: Immovable capital income (rental)
           capital-mobiliario:
+            description: Interest, dividends and other financial investment income.
             label: Movable capital income
           ganancias-patrimoniales:
+            description: Capital gains or losses from selling assets (shares, property,
+              crypto).
             label: Capital gains
           pension:
+            description: Pension income — treated as employment income under IRPF.
             label: Pension
           trabajo:
+            description: Salary or pension income from an employer or Social Security.
             label: Employment income
         help: Select every IRPF income category you have; only economic activity triggers
           Modelo 130/131
@@ -6861,8 +7197,12 @@ wizard:
           sal:
             label: Worker-owned public limited company (S.A.L.)
           sin-fines-lucrativos:
+            description: 'Non-profit under Ley 49/2002: may opt into the special tax
+              regime asked about below.'
             label: Non-profit entity
           sl:
+            description: 'Sociedad Limitada: the standard small-company form, minimum
+              capital 3.000 EUR.'
             label: Limited liability company (S.L.)
           sll:
             label: Worker-owned limited liability company (S.L.L.)
@@ -6892,33 +7232,17 @@ wizard:
       title: Taxpayer type
     title: Setup wizard
     verifier:
-      activity_present: 'Economic activity: check that the profile declares an activity.'
-      eu_eea_country_missing: 'Spouse residence: you indicated EU or EEA residence
-        but the country is missing. Add the country of residence.'
-      eu_eea_country_ok: 'Spouse residence: the EU or EEA country of residence is
-        consistent.'
-      joint_taxation_situacion_familiar_ok: 'Family situation: joint taxation is compatible
-        with the declared family situation.'
-      joint_taxation_situacion_familiar_refused: 'Family situation: joint taxation
-        is not permitted for an unregistered civil partnership (Art. 82.1.2° LIRPF).
-        Change the family situation or choose individual taxation.'
-      monoparental_requires_hijos_ok: 'Single-parent family unit: minor children requirement
-        verified.'
+      impatriado_requires_start_date: 'Impatriate regime: the special regime start
+        date is required. Add the start date.'
       monoparental_requires_hijos_warning: 'Single-parent family unit: joint taxation
         as a single-parent unit (Art. 82.1.2° LIRPF) requires minor children in the
         family unit. Without dependent children, joint taxation is not available for
         this family situation. Enable ''minor children in unit'' or switch to individual
         taxation.'
-      obligations_consistency_ok: 'Withholding obligations: the withholding answers
-        are consistent.'
-      obligations_inconsistent: 'Withholding obligations: you declared professional
-        withholding but not that you pay professionals with withholding. Review these
-        answers.'
-      spouse_consistency_missing: 'Joint taxation: the spouse''s tax identification
-        is missing. Add it to file jointly.'
-      spouse_consistency_ok: 'Joint taxation: the spouse details are consistent.'
-      tax_id_present: 'Tax identification: check that the profile carries a DNI, NIE,
-        NIF, or CIF.'
+      non_resident_requires_country: 'Non-resident IRNR: the country of fiscal residence
+        is required. Add the country of residence.'
+      non_resident_requires_representante: 'Non-resident IRNR: a fiscal representative
+        is required. Add the representative NIF and name.'
   test:
     description: Test your configuration and connectivity
     example:

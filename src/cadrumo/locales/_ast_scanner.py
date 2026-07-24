@@ -39,16 +39,21 @@ _KEY_PATTERN_PREFIX_MIN_PARTS = 2
 """A discovered f-string key prefix must carry at least two dotted
 segments before the dynamic tail (e.g. ``cli.registry.metrics``)."""
 
-_KEY_LITERAL_RE = re.compile(r"^\w+(?:\.\w+)+$", re.UNICODE)
-"""A literal that qualifies as a translation-key prefix: word chars and
-dots only, at least two dotted segments, no whitespace, slashes,
-operators, or punctuation."""
+_KEY_LITERAL_RE = re.compile(r"^[\w-]+(?:\.[\w-]+)+$", re.UNICODE)
+"""A literal that qualifies as a translation-key prefix: word chars,
+hyphens, and dots only, at least two dotted segments, no whitespace,
+slashes, operators, or other punctuation. Hyphens are first-class key
+characters — the wizard page catalogue keys segments by hyphenated page
+ids (``wizard.setup.format.tax-id``), and a hyphen-blind shape check
+leaves every such key invisible to the scanner even when it is declared
+in a ``*_LOCALE_KEY`` constant."""
 
 _DYNAMIC_TRANSLATION_ROOTS = frozenset(
     {
         "application",
         "cli",
         "errors",
+        "flows",
         "profile",
         "sheets",
         "topic",
@@ -183,8 +188,9 @@ def _collect_call_site_keys(node: ast.Call, findings: set[str], tr_names: frozen
 
     Handles ``tr(...)`` / ``t(...)`` direct calls, ``*Error``/``*Exception``
     constructor translation keys, ``build_entry(...)`` portal-catalogue
-    translation keys, and ``message_key=`` / ``translation_key=`` / ``translated_message=``
-    dotted-literal kwargs on any callee.
+    translation keys, ``ValidationVerdict.failed(...)`` flow-verdict
+    factory keys, and ``message_key=`` / ``translation_key=`` /
+    ``translated_message=`` dotted-literal kwargs on any callee.
 
     The translation-key kwargs (``message_key=`` / ``translation_key=`` / ``translated_message=``)
     are collected callee-agnostically: any call that names one of those
@@ -202,6 +208,14 @@ def _collect_call_site_keys(node: ast.Call, findings: set[str], tr_names: frozen
         return
     if name == "build_entry":
         _collect_build_entry_keys(node, findings)
+        return
+    if name == "failed":
+        # ValidationVerdict.failed("dotted.message.key", ...) — the flow
+        # substrate's verdict factory declares its operator-facing message
+        # key as the first positional argument, not a tr() call site or a
+        # message_key kwarg, so it needs first-class collection or the
+        # scaffold prunes the authored leaves as orphans.
+        _add_first_dotted_arg(node, findings)
         return
     if name.endswith("Error") or name.endswith("Exception"):
         _add_first_dotted_arg(node, findings)

@@ -8,9 +8,17 @@ active profile's ``renta_family.descendiente.{n}.*`` facts. Before this module, 
 production CLI surface wrote those facts: :func:`~domain.contribuyente.parse_descendiente_flag`
 and :func:`~domain.contribuyente.descendant_facts_from_list` had zero non-test
 callers, so casillas 0513/0514 computed to zero for every filer with children. This
-module closes that gap with three verbs mounted under ``config profile descendiente``:
+module closes that gap with three flag verbs mounted under ``config profile descendiente``:
 ``add`` (append one or more descendants), ``list`` (show the declared descendants), and
 ``remove`` (drop one descendant by 0-based index).
+
+Invoked with no subcommand (``aeat config profile descendiente``), the group opens the
+paged descendant door: a deep link onto the setup flow's descendant repeating group
+(:func:`~application.wizard.build_descendant_door`) that seeds from the profile's existing
+``renta_family.descendiente.*`` facts, lets the operator add / edit / remove rows on the
+best frontend the host supports, and commits the reviewed set back through one atomic
+write (:func:`~application.wizard.persist_descendant_door_answers`). The three flag verbs
+remain the flag-driven automation contract for non-interactive callers, unchanged.
 
 Every verb rewrites the FULL declared descendant set on the active profile: a partial
 patch of only the changed index would leave stale higher-index facts behind after a
@@ -29,6 +37,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 import typer
 
@@ -40,13 +49,17 @@ from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
+if TYPE_CHECKING:
+    from ....application.flows import FlowDefinition, FlowState
+
 descendiente_app = typer.Typer(
     name="descendiente",
     help=tr(
         "cli.config.profile.descendiente.help",
         default="Declare descendants for the Art. 58/61 LIRPF minimo por descendientes.",
     ),
-    no_args_is_help=True,
+    no_args_is_help=False,
+    invoke_without_command=True,
 )
 
 _resolve_active_profile_pointer: Callable[[], ProfileBucketPointer | None] | None = None
@@ -147,6 +160,132 @@ def _descendiente_row_lines(descendientes: tuple[DescendantInfo, ...]) -> list[s
     return lines
 
 
+def _emit_descendiente_list(
+    ctx: typer.Context,
+    pointer: ProfileBucketPointer,
+    descendientes: tuple[DescendantInfo, ...],
+) -> None:
+    """Emit the active profile's declared descendant set as the list envelope."""
+    from .._config_payloads import ConfigProfileDescendienteListResult, ProfileDescendientePayload
+
+    result = ConfigProfileDescendienteListResult(
+        profile=pointer.label,
+        total=len(descendientes),
+        descendientes=[
+            ProfileDescendientePayload(
+                index=index,
+                birth_date=descendant.birth_date.isoformat(),
+                adoption_date=descendant.adoption_date.isoformat() if descendant.adoption_date else None,
+                discapacidad_grado=descendant.discapacidad_grado,
+                convive_con_contribuyente=descendant.convive_con_contribuyente,
+                custodia_compartida=descendant.custodia_compartida,
+                nif=descendant.nif,
+            )
+            for index, descendant in enumerate(descendientes)
+        ],
+    )
+    lines = [f"profile\t{pointer.label}", f"total\t{len(descendientes)}"]
+    lines.extend(_descendiente_row_lines(descendientes))
+    _emit_envelope(ctx, command="config.profile.descendiente.list", result=result, lines=lines)
+
+
+@descendiente_app.callback()
+def descendiente_door(
+    ctx: typer.Context,
+    output_language: OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
+    """Open the paged descendant door, or dispatch to a flag subcommand.
+
+    Invoked with no subcommand (``aeat config profile descendiente``) this opens
+    the interactive paged descendant editor: the operator's existing descendants
+    seed the setup flow's repeating group, they add / edit / remove rows on the
+    best frontend the host supports, and the reviewed set commits back to the
+    ``renta_family.descendiente.*`` facts in one atomic write. The
+    ``add`` / ``list`` / ``remove`` subcommands remain the flag-driven automation
+    contract and are dispatched unchanged when named.
+    """
+    if ctx.invoked_subcommand is not None:
+        return
+    _activate_subcommand_output_language(ctx, output_language)
+    _run_descendant_door(ctx)
+
+
+def _run_descendant_door(ctx: typer.Context) -> None:
+    """Seed, host, and commit the paged descendant door for the active profile.
+
+    Reads the active profile record, seeds a MODIFY-mode door state from its
+    existing descendant facts, drives the interactive editor, then commits the
+    reviewed answers as the full descendant fact set through the single
+    application-layer seam. A piped / no-console host refuses with the substrate's
+    translated no-console error mapped to the CLI refusal boundary.
+    """
+    from ....application.flows import FlowUnsupportedConsoleError
+    from ....application.wizard import build_descendant_door, persist_descendant_door_answers
+    from ....application.workflow import workflow_state_repository
+    from ....core.errors import resolve_error_message
+    from ....domain.user_profile import ProfileNotFoundError
+    from ._profile_readiness import _read_profile_record
+
+    workflow_state_repository().load()
+    pointer = _active_profile_pointer()
+    try:
+        record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
+    except ProfileNotFoundError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.no_active_profile",
+        ) from exc
+
+    definition, resume_state = build_descendant_door(record)
+    try:
+        final_state = _host_descendant_door(definition, resume_state)
+    except FlowUnsupportedConsoleError as exc:
+        raise _CliRefusedBoundaryError(resolve_error_message(exc)) from exc
+
+    persist_descendant_door_answers(dict(final_state.answers))
+    _emit_descendiente_list(ctx, pointer, _load_descendientes(pointer.bucket_id))
+
+
+def _host_descendant_door(definition: FlowDefinition, resume_state: FlowState) -> FlowState:
+    """Drive the door on the best frontend, seeding it with ``resume_state``.
+
+    Mirrors the capability selection the shared setup-flow runner performs, but
+    threads ``resume_state`` — the seeded MODIFY-mode state — into the substrate's
+    own run helpers (:func:`~adapters.inbound.tui.run_flow_tui` full-screen,
+    :meth:`~application.flows.LineFlowFrontend.run` line), both of which accept it.
+    The shared ``run_setup_flow_frontend`` wrapper exposes no ``resume_state``
+    channel, so the door hosts through the two substrate run entrypoints directly
+    rather than forking the substrate. A piped / no-console host refuses with the
+    substrate's translated no-console error.
+    """
+    from ....application.flows import FlowUnsupportedConsoleError, LineFlowFrontend, detect_frontend_capability
+    from ....core.flows import FlowMode, FrontendCapability
+
+    capability = detect_frontend_capability()
+    if capability is FrontendCapability.NON_INTERACTIVE:
+        raise FlowUnsupportedConsoleError(translated_message="flows.errors.unsupported_console")
+    if capability is FrontendCapability.LINE:
+        state, _projection = LineFlowFrontend(definition, checkpoint_store=None).run(
+            mode=FlowMode.MODIFY,
+            resume_state=resume_state,
+        )
+        return state
+
+    from ....adapters.inbound.tui import run_flow_tui
+
+    state, _projection = run_flow_tui(
+        definition,
+        mode=FlowMode.MODIFY,
+        resume_state=resume_state,
+        registered_values=None,
+    )
+    return state
+
+
 @descendiente_app.command(
     "add",
     help=tr(
@@ -244,29 +383,7 @@ def descendiente_list(
     """List every ``DescendantInfo`` row declared on the active profile."""
     _activate_subcommand_output_language(ctx, output_language)
     pointer = _active_profile_pointer()
-    descendientes = _load_descendientes(pointer.bucket_id)
-
-    from .._config_payloads import ConfigProfileDescendienteListResult, ProfileDescendientePayload
-
-    result = ConfigProfileDescendienteListResult(
-        profile=pointer.label,
-        total=len(descendientes),
-        descendientes=[
-            ProfileDescendientePayload(
-                index=index,
-                birth_date=descendant.birth_date.isoformat(),
-                adoption_date=descendant.adoption_date.isoformat() if descendant.adoption_date else None,
-                discapacidad_grado=descendant.discapacidad_grado,
-                convive_con_contribuyente=descendant.convive_con_contribuyente,
-                custodia_compartida=descendant.custodia_compartida,
-                nif=descendant.nif,
-            )
-            for index, descendant in enumerate(descendientes)
-        ],
-    )
-    lines = [f"profile\t{pointer.label}", f"total\t{len(descendientes)}"]
-    lines.extend(_descendiente_row_lines(descendientes))
-    _emit_envelope(ctx, command="config.profile.descendiente.list", result=result, lines=lines)
+    _emit_descendiente_list(ctx, pointer, _load_descendientes(pointer.bucket_id))
 
 
 @descendiente_app.command(

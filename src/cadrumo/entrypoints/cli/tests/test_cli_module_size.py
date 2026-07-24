@@ -43,9 +43,9 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     # across the IVA-wallet and filed-live command docstrings; re-pinned to
     # the present size, matching the sibling override in
     # test_codebase_size_budgets.py. Regrew to 1296 under concurrent
-    # live-command feature work; re-pinned with small headroom per the
-    # ship-authorised rebaseline.
-    "_app_live.py": 1320,
+    # live-command feature work plus feature/profile branch growth; re-pinned
+    # with small headroom per the ship-authorised rebaseline.
+    "_app_live.py": 1320,  # SPLIT-CANDIDATE
 }
 _DEFAULT_COMMAND_LINE_LIMIT = 180
 # Per-command ceilings for command bodies pinned above the default, mirroring the

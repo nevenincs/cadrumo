@@ -86,22 +86,27 @@ _IVA_CHOICES: tuple[WizardChoice, ...] = (
     WizardChoice(
         value=_DEFAULT_IVA_REGIME,
         label=tr("wizard.setup.profile.iva-regime.choices.general.label"),
+        description=tr("wizard.setup.profile.iva-regime.choices.general.description"),
     ),
     WizardChoice(
         value=IVARegime.SIMPLIFICADO.value,
         label=tr("wizard.setup.profile.iva-regime.choices.simplificado.label"),
+        description=tr("wizard.setup.profile.iva-regime.choices.simplificado.description"),
     ),
     WizardChoice(
         value=IVARegime.RECARGO_EQUIVALENCIA.value,
         label=tr("wizard.setup.profile.iva-regime.choices.recargo-equivalencia.label"),
+        description=tr("wizard.setup.profile.iva-regime.choices.recargo-equivalencia.description"),
     ),
     WizardChoice(
         value=IVARegime.REAGP.value,
         label=tr("wizard.setup.profile.iva-regime.choices.reagp.label"),
+        description=tr("wizard.setup.profile.iva-regime.choices.reagp.description"),
     ),
     WizardChoice(
         value=IVARegime.EXENTO.value,
         label=tr("wizard.setup.profile.iva-regime.choices.exento.label"),
+        description=tr("wizard.setup.profile.iva-regime.choices.exento.description"),
     ),
 )
 
@@ -110,14 +115,24 @@ _ENTITY_TYPE_CHOICES: tuple[WizardChoice, ...] = tuple(
     WizardChoice(
         value=member.value,
         label=tr(f"wizard.setup.taxpayer-type.entity-type.choices.{member.value.replace('_', '-')}.label"),
+        description=tr(f"wizard.setup.taxpayer-type.entity-type.choices.{member.value.replace('_', '-')}.description"),
     )
     for member in EntityType
 )
+
+# Only the forms whose choice carries curated explainer copy; the rest render
+# label-only (an unlisted member must never mint an unresolvable description ref).
+_DESCRIBED_LEGAL_ENTITY_FORMS = frozenset({"sl", "sin_fines_lucrativos"})
 
 _LEGAL_ENTITY_FORM_CHOICES: tuple[WizardChoice, ...] = tuple(
     WizardChoice(
         value=member.value,
         label=tr(f"wizard.setup.taxpayer-type.legal-entity-form.choices.{member.value.replace('_', '-')}.label"),
+        description=(
+            tr(f"wizard.setup.taxpayer-type.legal-entity-form.choices.{member.value.replace('_', '-')}.description")
+            if member.value in _DESCRIBED_LEGAL_ENTITY_FORMS
+            else None
+        ),
     )
     for member in LegalEntityForm
 )
@@ -126,6 +141,9 @@ _IRPF_INCOME_CATEGORY_CHOICES: tuple[WizardChoice, ...] = tuple(
     WizardChoice(
         value=member.value,
         label=tr(f"wizard.setup.taxpayer-type.irpf-income-categories.choices.{member.value.replace('_', '-')}.label"),
+        description=tr(
+            f"wizard.setup.taxpayer-type.irpf-income-categories.choices.{member.value.replace('_', '-')}.description",
+        ),
     )
     for member in IrpfIncomeCategory
 )
@@ -134,6 +152,9 @@ _IRPF_ESTIMATION_REGIME_CHOICES: tuple[WizardChoice, ...] = tuple(
     WizardChoice(
         value=member.value,
         label=tr(f"wizard.setup.obligations.irpf-estimation-regime.choices.{member.value.replace('_', '-')}.label"),
+        description=tr(
+            f"wizard.setup.obligations.irpf-estimation-regime.choices.{member.value.replace('_', '-')}.description",
+        ),
     )
     for member in IrpfEstimationRegime
 )
@@ -156,6 +177,7 @@ _FISCAL_RESIDENCY_CHOICES: tuple[WizardChoice, ...] = tuple(
     WizardChoice(
         value=member.value,
         label=tr(f"wizard.setup.residence.fiscal-residency.choices.{member.value.replace('_', '-')}.label"),
+        description=tr(f"wizard.setup.residence.fiscal-residency.choices.{member.value.replace('_', '-')}.description"),
     )
     for member in FiscalResidency
 )
@@ -245,10 +267,12 @@ _SITUACION_FAMILIAR_CHOICES: tuple[WizardChoice, ...] = (
     WizardChoice(
         value=SituacionFamiliar.SOLTERO.value,
         label=tr("wizard.setup.taxpayer.situacion-familiar.choices.soltero.label"),
+        description=tr("wizard.setup.taxpayer.situacion-familiar.choices.soltero.description"),
     ),
     WizardChoice(
         value=SituacionFamiliar.SEPARADO_DIVORCIADO.value,
         label=tr("wizard.setup.taxpayer.situacion-familiar.choices.separado-divorciado.label"),
+        description=tr("wizard.setup.taxpayer.situacion-familiar.choices.separado-divorciado.description"),
     ),
 )
 
@@ -256,18 +280,22 @@ _DISABILITY_GRADE_CHOICES: tuple[WizardChoice, ...] = (
     WizardChoice(
         value=RentaDisabilityGrade.GE_33_LT_65.value,
         label=tr("wizard.setup.codes.disability-grade.choices.33-64.label"),
+        description=tr("wizard.setup.codes.disability-grade.choices.33-64.description"),
     ),
     WizardChoice(
         value=RentaDisabilityGrade.GE_65.value,
         label=tr("wizard.setup.codes.disability-grade.choices.65-plus.label"),
+        description=tr("wizard.setup.codes.disability-grade.choices.65-plus.description"),
     ),
     WizardChoice(
         value=RentaDisabilityGrade.JUDICIAL_INCAPACITY.value,
         label=tr("wizard.setup.codes.disability-grade.choices.judicial-incapacity.label"),
+        description=tr("wizard.setup.codes.disability-grade.choices.judicial-incapacity.description"),
     ),
     WizardChoice(
         value=RentaDisabilityGrade.ASSISTANCE_OR_REDUCED_MOBILITY.value,
         label=tr("wizard.setup.codes.disability-grade.choices.assistance-or-mobility.label"),
+        description=tr("wizard.setup.codes.disability-grade.choices.assistance-or-mobility.description"),
     ),
 )
 
@@ -305,10 +333,20 @@ _IVA_REGIME_VISIBLE = WizardVisibility(
 )
 
 
-_TAXPAYER_TYPE_SECTION = WizardSection(
-    id="taxpayer-type",
-    title=tr("wizard.setup.taxpayer-type.title"),
+_IDENTIDAD_SECTION = WizardSection(
+    id="identidad",
+    title=tr("wizard.setup.identidad.title"),
     questions=(
+        WizardQuestion(
+            id="output-language",
+            profile_key="preferences.output_language",
+            widget=WizardWidget.SELECT,
+            prompt=tr("wizard.setup.profile.output-language.prompt"),
+            choices=_OUTPUT_LANGUAGE_CHOICES,
+            default="es",
+            required=False,
+            answer_type=str,
+        ),
         WizardQuestion(
             id="entity-type",
             profile_key="taxpayer_type.entity_type",
@@ -330,6 +368,119 @@ _TAXPAYER_TYPE_SECTION = WizardSection(
             answer_type=str,
         ),
         WizardQuestion(
+            id="tax-id",
+            profile_key="identity.tax_id",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.profile.tax-id.prompt"),
+            required=True,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="name",
+            profile_key="identity.name",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.profile.name.prompt"),
+            required=False,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="surnames",
+            profile_key="identity.surnames",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.profile.surnames.prompt"),
+            required=False,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="legal-name",
+            profile_key="identity.legal_name",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.profile.legal-name.prompt"),
+            help=tr("wizard.setup.profile.legal-name.help"),
+            required=False,
+            visible_when=_ENTITY_LEGAL,
+            answer_type=str,
+        ),
+    ),
+)
+
+
+_RESIDENCE_SECTION = WizardSection(
+    id="residence",
+    title=tr("wizard.setup.residence.title"),
+    questions=(
+        WizardQuestion(
+            id="fiscal-residency",
+            profile_key="taxpayer_type.fiscal_residency",
+            widget=WizardWidget.SELECT,
+            prompt=tr("wizard.setup.residence.fiscal-residency.prompt"),
+            choices=_FISCAL_RESIDENCY_CHOICES,
+            default=FiscalResidency.RESIDENT_IRPF.value,
+            required=False,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="country-of-fiscal-residence",
+            profile_key="taxpayer_type.country_of_fiscal_residence",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.residence.country-of-fiscal-residence.prompt"),
+            required=False,
+            visible_when=_NON_RESIDENT_IRNR,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="representante-fiscal-nif",
+            profile_key="taxpayer_type.representante_fiscal_nif",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.residence.representante-fiscal-nif.prompt"),
+            required=False,
+            visible_when=_NON_RESIDENT_IRNR,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="representante-fiscal-nombre",
+            profile_key="taxpayer_type.representante_fiscal_nombre",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.residence.representante-fiscal-nombre.prompt"),
+            required=False,
+            visible_when=_NON_RESIDENT_IRNR,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            # IRNR non-residents have no CCAA residencia fiscal; only
+            # IRPF residents are assigned a CCAA. Suppress the question
+            # for NON_RESIDENT_IRNR so the wizard never silently defaults
+            # a non-resident onto "madrid".
+            id="tax-residence-ccaa",
+            profile_key="tax_residence.ccaa",
+            widget=WizardWidget.SELECT,
+            prompt=tr("wizard.setup.residence.tax-residence-ccaa.prompt"),
+            choices=_CCAA_CHOICES,
+            default=CCAA.MADRID.value,
+            required=False,
+            visible_when=WizardCondition(
+                question_id="fiscal-residency",
+                equals=FiscalResidency.RESIDENT_IRPF.value,
+            ),
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="address-postcode",
+            profile_key="contact.postcode",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.profile.address-postcode.prompt"),
+            required=False,
+            answer_type=str,
+        ),
+    ),
+)
+
+
+_ACTIVIDAD_SECTION = WizardSection(
+    id="actividad",
+    title=tr("wizard.setup.actividad.title"),
+    questions=(
+        WizardQuestion(
             id="irpf-income-categories",
             profile_key="taxpayer_type.irpf_income_categories",
             widget=WizardWidget.CHECKBOX,
@@ -338,6 +489,28 @@ _TAXPAYER_TYPE_SECTION = WizardSection(
             choices=_IRPF_INCOME_CATEGORY_CHOICES,
             required=False,
             visible_when=_NATURAL_PERSON,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="activity",
+            profile_key="activities.description",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.profile.activity.prompt"),
+            required=False,
+            visible_when=_HAS_ACTIVITY,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            # Optional censo alta date. When set, the deadline engine
+            # suppresses obligation windows that close before it, so a
+            # recent registrant is not shown overdue returns for periods
+            # that precede their alta.
+            id="activity-start-date",
+            profile_key="censo.activity_start_date",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.profile.activity-start-date.prompt"),
+            help=tr("wizard.setup.profile.activity-start-date.help"),
+            required=False,
             answer_type=str,
         ),
         WizardQuestion(
@@ -421,74 +594,54 @@ _TAXPAYER_TYPE_SECTION = WizardSection(
 )
 
 
-_PROFILE_SECTION = WizardSection(
-    id="profile",
-    title=tr("wizard.setup.profile.title"),
+_IVA_SECTION = WizardSection(
+    id="iva",
+    title=tr("wizard.setup.iva.title"),
     questions=(
         WizardQuestion(
-            id="tax-id",
-            profile_key="identity.tax_id",
-            widget=WizardWidget.TEXT,
-            prompt=tr("wizard.setup.profile.tax-id.prompt"),
-            required=True,
-            answer_type=str,
-        ),
-        WizardQuestion(
-            id="name",
-            profile_key="identity.name",
-            widget=WizardWidget.TEXT,
-            prompt=tr("wizard.setup.profile.name.prompt"),
+            id="iva-regime",
+            profile_key="iva.regime",
+            widget=WizardWidget.SELECT,
+            prompt=tr("wizard.setup.iva.iva-regime.prompt"),
+            choices=_IVA_CHOICES,
+            default=_DEFAULT_IVA_REGIME,
             required=False,
+            visible_when=_IVA_REGIME_VISIBLE,
             answer_type=str,
         ),
-        WizardQuestion(
-            id="surnames",
-            profile_key="identity.surnames",
-            widget=WizardWidget.TEXT,
-            prompt=tr("wizard.setup.profile.surnames.prompt"),
-            required=False,
-            answer_type=str,
+        _confirm("iva-roi-enrolled", "iva.roi_enrolled", suffix="iva"),
+        _confirm("iva-oss-enrolled", "iva.oss_enrolled", suffix="iva"),
+        _confirm("iva-group-member-enrolled", "iva.group_member_enrolled", suffix="iva"),
+        _confirm("iva-group-dominant-entity-enrolled", "iva.group_dominant_entity_enrolled", suffix="iva"),
+        _confirm("iva-sii-enrolled", "iva.sii_enrolled", suffix="iva"),
+        _confirm("iva-redeme-enrolled", "iva.redeme_enrolled", suffix="iva"),
+        _confirm(
+            "iva-intracommunity-operations-exceed-50000-eur",
+            "iva.intracommunity_operations_exceed_50000_eur",
+            suffix="iva",
         ),
-        WizardQuestion(
-            id="legal-name",
-            profile_key="identity.legal_name",
-            widget=WizardWidget.TEXT,
-            prompt=tr("wizard.setup.profile.legal-name.prompt"),
-            help=tr("wizard.setup.profile.legal-name.help"),
-            required=False,
-            visible_when=_ENTITY_LEGAL,
-            answer_type=str,
+    ),
+)
+
+
+_ENROLLMENT_SECTION = WizardSection(
+    id="enrollment",
+    title=tr("wizard.setup.enrollment.title"),
+    questions=(
+        _confirm("enrollment-large-company", "censo.large_company", suffix="enrollment"),
+        _confirm(
+            "enrollment-public-administration-budget-gt-6000000",
+            "censo.public_administration_budget_gt_6000000",
+            suffix="enrollment",
         ),
-        WizardQuestion(
-            id="activity",
-            profile_key="activities.description",
-            widget=WizardWidget.TEXT,
-            prompt=tr("wizard.setup.profile.activity.prompt"),
-            required=False,
-            visible_when=_HAS_ACTIVITY,
-            answer_type=str,
-        ),
-        WizardQuestion(
-            id="address-postcode",
-            profile_key="contact.postcode",
-            widget=WizardWidget.TEXT,
-            prompt=tr("wizard.setup.profile.address-postcode.prompt"),
-            required=False,
-            answer_type=str,
-        ),
-        WizardQuestion(
-            # Optional censo alta date. When set, the deadline engine
-            # suppresses obligation windows that close before it, so a
-            # recent registrant is not shown overdue returns for periods
-            # that precede their alta.
-            id="activity-start-date",
-            profile_key="censo.activity_start_date",
-            widget=WizardWidget.TEXT,
-            prompt=tr("wizard.setup.profile.activity-start-date.prompt"),
-            help=tr("wizard.setup.profile.activity-start-date.help"),
-            required=False,
-            answer_type=str,
-        ),
+    ),
+)
+
+
+_FAMILIA_SECTION = WizardSection(
+    id="familia",
+    title=tr("wizard.setup.familia.title"),
+    questions=(
         WizardQuestion(
             id="taxation-type",
             profile_key="filing_export.declaration_type",
@@ -499,24 +652,6 @@ _PROFILE_SECTION = WizardSection(
             visible_when=_NATURAL_PERSON,
             answer_type=str,
         ),
-        WizardQuestion(
-            id="output-language",
-            profile_key="preferences.output_language",
-            widget=WizardWidget.SELECT,
-            prompt=tr("wizard.setup.profile.output-language.prompt"),
-            choices=_OUTPUT_LANGUAGE_CHOICES,
-            default="es",
-            required=False,
-            answer_type=str,
-        ),
-    ),
-)
-
-
-_TAXPAYER_SECTION = WizardSection(
-    id="taxpayer",
-    title=tr("wizard.setup.taxpayer.title"),
-    questions=(
         WizardQuestion(
             id="taxpayer-sex",
             profile_key="renta_taxpayer.sex",
@@ -594,14 +729,6 @@ _TAXPAYER_SECTION = WizardSection(
             visible_when=_NATURAL_PERSON,
             answer_type=str,
         ),
-    ),
-)
-
-
-_SPOUSE_SECTION = WizardSection(
-    id="spouse",
-    title=tr("wizard.setup.spouse.title"),
-    questions=(
         WizardQuestion(
             # Required *when visible*: a joint declaration is invalid
             # without the spouse NIF (SetupAnswers enforces the same
@@ -697,14 +824,6 @@ _SPOUSE_SECTION = WizardSection(
             visible_when=_EU_EEA_RESIDENT,
             answer_type=str,
         ),
-    ),
-)
-
-
-_FAMILY_SECTION = WizardSection(
-    id="family",
-    title=tr("wizard.setup.family.title"),
-    questions=(
         _confirm(
             "family-descendants-eu-eea-deduction",
             "renta_family.descendants_eu_eea_deduction",
@@ -716,50 +835,6 @@ _FAMILY_SECTION = WizardSection(
             "renta_family.minor_children_in_unit",
             suffix="family",
             visible_when=_NATURAL_PERSON,
-        ),
-    ),
-)
-
-
-_IVA_SECTION = WizardSection(
-    id="iva",
-    title=tr("wizard.setup.iva.title"),
-    questions=(
-        WizardQuestion(
-            id="iva-regime",
-            profile_key="iva.regime",
-            widget=WizardWidget.SELECT,
-            prompt=tr("wizard.setup.iva.iva-regime.prompt"),
-            choices=_IVA_CHOICES,
-            default=_DEFAULT_IVA_REGIME,
-            required=False,
-            visible_when=_IVA_REGIME_VISIBLE,
-            answer_type=str,
-        ),
-        _confirm("iva-roi-enrolled", "iva.roi_enrolled", suffix="iva"),
-        _confirm("iva-oss-enrolled", "iva.oss_enrolled", suffix="iva"),
-        _confirm("iva-group-member-enrolled", "iva.group_member_enrolled", suffix="iva"),
-        _confirm("iva-group-dominant-entity-enrolled", "iva.group_dominant_entity_enrolled", suffix="iva"),
-        _confirm("iva-sii-enrolled", "iva.sii_enrolled", suffix="iva"),
-        _confirm("iva-redeme-enrolled", "iva.redeme_enrolled", suffix="iva"),
-        _confirm(
-            "iva-intracommunity-operations-exceed-50000-eur",
-            "iva.intracommunity_operations_exceed_50000_eur",
-            suffix="iva",
-        ),
-    ),
-)
-
-
-_ENROLLMENT_SECTION = WizardSection(
-    id="enrollment",
-    title=tr("wizard.setup.enrollment.title"),
-    questions=(
-        _confirm("enrollment-large-company", "censo.large_company", suffix="enrollment"),
-        _confirm(
-            "enrollment-public-administration-budget-gt-6000000",
-            "censo.public_administration_budget_gt_6000000",
-            suffix="enrollment",
         ),
     ),
 )
@@ -926,73 +1001,18 @@ _OBLIGATIONS_SECTION = WizardSection(
 )
 
 
-_RESIDENCE_SECTION = WizardSection(
-    id="residence",
-    title=tr("wizard.setup.residence.title"),
+_PREFERENCIAS_SECTION = WizardSection(
+    id="preferencias",
+    title=tr("wizard.setup.preferencias.title"),
     questions=(
-        WizardQuestion(
-            id="fiscal-residency",
-            profile_key="taxpayer_type.fiscal_residency",
-            widget=WizardWidget.SELECT,
-            prompt=tr("wizard.setup.residence.fiscal-residency.prompt"),
-            choices=_FISCAL_RESIDENCY_CHOICES,
-            default=FiscalResidency.RESIDENT_IRPF.value,
-            required=False,
-            answer_type=str,
+        _confirm(
+            "cloud-evidence-upload",
+            "capabilities.cloud_evidence_upload",
+            suffix="capabilities",
+            default="false",
         ),
-        WizardQuestion(
-            id="country-of-fiscal-residence",
-            profile_key="taxpayer_type.country_of_fiscal_residence",
-            widget=WizardWidget.TEXT,
-            prompt=tr("wizard.setup.residence.country-of-fiscal-residence.prompt"),
-            required=False,
-            visible_when=_NON_RESIDENT_IRNR,
-            answer_type=str,
-        ),
-        WizardQuestion(
-            id="representante-fiscal-nif",
-            profile_key="taxpayer_type.representante_fiscal_nif",
-            widget=WizardWidget.TEXT,
-            prompt=tr("wizard.setup.residence.representante-fiscal-nif.prompt"),
-            required=False,
-            visible_when=_NON_RESIDENT_IRNR,
-            answer_type=str,
-        ),
-        WizardQuestion(
-            id="representante-fiscal-nombre",
-            profile_key="taxpayer_type.representante_fiscal_nombre",
-            widget=WizardWidget.TEXT,
-            prompt=tr("wizard.setup.residence.representante-fiscal-nombre.prompt"),
-            required=False,
-            visible_when=_NON_RESIDENT_IRNR,
-            answer_type=str,
-        ),
-        WizardQuestion(
-            # IRNR non-residents have no CCAA residencia fiscal; only
-            # IRPF residents are assigned a CCAA. Suppress the question
-            # for NON_RESIDENT_IRNR so the wizard never silently defaults
-            # a non-resident onto "madrid".
-            id="tax-residence-ccaa",
-            profile_key="tax_residence.ccaa",
-            widget=WizardWidget.SELECT,
-            prompt=tr("wizard.setup.residence.tax-residence-ccaa.prompt"),
-            choices=_CCAA_CHOICES,
-            default=CCAA.MADRID.value,
-            required=False,
-            visible_when=WizardCondition(
-                question_id="fiscal-residency",
-                equals=FiscalResidency.RESIDENT_IRPF.value,
-            ),
-            answer_type=str,
-        ),
-    ),
-)
-
-
-_NOTES_SECTION = WizardSection(
-    id="notes",
-    title=tr("wizard.setup.notes.title"),
-    questions=(
+        _confirm("llm-vision", "capabilities.llm_vision", suffix="capabilities", default="true"),
+        _confirm("google-export", "capabilities.google_export", suffix="capabilities", default="true"),
         WizardQuestion(
             id="notes",
             profile_key="identity.notes",
@@ -1005,38 +1025,19 @@ _NOTES_SECTION = WizardSection(
 )
 
 
-_CAPABILITIES_SECTION = WizardSection(
-    id="capabilities",
-    title=tr("wizard.setup.capabilities.title"),
-    questions=(
-        _confirm(
-            "cloud-evidence-upload",
-            "capabilities.cloud_evidence_upload",
-            suffix="capabilities",
-            default="false",
-        ),
-        _confirm("llm-vision", "capabilities.llm_vision", suffix="capabilities", default="true"),
-        _confirm("google-export", "capabilities.google_export", suffix="capabilities", default="true"),
-    ),
-)
-
-
 SETUP_FLOW = WizardFlow(
     id="setup",
     title=tr("wizard.setup.title"),
     description=tr("wizard.setup.description"),
     sections=(
-        _TAXPAYER_TYPE_SECTION,
-        _PROFILE_SECTION,
-        _TAXPAYER_SECTION,
-        _SPOUSE_SECTION,
-        _FAMILY_SECTION,
+        _IDENTIDAD_SECTION,
+        _RESIDENCE_SECTION,
+        _ACTIVIDAD_SECTION,
         _IVA_SECTION,
         _ENROLLMENT_SECTION,
+        _FAMILIA_SECTION,
         _OBLIGATIONS_SECTION,
-        _RESIDENCE_SECTION,
-        _CAPABILITIES_SECTION,
-        _NOTES_SECTION,
+        _PREFERENCIAS_SECTION,
     ),
     answers_model=SetupAnswers,
 )

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#agent-harness-operability-followup'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-07-02-agent-harness-operability-followup-research]]'
   - '[[2026-07-03-agent-harness-operability-followup-audit]]'

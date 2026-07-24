@@ -16,6 +16,7 @@ from urllib.parse import urlsplit
 
 from pydantic import SecretStr
 
+from .....core.errors import resolve_error_message
 from .....core.identity import IdentityError, validate_spanish_tax_id
 from .....core.logging import get_logger
 from .....domain.calculations.registry import RemoteStateGuardPolicy
@@ -154,9 +155,8 @@ def classify_identity(raw: str) -> str:
         validate_spanish_tax_id(value)
     except IdentityError as exc:
         raise ClaveMovilConfigurationError(
-            f"The {kind} you entered has a valid shape but its checksum letter "
-            "does not match the digits. Check the final letter on your document "
-            "and try again.",
+            translated_message="errors.auth.clave_movil_identity_checksum",
+            context={"detail": resolve_error_message(exc)},
         ) from exc
     return kind
 

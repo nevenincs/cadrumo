@@ -3,15 +3,16 @@
 from __future__ import annotations
 
 import base64
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from types import MappingProxyType
 
 import pytest
 from pydantic import ValidationError
 
 from ....core.classification import SensitivityClass
+from ....core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
 from .._portable_export import CarriedSecureObject, CoverageManifest, UserProfilePortableExport
-from .._values import UserProfileFact, UserProfileRecord
+from .._values import UserProfileFact, UserProfileRecord, UserProfileStatus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -30,6 +31,97 @@ def _profile() -> UserProfileRecord:
         created_at=_INSTANT,
         updated_at=_INSTANT,
     )
+
+
+def _campaign_record() -> UserProfileRecord:
+    """A record populated with EVERY schema surface this campaign added.
+
+    The setup-flow campaign added three persisted surfaces: the
+    ``censo.divergencia.{n}.*`` cotejo divergence rows, the
+    ``renta_family.descendiente.{n}.*`` descendant extensions, and the
+    ``SETUP_INCOMPLETE`` lifecycle status. All three are carried by the
+    :class:`UserProfileRecord` -- as ordinary ``UserProfileFact`` rows and
+    the ``status`` enum -- never by a change to the export model's own shape.
+    Defaultable fact fields are populated non-default (a censo-artefact
+    ``source`` and a real effective-dated window) so a save-drops-field
+    regression would break the strict equality the roundtrip asserts.
+    """
+    return UserProfileRecord(
+        profile_id=_BUCKET_ID,
+        display_name="Campaign additions",
+        status=UserProfileStatus.SETUP_INCOMPLETE,
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(
+                path="censo.divergencia.0.axis",
+                value="activities.description",
+                source=PROVENANCE_SOURCE_CENSO_ARTEFACT,
+                valid_from=date(2026, 1, 1),
+                valid_to=date(2026, 12, 31),
+            ),
+            UserProfileFact(
+                path="censo.divergencia.0.artefact_value",
+                value="Consultoria informatica",
+                source=PROVENANCE_SOURCE_CENSO_ARTEFACT,
+            ),
+            UserProfileFact(
+                path="censo.divergencia.0.source",
+                value=PROVENANCE_SOURCE_CENSO_ARTEFACT,
+                source=PROVENANCE_SOURCE_CENSO_ARTEFACT,
+            ),
+            UserProfileFact(path="renta_family.descendiente.0.birth_date", value="2020-01-15"),
+            UserProfileFact(path="renta_family.descendiente.0.custodia_compartida", value="true"),
+            UserProfileFact(path="renta_family.descendiente.0.discapacidad", value="65"),
+        ),
+        created_at=_INSTANT,
+        updated_at=_INSTANT,
+    )
+
+
+def test_portable_export_carries_campaign_schema_additions_at_v3() -> None:
+    """The export subsumes every campaign schema addition with no version bump.
+
+    Proves the S30 finding: because ``UserProfilePortableExport`` composes the
+    whole :class:`UserProfileRecord` through the ``profile`` field and pydantic
+    serialises it generically, the new divergence facts, descendant facts, and
+    the ``SETUP_INCOMPLETE`` status flow through structurally. Under the
+    PRE_RELEASE compatibility regime this means no ``bundle_schema_version``
+    bump is warranted -- the same v3 bundle round-trips the new surfaces with
+    strict equality, and the new status survives (a dropped status would
+    re-default to ``ACTIVE`` and fail the identity check).
+    """
+    record = _campaign_record()
+    bundle = UserProfilePortableExport(profile=record, exported_at=_INSTANT)
+    assert bundle.bundle_schema_version == 3
+
+    reloaded = UserProfilePortableExport.model_validate_json(bundle.model_dump_json())
+
+    assert reloaded.bundle_schema_version == 3
+    assert reloaded.profile == record
+    assert reloaded.profile.status is UserProfileStatus.SETUP_INCOMPLETE
+    reloaded_paths = {fact.path for fact in reloaded.profile.facts}
+    assert "censo.divergencia.0.artefact_value" in reloaded_paths
+    assert "renta_family.descendiente.0.discapacidad" in reloaded_paths
+
+
+def test_portable_export_campaign_roundtrip_is_not_tautological() -> None:
+    """Anti-tautology for the export boundary: mangling the payload strictly differs.
+
+    Serialises the campaign record, corrupts one persisted divergence fact
+    value in the JSON bytes, then re-parses: the reloaded profile must differ
+    from the original, proving the roundtrip equality above reflects the
+    serialised payload rather than passing regardless. If the boundary were
+    tautological the mangled bundle would still compare equal.
+    """
+    record = _campaign_record()
+    payload = UserProfilePortableExport(profile=record, exported_at=_INSTANT).model_dump_json()
+
+    mangled = payload.replace("Consultoria informatica", "Corrupted on the wire")
+    assert "Corrupted on the wire" in mangled, "payload mutation did not apply"
+
+    reloaded = UserProfilePortableExport.model_validate_json(mangled)
+    assert reloaded.profile != record
+    assert any(fact.value == "Corrupted on the wire" for fact in reloaded.profile.facts)
 
 
 def test_portable_export_v3_defaults_keep_empty_custody_fields_json_valid() -> None:

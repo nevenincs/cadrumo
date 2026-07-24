@@ -229,6 +229,11 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
     ),
     UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: frozenset(
         {
+            # flow TUI screens -> app driver: the app imports both screens at
+            # module level, so the screens' typed access to the owning
+            # FlowTuiApp is a genuine module-load cycle break.
+            ImportEdge("adapters.inbound.tui._question_screen", "adapters.inbound.tui._app"),
+            ImportEdge("adapters.inbound.tui._review_screen", "adapters.inbound.tui._app"),
             # buckets event-history repository ports-inversion:
             # the concrete BucketEventHistoryRepository defers the storage-substrate
             # import from the persistence adapter (was domain._event_repository).
@@ -408,6 +413,11 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
     ),
     UnsanctionedClass.APPLICATION_DEFERRAL: frozenset(
         {
+            # flow-substrate bridge -> one-shot wizard catalogue: deferred so
+            # the domain-blind substrate facade stays importable without the
+            # wizard surface; no cycle exists. Delete this entry when the
+            # one-shot wizard surface and the projection are retired.
+            ImportEdge("application.flows._wizard_projection", "application.wizard"),
             # buckets event-history repository ports-inversion:
             # deferred consumers now reach the concrete repository at its
             # persistence-adapter home (was a domain.buckets deferral).
@@ -440,6 +450,45 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.auth", "core.i18n"),
             ImportEdge("application.auth._acquisition_lock", "core"),
             ImportEdge("application.auth._apoderado", "core.config"),
+            # apoderado single identity authority: the service defers the
+            # identity validator so importing the auth facade stays light on
+            # the CLI cold-start path.
+            ImportEdge("application.auth._apoderado", "core.identity"),
+            # cotejo divergence notice: the read-surface builder defers the
+            # record projection to avoid cycling user_profile through its own
+            # package initializer.
+            ImportEdge("application.user_profile._cotejo_apply", "application.user_profile._projections"),
+            # profile-facts checkpoint store: the wizard's persistence seam
+            # defers its lifecycle, projection, and repository reach so the
+            # wizard package imports without opening the storage surface.
+            ImportEdge("application.wizard._checkpoint_store", "application.user_profile"),
+            ImportEdge("application.wizard._checkpoint_store", "application.wizard._persistence"),
+            ImportEdge("application.wizard._checkpoint_store", "application.workflow"),
+            # wizard command module reaches its own package facade lazily for
+            # the console-refusal taxonomy re-exported there, and defers its
+            # widget/i18n reach on the same cold-start budget.
+            ImportEdge("application.wizard._commands", "application.wizard"),
+            ImportEdge("application.wizard._commands", "application.wizard._widgets"),
+            ImportEdge("application.wizard._commands", "core.i18n"),
+            # cotejo page family and outcome projection: deferred so the
+            # wizard package imports without the censo domain or the
+            # user-profile fact surface on the cold-start path.
+            ImportEdge("application.wizard._cotejo", "domain.censo"),
+            ImportEdge("application.wizard._cotejo", "domain.user_profile"),
+            ImportEdge("application.wizard._cotejo", "application.user_profile"),
+            # descendant door: defers the record schema and repository reach
+            # until the door actually opens.
+            ImportEdge("application.wizard._descendant_door", "domain.user_profile"),
+            ImportEdge("application.wizard._descendant_door", "application.workflow"),
+            # wizard persistence projections defer the contribuyente fact
+            # builders and the user-profile write surface per call.
+            ImportEdge("application.wizard._persistence", "domain.contribuyente"),
+            ImportEdge("application.wizard._persistence", "application.user_profile"),
+            # registered-values overview defers the profile projection.
+            ImportEdge("application.wizard._registered_values", "application.user_profile"),
+            # locale f-string registry enumerates profile enums lazily like
+            # its sibling contribuyente/deadlines entries above.
+            ImportEdge("locales._fstring_registry", "domain.user_profile"),
             # certificate-source registry operator verbs mirror
             # the sibling `_operator` deferrals below for the same targets.
             ImportEdge("application.auth._certificate_sources_operator", "adapters.persistence.profile.buckets"),
@@ -729,7 +778,6 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.verification._verify", "core.resources"),
             ImportEdge("application.wizard._commands", "application.user_profile"),
             ImportEdge("application.wizard._commands", "application.wizard._persistence"),
-            ImportEdge("application.wizard._commands", "application.wizard._runner"),
             ImportEdge("application.wizard._commands", "application.workflow"),
             ImportEdge("application.wizard._commands", "core.click_context"),
             ImportEdge("application.wizard._commands", "core.config"),
@@ -783,9 +831,9 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
     UnsanctionedClass.NAMED_CYCLE_BREAK: 1,
     UnsanctionedClass.PORTS_INVERSION_PENDING: 36,
     UnsanctionedClass.DOMAIN_CYCLE_BREAK: 51,
-    UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 179,  # +2 master_key login-throttle + persisted profile-session bucket keystore-path deferrals
+    UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 181,  # +2 master_key login-throttle + persisted profile-session bucket keystore-path deferrals, +2 flow TUI screen->app cycle breaks (was 177)
     UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 38,  # net +1 atomic_write bootstrap-cycle deferrals (_bucket_pointer_io, corpus_manifest; env_io net-zero, corpus_manifest's save_corpus_manifest site retired its own core.locks edge)
-    UnsanctionedClass.APPLICATION_DEFERRAL: 529,  # +1 ledger._actions_manual->invoices cycle-break (was 528)
+    UnsanctionedClass.APPLICATION_DEFERRAL: 542,  # +12 profile-setup-flow sites: apoderado identity authority, cotejo notice projection, checkpoint-store lifecycle/projection/repository reach, wizard command facade (was 530)
 }
 
 # Ceiling on the total number of allowlisted edges. Editing the allowlist to add
@@ -795,7 +843,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
 # baseline (the modelos_work_units/participation_index catalogue-repository
 # consolidation, the corpus_search/mcp/user_profile deferrals introduced by
 # intervening commits) were swept into their classified buckets in one pass.
-_ALLOWLIST_EDGE_CEILING: int = 476  # +2 master_key login-throttle + persisted profile-session bucket deferrals (was 474).
+_ALLOWLIST_EDGE_CEILING: int = 495  # +2 master_key login-throttle + persisted profile-session bucket deferrals, +19 profile-setup-flow edges: the apoderado identity authority, the cotejo page family and apply projections, the checkpoint store and descendant door reach, the wizard persistence/registered-values deferrals, and the locale registry's profile-enum enumeration (was 474).
 
 
 def _cadrumo_relative(dotted: str) -> str:

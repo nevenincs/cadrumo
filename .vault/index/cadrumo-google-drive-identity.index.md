@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cadrumo-google-drive-identity'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-07-12-cadrumo-google-drive-identity-reference]]'
 ---

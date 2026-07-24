@@ -64,11 +64,18 @@ class ProfilePointerPayload(OutputSchema):
     facts stay under
     :class:`ProfileFactPayload` in the
     profile-show envelope.
+
+    ``status`` mirrors the manifest lifecycle marker
+    (:class:`~cadrumo.domain.user_profile.UserProfileStatus` value) so the
+    listing distinguishes a workable ``active`` profile from a
+    ``setup_incomplete`` one still completing its interactive setup — the
+    latter is listed and resumable but not yet workable.
     """
 
     name: str
     bucket_id: str
     active: bool
+    status: str
 
 
 class ProfileIssuePayload(OutputSchema):
@@ -1215,3 +1222,23 @@ class ConfigProfileDescendienteRemoveResult(OutputSchema):
     profile: str
     removed_index: int
     total: int
+
+
+class CensoFileFactPayload(OutputSchema):
+    """One candidate censal fact projected from the G313 certificate.
+
+    ``source`` carries the non-official artefact provenance token, never
+    an AEAT-verified stamp.
+    """
+
+    path: str
+    value: str
+    source: str
+
+
+@register_schema("config.profile.censo.file")
+class CensoFileIngestResult(OutputSchema):
+    """Result of ``config profile censo file``: previewed or enrolled facts."""
+
+    applied: bool
+    facts: tuple[CensoFileFactPayload, ...] = ()

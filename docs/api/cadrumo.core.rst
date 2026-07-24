@@ -79,6 +79,7 @@ Submodules
    cadrumo.core.env_io
    cadrumo.core.external_constants
    cadrumo.core.file_permissions
+   cadrumo.core.flows
    cadrumo.core.hashing
    cadrumo.core.json_contract
    cadrumo.core.locks

@@ -1,10 +1,10 @@
-"""Scripted-answer round-trip tests for the wizard runtime against the setup flow.
+"""Scripted-answer round-trip tests for the setup flow on the flow substrate.
 
-These tests verify that ``run_flow`` walks the descriptor in the
-declared order, skips conditional questions when ``visible_when`` is
-not satisfied, builds a typed answers model that validates, and that
-``persist_answers`` + ``project_answers`` round-trip the canonical-token
-representation back to the same typed model.
+These tests verify that the scripted intent driver walks the projected
+setup definition in the declared order, skips conditional questions when
+``visible_when`` is not satisfied, builds a typed answers model that
+validates, and that ``persist_answers`` + ``project_answers`` round-trip
+the canonical-token representation back to the same typed model.
 """
 
 from __future__ import annotations
@@ -13,142 +13,216 @@ from collections import deque
 
 import pytest
 
+from ....core.flows import FlowMode
 from ....core.setup_answers import SetupAnswers
 from ....domain.deadlines import LegalEntityForm
+from ...flows import FlowAnswerError, run_scripted_flow
+from .. import DESCENDANTS_COUNT_PAGE_ID
 from .._catalogue import SETUP_FLOW
-from .._errors import WizardAnswerQueueOverflowError
+from .._commands import (
+    _answers_model_from_canonical,
+    _force_pages_visible,
+    _project_scripted_answers,
+    _setup_flow_definition,
+)
 from .._models import WizardWidget
 from .._persistence import project_answers, serialise_answers
-from .._prompter import CanonicalAnswerPrompter
-from .._runner import run_flow
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _scripted_answers_for_individual_declaration() -> deque[str]:
-    """Build a scripted answer set for an individual taxation profile.
+def _default_tokens() -> dict[str, str]:
+    """Every descriptor default, keyed by question id — the quiet-path seed."""
 
-    The order matches the declared question order in ``SETUP_FLOW``:
-    the taxpayer-type section is walked first, so ``entity-type``
-    fixes the natural-person path before the IRPF-personal sections.
-    Conditional spouse questions tied to ``taxation_type == "2"`` are
-    skipped by the runtime, so they do NOT appear in the deque. The
-    ``activity`` question is visible here because the declared IRPF
-    income categories include ``actividad_economica``.
+    return {
+        question.id: question.default or ""
+        for section in SETUP_FLOW.sections
+        for question in section.questions
+        if question.default is not None
+    }
+
+
+def _drive_scripted(
+    canonical: dict[str, str],
+    *,
+    force_visible: frozenset[str] = frozenset(),
+) -> tuple[SetupAnswers, dict[str, str]]:
+    """Drive a non-interactive walk through the shared flow substrate.
+
+    Mirrors the production non-interactive command path: project the
+    catalogue onto the flow definition, force any explicitly-supplied
+    gated questions visible, project the canonical dict into the
+    driver's own visible-sequence token order, run the scripted intent
+    driver, and coerce the committed answers through the one typed
+    projection every frontend shares.
+
+    Returns the typed answers plus the committed page-keyed answer map —
+    a question the walk visited carries a key in the map, a gate-hidden
+    question is absent.
+    """
+    definition = _force_pages_visible(_setup_flow_definition(SETUP_FLOW), force_visible)
+    tokens, _intended = _project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
+    state, _projection = run_scripted_flow(
+        definition,
+        tokens,
+        mode=FlowMode.CREATE,
+        defaults=_default_tokens(),
+    )
+    committed = dict(state.answers)
+    answers = _answers_model_from_canonical(SETUP_FLOW, committed)
+    assert isinstance(answers, SetupAnswers)
+    return answers, committed
+
+
+def _scripted_answers_for_individual_declaration() -> deque[str]:
+    """Build the ordered scripted token queue for an individual taxation profile.
+
+    The order matches the scripted driver's visible-sequence walk over the
+    projected setup definition: the identidad section is walked first, so
+    ``entity-type`` fixes the natural-person path before every later
+    section's gated questions. Conditional spouse questions tied to
+    ``taxation_type == "2"`` are never visited, so they do NOT appear in
+    the queue. Shared by sibling test modules that drive the substrate
+    with a positional token queue.
     """
 
-    return deque(
-        [
-            # ── taxpayer type ──────────────────────
-            "natural_person",  # entity-type
-            # legal-entity-form SKIPPED (conditional on entity-type == legal_entity)
-            "actividad_economica,capital_inmobiliario",  # irpf-income-categories
-            "",  # incn-prior-12-months (optional, blank — natural person doesn't gate Modelo 202)
-            # new-entity-first-two-profit-periods SKIPPED (conditional on entity-type == legal_entity)
-            # ── profile ────────────────────────────
-            "12345678Z",  # tax-id
-            "Operator",  # name
-            "Doe",  # surnames
-            "Software development",  # activity (visible: has actividad_economica)
-            "28001",  # address-postcode
-            "",  # activity-start-date (optional, left blank)
-            "1",  # taxation-type (individual, visible: natural person)
-            "en",  # output-language
-            # ── taxpayer biographic (visible: natural person) ──
-            "",  # taxpayer-sex
-            "",  # taxpayer-marital-status
-            "soltero",  # situacion-familiar (Art. 82 LIRPF axis, contract)
-            # taxpayer-marriage-date SKIPPED (conditional on marital-status == CASADO)
-            "",  # taxpayer-birth-date
-            "",  # taxpayer-disability-grade
-            "",  # taxpayer-death-date
-            # ── spouse (joint taxation condition NOT satisfied) ──
-            # every spouse question is joint-gated; none is asked here
-            # ── family (visible: natural person) ────
-            "false",  # family-descendants-eu-eea-deduction
-            "false",  # family-minor-children-in-unit
-            # ── IVA ────────────────────────────────
-            "GENERAL",  # iva-regime
-            "false",  # iva-roi-enrolled
-            "false",  # iva-oss-enrolled
-            "false",  # iva-group-member-enrolled
-            "false",  # iva-group-dominant-entity-enrolled
-            "false",  # iva-sii-enrolled
-            "false",  # iva-redeme-enrolled
-            "false",  # iva-intracommunity-operations-exceed-50000-eur
-            # ── enrollment ─────────────────────────
-            "false",  # enrollment-large-company
-            "false",  # enrollment-public-administration-budget-gt-6000000
-            # ── obligations ────────────────────────
-            "false",  # has-employees
-            "false",  # pays-professionals-with-retencion
-            "false",  # art109-activity-income-withholding-ge-70pct
-            "false",  # pays-rent-with-retencion
-            "false",  # pays-capital-income-with-retencion
-            "",  # modelo-111-no-retenciones-periods
-            "directa_normal",  # irpf-estimation-regime
-            "general",  # irpf-special-regime (visible: natural person; no special regime)
-            # irpf-special-regime-start-date SKIPPED (conditional on irpf-special-regime == IMPATRIADO)
-            "false",  # does-intracomunitario
-            "false",  # third-party-transactions-above-347-threshold
-            "false",  # bienes-extranjero-above-threshold
-            "false",  # monedas-virtuales-extranjero-above-threshold
-            # ── residence (non-resident axis #197) ────────────
-            "resident_irpf",  # fiscal-residency
-            # country-of-fiscal-residence + representante-fiscal-* SKIPPED
-            # (conditional on fiscal-residency == non_resident_irnr).
-            "madrid",  # tax-residence-ccaa (visible: resident)
-            # ── capabilities ───────────────────────
-            "false",  # cloud-evidence-upload
-            "true",  # llm-vision
-            "true",  # google-export
-            # ── notes ──────────────────────────────
-            "",  # notes
-        ],
-    )
+    canonical = _individual_declaration_canonical()
+    definition = _setup_flow_definition(SETUP_FLOW)
+    _tokens, intended = _project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
+    # The shared fixture carries no token for the descendant count page:
+    # the sibling scripted-walk helper defaults that page in walk order, so
+    # a positional token for it would misfeed the next visible page.
+    return deque(token for key, token in intended.items() if key != DESCENDANTS_COUNT_PAGE_ID)
 
 
-def test_run_flow_collects_visible_questions_in_order() -> None:
-    prompter = CanonicalAnswerPrompter(_scripted_answers_for_individual_declaration())
-    answers = run_flow(SETUP_FLOW, prompter)
-    assert isinstance(answers, SetupAnswers)
+def _individual_declaration_canonical() -> dict[str, str]:
+    """Build the canonical answer set for an individual taxation profile.
+
+    Conditional spouse questions tied to ``taxation_type == "2"`` stay
+    gate-hidden, so the driver never visits them. The ``activity``
+    question is visible because the declared IRPF income categories
+    include ``actividad_economica``.
+    """
+
+    return {
+        # -- identidad --
+        "output-language": "en",
+        "entity-type": "natural_person",
+        # legal-entity-form gate-hidden (conditional on entity-type == legal_entity)
+        "tax-id": "12345678Z",
+        "name": "Operator",
+        "surnames": "Doe",
+        # -- residence --
+        "fiscal-residency": "resident_irpf",
+        "tax-residence-ccaa": "madrid",
+        "address-postcode": "28001",
+        # -- actividad --
+        "irpf-income-categories": "actividad_economica,capital_inmobiliario",
+        "activity": "Software development",
+        "activity-start-date": "",
+        "incn-prior-12-months": "",
+        # -- IVA --
+        "iva-regime": "GENERAL",
+        "iva-roi-enrolled": "false",
+        "iva-oss-enrolled": "false",
+        "iva-group-member-enrolled": "false",
+        "iva-group-dominant-entity-enrolled": "false",
+        "iva-sii-enrolled": "false",
+        "iva-redeme-enrolled": "false",
+        "iva-intracommunity-operations-exceed-50000-eur": "false",
+        # -- enrollment --
+        "enrollment-large-company": "false",
+        "enrollment-public-administration-budget-gt-6000000": "false",
+        # -- familia --
+        "taxation-type": "1",
+        "taxpayer-sex": "",
+        "taxpayer-marital-status": "",
+        "situacion-familiar": "soltero",
+        "taxpayer-birth-date": "",
+        "taxpayer-disability-grade": "",
+        "taxpayer-death-date": "",
+        "family-descendants-eu-eea-deduction": "false",
+        "family-minor-children-in-unit": "false",
+        # -- obligations --
+        "has-employees": "false",
+        "pays-professionals-with-retencion": "false",
+        "art109-activity-income-withholding-ge-70pct": "false",
+        "pays-rent-with-retencion": "false",
+        "pays-capital-income-with-retencion": "false",
+        "modelo-111-no-retenciones-periods": "",
+        "irpf-estimation-regime": "directa_normal",
+        "irpf-special-regime": "general",
+        "does-intracomunitario": "false",
+        "third-party-transactions-above-347-threshold": "false",
+        "bienes-extranjero-above-threshold": "false",
+        "monedas-virtuales-extranjero-above-threshold": "false",
+        # -- preferencias --
+        "cloud-evidence-upload": "false",
+        "llm-vision": "true",
+        "google-export": "true",
+        "notes": "",
+    }
+
+
+def test_output_language_is_the_first_page_of_the_flow() -> None:
+    """The operator chooses the output language before anything else renders.
+
+    The language question must open the flow so the chosen locale can be
+    activated for the remainder of the walk; it therefore heads the first
+    section and appears nowhere else.
+    """
+    first_section = SETUP_FLOW.sections[0]
+    first_question = first_section.questions[0]
+    assert first_question.id == "output-language"
+    assert first_question.profile_key == "preferences.output_language"
+    all_ids = [question.id for section in SETUP_FLOW.sections for question in section.questions]
+    assert all_ids.count("output-language") == 1
+
+
+def test_scripted_walk_collects_visible_questions_in_order() -> None:
+    answers, _committed = _drive_scripted(_individual_declaration_canonical())
     assert answers.tax_id == "12345678Z"
     assert answers.activity == "Software development"
     assert answers.output_language == "en"
 
 
-def test_run_flow_skips_spouse_questions_when_declaration_is_individual() -> None:
-    prompter = CanonicalAnswerPrompter(_scripted_answers_for_individual_declaration())
-    run_flow(SETUP_FLOW, prompter)
-    # Every spouse question is joint-gated; none is asked for an
+def test_scripted_walk_skips_spouse_questions_when_declaration_is_individual() -> None:
+    _answers, committed = _drive_scripted(_individual_declaration_canonical())
+    # Every spouse question is joint-gated; none is visited for an
     # individual declaration (taxation_type != "2").
-    assert "spouse-tax-id" not in prompter.asked
-    assert "spouse-name" not in prompter.asked
-    assert "spouse-eu-eea-resident" not in prompter.asked
-    assert "spouse-non-resident-irpf" not in prompter.asked
-    assert "spouse-disability-grade" not in prompter.asked
+    assert "spouse-tax-id" not in committed
+    assert "spouse-name" not in committed
+    assert "spouse-eu-eea-resident" not in committed
+    assert "spouse-non-resident-irpf" not in committed
+    assert "spouse-disability-grade" not in committed
 
 
-def test_runner_close_overflow_is_caught() -> None:
-    """Calling close on a deque with extra answers raises overflow."""
+def test_scripted_driver_rejects_unconsumed_tokens() -> None:
+    """A queue longer than the visible walk raises overflow, counts only."""
 
-    extras = _scripted_answers_for_individual_declaration()
-    extras.append("orphan")
-    prompter = CanonicalAnswerPrompter(extras)
-    with pytest.raises(WizardAnswerQueueOverflowError) as excinfo:
-        run_flow(SETUP_FLOW, prompter)
-    assert excinfo.value.translated_message == "errors.internal.internal_wizard_answer_queue_overflow"
+    definition = _setup_flow_definition(SETUP_FLOW)
+    tokens, _intended = _project_scripted_answers(
+        definition,
+        _individual_declaration_canonical(),
+        mode=FlowMode.CREATE,
+    )
+    with pytest.raises(FlowAnswerError) as excinfo:
+        run_scripted_flow(
+            definition,
+            [*tokens, "orphan"],
+            mode=FlowMode.CREATE,
+            defaults=_default_tokens(),
+        )
+    assert excinfo.value.translated_message == "application.flows.errors.scripted_queue_overflow"
     assert excinfo.value.context == {
         "remaining_count": 1,
-        "asked_count": len(_scripted_answers_for_individual_declaration()),
+        "consumed_count": len(tokens),
     }
     assert "orphan" not in str(excinfo.value.context)
 
 
 def test_persist_answers_round_trip_via_project_answers() -> None:
-    prompter = CanonicalAnswerPrompter(_scripted_answers_for_individual_declaration())
-    answers = run_flow(SETUP_FLOW, prompter)
-    assert isinstance(answers, SetupAnswers)
+    answers, _committed = _drive_scripted(_individual_declaration_canonical())
     canonical = serialise_answers(SETUP_FLOW, answers)
     rebuilt = project_answers(SETUP_FLOW, canonical)
     assert isinstance(rebuilt, SetupAnswers)
@@ -158,8 +232,7 @@ def test_persist_answers_round_trip_via_project_answers() -> None:
 
 
 def test_canonical_dict_only_carries_profile_bound_keys() -> None:
-    prompter = CanonicalAnswerPrompter(_scripted_answers_for_individual_declaration())
-    answers = run_flow(SETUP_FLOW, prompter)
+    answers, _committed = _drive_scripted(_individual_declaration_canonical())
     canonical = serialise_answers(SETUP_FLOW, answers)
     assert "identity.tax_id" in canonical
     assert canonical["identity.tax_id"] == "12345678Z"
@@ -177,84 +250,29 @@ def test_canonical_dict_only_carries_profile_bound_keys() -> None:
         assert key not in canonical
 
 
-def test_run_flow_walks_joint_taxation_spouse_questions() -> None:
-    """When ``taxation_type == "2"``, the spouse questions appear in order."""
+def test_scripted_walk_visits_joint_taxation_spouse_questions() -> None:
+    """When ``taxation_type == "2"``, the spouse questions become visible."""
 
-    answers_deque: deque[str] = deque(
-        [
-            # ── taxpayer type ──────────────────────
-            "natural_person",  # entity-type
-            # legal-entity-form SKIPPED (conditional on entity-type == legal_entity)
-            "actividad_economica,trabajo",  # irpf-income-categories
-            "",  # incn-prior-12-months (optional)
-            # new-entity-first-two-profit-periods SKIPPED (conditional on entity-type == legal_entity)
-            # ── profile ────────────────────────────
-            "12345678Z",  # tax-id
-            "Operator",  # name
-            "Doe",  # surnames
-            "Software development",  # activity (visible: has actividad_economica)
-            "28001",  # address-postcode
-            "",  # activity-start-date (optional, left blank)
-            "2",  # taxation-type (joint, visible: natural person)
-            "en",  # output-language
-            # ── taxpayer biographic (visible: natural person) ──
-            "",  # taxpayer-sex
-            "",  # taxpayer-marital-status
-            "soltero",  # situacion-familiar (Art. 82 LIRPF axis, contract)
-            # taxpayer-marriage-date SKIPPED (conditional on marital-status == CASADO)
-            "",  # taxpayer-birth-date
-            "",  # taxpayer-disability-grade
-            "",  # taxpayer-death-date
+    joint = _individual_declaration_canonical()
+    joint.update(
+        {
+            "irpf-income-categories": "actividad_economica,trabajo",
+            "taxation-type": "2",
             # spouse joint-conditional questions are NOW visible
-            "87654321X",  # spouse-tax-id
-            "Spouse",  # spouse-name
-            "Doe",  # spouse-surnames
-            "",  # spouse-birth-date
-            "",  # spouse-sex
-            "",  # spouse-disability-grade
-            "false",  # spouse-non-resident-irpf
-            # spouse-eu-eea-resident SKIPPED (non-resident=false)
-            # spouse-eu-eea-country SKIPPED
-            "false",  # family-descendants-eu-eea-deduction
-            "false",  # family-minor-children-in-unit
-            "GENERAL",  # iva-regime
-            "false",  # iva-roi-enrolled
-            "false",  # iva-oss-enrolled
-            "false",  # iva-group-member-enrolled
-            "false",  # iva-group-dominant-entity-enrolled
-            "false",  # iva-sii-enrolled
-            "false",  # iva-redeme-enrolled
-            "false",  # iva-intracommunity-operations-exceed-50000-eur
-            "false",  # enrollment-large-company
-            "false",  # enrollment-public-administration-budget-gt-6000000
-            "false",  # has-employees
-            "false",  # pays-professionals-with-retencion
-            "false",  # art109-activity-income-withholding-ge-70pct
-            "false",  # pays-rent-with-retencion
-            "false",  # pays-capital-income-with-retencion
-            "",  # modelo-111-no-retenciones-periods
-            "directa_normal",  # irpf-estimation-regime
-            "general",  # irpf-special-regime (visible: natural person)
-            # irpf-special-regime-start-date SKIPPED (conditional on impatriado)
-            "false",  # does-intracomunitario
-            "false",  # third-party-transactions-above-347-threshold
-            "false",  # bienes-extranjero-above-threshold
-            "false",  # monedas-virtuales-extranjero-above-threshold
-            "resident_irpf",  # fiscal-residency (#197 non-resident axis)
-            # country-of-fiscal-residence + representante-fiscal-* SKIPPED (resident)
-            "madrid",  # tax-residence-ccaa
-            "false",  # cloud-evidence-upload
-            "true",  # llm-vision
-            "true",  # google-export
-            "",  # notes
-        ],
+            "spouse-tax-id": "87654321X",
+            "spouse-name": "Spouse",
+            "spouse-surnames": "Doe",
+            "spouse-birth-date": "",
+            "spouse-sex": "",
+            "spouse-disability-grade": "",
+            "spouse-non-resident-irpf": "false",
+            # spouse-eu-eea-resident stays gate-hidden (non-resident=false)
+        },
     )
-    prompter = CanonicalAnswerPrompter(answers_deque)
-    answers = run_flow(SETUP_FLOW, prompter)
-    assert isinstance(answers, SetupAnswers)
-    assert "spouse-tax-id" in prompter.asked
-    assert "spouse-name" in prompter.asked
-    assert "spouse-eu-eea-resident" not in prompter.asked
+    answers, committed = _drive_scripted(joint)
+    assert "spouse-tax-id" in committed
+    assert "spouse-name" in committed
+    assert "spouse-eu-eea-resident" not in committed
     assert answers.spouse_tax_id == "87654321X"
 
 
@@ -273,12 +291,7 @@ def _non_interactive_canonical(explicit: dict[str, str]) -> dict[str, str]:
     every descriptor default plus the operator's explicit flag values.
     """
 
-    seeded = {
-        question.id: question.default or ""
-        for section in SETUP_FLOW.sections
-        for question in section.questions
-        if question.default is not None
-    }
+    seeded = _default_tokens()
     seeded.update(explicit)
     return seeded
 
@@ -295,19 +308,15 @@ def test_legal_entity_intra_section_gate_walks_legal_entity_form() -> None:
     """A legal entity reveals ``legal-entity-form`` even though its gate
     names ``entity-type`` in the *same* section.
 
-    The runner evaluates ``visible_when`` incrementally, so an
+    The driver re-evaluates visibility after every commit, so an
     intra-section gate sees the answer to an earlier question in the
     same section. A section-wide upfront evaluation hid this question.
     """
 
-    from .._commands import _scripted_from_canonical
-
     canonical = _non_interactive_canonical(_LEGAL_ENTITY_FLAGS)
     explicit = frozenset(_LEGAL_ENTITY_FLAGS)
-    prompter = _scripted_from_canonical(SETUP_FLOW, canonical, force_visible=explicit)
-    answers = run_flow(SETUP_FLOW, prompter, force_visible=explicit)
-    assert isinstance(answers, SetupAnswers)
-    assert prompter.asked.count("legal-entity-form") == 1
+    answers, committed = _drive_scripted(canonical, force_visible=explicit)
+    assert "legal-entity-form" in committed
     assert answers.legal_entity_form is LegalEntityForm.SL
 
 
@@ -315,12 +324,9 @@ def test_legal_entity_does_not_walk_spouse_or_irpf_personal_questions() -> None:
     """A legal entity is never asked the spouse / personal-IRPF or the
     IRPF income-category questions — they are gated to natural persons."""
 
-    from .._commands import _scripted_from_canonical
-
     canonical = _non_interactive_canonical(_LEGAL_ENTITY_FLAGS)
     explicit = frozenset(_LEGAL_ENTITY_FLAGS)
-    prompter = _scripted_from_canonical(SETUP_FLOW, canonical, force_visible=explicit)
-    run_flow(SETUP_FLOW, prompter, force_visible=explicit)
+    _answers, committed = _drive_scripted(canonical, force_visible=explicit)
     for hidden in (
         "irpf-income-categories",
         "taxation-type",
@@ -330,7 +336,7 @@ def test_legal_entity_does_not_walk_spouse_or_irpf_personal_questions() -> None:
         "spouse-non-resident-irpf",
         "family-minor-children-in-unit",
     ):
-        assert hidden not in prompter.asked, hidden
+        assert hidden not in committed, hidden
 
 
 def test_explicit_flag_forces_a_gated_question_visible() -> None:
@@ -343,8 +349,6 @@ def test_explicit_flag_forces_a_gated_question_visible() -> None:
     it asked because the operator named ``--activity`` on the command
     line (``force_visible``)."""
 
-    from .._commands import _scripted_from_canonical
-
     flags = {
         "entity-type": "natural_person",
         "irpf-income-categories": "capital_inmobiliario",
@@ -353,18 +357,14 @@ def test_explicit_flag_forces_a_gated_question_visible() -> None:
     }
     canonical = _non_interactive_canonical(flags)
     explicit = frozenset(flags)
-    prompter = _scripted_from_canonical(SETUP_FLOW, canonical, force_visible=explicit)
-    answers = run_flow(SETUP_FLOW, prompter, force_visible=explicit)
-    assert isinstance(answers, SetupAnswers)
-    assert "activity" in prompter.asked
+    answers, committed = _drive_scripted(canonical, force_visible=explicit)
+    assert "activity" in committed
     assert answers.activity == "explicitly supplied"
 
 
 def test_landlord_without_activity_flag_is_not_asked_for_activity() -> None:
     """A pure landlord (only capital_inmobiliario, no --activity flag)
     is never asked for an economic activity — the gate stays closed."""
-
-    from .._commands import _scripted_from_canonical
 
     flags = {
         "entity-type": "natural_person",
@@ -373,17 +373,13 @@ def test_landlord_without_activity_flag_is_not_asked_for_activity() -> None:
     }
     canonical = _non_interactive_canonical(flags)
     explicit = frozenset(flags)
-    prompter = _scripted_from_canonical(SETUP_FLOW, canonical, force_visible=explicit)
-    answers = run_flow(SETUP_FLOW, prompter, force_visible=explicit)
-    assert isinstance(answers, SetupAnswers)
-    assert "activity" not in prompter.asked
+    answers, committed = _drive_scripted(canonical, force_visible=explicit)
+    assert "activity" not in committed
     assert answers.activity == ""
 
 
 def test_direct_estimation_profile_is_not_asked_for_modulos_annual_facts() -> None:
     """The módulos annual facts are gated to estimación objetiva only."""
-
-    from .._commands import _scripted_from_canonical
 
     flags = {
         "entity-type": "natural_person",
@@ -394,19 +390,15 @@ def test_direct_estimation_profile_is_not_asked_for_modulos_annual_facts() -> No
     }
     canonical = _non_interactive_canonical(flags)
     explicit = frozenset(flags)
-    prompter = _scripted_from_canonical(SETUP_FLOW, canonical, force_visible=explicit)
-    answers = run_flow(SETUP_FLOW, prompter, force_visible=explicit)
-    assert isinstance(answers, SetupAnswers)
-    assert "objective-estimation-modulos-iae-epigraph" not in prompter.asked
-    assert "objective-estimation-modulos-module-1-units" not in prompter.asked
+    answers, committed = _drive_scripted(canonical, force_visible=explicit)
+    assert "objective-estimation-modulos-iae-epigraph" not in committed
+    assert "objective-estimation-modulos-module-1-units" not in committed
     assert answers.objective_estimation_modulos_iae_epigraph == ""
     assert answers.objective_estimation_modulos_module_1_units == ""
 
 
 def test_objetiva_profile_collects_modulos_annual_facts() -> None:
     """Objective-estimation profiles collect stable annual módulo facts once."""
-
-    from .._commands import _scripted_from_canonical
 
     flags = {
         "entity-type": "natural_person",
@@ -421,12 +413,10 @@ def test_objetiva_profile_collects_modulos_annual_facts() -> None:
     }
     canonical = _non_interactive_canonical(flags)
     explicit = frozenset(flags)
-    prompter = _scripted_from_canonical(SETUP_FLOW, canonical, force_visible=explicit)
-    answers = run_flow(SETUP_FLOW, prompter, force_visible=explicit)
-    assert isinstance(answers, SetupAnswers)
+    answers, committed = _drive_scripted(canonical, force_visible=explicit)
 
-    assert "objective-estimation-modulos-iae-epigraph" in prompter.asked
-    assert "objective-estimation-modulos-module-1-units" in prompter.asked
+    assert "objective-estimation-modulos-iae-epigraph" in committed
+    assert "objective-estimation-modulos-module-1-units" in committed
     assert answers.objective_estimation_modulos_iae_epigraph == "972.1"
     assert answers.objective_estimation_modulos_module_1_units == "2.50"
     assert answers.objective_estimation_modulos_module_2_units == "85"

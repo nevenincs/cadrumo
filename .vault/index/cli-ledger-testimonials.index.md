@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-ledger-testimonials'
-date: '2026-07-23'
-modified: '2026-07-23'
+date: '2026-07-24'
+modified: '2026-07-24'
 related:
   - '[[2026-06-03-cli-ledger-testimonials-adr]]'
   - '[[2026-06-03-cli-ledger-testimonials-audit]]'
