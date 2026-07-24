@@ -72,7 +72,7 @@ from ...adapters.persistence.storage.master_key import (
     write_profile_session,
 )
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import BucketPointer, ProfileSessionRefusalReason
+from ...core import BucketPointer, ProfileSessionRefusalReason, resolve_active_bucket_id
 from ...core.config import SecretStoreBackend, load_settings
 from ...core.logging import get_logger
 from ...core.time import now as _now
@@ -442,6 +442,7 @@ def login_profile(
             prior_pointer=prior_pointer,
         )
         reset_login_throttle(storage_root=storage_root, bucket_id=target.bucket_id)
+        _record_activation(profile_id=target.bucket_id)
 
         backend_kind = _backend_kind(provider)
         idle_minutes, absolute_minutes = _session_windows(storage_root=storage_root, bucket_id=target.bucket_id)
@@ -584,6 +585,34 @@ def _authenticate_or_record_failure(
         pointer_transaction.restore(prior_pointer)
         raise
     return session
+
+
+def _record_activation(*, profile_id: str) -> None:
+    """Record that ``profile_id`` became the active profile.
+
+    Authentication and activation are one operation from the operator's
+    point of view, so a successful login owes the same two records the
+    dedicated selection span writes: the workflow-state selection, and the
+    ``PROFILE_ACTIVATED`` entry in the bucket-event catalogue that lets an
+    auditor replay which profile became active and when.
+
+    Both are delegated to the primitives that already own them rather than
+    re-implemented here. The dedicated span is deliberately NOT reused: it
+    opens its own pointer transaction and re-acquires the per-bucket lock,
+    and this runs inside a caller that already holds both, so composing the
+    span would nest them against the project-wide pointer-then-bucket lock
+    order. Reading the workflow state also surfaces a bucket whose manifest
+    exists but whose encrypted profile record does not, so activation
+    validates rather than silently succeeding.
+
+    Only a genuine authentication reaches here: the idempotent no-op
+    returns before this point, so a retry re-stamps no activation.
+    """
+    from ..workflow import workflow_state_repository
+    from ._orchestration import _append_profile_activated_event, select_profile
+
+    workflow_state_repository().update(lambda current: select_profile(current, profile_id=profile_id))
+    _append_profile_activated_event(profile_id=profile_id, active_profile=resolve_active_bucket_id())
 
 
 def _mint_or_warn(
