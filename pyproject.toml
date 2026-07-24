@@ -10,7 +10,7 @@ license = "Apache-2.0"
 # license-file globs.
 license-files = ["LICENSE", "NOTICE"]
 authors = [
-  { name = "Gergely Wootsch" },
+  { name = "Neve Nincs", email = "hello@neve.md" },
 ]
 keywords = ["cadrumo", "aeat", "hacienda", "impuestos", "spain", "tax", "toolkit", "utility", "cli"]
 classifiers = [

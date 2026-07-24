@@ -143,7 +143,7 @@ describe('App', () => {
       screen.getByRole('heading', { level: 1, name: /legal notice, privacy & cookies/i }),
     ).toBeVisible()
     expect(screen.getByText(/published by/i)).toBeVisible()
-    expect(screen.getAllByText(/Gergely Wootsch/).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Neve Nincs/).length).toBeGreaterThan(0)
     expect(screen.getByText(/collects no personal data/i)).toBeVisible()
     expect(screen.getByRole('heading', { name: /no relation to the aeat/i })).toBeVisible()
   })
