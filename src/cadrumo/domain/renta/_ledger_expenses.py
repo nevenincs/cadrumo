@@ -15,6 +15,7 @@ from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
+from types import MappingProxyType
 from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -31,6 +32,7 @@ from ..categories import (
     StatutoryCapPeriod,
     family_for,
 )
+from ..contribuyente import CCAA
 from ._errors import RentaValidationError
 from ._first_slice_routing import FIRST_SLICE_EXPENSE_CASILLAS
 
@@ -88,6 +90,16 @@ class RentaDeductibilityContext(_RentaStrictFrozenModel):
     statutory_cap_variant_id: str | None = Field(default=None, min_length=1, max_length=64)
     statutory_cap_person_count: int = Field(default=1, ge=1)
     exclusive_use_confirmed: bool = False
+    residence_ccaa: CCAA | None = None
+    """Ordinary residence comunidad autonoma, sourced from ``TaxResidenceProfile.ccaa``.
+
+    Optional and inert for the general expense path: LIRPF arts. 28-30 base-imponible
+    deductibility is state law and does not vary by comunidad (Ley 22/2009 cesion
+    framework grants no base competence to the CCAA). The axis only selects a
+    territorial-regime override where one is declared for the fact's category; when
+    an override exists but this field is ``None`` the evaluation fails closed rather
+    than silently choosing a base (see :func:`select_deductibility_profile`).
+    """
 
     @field_validator("usage_ratios", mode="after")
     @classmethod
@@ -259,6 +271,61 @@ def normalize_spending_category(value: SpendingCategory | str) -> SpendingCatego
     if isinstance(value, SpendingCategory):
         return value
     return SpendingCategory(value)
+
+
+def resolve_region_category_profiles(
+    profile_year: int,
+) -> Mapping[CCAA, Mapping[SpendingCategory, CategoryProfile]]:
+    """Return the territorial-regime category-profile overrides for a filing year.
+
+    The override layer is provisioned but deliberately empty: the only genuinely
+    region-varying expense-side regimes reach the base through their own dedicated
+    bindings (the Reserva para Inversiones en Canarias, Ley 19/1994 art. 27, is
+    modelled as its own binding, not a :class:`SpendingCategory` profile), and the
+    Ceuta/Melilla benefit is an art. 68.4 cuota deduction rather than a
+    base-imponible expense rule. No :class:`SpendingCategory` therefore warrants a
+    per-comunidad deductibility variant today, so this resolver returns an empty
+    mapping and every fact falls through to the state year profile. A future
+    territorial-regime enrollment populates this mapping (grounded to its regime
+    law) with no further architectural change.
+
+    Returns:
+        Mapping from :class:`CCAA` to a per-:class:`SpendingCategory` override
+        profile mapping; empty until a territorial regime is enrolled.
+    """
+    del profile_year
+    return MappingProxyType({})
+
+
+def select_deductibility_profile(
+    *,
+    state_profile: CategoryProfile,
+    region_override_profiles: Mapping[CCAA, CategoryProfile],
+    context: RentaDeductibilityContext,
+) -> CategoryProfile | None:
+    """Select the applicable category profile, honouring territorial-regime overrides.
+
+    ``region_override_profiles`` holds the per-:class:`CCAA` overrides declared for
+    the fact's category (empty for the general state-law case). Selection:
+
+    - no override for the category: return ``state_profile`` unchanged (general
+      expense deductibility is state base-imponible law, invariant across comunidades);
+    - the category carries an override but ``context.residence_ccaa is None``: return
+      ``None`` (D4 fail-closed) so the caller refuses rather than silently choosing a
+      base for an undeclared region;
+    - the residence comunidad has an override: return that override profile;
+    - the residence comunidad has no override (a different comunidad owns the regime):
+      return ``state_profile`` (state law applies to this taxpayer's region).
+
+    Returns:
+        The selected :class:`CategoryProfile`, or ``None`` when a region override
+        exists for the category but the residence comunidad is undeclared.
+    """
+    if not region_override_profiles:
+        return state_profile
+    if context.residence_ccaa is None:
+        return None
+    return region_override_profiles.get(context.residence_ccaa, state_profile)
 
 
 def evaluate_renta_deductibility(
@@ -454,4 +521,6 @@ __all__ = [
     "build_renta_deductible_expense_observation",
     "evaluate_renta_deductibility",
     "normalize_spending_category",
+    "resolve_region_category_profiles",
+    "select_deductibility_profile",
 ]
