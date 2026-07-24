@@ -27,6 +27,7 @@ related:
   - '[[2026-07-17-ledger-evidence-atomicity-P05-S19]]'
   - '[[2026-07-17-ledger-evidence-atomicity-P05-S20]]'
   - '[[2026-07-17-ledger-evidence-atomicity-P05-S21]]'
+  - '[[2026-07-17-ledger-evidence-atomicity-P05-S22]]'
   - '[[2026-07-17-ledger-evidence-atomicity-P05-S23]]'
   - '[[2026-07-17-ledger-evidence-atomicity-adr]]'
   - '[[2026-07-17-ledger-evidence-atomicity-audit]]'
@@ -72,6 +73,7 @@ Auto-generated index of all documents tagged with `#ledger-evidence-atomicity`.
 - `2026-07-17-ledger-evidence-atomicity-P05-S19` - Prove the composed write is one unit of work with real adapters, gated on a recorder asserting zero commits between the two catalogue writes, an anti-tautology counterpart asserting the pre-fix split shape does commit between them, and a mid-batch revision conflict leaving neither catalogue linked
 - `2026-07-17-ledger-evidence-atomicity-P05-S20` - Expose the dormant link-consistency detector on the existing ledger check verb as a typed period-independent result channel with a warning notice and a false readiness verdict, gated on a CLI test reproducing a one-sided link and asserting the row, the notice contract, and ready false
 - `2026-07-17-ledger-evidence-atomicity-P05-S21` - Correct the apply_evidence_split and apply_evidence_classification docstrings to describe the single classified-children writer that ships instead of the removed split-then-patch path, gated on the API stub drift check staying clean
+- `2026-07-17-ledger-evidence-atomicity-P05-S22` - Emit a bucket event for invoice linkage so the sole invoice-linkage writer leaves an audit trace like every neighbouring ledger mutation, co-committed in the same unit of work as the two catalogue writes, gated on a test asserting the event is appended atomically with the link and absent when the link is refused
 - `2026-07-17-ledger-evidence-atomicity-P05-S23` - Close the code-review findings on the remediation itself by promoting the one-sided link direction to a core enum consumed by the domain record and the operator payload, carrying typed rows into the notice builder instead of serialised mappings, and cross-linking the concrete repository parameters in the linking docstring, gated on the docstring core-struct module returning green
 
 ### plan
