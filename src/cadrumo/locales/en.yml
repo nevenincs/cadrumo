@@ -884,8 +884,10 @@ application:
         and cannot be overridden by external binding. Affected casillas: %{computed}.'
       cross_period_clean_state_incomplete: Cross-period clean-state proof is incomplete
         for modelo {modelo} {filing_year} {period}; {finding_count} finding(s) remain.
-      deductible_vat_evidence_missing: Deductible IVA ledger rows require linked purchase
-        invoice evidence before this action.
+      deductible_vat_evidence_missing: 'Deductible IVA ledger rows require linked
+        purchase invoice evidence before this action. Link the invoice to the ledger
+        row BEFORE running work calculate: a draft bundles its evidence when you verify
+        it, so an invoice attached after that does not reach this filing.'
       export_cross_bucket_refused: The addressed revision belongs to a bucket other
         than the active profile bucket. Switch profile before exporting.
       export_draft_approval_failed: Could not approve the draft for calculation revision
@@ -3931,9 +3933,10 @@ cli:
       actor_help: Operator name recorded on the bucket event
       attachment_help: Secure attachment id to link to the transaction; repeat for
         multiple attachments
-      finalized_revision_stale: Evidence attached, but Modelo %{modelo} %{filing_year}
-        %{period} was already finalized before this evidence existed. Recalculate
-        it so the evidence reaches a new draft.
+      finalized_revision_stale: Evidence stored on the ledger row, but Modelo %{modelo}
+        %{filing_year} %{period} was verified before this evidence existed and keeps
+        the evidence bundle captured then. This filing will not pick it up; recalculating
+        does not change that. Link invoices before running work calculate.
       help: Attach secure evidence objects to one ledger transaction. Create a purchase
         invoice evidence id first with 'aeat app ledger evidence add PATH'.
       id_help: Ledger transaction id to attach evidence to
