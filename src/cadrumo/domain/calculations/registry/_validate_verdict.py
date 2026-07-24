@@ -32,8 +32,11 @@ from ....core.config import load_settings
 from ....core.external_constants import UTF_8_ENCODING
 from ._loader_cache import is_bundled_registry_root
 
-FingerprintTuples = tuple[tuple[str, int, int], ...]
-"""``(path, size, mtime_ns)`` fingerprint tuples, as the loader collects them."""
+FingerprintTuples = tuple[tuple[str, int, int, str], ...]
+"""``(path, size, mtime_ns, content_digest)`` loader tuples; the digest is empty for directories/bundled files."""
+
+SourceEvidenceFingerprintTuples = tuple[tuple[str, int, int], ...]
+"""``(path, size, mtime_ns)`` tuples for source-evidence files (no content digest)."""
 
 VERDICT_OUTCOME_GREEN = "green"
 
@@ -62,7 +65,7 @@ class ValidationVerdict(BaseModel):
 def compute_verdict_key(
     *,
     registry_fingerprints: FingerprintTuples,
-    source_evidence_fingerprints: FingerprintTuples,
+    source_evidence_fingerprints: SourceEvidenceFingerprintTuples,
     package_version: str = __version__,
 ) -> str:
     """Hash the complete fingerprint tuples plus the package version into one key.
@@ -79,10 +82,9 @@ def compute_verdict_key(
     hasher.update(package_version.encode("utf-8"))
     for label, group in (("registry", registry_fingerprints), ("source", source_evidence_fingerprints)):
         hasher.update(label.encode("utf-8"))
-        for path, size, mtime_ns in group:
-            hasher.update(path.encode("utf-8"))
-            hasher.update(str(size).encode("utf-8"))
-            hasher.update(str(mtime_ns).encode("utf-8"))
+        for entry in group:
+            for part in entry:
+                hasher.update(str(part).encode("utf-8"))
     return hasher.hexdigest()
 
 
@@ -109,7 +111,7 @@ def compute_bundled_verdict_key(
     """
     resolved_root = registry_root.resolve()
     entries: list[tuple[str, int]] = []
-    for path, size, _mtime_ns in registry_fingerprints:
+    for path, size, _mtime_ns, _content_digest in registry_fingerprints:
         candidate = Path(path)
         if not candidate.is_file():
             continue

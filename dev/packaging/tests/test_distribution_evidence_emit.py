@@ -454,6 +454,49 @@ def test_version_mismatched_capture_against_cohort_is_refused(tmp_path: Path) ->
         )
 
 
+def test_version_binding_matches_on_a_token_boundary_not_a_substring(tmp_path: Path) -> None:
+    """A 0.2.10 (or prerelease) capture must not false-accept against a 0.2.1 cohort.
+
+    The cohort is 0.2.1; a capture whose installed CLI reports 0.2.10 contains
+    "0.2.1" as a bare substring but is a different build, so the token-boundary
+    match must still refuse it.
+    """
+    from dev.packaging.distribution_evidence_emit import EvidenceCohortBindingError
+
+    cohort = _release_cohort(tmp_path / "cohort")  # version 0.2.1
+    for foreign in ("0.2.10", "0.2.1rc1", "0.2.1.dev3"):
+        with pytest.raises(EvidenceCohortBindingError, match="distinct version token"):
+            build_installed_oracle_evidence(
+                row_id="python-macos-arm64",
+                cohort=cohort,
+                tax_evidence=_tax_evidence(tmp_path, version=foreign),
+                mcp_evidence=_mcp_evidence(),
+                acquisition=_acquisition(),
+                destination=_destination(cohort),
+            )
+
+
+def test_isolation_fields_missing_from_capture_is_an_instructive_refusal(tmp_path: Path) -> None:
+    """A pre-isolation-recording capture refuses with a re-capture action, not a raw KeyError."""
+    import json
+
+    from dev.packaging.distribution_evidence_emit import (
+        EvidenceCohortBindingError,
+        _mcp_evidence_from_mapping,
+        _tax_evidence_from_mapping,
+    )
+
+    tax_mapping = _tax_evidence(tmp_path).to_jsonable()
+    del tax_mapping["checkout_imports_removed"]
+    with pytest.raises(EvidenceCohortBindingError, match="isolation field"):
+        _tax_evidence_from_mapping(json.loads(json.dumps(tax_mapping)))
+
+    mcp_mapping = _mcp_evidence().to_jsonable()
+    del mcp_mapping["ambient_product_executables_removed"]
+    with pytest.raises(EvidenceCohortBindingError, match="isolation field"):
+        _mcp_evidence_from_mapping(json.loads(json.dumps(mcp_mapping)))
+
+
 def test_cli_refuses_a_version_mismatched_capture_against_the_cohort(tmp_path: Path) -> None:
     """The reconstitution CLI refuses a foreign capture, closing the mint-against-any-cohort hole."""
     import json

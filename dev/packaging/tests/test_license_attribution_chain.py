@@ -55,7 +55,7 @@ def test_distribution_declares_and_carries_the_attribution_chain(distribution: s
 def test_companion_notice_scopes_the_licence_off_official_documents(companion: str) -> None:
     """The corpus companions' NOTICE must scope Apache-2.0 to packaging, never the official texts."""
     notice = (_REPO_ROOT / "packaging" / companion / "NOTICE").read_text(encoding="utf-8")
-    assert "Gergely Wootsch" in notice
+    assert "Neve Nincs" in notice
     assert "Ley 37/2007" in notice
     assert "does not" in notice and "relicense" in notice
     assert "NOT affiliated" in notice

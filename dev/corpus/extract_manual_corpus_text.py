@@ -16,11 +16,15 @@ reference the registry declares.
 
 Usage::
 
-    uv run --no-sync python -m dev.packaging.extract_manual_corpus_text
-    uv run --no-sync python -m dev.packaging.extract_manual_corpus_text --check
+    uv run --no-sync python -m dev.corpus.extract_manual_corpus_text
+    uv run --no-sync python -m dev.corpus.extract_manual_corpus_text --check
 
 The ``--check`` mode exits non-zero when any sidecar is stale or missing
 without writing anything; it is suitable for CI freshness gates.
+
+Operator-run corpus regeneration: run ``just regenerate-corpus-text`` (or the
+``python -m`` form above) after a corpus PDF changes and commit the regenerated
+sidecars; ``just check-corpus-text`` is the freshness gate.
 """
 
 from __future__ import annotations
@@ -57,10 +61,10 @@ def _normalise_corpus_text(text: str) -> str:
 
 
 _UTF_8: Final[str] = "utf-8"
-_SCHEMA_VERSION: Final[int] = 1
+_SCHEMA_VERSION: Final[int] = 2
 _SIDECAR_SUFFIX: Final[str] = ".corpus_text.json"
 
-# dev/packaging/extract_manual_corpus_text.py is two levels below the repo root.
+# dev/corpus/extract_manual_corpus_text.py is two levels below the repo root.
 _REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
 _CORPUS_ROOT: Final[Path] = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus"
 _SIDECAR_ROOT: Final[Path] = _REPO_ROOT / "src" / "cadrumo" / "_data" / "manual_corpus_text"
@@ -89,15 +93,17 @@ def _sidecar_path_for(pdf_path: Path) -> Path:
 def _is_current(pdf_path: Path, sha256: str) -> bool:
     """Return True when an up-to-date sidecar exists for ``pdf_path``.
 
-    A sidecar is current when it exists, parses as valid JSON, and its
-    ``source_sha256`` field equals the supplied ``sha256``.
+    A sidecar is current when it exists, parses as valid JSON, carries the
+    current ``schema_version``, and its ``source_sha256`` field equals the
+    supplied ``sha256``.  An older-schema sidecar (e.g. one missing the
+    ``extraction_platform`` stamp) is stale and gets regenerated.
     """
     sidecar_path = _sidecar_path_for(pdf_path)
     if not sidecar_path.is_file():
         return False
     try:
         data = json.loads(sidecar_path.read_text(encoding=_UTF_8))
-        return bool(data.get("source_sha256") == sha256)
+        return bool(data.get("schema_version") == _SCHEMA_VERSION and data.get("source_sha256") == sha256)
     except Exception:
         return False
 
@@ -142,6 +148,12 @@ def _write_sidecar(pdf_path: Path, sha256: str, normalised_text: str) -> Path:
         "schema_version": _SCHEMA_VERSION,
         "corpus_path": corpus_path,
         "source_sha256": sha256,
+        # pypdfium2 bundles a per-OS native pdfium binary whose text extraction
+        # differs subtly across platforms, so the exact re-extraction equality
+        # gate only holds on the platform that generated the sidecar.  Runtime
+        # reads the committed text directly (keyed by source_sha256) on every
+        # platform, so the variance is a build/test-only concern.
+        "extraction_platform": sys.platform,
         "normalised_text": normalised_text,
     }
     # Compact JSON — this is a machine cache that can be megabytes of text.
@@ -188,7 +200,7 @@ def extract_all(*, check: bool = False) -> int:
         if stale:
             print(
                 f"\n{len(stale)} sidecar(s) stale or missing."
-                " Run: uv run --no-sync python -m dev.packaging.extract_manual_corpus_text",
+                " Run: uv run --no-sync python -m dev.corpus.extract_manual_corpus_text",
                 file=sys.stderr,
             )
             return len(stale)

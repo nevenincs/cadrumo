@@ -1,7 +1,15 @@
-# One-purpose PyPI promotion: upload the published v-release's Python
-# distributions to PyPI via OIDC Trusted Publishing. No secrets, no builds —
-# downloads the already-verified release assets and publishes them.
-# Operator-ordered fast-follow to the v0.2.1 direct promotion (2026-07-21).
+# RETIREMENT CHARTER — this workflow exists solely to deliver Python distributions
+# of already-published v* releases whose promotion predates an armed Gate 3 PyPI
+# leg (concretely the owed v0.2.1 fast-follow). It adds NO new capability.
+#
+# Deletion trigger: upon the FIRST successful publish-release.yml Gate 3 PyPI
+# publication, delete this file, its conformance test
+# (dev/release/tests/test_pypi_upload_workflow.py), and the three pypi-upload
+# Trusted Publishing registrations (environments: pypi, pypi-data-manuals,
+# pypi-data-official). Tracked for deletion: #618
+#
+# Until then, the workflow remains behind CADRUMO_PUBLISH_ENABLED exactly as
+# hardened. No modifications to the gate or hardening steps are permitted.
 
 name: Cadrumo PyPI Upload
 

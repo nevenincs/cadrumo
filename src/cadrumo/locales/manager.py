@@ -21,6 +21,7 @@ from ..core.external_constants import UTF_8_ENCODING, OutputLanguage
 from ..core.i18n import extract_placeholders
 from ..core.logging import get_logger
 from ..core.product_identity import PRODUCT_IDENTITY
+from ._registry_scanner import scan_registry_keys
 
 # YAML locale values are either leaf strings or nested dicts of the same shape.
 type LocaleNode = str | dict[str, "LocaleNode"]
@@ -171,7 +172,6 @@ class LocaleManager:
         """
         from ._ast_scanner import scan_source_tree
         from ._fstring_registry import get_registered_keys
-        from ._registry_scanner import scan_registry_keys
 
         keys: set[str] = set()
         for py_file in self.src_dir.rglob("*.py"):

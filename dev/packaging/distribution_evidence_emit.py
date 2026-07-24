@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Final
@@ -162,11 +163,16 @@ def _assert_oracle_bound_to_cohort(
     digest, so it cannot bind to the cohort manifest directly.
     """
     version = cohort.manifest.version
-    if version not in tax_evidence.version_output:
+    # Match on a token boundary, not a bare substring: a 0.2.10 or 0.2.1rc1
+    # capture must NOT false-accept against a 0.2.1 cohort. The guards reject an
+    # adjacent version-continuation character (word char or dot) on either side.
+    version_token = re.compile(rf"(?<![\w.]){re.escape(version)}(?![\w.])")
+    if not version_token.search(tax_evidence.version_output):
         raise EvidenceCohortBindingError(
             f"installed CLI version output {tax_evidence.version_output!r} does not carry the "
-            f"cohort version {version!r}: the captured oracle is not this cohort's build. "
-            "Re-run the installed oracles against the cohort under test before emitting evidence.",
+            f"cohort version {version!r} as a distinct version token: the captured oracle is not "
+            "this cohort's build. Re-run the installed oracles against the cohort under test before "
+            "emitting evidence.",
         )
 
 
@@ -413,6 +419,23 @@ def emit_installed_oracle_evidence(
     return write_distribution_evidence(directory, evidence)
 
 
+def _require_isolation_fields(data: dict[str, Any], *, kind: str, fields: tuple[str, ...]) -> None:
+    """Refuse a pre-isolation-recording capture with an instructive re-capture action.
+
+    Evidence JSON captured before the oracle recorded its isolation facts lacks
+    these keys. Rather than die with a raw ``KeyError``, name the missing fields
+    and the re-capture action. This is a hard refusal, not a tolerance branch:
+    an old-shape capture is never minted with defaulted isolation.
+    """
+    missing = [field for field in fields if field not in data]
+    if missing:
+        raise EvidenceCohortBindingError(
+            f"{kind} oracle JSON is missing the isolation field(s) {missing}: this capture predates the "
+            "isolation-fact recording and cannot be minted. Re-run the installed oracles against the cohort "
+            "under test to produce a current capture.",
+        )
+
+
 def _tax_evidence_from_mapping(data: dict[str, Any]) -> InstalledTaxEvidence:
     """Reconstruct installed-CLI oracle evidence from its ``to_jsonable`` mapping.
 
@@ -420,6 +443,7 @@ def _tax_evidence_from_mapping(data: dict[str, Any]) -> InstalledTaxEvidence:
     PowerShell Scoop smoke) can emit the flat record without re-running the
     oracle. Tuple-typed fields arrive as JSON lists and are coerced back.
     """
+    _require_isolation_fields(data, kind="installed CLI", fields=("checkout_imports_removed",))
     commands = tuple(
         CommandEvidence(
             argv=tuple(command["argv"]),
@@ -459,6 +483,11 @@ def _mcp_evidence_from_mapping(data: dict[str, Any]) -> InstalledMcpEvidence:
     """
     from dev.packaging.installed_mcp_oracle import InstalledMcpEvidence, McpCallEvidence
 
+    _require_isolation_fields(
+        data,
+        kind="installed MCP",
+        fields=("checkout_imports_removed", "ambient_product_executables_removed"),
+    )
     calls = tuple(
         McpCallEvidence(
             tool_name=call["tool_name"],

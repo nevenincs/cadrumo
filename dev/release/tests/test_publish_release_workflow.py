@@ -173,8 +173,11 @@ def test_workflow_row_count_prose_matches_the_required_distribution_set() -> Non
 def test_validate_runs_the_open_blocker_check_over_the_network() -> None:
     """Gate 2 drops --skip-network so the readiness gate's open-P0-blocker check runs here."""
     validate = _document()["jobs"]["validate"]
-    # issues:read is granted so the gh-backed blocker query is authoritative, not
-    # degraded-to-advisory by a missing scope.
+    # issues:read is granted so the gh-backed blocker query can succeed here.
+    # Authority against a failed/blind query comes from the readiness gate's
+    # strict mode on the cohort-dir path (cannot-determine -> blocking), verified
+    # in test_readiness; a granted scope alone does not make a fail-open advisory
+    # authoritative.
     assert validate["permissions"].get("issues") == "read"
 
     steps = validate["steps"]
@@ -277,6 +280,26 @@ def test_publish_uploads_the_stored_cohort_via_trusted_publishing() -> None:
     # per-lane manifests, so draft GC can never orphan a shipped audit trail.
     assert "evidence-manifest-$4.json" in surface
     assert '"$EVIDENCE_FINAL_DIR/attach"' in surface
+
+
+def test_download_latest_payload_is_emitted_swept_and_attached() -> None:
+    """The docs download-latest.json is a projection of the sealed cohort, swept then attached.
+
+    It must (a) be projected from the SEALED cohort manifest (not rebuilt), (b)
+    pass the same fail-closed leak-sweep every attached asset passes, and (c) be
+    uploaded to the just-created release — after ``gh release create``, so the
+    versioned asset URLs it carries are valid.
+    """
+    surface = _run_surface(_document()["jobs"]["publish"])
+    assert "dev.docs.download_matrix emit-latest" in surface
+    # Projected from the sealed cohort manifest, not a rebuild.
+    assert '--cohort-manifest "$RELEASE_COHORT_DIR/release-cohort.json"' in surface
+    # The payload is leak-swept before it is attached.
+    assert surface.count("evidence_release leak-sweep") >= 2
+    assert '--directory "$DOWNLOAD_LATEST_DIR"' in surface
+    # Attached to the release that already exists (emit runs after the create).
+    assert 'gh release upload "v$VERSION" "$DOWNLOAD_LATEST_DIR/download-latest.json"' in surface
+    assert surface.index('gh release create "v$VERSION"') < surface.index("dev.docs.download_matrix emit-latest")
 
 
 def test_github_release_refuses_colliding_asset_basenames() -> None:

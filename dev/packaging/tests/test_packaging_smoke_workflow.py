@@ -169,10 +169,11 @@ def test_workflow_runs_canonical_cadrumo_packaging_gates() -> None:
     assert job["name"] == "Cadrumo / Ubuntu / Python 3.13 / wheel artifacts"
     assert job["runs-on"] == ["self-hosted", "Linux", "X64"]
     commands = _run_command_lines(job)
-    assert {
-        "just packaging-smoke-ci",
-        "uv run --no-sync python -m dev.packaging.evidence",
-    } <= commands
+    # The Ubuntu leg captures the aggregate's exit status (`|| status=$?`) so the
+    # evidence checkpoint still runs when the gate fails, so the canonical gate is
+    # asserted as a line prefix rather than an exact match.
+    assert any(line == "just packaging-smoke-ci" or line.startswith("just packaging-smoke-ci ") for line in commands)
+    assert "uv run --no-sync python -m dev.packaging.evidence" in commands
     assert "just packaging-smoke-linux" not in commands
     assert "just packaging-smoke-split" not in commands
     assert "just packaging-smoke-docker" not in commands

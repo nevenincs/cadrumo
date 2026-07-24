@@ -26,6 +26,7 @@ from ._loader_cache import (
     MUTABLE_REGISTRY_FINGERPRINT_TTL_SECONDS,
     is_bundled_registry_root,
     registry_disk_cache_enabled,
+    toml_file_fingerprint,
 )
 from ._schema import (
     LegalParameter,
@@ -100,7 +101,8 @@ _CONSTRUCT_APPEND_ARRAYS: frozenset[str] = frozenset(
 )
 ModeloSourceLayout = Literal["single_file", "directory"]
 ModeloRevisionSourceLayout = Literal["revision_file", "fragment_directory"]
-type _RegistryPathFingerprint = tuple[str, int, int]
+type _RegistryPathFingerprint = tuple[str, int, int, str]
+"""``(path, size, mtime_ns, content_digest)``; the digest is empty for directories and bundled-tree files."""
 type _RegistryPathFingerprints = tuple[_RegistryPathFingerprint, ...]
 
 
@@ -150,17 +152,17 @@ def load_modelo_file(path: Path) -> ModeloDefinition:
     resolved = path.resolve()
     fingerprint = _toml_fingerprint(resolved)
     try:
-        return _load_modelo_file_cached(str(resolved), fingerprint[1], fingerprint[2])
+        return _load_modelo_file_cached(str(resolved), fingerprint[1], fingerprint[2], fingerprint[3])
     except RegistryLoadError as exc:
         refreshed = _refresh_toml_fingerprint_after_load_error(resolved, exc)
         if refreshed == fingerprint:
             raise
-        return _load_modelo_file_cached(str(resolved), refreshed[1], refreshed[2])
+        return _load_modelo_file_cached(str(resolved), refreshed[1], refreshed[2], refreshed[3])
 
 
 @lru_cache(maxsize=256)
-def _load_modelo_file_cached(path: str, byte_count: int, modified_ns: int) -> ModeloDefinition:
-    del byte_count, modified_ns
+def _load_modelo_file_cached(path: str, byte_count: int, modified_ns: int, content_digest: str) -> ModeloDefinition:
+    del byte_count, modified_ns, content_digest
     source_path = Path(path)
     data = freeze_toml(read_toml(source_path, error_factory=RegistryLoadError))
     return _build_modelo_definition_from_data(source_path, data)
@@ -275,7 +277,7 @@ def load_modelo_source(source: ModeloSource) -> ModeloDefinition:
 @lru_cache(maxsize=64)
 def _load_modelo_directory_cached(
     directory: str,
-    fingerprints: tuple[tuple[str, int, int], ...],
+    fingerprints: _RegistryPathFingerprints,
 ) -> ModeloDefinition:
     del fingerprints
     resolved = Path(directory)
@@ -689,17 +691,22 @@ def load_catalogue_file(path: Path) -> RegistryCatalogues:
     resolved = path.resolve()
     fingerprint = _toml_fingerprint(resolved)
     try:
-        return _load_catalogue_file_cached(str(resolved), fingerprint[1], fingerprint[2])
+        return _load_catalogue_file_cached(str(resolved), fingerprint[1], fingerprint[2], fingerprint[3])
     except RegistryLoadError as exc:
         refreshed = _refresh_toml_fingerprint_after_load_error(resolved, exc)
         if refreshed == fingerprint:
             raise
-        return _load_catalogue_file_cached(str(resolved), refreshed[1], refreshed[2])
+        return _load_catalogue_file_cached(str(resolved), refreshed[1], refreshed[2], refreshed[3])
 
 
 @lru_cache(maxsize=128)
-def _load_catalogue_file_cached(path: str, byte_count: int, modified_ns: int) -> RegistryCatalogues:
-    del byte_count, modified_ns
+def _load_catalogue_file_cached(
+    path: str,
+    byte_count: int,
+    modified_ns: int,
+    content_digest: str,
+) -> RegistryCatalogues:
+    del byte_count, modified_ns, content_digest
     source_path = Path(path)
     data = freeze_toml(read_toml(source_path, error_factory=RegistryLoadError))
     legal = _validate_catalogue_section(
@@ -908,12 +915,10 @@ def _discover_revision_sources(revisions_dir: Path) -> tuple[ModeloRevisionSourc
     sources: list[ModeloRevisionSource] = []
     for path in sorted(revisions_dir.glob("*.toml")):
         rev_data = freeze_toml(read_toml(path, error_factory=RegistryLoadError))
-        file_revisions = rev_data.get("revisions")
-        if not isinstance(file_revisions, dict) or not file_revisions:
+        file_revisions = _as_toml_table(rev_data.get("revisions"))
+        if not file_revisions:
             raise RegistryLoadError(f"{path}: revision file must declare [revisions.<id>]")
         for revision_id in sorted(file_revisions):
-            if not isinstance(revision_id, str):
-                raise RegistryLoadError(f"{path}: revision key must be a string")
             sources.append(
                 ModeloRevisionSource(
                     revision_id=revision_id,
@@ -967,7 +972,7 @@ def _collect_registry_tree_fingerprints_for_cache(
     *,
     use_cache: bool,
 ) -> _RegistryPathFingerprints:
-    """Walk ``resolved`` and return ``(path, size, mtime)`` fingerprints for the lru_cache key.
+    """Walk ``resolved`` and return ``(path, size, mtime, digest)`` fingerprints for the lru_cache key.
 
     Covers every catalogue source the loader will subsequently
     re-open: ``legal/*.toml``, single-file ``modelos/*.toml``, and
@@ -1163,7 +1168,7 @@ def _modelo_directory_fingerprints(entry: Path) -> _RegistryPathFingerprints:
 @lru_cache(maxsize=32)
 def _load_registry_tree_cached(
     root: str,
-    fingerprints: tuple[tuple[str, int, int], ...],
+    fingerprints: _RegistryPathFingerprints,
 ) -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
     resolved = Path(root)
     use_disk_cache = registry_disk_cache_enabled(is_bundled=is_bundled_registry_root(resolved))
@@ -1266,14 +1271,18 @@ def _directory_fingerprint(path: Path) -> _RegistryPathFingerprint:
             f"{path}: registry directory could not be fingerprinted; "
             f"retry after concurrent registry writes settle: {exc}",
         ) from exc
-    return str(path), stat.st_size, stat.st_mtime_ns
+    # A directory has no hashable content of its own; layout changes are what
+    # its stat observes, and member-file content is covered by the per-file
+    # digests, so the content slot stays empty.
+    return str(path), stat.st_size, stat.st_mtime_ns, ""
 
 
 def _toml_fingerprint(path: Path) -> _RegistryPathFingerprint:
-    try:
-        stat = path.stat()
-    except OSError as exc:
-        raise RegistryLoadError(
-            f"{path}: registry TOML could not be fingerprinted; retry after concurrent registry writes settle: {exc}",
-        ) from exc
-    return str(path), stat.st_size, stat.st_mtime_ns
+    """Return the ``(path, size, mtime_ns, content_digest)`` fingerprint for one TOML file.
+
+    Delegates to :func:`~cadrumo.domain.calculations.registry._loader_cache.toml_file_fingerprint`,
+    the shared primitive that makes mutable-tree fingerprints content-sensitive
+    (a same-size, same-mtime rewrite still re-keys every cache above the
+    loader) while the read-only bundled tree keeps the cheap stat-only form.
+    """
+    return toml_file_fingerprint(path)

@@ -7,6 +7,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from .....core.aggregation import BindingSourceKind
 from .....core.resources import bundled_path
 from .....tests.registry_observations import registry_grounded_modelo_observation
 from .. import CasillaId, RegistryCatalogues, RegistryValidationError, validated_casilla_id
@@ -400,7 +401,7 @@ def test_registry_validator_rejects_nondirect_previous_filing_binding() -> None:
     revision = modelo.revisions["2025"]
     target_id = "renta-2025-modelo-130-pagos-fraccionados"
     mutated_bindings = tuple(
-        binding.model_copy(update={"source": "previous_filing"}) if binding.id == target_id else binding
+        binding.model_copy(update={"source": BindingSourceKind.PREVIOUS_FILING}) if binding.id == target_id else binding
         for binding in revision.bindings
     )
     mutated_revision = revision.model_copy(update={"bindings": mutated_bindings})
@@ -426,7 +427,7 @@ def test_registry_validator_rejects_relation_targeted_previous_filing_binding() 
     revision = modelo.revisions["2023-y-siguientes"]
     target_id = "modelo-180-115-base-anual"
     mutated_bindings = tuple(
-        binding.model_copy(update={"source": "previous_filing"}) if binding.id == target_id else binding
+        binding.model_copy(update={"source": BindingSourceKind.PREVIOUS_FILING}) if binding.id == target_id else binding
         for binding in revision.bindings
     )
     mutated_revision = revision.model_copy(update={"bindings": mutated_bindings})

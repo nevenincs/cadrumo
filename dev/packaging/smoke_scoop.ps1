@@ -347,8 +347,19 @@ function Invoke-InstalledOracle {
     $mcpState = Join-Path $OutputDir "mcp-state"
     $mcpWork = Join-Path $OutputDir "mcp-work"
 
+    # The Scoop manifest's pre_install pinned the transitive closure through
+    # `uv pip install --constraint constraints.txt`; assert the venv it produced
+    # actually landed on those pins before the tax oracle mints evidence on it.
+    # The constraints file was written into the app dir beside the venv.
+    $constraints = (Resolve-Path (Join-Path $Prefix "constraints.txt")).Path
+
     Push-Location $RepoRoot
     try {
+        Invoke-Native -FilePath $python -ArgumentList @(
+            "-m", "dev.packaging.constraint_effect",
+            "--python", $python,
+            "--constraints", $constraints
+        ) -OutputPath (Join-Path $OutputDir "constraint-effect.log")
         Invoke-Native -FilePath $python -ArgumentList @(
             "-m", "dev.packaging.installed_tax_oracle",
             "--cli", $AeatCommand,

@@ -48,11 +48,18 @@ class RealClientSessionError(RuntimeError):
 
 
 def _iter_strings(value: Any) -> Iterator[str]:
-    """Yield every string leaf in an arbitrarily nested JSON structure."""
+    """Yield every string leaf in an arbitrarily nested JSON structure.
+
+    Dict KEYS are yielded alongside values: a session JSON key is operator-typed
+    text that can itself be secret-shaped or carry an email, so it must face the
+    same refusals as a value.
+    """
     if isinstance(value, str):
         yield value
     elif isinstance(value, dict):
-        for item in value.values():
+        for key, item in value.items():
+            if isinstance(key, str):
+                yield key
             yield from _iter_strings(item)
     elif isinstance(value, (list, tuple)):
         for item in value:
@@ -65,7 +72,8 @@ def assert_session_carries_no_secret(session_path: Path, session: object) -> Non
     The session JSON ships verbatim into a published ``claude-*.json`` row, so it
     is scanned before minting. It reuses the ``collect_seed_secrets`` long-string
     heuristic (any value >= 32 chars is treated as a secret) and additionally
-    walks nested values and refuses on an email address.
+    walks every nested string — dict KEYS as well as values — refusing a
+    token-length string or an email address wherever it appears.
 
     Raises:
         RealClientSessionError: On the first secret-shaped value found.

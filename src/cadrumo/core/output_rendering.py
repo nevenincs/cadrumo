@@ -160,7 +160,12 @@ def _json_default(value: object) -> object:
     if isinstance(value, Decimal):
         return format(value, "f")
     if isinstance(value, set | frozenset):
-        return sorted(value)
+        # Element types are heterogeneous scalars by construction (this is the
+        # last-resort JSON fallback for whatever residual set/frozenset content
+        # reaches here), so there is no single comparable element type to sort
+        # on directly; the string form is genuinely the deterministic ordering
+        # key for an otherwise-unordered, possibly-mixed-type set.
+        return sorted(value, key=str)
     raise OutputRenderingError(
         context={"type_name": type(value).__name__},
         translated_message="errors.internal.internal_output_rendering",

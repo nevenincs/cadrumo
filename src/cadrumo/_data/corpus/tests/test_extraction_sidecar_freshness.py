@@ -5,16 +5,17 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import sys
 from pathlib import Path
 
 import pytest
+from dev.corpus.extract_manual_corpus_text import _extract_raw_text, _normalise_corpus_text
 from dev.docs.preprocess import (
     EXTRACTED_JSON_SUFFIX,
     EXTRACTED_TEXT_SUFFIX,
     PreprocessOutput,
 )
 from dev.docs.preprocess._html import HTML_EXTRACTOR_ID, build_outputs
-from dev.packaging.extract_manual_corpus_text import _extract_raw_text, _normalise_corpus_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -128,7 +129,7 @@ def test_committed_extraction_sidecars_match_current_sources() -> None:
 def test_manual_pdf_corpus_text_sidecars_exist_and_match_source_sha256() -> None:
     """Every committed manual-PDF corpus text sidecar matches its source PDF bytes.
 
-    Ensures that dev/packaging/extract_manual_corpus_text.py was re-run after
+    Ensures that dev/corpus/extract_manual_corpus_text.py was re-run after
     any corpus PDF changed, so the shipped sidecars are always in sync with
     the source PDFs that _validate_evidence._read_manual_pdf_sidecar reads.
     """
@@ -147,6 +148,7 @@ def test_manual_pdf_corpus_text_sidecars_exist_and_match_source_sha256() -> None
         stored_sha256 = data.get("source_sha256")
         normalised_text = data.get("normalised_text")
         schema_version = data.get("schema_version")
+        extraction_platform = data.get("extraction_platform")
 
         if not isinstance(corpus_path, str) or not corpus_path.startswith("corpus/"):
             failures.append(f"{rel_sidecar}: missing or malformed corpus_path: {corpus_path!r}")
@@ -160,8 +162,11 @@ def test_manual_pdf_corpus_text_sidecars_exist_and_match_source_sha256() -> None
         if not normalised_text.strip():
             failures.append(f"{rel_sidecar}: normalised_text is empty")
             continue
-        if schema_version != 1:
+        if schema_version != 2:
             failures.append(f"{rel_sidecar}: unexpected schema_version {schema_version!r}")
+            continue
+        if not isinstance(extraction_platform, str) or not extraction_platform:
+            failures.append(f"{rel_sidecar}: missing or malformed extraction_platform")
             continue
 
         # Derive the expected source PDF path from corpus_path.
@@ -176,7 +181,7 @@ def test_manual_pdf_corpus_text_sidecars_exist_and_match_source_sha256() -> None
             failures.append(
                 f"{rel_sidecar}: sha256 mismatch for {corpus_path} "
                 f"(stored {stored_sha256[:8]}…, actual {actual_sha256[:8]}…) — "
-                "run: uv run --no-sync python -m dev.packaging.extract_manual_corpus_text"
+                "run: uv run --no-sync python -m dev.corpus.extract_manual_corpus_text"
             )
 
     assert sidecars, f"no manual corpus text sidecars found under {_MANUAL_CORPUS_TEXT_ROOT}"
@@ -199,16 +204,52 @@ def test_every_corpus_pdf_has_a_corpus_text_sidecar() -> None:
 
 
 def test_pdf_corpus_text_sidecars_equal_current_production_extraction() -> None:
+    """Committed sidecar text is an exact output of the live extractor.
+
+    pypdfium2 bundles a per-OS native pdfium binary whose text extraction
+    differs subtly across platforms, so exact byte-equality of a re-extraction
+    only holds on the platform that generated the sidecar (its stamped
+    ``extraction_platform``).  On any other platform this test still enforces
+    the platform-independent staleness guard — the stored ``source_sha256``
+    must match the current PDF bytes, so a changed PDF with an un-regenerated
+    sidecar fails on every platform — plus non-empty text; only the
+    platform-variant exact re-extraction comparison is scoped to the
+    generation platform.  Runtime (``_read_manual_pdf_sidecar``) reads the
+    committed text directly on every platform, so cross-platform extraction
+    variance never reaches the product.
+    """
     failures: list[str] = []
     sidecars = sorted(_MANUAL_CORPUS_TEXT_ROOT.rglob(f"*{_CORPUS_TEXT_SUFFIX}"))
 
     for sidecar_path in sidecars:
+        rel_sidecar = sidecar_path.relative_to(_REPO_ROOT).as_posix()
         data = json.loads(sidecar_path.read_text(encoding="utf-8"))
         corpus_path = data["corpus_path"]
         source_path = _CORPUS_ROOT / Path(corpus_path.removeprefix("corpus/"))
+        extraction_platform = data.get("extraction_platform")
+        if not isinstance(extraction_platform, str) or not extraction_platform:
+            failures.append(f"{rel_sidecar}: missing extraction_platform stamp — regenerate the sidecar")
+            continue
+
+        # Platform-independent staleness guard: the sidecar is keyed by the
+        # source PDF's bytes; a changed PDF must fail on EVERY platform.
+        actual_sha256 = hashlib.sha256(source_path.read_bytes()).hexdigest()
+        if data["source_sha256"] != actual_sha256:
+            failures.append(f"{rel_sidecar}: source_sha256 does not match current PDF bytes for {corpus_path}")
+            continue
+        normalised_text = data["normalised_text"]
+        if not isinstance(normalised_text, str) or not normalised_text.strip():
+            failures.append(f"{rel_sidecar}: normalised_text is empty or malformed")
+            continue
+
+        if sys.platform != extraction_platform:
+            # Exact re-extraction equality is platform-variant (native pdfium
+            # differences); it is enforced on the generation platform only.
+            continue
+
         expected = _normalise_corpus_text(_extract_raw_text(source_path))
-        if data["normalised_text"] != expected:
-            failures.append(sidecar_path.relative_to(_REPO_ROOT).as_posix())
+        if normalised_text != expected:
+            failures.append(rel_sidecar)
 
     assert sidecars
     assert not failures, "PDF corpus text differs from production extraction:\n" + "\n".join(failures)

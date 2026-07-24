@@ -80,6 +80,10 @@ docs/_generated/
 # command tree (docs/conf.py builder-inited); the widget fetches it same-origin
 # from _static. Never committed, so it cannot drift.
 docs/_static/cli-tree.json
+# download-latest.json is pulled from the latest GitHub release into _static by
+# the docs deploy (dev/deploy/docs_static_site.py) right before the site build;
+# it is a per-release runtime payload, never committed, so it cannot drift.
+docs/_static/download-latest.json
 # Compiled Pagefind search index (ADR D5: uncommitted, regenerated every docs
 # build like docs/_build). The canonical output lives under docs/_build/html/
 # pagefind/; a root-level pagefind/ from an ad-hoc build run is never committed.
@@ -391,6 +395,8 @@ cache/
 .vaultspec/_snapshots/
 .vaultspec/mcp-ownership.json
 .vaultspec/providers.json
+/.agents/mcp_config.json.lock
+/.codex/config.toml.lock
 /.gitignore.lock
 /.mcp.json.lock
 # <<< vaultspec-managed <<<

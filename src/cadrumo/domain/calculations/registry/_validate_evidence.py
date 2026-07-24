@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 _CORPUS_TEXT_CACHE_FILENAME = "cadrumo_corpus_text_cache.json"
 
-# Shipped sidecar constants (see dev/packaging/extract_manual_corpus_text.py).
+# Shipped sidecar constants (see dev/corpus/extract_manual_corpus_text.py).
 # Sidecars live at _data/manual_corpus_text/<path-relative-to-corpus>.corpus_text.json
 # where the path is source.corpus_path with the leading "corpus/" prefix stripped.
 _MANUAL_CORPUS_TEXT_DIR = "manual_corpus_text"
@@ -35,7 +35,7 @@ def _read_manual_pdf_sidecar(corpus_path: str, source_path: Path) -> str | None:
 
     Reads the content-keyed sidecar committed under
     ``_data/manual_corpus_text/`` that was built by
-    ``dev/packaging/extract_manual_corpus_text.py``.  Verifies the
+    ``dev/corpus/extract_manual_corpus_text.py``.  Verifies the
     sha256 of ``source_path``'s bytes against the sidecar's stored
     ``source_sha256`` before returning the text, so a modified or
     replaced PDF never silently serves stale text.
@@ -343,7 +343,7 @@ class EvidenceValidator:
             # Try the shipped content-keyed sidecar first; verify sha256 before
             # using it so a modified source PDF never serves stale text.  The
             # sidecar is generated once at build time by
-            # dev/packaging/extract_manual_corpus_text.py and shipped with the
+            # dev/corpus/extract_manual_corpus_text.py and shipped with the
             # cadrumo wheel — end-user machines should never reach the fallback.
             sidecar_text = _read_manual_pdf_sidecar(source.corpus_path, source_path)
             if sidecar_text is not None:

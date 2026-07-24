@@ -10,11 +10,12 @@ import unicodedata
 from dataclasses import dataclass
 from html.parser import HTMLParser
 from pathlib import Path
-from typing import NotRequired, TypedDict, override
+from typing import Final, NotRequired, TypedDict, override
 from urllib.parse import urljoin, urlparse
 
 import httpx
 
+_UTF_8: Final[str] = "utf-8"
 _ROOT = Path(__file__).resolve().parents[2]
 _CORPUS = _ROOT / "src/cadrumo/_data/corpus/aeat_official/disenos_registro"
 _HISTORICAL_EXCLUSIONS_PATH = _CORPUS / "historical_exclusions.json"
@@ -248,12 +249,12 @@ def _load_manifests() -> dict[str, _Manifest]:
     for model_dir in _CORPUS.glob("modelo_*"):
         path = model_dir / "manifest.json"
         if path.exists():
-            manifests[model_dir.name.removeprefix("modelo_")] = json.loads(path.read_text(encoding="utf-8"))
+            manifests[model_dir.name.removeprefix("modelo_")] = json.loads(path.read_text(encoding=_UTF_8))
     return manifests
 
 
 def _load_historical_exclusions() -> _HistoricalExclusions:
-    return json.loads(_HISTORICAL_EXCLUSIONS_PATH.read_text(encoding="utf-8"))
+    return json.loads(_HISTORICAL_EXCLUSIONS_PATH.read_text(encoding=_UTF_8))
 
 
 def _artifact_urls(artifact: _Artifact) -> set[str]:
@@ -311,7 +312,7 @@ def _write_manifests(manifests: dict[str, _Manifest]) -> None:
         path.write_bytes((json.dumps(manifest, ensure_ascii=False, indent=2) + "\n").encode())
 
     root_path = _CORPUS / "manifest.json"
-    root = json.loads(root_path.read_text(encoding="utf-8"))
+    root = json.loads(root_path.read_text(encoding=_UTF_8))
     modelos = sorted(manifests)
     root["retrieved_at"] = _RETRIEVED_AT
     root["supported_corpus_modelos"] = modelos
@@ -425,7 +426,7 @@ def check() -> None:
                 failures.append(f"byte mismatch: {path}")
             if _sha256_file(path) != artifact["sha256"]:
                 failures.append(f"sha256 mismatch: {path}")
-    root = json.loads((_CORPUS / "manifest.json").read_text(encoding="utf-8"))
+    root = json.loads((_CORPUS / "manifest.json").read_text(encoding=_UTF_8))
     expected_models = sorted(manifests)
     expected_artifact_count = sum(len(manifests[modelo]["artefacts"]) for modelo in expected_models)
     expected_rows = [
@@ -473,7 +474,7 @@ def check() -> None:
 def _live_check() -> None:
     manifests = _load_manifests()
     historical_exclusions = _load_historical_exclusions()
-    root = json.loads((_CORPUS / "manifest.json").read_text(encoding="utf-8"))
+    root = json.loads((_CORPUS / "manifest.json").read_text(encoding=_UTF_8))
     supported_modelos = {str(modelo) for modelo in root["supported_corpus_modelos"]}
     links_by_page: dict[str, dict[str, str]] = {}
     failures: list[str] = []

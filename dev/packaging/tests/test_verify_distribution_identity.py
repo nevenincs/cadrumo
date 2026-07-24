@@ -79,6 +79,7 @@ def test_accepted_mcp_product_tuple_passes_every_real_projection() -> None:
         "mcp_tool_prefix": "cadrumo_",
         "mcp_resource_scheme": "cadrumo://",
         "plugin_identifier": "cadrumo",
+        "mcpb_author": "CADRUMO tax assistant project",
     }
     assert product["approved_generic_mcp_tools"] == ["describe", "execute", "search", "toolsets"]
     assert all(check["compliant"] is True for check in product["checks"])
@@ -86,6 +87,13 @@ def test_accepted_mcp_product_tuple_passes_every_real_projection() -> None:
     surfaces = {observation["surface"] for observation in tool_check["observations"]}
     assert {f"runtime_tool:{name}" for name in product["approved_generic_mcp_tools"]} <= surfaces
     assert {"mcpb_tool:search", "mcpb_tool:execute"} <= surfaces
+    # The shipped MCPB manifest author derives from the central product identity.
+    author_check = next(check for check in product["checks"] if check["name"] == "mcpb_author")
+    assert author_check["compliant"] is True
+    assert author_check["expected"] == "CADRUMO tax assistant project"
+    assert [observation["value"] for observation in author_check["observations"]] == [
+        "CADRUMO tax assistant project",
+    ]
 
 
 def test_real_client_display_descriptions_report_missing_bilingual_claim_parity() -> None:

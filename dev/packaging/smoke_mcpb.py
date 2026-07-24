@@ -19,6 +19,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
+from dev.packaging.constraint_effect import assert_installed_matches_constraints  # noqa: E402
 from dev.packaging.installed_mcp_oracle import run_installed_mcp_oracle  # noqa: E402
 from dev.packaging.python_cohort import load_python_cohort  # noqa: E402
 
@@ -358,6 +359,17 @@ def run_mcpb_smoke(
         logs=logs,
         timeout=timeout_seconds,
     )
+    # The bundle pinned its runtime closure through the ``[tool.uv]
+    # constraint-dependencies`` block; observe the provisioned interpreter's
+    # actual installed set matches that pinned closure before the tax oracle can
+    # mint evidence on it. The bundle ships the same constraints.txt for
+    # transparency, so it is the constraint set of record here.
+    bundle_python = runtime_environment / ("Scripts" if os.name == "nt" else "bin")
+    bundle_python /= "python.exe" if os.name == "nt" else "python"
+    assert_installed_matches_constraints(
+        bundle_python,
+        (extracted / "constraints.txt").read_text(encoding=_UTF_8).splitlines(),
+    )
     work_dir = run_root / "external-work"
     evidence = run_installed_mcp_oracle(
         uv,
@@ -408,6 +420,7 @@ def run_mcpb_smoke(
                     "first_launch_provisioning": "passed into bundle .venv",
                     "second_launch_direct_exec": "passed with no re-resolution",
                     "concurrent_server_launches": "passed",
+                    "constraint_effect": "passed against the provisioned bundle interpreter",
                     "bundle_runtime_oracle": "passed outside a desktop client",
                     "project_independent_state": str(storage_root),
                     "retired_default_state_refusal_isolated": str(former_product_root),

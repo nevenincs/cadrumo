@@ -42,8 +42,10 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     # core-struct-docstring-links) added a handful of `:class:`/`:func:` links
     # across the IVA-wallet and filed-live command docstrings; re-pinned to
     # the present size, matching the sibling override in
-    # test_codebase_size_budgets.py.
-    "_app_live.py": 1265,
+    # test_codebase_size_budgets.py. Regrew to 1296 under concurrent
+    # live-command feature work; re-pinned with small headroom per the
+    # ship-authorised rebaseline.
+    "_app_live.py": 1320,
 }
 _DEFAULT_COMMAND_LINE_LIMIT = 180
 # Per-command ceilings for command bodies pinned above the default, mirroring the
@@ -55,7 +57,7 @@ _COMMAND_LINE_LIMIT_OVERRIDES = {
     # auto-split routes). The LLM-routing bodies live in `_ledger_llm_cli.py`;
     # what remains here is the option surface and the route dispatch.
     ("_ledger.py", "ledger_classify"): 234,  # SPLIT-CANDIDATE (concurrent growth)
-    ("_ledger.py", "ledger_add"): 238,  # SPLIT-CANDIDATE (concurrent growth)
+    ("_ledger.py", "ledger_add"): 250,  # SPLIT-CANDIDATE (regrew to 245; small-headroom rebaseline)
 }
 
 

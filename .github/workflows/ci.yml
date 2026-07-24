@@ -71,6 +71,10 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
         with:
+          # Pin uv to the release-cohort reproducibility version the packaging
+          # jobs use; release_cohort.py requires exactly this uv, and the
+          # conformance gate builds a clean cohort with it.
+          version: "0.11.29"
           python-version: "3.13"
           # Self-hosted: the runner-local uv cache (~/.cache/uv) persists between
           # jobs; the GitHub cache round-trip only adds network time here.
@@ -144,6 +148,10 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
         with:
+          # Pin uv to the release-cohort reproducibility version the packaging
+          # jobs use; release_cohort.py requires exactly this uv, and the
+          # conformance gate builds a clean cohort with it.
+          version: "0.11.29"
           python-version: "3.13"
           # Self-hosted: the runner-local uv cache (~/.cache/uv) persists between
           # jobs; the GitHub cache round-trip only adds network time here.
@@ -153,6 +161,15 @@ jobs:
         run: |
           uv sync
           uv run vaultspec-core install --force
+
+      - name: Provision Node for the duplication scan
+        # The duplication gate shells out to `npx jscpd`; the stock self-hosted
+        # runner image carries no Node, so provision it here rather than depend
+        # on runner-local state. Without it the audit degrades to "duplication
+        # signal unavailable" and test_dev_audit_report reds the suite.
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "20"
 
       - name: Provision Playwright Chromium
         run: just env-playwright

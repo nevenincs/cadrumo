@@ -8,7 +8,7 @@ Covers two behavioural contracts:
    :func:`packaged_data` resolution actually finds the sidecar.
 
 2. The ``_normalise_corpus_text`` function inlined in
-   ``dev/packaging/extract_manual_corpus_text.py`` is byte-equal to the
+   ``dev/corpus/extract_manual_corpus_text.py`` is byte-equal to the
    canonical :func:`normalise_corpus_text` in :mod:`cadrumo.domain.calculations.registry._text`
    over a battery of representative inputs, so a future edit to either side that
    does not mirror to the other fails loudly.
@@ -95,7 +95,7 @@ def test_manual_pdf_corpus_text_sidecar_mismatch_returns_none() -> None:
 def test_corpus_text_normaliser_inlined_copy_is_byte_equal_to_canonical() -> None:
     """The inlined _normalise_corpus_text in the build script is byte-equal to the canonical.
 
-    ``dev/packaging/extract_manual_corpus_text.py`` inlines
+    ``dev/corpus/extract_manual_corpus_text.py`` inlines
     :func:`normalise_corpus_text` from
     :mod:`cadrumo.domain.calculations.registry._text` to avoid triggering cadrumo
     package initialisation (pydantic Settings) in a plain ``python -m`` invocation.
@@ -112,7 +112,7 @@ def test_corpus_text_normaliser_inlined_copy_is_byte_equal_to_canonical() -> Non
     - Whitespace collapsing
     - Lowercasing
     """
-    from dev.packaging.extract_manual_corpus_text import (  # type: ignore[reportMissingImports]  # dev/ tooling module; resolves at runtime, not on the type-check src roots
+    from dev.corpus.extract_manual_corpus_text import (  # type: ignore[reportMissingImports]  # dev/ tooling module; resolves at runtime, not on the type-check src roots
         _normalise_corpus_text as inlined,
     )
 

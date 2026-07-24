@@ -291,16 +291,16 @@ def test_workspace_root_survives_fails_closed(tmp_path: Path) -> None:
     assert any("workspace root" in leak and "workspace_diag" in leak for leak in leaks)
 
 
-def test_default_workspace_roots_reads_ci_env_longest_first(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_default_workspace_roots_reads_ci_env_longest_first() -> None:
     """The default roots come from the runner's CI env, most specific first."""
-    monkeypatch.setenv("GITHUB_WORKSPACE", "/home/runner/work/cadrumo/cadrumo")
-    monkeypatch.setenv("RUNNER_WORKSPACE", "/home/runner/work/cadrumo")
-    roots = default_workspace_roots()
+    env = {
+        "GITHUB_WORKSPACE": "/home/runner/work/cadrumo/cadrumo",
+        "RUNNER_WORKSPACE": "/home/runner/work/cadrumo",
+    }
+    roots = default_workspace_roots(env)
     assert roots == ("/home/runner/work/cadrumo/cadrumo", "/home/runner/work/cadrumo")
 
 
-def test_default_workspace_roots_empty_without_ci_env(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_default_workspace_roots_empty_without_ci_env() -> None:
     """Off a CI runner the default workspace-root set is empty, so scrubbing is a no-op."""
-    monkeypatch.delenv("GITHUB_WORKSPACE", raising=False)
-    monkeypatch.delenv("RUNNER_WORKSPACE", raising=False)
-    assert default_workspace_roots() == ()
+    assert default_workspace_roots({}) == ()

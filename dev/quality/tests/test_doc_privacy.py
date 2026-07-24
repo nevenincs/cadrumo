@@ -10,10 +10,12 @@ Scope and judgement:
 
 - It bans leaked *machine/login/network* tokens, not deliberate published
   attribution. The project's public copyright holder / privacy responsible
-  party ("Gergely Wootsch") and the published contact address on the neve.md
-  domain are legally load-bearing attribution carried in NOTICE, PRIVACY.md,
-  the frontend, and license-chain tests; they are intentionally public and are
-  NOT banned here.
+  party ("Neve Nincs") and the published ``hello@neve.md`` contact address on
+  the neve.md domain are legally load-bearing attribution carried in NOTICE,
+  PRIVACY.md, the frontend, and license-chain tests; they are intentionally
+  public and are NOT banned here. The retired personal identity that predated
+  it is now a privacy leak if it resurfaces in a shipped doc and is banned
+  below.
 - Runner *labels* (``[self-hosted, Linux, X64]``) are GitHub configuration, not
   machine names, and are untouched.
 
@@ -57,7 +59,8 @@ def _token(*fragments: str) -> str:
     return "".join(fragments)
 
 
-# Fixed-string banned tokens. Each is leaked machine / login / path metadata.
+# Fixed-string banned tokens. Each is leaked machine / login / path metadata, or
+# a retired public identity that must not resurface in a shipped document.
 _BANNED_LITERALS: tuple[str, ...] = (
     _token("gw-", "workstation"),  # operator Windows/WSL build-host name
     _token("macbook", "-neo"),  # operator macOS build-host name
@@ -69,6 +72,21 @@ _BANNED_LITERALS: tuple[str, ...] = (
     _token("/home", "/hello"),  # operator Linux home path
     _token("/Users", "/gergely"),  # operator macOS home path
 )
+
+# Retired public identity, banned in SHIPPED surfaces only. Superseded by
+# "Neve Nincs" / hello@neve.md; the old personal name and contact address are a
+# privacy leak if they reappear in any published/shipped document. They are
+# scanned with .vault/ and .vaultspec/ excluded, because those trees are
+# removable development scaffolding whose historical records legitimately retain
+# the prior attribution — the exclusion applies ONLY to this retired-identity
+# set, never to the machine/login/path tokens above (which stay tree-wide).
+_BANNED_IN_SHIPPED_SURFACES: tuple[str, ...] = (
+    _token("Gergely", " Wootsch"),  # retired public personal name
+    _token("hello@gergely", "-wootsch.com"),  # retired public contact email
+)
+
+# Pathspec excluding the removable dev-scaffolding trees for the shipped-only set.
+_SCAFFOLDING_EXCLUSIONS: tuple[str, ...] = (":!.vault", ":!.vaultspec")
 
 # ERE banned patterns for network identifiers.
 _BANNED_PATTERNS: tuple[str, ...] = (
@@ -113,6 +131,13 @@ def test_no_operator_identifying_tokens_in_tracked_files() -> None:
 
     for token in _BANNED_LITERALS:
         for hit in _git_grep(root, ["-F", "-e", token]):
+            if not _is_allowlisted(hit, token):
+                offenders.append(f"[{token!r}] {hit}")
+
+    # Retired-identity tokens are banned only in shipped surfaces; historical
+    # .vault/.vaultspec records legitimately retain the prior attribution.
+    for token in _BANNED_IN_SHIPPED_SURFACES:
+        for hit in _git_grep(root, ["-F", "-e", token, "--", ".", *_SCAFFOLDING_EXCLUSIONS]):
             if not _is_allowlisted(hit, token):
                 offenders.append(f"[{token!r}] {hit}")
 

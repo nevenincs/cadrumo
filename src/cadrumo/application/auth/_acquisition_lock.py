@@ -306,6 +306,10 @@ def _pid_is_running(pid: int) -> bool:
 
 def _pid_is_running_windows(pid: int) -> bool:
     import ctypes
+    import sys
+
+    if sys.platform != "win32":  # narrows ctypes.windll to the platform that defines it
+        return False
 
     process_query_limited_information = 0x1000
     still_active = 259
