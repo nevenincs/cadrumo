@@ -33,6 +33,7 @@ related:
   - '[[2026-07-17-auth-cert-recovery-custody-audit]]'
   - '[[2026-07-17-auth-cert-recovery-custody-plan]]'
   - '[[2026-07-24-auth-cert-recovery-custody-close-honesty-review-audit]]'
+  - '[[2026-07-24-auth-cert-recovery-custody-passphrase-recovery-door-safety-review-audit]]'
 ---
 
 # `auth-cert-recovery-custody` feature index
@@ -49,6 +50,7 @@ Auto-generated index of all documents tagged with `#auth-cert-recovery-custody`.
 
 - `2026-07-17-auth-cert-recovery-custody-audit` - `auth-cert-recovery-custody` audit: `certificate secret door safety review`
 - `2026-07-24-auth-cert-recovery-custody-close-honesty-review-audit` - `auth-cert-recovery-custody` audit: `close honesty review`
+- `2026-07-24-auth-cert-recovery-custody-passphrase-recovery-door-safety-review-audit` - `auth-cert-recovery-custody` audit: `passphrase and recovery CLI door safety review`
 
 ### exec
 
@@ -56,7 +58,6 @@ Auto-generated index of all documents tagged with `#auth-cert-recovery-custody`.
 - `2026-07-17-auth-cert-recovery-custody-P05-S33` - Prove certificate secret set and remove against real secure storage, including command failure after the secret mutation but before event commit followed by an idempotent retry with one correctly classified event, and reject backend selection, keyring spellings, migration, fallback, and duplicate mutation paths
 - `2026-07-17-auth-cert-recovery-custody-P05-S34` - Require yes for auth reset while keeping auth status and auth test non-destructive
 - `2026-07-17-auth-cert-recovery-custody-P06-S35` - Remove certificate backend selectors from every payload and schema projection while preserving independent master-key keyring custody contracts
-- `2026-07-17-auth-cert-recovery-custody-P07-S41` - Thread constructor secret_store: SecretStore|None=None dependency-injection through the secret-store factory, certificate-secret backend, certificate-sources check, and materialisation helpers
 - `2026-07-17-auth-cert-recovery-custody-P07-S42` - Add an AST recurrence gate, patterned on test_wizard_prompter_singularity.py, that bans module-global _override_* factory state and public override_* setters in production, exempting only the sanctioned core.config.override_settings
 - `2026-07-17-auth-cert-recovery-custody-P07-S43` - Sweep the storage facade and generated API docs for the removed override_secret_store export and update the import-hygiene baseline after the seam removal
 - `2026-07-17-auth-cert-recovery-custody-P04-S22` - Replace config rekey with only config passphrase change and secure input handling
@@ -75,6 +76,7 @@ Auto-generated index of all documents tagged with `#auth-cert-recovery-custody`.
 - `2026-07-17-auth-cert-recovery-custody-P06-S39` - Regenerate the CLI reference and operator how-to pages for the auth, certificate, and recovery families from the frozen live surface
 - `2026-07-17-auth-cert-recovery-custody-P06-S40` - Prove the removed auth, certificate, and recovery spellings are absent from every source and generated surface
 - `2026-07-17-auth-cert-recovery-custody-P08-S44` - DEFERRED until the operator P04 passphrase door commits: make certificate secret set reject the passphrase as an argv value and read it only via the hidden prompt or bounded stdin, reusing the P04 door _secure_input.py bounded-stdin no-echo infrastructure rather than building a parallel secret-input authority, gated on a test proving the passphrase cannot be supplied as an argv value and is read only through hidden prompt or bounded stdin
+- `2026-07-17-auth-cert-recovery-custody-P07-S41` - Thread constructor secret_store: SecretStore|None=None dependency-injection through the secret-store factory, certificate-secret backend, certificate-sources check, and materialisation helpers
 
 ### plan
 
