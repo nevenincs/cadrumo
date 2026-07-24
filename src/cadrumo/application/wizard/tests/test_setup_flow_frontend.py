@@ -25,12 +25,13 @@ import typer
 
 from ....core.flows import FlowMode
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...flows import FlowDefinition, FlowState, run_scripted_flow
+from ...flows import FlowDefinition, FlowState
 from ...user_profile import profile_storage_session, record_to_path_values
 from ...workflow import read_profile_bucket, workflow_state_repository
 from .._catalogue import SETUP_FLOW
 from .._commands import build_wizard_command
 from .._persistence import WizardPersistMode
+from ._support import scripted_run_over_setup_definition
 from .test_setup_runtime import _scripted_answers_for_individual_declaration
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -60,7 +61,7 @@ def _scripted_runner(tokens: Sequence[str]):
         checkpoint_store: object = None,
     ) -> FlowState:
         del registered_values, on_language_activated, checkpoint_store
-        state, _projection = run_scripted_flow(definition, tokens, mode=mode)
+        state, _projection = scripted_run_over_setup_definition(definition, tokens, mode=mode)
         return state
 
     return _runner

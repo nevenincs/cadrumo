@@ -73,6 +73,7 @@ from ..flows import (
 )
 from ._catalogue import SETUP_FLOW
 from ._checkpoint_store import ProfileFactsCheckpointStore
+from ._descendant_group import attach_descendant_group
 from ._errors import WizardMissingFlagError
 from ._format_hints import attach_format_hints
 from ._models import WizardFlow, WizardQuestion, WizardWidget
@@ -712,12 +713,14 @@ def _setup_flow_definition(flow: WizardFlow) -> FlowDefinition:
     """Bridge and decorate the wizard flow into the shared substrate definition.
 
     The single projected :class:`FlowDefinition` every frontend drives:
-    the substrate bridge, format hints, and setup legal validators applied
-    in one place so the interactive and the non-interactive walks can never
-    diverge on the definition they run.
+    the substrate bridge, format hints, setup legal validators, and the
+    descendant repeating group applied in one place so the interactive and
+    the non-interactive walks can never diverge on the definition they run.
     """
-    return attach_setup_legal_validators(
-        attach_format_hints(flow_definition_from_wizard_flow(flow, checkpoint=_SETUP_CHECKPOINT)),
+    return attach_descendant_group(
+        attach_setup_legal_validators(
+            attach_format_hints(flow_definition_from_wizard_flow(flow, checkpoint=_SETUP_CHECKPOINT)),
+        ),
     )
 
 

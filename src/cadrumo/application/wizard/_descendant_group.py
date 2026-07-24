@@ -268,6 +268,11 @@ DESCENDANTS_COUNT_PAGE: FlowPage = FlowPage(
     prompt=_locale_ref(_COUNT_PROMPT_LOCALE_KEY),
     help=_locale_ref(_COUNT_HELP_LOCALE_KEY),
     format_hint=_locale_ref(_FORMAT_UNITS_LOCALE_KEY),
+    # Optional with an explicit zero default: a natural-person walk that never
+    # mentions descendants declares zero (the correct tax semantics and the
+    # interactive prefill), and the scripted driver fills the page from this
+    # default, so existing token fixtures need no descendant token.
+    default="0",
     required=False,
     visible_when=_NATURAL_PERSON_GATE,
     answer_type=int,
