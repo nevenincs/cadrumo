@@ -31,7 +31,7 @@ Submodules
    cadrumo.adapters.persistence.storage._namespace_registry
    cadrumo.adapters.persistence.storage._path_safety
    cadrumo.adapters.persistence.storage._rotation
-   cadrumo.adapters.persistence.storage._schema_version
+   cadrumo.adapters.persistence.storage._schema_lineage
    cadrumo.adapters.persistence.storage.attachment
    cadrumo.adapters.persistence.storage.errors
    cadrumo.adapters.persistence.storage.runtime

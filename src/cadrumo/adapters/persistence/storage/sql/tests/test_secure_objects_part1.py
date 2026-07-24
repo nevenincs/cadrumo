@@ -405,11 +405,12 @@ def test_secure_object_record_older_schema_version_is_refused(tmp_path: Path) ->
                 max_supported_version=3,
             )
 
-        assert raised.value.translated_message == "errors.storage.namespace.schema_version_unsupported"
+        assert raised.value.translated_message == "errors.storage.namespace.schema_upgrade_path_missing"
         assert raised.value.context == {
             "namespace": namespace,
             "schema_version": 2,
             "expected": 3,
+            "missing_from_version": 2,
         }
 
 

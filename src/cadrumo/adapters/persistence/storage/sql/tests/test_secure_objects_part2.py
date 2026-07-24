@@ -147,10 +147,11 @@ def test_iter_records_with_failures_yields_older_schema_drift(tmp_path: Path) ->
         assert isinstance(outcomes[0], SecureObjectUnreadable)
         assert outcomes[0].schema_version == 1
         assert outcomes[0].reason == tr(
-            "errors.storage.namespace.schema_version_unsupported",
+            "errors.storage.namespace.schema_upgrade_path_missing",
             namespace=namespace,
             schema_version=1,
             expected=2,
+            missing_from_version=1,
         )
 
 

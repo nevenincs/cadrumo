@@ -21,7 +21,7 @@ from .._namespace_registry import (
     StorageHierarchyRegistry,
     is_former_product_namespace,
 )
-from .._schema_version import ensure_schema_version_supported
+from .._schema_lineage import ensure_schema_version_readable
 from ..crypto import (
     encrypt_secure_object_payload,
     secure_object_key_digest,
@@ -207,7 +207,7 @@ class SecureObjectRepository:
     ) -> None:
         if definition is None or schema_version == definition.schema_version:
             return
-        ensure_schema_version_supported(
+        ensure_schema_version_readable(
             namespace=namespace,
             schema_version=schema_version,
             current_version=definition.schema_version,
@@ -490,8 +490,9 @@ class SecureObjectRepository:
             expected_class: The
                 :class:`~adapters.persistence.storage.SensitivityClass`
                 all rows in this namespace must carry.
-            max_supported_version: The consumer's current ``schema_version``;
-                any differing row version is treated as unreadable.
+            max_supported_version: The consumer's current ``schema_version``
+                ceiling; a row above it, or below it without a complete
+                registered upgrade chain, is treated as unreadable.
         """
         records: list[SecureObjectRecord] = []
         for item in self.iter_records_with_failures(
@@ -634,8 +635,9 @@ class SecureObjectRepository:
                 all rows in this namespace must carry; rows with a differing
                 classification are yielded as
                 :class:`~adapters.persistence.storage.SecureObjectUnreadable`.
-            max_supported_version: The consumer's current ``schema_version``.
-                Rows carrying any other version are yielded
+            max_supported_version: The consumer's current ``schema_version``
+                ceiling. Rows above it, or below it without a complete
+                registered upgrade chain, are yielded
                 as :class:`~adapters.persistence.storage.SecureObjectUnreadable`.
             batch_size: SQLAlchemy ``yield_per`` chunk size for the raw row
                 scan. The default keeps memory bounded for large namespaces

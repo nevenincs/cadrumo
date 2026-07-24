@@ -76,6 +76,7 @@ Submodules
    cadrumo.core.atomic_write
    cadrumo.core.auth_session_keys
    cadrumo.core.click_context
+   cadrumo.core.compatibility_lifecycle
    cadrumo.core.config
    cadrumo.core.env_io
    cadrumo.core.external_constants

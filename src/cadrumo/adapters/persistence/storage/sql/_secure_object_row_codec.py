@@ -4,9 +4,10 @@ This module keeps the encrypted row decode path and post-write revision
 metadata update close to the SQL secure-object adapter without leaving both
 algorithms embedded in the repository class. It derives and persists revision
 lineage after ciphertext is written, validates row classification and the
-exact-current schema version before decrypting (both older and future versions
-are refused), and refuses rows whose revision hashes no longer match their
-stored metadata.
+schema-lineage ceiling before decrypting (a version above the consumer's
+current version is refused; an older version decrypts under its written
+version and is chain-upgraded to current), and refuses rows whose revision
+hashes no longer match their stored metadata.
 
 See Also:
     :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
@@ -42,7 +43,7 @@ from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import sha256_hex
 from .....core.logging import get_logger
 from .._namespace_registry import SecureObjectNamespaceDefinition
-from .._schema_version import ensure_schema_version_supported
+from .._schema_lineage import ensure_schema_version_readable, upgrade_secure_object_payload
 from ..crypto import decrypt_secure_object_payload, secure_object_payload_aad
 from ..errors import ClassificationError, DecryptionError, EnvelopeVersionError, SecureObjectUnreadableError
 from . import _orm
@@ -152,7 +153,7 @@ def secure_object_record_from_row(
             },
             translated_message="errors.storage.namespace.classification_mismatch",
         )
-    ensure_schema_version_supported(
+    ensure_schema_version_readable(
         namespace=row.namespace,
         schema_version=row.schema_version,
         current_version=max_supported_version,
@@ -187,11 +188,18 @@ def secure_object_record_from_row(
             row.schema_version,
         ),
     )
+    if row.schema_version < max_supported_version:
+        payload_plain = upgrade_secure_object_payload(
+            payload_plain,
+            namespace=row.namespace,
+            from_version=row.schema_version,
+            to_version=max_supported_version,
+        )
     return SecureObjectRecord(
         namespace=row.namespace,
         object_key=bytes(row.object_key),
         classification=classification,
-        schema_version=row.schema_version,
+        schema_version=max_supported_version,
         written_at=row.written_at,
         payload=payload_plain,
         revision_id=str(row.revision_id),
@@ -213,8 +221,8 @@ def secure_object_list_item_from_raw_row(
     namespace.
 
     Fault-isolated: every failure mode (unknown classification, classification
-    mismatch, non-current schema version, decrypt failure, revision-lineage
-    inconsistency) returns a
+    mismatch, unreadable schema version, decrypt failure, revision-lineage
+    inconsistency, upgrade failure) returns a
     :class:`~._secure_object_records.SecureObjectUnreadable` carrying the
     reason instead of raising, so a caller iterating many rows can attribute a
     failure to its own row and keep inspecting the rest.
@@ -253,7 +261,7 @@ def secure_object_list_item_from_raw_row(
             reason=f"classification {classification.value!r} does not match expected {expected_class.value!r}",
         )
     try:
-        ensure_schema_version_supported(
+        ensure_schema_version_readable(
             namespace=namespace,
             schema_version=schema_version,
             current_version=max_supported_version,
@@ -319,11 +327,29 @@ def secure_object_list_item_from_raw_row(
             written_at=written_at,
             reason="revision lineage self-consistency check failed",
         )
+    if schema_version < max_supported_version:
+        try:
+            payload_plain = upgrade_secure_object_payload(
+                payload_plain,
+                namespace=namespace,
+                from_version=schema_version,
+                to_version=max_supported_version,
+            )
+        except Exception as exc:
+            return SecureObjectUnreadable(
+                namespace=namespace,
+                row_id=row_id,
+                object_key=object_key,
+                classification=classification_str,
+                schema_version=schema_version,
+                written_at=written_at,
+                reason=resolve_error_message(exc) if isinstance(exc, EnvelopeVersionError) else str(exc),
+            )
     return SecureObjectRecord(
         namespace=namespace,
         object_key=object_key,
         classification=classification,
-        schema_version=schema_version,
+        schema_version=max_supported_version,
         written_at=written_at,
         payload=payload_plain,
         revision_id=str(row.revision_id),
