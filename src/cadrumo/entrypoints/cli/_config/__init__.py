@@ -1023,6 +1023,14 @@ def config_status(
 ) -> None:
     """Show the readiness of the current configuration profile."""
     _activate_subcommand_output_language(ctx, output_language)
+    from ._status_frontend import present_status_tui
+
+    # A capable interactive console presents the read-only full-screen status
+    # page; a ``--format json`` request and any non-interactive host fall
+    # through to the unchanged envelope path below, so the machine contract is
+    # reached identically for every non-interactive and JSON caller.
+    if present_status_tui(ctx):
+        return
     from pydantic import ValidationError
 
     from ....application.user_profile import record_to_path_values
