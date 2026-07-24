@@ -46,6 +46,7 @@ from __future__ import annotations
 from ._active_session import (
     NoActiveBucketSessionError,
     activate_session,
+    bind_active_bucket_session,
     close_active_bucket_session,
     current_active_bucket_session,
     get_active_master_key,
@@ -74,12 +75,15 @@ from ._master_key import (
     atomic_write_secure_bytes,
     get_master_key_provider,
     looks_like_real_tax_id,
+    refuse_unsecured_bucket_with_real_profile,
     refuse_unsecured_with_real_nif,
 )
 from ._master_key_bucket_dek import (
     bucket_dek_path,
+    idle_minutes_for_bucket,
     load_or_mint_bucket_dek,
     read_wrapped_bucket_dek,
+    session_absolute_minutes_for_bucket,
     write_wrapped_bucket_dek,
 )
 from ._master_key_derivation import (
@@ -170,6 +174,7 @@ __all__ = [
     "activate_session",
     "advance_profile_session_idle_deadline",
     "atomic_write_secure_bytes",
+    "bind_active_bucket_session",
     "bucket_dek_path",
     "close_active_bucket_session",
     "current_active_bucket_session",
@@ -185,6 +190,7 @@ __all__ = [
     "get_active_master_key",
     "get_master_key_provider",
     "has_active_bucket_session",
+    "idle_minutes_for_bucket",
     "load_or_mint_bucket_dek",
     "load_profile_session_key",
     "load_recovery_envelope",
@@ -202,11 +208,13 @@ __all__ = [
     "recovery_rotate",
     "recovery_status",
     "recovery_verify",
+    "refuse_unsecured_bucket_with_real_profile",
     "refuse_unsecured_with_real_nif",
     "reset_login_throttle",
     "resume_profile_session",
     "save_recovery_envelope",
     "save_wrapped_master_key",
+    "session_absolute_minutes_for_bucket",
     "store_profile_session_key",
     "suspend_active_session",
     "unwrap_dek",

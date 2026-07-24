@@ -6249,6 +6249,8 @@ errors:
     refused_profile_label_ambiguous: 'Refusat: l''etiqueta del perfil és ambigua.'
     refused_profile_lifo_forbidden: La valoració d'existències pel mètode LIFO no
       està admesa fiscalment. Fes servir FIFO, preu mitjà ponderat o cost mitjà.
+    refused_profile_login_throttled: Massa intents d'inici de sessió fallits. Espera
+      %{seconds} segons abans de tornar a executar `aeat config login`.
     refused_profile_logout_override: El tancament de sessió no pot canviar un perfil
       actiu seleccionat mitjançant --profile o CADRUMO_ACTIVE_PROFILE. Elimina la
       selecció explícita i torna-ho a provar.

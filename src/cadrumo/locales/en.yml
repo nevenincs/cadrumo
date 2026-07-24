@@ -5841,6 +5841,8 @@ errors:
       profile. Use the profile UUID to disambiguate.
     refused_profile_lifo_forbidden: LIFO stock valuation is not admitted for tax purposes.
       Use FIFO, weighted average price, or average cost.
+    refused_profile_login_throttled: Too many failed login attempts. Wait %{seconds}
+      seconds before running `aeat config login` again.
     refused_profile_logout_override: Logout cannot change an active profile selected
       by --profile or CADRUMO_ACTIVE_PROFILE. Remove the override and retry.
     refused_profile_not_configured: RENTA verification needs a tax-residence profile.

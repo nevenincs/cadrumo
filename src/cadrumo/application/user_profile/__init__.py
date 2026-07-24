@@ -188,6 +188,13 @@ if TYPE_CHECKING:
     from ._keys_validation import list_profile_key_records, validate_profile_values
     from ._language_resolver import resolve_profile_output_language_hint
     from ._lifecycle import ProfileLifecycleService
+    from ._login_session import (
+        ProfileLoginOutcome,
+        ProfileLoginThrottledError,
+        close_profile_session_artefacts,
+        login_profile,
+        resume_active_profile_session,
+    )
     from ._orchestration import (
         ProfileAlreadyRegisteredError,
         ProfileLogoutOverrideError,
@@ -353,6 +360,16 @@ _LAZY_EXPORTS: dict[str, str] = {
         ("._language_resolver", ("resolve_profile_output_language_hint",)),
         ("._profile_pointer_transaction", ("active_profile_pointer_transaction",)),
         (
+            "._login_session",
+            (
+                "ProfileLoginOutcome",
+                "ProfileLoginThrottledError",
+                "close_profile_session_artefacts",
+                "login_profile",
+                "resume_active_profile_session",
+            ),
+        ),
+        (
             "._orchestration",
             (
                 "ProfileAlreadyRegisteredError",
@@ -444,6 +461,8 @@ __all__ = [
     "ProfileLifecycleService",
     "ProfileListResult",
     "ProfileListing",
+    "ProfileLoginOutcome",
+    "ProfileLoginThrottledError",
     "ProfileLogoutOverrideError",
     "ProfilePreflightReport",
     "ProfilePreflightRequirement",
@@ -471,6 +490,7 @@ __all__ = [
     "bundle_data_categories",
     "carried_namespace_definitions",
     "change_passphrase",
+    "close_profile_session_artefacts",
     "create_recovery_code",
     "decrypt_profile_bundle_with_passphrase",
     "delete_profile_with_lifecycle_span",
@@ -482,6 +502,7 @@ __all__ = [
     "inspect_recovery_status",
     "iva_regime_required",
     "list_profile_key_records",
+    "login_profile",
     "logout_active_profile",
     "missing_filing_baseline_flags",
     "prepare_profile_export",
@@ -505,6 +526,7 @@ __all__ = [
     "resolve_capability",
     "resolve_profile_output_language_hint",
     "restore_carried_objects",
+    "resume_active_profile_session",
     "rotate_recovery_code",
     "select_profile",
     "select_profile_with_lifecycle_span",

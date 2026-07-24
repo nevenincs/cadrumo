@@ -64,6 +64,7 @@ class BucketSession:
         "_engine",
         "_idle_deadline",
         "_idle_window",
+        "_kek_available",
         "_kek_buffer",
         "_opened_at",
         "_sealed",
@@ -83,9 +84,11 @@ class BucketSession:
         absolute_deadline: datetime,
         unsecured_backend: bool,
         storage_root: Path | None,
+        kek_available: bool = True,
     ) -> None:
         self._bucket_id = bucket_id
         self._storage_root = storage_root
+        self._kek_available = kek_available
         self._kek_buffer = kek_buffer
         self._dek_buffer = dek_buffer
         self._idle_window = idle_window
@@ -173,6 +176,71 @@ class BucketSession:
             storage_root=(storage_root.expanduser().resolve(strict=False) if storage_root is not None else None),
         )
 
+    @classmethod
+    def open_resumed(
+        cls,
+        *,
+        bucket_id: str,
+        dek: bytes,
+        idle_minutes: int,
+        opened_at: datetime,
+        idle_deadline: datetime,
+        absolute_deadline: datetime,
+        storage_root: Path | None = None,
+    ) -> BucketSession:
+        """Re-open a session from a resumed persisted profile session.
+
+        The persisted ``aeat config login`` record session-wraps the DEK
+        only: the KEK stays login-scoped and is never placed in the OS
+        keychain, so a resumed session legitimately has no KEK. Column
+        crypto reads the DEK, so the resumed session is fully functional;
+        :attr:`kek` refuses with
+        :class:`~adapters.persistence.storage.errors.MasterKeyUnavailableError`
+        rather than returning a placeholder.
+
+        Both deadlines come from the resumed record instead of being
+        re-derived, so the cross-process session inherits the ORIGINAL
+        login's absolute cap and cannot be extended by re-opening.
+
+        Args:
+            bucket_id: Non-empty identifier of the resumed bucket.
+            dek: 32-byte data-encryption key recovered by unwrapping the
+                persisted session record under its keychain session key.
+            idle_minutes: Sliding idle window applied by :meth:`touch`.
+            opened_at: The ORIGINAL login instant from the record.
+            idle_deadline: The record's current sliding idle deadline.
+            absolute_deadline: The record's immutable absolute cap.
+            storage_root: Canonical local-storage root that owns the bucket.
+
+        Returns:
+            A :class:`BucketSession` carrying the resumed DEK and deadlines.
+
+        Raises:
+            StorageValidationError: When ``bucket_id`` is empty,
+                ``idle_minutes`` is not positive, ``dek`` is not 32 bytes,
+                or the idle deadline outlives the absolute deadline.
+        """
+        if not bucket_id:
+            raise _storage_validation_error("bucket_id must be non-empty")
+        if idle_minutes <= 0:
+            raise _storage_validation_error("idle_minutes must be a strict positive integer")
+        if len(dek) != _DEK_BYTES:
+            raise _storage_validation_error(f"dek must be exactly {_DEK_BYTES} bytes")
+        if idle_deadline > absolute_deadline:
+            raise _storage_validation_error("idle_deadline must not exceed absolute_deadline")
+        return cls(
+            bucket_id=bucket_id,
+            kek_buffer=bytearray(),
+            dek_buffer=bytearray(dek),
+            idle_window=timedelta(minutes=idle_minutes),
+            idle_deadline=idle_deadline,
+            opened_at=opened_at,
+            absolute_deadline=absolute_deadline,
+            unsecured_backend=False,
+            storage_root=(storage_root.expanduser().resolve(strict=False) if storage_root is not None else None),
+            kek_available=False,
+        )
+
     @property
     def bucket_id(self) -> str:
         return self._bucket_id
@@ -213,10 +281,22 @@ class BucketSession:
         """Return an immutable view of the live KEK bytes.
 
         Raises `BucketLockedError` after `close()` has sealed the
-        session.
+        session, and
+        :class:`~adapters.persistence.storage.errors.MasterKeyUnavailableError`
+        on a session opened through :meth:`open_resumed`, whose persisted
+        record carries the DEK only (the KEK stays login-scoped).
         """
         if self._sealed:
             raise BucketLockedError(bucket_id=self._bucket_id)
+        if not self._kek_available:
+            from ..errors import MasterKeyUnavailableError
+
+            raise MasterKeyUnavailableError(
+                "this bucket session was resumed from a persisted profile session, which "
+                "session-wraps the DEK only; the KEK is login-scoped. Run `aeat config login` "
+                "to re-authenticate if key-encryption-key material is required.",
+                translated_message="errors.auth.auth_storage_master_key_unavailable",
+            )
         return bytes(self._kek_buffer)
 
     @property

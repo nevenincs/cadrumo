@@ -731,8 +731,21 @@ def _extract_profile_tax_ids(envelope_payload: bytes) -> tuple[str, ...] | None:
     return tuple(tax_ids) if tax_ids else None
 
 
-def _refuse_unsecured_active_bucket_with_real_profile(session: BucketSession) -> None:
-    """Refuse unsecured activation when the active bucket carries a real profile."""
+def refuse_unsecured_bucket_with_real_profile(session: BucketSession) -> None:
+    """Refuse unsecured activation when the bucket carries a real profile.
+
+    The NIF-canary gate for a session opened against the published
+    deterministic key. Public because every path that opens a session
+    outside :func:`_provider_enter` — notably the unscoped profile-login
+    open — must run exactly this guard rather than re-deriving it.
+
+    Args:
+        session: The freshly-opened unsecured :class:`BucketSession`.
+
+    Raises:
+        UnsecuredModeRefusedError: When the bucket's profile cannot be
+            proven synthetic, or carries a real NIF / NIE / CIF.
+    """
     from .....core.config import PRODUCT_DATABASE_FILENAME, load_settings
     from .._namespace_registry import BUCKET_DB_DIRNAME, BUCKETS_DIRNAME, USER_PROFILE_VALUE_NAMESPACE
     from ..crypto import decrypt_encrypted_bytes_column
@@ -872,7 +885,7 @@ def _provider_enter(
     provider._activation_cm = activation
     try:
         if session.unsecured_backend:
-            _refuse_unsecured_active_bucket_with_real_profile(session)
+            refuse_unsecured_bucket_with_real_profile(session)
     except BaseException:
         exit_provider_session(provider, None, None, None)
         raise
