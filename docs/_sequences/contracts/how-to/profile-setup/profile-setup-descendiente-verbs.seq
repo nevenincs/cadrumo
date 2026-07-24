@@ -1,0 +1,6 @@
+@step List the declared descendientes with their positions.
+@static aeat config profile descendiente list
+@step Add one descendiente as comma-separated KEY=VALUE pairs.
+@static aeat config profile descendiente add --descendiente NACIMIENTO=2018-04-01,DISCAPACIDAD=0,CONVIVENCIA=true
+@step Remove the descendiente at position 0.
+@static aeat config profile descendiente remove 0
