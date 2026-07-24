@@ -472,6 +472,18 @@ def tr_constant_naming_violations_in_tree(tree: ast.AST) -> Iterator[tuple[int, 
     genuinely dynamic runtime value, not a static constant, and is out of
     scope for this check — the same distinction the naming-convention rule
     itself draws.
+
+    Scope boundary (deliberate, not an oversight): this check is about the
+    KEY EXPRESSION at the Python call site — whether ``tr()``'s argument is a
+    literal the scanner can see, or a named constant whose OWN IDENTIFIER
+    hides the key from every literal-key scan. It never inspects, resolves,
+    or has any opinion about the STRING VALUE a locale catalogue stores under
+    that key. Whether a translated value is legitimately identical across
+    locales (a bare regulatory acronym such as ``IVA``/``IRPF``, a Spanish
+    product noun, a bare interpolation placeholder, a literal CLI command) is
+    a distinct concern owned entirely by the ``_intentional_identical.json``
+    allowlist and its honesty gate — this function does not read locale
+    catalogue files at all, so the two mechanisms cannot collide.
     """
     tr_names = _translation_call_names(tree)
     for node in ast.walk(tree):
