@@ -62,6 +62,42 @@ def test_no_axis_when_answer_matches_certificate() -> None:
     assert cotejo_axes(flow, certificado, {_ACTIVITY_QUESTION_ID: "Diseno grafico"}) == ()
 
 
+@pytest.mark.parametrize(
+    ("answer", "certificate"),
+    [
+        ("Consultoria informatica", "CONSULTORÍA INFORMÁTICA"),  # case + accents
+        ("Consultoria informatica", "Consultoria  informatica "),  # collapsed + trailing whitespace
+        ("consultoría informática", "CONSULTORIA INFORMATICA"),  # both directions
+    ],
+)
+def test_no_false_divergence_on_case_accent_or_whitespace_variants(answer: str, certificate: str) -> None:
+    """Operator prose vs PDF extraction must not spawn a page on a mere variant."""
+    flow = get_setup_flow()
+    certificado = _certificado(actividad=certificate)
+    assert cotejo_axes(flow, certificado, {_ACTIVITY_QUESTION_ID: answer}) == ()
+
+
+def test_genuinely_different_values_still_reconcile() -> None:
+    """A real difference (not a case/accent/whitespace variant) still builds a page."""
+    flow = get_setup_flow()
+    certificado = _certificado(actividad="Consultoria informatica")
+    axes = cotejo_axes(flow, certificado, {_ACTIVITY_QUESTION_ID: "Diseno grafico industrial"})
+    assert len(axes) == 1
+
+
+def test_adopt_routes_under_canonical_fold_never_a_spurious_keep() -> None:
+    """A decision equal to the certificate under the fold adopts; the verbatim value persists."""
+    flow = get_setup_flow()
+    certificado = _certificado(actividad="Consultoria informatica")
+    answers = {_ACTIVITY_QUESTION_ID: "Diseno grafico"}
+    # The engine committed the adopt candidate in a whitespace-variant form;
+    # the canonical fold still routes it to adopt, and the persisted value is
+    # the verbatim certificate original.
+    adopted, divergences = cotejo_outcome(flow, certificado, answers, {_COTEJO_PAGE_ID: "Consultoria  informatica "})
+    assert divergences == ()
+    assert [fact.value for fact in adopted] == ["Consultoria informatica"]
+
+
 def test_no_axis_when_answer_absent() -> None:
     flow = get_setup_flow()
     assert cotejo_axes(flow, _certificado(), {}) == ()
@@ -134,7 +170,7 @@ def test_attach_cotejo_pages_appends_valid_trailing_section() -> None:
     # Building through the command splice seam exercises the full definition
     # decoration (bridge + format hints + legal validators + descendants +
     # cotejo) and its construction-time FlowDefinition validators.
-    definition = _setup_flow_definition(flow, attach_descendants=True, certificado=_certificado(), cotejo_answers=answers)
+    definition = _setup_flow_definition(flow, attach_descendants=True, certificado=_certificado(), flow_answers=answers)
     cotejo_sections = [section for section in definition.sections if section.id == COTEJO_SECTION_ID]
     assert len(cotejo_sections) == 1
     assert definition.sections[-1].id == COTEJO_SECTION_ID
@@ -149,7 +185,7 @@ def test_attach_cotejo_pages_is_a_noop_without_reconcilable_axes() -> None:
         flow,
         attach_descendants=True,
         certificado=_certificado(actividad="Diseno grafico"),
-        cotejo_answers={_ACTIVITY_QUESTION_ID: "Diseno grafico"},
+        flow_answers={_ACTIVITY_QUESTION_ID: "Diseno grafico"},
     )
     assert not any(section.id == COTEJO_SECTION_ID for section in agreed.sections)
     assert len(agreed.sections) == len(base.sections)

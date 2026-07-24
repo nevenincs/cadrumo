@@ -50,3 +50,25 @@ def test_missing_artefact_is_refused_at_the_cli_boundary(tmp_path: Path) -> None
         ["--format", "json", "config", "profile", "censo", "file", "--file", str(tmp_path / "absent.pdf")],
     )
     assert result.exit_code != 0
+
+
+def test_apply_routes_through_the_single_cotejo_apply_authority() -> None:
+    """The ``--apply`` door persists through ``apply_cotejo`` (one CENSO_APPLIED), never a bare write.
+
+    The parser refuses every document while the layout extraction is
+    unpinned, so the door offers no seam to inject a synthetic certificate;
+    the adopt-all emission itself is proven directly against ``apply_cotejo``
+    in the user_profile suite. This inspection-level pin guards the door's
+    routing: it must call the single apply authority and never re-introduce a
+    parallel ``set_active_fields`` write that would skip the event.
+    """
+    import inspect
+
+    from .. import _censo_file
+
+    source = inspect.getsource(_censo_file.censo_file)
+    # The persistence call is apply_cotejo(...), never a bare set_active_fields(...)
+    # write that would skip the CENSO_APPLIED emission (the prose comment naming
+    # the retired parallel write is not a call, so pin on the call form).
+    assert "apply_cotejo(state" in source
+    assert "set_active_fields(" not in source

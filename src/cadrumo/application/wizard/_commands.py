@@ -716,7 +716,7 @@ def _setup_flow_definition(
     *,
     attach_descendants: bool = True,
     certificado: CertificadoSituacionCensal | None = None,
-    cotejo_answers: Mapping[str, str] | None = None,
+    flow_answers: Mapping[str, str] | None = None,
 ) -> FlowDefinition:
     """Bridge and decorate the wizard flow into the shared substrate definition.
 
@@ -741,14 +741,16 @@ def _setup_flow_definition(
 
     ``certificado`` gates the cotejo phase (the same post-bridge decoration
     seam as the descendant group). The cotejo pages are DYNAMIC over the
-    ingested certificate and the current answers, so both are supplied when
-    a G313 artefact has been reconciled; :func:`build_cotejo_pages` yields
-    one COMPARE_SELECT page per axis that disagrees, and empty pages splice
-    nothing. It stays ``None`` on every live walk today: the inbound censo
-    parser refuses every document while its layout extraction is unpinned
-    (no issued specimen exists), so no live walk reaches a parsed
-    certificate and the whole cotejo family is unreachable live -- exercised
-    only by tests that construct the certificate directly.
+    ingested certificate and the staged ``flow_answers`` (the operator's
+    setup answers the disagreement detection compares against -- NOT the
+    compare-select decisions), so both are supplied when a G313 artefact has
+    been reconciled; :func:`build_cotejo_pages` yields one COMPARE_SELECT
+    page per axis that disagrees, and empty pages splice nothing. It stays
+    ``None`` on every live walk today: the inbound censo parser refuses
+    every document while its layout extraction is unpinned (no issued
+    specimen exists), so no live walk reaches a parsed certificate and the
+    whole cotejo family is unreachable live -- exercised only by tests that
+    construct the certificate directly.
     """
     definition = attach_setup_legal_validators(
         attach_format_hints(flow_definition_from_wizard_flow(flow, checkpoint=_SETUP_CHECKPOINT)),
@@ -758,7 +760,7 @@ def _setup_flow_definition(
     if certificado is not None:
         definition = attach_cotejo_pages(
             definition,
-            build_cotejo_pages(flow, certificado, cotejo_answers or {}),
+            build_cotejo_pages(flow, certificado, flow_answers or {}),
         )
     return definition
 

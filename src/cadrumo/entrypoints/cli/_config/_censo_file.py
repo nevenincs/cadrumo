@@ -68,7 +68,7 @@ def censo_file(
 ) -> None:
     """Parse the certificate and preview — or with ``--apply``, enroll — its censal facts."""
     from ....adapters.inbound.censo import parse_certificado_censal_bytes
-    from ....application.user_profile import set_active_fields
+    from ....application.user_profile import apply_cotejo
     from ....application.workflow import workflow_state_repository
     from ....domain.censo import censo_facts_from_certificado
     from .._config_payloads import CensoFileFactPayload, CensoFileIngestResult
@@ -77,9 +77,14 @@ def censo_file(
     facts = censo_facts_from_certificado(certificado)
 
     if apply:
+        # The file door is the adopt-all shape of the cotejo apply: every
+        # mapped censo fact is adopted, none deferred. Route it through the
+        # single apply authority (never a parallel ``set_active_fields``
+        # write) so a censal artefact-apply always emits exactly one
+        # ``CENSO_APPLIED`` event, at the non-official evidence tier.
         repository = workflow_state_repository()
         state = repository.load()
-        repository.save(set_active_fields(state, facts))
+        repository.save(apply_cotejo(state, adopted=facts, divergences=()))
 
     rows = tuple(
         CensoFileFactPayload(path=fact.path, value=str(fact.value), source=fact.source) for fact in facts
