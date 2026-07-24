@@ -28,10 +28,29 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Callable, Mapping
 
+    from ....adapters.inbound.tui import FlowTuiApp
     from ....application.flows import FlowDefinition, FlowState
     from ....core.flows import FlowMode
+
+
+def _line_committed_callback(
+    on_language_activated: Callable[[str, str], bool] | None,
+) -> Callable[[str, str], None] | None:
+    """Adapt the language activator to the line frontend's post-commit callback.
+
+    Line mode re-assembles every page's copy on render, so an activated
+    language surfaces on the next page with no explicit rebuild; the
+    activator's verdict is therefore discarded here.
+    """
+    if on_language_activated is None:
+        return None
+
+    def _committed(page_key: str, value: str) -> None:
+        on_language_activated(page_key, value)
+
+    return _committed
 
 
 def run_setup_flow_frontend(
@@ -39,8 +58,16 @@ def run_setup_flow_frontend(
     *,
     mode: FlowMode,
     registered_values: Mapping[str, str] | None,
+    on_language_activated: Callable[[str, str], bool] | None = None,
 ) -> FlowState:
     """Drive ``definition`` on the best frontend the host supports.
+
+    ``on_language_activated`` is the mid-walk output-language activator (see
+    :func:`cadrumo.application.wizard.build_wizard_command`). It is fired
+    post-commit on each answered page and re-activates the output language
+    when the ``output-language`` page is committed, so the remaining pages
+    render in the chosen language. It is ``None`` when an explicit flag or the
+    environment already pins the language, in which case no hook is wired.
 
     Raises:
         FlowUnsupportedConsoleError: When the host can host neither the
@@ -58,13 +85,64 @@ def run_setup_flow_frontend(
     if capability is FrontendCapability.NON_INTERACTIVE:
         raise FlowUnsupportedConsoleError(translated_message="flows.errors.unsupported_console")
     if capability is FrontendCapability.LINE:
-        state, _projection = LineFlowFrontend(definition).run(mode=mode)
+        state, _projection = LineFlowFrontend(
+            definition,
+            on_answer_committed=_line_committed_callback(on_language_activated),
+        ).run(mode=mode)
         return state
 
     from ....adapters.inbound.tui import run_flow_tui
 
-    state, _projection = run_flow_tui(definition, mode=mode, registered_values=registered_values)
-    return state
+    if on_language_activated is None:
+        state, _projection = run_flow_tui(definition, mode=mode, registered_values=registered_values)
+        return state
+
+    return _run_full_screen_with_locale_hook(
+        definition,
+        mode=mode,
+        registered_values=registered_values,
+        on_language_activated=on_language_activated,
+    )
+
+
+def _run_full_screen_with_locale_hook(
+    definition: FlowDefinition,
+    *,
+    mode: FlowMode,
+    registered_values: Mapping[str, str] | None,
+    on_language_activated: Callable[[str, str], bool],
+) -> FlowState:
+    """Run the full-screen frontend with the mid-walk locale-switch hook wired.
+
+    The hook must call :meth:`FlowTuiApp.rebuild_for_locale` after activating
+    the language so the mounted screen (its footer bindings included)
+    re-resolves under the new locale. That needs the app handle
+    :func:`~cadrumo.adapters.inbound.tui.run_flow_tui` does not surface, so the
+    app is constructed here and driven with the same abandoned-run guard.
+    """
+    from ....adapters.inbound.tui import FlowTuiApp
+    from ....application.flows import FlowCheckpointError
+
+    holder: dict[str, FlowTuiApp] = {}
+
+    def _committed(page_key: str, value: str) -> None:
+        if on_language_activated(page_key, value):
+            holder["app"].rebuild_for_locale()
+
+    app = FlowTuiApp(
+        definition,
+        mode=mode,
+        registered_values=registered_values,
+        on_answer_committed=_committed,
+    )
+    holder["app"] = app
+    app.run()
+    if app.final_state is None:
+        raise FlowCheckpointError(
+            translated_message="flows.errors.tui_abandoned",
+            context={"flow_id": definition.id, "mode": mode.value},
+        )
+    return app.final_state
 
 
 __all__ = ["run_setup_flow_frontend"]

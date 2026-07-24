@@ -56,8 +56,9 @@ def _scripted_runner(tokens: Sequence[str]):
         *,
         mode: FlowMode,
         registered_values: object = None,
+        on_language_activated: object = None,
     ) -> FlowState:
-        del registered_values
+        del registered_values, on_language_activated
         state, _projection = run_scripted_flow(definition, tokens, mode=mode)
         return state
 
