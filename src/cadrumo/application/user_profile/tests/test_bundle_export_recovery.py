@@ -6,6 +6,12 @@ process reconciles the durable operation state honestly: a prepared operation is
 reported as prepared, never upgraded to complete, its orphan staged temp is
 cleared, and no ``PROFILE_EXPORTED`` completion event is ever surfaced for an
 artifact that was not durably published.
+
+Recovery is proved twice over: once through :func:`reconcile_prepared_exports`
+directly, for the reconciliation contract itself, and once through the operator
+path -- a plain later :func:`export_profile_bundle` call, with nothing in the
+test invoking reconciliation -- so the mechanism is proved reachable in
+production rather than only from the harness.
 """
 
 from __future__ import annotations
@@ -28,6 +34,7 @@ from .. import (
     ProfileBundleExportPurpose,
     ProfileBundleExportRequest,
     ProfileBundleExportTransport,
+    export_profile_bundle,
     prepare_profile_export,
     profile_storage_session,
     reconcile_prepared_exports,
@@ -331,6 +338,95 @@ def test_export_publishes_into_a_freshly_created_parent_directory(tmp_path: Path
         assert destination.is_file()
         published = UserProfilePortableExport.model_validate_json(destination.read_text(encoding="utf-8"))
         assert published.profile.profile_id == bucket_id
+
+
+def test_a_later_export_clears_a_crashed_run_orphan_journal_and_cleartext_temp(tmp_path: Path) -> None:
+    # The production trigger, not the test harness: a crashed export leaves a
+    # PREPARED journal and a 0o600 cleartext staged temp holding the whole
+    # bundle. Nothing here calls reconcile; the operator's NEXT export -- to an
+    # unrelated destination -- is what must clear both, or those bundle bytes
+    # sit on disk indefinitely (sensitive-financial-data-secure-storage-only).
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        bucket_id = _create_profile()
+        dispose_engine()
+        abandoned = tmp_path / "abandoned.json"
+
+        crashed = _run_export_child(storage_root, abandoned, "prepared")
+        assert crashed.returncode == _CRASH_EXIT_CODE, (crashed.stdout, crashed.stderr)
+
+        repository = ProfileBundleExportJournalRepository()
+        orphaned = repository.prepared()
+        assert len(orphaned) == 1
+        staged = Path(orphaned[0].staged_path)
+        assert staged.is_file()
+        # The staged temp really is the readable bundle, not an empty placeholder.
+        staged_bundle = UserProfilePortableExport.model_validate_json(staged.read_text(encoding="utf-8"))
+        assert staged_bundle.profile.profile_id == bucket_id
+        assert not abandoned.exists()
+
+        published = export_profile_bundle(_request(tmp_path / "later.json"))
+
+        assert published.profile_id == bucket_id
+        assert (tmp_path / "later.json").is_file()
+        assert not staged.exists()
+        assert not abandoned.exists()
+        assert repository.list() == ()
+        assert list(tmp_path.glob(f"*{_STAGED_TEMP_SUFFIX}")) == []
+        # The orphan never published, so only the new export owns an event.
+        assert len(_export_events(bucket_id)) == 1
+
+
+def test_re_exporting_to_the_crashed_target_clears_its_orphan_before_reusing_the_journal(tmp_path: Path) -> None:
+    # The operation id is clock-free and derived from profile, target identity,
+    # and purpose, so re-exporting to the SAME target reuses -- and overwrites --
+    # the crashed run's journal, which holds the only record of where its
+    # cleartext temp was staged. The reconcile must therefore run before the
+    # journal is rewritten, or that file is stranded with no way back to it.
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        bucket_id = _create_profile()
+        dispose_engine()
+        destination = tmp_path / "portable.json"
+
+        crashed = _run_export_child(storage_root, destination, "prepared")
+        assert crashed.returncode == _CRASH_EXIT_CODE, (crashed.stdout, crashed.stderr)
+
+        repository = ProfileBundleExportJournalRepository()
+        orphaned = repository.prepared()
+        assert len(orphaned) == 1
+        abandoned_temp = Path(orphaned[0].staged_path)
+        assert abandoned_temp.is_file()
+
+        published = export_profile_bundle(_request(destination))
+
+        assert published.profile_id == bucket_id
+        assert destination.is_file()
+        assert not abandoned_temp.exists()
+        assert repository.list() == ()
+        assert list(tmp_path.glob(f"*{_STAGED_TEMP_SUFFIX}")) == []
+        assert len(_export_events(bucket_id)) == 1
+
+
+def test_a_later_export_emits_the_owed_event_for_a_crash_published_bundle(tmp_path: Path) -> None:
+    # The un-audited-egress half of the same trigger: a crash between the atomic
+    # replace and the audit event leaves a durably-published bundle with no
+    # PROFILE_EXPORTED record. The next export to an unrelated destination must
+    # settle that owed event.
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        bucket_id = _create_profile()
+        dispose_engine()
+        crashed_destination = tmp_path / "published-uneventfully.json"
+
+        crashed = _run_export_child(storage_root, crashed_destination, "replaced")
+        assert crashed.returncode == _CRASH_EXIT_CODE, (crashed.stdout, crashed.stderr)
+        assert crashed_destination.is_file()
+        assert _export_events(bucket_id) == ()
+
+        export_profile_bundle(_request(tmp_path / "later.json"))
+
+        # One event owed by the crashed publication, one for the new export.
+        assert len(_export_events(bucket_id)) == 2
+        assert ProfileBundleExportJournalRepository().list() == ()
+        assert crashed_destination.is_file()
 
 
 def test_reconcile_skips_a_prepared_operation_whose_target_lock_is_held(tmp_path: Path) -> None:

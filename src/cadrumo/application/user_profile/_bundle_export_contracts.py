@@ -11,6 +11,13 @@ operation-state keying, and the published :class:`ProfileBundleExportResult`.
 Data categories are derived from the actual :class:`UserProfilePortableExport`
 schema fields and the registry namespaces the bundle carries, never from a
 static hand-maintained list that silently drifts from what the bundle contains.
+The field-to-label mapping is still authored here, so it is held exhaustive by
+construction: every serialized field must be mapped to a category, declared
+envelope metadata, or declared carried-namespace derived, and an unclassified
+field refuses rather than dropping out of the disclosed set. That refusal is
+what lets the subject-access response claim to list every personal-data
+category held for the profile.
+
 The sealed recovery archive is a separate confidentiality and restoration
 surface and is deliberately absent here.
 """
@@ -24,6 +31,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field, SecretStr, computed_field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...domain.user_profile import ProfileExportError
 
 if TYPE_CHECKING:
     from ...domain.user_profile import UserProfilePortableExport
@@ -41,6 +49,29 @@ _CATEGORY_BY_BUNDLE_FIELD: dict[str, str] = {
     "calculation_revisions": "calculation_revisions",
     "filing_records": "filing_records",
 }
+
+# Envelope fields that describe the export itself rather than the subject: the
+# integer shape marker the import path gates on, and the provenance timestamp of
+# this export run. Neither is personal data held for the profile, so neither
+# earns a disclosure category.
+_ENVELOPE_METADATA_BUNDLE_FIELDS: frozenset[str] = frozenset(
+    {
+        "bundle_schema_version",
+        "exported_at",
+    },
+)
+
+# Fields of the generic secure-object carry surface. Their personal data IS
+# disclosed, but per registry namespace out of ``coverage_manifest`` (see the
+# ``secure_object_namespace:`` categories below) rather than as one flat
+# field-level label, because one carried-objects tuple spans every namespace the
+# bundle carries.
+_CARRIED_NAMESPACE_DERIVED_BUNDLE_FIELDS: frozenset[str] = frozenset(
+    {
+        "carried_objects",
+        "coverage_manifest",
+    },
+)
 
 
 class ProfileBundleExportPurpose(StrEnum):
@@ -113,16 +144,47 @@ def bundle_data_categories(bundle: UserProfilePortableExport) -> tuple[str, ...]
     :class:`UserProfilePortableExport` and the registry namespaces the bundle's
     coverage manifest declares carried, so it cannot silently diverge from the
     bundle's actual contents.
+
+    Classification of the schema is TOTAL: every serialized field is either
+    mapped to a category, declared envelope metadata, or declared
+    carried-namespace derived. A field belonging to none of the three refuses
+    here rather than being dropped, because this set is what the subject-access
+    response presents as every personal-data category held for the profile --
+    a silently narrowed set would be a false completeness claim to a data
+    subject.
+
+    Raises:
+        ProfileExportError: If the bundle schema carries a field with no
+            declared personal-data classification.
     """
+    field_names = tuple(type(bundle).model_fields)
+    _refuse_unclassified_bundle_fields(field_names)
     schema_categories = tuple(
-        category
-        for field_name in type(bundle).model_fields
-        if (category := _CATEGORY_BY_BUNDLE_FIELD.get(field_name)) is not None
+        category for field_name in field_names if (category := _CATEGORY_BY_BUNDLE_FIELD.get(field_name)) is not None
     )
     carried = tuple(
         f"{_CARRIED_NAMESPACE_CATEGORY_PREFIX}{namespace}" for namespace in bundle.coverage_manifest.carried_namespaces
     )
     return (*schema_categories, *carried)
+
+
+def _refuse_unclassified_bundle_fields(field_names: tuple[str, ...]) -> None:
+    """Refuse a bundle schema field carrying no declared disclosure classification."""
+    unclassified = tuple(
+        sorted(
+            field_name
+            for field_name in field_names
+            if field_name not in _CATEGORY_BY_BUNDLE_FIELD
+            and field_name not in _ENVELOPE_METADATA_BUNDLE_FIELDS
+            and field_name not in _CARRIED_NAMESPACE_DERIVED_BUNDLE_FIELDS
+        ),
+    )
+    if unclassified:
+        raise ProfileExportError(
+            "portable profile bundle carries schema fields with no declared personal-data "
+            "classification, so the disclosed category set would be incomplete",
+            context={"unclassified_fields": ", ".join(unclassified)},
+        )
 
 
 __all__ = [
