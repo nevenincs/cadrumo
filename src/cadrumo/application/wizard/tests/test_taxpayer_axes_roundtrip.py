@@ -340,8 +340,8 @@ class TestNewEntityFirstTwoProfitPeriodsRoundTrip:
         and the projection must reload at ``None``.
         """
 
-        from .._commands import _scripted_from_canonical
         from .._runner import run_flow
+        from ._scripted_prompter import scripted_from_canonical
 
         # The scripted prompter is driven by an empty canonical dict;
         # every visible question falls back to its descriptor default
@@ -353,7 +353,7 @@ class TestNewEntityFirstTwoProfitPeriodsRoundTrip:
             "entity-type": "legal_entity",
             "legal-entity-form": "sl",
         }
-        prompter = _scripted_from_canonical(SETUP_FLOW, canonical)
+        prompter = scripted_from_canonical(SETUP_FLOW, canonical)
         answers = run_flow(SETUP_FLOW, prompter)
         assert isinstance(answers, SetupAnswers)
 
