@@ -173,7 +173,7 @@ Implement facts-as-checkpoint create (early mint, incremental facts, derived res
 
 Land the net-new descendant repeating group emitting the exact established fact shape, and convert descendiente, apoderado, and repair into deep-link doors while deleting their bespoke loops.
 
-- [ ] `W03.P07.S23` - Add the descendant repeating group emitting the exact renta_family.descendiente fact shape and aggregates through descendant_facts_from_list, descendant NIFs validated by core.identity; `src/cadrumo/application/wizard/_catalogue.py`.
+- [x] `W03.P07.S23` - Add the descendant repeating group emitting the exact renta_family.descendiente fact shape and aggregates through descendant_facts_from_list, descendant NIFs validated by core.identity; `src/cadrumo/application/wizard/_catalogue.py`.
 - [ ] `W03.P07.S24` - Convert the descendiente and repair verbs into deep-link doors into the flow and delete their bespoke prompt loops in the same change; `src/cadrumo/entrypoints/cli/_config/_descendiente.py`.
 - [ ] `W03.P07.S25` - Convert the apoderado verb into a door that hosts the flow pages while routing writes to the ApoderadoService namespace, never profile facts; `src/cadrumo/entrypoints/cli/_config/_apoderado.py`.
 
