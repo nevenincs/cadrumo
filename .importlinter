@@ -42,7 +42,7 @@ forbidden_modules =
 # domain-not-application contract.
 ignore_imports =
     # ── W09: re-sanctioned test-file roundtrip/fixture/oracle edges (prior ignores went stale on test rename) ──
-    cadrumo.domain.calculations.registry.tests.test_ledger_renta_expense_binding -> cadrumo.domain.renta
+    cadrumo.domain.calculations.registry.tests.test_ledger_renta_gastos_estimacion_directa_binding -> cadrumo.domain.renta
     # W09.S90: parity-scenario test consumers trigger the renta first-slice
     # registration directly (relocated out of the production _scenarios harness)
 
@@ -74,7 +74,6 @@ forbidden_modules =
 # pinned individually below so a new non-deferred production edge is still caught.
 ignore_imports =
     # ── W09: sanctioned cross-layer test/fixture/oracle edges (roundtrip discipline) ──
-    cadrumo.domain.deadlines.conftest -> cadrumo.application.wizard._catalogue
     # ── conftest profile-key eager registration (wizard import side-effect; test scaffolding) ──
     cadrumo.domain.calculations.registry.tests.conftest -> cadrumo.application.wizard
     cadrumo.domain.contribuyente.conftest -> cadrumo.application.wizard

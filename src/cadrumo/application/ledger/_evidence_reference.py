@@ -231,7 +231,7 @@ def refuse_reference_without_document_bytes(evidence_id: str) -> PurchaseInvoice
         "holds fiscal totals rather than a document",
         context={"evidence_id": evidence_id},
         suggestion=(
-            "register the document with `aeat app ledger evidence add --file INVOICE.pdf`, or attach it "
+            "register the document with `aeat app ledger evidence add INVOICE.pdf`, or attach it "
             "to the row with `aeat app ledger attach`, then retry"
         ),
     )
