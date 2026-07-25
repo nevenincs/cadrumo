@@ -76,7 +76,7 @@ def _modelo_100_2025_snapshot():
 def _neutral_binding_values() -> dict[str, Decimal]:
     """The minimal neutral binding set every M100 2025 calculate run needs.
 
-    Mirrors the fixture in ``test_ledger_renta_expense_binding.py`` — a
+    Mirrors the fixture in ``test_ledger_renta_gastos_estimacion_directa_binding.py`` — a
     childless, unmarried, estimación-directa-normal individual filer with no
     prior-year carry, so the chain under test is isolated from unrelated
     axes.

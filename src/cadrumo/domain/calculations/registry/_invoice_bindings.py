@@ -251,10 +251,11 @@ def validate_invoice_binding(binding: DataBindingDefinition) -> list[str]:
 
     Accumulating ``list[str]`` validator: validates the selector against
     :class:`_InvoiceSelector` and lifts the invoice fact/op invariants to build
-    time, preserving the underlying pydantic field error. This is the
-    ``list[str]`` companion to the raise-style
-    :func:`validate_invoice_binding_definition` (kept as a defence-in-depth
-    resolve-time re-check).
+    time, preserving the underlying pydantic field error. Both this validator and
+    the invoice resolvers run the same inner
+    :func:`_validated_invoice_selector`, so the fact/op invariants are genuinely
+    re-checked at resolve time; :func:`validate_invoice_binding_definition` is the
+    public raise-style wrapper over that same inner check.
     """
     failures = selector_against_model(binding, _InvoiceSelector)
     if failures:

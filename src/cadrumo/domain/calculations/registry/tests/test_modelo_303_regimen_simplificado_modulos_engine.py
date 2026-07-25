@@ -13,6 +13,7 @@ from decimal import Decimal
 
 import pytest
 
+from .....core.money import round_to_cents
 from .._formula_runtime import calculate_registry_snapshot
 from ._registry_schema_support import _committed_snapshot
 
@@ -71,14 +72,10 @@ def _run_modulos_engine(
     return values["modulos-iva-cuota-devengada"], values["modulos-iva-cuota-derivada"]
 
 
-def _quantize(value: Decimal) -> Decimal:
-    return value.quantize(Decimal("0.01"))
-
-
 def _expected_cuota_derivada(devengada: Decimal, epigrafe: str) -> Decimal:
     neto_forfait = devengada - devengada * _DIFICIL_JUSTIFICACION_FORFAIT_PCT / Decimal("100")
     minima = devengada * _CUOTA_MINIMA_PCT[epigrafe] / Decimal("100")
-    return _quantize(max(neto_forfait, minima))
+    return round_to_cents(max(neto_forfait, minima))
 
 
 class TestAutotaxi7212RegimenSimplificadoIva:
@@ -87,7 +84,7 @@ class TestAutotaxi7212RegimenSimplificadoIva:
     def test_cuota_devengada_matches_orden_coefficients(self) -> None:
         # 0 personal empleado, 40 (1.000 km).
         devengada, _derivada = _run_modulos_engine("721.2", modulo_1=Decimal("0"), modulo_2=Decimal("40"))
-        expected_devengada = _quantize(Decimal("40") * _AUTOTAXI_721_2_IVA[2])
+        expected_devengada = round_to_cents(Decimal("40") * _AUTOTAXI_721_2_IVA[2])
         assert devengada == expected_devengada == Decimal("351.20")
 
     def test_cuota_derivada_applies_forfait_and_cuota_minima_floor(self) -> None:
@@ -102,7 +99,7 @@ class TestMercancias722RegimenSimplificadoIva:
     def test_cuota_devengada_matches_orden_coefficients(self) -> None:
         # 1 personal empleado, 8 toneladas carga.
         devengada, _derivada = _run_modulos_engine("722", modulo_1=Decimal("1"), modulo_2=Decimal("8"))
-        expected_devengada = _quantize(
+        expected_devengada = round_to_cents(
             Decimal("1") * _MERCANCIAS_722_IVA[1] + Decimal("8") * _MERCANCIAS_722_IVA[2],
         )
         assert devengada == expected_devengada == Decimal("7258.39")
@@ -124,7 +121,7 @@ class TestPeluqueria9721RegimenSimplificadoIva:
             modulo_2=Decimal("40"),
             modulo_3=Decimal("15"),
         )
-        expected_devengada = _quantize(
+        expected_devengada = round_to_cents(
             Decimal("2") * _PELUQUERIA_972_1_IVA[1]
             + Decimal("40") * _PELUQUERIA_972_1_IVA[2]
             + Decimal("15") * _PELUQUERIA_972_1_IVA[3],
@@ -151,7 +148,7 @@ class TestPeluqueria9721RegimenSimplificadoIva:
         # percentage exceeding the 99% net-of-forfait fraction, which no
         # tabled activity here declares).
         devengada, derivada = _run_modulos_engine("972.1", modulo_1=Decimal("1"))
-        expected_devengada = _quantize(Decimal("1") * _PELUQUERIA_972_1_IVA[1])
+        expected_devengada = round_to_cents(Decimal("1") * _PELUQUERIA_972_1_IVA[1])
         expected_derivada = _expected_cuota_derivada(devengada, "972.1")
         assert devengada == expected_devengada
         assert derivada == expected_derivada

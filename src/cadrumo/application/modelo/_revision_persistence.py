@@ -51,9 +51,8 @@ from ...domain.buckets import (
     BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
-    append_bucket_event,
-    derive_bucket_event_id,
 )
+from ...domain.buckets import emit_bucket_event as _emit_domain_bucket_event
 from ...domain.calculations.registry import (
     BindingId,
     CasillaId,
@@ -114,7 +113,7 @@ _PRORRATA_PORCENTAJE_CASILLA = validated_casilla_id(
 )
 
 
-def emit_bucket_event(
+def emit_modelo_bucket_event(
     *,
     repository: BucketEventHistoryRepositoryProtocol,
     bucket_id: str,
@@ -125,36 +124,30 @@ def emit_bucket_event(
     object_id: str,
     payload: Mapping[str, str],
 ) -> BucketEvent:
-    """Append one :class:`BucketEvent` to the bucket-event-history catalogue.
+    """Emit one :class:`BucketEvent` under the modelo payload contract.
 
-    The returned event is the durable bucket-scoped audit pointer for the domain
-    mutation. Payloads stay compact and reference the owning calculation
-    revision, filing record, or work unit instead of duplicating their full
-    catalogued state.
+    Modelo's narrow wrapper over :func:`~domain.buckets.emit_bucket_event`: it
+    supplies :data:`_BUCKET_EVENT_PAYLOAD_VERSION` so no modelo call site restates
+    it, and adds nothing else. The shared derive-append-save sequence lives in the
+    domain beside :func:`append_bucket_event`, because it composes only bucket
+    domain types and every emitting domain needs it — keeping it here made this
+    module a hub that peer application packages had to reach up into.
+
+    The returned event is the durable bucket-scoped audit pointer for the modelo
+    mutation. Payloads stay compact and reference the owning calculation revision,
+    filing record, or work unit instead of duplicating their catalogued state.
     """
-    event_id = derive_bucket_event_id(
+    return _emit_domain_bucket_event(
+        repository=repository,
         bucket_id=bucket_id,
         event_type=event_type,
         occurred_at=occurred_at,
-        actor=actor.strip(),
+        actor=actor,
         object_type=object_type,
         object_id=object_id,
         payload=payload,
-    )
-    event = BucketEvent(
-        event_id=event_id,
-        bucket_id=bucket_id,
-        event_type=event_type,
-        occurred_at=occurred_at,
-        actor=actor.strip(),
-        object_type=object_type,
-        object_id=object_id,
         payload_version=_BUCKET_EVENT_PAYLOAD_VERSION,
-        payload=dict(payload),
     )
-    catalogue = repository.load()
-    repository.save(append_bucket_event(catalogue, event))
-    return event
 
 
 def _source_provenance_trace_sha256(source_provenance: tuple[CalculationSourceRef, ...]) -> str:
@@ -291,7 +284,7 @@ def persist_calculation_revision(
             ),
         ),
     )
-    emit_bucket_event(
+    emit_modelo_bucket_event(
         repository=bucket_event_repository,
         bucket_id=work_unit.bucket_id,
         event_type=BucketEventType.MODELO_CALCULATION_CREATED,
@@ -658,7 +651,7 @@ def persist_filed_revision(
     )
 
     if prior_current is not None:
-        emit_bucket_event(
+        emit_modelo_bucket_event(
             repository=bucket_event_repository,
             bucket_id=work_unit.bucket_id,
             event_type=BucketEventType.MODELO_FILED_SUPERSEDED,
@@ -675,7 +668,7 @@ def persist_filed_revision(
             },
         )
 
-    emit_bucket_event(
+    emit_modelo_bucket_event(
         repository=bucket_event_repository,
         bucket_id=work_unit.bucket_id,
         event_type=BucketEventType.MODELO_FILED,
@@ -713,7 +706,7 @@ def persist_filed_revision(
 
 
 __all__ = [
-    "emit_bucket_event",
+    "emit_modelo_bucket_event",
     "persist_calculation_revision",
     "persist_filed_revision",
 ]

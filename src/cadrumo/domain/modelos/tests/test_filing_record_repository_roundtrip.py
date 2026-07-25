@@ -23,7 +23,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from ....adapters.persistence.storage import SensitivityClass
+from ....adapters.persistence.storage import MODELO_FILING_RECORD_CATALOGUE_NAMESPACE, SensitivityClass
 from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
 from .._codes import ModeloCode
@@ -35,15 +35,16 @@ from .._filing_record import (
     ModeloRecordStatus,
     derive_filing_record_id,
 )
-from .._filing_repository import (
-    _FILING_CATALOGUE_VERSION,
-    _FILING_NAMESPACE,
-    _FILING_OBJECT_KEY,
-    ModeloRecordPersistenceError,
-)
+from .._filing_repository import ModeloRecordPersistenceError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+# The registry definition is the sole authority for this namespace's identifier,
+# singleton object key, and envelope schema version; the probe reads it rather
+# than restating the values the repository under test writes at.
+_FILING_NAMESPACE = MODELO_FILING_RECORD_CATALOGUE_NAMESPACE.namespace
+_FILING_OBJECT_KEY = MODELO_FILING_RECORD_CATALOGUE_NAMESPACE.require_default_object_key()
+_FILING_CATALOGUE_VERSION = MODELO_FILING_RECORD_CATALOGUE_NAMESPACE.schema_version
 _BUCKET_ID = "30330300-0000-4000-8000-000000000700"
 _RECORD_BUCKET_ID = "30330300-0000-4000-8000-000000000701"
 _P_2024_2T = Period.from_year_and_code(2024, "2T")

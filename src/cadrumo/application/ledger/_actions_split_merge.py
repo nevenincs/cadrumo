@@ -279,7 +279,7 @@ def split_transaction_with_classified_children(
     child_classifications: tuple[ManualLedgerTransactionPatch, ...],
     classified_by: str,
     actor: str,
-    source_command: str = "aeat app ledger classify --read-evidence --auto-split --apply",
+    source_command: str,
     reason: str = "",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,

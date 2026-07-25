@@ -27,13 +27,11 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
-from ....adapters.persistence.storage import SensitivityClass
+from ....adapters.persistence.storage import TRANSACTION_PARTICIPATION_INDEX_NAMESPACE, SensitivityClass
 from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
 from .._codes import ModeloCode
 from .._participation_index import (
-    PARTICIPATION_INDEX_NAMESPACE,
-    PARTICIPATION_INDEX_SCHEMA_VERSION,
     TransactionParticipationIndexPersistenceError,
     TransactionRevisionParticipation,
     TransactionRevisionParticipationIndex,
@@ -42,6 +40,11 @@ from .._participation_index import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+# The registry definition is the sole authority for this namespace's identifier
+# and envelope schema version; the probe reads it rather than restating the
+# values the repository under test writes at.
+PARTICIPATION_INDEX_NAMESPACE = TRANSACTION_PARTICIPATION_INDEX_NAMESPACE.namespace
+PARTICIPATION_INDEX_SCHEMA_VERSION = TRANSACTION_PARTICIPATION_INDEX_NAMESPACE.schema_version
 _BUCKET_ID = "modelo-participation-runtime"
 _P_2024_2T = Period.from_year_and_code(2024, "2T")
 _CORRUPT_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 10, 20, 0, tzinfo=UTC)

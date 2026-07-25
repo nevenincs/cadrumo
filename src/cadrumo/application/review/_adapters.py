@@ -290,7 +290,7 @@ def drafts_pending(
     """
     if drafts is None:
         drafts = _load_drafts(settings, bucket_id=bucket_id)
-    active_tax_id = _resolve_active_tax_id(settings)
+    active_tax_id = _resolve_review_active_tax_id(settings)
     if active_tax_id is None:
         return ()
     items: list[FindingReviewItem] = []
@@ -349,7 +349,7 @@ def _append_unready_draft_review_item(
         items.append(_to_stale_approval_item(draft=draft, path_str=path_str))
 
 
-def _resolve_active_tax_id(settings: Settings) -> str | None:
+def _resolve_review_active_tax_id(settings: Settings) -> str | None:
     """Return the active profile's tax id, or ``None`` when unknown."""
     del settings
     try:

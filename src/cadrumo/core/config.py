@@ -56,6 +56,7 @@ from ._config_support import (
     SecretStoreBackend,
     StorageRouteClassification,
     StorageRouteKind,  # noqa: F401 - public re-export from cadrumo.core.config
+    TuiAppearance,
     unwrap_optional_secret,  # noqa: F401 - public re-export from cadrumo.core.config
 )
 from ._config_support import coerce_output_language_setting as _coerce_output_language_setting
@@ -141,22 +142,6 @@ _STATE_ROOT_DERIVED_DIRS: dict[str, str] = {
     "cadrumo_registry_parity_store_dir": "audit/registry/parity",
 }
 
-_LEGACY_PRODUCT_DOTENV_NAMES = frozenset(
-    {
-        "AEAT_LIVE_TESTS_ENABLED",
-        "AEAT_LOCAL_STORAGE_ROOT",
-        "AEAT_SECRET_PASSPHRASE",
-        "AEAT_SECRET_STORE_BACKEND",
-        "AEAT_SECRET_STORE_DIR",
-    }
-)
-"""Former product settings excluded from the Cadrumo dotenv boundary.
-
-These names used to select product state and credentials. They are neither
-renamed nor read: a Cadrumo process instead starts from its Cadrumo defaults or
-explicit ``CADRUMO_*`` controls. Authority-owned ``AEAT_*`` settings remain in
-the normal settings model.
-"""
 
 
 _NON_ENVIRONMENT_SELECTION_NAMES: Final[frozenset[str]] = frozenset({"CADRUMO_ACTIVE_PROFILE"})
@@ -182,7 +167,7 @@ def _without_severed_names(env_vars: Mapping[str, str | None]) -> dict[str, str 
     return {
         name: value
         for name, value in env_vars.items()
-        if name.upper() not in _LEGACY_PRODUCT_DOTENV_NAMES and name.upper() not in _NON_ENVIRONMENT_SELECTION_NAMES
+        if name.upper() not in _NON_ENVIRONMENT_SELECTION_NAMES
     }
 
 
@@ -320,6 +305,14 @@ class Settings(CadrumoMcpServingSettings):
     cadrumo_log_level: str = Field(
         default="",
         description="Optional default CLI log level override: quiet, default, verbose, or debug",
+    )
+    cadrumo_tui_appearance: TuiAppearance = Field(
+        default=TuiAppearance.AUTO,
+        description=(
+            "Appearance for the full-screen terminal surfaces. "
+            "auto = follow the host terminal. light = the warm-paper appearance. "
+            "dark = the low-light appearance."
+        ),
     )
     # ── Multilingual i18n ───────────────────────────────────────────────────
     cadrumo_output_language: Annotated[

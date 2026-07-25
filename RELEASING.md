@@ -89,6 +89,80 @@ them. The cohort manifest binds the source commit, version, filenames, and SHA-2
 digest of every distribution file. The publication authority consumes those retained
 bytes without rebuilding them.
 
+## Day one: enrolling a new product in the account distribution standard
+
+This section is the whole cost of bringing a *new* product under the account
+distribution standard. It does not grow with the number of products already
+shipping — that fixed cost is the property the standard is chosen for. A product
+already shipping (this one) has completed it; the checklist is here so a sibling
+product can be enrolled without rediscovering the shape.
+
+Work through it in order.
+
+1. **Declare the version authority.** Add release-please configuration and its
+   manifest. The version is single-source and is written into the product's own
+   package metadata. Whether the release commit is produced by a workflow or by a
+   local invocation is a per-product safety choice and is deliberately *not*
+   standardised — both emit the same release commit, tag, and manifest, and
+   standardising the output is what makes the pipeline transferable.
+
+2. **Add the two workflows.** One builds and proves the immutable cohort; one
+   promotes it. The promotion workflow must be dispatched explicitly and must
+   declare **no tag trigger**: a tag created by a workflow's own token does not
+   fire tag-triggered workflows, so a declared tag filter is inert while reading
+   as a second, automatic way to publish. Remove it rather than keep it.
+   `dev/release/tests/test_publish_release_workflow.py` pins this.
+
+3. **Evaluate the channel set — do not choose it.** Answer three questions about
+   the product and let the rule decide the rest:
+
+   - Does the artifact expose a command a user invokes directly?
+   - Can that user be assumed to hold the language toolchain?
+   - Is the artifact an extension of a host application?
+
+   Record the answers in the `[matrix]` block of the product's channel
+   descriptor (`docs/_data/download_channels.toml` here). The derivation lives in
+   `dev/docs/download_matrix.py` (`derived_tiers`) and is validated at load, so a
+   descriptor whose channels disagree with the rule refuses rather than drifts.
+   Every product ships its language-native registry — that is the floor and the
+   only channel where dependency resolution happens. A tier the rule selects that
+   the product does not ship yet goes in `pending_tiers`, so the gap is declared
+   data rather than a silent absence.
+
+4. **Add the shared-repository files, if the rule selected them.** One formula
+   file under `Formula/` and one manifest file under `bucket/`, in the account's
+   single shared distribution repository. **Create nothing.** The repository
+   already exists — Homebrew's `homebrew-` name prefix forces it to, and Scoop
+   scopes discovery to `bucket/` when present, so one repository serves both
+   ecosystems. The account's distribution repository count is one at one product
+   and one at a hundred.
+
+   Each channel push must stage exactly its own product-scoped path — never
+   `git add -A`, never `git add .`, never a wholesale delete of the checkout —
+   because a sibling product's file lives beside it. It must also guard against a
+   backward version bump (`dev/packaging/release_pointer_guard.py`) and retry a
+   lost push race, since several products can release into one repository
+   concurrently and hosted concurrency groups cannot serialise across
+   repositories.
+
+5. **Register workload identity federation on the registry.** Publication uploads
+   under a short-lived token exchanged at run time; no long-lived credential is
+   stored anywhere.
+
+6. **Derive every user-facing name from the product name.** The repository, the
+   registry package, the tap formula, the bucket manifest, and the community
+   package identifier all carry it, the last qualified by the account as
+   publisher. **Never claim an unqualified family name** — a published identifier
+   cannot be renamed in place, so the correction is forward-only and strands the
+   released version permanently.
+
+Evidence stays proportional to claims. The required evidence-row set derives from
+the channels the release actually claims, so a release claiming one channel proves
+one channel. No gate is weakened and no row is removed: a channel still cannot be
+claimed without its passing row. What changed is that an unclaimed channel no
+longer blocks a claimed one, so a product can ship its registry first and add each
+further channel when that channel's own proof passes.
+
 ## Publication prerequisites
 
 ### Former-name package cleanup
@@ -146,37 +220,36 @@ Arm `publish-release.yml` before the first publication, in this order:
 2. Create the `release` GitHub Environment with yourself as a required reviewer. The
    approval click on each dispatched run is the human publication gate.
 
-There are **no per-product distribution repositories**. Scoop is served from this
-repository's own `bucket/` directory, and the Homebrew tap and Claude marketplace are
-single account-level repositories shared by every product published under the account.
-The two channel variables are deliberately **product-neutral**, so a sibling product
-sets the identical pair and drops in one more formula file and one more plugin subtree
-with no restructuring.
+There are **no per-product distribution repositories**. The account carries exactly
+**one** shared distribution repository serving both Homebrew and Scoop, plus the
+account Claude marketplace. Every channel variable is deliberately
+**product-neutral**, so a sibling product sets the identical pair and drops in one
+more formula file, one more manifest file, and one more plugin subtree with no
+restructuring. No publication writes to any product repository's default branch.
 
-3. **Scoop — nothing to create or configure.** Scoop resolves manifests from a
-   `bucket/` subdirectory, so this repository is its own bucket. The publish workflow
-   pushes `bucket/cadrumo.json` to `github.repository` using the job's own
-   `GITHUB_TOKEN`; there is no bucket repository, no variable, and no PAT. Users run
-   `scoop bucket add cadrumo https://github.com/nevenincs/cadrumo`.
-
-   Note the one operational consequence: publication commits to this repository's
-   default branch. If branch protection ever requires reviews or status checks on
-   `main`, that rule must admit this workflow or the Scoop push will fail.
-
-4. Create the public account Homebrew tap `nevenincs/homebrew-tap` and set:
+3. Create the public shared account distribution repository `nevenincs/homebrew-tap`
+   and set:
    - Repository variable `HOMEBREW_TAP_REPO` to its slug
    - Repository secret `HOMEBREW_TAP_TOKEN` to a PAT with write access
 
-   The `homebrew-` repository-name prefix is mandatory for the one-argument tap form,
-   so the repository is `homebrew-tap` and the tap name users type is `nevenincs/tap`
+   The same variable and secret serve **both** the Homebrew and the Scoop pushes,
+   because both land in this one repository. The `homebrew-` repository-name prefix
+   is mandatory for the one-argument tap form, so the repository is `homebrew-tap`
+   and the tap name users type is `nevenincs/tap`
    (`brew install nevenincs/tap/cadrumo`). One tap holding many formulae under
    `Formula/` is the standard shape — `hashicorp/homebrew-tap` serves 33 of them.
 
-5. Use the existing public Claude plugin marketplace `nevenincs/neve-marketplace` and set:
+   Scoop rides along in the same repository under `bucket/`, because Scoop imposes
+   no repository-name constraint and scopes discovery to that directory when it is
+   present. Users add the bucket once, ever, and reach every product in it. One
+   account precedent for the combined layout is `verda-cloud/homebrew-tap`, which
+   carries a populated `Formula/` and `bucket/` side by side in production.
+
+4. Use the existing public Claude plugin marketplace `nevenincs/neve-marketplace` and set:
    - Repository variable `CLAUDE_MARKETPLACE_REPO` to its slug
    - Repository secret `CLAUDE_MARKETPLACE_TOKEN` to a PAT with write access
 
-6. Set repository variable `CADRUMO_PUBLISH_ENABLED=true` to arm the workflow.
+5. Set repository variable `CADRUMO_PUBLISH_ENABLED=true` to arm the workflow.
 
 Without `CADRUMO_PUBLISH_ENABLED=true` the workflow refuses with a detailed prerequisite
 list and uploads nothing.

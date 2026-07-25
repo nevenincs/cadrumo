@@ -118,11 +118,12 @@ from ...application.workflow import workflow_state_repository
 from ...core import Period
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n import tr
-from ._common import _emit_envelope, _profile_to_taxpayer, active_bucket_id_or_refuse
+from ._common import _emit_envelope, _profile_to_taxpayer
 from ._modelo_cli_support import (
     load_work_unit,
     parse_revision_selector,
     resolve_default_actor,
+    resolve_explicit_or_active_bucket_id,
     validate_calculation_revision_id,
     validate_work_unit_id,
 )
@@ -146,20 +147,6 @@ from ._modelo_work_options import (
     _RegistryRevisionOpt,
     _YearOpt,
 )
-
-
-def _resolve_signing_bucket_id(bucket_id: str | None) -> str:
-    """Return ``bucket_id`` verbatim, or the active profile bucket when unset.
-
-    Mirrors the ``--bucket-id`` fallback already used across the modelo work
-    surface: an explicit override lets the accountant scope the command to
-    their own profile bucket on a shared machine; omitting it addresses the
-    active profile, which is the common single-operator case.
-    """
-    if bucket_id is not None and bucket_id.strip():
-        return bucket_id.strip()
-    return active_bucket_id_or_refuse()
-
 
 review_package_app = typer.Typer(
     name="review-package",
@@ -435,7 +422,7 @@ def review_package_sign(
     """Sign a review package's manifest digest and write the signature envelope."""
     from ._modelo_cli_support import bad_parameter_from_error
 
-    resolved_bucket_id = _resolve_signing_bucket_id(bucket_id)
+    resolved_bucket_id = resolve_explicit_or_active_bucket_id(bucket_id)
 
     from ...adapters.persistence.storage import secure_object_repository_for_bucket
 
@@ -614,7 +601,7 @@ def review_package_counter_sign(
     except ValueError as exc:
         raise bad_parameter_from_error(ReviewPackageSigningError(str(exc))) from exc
 
-    resolved_bucket_id = _resolve_signing_bucket_id(bucket_id)
+    resolved_bucket_id = resolve_explicit_or_active_bucket_id(bucket_id)
 
     from ...adapters.persistence.storage import secure_object_repository_for_bucket
 
@@ -812,7 +799,7 @@ def review_package_encrypt_for_recipient(
             ),
         )
 
-    resolved_bucket_id = _resolve_signing_bucket_id(bucket_id)
+    resolved_bucket_id = resolve_explicit_or_active_bucket_id(bucket_id)
     registry = RecipientFingerprintRegistryRepository(bucket_id=resolved_bucket_id)
     try:
         recipient = registry.get(recipient_id)
@@ -906,7 +893,7 @@ def review_package_decrypt(
     except ValueError as exc:
         raise bad_parameter_from_error(RecipientEncryptionError(str(exc))) from exc
 
-    resolved_bucket_id = _resolve_signing_bucket_id(bucket_id)
+    resolved_bucket_id = resolve_explicit_or_active_bucket_id(bucket_id)
 
     from ...adapters.persistence.storage import secure_object_repository_for_bucket
 
@@ -1030,7 +1017,7 @@ def review_package_encrypt_feedback(
     """Seal review feedback back to the originator's registered public key."""
     from ._modelo_cli_support import bad_parameter_from_error
 
-    resolved_bucket_id = _resolve_signing_bucket_id(bucket_id)
+    resolved_bucket_id = resolve_explicit_or_active_bucket_id(bucket_id)
     registry = RecipientFingerprintRegistryRepository(bucket_id=resolved_bucket_id)
     try:
         originator = registry.get(originator_id)
@@ -1173,7 +1160,7 @@ def review_package_import_feedback(
     except ValueError as exc:
         raise bad_parameter_from_error(RecipientEncryptionError(str(exc))) from exc
 
-    resolved_bucket_id = _resolve_signing_bucket_id(bucket_id)
+    resolved_bucket_id = resolve_explicit_or_active_bucket_id(bucket_id)
 
     from ...adapters.persistence.storage import secure_object_repository_for_bucket
 

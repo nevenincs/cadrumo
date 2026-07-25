@@ -17,7 +17,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-from ....adapters.persistence.storage import SensitivityClass
+from ....adapters.persistence.storage import MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE, SensitivityClass
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.registry import CasillaId, validated_casilla_id
 from .._verification_report import (
@@ -29,15 +29,16 @@ from .._verification_report import (
     VerificationReportCatalogue,
     derive_verification_report_id,
 )
-from .._verification_repository import (
-    _VERIFICATION_CATALOGUE_VERSION,
-    _VERIFICATION_NAMESPACE,
-    _VERIFICATION_OBJECT_KEY,
-    VerificationReportPersistenceError,
-)
+from .._verification_repository import VerificationReportPersistenceError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+# The registry definition is the sole authority for this namespace's identifier,
+# singleton object key, and envelope schema version; the probe reads it rather
+# than restating the values the repository under test writes at.
+_VERIFICATION_NAMESPACE = MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE.namespace
+_VERIFICATION_OBJECT_KEY = MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE.require_default_object_key()
+_VERIFICATION_CATALOGUE_VERSION = MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE.schema_version
 _BUCKET_ID = "modelo-runtime"
 
 

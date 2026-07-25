@@ -19,18 +19,16 @@ from ...core import Modelo
 from ...core.decimal import coerce_decimal_strict
 from ...core.i18n import tr
 from ...domain.calculations.registry import (
-    ApplicabilityVerdict,
     LegalRefId,
     Modelo202Modality,
     SourceRefId,
     derive_modelo_202_modality,
-    derive_modelo_applicability,
+    derive_not_applicable_source_modelos,
 )
-from ...domain.deadlines import IrpfIncomeCategory, TaxpayerProfile
+from ...domain.deadlines import TaxpayerProfile
 from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogueRepositoryProtocol,
-    ModeloError,
     ModeloRecordCatalogueRepositoryProtocol,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -76,46 +74,6 @@ def _cross_period_expected_member_sets_from_profile(
 
 
 cross_period_expected_member_sets_from_profile = _cross_period_expected_member_sets_from_profile
-
-
-def derive_taxpayer_files_economic_activity(profile: TaxpayerProfile) -> bool | None:
-    """Whether the taxpayer files actividad-económica pagos fraccionados (130/131).
-
-    Reads the :class:`TaxpayerProfile` income-category declarations. ``True``
-    when the profile declares actividad-económica income; ``False`` when it
-    declares income categories that exclude it (a salaried/rental-only filer
-    never files 130/131); ``None`` when income categories are undeclared
-    (fail-closed: the 130/131 dependency stays enforced). LIRPF art. 99 /
-    RIRPF art. 109.
-    """
-    if not profile.irpf_income_categories:
-        return None
-    return IrpfIncomeCategory.ACTIVIDAD_ECONOMICA in profile.irpf_income_categories
-
-
-def derive_not_applicable_source_modelos(profile: TaxpayerProfile, modelos: Iterable[str]) -> frozenset[str] | None:
-    """Return source modelos positively known not applicable for ``profile``.
-
-    The clean-state gate is fail-closed: if applicability derivation raises or
-    returns an incomplete/undetermined verdict for any queried modelo, callers
-    receive ``None`` and suppress nothing. A positive ``NOT_APPLICABLE`` result
-    is grounded in the same deadline/applicability rules that decide whether the
-    :class:`TaxpayerProfile` files M130 vs M131.
-    """
-    not_applicable: set[str] = set()
-    for modelo in sorted({str(modelo) for modelo in modelos}):
-        try:
-            applicability = derive_modelo_applicability(profile, modelo)
-        except (ModeloError, TypeError, ValueError):
-            return None
-        if applicability.verdict is ApplicabilityVerdict.NOT_APPLICABLE:
-            not_applicable.add(modelo)
-        elif applicability.verdict not in {
-            ApplicabilityVerdict.APPLICABLE,
-            ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH,
-        }:
-            return None
-    return frozenset(not_applicable)
 
 
 _MODELO_202_INCN_PROFILE_FACT = "taxpayer_type.incn_prior_12_months"

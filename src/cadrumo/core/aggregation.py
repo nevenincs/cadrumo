@@ -247,18 +247,27 @@ class BindingSourceKind(StrEnum):
     # Ledger-aggregation sources (all five ledger kinds).
     LEDGER_OSS_AGGREGATION = "ledger_oss_aggregation"
     LEDGER_IVA_AGGREGATION = "ledger_iva_aggregation"
-    LEDGER_RENTA_EXPENSE_AGGREGATION = "ledger_renta_expense_aggregation"
+    # Modelo 100 first-slice gastos under estimación directa (LIRPF arts. 28-30),
+    # routed per SpendingCategory across the 14 first-slice casillas over the
+    # annual (period "0A") window. Carries the invoice-evidence, category-profile
+    # deductibility and proportionality machinery the pago-fraccionado sibling
+    # below has no use for.
+    LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION = "ledger_renta_gastos_estimacion_directa_aggregation"
     LEDGER_RENTA_INCOME_AGGREGATION = "ledger_renta_income_aggregation"
-    # Modelo 130 pago-fraccionado deductible-expense (casilla 02 "Gastos")
+    # Modelo 130 pago-fraccionado deductible gastos (casilla 02 "Gastos")
     # cumulative aggregation. The OUTGOING sibling of
     # ``ledger_renta_income_aggregation``: the same lightweight ledger-projection
-    # mechanism and cumulative year-to-date window, applied to the expense
-    # dimension. Spanish stem ``gasto`` per the AEAT casilla 02 "Gastos" surface
-    # (aeat-spanish-stem-naming); the M100 first-slice annual-expense source
-    # ``ledger_renta_expense_aggregation`` is a constraint-shape-divergent
-    # mechanism (invoice-evidence + category-profile + annual-window) and is
-    # deliberately not reused for the M130 quarterly cumulative gasto sum.
-    LEDGER_RENTA_GASTO_AGGREGATION = "ledger_renta_gasto_aggregation"
+    # mechanism and cumulative year-to-date window, applied to the gastos
+    # dimension.
+    #
+    # Both renta gastos sources carry the AEAT "Gastos" stem
+    # (aeat-spanish-stem-naming) and each is qualified by the régimen it serves,
+    # because the M100 first-slice boxes are gastos too (casilla 0203 is "Gastos
+    # financieros"): a bare ``gasto`` would not say which régimen it belongs to.
+    # ``ledger_renta_gastos_estimacion_directa_aggregation`` stays a separate,
+    # constraint-shape-divergent mechanism and is deliberately not reused for
+    # this quarterly cumulative sum.
+    LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION = "ledger_renta_gastos_pago_fraccionado_aggregation"
     # Modelo 151 régimen especial de impatriados (Ley Beckham, art. 93 LIRPF)
     # Spanish-source base aggregation. Reads the bucket ledger like the other
     # ledger-aggregation sources, but its per-row classifier admits INCOMING
@@ -426,8 +435,8 @@ LEDGER_BINDING_SOURCE_KINDS: Final[frozenset[BindingSourceKind]] = frozenset(
 
 Every binding whose ``source`` is a member reads its values from the
 bucket-scoped ledger (transaction-classified IVA / OSS aggregation, Renta
-first-slice income/expense aggregation, the M130 pago-fraccionado gasto
-cumulative aggregation, or the M151 impatriado Spanish-source base
+first-slice income and estimación directa gastos aggregation, the M130
+pago-fraccionado gastos cumulative aggregation, or the M151 impatriado base
 aggregation, M151 impatriado income, or M210 explicit IRNR income). The
 ``ledger_`` namespace derives the set directly from the canonical enum;
 ``ledger_transaction`` remains a counterpart source rather than a ledger

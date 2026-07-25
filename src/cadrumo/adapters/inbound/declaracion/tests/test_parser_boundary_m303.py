@@ -17,7 +17,7 @@ import pytest
 
 from ._parser_boundary_m303_support import _M303_CURRENT_PROFILE_CASILLAS
 from ._parser_boundary_support import (
-    _REAL_MODELO_303_DECLARATION_COPY,
+    _MODELO_303_SYNTHETIC_FIXTURE,
     Decimal,
     _expected_casilla_values,
     _expected_period,
@@ -27,9 +27,19 @@ from ._parser_boundary_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 
-def test_parser_extracts_modelo_303_targets_from_real_redacted_declaration_copy() -> None:
+def test_parser_extracts_modelo_303_targets_from_synthetic_fixture() -> None:
+    """Extract the profile's targets from the project's own synthetic M303 fixture.
+
+    The fixture is ``synthetic_generated``, not an AEAT render, and the test name
+    now says so. What this pins is the parser-to-profile wiring: the extracted
+    casilla set equals the profile's target set exactly. It does NOT establish
+    that the profile can read a real AEAT render -- only the bundled manual annex
+    quarters do that, and they are exercised through the coverage floor rather
+    than here, because they carry no NIF and the parser rejects them at the
+    identity step by design.
+    """
     filing = parse_declaracion(
-        _REAL_MODELO_303_DECLARATION_COPY,
+        _MODELO_303_SYNTHETIC_FIXTURE,
         modelo_override="303",
         año_override=2024,
         period_override="1T",

@@ -87,6 +87,63 @@ def test_result_frames_assert_the_result_payload() -> None:
     )
 
 
+def test_sequence_discovery_reads_a_non_empty_corpus() -> None:
+    """Every gate in this module is vacuous over an empty discovery result.
+
+    ``discover_sequences`` reports an absent or empty docs tree as zero
+    sequences and zero PROBLEMS, so nothing downstream distinguishes "the
+    corpus is clean" from "there was no corpus". The ratchet above then folds
+    an empty result into an empty offender map and passes.
+    """
+    discovered, problems = discover_sequences(docs_root=default_docs_root())
+    assert not problems, "sequence discovery reported problems:\n  " + "\n  ".join(problems)
+    assert len(discovered) > 100, f"expected the enrolled sequence corpus, discovered only {len(discovered)}"
+
+
+def test_an_empty_docs_root_yields_no_offenders_and_no_problems(tmp_path: Path) -> None:
+    """The reproduction behind the guard above is real, not theoretical.
+
+    Pointed at an empty root, discovery returns nothing AND reports nothing
+    wrong, so the offender map is empty and the ratchet passes clean. This was
+    observed for real: a probe that resolved its docs root to a path that did
+    not exist got a confident zero back and no error. Asserting the behaviour
+    here keeps the non-emptiness guard load-bearing rather than decorative.
+    """
+    discovered, problems = discover_sequences(docs_root=tmp_path, contracts_root=tmp_path)
+    assert discovered == ()
+    assert problems == (), "an empty root is reported as clean, which is exactly why the guard is needed"
+
+
+def test_development_metadata_pattern_discriminates() -> None:
+    """Positive control: the metadata pattern matches its grammar and rejects prose.
+
+    The corpus scan finds nothing today, so it is green whether the pattern
+    works or not. These cases pin it against lines it MUST flag and reader
+    prose it MUST NOT, independently of what the documentation contains.
+    """
+    must_match = (
+        "@setup aeat app ledger import --file fixtures/x.csv",
+        "@result aeat app modelo work verify wu",
+        "@capture work_unit_id result.work_unit_id",
+        '@expect result.status == "verified_complete"',
+        "@static aeat app live justificante pull",
+        "@step Create the quarterly draft.",
+        ":seed: demo-profile",
+        ":shells: bash pwsh",
+        "  @result an indented frame still leaks",
+    )
+    must_not_match = (
+        "Write to us at support@setupdesk.example.",
+        "An @ sign in ordinary prose.",
+        "Mention of a step, a result, and an expectation in a sentence.",
+        "text @result appearing mid-line is not a directive line",
+    )
+    for line in must_match:
+        assert _PUBLIC_DEVELOPMENT_METADATA_RE.search(line), f"metadata pattern no longer flags {line!r}"
+    for line in must_not_match:
+        assert not _PUBLIC_DEVELOPMENT_METADATA_RE.search(line), f"metadata pattern over-matches prose {line!r}"
+
+
 def test_result_assertion_baseline_is_well_formed() -> None:
     """The ratchet baseline is a well-formed page -> non-negative-count map.
 
@@ -120,11 +177,15 @@ def test_operator_profile_journeys_remain_executed_truth() -> None:
 def test_user_markdown_contains_no_sequence_development_metadata() -> None:
     """Machine grammar stays in private keyed contracts, never reader Markdown."""
     docs_root = default_docs_root()
+    scanned: list[Path] = [
+        path
+        for path in sorted(docs_root.rglob("*.md"))
+        if not (path.relative_to(docs_root).parts and path.relative_to(docs_root).parts[0] in {"_build", "_sequences"})
+    ]
+    assert len(scanned) > 20, f"expected the reader-facing docs corpus, scanned only {len(scanned)} page(s)"
     offenders: list[str] = []
-    for path in sorted(docs_root.rglob("*.md")):
+    for path in scanned:
         relative = path.relative_to(docs_root)
-        if relative.parts and relative.parts[0] in {"_build", "_sequences"}:
-            continue
         text = path.read_text(encoding="utf-8")
         for match in _PUBLIC_DEVELOPMENT_METADATA_RE.finditer(text):
             line = text.count("\n", 0, match.start()) + 1

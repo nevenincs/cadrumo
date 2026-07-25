@@ -1,4 +1,4 @@
-"""Tests for ledger-backed Renta expense registry bindings."""
+"""Tests for ledger-backed Renta estimación directa gastos registry bindings."""
 
 from __future__ import annotations
 
@@ -25,9 +25,9 @@ from .. import (
     RegistryValidationError,
     build_snapshot,
     calculate_registry_snapshot,
-    resolve_ledger_renta_expense_aggregation_binding_values,
-    unsupported_ledger_renta_expense_observations,
-    validate_ledger_renta_expense_aggregation_binding_definition,
+    resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values,
+    unsupported_ledger_renta_gastos_estimacion_directa_observations,
+    validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definition,
     validated_casilla_id,
 )
 from .._binding_selector_utils import selector_as_dict
@@ -142,7 +142,7 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
         ),
     )
 
-    binding_values = resolve_ledger_renta_expense_aggregation_binding_values(revision, observations)
+    binding_values = resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values(revision, observations)
     casilla_inputs = {
         casilla.id: binding_values[casilla.binding]
         for casilla in revision.casillas
@@ -266,7 +266,7 @@ def test_modelo_100_renta_ledger_expense_bindings_cite_year_manual(
     bindings = {
         selector_as_dict(binding)["target_casilla_id"]: binding
         for binding in revision.bindings
-        if binding.source == "ledger_renta_expense_aggregation"
+        if binding.source == "ledger_renta_gastos_estimacion_directa_aggregation"
     }
 
     assert expected_targets <= set(bindings)
@@ -292,7 +292,7 @@ def test_renta_ledger_expense_binding_rejects_noncanonical_selector() -> None:
     binding = DataBindingDefinition.model_validate(
         {
             "id": "bad-renta-binding",
-            "source": "ledger_renta_expense_aggregation",
+            "source": "ledger_renta_gastos_estimacion_directa_aggregation",
             "selector": {
                 "modelo": "100",
                 "period": "0A",
@@ -305,20 +305,20 @@ def test_renta_ledger_expense_binding_rejects_noncanonical_selector() -> None:
         },
     )
 
-    with pytest.raises(RegistryValidationError, match="outside the first Modelo 100 Renta ledger expense slice"):
-        validate_ledger_renta_expense_aggregation_binding_definition(binding)
+    with pytest.raises(RegistryValidationError, match="outside the first Modelo 100 Renta ledger gastos slice"):
+        validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definition(binding)
 
 
 def test_renta_ledger_expense_binding_rejects_legacy_target_casilla_key() -> None:
     # The legacy ``target_casilla`` key is a selector-SHAPE violation (the strict
-    # ``_RentaLedgerExpenseSelector`` forbids the extra key), so under the F8
+    # ``_RentaLedgerGastosEstimacionDirectaSelector`` forbids the extra key), so under the F8
     # construction-time selector gate the binding is refused the moment it is
     # built — the diagnostic still names both the canonical and legacy key.
     with pytest.raises(ValidationError) as exc_info:
         DataBindingDefinition.model_validate(
             {
                 "id": "bad-renta-binding-legacy-target-key",
-                "source": "ledger_renta_expense_aggregation",
+                "source": "ledger_renta_gastos_estimacion_directa_aggregation",
                 "selector": {
                     "modelo": "100",
                     "period": "0A",
@@ -342,7 +342,7 @@ def _single_expense_binding_revision(snapshot: RegistrySnapshot, target_casilla_
     binding = next(
         item
         for item in revision.bindings
-        if item.source == "ledger_renta_expense_aggregation"
+        if item.source == "ledger_renta_gastos_estimacion_directa_aggregation"
         and selector_as_dict(item).get("target_casilla_id") == target_casilla_id
     )
     return revision.model_copy(update={"bindings": (binding,)})
@@ -372,7 +372,7 @@ def test_unsupported_renta_expense_flags_observation_routed_to_no_binding() -> N
     assert unrouted.target_casilla_id == _M100_GASTO_OTROS_CONCEPTOS_CASILLA
     assert unrouted.deductible_amount > Decimal("0")
 
-    result = unsupported_ledger_renta_expense_observations(revision, (routed, unrouted))
+    result = unsupported_ledger_renta_gastos_estimacion_directa_observations(revision, (routed, unrouted))
     assert result == (unrouted,)
 
 
@@ -396,5 +396,5 @@ def test_unsupported_renta_expense_does_not_flag_zero_deductible() -> None:
     assert zero_unrouted.target_casilla_id == _M100_GASTO_OTROS_CONCEPTOS_CASILLA
     assert zero_unrouted.deductible_amount == Decimal("0")
 
-    result = unsupported_ledger_renta_expense_observations(revision, (zero_unrouted,))
+    result = unsupported_ledger_renta_gastos_estimacion_directa_observations(revision, (zero_unrouted,))
     assert result == ()

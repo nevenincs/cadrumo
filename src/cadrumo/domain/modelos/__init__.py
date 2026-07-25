@@ -122,8 +122,6 @@ from ._ledger_filing_snapshot import (
 )
 from ._m232_row_materialisation import materialize_m232_related_party_rows
 from ._participation_index import (
-    PARTICIPATION_INDEX_NAMESPACE,
-    PARTICIPATION_INDEX_SCHEMA_VERSION,
     TransactionParticipationIndexPersistenceError,
     TransactionRevisionParticipation,
     TransactionRevisionParticipationIndex,
@@ -171,8 +169,6 @@ from ._verification_repository import VerificationReportPersistenceError, upsert
 from ._work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
 
 __all__ = (
-    "PARTICIPATION_INDEX_NAMESPACE",
-    "PARTICIPATION_INDEX_SCHEMA_VERSION",
     "CalculationRevision",
     "CalculationRevisionAmendmentKind",
     "CalculationRevisionCatalogue",

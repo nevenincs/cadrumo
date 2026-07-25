@@ -530,8 +530,13 @@ application:
         but AEAT-backed reads stay unavailable until an auth provider is configured.
     sessions:
       errors:
-        clave_identity_missing: Cl@ve Móvil live auth requires a configured DNI/NIE
-          (CADRUMO_CLAVE_MOVIL_DNI_NIE) before any AEAT session can be used.
+        clave_contraste_missing: The non-QR Cl@ve Móvil route needs the contraste
+          printed on your document. Record auth.numero_soporte on the active profile
+          for a NIE, or auth.fecha_validez for a DNI, before any AEAT session can
+          be used.
+        clave_identity_missing: Cl@ve live auth requires a DNI/NIE. Record it on the
+          active profile as auth.dni_nie, or configure it for the provider with `aeat
+          config auth configure`, before any AEAT session can be used.
         clave_identity_profile_mismatch: Cl@ve Móvil identity does not match the active
           profile tax identity; switch to the matching profile or update the profile
           before live AEAT auth.
@@ -1412,6 +1417,9 @@ application:
         profile create NAME` to create it.
       profile_tombstoned_not_selectable: Profile '%{profile}' is tombstoned and cannot
         be selected.
+      registration_label_blank: The profile name cannot be empty.
+      registration_passphrase_too_short: The password must be at least {minimum_length}
+        characters long.
       repository_profile_record_classification_mismatch: Profile record classification
         does not match the repository contract.
       repository_profile_record_missing: Profile record was not found in the active
@@ -2530,7 +2538,8 @@ cli:
           converted to the rental estate. The assistant automatically applies 21%
           (Art. 90 LISIVA) to compute the IVA charge. Applicable to Modelo 303 only.'
         autoconsumo_promotor_base_not_decimal: '--autoconsumo-promotor-base must be
-          a decimal amount; received: {value}'
+          a decimal amount; received: {value}. Use a dot decimal separator with no
+          thousands grouping, e.g. 1234.56.'
         borrador_help: Modelo 100 borrador snapshot id (full or unambiguous prefix).
           Snapshot binding values are used only for registry bindings marked aeat_prefilled;
           caller --binding overrides always take precedence.
@@ -2748,18 +2757,21 @@ cli:
           received from Social Security for maternity or paternity leave. Do NOT include
           this in --casilla 0003 (Retribuciones dinerarias).
         prestacion_inss_exenta_not_decimal: '--prestacion-inss-exenta must be a decimal
-          amount; received: {value}.'
+          amount; received: {value}. Use a dot decimal separator with no thousands
+          grouping, e.g. 1234.56.'
         preview_maritime_exemption_annual_salary_help: Gross annual salary in EUR
           (Decimal). Required when the active profile triggers Art. 7.p) eligibility
           (vessel_flag=foreign or waters_type=international).
         preview_maritime_exemption_annual_salary_not_decimal: '--annual-salary must
-          be a decimal amount; received: {value}.'
+          be a decimal amount; received: {value}. Use a dot decimal separator with
+          no thousands grouping, e.g. 1234.56.'
         preview_maritime_exemption_gross_navigation_income_help: Total gross employment
           income from navigation in EUR (Decimal). Required when the active profile
           triggers REBECA eligibility (vessel_registry in REBECA / rebeca_eu_eea /
           scheduled_canary_route).
         preview_maritime_exemption_gross_navigation_income_not_decimal: '--gross-navigation-income
-          must be a decimal amount; received: {value}.'
+          must be a decimal amount; received: {value}. Use a dot decimal separator
+          with no thousands grouping, e.g. 1234.56.'
         preview_maritime_exemption_help: Preview the Art. 7.p) / REBECA maritime worker
           IRPF exemption resolved from the active profile's maritime_worker facts.
           Emits typed CasillaObservation rows with legal_refs; surfaces the RETMAR
@@ -2790,8 +2802,9 @@ cli:
           amount (LIRPF transitional provision 12). Use it with --rescate-plan-pensiones-aportaciones-pre-2007
           and --rescate-plan-pensiones-aportaciones-totales so the assistant calculates
           the 40% reduction and injects it into casilla 0011.
-        rescate_plan_pensiones_not_decimal: --rescate-plan-pensiones-* values must
-          be decimal amounts.
+        rescate_plan_pensiones_not_decimal: '--rescate-plan-pensiones-* values must
+          be decimal amounts; received: {value}. Use a dot decimal separator with
+          no thousands grouping, e.g. 1234.56.'
         rescate_type_help: 'Pension-plan capital rescate type (LIRPF DT 12a): total
           (whole capital at once) or parcial (staged withdrawals). A classification
           and provenance signal, not an amount change: the 40% reduction applies to
@@ -2852,7 +2865,8 @@ cli:
           (Law 44/2015 Art. 14). Used to check whether the reserve has reached the
           first euro cent above twice share capital. Required with --sal-beneficio-neto
           and --sal-capital-social.
-        sal_reserva_not_decimal: --sal-* values must be decimal amounts.
+        sal_reserva_not_decimal: '--sal-* values must be decimal amounts; received:
+          {value}. Use a dot decimal separator with no thousands grouping, e.g. 1234.56.'
         selector_ambiguous: More than one active work unit matches this modelo/year/period.
           Choose a registry revision or pass an explicit work-unit id. {candidates}
         selector_not_found: No active work unit matches this modelo, year, and period.
@@ -3445,6 +3459,9 @@ cli:
       import_requires_path: Provide the bundle PATH argument, or run in an interactive
         terminal to be prompted.
       import_uuid_collision: The UUID in the bundle conflicts with an existing profile.
+      manager_closed: Changes to '{profile}' are saved.
+      manager_closed_created: Profile '{profile}' created and ready. Reopen it any
+        time with 'aeat config profile edit'.
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF/CIF/DNI/NIE>` first.
       preflight_filing_year_help: Four-digit filing year.
@@ -3466,6 +3483,7 @@ cli:
         filing year %{filing_year} period %{period}. Run `aeat app modelo describe
         %{modelo}` to see the valid periods and revisions.
       preflight_year_help: Filing year.
+      registration_abandoned: No profile was created.
       remove_help: Tombstone a profile (immutable filing snapshots are retained)
       remove_name_help: Profile id to tombstone
       remove_requires_yes: Removal is destructive. Re-run 'aeat config profile delete
@@ -5737,6 +5755,8 @@ errors:
     bootstrap_already_complete: Secure storage bootstrap is already complete. Use
       aeat config login NAME to activate an existing profile or aeat config profile
       create NAME to add another profile.
+    clave_credentials_incomplete: The selected Cl@ve authentication mode is missing
+      a credential it needs.
     ledger_preflight: Ledger preflight rejected the modelo run because it is not yet
       fileable.
     m145_communication_record_ambiguous: The Modelo 145 communication record id prefix
@@ -5813,6 +5833,7 @@ errors:
       login NAME` and try again.
     profile_name_collision: The profile name provided is already in use. Choose a
       different name.
+    profile_registration: The profile could not be registered.
     reconciliation_cross_bucket: The addressed work unit belongs to a bucket other
       than the active profile's. Reconciliation only operates within the active profile
       bucket.
@@ -6161,6 +6182,36 @@ flows:
     unexpected_app_type: The interactive screen is not attached to a flow application.
     unsupported_console: This console cannot host interactive questions. Run the flow
       from a real terminal, or drive it with a scripted answer file.
+  manager:
+    action:
+      abandoned: No changes made.
+      auth_clave_incomplete: Cl@ve still needs %{missing}. Nothing was saved.
+      auth_dni_nie: DNI or NIE you identify with
+      auth_numero_soporte: Support number printed on the document
+      auth_provider: How you identify to AEAT
+      certificate: Certificate
+      certificate_active: Active certificate
+      certificate_done: 'Identification: %{provider}; active certificate: %{name}.'
+      export: Export a copy
+      export_destination: Destination file path
+      export_done: Encrypted copy written to %{destination}.
+      export_passphrase: Passphrase that will protect the copy
+      provider:
+        certificate: Electronic certificate
+        clave_movil: Cl@ve Móvil
+        clave_permanente: Cl@ve Permanente
+    actions:
+      section: Actions
+    column:
+      field: Field
+      state: State
+      value: Value
+    edit:
+      cancel: Cancel
+      save: Save
+    progress: '{present} of {total} fields filled in, {missing} still needed for filing'
+    section_title: '{title} — {present}/{total}'
+    title: 'Profile: {profile}'
   progress:
     current_answer: 'Current answer: {value}'
     current_answer_secret: 'Current answer: (hidden)'
@@ -6170,6 +6221,31 @@ flows:
     optional: Optional
     page_header: Question {position} of {total} — section {section}
     required: Required
+  registration:
+    confirm_label: Repeat the password
+    create_button: Create profile
+    intro: 'Choose a name for this profile and a password to protect it. That is all
+      that is needed: your profile exists as soon as you continue, and you fill in
+      the rest whenever you like.'
+    password_hint: At least {minimum_length} characters. A few ordinary words strung
+      together are easier to remember and harder to guess than one short complicated
+      word.
+    password_label: Password
+    refusal:
+      confirmation_mismatch: The two passwords do not match.
+      username_required: Enter a name for this profile.
+    section: Name and password
+    strength:
+      fair: Reasonable.
+      strong: Strong.
+      too_short: 'Too short: at least {minimum_length} characters are required.'
+      weak: Accepted, but weak. Making it longer helps more than adding symbols.
+    title: Create your profile
+    username_hint: How this profile appears in lists. You can change it later.
+    username_label: Profile name
+    why_password: 'Your tax data stays on this computer and is never sent anywhere.
+      The password encrypts it on disk, so it cannot be read without you. It cannot
+      be reset: if you lose it, the data is unrecoverable.'
   review:
     action_edit: Edit an answer
     action_prompt: What do you want to do?
@@ -6515,6 +6591,7 @@ wizard:
   commands:
     status:
       created: created
+      saved: saved
       updated: updated
   demo:
     description: A demonstration section to test wizard functionality

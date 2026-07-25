@@ -13,6 +13,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.storage.sql import SecureObjectRepository
@@ -20,6 +21,7 @@ from ....core.config import Settings
 from .._evidence import (
     MediaKind,
     PurchaseInvoiceEvidence,
+    PurchaseInvoiceEvidenceDocument,
     PurchaseInvoiceEvidenceInputError,
 )
 from .._evidence_input import (
@@ -115,20 +117,50 @@ def test_resolve_attachment_evidence_input_round_trips_bytes(
     assert resolved.attachment_id == record.attachment_id
 
 
-def test_resolve_refuses_record_without_in_store_attachment(
+def test_record_without_in_store_attachment_is_unconstructable() -> None:
+    """A record whose bytes are not in secure storage must not exist at all.
+
+    ``attachment_id`` is required, so the byte-less shape is refused at model
+    validation rather than at read time: there is no record a reader could be
+    tempted to satisfy from the cleartext ``source_path``
+    (sensitive-financial-data-secure-storage-only). The read path therefore
+    carries no byte-custody guard, because it cannot be reached.
+    """
+    with pytest.raises(ValidationError) as excinfo:
+        PurchaseInvoiceEvidence(
+            evidence_id="ev-orphan",
+            bucket_id=_BUCKET_ID,
+            source_path="/some/cleartext/path.pdf",
+            source_sha256=hashlib.sha256(_PDF_BYTES).hexdigest(),
+            media_kind=MediaKind.PDF,
+            created_at=datetime(2026, 6, 10, tzinfo=UTC),
+            updated_at=datetime(2026, 6, 10, tzinfo=UTC),
+        )
+
+    assert "attachment_id" in str(excinfo.value)
+
+
+def test_persisted_record_stripped_of_its_attachment_is_refused_on_load(
+    isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
+    pdf_file: Path,
 ) -> None:
-    # A record whose bytes are not in secure storage (no attachment_id) must not
-    # fall back to a cleartext path read.
-    orphan = PurchaseInvoiceEvidence(
-        evidence_id="ev-orphan",
-        bucket_id=_BUCKET_ID,
-        source_path="/some/cleartext/path.pdf",
-        source_sha256=hashlib.sha256(_PDF_BYTES).hexdigest(),
-        attachment_id=None,
-        media_kind=MediaKind.PDF,
-        created_at=datetime(2026, 6, 10, tzinfo=UTC),
-        updated_at=datetime(2026, 6, 10, tzinfo=UTC),
-    )
-    with pytest.raises(PurchaseInvoiceEvidenceInputError):
-        resolve_purchase_invoice_evidence_input(orphan, store=AttachmentStore(objects=secure_objects))
+    """Anti-tautology proof: delete the field from a real stored payload and reload.
+
+    Stores a genuine record through the real encrypted repository, drops
+    ``attachment_id`` from the persisted payload, and asserts the strict model
+    refuses it. If this ever passes with the field absent, the required-field
+    contract is not actually enforced at the persistence boundary.
+    """
+    record = _added_record(isolated_settings, secure_objects, pdf_file)
+    stripped = record.model_dump()
+    del stripped["attachment_id"]
+
+    with pytest.raises(ValidationError):
+        PurchaseInvoiceEvidence.model_validate(stripped)
+
+    document = PurchaseInvoiceEvidenceDocument(bucket_id=_BUCKET_ID, records=(record,))
+    payload = document.model_dump()
+    del payload["records"][0]["attachment_id"]
+    with pytest.raises(ValidationError):
+        PurchaseInvoiceEvidenceDocument.model_validate(payload)

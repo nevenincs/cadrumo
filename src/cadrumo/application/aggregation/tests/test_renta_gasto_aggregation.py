@@ -3,7 +3,7 @@
 Tests exercise the full path:
   - real TransactionCatalogueRepository backed by isolated_runtime_profile
   - aggregate_renta_gasto_ledger(_from_repositories) for quarterly cumulative windows
-  - resolve_ledger_renta_gasto_aggregation_binding_values against the real M130
+  - resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values against the real M130
     registry revision
 
 The cumulative window rule (RD 439/2007 art. 110.2) mirrors the income pipeline:
@@ -29,7 +29,7 @@ from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaId,
     InputKind,
-    resolve_ledger_renta_gasto_aggregation_binding_values,
+    resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values,
     validated_casilla_id,
 )
 from ....domain.transactions import (
@@ -524,7 +524,7 @@ def test_domain_resolver_folds_gasto_observations_into_the_m130_casilla_02_bindi
     casilla_02 = next(c for c in revision.casillas if c.id == _M130_GASTOS_CASILLA)
     assert casilla_02.input_kind is InputKind.BOUND
     binding = next(b for b in revision.bindings if b.id == casilla_02.binding)
-    assert str(binding.source) == "ledger_renta_gasto_aggregation"
+    assert str(binding.source) == "ledger_renta_gastos_pago_fraccionado_aggregation"
 
     feb_base, apr_base = Decimal("147.93"), Decimal("100.00")
     feb = _gasto_transaction("feb", value_date=date(2024, 2, 1), taxable_base=feb_base)
@@ -532,7 +532,7 @@ def test_domain_resolver_folds_gasto_observations_into_the_m130_casilla_02_bindi
     catalogue = TransactionCatalogue.from_transactions((feb, apr))
     aggregation = aggregate_renta_gasto_ledger(catalogue, bucket_id="test", period=_Q2_2024)
 
-    resolved = resolve_ledger_renta_gasto_aggregation_binding_values(revision, aggregation.observations)
+    resolved = resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values(revision, aggregation.observations)
 
     # Both rows fall in the 2T cumulative window; expected = the input bases summed.
     assert resolved[binding.id] == sum((feb_base, apr_base), Decimal("0"))

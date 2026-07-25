@@ -19,7 +19,6 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Callable
-from decimal import Decimal, InvalidOperation
 from typing import Annotated
 
 import typer
@@ -30,6 +29,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...domain.renta import RentaValidationError
 from ._common import _emit_envelope
+from ._modelo_cli_support import optional_decimal_option
 from ._modelo_payloads import (
     CasillaObservationPayload,
     WorkPreviewMaritimeExemptionResult,
@@ -127,15 +127,21 @@ def register_maritime_commands(
         activate_output_language(ctx, output_language)
         require_active_profile()
 
-        annual_salary_decimal = _optional_decimal(
+        annual_salary_decimal = optional_decimal_option(
             annual_salary,
             translation_key="cli.app.modelo.work.preview_maritime_exemption_annual_salary_not_decimal",
-            default="--annual-salary must be a decimal amount; received: {value}",
+            default=(
+                "--annual-salary must be a decimal amount; received: {value}. "
+                "Use a dot decimal separator with no thousands grouping, e.g. 1234.56."
+            ),
         )
-        gross_navigation_decimal = _optional_decimal(
+        gross_navigation_decimal = optional_decimal_option(
             gross_navigation_income,
             translation_key=("cli.app.modelo.work.preview_maritime_exemption_gross_navigation_income_not_decimal"),
-            default="--gross-navigation-income must be a decimal amount; received: {value}",
+            default=(
+                "--gross-navigation-income must be a decimal amount; received: {value}. "
+                "Use a dot decimal separator with no thousands grouping, e.g. 1234.56."
+            ),
         )
 
         try:
@@ -208,23 +214,3 @@ def register_maritime_commands(
             result=payload,
             lines=lines,
         )
-
-
-def _optional_decimal(
-    value: str | None,
-    *,
-    translation_key: str,
-    default: str,
-) -> Decimal | None:
-    if value is None:
-        return None
-    try:
-        return Decimal(value)
-    except (InvalidOperation, ValueError) as exc:
-        raise typer.BadParameter(
-            tr(
-                translation_key,
-                value=value,
-                default=default,
-            ),
-        ) from exc

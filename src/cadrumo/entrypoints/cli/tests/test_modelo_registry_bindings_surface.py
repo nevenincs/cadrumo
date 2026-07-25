@@ -421,6 +421,7 @@ def test_bindings_list_and_resolve_emit_no_bucket_event() -> None:
     )
     forbidden_emitters = (
         "emit_bucket_event",
+        "emit_modelo_bucket_event",
         "append_bucket_event",
         "bucket_event(",
     )

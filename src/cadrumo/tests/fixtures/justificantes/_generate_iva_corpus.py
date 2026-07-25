@@ -4,24 +4,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import TypedDict
 
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
 from ._generate_base import _SEDE_ORIGIN
-
-
-class _M303PrimitivesDict(TypedDict):
-    """TypedDict for M303 primitive cuota fields."""
-
-    repercutido_general: Decimal
-    repercutido_reducido: Decimal
-    repercutido_super_reducido: Decimal
-    autorepercutido_intracomunitaria: Decimal
-    soportado_interiores: Decimal
-    autoconsumo_promotor_base: Decimal
 
 
 def _fmt_spanish(d: Decimal) -> str:
@@ -81,24 +69,6 @@ class _Modelo303CorpusFixture:
     c66: Decimal  # Atribuible Estado = c64 (c65=100%)            [box 66, 2023+ only]
     c69: Decimal  # Resultado autoliquidacion = c66 - 0           [box 69 / iva.resultado]
     c71: Decimal  # Resultado final = c69 (no ajustes)            [box 71, 2023+ only]
-    # Primitive cuota-leaf inputs that the engine sums into iva.cuota-devengada-total
-    # and iva.cuota-deducible-total (Route A of the parser-engine-totals mapping,
-    # with the corrected encoding).
-    # Single-rate filer pattern: all devengada cuota on iva.repercutido.general,
-    # all deducible cuota on iva.soportado.interiores; other leaves zero. This
-    # preserves the existing c27/c29/c45/c46 invariants bit-for-bit.
-    # Defaults are Decimal("0.00") so existing fixture construction sites that
-    # do not explicitly populate the primitive set still produce valid records;
-    # _compute_m303_primitives derives the active values from c27/c29.
-    repercutido_general: Decimal = Decimal("0.00")
-    repercutido_reducido: Decimal = Decimal("0.00")
-    repercutido_super_reducido: Decimal = Decimal("0.00")
-    autorepercutido_intracomunitaria: Decimal = Decimal("0.00")
-    soportado_interiores: Decimal = Decimal("0.00")
-    # 2023-y-siguientes only â€” the 2009-y-siguientes revision has no
-    # iva.autoconsumo.promotor.base casilla; the field is harmlessly zero for
-    # legacy fixtures and the legacy extraction profile does not target it.
-    autoconsumo_promotor_base: Decimal = Decimal("0.00")
     # Justificante receipt fields â€” required by the sidecar roundtrip test.
     # csv must match SANITIZED{modelo}{ejercicio} to satisfy _CSV_SYNTHETIC_RE.
     csv: str = ""
@@ -133,41 +103,6 @@ def _compute_m303_closure(c27: Decimal, c45: Decimal) -> tuple[Decimal, Decimal,
     return c46, c64, c66, c69, c71
 
 
-def _compute_m303_primitives(c27: Decimal, c29: Decimal) -> _M303PrimitivesDict:
-    """Compute single-rate M303 primitives whose engine-summed totals equal c27/c29.
-
-    Single-rate filer pattern: place all devengada cuota on
-    ``iva.repercutido.general`` and all deducible cuota on
-    ``iva.soportado.interiores``; zero out the other repercutido / soportado /
-    autorepercutido / autoconsumo leaves. The engine then recomputes:
-
-    - ``iva.cuota-devengada-total`` = repercutido.general (+ 0 + 0 + 0 + 0) = c27.
-    - ``iva.cuota-deducible-total`` = soportado.interiores (+ 0) = c29.
-    - ``iva.resultado-regimen-general`` = c27 âˆ’ c29 = c46 (existing fixtures all
-      satisfy c45 = c29, so the engine’s resultado-regimen-general matches the
-      fixture’s c46 bit-for-bit).
-
-    Returns a six-field dict suitable for ``**_compute_m303_primitives(c27, c29)``
-    splat into ``_Modelo303CorpusFixture(...)``. ``autoconsumo_promotor_base`` is
-    a 2023+ leaf only; the 2009-y-siguientes revision has no such casilla, but
-    the field stays Decimal("0.00") on legacy fixtures with no engine impact
-    because the legacy extraction profile does not target it.
-
-    Uses the corrected 6-field encoding and Route A of the
-    parser-engine-totals mapping.
-    """
-    zero: Decimal = Decimal("0.00")
-    result: _M303PrimitivesDict = {
-        "repercutido_general": c27,
-        "repercutido_reducido": zero,
-        "repercutido_super_reducido": zero,
-        "autorepercutido_intracomunitaria": zero,
-        "soportado_interiores": c29,
-        "autoconsumo_promotor_base": zero,
-    }
-    return result
-
-
 _MODELO_303_CORPUS_FIXTURES: tuple[_Modelo303CorpusFixture, ...] = (
     # --- 2009-y-siguientes (legacy) revision: 2021-2T through 2022-4T ---
     _Modelo303CorpusFixture(
@@ -184,7 +119,6 @@ _MODELO_303_CORPUS_FIXTURES: tuple[_Modelo303CorpusFixture, ...] = (
         c66=_compute_m303_closure(Decimal("12000.00"), Decimal("7800.00"))[2],
         c69=_compute_m303_closure(Decimal("12000.00"), Decimal("7800.00"))[3],
         c71=_compute_m303_closure(Decimal("12000.00"), Decimal("7800.00"))[4],
-        **_compute_m303_primitives(Decimal("12000.00"), Decimal("7800.00")),
     ),
     _Modelo303CorpusFixture(
         filename="303/2021-3T.pdf",
@@ -200,7 +134,6 @@ _MODELO_303_CORPUS_FIXTURES: tuple[_Modelo303CorpusFixture, ...] = (
         c66=_compute_m303_closure(Decimal("13200.00"), Decimal("8400.00"))[2],
         c69=_compute_m303_closure(Decimal("13200.00"), Decimal("8400.00"))[3],
         c71=_compute_m303_closure(Decimal("13200.00"), Decimal("8400.00"))[4],
-        **_compute_m303_primitives(Decimal("13200.00"), Decimal("8400.00")),
     ),
     _Modelo303CorpusFixture(
         filename="303/2021-4T.pdf",
@@ -216,7 +149,6 @@ _MODELO_303_CORPUS_FIXTURES: tuple[_Modelo303CorpusFixture, ...] = (
         c66=_compute_m303_closure(Decimal("14400.00"), Decimal("9000.00"))[2],
         c69=_compute_m303_closure(Decimal("14400.00"), Decimal("9000.00"))[3],
         c71=_compute_m303_closure(Decimal("14400.00"), Decimal("9000.00"))[4],
-        **_compute_m303_primitives(Decimal("14400.00"), Decimal("9000.00")),
     ),
     _Modelo303CorpusFixture(
         filename="303/2022-1T.pdf",
@@ -232,7 +164,6 @@ _MODELO_303_CORPUS_FIXTURES: tuple[_Modelo303CorpusFixture, ...] = (
         c66=_compute_m303_closure(Decimal("12600.00"), Decimal("8100.00"))[2],
         c69=_compute_m303_closure(Decimal("12600.00"), Decimal("8100.00"))[3],
         c71=_compute_m303_closure(Decimal("12600.00"), Decimal("8100.00"))[4],
-        **_compute_m303_primitives(Decimal("12600.00"), Decimal("8100.00")),
     ),
     _Modelo303CorpusFixture(
         filename="303/2022-2T.pdf",
@@ -248,7 +179,6 @@ _MODELO_303_CORPUS_FIXTURES: tuple[_Modelo303CorpusFixture, ...] = (
         c66=_compute_m303_closure(Decimal("15000.00"), Decimal("9600.00"))[2],
         c69=_compute_m303_closure(Decimal("15000.00"), Decimal("9600.00"))[3],
         c71=_compute_m303_closure(Decimal("15000.00"), Decimal("9600.00"))[4],
-        **_compute_m303_primitives(Decimal("15000.00"), Decimal("9600.00")),
     ),
     _Modelo303CorpusFixture(
         filename="303/2022-3T.pdf",
@@ -264,7 +194,6 @@ _MODELO_303_CORPUS_FIXTURES: tuple[_Modelo303CorpusFixture, ...] = (
         c66=_compute_m303_closure(Decimal("16200.00"), Decimal("10200.00"))[2],
         c69=_compute_m303_closure(Decimal("16200.00"), Decimal("10200.00"))[3],
         c71=_compute_m303_closure(Decimal("16200.00"), Decimal("10200.00"))[4],
-        **_compute_m303_primitives(Decimal("16200.00"), Decimal("10200.00")),
     ),
     _Modelo303CorpusFixture(
         filename="303/2022-4T.pdf",
@@ -280,7 +209,6 @@ _MODELO_303_CORPUS_FIXTURES: tuple[_Modelo303CorpusFixture, ...] = (
         c66=_compute_m303_closure(Decimal("18000.00"), Decimal("11400.00"))[2],
         c69=_compute_m303_closure(Decimal("18000.00"), Decimal("11400.00"))[3],
         c71=_compute_m303_closure(Decimal("18000.00"), Decimal("11400.00"))[4],
-        **_compute_m303_primitives(Decimal("18000.00"), Decimal("11400.00")),
     ),
     # --- 2023-y-siguientes (new template) revision: 2023-1T through 2024-4T ---
     _Modelo303CorpusFixture(
@@ -297,7 +225,6 @@ _MODELO_303_CORPUS_FIXTURES: tuple[_Modelo303CorpusFixture, ...] = (
         c66=_compute_m303_closure(Decimal("12600.00"), Decimal("8100.00"))[2],
         c69=_compute_m303_closure(Decimal("12600.00"), Decimal("8100.00"))[3],
         c71=_compute_m303_closure(Decimal("12600.00"), Decimal("8100.00"))[4],
-        **_compute_m303_primitives(Decimal("12600.00"), Decimal("8100.00")),
     ),
     _Modelo303CorpusFixture(
         filename="303/2023-2T.pdf",
@@ -313,7 +240,6 @@ _MODELO_303_CORPUS_FIXTURES: tuple[_Modelo303CorpusFixture, ...] = (
         c66=_compute_m303_closure(Decimal("13800.00"), Decimal("8700.00"))[2],
         c69=_compute_m303_closure(Decimal("13800.00"), Decimal("8700.00"))[3],
         c71=_compute_m303_closure(Decimal("13800.00"), Decimal("8700.00"))[4],
-        **_compute_m303_primitives(Decimal("13800.00"), Decimal("8700.00")),
     ),
     _Modelo303CorpusFixture(
         filename="303/2023-3T.pdf",
@@ -329,7 +255,6 @@ _MODELO_303_CORPUS_FIXTURES: tuple[_Modelo303CorpusFixture, ...] = (
         c66=_compute_m303_closure(Decimal("15000.00"), Decimal("9300.00"))[2],
         c69=_compute_m303_closure(Decimal("15000.00"), Decimal("9300.00"))[3],
         c71=_compute_m303_closure(Decimal("15000.00"), Decimal("9300.00"))[4],
-        **_compute_m303_primitives(Decimal("15000.00"), Decimal("9300.00")),
     ),
     _Modelo303CorpusFixture(
         filename="303/2023-4T.pdf",
@@ -345,7 +270,6 @@ _MODELO_303_CORPUS_FIXTURES: tuple[_Modelo303CorpusFixture, ...] = (
         c66=_compute_m303_closure(Decimal("16800.00"), Decimal("10500.00"))[2],
         c69=_compute_m303_closure(Decimal("16800.00"), Decimal("10500.00"))[3],
         c71=_compute_m303_closure(Decimal("16800.00"), Decimal("10500.00"))[4],
-        **_compute_m303_primitives(Decimal("16800.00"), Decimal("10500.00")),
     ),
     _Modelo303CorpusFixture(
         filename="303/2024-1T.pdf",
@@ -361,7 +285,6 @@ _MODELO_303_CORPUS_FIXTURES: tuple[_Modelo303CorpusFixture, ...] = (
         c66=_compute_m303_closure(Decimal("13200.00"), Decimal("8400.00"))[2],
         c69=_compute_m303_closure(Decimal("13200.00"), Decimal("8400.00"))[3],
         c71=_compute_m303_closure(Decimal("13200.00"), Decimal("8400.00"))[4],
-        **_compute_m303_primitives(Decimal("13200.00"), Decimal("8400.00")),
     ),
     _Modelo303CorpusFixture(
         filename="303/2024-2T.pdf",
@@ -377,7 +300,6 @@ _MODELO_303_CORPUS_FIXTURES: tuple[_Modelo303CorpusFixture, ...] = (
         c66=_compute_m303_closure(Decimal("14400.00"), Decimal("9000.00"))[2],
         c69=_compute_m303_closure(Decimal("14400.00"), Decimal("9000.00"))[3],
         c71=_compute_m303_closure(Decimal("14400.00"), Decimal("9000.00"))[4],
-        **_compute_m303_primitives(Decimal("14400.00"), Decimal("9000.00")),
     ),
     _Modelo303CorpusFixture(
         filename="303/2024-3T.pdf",
@@ -393,7 +315,6 @@ _MODELO_303_CORPUS_FIXTURES: tuple[_Modelo303CorpusFixture, ...] = (
         c66=_compute_m303_closure(Decimal("16200.00"), Decimal("10200.00"))[2],
         c69=_compute_m303_closure(Decimal("16200.00"), Decimal("10200.00"))[3],
         c71=_compute_m303_closure(Decimal("16200.00"), Decimal("10200.00"))[4],
-        **_compute_m303_primitives(Decimal("16200.00"), Decimal("10200.00")),
     ),
     _Modelo303CorpusFixture(
         filename="303/2024-4T.pdf",
@@ -409,7 +330,6 @@ _MODELO_303_CORPUS_FIXTURES: tuple[_Modelo303CorpusFixture, ...] = (
         c66=_compute_m303_closure(Decimal("18000.00"), Decimal("11400.00"))[2],
         c69=_compute_m303_closure(Decimal("18000.00"), Decimal("11400.00"))[3],
         c71=_compute_m303_closure(Decimal("18000.00"), Decimal("11400.00"))[4],
-        **_compute_m303_primitives(Decimal("18000.00"), Decimal("11400.00")),
     ),
 )
 
@@ -479,55 +399,6 @@ def _draw_modelo_303_corpus(c: canvas.Canvas, fixture: _Modelo303CorpusFixture) 
     # Accents stripped to stay within ASCII-safe pdfplumber extraction path.
     # Value follows on the same line after a space; named_label parser captures it.
     zero_fmt: str = _fmt_spanish(Decimal("0.00"))
-
-    # ---- Primitive cuota leaves (Route A of the parser-engine-totals mapping)
-    # The extraction profile targets these so the engine recomputes
-    # iva.cuota-devengada-total and iva.cuota-deducible-total from the
-    # primitive set. The single-rate filer pattern places all devengada on
-    # iva.repercutido.general and all deducible on iva.soportado.interiores;
-    # the rest are zero. Labels carry the "Primitivo" prefix to avoid
-    # collision with the form-page totals (box 27 "Total cuota devengada",
-    # box 29 "Por cuotas soportadas...").
-    c.drawString(
-        20 * mm,
-        y,
-        f"Primitivo IVA repercutido general 21 por ciento {_fmt_spanish(fixture.repercutido_general)}",
-    )
-    y -= 6 * mm
-    c.drawString(
-        20 * mm,
-        y,
-        f"Primitivo IVA repercutido reducido 10 por ciento {_fmt_spanish(fixture.repercutido_reducido)}",
-    )
-    y -= 6 * mm
-    c.drawString(
-        20 * mm,
-        y,
-        f"Primitivo IVA repercutido super-reducido 4 por ciento {_fmt_spanish(fixture.repercutido_super_reducido)}",
-    )
-    y -= 6 * mm
-    c.drawString(
-        20 * mm,
-        y,
-        f"Primitivo IVA autorepercutido intracomunitaria {_fmt_spanish(fixture.autorepercutido_intracomunitaria)}",
-    )
-    y -= 6 * mm
-    c.drawString(
-        20 * mm,
-        y,
-        f"Primitivo IVA soportado interiores {_fmt_spanish(fixture.soportado_interiores)}",
-    )
-    y -= 6 * mm
-    if fixture.new_template:
-        # iva.autoconsumo.promotor.base is a 2023-y-siguientes-only casilla; the
-        # 2009 revision has no such leaf and the legacy extraction profile does
-        # not target it.
-        c.drawString(
-            20 * mm,
-            y,
-            f"Primitivo IVA autoconsumo promotor base {_fmt_spanish(fixture.autoconsumo_promotor_base)}",
-        )
-        y -= 6 * mm
 
     # box 27 â€” Total cuota devengada (leaf input, profile pattern: 'Total\s+cuota\s+devengada')
     c.drawString(20 * mm, y, f"Total cuota devengada {_fmt_spanish(fixture.c27)}")

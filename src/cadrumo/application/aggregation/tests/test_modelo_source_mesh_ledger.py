@@ -52,7 +52,7 @@ from .. import (
     CalculationSourceContext,
     IvaLedgerAggregationIssueReason,
     LedgerIvaAggregationSourceResolver,
-    LedgerRentaExpenseAggregationSourceResolver,
+    LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
     OssIossLedgerCandidate,
     OssIossLedgerSourceResolver,
     aggregate_iva_ledger_observations,
@@ -746,7 +746,7 @@ def test_renta_source_mesh_resolver_preserves_purchase_invoice_evidence_provenan
     tx_repo.save(TransactionCatalogue.from_transactions((linked,)))
     invoice_repo.save(InvoiceCatalogue.from_invoices((invoice,)))
 
-    resolution = LedgerRentaExpenseAggregationSourceResolver(
+    resolution = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
         transaction_repository=tx_repo,
         invoice_repository=invoice_repo,
     ).resolve(

@@ -588,9 +588,13 @@ application:
         fins que es configuri un proveïdor d'autenticació.
     sessions:
       errors:
-        clave_identity_missing: L'autenticació Cl@ve Móvil en directe requereix un
-          DNI/NIE configurat (CADRUMO_CLAVE_MOVIL_DNI_NIE) abans de fer servir cap
-          sessió AEAT.
+        clave_contraste_missing: La ruta Cl@ve Móvil sense QR necessita el contrast
+          imprès al teu document. Registra auth.numero_soporte al perfil actiu si
+          és un NIE, o auth.fecha_validez si és un DNI, abans de fer servir cap sessió
+          AEAT.
+        clave_identity_missing: L'autenticació Cl@ve en directe requereix un DNI/NIE.
+          Registra'l al perfil actiu com a auth.dni_nie, o configura'l per al proveïdor
+          amb `aeat config auth configure`, abans de fer servir cap sessió AEAT.
         clave_identity_profile_mismatch: La identitat de Cl@ve Móvil no coincideix
           amb la identitat fiscal del perfil actiu; canvia al perfil que coincideixi
           o actualitza el perfil abans de l'autenticació AEAT en directe.
@@ -1533,6 +1537,9 @@ application:
         profile create NAME` per crear-lo.
       profile_tombstoned_not_selectable: El perfil '%{profile}' està eliminat i no
         es pot seleccionar.
+      registration_label_blank: El nom del perfil no pot estar buit.
+      registration_passphrase_too_short: La contrasenya ha de tenir com a mínim {minimum_length}
+        caràcters.
       repository_profile_record_classification_mismatch: La classificació del registre
         de perfil no coincideix amb el contracte del repositori.
       repository_profile_record_missing: No s'ha trobat el registre de perfil al bucket
@@ -2713,7 +2720,8 @@ cli:
           el 21% (art. 90 LISIVA) per calcular la quota meritada. Només aplicable
           al Model 303.'
         autoconsumo_promotor_base_not_decimal: '--autoconsumo-promotor-base ha de
-          ser un import decimal; rebut: {value}'
+          ser un import decimal; s''ha rebut: {value}. Utilitzeu el punt com a separador
+          decimal i sense separador de milers, p. ex. 1234.56.'
         borrador_help: Id del snapshot de borrador del model 100 (complet o prefix
           no ambigu). Els seus valors de binding s'usen només per a bindings marcats
           aeat_prefilled; les sobrescriptures --binding de l'operador sempre tenen
@@ -2950,18 +2958,21 @@ cli:
           Social per baixa de maternitat o paternitat. NO l''incloguis a --casilla
           0003 (Retribucions dineràries).
         prestacion_inss_exenta_not_decimal: '--prestacion-inss-exenta ha de ser un
-          import decimal; s''ha rebut: {value}.'
+          import decimal; s''ha rebut: {value}. Utilitzeu el punt com a separador
+          decimal i sense separador de milers, p. ex. 1234.56.'
         preview_maritime_exemption_annual_salary_help: Salari anual brut en EUR (Decimal).
           Obligatori quan el perfil actiu compleix els requisits de l'Art. 7.p) (vessel_flag=foreign
           o waters_type=international).
         preview_maritime_exemption_annual_salary_not_decimal: '--annual-salary ha
-          de ser un import decimal; s''ha rebut: {value}.'
+          de ser un import decimal; s''ha rebut: {value}. Utilitzeu el punt com a
+          separador decimal i sense separador de milers, p. ex. 1234.56.'
         preview_maritime_exemption_gross_navigation_income_help: Total d'ingressos
           bruts de treball procedents de la navegació en EUR (Decimal). Obligatori
           quan el perfil actiu compleix REBECA (vessel_registry a REBECA / rebeca_eu_eea
           / scheduled_canary_route).
         preview_maritime_exemption_gross_navigation_income_not_decimal: '--gross-navigation-income
-          ha de ser un import decimal; s''ha rebut: {value}.'
+          ha de ser un import decimal; s''ha rebut: {value}. Utilitzeu el punt com
+          a separador decimal i sense separador de milers, p. ex. 1234.56.'
         preview_maritime_exemption_help: Previsualitza l'exempció IRPF del treballador
           del mar (Art. 7.p) LIRPF / REBECA 50%) a partir dels fets maritime_worker
           del perfil actiu. Emet files CasillaObservation tipades amb legal_refs;
@@ -2993,8 +3004,9 @@ cli:
           en forma de capital (DT 12a LIRPF). Fes-lo servir amb --rescate-plan-pensiones-aportaciones-pre-2007
           i --rescate-plan-pensiones-aportaciones-totales perquè l'assistent calculi
           la reducció del 40% i l'injecti a la casella 0011.
-        rescate_plan_pensiones_not_decimal: Els valors --rescate-plan-pensiones-*
-          han de ser imports decimals.
+        rescate_plan_pensiones_not_decimal: 'Els valors --rescate-plan-pensiones-*
+          han de ser imports decimals; s''ha rebut: {value}. Utilitzeu el punt com
+          a separador decimal i sense separador de milers, p. ex. 1234.56.'
         rescate_type_help: 'Tipus de rescat del pla de pensions (DT 12a LIRPF): total
           (tot el capital de cop) o parcial (cobraments esglaonats). És un senyal
           de classificació i provenance, no canvia l''import: la reducció del 40%
@@ -3057,7 +3069,9 @@ cli:
           (Llei 44/2015 art. 14). S'utilitza per comprovar si la reserva ja arriba
           al primer cèntim per sobre del doble del capital social. Necessari amb --sal-beneficio-neto
           i --sal-capital-social.
-        sal_reserva_not_decimal: Els valors --sal-* han de ser imports decimals.
+        sal_reserva_not_decimal: 'Els valors --sal-* han de ser imports decimals;
+          s''ha rebut: {value}. Utilitzeu el punt com a separador decimal i sense
+          separador de milers, p. ex. 1234.56.'
         selector_ambiguous: Més d'una unitat de treball activa coincideix amb aquest
           modelo/any/període. Trieu una revisió del registre o passeu un id explícit
           d unitat de treball. {candidates}
@@ -3694,6 +3708,9 @@ cli:
       import_requires_path: Indica l'argument RUTA del paquet, o executa l'ordre en
         un terminal interactiu perquè se't pregunti.
       import_uuid_collision: El UUID del paquet entra en conflicte amb un perfil existent.
+      manager_closed: Els canvis a '{profile}' estan desats.
+      manager_closed_created: Perfil '{profile}' creat i a punt. Torna a obrir-lo
+        quan vulguis amb 'aeat config profile edit'.
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF>` first.
       preflight_filing_year_help: Exercici de presentació (quatre dígits).
@@ -3715,6 +3732,7 @@ cli:
         exercici %{filing_year} període %{period}. Executeu `aeat app modelo describe
         %{modelo}` per veure els períodes i revisions vàlids.
       preflight_year_help: Exercici fiscal.
+      registration_abandoned: No s'ha creat cap perfil.
       remove_help: Marcar un perfil com a retirat (les snapshots immutables es conserven)
       remove_name_help: Id del perfil a retirar
       remove_requires_yes: La retirada és destructiva. Torna a executar 'aeat config
@@ -6143,6 +6161,8 @@ errors:
     bootstrap_already_complete: L'arrencada de l'emmagatzematge segur ja està completa.
       Fes servir aeat config login NAME per activar un perfil existent o aeat config
       profile create NAME per afegir-ne un altre.
+    clave_credentials_incomplete: Al mode d'autenticació Cl@ve seleccionat li falta
+      una credencial que necessita.
     ledger_preflight: La comprovació prèvia del llibre ha rebutjat l'execució del
       model perquè encara no es pot presentar.
     m145_communication_record_ambiguous: El prefix de l'id de registre de comunicació
@@ -6221,6 +6241,7 @@ errors:
       config login NAME` i torna-ho a provar.
     profile_name_collision: El nom de perfil indicat ja s'està utilitzant. Tria un
       nom diferent.
+    profile_registration: No s'ha pogut registrar el perfil.
     reconciliation_cross_bucket: La unitat de treball apuntada pertany a un bucket
       diferent del perfil actiu. La conciliació només opera dins el bucket del perfil
       actiu.
@@ -6594,6 +6615,36 @@ flows:
       de flux.
     unsupported_console: Aquesta consola no pot mostrar preguntes interactives. Executa
       el flux des d'un terminal real o guia'l amb un fitxer de respostes.
+  manager:
+    action:
+      abandoned: Sense canvis.
+      auth_clave_incomplete: A Cl@ve encara li falta %{missing}. No s'ha desat res.
+      auth_dni_nie: DNI o NIE amb què us identifiqueu
+      auth_numero_soporte: Número de suport del document
+      auth_provider: Forma d'identificació davant l'AEAT
+      certificate: Certificat
+      certificate_active: Certificat actiu
+      certificate_done: 'Identificació: %{provider}; certificat actiu: %{name}.'
+      export: Exportar còpia
+      export_destination: Ruta del fitxer de destinació
+      export_done: Còpia xifrada escrita a %{destination}.
+      export_passphrase: Contrasenya que protegirà la còpia
+      provider:
+        certificate: Certificat electrònic
+        clave_movil: Cl@ve Mòbil
+        clave_permanente: Cl@ve Permanent
+    actions:
+      section: Accions
+    column:
+      field: Camp
+      state: Estat
+      value: Valor
+    edit:
+      cancel: Cancel·la
+      save: Desa
+    progress: '{present} de {total} camps emplenats, en falten {missing} per presentar'
+    section_title: '{title} — {present}/{total}'
+    title: 'Perfil: {profile}'
   progress:
     current_answer: 'Resposta actual: {value}'
     current_answer_secret: 'Resposta actual: (oculta)'
@@ -6603,6 +6654,31 @@ flows:
     optional: Opcional
     page_header: Pregunta {position} de {total} — secció {section}
     required: Obligatori
+  registration:
+    confirm_label: Repeteix la contrasenya
+    create_button: Crea el perfil
+    intro: 'Tria un nom per a aquest perfil i una contrasenya que el protegeixi. No
+      cal res més: el teu perfil existeix tan bon punt continuïs, i la resta la completes
+      quan vulguis.'
+    password_hint: Com a mínim {minimum_length} caràcters. Unes quantes paraules corrents
+      seguides són més fàcils de recordar i més difícils d'endevinar que una sola
+      paraula curta i complicada.
+    password_label: Contrasenya
+    refusal:
+      confirmation_mismatch: Les dues contrasenyes no coincideixen.
+      username_required: Introdueix un nom per a aquest perfil.
+    section: Nom i contrasenya
+    strength:
+      fair: Raonable.
+      strong: Forta.
+      too_short: 'Massa curta: calen com a mínim {minimum_length} caràcters.'
+      weak: Acceptada, però feble. Allargar-la ajuda més que afegir-hi símbols.
+    title: Crea el teu perfil
+    username_hint: Com apareix aquest perfil a les llistes. El pots canviar més endavant.
+    username_label: Nom del perfil
+    why_password: 'Les teves dades fiscals es queden en aquest ordinador i no s''envien
+      enlloc. La contrasenya les xifra al disc, de manera que no es poden llegir sense
+      tu. No es pot restablir: si la perds, les dades són irrecuperables.'
   review:
     action_edit: Edita una resposta
     action_prompt: Què vols fer?
@@ -6957,6 +7033,7 @@ wizard:
   commands:
     status:
       created: creat
+      saved: desat
       updated: actualitzat
   demo:
     description: Una secció de demostració per provar la funcionalitat de l'assistent

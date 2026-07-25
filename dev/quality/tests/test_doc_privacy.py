@@ -124,6 +124,73 @@ def _is_allowlisted(hit: str, token: str) -> bool:
     return (path, token) in _ALLOWLIST
 
 
+def _probe_repo(root: Path) -> None:
+    """Materialise a real git repo carrying one instance of each banned shape.
+
+    Every planted token is assembled through :func:`_token` for the same reason
+    the ban list is: a literal here would be a real leak in a tracked file and
+    the tree-wide scan would flag this module. The out-of-range addresses are
+    written whole because they are not banned and must not match.
+    """
+    leak = "\n".join(
+        (
+            f"host {_token('probe-host.tailnet-0000', '.ts', '.net')} answered",
+            f"peer {_token('100.', '101.102.103')} answered",
+            f"low edge {_token('100.', '64.0.1')} high edge {_token('100.', '127.255.254')}",
+            "outside 100.63.0.1 and outside 100.128.0.1",
+            f"contact {_BANNED_LITERALS[0]}",
+        ),
+    )
+    (root / "leak.txt").write_text(leak + "\n", encoding="utf-8")
+    for argv in (
+        ["git", "init", "-q"],
+        ["git", "add", "-A"],
+        ["git", "-c", "user.email=p@example.invalid", "-c", "user.name=probe", "commit", "-qm", "probe"],
+    ):
+        subprocess.run(argv, cwd=root, check=True, capture_output=True)  # noqa: S603 - fixed git argv in a temp repo
+
+
+def test_the_banned_token_sets_are_not_empty() -> None:
+    """An emptied ban list disarms the scan while leaving it green."""
+    assert len(_BANNED_LITERALS) >= 5
+    assert _BANNED_IN_SHIPPED_SURFACES
+    assert _BANNED_PATTERNS
+
+
+def test_the_scan_finds_every_banned_shape_in_a_repository_that_carries_them(tmp_path: Path) -> None:
+    """Positive control: the real scan, run against a repo that really leaks.
+
+    The tree-wide assertion below reports zero offenders, which is the same
+    result it would report if the patterns had stopped matching or ``git grep``
+    had stopped reading anything. Nothing distinguishes a scrubbed tree from a
+    blind scan without exercising the scan against a corpus known to contain
+    each shape, through the gate's own ``_git_grep``.
+    """
+    _probe_repo(tmp_path)
+
+    literal_hits = _git_grep(tmp_path, ["-F", "-e", _BANNED_LITERALS[0]])
+    assert literal_hits, f"the fixed-string scan no longer finds {_BANNED_LITERALS[0]!r}"
+
+    for pattern in _BANNED_PATTERNS:
+        assert _git_grep(tmp_path, ["-E", "-e", pattern]), f"the ERE scan no longer matches {pattern!r}"
+
+
+def test_the_network_range_pattern_stops_at_its_boundaries(tmp_path: Path) -> None:
+    """Negative control: the CGNAT pattern covers 100.64-100.127 and no more.
+
+    A pattern widened to every ``100.x`` address would flag ordinary public
+    addresses and get silenced rather than corrected, so both edges are pinned.
+    """
+    _probe_repo(tmp_path)
+    cgnat = next(pattern for pattern in _BANNED_PATTERNS if "12[0-7]" in pattern)
+    matched = "\n".join(_git_grep(tmp_path, ["-E", "-e", cgnat]))
+
+    for inside in (_token("100.", "64.0.1"), _token("100.", "127.255.254"), _token("100.", "101.102.103")):
+        assert inside in matched, f"{inside} is inside the CGNAT range and must match"
+    for outside in ("100.63.0.1", "100.128.0.1"):
+        assert outside not in matched, f"{outside} is outside the CGNAT range and must not match"
+
+
 def test_no_operator_identifying_tokens_in_tracked_files() -> None:
     """No tracked file may carry a leaked host / login / path / network token."""
     root = _repo_root()

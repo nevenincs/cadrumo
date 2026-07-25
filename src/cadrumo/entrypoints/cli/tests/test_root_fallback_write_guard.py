@@ -10,7 +10,10 @@ from textwrap import dedent
 
 import pytest
 
-from ....application.storage_write_policy import is_profile_bound_write_verb_path
+from ....application.storage_write_policy import (
+    PROFILE_BOUND_WRITE_VERB_PATHS,
+    is_profile_bound_write_verb_path,
+)
 from ....core.paths import PROJECT_ROOT
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -280,6 +283,93 @@ def test_root_fallback_guard_predicate_leaves_read_and_recovery_paths_open() -> 
 
     for verb_path in _UNGARDED_PREDICATE_PATHS:
         assert not is_profile_bound_write_verb_path(verb_path), verb_path
+
+
+def _live_leaf_paths() -> tuple[str, ...]:
+    """Return every leaf command path in the fully-materialised CLI tree.
+
+    The tree is lazy: walking it without draining the lazy registry yields a
+    single leaf and would make every conformance assertion below vacuously
+    true. The subtrees are materialised first for that reason.
+    """
+    import click
+    import typer
+
+    from ...cli import app
+    from ._lazy_command_tree import materialise_lazy_subcommands
+
+    materialise_lazy_subcommands(app)
+    root = typer.main.get_command(app)
+
+    leaves: list[str] = []
+
+    def walk(command: object, prefix: list[str], parent: click.Context | None) -> None:
+        ctx = click.Context(command, info_name=prefix[-1] if prefix else "aeat", parent=parent)  # type: ignore[arg-type]
+        names = list(command.list_commands(ctx)) if hasattr(command, "list_commands") else []
+        if not names:
+            leaves.append(" ".join(prefix))
+            return
+        for name in sorted(names):
+            child = command.get_command(ctx, name)  # type: ignore[attr-defined]
+            if child is not None:
+                walk(child, [*prefix, name], ctx)
+
+    walk(root, [], None)
+    return tuple(leaves)
+
+
+def _entry_matches_a_live_leaf(entry: str, leaves: tuple[str, ...]) -> bool:
+    """Whether ``entry`` names, or prefixes, at least one live leaf path."""
+
+    return any(leaf == entry or leaf.startswith(f"{entry} ") for leaf in leaves)
+
+
+def test_every_guarded_write_path_names_a_live_command() -> None:
+    """No catalogue entry may name a command path the CLI no longer exposes.
+
+    The write guard matches by prefix, so an entry left behind by a verb
+    rename silently stops matching anything: the renamed command is answered
+    ``NON_PROFILE_BOUND_VERB`` and drops out of the profile-bound write guard
+    entirely. That is a fail-OPEN, and it is invisible to the manifest parity
+    gate because an unknown command key classifies as not-read-only, exactly
+    like a live write verb.
+
+    This binds the catalogue to the live command tree, which is the only
+    surface that cannot drift away from what the operator can actually run.
+    """
+
+    leaves = _live_leaf_paths()
+    assert len(leaves) > 100, f"materialisation failed; only {len(leaves)} leaves walked"
+
+    stale = sorted(entry for entry in PROFILE_BOUND_WRITE_VERB_PATHS if not _entry_matches_a_live_leaf(entry, leaves))
+
+    assert stale == [], (
+        "write-guard catalogue entries naming no live command (these fall out of "
+        f"the profile-bound write guard and fail OPEN): {stale}"
+    )
+
+
+def test_live_command_check_rejects_a_stale_catalogue_entry() -> None:
+    """Anti-tautology proof for the catalogue conformance gate above.
+
+    If the matcher accepted anything, the green result would carry no
+    information. A path from the pre-collapse invoice grammar — the exact
+    drift that put every invoice mutation outside the guard — must be
+    rejected, while its live replacement is accepted.
+    """
+
+    leaves = _live_leaf_paths()
+
+    assert not _entry_matches_a_live_leaf("app ledger payable-invoice add", leaves)
+    assert not _entry_matches_a_live_leaf("app ledger collectible-invoice add", leaves)
+    assert _entry_matches_a_live_leaf("app ledger invoice add", leaves)
+
+
+def test_invoice_mutations_are_profile_bound_writes() -> None:
+    """Invoice mutations write profile-bound storage and must stay guarded."""
+
+    for verb_path in ("app ledger invoice add", "app ledger invoice update", "app ledger invoice remove"):
+        assert is_profile_bound_write_verb_path(verb_path), verb_path
 
 
 def test_cli_root_delegates_route_classification_to_backend_policy() -> None:

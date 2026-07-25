@@ -142,7 +142,7 @@ _NEGATIVE_1T_INPUTS: dict[CasillaId, Decimal] = {
 }
 # Casilla "01" (actividad-económica gross income) is now owned by the enrolled
 # LedgerRentaIncomeAggregationSourceResolver, and casilla "02" (Gastos) by the
-# enrolled LedgerRentaGastoAggregationSourceResolver.  Callers must not supply
+# enrolled LedgerRentaGastosPagoFraccionadoAggregationSourceResolver.  Callers must not supply
 # either on the aggregation path; both resolvers return zero for an empty
 # transaction bucket, which is correct for these carry-forward tests that do not
 # seed income or expense transactions.  The carry-forward assertion (casilla 15

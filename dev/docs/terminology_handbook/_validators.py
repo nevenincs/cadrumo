@@ -20,7 +20,8 @@ from __future__ import annotations
 
 from collections.abc import Container
 
-from ._enums import ConceptLifecycle
+from cadrumo.core import ConceptLifecycle
+
 from ._errors import TerminologyValidationError
 from ._loader import HandbookValidator, TerminologyHandbook
 

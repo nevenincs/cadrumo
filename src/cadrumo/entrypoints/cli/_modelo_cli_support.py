@@ -11,7 +11,7 @@ from __future__ import annotations
 import re
 import shlex
 from collections.abc import Callable
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from typing import TYPE_CHECKING, Annotated
 
 import typer
@@ -44,11 +44,13 @@ from ...application.modelo import (
     validate_m349_nif_format,
 )
 from ...core import M210GrossIncomeSourceMode, Modelo, RescateType
+from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import CadrumoError, build_error_envelope, resolve_error_message
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...domain.calculations.registry import BindingId, CasillaId, RelationId, validated_casilla_id
+from ._common import active_bucket_id_or_refuse
 from ._errors import CliRefusedBoundaryError
 from ._modelo_rendering import short_id
 
@@ -465,19 +467,36 @@ def parse_meses_trabajo_hijo_spec(spec: str) -> tuple[str, int]:
 
 
 def optional_decimal_option(raw: str | None, *, translation_key: str, default: str) -> Decimal | None:
-    """Parse an optional decimal CLI option."""
+    """Parse an optional hand-typed euro amount carrying a per-field refusal message.
+
+    The single home for the "optional operator-typed amount whose refusal names
+    its own field" shape. Every caller supplies its own ``translation_key`` /
+    ``default`` pair, which is the only axis they differ on; the accepted grammar
+    is shared and enforced here once.
+
+    Conformance is the canonical euro-amount grammar
+    (:func:`~cadrumo.core.decimal.try_parse_canonical_decimal` with a
+    two-fractional-digit cap): a dot decimal separator, at most euro-cent
+    precision, no thousands grouping, no comma decimal, no scientific notation,
+    no leading ``+``, and no ``NaN``/``Infinity``. The cap is what makes the
+    Spanish thousands shape ``1.000`` refuse rather than silently becoming
+    ``Decimal("1.0")`` — a one-euro figure where the operator meant one
+    thousand. A leading ``-`` still conforms, so a field whose domain forbids a
+    negative amount keeps reporting that through its own validator rather than
+    changing which surface refuses.
+    """
     if raw is None:
         return None
-    try:
-        return Decimal(raw)
-    except (InvalidOperation, ValueError) as exc:
+    parsed = try_parse_canonical_decimal(raw, max_fraction_digits=2)
+    if parsed is None:
         raise typer.BadParameter(
             tr(
                 translation_key,
                 value=raw,
                 default=default,
             ),
-        ) from exc
+        )
+    return parsed
 
 
 def work_calculate_input_bundle_from_cli(
@@ -523,23 +542,35 @@ def work_calculate_input_bundle_from_cli(
             prestacion_inss_exenta=optional_decimal_option(
                 prestacion_inss_exenta,
                 translation_key="cli.app.modelo.work.prestacion_inss_exenta_not_decimal",
-                default="--prestacion-inss-exenta must be a decimal amount; received: {value}",
+                default=(
+                    "--prestacion-inss-exenta must be a decimal amount; received: {value}. "
+                    "Use a dot decimal separator with no thousands grouping, e.g. 1234.56."
+                ),
             ),
             meses_trabajo_con_hijo_menor_3=meses_pairs,
             rescate_plan_pensiones_capital=optional_decimal_option(
                 rescate_plan_pensiones_capital,
                 translation_key="cli.app.modelo.work.rescate_plan_pensiones_not_decimal",
-                default="--rescate-plan-pensiones-* values must be decimals.",
+                default=(
+                    "--rescate-plan-pensiones-* values must be decimal amounts; received: {value}. "
+                    "Use a dot decimal separator with no thousands grouping, e.g. 1234.56."
+                ),
             ),
             rescate_plan_pensiones_aportaciones_pre_2007=optional_decimal_option(
                 rescate_plan_pensiones_aportaciones_pre_2007,
                 translation_key="cli.app.modelo.work.rescate_plan_pensiones_not_decimal",
-                default="--rescate-plan-pensiones-* values must be decimals.",
+                default=(
+                    "--rescate-plan-pensiones-* values must be decimal amounts; received: {value}. "
+                    "Use a dot decimal separator with no thousands grouping, e.g. 1234.56."
+                ),
             ),
             rescate_plan_pensiones_aportaciones_totales=optional_decimal_option(
                 rescate_plan_pensiones_aportaciones_totales,
                 translation_key="cli.app.modelo.work.rescate_plan_pensiones_not_decimal",
-                default="--rescate-plan-pensiones-* values must be decimals.",
+                default=(
+                    "--rescate-plan-pensiones-* values must be decimal amounts; received: {value}. "
+                    "Use a dot decimal separator with no thousands grouping, e.g. 1234.56."
+                ),
             ),
             rescate_plan_pensiones_tipo=rescate_type,
             rescate_plan_pensiones_contingencia_year=contingencia_year,
@@ -547,22 +578,34 @@ def work_calculate_input_bundle_from_cli(
             sal_beneficio_neto=optional_decimal_option(
                 sal_beneficio_neto,
                 translation_key="cli.app.modelo.work.sal_reserva_not_decimal",
-                default="--sal-* values must be decimals.",
+                default=(
+                    "--sal-* values must be decimal amounts; received: {value}. "
+                    "Use a dot decimal separator with no thousands grouping, e.g. 1234.56."
+                ),
             ),
             sal_reserva_dotada=optional_decimal_option(
                 sal_reserva_dotada,
                 translation_key="cli.app.modelo.work.sal_reserva_not_decimal",
-                default="--sal-* values must be decimals.",
+                default=(
+                    "--sal-* values must be decimal amounts; received: {value}. "
+                    "Use a dot decimal separator with no thousands grouping, e.g. 1234.56."
+                ),
             ),
             sal_capital_social=optional_decimal_option(
                 sal_capital_social,
                 translation_key="cli.app.modelo.work.sal_reserva_not_decimal",
-                default="--sal-* values must be decimals.",
+                default=(
+                    "--sal-* values must be decimal amounts; received: {value}. "
+                    "Use a dot decimal separator with no thousands grouping, e.g. 1234.56."
+                ),
             ),
             autoconsumo_promotor_base=optional_decimal_option(
                 autoconsumo_promotor_base,
                 translation_key="cli.app.modelo.work.autoconsumo_promotor_base_not_decimal",
-                default="--autoconsumo-promotor-base must be a decimal amount; received: {value}",
+                default=(
+                    "--autoconsumo-promotor-base must be a decimal amount; received: {value}. "
+                    "Use a dot decimal separator with no thousands grouping, e.g. 1234.56."
+                ),
             ),
         )
     except CadrumoError:
@@ -765,6 +808,32 @@ def load_calculation_revision(calculation_revision_id: str) -> CalculationRevisi
     return get_calculation_revision(calculation_revision_id)
 
 
+def resolve_explicit_or_active_bucket_id(bucket_id: str | None) -> str:
+    """Return an explicit ``--bucket-id``, or the active profile bucket when unset.
+
+    Single canonical home for the modelo CLI's ``--bucket-id`` fallback: an
+    explicit override lets an accountant scope the command to one profile bucket
+    on a shared machine, while omitting it addresses the active profile, which is
+    the common single-operator case. A blank explicit value is treated as unset so
+    an empty option never reaches storage scoping as a bucket id.
+
+    The refusal is the operator-facing no-active-profile refusal rather than the
+    domain error raised by :func:`~core.resolve_repository_bucket_id`, because a
+    cold-start CLI invocation must distinguish "no profile registered" from
+    "registered but logged out" in its suggested next command.
+
+    Args:
+        bucket_id: The operator-supplied bucket id, or ``None`` to address the
+            active profile bucket.
+
+    Returns:
+        The resolved bucket id, trimmed.
+    """
+    if bucket_id is not None and bucket_id.strip():
+        return bucket_id.strip()
+    return active_bucket_id_or_refuse()
+
+
 def resolve_default_actor() -> str:
     """Return the active profile display_name, or a permanent fallback label."""
     try:
@@ -800,6 +869,7 @@ __all__ = [
     "parse_revision_selector",
     "parse_row_spec",
     "resolve_default_actor",
+    "resolve_explicit_or_active_bucket_id",
     "selector_bad_parameter",
     "validate_binding_key",
     "validate_calculation_revision_id",

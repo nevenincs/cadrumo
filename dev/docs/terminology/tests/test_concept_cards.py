@@ -19,11 +19,11 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.core import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
 from dev.docs.terminology._concept_cards import ConceptCardProjectionStats, ConceptCardRecord
 
 from ...terminology_handbook import (
-    ConceptLifecycle,
     TermStatus,
     load_terminology_handbook,
     terminology_concepts_dir,

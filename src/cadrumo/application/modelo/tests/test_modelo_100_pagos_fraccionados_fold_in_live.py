@@ -226,7 +226,7 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
             "profile",
             _RELATION_PREFILL_SOURCE,
             "ledger_renta_income_aggregation",
-            "ledger_renta_expense_aggregation",
+            "ledger_renta_gastos_estimacion_directa_aggregation",
             "ledger_iva_aggregation",
             "ledger_oss_aggregation",
             "collectible_invoice",

@@ -69,6 +69,7 @@ from ._login_throttle import (
     reset_login_throttle,
 )
 from ._master_key import (
+    NIST_PASSPHRASE_MIN_LENGTH,
     FileFallbackMasterKeyProvider,
     KeyringMasterKeyProvider,
     MasterKeyProvider,
@@ -150,6 +151,7 @@ __all__ = [
     "ARGON2_MEMORY_COST_KIB",
     "ARGON2_PARALLELISM",
     "ARGON2_TIME_COST",
+    "NIST_PASSPHRASE_MIN_LENGTH",
     "PROFILE_SESSION_KEYCHAIN_SERVICE",
     "PROFILE_SESSION_SCHEMA_VERSION",
     "BucketSession",

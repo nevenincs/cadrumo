@@ -6,7 +6,14 @@ install/bucket references, Homebrew install/tap references, Claude plugin
 marketplace URLs, and MCPB download references.  For every claim found the
 gate requires a passing :class:`~dev.packaging.evidence.DistributionEvidence`
 record in ``var/distribution-install-readiness/`` for each distribution row
-the channel maps to in :data:`REQUIRED_DISTRIBUTION_ROWS`.
+the channel maps to in :data:`~dev.release.readiness.ALL_DISTRIBUTION_ROWS`.
+
+This gate is anchored on the FULL row set rather than the claimed subset. The
+readiness gate scales its required rows to the channels a release claims, so an
+unclaimed channel no longer blocks a claimed one — but a documentation claim is
+itself the act of claiming a channel, so it must always carry that channel's
+proof. The two are complements: readiness asks "did the channels you claim
+pass?", this gate asks "are you claiming a channel that did not?".
 
 The gate passes cleanly when documentation makes no positive acquisition
 claims — disclaimers such as "do not install from PyPI yet" do not match the
@@ -33,7 +40,7 @@ import pydantic
 import pytest
 
 from dev.packaging.evidence import DistributionEvidence, EvidenceStatus
-from dev.release.readiness import REQUIRED_DISTRIBUTION_ROWS
+from dev.release.readiness import ALL_DISTRIBUTION_ROWS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -395,24 +402,42 @@ def test_no_unevidenced_channel_claims() -> None:
     )
 
 
-def test_claim_row_ids_are_in_required_distribution_rows() -> None:
-    """All row IDs in the claim-pattern mapping are known REQUIRED_DISTRIBUTION_ROWS.
+def test_claim_row_ids_are_real_distribution_rows() -> None:
+    """All row IDs in the claim-pattern mapping are rows some channel really owns.
 
     Guards against a typo in the mapping table that would silently skip the
-    evidence check for a real distribution row.  If a new row is added to
-    :data:`~dev.release.readiness.REQUIRED_DISTRIBUTION_ROWS`, the mapping
-    here must be updated when documentation for that channel lands.
+    evidence check for a real distribution row.
+
+    Anchored on :data:`~dev.release.readiness.ALL_DISTRIBUTION_ROWS`, not the
+    claimed subset. This gate exists to stop documentation advertising a channel
+    ahead of its proof, so it must keep teeth for exactly the channels the
+    release does NOT claim — anchoring it on the claimed set would let a doc
+    claim an unclaimed channel with no row at all, which is the failure it is
+    built to prevent.
     """
-    known_rows: frozenset[str] = frozenset(REQUIRED_DISTRIBUTION_ROWS)
+    known_rows: frozenset[str] = frozenset(ALL_DISTRIBUTION_ROWS)
     invalid: list[str] = []
     for label, _pattern, row_ids in _CLAIM_PATTERNS:
         for row_id in row_ids:
             if row_id not in known_rows:
-                invalid.append(f"  pattern '{label}': '{row_id}' is not in REQUIRED_DISTRIBUTION_ROWS")
+                invalid.append(f"  pattern '{label}': '{row_id}' is owned by no download channel")
     assert not invalid, (
-        "Claim pattern mapping references row IDs that are not in "
-        "REQUIRED_DISTRIBUTION_ROWS (typo or stale entry):\n"
-        + "\n".join(invalid)
-        + "\nUpdate REQUIRED_DISTRIBUTION_ROWS in dev/release/readiness.py "
-        "or correct the mapping in this file."
+        "Claim pattern mapping references row IDs that no channel owns "
+        "(typo or stale entry):\n" + "\n".join(invalid) + "\nAdd the row to a channel's evidence_rows in "
+        "docs/_data/download_channels.toml or correct the mapping in this file."
+    )
+
+
+def test_every_channel_evidence_row_is_reachable_by_a_claim_pattern() -> None:
+    """Anti-vacuity: each row a channel declares is guarded by some claim pattern.
+
+    Without this, adding a channel row to the descriptor and forgetting its claim
+    pattern would leave that channel documentable with no evidence requirement —
+    the gate would stay green while measuring nothing for that channel.
+    """
+    patterned: frozenset[str] = frozenset(row for _label, _pattern, rows in _CLAIM_PATTERNS for row in rows)
+    unguarded = sorted(frozenset(ALL_DISTRIBUTION_ROWS) - patterned)
+    assert not unguarded, (
+        "these declared channel evidence rows are guarded by no documentation claim pattern, "
+        f"so their channel could be advertised unproven: {unguarded}"
     )

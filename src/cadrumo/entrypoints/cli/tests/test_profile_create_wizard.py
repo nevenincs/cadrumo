@@ -1,14 +1,12 @@
 """Terminal-boundary coverage for an interactive ``aeat config profile create``.
 
-``config profile create`` is the operator's first contact with Cadrumo. The
-interactive branch now runs the paged flow substrate behind a capability
-probe: a capable terminal gets the full-screen TUI, and a host without a
-usable console (this test process included) is refused instructively rather
-than half-prompted. The end-to-end interactive persistence contract is
-covered by the scripted-driver tests beside the frontend seam
-(``application/wizard/tests/test_setup_flow_frontend.py``); this module
-covers the CLI boundary itself: the machine-caller contract of a refused
-interactive run, and the pinned prompted-question inventory.
+``config profile create`` is the operator's first contact with Cadrumo. A
+capable terminal is diverted to the profile manager before this command
+runs; a host without a usable console (this test process included) reaches
+the command and is refused instructively, naming the flag form, rather than
+being half-prompted. This module covers that CLI boundary: the
+machine-caller contract of a refused run, and the pinned question
+inventory the flags are derived from.
 """
 
 from __future__ import annotations

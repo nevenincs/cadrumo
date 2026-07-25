@@ -34,7 +34,8 @@ from ...core.json_contract import Notice
 from ...domain.calculations.registry import RegistrySnapshotError
 from ...domain.contribuyente import parse_tax_region
 from ...domain.modelos import WorkUnit
-from ._common import _emit_envelope, active_bucket_id_or_refuse
+from ._common import _emit_envelope
+from ._modelo_cli_support import resolve_explicit_or_active_bucket_id
 from ._modelo_payloads import (
     WorkCreateResult,
     WorkDiscardResult,
@@ -232,7 +233,7 @@ def _register_work_create_command(work_app: typer.Typer, deps: _LifecycleDeps) -
         deps.require_active_profile()
         deps.guard_foral_profile_ccaa()
         _guard_modelo_applicability(modelo, allow_not_applicable=allow_not_applicable)
-        resolved_bucket = bucket_id if bucket_id is not None else active_bucket_id_or_refuse()
+        resolved_bucket = resolve_explicit_or_active_bucket_id(bucket_id)
         resolved_actor = actor or deps.resolve_default_actor()
         require_existing_profile_baseline_ready_for_modelo_work(
             bucket_id=resolved_bucket,

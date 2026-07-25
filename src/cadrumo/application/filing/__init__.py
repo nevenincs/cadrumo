@@ -73,7 +73,6 @@ from __future__ import annotations
 from collections.abc import Iterator, Mapping
 from datetime import date
 from decimal import Decimal, InvalidOperation
-from functools import lru_cache
 
 from ...core import BindingSourceKind as _BindingSourceKind
 from ...core import Period as _Period
@@ -404,8 +403,24 @@ def build_draft(
     return apply_validation(draft, findings)
 
 
-@lru_cache(maxsize=128)
 def _load_registry_snapshot(*, modelo: str, period: _Period) -> _RegistrySnapshot:
+    """Resolve the registry snapshot for ``modelo`` in ``period`` from the authority.
+
+    Deliberately uncached at this layer. Registry snapshots are already cached
+    beneath this call, and that cache chain is invalidated by the complete
+    registry-tree fingerprint: resetting the process resource registry rebuilds
+    the authority, whose tree load is keyed on that fingerprint, so changed
+    sources re-derive. A memo here would sit *above* the loader keyed only on
+    ``(modelo, period)`` — no fingerprint, no TTL, and outside that reset
+    protocol — so it would keep serving the pre-change snapshot for the life of
+    the process even after a correct reset, which means computing a filing under
+    a superseded revision's norms. Resolving through the authority costs well
+    under a microsecond on the warm path, so the memo bought nothing that could
+    justify that.
+
+    Revision selection stays law-determined: only ``filing_year`` and the bare
+    registry period token are passed, never a stored revision id.
+    """
     filing_year, registry_period = _registry_period(period)
     try:
         authority = _resources().modelos.authority

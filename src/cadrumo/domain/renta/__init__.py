@@ -53,7 +53,6 @@ from __future__ import annotations
 from . import _first_slice_routing_integrity as _first_slice_routing_integrity
 from ._errors import RentaValidationError
 from ._ledger_expenses import (
-    LEDGER_RENTA_EXPENSE_SOURCE,
     RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS,
     RentaDeductibilityContext,
     RentaDeductibilityResult,
@@ -87,7 +86,6 @@ from ._substrate import EstimacionDirectaModalidad, RentaIncomeType
 
 __all__ = [
     "ART_7P_EXEMPTION_CAP_EUR",
-    "LEDGER_RENTA_EXPENSE_SOURCE",
     "RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS",
     "RENTA_EXENTA_CASILLA",
     "EstimacionDirectaModalidad",

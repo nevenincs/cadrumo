@@ -25,8 +25,8 @@ The audit FAILS (exit 1) only on:
 
 It exits 0 when every current violation is within its baselined ceiling. This
 mirrors the size-budget ratchet in
-``src/cadrumo/tests/test_codebase_size_budgets.py``
-(``_MODULE_LINE_LIMIT_OVERRIDES`` / SPLIT-CANDIDATE pins).
+``src/cadrumo/tests/test_codebase_size_budgets.py``, whose limits are generated
+into ``dev/audit/size_budget_baseline.json`` by ``dev/audit/size_budget.py``.
 
 Baseline entries that NO LONGER violate are reported as a soft "resolved"
 notice so the baseline can shrink over time; they do not fail the run unless

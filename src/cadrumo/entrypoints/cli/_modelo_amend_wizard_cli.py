@@ -79,6 +79,7 @@ from ...application.modelo import (
     registry_casillas_for_registry_scope,
 )
 from ...core import STRICT_FROZEN_CONFIG, Period, permitted_amendment_kind_values
+from ...core.decimal import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ...core.i18n import output_language, tr
@@ -520,6 +521,23 @@ def _selected_rows(
     return tuple(selected)
 
 
+def _wizard_corrected_amount(state: FlowState, casilla_id: str) -> Decimal:
+    """Read one corrected casilla amount back off the flow state.
+
+    The DECIMAL widget's shape validation already admitted only a
+    canonical-grammar amount and canonicalised it to ``str(Decimal)``, so this
+    re-read is defence in depth against a widget contract change rather than the
+    boundary itself. It uses the same uncapped grammar the widget applies, so a
+    value the widget accepted can never hard-refuse here — a refusal at the end
+    of a collected flow would be a refusal at the wrong surface.
+    """
+    raw = (state.answers.get(_value_page_id(casilla_id)) or "").strip()
+    parsed = try_parse_canonical_decimal(raw)
+    if parsed is None:
+        raise typer.BadParameter(tr("cli.app.modelo.work.set_not_decimal", value=raw))
+    return parsed
+
+
 # KWARGS-ANY-RATIONALE-cli: selected rows carry a heterogeneous casilla-id element
 def _prompt_values_kind_reason(
     *,
@@ -551,8 +569,7 @@ def _prompt_values_kind_reason(
     corrections: list[tuple[Any, Decimal, Decimal]] = []
     for row in selected:
         previous = baseline_revision.casilla_values.get(row.casilla_id, Decimal("0"))
-        corrected = Decimal((state.answers.get(_value_page_id(row.casilla_id)) or "").strip())
-        corrections.append((row, previous, corrected))
+        corrections.append((row, previous, _wizard_corrected_amount(state, row.casilla_id)))
 
     amendment_kind = CalculationRevisionAmendmentKind((state.answers.get(_KIND_PAGE_ID) or "").strip())
     reason = (state.answers.get(_REASON_PAGE_ID) or "").strip()

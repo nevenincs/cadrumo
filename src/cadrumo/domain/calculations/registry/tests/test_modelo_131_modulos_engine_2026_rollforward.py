@@ -28,10 +28,11 @@ See Also:
 
 from __future__ import annotations
 
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import Decimal
 
 import pytest
 
+from .....core.money import round_to_cents
 from .._formula_runtime import calculate_registry_snapshot
 from ._registry_schema_support import _committed_snapshot
 
@@ -78,14 +79,6 @@ _INDICE_EXCESO = Decimal("1.30")
 _CUANTIA_EXCESO_972_1 = Decimal("18051.81")
 
 
-def _quantize(value: Decimal) -> Decimal:
-    return value.quantize(Decimal("0.01"))
-
-
-def _money_round(value: Decimal) -> Decimal:
-    return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-
-
 def _coeficiente_tramos(base: Decimal) -> Decimal:
     """Reproduce the coeficiente-por-tramos progressive-bracket lookup.
 
@@ -110,14 +103,14 @@ def _expected_minorado_no_inversion(previo: Decimal, *, modulo_1: Decimal, modul
     """Reproduce Fase 2ª (minoración por incentivos al empleo only; no anterior/inversión)."""
     coeficiente_tramos = _coeficiente_tramos(modulo_1)
     minoracion_empleo = coeficiente_tramos * modulo_1_coefficient
-    return _money_round(previo - minoracion_empleo)
+    return round_to_cents(previo - minoracion_empleo)
 
 
 def _expected_modulos(minorado: Decimal, *, cuantia: Decimal | None) -> Decimal:
     """Reproduce Fase 3ª (índice corrector de exceso only)."""
     if cuantia is None or minorado <= cuantia:
         return minorado
-    return _money_round(cuantia + _INDICE_EXCESO * (minorado - cuantia))
+    return round_to_cents(cuantia + _INDICE_EXCESO * (minorado - cuantia))
 
 
 def _run_modulos_engine_2026(
@@ -168,7 +161,7 @@ class TestPeluqueria9721EstimacionObjetiva2026:
             modulo_3=Decimal("50"),
             modulo_4=Decimal("30"),
         )
-        expected_previo = _quantize(
+        expected_previo = round_to_cents(
             Decimal("2") * _PELUQUERIA_972_1[1]
             + Decimal("1") * _PELUQUERIA_972_1[2]
             + Decimal("50") * _PELUQUERIA_972_1[3]
@@ -190,7 +183,7 @@ class TestPeluqueria9721EstimacionObjetiva2026:
             modulo_1_coefficient=_PELUQUERIA_972_1[1],
         )
         expected_modulos = _expected_modulos(expected_minorado, cuantia=_CUANTIA_EXCESO_972_1)
-        expected_actividad = _money_round(expected_modulos - expected_modulos * _REDUCCION_GENERAL_2026)
+        expected_actividad = round_to_cents(expected_modulos - expected_modulos * _REDUCCION_GENERAL_2026)
         assert minorado == expected_minorado == Decimal("22363.20")
         assert modulos == expected_modulos == Decimal("23656.62")
         assert actividad == expected_actividad == Decimal("22473.79")
@@ -207,7 +200,7 @@ class TestAutotaxi7212EstimacionObjetiva2026:
             modulo_2=Decimal("1"),
             modulo_3=Decimal("40"),
         )
-        expected_previo = _quantize(Decimal("1") * _AUTOTAXI_721_2[2] + Decimal("40") * _AUTOTAXI_721_2[3])
+        expected_previo = round_to_cents(Decimal("1") * _AUTOTAXI_721_2[2] + Decimal("40") * _AUTOTAXI_721_2[3])
         assert previo == expected_previo == Decimal("9460.09")
 
 

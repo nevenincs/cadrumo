@@ -47,15 +47,15 @@ from ...domain.calculations.registry import (
     ModeloRevision,
     resolve_ledger_impatriado_income_aggregation_binding_values,
     resolve_ledger_irnr_income_aggregation_binding_values,
-    resolve_ledger_renta_expense_aggregation_binding_values,
-    resolve_ledger_renta_gasto_aggregation_binding_values,
+    resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values,
+    resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values,
     resolve_ledger_renta_income_aggregation_binding_values,
     resolve_retenciones_aggregation_binding_values,
     unsupported_ledger_impatriado_income_observations,
     unsupported_ledger_irnr_income_observations,
     unsupported_ledger_iva_observations,
-    unsupported_ledger_renta_expense_observations,
-    unsupported_ledger_renta_gasto_observations,
+    unsupported_ledger_renta_gastos_estimacion_directa_observations,
+    unsupported_ledger_renta_gastos_pago_fraccionado_observations,
     unsupported_ledger_renta_income_observations,
     validated_casilla_id,
 )
@@ -263,18 +263,20 @@ class LedgerIvaAggregationSourceResolver:
         )
 
 
-class LedgerRentaExpenseAggregationSourceResolver:
-    """Resolve ``ledger_renta_expense_aggregation`` bindings for Renta expenses.
+class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
+    """Resolve ``ledger_renta_gastos_estimacion_directa_aggregation`` bindings for Renta expenses.
 
-    Owns :attr:`BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION` and folds
+    Owns :attr:`BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION` and folds
     transaction rows plus purchase-invoice evidence through
     :func:`~._renta_ledger.aggregate_renta_ledger_expenses_from_repositories`.
     It reports source issues and unrouted deductible expenses on the returned
     :class:`~._source_mesh.CalculationSourceResolution`.
     """
 
-    resolver_id = "ledger_renta_expense_aggregation"
-    owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION,)
+    resolver_id = "ledger_renta_gastos_estimacion_directa_aggregation"
+    owned_sources: tuple[BindingSourceKind, ...] = (
+        BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
+    )
 
     def __init__(
         self,
@@ -286,7 +288,7 @@ class LedgerRentaExpenseAggregationSourceResolver:
         self._invoice_repository = invoice_repository
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
-        if not _revision_has_binding_source(context.revision, "ledger_renta_expense_aggregation"):
+        if not _revision_has_binding_source(context.revision, "ledger_renta_gastos_estimacion_directa_aggregation"):
             return _empty_source_resolution(self.resolver_id, self.owned_sources)
 
         try:
@@ -311,14 +313,16 @@ class LedgerRentaExpenseAggregationSourceResolver:
             )
         # Fail-closed advisory parity with the IVA screen: a non-zero declarable
         # expense whose (modelo, period, target_casilla_id) matches no
-        # ledger_renta_expense_aggregation binding would otherwise be silently
+        # ledger_renta_gastos_estimacion_directa_aggregation binding would otherwise be silently
         # dropped (no-silent-under-declaration). Calculate still succeeds; the
         # operator sees the unrouted expense instead of an under-declared form.
-        unrouted = unsupported_ledger_renta_expense_observations(context.revision, aggregation.observations)
+        unrouted = unsupported_ledger_renta_gastos_estimacion_directa_observations(
+            context.revision, aggregation.observations
+        )
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
-            binding_values=resolve_ledger_renta_expense_aggregation_binding_values(
+            binding_values=resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values(
                 context.revision,
                 aggregation.observations,
             ),
@@ -328,7 +332,7 @@ class LedgerRentaExpenseAggregationSourceResolver:
             diagnostics=tuple(
                 CalculationSourceDiagnostic(
                     reason="source_issue",
-                    source_kind="ledger_renta_expense_aggregation",
+                    source_kind="ledger_renta_gastos_estimacion_directa_aggregation",
                     resolver_id=self.resolver_id,
                     message=issue.detail,
                 )
@@ -337,14 +341,15 @@ class LedgerRentaExpenseAggregationSourceResolver:
             + tuple(
                 CalculationSourceDiagnostic(
                     reason="unrouted_observation",
-                    source_kind="ledger_renta_expense_aggregation",
+                    source_kind="ledger_renta_gastos_estimacion_directa_aggregation",
                     resolver_id=self.resolver_id,
                     message=(
-                        f"declarable renta expense observation "
+                        f"declarable renta gastos observation "
                         f"(modelo={str(observation.modelo)!r}, period={observation.period!r}, "
                         f"target_casilla_id={observation.target_casilla_id!r}, "
                         f"deductible_amount={observation.deductible_amount}) is not consumed by any "
-                        f"ledger_renta_expense_aggregation binding on revision {context.revision.id!r}; "
+                        f"ledger_renta_gastos_estimacion_directa_aggregation binding "
+                        f"on revision {context.revision.id!r}; "
                         "its deductible amount is not declared on this calculation"
                     ),
                 )
@@ -703,24 +708,24 @@ def _irnr_annual_agrupacion_renta_rows(
     )
 
 
-class LedgerRentaGastoAggregationSourceResolver:
+class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
     """Source mesh resolver for repository-backed M130 deductible-expense (gasto) bindings.
 
-    Owns :attr:`BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION`. This is the
+    Owns :attr:`BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION`. This is the
     OUTGOING sibling of :class:`LedgerRentaIncomeAggregationSourceResolver`: it
     folds deductible business expenses into Modelo 130 casilla 02 over the same
     cumulative year-to-date quarterly window and emits an unrouted-observation
     diagnostic for declarable gastos no binding consumes.
     """
 
-    resolver_id = "ledger_renta_gasto_aggregation"
-    owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION,)
+    resolver_id = "ledger_renta_gastos_pago_fraccionado_aggregation"
+    owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,)
 
     def __init__(self, *, transaction_repository: TransactionCatalogueRepositoryProtocol | None = None) -> None:
         self._transaction_repository = transaction_repository
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
-        if not _revision_has_binding_source(context.revision, "ledger_renta_gasto_aggregation"):
+        if not _revision_has_binding_source(context.revision, "ledger_renta_gastos_pago_fraccionado_aggregation"):
             return _empty_source_resolution(self.resolver_id, self.owned_sources)
 
         aggregation_period = aggregation_period_for_modelo(
@@ -742,14 +747,16 @@ class LedgerRentaGastoAggregationSourceResolver:
             )
         # Fail-closed advisory parity with the income screen: a non-zero
         # declarable gasto whose target_casilla_id matches no
-        # ledger_renta_gasto_aggregation binding would otherwise be silently
+        # ledger_renta_gastos_pago_fraccionado_aggregation binding would otherwise be silently
         # dropped (no-silent-under-declaration). Calculate still succeeds; the
         # operator sees the unrouted expense instead of an under-declared form.
-        unrouted = unsupported_ledger_renta_gasto_observations(context.revision, aggregation.observations)
+        unrouted = unsupported_ledger_renta_gastos_pago_fraccionado_observations(
+            context.revision, aggregation.observations
+        )
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
-            binding_values=resolve_ledger_renta_gasto_aggregation_binding_values(
+            binding_values=resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values(
                 context.revision,
                 aggregation.observations,
             ),
@@ -758,13 +765,13 @@ class LedgerRentaGastoAggregationSourceResolver:
             ),
             diagnostics=_out_of_window_summary_diagnostics(
                 aggregation.out_of_window_summary,
-                source_kind="ledger_renta_gasto_aggregation",
+                source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
                 resolver_id=self.resolver_id,
             )
             + tuple(
                 CalculationSourceDiagnostic(
                     reason="source_issue",
-                    source_kind="ledger_renta_gasto_aggregation",
+                    source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
                     resolver_id=self.resolver_id,
                     message=issue.detail,
                 )
@@ -773,12 +780,12 @@ class LedgerRentaGastoAggregationSourceResolver:
             + tuple(
                 CalculationSourceDiagnostic(
                     reason="unrouted_observation",
-                    source_kind="ledger_renta_gasto_aggregation",
+                    source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
                     resolver_id=self.resolver_id,
                     message=(
                         f"declarable renta gasto observation (target_casilla_id="
                         f"{observation.target_casilla_id!r}, deductible_amount={observation.deductible_amount}) "
-                        f"is not consumed by any ledger_renta_gasto_aggregation binding on revision "
+                        f"is not consumed by any ledger_renta_gastos_pago_fraccionado_aggregation binding on revision "
                         f"{context.revision.id!r}; its deductible expense is not declared on this calculation"
                     ),
                 )
@@ -786,7 +793,7 @@ class LedgerRentaGastoAggregationSourceResolver:
             ),
             provenance=tuple(
                 CalculationSourceProvenance(
-                    source_kind="ledger_renta_gasto_aggregation",
+                    source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
                     source_ref=f"transaction:{observation.transaction_id}",
                 )
                 for observation in aggregation.observations
@@ -1134,14 +1141,14 @@ def _renta_observation_provenance(
 ) -> tuple[CalculationSourceProvenance, ...]:
     provenance = [
         CalculationSourceProvenance(
-            source_kind="ledger_renta_expense_aggregation",
+            source_kind="ledger_renta_gastos_estimacion_directa_aggregation",
             source_ref=f"transaction:{observation.transaction_id}",
         ),
     ]
     if observation.invoice_id is not None:
         provenance.append(
             CalculationSourceProvenance(
-                source_kind="ledger_renta_expense_aggregation",
+                source_kind="ledger_renta_gastos_estimacion_directa_aggregation",
                 source_ref=f"purchase-invoice-evidence:{observation.invoice_id}",
             ),
         )
@@ -1150,8 +1157,8 @@ def _renta_observation_provenance(
 
 __all__ = [
     "LedgerIvaAggregationSourceResolver",
-    "LedgerRentaExpenseAggregationSourceResolver",
-    "LedgerRentaGastoAggregationSourceResolver",
+    "LedgerRentaGastosEstimacionDirectaAggregationSourceResolver",
+    "LedgerRentaGastosPagoFraccionadoAggregationSourceResolver",
     "LedgerRentaIncomeAggregationSourceResolver",
     "aggregation_period_for_modelo",
 ]

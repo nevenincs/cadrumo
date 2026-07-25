@@ -85,11 +85,15 @@ import pytest
 from dev.import_hygiene_scan import (
     PKG_ROOT,
     discover_facades,
+    find_dev_tooling_import_violations,
     find_multi_sourced_symbols,
     find_private_import_violations,
     find_shim_modules,
     find_underscore_in_all_violations,
+    is_shipped_module,
+    iter_dynamic_import_targets,
     walk_module_imports,
+    wheel_exclude_globs,
 )
 
 from ..core.paths import PROJECT_ROOT
@@ -477,3 +481,171 @@ def test_family4_no_underscore_named_entries_in_any_facade_all() -> None:
         "sweep every consumer in one commit) or drop it from __all__ (it stays importable "
         "intra-package via its owning private submodule)."
     )
+
+
+# ---------------------------------------------------------------------------
+# Family 5: a shipped module must not import the unshipped dev/ tooling
+# ---------------------------------------------------------------------------
+#
+# RULING, stated so the next reader sees a decision rather than an oversight:
+# this family is scoped to SHIPPED modules, and an excluded test tree's
+# ``dev.`` import is permitted by design.
+#
+# The packaging config excludes every ``tests/`` tree from both the wheel and
+# the sdist, so a test module's ``dev.`` import cannot reach an installed user
+# -- it encodes "this suite needs the repo checkout and the dev dependency
+# group", which is already true and intended. A SHIPPED module's identical
+# import is a ``ModuleNotFoundError`` for every installed user while resolving
+# fine in a source checkout: a defect no in-repo test run can surface. That
+# asymmetry, not a style preference, is what this family gates.
+#
+# "Shipped" is READ from the wheel excludes rather than restated, so the gate
+# stays true if the packaging config changes. It is deliberately NOT the
+# scanner's ``is_test_module`` partition: a package-root ``conftest.py`` has no
+# ``tests/`` path component and therefore SHIPS, so it is gated despite being
+# test infrastructure by name. Reusing the name-based partition would have left
+# exactly that hole.
+#
+# The current shipped answer is zero, so this is a hard-zero pin with no
+# baseline and no allowlist. Widening it to the excluded test trees would trade
+# a hard zero for a migration backlog; do that by ruling if at all, never by
+# drift.
+
+
+def _plant_module(root: Path, dotted_rel: str, body: str) -> Path:
+    """Write a synthetic module at ``dotted_rel`` under ``root`` and return its path."""
+    path = root / dotted_rel
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(body, encoding="utf-8")
+    return path
+
+
+def test_no_shipped_module_imports_the_unshipped_dev_tooling() -> None:
+    """No shipped module under ``src/cadrumo`` may import ``dev.``.
+
+    ``dev/`` is development tooling present in neither distribution, so a
+    shipped module importing it raises ``ModuleNotFoundError`` for every
+    installed user. Hard zero: no baseline, no allowlist. A new hit is fixed by
+    moving what the shipped side needs under ``src/cadrumo``, never by
+    recording a tolerated exception.
+    """
+    py_files = sorted(p for p in PKG_ROOT.rglob("*.py") if "__pycache__" not in p.parts)
+    violations = find_dev_tooling_import_violations(py_files)
+
+    offenders = [f"{v.importer_path}:{v.lineno} -> {v.target_mod}" for v in violations]
+    assert offenders == [], (
+        "shipped module(s) under src/cadrumo import the unshipped dev/ tooling, which "
+        f"is a ModuleNotFoundError for every installed user: {offenders}. Move the helper the "
+        "shipped side needs into src/cadrumo (or give the shipped side its own implementation "
+        "where the dev tool's version is genuinely dev-specific); do not add an allowlist entry."
+    )
+
+
+def test_the_dev_tooling_gate_catches_a_planted_static_production_import(tmp_path: Path) -> None:
+    """Anti-tautology: a planted non-test ``from dev.x import y`` MUST be caught.
+
+    Without this proof the hard-zero assertion above is indistinguishable from
+    a detector that can never fire -- the failure mode that lets a gate pass
+    while blind to the thing it guards.
+    """
+    _plant_module(tmp_path, "cadrumo/planted_production.py", "from dev.docs.cli_reference import _force_lazy_imports\n")
+
+    violations = find_dev_tooling_import_violations(
+        [tmp_path / "cadrumo" / "planted_production.py"],
+        src_root=tmp_path,
+    )
+
+    assert [(v.importer_path, v.target_mod, v.is_dynamic) for v in violations] == [
+        ("cadrumo/planted_production.py", "dev.docs.cli_reference", False)
+    ], f"the gate failed to catch a planted production dev-tooling import; it detected {violations!r}"
+
+
+def test_the_dev_tooling_gate_catches_a_planted_bare_and_dynamic_import(tmp_path: Path) -> None:
+    """Anti-tautology: bare ``import dev`` and a dynamically-built target are both caught.
+
+    A ``dev.`` reach expressed through ``importlib.import_module`` is invisible
+    to an AST import walk, so a gate covering only ``from``/``import`` forms
+    would miss the aliased shape entirely.
+    """
+    _plant_module(
+        tmp_path,
+        "cadrumo/planted_dynamic.py",
+        "import dev\n"
+        "import importlib\n"
+        "\n"
+        "def load() -> object:\n"
+        '    return importlib.import_module("dev.docs.cli_reference")\n',
+    )
+
+    violations = find_dev_tooling_import_violations(
+        [tmp_path / "cadrumo" / "planted_dynamic.py"],
+        src_root=tmp_path,
+    )
+
+    assert [(v.target_mod, v.is_dynamic) for v in violations] == [
+        ("dev", False),
+        ("dev.docs.cli_reference", True),
+    ], f"the gate missed the bare or the dynamically-built dev target; it detected {violations!r}"
+
+    # The dynamic extractor must also not over-reach onto a legitimate target.
+    _plant_module(tmp_path, "cadrumo/planted_clean.py", 'import importlib\nimportlib.import_module("cadrumo.core")\n')
+    assert find_dev_tooling_import_violations([tmp_path / "cadrumo" / "planted_clean.py"], src_root=tmp_path) == [], (
+        "the gate fired on a non-dev dynamic import target"
+    )
+
+    assert iter_dynamic_import_targets(tmp_path / "cadrumo" / "planted_clean.py") == [(2, "cadrumo.core")]
+
+
+def test_the_dev_tooling_gate_permits_an_excluded_test_tree_import(tmp_path: Path) -> None:
+    """The ruling, proven: an identical import in an EXCLUDED test tree is NOT a violation.
+
+    This pins the scope decision documented above. If someone later widens the
+    family to the excluded test trees, this test fails and forces the change to
+    be a deliberate ruling rather than a silent broadening.
+    """
+    body = "from dev.docs.cli_reference import _force_lazy_imports\n"
+    planted = [
+        _plant_module(tmp_path, "cadrumo/entrypoints/cli/tests/test_planted.py", body),
+        _plant_module(tmp_path, "cadrumo/entrypoints/cli/tests/_planted_support.py", body),
+        _plant_module(tmp_path, "cadrumo/tests/test_planted_root.py", body),
+    ]
+
+    violations = find_dev_tooling_import_violations(planted, src_root=tmp_path)
+
+    assert violations == [], (
+        "the dev-tooling gate fired on an EXCLUDED test module, contradicting its documented "
+        f"scope: those trees ship in neither the wheel nor the sdist. {violations!r}"
+    )
+
+
+def test_the_dev_tooling_gate_catches_a_planted_shipped_conftest(tmp_path: Path) -> None:
+    """A package-root ``conftest.py`` SHIPS, so its ``dev.`` import is a violation.
+
+    Pins the boundary that separates this family from the scanner's name-based
+    ``is_test_module`` partition. That partition calls any ``conftest`` a test
+    module, but a package-root ``conftest.py`` carries no ``tests/`` path
+    component and is a real wheel member -- so a name-based scope would have
+    silently exempted a genuinely shipped module.
+    """
+    planted = _plant_module(tmp_path, "cadrumo/conftest.py", "import dev\n")
+
+    violations = find_dev_tooling_import_violations([planted], src_root=tmp_path)
+
+    assert [(v.importer_path, v.target_mod) for v in violations] == [("cadrumo/conftest.py", "dev")], (
+        f"a shipped package-root conftest.py importing dev/ must be caught; the gate detected {violations!r}"
+    )
+
+
+def test_the_shipped_boundary_is_read_from_the_packaging_config() -> None:
+    """The shipped/unshipped split must come from the wheel excludes, not a restated list.
+
+    A config rename must fail loudly rather than silently classifying every
+    module as shipped (noise) or none as shipped (a muted gate).
+    """
+    globs = wheel_exclude_globs()
+    assert globs, "the wheel exclude list read from pyproject.toml is empty"
+
+    assert is_shipped_module(PKG_ROOT / "conftest.py", exclude_globs=globs) is True
+    assert is_shipped_module(PKG_ROOT / "core" / "config.py", exclude_globs=globs) is True
+    assert is_shipped_module(PKG_ROOT / "tests" / "test_x.py", exclude_globs=globs) is False
+    assert is_shipped_module(PKG_ROOT / "entrypoints" / "cli" / "tests" / "test_x.py", exclude_globs=globs) is False

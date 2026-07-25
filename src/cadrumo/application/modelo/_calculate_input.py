@@ -43,6 +43,7 @@ from ...core import (
     Modelo,
     RescateType,
 )
+from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import CadrumoError
 from ...core.resources import resources
 from ...domain.calculations.registry import (
@@ -469,14 +470,26 @@ def _validate_detail_rows(rows: tuple[ModeloDetailRow, ...]) -> None:
 
 
 def _decimal(raw_value: str, *, flag: str, key: str) -> Decimal:
-    try:
-        return Decimal(raw_value)
-    except (InvalidOperation, ValueError) as exc:
+    """Validate an operator-supplied calculation input against the canonical grammar.
+
+    The fractional part is deliberately uncapped: a casilla, relation, or
+    binding value may legitimately carry sub-cent precision (the AEAT
+    fixed-width encoder rounds such a value to cents with ``ROUND_HALF_UP`` per
+    the AEAT Instrucciones), so a two-digit cap here would refuse a value the
+    export layer is built to accept. What the grammar does refuse is text whose
+    numeric meaning is not what it appears: scientific notation, a leading
+    ``+``, a comma decimal separator, embedded whitespace, and
+    ``NaN``/``Infinity`` — all of which a bare :class:`~decimal.Decimal` call
+    silently accepted.
+    """
+    parsed = try_parse_canonical_decimal(raw_value)
+    if parsed is None:
         raise ModeloCalculateDecimalInputError(
             f"{flag} value for {key!r} is not a decimal: {raw_value!r}",
             context={"flag": flag, "key": key, "value": raw_value},
             translated_message="application.modelo.errors.calculate_decimal_input_invalid",
-        ) from exc
+        )
+    return parsed
 
 
 def _decimal_binding_value(raw_value: str, binding: DataBindingDefinition) -> Decimal:
@@ -487,11 +500,15 @@ def _decimal_binding_value(raw_value: str, binding: DataBindingDefinition) -> De
     opaque "is not a decimal" error. This raises an instructive refusal that names
     the accepted ``0`` / ``1`` encoding and what each value means, derived from the
     binding's boolean selector rather than a per-form hardcoded table.
+
+    Conformance is judged by the same canonical grammar :func:`_decimal` applies,
+    so a value whose numeric meaning is not what it appears (scientific
+    notation, a leading ``+``, a comma decimal) refuses here too instead of
+    being silently coerced.
     """
     encoded_options = boolean_binding_encoded_values(binding)
-    try:
-        return Decimal(raw_value)
-    except (InvalidOperation, ValueError) as exc:
+    parsed = try_parse_canonical_decimal(raw_value)
+    if parsed is None:
         if encoded_options:
             mapping = ", ".join(
                 f"{option.encoded_value} ({'true' if option.boolean_meaning else 'false'} = "
@@ -511,12 +528,13 @@ def _decimal_binding_value(raw_value: str, binding: DataBindingDefinition) -> De
                     "mapping": mapping,
                 },
                 translated_message="application.modelo.errors.calculate_boolean_binding_encoding_invalid",
-            ) from exc
+            )
         raise ModeloCalculateDecimalInputError(
             f"--binding value for {binding.id!r} is not a decimal: {raw_value!r}",
             context={"flag": "--binding", "key": binding.id, "value": raw_value},
             translated_message="application.modelo.errors.calculate_decimal_input_invalid",
-        ) from exc
+        )
+    return parsed
 
 
 def _text_value(raw_value: str, *, key: str) -> str:

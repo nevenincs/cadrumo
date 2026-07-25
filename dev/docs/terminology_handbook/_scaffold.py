@@ -39,10 +39,11 @@ from datetime import date
 from enum import StrEnum
 from pathlib import Path
 
+from cadrumo.core import ConceptLifecycle
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
 
 from ._enrolment import EnrolmentCandidate
-from ._enums import ConceptLifecycle, TermStatus
+from ._enums import TermStatus
 from ._loader import load_terminology_handbook, terminology_concepts_dir
 from ._schema import ConceptRecord, LanguageSection, TermSection
 from ._serialize import serialise_concept

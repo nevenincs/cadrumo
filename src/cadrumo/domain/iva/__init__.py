@@ -145,6 +145,7 @@ from ._saturation import (
 from ._schema import (
     CUOTA_LESS_M303_IVA_CATEGORIES,
     EUMemberState,
+    EVIDENCE_EXEMPT_IVA_CATEGORIES,
     IvaCashAccountingPaymentEvidence,
     IvaCashAccountingTreatment,
     IvaCatalogue,
@@ -169,6 +170,7 @@ __all__ = [
     "CUOTA_LESS_M303_IVA_CATEGORIES",
     "DEDUCIBLE_FLOW_DIRECTIONS",
     "DEVENGADA_FLOW_DIRECTIONS",
+    "EVIDENCE_EXEMPT_IVA_CATEGORIES",
     "LAST_FILING_PERIOD_TOKENS",
     "REGIME_PERIODICITY",
     "SEPA_ZONE_COUNTRY_CODES",

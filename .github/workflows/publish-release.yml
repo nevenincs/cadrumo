@@ -76,23 +76,26 @@ jobs:
                https://pypi.org/manage/account/publishing/.
             2. Create the `release` GitHub Environment with required reviewers
                (the operator) - that approval click is the human release gate.
-            3. Provide the two shared, PRODUCT-NEUTRAL channel targets. There is
-               no Scoop bucket repo to create: Scoop reads a `bucket/`
-               subdirectory, so THIS repository is its own bucket and that push
-               needs no variable and no PAT.
-                 - Homebrew: create the PUBLIC account tap nevenincs/homebrew-tap
-                   (the `homebrew-` prefix is mandatory; users type
-                   `brew install nevenincs/tap/cadrumo`). Set var
-                   HOMEBREW_TAP_REPO and secret HOMEBREW_TAP_TOKEN.
+            3. Provide the two shared, PRODUCT-NEUTRAL channel targets. The
+               account carries exactly ONE distribution repository, and it serves
+               BOTH Homebrew and Scoop.
+                 - Homebrew AND Scoop: create the PUBLIC shared account
+                   repository nevenincs/homebrew-tap (the `homebrew-` prefix is
+                   mandatory for the one-argument tap form; users type
+                   `brew install nevenincs/tap/cadrumo`). Scoop imposes no name
+                   constraint and reads a `bucket/` subdirectory, so the same
+                   repository carries `bucket/` and users add it once, ever. Set
+                   var HOMEBREW_TAP_REPO and secret HOMEBREW_TAP_TOKEN - ONE
+                   pair serves both channel pushes.
                  - Claude plugins: use the PUBLIC nevenincs/neve-marketplace. Set
                    var CLAUDE_MARKETPLACE_REPO and secret
                    CLAUDE_MARKETPLACE_TOKEN.
                Both names are deliberately product-neutral: every product under
                the account sets the same two pairs and drops in one more formula
-               file and one more plugin subtree, with no restructuring. Both
-               targets MUST be public - Homebrew reaches the tap by ordinary git
-               clone, so a private tap is unusable by anyone without push
-               credentials.
+               file, one more bucket manifest, and one more plugin subtree, with
+               no restructuring. Both targets MUST be public - both managers
+               reach their repository by ordinary git clone, so a private target
+               is unusable by anyone without push credentials.
             4. Ensure the source Packaging Smoke run sealed its evidence draft
                (release tag evidence-smoke-<run id> carrying
                cadrumo-release-cohort.tar.gz and evidence-manifest.json).
@@ -442,38 +445,78 @@ jobs:
           gh release upload "v$VERSION" "$DOWNLOAD_LATEST_DIR/download-latest.json" \
             --repo "$GITHUB_REPOSITORY" --clobber
 
-      # Scoop resolves manifests from a `bucket/` subdirectory when one exists, so
-      # this repository IS its own bucket and there is no separate bucket repo to
-      # configure. That is why this step takes no repo variable and no PAT: it
-      # pushes to `github.repository` with the job's own GITHUB_TOKEN. Every
-      # sibling product repeats the identical layout in its own repository.
-      - name: Push the Scoop bucket manifest into this repository's bucket
+      # ONE shared account distribution repository serves BOTH ecosystems.
+      # Homebrew's mandatory `homebrew-` repo-name prefix forces that repository
+      # to exist for the one-argument tap form; Scoop imposes no name constraint
+      # and resolves manifests from a `bucket/` subdirectory, so the same
+      # repository carries `bucket/` at no extra cost. A new product therefore
+      # adds one manifest file and one formula file and CREATES NOTHING — the
+      # account's distribution repository count is one at one product and one at
+      # a hundred.
+      #
+      # Both pushes below share three properties that make a shared repository
+      # safe, and all three are pinned by the conformance gate in
+      # dev/release/tests/test_publish_release_workflow.py:
+      #   * each stages exactly its own product-scoped path, never `add -A`,
+      #     never `add .`, and never a wholesale delete of the checkout;
+      #   * each refuses a BACKWARD version bump before committing, because
+      #     ordinary merge semantics can otherwise un-publish a newer version
+      #     with no workflow failing;
+      #   * each retries a lost push race, because several products can release
+      #     into one shared repository concurrently and GitHub concurrency groups
+      #     are per-repository, so they cannot serialise across product repos.
+      - name: Push the Scoop manifest into the shared account bucket
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          TAP_REPO: ${{ vars.HOMEBREW_TAP_REPO }}
         run: |
+          if [[ -z "$TAP_TOKEN" || -z "$TAP_REPO" ]]; then
+            echo "REFUSED: shared distribution repository not configured. Set the" >&2
+            echo "HOMEBREW_TAP_REPO variable and the HOMEBREW_TAP_TOKEN secret to" >&2
+            echo "publish the Scoop manifest into the shared account bucket." >&2
+            exit 1
+          fi
           # Token rides an -c http.extraheader (never the clone URL) so it is not
           # persisted into the runner's .git/config remote.
-          auth="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 | tr -d '\n')"
-          work="$(mktemp -d)"
-          git -c http.extraheader="$auth" clone --depth 1 \
-            "https://github.com/${GITHUB_REPOSITORY}.git" "$work"
-          mkdir -p "$work/bucket"
-          cp "$RELEASE_COHORT_DIR/scoop/cadrumo.json" "$work/bucket/cadrumo.json"
-          # Stage exactly this product's manifest. A sibling manifest in the same
-          # bucket is never touched, which is what lets one bucket serve many
-          # apps without a per-app repository.
-          git -C "$work" add -- bucket/cadrumo.json
-          if git -C "$work" diff --cached --quiet; then
-            echo "bucket already at cadrumo $VERSION; nothing to push"
-          else
-            git -C "$work" -c user.name="cadrumo-release" -c user.email="release@cadrumo.invalid" \
-              commit -m "cadrumo $VERSION scoop manifest"
-            git -C "$work" -c http.extraheader="$auth" push
+          auth="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$TAP_TOKEN" | base64 | tr -d '\n')"
+          published=""
+          for attempt in 1 2 3; do
+            work="$(mktemp -d)"
+            git -c http.extraheader="$auth" clone "https://github.com/${TAP_REPO}.git" "$work"
+            # Backward-bump guard: the committed manifest is a release POINTER,
+            # so a merge that resurrects an older manifest would silently
+            # un-publish the current version. Refuse rather than regress.
+            uv run --frozen python -m dev.packaging.release_pointer_guard \
+              --existing "$work/bucket/cadrumo.json" \
+              --version "$VERSION" \
+              --format scoop
+            mkdir -p "$work/bucket"
+            cp "$RELEASE_COHORT_DIR/scoop/cadrumo.json" "$work/bucket/cadrumo.json"
+            # Stage exactly this product's manifest. A sibling product's manifest
+            # in the same bucket is never touched, which is what lets one shared
+            # repository serve many products without a per-product repository.
+            git -C "$work" add -- bucket/cadrumo.json
+            if git -C "$work" diff --cached --quiet; then
+              echo "bucket already at cadrumo $VERSION; nothing to push"
+              published="yes"
+            else
+              git -C "$work" -c user.name="cadrumo-release" -c user.email="release@cadrumo.invalid" \
+                commit -m "cadrumo $VERSION scoop manifest"
+              if git -C "$work" -c http.extraheader="$auth" push; then
+                published="yes"
+              else
+                echo "bucket push rejected on attempt ${attempt}; a sibling product likely pushed first" >&2
+              fi
+            fi
+            rm -rf "$work"
+            [[ -n "$published" ]] && break
+          done
+          if [[ -z "$published" ]]; then
+            echo "REFUSED: bucket push lost three consecutive races; re-run this publication." >&2
+            exit 1
           fi
-          rm -rf "$work"
-          rm -rf "$work"
 
-      - name: Push the Homebrew formula to the public tap
+      - name: Push the Homebrew formula into the shared account tap
         env:
           TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
           TAP_REPO: ${{ vars.HOMEBREW_TAP_REPO }}
@@ -486,15 +529,38 @@ jobs:
           # Token rides an -c http.extraheader (never the clone URL) so it is not
           # persisted into the runner's .git/config remote.
           auth="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$TAP_TOKEN" | base64 | tr -d '\n')"
-          work="$(mktemp -d)"
-          git -c http.extraheader="$auth" clone "https://github.com/${TAP_REPO}.git" "$work"
-          mkdir -p "$work/Formula"
-          cp "$RELEASE_COHORT_DIR/homebrew/Formula/cadrumo.rb" "$work/Formula/cadrumo.rb"
-          git -C "$work" add -- Formula/cadrumo.rb
-          git -C "$work" -c user.name="cadrumo-release" -c user.email="release@cadrumo.invalid" \
-            commit -m "cadrumo $VERSION"
-          git -C "$work" -c http.extraheader="$auth" push
-          rm -rf "$work"
+          published=""
+          for attempt in 1 2 3; do
+            work="$(mktemp -d)"
+            git -c http.extraheader="$auth" clone "https://github.com/${TAP_REPO}.git" "$work"
+            # Backward-bump guard: same reasoning as the bucket manifest above —
+            # the committed formula pins a version and a digest a user acts on.
+            uv run --frozen python -m dev.packaging.release_pointer_guard \
+              --existing "$work/Formula/cadrumo.rb" \
+              --version "$VERSION" \
+              --format homebrew
+            mkdir -p "$work/Formula"
+            cp "$RELEASE_COHORT_DIR/homebrew/Formula/cadrumo.rb" "$work/Formula/cadrumo.rb"
+            git -C "$work" add -- Formula/cadrumo.rb
+            if git -C "$work" diff --cached --quiet; then
+              echo "tap already at cadrumo $VERSION; nothing to push"
+              published="yes"
+            else
+              git -C "$work" -c user.name="cadrumo-release" -c user.email="release@cadrumo.invalid" \
+                commit -m "cadrumo $VERSION"
+              if git -C "$work" -c http.extraheader="$auth" push; then
+                published="yes"
+              else
+                echo "tap push rejected on attempt ${attempt}; a sibling product likely pushed first" >&2
+              fi
+            fi
+            rm -rf "$work"
+            [[ -n "$published" ]] && break
+          done
+          if [[ -z "$published" ]]; then
+            echo "REFUSED: tap push lost three consecutive races; re-run this publication." >&2
+            exit 1
+          fi
 
       # The Claude plugin marketplace is a supported avenue (readiness row set,
       # docs download page), so a release MUST populate it - not only attach the

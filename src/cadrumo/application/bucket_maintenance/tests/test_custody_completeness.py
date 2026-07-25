@@ -277,3 +277,39 @@ def test_every_carried_namespace_has_a_natural_key_resolver() -> None:
         if definition.namespace not in resolvers and definition.default_object_key is None
     ]
     assert unresolved == [], f"carried namespaces without a natural-key resolver: {unresolved}"
+
+
+def test_typed_category_namespaces_are_load_bearing_exclusions_from_the_generic_carry() -> None:
+    """The typed-category subtraction must actually remove carried namespaces.
+
+    The five typed categories ride dedicated bundle fields, so the generic carry
+    subtracts them to avoid double-carrying. That subtraction is only meaningful
+    if each member would otherwise be carried: were one to name a namespace that
+    is absent from the registry, or one whose custody disposition keeps it out of
+    the full profile anyway, the subtraction would be a silent no-op and a drifted
+    member would double-carry undetected. This gate pins both halves — every
+    member is a real full-profile carry candidate, and every member is in fact
+    absent from the generic carry.
+    """
+    from ....adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY, StorageCustodyProfile
+    from ...user_profile import carried_namespace_definitions
+    from ...user_profile._custody_carry import TYPED_CATEGORY_NAMESPACES
+
+    assert len(TYPED_CATEGORY_NAMESPACES) == 5
+
+    # Non-vacuity: each member is a registered namespace the FULL profile would
+    # otherwise carry, so subtracting it changes the carry set.
+    full_profile_candidates = {
+        definition.namespace
+        for definition in STORAGE_NAMESPACE_REGISTRY.namespaces_for_custody_profile(StorageCustodyProfile.FULL)
+    }
+    not_candidates = sorted(TYPED_CATEGORY_NAMESPACES - full_profile_candidates)
+    assert not_candidates == [], (
+        "typed-category namespaces that the FULL profile would not carry anyway, "
+        f"making their exclusion a no-op: {not_candidates}"
+    )
+
+    # Effect: none of them survives into the generic carry.
+    carried = {definition.namespace for definition in carried_namespace_definitions(StorageCustodyProfile.FULL)}
+    double_carried = sorted(TYPED_CATEGORY_NAMESPACES & carried)
+    assert double_carried == [], f"typed-category namespaces also carried generically: {double_carried}"

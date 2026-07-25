@@ -99,13 +99,13 @@ Registry mapping (M100 2024 revision, casillas 0163-0236,
     0184 "Sueldos y salarios" = 17.700.
     0185 "Seguridad Social a cargo de la empresa" = 5.900.
     0186 "Seguridad Social del titular de la actividad" (bound,
-      ledger_renta_expense_aggregation) = 3.300 (RETA).
+      ledger_renta_gastos_estimacion_directa_aggregation) = 3.300 (RETA).
     0193 "Reparaciones y conservación" = 3.800.
     0194 "Suministros (electricidad, agua, gas, telefonía e internet)"
       = 7.800.
     0202 "Otros servicios exteriores" = 4.500 (limpieza) + 1.700 (comunidad)
       = 6.200.
-    0203 "Gastos financieros" (bound, ledger_renta_expense_aggregation)
+    0203 "Gastos financieros" (bound, ledger_renta_gastos_estimacion_directa_aggregation)
       = 1.100.
     0205 "IVA soportado" = 1.600.
     0206 "Otros tributos fiscalmente deducibles" = 1.700.

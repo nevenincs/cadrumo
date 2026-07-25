@@ -17,7 +17,6 @@ plaintext files.
 
 from __future__ import annotations
 
-import json
 from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
@@ -30,7 +29,7 @@ from .....core.auth_session_keys import (
     is_former_product_auth_session_path,
 )
 from .....core.external_constants import UTF_8_ENCODING
-from .....core.hashing import sha256_hex
+from .....core.hashing import content_hash_hex
 from .....core.time import now
 from ....persistence.storage import (
     AEAT_BROWSER_SESSION_NAMESPACE,
@@ -206,5 +205,4 @@ def _repository_for_path(path: Path) -> SecureObjectRepository:
 
 def _storage_state_sha256(storage_state: Mapping[str, object]) -> str:
     validated = _JSON_OBJECT_ADAPTER.validate_python(storage_state)
-    payload = json.dumps(validated, sort_keys=True, separators=(",", ":")).encode(UTF_8_ENCODING)
-    return sha256_hex(payload)
+    return content_hash_hex(validated)

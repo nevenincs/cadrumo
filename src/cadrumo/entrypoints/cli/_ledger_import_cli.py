@@ -16,6 +16,7 @@ from ...application.ledger import (
     import_ledger_source,
 )
 from ...core import resolve_active_bucket_id
+from ...core.external_constants import XLS_EXTENSION, XLSX_EXTENSION
 from ...core.i18n import tr
 from ._common import _bad, _emit_envelope, _optional_canonical_period, _state, _tx_repo
 
@@ -159,7 +160,9 @@ def register_import_commands(app: typer.Typer) -> None:
         )
 
 
-_IMPORT_DIR_EXTENSIONS = frozenset({".csv", ".xlsx", ".xls", ".ofx", ".qfx", ".tsv"})
+_IMPORT_DIR_EXTENSIONS = frozenset(
+    {".csv", XLSX_EXTENSION, XLS_EXTENSION, ".ofx", ".qfx", ".tsv"},
+)
 
 
 def _resolve_import_paths(path: Path) -> list[Path]:

@@ -21,16 +21,11 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.storage import SensitivityClass
+from ....adapters.persistence.storage import MODELO_WORK_UNIT_CATALOGUE_NAMESPACE, SensitivityClass
 from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
 from .._codes import ModeloCode
-from .._repository import (
-    _WORK_UNIT_CATALOGUE_VERSION,
-    _WORK_UNIT_NAMESPACE,
-    _WORK_UNIT_OBJECT_KEY,
-    WorkUnitPersistenceError,
-)
+from .._repository import WorkUnitPersistenceError
 from .._work_unit import (
     WorkUnit,
     WorkUnitCatalogue,
@@ -41,6 +36,12 @@ from .._work_unit import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _BUCKET_ID = "modelo-runtime"
+# The registry definition is the sole authority for this namespace's identifier,
+# singleton object key, and envelope schema version; the probe reads it rather
+# than restating the values the repository under test writes at.
+_WORK_UNIT_NAMESPACE = MODELO_WORK_UNIT_CATALOGUE_NAMESPACE.namespace
+_WORK_UNIT_OBJECT_KEY = MODELO_WORK_UNIT_CATALOGUE_NAMESPACE.require_default_object_key()
+_WORK_UNIT_CATALOGUE_VERSION = MODELO_WORK_UNIT_CATALOGUE_NAMESPACE.schema_version
 _WORK_UNIT_TIMESTAMP = datetime(2026, 5, 28, 10, 30, 0, tzinfo=UTC)
 _CORRUPT_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 10, 35, 0, tzinfo=UTC)
 _FUTURE_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 10, 40, 0, tzinfo=UTC)

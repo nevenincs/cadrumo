@@ -143,7 +143,7 @@ def test_requires_classifies_m130_casillas_against_live_registry_no_active_profi
     # Ledger-derivable rows carry their binding provenance for the checklist.
     ledger_rows = {row["number"]: row["binding_source"] for row in result["ledger_derivable"]}
     assert ledger_rows["01"] == "ledger_renta_income_aggregation"
-    assert ledger_rows["02"] == "ledger_renta_gasto_aggregation"
+    assert ledger_rows["02"] == "ledger_renta_gastos_pago_fraccionado_aggregation"
 
     # No active profile: the checklist cannot check profile coefficients and
     # must say so via a non-blocking advisory notice, not silently.

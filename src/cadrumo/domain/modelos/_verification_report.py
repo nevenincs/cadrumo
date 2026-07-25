@@ -1,4 +1,4 @@
-"""Structured verification report produced by ``aeat app modelo verify``.
+"""Structured verification report produced by ``aeat app modelo work verify``.
 
 A :class:`VerificationReport` is the decision artifact the verify
 command persists for every run. It captures whether the target

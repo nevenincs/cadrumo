@@ -116,6 +116,31 @@ def test_real_nonzero_exit_is_unavailable_not_green() -> None:
     assert "exited" in result.reason
 
 
+def test_real_failure_diagnostic_reaches_the_reason() -> None:
+    """The failed process's own diagnostic must survive into the reason.
+
+    ``run_duplication_scan`` builds the unavailable reason from the failed
+    process's stderr, falling back to stdout and then to a fixed
+    ``no diagnostic output`` sentinel. Asserting only that the reason says
+    ``exited`` cannot tell those apart: drop the stderr capture entirely and the
+    reason still reads ``jscpd exited 2: no diagnostic output``, so the amber
+    verdict stays correct while the evidence explaining it silently vanishes.
+
+    This pins the evidence rather than the verdict. The tail is a real
+    interpreter's own error text, which varies by version and locale, so the
+    assertion is structural -- a non-empty tail that is not the fallback
+    sentinel -- never the literal message.
+    """
+    result = run_duplication_scan(_REPO_ROOT, which=lambda _name: sys.executable)
+
+    _, _, tail = result.reason.partition(": ")
+
+    assert tail, f"the reason carried no diagnostic tail at all: {result.reason!r}"
+    assert tail != "no diagnostic output", (
+        f"the failed process wrote a diagnostic but it did not reach the reason: {result.reason!r}"
+    )
+
+
 def test_health_report_duplication_dimension_is_amber_with_a_measured_count() -> None:
     """End-to-end: the health dashboard must not render the false green.
 

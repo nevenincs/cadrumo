@@ -261,7 +261,7 @@ def test_m130_has_no_required_manual_casilla_so_missing_required_never_blocks(re
     Casilla 02 (Gastos) used to be the lone ``input_kind = manual`` + ``required``
     casilla, so a filer with no gastos was blocked with a MISSING_REQUIRED_CASILLA
     finding until they hand-entered ``--casilla 02=0``. Binding casilla 02 to the
-    ``ledger_renta_gasto_aggregation`` source means it is
+    ``ledger_renta_gastos_pago_fraccionado_aggregation`` source means it is
     auto-populated (0 when there are no expenses) and the missing-required gate —
     which fires only for MANUAL required casillas — has nothing to flag. This test
     pins that no required manual casilla remains and that an M130 revision with no

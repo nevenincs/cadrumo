@@ -58,7 +58,7 @@
             },
             {
               "binding_id": "renta-2025-ledger-expense-0183-deductible",
-              "binding_source": "ledger_renta_expense_aggregation",
+              "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "casilla_id": "0183",
               "label": "Other operating consumables",
               "legal_refs": [
@@ -81,7 +81,7 @@
             },
             {
               "binding_id": "renta-2025-ledger-expense-0186-deductible",
-              "binding_source": "ledger_renta_expense_aggregation",
+              "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "casilla_id": "0186",
               "label": "Social Security contributions of the activity holder",
               "legal_refs": [
@@ -104,7 +104,7 @@
             },
             {
               "binding_id": "renta-2025-ledger-expense-0191-deductible",
-              "binding_source": "ledger_renta_expense_aggregation",
+              "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "casilla_id": "0191",
               "label": "Taxpayer's subsistence expenses",
               "legal_refs": [
@@ -127,7 +127,7 @@
             },
             {
               "binding_id": "renta-2025-ledger-expense-0192-deductible",
-              "binding_source": "ledger_renta_expense_aggregation",
+              "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "casilla_id": "0192",
               "label": "Leases and royalties",
               "legal_refs": [
@@ -150,7 +150,7 @@
             },
             {
               "binding_id": "renta-2025-ledger-expense-0193-deductible",
-              "binding_source": "ledger_renta_expense_aggregation",
+              "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "casilla_id": "0193",
               "label": "Repairs and maintenance",
               "legal_refs": [
@@ -173,7 +173,7 @@
             },
             {
               "binding_id": "renta-2025-ledger-expense-0194-deductible",
-              "binding_source": "ledger_renta_expense_aggregation",
+              "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "casilla_id": "0194",
               "label": "Utility supplies",
               "legal_refs": [
@@ -196,7 +196,7 @@
             },
             {
               "binding_id": "renta-2025-ledger-expense-0195-deductible",
-              "binding_source": "ledger_renta_expense_aggregation",
+              "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "casilla_id": "0195",
               "label": "Contributions to alternative mutual-insurance schemes by the activity holder",
               "legal_refs": [
@@ -219,7 +219,7 @@
             },
             {
               "binding_id": "renta-2025-ledger-expense-0199-deductible",
-              "binding_source": "ledger_renta_expense_aggregation",
+              "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "casilla_id": "0199",
               "label": "Services of independent professionals",
               "legal_refs": [
@@ -242,7 +242,7 @@
             },
             {
               "binding_id": "renta-2025-ledger-expense-0200-deductible",
-              "binding_source": "ledger_renta_expense_aggregation",
+              "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "casilla_id": "0200",
               "label": "Insurance premiums",
               "legal_refs": [
@@ -265,7 +265,7 @@
             },
             {
               "binding_id": "renta-2025-ledger-expense-0202-deductible",
-              "binding_source": "ledger_renta_expense_aggregation",
+              "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "casilla_id": "0202",
               "label": "Other external services",
               "legal_refs": [
@@ -288,7 +288,7 @@
             },
             {
               "binding_id": "renta-2025-ledger-expense-0203-deductible",
-              "binding_source": "ledger_renta_expense_aggregation",
+              "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "casilla_id": "0203",
               "label": "Financial expenses",
               "legal_refs": [
@@ -311,7 +311,7 @@
             },
             {
               "binding_id": "renta-2025-ledger-expense-0206-deductible",
-              "binding_source": "ledger_renta_expense_aggregation",
+              "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "casilla_id": "0206",
               "label": "Other tax-deductible levies",
               "legal_refs": [
@@ -334,7 +334,7 @@
             },
             {
               "binding_id": "renta-2025-ledger-expense-0208-deductible",
-              "binding_source": "ledger_renta_expense_aggregation",
+              "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "casilla_id": "0208",
               "label": "Depreciation of tangible fixed assets",
               "legal_refs": [
@@ -357,7 +357,7 @@
             },
             {
               "binding_id": "renta-2025-ledger-expense-0217-deductible",
-              "binding_source": "ledger_renta_expense_aggregation",
+              "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "casilla_id": "0217",
               "label": "Other tax-deductible items, excluding provisions",
               "legal_refs": [

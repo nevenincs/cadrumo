@@ -8,7 +8,6 @@ See Also:
 
 from __future__ import annotations
 
-import json
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -16,8 +15,7 @@ from datetime import date
 from decimal import Decimal
 
 from ...core import BindingSourceKind
-from ...core.external_constants import UTF_8_ENCODING
-from ...core.hashing import sha256_hex
+from ...core.hashing import content_hash_hex
 from ...domain.calculations.registry import AtributionMemberObservation, resolve_atribucion_binding_row_values
 from ...domain.modelos import Modelo184MemberRow
 from ...domain.user_profile import ProfileNotFoundError, UserProfileFact, UserProfileRecord
@@ -165,8 +163,7 @@ def _decimal(value: object) -> Decimal:
 
 
 def _profile_record_fingerprint(record: UserProfileRecord) -> str:
-    payload = json.dumps(record.model_dump(mode="json"), sort_keys=True, separators=(",", ":")).encode(UTF_8_ENCODING)
-    return f"sha256:{sha256_hex(payload)}"
+    return f"sha256:{content_hash_hex(record.model_dump(mode='json'))}"
 
 
 __all__ = ["AtribucionMemberSourceResolver"]

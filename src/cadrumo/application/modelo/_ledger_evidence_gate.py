@@ -10,7 +10,7 @@ from decimal import Decimal
 from enum import StrEnum
 
 from ...domain.iva import (
-    CUOTA_LESS_M303_IVA_CATEGORIES,
+    EVIDENCE_EXEMPT_IVA_CATEGORIES,
     InvoiceKind,
     IvaCategory,
     IvaFlowDirection,
@@ -22,14 +22,6 @@ from ...domain.transactions import (
     BusinessClassification,
     TransactionDirection,
     TransactionLifecycleState,
-)
-
-_EVIDENCE_EXEMPT_IVA_CATEGORIES: frozenset[IvaCategory] = CUOTA_LESS_M303_IVA_CATEGORIES | frozenset(
-    {
-        IvaCategory.RECARGO_EQUIVALENCIA,
-        IvaCategory.ERRONEOUS_INVOICE,
-        IvaCategory.UNKNOWN,
-    },
 )
 
 _EVIDENCE_EXPECTING_BUSINESS_STATES: frozenset[BusinessClassification] = frozenset(
@@ -69,7 +61,7 @@ def _row_flow(row: LedgerEvidenceRow) -> IvaFlowDirection | None:
     category = _enum_or_none(IvaCategory, row.iva_category)
     if category is None:
         return IvaFlowDirection.REPERCUTIDO if invoice_kind is InvoiceKind.ISSUED else IvaFlowDirection.SOPORTADO
-    if category in _EVIDENCE_EXEMPT_IVA_CATEGORIES:
+    if category in EVIDENCE_EXEMPT_IVA_CATEGORIES:
         return None
     return derive_flow_for_classification(
         category=category,

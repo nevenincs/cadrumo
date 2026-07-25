@@ -20,7 +20,22 @@ Verification emits bucket-history entries through
 :class:`TransactionCatalogueRepository` only for evidence advisories over source
 transactions.
 
+Draft-construction structural validation is a distinct, nested stage, not a
+parallel pipeline. When verification grants, this module runs the revision
+workflow gate with :class:`~cadrumo.application.workflow.WorkflowPurpose.VERIFY`;
+that gate builds a filing draft, and the draft builder stamps
+:class:`ModeloValidationFinding` rows produced by
+:class:`~cadrumo.domain.filing.ModeloValidator` onto the draft, which the
+workflow engine re-scans for ERROR severity. Those structural findings answer
+whether the draft is well-formed against the casilla collection;
+:class:`ModeloVerificationFinding` answers operator-facing filing readiness and
+carries registry ``legal_refs`` provenance the structural model does not. The
+two vocabularies are not interchangeable.
+
 See Also:
+    :class:`~cadrumo.domain.filing.ModeloValidator`:
+        Draft-construction structural validator reached through the workflow
+        gate's draft builder; owns :class:`ModeloValidationFinding`.
     :func:`~cadrumo.application.calculations.evaluate_cross_period_clean_state`:
         Shared cross-period gate used by verify, file, and export.
     :mod:`~cadrumo.application.modelo._calculation_diagnostics`:
@@ -60,6 +75,7 @@ from ...domain.calculations.registry import (
     RegistrySnapshot,
     SourceRefId,
     derive_modelo_202_modality,
+    derive_taxpayer_files_economic_activity,
 )
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.modelos import (
@@ -130,7 +146,7 @@ from ._registry_resources import authority_via_resources as _authority_via_resou
 from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
 )
-from ._revision_persistence import emit_bucket_event as _emit_bucket_event
+from ._revision_persistence import emit_modelo_bucket_event as _emit_bucket_event
 from ._verification_cross_period import (
     _CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS as _CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS,
 )
@@ -145,7 +161,6 @@ from ._verification_cross_period import (
     _modelo_202_incomplete_modality_finding,
     _require_cross_period_clean_state,
     _zero_value_previous_filing_binding_ids,
-    derive_taxpayer_files_economic_activity,
 )
 from ._verification_cross_period import (
     _cross_period_clean_state_next_action as _cross_period_clean_state_next_action,

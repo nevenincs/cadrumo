@@ -28,6 +28,7 @@ inventing its own error surface.
 
 from __future__ import annotations
 
+from ...core import ConceptLifecycle
 from ...core.flows import CopyRefKind
 from ...core.i18n import output_language
 from ...core.resources import resources
@@ -37,7 +38,6 @@ from ..flows import register_copy_source
 
 _SCHEMA_NAMESPACE = "profile-schema:"
 _TERMINOLOGY_NAMESPACE = "profile-terminology:"
-_APPROVED_LIFECYCLE = "approved"
 
 _registered = False
 
@@ -88,7 +88,7 @@ def resolve_profile_terminology_copy(ref: str) -> str | None:
         concept = lookup_terminology(concept_id, locale=output_language())
     except CorpusSearchInputError:
         return None
-    if concept.lifecycle != _APPROVED_LIFECYCLE:
+    if concept.lifecycle is not ConceptLifecycle.APPROVED:
         return None
     parts = [text for text in (concept.short_description.strip(), concept.definition.strip()) if text]
     if not parts:

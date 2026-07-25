@@ -78,11 +78,37 @@ def test_docs_work_modules_import_without_vaultspec_rag() -> None:
     assert "DOCS-WORK-RAG-FREE" in result.stdout
 
 
+def _production_python_files() -> list[Path]:
+    """Every Python module under the production package."""
+    return sorted((_REPO_ROOT / "src" / "cadrumo").rglob("*.py"))
+
+
 def test_production_package_never_imports_vaultspec_rag() -> None:
     """No module under src/cadrumo references vaultspec_rag at all."""
+    files = _production_python_files()
+    # A survivor scan reports the same clean result over the real package and
+    # over a path that does not exist, so the corpus size is the only thing
+    # separating "nothing references it" from "nothing was read".
+    assert len(files) > 500, f"expected the production package, scanned only {len(files)} module(s)"
     offenders = [
         str(path.relative_to(_REPO_ROOT))
-        for path in (_REPO_ROOT / "src" / "cadrumo").rglob("*.py")
+        for path in files
         if "vaultspec_rag" in path.read_text(encoding="utf-8", errors="ignore")
     ]
     assert not offenders, f"src/cadrumo references vaultspec_rag: {offenders}"
+
+
+def test_the_production_scan_detects_a_reference_when_one_exists(tmp_path: Path) -> None:
+    """The detection itself works: a file carrying the token is found.
+
+    Without this the gate proves only that its corpus is large, not that
+    reading it would surface a real reference.
+    """
+    (tmp_path / "clean.py").write_text("import json\n", encoding="utf-8")
+    (tmp_path / "offending.py").write_text("import vaultspec_rag\n", encoding="utf-8")
+    found = [
+        path.name
+        for path in sorted(tmp_path.rglob("*.py"))
+        if "vaultspec_rag" in path.read_text(encoding="utf-8", errors="ignore")
+    ]
+    assert found == ["offending.py"]

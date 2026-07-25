@@ -13,9 +13,12 @@ from __future__ import annotations
 
 import argparse
 import ast
+import fnmatch
 import json
 import sys
+import tomllib
 from collections import Counter, defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Final
@@ -31,9 +34,16 @@ _UTF_8: Final[str] = "utf-8"
 # ---------------------------------------------------------------------------
 
 
-def module_name_for(path: Path) -> str:
-    """Return the dotted module name for a file under ``src/``."""
-    rel = path.relative_to(SRC_ROOT)
+def module_name_for(path: Path, *, src_root: Path = SRC_ROOT) -> str:
+    """Return the dotted module name for a file under ``src_root``.
+
+    Args:
+        path: The module file to name.
+        src_root: Source root the name is taken relative to. Injectable so a
+            caller can resolve names inside a synthetic tree; defaults to the
+            repository's real ``src/``.
+    """
+    rel = path.relative_to(src_root)
     parts = list(rel.parts)
     if parts[-1] == "__init__.py":
         parts = parts[:-1]
@@ -228,15 +238,20 @@ class ImportSite:
     in_type_checking: bool
 
 
-def walk_module_imports(path: Path) -> list[ImportSite]:
-    """Parse a module and return every resolved import site it contains."""
+def walk_module_imports(path: Path, *, src_root: Path = SRC_ROOT) -> list[ImportSite]:
+    """Parse a module and return every resolved import site it contains.
+
+    Args:
+        path: The module file to parse.
+        src_root: Source root the importer's dotted name is taken relative to.
+    """
     try:
         src = path.read_text(encoding=_UTF_8)
         tree = ast.parse(src, filename=str(path))
     except (FileNotFoundError, SyntaxError, UnicodeDecodeError):
         return []
 
-    mod = module_name_for(path)
+    mod = module_name_for(path, src_root=src_root)
     is_pkg = path.name == "__init__.py"
     sites: list[ImportSite] = []
     test_flag = is_test_module(mod, path)
@@ -336,6 +351,172 @@ def find_private_import_violations(all_sites: list[ImportSite]) -> list[PrivateI
             )
         )
     return violations
+
+
+# ---------------------------------------------------------------------------
+# Violation family 5: shipped module importing the unshipped dev tooling
+# ---------------------------------------------------------------------------
+
+DEV_TOOLING_ROOT: Final[str] = "dev"
+
+PYPROJECT_PATH: Final[Path] = REPO_ROOT / "pyproject.toml"
+
+# Callables whose first string-literal argument names a module to import. A
+# dynamically-built target is invisible to the AST import walk above, so a
+# `dev.` reach expressed this way would otherwise slip the family entirely --
+# the exact blind spot that makes a gate pass while missing what it guards.
+_DYNAMIC_IMPORT_CALLABLES: Final[frozenset[str]] = frozenset({"import_module", "__import__"})
+
+
+@dataclass
+class DevToolingImportViolation:
+    """A non-test module under ``src/`` that imports the unshipped ``dev/`` tooling."""
+
+    importer_mod: str
+    importer_path: str
+    lineno: int
+    target_mod: str
+    imported_names: list[str]
+    is_dynamic: bool
+
+
+def targets_dev_tooling(mod: str) -> bool:
+    """True if ``mod`` names the ``dev`` tooling root or anything beneath it."""
+    return mod == DEV_TOOLING_ROOT or mod.startswith(DEV_TOOLING_ROOT + ".")
+
+
+def wheel_exclude_globs(pyproject_path: Path = PYPROJECT_PATH) -> tuple[str, ...]:
+    """Return the wheel target's exclude globs, read from the packaging config.
+
+    Read rather than restated so the shipped/unshipped boundary this module
+    reasons about stays true if the packaging excludes change. A missing table
+    raises: silently defaulting to "nothing is excluded" would make every
+    module look shipped, and defaulting to "everything" would mute the gate.
+    """
+    data = tomllib.loads(pyproject_path.read_text(encoding=_UTF_8))
+    excludes = data["tool"]["hatch"]["build"]["targets"]["wheel"]["exclude"]
+    return tuple(str(glob) for glob in excludes)
+
+
+def is_shipped_module(
+    path: Path,
+    *,
+    src_root: Path = SRC_ROOT,
+    exclude_globs: tuple[str, ...] | None = None,
+) -> bool:
+    """True if ``path`` lands in the installed wheel.
+
+    A module is shipped unless the packaging config excludes it. Note this is
+    NOT the same partition as :func:`is_test_module`: a package-root
+    ``conftest.py`` carries no ``tests/`` path component, so it ships and is
+    treated as shipped here even though it is test infrastructure by name.
+
+    Args:
+        path: Module file to classify.
+        src_root: Source root ``path`` is relative to.
+        exclude_globs: Wheel exclude globs; read from the packaging config when
+            omitted.
+    """
+    globs = wheel_exclude_globs() if exclude_globs is None else exclude_globs
+    rel = "src/" + path.relative_to(src_root).as_posix()
+    for glob in globs:
+        # A bare directory glob ("src/cadrumo/tests") excludes the tree under it;
+        # fnmatch's '*' spans '/', so the recursive forms match as written.
+        if fnmatch.fnmatchcase(rel, glob) or rel.startswith(glob.rstrip("*").rstrip("/") + "/"):
+            return False
+    return True
+
+
+def iter_dynamic_import_targets(path: Path) -> list[tuple[int, str]]:
+    """Return every ``(lineno, module)`` pair from a string-literal dynamic import.
+
+    Only a literal first argument is resolvable by static reading; a target
+    assembled from variables is out of reach here and is left to review.
+    """
+    try:
+        tree = ast.parse(path.read_text(encoding=_UTF_8), filename=str(path))
+    except (FileNotFoundError, SyntaxError, UnicodeDecodeError):
+        return []
+
+    found: list[tuple[int, str]] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call) or not node.args:
+            continue
+        func = node.func
+        if isinstance(func, ast.Attribute):
+            called = func.attr
+        elif isinstance(func, ast.Name):
+            called = func.id
+        else:
+            continue
+        if called not in _DYNAMIC_IMPORT_CALLABLES:
+            continue
+        first = node.args[0]
+        if isinstance(first, ast.Constant) and isinstance(first.value, str):
+            found.append((node.lineno, first.value))
+    return found
+
+
+def find_dev_tooling_import_violations(
+    py_files: Iterable[Path],
+    *,
+    src_root: Path = SRC_ROOT,
+    exclude_globs: tuple[str, ...] | None = None,
+) -> list[DevToolingImportViolation]:
+    """Return every SHIPPED module under ``src_root`` that imports ``dev.``.
+
+    The ``dev/`` tree is development tooling and ships in neither the wheel nor
+    the sdist. A shipped module importing it therefore raises
+    ``ModuleNotFoundError`` for every installed user, while resolving fine in a
+    source checkout -- a defect no test run in the repository can surface.
+
+    Scoped deliberately to SHIPPED modules, the boundary being read from the
+    packaging config rather than restated. An excluded test tree's ``dev.``
+    import cannot reach an installed user: it encodes "this suite requires the
+    repo checkout and the dev dependency group", which is already true and
+    intended. Widening this family to unshipped tests would be an ownership
+    preference, not a correctness gate, and would convert a hard zero into a
+    migration backlog. That is a decision, not an oversight; revisit it by
+    ruling, never by drift.
+
+    Args:
+        py_files: Module files to scan.
+        src_root: Source root importer names are resolved against.
+        exclude_globs: Wheel exclude globs; read from the packaging config when
+            omitted.
+    """
+    globs = wheel_exclude_globs() if exclude_globs is None else exclude_globs
+    violations: list[DevToolingImportViolation] = []
+    for path in py_files:
+        mod = module_name_for(path, src_root=src_root)
+        if not is_shipped_module(path, src_root=src_root, exclude_globs=globs):
+            continue
+        rel = str(path.relative_to(src_root)).replace("\\", "/")
+        for site in walk_module_imports(path, src_root=src_root):
+            if targets_dev_tooling(site.target_mod):
+                violations.append(
+                    DevToolingImportViolation(
+                        importer_mod=mod,
+                        importer_path=rel,
+                        lineno=site.lineno,
+                        target_mod=site.target_mod,
+                        imported_names=site.imported_names,
+                        is_dynamic=False,
+                    )
+                )
+        for lineno, target in iter_dynamic_import_targets(path):
+            if targets_dev_tooling(target):
+                violations.append(
+                    DevToolingImportViolation(
+                        importer_mod=mod,
+                        importer_path=rel,
+                        lineno=lineno,
+                        target_mod=target,
+                        imported_names=[],
+                        is_dynamic=True,
+                    )
+                )
+    return sorted(violations, key=lambda v: (v.importer_path, v.lineno, v.target_mod))
 
 
 # ---------------------------------------------------------------------------
@@ -705,6 +886,7 @@ def main() -> int:
     multi_sourced = find_multi_sourced_symbols(facades, all_sites)
     fix_classes = classify_fix_strategy(priv_violations, facades)
     underscore_in_all = find_underscore_in_all_violations(facades)
+    dev_tooling_imports = find_dev_tooling_import_violations(py_files)
 
     # ---- Reporting ----
     print(f"Scanned {len(py_files)} .py files under {PKG_ROOT}")
@@ -772,6 +954,14 @@ def main() -> int:
         print(f"  [{v.package}] {v.name}  ({v.path})")
     print()
 
+    print(f"=== FAMILY 5: shipped modules importing the unshipped dev tooling: {len(dev_tooling_imports)} total ===")
+    print("  (dev/ ships in neither the wheel nor the sdist, so each hit is a ModuleNotFoundError")
+    print("   for every installed user; move what the shipped side needs under src/cadrumo)")
+    for v in dev_tooling_imports:
+        kind = "dynamic" if v.is_dynamic else "static"
+        print(f"  [{kind}] {v.importer_path}:{v.lineno} -> {v.target_mod}")
+    print()
+
     print(f"=== FIX STRATEGY: precondition promotions vs. simple consumer rewrites ({len(fix_classes)} pairs) ===")
     needs_promotion = [f for f in fix_classes if not f.already_in_facade]
     simple_rewrite = [f for f in fix_classes if f.already_in_facade]
@@ -814,6 +1004,7 @@ def main() -> int:
     print(f"  distinct symbols needing facade promotion: {len({f.symbol for f in needs_promotion})}")
     print(f"  distinct owning packages needing >=1 promotion: {len(promo_by_owner)}")
     print(f"  underscore-named __all__ entries (Family 4): {len(underscore_in_all)}")
+    print(f"  shipped modules importing dev/ tooling (Family 5): {len(dev_tooling_imports)}")
     print()
 
     if args.json:
@@ -856,6 +1047,15 @@ def main() -> int:
                     "consumer_modules": f.consumer_modules,
                 }
                 for f in fix_classes
+            ],
+            "dev_tooling_import_violations": [
+                {
+                    "importer_path": v.importer_path,
+                    "lineno": v.lineno,
+                    "target_mod": v.target_mod,
+                    "is_dynamic": v.is_dynamic,
+                }
+                for v in dev_tooling_imports
             ],
             "underscore_in_all_violations": [
                 {"package": v.package, "path": v.path, "name": v.name} for v in underscore_in_all

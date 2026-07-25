@@ -211,9 +211,9 @@ CALLER_OVERRIDE_PRECEDENCE_LADDER: tuple[CallerOverridePrecedenceTier, ...] = (
         source_kinds=frozenset(
             {
                 BindingSourceKind.LEDGER_IVA_AGGREGATION,
-                BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION,
+                BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
                 BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
-                BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION,
+                BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,
                 BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION,
                 BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION,
                 BindingSourceKind.LEDGER_OSS_AGGREGATION,

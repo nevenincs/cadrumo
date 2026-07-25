@@ -1,11 +1,17 @@
 """Profile construction helpers for deadline and schedule consumers.
 
 The helper projects a ``ProfileRecord.values``-shaped mapping into an
-:class:`TaxpayerProfile` by deferring to the wizard descriptor's
-typed projection (``project_answers``). The wizard catalogue is the
-single source of truth for the canonical-token shape of every field;
-this helper composes the typed answer over the deadline-engine's
-record.
+:class:`TaxpayerProfile` through
+:func:`~cadrumo.core.setup_answers.project_setup_answers`, which reads
+stored facts by their profile path and applies the canonical-token
+parsing every field declares.
+
+The projection deliberately depends on the core answer table and not on
+any interactive surface. Deciding which modelos a taxpayer must file is a
+regulatory computation that runs on stored facts; when it instead walked
+the terminal wizard's question catalogue, a schedule could not be
+computed in a process that had never built a setup UI, and the UI could
+not be replaced without moving the tax logic with it.
 """
 
 from __future__ import annotations
@@ -18,8 +24,7 @@ from typing import TypedDict
 from ...core import Modelo, Period
 from ...core.parsing import parse_bool as _parse_bool
 from ...core.parsing import parse_date as _parse_date_canonical
-from ...core.setup_answers import SetupAnswers, project_answers
-from ...core.wizard_catalogue import get_setup_flow
+from ...core.setup_answers import project_setup_answers
 from ._errors import ProfileError
 from ._models import (
     CrossPeriodGroupMemberRoster,
@@ -52,10 +57,7 @@ def taxpayer_profile_from_mapping(
     IVA regime declaration.
     """
     canonical, padded = _canonicalize_and_pad(values, tax_id_default=tax_id_default)
-    setup_flow = get_setup_flow()
-    typed = project_answers(setup_flow, padded)
-    if not isinstance(typed, SetupAnswers):
-        raise ProfileError("setup flow projection did not yield a SetupAnswers instance")
+    typed = project_setup_answers(padded)
 
     entity_type = typed.entity_type or None
     legal_entity_form = typed.legal_entity_form or None

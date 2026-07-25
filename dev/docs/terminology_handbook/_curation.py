@@ -22,9 +22,10 @@ from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 
+from cadrumo.core import ConceptLifecycle
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
 
-from ._enums import ConceptLifecycle, TermStatus
+from ._enums import TermStatus
 from ._errors import TerminologyValidationError
 from ._loader import TerminologyHandbook, load_terminology_handbook, terminology_concepts_dir
 from ._schema import (

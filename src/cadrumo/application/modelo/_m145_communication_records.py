@@ -71,7 +71,7 @@ from ._m145_communication import (
     M145_COMMUNICATION_SERVICE_OWNER,
     build_m145_communication_service_contract,
 )
-from ._revision_persistence import emit_bucket_event as _emit_bucket_event
+from ._revision_persistence import emit_modelo_bucket_event as _emit_bucket_event
 
 _HEX_64_PATTERN = r"^[0-9a-f]{64}$"
 _FOUR_DIGIT_YEAR_PATTERN = re.compile(r"^\d{4}$")

@@ -41,9 +41,6 @@ from ._codes import ModeloCode
 from ._errors import ModeloError, ModeloValidationError
 from ._ids import CalculationRevisionId, FilingRecordId, WorkUnitId
 
-PARTICIPATION_INDEX_NAMESPACE = "cadrumo.domain.modelos.participation_index"
-PARTICIPATION_INDEX_SCHEMA_VERSION = 1
-
 _JustificanteReference = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
@@ -171,8 +168,6 @@ class TransactionParticipationIndexPersistenceError(ModeloError):
 
 
 __all__ = [
-    "PARTICIPATION_INDEX_NAMESPACE",
-    "PARTICIPATION_INDEX_SCHEMA_VERSION",
     "TransactionParticipationIndexPersistenceError",
     "TransactionRevisionParticipation",
     "TransactionRevisionParticipationIndex",

@@ -15,7 +15,7 @@ Every model is strict, frozen, and forbids extra fields
 axis reuses the canonical
 :class:`~cadrumo.core.external_constants.OutputLanguage`; the
 Handbook-local closed axes (:class:`~dev.docs.terminology_handbook._enums.ConceptDomain`,
-:class:`~dev.docs.terminology_handbook._enums.ConceptLifecycle`,
+:class:`~cadrumo.core.ConceptLifecycle`,
 :class:`~dev.docs.terminology_handbook._enums.TermStatus`) live beside this schema.
 
 The ``narrower`` field is intentionally NOT settable from a fragment:
@@ -36,9 +36,10 @@ from typing import Annotated, Self
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
 from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from cadrumo.core import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
 
-from ._enums import ConceptDomain, ConceptLifecycle, TermStatus
+from ._enums import ConceptDomain, TermStatus
 from ._errors import TerminologyValidationError
 
 __all__ = [

@@ -335,11 +335,6 @@ _M303_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = _casilla_id("iva.resultado-
 _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = _casilla_id(
     "iva.compensacion-pendiente-periodos-anteriores",
 )
-_M303_ENGINE_REQUIRED_CASILLAS: tuple[CasillaId, ...] = (
-    _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
-    _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
-    _M303_RESULTADO_REGIMEN_GENERAL_CASILLA,
-)
 _COMPUTED_CASILLAS_M130: frozenset[CasillaId] = _casilla_ids(
     "03",
     "04",
@@ -361,36 +356,6 @@ def _registry_snapshot(modelo: str, filing_year: int, period: str):
     """Resolve a validated registry snapshot from the committed authority."""
     return resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
 
-
-_DR303_PROJECTION_CASILLAS: frozenset[CasillaId] = _casilla_ids(
-    "03",
-    "06",
-    "09",
-    "11",
-    "13",
-    "27",
-    "29",
-    "33",
-    "37",
-    "45",
-)
-
-_COMPUTED_CASILLAS_M303: frozenset[CasillaId] = frozenset(
-    {
-        _casilla_id("iva.cuota-devengada-total"),
-        _casilla_id("iva.cuota-deducible-total"),
-        _casilla_id("iva.resultado-regimen-general"),
-        *_DR303_PROJECTION_CASILLAS,
-        _casilla_id("64"),  # suma de resultados (46 + 58 + 76) — Orden HAC/819/2024 art. 1
-        _casilla_id("66"),  # atribuible Estado (64 × 65 / 100) — Orden HAC/819/2024 art. 1
-        _casilla_id("iva.compensacion-aplicada-periodo"),
-        _casilla_id("iva.compensacion-pendiente-periodos-posteriores"),
-        _casilla_id("iva.resultado"),  # resultado autoliquidación (66 + 77 + 68 - 78)
-        _casilla_id("71"),  # resultado final (69 - 70 + 109) — Orden HAC/819/2024 art. 1
-        _casilla_id("iva.compensacion-generada-periodo"),
-        _casilla_id("iva.compensacion-disponible-fin-periodo"),
-    },
-)
 
 _M303_2023_ONWARDS_PARAMS = [
     ("2023-1T", 2023, "1T"),
@@ -431,96 +396,69 @@ def _calculate_m303_engine_values_from_inputs(
     return dict(result.values)
 
 
-def _build_m303_engine_result(pdf_stem: str, year: int, period: str):  # type: ignore[return]
-    """Parse the corpus PDF and run the registry engine.  Returns (extracted, engine_values)."""
-    extracted = _parse_extracted_declaracion_values(modelo="303", fixture_stem=pdf_stem, year=year, period=period)
-    for required_id in _M303_ENGINE_REQUIRED_CASILLAS:
-        assert required_id in extracted, (
-            f"PARSER-GAP [{pdf_stem}]: required casilla {required_id!r} not in extracted values.\n"
-            f"  got: {sorted(extracted)}"
-        )
-
-    inputs = _decimal_inputs_from_extracted_values(extracted, excluding=_COMPUTED_CASILLAS_M303)
-
-    # Box 65 — % atribuible Estado; bound to the profile-derived
-    # ``tax_residence.state_attribution_ratio`` via casilla.binding. The engine's
-    # _initial_values only auto-hydrates BOUND casillas from binding_values when
-    # the binding's source is ``previous_filing``; profile-sourced bound casillas
-    # expect the application-layer resolver to have populated ``inputs`` with the
-    # resolved value before reaching the calculator. This test path bypasses
-    # the application layer, so we supply C65 via both channels: inputs hydrates
-    # the casilla value for the formula multiplier; binding_values satisfies
-    # any explicit binding-fact lookups.
-    # Grounded in Orden HAC/819/2024 art. 1 (casilla 65 instrucciones).
-    inputs[_M303_STATE_ATTRIBUTION_RATIO_CASILLA] = Decimal("100")
-
-    _extracted_comp = extracted.get(_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA, Decimal("0"))
-    _comp = _extracted_comp if isinstance(_extracted_comp, Decimal) else Decimal("0")
-    binding_values: dict[BindingId, Decimal] = {
-        "modelo-303-compensacion-pendiente-anteriores": _comp,
-        "modelo-303-profile-state-attribution-ratio": Decimal("100"),
-    }
-    engine_values = _calculate_m303_engine_values_from_inputs(
-        inputs=inputs,
-        year=year,
-        period=period,
-        binding_values=binding_values,
-        label=pdf_stem,
-    )
-    return extracted, engine_values, inputs
-
-
-def _assert_m303_engine_matches_extracted_decimal(
+def _extracted_m303_decimal(
     *,
     pdf_stem: str,
-    engine_values: Mapping[CasillaId, object],
     extracted: Mapping[CasillaId, object],
     casilla_id: CasillaId,
     label: str,
-    formula_context: str,
 ) -> Decimal:
-    engine_value = engine_values.get(casilla_id)
-    assert isinstance(engine_value, Decimal), (
-        f"VERIFIED-FAIL [{pdf_stem}]: engine {label} missing or non-Decimal: {engine_value!r}"
+    """Read one printed amount off the parsed declaración, refusing anything else."""
+    value = extracted.get(casilla_id)
+    assert isinstance(value, Decimal), (
+        f"PARSER-GAP [{pdf_stem}]: printed {label} missing or non-Decimal: {value!r}\n  extracted: {sorted(extracted)}"
     )
-    extracted_value = extracted.get(casilla_id)
-    assert isinstance(extracted_value, Decimal), (
-        f"VERIFIED-FAIL [{pdf_stem}]: extracted {label} missing or non-Decimal: {extracted_value!r}"
-    )
-    assert engine_value == extracted_value, (
-        f"VERIFIED-FAIL [{pdf_stem}]: engine {label} {engine_value!r} != extracted {extracted_value!r}\n"
-        f"  ({formula_context})"
-    )
-    return engine_value
+    return value
 
 
-def _assert_m303_resultado_regimen_general_consistency(
+def _assert_m303_printed_resultado_regimen_general_arithmetic(
     *,
     pdf_stem: str,
-    engine_values: Mapping[CasillaId, object],
     extracted: Mapping[CasillaId, object],
 ) -> None:
-    engine_resultado = _assert_m303_engine_matches_extracted_decimal(
+    """The declaración's own printed arithmetic must hold: box 46 == box 27 - box 45.
+
+    GROUNDED authority: Orden EHA/3786/2008 art. 1 — box 46 = box 27 - box 45,
+    where box 27 is Total cuota devengada (LIVA art. 88) and box 45 is Total a
+    deducir (LIVA arts. 92-94).
+
+    This is a check on the DOCUMENT, not on the engine, and that is deliberate.
+    The three values are printed independently by AEAT, so a render whose own
+    totals disagree is caught here. The assertion is falsifiable by construction:
+    perturbing any one of the three printed amounts makes it fail.
+
+    The engine deliberately does not participate. Boxes 27 and 45 are
+    projections of ``iva.cuota-devengada-total`` and
+    ``iva.cuota-deducible-total``, which the engine computes by summing the
+    per-rate cuota primitives — and the printed form does not carry those
+    primitives, so the parse path cannot supply them. Supplying the printed
+    totals instead is refused by the engine (``computed registry casillas cannot
+    be supplied as inputs``), a guard that exists so pull and calculate cannot
+    diverge. Engine coverage of the summation formulas therefore lives on the
+    calculate path, where the primitives arrive from ledger aggregation.
+    """
+    printed_27 = _extracted_m303_decimal(
         pdf_stem=pdf_stem,
-        engine_values=engine_values,
+        extracted=extracted,
+        casilla_id=_M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
+        label="box 27 (total cuota devengada)",
+    )
+    printed_45 = _extracted_m303_decimal(
+        pdf_stem=pdf_stem,
+        extracted=extracted,
+        casilla_id=_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
+        label="box 45 (total a deducir)",
+    )
+    printed_46 = _extracted_m303_decimal(
+        pdf_stem=pdf_stem,
         extracted=extracted,
         casilla_id=_M303_RESULTADO_REGIMEN_GENERAL_CASILLA,
         label="box 46 (resultado regimen general)",
-        formula_context="box 46 = box 27 - box 45, Orden EHA/3786/2008 art. 1",
     )
-    engine_27 = engine_values.get(_M303_CUOTA_DEVENGADA_TOTAL_CASILLA)
-    engine_45 = engine_values.get(_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA)
-    assert isinstance(engine_27, Decimal), (
-        f"VERIFIED-FAIL [{pdf_stem}]: engine-computed box 27 missing or non-Decimal: {engine_27!r}"
-    )
-    assert isinstance(engine_45, Decimal), (
-        f"VERIFIED-FAIL [{pdf_stem}]: engine-computed box 45 missing or non-Decimal: {engine_45!r}"
-    )
-    expected_resultado = engine_27 - engine_45
-    assert engine_resultado == expected_resultado, (
-        f"VERIFIED-FAIL [{pdf_stem}]: engine resultado-regimen-general "
-        f"{engine_resultado!r} != box27({engine_27!r}) - box45({engine_45!r}) = {expected_resultado!r}\n"
-        f"  (internal formula consistency broken - registry formula defect)"
+    assert printed_46 == printed_27 - printed_45, (
+        f"DOCUMENT-INCONSISTENT [{pdf_stem}]: printed box 46 {printed_46!r} != "
+        f"box 27 {printed_27!r} - box 45 {printed_45!r} = {printed_27 - printed_45!r}\n"
+        f"  (box 46 = box 27 - box 45, Orden EHA/3786/2008 art. 1)"
     )
 
 

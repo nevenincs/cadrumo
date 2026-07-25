@@ -267,6 +267,7 @@ def test_split_child_classification_that_changes_raw_id_is_refused(
             child_classifications=classifications,
             classified_by="llm:test-model",
             actor="operator",
+            source_command="aeat app ledger split --llm --apply",
             transaction_repository=repository,
             bucket_event_repository=events,
             occurred_at=_NOW,

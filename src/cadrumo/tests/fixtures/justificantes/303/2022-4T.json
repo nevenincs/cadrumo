@@ -1,10 +1,10 @@
 {
   "provenance": "synthetic_generated",
   "role": "formula_verification",
-  "source_sha256": "ccecbcce9ade468910fd4cbac4366cb1f0097cf1963e190e9cb23f8eeed5c5c0",
-  "output_sha256": "ccecbcce9ade468910fd4cbac4366cb1f0097cf1963e190e9cb23f8eeed5c5c0",
-  "source_size_bytes": 2183,
-  "output_size_bytes": 2183,
+  "source_sha256": "6907c7a3fa93ae4e45a85e94a5685ab11cfef06fd390a45263299f6f282bf172",
+  "output_sha256": "6907c7a3fa93ae4e45a85e94a5685ab11cfef06fd390a45263299f6f282bf172",
+  "source_size_bytes": 2050,
+  "output_size_bytes": 2050,
   "sanitizer_version": "0.1.0-synthetic",
   "determinism_flags": {
     "deterministic_id": true,

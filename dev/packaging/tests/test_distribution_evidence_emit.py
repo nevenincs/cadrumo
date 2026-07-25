@@ -372,11 +372,17 @@ def test_required_real_client_row_needs_a_real_session(tmp_path: Path) -> None:
 
 
 def test_required_real_client_rows_match_readiness() -> None:
-    """The guard's required-row set stays in lock-step with the readiness authority."""
-    from dev.packaging.distribution_evidence_emit import _REQUIRED_REAL_CLIENT_ROW_IDS
-    from dev.release.readiness import REQUIRED_DISTRIBUTION_ROWS
+    """The guard's required-row set stays in lock-step with the readiness authority.
 
-    claude_rows = frozenset(row for row in REQUIRED_DISTRIBUTION_ROWS if row.startswith("claude-"))
+    Anchored on ``ALL_DISTRIBUTION_ROWS``, not the claimed subset: the real-client
+    honesty guard governs how a claude-* row may be MINTED, which is independent
+    of whether this release happens to claim that channel. Anchoring it on the
+    claimed set would silently drop the guard for every unclaimed client row.
+    """
+    from dev.packaging.distribution_evidence_emit import _REQUIRED_REAL_CLIENT_ROW_IDS
+    from dev.release.readiness import ALL_DISTRIBUTION_ROWS
+
+    claude_rows = frozenset(row for row in ALL_DISTRIBUTION_ROWS if row.startswith("claude-"))
     assert claude_rows == _REQUIRED_REAL_CLIENT_ROW_IDS
 
 

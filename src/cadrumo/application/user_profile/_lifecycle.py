@@ -19,12 +19,10 @@ from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...core.errors import BaseSeverity
 from ...core.hashing import sha256_hex
 from ...domain.buckets import (
-    BucketEvent,
     BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
-    append_bucket_event,
-    derive_bucket_event_id,
+    emit_bucket_event,
 )
 from ...domain.user_profile import (
     ProfileAlreadyExistsError,
@@ -48,9 +46,11 @@ from . import (
     RenameProfileCommand,
 )
 from ._repository import UserProfileLifecycleRepository
-from ._validation import ProfileValidationService
+from ._validation import COMPLETENESS_ISSUE_CODES, ProfileValidationService
 
 _PROFILE_LIFECYCLE_ACTOR = "cadrumo.application.user_profile"
+_PROFILE_EVENT_PAYLOAD_VERSION = 1
+"""Schema version for the payload dict on this service's profile-lifecycle events."""
 _PROFILE_ALREADY_EXISTS_MESSAGE = "profile already exists in the active bucket"
 _PROFILE_TOMBSTONED_RENAME_MESSAGE = "tombstoned profile cannot be renamed"
 _PROFILE_TOMBSTONED_DUPLICATE_MESSAGE = "tombstoned profile cannot be duplicated"
@@ -91,7 +91,11 @@ class ProfileLifecycleService:
                 profile_id=command.profile_id,
                 bucket_id=self._repository.bucket_id,
             )
-        self._reject_invalid(command.profile_id, command.facts)
+        self._reject_invalid(
+            command.profile_id,
+            command.facts,
+            require_complete=command.status is not UserProfileStatus.SETUP_INCOMPLETE,
+        )
         now = utc_now()
         record = UserProfileRecord(
             schema_id=self._validator.schema.id,
@@ -155,7 +159,17 @@ class ProfileLifecycleService:
             source=command.source,
         )
         next_facts = self._merge_facts(record.facts, (new_fact,))
-        self._reject_invalid(command.profile_id, next_facts)
+        # Editing one field must not be gated on OTHER fields being filled in.
+        # A SETUP_INCOMPLETE profile is filled in a field at a time, so
+        # demanding global completeness here would refuse every edit until the
+        # profile was already complete — an unreachable state, since the only
+        # way to reach it is through this door. The edited value is still
+        # validated for shape; completeness binds at the ACTIVE promotion.
+        self._reject_invalid(
+            command.profile_id,
+            next_facts,
+            require_complete=record.status is not UserProfileStatus.SETUP_INCOMPLETE,
+        )
         result = self._save_updated(record, next_facts)
         event_type = (
             BucketEventType.PROFILE_VALUES_CLEARED if new_fact.value is None else BucketEventType.PROFILE_VALUES_UPDATED
@@ -218,6 +232,13 @@ class ProfileLifecycleService:
         Returns a :class:`ProfileLifecycleResult` with the activated profile.
         """
         record = self._repository.load(command.profile_id)
+        # Completeness binds HERE, at the one-way promotion to ACTIVE, rather
+        # than at birth. Previously nothing in this arm checked it: the gate
+        # was the setup flow's own final-commit validation, which held only
+        # for callers that went through the flow. Re-running the full check
+        # against the record's accumulated facts makes the guarantee
+        # structural — no surface can promote an under-populated profile.
+        self._reject_invalid(record.profile_id, record.facts, require_complete=True)
         completed = record.complete_setup()
         self._repository.save(completed)
         self._emit_event(
@@ -320,9 +341,35 @@ class ProfileLifecycleService:
 
     # ── helpers ────────────────────────────────────────────────────
 
-    def _reject_invalid(self, profile_id: str, facts: Iterable[UserProfileFact]) -> None:
+    def _reject_invalid(
+        self,
+        profile_id: str,
+        facts: Iterable[UserProfileFact],
+        *,
+        require_complete: bool = True,
+    ) -> None:
+        """Refuse the fact set on blocking schema issues.
+
+        ``require_complete`` selects which issues block. A profile being born
+        ``SETUP_INCOMPLETE`` is, by definition, allowed to be missing the
+        fields filing depends on — demanding them to create an *incomplete*
+        profile is a contradiction, and it is what forced a tax id to be known
+        before a profile could exist at all. Whatever facts ARE supplied are
+        still validated for shape and value in both modes; only the
+        missing-required-field issues are deferred.
+
+        They are not dropped: :meth:`complete_setup` re-runs this check with
+        ``require_complete=True`` against the record's accumulated facts, so
+        completeness is enforced at the ACTIVE promotion instead. That is the
+        moment it actually matters, and it now binds regardless of which
+        surface drives the promotion.
+        """
         report = self._validator.validate_facts(profile_id, facts)
-        blocking = [issue for issue in report.issues if issue.severity is BaseSeverity.ERROR]
+        blocking = [
+            issue
+            for issue in report.issues
+            if issue.severity is BaseSeverity.ERROR and (require_complete or issue.code not in COMPLETENESS_ISSUE_CODES)
+        ]
         if blocking:
             raise ProfileSchemaValidationError(
                 _PROFILE_SCHEMA_VALIDATION_MESSAGE,
@@ -366,27 +413,17 @@ class ProfileLifecycleService:
         occurred_at: datetime,
         payload: dict[str, str] | None = None,
     ) -> None:
-        payload_body = dict(payload or {})
-        event = BucketEvent(
-            event_id=derive_bucket_event_id(
-                bucket_id=self._repository.bucket_id,
-                event_type=event_type,
-                occurred_at=occurred_at,
-                actor=_PROFILE_LIFECYCLE_ACTOR,
-                object_type=BucketEventObjectType.PROFILE,
-                object_id=object_id,
-                payload=payload_body,
-            ),
+        emit_bucket_event(
+            repository=self._events,
             bucket_id=self._repository.bucket_id,
             event_type=event_type,
             occurred_at=occurred_at,
             actor=_PROFILE_LIFECYCLE_ACTOR,
             object_type=BucketEventObjectType.PROFILE,
             object_id=object_id,
-            payload_version=1,
-            payload=payload_body,
+            payload=dict(payload or {}),
+            payload_version=_PROFILE_EVENT_PAYLOAD_VERSION,
         )
-        self._events.save(append_bucket_event(self._events.load(), event))
 
     def _iter_profiles(self) -> Iterable[UserProfileRecord]:
         """Yield every live profile record by delegating to the repository.

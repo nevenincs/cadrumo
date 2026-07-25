@@ -30,6 +30,7 @@ path: ``cadrumo.core.setup_answers`` -> ``cadrumo.domain.deadlines._models`` ->
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from typing import Any, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -173,6 +174,214 @@ def project_answers(flow: Any, values: Mapping[str, str]) -> BaseModel:
         implementation.
     """
     return get_project_answers()(flow, values)
+
+
+# ---------------------------------------------------------------------------
+# Profile-record projection
+#
+# The mapping below is what a persisted profile record needs to fill
+# :class:`SetupAnswers`: for each answer field, the profile path its value
+# is stored under, the type that value carries, and the default to assume
+# when the record is silent. Nothing else — no prompt, no widget, no
+# ordering, no visibility condition — participates in the projection.
+#
+# It lives here, beside the model it fills, because the deadline engine
+# projects a taxpayer profile out of stored facts on every schedule
+# computation, and that must not depend on the presence of an interactive
+# setup surface. Previously the engine reached the same information by
+# walking the terminal wizard's question catalogue, which coupled a
+# regulatory computation to a UI script and made the wizard undeletable.
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class SetupFieldSpec:
+    """Where one :class:`SetupAnswers` field is read from and how it parses."""
+
+    path: str
+    """Dotted profile-record path, e.g. ``identity.tax_id``.
+
+    Every path here is declared in the user-profile schema; the schema
+    remains the authority on which fields exist, this table only records
+    which answer field each one feeds.
+    """
+
+    answer_type: type[str] | type[bool]
+    """The stored token's type. Only these two occur in the setup answers."""
+
+    default: str | None = None
+    """Token to assume when the record carries no value for ``path``.
+
+    ``None`` means "leave the field to the model's own default", which is
+    not the same as an empty string: a blank token is a *declared* blank
+    and reaches the model, where an optional boolean reads it as
+    undeclared rather than as a positive ``False``.
+    """
+
+
+SETUP_ANSWER_FIELDS: Mapping[str, SetupFieldSpec] = {
+    "activity": SetupFieldSpec("activities.description", str),
+    "activity_start_date": SetupFieldSpec("censo.activity_start_date", str),
+    "address_postcode": SetupFieldSpec("contact.postcode", str),
+    "art109_activity_income_withholding_ge_70pct": SetupFieldSpec(
+        "irpf.art109_activity_income_withholding_ge_70pct",
+        bool,
+        "false",
+    ),
+    "bienes_extranjero_above_threshold": SetupFieldSpec("obligations.bienes_extranjero_above_threshold", bool, "false"),
+    "cloud_evidence_upload": SetupFieldSpec("capabilities.cloud_evidence_upload", bool, "false"),
+    "country_of_fiscal_residence": SetupFieldSpec("taxpayer_type.country_of_fiscal_residence", str),
+    "does_intracomunitario": SetupFieldSpec("iva.does_intracomunitario", bool, "false"),
+    "enrollment_large_company": SetupFieldSpec("censo.large_company", bool, "false"),
+    "enrollment_public_administration_budget_gt_6000000": SetupFieldSpec(
+        "censo.public_administration_budget_gt_6000000",
+        bool,
+        "false",
+    ),
+    "entity_type": SetupFieldSpec("taxpayer_type.entity_type", str),
+    "family_descendants_eu_eea_deduction": SetupFieldSpec("renta_family.descendants_eu_eea_deduction", bool, "false"),
+    "family_minor_children_in_unit": SetupFieldSpec("renta_family.minor_children_in_unit", bool, "false"),
+    "fiscal_residency": SetupFieldSpec("taxpayer_type.fiscal_residency", str, "resident_irpf"),
+    "google_export": SetupFieldSpec("capabilities.google_export", bool, "true"),
+    "has_employees": SetupFieldSpec("withholding.has_employees", bool, "false"),
+    "incn_prior_12_months": SetupFieldSpec("taxpayer_type.incn_prior_12_months", str),
+    "irpf_estimation_regime": SetupFieldSpec("irpf.estimation_regime", str),
+    "irpf_income_categories": SetupFieldSpec("taxpayer_type.irpf_income_categories", str),
+    "irpf_special_regime": SetupFieldSpec("irpf.special_regime", str),
+    "irpf_special_regime_start_date": SetupFieldSpec("irpf.special_regime_start_date", str),
+    "iva_group_dominant_entity_enrolled": SetupFieldSpec("iva.group_dominant_entity_enrolled", bool, "false"),
+    "iva_group_member_enrolled": SetupFieldSpec("iva.group_member_enrolled", bool, "false"),
+    "iva_intracommunity_operations_exceed_50000_eur": SetupFieldSpec(
+        "iva.intracommunity_operations_exceed_50000_eur",
+        bool,
+        "false",
+    ),
+    "iva_oss_enrolled": SetupFieldSpec("iva.oss_enrolled", bool, "false"),
+    "iva_redeme_enrolled": SetupFieldSpec("iva.redeme_enrolled", bool, "false"),
+    "iva_regime": SetupFieldSpec("iva.regime", str, "GENERAL"),
+    "iva_roi_enrolled": SetupFieldSpec("iva.roi_enrolled", bool, "false"),
+    "iva_sii_enrolled": SetupFieldSpec("iva.sii_enrolled", bool, "false"),
+    "legal_entity_form": SetupFieldSpec("taxpayer_type.legal_entity_form", str),
+    "legal_name": SetupFieldSpec("identity.legal_name", str),
+    "ley_49_2002_option_date": SetupFieldSpec("taxpayer_type.ley_49_2002_special_regime_option_date", str),
+    "ley_49_2002_option_declared": SetupFieldSpec("taxpayer_type.ley_49_2002_special_regime_option_declared", bool),
+    "ley_49_2002_renunciation_date": SetupFieldSpec("taxpayer_type.ley_49_2002_special_regime_renunciation_date", str),
+    "ley_49_2002_renunciation_declared": SetupFieldSpec(
+        "taxpayer_type.ley_49_2002_special_regime_renunciation_declared",
+        bool,
+    ),
+    "llm_vision": SetupFieldSpec("capabilities.llm_vision", bool, "true"),
+    "modelo_111_no_retenciones_periods": SetupFieldSpec("withholding.modelo_111_no_retenciones_periods", str),
+    "monedas_virtuales_extranjero_above_threshold": SetupFieldSpec(
+        "obligations.monedas_virtuales_extranjero_above_threshold",
+        bool,
+        "false",
+    ),
+    "name": SetupFieldSpec("identity.name", str),
+    "new_entity_first_two_profit_periods": SetupFieldSpec("taxpayer_type.new_entity_first_two_profit_periods", bool),
+    "notes": SetupFieldSpec("identity.notes", str),
+    "objective_estimation_modulos_iae_epigraph": SetupFieldSpec("irpf.objective_estimation_modulos_iae_epigraph", str),
+    "objective_estimation_modulos_module_1_units": SetupFieldSpec(
+        "irpf.objective_estimation_modulos_module_1_units",
+        str,
+    ),
+    "objective_estimation_modulos_module_2_units": SetupFieldSpec(
+        "irpf.objective_estimation_modulos_module_2_units",
+        str,
+    ),
+    "objective_estimation_modulos_module_3_units": SetupFieldSpec(
+        "irpf.objective_estimation_modulos_module_3_units",
+        str,
+    ),
+    "objective_estimation_modulos_module_4_units": SetupFieldSpec(
+        "irpf.objective_estimation_modulos_module_4_units",
+        str,
+    ),
+    "objective_estimation_modulos_module_5_units": SetupFieldSpec(
+        "irpf.objective_estimation_modulos_module_5_units",
+        str,
+    ),
+    "objective_estimation_modulos_module_6_units": SetupFieldSpec(
+        "irpf.objective_estimation_modulos_module_6_units",
+        str,
+    ),
+    "objective_estimation_modulos_module_7_units": SetupFieldSpec(
+        "irpf.objective_estimation_modulos_module_7_units",
+        str,
+    ),
+    "output_language": SetupFieldSpec("preferences.output_language", str, "es"),
+    "pays_capital_income_with_retencion": SetupFieldSpec(
+        "withholding.pays_capital_income_with_retencion",
+        bool,
+        "false",
+    ),
+    "pays_professionals_with_retencion": SetupFieldSpec("withholding.pays_professionals_with_retencion", bool, "false"),
+    "pays_rent_with_retencion": SetupFieldSpec("withholding.pays_rent_with_retencion", bool, "false"),
+    # No setup question ever collected this, so the engine read the model
+    # default and a taxpayer who HAD declared the fact was still scheduled
+    # as though they had not — the flag governs Modelo 130 applicability.
+    # The schema has always declared the path and named this very field in
+    # its model selector; only the projection was missing.
+    "professional_income_withholding_ge_70pct": SetupFieldSpec(
+        "irpf.professional_income_withholding_ge_70pct",
+        bool,
+        "false",
+    ),
+    "representante_fiscal_nif": SetupFieldSpec("taxpayer_type.representante_fiscal_nif", str),
+    "representante_fiscal_nombre": SetupFieldSpec("taxpayer_type.representante_fiscal_nombre", str),
+    "situacion_familiar": SetupFieldSpec("renta_family.situacion_familiar", str),
+    "spouse_birth_date": SetupFieldSpec("renta_spouse.birth_date", str),
+    "spouse_disability_grade": SetupFieldSpec("renta_spouse.disability_grade", str),
+    "spouse_eu_eea_country": SetupFieldSpec("renta_spouse.eu_eea_country", str),
+    "spouse_eu_eea_resident": SetupFieldSpec("renta_spouse.eu_eea_resident", bool, "false"),
+    "spouse_name": SetupFieldSpec("renta_spouse.name", str),
+    "spouse_non_resident_irpf": SetupFieldSpec("renta_spouse.non_resident_irpf", bool, "false"),
+    "spouse_sex": SetupFieldSpec("renta_spouse.sex", str),
+    "spouse_surnames": SetupFieldSpec("renta_spouse.surnames", str),
+    "spouse_tax_id": SetupFieldSpec("renta_spouse.tax_id", str),
+    "surnames": SetupFieldSpec("identity.surnames", str),
+    "tax_id": SetupFieldSpec("identity.tax_id", str),
+    "tax_residence_ccaa": SetupFieldSpec("tax_residence.ccaa", str, "madrid"),
+    "taxation_type": SetupFieldSpec("filing_export.declaration_type", str),
+    "taxpayer_birth_date": SetupFieldSpec("renta_taxpayer.birth_date", str),
+    "taxpayer_death_date": SetupFieldSpec("renta_taxpayer.death_date", str),
+    "taxpayer_disability_grade": SetupFieldSpec("renta_taxpayer.disability_grade", str),
+    "taxpayer_marital_status": SetupFieldSpec("renta_taxpayer.marital_status", str),
+    "taxpayer_marriage_date": SetupFieldSpec("renta_taxpayer.marriage_date", str),
+    "taxpayer_sex": SetupFieldSpec("renta_taxpayer.sex", str),
+    "third_party_transactions_above_347_threshold": SetupFieldSpec(
+        "obligations.third_party_transactions_above_347_threshold",
+        bool,
+        "false",
+    ),
+}
+"""Every :class:`SetupAnswers` field a persisted profile record can fill.
+
+A field absent from this table is filled by some other route (the
+descendant flow writes ``unidad_familiar_descendientes_exclusivos``) and
+keeps its model default here.
+"""
+
+
+def project_setup_answers(values: Mapping[str, str]) -> SetupAnswers:
+    """Build :class:`SetupAnswers` from a profile-record path mapping.
+
+    A path present in ``values`` wins even when its value is blank, because
+    a stored blank is a declared blank; only a genuinely absent path falls
+    back to the table's default. A blank boolean projects to the empty
+    string rather than ``False`` so that "not declared" survives the round
+    trip — collapsing it would let a persistence layer store a positive
+    ``"false"`` the operator never asserted.
+    """
+    typed: dict[str, object] = {}
+    for field, spec in SETUP_ANSWER_FIELDS.items():
+        raw = values.get(spec.path)
+        if raw is None:
+            raw = spec.default
+        if raw is None:
+            continue
+        typed[field] = (raw == "true" if raw else "") if spec.answer_type is bool else raw
+    return SetupAnswers.model_validate(typed)
 
 
 # ---------------------------------------------------------------------------
@@ -744,11 +953,14 @@ class SetupAnswers(BaseModel):
 
 
 __all__ = [
+    "SETUP_ANSWER_FIELDS",
     "ProfileAnswerTypeError",
     "ProjectAnswersFn",
     "ProjectAnswersNotRegisteredError",
     "SetupAnswers",
+    "SetupFieldSpec",
     "get_project_answers",
     "project_answers",
+    "project_setup_answers",
     "register_project_answers",
 ]

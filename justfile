@@ -197,9 +197,20 @@ check-dependencies:
 packaging-smoke-dependencies:
     @uv run --no-sync python -m dev.packaging.dependency_surface
 
-# Verify the lightweight packaging preflight command contracts.
+# Verify the packaging preflight command contracts. The marker expression is
+# stated explicitly and kept byte-identical to the static lane in
+# `.github/workflows/ci.yml`, so this local gate and CI select the same set.
+# `dev/packaging/tests` is mixed-marker: inheriting the default `-m 'unit and
+# ...'` expression from pyproject silently deselected every integration
+# contract in it -- including the modules named for the packaging-smoke, Scoop,
+# Homebrew, and Docker workflows this recipe gates as a dependency of
+# `packaging-smoke-linux` and `packaging-smoke-docker` -- and still exited zero.
+# The excluded `serial` tests are not dropped silently: the installed-oracle
+# cohort is owned by `packaging-smoke-installed-oracles`, and the serving-path
+# benchmark by the `-m perf` lane in `.github/workflows/ci-full.yml`. Guarded by
+# `dev/packaging/tests/test_preflight_recipe_selection.py`.
 packaging-smoke-preflight-tests:
-    @uv run --no-sync pytest dev/packaging/tests -q
+    @uv run --no-sync pytest -q -m "unit or (integration and not serial)" dev/packaging/tests
 
 # Cheap source-data preflight: fail before wheel, venv, or Docker work if a
 # git-tracked shipped data file has been deleted from the worktree.

@@ -25,6 +25,7 @@ from __future__ import annotations
 import json
 import re
 from datetime import UTC, datetime
+from decimal import Decimal
 
 import pytest
 import typer
@@ -727,6 +728,52 @@ def test_parse_amendment_casilla_rejects_whitespace_padded_keys() -> None:
     for spec in (" 01=1.00", "01 =1.00"):
         with pytest.raises(_typer.BadParameter):
             _parse_amendment_casilla(spec)
+
+
+def test_parse_amendment_casilla_refuses_non_canonical_amounts() -> None:
+    """Amendment ``--set`` amounts conform to the canonical euro grammar.
+
+    Each form here is one the bare ``Decimal`` constructor this replaced really
+    does accept, asserted first so the test proves a genuine tightening rather
+    than restating the constructor. An amendment restates a casilla on a filed
+    declaration, so admitting ``1e3`` (a 1000x misreading of a typo'd ``1e3``),
+    ``1.000`` (the Spanish thousands shape silently becoming one euro), or the
+    non-finite ``NaN``/``Infinity`` is a filing-grade defect: a ``NaN`` amount
+    compares ``False`` to every threshold, so an under-declaration advisory
+    keyed on ``> 0`` would never fire for it.
+    """
+    import typer as _typer
+
+    from .._modelo import _parse_amendment_casilla
+
+    for raw in ("1e3", "1E3", "+140000", "1_000", ".5", "1.", "NaN", "-NaN", "Infinity", "-Infinity", "1.000"):
+        assert isinstance(Decimal(raw), Decimal), raw
+        with pytest.raises(_typer.BadParameter):
+            _parse_amendment_casilla(f"01={raw}")
+
+    # Forms the constructor also rejects must refuse through the same surface
+    # rather than escaping as a raw InvalidOperation.
+    for raw in ("1.234,56", "36.500,00", "not-decimal", "1 000"):
+        with pytest.raises(_typer.BadParameter):
+            _parse_amendment_casilla(f"01={raw}")
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        ("140000", Decimal("140000")),
+        ("1234.56", Decimal("1234.56")),
+        ("0", Decimal("0")),
+        ("-1234.56", Decimal("-1234.56")),
+        ("  1234.56  ", Decimal("1234.56")),
+    ],
+)
+def test_parse_amendment_casilla_accepts_canonical_amounts(raw: str, expected: Decimal) -> None:
+    """The canonical euro form still parses to the exact declared amount."""
+    from .._modelo import _parse_amendment_casilla
+
+    _, value = _parse_amendment_casilla(f"01={raw}")
+    assert value == expected
 
 
 def test_parse_binding_override_accepts_valid_keys() -> None:

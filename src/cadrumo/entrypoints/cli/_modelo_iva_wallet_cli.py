@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from typing import Annotated
 
 import typer
@@ -19,11 +19,37 @@ from ...application.modelo import (
     seed_iva_compensation_period_for_bucket,
 )
 from ...core import Period
+from ...core.decimal import try_parse_canonical_decimal
 from ...core.i18n import tr
 from ...domain.iva_compensation import IvaCompensationSeedConflictError
 from ._common import _emit_envelope
 from ._modelo_payloads import IvaWalletBalanceResult, IvaWalletOverrideResult, IvaWalletSeedResult
 from ._modelo_payloads_m036 import IvaWalletCorrectResult
+
+
+def _wallet_amount(amount: str) -> Decimal:
+    """Validate a hand-typed M303 carry-forward balance against the canonical grammar.
+
+    All three mutating wallet verbs (``seed``, ``correct``, ``override``) declare
+    the same euro figure and refuse with the same catalogue message, so the
+    grammar is enforced once here. The two-fractional-digit cap is what makes the
+    Spanish thousands shape ``1.000`` refuse instead of silently becoming
+    ``Decimal("1.0")``; the grammar also refuses scientific notation, a leading
+    ``+``, a comma decimal separator, and ``NaN``/``Infinity``, all of which the
+    previous bare :class:`~decimal.Decimal` call accepted. A leading ``-`` still
+    conforms so the domain's own non-negative refusal stays the surface that
+    reports a negative balance.
+    """
+    parsed = try_parse_canonical_decimal(amount, max_fraction_digits=2)
+    if parsed is None:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.iva_wallet.seed_invalid_amount",
+                amount=amount,
+                default=f"Amount {amount!r} is not a valid decimal.",
+            ),
+        )
+    return parsed
 
 
 def register_iva_wallet_commands(
@@ -177,16 +203,7 @@ def _register_iva_wallet_seed_command(iva_wallet_app: typer.Typer, *, active_buc
                 ),
             )
 
-        try:
-            seed_amount = Decimal(amount)
-        except InvalidOperation as exc:
-            raise typer.BadParameter(
-                tr(
-                    "cli.app.modelo.iva_wallet.seed_invalid_amount",
-                    amount=amount,
-                    default=f"Amount {amount!r} is not a valid decimal.",
-                ),
-            ) from exc
+        seed_amount = _wallet_amount(amount)
 
         try:
             filing_period = Period.from_year_and_code(filing_year, period)
@@ -336,16 +353,7 @@ def _register_iva_wallet_correct_command(iva_wallet_app: typer.Typer, *, active_
                 ),
             )
 
-        try:
-            correct_amount = Decimal(amount)
-        except InvalidOperation as exc:
-            raise typer.BadParameter(
-                tr(
-                    "cli.app.modelo.iva_wallet.seed_invalid_amount",
-                    amount=amount,
-                    default=f"Amount {amount!r} is not a valid decimal.",
-                ),
-            ) from exc
+        correct_amount = _wallet_amount(amount)
 
         filing_period = Period.from_year_and_code(filing_year, period)
         previous_state = _load_existing_seeded_period(active_bucket_id(), filing_period)
@@ -545,16 +553,7 @@ def _register_iva_wallet_override_command(iva_wallet_app: typer.Typer, *, active
                 ),
             )
 
-        try:
-            override_amount = Decimal(amount)
-        except InvalidOperation as exc:
-            raise typer.BadParameter(
-                tr(
-                    "cli.app.modelo.iva_wallet.seed_invalid_amount",
-                    amount=amount,
-                    default=f"Amount {amount!r} is not a valid decimal.",
-                ),
-            ) from exc
+        override_amount = _wallet_amount(amount)
 
         filing_period = Period.from_year_and_code(filing_year, period)
         try:

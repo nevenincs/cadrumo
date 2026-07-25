@@ -9,7 +9,11 @@ simple in-memory search over the small concept set.
 Per the ``glossary-concepts-are-taxpayer-facing`` rule the shipped search
 surfaces only ``approved``-lifecycle concepts — the ratified taxpayer/operator
 vocabulary — excluding ``draft`` (unreviewed) and ``deprecated`` (internal
-machinery) concepts, which the taxpayer glossary also excludes.
+machinery) concepts, which the taxpayer glossary also excludes. The lifecycle
+axis itself is the core-owned :class:`~core.ConceptLifecycle` closed set, the
+one home reachable from both this shipped reader and the unshipped authoring
+tooling; a stored token that names no member is refused here rather than
+silently filtered out of every result.
 
 See Also:
     :func:`~application.corpus_search.search_terminology`
@@ -33,6 +37,7 @@ from typing import Annotated
 from pydantic import BaseModel, Field, StringConstraints
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import ConceptLifecycle
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.resources import bundled_path
 from ._errors import CorpusSearchInputError
@@ -41,8 +46,7 @@ _Text = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 
 _TERMINOLOGY_PARTS = ("terminology", "concepts")
 _FALLBACK_LOCALE = "es"
-_APPROVED = "approved"
-_DEFAULT_LIFECYCLES = (_APPROVED,)
+_DEFAULT_LIFECYCLES = (ConceptLifecycle.APPROVED,)
 _DEFAULT_LIMIT = 8
 
 _WHITESPACE_RE = re.compile(r"\s+")
@@ -55,7 +59,7 @@ class TerminologyConcept(BaseModel):
 
     concept_id: _Text
     domain: _Text
-    lifecycle: _Text
+    lifecycle: ConceptLifecycle
     locale: _Text
     preferred_label: _Text
     terms: tuple[str, ...] = ()
@@ -131,6 +135,33 @@ def _terms_and_preferred(language_block: dict[str, object]) -> tuple[str, tuple[
     return resolved_preferred, tuple(dict.fromkeys(labels))
 
 
+def _hydrated_lifecycle(token: str, *, concept_id: str) -> ConceptLifecycle:
+    """Hydrate a stored ``lifecycle`` token to its member, refusing an unknown one.
+
+    A token outside the closed set is drift between the authoring tooling and
+    the shipped reader, not a concept to skip: silently dropping it would erase
+    the concept from every search result with no operator-visible signal.
+
+    Raises:
+        CorpusSearchInputError: If ``token`` names no
+            :class:`~core.ConceptLifecycle` member.
+
+    Returns:
+        A :class:`~core.ConceptLifecycle`.
+    """
+    try:
+        return ConceptLifecycle(token)
+    except ValueError as exc:
+        raise CorpusSearchInputError(
+            "unknown terminology concept lifecycle",
+            context={
+                "concept_id": concept_id,
+                "lifecycle": token,
+                "accepted": tuple(member.value for member in ConceptLifecycle),
+            },
+        ) from exc
+
+
 def _project_concept(payload: dict[str, object], *, locale: str) -> TerminologyConcept | None:
     concept = payload.get("concept")
     if not isinstance(concept, dict):
@@ -140,6 +171,7 @@ def _project_concept(payload: dict[str, object], *, locale: str) -> TerminologyC
     lifecycle = concept.get("lifecycle")
     if not (isinstance(concept_id, str) and isinstance(domain, str) and isinstance(lifecycle, str)):
         return None
+    resolved_lifecycle = _hydrated_lifecycle(lifecycle, concept_id=concept_id)
     resolved_locale, language_block = _resolve_language(payload, locale)
     preferred_label, terms = _terms_and_preferred(language_block)
     if not preferred_label:
@@ -148,7 +180,7 @@ def _project_concept(payload: dict[str, object], *, locale: str) -> TerminologyC
     return TerminologyConcept(
         concept_id=concept_id,
         domain=domain,
-        lifecycle=lifecycle,
+        lifecycle=resolved_lifecycle,
         locale=resolved_locale,
         preferred_label=preferred_label,
         terms=terms,
@@ -207,12 +239,13 @@ def search_terminology(
     *,
     locale: str = _FALLBACK_LOCALE,
     limit: int = _DEFAULT_LIMIT,
-    lifecycles: Iterable[str] = _DEFAULT_LIFECYCLES,
+    lifecycles: Iterable[ConceptLifecycle] = _DEFAULT_LIFECYCLES,
 ) -> tuple[TerminologyHit, ...]:
     """Search the Handbook for ``query``, returning ranked hits.
 
-    Only concepts whose lifecycle is in ``lifecycles`` (``approved`` by
-    default, the taxpayer-facing set) are considered.
+    Only concepts whose lifecycle is in ``lifecycles``
+    (:attr:`~core.ConceptLifecycle.APPROVED` by default, the taxpayer-facing
+    set) are considered.
 
     Raises:
         CorpusSearchInputError: If ``query`` is blank or ``limit`` is not

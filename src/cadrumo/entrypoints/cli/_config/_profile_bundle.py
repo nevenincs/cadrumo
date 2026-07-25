@@ -1,8 +1,10 @@
 """Profile bundle import/export command registration for ``aeat config profile``.
 
-Profile import emits a lifecycle event after restoring a portable bundle.
-Profile export delegates resolution, serialization, publication, and event
-recording to the application-layer export authority.
+Both verbs are thin adapters: import delegates the restore and its
+``profile.imported`` lifecycle event to the application-layer bundle authority,
+and export delegates resolution, serialization, publication, and event recording
+to the application-layer export authority. Neither appends a bucket event
+itself.
 
 The bundle passphrase is never an ``argv`` value (the process table and shell
 history must not see it): export under ``--encrypt`` collects it via a hidden
@@ -32,7 +34,6 @@ from ....core.errors import resolve_error_message as _resolve_error_message
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
-from ....core.time import now as _now
 from .._common import _emit_envelope, _no_active_profile_refusal
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
@@ -95,7 +96,6 @@ def _resolve_import_passphrase(secrets_stdin: bool) -> str:
 
 if TYPE_CHECKING:
     from ....application.user_profile import ProfileBundleExportReconcileFailure
-    from ....domain.buckets import BucketEventType
     from ....domain.user_profile import UserProfilePortableExport, UserProfileRecord
 
 
@@ -557,12 +557,11 @@ def _register_profile_import_command(
             path = collected.path
             label = collected.label
         from ....application.user_profile import (
-            deserialize_profile_bundle,
             missing_filing_baseline_flags,
             profile_storage_session,
             record_to_path_values,
+            register_imported_profile_bundle,
         )
-        from ....domain.buckets import BucketEventType
         from .._config_payloads import ConfigProfileImportResult
 
         raw_bundle_text = _load_import_bundle_text(path)
@@ -580,16 +579,11 @@ def _register_profile_import_command(
         )
 
         with profile_storage_session(target_id):
-            deserialize_profile_bundle(bundle, target_bucket_id=target_id)
-            _emit_profile_lifecycle_event(
-                event_type=BucketEventType.PROFILE_IMPORTED,
-                bucket_id=target_id,
-                object_id=target_id,
-                payload={
-                    "display_name": target_label,
-                    "source_path": str(path),
-                    "schema_version": str(bundle.bundle_schema_version),
-                },
+            register_imported_profile_bundle(
+                bundle,
+                target_bucket_id=target_id,
+                display_name=target_label,
+                source_path=str(path),
             )
 
         import_result = ConfigProfileImportResult(
@@ -799,49 +793,6 @@ def _invalid_import_tax_id(error: str) -> _CliRefusedBoundaryError:
         translated_message="cli.config.profile.import_invalid_tax_id",
         context={"error": error},
     )
-
-
-def _emit_profile_lifecycle_event(
-    *,
-    event_type: BucketEventType,
-    bucket_id: str,
-    object_id: str,
-    payload: dict[str, str],
-) -> None:
-    """Append a profile-lifecycle event to the bucket-event-history catalogue."""
-    from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ....domain.buckets import (
-        BucketEvent,
-        BucketEventHistoryCatalogue,
-        BucketEventObjectType,
-        derive_bucket_event_id,
-    )
-
-    occurred_at = _now().replace(microsecond=0)
-    actor = "operator"
-    event_id = derive_bucket_event_id(
-        bucket_id=bucket_id,
-        event_type=event_type,
-        occurred_at=occurred_at,
-        actor=actor,
-        object_type=BucketEventObjectType.PROFILE,
-        object_id=object_id,
-        payload=payload,
-    )
-    event = BucketEvent(
-        event_id=event_id,
-        bucket_id=bucket_id,
-        event_type=event_type,
-        occurred_at=occurred_at,
-        actor=actor,
-        object_type=BucketEventObjectType.PROFILE,
-        object_id=object_id,
-        payload_version=1,
-        payload=payload,
-    )
-    repo = BucketEventHistoryRepository()
-    catalogue = repo.load()
-    repo.save(BucketEventHistoryCatalogue(events={**catalogue.events, event_id: event}))
 
 
 __all__ = ["register_profile_bundle_commands"]

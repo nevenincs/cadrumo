@@ -15,7 +15,7 @@ from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from ....core import BindingSourceKind, Modelo, Period, TaxDomain
 from ._authority import ValidatedRegistryAuthority
@@ -62,6 +62,32 @@ _BARE_PERIOD_RE = re.compile(
     r"^(?:0A|[1-4]T|[1-4]P|0[1-9]|1[0-2]|EXT-[1-4]T|AD-HOC|EVENT-\d+)$",
     re.I,
 )
+
+
+class ResolvedRegistryQueryContext(BaseModel):
+    """One resolved registry query context, returned by both resolution forms.
+
+    ``RegistryQueryService`` reaches a modelo revision by two routes: an
+    unscoped lookup that narrows by period token alone, and a scoped lookup
+    that resolves a snapshot for an explicit filing year. Both routes return
+    this context, so every query method and report builder consumes one typed
+    shape instead of two positional tuples whose arity and element meaning
+    differed. The unscoped route leaves :attr:`filing_year` unset, which is
+    why it stays optional here.
+
+    This is deliberately narrower than a
+    :class:`~domain.calculations.registry.RegistrySnapshot`: a snapshot
+    requires a filing year and carries the whole legal, source, and
+    expectation authority, none of which the unscoped period query has or
+    needs to answer a read-only introspection request.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    definition: ModeloDefinition
+    revision: ModeloRevision
+    filing_year: int | None = None
+    registry_period: str | None = None
 
 
 class RegistryQueryService:
@@ -212,13 +238,7 @@ class RegistryQueryService:
                 the period is not declared by any revision, or no revision
                 covers the requested scope.
         """
-        definition, revision, filing_year, registry_period = self._resolve_revision(modelo, period=period, as_of=as_of)
-        return _build_modelo_describe_report(
-            definition,
-            revision,
-            filing_year=filing_year,
-            registry_period=registry_period,
-        )
+        return _build_modelo_describe_report(self._resolve_revision(modelo, period=period, as_of=as_of))
 
     def describe_modelo_for_scope(
         self,
@@ -229,17 +249,8 @@ class RegistryQueryService:
         as_of: date | None = None,
     ) -> ModeloDescribeReport:
         """Return a :class:`~domain.calculations.registry._query_reports.ModeloDescribeReport` for a scope."""
-        definition, revision, registry_period = self._resolve_revision_for_scope(
-            modelo,
-            filing_year=filing_year,
-            period=period,
-            as_of=as_of,
-        )
         return _build_modelo_describe_report(
-            definition,
-            revision,
-            filing_year=filing_year,
-            registry_period=registry_period,
+            self._resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
         )
 
     def casillas(
@@ -279,12 +290,8 @@ class RegistryQueryService:
             ``RegistryValidationError``: When the modelo or period is not
                 registered, or no revision covers the requested scope.
         """
-        definition, revision, filing_year, registry_period = self._resolve_revision(modelo, period=period, as_of=as_of)
         return _build_modelo_casillas_report(
-            definition,
-            revision,
-            filing_year=filing_year,
-            registry_period=registry_period,
+            self._resolve_revision(modelo, period=period, as_of=as_of),
             input_kind=input_kind,
             required=required,
             form_number=form_number,
@@ -302,17 +309,8 @@ class RegistryQueryService:
         form_number: str | None = None,
     ) -> ModeloCasillasReport:
         """Return a :class:`~domain.calculations.registry._query_reports.ModeloCasillasReport` for a scope."""
-        definition, revision, registry_period = self._resolve_revision_for_scope(
-            modelo,
-            filing_year=filing_year,
-            period=period,
-            as_of=as_of,
-        )
         return _build_modelo_casillas_report(
-            definition,
-            revision,
-            filing_year=filing_year,
-            registry_period=registry_period,
+            self._resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
             input_kind=input_kind,
             required=required,
             form_number=form_number,
@@ -349,8 +347,7 @@ class RegistryQueryService:
                 registered, no revision covers the requested scope, or the
                 casilla id/number is not defined by the resolved revision.
         """
-        definition, revision, filing_year, registry_period = self._resolve_revision(modelo, period=period, as_of=as_of)
-        return _casilla_detail_report(definition, revision, casilla, filing_year, registry_period)
+        return _casilla_detail_report(self._resolve_revision(modelo, period=period, as_of=as_of), casilla)
 
     def casilla_for_scope(
         self,
@@ -362,13 +359,10 @@ class RegistryQueryService:
         as_of: date | None = None,
     ) -> ModeloCasillaDetailReport:
         """Return a :class:`~domain.calculations.registry._query_reports.ModeloCasillaDetailReport` for a scope."""
-        definition, revision, registry_period = self._resolve_revision_for_scope(
-            modelo,
-            filing_year=filing_year,
-            period=period,
-            as_of=as_of,
+        return _casilla_detail_report(
+            self._resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
+            casilla,
         )
-        return _casilla_detail_report(definition, revision, casilla, filing_year, registry_period)
 
     def bindings_for_scope(
         self,
@@ -389,20 +383,8 @@ class RegistryQueryService:
             A :class:`~domain.calculations.registry._query_reports.ModeloBindingsReport`
             for the requested filing scope.
         """
-        definition = self._authority.validate_modelo(modelo.strip())
-        snapshot = self._authority.snapshot(
-            str(definition.id),
-            filing_year=filing_year,
-            period=period,
-            on=as_of,
-        )
-        return ModeloBindingsReport(
-            code=str(definition.id),
-            revision=str(snapshot.revision.id),
-            filing_year=filing_year,
-            filing_period=filing_period_from_scope(filing_year, period),
-            period=period,
-            rows=_binding_rows(snapshot.revision, modelo=str(definition.id), period=period),
+        return _build_modelo_bindings_report(
+            self._resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
         )
 
     def formulas_for_scope(
@@ -414,17 +396,8 @@ class RegistryQueryService:
         as_of: date | None = None,
     ) -> ModeloFormulasReport:
         """Return a :class:`~domain.calculations.registry._query_reports.ModeloFormulasReport` for a scope."""
-        definition, revision, registry_period = self._resolve_revision_for_scope(
-            modelo,
-            filing_year=filing_year,
-            period=period,
-            as_of=as_of,
-        )
         return _build_modelo_formulas_report(
-            definition,
-            revision,
-            filing_year=filing_year,
-            registry_period=registry_period,
+            self._resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
         )
 
     def bindings_for_year(
@@ -501,15 +474,7 @@ class RegistryQueryService:
             ``RegistryValidationError``: When the modelo or period is not
                 registered, or no revision covers the requested scope.
         """
-        definition, revision, filing_year, registry_period = self._resolve_revision(modelo, period=period, as_of=as_of)
-        return ModeloBindingsReport(
-            code=str(definition.id),
-            revision=str(revision.id),
-            filing_year=filing_year,
-            filing_period=_query_filing_period(filing_year, registry_period),
-            period=registry_period,
-            rows=_binding_rows(revision, modelo=str(definition.id), period=registry_period),
-        )
+        return _build_modelo_bindings_report(self._resolve_revision(modelo, period=period, as_of=as_of))
 
     def formulas(
         self,
@@ -539,13 +504,7 @@ class RegistryQueryService:
             ``RegistryValidationError``: When the modelo or period is not
                 registered, or no revision covers the requested scope.
         """
-        definition, revision, filing_year, registry_period = self._resolve_revision(modelo, period=period, as_of=as_of)
-        return _build_modelo_formulas_report(
-            definition,
-            revision,
-            filing_year=filing_year,
-            registry_period=registry_period,
-        )
+        return _build_modelo_formulas_report(self._resolve_revision(modelo, period=period, as_of=as_of))
 
     def _resolve_revision(
         self,
@@ -553,7 +512,7 @@ class RegistryQueryService:
         *,
         period: str | None,
         as_of: date | None,
-    ) -> tuple[ModeloDefinition, ModeloRevision, int | None, str | None]:
+    ) -> ResolvedRegistryQueryContext:
         if as_of is not None:
             # The unscoped path resolves the latest revision by period and has no
             # filing-year context to gate an as_of date against a revision's
@@ -568,7 +527,7 @@ class RegistryQueryService:
         definition = self._authority.validate_modelo(modelo.strip())
         if period is None:
             revision = max(definition.revisions.values(), key=lambda item: (item.valid_from, str(item.id)))
-            return definition, revision, None, None
+            return ResolvedRegistryQueryContext(definition=definition, revision=revision)
         bare = period.strip()
         bare_upper = bare.upper()
         # A bare period token is one of: a registry time-code
@@ -602,7 +561,11 @@ class RegistryQueryService:
                 raise RegistryValidationError(
                     f"period {period!r} is not declared by revision {revision.id} of modelo {definition.id}",
                 )
-            return definition, revision, None, registry_token
+            return ResolvedRegistryQueryContext(
+                definition=definition,
+                revision=revision,
+                registry_period=registry_token,
+            )
         raise RegistryValidationError(
             f"period must be a bare registry token; pass the filing year separately; got {period!r}",
         )
@@ -614,7 +577,7 @@ class RegistryQueryService:
         filing_year: int,
         period: str,
         as_of: date | None,
-    ) -> tuple[ModeloDefinition, ModeloRevision, str]:
+    ) -> ResolvedRegistryQueryContext:
         definition = self._authority.validate_modelo(modelo.strip())
         requested_period = period.strip()
         declared_by_revision = tuple(
@@ -629,17 +592,20 @@ class RegistryQueryService:
             period=registry_period,
             on=as_of,
         )
-        return definition, snapshot.revision, registry_period
+        return ResolvedRegistryQueryContext(
+            definition=definition,
+            revision=snapshot.revision,
+            filing_year=filing_year,
+            registry_period=registry_period,
+        )
 
 
-def _build_modelo_describe_report(
-    definition: ModeloDefinition,
-    revision: ModeloRevision,
-    *,
-    filing_year: int | None,
-    registry_period: str | None,
-) -> ModeloDescribeReport:
-    """Assemble a :class:`ModeloDescribeReport` from a resolved definition/revision."""
+def _build_modelo_describe_report(context: ResolvedRegistryQueryContext) -> ModeloDescribeReport:
+    """Assemble a :class:`ModeloDescribeReport` from a resolved query context."""
+    definition = context.definition
+    revision = context.revision
+    filing_year = context.filing_year
+    registry_period = context.registry_period
     return ModeloDescribeReport(
         code=str(definition.id),
         title=definition.title,
@@ -688,16 +654,15 @@ def _casilla_row_included(
 
 
 def _build_modelo_casillas_report(
-    definition: ModeloDefinition,
-    revision: ModeloRevision,
+    context: ResolvedRegistryQueryContext,
     *,
-    filing_year: int | None,
-    registry_period: str | None,
     input_kind: InputKind | None,
     required: bool | None,
     form_number: str | None,
 ) -> ModeloCasillasReport:
-    """Assemble a filtered :class:`ModeloCasillasReport` from a resolved revision."""
+    """Assemble a filtered :class:`ModeloCasillasReport` from a resolved query context."""
+    definition = context.definition
+    revision = context.revision
     rows = [
         ModeloCasillaRow(
             casilla_id=casilla.id,
@@ -721,21 +686,17 @@ def _build_modelo_casillas_report(
     return ModeloCasillasReport(
         code=str(definition.id),
         revision=str(revision.id),
-        filing_year=filing_year,
-        filing_period=_query_filing_period(filing_year, registry_period),
-        period=registry_period,
+        filing_year=context.filing_year,
+        filing_period=_query_filing_period(context.filing_year, context.registry_period),
+        period=context.registry_period,
         rows=tuple(rows),
     )
 
 
-def _build_modelo_formulas_report(
-    definition: ModeloDefinition,
-    revision: ModeloRevision,
-    *,
-    filing_year: int | None,
-    registry_period: str | None,
-) -> ModeloFormulasReport:
-    """Assemble a :class:`ModeloFormulasReport` from a resolved revision."""
+def _build_modelo_formulas_report(context: ResolvedRegistryQueryContext) -> ModeloFormulasReport:
+    """Assemble a :class:`ModeloFormulasReport` from a resolved query context."""
+    definition = context.definition
+    revision = context.revision
     rows = tuple(
         ModeloFormulaRow(
             formula_id=str(formula.id),
@@ -753,10 +714,23 @@ def _build_modelo_formulas_report(
     return ModeloFormulasReport(
         code=str(definition.id),
         revision=str(revision.id),
-        filing_year=filing_year,
-        filing_period=_query_filing_period(filing_year, registry_period),
-        period=registry_period,
+        filing_year=context.filing_year,
+        filing_period=_query_filing_period(context.filing_year, context.registry_period),
+        period=context.registry_period,
         rows=rows,
+    )
+
+
+def _build_modelo_bindings_report(context: ResolvedRegistryQueryContext) -> ModeloBindingsReport:
+    """Assemble a :class:`ModeloBindingsReport` from a resolved query context."""
+    modelo = str(context.definition.id)
+    return ModeloBindingsReport(
+        code=modelo,
+        revision=str(context.revision.id),
+        filing_year=context.filing_year,
+        filing_period=_query_filing_period(context.filing_year, context.registry_period),
+        period=context.registry_period,
+        rows=_binding_rows(context.revision, modelo=modelo, period=context.registry_period),
     )
 
 
@@ -795,13 +769,7 @@ def _binding_rows(
     )
 
 
-def _casilla_detail_report(
-    definition: ModeloDefinition,
-    revision: ModeloRevision,
-    casilla: str,
-    filing_year: int | None,
-    registry_period: str | None,
-) -> ModeloCasillaDetailReport:
+def _casilla_detail_report(context: ResolvedRegistryQueryContext, casilla: str) -> ModeloCasillaDetailReport:
     """Build the single-casilla detail report, resolving the formula expression.
 
     The casilla is matched by canonical id first, then by printed ``number``
@@ -811,6 +779,8 @@ def _casilla_detail_report(
     A computed casilla's ``formula`` id is resolved against the revision's
     formulas so the structured expression rides the report.
     """
+    definition = context.definition
+    revision = context.revision
     needle = casilla.strip()
     matched = next(
         (item for item in revision.casillas if str(item.id) == needle or item.number == needle),
@@ -833,9 +803,9 @@ def _casilla_detail_report(
     return ModeloCasillaDetailReport(
         code=str(definition.id),
         revision=str(revision.id),
-        filing_year=filing_year,
-        filing_period=_query_filing_period(filing_year, registry_period),
-        period=registry_period,
+        filing_year=context.filing_year,
+        filing_period=_query_filing_period(context.filing_year, context.registry_period),
+        period=context.registry_period,
         casilla_id=matched.id,
         number=matched.number,
         label=matched.label,

@@ -145,6 +145,8 @@ def _evidence(*, evidence_id: str = "ev-001") -> PurchaseInvoiceEvidence:
             "bucket_id": _BUCKET_ID,
             "source_path": "factura.pdf",
             "source_sha256": "a" * 64,
+            # The bytes' in-store home; equals source_sha256 for a real `evidence add`.
+            "attachment_id": "a" * 64,
             "media_kind": MediaKind.PDF,
             "created_at": datetime(2026, 2, 5, tzinfo=UTC),
             "updated_at": datetime(2026, 2, 5, tzinfo=UTC),

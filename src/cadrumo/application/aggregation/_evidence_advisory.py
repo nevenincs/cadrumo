@@ -24,7 +24,7 @@ from collections.abc import Iterable
 from decimal import Decimal
 
 from ...domain.iva import (
-    CUOTA_LESS_M303_IVA_CATEGORIES,
+    EVIDENCE_EXEMPT_IVA_CATEGORIES,
     InvoiceKind,
     IvaCategory,
     IvaFlowDirection,
@@ -39,20 +39,6 @@ from ...domain.transactions import (
     TransactionLifecycleState,
 )
 from ._source_mesh import CalculationSourceDiagnostic
-
-# IVA categories that never bear a deductible (input) or devengada (output)
-# cuota a binding would route, so an evidence-presence advisory on them would
-# be noise. Extends the by-law cuota-less set with the non-declarable
-# sentinels (recargo de equivalencia is filed under a separate regime;
-# unknown / erroneous carry no settled cuota). A None category is treated as
-# "not yet a cuota-bearing classification" and likewise excluded.
-_EVIDENCE_EXEMPT_IVA_CATEGORIES: frozenset[IvaCategory] = CUOTA_LESS_M303_IVA_CATEGORIES | frozenset(
-    {
-        IvaCategory.RECARGO_EQUIVALENCIA,
-        IvaCategory.ERRONEOUS_INVOICE,
-        IvaCategory.UNKNOWN,
-    },
-)
 
 #: Business classifications that carry a deductible / declarable economic role.
 _EVIDENCE_EXPECTING_BUSINESS_STATES: frozenset[BusinessClassification] = frozenset(
@@ -83,8 +69,13 @@ def _row_has_linked_evidence(transaction: Transaction) -> bool:
 
 
 def _is_cuota_bearing_iva_category(category: IvaCategory | None) -> bool:
-    """Return whether ``category`` is legally expected to bear a routed cuota."""
-    return category is None or category not in _EVIDENCE_EXEMPT_IVA_CATEGORIES
+    """Return whether ``category`` is legally expected to bear a routed cuota.
+
+    ``None`` is treated as "not yet a cuota-bearing classification" and is
+    likewise excluded, alongside the categories named in
+    :data:`~cadrumo.domain.iva.EVIDENCE_EXEMPT_IVA_CATEGORIES`.
+    """
+    return category is None or category not in EVIDENCE_EXEMPT_IVA_CATEGORIES
 
 
 def _invoice_kind_for(direction: TransactionDirection) -> InvoiceKind | None:
@@ -171,8 +162,8 @@ def missing_evidence_advisory_observations(
       required for filing-grade verification), or
     - an output-IVA row whose IVA category is legally expected to bear a
       devengada cuota — i.e. not in
-      :data:`domain.iva.CUOTA_LESS_M303_IVA_CATEGORIES` nor a
-      non-declarable sentinel (the issued-invoice evidence gap remains visible).
+      :data:`~cadrumo.domain.iva.EVIDENCE_EXEMPT_IVA_CATEGORIES`
+      (the issued-invoice evidence gap remains visible).
 
     Rows that legitimately bear no evidence requirement — non-business /
     personal, exempt / zero-rated / not-subject / sentinel IVA categories, no

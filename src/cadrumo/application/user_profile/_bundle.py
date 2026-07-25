@@ -38,6 +38,8 @@ from typing import TYPE_CHECKING, Final
 
 from ...adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY, StorageCustodyProfile
 from ...core.errors import CadrumoError
+from ...core.time import now
+from ...domain.buckets import BucketEvent, BucketEventObjectType, BucketEventType, emit_bucket_event
 
 if TYPE_CHECKING:
     from ...domain.user_profile import (
@@ -45,6 +47,11 @@ if TYPE_CHECKING:
         CoverageManifest,
         UserProfilePortableExport,
     )
+
+# Import is an operator handoff, so the trail names the operator rather than the
+# emitting module. The payload version tracks the import event's own key set.
+_PROFILE_IMPORT_EVENT_ACTOR = "operator"
+_PROFILE_IMPORT_EVENT_PAYLOAD_VERSION = 1
 
 
 #: Current bundle write version. Every export stamps this.
@@ -231,19 +238,6 @@ def _normalize_custody_profile(custody_profile: StorageCustodyProfile | str) -> 
         ) from exc
 
 
-#: Namespaces carried by the typed bundle fields; they count as covered for the
-#: full-custody coverage assertion even though the generic carry skips them.
-_TYPED_CATEGORY_NAMESPACES: frozenset[str] = frozenset(
-    {
-        "cadrumo.application.user_profile.value",
-        "cadrumo.domain.transactions.bucket",
-        "cadrumo.domain.modelos.work_units",
-        "cadrumo.domain.modelos.calculation_revisions",
-        "cadrumo.domain.modelos.filing_records",
-    },
-)
-
-
 def _build_secure_object_custody_payload(
     *,
     bucket_id: str,
@@ -251,7 +245,11 @@ def _build_secure_object_custody_payload(
 ) -> tuple[tuple[CarriedSecureObject, ...], CoverageManifest]:
     from ...adapters.persistence.storage import secure_object_repository_for_bucket
     from ...domain.user_profile import CoverageManifest
-    from ._custody_carry import carried_namespace_definitions, serialize_carried_objects
+    from ._custody_carry import (
+        TYPED_CATEGORY_NAMESPACES,
+        carried_namespace_definitions,
+        serialize_carried_objects,
+    )
 
     repository = secure_object_repository_for_bucket(bucket_id)
     populated_namespaces = tuple(repository.list_namespaces())
@@ -260,7 +258,7 @@ def _build_secure_object_custody_payload(
     carried_namespace_set = frozenset(
         definition.namespace for definition in carried_namespace_definitions(custody_profile)
     )
-    carried_or_typed = carried_namespace_set | _TYPED_CATEGORY_NAMESPACES
+    carried_or_typed = carried_namespace_set | TYPED_CATEGORY_NAMESPACES
     # ``excluded_namespaces`` (for the manifest) is every populated namespace not
     # carried by this profile — the deliberately-excluded host-local / derived /
     # full-only stores plus the typed-category-covered ones are reported honestly.
@@ -365,6 +363,61 @@ def deserialize_profile_bundle(bundle: UserProfilePortableExport, *, target_buck
 
     restore_carried_objects(bundle.carried_objects, target_bucket_id=target_bucket_id)
     _rebuild_participation_index(target_bucket_id=target_bucket_id)
+
+
+def register_imported_profile_bundle(
+    bundle: UserProfilePortableExport,
+    *,
+    target_bucket_id: str,
+    display_name: str,
+    source_path: str,
+) -> BucketEvent:
+    """Import ``bundle`` into ``target_bucket_id`` and record the operator's import.
+
+    This is the sanctioned entry point for the operator-facing import verb. It
+    pairs the restore with its ``profile.imported`` audit event so the two cannot
+    drift apart, and so the emission stays inside the application layer: an
+    entrypoint that restored a bundle and then appended the event itself would
+    own an application concern, and would be free to omit it.
+
+    The caller still owns bucket provisioning and the live bucket session, exactly
+    as :func:`deserialize_profile_bundle` requires; the event repository resolves
+    against that active session.
+
+    Args:
+        bundle: The validated export bundle to restore.
+        target_bucket_id: The bucket id under which to write the objects.
+        display_name: Operator-facing label the imported profile was registered
+            under, recorded on the event payload.
+        source_path: Filesystem location the bundle was read from, recorded on
+            the event payload as import provenance.
+
+    Returns:
+        The appended :class:`BucketEvent`.
+
+    Raises:
+        UnsupportedBundleSchemaVersionError: Propagated from
+            :func:`deserialize_profile_bundle` for an unsupported bundle version;
+            no event is emitted when the restore refuses.
+    """
+    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+
+    deserialize_profile_bundle(bundle, target_bucket_id=target_bucket_id)
+    return emit_bucket_event(
+        repository=BucketEventHistoryRepository(),
+        bucket_id=target_bucket_id,
+        event_type=BucketEventType.PROFILE_IMPORTED,
+        occurred_at=now().replace(microsecond=0),
+        actor=_PROFILE_IMPORT_EVENT_ACTOR,
+        object_type=BucketEventObjectType.PROFILE,
+        object_id=target_bucket_id,
+        payload={
+            "display_name": display_name,
+            "source_path": source_path,
+            "schema_version": str(bundle.bundle_schema_version),
+        },
+        payload_version=_PROFILE_IMPORT_EVENT_PAYLOAD_VERSION,
+    )
 
 
 def _rebuild_participation_index(*, target_bucket_id: str) -> None:
