@@ -50,4 +50,10 @@ Treat this note as closed on its original subject. The period grammar is sound, 
 
 Carry the method rule forward: a question about what an operator-facing surface SAYS is answered by invoking it, not by reading the assertion messages of tests that failed against it. Reach for the manual invocation first, and reserve reasoning-from-failure-output for questions about what a test asserted.
 
-Do not treat the green suite as evidence that the refusal names its accepted set. The fix changed how the tests address the verb; it did not add an assertion on the accepted-set content. The manual invocation quoted above is the evidence for the instructive-refusal claim, and Step S284 is what would make it a standing gate rather than a one-off observation.
+The green suite IS evidence that the refusal names its accepted set, and this note previously said otherwise. The correction matters, because the weaker claim would send the next reader to build coverage that already exists.
+
+The fix added no assertion, but it did not need to: the assertions were already there and had never been reached. `test_import_historic_period_forms_refuse_with_current_canonical_grammar` asserts a non-zero exit, then that the refused token is echoed, then that `1T`, `0A` and `--year` all appear in the output. That is the accepted-set content asserted directly on a refusal. Unmodified by the fix, and now passing. The two sibling cases assert the same shape.
+
+So the standing gate exists. The manual invocation is corroborating evidence, not the only evidence.
+
+Step S284 remains worth doing, but for the reason this note already gives under the durability weakness, not for a coverage gap: the assertions match rendered prose, so the next wording pass reddens them even though the behaviour is correct. Moving them onto the envelope's structured accepted-set makes them durable. It does not add coverage that is missing today.
