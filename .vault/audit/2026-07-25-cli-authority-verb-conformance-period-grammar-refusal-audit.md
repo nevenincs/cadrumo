@@ -12,52 +12,42 @@ related:
 
 ## Scope
 
-Four ledger-import period-grammar cases in the CLI test surface that failed during the W06.P18 focused verification wave and could not be judged at the time. This note records the reasoning so the judgement is not lost when the surface they depend on settles. It reaches no verdict, and it recommends no fix.
-
-The four cases live in `src/cadrumo/entrypoints/cli/tests/test_ledger_period_grammar.py`. They failed identically in the parallel and the sequential pass, so they are not worker artefacts.
+Four ledger-import period-grammar cases that reddened during the W06.P18 focused verification wave, in `src/cadrumo/entrypoints/cli/tests/test_ledger_period_grammar.py`. The first revision of this note escalated them as a possible instructive-refusal breach and a possible accept-path regression. Both readings were wrong. This revision records the real cause, the fix, and the method error that produced the wrong reading, because the method error is the durable finding here.
 
 ## Findings
 
-### The four cases are not one thing
+### The real cause: a stale invocation shape, not a period defect
 
-Three concern the wording of a refusal. One concerns whether a valid input is accepted at all. Treating them as a single cluster is the mistake this note exists to prevent.
+All four cases addressed the import statement positionally. Under the pull-and-file standard the verb now takes a required `--file`, so the framework refused the unexpected argument and every case died at parse time, before any period logic ran. The bare usage block observed in the failure output was the framework refusing an extra argument. It was never a period refusal that had lost its accepted-set prose.
 
-### One case is an accept-path failure and is judgeable on its own terms
+Corrected at commit `e351ded266`, which passes the statement through `--file` in all four cases. Confirmed at HEAD `8068188db8`: `18 passed in 8.87s`, previously 4 failed and 14 passed.
 
-`test_import_accepts_aeat_token_with_year` at line 312 asserts a successful import of a year-qualified AEAT period token. It fails with an assertion message that opens with the import command's usage block, meaning the invocation was refused rather than accepted. A token the canonical grammar is specified to accept is being rejected at the command boundary.
+### There is no accept-path regression
 
-This is a functional outcome, not a presentation one. No change in how a refusal is worded can explain an accepted token becoming a refused one, so this case should not be absorbed into the wording discussion below. It is the strongest candidate for a real regression among the four.
+The first revision singled out the accept case as a functional break on the grounds that a token the canonical grammar accepts was being refused. The token was never reaching the grammar. The refusal was at argument parsing, one layer above. Nothing in the period grammar was rejecting it.
 
-### Three cases lost the accepted-token list from their refusal text
+### The instructive-refusal requirement is met
 
-`test_import_historic_period_forms_refuse_with_current_canonical_grammar` at line 346 requires the refusal to name `2024-1T`. `test_import_period_without_year_refuses_with_year_guidance` at line 376 requires it to name `1T`. `test_import_period_year_prefixed_token_refuses_with_current_canonical_grammar` at line 406 requires it to name `2026T1`. In each, the refusal now renders a bare usage block followed by a framed error region, and the required token appears nowhere in it.
+Driven through `--file` with an unrecognised token, the refusal names the accepted set and the corrected invocation: `Periodo '2026T1' no reconocido. Use un token AEAT: 1T-4T ... 0A ... (--period 1T --year 2024)`. It names both the accepted token family and the shape of a working call. The requirement that a closed-value refusal enumerate its accepted set rather than fail as a bare invalid value is satisfied on this surface.
 
-### What the requirement actually demands
+### The method error, which is the finding worth keeping
 
-The architecture boundary rule requires every closed-value CLI axis to hint its accepted values at the boundary, and requires a late registry-driven refusal to list the accepted set in its error message rather than fail as a bare invalid value. The stated reason is that the CLI gate is the operator's first instructive surface. The requirement is that the accepted set reaches the operator; it does not mandate any particular sentence.
+The wrong reading came from reasoning about a refusal's text using only the assertion messages the failures printed. Those messages showed a usage block where accepted tokens were expected, which is indistinguishable from a genuine refusal that lost its prose. No amount of further reading would have separated the two, because the distinguishing evidence was not in the test output at all: it was in what the command does when invoked each way.
 
-That distinction is what makes the three wording cases unjudgeable rather than failed. There are two endings that satisfy the requirement and one that breaches it.
+The discriminator was cheap and available throughout: invoke the verb by hand, both ways, and compare. The same wave had already used that instrument decisively elsewhere. The MCP identity question was settled by running the shipped executable end to end and watching a real server process answer, which is what turned an arguable test artefact into an unarguable production defect. The instrument was in hand and was not reached for on the structurally identical question one step later.
 
-The first satisfying ending is that the period option becomes a typed enum at the command boundary, so the framework renders its own accepted-value list on parse failure. For a closed value set this is the ending the architecture rule prefers, and it would mean the three tests are stale rather than the code being wrong.
+The generalisation: when the TEXT of a refusal is the thing in question, drive the surface manually before reasoning about the text. Failure output describes what a test asserted, not what the command does.
 
-The second satisfying ending is that the accepted set survives structurally on the error envelope while the rendered text carries only the usage block. A sibling failure in the same wave, `test_registry_retained_commands_reject_command_local_json_flag` in `test_registry_cli.py`, shows framework-level boundary errors now being wrapped into a refused-CLI-boundary envelope carrying an option context, so a structured accepted-set field is plausible. All three cases assert against rendered text and would not observe it.
+A second-order point worth stating plainly. Escalating was still correct. A stale invocation against a renamed option surfaces as a refusal-shaped error at exactly the boundary whose refusal text is under scrutiny, so the failure genuinely looks like a grammar defect. The error was not raising it; it was reasoning to a conclusion about it from the wrong evidence, and framing that conclusion as blocked-pending-a-commit rather than as answerable-now-by-a-manual-invocation.
 
-The breaching ending is that the accepted tokens appear neither in the rendered text nor in the envelope context. Then the refusal is the bare invalid-value refusal the rule forbids, and the repair belongs in the boundary rather than in the tests.
+### A durability weakness that survives the correction
 
-### What blocks the judgement
-
-The CLI common module that owns the boundary refusal, `src/cadrumo/entrypoints/cli/_common.py`, was uncommitted in the shared worktree throughout the verification wave, alongside the error-taxonomy work visible in the sibling refused-CLI-boundary failure. The observed behaviour is therefore a snapshot of another campaign's intermediate state, and neither the rendered text nor the envelope shape can be treated as the intended end state.
-
-### A durability weakness independent of the outcome
-
-All four cases assert against rendered operator prose. That is why a boundary change reddens them rather than a behaviour change, and it is why the wave could not tell a regression from a rewording without reading the source. Asserting on generated or localised prose is fragile by construction; the same four will redden again on the next wording pass and cost another triage cycle.
+All four cases assert against rendered operator prose. That is why an invocation-shape change reddened them rather than a behaviour change, and why the failure output could not distinguish a rewording from a regression. The same cases will redden again on the next wording pass. The accepted set should be asserted on the error envelope's structured context rather than on the refusal sentence. Tracked separately as Step S284.
 
 ## Recommendations
 
-Re-check the accept-path case first and separately, as a candidate regression rather than as churn. Drive the year-qualified AEAT token through the import command and confirm it is accepted. If it is still refused, that is a functional break in the period grammar and it is independent of anything in the wording discussion.
+Treat this note as closed on its original subject. The period grammar is sound, the refusal is instructive, and the suite is green.
 
-For the three wording cases, apply a prose-independent test once the boundary module commits. For each refusal, assert that the accepted period tokens appear either in the rendered text or in the error envelope's context. If they appear in neither, the instructive-refusal requirement is breached and the boundary is the thing to repair. If they appear in the envelope, or the framework now renders its own accepted-value list, the requirement is met and the three assertions are stale.
+Carry the method rule forward: a question about what an operator-facing surface SAYS is answered by invoking it, not by reading the assertion messages of tests that failed against it. Reach for the manual invocation first, and reserve reasoning-from-failure-output for questions about what a test asserted.
 
-Whichever way it lands, repair the four to assert on the structured accepted-set carried by the envelope rather than on the refusal sentence. That is what makes them durable across future wording changes, and it removes the prose dependency that made this wave's triage necessary.
-
-Do not close the owning verification Step on a green re-run alone. A green result after the boundary settles could equally mean the accepted set came back or that the assertions were relaxed to match whatever the boundary now emits; the check above is what distinguishes those.
+Do not treat the green suite as evidence that the refusal names its accepted set. The fix changed how the tests address the verb; it did not add an assertion on the accepted-set content. The manual invocation quoted above is the evidence for the instructive-refusal claim, and Step S284 is what would make it a standing gate rather than a one-off observation.
