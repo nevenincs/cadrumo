@@ -208,7 +208,7 @@ Make the storage namespace registry the sole declaration authority and prove eve
 - [ ] `W03.P22.S243` - Remove duplicate namespace, version, sensitivity, catalogue-key, and custody literals from transaction, invoice, modelo participation, and bucket persistence consumers and bind them to registry definitions; `src/cadrumo/domain/transactions/; src/cadrumo/domain/invoices/; src/cadrumo/domain/modelos/; src/cadrumo/domain/buckets/`.
 - [ ] `W03.P22.S244` - Remove duplicate namespace metadata from profile, calculation, aggregation, and filed-observation repositories and bind repository construction to registry definitions; `src/cadrumo/application/user_profile/; src/cadrumo/application/calculations/; src/cadrumo/application/aggregation/; src/cadrumo/application/live/`.
 - [ ] `W03.P22.S245` - Remove duplicate namespace and custody declarations from Clave, LLM cache and usage, bundle, attachment, and secure-storage consumers without conflating certificate custody with master-key keyring custody; `src/cadrumo/adapters/outbound/aeat/auth/; src/cadrumo/adapters/outbound/llm/; src/cadrumo/application/evidence/; src/cadrumo/domain/attachments/; src/cadrumo/adapters/persistence/storage/`.
-- [ ] `W03.P22.S246` - Replace literal-membership namespace checks with a non-vacuous production-root adoption gate that recognizes cadrumo-prefixed declarations, detects local metadata declarations, and proves each storage binding consumes the registered definition; `src/cadrumo/application/tests/test_namespace_registry_adoption.py`.
+- [x] `W03.P22.S246` - Replace literal-membership namespace checks with a non-vacuous production-root adoption gate that recognizes cadrumo-prefixed declarations, detects local metadata declarations, and proves each storage binding consumes the registered definition; `src/cadrumo/application/tests/test_namespace_registry_adoption.py`.
 
 ### Phase `W03.P23` - Centralize filed observation capture
 
@@ -240,10 +240,10 @@ Share typed resolved context and projection builders while making every accepted
 
 Give one platform-neutral typed runner ownership of duplication execution, parsing, and truthful availability classification.
 
-- [ ] `W03.P26.S258` - Make dev.audit.duplication the sole owner of the platform-neutral jscpd command, subprocess execution, timeout handling, output parsing, clone records, percentage, diagnostics, and typed availability result; `dev/audit/duplication.py`.
-- [ ] `W03.P26.S259` - Make the health report consume the typed duplication result and classify zero observed clones as green, observed clones as amber, and unavailable, failed, timed-out, non-zero, or unparseable execution as explicit amber-unavailable; `dev/audit/report.py`.
-- [ ] `W03.P26.S260` - Replace the shell pipeline with a direct Python duplication runner invocation so Windows and POSIX execute the same authority and retain stdout, stderr, return code, and timeout evidence; `justfile`.
-- [ ] `W03.P26.S261` - Prove real zero-clone, clone, unavailable executable, non-zero, timeout, stderr, and unparseable outcomes cannot become false green and that report and direct runner render the same typed result; `src/cadrumo/tests/test_dev_audit_report.py`.
+- [x] `W03.P26.S258` - Make dev.audit.duplication the sole owner of the platform-neutral jscpd command, subprocess execution, timeout handling, output parsing, clone records, percentage, diagnostics, and typed availability result; `dev/audit/duplication.py`.
+- [x] `W03.P26.S259` - Make the health report consume the typed duplication result and classify zero observed clones as green, observed clones as amber, and unavailable, failed, timed-out, non-zero, or unparseable execution as explicit amber-unavailable; `dev/audit/report.py`.
+- [x] `W03.P26.S260` - Replace the shell pipeline with a direct Python duplication runner invocation so Windows and POSIX execute the same authority and retain stdout, stderr, return code, and timeout evidence; `justfile`.
+- [x] `W03.P26.S261` - Prove real zero-clone, clone, unavailable executable, non-zero, timeout, stderr, and unparseable outcomes cannot become false green and that report and direct runner render the same typed result; `src/cadrumo/tests/test_dev_audit_report.py`.
 
 ## Wave `W04` - Hard-cut over the operator CLI
 
