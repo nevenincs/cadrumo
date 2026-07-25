@@ -40,10 +40,11 @@ import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 
+from cadrumo.core import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
 
 from .terminology_handbook import load_terminology_handbook
-from .terminology_handbook._enums import ConceptLifecycle, TermStatus
+from .terminology_handbook._enums import TermStatus
 from .terminology_handbook._loader import TerminologyHandbook
 from .terminology_handbook._schema import ConceptRecord, LanguageSection
 

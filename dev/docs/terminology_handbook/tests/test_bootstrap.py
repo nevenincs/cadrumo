@@ -11,11 +11,11 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.core import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry import bundled_authority
 
 from .. import (
-    ConceptLifecycle,
     audit_handbook,
     build_scaffold_plan,
     collect_enrolment_candidates,

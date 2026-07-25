@@ -57,6 +57,8 @@ See Also:
         code set grounded in bundled AEAT diseños.
     :class:`BindingSourceKind`: Canonical registry binding-source taxonomy
         resolved lazily from :mod:`core.aggregation`.
+    :class:`ConceptLifecycle`: Terminology Handbook concept lifecycle, shared
+        by the shipped terminology search and the unshipped authoring tooling.
 """
 
 from __future__ import annotations
@@ -74,6 +76,7 @@ from ._amendment_kind_regime import (
 from ._auth_provider import AuthProviderDescription, AuthProviderKind
 from ._capabilities import ServiceCapability
 from ._casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
+from ._concept_lifecycle import ConceptLifecycle
 from ._config_state_root import FormerProductStateError
 from ._credentials import (
     LENGTH_ALONE_IS_STRONG,
@@ -244,6 +247,7 @@ __all__: list[str] = [
     "BucketPointer",
     "CasillaId",
     "CompatibilityRegime",
+    "ConceptLifecycle",
     "ConvenioOverrideKind",
     "ForeignAssetDeclarationThreshold",
     "ForeignAssetObligationGroup",

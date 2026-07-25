@@ -17,13 +17,12 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core import Modelo
+from cadrumo.core import ConceptLifecycle, Modelo
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry import CasillaId, validated_casilla_id
 
 from .. import (
     ConceptDomain,
-    ConceptLifecycle,
     GrammaticalGender,
     PartOfSpeech,
     TerminologyHandbook,

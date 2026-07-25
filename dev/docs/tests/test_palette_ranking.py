@@ -113,7 +113,7 @@ def _casilla_and_cli_records() -> _Materialised:
 
 def _approved_concept_records() -> _Materialised:
     """The approved concept cards the production injector ships (no drafts)."""
-    from ..terminology_handbook._enums import ConceptLifecycle
+    from cadrumo.core import ConceptLifecycle
 
     cards, _ = project_concept_cards()
     approved = [c for c in cards if c.lifecycle is ConceptLifecycle.APPROVED]

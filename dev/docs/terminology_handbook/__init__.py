@@ -16,10 +16,11 @@ label borrowings. ``narrower`` is derived by
 never authored on a fragment.
 
 Closed value sets are typed: the four output languages reuse the
-canonical :class:`~cadrumo.core.external_constants.OutputLanguage`, while
-the Handbook-local axes :class:`ConceptDomain`, :class:`ConceptLifecycle`,
-and :class:`TermStatus` live in this package beside the schema they
-constrain.
+canonical :class:`~cadrumo.core.external_constants.OutputLanguage` and the
+concept lifecycle reuses :class:`~cadrumo.core.ConceptLifecycle` (shared
+with the shipped product terminology search), while the Handbook-local axes
+:class:`ConceptDomain` and :class:`TermStatus` live in this package beside
+the schema they constrain.
 """
 
 from __future__ import annotations
@@ -35,7 +36,7 @@ from ._curation import (
     set_term,
 )
 from ._enrolment import EnrolmentCandidate, SeedLabel, collect_enrolment_candidates
-from ._enums import ConceptDomain, ConceptLifecycle, TermStatus
+from ._enums import ConceptDomain, TermStatus
 from ._errors import TerminologyError, TerminologyLoadError, TerminologyValidationError
 from ._loader import (
     HandbookValidator,
@@ -94,7 +95,6 @@ from ._validators import (
 __all__ = [
     "AuditReport",
     "ConceptDomain",
-    "ConceptLifecycle",
     "ConceptRecord",
     "CurationBacklogRatchetBaseline",
     "CurationBacklogRatchetResult",
