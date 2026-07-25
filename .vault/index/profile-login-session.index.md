@@ -26,6 +26,7 @@ related:
   - '[[2026-07-24-profile-login-session-close-honesty-review-audit]]'
   - '[[2026-07-24-profile-login-session-plan]]'
   - '[[2026-07-24-profile-login-session-research]]'
+  - '[[2026-07-25-profile-login-session-model-facing-digest-delta-audit]]'
 ---
 
 # `profile-login-session` feature index
@@ -41,6 +42,7 @@ Auto-generated index of all documents tagged with `#profile-login-session`.
 ### audit
 
 - `2026-07-24-profile-login-session-close-honesty-review-audit` - `profile-login-session` audit: `Fresh-context campaign close honesty review`
+- `2026-07-25-profile-login-session-model-facing-digest-delta-audit` - `profile-login-session` audit: `model facing digest delta`
 
 ### exec
 
