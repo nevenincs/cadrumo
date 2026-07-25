@@ -158,16 +158,28 @@ def _media_kind_from_mime(mime_type: str) -> MediaKind:
     )
 
 
-def resolve_attachment_evidence_input(attachment_id: str, *, store: AttachmentStoreProtocol) -> EvidenceInput:
-    """Read a linked attachment's bytes from secure storage into an ``EvidenceInput``.
+def resolve_attachment_evidence_input(
+    attachment_id: str,
+    *,
+    store: AttachmentStoreProtocol,
+    evidence_id: str | None = None,
+) -> EvidenceInput:
+    """Read stored evidence bytes from secure storage into an ``EvidenceInput``.
 
-    Loads the attachment manifest and its encrypted blob from the
-    :class:`~cadrumo.domain.attachments.AttachmentStoreProtocol` (active bucket)
-    into memory. No file is written.
+    The single read path for every evidence byte payload: bytes live in exactly
+    one place (the content-addressed
+    :class:`~cadrumo.domain.attachments.AttachmentStoreProtocol` blob for the
+    active bucket), so both evidence tiers reach them through this one function.
+    Loads the attachment manifest and its encrypted blob into memory. No file is
+    written.
 
     Args:
-        attachment_id: Content-addressed id of the linked attachment.
+        attachment_id: Content-addressed id of the stored bytes.
         store: Attachment store bound to the operation's secure-storage bucket.
+        evidence_id: Originating :class:`PurchaseInvoiceEvidence` record id when
+            the caller reached these bytes through an evidence record, else
+            ``None`` for a bare linked attachment. Recorded on the result purely
+            as provenance; it never selects the bytes.
 
     Returns:
         :class:`EvidenceInput`: In-memory bytes plus provenance, for an on-host read.
@@ -179,6 +191,7 @@ def resolve_attachment_evidence_input(attachment_id: str, *, store: AttachmentSt
         mime_type=manifest.mime_type,
         data=data,
         content_sha256=manifest.sha256,
+        evidence_id=evidence_id,
         attachment_id=manifest.attachment_id,
     )
 
@@ -190,10 +203,13 @@ def resolve_purchase_invoice_evidence_input(
 ) -> EvidenceInput:
     """Read a purchase-invoice evidence record's bytes from secure storage.
 
-    Reads via the record's ``attachment_id`` -- the in-store byte home written at
-    ``add`` time. A record without an ``attachment_id`` predates that contract and
-    has no in-store bytes to read; this raises rather than falling back to the
-    cleartext ``source_path`` (sensitive-financial-data-secure-storage-only).
+    The byte-custody guard over :func:`resolve_attachment_evidence_input`: a
+    :class:`PurchaseInvoiceEvidence` record holds no bytes of its own, only the
+    ``attachment_id`` naming their in-store home written at ``add`` time, so the
+    read delegates to the one attachment read path and stamps the record id as
+    provenance. A record without an ``attachment_id`` has no in-store bytes to
+    read; this raises rather than falling back to the cleartext ``source_path``
+    (sensitive-financial-data-secure-storage-only).
 
     Args:
         evidence: The purchase-invoice evidence record.
@@ -210,13 +226,8 @@ def resolve_purchase_invoice_evidence_input(
             f"evidence {evidence.evidence_id!r} has no in-store attachment; its bytes are not in secure storage",
             suggestion="re-add the evidence so its bytes are stored in the encrypted attachment store",
         )
-    manifest = store.load_manifest(evidence.attachment_id)
-    data = store.read_bytes(manifest.sha256)
-    return EvidenceInput(
-        media_kind=_media_kind_from_mime(manifest.mime_type),
-        mime_type=manifest.mime_type,
-        data=data,
-        content_sha256=manifest.sha256,
+    return resolve_attachment_evidence_input(
+        evidence.attachment_id,
+        store=store,
         evidence_id=evidence.evidence_id,
-        attachment_id=manifest.attachment_id,
     )

@@ -4,6 +4,30 @@
 :class:`PurchaseInvoiceEvidence` pydantic record. Audit events are emitted
 to a :class:`BucketEventHistoryRepository` on every mutating verb.
 
+A :class:`PurchaseInvoiceEvidence` record is the MIDDLE tier of the three-rung
+evidence progression, and owns no bytes of its own:
+
+1. :class:`~cadrumo.domain.attachments.Attachment` owns byte custody. It is
+   strictly content-addressed (``attachment_id == sha256`` of the stored bytes),
+   immutable, and carries no fiscal figures. ``aeat app ledger attach`` and
+   ``aeat app ledger doclink`` link one directly to a transaction.
+2. :class:`PurchaseInvoiceEvidence` is an operator-registered CLAIM ABOUT one
+   such byte payload: a mutable record whose supplier, invoice number, invoice
+   date, and IVA figures are all OPTIONAL, because a scan whose text layer
+   yields nothing is still valid evidence. Its ``evidence_id`` is a metadata
+   digest, not a content digest, so several records may describe one byte
+   payload; the bytes themselves are stored once, as the ``Attachment`` written
+   at ``add`` time and read back through ``attachment_id``.
+3. :class:`~cadrumo.domain.invoices.Invoice` is the CONFIRMED fiscal document,
+   whose counterparty name, tax id, country, totals, currency, and lines are all
+   REQUIRED. ``aeat app ledger evidence confirm`` promotes tier 2 to tier 3 once
+   the operator supplies or accepts those figures.
+
+The tiers are a permissiveness ladder, not three ways of saying one thing: each
+rung requires strictly more than the one below it, so none can absorb another
+without either dropping fiscal fields or refusing evidence the tier below
+legitimately accepts.
+
 File-type scope is restricted to PDF and image inputs. Plaintext, email
 body, and Drive-URL evidence sources are out of scope. ``add`` refuses
 non-PDF/non-image source paths with a typed

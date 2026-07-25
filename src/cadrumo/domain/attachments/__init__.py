@@ -9,6 +9,16 @@ timestamp, owning bucket, linked transaction/invoice ids, metadata, and notes.
 Link-only URI-list manifests are rejected: an attachment evidence record must
 represent document bytes, not an external pointer.
 
+This package owns BYTE CUSTODY and nothing else. An :class:`Attachment` records
+what the bytes are and where they came from; it never carries a fiscal figure
+(no supplier, invoice number, taxable base, IVA rate, or IVA amount) and is
+immutable once written, because its identity IS the byte digest. A record that
+asserts fiscal figures about a document is the separate middle evidence tier
+:class:`application.ledger.PurchaseInvoiceEvidence`, which stores its bytes here
+and references them by ``attachment_id``; a confirmed fiscal document is
+:class:`domain.invoices.Invoice`. Read those two before adding a field here: a
+figure belongs on one of them, never on the byte manifest.
+
 Persistence is a protocol boundary. Domain helpers accept an
 :class:`AttachmentStoreProtocol`; the concrete
 :class:`adapters.persistence.storage.AttachmentStore` lives in the
@@ -39,8 +49,11 @@ See Also:
         Ledger lifecycle that verifies attachment existence, byte custody, and
         bucket ownership before a transaction claims attachment evidence.
     :mod:`domain.invoices`
-        Purchase-invoice evidence records that remain distinct from generic
-        encrypted attachment bytes while sharing ledger evidence workflows.
+        The confirmed fiscal document tier, whose counterparty, totals, currency,
+        and lines are required — the rung above the optional-metadata
+        purchase-invoice evidence record, which itself lives in
+        :mod:`application.ledger`. Neither models byte custody; both delegate it
+        here.
     :mod:`application.aggregation`
         Calculation-source and evidence-advisory surfaces that consume
         transaction evidence links without reading plaintext files from disk.
