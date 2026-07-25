@@ -701,6 +701,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.auth._sessions.ClaveCredentialsIncompleteError",
+        ErrorCode(
+            code="REFUSED_CLAVE_CREDENTIALS_INCOMPLETE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.clave_credentials_incomplete",
+            default_suggestion="aeat config profile edit",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.auth._sessions.SessionDeserializationError",
         ErrorCode(
             code="AUTH_SESSION_DESERIALIZATION",

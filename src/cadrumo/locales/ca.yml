@@ -588,9 +588,9 @@ application:
         fins que es configuri un proveïdor d'autenticació.
     sessions:
       errors:
-        clave_identity_missing: L'autenticació Cl@ve Móvil en directe requereix un
-          DNI/NIE configurat (CADRUMO_CLAVE_MOVIL_DNI_NIE) abans de fer servir cap
-          sessió AEAT.
+        clave_identity_missing: L'autenticació Cl@ve en directe requereix un DNI/NIE.
+          Registra'l al perfil actiu com a auth.dni_nie, o configura'l per al proveïdor
+          amb `aeat config auth configure`, abans de fer servir cap sessió AEAT.
         clave_identity_profile_mismatch: La identitat de Cl@ve Móvil no coincideix
           amb la identitat fiscal del perfil actiu; canvia al perfil que coincideixi
           o actualitza el perfil abans de l'autenticació AEAT en directe.
@@ -613,6 +613,7 @@ application:
           test` abans de llegir dades AEAT.
         verify_failed: No s'ha pogut verificar la sessió AEAT; executa `aeat config
           auth test` abans de llegir dades AEAT.
+        clave_contraste_missing: 'La ruta Cl@ve Móvil sense QR necessita el contrast imprès al teu document. Registra auth.numero_soporte al perfil actiu si és un NIE, o defineix CADRUMO_CLAVE_MOVIL_DNI_FECHA si és un DNI, abans de fer servir cap sessió AEAT.'
   bucket_maintenance:
     errors:
       archive_active_bucket: El bucket actiu no es pot arxivar; canvia primer a un
@@ -6157,6 +6158,8 @@ errors:
     bootstrap_already_complete: L'arrencada de l'emmagatzematge segur ja està completa.
       Fes servir aeat config login NAME per activar un perfil existent o aeat config
       profile create NAME per afegir-ne un altre.
+    clave_credentials_incomplete: Al mode d'autenticació Cl@ve seleccionat li falta
+      una credencial que necessita.
     ledger_preflight: La comprovació prèvia del llibre ha rebutjat l'execució del
       model perquè encara no es pot presentar.
     m145_communication_record_ambiguous: El prefix de l'id de registre de comunicació

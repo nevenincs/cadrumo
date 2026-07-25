@@ -552,9 +552,10 @@ application:
         szolgáltatót nem konfigurál.
     sessions:
       errors:
-        clave_identity_missing: A Cl@ve Móvil élő hitelesítés konfigurált DNI/NIE-t
-          (CADRUMO_CLAVE_MOVIL_DNI_NIE) igényel, mielőtt bármely AEAT munkamenet használható
-          lenne.
+        clave_identity_missing: A Cl@ve élő hitelesítéshez DNI/NIE szükséges. Rögzítsd
+          az aktív profilban auth.dni_nie néven, vagy állítsd be a szolgáltatóhoz
+          az `aeat config auth configure` paranccsal, mielőtt bármelyik AEAT-munkamenetet
+          használnád.
         clave_identity_profile_mismatch: A Cl@ve Móvil azonossága nem egyezik az aktív
           profil adóazonosítójával; váltson az egyező profilra, vagy frissítse a profil
           adóazonosítóját.
@@ -577,6 +578,7 @@ application:
           auth test` parancsot az AEAT adatok olvasása előtt.
         verify_failed: Az AEAT munkamenetet nem sikerült ellenőrizni; futtassa a `aeat
           config auth test` parancsot az AEAT adatok olvasása előtt.
+        clave_contraste_missing: 'A QR nélküli Cl@ve Móvil útvonalhoz szükség van a dokumentumon nyomtatott contraste értékre. NIE esetén rögzítsd az auth.numero_soporte mezőt az aktív profilban, DNI esetén állítsd be a CADRUMO_CLAVE_MOVIL_DNI_FECHA értéket, mielőtt bármelyik AEAT-munkamenetet használnád.'
   bucket_maintenance:
     errors:
       archive_active_bucket: Az aktív bucket nem archiválható; válts előbb másik profilra.
@@ -6060,6 +6062,8 @@ errors:
     bootstrap_already_complete: A biztonságos tároló beállítása már befejeződött.
       Használja az aeat config login NÉV parancsot egy meglévő profil aktiválásához,
       vagy az aeat config profile create NÉV parancsot másik profil hozzáadásához.
+    clave_credentials_incomplete: A kiválasztott Cl@ve hitelesítési módból hiányzik
+      egy szükséges hitelesítő adat.
     ledger_preflight: A főkönyvi előzetes ellenőrzés elutasította a modellfuttatást,
       mert az még nem nyújtható be.
     m145_communication_record_ambiguous: A Modelo 145 kommunikációs rekord azonosítójának

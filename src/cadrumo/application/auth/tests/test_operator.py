@@ -43,7 +43,7 @@ from .._operator import (
 from .._operator import test_operator_auth as run_operator_auth_test
 from .._sessions import (
     AuthProfileIdentityMismatchError,
-    _assert_active_profile_identity_matches_provider,
+    _prepare_clave_auth,
     storage_state_paths,
 )
 
@@ -766,7 +766,8 @@ def test_clave_live_auth_guard_accepts_matching_active_profile_identity() -> Non
         ),
     )
     with override_settings(cadrumo_clave_movil_dni_nie=SecretStr("12345678Z")) as settings:
-        assert _assert_active_profile_identity_matches_provider(settings, AuthProviderKind.CLAVE_MOVIL) == "12345678Z"
+        _bound, expected_identity = _prepare_clave_auth(settings, AuthProviderKind.CLAVE_MOVIL)
+        assert expected_identity == "12345678Z"
 
 
 def test_clave_live_auth_guard_rejects_mismatched_active_profile_identity() -> None:
@@ -782,7 +783,7 @@ def test_clave_live_auth_guard_rejects_mismatched_active_profile_identity() -> N
     )
     with override_settings(cadrumo_clave_movil_dni_nie=SecretStr("00000001R")) as settings:
         with pytest.raises(AuthProfileIdentityMismatchError) as raised:
-            _assert_active_profile_identity_matches_provider(settings, AuthProviderKind.CLAVE_MOVIL)
+            _prepare_clave_auth(settings, AuthProviderKind.CLAVE_MOVIL)
         # The refusal text is routed through the locale system so it honours
         # the profile language; assert it equals
         # the localised string for the canonical key rather than a

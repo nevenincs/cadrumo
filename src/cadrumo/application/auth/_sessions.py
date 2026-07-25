@@ -153,6 +153,39 @@ class AuthProfileIdentityMismatchError(CadrumoError):
     """Raised when the active profile identity cannot own the requested auth session."""
 
 
+class ClaveCredentialsIncompleteError(CadrumoError):
+    """Raised when a Cl@ve mode lacks a credential half the AEAT flow needs.
+
+    Distinct from :class:`AuthProfileIdentityMismatchError`: nothing
+    disagrees here, a credential is simply absent. The operator's recovery
+    is to record it rather than to switch profile, so the refusal names
+    what is missing and points at the profile it belongs on.
+    """
+
+
+class ClaveCredentials(BaseModel):
+    """Cl@ve credential halves for one provider kind, and where each came from.
+
+    ``dni_nie`` and ``numero_soporte`` are the effective values: the
+    active profile's when it carries one, the :class:`Settings` surface's
+    otherwise, so an operator who configured Cl@ve through the
+    environment keeps working. The ``profile_`` fields record what the
+    profile itself held, because the provider adapters read their
+    credentials from :class:`Settings` - a profile-borne value only
+    reaches AEAT once it has been bound onto the settings the provider
+    will read.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    provider_kind: AuthProviderKind
+    dni_nie: str = ""
+    numero_soporte: str = ""
+    profile_tax_id: str = ""
+    profile_dni_nie: str = ""
+    profile_numero_soporte: str = ""
+
+
 class AuthenticatedAeatSessionResult(BaseModel):
     """Outcome of ensuring an authenticated AEAT session."""
 
@@ -285,7 +318,7 @@ async def require_verified_aeat_session(
 ) -> AeatSession:
     """Return a verified active :class:`AeatSession` without exposing provider mechanics."""
     provider_kind = _resolve_provider_kind(settings, kind)
-    expected_identity = _assert_active_profile_identity_matches_provider(settings, provider_kind)
+    settings, expected_identity = _prepare_clave_auth(settings, provider_kind)
     persisted = load_persisted_session(settings, kind)
     if persisted is None:
         raise AuthSessionUnavailableError(
@@ -385,7 +418,7 @@ async def _ensure_authenticated_aeat_session_locked(
     session and the lock-reset status when one was requested.
     """
     provider_kind = _resolve_provider_kind(settings, kind)
-    expected_identity = _assert_active_profile_identity_matches_provider(settings, provider_kind)
+    settings, expected_identity = _prepare_clave_auth(settings, provider_kind)
     reset_status = (
         clear_auth_acquisition_lock(settings, provider_kind, reason="operator-reset-before-ensure")
         if reset_lock
@@ -560,32 +593,168 @@ def _normalise_tax_identity(value: object) -> str:
     return str(value or "").strip().upper()
 
 
-def _assert_active_profile_identity_matches_provider(
+def _normalise_credential(value: object) -> str:
+    """Strip a credential without case-folding it.
+
+    A DNI/NIE is canonically upper-case, but a numero de soporte is
+    transcribed from the document exactly as printed, so only surrounding
+    whitespace is removed here.
+    """
+    if isinstance(value, SecretStr):
+        value = value.get_secret_value()
+    return str(value or "").strip()
+
+
+def _prepare_clave_auth(
     settings: Settings,
     provider_kind: AuthProviderKind,
-) -> str | None:
-    """Fail closed before live auth can bind one taxpayer's session to another profile."""
-    if provider_kind is not AuthProviderKind.CLAVE_MOVIL:
+) -> tuple[Settings, str | None]:
+    """Bind profile-borne Cl@ve credentials and refuse an incomplete mode.
+
+    Returns the settings the provider should read - the caller's, with any
+    profile-borne credential bound onto it - and the identity a resulting
+    session must carry, or ``None`` when the provider kind carries no
+    Cl@ve identity to bind.
+
+    The refusal happens here, at the entry to every live session, so an
+    operator who has not finished recording their Cl@ve credentials is
+    told what is absent before a browser opens rather than part-way
+    through an AEAT form.
+    """
+    credentials = _resolve_clave_credentials(settings, provider_kind)
+    if credentials is None:
+        return settings, None
+    _require_clave_credentials(settings, credentials)
+    expected_identity = _assert_active_profile_identity_matches_provider(credentials)
+    return _bind_clave_credentials_to_settings(settings, credentials), expected_identity
+
+
+def _resolve_clave_credentials(
+    settings: Settings,
+    provider_kind: AuthProviderKind,
+) -> ClaveCredentials | None:
+    """Resolve the Cl@ve halves for ``provider_kind``, profile first.
+
+    Returns ``None`` for the certificate provider, which authenticates
+    with an installed certificate and needs neither Cl@ve field.
+    """
+    if provider_kind is AuthProviderKind.CERTIFICATE:
         return None
-    provider_identity = _normalise_tax_identity(settings.cadrumo_clave_movil_dni_nie)
-    if not provider_identity:
-        raise AuthProfileIdentityMismatchError(
+    facts = _active_profile_auth_facts()
+    if provider_kind is AuthProviderKind.CLAVE_PERMANENTE:
+        settings_dni_nie = _normalise_tax_identity(settings.cadrumo_clave_permanente_dni_nie)
+        settings_numero_soporte = ""
+    else:
+        settings_dni_nie = _normalise_tax_identity(settings.cadrumo_clave_movil_dni_nie)
+        settings_numero_soporte = _normalise_credential(settings.cadrumo_clave_movil_nie_soporte)
+    return ClaveCredentials(
+        provider_kind=provider_kind,
+        dni_nie=facts.dni_nie or settings_dni_nie,
+        numero_soporte=facts.numero_soporte or settings_numero_soporte,
+        profile_tax_id=facts.tax_id,
+        profile_dni_nie=facts.dni_nie,
+        profile_numero_soporte=facts.numero_soporte,
+    )
+
+
+def _require_clave_credentials(settings: Settings, credentials: ClaveCredentials) -> None:
+    """Refuse a Cl@ve mode whose flow lacks a credential it needs.
+
+    Every Cl@ve mode needs the DNI/NIE that identifies the person. The
+    contraste - the numero de soporte for a NIE, the DNI validity date
+    for a DNI - is read only by the non-QR fallback form, so it is
+    required exactly when that route is selected; the QR route asks for
+    neither and must not be refused for their absence.
+    """
+    if not credentials.dni_nie:
+        raise ClaveCredentialsIncompleteError(
             translated_message="application.auth.sessions.errors.clave_identity_missing",
+            context={"provider": credentials.provider_kind.value},
+        )
+    if credentials.provider_kind is not AuthProviderKind.CLAVE_MOVIL:
+        return
+    if not settings.cadrumo_clave_prefer_non_qr:
+        return
+    dni_fecha = _normalise_credential(settings.cadrumo_clave_movil_dni_fecha)
+    if not credentials.numero_soporte and not dni_fecha:
+        raise ClaveCredentialsIncompleteError(
+            translated_message="application.auth.sessions.errors.clave_contraste_missing",
+            context={"provider": credentials.provider_kind.value},
         )
 
-    profile_identity = _active_profile_tax_identity()
-    if not profile_identity:
+
+def _assert_active_profile_identity_matches_provider(
+    credentials: ClaveCredentials | None,
+) -> str | None:
+    """Fail closed before live auth can bind one taxpayer's session to another profile."""
+    if credentials is None or credentials.provider_kind is not AuthProviderKind.CLAVE_MOVIL:
+        return None
+    if not credentials.profile_tax_id:
         raise AuthProfileIdentityMismatchError(
             translated_message="application.auth.sessions.errors.profile_tax_id_missing",
         )
-    if profile_identity != provider_identity:
+    if credentials.profile_tax_id != credentials.dni_nie:
         raise AuthProfileIdentityMismatchError(
             translated_message="application.auth.sessions.errors.clave_identity_profile_mismatch",
         )
-    return provider_identity
+    return credentials.dni_nie
 
 
-def _active_profile_tax_identity() -> str:
+def _bind_clave_credentials_to_settings(
+    settings: Settings,
+    credentials: ClaveCredentials,
+) -> Settings:
+    """Return settings carrying the profile's Cl@ve credentials.
+
+    The outbound providers read their credentials from :class:`Settings`,
+    so a value the profile holds is inert until it is bound here. When the
+    profile carries nothing the caller's settings are returned unchanged,
+    which keeps the environment-configured path byte-identical.
+    """
+    overrides: dict[str, object] = {}
+    if credentials.profile_dni_nie:
+        field = (
+            "cadrumo_clave_permanente_dni_nie"
+            if credentials.provider_kind is AuthProviderKind.CLAVE_PERMANENTE
+            else "cadrumo_clave_movil_dni_nie"
+        )
+        overrides[field] = SecretStr(credentials.profile_dni_nie)
+    if credentials.profile_numero_soporte and credentials.provider_kind is AuthProviderKind.CLAVE_MOVIL:
+        overrides["cadrumo_clave_movil_nie_soporte"] = SecretStr(credentials.profile_numero_soporte)
+    if not overrides:
+        return settings
+
+    from ...core.config import Settings as SettingsModel
+
+    merged = settings.model_dump()
+    merged.update(overrides)
+    # ``model_copy(update=)`` skips validators in Pydantic v2, so the merged
+    # mapping is revalidated. Only credential fields are overridden here, so
+    # none of the derived route/storage defaults that ``override_settings``
+    # has to unset can be disturbed.
+    bound = SettingsModel.model_validate(merged)
+    object.__setattr__(bound, "__pydantic_fields_set__", settings.model_fields_set | set(overrides))
+    return bound
+
+
+class _ActiveProfileAuthFacts(BaseModel):
+    """Authentication facts read from the active profile record."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    tax_id: str = ""
+    dni_nie: str = ""
+    numero_soporte: str = ""
+
+
+def _active_profile_auth_facts() -> _ActiveProfileAuthFacts:
+    """Read the active profile's identity and Cl@ve credentials in one pass.
+
+    Returns empty facts when no profile is active or the record cannot be
+    found, leaving the settings surface as the sole source. Reading the
+    record requires an unlocked bucket session, so the locked case
+    activates the master key provider for the read.
+    """
     from ...adapters.persistence.storage import (
         activate_master_key_provider,
         get_master_key_provider,
@@ -601,7 +770,7 @@ def _active_profile_tax_identity() -> str:
 
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
-        return ""
+        return _ActiveProfileAuthFacts()
     try:
         if has_active_bucket_session():
             record = build_lifecycle_service(bucket_id=bucket_id).read(bucket_id)
@@ -613,14 +782,18 @@ def _active_profile_tax_identity() -> str:
                 with activate_master_key_provider(get_master_key_provider(), fallback_bucket_id=bucket_id):
                     record = service.read(bucket_id)
     except ProfileNotFoundError:
-        return ""
+        return _ActiveProfileAuthFacts()
 
     path_values = record_to_path_values(record)
-    profile_identity = _normalise_tax_identity(path_values.get("identity.tax_id"))
-    if profile_identity:
-        return profile_identity
-    selector_values = record_to_values(record)
-    return _normalise_tax_identity(selector_values.get("tax.id"))
+    tax_id = _normalise_tax_identity(path_values.get("identity.tax_id"))
+    if not tax_id:
+        selector_values = record_to_values(record)
+        tax_id = _normalise_tax_identity(selector_values.get("tax.id"))
+    return _ActiveProfileAuthFacts(
+        tax_id=tax_id,
+        dni_nie=_normalise_tax_identity(path_values.get("auth.dni_nie")),
+        numero_soporte=_normalise_credential(path_values.get("auth.numero_soporte")),
+    )
 
 
 def _assert_session_identity_matches_expected(session: object, expected_identity: str | None) -> None:
