@@ -143,3 +143,89 @@ def test_no_bare_latin1_decode_literals() -> None:
         f"Found {len(hits)} bare .decode('latin-1') literal(s) outside canonical definition:\n"
         + "\n".join(f"  {h}" for h in hits)
     )
+
+
+# ---------------------------------------------------------------------------
+# Controls: the scans above only mean something while they can still match.
+# ---------------------------------------------------------------------------
+
+#: Each scan pattern with a literal it MUST flag and a migrated form it MUST NOT.
+#:
+#: Every test above reports absence, and absence is what a broken pattern reports
+#: too. The sibling survivor gate carried a pattern built from a raw string with a
+#: doubled backslash, so it required a literal backslash before the token and could
+#: never match a real string literal; it read clean across the whole production tree
+#: while four live sites went uncaught. These pairs are what separate "nothing to
+#: find" from "cannot find anything".
+_PATTERN_CONTROLS: tuple[tuple[re.Pattern[str], str, str], ...] = (
+    (
+        _RE_DOMCONTENTLOADED,
+        'await page.goto(url, wait_until="domcontentloaded")',
+        "await page.goto(url, wait_until=PLAYWRIGHT_WAIT_DOMCONTENTLOADED)",
+    ),
+    (
+        _RE_NETWORKIDLE,
+        'page.wait_for_load_state("networkidle")',
+        "page.wait_for_load_state(PLAYWRIGHT_WAIT_NETWORKIDLE)",
+    ),
+    (_RE_PDF_MIME, 'content_type = "application/pdf"', "content_type = PDF_MIME_TYPE"),
+    (
+        _RE_PLAYWRIGHT_TIMEOUT_SHORT,
+        "locator.click(timeout=2_000)",
+        "locator.click(timeout=PLAYWRIGHT_TIMEOUT_SHORT_MS)",
+    ),
+    (_RE_LATIN1_DECODE, 'body.decode("latin-1")', "body.decode(SEDE_BODY_ENCODING)"),
+)
+
+#: Near-misses that must stay unflagged, so the scans cannot be made to pass by
+#: over-broadening. Each is a real neighbour of its pattern's target.
+_PATTERN_NEAR_MISSES: tuple[tuple[re.Pattern[str], str], ...] = (
+    (_RE_PDF_MIME, 'content_type = "application/pdfx"'),
+    (_RE_PLAYWRIGHT_TIMEOUT_SHORT, "locator.click(timeout=20000)"),
+    (_RE_LATIN1_DECODE, 'body.encode("latin-1")'),
+)
+
+
+def test_constant_scan_patterns_discriminate() -> None:
+    """Positive control: each pattern flags a bare literal and clears the migrated form."""
+    assert len(_PATTERN_CONTROLS) == 5, "every scan pattern in this module needs a control pair"
+    failures: list[str] = []
+    failures.extend(
+        f"{pattern.pattern!r} failed to flag the bare literal {bare!r}"
+        for pattern, bare, _ in _PATTERN_CONTROLS
+        if not pattern.search(bare)
+    )
+    failures.extend(
+        f"{pattern.pattern!r} wrongly flagged the migrated form {migrated!r}"
+        for pattern, _, migrated in _PATTERN_CONTROLS
+        if pattern.search(migrated)
+    )
+    failures.extend(
+        f"{pattern.pattern!r} wrongly flagged the near-miss {probe!r}"
+        for pattern, probe in _PATTERN_NEAR_MISSES
+        if pattern.search(probe)
+    )
+    assert not failures, "constant scan patterns no longer discriminate:\n" + "\n".join(failures)
+
+
+def test_constant_scan_reads_a_non_empty_corpus() -> None:
+    """A survivor scan over zero files would report clean without looking at anything."""
+    files = _production_py_files()
+    assert len(files) > 500, f"expected the production corpus, scanned only {len(files)} files"
+
+
+def test_scan_reports_a_planted_literal_with_its_location() -> None:
+    """The scan reports a real hit, not merely an empty list, and names where it is.
+
+    Proves the walk reaches file contents. A scanner whose file read or line
+    accounting broke would return an empty list over a corpus that genuinely
+    contains the token, which is indistinguishable from the clean result the
+    tests above assert.
+    """
+    planted = _SRC_ROOT / "core" / "external_constants.py"
+    assert planted.is_file(), "canonical constant home moved; update this control"
+
+    hits = _scan((planted,), _RE_PDF_MIME)
+
+    assert hits, "the canonical constant home defines the PDF MIME literal, so the scan must see it"
+    assert all(":" in hit for hit in hits), f"scan hits must carry a path:line locator, got {hits!r}"
