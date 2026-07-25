@@ -16,7 +16,6 @@ related:
   - '[[2026-07-17-auth-cert-recovery-custody-adr]]'
 ---
 
-
 # `auth-cert-recovery-custody` plan
 
 ### Phase `P01` - Authentication custody backend
@@ -106,6 +105,8 @@ The cert-secret door safety review returned PASS with one Low hardening item: ce
 
 - [x] `P08.S44` - DEFERRED until the operator P04 passphrase door commits: make certificate secret set reject the passphrase as an argv value and read it only via the hidden prompt or bounded stdin, reusing the P04 door _secure_input.py bounded-stdin no-echo infrastructure rather than building a parallel secret-input authority, gated on a test proving the passphrase cannot be supplied as an argv value and is read only through hidden prompt or bounded stdin; `src/cadrumo/entrypoints/cli/_config/_certificate.py`.
 - [ ] `P08.S45` - Perform and persist the independent safety review of the P04 passphrase and recovery CLI door that the close honesty review found was never carried out, covering secure TTY handling, no-echo retype, secrets-stdin bounds, and mnemonic absence from argv, envelopes, logs and help, with the review persisted as a vault audit and every item it surfaces tracked as a Step or formally deferred; `.vault/audit`.
+- [ ] `P08.S49` - Convert recovery-key, mnemonic, unwrapped master-key, and enrollment-time DEK material from immutable bytes and str to wipeable mutable buffers so the substrate zeroise primitive can reach them, closing the plaintext-DEK exposure window that the P04 door safety review found is structurally wider here than on the BucketSession steady-state path because it opens on every recovery mint, unwrap, and passphrase change, deferred by that review as a pre-existing disclosed project-wide Python immutability limitation rather than a new regression, and tracked here so a later pass over this surface cannot re-introduce it as a false already-covered assumption; `src/cadrumo/adapters/persistence/storage/master_key/_recovery.py`.
+- [ ] `P08.S50` - Make the recovery-enrollment manifest flag write atomic with the verified envelope install, or reconcile the flag from the envelope on read, so a process kill between the two cannot leave recovery_enrolled reading false while a genuinely enrolled envelope exists on disk, deferred by the P04 door safety review as cosmetic because recovery status and verify both read the envelope file directly rather than the manifest flag, whose only untraced exposure is wherever it is consumed as a UI hint rather than a security-relevant gate, and tracked here so a later pass over this surface cannot re-introduce it as a false already-covered assumption; `src/cadrumo/application/user_profile/_custody.py`.
 
 ## Description
 
