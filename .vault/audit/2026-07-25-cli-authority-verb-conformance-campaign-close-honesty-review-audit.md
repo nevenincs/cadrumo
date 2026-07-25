@@ -169,7 +169,52 @@ That is the whole argument against closing a wave on presumption. The
 satisfied-at-HEAD conclusion must be established per step against its named
 surface before any W05 step is checked.
 
-### w06-evidence-partial | critical | W06 is partly verified, P18 landed 10 of 13 records and P19 landed none
+### w06-p18-verified | high | P18 evidence is complete at HEAD, 13 of 13 records populated, 4 steps must stay open
+
+DEFINITIVE. Supersedes the two entries below, both of which counted W06
+coverage from working-tree snapshots taken while the phase was still running
+and were wrong in different directions. Measured at HEAD by reading every
+record out of the object store rather than the working tree: **13 W06.P18
+records, 13 with a populated Outcome, zero empty.** They landed as one
+explicit-pathspec commit. P19 remains at 24 untracked empty scaffolds and
+nothing committed.
+
+The methodological point outlives the numbers. A count taken from the working
+tree while a peer is mid-commit is not a measurement, and this review made that
+error twice before reading HEAD. The reconciliation should read committed
+state, not the tree.
+
+P18's verdicts: eight satisfied, four failed, one satisfied-with-unverified.
+Failures, none of which may be closed — the whole-directory CLI test gate at 16
+failed of 2756, where 12 are peer clusters against uncommitted locale, error
+taxonomy and sequence files and 3 are worker artefacts; the config suite at 8
+failed of 131 on an order dependence; the evidence and audit suite passing on
+code, command, schema and tests but failing on documentation; and the MCP
+parity suite at 22 failed of 279, still 13 failed when re-run sequentially, so
+not a parallelism artefact.
+
+Six defects were surfaced and are tracked as Steps rather than left in prose.
+The MCP identity break is the serious one: `cadrumo_whoami` resolves profile
+health through a process-global registry seeded only as an import side effect
+of the wizard package, and every production wizard import is deferred and
+function-local, so nothing on the MCP path ever seeds it. A clean interpreter
+importing the MCP entrypoint confirms the wizard is absent and the read raises,
+and a stdio-subprocess client receives the error over the wire. The same root
+cause explains failures in the config and agent-eval suites. The CLI
+diagnostics path was driven end to end through the installed executable and is
+unaffected.
+
+A second false-green instrument was found, matching the pattern already
+recorded here twice: the namespace-registry adoption gate walks 879 production
+files, finds zero subjects, and asserts that the empty list is empty. It has no
+anti-vacuity floor and covers three roots rather than every production root.
+The invariant it claims is genuinely proven, but by a different named gate, so
+the gate itself carries no information.
+
+Six of the six os_keychain cases remain deselected by marker under the agent
+logon: not skipped, not xfailed, not passed, and not verified.
+
+### w06-evidence-partial | superseded | Counted 10 of 13 from a working-tree snapshot, wrong, see w06-p18-verified
 
 CORRECTION to the entry below, which was written from a snapshot taken while
 both agents were still running and is superseded on the counts. The P18 agent
@@ -197,7 +242,7 @@ triaged. Neither Step is closed.
 Still empty in P18: the pointer, switch, logout, reset and bootstrap-policy
 suites, the hashing call-site suites, and the registry as-of query suites.
 
-### w06-evidence-not-produced | critical | Superseded on counts, W06 evidence was not produced within the review window
+### w06-evidence-not-produced | superseded | Counted 36 of 37 empty from a working-tree snapshot, wrong, see w06-p18-verified
 
 Thirty-seven execution records exist on disk for phases W06.P18 and W06.P19.
 Thirty-six carry empty Description and Outcome sections: the scaffold exists,
