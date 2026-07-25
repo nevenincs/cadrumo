@@ -27,9 +27,25 @@ no mocks, no fixture trees) and resolves every cited command path from:
 
 The four locale catalogues (``en``/``es``/``ca``/``hu``) carry the same class
 of citations inside translated suggestion text and are the natural fourth
-sweep; extending this gate over them is tracked as a follow-up (the catalogues
-carried three locale-divergent dead citations when this gate landed, owned by
-the locale-CLI workflow).
+sweep. This was tracked as a follow-up when the gate first landed (the
+catalogues carried three locale-divergent dead citations at that time); it is
+now closed by :func:`test_locale_catalogues_cite_live_commands`, which walks
+every string leaf of every catalogue through the same live-tree resolver.
+Landing that sweep caught three real dead citations shipped across the
+catalogues: all four locales cited a never-existing ``aeat config profile
+health`` for the Google OAuth profile-repair suggestion (corrected to the
+real ``aeat config profile status``); the Hungarian catalogue alone cited a
+retired ``aeat config doctor`` path where the sibling locales already cited
+the real ``aeat config repair`` (corrected to match); and the Spanish and
+Catalan catalogues each hardcoded a stale ``aeat config first-run`` inside
+the no-active-profile landing message, duplicating — and diverging from —
+the ``%{command}`` interpolation the message template already appends
+(:func:`application.operator_surface.build_root_landing_report` supplies that
+command as ``aeat config profile create NAME``; the English and Hungarian
+catalogues never hardcoded a command there, and es/ca were corrected to
+match that bare-message shape).
+Locale edits route through ``python -m cadrumo.locales set`` per the
+locale-CLI workflow, never a hand-edit of the YAML.
 
 Citation grammar: ``aeat`` followed by a root family (``app`` / ``config``)
 and a run of lowercase kebab-case tokens. Resolution walks group-by-group and
@@ -54,11 +70,13 @@ import pytest
 
 from ....application.operator_surface import HelpSurface, build_help_document
 from ....core.errors import ERROR_REGISTRY
+from ....locales.manager import LocaleManager, LocaleNode
 from ....tests.cli_runner import cadrumo_click_command
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _PACKAGE_ROOT = Path(__file__).resolve().parents[3]
+_LOCALES_DIR = _PACKAGE_ROOT / "locales"
 _AST_SCAN_ROOTS = (
     _PACKAGE_ROOT / "adapters",
     _PACKAGE_ROOT / "application",
@@ -412,6 +430,94 @@ def test_production_string_literals_cite_live_commands() -> None:
     assert citation_count >= 550, (
         f"only {citation_count} command citations found across production string literals; "
         "the extractor appears blind — the scan roots carried 760+ when adapters/ enrolled"
+    )
+
+
+def _iter_locale_leaves(node: LocaleNode, prefix: str = "") -> Iterator[tuple[str, str]]:
+    """Yield ``(dotted_key, value)`` for every string leaf in a parsed locale tree.
+
+    Mirrors :meth:`LocaleManager.get_yaml_keys`'s recursive walk but also
+    returns the leaf value, which the key-only helper drops.
+    """
+    if isinstance(node, dict):
+        for key, child in node.items():
+            child_prefix = f"{prefix}.{key}" if prefix else str(key)
+            yield from _iter_locale_leaves(child, child_prefix)
+    else:
+        yield prefix, node
+
+
+def test_locale_catalogues_cite_live_commands() -> None:
+    """Every ``aeat app/config`` citation inside the four locale catalogues stays live.
+
+    The four shipped locale catalogues (``en``/``es``/``ca``/``hu``) carry the
+    same class of operator-facing citations as the error-registry suggestions
+    and curated help documents, inside translated suggestion and error text.
+    This module's own docstring named the catalogues as the one remaining
+    ungated surface; this test closes that gap.
+
+    ``require_runnable_leaf`` is intentionally OFF here, matching
+    :func:`test_production_string_literals_cite_live_commands` rather than
+    :func:`test_error_registry_suggestions_cite_live_commands`: a locale leaf
+    is a mix of runnable suggestions and reference prose (e.g. a legitimately
+    bare ``aeat config repair`` citation, a command GROUP that is genuinely
+    runnable because its Typer callback executes with no subcommand), so
+    scoping the check to the dead-token class only (a token that resolves to
+    nothing in the live tree) avoids false-flagging a live bare-group
+    citation while still catching a renamed or invented verb.
+    """
+    manager = LocaleManager(_PACKAGE_ROOT, _LOCALES_DIR)
+    locale_paths = sorted(_LOCALES_DIR.glob("*.yml"))
+    assert locale_paths, f"no locale catalogues found under {_LOCALES_DIR}"
+    failures: list[str] = []
+    citation_count = 0
+    for path in locale_paths:
+        data = manager.load_locale(path)
+        for key, value in _iter_locale_leaves(data):
+            if not isinstance(value, str):
+                continue
+            citation_count += _count_citations(value)
+            failures.extend(_dead_citations_in(value, origin=f"{path.name}:{key}"))
+    assert not failures, "\n".join(failures)
+    assert citation_count >= 700, (
+        f"only {citation_count} command citations found across the locale catalogues; "
+        "the extractor appears blind — the four catalogues carried 880+ when this gate landed"
+    )
+
+
+def test_scanner_flags_the_locale_defects_this_gate_closed() -> None:
+    """Anti-tautology proof: the scanner catches the two real defects this gate found.
+
+    Reproduces, as inline synthetic text (not a disk read — the live
+    catalogues are already fixed), the exact dead citations that shipped in
+    all four locale catalogues (``aeat config profile health``, a command
+    that never existed) and in the Hungarian catalogue alone (``aeat config
+    doctor``, a retired command path — the sibling locales already cited the
+    real ``aeat config repair``). If this test ever fails, the extractor
+    would have shipped both defects undetected.
+    """
+    dead_health = _dead_citations_in(
+        "Run `aeat config profile health` and repair or switch the active profile before retrying the Google command.",
+        origin="synthetic",
+    )
+    assert len(dead_health) == 1, dead_health
+    assert "'health'" in dead_health[0]
+
+    dead_doctor = _dead_citations_in(
+        "Diagnosztikához és helyreállításhoz futtasd aeat config doctor.",
+        origin="synthetic",
+    )
+    assert len(dead_doctor) == 1, dead_doctor
+    assert "'doctor'" in dead_doctor[0]
+
+    # The live corrected forms now shipped in the catalogues pass cleanly.
+    assert not _dead_citations_in(
+        "Run `aeat config profile status` and repair or switch the active profile.",
+        origin="synthetic",
+    )
+    assert not _dead_citations_in(
+        "Diagnosztikához és helyreállításhoz futtasd aeat config repair.",
+        origin="synthetic",
     )
 
 

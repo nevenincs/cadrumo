@@ -110,7 +110,7 @@ adapters:
         close_loopback_port: Close the application holding a stray loopback port and
           retry.
         open_consent_url_manually: Open the printed consent URL manually in your browser.
-        repair_profile_state: Run `aeat config profile health` and repair or switch
+        repair_profile_state: Run `aeat config profile status` and repair or switch
           the active profile before retrying the Google command.
         run_from_interactive_terminal: Run 'aeat config google login' from an interactive
           terminal with a web browser available.

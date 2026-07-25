@@ -118,7 +118,7 @@ adapters:
           orfe i torna-ho a intentar.
         open_consent_url_manually: Obre manualment al navegador l'URL de consentiment
           impresa.
-        repair_profile_state: Executeu `aeat config profile health` i repareu o canvieu
+        repair_profile_state: Executeu `aeat config profile status` i repareu o canvieu
           el perfil actiu abans de tornar a provar l'ordre de Google.
         run_from_interactive_terminal: Executa 'aeat config google login' des d'un
           terminal interactiu amb un navegador web disponible.
@@ -4911,8 +4911,7 @@ cli:
         setup_inspect_profile: Inspeccionar el perfil de contribuent actiu.
     landing:
       active_profile_message: 'Perfil actiu: %{profile}.'
-      no_active_profile_message: No hi ha cap perfil actiu. Executeu 'aeat config
-        first-run' per comecar.
+      no_active_profile_message: No hi ha cap perfil actiu.
       text_template: '%{message} Ordre suggerida: %{command}'
   overview:
     agenda:

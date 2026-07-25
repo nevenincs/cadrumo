@@ -119,7 +119,7 @@ adapters:
           huérfano y vuelve a intentarlo.
         open_consent_url_manually: Abre manualmente en tu navegador la URL de consentimiento
           impresa.
-        repair_profile_state: Ejecuta `aeat config profile health` y repara o cambia
+        repair_profile_state: Ejecuta `aeat config profile status` y repara o cambia
           el perfil activo antes de reintentar el comando de Google.
         run_from_interactive_terminal: Ejecuta 'aeat config google login' desde un
           terminal interactivo con un navegador web disponible.
@@ -4947,8 +4947,7 @@ cli:
         setup_inspect_profile: Inspeccionar el perfil de contribuyente activo.
     landing:
       active_profile_message: 'Perfil activo: %{profile}.'
-      no_active_profile_message: No hay ningún perfil activo. Ejecute 'aeat config
-        first-run' para comenzar.
+      no_active_profile_message: No hay ningún perfil activo.
       text_template: '%{message} Comando sugerido: %{command}'
   overview:
     agenda:
