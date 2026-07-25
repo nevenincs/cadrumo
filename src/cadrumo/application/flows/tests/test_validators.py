@@ -11,6 +11,8 @@ required page refuses blank, a gated or optional page accepts it.
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 
 from ....core.flows import CopyRefKind, FlowWidgetKind
@@ -102,11 +104,30 @@ def test_decimal_accepts_and_preserves_significant_trailing_zeros() -> None:
     assert canonical == "1.50"
 
 
-def test_decimal_strips_whitespace_and_normalises_the_sign() -> None:
-    canonical, verdict = validate_widget_shape(_page(widget=FlowWidgetKind.DECIMAL), "  +1.5  ")
+def test_decimal_strips_surrounding_whitespace() -> None:
+    canonical, verdict = validate_widget_shape(_page(widget=FlowWidgetKind.DECIMAL), "  1.5  ")
 
     assert verdict.ok
     assert canonical == "1.5"
+
+
+@pytest.mark.parametrize("raw", ["+1.5", "+140000", "1e3", "1E3", "1_000", ".5", "1."])
+def test_decimal_refuses_forms_the_bare_constructor_accepted(raw: str) -> None:
+    """The canonical grammar refuses text whose numeric meaning is not what it appears.
+
+    Each form is asserted constructible first, so the test proves a genuine
+    tightening rather than restating the constructor. A leading ``+`` was
+    previously normalised away, and ``1e3`` silently became one thousand — a
+    thousand-fold misreading of a typo on an operator-typed amount.
+    """
+    assert isinstance(Decimal(raw), Decimal), raw
+
+    canonical, verdict = validate_widget_shape(_page(widget=FlowWidgetKind.DECIMAL), raw)
+
+    assert not verdict.ok
+    assert canonical == ""
+    assert verdict.message_key == "flows.errors.invalid_decimal"
+    assert verdict.context == {"page_id": "probe"}
 
 
 @pytest.mark.parametrize("raw", ["1,5", "abc", "1.2.3", ""])

@@ -62,6 +62,7 @@ from typing import TYPE_CHECKING, Final, TypedDict
 
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core import BindingSourceKind, Modelo, Period
+from ...core.decimal import try_parse_canonical_decimal
 from ...core.logging import get_logger
 from ...core.parsing import parse_iso8601_date
 from ...core.time import now
@@ -327,15 +328,18 @@ def _parse_canonical_iso_date(raw: str | None) -> date | None:
 
 
 def _parse_canonical_decimal(raw: str | None) -> Decimal | None:
-    """Parse a canonical decimal projection value, or ``None`` when absent / malformed."""
+    """Parse a canonical decimal projection value, or ``None`` when absent / malformed.
+
+    "Canonical" is now enforced rather than asserted: the projection value is
+    judged by :func:`~core.decimal.try_parse_canonical_decimal`, so a stored
+    token carrying scientific notation, a leading ``+``, a comma decimal, or
+    ``NaN``/``Infinity`` resolves to ``None`` (absent) instead of a value whose
+    numeric meaning is not what it appears. Fractional digits stay uncapped: a
+    projection value may legitimately carry sub-cent precision.
+    """
     if not raw:
         return None
-    from decimal import InvalidOperation
-
-    try:
-        return Decimal(raw)
-    except (InvalidOperation, ValueError):
-        return None
+    return try_parse_canonical_decimal(raw)
 
 
 def _entity_type_from_token(raw: str | None) -> EntityType | None:

@@ -38,12 +38,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core import IntracomOperationType
+from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import CoreValidationError, resolve_error_message
 from ...core.identity import IdentityError, validate_spanish_tax_id
 from ...core.parsing import parse_iso8601_date
@@ -145,12 +146,19 @@ def _validate_invoice_date(raw: str) -> date:
 
 
 def _validate_taxable_base(raw: str) -> Decimal:
-    stripped = raw.strip()
-    try:
-        value = Decimal(stripped)
-    except InvalidOperation as exc:
-        raise _WizardFieldError(field="taxable_base", reason=f"invalid decimal amount: {raw!r}") from exc
-    if not value.is_finite():
+    """Validate the operator-typed taxable base against the canonical euro grammar.
+
+    The two-fractional-digit cap is what makes the Spanish thousands shape
+    ``1.000`` refuse instead of silently becoming ``Decimal("1.0")`` — a one-euro
+    base for an operator who meant one thousand. The grammar also subsumes the
+    finiteness guard and closes ``1e3``, a leading ``+``, an underscore digit
+    separator, and a comma decimal, all of which the bare
+    :class:`~decimal.Decimal` call accepted. The negative refusal stays separate
+    so it keeps naming its own reason rather than collapsing into the grammar
+    message.
+    """
+    value = try_parse_canonical_decimal(raw, max_fraction_digits=2)
+    if value is None:
         raise _WizardFieldError(field="taxable_base", reason=f"invalid decimal amount: {raw!r}")
     if value < 0:
         raise _WizardFieldError(field="taxable_base", reason="must not be negative")
@@ -158,15 +166,23 @@ def _validate_taxable_base(raw: str) -> Decimal:
 
 
 def _validate_iva_rate(raw: str | None) -> Decimal | None:
+    """Validate the operator-typed IVA percentage against the canonical grammar.
+
+    Uncapped fractional digits: this is a percentage, not a euro amount, and the
+    registry's declared rate slots are the authority on which values exist. The
+    grammar refuses the forms a bare :class:`~decimal.Decimal` call admitted
+    (scientific notation, a leading ``+``, an underscore separator, a comma
+    decimal, ``NaN``/``Infinity``) so a malformed token reports as a decimal
+    failure rather than reaching the slot check and reporting the misleading "not
+    a recognised IVA percentage".
+    """
     if raw is None:
         return None
-    stripped = raw.strip()
-    if not stripped:
+    if not raw.strip():
         return None
-    try:
-        value = Decimal(stripped)
-    except InvalidOperation as exc:
-        raise _WizardFieldError(field="iva_rate", reason=f"invalid decimal percentage: {raw!r}") from exc
+    value = try_parse_canonical_decimal(raw)
+    if value is None:
+        raise _WizardFieldError(field="iva_rate", reason=f"invalid decimal percentage: {raw!r}")
     accepted_slots = numeric_iva_rate_slots()
     if value not in accepted_slots:
         accepted = ", ".join(format(rate, "f") for rate in sorted(accepted_slots))

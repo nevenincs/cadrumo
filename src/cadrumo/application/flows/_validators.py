@@ -17,14 +17,13 @@ built in and runs before any registered per-answer validator.
 
 from __future__ import annotations
 
-import decimal
 from collections.abc import Callable, Mapping
-from decimal import Decimal
 from pathlib import Path
 
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG
+from ...core.decimal import try_parse_canonical_decimal
 from ...core.flows import DEFER_TOKEN, FlowWidgetKind
 from ...core.parsing import parse_date
 from ._definition import FlowPage
@@ -280,22 +279,32 @@ def _validate_date(page: FlowPage, raw: str) -> tuple[str, ValidationVerdict]:
 def _validate_decimal(page: FlowPage, raw: str) -> tuple[str, ValidationVerdict]:
     """Validate a :class:`~decimal.Decimal` amount, canonicalising to ``str(Decimal)``.
 
-    The blank policy is identical to :func:`_validate_integer`. A
-    non-blank token must parse as a finite ``Decimal``; ``NaN`` and the
-    infinities parse under :class:`~decimal.Decimal` but are rejected
-    because an amount is a finite quantity. The failure context carries
-    only ``page_id`` — never the raw answer.
+    The blank policy is identical to :func:`_validate_integer`. A non-blank token
+    must conform to the canonical decimal grammar
+    (:func:`~core.decimal.try_parse_canonical_decimal`): a dot decimal separator,
+    no thousands grouping, no comma decimal, no scientific notation, no leading
+    ``+``, no underscore digit separator, and no ``NaN``/``Infinity``. The
+    grammar subsumes the finiteness guard this previously applied on top of a
+    bare :class:`~decimal.Decimal` call, and closes the forms that call admitted:
+    ``1e3`` became a thousand-fold misreading of a typo, and a non-finite amount
+    compares ``False`` to every threshold, so a downstream advisory keyed on
+    ``> 0`` never fires for it.
+
+    The fractional part is deliberately uncapped, because the DECIMAL widget is a
+    generic numeric channel serving rates and percentages as well as euro
+    amounts. Because the grammar refuses exponent input, the parsed value's
+    exponent is never positive, so the ``str(Decimal)`` canonical form this
+    returns is always plain digits — a token every downstream re-read parses back
+    under the same grammar. The failure context carries only ``page_id`` — never
+    the raw answer.
     """
     text = raw.strip()
     if not text:
         if _blank_allowed(page):
             return "", ValidationVerdict.passed()
         return "", ValidationVerdict.failed("flows.errors.blank_required", page_id=page.id)
-    try:
-        parsed = Decimal(text)
-    except decimal.InvalidOperation:
-        return "", ValidationVerdict.failed("flows.errors.invalid_decimal", page_id=page.id)
-    if not parsed.is_finite():
+    parsed = try_parse_canonical_decimal(text)
+    if parsed is None:
         return "", ValidationVerdict.failed("flows.errors.invalid_decimal", page_id=page.id)
     return str(parsed), ValidationVerdict.passed()
 
