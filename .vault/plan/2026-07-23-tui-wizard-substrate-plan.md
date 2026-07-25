@@ -10,6 +10,16 @@ related:
   - '[[2026-07-23-tui-wizard-substrate-research]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 <!-- RETIRED: S24 -->
 
 # `tui-wizard-substrate` plan
@@ -98,7 +108,7 @@ Land the interactive-versus-non-interactive parity regression, locale parity and
 
 - [x] `W03.P09.S27` - Land the parity regression proving the scripted, line-mode, and full-screen paths produce identical answers and validation verdicts for a shared definition; `src/cadrumo/application/flows/tests/test_frontend_parity.py`.
 - [x] `W03.P09.S28` - Run the locale parity, translation honesty, and scaffold check gates green for the substrate key namespaces; `src/cadrumo/locales/`.
-- [ ] `W03.P09.S29` - Run the docs build and documented-command conformance gates green, with owner triage recorded for any unrelated peer failures; `docs/`.
+- [x] `W03.P09.S29` - Run the docs build and documented-command conformance gates green, with owner triage recorded for any unrelated peer failures; `docs/`.
 - [x] `W03.P09.S30` - Run the full src collect-only and suite gates with owner-distinguished triage of the results; `src/cadrumo/`.
 - [x] `W03.P09.S32` - Land the bounded-fstring coverage gate, every dynamic tr or copy-reference site over an enum must carry its registry registration in the same commit, with the three campaign incidents as its seed cases; `src/cadrumo/locales/tests/`.
 
