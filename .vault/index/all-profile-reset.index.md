@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#all-profile-reset'
-date: '2026-07-24'
-modified: '2026-07-24'
+date: '2026-07-25'
+modified: '2026-07-25'
 related:
   - '[[2026-07-17-all-profile-reset-P01-S01]]'
   - '[[2026-07-17-all-profile-reset-P01-S02]]'
@@ -31,6 +31,7 @@ related:
   - '[[2026-07-17-all-profile-reset-P04-S23]]'
   - '[[2026-07-17-all-profile-reset-P04-S24]]'
   - '[[2026-07-17-all-profile-reset-P04-S25]]'
+  - '[[2026-07-17-all-profile-reset-P04-S32]]'
   - '[[2026-07-17-all-profile-reset-P05-S26]]'
   - '[[2026-07-17-all-profile-reset-P05-S27]]'
   - '[[2026-07-17-all-profile-reset-P05-S28]]'
@@ -77,7 +78,6 @@ Auto-generated index of all documents tagged with `#all-profile-reset`.
 - `2026-07-17-all-profile-reset-P03-S15` - Prove target discovery includes live, tombstoned, and dangling-pointer buckets but excludes cold defaults
 - `2026-07-17-all-profile-reset-P03-S16` - Prove every reset phase boundary resumes honestly in a fresh child process
 - `2026-07-17-all-profile-reset-P03-S17` - Prove sorted locking, writer pauses, reset exclusion, retention recheck, and renewed confirmation with real processes
-- `2026-07-17-all-profile-reset-P04-S23` - Prove switching and strong logout through real persisted custody state
 - `2026-07-17-all-profile-reset-P04-S18` - Restrict config switch to UUIDs and exact labels including canonical sandbox labels and reject bare sandbox names
 - `2026-07-17-all-profile-reset-P04-S19` - Remove the config profile sandbox use registration and execution path without an alias
 - `2026-07-17-all-profile-reset-P04-S20` - Replace flat scoped reset registration with the config reset command group
@@ -91,6 +91,8 @@ Auto-generated index of all documents tagged with `#all-profile-reset`.
 - `2026-07-17-all-profile-reset-P05-S29` - Regenerate the CLI reference and operator how-to pages for the reset family from the frozen live surface
 - `2026-07-17-all-profile-reset-P05-S30` - Prove the removed reset and sandbox spellings are absent from every source and generated surface
 - `2026-07-17-all-profile-reset-P05-S31` - Sweep the MCP identity gate off the sandbox-use grammar onto switch-based sandbox addressing, updating its identity-changing command set and docstring
+- `2026-07-17-all-profile-reset-P04-S23` - Prove switching and strong logout through real persisted custody state
+- `2026-07-17-all-profile-reset-P04-S32` - Repair the two failing tests in the P04.S23 carried evidence file that a same-day peer commit turned red by retiring the active-profile environment override, so the carried-forward completeness claim rests on green evidence, coordinating with the owner of the environment severance rather than re-implementing the retired mechanism, gated on the module passing in the integration lane
 
 ### plan
 

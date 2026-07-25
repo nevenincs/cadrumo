@@ -13,6 +13,7 @@ related:
   - '[[2026-07-17-cli-authority-verb-conformance-audit]]'
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
   - '[[2026-07-17-all-profile-reset-adr]]'
+  - '[[2026-07-17-all-profile-reset-audit]]'
 ---
 
 <!-- LINK RULES:
@@ -71,7 +72,7 @@ Cut the config reset and sandbox command grammar over to the reset orchestration
 - [x] `P04.S23` - Prove switching and strong logout through real persisted custody state; `src/cadrumo/entrypoints/cli/tests/test_config_custody_profile_lifecycle.py`.
 - [x] `P04.S24` - Prove reset start, status, resume, operation IDs, retention override, reasons, and confirmations across real processes; `src/cadrumo/entrypoints/cli/tests/test_config_reset_lifecycle.py`.
 - [x] `P04.S25` - Require yes for reset start and resume while keeping status non-destructive; `src/cadrumo/entrypoints/cli/tests/test_destructive_verbs_require_yes.py`.
-- [ ] `P04.S32` - Repair the two failing tests in the P04.S23 carried evidence file that a same-day peer commit turned red by retiring the active-profile environment override, so the carried-forward completeness claim rests on green evidence, coordinating with the owner of the environment severance rather than re-implementing the retired mechanism, gated on the module passing in the integration lane; `src/cadrumo/entrypoints/cli/tests/test_config_custody_profile_lifecycle.py`.
+- [x] `P04.S32` - Repair the two failing tests in the P04.S23 carried evidence file that a same-day peer commit turned red by retiring the active-profile environment override, so the carried-forward completeness claim rests on green evidence, coordinating with the owner of the environment severance rather than re-implementing the retired mechanism, gated on the module passing in the integration lane; `src/cadrumo/entrypoints/cli/tests/test_config_custody_profile_lifecycle.py`.
 
 ### Phase `P05` - Contract migration for the reset family
 
@@ -94,7 +95,7 @@ Reset is replaced by start, status, and resume. State is durable and non-secret,
 
 The decision record keeps reset distinct from neighbouring verbs on purpose. Profile logout closes local profile resources and is not destructive; reset is. Sandbox discard removes a selected sandbox; retention prune applies retention-based cleanup. This plan preserves those distinctions.
 
-Four steps below are already landed and carry execution evidence under the originating campaign feature stem, which the rescope record documents. Do not re-execute them.
+One step below, `P04.S23`, is already landed and carries execution evidence under the originating campaign feature stem, which the rescope record documents. Do not re-execute it. This narrowed from four steps to one as the other three (`P03.S15`, `S16`, `S17`) were retroactively grounded with fresh local exec records rather than left carried-forward, per the close-honesty review's `plan-description-overstates-carried-forward-count` finding.
 
 ## Steps
 
