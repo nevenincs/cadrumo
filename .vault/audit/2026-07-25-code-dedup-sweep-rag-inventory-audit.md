@@ -7,61 +7,33 @@ modified: '2026-07-25'
 related: []
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace code-dedup-sweep with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
 # `code-dedup-sweep` audit: `semantic duplication sweep: 29-searcher RAG inventory`
 
 ## Scope
-
-<!-- What was audited and why -->
-
-## Findings
-
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
-
-       ### semantic duplication sweep: 29-searcher RAG inventory | {level} | {summary}
-
-     followed by a paragraph carrying the detail. semantic duplication sweep: 29-searcher RAG inventory is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
-
-## Recommendations
-
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
-
-## Context
 
 Campaign shape: 8 domain leads x 4 semantic searchers (32 dispatched, 29 returned, 3 killed by server-side throttling). Evidence channel was vaultspec-rag semantic search only - no file reads, no git, no tests. Every site below is RAG-reported and UNCONFIRMED against HEAD; each carries the symbols a targeted rg pass must confirm before any edit. Recall is partial: the code index was mid-rebuild throughout and one probe returned index_unavailable, so a thin domain means "no signal", never "no duplication".
 
 Blind spots (rate-limit casualties, never searched): login/credentials/tokens (D4.2), taxpayer-identity validation (D4.3), censal facts and profile-fact bindings (D4.4).
 
+## Findings
+
+### tier-1-promotable-duplication | medium | six candidates for promotion to an existing canonical superset
+
 TIER 1 - promotable, canonical home already exists: (1) schema-version ceiling hand-rolled in >=4 catalogue repositories while ensure_schema_version_readable is a strict superset; (2) _common.py::_parse_iso_date calls date.fromisoformat directly while its identically-named sibling routes through core.parsing.parse_iso8601_date - and a gate, test_no_bare_date_fromisoformat, claims zero bare calls survive; (3) lazy-Typer-subcommand materialiser hand-rolled 3x; (4) _money_round defined 3x instead of core.money.round_to_cents, with a sibling _quantize using default banker's rounding where neighbours use ROUND_HALF_UP; (5) _storage_state_sha256 re-rolls canonical-JSON+SHA256 instead of core.hashing.content_hash_hex; (6) two byte-shaped _parse_iso_date copies.
+
+### tier-2-cross-corroborated-clusters | medium | duplication clusters each found independently by 2-3 domains
 
 TIER 2 - cross-corroborated clusters, each found independently by 2-3 domains: decimal-string parsing (core.decimal self-declares canonical; >=6 bypassers, two using bare Decimal() with NO grammar validation on a --set path, i.e. silent under-validation); explicit-or-active bucket-id resolver (canonical declared in core/_bucket_pointer_io.py, >=4 re-derivations, one docstring admitting it "Mirrors" the fallback); bucket-event emission (~6 per-domain wrappers plus one emitting from the CLI layer, a hexagonal-boundary violation); FX rate resolution 4x with a comment admitting it behaves "exactly as the file-import path does"; fixed-width field encoders 3x; committed-TOML reader bypassed by 4 loaders; registry-tree fingerprint 2x plus a second snapshot cache with a coarser key and no fingerprint invalidation; scalar-parameter resolver 3x across M100/M131/M210 formula runtimes; sensitive-key redaction predicate 4x; accent-fold 4x under colliding generic names; _renta_ledger::_casilla_aggregation hand-rolls the per-casilla fold while its sibling income aggregator in the same module family calls the shared fold_casilla_observations; evidence-covers-snapshot contributor-coverage guard 3x including a private near-duplicate of the public exported one.
 
+### tier-3-structural-rulings-needed | high | structural coexistences needing a ruling rather than a refactor
+
 TIER 3 - structural, needs a ruling rather than a refactor: two coexisting filing-readiness pipelines (ModeloValidator/ModeloDraft vs verify_modelo_revision/CalculationRevision) with different finding taxonomies, the older possibly reachable only from internals; two parallel per-transaction evidence systems (PurchaseInvoiceEvidence CRUD service vs the generic content-addressed Attachment manifest, with attach_manual_transaction_evidence accepting both ids); cross-period not-applicable suppression set derived twice on the legally load-bearing path; _formats/__init__.py declaring itself superseded while _serialise() still ships; terminology lifecycle value set living in non-shippable dev/docs so production hardcodes the string "approved"; two parallel synthetic-PDF generator families for the same three modelos; the mandated grimp runtime import-graph audit axis apparently never built; ledger_transaction_review_payload with no call site found while the CLI recomposes it inline.
 
+### confirmed-clean-surfaces | low | surfaces confirmed single-homed or deliberately divergent; do not re-flag
+
 CONFIRMED CLEAN - do not re-flag: the sheets/workbook shared-plan two-transport pattern; the four retry policies (genuinely divergent - security throttle vs lock poll vs dev-tooling flakiness vs deliberately single-shot AEAT auth); prompter singularity (AST gate holds; blind spot is an indirect questionary re-export); help builder, command manifest, and risk classifier each single-homed; UnsecuredMasterKeyProvider env-gated and hostile-named; the jscpd false-green duplication runner already fixed and pinned to exactly one command constructor tree-wide.
+
+### d1-lead-direct-audit-binding-validators-and-expense-stem | medium | dual binding-validator convention and an english/spanish stem pair on ledger sources
 
 ADDENDUM - D1 lead direct audit (binding resolvers, revision/period), recovered after the lead tier failed to receive its children's reports.
 
@@ -69,7 +41,11 @@ D1-1 dual binding-validator convention still live on four ledger source families
 
 D1-2 English/Spanish dual stem across sibling renta-expense binding source kinds. `BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION` (English) and `LEDGER_RENTA_GASTO_AGGREGATION` (Spanish) both exist with separate resolvers in `application/aggregation/_modelo_bindings.py` (the gasto resolver at ~706). Functionally these look divergent-by-design - M100 first-slice expense vs M130 deductible gasto - but the English stem violates the Spanish-stem naming rule regardless. HAZARD for whoever actions this: a `BindingSourceKind` member value must stay byte-identical to the token stored in registry TOML, so a rename is not a code-only change - it must sweep the enum, every resolver and consumer, and the registry authoring tree in one atomic commit, and the registry validates the whole working tree on load. Enumerate consumers first with `rg "LEDGER_RENTA_EXPENSE_AGGREGATION|LEDGER_RENTA_GASTO_AGGREGATION"`. Unresolved: whether both source kinds are reachable on the same modelo/casilla, which would make this a functional duplicate rather than a naming defect - answerable only from the registry TOML.
 
+### revision-period-resolution-clean-positive | low | revision/period resolution surface reads as genuinely single-canonical
+
 CLEAN POSITIVE on the revision/period axis: seven queries returned coherent single-owner results for `select_revision`/`_temporal.py`, `Period.contains`/`core/_period.py`, `period_start_date`/`period_end_date`/`domain/period.py`, `validate_revision_windows`, and `apply_period_offset`/`_period_offset_math.py`. This is a clean signal, not an absence of signal - the period/revision resolution surface reads as genuinely single-canonical.
+
+### gate-blind-spots-alias-evasion | critical | two structural gates report green against violations they cannot see
 
 ADDENDUM - GATE BLIND SPOTS, a finding class more serious than any single duplication below.
 
@@ -83,11 +59,19 @@ These are the same defect: a gate whose pattern does not fit the data's possible
 
 Audit implication: the whole class of AST-based structural gates in this repo needs the same review - the modelo-string-literal gate, the lazy-import policy gate, the import-hygiene scanner, the duplication runner, and the prompter-singularity gate all pattern-match names.
 
+### refutations-overview | info | two findings from this sweep were investigated against head and refuted
+
 ADDENDUM - REFUTATIONS. Two findings from this sweep were investigated by Opus agents against HEAD and REFUTED. Both would have caused real regressions had they been actioned as written. Recording them so no future pass re-raises them.
+
+### refuted-1-cross-period-suppression-derived-twice | info | composition, not duplication; verdict refuted, nothing changed
 
 REFUTED 1 - cross-period suppression "derived twice" (was Tier 3). Verdict: composition, not duplication. `_non_filer_modelos` (application/calculations/_cross_period_clean_state.py:369-385) is the sole owner of the suppression verdict, a three-way OR over `taxpayer_files_source`, `conditional_on_economic_activity` + `taxpayer_files_economic_activity is False`, and a caller-supplied set. The block at application/modelo/_verification_cross_period.py:212-221 filters on ONE condition into a local `conditional_source_modelos`, passes it through `derive_not_applicable_source_modelos`, and hands the result in as the `not_applicable_source_modelos=` kwarg - i.e. it produces the third OR-term ARGUMENT, not a verdict. Decisive discriminator: the inline set structurally excludes the suffered-retencion modelos (111/123/193, `taxpayer_files_source = false`) that the helper does suppress, so it cannot be the suppression set. The inline narrowing is LOAD-BEARING for fail-closed behaviour: any raised error or any verdict outside the accepted set collapses the whole result to None, so widening the query set can only preserve or destroy suppression, never add any - a naive consolidation risked an undetermined verdict on an unrelated modelo wiping the M130/M131 regime split. Gates on the untouched tree: 30 passed (test_cross_period_clean_state.py) and 31 passed (the three modelo-layer cross-period modules), both sequential, both unit-marked so selection was real. The undeclared/None fail-closed gate ALREADY EXISTS (test_m100_pagos_fraccionados_conditional_on_economic_activity, asserting False/True/None against a real registry snapshot) as does the suffered-vs-self-filed gate including the operator-visible not-applicable advisory. Nothing changed, no commit.
 
+### refuted-2-dual-binding-validator-convention | info | the premise is false; the raise-style helpers are invariant bodies, not dead siblings
+
 REFUTED 2 - "dual binding-validator convention still live" (was D1-1). Verdict: the premise is false. The four raise-style `validate_ledger_<family>_aggregation_binding_definition` functions are NOT uncalled siblings - they are the invariant bodies the registered accumulating validators delegate to, each via `return invariant_diagnostics(binding, "<family>", <raise-style check>)` at _ledger_bindings.py:1376, :1389, :1422, :1439. `invariant_diagnostics` (_binding_selector_utils.py:306-324) runs a raise-style check, catches RegistryValidationError, and converts it to one accumulating diagnostic string, so the `list[str]` never-raise contract is intact end to end. This two-layer shape is the norm, not a ledger anomaly: 15 of 24 dispatch entries use it (counterpart, invoice, the four detail-record families, donativo, previous-filing, irnr, impatriado, renta_expense), and `_BINDING_VALIDATOR_REGISTRY` holds exactly one accumulating entry per BindingSourceKind. Deleting the four would have deleted the op/fact enforcement itself - sum-only aggregation op, closed fact set, casilla scoping - a genuine under-validation regression. Gates: 83 passed sequential on the targeted binding suites, 3019 passed parallel across the whole registry test tree. Nothing changed, no commit.
+
+### refutation-2-followup-false-docstrings-and-visibility | medium | two real defects surfaced by refutation 2, both worth their own atomic change
 
 TWO REAL DEFECTS SURFACED BY REFUTATION 2, both worth their own atomic change:
 
@@ -95,7 +79,11 @@ TWO REAL DEFECTS SURFACED BY REFUTATION 2, both worth their own atomic change:
 
 (b) INCONSISTENT VISIBILITY OF AN INTERNAL DELEGATE. For counterpart / detail-record / donativo / previous-filing the inner invariant check is PRIVATE (`_validated_counterpart_selector`, `_validate_previous_filing_invariants`). For ledger / invoice / irnr / impatriado it is PUBLIC, exported through _bindings.py and the registry package facade `__init__.py` and pinned by tests/test_public_api_boundaries.py. A public export that reads like a top-level validator but is an internal delegate is exactly what made this look like a live parallel convention. Demoting them to private is the durable fix; it requires a facade change, a public-API-boundary test update, and handling one cross-package test consumer (application/aggregation/tests/test_impatriado_income_ledger.py:414,428).
 
+### pagos-fraccionados-third-route-not-yet-actioned | medium | a third route assembling the not-applicable argument, hardcoding two modelo codes
+
 NEW FINDING, adjacent to refutation 1, not yet actioned: `_pagos_fraccionados_not_applicable_source_modelos` (application/calculations/_relation_prefill.py:257-285, used at :522 and :755) assembles the same not-applicable argument by a THIRD route - reading bucket profile-path values rather than a TaxpayerProfile, and HARDCODING M130/M131 instead of consulting `dependency_classifications`. It is not a duplicate of the classification derivation and it does fail closed (empty set on missing facts), but it re-implements the profile-to-M130/M131 applicability reasoning that `derive_taxpayer_files_economic_activity` + `derive_not_applicable_source_modelos` own. A hardcoded modelo pair on a suppression-adjacent path is exactly what the registry-classification grounding rule exists to prevent.
+
+### bucket-event-emission-cluster-corrected-inventory | high | 22 production sites, a payload-version hazard, and two cli-layer violations
 
 ADDENDUM - BUCKET-EVENT EMISSION, corrected inventory and a blocking hazard the original finding missed.
 
@@ -108,6 +96,8 @@ BLOCKING SUPERSET HAZARD - the reason a naive consolidation here would have been
 HOUSE DEFECT - `emit_bucket_event` currently lives in application/modelo/_revision_persistence.py but composes only `domain.buckets` symbols (BucketEvent, derive_bucket_event_id, append_bucket_event, BucketEventHistoryRepositoryProtocol) plus one modelo-flavoured payload-version constant. Its correct home is domain/buckets, beside `append_bucket_event`. Routing the cross-package sites through application.modelo would make modelo a hub and mint NEW package edges from `inventory` and `ledger`, neither of which imports application.modelo today - edges that the relocation would then delete. Correct order is therefore: fix the CLI-layer violation, widen the emitter for payload_version, relocate the emitter to domain/buckets as one atomic `relocation:emit_bucket_event` commit including regenerated docs/api stubs, and only then route the wrappers.
 
 SECOND CLI-LAYER VIOLATION, previously unnamed: entrypoints/cli/_ledger_ratios_cli.py:41 `_emit_ratios_event` and :88 `_emit_ratios_censo_override_warning` emit directly from the entrypoint layer, and there is NO application-layer ratios service at all - the whole mutation lives in the CLI. This is a larger gap than the profile-bundle case (which merely bypasses an existing service): closing it requires authoring a new application module, so it is its own decision and its own commit. The known first violation, entrypoints/cli/_config/_profile_bundle.py:831 `_emit_profile_lifecycle_event`, additionally hand-rolls the catalogue insert instead of calling `append_bucket_event`.
+
+### expense-gasto-source-kind-naming-not-a-duplicate | medium | not duplication, but a real and larger naming defect on both stems
 
 ADDENDUM - EXPENSE/GASTO SOURCE KINDS: not duplication, but a real and larger naming defect. Verdict from a full investigation against HEAD.
 
@@ -125,6 +115,8 @@ FULL RENAME SURFACE, for whoever executes: registry/_ledger_bindings.py (67 site
 
 STANDALONE DEFECT AND RENAME TRAP, found independently: domain/renta/_ledger_expenses.py:39 and :210 hardcode `LEDGER_RENTA_EXPENSE_SOURCE = "ledger_renta_expense_aggregation"` as a raw string literal plus a `Literal[...]` annotation instead of deriving from `BindingSourceKind`. Fixing that to derive from the enum is worth doing on its own merits and de-risks the rename by removing a site a sweep could miss.
 
+### bucket-id-resolver-cluster-landed | info | landed as commit 58c02ee8e7; reframes how much of the inventory is already-fixed
+
 ADDENDUM - BUCKET-ID RESOLVER CLUSTER: landed as commit 58c02ee8e7, and the result reframes how much of this whole inventory is already-fixed work.
 
 THREE OF THE FIVE REPORTED SITES WERE ALREADY CANONICAL. `adapters/persistence/profile/_modelo_runtime.py:39`, `adapters/persistence/profile/_filing_runtime.py:39`, and `application/filing/_runtime_repository.py:32` all import `resolve_repository_bucket_id` from `cadrumo.core` and delegate in one line at HEAD. The sweep reported `_filing_runtime.py` as having "no visible import of the canonical"; the import is at line 31. ADR `2026-06-13-semantic-dedup-epic-adr` (F3) already landed exactly these three. IMPLICATION FOR THIS AUDIT: a prior semantic-deduplication campaign exists, and some fraction of the Tier 1 and Tier 2 inventory in this document is re-discovery of work that campaign already completed. Any future pass over this inventory must re-read HEAD per site before acting - the searchers read a tree that was, in places, months stale relative to the fixes.
@@ -139,7 +131,11 @@ CORRECTLY EXCLUDED FROM THE CLUSTER (each a different concern, not a duplicate):
 
 GATES: ruff and ty clean on 4 files; `pytest --collect-only -q` gave 14064/17332 collected with zero collection errors; 47 passed on the bucket-pointer/invoice/runtime-repository suites; 74 passed on the review-package and modelo-work CLI suites. Every selection used an explicit `-m "(unit or integration) and not external_tool and not os_keychain"` because the repo default of `-m 'unit and ...'` would have selected nothing for the integration-marked CLI modules and exited green - a vacuous pass, not a verification.
 
+### cross-agent-correlation-lazy-import-red-gate | medium | a red gate was traced to concurrent bucket-event routing work, not a pre-existing regression
+
 CROSS-AGENT CORRELATION, recorded because it nearly caused a mis-triage: this agent reported `src/cadrumo/tests/test_lazy_import_policy.py` failing 4 tests on 8 unallowlisted runtime edges and attributed them to peer campaigns. Five of those edges - inventory._service, ledger._business_operation_invoice, user_profile._bundle_export, user_profile._lifecycle, and workflow._events, each reaching `application.modelo` - are precisely the five bucket-event wrappers ANOTHER agent was concurrently routing via function-local imports at the `application.modelo` facade. The gate exists to catch exactly that class of edge. This is empirical confirmation of that agent's own house finding: relocating `emit_bucket_event` from application/modelo to domain/buckets does not merely avoid new coupling, it DELETES these five edges and is therefore the fix for the red gate, not a follow-up nicety. Lesson for the campaign: in a shared worktree, "pre-existing failure, not my surface" must be verified against concurrent agents' in-flight edits before it is believed.
+
+### refuted-3-schema-version-ceiling-vs-equality | critical | corrects the audit's own highest-confidence, caveat-free tier-1 claim
 
 ADDENDUM - REFUTED 3, and a correction to this audit's own Tier 1. This was the finding the compiled report rated highest-confidence and caveat-free. It was the most wrong item in the inventory.
 
@@ -157,9 +153,9 @@ Facade note: `ensure_schema_version_readable` is deliberately ABSENT from the st
 
 GATES (evidence for the refutation, tests genuinely executed - all four modules carry pytestmark unit + hex_persistence_adapter): 34 passed in 11.87s across test_schema_lineage.py, test_calculation_repository_roundtrip.py, test_event_history_roundtrip.py, test_transactions_repository_roundtrip.py. That run contains both gate kinds the conversion would have broken: save/load strict-equality roundtrips, and the mutate-the-payload-and-assert-refusal proofs - test_calculation_revision_catalogue_unsupported_storage_version_is_localized (future inner stamp, asserts CalculationRevisionPersistenceError plus its exact message key and `{reason: unsupported_envelope_version, stored_schema_version, max_supported_version}`), test_bucket_event_inner_schema_version_drift_is_structured (asserts BucketEventHistoryPersistenceError plus `{namespace, object_key, schema_version, expected}`), the transactions gate asserting object_key and bucket_id, and the event-history in-place ciphertext-tamper proof. Nothing was changed, nothing committed, no ceiling weakened.
 
-NEW GENUINE FINDING, requiring a DECISION RECORD rather than a coder sweep: all 22 layer-2 checks use `>` where the layer-2 canonical contract is `!=`. Post-upgrade, an inner stamp BELOW current is drift that all 22 sites currently accept SILENTLY. Tightening to equality would harden a persisted-read boundary across 22 paths, but it changes a data-integrity refusal, so it belongs under the compatibility-lifecycle regime as an ADR - not a mechanical consolidation.
-
 METHODOLOGICAL LESSON FOR THIS AUDIT, applying to every remaining unactioned finding above: the sweep's own confidence ratings were inversely predictive. This item was rated high-confidence precisely because signature similarity is the easiest thing for semantic search to see, while constraint shape, error-branch identity, diagnostic context, and layer position are invisible to it. Four findings have now been investigated and refuted, all four correctly, and two of those refutations prevented regressions. Treat every remaining PROMOTABLE claim in this document as unverified until an agent has read both sides at HEAD and compared constraint shape, not signature.
+
+### progress-ledger-expense-source-constant-retired | info | commit bc87cbeaa9022...; rename-trap fix ahead of the expense/gasto sweep
 
 PROGRESS - commit bc87cbeaa90229e053f89a6d5749b255baa58458, the standalone rename-trap fix ahead of the expense/gasto sweep.
 
@@ -171,7 +167,11 @@ A TAUTOLOGICAL TEST WAS FIXED IN PASSING: the prior assertion in tests/test_ledg
 
 Gates, all sequential with an explicit `-m ''` and `-o addopts=""` because the repo default marker selection would have selected nothing and exited green: ruff check and format clean on 3 files; `ty check` clean; pyright strict on the domain reporting 0 errors; 130 passed across the renta domain, registry taxonomy, expense-binding and both aggregation suites; 11 passed on test_import_hygiene_gate.py; and `pytest --collect-only -q` giving 14140/17430 collected with zero collection errors, run immediately before the commit. Post-commit verification at HEAD confirmed the field default is the enum member, its `.value` is byte-identical to the stored token `ledger_renta_expense_aggregation`, and the retired alias is absent from the facade.
 
+### cross-campaign-red-gate-docstring-links-not-owned | info | a pre-existing red gate belonging to another live campaign
+
 CROSS-CAMPAIGN RED GATE, not owned by this campaign and not actionable from it: `src/cadrumo/tests/test_docstring_core_struct_links.py` fails 2 tests, requiring cross-links from `cadrumo.application.user_profile._overview` to `:class:`SensitivityClass`` and `:class:`UserProfileRecord`` (the latter also from `build_profile_overview`). That module is UNTRACKED in git - a live peer's brand-new file, alongside further uncommitted WIP in user_profile/{__init__,_bundle,_bundle_export,_lifecycle}.py. No renta or registry module appears in the violation list. Whoever owns that campaign must add the two cross-links; until then the docs lane reds for anyone who runs it, and any agent seeing it should NOT triage it as their own surface.
+
+### progress-concept-lifecycle-relocation | info | commit db28b65b0907...; ConceptLifecycle acquires one declared home
 
 PROGRESS - commit db28b65b0907f3dd63f92c5d977d4909764cd2f6, `relocation:ConceptLifecycle`, 24 files, 290 insertions / 58 deletions. The concept-lifecycle closed axis now has one declared home.
 
@@ -189,6 +189,8 @@ GATES: 62 passed on corpus_search plus the wizard copy-sources suite; 21 passed 
 
 COMMIT-HYGIENE PRECEDENT WORTH REUSING: the agent's `apidocs scaffold` run regenerated stubs for peers' new modules and the core toctree also picked up a `_credentials` line belonging to pre-existing drift it did not own. It staged only its own toctree line via a HEAD-anchored `git apply --cached` patch, verified the staged set carried zero foreign hunks, and committed the verified index - leaving the peer's line unstaged and untouched. That is the correct shape for landing a change that a shared generator touches.
 
+### incident-rag-index-destroyed-itself | critical | the sweep's own write volume destroyed its own discovery substrate, undetected by the health signal
+
 CAMPAIGN-LEVEL INCIDENT - THE SWEEP DESTROYED ITS OWN DISCOVERY SUBSTRATE, AND THE SERVICE REPORTED HEALTHY THROUGHOUT.
 
 Measured directly at 2026-07-25T16:19 local: `code_count` = 214 against 3,634 tracked src/**/*.py files, down from 27,902 earlier in the same session. `degraded_reasons` = `[]`. The code generation job sat `state: running` with progress 109/109 - i.e. completing tiny incremental rebuilds that never converge on the tree.
@@ -201,11 +203,19 @@ CONSEQUENCE FOR THIS AUDIT'S PROVENANCE: every RAG discovery gate run during the
 
 REMEDIATION APPLIED: new agent dispatches paused to let the fleet drain and the watcher settle, so the index can converge. The service was deliberately NOT restarted - a restart discards the in-progress job and induces a perpetual-reindex state. No agent was permitted to reindex or restart either.
 
+### coordinator-adjudication-canonical-json-grep-substitution | info | a narrow, stated substitution of exhaustive grep for the unavailable semantic gate
+
 COORDINATOR ADJUDICATION RECORDED: for the canonical-JSON-then-SHA256 consolidation, the semantic gate was substituted by exhaustive grep coverage, on the grounds that the coverage is complete BY CONSTRUCTION rather than by diligence - any implementation of that concept must call `json.dumps`, and every `sort_keys=True` in production was swept. Byte-identity was established down to separators, key ordering, and encoding, so the persisted digest cannot move. The substitution is stated in the commit message rather than left implicit. This adjudication is narrow and does not generalise: it applies only where a concept has a mechanically exhaustive textual signature.
+
+### toml-cluster-resolved | info | the committed-toml reader cluster is closed with no edits
 
 TOML CLUSTER, resolved without edits: `domain/categories/_registry.py` ALREADY delegates to `read_toml` with an `error_factory` - that finding was stale. `core/_bucket_pointer.py::from_toml` must NOT be converted, and the real reason is not the suspected datetime handling (its pair only ever handles two scalar keys) but a documented `tomllib.TOMLDecodeError` contract: verified in-environment, `rtoml.TomlParsingError` is a `ValueError` subclass but NOT a `TOMLDecodeError` subclass, so conversion would falsify a documented contract that `core/_bucket_pointer_io.py:70` also declares. `core/external_constants.py` and `agent/eval/_runner.py` call raw `tomllib` with NO except branch at all, so the decode error propagates untyped and no caller catches it; routing them through `read_toml`/`parse_toml_text` would ADD a refusal contract rather than preserve one, making "which typed error should each raise" a contract decision rather than a de-duplication. `external_constants` additionally parses one branch from `importlib.resources` text rather than a Path, so only `parse_toml_text` fits and the conversion would be partial.
 
+### false-prose-toml-sole-surface-adr | medium | a fourth instance of prose asserting a guarantee that does not hold
+
 FOURTH INSTANCE OF FALSE PROSE ASSERTING A GUARANTEE THAT DOES NOT HOLD: ADR `2026-07-07-registry-toml-parser-adr` states that `core/_toml.py` "is the SOLE TOML-parsing surface project-wide". That was already untrue when written - `core/external_constants.py`, `agent/eval/_runner.py`, `application/corpus_search/_terminology.py` and `application/workflow/_profile_bucket_scan.py` all use raw `tomllib`. The ADR's parser-correctness argument is sound and thoroughly evidenced (rtoml/tomllib parity proven across all 16,260 registry files plus offset and local datetime, date, time, inf/nan, large-exponent and duplicate-key probes), so parser behaviour is NOT the gap; the gap is that its safety argument rests on `error_factory` re-wrapping the parse failure, which is exactly what the unconverted sites lack. The ADR's sole-surface premise needs correcting or the sites need enrolling. This joins the false resolve-time-defence-in-depth docstrings, the ALT-FINGERPRINT rationale marker, and the two blind structural gates as a recurring pattern: prose in this repo asserts guarantees that were never or are no longer true, and those assertions actively manufacture false audit findings.
+
+### resolved-gate-blind-spots-alias-aware | critical | commit a5d21ced8a; teaches the structural gates to resolve aliases and prove they can fail
 
 RESOLVED - GATE BLIND SPOTS, commit a5d21ced8a `test(gates): teach the structural gates to resolve aliases, and prove they can fail`. 4 files, +762/-62. This closes the highest-value finding in the campaign.
 
@@ -229,6 +239,8 @@ PRE-EXISTING RED NAMED, NOT PATCHED (per full-tree-gate-must-distinguish-owner):
 
 METHOD NOTE: the agent found its own pattern by searching first - `test_no_skip_xfail.py` already carried a complete alias-resolution inventory (module aliases, from-import aliases, assignment rebinding chains), so the tree already held a worked solution to this exact defect. It modelled the fixes on that rather than inventing a shape. Worth remembering: before building a structural gate here, look for the one that already solved the same problem.
 
+### coordinator-ruling-decimal-parsing-canonical-home | high | core.decimal owns the grammar; a contradictory-brief collision was averted
+
 COORDINATOR RULING - DECIMAL PARSING CANONICAL HOME, recorded here because a second campaign's agent found this document on its own and quoted it while asking exactly this question.
 
 RULING: `cadrumo.core.decimal` owns the decimal GRAMMAR. `entrypoints/cli/_common.py`'s regex-based `parse_decimal_amount` / `parse_optional_decimal_amount` are a SECOND grammar for one concept and must be reconciled into the core primitive, becoming thin localised-refusal shells over it rather than independent implementations. Before that reconciliation lands, the two accepted-input sets must be proven identical; any input the regex accepts or rejects that `try_parse_canonical_decimal` does not is itself a finding to report, not a difference to paper over by widening or narrowing the CLI boundary. CLI-layer wrappers KEEP their own refusal shells - translation key, `typer.BadParameter`, optional and default behaviour - because a per-command message key is deliberate; only the grammar is shared.
@@ -240,6 +252,8 @@ TREE STATE ESTABLISHED BY THAT AGENT (supersedes the inventory recorded earlier 
 STILL OPEN AND STILL THE PRIORITY: `application/modelo/_calculate_input.py::_decimal`, the bare `Decimal()` on the `modelo calculate --set` path. That is operator-supplied casilla values reaching a tax calculation with no canonical-grammar validation - a silent under-validation defect rather than a duplication nit, and the reason this cluster was ranked as correctness work.
 
 RING-FENCE UNCHANGED: the bank-export (`adapters/inbound/financial/providers/_base.py::parse_amount_value`), AEAT-PDF (`adapters/inbound/pdf/_label_regex.py`, `adapters/inbound/justificante/_extract.py`), and oracle (`domain/calculations/registry/_renta_web_open_oracle.py`) parsers are DIFFERENT accepted-input sets parsing real AEAT artefacts. They are not part of this cluster and must not be merged into it. Where two sites share a grammar but differ only in error contract (raise-with-context versus best-effort `None`), the correct shape is one parser plus a thin `try_*` wrapper - not two implementations.
+
+### resolved-pagos-fraccionados-applicability-route | critical | commit feb71e30e6; the obvious consolidation would have stripped real tax credits
 
 RESOLVED WITH A CORRECTION - the pagos-fraccionados applicability route, commit feb71e30e6 (2 files, 312 insertions, 11 deletions). This entry contains the campaign's most important single measurement: proof that the obvious consolidation would have STRIPPED REAL TAX CREDITS.
 
@@ -267,6 +281,8 @@ Canonical is the better answer: `derive_modelo_applicability` resolves an undecl
 
 BLOCKER AND THE APPROVED PLAN. The canonical pair is unreachable from `application.calculations` without a new function-local import, and `tests/test_lazy_import_policy.py` currently carries live peer WIP editing `_SITE_CEILINGS[APPLICATION_DEFERRAL]` (523 -> 535) and `_ALLOWLIST_EDGE_CEILING` (477 -> 487); `test_ceilings_carry_no_slack_over_the_live_counts` demands EXACT equality, so two agents cannot both ratchet those constants without one redding the gate. APPROVED PLAN (held pending release of two peer-owned files): relocate `derive_taxpayer_files_economic_activity` and `derive_not_applicable_source_modelos` into `domain/calculations/registry/_applicability.py`, beside their siblings `derive_modelo_applicability`, `derive_modelo_202_modality` and `derive_tax_route`. They are pure `TaxpayerProfile -> verdict` functions with no verification coupling, so that is their proper home; the move lets both layers import EAGERLY, creating no new lazy edge and requiring no ratchet edit at all - avoiding the collision rather than negotiating it. One atomic `relocation:derive_taxpayer_files_economic_activity` commit across the canonical site, application/modelo/{__init__,_filing_actions,_export}.py, _modelo_work_verification_cli.py, the two verification modules, every `__all__` baseline, and regenerated docs/api stubs. Verified prerequisite: `projection_for_taxpayer` self-registers the wizard catalogue at function scope (probe showed registered False -> True across one call), so the relocation preserves the non-CLI property the subprocess test pins.
 
+### refuted-5-fixed-width-export-encoders | critical | consolidation proven unsafe on the surface that writes filed bytes
+
 REFUTED 5 - THE FIXED-WIDTH EXPORT ENCODERS. No commits, consolidation proven unsafe, and the finding's own framing corrected by one structural level. This surface writes the bytes a human files with the tax authority, so the refusal matters more than a fix would have.
 
 THE MODEL COMPARISON WAS WRONG BY A LEVEL. `ExportRecordDefinition.fields: tuple[ExportFieldDefinition, ...]` (_schema_surfaces.py:703 / :648) - the record CONTAINS the field. So application/filing/_export.py and application/modelo/_m145_communication_records.py are NOT two models; they are ONE model with TWO CONTRADICTORY CONSUMERS. `RecordFieldSpec` (_formats/_record_spec.py:136) is the only genuinely foreign model, differing on eight axes: offset and length optional-ge0 versus required-ge1 (1-based BOE); `kind` meaning value SOURCE (CASILLA/BINDING/LITERAL/HEADER/DRAFT/COMPUTED/FILLER) versus semantic TYPE (ALPHANUMERIC/NUMERIC/CURRENCY/DATE/RESERVED); semantic type as a separate `data_type` field versus folded into `kind`; `padding` with char and side FUSED plus a separate `justification` versus orthogonal `pad_char` + `justification` with no "none" member; `signed: bool` versus a `signed_mode` enum; free-form `date_format: str` versus a 2-member `DateFmt` enum; legal_refs/source_refs REQUIRED versus absent. Decisively, `RecordFieldSpec.kind` corresponds to `ExportFieldDefinition.data_type`, NOT to its `kind` - unifiable only through a lossy remap.
@@ -284,6 +300,8 @@ CORPUS EVIDENCE: 23 fixed_width layouts, 7,944 real export fields probed. Exactl
 
 Gates on the untouched tree, marker `-m "unit or integration"` (explicitly not the repo default, which deselects integration modules and exits green): 183 collected, `183 passed in 105.45s` at one HEAD and `183 passed in 81.90s` re-run after HEAD moved mid-session under a peer ledger refactor - re-run specifically to keep the green claim honest. Coverage included the golden-SHA roundtrip, envelope, currency-edge-case, completeness-parity and completeness-set suites, so the blank-required-casilla refusal on the write path is confirmed still firing.
 
+### resolved-rounding-duplication-and-mode-anomaly | high | commit 961485c7c6ff...; a live wrong-mode trap in test expected values
+
 RESOLVED - ROUNDING DUPLICATION AND MODE ANOMALY, commit 961485c7c6ff98bb1f1428b5b12921a0075fb2d5. Seven local helpers retired onto `core.money.round_to_cents` across 7 files (~100 call sites, both local definitions removed, the support module's re-export dropped from its 3 importers, now-unused ROUND_HALF_UP imports cleaned).
 
 THE ANOMALY WAS FOUR COPIES, NOT ONE, WITH WIDER REACH THAN REPORTED. All four were `return value.quantize(Decimal("0.01"))` with NO rounding argument, i.e. ROUND_HALF_EVEN: _modelo_131_modulos_engine_support.py:572 (and this one was RE-EXPORTED to three further test modules - test_modelo_131_modulos_engine, _food, _retail_services), test_modelo_131_modulos_engine_2024_backfill.py:90, test_modelo_131_modulos_engine_2026_rollforward.py:81, and test_modelo_303_regimen_simplificado_modulos_engine.py:74.
@@ -299,6 +317,8 @@ NO PRODUCTION MONEY BUG: four production bare-mode cent-quantize sites exist and
 OPEN FOLLOW-UP, out of scope and not touched: 45 test-side bare-mode cent-quantize sites remain, several shaping tax figures under the same latent class - test_modelo_151_beckham_cuota_continuity.py:94 and :97, test_modelo_202_cuota_base_ejercicio_anterior_continuity.py:299, test_modelo_190_111_reconciliation_continuity.py:261, five sites in test_modelo_210_irnr_continuity.py, and test_e2e_ledger_m303_recargo_cross_period.py. Worth one dispatch alongside the gate widening.
 
 Gates: `137 passed in 36.43s` sequential `-n 0 -m unit` across the six modulos modules plus core/money/tests/test_money.py plus the enrollment gate; `3019 passed, 2 warnings in 209.77s` parallel across the full registry test tree with zero FAILED lines; `pytest --collect-only -q` 14187/17482 collected with no errors; ruff check clean and format clean after a formatting pass; `dev.quality.types` and `dev.quality.relative_imports` both exit 0 with no diagnostics in the touched files. A peer's live WIP in test_modelo_303_registry.py appeared mid-session and was left untouched and out of the commit, with the staged set verified as exactly the seven authored files before an explicit-pathspec commit.
+
+### decision-record-inner-envelope-version-drift | medium | adr proposed at .vault/adr/2026-07-25-code-dedup-sweep-adr.md; no source touched
 
 DECISION RECORD DELIVERED - inner-envelope version drift. ADR scaffolded at .vault/adr/2026-07-25-code-dedup-sweep-adr.md, status `proposed`, currently UNTRACKED and uncommitted. No source file was touched.
 
@@ -319,6 +339,8 @@ VAULT VERIFICATION, done properly rather than assumed: `vault check all` exits 0
 OPERATIONAL HAZARD RECORDED: `vault add adr` supports no `--topic` flag, so there is exactly ONE ADR filename slot per feature per date. With many agents dispatched under the `code-dedup-sweep` feature tag, any second agent wanting an ADR today collides on this filename. Future campaigns should either allocate distinct feature tags per decision or scaffold ADRs from the coordinator serially.
 
 PENDING: both this ADR and this audit document are untracked. They need committing under an explicit pathspec by an agent authorised to run git, or they will be lost to a peer's broad `git add`.
+
+### refuted-6-two-parallel-evidence-systems | high | commit cd14309ddbc...; a permissiveness ladder over one byte payload, not competing systems
 
 REFUTED 6 - THE "TWO PARALLEL EVIDENCE SYSTEMS". Not substitutable, and the finding's premise was already satisfied by the code. Commit cd14309ddbcbe98500f0c946df9f4c08900f67a0 landed only the genuine cheap win (3 files, behaviour-preserving, evidence surface but NOT a persistence boundary).
 
@@ -349,6 +371,8 @@ TWO HONEST NEGATIVE RESULTS worth recording as method. First, the nitpicky Sphin
 
 Also noted, not this campaign's surface: `just check-types` is red at HEAD with 39 advisory diagnostics, all in application/user_profile/*, entrypoints/cli/_config/__init__.py:888, entrypoints/cli/tests/, tests/_marker_hook.py and storage/master_key/tests/ - zero in the three committed files. The count moved 36 -> 39 mid-session with three new undefined-name errors in user_profile/_bundle.py, confirming a peer is mid-write there.
 
+### resolved-canonical-json-sha256-duplication | info | commit 921a78ce6d; byte-identity proven empirically across both sites
+
 RESOLVED - canonical-JSON-then-SHA256 duplication, commit 921a78ce6d (2 files, 4 insertions, 9 deletions, one atomic commit covering both sites).
 
 BOTH SITES ROUTED onto `core.hashing.content_hash_hex`: `adapters/outbound/aeat/auth/_session_store.py::_storage_state_sha256` and the sibling found out of scope at `application/aggregation/_atribucion_member.py:168`, which built `json.dumps(record.model_dump(mode="json"), sort_keys=True, separators=(",", ":")).encode(UTF_8_ENCODING)` - identical sorting, separators and encoding, differing only by a `"sha256:"` prefix that was preserved so the full string is unchanged. `_JSON_OBJECT_ADAPTER.validate_python` was PRESERVED at the session-store boundary: it is separate JSON-safety validation, not digest mechanics. No `__all__` promotion was needed - `content_hash_hex` is absent from `core/__init__.py` but `core.hashing` is a public module both files already imported, so no private-module violation arises.
@@ -363,7 +387,11 @@ TWO SELF-CORRECTIONS the agent volunteered, both material. First, it had earlier
 
 Gates, marker `-m "unit or integration"` (broader than the repo default, so nothing integration-marked was silently skipped): ruff check and format clean; `ty check` clean (the canonical checker here, mypy not being installed); `pytest --collect-only -q` 14187/17482 collected with no errors; `816 passed, 6 warnings in 236.32s` across the hashing, auth and aggregation suites; `30 passed in 20.00s` run verbosely to CONFIRM the load-bearing cases actually executed rather than assuming they were in the 816 - specifically the real-encryption session roundtrip, the non-JSON rejection proving the preserved validation still refuses, and the hash-mismatch resume path that exercises digest comparison; `46 passed in 20.18s` for the AtribucionMember resolver, run explicitly because those modules live outside the three directories already covered; and the held serial benchmark run separately. No keychain failures arose, so nothing environmental to discount and no guard was touched.
 
+### toml-cluster-closure-confirmed | info | committed-toml cluster closed with no edits, verdicts recorded earlier
+
 CLUSTER 2 (committed-TOML) closed with no edits, verdicts recorded earlier in this document: one site already delegates, one is genuinely unconvertible on a documented `tomllib.TOMLDecodeError` contract that `rtoml.TomlParsingError` does not satisfy, and two would ADD a refusal contract rather than preserve one - making "which typed error should each raise" a contract decision rather than a de-duplication.
+
+### registry-caching-defect-and-three-refutations | high | commit 31ce3018bf; one real defect fixed, three sharper-rated claims refuted
 
 REGISTRY CACHING - ONE REAL DEFECT FIXED, THREE CLAIMS REFUTED. Commit 31ce3018bf (2 files, explicit pathspec). This dispatch went one-for-four, and three of the coordinator's hypotheses were wrong, including the one rated sharpest.
 
@@ -382,3 +410,146 @@ BLAST RADIUS SCOPED HONESTLY, not inflated: the registry root is `bundled_path("
 THE FIX plus THE GATE WHOSE ABSENCE ALLOWED IT: the memo and its now-unused `lru_cache` import were removed, leaving the fingerprint-keyed chain as the single authority, with a docstring stating why that layer is deliberately uncached. Law-determined resolution is untouched - only `filing_year` and the bare period token are passed, never a revision id. New gate `application/filing/tests/test_registry_snapshot_freshness.py` uses two real registry trees and two real `ValidatedRegistryAuthority` instances over real TOML, substituting nothing about snapshot resolution itself (only which authority the module reaches, which is exactly what a resource reset changes) - no mocks of the subject, no skips, no xfail. PROVEN NON-TAUTOLOGICAL by re-applying the removed `lru_cache` in-process and confirming `GATE WOULD FAIL (stale served): True`. That anti-tautology discipline was applied unprompted, and it is the standard every gate added by this campaign has met.
 
 Gates, all SEQUENTIAL (`-n 0 -p no:randomly`) with explicit `-m "unit or integration"` rather than the default selection: `3 passed in 163.50s` (new freshness gate), `41 passed in 150.48s` (registry compiled-cache, loader-cache-isolation, fingerprint-content-collision, cache-eviction, disk-cache-loader-fingerprint, temporal and validation-verdict-cache suites), `261 passed in 297.97s` (the whole application/filing tests suite), `14197/17492 collected` pre-commit, ruff check and format clean. No failures, so no parallel-versus-sequential re-triage was required. `lru_cache` confirmed absent at HEAD after the commit, as a peer-sweep check.
+
+### bucket-event-emission-attribution-and-fix-forward-plan | high | attribution resolved; an emergency landing explained; a plan improving on the coordinator's ruling
+
+BUCKET-EVENT EMISSION - ATTRIBUTION RESOLVED, AN EMERGENCY LANDING EXPLAINED, AND A FIX-FORWARD PLAN THAT IMPROVES ON THE COORDINATOR'S RULING.
+
+ATTRIBUTION: all five `-> application.modelo` runtime edges that reddened `test_lazy_import_policy.py` belong to this campaign, traced with `git log -S`. Four (`inventory._service`, `ledger._business_operation_invoice`, `user_profile._bundle_export`, `workflow._events`) came from this campaign's commit 087f8a5a55. The fifth (`user_profile._lifecycle`) was introduced by PEER commit d60a70515a, a no-pathspec sweep that captured this campaign's UNCOMMITTED `_lifecycle.py` edit - so the line is this campaign's while the commit is the peer's, which is precisely why an earlier agent mis-attributed it to the profile campaign: `git blame` points at the peer's SHA. LESSON: in this worktree, `git blame` attribution is unreliable across a peer's broad commit, and `git log -S` on the specific symbol is the discriminator.
+
+SECOND DOCUMENTED HARM FROM A NO-PATHSPEC PEER COMMIT, and this one broke the tree. Peer sweep d60a70515a left HEAD UNIMPORTABLE: `_lifecycle._emit_event` called `from ..modelo import emit_bucket_event` while the modelo facade exported no such name and had no module-level `__getattr__`, so every profile register / edit / remove / rename raised ImportError at committed HEAD; additionally `user_profile.__all__` advertised `register_imported_profile_bundle` against a `_bundle.py` that did not define it. Landing commit 087f8a5a55 (the modelo facade plus `_bundle.py`) was the only way to close that breakage. This is the second incident in one session traceable to a commit without an explicit pathspec - the first swept another agent's staged work - and it is the concrete argument for the pathspec discipline this campaign has applied throughout.
+
+WHAT ACTUALLY LANDED BEFORE THE COORDINATOR'S RULINGS ARRIVED, recorded because the rulings were written against stale state: 087f8a5a55 bundled the `payload_version` widening, the five-wrapper routing AND the CLI-layer emission move; cda1e320a9 added six allowlist entries to `test_lazy_import_policy.py` and raised its ceilings by a measured +4/+4. Two of those actions the rulings would have forbidden - bundling instead of sequencing, and adding allowlist entries. The emergency justified the urgent landing; the bundling was avoidable; the allowlist entries are self-correcting because the fix-forward plan strikes them.
+
+THE FIX-FORWARD PLAN, endorsed, and it improves on the coordinator's ruling in two respects. (i) The primitive moves to `domain/buckets/_event_repository.py` beside `append_bucket_event` with `payload_version` REQUIRED rather than defaulted - strictly stronger than the ruling's widening-with-default, because a default lets a site inherit another domain's version by OMISSION, which is the exact failure mode the ruling existed to prevent, and because a domain module must not carry a modelo-flavoured constant at all. (ii) `application/modelo` keeps its own narrow wrapper supplying `_BUCKET_EVENT_PAYLOAD_VERSION`, RENAMED `emit_modelo_bucket_event` so it is not a same-named passthrough - a same-named wrapper would have read as exactly the temporary bridge the no-shims rule bars. Remainder of the plan: strike `emit_bucket_event` from `application.modelo.__all__` once nothing outside modelo reaches it; repoint the six routed sites at `domain.buckets` with MODULE-LEVEL imports, since `domain.buckets` is a leaf with no cycle to break and therefore no deferral to justify - so the offending edges CEASE TO EXIST rather than move; strike the six allowlist entries and lower the ceilings by a delta RE-MEASURED with the gate's own walker rather than assumed symmetric, because module-level imports remove more sites than the six edges alone; add the payload-version pinning test; regenerate docs/api stubs with `apidocs scaffold` and confirm `scaffold --check` clean; run `pytest --collect-only -q` immediately before committing; and stop and report rather than leave a half-landed relocation with live function-local edges.
+
+CORRECTED INVENTORY NOTE from the same agent's earlier survey: the emission cluster is 22 production sites, not the ~6 this audit originally recorded, and SEVEN of the reported sites in `application/modelo/_review_package_collab_audit.py` were FALSE POSITIVES - all seven already route through the generic emitter, and that module's docstring cites the no-parallel-write-path rule explicitly. Twelve in-modelo, live, bucket-maintenance, auth and custody sites remain unrouted by deliberate deferral until after the relocation, so they are not re-pointed twice.
+
+### resolved-decimal-parsing-cluster | high | four commits close the decimal grammar cluster and surface a live money-corruption defect
+
+RESOLVED - THE DECIMAL-PARSING CLUSTER. Four commits: 0a7f1bf797 (core grammar plus maritime plus calculate-input), 625f94b299 (one home for the optional euro-amount option, 8 callers guarded), cf328bdd28 (financial import refuses scientific notation), 208e4af672 (_common.py delegates to the core grammar). Governing ADR located: 2026-06-10-ledger-input-localization-adr.
+
+THE MOST SERIOUS DEFECT THE CAMPAIGN HAS FOUND, and it was UNPROMPTED - not in any finding, discovered while mapping grammars. `adapters/inbound/financial/providers/_base.py::parse_amount_value` SILENTLY REWROTE SCIENTIFIC NOTATION instead of refusing it. Its sanitisation drops non-numeric characters so currency symbols are tolerated; for an exponent marker that same drop changes the MAGNITUDE: `1.23E+05` became `1.2305` where the true value is 123,000.00; `2E+10` became `210` where the true value is 20,000,000,000.00; `1E3` became `13`. Every result was parseable, plausible, passed the `is_finite` guard, and landed in the ledger feeding EVERY modelo aggregation. A spreadsheet re-export of a large amount produces exactly this shape, so this was live rather than theoretical. Now refuses, with all legitimate tolerance asserted unchanged (three sign conventions, separator inference, currency symbols and codes). Gates: financial suite 74 passed, ledger application suite 428 passed.
+
+PART 1 - THE UNDER-VALIDATION DEFECT, closed, and it was THREE sites not two. Beyond the two recorded sites, `entrypoints/cli/_modelo_cli_support.py::optional_decimal_option` carried the same bare-`Decimal` shape with 8 callers. Forms previously admitted as real figures, now refused: `1e3` (became 1000), `1E3`, `1e-3`, `+140000`, `.5`, `1.`, `1_000`, `NaN`, and both signed infinities. The maritime path additionally admitted `36.500` as `Decimal("36.5")` - a EUR 36 salary where the operator meant EUR 36,500. Error types, message keys and optional/default behaviour preserved exactly; `-` still conforms so domain validators continue reporting negatives themselves.
+
+A JUDGEMENT CALL THAT CORRECTED THE COORDINATOR'S BRIEF: the euro-cent cap was deliberately NOT applied to the calculate path. `test_currency_edge_cases.py` proves the AEAT fixed-width encoder ROUNDS sub-cent values (`2.345` to 235 cents, ROUND_HALF_UP, per the Instrucciones), so a 2-digit cap on that channel would refuse figures the export layer is built to accept - the same defect class as Part 1, inverted. The correct axis is hand-typed euro amounts (capped) versus calculation input channels (uncapped), not one uniform grammar.
+
+THE COMPETING-CANONICAL RULING, REFINED: not a contradiction but a MISSING DISTINCTION, now written into both docstrings. `core.decimal` owns grammar primitives and tolerant coercion; `entrypoints/cli/_common.py` owns the strict CLI refusal. The forcing constraint is architectural rather than aesthetic: `application/modelo/_calculate_input.py` needs the same grammar and CANNOT import `entrypoints` under the layered import contract, so the grammar had to move DOWN into core (new `core/decimal/_grammar.py::try_parse_canonical_decimal`, returning `None`, with a `max_fraction_digits` parameter) while the refusal stayed UP in the CLI. `_common.py` had been declaring the identical regex a second time and now delegates.
+
+THREE OF NINE REPORTED SITES WERE FALSE POSITIVES, flagged as duplicates on symbol-name similarity alone: `entrypoints/cli/_ledger_support.py::_parse_decimal` is already a one-line delegate to `_common`, and `adapters/inbound/justificante/_extract.py::_parse_decimal` is already a thin wrapper over the pdf parser - both already the correct one-parser-plus-thin-wrapper shape.
+
+THE EXTRACTION GRAMMARS ARE PROVABLY NOT INTERCHANGEABLE, so the ring-fence held for good reason. Empirically: `1,234.56` yields `1234.56` on the pdf path but `1.23456` on both the oracle and advisory paths - a 1000x error; `1 234,56` parses on the pdf path and returns `None` on the other two; `NaN` and `Infinity` are REJECTED by the pdf parser but ADMITTED by both the oracle and the advisory. The pdf parser documents exactly why non-finite must be refused - "arithmetic propagates the special value... serialised filing payloads would emit invalid digits" - and the other two carry precisely that gap.
+  QUEUED FOLLOW-UP, accepted: add the `is_finite()` guard to `domain/calculations/registry/_renta_web_open_oracle.py::_parse_decimal_text` and `application/ledger/_evidence_advisory.py::_parse_amount`, and replace their unconditional strip-thousands with the pdf parser's rightmost-separator check. Small, but it needs the owning agents; the table above is the evidence.
+
+A DISCIPLINE IMPROVEMENT WORTH ADOPTING TREE-WIDE: pin a commit abort-gate on the FILE'S BLOB AT HEAD rather than on the HEAD sha, because HEAD moves every few minutes in this worktree for unrelated reasons. This agent's gate fired twice and both were real - once on a HEAD move, and once because a peer had FIVE files staged in the shared index mid-commit (the same shape as the historical incident where a no-pathspec commit swept 35 peer files). It restored its own index entry with the HEAD blob rather than resetting, waited for the peer's commit (2a5483dd0b) to land, then committed against an empty index with a blob-level base check. Peer WIP verified intact afterwards and HEAD verified free of peer markers.
+
+Gates: `pytest --collect-only -q` exit 0 with 14224/17519 collected, run before EVERY commit; affected suites at final HEAD exit 0 with 180 passed; maritime run under `-m integration` explicitly (a bare path run selects nothing there) exit 0 with 23 passed; new tests comprising test_grammar.py (22), test_modelo_optional_decimal_option.py (26), calculate-input refusal-plus-accept parameters (17) and the maritime end-to-end refusal class (15); anti-vacuity handled by pairing every refusal test with a canonical-accept test AND by asserting that the bare constructor really does accept each refused form; ruff clean; typechecker reporting zero diagnostics in the touched files.
+
+HONEST REDS, all peer-owned and none decimal-related: the CLI lane exits 1 with six failures - `test_cli_module_size` (entrypoints/cli/_config/__init__.py at 1388 lines against a 1261 ceiling), two `test_audit_remediation` failures on locales/cli.py:136 help strings, two `test_profile_session_root_resume` failures caused by the absence of a usable OS keychain under an agent's SSH session (verifiable only from the operator's own console, never a code defect), `test_ledger_view_ux` on console-encoding mojibake, and `test_modelo_casilla_number_discovery` on locale leakage. `lint-imports` exits 1 on the layered-architecture contract with all three broken edges in untracked `application/operator_output/` and modified `application/user_profile/` - live peer WIP.
+
+### resolved-src-to-dev-import-boundary | high | commit 2a5483dd0b; family 5 added to the existing scanner, derived from packaging config
+
+RESOLVED - THE src-TO-dev IMPORT BOUNDARY, commit 2a5483dd0b (5 files, +434/-10). Both deliverables landed: the structural gate and the cleanup of this campaign's own add5af0546.
+
+THE GATE was added as FAMILY 5 of the EXISTING scanner (`dev/import_hygiene_scan.py`) rather than as a new gate, because the real gap was one line: `find_private_import_violations` opens with `if not site.target_mod.startswith("cadrumo"): continue`, skipping every `dev.` target before any check runs. It covers all three forms - `from dev.x import y`, bare `import dev`, and `importlib.import_module("dev...")` / `__import__` string literals, the last being invisible to an AST import walk. Hard zero, no baseline, no allowlist, surfaced in both the scan report and its `--json` output. The shipped-versus-excluded boundary is DERIVED from the packaging config: `wheel_exclude_globs()` reads `tool.hatch.build.targets.wheel.exclude` from pyproject.toml, and a missing table RAISES rather than defaulting - defaulting would either mute the gate or flood it. RULING, stated in the scanner docstring and a comment block above the tests and marked revisitable by ruling rather than by drift: a shipped module importing `dev.` is an ERROR; an excluded test tree doing so is PERMITTED BY DESIGN.
+
+A DELIBERATE DEVIATION FROM THE COORDINATOR'S INSTRUCTION THAT PREVENTED A BLIND SPOT. The brief said to reuse the scanner's existing production-versus-test predicate. The agent did not, because `is_test_module` returns True for ANY `conftest` - and `cadrumo/conftest.py` is a REAL WHEEL MEMBER (14 conftests ship). Reusing that predicate would have exempted a genuinely shipped module, which is precisely the class of blind spot this exercise existed to close. Shipped-ness is instead computed from the wheel excludes, validated against six known cases and cross-checked against a wheel the agent actually built.
+
+ANTI-TAUTOLOGY PROOF: six new tests, the module going 11 to 17. Synthetic modules planted under a `tmp_path` root, with an injectable `src_root` on the detectors so no monkeypatching was required. Proven in BOTH directions: a planted production `from dev.` fires; bare `import dev` fires; a dynamic `import_module("dev...")` fires; a legitimate `import_module("cadrumo.core")` does not; an excluded test tree does not; and a shipped `conftest.py` DOES. Exit line under `-m "unit and not external_tool and not os_keychain"`: 19 passed in 74.32s.
+
+AN HONEST LIMITATION VOLUNTEERED: this gate would NOT have caught the two files the same commit fixed, because they are unshipped test modules and the ruling permits that. Those fixes stand on OWNERSHIP grounds only - a shipped-tree test reaching a private `_force_lazy_imports` in unshipped tooling - not on packaging grounds.
+
+THE add5af0546 CLEANUP: a new `src/cadrumo/entrypoints/cli/tests/_lazy_command_tree.py` exports `materialise_lazy_subcommands`; both test modules import it from there; no copies were reintroduced; `dev/docs/cli_reference.py` was left untouched. Same-package placement means both consumers reach it INTRA-package, so no cross-package private reach was traded in either. 155 passed in 13.69s under `-m "integration and ..."`, identical to the pre-refactor count.
+
+PACKAGING FACTS CONFIRMED INDEPENDENTLY, closing the question for good: the SDIST also excludes tests - built and inspected, 19,726 members with ZERO under `tests/` and no `.py` at all outside `src/` (its only `dev/` member is a README). The wheel: 19,709 members, zero `tests/`, zero `dev/`. `test_wheel_content_boundary.py` passed at 6 passed in 29.43s. And ZERO production modules import `dev.` - AST-derived, 18 sites across 10 modules, every one under a `tests/` directory. So the originally-feared packaged-install breakage does not exist by either distribution path.
+
+RECOMMENDATION ACCEPTED - LEAVE THE OTHER EIGHT PERMANENTLY, not merely de-prioritised. Most are tests OF THE DEV TOOLING ITSELF, including, self-referentially, `test_import_hygiene_gate.py`, which imports `dev.import_hygiene_scan` because that scanner is its subject. The `dev.` import there is the thing under test, not a leak.
+
+A THIRD COPY OF THE WALKER, found by nobody else and deliberately LEFT: `src/cadrumo/agent/tests/test_rule_surface_conformance.py:114-136` carries the same tree-walk inline. It was left because that module is in the `agent` package, so importing the new helper would create a CROSS-PACKAGE PRIVATE REACH that the hygiene gate genuinely forbids - trading one smell for a worse one. It imports no `dev.`, so it is not a violation of the new family.
+
+A COMMIT-MECHANICS REFINEMENT AND A NEW TRAP. The shared index held a DIFFERENT peer's staged `providers/_base.py`, so a no-pathspec commit would have swept it while a pathspec commit would have taken that peer's working-tree content. The agent built the commit with git PLUMBING - a temp index, `hash-object -w`, `write-tree`, `commit-tree`, and `update-ref` with an expected-old guard - and that expected-old guard is what made it race-safe while HEAD MOVED THREE TIMES during the operation. THE NEW TRAP: its first reconstruction MOJIBAKED EVERY EM-DASH, because `git show` decoded through cp1252; it was caught in the diffstat and redone with explicit bytes, landing a diff of exactly 4 lines. Anyone reconstructing a blob on this platform must read bytes, not decoded text - this is the encoding sibling of the CRLF-smudge problem already known here.
+
+LIVE BREAKAGE DISCOVERED AT HEAD, escalated to its owner: `entrypoints/cli/tests/test_json_schema_conformance.py::test_profile_bound_command_populates_active_profile_label` fails with `TypeError: emit_bucket_event() got an unexpected keyword argument 'payload_version'`. TWO `emit_bucket_event` functions currently exist - `domain/buckets/_event_repository.py` HAS the parameter but is uncommitted peer WIP, `application/modelo/_revision_persistence.py` LACKS it, and the committed caller `application/workflow/_events.py` PASSES it. So a committed caller invokes a committed callee with a keyword it does not accept: the emitter relocation is half-landed across a commit boundary. The reporting agent exonerated itself correctly (the test passed twice with its exact changes at earlier HEADs, and the test body references neither of its edits). Also at HEAD and peer-owned: `test_lazy_import_policy.py` 4 failures on `adapters.inbound.tui.*` and `user_profile._registration -> _login_session` edges, and `apidocs scaffold --check` drifting on a peer's `application.live._censo_036_pull` - the agent deliberately did NOT run `scaffold`, since doing so would have swept that peer's module into its own commit.
+
+### coordinator-corrections-decimal-and-src-dev-record | medium | three self-corrections to this audit's own record
+
+COORDINATOR CORRECTIONS TO THIS AUDIT'S OWN RECORD - three items, all mine.
+
+CORRECTION 1 - A CLAIMED CROSS-CORROBORATION THAT WAS NOT ONE. Earlier in this document the decimal cluster is described as converging on `core.decimal` via a peer's in-flight work observed independently of this campaign's own agent. That is WRONG. The tree state in question - `optional_decimal_option` delegating to `try_parse_canonical_decimal`, `_optional_decimal` deleted with its call sites migrated, and `try_parse_canonical_decimal` itself existing at all - was this campaign's OWN agent's four commits (0a7f1bf797, 625f94b299, cf328bdd28, 208e4af672), observed a second time by a different agent and mistaken for independent confirmation. The coordinator then cited that false convergence as evidence supporting the canonical ruling. The ruling happens to be right, but it was not corroborated: one agent's work was counted twice. LESSON, applying to every "two agents independently found X" claim in this document: in a shared worktree with many concurrent agents, apparent independent convergence must be verified against `git log -S` on the specific symbol before it is treated as evidence. Attribution by observation of tree state is not attribution.
+
+CORRECTION 2 - RULING 3 WITHDRAWN, because it contradicted ruling 2. The coordinator ruled that `entrypoints/cli/_ledger_support.py::_parse_decimal` should be migrated onto `core.decimal`. It is a two-line delegate to `parse_optional_decimal_amount`, which since 208e4af672 delegates to `core.decimal` - so the grammar chain ALREADY terminates where the ruling required. Taking the ruling literally would have forced a re-implementation of the `cli.ledger.errors.invalid_decimal` refusal, with its label echo, inside `_ledger_support` - which is precisely the refusal-shell duplication ruling 2 forbids. The two rulings contradicted each other and the executing agent caught it. Additionally the aliases are load-bearing rather than dead indirection: 18 call sites across `_ledger.py` (13), `_ledger_llm_cli.py` (2), `_ledger_m210_classify_cli.py` (2) and `_ledger_support.py` (1). Verdict: leave as-is.
+
+CORRECTION 3 - THE BANK-EXPORT RING-FENCE WAS SCOPED TOO BLUNTLY, and commit cf328bdd28 stands. The ring-fence existed to stop a consolidation from changing WHICH REAL VALUES a grammar parsing genuine AEAT artefacts accepts - widening it to admit shapes the source never produces, or narrowing it to reject values that legitimately appear. The scientific-notation fix does neither: `2E+10` reading as `210` was never an accepted value, it was a CORRUPTED one. The change narrows the accepted set by exactly one shape (digit, `e` or `E`, optional sign, digit), refuses it with the `FinancialValidationError` the function already documents, and asserts every legitimate tolerance unchanged - three sign conventions, separator inference, currency symbols and codes - with 74 and 428 passing. Closing a live silent-money-corruption path on the ledger ingest feeding every modelo aggregation is what `no-silent-under-declaration` requires. The ring-fence continues to apply, unchanged, to the PDF, justificante and oracle grammars, which were not touched and which were empirically shown non-interchangeable.
+
+PROOF-DISCHARGE METHOD WORTH REUSING: the requirement to prove two accepted-input sets identical before reconciling a grammar was discharged by lifting the RETIRED implementation verbatim out of the commit that deleted it and differentially testing it against the replacement over a generated corpus - sign by integer by separator by fraction by padding permutations, plus adversarial literals (`1e3`, `NaN`, `sNaN`, both signed infinities, `1_000`, `1 000`, `1.234,56`, `1,234.56`, `0x10`, a currency symbol, `1.`, `.5`, `-0.00`, full-width digits, NBSP and narrow-NBSP). 11,177 inputs across 2 signed modes gave 22,354 comparisons with ZERO mismatches and 2,020 ACCEPTS - the accept count matters, since a corpus that only exercises rejections proves little. Verdicts were compared on both `None`-ness and exact `str(Decimal)`, so scale or precision drift would also have surfaced. The probe was deliberately NOT enshrined as a permanent test: it asserts against a now-deleted implementation and would rot into a test of dead code. That is the correct call - a differential test against a retired implementation is an excellent one-shot proof and a bad regression test. It remains reproducible from the commit that holds the old code.
+
+### queued-orphaned-ledger-period-grammar-test | low | new finding, queued, not this campaign's to fix
+
+NEW FINDING, QUEUED, not this campaign's to fix: `entrypoints/cli/tests/test_ledger_period_grammar.py` fails four times with `Missing option '--file'`, orphaned by peer commit 68bd1710f6 (`feat(ledger)!: rename classify --from-csv to --file per the CLI file-input standard`), which swept the verb registrations but not this test module. This is exactly the mandatory-hand-sweep hazard the CLI pull-and-file standard warns about: a rename that updates the registrations while leaving referencing surfaces stale. A fifth failure in the same lane is `test_ledger_view_ux` console-encoding mojibake (`Categoria` versus `Categoria` with an accent), which is environmental.
+
+## Recommendations
+
+### retire-the-dead-formats-package | medium | delete `_formats` (record_spec + serialise + deserialise) and repoint its one live pin
+
+Ties to `refuted-5-fixed-width-export-encoders`. Retire the whole `_formats` package once the code index is real enough to search safely: it is unreachable from every facade, its roundtrip gate already exercises the live `application.filing.export_draft` path and survives the deletion, and two dev-tooling references (`dev/audit/semantic.py::_VERIFIED_NON_LEAK_PATHS`, `test_dev_rename_audit_tools.py:52`) need repointing in the same commit.
+
+### land-the-pad-axis-registry-validator | high | refuse a fixed-width field whose padding-implied side conflicts with its declared justification
+
+Ties to `refuted-5-fixed-width-export-encoders`. Land the registry-build validator BEFORE any shared primitive is attempted: `_export.py` derives pad side from `padding` and ignores `justification`, M145 derives side from `justification` and char from `padding`, and nine of twelve combinations diverge (several to exact opposites). Today the validator would refuse exactly one byte-neutral field; it makes the ambiguity structurally unrepresentable going forward.
+
+### widen-the-decimal-quantize-gate-and-clear-the-45-sites | high | close the gate blind spot that misses test-local and missing-keyword wrong-mode rounding
+
+Ties to `resolved-rounding-duplication-and-mode-anomaly`. Widen `test_no_inline_quantize_round_half_up` to scan test modules (not only `production_ast_items`) and to catch a bare `quantize(Decimal("0.01"))` with no `rounding=` keyword, then action the 45 remaining test-side bare-mode cent-quantize sites that shape tax figures under the same latent-tie class (M151, M202, M190/111, M210 x5, the M303 recargo cross-period e2e).
+
+### land-the-approved-applicability-relocation | high | move the two applicability derivations to `domain/calculations/registry/_applicability.py`
+
+Ties to `resolved-pagos-fraccionados-applicability-route`. Held pending release of two peer-owned files (`tests/test_lazy_import_policy.py` ceilings mid-edit by a peer). Relocate `derive_taxpayer_files_economic_activity` and `derive_not_applicable_source_modelos` beside their siblings so both layers import eagerly, avoiding the ceiling-ratchet collision rather than negotiating it, as one atomic `relocation:derive_taxpayer_files_economic_activity` commit with regenerated docs/api stubs.
+
+### land-the-persona-divergence-verdict-change | medium | suppress M131 for the undeclared-regime persona, as its own commit with a pinning test
+
+Ties to `resolved-pagos-fraccionados-applicability-route`. The undeclared-estimation-regime persona currently diverges from the canonical `derive_modelo_applicability` answer (LIRPF art. 16 / RIRPF art. 32); canonical is the better answer and the clean-state gate already suppresses M131 there, so the resolver is the component out of step. This changes a verdict, not a duplicate, so it lands separately with its own test.
+
+### execute-the-expense-gasto-rename-sweep | medium | rename both stems in one atomic commit across the full enumerated surface
+
+Ties to `expense-gasto-source-kind-naming-not-a-duplicate`. Rename `ledger_renta_expense_aggregation` -> `ledger_renta_gastos_estimacion_directa_aggregation` and `ledger_renta_gasto_aggregation` -> `ledger_renta_gastos_pago_fraccionado_aggregation` across the enum, every resolver and consumer, and the registry authoring tree in ONE commit (a partial sweep breaks suite collection for every concurrent agent); regenerate the six `docs/_sequences/*.json` recorded-output contracts rather than hand-editing them.
+
+### demote-the-four-public-binding-invariant-delegates-and-fix-the-false-docstrings | medium | make ledger/invoice/irnr/impatriado match their private counterpart/detail-record/donativo/previous-filing siblings
+
+Ties to `refutation-2-followup-false-docstrings-and-visibility`. Correct the false "defence-in-depth resolve-time re-check" docstrings at `_ledger_bindings.py:1370,1384,1414,1431` and the `_bindings.py:931-932` dispatch-table comment (no resolver calls them; the invariants are build-time only), and demote the four publicly-exported invariant delegates to private, handling the one cross-package test consumer (`test_impatriado_income_ledger.py:414,428`).
+
+### resolve-the-polymorphic-purchase-invoice-evidence-id-space | high | either tag the id space, resolve both spaces everywhere, or name the ambiguity in the diagnostic
+
+Ties to `refuted-6-two-parallel-evidence-systems`. `Transaction.purchase_invoice_evidence_id` is deliberately polymorphic across a PurchaseInvoiceEvidence id and an Invoice id, but each consumer resolves only one space, so a transaction attached with a valid PIE id is silently dropped from renta deductible-expense observations with a misleading diagnostic. This costs the taxpayer a real deduction and needs its own dispatch.
+
+### enrol-a-version-gate-on-the-bucket-manifest-schema-version | medium | the manifest currently has no ceiling, no floor, no upgrader registry
+
+Ties to `decision-record-inner-envelope-version-drift`. The bucket manifest's `schema_version` field is hardcoded at create, passed through unchanged on every save, and read with no version gate of any kind - a manifest written by a newer application version is accepted silently. Under the compatibility-lifecycle rule a persisted format must enrol its floor, version and upgrader registry at birth; this one never did.
+
+### tighten-the-inner-envelope-layer-2-checks-from-greater-than-to-not-equal | medium | zero-behaviour today, becomes a hard refusal once the RELEASED regime is live
+
+Ties to `decision-record-inner-envelope-version-drift`. Land one shared non-raising predicate each of the 20 layer-2 sites calls, keeping its own error type, message key and per-object context, plus an AST gate so the loose `>` form cannot re-enter by copy. The ADR at `.vault/adr/2026-07-25-code-dedup-sweep-adr.md` is proposed and untracked; commit it under an explicit pathspec.
+
+### assess-the-third-canonical-json-sha256-fingerprint-site | low | `application/aggregation/_ledger_filing_snapshot.py` also defines a canonical-JSON fingerprint helper
+
+Ties to `resolved-canonical-json-sha256-duplication`. Assess it with the same byte-identity discipline used for the session-store and atribucion-member sites (exercise both implementations across nesting, non-ASCII, escapes, floats, bools, nulls and key reordering, then cross-check the digest directly) before consolidating.
+
+### correct-or-enrol-the-false-toml-sole-surface-adr-premise | low | `2026-07-07-registry-toml-parser-adr` overstates its own scope
+
+Ties to `false-prose-toml-sole-surface-adr`. Either correct the ADR's "sole TOML-parsing surface project-wide" claim, or enrol the four raw-`tomllib` sites (`core/external_constants.py`, `agent/eval/_runner.py`, `application/corpus_search/_terminology.py`, `application/workflow/_profile_bucket_scan.py`) so the claim becomes true; the parser-correctness argument itself is sound and needs no rework.
+
+### execute-the-emit-bucket-event-fix-forward-plan | critical | relocate to `domain/buckets`, require `payload_version`, and fix the half-landed relocation that currently breaks a committed test at head
+
+Ties to `bucket-event-emission-attribution-and-fix-forward-plan` and `resolved-src-to-dev-import-boundary`. Move the primitive to `domain/buckets/_event_repository.py` with `payload_version` required (not defaulted); keep `application/modelo`'s own narrow wrapper renamed `emit_modelo_bucket_event`; repoint the six routed sites at `domain.buckets` with module-level imports so the flagged runtime edges cease to exist; strike the six allowlist entries the emergency landing added, re-measuring the ceiling delta rather than assuming it symmetric; and separately author the still-missing application-layer ratios service so `entrypoints/cli/_ledger_ratios_cli.py` stops emitting bucket events directly from the CLI layer. URGENT: `test_json_schema_conformance.py::test_profile_bound_command_populates_active_profile_label` is failing at HEAD right now with `TypeError: emit_bucket_event() got an unexpected keyword argument 'payload_version'` because the relocation is half-landed across a commit boundary - the committed caller passes a keyword the committed callee does not accept.
+
+### allocate-distinct-feature-tags-or-serialise-adr-scaffolding | low | avoid the one-adr-slot-per-feature-per-date filename collision
+
+Ties to `decision-record-inner-envelope-version-drift`. `vault add adr` supports no `--topic` flag, so only one ADR filename slot exists per feature per date; future campaigns dispatching many agents under one feature tag should allocate distinct feature tags per decision or scaffold ADRs from the coordinator serially.
+
+### add-the-is-finite-guard-to-the-oracle-and-advisory-decimal-parsers | low | close the last two non-interchangeable-grammar gaps in the decimal cluster
+
+Ties to `resolved-decimal-parsing-cluster`. Add the `is_finite()` guard to `domain/calculations/registry/_renta_web_open_oracle.py::_parse_decimal_text` and `application/ledger/_evidence_advisory.py::_parse_amount`, and replace their unconditional strip-thousands with the pdf parser's rightmost-separator check; both currently admit `NaN`/`Infinity` where the pdf parser correctly refuses them.
+
+### repair-the-orphaned-ledger-period-grammar-test | low | `--file` rename swept the verb registrations but not this test module
+
+Ties to `queued-orphaned-ledger-period-grammar-test`. `entrypoints/cli/tests/test_ledger_period_grammar.py` fails four times with `Missing option '--file'` after peer commit 68bd1710f6 renamed `classify --from-csv` to `--file`; update the test module to the current verb surface.
