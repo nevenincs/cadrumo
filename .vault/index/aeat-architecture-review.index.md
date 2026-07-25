@@ -3,10 +3,11 @@ generated: true
 tags:
   - '#index'
   - '#aeat-architecture-review'
-date: '2026-07-24'
-modified: '2026-07-24'
+date: '2026-07-25'
+modified: '2026-07-25'
 related:
   - '[[2026-07-02-aeat-architecture-review-audit]]'
+  - '[[2026-07-24-aeat-architecture-review-startup-import-coupling-audit]]'
 ---
 
 # `aeat-architecture-review` feature index
@@ -18,3 +19,4 @@ Auto-generated index of all documents tagged with `#aeat-architecture-review`.
 ### audit
 
 - `2026-07-02-aeat-architecture-review-audit` - `aeat-architecture-review` audit: `high-level architecture review`
+- `2026-07-24-aeat-architecture-review-startup-import-coupling-audit` - `aeat-architecture-review` audit: `startup import coupling`
