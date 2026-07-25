@@ -519,6 +519,7 @@ _STRICT_PRINTED_AMOUNT_RE = re.compile(rf"^{SPANISH_AMOUNT_GROUP}$")
 prints on every populated money box.
 """
 
+
 def _is_own_box_number_of_blank_box(raw: str, printed_number: str | None) -> bool:
     """Whether ``raw`` is the target's own box number left by a BLANK box.
 

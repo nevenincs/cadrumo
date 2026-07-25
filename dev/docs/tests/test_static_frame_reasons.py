@@ -93,14 +93,11 @@ def test_live_aeat_reason_matches_the_frames_own_argv() -> None:
     mislabelled = [
         f"{page}/{sequence_id} line {frame.line_number}: {frame.command_line}"
         for page, sequence_id, frame in _static_frames()
-        if frame.blocked is not None
-        and frame.blocked.code is StaticBlocker.LIVE_AEAT
-        and not live_aeat_tokens(frame)
+        if frame.blocked is not None and frame.blocked.code is StaticBlocker.LIVE_AEAT and not live_aeat_tokens(frame)
     ]
     assert mislabelled == [], (
         "these @static frames claim 'live-aeat' but carry no live-AEAT argv token; "
-        "the sandbox would run them, so state the real blocker or convert them:\n  "
-        + "\n  ".join(mislabelled)
+        "the sandbox would run them, so state the real blocker or convert them:\n  " + "\n  ".join(mislabelled)
     )
 
 
@@ -119,9 +116,7 @@ def test_live_token_frames_are_never_marked_unconverted() -> None:
         f"{page}/{sequence_id} line {frame.line_number}: {frame.command_line} "
         f"(live tokens: {', '.join(live_aeat_tokens(frame))})"
         for page, sequence_id, frame in _static_frames()
-        if frame.blocked is not None
-        and frame.blocked.code is StaticBlocker.UNCONVERTED
-        and live_aeat_tokens(frame)
+        if frame.blocked is not None and frame.blocked.code is StaticBlocker.UNCONVERTED and live_aeat_tokens(frame)
     ]
     assert laundered == [], (
         f"these @static frames are marked '{StaticBlocker.UNCONVERTED.value}' but carry an argv "

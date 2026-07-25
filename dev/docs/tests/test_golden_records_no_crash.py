@@ -62,9 +62,7 @@ def _golden_paths() -> list[Path]:
     """Every committed sequence golden, excluding authoring inputs."""
     root = default_docs_root() / "_sequences"
     return [
-        path
-        for path in sorted(root.rglob("*.json"))
-        if "contracts" not in path.parts and "fixtures" not in path.parts
+        path for path in sorted(root.rglob("*.json")) if "contracts" not in path.parts and "fixtures" not in path.parts
     ]
 
 
@@ -183,7 +181,7 @@ def test_a_recorded_error_outcome_is_declared_by_the_frame() -> None:
             continue
         try:
             golden = read_golden(item.page, item.sequence_id)
-        except Exception:  # noqa: BLE001 - a missing/unreadable golden is another gate's finding
+        except Exception:  # noqa: S112 - a missing/unreadable golden is another gate's finding
             continue
         recorded = list(golden.frames)
         if len(recorded) != len(executed):
