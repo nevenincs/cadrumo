@@ -23,6 +23,7 @@ Give an authentication mode somewhere to keep what it needs, on the encrypted pr
 - [x] `P01.S12` - Resolve the Clave credentials in the operator readiness probes and status surfaces through the same profile-first resolver the session entry uses, so a profile-borne credential reports as configured; `src/cadrumo/application/auth/_operator_probes.py`.
 - [x] `P01.S13` - Collect the DNI validity-date contraste in the manager auth form and require a contraste only on the non-QR route, satisfied by either the soporte or the validity date, so the default QR flow and Clave Permanente are not refused; `src/cadrumo/entrypoints/cli/_config/_manager_actions.py`.
 - [x] `P01.S16` - Bind the schema declared provenance set to UserProfileFact, widening it first for the shipped censal token, and gate every shipped fact path and provenance token against the schema; `src/cadrumo/domain/user_profile/_values.py`.
+- [x] `P01.S17` - Declare the renta sex fields with the value set the AEAT registro design defines, and anchor the provenance contract at the schema rather than at a consuming module; `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`.
 
 ### Phase `P02` - Read-only censal reader
 
@@ -39,7 +40,7 @@ Commit pulled censal facts through the cotejo authority, and delete the register
 - [ ] `P03.S07` - Map the identity and address fields read from mis datos censales onto profile schema paths with a provenance token naming the consulta surface, the regime fields being out of scope while they have no route; `src/cadrumo/application/live`.
 - [ ] `P03.S08` - Commit pulled facts through apply_cotejo, adopting only blank paths and reporting every disagreement; `src/cadrumo/application/live`.
 - [x] `P03.S09` - Delete the register-based censal pull, its manager action and its tests, and re-point the causa-casilla mapping it fed; `src/cadrumo/application/live/_censo_036_pull.py`.
-- [ ] `P03.S10` - Verify the whole path live end to end: auth, pull, autofill, and a second pull that reports disagreement instead of overwriting; `src/cadrumo/application/live/tests`.
+- [ ] `P03.S10` - Verify the whole path live end to end in three phases, a pull onto a blank profile that adopts, a second unchanged pull that is a no-op, and a third pull after the operator edits an adopted value that reports the divergence rather than overwriting it; `src/cadrumo/application/live/tests`.
 - [ ] `P03.S14` - Restore aeat config profile censo pull as the live-transport sibling of censo file --file, reading through the censal reader and persisting through apply_cotejo behind the same --apply door, so both transports reconcile identically; `src/cadrumo/entrypoints/cli/_config/_censo_file.py`.
 - [ ] `P03.S15` - Offer the censal pull as a manager action gated on the auth mode having everything it needs, unavailable with an instructive refusal until the credentials are complete; `src/cadrumo/entrypoints/cli/_config/_manager_actions.py`.
 
