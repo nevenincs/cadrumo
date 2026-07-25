@@ -10,7 +10,7 @@ related:
   - "[[2026-05-26-live-iva-remote-evidence-reconciliation-adr]]"
 ---
 
-# `reconcile-evidence-relocation` adr: `where reconcile diff detail persists` | (**status:** `proposed`)
+# `reconcile-evidence-relocation` adr: `where reconcile diff detail persists` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -91,6 +91,58 @@ layer when this surface was designed.
   to 500 chars" recorded into the event payload, treating the bound as a given. The figure
   itself is decided nowhere.
 
+### Re-verified at HEAD `7058ef827f`: the four-instance shape has moved, and it moved toward (e)
+
+Semantic search was unavailable for this ruling — the code index was truncated
+while reporting `degraded_reasons: []`, so a miss proves nothing. Every statement
+below rests on `rg`, on reading the sites, and on git history.
+
+The record above lists four instances of the shape and, under Consequences, three
+items left open. **Two of those three closed between the record being written and
+this ruling.** The facts as recorded were true when written; the conclusion drawn
+from them is not, and must be recomputed.
+
+- **The `LEDGER_TRANSACTION_REMOVED` joined-id pair is fixed**, by
+  `5d93814876 fix(ledger): a row with eight attachments could not record its own
+  removal`. At `application/ledger/_actions_lifecycle.py:764-778` the payload now
+  carries `purchase_invoice_evidence_count`, `attachment_count` and
+  `cascade_count` — counts, never the joins. The in-code comment reproduces this
+  research's own 519-character arithmetic, and records the reason nothing is lost:
+  each cascaded id is already the `object_id` of its own event in the same batch.
+  Both counts are kept rather than only their sum so the cascade stays
+  decomposable by kind.
+- **The `source_ref` 512-against-500 inconsistency is fixed**, by
+  `befb5f09fa fix(modelo): an over-long evidence path made a reconciliation
+  unrecordable`, and the fix is broader than the item as recorded. It found a
+  *second* producer this record missed: the file command's `source_path` is a bare
+  `Path` with no bound at all, `str()`-ed into the same slot, so any sufficiently
+  deep directory overflowed — and that is the reachable producer, where the 512
+  field only had a twelve-character window. It bounds at the shared tail
+  (`_bounded_payload_reference`), keeps the reference's tail rather than its head
+  since the filename identifies the artifact, and prefixes an explicit elision
+  marker so a shortened reference is self-evidently shortened. The field was also
+  tightened to 500 rather than removed, deliberately: an app-generated handle past
+  the cap is an internal defect and belongs refused where the error names the
+  field, while an operator filesystem path has no such contract and is shortened.
+
+So at HEAD the tally is three closed, one live. The live one is `diffs_detail`
+(`application/modelo/_reconcile.py:736`, decoded back at `:1258`), unchanged.
+
+**This strengthens (e) rather than weakening it, and the direction matters.** A
+reader might take "the shape is systemic" as an argument for a substrate-level
+remedy that would cover reconcile too. The opposite is now demonstrated: every
+instance that bounded metadata *could* close has been closed by bounded metadata,
+each in its own commit, and the residue is precisely the one instance where that
+remedy is lossy — because the reconcile detail is the only copy, exactly as this
+record argues. The systemic pattern and the reconcile exception are no longer
+competing readings; the pattern has resolved itself around the exception.
+
+What remains genuinely open is the third item: a standing guard against joining a
+variable-length value into a capped payload slot. Four instances, three closed by
+hand, each rediscovered independently by a different pass. That is now the whole
+of the systemic residue, and it is carried as a named step rather than left in a
+Consequences note.
+
 ## Considered options
 
 - **(a) Revert to count-only history and keep the status quo.** Rejected. The Modelo 100
@@ -161,28 +213,75 @@ layer when this surface was designed.
 
 ## Implementation
 
-Not decided; this record exists to obtain the decision. If (e) is chosen, the shape is:
+Ruled `accepted` on option (e): a dedicated encrypted, profile-scoped store for
+reconciliation records, with the bucket event reduced to verdict plus count. The
+work is carried by `2026-07-25-reconcile-evidence-relocation-plan`.
 
-A new `MODELO_RECONCILIATION_RECORDS` secure-object namespace at `AUDIT` sensitivity,
-`PROFILE_LOCAL` scope, `STRUCTURED_CUSTODY` disposition, its object key admitting N
-reconciliations per work unit rather than overwriting. A new strict-frozen
-reconciliation record model carrying verdict, source kind, source reference, work unit
-id, the grounded diffs, advisories, instant and actor; the existing diff and advisory
-models are already strict-frozen and are reused unchanged. The reconcile finalisation
-writes the record and the slimmed event together through the existing co-emit write
-discipline. `list_modelo_reconciliations` reads the new store while keeping its return
-type, so the CLI payload and the round-trip test are unchanged. The event keeps verdict
-and count; `diffs_detail` is deleted rather than migrated, per `no-legacy-compatibility`
-under the `PRE_RELEASE` regime. The `ModeloReconciliationHistoryEntry` docstring is
-rewritten, since its "no parallel reconciliation store" sentence becomes false.
+**The store.** A new `MODELO_RECONCILIATION_RECORDS` secure-object namespace at
+`AUDIT` sensitivity, `PROFILE_LOCAL` scope, `STRUCTURED_CUSTODY` disposition —
+enrolling under the shipped IVA-wallet reconciliation precedent
+(`_namespace_registry.py:445-464`) rather than inventing a shape. Under
+`compatibility-lifecycle-checkpoint` a new persisted format enrols its floor, its
+version and its (empty) upgrader registry **at birth**; the bucket-manifest gap
+recorded in the sibling code-dedup ruling is what skipping that looks like later.
+Per the ruling on that record, the reader compares its inner envelope version with
+equality, not a ceiling.
 
-The riskiest part is write atomicity, and the second risk is key design: N
-reconciliations per work unit must each persist distinctly rather than overwrite.
+**The key is the risk.** The object key MUST admit N reconciliations per work
+unit rather than overwriting — reconciliation is explicitly repeatable and
+`history` is a shipped verb, so a key that collapses runs silently destroys the
+history this decision exists to preserve. It MUST also admit the runs that have no
+revision at all: both `_reconcile_receipt_totals` and
+`_reconcile_declaracion_casillas` emit a `no_persisted_revision` advisory and
+still produce a report and an event, and identity-header reconcile needs no
+revision. A key derived from a revision id cannot store those, which is one of the
+three independent reasons option (c) was rejected.
 
-Two items are separable and should not gate this decision. The `source_ref` 512-against-500
-inconsistency is an independent defect in the same payload. Whether `reconcile history`
-should surface the grounded diffs it currently discards is an operator-experience choice
-that relocation enables but does not require.
+**The record model.** A new strict-frozen model carrying verdict, source kind,
+source reference, work unit id, the grounded diffs, advisories, instant and actor.
+The existing diff and advisory models are already strict-frozen and are reused
+unchanged. Grounding is **stored, not re-derived** — that is the decisive
+objection to option (b) and it survives into the new site: a re-grounding sweep
+that moves a casilla's `legal_refs` without moving the revision id would otherwise
+silently rewrite the legal basis of a historical reconciliation, and such sweeps
+are routine.
+
+**Atomicity.** The reconciliation record and the slimmed event MUST land together
+through the existing co-emit write discipline. A crash between them desynchronises
+the event log from the detail store, which is the second of the two risks this
+record names.
+
+**The seams that must not move.** `list_modelo_reconciliations` keeps its return
+type and reads the new store, so `ModeloReconciliationHistoryEntry`, the CLI
+payload schema and
+`test_history_persists_which_total_diverged_not_just_a_count` are all undisturbed
+— that test binds only to the public API, never to the payload, so it is a real
+gate on the relocation rather than a fixture to update. The event keeps verdict and
+count; `diffs_detail` is **deleted, not migrated**, per `no-legacy-compatibility`
+under `PRE_RELEASE`, and already-persisted overflowing values are dropped rather
+than read.
+
+**Roundtrip obligations.** Per `aeat-roundtrip-discipline` the new format owes a
+strict save-load-equality roundtrip with every defaultable field set to a
+non-default value, plus an anti-tautology proof that mutating the stored payload
+surfaces a refusal. Use real adapters — real `EphemeralMasterKeyProvider`, real
+SQLite — never a double.
+
+**Two corrections to prose that becomes false.** The
+`ModeloReconciliationHistoryEntry` docstring asserts that "there is no parallel
+reconciliation store"; adding one makes it false and it MUST be rewritten in the
+same change. This repo has a documented recurring pattern of prose asserting
+guarantees that do not hold, and those assertions actively manufacture false audit
+findings on later passes — leaving this one standing would seed exactly that.
+Relocation also supersedes Decision 2 / 2.B of
+`2026-07-01-reconcile-value-comparison-adr`, whose provenance-carried constraint
+must be re-affirmed at the new site; that ADR's remaining decisions are untouched.
+
+**Separable, and deliberately not gating this.** Whether `reconcile history`
+should surface the grounded diffs it currently reads and discards is an
+operator-experience choice that relocation enables and does not require. The
+substrate guard against joining a variable-length value into a capped slot is the
+remaining systemic item and is carried as its own step.
 
 ## Rationale
 
@@ -211,6 +310,50 @@ the precedent already set for ledger export. That is a product judgement about w
 auditable reconciliation history is worth a persisted format, and it is the judgement
 this record asks for.
 
+### Ruling: (e), and why the counter-argument for (f) does not carry
+
+Ruled `accepted` on (e). The record above deferred to the operator; the decision
+is taken here so the work stops being invisible, and the reasoning is recorded
+rather than asserted.
+
+The honest counter-argument for (f) is preserved above and deserves a direct
+answer rather than a restatement of the recommendation. It runs: if reconciliation
+history is judged genuinely low-value, bounded metadata is far cheaper and matches
+the precedent already set for ledger export. Two things defeat it.
+
+First, the precedent it invokes has now been fully spent, and spending it is what
+isolated reconcile. Since this record was written the two remaining
+bounded-metadata candidates were closed that way — the transaction-removal joins
+and the `source_ref`/`source_path` pair, both detailed in Considerations. The
+ledger precedent works because the joined identifiers stay recoverable from their
+own catalogues, so the payload need only be a pointer; the removal fix says so
+explicitly, noting each cascaded id is already an `object_id` in the same batch.
+Reconcile diff detail has no second home. Invoking the precedent therefore no
+longer imports its justification — it imports only its shape, applied where the
+precondition fails.
+
+Second, (f) is not a cheaper way to keep history; it is a reversal of Decision
+2.A's rejection, which refused count-only as `no-silent-under-declaration` at the
+audit layer. That reversal may be a legitimate product judgement, but it must be
+made as one. Choosing (f) *because it is cheaper* would decide the product
+question by implication — the failure mode this record was written to prevent.
+Nothing in the corpus has since re-argued that audit-layer refusal, so the
+standing decision holds.
+
+The measurement settles the remaining doubt about severity. At a median encoded
+diff of 303 characters, two divergences are unpersistable for 99.6% of Modelo 100
+casillas and 175 casillas overflow on the first divergence alone — so this is not
+a degraded history but an unhandled pydantic `ValidationError` raised before
+anything is written, on a production-reachable path where the declaración
+comparison produces many diffs at once. A verb that fails on the length of its own
+result is a defect regardless of how the history question resolves.
+
+One caveat is recorded honestly rather than argued away: (e) is materially larger
+than the one-commit fix originally scoped, and its two named risks — write
+atomicity and the N-per-work-unit key — are both correctness risks in encrypted
+storage, not merely effort. That is why it carries roundtrip and anti-tautology
+obligations in the Implementation above rather than a test-later note.
+
 ## Consequences
 
 If (e) is accepted, Modelo 100 reconciliation becomes persistable at any divergence
@@ -229,3 +372,23 @@ substrate deserves a standing guard against joining a variable-length value into
 capped payload slot — four instances in, that is a pattern rather than a coincidence.
 The docstring asserting that no parallel reconciliation store exists must be corrected
 if any store is added.
+
+### What remains open, recomputed at HEAD `7058ef827f`
+
+The three open items this record closes with were true when written. Two have
+since been closed by peer commits and only one survives:
+
+- **Closed** — the `source_ref` 512-against-500 inconsistency (`befb5f09fa`,
+  which also found and bounded an unbounded second producer this record missed).
+- **Closed** — the joined-id pair in the transaction-removal event that broke
+  removal at eight attachments (`5d93814876`).
+- **Open, and now the only systemic item** — whether the substrate deserves a
+  standing guard against joining a variable-length value into a capped payload
+  slot. Four instances have now been found and three closed by hand, each
+  rediscovered independently. The cap is an inline literal in the domain model
+  rather than a central-config constant and no record ratifies the figure, so a
+  guard would also give it its first declared home. Carried as a named step on
+  the plan.
+
+The docstring asserting that no parallel reconciliation store exists becomes false
+the moment the store lands and is corrected in the same change, not after.

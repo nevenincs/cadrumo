@@ -7,6 +7,7 @@ date: '2026-07-25'
 modified: '2026-07-25'
 related:
   - '[[2026-07-25-code-dedup-sweep-adr]]'
+  - '[[2026-07-25-code-dedup-sweep-plan]]'
   - '[[2026-07-25-code-dedup-sweep-rag-inventory-audit]]'
 ---
 
@@ -18,8 +19,12 @@ Auto-generated index of all documents tagged with `#code-dedup-sweep`.
 
 ### adr
 
-- `2026-07-25-code-dedup-sweep-adr` - `code-dedup-sweep` adr: `inner-envelope version check is an equality, armed before the first bump` | (**status:** `proposed`)
+- `2026-07-25-code-dedup-sweep-adr` - `code-dedup-sweep` adr: `inner-envelope version check is an equality, armed before the first bump` | (**status:** `accepted`)
 
 ### audit
 
 - `2026-07-25-code-dedup-sweep-rag-inventory-audit` - `code-dedup-sweep` audit: `semantic duplication sweep: 29-searcher RAG inventory`
+
+### plan
+
+- `2026-07-25-code-dedup-sweep-plan` - `code-dedup-sweep` plan

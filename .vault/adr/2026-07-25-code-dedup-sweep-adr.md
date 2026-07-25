@@ -8,7 +8,7 @@ related:
   - "[[2026-07-25-code-dedup-sweep-rag-inventory-audit]]"
 ---
 
-# `code-dedup-sweep` adr: `inner-envelope version check is an equality, armed before the first bump` | (**status:** `proposed`)
+# `code-dedup-sweep` adr: `inner-envelope version check is an equality, armed before the first bump` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -85,6 +85,53 @@ change against filed taxpayer data the moment the first real version bump lands.
   `UsageRatioPersistenceError`, so any shared helper that raises would silently
   re-route that path.
 
+### Re-verified at HEAD `7058ef827f`, with two corrections to the inventory above
+
+Semantic search was unavailable for this ruling. The code index was truncated
+throughout the window (roughly 1027 chunks against roughly 4546 files) while
+reporting `degraded_reasons: []`, so a miss carries no evidential weight. Every
+claim below was re-established by `rg` over the tree and by reading both sides of
+each site — never by a semantic probe, and never by trusting the inventory above.
+
+The twenty sites are confirmed live and unchanged at HEAD. Enumerated:
+`adapters/persistence/profile/` — `modelos_filing.py:174`,
+`modelos_verification_reports.py:153`, `modelos_calculation.py:182`,
+`buckets.py:176`, `modelos_work_units.py:154`, `participation_index.py:129`,
+`transactions.py:316`, `filing_amendments.py:132`, `invoices.py:132`,
+`usage_ratios.py:88`; `adapters/outbound/aeat/sede/_observation_store.py:192`,
+`:219`, `:291`, `:320`; `application/workflow/_persistence.py:146` and `:411`;
+`application/user_profile/_repository.py:295` and `:484`;
+`application/live/_verify.py:252`; `application/live/_snapshot_base.py:489`. The
+only drift from the record above is `participation_index.py`, at `:129` rather
+than `:130`.
+
+**Correction 1 — the namespace count is 67, not 66, and the vacuity proof must be
+re-stated to survive it.** Sixty-six namespace definitions declare
+`schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1`, but a sixty-seventh
+(`_namespace_registry.py:1095`) declares `schema_version=BLOB_MANIFEST_SCHEMA_VERSION`.
+The proof holds only because that constant is also `1`
+(`_namespace_registry.py:40`) — a coincidence of value, not a shared authority.
+The consequence is for the gate, not the argument: a gate written as "every
+registered namespace equals 1" would pin a literal that a legitimate future
+per-namespace bump breaks for the wrong reason, reddening on a correct change.
+The gate must instead assert that each namespace's declared version is the
+version its readers compare against — a relation, not a constant. The
+`Envelope.schema_version` floor is confirmed as `Field(ge=1)`
+(`envelope/_envelope.py:174`), so the below-current region is empty and `> 1` and
+`!= 1` remain the same predicate today.
+
+**Correction 2 — the equality form is already the majority shape, which
+strengthens the case.** Beyond the two canonical sites this record cites,
+equality is what newer persisted readers already do:
+`blob_store/_blob_store.py:443`, `attachment.py:97`,
+`master_key/_persisted_session.py:706`, `master_key/_login_throttle.py:115`,
+`auth/_session_store.py:83`, `auth/_authenticator.py:1033`, and three further
+envelope sites (`_envelope.py:469`, `:543`, `_secure_repository.py:274`). So the
+twenty are not a competing convention with equal standing; they are a minority
+residue of an older spelling, and the tightening moves them onto the shape the
+rest of the substrate already uses. That was not visible from the inventory above
+and is the strongest single argument for acting.
+
 ## Considered options
 
 - **Leave the `>` form.** Correct today by the vacuity proof, and defensible as
@@ -131,31 +178,76 @@ change against filed taxpayer data the moment the first real version bump lands.
 
 ## Implementation
 
-One predicate lands in the storage substrate beside the existing lineage policy:
-it takes the stored inner version and the namespace's current version and reports
-whether the stamp is exactly current, returning a boolean rather than raising. The
-twenty inner-envelope read paths replace their inequality comparison with a call
-to that predicate, each keeping its logging, its exception class, its translated
-message key, and its context mapping unchanged. The two out-of-scope sites — the
-sealed-archive range gate and the encrypted-bundle envelope gate — are not
-touched; they already carry the two-sided shape this decision brings to the
-secure-object inner layer.
+Ruled `accepted` on the chosen option: one shared non-raising predicate, each site
+keeping its own raise, plus a structural gate. The work below is carried by
+`2026-07-25-code-dedup-sweep-plan`.
 
-Two gates make the state durable. A structural AST gate asserts that no persisted
-inner-envelope read path compares `schema_version` with an inequality operator, in
-the shape the project already uses for the modelo-literal gate, so the loose form
-cannot re-enter by copy. A lineage-gate addition pins the two facts the vacuity
-proof rests on — every registered namespace at its declared current version, and
-the envelope field's `ge=1` floor — and records the inner-re-stamp obligation
-against the upgrader registration surface, so the first registered hop inherits an
-explicit requirement rather than an implicit one. Under the mandated post-flip
-restorability test that obligation becomes directly executable: loading pre-bump
-bytes through the real read path fails on the equality check when the upgrader
-leaves the inner stamp stale.
+**The predicate.** One function lands in the storage substrate beside the existing
+lineage policy, taking the stored inner version and the namespace's current
+version and returning a boolean. It MUST NOT raise — the ordering-sensitive
+`usage_ratios.py:88` site, whose raise sits inside a `try` whose
+`except (ClassificationError, EnvelopeVersionError)` re-raises
+`UsageRatioPersistenceError`, makes a raising helper an observable behaviour
+change there even though the comparison is unchanged. It is consumed through the
+storage package's public facade per `service-imports-via-top-level-reexports`.
+Note that `ensure_schema_version_readable` stays deliberately absent from that
+facade: it is the layer-one gate, and promoting it would advertise the wrong
+contract to layer-two callers.
+
+**The twenty sites.** Each replaces its inequality with a call to the predicate
+and changes nothing else — same exception class, same translated message key,
+same per-object context mapping, same logging. This is not negotiable and is what
+defeated the naive consolidation: six profile sites raise `ModeloError` and
+`BucketsError` descendants on a different error branch from `EnvelopeVersionError`,
+each enrolled in the core error registry that drives envelope and exit-code
+mapping, and each caught narrowly by exact type in tests. The per-object
+diagnostics (`object_key`, `bucket_id`, `amendment_id`, observation and snapshot
+labels) identify which row is unreadable and the layer-one gate cannot produce
+them. Land the sweep in one atomic explicit-pathspec commit so no site is left
+straddling the two shapes; the shared worktree makes a half-swept state worse
+than either endpoint.
+
+**Out of scope, unchanged.** The sealed-archive range gate
+(`bucket_maintenance/_service.py:149` paired with `:157`) and the
+encrypted-bundle envelope gate (`user_profile/_bundle_encryption.py:91` paired
+with `:99`) already carry the two-sided shape this decision brings to the
+secure-object inner layer, and `_bundle.py:121`/`:131` is the same correct
+pattern. Layer one is untouched.
+
+**Two gates.** First, a structural AST gate asserting that no persisted
+inner-envelope read path compares `schema_version` with an inequality operator,
+built in the shape the project already uses for the modelo-literal gate. It MUST
+ship with an anti-tautology proof that plants a violation and proves the gate
+catches it, and it MUST resolve import aliases rather than matching a name — this
+audit's own critical finding is that two structural gates reported green against
+violations they could not see, and `a5d21ced8a` has already established the
+alias-aware pattern plus the planted-violation proof to copy. A gate landed here
+without a failure proof would reproduce the exact defect this campaign's
+highest-value finding identified.
+
+Second, a lineage-gate addition pinning the facts the vacuity proof rests on. Per
+Correction 1 above this is a relation, not a literal: assert that each registered
+namespace's declared `schema_version` is the version its reader compares against,
+and that the `Envelope.schema_version` field retains its `ge=1` floor. Record the
+inner-re-stamp obligation against the upgrader registration surface so the first
+registered hop inherits it explicitly.
+
+**The honest limit stays honest.** The obligation that an upgrader must re-stamp
+the inner envelope is only vacuously assertable while the upgrader registry is
+empty. It ships as a documented obligation plus a gate that becomes substantive on
+the first registered hop — never as a fabricated old-shape fixture, which
+`no-legacy-compatibility` forbids. Under the mandated post-flip restorability test
+it becomes directly executable.
 
 No locale catalogue entry is added: every site keeps its existing message key,
 because no new refusal reason is introduced — the refusal set is unchanged, only
 its trigger boundary is corrected.
+
+**Carried forward, not folded in.** The bucket-manifest gap recorded under
+Consequences is a fourth persisted format with no version gate of any kind. It is
+strictly stronger than this record's subject and it is NOT closed here. It is
+carried as a named step on the plan so it acquires an owner rather than resting
+in an ADR's out-of-scope note, which is where it would otherwise rot.
 
 ## Rationale
 
@@ -212,3 +304,34 @@ applied one layer inward.
   silently. That needs its own tier decision under the durability framing and is
   not folded in here. The manifest read surface was not audited beyond confirming
   the absence of a gate on this path.
+
+### Ruling, and a correction to the premise that this record governs landed work
+
+Ruled `accepted` at HEAD `7058ef827f` on the chosen option. The vacuity proof was
+re-derived independently rather than taken from the record above, and it holds,
+subject to Correction 1 in Considerations.
+
+**This record governs nothing that has shipped, and the belief that it does is
+wrong on the dates.** The dedup commits carrying this record's feature tag —
+`8bf229716e refactor(adapters): dedup storage/inbound clone clusters (Batch A G1)`
+and its siblings through `e9a3c35abe` — landed on 2026-07-21. This ADR was
+scaffolded on 2026-07-25 at 16:39 (`f8fa62ef11`), four days later. Those commits
+are jscpd clone-cluster extraction from the duplication-evidence-repair campaign;
+they share the `code-dedup-sweep` feature tag only because, as the companion audit
+records, `vault add adr` has no `--topic` flag and there is exactly one ADR
+filename slot per feature per date. They have no relation to this record's
+subject.
+
+The subject itself — the layer-two `>` to `!=` tightening — is entirely
+unimplemented: all twenty sites carry the loose form at HEAD, enumerated in
+Considerations. So there is no divergence between record and reality to
+reconcile, and no shipped work to retro-govern. This ADR is a forward decision,
+and the sequencing it asks for — land the tightening while it is provably a no-op,
+rather than after the first bump makes it a refusal against filed taxpayer data —
+is intact and unspent.
+
+The feature-tag collision is worth naming as a durable hazard rather than an
+incidental: a reader who sees dedup commits and an ADR under one tag will
+reasonably infer the ADR ruled them. It did not. Future campaigns should allocate
+a distinct feature tag per decision, or scaffold ADRs serially from the
+coordinator.
