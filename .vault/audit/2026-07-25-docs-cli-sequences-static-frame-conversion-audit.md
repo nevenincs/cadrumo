@@ -144,6 +144,42 @@ The drift is invisible from inside the conversation because each restatement is
 consistent with the speaker's memory of the last one rather than with the
 evidence.
 
+### review-above-the-work-launders-premise-false-errors | critical | A reviewing layer does not filter a false-premise error, it adds authority to it
+
+The false-premise finding in this session travelled five steps through three
+agents: one classifier produced a wrong diagnosis, a second agent challenged it,
+the first retracted, the coordinator had by then already relayed the original
+claim onward as fact, and the coordinator then issued a correction. The
+coordinator read the report, found it plausible, and passed it on with more
+authority than it arrived with.
+
+That is the expected behaviour of review, not a lapse in it. Review asks whether
+the reasoning is sound, and in a false-premise error the reasoning IS sound —
+every observation is true and only the unstated premise is false. So a layer
+above the work cannot filter this class; it launders it, converting a single
+agent's plausible error into a coordinated position. The only reader who catches
+it is one holding the specific domain fact, and that reader has to be looking at
+the same artefact at the same time. **A second reader must sit beside the
+classifier, not above it.**
+
+### flawed-instrument-contaminated-half-the-annotation-corpus | critical | One exit-status blind spot produced ninety unverified rows before anyone noticed
+
+The `@static` annotation sweep classified the corpus using a check carrying the
+exit-status blind spot recorded above. Ninety of the 185 shipped annotations —
+just under half — carry the code meaning "no verified blocker known", and the
+sweep's owner has since disclosed that all ninety were produced by that
+instrument rather than by a per-frame verdict, splitting them by risk and
+re-deriving the roughly two dozen where a wrong answer is dangerous. The row
+count is verified here; the attribution is the owner's own disclosure.
+
+This is the concrete cost of the earlier findings and the reason they are graded
+critical rather than noted. A blind spot in a one-off check wastes minutes. The
+same blind spot inside an instrument that sweeps a whole corpus produces a
+plausible, uniformly-formatted, machine-readable body of claims that reads as
+evidence, and every consumer downstream inherits it. The ratchet that counts that
+code would have driven agents at ninety rows, of which an unknown number cannot
+be retired.
+
 ## Recommendations
 
 Treat a measurement's key as the first thing to audit, before its result. Each
@@ -161,11 +197,16 @@ than nothing. The first is defeated by hygiene, the second by repeating the
 search along a different route, and the third only by a second reader who happens
 to hold the domain fact.
 
-Make the second reader a standing control rather than a courtesy. Across every
-finding above, the rescue was a second look by a different route or a second
-person, never care, never confidence, and never the instrument. Two agents
-classifying the same set from different starting points corrected four errors
-neither would have found alone, in both directions.
+Make the second reader a standing control rather than a courtesy, and place them
+beside the classifier rather than above. Across every finding above, the rescue
+was a second look by a different route or a second person, never care, never
+confidence, and never the instrument. Two agents classifying the same set from
+different starting points corrected four errors neither would have found alone,
+in both directions. Escalating to a reviewer does not substitute: a
+false-premise error passes review intact, because review checks the reasoning and
+the reasoning holds. Size dispatches so that no corpus-wide classification is
+produced by a single agent, and treat a sole classifier's output as a hypothesis
+carrying an undetected error rate rather than as findings.
 
 For structured data, parse it rather than searching its text. A line-oriented
 query of wrapped YAML or TOML returns a confident zero. On a registry surface
