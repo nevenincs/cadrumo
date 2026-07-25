@@ -47,3 +47,13 @@ Semantic CODE search was degraded and reported itself healthy: 188 indexed secti
 A verification trap worth recording: the live-scan test module is integration-marked, so a bare pytest invocation against it selects nothing and exits green. Every run here carried an explicit marker expression and a confirmed non-zero collected count. The gate that catches the defect class is itself reachable only past a selection defect of the same family.
 
 The discrimination proof required briefly reintroducing the defect in the production runner. The line was restored immediately and confirmed byte-identical to the commit before anything was staged.
+
+CORRECTION to this record's own verification, added after the fact rather than smoothed over.
+
+The verification behind this step ran the duplication module's unit half, 22 passed, plus targeted selections against the non-zero-exit and diagnostic cases. It did NOT run the full live-scan suite. A later independent re-run at commit 003a2f987d did, and found the disposition-coverage gate RED: the live scan observes clone groups in the TUI form-screen module that carry no recorded disposition, failing with 1 failed and 45 passed.
+
+Attributed before being reported. The form-screen module did not change during this session and carries no working-tree WIP, so the condition predates this work and is not caused by it; the clone groups are peer-owned TUI code. The gate itself is behaving correctly, since detecting exactly this drift is its purpose.
+
+The finding does not overturn this step's conclusion, because the false-green defect and the outcome classification are separate properties from the disposition record's freshness, and both were verified directly. It does qualify the CLAIM: the duplication authority is sound, and one of its gates is red on stale reference data. Those are different facts and were reported as such.
+
+The deeper lesson is the one this campaign is about. A gate that is only ever run through a marker-scoped or -k-narrowed selection is a gate whose result you have not actually seen. The live-scan module is integration-marked, so every convenient way of running it during this step silently excluded the one test that was failing. Verifying a gate authority without running its slowest half is the same substitution the audit names: checking the description rather than the artifact.

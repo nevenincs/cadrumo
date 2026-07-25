@@ -7,8 +7,11 @@ date: '2026-07-25'
 modified: '2026-07-25'
 related:
   - '[[2026-07-25-test-harness-honesty-S01]]'
+  - '[[2026-07-25-test-harness-honesty-S04]]'
+  - '[[2026-07-25-test-harness-honesty-S05]]'
   - '[[2026-07-25-test-harness-honesty-S06]]'
   - '[[2026-07-25-test-harness-honesty-S07]]'
+  - '[[2026-07-25-test-harness-honesty-S08]]'
   - '[[2026-07-25-test-harness-honesty-adr]]'
   - '[[2026-07-25-test-harness-honesty-false-green-gates-audit]]'
   - '[[2026-07-25-test-harness-honesty-plan]]'
@@ -31,8 +34,11 @@ Auto-generated index of all documents tagged with `#test-harness-honesty`.
 ### exec
 
 - `2026-07-25-test-harness-honesty-S01` - CLOSED at commit ad2d2e3eda, the bare-.xls scan pattern carried a doubled backslash so it could never match a real literal and passed over four live sites, now corrected with three routed through the canonical constants, one documented Literal-alias escape guarded by a justification test, a positive control asserting every survivor pattern matches its target and rejects near-misses, and a non-empty-corpus assertion, verified by reintroducing a bare literal and observing the gate name the exact file and line
+- `2026-07-25-test-harness-honesty-S04` - Make the packaging preflight recipe state its marker selection explicitly, because it inherits the default marker expression over a mixed-marker directory and silently drops 106 of 330 tests while exiting zero, and the dropped modules are those named for the packaging smoke, Scoop, Homebrew, and Docker workflows the recipe gates
+- `2026-07-25-test-harness-honesty-S05` - Refresh the module size-budget pins that are documented as having no headroom while sitting far above actual, since a stale ceiling permits silent regrowth up to the gap and the gate reports green throughout
 - `2026-07-25-test-harness-honesty-S06` - VERIFIED-SOUND RECORD, the held-serial escalation mechanism is unwired by design rather than dead code, recorded so a later reader does not fix a mechanism that is deliberately inert
 - `2026-07-25-test-harness-honesty-S07` - VERIFIED-SOUND RECORD, the majority of the audited gate surface carries genuine positive controls, recorded so a later audit does not re-derive the same negative result
+- `2026-07-25-test-harness-honesty-S08` - Sweep the remaining survivor and conformance gates for the vacuous-pattern shape this audit found twice in one day, in the bare-literal scan and in the documentation claims gate, asserting each pattern against a known-match and a known-reject rather than trusting that a green gate is measuring anything
 
 ### plan
 
