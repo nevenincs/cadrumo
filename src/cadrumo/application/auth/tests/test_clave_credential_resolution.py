@@ -28,7 +28,11 @@ from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
-from .._sessions import ClaveCredentialsIncompleteError, _prepare_clave_auth
+from .._sessions import (
+    AuthProfileIdentityMismatchError,
+    ClaveCredentialsIncompleteError,
+    _prepare_clave_auth,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -267,9 +271,11 @@ def test_clave_permanente_resolves_its_identity_from_the_profile() -> None:
     # ambient environment configured, so the two providers cannot bleed
     # one taxpayer's identity into the other's login form.
     assert bound.cadrumo_clave_movil_dni_nie == settings.cadrumo_clave_movil_dni_nie
-    # Only Cl@ve Móvil binds a session to the profile identity today, so
-    # the permanente path returns no expected identity to assert against.
-    assert expected_identity is None
+    # Permanente is held to the profile identity like every other mode.
+    # It was exempt once, which meant its configured credential was never
+    # compared to the profile and the session check downstream had no
+    # expectation to compare either.
+    assert expected_identity == _TAX_ID
 
 
 def test_certificate_provider_needs_neither_clave_field() -> None:
@@ -284,7 +290,68 @@ def test_certificate_provider_needs_neither_clave_field() -> None:
         bound, expected_identity = _prepare_clave_auth(settings, AuthProviderKind.CERTIFICATE)
 
     assert bound is settings
-    assert expected_identity is None
+    # It still carries an expectation. The certificate has no
+    # operator-configured credential to check up front, but it does bind
+    # a normalised NIF parsed from its subject at session bind, so the
+    # profile identity is handed down for that comparison rather than
+    # left as None, which would have made the session check no-op.
+    assert expected_identity == _TAX_ID
+
+
+def test_every_provider_carries_an_expectation_for_the_session_check() -> None:
+    """The guard promises fail-closed; it must deliver it for each mode.
+
+    It returned early for anything but Cl@ve Movil, so two of three
+    providers got no comparison at all - and because the expectation is
+    what the downstream session check compares against, returning None
+    made that check pass silently rather than skip loudly. A provider
+    added later would inherit the same silence, which is why this is
+    asserted across the whole enum rather than for the two that were
+    missing.
+    """
+
+    _register_profile(**{"auth.dni_nie": _TAX_ID})
+    missing: list[str] = []
+    for kind in AuthProviderKind:
+        with override_settings(
+            cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
+            cadrumo_clave_permanente_dni_nie=SecretStr(_TAX_ID),
+        ) as settings:
+            _bound, expected_identity = _prepare_clave_auth(settings, kind)
+        if expected_identity != _TAX_ID:
+            missing.append(f"{kind.value} -> {expected_identity!r}")
+
+    assert not missing, (
+        f"provider(s) returned no profile identity for the session check to compare: {missing}. "
+        "A provider with no expectation makes the downstream check pass silently."
+    )
+
+
+def test_a_clave_identity_disagreeing_with_the_profile_is_refused_for_every_clave_mode() -> None:
+    """The refusal itself, not just the expectation, covers each Cl@ve mode.
+
+    Permanente previously returned before this comparison, so a
+    credential belonging to another taxpayer was accepted without
+    complaint on that provider.
+    """
+
+    _register_profile(**{"auth.dni_nie": _OTHER_TAX_ID})
+    refused: dict[str, bool] = {}
+    for kind in (AuthProviderKind.CLAVE_MOVIL, AuthProviderKind.CLAVE_PERMANENTE):
+        with override_settings(
+            cadrumo_clave_movil_dni_nie=SecretStr(_OTHER_TAX_ID),
+            cadrumo_clave_permanente_dni_nie=SecretStr(_OTHER_TAX_ID),
+        ) as settings:
+            try:
+                _prepare_clave_auth(settings, kind)
+            except AuthProfileIdentityMismatchError:
+                refused[kind.value] = True
+            else:
+                refused[kind.value] = False
+
+    assert all(refused.values()), (
+        f"a mismatched Cl@ve identity was accepted by: {[k for k, v in refused.items() if not v]}"
+    )
 
 
 @pytest.fixture(autouse=True)
