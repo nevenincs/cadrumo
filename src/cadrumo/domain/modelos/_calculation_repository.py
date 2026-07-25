@@ -18,9 +18,6 @@ from ._calculation_revision import CalculationRevision, CalculationRevisionCatal
 from ._errors import ModeloError
 
 _LOGGER = get_logger(__name__)
-_CALCULATION_NAMESPACE = "cadrumo.domain.modelos.calculation_revisions"
-_CALCULATION_OBJECT_KEY = "catalogue"
-_CALCULATION_CATALOGUE_VERSION = 1
 _CALCULATION_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_calculation_revision_persistence"
 
 

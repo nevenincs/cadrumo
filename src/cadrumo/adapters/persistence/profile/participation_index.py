@@ -38,8 +38,7 @@ if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
 _LOGGER = get_logger(__name__)
 
 # Namespace, sensitivity, and schema version are sourced from the single registry
-# authority. The registry def's value mirrors the domain-owned
-# ``PARTICIPATION_INDEX_NAMESPACE`` string; the adapter consumes the def.
+# authority, which is their sole declaration site.
 _PARTICIPATION_INDEX_NAMESPACE = TRANSACTION_PARTICIPATION_INDEX_NAMESPACE.namespace
 _PARTICIPATION_INDEX_SENSITIVITY = TRANSACTION_PARTICIPATION_INDEX_NAMESPACE.sensitivity
 _PARTICIPATION_INDEX_SCHEMA_VERSION = TRANSACTION_PARTICIPATION_INDEX_NAMESPACE.schema_version

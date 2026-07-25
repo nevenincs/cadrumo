@@ -19,10 +19,6 @@ from __future__ import annotations
 from ._errors import ModeloError
 from ._work_unit import WorkUnit, WorkUnitCatalogue
 
-_WORK_UNIT_NAMESPACE = "cadrumo.domain.modelos.work_units"
-_WORK_UNIT_OBJECT_KEY = "catalogue"
-_WORK_UNIT_CATALOGUE_VERSION = 1
-
 
 class WorkUnitPersistenceError(ModeloError):
     """Raised when the work-unit catalogue cannot be loaded or saved.
