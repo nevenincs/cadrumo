@@ -1137,14 +1137,18 @@ application:
       work_period_token_unrecognised: --period '%{token}' no es reconeix. Indica --year
         %{year} per separat i usa un token de període com 0A, Q1, 1T o 01.
       work_unit_already_discarded: La unitat de treball ja està descartada.
+      work_unit_create_discarded: Aquest objectiu de declaracio es va descartar. Tornar
+        a crear-lo retorna la mateixa unitat de treball descartada, de manera que
+        no es pot reprendre.
       work_unit_discarded_cannot_calculate: La unitat de treball %{work_unit_id} està
         descartada i no es pot calcular. Crea una nova unitat de treball sobre el
         mateix modelo, any i període per continuar.
       work_unit_discarded_cannot_import: La unitat de treball %{work_unit_id} està
         descartada i no es pot importar. Crea una nova unitat de treball sobre el
         mateix modelo, any i període per continuar.
-      work_unit_mutation_refused: La unitat de treball està descartada; creeu una
-        nova unitat de treball per continuar.
+      work_unit_mutation_refused: La unitat de treball esta descartada, i tornar a
+        crear el mateix objectiu de declaracio es rebutja en lloc de retornar una
+        unitat nova.
       work_unit_not_found: No s'ha trobat cap unitat de treball de modelo amb id=%{work_unit_id}.
       work_unit_revision_divergence: La unitat de treball %{work_unit_id} es va crear
         amb la revisió de registre %{work_unit_revision}, però la revisió determinada
@@ -6628,8 +6632,19 @@ flows:
         DNI. No s''ha desat res.'
       auth_dni_nie: DNI o NIE amb què us identifiqueu
       auth_fecha_validez: Data de validesa del document, AAAA-MM-DD (per a DNI)
+      auth_fecha_validez_invalid: Introduïu la data de validesa com a AAAA-MM-DD,
+        per exemple 1990-01-31.
       auth_numero_soporte: Número de suport del document
       auth_provider: Forma d'identificació davant l'AEAT
+      censal_pull: Emplenar amb les dades censals de l'AEAT
+      censal_pull_auth_incomplete: La vostra identificació és incompleta, així que
+        encara no es pot llegir l'AEAT. Completeu-la primer.
+      censal_pull_contested: 'L''AEAT discrepa del que vau declarar a: %{paths}. La
+        vostra resposta es manté; resoleu cada cas vosaltres mateixos.'
+      censal_pull_done: 'Dades censals de l''AEAT llegides: %{adopted} camp(s) emplenats,
+        %{unchanged} ja coincidents, %{diverging} discrepants.'
+      censal_pull_no_provider: Trieu com us identifiqueu davant l'AEAT abans de llegir
+        les vostres dades censals.
       certificate: Certificat
       certificate_active: Certificat actiu
       certificate_done: 'Identificació: %{provider}; certificat actiu: %{name}.'
@@ -6641,7 +6656,6 @@ flows:
         certificate: Certificat electrònic
         clave_movil: Cl@ve Mòbil
         clave_permanente: Cl@ve Permanent
-      auth_fecha_validez_invalid: 'Introduïu la data de validesa com a AAAA-MM-DD, per exemple 1990-01-31.'
     actions:
       section: Accions
     column:

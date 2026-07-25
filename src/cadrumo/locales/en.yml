@@ -1031,14 +1031,16 @@ application:
       work_period_token_unrecognised: --period '%{token}' is not recognised. Pass
         --year %{year} separately and use a period token such as 0A, Q1, 1T, or 01.
       work_unit_already_discarded: The work unit is already discarded.
+      work_unit_create_discarded: This filing target was discarded. Creating it again
+        resolves to the same discarded work unit, so the target cannot be resumed.
       work_unit_discarded_cannot_calculate: Work unit %{work_unit_id} is discarded
         and cannot be calculated. Create a fresh work unit on the same modelo, year,
         and period to continue.
       work_unit_discarded_cannot_import: Work unit %{work_unit_id} is discarded and
         cannot be imported. Create a fresh work unit on the same modelo, year, and
         period to continue.
-      work_unit_mutation_refused: The work unit is discarded; create a fresh work
-        unit to continue.
+      work_unit_mutation_refused: The work unit is discarded, and re-creating the
+        same filing target is refused rather than returning a fresh unit.
       work_unit_not_found: No modelo work unit found with id=%{work_unit_id}.
       work_unit_revision_divergence: Work unit %{work_unit_id} was created against
         registry revision %{work_unit_revision}, but the law-determined revision for
@@ -6195,8 +6197,19 @@ flows:
         was saved.'
       auth_dni_nie: DNI or NIE you identify with
       auth_fecha_validez: Validity date on the document, YYYY-MM-DD (DNI holders)
+      auth_fecha_validez_invalid: Enter the validity date as YYYY-MM-DD, for example
+        1990-01-31.
       auth_numero_soporte: Support number printed on the document
       auth_provider: How you identify to AEAT
+      censal_pull: Fill in from AEAT censal data
+      censal_pull_auth_incomplete: Your identification is incomplete, so AEAT cannot
+        be read yet. Complete it first.
+      censal_pull_contested: 'AEAT differs from what you declared at: %{paths}. Your
+        answer stands; resolve each one yourself.'
+      censal_pull_done: 'AEAT censal data read: %{adopted} field(s) filled in, %{unchanged}
+        already matching, %{diverging} differing.'
+      censal_pull_no_provider: Choose how you identify to AEAT before reading your
+        censal data.
       certificate: Certificate
       certificate_active: Active certificate
       certificate_done: 'Identification: %{provider}; active certificate: %{name}.'
@@ -6208,7 +6221,6 @@ flows:
         certificate: Electronic certificate
         clave_movil: Cl@ve Móvil
         clave_permanente: Cl@ve Permanente
-      auth_fecha_validez_invalid: 'Enter the validity date as YYYY-MM-DD, for example 1990-01-31.'
     actions:
       section: Actions
     column:

@@ -1,14 +1,18 @@
 """What the profile manager can do besides edit a field.
 
 The manager page answers "what does my profile hold". These are the
-operations an operator reaches for while looking at that answer: take a
-copy of it away, and say how they identify to AEAT.
+operations an operator reaches for while looking at that answer: say how
+they identify to AEAT, fill the profile in from what AEAT already holds,
+and take a copy of it away. They are offered in that order because it is
+the order they depend on each other in - the pull cannot run until the
+authentication mode is complete, and says so rather than failing at the
+browser.
 
 Each one is a plain callable returning a
 :class:`~cadrumo.adapters.inbound.tui.ManagerActionOutcome`, so the screen
-never learns what a profile bundle or an authentication provider is — it
-renders a label, calls the callable, and shows the sentence it gets back.
-That is the same injected-door arrangement the rest of this seam uses.
+never learns what a censal read or a profile bundle is — it renders a
+label, calls the callable, and shows the sentence it gets back. That is
+the same injected-door arrangement the rest of this seam uses.
 
 Import is deliberately absent. ``aeat config profile import`` feeds
 secrets over stdin and threads an atomic-create callback the screen has no
@@ -30,6 +34,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
 
     from ....adapters.inbound.tui import FormPage, ManagerAction, ManagerActionOutcome
+    from ....application.user_profile import CensalReconciliation
     from ....core import AuthProviderKind
 
     FormPresenter = Callable[[FormPage], Mapping[str, str] | None]
@@ -74,6 +79,119 @@ Not a profile path: which certificate is active lives in the auth
 registry beside the certificate itself, so this row is the one on the
 page that does not round-trip through the ``auth`` profile section.
 """
+
+
+def censal_pull_action() -> ManagerAction:
+    """Fill the censal fields in from what AEAT already publishes.
+
+    This is the reason the profile screen exists: AEAT holds the
+    taxpayer's censal state at *Mis Datos Censales*, and an operator
+    should not retype what the authority already has.
+    """
+    from ....adapters.inbound.tui import ManagerAction
+
+    return ManagerAction(key="censal-pull", label=tr("flows.manager.action.censal_pull"), run=_run_censal_pull)
+
+
+def _run_censal_pull() -> ManagerActionOutcome:
+    """Read the censal consulta and reconcile it onto the active profile.
+
+    A pure read. The reader navigates to the consulta view and parses the
+    rendered DOM; it submits nothing, and refuses at runtime if AEAT
+    lands it on a modification surface. Nothing on this path can file.
+
+    There is no way to aim the read at anybody: the taxpayer is taken
+    from the authenticated session's own identity, so this action offers
+    no subject to choose and could not read another person's data if an
+    operator asked it to.
+
+    The commit routes through ``apply_censal_read`` onto ``apply_cotejo``,
+    the single censal apply authority the CLI verb drives, so one
+    ``CENSO_APPLIED`` marks the change and no second write path exists.
+
+    Three things can happen to any field and the operator is told all
+    three. A blank path is adopted. A path already carrying the same
+    value is unchanged. A path where AEAT disagrees with an answer the
+    operator declared is reported and left standing - that is the
+    reconciliation working, not a failure. A value a previous pull
+    adopted is refreshed rather than reported, because there is no
+    operator answer to protect and both sides are the authority's.
+    """
+    import asyncio
+
+    from ....adapters.inbound.tui import ManagerActionOutcome
+    from ....application.live import pull_censal_datos
+    from ....application.user_profile import (
+        apply_censal_read,
+        censal_facts_from_read,
+        reconcile_censal_read,
+    )
+    from ....application.workflow import workflow_state_repository
+    from ._manager_frontend import build_active_profile_overview
+
+    unavailable = _censal_pull_unavailable()
+    if unavailable is not None:
+        # Refuse before the read, not after: the live navigation can push
+        # a Cl@ve prompt to the operator's phone, and spending their
+        # second factor on a pull that cannot authenticate is worse than
+        # telling them what is missing.
+        return ManagerActionOutcome(message=unavailable)
+
+    repository = workflow_state_repository()
+    state = repository.load()
+    read = asyncio.run(pull_censal_datos())
+    facts = censal_facts_from_read(read)
+    reconciliation = reconcile_censal_read(state.active_profile_record(), facts)
+    repository.save(apply_censal_read(state, read))
+
+    return ManagerActionOutcome(
+        message=_censal_pull_summary(reconciliation, read_count=len(facts)),
+        overview=build_active_profile_overview(),
+    )
+
+
+def _censal_pull_unavailable() -> str | None:
+    """Return why the pull cannot run yet, or ``None`` when it can.
+
+    "Ready" here means exactly what the live session entry means by it,
+    because it asks the same question through the same predicate the
+    authentication page uses. A separate opinion about credential
+    sufficiency would drift from the entry that actually authenticates,
+    and this action would then either refuse a working setup or promise
+    a pull that fails at the browser.
+
+    That the certificate mode passes this gate carrying no Cl@ve half is
+    not an oversight: the session entry imposes no Cl@ve requirement on
+    it either, and the certificate's own sufficiency is settled where the
+    provider loads it.
+    """
+    on_record = _auth_facts_on_record()
+    if not on_record.get(_AUTH_PROVIDER_PATH, "").strip():
+        return tr("flows.manager.action.censal_pull_no_provider")
+    if _clave_refusal(on_record) is not None:
+        return tr("flows.manager.action.censal_pull_auth_incomplete")
+    return None
+
+
+def _censal_pull_summary(reconciliation: CensalReconciliation, *, read_count: int) -> str:
+    """Report what the read did to each field, in the operator's terms.
+
+    Unchanged is derived rather than reported by the reconciliation,
+    which emits only the two axes that changed something: a field AEAT
+    agrees with is neither adopted nor diverging.
+    """
+    adopted = len(reconciliation.adopted)
+    diverging = len(reconciliation.divergences)
+    summary = tr(
+        "flows.manager.action.censal_pull_done",
+        adopted=adopted,
+        unchanged=read_count - adopted - diverging,
+        diverging=diverging,
+    )
+    if not reconciliation.divergences:
+        return summary
+    paths = ", ".join(path for path, _ in reconciliation.divergences)
+    return f"{summary} {tr('flows.manager.action.censal_pull_contested', paths=paths)}"
 
 
 def export_action() -> ManagerAction:
@@ -466,10 +584,11 @@ def _provider_label(kind: AuthProviderKind) -> str:
 
 def manager_actions() -> tuple[ManagerAction, ...]:
     """Every action the manager offers, in the order it offers them."""
-    return (export_action(), certificate_action())
+    return (certificate_action(), censal_pull_action(), export_action())
 
 
 __all__ = [
+    "censal_pull_action",
     "certificate_action",
     "export_action",
     "manager_actions",

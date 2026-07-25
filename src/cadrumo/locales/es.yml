@@ -1143,14 +1143,18 @@ application:
       work_period_token_unrecognised: --period '%{token}' no se reconoce. Indica --year
         %{year} por separado y usa un token de periodo como 0A, Q1, 1T o 01.
       work_unit_already_discarded: La unidad de trabajo ya está descartada.
+      work_unit_create_discarded: Este objetivo de declaracion fue descartado. Volver
+        a crearlo devuelve la misma unidad de trabajo descartada, por lo que no se
+        puede reanudar.
       work_unit_discarded_cannot_calculate: La unidad de trabajo %{work_unit_id} está
         descartada y no puede calcularse. Crea una nueva unidad de trabajo sobre el
         mismo modelo, ejercicio y periodo para continuar.
       work_unit_discarded_cannot_import: La unidad de trabajo %{work_unit_id} está
         descartada y no puede importarse. Crea una nueva unidad de trabajo sobre el
         mismo modelo, ejercicio y periodo para continuar.
-      work_unit_mutation_refused: La unidad de trabajo está descartada; cree una nueva
-        unidad de trabajo para continuar.
+      work_unit_mutation_refused: La unidad de trabajo esta descartada, y volver a
+        crear el mismo objetivo de declaracion se rechaza en lugar de devolver una
+        unidad nueva.
       work_unit_not_found: No existe ninguna unidad de trabajo de modelo con id=%{work_unit_id}.
       work_unit_revision_divergence: La unidad de trabajo %{work_unit_id} se creó
         con la revisión de registro %{work_unit_revision}, pero la revisión determinada
@@ -6666,8 +6670,19 @@ flows:
         se ha guardado nada.'
       auth_dni_nie: DNI o NIE con el que se identifica
       auth_fecha_validez: Fecha de validez del documento, AAAA-MM-DD (para DNI)
+      auth_fecha_validez_invalid: Introduzca la fecha de validez como AAAA-MM-DD,
+        por ejemplo 1990-01-31.
       auth_numero_soporte: Número de soporte del documento
       auth_provider: Forma de identificación ante la AEAT
+      censal_pull: Rellenar con los datos censales de la AEAT
+      censal_pull_auth_incomplete: Su identificación está incompleta, así que aún
+        no se puede leer la AEAT. Complétela primero.
+      censal_pull_contested: 'La AEAT discrepa de lo que usted declaró en: %{paths}.
+        Su respuesta se mantiene; resuelva cada caso usted mismo.'
+      censal_pull_done: 'Datos censales de la AEAT leídos: %{adopted} campo(s) rellenados,
+        %{unchanged} ya coincidentes, %{diverging} discrepantes.'
+      censal_pull_no_provider: Elija cómo se identifica ante la AEAT antes de leer
+        sus datos censales.
       certificate: Certificado
       certificate_active: Certificado activo
       certificate_done: 'Identificación: %{provider}; certificado activo: %{name}.'
@@ -6679,7 +6694,6 @@ flows:
         certificate: Certificado electrónico
         clave_movil: Cl@ve Móvil
         clave_permanente: Cl@ve Permanente
-      auth_fecha_validez_invalid: 'Introduzca la fecha de validez como AAAA-MM-DD, por ejemplo 1990-01-31.'
     actions:
       section: Acciones
     column:

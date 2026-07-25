@@ -1072,14 +1072,16 @@ application:
         meg külön: --year %{year}, és használjon időszak-tokent, például 0A, Q1, 1T
         vagy 01.'
       work_unit_already_discarded: A munkakérés már el van vetve.
+      work_unit_create_discarded: Ezt a bevallasi celt elvetettek. Az ismetelt letrehozas
+        ugyanazt az elvetett munkaegyseget adja vissza, igy nem folytathato.
       work_unit_discarded_cannot_calculate: A(z) %{work_unit_id} munkaegység el lett
         dobva, nem számítható. Hozz létre új munkaegységet ugyanazon modell, év és
         időszak alapján a folytatáshoz.
       work_unit_discarded_cannot_import: A(z) %{work_unit_id} munkaegység el lett
         dobva, nem importálható. Hozz létre új munkaegységet ugyanazon modell, év
         és időszak alapján a folytatáshoz.
-      work_unit_mutation_refused: A munkakérés el van vetve; új munkakérést kell létrehozni
-        a folytatáshoz.
+      work_unit_mutation_refused: A munkaegyseg el van vetve, es ugyanannak a bevallasi
+        celnak az ujboli letrehozasa elutasitasra kerul uj egyseg helyett.
       work_unit_not_found: 'Nem található modell munkaegység ezzel az azonosítóval:
         %{work_unit_id}.'
       work_unit_revision_divergence: A(z) %{work_unit_id} munkaegység a(z) %{work_unit_revision}
@@ -6514,8 +6516,19 @@ flows:
         dátum. Semmi sem lett elmentve.'
       auth_dni_nie: DNI vagy NIE, amellyel azonosítja magát
       auth_fecha_validez: A dokumentum érvényességi dátuma, ÉÉÉÉ-HH-NN (DNI esetén)
+      auth_fecha_validez_invalid: Az érvényességi dátumot ÉÉÉÉ-HH-NN alakban adja
+        meg, például 1990-01-31.
       auth_numero_soporte: A dokumentumon szereplő támogatási szám
       auth_provider: Azonosítás módja az AEAT felé
+      censal_pull: Kitöltés az AEAT censusadataiból
+      censal_pull_auth_incomplete: Az azonosítása hiányos, ezért az AEAT még nem olvasható.
+        Előbb egészítse ki.
+      censal_pull_contested: 'Az AEAT eltér az Ön bevallásától itt: %{paths}. Az Ön
+        válasza marad érvényben; oldja meg egyenként.'
+      censal_pull_done: 'AEAT censusadatok beolvasva: %{adopted} mező kitöltve, %{unchanged}
+        már egyezett, %{diverging} eltér.'
+      censal_pull_no_provider: A censusadatok beolvasása előtt válassza ki, hogyan
+        azonosítja magát az AEAT felé.
       certificate: Tanúsítvány
       certificate_active: Aktív tanúsítvány
       certificate_done: 'Azonosítás: %{provider}; aktív tanúsítvány: %{name}.'
@@ -6527,7 +6540,6 @@ flows:
         certificate: Elektronikus tanúsítvány
         clave_movil: Cl@ve Móvil
         clave_permanente: Cl@ve Permanente
-      auth_fecha_validez_invalid: 'Az érvényességi dátumot ÉÉÉÉ-HH-NN alakban adja meg, például 1990-01-31.'
     actions:
       section: Műveletek
     column:
