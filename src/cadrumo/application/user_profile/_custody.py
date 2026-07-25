@@ -13,6 +13,24 @@ failures from
 :class:`~cadrumo.adapters.persistence.storage.RecoveryVerificationError` are
 rendered as a false verification result rather than leaking backend exception
 details.
+
+Every operation here resolves the secret-store passphrase through an explicit
+callback rather than letting the storage substrate pick its own: the
+interactive door supplies a guarded terminal prompt, a programmatic driver
+supplies a fixed value or accepts the non-interactive resolver below. The
+substrate's own resolver ends in an unguarded terminal read, so inheriting it
+would put a blocking, potentially echoing prompt behind a custody mutation.
+
+These operations run without a login session and without the failed-attempt
+backoff that guards profile login. That exemption is deliberate, not an
+oversight. Any caller able to invoke them already holds same-user read access
+to the ``master.key`` and ``master.kdf`` artefacts and can mount the identical
+Argon2id attack offline at the same cost, so throttling this surface would
+confer no protection at all; and the recovery mnemonic carries 256 bits of
+entropy drawn from :func:`secrets.token_bytes`, which is not guessable at any
+rate. The tripwire is reachability: if these operations ever become remotely
+or cross-user reachable, the offline-equivalence argument collapses and the
+failed-attempt backoff MUST be extended to cover them.
 """
 
 from __future__ import annotations
@@ -30,6 +48,7 @@ from ...adapters.persistence.storage import (
 )
 from ...adapters.persistence.storage.master_key import (
     FileFallbackMasterKeyProvider,
+    PassphraseCallback,
     RecoveryEnrollmentOutcome,
     activate_master_key_provider,
     get_master_key_provider,
@@ -252,9 +271,39 @@ def _mark_active_profile_recovery_enrolled(settings: Settings) -> None:
     _reconcile_active_profile_recovery_flag(settings=settings, enrolled=True)
 
 
+def _configured_passphrase_callback(settings: Settings) -> PassphraseCallback:
+    """Return a resolver for the configured secret-store passphrase that never prompts.
+
+    Bound to the ``settings`` the calling operation already resolved, so a
+    caller-supplied override is honoured instead of being silently re-read from
+    the process environment.
+
+    Deliberately incapable of prompting. Enrollment must unwrap the master key
+    before it can mint a candidate envelope, and the storage substrate's own
+    resolver ends in a bare terminal read carrying no real-console precondition
+    and no promotion of an echo-suppression failure to a refusal. A programmatic
+    driver that configures no passphrase therefore gets a typed refusal here
+    rather than a prompt it cannot answer; an interactive caller supplies its
+    own guarded prompt and never reaches this resolver.
+    """
+
+    def _resolve() -> str:
+        configured = settings.cadrumo_secret_passphrase
+        if configured is None:
+            raise SecretStoreError(
+                "no secret-store passphrase is available for this custody operation; "
+                "pass an explicit passphrase_callback, or configure the secret-store "
+                "passphrase in the settings environment before enrolling a recovery code.",
+            )
+        return configured.get_secret_value().rstrip("\r\n")
+
+    return _resolve
+
+
 def create_recovery_code(
     *,
     confirm: Callable[[str], str],
+    passphrase_callback: PassphraseCallback | None = None,
     settings: Settings | None = None,
 ) -> CustodyRecoveryEnrollmentResult:
     """Enroll a first recovery code and return a :class:`CustodyRecoveryEnrollmentResult`.
@@ -266,10 +315,19 @@ def create_recovery_code(
     enrollment refuses with a typed
     :class:`~cadrumo.adapters.persistence.storage.SecretStoreError` naming the
     rotate path. The plaintext words are never persisted or returned.
+
+    ``passphrase_callback`` resolves the existing secret-store passphrase that
+    unwraps the master key. An interactive caller MUST supply one — the CLI
+    supplies its hardened no-echo terminal prompt — so the enrollment never
+    inherits the storage substrate's unguarded terminal read. Omitting it
+    selects :func:`_configured_passphrase_callback`, which reads the configured
+    passphrase and refuses when none is set; it never prompts, so a
+    programmatic driver cannot silently acquire an interactive prompt.
     """
     return _enroll_recovery_code(
         operation=recovery_create,
         confirm=confirm,
+        passphrase_callback=passphrase_callback,
         settings=settings,
         event_type=BucketEventType.CUSTODY_RECOVERY_CODE_CREATED,
     )
@@ -278,17 +336,20 @@ def create_recovery_code(
 def rotate_recovery_code(
     *,
     confirm: Callable[[str], str],
+    passphrase_callback: PassphraseCallback | None = None,
     settings: Settings | None = None,
 ) -> CustodyRecoveryEnrollmentResult:
     """Replace the enrolled recovery code and return a :class:`CustodyRecoveryEnrollmentResult`.
 
-    Same two-phase shape as :func:`create_recovery_code`, but requires an
-    existing enrollment; the prior envelope survives untouched until the
-    operator's retype fully verifies the fresh candidate.
+    Same two-phase shape as :func:`create_recovery_code`, including the same
+    ``passphrase_callback`` contract; but requires an existing enrollment, and
+    the prior envelope survives untouched until the operator's retype fully
+    verifies the fresh candidate.
     """
     return _enroll_recovery_code(
         operation=recovery_rotate,
         confirm=confirm,
+        passphrase_callback=passphrase_callback,
         settings=settings,
         event_type=BucketEventType.CUSTODY_RECOVERY_CODE_ROTATED,
     )
@@ -298,12 +359,23 @@ def _enroll_recovery_code(
     *,
     operation: Callable[..., RecoveryEnrollmentOutcome],
     confirm: Callable[[str], str],
+    passphrase_callback: PassphraseCallback | None,
     settings: Settings | None,
     event_type: BucketEventType,
 ) -> CustodyRecoveryEnrollmentResult:
     resolved = _settings(settings)
     path = recovery_wrap_path(resolved)
-    provider = get_master_key_provider(settings_override=resolved)
+    # The callback is threaded explicitly rather than left to the provider's own
+    # default, which resolves the passphrase through a bare terminal read: on a
+    # console-less host that read blocks forever, and where echo suppression
+    # cannot be established it degrades to an echoing read. Neither outcome is
+    # acceptable behind a custody mutation, so no enrollment inherits it.
+    provider = get_master_key_provider(
+        settings_override=resolved,
+        passphrase_callback=(
+            passphrase_callback if passphrase_callback is not None else _configured_passphrase_callback(resolved)
+        ),
+    )
     outcome = operation(provider=provider, path=path, created_at=utc_now(), confirm=confirm)
     # The envelope is durably installed here; the audit trail is recorded before
     # the separate, non-atomic manifest-flag write so a crash between the two
@@ -333,7 +405,16 @@ def verify_recovery_code(*, mnemonic: str, settings: Settings | None = None) -> 
     """
     resolved = _settings(settings)
     path = recovery_wrap_path(resolved)
-    provider = get_master_key_provider(settings_override=resolved)
+    # Verification reads the envelope and unwraps it with the mnemonic alone, so
+    # this provider is only narrowed to the file backend and never asked for the
+    # master key — no passphrase is resolved on this path today. The explicit
+    # non-interactive callback keeps that true by construction: a later change
+    # that does reach the master key gets a typed refusal rather than silently
+    # inheriting the substrate's unguarded terminal read.
+    provider = get_master_key_provider(
+        settings_override=resolved,
+        passphrase_callback=_configured_passphrase_callback(resolved),
+    )
     try:
         outcome = recovery_verify(provider=provider, path=path, mnemonic=mnemonic)
     except RecoveryVerificationError as exc:
@@ -364,8 +445,15 @@ def _require_file_custody(settings: Settings) -> None:
     only the encrypted-file backend supports. Keyring and unsecured custody are
     refused with a typed, remediating :class:`SecretStoreError` rather than
     crashing later against absent ``master.key`` / ``master.kdf`` artefacts.
+
+    The probe provider is narrowed and discarded without ever being asked for
+    the master key; the explicit non-interactive callback keeps it that way,
+    so a backend check can never turn into a prompt.
     """
-    provider = get_master_key_provider(settings_override=settings)
+    provider = get_master_key_provider(
+        settings_override=settings,
+        passphrase_callback=_configured_passphrase_callback(settings),
+    )
     if not isinstance(provider, FileFallbackMasterKeyProvider):
         raise SecretStoreError(
             "passphrase change requires the file secret-store backend; the resolved "
