@@ -66,6 +66,7 @@ from ._descendant_group import (
     DESCENDANT_GROUP,
     DESCENDANT_LOCALE_KEYS,
     DESCENDANT_NIF_VALIDATOR_ID,
+    DESCENDANT_PAGE_IDS,
     DESCENDANTS_COUNT_PAGE_ID,
     DESCENDANTS_GROUP_ID,
     attach_descendant_group,
@@ -89,7 +90,12 @@ from ._models import (
     WizardSection,
     WizardVisibility,
 )
-from ._persistence import descendant_facts_from_answers, project_answers
+from ._persistence import (
+    descendant_answers_from_record,
+    descendant_facts_from_answers,
+    project_answers,
+)
+from ._results import ConfigProfileCreateResult, ConfigProfileEditResult
 from ._setup_legal_validators import (
     SETUP_UNIDAD_FAMILIAR_VALIDATOR_ID,
     attach_setup_legal_validators,
@@ -112,9 +118,12 @@ __all__ = [
     "DESCENDANT_GROUP",
     "DESCENDANT_LOCALE_KEYS",
     "DESCENDANT_NIF_VALIDATOR_ID",
+    "DESCENDANT_PAGE_IDS",
     "SETUP_UNIDAD_FAMILIAR_VALIDATOR_ID",
     "TAXPAYER_PROJECTION_VALIDATOR_ID",
     "WIZARD_FLOWS",
+    "ConfigProfileCreateResult",
+    "ConfigProfileEditResult",
     "CotejoAxis",
     "PageLegalZone",
     "ProfileFactsCheckpointStore",
@@ -142,6 +151,7 @@ __all__ = [
     "checkpoint_facts_from_answers",
     "cotejo_axes",
     "cotejo_outcome",
+    "descendant_answers_from_record",
     "descendant_facts_from_answers",
     "load_active_taxpayer_profile",
     "persist_descendant_door_answers",

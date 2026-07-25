@@ -26,7 +26,6 @@ def _route(**overrides: object) -> bool:
     call = {
         "mode": "edit",
         "scripted": False,
-        "named": False,
         "explicit_fields": False,
         "full_screen": True,
     }
@@ -56,21 +55,19 @@ def test_a_host_that_cannot_go_full_screen_keeps_the_wizard() -> None:
     assert not _route(mode="create", full_screen=False)
 
 
-def test_create_with_a_name_on_the_command_line_keeps_the_wizard() -> None:
-    """A supplied name is the existing scripted create shape.
+def test_a_name_on_the_command_line_never_diverts_either_verb() -> None:
+    """The rule takes no name at all, and that is the point.
 
-    The manager's own first screen is what collects the profile name, so
-    a name already on the command line means the caller is not asking for
-    that screen. Anything already automated therefore keeps working.
+    Routing ``create NAME`` to the wizard was the defect that made the
+    registration screen unreachable: a name is the documented create
+    shape, so an operator met the retired flow every time. A name now
+    prefills the screen's name field instead of deciding which surface
+    they get, which is why it is absent from the signature — a routing
+    input that cannot be passed cannot be honoured by mistake.
     """
-    assert not _route(mode="create", named=True)
+    import inspect
 
-
-def test_edit_ignores_the_name_argument_for_routing() -> None:
-    """``edit`` addresses an existing profile, so a name never diverts it.
-
-    Unlike create, the name here selects a target rather than supplying
-    one the screen would otherwise collect — it says nothing about whether
-    the operator wants a screen.
-    """
-    assert _route(mode="edit", named=True)
+    parameters = set(inspect.signature(manager_is_the_right_frontend).parameters)
+    assert "named" not in parameters, f"routing must not read a supplied name; takes {sorted(parameters)}"
+    assert _route(mode="create")
+    assert _route(mode="edit")
