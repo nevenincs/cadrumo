@@ -3,7 +3,7 @@ tags:
   - '#reference'
   - '#account-distribution-standard'
 date: '2026-07-25'
-modified: '2026-07-25'
+modified: '2026-07-26'
 related:
   - "[[2026-07-25-account-distribution-standard-adr]]"
   - "[[2026-07-25-shared-distribution-repository-adr]]"
@@ -149,37 +149,55 @@ submitted manifest's own installer URL before submitting any correction.
 ### Resolved: the community-Windows submission is this product
 
 The ambiguity flagged above was settled by reading the submitted manifests
-directly on 2026-07-25. It is **vaultspec-dashboard**, decisively, and the
-evidence converges on four independent fields of the published manifest:
+directly on 2026-07-25. It is **vaultspec-dashboard**, and the identification is
+conclusive rather than merely convergent.
 
-- `InstallerUrl` names
-  `nevenincs/vaultspec-dashboard/releases/download/v0.1.0/vaultspec-cli-x86_64-pc-windows-msvc.zip`
-- `PackageUrl` names the `vaultspec-dashboard` repository
-- `PublisherSupportUrl` names that repository's issue tracker
-- `ShortDescription` reads "Unified dashboard UI for the vaultspec ecosystem"
+The decisive evidence is a digest match, not a name match. The submitted
+`InstallerSha256` is `157B69CF...5D56AAE8`, and the `.sha256` companion file
+published alongside that exact asset on `vaultspec-dashboard`'s `v0.1.0` release
+reads the same value byte for byte. The manifest therefore points at *those exact
+bytes*, which no naming coincidence can produce.
 
-Corroborated independently: the `v0.1.0` release of `vaultspec-dashboard` really
-does carry an asset named exactly `vaultspec-cli-x86_64-pc-windows-msvc.zip`, so
-the installer URL resolves rather than merely being plausible. `vaultspec-core` is
-excluded: its assets are all named `vaultspec-core-*` and no submitted field
-references it.
+Four further fields agree independently: the installer URL names that
+repository's release asset, and `PackageUrl`, `PublisherSupportUrl` and
+`ReleaseNotesUrl` all resolve to it. The short description reads "Unified
+dashboard UI for the vaultspec ecosystem".
+
+`vaultspec-core` is excluded on packaging *shape*, which is a stronger exclusion
+than naming: its releases ship a bare `vaultspec-core-x86_64-pc-windows-msvc.exe`
+with no zip and no nested portable executable, while the submission declares
+`InstallerType: zip` with `NestedInstallerType: portable` and a nested
+`vaultspec.exe`. The shapes are incompatible.
+
+A second, unrelated channel corroborates: this product's own committed Scoop
+manifest claims the same bare family name and shims the same `bin/vaultspec.exe`.
+Two independent channels agreeing is what raises this from inference to fact.
 
 **The defect is narrower than the plan wording suggests, and that changes the
 correction.** The published identifier is `nevenincs.vaultspec`. Its *publisher*
 half is already correctly account-qualified; what is wrong is the *package-name*
-half, which carries the family name `vaultspec` rather than this product's own
-name. `PackageName` is likewise `vaultspec`. So the correction is not to add
-account qualification — that is present — but to replace the family name with the
-product name, giving `nevenincs.vaultspec-dashboard`.
+half, which carries the family name rather than this product's own name.
+`PackageName` is likewise `vaultspec`. So the correction is not to add account
+qualification — that is present — but to replace the family name with the product
+name, giving `nevenincs.vaultspec-dashboard`.
 
-One published version exists, `0.1.0`, and it is the only identifier in the
-account's publisher namespace. Unlike the Scoop manifest, this submission is
-technically sound: its `InstallerSha256` is a real digest and its URL resolves. It
-is a *naming* defect only, which is why the correction is forward-only — submit
-subsequent versions under `nevenincs.vaultspec-dashboard` and leave `0.1.0`
-orphaned under the family name, since a published identifier cannot be renamed in
-place. Each further release under the family name adds one more stranded version,
-which is why this precedes the next release rather than following it.
+One published version exists, `0.1.0`, submitted as a single pull request merged
+2026-07-21, and it is the only identifier in the account's publisher namespace.
+Unlike the Scoop manifest, this submission is technically sound: its digest is
+real and verified, and its URL resolves. It is a *naming* defect only, which is
+why the correction is forward-only — submit subsequent versions under
+`nevenincs.vaultspec-dashboard` and leave `0.1.0` orphaned under the family name,
+since a published identifier cannot be renamed in place. Each further release
+under the family name adds one more stranded version, which is why this precedes
+the next release rather than following it.
+
+One further defect surfaced while confirming this, and it belongs in the same
+correction: the submission describes a "dashboard UI" while the artifact it ships
+is a portable command-line executable. Whichever of those is wrong, a user reading
+the listing is misled about what they are installing, so the corrected submission
+should reconcile the description with the artifact rather than carrying the
+mismatch forward under a new name.
 
 Submitting the correction is an outward-facing action against a repository the
 account does not own. It is an operator action and is not performed here.
+
