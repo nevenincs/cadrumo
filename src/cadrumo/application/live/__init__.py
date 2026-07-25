@@ -216,6 +216,18 @@ class JustificanteCaptureOutcome:
         return self.filing_record.filing_record_id if self.filing_record is not None else None
 
 
+def censo_pull_surface():
+    """Return the filed-036 censal pull surface.
+
+    Deferred behind a call so importing ``application.live`` does not drag
+    the censal projection in for every consumer that only wants a
+    justificante.
+    """
+    from . import _censo_036_pull
+
+    return _censo_036_pull
+
+
 async def capture_expedientes(*, bucket_id: str, modelo: str, year: int):
     """Live-walk the AEAT declaration register and persist a bucket-scoped snapshot.
 
