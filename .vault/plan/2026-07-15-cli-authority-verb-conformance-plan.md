@@ -461,6 +461,11 @@ Run the formal code-review skill, reconcile findings, and prove every accepted A
 - [ ] `W06.P20.S285` - Ground the HITL confirmation key against the live descriptor set at the gate itself, so the permissive default cannot auto-approve an unclassified mutation if a future caller passes an unvalidated key; `src/cadrumo/entrypoints/mcp/_hitl.py`.
 - [ ] `W06.P20.S286` - Return the operator-output test probe and the wizard results schemas to their owning campaigns, since a test module registering a production schema key breaks 128 assertions and 19 setup errors while untracked; `src/cadrumo/application/operator_output/; src/cadrumo/application/wizard/`.
 - [ ] `W06.P20.S287` - Bisect the documentation lane with no workers and name the module whose worker exits, since it stalls identically at 24 and at 4 workers and emits no failure identities; `dev/docs/tests/test_docs_build.py`.
+- [ ] `W06.P20.S288` - Retire the M100 casilla-accessor hand-copy onto the public numeric_casilla_value it duplicates, in a module already importing both that ops module and the error class the copy raises; `src/cadrumo/domain/calculations/registry/_formula_runtime.py`.
+- [ ] `W06.P20.S289` - Route the modelo evidence-covers-snapshot copy onto the public assert_evidence_covers_snapshot, and retire the cross-package private import the aggregation test uses to reach it; `src/cadrumo/application/modelo/_verification_actions.py; src/cadrumo/application/aggregation/tests/test_ledger_filing_evidence.py`.
+- [ ] `W06.P20.S290` - Give the byte-identical FTS or-group builder one shared leaf home, since both copies sit in application packages that may not reach into each other; `src/cadrumo/application/command_search/_index.py; src/cadrumo/application/corpus_search/_lexical_index.py`.
+- [ ] `W06.P20.S291` - Route the filing export-field overlap predicate onto the registry copy, the only admissible canonical home across that layer boundary; `src/cadrumo/application/filing/_export.py`.
+- [ ] `W06.P20.S292` - Extract the shared journal-repository file substrate, noting the two classes are constraint-shape divergent so this is extraction rather than replacement; `src/cadrumo/application/config_reset.py; src/cadrumo/application/user_profile/_bundle_export_operation.py`.
 
 ## Description
 

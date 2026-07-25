@@ -693,6 +693,61 @@ same class of defect the review spent its length documenting in gates — a chec
 that runs, passes, and does not measure the thing the operation actually
 depends on.
 
+### s204-found-what-the-token-matcher-cannot | high | Four duplicate authorities invisible to the clone runner, one verified in full here
+
+The swarm step was executed as a single structural scan rather than a fan-out,
+because the semantic index could not serve as a discovery instrument at 466
+sections against 3982 files. The substitute was an AST scan whose load-bearing
+pass renames every local identifier to a positional placeholder and blanks every
+string before hashing a function body, so a concept implemented twice under
+different names, variables and messages still collides. Discrimination was
+proven before use against a hand-built twin pair and an unrelated control, and
+the corpus is quoted: 1372 production modules, all parsed, 8947 bodies hashed.
+
+That method matters because it explains the finding. The clone runner's twelve
+groups and these four barely intersect, and none of the four appears in the
+duplication dispositions — exactly what a token matcher blind to renamed twins
+would produce.
+
+The strongest cluster was verified independently here rather than accepted.
+`_formula_runtime_ops.numeric_casilla_value` is public and its docstring states
+it is the accessor shared by the M210, M131 and M303 formula-op families. The
+formula-runtime module nevertheless carries its own `_m100_numeric_casilla_value`
+with six call sites. Normalising only the function name and the error alias, the
+two bodies diff to nothing but the missing docstring — the executable code is
+identical. And the module already imports the ops module at line 40 and aliases
+that module's `UnresolvedFormulaDependencyError` at line 49, which is the very
+class its private copy raises.
+
+This is precisely the wizard-prompter shape the project's own discovery rule
+cites: a canonical owner whose docstring claims what ships, plus an undocumented
+hand-copy that a symbol-name search would never surface. The rule exists because
+that pattern cost hours once already, and it has now recurred in the calculation
+engine.
+
+The other three are a modelo copy of a public evidence-covers-snapshot invariant
+that raises a wider error type than the canonical and is reached by a
+cross-package private import from another package's test, and two byte-identical
+helpers — an FTS or-group builder duplicated across two application packages
+that may not reach into each other, and an export-field overlap predicate
+duplicated across a layer boundary. A journal-repository substrate is recorded
+separately as an extraction candidate rather than a duplication finding, because
+the two classes are constraint-shape divergent even though their file substrate
+is not.
+
+Two candidates were correctly killed by the substitutability pre-filter, and the
+name-collision pass was dominated by protocol methods rather than duplication —
+both signs the filter is doing its job rather than inflating a count.
+
+Novelty was established by exact search rather than assumed: no vault document
+names three of the symbols at all, and the fourth appears only as an invariant,
+never as a fact that two implementations of it exist.
+
+The honest limit is recorded with the finding: the scan collides only exactly
+equal normalised bodies, so one extra guard clause or a reordered statement pair
+defeats it. A hit is strong evidence and a null is weak. Production only, with a
+twelve-node floor. The four found are a lower bound, not an inventory.
+
 ## Recommendations
 
 Each recommendation below is tracked as a Step with a verification gate, per
