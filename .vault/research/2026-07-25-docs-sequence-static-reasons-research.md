@@ -113,14 +113,33 @@ frame that runs EARLIER IN ITS OWN SEQUENCE, so counting preceding executed
 frames answers the question directly. Twenty-two of the twenty-four have NO
 preceding executed frame at all, which makes the claim false as stated for all
 twenty-two — there is nothing in-sequence to capture from, and conversion would
-mean authoring a whole new setup chain rather than annotating a capture. Exactly
-one of the twenty-four is a genuine candidate.
+mean authoring a whole new setup chain rather than annotating a capture. The
+remaining two are settled by the correction immediately below — neither is a
+candidate either, so the true count is zero.
+
+**Corrected the same day: the count of genuine capture candidates is ZERO, not
+one.** The "preceding executed frame" test above is itself a proxy, and it failed
+the same way the claim it was testing did. The real property is not *does a
+predecessor exist* but *does a predecessor YIELD the value*.
+`troubleshooting-auth-diagnostics` frame 1 does have a predecessor —
+`config auth diagnostics list` — but that frame asserts
+`result.row_count == 0`. An empty list yields no id, so there was never anything
+to capture. Looking at what the predecessor actually returns, rather than that it
+exists, removes the last candidate.
+
+Chasing that one frame also reclassified it and its sibling. An auth diagnostic
+is only produced by a live AEAT auth page-drive (`_clave_movil_page_flow.py`
+persists failure diagnostics during page driving), so no hermetic chain can
+create one, and it must not be fabricated. Both
+`troubleshooting-auth-diagnostics` frame 1 and `troubleshooting-diagnostics-report`
+frame 0 are therefore `operator-artifact`, not `unconverted`. Note the commands
+themselves read a LOCAL store, so `live-aeat` would be the wrong code — the
+blocker is the artefact's provenance, not the verb's surface.
 
 The twenty-four decompose as:
 
-- **1 genuine capture candidate** — `troubleshooting/troubleshooting-auth-diagnostics`
-  frame 1 needs `<diagnostic-id>` and does have a preceding executed frame.
-- **16 need a new setup chain authored** — locally-derivable ids
+- **0 genuine capture candidates.**
+- **15 need a new setup chain authored** — locally-derivable ids
   (`work-unit-id`, `calculation-revision-id`, `verification-report-id`,
   `filing-record-id`, `bundle-id`, `relation-id`, `run-id`) with no producing
   frame in their sequence; nine of these are the `filing-spine` address-by-id
@@ -133,20 +152,26 @@ The twenty-four decompose as:
   command needs. Distinguishing the two is the point: "not a capture candidate"
   does not imply "not a conversion candidate", and an earlier draft of this
   paragraph wrongly collapsed them.
-- **3 are misclassified and need an externally-owned id** — the two
-  `modelo-036` records need an AEAT `<acuse>`, and `modelo-390-records-audit`
-  frame 1 needs a `<justificante-or-capture-id>`. These belong under
-  `live-aeat` / `operator-artifact`, not `unconverted`; correcting the code
-  lowers the ratchet honestly rather than by conversion.
+- **5 are misclassified and need an operator-supplied artefact** — the two
+  `modelo-036` records need an AEAT `<acuse>`, `modelo-390-records-audit`
+  frame 1 needs a `<justificante-or-capture-id>`, and the two `troubleshooting`
+  diagnostics frames need a real login-failure diagnostic. All five are
+  `operator-artifact`, not `unconverted`; correcting the code lowers the ratchet
+  honestly rather than by conversion. All five have been recoded, taking the
+  ratchet 87 → 82 and removing `how-to/modelo-036` from it entirely.
 
 So the optimistic reading — specifically that *a capture chain* would supply these
-— was wrong for 23 of 24, the same direction as the participation frame and for
+— was wrong for **all 24**, the same direction as the participation frame and for
 the same reason: a positive claim about a conversion that was never attempted.
-That is a narrower result than "23 are unconvertible": 20 of them (16 + 4) are
-still convertible by authoring setup and substituting literals, which is real
-work rather than an annotation. Only the 3 recoded frames are genuinely
-impossible locally. The open probe-scope question is therefore not blocking this
-residue; it remains open only for already-runnable frames.
+That is still narrower than "24 are unconvertible": 19 of them (15 + 4) remain
+convertible by authoring setup and substituting literals, which is real work
+rather than an annotation. Only the 5 recoded frames are genuinely impossible
+locally. The open probe-scope question is therefore not blocking this residue; it
+remains open only for already-runnable frames.
+
+The residue now contains no unexamined frame: every one of the 24 has been read
+against what its own sequence actually produces, and the 5 whose blocker was
+wrong have been corrected rather than left counted as debt.
 
 Measurement: `dev.docs.sequences.discover_sequences` over the live corpus in this
 checkout, reading each frame's own `blocked.code` and counting non-`STATIC`
