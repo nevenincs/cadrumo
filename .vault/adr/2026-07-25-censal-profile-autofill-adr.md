@@ -115,6 +115,37 @@ because the person authenticating is not always the taxpayer the profile
 describes. Requirement is conditional on the mode: a Cl@ve provider needs
 both Cl@ve fields, the certificate provider needs neither.
 
+**D1a - The Cl@ve second factor is a contraste whose form follows the
+document, and it is required only on the route that reads it.** D1's "a
+Cl@ve provider needs both fields" was wrong as written and is corrected
+here on evidence. The contraste is read only by the non-QR fallback, and
+it is the número de soporte for a NIE but the **validity date** for a
+DNI; Cl@ve Permanente's second half is a password, not a contraste at
+all. Requiring both fields unconditionally would refuse the default QR
+flow and Permanente outright, breaking flows that work today, which D2
+forbids. So: every Cl@ve mode requires `auth.dni_nie`; the contraste is
+required exactly when the non-QR route is selected, and is satisfied by
+either the soporte or the DNI validity date. The schema therefore needs a
+second contraste field for DNI holders, who have no home for their half
+today. Cl@ve Permanente's password stays out of the profile record and in
+the secret store, beside the certificate passphrase — a password is not a
+profile fact.
+
+**D1b - `dni_nie` is stored apart from `identity.tax_id` because it is a
+credential, not because the two may differ.** D1's original rationale
+said the authenticating person is not always the taxpayer the profile
+describes. That case is unreachable and must stay so: the pre-existing
+fail-closed guard refuses whenever the Cl@ve identity differs from
+`identity.tax_id`, and the login driver refuses third-party
+representation outright ("Do not provide represented-third-party data
+through this driver"). The product does not support acting as a
+representative, deliberately. The guard is NOT relaxed - keeping a
+fail-closed safety gate closed needs no justification, opening one does,
+and there is no current use case. The field stays separate because a
+credential input and a taxpayer identifier are different things that
+happen to carry equal values today, and conflating them would hide the
+day they diverge.
+
 **D2 - Authentication resolves credentials from the active profile,
 falling back to settings.** The profile is the authority when it carries
 them; the existing settings remain a fallback so nothing that works today
