@@ -26,7 +26,37 @@ blob-manifest constant, so the proof holds today on a coincidence of value.
 
 ## Outcome
 
-Landed in commit `cd64d40215` as a dedicated module in the storage tests package.
+**This step was executed twice concurrently, and the record below describes only
+one of the two.** Sixty-seven seconds apart, two agents pinned the vacuity
+argument without seeing each other: `ed0d05f3cc` extended the lineage gate,
+`cd64d40215` landed the dedicated module this record describes. Both were on
+main. Reconciled in `3491e04a31`, which is the commit that now governs.
+
+The reconciliation kept the stronger treatment of each fact rather than the
+earlier or the later one, and corrected a real defect in the dedicated module in
+passing. Its reach relation asserted the envelope bound reaches the LOWEST
+DECLARED namespace version; that reds when every namespace bumps past 1 — a
+correct change failing a gate for the wrong reason, which is precisely what the
+ruling's Correction 1 warned against. The bound is now related to the durability
+floor, which is also the semantically correct partner: the floor is the lowest
+version every read path keeps readable, the field bound is the lowest version the
+payload can represent, and those are one boundary seen from two sides.
+
+The dedicated module's anti-tautology proofs survived intact and are better than
+the lineage-gate version had — a helper that raises rather than defaulting, and a
+loosened stand-in driven through the same comparison the real assertion makes.
+The lineage-gate version's unique half also survived: the leg asserting every
+reader takes its expected version from its own namespace definition rather than
+restating a literal, which the dedicated module did not cover and which is the
+half the plan's wording specifically named. `test_schema_lineage.py` returned to
+being the layer-one gate it was.
+
+That the campaign closing a duplication finding introduced a duplication of its
+own, in the very gate meant to close it, is worth stating plainly rather than
+tidying away. The cause was two agents holding the same step with no coordination
+channel between them.
+
+What the dedicated module contributed, as originally recorded:
 
 It pins that the envelope's `schema_version` carries a positive lower bound, and
 that the bound reaches the lowest version any registered namespace declares. Both

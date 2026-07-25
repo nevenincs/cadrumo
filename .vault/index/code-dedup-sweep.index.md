@@ -10,6 +10,7 @@ related:
   - '[[2026-07-25-code-dedup-sweep-S02]]'
   - '[[2026-07-25-code-dedup-sweep-S03]]'
   - '[[2026-07-25-code-dedup-sweep-S04]]'
+  - '[[2026-07-25-code-dedup-sweep-S05]]'
   - '[[2026-07-25-code-dedup-sweep-adr]]'
   - '[[2026-07-25-code-dedup-sweep-plan]]'
   - '[[2026-07-25-code-dedup-sweep-rag-inventory-audit]]'
@@ -35,6 +36,7 @@ Auto-generated index of all documents tagged with `#code-dedup-sweep`.
 - `2026-07-25-code-dedup-sweep-S02` - Replace the inequality with the predicate at all twenty inner-envelope read paths in one atomic explicit-pathspec commit, each site keeping its exception class and translated message key and per-object context mapping unchanged, and the non-raising contract preserving the usage_ratios except-clause ordering
 - `2026-07-25-code-dedup-sweep-S03` - Add the structural AST gate refusing an inequality comparison of schema_version on a persisted inner-envelope read path, alias-aware rather than name-matching, shipping with a planted-violation anti-tautology proof modelled on commit a5d21ced8a
 - `2026-07-25-code-dedup-sweep-S04` - Extend the lineage gate to pin the two facts the vacuity proof rests on, asserting each registered namespace's declared schema_version against the version its readers compare and the Envelope ge=1 floor, expressed as a relation rather than the literal 1 so a legitimate per-namespace bump does not red it
+- `2026-07-25-code-dedup-sweep-S05` - Record the inner-re-stamp obligation on the upgrader registration surface so the first registered hop inherits it explicitly, without fabricating an old-shape fixture that no-legacy-compatibility forbids
 
 ### plan
 
