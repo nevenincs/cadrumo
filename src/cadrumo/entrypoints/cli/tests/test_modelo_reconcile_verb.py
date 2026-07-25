@@ -590,15 +590,19 @@ def test_reconcile_file_kind_declaration_m111_catches_casilla_divergence(
 # --- Modelo 390 (IVA resumen anual): compound iva.anual.* casilla ids -------
 
 MODELO_390_DECLARACION_FIXTURE = FIXTURES_DIR / "justificantes" / "390" / "2022-0A.pdf"
-"""Synthetic-generated M390 declaración PDF for ejercicio 2022, 0A. The
-sibling `2021-0A.pdf` fixture is NOT used here: it carries a bilingual
-(English-render) header whose printed NIF label
-(``Tax identification number(NIF)of filer:``) does not match the parser's
-Spanish-only tax-id regex (`_TAX_ID_RE` / `_TAX_ID_BEFORE_LABEL_RE` in
-``adapters/inbound/declaracion/_parser.py``) -- a separate, pre-existing
-fixture-content defect unrelated to the override-forwarding fix this section
-exercises. `2022-0A.pdf` and `2023-0A.pdf` are both Spanish-only and parse
-cleanly."""
+"""Synthetic-generated M390 declaración PDF for ejercicio 2022, 0A.
+
+Chosen for its VALUES, not its render. The sibling `2021-0A.pdf` is a real
+sanitised specimen whose sanitiser rewrote all thirteen printed amounts to
+the same ``1.000,00`` placeholder, so every compound ``iva.anual.*`` casilla
+reads alike and a casilla-crossing mismatch would be invisible. The
+synthetic `2022-0A.pdf` and `2023-0A.pdf` carry distinct per-casilla
+amounts, which is what makes the diff this section asserts observable.
+
+Render language is not a factor in that choice: the parser anchors on
+AEAT's Spanish and English presentador-NIF labels alike (the shared
+``PRESENTADOR_NIF_LABEL`` fragment in ``adapters/inbound/pdf``), so the
+English-render `2021-0A.pdf` parses cleanly too."""
 
 _M390_2022_0A_REVISION_ID = "2010-y-siguientes"
 """Law-determined registry revision for M390 filing_year=2022, period=0A."""
