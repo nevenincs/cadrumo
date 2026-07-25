@@ -171,10 +171,11 @@ surface before any W05 step is checked.
 
 ### w06-evidence-not-produced | critical | W06 itself is not verified; 12 of 13 records are empty scaffolds
 
-Thirteen execution records exist on disk for phase W06.P18 and zero for W06.P19.
-Twelve of the thirteen carry empty Description and Outcome sections: the
-scaffold exists, the evidence does not. Counted naively, thirteen files look
-like thirteen completed steps.
+Thirty-seven execution records exist on disk for phases W06.P18 and W06.P19.
+Thirty-six carry empty Description and Outcome sections: the scaffold exists,
+the evidence does not. Both dispatched verification agents scaffolded their
+full record set up front and filled almost none of it. Counted by file
+existence alone, those 36 files read as 36 completed Steps.
 
 No W06.P18 or W06.P19 step is closed by this review, and none should be until
 its record carries the command, the collected count, the exit line and the
@@ -258,6 +259,30 @@ last committed the same day by that campaign. It was left untouched. It is a
 parser gap in how the conformance gate reads a blocked-row marker, not a
 removed verb spelling, so it does not indicate a conformance regression in
 this campaign's surface.
+
+### what-was-actually-verified | low | The evidence this review does carry, so the next handover need not re-derive it
+
+Recorded so the remaining work is bounded rather than restarted. All figures
+were taken between commits `82a04ead90` and `c4ed7ea96b`.
+
+The live command tree materialises to 289 leaf paths with zero duplicate paths.
+The five CLI conformance suites collected 539 cases with 537 passing, and the
+two failures are triaged above. The four-locale suite passed 60 of 60. The
+layered import contracts, once able to run, stand at 3 kept and 2 broken. The
+duplication runner reports 12 clones at 0.07 percent duplicated lines over a
+non-empty corpus, and refuses five distinct failure modes as unavailable rather
+than green. The write-guard and manifest-parity suites pass 13 of 13 serially
+across both lanes. Repository-wide vault checks exit 0 with zero errors and no
+finding attributable to this feature. Every one of the 153 closed Steps
+reconciles to a substantive execution record.
+
+What remains genuinely unverified in W06 is the full unit lane, the serial
+integration lane, the documentation build and conformance gate, the generated
+CLI reference and static-tree conformance, the repository ratchets for skips
+and test doubles and tautology, the full collect-only classification, the
+semantic duplication re-audit across functionality clusters, and the formal
+code review over the campaign diff. None of those were run to completion, and
+none should be recorded as satisfied.
 
 ## Recommendations
 
