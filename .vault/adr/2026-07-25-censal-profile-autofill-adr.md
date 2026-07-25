@@ -279,3 +279,42 @@ schema's declared field set either. Neither escape was loud, and only
 the surface's total absence of output kept them from reaching a profile.
 Closing this is a follow-up in its own right: it applies to every writer
 of a profile fact, whatever becomes of D3.
+
+The censal regime fields are not available from AEAT's read surfaces as
+of 2026-07-25. This is a measured result, not an open task: nobody knows
+where to look, so recording it as pending would imply a lead that does
+not exist. The consulta populates the filing identity and the three
+address paths and nothing else, leaving all eight declared `censo`
+fields — enrolment state, the large-company and public-administration
+budget flags, the activity start and end dates, the establishment type,
+and the elected withholding rate — unfilled by any automated route.
+
+Three routes were eliminated against a live authenticated session. The
+two consultation navigations the consulta page offers install their
+target and submit, but both return to the same page unchanged, so the
+form-submit transport yields nothing. The obligations route serves a
+605-byte shell under a non-standard HTTP status with no rendered content
+and no form, unchanged after a network-idle wait and a further settle,
+so it is a client-rendered surface rather than a document this reader
+can parse. The activities route refuses with "No ha sido posible
+identificar el NIF introducido".
+
+That third refusal is the one worth understanding, because it looks like
+a navigation bug and is not. The error is present on arrival, before any
+interaction, so it is evidence about the register rather than about the
+request. The surface is the Censo de Actividades y Locales, the IAE
+matrícula that modelos 840 and 848 maintain, and personas físicas are
+exempt from IAE outright rather than by turnover. An exempt individual
+files no 840 and holds no matrícula entry, so the register has nothing to
+identify them against. The distinction that makes this counter-intuitive:
+an autónomo does hold an IAE epígrafe, declared on their 036, but holding
+an epígrafe and appearing in the matrícula are different facts. The
+absence is therefore consistent with a fully enrolled taxpayer, and the
+route is structurally empty for individuals rather than broken for one of
+them. Retrying it will not help.
+
+The consequence for the operator is that regime facts stay
+operator-declared through the ordinary edit path. The consequence for
+this record is that the identity and address half ships as real value on
+its own. Direct observation of a rendered regime surface would reopen
+this on evidence, which is a better trigger than a task nobody revisits.
