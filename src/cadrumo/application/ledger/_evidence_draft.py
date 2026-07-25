@@ -686,14 +686,11 @@ def _resolve_evidence_attachment_id(
     enforces (that call already ran, so the invariant holds here too): when
     *attachment_id* is supplied directly it is returned unchanged; when
     *evidence_id* is supplied, the linked ``purchase_invoice_evidence`` record's own
-    :attr:`~._evidence.PurchaseInvoiceEvidence.attachment_id` is looked up (guaranteed
-    non-``None`` for any evidence whose bytes were actually read, since
-    :func:`~application.ledger._evidence_input.resolve_purchase_invoice_evidence_input`
-    already refused a record with no in-store attachment).
+    :attr:`~._evidence.PurchaseInvoiceEvidence.attachment_id` is looked up, which is
+    a required field and so always names an in-store byte home.
     """
     if attachment_id is not None:
         return attachment_id
     assert evidence_id is not None  # narrowed by the caller's exactly-one guard
     record = PurchaseInvoiceEvidenceService(settings=settings).view(bucket_id=bucket_id, evidence_id=evidence_id)
-    assert record.attachment_id is not None  # guaranteed by resolve_purchase_invoice_evidence_input above
     return record.attachment_id

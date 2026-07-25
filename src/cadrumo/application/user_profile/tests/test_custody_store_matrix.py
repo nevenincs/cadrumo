@@ -775,6 +775,8 @@ def _seed_purchase_invoice_evidence(bucket_id: str) -> None:
         bucket_id=bucket_id,
         source_path="invoice.pdf",
         source_sha256="0" * 64,
+        # The bytes' in-store home; equals source_sha256 for a real `evidence add`.
+        attachment_id="0" * 64,
         media_kind=MediaKind.PDF,
         created_at=_NOW,
         updated_at=_NOW,

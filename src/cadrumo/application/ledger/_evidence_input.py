@@ -203,12 +203,18 @@ def resolve_purchase_invoice_evidence_input(
 ) -> EvidenceInput:
     """Read a purchase-invoice evidence record's bytes from secure storage.
 
-    The byte-custody guard over :func:`resolve_attachment_evidence_input`: a
-    :class:`PurchaseInvoiceEvidence` record holds no bytes of its own, only the
+    The provenance-binding adapter over :func:`resolve_attachment_evidence_input`:
+    a :class:`PurchaseInvoiceEvidence` record holds no bytes of its own, only the
     ``attachment_id`` naming their in-store home written at ``add`` time, so the
-    read delegates to the one attachment read path and stamps the record id as
-    provenance. A record without an ``attachment_id`` has no in-store bytes to
-    read; this raises rather than falling back to the cleartext ``source_path``
+    read delegates to the one attachment read path. Reading through this function
+    rather than calling the attachment resolver directly is what guarantees the
+    originating ``evidence_id`` is stamped on the result, so a record read can
+    never lose its provenance.
+
+    No byte-custody guard is needed or possible: ``attachment_id`` is a required
+    field, so a record that reached secure storage has an in-store byte home by
+    construction, and a byte-less record is refused at model validation rather
+    than here. The cleartext ``source_path`` is never a fallback byte source
     (sensitive-financial-data-secure-storage-only).
 
     Args:
@@ -217,15 +223,7 @@ def resolve_purchase_invoice_evidence_input(
 
     Returns:
         :class:`EvidenceInput`: In-memory bytes plus provenance, for an on-host read.
-
-    Raises:
-        PurchaseInvoiceEvidenceInputError: When the record carries no ``attachment_id``.
     """
-    if evidence.attachment_id is None:
-        raise PurchaseInvoiceEvidenceInputError(
-            f"evidence {evidence.evidence_id!r} has no in-store attachment; its bytes are not in secure storage",
-            suggestion="re-add the evidence so its bytes are stored in the encrypted attachment store",
-        )
     return resolve_attachment_evidence_input(
         evidence.attachment_id,
         store=store,

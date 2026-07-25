@@ -130,9 +130,11 @@ class PurchaseInvoiceEvidence(BaseModel):
     source_path: str = Field(min_length=1)
     source_sha256: str = Field(min_length=64, max_length=64)
     # In-store byte home: the bytes live encrypted in the AttachmentStore under this
-    # content-addressed id. `source_path` is a provenance breadcrumb only and is never
-    # read for bytes (sensitive-financial-data-secure-storage-only).
-    attachment_id: str | None = Field(default=None, min_length=64, max_length=64)
+    # content-addressed id. Required, because a record whose bytes are not in secure
+    # storage is not evidence -- `source_path` is a provenance breadcrumb only and is
+    # never read for bytes (sensitive-financial-data-secure-storage-only), so a
+    # byte-less record would be an unreadable claim about a file we do not hold.
+    attachment_id: str = Field(min_length=64, max_length=64)
     media_kind: MediaKind
     supplier: str | None = None
     invoice_number: str | None = None
@@ -216,7 +218,8 @@ class PurchaseInvoiceEvidencePatch(BaseModel):
 
     Only the fields listed here may be changed after an evidence record is
     created. ``evidence_id``, ``bucket_id``, ``source_path``,
-    ``source_sha256``, ``media_kind``, and the timestamp fields are immutable.
+    ``source_sha256``, ``attachment_id``, ``media_kind``, and the timestamp
+    fields are immutable.
     A ``None`` value for any optional field means "leave unchanged"; the
     service ignores ``None`` entries when applying the patch.
     """
