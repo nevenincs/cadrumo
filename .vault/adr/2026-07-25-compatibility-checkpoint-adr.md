@@ -11,7 +11,6 @@ related:
   - "[[2026-07-25-compatibility-checkpoint-research]]"
 ---
 
-
 # `compatibility-checkpoint` adr: `release the pre-release regime, or defer the durability commitment` | (**status:** `proposed`)
 
 ## Problem Statement
@@ -47,18 +46,23 @@ without one.
 - A product-rename commit raised a durable format's version and floor together
   twelve days ago; under the released regime that same commit would have owed a
   version-aware reader and a fixture.
-- Breaking changes below 1.0.0 are conventional and expressible in the existing
-  release tooling: `bump-minor-pre-major` (default `false`) makes a breaking change
-  bump the minor while the version is below 1.0.0, per the release-please manifest
-  configuration reference at
-  https://github.com/googleapis/release-please/blob/main/docs/manifest-releaser.md
+- The proposed `1.0.0` is an inherited tooling default, not a chosen milestone.
+  The release configuration declares no stance on `bump-minor-pre-major` at either
+  level, so a breaking change on a pre-1.0 version goes straight to `1.0.0` where
+  the alternative setting would give `0.3.0`; the research records the observed key
+  sets and the three-way confirmation of the default's semantics.
+- The tripwire couples the two decisions in one direction only. It forbids a 1.0
+  cut while the regime is pre-release; it never requires the flip to wait for
+  1.0.0. Freezing the floors and declaring the interface stable are separable
+  claims, and the gate already treats them as such.
 - The regime constant is documented one-way, so the cost of flipping early is not
   symmetric with the cost of flipping late.
 
 ## Considered options
 
 - **Flip to released at 1.0.0, freezing the three tier floors.** Satisfies the
-  tripwire and honours the accepted lifecycle mechanism as written. Rejected for
+  tripwire and honours the accepted lifecycle mechanism as written, though the
+  1.0.0 it satisfies was never consciously chosen. Rejected for
   now: it publishes a durability guarantee whose scope silently excludes two
   durable formats and one undeclared one, and it freezes floors on a substrate that
   has been in its intended shape for a day.
@@ -96,11 +100,17 @@ without one.
 ## Implementation
 
 We will defer the durability commitment and keep the release line below 1.0.0. The
-release configuration gains `"bump-minor-pre-major": true`, so the two
-breaking-change footers bump the minor and the next version is 0.3.0 with its
+release configuration declares `"bump-minor-pre-major": true` explicitly, so the
+two breaking-change footers bump the minor and the next version is 0.3.0 with its
 breaking changes described accurately in the changelog. `COMPATIBILITY_REGIME`
 stays pre-release, `RELEASED_FORMAT_FLOORS` stays unpopulated, the tripwire stays
 satisfied, and no floor freezes.
+
+Declaring that key is part of the decision in either direction. Leaving it unset is
+not a neutral position: it is the `false` default deciding a durability question on
+the evidence of a renamed CLI flag, silently and without a record. Whichever way
+the operator rules, the key is stated in the configuration so the version
+calculator's behaviour becomes a recorded choice rather than an inherited default.
 
 The deferral is bounded by four readiness conditions, each a gate rather than a
 judgement. First, `blob_manifest` joins the durability inventory, and enrollment
@@ -117,11 +127,18 @@ flip cannot pass green while excluding a durable format.
 
 When those conditions hold, the flip commit contains exactly this and nothing else:
 `COMPATIBILITY_REGIME` set to released; `RELEASED_FORMAT_FLOORS` populated with
-every durable format's then-current floor; the per-format current-version mapping
-in the central gate populated with the same key set; and the version bump to 1.0.0.
-It adds no upgrader and no fixture, because at the checkpoint every format sits at
-its floor and there is no old shape to read. Every subsequent bump above a frozen
-floor pays the full cost in its own commit.
+every durable format's then-current floor; and the per-format current-version
+mapping in the central gate populated with the same key set. It adds no upgrader and no
+fixture, because at the checkpoint every format sits at its floor and there is no
+old shape to read. Every subsequent bump above a frozen floor pays the full cost in
+its own commit.
+
+The version bump is deliberately not part of that commit. Data durability and
+interface stability are different claims answering to different evidence, and the
+tripwire's one-directional coupling permits the flip at any version. The flip lands
+when the formats have stabilised; 1.0.0 is cut when the interface has, which may be
+the same week or much later. The tripwire guarantees only the ordering, that 1.0.0
+cannot precede the flip.
 
 ## Rationale
 

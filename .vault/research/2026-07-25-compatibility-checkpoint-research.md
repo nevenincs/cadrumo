@@ -139,7 +139,7 @@ a restorability test. This is direct evidence of the durability cost the flip
 imposes on ordinary refactoring work, measured on this codebase within the last
 fortnight.
 
-### The version and the regime are now coupled by the tripwire
+### The version and the regime are coupled by the tripwire, in one direction only
 
 `pyproject.toml:3` declares `0.2.1`. The release calculator computes `1.0.0` from
 two correctly-labelled breaking-change footers (log at
@@ -147,8 +147,14 @@ two correctly-labelled breaking-change footers (log at
 `src/cadrumo/tests/test_compatibility_lifecycle_gate.py:82-89` asserts the package
 major stays below 1 while the regime is pre-release, reading the installed
 distribution metadata or falling back to `pyproject.toml`. Applying the proposed
-bump without flipping reds the suite by design. The version calculator takes no
-input from durability state; the coupling is one-directional and deliberate.
+bump without flipping reds the suite by design.
+
+The constraint runs one way. It bounds the version given the regime, never the
+regime given the version, so nothing forbids flipping to released at a pre-1.0
+version. Freezing the durability floors and declaring the interface stable are
+therefore separable decisions, and the only ordering the gate enforces is that
+1.0.0 cannot precede the flip. The calculator takes no input from durability state
+at all.
 
 ### The flip commit has three constants, not two
 
@@ -159,6 +165,26 @@ key set is bound equal to the floors by its own gate. The fixture corpus root
 `src/cadrumo/_data/compat_fixtures/` exists and is empty, as the pre-release
 posture requires, since fabricating an old-version fixture before a real
 post-checkpoint bump is barred.
+
+### The proposed 1.0.0 follows from an undeclared configuration default
+
+`release-please-config.json` declares no stance on `bump-minor-pre-major`. Its
+top-level keys are `$schema`, `changelog-path`, `changelog-sections`, `draft`,
+`include-component-in-tag`, `packages`, `prerelease`, `release-type`, and
+`separate-pull-requests`; the sole package entry carries `changelog-path`,
+`extra-files`, `package-name`, and `release-type`. The option is therefore at its
+default, which sends a breaking change on a pre-1.0 version straight to `1.0.0`;
+set to `true` it bumps the minor instead, giving `0.3.0` from `0.2.1`.
+
+The default's semantics are confirmed three ways. The configuration schema at
+https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json
+describes the property as "Breaking changes only bump semver minor if version <
+1.0.0" and declares no default value of its own. The manifest-releaser reference at
+https://github.com/googleapis/release-please/blob/main/docs/manifest-releaser.md
+gives the description "BREAKING CHANGE only bumps semver minor if version < 1.0.0"
+with "Default: false". And the observed computation from `0.2.1` to `1.0.0` is
+consistent with `false` and inconsistent with `true`. The proposed milestone is thus
+an inherited default rather than a considered choice.
 
 ### Option space the decision must choose between
 
@@ -196,7 +222,7 @@ prior durability record already establishes.
 - `src/cadrumo/tests/test_compatibility_lifecycle_gate.py:50,59,82-89,97-123`
 - `src/cadrumo/tests/test_persisted_format_enrollment.py:56-74`
 - `pyproject.toml:3`
-- `var/release/release-please.log`
+- `var/release/release-please.log`, `release-please-config.json`, `.release-please-manifest.json`
 - commits `e36927cf7b` (2026-07-25) and `34e04e3986` (2026-07-12)
 
 Semantic code search was degraded during this pass, serving a fraction of the tree
