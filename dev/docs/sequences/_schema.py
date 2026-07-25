@@ -187,6 +187,20 @@ class StaticBlocker(StrEnum):
     #: bar is a REPRODUCIBLE run, not a zero exit; see
     #: :attr:`NONDETERMINISTIC_OUTPUT` for the trap, and run any candidate twice
     #: before declaring this.
+    #:
+    #: Read the two hazards below as examples, never as an exhaustive checklist:
+    #: a reason this member is wrong is any property a single invocation cannot
+    #: show, and the list of those is open.
+    #:
+    #: A frame carrying a ``<placeholder>`` metavariable has not been run AT
+    #: ALL, so this member states only that its FORM is not yet rewritten; it is
+    #: never a verdict that the frame is convertible. Converting one means
+    #: authoring the ``@capture`` chain that produces the real id and then
+    #: running THAT twice, like any other candidate — the capture chain is the
+    #: thing under test, not the id. ``aeat app ledger participation
+    #: <transaction-id>`` is the worked refutation: it was recorded as needing
+    #: only a captured id, and supplying a real one still refused with exit 4
+    #: under :attr:`SANDBOX_POSTURE`.
     UNCONVERTED = "unconverted"
 
 
