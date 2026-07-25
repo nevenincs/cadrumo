@@ -19,7 +19,7 @@ a future audit query distinguish "who was trusted / what was sealed" from
 "what was actually read".
 
 Every function in this module is a thin, pure composition over
-:func:`~application.modelo._revision_persistence.emit_bucket_event`
+:func:`~application.modelo._revision_persistence.emit_modelo_bucket_event`
 (``composition-service-no-parallel-write-path``): none of them open a
 :class:`~adapters.persistence.storage.SecureObjectRepository` write path
 of their own for the recipient registry, the encryption primitives, or the
@@ -74,7 +74,7 @@ from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventObjectType, BucketEventType
 from ._review_package_recipient_registry import RecipientFingerprintRecord
 from ._review_package_review_only_workspace import ReviewOnlyWorkspace
-from ._revision_persistence import emit_bucket_event
+from ._revision_persistence import emit_modelo_bucket_event
 
 if TYPE_CHECKING:
     from ...domain.buckets import BucketEvent, BucketEventHistoryRepositoryProtocol
@@ -103,7 +103,7 @@ def emit_collab_recipient_registered_event(
         occurred_at: Optional override for the event's ``occurred_at``
             timestamp (tests only); defaults to the current UTC time.
     """
-    return emit_bucket_event(
+    return emit_modelo_bucket_event(
         repository=repository,
         bucket_id=bucket_id,
         event_type=BucketEventType.COLLAB_RECIPIENT_REGISTERED,
@@ -138,7 +138,7 @@ def emit_collab_recipient_removed_event(
         occurred_at: Optional override for the event's ``occurred_at``
             timestamp (tests only); defaults to the current UTC time.
     """
-    return emit_bucket_event(
+    return emit_modelo_bucket_event(
         repository=repository,
         bucket_id=bucket_id,
         event_type=BucketEventType.COLLAB_RECIPIENT_REMOVED,
@@ -175,7 +175,7 @@ def emit_collab_package_encrypted_event(
         occurred_at: Optional override for the event's ``occurred_at``
             timestamp (tests only); defaults to the current UTC time.
     """
-    return emit_bucket_event(
+    return emit_modelo_bucket_event(
         repository=repository,
         bucket_id=bucket_id,
         event_type=BucketEventType.COLLAB_PACKAGE_ENCRYPTED_FOR_RECIPIENT,
@@ -218,7 +218,7 @@ def emit_collab_package_decrypted_event(
         occurred_at: Optional override for the event's ``occurred_at``
             timestamp (tests only); defaults to the current UTC time.
     """
-    return emit_bucket_event(
+    return emit_modelo_bucket_event(
         repository=repository,
         bucket_id=bucket_id,
         event_type=BucketEventType.COLLAB_PACKAGE_DECRYPTED,
@@ -258,7 +258,7 @@ def emit_collab_review_only_workspace_opened_event(
         occurred_at: Optional override for the event's ``occurred_at``
             timestamp (tests only); defaults to the current UTC time.
     """
-    return emit_bucket_event(
+    return emit_modelo_bucket_event(
         repository=repository,
         bucket_id=bucket_id,
         event_type=BucketEventType.COLLAB_REVIEW_ONLY_WORKSPACE_OPENED,
@@ -300,7 +300,7 @@ def emit_collab_package_counter_signed_event(
         occurred_at: Optional override for the event's ``occurred_at``
             timestamp (tests only); defaults to the current UTC time.
     """
-    return emit_bucket_event(
+    return emit_modelo_bucket_event(
         repository=repository,
         bucket_id=bucket_id,
         event_type=BucketEventType.COLLAB_PACKAGE_COUNTER_SIGNED,
@@ -363,7 +363,7 @@ def emit_collab_feedback_countersign_attached_event(
             "cannot attach an unverified or absent counter-signed receipt to the journal; "
             "import_feedback_package must report counter_signature_verified=True first",
         )
-    return emit_bucket_event(
+    return emit_modelo_bucket_event(
         repository=repository,
         bucket_id=bucket_id,
         event_type=BucketEventType.COLLAB_PACKAGE_COUNTER_SIGNED,

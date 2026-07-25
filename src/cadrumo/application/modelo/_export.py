@@ -108,7 +108,7 @@ from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
 )
 from ._result_disposition_resolution import resolve_modelo_result_disposition
-from ._revision_persistence import emit_bucket_event as _emit_bucket_event
+from ._revision_persistence import emit_modelo_bucket_event as _emit_bucket_event
 from ._revision_replay_inputs import revision_filing_replay_inputs
 from ._verification_actions import (
     cross_period_expected_member_sets_from_profile,

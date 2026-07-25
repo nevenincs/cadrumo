@@ -82,7 +82,7 @@ from ._calculation_helpers import amendment_observations as _amendment_observati
 from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
 from ._registry_helpers import reject_incomplete_amendment_casillas as _reject_incomplete_amendment_casillas
 from ._registry_helpers import reject_unknown_override_casillas as _reject_unknown_override_casillas
-from ._revision_persistence import emit_bucket_event as _emit_bucket_event
+from ._revision_persistence import emit_modelo_bucket_event as _emit_bucket_event
 
 
 def _load_amendment_baseline[CasillaKey](

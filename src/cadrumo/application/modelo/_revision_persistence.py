@@ -113,7 +113,7 @@ _PRORRATA_PORCENTAJE_CASILLA = validated_casilla_id(
 )
 
 
-def emit_bucket_event(
+def emit_modelo_bucket_event(
     *,
     repository: BucketEventHistoryRepositoryProtocol,
     bucket_id: str,
@@ -284,7 +284,7 @@ def persist_calculation_revision(
             ),
         ),
     )
-    emit_bucket_event(
+    emit_modelo_bucket_event(
         repository=bucket_event_repository,
         bucket_id=work_unit.bucket_id,
         event_type=BucketEventType.MODELO_CALCULATION_CREATED,
@@ -651,7 +651,7 @@ def persist_filed_revision(
     )
 
     if prior_current is not None:
-        emit_bucket_event(
+        emit_modelo_bucket_event(
             repository=bucket_event_repository,
             bucket_id=work_unit.bucket_id,
             event_type=BucketEventType.MODELO_FILED_SUPERSEDED,
@@ -668,7 +668,7 @@ def persist_filed_revision(
             },
         )
 
-    emit_bucket_event(
+    emit_modelo_bucket_event(
         repository=bucket_event_repository,
         bucket_id=work_unit.bucket_id,
         event_type=BucketEventType.MODELO_FILED,
@@ -706,7 +706,7 @@ def persist_filed_revision(
 
 
 __all__ = [
-    "emit_bucket_event",
+    "emit_modelo_bucket_event",
     "persist_calculation_revision",
     "persist_filed_revision",
 ]

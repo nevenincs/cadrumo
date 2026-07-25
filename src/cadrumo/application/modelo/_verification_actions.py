@@ -145,7 +145,7 @@ from ._registry_resources import authority_via_resources as _authority_via_resou
 from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
 )
-from ._revision_persistence import emit_bucket_event as _emit_bucket_event
+from ._revision_persistence import emit_modelo_bucket_event as _emit_bucket_event
 from ._verification_cross_period import (
     _CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS as _CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS,
 )

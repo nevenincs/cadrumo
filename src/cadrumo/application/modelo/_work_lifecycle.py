@@ -46,7 +46,7 @@ from ...domain.modelos import (
 )
 from ._action_errors import WorkUnitAlreadyDiscardedError, WorkUnitMutationRefusedError, WorkUnitNotFoundError
 from ._registry_resources import reject_unknown_period_for_revision, reject_unknown_revision
-from ._revision_persistence import emit_bucket_event as _emit_bucket_event
+from ._revision_persistence import emit_modelo_bucket_event as _emit_bucket_event
 
 
 def _default_name(*, modelo: str, filing_year: int, period: Period) -> str:

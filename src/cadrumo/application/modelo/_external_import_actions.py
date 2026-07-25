@@ -76,7 +76,7 @@ from ._action_errors import ExternalModeloImportError, WorkUnitMutationRefusedEr
 from ._calculation_helpers import external_filing_observations as _external_filing_observations
 from ._registry_helpers import reject_unknown_import_casillas as _reject_unknown_import_casillas
 from ._revision_persistence import _supersede_prior_current_filing
-from ._revision_persistence import emit_bucket_event as _emit_bucket_event
+from ._revision_persistence import emit_modelo_bucket_event as _emit_bucket_event
 
 _JUSTIFICANTE_BOUND_EVIDENCE_KINDS = frozenset(
     {
