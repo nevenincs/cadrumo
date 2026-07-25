@@ -7,6 +7,12 @@ from typing import Literal
 
 from pydantic import Field, field_validator, model_validator
 
+from ....core.external_constants import (
+    PDF_EXTENSION,
+    XLS_EXTENSION,
+    XLSM_EXTENSION,
+    XLSX_EXTENSION,
+)
 from ._errors import RegistryValidationError
 from ._ids import LegalRefId, ModeloId, RevisionId, SourceRefId
 from ._schema_base import DateAxis, EvidenceTier, LegalRefs, RegistryModel, ReviewStatus
@@ -162,7 +168,12 @@ class SourceReference(RegistryModel):
         if "\\" in self.corpus_path or self.corpus_path.startswith(("/", ".")):
             raise RegistryValidationError("source reference corpus_path must be repository-relative POSIX style")
         if self.kind == "record_design":
-            allowed_record_design_suffixes = (".pdf", ".xls", ".xlsx", ".xlsm")
+            allowed_record_design_suffixes = (
+                PDF_EXTENSION,
+                XLS_EXTENSION,
+                XLSX_EXTENSION,
+                XLSM_EXTENSION,
+            )
             suffix = self.corpus_path.rsplit(".", 1)
             extension = "." + suffix[1].lower() if len(suffix) == 2 else ""
             if extension not in allowed_record_design_suffixes:

@@ -90,16 +90,63 @@ def test_no_bare_ledger_transaction_literals() -> None:
 # No bare ".xls" runtime usage outside canonical extension def
 # ---------------------------------------------------------------------------
 
-_RE_XLS_BARE = re.compile(r'"\\.xls"')
+_RE_XLS_BARE = re.compile(r'"\.xls"')
+
+# ``Literal[...]`` accepts only literal forms, never a ``Final[Literal[...]]``
+# constant, so a static extension type alias cannot route through
+# XLS_EXTENSION. The alias and the assertion pinning it to the constant are
+# the one authorised escape; ``test_xls_escape_still_needs_its_escape`` fails
+# if the construct justifying it ever disappears.
+_XLS_LITERAL_ALIAS_ESCAPE: Path = (
+    _SRC_ROOT / "domain" / "calculations" / "registry" / "_workbook_parity_models.py"
+)
 
 
 def test_no_bare_xls_extension_literals() -> None:
     """Runtime .xls usage must go through XLS_EXTENSION constant."""
-    files = _production_py_files()
+    files = tuple(p for p in _production_py_files() if p != _XLS_LITERAL_ALIAS_ESCAPE)
     hits = _scan(files, _RE_XLS_BARE)
     assert not hits, f"Found {len(hits)} bare '.xls' literal(s) outside canonical definition:\n" + "\n".join(
         f"  {h}" for h in hits
     )
+
+
+def test_xls_escape_still_needs_its_escape() -> None:
+    """The escaped module must still carry the Literal alias that justifies it."""
+    text = _XLS_LITERAL_ALIAS_ESCAPE.read_text(encoding="utf-8")
+    assert "Literal[" in text and _RE_XLS_BARE.search(text), (
+        f"{_XLS_LITERAL_ALIAS_ESCAPE} no longer carries a Literal-typed '.xls' alias, "
+        "so its escape from the bare-literal gate is unjustified — remove the escape."
+    )
+
+
+def test_bare_literal_patterns_discriminate() -> None:
+    """Positive control: each scan pattern must match its target and reject near-misses.
+
+    A pattern that matches nothing passes the survivor gates vacuously. The
+    shipped ``.xls`` pattern carried a doubled backslash and could never match
+    a real ``".xls"`` literal, so the gate reported clean over four live sites.
+    """
+    must_match: tuple[tuple[re.Pattern[str], str], ...] = (
+        (_RE_XLS_BARE, 'suffix = ".xls"'),
+        (_RE_XLS_BARE, 'ALLOWED = (".xls", ".xlsx")'),
+        (_RE_LEDGER_TRANSACTION, 'source = "ledger_transaction"'),
+    )
+    must_not_match: tuple[tuple[re.Pattern[str], str], ...] = (
+        (_RE_XLS_BARE, 'suffix = ".xlsx"'),
+        (_RE_XLS_BARE, "suffix = XLS_EXTENSION"),
+        (_RE_LEDGER_TRANSACTION, "source = BindingSourceKind.LEDGER_TRANSACTION"),
+    )
+    for pattern, line in must_match:
+        assert pattern.search(line), f"{pattern.pattern!r} failed to match its target {line!r}"
+    for pattern, line in must_not_match:
+        assert not pattern.search(line), f"{pattern.pattern!r} wrongly matched {line!r}"
+
+
+def test_literal_survivor_scan_reads_a_non_empty_corpus() -> None:
+    """A survivor gate over zero files would pass vacuously."""
+    files = _production_py_files()
+    assert len(files) > 500, f"expected the production corpus, scanned only {len(files)} files"
 
 
 # ---------------------------------------------------------------------------
