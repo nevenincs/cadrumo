@@ -40,10 +40,23 @@ the import-hygiene gate.
 The fourteen that reproduce, each with its owner:
 
 Module size budgets and the CLI module size gate both fail on the CLI config package initialiser
-at 1385 lines against a ceiling of 1261. This is the ONE failure on feature-owned surface. The
-file is clean at HEAD; the growth arrived with the wizard-retirement and TUI manager commits. The
-same budget gate additionally names a modelo reconcile module at 1283 against 1250 and a registry
-ledger-bindings module at 1475 against 1440, both owned elsewhere.
+at 1385 lines against a ceiling of 1261. This record ORIGINALLY attributed that breach to this
+campaign as its one feature-owned regression. That attribution was WRONG and is corrected here on
+numstat evidence.
+
+The file stood at 1254 lines, INSIDE the 1261 budget, immediately before the peer commit that opens
+the manager from profile create and edit. That commit is `+138 / -4`, a net `+134`, taking the file
+to 1388 and through the ceiling in one move. The three commits after it are this campaign's and
+they REDUCE the file: the TUI create-routing fix `+9 / -7`, the wizard retirement `+1 / -6`, and a
+docstring correction `+2 / -2`. Net across the three is minus three lines.
+
+The two subjects read as a joint cause because they land the same day on the same file and both
+concern the manager. The numstat separates them cleanly: one added 134 lines, the other removed
+three. The breach is the peer commit's, and no amount of this campaign's shrinking would have
+cleared a ceiling it did not cross.
+
+The same budget gate additionally names a modelo reconcile module at 1283 against 1250 and a
+registry ledger-bindings module at 1475 against 1440, both owned elsewhere.
 
 Marker integrity, mock inventory and monkeypatch inventory reproduce the three ratchet failures
 recorded under S198.

@@ -49,7 +49,14 @@ surfaces they touched, is NO for lint and NOT ESTABLISHED for tests: the feature
 surface is currently red, but every named cause is peer-owned and four of them are uncommitted, so
 the surface cannot be measured cleanly until the working tree settles.
 
-One genuine feature-adjacent regression stands separately and is not laundered by this attribution:
-the CLI config package initialiser exceeds its module size ceiling, recorded under S200.
+This record originally reserved one exception to that attribution, naming the CLI config package
+initialiser's module-size breach as a genuine feature-owned regression. That exception is
+WITHDRAWN. Numstat shows the file was inside its budget at 1254 lines until a peer commit added a
+net 134 lines in one move, and that this campaign's three subsequent commits reduce it by three.
+The correction is recorded in full under S200.
+
+With that reattributed, NO feature-owned regression has been identified in any failing lane. Every
+failure this Phase measured belongs to a concurrent campaign, to uncommitted peer work, or to the
+machine.
 
 The semantic code index was degraded throughout this Phase: the service reported `Source code sections: 466` against 3982 tracked Python files while declaring its code generation succeeded. No absence recorded here rests on a semantic miss.
