@@ -1541,6 +1541,9 @@ application:
         profile create NAME` para crearlo.
       profile_tombstoned_not_selectable: El perfil '%{profile}' está eliminado y no
         puede seleccionarse.
+      registration_label_blank: El nombre del perfil no puede estar vacío.
+      registration_passphrase_too_short: La contraseña debe tener al menos {minimum_length}
+        caracteres.
       repository_profile_record_classification_mismatch: La clasificación del registro
         de perfil no coincide con el contrato del repositorio.
       repository_profile_record_missing: No se encontró el registro de perfil en el
@@ -1555,8 +1558,6 @@ application:
         instantánea de perfil es más reciente de lo que admite esta aplicación.
       unsupported_bundle_schema_version: La versión del esquema del paquete no es
         compatible con esta versión de la aplicación.
-      registration_label_blank: 'El nombre del perfil no puede estar vacío.'
-      registration_passphrase_too_short: 'La contraseña debe tener al menos {minimum_length} caracteres.'
     notices:
       censo_divergences_open: '{count} dato(s) del perfil siguen difiriendo del Certificado
         de Situación Censal y quedan sin resolver: {axes}.'
@@ -6258,6 +6259,7 @@ errors:
       config login NAME` y vuelve a intentarlo.
     profile_name_collision: El nombre de perfil indicado ya está en uso. Elige un
       nombre distinto.
+    profile_registration: No se ha podido registrar el perfil.
     reconciliation_cross_bucket: La unidad de trabajo apuntada pertenece a un bucket
       distinto del perfil activo. La conciliación solo opera dentro del bucket del
       perfil activo.
@@ -6539,7 +6541,6 @@ errors:
     submission_preflight_error_findings: El borrador tiene {finding_count} incidencia(s)
       de severidad ERROR; resuélvelas antes de presentar.
     unsupported_currency: El código de moneda indicado no es compatible.
-    profile_registration: 'No se ha podido registrar el perfil.'
   snapshot:
     ambiguous_revision_selection: 'Más de una revisión del registro coincide con el
       modelo %{modelo_id}: %{candidate_ids}.'
@@ -6642,6 +6643,31 @@ flows:
     optional: Opcional
     page_header: Pregunta {position} de {total} — sección {section}
     required: Obligatorio
+  registration:
+    confirm_label: Repite la contraseña
+    create_button: Crear perfil
+    intro: 'Elige un nombre para este perfil y una contraseña que lo proteja. No hace
+      falta nada más: tu perfil existe en cuanto continúes, y completas el resto cuando
+      quieras.'
+    password_hint: Al menos {minimum_length} caracteres. Varias palabras corrientes
+      seguidas son más fáciles de recordar y más difíciles de adivinar que una sola
+      palabra corta y complicada.
+    password_label: Contraseña
+    refusal:
+      confirmation_mismatch: Las dos contraseñas no coinciden.
+      username_required: Introduce un nombre para este perfil.
+    section: Nombre y contraseña
+    strength:
+      fair: Razonable.
+      strong: Fuerte.
+      too_short: 'Demasiado corta: se requieren al menos {minimum_length} caracteres.'
+      weak: Aceptada, pero débil. Alargarla ayuda más que añadir símbolos.
+    title: Crea tu perfil
+    username_hint: Cómo aparece este perfil en las listas. Puedes cambiarlo más adelante.
+    username_label: Nombre del perfil
+    why_password: 'Tus datos fiscales se quedan en este ordenador y no se envían a
+      ningún sitio. La contraseña los cifra en el disco, de modo que no se pueden
+      leer sin ti. No se puede restablecer: si la pierdes, los datos son irrecuperables.'
   review:
     action_edit: Editar una respuesta
     action_prompt: ¿Qué quieres hacer?
@@ -6997,8 +7023,8 @@ wizard:
   commands:
     status:
       created: creado
+      saved: guardado
       updated: actualizado
-      saved: 'guardado'
   demo:
     description: Una sección de demostración para probar la funcionalidad del asistente.
     section:

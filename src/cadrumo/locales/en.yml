@@ -1412,6 +1412,9 @@ application:
         profile create NAME` to create it.
       profile_tombstoned_not_selectable: Profile '%{profile}' is tombstoned and cannot
         be selected.
+      registration_label_blank: The profile name cannot be empty.
+      registration_passphrase_too_short: The password must be at least {minimum_length}
+        characters long.
       repository_profile_record_classification_mismatch: Profile record classification
         does not match the repository contract.
       repository_profile_record_missing: Profile record was not found in the active
@@ -1426,8 +1429,6 @@ application:
         is newer than this application supports.
       unsupported_bundle_schema_version: The bundle schema version is not supported
         by this application version.
-      registration_label_blank: 'The profile name cannot be empty.'
-      registration_passphrase_too_short: 'The password must be at least {minimum_length} characters long.'
     notices:
       censo_divergences_open: '{count} profile field(s) still diverge from the Certificado
         de Situación Censal and remain unresolved: {axes}.'
@@ -5815,6 +5816,7 @@ errors:
       login NAME` and try again.
     profile_name_collision: The profile name provided is already in use. Choose a
       different name.
+    profile_registration: The profile could not be registered.
     reconciliation_cross_bucket: The addressed work unit belongs to a bucket other
       than the active profile's. Reconciliation only operates within the active profile
       bucket.
@@ -6074,7 +6076,6 @@ errors:
     submission_preflight_error_findings: Draft has {finding_count} ERROR-severity
       finding(s); resolve them before submission.
     unsupported_currency: The currency code provided is not supported.
-    profile_registration: 'The profile could not be registered.'
   snapshot:
     ambiguous_revision_selection: 'More than one registry revision matches modelo
       %{modelo_id}: %{candidate_ids}.'
@@ -6173,6 +6174,31 @@ flows:
     optional: Optional
     page_header: Question {position} of {total} — section {section}
     required: Required
+  registration:
+    confirm_label: Repeat the password
+    create_button: Create profile
+    intro: 'Choose a name for this profile and a password to protect it. That is all
+      that is needed: your profile exists as soon as you continue, and you fill in
+      the rest whenever you like.'
+    password_hint: At least {minimum_length} characters. A few ordinary words strung
+      together are easier to remember and harder to guess than one short complicated
+      word.
+    password_label: Password
+    refusal:
+      confirmation_mismatch: The two passwords do not match.
+      username_required: Enter a name for this profile.
+    section: Name and password
+    strength:
+      fair: Reasonable.
+      strong: Strong.
+      too_short: 'Too short: at least {minimum_length} characters are required.'
+      weak: Accepted, but weak. Making it longer helps more than adding symbols.
+    title: Create your profile
+    username_hint: How this profile appears in lists. You can change it later.
+    username_label: Profile name
+    why_password: 'Your tax data stays on this computer and is never sent anywhere.
+      The password encrypts it on disk, so it cannot be read without you. It cannot
+      be reset: if you lose it, the data is unrecoverable.'
   review:
     action_edit: Edit an answer
     action_prompt: What do you want to do?
@@ -6518,8 +6544,8 @@ wizard:
   commands:
     status:
       created: created
+      saved: saved
       updated: updated
-      saved: 'saved'
   demo:
     description: A demonstration section to test wizard functionality
     section:

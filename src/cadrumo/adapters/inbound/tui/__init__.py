@@ -12,6 +12,7 @@ degrades to the line-mode frontend.
 from __future__ import annotations
 
 from ._app import FlowTuiApp, run_flow_tui
+from ._registration_screen import RegistrationApp, run_registration_tui
 from ._select import select_flow_frontend
 from ._status_screen import (
     StatusApp,
@@ -43,6 +44,7 @@ __all__ = [
     "CADRUMO_THEMES",
     "CONTENT_MAX_WIDTH",
     "FlowTuiApp",
+    "RegistrationApp",
     "StatusApp",
     "StatusAuthView",
     "StatusFactRow",
@@ -52,6 +54,7 @@ __all__ = [
     "install_cadrumo_themes",
     "resolve_theme_name",
     "run_flow_tui",
+    "run_registration_tui",
     "select_flow_frontend",
     "toggle_appearance",
 ]

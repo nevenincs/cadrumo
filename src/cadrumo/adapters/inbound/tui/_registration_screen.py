@@ -1,0 +1,274 @@
+"""The first screen: choose a name and a password, and the profile exists.
+
+This is the literal first surface of the application. Everything else —
+the manager, the overview, filing — is behind it, because everything else
+needs an unlocked encrypted bucket and this is where that bucket is
+created.
+
+The screen is deliberately a single page rather than a paged flow. The
+three fields are one decision ("who am I on this machine, and what
+protects it"), and a password field needs its confirmation and its
+strength feedback visible at the same time as itself; splitting them
+across pages would make the operator hold state in their head for no
+gain. The paged substrate remains the right shape for the many-question
+profile detail that follows, and is used there.
+
+The copy carries what an offline CLI tool owes the operator at this
+moment: what is being created, why a password is being asked for at all
+when nothing is going over a network, and what happens if it is lost.
+That last point is not decoration — the passphrase derives the
+key-encryption key, so there is no reset path, and saying so before the
+field rather than after a failure is the difference between an informed
+choice and a trap.
+
+See Also:
+    :func:`~cadrumo.application.user_profile.register_profile_with_credentials`
+        The application door this screen drives; it creates the profile,
+        provisions the key material, and leaves the session unlocked.
+    :func:`~cadrumo.application.user_profile.assess_passphrase`
+        The advisory banding behind the live strength line.
+"""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, ClassVar, Final, override
+
+from textual.app import App, ComposeResult
+from textual.binding import Binding
+from textual.containers import Vertical, VerticalScroll
+from textual.widgets import Button, Footer, Input, Label, Static
+
+from ....core import PassphraseStrength
+from ....core.i18n import tr
+from ._theme import BASE_CSS, install_cadrumo_themes, toggle_appearance
+
+if TYPE_CHECKING:
+    from ....application.user_profile import ProfileRegistrationOutcome
+
+
+def strength_copy(strength: PassphraseStrength, *, minimum_length: int) -> str:
+    """Resolve the advisory line for one band.
+
+    Every key is written as a literal ``tr(...)`` argument rather than
+    looked up through a mapping. That is not style: the locale scaffolder
+    finds keys by static scan, so a key reached through a variable is
+    invisible to it and silently never lands in the catalogues. Spelling
+    them out here keeps the copy scaffoldable and greppable, and the
+    exhaustive match means a new band cannot ship without its own line.
+    """
+    match strength:
+        case PassphraseStrength.TOO_SHORT:
+            return tr("flows.registration.strength.too_short", minimum_length=minimum_length)
+        case PassphraseStrength.WEAK:
+            return tr("flows.registration.strength.weak")
+        case PassphraseStrength.FAIR:
+            return tr("flows.registration.strength.fair")
+        case PassphraseStrength.STRONG:
+            return tr("flows.registration.strength.strong")
+
+
+_STRENGTH_CLASSES: Final[dict[PassphraseStrength, str]] = {
+    PassphraseStrength.TOO_SHORT: "strength-refused",
+    PassphraseStrength.WEAK: "strength-weak",
+    PassphraseStrength.FAIR: "strength-fair",
+    PassphraseStrength.STRONG: "strength-strong",
+}
+"""CSS class per band. Colour is never the sole signal — the band's own
+words carry the meaning, and the class only reinforces it."""
+
+
+class RegistrationApp(App["ProfileRegistrationOutcome | None"]):
+    """Full-screen credential entry that creates and unlocks one profile."""
+
+    CSS = (
+        BASE_CSS
+        + """
+    #registration-banner {
+        dock: top;
+        height: 1;
+        width: 100%;
+        background: $primary;
+        color: $text;
+        text-style: bold;
+        padding: 0 2;
+    }
+    #registration-body {
+        border: round $primary;
+        border-title-color: $accent;
+        border-title-style: bold;
+        background: $surface;
+        padding: 1 3;
+        margin: 1 2;
+        width: 100%;
+        max-width: 84;
+        height: auto;
+    }
+    #registration-intro { margin: 0 0 1 0; }
+    #registration-why {
+        color: $text-muted;
+        border-left: outer $accent;
+        padding: 0 0 0 1;
+        margin: 0 0 1 0;
+    }
+    .field-label { text-style: bold; margin: 1 0 0 0; }
+    .field-hint { color: $text-muted; margin: 0 0 0 0; }
+    #registration-body Input { border: tall $accent; background: $background; margin: 0 0 1 0; }
+    #strength-line { margin: 0 0 1 0; }
+    .strength-refused { color: $error; }
+    .strength-weak { color: $warning; }
+    .strength-fair { color: $accent; }
+    .strength-strong { color: $success; }
+    #registration-refusal { color: $error; margin: 0 0 1 0; }
+    #registration-actions { height: 1; align-horizontal: right; margin: 1 0 0 0; }
+    """
+    )
+
+    BINDINGS: ClassVar = [
+        Binding("f3", "toggle_appearance", "", show=False),
+        Binding("escape", "abandon", "", show=False),
+    ]
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.outcome: ProfileRegistrationOutcome | None = None
+        """The created profile, or ``None`` when the operator abandoned the
+        screen. The caller distinguishes the two by this, never by an
+        exception, because abandoning registration is an ordinary choice."""
+
+    @override
+    def compose(self) -> ComposeResult:
+        """Yield the banner, the credential form, and the footer."""
+        yield Static(id="registration-banner")
+        with VerticalScroll(), Vertical(id="registration-body"):
+            yield Static(id="registration-intro")
+            yield Static(id="registration-why")
+
+            yield Label(tr("flows.registration.username_label"), classes="field-label")
+            yield Static(tr("flows.registration.username_hint"), classes="field-hint")
+            yield Input(id="field-username")
+
+            yield Label(tr("flows.registration.password_label"), classes="field-label")
+            yield Static(tr("flows.registration.password_hint"), classes="field-hint")
+            yield Input(id="field-password", password=True)
+            yield Static(id="strength-line")
+
+            yield Label(tr("flows.registration.confirm_label"), classes="field-label")
+            yield Input(id="field-confirm", password=True)
+
+            yield Static(id="registration-refusal")
+            with Vertical(id="registration-actions"):
+                yield Button(tr("flows.registration.create_button"), id="btn-create", classes="-primary")
+        yield Footer()
+
+    def on_mount(self) -> None:
+        install_cadrumo_themes(self)
+        self.query_one("#registration-banner", Static).update(tr("flows.registration.title"))
+        self.query_one("#registration-intro", Static).update(tr("flows.registration.intro"))
+        self.query_one("#registration-why", Static).update(tr("flows.registration.why_password"))
+        body = self.query_one("#registration-body", Vertical)
+        body.border_title = tr("flows.registration.section")
+        self.query_one("#field-username", Input).focus()
+
+    # ── live feedback ───────────────────────────────────────────────────
+
+    def on_input_changed(self, event: Input.Changed) -> None:
+        """Re-render the advisory strength line as the password is typed."""
+        if event.input.id == "field-password":
+            self._render_strength(event.value)
+
+    def _render_strength(self, candidate: str) -> None:
+        """Update the band line, or clear it while the field is empty."""
+        line = self.query_one("#strength-line", Static)
+        line.remove_class(*_STRENGTH_CLASSES.values())
+        if not candidate:
+            line.update("")
+            return
+        from ....application.user_profile import assess_passphrase
+
+        assessment = assess_passphrase(candidate)
+        line.add_class(_STRENGTH_CLASSES[assessment.strength])
+        line.update(strength_copy(assessment.strength, minimum_length=assessment.minimum_length))
+
+    # ── intents ─────────────────────────────────────────────────────────
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "btn-create":
+            self.action_create()
+
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        """Enter advances to the next field, and submits from the last one."""
+        order = ("field-username", "field-password", "field-confirm")
+        current = event.input.id
+        if current == order[-1]:
+            self.action_create()
+            return
+        if current in order:
+            self.query_one(f"#{order[order.index(current) + 1]}", Input).focus()
+
+    def action_create(self) -> None:
+        """Validate the form locally, then create the profile and exit.
+
+        Local checks cover only what the screen can see — a blank name, a
+        mismatched confirmation, a too-short password. Everything else
+        (a duplicate label, a storage refusal) is the application door's
+        decision, surfaced here as its translated message rather than
+        re-derived, so the screen never becomes a second authority on what
+        a valid registration is.
+        """
+        from ....application.user_profile import (
+            ProfileAlreadyRegisteredError,
+            ProfileRegistrationError,
+            assess_passphrase,
+            register_profile_with_credentials,
+        )
+
+        username = self.query_one("#field-username", Input).value.strip()
+        password = self.query_one("#field-password", Input).value
+        confirm = self.query_one("#field-confirm", Input).value
+
+        if not username:
+            self._refuse(tr("flows.registration.refusal.username_required"))
+            self.query_one("#field-username", Input).focus()
+            return
+        assessment = assess_passphrase(password)
+        if not assessment.acceptable:
+            self._refuse(strength_copy(assessment.strength, minimum_length=assessment.minimum_length))
+            self.query_one("#field-password", Input).focus()
+            return
+        if password != confirm:
+            self._refuse(tr("flows.registration.refusal.confirmation_mismatch"))
+            self.query_one("#field-confirm", Input).focus()
+            return
+
+        try:
+            self.outcome = register_profile_with_credentials(label=username, passphrase=password)
+        except (ProfileRegistrationError, ProfileAlreadyRegisteredError) as refusal:
+            self._refuse(str(refusal))
+            return
+        self.exit(self.outcome)
+
+    def action_abandon(self) -> None:
+        """Leave without creating anything; the caller sees ``None``."""
+        self.outcome = None
+        self.exit(None)
+
+    def action_toggle_appearance(self) -> None:
+        toggle_appearance(self)
+
+    def _refuse(self, message: str) -> None:
+        self.query_one("#registration-refusal", Static).update(message)
+
+
+def run_registration_tui() -> ProfileRegistrationOutcome | None:
+    """Run the registration screen and return the created profile, or ``None``.
+
+    ``None`` means the operator abandoned the screen — an ordinary outcome,
+    not an error, so the caller decides what to do rather than catching an
+    exception to find out.
+    """
+    app = RegistrationApp()
+    app.run()
+    return app.outcome
+
+
+__all__ = ["RegistrationApp", "run_registration_tui"]

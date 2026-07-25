@@ -1469,6 +1469,9 @@ application:
         futtassa a `aeat config profile create NÉV` parancsot.
       profile_tombstoned_not_selectable: A(z) "%{profile}" profil törölve van és nem
         választható ki.
+      registration_label_blank: A profil neve nem lehet üres.
+      registration_passphrase_too_short: A jelszónak legalább {minimum_length} karakter
+        hosszúnak kell lennie.
       repository_profile_record_classification_mismatch: A profilrekord besorolása
         nem egyezik a repository szerződésével.
       repository_profile_record_missing: Az aktív bucketben nem található profilrekord.
@@ -1481,8 +1484,6 @@ application:
         ez az alkalmazás nem támogatja.
       unsupported_bundle_schema_version: A csomag sémaverziója nem támogatott ebben
         az alkalmazásverzióban.
-      registration_label_blank: 'A profil neve nem lehet üres.'
-      registration_passphrase_too_short: 'A jelszónak legalább {minimum_length} karakter hosszúnak kell lennie.'
     notices:
       censo_divergences_open: '{count} profiladat továbbra is eltér a Certificado
         de Situación Censal tanúsítványtól és megoldatlan: {axes}.'
@@ -6126,6 +6127,7 @@ errors:
       config login NÉV` parancsot, és próbálja újra.
     profile_name_collision: A megadott profilnév már használatban van. Válasszon más
       nevet.
+    profile_registration: A profil regisztrációja nem sikerült.
     reconciliation_cross_bucket: A megcímzett munkajegység egy másik bucket-hez tartozik,
       nem az aktív profil bucket-jéhez. Az egyeztetés csak az aktív profil bucket-en
       belül működik.
@@ -6389,7 +6391,6 @@ errors:
     submission_preflight_error_findings: A tervezetben {finding_count} ERROR súlyosságú
       megállapítás van; javítsa ezeket benyújtás előtt.
     unsupported_currency: A megadott devizakód nem támogatott.
-    profile_registration: 'A profil regisztrációja nem sikerült.'
   snapshot:
     ambiguous_revision_selection: 'Egynél több nyilvántartási revízió illeszkedik
       a(z) %{modelo_id} modellhez: %{candidate_ids}.'
@@ -6490,6 +6491,32 @@ flows:
     optional: Nem kötelező
     page_header: '{position}. kérdés a(z) {total} közül — {section} szakasz'
     required: Kötelező
+  registration:
+    confirm_label: Ismételd meg a jelszót
+    create_button: Profil létrehozása
+    intro: 'Válassz nevet ennek a profilnak és jelszót a védelméhez. Semmi másra nincs
+      szükség: a profil a folytatás pillanatában létrejön, a többit pedig akkor töltöd
+      ki, amikor szeretnéd.'
+    password_hint: Legalább {minimum_length} karakter. Néhány hétköznapi szó egymás
+      után könnyebben megjegyezhető és nehezebben kitalálható, mint egy rövid, bonyolult
+      szó.
+    password_label: Jelszó
+    refusal:
+      confirmation_mismatch: A két jelszó nem egyezik.
+      username_required: Adj meg egy nevet ennek a profilnak.
+    section: Név és jelszó
+    strength:
+      fair: Megfelelő.
+      strong: Erős.
+      too_short: 'Túl rövid: legalább {minimum_length} karakter szükséges.'
+      weak: Elfogadva, de gyenge. A hosszabbítás többet segít, mint a szimbólumok
+        hozzáadása.
+    title: Profil létrehozása
+    username_hint: Így jelenik meg a profil a listákban. Később megváltoztathatod.
+    username_label: Profil neve
+    why_password: 'Az adóadataid ezen a számítógépen maradnak, és sehová nem kerülnek
+      elküldésre. A jelszó titkosítja őket a lemezen, így nélküled nem olvashatók.
+      Nem állítható vissza: ha elveszíted, az adatok helyreállíthatatlanok.'
   review:
     action_edit: Válasz szerkesztése
     action_prompt: Mit szeretnél tenni?
@@ -6852,8 +6879,8 @@ wizard:
   commands:
     status:
       created: létrehozva
+      saved: mentve
       updated: frissitett
-      saved: 'mentve'
   demo:
     description: Bemutató szekció a varázslófunkció teszteléséhez
     section:
