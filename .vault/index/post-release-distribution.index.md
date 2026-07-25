@@ -13,6 +13,11 @@ related:
   - '[[2026-07-17-post-release-distribution-P02-S08]]'
   - '[[2026-07-17-post-release-distribution-P02-S09]]'
   - '[[2026-07-17-post-release-distribution-P05-S26]]'
+  - '[[2026-07-17-post-release-distribution-P06-S31]]'
+  - '[[2026-07-17-post-release-distribution-P06-S32]]'
+  - '[[2026-07-17-post-release-distribution-P06-S33]]'
+  - '[[2026-07-17-post-release-distribution-P06-S34]]'
+  - '[[2026-07-17-post-release-distribution-P06-S35]]'
   - '[[2026-07-17-post-release-distribution-audit]]'
   - '[[2026-07-17-post-release-distribution-plan]]'
   - '[[2026-07-19-post-release-distribution-adr]]'
@@ -47,6 +52,11 @@ Auto-generated index of all documents tagged with `#post-release-distribution`.
 - `2026-07-17-post-release-distribution-P02-S09` - DONE via local subscription-authed Claude Code 2.1.214 per operator ruling (no CI API key), evidence var/distribution-install-readiness/s27-plugin-68a8433c/run-20260718T164855Z/plugin-evidence.json against cohort 68a8433c at commit 02b3656095, marketplace install with byte-verified three-wheel cohort, real client session connected and called cadrumo_harness_load (status passed), protocol oracle on the same install returned DP200014:00562 = 23000.00 via modelo-200-cuota-integra with the sole permitted plazo-vencido notice
 - `2026-07-17-post-release-distribution-P05-S26` - UNBLOCKED by operator GO 2026-07-18 and DONE, harness-identity migration landed as the distribution-harness-identity campaign (12/12 steps, exec records under .vault/exec/2026-07-18-distribution-harness-identity), verify_distribution_identity exits 0 with report.ok true (evidence var/distribution-install-readiness/s11-migration-identity-bilingual), distribution S67 and S68 closed
 - `2026-07-17-post-release-distribution-P02-S08` - DONE, Homebrew Linux x86-64 row green in Cadrumo Homebrew Acquisition run 29895959334 at commit 1af8f4fb13, sanctioned homebrew-linux-x86-64 distribution-evidence row minted against release cohort bfe3df0bae (version 0.2.1, source commit 1c9c523d7c) with the installed CLI oracle and the installed MCP oracle both computing DP200014:00562 = 23000.00 via modelo-200-cuota-integra from the brew Cellar keg, the second Linux row homebrew-linux-arm64 stays red and is tracked under P01.S03
+- `2026-07-17-post-release-distribution-P06-S31` - DONE 7d20b2d984, the docs-claims gate now measures, a positive control asserts every pattern against a must-match and a must-not-match string and a guard requires a new pattern to arrive with its own cases, the retired tap pattern fails 2 of 4 control cases so the control discriminates. GATE, uv run --no-sync pytest dev/docs/tests/test_distribution_claims.py collects 12 and passes
+- `2026-07-17-post-release-distribution-P06-S32` - DONE 7d20b2d984, the three tap-pattern over-broadenings are closed, scanning moved per line so a cross-newline match cannot form and the regression document genuinely reproduces the whole-file match, the pattern re-anchored on the account so a third-party tap is not a claim, and a negation preceding the command marks a disclaimer. GATE, the positive control carries all three strings as must-not-match cases
+- `2026-07-17-post-release-distribution-P06-S33` - DONE 7d20b2d984, marketplace publish is atomic, the whole cohort validates before any mutation so a refusal leaves the tree byte-identical, and the multi-plugin case that was entirely uncovered now has both a refusal test and a success test. GATE, the pre-fix loop leaves a torn tree so the atomicity test discriminates
+- `2026-07-17-post-release-distribution-P06-S34` - DONE 7d20b2d984, plugin-name collision refuses instead of silently overwriting, index entries carry published_by and a cohort declaring a name another product published is refused, while an unattributed entry stays claimable so the first release adopting it is not deadlocked. GATE, the sibling tree and its attribution both survive a refused takeover
+- `2026-07-17-post-release-distribution-P06-S35` - DONE 7d20b2d984, concurrent publication is closed rather than only recorded, the marketplace push re-clones and re-applies on a rejected push because concurrency groups are per-repository and cannot serialise across product repos, and refuses after three lost races. GATE, a workflow conformance test pins the retry, the re-clone inside the loop, and the fail-closed exhaustion
 
 ### plan
 
