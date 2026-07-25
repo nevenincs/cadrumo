@@ -3,13 +3,23 @@ tags:
   - '#plan'
   - '#cli-authority-verb-conformance'
 date: '2026-07-15'
-modified: '2026-07-17'
+modified: '2026-07-25'
 tier: L3
 related:
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
   - '[[2026-07-15-cli-authority-verb-conformance-research]]'
   - '[[2026-07-15-cli-authority-verb-conformance-reference]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 <!-- RETIRED: S38, S39, S40, S41, S42, S53, S94, S95, S115, S117, S127, S184 -->
 
@@ -112,19 +122,19 @@ Resolve the selected certificate path and secure-storage secret once, delete the
 
 Replace scope reset with a durable target-scoped roll-forward operation composed from canonical deletion, auth, retention, and pointer services.
 
-- [ ] `W02.P05.S54` - Add target deletion assessment and reset ownership fields to bucket-maintenance contracts; `src/cadrumo/application/bucket_maintenance/_contracts.py`.
-- [ ] `W02.P05.S55` - Expose target-scoped deletion assessment and verify reset operation ownership and fingerprint during deletion; `src/cadrumo/application/bucket_maintenance/_service.py`.
-- [ ] `W02.P05.S56` - Define the authoritative deletion-relevant bucket fingerprint for assessment and resume; `src/cadrumo/application/bucket_maintenance/_manifest_digest.py`.
-- [ ] `W02.P05.S57` - Prove deletion assessment reports real retention blockers without mutating the bucket; `src/cadrumo/application/bucket_maintenance/tests/test_service_retention_floor.py`.
-- [ ] `W02.P05.S58` - Prove operation-owned deletion rejects mismatches and accepts only journal-proven absence; `src/cadrumo/application/bucket_maintenance/tests/test_service_delete.py`.
-- [ ] `W02.P05.S59` - Define durable non-secret reset operation, target phase, pointer snapshot, retention, marker, and summary models; `src/cadrumo/application/_config_reset_models.py`.
-- [ ] `W02.P05.S60` - Persist reset journals atomically outside target directories with restrictive permissions and corruption refusal; `src/cadrumo/application/_config_reset_repository.py`.
-- [ ] `W02.P05.S61` - Prove reset journal atomicity, permissions, corruption refusal, exclusion, and fresh-process reload; `src/cadrumo/application/tests/test_config_reset_repository.py`.
-- [ ] `W02.P05.S62` - Replace scoped reset with start, status, and resume over all live, tombstoned, and dangling-pointer targets; `src/cadrumo/application/config_reset.py`.
-- [ ] `W02.P05.S63` - Acquire target locks in sorted UUID order and persist every retention decision before mutation; `src/cadrumo/application/config_reset.py`.
-- [ ] `W02.P05.S64` - Invoke target-scoped auth reset and delete canonical secure-storage certificate secrets before each target deletion without certificate keyring reconciliation or migration; `src/cadrumo/application/config_reset.py`.
-- [ ] `W02.P05.S65` - Invoke strong profile logout for the active reset target and reconcile dangling pointers through the core authority; `src/cadrumo/application/config_reset.py`.
-- [ ] `W02.P05.S66` - Persist deleting ownership before deletion and completion after each irreversible transition; `src/cadrumo/application/config_reset.py`.
+- [x] `W02.P05.S54` - Add target deletion assessment and reset ownership fields to bucket-maintenance contracts; `src/cadrumo/application/bucket_maintenance/_contracts.py`.
+- [x] `W02.P05.S55` - Expose target-scoped deletion assessment and verify reset operation ownership and fingerprint during deletion; `src/cadrumo/application/bucket_maintenance/_service.py`.
+- [x] `W02.P05.S56` - Define the authoritative deletion-relevant bucket fingerprint for assessment and resume; `src/cadrumo/application/bucket_maintenance/_manifest_digest.py`.
+- [x] `W02.P05.S57` - Prove deletion assessment reports real retention blockers without mutating the bucket; `src/cadrumo/application/bucket_maintenance/tests/test_service_retention_floor.py`.
+- [x] `W02.P05.S58` - Prove operation-owned deletion rejects mismatches and accepts only journal-proven absence; `src/cadrumo/application/bucket_maintenance/tests/test_service_delete.py`.
+- [x] `W02.P05.S59` - Define durable non-secret reset operation, target phase, pointer snapshot, retention, marker, and summary models; `src/cadrumo/application/_config_reset_models.py`.
+- [x] `W02.P05.S60` - Persist reset journals atomically outside target directories with restrictive permissions and corruption refusal; `src/cadrumo/application/_config_reset_repository.py`.
+- [x] `W02.P05.S61` - Prove reset journal atomicity, permissions, corruption refusal, exclusion, and fresh-process reload; `src/cadrumo/application/tests/test_config_reset_repository.py`.
+- [x] `W02.P05.S62` - Replace scoped reset with start, status, and resume over all live, tombstoned, and dangling-pointer targets; `src/cadrumo/application/config_reset.py`.
+- [x] `W02.P05.S63` - Acquire target locks in sorted UUID order and persist every retention decision before mutation; `src/cadrumo/application/config_reset.py`.
+- [x] `W02.P05.S64` - Invoke target-scoped auth reset and delete canonical secure-storage certificate secrets before each target deletion without certificate keyring reconciliation or migration; `src/cadrumo/application/config_reset.py`.
+- [x] `W02.P05.S65` - Invoke strong profile logout for the active reset target and reconcile dangling pointers through the core authority; `src/cadrumo/application/config_reset.py`.
+- [x] `W02.P05.S66` - Persist deleting ownership before deletion and completion after each irreversible transition; `src/cadrumo/application/config_reset.py`.
 - [ ] `W02.P05.S67` - Reacquire locks and recheck fingerprints and retention during roll-forward resume without mutating on status; `src/cadrumo/application/config_reset.py`.
 - [x] `W02.P05.S68` - Prove target discovery includes live, tombstoned, and dangling-pointer buckets but excludes cold defaults; `src/cadrumo/application/tests/test_config_reset.py`.
 - [x] `W02.P05.S69` - Prove every reset phase boundary resumes honestly in a fresh child process; `src/cadrumo/application/tests/test_config_reset_recovery.py`.
