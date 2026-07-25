@@ -367,7 +367,7 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
     AllowlistRule(
         path=_path(
             r"^docs/_sequences/how-to/(?:"
-            r"quickstart/quickstart-revision|"
+            r"quickstart/quickstart-(?:revision|export|file)|"
             r"review-calculation-values/review-values-(?:bindings|manual-casilla|review-saved)"
             r")\.json$"
         ),
@@ -377,7 +377,28 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         text=_text(r"name\\t\d+-\d{4}-[1-4]T"),
     ),
     AllowlistRule(
-        path=_path(r"^docs/_sequences/how-to/iva-lifecycle/iva-lifecycle-q1\.json$"),
+        path=_path(
+            r"^docs/_sequences/how-to/(?:"
+            r"filing-spine/filing-spine-(?:discard|file|history|rename|runs|select)|"
+            r"first-quarterly-filing/first-quarter-export-file|"
+            r"modelo-130/modelo-130-export-file"
+            r")\.json$"
+        ),
+        reason="captured CLI sequence preserves the WorkUnit.name display-name field as a JSON "
+        "string; `work create` derives it from _default_name (application/modelo/_work_lifecycle.py) "
+        "as <modelo>-<year>-<period>, so it is generated output, not period input grammar. Scoped "
+        "by text to the name field alone rather than added to the looser sibling bucket above, so a "
+        "genuine combined-period token appearing elsewhere in these same captures still fails.",
+        pattern_names=frozenset({"year-qualified quarterly token"}),
+        text=_text(r'"name": "\d+-\d{4}-[1-4]T"'),
+    ),
+    AllowlistRule(
+        path=_path(
+            r"^docs/_sequences/how-to/(?:"
+            r"iva-lifecycle/iva-lifecycle-q1|"
+            r"quickstart/quickstart-export"
+            r")\.json$"
+        ),
         reason="captured CLI sequence's modelo.export --output/output_path names the canonical "
         "modelo-<id>-<year>-<period> fichero-BOE export filename schema, not a period input",
         pattern_names=frozenset({"year-qualified quarterly token"}),
