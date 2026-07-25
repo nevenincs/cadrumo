@@ -589,7 +589,63 @@ surface, not merely a docs gate: a focused input-schema run fails with a key
 error on `config.profile.create`. It is also the second cause behind the single
 non-identity MCP parity failure recorded elsewhere in this review.
 
-### docs-lane-stalls-and-is-unverified | medium | The documentation lane stops progressing identically at 24 and at 4 workers
+### docs-lane-stall-claim-withdrawn | high | The stall this review recorded did not exist as described, and the real signal is worker deaths
+
+WITHDRAWAL, superseding the entry below, which this review accepted from a
+verification report and recorded without testing its mechanism. Reading the
+captures as bytes rather than as rendered text overturned it.
+
+The forty minutes of silence was structurally guaranteed and carried no
+information. Under quiet mode pytest's progress line is 72 marks plus a
+percentage field, and the capture wrote only complete lines. The isolated run
+reported as producing nothing for forty minutes was a module of 22 tests: 22
+marks cannot reach 72, so a perfectly healthy run could not have emitted one
+byte. Zero bytes was the correct output of a correct run. Confirmed
+independently here against this review's own captures, where the progress line
+is 79 characters wide in every case while the mark count varies from 13 to 72 —
+the line is padded and terminated only at completion, so nothing flushes
+mid-run.
+
+The identical-stopping-point coincidence dissolves too. Each capture holds two
+complete 72-mark lines plus a partial third that never terminated and so never
+flushed as it grew. Counting the marks actually present on that partial line
+gives 30 in the 24-worker attempt and 31 in the 4-worker attempt, so the two
+runs had completed roughly 174 and 175 of 194 rather than stopping together at
+144. They were read at the same buffer boundary. That is a property of the
+capture, not of the lane, and the inference this review drew from it — that
+matching stop points ruled out a resource explanation — is unsound and is
+withdrawn. The memory measurement stands; the conclusion hung on it does not.
+
+What survives every correction is the real finding, and it was always the
+stronger one: four workers reported `node down: Not properly terminated` at 24
+workers and two at 4. Those lines are written inline and are independent of
+buffering. Abnormal worker termination is a genuine defect signal, unlike
+slowness.
+
+The lane is also simply expensive, and declared so in-tree: two modules override
+the repository timeout ceiling with a 1800-second budget, eleven of 24 modules
+shell a build or subprocess, and the resolvability sweep is a single test whose
+own comment records that it measures about 840 seconds because it shells a full
+single-worker documentation build and then reads every rendered page. A lane
+that looks motionless for fifteen minutes is consistent with one such test
+running normally.
+
+The module still cannot be named, for two reasons worth recording: the
+distribution mode decouples completion order from collection order, so a mark
+position cannot be mapped back to a test; and both runs were killed, destroying
+the evidence of whether they would have recovered and finished. The lane stays
+UNVERIFIED and S287 is re-scoped to the worker-death question.
+
+The method lesson generalises past this lane and is the reason this is filed at
+high rather than medium. Every wrong conclusion in this thread came from
+trusting a rendered view of a log instead of its bytes; a 324-byte file examined
+with a control-character view overturned two filed claims. A partial line is
+invisible in a normal read and looks exactly like a stalled process. That is the
+vacuity problem this review has chased throughout, one level further down — in
+the toolchain that reports the evidence rather than in the gate that produces
+it.
+
+### docs-lane-stalls-and-is-unverified | superseded | Recorded a stall that was a capture artefact, see docs-lane-stall-claim-withdrawn
 
 Recorded as a finding rather than accepted as a slow run. The docs pytest lane
 stopped progressing at the same point under 24 workers and under 4, with
