@@ -39,6 +39,7 @@ irpf_expediente_detail_year_prefix = "/wlpl/DASR-CORE/AccesoDR"
 irpf_expediente_detail_year_suffix = "RVlt"
 notificaciones = "/wlpl/TC-UTIL/NOT-L/Notificacion"
 iva_compensation_wallet = "/wlpl/DAI3-RUTI/CarteraCuotas"
+censal_datos = "/wlpl/BUGC-JDIT/MdcAcceso"
 
 [aeat.clave_permanente]
 # Cl@ve Permanente reuses AEAT's auth-method selector page (the same
@@ -193,6 +194,35 @@ renta_web_open_browser_action_patterns = [
   "apply-display-override:*",
   "scrape-summary-field:*",
   "close-browser-context",
+]
+# The censal reader drives exactly one control: the access selector's
+# authorize button, which dispatches the authenticated session to whichever
+# numbered host AEAT assigns. That is an authentication dispatch, not a
+# censal control; the reader touches nothing on the consulta page itself.
+censal_browser_action_patterns = [
+  "clave-movil-authorize",
+]
+# Landing-path fragments that mark a censal MODIFICATION surface. The censal
+# consulta page renders "Cambio de Domicilio Fiscal" / "Cambio de Domicilio de
+# Notificaciones" buttons whose JS builds relative "ModifDomiDual" /
+# "ModifDomiNotif" targets, links the M036 filing tool at "BU36-ASIS/M036/
+# index.zul", and links "Otras Modificaciones Censales" at a
+# /Sede/procedimientoini/ launcher. None of those carry the token "MOD036",
+# so the reader keys its fail-closed landing guard on these fragments instead.
+#
+# Every entry is a PREFIX or family fragment, never a single procedure code:
+# "ModifDomi" catches both domicilio write siblings, and the launcher entry is
+# the path prefix rather than "G322", so G313/G323/G414 and every future code
+# are refused too. It recognises the same family as the committed
+# portal_paths.filing_censo_path_regex, so the two surfaces cannot drift.
+# Blocking the consulta-only launchers (G313) as well is deliberate: what makes
+# a landing safe is where the reader IS, and a procedure launcher is the page
+# that offers the write.
+censal_forbidden_landing_markers = [
+  "BU36-",
+  ".zul",
+  "ModifDomi",
+  "/Sede/procedimientoini/",
 ]
 
 [aeat.portal_paths]

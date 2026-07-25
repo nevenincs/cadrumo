@@ -159,6 +159,7 @@ def test_aeat_sede_paths_are_absolute_paths() -> None:
         paths.irpf_expediente_detail_year_prefix,
         paths.notificaciones,
         paths.iva_compensation_wallet,
+        paths.censal_datos,
     ):
         assert value.startswith("/")
     assert paths.irpf_expediente_detail_year_suffix
@@ -357,6 +358,7 @@ def test_live_sede_executable_route_literals_stay_centralized(source_tree_ast: M
         repo_path("src/cadrumo/adapters/outbound/aeat/auth/_clave_movil.py"),
         repo_path("src/cadrumo/adapters/outbound/aeat/sede/_groi_check.py"),
         repo_path("src/cadrumo/adapters/outbound/aeat/sede/_nif_iva_check.py"),
+        repo_path("src/cadrumo/adapters/outbound/aeat/sede/_censal_datos.py"),
         repo_path("src/cadrumo/adapters/outbound/aeat/sede/_declarations.py"),
         repo_path("src/cadrumo/adapters/outbound/aeat/sede/_iva_compensation_wallet.py"),
         repo_path("src/cadrumo/adapters/outbound/aeat/sede/_parse.py"),

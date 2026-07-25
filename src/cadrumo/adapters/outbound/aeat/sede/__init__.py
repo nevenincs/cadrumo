@@ -66,6 +66,16 @@ Navigation flow:
 
 from __future__ import annotations
 
+from ._censal_datos import (
+    CensalDatosResult,
+    CensalDomicilio,
+    CensalIdentity,
+    censal_datos_url,
+    fetch_censal_datos,
+    forbidden_censal_landing_marker,
+    is_forbidden_censal_landing,
+    parse_censal_datos,
+)
 from ._declarations import (
     Declaracion,
     DeclaracionesRegisterSession,
@@ -138,6 +148,9 @@ __all__ = [
     "IVA_COMPENSATION_WALLET_URL",
     "PRE303_PRESENTATION_SERVICE_URL",
     "BrowserAdapterTypeError",
+    "CensalDatosResult",
+    "CensalDomicilio",
+    "CensalIdentity",
     "Declaracion",
     "DeclaracionesRegisterSession",
     "Expediente",
@@ -165,16 +178,21 @@ __all__ = [
     "capture_justificante",
     "capture_previous_filing_observations",
     "capture_relation_source_observations",
+    "censal_datos_url",
     "collect_renta_web_open_observation",
     "extract_renta_web_open_summary_value",
+    "fetch_censal_datos",
     "fetch_iva_compensation_wallet",
     "fetch_notifications_query",
     "fetch_notifications_summary",
     "filed_declaracion_observation_object_key",
     "find_expediente",
+    "forbidden_censal_landing_marker",
+    "is_forbidden_censal_landing",
     "iva_compensation_wallet_observation_object_key",
     "observed_casillas_from_submitted_file",
     "open_declarations_register",
+    "parse_censal_datos",
     "parse_expediente_detail",
     "parse_iva_compensation_wallet_html",
     "parse_notifications_query",

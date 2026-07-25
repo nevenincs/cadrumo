@@ -621,6 +621,39 @@ Every absence claim in this review was therefore established by reading and
 exact search, and the semantic sweep steps are reported unverified rather than
 clean. The service was not restarted or reindexed by anyone during the wave.
 
+### size-budget-breach-is-peer-owned | medium | The one claimed feature-owned regression is not this campaign's
+
+Both verification phases independently reported the config CLI module over its
+size budget, and one attributed the growth to "the wizard-retirement and TUI
+manager commits". The gate is genuinely red — 1385 lines against a budget of
+1261, reproduced at HEAD with exit 1 — but the attribution is half wrong, and
+the wrong half is the half that matters.
+
+The line counts across the growth commits settle it. The module stood at 1254
+lines, comfortably inside the budget, immediately before the commit that opens
+the profile manager from create and edit. That commit took it to 1388. This
+campaign's own wizard-retirement commit then reduced it to 1385, where it
+stands.
+
+So the breach was caused by a peer TUI campaign's addition, and this campaign's
+contribution to that file was to make it smaller. It is not a feature-owned
+regression, and the Step tracking it is re-scoped accordingly rather than
+carried as this campaign's debt.
+
+The wider consequence is worth stating, because it changes the shape of the
+close. With this reattributed, no feature-owned regression has been identified
+in any of the failing lanes: the unit-lane and integration-lane failures are
+peer working-tree churn, two untracked peer modules, and environmental keychain
+deselection. The campaign's own surface is not what is red. That is a
+materially different close position from "nine failures outstanding", and it
+was only reachable by attributing rather than counting.
+
+Recorded also as a caution about attribution by commit subject. "Growth arrived
+with the wizard-retirement and TUI manager commits" reads as a joint cause and
+is how the misattribution entered; the numbers show one commit added 134 lines
+and the other removed three. Attribute with `git show --numstat` against the
+file, not with the commit subjects that happen to sit near it in the log.
+
 ## Recommendations
 
 Each recommendation below is tracked as a Step with a verification gate, per

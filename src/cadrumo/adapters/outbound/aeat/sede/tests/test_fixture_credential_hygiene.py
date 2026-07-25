@@ -25,6 +25,7 @@ from pathlib import Path
 import pytest
 
 from ......tests import FIXTURES_DIR
+from ......tests.aeat_literal_fixtures import configured_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -112,7 +113,7 @@ class TestCredentialDiscriminator:
         "value",
         [
             "EJECUTADO EN INTERNET",
-            "/wlpl/BUGC-JDIT/MdcAcceso",
+            configured_path("sede_paths", "censal_datos"),
             "es.aeat.gnno.jdit.web.punSede.interesados.query.SvInteresadosQuery",
             "20/1/20260424215615255685",
             "CONSIDENIT",

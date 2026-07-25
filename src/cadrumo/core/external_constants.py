@@ -125,6 +125,7 @@ class AeatSedePaths(_Frozen):
     irpf_expediente_detail_year_suffix: str
     notificaciones: str
     iva_compensation_wallet: str
+    censal_datos: str
 
 
 class AeatClaveMovilSurface(_Frozen):
@@ -265,6 +266,8 @@ class AeatLiveSafety(_Frozen):
     declarations_browser_action_patterns: tuple[str, ...] = Field(default_factory=tuple)
     consult_oracle_browser_action_patterns: tuple[str, ...] = Field(default_factory=tuple)
     renta_web_open_browser_action_patterns: tuple[str, ...] = Field(default_factory=tuple)
+    censal_browser_action_patterns: tuple[str, ...] = Field(default_factory=tuple)
+    censal_forbidden_landing_markers: tuple[str, ...] = Field(default_factory=tuple)
 
     @field_validator(
         "auth_browser_action_patterns",
@@ -272,6 +275,8 @@ class AeatLiveSafety(_Frozen):
         "declarations_browser_action_patterns",
         "consult_oracle_browser_action_patterns",
         "renta_web_open_browser_action_patterns",
+        "censal_browser_action_patterns",
+        "censal_forbidden_landing_markers",
         mode="before",
     )
     @classmethod

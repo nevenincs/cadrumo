@@ -17,6 +17,7 @@ Submodules
    cadrumo.adapters.outbound.aeat.sede._auth_state
    cadrumo.adapters.outbound.aeat.sede._browser_constants
    cadrumo.adapters.outbound.aeat.sede._browser_stage
+   cadrumo.adapters.outbound.aeat.sede._censal_datos
    cadrumo.adapters.outbound.aeat.sede._declarations
    cadrumo.adapters.outbound.aeat.sede._declarations_diagnostics
    cadrumo.adapters.outbound.aeat.sede._declarations_listbox
