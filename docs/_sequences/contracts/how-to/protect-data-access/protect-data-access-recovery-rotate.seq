@@ -1,2 +1,3 @@
 @step Mint a fresh recovery key and retire the previous words. The new words appear once and must be retyped.
 @static aeat config recovery rotate
+@blocked interactive-tty Refuses because enrollment shows the code once on an interactive terminal only.

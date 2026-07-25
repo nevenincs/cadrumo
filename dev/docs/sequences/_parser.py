@@ -11,6 +11,10 @@ Parses a directive body of plain frame lines into a strict
   parsed envelope; later frames interpolate it as ``{name}``.
 - ``@expect <json-path> == <literal>`` -- a semantic assertion on the preceding
   frame.
+- ``@blocked <code> <detail>`` -- the MANDATORY reason a preceding ``@static``
+  frame is not executed: a closed-set :class:`~dev.docs.sequences._schema.StaticBlocker`
+  code a gate can cross-check against the frame's own argv, plus the specific
+  sentence naming what is unavailable. Refused on an executed frame.
 - ``@step <imperative sentence>`` -- a narration caption for the NEXT frame
   (setup, command, or result). Render-side metadata only: never executed,
   never golden-compared, and free prose (no placeholder scan).
@@ -39,6 +43,8 @@ from pydantic import StringConstraints
 
 from ._errors import SequenceParseError
 from ._schema import (
+    BlockedDetail,
+    BlockedReason,
     CaptureBinding,
     ExpectAssertion,
     ExpectLiteral,
@@ -48,6 +54,7 @@ from ._schema import (
     ParsedSequence,
     SequenceFrame,
     SequenceId,
+    StaticBlocker,
     StepSentence,
     VerifySentence,
 )
@@ -80,6 +87,7 @@ _IDENTIFIER_CONSTRAINTS = _string_constraints(Identifier)
 _JSON_PATH_CONSTRAINTS = _string_constraints(JsonPath)
 _VERIFY_CONSTRAINTS = _string_constraints(VerifySentence)
 _STEP_CONSTRAINTS = _string_constraints(StepSentence)
+_BLOCKED_DETAIL_CONSTRAINTS = _string_constraints(BlockedDetail)
 
 _SEQUENCE_ID_RE = re.compile(_SEQUENCE_ID_CONSTRAINTS.pattern or "")
 _IDENTIFIER_RE = re.compile(_IDENTIFIER_CONSTRAINTS.pattern or "")
@@ -117,6 +125,8 @@ class _FrameBuilder:
     capture_lines: list[int] = field(default_factory=list)
     #: The ``@step`` narration sentence authored above this frame, if any.
     step_description: str | None = None
+    #: The ``@blocked`` reason authored beneath this ``@static`` frame, if any.
+    blocked: BlockedReason | None = None
 
     def build(self) -> SequenceFrame:
         return SequenceFrame(
@@ -127,6 +137,7 @@ class _FrameBuilder:
             expects=tuple(self.expects),
             placeholder_names=self.placeholder_names,
             step_description=self.step_description,
+            blocked=self.blocked,
             source=self.source,
             line_number=self.line_number,
         )
@@ -277,6 +288,49 @@ def _parse_expect(rest: str, source: str, line_number: int, problems: list[str])
     return ExpectAssertion(json_path=json_path, expected=value)
 
 
+#: The accepted ``@blocked`` codes, rendered for a diagnostic's accepted-value set.
+_BLOCKER_CODES: tuple[str, ...] = tuple(member.value for member in StaticBlocker)
+
+
+def _parse_blocked(rest: str, source: str, line_number: int, problems: list[str]) -> BlockedReason | None:
+    """Parse a ``@blocked <code> <detail>`` annotation body.
+
+    The code is validated against the closed :class:`StaticBlocker` set and the
+    refusal enumerates every accepted value, so a mistyped code names its own
+    fix rather than failing as a bare "value invalid".
+    """
+    code_text, _, detail_text = rest.partition(" ")
+    code_text = code_text.strip()
+    detail = detail_text.strip()
+    if not code_text:
+        problems.append(
+            f"{_at(source, line_number)}: @blocked must be '@blocked <code> <detail>' where code is "
+            f"one of {', '.join(_BLOCKER_CODES)}",
+        )
+        return None
+    try:
+        code = StaticBlocker(code_text)
+    except ValueError:
+        problems.append(
+            f"{_at(source, line_number)}: @blocked code {code_text!r} is not a known blocker; "
+            f"accepted values are {', '.join(_BLOCKER_CODES)}",
+        )
+        return None
+    minimum = _BLOCKED_DETAIL_CONSTRAINTS.min_length or 0
+    maximum = _BLOCKED_DETAIL_CONSTRAINTS.max_length
+    if len(detail) < minimum:
+        problems.append(
+            f"{_at(source, line_number)}: @blocked {code_text} needs a specific reason of at least "
+            f"{minimum} characters naming what is unavailable (e.g. 'Reads the AEAT sede over the "
+            "operator's live session.'); the code alone is not a reason",
+        )
+        return None
+    if maximum is not None and len(detail) > maximum:
+        problems.append(f"{_at(source, line_number)}: the @blocked detail must be at most {maximum} characters")
+        return None
+    return BlockedReason(code=code, detail=detail)
+
+
 def _parse_step_sentence(rest: str, source: str, line_number: int, problems: list[str]) -> tuple[str, bool]:
     """Parse an ``@step <imperative sentence>`` annotation body.
 
@@ -406,17 +460,36 @@ def parse_frame_lines(text: str, *, source: str) -> tuple[list[_FrameBuilder], l
                 current.expects.append(assertion)
             continue
 
+        if head == "@blocked":
+            if current is None:
+                problems.append(f"{_at(source, offset)}: @blocked must follow a @static frame")
+                continue
+            if current.kind is not FrameKind.STATIC:
+                problems.append(
+                    f"{_at(source, offset)}: @blocked cannot annotate a {current.kind.value} frame; "
+                    "an executed frame runs, so it has no blocker to record",
+                )
+                continue
+            if current.blocked is not None:
+                problems.append(
+                    f"{_at(source, offset)}: a @static frame takes one @blocked reason; "
+                    f"the frame at {_at(current.source, current.line_number)} already carries one",
+                )
+                continue
+            current.blocked = _parse_blocked(remainder, source, offset, problems)
+            continue
+
         if head.startswith("@"):
             problems.append(
                 f"{_at(source, offset)}: unknown sigil {head!r}; expected "
-                "@setup, @result, @static, @capture, @expect, or @step",
+                "@setup, @result, @static, @capture, @expect, @blocked, or @step",
             )
             current = None
             continue
 
         problems.append(
-            f"{_at(source, offset)}: unrecognised line {line!r}; "
-            f"expected an '{_EXECUTABLE} ...' command, @setup, @result, @static, @capture, @expect, or @step",
+            f"{_at(source, offset)}: unrecognised line {line!r}; expected an "
+            f"'{_EXECUTABLE} ...' command, @setup, @result, @static, @capture, @expect, @blocked, or @step",
         )
         current = None
 
@@ -497,6 +570,25 @@ def result_frame_asserts_result_payload(sequence: ParsedSequence) -> bool:
     )
 
 
+def _enforce_static_frames_state_a_reason(builders: list[_FrameBuilder], problems: list[str]) -> None:
+    """Every ``@static`` frame must carry a ``@blocked`` reason.
+
+    A bare ``@static`` marker is indistinguishable from a frame nobody got round
+    to converting, and that ambiguity is exactly how a documented dead end hides:
+    the quickstart export frame sat static and unexercised until its narrative was
+    found to have no working path. Requiring the reason at parse time means the
+    ambiguity cannot be re-authored.
+    """
+    for builder in builders:
+        if builder.kind is FrameKind.STATIC and builder.blocked is None:
+            problems.append(
+                f"{_at(builder.source, builder.line_number)}: the @static frame {builder.command_line!r} "
+                "must state why it is not executed on the line beneath it: "
+                f"'@blocked <code> <detail>' where code is one of {', '.join(_BLOCKER_CODES)}. "
+                f"Use '{StaticBlocker.UNCONVERTED.value}' only when nothing actually blocks execution",
+            )
+
+
 def _enforce_captures_and_placeholders(builders: list[_FrameBuilder], problems: list[str]) -> None:
     """Enforce unique capture names and prior-capture placeholder resolution."""
     available: set[str] = set()
@@ -573,6 +665,7 @@ def parse_sequence(
         problems.append("a cli-sequence must contain at least one frame")
 
     _enforce_result_contract(builders, problems)
+    _enforce_static_frames_state_a_reason(builders, problems)
     _enforce_captures_and_placeholders(builders, problems)
 
     # The :verify: contract depends on whether the sequence runs anything: it is

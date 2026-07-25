@@ -1,2 +1,3 @@
 @step Verify the recovery words without changing anything. The command prompts for them with echo off.
 @static aeat config recovery verify
+@blocked interactive-tty Refuses with 'a secret is required but no interactive terminal is available'.

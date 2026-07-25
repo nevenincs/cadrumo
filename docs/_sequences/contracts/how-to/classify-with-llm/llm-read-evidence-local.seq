@@ -1,4 +1,6 @@
 @step Preview the on-host read of the attached image.
 @static aeat app ledger classify <transaction-id> --read-evidence --saturate
+@blocked external-service Needs a vision model to read the evidence bytes; none is reachable in the sandbox.
 @step Apply the on-host read.
 @static aeat app ledger classify <transaction-id> --read-evidence --saturate --apply
+@blocked external-service Needs a vision model to read the evidence bytes; none is reachable in the sandbox.

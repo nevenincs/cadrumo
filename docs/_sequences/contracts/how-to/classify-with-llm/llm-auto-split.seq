@@ -1,4 +1,6 @@
 @step Preview one child transaction per invoice line.
 @static aeat app ledger classify <transaction-id> --read-evidence --auto-split
+@blocked external-service Needs a vision model to read the evidence bytes; none is reachable in the sandbox.
 @step Apply the split, one entry per line.
 @static aeat app ledger classify <transaction-id> --read-evidence --auto-split --apply
+@blocked external-service Needs a vision model to read the evidence bytes; none is reachable in the sandbox.

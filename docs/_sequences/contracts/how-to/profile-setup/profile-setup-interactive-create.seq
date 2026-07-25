@@ -1,2 +1,3 @@
 @step Start the guided wizard for a new profile.
 @static aeat config profile create my-profile
+@blocked interactive-tty Refuses because enrollment shows the code once on an interactive terminal only.

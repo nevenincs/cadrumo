@@ -1,2 +1,3 @@
 @step List the provider CLIs visible on the path.
 @static aeat app ledger providers
+@blocked unconverted Runs clean in the sandbox probe; nothing blocks it, so it awaits conversion.

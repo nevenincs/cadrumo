@@ -1,10 +1,15 @@
 @step Download the declaration history for a specific form and year.
 @static aeat app live expedientes pull --modelo 100 --year 2026
+@blocked live-aeat The app live group reads the operator's authenticated AEAT sede session.
 @step Download history for a range of years.
 @static aeat app live expedientes pull --from-year 2020 --to-year 2026 --modelo 303
+@blocked live-aeat The app live group reads the operator's authenticated AEAT sede session.
 @step List saved downloads.
 @static aeat app live expedientes list
+@blocked live-aeat The app live group reads the operator's authenticated AEAT sede session.
 @step View a specific download's details.
 @static aeat app live expedientes view <snapshot-id>
+@blocked live-aeat The app live group reads the operator's authenticated AEAT sede session.
 @step Show the most recent expedientes snapshot.
 @static aeat app live expedientes latest
+@blocked live-aeat The app live group reads the operator's authenticated AEAT sede session.

@@ -1,6 +1,9 @@
 @step Show the work unit status by its reference number.
 @static aeat app modelo work status <work-unit-id>
+@blocked unconverted Shows the addressing form with a metavariable; convert it with a captured real id.
 @step Calculate by the same reference number.
 @static aeat app modelo work calculate <work-unit-id>
+@blocked unconverted Shows the addressing form with a metavariable; convert it with a captured real id.
 @step List the saved revisions by the same reference number.
 @static aeat app modelo work revisions <work-unit-id>
+@blocked unconverted Shows the addressing form with a metavariable; convert it with a captured real id.

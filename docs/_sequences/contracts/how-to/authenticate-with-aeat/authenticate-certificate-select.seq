@@ -1,2 +1,3 @@
 @step Select the registered certificate you want active.
 @static aeat config auth certificate select --name apoderado-acme
+@blocked credential-store Needs a certificate registered in the OS credential store the sandbox has none of.

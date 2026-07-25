@@ -1,2 +1,3 @@
 @step Record the phone state you observed on one diagnostic.
 @static aeat config auth diagnostics report <diagnostic-id> --phone-state app_prompted_not_accepted
+@blocked unconverted Shows the addressing form with a metavariable; convert it with a captured real id.

@@ -4,3 +4,4 @@
 @step Mark the filing workspace as discarded, recording the reason.
 @result aeat --format json app modelo work discard --modelo 303 --year 2026 --period 1T --reason "re-creating with correct revision" --yes
 @expect exit_code == 0
+@expect result.discard_reason == "re-creating with correct revision"

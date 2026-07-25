@@ -1,4 +1,6 @@
 @step List the saved verification reports for a calculation revision.
 @static aeat app modelo verification-report list --calculation-revision-id <calculation-revision-id>
+@blocked unconverted Shows the addressing form with a metavariable; convert it with a captured real id.
 @step View one verification report in full by id.
 @static aeat app modelo verification-report view <verification-report-id>
+@blocked unconverted Shows the addressing form with a metavariable; convert it with a captured real id.

@@ -1,2 +1,3 @@
 @step Unlock the master key from the recovery words and set a new passphrase. Both are prompted with echo off.
 @static aeat config recover
+@blocked interactive-tty Refuses with 'a secret is required but no interactive terminal is available'.

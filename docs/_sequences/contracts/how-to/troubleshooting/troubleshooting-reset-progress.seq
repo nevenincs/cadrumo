@@ -1,2 +1,3 @@
 @step Clear the saved progress of interrupted commands.
 @static aeat config repair reset-progress --yes
+@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.

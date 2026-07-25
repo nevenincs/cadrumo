@@ -13,8 +13,10 @@ committed golden store, the golden comparison plus ``@expect`` evaluation
 tier, the discovery/refresh/check engine functions behind
 ``python -m dev.docs.sequences`` — the one execution path the Sphinx build
 hook and the pytest gate both wire — the build-time command-line tokeniser,
-and the static live-AEAT enrollment refusal (``refuse_live_frames`` /
-``live_aeat_tokens``).
+the static live-AEAT enrollment refusal (``refuse_live_frames`` /
+``live_aeat_tokens``), and the ``@static`` blocked-reason taxonomy
+(``StaticBlocker`` / ``BlockedReason``) that keeps a non-executed frame's
+justification stated and cross-checkable.
 """
 
 from __future__ import annotations
@@ -76,11 +78,13 @@ from ._runner import (
 from ._runner import _live_aeat_tokens as live_aeat_tokens
 from ._runner import _refuse_live_frames as refuse_live_frames
 from ._schema import (
+    BlockedReason,
     CaptureBinding,
     ExpectAssertion,
     FrameKind,
     ParsedSequence,
     SequenceFrame,
+    StaticBlocker,
 )
 from ._seeds import SEED_SUFFIX, default_seeds_root, load_seed_frames
 from ._tokeniser import CommandToken, TokenKind, command_path_key, tokenise_command
@@ -94,6 +98,7 @@ __all__ = [
     "SANDBOX_STORAGE_ROOT_TOKEN",
     "SANDBOX_WORKDIR_TOKEN",
     "SEED_SUFFIX",
+    "BlockedReason",
     "CaptureBinding",
     "CapturedValue",
     "CommandToken",
@@ -113,6 +118,7 @@ __all__ = [
     "SequenceParseError",
     "SequenceSandbox",
     "SequenceTranscript",
+    "StaticBlocker",
     "TokenKind",
     "assert_transcript_matches_golden",
     "build_golden",

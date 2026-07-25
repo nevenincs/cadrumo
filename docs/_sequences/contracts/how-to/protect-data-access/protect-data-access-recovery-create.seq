@@ -1,2 +1,3 @@
 @step Enroll your recovery key. The 24 words appear once on the terminal and must be retyped.
 @static aeat config recovery create
+@blocked interactive-tty Refuses because enrollment shows the code once on an interactive terminal only.

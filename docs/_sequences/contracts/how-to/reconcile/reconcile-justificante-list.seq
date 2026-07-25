@@ -1,4 +1,6 @@
 @step List the justificante captures stored in the active profile.
 @static aeat app live justificante list
+@blocked live-aeat The app live group reads the operator's authenticated AEAT sede session.
 @step Inspect one capture by an unambiguous prefix of its snapshot id.
 @static aeat app live justificante view <snapshot-id>
+@blocked live-aeat The app live group reads the operator's authenticated AEAT sede session.

@@ -14,9 +14,10 @@ The grammar these records model is a body of plain frame lines where a bare
 executed-but-collapsed setup frame, ``@result aeat ...`` the single terminal
 verification frame, ``@capture <name> <json-path>`` binds a value from the
 preceding frame's parsed envelope, ``@expect <json-path> == <literal>``
-attaches a semantic assertion to the preceding frame, and ``@step <sentence>``
-attaches a narration caption to the NEXT frame (render-side metadata only,
-never executed).
+attaches a semantic assertion to the preceding frame, ``@blocked <code>
+<detail>`` records WHY the preceding ``@static`` frame is not executed, and
+``@step <sentence>`` attaches a narration caption to the NEXT frame
+(render-side metadata only, never executed).
 """
 
 from __future__ import annotations
@@ -29,11 +30,13 @@ from pydantic import BaseModel, Field, StringConstraints
 from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 __all__ = [
+    "BlockedReason",
     "CaptureBinding",
     "ExpectAssertion",
     "FrameKind",
     "ParsedSequence",
     "SequenceFrame",
+    "StaticBlocker",
 ]
 
 #: A ``cli-sequence`` id (the directive argument) and a ``:seed:`` recipe name:
@@ -83,6 +86,14 @@ StepSentence = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=240),
 ]
+#: The specific sentence carried by a ``@blocked`` annotation, naming what
+#: exactly is unavailable. A floor of 12 characters refuses a token-length
+#: restatement of the code ("live", "n/a") — the code already classifies, so the
+#: detail exists to be checkable prose.
+BlockedDetail = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=12, max_length=240),
+]
 
 #: A JSON literal on the right-hand side of an ``@expect`` assertion — a quoted
 #: string, a number, a boolean, or null, parsed from the authored literal.
@@ -106,7 +117,57 @@ class FrameKind(StrEnum):
     #: output and no golden. Admissible only where hermetic execution is
     #: impossible (live AEAT, Google OAuth, interactive wizards, or an
     #: operator-machine-specific path); output is never fabricated for it.
+    #: Every static frame MUST carry a :class:`BlockedReason` naming why it does
+    #: not execute — a bare marker is indistinguishable from one nobody
+    #: converted, and that ambiguity is how a documented dead end hides.
     STATIC = "static"
+
+
+class StaticBlocker(StrEnum):
+    """Closed set of reasons a ``@static`` frame is not executed.
+
+    Every member except :attr:`UNCONVERTED` asserts a VERIFIED impossibility:
+    the frame cannot run hermetically, so displaying it is the honest choice.
+    :attr:`UNCONVERTED` asserts the opposite — no blocker is known and the frame
+    is merely awaiting conversion — so it is the one member a ratchet gate
+    drives to zero. Keeping the two apart is the whole point: a real blocker and
+    an unconverted frame must never wear the same marker.
+    """
+
+    #: Reads a live AEAT surface — the ``pull`` verb family or the ``app live``
+    #: group. The sandbox runner refuses these outright
+    #: (``_refuse_live_frames``), and live submission is barred project-wide.
+    LIVE_AEAT = "live-aeat"
+    #: Needs an interactive terminal: a wizard prompt, a passphrase read, or a
+    #: confirmation the hermetic in-process runner cannot answer.
+    INTERACTIVE_TTY = "interactive-tty"
+    #: Needs the OS credential store (keyring / certificate custody), which is
+    #: unavailable to the headless sandbox.
+    CREDENTIAL_STORE = "credential-store"
+    #: Needs a third-party network service — Google OAuth / Sheets, or an LLM
+    #: provider API — that the hermetic sandbox neither has nor should contact.
+    EXTERNAL_SERVICE = "external-service"
+    #: Needs an operator-supplied artefact (a real AEAT justificante, an
+    #: exported profile bundle) that is not, and should not be fabricated as, a
+    #: committed fixture.
+    OPERATOR_ARTIFACT = "operator-artifact"
+    #: No verified blocker: the frame COULD execute and is awaiting conversion.
+    #: Never a justification — a visible, counted debt the ratchet retires.
+    UNCONVERTED = "unconverted"
+
+
+class BlockedReason(BaseModel):
+    """The ``@blocked <code> <detail>`` annotation on a ``@static`` frame.
+
+    ``code`` is the closed-set classification a gate can cross-check against the
+    frame's own argv; ``detail`` is the specific, human-checkable sentence that
+    makes the refusal auditable rather than a generic label.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    code: StaticBlocker
+    detail: BlockedDetail
 
 
 class CaptureBinding(BaseModel):
@@ -149,6 +210,10 @@ class SequenceFrame(BaseModel):
     directly ABOVE the frame — render-side metadata only, never executed truth:
     the runner, golden store, and comparison ignore it entirely, so authoring or
     editing an ``@step`` line can never invalidate a committed golden.
+    ``blocked`` is the mandatory ``@blocked`` reason on a
+    :attr:`FrameKind.STATIC` frame and is ``None`` on every executed kind — the
+    parser enforces both directions, so a static frame can never ship without a
+    stated reason and an executed frame can never carry a stale one.
     ``source`` and ``line_number`` locate the frame for diagnostics
     (``"body"`` or ``"seed:<name>"``).
     """
@@ -162,6 +227,7 @@ class SequenceFrame(BaseModel):
     expects: tuple[ExpectAssertion, ...] = Field(default=())
     placeholder_names: tuple[Identifier, ...] = Field(default=())
     step_description: StepSentence | None = None
+    blocked: BlockedReason | None = None
     source: Annotated[str, StringConstraints(min_length=1)]
     line_number: int = Field(ge=1)
 

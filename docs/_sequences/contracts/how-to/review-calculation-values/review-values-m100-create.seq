@@ -1,2 +1,3 @@
 @step Create the Modelo 100 draft the comparison needs.
   @static aeat app modelo work create --modelo 100 --year 2026 --period 0A
+@blocked unconverted Only lacks a registry revision for the year the page names; a covered year converts it.

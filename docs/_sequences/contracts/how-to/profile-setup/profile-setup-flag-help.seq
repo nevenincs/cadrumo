@@ -1,4 +1,6 @@
 @step List every flag the create command accepts.
 @static aeat config profile create --help
+@blocked unconverted Runs clean in the sandbox probe; nothing blocks it, so it awaits conversion.
 @step List every flag the edit command accepts.
 @static aeat config profile edit --help
+@blocked unconverted Runs clean in the sandbox probe; nothing blocks it, so it awaits conversion.

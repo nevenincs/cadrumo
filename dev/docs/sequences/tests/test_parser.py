@@ -17,6 +17,7 @@ from .. import (
     ExpectAssertion,
     FrameKind,
     SequenceParseError,
+    StaticBlocker,
     parse_sequence,
 )
 
@@ -539,7 +540,8 @@ def test_static_frame_is_classified_and_excluded_from_executed_frames() -> None:
         "@result aeat app modelo verify wu\n"
         '@expect result.status == "ok"\n'
         "@step Upload the file at the portal yourself.\n"
-        "@static aeat app live justificante pull",
+        "@static aeat app live justificante pull\n"
+        "@blocked live-aeat The pull verb fetches from the AEAT sede; the sandbox refuses it.",
     )
     kinds = [frame.kind for frame in sequence.frames]
     assert kinds == [FrameKind.COMMAND, FrameKind.RESULT, FrameKind.STATIC]
@@ -552,7 +554,10 @@ def test_static_frame_is_classified_and_excluded_from_executed_frames() -> None:
 def test_static_frame_may_follow_the_result_frame() -> None:
     """A @static frame is allowed after the terminal @result (it is display-only)."""
     sequence = _parse(
-        "@result aeat app modelo verify wu\n@expect exit_code == 0\n@static aeat app live justificante pull",
+        "@result aeat app modelo verify wu\n"
+        "@expect exit_code == 0\n"
+        "@static aeat app live justificante pull\n"
+        "@blocked live-aeat The pull verb fetches from the AEAT sede; the sandbox refuses it.",
     )
     assert sequence.result_frame is not None
     assert sequence.frames[-1].kind is FrameKind.STATIC
@@ -563,8 +568,10 @@ def test_all_static_sequence_needs_no_result_or_verify() -> None:
     sequence = _parse(
         "@step Authenticate with Google.\n"
         "@static aeat config google login\n"
+        "@blocked external-service Needs a Google OAuth consent the sandbox cannot grant.\n"
         "@step Confirm the token was stored.\n"
-        "@static aeat config google status",
+        "@static aeat config google status\n"
+        "@blocked external-service Needs a Google OAuth consent the sandbox cannot grant.",
         verify=None,
     )
     assert [frame.kind for frame in sequence.frames] == [FrameKind.STATIC, FrameKind.STATIC]
@@ -575,7 +582,11 @@ def test_all_static_sequence_needs_no_result_or_verify() -> None:
 
 def test_verify_on_all_static_sequence_is_refused() -> None:
     """An all-@static sequence with a :verify: sentence is refused (it would overclaim)."""
-    problems = _problems("@static aeat config google login", verify=_VERIFY)
+    problems = _problems(
+        "@static aeat config google login\n"
+        "@blocked external-service Needs a Google OAuth consent the sandbox cannot grant.",
+        verify=_VERIFY,
+    )
     assert any("all-@static" in problem and ":verify:" in problem for problem in problems)
 
 
@@ -599,6 +610,91 @@ def test_capture_on_static_frame_is_refused() -> None:
         "@capture ref result.reference",
     )
     assert any("@capture cannot annotate a @static frame" in problem for problem in problems)
+
+
+# ---------------------------------------------------------------------------
+# @blocked — the mandatory reason a @static frame does not execute
+# ---------------------------------------------------------------------------
+
+
+def test_static_frame_carries_its_blocked_reason() -> None:
+    """A @static frame parses its @blocked code and detail onto the frame."""
+    sequence = _parse(
+        "@static aeat app live justificante pull\n"
+        "@blocked live-aeat The pull verb fetches from the AEAT sede; the sandbox refuses it.",
+        verify=None,
+    )
+    blocked = sequence.frames[0].blocked
+    assert blocked is not None
+    assert blocked.code is StaticBlocker.LIVE_AEAT
+    assert blocked.detail == "The pull verb fetches from the AEAT sede; the sandbox refuses it."
+
+
+def test_static_frame_without_a_blocked_reason_is_refused() -> None:
+    """A bare @static marker is refused: the reason is what makes it auditable.
+
+    This is the regression that let a documented dead end hide — an unexercised
+    static frame and a deliberately-blocked one wore the same marker, so nobody
+    could tell which was which.
+    """
+    problems = _problems("@static aeat config profile list", verify=None)
+    assert any(
+        "must state why it is not executed" in problem and "@blocked" in problem for problem in problems
+    )
+
+
+def test_blocked_code_outside_the_closed_set_is_refused_with_its_options() -> None:
+    """An unknown @blocked code names the accepted value set, never a bare refusal."""
+    problems = _problems(
+        "@static aeat config profile list\n@blocked someday A reason sentence that is long enough.",
+        verify=None,
+    )
+    assert any(
+        "is not a known blocker" in problem and StaticBlocker.LIVE_AEAT.value in problem
+        for problem in problems
+    )
+
+
+def test_blocked_detail_must_be_more_than_a_restated_code() -> None:
+    """A token-length detail is refused: the code classifies, the detail must be checkable."""
+    problems = _problems("@static aeat config profile list\n@blocked live-aeat live", verify=None)
+    assert any("needs a specific reason of at least" in problem for problem in problems)
+
+
+def test_blocked_on_an_executed_frame_is_refused() -> None:
+    """@blocked cannot annotate an executed frame; a frame that runs has no blocker."""
+    problems = _problems(
+        "@result aeat app modelo verify wu\n"
+        "@expect exit_code == 0\n"
+        "@blocked live-aeat The pull verb fetches from the AEAT sede.",
+    )
+    assert any("@blocked cannot annotate a result frame" in problem for problem in problems)
+
+
+def test_a_static_frame_takes_one_blocked_reason() -> None:
+    """A second @blocked on the same @static frame is refused."""
+    problems = _problems(
+        "@static aeat config profile list\n"
+        "@blocked live-aeat The pull verb fetches from the AEAT sede.\n"
+        "@blocked interactive-tty Prompts on a terminal the runner does not have.",
+        verify=None,
+    )
+    assert any("takes one @blocked reason" in problem for problem in problems)
+
+
+def test_blocked_without_a_preceding_frame_is_refused() -> None:
+    """A leading @blocked attaches to nothing and is refused."""
+    problems = _problems(
+        "@blocked live-aeat The pull verb fetches from the AEAT sede.\n@static aeat config profile list",
+        verify=None,
+    )
+    assert any("@blocked must follow a @static frame" in problem for problem in problems)
+
+
+def test_executed_frames_carry_no_blocked_reason() -> None:
+    """An executed frame parses with ``blocked`` unset, so no stale reason can ride along."""
+    sequence = _parse(_WORKED_EXAMPLE)
+    assert all(frame.blocked is None for frame in sequence.executed_frames)
 
 
 def test_executed_frame_after_result_is_refused() -> None:

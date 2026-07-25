@@ -14,3 +14,4 @@ aeat --format json app modelo work revision --modelo 303 --year 2026 --period 1T
 @step Select the filed revision.
 @result aeat --format json app modelo work revision --modelo 303 --year 2026 --period 1T --select filed
 @expect exit_code == 0
+@expect result.filed_by == "docs-sequence-sandbox"

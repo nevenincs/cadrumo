@@ -1,2 +1,3 @@
 @step Check that the tool can reach the AEAT website.
 @static aeat config repair connectivity
+@blocked unconverted Runs clean in the sandbox probe; nothing blocks it, so it awaits conversion.

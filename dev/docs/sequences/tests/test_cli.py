@@ -429,8 +429,10 @@ class TestPageCoherenceMode:
             "live-notifications-static",
             "@step Pull your notifications from AEAT.\n"
             "@static aeat app live notifications pull\n"
+            "@blocked live-aeat The pull verb fetches from the AEAT sede; the sandbox refuses it.\n"
             "@step View the stored snapshot.\n"
-            "@static aeat app live notifications latest",
+            "@static aeat app live notifications latest\n"
+            "@blocked live-aeat The app live group reads the operator's authenticated sede session.",
         )
         problems = check_page_coherence(docs_root=tmp_path)
         assert problems == (), problems

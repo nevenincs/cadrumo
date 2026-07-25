@@ -4,3 +4,4 @@
 @step List recent flow runs, from most recent to oldest.
 @result aeat --format json app modelo work runs
 @expect exit_code == 0
+@expect result.run_count == 0

@@ -4,3 +4,4 @@
 @expect exit_code == 0
 @step Look up which finalized filings used one transaction.
 @static aeat app ledger participation <transaction-id>
+@blocked unconverted Shows the addressing form with a metavariable; convert it with a captured real id.
