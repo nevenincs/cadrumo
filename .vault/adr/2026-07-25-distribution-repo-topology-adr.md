@@ -71,11 +71,13 @@ tree references it.
   by the number of products. Rejected — it preserves the fragmentation that
   prompted the review and teaches the next product to add two more repositories.
 - **Serve the bucket from the product repository's own `bucket/` directory.**
-  Mechanically supported by Scoop and removes one repository. Rejected — the
-  product repository is deliberately private, so this couples the bucket's
-  availability to a separate and much larger decision about publishing source.
-  No real-world precedent was found for a product's primary repository serving
-  its own bucket.
+  Mechanically supported by Scoop, removes one repository, and viable now that
+  the product repository is public. Rejected on the axis this record turns on:
+  a bucket living in one product's repository is product-scoped by
+  construction and cannot serve a sibling product, so it solves the count
+  while preserving exactly the fragmentation under review. No real-world
+  precedent was found for a product's primary repository serving its own
+  bucket either.
 - **Drop the tap and bucket entirely and ship only the Python channels and
   release assets.** Honest and cheap, and defensible for a Python CLI.
   Rejected as the primary ruling — the artifacts, the generators, and two of
@@ -103,10 +105,19 @@ tree references it.
 - Moving the tap changes the user-visible install command, because the tap
   name is derived from the repository name. Any command already published must
   be swept in the same change.
+- The product repository is public and its release assets are anonymously
+  downloadable, verified by an unauthenticated fetch of a v0.2.1 asset. The
+  generated bucket manifest and tap formula point at those release URLs, so
+  the only remaining obstacle to a working acquisition is the bucket and tap
+  repositories' own absence and visibility — not the assets they reference.
+- That same fact retires the artifacts landing repository's rationale rather
+  than merely leaving it unreferenced: it was created to serve public binaries
+  for a private source, and the source is no longer private.
 - The Windows community package channel needs an installer URL served directly
-  from the publisher's own release location, which the private product
-  repository does not currently provide. That channel is recorded as the
-  strategic Windows path but is out of scope here and is not claimed.
+  from the publisher's own release location, which the public product
+  repository now does provide. That channel is therefore newly viable, but it
+  is recorded as a follow-on and is not claimed here — it needs its own
+  manifest, submission, and evidence row.
 
 ## Implementation
 
@@ -181,10 +192,17 @@ rather than merely relocating a name: a wholesale tree replacement is safe for
 a single-product marketplace and destructive for a shared one, and the shared
 case is the one this ruling commits to.
 
-Three things remain outside this ruling and stay open. The Windows community
-package channel is recorded as the strategic Windows path but needs a publicly
-reachable release location before it can be pursued. Whether the product
-repository itself becomes public is a separate decision this record does not
-make, and the chosen topology deliberately does not depend on it. And the
-supplementary standing of the tap and bucket relative to the Python channels
-means a future decision to retire them remains available at low cost.
+Two things remain outside this ruling and stay open. The Windows community
+package channel is now viable, because the release location it needs is
+public, and the account already holds a merged publisher namespace there for a
+sibling product; pursuing it is a follow-on that needs its own manifest,
+submission, and evidence row. And the supplementary standing of the tap and
+bucket relative to the Python channels means a future decision to retire them
+remains available at low cost.
+
+One caution is worth recording because it bit this record's own drafting: the
+product repository's visibility changed from private to public during the
+review, and an early reading of the account's repository listing was already
+stale by the time it was used. Any later work here should re-read repository
+visibility at the moment it acts rather than trusting a listing taken earlier
+in the same session.
