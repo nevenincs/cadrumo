@@ -6208,6 +6208,7 @@ flows:
         certificate: Electronic certificate
         clave_movil: Cl@ve Móvil
         clave_permanente: Cl@ve Permanente
+      auth_fecha_validez_invalid: 'Enter the validity date as YYYY-MM-DD, for example 1990-01-31.'
     actions:
       section: Actions
     column:

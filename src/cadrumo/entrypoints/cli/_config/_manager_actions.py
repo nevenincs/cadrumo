@@ -27,10 +27,17 @@ from typing import TYPE_CHECKING
 from ....core.i18n import tr
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
+    from collections.abc import Callable, Mapping, Sequence
 
     from ....adapters.inbound.tui import FormPage, ManagerAction, ManagerActionOutcome
     from ....core import AuthProviderKind
+
+    FormPresenter = Callable[[FormPage], Mapping[str, str] | None]
+    """Shows one page and returns what the operator committed, or ``None``.
+
+    The screen's own ``present_form`` is the shipped implementation; the
+    seam exists so the action's branches are reachable headlessly.
+    """
 
 _AUTH_PROVIDER_PATH = "auth.provider"
 _AUTH_DNI_NIE_PATH = "auth.dni_nie"
@@ -48,6 +55,16 @@ _AUTH_PROFILE_PATHS = (
 The two contraste paths are alternatives rather than a pair: Cl@ve asks a
 NIE holder for the numero de soporte and a DNI holder for the document's
 validity date, so an operator fills in whichever their document carries.
+"""
+
+_VALIDATION_SCRATCH_PROFILE_ID = "00000000-0000-4000-8000-000000000000"
+"""Stand-in identity for validating one typed row before it is written.
+
+The validation report is keyed by profile id and refuses anything that is
+not a UUID, but a row-level check has no profile yet - the operator is
+still typing. Nothing is persisted under this id and no record is read by
+it; it exists only to let the page ask the record's own validator what it
+thinks of one value.
 """
 
 _CERTIFICATE_KEY = "certificate"
@@ -125,7 +142,7 @@ def certificate_action() -> ManagerAction:
     return ManagerAction(key="certificate", label=tr("flows.manager.action.certificate"), run=_run_certificate)
 
 
-def _run_certificate() -> ManagerActionOutcome:
+def _run_certificate(present: FormPresenter | None = None) -> ManagerActionOutcome:
     """Collect how this taxpayer authenticates, and whatever that mode needs.
 
     The point of asking here is that authenticating is what lets the
@@ -142,13 +159,21 @@ def _run_certificate() -> ManagerActionOutcome:
 
     Everything collected lands in the encrypted profile store under the
     ``auth`` section, never a plain file.
+
+    Args:
+        present: The door that shows the page and returns what the
+            operator committed, or ``None`` for the real screen. Injected
+            so the refusal and commit branches can be driven without a
+            terminal, which is the only way to prove that a refused
+            answer writes nothing.
     """
     from ....adapters.inbound.tui import ManagerActionOutcome
     from ....application.auth import list_operator_certificate_sources
     from ._manager_frontend import build_active_profile_overview, present_form
 
+    show = present if present is not None else present_form
     listing = list_operator_certificate_sources()
-    collected = present_form(
+    collected = show(
         _auth_form_page(
             on_record=_auth_facts_on_record(),
             certificate_names=tuple(source.name for source in listing.sources),
@@ -236,6 +261,7 @@ def _auth_form_page(
             key=_AUTH_FECHA_VALIDEZ_PATH,
             label=tr("flows.manager.action.auth_fecha_validez"),
             value=on_record.get(_AUTH_FECHA_VALIDEZ_PATH, ""),
+            validate=_validated_schema_value,
         ),
     ]
     if certificate_names:
@@ -253,6 +279,45 @@ def _auth_form_page(
         section=tr("flows.manager.action.certificate"),
         fields=tuple(fields),
     )
+
+
+def _validated_schema_value(value: str) -> str | None:
+    """Refuse a validity date the profile schema would reject, at the row.
+
+    The schema types this path a date and anchors it to a zero-padded
+    ISO day, so an operator entering the form their document prints -
+    ``01/01/1990`` - is refused. Without a check here that refusal
+    arrives from the write, and the write is not atomic: the three
+    earlier paths are already persisted by the time the fourth is
+    rejected, leaving a half-written auth section and a provider
+    recorded but never activated.
+
+    The check asks the very validator the write will ask, rather than
+    restating its rule, so the page and the record cannot disagree about
+    what a date is. A blank is not an answer and is left to the write,
+    which stores it as a cleared fact.
+
+    Args:
+        value: The text the operator typed into the row.
+
+    Returns:
+        The refusal to show, or ``None`` when the value is storable.
+    """
+    from ....application.user_profile import ProfileValidationService
+    from ....domain.user_profile import UserProfileFact, load_user_profile_schema
+
+    text = value.strip()
+    if not text:
+        return None
+    report = ProfileValidationService(schema=load_user_profile_schema()).validate_facts(
+        _VALIDATION_SCRATCH_PROFILE_ID,
+        (UserProfileFact(path=_AUTH_FECHA_VALIDEZ_PATH, value=text),),
+    )
+    # The report also carries required-field issues for every path this
+    # single fact does not cover, so only this row's own verdict counts.
+    if any(issue.path == _AUTH_FECHA_VALIDEZ_PATH for issue in report.issues):
+        return tr("flows.manager.action.auth_fecha_validez_invalid")
+    return None
 
 
 def _clave_refusal(collected: Mapping[str, str]) -> str | None:
@@ -313,9 +378,21 @@ def _clave_refusal(collected: Mapping[str, str]) -> str | None:
 def _commit_auth_choice(collected: Mapping[str, str]) -> str:
     """Persist the auth section, select the certificate, activate the provider.
 
-    The three profile fields go through the plural ``set_active_fields``
-    door in one call rather than a loop of single writes, so a failure
-    part-way cannot leave a provider recorded with half its credentials.
+    The four profile fields go through the plural ``set_active_fields``
+    door in one call. That buys ergonomics, not atomicity: the plural
+    door is itself a loop over the singular one, persisting between
+    iterations, so a fact rejected part-way leaves the earlier ones
+    durably written. This action's defence against that is upstream - the
+    page validates each value against the same schema before any write -
+    rather than a guarantee this door does not offer.
+
+    Two failure windows therefore remain open, and are accepted here
+    rather than papered over. A fact the page passed but the record
+    rejects leaves the earlier facts written. A failure in
+    ``configure_operator_auth`` leaves the profile carrying credentials
+    for a provider workflow state never activated. Closing either needs a
+    transactional profile write, which is a question about a door shared
+    across the application rather than one this action may settle.
 
     Certificate before provider: selecting the source before making it
     the active provider means the provider is never briefly active with
@@ -349,7 +426,17 @@ def _commit_auth_choice(collected: Mapping[str, str]) -> str:
 
 
 def _auth_facts_on_record() -> dict[str, str]:
-    """Return the auth fields already stored, so the page opens on them."""
+    """Return the auth fields already stored, so the page opens on them.
+
+    These values reach the page as ordinary text rows, so the identity
+    and the contraste are legible on screen while the profile overview
+    masks the same paths. That asymmetry is deliberate rather than
+    overlooked: a masked edit row cannot be edited, and a page that hid
+    what it holds would make this a retype rather than an edit. It is
+    recorded here so the next reader meets a reason instead of an
+    inconsistency; a field kind that masks until focused would resolve it
+    properly, and none exists yet.
+    """
     from ....application.user_profile import ProfileRepository
     from ....core import require_active_bucket_id
 

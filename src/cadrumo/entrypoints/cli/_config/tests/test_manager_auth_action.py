@@ -47,6 +47,7 @@ from .....application.workflow import workflow_state_repository
 from .....core import AuthProviderKind, require_active_bucket_id
 from .....core.config import override_settings
 from .....core.i18n import tr
+from .....domain.user_profile import ProfileSchemaValidationError
 from .....tests.secure_sql import isolated_profile_storage_root
 from .....tests.user_profile import register_minimal_profile
 from .._manager_actions import (
@@ -60,6 +61,7 @@ from .._manager_actions import (
     _auth_form_page,
     _clave_refusal,
     _commit_auth_choice,
+    _run_certificate,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -166,13 +168,20 @@ async def test_an_unanswered_profile_opens_on_a_mode_it_can_actually_use() -> No
 
 @pytest.mark.asyncio
 async def test_committing_hands_back_every_auth_path_the_action_writes() -> None:
-    """The page's output has to carry exactly what the commit half reads."""
-    seeded = {
+    """The page's output has to carry exactly what the commit half reads.
+
+    The expectation is derived from the path tuple the commit half
+    iterates, so a fifth path added to one side and not the other fails
+    here rather than passing against a literal this test wrote for
+    itself.
+    """
+    values = {
         _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
         _AUTH_DNI_NIE_PATH: "00000000T",
         _AUTH_SOPORTE_PATH: "ABC123456",
         _AUTH_FECHA_VALIDEZ_PATH: "1990-01-01",
     }
+    seeded = {path: values.get(path, "seeded") for path in _AUTH_PROFILE_PATHS}
     app = FormApp(_page(on_record=seeded))
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
@@ -180,6 +189,7 @@ async def test_committing_hands_back_every_auth_path_the_action_writes() -> None
         await pilot.pause()
     assert app.collected is not None
     assert dict(app.collected) == seeded
+    assert set(app.collected) == set(_AUTH_PROFILE_PATHS), "the page and the commit half must agree on the path set"
 
 
 _NO_CLAVE_SETTINGS: Mapping[str, object] = {
@@ -474,29 +484,142 @@ def test_a_blank_credential_clears_its_fact_rather_than_storing_an_empty_string(
     assert facts.get(_AUTH_FECHA_VALIDEZ_PATH) is None
 
 
-def test_the_commit_uses_the_plural_door_and_selects_before_activating() -> None:
-    """Two routing properties no reachable input can distinguish.
+@pytest.mark.usefixtures("active_profile")
+def test_a_refused_clave_answer_writes_nothing_at_all() -> None:
+    """The refusal promises "Nothing was saved", so nothing may be saved.
 
-    The plural ``set_active_fields`` write is one atomic call, so a loop
-    of single writes would leave a provider recorded with half its
-    credentials after a mid-way failure -- but a failure part-way through
-    that loop is not something a caller can provoke here.
+    Driven through the whole action rather than its refusal half, because
+    the promise is about what the action does after refusing, and
+    statement order alone is not evidence of that.
+    """
+    with override_settings(cadrumo_clave_prefer_non_qr=True, **_NO_CLAVE_SETTINGS):
+        outcome = _run_certificate(
+            lambda _page: _answer(**{_AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value}),
+        )
 
-    The ordering is the same shape: selecting the certificate before
-    activating the provider means the provider is never briefly active
-    with nothing behind it, and "briefly" is a window no assertion from
-    outside the call can observe.
+    assert outcome.overview is None, "a refusal must not redraw the page as though something changed"
+    assert _auth_facts() == {}, "a refused answer must leave the record untouched"
+    assert workflow_state_repository().load().auth.provider is None
 
-    Both are therefore pinned by reading the source, the same way the
-    censo file door pins its single-apply-authority routing.
+
+@pytest.mark.usefixtures("active_profile")
+def test_an_accepted_answer_reaches_the_record_through_the_whole_action() -> None:
+    """The other half of the same door: an acceptable answer does land."""
+    with override_settings(cadrumo_clave_prefer_non_qr=False, **_NO_CLAVE_SETTINGS):
+        outcome = _run_certificate(
+            lambda _page: _answer(
+                **{
+                    _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
+                    _AUTH_DNI_NIE_PATH: "00000000T",
+                },
+            ),
+        )
+
+    assert outcome.overview is not None, "a committed change must redraw the page"
+    assert _auth_facts()[_AUTH_DNI_NIE_PATH] == "00000000T"
+
+
+@pytest.mark.usefixtures("active_profile")
+def test_abandoning_the_page_writes_nothing() -> None:
+    """Leaving without committing is "make no change", not an error."""
+    outcome = _run_certificate(lambda _page: None)
+
+    assert outcome.overview is None
+    assert _auth_facts() == {}
+
+
+@pytest.mark.usefixtures("active_profile")
+def test_a_value_the_record_rejects_leaves_the_earlier_facts_written() -> None:
+    """The plural door is a loop, so a late rejection half-writes.
+
+    This is the behaviour the page's field validation exists to keep an
+    operator away from, and it is pinned here so the docstring's account
+    of the remaining failure window stays honest. If profile-fact writes
+    ever become transactional this case is what should fail, and the
+    docstring it defends is what should then change.
+    """
+    with pytest.raises(ProfileSchemaValidationError):
+        _commit_auth_choice(
+            {
+                _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
+                _AUTH_DNI_NIE_PATH: "00000000T",
+                _AUTH_SOPORTE_PATH: "ABC123456",
+                # The form the document prints, which the schema refuses.
+                _AUTH_FECHA_VALIDEZ_PATH: "01/01/1990",
+            },
+        )
+
+    facts = _auth_facts()
+    assert facts.get(_AUTH_DNI_NIE_PATH) == "00000000T", "the earlier facts are already durable"
+    assert facts.get(_AUTH_FECHA_VALIDEZ_PATH) is None, "the rejected fact never landed"
+    assert workflow_state_repository().load().auth.provider is None, (
+        "the provider was never activated, so the two stores now disagree"
+    )
+
+
+def test_the_validity_date_row_refuses_a_malformed_date_before_any_write() -> None:
+    """The page is where a bad date has to be caught, not the record.
+
+    Refusing at the row keeps the operator away from the half-write
+    above, and names the field they are looking at instead of surfacing a
+    schema error through the screen's generic renderer.
+    """
+    field = next(f for f in _page().fields if f.key == _AUTH_FECHA_VALIDEZ_PATH)
+    assert field.validate is not None, "the date row must carry a validator"
+    assert field.validate("01/01/1990") is not None, "the printed form must be refused"
+    assert field.validate("1990-13-45") is not None, "a non-calendar day must be refused"
+    assert field.validate("1990-01-31") is None, "a zero-padded ISO day is what the schema stores"
+    assert field.validate("") is None, "blank is not an answer; the write clears the fact"
+
+
+@pytest.mark.usefixtures("active_profile")
+def test_the_certificate_is_selected_before_the_provider_is_activated(tmp_path: Path) -> None:
+    """Both writes emit into the same per-bucket catalogue, so the order is durable.
+
+    Activating the provider first would leave it briefly active with no
+    certificate behind it. Reading the two events back is the observable
+    proof; the source check below it is the second wall, catching a
+    reordering that also rewrote this expectation.
     """
     import inspect
 
+    from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from .....application.auth import register_operator_certificate_source
+    from .....domain.buckets import BucketEventType
     from .. import _manager_actions
 
+    certificate = tmp_path / "operator.p12"
+    certificate.write_bytes(b"placeholder")
+    register_operator_certificate_source(name="personal", certificate_path=certificate)
+
+    _commit_auth_choice(
+        {
+            _AUTH_PROVIDER_PATH: AuthProviderKind.CERTIFICATE.value,
+            _AUTH_DNI_NIE_PATH: "",
+            _AUTH_SOPORTE_PATH: "",
+            _AUTH_FECHA_VALIDEZ_PATH: "",
+            _CERTIFICATE_KEY: "personal",
+        },
+    )
+
+    ordered = [
+        event.event_type
+        for event in BucketEventHistoryRepository()
+        .load()
+        .for_bucket(
+            require_active_bucket_id(),
+            event_types=(
+                BucketEventType.AUTH_CERTIFICATE_SOURCE_SELECTED,
+                BucketEventType.AUTH_PROVIDER_CONFIGURED,
+            ),
+        )
+    ]
+    assert ordered == [
+        BucketEventType.AUTH_CERTIFICATE_SOURCE_SELECTED,
+        BucketEventType.AUTH_PROVIDER_CONFIGURED,
+    ], f"the certificate must be selected before the provider is activated; got {ordered}"
+
     source = inspect.getsource(_manager_actions._commit_auth_choice)
-    assert "set_active_fields(state, facts)" in source, "the plural door is the only sanctioned write"
-    assert "set_active_field(" not in source, "a loop of single writes drops the atomicity"
     assert source.index("select_operator_certificate_source(") < source.index("configure_operator_auth("), (
-        "the certificate must be selected before the provider is activated"
+        "the source order is the second wall behind the event order"
     )

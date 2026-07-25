@@ -6527,6 +6527,7 @@ flows:
         certificate: Elektronikus tanúsítvány
         clave_movil: Cl@ve Móvil
         clave_permanente: Cl@ve Permanente
+      auth_fecha_validez_invalid: 'Az érvényességi dátumot ÉÉÉÉ-HH-NN alakban adja meg, például 1990-01-31.'
     actions:
       section: Műveletek
     column:

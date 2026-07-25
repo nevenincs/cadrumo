@@ -6641,6 +6641,7 @@ flows:
         certificate: Certificat electrònic
         clave_movil: Cl@ve Mòbil
         clave_permanente: Cl@ve Permanent
+      auth_fecha_validez_invalid: 'Introduïu la data de validesa com a AAAA-MM-DD, per exemple 1990-01-31.'
     actions:
       section: Accions
     column:
