@@ -62,6 +62,36 @@ Each module carries exactly one layer marker:
 | `hex_entrypoint` | `entrypoints.*` command and presentation surfaces. |
 | `hex_core` | `core.*` foundational cross-cutting utilities and central test harnesses. |
 
+### Supplementary labels
+
+A supplementary label rides *alongside* an execution marker; it never
+replaces one. Unlike the two tiers above it may be declared per class or
+per function, so a module can hold both labelled and unlabelled cases.
+
+| Label | Marks | Enrol with |
+| --- | --- | --- |
+| `docs` | Documentation build, stubs, and docstring structure. | `-m docs` |
+| `serial` | Isolation-sensitive tests that mutate process-global state; they flake under `-n auto`. | `just test-integration-serial` |
+| `perf` | Performance acceptance gates. | the dispatch-only ci-full lane |
+| `external_tool` | Tests needing a binary the dependency set does not install (LibreOffice). | `just test-workbook-parity` |
+| `os_keychain` | Tests whose assertion subject is the OS credential store itself. | `just test-os-keychain` |
+
+Every lane excludes `external_tool` and `os_keychain`, so the label -
+not a path `--ignore` - is what holds those tests out.
+
+Read `os_keychain` as a capability of the **logon session**, not of the
+dependency set. A headless continuous-integration runner, and an agent
+reaching the host over SSH, each hold a network logon that carries no
+credentials: a real credential backend is selected and then refuses
+every call, so no session key can be custodied there at all. Run these
+tests from an interactive desktop session. Selected on a host that
+cannot custody one, they fail at an explicit precondition naming the
+missing capability - a true report of the host, never a defect.
+
+Label only what is irreducibly capability-bound. A case provable
+*without* the capability must stay unlabelled, or it silently leaves
+every automated lane.
+
 ## Enforcement
 
 `src/cadrumo/tests/test_marker_integrity.py` walks `test_*.py` modules under
