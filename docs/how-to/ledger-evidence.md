@@ -82,6 +82,7 @@ it, changes the supplier, and confirms the change:
 Remove an evidence record you no longer need, addressing it by id:
 
 ```{cli-sequence} ledger-evidence-remove
+:verify: Confirm the evidence record no longer appears in the catalogue.
 ```
 
 Removing applies to evidence records, not transactions. To fix a transaction row itself, see [Correct mistakes in your ledger](correct-ledger-entries.md).
