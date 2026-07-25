@@ -1,10 +1,10 @@
 """Durable gate: the SHIPPED search page inherits the palette tier ladder.
 
-ADR ``2026-07-15`` D5 retires the stock ``PagefindUI`` drop from
+The ratified search-surface decision retires the stock ``PagefindUI`` drop from
 ``docs/_templates/search.html`` and hosts the Ctrl-K palette's own search
 controller inline on the page, so the page and the modal share ONE ranking
 implementation. The whole point of that extraction is that the page stops
-rendering Pagefind's flat relevance list and starts rendering the D5 tier
+rendering Pagefind's flat relevance list and starts rendering the ratified tier
 ladder -- term/casilla/CLI cards ABOVE full-text pages, with the PERF-003
 exact-term tie-break inside the card tier.
 
@@ -18,7 +18,7 @@ palette ranking rather than Pagefind's flat list (which would surface no
 
 If this ever fails while ``test_palette_ranking.py`` passes, the extraction
 regressed the inline host specifically; if both fail, the shared controller
-regressed and BOTH search surfaces degraded at once (ADR Consequences).
+regressed and BOTH search surfaces degraded at once.
 
 Scope/cost: builds a Furo subset that renders the real search template + loads
 the real controller, injects the approved concept cards, indexes, and drives one

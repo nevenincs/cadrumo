@@ -1,52 +1,20 @@
-r"""Real-behavior tests for the single duplication runner.
+"""Duplication report shape, parsing and disposition-coverage arithmetic.
 
-CI DOES NOT RUN THIS MODULE. Read that before trusting it as a gate.
+In-process checks over synthetic scanner output and the committed disposition
+record: the report parses real jscpd shapes, a stdout-empty scan is a named
+defect rather than a silent zero, and the coverage read is a per-file-set
+multiset comparison so a second unrelated clone inside an already-recorded file
+cannot pass unseen.
 
-``dev/audit/tests`` is outside ``testpaths`` (``src/cadrumo`` plus one packaging
-file), so the unit lane never collects it, and it is absent from the dev-tree
-lane's explicit path list in ``.github/workflows/ci.yml``. Every test here is
-hand-run. Adding the module to that lane needs Node provisioned in that job,
-because ``_require_npx`` asserts rather than skips, and that cost was weighed
-and declined -- the omission is a decision, not an accident.
-
-What still protects the tree on every push is
-``src/cadrumo/tests/test_dev_audit_report.py``'s
-``test_audit_duplication_reports_the_live_trees_real_duplication_state``: it is
-unit-marked, sits inside ``testpaths``, runs the real jscpd scan, and asserts
-AMBER with a measured count. That is the false-green pin. What lives ONLY here,
-and therefore only runs when a human runs it, is the single-runner pin, the
-dispositions arithmetic check, and the disposition-coverage gate.
-
-A second thing this module cannot see: jscpd matches token sequences, so a
-concept duplicated in different syntax is invisible to it and to every gate
-below. See the banner in ``duplication_dispositions.toml``.
-
-These tests exist because ``dev/audit/report.py`` once reported the duplication
-dimension GREEN ("no clones found") on a tree carrying 65 real clones. The lie
-had two independent causes, and both are pinned here:
-
-* the source path was passed as ``str(Path("src/cadrumo"))``, which renders
-  ``src\\cadrumo`` on Windows and matches nothing inside jscpd's glob engine, and
-* the classifier collapsed "jscpd inspected nothing" into ``total == 0``, which
-  is indistinguishable from "jscpd inspected everything and found nothing"
-  unless ``files_analyzed`` is read.
-
-Crucially the failing scan exits **0**, so a returncode check alone never catches
-it. Every test below drives the real jscpd subprocess. Where a failure condition
-must be forced, the CONDITION is forced (a real bad path, a real non-zero-exit
-process, a real timeout) rather than stubbing the parser -- a mocked parser would
-re-create exactly the blind spot these tests exist to close.
+Split from the live-scan half so each module carries one execution lane; the
+gates that actually run jscpd over the tree live in ``test_duplication_scan``.
 """
 
 from __future__ import annotations
 
-import re
 import shutil
 import subprocess
-import sys
 import tomllib
-from collections import Counter
-from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
@@ -60,33 +28,30 @@ from dev.audit.duplication import (
     render_console_report,
     run_duplication_scan,
 )
-from dev.audit.report import Status, audit_duplication
 
-# Dev tooling sits outside the hexagon; the sibling dev/ suites classify as hex_core.
-# The unit/integration axis is per-test: the real-jscpd tests are integration.
-pytestmark = [pytest.mark.hex_core]
+from ._duplication_support import (
+    _REPO_ROOT,
+    _recorded_dispositions,
+    _uncovered_groups,
+)
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-# The real stdout jscpd emitted, byte for byte, under the original defect: a
-# path it could not match, a 0 exit code, and a lone timing line. Captured from
-# a live run rather than hand-written.
+
 _DEFECT_STDOUT_EMPTY_SCAN = "\x1b[3m\x1b[90mtime\x1b[39m\x1b[23m: 0.135ms\n"
 
 
-def _require_npx() -> None:
-    """Assert the real npx binary is present for an integration test.
+def _self_clone_group(path: str, first: int, second: int) -> CloneGroup:
+    """Build a clone group naming one file twice, in jscpd's console shape."""
+    return CloneGroup(
+        (
+            "Clone found (python):",
+            f" - src/cadrumo/{path} [{first}:1 - {first + 10}:9] (10 lines, 120 tokens)",
+            f"   src/cadrumo/{path} [{second}:1 - {second + 10}:9]",
+        )
+    )
 
-    The sanctioned convention for external-binary integration tests in this
-    repo is to assert the tool is present, not to self-skip when it is absent
-    (see ``dev/release/tests/test_justfile_release_guidance.py`` and
-    ``dev/packaging/tests/test_smoke_split_install_sequence.py``). ``skipif`` is
-    forbidden by ``test_no_skip_xfail`` for tests outside the source tree.
-    """
-    assert shutil.which("npx") is not None, "npx is required to run the real jscpd duplication scan"
 
-
-@pytest.mark.unit
 def test_command_passes_a_posix_source_path() -> None:
     r"""The source path must be POSIX on every OS.
 
@@ -100,7 +65,6 @@ def test_command_passes_a_posix_source_path() -> None:
     assert not any("\\" in arg for arg in command), f"a backslash path reached jscpd: {command}"
 
 
-@pytest.mark.unit
 def test_empty_scan_output_is_unavailable_not_zero() -> None:
     """The recorded defect output must classify as unavailable, never green.
 
@@ -115,7 +79,6 @@ def test_empty_scan_output_is_unavailable_not_zero() -> None:
     assert result.files_analyzed == 0
 
 
-@pytest.mark.unit
 @pytest.mark.parametrize(
     "raw",
     [
@@ -137,90 +100,12 @@ def test_unparseable_output_never_classifies_green(raw: str) -> None:
     assert result.is_green is False
 
 
-@pytest.mark.unit
 def test_observed_zero_cannot_be_constructed_without_inspected_files() -> None:
     """The green state structurally requires evidence the tree was inspected."""
     with pytest.raises(ValueError, match="demonstrably inspected"):
         DuplicationResult.observed_zero(files_analyzed=0)
 
 
-@pytest.mark.integration
-def test_real_clean_subtree_scan_observes_zero() -> None:
-    """A real zero-clone jscpd run over a real clone-free tree is observed_zero.
-
-    ``dev/audit`` is genuinely clone-free, so this is the only honest route to
-    the green state: a real subprocess that really looked at real files.
-    """
-    _require_npx()
-    result = run_duplication_scan(_REPO_ROOT, source_root=Path("dev/audit"))
-
-    assert result.outcome is DuplicationOutcome.OBSERVED_ZERO
-    assert result.is_green is True
-    assert result.clone_count == 0
-    assert result.files_analyzed > 0, "a green verdict must prove files were analysed"
-
-
-@pytest.mark.integration
-def test_real_production_tree_scan_reports_measured_clones() -> None:
-    """The real production tree carries clones and must report them as AMBER debt.
-
-    This is the assertion the old runner inverted. The count is advisory and
-    drifts as code lands, so this pins the honest SHAPE (clones observed, with a
-    real measured count over a real analysed corpus) rather than a brittle
-    literal.
-    """
-    _require_npx()
-    result = run_duplication_scan(_REPO_ROOT)
-
-    assert result.outcome is DuplicationOutcome.CLONES
-    assert result.is_green is False, "the production tree carries clones; green here is the false-green defect"
-    assert result.clone_count > 0
-    assert result.files_analyzed > 1000, (
-        "the production tree carries >1000 source files; a small count means a partial scan"
-    )
-    assert result.groups, "a clone verdict must carry the clone records backing it"
-    assert result.duplicated_pct
-
-
-@pytest.mark.integration
-def test_real_bad_source_path_is_unavailable_not_green() -> None:
-    """A real scan of a path that matches nothing must refuse to claim cleanliness."""
-    _require_npx()
-    result = run_duplication_scan(_REPO_ROOT, source_root=Path("src/cadrumo/no-such-directory"))
-
-    assert result.outcome is DuplicationOutcome.UNAVAILABLE
-    assert result.is_green is False
-
-
-@pytest.mark.integration
-def test_real_timeout_is_unavailable_not_green() -> None:
-    """A real jscpd run cut off by the timeout must report unavailable."""
-    _require_npx()
-    result = run_duplication_scan(_REPO_ROOT, timeout=0.001)
-
-    assert result.outcome is DuplicationOutcome.UNAVAILABLE
-    assert result.is_green is False
-    assert "timeout" in result.reason
-
-
-@pytest.mark.integration
-def test_real_nonzero_exit_is_unavailable_not_green() -> None:
-    """A real subprocess that exits non-zero must report unavailable.
-
-    The failure CONDITION is forced through the injected ``which`` seam, not by
-    patching global state: the resolver returns a real Python interpreter, so
-    ``run_duplication_scan`` really launches ``<python> --yes jscpd@4.2.0 ...``,
-    which the interpreter rejects and exits non-zero. A genuinely failing
-    process is what is under test -- the parser is untouched.
-    """
-    result = run_duplication_scan(_REPO_ROOT, which=lambda _name: sys.executable)
-
-    assert result.outcome is DuplicationOutcome.UNAVAILABLE
-    assert result.is_green is False
-    assert "exited" in result.reason
-
-
-@pytest.mark.unit
 def test_missing_npx_is_unavailable_not_green() -> None:
     """An absent npx must report unavailable rather than an accidental clean run.
 
@@ -235,7 +120,6 @@ def test_missing_npx_is_unavailable_not_green() -> None:
     assert "npx" in result.reason
 
 
-@pytest.mark.unit
 def test_clone_output_parses_count_pct_and_groups() -> None:
     """A real clone-bearing console report parses into count, pct, and records."""
     raw = (
@@ -260,7 +144,6 @@ def test_clone_output_parses_count_pct_and_groups() -> None:
     assert "src/cadrumo/a.py" in result.groups[0].render(), "clone paths are normalised to POSIX"
 
 
-@pytest.mark.unit
 def test_console_report_names_unavailability_instead_of_claiming_clean() -> None:
     """The operator-facing report must not print a clean line for a failed scan."""
     rendered = render_console_report(DuplicationResult.unavailable("npx was not found on PATH"))
@@ -269,22 +152,6 @@ def test_console_report_names_unavailability_instead_of_claiming_clean() -> None
     assert "no clones found" not in rendered
 
 
-@pytest.mark.integration
-def test_health_report_duplication_dimension_is_amber_with_a_measured_count() -> None:
-    """End-to-end: the health dashboard must not render the false green.
-
-    The tree carries clones, so the honest verdict is AMBER carrying the count.
-    Per the advisory clone-count policy this dimension is never RED on clones.
-    """
-    _require_npx()
-    dimension = audit_duplication(_REPO_ROOT)
-
-    assert dimension.status is not Status.GREEN, "the production tree carries clones; GREEN is the reported lie"
-    assert dimension.status is Status.AMBER
-    assert "clone cluster(s)" in dimension.headline
-
-
-@pytest.mark.unit
 def test_only_one_jscpd_invocation_exists_in_the_tree() -> None:
     """Exactly one module may construct a jscpd command, tree-wide.
 
@@ -334,7 +201,6 @@ def test_only_one_jscpd_invocation_exists_in_the_tree() -> None:
     assert builders == [], f"jscpd must be invoked from exactly one runner; found: {builders}"
 
 
-@pytest.mark.unit
 def test_dispositions_arithmetic_reconciles() -> None:
     """The dispositions file's own counts must add up.
 
@@ -361,117 +227,6 @@ def test_dispositions_arithmetic_reconciles() -> None:
     )
 
 
-_WHERE_PATH = re.compile(r"^-?\s*(.+?\.py) \[")
-
-
-def _paths_from_where(entries: list[str]) -> frozenset[str]:
-    """Extract the bare file paths a disposition's ``where`` list names."""
-    paths = set()
-    for entry in entries:
-        match = _WHERE_PATH.match(entry)
-        assert match, f"disposition `where` entry has no parseable path: {entry!r}"
-        paths.add(match.group(1))
-    return frozenset(paths)
-
-
-def _paths_from_group(group: CloneGroup) -> frozenset[str]:
-    """Extract the bare file paths a live ``CloneGroup``'s console block names.
-
-    ``CloneGroup.lines`` renders relative to the repository root
-    (``src/cadrumo/...``), while the dispositions file records paths relative
-    to ``src/cadrumo/`` -- the same convention its own header states.
-    """
-    paths = set()
-    for line in group.lines[1:]:
-        stripped = line.strip()
-        match = _WHERE_PATH.match(stripped)
-        if not match:
-            continue
-        path = match.group(1)
-        paths.add(path.removeprefix("src/cadrumo/"))
-    return frozenset(paths)
-
-
-def _recorded_dispositions() -> Counter[frozenset[str]]:
-    """Count how many clone groups the dispositions file records per file-set."""
-    dispositions_path = _REPO_ROOT / "dev" / "audit" / "duplication_dispositions.toml"
-    dispositions = tomllib.loads(dispositions_path.read_text(encoding="utf-8"))
-    return Counter(_paths_from_where(group["where"]) for group in dispositions["group"])
-
-
-def _uncovered_groups(groups: Sequence[CloneGroup], recorded: Counter[frozenset[str]]) -> list[CloneGroup]:
-    """Return the observed groups exceeding what the record accounts for.
-
-    Coverage is a MULTISET comparison, not set membership. A self-clone names
-    one file twice, so its file-set collapses to a single path; under a plain
-    set membership test any second, unrelated clone group inside that same file
-    matched the first one's entry and passed unseen. Comparing how MANY groups
-    each file-set carries closes that hole while still keying on paths rather
-    than line spans, which drift on every unrelated edit.
-
-    Under-observing is not a failure: a group the record still carries but the
-    scan no longer sees is a landed consolidation, which is progress.
-    """
-    observed = Counter(_paths_from_group(group) for group in groups)
-    surplus = {paths: count - recorded[paths] for paths, count in observed.items() if count > recorded[paths]}
-    uncovered: list[CloneGroup] = []
-    for group in groups:
-        paths = _paths_from_group(group)
-        if surplus.get(paths, 0) > 0:
-            uncovered.append(group)
-            surplus[paths] -= 1
-    return uncovered
-
-
-@pytest.mark.integration
-def test_every_observed_clone_group_has_a_recorded_disposition() -> None:
-    """Every clone group the live scan observes must carry a recorded disposition.
-
-    The plan's own verification criterion -- every observed clone group carries
-    an explicit recorded disposition -- had no gate anywhere in the tree; the
-    claim could not be checked and could rot silently as consolidations landed.
-    This asserts COVERAGE, never a COUNT of clones: the clone count is advisory
-    debt per the governing ADR, so a clone-count assertion would fight that ADR
-    and go red on every genuine consolidation. The record is a superset by
-    design -- a group disappearing is progress, not a gate failure -- while a
-    NEW, unrecorded group is exactly what this gate exists to catch.
-
-    Coverage is measured per file-set as a MULTISET, not a set. A self-clone
-    names one file twice, so its file-set collapses to a single path; under a
-    plain set membership test any second, entirely unrelated clone group inside
-    that same file matched the first one's entry and passed unseen. Seven of
-    the recorded groups are self-clones, so seven files were unguarded against
-    a new intra-file clone. Comparing how MANY groups each file-set carries
-    closes that hole while still keying on paths rather than line spans, which
-    drift on every unrelated edit.
-    """
-    _require_npx()
-    result = run_duplication_scan(_REPO_ROOT)
-    assert result.outcome is DuplicationOutcome.CLONES, (
-        "the production tree is expected to carry advisory clone debt; "
-        "if this ever goes clean, update this test rather than deleting it"
-    )
-
-    uncovered = [group.render() for group in _uncovered_groups(result.groups, _recorded_dispositions())]
-
-    assert not uncovered, (
-        "the live scan observed clone group(s) with no recorded disposition in "
-        f"duplication_dispositions.toml:\n\n{chr(10).join(uncovered)}"
-    )
-
-
-def _self_clone_group(path: str, first: int, second: int) -> CloneGroup:
-    """Build a clone group naming one file twice, in jscpd's console shape."""
-    return CloneGroup(
-        (
-            "Clone found (python):",
-            f" - src/cadrumo/{path} [{first}:1 - {first + 10}:9] (10 lines, 120 tokens)",
-            f"   src/cadrumo/{path} [{second}:1 - {second + 10}:9]",
-        )
-    )
-
-
-@pytest.mark.unit
 def test_a_second_clone_inside_an_already_recorded_file_is_uncovered() -> None:
     """A new intra-file clone must not inherit another group's disposition.
 
@@ -494,13 +249,12 @@ def test_a_second_clone_inside_an_already_recorded_file_is_uncovered() -> None:
     assert len(surplus) == 1, f"one clone group beyond the record must be flagged, got {len(surplus)}"
 
 
-@pytest.mark.unit
 def test_a_landed_consolidation_does_not_fail_the_coverage_read() -> None:
     """Observing FEWER groups than recorded is progress, not a gate failure.
 
     The record is a superset by design. This pins the asymmetry, so a future
-    tightening cannot quietly turn the coverage read into the clone-count
-    assertion the governing ADR rules out.
+    tightening cannot quietly turn the coverage read into a clone-count
+    assertion, which this project treats as advisory debt rather than a gate.
     """
     recorded = _recorded_dispositions()
     assert _uncovered_groups((), recorded) == []

@@ -32,7 +32,7 @@ def test_pagefind_yml_scopes_to_article_body() -> None:
 
 
 def test_search_template_hosts_the_shared_controller() -> None:
-    """The search page is a bare mount for the shared controller (ADR D5).
+    """The search page is a bare mount for the shared controller.
 
     The stock ``PagefindUI`` drop was retired: the page no longer loads a
     per-page UI bundle. It exposes the ``#pagefind-search`` mount that the

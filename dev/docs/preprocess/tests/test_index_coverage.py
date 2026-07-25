@@ -47,7 +47,7 @@ def test_index_metadata_exists() -> None:
 def test_extraction_sidecars_are_excluded_from_the_expected_set() -> None:
     """No committed extraction sidecar is walker-indexable any more.
 
-    Post-cutover (docs-terminology-search ADR Update 1) the sidecars are the
+    Post-cutover the sidecars are the
     PRODUCT corpus payload and are ``.vaultragignore``-excluded from the dev
     index; the walker reads the same text from the SOURCE files through the
     ``.vaultragpreprocess.toml`` hook rules. A sidecar re-entering the

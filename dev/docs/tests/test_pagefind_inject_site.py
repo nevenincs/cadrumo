@@ -45,7 +45,6 @@ def _fixture_site(tmp_path: Path, *, pages: int = 3) -> Path:
     return site
 
 
-@pytest.mark.hex_core
 def test_injection_lands_one_record_per_concept_in_primary_language(
     tmp_path: Path,
 ) -> None:
@@ -79,7 +78,6 @@ def test_injection_lands_one_record_per_concept_in_primary_language(
     assert "en" in languages
 
 
-@pytest.mark.hex_core
 def test_sorted_by_weight_returns_only_injected_cards(tmp_path: Path) -> None:
     """A weight-sorted Pagefind search returns ONLY the injected records.
 
@@ -142,7 +140,6 @@ def test_sorted_by_weight_returns_only_injected_cards(tmp_path: Path) -> None:
     assert any(row["cid"] == "prorrata" for row in result), result
 
 
-@pytest.mark.hex_core
 def test_materialises_every_kind_with_graceful_cli() -> None:
     """All four record kinds materialise into unified records.
 
@@ -169,7 +166,6 @@ def test_materialises_every_kind_with_graceful_cli() -> None:
     assert 0.0 <= sample.ranking_weight <= 1.0
 
 
-@pytest.mark.hex_core
 def test_compile_search_index_wires_the_real_injector_over_built_html(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
@@ -203,7 +199,6 @@ def test_compile_search_index_wires_the_real_injector_over_built_html(
     assert "term/casilla/CLI records" in summary
 
 
-@pytest.mark.hex_core
 def test_materialise_injects_approved_concepts_only_no_drafts() -> None:
     """The production injector ships only approved concept cards, never drafts.
 

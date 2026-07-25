@@ -1,6 +1,6 @@
-"""Durable D8 gate: full-text PAGE hits rank user docs above dev machinery.
+"""Durable ranking gate: full-text PAGE hits rank user docs above dev machinery.
 
-ADR ``2026-07-15`` D8 extends the user-first ranking ladder from the injected
+The ratified ranking decision extends the user-first ladder from the injected
 result CARDS (concept / casilla / cli) to the RAW full-text page hits. Before the
 build-side page-meta stamping this was structurally impossible: Pagefind
 directory-indexed pages carried no ranking meta, so the palette ordered them by

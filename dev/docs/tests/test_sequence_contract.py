@@ -1,6 +1,6 @@
 """Structural contract gates over the enrolled ``cli-sequence`` corpus.
 
-The tightened @result contract (ADR D4): a ``@result`` frame must assert the
+The tightened @result contract: a ``@result`` frame must assert the
 result PAYLOAD — at least one ``@expect`` on a ``result.<path>`` / ``result[...]``
 json-path — not merely ``exit_code`` or the ``status`` spine field, so a sequence
 verifies the MEANING of its final output rather than only that the process ran.

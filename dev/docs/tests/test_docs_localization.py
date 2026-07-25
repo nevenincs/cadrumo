@@ -8,7 +8,7 @@ msgid source) exactly - never a second hand-listed authority.
 
 The completeness gate (:func:`test_every_user_page_is_fully_translated`) is
 EXPECTED RED until the Spanish, Catalan, and Hungarian catalogues are translated
-in a later wave. That is the intended state: gettext falls back to English for an
+in a later pass. That is the intended state: gettext falls back to English for an
 untranslated segment silently, and this gate inverts that silence into a loud
 per-language, per-page refusal. It carries no skip or xfail - it fails honestly
 today and passes cleanly once the translations land. It is one parametrized test
@@ -75,7 +75,7 @@ def _catalogue_counts(po_path: Path) -> tuple[int, int]:
 def test_every_user_page_is_fully_translated(language: str) -> None:
     """Every user-scope page has a complete catalogue with no untranslated or fuzzy entries.
 
-    EXPECTED RED until the translation wave lands: a page whose catalogue is
+    EXPECTED RED until the translations land: a page whose catalogue is
     missing, or carries any untranslated or fuzzy entry, fails the language. The
     failure enumerates every incomplete page with its untranslated and fuzzy
     counts so the translation work is sized directly from the gate output.

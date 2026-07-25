@@ -107,7 +107,7 @@ def test_rung2_adjudication_is_consistent_with_the_ratified_gate() -> None:
 
     The gate does not pin the verdict (the close-review found the previous
     version asserted keep-deferred, which made the measurement decorative).
-    It pins consistency: the default threshold IS the ADR D3 ten percent,
+    It pins consistency: the default threshold IS the ratified ten percent,
     and the decision is exactly what the measured rate demands on either
     side of it.
     """

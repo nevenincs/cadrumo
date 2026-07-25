@@ -1,6 +1,6 @@
 """Cross-workflow structural gates for the release-asset evidence transport.
 
-The release-asset-transport ADR moved every inter-workflow payload off Actions
+The release-asset transport decision moved every inter-workflow payload off Actions
 artifact storage (quota-broken on the private Free plan) onto per-run draft
 releases in the reserved ``evidence-*`` tag namespace. These gates pin the
 transport invariants that span workflows: no packaging workflow may fall back

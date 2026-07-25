@@ -11,7 +11,7 @@ The gate is written against OBSERVABLE behaviour, not the surface internals:
 navigate to ``search.html?q=<term>``, assert the query is visible in an input
 and results for ``<term>`` are on screen without typing. It queries a plain
 ``input`` value and the page's own rendered text (the indexed page title), NOT
-any surface-specific result class, so the assertions held across ADR D5's
+any surface-specific result class, so the assertions held across the
 retirement of the stock ``PagefindUI`` drop in favour of the palette-hosted
 inline controller -- the ``?q=`` contract is the same either way. The page is
 now a bare ``#pagefind-search`` mount that the globally-loaded
@@ -82,7 +82,7 @@ def _build_search_site(out: Path) -> Path:
     build = out / "html"
     src.mkdir(parents=True)
     # The shipped search.html is a bare mount; the globally-loaded
-    # cadrumo-docs.js hosts the search controller inline (ADR D5). Copy the real
+    # cadrumo-docs.js hosts the search controller inline. Copy the real
     # shipped asset in and wire it exactly as production conf.py does
     # (html_js_files / html_css_files), so the built page loads the same
     # controller the real site does -- not a stub.

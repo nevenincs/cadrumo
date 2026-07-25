@@ -123,7 +123,7 @@ def test_subprocess_first_touch_cliff_is_gone(evidence: ServingPathEvidence) -> 
     measured baseline 21.6 child-CPU-s on the editable tree, ceiling 35
     mirrors the module constant and stays under the ~50 s cliff class. The
     installed-cohort <= 5 s target is not asserted on the editable tree
-    (S19/S20 own that against the built cohort).
+    (the installed-cohort gates own that against the built cohort).
     """
     first_touch = next(
         m for m in evidence.measurements if m.mode == "subprocess" and m.label.startswith("work create (first-touch")

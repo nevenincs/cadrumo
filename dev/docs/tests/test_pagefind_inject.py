@@ -33,7 +33,6 @@ from ._pagefind_inject_support import concept_records
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-@pytest.mark.hex_core
 def test_concept_records_funnel_into_search_records() -> None:
     """Every Handbook concept projects into a unified record with a deep link."""
     materialised = concept_records()
@@ -46,7 +45,6 @@ def test_concept_records_funnel_into_search_records() -> None:
     assert "es" in {lang.value for lang in sample.descriptions}
 
 
-@pytest.mark.hex_core
 def test_meta_filters_and_sort_carry_the_card_payload() -> None:
     """The Pagefind meta/filters/sort carry the typed term-card payload."""
     record = next(r for r in concept_records().records if r.metadata.concept_id == "prorrata")
@@ -64,7 +62,6 @@ def test_meta_filters_and_sort_carry_the_card_payload() -> None:
     assert _sort_key(1.0) > _sort_key(0.5)
 
 
-@pytest.mark.hex_core
 def test_relevance_boost_applies_when_present_else_base() -> None:
     """A present relevance weight boosts a record; absence keeps the base."""
     record = next(r for r in concept_records().records if r.metadata.concept_id == "prorrata")
@@ -79,13 +76,11 @@ def test_relevance_boost_applies_when_present_else_base() -> None:
     assert _effective_weight(casilla, {casilla.id: 1.0}) >= casilla.ranking_weight
 
 
-@pytest.mark.hex_core
 def test_relevance_file_absent_yields_empty_map(tmp_path: Path) -> None:
     """An absent relevance file yields an empty weight map (base weights)."""
     assert load_relevance_weights(tmp_path) == {}
 
 
-@pytest.mark.hex_core
 def test_relevance_file_present_is_loaded(tmp_path: Path) -> None:
     """The committed SweepResult is parsed into a per-record boost map.
 
@@ -139,7 +134,6 @@ def test_relevance_file_present_is_loaded(tmp_path: Path) -> None:
     assert weights["concept:iva"] == 0.4
 
 
-@pytest.mark.hex_core
 def test_relevance_file_malformed_yields_empty_map(tmp_path: Path) -> None:
     """A file that is not a valid SweepResult yields an empty boost map."""
     rel = tmp_path / "src/cadrumo/_data/terminology/relevance"
@@ -148,7 +142,6 @@ def test_relevance_file_malformed_yields_empty_map(tmp_path: Path) -> None:
     assert load_relevance_weights(tmp_path) == {}
 
 
-@pytest.mark.hex_core
 def test_build_record_injector_returns_a_callable(tmp_path: Path) -> None:
     """The public injector factory builds a callback (pre-loading relevance).
 

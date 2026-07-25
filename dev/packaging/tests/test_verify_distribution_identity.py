@@ -101,7 +101,7 @@ def test_accepted_mcp_product_tuple_passes_every_real_projection() -> None:
 def test_real_client_display_descriptions_report_missing_bilingual_claim_parity() -> None:
     """All five client-display fields carry approved bilingual pairs with full six-claim parity.
 
-    Revision 2 of the S06 copy record expanded every short client-display field to the
+    Revision 2 of the copy record expanded every short client-display field to the
     full six required claims. All five rows are now compliant=True and
     product_descriptions.ok is True.
     """
@@ -117,14 +117,14 @@ def test_real_client_display_descriptions_report_missing_bilingual_claim_parity(
         "human_confirmation",
         "never_files_live",
     ]
-    # S07 enrolled 2 pairs (plugin + marketplace-plugin); S08 adds the marketplace pair;
-    # S09 adds the mcpb short description and long_description pairs.
+    # Five approved pairs: plugin, marketplace-plugin, marketplace, and the mcpb
+    # short description and long_description.
     assert descriptions["approved_pair_count"] == 5
     assert descriptions["product_review_required"] is False
     # model_facing_descriptions count and sha256 are the sibling rename executor's
     # surface (MCP tool/argument descriptions change as renames land). Only check the
     # stable structural properties here; the sibling updates expected_sha256 in the
-    # verifier when each rename wave lands.
+    # verifier as each rename lands.
     mfd = descriptions["model_facing_descriptions"]
     assert mfd["nonempty"] is True
     assert mfd["language_labels_absent"] is True
@@ -202,7 +202,7 @@ def test_unapproved_semantic_contradiction_cannot_pass_keyword_claim_checks() ->
 def test_cli_exits_zero_and_emits_a_passing_report() -> None:
     """The production CLI exits 0 and emits a passing report once all claims carry parity.
 
-    After Revision 2 of the S06 copy record expanded every short client-display field to
+    After Revision 2 of the copy record expanded every short client-display field to
     all six required claims, the verifier is fully green: namespace, identity, and
     description checks all pass.
 

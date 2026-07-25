@@ -67,7 +67,7 @@ def test_golden_query_reaches_its_surface(golden: GoldenQuery) -> None:
 def test_extraction_sidecars_are_deduplicated_out_of_the_index() -> None:
     """A corpus query returns NO sidecar hits - only hook-fed source hits.
 
-    Proves the post-cutover dedup (docs-terminology-search ADR Update 1): the
+    Proves the post-cutover dedup: the
     ``*.extracted.*`` sidecars are ``.vaultragignore``-excluded because the
     preprocess-hook rules feed the same extraction truth under source paths.
     A sidecar hit means the exclusion did not take effect (the index was not
