@@ -6118,6 +6118,9 @@ errors:
     profile_import_signature: El archivo de perfil no superó la comprobación de firma
       o integridad. No importes archivos de origen no fiable.
   internal:
+    cli_outbound_payload_boundary: Cadrumo ha construido un registro interno que no
+      ha superado su propia validación. Tu comando era correcto; esto es un defecto
+      de Cadrumo. Comunícalo indicando el comando que ejecutaste.
     internal_active_profile_pointer_transaction: 'Error interno: la propiedad de la
       transacción del puntero de perfil activo no es válida.'
     internal_cli_unexpected_boundary: El comando falló por un error interno inesperado,

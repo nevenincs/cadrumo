@@ -5680,6 +5680,9 @@ errors:
     profile_import_signature: The profile archive failed its signature or integrity
       check. Do not import archives from an untrusted source.
   internal:
+    cli_outbound_payload_boundary: Cadrumo built an internal record that failed its
+      own validation. Your command was correct; this is a defect in Cadrumo. Report
+      it with the command you ran.
     internal_active_profile_pointer_transaction: 'Internal error: active-profile pointer
       transaction ownership is invalid.'
     internal_cli_unexpected_boundary: The command failed due to an unexpected internal

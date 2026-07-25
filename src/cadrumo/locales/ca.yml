@@ -6083,6 +6083,9 @@ errors:
     profile_import_signature: L'arxiu de perfil no ha superat la comprovació de signatura
       o integritat. No importis arxius d'origen no fiable.
   internal:
+    cli_outbound_payload_boundary: Cadrumo ha construït un registre intern que no
+      ha superat la seva pròpia validació. La teva ordre era correcta; això és un
+      defecte de Cadrumo. Comunica-ho indicant l'ordre que vas executar.
     internal_active_profile_pointer_transaction: 'Error intern: la propietat de la
       transacció del punter de perfil actiu no és vàlida.'
     internal_cli_unexpected_boundary: L'ordre ha fallat per un error intern inesperat,

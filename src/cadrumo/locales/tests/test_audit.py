@@ -26,6 +26,7 @@ _IDENTITY_HEADING_KEYS = {
 _PROSE_KEYS = {
     "ca": {
         "errors.auth.auth_former_product_session_state",
+        "errors.internal.cli_outbound_payload_boundary",
         "adapters.google.calc_sheets.errors.foreign_spreadsheet_not_owned",
         "adapters.google.oauth_flow.errors.profile_state_unresolved",
         "adapters.google.profile_binding.errors.no_active_profile",
@@ -40,6 +41,7 @@ _PROSE_KEYS = {
     },
     "en": {
         "errors.auth.auth_former_product_session_state",
+        "errors.internal.cli_outbound_payload_boundary",
         "adapters.google.calc_sheets.errors.foreign_spreadsheet_not_owned",
         "adapters.google.oauth_flow.errors.profile_state_unresolved",
         "adapters.google.profile_binding.errors.no_active_profile",
@@ -52,6 +54,7 @@ _PROSE_KEYS = {
     },
     "es": {
         "errors.auth.auth_former_product_session_state",
+        "errors.internal.cli_outbound_payload_boundary",
         "adapters.outbound.storage.google_drive.errors.former_vault_folder",
         "cli.config.passphrase.confirm_new_passphrase_prompt",
         "cli.config.passphrase.current_passphrase_prompt",
@@ -62,6 +65,7 @@ _PROSE_KEYS = {
     },
     "hu": {
         "errors.auth.auth_former_product_session_state",
+        "errors.internal.cli_outbound_payload_boundary",
         "adapters.outbound.storage.google_drive.errors.former_vault_folder",
         "cli.config.passphrase.confirm_new_passphrase_prompt",
         "cli.config.passphrase.current_passphrase_prompt",

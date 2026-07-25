@@ -201,6 +201,45 @@ class CliStoredDataValidationBoundaryError(CadrumoError):
         self.original_exception: ValidationError = error
 
 
+class CliOutboundPayloadBoundaryError(CadrumoError):
+    """Raised when the application builds an outbound payload that fails validation.
+
+    The third member of this family, and the one neither sibling covered.
+    :exc:`CliValidationBoundaryError` is scoped to input-time failures -- the
+    operator passed an invalid argument or body -- and
+    :exc:`CliStoredDataValidationBoundaryError` to drift on a record that was
+    valid when written. This case is neither: the operator's input was fine and
+    nothing was loaded, but a record the application ITSELF constructed on the
+    way out violated its own contract. That is a program defect, so it is
+    INTERNAL rather than REFUSED.
+
+    Classifying it as either sibling misdirects the operator. The observed case
+    was a Modelo 100 reconcile diverging on several casillas: the per-diff
+    grounding overflowed a bucket-event payload field, and the operator was told
+    "the command input failed validation, check the command's arguments" about
+    arguments that were entirely correct, on the modelo most likely to trigger
+    it.
+
+    Attributes:
+        original_exception: The underlying :exc:`~pydantic.ValidationError`
+            raised while constructing the outbound record.
+    """
+
+    def __init__(self, error: ValidationError) -> None:
+        """Wrap ``error`` in the outbound-payload boundary contract.
+
+        Args:
+            error: The pydantic validation error raised while constructing a
+                payload the application emits or persists.
+        """
+        super().__init__(
+            translated_message="errors.internal.cli_outbound_payload_boundary",
+            context={},
+            suggestion=None,
+        )
+        self.original_exception: ValidationError = error
+
+
 class CliCommandGroupUnavailableError(CadrumoError):
     """Raised when a command group cannot be imported and the cause is not an optional extra.
 
