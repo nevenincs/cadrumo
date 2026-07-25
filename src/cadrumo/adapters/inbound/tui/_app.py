@@ -90,7 +90,6 @@ class FlowTuiApp(App[None]):
         padding: 1 3;
         margin: 1 2;
         width: 100%;
-        max-width: 110;
         height: auto;
     }
     #page-prompt { text-style: bold; margin: 0 0 1 0; }
@@ -136,7 +135,6 @@ class FlowTuiApp(App[None]):
         margin: 1 2;
         height: auto;
         width: 100%;
-        max-width: 110;
     }
     #review-blocking {
         color: $error;
@@ -144,7 +142,6 @@ class FlowTuiApp(App[None]):
         padding: 0 1;
         margin: 1 2;
         width: 100%;
-        max-width: 110;
     }
     #review-save-note { color: $warning; margin: 0 2; }
     #btn-submit { dock: bottom; margin: 1 2; }

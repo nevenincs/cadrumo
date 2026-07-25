@@ -35,12 +35,12 @@ from typing import TYPE_CHECKING, ClassVar, Final, override
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
-from textual.containers import Vertical, VerticalScroll
+from textual.containers import Vertical
 from textual.widgets import Button, Footer, Input, Label, Static
 
 from ....core import PassphraseStrength
 from ....core.i18n import tr
-from ._theme import BASE_CSS, install_cadrumo_themes, toggle_appearance
+from ._theme import BASE_CSS, ContentScroll, install_cadrumo_themes, toggle_appearance
 
 if TYPE_CHECKING:
     from ....application.user_profile import ProfileRegistrationOutcome
@@ -83,43 +83,22 @@ class RegistrationApp(App["ProfileRegistrationOutcome | None"]):
     CSS = (
         BASE_CSS
         + """
-    #registration-banner {
-        dock: top;
-        height: 1;
-        width: 100%;
-        background: $primary;
-        color: $text;
-        text-style: bold;
-        padding: 0 2;
-    }
-    #registration-body {
-        border: round $primary;
-        border-title-color: $accent;
-        border-title-style: bold;
-        background: $surface;
-        padding: 1 3;
-        margin: 1 2;
-        width: 100%;
-        max-width: 84;
-        height: auto;
-    }
     #registration-intro { margin: 0 0 1 0; }
     #registration-why {
         color: $text-muted;
         border-left: outer $accent;
-        padding: 0 0 0 1;
+        padding: 0 0 0 2;
         margin: 0 0 1 0;
     }
     .field-label { text-style: bold; margin: 1 0 0 0; }
-    .field-hint { color: $text-muted; margin: 0 0 0 0; }
-    #registration-body Input { border: tall $accent; background: $background; margin: 0 0 1 0; }
+    .field-hint { color: $text-muted; margin: 0 0 1 0; }
     #strength-line { margin: 0 0 1 0; }
     .strength-refused { color: $error; }
     .strength-weak { color: $warning; }
     .strength-fair { color: $accent; }
     .strength-strong { color: $success; }
     #registration-refusal { color: $error; margin: 0 0 1 0; }
-    #registration-actions { height: 1; align-horizontal: right; margin: 1 0 0 0; }
+    #registration-actions { height: auto; align-horizontal: right; margin: 1 0 0 0; }
     """
     )
 
@@ -128,8 +107,13 @@ class RegistrationApp(App["ProfileRegistrationOutcome | None"]):
         Binding("escape", "abandon", "", show=False),
     ]
 
-    def __init__(self) -> None:
+    def __init__(self, *, suggested_name: str | None = None) -> None:
         super().__init__()
+        self._suggested_name = suggested_name or ""
+        """Name carried in from the command line, prefilled into the field.
+
+        A prefill, never a commitment: this screen is where the decision is
+        made, so the operator can still change it before creating."""
         self.outcome: ProfileRegistrationOutcome | None = None
         """The created profile, or ``None`` when the operator abandoned the
         screen. The caller distinguishes the two by this, never by an
@@ -138,14 +122,18 @@ class RegistrationApp(App["ProfileRegistrationOutcome | None"]):
     @override
     def compose(self) -> ComposeResult:
         """Yield the banner, the credential form, and the footer."""
-        yield Static(id="registration-banner")
-        with VerticalScroll(), Vertical(id="registration-body"):
+        yield Static(id="registration-banner", classes="cadrumo-banner")
+        with (
+            ContentScroll(classes="cadrumo-scroll"),
+            Vertical(classes="cadrumo-column"),
+            Vertical(id="registration-body", classes="cadrumo-panel"),
+        ):
             yield Static(id="registration-intro")
             yield Static(id="registration-why")
 
             yield Label(tr("flows.registration.username_label"), classes="field-label")
             yield Static(tr("flows.registration.username_hint"), classes="field-hint")
-            yield Input(id="field-username")
+            yield Input(id="field-username", value=self._suggested_name)
 
             yield Label(tr("flows.registration.password_label"), classes="field-label")
             yield Static(tr("flows.registration.password_hint"), classes="field-hint")
@@ -259,14 +247,14 @@ class RegistrationApp(App["ProfileRegistrationOutcome | None"]):
         self.query_one("#registration-refusal", Static).update(message)
 
 
-def run_registration_tui() -> ProfileRegistrationOutcome | None:
+def run_registration_tui(*, suggested_name: str | None = None) -> ProfileRegistrationOutcome | None:
     """Run the registration screen and return the created profile, or ``None``.
 
     ``None`` means the operator abandoned the screen — an ordinary outcome,
     not an error, so the caller decides what to do rather than catching an
     exception to find out.
     """
-    app = RegistrationApp()
+    app = RegistrationApp(suggested_name=suggested_name)
     app.run()
     return app.outcome
 

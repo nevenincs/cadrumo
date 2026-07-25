@@ -28,7 +28,7 @@ from .. import (
     CADRUMO_LIGHT,
     CADRUMO_LIGHT_THEME_NAME,
     CADRUMO_THEMES,
-    CONTENT_MAX_WIDTH,
+    CONTENT_WIDTH_PERCENT,
     resolve_theme_name,
 )
 
@@ -162,6 +162,31 @@ def test_light_is_actually_lighter_than_dark() -> None:
     assert _relative_luminance(str(CADRUMO_LIGHT.background)) > _relative_luminance(str(CADRUMO_DARK.background))
 
 
-def test_content_column_is_wider_than_the_retired_fixed_width() -> None:
-    """The layout cap replaced a hardcoded 96-cell body; it must not shrink it."""
-    assert CONTENT_MAX_WIDTH >= 96
+def test_the_content_column_is_a_proportion_not_a_cell_count() -> None:
+    """The column must scale with the terminal, never pin a width.
+
+    Cell constants were the original defect: a body pinned at 96 cells
+    wasted a wide terminal and clipped a narrow one. Raising the number
+    moves the problem; expressing it as a share removes it.
+    """
+    assert CONTENT_WIDTH_PERCENT.endswith("%")
+    assert 50 < int(CONTENT_WIDTH_PERCENT.rstrip("%")) < 100
+
+
+def test_no_surface_pins_a_cell_width_in_its_stylesheet() -> None:
+    """No screen may reintroduce a hardcoded width or max-width in cells.
+
+    Scans the shipped stylesheets for a bare integer width. Percentages and
+    ``fr`` units pass; ``width: 96`` or ``max-width: 110`` do not. This is
+    the regression guard for the whole fluid-layout property, which is
+    otherwise easy to undo one screen at a time.
+    """
+    import re
+    from pathlib import Path
+
+    tui_dir = Path(__file__).resolve().parent.parent
+    offenders: list[str] = []
+    for module in sorted(tui_dir.glob("*.py")):
+        for match in re.finditer(r"(max-)?width:\s*(\d+)\s*;", module.read_text(encoding="utf-8")):
+            offenders.append(f"{module.name}: {match.group(0)}")
+    assert not offenders, f"hardcoded cell widths: {offenders}"

@@ -883,10 +883,11 @@ def _with_manager_frontend(wizard_command, *, mode: _WizardPersistMode):
     gated. Only the second arm is diverted here — the scripted path keeps
     the wizard, its flags, and its documented contract untouched.
 
-    ``create`` diverts only when no profile name was supplied, because the
-    name is what the registration screen itself collects. Passing a name
-    keeps the existing scripted behaviour, so nothing already automated
-    changes shape.
+    A profile name on the command line does NOT send ``create`` back to the
+    flow: it prefills the registration screen's name field. Routing on it
+    was a mistake -- ``config profile create NAME`` is the documented usage,
+    so it meant the operator met the old paged flow every time and the new
+    surface was effectively unreachable.
     """
     import functools
 
@@ -899,11 +900,9 @@ def _with_manager_frontend(wizard_command, *, mode: _WizardPersistMode):
             present_registration,
         )
 
-        named = bool(kwargs.get("profile_name"))
         if not manager_is_the_right_frontend(
             mode=mode,
             scripted=bool(kwargs.get("quiet")) or bool(kwargs.get("accept_defaults")),
-            named=named,
             explicit_fields=any(
                 value is not None
                 for key, value in kwargs.items()
@@ -920,7 +919,10 @@ def _with_manager_frontend(wizard_command, *, mode: _WizardPersistMode):
             # than rendering a manager whose result could not be reported.
             return wizard_command(*args, **kwargs)
         if mode == "create":
-            outcome = present_registration()
+            supplied = kwargs.get("profile_name")
+            outcome = present_registration(
+                suggested_name=supplied if isinstance(supplied, str) else None,
+            )
             if outcome is None:
                 _emit_registration_abandoned(ctx)
                 return None

@@ -30,12 +30,12 @@ from typing import TYPE_CHECKING, ClassVar, override
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
-from textual.containers import Horizontal, Vertical, VerticalScroll
+from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, DataTable, Footer, Input, Label, Static
 
 from ....core.i18n import tr
-from ._theme import BASE_CSS, install_cadrumo_themes, toggle_appearance
+from ._theme import BASE_CSS, ContentScroll, install_cadrumo_themes, toggle_appearance
 
 if TYPE_CHECKING:
     from ....application.user_profile import ProfileFieldView, ProfileOverview
@@ -95,15 +95,6 @@ class ProfileManagerApp(App[None]):
     CSS = (
         BASE_CSS
         + """
-    #manager-banner {
-        dock: top;
-        height: 1;
-        width: 100%;
-        background: $primary;
-        color: $text;
-        text-style: bold;
-        padding: 0 2;
-    }
     #manager-progress {
         dock: top;
         height: 1;
@@ -112,30 +103,18 @@ class ProfileManagerApp(App[None]):
         background: $surface;
         color: $text-muted;
     }
-    .manager-section {
-        border: round $primary;
-        border-title-color: $accent;
-        border-title-style: bold;
-        background: $surface;
-        padding: 1 2;
-        margin: 1 2;
-        width: 100%;
-        max-width: 110;
-        height: auto;
-    }
     .manager-section DataTable { height: auto; width: 100%; background: $surface; }
     #edit-dialog {
         border: thick $accent;
         background: $surface;
-        padding: 1 2;
-        width: 70;
-        max-width: 100%;
+        padding: 1 3;
+        width: 60%;
         height: auto;
     }
     #edit-label { text-style: bold; }
     #edit-path { color: $text-muted; margin: 0 0 1 0; }
-    #edit-dialog Input { border: tall $accent; background: $background; margin: 0 0 1 0; }
-    #edit-actions { height: 1; align-horizontal: right; }
+    #edit-dialog Input { margin: 0 0 1 0; }
+    #edit-actions { height: auto; align-horizontal: right; margin: 1 0 0 0; }
     #edit-actions Button { margin: 0 0 0 2; }
     """
     )
@@ -153,11 +132,11 @@ class ProfileManagerApp(App[None]):
 
     @override
     def compose(self) -> ComposeResult:
-        yield Static(id="manager-banner")
+        yield Static(id="manager-banner", classes="cadrumo-banner")
         yield Static(id="manager-progress")
-        with VerticalScroll(id="manager-body"):
+        with ContentScroll(id="manager-body", classes="cadrumo-scroll"), Vertical(classes="cadrumo-column"):
             for section in self.overview.sections:
-                yield Static(id=f"section-{section.key}", classes="manager-section")
+                yield Static(id=f"section-{section.key}", classes="manager-section cadrumo-panel")
         yield Footer()
 
     def on_mount(self) -> None:

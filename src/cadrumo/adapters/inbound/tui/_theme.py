@@ -35,6 +35,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Final
 
+from textual.containers import VerticalScroll
 from textual.theme import Theme
 
 from ....core.config import TuiAppearance
@@ -46,14 +47,14 @@ if TYPE_CHECKING:
 CADRUMO_LIGHT_THEME_NAME: Final[str] = "cadrumo-light"
 CADRUMO_DARK_THEME_NAME: Final[str] = "cadrumo-dark"
 
-CONTENT_MAX_WIDTH: Final[int] = 110
-"""Maximum column width in cells for a body of prose, form, or table.
+CONTENT_WIDTH_PERCENT: Final[str] = "86%"
+"""Share of the terminal the content column occupies.
 
-The previous surfaces pinned ``width: 96`` outright, so a wide terminal
-wasted its space and a narrow one clipped. The column now fills the
-available width and caps here: wide enough to hold a review table
-comfortably, narrow enough that a full-width 200-column terminal does not
-render a line of prose too long to track back to the next line's start.
+Expressed as a proportion, never a cell count. Cell constants were the
+original defect: a body pinned at 96 cells wasted a wide terminal and
+clipped a narrow one, and simply raising the number moves the problem
+rather than removing it. A proportion scales with whatever the operator
+actually gave the application, leaving a consistent gutter at every size.
 """
 
 
@@ -113,16 +114,32 @@ BASE_CSS: Final[str] = """
     Screen {
         background: $background;
         color: $foreground;
-        align-horizontal: center;
+        /* Both axes. Horizontal alone left every surface hugging the top of
+           a tall terminal with the whole lower half empty, which is what
+           "not centred" actually looked like. */
+        align: center middle;
     }
 
-    /* The shared responsive content column. A surface marks its body with
-       this class instead of pinning a width, so every screen breathes with
-       the terminal and stays centred. */
+    /* The shared fluid content column. A surface marks its body with this
+       class instead of pinning a width: the column is a PROPORTION of the
+       terminal, so it grows with a wide one and shrinks with a narrow one
+       while keeping the same gutter on both sides. No cell constants. */
     .cadrumo-column {
-        width: 100%;
-        max-width: 110;
+        width: 86%;
         height: auto;
+    }
+
+    /* A scroll host must not eat the column's centring. `scrollbar-gutter:
+       stable` reserves the track on BOTH sides, so the column sits on the
+       true midline whether or not a scrollbar is currently drawn — without
+       it the reserved track lands entirely on the right and every surface
+       is measurably off-centre. */
+    .cadrumo-scroll {
+        width: 100%;
+        height: 1fr;
+        align-horizontal: center;
+        scrollbar-size-vertical: 1;
+        scrollbar-gutter: stable;
     }
 
     /* The docked title band every full-screen surface carries. */
@@ -136,21 +153,47 @@ BASE_CSS: Final[str] = """
         padding: 0 2;
     }
 
+    /* One padding scale, so panels across surfaces breathe identically. */
+    .cadrumo-panel {
+        border: round $primary;
+        border-title-color: $accent;
+        border-title-style: bold;
+        background: $surface;
+        padding: 1 3;
+        margin: 1 0;
+        width: 100%;
+        height: auto;
+    }
+
     .cadrumo-subtle { color: $text-muted; }
     .cadrumo-note { color: $text-muted; text-style: italic; }
 
+    /* Buttons must read as focused from across the room: reversed brand
+       fill plus a marker, so focus never depends on colour alone. */
     Button {
-        height: 1;
+        height: 3;
         border: none;
-        padding: 0 2;
-        min-width: 12;
+        padding: 0 3;
         background: $panel;
         color: $foreground;
     }
     Button:hover { background: $panel-lighten-1; }
-    Button:focus { background: $primary; color: $text; text-style: bold; }
+    Button:focus {
+        background: $primary;
+        color: $text;
+        text-style: bold reverse;
+    }
     Button.-primary { background: $primary; color: $text; }
     Button.-primary:focus { text-style: bold reverse; }
+
+    /* Inputs take the same full-width treatment so a form reads as a column
+       of equal-weight rows rather than ragged boxes. */
+    Input {
+        width: 100%;
+        border: tall $accent;
+        background: $background;
+    }
+    Input:focus { border: tall $primary; }
 """
 """Chrome and layout shared by every Cadrumo full-screen surface.
 
@@ -159,6 +202,20 @@ so the banner, the centred content column, and the button treatment are
 defined once. Colours resolve through theme tokens exclusively, which is
 what lets one app serve both appearances without a second stylesheet.
 """
+
+
+class ContentScroll(VerticalScroll, can_focus=False):
+    """The scroll host every Cadrumo surface puts its content column in.
+
+    Identical to :class:`~textual.containers.VerticalScroll` except that it
+    is removed from the tab order. A scrollable container is focusable by
+    default so it can be scrolled from the keyboard, but on these surfaces
+    it lands between the last control and the first as a stop that shows no
+    focus and does nothing visible — the operator presses Tab, the
+    highlight vanishes, and the form looks broken. The content is reachable
+    by tabbing the real controls, and the scroll still responds to the
+    mouse wheel and to Page Up / Page Down.
+    """
 
 
 def resolve_theme_name(appearance: TuiAppearance, *, host_prefers_dark: bool = True) -> str:
@@ -214,7 +271,8 @@ __all__ = [
     "CADRUMO_LIGHT",
     "CADRUMO_LIGHT_THEME_NAME",
     "CADRUMO_THEMES",
-    "CONTENT_MAX_WIDTH",
+    "CONTENT_WIDTH_PERCENT",
+    "ContentScroll",
     "install_cadrumo_themes",
     "resolve_theme_name",
     "toggle_appearance",

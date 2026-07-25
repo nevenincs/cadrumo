@@ -23,11 +23,11 @@ from typing import override
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding, BindingsMap
-from textual.containers import VerticalScroll
+from textual.containers import Vertical
 from textual.widgets import DataTable, Footer, Static
 
 from ....core.i18n import tr
-from ._theme import BASE_CSS, install_cadrumo_themes, toggle_appearance
+from ._theme import BASE_CSS, ContentScroll, install_cadrumo_themes, toggle_appearance
 
 # Copyable custody / recovery next-step lines. These are literal CLI
 # invocations (command tokens, not operator prose), rendered verbatim so an
@@ -118,27 +118,6 @@ class StatusApp(App[None]):
     CSS = (
         BASE_CSS
         + """
-    VerticalScroll { align-horizontal: center; }
-    #status-header {
-        dock: top;
-        height: 1;
-        width: 100%;
-        background: $primary;
-        color: $text;
-        text-style: bold;
-        padding: 0 2;
-    }
-    .status-panel {
-        border: round $primary;
-        border-title-color: $accent;
-        border-title-style: bold;
-        background: $surface;
-        padding: 1 3;
-        margin: 1 2;
-        width: 100%;
-        max-width: 110;
-        height: auto;
-    }
     .status-panel DataTable { height: auto; width: 100%; background: $surface; }
     .status-empty { color: $text-muted; text-style: italic; }
     .status-commands { color: $text-muted; margin: 1 0 0 0; }
@@ -160,12 +139,12 @@ class StatusApp(App[None]):
     @override
     def compose(self) -> ComposeResult:
         """Yield the status screen's widgets: header and the scrollable status body."""
-        yield Static(id="status-header")
-        with VerticalScroll(id="status-body"):
-            yield Static(id="panel-profile", classes="status-panel")
-            yield Static(id="panel-profiles", classes="status-panel")
-            yield Static(id="panel-auth", classes="status-panel")
-            yield Static(id="panel-recovery", classes="status-panel")
+        yield Static(id="status-header", classes="cadrumo-banner")
+        with ContentScroll(id="status-body", classes="cadrumo-scroll"), Vertical(classes="cadrumo-column"):
+            yield Static(id="panel-profile", classes="status-panel cadrumo-panel")
+            yield Static(id="panel-profiles", classes="status-panel cadrumo-panel")
+            yield Static(id="panel-auth", classes="status-panel cadrumo-panel")
+            yield Static(id="panel-recovery", classes="status-panel cadrumo-panel")
         yield Footer()
 
     def on_mount(self) -> None:

@@ -30,7 +30,6 @@ def manager_is_the_right_frontend(
     *,
     mode: str,
     scripted: bool,
-    named: bool,
     explicit_fields: bool,
     full_screen: bool,
 ) -> bool:
@@ -39,21 +38,24 @@ def manager_is_the_right_frontend(
     Pure, so the routing rule can be exercised directly rather than only
     through a terminal that a test host cannot provide.
 
-    The manager wins only for a bare interactive invocation on a capable
-    host. Every other combination belongs to the wizard:
+    **Every** interactive invocation on a capable host gets the manager.
+    There is exactly one interactive surface for managing a profile, and
+    the paged setup flow is not it — leaving the old flow reachable for
+    some interactive invocations meant two competing answers to the same
+    question, which is the parallel-authority failure the architecture
+    rules exist to prevent. A supplied profile name does NOT change this:
+    it prefills the registration screen's name field.
 
-    - ``scripted`` (``--quiet`` / ``--accept-defaults``) is an explicit
-      request for the non-interactive path.
-    - ``explicit_fields`` means the caller already knows what it wants to
-      set; opening a screen would strand those values.
+    What still belongs to the flow is the genuinely non-interactive
+    contract, which is a different thing rather than a competing screen:
+
+    - ``scripted`` (``--quiet`` / ``--accept-defaults``) explicitly asks
+      for the headless path and its JSON envelope.
+    - ``explicit_fields`` means the caller already knows what to set;
+      opening a screen would strand those values.
     - a host that cannot go full-screen has no manager to show.
-    - for ``create``, ``named`` means the profile label came from the
-      command line, which is the existing scripted shape — the manager's
-      own first screen is what collects that name otherwise.
     """
-    if scripted or explicit_fields or not full_screen:
-        return False
-    return not (mode == "create" and named)
+    return not (scripted or explicit_fields or not full_screen)
 
 
 def host_can_run_full_screen() -> bool:
@@ -93,8 +95,12 @@ def present_profile_manager(*, label: str | None = None) -> None:
     run_profile_manager_tui(build_active_profile_overview(label=label))
 
 
-def present_registration() -> ProfileRegistrationOutcome | None:
+def present_registration(*, suggested_name: str | None = None) -> ProfileRegistrationOutcome | None:
     """Run the credential-first registration screen.
+
+    ``suggested_name`` prefills the name field from a profile name given on
+    the command line. It is a prefill, not a commitment: the operator can
+    still change it, because the screen is where the decision is made.
 
     Returns the created profile, or ``None`` when the operator left without
     creating one — an ordinary outcome the caller reports as a no-op rather
@@ -102,7 +108,7 @@ def present_registration() -> ProfileRegistrationOutcome | None:
     """
     from ....adapters.inbound.tui import run_registration_tui
 
-    return run_registration_tui()
+    return run_registration_tui(suggested_name=suggested_name)
 
 
 __all__ = [
