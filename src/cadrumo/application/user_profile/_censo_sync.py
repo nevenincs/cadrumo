@@ -47,14 +47,8 @@ if TYPE_CHECKING:
 CENSO_SOURCE_TAG: Final = "aeat_censo_read"
 """``UserProfileFact.source`` value marking an AEAT-verified censo fact."""
 
-CENSO_DERIVED_SOURCE_TAG: Final = "aeat_censo_derived"
-"""``UserProfileFact.source`` for facts derived from an AEAT-verified censo."""
-
 _log = get_logger(__name__)
 
-#: Declared profile paths the censal consulta can fill, in emit order. Every
-#: entry is a key declared by the user-profile schema; the reconciliation
-#: refuses to invent one.
 #: The profile's fiscal identity. Read from the censal projection to decide
 #: OWNERSHIP of the read, and deliberately not adoptable — see below.
 _TAX_ID_PATH: Final = "identity.tax_id"
@@ -392,7 +386,6 @@ def _raw_afectacion_ratio(censo_facts: Mapping[str, str]) -> Decimal | None:
 
 __all__ = [
     "CENSAL_ADOPTABLE_PATHS",
-    "CENSO_DERIVED_SOURCE_TAG",
     "CENSO_SOURCE_TAG",
     "CensalReconciliation",
     "CensoSyncService",
