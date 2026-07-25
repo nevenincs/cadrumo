@@ -15,3 +15,4 @@ Submodules
 
    cadrumo.core.decimal._coerce
    cadrumo.core.decimal._format
+   cadrumo.core.decimal._grammar

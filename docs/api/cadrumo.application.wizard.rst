@@ -28,6 +28,7 @@ Submodules
    cadrumo.application.wizard._models
    cadrumo.application.wizard._persistence
    cadrumo.application.wizard._registered_values
+   cadrumo.application.wizard._results
    cadrumo.application.wizard._setup_legal_validators
    cadrumo.application.wizard._status
    cadrumo.application.wizard._translations

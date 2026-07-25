@@ -29,6 +29,7 @@ Subpackages
    cadrumo.application.ledger
    cadrumo.application.live
    cadrumo.application.modelo
+   cadrumo.application.operator_output
    cadrumo.application.operator_surface
    cadrumo.application.overview
    cadrumo.application.portals
