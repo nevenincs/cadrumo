@@ -11,16 +11,6 @@ related:
   - '[[2026-07-23-tui-wizard-substrate-plan]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 # `profile-bundle-tui` plan
 
 - [x] `S01` - Build the export FlowDefinition at the entrypoint tier collecting profile as a SELECT over live bucket labels defaulting to the active profile and included only when no NAME argument was given, destination as a PATH, and transport as a SELECT over the canonical ProfileBundleExportTransport values with the encrypted arm as default; `src/cadrumo/entrypoints/cli/_config/_profile_bundle_flow.py`.
