@@ -30,7 +30,7 @@ from typing import TypeGuard, cast
 
 import click
 import pytest
-import typer
+from dev.docs.cli_reference import _force_lazy_imports
 from typer.main import get_command as _typer_get_command
 
 from ....application.operator_surface import get_operator_surface_contract
@@ -38,32 +38,6 @@ from ....application.operator_surface import get_operator_surface_contract
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _PINNED_ROOTS: frozenset[str] = frozenset({"config", "app"})
-
-
-def _force_load_lazy_subcommands(app: typer.Typer) -> None:
-    """Materialise every lazily-registered subcommand on ``app`` and its descendants.
-
-    Mirrors the leaf-schema gate's loader: the CLI registers heavy subtrees via
-    :func:`register_lazy_subcommand` in a process-global table keyed by group
-    name, imported only on dispatch. The drift gate needs the full tree at
-    collection time, so we force-load every lazy entry under every materialised
-    group.
-    """
-    from .._command_suggestions import _LAZY_REGISTRY
-
-    seen: set[int] = set()
-    pending: list[typer.Typer] = [app]
-    while pending:
-        node = pending.pop()
-        if id(node) in seen:
-            continue
-        seen.add(id(node))
-        group_name = node.info.name or ""
-        for lazy in _LAZY_REGISTRY.get(group_name, {}).values():
-            lazy.load()
-        for group in node.registered_groups:
-            if group.typer_instance is not None:
-                pending.append(group.typer_instance)
 
 
 def _is_command_group(command: click.Command) -> TypeGuard[click.Group]:
@@ -104,7 +78,7 @@ def _resolve_live_surface() -> dict[str, dict[str, frozenset[str]]]:
     """
     from .. import app as live_app
 
-    _force_load_lazy_subcommands(live_app)
+    _force_lazy_imports(live_app)
     root = _typer_get_command(live_app)
     root.name = live_app.info.name or "cadrumo"
 

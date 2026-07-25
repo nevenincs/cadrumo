@@ -23,6 +23,7 @@ from typing import Any, Protocol, TypeGuard, cast
 import click
 import pytest
 import typer
+from dev.docs.cli_reference import _force_lazy_imports
 from typer.main import get_command as _typer_get_command
 
 from ....application.ledger import (
@@ -119,34 +120,6 @@ def _normalise_command_path(path: tuple[str, ...]) -> str:
 # ---------------------------------------------------------------------
 
 
-def _force_load_lazy_subcommands(app: typer.Typer) -> None:
-    """Materialise every lazily-registered subcommand on ``app`` and its descendants.
-
-    The CLI registers heavy subtrees via :func:`register_lazy_subcommand`
-    to keep ``aeat --version`` / ``aeat --help`` off the registry-parse
-    path. The lazy entries live in a process-global table keyed by group
-    name and are only imported when an operator dispatches into them.
-    The conformance gate needs the full tree available at collection
-    time, so we walk every materialised group and force-load every lazy
-    entry registered under its name.
-    """
-    from .._command_suggestions import _LAZY_REGISTRY
-
-    seen: set[int] = set()
-    pending: list[typer.Typer] = [app]
-    while pending:
-        node = pending.pop()
-        if id(node) in seen:
-            continue
-        seen.add(id(node))
-        group_name = node.info.name or ""
-        for lazy in _LAZY_REGISTRY.get(group_name, {}).values():
-            lazy.load()
-        for group in node.registered_groups:
-            if group.typer_instance is not None:
-                pending.append(group.typer_instance)
-
-
 def _is_command_group(command: click.Command) -> TypeGuard[click.Group]:
     """Return True when ``command`` is a Click group / multi-command.
 
@@ -217,7 +190,7 @@ def _walk_cli_command_paths(app: typer.Typer) -> set[str]:
     via :data:`_GROUP_CALLBACK_EMIT_KEYS` because the click leaf walk
     cannot reach a callback that does not register as a subcommand.
     """
-    _force_load_lazy_subcommands(app)
+    _force_lazy_imports(app)
     root = _typer_get_command(app)
     root.name = app.info.name or PRODUCT_IDENTITY.cli_executable
     # typer.main.get_command is typed to return typer's vendored
