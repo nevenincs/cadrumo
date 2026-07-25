@@ -9,6 +9,7 @@ related:
   - '[[2026-07-25-censal-profile-autofill-adr]]'
   - '[[2026-07-25-censal-profile-autofill-research]]'
 ---
+
 # `censal-profile-autofill` plan
 
 ### Phase `P01` - Auth credentials on the profile
@@ -18,6 +19,7 @@ Give an authentication mode somewhere to keep what it needs, on the encrypted pr
 - [x] `P01.S01` - Declare the auth section in the user-profile schema with provider, dni_nie and numero_soporte at identity sensitivity, and pin its shape with a schema test; `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`.
 - [x] `P01.S02` - Resolve Clave credentials from the active profile with a settings fallback, refusing a Clave mode missing either half and naming what is absent; `src/cadrumo/application/auth/_sessions.py`.
 - [ ] `P01.S03` - Make the manager authentication action mode-aware over the profile fields, offering certificate selection only when a certificate is registered; `src/cadrumo/entrypoints/cli/_config/_manager_actions.py`.
+- [x] `P01.S11` - Declare the DNI validity-date contraste beside numero_soporte and resolve it profile-first with the settings fallback, refusing a non-QR route that carries neither form; `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`.
 
 ### Phase `P02` - Read-only censal reader
 
