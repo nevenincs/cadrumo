@@ -24,10 +24,9 @@ import sys
 import tempfile
 from pathlib import Path
 
-import psutil
 import pytest
 
-from ._worker_count_hook import resolve_auto_num_workers
+from ._worker_count_hook import DEFAULT_WORKER_CAP, resolve_auto_num_workers
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -50,7 +49,7 @@ def test_probe():
 """
 
 
-def _resolved_worker_count(*, env_var_value: str | None) -> tuple[int, str]:
+def _resolved_worker_count(*, env_var_value: str | None, numprocesses: str = "auto") -> tuple[int, str]:
     """Run the real probe fixture in a fresh pytest subprocess.
 
     Writes a throwaway ``conftest.py`` delegating to the real
@@ -62,6 +61,8 @@ def _resolved_worker_count(*, env_var_value: str | None) -> tuple[int, str]:
     Args:
         env_var_value: Value to set for ``CADRUMO_PYTEST_WORKERS`` in the
             subprocess environment, or ``None`` to leave it unset.
+        numprocesses: The ``-n`` value passed on the command line. ``"auto"``
+            exercises the hook; an explicit count proves the hook is bypassed.
 
     Returns:
         A ``(worker_count, stderr)`` pair -- the resolved worker count and
@@ -78,7 +79,7 @@ def _resolved_worker_count(*, env_var_value: str | None) -> tuple[int, str]:
         if env_var_value is not None:
             env["CADRUMO_PYTEST_WORKERS"] = env_var_value
 
-        result = subprocess.run(
+        result = subprocess.run(  # noqa: S603 - fixed interpreter argv; numprocesses is a test-local literal.
             [
                 sys.executable,
                 "-m",
@@ -88,7 +89,7 @@ def _resolved_worker_count(*, env_var_value: str | None) -> tuple[int, str]:
                 "-p",
                 "no:cacheprovider",
                 "-n",
-                "auto",
+                numprocesses,
                 "test_probe.py",
             ],
             cwd=tmp_path,
@@ -106,17 +107,6 @@ def _resolved_worker_count(*, env_var_value: str | None) -> tuple[int, str]:
         return int(sentinel.read_text(encoding="utf-8")), result.stderr
 
 
-def _xdist_default_worker_count() -> int:
-    """Return the worker count xdist's own ``-n auto`` default resolves to.
-
-    Mirrors ``xdist.plugin.pytest_xdist_auto_num_workers``'s own algorithm
-    for non-``logical`` ``-n auto`` (``psutil.cpu_count(logical=False)``),
-    computed fresh at test time so the expectation adapts to whatever
-    machine runs the suite rather than a hardcoded core count.
-    """
-    return psutil.cpu_count(logical=False) or psutil.cpu_count() or 1
-
-
 def test_worker_count_is_capped_when_env_var_set() -> None:
     """``CADRUMO_PYTEST_WORKERS=2`` resolves ``-n auto`` to exactly 2 workers."""
     assert callable(resolve_auto_num_workers)
@@ -124,14 +114,38 @@ def test_worker_count_is_capped_when_env_var_set() -> None:
     assert worker_count == 2
 
 
-def test_worker_count_falls_through_to_xdist_default_when_unset() -> None:
-    """An unset ``CADRUMO_PYTEST_WORKERS`` falls through byte-for-byte to xdist's own default."""
+def test_worker_count_defaults_to_the_project_cap_when_unset() -> None:
+    """An unset ``CADRUMO_PYTEST_WORKERS`` resolves to the project default, not the machine width.
+
+    The cap was originally opt-in and fell through to xdist's own
+    physical-core default when unset. That required every author to remember
+    the variable on every invocation, so in practice it was almost never set
+    and concurrent runs on a shared box multiplied the full machine width.
+    """
     worker_count, _stderr = _resolved_worker_count(env_var_value=None)
-    assert worker_count == _xdist_default_worker_count()
+    assert worker_count == DEFAULT_WORKER_CAP
 
 
-def test_worker_count_falls_through_when_invalid_not_a_crash() -> None:
-    """An invalid ``CADRUMO_PYTEST_WORKERS`` falls through to the default and warns, never crashes."""
+def test_worker_count_falls_back_to_the_project_cap_when_invalid() -> None:
+    """An invalid ``CADRUMO_PYTEST_WORKERS`` warns and uses the default, never crashes.
+
+    A typo degrades to the safe width rather than to the wider machine
+    default, so a malformed value cannot quietly buy more workers than
+    setting nothing would.
+    """
     worker_count, stderr = _resolved_worker_count(env_var_value="notanumber")
-    assert worker_count == _xdist_default_worker_count()
+    assert worker_count == DEFAULT_WORKER_CAP
     assert "CADRUMO_PYTEST_WORKERS is not a number" in stderr
+
+
+def test_explicit_numprocesses_bypasses_the_default() -> None:
+    """An explicit ``-n <N>`` overrides the default in both directions.
+
+    The default must never become a ceiling: xdist consults this hook only
+    while resolving ``-n auto``, so anyone deliberately asking for a wider
+    run still gets it. Asserted with a count ABOVE the default so a
+    regression that clamped instead of defaulting would fail here.
+    """
+    wider = DEFAULT_WORKER_CAP + 2
+    worker_count, _stderr = _resolved_worker_count(env_var_value=None, numprocesses=str(wider))
+    assert worker_count == wider
