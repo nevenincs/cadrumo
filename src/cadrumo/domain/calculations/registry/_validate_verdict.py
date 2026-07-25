@@ -21,13 +21,12 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
-import os
-import tempfile
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict
 
 from .... import __version__
+from ....core.atomic_write import atomic_write_best_effort_text
 from ....core.config import load_settings
 from ....core.external_constants import UTF_8_ENCODING
 from ._loader_cache import is_bundled_registry_root
@@ -216,20 +215,10 @@ def read_verdict(path: Path) -> ValidationVerdict | None:
 
 def write_verdict(path: Path, verdict: ValidationVerdict) -> None:
     """Persist ``verdict`` to ``path`` atomically via a sibling temp file."""
-    temp_name = None
     try:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        with tempfile.NamedTemporaryFile("w", dir=path.parent, delete=False, encoding=UTF_8_ENCODING) as tf:
-            tf.write(verdict.model_dump_json())
-            temp_name = tf.name
-        os.replace(temp_name, path)
+        atomic_write_best_effort_text(path, verdict.model_dump_json(), encoding=UTF_8_ENCODING)
     except Exception:
         _LOGGER.warning("Could not write validation verdict at %s", path, exc_info=True)
-        if temp_name is not None:
-            try:
-                os.unlink(temp_name)
-            except Exception:
-                _LOGGER.debug("Could not remove temporary validation verdict file %s", temp_name, exc_info=True)
 
 
 def delete_verdict(path: Path) -> None:

@@ -72,6 +72,11 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "os.write",
     ): "shared complete-write primitive for the hardened atomic writer's private fd",
     (
+        "src/cadrumo/core/atomic_write.py",
+        "atomic_write_best_effort_bytes",
+        "tempfile.NamedTemporaryFile",
+    ): "shared best-effort-tier atomic-write primitive (no fsync); writes caller-supplied bytes only, no data of its own",
+    (
         "src/cadrumo/entrypoints/cli/_config/_secure_input.py",
         "write_to_controlling_terminal",
         "open",
@@ -94,21 +99,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "write_promoted_scenario",
         "path.write_text",
     ): "agent-harness eval flywheel; writes promoted eval scenario definitions, no sensitive/user data",
-    (
-        "src/cadrumo/domain/calculations/registry/_validate_evidence.py",
-        "_write_disk_cache",
-        "tempfile.NamedTemporaryFile",
-    ): "registry corpus PDF-text cache; writes public AEAT manual text only, no user data",
-    (
-        "src/cadrumo/domain/calculations/registry/_compiled_cache.py",
-        "store_compiled_registry_cache",
-        "tempfile.NamedTemporaryFile",
-    ): "compiled-registry payload cache; writes the framed first-party compiled registry set only, no user data",
-    (
-        "src/cadrumo/domain/calculations/registry/_validate_verdict.py",
-        "write_verdict",
-        "tempfile.NamedTemporaryFile",
-    ): "registry validation-verdict cache; writes the non-secret compiled-registry validation verdict (JSON), no user data",
     (
         "src/cadrumo/adapters/persistence/storage/blob_store/_materialisation.py",
         "_write_bytes_secure_fd",

@@ -39,13 +39,12 @@ import hmac
 import importlib
 import inspect
 import logging
-import os
 import pickle
 import sys
-import tempfile
 import time
 from pathlib import Path
 
+from ....core.atomic_write import atomic_write_best_effort_bytes
 from ....core.hashing import sha256_hex
 from ._loader_cache import registry_disk_cache_dir, registry_disk_cache_max_entries
 from ._schema import ModeloDefinition, RegistryCatalogues
@@ -271,28 +270,19 @@ def store_compiled_registry_cache(
     """Persist ``payload`` for ``root`` at the current fingerprint key.
 
     Writes the framed file (schema-version marker, integrity digest, pickled
-    payload) atomically via a sibling temp file, then prunes stale sibling
-    pickles beyond the retained-entry ceiling. Best-effort: a write failure is
-    logged and swallowed so a cache-directory permission problem never crashes a
-    registry load -- the worst case is a recompile on the next process.
+    payload) atomically via the best-effort tier's sibling temp file, then
+    prunes stale sibling pickles beyond the retained-entry ceiling.
+    Best-effort: a write failure is logged and swallowed so a cache-directory
+    permission problem never crashes a registry load -- the worst case is a
+    recompile on the next process.
     """
     path = compiled_cache_path(root, fingerprints)
     frame = _encode_frame(payload)
-    temp_name: str | None = None
     try:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        with tempfile.NamedTemporaryFile("wb", dir=path.parent, delete=False) as tf:
-            tf.write(frame)
-            temp_name = tf.name
-        os.replace(temp_name, path)
+        atomic_write_best_effort_bytes(path, frame)
         _evict_stale_registry_pickles(path.parent, logger=_LOGGER)
     except Exception:
         _LOGGER.debug("Could not write compiled registry cache at %s", path, exc_info=True)
-        if temp_name is not None:
-            try:
-                os.unlink(temp_name)
-            except OSError:
-                _LOGGER.debug("Could not remove temporary compiled registry cache file %s", temp_name, exc_info=True)
 
 
 def _encode_frame(payload: CompiledRegistryPayload) -> bytes:

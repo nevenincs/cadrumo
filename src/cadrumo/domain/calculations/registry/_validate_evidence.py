@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import json
 import logging
-import os
-import tempfile
 from collections.abc import Iterable, Mapping
 from functools import lru_cache
 from pathlib import Path
 
+from ....core.atomic_write import atomic_write_best_effort_text
 from ....core.config import load_settings
 from ....core.hashing import sha256_hex
 from ....core.resources import packaged_data, resolve_companion_binary
@@ -156,12 +155,10 @@ def _write_disk_cache(data: dict[str, str]) -> None:
     global _DISK_CACHE_WRITE_COUNT
     _DISK_CACHE_WRITE_COUNT += 1
     cache_path = _corpus_text_cache_path()
-    temp_name = None
     try:
-        cache_path.parent.mkdir(parents=True, exist_ok=True)
         # Read-merge-before-write narrows the multi-process last-writer-wins
-        # window that the atomic ``os.replace`` alone does not close: fold in
-        # any entries a concurrent writer committed since our in-memory copy
+        # window that the atomic replace alone does not close: fold in any
+        # entries a concurrent writer committed since our in-memory copy
         # loaded, so a parallel writer's new key is not dropped. The residual
         # race (two writers merging the same pre-image) can only cost a
         # recompute, never a wrong value, because every key embeds the source
@@ -176,19 +173,15 @@ def _write_disk_cache(data: dict[str, str]) -> None:
             except Exception:
                 _LOGGER.debug("Ignoring unreadable corpus text cache while merging at %s", cache_path, exc_info=True)
         merged.update(data)
-        with tempfile.NamedTemporaryFile("w", dir=cache_path.parent, delete=False, encoding="utf-8") as tf:
-            # Compact separators: this is a machine cache that reaches tens of
-            # megabytes; indentation only inflates every read and write.
-            json.dump(merged, tf, ensure_ascii=False, separators=(",", ":"))
-            temp_name = tf.name
-        os.replace(temp_name, cache_path)
+        # Compact separators: this is a machine cache that reaches tens of
+        # megabytes; indentation only inflates every read and write.
+        atomic_write_best_effort_text(
+            cache_path,
+            json.dumps(merged, ensure_ascii=False, separators=(",", ":")),
+            encoding="utf-8",
+        )
     except Exception:
         _LOGGER.warning("Could not write corpus text cache at %s", cache_path, exc_info=True)
-        if temp_name is not None:
-            try:
-                os.unlink(temp_name)
-            except Exception:
-                _LOGGER.debug("Could not remove temporary corpus text cache file %s", temp_name, exc_info=True)
 
 
 def _extract_pdf_text_impl(path: str) -> str:
