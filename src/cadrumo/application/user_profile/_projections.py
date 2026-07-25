@@ -12,7 +12,8 @@ coercer so field-level coercion logic stays in one place.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
+from datetime import date
 
 from pydantic import BaseModel
 
@@ -25,6 +26,14 @@ from ...domain.user_profile import (
     UserProfileSnapshot,
     load_user_profile_schema,
 )
+
+_WINDOWLESS_SENTINEL = date.min
+"""Sort position for a fact carrying no ``valid_from``.
+
+An absent window means "no stated start", which orders before every
+stated one, so a windowed fact supersedes an unwindowed one at the same
+path. Matches the sentinel the record resolvers already sort on.
+"""
 
 _DEFAULT_SCHEMA: ProfileSchemaDefinition | None = None
 
@@ -111,6 +120,37 @@ def snapshot_to_values(
     return facts_to_values(snapshot.facts, schema=schema)
 
 
+def _in_window_order(facts: Sequence[UserProfileFact]) -> tuple[UserProfileFact, ...]:
+    """Order facts so the chronologically last effective window wins.
+
+    The record model permits several live facts at one path with
+    different effective-dating windows, and the schema declares
+    ``effective_dated`` on most of its sections and fields, so which of
+    them is effective is a real question rather than a hypothetical one.
+    Both projections resolve it by taking the LAST fact per path, so
+    ordering by window here is what makes that answer the in-force one.
+
+    The rule is the one the record resolvers already use - sort on
+    ``valid_from``, absent windows first, and let the last win. It is
+    matched rather than improved deliberately: a resolver that also
+    honoured ``valid_to`` would be a better rule and a different
+    decision, and having two better-rules disagree is the situation this
+    change exists to end.
+
+    The sort is stable, so a record whose facts carry no window at all
+    keeps its declaration order exactly. Nothing in production sets a
+    window today, which is what makes this behaviour-neutral now and
+    correct when something starts.
+
+    Args:
+        facts: The record's facts, in declaration order.
+
+    Returns:
+        The same facts, ordered so a later window resolves last.
+    """
+    return tuple(sorted(facts, key=lambda fact: fact.valid_from or _WINDOWLESS_SENTINEL))
+
+
 def record_to_path_values(record: UserProfileRecord | UserProfileSnapshot | None) -> dict[str, str]:
     """Project a :class:`UserProfileRecord` (or snapshot) into a schema-path-keyed string mapping.
 
@@ -121,11 +161,13 @@ def record_to_path_values(record: UserProfileRecord | UserProfileSnapshot | None
     """
     if record is None:
         return {}
-    return {fact.path: _render_fact_value(fact.value) for fact in record.facts if fact.value is not None}
+    return {
+        fact.path: _render_fact_value(fact.value) for fact in _in_window_order(record.facts) if fact.value is not None
+    }
 
 
 class EffectiveFact(BaseModel):
-    """The LAST-DECLARED fact at one schema path, disregarding effective-dating.
+    """The fact at one schema path whose effective window starts latest.
 
     ``value`` is the rendered canonical token, or ``None`` when the path was
     explicitly CLEARED. A cleared path is not the same as an unset one: it
@@ -133,13 +175,16 @@ class EffectiveFact(BaseModel):
     caller that cannot see the difference will treat the deletion as absence
     and quietly undo it.
 
-    "Last-declared" is deliberate wording rather than "in force". A fact
-    carries ``valid_from`` / ``valid_to``, and the record model permits several
-    live facts at one path with different windows; neither this projection nor
-    :func:`record_to_path_values` consults them, so an expired fact still
-    resolves. Nothing sets a window today, which is why the two agree in
-    practice — but that is a property of current data, not of the model, and
-    saying "in force" would claim a guarantee the code does not make.
+    Several facts may be live at one path with different effective-dating
+    windows, and this resolves them the way the record resolvers do: the
+    latest ``valid_from`` wins, with an absent window ordering first. That
+    is deliberately the same rule rather than a better one, so no two
+    readers can disagree about which fact is effective.
+
+    One thing it still does NOT do: ``valid_to`` is not consulted, so a
+    fact whose window has expired continues to resolve. That is the
+    existing rule's limit, shared with the record resolvers, and not a
+    property of this projection alone.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -168,7 +213,7 @@ def record_to_effective_facts(
     if record is None:
         return {}
     effective: dict[str, EffectiveFact] = {}
-    for fact in record.facts:
+    for fact in _in_window_order(record.facts):
         effective[fact.path] = EffectiveFact(
             value=None if fact.value is None else _render_fact_value(fact.value),
             source=fact.source,
