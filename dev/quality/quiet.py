@@ -19,7 +19,9 @@ from __future__ import annotations
 
 import subprocess
 import sys
-from typing import TextIO
+from typing import Final, TextIO
+
+_UTF_8: Final[str] = "utf-8"
 
 
 def main() -> int:
@@ -38,7 +40,7 @@ def main() -> int:
         command,
         capture_output=True,
         text=True,
-        encoding="utf-8",
+        encoding=_UTF_8,
         errors="replace",
         check=False,
     )

@@ -19,6 +19,9 @@ from __future__ import annotations
 import subprocess
 import sys
 from dataclasses import dataclass
+from typing import Final
+
+_UTF_8: Final[str] = "utf-8"
 
 GATES = (
     "check-style",
@@ -55,7 +58,7 @@ def run_gate(name: str) -> GateResult:
         ["just", name],
         capture_output=True,
         text=True,
-        encoding="utf-8",
+        encoding=_UTF_8,
         errors="replace",
         check=False,
     )
