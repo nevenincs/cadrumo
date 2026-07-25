@@ -25,6 +25,7 @@ Give an authentication mode somewhere to keep what it needs, on the encrypted pr
 - [x] `P01.S16` - Bind the schema declared provenance set to UserProfileFact, widening it first for the shipped censal token, and gate every shipped fact path and provenance token against the schema; `src/cadrumo/domain/user_profile/_values.py`.
 - [x] `P01.S17` - Declare the renta sex fields with the value set the AEAT registro design defines, and anchor the provenance contract at the schema rather than at a consuming module; `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`.
 - [x] `P01.S18` - Make the readiness probes no-session contract the subject of a test, asserting the profile read is declined rather than merely survived; `src/cadrumo/application/auth/tests`.
+- [x] `P01.S19` - Hold every auth provider to the identity guard, since each binds a comparable NIF at session bind and an absent expectation silently disarms the downstream session check; `src/cadrumo/application/auth/_sessions.py`.
 
 ### Phase `P02` - Read-only censal reader
 
