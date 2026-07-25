@@ -6652,6 +6652,10 @@ flows:
   manager:
     action:
       abandoned: Sin cambios.
+      auth_clave_incomplete: A Cl@ve todavía le falta %{missing}. No se ha guardado
+        nada.
+      auth_dni_nie: DNI o NIE con el que se identifica
+      auth_numero_soporte: Número de soporte del documento
       auth_provider: Forma de identificación ante la AEAT
       censal_pull: Traer datos censales (036)
       censal_pull_contested: 'El 036 presentado discrepa de lo que usted declaró en:
@@ -6663,8 +6667,6 @@ flows:
       certificate: Certificado
       certificate_active: Certificado activo
       certificate_done: 'Identificación: %{provider}; certificado activo: %{name}.'
-      certificate_none: No hay certificados registrados. Regístrelos con 'aeat config
-        certificate register'.
       export: Exportar copia
       export_destination: Ruta del archivo de destino
       export_done: Copia cifrada escrita en %{destination}.

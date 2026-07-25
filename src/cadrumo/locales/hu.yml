@@ -6500,6 +6500,10 @@ flows:
   manager:
     action:
       abandoned: Nem történt változás.
+      auth_clave_incomplete: 'A Cl@ve még ezt igényli: %{missing}. Semmi sem lett
+        elmentve.'
+      auth_dni_nie: DNI vagy NIE, amellyel azonosítja magát
+      auth_numero_soporte: A dokumentumon szereplő támogatási szám
       auth_provider: Azonosítás módja az AEAT felé
       censal_pull: Censusadatok lekérése (036)
       censal_pull_contested: 'A benyújtott 036 eltér az Ön bevallásától itt: %{paths}.
@@ -6510,8 +6514,6 @@ flows:
       certificate: Tanúsítvány
       certificate_active: Aktív tanúsítvány
       certificate_done: 'Azonosítás: %{provider}; aktív tanúsítvány: %{name}.'
-      certificate_none: 'Nincs regisztrált tanúsítvány. Regisztráljon egyet: ''aeat
-        config certificate register''.'
       export: Másolat exportálása
       export_destination: A célfájl elérési útja
       export_done: 'A titkosított másolat ide került: %{destination}.'

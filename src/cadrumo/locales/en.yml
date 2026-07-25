@@ -6182,6 +6182,9 @@ flows:
   manager:
     action:
       abandoned: No changes made.
+      auth_clave_incomplete: Cl@ve still needs %{missing}. Nothing was saved.
+      auth_dni_nie: DNI or NIE you identify with
+      auth_numero_soporte: Support number printed on the document
       auth_provider: How you identify to AEAT
       censal_pull: Pull censal data (036)
       censal_pull_contested: 'The filed 036 disagrees with what you declared at: %{paths}.
@@ -6192,8 +6195,6 @@ flows:
       certificate: Certificate
       certificate_active: Active certificate
       certificate_done: 'Identification: %{provider}; active certificate: %{name}.'
-      certificate_none: No certificates are registered. Register one with 'aeat config
-        certificate register'.
       export: Export a copy
       export_destination: Destination file path
       export_done: Encrypted copy written to %{destination}.
