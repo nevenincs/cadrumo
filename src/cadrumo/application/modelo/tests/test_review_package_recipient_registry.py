@@ -41,6 +41,7 @@ from ....tests.review_package_adapters import (
 from ....tests.secure_sql import isolated_runtime_profile
 from .._review_package_recipient_registry import (
     RecipientAlreadyRegisteredError,
+    RecipientFingerprintRecord,
     RecipientFingerprintRegister,
     RecipientFingerprintRegistryError,
     RecipientFingerprintRegistryRepository,
@@ -55,6 +56,29 @@ _NOW = datetime(2026, 7, 4, 12, 0, tzinfo=UTC)
 
 def _fresh_public_key_hex() -> str:
     return public_key_hex_from_raw_bytes(X25519PrivateKey.generate().public_key().public_bytes_raw())
+
+
+# --- Known-vector, non-tautological proof of the ``sha256_hex`` delegation --
+#
+# ``public_key_hex`` is pattern-constrained to exactly 64 lowercase hex
+# characters (32 raw bytes, the X25519 key size), so the published NIST
+# "abc" worked example (a 3-byte message) cannot be used directly here. Each
+# digest below is instead computed independently of this project -- via
+# CPython's ``hashlib`` in a throwaway shell session
+# (``python -c "import hashlib; print(hashlib.sha256(bytes(32)).hexdigest())"``)
+# -- and hard-coded as a literal. The tests below drive the production
+# ``fingerprint_sha256`` property with the exact input bytes and assert
+# against the literal; they never call ``fingerprint_sha256`` (or
+# ``sha256_hex``) to build their own expectation.
+_KNOWN_VECTOR_ZERO32_PUBLIC_KEY_HEX = "00" * 32
+"""32 zero bytes, hex-encoded (64 hex chars)."""
+_KNOWN_VECTOR_ZERO32_SHA256 = "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+"""``hashlib.sha256(bytes(32)).hexdigest()``, computed outside this codebase."""
+
+_KNOWN_VECTOR_SEQ32_PUBLIC_KEY_HEX = "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+"""32 sequential bytes ``0x00..0x1f``, hex-encoded (64 hex chars)."""
+_KNOWN_VECTOR_SEQ32_SHA256 = "630dcd2966c4336691125448bbb25b4ff412a49c732db2c8abc1b8581bd710dd"
+"""``hashlib.sha256(bytes(range(32))).hexdigest()``, computed outside this codebase."""
 
 
 def test_load_returns_empty_register_when_absent(tmp_path: Path) -> None:
@@ -205,6 +229,57 @@ def test_load_raises_on_corrupted_ciphertext(tmp_path: Path) -> None:
 
         with pytest.raises(DecryptionError):
             repository.load()
+
+
+@pytest.mark.parametrize(
+    ("public_key_hex", "expected_sha256"),
+    [
+        pytest.param(_KNOWN_VECTOR_ZERO32_PUBLIC_KEY_HEX, _KNOWN_VECTOR_ZERO32_SHA256, id="zero32"),
+        pytest.param(_KNOWN_VECTOR_SEQ32_PUBLIC_KEY_HEX, _KNOWN_VECTOR_SEQ32_SHA256, id="sequential32"),
+    ],
+)
+def test_fingerprint_sha256_matches_a_known_sha256_vector(public_key_hex: str, expected_sha256: str) -> None:
+    """``fingerprint_sha256`` reproduces an independently-computed SHA-256 digest.
+
+    Non-tautological proof of the ``core.hashing.sha256_hex`` delegation this
+    property carries: ``expected_sha256`` is a literal computed with CPython's
+    ``hashlib`` outside this codebase, never by calling ``fingerprint_sha256``
+    (or the project's own ``sha256_hex`` helper) to build its own expectation.
+    """
+    record = RecipientFingerprintRecord(
+        recipient_id="known-vector",
+        public_key_hex=public_key_hex,
+        added_at=_NOW,
+    )
+
+    assert record.fingerprint_sha256 == expected_sha256
+
+
+def test_known_vector_fingerprint_survives_the_encrypted_registry_roundtrip(tmp_path: Path) -> None:
+    """A known-vector fingerprint is byte-identical after the encrypted roundtrip.
+
+    Combines the known-vector proof above with the real
+    ``RecipientFingerprintRegistryRepository`` persistence boundary (a genuine
+    ``BUCKET_DEK_V1`` bucket, no mocks or fakes): adds a record carrying the
+    zero32 known-vector public key, reloads it through the encrypted store,
+    and confirms the reloaded record's ``fingerprint_sha256`` still equals the
+    literal computed independently via ``hashlib`` -- proving the
+    ``sha256_hex`` delegation is byte-identical across the persistence
+    boundary, not just in memory.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-reg-known-vector") as profile:
+        repository = RecipientFingerprintRegistryRepository(objects=profile.repository)
+        repository.add(
+            recipient_id="known-vector",
+            public_key_hex=_KNOWN_VECTOR_ZERO32_PUBLIC_KEY_HEX,
+            added_at=_NOW,
+        )
+        reloaded = repository.load()
+
+    assert len(reloaded.records) == 1
+    record = reloaded.records[0]
+    assert record.public_key_hex == _KNOWN_VECTOR_ZERO32_PUBLIC_KEY_HEX
+    assert record.fingerprint_sha256 == _KNOWN_VECTOR_ZERO32_SHA256
 
 
 __all__: list[str] = []

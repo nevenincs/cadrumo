@@ -28,7 +28,6 @@ On failure, the helper falls back to the old key.
 from __future__ import annotations
 
 import binascii
-import hashlib
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Protocol
@@ -38,6 +37,7 @@ from pydantic import BaseModel, Field, ValidationError
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.atomic_write import atomic_write_text
 from ....core.external_constants import UTF_8_ENCODING
+from ....core.hashing import sha256_hex
 from ....core.locks import exclusive_file_lock
 from ....core.logging import get_logger
 from ....core.time import now
@@ -64,7 +64,7 @@ def _path_log_marker(path: Path) -> str:
         raw_path = path.resolve(strict=False).as_posix()
     except OSError:
         raw_path = path.as_posix()
-    digest = hashlib.sha256(raw_path.encode(UTF_8_ENCODING)).hexdigest()[:16]
+    digest = sha256_hex(raw_path.encode(UTF_8_ENCODING))[:16]
     return f"<path:{digest}>"
 
 

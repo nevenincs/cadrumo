@@ -1,13 +1,12 @@
 """Recurrence gate: no NEW reducible one-shot SHA-256 body lands in production.
 
-`core.hashing.sha256_hex` is the canonical one-shot bytes->hex digest. Per the
-`cli-authority-verb-conformance` decision the existing reducible bodies are NOT
-rewritten (low-value churn against a service that already exists); the durable
-value is this AST recurrence gate, which prevents a NEW reducible
-``sha256(<data>).hexdigest()`` body from landing while allowing the
-non-substitutable cryptographic uses it must never block: incremental/streaming
-hashing, keyed HMAC, key derivation (HKDF), X509 fingerprints, and raw
-digest-byte uses.
+`core.hashing.sha256_hex` is the canonical one-shot bytes->hex digest. The
+`cli-authority-verb-conformance` decision delegates the audited production
+bodies to it, and this AST recurrence gate is what stops the pattern coming
+back: it prevents a NEW reducible ``sha256(<data>).hexdigest()`` body from
+landing while allowing the non-substitutable cryptographic uses it must never
+block: incremental/streaming hashing, keyed HMAC, key derivation (HKDF), X509
+fingerprints, and raw digest-byte uses.
 
 Two tests: the gate itself (a per-module additions ratchet against a
 grandfathered baseline) and a discrimination proof that the detector actually
@@ -34,33 +33,23 @@ _CADRUMO_ROOT = Path(__file__).resolve().parents[2]
 #: delegates to, so it is excluded from the recurrence scan.
 _CANONICAL_HELPER = "core/hashing.py"
 
-#: Grandfathered reducible ``sha256(<data>).hexdigest()`` bodies per module,
-#: captured at gate introduction. That decision does not rewrite these. The gate
-#: ratchets in the reducing direction only: a module may carry FEWER over time
-#: (delegate a body to ``sha256_hex`` and, optionally, lower or drop its entry),
+#: Reducible ``sha256(<data>).hexdigest()`` bodies still awaiting delegation,
+#: per module. Seeded at gate introduction and shrunk as bodies are delegated.
+#: The gate ratchets in the reducing direction only: a module may carry FEWER
+#: over time (delegate a body to ``sha256_hex`` and lower or drop its entry),
 #: but a new module or a higher count is a NEW reducible body and fails.
+#:
+#: The entries below post-date the audited set the governing decision
+#: enumerated, so they are not yet delegated. Delegating one means dropping its
+#: entry in the SAME commit: the grounding test refuses an entry whose module no
+#: longer hosts a reducible body.
 _REDUCIBLE_ONE_SHOT_BASELINE: dict[str, int] = {
-    "adapters/outbound/aeat/auth/_clave_movil_support.py": 1,
-    "adapters/outbound/llm/_cache.py": 1,
-    "adapters/persistence/storage/_rotation.py": 1,
-    "adapters/persistence/storage/sql/engine.py": 1,
     "agent/_workspace.py": 1,
-    "agent/eval/_flywheel.py": 1,
-    "application/aggregation/_percepciones_observations_repository.py": 1,
-    "application/aggregation/_retencion_observations_repository.py": 1,
     "application/auth/_certificate_sources_operator.py": 1,
     "application/auth/_operator.py": 1,
-    "application/calculations/_observations_repository.py": 2,
-    "application/filing/_import.py": 1,
-    "application/modelo/_m145_communication_records.py": 1,
-    "application/modelo/_review_package_recipient_registry.py": 1,
-    "application/storage/calc_sheets/_engine.py": 1,
-    "application/workflow/_models.py": 1,
     "domain/calculations/registry/_compiled_cache.py": 1,
     "domain/calculations/registry/_validate_evidence.py": 1,
     "domain/calculations/registry/_validate_verdict.py": 1,
-    "domain/submission/_models.py": 1,
-    "entrypoints/mcp/_telemetry.py": 1,
 }
 
 

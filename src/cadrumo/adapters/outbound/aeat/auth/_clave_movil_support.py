@@ -8,7 +8,6 @@ closed :class:`ClaveMovilFailureMode` taxonomy to provider errors.
 
 from __future__ import annotations
 
-import hashlib
 import re
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final
@@ -17,6 +16,7 @@ from urllib.parse import urlsplit
 from pydantic import SecretStr
 
 from .....core.errors import resolve_error_message
+from .....core.hashing import sha256_hex
 from .....core.identity import IdentityError, validate_spanish_tax_id
 from .....core.logging import get_logger
 from .....domain.calculations.registry import RemoteStateGuardPolicy
@@ -197,7 +197,7 @@ def diagnostic_fingerprint(value: object) -> str:
     text = str(value or "").strip().upper()
     if not text:
         return ""
-    digest = hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
+    digest = sha256_hex(text.encode("utf-8"))[:12]
     return f"sha256:{digest}"
 
 

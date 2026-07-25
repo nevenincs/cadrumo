@@ -39,7 +39,6 @@ See Also:
 
 from __future__ import annotations
 
-import hashlib
 from dataclasses import dataclass
 from datetime import UTC
 from pathlib import Path
@@ -47,6 +46,7 @@ from typing import TYPE_CHECKING, Protocol
 
 from ...adapters.inbound.justificante import parse_justificante
 from ...core import Period, PeriodError
+from ...core.hashing import sha256_hex
 from ...core.logging import get_logger
 from ...core.time import MADRID_TZ
 from ...domain.filing import CasillaSchemaProvider, ModeloBuilderError, ModeloDraft, ModeloImportError
@@ -256,7 +256,7 @@ def _build_submission_record(
     from ...domain.submission import ModeloPresentado, SubmissionAttempt, SubmissionStatus
 
     submitted_at = justificante.presented_at.replace(tzinfo=MADRID_TZ).astimezone(UTC)
-    submission_id = hashlib.sha256(f"{justificante.csv}:{draft.draft_id}".encode()).hexdigest()[:16]
+    submission_id = sha256_hex(f"{justificante.csv}:{draft.draft_id}".encode())[:16]
     attempt = SubmissionAttempt(
         attempt_id=f"{submission_id}.1",
         started_at=submitted_at,

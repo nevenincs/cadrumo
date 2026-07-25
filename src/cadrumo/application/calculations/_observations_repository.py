@@ -35,7 +35,6 @@ filing records, verification reports, and justificante evidence through
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Iterator, Mapping
 from datetime import datetime
 from typing import ClassVar, override
@@ -212,9 +211,9 @@ def iva_wallet_decision_key(taxpayer_nif: str, target_period: Period) -> str:
     safe_repository_id(target_period_token, context="target_period")
     if not 2000 <= target_year <= 2099:
         raise ObservationKeyError(f"IVA wallet target_year {target_year} out of supported range [2000, 2099]")
-    digest = hashlib.sha256(
+    digest = sha256_hex(
         "\x1f".join((taxpayer_token, str(target_year), target_period_token)).encode(UTF_8_ENCODING),
-    ).hexdigest()
+    )
     return f"iva-wallet-decision:{digest}"
 
 
@@ -223,7 +222,7 @@ def iva_wallet_decision_event_key(decision: IvaCompensationReconciliationDecisio
     taxpayer_token = decision.taxpayer_nif.strip().upper()
     if not taxpayer_token:
         raise ObservationKeyError("decision taxpayer_nif must be non-empty")
-    digest = hashlib.sha256(
+    digest = sha256_hex(
         "\x1f".join(
             (
                 taxpayer_token,
@@ -234,7 +233,7 @@ def iva_wallet_decision_event_key(decision: IvaCompensationReconciliationDecisio
                 _decision_payload_digest(decision),
             ),
         ).encode(UTF_8_ENCODING),
-    ).hexdigest()
+    )
     return f"iva-wallet-decision-event:{digest}"
 
 
