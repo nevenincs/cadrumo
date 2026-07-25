@@ -93,12 +93,19 @@ Suppose the second quarter goes the other way: Ana buys a laptop and other
 equipment, and her deductible IVA exceeds what she charged. When deductible IVA
 exceeds charged IVA, the result box is negative and the return declares the
 difference as credit to compensate: the quarter ends with nothing to pay, and
-the wallet remembers the credit. The whole second quarter runs against Ana's
-filed first quarter and inside the July presentation window, which the frozen
-documentation sandbox cannot reproduce, so the chain is shown as display frames:
+the wallet remembers the credit.
+
+Record the equipment purchase, then run the same chain as the first quarter:
 
 ```{cli-sequence} iva-lifecycle-q2
+:verify: Confirm the equipment purchase records and the second-quarter draft opens.
 ```
+
+The commands from `work calculate` onwards each read the filed first quarter the
+credit carries from, so they are shown as display frames. Link the equipment
+supplier's invoice to the ledger row before you calculate: a quarter that claims
+deductible IVA cannot be exported or filed until every deductible row carries
+its invoice. [Attach invoices and receipts](ledger-evidence.md) walks through it.
 
 In the third quarter the carry shows itself: the same chain with `3T` brings the
 prior-compensation box from the wallet, so the second quarter's credit reduces
@@ -141,12 +148,14 @@ cross-period finding that names it. The verification includes the reconciliation
 rule: an annual total that disagrees with the sum of the quarters is a blocking
 finding, not a warning.
 
-The annual summary resolves the four filed quarters and the 2026 Modelo 390
-registry revision, published for the 2027 filing season after this documentation
-is built, so the chain is shown as display frames:
+Open the annual summary, then run the same chain as a quarter:
 
 ```{cli-sequence} iva-lifecycle-annual
+:verify: Confirm the annual Modelo 390 summary opens on its 2026 registry revision.
 ```
+
+The commands from `work calculate` onwards each resolve all four filed quarters,
+so they are shown as display frames until every quarter of the year is filed.
 
 The per-box detail is
 [Prepare the annual Modelo 390 summary](modelo-390.md).
