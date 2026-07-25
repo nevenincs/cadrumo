@@ -36,6 +36,7 @@ from pydantic import AnyHttpUrl
 from .....adapters.outbound.aeat.sede import CensalDatosResult, CensalDomicilio, CensalIdentity
 from .....application.user_profile import (
     CensalReconciliation,
+    EffectiveFact,
     apply_censal_read,
     censal_facts_from_read,
     profile_create_storage_span,
@@ -54,6 +55,7 @@ from .._manager_actions import (
     _censal_pull_summary,
     _censal_pull_unavailable,
     _commit_auth_choice,
+    _split_divergences,
     manager_actions,
 )
 
@@ -196,27 +198,26 @@ def test_the_certificate_mode_is_ready_without_any_clave_credential() -> None:
 
 
 @pytest.mark.usefixtures("active_profile")
-def test_a_read_for_a_different_taxpayer_is_reported_not_adopted() -> None:
-    """The identity of the profile is not something a pull may overwrite.
+def test_a_read_for_a_different_taxpayer_is_refused_outright() -> None:
+    """The identity of the profile is not something a pull may touch.
 
-    Found while building the re-pull case: a read carrying a NIF other
-    than the profile's own is reported as a divergence and the declared
-    identity stands. That is the reconciliation's most important refusal
-    - silently rewriting whose profile this is would be worse than any
-    address being stale - so it is pinned rather than left implicit.
+    Found while building the re-pull case, where a fixture NIF that did
+    not match the profile's produced a puzzling divergence. The
+    reconciliation now refuses the whole read rather than reporting one
+    row, which is the stronger contract: a read belonging to someone else
+    has nothing to reconcile, and adopting any part of it would write one
+    taxpayer's data onto another's profile.
+
+    The manager surfaces this rather than crashing on it - the screen
+    catches an action's refusal and renders it as a line, so an operator
+    sees the reason instead of losing the page.
     """
-    repository = workflow_state_repository()
-    state = repository.load()
+    from .....application.user_profile import CensalIdentityMismatchError
 
-    reconciliation = reconcile_censal_read(
-        state.active_profile_record(),
-        censal_facts_from_read(_read(nif="Y0000001Z")),
-    )
+    record = workflow_state_repository().load().active_profile_record()
 
-    assert "identity.tax_id" in [path for path, _ in reconciliation.divergences], (
-        "a foreign NIF must be reported, never adopted over the declared one"
-    )
-    assert "identity.tax_id" not in [fact.path for fact in reconciliation.adopted]
+    with pytest.raises(CensalIdentityMismatchError):
+        reconcile_censal_read(record, censal_facts_from_read(_read(nif="Y0000001Z")))
 
 
 def _profile_tax_id() -> str:
@@ -278,10 +279,53 @@ def test_the_summary_counts_all_three_outcomes() -> None:
         divergences=(("contact.fiscal_address", "CALLE MAYOR 1"),),
     )
 
-    summary = _censal_pull_summary(reconciliation, read_count=5)
+    summary = _censal_pull_summary(reconciliation, read_count=5, declared={})
 
     assert "1" in summary, "one field was filled in"
     assert "3" in summary, "five read, one adopted and one diverging leaves three already matching"
+
+
+def test_a_cleared_path_is_reported_apart_from_a_declared_disagreement() -> None:
+    """A deletion is an answer, and it does not read like a declaration.
+
+    "AEAT differs from what you declared" describes an answer the
+    operator never gave when they deliberately emptied the field, and a
+    row rendering their side would show a blank that looks like a fault
+    rather than their deletion being honoured. The two states get
+    separate wording, matching the vocabulary the CLI verb uses.
+    """
+    reconciliation = CensalReconciliation(
+        adopted=(),
+        divergences=(("contact.postcode", "08032"), ("contact.fiscal_address", "CALLE MAYOR 1")),
+    )
+    declared = {
+        # Emptied by the operator: the deletion is their answer.
+        "contact.postcode": EffectiveFact(value=None, source="manual_cli"),
+        "contact.fiscal_address": EffectiveFact(value="OTRA CALLE 9", source="manual_cli"),
+    }
+
+    summary = _censal_pull_summary(reconciliation, read_count=2, declared=declared)
+    cleared, contested = _split_divergences(reconciliation, declared)
+
+    assert cleared == ("contact.postcode",)
+    assert contested == ("contact.fiscal_address",)
+    assert summary.count("contact.postcode") == 1, "the cleared path is named once, in its own sentence"
+    assert summary.count("contact.fiscal_address") == 1
+
+
+def test_a_path_the_operator_never_set_is_not_treated_as_cleared() -> None:
+    """Never-set and emptied are different states and must stay so.
+
+    A path with no fact at all is adopted rather than diverging, so it
+    should not reach the split; if one ever does, it is a declared
+    disagreement rather than a deletion the operator made.
+    """
+    reconciliation = CensalReconciliation(adopted=(), divergences=(("contact.postcode", "08032"),))
+
+    cleared, contested = _split_divergences(reconciliation, {})
+
+    assert cleared == ()
+    assert contested == ("contact.postcode",)
 
 
 def test_the_summary_names_the_paths_aeat_disagrees_on() -> None:
@@ -291,7 +335,7 @@ def test_the_summary_names_the_paths_aeat_disagrees_on() -> None:
         divergences=(("contact.fiscal_address", "CALLE MAYOR 1"),),
     )
 
-    assert "contact.fiscal_address" in _censal_pull_summary(reconciliation, read_count=1)
+    assert "contact.fiscal_address" in _censal_pull_summary(reconciliation, read_count=1, declared={})
 
 
 def test_a_clean_pull_says_nothing_about_divergences() -> None:
@@ -301,7 +345,7 @@ def test_a_clean_pull_says_nothing_about_divergences() -> None:
         divergences=(),
     )
 
-    assert "contact." not in _censal_pull_summary(reconciliation, read_count=1)
+    assert "contact." not in _censal_pull_summary(reconciliation, read_count=1, declared={})
 
 
 @pytest.mark.usefixtures("active_profile")
@@ -327,6 +371,6 @@ def test_a_read_matching_the_profile_is_neither_adopted_nor_diverging() -> None:
     )
     assert again.adopted == (), "nothing to adopt when the record already agrees"
     assert again.divergences == (), "agreement is not a disagreement"
-    assert _censal_pull_summary(again, read_count=len(first.adopted)) is not None, (
+    assert _censal_pull_summary(again, read_count=len(first.adopted), declared={}) is not None, (
         "a pull that changed nothing still has something to report"
     )

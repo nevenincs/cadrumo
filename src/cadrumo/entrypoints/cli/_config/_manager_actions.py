@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
 
     from ....adapters.inbound.tui import FormPage, ManagerAction, ManagerActionOutcome
-    from ....application.user_profile import CensalReconciliation
+    from ....application.user_profile import CensalReconciliation, EffectiveFact
     from ....core import AuthProviderKind
 
     FormPresenter = Callable[[FormPage], Mapping[str, str] | None]
@@ -125,6 +125,7 @@ def _run_censal_pull() -> ManagerActionOutcome:
         apply_censal_read,
         censal_facts_from_read,
         reconcile_censal_read,
+        record_to_effective_facts,
     )
     from ....application.workflow import workflow_state_repository
     from ._manager_frontend import build_active_profile_overview
@@ -141,11 +142,15 @@ def _run_censal_pull() -> ManagerActionOutcome:
     state = repository.load()
     read = asyncio.run(pull_censal_datos())
     facts = censal_facts_from_read(read)
-    reconciliation = reconcile_censal_read(state.active_profile_record(), facts)
+    record = state.active_profile_record()
+    # Read the effective facts BEFORE the commit: afterwards a cleared
+    # path may carry the adopted value and no longer look cleared.
+    declared = record_to_effective_facts(record)
+    reconciliation = reconcile_censal_read(record, facts)
     repository.save(apply_censal_read(state, read))
 
     return ManagerActionOutcome(
-        message=_censal_pull_summary(reconciliation, read_count=len(facts)),
+        message=_censal_pull_summary(reconciliation, read_count=len(facts), declared=declared),
         overview=build_active_profile_overview(),
     )
 
@@ -173,25 +178,70 @@ def _censal_pull_unavailable() -> str | None:
     return None
 
 
-def _censal_pull_summary(reconciliation: CensalReconciliation, *, read_count: int) -> str:
+def _censal_pull_summary(
+    reconciliation: CensalReconciliation,
+    *,
+    read_count: int,
+    declared: Mapping[str, EffectiveFact],
+) -> str:
     """Report what the read did to each field, in the operator's terms.
 
     Unchanged is derived rather than reported by the reconciliation,
     which emits only the two axes that changed something: a field AEAT
     agrees with is neither adopted nor diverging.
+
+    The diverging axis carries two different situations and they do not
+    read alike. "You declared X and AEAT says Y" describes an answer the
+    operator gave. A path they deliberately CLEARED has no declared
+    answer to set against AEAT's value, so the same wording would
+    describe a declaration they never made, and a rendering that shows
+    their side would show a blank that looks like a fault rather than
+    their deletion being honoured. They are reported separately, in the
+    vocabulary the CLI verb uses for the same two states.
     """
     adopted = len(reconciliation.adopted)
     diverging = len(reconciliation.divergences)
-    summary = tr(
-        "flows.manager.action.censal_pull_done",
-        adopted=adopted,
-        unchanged=read_count - adopted - diverging,
-        diverging=diverging,
-    )
-    if not reconciliation.divergences:
-        return summary
-    paths = ", ".join(path for path, _ in reconciliation.divergences)
-    return f"{summary} {tr('flows.manager.action.censal_pull_contested', paths=paths)}"
+    parts = [
+        tr(
+            "flows.manager.action.censal_pull_done",
+            adopted=adopted,
+            unchanged=read_count - adopted - diverging,
+            diverging=diverging,
+        ),
+    ]
+    cleared, contested = _split_divergences(reconciliation, declared)
+    if contested:
+        parts.append(tr("flows.manager.action.censal_pull_contested", paths=", ".join(contested)))
+    if cleared:
+        parts.append(tr("flows.manager.action.censal_pull_cleared", paths=", ".join(cleared)))
+    return " ".join(parts)
+
+
+def _split_divergences(
+    reconciliation: CensalReconciliation,
+    declared: Mapping[str, EffectiveFact],
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """Separate a deletion the operator made from an answer they declared.
+
+    A cleared path is an effective fact whose value is ``None``: the
+    operator emptied it, and that deletion is their answer. A path they
+    never set at all does not reach here, because the reconciliation
+    adopts it.
+
+    Args:
+        reconciliation: The split the read produced.
+        declared: The effective fact at each path the record holds.
+
+    Returns:
+        The cleared paths and the contested paths, in that order.
+    """
+    cleared: list[str] = []
+    contested: list[str] = []
+    for path, _incoming in reconciliation.divergences:
+        fact = declared.get(path)
+        target = cleared if fact is not None and fact.value is None else contested
+        target.append(path)
+    return tuple(cleared), tuple(contested)
 
 
 def export_action() -> ManagerAction:
