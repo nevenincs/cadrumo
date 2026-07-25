@@ -9,25 +9,6 @@ related:
   - "[[2026-07-15-cli-authority-verb-conformance-adr]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace cli-authority-verb-conformance with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
 # `cli-authority-verb-conformance` audit: `Campaign-close honesty review`
 
 ## Scope
@@ -55,15 +36,6 @@ defect, and those cases have never been observed green in any lane. Nothing
 in this review verified them, and the closure must not imply otherwise.
 
 ## Findings
-
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
-
-       ### Campaign-close honesty review | {level} | {summary}
-
-     followed by a paragraph carrying the detail. Campaign-close honesty review is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
 
 ### write-guard-fail-open | critical | Every invoice mutation had fallen outside the profile-bound write guard
 
@@ -241,6 +213,52 @@ closures: they belong to their authoring handovers, and sweeping another
 agent's plan state under this SHA is the failure this campaign's own
 discipline forbids.
 
+### import-contracts-never-ran | critical | Two stale ignores aborted the layered contracts before any were evaluated
+
+Import-linter aborts on an ignore that matches nothing, so a single stale entry
+disables the whole run. Two were present: one naming a test module renamed by
+commit `04ca5436f6`, one naming a conftest that no longer exists in the
+deadlines package. The five layered contracts were therefore not being checked
+at all, and had not been for some time. The configuration's own comment records
+that prior ignores had already gone stale once on a test rename, so this is the
+second occurrence of the same failure.
+
+The failure was masked twice over. The tool exits 1, but the exit code was lost
+whenever the command was piped, and the aborted run prints no contract results
+at all — so it reads as a short, unremarkable output rather than as a gate that
+never ran.
+
+Retargeted and removed at commit `b8ed7b3ccc`. Restoring the run made real
+violations visible for the first time: **3 contracts kept, 2 broken**, with
+roughly ten violating edges — three domain-to-application edges from a bucket
+payload-version test, one from profile registration and two from a sandbox
+notice into adapters persistence, and four TUI test modules importing
+entrypoints. Every one belongs to another campaign and none was absorbed here.
+
+This is the most consequential finding after the write guard, because unlike
+the write guard it disabled an entire gate family rather than one catalogue
+entry, and because the aborted state is indistinguishable from a healthy one
+without reading the exit code.
+
+### conformance-gate-residual | medium | Two conformance failures remain, both peer-owned, one now fixed
+
+The five CLI conformance suites collected 539 cases: 537 passed and 2 failed.
+
+The first was a live dead operator instruction. An evidence refusal told the
+operator to run `aeat app ledger evidence add --file INVOICE.pdf`, but that verb
+takes a positional path and has no such option, so following the instruction
+fails. Every other citation of that verb in the tree already uses the positional
+form, making this a lone outlier. Fixed at commit `b8ed7b3ccc`; the suite now
+passes 8 of 8.
+
+The second is a sequence contract for a modelo-390 records audit whose
+`@blocked unconverted` marker line is parsed as a command path. That file is
+uncommitted peer work in flight from the docs-sequence conversion campaign,
+last committed the same day by that campaign. It was left untouched. It is a
+parser gap in how the conformance gate reads a blocked-row marker, not a
+removed verb spelling, so it does not indicate a conformance regression in
+this campaign's surface.
+
 ## Recommendations
 
 Each recommendation below is tracked as a Step with a verification gate, per
@@ -277,6 +295,20 @@ Add a structural assertion that an execution record carries a populated Outcome
 before its Step may be checked. The existing vault check passes empty
 scaffolds, so the honesty property this campaign depends on is currently
 enforced by author discipline alone. Ties to w06-evidence-not-produced.
+
+Make a stale ignore entry fail loudly and separately from a contract breach, so
+an aborted import-linter run cannot be mistaken for a quiet one. A gate whose
+configuration has rotted should be as visible as a gate whose contract is
+broken. Ties to import-contracts-never-ran.
+
+Resolve the two broken layered contracts with their owning campaigns. They are
+newly visible rather than newly introduced, and they should not be closed by
+widening the ignore list, which is what produced the stale entries in the first
+place. Ties to import-contracts-never-ran.
+
+Teach the documented-command conformance parser to recognise a blocked-row
+marker instead of reading its prose as a command path. Ties to
+conformance-gate-residual.
 
 Commit the plan alongside the execution records in every closure commit, and
 land the 31 closures currently held only in the working tree. Any completion
