@@ -54,6 +54,9 @@ _EXECUTION_MARKERS = frozenset({"unit", "integration", "aeat_live"})
 _SERIAL_MARKER = "serial"
 _MAX_NAMED_HELD_ITEMS = 10
 
+SERIAL_HELD_WORKEROUTPUT_KEY = "cadrumo_serial_held"
+"""``config.workeroutput`` key carrying the node ids held out of an xdist run."""
+
 
 class SerialTestsHeldWarning(pytest.PytestWarning):
     """Announces ``serial`` items held out of a run with xdist workers active."""
@@ -122,6 +125,12 @@ def _hold_serial_items_from_xdist(config: pytest.Config, items: list[pytest.Item
     config.hook.pytest_deselected(items=held)
 
     node_ids = sorted(item.nodeid for item in held)
+    # ``workeroutput`` is the sanctioned worker-to-controller channel; xdist
+    # ships it on node-down, where ``pytest_testnodedown`` can read it. Written
+    # here so a controller-side hook can turn the hold into a non-zero exit
+    # rather than leaving a green run that silently dropped tests. Inert until
+    # such a hook exists: nothing reads the key yet.
+    config.workeroutput[SERIAL_HELD_WORKEROUTPUT_KEY] = node_ids
     named = ", ".join(node_ids[:_MAX_NAMED_HELD_ITEMS])
     elided = len(node_ids) - _MAX_NAMED_HELD_ITEMS
     if elided > 0:
