@@ -8,6 +8,7 @@ modified: '2026-07-25'
 related:
   - '[[2026-07-24-profile-bundle-tui-adr]]'
   - '[[2026-07-24-profile-bundle-tui-canonical-bundle-path-reference]]'
+  - '[[2026-07-25-profile-bundle-tui-plan]]'
 ---
 
 # `profile-bundle-tui` feature index
@@ -19,6 +20,10 @@ Auto-generated index of all documents tagged with `#profile-bundle-tui`.
 ### adr
 
 - `2026-07-24-profile-bundle-tui-adr` - `profile-bundle-tui` adr: `interactive flow mode for the profile bundle verbs` | (**status:** `accepted`)
+
+### plan
+
+- `2026-07-25-profile-bundle-tui-plan` - `profile-bundle-tui` plan
 
 ### reference
 

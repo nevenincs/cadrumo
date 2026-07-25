@@ -7,6 +7,7 @@ date: '2026-07-25'
 modified: '2026-07-25'
 related:
   - '[[2026-07-25-declaracion-profile-printed-box-scope-adr]]'
+  - '[[2026-07-25-declaracion-profile-printed-box-scope-plan]]'
   - '[[2026-07-25-declaracion-profile-printed-box-scope-research]]'
   - '[[2026-07-25-declaracion-profile-printed-box-scope-revision-scope-and-coverage-evidence-audit]]'
 ---
@@ -19,11 +20,15 @@ Auto-generated index of all documents tagged with `#declaracion-profile-printed-
 
 ### adr
 
-- `2026-07-25-declaracion-profile-printed-box-scope-adr` - `declaracion-profile-printed-box-scope` adr: `extraction profiles target only what AEAT prints` | (**status:** `proposed`)
+- `2026-07-25-declaracion-profile-printed-box-scope-adr` - `declaracion-profile-printed-box-scope` adr: `extraction profiles target only what AEAT prints` | (**status:** `accepted`)
 
 ### audit
 
 - `2026-07-25-declaracion-profile-printed-box-scope-revision-scope-and-coverage-evidence-audit` - `declaracion-profile-printed-box-scope` audit: `revision scope and coverage evidence`
+
+### plan
+
+- `2026-07-25-declaracion-profile-printed-box-scope-plan` - `declaracion-profile-printed-box-scope` plan
 
 ### research
 

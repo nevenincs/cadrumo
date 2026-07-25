@@ -8,6 +8,7 @@ modified: '2026-07-25'
 related:
   - '[[2026-07-24-delivery-pipeline-audit-adr]]'
   - '[[2026-07-24-delivery-pipeline-audit-audit]]'
+  - '[[2026-07-25-delivery-pipeline-audit-plan]]'
 ---
 
 # `delivery-pipeline-audit` feature index
@@ -23,3 +24,7 @@ Auto-generated index of all documents tagged with `#delivery-pipeline-audit`.
 ### audit
 
 - `2026-07-24-delivery-pipeline-audit-audit` - `delivery-pipeline-audit` audit: `delivery pipeline audit campaign close`
+
+### plan
+
+- `2026-07-25-delivery-pipeline-audit-plan` - `delivery-pipeline-audit` plan
