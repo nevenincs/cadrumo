@@ -282,6 +282,15 @@ def reconcile_censal_read(
             # and this one did not, so a clear the app wrote earned the
             # protection meant for an operator's decision and the path
             # would never have been re-populated.
+            #
+            # A clear must therefore SAY who wrote it. The default source is
+            # the operator's, so a clear the app writes with no operator
+            # intent behind it has to stamp itself with a machine token or
+            # it lands here indistinguishable from a declaration. Every
+            # machine-written clear in the tree today follows an operator
+            # action — a descendant removed, a divergence row superseded —
+            # so the default is honest for all of them, and this note is
+            # for whoever writes the first one that is not.
             if effective.source == CENSO_SOURCE_TAG:
                 adopted.append(fact)
             else:
