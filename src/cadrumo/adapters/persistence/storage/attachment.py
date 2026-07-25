@@ -22,7 +22,6 @@ addressed substrate and its sensitivity class is irreducibly FINANCIAL.
 
 from __future__ import annotations
 
-import hashlib
 import json
 from collections.abc import Iterator
 from io import BytesIO
@@ -55,7 +54,6 @@ from .sql import SecureObjectRepository
 
 _LOGGER = get_logger(__name__)
 
-_STREAM_CHUNK_SIZE = 1024 * 1024
 _HEX_DIGITS = frozenset("0123456789abcdef")
 _ATTACHMENT_BLOB_VERSION = ATTACHMENT_BLOB_STORAGE_NAMESPACE.schema_version
 _ATTACHMENT_BLOB_SENSITIVITY = ATTACHMENT_BLOB_STORAGE_NAMESPACE.sensitivity
@@ -231,34 +229,14 @@ class AttachmentStore(BaseModel):
         return digest
 
     def put_file(self, source: Path) -> tuple[str, int]:
-        """Read ``source`` into the encrypted object backend."""
-        hasher = hashlib.sha256()
-        chunks: list[bytes] = []
-        bytes_size = 0
+        """Read ``source`` and store it via :meth:`put_bytes`, deduplicating by digest."""
         try:
-            with source.open("rb") as reader:
-                while True:
-                    chunk = reader.read(_STREAM_CHUNK_SIZE)
-                    if not chunk:
-                        break
-                    hasher.update(chunk)
-                    bytes_size += len(chunk)
-                    chunks.append(chunk)
+            data = source.read_bytes()
         except OSError as exc:
             _LOGGER.debug("attachment source read failed error_type=%s", type(exc).__name__)
             raise _attachment_persistence_error("unable to read attachment source", operation="read_source") from exc
-        digest = hasher.hexdigest()
-        self._objects_repo().save(
-            namespace=_ATTACHMENT_BLOB_NAMESPACE,
-            object_key=digest,
-            # rationale: blob sensitivity is FINANCIAL regardless of modelo; see module docstring.
-            classification=_ATTACHMENT_BLOB_SENSITIVITY,
-            schema_version=_ATTACHMENT_BLOB_VERSION,
-            written_at=now(),
-            payload=_wrap_blob_payload(b"".join(chunks)),
-        )
-        _LOGGER.debug("stored attachment object %s (%d bytes)", digest, bytes_size)
-        return digest, bytes_size
+        digest = self.put_bytes(data)
+        return digest, len(data)
 
     def read_bytes(self, sha256: str) -> bytes:
         """Return the raw bytes for ``sha256``."""

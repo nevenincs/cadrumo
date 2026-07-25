@@ -42,7 +42,13 @@ from .....domain.attachments import (
     AttachmentValidationError,
 )
 from .....tests.secure_sql import isolated_runtime_profile
-from ..attachment import _ATTACHMENT_MANIFEST_NAMESPACE, AttachmentStore
+from ..attachment import (
+    _ATTACHMENT_BLOB_NAMESPACE,
+    _ATTACHMENT_BLOB_SENSITIVITY,
+    _ATTACHMENT_BLOB_VERSION,
+    _ATTACHMENT_MANIFEST_NAMESPACE,
+    AttachmentStore,
+)
 from ..crypto import (
     decrypt_secure_object_payload,
     encrypt_secure_object_payload,
@@ -199,6 +205,53 @@ def test_attachment_source_read_error_is_localized_without_path_leak(tmp_path: P
         "operation": "read_source",
         "surface": "attachment_store",
     }
+
+
+def test_attachment_store_put_file_deduplicates_by_digest(tmp_path: Path) -> None:
+    """A second ``put_file`` of identical content must not re-save the blob object.
+
+    ``put_file`` delegates to ``put_bytes``, which short-circuits with
+    ``objects.exists(...)`` before calling ``save`` a second time for a
+    digest already on disk. Each ``save`` call mints a new
+    ``SecureObjectRecord.revision_id`` (an upsert bumps the revision chain),
+    so the revision id observed after the first write is a real, checkable
+    proxy for "did a second underlying write happen". If ``put_file``
+    regresses to unconditionally calling ``save`` (as it did before this
+    delegation), the second call mints a fresh revision id and this
+    assertion fails.
+    """
+
+    source_dir = tmp_path / "source"
+    source_dir.mkdir()
+    source_file = source_dir / "invoice.pdf"
+    source_file.write_bytes(b"%PDF-1.4\n%put-file-dedup-canary\n" + b"\x00" * 128)
+
+    with isolated_runtime_profile(tmp_path=tmp_path / "profile"):
+        store = AttachmentStore()
+
+        first_digest, first_size = store.put_file(source_file)
+        first_record = store._objects_repo().load(
+            _ATTACHMENT_BLOB_NAMESPACE,
+            first_digest,
+            expected_class=_ATTACHMENT_BLOB_SENSITIVITY,
+            max_supported_version=_ATTACHMENT_BLOB_VERSION,
+        )
+        assert first_record is not None
+
+        second_digest, second_size = store.put_file(source_file)
+        second_record = store._objects_repo().load(
+            _ATTACHMENT_BLOB_NAMESPACE,
+            second_digest,
+            expected_class=_ATTACHMENT_BLOB_SENSITIVITY,
+            max_supported_version=_ATTACHMENT_BLOB_VERSION,
+        )
+        assert second_record is not None
+
+        assert second_digest == first_digest
+        assert second_size == first_size == source_file.stat().st_size
+        assert second_record.revision_id == first_record.revision_id, (
+            "second put_file of identical content re-saved the blob object instead of deduplicating"
+        )
 
 
 def test_attachment_manifest_id_sha_mismatch_surfaces_at_load(tmp_path: Path) -> None:
