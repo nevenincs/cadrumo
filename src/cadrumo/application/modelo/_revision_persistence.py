@@ -124,6 +124,7 @@ def emit_bucket_event(
     object_type: BucketEventObjectType,
     object_id: str,
     payload: Mapping[str, str],
+    payload_version: int = _BUCKET_EVENT_PAYLOAD_VERSION,
 ) -> BucketEvent:
     """Append one :class:`BucketEvent` to the bucket-event-history catalogue.
 
@@ -131,6 +132,14 @@ def emit_bucket_event(
     mutation. Payloads stay compact and reference the owning calculation
     revision, filing record, or work unit instead of duplicating their full
     catalogued state.
+
+    ``payload_version`` is the emitting surface's own payload-schema version. It
+    defaults to the modelo payload contract but is explicit for every other
+    domain, because each event family versions its payload independently: the
+    version is *not* folded into :func:`derive_bucket_event_id`, so a caller that
+    accepted the default would silently restamp its persisted payload contract
+    without changing the payload. Domains that share this emitter therefore pass
+    their own constant.
     """
     event_id = derive_bucket_event_id(
         bucket_id=bucket_id,
@@ -149,7 +158,7 @@ def emit_bucket_event(
         actor=actor.strip(),
         object_type=object_type,
         object_id=object_id,
-        payload_version=_BUCKET_EVENT_PAYLOAD_VERSION,
+        payload_version=payload_version,
         payload=dict(payload),
     )
     catalogue = repository.load()

@@ -21,6 +21,7 @@ def test_application_package_reexports_callable_symbols() -> None:
     symbols = (
         "serialize_profile_bundle",
         "deserialize_profile_bundle",
+        "register_imported_profile_bundle",
         "rename_profile",
         "delete_profile_with_lifecycle_span",
         "remove_profile_bucket_directory",

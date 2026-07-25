@@ -76,6 +76,11 @@ _HARDENED_INNER_TEMP_SUFFIX = ".tmp"
 # it rather than waiting.
 _RECONCILE_LOCK_TIMEOUT_S = 0.0
 
+# Export is an operator handoff, so the trail names the operator rather than the
+# emitting module. The payload version tracks the export event's own key set.
+_PROFILE_BUNDLE_EVENT_ACTOR = "operator"
+_PROFILE_BUNDLE_EVENT_PAYLOAD_VERSION = 1
+
 
 @dataclass(frozen=True)
 class PreparedProfileExport:
@@ -609,44 +614,28 @@ def _emit_export_event(operation: ProfileBundleExportOperation) -> None:
     content-addressed event catalogue then collapses the re-emission to one
     entry.
     """
-    from ...domain.buckets import (
-        BucketEvent,
-        BucketEventObjectType,
-        BucketEventType,
-        append_bucket_event,
-        derive_bucket_event_id,
-    )
+    from ...domain.buckets import BucketEventObjectType, BucketEventType
+    from ..modelo import emit_bucket_event
     from ._orchestration import _profile_export_runtime
 
-    payload = {
-        "display_name": operation.display_name,
-        "out": operation.destination,
-        "purpose": operation.purpose.value,
-        "schema_version": str(operation.bundle_schema_version),
-        "transport": operation.transport.value,
-    }
-    event_id = derive_bucket_event_id(
-        bucket_id=operation.profile_id,
-        event_type=BucketEventType.PROFILE_EXPORTED,
-        occurred_at=operation.event_occurred_at,
-        actor="operator",
-        object_type=BucketEventObjectType.PROFILE,
-        object_id=operation.profile_id,
-        payload=payload,
-    )
-    event = BucketEvent(
-        event_id=event_id,
-        bucket_id=operation.profile_id,
-        event_type=BucketEventType.PROFILE_EXPORTED,
-        occurred_at=operation.event_occurred_at,
-        actor="operator",
-        object_type=BucketEventObjectType.PROFILE,
-        object_id=operation.profile_id,
-        payload_version=1,
-        payload=payload,
-    )
     with _profile_export_runtime(operation.profile_id) as event_repository:
-        event_repository.save(append_bucket_event(event_repository.load(), event))
+        emit_bucket_event(
+            repository=event_repository,
+            bucket_id=operation.profile_id,
+            event_type=BucketEventType.PROFILE_EXPORTED,
+            occurred_at=operation.event_occurred_at,
+            actor=_PROFILE_BUNDLE_EVENT_ACTOR,
+            object_type=BucketEventObjectType.PROFILE,
+            object_id=operation.profile_id,
+            payload={
+                "display_name": operation.display_name,
+                "out": operation.destination,
+                "purpose": operation.purpose.value,
+                "schema_version": str(operation.bundle_schema_version),
+                "transport": operation.transport.value,
+            },
+            payload_version=_PROFILE_BUNDLE_EVENT_PAYLOAD_VERSION,
+        )
 
 
 __all__ = [

@@ -33,8 +33,6 @@ from ...domain.buckets import (
     BucketEvent,
     BucketEventObjectType,
     BucketEventType,
-    append_bucket_event,
-    derive_bucket_event_id,
 )
 from ._utils import utc_now
 
@@ -112,30 +110,19 @@ def emit_workflow_state_reset(
         source=source,
         timestamp=occurred_at,
     )
-    bucket_id = fingerprint.recovered_bucket_id or SYSTEM_BUCKET_ID
-    payload = _payload_from_event(event_model)
-    event = BucketEvent(
-        event_id=derive_bucket_event_id(
-            bucket_id=bucket_id,
-            event_type=BucketEventType.WORKFLOW_STATE_RESET,
-            occurred_at=occurred_at,
-            actor=actor,
-            object_type=BucketEventObjectType.WORKFLOW_STATE,
-            object_id=WORKFLOW_STATE_OBJECT_ID,
-            payload=payload,
-        ),
-        bucket_id=bucket_id,
+    from ..modelo import emit_bucket_event
+
+    return emit_bucket_event(
+        repository=BucketEventHistoryRepository(),
+        bucket_id=fingerprint.recovered_bucket_id or SYSTEM_BUCKET_ID,
         event_type=BucketEventType.WORKFLOW_STATE_RESET,
         occurred_at=occurred_at,
         actor=actor,
         object_type=BucketEventObjectType.WORKFLOW_STATE,
         object_id=WORKFLOW_STATE_OBJECT_ID,
+        payload=_payload_from_event(event_model),
         payload_version=_EVENT_PAYLOAD_VERSION,
-        payload=payload,
     )
-    repository = BucketEventHistoryRepository()
-    repository.save(append_bucket_event(repository.load(), event))
-    return event
 
 
 __all__ = [

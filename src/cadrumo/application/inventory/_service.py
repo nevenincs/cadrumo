@@ -29,7 +29,6 @@ from ...domain.buckets import (
     BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
-    append_bucket_event,
 )
 from ...domain.contribuyente.inventory import (
     InventoryLedger,
@@ -134,32 +133,19 @@ def _emit_inventory_event(
     occurred_at: datetime,
     payload: dict[str, str],
 ) -> str:
-    from ...domain.buckets import (
-        BucketEvent,
-        derive_bucket_event_id,
-    )
+    from ..modelo import emit_bucket_event
 
-    object_id = f"{actividad_id}:{year}"
-    event = BucketEvent(
-        event_id=derive_bucket_event_id(
-            bucket_id=bucket_id,
-            event_type=event_type,
-            occurred_at=occurred_at,
-            actor=actor,
-            object_type=BucketEventObjectType.LEDGER_CATALOGUE,
-            object_id=object_id,
-            payload=payload,
-        ),
+    event = emit_bucket_event(
+        repository=event_repository,
         bucket_id=bucket_id,
         event_type=event_type,
         occurred_at=occurred_at,
         actor=actor,
         object_type=BucketEventObjectType.LEDGER_CATALOGUE,
-        object_id=object_id,
-        payload_version=_INVENTORY_EVENT_PAYLOAD_VERSION,
+        object_id=f"{actividad_id}:{year}",
         payload=payload,
+        payload_version=_INVENTORY_EVENT_PAYLOAD_VERSION,
     )
-    event_repository.save(append_bucket_event(event_repository.load(), event))
     return event.event_id
 
 

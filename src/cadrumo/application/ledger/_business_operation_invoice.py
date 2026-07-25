@@ -57,7 +57,6 @@ from ...domain.buckets import (
     BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
-    append_bucket_event,
 )
 from ...domain.currency import ExchangeRateProvider
 
@@ -388,37 +387,23 @@ def _emit_invoice_event(
     occurred_at: datetime,
     actor: str,
 ) -> str:
-    from ...domain.buckets import (
-        BucketEvent,
-        derive_bucket_event_id,
-    )
+    from ..modelo import emit_bucket_event
 
-    object_type = _OBJECT_TYPE_MAP[record.source_kind.value]
-    payload = {
-        "invoice_number": record.invoice_number,
-        "invoice_date": record.invoice_date,
-        "counterparty_nif": record.counterparty_nif,
-    }
-    event = BucketEvent(
-        event_id=derive_bucket_event_id(
-            bucket_id=record.bucket_id,
-            event_type=event_type,
-            occurred_at=occurred_at,
-            actor=actor,
-            object_type=object_type,
-            object_id=record.invoice_id,
-            payload=payload,
-        ),
+    event = emit_bucket_event(
+        repository=event_repository,
         bucket_id=record.bucket_id,
         event_type=event_type,
         occurred_at=occurred_at,
         actor=actor,
-        object_type=object_type,
+        object_type=_OBJECT_TYPE_MAP[record.source_kind.value],
         object_id=record.invoice_id,
+        payload={
+            "invoice_number": record.invoice_number,
+            "invoice_date": record.invoice_date,
+            "counterparty_nif": record.counterparty_nif,
+        },
         payload_version=_INVOICE_EVENT_PAYLOAD_VERSION,
-        payload=payload,
     )
-    event_repository.save(append_bucket_event(event_repository.load(), event))
     return event.event_id
 
 

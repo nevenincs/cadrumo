@@ -38,6 +38,8 @@ from typing import TYPE_CHECKING, Final
 
 from ...adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY, StorageCustodyProfile
 from ...core.errors import CadrumoError
+from ...core.time import now
+from ...domain.buckets import BucketEvent, BucketEventObjectType, BucketEventType
 
 if TYPE_CHECKING:
     from ...domain.user_profile import (
@@ -45,6 +47,11 @@ if TYPE_CHECKING:
         CoverageManifest,
         UserProfilePortableExport,
     )
+
+# Import is an operator handoff, so the trail names the operator rather than the
+# emitting module. The payload version tracks the import event's own key set.
+_PROFILE_IMPORT_EVENT_ACTOR = "operator"
+_PROFILE_IMPORT_EVENT_PAYLOAD_VERSION = 1
 
 
 #: Current bundle write version. Every export stamps this.
@@ -365,6 +372,62 @@ def deserialize_profile_bundle(bundle: UserProfilePortableExport, *, target_buck
 
     restore_carried_objects(bundle.carried_objects, target_bucket_id=target_bucket_id)
     _rebuild_participation_index(target_bucket_id=target_bucket_id)
+
+
+def register_imported_profile_bundle(
+    bundle: UserProfilePortableExport,
+    *,
+    target_bucket_id: str,
+    display_name: str,
+    source_path: str,
+) -> BucketEvent:
+    """Import ``bundle`` into ``target_bucket_id`` and record the operator's import.
+
+    This is the sanctioned entry point for the operator-facing import verb. It
+    pairs the restore with its ``profile.imported`` audit event so the two cannot
+    drift apart, and so the emission stays inside the application layer: an
+    entrypoint that restored a bundle and then appended the event itself would
+    own an application concern, and would be free to omit it.
+
+    The caller still owns bucket provisioning and the live bucket session, exactly
+    as :func:`deserialize_profile_bundle` requires; the event repository resolves
+    against that active session.
+
+    Args:
+        bundle: The validated export bundle to restore.
+        target_bucket_id: The bucket id under which to write the objects.
+        display_name: Operator-facing label the imported profile was registered
+            under, recorded on the event payload.
+        source_path: Filesystem location the bundle was read from, recorded on
+            the event payload as import provenance.
+
+    Returns:
+        The appended :class:`BucketEvent`.
+
+    Raises:
+        UnsupportedBundleSchemaVersionError: Propagated from
+            :func:`deserialize_profile_bundle` for an unsupported bundle version;
+            no event is emitted when the restore refuses.
+    """
+    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ..modelo import emit_bucket_event
+
+    deserialize_profile_bundle(bundle, target_bucket_id=target_bucket_id)
+    return emit_bucket_event(
+        repository=BucketEventHistoryRepository(),
+        bucket_id=target_bucket_id,
+        event_type=BucketEventType.PROFILE_IMPORTED,
+        occurred_at=now().replace(microsecond=0),
+        actor=_PROFILE_IMPORT_EVENT_ACTOR,
+        object_type=BucketEventObjectType.PROFILE,
+        object_id=target_bucket_id,
+        payload={
+            "display_name": display_name,
+            "source_path": source_path,
+            "schema_version": str(bundle.bundle_schema_version),
+        },
+        payload_version=_PROFILE_IMPORT_EVENT_PAYLOAD_VERSION,
+    )
 
 
 def _rebuild_participation_index(*, target_bucket_id: str) -> None:

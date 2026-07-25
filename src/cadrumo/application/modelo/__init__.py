@@ -423,7 +423,7 @@ from ._review_package_signing import (
     sign_review_package,
     verify_review_package_signature,
 )
-from ._revision_persistence import persist_filed_revision
+from ._revision_persistence import emit_bucket_event, persist_filed_revision
 from ._selectors import (
     ModeloCalculationRevisionCandidate,
     ModeloCalculationRevisionDefault,
@@ -770,6 +770,7 @@ __all__ = [
     "derive_taxpayer_files_economic_activity",
     "detect_casilla_divergences",
     "discard_work_unit",
+    "emit_bucket_event",
     "emit_collab_feedback_countersign_attached_event",
     "emit_collab_package_counter_signed_event",
     "emit_collab_package_decrypted_event",
