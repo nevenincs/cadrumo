@@ -553,6 +553,21 @@ def _build_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _owning_page(sequence_id: str, *, docs_root: Path | None = None) -> str | None:
+    """Return the docname of the page enrolling ``sequence_id``, or ``None``.
+
+    Used only to make the single-sequence advisory name the exact page-level
+    command to run next, so the operator is never told to substitute a docname
+    themselves. A discovery failure here degrades the advisory's wording and must
+    never affect the check's own verdict.
+    """
+    try:
+        discovered, _problems = discover_sequences(docs_root=docs_root, sequence_id=sequence_id)
+    except SequenceEngineError:
+        return None
+    return next((item.page for item in discovered if item.sequence_id == sequence_id), None)
+
+
 def main(argv: list[str] | None = None) -> int:
     """CLI entry: exit 0 on a clean run, 1 on any problem, 2 on usage errors."""
     args = _build_argument_parser().parse_args(argv)
@@ -614,6 +629,23 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1
     print("cli-sequence goldens: clean")
+    if args.sequence is not None:
+        # A single-sequence pass is NOT a verification. Sequences on one page
+        # share the in-process CLI tree, so a clean run in isolation can hide a
+        # divergence that only appears once the page's earlier sequences have
+        # run ahead of it — observed on `filing-spine-file`, which passed alone
+        # and failed under its page. Say so at the point of use rather than
+        # letting a green line be mistaken for the gate.
+        owning_page = _owning_page(
+            args.sequence,
+            docs_root=args.docs_root,
+        )
+        target = owning_page or "<docname>"
+        print(
+            f"advisory: a single-sequence pass does not verify {args.sequence!r}; sequences on a "
+            "page share the in-process CLI tree, so run the page-level gate before trusting this: "
+            f"python -m dev.docs.sequences check --page {target}",
+        )
     return 0
 
 
