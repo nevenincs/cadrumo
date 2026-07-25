@@ -10,6 +10,7 @@ related:
   - '[[2026-07-25-evidence-revision-identity-S01]]'
   - '[[2026-07-25-evidence-revision-identity-S02]]'
   - '[[2026-07-25-evidence-revision-identity-S03]]'
+  - '[[2026-07-25-evidence-revision-identity-S07]]'
   - '[[2026-07-25-evidence-revision-identity-operator-walkthrough-audit]]'
   - '[[2026-07-25-evidence-revision-identity-plan]]'
   - '[[2026-07-25-evidence-revision-identity-supersede-identity-conflict-audit]]'
@@ -37,6 +38,7 @@ Auto-generated index of all documents tagged with `#evidence-revision-identity`.
 - `2026-07-25-evidence-revision-identity-S01` - Refuse a DESCARTADO unit in create_work_unit with an instructive message naming its state and a real next step, in the WorkUnitMutationRefusedError shape the same module already uses eleven lines below, rather than returning the discarded unit and letting every downstream verb deny it exists
 - `2026-07-25-evidence-revision-identity-S02` - Gate that a discarded unit refuses at create and that the refusal names its state, closing the asymmetry where list_work_units hides a discarded unit by default while create_work_unit hands it back
 - `2026-07-25-evidence-revision-identity-S03` - BLOCKED ON OPERATOR, the supersede transition as specified cannot be built, it carries the same inputs so it re-derives the id it is escaping and hits the amendment path's existing no-op refusal, and the escape requires a discriminator inside revision identity which this ADR reserves for operator sign-off
+- `2026-07-25-evidence-revision-identity-S07` - Convert the runnable display-only sequence frames and record why the blocked ones cannot execute, DONE, roughly forty converted by peers and the residual thirty-three each carry a measured page-specific reason, with the blocked reason structurally mandatory so display-only is a stated constraint rather than an unexamined default
 
 ### plan
 

@@ -137,6 +137,51 @@ over tax facts, and evidence is deliberately outside it. Any recovery path must
 either reopen that boundary or add a record beside it, and choosing which is the
 decision the governing ADR reserved from the start.
 
+
+### the-sequence-frame-backlog-is-triaged-not-pending | medium | S07's work is done, and its reason code now misnames the result
+
+S07 was carried as unblocked implementation work. Measured at HEAD it is neither
+unblocked in the way assumed nor outstanding in the way assumed.
+
+The audit that produced the step counted 72 directly-runnable display-only
+frames. Thirty-three remain flagged, so roughly forty were converted by peers in
+the interim. More importantly, the second half of the step is structurally
+guaranteed rather than pending: `@blocked <code> <detail>` is MANDATORY beneath
+every `@static` frame and the parser refuses a frame without one. The tree holds
+153 static frames and 153 blocked reasons. Display-only is already a stated
+constraint, which is precisely what the step asked for.
+
+The residue is triaged, not untouched. Every one of the thirty-three carries a
+measured, page-specific reason: nine because no registry revision covers filing
+year 2026, five on cumulative-page filing order, three on cross-period clean
+state, several cascading from a blocked parent frame, one because no CLI verb
+creates an evidence bundle so no id exists to address, and FIVE that say "Do NOT
+convert" outright with evidence — converting them would double an import, switch
+the active profile and strand the rest of the page, or drive a real browser at
+the AEAT sede.
+
+Two of them are blocked by `REFUSED_MODELO_EXPORT_EVIDENCE_MISSING` and
+`REFUSED_MODELO_FILING_EVIDENCE_MISSING` — the deductible-IVA evidence trap this
+very record exists to resolve. So S07 was not independent of the blocked decision
+after all, which is a correction to how it was filed and to my own statement that
+it was cleanly available work.
+
+One earlier claim of mine is withdrawn as overstated. Reading that several frames
+cite "work file rejects an already-presentado revision", I concluded the premise
+was stale because the idempotent re-file is implemented and returns the existing
+VIGENTE record. That path is conditional: it falls through to the hard refusal
+when no VIGENTE record exists, so the frames' reasons are not simply false. The
+files carrying that wording are also under live peer edit and may be being
+revised now.
+
+The durable finding is the reason code itself. `unconverted` no longer means "not
+yet triaged"; it means "triaged and not convertible for a stated reason", and in
+five cases it means the opposite of what it says. A later pass reading the code
+name rather than the detail will redo this work — the same prose-asserting-a-
+guarantee-that-no-longer-holds pattern this campaign has now found five times.
+Splitting it into a converted-later code and a deliberate do-not-convert code
+would close that, and belongs to whoever owns the sequence corpus.
+
 ## Recommendations
 
 The accepted ruling's chosen option should be superseded rather than built. It is
