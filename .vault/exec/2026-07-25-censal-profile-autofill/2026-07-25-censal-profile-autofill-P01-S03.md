@@ -9,9 +9,6 @@ related:
   - "[[2026-07-25-censal-profile-autofill-plan]]"
 ---
 
-
-
-
 # Make the manager authentication action mode-aware over the profile fields, offering certificate selection only when a certificate is registered
 
 ## Scope
@@ -25,7 +22,7 @@ related:
 - Offer the provider choice and both Cl@ve fields unconditionally, seeded from the `auth` section the profile already holds.
 - Offer the certificate row only when a certificate source is registered, retiring the blanket refusal that stopped the action when none was.
 - Name the absent credential in the Cl@ve refusal, using the label the field carried on the page.
-- Write the three auth facts through the plural `set_active_fields` door in one call, selecting the certificate before activating the provider.
+- Write the auth facts through the plural `set_active_fields` door in one call, selecting the certificate before activating the provider.
 - Translate the refusal in all four catalogues through the locales CLI, adding the missing-credential placeholder it had no way to carry.
 - Type `_provider_label` as the provider enum rather than `object`.
 - Add Pilot-driven coverage of the real page plus real-storage coverage of the commit half.
@@ -69,6 +66,17 @@ uncommitted rewrite of an unrelated Cl@ve key. Their hunks were separated
 out and only this step's were staged, through a patch reversed and
 reapplied against the index; the working tree was never touched, and that
 agent's edit remains uncommitted and intact.
+
+Two claims made in this Step were later found false and are corrected in
+`S13` rather than left standing here. The requirement that every Cl@ve
+mode supply both halves was wrong: the ADR correction establishes that
+the contraste is read only by the non-QR route and takes a different
+form for a DNI than for a NIE, so demanding both refused the default QR
+flow and Cl@ve Permanente outright. And the plural `set_active_fields`
+door does not make the write atomic - it is a loop over the singular
+door, persisting between iterations - so the account given here of what
+that door buys was mistaken, and a test asserting the property was
+removed.
 
 Two findings belong to other owners and were not acted on. The locale
 catalogues still carry four censal-pull keys that no source references
