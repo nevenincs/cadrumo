@@ -31,7 +31,8 @@ See Also:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, ClassVar, Final, override
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, ClassVar, Final, Protocol, override
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
@@ -43,7 +44,48 @@ from ....core.i18n import tr
 from ._theme import BASE_CSS, ContentScroll, install_cadrumo_themes, toggle_appearance
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from ....application.user_profile import ProfileRegistrationOutcome
+
+
+class PassphraseVerdict(Protocol):
+    """What the screen needs to know about a candidate passphrase.
+
+    Structural rather than concrete: the application's assessment already
+    has this shape, so it satisfies the protocol without the screen
+    importing it. The strength banding itself stays where the policy lives
+    — this surface only renders the verdict.
+    """
+
+    @property
+    def strength(self) -> PassphraseStrength:
+        """Advisory band the candidate falls in."""
+        ...  # pragma: no cover
+
+    @property
+    def minimum_length(self) -> int:
+        """Shortest passphrase the storage layer will accept."""
+        ...  # pragma: no cover
+
+    @property
+    def acceptable(self) -> bool:
+        """Whether a profile can be created with this passphrase."""
+        ...  # pragma: no cover
+
+
+@dataclass(frozen=True, slots=True)
+class RegistrationAttempt:
+    """The outcome of asking the application to create a profile.
+
+    A refusal arrives as text the screen displays, not as an exception it
+    has to recognise. That keeps refusal *classification* with the layer
+    that owns the rules, and leaves this screen doing what a screen does:
+    show the operator what happened.
+    """
+
+    outcome: ProfileRegistrationOutcome | None = None
+    refusal: str | None = None
 
 
 def strength_copy(strength: PassphraseStrength, *, minimum_length: int) -> str:
@@ -107,8 +149,25 @@ class RegistrationApp(App["ProfileRegistrationOutcome | None"]):
         Binding("escape", "abandon", "", show=False),
     ]
 
-    def __init__(self, *, suggested_name: str | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        assess: Callable[[str], PassphraseVerdict],
+        register: Callable[[str, str], RegistrationAttempt],
+        suggested_name: str | None = None,
+    ) -> None:
         super().__init__()
+        self._assess_passphrase = assess
+        """Passphrase banding, injected rather than imported.
+
+        The adapter tier renders; it does not reach up into the application
+        layer for its own data. Injection is the same shape the status page
+        already uses, and it also makes the screen drivable against a
+        deliberate refusal without contriving one in real storage."""
+        self._create_profile = register
+        """Named to avoid ``App._register``, a Textual internal that
+        silently swallowed the door and passed the app itself as the
+        profile label."""
         self._suggested_name = suggested_name or ""
         """Name carried in from the command line, prefilled into the field.
 
@@ -171,9 +230,7 @@ class RegistrationApp(App["ProfileRegistrationOutcome | None"]):
         if not candidate:
             line.update("")
             return
-        from ....application.user_profile import assess_passphrase
-
-        assessment = assess_passphrase(candidate)
+        assessment = self._assess_passphrase(candidate)
         line.add_class(_STRENGTH_CLASSES[assessment.strength])
         line.update(strength_copy(assessment.strength, minimum_length=assessment.minimum_length))
 
@@ -203,13 +260,6 @@ class RegistrationApp(App["ProfileRegistrationOutcome | None"]):
         re-derived, so the screen never becomes a second authority on what
         a valid registration is.
         """
-        from ....application.user_profile import (
-            ProfileAlreadyRegisteredError,
-            ProfileRegistrationError,
-            assess_passphrase,
-            register_profile_with_credentials,
-        )
-
         username = self.query_one("#field-username", Input).value.strip()
         password = self.query_one("#field-password", Input).value
         confirm = self.query_one("#field-confirm", Input).value
@@ -218,7 +268,7 @@ class RegistrationApp(App["ProfileRegistrationOutcome | None"]):
             self._refuse(tr("flows.registration.refusal.username_required"))
             self.query_one("#field-username", Input).focus()
             return
-        assessment = assess_passphrase(password)
+        assessment = self._assess_passphrase(password)
         if not assessment.acceptable:
             self._refuse(strength_copy(assessment.strength, minimum_length=assessment.minimum_length))
             self.query_one("#field-password", Input).focus()
@@ -228,11 +278,11 @@ class RegistrationApp(App["ProfileRegistrationOutcome | None"]):
             self.query_one("#field-confirm", Input).focus()
             return
 
-        try:
-            self.outcome = register_profile_with_credentials(label=username, passphrase=password)
-        except (ProfileRegistrationError, ProfileAlreadyRegisteredError) as refusal:
-            self._refuse(str(refusal))
+        attempt = self._create_profile(username, password)
+        if attempt.outcome is None:
+            self._refuse(attempt.refusal or tr("flows.registration.refusal.username_required"))
             return
+        self.outcome = attempt.outcome
         self.exit(self.outcome)
 
     def action_abandon(self) -> None:
@@ -247,16 +297,21 @@ class RegistrationApp(App["ProfileRegistrationOutcome | None"]):
         self.query_one("#registration-refusal", Static).update(message)
 
 
-def run_registration_tui(*, suggested_name: str | None = None) -> ProfileRegistrationOutcome | None:
+def run_registration_tui(
+    *,
+    assess: Callable[[str], PassphraseVerdict],
+    register: Callable[[str, str], RegistrationAttempt],
+    suggested_name: str | None = None,
+) -> ProfileRegistrationOutcome | None:
     """Run the registration screen and return the created profile, or ``None``.
 
     ``None`` means the operator abandoned the screen — an ordinary outcome,
     not an error, so the caller decides what to do rather than catching an
     exception to find out.
     """
-    app = RegistrationApp(suggested_name=suggested_name)
+    app = RegistrationApp(assess=assess, register=register, suggested_name=suggested_name)
     app.run()
     return app.outcome
 
 
-__all__ = ["RegistrationApp", "run_registration_tui"]
+__all__ = ["PassphraseVerdict", "RegistrationApp", "RegistrationAttempt", "run_registration_tui"]

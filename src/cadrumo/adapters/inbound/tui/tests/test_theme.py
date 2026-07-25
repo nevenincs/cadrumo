@@ -196,6 +196,18 @@ rounding on a wide terminal and as a visibly shoved page on a narrow one.
 """
 
 
+def _registration_screen() -> RegistrationApp:
+    """The registration surface wired to its real doors.
+
+    Geometry never calls them, but the screen takes them because it does
+    not reach up into the application layer for itself.
+    """
+    from .....application.user_profile import assess_passphrase
+    from .....entrypoints.cli._config._manager_frontend import attempt_registration
+
+    return RegistrationApp(assess=assess_passphrase, register=attempt_registration)
+
+
 def _gutters(app: App[object]) -> tuple[int, int]:
     """Return the empty cells left and right of the centred content column."""
     screen = app.screen.region
@@ -207,7 +219,7 @@ def _gutters(app: App[object]) -> tuple[int, int]:
 @pytest.mark.parametrize(("width", "height"), _GEOMETRY_SIZES)
 @pytest.mark.parametrize(
     "build",
-    [lambda: RegistrationApp(), lambda: StatusApp(StatusPageData())],
+    [_registration_screen, lambda: StatusApp(StatusPageData())],
     ids=["registration", "status"],
 )
 async def test_the_content_column_lands_on_the_terminal_midline(
@@ -248,7 +260,8 @@ async def test_dropping_the_left_reservation_really_does_shove_the_page() -> Non
     class UncompensatedApp(RegistrationApp):
         CSS = RegistrationApp.CSS.replace("padding: 0 0 0 1;", "")
 
-    app = UncompensatedApp()
+    reference = _registration_screen()
+    app = UncompensatedApp(assess=reference._assess_passphrase, register=reference._create_profile)
     async with app.run_test(size=(120, 40)) as pilot:
         await pilot.pause()
         left, right = _gutters(app)

@@ -38,6 +38,8 @@ from ....core.i18n import tr
 from ._theme import BASE_CSS, ContentScroll, install_cadrumo_themes, toggle_appearance
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from ....application.user_profile import ProfileFieldView, ProfileOverview
 
 
@@ -125,9 +127,17 @@ class ProfileManagerApp(App[None]):
         Binding("escape", "quit", "", show=False),
     ]
 
-    def __init__(self, overview: ProfileOverview) -> None:
+    def __init__(self, overview: ProfileOverview, *, persist: Callable[[str, str], ProfileOverview]) -> None:
         super().__init__()
         self.overview = overview
+        self._persist_field = persist
+        """Writes one field and hands back the page as storage now holds it.
+
+        Injected, not imported: the adapter tier renders a view-model and
+        reports intents, exactly as the status page does. Returning the
+        reloaded overview rather than ``None`` is what keeps the screen
+        from ever displaying its own optimistic guess — whatever the store
+        made of the value is what appears."""
         self._field_by_key: dict[str, ProfileFieldView] = {}
 
     @override
@@ -209,45 +219,17 @@ class ProfileManagerApp(App[None]):
         return _apply
 
     def _persist(self, path: str, value: str) -> None:
-        """Write one field through the canonical edit door and re-render.
-
-        A blank submission clears the fact rather than storing an empty
-        string, so "I did not mean to set this" and "this is empty" stay the
-        same state rather than drifting into two.
-        """
-        from ....application.user_profile import build_profile_overview, set_active_field
-        from ....application.workflow import workflow_state_repository
-        from ....domain.user_profile import UserProfileFact
-
-        fact = UserProfileFact(path=path, value=value if value != "" else None)
-        workflow_state_repository().update(lambda state: set_active_field(state, fact))
-        self.overview = build_profile_overview(
-            _reload_active_record(),
-            label=self.overview.label,
-        )
+        """Write one field through the injected door and re-render."""
+        self.overview = self._persist_field(path, value)
         self._render()
 
     def action_toggle_appearance(self) -> None:
         toggle_appearance(self)
 
 
-def _reload_active_record():
-    """Re-read the active profile so the page reflects what was persisted.
-
-    Re-reading rather than patching the in-memory view is deliberate: the
-    edit door may normalise or reject a value, and the page must show what
-    the store actually holds, not what the screen hoped it wrote.
-    """
-    from ....application.user_profile import ProfileRepository
-    from ....core import require_active_bucket_id
-
-    aggregate = ProfileRepository().load(require_active_bucket_id())
-    return aggregate.record
-
-
-def run_profile_manager_tui(overview: ProfileOverview) -> None:
+def run_profile_manager_tui(overview: ProfileOverview, *, persist: Callable[[str, str], ProfileOverview]) -> None:
     """Run the manager to completion against an already-built overview."""
-    ProfileManagerApp(overview).run()
+    ProfileManagerApp(overview, persist=persist).run()
 
 
 __all__ = ["FieldEditScreen", "ProfileManagerApp", "run_profile_manager_tui"]

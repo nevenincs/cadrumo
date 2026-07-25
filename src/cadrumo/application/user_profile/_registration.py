@@ -41,6 +41,7 @@ from ...core import PassphraseStrength, assess_passphrase_strength
 from ...core.errors import CadrumoError
 from ...domain.user_profile import UserProfileStatus, new_profile_id
 from ..workflow import workflow_state_repository
+from ._login_session import login_profile
 from ._orchestration import (
     profile_create_storage_span,
     refuse_duplicate_label,
@@ -192,8 +193,6 @@ def register_profile_with_credentials(
     # Delegating to the canonical login door (rather than opening a session
     # here) keeps one authentication path, and with it the throttle, the
     # pointer transaction, and the persisted-session semantics.
-    from ._login_session import login_profile
-
     login_profile(name=resolved_label, passphrase_callback=lambda: passphrase)
 
     return ProfileRegistrationOutcome(

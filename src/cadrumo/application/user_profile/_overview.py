@@ -40,6 +40,7 @@ from ...core.classification import SensitivityClass
 # runtime; deferring it to TYPE_CHECKING leaves the model undefined and every
 # construction raises. The rest of the domain surface is annotation-only.
 from ...domain.user_profile import UserProfileStatus, load_user_profile_schema
+from ._projections import record_to_path_values
 
 if TYPE_CHECKING:
     from ...domain.user_profile import (
@@ -157,8 +158,6 @@ def build_profile_overview(
     Returns:
         A :class:`ProfileOverview` covering every declared section and field.
     """
-    from ._projections import record_to_path_values
-
     resolved_schema = schema if schema is not None else load_user_profile_schema()
     values = record_to_path_values(record)
 

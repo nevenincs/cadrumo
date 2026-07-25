@@ -47,13 +47,14 @@ from typing import TYPE_CHECKING, Final
 from pydantic import BaseModel, ConfigDict
 
 from ...core import Modelo
-from ...domain.calculations.registry import CensoModeloEventKind
+from ...domain.calculations.registry import CensoModeloEventKind, bundled_authority
+from ...domain.user_profile import UserProfileFact
+from . import capture_expedientes
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from ...adapters.outbound.aeat.sede import Declaracion
-    from ...domain.user_profile import UserProfileFact
 
 
 CENSO_STATUS_FACT_PATH: Final[str] = "censo.status"
@@ -108,8 +109,6 @@ def causa_casilla_event_kinds() -> dict[str, CensoModeloEventKind]:
     registry data; hardcoding a second copy would be a regulatory value
     inlined at a call site, and would drift the moment AEAT adds a causa.
     """
-    from ...domain.calculations.registry import bundled_authority
-
     definition = bundled_authority().validate_modelo(Modelo.M036.value)
     mapping: dict[str, CensoModeloEventKind] = {}
     for revision in definition.revisions.values():
@@ -219,8 +218,6 @@ def censo_facts_from_filed_036(filings: Sequence[Filed036Declaration]) -> tuple[
     the current census. The calendar's ``censo.enrolment_unverified``
     posture is unaffected, exactly as the operator-manual path leaves it.
     """
-    from ...domain.user_profile import UserProfileFact
-
     current = current_censal_state(filings)
     if current is None:
         return ()
@@ -239,8 +236,6 @@ async def pull_filed_036(*, bucket_id: str, year_from: int, year_to: int) -> tup
     rather than failing the span — a taxpayer files a censal declaration
     only when something changes, so most years are legitimately empty.
     """
-    from . import capture_expedientes
-
     collected: list[Filed036Declaration] = []
     for year in range(year_from, year_to + 1):
         snapshot = await capture_expedientes(bucket_id=bucket_id, modelo=Modelo.M036.value, year=year)

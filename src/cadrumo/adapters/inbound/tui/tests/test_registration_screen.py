@@ -21,7 +21,9 @@ from textual.widgets import Input, Static
 
 from .....adapters.persistence.storage.errors import MasterKeyPassphraseMismatchError
 from .....adapters.persistence.storage.master_key import get_master_key_provider
+from .....application.user_profile import assess_passphrase
 from .....domain.user_profile import UserProfileStatus
+from .....entrypoints.cli._config._manager_frontend import attempt_registration
 from .....tests.secure_sql import isolated_profile_storage_root
 from .. import RegistrationApp
 
@@ -33,6 +35,16 @@ pytestmark = [
 _TERMINAL_SIZE = (140, 60)
 _TYPED_PASSWORD = "screen-typed-operator-secret"  # noqa: S105 - synthetic test fixture
 _TOO_SHORT_PASSWORD = "abc"  # noqa: S105 - synthetic test fixture, deliberately under the floor
+
+
+def _screen(**kwargs) -> RegistrationApp:
+    """Build the screen wired to the doors the CLI actually gives it.
+
+    The production composition rather than a stand-in, so these tests
+    exercise the same path an operator does: a stub here would prove the
+    widgets talk to a stub.
+    """
+    return RegistrationApp(assess=assess_passphrase, register=attempt_registration, **kwargs)
 
 
 async def _fill(pilot, *, username: str, password: str, confirm: str) -> None:
@@ -54,7 +66,7 @@ async def test_typing_credentials_and_pressing_create_makes_a_live_profile(tmp_p
     material rather than merely reporting success.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        app = RegistrationApp()
+        app = _screen()
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(pilot, username="Screen Subject", password=_TYPED_PASSWORD, confirm=_TYPED_PASSWORD)
             await pilot.click("#btn-create")
@@ -72,7 +84,7 @@ async def test_typing_credentials_and_pressing_create_makes_a_live_profile(tmp_p
 @pytest.mark.asyncio
 async def test_mismatched_confirmation_refuses_and_creates_nothing(tmp_path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        app = RegistrationApp()
+        app = _screen()
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(pilot, username="Mismatch", password=_TYPED_PASSWORD, confirm="something-else-entirely")
             await pilot.click("#btn-create")
@@ -90,7 +102,7 @@ async def test_mismatched_confirmation_refuses_and_creates_nothing(tmp_path) -> 
 @pytest.mark.asyncio
 async def test_short_password_refuses_and_creates_nothing(tmp_path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        app = RegistrationApp()
+        app = _screen()
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(pilot, username="Short", password=_TOO_SHORT_PASSWORD, confirm=_TOO_SHORT_PASSWORD)
             await pilot.click("#btn-create")
@@ -105,7 +117,7 @@ async def test_short_password_refuses_and_creates_nothing(tmp_path) -> None:
 @pytest.mark.asyncio
 async def test_blank_username_refuses_and_focuses_the_field(tmp_path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        app = RegistrationApp()
+        app = _screen()
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(pilot, username="   ", password=_TYPED_PASSWORD, confirm=_TYPED_PASSWORD)
             await pilot.click("#btn-create")
@@ -124,7 +136,7 @@ async def test_the_strength_line_tracks_the_password_field(tmp_path) -> None:
     words are locale data, the class is the screen's own decision.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        app = RegistrationApp()
+        app = _screen()
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             field = app.query_one("#field-password", Input)
             line = app.query_one("#strength-line", Static)
@@ -155,7 +167,7 @@ async def test_the_password_fields_are_masked(tmp_path) -> None:
     is the failure this pins.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        app = RegistrationApp()
+        app = _screen()
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             assert app.query_one("#field-password", Input).password is True
             assert app.query_one("#field-confirm", Input).password is True

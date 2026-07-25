@@ -13,7 +13,12 @@ from __future__ import annotations
 
 from ._app import FlowTuiApp, run_flow_tui
 from ._manager_screen import FieldEditScreen, ProfileManagerApp, run_profile_manager_tui
-from ._registration_screen import RegistrationApp, run_registration_tui
+from ._registration_screen import (
+    PassphraseVerdict,
+    RegistrationApp,
+    RegistrationAttempt,
+    run_registration_tui,
+)
 from ._select import select_flow_frontend
 from ._status_screen import (
     StatusApp,
@@ -46,8 +51,10 @@ __all__ = [
     "CONTENT_WIDTH_PERCENT",
     "FieldEditScreen",
     "FlowTuiApp",
+    "PassphraseVerdict",
     "ProfileManagerApp",
     "RegistrationApp",
+    "RegistrationAttempt",
     "StatusApp",
     "StatusAuthView",
     "StatusFactRow",

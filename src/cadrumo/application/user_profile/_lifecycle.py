@@ -368,8 +368,7 @@ class ProfileLifecycleService:
         blocking = [
             issue
             for issue in report.issues
-            if issue.severity is BaseSeverity.ERROR
-            and (require_complete or issue.code not in COMPLETENESS_ISSUE_CODES)
+            if issue.severity is BaseSeverity.ERROR and (require_complete or issue.code not in COMPLETENESS_ISSUE_CODES)
         ]
         if blocking:
             raise ProfileSchemaValidationError(

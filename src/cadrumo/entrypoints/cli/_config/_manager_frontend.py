@@ -23,6 +23,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from ....adapters.inbound.tui import RegistrationAttempt
     from ....application.user_profile import ProfileOverview, ProfileRegistrationOutcome
 
 
@@ -83,6 +84,26 @@ def build_active_profile_overview(*, label: str | None = None) -> ProfileOvervie
     )
 
 
+def persist_active_profile_field(path: str, value: str, *, label: str | None = None) -> ProfileOverview:
+    """Write one profile field and return the page as storage now holds it.
+
+    A blank submission clears the fact rather than storing an empty string,
+    so "I did not mean to set this" and "this is empty" stay one state
+    instead of drifting into two.
+
+    The page is rebuilt by re-reading the record rather than by patching
+    the previous view: the edit door may normalise or refuse a value, and
+    the operator must see what was actually stored.
+    """
+    from ....application.user_profile import set_active_field
+    from ....application.workflow import workflow_state_repository
+    from ....domain.user_profile import UserProfileFact
+
+    fact = UserProfileFact(path=path, value=value if value != "" else None)
+    workflow_state_repository().update(lambda state: set_active_field(state, fact))
+    return build_active_profile_overview(label=label)
+
+
 def present_profile_manager(*, label: str | None = None) -> None:
     """Open the manager on the active profile and run it to completion.
 
@@ -92,7 +113,32 @@ def present_profile_manager(*, label: str | None = None) -> None:
     """
     from ....adapters.inbound.tui import run_profile_manager_tui
 
-    run_profile_manager_tui(build_active_profile_overview(label=label))
+    run_profile_manager_tui(
+        build_active_profile_overview(label=label),
+        persist=lambda path, value: persist_active_profile_field(path, value, label=label),
+    )
+
+
+def attempt_registration(label: str, passphrase: str) -> RegistrationAttempt:
+    """Create one profile, reporting a refusal as text rather than raising.
+
+    Classifying a refusal is the application layer's job and displaying it
+    is the screen's; translating between the two is this seam's. That is
+    what keeps the screen from having to import — and recognise — the
+    application's exception types.
+    """
+    from ....adapters.inbound.tui import RegistrationAttempt as _Attempt
+    from ....application.user_profile import (
+        ProfileAlreadyRegisteredError,
+        ProfileRegistrationError,
+        register_profile_with_credentials,
+    )
+
+    try:
+        outcome = register_profile_with_credentials(label=label, passphrase=passphrase)
+    except (ProfileRegistrationError, ProfileAlreadyRegisteredError) as refusal:
+        return _Attempt(refusal=str(refusal))
+    return _Attempt(outcome=outcome)
 
 
 def present_registration(*, suggested_name: str | None = None) -> ProfileRegistrationOutcome | None:
@@ -107,14 +153,21 @@ def present_registration(*, suggested_name: str | None = None) -> ProfileRegistr
     than an error.
     """
     from ....adapters.inbound.tui import run_registration_tui
+    from ....application.user_profile import assess_passphrase
 
-    return run_registration_tui(suggested_name=suggested_name)
+    return run_registration_tui(
+        assess=assess_passphrase,
+        register=attempt_registration,
+        suggested_name=suggested_name,
+    )
 
 
 __all__ = [
+    "attempt_registration",
     "build_active_profile_overview",
     "host_can_run_full_screen",
     "manager_is_the_right_frontend",
+    "persist_active_profile_field",
     "present_profile_manager",
     "present_registration",
 ]

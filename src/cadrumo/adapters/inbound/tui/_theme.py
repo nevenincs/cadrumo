@@ -38,7 +38,7 @@ from typing import TYPE_CHECKING, Final
 from textual.containers import VerticalScroll
 from textual.theme import Theme
 
-from ....core.config import TuiAppearance
+from ....core.config import TuiAppearance, load_settings
 
 if TYPE_CHECKING:
     from textual.app import App
@@ -262,8 +262,6 @@ def install_cadrumo_themes[ReturnT](app: App[ReturnT], *, appearance: TuiAppeara
     configured look without every app re-reading settings itself.
     """
     if appearance is None:
-        from ....core.config import load_settings
-
         appearance = load_settings().cadrumo_tui_appearance
     for theme in CADRUMO_THEMES:
         app.register_theme(theme)

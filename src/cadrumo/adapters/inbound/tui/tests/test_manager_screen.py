@@ -21,6 +21,7 @@ from .....application.user_profile import (
     register_profile_with_credentials,
 )
 from .....core import require_active_bucket_id
+from .....entrypoints.cli._config._manager_frontend import persist_active_profile_field
 from .....tests.secure_sql import isolated_profile_storage_root
 from .. import ProfileManagerApp
 
@@ -38,6 +39,11 @@ def _live_overview(label: str = "Manager Subject"):
     """Build the overview from whatever the store currently holds."""
     aggregate = ProfileRepository().load(require_active_bucket_id())
     return build_profile_overview(aggregate.record, label=label)
+
+
+def _persist(path: str, value: str):
+    """The production write door, so an edit here travels the real path."""
+    return persist_active_profile_field(path, value, label="Manager Subject")
 
 
 def _rows(app: ProfileManagerApp) -> dict[str, list[str]]:
@@ -63,7 +69,7 @@ async def test_the_page_shows_every_declared_field_including_the_empty_ones(tmp_
         register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
         overview = _live_overview()
 
-        app = ProfileManagerApp(overview)
+        app = ProfileManagerApp(overview, persist=_persist)
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             rendered = _rows(app)
@@ -84,7 +90,7 @@ async def test_editing_a_row_writes_through_to_the_encrypted_record(tmp_path) ->
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
 
-        app = ProfileManagerApp(_live_overview())
+        app = ProfileManagerApp(_live_overview(), persist=_persist)
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             field = app._field_by_key[_EDITED_PATH]
@@ -126,7 +132,7 @@ async def test_a_masked_field_opens_empty_rather_than_prefilled(tmp_path) -> Non
     )
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(label="Masked Subject", passphrase=_PASSWORD)
-        app = ProfileManagerApp(_live_overview("Masked Subject"))
+        app = ProfileManagerApp(_live_overview("Masked Subject"), persist=_persist)
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             app.push_screen(FieldEditScreen(masked))
             await pilot.pause()
