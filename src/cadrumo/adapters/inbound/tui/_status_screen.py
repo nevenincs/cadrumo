@@ -27,6 +27,7 @@ from textual.containers import VerticalScroll
 from textual.widgets import DataTable, Footer, Static
 
 from ....core.i18n import tr
+from ._theme import BASE_CSS, install_cadrumo_themes, toggle_appearance
 
 # Copyable custody / recovery next-step lines. These are literal CLI
 # invocations (command tokens, not operator prose), rendered verbatim so an
@@ -114,7 +115,9 @@ _ACTIVE_MARKER = "●"
 class StatusApp(App[None]):
     """Full-screen read-only projection of the operator's configuration state."""
 
-    CSS = """
+    CSS = (
+        BASE_CSS
+        + """
     VerticalScroll { align-horizontal: center; }
     #status-header {
         dock: top;
@@ -129,22 +132,25 @@ class StatusApp(App[None]):
         border: round $primary;
         border-title-color: $accent;
         border-title-style: bold;
+        background: $surface;
         padding: 1 3;
         margin: 1 2;
-        width: 96;
-        max-width: 100%;
+        width: 100%;
+        max-width: 110;
         height: auto;
     }
-    .status-panel DataTable { height: auto; width: 100%; }
+    .status-panel DataTable { height: auto; width: 100%; background: $surface; }
     .status-empty { color: $text-muted; text-style: italic; }
     .status-commands { color: $text-muted; margin: 1 0 0 0; }
     """
+    )
 
     # Keys and actions only; descriptions resolve in on_mount so the footer
     # tracks the active language, not the import-time language.
     BINDINGS = [
         Binding("q", "quit", ""),
         Binding("escape", "quit", ""),
+        Binding("f3", "toggle_appearance", "", show=False),
     ]
 
     def __init__(self, data: StatusPageData) -> None:
@@ -163,6 +169,7 @@ class StatusApp(App[None]):
         yield Footer()
 
     def on_mount(self) -> None:
+        install_cadrumo_themes(self)
         self._localize_bindings()
         self.query_one("#status-header", Static).update(tr("flows.status.title"))
         self._mount_profile_panel()
@@ -170,11 +177,19 @@ class StatusApp(App[None]):
         self._mount_auth_panel()
         self._mount_recovery_panel()
 
+    def action_toggle_appearance(self) -> None:
+        """Flip between the light and dark appearance; the projection is read-only."""
+        toggle_appearance(self)
+
     def _localize_bindings(self) -> None:
         self._bindings = BindingsMap(
             [
                 Binding("q", "quit", tr("flows.status.binding_quit")),
                 Binding("escape", "quit", tr("flows.status.binding_quit")),
+                # Rebuilt here too: this map REPLACES the class-level BINDINGS
+                # wholesale, so a binding omitted from this list is dropped at
+                # mount rather than merged.
+                Binding("f3", "toggle_appearance", "", show=False),
             ],
         )
         self.refresh_bindings()

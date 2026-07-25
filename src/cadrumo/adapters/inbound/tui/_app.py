@@ -17,9 +17,10 @@ review screen.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from textual.app import App
+from textual.binding import Binding
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
@@ -51,6 +52,8 @@ from ....application.flows import (
 from ....core.flows import REPEATING_INSTANCE_SEPARATOR, FlowMode, FlowWidgetKind, PageStatus
 from ._question_screen import QuestionScreen
 from ._review_screen import ReviewScreen
+from ._theme import BASE_CSS as _BASE_CSS
+from ._theme import install_cadrumo_themes, toggle_appearance
 
 if TYPE_CHECKING:
     from ....application.flows import CheckpointStore, FlowDefinition, FlowState, VisiblePage
@@ -59,15 +62,9 @@ if TYPE_CHECKING:
 class FlowTuiApp(App[None]):
     """Full-screen projection of one flow run."""
 
-    CSS = """
-    QuestionScreen, ReviewScreen { align-horizontal: center; }
-    Button {
-        height: 1;
-        border: none;
-        padding: 0 2;
-        min-width: 12;
-    }
-    Button:focus { text-style: bold reverse; }
+    CSS = (
+        _BASE_CSS
+        + """
     #flow-header {
         dock: top;
         height: 1;
@@ -77,15 +74,23 @@ class FlowTuiApp(App[None]):
         text-style: bold;
         padding: 0 2;
     }
-    #flow-progress { dock: top; height: 1; width: 100%; padding: 0 2; }
+    #flow-progress {
+        dock: top;
+        height: 1;
+        width: 100%;
+        padding: 0 2;
+        background: $surface;
+        color: $text-muted;
+    }
     #page-body {
         border: round $primary;
         border-title-color: $accent;
         border-title-style: bold;
+        background: $surface;
         padding: 1 3;
         margin: 1 2;
-        width: 96;
-        max-width: 100%;
+        width: 100%;
+        max-width: 110;
         height: auto;
     }
     #page-prompt { text-style: bold; margin: 0 0 1 0; }
@@ -101,8 +106,14 @@ class FlowTuiApp(App[None]):
     #page-failure-modes { color: $text-muted; margin: 0 0 1 0; }
     #page-legal-zone { color: $text-muted; text-style: italic; margin: 0 0 1 0; }
     #widget-area { margin: 1 0; height: auto; }
-    #widget-area Input { border: tall $accent; }
-    #widget-area RadioSet, #widget-area OptionList { border: round $panel; padding: 0 1; height: auto; width: 100%; }
+    #widget-area Input { border: tall $accent; background: $background; }
+    #widget-area RadioSet, #widget-area OptionList {
+        border: round $panel;
+        background: $background;
+        padding: 0 1;
+        height: auto;
+        width: 100%;
+    }
     #widget-area RadioButton { height: auto; }
     #widget-area OptionList > .option-list--option { padding: 0 1; }
     #live-validation { color: $error; margin: 0; }
@@ -119,11 +130,34 @@ class FlowTuiApp(App[None]):
         text-style: bold;
         padding: 0 2;
     }
-    #review-table { border: round $primary; margin: 1 2; height: auto; width: 96; max-width: 100%; }
-    #review-blocking { color: $error; border: round $error; padding: 0 1; margin: 1 2; width: 96; max-width: 100%; }
+    #review-table {
+        border: round $primary;
+        background: $surface;
+        margin: 1 2;
+        height: auto;
+        width: 100%;
+        max-width: 110;
+    }
+    #review-blocking {
+        color: $error;
+        border: round $error;
+        padding: 0 1;
+        margin: 1 2;
+        width: 100%;
+        max-width: 110;
+    }
     #review-save-note { color: $warning; margin: 0 2; }
     #btn-submit { dock: bottom; margin: 1 2; }
     """
+    )
+
+    BINDINGS: ClassVar = [
+        # F2 is the review intent on the question screen; F3 is free across
+        # every surface. Hidden, and description-free: an app-level BINDINGS
+        # list resolves at import time, so a ``tr`` call here would freeze the
+        # import-time language into the footer the screens deliberately defer.
+        Binding("f3", "toggle_appearance", "", show=False),
+    ]
 
     def __init__(
         self,
@@ -165,7 +199,17 @@ class FlowTuiApp(App[None]):
         self.saved_and_exited = False
 
     def on_mount(self) -> None:
+        install_cadrumo_themes(self)
         self.push_screen(QuestionScreen())
+
+    def action_toggle_appearance(self) -> None:
+        """Flip between the light and dark appearance without leaving the flow.
+
+        The engine state is appearance-blind, so nothing re-renders beyond
+        the stylesheet: the operator keeps their cursor, answers, and
+        scroll position across the switch.
+        """
+        toggle_appearance(self)
 
     # ── engine access for screens ───────────────────────────────────────
 

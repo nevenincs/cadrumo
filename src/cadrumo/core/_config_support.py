@@ -50,6 +50,21 @@ class SecretStoreBackend(StrEnum):
     UNSECURED = "unsecured"
 
 
+class TuiAppearance(StrEnum):
+    """Supported appearances for the full-screen terminal surfaces.
+
+    :class:`~core.config.Settings` exposes this closed set through
+    ``cadrumo_tui_appearance`` so the profile manager, the paged flow
+    frontend, and the read-only status page share one spelling for the
+    operator's light/dark preference. ``AUTO`` defers to the host terminal
+    rather than pinning an appearance.
+    """
+
+    AUTO = "auto"
+    LIGHT = "light"
+    DARK = "dark"
+
+
 def unwrap_optional_secret(value: SecretStr | None) -> str:
     """Return the cleartext of an optional :class:`pydantic.SecretStr`.
 

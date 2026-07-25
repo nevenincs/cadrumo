@@ -56,6 +56,7 @@ from ._config_support import (
     SecretStoreBackend,
     StorageRouteClassification,
     StorageRouteKind,  # noqa: F401 - public re-export from cadrumo.core.config
+    TuiAppearance,
     unwrap_optional_secret,  # noqa: F401 - public re-export from cadrumo.core.config
 )
 from ._config_support import coerce_output_language_setting as _coerce_output_language_setting
@@ -320,6 +321,14 @@ class Settings(CadrumoMcpServingSettings):
     cadrumo_log_level: str = Field(
         default="",
         description="Optional default CLI log level override: quiet, default, verbose, or debug",
+    )
+    cadrumo_tui_appearance: TuiAppearance = Field(
+        default=TuiAppearance.AUTO,
+        description=(
+            "Appearance for the full-screen terminal surfaces. "
+            "auto = follow the host terminal. light = the warm-paper appearance. "
+            "dark = the low-light appearance."
+        ),
     )
     # ── Multilingual i18n ───────────────────────────────────────────────────
     cadrumo_output_language: Annotated[

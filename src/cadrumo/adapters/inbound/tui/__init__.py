@@ -21,8 +21,27 @@ from ._status_screen import (
     StatusProfileRow,
     StatusRecoveryView,
 )
+from ._theme import (
+    BASE_CSS,
+    CADRUMO_DARK,
+    CADRUMO_DARK_THEME_NAME,
+    CADRUMO_LIGHT,
+    CADRUMO_LIGHT_THEME_NAME,
+    CADRUMO_THEMES,
+    CONTENT_MAX_WIDTH,
+    install_cadrumo_themes,
+    resolve_theme_name,
+    toggle_appearance,
+)
 
 __all__ = [
+    "BASE_CSS",
+    "CADRUMO_DARK",
+    "CADRUMO_DARK_THEME_NAME",
+    "CADRUMO_LIGHT",
+    "CADRUMO_LIGHT_THEME_NAME",
+    "CADRUMO_THEMES",
+    "CONTENT_MAX_WIDTH",
     "FlowTuiApp",
     "StatusApp",
     "StatusAuthView",
@@ -30,6 +49,9 @@ __all__ = [
     "StatusPageData",
     "StatusProfileRow",
     "StatusRecoveryView",
+    "install_cadrumo_themes",
+    "resolve_theme_name",
     "run_flow_tui",
     "select_flow_frontend",
+    "toggle_appearance",
 ]

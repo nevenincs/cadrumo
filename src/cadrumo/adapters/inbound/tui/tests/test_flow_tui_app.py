@@ -25,6 +25,7 @@ from typing import TYPE_CHECKING
 import pytest
 import yaml
 from pydantic import BaseModel
+from textual.containers import VerticalScroll
 from textual.widgets import Button, DataTable, Input, Label, OptionList, ProgressBar, Static
 
 from .....application.flows import (
@@ -40,6 +41,7 @@ from .....application.flows import (
     page_status,
     start_flow,
 )
+from .....core.config import TuiAppearance
 from .....core.flows import (
     CheckpointAvailability,
     CopyRefKind,
@@ -54,7 +56,13 @@ from .....core.i18n import (
     tr,
 )
 from .....tests.locales_root_fixture import locales_root_scope
-from .. import FlowTuiApp, run_flow_tui
+from .. import (
+    CADRUMO_DARK_THEME_NAME,
+    CADRUMO_LIGHT_THEME_NAME,
+    FlowTuiApp,
+    install_cadrumo_themes,
+    run_flow_tui,
+)
 
 pytestmark = [
     pytest.mark.unit,
@@ -1123,3 +1131,65 @@ def test_run_flow_tui_raises_on_a_run_abandoned_without_submit_or_save(
 
     assert completed.returncode == 0, completed.stdout + completed.stderr
     assert "REFUSED_ABANDONED_RUN" in completed.stdout
+
+
+# ── appearance ──────────────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("appearance", "expected_theme"),
+    [
+        (TuiAppearance.LIGHT, CADRUMO_LIGHT_THEME_NAME),
+        (TuiAppearance.DARK, CADRUMO_DARK_THEME_NAME),
+    ],
+)
+async def test_flow_mounts_and_activates_the_configured_appearance(
+    appearance: TuiAppearance,
+    expected_theme: str,
+) -> None:
+    """The configured appearance is the one the mounted app actually runs.
+
+    Mounting is the real assertion: Textual resolves the whole stylesheet
+    against the active theme's tokens at mount, so a rule naming a token
+    the theme does not define fails here rather than at the operator's
+    terminal. Driving both appearances therefore proves both token sets
+    satisfy every rule the flow surfaces declare.
+    """
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        install_cadrumo_themes(app, appearance=appearance)
+        await pilot.pause()
+        assert app.theme == expected_theme
+        # The body lives on the pushed QuestionScreen, not the default
+        # screen, and is the scrollable container rather than a Static.
+        assert app.screen.query_one("#page-body", VerticalScroll)
+
+
+@pytest.mark.asyncio
+async def test_f3_toggles_the_appearance_and_leaves_the_flow_state_untouched() -> None:
+    """The appearance switch is presentation-only: no engine transition.
+
+    F2 remains the review intent; the appearance toggle deliberately took
+    F3 so it shadows nothing. The operator keeps their cursor and their
+    committed answers across the switch.
+    """
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        install_cadrumo_themes(app, appearance=TuiAppearance.DARK)
+        await pilot.press(*"ada")
+        await pilot.click("#btn-next")
+        cursor_before = app.state.cursor
+        answers_before = dict(app.state.answers)
+
+        await pilot.press("f3")
+        await pilot.pause()
+        assert app.theme == CADRUMO_LIGHT_THEME_NAME
+
+        await pilot.press("f3")
+        await pilot.pause()
+        assert app.theme == CADRUMO_DARK_THEME_NAME
+
+        assert app.state.cursor == cursor_before
+        assert dict(app.state.answers) == answers_before
+        assert not _on_review(app), "F3 must not trigger the F2 review intent"
