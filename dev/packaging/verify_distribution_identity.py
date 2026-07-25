@@ -468,6 +468,24 @@ class ModelFacingDescriptionCheck:
     surfaces: tuple[str, ...]
     count: int
     surface_counts: dict[str, int]
+    argument_nodes_by_owner: dict[str, int]
+    """Per-owner argument-node counts, so a digest change is DECOMPOSABLE.
+
+    The four surface totals answer "arguments moved by two"; they cannot answer
+    "which tools". That gap cost a four-message investigation whose conclusion
+    was that the answer is unrecoverable: the reference it had to be measured
+    against preserved a total and not its composition, so no later diff could
+    reach back across it. Emitting the map means the NEXT delta names its tools
+    by subtraction instead of by archaeology over commit diffs.
+
+    Keyed by the OWNING entity, which is not always a tool: a tool argument is
+    ``<tool>:inputSchema.properties.<name>`` and owns as ``<tool>``, while a
+    prompt argument is ``prompt:<prompt-name>:<arg>`` and owns as
+    ``prompt:<prompt-name>``. Splitting on the first colon alone collapses every
+    prompt argument under a single bogus ``prompt`` key -- a map that sums
+    correctly and decomposes nothing.
+    """
+
     sha256: str
     expected_sha256: str
     nonempty: bool
@@ -1450,6 +1468,15 @@ def _model_facing_description_check(
     digest = hashlib.sha256(canonical).hexdigest()
     surfaces = ("argument", "prompt", "resource", "tool")
     surface_counts = {surface: sum(row["surface"] == surface for row in rows) for surface in surfaces}
+    argument_nodes_by_owner: dict[str, int] = {}
+    for row in rows:
+        if row["surface"] != "argument":
+            continue
+        segments = row["identifier"].split(":")
+        # A tool argument's second segment is its schema path; a prompt
+        # argument's second segment is the prompt name and must stay in the key.
+        owner = segments[0] if len(segments) < 3 else ":".join(segments[:2])
+        argument_nodes_by_owner[owner] = argument_nodes_by_owner.get(owner, 0) + 1
     nonempty = all(row["identifier"].strip() and row["description"].strip() for row in rows)
     language_labels_absent = all(_LANGUAGE_LABEL_PATTERN.search(row["description"]) is None for row in rows)
     complete = all(surface_counts[surface] > 0 for surface in surfaces)
@@ -1458,6 +1485,7 @@ def _model_facing_description_check(
         surfaces=_MODEL_FACING_DESCRIPTION_SURFACES,
         count=len(rows),
         surface_counts=surface_counts,
+        argument_nodes_by_owner=dict(sorted(argument_nodes_by_owner.items())),
         sha256=digest,
         expected_sha256=_EXPECTED_MODEL_FACING_DESCRIPTION_SHA256,
         nonempty=nonempty,

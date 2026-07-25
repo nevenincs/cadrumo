@@ -252,6 +252,7 @@ def _model_facing_check(
         surfaces=("MCP tool descriptions",),
         count=sum(counts.values()),
         surface_counts=counts,
+        argument_nodes_by_owner={"cadrumo_probe": counts.get("argument", 0)},
         sha256=sha256,
         expected_sha256="a" * 64,
         nonempty=nonempty,
@@ -307,3 +308,43 @@ def test_each_integrity_failure_contributes_its_own_line() -> None:
     assert len(empty_surface) == 1
     assert "tool" in empty_surface[0]
     assert len({blank[0], labelled[0], empty_surface[0]}) == 3
+
+
+def test_the_per_owner_argument_map_decomposes_the_argument_total() -> None:
+    """The map must be present and must SUM to the total it decomposes.
+
+    The four surface totals can say "arguments moved by two" and cannot say
+    which entity moved. That gap cost a four-message investigation whose answer
+    was that it is unrecoverable: the reference the delta had to be measured
+    against preserved a total and not its composition, so no later diff could
+    reach back across it. A map that silently drifted from its own total would
+    reintroduce exactly that.
+    """
+    report = verify_distribution_identity()
+    check = report.model_facing_description_check
+    by_owner = check.argument_nodes_by_owner
+
+    assert by_owner, "the per-owner argument map must not be empty"
+    assert sum(by_owner.values()) == check.surface_counts["argument"], (
+        f"map sums to {sum(by_owner.values())} but the argument surface reports {check.surface_counts['argument']}"
+    )
+    assert all(count > 0 for count in by_owner.values())
+
+
+def test_prompt_arguments_decompose_per_prompt_not_under_one_key() -> None:
+    """Prompt arguments must key per prompt, never collapse under a bare ``prompt``.
+
+    A prompt argument identifier is ``prompt:<prompt-name>:<arg>``, so splitting
+    on the first colon alone buckets every prompt argument under one key. That
+    map sums correctly and decomposes nothing, which is the exact failure this
+    field exists to prevent -- the sum invariant cannot catch it, so this does.
+    """
+    report = verify_distribution_identity()
+    by_owner = report.model_facing_description_check.argument_nodes_by_owner
+
+    assert "prompt" not in by_owner, "prompt arguments collapsed under a single bogus key"
+    prompt_owners = [key for key in by_owner if key.startswith("prompt:")]
+    assert len(prompt_owners) > 1, f"expected many prompt owners, got {prompt_owners}"
+    assert all(key.count(":") == 1 for key in prompt_owners), [k for k in prompt_owners if k.count(":") != 1]
+    tool_owners = [key for key in by_owner if not key.startswith("prompt:")]
+    assert all(":" not in key for key in tool_owners), [k for k in tool_owners if ":" in k]
