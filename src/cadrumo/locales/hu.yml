@@ -6498,6 +6498,8 @@ flows:
       abandoned: Nem történt változás.
       auth_provider: Azonosítás módja az AEAT felé
       censal_pull: Censusadatok lekérése (036)
+      censal_pull_contested: 'A benyújtott 036 eltér az Ön bevallásától itt: %{paths}.
+        Semmi nem került felülírásra.'
       censal_pull_done: '%{count} censusadat származik %{filings} benyújtott 036-os
         bevallásból.'
       censal_pull_empty: Nem található benyújtott 036-os bevallás a vizsgált időszakban.

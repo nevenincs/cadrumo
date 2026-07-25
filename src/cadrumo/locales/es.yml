@@ -6650,6 +6650,8 @@ flows:
       abandoned: Sin cambios.
       auth_provider: Forma de identificación ante la AEAT
       censal_pull: Traer datos censales (036)
+      censal_pull_contested: 'El 036 presentado discrepa de lo que usted declaró en:
+        %{paths}. No se ha sobrescrito nada.'
       censal_pull_done: '%{count} datos censales tomados de %{filings} declaraciones
         036 presentadas.'
       censal_pull_empty: No consta ninguna declaración 036 presentada en el periodo

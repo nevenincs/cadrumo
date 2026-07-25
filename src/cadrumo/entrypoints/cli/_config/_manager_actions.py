@@ -63,7 +63,7 @@ def _run_censal_pull() -> ManagerActionOutcome:
 
     from ....adapters.inbound.tui import ManagerActionOutcome
     from ....application.live._censo_036_pull import censo_facts_from_filed_036, pull_filed_036
-    from ....application.user_profile import set_active_field
+    from ....application.user_profile import set_active_fields
     from ....application.workflow import workflow_state_repository
     from ....core import require_active_bucket_id
     from ....core.time import now
@@ -86,12 +86,49 @@ def _run_censal_pull() -> ManagerActionOutcome:
         # enrolled long ago may have nothing in the window, and stamping a
         # default would invent an enrolment they never declared.
         return ManagerActionOutcome(message=tr("flows.manager.action.censal_pull_empty"))
-    for fact in facts:
-        workflow_state_repository().update(lambda state, fact=fact: set_active_field(state, fact))
+
+    adopted, contested = _split_against_the_record(facts)
+    if adopted:
+        # One atomic write through the plural door, not a loop of single
+        # ones: a censal state and the date it came from are one fact, and
+        # a partial write would leave a status with no filing date behind it.
+        workflow_state_repository().update(lambda state: set_active_fields(state, adopted))
+    if contested:
+        return ManagerActionOutcome(
+            message=tr("flows.manager.action.censal_pull_contested", paths=", ".join(contested)),
+            overview=build_active_profile_overview(),
+        )
     return ManagerActionOutcome(
-        message=tr("flows.manager.action.censal_pull_done", count=len(facts), filings=len(filings)),
+        message=tr("flows.manager.action.censal_pull_done", count=len(adopted), filings=len(filings)),
         overview=build_active_profile_overview(),
     )
+
+
+def _split_against_the_record(facts):
+    """Split pulled facts into those to adopt and those the operator already answered.
+
+    A filed declaration never silently overwrites what the operator
+    declared themselves. Where the record is blank the pulled value fills
+    it in; where the record already says something different, the pull
+    reports the disagreement and writes nothing at that path, because
+    which of the two is right is the operators call and not this actions.
+
+    This is the conservative half of the cotejo contract. The full one
+    records each disagreement as a `censo.divergencia.{n}.*` row through
+    `apply_cotejo`, whose provenance token names a G313 certificate; a
+    filed 036 is a different artefact and would need its own token before
+    those rows could honestly claim it as their source.
+    """
+    from ....application.user_profile import ProfileRepository
+    from ....core import require_active_bucket_id
+
+    record = ProfileRepository().load(require_active_bucket_id()).record
+    on_record = {fact.path: str(fact.value) for fact in record.facts if fact.value is not None}
+    adopted = tuple(
+        fact for fact in facts if on_record.get(fact.path, str(fact.value)) == str(fact.value)
+    )
+    contested = tuple(fact.path for fact in facts if fact not in adopted)
+    return adopted, contested
 
 
 def export_action() -> ManagerAction:
