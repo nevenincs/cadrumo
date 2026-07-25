@@ -124,6 +124,50 @@ def _literal_ids(tree: ast.Module) -> set[int]:
     return ids
 
 
+_SKIP_FILES: frozenset[str] = frozenset({"core/_modelo.py"})
+"""The enum's own declaration module, where the code strings are the values."""
+
+
+def bare_modelo_code_offenders(relative: str, tree: ast.Module) -> list[str]:
+    """Return ``path:line`` offender strings for one module's bare modelo codes.
+
+    Pure over ``(relative path, tree)`` so the discrimination tests below can
+    feed it a synthetic violating module and prove it fires. Allowlisted
+    ``(path, code)`` pairs are excluded here; the caller reconciles staleness.
+    """
+    if relative in _SKIP_FILES:
+        return []
+    excluded = _docstring_const_ids(tree) | _decimal_arg_ids(tree) | _literal_ids(tree)
+    offenders: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
+            continue
+        if node.value not in _CODES or id(node) in excluded:
+            continue
+        if (relative, node.value) in _ALLOWLIST:
+            continue
+        offenders.append(
+            f'src/cadrumo/{relative}:{node.lineno}: bare modelo code "{node.value}"; use Modelo.M{node.value}'
+        )
+    return offenders
+
+
+def _allowlist_keys_present(relative: str, tree: ast.Module) -> set[tuple[str, str]]:
+    """Return the allowlist keys this module's source actually still carries."""
+    if relative in _SKIP_FILES:
+        return set()
+    excluded = _docstring_const_ids(tree) | _decimal_arg_ids(tree) | _literal_ids(tree)
+    return {
+        (relative, node.value)
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Constant)
+        and isinstance(node.value, str)
+        and node.value in _CODES
+        and id(node) not in excluded
+        and (relative, node.value) in _ALLOWLIST
+    }
+
+
 def test_no_bare_modelo_code_strings_in_production_identifiers(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """No production module carries a bare modelo-code string where ``Modelo`` belongs.
 
@@ -131,28 +175,14 @@ def test_no_bare_modelo_code_strings_in_production_identifiers(source_tree_ast: 
     and the worklist is recomputed from each module's AST on every run, so the
     gate ratchets — it cannot pass with a stale baseline.
     """
-    skip_files = {"core/_modelo.py"}
     offenders: list[str] = []
     stale_allowlist: set[tuple[str, str]] = set(_ALLOWLIST)
 
     for path, tree in production_ast_items(source_tree_ast):
         assert isinstance(tree, ast.Module), f"Expected a module AST for {path}, got {type(tree).__name__}"
         rel = aeat_relative(path)
-        if rel in skip_files:
-            continue
-        excluded = _docstring_const_ids(tree) | _decimal_arg_ids(tree) | _literal_ids(tree)
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
-                continue
-            if node.value not in _CODES or id(node) in excluded:
-                continue
-            key = (rel, node.value)
-            if key in _ALLOWLIST:
-                stale_allowlist.discard(key)
-                continue
-            offenders.append(
-                f'src/cadrumo/{rel}:{node.lineno}: bare modelo code "{node.value}"; use Modelo.M{node.value}'
-            )
+        offenders.extend(bare_modelo_code_offenders(rel, tree))
+        stale_allowlist -= _allowlist_keys_present(rel, tree)
 
     assert not offenders, (
         "Bare modelo-code string literals found in production identifier positions; "
@@ -161,3 +191,68 @@ def test_no_bare_modelo_code_strings_in_production_identifiers(source_tree_ast: 
     assert not stale_allowlist, "Stale _ALLOWLIST entries no longer present in the source; remove them:\n" + "\n".join(
         f"  {path}: {code}" for path, code in sorted(stale_allowlist)
     )
+
+
+@pytest.mark.parametrize(
+    ("source", "expected_offenders"),
+    (
+        pytest.param('if unit.modelo != "303":\n    raise ValueError(unit)\n', 1, id="comparison"),
+        pytest.param('ROUTES = {"347": handle_347, "349": handle_349}\n', 2, id="dict-keys"),
+        pytest.param('register(modelo="130")\n', 1, id="call-keyword-argument"),
+        pytest.param('SUPPORTED = frozenset({"100"})\n', 1, id="set-member"),
+        pytest.param('DEFAULT_MODELO: str = "390"\n', 1, id="annotated-assignment-without-literal"),
+    ),
+)
+def test_detector_fires_on_a_planted_bare_modelo_code(source: str, expected_offenders: int) -> None:
+    """Anti-tautology proof: the detector really catches a planted violation.
+
+    A gate whose only assertion is ``offenders == []`` against a clean tree is
+    indistinguishable from a gate that always passes. Each case plants a bare
+    code in a real identifier position and asserts the live detector fires.
+    Sources are parsed in memory: no violation enters the tree.
+    """
+    offenders = bare_modelo_code_offenders("application/synthetic/_planted.py", ast.parse(source))
+
+    assert len(offenders) == expected_offenders, f"detector missed the planted violation in:\n{source}"
+    assert all("use Modelo.M" in offender for offender in offenders)
+
+
+@pytest.mark.parametrize(
+    "source",
+    (
+        pytest.param('"""Handles modelo 303 filings."""\n', id="module-docstring"),
+        pytest.param('from decimal import Decimal\n\nPERCENT = Decimal("100")\n', id="decimal-scale"),
+        pytest.param(
+            'from typing import Literal\n\ndef run(modelo: Literal["303"]) -> None:\n    del modelo\n',
+            id="literal-annotation",
+        ),
+        pytest.param(
+            'from typing import Literal\n\nmodelo: Literal["100"] = "100"\n',
+            id="literal-pinned-default",
+        ),
+        pytest.param(
+            "from ... import Modelo\n\nif unit.modelo != Modelo.M303:\n    raise ValueError(unit)\n", id="enum-member"
+        ),
+    ),
+)
+def test_detector_ignores_the_structurally_excluded_shapes(source: str) -> None:
+    """The documented exclusions must hold, or authors route around the gate by noise.
+
+    Each shape is a non-identifier occurrence the gate excludes structurally
+    rather than by allowlist; a regression here would flood the gate with false
+    positives and pressure real entries into ``_ALLOWLIST``.
+    """
+    assert bare_modelo_code_offenders("application/synthetic/_clean.py", ast.parse(source)) == []
+
+
+def test_detector_honours_the_allowlist_only_for_its_own_module() -> None:
+    """An allowlist entry is keyed by ``(path, code)``, never by code alone.
+
+    Were the key just the code, one documented false positive would silence
+    that code across the whole tree.
+    """
+    allowlisted_path, allowlisted_code = next(iter(_ALLOWLIST))
+    source = f'MODELO = "{allowlisted_code}"\n'
+
+    assert bare_modelo_code_offenders(allowlisted_path, ast.parse(source)) == []
+    assert len(bare_modelo_code_offenders("application/elsewhere/_x.py", ast.parse(source))) == 1

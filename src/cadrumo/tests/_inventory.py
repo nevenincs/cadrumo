@@ -284,6 +284,96 @@ def leaf_name(node: ast.AST) -> str:
     return name.rsplit(".", 1)[-1] if name else ""
 
 
+_ALIAS_RESOLUTION_PASSES = 4
+"""Fixed-point bound for folding assignment aliases into an import binding map.
+
+Each pass resolves one further link of an ``a = date; b = a; c = b`` rebinding
+chain. Four passes cover every chain length observed in the tree while keeping
+the walk bounded on a pathological source.
+"""
+
+
+def import_binding_map(tree: ast.AST) -> dict[str, str]:
+    """Return local name -> absolute origin for every import binding in *tree*.
+
+    Structural gates that forbid a call site must key off what a name *is*,
+    not how it happens to be spelled locally: ``from datetime import date as
+    _date`` binds the same class as a bare ``from datetime import date``, and a
+    gate matching only the bare spelling reports green on the aliased form.
+    This map is the resolution substrate for :func:`resolve_dotted_origin`.
+
+    Every alias spelling is covered — ``import x``, ``import x as y``,
+    ``import x.y`` (which binds the root ``x``), ``from x import y``, and
+    ``from x import y as z`` — at module level and inside functions alike,
+    since a function-local import binds a name that call sites in that
+    function really use. Assignment rebindings (``D = date``) are then folded
+    in to a fixed point, so a handle passed through a local variable still
+    resolves to its origin.
+
+    Relative imports are skipped: their origin depends on the importing
+    module's own package position, which a single-tree walk cannot know.
+    Callers needing first-party resolution must supply the consumer module's
+    dotted name themselves.
+    """
+    bindings: dict[str, str] = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.asname:
+                    bindings[alias.asname] = alias.name
+                else:
+                    root = alias.name.split(".", 1)[0]
+                    bindings[root] = root
+        elif isinstance(node, ast.ImportFrom) and node.module and not node.level:
+            for alias in node.names:
+                bindings[alias.asname or alias.name] = f"{node.module}.{alias.name}"
+
+    for _ in range(_ALIAS_RESOLUTION_PASSES):
+        if not _fold_assignment_aliases(tree, bindings):
+            break
+    return bindings
+
+
+def _fold_assignment_aliases(tree: ast.AST, bindings: dict[str, str]) -> bool:
+    """Record one pass of ``target = <already-resolvable expr>`` rebindings."""
+    changed = False
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            targets, value = node.targets, node.value
+        elif isinstance(node, ast.AnnAssign) and node.value is not None:
+            targets, value = [node.target], node.value
+        else:
+            continue
+        name = qualified_name(value)
+        if not name:
+            continue
+        origin = resolve_dotted_origin(name, bindings)
+        if origin == name:
+            continue
+        for target in targets:
+            if isinstance(target, ast.Name) and bindings.get(target.id) != origin:
+                bindings[target.id] = origin
+                changed = True
+    return changed
+
+
+def resolve_dotted_origin(name: str, bindings: Mapping[str, str]) -> str:
+    """Return *name* with its head segment resolved through import *bindings*.
+
+    ``_date.fromisoformat`` against ``{"_date": "datetime.date"}`` resolves to
+    ``datetime.date.fromisoformat``, collapsing every local spelling of one
+    origin onto a single comparable string. An unbound head is returned
+    unchanged, so a caller can seed defaults for the names it means to govern.
+    """
+    if not name:
+        return name
+    head, _, tail = name.partition(".")
+    origin = bindings.get(head)
+    if origin is None:
+        return name
+    return f"{origin}.{tail}" if tail else origin
+
+
 def has_marker_on_line_or_adjacent_comment_block(lines: Sequence[str], lineno: int, marker: str) -> bool:
     """Return True when *marker* appears on *lineno* or its leading comment block."""
     idx = lineno - 1

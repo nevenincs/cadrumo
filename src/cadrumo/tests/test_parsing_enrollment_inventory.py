@@ -4,8 +4,13 @@ Rule
 ----
 Production modules under ``src/cadrumo/`` must not contain:
 
-1. ``date.fromisoformat(`` — direct bare invocations bypassing the canonical
-   ``_parse_iso8601_date`` or ``_parse_ddmmyyyy_date`` helpers.
+1. ``date.fromisoformat(`` — invocations bypassing the canonical
+   ``_parse_iso8601_date`` or ``_parse_ddmmyyyy_date`` helpers, under *any*
+   local spelling. Detection resolves each call's callee through the module's
+   own import bindings, so an import alias cannot hide the call: the earlier
+   spelling-matched check demanded a literal ``date.fromisoformat`` callee and
+   therefore reported green over a real ``_date.fromisoformat`` call site
+   reached through ``from datetime import date as _date``.
 2. ``value.lower() == "true"`` or ``value.lower() == "false"`` — inline boolean
    parsing that bypasses the canonical ``_parse_bool`` helper.
 
@@ -40,7 +45,14 @@ from pathlib import Path
 
 import pytest
 
-from ._inventory import SRC_CADRUMO, production_ast_items, repo_relative
+from ._inventory import (
+    SRC_CADRUMO,
+    import_binding_map,
+    production_ast_items,
+    qualified_name,
+    repo_relative,
+    resolve_dotted_origin,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -80,18 +92,52 @@ def _is_excluded(path: Path) -> bool:
 # ---------------------------------------------------------------------------
 
 
+_DATE_FROMISOFORMAT_ORIGIN = "datetime.date.fromisoformat"
+"""The single origin every in-scope spelling must resolve to."""
+
+_UNREBOUND_DATETIME_DEFAULTS: Mapping[str, str] = {
+    "date": "datetime.date",
+    "datetime": "datetime",
+}
+"""Seed origins for the stdlib names a module has not rebound.
+
+A module reading ``date.fromisoformat`` without a resolvable ``from datetime
+import date`` in this tree (a first-party re-export, a ``TYPE_CHECKING``-only
+import) still means the date class, so the bare spelling stays in scope and
+alias awareness cannot narrow what the gate governs. A module that *does*
+rebind the name — ``from datetime import datetime`` making ``datetime`` the
+class, not the module — keeps its own binding and is judged on that.
+"""
+
+
+def _datetime_binding_map(tree: ast.AST) -> dict[str, str]:
+    """Return the module's import bindings seeded with the unrebound stdlib defaults."""
+    bindings = import_binding_map(tree)
+    for name, origin in _UNREBOUND_DATETIME_DEFAULTS.items():
+        bindings.setdefault(name, origin)
+    return bindings
+
+
 def _fromisoformat_call_linenos(tree: ast.AST) -> Iterator[int]:
-    """Yield line numbers of ``date.fromisoformat(...)`` call expressions."""
+    """Yield line numbers of ``date.fromisoformat(...)`` calls under any local spelling.
+
+    Import-alias aware by resolution rather than by spelling: every call's
+    dotted callee is resolved through the module's own import bindings and
+    compared against the one canonical origin, so ``date.fromisoformat``,
+    ``_date.fromisoformat`` (``from datetime import date as _date``),
+    ``dt.date.fromisoformat`` (``import datetime as dt``),
+    ``datetime.date.fromisoformat``, and a handle rebound through a local
+    variable all collapse onto the same match.
+
+    The naive shape this replaces required the callee to be spelled literally
+    ``date.fromisoformat``, so any import alias walked straight past it and the
+    gate reported green over a live call site.
+    """
+    bindings = _datetime_binding_map(tree)
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call):
             continue
-        func = node.func
-        if (
-            isinstance(func, ast.Attribute)
-            and func.attr == "fromisoformat"
-            and isinstance(func.value, ast.Name)
-            and func.value.id == "date"
-        ):
+        if resolve_dotted_origin(qualified_name(node.func), bindings) == _DATE_FROMISOFORMAT_ORIGIN:
             yield node.lineno
 
 
@@ -179,6 +225,98 @@ def test_no_bare_date_fromisoformat(source_tree_ast: Mapping[Path, ast.AST]) -> 
             f"{len(violations)} bare date.fromisoformat() call(s) found in production code:\n  {joined}\n\n"
             "Replace with _parse_iso8601_date() or _parse_ddmmyyyy_date() from cadrumo.core.parsing._dates.",
         )
+
+
+@pytest.mark.parametrize(
+    ("source", "expected_hits"),
+    (
+        pytest.param(
+            "from datetime import date\n\nd = date.fromisoformat(raw)\n",
+            1,
+            id="bare-date-import",
+        ),
+        pytest.param(
+            "from datetime import date as _date\n\nd = _date.fromisoformat(raw)\n",
+            1,
+            id="renamed-date-import",
+        ),
+        pytest.param(
+            "import datetime as dt\n\nd = dt.date.fromisoformat(raw)\n",
+            1,
+            id="renamed-datetime-module",
+        ),
+        pytest.param(
+            "import datetime\n\nd = datetime.date.fromisoformat(raw)\n",
+            1,
+            id="qualified-datetime-module",
+        ),
+        pytest.param(
+            "import datetime.timezone\n\nd = datetime.date.fromisoformat(raw)\n",
+            1,
+            id="submodule-import-binds-root",
+        ),
+        pytest.param(
+            "from datetime import date as _date\n\n_iso = _date.fromisoformat\n\nd = _iso(raw)\n",
+            # The assignment itself is not a call; only the rebound invocation is.
+            1,
+            id="handle-rebound-through-a-variable",
+        ),
+        pytest.param(
+            "def parse(raw):\n    from datetime import date as _d\n\n    return _d.fromisoformat(raw)\n",
+            1,
+            id="function-local-aliased-import",
+        ),
+        pytest.param(
+            "from datetime import date as _date\n\na = _date\nb = a\n\nd = b.fromisoformat(raw)\n",
+            1,
+            id="rebinding-chain",
+        ),
+    ),
+)
+def test_fromisoformat_detector_catches_every_alias_spelling(source: str, expected_hits: int) -> None:
+    """Anti-tautology proof: a planted violation is caught under every import alias.
+
+    A structural gate with no demonstration that it *can* fail is
+    indistinguishable from one that always passes. Each case plants the
+    forbidden call in a spelling the earlier literal-``date`` check walked
+    past, and asserts the live detector fires. Sources are parsed in memory:
+    no violation is committed to the tree.
+    """
+    hits = list(_fromisoformat_call_linenos(ast.parse(source)))
+
+    assert len(hits) == expected_hits, f"detector missed the planted violation in:\n{source}"
+
+
+@pytest.mark.parametrize(
+    "source",
+    (
+        pytest.param(
+            "from datetime import datetime\n\nd = datetime.fromisoformat(raw)\n",
+            id="datetime-class-is-out-of-scope",
+        ),
+        pytest.param(
+            "from ..core.parsing import parse_iso8601_date\n\nd = parse_iso8601_date(raw)\n",
+            id="canonical-helper-call",
+        ),
+        pytest.param(
+            "from datetime import datetime as date\n\nd = date.fromisoformat(raw)\n",
+            id="date-name-rebound-to-the-datetime-class",
+        ),
+        pytest.param(
+            "class Custom:\n    @staticmethod\n    def fromisoformat(raw):\n        return raw\n\n"
+            "d = Custom.fromisoformat(raw)\n",
+            id="unrelated-fromisoformat-owner",
+        ),
+    ),
+)
+def test_fromisoformat_detector_ignores_out_of_scope_shapes(source: str) -> None:
+    """The gate governs the date class only; alias awareness must not widen its reach.
+
+    ``datetime.fromisoformat`` is a different parser with a different canonical
+    owner, and a local name rebound to the ``datetime`` class is judged on that
+    binding rather than on the letters ``date``.
+    """
+    assert list(_fromisoformat_call_linenos(ast.parse(source))) == []
 
 
 def test_no_inline_bool_lower_comparison(source_tree_ast: Mapping[Path, ast.AST]) -> None:

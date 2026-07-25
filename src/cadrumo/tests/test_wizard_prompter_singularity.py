@@ -17,7 +17,7 @@ and drifted exactly where a copy drifts: it took no injectable input/output
 traceback instead of a translated refusal. The copy was found by accident.
 Nothing structural prevented it, and nothing prevented a fourth.
 
-This gate is that structural prevention. Two rules, recomputed from the
+This gate is that structural prevention. Three rules, recomputed from the
 real ``ast`` module every run against the production tree (test modules
 excluded), with NO stored baseline and NO per-violation allowlist:
 
@@ -26,17 +26,40 @@ excluded), with NO stored baseline and NO per-violation allowlist:
    :data:`CANONICAL_PROMPT_MODULES`. Type-only imports under
    ``TYPE_CHECKING`` are exempt: they annotate, they never construct a
    prompt.
-2. No class outside the sanctioned surfaces declares an ``ask``/``ask_text``
+2. No module outside the sanctioned surfaces imports a prompter-library
+   handle *indirectly*, through a first-party module that re-exports one.
+   Rule 1 reads import statements for a third-party root, so a rival
+   reaching questionary as ``from ..flows._line_frontend import
+   questionary`` names only a first-party module and walks straight past
+   it. This rule resolves the re-export instead of matching the spelling.
+3. No class outside the sanctioned surfaces declares an ``ask``/``ask_text``
    method while its module carries a questionary/prompt_toolkit
-   dependency.
+   dependency — where "carries" is likewise alias- and re-export-aware, so
+   ``from ._reexports import questionary as q`` counts.
 
-Rule 1 makes a hand-copied prompter unable to reach a live terminal; rule 2
-is defence in depth for a prompter assembled from a re-exported or
-indirectly-bound questionary handle that rule 1's import walk would miss.
+Rule 1 makes a hand-copied prompter unable to reach a live terminal, rule 2
+closes the indirect route around it, and rule 3 is defence in depth
+catching a prompter by its silhouette rather than by its imports.
 
-The detectors are pure ``(path, tree) -> list[str]`` functions so the
-discrimination tests below can feed each one a synthetic violating module
-and prove it fires. A gate that cannot fail is worse than no gate.
+Transitive closure and its residual limits
+------------------------------------------
+Rule 2 closes the re-export graph transitively (:func:`prompter_export_map`),
+not to one hop: a handle laundered through a chain of first-party
+re-exports still resolves to its library. Two shapes remain invisible to
+any AST pass and are stated here rather than papered over:
+
+* A module string built at runtime and fed to ``importlib.import_module``
+  is not an import statement; no static walk can see its target. This is a
+  documented structural limit of AST scanning, and the reason the
+  ``dynamic-import-targets-the-public-facade`` discipline is author-side.
+* A module-level ``__getattr__`` (PEP 562) that serves a prompter handle on
+  attribute access binds no name an import statement declares, so a facade
+  built that way is outside the closure. No production facade in this tree
+  does so; rule 3's silhouette check is the backstop if one appears.
+
+The detectors are pure functions over ``(display path, module path, tree)``
+so the discrimination tests below can feed each one a synthetic violating
+module and prove it fires. A gate that cannot fail is worse than no gate.
 """
 
 from __future__ import annotations
@@ -46,12 +69,12 @@ from typing import TYPE_CHECKING, override
 
 import pytest
 
-from ._inventory import aeat_relative, production_ast_items, repo_relative
+from ._inventory import SRC_CADRUMO, aeat_relative, module_name, production_ast_items, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Iterable, Mapping
     from pathlib import Path
 
 
@@ -103,12 +126,15 @@ class _RuntimeImportWalker(ast.NodeVisitor):
     def __init__(self) -> None:
         self._type_checking_depth = 0
         self.runtime_imports: list[tuple[int, str]] = []
+        self.runtime_import_from: list[ast.ImportFrom] = []
 
     def _record(self, node: ast.Import | ast.ImportFrom) -> None:
         if self._type_checking_depth:
             return
         for root in _imported_roots(node) & PROMPTER_LIBRARIES:
             self.runtime_imports.append((node.lineno, root))
+        if isinstance(node, ast.ImportFrom):
+            self.runtime_import_from.append(node)
 
     @override
     def visit_Import(self, node: ast.Import) -> None:
@@ -144,26 +170,202 @@ def prompter_library_import_violations(display_path: str, tree: ast.AST, *, is_c
     ]
 
 
-def _module_names_a_prompter_library(tree: ast.AST) -> bool:
-    """Return True when the module imports or names questionary/prompt_toolkit anywhere.
+# --------------------------------------------------------------------------
+# Rule 2: the indirect route around rule 1's third-party-root import walk.
+# --------------------------------------------------------------------------
 
-    Deliberately broader than the rule-1 walk: it counts ``TYPE_CHECKING``
-    imports and bare name references, so a class holding a questionary handle
-    bound indirectly (a re-export, a module attribute) still registers as
-    carrying the dependency.
+
+def _package_base(path: Path) -> str:
+    """Return the dotted package a relative import inside *path* resolves against."""
+    dotted = module_name(path)
+    if path.name == "__init__.py":
+        return dotted
+    parent, _, _ = dotted.rpartition(".")
+    return parent
+
+
+def _resolved_import_target(path: Path, node: ast.ImportFrom) -> str | None:
+    """Return the absolute dotted module an ``ImportFrom`` in *path* names."""
+    if not node.level:
+        return node.module
+    base_parts = _package_base(path).split(".")
+    ascent = node.level - 1
+    if ascent >= len(base_parts):
+        return None
+    anchor = ".".join(base_parts[: len(base_parts) - ascent])
+    if not anchor:
+        return None
+    return f"{anchor}.{node.module}" if node.module else anchor
+
+
+def _module_level_runtime_imports(tree: ast.AST) -> list[ast.Import | ast.ImportFrom]:
+    """Return import statements executing at module import time, outside ``TYPE_CHECKING``.
+
+    Only a module-level binding is importable by another module, so this is
+    the surface that can re-export a prompter handle onward. Function-local
+    imports bind a name nothing outside the function can reach.
     """
-    for node in ast.walk(tree):
+    statements: list[ast.Import | ast.ImportFrom] = []
+    pending: list[ast.stmt] = list(tree.body) if isinstance(tree, ast.Module) else []
+    while pending:
+        node = pending.pop(0)
         if isinstance(node, ast.Import | ast.ImportFrom):
-            if _imported_roots(node) & PROMPTER_LIBRARIES:
-                return True
-        elif isinstance(node, ast.Name) and node.id in PROMPTER_LIBRARIES:
-            return True
-    return False
+            statements.append(node)
+        elif isinstance(node, ast.If):
+            guarded = node.test is not None and "TYPE_CHECKING" in ast.unparse(node.test)
+            branch = list(node.orelse) if guarded else [*node.body, *node.orelse]
+            pending = branch + pending
+        elif isinstance(node, ast.Try):
+            handled = [statement for handler in node.handlers for statement in handler.body]
+            pending = [*node.body, *handled, *node.orelse, *node.finalbody, *pending]
+    return statements
 
 
-def rival_prompter_class_violations(display_path: str, tree: ast.AST, *, is_canonical: bool) -> list[str]:
-    """Return rule-2 violations: an ask-shaped class in a questionary-dependent module."""
-    if is_canonical or not _module_names_a_prompter_library(tree):
+def _direct_prompter_bindings(tree: ast.AST) -> dict[str, str]:
+    """Return module-level local names bound directly to a prompting library."""
+    bindings: dict[str, str] = {}
+    for node in _module_level_runtime_imports(tree):
+        libraries = _imported_roots(node) & PROMPTER_LIBRARIES
+        if not libraries:
+            continue
+        library = sorted(libraries)[0]
+        for alias in node.names:
+            bindings[alias.asname or alias.name.split(".", 1)[0]] = library
+    return bindings
+
+
+def prompter_export_map(modules: Iterable[tuple[Path, ast.AST]]) -> dict[str, dict[str, str]]:
+    """Return ``dotted module -> {re-exported name: library root}``, closed transitively.
+
+    Seeded from every module-level direct binding, then propagated across
+    first-party ``from ... import`` edges until it stops growing, so a handle
+    laundered through a chain of re-exports still resolves to its library
+    rather than only surviving one hop.
+    """
+    parsed = tuple(modules)
+    exports: dict[str, dict[str, str]] = {}
+    edges: dict[str, list[tuple[str, tuple[ast.alias, ...]]]] = {}
+    for path, tree in parsed:
+        dotted = module_name(path)
+        exports[dotted] = _direct_prompter_bindings(tree)
+        module_edges: list[tuple[str, tuple[ast.alias, ...]]] = []
+        for node in _module_level_runtime_imports(tree):
+            if not isinstance(node, ast.ImportFrom):
+                continue
+            target = _resolved_import_target(path, node)
+            if target is not None:
+                module_edges.append((target, tuple(node.names)))
+        edges[dotted] = module_edges
+
+    changed = True
+    while changed:
+        changed = False
+        for dotted, module_edges in edges.items():
+            for target, names in module_edges:
+                exported = exports.get(target)
+                if not exported:
+                    continue
+                for adopted, library in _adopted_bindings(names, exported).items():
+                    if exports[dotted].get(adopted) != library:
+                        exports[dotted][adopted] = library
+                        changed = True
+    return exports
+
+
+def _adopted_bindings(names: Iterable[ast.alias], exported: Mapping[str, str]) -> dict[str, str]:
+    """Return the prompter handles an import of *names* pulls from *exported*."""
+    adopted: dict[str, str] = {}
+    for alias in names:
+        if alias.name == "*":
+            adopted.update(exported)
+            continue
+        library = exported.get(alias.name)
+        if library is not None:
+            adopted[alias.asname or alias.name] = library
+    return adopted
+
+
+def indirect_prompter_binding_violations(
+    display_path: str,
+    path: Path,
+    tree: ast.AST,
+    prompter_exports: Mapping[str, Mapping[str, str]],
+    *,
+    is_canonical: bool,
+) -> list[str]:
+    """Return rule-2 violations: a prompter handle reached through a first-party re-export."""
+    if is_canonical:
+        return []
+    walker = _RuntimeImportWalker()
+    walker.visit(tree)
+    violations: list[str] = []
+    for node in walker.runtime_import_from:
+        target = _resolved_import_target(path, node)
+        if target is None:
+            continue
+        exported = prompter_exports.get(target)
+        if not exported:
+            continue
+        for local, library in _adopted_bindings(node.names, exported).items():
+            violations.append(
+                f"{display_path}:{node.lineno}: binds {local!r} to {library!r} through "
+                f"{target}; a re-exported prompter handle is still a prompter handle. "
+                f"Interactive prompting is owned by {LINE_FRONTEND_MODULE}"
+            )
+    return violations
+
+
+# --------------------------------------------------------------------------
+# Rule 3: the prompter silhouette, alias- and re-export-aware.
+# --------------------------------------------------------------------------
+
+
+def _prompter_handle_names(
+    path: Path,
+    tree: ast.AST,
+    prompter_exports: Mapping[str, Mapping[str, str]],
+) -> frozenset[str]:
+    """Return local names in this module denoting a prompting library.
+
+    Deliberately broader than the rule-1 walk: ``TYPE_CHECKING`` imports and
+    function-local imports both count, and every alias spelling resolves, so
+    ``from ._reexports import questionary as q`` registers under ``q``.
+    """
+    names: dict[str, str] = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import | ast.ImportFrom) and _imported_roots(node) & PROMPTER_LIBRARIES:
+            for alias in node.names:
+                names[alias.asname or alias.name.split(".", 1)[0]] = "direct"
+        if isinstance(node, ast.ImportFrom):
+            target = _resolved_import_target(path, node)
+            exported = prompter_exports.get(target) if target is not None else None
+            if exported:
+                names.update(dict.fromkeys(_adopted_bindings(node.names, exported), "reexport"))
+    return frozenset(names)
+
+
+def _module_names_a_prompter_library(tree: ast.AST, handle_names: frozenset[str]) -> bool:
+    """Return True when the module carries a prompting-library dependency.
+
+    A resolved handle binding is conclusive. Absent one, a bare reference to
+    a library's own name still counts: it is a handle arriving by a route
+    this pass cannot resolve (a PEP 562 module ``__getattr__``, an attribute
+    off an object), and rule 3 is the backstop for exactly that case.
+    """
+    if handle_names:
+        return True
+    return any(isinstance(node, ast.Name) and node.id in PROMPTER_LIBRARIES for node in ast.walk(tree))
+
+
+def rival_prompter_class_violations(
+    display_path: str,
+    tree: ast.AST,
+    *,
+    is_canonical: bool,
+    handle_names: frozenset[str] = frozenset(),
+) -> list[str]:
+    """Return rule-3 violations: an ask-shaped class in a questionary-dependent module."""
+    if is_canonical or not _module_names_a_prompter_library(tree, handle_names):
         return []
     violations: list[str] = []
     for node in ast.walk(tree):
@@ -223,25 +425,77 @@ def test_questionary_is_imported_only_by_the_sanctioned_prompt_surfaces(
     )
 
 
+def test_no_module_reaches_a_prompter_library_through_a_reexport(
+    source_tree_ast: Mapping[Path, ast.AST],
+) -> None:
+    """Rule 2: no production module binds a prompter handle through a first-party re-export.
+
+    Rule 1 matches a third-party import root, so a rival importing
+    ``questionary`` from a first-party module that re-exports it names only
+    first-party code and passes rule 1 untouched. This resolves the
+    re-export graph transitively instead.
+    """
+    modules = _production_modules(source_tree_ast)
+    exports = prompter_export_map(modules)
+    violations = [
+        violation
+        for path, tree in modules
+        for violation in indirect_prompter_binding_violations(
+            repo_relative(path),
+            path,
+            tree,
+            exports,
+            is_canonical=_is_sanctioned_prompt_library_module(path),
+        )
+    ]
+
+    assert violations == [], "a prompter handle must not be reached through a first-party re-export:\n" + "\n".join(
+        violations
+    )
+
+
 def test_no_rival_prompter_class_exists_outside_the_sanctioned_surfaces(
     source_tree_ast: Mapping[Path, ast.AST],
 ) -> None:
-    """Rule 2: an ask-shaped class in a questionary-dependent module is a rival prompter.
+    """Rule 3: an ask-shaped class in a questionary-dependent module is a rival prompter.
 
     This is the shape the deleted ``_QuestionaryTextPrompter`` had, caught by
     its silhouette rather than by its imports.
     """
+    modules = _production_modules(source_tree_ast)
+    exports = prompter_export_map(modules)
     violations = [
         violation
-        for path, tree in _production_modules(source_tree_ast)
+        for path, tree in modules
         for violation in rival_prompter_class_violations(
-            repo_relative(path), tree, is_canonical=_is_sanctioned_prompt_library_module(path)
+            repo_relative(path),
+            tree,
+            is_canonical=_is_sanctioned_prompt_library_module(path),
+            handle_names=_prompter_handle_names(path, tree, exports),
         )
     ]
 
     assert violations == [], "only the sanctioned prompt surfaces may declare an ask-shaped class:\n" + "\n".join(
         violations
     )
+
+
+def test_the_canonical_line_frontend_is_a_live_taint_source(
+    source_tree_ast: Mapping[Path, ast.AST],
+) -> None:
+    """Anti-vacuity for rule 2: the export map must really carry a prompter handle.
+
+    Rule 2 compares imports against :func:`prompter_export_map`. Were that map
+    empty — the line frontend renamed, its ``import questionary`` moved into a
+    function, the module-level walk broken — rule 2 would scan every module
+    against nothing and report green while enforcing nothing. This pins the
+    seed the closure grows from.
+    """
+    exports = prompter_export_map(_production_modules(source_tree_ast))
+    frontend = exports.get(f"cadrumo.{LINE_FRONTEND_MODULE.removesuffix('.py').replace('/', '.')}")
+
+    assert frontend, "expected the line frontend to expose a module-level prompter binding"
+    assert "questionary" in frontend, f"expected a questionary handle in the line frontend's exports; got {frontend}"
 
 
 # --------------------------------------------------------------------------
@@ -301,7 +555,101 @@ def test_rule_one_exempts_type_only_imports_and_the_sanctioned_modules() -> None
     )
 
 
-def test_rule_two_fires_on_an_ask_shaped_class_in_a_questionary_module() -> None:
+def _synthetic_modules(sources: Mapping[str, str]) -> tuple[tuple[Path, ast.AST], ...]:
+    """Return ``(path, tree)`` pairs for synthetic modules keyed by aeat-relative path.
+
+    Paths are composed under ``src/cadrumo`` so ``module_name`` and the
+    relative-import resolver treat them exactly as they treat a real module,
+    while the sources are parsed from memory — no planted violation is ever
+    written into the tree.
+    """
+    return tuple((SRC_CADRUMO / relative, ast.parse(source, filename=relative)) for relative, source in sources.items())
+
+
+_LAUNDERED_THROUGH_REEXPORTS: Mapping[str, str] = {
+    LINE_FRONTEND_MODULE: "import questionary\n",
+    "entrypoints/cli/_reexports.py": "from ...application.flows._line_frontend import questionary\n",
+    "entrypoints/cli/_rival.py": (
+        "from ._reexports import questionary as prompt_lib\n"
+        "\n"
+        "\n"
+        "class _Rival:\n"
+        "    def ask(self, question: object) -> str:\n"
+        '        return prompt_lib.text("x").ask()\n'
+    ),
+}
+"""A prompter handle laundered two hops out of the canonical owner.
+
+Neither consumer names a third-party root, so rule 1's import walk reports
+green over both while ``prompt_lib`` really is ``questionary``.
+"""
+
+
+def test_rule_two_fires_on_a_handle_laundered_through_first_party_reexports() -> None:
+    """Anti-tautology proof for rule 2, including the second hop.
+
+    ``_reexports`` takes the handle straight off the canonical owner and
+    ``_rival`` takes it from ``_reexports`` under a new alias. Both are
+    violations, and the second only resolves because the export map is closed
+    transitively rather than stopped at one hop.
+    """
+    modules = _synthetic_modules(_LAUNDERED_THROUGH_REEXPORTS)
+    exports = prompter_export_map(modules)
+    violations = [
+        violation
+        for path, tree in modules
+        for violation in indirect_prompter_binding_violations(
+            aeat_relative(path),
+            path,
+            tree,
+            exports,
+            is_canonical=_is_sanctioned_prompt_library_module(path),
+        )
+    ]
+
+    assert len(violations) == 2, f"expected both re-export hops to be caught; got {violations}"
+    assert any("_reexports.py" in violation and "questionary" in violation for violation in violations)
+    second_hop = [violation for violation in violations if "_rival.py" in violation]
+    assert len(second_hop) == 1, f"the second hop must resolve transitively; got {violations}"
+    assert "'prompt_lib'" in second_hop[0] and "'questionary'" in second_hop[0]
+
+
+def test_rule_two_ignores_ordinary_imports_from_the_canonical_prompt_surfaces() -> None:
+    """A non-prompter symbol re-exported by a sanctioned surface is not a handle.
+
+    This is the live shape in the tree: the flows package imports
+    ``detect_frontend_capability`` and the line frontend imports
+    ``NO_CONSOLE_ERRORS``. Both are locally-defined symbols, not library
+    handles, and flagging them would make rule 2 unusable.
+    """
+    modules = _synthetic_modules(
+        {
+            LINE_FRONTEND_MODULE: "import questionary\n\n\nclass LineFlowFrontend:\n    pass\n",
+            "application/flows/_capability.py": (
+                "def detect_frontend_capability():\n    return None\n\n\nNO_CONSOLE_ERRORS = (OSError,)\n"
+            ),
+            "application/flows/__init__.py": (
+                "from ._capability import NO_CONSOLE_ERRORS, detect_frontend_capability\n"
+                "from ._line_frontend import LineFlowFrontend\n"
+            ),
+        },
+    )
+    exports = prompter_export_map(modules)
+    consumer = SRC_CADRUMO / "application/flows/__init__.py"
+
+    violations = [
+        violation
+        for path, tree in modules
+        if path == consumer
+        for violation in indirect_prompter_binding_violations(
+            aeat_relative(path), path, tree, exports, is_canonical=False
+        )
+    ]
+
+    assert violations == [], f"a locally-defined re-exported symbol is not a prompter handle; got {violations}"
+
+
+def test_rule_three_fires_on_an_ask_shaped_class_in_a_questionary_module() -> None:
     violations = rival_prompter_class_violations(
         "src/cadrumo/entrypoints/cli/_drifted.py", ast.parse(_DRIFTED_COPY), is_canonical=False
     )
@@ -311,8 +659,8 @@ def test_rule_two_fires_on_an_ask_shaped_class_in_a_questionary_module() -> None
     assert "rival prompter" in violations[0]
 
 
-def test_rule_two_fires_when_the_questionary_handle_is_bound_indirectly() -> None:
-    """Rule 2's reach beyond rule 1: a name reference with no import of its own."""
+def test_rule_three_fires_when_the_questionary_handle_is_bound_indirectly() -> None:
+    """Rule 3's reach beyond rule 1: a name reference with no import of its own."""
     source = """
 from ._reexports import questionary
 
@@ -328,7 +676,36 @@ class _Rival:
     assert "_Rival" in violations[0]
 
 
-def test_rule_two_ignores_ask_shaped_classes_with_no_prompter_dependency() -> None:
+def test_rule_three_fires_when_the_reexported_handle_is_renamed() -> None:
+    """Anti-tautology proof for rule 3's alias awareness.
+
+    The silhouette check used to key on a bare reference spelled
+    ``questionary``, so renaming the re-exported handle walked past it while
+    the class went on prompting. Resolving the binding removes the escape.
+    """
+    modules = _synthetic_modules(_LAUNDERED_THROUGH_REEXPORTS)
+    exports = prompter_export_map(modules)
+    rival = SRC_CADRUMO / "entrypoints/cli/_rival.py"
+    tree = next(tree for path, tree in modules if path == rival)
+
+    handle_names = _prompter_handle_names(rival, tree, exports)
+    assert "prompt_lib" in handle_names, f"expected the renamed handle to resolve; got {sorted(handle_names)}"
+
+    violations = rival_prompter_class_violations(
+        aeat_relative(rival), tree, is_canonical=False, handle_names=handle_names
+    )
+
+    assert len(violations) == 1, f"expected the renamed-handle rival to be caught; got {violations}"
+    assert "_Rival" in violations[0]
+
+    unaware = rival_prompter_class_violations(aeat_relative(rival), tree, is_canonical=False)
+    assert unaware == [], (
+        "guard on the proof itself: without resolved handle names this rival is invisible, "
+        "which is exactly the blindness the alias resolution removes"
+    )
+
+
+def test_rule_three_ignores_ask_shaped_classes_with_no_prompter_dependency() -> None:
     """An ``ask`` method alone is not a prompter; the questionary dependency is the tell."""
     source = """
 class NonInteractiveAnswers:
