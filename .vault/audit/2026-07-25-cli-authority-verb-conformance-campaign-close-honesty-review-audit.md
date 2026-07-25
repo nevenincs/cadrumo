@@ -211,6 +211,18 @@ anti-vacuity floor and covers three roots rather than every production root.
 The invariant it claims is genuinely proven, but by a different named gate, so
 the gate itself carries no information.
 
+The constraint that makes the identity fix non-trivial, and the trap to avoid.
+The profile-key registry has exactly two seeding points today, both test
+conftests — one under the contribuyente domain, one under the registry
+calculations tests — and neither is reachable from the MCP or CLI-config trees.
+Every production wizard import is function-local by lazy-import policy, so
+there is no import-time path that seeds it in a shipped process. A third
+conftest import would turn all twelve failures green and leave the shipped
+server exactly as broken as it is now. The fix needs an initialisation point
+the entrypoints actually execute, and its proof needs to be a real server
+process rather than a test-suite pass — which is how the defect was
+established in the first place.
+
 Six of the six os_keychain cases remain deselected by marker under the agent
 logon: not skipped, not xfailed, not passed, and not verified.
 
