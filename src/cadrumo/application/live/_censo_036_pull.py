@@ -47,6 +47,7 @@ from typing import TYPE_CHECKING, Final
 from pydantic import BaseModel, ConfigDict
 
 from ...core import Modelo
+from ...core.external_constants import PROVENANCE_SOURCE_CENSO_FILED_036
 from ...domain.calculations.registry import CensoModeloEventKind, bundled_authority
 from ...domain.user_profile import UserProfileFact
 from . import capture_expedientes
@@ -83,6 +84,14 @@ class Filed036Declaration(BaseModel):
     event_kind: CensoModeloEventKind
     presented_at: datetime
 
+
+_CENSAL_PERIOD_CODE: Final[str] = "0A"
+"""Period code a censal declaration files under.
+
+036 is not a periodic return — it is filed when something changes — so it
+carries the annual code, which is the shape the justificante fixtures for
+this modelo already use.
+"""
 
 _CAUSA_CASILLA_PREFIX: Final[str] = "decl.causa-"
 
@@ -222,9 +231,60 @@ def censo_facts_from_filed_036(filings: Sequence[Filed036Declaration]) -> tuple[
     if current is None:
         return ()
     return (
-        UserProfileFact(path=CENSO_STATUS_FACT_PATH, value=current.event_kind.value),
-        UserProfileFact(path=CENSO_FILED_ON_FACT_PATH, value=current.presented_at.date().isoformat()),
+        UserProfileFact(
+            path=CENSO_STATUS_FACT_PATH,
+            value=current.event_kind.value,
+            source=PROVENANCE_SOURCE_CENSO_FILED_036,
+        ),
+        UserProfileFact(
+            path=CENSO_FILED_ON_FACT_PATH,
+            value=current.presented_at.date().isoformat(),
+            source=PROVENANCE_SOURCE_CENSO_FILED_036,
+        ),
     )
+
+
+async def pull_censal_declaration(*, bucket_id: str, year_from: int, year_to: int):
+    """Live-pull the taxpayer's current filed 036 and read the form itself.
+
+    The full censal pull, and the one the operator actually wants: find
+    which 036 is current, fetch that declaration's signed PDF over the
+    same authenticated Playwright session every justificante pull uses,
+    and read the form. Reading the register alone tells you a filing
+    happened and roughly what it was called; reading the declaration tells
+    you what it said.
+
+    Returns ``(filing, observation)`` for the current declaration, or
+    ``None`` when the taxpayer has filed no 036 in the span — silence, not
+    a default, because stamping one would invent an enrolment.
+
+    The PDF is parsed from memory and never written to disk: it is the
+    taxpayer's own filed declaration, and
+    ``sensitive-financial-data-secure-storage-only`` allows decrypted
+    evidence to exist only transiently in process memory.
+    """
+    from ...adapters.inbound.declaracion import parse_declaracion_bytes
+    from ...core import Period
+    from . import capture_justificante_snapshot
+
+    filings = await pull_filed_036(bucket_id=bucket_id, year_from=year_from, year_to=year_to)
+    current = current_censal_state(filings)
+    if current is None:
+        return None
+    snapshot = await capture_justificante_snapshot(
+        bucket_id=bucket_id,
+        modelo=Modelo.M036.value,
+        year=current.ejercicio,
+        period=Period.from_year_and_code(current.ejercicio, _CENSAL_PERIOD_CODE),
+    )
+    observation = parse_declaracion_bytes(
+        snapshot.decoded_pdf_bytes(),
+        source_label=f"filed 036 {current.ejercicio} expediente {current.expediente_id}",
+        modelo_override=Modelo.M036.value,
+        año_override=current.ejercicio,
+        period_override=_CENSAL_PERIOD_CODE,
+    )
+    return current, observation
 
 
 async def pull_filed_036(*, bucket_id: str, year_from: int, year_to: int) -> tuple[Filed036Declaration, ...]:
@@ -253,5 +313,6 @@ __all__ = [
     "classify_from_causa_casillas",
     "current_censal_state",
     "filed_036_declarations",
+    "pull_censal_declaration",
     "pull_filed_036",
 ]

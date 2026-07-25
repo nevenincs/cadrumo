@@ -208,3 +208,27 @@ def test_the_grounded_tier_needs_no_prose_at_all() -> None:
     enough, which is the whole advantage over reading the register's prose.
     """
     assert classify_from_causa_casillas(["122"]) is CensoModeloEventKind.MODIFICACION
+
+
+def test_derived_facts_name_the_document_they_came_from() -> None:
+    """A pulled fact must not claim the operator typed it.
+
+    ``UserProfileFact.source`` defaults to the manual-CLI token, so a fact
+    built without one silently asserts operator authorship. These came from
+    a filed declaration, and they carry their own token rather than
+    borrowing the G313 certificate's — both are censal artefacts at the
+    same non-official tier, but they are different documents.
+    """
+    from ....core.external_constants import (
+        PROVENANCE_SOURCE_CENSO_ARTEFACT,
+        PROVENANCE_SOURCE_CENSO_FILED_036,
+        PROVENANCE_SOURCE_MANUAL_CLI,
+    )
+
+    filings = filed_036_declarations((_row(year=2024, day=7, tipo="Alta en el censo"),))
+    facts = censo_facts_from_filed_036(filings)
+    assert facts, "the fixture must produce facts, or this proves nothing"
+    for fact in facts:
+        assert fact.source == PROVENANCE_SOURCE_CENSO_FILED_036
+        assert fact.source != PROVENANCE_SOURCE_MANUAL_CLI
+        assert fact.source != PROVENANCE_SOURCE_CENSO_ARTEFACT

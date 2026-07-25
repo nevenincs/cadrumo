@@ -62,8 +62,11 @@ def _run_censal_pull() -> ManagerActionOutcome:
     import asyncio
 
     from ....adapters.inbound.tui import ManagerActionOutcome
-    from ....application.live._censo_036_pull import censo_facts_from_filed_036, pull_filed_036
-    from ....application.user_profile import set_active_fields
+    from ....application.live._censo_036_pull import (
+        censo_facts_from_filed_036,
+        pull_censal_declaration,
+    )
+    from ....application.user_profile import apply_cotejo
     from ....application.workflow import workflow_state_repository
     from ....core import require_active_bucket_id
     from ....core.time import now
@@ -73,14 +76,18 @@ def _run_censal_pull() -> ManagerActionOutcome:
     # Through the clock seam, so a frozen-clock test pins the year span
     # rather than searching a window that moves with the calendar.
     this_year = now().year
-    filings = asyncio.run(
-        pull_filed_036(
+    # The full pull: find the current filing over the authenticated
+    # Playwright session, then fetch and read that declaration's own PDF.
+    # Reading the register alone says a filing happened; reading the
+    # declaration says what it declared.
+    pulled = asyncio.run(
+        pull_censal_declaration(
             bucket_id=bucket_id,
             year_from=this_year - _CENSAL_PULL_YEARS_BACK,
             year_to=this_year,
         ),
     )
-    facts = censo_facts_from_filed_036(filings)
+    facts = censo_facts_from_filed_036((pulled[0],)) if pulled is not None else ()
     if not facts:
         # No filing found is an ordinary answer, not a failure: a taxpayer
         # enrolled long ago may have nothing in the window, and stamping a
@@ -89,17 +96,19 @@ def _run_censal_pull() -> ManagerActionOutcome:
 
     adopted, contested = _split_against_the_record(facts)
     if adopted:
-        # One atomic write through the plural door, not a loop of single
-        # ones: a censal state and the date it came from are one fact, and
-        # a partial write would leave a status with no filing date behind it.
-        workflow_state_repository().update(lambda state: set_active_fields(state, adopted))
+        # Through the single cotejo apply authority, never a parallel
+        # set_active_fields write: a censal artefact-apply must emit exactly
+        # one CENSO_APPLIED event, and the facts carry their own filed-036
+        # provenance token so they land at the non-official evidence tier.
+        repository = workflow_state_repository()
+        repository.save(apply_cotejo(repository.load(), adopted=adopted, divergences=()))
     if contested:
         return ManagerActionOutcome(
             message=tr("flows.manager.action.censal_pull_contested", paths=", ".join(contested)),
             overview=build_active_profile_overview(),
         )
     return ManagerActionOutcome(
-        message=tr("flows.manager.action.censal_pull_done", count=len(adopted), filings=len(filings)),
+        message=tr("flows.manager.action.censal_pull_done", count=len(adopted), filings=1),
         overview=build_active_profile_overview(),
     )
 
@@ -113,11 +122,12 @@ def _split_against_the_record(facts):
     reports the disagreement and writes nothing at that path, because
     which of the two is right is the operators call and not this actions.
 
-    This is the conservative half of the cotejo contract. The full one
-    records each disagreement as a `censo.divergencia.{n}.*` row through
-    `apply_cotejo`, whose provenance token names a G313 certificate; a
-    filed 036 is a different artefact and would need its own token before
-    those rows could honestly claim it as their source.
+    The adopt-all commit itself routes through `apply_cotejo`, the same
+    authority the `censo file` door uses. What this split adds is the
+    refusal to adopt over a value the operator already gave: the file door
+    adopts everything because the operator hands it the artefact
+    deliberately, while a pull happens on a button press and must not
+    quietly rewrite an answer on the strength of one.
     """
     from ....application.user_profile import ProfileRepository
     from ....core import require_active_bucket_id

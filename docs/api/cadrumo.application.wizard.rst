@@ -18,7 +18,6 @@ Submodules
    cadrumo.application.wizard._commands
    cadrumo.application.wizard._compiler
    cadrumo.application.wizard._copy_sources
-   cadrumo.application.wizard._cotejo
    cadrumo.application.wizard._descendant_door
    cadrumo.application.wizard._descendant_group
    cadrumo.application.wizard._errors

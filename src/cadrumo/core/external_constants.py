@@ -453,6 +453,13 @@ PROVENANCE_SOURCE_MANUAL_CLI: Final[str] = "manual_cli"
 #: this token.
 PROVENANCE_SOURCE_CENSO_ARTEFACT: Final[str] = "censo_artefact_g313"
 
+#: Provenance source identifier for censal facts derived from the taxpayer's
+#: own FILED Modelo 036 read out of their expediente history. A separate
+#: token from the G313 one on purpose: both are censal artefacts at the same
+#: NON-OFFICIAL evidence tier, but they are different documents, and a fact
+#: must say which one it came from rather than borrow the other's name.
+PROVENANCE_SOURCE_CENSO_FILED_036: Final[str] = "censo_filed_036"
+
 #: Reserved operator-visible bucket-label prefix identifying a sandbox profile.
 #: A profile whose plaintext manifest label starts with this token is a sandbox:
 #: an isolated, discardable bucket. Declared in the light core layer so the

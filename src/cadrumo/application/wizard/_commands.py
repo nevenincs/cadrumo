@@ -41,7 +41,6 @@ from typing import TYPE_CHECKING, Annotated
 
 if TYPE_CHECKING:
     from ...core.errors import CadrumoError
-    from ...domain.censo import CertificadoSituacionCensal
     from ...domain.user_profile import UserProfileRecord
     from ..workflow import WorkflowState
 
@@ -70,7 +69,6 @@ from ..flows import (
 )
 from ._catalogue import SETUP_FLOW
 from ._checkpoint_store import ProfileFactsCheckpointStore
-from ._cotejo import attach_cotejo_pages, build_cotejo_pages
 from ._descendant_group import attach_descendant_group
 from ._errors import WizardMissingFlagError
 from ._format_hints import attach_format_hints
@@ -629,17 +627,13 @@ def _setup_flow_definition(
     flow: WizardFlow,
     *,
     attach_descendants: bool = True,
-    certificado: CertificadoSituacionCensal | None = None,
-    flow_answers: Mapping[str, str] | None = None,
 ) -> FlowDefinition:
     """Bridge and decorate the wizard flow into the shared substrate definition.
 
     The single projected :class:`FlowDefinition` every frontend drives:
-    the substrate bridge, format hints, setup legal validators, -- for
-    CREATE -- the descendant repeating group, and -- when a censal artefact
-    was ingested -- the cotejo compare-select pages, applied in one place so
-    the interactive and the non-interactive walks can never diverge on the
-    definition they run.
+    the substrate bridge, format hints, setup legal validators, and -- for
+    CREATE -- the descendant repeating group, applied in one place so no
+    caller can diverge on the definition it runs.
 
     ``attach_descendants`` gates the descendant group. It is spliced for
     CREATE (where the facts-as-checkpoint store seeds and re-seeds the group)
@@ -653,29 +647,12 @@ def _setup_flow_definition(
     silently erase them. So MODIFY withholds the group and the command
     surfaces the descendant door instead of a silently-lossy surface.
 
-    ``certificado`` gates the cotejo phase (the same post-bridge decoration
-    seam as the descendant group). The cotejo pages are DYNAMIC over the
-    ingested certificate and the staged ``flow_answers`` (the operator's
-    setup answers the disagreement detection compares against -- NOT the
-    compare-select decisions), so both are supplied when a G313 artefact has
-    been reconciled; :func:`build_cotejo_pages` yields one COMPARE_SELECT
-    page per axis that disagrees, and empty pages splice nothing. It stays
-    ``None`` on every live walk today: the inbound censo parser refuses
-    every document while its layout extraction is unpinned (no issued
-    specimen exists), so no live walk reaches a parsed certificate and the
-    whole cotejo family is unreachable live -- exercised only by tests that
-    construct the certificate directly.
     """
     definition = attach_setup_legal_validators(
         attach_format_hints(flow_definition_from_wizard_flow(flow, checkpoint=_SETUP_CHECKPOINT)),
     )
     if attach_descendants:
         definition = attach_descendant_group(definition)
-    if certificado is not None:
-        definition = attach_cotejo_pages(
-            definition,
-            build_cotejo_pages(flow, certificado, flow_answers or {}),
-        )
     return definition
 
 
