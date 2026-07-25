@@ -45,8 +45,13 @@ from ...adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ...adapters.persistence.profile.justificante import JustificanteRepository
 from ...adapters.persistence.profile.submission import SubmissionRepository
 from ...adapters.persistence.storage import (
+    MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE,
+    MODELO_FILING_RECORD_CATALOGUE_NAMESPACE,
+    MODELO_WORK_UNIT_CATALOGUE_NAMESPACE,
     SECURE_OBJECT_CATALOGUE_KEY,
     STORAGE_NAMESPACE_REGISTRY,
+    TRANSACTION_CATALOGUE_NAMESPACE,
+    USER_PROFILE_VALUE_NAMESPACE,
     SecureBoundRepository,
     SecureObjectNamespaceDefinition,
     StorageCustodyProfile,
@@ -97,14 +102,18 @@ if TYPE_CHECKING:
     from ...adapters.persistence.storage.sql import SecureObjectRecord
 
 #: Namespaces carried by the typed bundle fields; the generic carry skips them so
-#: they are not double-carried.
-_TYPED_CATEGORY_NAMESPACES: frozenset[str] = frozenset(
+#: they are not double-carried, and the bundle's coverage manifest counts them as
+#: covered. Both decisions read this one set, and each member names its registered
+#: definition rather than restating the namespace string: an entry that drifted
+#: from the registry would silently re-admit a typed store into the generic carry,
+#: which no coverage gate would catch.
+TYPED_CATEGORY_NAMESPACES: frozenset[str] = frozenset(
     {
-        "cadrumo.application.user_profile.value",
-        "cadrumo.domain.transactions.bucket",
-        "cadrumo.domain.modelos.work_units",
-        "cadrumo.domain.modelos.calculation_revisions",
-        "cadrumo.domain.modelos.filing_records",
+        USER_PROFILE_VALUE_NAMESPACE.namespace,
+        TRANSACTION_CATALOGUE_NAMESPACE.namespace,
+        MODELO_WORK_UNIT_CATALOGUE_NAMESPACE.namespace,
+        MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+        MODELO_FILING_RECORD_CATALOGUE_NAMESPACE.namespace,
     },
 )
 
@@ -421,7 +430,7 @@ def carried_namespace_definitions(
     return tuple(
         definition
         for definition in STORAGE_NAMESPACE_REGISTRY.namespaces_for_custody_profile(profile)
-        if definition.namespace not in _TYPED_CATEGORY_NAMESPACES
+        if definition.namespace not in TYPED_CATEGORY_NAMESPACES
     )
 
 
@@ -504,6 +513,7 @@ def restore_carried_objects(
 
 
 __all__ = [
+    "TYPED_CATEGORY_NAMESPACES",
     "carried_namespace_definitions",
     "restore_carried_objects",
     "serialize_carried_objects",

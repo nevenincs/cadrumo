@@ -238,19 +238,6 @@ def _normalize_custody_profile(custody_profile: StorageCustodyProfile | str) -> 
         ) from exc
 
 
-#: Namespaces carried by the typed bundle fields; they count as covered for the
-#: full-custody coverage assertion even though the generic carry skips them.
-_TYPED_CATEGORY_NAMESPACES: frozenset[str] = frozenset(
-    {
-        "cadrumo.application.user_profile.value",
-        "cadrumo.domain.transactions.bucket",
-        "cadrumo.domain.modelos.work_units",
-        "cadrumo.domain.modelos.calculation_revisions",
-        "cadrumo.domain.modelos.filing_records",
-    },
-)
-
-
 def _build_secure_object_custody_payload(
     *,
     bucket_id: str,
@@ -258,7 +245,11 @@ def _build_secure_object_custody_payload(
 ) -> tuple[tuple[CarriedSecureObject, ...], CoverageManifest]:
     from ...adapters.persistence.storage import secure_object_repository_for_bucket
     from ...domain.user_profile import CoverageManifest
-    from ._custody_carry import carried_namespace_definitions, serialize_carried_objects
+    from ._custody_carry import (
+        TYPED_CATEGORY_NAMESPACES,
+        carried_namespace_definitions,
+        serialize_carried_objects,
+    )
 
     repository = secure_object_repository_for_bucket(bucket_id)
     populated_namespaces = tuple(repository.list_namespaces())
@@ -267,7 +258,7 @@ def _build_secure_object_custody_payload(
     carried_namespace_set = frozenset(
         definition.namespace for definition in carried_namespace_definitions(custody_profile)
     )
-    carried_or_typed = carried_namespace_set | _TYPED_CATEGORY_NAMESPACES
+    carried_or_typed = carried_namespace_set | TYPED_CATEGORY_NAMESPACES
     # ``excluded_namespaces`` (for the manifest) is every populated namespace not
     # carried by this profile — the deliberately-excluded host-local / derived /
     # full-only stores plus the typed-category-covered ones are reported honestly.
