@@ -1,10 +1,17 @@
 @step Record the equipment purchase whose deductible IVA exceeds the quarter's charged IVA.
 @static aeat app ledger add --date 2026-05-12 --amount 1815 --direction OUTGOING --description "equipo informatico" --classification BUSINESS --category-id equipamiento_informatico --taxable-base 1500 --iva-rate 0.21 --iva-amount 315
+@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
 @step Create and calculate the second-quarter return.
 @static aeat app modelo work create --modelo 303 --year 2026 --period 2T
+@blocked unconverted Runs clean in the sandbox probe; nothing blocks it, so it awaits conversion.
 @static aeat app modelo work calculate --modelo 303 --year 2026 --period 2T
+@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
 @step Verify, export, file, and reconcile the credit quarter.
 @static aeat app modelo work verify --modelo 303 --year 2026 --period 2T
+@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
 @static aeat app modelo export --modelo 303 --year 2026 --period 2T --output ./modelo-303-2026-2T.boe
+@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
 @static aeat app modelo work file --modelo 303 --year 2026 --period 2T
+@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
 @static aeat app modelo reconcile pull --modelo 303 --year 2026 --period 2T
+@blocked live-aeat The pull verb fetches from the AEAT sede; the sandbox refuses live frames.

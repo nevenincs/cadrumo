@@ -1,2 +1,3 @@
 @step Confirm the recovery key is enrolled without exposing it.
 @static aeat config recovery status
+@blocked unconverted Runs clean in the sandbox probe; nothing blocks it, so it awaits conversion.

@@ -1,8 +1,12 @@
 @step Download and track your current IVA compensation balance.
 @static aeat app live iva-wallet pull --year 2026 --period 4T
+@blocked live-aeat The app live group reads the operator's authenticated AEAT sede session.
 @step Reconstruct the history of past compensation decisions.
 @static aeat app live iva-wallet pull-history --from-year 2020 --to-year 2026
+@blocked live-aeat The app live group reads the operator's authenticated AEAT sede session.
 @step Capture past returns and the current IVA evidence in one read-only run.
 @static aeat app live iva-wallet pull-evidence --from-year 2020 --to-year 2026 --target-year 2026 --target-period 4T
+@blocked live-aeat The app live group reads the operator's authenticated AEAT sede session.
 @step List the persisted compensation balances and decisions.
 @static aeat app live iva-wallet history --as-of-year 2026
+@blocked live-aeat The app live group reads the operator's authenticated AEAT sede session.

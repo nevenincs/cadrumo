@@ -22,6 +22,7 @@ from pathlib import Path
 import pytest
 from pydantic_settings import SettingsConfigDict
 
+from ...tests.env_scope import scoped_env_var
 from ..config import Settings, override_settings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -47,22 +48,18 @@ def _dotenv_settings_class(tmp_path: Path) -> type[Settings]:
 
 
 @pytest.fixture(autouse=True)
-def _no_ambient_selection(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+def _no_ambient_selection() -> Iterator[None]:
     """Start every case with no ambient selection in the environment."""
-    monkeypatch.delenv(_ENV_NAME, raising=False)
-    yield
+    with scoped_env_var(_ENV_NAME, None):
+        yield
 
 
 class TestEnvironmentSourceIsSevered:
     """No environment channel populates the active-profile field."""
 
-    def test_process_environment_does_not_select_a_profile(
-        self,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
-        monkeypatch.setenv(_ENV_NAME, _SENTINEL)
-
-        assert Settings().cadrumo_active_profile is None
+    def test_process_environment_does_not_select_a_profile(self) -> None:
+        with scoped_env_var(_ENV_NAME, _SENTINEL):
+            assert Settings().cadrumo_active_profile is None
 
     def test_dotenv_file_does_not_select_a_profile(
         self,
@@ -77,18 +74,14 @@ class TestEnvironmentSourceIsSevered:
         """The documented env-var set must not advertise a dead control."""
         assert _ENV_NAME not in Settings.env_var_names()
 
-    def test_a_neighbouring_field_still_reads_its_environment_variable(
-        self,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
+    def test_a_neighbouring_field_still_reads_its_environment_variable(self) -> None:
         """Anti-tautology: the severance is field-scoped, not a dead source.
 
         Without this, a filter that silently dropped EVERY environment
         variable would pass every assertion above.
         """
-        monkeypatch.setenv("CADRUMO_BUCKET_DEFAULT_SESSION_ABSOLUTE_MINUTES", "300")
-
-        assert Settings().cadrumo_bucket_default_session_absolute_minutes == 300
+        with scoped_env_var("CADRUMO_BUCKET_DEFAULT_SESSION_ABSOLUTE_MINUTES", "300"):
+            assert Settings().cadrumo_bucket_default_session_absolute_minutes == 300
 
 
 class TestSurvivingSelectionChannel:
@@ -102,12 +95,10 @@ class TestSurvivingSelectionChannel:
         """The init channel underneath the ``--profile`` flag."""
         assert Settings(cadrumo_active_profile="chosen-by-flag").cadrumo_active_profile == "chosen-by-flag"
 
-    def test_the_in_process_channel_wins_over_a_set_environment_variable(
-        self,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
+    def test_the_in_process_channel_wins_over_a_set_environment_variable(self) -> None:
         """A stale exported variable cannot contradict an explicit selection."""
-        monkeypatch.setenv(_ENV_NAME, _SENTINEL)
-
-        with override_settings(cadrumo_active_profile="chosen-in-process") as settings:
+        with (
+            scoped_env_var(_ENV_NAME, _SENTINEL),
+            override_settings(cadrumo_active_profile="chosen-in-process") as settings,
+        ):
             assert settings.cadrumo_active_profile == "chosen-in-process"

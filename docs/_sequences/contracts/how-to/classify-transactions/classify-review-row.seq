@@ -1,5 +1,5 @@
 @step Import the quarter's movements so there is a row to classify.
-@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@setup aeat app ledger import --file fixtures/movimientos-2026-1t.csv --provider csv
 @step List the rows that still need a decision.
 aeat app ledger list --filter classification=NOT_YET_PROCESSED
 @step Inspect the row before changing it.

@@ -1,4 +1,6 @@
 @step Preview a suggestion that also selects the IVA category.
 @static aeat app ledger classify <transaction-id> --llm claude --saturate
+@blocked external-service Needs a live LLM provider API key; the sandbox contacts no third-party model.
 @step Apply the saturated suggestion.
 @static aeat app ledger classify <transaction-id> --llm claude --saturate --apply
+@blocked external-service Needs a live LLM provider API key; the sandbox contacts no third-party model.

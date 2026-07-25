@@ -89,10 +89,10 @@ Read the frames in order:
 
 The verification result is the signal that the draft is ready. When
 `granted_verificado_completo` reads true, export the file. Export refuses until
-every deductible-expense row carries linked purchase-invoice evidence; this
-first-filing example omits that evidence, so the export and the post-portal
-filed marker are shown as display frames. The full evidence-to-export chain runs
-end to end, executed, on [Prepare a Modelo 303 IVA filing](modelo-303.md):
+every deductible-expense row carries linked purchase-invoice evidence, so this
+example registers the supplier invoice and attaches it before it calculates.
+Attach in that order: a draft bundles its evidence when you verify it, so an
+invoice attached afterwards does not reach the filing.
 
 ```{cli-sequence} first-quarter-export-file
 :verify: Confirm the export writes a local fichero and the filing stays local.

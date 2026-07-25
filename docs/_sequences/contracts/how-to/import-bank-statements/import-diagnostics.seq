@@ -1,5 +1,5 @@
 @step Import the statement with diagnostics.
-aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv --verify
+aeat app ledger import --file fixtures/movimientos-2026-1t.csv --provider csv --verify
 @step Confirm the imported row is present.
 @result aeat --format json app ledger view 71a5db2b
 @expect result.transaction.direction == "INCOMING"

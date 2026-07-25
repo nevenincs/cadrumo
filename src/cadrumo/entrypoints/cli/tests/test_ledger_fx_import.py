@@ -39,7 +39,7 @@ def _invoke(args: Sequence[str]) -> Result:
 
 
 def _import_statement(source: Path, *, json_format: bool = False) -> Result:
-    args = ["app", "ledger", "import", str(source), "--provider", "csv"]
+    args = ["app", "ledger", "import", "--file", str(source), "--provider", "csv"]
     if json_format:
         args = ["--format", "json", *args]
     return _invoke(args)

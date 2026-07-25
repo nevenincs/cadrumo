@@ -1,2 +1,3 @@
 @step Record the modificacion you filed at the sede, with the sede receipt number.
 @static aeat app modelo m036 modificacion --declared-on 2026-03-15 --sede-justificante <acuse>
+@blocked unconverted Shows the addressing form with a metavariable; convert it with a captured real id.

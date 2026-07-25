@@ -1,2 +1,3 @@
 @step Point the tool at the renewed certificate file.
 @static aeat config auth configure --provider certificate --file ./renewed-certificate.p12
+@blocked credential-store Needs certificate custody in the OS credential store, absent from the sandbox.

@@ -1,5 +1,5 @@
 @step Import the quarter's movements so there are rows to review.
-@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@setup aeat app ledger import --file fixtures/movimientos-2026-1t.csv --provider csv
 @step List every row.
 aeat app ledger list
 @step Narrow the list with filters.

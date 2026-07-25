@@ -28,6 +28,7 @@
         "app",
         "ledger",
         "import",
+        "--file",
         "fixtures/movimientos-2026-1t.csv",
         "--provider",
         "csv"

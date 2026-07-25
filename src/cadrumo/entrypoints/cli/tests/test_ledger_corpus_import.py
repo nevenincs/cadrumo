@@ -20,7 +20,7 @@ def test_reimport_is_idempotent_dedups() -> None:
     _import_corpus()
     first = len(_list_rows())
     result = _invoke(
-        ["--format", "json", "app", "ledger", "import", str(_CORPUS / _FILES[0]), "--provider", "csv"],
+        ["--format", "json", "app", "ledger", "import", "--file", str(_CORPUS / _FILES[0]), "--provider", "csv"],
     )
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
@@ -31,7 +31,7 @@ def test_reimport_is_idempotent_dedups() -> None:
 
 def test_import_dry_run_does_not_persist() -> None:
     result = _invoke(
-        ["app", "ledger", "import", str(_CORPUS / _FILES[0]), "--provider", "csv", "--dry-run"],
+        ["app", "ledger", "import", "--file", str(_CORPUS / _FILES[0]), "--provider", "csv", "--dry-run"],
     )
     assert result.exit_code == 0, result.output
     assert _list_rows() == []

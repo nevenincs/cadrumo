@@ -1,2 +1,3 @@
 @step Force a fresh authentication.
 @static aeat config auth login --fresh
+@blocked credential-store Needs certificate custody in the OS credential store, absent from the sandbox.

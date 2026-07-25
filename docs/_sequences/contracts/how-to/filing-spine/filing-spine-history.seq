@@ -6,3 +6,4 @@
 @step Review all actions the tool has taken on this filing, in order.
 @result aeat --format json app modelo work history --modelo 303 --year 2026 --period 1T
 @expect exit_code == 0
+@expect result.event_count == 2

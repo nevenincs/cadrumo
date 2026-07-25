@@ -3,19 +3,30 @@
 The CLI root callback no longer implicitly unlocks the profile. It
 resumes the persisted session ``aeat config login`` minted, or refuses
 naming that verb. These tests drive the REAL CLI against a REAL bucket
-created through the real ``config profile create`` flow, with real files
-and the real OS keychain.
+created through the real ``config profile create`` flow, with real
+records, real AEAD wraps, and real files.
 
 "Fresh process" is simulated by evicting the active-session context
 variable between invocations, which is exactly what a new ``aeat``
 process starts with — the persisted artefacts are then the only thing
 that can unlock the profile.
+
+The two halves have different host requirements, deliberately. The
+refusal branches — absent, idle-elapsed, absolute-elapsed — are decided
+before the OS keychain is ever consulted, so they run anywhere and are
+asserted by refusal-reason name. Silent RESUME genuinely needs the
+keychain, because unwrapping the record's DEK requires the session key
+held there; on a host with no usable credential store those tests fail
+at an explicit precondition naming that cause rather than misreporting a
+resume defect.
 """
 
 from __future__ import annotations
 
+import json
+import secrets
 from collections.abc import Iterator
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -24,10 +35,12 @@ from ....adapters.persistence.storage.master_key import (
     close_active_bucket_session,
     current_active_bucket_session,
     delete_profile_session,
-    mint_profile_session,
     profile_session_path,
+    wrap_profile_session_dek,
+    write_profile_session,
 )
 from ....adapters.persistence.storage.sql.engine import dispose_engine
+from ....core import ProfileSessionRefusalReason
 from ....core.config import SecretStoreBackend, load_settings, override_settings
 from ....core.time import now as _now
 from ....tests.cli_runner import invoke_cached_cli, semantic_cli_output
@@ -95,6 +108,29 @@ def _login() -> None:
     login_profile()
 
 
+def _login_and_require_persistence(storage_root: Path, bucket_id: str) -> None:
+    """Log in and assert the persisted record this test needs actually exists.
+
+    Login itself succeeds process-scoped on a host with no usable OS keychain
+    (it warns and skips the mint rather than writing key material to disk), so
+    without this precondition a cross-process resume test would fail later with
+    a misleading "you are not logged in" refusal that reads like a resume
+    defect. Asserting it here pins the failure on the missing custody instead.
+    """
+    _login()
+    assert profile_session_path(storage_root=storage_root, bucket_id=bucket_id).is_file(), (
+        "login did not persist a session record, so cross-process resume cannot be exercised; "
+        "this host has no usable OS keychain to custody the session key"
+    )
+
+
+def _resume(bucket_id: str) -> ProfileSessionRefusalReason | None:
+    """Drive the shared resume authority the root callback itself calls."""
+    from ....application.user_profile import resume_active_profile_session
+
+    return resume_active_profile_session(bucket_id=bucket_id)
+
+
 def _invoke_decrypting_verb_without_the_secret_channel():
     """Run a real decrypting verb with no headless passphrase configured.
 
@@ -110,9 +146,9 @@ def _invoke_decrypting_verb_without_the_secret_channel():
 class TestSilentResume:
     """A valid persisted session unlocks later invocations with no prompt."""
 
-    def test_valid_session_resumes_with_no_authentication(self) -> None:
-        _create_profile()
-        _login()
+    def test_valid_session_resumes_with_no_authentication(self, _isolated_root: Path) -> None:
+        bucket_id = _create_profile()
+        _login_and_require_persistence(_isolated_root, bucket_id)
 
         # Fresh process: nothing in memory, only the persisted artefacts.
         close_active_bucket_session()
@@ -128,7 +164,7 @@ class TestSilentResume:
 
     def test_resume_advances_the_idle_deadline(self, _isolated_root: Path) -> None:
         bucket_id = _create_profile()
-        _login()
+        _login_and_require_persistence(_isolated_root, bucket_id)
         session = current_active_bucket_session()
         assert session is not None
         original_idle_deadline = session.idle_deadline
@@ -165,57 +201,152 @@ class TestFailClosedRefusals:
         assert "aeat config login" in semantic_cli_output(result)
 
     def test_idle_expiry_refuses(self, _isolated_root: Path) -> None:
-        bucket_id = self._mint_session_aged_by(minutes=20, storage_root=_isolated_root)
+        bucket_id, dek = self._aged_session_material(storage_root=_isolated_root, minutes=20)
+        assert profile_session_path(storage_root=_isolated_root, bucket_id=bucket_id).is_file()
+
+        # The elapsed sliding window is what refuses, and the lapsed record is
+        # deleted rather than left to be retried.
+        assert _resume(bucket_id) is ProfileSessionRefusalReason.EXPIRED_IDLE, (
+            "an elapsed idle deadline must refuse on the idle branch"
+        )
+        assert not profile_session_path(storage_root=_isolated_root, bucket_id=bucket_id).is_file()
+
+        # The operator-facing half: the same lapse refuses the real verb and
+        # names the verb that fixes it.
+        self._write_aged_session(storage_root=_isolated_root, bucket_id=bucket_id, dek=dek, minutes=20)
+        result = _invoke_decrypting_verb_without_the_secret_channel()
+
+        assert result.exit_code != 0
+        assert "aeat config login" in semantic_cli_output(result)
+        assert not profile_session_path(storage_root=_isolated_root, bucket_id=bucket_id).is_file()
+
+    def test_absolute_cap_refuses(self, _isolated_root: Path) -> None:
+        # Aged well past the 240-minute cap. Mint clamps the idle deadline to the
+        # absolute one, so both are elapsed here; asserting the branch by name is
+        # what proves the immutable cap - not the sliding window - did the
+        # refusing, since the absolute deadline is evaluated first.
+        bucket_id, dek = self._aged_session_material(
+            storage_root=_isolated_root,
+            minutes=300,
+            idle_minutes=600,
+        )
+
+        assert _resume(bucket_id) is ProfileSessionRefusalReason.EXPIRED_ABSOLUTE, (
+            "a session past its absolute cap must refuse on the absolute branch"
+        )
+        assert not profile_session_path(storage_root=_isolated_root, bucket_id=bucket_id).is_file()
+
+        self._write_aged_session(
+            storage_root=_isolated_root,
+            bucket_id=bucket_id,
+            dek=dek,
+            minutes=300,
+            idle_minutes=600,
+        )
+        result = _invoke_decrypting_verb_without_the_secret_channel()
+
+        assert result.exit_code != 0
+        assert "aeat config login" in semantic_cli_output(result)
+        assert not profile_session_path(storage_root=_isolated_root, bucket_id=bucket_id).is_file()
+
+    def test_unreadable_credential_store_refuses_as_custody_not_as_logout(
+        self,
+        _isolated_root: Path,
+    ) -> None:
+        """An unreachable credential store refuses on its own terms.
+
+        The operator logged in while the credential store was healthy and it
+        later became unreachable (a locked keyring, a changed logon session).
+        The record is intact and unexpired, so no deadline branch fires and the
+        resume reaches the keychain, which cannot answer.
+
+        This is deliberately NOT routed to the "run `aeat config login`"
+        refusal: re-authenticating cannot fix an unreachable credential store —
+        the login would have nowhere to custody its session key either — so
+        naming it would loop the operator. The contract is that the custody
+        failure surfaces as its own typed, actionable refusal on the shared
+        envelope spine rather than escaping the root callback unhandled.
+        """
+        bucket_id, _dek = self._aged_session_material(storage_root=_isolated_root, minutes=0)
         assert profile_session_path(storage_root=_isolated_root, bucket_id=bucket_id).is_file()
 
         result = _invoke_decrypting_verb_without_the_secret_channel()
 
         assert result.exit_code != 0
-        assert "aeat config login" in semantic_cli_output(result)
-        # Fail-closed: the lapsed artefacts are deleted, not left to be retried.
-        assert not profile_session_path(storage_root=_isolated_root, bucket_id=bucket_id).is_file()
+        document = json.loads(semantic_cli_output(result))
+        assert document["status"] == "error"
+        error = document["error"]
+        assert error["category"] == "AUTH"
+        assert error["code"] == "AUTH_STORAGE_KEYRING_UNAVAILABLE"
+        # The operator is handed a next action, not a dead end.
+        assert error["suggestion"]
 
-    def test_absolute_cap_refuses(self, _isolated_root: Path) -> None:
-        # Aged past the 240-minute cap while the idle window is still open,
-        # so only the absolute deadline can be doing the refusing.
-        bucket_id = self._mint_session_aged_by(minutes=300, storage_root=_isolated_root, idle_minutes=600)
-
-        result = _invoke_decrypting_verb_without_the_secret_channel()
-
-        assert result.exit_code != 0
-        assert "aeat config login" in semantic_cli_output(result)
-        assert not profile_session_path(storage_root=_isolated_root, bucket_id=bucket_id).is_file()
-
-    @staticmethod
-    def _mint_session_aged_by(
+    @classmethod
+    def _aged_session_material(
+        cls,
         *,
-        minutes: int,
         storage_root: Path,
+        minutes: int,
         idle_minutes: int = 15,
-    ) -> str:
-        """Mint a genuine session record whose clock has already run out.
-
-        Real record, real wrap, real keychain custody — only the login
-        instant is in the past, which is exactly the state a CLI process
-        finds after the operator walked away.
-        """
+    ) -> tuple[str, bytes]:
+        """Create a real profile and lay down a real, already-lapsed record."""
         bucket_id = _create_profile()
         _login()
         session = current_active_bucket_session()
         assert session is not None
         dek = session.dek
         delete_profile_session(storage_root=storage_root, bucket_id=bucket_id)
-        mint_profile_session(
+        cls._write_aged_session(
             storage_root=storage_root,
             bucket_id=bucket_id,
-            backend_kind=SecretStoreBackend.FILE,
             dek=dek,
-            now=_now() - timedelta(minutes=minutes),
+            minutes=minutes,
             idle_minutes=idle_minutes,
-            absolute_minutes=240,
         )
         close_active_bucket_session()
-        return bucket_id
+        return bucket_id, dek
+
+    @staticmethod
+    def _write_aged_session(
+        *,
+        storage_root: Path,
+        bucket_id: str,
+        dek: bytes,
+        minutes: int,
+        idle_minutes: int = 15,
+        absolute_minutes: int = 240,
+    ) -> None:
+        """Write a genuine session record whose clock has already run out.
+
+        Real AEAD wrap of a real logged-in DEK, real atomic on-disk write,
+        real deadline arithmetic — mirroring ``mint_profile_session`` exactly,
+        including its clamp of the idle deadline to the absolute cap. Only the
+        login instant is in the past, which is the state a CLI process finds
+        after the operator walked away.
+
+        The ephemeral session key is deliberately generated and dropped rather
+        than placed in the OS keychain. That is not a stand-in for custody: an
+        elapsed record is refused by the deadline branches of
+        ``resume_profile_session``, which run BEFORE the keychain is ever
+        consulted, so the expiry decision this exercises is reached identically
+        either way. Keeping the record keychain-free makes expiry verifiable on
+        hosts whose credential store is unreachable, and the callers assert the
+        refusal branch BY NAME so a test can never pass on the unrelated
+        ``KEYCHAIN_ENTRY_MISSING`` branch that a missing key would otherwise
+        produce.
+        """
+        authenticated_at: datetime = _now() - timedelta(minutes=minutes)
+        absolute_deadline = authenticated_at + timedelta(minutes=absolute_minutes)
+        record = wrap_profile_session_dek(
+            session_key=secrets.token_bytes(32),
+            dek=dek,
+            bucket_id=bucket_id,
+            backend_kind=SecretStoreBackend.FILE,
+            authenticated_at=authenticated_at,
+            idle_deadline=min(authenticated_at + timedelta(minutes=idle_minutes), absolute_deadline),
+            absolute_deadline=absolute_deadline,
+        )
+        write_profile_session(storage_root=storage_root, bucket_id=bucket_id, record=record)
 
 
 class TestHeadlessSecretChannel:

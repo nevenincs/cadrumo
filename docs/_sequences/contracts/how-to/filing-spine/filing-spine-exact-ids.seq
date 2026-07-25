@@ -1,6 +1,9 @@
 @step Verify a specific calculation by its reference number.
 @static aeat app modelo work verify <calculation-revision-id>
+@blocked unconverted Shows the addressing form with a metavariable; convert it with a captured real id.
 @step File a specific calculation by its reference number.
 @static aeat app modelo work file <calculation-revision-id>
+@blocked unconverted Shows the addressing form with a metavariable; convert it with a captured real id.
 @step Export a specific work unit and revision by their reference numbers.
 @static aeat app modelo export <work-unit-id> --revision <calculation-revision-id> --output ./modelo-303.boe
+@blocked unconverted Shows the addressing form with a metavariable; convert it with a captured real id.

@@ -119,7 +119,7 @@ def test_import_csv_source_jurisdiction_reaches_canonical_exports(
         encoding="utf-8",
     )
 
-    imported = invoke_cached_cli(["app", "ledger", "import", str(statement), "--provider", "csv"])
+    imported = invoke_cached_cli(["app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
     assert imported.exit_code == 0, imported.output
 
     expected = {

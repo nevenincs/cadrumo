@@ -274,7 +274,7 @@ def test_manual_ledger_root_format_still_controls_emitted_payload_shape(tmp_path
     )
 
     result = invoke_cached_cli(
-        ["--format", "json", "app", "ledger", "import", str(statement), "--provider", "csv", "--dry-run"],
+        ["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv", "--dry-run"],
         env=env,
     )
 

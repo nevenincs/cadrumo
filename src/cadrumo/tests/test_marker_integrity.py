@@ -276,6 +276,7 @@ def _marker_module_inventory(path: Path) -> _MarkerModuleInventory:
         )
     )
     source_has_live_gate_helper = "requires_live_enabled" in source
+    marker_aliases = _module_marker_aliases(tree)
 
     docstring_ranges: set[tuple[int, int]] = set()
     process_symbol_violations: list[str] = []
@@ -298,7 +299,7 @@ def _marker_module_inventory(path: Path) -> _MarkerModuleInventory:
             if any(pattern.search(node.name) for pattern in _PROCESS_SYMBOL_METADATA_PATTERNS):
                 process_symbol_violations.append(f"{relative}:{node.lineno}: {node.name}")
             for decorator in node.decorator_list:
-                name = _pytest_mark_name(decorator)
+                name = _pytest_mark_name(decorator) or _aliased_marker_name(decorator, marker_aliases)
                 if name in _EXECUTION_MARKERS or (name is not None and name.startswith("hex_")):
                     function_level_marker_violations.append(f"{relative}:{decorator.lineno}: @{name}")
 
@@ -456,13 +457,51 @@ def _pytest_mark_name(node: ast.AST) -> str | None:
     return attr_chain.attr
 
 
-def _decorator_marker_names(node: ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef) -> set[str]:
+def _module_marker_aliases(tree: ast.Module) -> dict[str, str]:
+    """Return module-level ``NAME = pytest.mark.<marker>`` bindings.
+
+    A marker bound to a constant and applied as a bare ``@NAME`` decorator is
+    invisible to :func:`_pytest_mark_name`, which only recognises the literal
+    attribute chain. The runtime collection hook sees the real marker either
+    way, so an unresolved alias lets a module declare one execution lane at
+    module level and a conflicting one per test — a combination that raises
+    :class:`pytest.UsageError` during collection and aborts the entire run
+    rather than failing this gate. Resolving the binding keeps the static gate
+    and the runtime hook looking at the same marker set.
+    """
+    aliases: dict[str, str] = {}
+    for node in tree.body:
+        if not isinstance(node, ast.Assign) or len(node.targets) != 1:
+            continue
+        target = node.targets[0]
+        if not isinstance(target, ast.Name):
+            continue
+        marker = _pytest_mark_name(node.value)
+        if marker is not None:
+            aliases[target.id] = marker
+    return aliases
+
+
+def _decorator_marker_names(
+    node: ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef,
+    aliases: dict[str, str] | None = None,
+) -> set[str]:
     names: set[str] = set()
     for decorator in node.decorator_list:
         name = _pytest_mark_name(decorator)
+        if name is None:
+            name = _aliased_marker_name(decorator, aliases or {})
         if name is not None:
             names.add(name)
     return names
+
+
+def _aliased_marker_name(decorator: ast.expr, aliases: dict[str, str]) -> str | None:
+    """Return the marker a bare ``@NAME`` decorator resolves to, if any."""
+    target = decorator.func if isinstance(decorator, ast.Call) else decorator
+    if isinstance(target, ast.Name):
+        return aliases.get(target.id)
+    return None
 
 
 def _project_module_marker_names(path: Path) -> tuple[set[str], str | None]:
@@ -483,6 +522,7 @@ def _project_test_item_marker_violations(path: Path) -> list[str]:
         return [f"{relative}:{lineno}: {error}"]
 
     violations: list[str] = []
+    aliases = _module_marker_aliases(tree)
 
     def check_item(lineno: int, name: str, marker_names: set[str]) -> None:
         execution = marker_names & _EXECUTION_MARKERS
@@ -494,14 +534,18 @@ def _project_test_item_marker_violations(path: Path) -> list[str]:
 
     for node in tree.body:
         if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) and node.name.startswith("test_"):
-            check_item(node.lineno, node.name, module_markers | _decorator_marker_names(node))
+            check_item(node.lineno, node.name, module_markers | _decorator_marker_names(node, aliases))
             continue
         if not isinstance(node, ast.ClassDef) or not node.name.startswith("Test"):
             continue
-        class_markers = module_markers | _decorator_marker_names(node)
+        class_markers = module_markers | _decorator_marker_names(node, aliases)
         for child in node.body:
             if isinstance(child, ast.FunctionDef | ast.AsyncFunctionDef) and child.name.startswith("test_"):
-                check_item(child.lineno, f"{node.name}.{child.name}", class_markers | _decorator_marker_names(child))
+                check_item(
+                    child.lineno,
+                    f"{node.name}.{child.name}",
+                    class_markers | _decorator_marker_names(child, aliases),
+                )
 
     return violations
 
@@ -817,6 +861,33 @@ def test_campaign_metadata_scan_ignores_noqa_lint_codes() -> None:
 
     assert not any(pattern.search(lint_scan_text) for pattern in _CAMPAIGN_METADATA_PATTERNS)
     assert any(pattern.search(campaign_scan_text) for pattern in _CAMPAIGN_METADATA_PATTERNS)
+
+
+def test_alias_bound_execution_marker_resolves_to_its_marker_name() -> None:
+    """A marker bound to a constant is recognised through the bare decorator.
+
+    Proves the detector is not vacuous. An alias-applied execution marker
+    combines with the module-level ``pytestmark`` to give a test two execution
+    markers, which the runtime collection hook rejects with a
+    :class:`pytest.UsageError` that aborts the whole run before any test
+    executes. This gate has to see the same marker set the hook does, so the
+    resolution is asserted against the shape that caused that abort.
+    """
+    tree = ast.parse(
+        "import pytest\n"
+        "pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]\n"
+        "_CLASSIFICATION = pytest.mark.unit\n"
+        "@_CLASSIFICATION\n"
+        "def test_case() -> None: ...\n",
+    )
+    aliases = _module_marker_aliases(tree)
+    assert aliases == {"_CLASSIFICATION": "unit"}
+
+    function = next(node for node in tree.body if isinstance(node, ast.FunctionDef))
+    assert _decorator_marker_names(function, aliases) == {"unit"}
+    # Without the alias map the decorator is invisible: that blindness is what
+    # let a two-lane module reach main and abort every collection.
+    assert _decorator_marker_names(function) == set()
 
 
 def test_qualified_name_handles_parametrize_call_shape() -> None:

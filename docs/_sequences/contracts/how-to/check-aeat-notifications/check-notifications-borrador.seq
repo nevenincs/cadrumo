@@ -1,6 +1,9 @@
 @step Download and list the active borrador snapshots.
 @static aeat app live borrador 100 list --state active
+@blocked live-aeat The app live group reads the operator's authenticated AEAT sede session.
 @step View a specific borrador's box values.
 @static aeat app live borrador 100 view <snapshot-id>
+@blocked live-aeat The app live group reads the operator's authenticated AEAT sede session.
 @step Show the latest active draft for a filing year.
 @static aeat app live borrador 100 latest --filing-year 2026
+@blocked live-aeat The app live group reads the operator's authenticated AEAT sede session.

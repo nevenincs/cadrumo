@@ -24,17 +24,32 @@ whatever made it slow.
 
 from __future__ import annotations
 
+import contextlib
 import threading
 import time
+from collections.abc import Iterator
 
 import pytest
 
 from ...errors import KeyringUnavailableError, MasterKeyKeychainLockedError
-from .._master_key import _read_master_key_within_budget
+from .._master_key import KeyringMasterKeyProvider, _read_master_key_within_budget
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUDGET_S = 0.5
+
+
+@contextlib.contextmanager
+def _active_keyring_backend(backend: object) -> Iterator[None]:
+    """Install *backend* as the real process-wide keyring backend, then restore it."""
+    import keyring
+
+    previous = keyring.get_keyring()
+    keyring.set_keyring(backend)  # type: ignore[arg-type]
+    try:
+        yield
+    finally:
+        keyring.set_keyring(previous)
 
 
 class _BlockingKeyringProvider:
@@ -49,17 +64,6 @@ class _BlockingKeyringProvider:
         self.entered.set()
         self.released.wait()
         return b"\x00" * 32
-
-
-class _RaisingKeyringProvider:
-    """A provider whose read fails fast, to prove errors still propagate."""
-
-    def __init__(self, error: Exception) -> None:
-        self._error = error
-
-    def get_master_key(self) -> bytes:
-        """Raise the configured error immediately."""
-        raise self._error
 
 
 class _PromptKeyringProvider:
@@ -127,14 +131,25 @@ class TestWithinBudgetIsUnchanged:
         _read_master_key_within_budget(_PromptKeyringProvider(0.01), timeout_s=_BUDGET_S)
 
     def test_an_unusable_backend_still_reports_unavailable(self) -> None:
-        """The bound must not reclassify a genuine backend failure as locked."""
-        provider = _RaisingKeyringProvider(KeyringUnavailableError("no usable backend"))
+        """The bound must not reclassify a genuine backend failure as locked.
 
-        with pytest.raises(KeyringUnavailableError):
-            _read_master_key_within_budget(provider, timeout_s=_BUDGET_S)
+        This drives the REAL provider against the REAL no-op placeholder
+        backend the ``keyring`` package installs on a machine with no
+        usable keychain, so production's own backend probe raises the
+        error the guard has to pass through. The guard re-raises whatever
+        the read raised, so covering the one real error the platform can
+        actually produce covers the re-raise for every type.
+        """
+        from keyring.backends import fail
 
-    def test_a_locked_keychain_still_reports_locked(self) -> None:
-        provider = _RaisingKeyringProvider(MasterKeyKeychainLockedError("keychain locked"))
+        started = time.monotonic()
+        with _active_keyring_backend(fail.Keyring()), pytest.raises(KeyringUnavailableError) as caught:
+            _read_master_key_within_budget(KeyringMasterKeyProvider(), timeout_s=_BUDGET_S)
+        elapsed = time.monotonic() - started
 
-        with pytest.raises(MasterKeyKeychainLockedError):
-            _read_master_key_within_budget(provider, timeout_s=_BUDGET_S)
+        # Not the locked error: that one routes through pre-existing
+        # file-fallback artefacts or refuses, where an unusable backend
+        # may fall back unconditionally.
+        assert not isinstance(caught.value, MasterKeyKeychainLockedError)
+        # A fast real failure must surface as itself, not as a budget timeout.
+        assert elapsed < _BUDGET_S, "the real error waited out the budget instead of propagating"

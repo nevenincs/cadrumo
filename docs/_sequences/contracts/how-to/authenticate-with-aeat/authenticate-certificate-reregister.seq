@@ -1,2 +1,3 @@
 @step Re-register a renewed certificate under its existing name.
 @static aeat config auth certificate register --name apoderado-acme --file ./renewed-acme.p12
+@blocked credential-store Needs certificate custody in the OS credential store, absent from the sandbox.

@@ -1,2 +1,3 @@
 @step Read the latest DEHu notification snapshot from AEAT.
 @static aeat app live notifications latest
+@blocked live-aeat The app live group reads the operator's authenticated AEAT sede session.

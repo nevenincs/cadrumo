@@ -41,7 +41,7 @@ def test_export_csv_is_refused_by_raw_bank_import_provider(tmp_path: Path) -> No
     # A canonical ledger export is a rich local ledger artifact, not a bank CSV
     # statement. The raw bank provider must refuse it instead of creating
     # phantom rows or offering a restore path here.
-    reimported = _invoke(["app", "ledger", "import", str(out), "--provider", "csv"])
+    reimported = _invoke(["app", "ledger", "import", "--file", str(out), "--provider", "csv"])
     assert reimported.exit_code != 0, reimported.output
     assert "raw bank CSV provider" in reimported.output
     assert len(_list_rows()) == before, reimported.output
@@ -62,7 +62,7 @@ def test_xlsx_import_is_id_for_id_parity_with_csv(tmp_path: Path) -> None:
     xlsx_path = tmp_path / "bbva.xlsx"
     _xlsx_mirror_of_csv(csv_path, xlsx_path)
     xlsx_res = _invoke(
-        ["--format", "json", "app", "ledger", "import", str(xlsx_path), "--provider", "xlsx"],
+        ["--format", "json", "app", "ledger", "import", "--file", str(xlsx_path), "--provider", "xlsx"],
     )
     assert xlsx_res.exit_code == 0, xlsx_res.output
     xlsx_ids = {r["transaction_id"] for r in _list_rows()}
@@ -72,13 +72,13 @@ def test_xlsx_import_is_id_for_id_parity_with_csv(tmp_path: Path) -> None:
 def test_cross_format_reimport_dedups_by_fingerprint(tmp_path: Path) -> None:
     """Re-importing the same rows in a different format adds nothing."""
     csv_path = _CORPUS / "bbva-business-eur.csv"
-    _invoke(["app", "ledger", "import", str(csv_path), "--provider", "csv"])
+    _invoke(["app", "ledger", "import", "--file", str(csv_path), "--provider", "csv"])
     before = len(_list_rows())
     assert before > 40
     xlsx_path = tmp_path / "bbva.xlsx"
     _xlsx_mirror_of_csv(csv_path, xlsx_path)
     reimport = _invoke(
-        ["--format", "json", "app", "ledger", "import", str(xlsx_path), "--provider", "xlsx"],
+        ["--format", "json", "app", "ledger", "import", "--file", str(xlsx_path), "--provider", "xlsx"],
     )
     assert reimport.exit_code == 0, reimport.output
     # Cross-format re-import of identical rows dedups to zero new rows.
@@ -88,13 +88,13 @@ def test_cross_format_reimport_dedups_by_fingerprint(tmp_path: Path) -> None:
 def test_ofx_and_pdf_providers_import_real_transactions() -> None:
     """The OFX and PDF providers ingest real bank exports."""
     ofx = _FIN_FIXTURES / "synthetic-transactions.ofx"
-    ofx_res = _invoke(["--format", "json", "app", "ledger", "import", str(ofx), "--provider", "ofx"])
+    ofx_res = _invoke(["--format", "json", "app", "ledger", "import", "--file", str(ofx), "--provider", "ofx"])
     assert ofx_res.exit_code == 0, ofx_res.output
     assert len(_list_rows()) > 0
 
     _invoke(["app", "ledger", "reset", "--yes"])
     pdf = _FIN_FIXTURES / "n26" / "n26-savings-2025-01.pdf"
-    pdf_res = _invoke(["--format", "json", "app", "ledger", "import", str(pdf), "--provider", "pdf"])
+    pdf_res = _invoke(["--format", "json", "app", "ledger", "import", "--file", str(pdf), "--provider", "pdf"])
     assert pdf_res.exit_code == 0, pdf_res.output
     assert len(_list_rows()) > 0
 
@@ -110,7 +110,7 @@ def test_jsonl_export_roundtrips_back_through_import(tmp_path: Path) -> None:
     # The canonical JSONL export carries the rich ledger schema, not a bank
     # layout; importing it through a bank provider must refuse explicitly rather
     # than being treated as a permissive no-op.
-    reimported = _invoke(["app", "ledger", "import", str(out), "--provider", "csv"])
+    reimported = _invoke(["app", "ledger", "import", "--file", str(out), "--provider", "csv"])
     assert reimported.exit_code != 0, reimported.output
     assert "cannot be imported" in reimported.output
     assert len(_list_rows()) == before

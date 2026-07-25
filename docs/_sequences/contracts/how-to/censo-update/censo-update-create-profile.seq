@@ -1,2 +1,3 @@
 @step Create a taxpayer profile non-interactively.
 @static aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --activity "consultoria"
+@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.

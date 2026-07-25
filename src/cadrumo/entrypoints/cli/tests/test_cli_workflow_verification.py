@@ -231,7 +231,7 @@ def _drive_workflow_round_trip(backend: Path) -> _WorkflowRoundTripOutcome:
         "2026-04-15,Client SL,Payment F-001,121.00,EUR,bank-001\n",
         encoding="utf-8",
     )
-    imported = _invoke(["--format", "json", "app", "ledger", "import", str(statement), "--provider", "csv"])
+    imported = _invoke(["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
     overview = _invoke(["--format", "json", "app", "overview", "status"])
     review = _invoke(["--format", "json", "app", "review", "queue", "--source-kind", "ledger_transaction"])
     assert imported.exit_code == 0, imported.output

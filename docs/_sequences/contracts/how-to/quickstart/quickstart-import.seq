@@ -1,2 +1,4 @@
-@static aeat app ledger import ./statement.csv --provider auto --dry-run
-@static aeat app ledger import ./statement.csv --provider auto
+@static aeat app ledger import --file ./statement.csv --provider auto --dry-run
+@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
+@static aeat app ledger import --file ./statement.csv --provider auto
+@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.

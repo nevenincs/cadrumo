@@ -43,6 +43,7 @@ List the provider CLIs visible on `PATH`. Each row reports a provider, its
 status (`available` or `unavailable`), and a fix when something is missing:
 
 ```{cli-sequence} llm-providers
+:verify: Confirm each provider CLI reports whether it is available.
 ```
 
 This checks discoverability only, not account login. The local vision reader

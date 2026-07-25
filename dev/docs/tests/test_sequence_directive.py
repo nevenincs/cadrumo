@@ -640,8 +640,10 @@ _INDEX_ALL_STATIC = "# Pull live data\n\n```{cli-sequence} live-all-static\n```\
 _CONTRACT_ALL_STATIC = (
     "@step Pull the justificante from AEAT.\n"
     "@static aeat app live justificante pull\n"
+    "@blocked live-aeat The pull verb fetches from the AEAT sede; the sandbox refuses it.\n"
     "@step View the stored justificante.\n"
     "@static aeat app live justificante latest\n"
+    "@blocked live-aeat The app live group reads the operator's authenticated sede session.\n"
 )
 
 
@@ -706,7 +708,8 @@ def test_mixed_sequence_renders_trailing_static_frame_without_output() -> None:
             "@result aeat app modelo work verify wu\n"
             '@expect result.status == "ok"\n'
             "@step Upload the exported file at the AEAT portal yourself.\n"
-            "@static aeat app live justificante pull"
+            "@static aeat app live justificante pull\n"
+            "@blocked live-aeat The pull verb fetches from the AEAT sede; the sandbox refuses it."
         ),
     )
     golden = SequenceGolden(

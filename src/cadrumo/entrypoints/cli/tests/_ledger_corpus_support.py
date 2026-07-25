@@ -77,7 +77,7 @@ def _match(description: str, rules: list[dict[str, Any]]) -> dict[str, Any] | No
 def _import_corpus() -> int:
     total = 0
     for name in _FILES:
-        result = _invoke(["app", "ledger", "import", str(_CORPUS / name), "--provider", "csv"])
+        result = _invoke(["app", "ledger", "import", "--file", str(_CORPUS / name), "--provider", "csv"])
         assert result.exit_code == 0, f"{name}: {result.output}"
         total += 1
     return total
@@ -86,7 +86,7 @@ def _import_corpus() -> int:
 def _import_bbva() -> None:
     """Lighter import (single business account) for row-targeted journeys."""
     result = _invoke(
-        ["app", "ledger", "import", str(_CORPUS / "bbva-business-eur.csv"), "--provider", "csv"],
+        ["app", "ledger", "import", "--file", str(_CORPUS / "bbva-business-eur.csv"), "--provider", "csv"],
     )
     assert result.exit_code == 0, result.output
 

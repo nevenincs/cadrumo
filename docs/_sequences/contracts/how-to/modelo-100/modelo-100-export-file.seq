@@ -1,6 +1,9 @@
 @step Export the verified declaration to a local fichero-BOE.
 @static aeat app modelo export --modelo 100 --year 2025 --period 0A --output ./modelo-100.boe
+@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
 @step After you upload at the portal, record the local filed marker.
 @static aeat app modelo work file --modelo 100 --year 2025 --period 0A
+@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
 @step Pull the justificante and reconcile it against the filed record (a live AEAT read).
 @static aeat app modelo reconcile pull --modelo 100 --year 2025 --period 0A
+@blocked live-aeat The pull verb fetches from the AEAT sede; the sandbox refuses live frames.

@@ -1,7 +1,7 @@
 @step Preview the import - a dry run saves no rows.
-aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv --dry-run
+aeat app ledger import --file fixtures/movimientos-2026-1t.csv --provider csv --dry-run
 @step Save the rows by repeating the command without --dry-run.
-aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+aeat app ledger import --file fixtures/movimientos-2026-1t.csv --provider csv
 @step Confirm an imported row is now in the ledger.
 @result aeat --format json app ledger view 71a5db2b
 @expect result.transaction.description == "Cobro factura F-2026-001 servicios de consultoria"

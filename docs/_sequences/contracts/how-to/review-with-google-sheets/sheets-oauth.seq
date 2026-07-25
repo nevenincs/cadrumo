@@ -1,4 +1,6 @@
 @step Register the Desktop OAuth client for the active profile.
 @static aeat config google register --client-json ./client_secret.json
+@blocked external-service Needs a Google OAuth consent and a live Sheets API the sandbox has no credentials for.
 @step Run the Google consent flow.
 @static aeat config google login
+@blocked external-service Refuses with no registered Google OAuth client; consent cannot be granted here.

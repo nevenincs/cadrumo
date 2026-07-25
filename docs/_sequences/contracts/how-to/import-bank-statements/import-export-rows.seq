@@ -1,8 +1,9 @@
 @step Import the quarter's movements so there is something to export.
-@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@setup aeat app ledger import --file fixtures/movimientos-2026-1t.csv --provider csv
 @step Export the first quarter to a CSV snapshot.
 @result aeat --format json app ledger export --output ./ledger-2026-q1.csv --year 2026 --period 1T
 @expect result.export_format == "csv"
 @expect exit_code == 0
 @step Write an XLSX snapshot of the whole year instead. XLSX embeds a per-run id, so it is shown as a display frame.
 @static aeat app ledger export --output ./ledger-2026.xlsx --export-format xlsx --year 2026 --period 0A
+@blocked unconverted Runs clean in the sandbox probe; nothing blocks it, so it awaits conversion.

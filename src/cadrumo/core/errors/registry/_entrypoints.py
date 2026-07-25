@@ -41,6 +41,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.entrypoints.cli._errors.CliOutboundPayloadBoundaryError",
+        ErrorCode(
+            code="INTERNAL_CLI_OUTBOUND_PAYLOAD_BOUNDARY",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.cli_outbound_payload_boundary",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.entrypoints.cli._errors.CliStoredDataValidationBoundaryError",
         ErrorCode(
             code="INTEGRITY_STORED_DATA_VALIDATION_BOUNDARY",

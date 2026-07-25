@@ -4,5 +4,7 @@
 @expect exit_code == 0
 @step Fix a wrong seed. This refuses once an already-filed 303 has consumed the basis, so it is a display frame.
 @static aeat app modelo iva-wallet correct --filing-year 2024 --period 4T --amount 1200.50 --reason "fix opening balance" --confirm
+@blocked unconverted Runs clean in the sandbox probe; nothing blocks it, so it awaits conversion.
 @step Review the AEAT-side compensation history (a live read).
 @static aeat app live iva-wallet pull-history --from-year 2024 --to-year 2025
+@blocked live-aeat The app live group reads the operator's authenticated AEAT sede session.

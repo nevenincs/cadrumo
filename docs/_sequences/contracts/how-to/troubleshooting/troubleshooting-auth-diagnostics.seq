@@ -4,3 +4,4 @@
 @expect exit_code == 0
 @step Inspect one diagnostic by its reference.
 @static aeat config auth diagnostics show <diagnostic-id>
+@blocked unconverted Shows the addressing form with a metavariable; convert it with a captured real id.
