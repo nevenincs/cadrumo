@@ -1426,6 +1426,8 @@ application:
         is newer than this application supports.
       unsupported_bundle_schema_version: The bundle schema version is not supported
         by this application version.
+      registration_label_blank: 'The profile name cannot be empty.'
+      registration_passphrase_too_short: 'The password must be at least {minimum_length} characters long.'
     notices:
       censo_divergences_open: '{count} profile field(s) still diverge from the Certificado
         de Situación Censal and remain unresolved: {axes}.'
@@ -6072,6 +6074,7 @@ errors:
     submission_preflight_error_findings: Draft has {finding_count} ERROR-severity
       finding(s); resolve them before submission.
     unsupported_currency: The currency code provided is not supported.
+    profile_registration: 'The profile could not be registered.'
   snapshot:
     ambiguous_revision_selection: 'More than one registry revision matches modelo
       %{modelo_id}: %{candidate_ids}.'
@@ -6516,6 +6519,7 @@ wizard:
     status:
       created: created
       updated: updated
+      saved: 'saved'
   demo:
     description: A demonstration section to test wizard functionality
     section:

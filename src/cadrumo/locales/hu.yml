@@ -1481,6 +1481,8 @@ application:
         ez az alkalmazás nem támogatja.
       unsupported_bundle_schema_version: A csomag sémaverziója nem támogatott ebben
         az alkalmazásverzióban.
+      registration_label_blank: 'A profil neve nem lehet üres.'
+      registration_passphrase_too_short: 'A jelszónak legalább {minimum_length} karakter hosszúnak kell lennie.'
     notices:
       censo_divergences_open: '{count} profiladat továbbra is eltér a Certificado
         de Situación Censal tanúsítványtól és megoldatlan: {axes}.'
@@ -6387,6 +6389,7 @@ errors:
     submission_preflight_error_findings: A tervezetben {finding_count} ERROR súlyosságú
       megállapítás van; javítsa ezeket benyújtás előtt.
     unsupported_currency: A megadott devizakód nem támogatott.
+    profile_registration: 'A profil regisztrációja nem sikerült.'
   snapshot:
     ambiguous_revision_selection: 'Egynél több nyilvántartási revízió illeszkedik
       a(z) %{modelo_id} modellhez: %{candidate_ids}.'
@@ -6850,6 +6853,7 @@ wizard:
     status:
       created: létrehozva
       updated: frissitett
+      saved: 'mentve'
   demo:
     description: Bemutató szekció a varázslófunkció teszteléséhez
     section:

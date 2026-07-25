@@ -1555,6 +1555,8 @@ application:
         instantánea de perfil es más reciente de lo que admite esta aplicación.
       unsupported_bundle_schema_version: La versión del esquema del paquete no es
         compatible con esta versión de la aplicación.
+      registration_label_blank: 'El nombre del perfil no puede estar vacío.'
+      registration_passphrase_too_short: 'La contraseña debe tener al menos {minimum_length} caracteres.'
     notices:
       censo_divergences_open: '{count} dato(s) del perfil siguen difiriendo del Certificado
         de Situación Censal y quedan sin resolver: {axes}.'
@@ -6537,6 +6539,7 @@ errors:
     submission_preflight_error_findings: El borrador tiene {finding_count} incidencia(s)
       de severidad ERROR; resuélvelas antes de presentar.
     unsupported_currency: El código de moneda indicado no es compatible.
+    profile_registration: 'No se ha podido registrar el perfil.'
   snapshot:
     ambiguous_revision_selection: 'Más de una revisión del registro coincide con el
       modelo %{modelo_id}: %{candidate_ids}.'
@@ -6995,6 +6998,7 @@ wizard:
     status:
       created: creado
       updated: actualizado
+      saved: 'guardado'
   demo:
     description: Una sección de demostración para probar la funcionalidad del asistente.
     section:

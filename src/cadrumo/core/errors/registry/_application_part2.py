@@ -404,6 +404,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.user_profile._registration.ProfileRegistrationError",
+        ErrorCode(
+            code="REFUSED_PROFILE_REGISTRATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.profile_registration",
+            default_suggestion="aeat config profile create",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.user_profile._login_session.ProfileLoginThrottledError",
         ErrorCode(
             code="REFUSED_PROFILE_LOGIN_THROTTLED",

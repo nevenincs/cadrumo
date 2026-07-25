@@ -75,6 +75,13 @@ from ._auth_provider import AuthProviderDescription, AuthProviderKind
 from ._capabilities import ServiceCapability
 from ._casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from ._config_state_root import FormerProductStateError
+from ._credentials import (
+    LENGTH_ALONE_IS_STRONG,
+    LENGTH_FAIR_FLOOR,
+    PassphraseStrength,
+    assess_passphrase_strength,
+    character_class_count,
+)
 from ._google_credential_source import GoogleCredentialSourceKind
 from ._hex import HEX_PATTERN_64, HEX_PATTERN_128
 from ._iban import IBAN_SHAPE_RE, iban_mod_97
@@ -212,6 +219,8 @@ __all__: list[str] = [
     "HEX_PATTERN_64",
     "HEX_PATTERN_128",
     "IBAN_SHAPE_RE",
+    "LENGTH_ALONE_IS_STRONG",
+    "LENGTH_FAIR_FLOOR",
     "M210_TIPO_RENTA_CODE_PROJECTION",
     "M347_THRESHOLD_EUR",
     "MODELO_720_FOREIGN_ASSET_CLASS_CODES",
@@ -251,6 +260,7 @@ __all__: list[str] = [
     "Modelo",
     "OfficialTipoRentaCode",
     "OptionalExtra",
+    "PassphraseStrength",
     "Period",
     "PeriodError",
     "PeriodKind",
@@ -273,7 +283,9 @@ __all__: list[str] = [
     "TipoRentaIrnr",
     "accepted_period_codes",
     "accepted_period_patterns",
+    "assess_passphrase_strength",
     "capture_pointer",
+    "character_class_count",
     "classify_amendment_liability_direction",
     "classify_post_filing_event_kind",
     "clear_pointer",

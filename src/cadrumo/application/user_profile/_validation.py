@@ -10,6 +10,7 @@ from __future__ import annotations
 import re
 from collections.abc import Iterable
 from datetime import date
+from typing import Final
 
 from ...core.errors import BaseSeverity
 from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
@@ -35,6 +36,24 @@ basic form (``19780315``), which the rest of the profile stack does
 not canonicalise back to a :class:`datetime.date`. Anchoring the
 extended hyphenated layout keeps every persisted date fact in one
 shape."""
+
+REQUIRED_FIELD_MISSING_CODE: Final[str] = "required_field_missing"
+"""Issue code for a schema-required field absent from the fact set."""
+
+CONDITIONAL_REQUIRED_FIELD_MISSING_CODE: Final[str] = "conditional_required_field_missing"
+"""Issue code for a field required only under some other fact's value."""
+
+COMPLETENESS_ISSUE_CODES: Final[frozenset[str]] = frozenset(
+    {REQUIRED_FIELD_MISSING_CODE, CONDITIONAL_REQUIRED_FIELD_MISSING_CODE},
+)
+"""The issue codes that mean "not finished yet" rather than "malformed".
+
+A profile born ``SETUP_INCOMPLETE`` defers exactly these; every other
+blocking issue (bad shape, bad value, unknown path) still refuses at
+registration. The lifecycle service re-applies them in full at the ACTIVE
+promotion — see
+:meth:`~cadrumo.application.user_profile.ProfileLifecycleService.complete_setup`.
+"""
 
 
 class ProfileValidationService:
@@ -190,7 +209,7 @@ class ProfileValidationService:
                     issues.append(
                         ProfileValidationIssue(
                             severity=BaseSeverity.ERROR,
-                            code="required_field_missing",
+                            code=REQUIRED_FIELD_MISSING_CODE,
                             path=path,
                             message=f"required field {path} is missing",
                         ),
@@ -205,7 +224,7 @@ class ProfileValidationService:
         return tuple(
             ProfileValidationIssue(
                 severity=BaseSeverity.ERROR,
-                code="conditional_required_field_missing",
+                code=CONDITIONAL_REQUIRED_FIELD_MISSING_CODE,
                 path=path,
                 message=f"conditionally required field {path} is missing",
             )
@@ -228,4 +247,9 @@ class ProfileValidationService:
         return str(value)
 
 
-__all__ = ["ProfileValidationService"]
+__all__ = [
+    "COMPLETENESS_ISSUE_CODES",
+    "CONDITIONAL_REQUIRED_FIELD_MISSING_CODE",
+    "REQUIRED_FIELD_MISSING_CODE",
+    "ProfileValidationService",
+]

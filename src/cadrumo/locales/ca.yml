@@ -1547,6 +1547,8 @@ application:
         instantània de perfil no és compatible amb aquesta aplicació.
       unsupported_bundle_schema_version: La versió de l'esquema del paquet no és compatible
         amb aquesta versió de l'aplicació.
+      registration_label_blank: 'El nom del perfil no pot estar buit.'
+      registration_passphrase_too_short: 'La contrasenya ha de tenir com a mínim {minimum_length} caràcters.'
     notices:
       censo_divergences_open: '{count} dada/es del perfil encara difereixen del Certificat
         de Situació Censal i resten sense resoldre: {axes}.'
@@ -6500,6 +6502,7 @@ errors:
     submission_preflight_error_findings: L'esborrany té {finding_count} incidència(es)
       de severitat ERROR; resol-les abans de presentar.
     unsupported_currency: El codi de moneda indicat no és compatible.
+    profile_registration: 'No s''ha pogut registrar el perfil.'
   snapshot:
     ambiguous_revision_selection: 'Més d''una revisió del registre coincideix amb
       el model %{modelo_id}: %{candidate_ids}.'
@@ -6958,6 +6961,7 @@ wizard:
     status:
       created: creat
       updated: actualitzat
+      saved: 'desat'
   demo:
     description: Una secció de demostració per provar la funcionalitat de l'assistent
     section:

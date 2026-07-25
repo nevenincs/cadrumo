@@ -70,6 +70,7 @@ from ._profile_repository import ProfileRepository
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from ...adapters.persistence.storage.master_key import PassphraseCallback
     from ...domain.buckets import BucketEventHistoryRepositoryProtocol
     from ..workflow import WorkflowState
 
@@ -133,7 +134,7 @@ def _append_workflow_event(state: WorkflowState, *, action: str, bucket_id: str,
 
 
 @contextmanager
-def profile_create_storage_span(profile_id: str):
+def profile_create_storage_span(profile_id: str, *, passphrase_callback: PassphraseCallback | None = None):
     """Open the first-profile storage span for a bucket being created.
 
     The span writes the provisional :class:`~cadrumo.core.BucketPointer`
@@ -143,6 +144,15 @@ def profile_create_storage_span(profile_id: str):
     creation, or later outside the repository's own rollback boundary, the
     prior pointer bytes are restored and provisional bucket/DEK artifacts
     minted by this span are removed.
+
+    Args:
+        profile_id: Immutable UUID identity of the profile being created.
+        passphrase_callback: Optional resolver for the file backend's
+            passphrase. Supplied by the credential-first registration door
+            so the new bucket's key-encryption key derives from the
+            passphrase the operator just chose. Omitted by every other
+            create route, which resolves the ambient configured secret
+            exactly as before.
     """
     from ...adapters.persistence.storage.errors import (
         MasterKeyMaterialMissingError,
@@ -164,7 +174,7 @@ def profile_create_storage_span(profile_id: str):
         prior_pointer = pointer_transaction.capture()
         try:
             pointer_transaction.write(BucketPointer(bucket_id=profile_id, schema_version=1))
-            provider = get_master_key_provider()
+            provider = get_master_key_provider(passphrase_callback=passphrase_callback)
             try:
                 provider.get_master_key()
             except MasterKeyMaterialMissingError:
