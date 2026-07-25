@@ -18,13 +18,14 @@ it that would agree with itself.
 
 The SECONDARY wall is a static source scan. It is weak by construction: a
 static token check cannot see where a navigation lands, and the original
-specification for this gate proposed exactly one such check, for the
-token ``MOD036`` - which appears in NEITHER write surface, since the
-filing tool is ``BU36-ASIS/M036/index.zul`` and the write sibling is
-``BUGC-JDIT/ModifDomiDual``. That gate would have gone green over a
-reader parked beside a write surface. It is retained as a second wall and
-must never be treated as the proof; if the runtime half is ever removed
-as redundant, this file has failed at its job.
+specification for this gate proposed exactly one such check, for a token
+that appears in NEITHER of the two real write surfaces - the filing tool
+and the domicile-modification sibling both carry different route names.
+That gate would have gone green over a reader parked beside a write
+surface. It is retained as a second wall and must never be treated as the
+proof; if the runtime half is ever removed as redundant, this file has
+failed at its job. The paths themselves are not repeated here: they are
+declared canaries, so this file names none of them.
 """
 
 from __future__ import annotations
@@ -34,6 +35,13 @@ from pathlib import Path
 import pytest
 
 from ......core.config import Settings
+from ......tests.aeat_literal_fixtures import (
+    CENSAL_M036_FILING_TOOL_PATH_CANARY,
+    CENSAL_WRITE_SURFACE_PATH_CANARIES,
+    PROCEDIMIENTOINI_PATH_PREFIX_FIXTURE,
+    aeat_url,
+    configured_path,
+)
 from .. import is_forbidden_censal_landing
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -42,28 +50,46 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _SEDE_ROOT = Path(__file__).resolve().parent.parent
 _CENSAL_MODULE = _SEDE_ROOT / "_censal_datos.py"
 
-# Real AEAT write surfaces the reader must never be left sitting on.
-# Every one is drawn from bundled AEAT material or a live authenticated
-# capture, not invented for this test.
+# Procedure codes reachable from the consulta page's own launcher links.
+# G322 is the "Otras Modificaciones Censales" door confirmed live on the
+# page the reader lands on; the others are siblings in the same family,
+# present so the marker cannot be narrowed back to a single code.
+_LAUNCHER_CODES: tuple[str, ...] = ("G322", "G313", "G414")
+
+# Real AEAT write surfaces the reader must never be left sitting on, built
+# from declared canaries and configured origins rather than literals. The
+# origin is deliberately incidental: the landing rule keys on the path, so
+# any AEAT origin serving these paths must be refused.
 _WRITE_LANDINGS: tuple[str, ...] = (
-    "https://www1.agenciatributaria.gob.es/wlpl/BU36-M036/MOD036/index.zul",
-    "https://www1.agenciatributaria.gob.es/wlpl/BU36-ASIS/M036/index.zul",
-    "https://www6.agenciatributaria.gob.es/wlpl/BUGC-JDIT/ModifDomiDual?NIF=Y0000001Z",
-    "https://www6.agenciatributaria.gob.es/wlpl/BUGC-JDIT/ModifDomiNotif?NIF=Y0000001Z",
-    "https://sede.agenciatributaria.gob.es//Sede/procedimientoini/G322.shtml",
-    "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G313.shtml",
-    "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G414.shtml",
+    *(aeat_url("www1", path) for path in CENSAL_WRITE_SURFACE_PATH_CANARIES),
+    *(aeat_url("sede", f"{PROCEDIMIENTOINI_PATH_PREFIX_FIXTURE}{code}.shtml") for code in _LAUNCHER_CODES),
 )
 
 # The landing the reader legitimately wants, plus the surfaces sibling
-# readers use. A marker set that rejects these is unusable and would be
-# switched off, so they are pinned as must-pass.
+# readers use. A rule that rejects these is unusable and would be switched
+# off, so they are pinned as must-pass.
 _READ_LANDINGS: tuple[str, ...] = (
-    "https://www6.agenciatributaria.gob.es/wlpl/BUGC-JDIT/MdcAcceso?nifRepresentado=Y0000001Z",
-    "https://www6.agenciatributaria.gob.es/wlpl/TEWV-CORE/ResumenVlt",
-    "https://www6.agenciatributaria.gob.es/wlpl/GNNO-JDIT/ResumenInteresados",
-    "https://www1.agenciatributaria.gob.es/wlpl/DAI3-RUTI/CarteraCuotas",
+    aeat_url("www6", configured_path("sede_paths", "censal_datos")),
+    aeat_url("www6", configured_path("sede_paths", "expedientes_resumen")),
+    aeat_url("www6", configured_path("sede_paths", "notifications_summary")),
+    aeat_url("www1", configured_path("sede_paths", "iva_compensation_wallet")),
 )
+
+
+def _filing_path_hits(source: str) -> tuple[str, ...]:
+    """Return source lines naming a censal filing-tool path, comments aside.
+
+    Both walls use this, so the check the reader is held to is the same one
+    proven to fire on a planted path. The paths come from the declared
+    canaries rather than from literals repeated here.
+    """
+    return tuple(
+        line.strip()
+        for line in source.splitlines()
+        if any(path in line for path in CENSAL_WRITE_SURFACE_PATH_CANARIES)
+        and not line.strip().startswith("#")
+        and '"""' not in line
+    )
 
 
 def _forbidden_landing_markers() -> tuple[str, ...]:
@@ -102,13 +128,13 @@ class TestForbiddenLandingMarkers:
     def test_the_launcher_marker_is_a_prefix_not_a_code(self) -> None:
         """The procedure-launcher marker covers the family, not one door.
 
-        A literal such as ``G322`` catches the door that happened to be
-        found and leaves ``G313``, ``G414`` and every future code open.
-        This is the same defect as the ``MOD036`` token: a member standing
-        in for its class.
+        A single procedure code catches the door that happened to be found
+        and leaves its siblings and every future code open. That is the
+        same defect as the token this proof was originally specified
+        around: a member standing in for its class.
         """
         markers = _forbidden_landing_markers()
-        assert "/Sede/procedimientoini/" in markers, (
+        assert PROCEDIMIENTOINI_PATH_PREFIX_FIXTURE in markers, (
             f"the procedure-launcher marker must be the path prefix; declared markers are {markers}"
         )
 
@@ -184,20 +210,15 @@ class TestStaticFilingPathWall:
         path, not that it cannot LAND on one. The runtime landing refusal
         is the wall that matters.
         """
-        source = _CENSAL_MODULE.read_text(encoding="utf-8")
-        for fragment in ("BU36-M036", "BU36-ASIS", "MOD036"):
-            for line in source.splitlines():
-                stripped = line.strip()
-                if fragment in line and not stripped.startswith("#") and '"""' not in line:
-                    pytest.fail(f"censal reader source names filing path {fragment!r}: {stripped}")
+        offenders = _filing_path_hits(_CENSAL_MODULE.read_text(encoding="utf-8"))
+        assert not offenders, f"censal reader source names a filing path: {offenders}"
 
     def test_the_static_wall_fails_on_a_planted_filing_path(self, tmp_path: Path) -> None:
         """Prove the static scan reports a filing path rather than passing over it."""
         planted = tmp_path / "planted_reader.py"
         planted.write_text(
-            'TARGET = "https://www1.agenciatributaria.gob.es/wlpl/BU36-ASIS/M036/index.zul"\n',
+            f'TARGET = "{aeat_url("www1", CENSAL_M036_FILING_TOOL_PATH_CANARY)}"\n',
             encoding="utf-8",
         )
-        source = planted.read_text(encoding="utf-8")
-        hits = [line for line in source.splitlines() if "BU36-ASIS" in line and not line.strip().startswith("#")]
-        assert hits, "the static scan would not have reported a planted filing path"
+        offenders = _filing_path_hits(planted.read_text(encoding="utf-8"))
+        assert offenders, "the static scan would not have reported a planted filing path"
