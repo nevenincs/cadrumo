@@ -11,7 +11,7 @@ related:
   - "[[2026-07-17-post-release-distribution-plan]]"
 ---
 
-# `distribution-repo-topology` adr: `Distribution repositories are account-scoped and multi-product, not per-product` | (**status:** `accepted`)
+# `distribution-repo-topology` adr: `Distribution channels are shared and product-neutral, and Scoop needs no repository at all` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -41,19 +41,23 @@ tree references it.
   out-of-tap formula installs are effectively developer-only. The prefix is a
   real ecosystem constraint, not an accident of the current setup.
 - Scoop imposes no name prefix and resolves manifests from a `bucket/`
-  subdirectory when present, so a bucket repository may carry unrelated content
-  alongside its manifests.
-- A single tap holding many formulae under `Formula/`, and a single bucket
-  holding many manifests under `bucket/`, are both fully supported and are the
-  observed convention among maintainers who ship more than one tool.
+  subdirectory when present, so any repository — including the product's own —
+  can serve as a bucket while carrying unrelated content. A dedicated Scoop
+  bucket repository was therefore never necessary at all.
+- A single tap holding many formulae under `Formula/` is fully supported and is
+  the observed convention among maintainers who ship more than one tool. The
+  canonical template is the HashiCorp account tap, which serves 33 formulae —
+  terraform, vault, consul, nomad, packer and the rest — from one repository,
+  installed as a product path within the tap. Per-product taps are not the
+  convention.
 - Both managers reach their repository by ordinary git clone, so a private
   target is unusable by any user without push credentials — the private state
   of the current bucket and tap is what blocks the acquisition evidence rows,
   not a tooling gap.
 - The homebrew-core self-submission notability bar is far above this product's
-  current position, and the product repository is private with no public
-  signal at all, so core submission is not a reachable endgame within this
-  campaign's horizon.
+  current position — the self-submission tier is three times the ordinary one —
+  so core submission is not a reachable endgame within this campaign's horizon.
+  The tap is the terminal state for that channel, not a waypoint toward core.
 - For a Python CLI the dominant install channel is the Python tool installers;
   a tap and a bucket are supplementary reach, not the primary path.
 - The account already carries a merged publisher namespace in the community
@@ -70,25 +74,26 @@ tree references it.
   change; leaves four repositories for one product and a shape that multiplies
   by the number of products. Rejected — it preserves the fragmentation that
   prompted the review and teaches the next product to add two more repositories.
-- **Serve the bucket from the product repository's own `bucket/` directory.**
-  Mechanically supported by Scoop, removes one repository, and viable now that
-  the product repository is public. Rejected on the axis this record turns on:
-  a bucket living in one product's repository is product-scoped by
-  construction and cannot serve a sibling product, so it solves the count
-  while preserving exactly the fragmentation under review. No real-world
-  precedent was found for a product's primary repository serving its own
-  bucket either.
+- **A dedicated account-scoped Scoop bucket repository.** One bucket repo
+  serving every product, so a user adds one bucket and reaches all of them.
+  Rejected by the operator: it still creates a distribution repository, and the
+  standing objection is to distribution repositories as such, not merely to
+  their per-product multiplication. Since Scoop reads a `bucket/`
+  subdirectory, the repository buys a marginal user convenience at the cost of
+  the very thing being retired.
 - **Drop the tap and bucket entirely and ship only the Python channels and
   release assets.** Honest and cheap, and defensible for a Python CLI.
   Rejected as the primary ruling — the artifacts, the generators, and two of
   the three Homebrew evidence rows already exist and pass, so retiring them
   discards working, evidenced capability. Retained in part: the channels stay
   supplementary and are not claimed in documentation without evidence.
-- **Account-scoped multi-product bucket and tap, marketplace kept, landing
-  repository retired (chosen).** One `homebrew-tap` and one `scoop-bucket`
-  serving every product under the account, the existing account-scoped
-  marketplace kept and corrected, and the artifacts landing repository retired.
-  Two repositories instead of four, and the count no longer grows per product.
+- **Zero Scoop repository, one shared tap, marketplace kept, landing
+  repository retired (chosen).** Scoop is served from this repository's own
+  `bucket/` directory, so no bucket repository exists at all; Homebrew gets one
+  product-neutral `homebrew-tap` for the account, because its mandatory
+  `homebrew-` prefix leaves no in-repo option; the existing account marketplace
+  is kept and corrected; the artifacts landing repository is retired. One
+  distribution repository total, and it does not grow per product.
 
 ## Constraints
 
@@ -98,10 +103,13 @@ tree references it.
   publishes them. Publication is outward-facing and effectively irreversible
   once indexed, so it stays an operator decision.
 - The account is a user account, not an organization, so there are no
-  account-level Actions variables. The reuse this ruling buys is the shared
-  target repositories and the shared naming pattern, not a shared variable;
-  each product repository still declares its own. Renaming the variables
-  would therefore buy nothing mechanically and is not part of this decision.
+  account-level Actions variables and each product repository declares its own.
+  The variables are nonetheless renamed off the product prefix by operator
+  ruling. The mechanical gain is nil and was argued as such; the gain is that
+  the configuration a sibling product copies is identical rather than
+  needing a rename, which is what makes the topology transferable in practice.
+  The Scoop pair disappears entirely rather than being renamed, since an
+  in-repository bucket needs no target and no credential.
 - Moving the tap changes the user-visible install command, because the tap
   name is derived from the repository name. Any command already published must
   be swept in the same change.
@@ -121,20 +129,31 @@ tree references it.
 
 ## Implementation
 
-The bucket moves to one account-scoped repository whose manifests live under
-`bucket/`, added by users under an account-named bucket alias rather than a
-product-named one. The tap moves to one account-scoped repository carrying the
-mandatory `homebrew-` prefix, with formulae under `Formula/`, so the install
-command addresses the product within the account's tap rather than a
-product-specific tap. Both new targets are additive for sibling products: each
-later product adds one file.
+Scoop is served from this repository's own `bucket/` directory. No bucket
+repository exists, so the push takes no repository variable and no personal
+access token: it targets the workflow's own repository using the job's built-in
+token. Every sibling product repeats the identical layout in its own
+repository, which is what holds the per-product distribution-repository count
+at zero rather than merely reducing it.
 
-Every site naming the old targets is retargeted in one sweep — the channel
-descriptor that is the single source of truth for install commands, the two
-post-publication acquisition entry points that carry defaults, the publish
-authority's repository variables, and the acquisition test expectations. The
-bucket and tap push steps need no structural change, because each already
-stages exactly one file and therefore leaves sibling products' files untouched.
+The tap is one product-neutral account repository carrying the mandatory
+`homebrew-` prefix, with formulae under `Formula/`, so the install command
+addresses the product as a path within the account's tap. A second product adds
+one formula file and nothing else.
+
+The two remaining channel variables are renamed off the product prefix so a
+sibling product copies the same configuration verbatim. Every site naming the
+old targets is retargeted in one sweep — the channel descriptor that is the
+single source of truth for install commands, the acquisition entry points that
+carry defaults, the publish authority's variables and refusal text, and the
+workflow conformance expectations.
+
+The bucket and tap push steps stage exactly one product-scoped path each, which
+is what makes a shared channel safe. That property is pinned by a conformance
+gate asserting each push names its own file and carries none of the sweeping
+forms — stage-everything or a wholesale delete of the checkout — that would
+take a sibling product's file with it. That gate is the acceptance test for the
+design, and it fails against the previous workflow.
 
 The marketplace push does need a structural change. It currently deletes every
 tracked path except the git directory and replaces the tree from the release
@@ -157,9 +176,15 @@ The decisive evidence is that the account already ships a sibling product
 through an account-scoped publisher namespace with no per-product repository at
 all, while none of the sibling products has ever been given a bucket or a tap.
 The per-product shape was therefore never a considered pattern the account
-follows — it was applied once, to one product, and not repeated. Consolidating
-to account scope aligns this product with what the account already does rather
-than imposing a new convention on it.
+follows — it was applied once, to one product, and not repeated. The external
+template points the same way: the canonical multi-product tap serves 33
+formulae from one repository.
+
+The Scoop finding is what makes this more than a consolidation. A bucket
+repository was never required in the first place, because Scoop reads a
+`bucket/` subdirectory of any repository. The three repositories that existed
+for this product were not an over-application of a necessary pattern; one of
+them answered a requirement that does not exist.
 
 The ecosystem research resolves the part of the current shape that is not a
 mistake and should not be reported as one. Separate bucket and tap
@@ -177,10 +202,16 @@ next product adds one file to each.
 
 ## Consequences
 
-Two repositories replace four, and the count stays flat as products are added.
-The bucket, tap, and marketplace become reachable by ordinary users once the
-operator publishes them, which unblocks the acquisition evidence rows that have
-been blocked on private targets rather than on any missing capability.
+One repository replaces four, and the count stays flat as products are added.
+The tap and marketplace become reachable by ordinary users once the operator
+creates and publishes the tap, which unblocks the acquisition evidence rows
+that have been blocked on private targets rather than on any missing
+capability. Scoop needs no such step at all.
+
+The in-repository bucket carries one operational consequence worth stating: a
+publication now commits to this repository's default branch. If branch
+protection later requires reviews or checks on that branch, the rule must admit
+the publish workflow or the Scoop push fails.
 
 The install commands change shape, addressing the product within an
 account-scoped bucket and tap. Because nothing has been published, no user is

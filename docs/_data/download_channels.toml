@@ -53,14 +53,15 @@ artifact_kinds = ["scoop-manifest"]
 availability = "public_launch"
 package = "cadrumo"
 registry = "Scoop bucket"
-# Account-scoped bucket serving every product published under this account, not
-# a per-product bucket. Scoop imposes no repo-name prefix and resolves manifests
-# from `bucket/`, so one repo carries one manifest per product.
-bucket = "nevenincs"
-bucket_repo = "nevenincs/scoop-bucket"
+# Scoop resolves manifests from a `bucket/` subdirectory when one is present, so
+# the product repository serves as its own bucket and no separate bucket
+# repository exists. Every product under the account repeats this layout in its
+# own repository, which is why no bucket repo has to be created per product.
+bucket = "cadrumo"
+bucket_repo = "nevenincs/cadrumo"
 install_commands = [
-  "scoop bucket add nevenincs https://github.com/nevenincs/scoop-bucket",
-  "scoop install nevenincs/cadrumo",
+  "scoop bucket add cadrumo https://github.com/nevenincs/cadrumo",
+  "scoop install cadrumo",
 ]
 
 [[channel]]

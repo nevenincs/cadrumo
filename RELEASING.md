@@ -146,30 +146,35 @@ Arm `publish-release.yml` before the first publication, in this order:
 2. Create the `release` GitHub Environment with yourself as a required reviewer. The
    approval click on each dispatched run is the human publication gate.
 
-The Scoop bucket, the Homebrew tap, and the plugin marketplace are **account-scoped and
-shared across every product published under the account**, not per-product repositories.
-Each product owns one manifest in the bucket, one formula in the tap, and one plugin
-subtree in the marketplace. Create each once; later products reuse them. All three MUST
-be public — both package managers reach them by ordinary `git clone`, so a private
-target is unusable by anyone without push credentials.
+There are **no per-product distribution repositories**. Scoop is served from this
+repository's own `bucket/` directory, and the Homebrew tap and Claude marketplace are
+single account-level repositories shared by every product published under the account.
+The two channel variables are deliberately **product-neutral**, so a sibling product
+sets the identical pair and drops in one more formula file and one more plugin subtree
+with no restructuring.
 
-3. Create the public account-scoped Scoop bucket `nevenincs/scoop-bucket` and set:
-   - Repository variable `CADRUMO_SCOOP_BUCKET_REPO` to its slug (`<owner>/<repo>`)
-   - Repository secret `CADRUMO_SCOOP_BUCKET_TOKEN` to a PAT with write access
+3. **Scoop — nothing to create or configure.** Scoop resolves manifests from a
+   `bucket/` subdirectory, so this repository is its own bucket. The publish workflow
+   pushes `bucket/cadrumo.json` to `github.repository` using the job's own
+   `GITHUB_TOKEN`; there is no bucket repository, no variable, and no PAT. Users run
+   `scoop bucket add cadrumo https://github.com/nevenincs/cadrumo`.
 
-   Scoop imposes no repository-name prefix. Users add it under the account alias:
-   `scoop bucket add nevenincs https://github.com/nevenincs/scoop-bucket`.
+   Note the one operational consequence: publication commits to this repository's
+   default branch. If branch protection ever requires reviews or status checks on
+   `main`, that rule must admit this workflow or the Scoop push will fail.
 
-4. Create the public account-scoped Homebrew tap `nevenincs/homebrew-tap` and set:
-   - Repository variable `CADRUMO_HOMEBREW_TAP_REPO` to its slug
-   - Repository secret `CADRUMO_HOMEBREW_TAP_TOKEN` to a PAT with write access
+4. Create the public account Homebrew tap `nevenincs/homebrew-tap` and set:
+   - Repository variable `HOMEBREW_TAP_REPO` to its slug
+   - Repository secret `HOMEBREW_TAP_TOKEN` to a PAT with write access
 
    The `homebrew-` repository-name prefix is mandatory for the one-argument tap form,
-   so the repository is `homebrew-tap` and the tap name users type is `nevenincs/tap`.
+   so the repository is `homebrew-tap` and the tap name users type is `nevenincs/tap`
+   (`brew install nevenincs/tap/cadrumo`). One tap holding many formulae under
+   `Formula/` is the standard shape — `hashicorp/homebrew-tap` serves 33 of them.
 
 5. Use the existing public Claude plugin marketplace `nevenincs/neve-marketplace` and set:
-   - Repository variable `CADRUMO_MARKETPLACE_REPO` to its slug
-   - Repository secret `CADRUMO_MARKETPLACE_TOKEN` to a PAT with write access
+   - Repository variable `CLAUDE_MARKETPLACE_REPO` to its slug
+   - Repository secret `CLAUDE_MARKETPLACE_TOKEN` to a PAT with write access
 
 6. Set repository variable `CADRUMO_PUBLISH_ENABLED=true` to arm the workflow.
 
@@ -536,15 +541,16 @@ fail-closed `evidence_release leak-sweep` over everything about to be attached
   rows and the three per-lane evidence manifests, so the published release is
   self-evidencing and draft GC can never orphan a shipped audit trail. An empty asset
   set fails hard.
-- Clones the public Scoop bucket repo, copies `scoop/cadrumo.json` to `bucket/`, and
-  pushes (requires `CADRUMO_SCOOP_BUCKET_REPO` and `CADRUMO_SCOOP_BUCKET_TOKEN`).
+- Pushes `scoop/cadrumo.json` to this repository's own `bucket/cadrumo.json` using the
+  job's `GITHUB_TOKEN`. Scoop reads a `bucket/` subdirectory, so there is no bucket
+  repository, variable, or PAT.
 - Clones the public Homebrew tap repo, copies `homebrew/Formula/cadrumo.rb` to
-  `Formula/`, and pushes (requires `CADRUMO_HOMEBREW_TAP_REPO` and
-  `CADRUMO_HOMEBREW_TAP_TOKEN`).
+  `Formula/`, and pushes (requires `HOMEBREW_TAP_REPO` and
+  `HOMEBREW_TAP_TOKEN`).
 - Clones the public marketplace repo and runs `dev.packaging.marketplace_publish`, which
   replaces only the plugin subtrees the unzipped `cadrumo-marketplace-X.Y.Z.zip` declares
   and merges its entries into `.claude-plugin/marketplace.json` by plugin name (requires
-  `CADRUMO_MARKETPLACE_REPO` and `CADRUMO_MARKETPLACE_TOKEN`). The marketplace is
+  `CLAUDE_MARKETPLACE_REPO` and `CLAUDE_MARKETPLACE_TOKEN`). The marketplace is
   account-scoped, so a sibling product's plugin and index entry survive this product's
   release; the earlier wholesale tree replacement would have deleted them.
 

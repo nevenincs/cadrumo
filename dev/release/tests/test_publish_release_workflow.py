@@ -417,19 +417,93 @@ def test_publish_detector_leaves_prose_comments_and_read_only_verbs_alone(benign
 
 
 def test_external_channel_pushes_refuse_instructively_when_unconfigured() -> None:
-    """Scoop and Homebrew pushes fail closed with instructions when credentials are absent."""
+    """The externally-hosted channels fail closed with instructions when credentials are absent.
+
+    Scoop is deliberately absent from this set: the bucket is this repository's
+    own ``bucket/`` directory, so that push takes no repo variable and no PAT and
+    consequently has nothing to refuse. Only the two genuinely external channels
+    -- the Homebrew tap and the Claude marketplace -- can be unconfigured.
+    """
     surface = _run_surface(_document()["jobs"]["publish"])
-    assert "REFUSED: Scoop bucket not configured" in surface
     assert "REFUSED: Homebrew tap not configured" in surface
-    assert "CADRUMO_SCOOP_BUCKET_TOKEN" in surface
-    assert "CADRUMO_HOMEBREW_TAP_TOKEN" in surface
+    assert "REFUSED: Claude marketplace not configured" in surface
+    assert "HOMEBREW_TAP_TOKEN" in surface
+    assert "CLAUDE_MARKETPLACE_TOKEN" in surface
+    # The channel credential names stay product-neutral so a sibling product
+    # reuses the identical configuration.
+    assert "CADRUMO_HOMEBREW_TAP_TOKEN" not in surface
+    assert "CADRUMO_MARKETPLACE_TOKEN" not in surface
+    assert "CADRUMO_SCOOP_BUCKET_REPO" not in surface
+
+
+def _step_run(name_fragment: str) -> str:
+    """Return the run body of the single publish step whose name contains the fragment."""
+    steps = _document()["jobs"]["publish"]["steps"]
+    matches = [
+        str(step["run"])
+        for step in steps
+        if isinstance(step, Mapping) and "run" in step and name_fragment.lower() in str(step.get("name", "")).lower()
+    ]
+    assert len(matches) == 1, f"expected exactly one publish step matching {name_fragment!r}, got {len(matches)}"
+    return matches[0]
+
+
+def test_a_second_product_drops_into_each_shared_channel_as_one_more_file() -> None:
+    """The acceptance test for the shared-channel design.
+
+    The bucket and the tap are shared across every product published under the
+    account, so a release of one product must stage only that product's own file.
+    Each push is asserted to name its single product-scoped path and to carry
+    none of the sweeping forms -- ``git add -A``, ``git add .``, or a wholesale
+    delete of the checkout -- that would take a sibling product's file with it.
+    A second product therefore lands as one more manifest and one more formula,
+    with no restructuring of either channel.
+    """
+    bucket = _command_lines(_step_run("Scoop bucket manifest"))
+    tap = _command_lines(_step_run("Homebrew formula"))
+
+    assert "git -C \"$work\" add -- bucket/cadrumo.json" in bucket
+    assert "git -C \"$work\" add -- Formula/cadrumo.rb" in tap
+
+    for label, surface in (("bucket", bucket), ("tap", tap)):
+        assert "add -A" not in surface, f"{label} push stages the whole tree; a sibling product's file would ride along"
+        assert re.search(r"\bgit\b[^\n]*\badd\s+\.(?:\s|$)", surface) is None, f"{label} push stages the whole tree"
+        # The wholesale-replace shape that the marketplace push used to carry.
+        assert "-maxdepth 1" not in surface, f"{label} push deletes the checkout wholesale"
+
+
+def test_the_marketplace_push_merges_rather_than_replacing_the_tree() -> None:
+    """The shared marketplace is updated through the merge module, never a tree wipe.
+
+    A wholesale replacement is correct only while exactly one product is served;
+    against the account-scoped marketplace it deletes every sibling product's
+    plugin. The push therefore delegates to the module that replaces only the
+    cohort's own plugin subtrees and merges the index by plugin name.
+    """
+    marketplace = _command_lines(_step_run("marketplace"))
+    assert "dev.packaging.marketplace_publish" in marketplace
+    assert "-maxdepth 1" not in marketplace, "marketplace push still wipes the tracked tree wholesale"
+
+
+def test_the_scoop_bucket_is_this_repository_and_needs_no_channel_credentials() -> None:
+    """Scoop reads a ``bucket/`` subdirectory, so no separate bucket repo is configured.
+
+    This is what removes a repository per product rather than merely renaming one:
+    the push targets ``github.repository`` with the job's own token, so a sibling
+    product's workflow serves its own bucket with zero configuration.
+    """
+    bucket = _command_lines(_step_run("Scoop bucket manifest"))
+    assert "${GITHUB_REPOSITORY}" in bucket
+    assert "vars." not in bucket, "the Scoop push must not depend on a configured bucket repo variable"
+    assert "SCOOP_BUCKET_REPO" not in bucket
+    assert "SCOOP_BUCKET_TOKEN" not in bucket
 
 
 def test_external_pushes_keep_the_token_out_of_the_persisted_remote() -> None:
     """Scoop/Homebrew/marketplace push via an -c http.extraheader, never a token-in-URL clone."""
     surface = _run_surface(_document()["jobs"]["publish"])
     # No clone embeds the token in the URL (it would persist in .git/config).
-    assert "x-access-token:${SCOOP_TOKEN}@" not in surface
+    assert "x-access-token:${GH_TOKEN}@" not in surface
     assert "x-access-token:${TAP_TOKEN}@" not in surface
     assert "x-access-token:${MARKETPLACE_TOKEN}@" not in surface
     # Each channel authenticates via a per-command HTTP header and scrubs its temp
@@ -437,8 +511,7 @@ def test_external_pushes_keep_the_token_out_of_the_persisted_remote() -> None:
     assert surface.count('http.extraheader="$auth"') >= 6  # clone + push per channel
     assert surface.count("printf 'x-access-token:%s'") == 3
     assert 'rm -rf "$work"' in surface
-    # The refuse-when-empty guards survive.
-    assert "REFUSED: Scoop bucket not configured" in surface
+    # The refuse-when-empty guards survive for the two externally-hosted channels.
     assert "REFUSED: Homebrew tap not configured" in surface
     assert "REFUSED: Claude marketplace not configured" in surface
 

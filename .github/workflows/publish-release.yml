@@ -76,19 +76,23 @@ jobs:
                https://pypi.org/manage/account/publishing/.
             2. Create the `release` GitHub Environment with required reviewers
                (the operator) - that approval click is the human release gate.
-            3. Create the PUBLIC account-scoped distribution repos - the Scoop
-               bucket nevenincs/scoop-bucket, the Homebrew tap
-               nevenincs/homebrew-tap, and the plugin marketplace
-               nevenincs/neve-marketplace - and add push credentials as the
-               secrets CADRUMO_SCOOP_BUCKET_TOKEN, CADRUMO_HOMEBREW_TAP_TOKEN,
-               and CADRUMO_MARKETPLACE_TOKEN (with the target repo slugs as
-               vars CADRUMO_SCOOP_BUCKET_REPO, CADRUMO_HOMEBREW_TAP_REPO, and
-               CADRUMO_MARKETPLACE_REPO). These repos are shared across every
-               product published under the account: each product owns one file
-               in the bucket and the tap, and one plugin subtree in the
-               marketplace. They MUST be public - both package managers reach
-               them by ordinary git clone, so a private target is unusable by
-               any user without push credentials.
+            3. Provide the two shared, PRODUCT-NEUTRAL channel targets. There is
+               no Scoop bucket repo to create: Scoop reads a `bucket/`
+               subdirectory, so THIS repository is its own bucket and that push
+               needs no variable and no PAT.
+                 - Homebrew: create the PUBLIC account tap nevenincs/homebrew-tap
+                   (the `homebrew-` prefix is mandatory; users type
+                   `brew install nevenincs/tap/cadrumo`). Set var
+                   HOMEBREW_TAP_REPO and secret HOMEBREW_TAP_TOKEN.
+                 - Claude plugins: use the PUBLIC nevenincs/neve-marketplace. Set
+                   var CLAUDE_MARKETPLACE_REPO and secret
+                   CLAUDE_MARKETPLACE_TOKEN.
+               Both names are deliberately product-neutral: every product under
+               the account sets the same two pairs and drops in one more formula
+               file and one more plugin subtree, with no restructuring. Both
+               targets MUST be public - Homebrew reaches the tap by ordinary git
+               clone, so a private tap is unusable by anyone without push
+               credentials.
             4. Ensure the source Packaging Smoke run sealed its evidence draft
                (release tag evidence-smoke-<run id> carrying
                cadrumo-release-cohort.tar.gz and evidence-manifest.json).
@@ -438,38 +442,45 @@ jobs:
           gh release upload "v$VERSION" "$DOWNLOAD_LATEST_DIR/download-latest.json" \
             --repo "$GITHUB_REPOSITORY" --clobber
 
-      - name: Push the Scoop bucket manifest to the public bucket
+      # Scoop resolves manifests from a `bucket/` subdirectory when one exists, so
+      # this repository IS its own bucket and there is no separate bucket repo to
+      # configure. That is why this step takes no repo variable and no PAT: it
+      # pushes to `github.repository` with the job's own GITHUB_TOKEN. Every
+      # sibling product repeats the identical layout in its own repository.
+      - name: Push the Scoop bucket manifest into this repository's bucket
         env:
-          SCOOP_TOKEN: ${{ secrets.CADRUMO_SCOOP_BUCKET_TOKEN }}
-          SCOOP_REPO: ${{ vars.CADRUMO_SCOOP_BUCKET_REPO }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [[ -z "$SCOOP_TOKEN" || -z "$SCOOP_REPO" ]]; then
-            echo "REFUSED: Scoop bucket not configured. Set the CADRUMO_SCOOP_BUCKET_REPO variable" >&2
-            echo "and the CADRUMO_SCOOP_BUCKET_TOKEN secret to publish the Scoop manifest." >&2
-            exit 1
-          fi
-          # Pass the token as a per-command HTTP auth header (never in the clone
-          # URL): an -c http.extraheader value is not persisted to .git/config, so
-          # no token is written into the runner's on-disk remote.
-          auth="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$SCOOP_TOKEN" | base64 | tr -d '\n')"
+          # Token rides an -c http.extraheader (never the clone URL) so it is not
+          # persisted into the runner's .git/config remote.
+          auth="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 | tr -d '\n')"
           work="$(mktemp -d)"
-          git -c http.extraheader="$auth" clone "https://github.com/${SCOOP_REPO}.git" "$work"
+          git -c http.extraheader="$auth" clone --depth 1 \
+            "https://github.com/${GITHUB_REPOSITORY}.git" "$work"
           mkdir -p "$work/bucket"
           cp "$RELEASE_COHORT_DIR/scoop/cadrumo.json" "$work/bucket/cadrumo.json"
+          # Stage exactly this product's manifest. A sibling manifest in the same
+          # bucket is never touched, which is what lets one bucket serve many
+          # apps without a per-app repository.
           git -C "$work" add -- bucket/cadrumo.json
-          git -C "$work" -c user.name="cadrumo-release" -c user.email="release@cadrumo.invalid" \
-            commit -m "cadrumo $VERSION"
-          git -C "$work" -c http.extraheader="$auth" push
+          if git -C "$work" diff --cached --quiet; then
+            echo "bucket already at cadrumo $VERSION; nothing to push"
+          else
+            git -C "$work" -c user.name="cadrumo-release" -c user.email="release@cadrumo.invalid" \
+              commit -m "cadrumo $VERSION scoop manifest"
+            git -C "$work" -c http.extraheader="$auth" push
+          fi
+          rm -rf "$work"
           rm -rf "$work"
 
       - name: Push the Homebrew formula to the public tap
         env:
-          TAP_TOKEN: ${{ secrets.CADRUMO_HOMEBREW_TAP_TOKEN }}
-          TAP_REPO: ${{ vars.CADRUMO_HOMEBREW_TAP_REPO }}
+          TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          TAP_REPO: ${{ vars.HOMEBREW_TAP_REPO }}
         run: |
           if [[ -z "$TAP_TOKEN" || -z "$TAP_REPO" ]]; then
-            echo "REFUSED: Homebrew tap not configured. Set the CADRUMO_HOMEBREW_TAP_REPO variable" >&2
-            echo "and the CADRUMO_HOMEBREW_TAP_TOKEN secret to publish the Homebrew formula." >&2
+            echo "REFUSED: Homebrew tap not configured. Set the HOMEBREW_TAP_REPO variable" >&2
+            echo "and the HOMEBREW_TAP_TOKEN secret to publish the Homebrew formula." >&2
             exit 1
           fi
           # Token rides an -c http.extraheader (never the clone URL) so it is not
@@ -493,12 +504,12 @@ jobs:
       # and Homebrew steps.
       - name: Push the Claude plugin marketplace to the public marketplace repo
         env:
-          MARKETPLACE_TOKEN: ${{ secrets.CADRUMO_MARKETPLACE_TOKEN }}
-          MARKETPLACE_REPO: ${{ vars.CADRUMO_MARKETPLACE_REPO }}
+          MARKETPLACE_TOKEN: ${{ secrets.CLAUDE_MARKETPLACE_TOKEN }}
+          MARKETPLACE_REPO: ${{ vars.CLAUDE_MARKETPLACE_REPO }}
         run: |
           if [[ -z "$MARKETPLACE_TOKEN" || -z "$MARKETPLACE_REPO" ]]; then
-            echo "REFUSED: Claude marketplace not configured. Set the CADRUMO_MARKETPLACE_REPO variable" >&2
-            echo "and the CADRUMO_MARKETPLACE_TOKEN secret to publish the plugin marketplace." >&2
+            echo "REFUSED: Claude marketplace not configured. Set the CLAUDE_MARKETPLACE_REPO variable" >&2
+            echo "and the CLAUDE_MARKETPLACE_TOKEN secret to publish the plugin marketplace." >&2
             exit 1
           fi
           bundle="$(find "$RELEASE_COHORT_DIR/claude" -name 'cadrumo-marketplace-*.zip' -print -quit)"
