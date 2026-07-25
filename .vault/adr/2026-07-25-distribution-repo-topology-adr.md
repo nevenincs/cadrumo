@@ -1,17 +1,17 @@
 ---
 tags:
-  - '#adr'
-  - '#distribution-repo-topology'
+  - "#adr"
+  - "#distribution-repo-topology"
 date: '2026-07-25'
-modified: '2026-07-25'
 related:
   - "[[2026-07-19-post-release-distribution-reference]]"
   - "[[2026-07-22-scoop-runner-topology-adr]]"
   - "[[2026-07-15-distribution-installation-readiness-adr]]"
   - "[[2026-07-17-post-release-distribution-plan]]"
+superseded_by: '2026-07-25-shared-distribution-repository-adr'
+modified: '2026-07-25'
 ---
-
-# `distribution-repo-topology` adr: `Distribution channels are shared and product-neutral, and Scoop needs no repository at all` | (**status:** `accepted`)
+# `distribution-repo-topology` adr: `Distribution channels are shared and product-neutral, and Scoop needs no repository at all` | (**status:** `superseded`)
 
 ## Problem Statement
 

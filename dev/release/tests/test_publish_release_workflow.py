@@ -62,7 +62,12 @@ _PUBLISHING_JOBS: Final[frozenset[str]] = frozenset({"publish"})
 # prefix and an "EVIDENCE (non-release)" title; a real publication carries a
 # `v$VERSION` tag and no `--draft`. Widen by exempting on that evidence shape,
 # never by loosening the verb patterns below.
-_COMMAND_POSITION: Final[str] = r"(?:^|[;&|]|\$\()[ \t]*"
+# A shell keyword introduces a command position too: `if git ... push; then` runs
+# git exactly as surely as a bare `git ... push` does. Without the keyword prefix
+# below, wrapping an egress in `if`/`else`/`do` would hide it from this scan --
+# a real hole, since the retry loops that make a SHARED distribution repository
+# safe put every channel push behind exactly that `if`.
+_COMMAND_POSITION: Final[str] = r"(?:^|[;&|]|\$\()[ \t]*(?:(?:if|then|elif|else|do|while|until|!)[ \t]+)*"
 
 _PUBLISH_RUN_PATTERNS: Final[tuple[re.Pattern[str], ...]] = (
     re.compile(rf"{_COMMAND_POSITION}uv\s+publish\b", re.IGNORECASE | re.MULTILINE),
@@ -126,6 +131,26 @@ def test_workflow_shape_and_least_privilege_top_level() -> None:
     }
     assert document["permissions"] == {"contents": "read"}
     assert set(document["jobs"]) == {"operator-preflight", "validate", "publish"}
+
+
+def test_publication_declares_no_tag_trigger_the_dispatch_path_would_mask() -> None:
+    """Publication is dispatched explicitly; a declared tag trigger would be dead weight.
+
+    A tag created by a workflow's own token does NOT fire tag-triggered workflows,
+    so a release-please style tag push could never start this publication. A
+    declared ``push.tags`` filter would therefore be inert while reading, to any
+    maintainer, as a second and automatic way to publish — the most dangerous
+    kind of dead configuration on the one workflow that uploads to public
+    channels.
+
+    Cadrumo has never carried such a trigger; this gate is what keeps it that
+    way, and it is the property the sibling products' migration instructions ask
+    them to reach.
+    """
+    document = _document()
+    on = document[True]
+    assert set(on) == {"workflow_dispatch"}, f"publication must be dispatch-only, found triggers: {sorted(on)}"
+    assert "tags" not in str(on), "a tag filter on the publication authority is inert and misleading"
 
 
 def test_dry_run_validates_everything_and_skips_publish() -> None:
@@ -223,16 +248,47 @@ def test_validate_aggregates_all_eleven_rows_from_authoritative_sources() -> Non
     assert "--evidence-dir" in surface
 
 
-def test_workflow_row_count_prose_matches_the_required_distribution_set() -> None:
-    """Both Gate-2/Gate-3 row-count comments name the true REQUIRED_DISTRIBUTION_ROWS size."""
-    from dev.release.readiness import REQUIRED_DISTRIBUTION_ROWS
+def test_workflow_row_count_prose_matches_the_full_distribution_set() -> None:
+    """Both Gate-2/Gate-3 row-count comments name the true ALL_DISTRIBUTION_ROWS size.
 
-    assert len(REQUIRED_DISTRIBUTION_ROWS) == 11
+    The workflow AGGREGATES every row the channels can produce -- that count is
+    the full set, not the claimed subset -- and the readiness gate then requires
+    the rows the claimed channels own. Anchoring this prose on the required set
+    would make it drift every time a channel flips to available.
+    """
+    from dev.release.readiness import ALL_DISTRIBUTION_ROWS
+
+    assert len(ALL_DISTRIBUTION_ROWS) == 11
     text = _WORKFLOW.read_text(encoding="utf-8")
     # The stale "twelve" drift is reconciled to the one true count everywhere.
     assert "twelve" not in text
     assert "Aggregate all eleven rows" in text
     assert "eleven verified rows" in text
+
+
+def test_required_rows_derive_from_claimed_channels_and_never_collapse_to_nothing() -> None:
+    """Evidence is proportional to claims, and the registry floor keeps it non-vacuous.
+
+    The required set is a subset of the full set (an unclaimed channel does not
+    block a claimed one) and always contains the language-native registry rows
+    (the floor of the account standard). Without the floor a descriptor with no
+    channel marked available would require nothing, and the readiness gate would
+    pass while measuring nothing at all.
+    """
+    from dev.docs.download_matrix import ChannelTier, load_descriptor
+    from dev.release.readiness import ALL_DISTRIBUTION_ROWS, REQUIRED_DISTRIBUTION_ROWS
+
+    assert frozenset(REQUIRED_DISTRIBUTION_ROWS) <= frozenset(ALL_DISTRIBUTION_ROWS)
+    registry_rows = frozenset(
+        row
+        for channel in load_descriptor().channel
+        if channel.tier is ChannelTier.REGISTRY
+        for row in channel.evidence_rows
+    )
+    assert registry_rows
+    assert registry_rows <= frozenset(REQUIRED_DISTRIBUTION_ROWS), (
+        "the language-native registry is the floor of the account standard and must always be required"
+    )
 
 
 def test_validate_runs_the_open_blocker_check_over_the_network() -> None:
@@ -357,6 +413,13 @@ def test_build_detector_flags_every_forbidden_build_spelling(forbidden: str) -> 
         'gh release delete "v$VERSION"',
         'git -C "$work" -c http.extraheader="$auth" push',
         "cd tap && git push origin main",
+        # An egress wrapped in a shell keyword still runs. The retry loops that
+        # make the shared distribution repository safe use exactly these shapes,
+        # so the scan must see through them.
+        'if git -C "$work" -c http.extraheader="$auth" push; then',
+        "else\n  git push origin main",
+        "while ! git push; do :; done",
+        "if uv publish --trusted-publishing always; then",
     ],
 )
 def test_publish_detector_flags_every_forbidden_publish_spelling(forbidden: str) -> None:
@@ -417,14 +480,16 @@ def test_publish_detector_leaves_prose_comments_and_read_only_verbs_alone(benign
 
 
 def test_external_channel_pushes_refuse_instructively_when_unconfigured() -> None:
-    """The externally-hosted channels fail closed with instructions when credentials are absent.
+    """Every externally-hosted channel fails closed with instructions when unconfigured.
 
-    Scoop is deliberately absent from this set: the bucket is this repository's
-    own ``bucket/`` directory, so that push takes no repo variable and no PAT and
-    consequently has nothing to refuse. Only the two genuinely external channels
-    -- the Homebrew tap and the Claude marketplace -- can be unconfigured.
+    All three channels are now externally hosted: the Scoop bucket and the
+    Homebrew formula both land in the shared account distribution repository, and
+    the plugin marketplace in the account marketplace. None of them can fall back
+    to the workflow's own repository, so each must refuse instructively rather
+    than publish somewhere unintended.
     """
     surface = _run_surface(_document()["jobs"]["publish"])
+    assert "REFUSED: shared distribution repository not configured" in surface
     assert "REFUSED: Homebrew tap not configured" in surface
     assert "REFUSED: Claude marketplace not configured" in surface
     assert "HOMEBREW_TAP_TOKEN" in surface
@@ -448,28 +513,167 @@ def _step_run(name_fragment: str) -> str:
     return matches[0]
 
 
-def test_a_second_product_drops_into_each_shared_channel_as_one_more_file() -> None:
-    """The acceptance test for the shared-channel design.
+def shared_repository_push_violations(surface: str, *, product_path: str) -> list[str]:
+    """Return every reason ``surface`` would be unsafe against a SHARED repository.
 
-    The bucket and the tap are shared across every product published under the
-    account, so a release of one product must stage only that product's own file.
-    Each push is asserted to name its single product-scoped path and to carry
-    none of the sweeping forms -- ``git add -A``, ``git add .``, or a wholesale
-    delete of the checkout -- that would take a sibling product's file with it.
-    A second product therefore lands as one more manifest and one more formula,
-    with no restructuring of either channel.
+    This is the acceptance predicate for the one-repository design, factored out
+    of the tests so a negative control can drive the same code against a known-bad
+    push. A push into a repository that also holds sibling products' files is safe
+    only when it stages exactly its own product-scoped path and carries none of
+    the sweeping forms that would take a sibling's file with it.
     """
-    bucket = _command_lines(_step_run("Scoop bucket manifest"))
+    violations: list[str] = []
+    if f"add -- {product_path}" not in surface:
+        violations.append(f"does not stage its own product-scoped path {product_path!r}")
+    if re.search(r"\bgit\b[^\n]*\badd\b[^\n]*(?:\s-A\b|\s--all\b)", surface):
+        violations.append("stages the whole tree with `git add -A`; a sibling product's file would ride along")
+    if re.search(r"\bgit\b[^\n]*\badd\s+\.(?:\s|$)", surface, re.MULTILINE):
+        violations.append("stages the whole tree with `git add .`")
+    if "-maxdepth 1" in surface:
+        violations.append("deletes the checkout wholesale before writing")
+    if re.search(r"\bgit\b[^\n]*\brm\b[^\n]*\s-r\b", surface):
+        violations.append("removes tracked paths recursively; a sibling product's file would be deleted")
+    # A push aimed at the product's own repository is not a shared-repository
+    # push at all: it re-creates a per-product distribution surface, which is the
+    # topology the account standard replaces.
+    if "${GITHUB_REPOSITORY}" in surface:
+        violations.append("targets the product's own repository instead of the shared account repository")
+    return violations
+
+
+def test_a_second_product_drops_into_each_shared_channel_as_one_more_file() -> None:
+    """The acceptance test for the one-repository design.
+
+    ONE shared account repository carries ``Formula/`` for Homebrew and
+    ``bucket/`` for Scoop, so both pushes land in a repository that also holds
+    every sibling product's files. A release of one product must therefore stage
+    only that product's own file. A second product then drops in as one more
+    formula file and one more manifest file, with ZERO restructuring -- which is
+    the property the whole standard is chosen for.
+
+    The negative control for this assertion lives in
+    ``test_the_conformance_predicate_rejects_every_unsafe_push_shape``: without
+    it, this test would pass just as happily against a workflow with no pushes at
+    all.
+    """
+    for label, step, product_path in (
+        ("bucket", "Scoop manifest", "bucket/cadrumo.json"),
+        ("tap", "Homebrew formula", "Formula/cadrumo.rb"),
+    ):
+        surface = _command_lines(_step_run(step))
+        violations = shared_repository_push_violations(surface, product_path=product_path)
+        assert violations == [], f"the {label} push is unsafe in a shared repository: {violations}"
+
+
+@pytest.mark.parametrize(
+    ("label", "unsafe_surface"),
+    [
+        # The PRE-CHANGE Scoop push: it targeted the product's own repository,
+        # which held the repository count down only by giving every product its
+        # own bucket. This is the exact shape this campaign replaced, and the
+        # predicate must reject it.
+        (
+            "pre-change in-repository bucket push",
+            'git -c http.extraheader="$auth" clone --depth 1 "https://github.com/${GITHUB_REPOSITORY}.git" "$work"\n'
+            'git -C "$work" add -- bucket/cadrumo.json',
+        ),
+        ("stages the whole tree with -A", 'git -C "$work" add -A'),
+        ("stages the whole tree with --all", 'git -C "$work" add --all'),
+        ("stages the whole tree with a dot", 'git -C "$work" add .'),
+        (
+            "wipes the checkout before writing",
+            'find "$work" -maxdepth 1 ! -name .git -exec rm -rf {} +\ngit -C "$work" add -- bucket/cadrumo.json',
+        ),
+        (
+            "removes tracked paths recursively",
+            'git -C "$work" rm -r --cached bucket\ngit -C "$work" add -- bucket/cadrumo.json',
+        ),
+        ("stages nothing at all", 'git -C "$work" commit -m "cadrumo $VERSION"'),
+    ],
+)
+def test_the_conformance_predicate_rejects_every_unsafe_push_shape(label: str, unsafe_surface: str) -> None:
+    """Non-vacuity: the acceptance predicate really rejects each shape it claims to bar.
+
+    A conformance test that passes vacuously proves nothing. Each case here is a
+    push that would damage a sibling product's file in the shared repository --
+    including the literal pre-change shape this campaign replaced -- and the
+    predicate must return at least one violation for every one of them.
+    """
+    violations = shared_repository_push_violations(unsafe_surface, product_path="bucket/cadrumo.json")
+    assert violations, f"the conformance predicate accepted an unsafe push: {label}"
+
+
+def test_the_conformance_predicate_accepts_the_safe_shape() -> None:
+    """Negative control the other way: the predicate is not simply always-failing.
+
+    Paired with the rejection cases above, this pins the predicate as
+    discriminating rather than vacuously strict -- a predicate that returned a
+    violation for every input would satisfy the rejection tests alone.
+    """
+    safe = (
+        'git -c http.extraheader="$auth" clone "https://github.com/${TAP_REPO}.git" "$work"\n'
+        'cp "$RELEASE_COHORT_DIR/scoop/cadrumo.json" "$work/bucket/cadrumo.json"\n'
+        'git -C "$work" add -- bucket/cadrumo.json\n'
+        'git -C "$work" -c http.extraheader="$auth" push'
+    )
+    assert shared_repository_push_violations(safe, product_path="bucket/cadrumo.json") == []
+
+
+def test_both_ecosystems_are_served_from_the_one_shared_repository() -> None:
+    """Homebrew and Scoop resolve from the SAME account repository.
+
+    This is what holds the account's distribution repository count at one. The
+    ``homebrew-`` name prefix is mandatory for the one-argument tap form, so that
+    repository must exist regardless; Scoop imposes no name constraint and scopes
+    discovery to ``bucket/`` when present, so it rides along for free. Both
+    pushes therefore read the same repository variable and the same token.
+    """
+    bucket = _command_lines(_step_run("Scoop manifest"))
     tap = _command_lines(_step_run("Homebrew formula"))
-
-    assert "git -C \"$work\" add -- bucket/cadrumo.json" in bucket
-    assert "git -C \"$work\" add -- Formula/cadrumo.rb" in tap
-
     for label, surface in (("bucket", bucket), ("tap", tap)):
-        assert "add -A" not in surface, f"{label} push stages the whole tree; a sibling product's file would ride along"
-        assert re.search(r"\bgit\b[^\n]*\badd\s+\.(?:\s|$)", surface) is None, f"{label} push stages the whole tree"
-        # The wholesale-replace shape that the marketplace push used to carry.
-        assert "-maxdepth 1" not in surface, f"{label} push deletes the checkout wholesale"
+        assert "${TAP_REPO}" in surface, f"the {label} push does not target the shared repository"
+        assert "vars.HOMEBREW_TAP_REPO" in _WORKFLOW.read_text(encoding="utf-8")
+        assert "SCOOP_BUCKET_REPO" not in surface, f"the {label} push reintroduces a per-product bucket repo variable"
+
+
+def test_each_shared_repository_push_guards_against_a_backward_bump() -> None:
+    """A committed release pointer may never move backward.
+
+    Both files are release POINTERS a user's package manager resolves, so an
+    ordinary merge that resurrects an older one silently un-publishes the current
+    version with no workflow failing. The guard runs against the CLONED
+    repository state, before the new pointer is copied over it -- checking after
+    the copy would compare the file with itself.
+    """
+    for label, step, pointer, fmt in (
+        ("bucket", "Scoop manifest", "bucket/cadrumo.json", "scoop"),
+        ("tap", "Homebrew formula", "Formula/cadrumo.rb", "homebrew"),
+    ):
+        surface = _command_lines(_step_run(step))
+        assert "dev.packaging.release_pointer_guard" in surface, f"the {label} push has no backward-bump guard"
+        assert f"--format {fmt}" in surface
+        assert f'--existing "$work/{pointer}"' in surface
+        # The guard must read the CLONE, not the freshly-copied cohort file.
+        guard_at = surface.index("release_pointer_guard")
+        copy_at = surface.index('cp "$RELEASE_COHORT_DIR')
+        assert guard_at < copy_at, f"the {label} guard runs after the copy, so it compares the file with itself"
+
+
+def test_each_shared_repository_push_retries_a_lost_race_and_fails_closed() -> None:
+    """Concurrent publication into the one shared repository is a designed-in condition.
+
+    Several products releasing into one account repository can interleave clone
+    and push, making the later push a non-fast-forward. GitHub concurrency groups
+    are per-repository and cannot serialise across product repos, so each push
+    re-clones and re-applies. Exhausting the retries must fail the release rather
+    than report success on an unpublished channel.
+    """
+    for label, step in (("bucket", "Scoop manifest"), ("tap", "Homebrew formula")):
+        surface = _command_lines(_step_run(step))
+        assert "for attempt in" in surface, f"the {label} push does not retry a lost race"
+        loop_body = surface.split("for attempt in", 1)[1]
+        assert "clone" in loop_body, f"the {label} retry does not re-clone, so it would re-push a stale tree"
+        assert "REFUSED" in surface, f"an exhausted {label} retry must refuse rather than pass silently"
 
 
 def test_the_marketplace_push_merges_rather_than_replacing_the_tree() -> None:
@@ -503,18 +707,20 @@ def test_the_marketplace_push_retries_a_lost_race_and_fails_closed() -> None:
     assert "REFUSED" in marketplace, "an exhausted retry must refuse rather than pass silently"
 
 
-def test_the_scoop_bucket_is_this_repository_and_needs_no_channel_credentials() -> None:
-    """Scoop reads a ``bucket/`` subdirectory, so no separate bucket repo is configured.
+def test_no_channel_push_writes_to_a_product_repository_default_branch() -> None:
+    """No publication writes to any product repository's own default branch.
 
-    This is what removes a repository per product rather than merely renaming one:
-    the push targets ``github.repository`` with the job's own token, so a sibling
-    product's workflow serves its own bucket with zero configuration.
+    The superseded in-repository-bucket topology served Scoop from the product's
+    own repository, which held the repository count down only by giving every
+    product its own bucket AND by committing to a public product repository's
+    default branch at release time. Both costs are gone: every channel push now
+    targets an account-scoped shared repository.
     """
-    bucket = _command_lines(_step_run("Scoop bucket manifest"))
-    assert "${GITHUB_REPOSITORY}" in bucket
-    assert "vars." not in bucket, "the Scoop push must not depend on a configured bucket repo variable"
-    assert "SCOOP_BUCKET_REPO" not in bucket
-    assert "SCOOP_BUCKET_TOKEN" not in bucket
+    for step in ("Scoop manifest", "Homebrew formula", "marketplace"):
+        surface = _command_lines(_step_run(step))
+        assert "${GITHUB_REPOSITORY}" not in surface, (
+            f"the {step!r} push writes to the product repository; channel pushes are account-scoped"
+        )
 
 
 def test_external_pushes_keep_the_token_out_of_the_persisted_remote() -> None:

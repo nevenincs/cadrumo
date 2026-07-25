@@ -51,6 +51,7 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core import PRODUCT_IDENTITY
+from dev.docs.download_matrix import load_descriptor, required_evidence_rows
 from dev.packaging.cohort_manifest import load_release_cohort
 from dev.packaging.evidence import EvidenceStatus, load_distribution_evidence
 
@@ -164,21 +165,23 @@ _MCPB_MANIFEST_PATH: Final = Path("packaging/mcpb/manifest.json")
 # check_generated_surface_versions instead.
 _MCPB_MANIFEST_VERSION_SENTINEL: Final = "0.0.0"
 
-REQUIRED_DISTRIBUTION_ROWS: Final[tuple[str, ...]] = (
-    "claude-code-plugin",
-    "claude-cowork-plugin",
-    "claude-desktop-mcpb",
-    "claude-desktop-plugin",
-    "homebrew-linux-arm64",
-    "homebrew-linux-x86-64",
-    "homebrew-macos-arm64",
-    "python-linux-x86-64",
-    "python-macos-arm64",
-    "python-windows-x86-64",
-    "scoop-windows-x86-64",
+#: Every row any channel can produce, whether or not this release claims it.
+#: Derived from the channel descriptor so a channel's proof obligation is
+#: declared in exactly one place.
+ALL_DISTRIBUTION_ROWS: Final[tuple[str, ...]] = tuple(
+    sorted({row for channel in load_descriptor().channel for row in channel.evidence_rows}),
 )
+
+#: The rows THIS release must prove: the union over the channels it actually
+#: claims, floored at the language-native registry. Evidence is proportional to
+#: claims — an unclaimed channel no longer blocks a claimed one — but no gate is
+#: weakened and no row is removed: a channel still cannot be claimed without its
+#: passing row, and flipping a channel to `available` in the descriptor
+#: immediately re-arms every row it owns.
+REQUIRED_DISTRIBUTION_ROWS: Final[tuple[str, ...]] = required_evidence_rows(load_descriptor())
+
 _CLIENT_DISTRIBUTION_ROWS: Final[frozenset[str]] = frozenset(
-    row for row in REQUIRED_DISTRIBUTION_ROWS if row.startswith("claude-")
+    row for row in ALL_DISTRIBUTION_ROWS if row.startswith("claude-")
 )
 
 
