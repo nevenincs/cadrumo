@@ -354,6 +354,34 @@ class _DropRunEventFilter(logging.Filter):
         return getattr(record, "run_event", None) is None
 
 
+#: Extra key marking a record whose content the emitter has ALREADY written to
+#: the operator's stream as a structured document. Pass it through ``extra`` on
+#: any log call that accompanies such a write.
+OPERATOR_DOCUMENT_LOG_EXTRA = "operator_document"
+
+
+class _DropOperatorDocumentEchoFilter(logging.Filter):
+    """Suppress records already rendered as an operator document, on stderr only.
+
+    stderr is the machine-readable error channel: the CLI's terminal boundary
+    writes the JSON error document there, and an agent or script parses that
+    stream. A diagnostic log record about the same failure is therefore a
+    *duplicate* on stderr, and a harmful one — the record carries the raw
+    exception and its traceback, so echoing it prepends internal frames and the
+    unredacted exception text to a document whose whole purpose is to present a
+    translated, redacted message instead.
+
+    Suppressing the echo here keeps the record intact for every other handler,
+    so the rotating file sink still receives the full traceback. That matters:
+    the INTERNAL document tells the operator to consult the diagnostic logs, so
+    the traceback has to actually be in them.
+    """
+
+    @override
+    def filter(self, record: logging.LogRecord) -> bool:
+        return getattr(record, OPERATOR_DOCUMENT_LOG_EXTRA, None) is None
+
+
 def default_log_file_path() -> Path:
     """Return the file path for non-interactive project logs.
 
@@ -449,7 +477,7 @@ def configure_logging() -> None:
             "formatter": "standard",
             "class": "logging.StreamHandler",
             "stream": "ext://sys.stderr",
-            "filters": ["drop_run_event"],
+            "filters": ["drop_run_event", "drop_operator_document"],
         },
     }
     root_handlers = ["stderr"]
@@ -474,6 +502,7 @@ def configure_logging() -> None:
             },
             "filters": {
                 "drop_run_event": {"()": f"{__name__}._DropRunEventFilter"},
+                "drop_operator_document": {"()": f"{__name__}._DropOperatorDocumentEchoFilter"},
             },
             "handlers": configured_handlers,
             "root": {
