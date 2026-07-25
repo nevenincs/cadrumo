@@ -208,3 +208,29 @@ generalise, but where it applies it discharged the mandate's actual purpose —
 establishing that no canonical owner already existed — rather than merely
 satisfying its form. It found a shipped supersession state and an existing
 identity axis that a blind implementation would have duplicated.
+
+
+### Terminus, and what was checked to establish it
+
+The implementable surface of this feature is exhausted. Every remaining row was
+tested against the code rather than assumed blocked, and the last candidate was
+checked after the rest had failed.
+
+That candidate was the misleading-refusal defect class — the same one already
+fixed on `create_work_unit`, where a refusal named a remedy that itself refused.
+The export evidence refusal does NOT carry it. Its suggestion states outright that
+the linking commands are only half the answer, that this revision bundled its
+evidence at verify, and that attaching now does not unblock the export; the locale
+text names the ordering that does work. The signposting the governing ADR
+describes as landed is genuinely landed and honest.
+
+So the position is: the trap is signposted so no operator is silently caught, the
+independent half (the stranded work unit) is fixed and gated, the docs residue is
+triaged, and recovery for an operator already caught requires one of three
+branches — every one a persisted-schema or identity change this record's own
+Constraints reserve.
+
+What would make the remaining work implementable is a single choice among those
+three, not further investigation. Four separate attempts have now run into the
+same boundary from different directions, which is itself the evidence that the
+boundary is real rather than a gap in the analysis.
