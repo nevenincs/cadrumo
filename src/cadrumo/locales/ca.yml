@@ -1562,6 +1562,8 @@ application:
         instantània de perfil no és compatible amb aquesta aplicació.
       unsupported_bundle_schema_version: La versió de l'esquema del paquet no és compatible
         amb aquesta versió de l'aplicació.
+      censal_read_identity_absent: 'La lectura censal no inclou cap NIF, de manera que no es pot confirmar que correspongui a aquest perfil.'
+      censal_read_identity_mismatch: 'La lectura censal correspon a un contribuent diferent del d''aquest perfil; no s''ha aplicat.'
     notices:
       censo_divergences_open: '{count} dada/es del perfil encara difereixen del Certificat
         de Situació Censal i resten sense resoldre: {axes}.'
@@ -6540,6 +6542,7 @@ errors:
     submission_preflight_error_findings: L'esborrany té {finding_count} incidència(es)
       de severitat ERROR; resol-les abans de presentar.
     unsupported_currency: El codi de moneda indicat no és compatible.
+    censal_read_identity: 'La lectura censal no correspon al contribuent d''aquest perfil.'
   snapshot:
     ambiguous_revision_selection: 'Més d''una revisió del registre coincideix amb
       el model %{modelo_id}: %{candidate_ids}.'
@@ -6667,6 +6670,7 @@ flows:
         certificate: Certificat electrònic
         clave_movil: Cl@ve Mòbil
         clave_permanente: Cl@ve Permanent
+      censal_pull_cleared: 'L''AEAT encara té un valor per als camps que vau buidar: %{paths}. S''han deixat buits; buidar-los aquí no canvia el registre de l''AEAT.'
     actions:
       section: Accions
     column:

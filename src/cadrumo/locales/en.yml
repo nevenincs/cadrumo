@@ -1440,6 +1440,8 @@ application:
         is newer than this application supports.
       unsupported_bundle_schema_version: The bundle schema version is not supported
         by this application version.
+      censal_read_identity_absent: 'The censal read carried no tax identity, so it cannot be confirmed to belong to this profile.'
+      censal_read_identity_mismatch: 'The censal read belongs to a different taxpayer than this profile; it was not applied.'
     notices:
       censo_divergences_open: '{count} profile field(s) still diverge from the Certificado
         de Situación Censal and remain unresolved: {axes}.'
@@ -6110,6 +6112,7 @@ errors:
     submission_preflight_error_findings: Draft has {finding_count} ERROR-severity
       finding(s); resolve them before submission.
     unsupported_currency: The currency code provided is not supported.
+    censal_read_identity: 'The censal read does not belong to this profile''s taxpayer.'
   snapshot:
     ambiguous_revision_selection: 'More than one registry revision matches modelo
       %{modelo_id}: %{candidate_ids}.'
@@ -6232,6 +6235,7 @@ flows:
         certificate: Electronic certificate
         clave_movil: Cl@ve Móvil
         clave_permanente: Cl@ve Permanente
+      censal_pull_cleared: 'AEAT still holds a value for the fields you cleared: %{paths}. They were left empty; clearing here does not change AEAT''s record.'
     actions:
       section: Actions
     column:

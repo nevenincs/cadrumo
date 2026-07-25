@@ -1571,6 +1571,8 @@ application:
         instantánea de perfil es más reciente de lo que admite esta aplicación.
       unsupported_bundle_schema_version: La versión del esquema del paquete no es
         compatible con esta versión de la aplicación.
+      censal_read_identity_absent: 'La lectura censal no incluye ningún NIF, por lo que no puede confirmarse que corresponda a este perfil.'
+      censal_read_identity_mismatch: 'La lectura censal corresponde a un contribuyente distinto al de este perfil; no se ha aplicado.'
     notices:
       censo_divergences_open: '{count} dato(s) del perfil siguen difiriendo del Certificado
         de Situación Censal y quedan sin resolver: {axes}.'
@@ -6578,6 +6580,7 @@ errors:
     submission_preflight_error_findings: El borrador tiene {finding_count} incidencia(s)
       de severidad ERROR; resuélvelas antes de presentar.
     unsupported_currency: El código de moneda indicado no es compatible.
+    censal_read_identity: 'La lectura censal no corresponde al contribuyente de este perfil.'
   snapshot:
     ambiguous_revision_selection: 'Más de una revisión del registro coincide con el
       modelo %{modelo_id}: %{candidate_ids}.'
@@ -6705,6 +6708,7 @@ flows:
         certificate: Certificado electrónico
         clave_movil: Cl@ve Móvil
         clave_permanente: Cl@ve Permanente
+      censal_pull_cleared: 'La AEAT todavía tiene un valor para los campos que usted vació: %{paths}. Se han dejado vacíos; vaciarlos aquí no cambia el registro de la AEAT.'
     actions:
       section: Acciones
     column:

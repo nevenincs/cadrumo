@@ -1495,6 +1495,8 @@ application:
         ez az alkalmazás nem támogatja.
       unsupported_bundle_schema_version: A csomag sémaverziója nem támogatott ebben
         az alkalmazásverzióban.
+      censal_read_identity_absent: 'A nyilvántartási olvasás nem tartalmazott adóazonosítót, ezért nem erősíthető meg, hogy ehhez a profilhoz tartozik.'
+      censal_read_identity_mismatch: 'A nyilvántartási olvasás egy másik adózóhoz tartozik, nem ehhez a profilhoz; nem került alkalmazásra.'
     notices:
       censo_divergences_open: '{count} profiladat továbbra is eltér a Certificado
         de Situación Censal tanúsítványtól és megoldatlan: {axes}.'
@@ -6427,6 +6429,7 @@ errors:
     submission_preflight_error_findings: A tervezetben {finding_count} ERROR súlyosságú
       megállapítás van; javítsa ezeket benyújtás előtt.
     unsupported_currency: A megadott devizakód nem támogatott.
+    censal_read_identity: 'A nyilvántartási olvasás nem ehhez a profilhoz tartozó adózóé.'
   snapshot:
     ambiguous_revision_selection: 'Egynél több nyilvántartási revízió illeszkedik
       a(z) %{modelo_id} modellhez: %{candidate_ids}.'
@@ -6552,6 +6555,7 @@ flows:
         certificate: Elektronikus tanúsítvány
         clave_movil: Cl@ve Móvil
         clave_permanente: Cl@ve Permanente
+      censal_pull_cleared: 'Az AEAT-nál még szerepel érték az Ön által kiürített mezőkhöz: %{paths}. Ezek üresen maradtak; a kiürítés itt nem módosítja az AEAT nyilvántartását.'
     actions:
       section: Műveletek
     column:
