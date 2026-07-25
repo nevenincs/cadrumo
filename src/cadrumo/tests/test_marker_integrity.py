@@ -31,9 +31,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _SRC_CADRUMO = Path(__file__).resolve().parents[1]
 _REPO_ROOT = _SRC_CADRUMO.parents[1]
+#: Roots the module-level marker checks read. ``dev`` is included so the two
+#: inventories in this gate cover the same trees: ``project_test_modules()``
+#: (the unioned per-item check) already reaches ``dev`` and ``docs``, and this
+#: one reaches ``src/cadrumo`` and ``docs``. Leaving ``dev`` out here meant each
+#: inventory had a hole the other only partly filled, so a ``dev`` module could
+#: carry no module-level execution marker and no check would say so.
 _TEST_MODULE_ROOTS = (
     _SRC_CADRUMO,
     _REPO_ROOT / "docs",
+    _REPO_ROOT / "dev",
 )
 _TEST_TOPOLOGY_ROOTS = (_SRC_CADRUMO, *PROJECT_TEST_ROOTS)
 _EXECUTION_MARKERS = frozenset({"unit", "integration", "aeat_live"})

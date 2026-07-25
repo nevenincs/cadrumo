@@ -7,10 +7,11 @@ are vendored), the custom-record injection seam works, and the search-page
 template plus the pagefind.yml config reference the artifacts the pass
 emits.
 
-The index-pass tests are ``integration``-marked (they run the bundled
-binary over real HTML); the config/template assertions are pure-file checks.
-None mock Pagefind - the whole point is to prove the vendored binary runs
-offline.
+Every test here runs the bundled binary over real HTML, so the module is
+``integration`` throughout. The config and template assertions that used to
+share this file are pure-file checks and now live in ``test_pagefind_config``,
+one execution lane per module. None mock Pagefind - the whole point is to prove
+the vendored binary runs offline.
 """
 
 from __future__ import annotations
@@ -19,11 +20,9 @@ from pathlib import Path
 
 import pytest
 
-from ..pagefind_index import (
-    PagefindUnavailableError,
-    SearchIndexResult,
-    build_search_index,
-)
+from ..pagefind_index import SearchIndexResult, build_search_index
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 # dev/docs/tests/test_pagefind_index.py -> parents[3] is the repo root.
 _REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -66,8 +65,6 @@ def _write_fixture_site(root: Path) -> None:
     )
 
 
-@pytest.mark.integration
-@pytest.mark.hex_core
 def test_index_pass_indexes_built_html(tmp_path: Path) -> None:
     """The post-build pass indexes the fixture pages and writes the index.
 
@@ -89,8 +86,6 @@ def test_index_pass_indexes_built_html(tmp_path: Path) -> None:
     assert "pagefind.js" in files
 
 
-@pytest.mark.integration
-@pytest.mark.hex_core
 def test_custom_record_injection_seam_and_language_splits(tmp_path: Path) -> None:
     """The injection seam runs and per-language (es/ca/en) splits are produced.
 
@@ -123,42 +118,3 @@ def test_custom_record_injection_seam_and_language_splits(tmp_path: Path) -> Non
     pf = tmp_path / "pagefind"
     languages = {p.name.split("_")[0] for p in pf.rglob("*.pf_index")}
     assert {"es", "ca", "en"} <= languages, languages
-
-
-@pytest.mark.unit
-@pytest.mark.hex_core
-def test_pagefind_yml_scopes_to_article_body() -> None:
-    """The shipped pagefind.yml indexes the article body, excluding chrome."""
-    text = (_DOCS / "pagefind.yml").read_text(encoding="utf-8")
-    assert 'root_selector: "article[role=main]"' in text
-    assert "exclude_selectors:" in text
-    assert ".sidebar-tree" in text  # navigation chrome is excluded
-
-
-@pytest.mark.unit
-@pytest.mark.hex_core
-def test_search_template_hosts_the_shared_controller() -> None:
-    """The search page is a bare mount for the shared controller (ADR D5).
-
-    The stock ``PagefindUI`` drop was retired: the page no longer loads a
-    per-page UI bundle. It exposes the ``#pagefind-search`` mount that the
-    globally-loaded ``cadrumo-docs.js`` (``initSearchPage``, wired through
-    ``html_js_files`` in ``conf.py``) renders the same search controller as the
-    Ctrl-K palette into -- one implementation, two hosts. Asserting the retired
-    bundle is absent keeps the divergent second surface from creeping back in.
-    """
-    template = (_DOCS / "_templates" / "search.html").read_text(encoding="utf-8")
-    assert 'id="pagefind-search"' in template
-    # The retired PagefindUI bundle path is gone, and the page loads no per-page
-    # script/link at all -- the controller arrives via the global cadrumo-docs.js
-    # (asserting the raw wiring, not the comment prose that names the retirement).
-    assert "pagefind-ui" not in template
-    assert "<script" not in template
-    assert "<link" not in template
-
-
-@pytest.mark.unit
-@pytest.mark.hex_core
-def test_unavailable_pagefind_is_a_named_error() -> None:
-    """The vendor-absent boundary is a named, actionable error type."""
-    assert issubclass(PagefindUnavailableError, RuntimeError)
