@@ -46,6 +46,21 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     # live-command feature work plus feature/profile branch growth; re-pinned
     # with small headroom per the ship-authorised rebaseline.
     "_app_live.py": 1320,  # SPLIT-CANDIDATE
+    # _config_payloads.py: grew past the default budget under the login/logout
+    # campaign (the login and logout door registrations, the hard-cut switch,
+    # then the profile-export pre-journal cleartext-window fix). Pinned at
+    # EXACTLY the present size, with no headroom, so the next line of growth
+    # reds this gate again rather than being absorbed. SPLIT-CANDIDATE for the
+    # campaign owner: extract the login/session payload family to a sibling
+    # module, following the `_ledger_payloads.py` -> `_ledger_business_payloads.py`
+    # split recorded above.
+    "_config_payloads.py": 1266,  # SPLIT-CANDIDATE
+    # _ledger_read_cli.py: grew past the default budget under the invoice-linkage
+    # campaign (single-transaction link commit, typed link-inconsistency
+    # direction, then the linkage audit event). Pinned at EXACTLY the present
+    # size with no headroom. SPLIT-CANDIDATE for the campaign owner: the invoice
+    # link/verify read surface is the extractable family.
+    "_ledger_read_cli.py": 1257,  # SPLIT-CANDIDATE
 }
 _DEFAULT_COMMAND_LINE_LIMIT = 180
 # Per-command ceilings for command bodies pinned above the default, mirroring the

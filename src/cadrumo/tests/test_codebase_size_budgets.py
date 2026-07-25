@@ -39,14 +39,23 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     "src/cadrumo/application/ledger/_llm_classification.py": 1664,  # SPLIT-CANDIDATE (active LLM-ledger growth)
     # Manual ledger-action surface grew to 1278 under concurrent ledger feature
     # work; first override, pinned with small headroom per the ship-authorised
-    # rebaseline. SPLIT-CANDIDATE: extract manual-command helpers on the next pass.
-    "src/cadrumo/application/ledger/_actions_manual.py": 1305,  # SPLIT-CANDIDATE
+    # rebaseline. That headroom is now spent (1317) under continued ledger
+    # feature work, so this is re-pinned at EXACTLY the present size with NO
+    # headroom: the next line of growth reds this gate again instead of being
+    # absorbed. SPLIT-CANDIDATE: extract manual-command helpers on the next pass.
+    "src/cadrumo/application/ledger/_actions_manual.py": 1317,  # SPLIT-CANDIDATE
     "src/cadrumo/application/modelo/_verification_actions.py": 1750,  # SPLIT-CANDIDATE
     # Grew with the state-root derivation table and the per-family growth-lifecycle
     # settings (log rotation cap/backup, LLM cache/usage/run-telemetry retention,
     # run-trace + wallet-dump + corpus-cache retention/derivation); re-pinned to
-    # present size. SPLIT-CANDIDATE: the settings model is a split-by-mixin target.
-    "src/cadrumo/core/config.py": 1400,  # SPLIT-CANDIDATE
+    # present size. Grew again to 1412 under the active-profile env-source
+    # severance (net +75: the pointer-file writer contract, the removal of the
+    # env slot from the documented inventory, and the surviving-writer prose).
+    # Re-pinned at EXACTLY the present size with no headroom. The split-by-mixin
+    # direction is proven, not theoretical: extracting the LLM and MCP-serving
+    # settings into mixins took this module down by ~104 lines.
+    # SPLIT-CANDIDATE: continue that mixin extraction on the next pass.
+    "src/cadrumo/core/config.py": 1412,  # SPLIT-CANDIDATE
     # Active live-censo calendar reconciliation is landing in this shared tree;
     # keep a bounded ceiling so unrelated closeout sweeps can proceed while it settles.
     # Live-censo calendar reconciliation is actively landing and growing; bounded
@@ -86,6 +95,22 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     # `_modelo_aux_payloads.py` / `_modelo_revision_payload_parts.py`;
     # re-pinned to the smaller post-split size.
     "src/cadrumo/entrypoints/cli/_modelo_payloads.py": 1341,  # SPLIT-CANDIDATE
+    # _record_design.py sat at EXACTLY the 1250 default and was pushed to 1252 by
+    # the ruff 0.15.22 -> 0.16.0 formatter reflow (5d41cdccc2, +8/-6 on this file,
+    # no logic change): the new formatter joins comprehensions and call chains the
+    # old one split. This is toolchain line-wrapping, not acquired complexity, so
+    # a split would be the wrong remedy. Pinned at the reflowed size; NOT marked
+    # SPLIT-CANDIDATE, because the module has not actually grown.
+    "src/cadrumo/domain/calculations/registry/_record_design.py": 1252,
+    # The two CLI modules below mirror the sibling overrides in
+    # test_cli_module_size.py, which is the gate that flagged them; both are
+    # pinned at EXACTLY the present size with no headroom.
+    # _config_payloads.py: login/logout campaign growth (login and logout door
+    # registrations, the hard-cut switch, the profile-export cleartext-window fix).
+    "src/cadrumo/entrypoints/cli/_config_payloads.py": 1266,  # SPLIT-CANDIDATE
+    # _ledger_read_cli.py: invoice-linkage campaign growth (single-transaction
+    # link commit, typed link-inconsistency direction, linkage audit event).
+    "src/cadrumo/entrypoints/cli/_ledger_read_cli.py": 1257,  # SPLIT-CANDIDATE
     # New peer-introduced modules discovered by the size-budget gate;
     # pinned at present size pending an owner split pass.
     "src/cadrumo/adapters/outbound/google/_calc_sheets_apply.py": 1272,  # SPLIT-CANDIDATE (+13: call-time vault-folder Settings deferral, 1d026764cc)
