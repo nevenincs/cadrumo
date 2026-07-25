@@ -24,11 +24,11 @@ import io
 import re
 from dataclasses import dataclass
 from decimal import Decimal
-from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
 from ....core import Period
+from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
 from ....core.resources import bundled_path
 from ....core.time import now
@@ -211,7 +211,7 @@ def parse_declaracion_bytes(
             registry snapshot loading, or registry-profile extraction fails.
     """
     pages = extract_pages_text_from_bytes(pdf_bytes, source_label=source_label)
-    digest = sha256(pdf_bytes).hexdigest()
+    digest = sha256_hex(pdf_bytes)
     source_pdf_path = source_pdf_reference_path(digest)
     return _parse_declaracion_pages(
         pages=pages,

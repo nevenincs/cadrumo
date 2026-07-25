@@ -40,8 +40,6 @@ _CANONICAL_HELPER = "core/hashing.py"
 #: (delegate a body to ``sha256_hex`` and, optionally, lower or drop its entry),
 #: but a new module or a higher count is a NEW reducible body and fails.
 _REDUCIBLE_ONE_SHOT_BASELINE: dict[str, int] = {
-    "adapters/inbound/declaracion/_parser.py": 1,
-    "adapters/inbound/declaracion/_parsers/_pdfplumber_backend.py": 1,
     "adapters/outbound/aeat/auth/_clave_movil_support.py": 1,
     "adapters/outbound/llm/_cache.py": 1,
     "adapters/persistence/storage/_rotation.py": 1,
