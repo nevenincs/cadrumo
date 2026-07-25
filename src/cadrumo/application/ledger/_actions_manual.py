@@ -611,7 +611,7 @@ def update_manual_transaction(
     )
     # An evidence-only attachment cannot disturb a finalized revision (stable
     # transaction id, unchanged row fingerprint, frozen bundled evidence), so it
-    # is exempt from the write guard - otherwise the documented remedy for an
+    # is exempt from the write guard — otherwise the documented remedy for an
     # export evidence refusal would itself be blocked by the calculation that
     # raised it. The cited revisions are reported back as stale so the operator
     # is told to recalculate; the exemption never widens past evidence fields.

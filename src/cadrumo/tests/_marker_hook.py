@@ -143,3 +143,75 @@ def _hold_serial_items_from_xdist(config: pytest.Config, items: list[pytest.Item
         SerialTestsHeldWarning,
         stacklevel=1,
     )
+
+
+_held_from_workers: list[str] = []
+"""Serial node ids held out of an xdist run, accumulated across workers.
+
+Module-level because the controller sees each worker exactly once, on node
+down, and must survive until the session finishes to decide the exit status.
+"""
+
+
+def record_held_from_node(node: object) -> None:
+    """Absorb one worker's held-serial ids as its node goes down.
+
+    ``workeroutput`` is the sanctioned worker-to-controller channel. The hop
+    is REQUIRED rather than convenient: xdist deselects inside the workers,
+    so the controller's own ``deselected`` stat never receives these items
+    and cannot be used as the signal.
+
+    Args:
+        node: The xdist worker node that just went down.
+    """
+    payload = getattr(node, "workeroutput", {}) or {}
+    for node_id in payload.get(SERIAL_HELD_WORKEROUTPUT_KEY, ()):
+        if node_id not in _held_from_workers:
+            _held_from_workers.append(node_id)
+
+
+def held_serial_node_ids() -> tuple[str, ...]:
+    """Return the serial node ids held out of this run, in first-seen order."""
+    return tuple(_held_from_workers)
+
+
+def fail_session_on_held_serials(session: pytest.Session) -> None:
+    """Refuse a run that silently held isolation-sensitive tests back.
+
+    Keyed on the held list being NON-EMPTY, never on workers merely being
+    active, so a parallel run that selected no serial test is untouched.
+
+    ``USAGE_ERROR`` is deliberate: the invocation, not the code, is what was
+    wrong, and it stays distinguishable from tests-failed and from an xdist
+    abort. Without this the run completes GREEN with those tests unrun, and
+    a warning in a fourteen-thousand-test footer scrolls past -- the same
+    false-green shape as a marker expression silently deselecting a whole
+    lane.
+
+    Args:
+        session: The finishing session, whose exit status is overridden.
+    """
+    if _held_from_workers:
+        session.exitstatus = pytest.ExitCode.USAGE_ERROR
+
+
+def report_held_serials(terminalreporter: object) -> None:
+    """Name the held tests and the invocation that would run them.
+
+    Args:
+        terminalreporter: The active terminal reporter.
+    """
+    if not _held_from_workers:
+        return
+    write_sep = terminalreporter.write_sep  # type: ignore[attr-defined]
+    write_line = terminalreporter.write_line  # type: ignore[attr-defined]
+    write_sep("=", "SERIAL TESTS HELD BACK", red=True, bold=True)
+    write_line(
+        f"{len(_held_from_workers)} isolation-sensitive tests were NOT RUN: they cannot be "
+        "scheduled alongside a parallel lane.",
+        red=True,
+        bold=True,
+    )
+    for node_id in _held_from_workers:
+        write_line(f"  {node_id}")
+    write_line("Run them with `just test-integration-serial`, or add -n0 to this invocation.")
