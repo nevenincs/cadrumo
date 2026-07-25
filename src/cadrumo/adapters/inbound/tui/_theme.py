@@ -110,7 +110,17 @@ CADRUMO_DARK: Final[Theme] = Theme(
 CADRUMO_THEMES: Final[tuple[Theme, ...]] = (CADRUMO_LIGHT, CADRUMO_DARK)
 
 
-BASE_CSS: Final[str] = """
+SCROLLBAR_CELLS: Final[int] = 1
+"""Width of the vertical scrollbar track, in cells.
+
+The scroll host reserves this on the right (``scrollbar-gutter: stable``)
+and pads by the same amount on the left, so the reservation is symmetric
+and the centred content column lands on the terminal's true midline. The
+two must always agree, which is why they are one constant substituted
+into the stylesheet rather than two numbers typed twice.
+"""
+
+_BASE_CSS_TEMPLATE: Final[str] = """
     Screen {
         background: $background;
         color: $foreground;
@@ -130,16 +140,21 @@ BASE_CSS: Final[str] = """
     }
 
     /* A scroll host must not eat the column's centring. `scrollbar-gutter:
-       stable` reserves the track on BOTH sides, so the column sits on the
-       true midline whether or not a scrollbar is currently drawn — without
-       it the reserved track lands entirely on the right and every surface
-       is measurably off-centre. */
+       stable` reserves the track so the layout does not jump when the
+       scrollbar appears — but it reserves on the RIGHT ONLY, which moves
+       the content box off the terminal's midline and drags the centred
+       column with it (measured: gutters 8 left / 10 right at 120 columns).
+       Matching that reservation with an equal left padding restores the
+       symmetry: the content box is now inset by the scrollbar width on
+       both sides, so its midline is the terminal's midline. Both values
+       track SCROLLBAR_CELLS — they are one measurement, not two. */
     .cadrumo-scroll {
         width: 100%;
         height: 1fr;
         align-horizontal: center;
-        scrollbar-size-vertical: 1;
+        scrollbar-size-vertical: SCROLLBAR_CELLS;
         scrollbar-gutter: stable;
+        padding: 0 0 0 SCROLLBAR_CELLS;
     }
 
     /* The docked title band every full-screen surface carries. */
@@ -195,6 +210,8 @@ BASE_CSS: Final[str] = """
     }
     Input:focus { border: tall $primary; }
 """
+
+BASE_CSS: Final[str] = _BASE_CSS_TEMPLATE.replace("SCROLLBAR_CELLS", str(SCROLLBAR_CELLS))
 """Chrome and layout shared by every Cadrumo full-screen surface.
 
 An app composes this ahead of its own rules (``CSS = BASE_CSS + "..."``)

@@ -18,7 +18,10 @@ rather than a smoke test.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import pytest
+from textual.containers import Vertical
 from textual.theme import Theme
 
 from .....core.config import TuiAppearance
@@ -29,8 +32,17 @@ from .. import (
     CADRUMO_LIGHT_THEME_NAME,
     CADRUMO_THEMES,
     CONTENT_WIDTH_PERCENT,
+    RegistrationApp,
+    StatusApp,
+    StatusPageData,
     resolve_theme_name,
 )
+from .._theme import BASE_CSS, SCROLLBAR_CELLS
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from textual.app import App
 
 pytestmark = [
     pytest.mark.unit,
@@ -171,6 +183,89 @@ def test_the_content_column_is_a_proportion_not_a_cell_count() -> None:
     """
     assert CONTENT_WIDTH_PERCENT.endswith("%")
     assert 50 < int(CONTENT_WIDTH_PERCENT.rstrip("%")) < 100
+
+
+# ── rendered geometry ───────────────────────────────────────────────────────
+
+_GEOMETRY_SIZES = [(80, 30), (120, 40), (200, 50)]
+"""A narrow, an ordinary, and a wide terminal.
+
+Three sizes rather than one because the defect this guards was invisible
+at some widths and obvious at others: a fixed bias reads as tolerable
+rounding on a wide terminal and as a visibly shoved page on a narrow one.
+"""
+
+
+def _gutters(app: App[object]) -> tuple[int, int]:
+    """Return the empty cells left and right of the centred content column."""
+    screen = app.screen.region
+    column = app.query_one(".cadrumo-column", Vertical).region
+    return (column.x - screen.x, (screen.x + screen.width) - (column.x + column.width))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(("width", "height"), _GEOMETRY_SIZES)
+@pytest.mark.parametrize(
+    "build",
+    [lambda: RegistrationApp(), lambda: StatusApp(StatusPageData())],
+    ids=["registration", "status"],
+)
+async def test_the_content_column_lands_on_the_terminal_midline(
+    build: Callable[[], App[object]],
+    width: int,
+    height: int,
+) -> None:
+    """Left and right gutters must match to within one cell.
+
+    Measured from the real rendered ``region`` of the mounted widgets, not
+    from a screenshot: scraped output made the page look 9 cells off when
+    the true bias was 2, because unfilled prose lines read as gutter.
+
+    One cell of slack is the honest tolerance, not a fudge. When the space
+    left over after the column is odd it cannot be split evenly across a
+    cell grid, so a perfect-equality assertion would be unsatisfiable at
+    half the terminal widths in existence.
+    """
+    app = build()
+    async with app.run_test(size=(width, height)) as pilot:
+        await pilot.pause()
+        left, right = _gutters(app)
+        assert abs(left - right) <= 1, f"off-centre at {width}x{height}: left={left} right={right}"
+        assert left > 0, "the column must not touch the terminal edge"
+        app.exit(None)
+
+
+@pytest.mark.asyncio
+async def test_dropping_the_left_reservation_really_does_shove_the_page() -> None:
+    """Anti-tautology: the guard above fails on the layout it was written for.
+
+    Reproduces the original defect by removing the compensating left
+    padding, leaving ``scrollbar-gutter: stable`` reserving on the right
+    alone. If this app centres, the assertion in the test above is
+    measuring nothing.
+    """
+
+    class UncompensatedApp(RegistrationApp):
+        CSS = RegistrationApp.CSS.replace("padding: 0 0 0 1;", "")
+
+    app = UncompensatedApp()
+    async with app.run_test(size=(120, 40)) as pilot:
+        await pilot.pause()
+        left, right = _gutters(app)
+        assert abs(left - right) > 1, f"the defect did not reproduce: left={left} right={right}"
+        app.exit(None)
+
+
+def test_the_scrollbar_reservation_is_declared_once_for_both_sides() -> None:
+    """The right-hand track and the left-hand pad come from one constant.
+
+    Typing the number twice is how they drift apart, and a drifted pair is
+    exactly the off-centre page above — so the stylesheet substitutes
+    :data:`SCROLLBAR_CELLS` into both and this pins that it happened.
+    """
+    assert f"scrollbar-size-vertical: {SCROLLBAR_CELLS};" in BASE_CSS
+    assert f"padding: 0 0 0 {SCROLLBAR_CELLS};" in BASE_CSS
+    assert "SCROLLBAR_CELLS" not in BASE_CSS, "an unsubstituted token would be invalid CSS"
 
 
 def test_no_surface_pins_a_cell_width_in_its_stylesheet() -> None:
