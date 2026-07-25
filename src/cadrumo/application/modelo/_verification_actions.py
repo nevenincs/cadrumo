@@ -20,7 +20,22 @@ Verification emits bucket-history entries through
 :class:`TransactionCatalogueRepository` only for evidence advisories over source
 transactions.
 
+Draft-construction structural validation is a distinct, nested stage, not a
+parallel pipeline. When verification grants, this module runs the revision
+workflow gate with :class:`~cadrumo.application.workflow.WorkflowPurpose.VERIFY`;
+that gate builds a filing draft, and the draft builder stamps
+:class:`ModeloValidationFinding` rows produced by
+:class:`~cadrumo.domain.filing.ModeloValidator` onto the draft, which the
+workflow engine re-scans for ERROR severity. Those structural findings answer
+whether the draft is well-formed against the casilla collection;
+:class:`ModeloVerificationFinding` answers operator-facing filing readiness and
+carries registry ``legal_refs`` provenance the structural model does not. The
+two vocabularies are not interchangeable.
+
 See Also:
+    :class:`~cadrumo.domain.filing.ModeloValidator`:
+        Draft-construction structural validator reached through the workflow
+        gate's draft builder; owns :class:`ModeloValidationFinding`.
     :func:`~cadrumo.application.calculations.evaluate_cross_period_clean_state`:
         Shared cross-period gate used by verify, file, and export.
     :mod:`~cadrumo.application.modelo._calculation_diagnostics`:

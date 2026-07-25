@@ -5,6 +5,36 @@ casilla collection it was built against and returns a tuple of
 :class:`ModeloValidationFinding` records. It never raises — strict
 behaviour is the caller's responsibility via
 ``fail_on_warning`` on :func:`build_draft`.
+
+This is draft-construction-time *structural* validation, and it is one
+stage inside the pre-file verification gate rather than an alternative to
+it. :func:`build_draft` runs this validator on every draft it constructs
+and stamps the result onto the ``findings`` tuple of the resulting
+:class:`ModeloDraft`, so the stage is reached from all three operator
+verbs that build a draft: verify and file via the revision workflow
+gate, and export via the draft-export action.
+The workflow engine then re-scans those stamped findings in its
+``VALIDATING_DRAFT`` stage and aborts on any ERROR-severity row.
+
+The two finding vocabularies are deliberately distinct and answer
+different questions. :class:`ModeloValidationFinding` answers "is this
+draft structurally well-formed against the casilla collection?" —
+schema version, declared and required casillas, value ranges, formula
+traces, and the deadline check — and grounds itself in Manual práctico
+rule ids via ``references_rules``. The verify gate's
+:class:`ModeloVerificationFinding` answers the broader operator-facing
+readiness question, carries a closed kind/severity taxonomy, and
+requires registry ``legal_refs`` provenance. Neither model subsumes the
+other; do not collapse them.
+
+See Also:
+    :func:`~cadrumo.application.modelo.verify_modelo_revision`:
+        The pre-file verification gate this validator runs inside, which
+        owns :class:`ModeloVerificationFinding` and the persisted
+        :class:`VerificationReport`.
+    :func:`~cadrumo.application.filing.validate_draft`:
+        Re-runs this validator against an existing draft, preserving
+        ``draft_id``.
 """
 
 from __future__ import annotations
