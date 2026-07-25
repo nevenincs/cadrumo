@@ -28,11 +28,11 @@ from __future__ import annotations
 
 import base64
 import binascii
-from collections.abc import Callable
+from collections.abc import Buffer, Callable
 from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Self
 
 from pydantic import BaseModel, ValidationError
 
@@ -52,6 +52,7 @@ from ._recovery import (
     wrap_master_key,
 )
 from ._recovery_record import RecoveryRecord
+from ._zeroise import zeroise as _zeroise
 
 if TYPE_CHECKING:
     from ._master_key import FileFallbackMasterKeyProvider, MasterKeyProvider
@@ -60,18 +61,43 @@ _GCM_TAG_BYTES = 16
 _HKDF_INFO = "cadrumo.recovery-key.master-wrap.v1"
 
 
-class MintedRecovery(BaseModel):
+class MintedRecovery:
     """In-memory result of a recovery enrollment.
 
     The mnemonic is the only handle on the recovery KEK; the caller
-    arranges for the operator to copy it before this record falls out
-    of scope.
+    arranges for the operator to copy it, then calls :meth:`wipe`.
+
+    Held in a wipeable ``bytearray`` rather than an immutable ``str``,
+    and deliberately not a pydantic model, for the reasons
+    :class:`RecoveryKey` documents: an enrollment carries this value
+    across the operator's interactive confirmation, and a model with a
+    ``model_dump_json`` is one careless call away from serialising the
+    recovery code the envelope exists to keep off disk.
+
+    The ``envelope`` is public ciphertext and stays a strict pydantic
+    record — it is exactly the part that *is* meant to be serialised.
     """
 
-    model_config = _STRICT_FROZEN
+    __slots__ = ("_mnemonic_buffer", "envelope")
 
-    envelope: RecoveryRecord
-    mnemonic: str
+    def __init__(self, *, envelope: RecoveryRecord, mnemonic: str) -> None:
+        self.envelope = envelope
+        self._mnemonic_buffer = bytearray(mnemonic.encode(_UTF_8_ENCODING))
+
+    @property
+    def mnemonic(self) -> str:
+        """Return the 24-word mnemonic, decoded from its wipeable buffer."""
+        return self._mnemonic_buffer.decode(_UTF_8_ENCODING)
+
+    def wipe(self) -> None:
+        """Overwrite the mnemonic buffer with zero bytes. Idempotent."""
+        _zeroise(self._mnemonic_buffer)
+
+    def __enter__(self) -> Self:
+        return self
+
+    def __exit__(self, *_exc_info: object) -> None:
+        self.wipe()
 
 
 def _envelope_from_blob(blob: EncryptedBlob, created_at: datetime) -> RecoveryRecord:
@@ -100,26 +126,33 @@ def _blob_from_envelope(envelope: RecoveryRecord) -> EncryptedBlob:
         raise RecoveryVerificationError("recovery envelope is malformed") from exc
 
 
-def mint_recovery_envelope(*, dek: bytes, created_at: datetime) -> MintedRecovery:
+def mint_recovery_envelope(*, dek: Buffer, created_at: datetime) -> MintedRecovery:
     """Mint a fresh :class:`MintedRecovery` envelope wrapping ``dek``.
 
     Returns a :class:`MintedRecovery` carrying the typed ``RecoveryRecord`` and
     the 24-word mnemonic the operator must record. The mnemonic is the
     only handle on the recovery KEK; this function does NOT persist it.
+
+    The intermediate :class:`RecoveryKey` is wiped before returning: the
+    minted record takes its own copy of the mnemonic, so the entropy and
+    the generator's copy of the words do not outlive this call.
     """
     recovery_key: RecoveryKey = generate_recovery_key()
-    wrapped: WrappedMasterKey = wrap_master_key(master_key=dek, recovery_key=recovery_key)
-    blob = wrapped.to_blob()
-    envelope = _envelope_from_blob(blob, created_at=created_at)
-    return MintedRecovery(envelope=envelope, mnemonic=recovery_key.mnemonic)
+    try:
+        wrapped: WrappedMasterKey = wrap_master_key(master_key=dek, recovery_key=recovery_key)
+        blob = wrapped.to_blob()
+        envelope = _envelope_from_blob(blob, created_at=created_at)
+        return MintedRecovery(envelope=envelope, mnemonic=recovery_key.mnemonic)
+    finally:
+        recovery_key.wipe()
 
 
 def unwrap_recovery_envelope(
     *,
     envelope: RecoveryRecord,
     mnemonic: str,
-    decoder: Callable[[str], bytes] | None = None,
-) -> bytes:
+    decoder: Callable[[str], Buffer] | None = None,
+) -> bytearray:
     """Decode ``mnemonic`` and unwrap ``envelope`` to recover the 32-byte DEK.
 
     Args:
@@ -128,7 +161,9 @@ def unwrap_recovery_envelope(
         decoder: Optional override for mnemonic decoding; production callers omit it.
 
     Returns:
-        The recovered 32-byte data-encryption key.
+        The recovered 32-byte data-encryption key, in a wipeable
+        ``bytearray`` the caller is expected to :func:`zeroise` once it has
+        opened a session or re-minted custody from it.
 
     Raises:
         RecoveryVerificationError: When the mnemonic does not decode or the AEAD tag
@@ -136,7 +171,7 @@ def unwrap_recovery_envelope(
     """
     resolved_decoder = decoder or decode_mnemonic
     try:
-        entropy = resolved_decoder(mnemonic)
+        entropy = bytearray(resolved_decoder(mnemonic))
     except StorageValidationError as exc:
         raise RecoveryVerificationError(str(exc)) from exc
 
@@ -148,6 +183,10 @@ def unwrap_recovery_envelope(
         raise RecoveryVerificationError(
             "recovery envelope did not decrypt under the supplied mnemonic",
         ) from exc
+    finally:
+        # The decoded entropy is the recovery key itself; it has served its
+        # purpose the moment the KEK is derived, whether or not that succeeded.
+        _zeroise(entropy)
 
 
 def verify_recovery_mnemonic(*, envelope: RecoveryRecord, mnemonic: str) -> bool:
@@ -156,11 +195,18 @@ def verify_recovery_mnemonic(*, envelope: RecoveryRecord, mnemonic: str) -> bool
     Used by the `aeat config recovery verify` periodic-custody-test
     verb. Catches `RecoveryVerificationError` and surfaces a boolean
     so the CLI renders the outcome without leaking detail.
+
+    A successful check unwraps the real DEK purely to prove the AEAD tag
+    verifies, so the recovered buffer is zeroed before returning. This verb
+    is the one an operator is told to run *periodically*, which would
+    otherwise make it the most frequently repeated plaintext-DEK exposure
+    on the whole recovery surface.
     """
     try:
-        unwrap_recovery_envelope(envelope=envelope, mnemonic=mnemonic)
+        dek = unwrap_recovery_envelope(envelope=envelope, mnemonic=mnemonic)
     except RecoveryVerificationError:
         return False
+    _zeroise(dek)
     return True
 
 
@@ -195,16 +241,23 @@ def open_session_from_recovery(
     operator's new passphrase, run through Argon2id under a fresh salt);
     the function unwraps the DEK from the recovery envelope and yields
     a live session bound to `bucket_id`.
+
+    ``BucketSession.open`` copies the DEK into its own wipeable session
+    buffer, so the unwrapped copy here is zeroed once the session owns it;
+    from that point the session's ``close`` is the wipe authority.
     """
     dek = unwrap_recovery_envelope(envelope=envelope, mnemonic=mnemonic)
-    return BucketSession.open(
-        bucket_id=bucket_id,
-        kek=kek,
-        dek=dek,
-        idle_minutes=idle_minutes,
-        opened_at=opened_at,
-        storage_root=storage_root,
-    )
+    try:
+        return BucketSession.open(
+            bucket_id=bucket_id,
+            kek=kek,
+            dek=bytes(dek),
+            idle_minutes=idle_minutes,
+            opened_at=opened_at,
+            storage_root=storage_root,
+        )
+    finally:
+        _zeroise(dek)
 
 
 # ---------------------------------------------------------------------------
@@ -341,23 +394,37 @@ def _enroll_recovery(
             "to enroll one before rotating.",
         )
 
-    master_key = file_provider.get_master_key()
-    candidate = mint_recovery_envelope(dek=master_key, created_at=created_at)
-    retyped = confirm(candidate.mnemonic)
-    payload = candidate.envelope.model_dump_json().encode(_UTF_8_ENCODING)
+    # The provider hands back immutable bytes (its own steady-state contract);
+    # copy into a wipeable buffer immediately, because this value is then held
+    # live across `confirm`, an interactive prompt that lasts as long as it
+    # takes the operator to copy down 24 words.
+    master_key = bytearray(file_provider.get_master_key())
+    candidate: MintedRecovery | None = None
+    try:
+        candidate = mint_recovery_envelope(dek=master_key, created_at=created_at)
+        _zeroise(master_key)
+        retyped = confirm(candidate.mnemonic)
+        payload = candidate.envelope.model_dump_json().encode(_UTF_8_ENCODING)
+        staged_envelope = candidate.envelope
 
-    def _verify_candidate() -> None:
-        if not verify_recovery_mnemonic(envelope=candidate.envelope, mnemonic=retyped):
-            raise RecoveryVerificationError(
-                "recovery confirmation did not match the staged recovery code; "
-                "the previous recovery envelope is unchanged.",
-            )
+        def _verify_candidate() -> None:
+            if not verify_recovery_mnemonic(envelope=staged_envelope, mnemonic=retyped):
+                raise RecoveryVerificationError(
+                    "recovery confirmation did not match the staged recovery code; "
+                    "the previous recovery envelope is unchanged.",
+                )
 
-    atomically_install_verified_recovery(path=path, payload=payload, verify=_verify_candidate)
-    return RecoveryEnrollmentOutcome(
-        recovery_fingerprint=candidate.envelope.recovery_fingerprint,
-        rotated=mode is RecoveryEnrollmentMode.ROTATE,
-    )
+        atomically_install_verified_recovery(path=path, payload=payload, verify=_verify_candidate)
+        return RecoveryEnrollmentOutcome(
+            recovery_fingerprint=staged_envelope.recovery_fingerprint,
+            rotated=mode is RecoveryEnrollmentMode.ROTATE,
+        )
+    finally:
+        # Runs on the cancelled and mistyped paths too, where the operator has
+        # already seen a mnemonic that will never be installed.
+        _zeroise(master_key)
+        if candidate is not None:
+            candidate.wipe()
 
 
 def recovery_create(
@@ -448,7 +515,10 @@ def recovery_recover(
     envelope = load_recovery_envelope(path)
     established_fingerprint = envelope.recovery_fingerprint
     master_key = unwrap_recovery_envelope(envelope=envelope, mnemonic=mnemonic)
-    file_provider.complete_recovery(master_key)
+    try:
+        file_provider.complete_recovery(bytes(master_key))
+    finally:
+        _zeroise(master_key)
     return RecoveryRecoverOutcome(recovery_fingerprint=established_fingerprint)
 
 

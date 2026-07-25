@@ -38,6 +38,7 @@ from ...adapters.persistence.storage.master_key import (
     recovery_rotate,
     recovery_status,
     recovery_verify,
+    zeroise,
 )
 from ...core import STRICT_FROZEN_CONFIG, resolve_active_bucket_id
 from ...core.config import Settings, load_settings
@@ -125,9 +126,20 @@ def recovery_wrap_path(settings: Settings | None = None) -> Path:
 
 
 def inspect_recovery_status(settings: Settings | None = None) -> CustodyRecoveryStatus:
-    """Inspect whether the configured recovery wrapper exists and return a :class:`CustodyRecoveryStatus`."""
+    """Inspect whether the configured recovery wrapper exists and return a :class:`CustodyRecoveryStatus`.
+
+    The envelope file on disk is the single source of truth for whether
+    recovery is enrolled. The active profile manifest also carries a
+    ``recovery_enrolled`` mirror of that fact, written in a separate,
+    necessarily non-atomic step after the envelope is installed — so a
+    process killed between the two writes leaves the mirror disagreeing
+    with disk. Reading the status reconciles the mirror against the
+    envelope, in both directions, so the drift is self-healing on the
+    natural read path rather than persisting until the next enrollment.
+    """
     path = recovery_wrap_path(settings)
     status = recovery_status(path=path)
+    _reconcile_active_profile_recovery_flag(settings=_settings(settings), enrolled=status.enrolled)
     return CustodyRecoveryStatus(
         recovery_path=path,
         recovery_enrolled=status.enrolled,
@@ -194,18 +206,50 @@ def _emit_custody_event(
         )
 
 
-def _mark_active_profile_recovery_enrolled(settings: Settings) -> None:
-    """Mirror recovery enrollment into the active profile manifest."""
+def _reconcile_active_profile_recovery_flag(*, settings: Settings, enrolled: bool) -> None:
+    """Align the active profile manifest's ``recovery_enrolled`` mirror with ``enrolled``.
+
+    ``enrolled`` is the ground truth read from the recovery envelope on
+    disk. The manifest flag is only a mirror: it is written in a separate
+    step from the envelope install, and two files in different directories
+    cannot be written atomically together, so the mirror can drift in
+    either direction — a process killed after the envelope lands leaves it
+    reading false while a genuinely enrolled envelope exists, and an
+    envelope removed out of band leaves it reading true with nothing behind
+    it. Reconciling from the envelope repairs both, and does so no matter
+    what caused the drift.
+
+    Writes only on an actual mismatch, so the common path is a read.
+
+    Best-effort by design. The mirror feeds operator-facing status display,
+    never a security gate — the recovery status and verify authorities both
+    read the envelope directly — so a locked, absent, or unreadable profile
+    store must never turn a read-only status query into a failure. Any such
+    condition is logged and the reported status still stands on the
+    envelope.
+    """
     from ...adapters.persistence.storage.bucket import bucket_paths, read_manifest, write_manifest
 
     active_profile = resolve_active_bucket_id()
     if active_profile is None:
         return
-    paths = bucket_paths(Path(settings.cadrumo_local_storage_root), active_profile)
-    manifest = read_manifest(paths)
-    if manifest.recovery_enrolled:
-        return
-    write_manifest(paths, manifest.model_copy(update={"recovery_enrolled": True}))
+    try:
+        paths = bucket_paths(Path(settings.cadrumo_local_storage_root), active_profile)
+        manifest = read_manifest(paths)
+        if manifest.recovery_enrolled is enrolled:
+            return
+        write_manifest(paths, manifest.model_copy(update={"recovery_enrolled": enrolled}))
+    except (OSError, StorageValidationError):
+        _log.debug(
+            "recovery-enrollment manifest mirror not reconciled to %s: profile storage unavailable",
+            enrolled,
+            exc_info=True,
+        )
+
+
+def _mark_active_profile_recovery_enrolled(settings: Settings) -> None:
+    """Mirror recovery enrollment into the active profile manifest."""
+    _reconcile_active_profile_recovery_flag(settings=settings, enrolled=True)
 
 
 def create_recovery_code(
@@ -354,9 +398,17 @@ def change_passphrase(
     resolved = _settings(settings)
     _require_file_custody(resolved)
     verifying_provider = _file_provider_with_passphrase(settings=resolved, passphrase=current_passphrase)
-    master_key = verifying_provider.get_master_key()
-    new_provider = _file_provider_with_passphrase(settings=resolved, passphrase=new_passphrase)
-    new_provider.complete_recovery(master_key)
+    # The unwrapped master key is copied into a wipeable buffer and zeroed as
+    # soon as it has been rewrapped, so the plaintext DEK does not linger in an
+    # immutable object for the garbage collector to release at its leisure. A
+    # passphrase change is one of the three recovery-surface operations that
+    # opens this window, alongside recovery mint and unwrap.
+    master_key = bytearray(verifying_provider.get_master_key())
+    try:
+        new_provider = _file_provider_with_passphrase(settings=resolved, passphrase=new_passphrase)
+        new_provider.complete_recovery(bytes(master_key))
+    finally:
+        zeroise(master_key)
     with activate_master_key_provider(new_provider):
         pass
     _emit_custody_event(
