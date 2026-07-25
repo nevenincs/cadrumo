@@ -284,6 +284,11 @@ _INVENTORIES = Path(__file__).resolve().parent / "_inventories"
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", str(_INVENTORIES / "python.inv")),
     "sqlalchemy": ("https://docs.sqlalchemy.org/en/20/", str(_INVENTORIES / "sqlalchemy.inv")),
+    # textual is vendored rather than left to nitpick_ignore because the TUI
+    # screens subclass it, so autodoc documents the inherited members and every
+    # base class is a real cross-reference a reader will follow. Suppressing
+    # them would silence the warning while leaving the link dead.
+    "textual": ("https://textual.textualize.io/", str(_INVENTORIES / "textual.inv")),
     "pydantic": ("https://docs.pydantic.dev/latest", None),
     "typer": ("https://typer.tiangolo.com/", None),
 }

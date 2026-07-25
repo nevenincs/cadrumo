@@ -212,6 +212,9 @@ class ModeloLocaleCoverageRecord(BaseModel):
 class ModeloLocaleManager:
     """Path authority for registry-local modelo schema translation files."""
 
+    fragment_leaf_capacity: int
+    """Maximum translation leaves written to one fragment file before the next is opened."""
+
     def __init__(self, registry_root: Path | None = None, *, fragment_leaf_capacity: int = 1000):
         """Initialise the manager with a contained AEAT registry root.
 

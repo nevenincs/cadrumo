@@ -65,6 +65,7 @@ class ReviewScreen(Screen[None]):
 
     @override
     def compose(self) -> ComposeResult:
+        """Yield the review screen's widgets: header, answer table, blocking notes, and submit."""
         yield Static(id="review-header")
         yield DataTable(id="review-table", cursor_type="row")
         yield Static(id="review-blocking")

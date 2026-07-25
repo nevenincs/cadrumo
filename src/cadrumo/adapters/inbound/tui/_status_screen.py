@@ -153,6 +153,7 @@ class StatusApp(App[None]):
 
     @override
     def compose(self) -> ComposeResult:
+        """Yield the status screen's widgets: header and the scrollable status body."""
         yield Static(id="status-header")
         with VerticalScroll(id="status-body"):
             yield Static(id="panel-profile", classes="status-panel")

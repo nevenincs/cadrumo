@@ -75,6 +75,7 @@ class QuestionScreen(Screen[None]):
 
     @override
     def compose(self) -> ComposeResult:
+        """Yield the question screen's widgets: header, progress, prompt, and answer input."""
         yield Static(id="flow-header")
         yield ProgressBar(id="flow-progress", show_eta=False)
         with VerticalScroll(id="page-body"):
