@@ -338,6 +338,13 @@
         "target_mod": "cadrumo.entrypoints.mcp._meta_tools",
         "imported_names": ["build_command_search_index", "search_commands"],
         "reason": "Pinned retrieval golden set asserting the live command-ranking over build_tool_descriptors(). The ranking helpers wrap the private `search` meta-tool surface and have no public facade promotion candidate; the golden set is authored under the command_search package it validates, so it is a white-box test-only reach into the meta-tool ranking API."
+      },
+      {
+        "importer_path": "src/cadrumo/entrypoints/cli/tests/test_app_maintenance_export_reconcile.py",
+        "lineno": 28,
+        "target_mod": "cadrumo.application.user_profile._bundle_export",
+        "imported_names": ["_STAGED_TEMP_SUFFIX"],
+        "reason": "White-box reach for the private staged-temp filename suffix, used only to assert that no cleartext staged file survives the maintenance reconcile verb. The suffix is an internal staging-layout detail of the publication service, not a contract any consumer depends on; promoting it would put a filename fragment on the public facade for a single directory-scan assertion. The publication service's operator-facing symbols (the journal repository, the typed reconciliation) ARE promoted and this same test imports them from the facade."
       }
     ]
   }

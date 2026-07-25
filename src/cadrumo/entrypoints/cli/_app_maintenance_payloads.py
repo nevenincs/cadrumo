@@ -47,7 +47,7 @@ class UnreconciledProfileExportPayload(OutputSchema):
     reason: str
 
 
-@register_schema("app.maintenance.profile_bundle_reconcile")
+@register_schema("app.maintenance.reconcile")
 class ProfileBundleReconcileResult(OutputSchema):
     """Outcome of one portable profile-bundle export reconciliation sweep."""
 

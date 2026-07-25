@@ -417,7 +417,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
             "profile-bundle export whose crash left an unencrypted staged file on disk"
         ),
         service_owner="cadrumo.application.user_profile",
-        commands=("profile-bundle-reconcile",),
+        commands=("reconcile",),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
 )

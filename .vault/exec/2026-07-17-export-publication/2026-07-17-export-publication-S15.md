@@ -54,9 +54,10 @@ related:
 
 ## Description
 
-- Add the `maintenance` command family under the app root, with
-  `profile-bundle-reconcile` as its first verb over the existing reconciliation
-  authority.
+- Add the `maintenance` command family under the app root, with `reconcile` as its
+  first verb over the existing reconciliation authority. The verb first shipped under
+  a longer profile-bundle name and was shortened when the tool-name budget gate found
+  the prefixed form over the client ceiling, which only the prefixed length reveals.
 - Add an explicit group callback so Typer does not fold the single command into the
   group and mount the verb under the family's own name.
 - Declare typed result payloads for the reconciled and isolated halves, registering the

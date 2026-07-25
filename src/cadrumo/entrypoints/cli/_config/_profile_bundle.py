@@ -268,12 +268,12 @@ def _reconcile_failure_notices(
                 default=(
                     "{count} interrupted profile-bundle export(s) from an earlier run "
                     "could not be cleared. An unencrypted staged file may remain on "
-                    "disk for each. Run 'aeat app maintenance profile-bundle-reconcile' "
+                    "disk for each. Run 'aeat app maintenance reconcile' "
                     "once the cause is resolved."
                 ),
                 count=str(len(failures)),
             ),
-            suggestion="aeat app maintenance profile-bundle-reconcile",
+            suggestion="aeat app maintenance reconcile",
             context={
                 "failed_count": str(len(failures)),
                 "journal_ids": ",".join(failure.journal_id for failure in failures),
