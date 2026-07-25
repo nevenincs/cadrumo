@@ -618,12 +618,21 @@ def _purchase_invoice_evidence_payload(
         return _PurchaseInvoiceEvidencePayload()
     invoice = invoices.get(purchase_invoice_evidence_id)
     if invoice is None:
+        # The evidence reference addresses two id spaces and only the invoice
+        # catalogue carries the fiscal totals this fold-in needs, so a miss here is
+        # NOT proof the reference is broken: it is also what a legitimately
+        # registered, not-yet-confirmed evidence record looks like from this side.
+        # Naming both cases keeps the operator from hunting a phantom missing record.
         return RentaLedgerAggregationIssue(
             transaction_id=transaction_id,
             purchase_invoice_evidence_id=purchase_invoice_evidence_id,
             category_id=category_id,
             reason=RentaLedgerAggregationIssueReason.MISSING_PURCHASE_INVOICE_EVIDENCE,
-            detail="transaction references purchase invoice evidence that is absent from the invoice catalogue",
+            detail=(
+                "transaction references no confirmed invoice in the catalogue, so this expense carries no "
+                "invoice totals to fold in; if the reference names a registered evidence record, confirm it "
+                "into an invoice with `aeat app ledger evidence confirm`"
+            ),
         )
     if invoice.bucket_id != bucket_id:
         return RentaLedgerAggregationIssue(
