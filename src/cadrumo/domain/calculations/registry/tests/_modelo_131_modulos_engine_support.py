@@ -16,8 +16,9 @@ See Also:
 
 from __future__ import annotations
 
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import Decimal
 
+from .....core.money import round_to_cents
 from .._formula_runtime import calculate_registry_snapshot
 from ._registry_schema_support import _committed_snapshot
 
@@ -432,11 +433,6 @@ def _coeficiente_tramos(base: Decimal) -> Decimal:
     raise AssertionError("unreachable: open-ended top tramo always matches")
 
 
-def _money_round(value: Decimal) -> Decimal:
-    """Round to euro-cent precision with half-up semantics (mirrors ``apply_rounding('money-2')``)."""
-    return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-
-
 def _expected_minorado(
     previo: Decimal,
     *,
@@ -456,7 +452,7 @@ def _expected_minorado(
     base_tramos = modulo_1 - incremento
     coeficiente_tramos = _coeficiente_tramos(base_tramos)
     minoracion_empleo = (coeficiente_incremento + coeficiente_tramos) * modulo_1_coefficient
-    return _money_round(previo - minoracion_empleo - minoracion_inversion)
+    return round_to_cents(previo - minoracion_empleo - minoracion_inversion)
 
 
 def _expected_modulos(minorado: Decimal, *, epigrafe: str) -> Decimal:
@@ -464,7 +460,7 @@ def _expected_modulos(minorado: Decimal, *, epigrafe: str) -> Decimal:
     cuantia = _CUANTIA_EXCESO.get(epigrafe)
     if cuantia is None or minorado <= cuantia:
         return minorado
-    return _money_round(cuantia + _INDICE_EXCESO * (minorado - cuantia))
+    return round_to_cents(cuantia + _INDICE_EXCESO * (minorado - cuantia))
 
 
 #: Epígrafes carrying a documented índice corrector especial (Orden
@@ -507,7 +503,7 @@ def _expected_modulos_generales(
         rendimiento = rendimiento * pequena_dimension
         # b.1 excludes b.3 outright, and the Orden never reaches b.2/b.4 once
         # b.1 applies.
-        return _money_round(rendimiento)
+        return round_to_cents(rendimiento)
     # b.2) temporada — applied BEFORE b.3.
     if temporada > Decimal("0"):
         rendimiento = rendimiento * temporada
@@ -519,7 +515,7 @@ def _expected_modulos_generales(
     # rendimiento, and only when b.2 (temporada) is absent (mutual exclusion).
     if temporada <= Decimal("0") and inicio_actividad > Decimal("0"):
         rendimiento = rendimiento * inicio_actividad
-    return _money_round(rendimiento)
+    return round_to_cents(rendimiento)
 
 
 def _run_modulos_engine(
@@ -567,7 +563,3 @@ def _run_modulos_engine(
         values["modulos-rendimiento-neto-modulos"],
         values["modulos-rendimiento-neto-actividad"],
     )
-
-
-def _quantize(value: Decimal) -> Decimal:
-    return value.quantize(Decimal("0.01"))

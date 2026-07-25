@@ -20,6 +20,7 @@ from decimal import Decimal
 
 import pytest
 
+from .....core.money import round_to_cents
 from ._modelo_131_modulos_engine_support import (
     _AUTOSERVICIO_647_2,
     _CAFES_ESPECIAL_673_1,
@@ -34,8 +35,6 @@ from ._modelo_131_modulos_engine_support import (
     _expected_minorado,
     _expected_modulos,
     _module_1_coefficient,
-    _money_round,
-    _quantize,
     _run_modulos_engine,
 )
 
@@ -52,7 +51,7 @@ class TestCafesEspecial6731EstimacionObjetiva:
             modulo_1=Decimal("1"),
             modulo_5=Decimal("5"),
         )
-        expected_previo = _quantize(
+        expected_previo = round_to_cents(
             Decimal("1") * _CAFES_ESPECIAL_673_1[1] + Decimal("5") * _CAFES_ESPECIAL_673_1[5],
         )
         assert previo == expected_previo == Decimal("5914.40")
@@ -71,7 +70,7 @@ class TestCafesEspecial6731EstimacionObjetiva:
             modulo_1_coefficient=_module_1_coefficient("673.1"),
         )
         expected_modulos = _expected_modulos(minorado, epigrafe="673.1")
-        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        expected_actividad = round_to_cents(modulos - modulos * _REDUCCION_GENERAL_2025)
         assert minorado == expected_minorado
         assert modulos == expected_modulos
         assert actividad == expected_actividad
@@ -121,7 +120,7 @@ class TestCafesEspecial6731EstimacionObjetiva:
         # por tramos sobre 3,00 unidades restantes = 0,10 + 0,30 = 0,40;
         # coeficiente de minoración 0,264 + 0,40 = 0,664; minoración empleo =
         # 0,664 x 4.056,30 = 2.693,38 (manual, redondeado).
-        minoracion_empleo = _money_round(previo - minorado)
+        minoracion_empleo = round_to_cents(previo - minorado)
         assert minoracion_empleo == Decimal("2693.38")
         assert minorado == Decimal("47418.57")
 
@@ -181,7 +180,7 @@ class TestOtrosCafes6732EstimacionObjetiva:
             modulo_2=Decimal("1"),
             modulo_4=Decimal("3"),
         )
-        expected_previo = _quantize(
+        expected_previo = round_to_cents(
             Decimal("1") * _OTROS_CAFES_673_2[1]
             + Decimal("1") * _OTROS_CAFES_673_2[2]
             + Decimal("3") * _OTROS_CAFES_673_2[4],
@@ -203,7 +202,7 @@ class TestOtrosCafes6732EstimacionObjetiva:
             modulo_1_coefficient=_module_1_coefficient("673.2"),
         )
         expected_modulos = _expected_modulos(minorado, epigrafe="673.2")
-        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        expected_actividad = round_to_cents(modulos - modulos * _REDUCCION_GENERAL_2025)
         assert minorado == expected_minorado
         assert modulos == expected_modulos
         assert actividad == expected_actividad
@@ -219,7 +218,7 @@ class TestHuevosAves6425EstimacionObjetiva:
             modulo_1=Decimal("1"),
             modulo_4=Decimal("20"),
         )
-        expected_previo = _quantize(
+        expected_previo = round_to_cents(
             Decimal("1") * _HUEVOS_AVES_642_5[1] + Decimal("20") * _HUEVOS_AVES_642_5[4],
         )
         assert previo == expected_previo == Decimal("3923.96")
@@ -238,7 +237,7 @@ class TestHuevosAves6425EstimacionObjetiva:
             modulo_1_coefficient=_module_1_coefficient("642.5"),
         )
         expected_modulos = _expected_modulos(minorado, epigrafe="642.5")
-        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        expected_actividad = round_to_cents(modulos - modulos * _REDUCCION_GENERAL_2025)
         assert minorado == expected_minorado
         assert modulos == expected_modulos
         assert actividad == expected_actividad
@@ -254,7 +253,7 @@ class TestCasquerias6426EstimacionObjetiva:
             modulo_2=Decimal("1"),
             modulo_4=Decimal("30"),
         )
-        expected_previo = _quantize(
+        expected_previo = round_to_cents(
             Decimal("1") * _CASQUERIAS_642_6[2] + Decimal("30") * _CASQUERIAS_642_6[4],
         )
         assert previo == expected_previo == Decimal("13176.54")
@@ -273,7 +272,7 @@ class TestCasquerias6426EstimacionObjetiva:
             modulo_1_coefficient=_module_1_coefficient("642.6"),
         )
         expected_modulos = _expected_modulos(minorado, epigrafe="642.6")
-        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        expected_actividad = round_to_cents(modulos - modulos * _REDUCCION_GENERAL_2025)
         assert minorado == expected_minorado
         assert modulos == expected_modulos
         assert actividad == expected_actividad
@@ -289,7 +288,7 @@ class TestPescados6431EstimacionObjetiva:
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
         )
-        expected_previo = _quantize(
+        expected_previo = round_to_cents(
             Decimal("1") * _PESCADOS_643_1[1] + Decimal("1") * _PESCADOS_643_1[2],
         )
         assert previo == expected_previo == Decimal("17119.61")
@@ -308,7 +307,7 @@ class TestPescados6431EstimacionObjetiva:
             modulo_1_coefficient=_module_1_coefficient("643.1"),
         )
         expected_modulos = _expected_modulos(minorado, epigrafe="643.1")
-        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        expected_actividad = round_to_cents(modulos - modulos * _REDUCCION_GENERAL_2025)
         assert minorado == expected_minorado
         assert modulos == expected_modulos
         assert actividad == expected_actividad
@@ -324,7 +323,7 @@ class TestDespachosPan6442EstimacionObjetiva:
             modulo_1=Decimal("1"),
             modulo_3=Decimal("1"),
         )
-        expected_previo = _quantize(
+        expected_previo = round_to_cents(
             Decimal("1") * _DESPACHOS_PAN_644_2[1] + Decimal("1") * _DESPACHOS_PAN_644_2[3],
         )
         assert previo == expected_previo == Decimal("20401.19")
@@ -343,7 +342,7 @@ class TestDespachosPan6442EstimacionObjetiva:
             modulo_1_coefficient=_module_1_coefficient("644.2"),
         )
         expected_modulos = _expected_modulos(minorado, epigrafe="644.2")
-        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        expected_actividad = round_to_cents(modulos - modulos * _REDUCCION_GENERAL_2025)
         assert minorado == expected_minorado
         assert modulos == expected_modulos
         assert actividad == expected_actividad
@@ -359,7 +358,7 @@ class TestPasteleria6443EstimacionObjetiva:
             modulo_1=Decimal("1"),
             modulo_4=Decimal("20"),
         )
-        expected_previo = _quantize(
+        expected_previo = round_to_cents(
             Decimal("1") * _PASTELERIA_644_3[1] + Decimal("20") * _PASTELERIA_644_3[4],
         )
         assert previo == expected_previo == Decimal("7237.09")
@@ -378,7 +377,7 @@ class TestPasteleria6443EstimacionObjetiva:
             modulo_1_coefficient=_module_1_coefficient("644.3"),
         )
         expected_modulos = _expected_modulos(minorado, epigrafe="644.3")
-        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        expected_actividad = round_to_cents(modulos - modulos * _REDUCCION_GENERAL_2025)
         assert minorado == expected_minorado
         assert modulos == expected_modulos
         assert actividad == expected_actividad
@@ -394,7 +393,7 @@ class TestMasasFritas6446EstimacionObjetiva:
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
         )
-        expected_previo = _quantize(
+        expected_previo = round_to_cents(
             Decimal("1") * _MASAS_FRITAS_644_6[1] + Decimal("1") * _MASAS_FRITAS_644_6[2],
         )
         assert previo == expected_previo == Decimal("9107.78")
@@ -413,7 +412,7 @@ class TestMasasFritas6446EstimacionObjetiva:
             modulo_1_coefficient=_module_1_coefficient("644.6"),
         )
         expected_modulos = _expected_modulos(minorado, epigrafe="644.6")
-        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        expected_actividad = round_to_cents(modulos - modulos * _REDUCCION_GENERAL_2025)
         assert minorado == expected_minorado
         assert modulos == expected_modulos
         assert actividad == expected_actividad
@@ -429,7 +428,7 @@ class TestAutoservicio6472EstimacionObjetiva:
             modulo_1=Decimal("1"),
             modulo_3=Decimal("30"),
         )
-        expected_previo = _quantize(
+        expected_previo = round_to_cents(
             Decimal("1") * _AUTOSERVICIO_647_2[1] + Decimal("30") * _AUTOSERVICIO_647_2[3],
         )
         assert previo == expected_previo == Decimal("2488.10")
@@ -448,7 +447,7 @@ class TestAutoservicio6472EstimacionObjetiva:
             modulo_1_coefficient=_module_1_coefficient("647.2"),
         )
         expected_modulos = _expected_modulos(minorado, epigrafe="647.2")
-        expected_actividad = _money_round(modulos - modulos * _REDUCCION_GENERAL_2025)
+        expected_actividad = round_to_cents(modulos - modulos * _REDUCCION_GENERAL_2025)
         assert minorado == expected_minorado
         assert modulos == expected_modulos
         assert actividad == expected_actividad
