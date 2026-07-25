@@ -19,7 +19,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
@@ -36,18 +36,26 @@ from ...domain.calculations.registry import (
     CasillaId,
     FormulaId,
     LegalRefId,
+    ModeloRevision,
     RegistrySnapshot,
     RegistrySnapshotError,
     RegistryValidationError,
     RelationId,
     SourceRefId,
     calculate_registry_snapshot,
+    enum_consumed_binding_ids,
+    revision_date_binding_ids,
     validated_casilla_id,
 )
 from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
     WorkUnitState,
+)
+from ._calculate_input import (
+    ModeloCalculateBindingInputError,
+    _decimal_binding_value,
+    _validated_binding_input_channel,
 )
 from ._calculation_actions import list_calculation_revisions
 from ._profile_binding import resolve_profile_sourced_bindings
@@ -436,16 +444,48 @@ def _m130_annual_projection(year: int) -> _M130AnnualProjection:
 
 def _parse_projection_binding_overrides(
     binding_overrides: Mapping[BindingId, str] | None,
+    revision: ModeloRevision,
 ) -> tuple[dict[BindingId, Decimal], dict[BindingId, str]]:
-    """Split caller binding overrides into the Decimal and enum channels."""
+    """Split caller binding overrides into the Decimal and enum channels.
+
+    The split is decided by the binding's REGISTRY-DECLARED channel, never by
+    parse success. Deciding it by parse success inverted the test: a decimal
+    binding whose value failed to parse was silently reclassified as an enum
+    string, so a Spanish-convention operator's ``--binding <id>=1.234,56`` was
+    accepted as the literal text ``"1.234,56"`` on the enum channel instead of
+    refusing. Routing by the declared channel makes a malformed decimal refuse
+    and leaves a genuine enum binding carrying its string verbatim.
+
+    This shares :func:`_validated_binding_input_channel` and
+    :func:`_decimal_binding_value` with the calculate path rather than deriving a
+    second channel-resolution shape, so the two surfaces cannot drift.
+    """
     extra_bindings: dict[BindingId, Decimal] = {}
     extra_enum_bindings: dict[BindingId, str] = {}
-    for raw_key, value in (binding_overrides or {}).items():
-        key = _binding_id(raw_key, surface="project modelo 100 binding override")
-        try:
-            extra_bindings[key] = Decimal(value)
-        except (InvalidOperation, ValueError):
+    if not binding_overrides:
+        return extra_bindings, extra_enum_bindings
+
+    bindings_by_id = {binding.id: binding for binding in revision.bindings}
+    known_binding_ids = set(bindings_by_id)
+    enum_channel_ids = enum_consumed_binding_ids(revision)
+    date_channel_ids = revision_date_binding_ids(revision)
+    for raw_key, value in binding_overrides.items():
+        binding_id = _binding_id(raw_key, surface="project modelo 100 binding override")
+        if binding_id in date_channel_ids:
+            raise ModeloCalculateBindingInputError(
+                f"--binding {binding_id!r} is a date-valued binding sourced from the active "
+                "profile (a taxpayer date fact such as the birth date); it cannot be "
+                "supplied through --binding, which carries only decimal and enum "
+                "values. Set it as a profile fact (e.g. `aeat config profile create "
+                "... --taxpayer-birth-date YYYY-MM-DD`) and recalculate.",
+                context={"key": binding_id},
+                translated_message="application.modelo.errors.calculate_binding_is_date_sourced",
+            )
+        key, channel = _validated_binding_input_channel(binding_id, revision, known_binding_ids, enum_channel_ids)
+        if channel == "enum":
             extra_enum_bindings[key] = value
+        else:
+            extra_bindings[key] = _decimal_binding_value(value, bindings_by_id[key])
     return extra_bindings, extra_enum_bindings
 
 
@@ -582,7 +622,10 @@ def project_modelo_100_from_m130(
         ),
     )
 
-    extra_bindings, extra_enum_bindings = _parse_projection_binding_overrides(binding_overrides)
+    extra_bindings, extra_enum_bindings = _parse_projection_binding_overrides(
+        binding_overrides,
+        m100_snapshot.revision,
+    )
 
     m100_inputs: dict[CasillaId, Decimal] = {
         _M100_RENDIMIENTO_NETO_PROJECTED_CASILLA: annual.projected_rendimiento_neto,

@@ -104,14 +104,6 @@ _STRING_PARSE_EXEMPTIONS: Mapping[tuple[str, str], str] = {
     ("application/modelo/_iva_wallet_gate.py", "_calculated_revision_local_iva_compensation_recurrence"): (
         "Reads a persisted casilla_values entry the calculate boundary already validated through the canonical grammar."
     ),
-    ("application/modelo/_projection.py", "_parse_projection_binding_overrides"): (
-        "OPEN RULING, not a settled exemption: this except-branch routes a "
-        "malformed decimal into the ENUM channel instead of refusing, so "
-        "'--binding 1.234,56' is silently reclassified as an enum string. "
-        "Replacing the fallback with the registry-declared channel split the "
-        "calculate path already uses (enum_consumed_binding_ids) is "
-        "architecturally significant and was escalated rather than implemented."
-    ),
 }
 """Reasoned exemptions from rule 3, keyed by ``(path, enclosing function)``.
 
