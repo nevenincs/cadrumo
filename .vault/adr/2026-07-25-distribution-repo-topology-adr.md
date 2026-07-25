@@ -15,6 +15,21 @@ related:
 
 ## Problem Statement
 
+**Status qualification — the Scoop transport choice in this record is
+PROVISIONAL.** Everything else here is settled: the shared product-neutral tap,
+the corrected marketplace target, the marketplace merge-rather-than-replace fix,
+the retirement of the artifacts landing repository, and the product-neutral
+variable names. But the decision to serve Scoop from this repository's own
+`bucket/` directory is under review at account scope, because it was costed on
+maintainer repository count alone and two costs were undercounted: it multiplies
+the user's one-time bucket-add step by the number of products, and it introduces
+a release-time write to a public product repository's default branch. A single
+repository can carry `Formula/` and `bucket/` simultaneously — the two
+ecosystems constrain disjoint things, the repository name and the directory
+layout — which removes both costs and is the option this record failed to
+consider. A later account-scope record governs; treat the Scoop half of this one
+as input, not as settled law.
+
 The account publishing this product publishes several others under the same
 name. Distribution for this product accreted four repositories — a Scoop
 bucket, a Homebrew tap, a plugin marketplace, and an artifacts landing repo —
