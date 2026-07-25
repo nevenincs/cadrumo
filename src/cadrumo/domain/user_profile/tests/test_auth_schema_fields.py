@@ -22,7 +22,8 @@ from .. import ProfileSchemaDefinition, load_user_profile_schema
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-AUTH_FIELD_KEYS: frozenset[str] = frozenset({"provider", "dni_nie", "numero_soporte"})
+AUTH_FIELD_KEYS: frozenset[str] = frozenset({"provider", "dni_nie", "numero_soporte", "fecha_validez"})
+CONTRASTE_FIELD_KEYS: frozenset[str] = frozenset({"numero_soporte", "fecha_validez"})
 
 
 @pytest.fixture
@@ -43,19 +44,32 @@ def test_auth_section_persists_at_identity_sensitivity(
     assert all(field.sensitivity is SensitivityClass.IDENTITY for field in section.fields)
 
 
-def test_auth_section_carries_the_provider_and_both_clave_credentials(
+def test_auth_section_carries_the_provider_and_every_clave_credential(
     schema: ProfileSchemaDefinition,
 ) -> None:
-    """The section carries exactly the provider choice and the two
-    Cl@ve credential halves. ``dni_nie`` is separate from
-    ``identity.tax_id`` because the person authenticating is not always
-    the taxpayer the profile describes."""
+    """The section carries the provider choice, the identity, and both
+    forms of contraste. ``dni_nie`` is separate from ``identity.tax_id``
+    because a credential input and a taxpayer identifier are different
+    things that happen to carry equal values today."""
 
     section = schema.section("auth")
     assert {field.key for field in section.fields} == AUTH_FIELD_KEYS
-    for field_key in sorted(AUTH_FIELD_KEYS - {"provider"}):
-        field = schema.field(f"auth.{field_key}")
-        assert field.type.value == "string"
+    assert schema.field("auth.dni_nie").type.value == "string"
+
+
+def test_both_contraste_forms_have_a_home_on_the_profile(
+    schema: ProfileSchemaDefinition,
+) -> None:
+    """Cl@ve asks a NIE holder for the numero de soporte and a DNI
+    holder for the validity date, reading exactly one of the two. Only
+    the NIE half was declared at first, so a DNI holder had no home for
+    theirs and had to fall back to the environment. Both are declared
+    now, and the date is date-typed so it renders as the ISO token the
+    AEAT form is given."""
+
+    assert CONTRASTE_FIELD_KEYS < AUTH_FIELD_KEYS
+    assert schema.field("auth.numero_soporte").type.value == "string"
+    assert schema.field("auth.fecha_validez").type.value == "date"
 
 
 def test_auth_provider_enum_covers_every_supported_provider_kind(

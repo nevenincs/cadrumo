@@ -112,7 +112,7 @@ key = "provider"
 type = "enum"
 required = false
 sensitivity = "identity"
-description = "How this taxpayer identifies to AEAT. Cl@ve Movil and Cl@ve Permanente authenticate the person directly and need their DNI/NIE plus the numero de soporte printed on the document; the certificate provider authenticates with an installed electronic certificate instead. The choice decides which of the fields below are required, which is why they live beside it rather than in the environment."
+description = "How this taxpayer identifies to AEAT. Cl@ve Movil and Cl@ve Permanente authenticate the person directly and need their DNI/NIE; the certificate provider authenticates with an installed electronic certificate instead. The choice decides which of the fields below are required, which is why they live beside it rather than in the environment. Cl@ve Permanente also needs a password, which is not declared here: a password is not a profile fact and lives in the secret store beside the certificate passphrase."
 enum_values = ["certificate", "clave_movil", "clave_permanente"]
 
 [[sections.fields]]
@@ -120,14 +120,21 @@ key = "dni_nie"
 type = "string"
 required = false
 sensitivity = "identity"
-description = "DNI or NIE presented to Cl@ve. It identifies the natural person authenticating, which is not always the taxpayer the profile is about (a representative authenticates as themselves), so it is recorded separately from identity.tax_id rather than assumed equal to it."
+description = "DNI or NIE presented to Cl@ve. It is recorded separately from identity.tax_id because a credential input and a taxpayer identifier are different things that happen to carry equal values today; merging them would hide the day they diverge. It is not a route to acting for someone else: live authentication refuses outright when this value and identity.tax_id disagree."
 
 [[sections.fields]]
 key = "numero_soporte"
 type = "string"
 required = false
 sensitivity = "identity"
-description = "Numero de soporte printed on the DNI or NIE document, which Cl@ve requires alongside the number itself. It is a credential input: it persists only in the encrypted profile store, never in a dotenv file or a log."
+description = "Numero de soporte printed on a NIE document. It is the contraste Cl@ve asks a NIE holder for, the counterpart of fecha_validez for a DNI holder; Cl@ve reads exactly one of the two, chosen by which document the DNI/NIE is, and only on the non-QR route. It is a credential input: it persists only in the encrypted profile store, never in a dotenv file or a log."
+
+[[sections.fields]]
+key = "fecha_validez"
+type = "date"
+required = false
+sensitivity = "identity"
+description = "Validity date printed on a DNI document. It is the contraste Cl@ve asks a DNI holder for, the counterpart of numero_soporte for a NIE holder; Cl@ve reads exactly one of the two, chosen by which document the DNI/NIE is, and only on the non-QR route. It is a credential input: it persists only in the encrypted profile store, never in a dotenv file or a log."
 
 [[sections]]
 key = "contact"

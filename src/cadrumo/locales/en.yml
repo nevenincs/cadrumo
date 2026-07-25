@@ -530,6 +530,10 @@ application:
         but AEAT-backed reads stay unavailable until an auth provider is configured.
     sessions:
       errors:
+        clave_contraste_missing: The non-QR Cl@ve Móvil route needs the contraste
+          printed on your document. Record auth.numero_soporte on the active profile
+          for a NIE, or auth.fecha_validez for a DNI, before any AEAT session can
+          be used.
         clave_identity_missing: Cl@ve live auth requires a DNI/NIE. Record it on the
           active profile as auth.dni_nie, or configure it for the provider with `aeat
           config auth configure`, before any AEAT session can be used.
@@ -555,7 +559,6 @@ application:
           before reading AEAT data.
         verify_failed: AEAT session could not be verified; run `aeat config auth test`
           before reading AEAT data.
-        clave_contraste_missing: 'The non-QR Cl@ve Móvil route needs the contraste printed on your document. Record auth.numero_soporte on the active profile for a NIE, or set CADRUMO_CLAVE_MOVIL_DNI_FECHA for a DNI, before any AEAT session can be used.'
   bucket_maintenance:
     errors:
       archive_active_bucket: The active bucket cannot be archived; switch to another

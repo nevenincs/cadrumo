@@ -37,6 +37,7 @@ _PROFILE_LABEL = "clave-operator"
 _TAX_ID = "12345678Z"
 _OTHER_TAX_ID = "00000001R"
 _SOPORTE = "E12345678"
+_FECHA_VALIDEZ = "2030-01-01"
 
 
 def _register_profile(**overrides: str) -> None:
@@ -183,24 +184,70 @@ def test_qr_route_is_not_refused_for_a_missing_contraste() -> None:
     assert expected_identity == _TAX_ID
 
 
-def test_dni_validity_date_satisfies_the_contraste_for_a_dni_holder() -> None:
+def test_dni_validity_date_from_settings_satisfies_the_contraste() -> None:
     """A DNI holder's contraste is the validity date, not a soporte number.
 
-    The profile schema carries only the soporte, so a DNI holder supplies
-    the date through settings; the refusal must accept that as the
-    contraste rather than demanding a soporte the document does not have.
+    The refusal must accept the date as the contraste rather than
+    demanding a soporte the document does not have, and the environment
+    stays a working source for it.
     """
 
     _register_profile(**{"auth.dni_nie": _TAX_ID})
     with override_settings(
         cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
         cadrumo_clave_movil_nie_soporte=None,
-        cadrumo_clave_movil_dni_fecha="2030-01-01",
+        cadrumo_clave_movil_dni_fecha=_FECHA_VALIDEZ,
         cadrumo_clave_prefer_non_qr=True,
     ) as settings:
         _bound, expected_identity = _prepare_clave_auth(settings, AuthProviderKind.CLAVE_MOVIL)
 
     assert expected_identity == _TAX_ID
+
+
+def test_profile_fecha_validez_carries_a_dni_holder_through_the_non_qr_route() -> None:
+    """A DNI holder's contraste now has a home on the profile.
+
+    Until it was declared, only a NIE holder could keep their half on the
+    profile and a DNI holder had to fall back to the environment. The
+    environment is left empty here, so a pass cannot be explained by the
+    fallback: the profile alone has to satisfy the refusal and reach the
+    setting the non-QR form types into.
+    """
+
+    _register_profile(**{"auth.dni_nie": _TAX_ID, "auth.fecha_validez": _FECHA_VALIDEZ})
+    with override_settings(
+        cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
+        cadrumo_clave_movil_nie_soporte=None,
+        cadrumo_clave_movil_dni_fecha=None,
+        cadrumo_clave_prefer_non_qr=True,
+    ) as settings:
+        bound, expected_identity = _prepare_clave_auth(settings, AuthProviderKind.CLAVE_MOVIL)
+
+    assert expected_identity == _TAX_ID
+    assert bound.cadrumo_clave_movil_dni_fecha == _FECHA_VALIDEZ
+
+
+def test_a_profile_carrying_neither_contraste_still_refuses_the_non_qr_route() -> None:
+    """Declaring the DNI half must not weaken the refusal.
+
+    A profile with an identity but no contraste of either form is exactly
+    the case the non-QR route cannot complete, so it has to stay refused
+    now that there are two fields that could satisfy it.
+    """
+
+    _register_profile(**{"auth.dni_nie": _TAX_ID})
+    with (
+        override_settings(
+            cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
+            cadrumo_clave_movil_nie_soporte=None,
+            cadrumo_clave_movil_dni_fecha=None,
+            cadrumo_clave_prefer_non_qr=True,
+        ) as settings,
+        pytest.raises(ClaveCredentialsIncompleteError) as raised,
+    ):
+        _prepare_clave_auth(settings, AuthProviderKind.CLAVE_MOVIL)
+
+    assert raised.value.translated_message == "application.auth.sessions.errors.clave_contraste_missing"
 
 
 def test_clave_permanente_resolves_its_identity_from_the_profile() -> None:

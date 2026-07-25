@@ -181,9 +181,21 @@ class ClaveCredentials(BaseModel):
     provider_kind: AuthProviderKind
     dni_nie: str = ""
     numero_soporte: str = ""
+    fecha_validez: str = ""
     profile_tax_id: str = ""
     profile_dni_nie: str = ""
     profile_numero_soporte: str = ""
+    profile_fecha_validez: str = ""
+
+    @property
+    def contraste(self) -> str:
+        """Return whichever contraste the operator's document carries.
+
+        Cl@ve asks a NIE holder for the numero de soporte and a DNI
+        holder for the validity date, so exactly one of the two is
+        expected to be present and either satisfies the non-QR route.
+        """
+        return self.numero_soporte or self.fecha_validez
 
 
 class AuthenticatedAeatSessionResult(BaseModel):
@@ -644,16 +656,20 @@ def _resolve_clave_credentials(
     if provider_kind is AuthProviderKind.CLAVE_PERMANENTE:
         settings_dni_nie = _normalise_tax_identity(settings.cadrumo_clave_permanente_dni_nie)
         settings_numero_soporte = ""
+        settings_fecha_validez = ""
     else:
         settings_dni_nie = _normalise_tax_identity(settings.cadrumo_clave_movil_dni_nie)
         settings_numero_soporte = _normalise_credential(settings.cadrumo_clave_movil_nie_soporte)
+        settings_fecha_validez = _normalise_credential(settings.cadrumo_clave_movil_dni_fecha)
     return ClaveCredentials(
         provider_kind=provider_kind,
         dni_nie=facts.dni_nie or settings_dni_nie,
         numero_soporte=facts.numero_soporte or settings_numero_soporte,
+        fecha_validez=facts.fecha_validez or settings_fecha_validez,
         profile_tax_id=facts.tax_id,
         profile_dni_nie=facts.dni_nie,
         profile_numero_soporte=facts.numero_soporte,
+        profile_fecha_validez=facts.fecha_validez,
     )
 
 
@@ -661,10 +677,10 @@ def _require_clave_credentials(settings: Settings, credentials: ClaveCredentials
     """Refuse a Cl@ve mode whose flow lacks a credential it needs.
 
     Every Cl@ve mode needs the DNI/NIE that identifies the person. The
-    contraste - the numero de soporte for a NIE, the DNI validity date
-    for a DNI - is read only by the non-QR fallback form, so it is
-    required exactly when that route is selected; the QR route asks for
-    neither and must not be refused for their absence.
+    contraste - the numero de soporte for a NIE, the validity date for a
+    DNI - is read only by the non-QR fallback form, so it is required
+    exactly when that route is selected; the QR route asks for neither
+    and must not be refused for their absence.
     """
     if not credentials.dni_nie:
         raise ClaveCredentialsIncompleteError(
@@ -675,8 +691,7 @@ def _require_clave_credentials(settings: Settings, credentials: ClaveCredentials
         return
     if not settings.cadrumo_clave_prefer_non_qr:
         return
-    dni_fecha = _normalise_credential(settings.cadrumo_clave_movil_dni_fecha)
-    if not credentials.numero_soporte and not dni_fecha:
+    if not credentials.contraste:
         raise ClaveCredentialsIncompleteError(
             translated_message="application.auth.sessions.errors.clave_contraste_missing",
             context={"provider": credentials.provider_kind.value},
@@ -719,8 +734,13 @@ def _bind_clave_credentials_to_settings(
             else "cadrumo_clave_movil_dni_nie"
         )
         overrides[field] = SecretStr(credentials.profile_dni_nie)
-    if credentials.profile_numero_soporte and credentials.provider_kind is AuthProviderKind.CLAVE_MOVIL:
-        overrides["cadrumo_clave_movil_nie_soporte"] = SecretStr(credentials.profile_numero_soporte)
+    if credentials.provider_kind is AuthProviderKind.CLAVE_MOVIL:
+        if credentials.profile_numero_soporte:
+            overrides["cadrumo_clave_movil_nie_soporte"] = SecretStr(credentials.profile_numero_soporte)
+        if credentials.profile_fecha_validez:
+            # The DNI contraste setting is a plain ``str`` the page flow types
+            # verbatim into the AEAT form, so it is bound unwrapped.
+            overrides["cadrumo_clave_movil_dni_fecha"] = credentials.profile_fecha_validez
     if not overrides:
         return settings
 
@@ -745,6 +765,7 @@ class _ActiveProfileAuthFacts(BaseModel):
     tax_id: str = ""
     dni_nie: str = ""
     numero_soporte: str = ""
+    fecha_validez: str = ""
 
 
 def _active_profile_auth_facts() -> _ActiveProfileAuthFacts:
@@ -793,6 +814,7 @@ def _active_profile_auth_facts() -> _ActiveProfileAuthFacts:
         tax_id=tax_id,
         dni_nie=_normalise_tax_identity(path_values.get("auth.dni_nie")),
         numero_soporte=_normalise_credential(path_values.get("auth.numero_soporte")),
+        fecha_validez=_normalise_credential(path_values.get("auth.fecha_validez")),
     )
 
 

@@ -593,6 +593,10 @@ application:
         hasta que se configure un proveedor de autenticación.
     sessions:
       errors:
+        clave_contraste_missing: La ruta Cl@ve Móvil sin QR necesita el contraste
+          impreso en tu documento. Registra auth.numero_soporte en el perfil activo
+          si es un NIE, o auth.fecha_validez si es un DNI, antes de usar cualquier
+          sesión AEAT.
         clave_identity_missing: La autenticación Cl@ve en directo requiere un DNI/NIE.
           Regístralo en el perfil activo como auth.dni_nie, o configúralo para el
           proveedor con `aeat config auth configure`, antes de usar cualquier sesión
@@ -619,7 +623,6 @@ application:
           test` antes de leer datos AEAT.
         verify_failed: No se ha podido verificar la sesión AEAT; ejecuta `aeat config
           auth test` antes de leer datos AEAT.
-        clave_contraste_missing: 'La ruta Cl@ve Móvil sin QR necesita el contraste impreso en tu documento. Registra auth.numero_soporte en el perfil activo si es un NIE, o define CADRUMO_CLAVE_MOVIL_DNI_FECHA si es un DNI, antes de usar cualquier sesión AEAT.'
   bucket_maintenance:
     errors:
       archive_active_bucket: El bucket activo no puede archivarse; cambia primero

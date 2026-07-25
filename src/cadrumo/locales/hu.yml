@@ -552,6 +552,10 @@ application:
         szolgáltatót nem konfigurál.
     sessions:
       errors:
+        clave_contraste_missing: A QR nélküli Cl@ve Móvil útvonalhoz szükség van a
+          dokumentumon nyomtatott contraste értékre. NIE esetén rögzítsd az auth.numero_soporte,
+          DNI esetén az auth.fecha_validez mezőt az aktív profilban, mielőtt bármelyik
+          AEAT-munkamenetet használnád.
         clave_identity_missing: A Cl@ve élő hitelesítéshez DNI/NIE szükséges. Rögzítsd
           az aktív profilban auth.dni_nie néven, vagy állítsd be a szolgáltatóhoz
           az `aeat config auth configure` paranccsal, mielőtt bármelyik AEAT-munkamenetet
@@ -578,7 +582,6 @@ application:
           auth test` parancsot az AEAT adatok olvasása előtt.
         verify_failed: Az AEAT munkamenetet nem sikerült ellenőrizni; futtassa a `aeat
           config auth test` parancsot az AEAT adatok olvasása előtt.
-        clave_contraste_missing: 'A QR nélküli Cl@ve Móvil útvonalhoz szükség van a dokumentumon nyomtatott contraste értékre. NIE esetén rögzítsd az auth.numero_soporte mezőt az aktív profilban, DNI esetén állítsd be a CADRUMO_CLAVE_MOVIL_DNI_FECHA értéket, mielőtt bármelyik AEAT-munkamenetet használnád.'
   bucket_maintenance:
     errors:
       archive_active_bucket: Az aktív bucket nem archiválható; válts előbb másik profilra.
