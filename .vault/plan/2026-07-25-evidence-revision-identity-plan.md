@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#evidence-revision-identity'
 date: '2026-07-25'
-modified: '2026-07-25'
+modified: '2026-07-26'
 tier: L1
 related:
   - '[[2026-07-24-evidence-revision-identity-adr]]'
@@ -12,14 +12,13 @@ related:
 
 # `evidence-revision-identity` plan
 
-- [ ] `S01` - Refuse a DESCARTADO unit in create_work_unit with an instructive message naming its state and a real next step, in the WorkUnitMutationRefusedError shape the same module already uses eleven lines below, rather than returning the discarded unit and letting every downstream verb deny it exists; `src/cadrumo/application/modelo/_work_lifecycle.py`.
-- [ ] `S02` - Gate that a discarded unit refuses at create and that the refusal names its state, closing the asymmetry where list_work_units hides a discarded unit by default while create_work_unit hands it back; `src/cadrumo/application/modelo/tests/`.
+- [x] `S01` - Refuse a DESCARTADO unit in create_work_unit with an instructive message naming its state and a real next step, in the WorkUnitMutationRefusedError shape the same module already uses eleven lines below, rather than returning the discarded unit and letting every downstream verb deny it exists; `src/cadrumo/application/modelo/_work_lifecycle.py`.
+- [x] `S02` - Gate that a discarded unit refuses at create and that the refusal names its state, closing the asymmetry where list_work_units hides a discarded unit by default while create_work_unit hands it back; `src/cadrumo/application/modelo/tests/`.
 - [ ] `S03` - Add the supersede transition opening a new draft revision from a finalized one, carrying the same inputs and re-capturing the evidence bundle at the next verify, leaving derive_calculation_revision_id and the frozen bundle untouched; `src/cadrumo/application/modelo/_work_lifecycle.py, src/cadrumo/domain/modelos/`.
 - [ ] `S04` - Make the supersede transition idempotent-guarded on a clock-free derived id so a retry resolves to the existing successor rather than minting a second draft, per single-subject-mutation-is-idempotent-guarded; `src/cadrumo/application/modelo/`.
 - [ ] `S05` - Emit a supersession bucket event naming the superseded revision id, keeping the original finalized record readable rather than rewriting it, so the immutability guarantee the bundle exists to provide survives the new transition; `src/cadrumo/application/modelo/, src/cadrumo/domain/buckets/`.
 - [ ] `S06` - Name the supersede transition in the export refusal and the internal-filing refusal and the post-attach advisory, replacing the deliberate silence that was correct only while both candidate recovery verbs made the operator's position worse; `src/cadrumo/application/modelo/_export.py, src/cadrumo/locales/`.
 - [ ] `S07` - Convert the 72 directly-runnable display-only sequence frames weighted to the export and local filing verbs, and record why each of the 96 genuinely blocked frames cannot execute so display-only becomes a stated constraint rather than an unexamined default that hides the next dead end; `docs/_sequences/`.
-
 ## Description
 
 Executes the accepted evidence-revision-identity decision, whose two halves have
