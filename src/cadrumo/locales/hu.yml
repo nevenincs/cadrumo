@@ -3551,12 +3551,24 @@ cli:
         non_official_notice: A tanúsítványból származó adatok az operátor által szolgáltatott
           bizonyítékok, sosem AEAT által ellenőrzöttek; a censal nyilvántartás nem
           hivatalos szinten marad.
-        pull_help: Letölti a legfrissebb censo-t az AEAT-tól e profil pillanatkép-tárolójába.
+        pull_cleared_notice: 'Az AEAT még mindig tárol értéket {count} olyan mezőnél,
+          amelyet kiürítettél: {axes}. Ezek üresen maradtak; az itteni törlés nem
+          módosítja az AEAT nyilvántartását.'
+        pull_divergences_notice: 'Az AEAT {count} mezőt a bevallott válaszodtól eltérően
+          közöl: {axes}. A te válaszod marad érvényben; mindegyik eltérést neked kell
+          rendezned.'
+        pull_help: Beolvassa a személyazonosságodat és a lakcímedet az AEAT nyilvántartási
+          adataiból, majd előnézetet ad vagy rögzíti azokat az aktív profilban.
+        pull_preview_notice: 'Csak előnézet: a profilba semmi nem került. Az adatok
+          rögzítéséhez futtasd újra a --apply kapcsolóval.'
+        pull_verified_tier_notice: Ezek az adatok közvetlenül az AEAT-tól származnak,
+          ezért a nyilvántartásba vétel igazoltnak számít.
         refresh_help: A legfrissebb nyilvántartás letöltése az AEAT-ból és pillanatkép
           mentése.
         show_help: Az AEAT által legutóbb jelentett nyilvántartás megjelenítése erre
           a profilra.
         snapshot_id_help: Konkrét pillanatkép-azonosító (előtagok elfogadva).
+        pull_withheld_notice: '{count} mező értékét nem jelenítjük meg: {axes}. Hasonlítsd össze magad az AEAT adataival; ez az eszköz nem írja ki őket.'
       create_epilog: 'Minimális önálló vállalkozói profil: --entity-type natural_person
         --tax-id <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet
         --accept-defaults'

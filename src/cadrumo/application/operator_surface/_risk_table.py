@@ -138,6 +138,16 @@ COMMAND_RISK: dict[str, CommandRiskDeclaration] = {
     # shape as `capabilities.set` and `edit` - it destroys no record, produces
     # no filing-grade artefact, and never reaches AEAT.
     "config.profile.censo.file": CommandRiskDeclaration(),
+    # The live sibling of `censo.file`: reads AEAT's censal consulta and, under
+    # `--apply`, enrolls through the same single cotejo apply authority. It is
+    # not a live-write - the read never submits a form, and the only write is
+    # local. It writes a field only where the operator has declared nothing to
+    # lose: an unset path, or one whose current value a previous censal read
+    # wrote and the authority has since changed. A value the operator declared,
+    # and a path they deliberately cleared, are reported for them to adjudicate
+    # and never overwritten. So it destroys no record and produces no
+    # filing-grade artefact.
+    "config.profile.censo.pull": CommandRiskDeclaration(),
     "config.profile.create": CommandRiskDeclaration(),
     "config.profile.delete": CommandRiskDeclaration(destructive=True),
     "config.profile.descendiente.add": CommandRiskDeclaration(),

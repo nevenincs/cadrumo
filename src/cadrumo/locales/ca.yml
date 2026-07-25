@@ -3602,11 +3602,22 @@ cli:
         non_official_notice: Les dades derivades del certificat són evidència aportada
           per l'operador, mai verificada per l'AEAT; l'alta censal es manté al nivell
           no oficial.
-        pull_help: Descàrrega el teu cens més recent d'AEAT al magatzem d'instantànies
-          d'aquest perfil.
+        pull_cleared_notice: 'L''AEAT continua tenint un valor en {count} camp(s)
+          que vas buidar: {axes}. S''han deixat buits; buidar-los aquí no canvia el
+          registre de l''AEAT.'
+        pull_divergences_notice: 'L''AEAT informa {count} camp(s) de manera diferent
+          del que vas declarar: {axes}. La teva resposta es manté; resol cada discrepància
+          tu mateix.'
+        pull_help: Llegeix la teva identitat i el teu domicili de les dades censals
+          de l'AEAT i previsualitza'ls o inscriu-los al perfil actiu.
+        pull_preview_notice: 'Només previsualització: no s''ha escrit res al perfil.
+          Torna a executar amb --apply per inscriure aquestes dades.'
+        pull_verified_tier_notice: Aquestes dades s'han llegit directament de l'AEAT,
+          de manera que l'alta censal compta com a verificada.
         refresh_help: Descàrrega d'AEAT l'últim cens i desa un snapshot
         show_help: Mostra l'últim cens informat per AEAT per a aquest perfil
         snapshot_id_help: Id de snapshot concret (s'accepten prefixos)
+        pull_withheld_notice: 'Els valors de {count} camp(s) no es mostren: {axes}. Compara''ls tu mateix amb els de l''AEAT; aquesta eina no els imprimeix.'
       create_epilog: 'Perfil mínim per a autònom: --entity-type natural_person --tax-id
         <NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
       create_help: Inicialitza un perfil actiu nou.

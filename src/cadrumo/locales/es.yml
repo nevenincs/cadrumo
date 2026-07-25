@@ -3628,11 +3628,22 @@ cli:
         non_official_notice: Los datos derivados del certificado son evidencia aportada
           por el operador, nunca verificada por la AEAT; el alta censal permanece
           en el nivel no oficial.
-        pull_help: Descarga tu censo más reciente de AEAT al almacén de instantáneas
-          de este perfil.
+        pull_cleared_notice: 'La AEAT sigue teniendo un valor en {count} campo(s)
+          que vaciaste: {axes}. Se han dejado vacíos; vaciarlos aquí no cambia el
+          registro de la AEAT.'
+        pull_divergences_notice: 'La AEAT informa {count} campo(s) de forma distinta
+          a lo que declaraste: {axes}. Tu respuesta se mantiene; resuelve cada discrepancia
+          tú mismo.'
+        pull_help: Lee tu identidad y tu domicilio de los datos censales de la AEAT
+          y previsualiza o inscríbelos en el perfil activo.
+        pull_preview_notice: 'Solo previsualización: no se ha escrito nada en el perfil.
+          Vuelve a ejecutar con --apply para inscribir estos datos.'
+        pull_verified_tier_notice: Estos datos se han leído directamente de la AEAT,
+          por lo que el alta censal cuenta como verificada.
         refresh_help: Descarga de AEAT el último censo y guarda un snapshot
         show_help: Muestra el último censo informado por AEAT para este perfil
         snapshot_id_help: Id de snapshot concreto (se aceptan prefijos)
+        pull_withheld_notice: 'Los valores de {count} campo(s) no se muestran: {axes}. Compáralos tú mismo con los de la AEAT; esta herramienta no los imprime.'
       create_epilog: 'Perfil mínimo para autónomo: --entity-type natural_person --tax-id
         <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
       create_help: Inicializa un nuevo perfil activo.

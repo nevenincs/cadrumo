@@ -3353,10 +3353,21 @@ cli:
         help: Censal artefact ingestion for the active profile.
         non_official_notice: Certificate-derived facts are operator-supplied evidence,
           never AEAT-verified; the censo enrolment stays at the non-official tier.
-        pull_help: Pull your latest censo from AEAT into this profile's snapshot store.
+        pull_cleared_notice: 'AEAT still holds a value for {count} field(s) you cleared:
+          {axes}. They were left empty; clearing them here does not change AEAT''s
+          record.'
+        pull_divergences_notice: 'AEAT reports {count} field(s) differently from your
+          declared answer: {axes}. Your answer stands; resolve each one yourself.'
+        pull_help: Read your identity and address from AEAT's censal record and preview
+          or enroll them onto the active profile.
+        pull_preview_notice: 'Preview only: nothing was written to the profile. Re-run
+          with --apply to enroll these facts.'
+        pull_verified_tier_notice: These facts were read from AEAT itself, so the
+          censo enrolment counts as verified.
         refresh_help: Download the latest censo from AEAT and save a snapshot
         show_help: Show the latest censo AEAT reported for this profile
         snapshot_id_help: Specific snapshot id (prefixes accepted)
+        pull_withheld_notice: 'The values for {count} field(s) are withheld from output: {axes}. Compare them yourself against AEAT; this tool will not print them.'
       create_epilog: 'Minimal freelancer profile: --entity-type natural_person --tax-id
         <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
       create_help: Initialize a new active profile.
