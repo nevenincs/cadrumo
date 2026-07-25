@@ -121,6 +121,24 @@ def record_to_path_values(record: UserProfileRecord | UserProfileSnapshot | None
     return {fact.path: _render_fact_value(fact.value) for fact in record.facts if fact.value is not None}
 
 
+def record_to_path_sources(record: UserProfileRecord | UserProfileSnapshot | None) -> dict[str, str]:
+    """Project a record into a schema-path-keyed provenance-token mapping.
+
+    The provenance companion to :func:`record_to_path_values`, resolved by
+    the same last-fact-wins rule over the same filter (facts whose value is
+    not ``None``), so a path's value and its source always describe the same
+    effective fact rather than two different ones.
+
+    Callers that must know WHERE a value came from need this: a value the
+    operator declared and a value an automated pull adopted are
+    indistinguishable by value alone, and treating them alike lets a stale
+    pulled value outrank a fresher authoritative one.
+    """
+    if record is None:
+        return {}
+    return {fact.path: fact.source for fact in record.facts if fact.value is not None}
+
+
 def projection_for_taxpayer(
     facts: Mapping[str, object] | UserProfileRecord | UserProfileSnapshot,
     *,

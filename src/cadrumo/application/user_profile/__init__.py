@@ -246,6 +246,7 @@ if TYPE_CHECKING:
     from ._projections import (
         facts_to_values,
         projection_for_taxpayer,
+        record_to_path_sources,
         record_to_path_values,
         record_to_values,
         snapshot_to_values,
@@ -333,6 +334,7 @@ _LAZY_EXPORTS: dict[str, str] = {
             (
                 "facts_to_values",
                 "projection_for_taxpayer",
+                "record_to_path_sources",
                 "record_to_path_values",
                 "record_to_values",
                 "snapshot_to_values",
@@ -621,6 +623,7 @@ __all__ = [
     "reactivate_profile_with_lifecycle_span",
     "reconcile_censal_read",
     "reconcile_prepared_exports",
+    "record_to_path_sources",
     "record_to_path_values",
     "record_to_values",
     "recover_secret_store",

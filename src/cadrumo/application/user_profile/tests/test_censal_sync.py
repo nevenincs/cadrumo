@@ -21,6 +21,7 @@ from pydantic import AnyHttpUrl
 
 from ....adapters.outbound.aeat.sede import CensalDatosResult, CensalDomicilio, CensalIdentity
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI
 from ....core.resources import resources
 from ....domain.buckets import BucketEventType
 from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact
@@ -198,6 +199,64 @@ class TestReconciliation:
             outcome = reconcile_censal_read(state.active_profile_record(schema=schema), censal_facts_from_read(_read()))
             assert ("contact.postcode", "08032") in outcome.divergences
             assert "contact.postcode" not in {fact.path for fact in outcome.adopted}
+
+    def test_a_previously_pulled_value_refreshes_instead_of_diverging(
+        self,
+        schema: ProfileSchemaDefinition,
+    ) -> None:
+        """A changed authority value must not diverge against the authority.
+
+        When the recorded value carries the censal-read token, a previous
+        pull wrote it and there is no operator answer to protect. Reporting
+        a divergence would strand the profile on the stale value forever and
+        assert a conflict between two values that are both AEAT's.
+        """
+        with profile_create_storage_span(_PROFILE_ID) as routing:
+            state = _register(schema, routing)
+            state = set_active_fields(
+                state,
+                (UserProfileFact(path="contact.postcode", value="08032", source=CENSO_SOURCE_TAG),),
+            )
+            outcome = reconcile_censal_read(
+                state.active_profile_record(schema=schema),
+                censal_facts_from_read(_read(codigo_postal="08033")),
+            )
+            assert "contact.postcode" not in {axis for axis, _ in outcome.divergences}
+            refreshed = {fact.path: str(fact.value) for fact in outcome.adopted}
+            assert refreshed["contact.postcode"] == "08033"
+
+    @pytest.mark.parametrize(
+        ("source", "expect_divergence"),
+        [
+            pytest.param(CENSO_SOURCE_TAG, False, id="previously-pulled-refreshes"),
+            pytest.param(PROVENANCE_SOURCE_MANUAL_CLI, True, id="operator-declared-diverges"),
+        ],
+    )
+    def test_provenance_decides_the_conflict_not_the_value(
+        self,
+        schema: ProfileSchemaDefinition,
+        source: str,
+        expect_divergence: bool,
+    ) -> None:
+        """The same value conflict resolves oppositely by who wrote it.
+
+        Anti-tautology: both cases present an identical recorded-versus-read
+        disagreement (08032 on record, 08033 from AEAT) and differ ONLY in the
+        recorded fact's provenance. A reconciliation that ignored provenance
+        would give both the same answer and could not satisfy both cases.
+        """
+        with profile_create_storage_span(_PROFILE_ID) as routing:
+            state = _register(schema, routing)
+            state = set_active_fields(
+                state,
+                (UserProfileFact(path="contact.postcode", value="08032", source=source),),
+            )
+            outcome = reconcile_censal_read(
+                state.active_profile_record(schema=schema),
+                censal_facts_from_read(_read(codigo_postal="08033")),
+            )
+            diverged = "contact.postcode" in {axis for axis, _ in outcome.divergences}
+            assert diverged is expect_divergence, f"source={source} diverged={diverged}"
 
 
 class TestApply:

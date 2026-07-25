@@ -154,9 +154,24 @@ def reconcile_censal_read(
 
     A path the record leaves blank is adopted. A path whose recorded value
     already equals the read is a no-op and is emitted as neither. A path
-    where the two differ is a divergence: the operator declared something
-    and an autofill must not overwrite a declared answer just because the
-    authority disagrees.
+    where the two differ is decided by WHO wrote the recorded value:
+
+    * an operator-declared value is reported as a divergence and left
+      standing — an autofill must not overwrite a declared answer just
+      because the authority disagrees;
+    * a value a previous censal read adopted is REFRESHED, because there is
+      no operator answer to protect. Both sides are the authority's, one
+      stale and one current, so reporting it as a disagreement would both
+      strand the profile on the old value forever and assert a conflict
+      that does not exist. A censal address change is the likeliest reason
+      to pull at all, so this is the path that keeps a profile current.
+
+    Comparison is exact after a whitespace strip. No per-field
+    normalisation is applied: deciding that two differently-written
+    cadastral references or postcodes mean the same thing is a guess about
+    an authority's format, and a spurious divergence is recoverable by the
+    operator where a silent equation of two genuinely different values is
+    not.
 
     Args:
         record: The active profile record, or ``None`` for a fresh profile.
@@ -165,9 +180,10 @@ def reconcile_censal_read(
     Returns:
         The :class:`CensalReconciliation` split.
     """
-    from ._projections import record_to_path_values
+    from ._projections import record_to_path_sources, record_to_path_values
 
     existing = record_to_path_values(record)
+    sources = record_to_path_sources(record)
     adopted: list[UserProfileFact] = []
     divergences: list[tuple[str, str]] = []
     for fact in facts:
@@ -175,7 +191,11 @@ def reconcile_censal_read(
         incoming = str(fact.value)
         if current is None or not current.strip():
             adopted.append(fact)
-        elif current.strip() != incoming.strip():
+        elif current.strip() == incoming.strip():
+            continue
+        elif sources.get(fact.path) == CENSO_SOURCE_TAG:
+            adopted.append(fact)
+        else:
             divergences.append((fact.path, incoming))
     return CensalReconciliation(adopted=tuple(adopted), divergences=tuple(divergences))
 
