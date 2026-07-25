@@ -76,11 +76,19 @@ jobs:
                https://pypi.org/manage/account/publishing/.
             2. Create the `release` GitHub Environment with required reviewers
                (the operator) - that approval click is the human release gate.
-            3. Create the public Scoop bucket repo and the public Homebrew tap
-               repo, and add push credentials as the secrets
-               CADRUMO_SCOOP_BUCKET_TOKEN and CADRUMO_HOMEBREW_TAP_TOKEN
-               (with the target repo slugs as vars CADRUMO_SCOOP_BUCKET_REPO
-               and CADRUMO_HOMEBREW_TAP_REPO).
+            3. Create the PUBLIC account-scoped distribution repos - the Scoop
+               bucket nevenincs/scoop-bucket, the Homebrew tap
+               nevenincs/homebrew-tap, and the plugin marketplace
+               nevenincs/neve-marketplace - and add push credentials as the
+               secrets CADRUMO_SCOOP_BUCKET_TOKEN, CADRUMO_HOMEBREW_TAP_TOKEN,
+               and CADRUMO_MARKETPLACE_TOKEN (with the target repo slugs as
+               vars CADRUMO_SCOOP_BUCKET_REPO, CADRUMO_HOMEBREW_TAP_REPO, and
+               CADRUMO_MARKETPLACE_REPO). These repos are shared across every
+               product published under the account: each product owns one file
+               in the bucket and the tap, and one plugin subtree in the
+               marketplace. They MUST be public - both package managers reach
+               them by ordinary git clone, so a private target is unusable by
+               any user without push credentials.
             4. Ensure the source Packaging Smoke run sealed its evidence draft
                (release tag evidence-smoke-<run id> carrying
                cadrumo-release-cohort.tar.gz and evidence-manifest.json).
@@ -505,10 +513,13 @@ jobs:
           git -c http.extraheader="$auth" clone "https://github.com/${MARKETPLACE_REPO}.git" "$work"
           staged="$(mktemp -d)"
           unzip -q "$bundle" -d "$staged"
-          # Replace the tracked marketplace tree wholesale (preserve .git) so a
-          # removed plugin never lingers; the cohort tree is the whole truth.
-          find "$work" -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
-          cp -R "$staged"/. "$work"/
+          # The marketplace is account-scoped and may serve sibling products, so
+          # this replaces ONLY the plugin subtrees this cohort declares and
+          # merges its entries into the marketplace index by plugin name. The
+          # earlier wholesale tree replacement would delete a sibling product's
+          # plugin on every release of this one.
+          uv run --frozen python -m dev.packaging.marketplace_publish \
+            --marketplace "$work" --cohort "$staged"
           git -C "$work" add -A
           if git -C "$work" diff --cached --quiet; then
             echo "marketplace already at cadrumo $VERSION; nothing to push"

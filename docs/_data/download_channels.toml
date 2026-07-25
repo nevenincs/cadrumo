@@ -53,11 +53,14 @@ artifact_kinds = ["scoop-manifest"]
 availability = "public_launch"
 package = "cadrumo"
 registry = "Scoop bucket"
-bucket = "cadrumo"
-bucket_repo = "nevenincs/scoop-cadrumo"
+# Account-scoped bucket serving every product published under this account, not
+# a per-product bucket. Scoop imposes no repo-name prefix and resolves manifests
+# from `bucket/`, so one repo carries one manifest per product.
+bucket = "nevenincs"
+bucket_repo = "nevenincs/scoop-bucket"
 install_commands = [
-  "scoop bucket add cadrumo https://github.com/nevenincs/scoop-cadrumo",
-  "scoop install cadrumo",
+  "scoop bucket add nevenincs https://github.com/nevenincs/scoop-bucket",
+  "scoop install nevenincs/cadrumo",
 ]
 
 [[channel]]
@@ -68,10 +71,13 @@ artifact_kinds = ["homebrew-formula"]
 availability = "public_launch"
 package = "cadrumo"
 registry = "Homebrew tap"
-tap = "nevenincs/cadrumo"
+# Account-scoped tap serving every product published under this account. The
+# `homebrew-` repo-name prefix is mandatory for the one-argument tap form, so
+# the repo is `nevenincs/homebrew-tap` and the tap name is `nevenincs/tap`.
+tap = "nevenincs/tap"
 install_commands = [
-  "brew tap nevenincs/cadrumo",
-  "brew install nevenincs/cadrumo",
+  "brew tap nevenincs/tap",
+  "brew install nevenincs/tap/cadrumo",
 ]
 
 [[channel]]

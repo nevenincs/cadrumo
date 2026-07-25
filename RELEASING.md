@@ -146,15 +146,28 @@ Arm `publish-release.yml` before the first publication, in this order:
 2. Create the `release` GitHub Environment with yourself as a required reviewer. The
    approval click on each dispatched run is the human publication gate.
 
-3. Create the public Scoop bucket repository and set:
+The Scoop bucket, the Homebrew tap, and the plugin marketplace are **account-scoped and
+shared across every product published under the account**, not per-product repositories.
+Each product owns one manifest in the bucket, one formula in the tap, and one plugin
+subtree in the marketplace. Create each once; later products reuse them. All three MUST
+be public — both package managers reach them by ordinary `git clone`, so a private
+target is unusable by anyone without push credentials.
+
+3. Create the public account-scoped Scoop bucket `nevenincs/scoop-bucket` and set:
    - Repository variable `CADRUMO_SCOOP_BUCKET_REPO` to its slug (`<owner>/<repo>`)
    - Repository secret `CADRUMO_SCOOP_BUCKET_TOKEN` to a PAT with write access
 
-4. Create the public Homebrew tap repository and set:
+   Scoop imposes no repository-name prefix. Users add it under the account alias:
+   `scoop bucket add nevenincs https://github.com/nevenincs/scoop-bucket`.
+
+4. Create the public account-scoped Homebrew tap `nevenincs/homebrew-tap` and set:
    - Repository variable `CADRUMO_HOMEBREW_TAP_REPO` to its slug
    - Repository secret `CADRUMO_HOMEBREW_TAP_TOKEN` to a PAT with write access
 
-5. Create the public Claude plugin marketplace repository and set:
+   The `homebrew-` repository-name prefix is mandatory for the one-argument tap form,
+   so the repository is `homebrew-tap` and the tap name users type is `nevenincs/tap`.
+
+5. Use the existing public Claude plugin marketplace `nevenincs/neve-marketplace` and set:
    - Repository variable `CADRUMO_MARKETPLACE_REPO` to its slug
    - Repository secret `CADRUMO_MARKETPLACE_TOKEN` to a PAT with write access
 
@@ -528,11 +541,16 @@ fail-closed `evidence_release leak-sweep` over everything about to be attached
 - Clones the public Homebrew tap repo, copies `homebrew/Formula/cadrumo.rb` to
   `Formula/`, and pushes (requires `CADRUMO_HOMEBREW_TAP_REPO` and
   `CADRUMO_HOMEBREW_TAP_TOKEN`).
-- Clones the public marketplace repo, replaces its tracked tree wholesale with the
-  unzipped `cadrumo-marketplace-X.Y.Z.zip` from the cohort, and pushes (requires
-  `CADRUMO_MARKETPLACE_REPO` and `CADRUMO_MARKETPLACE_TOKEN`; added in commit
-  `17abf9c021`). Each channel push refuses instructively when its credentials are
-  absent.
+- Clones the public marketplace repo and runs `dev.packaging.marketplace_publish`, which
+  replaces only the plugin subtrees the unzipped `cadrumo-marketplace-X.Y.Z.zip` declares
+  and merges its entries into `.claude-plugin/marketplace.json` by plugin name (requires
+  `CADRUMO_MARKETPLACE_REPO` and `CADRUMO_MARKETPLACE_TOKEN`). The marketplace is
+  account-scoped, so a sibling product's plugin and index entry survive this product's
+  release; the earlier wholesale tree replacement would have deleted them.
+
+Each channel push refuses instructively when its credentials are absent. The bucket and
+tap pushes each stage exactly one file, so they are likewise safe against sibling
+products' files in the shared repositories.
 
 ### Stage 5: reacquisition and docs unlock
 

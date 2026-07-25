@@ -66,7 +66,11 @@ _CLAIM_PATTERNS: Final[tuple[tuple[str, re.Pattern[str], tuple[str, ...]], ...]]
     ),
     (
         "scoop install cadrumo (Scoop)",
-        re.compile(r"scoop\s+install\s+cadrumo", re.IGNORECASE),
+        # The bucket is account-scoped, so the documented command addresses the
+        # app within that bucket (`scoop install nevenincs/cadrumo`). The bucket
+        # prefix is optional because Scoop also resolves a bare app name once the
+        # bucket is added; both spellings are a positive acquisition claim.
+        re.compile(r"scoop\s+install\s+(?:\S+/)?cadrumo\b", re.IGNORECASE),
         ("scoop-windows-x86-64",),
     ),
     (
@@ -80,7 +84,11 @@ _CLAIM_PATTERNS: Final[tuple[tuple[str, re.Pattern[str], tuple[str, ...]], ...]]
     ),
     (
         "brew tap cadrumo (Homebrew tap)",
-        re.compile(r"brew\s+tap\s+\S+/cadrumo\b", re.IGNORECASE),
+        # The tap is account-scoped (`brew tap nevenincs/tap`), so the slug no
+        # longer carries the product name. Requiring an owner/name slug is what
+        # keeps prose such as "the Homebrew tap opens at public launch" from
+        # matching, since "brew tap opens" has no slash in the following token.
+        re.compile(r"brew\s+tap\s+\S+/\S+", re.IGNORECASE),
         (
             "homebrew-linux-arm64",
             "homebrew-linux-x86-64",
