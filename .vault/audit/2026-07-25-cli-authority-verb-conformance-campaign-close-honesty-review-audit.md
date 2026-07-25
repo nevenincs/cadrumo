@@ -176,8 +176,11 @@ coverage from working-tree snapshots taken while the phase was still running
 and were wrong in different directions. Measured at HEAD by reading every
 record out of the object store rather than the working tree: **13 W06.P18
 records, 13 with a populated Outcome, zero empty.** They landed as one
-explicit-pathspec commit. P19 remains at 24 untracked empty scaffolds and
-nothing committed.
+explicit-pathspec commit.
+
+P19 subsequently landed all 24 of its records too — see the entry below. Both
+phases produced their evidence in full. Every claim in this review that either
+had not is superseded.
 
 The methodological point outlives the numbers. A count taken from the working
 tree while a peer is mid-commit is not a measurement, and this review made that
@@ -481,6 +484,53 @@ Note the two guards are not interchangeable: the no-pathspec index commit is
 what protects an entangled file, and the pathspec commit is what protects
 against sweeping a peer's *other* staged files. Which one is correct depends on
 whether the contention is within a file or across files.
+
+### w06-p19-verified | high | P19 evidence is complete too, and its verdicts are honest, 12 of 24 steps must stay open
+
+Measured at HEAD from the object store: **24 W06.P19 records, 24 with a
+populated Outcome, zero empty.** W06 evidence is therefore complete across both
+phases — 37 of 37 records — and this review's earlier statements that the wave
+produced no evidence are wrong and superseded.
+
+The verdict distribution is 12 satisfied, 9 failed, 2 unverified, 1 blocked.
+The two unverified and the one blocked are the reason to trust the set: the
+documentation build and the semantic duplication sweep are reported unverified
+rather than green, and the agent-swarm dispatch is reported blocked by harness
+policy with a substitute named. An audit that reports twelve satisfied and
+nothing else would have been the less credible outcome.
+
+Independent confirmation of this review's own import-contract finding, which is
+worth more than the finding standing alone. P19 reached the same result by its
+own route — three contracts kept, two broken, exit 1 — and recorded the corpus
+size the tool itself reports, 3660 files and 17595 dependencies, so the result
+is proof against the vacuity failure this review has now recorded four times.
+It also attributes every violating site and finds none owned by this feature,
+matching the attribution reached here.
+
+Twelve steps must stay open: the nine failures, the two unverified and the one
+blocked. Several failures are explicitly peer-owned working-tree churn, and one
+records a defect that was fixed between measurement and writing — that one
+should be re-run rather than closed on the record alone.
+
+### stale-snapshot-error-recurred-four-times | high | The method finding is evidenced by this review's own repeat failures
+
+Recorded because the count matters more than any single instance. This review
+drew a conclusion from a working-tree or point-in-time snapshot, and was wrong,
+**four separate times**: W06 coverage reported as 1 of 13, then as 10 of 13,
+then P19 reported as having landed nothing, and separately a verdict-extraction
+pattern that did not fit the records' actual shape and returned no verdicts at
+all where twenty-four existed.
+
+Every one was corrected by going to the subject — reading committed state out
+of the object store, or reading the record bodies rather than pattern-matching
+a heading that was never there. Every one was cheap to check and expensive to
+leave standing.
+
+Four occurrences in a single review, by the reviewer whose explicit remit was
+to catch exactly this class in others, is the strongest available argument that
+the discipline cannot rest on care. It needs the mechanical form recorded in
+the recommendations: reconciliation reads committed state, and a pattern is
+proven against the data's real shape before its silence is believed.
 
 ## Recommendations
 
