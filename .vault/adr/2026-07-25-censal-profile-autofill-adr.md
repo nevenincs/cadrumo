@@ -10,6 +10,28 @@ related:
 
 # `censal-profile-autofill` adr: `profile-borne auth credentials and a read-only censal autofill` | (**status:** `accepted`)
 
+> **D3 IS BLOCKED ON A FALSE PREMISE AND MUST NOT BE BUILT AS WRITTEN.**
+> D3 assumed a read-only consulta endpoint exists. It does not, on the
+> evidence available: `2026-07-11-censo-operator-manual-enrolment-adr`
+> records a 2026-07-10 authenticated investigation finding that the
+> launcher `/wlpl/BUGC-JDIT/MdcAcceso` - the target both "Mis datos
+> censales" links in this repo's own sede fixtures resolve to - returns
+> HTTP 404, and that AEAT exposes no read-only censal projection at all;
+> the data lives only inside the Censos WEB modification tool. The
+> grounding D3 rested on was a Sede help-page title and a Renta manual
+> mention, neither of which evidences an endpoint. That prior ADR set a
+> revival condition, and this record does not meet it. P02.S04 - a live
+> probe of that launcher - is the gate: if it still 404s or resolves into
+> `BU36-*`/`.zul`, D3 must be re-decided. D1, D2, D4, D5 and D6 stand.
+>
+> The S06 proof as written was also wrong. It forbids the token `MOD036`,
+> but the filing tool is `BU36-ASIS/M036/index.zul` and the write sibling
+> is `BUGC-JDIT/ModifDomiDual` - neither contains that token, so the gate
+> would have passed while the reader's only known landing was the
+> modification tool. A revived D3 must fail closed at runtime on any
+> `BU36-*`, `.zul` or `ModifDomiDual` landing, with the static check kept
+> only as the weaker of two walls.
+
 ## Problem Statement
 
 The profile TUI's reason to exist is that an operator should not retype
