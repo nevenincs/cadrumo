@@ -301,3 +301,61 @@ class TestThrottleAndAuthenticationFailure:
         outcome = login_profile(now=instant + timedelta(seconds=120))
         assert outcome.already_authenticated is False
         assert load_settings().cadrumo_local_storage_root == _storage_root
+
+
+class TestSessionPersistenceContract:
+    """``session_persisted`` couples to disk, and a degraded host fails closed.
+
+    ``ProfileLoginOutcome.session_persisted`` is the application-layer claim
+    for whether the login left a resumable record behind, and this module
+    OWNS it — every other assertion of it reaches it only transitively,
+    through a CLI subprocess. Persisted-session custody hard-requires the OS
+    keychain: a host that cannot custody the session key writes no artefact
+    at all rather than spilling one half of the split-knowledge pair to disk,
+    so the login degrades to a process-scoped session instead of refusing.
+    This case holds on either kind of host by coupling the claim to the
+    filesystem rather than presuming custody.
+    """
+
+    def test_persistence_claim_couples_to_the_on_disk_record(
+        self,
+        schema: ProfileSchemaDefinition,
+        _storage_root: Path,
+    ) -> None:
+        _create_profile(schema, profile_id=_PROFILE_A, label="Contract operator")
+
+        outcome = login_profile()
+
+        # The login succeeds whatever the custody outcome: a live in-process
+        # session is bound before the mint is even attempted, so the
+        # process-scoped half of the contract holds on every host.
+        assert outcome.already_authenticated is False
+        live = current_active_bucket_session()
+        assert live is not None
+        assert live.bucket_id == _PROFILE_A
+
+        # THE COUPLING: the claim must match the filesystem. A login reporting
+        # a saved session without writing one -- or writing one while
+        # reporting otherwise -- fails here on any host.
+        record_path = profile_session_path(storage_root=_storage_root, bucket_id=_PROFILE_A)
+        on_disk = record_path.is_file()
+        assert outcome.session_persisted is on_disk, (
+            f"session_persisted={outcome.session_persisted} disagrees with the on-disk "
+            f"record at {record_path} (is_file={on_disk})"
+        )
+
+        if not outcome.session_persisted:
+            # Fail-closed: the degraded login writes no persisted artefact at
+            # all, and a later process therefore finds nothing to reconstruct.
+            # The shared resume authority reads disk directly (never the live
+            # session) and decides ABSENT before it ever consults the
+            # keychain, so this branch is reachable on a credential-less host.
+            # Drop the process-scoped session first so the "a later process
+            # finds nothing" framing is literal.
+            assert not record_path.is_file()
+            close_active_bucket_session()
+            assert resume_active_profile_session(bucket_id=_PROFILE_A) is ProfileSessionRefusalReason.ABSENT
+        else:
+            # Custody host: the record is on disk, the resumable half of the
+            # split-knowledge pair.
+            assert record_path.is_file()
