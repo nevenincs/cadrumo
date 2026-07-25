@@ -152,6 +152,36 @@ them; the existing settings remain a fallback so nothing that works today
 breaks. A Cl@ve mode with either field missing refuses at the setup
 surface, naming what is absent, rather than at the first pull.
 
+**D7 - The user-profile schema is a CONTRACT, and the code is brought to
+it.** Three instances now show it read as an authority and honoured as
+prose: `UserProfileFact.source` is a length-constrained `str` so the
+schema's declared provenance enum binds nothing; the entire `auth`
+section is absent from the compiled profile-key catalogue, so a
+schema-declared `date` type is enforced nowhere and a malformed value is
+refused opaquely by AEAT rather than by the profile that declared it; and
+a fact path absent from the schema was written with no complaint. The
+audit `2026-07-25-censal-profile-autofill-tooling-honesty-audit` records
+these as one critical finding.
+
+The alternative - declaring the schema documentation and dropping its
+closed sets - is rejected. The schema is the one authority every other
+surface already reads against: registry bindings select on its paths, the
+manager renders its sections, validation quotes it to operators. Making
+it advisory would demote the only thing holding those surfaces in
+agreement, to avoid enforcing what they all already assume.
+
+So: `UserProfileFact.source` validates against the schema's declared
+provenance set; every schema-declared section is enrolled in the compiled
+key catalogue; and a gate asserts that parity, because the `auth` gap was
+found by someone trying a value by hand rather than by any check.
+
+Two existing breaches are reconciled rather than grandfathered. The
+shipped censal-artefact path stamps `censo_artefact_g313`, which the
+declared set does not contain - the token is real and in use, so the
+declared set gains it rather than the code losing it. And the `auth`
+section is enrolled. Neither is new work; both are the schema being made
+true about code that already ships.
+
 **D3 - A new read-only censal reader lives in the sede adapter.** It
 navigates to the consulta view only, through the same authenticated
 session and access-gate path every other live read uses. It exposes no
