@@ -28,7 +28,7 @@ Build the sede reader for mis datos censales, pinned to the consulta view and pr
 
 - [ ] `P02.S04` - Discover the authenticated consulta URL and DOM for mis datos censales against a live session and record the selectors; `src/cadrumo/adapters/outbound/aeat/sede`.
 - [ ] `P02.S05` - Build the read-only censal reader in the sede adapter over the shared authenticated session and access gate; `src/cadrumo/adapters/outbound/aeat/sede`.
-- [ ] `P02.S06` - Prove the reader cannot write, failing closed at runtime on any BU36- or .zul or ModifDomiDual landing and on the /Sede/procedimientoini/ launcher prefix, with a static string check kept only as the weaker of two walls; `src/cadrumo/adapters/outbound/aeat/sede/tests`.
+- [x] `P02.S06` - Prove the reader cannot write, failing closed at runtime on any BU36- or .zul or ModifDomiDual landing and on the /Sede/procedimientoini/ launcher prefix, with a static string check kept only as the weaker of two walls; `src/cadrumo/adapters/outbound/aeat/sede/tests`.
 
 ### Phase `P03` - Autofill and retirement
 
