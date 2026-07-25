@@ -64,6 +64,54 @@ four, because the workbook-parity module carries two occurrences on separate
 lines. The discrepancy is recorded because it is the reason the coordinator
 re-derives every subagent number.
 
+### completion-flag-substituted-for-coverage | critical | A service derives its health from whether the job finished, not from whether the result is usable
+
+The deepest finding of this audit is not in the test suite. The semantic
+code-search service reports a terminal outcome of succeeded, with committed units
+recorded and an empty degraded-reasons list, on an index covering a small fraction
+of the tree. It is not merely mid-rebuild. It DECLARED SUCCESS on a fractional
+artifact, which is materially worse than an unfinished job: a running job
+eventually finishes and can be waited on, whereas a job that has already reported
+success will never retry, so the degraded state is permanent until something
+external intervenes.
+
+The mechanism, stated precisely: THE HEALTH SIGNAL IS DERIVED FROM WHETHER THE JOB
+FINISHED, NOT FROM WHETHER THE RESULT IS USABLE. A completion flag is a
+description of a PROCESS. Coverage is a property of the ARTIFACT. Validating the
+description is not validating the artifact.
+
+That substitution is the same one this audit hunts throughout the test harness. It
+is the service-level form of a gate asserting a TOTAL where the property is a
+DECOMPOSITION: the total is real, arithmetically correct, and derived from the
+right raw material, yet it cannot see the distribution that carries the defect.
+Here the process genuinely did terminate without error, so the flag is not lying
+about what it measures — it is measuring the wrong thing, which is why no
+error-handling path anywhere catches it. A gate cannot be rescued by making its
+existing signal more reliable when the signal is a proxy for the property that
+matters.
+
+It also defeats a rule written specifically to fail closed. Project rule makes
+semantic discovery mandatory before coding work and instructs an agent to REFUSE
+when the service is DOWN. This condition never presents as down: the service is
+reachable, the index reports available, and queries return ranked results. A
+fail-closed rule is only as fail-closed as the liveness signal it consults, so a
+health signal that cannot express partial coverage silently converts a refusal
+gate into a pass-through.
+
+The failing scenario, measured twice from different angles: a probe for CLI
+command-group registration returned no CLI code at all, the top hit being an
+unrelated PDF-parser registry loader at a similarity of 0.0138 with everything
+else at or below 0.005, and the entire CLI entrypoints tree absent from the
+results. An agent reading that result concludes no canonical owner exists for the
+concept it is about to implement, and writes a duplicate authority — the precise
+outcome the mandatory-discovery rule exists to prevent.
+
+Recorded as critical rather than high because of blast radius and silence: it
+applies to every agent on the machine simultaneously, it is invisible from inside
+any single agent's session, and it corrupts the one step the process relies on to
+prevent duplicate authorities. Remediation belongs to the search service, which is
+a separate product in a separate worktree, so no code change is proposed here.
+
 ### rag-discovery-instrument-answers-while-degraded | high | The mandated discovery instrument returns confident results from a truncated index and does not report itself degraded
 
 The semantic code-search service that project rule makes MANDATORY before any
@@ -85,10 +133,24 @@ and it was live for a large concurrent agent fleet, meaning any "semantic search
 found nothing" conclusion reached during the window is worthless, including
 conclusions recorded in peer reports.
 
-A second-order observation: over the audit the code job identifier changed while
-chunk counts climbed from 52 to 791, indicating the file watcher re-triggered the
-rebuild as peers committed. Under a fleet committing every few minutes the code
-index may not converge at all, so the degraded window is not self-limiting.
+A second-order observation, and a correction to this finding's own first reading.
+Over the audit the code job identifier changed while chunk counts climbed from 52
+to 791, which initially read as the file watcher re-triggering a rebuild under a
+committing fleet — that is, a slow but self-resolving condition. Independent
+re-measurement showed otherwise: the job then reported a terminal outcome of
+succeeded on the fractional index. So the condition is NOT a rebuild that will
+eventually finish and NOT self-limiting in the opposite direction either — nothing
+will re-trigger a job that has already declared success. The mechanism behind that
+is recorded as its own finding above; it is retained here because the corrected
+reading changes the remediation from "wait for it" to "the health signal cannot
+express this state at all".
+
+Note also which discriminator survived. The chunk count moved while the defect
+persisted, so the COUNT alone never distinguished healthy from degraded. What
+distinguished it was BEHAVIOUR: two deliberately unrelated probes returning the
+same file, or a probe for a surface known to exist returning none of it. A
+coverage floor is still the right structural fix, but the cheap field test is
+behavioural.
 
 The service was deliberately NOT restarted, because a restart discards in-progress
 index work and induces the perpetual-rebuild state this finding describes.
@@ -209,13 +271,28 @@ This is the general remedy for the shape — a scanner should assert it can see 
 token it is known to contain, alongside the negative result it reports.
 
 Raise the degraded-index problem with the search service rather than in this
-repository. The needed behaviour is that a truncated or mid-rebuild index either
-declines to answer or marks its results untrustworthy, so the existing refusal
-rule can fire. Until then, treat semantic code-search results as unusable while
-chunk counts are far below the tree size, and pair every sweep with an exhaustive
-targeted search. Any conclusion of the form "semantic search found no existing
-owner" recorded during the degraded window should be re-derived before it is
-relied on.
+repository, and frame it as the completion-flag substitution rather than as a
+slow rebuild, because the two have different fixes and only the latter is fixed by
+waiting.
+
+The real check the service lacks: reconcile the indexed chunk or file count against
+the tracked source-file count of the target tree, and report degraded whenever the
+ratio falls below a floor, REGARDLESS of job state. The job-state signal and the
+coverage signal must be independent, because the whole defect is that one is
+currently standing in for the other — a terminal outcome of succeeded must not be
+able to override a coverage floor. Deliberately not implemented here: the search
+service is a separate product in a separate worktree and outside this audit's
+scope. Recorded so the requirement is not rediscovered from scratch.
+
+Until that lands, treat semantic code-search HITS as a weak positive only and
+treat ABSENCE as proving nothing. Establish "no canonical owner exists" by
+exhaustive targeted search over the concept's vocabulary plus several plausible
+alternative names, and by reading the candidate owning module's docstring for a
+claim of ownership. Any conclusion of the form "semantic search found no existing
+owner" reached during the degraded window is void and must be re-derived. The cheap
+field test for whether the index is usable at all is behavioural, not numeric: two
+deliberately unrelated probes that return the same file, or a probe for a surface
+known to exist that returns none of it, indicate a truncated index.
 
 Decide the packaging preflight recipe's intent and make it explicit. Either widen
 its marker expression to match the lane that continuous integration runs, or state
@@ -227,6 +304,19 @@ worth removing.
 Re-baseline the size-budget pins to measured actuals, and prefer a generated
 baseline over hand-maintained comments, since the comments are what went stale
 rather than the mechanism.
+
+The worker-replacement detector this audit landed is also the worked example of the
+discovery discipline recommended above, since it was authored during the degraded
+window. Its placement was established WITHOUT relying on semantic search: an
+exhaustive targeted sweep over ten terms across five vocabularies — worker
+identity, crash and death, replacement and respawn, the xdist gateway and
+node-down naming, and the scheduler internals — plus a read of the sibling
+xdist module's docstring to check it claimed no such ownership. That sibling
+module prevents one cause of an aborted run; the detector observes that one
+occurred, so the two are complementary rather than duplicative. Recorded because
+a conclusion of "no canonical owner" reached in this window is exactly what the
+recommendation above voids, and this one is offered as re-derived rather than
+exempt.
 
 Treat the wiring of the inert held-serial refusal, and of the worker-replacement
 detector this audit landed, as a single owner decision rather than two cleanup
