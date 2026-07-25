@@ -143,8 +143,16 @@ def _invoke_decrypting_verb_without_the_secret_channel():
         return invoke_cached_cli(["--format", "json", "app", "ledger", "list"])
 
 
+@pytest.mark.os_keychain
 class TestSilentResume:
-    """A valid persisted session unlocks later invocations with no prompt."""
+    """A valid persisted session unlocks later invocations with no prompt.
+
+    Custody-bound end to end: resuming means unwrapping the record's DEK
+    under the session key the OS credential store holds, so a host that
+    cannot custody one cannot exhibit a silent resume at all. The
+    fail-closed refusals below are the keychain-free half and stay in the
+    default lane -- they are decided BEFORE any credential call.
+    """
 
     def test_valid_session_resumes_with_no_authentication(self, _isolated_root: Path) -> None:
         bucket_id = _create_profile()

@@ -66,7 +66,17 @@ _HEX_MARKERS = frozenset(
 # enrols it explicitly. It marks tests needing an external binary the dependency
 # set does not install (LibreOffice), so the marker rather than a path
 # ``--ignore`` is what holds them out of the default lane.
-_EXPECTED_CONFIGURED_MARKERS = _EXECUTION_MARKERS | _HEX_MARKERS | {"docs", "serial", "perf", "external_tool"}
+# ``os_keychain`` follows the same supplementary-label pattern for a capability
+# of the LOGON SESSION rather than of the dependency set: the OS credential
+# store answers only an interactive desktop session, so a headless CI runner and
+# an agent's SSH network logon both reach a real backend that refuses every
+# credential call. Tests whose assertion subject IS that custody carry the label
+# alongside their execution marker, every lane excludes it, and
+# ``just test-os-keychain`` enrols it. Everything provable without custody stays
+# in the default lanes.
+_EXPECTED_CONFIGURED_MARKERS = (
+    _EXECUTION_MARKERS | _HEX_MARKERS | {"docs", "serial", "perf", "external_tool", "os_keychain"}
+)
 _LEGACY_READ_MARKER = "live_" + "read"
 _LEGACY_WRITE_MARKER = "live_" + "write"
 _LEGACY_DOMAIN_MARKERS = frozenset(

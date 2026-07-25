@@ -95,6 +95,7 @@ def _create_profile(schema: ProfileSchemaDefinition, *, profile_id: str, label: 
 class TestFirstLogin:
     """A first login authenticates, opens a session, and mints a resumable record."""
 
+    @pytest.mark.os_keychain
     def test_first_login_mints_a_resumable_persisted_session(
         self,
         schema: ProfileSchemaDefinition,
@@ -159,8 +160,16 @@ class TestFirstLogin:
             login_profile(name="no-such-profile")
 
 
+@pytest.mark.os_keychain
 class TestIdempotentGuard:
-    """A retry against a still-valid session is a no-op, not a second login."""
+    """A retry against a still-valid session is a no-op, not a second login.
+
+    Both cases are custody-bound: the guard fires only when the persisted
+    record can be RESUMED, and resuming unwraps the DEK under the session
+    key held in the OS credential store. Laying a record down without
+    custody would not reach the guard, so neither case has a
+    keychain-free half to keep in the default lane.
+    """
 
     def test_valid_session_retry_is_a_no_op(
         self,

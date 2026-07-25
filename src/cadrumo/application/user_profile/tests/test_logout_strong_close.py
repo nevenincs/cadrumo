@@ -124,6 +124,7 @@ class TestStrongClose:
         assert resume_active_profile_session(bucket_id=_PROFILE_ID) is ProfileSessionRefusalReason.ABSENT
         assert current_active_bucket_session() is None
 
+    @pytest.mark.os_keychain
     def test_logout_removes_the_keychain_half_of_the_session(
         self,
         schema: ProfileSchemaDefinition,

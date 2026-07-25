@@ -24,6 +24,15 @@ the keychain (that the *other* half of the split-knowledge pair is gone,
 or that a record can be resumed into a live session) is NOT made
 reachable by this helper and must stay in a test that states its custody
 precondition explicitly.
+
+Such a test carries the ``os_keychain`` marker alongside its execution
+marker. Every lane excludes that marker, because the capability belongs to
+the logon session rather than to the dependency set: a headless CI runner
+and an agent's SSH network logon both reach a real credential backend that
+then refuses every call. ``just test-os-keychain`` enrols them, and is
+meaningful only from an interactive desktop session. The split this module
+draws is therefore load-bearing — a case that CAN be proven without custody
+must not take the marker, or it silently leaves every automated lane.
 """
 
 from __future__ import annotations
