@@ -113,6 +113,13 @@ tree references it.
 - Moving the tap changes the user-visible install command, because the tap
   name is derived from the repository name. Any command already published must
   be swept in the same change.
+- Discovery for this record was done by direct directory listings, file reads,
+  and targeted pattern search, not by semantic search: the code index was
+  serving roughly a fifth of the tree while reporting itself healthy, so a
+  semantic miss was not evidence of absence. The one conclusion that depended
+  on absence — that no existing packaging module already published a plugin
+  tree or merged a marketplace index — was confirmed against the real module
+  listing and their declarations rather than a search result.
 - The product repository is public and its release assets are anonymously
   downloadable, verified by an unauthenticated fetch of a v0.2.1 asset. The
   generated bucket manifest and tap formula point at those release URLs, so
