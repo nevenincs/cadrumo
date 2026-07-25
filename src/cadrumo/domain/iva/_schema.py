@@ -175,6 +175,21 @@ CUOTA_LESS_M303_IVA_CATEGORIES: frozenset[IvaCategory] = frozenset(
     },
 )
 
+# IVA categories that never bear a deductible (input) or devengada (output)
+# cuota a binding would route, so a missing-evidence advisory on them would be
+# noise. Extends the by-law cuota-less set with the non-declarable sentinels
+# (recargo de equivalencia is filed under a separate regime; unknown /
+# erroneous carry no settled cuota). The single canonical home for this
+# derived set — evidence-presence gates and advisories both consume it rather
+# than each re-deriving the same extension of CUOTA_LESS_M303_IVA_CATEGORIES.
+EVIDENCE_EXEMPT_IVA_CATEGORIES: frozenset[IvaCategory] = CUOTA_LESS_M303_IVA_CATEGORIES | frozenset(
+    {
+        IvaCategory.RECARGO_EQUIVALENCIA,
+        IvaCategory.ERRONEOUS_INVOICE,
+        IvaCategory.UNKNOWN,
+    },
+)
+
 
 class IvaExemptionArticle(StrEnum):
     """Closed catalogue of Ley 37/1992 Art. 20 sub-articles.
