@@ -23,7 +23,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ....adapters.inbound.tui import RegistrationAttempt
+    from collections.abc import Callable, Mapping
+
+    from ....adapters.inbound.tui import FormPage, RegistrationAttempt
     from ....application.user_profile import ProfileOverview, ProfileRegistrationOutcome
 
 
@@ -119,6 +121,21 @@ def present_profile_manager(*, label: str | None = None) -> None:
     )
 
 
+def present_form(
+    page: FormPage,
+    *,
+    rebuild: Callable[[Mapping[str, str]], FormPage] | None = None,
+) -> Mapping[str, str] | None:
+    """Show one editable field page and return what the operator committed.
+
+    ``None`` means they left without committing, which every caller treats
+    as "make no change" rather than as an error.
+    """
+    from ....adapters.inbound.tui import run_form_tui
+
+    return run_form_tui(page, rebuild=rebuild)
+
+
 def attempt_registration(label: str, passphrase: str) -> RegistrationAttempt:
     """Create one profile, reporting a refusal as text rather than raising.
 
@@ -168,6 +185,7 @@ __all__ = [
     "host_can_run_full_screen",
     "manager_is_the_right_frontend",
     "persist_active_profile_field",
+    "present_form",
     "present_profile_manager",
     "present_registration",
 ]

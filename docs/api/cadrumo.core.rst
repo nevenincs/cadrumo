@@ -51,6 +51,7 @@ Submodules
    cadrumo.core._config_storage_route
    cadrumo.core._config_support
    cadrumo.core._config_timeouts
+   cadrumo.core._credentials
    cadrumo.core._foreign_asset_obligation
    cadrumo.core._fsync
    cadrumo.core._google_credential_source

@@ -34,9 +34,11 @@ Submodules
    cadrumo.application.user_profile._lifecycle
    cadrumo.application.user_profile._login_session
    cadrumo.application.user_profile._orchestration
+   cadrumo.application.user_profile._overview
    cadrumo.application.user_profile._preflight
    cadrumo.application.user_profile._profile_pointer_transaction
    cadrumo.application.user_profile._profile_repository
    cadrumo.application.user_profile._projections
+   cadrumo.application.user_profile._registration
    cadrumo.application.user_profile._repository
    cadrumo.application.user_profile._validation
