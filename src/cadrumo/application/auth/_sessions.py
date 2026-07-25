@@ -20,7 +20,7 @@ See Also:
 from __future__ import annotations
 
 import json
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Mapping
 from contextlib import asynccontextmanager
 from datetime import datetime
 from importlib import import_module
@@ -645,14 +645,40 @@ def _resolve_clave_credentials(
     settings: Settings,
     provider_kind: AuthProviderKind,
 ) -> ClaveCredentials | None:
+    """Resolve the Cl@ve halves for ``provider_kind`` from the active profile.
+
+    Reads the profile record through the lifecycle service, which needs
+    an unlocked bucket session. A readiness probe that already holds the
+    profile's values should call :func:`resolve_clave_credentials`
+    directly rather than pay for a second read.
+    """
+    if provider_kind is AuthProviderKind.CERTIFICATE:
+        return None
+    return resolve_clave_credentials(
+        provider_kind,
+        settings=settings,
+        facts=_active_profile_auth_facts(),
+    )
+
+
+def resolve_clave_credentials(
+    provider_kind: AuthProviderKind,
+    *,
+    settings: Settings,
+    facts: ClaveAuthFacts,
+) -> ClaveCredentials | None:
     """Resolve the Cl@ve halves for ``provider_kind``, profile first.
+
+    The single home for the profile-beats-settings precedence. Both the
+    live session entry and the operator readiness surfaces resolve
+    through here, so a status surface cannot report a credential as
+    unconfigured that the session entry would happily authenticate with.
 
     Returns ``None`` for the certificate provider, which authenticates
     with an installed certificate and needs neither Cl@ve field.
     """
     if provider_kind is AuthProviderKind.CERTIFICATE:
         return None
-    facts = _active_profile_auth_facts()
     if provider_kind is AuthProviderKind.CLAVE_PERMANENTE:
         settings_dni_nie = _normalise_tax_identity(settings.cadrumo_clave_permanente_dni_nie)
         settings_numero_soporte = ""
@@ -757,7 +783,7 @@ def _bind_clave_credentials_to_settings(
     return bound
 
 
-class _ActiveProfileAuthFacts(BaseModel):
+class ClaveAuthFacts(BaseModel):
     """Authentication facts read from the active profile record."""
 
     model_config = STRICT_FROZEN_CONFIG
@@ -768,7 +794,24 @@ class _ActiveProfileAuthFacts(BaseModel):
     fecha_validez: str = ""
 
 
-def _active_profile_auth_facts() -> _ActiveProfileAuthFacts:
+def clave_auth_facts_from_profile_values(values: Mapping[str, str]) -> ClaveAuthFacts:
+    """Read the auth facts out of a profile's schema-path value mapping.
+
+    The projection a readiness surface already holds is enough to resolve
+    a credential, so this lets those surfaces reuse the resolver without
+    opening the profile record a second time. ``identity.tax_id`` is read
+    here only in its canonical path form; the lifecycle reader applies
+    the selector fallback before calling this.
+    """
+    return ClaveAuthFacts(
+        tax_id=_normalise_tax_identity(values.get("identity.tax_id")),
+        dni_nie=_normalise_tax_identity(values.get("auth.dni_nie")),
+        numero_soporte=_normalise_credential(values.get("auth.numero_soporte")),
+        fecha_validez=_normalise_credential(values.get("auth.fecha_validez")),
+    )
+
+
+def _active_profile_auth_facts() -> ClaveAuthFacts:
     """Read the active profile's identity and Cl@ve credentials in one pass.
 
     Returns empty facts when no profile is active or the record cannot be
@@ -791,7 +834,7 @@ def _active_profile_auth_facts() -> _ActiveProfileAuthFacts:
 
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
-        return _ActiveProfileAuthFacts()
+        return ClaveAuthFacts()
     try:
         if has_active_bucket_session():
             record = build_lifecycle_service(bucket_id=bucket_id).read(bucket_id)
@@ -803,19 +846,16 @@ def _active_profile_auth_facts() -> _ActiveProfileAuthFacts:
                 with activate_master_key_provider(get_master_key_provider(), fallback_bucket_id=bucket_id):
                     record = service.read(bucket_id)
     except ProfileNotFoundError:
-        return _ActiveProfileAuthFacts()
+        return ClaveAuthFacts()
 
-    path_values = record_to_path_values(record)
-    tax_id = _normalise_tax_identity(path_values.get("identity.tax_id"))
-    if not tax_id:
+    path_values = dict(record_to_path_values(record))
+    if not _normalise_tax_identity(path_values.get("identity.tax_id")):
+        # A record whose tax id reached the projection only through its
+        # model selector still owns that identity; fold it onto the
+        # canonical path so the shared reader sees one shape.
         selector_values = record_to_values(record)
-        tax_id = _normalise_tax_identity(selector_values.get("tax.id"))
-    return _ActiveProfileAuthFacts(
-        tax_id=tax_id,
-        dni_nie=_normalise_tax_identity(path_values.get("auth.dni_nie")),
-        numero_soporte=_normalise_credential(path_values.get("auth.numero_soporte")),
-        fecha_validez=_normalise_credential(path_values.get("auth.fecha_validez")),
-    )
+        path_values["identity.tax_id"] = str(selector_values.get("tax.id") or "")
+    return clave_auth_facts_from_profile_values(path_values)
 
 
 def _assert_session_identity_matches_expected(session: object, expected_identity: str | None) -> None:

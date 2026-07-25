@@ -64,6 +64,7 @@ from ._operator_probes import (
     _live_auth_identity_state,
     _live_auth_mode,
     _probe_local_session,
+    probe_clave_credentials,
 )
 from ._operator_results import (
     AuthConfigureDanglingActiveProfileError,
@@ -96,9 +97,11 @@ from ._operator_scope import (
 )
 from ._operator_scope import resolve_auth_operation_scope
 from ._sessions import (
+    clave_auth_facts_from_profile_values,
     delete_persisted_session,
     ensure_authenticated_aeat_session,
     persisted_session_exists,
+    resolve_clave_credentials,
 )
 
 if TYPE_CHECKING:
@@ -293,7 +296,14 @@ def _auth_configure_result(
     settings = load_settings()
     provider_identity = ""
     if provider == AuthProviderKind.CLAVE_MOVIL.value:
-        provider_identity = unwrap_optional_secret(settings.cadrumo_clave_movil_dni_nie).strip().upper()
+        # The profile's own values are already in hand, so the shared
+        # resolver is fed directly rather than re-reading the record.
+        credentials = resolve_clave_credentials(
+            AuthProviderKind.CLAVE_MOVIL,
+            settings=settings,
+            facts=clave_auth_facts_from_profile_values(values),
+        )
+        provider_identity = credentials.dni_nie if credentials is not None else ""
     alignment = "not_applicable"
     alignment_detail = ""
     if provider == AuthProviderKind.CLAVE_MOVIL.value:
@@ -1520,13 +1530,12 @@ def _assert_login_precondition(
                 translated_message="application.auth.operator.login.refused_certificate_file_missing",
                 context={"path": str(cert_path)},
             )
-    if (
-        provider_kind is AuthProviderKind.CLAVE_MOVIL
-        and not unwrap_optional_secret(settings.cadrumo_clave_movil_dni_nie).strip()
-    ):
-        raise AuthLoginPreconditionError(
-            translated_message="application.auth.operator.login.refused_clave_movil_identity_unset",
-        )
+    if provider_kind is AuthProviderKind.CLAVE_MOVIL:
+        credentials = probe_clave_credentials(provider_kind, settings=settings)
+        if credentials is None or not credentials.dni_nie:
+            raise AuthLoginPreconditionError(
+                translated_message="application.auth.operator.login.refused_clave_movil_identity_unset",
+            )
 
 
 def _implemented_provider(provider: str) -> AuthProviderListing:

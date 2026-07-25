@@ -1,0 +1,206 @@
+"""Real-behavior tests for readiness surfaces reading profile-borne credentials.
+
+Live authentication resolves a Cl@ve credential from the active profile
+first, but the readiness probes and status surfaces used to read the
+environment settings directly. That split let a status surface report
+"not configured" about a credential the profile holds and the session
+entry would happily authenticate with, which is a lie to the operator
+rather than a cosmetic gap.
+
+Every test here therefore leaves the environment empty and puts the
+credential only on the profile, so a pass cannot be explained by the
+settings fallback. The profile is driven through the real store and the
+real lifecycle service; no test doubles stand in for the read.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Iterator
+from pathlib import Path
+
+import pytest
+from pydantic import SecretStr
+
+from ....core import AuthProviderKind
+from ....core.config import load_settings, override_settings
+from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
+from ...user_profile import profile_create_storage_span
+from ...workflow import workflow_state_repository
+from .._operator import _assert_login_precondition
+from .._operator_probes import (
+    _live_auth_identity_kind,
+    _live_auth_identity_state,
+    probe_clave_credentials,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_BUCKET_ID = "55555555-5555-4555-8555-555555555555"
+_PROFILE_LABEL = "probe-operator"
+_TAX_ID = "12345678Z"
+_OTHER_TAX_ID = "00000001R"
+
+
+def _register_profile(**overrides: str) -> None:
+    facts = {"identity.tax_id": _TAX_ID}
+    facts.update(overrides)
+    workflow_state_repository().update(
+        lambda state: register_minimal_profile(
+            state,
+            profile_id=_BUCKET_ID,
+            display_name=_PROFILE_LABEL,
+            overrides=facts,
+        ),
+    )
+
+
+def test_probe_reports_a_profile_borne_credential_as_configured() -> None:
+    """The environment holds nothing; the profile holds the identity.
+
+    Before this, the probe read the setting and reported the credential
+    absent, so the operator was told to configure something they had
+    already recorded.
+    """
+
+    _register_profile(**{"auth.dni_nie": _TAX_ID})
+    with override_settings(cadrumo_clave_movil_dni_nie=None) as settings:
+        credentials = probe_clave_credentials(AuthProviderKind.CLAVE_MOVIL, settings=settings)
+
+    assert credentials is not None
+    assert credentials.dni_nie == _TAX_ID
+
+
+def test_alignment_reports_a_match_for_a_profile_borne_credential() -> None:
+    """The five-way alignment ladder has to see the resolved identity.
+
+    A profile whose Cl@ve credential equals its tax identity is aligned.
+    Reading the empty setting instead would classify it
+    ``clave_identity_missing`` and send the operator to configure a
+    credential that is already correct.
+    """
+
+    _register_profile(**{"auth.dni_nie": _TAX_ID})
+    with override_settings(cadrumo_clave_movil_dni_nie=None) as settings:
+        profile_present, provider_present, alignment = _live_auth_identity_state(
+            AuthProviderKind.CLAVE_MOVIL,
+            settings=settings,
+        )
+
+    assert profile_present is True
+    assert provider_present is True
+    assert alignment == "matches"
+
+
+def test_alignment_still_reports_a_mismatch_it_should_catch() -> None:
+    """Resolving from the profile must not blunt the mismatch signal.
+
+    A Cl@ve credential that disagrees with the profile's tax identity is
+    the case the fail-closed guard exists for, so the probe has to keep
+    naming it even when the credential came from the profile.
+    """
+
+    _register_profile(**{"auth.dni_nie": _OTHER_TAX_ID})
+    with override_settings(cadrumo_clave_movil_dni_nie=None) as settings:
+        _profile_present, _provider_present, alignment = _live_auth_identity_state(
+            AuthProviderKind.CLAVE_MOVIL,
+            settings=settings,
+        )
+
+    assert alignment == "mismatch"
+
+
+def test_alignment_still_reports_an_absent_credential() -> None:
+    """A profile with no credential anywhere is genuinely unconfigured.
+
+    The guard against over-reporting: resolving profile-first must not
+    invent a credential where neither source holds one.
+    """
+
+    _register_profile()
+    with override_settings(cadrumo_clave_movil_dni_nie=None) as settings:
+        _profile_present, provider_present, alignment = _live_auth_identity_state(
+            AuthProviderKind.CLAVE_MOVIL,
+            settings=settings,
+        )
+
+    assert provider_present is False
+    assert alignment == "clave_identity_missing"
+
+
+def test_identity_kind_classifies_a_profile_borne_credential() -> None:
+    """The DNI/NIE classifier must see the resolved identity too.
+
+    Reading the empty setting would report ``invalid_or_missing`` for a
+    perfectly well-formed DNI the profile carries.
+    """
+
+    _register_profile(**{"auth.dni_nie": _TAX_ID})
+    with override_settings(cadrumo_clave_movil_dni_nie=None) as settings:
+        kind = _live_auth_identity_kind(AuthProviderKind.CLAVE_MOVIL, settings=settings)
+
+    assert kind == "DNI"
+
+
+def test_login_precondition_admits_a_profile_borne_credential() -> None:
+    """Login must not refuse a credential the session entry would use.
+
+    This is the sharpest form of the divergence: the precondition ran
+    before the session entry resolved anything, so a profile-only
+    operator was refused at the door by the very check meant to spare
+    them a failed AEAT round-trip.
+    """
+
+    _register_profile(**{"auth.dni_nie": _TAX_ID})
+    with override_settings(cadrumo_clave_movil_dni_nie=None) as settings:
+        _assert_login_precondition(settings, AuthProviderKind.CLAVE_MOVIL)
+
+
+def test_login_precondition_still_refuses_when_no_credential_exists() -> None:
+    """The refusal has to survive: neither source holds an identity."""
+
+    from .._operator_results import AuthLoginPreconditionError
+
+    _register_profile()
+    with (
+        override_settings(cadrumo_clave_movil_dni_nie=None) as settings,
+        pytest.raises(AuthLoginPreconditionError) as raised,
+    ):
+        _assert_login_precondition(settings, AuthProviderKind.CLAVE_MOVIL)
+
+    assert raised.value.translated_message == "application.auth.operator.login.refused_clave_movil_identity_unset"
+
+
+def test_settings_still_win_when_the_profile_carries_nothing() -> None:
+    """The environment-configured operator keeps their reported state.
+
+    The fallback is what makes this change safe to land, so it is
+    asserted at the probe surface too rather than only at the session
+    entry.
+    """
+
+    _register_profile()
+    with override_settings(cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID)) as settings:
+        _profile_present, provider_present, alignment = _live_auth_identity_state(
+            AuthProviderKind.CLAVE_MOVIL,
+            settings=settings,
+        )
+
+    assert provider_present is True
+    assert alignment == "matches"
+
+
+def test_certificate_provider_is_not_probed_for_clave_credentials() -> None:
+    """A certificate profile has no Cl@ve credential to resolve."""
+
+    _register_profile(**{"auth.dni_nie": _TAX_ID})
+    assert probe_clave_credentials(AuthProviderKind.CERTIFICATE, settings=load_settings()) is None
+
+
+@pytest.fixture(autouse=True)
+def _isolated_backend(tmp_path: Path) -> Iterator[None]:
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        profile_create_storage_span(_BUCKET_ID),
+    ):
+        yield

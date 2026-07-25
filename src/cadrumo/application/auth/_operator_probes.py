@@ -15,7 +15,7 @@ from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import AuthProviderKind
-from ...core.config import Settings, load_settings, unwrap_optional_secret
+from ...core.config import Settings, load_settings
 from ...core.errors import CadrumoError
 from ...core.i18n import tr
 from ...core.logging import get_logger
@@ -25,7 +25,12 @@ from ..auth_credentials import (
     unnamed_certificate_credentials,
 )
 from ._operator_scope import active_profile_storage_span
-from ._sessions import load_persisted_session
+from ._sessions import (
+    ClaveCredentials,
+    clave_auth_facts_from_profile_values,
+    load_persisted_session,
+    resolve_clave_credentials,
+)
 
 _log = get_logger(__name__)
 
@@ -52,6 +57,48 @@ def _classify_identity_alignment(profile_tax_id: str, provider_identity: str) ->
     return "mismatch"
 
 
+def _active_profile_path_values(state: WorkflowState | None = None) -> dict[str, str]:
+    """Return the active profile's schema-path values, empty when unreadable.
+
+    A readiness probe reports on configuration; it must never fail
+    because the profile could not be read, so every read fault degrades
+    to an empty mapping and the caller reports the credential as absent.
+    """
+    try:
+        from ..user_profile import record_to_path_values
+        from ..workflow import workflow_state_repository
+
+        resolved_state = state if state is not None else workflow_state_repository().load()
+        record = resolved_state.active_profile_record()
+        return dict(record_to_path_values(record)) if record is not None else {}
+    except (OSError, CadrumoError, AttributeError, LookupError):
+        _log.debug("active profile read failed during an auth probe; treating as empty", exc_info=True)
+        return {}
+
+
+def probe_clave_credentials(
+    provider_kind: AuthProviderKind | None,
+    *,
+    settings: Settings,
+    state: WorkflowState | None = None,
+) -> ClaveCredentials | None:
+    """Resolve the credentials a readiness probe should report on.
+
+    Routes through the same resolver the live session entry uses, so a
+    surface cannot report a credential as unconfigured that the session
+    entry would authenticate with. Unlike the session entry this never
+    refuses: an absent credential is the state being reported, not a
+    fault.
+    """
+    if provider_kind is None:
+        return None
+    return resolve_clave_credentials(
+        provider_kind,
+        settings=settings,
+        facts=clave_auth_facts_from_profile_values(_active_profile_path_values(state)),
+    )
+
+
 def _live_auth_identity_state(
     provider_kind: AuthProviderKind | None,
     *,
@@ -60,28 +107,26 @@ def _live_auth_identity_state(
 ) -> tuple[bool, bool, str]:
     if provider_kind is not AuthProviderKind.CLAVE_MOVIL:
         return False, provider_kind is AuthProviderKind.CERTIFICATE, "not_applicable"
-    try:
-        from ..user_profile import record_to_path_values
-        from ..workflow import workflow_state_repository
-
-        resolved_state = state if state is not None else workflow_state_repository().load()
-        record = resolved_state.active_profile_record()
-        values = record_to_path_values(record) if record is not None else {}
-        profile_tax_id = (values.get("identity.tax_id") or "").strip().upper()
-    except (OSError, CadrumoError, AttributeError, LookupError):
-        _log.debug("profile tax-id probe failed; treating as empty", exc_info=True)
-        profile_tax_id = ""
-    provider_identity = unwrap_optional_secret(settings.cadrumo_clave_movil_dni_nie).strip().upper()
-    alignment = _classify_identity_alignment(profile_tax_id, provider_identity)
-    return bool(profile_tax_id), bool(provider_identity), alignment
+    values = _active_profile_path_values(state)
+    facts = clave_auth_facts_from_profile_values(values)
+    credentials = resolve_clave_credentials(provider_kind, settings=settings, facts=facts)
+    provider_identity = credentials.dni_nie if credentials is not None else ""
+    alignment = _classify_identity_alignment(facts.tax_id, provider_identity)
+    return bool(facts.tax_id), bool(provider_identity), alignment
 
 
-def _live_auth_identity_kind(provider_kind: AuthProviderKind | None, *, settings: Settings) -> str:
+def _live_auth_identity_kind(
+    provider_kind: AuthProviderKind | None,
+    *,
+    settings: Settings,
+    state: WorkflowState | None = None,
+) -> str:
     if provider_kind is not AuthProviderKind.CLAVE_MOVIL:
         return ""
     from ...adapters.outbound.aeat.auth import ClaveMovilConfigurationError, classify_identity
 
-    identity = unwrap_optional_secret(settings.cadrumo_clave_movil_dni_nie).strip()
+    credentials = probe_clave_credentials(provider_kind, settings=settings, state=state)
+    identity = credentials.dni_nie if credentials is not None else ""
     try:
         return classify_identity(identity)
     except ClaveMovilConfigurationError:
@@ -428,7 +473,8 @@ def _probe_clave_movil_identity(*, settings: Settings | None = None) -> _Provide
     from ...adapters.outbound.aeat.auth import ClaveMovilConfigurationError, classify_identity
 
     resolved_settings = settings or load_settings()
-    raw = unwrap_optional_secret(resolved_settings.cadrumo_clave_movil_dni_nie).strip()
+    credentials = probe_clave_credentials(AuthProviderKind.CLAVE_MOVIL, settings=resolved_settings)
+    raw = credentials.dni_nie if credentials is not None else ""
     if not raw:
         return _ProviderProbeOutcome(
             result=ProviderProbeResult.IDENTITY_UNSET,
