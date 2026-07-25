@@ -691,6 +691,26 @@ def _production_live_test_opt_in_violations() -> list[str]:
 _MODULES = _discover_test_modules()
 
 
+def _unioned_marker_item_modules() -> tuple[Path, ...]:
+    """Return every test module whose per-item marker union must be asserted.
+
+    The per-item union is the marker set pytest actually resolves for a test:
+    the module-level ``pytestmark`` combined with the test's own decorators. It
+    is the only view that sees a module declaring one execution lane while a
+    decorator supplies another — the collision the runtime collection hook
+    rejects with a session-aborting :class:`pytest.UsageError`.
+
+    That view previously covered only :func:`project_test_modules`
+    (``dev`` and ``docs``), leaving every ``src/cadrumo`` test guaranteed only
+    *emergently*: the module-level check plus the function-level ban together
+    imply one lane per item, but only while both remain sighted. One of them
+    went blind to alias-bound decorators, which is how a two-lane module
+    reached main and aborted every collection. Asserting the union directly
+    over the whole tree does not depend on that composition holding.
+    """
+    return tuple(sorted({*project_test_modules(), *_MODULES}))
+
+
 @pytest.fixture(scope="module")
 def marker_policy_inventory() -> _MarkerPolicyInventory:
     campaign_metadata_violations: list[str] = []
@@ -784,11 +804,34 @@ def test_module_pytestmark_is_first_test_statement() -> None:
     assert not violations, "module pytestmark placement violations:\n" + "\n".join(violations)
 
 
-def test_project_test_items_resolve_to_single_execution_and_hex_marker() -> None:
+def test_unioned_marker_item_inventory_covers_the_package_tree() -> None:
+    """The per-item union is asserted over ``src/cadrumo``, not just ``dev``/``docs``.
+
+    Proves the widening is not vacuous. The module that aborted every
+    collection lived under ``src/cadrumo``, which the previous
+    :func:`project_test_modules` inventory did not reach, so the check that
+    would have caught it never ran on it.
+    """
+    inventory = _unioned_marker_item_modules()
+    package_modules = [path for path in inventory if _SRC_CADRUMO in path.parents]
+
+    assert package_modules, "the per-item union must reach the src/cadrumo tree"
+    # The dev/docs coverage the check started with is retained, not traded away.
+    assert set(project_test_modules()) <= set(inventory)
+
+
+def test_every_test_item_resolves_to_single_execution_and_hex_marker() -> None:
+    """Every test's resolved marker union carries exactly one execution lane.
+
+    Asserted directly over the whole tree rather than inferred from the
+    module-level and function-level checks agreeing; see
+    :func:`_unioned_marker_item_modules` for why the emergent form was not
+    enough.
+    """
     violations: list[str] = []
-    for module_path in project_test_modules():
+    for module_path in _unioned_marker_item_modules():
         violations.extend(_project_test_item_marker_violations(module_path))
-    assert not violations, "project test item marker violations:\n" + "\n".join(violations)
+    assert not violations, "test item marker violations:\n" + "\n".join(violations)
 
 
 def test_no_function_level_access_or_domain_markers(marker_policy_inventory: _MarkerPolicyInventory) -> None:
