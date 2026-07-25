@@ -98,6 +98,45 @@ was rejected for reversing a documented content-addressing invariant; this one
 uses that invariant exactly as designed — it changes what legitimately feeds an
 existing identity axis, not what identity means.
 
+
+### the-source-issue-route-does-not-fit-either | critical | third iteration, and the carrier is semantically wrong for this condition
+
+The mechanism recommended above was pressed further before being planned, and it
+does not survive either. Recording the reversal rather than leaving the earlier
+recommendation standing.
+
+`CalculationSourceIssue` cannot carry an evidence gap as it stands. Its `reason`
+is a closed `Literal` admitting exactly one value, and `binding_source` is
+required — an evidence gap has no binding source. Adopting this route therefore
+means widening a Literal AND relaxing a required field on a strict-frozen
+PERSISTED model that verification reads. That is a persisted-schema change on the
+filing path, carrying roundtrip and anti-tautology obligations, not the cheap
+re-use of an existing axis it first appeared to be.
+
+The semantic objection is the stronger one and is independent of cost. That model
+means, in its own words, a source observation that could not be consumed by any
+declared binding, and it explicitly exists to avoid misrepresenting such an
+observation as provenance for a computed output. A deductible row whose invoice
+is missing was CONSUMED — it contributed to the casilla value; what is absent is
+its supporting evidence, not its consumption. Forcing the condition into that
+envelope would state something false about the calculation, which is the precise
+misrepresentation the model was shaped to prevent.
+
+So the option space for dissolving the trap is now bounded and every branch is an
+architecture decision rather than an implementer's judgement: a discriminator
+inside revision identity (reserved to the operator by this ADR), a new persisted
+issue envelope of its own with its own roundtrip obligations, or widening an
+existing persisted model in a way that misdescribes the condition. There is no
+fourth route that is merely cheaper.
+
+That is the honest terminus of this investigation. Three designs were taken to
+the code and three failed for different structural reasons — the specified
+supersede on id collision, amendment on reachability, and this one on carrier
+semantics. The recurring cause is that revision identity is deliberately closed
+over tax facts, and evidence is deliberately outside it. Any recovery path must
+either reopen that boundary or add a record beside it, and choosing which is the
+decision the governing ADR reserved from the start.
+
 ## Recommendations
 
 The accepted ruling's chosen option should be superseded rather than built. It is

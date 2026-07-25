@@ -10,6 +10,16 @@ related:
   - '[[2026-07-25-evidence-revision-identity-operator-walkthrough-audit]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `evidence-revision-identity` plan
 
 - [x] `S01` - Refuse a DESCARTADO unit in create_work_unit with an instructive message naming its state and a real next step, in the WorkUnitMutationRefusedError shape the same module already uses eleven lines below, rather than returning the discarded unit and letting every downstream verb deny it exists; `src/cadrumo/application/modelo/_work_lifecycle.py`.
@@ -19,8 +29,8 @@ related:
 - [ ] `S05` - SUPERSEDED BY S08, the supersession event was scoped to a new verb, and PRESENTADO_SUPERSEDIDO already models supersession for the filed case across roughly a dozen surfaces; `no source change`.
 - [ ] `S06` - BLOCKED ON S03 OR S08, a refusal cannot name a recovery verb until one exists; `src/cadrumo/application/modelo/_export.py, src/cadrumo/locales/`.
 - [ ] `S07` - Convert the 72 directly-runnable display-only sequence frames weighted to the export and local filing verbs, and record why each of the 96 genuinely blocked frames cannot execute so display-only becomes a stated constraint rather than an unexamined default that hides the next dead end; `docs/_sequences/`.
-- [ ] `S08` - Record the deductible-evidence gap as a CalculationSourceIssue at calculate so it feeds the existing source_issues identity axis, making a post-attach recalculation derive a different revision id and dissolve the trap without a new verb; `src/cadrumo/application/modelo/_calculation_actions.py, src/cadrumo/application/modelo/_ledger_evidence_gate.py`.
-- [ ] `S09` - Obtain operator sign-off before S08 lands, because feeding the evidence gap into revision identity changes the id a recalculation derives for revisions that already exist, which is a behavioural change on filing-grade records the governing ADR reserves for the operator; `operator decision, governing ADR constraint`.
+- [ ] `S08` - BLOCKED ON OPERATOR, the source-issue route needs CalculationSourceIssue's closed reason Literal widened and its required binding_source relaxed on a strict-frozen persisted model verification reads, and that carrier means an observation no binding consumed, which misdescribes a deductible row that was consumed but lacks evidence; `see the supersede-implementation-findings audit, no source change`.
+- [ ] `S09` - OPERATOR DECISION, choose among the three bounded options for dissolving the evidence trap, a discriminator inside revision identity, a new persisted issue envelope with its own roundtrip obligations, or widening an existing persisted model in a way that misdescribes the condition, since no cheaper fourth route exists; `operator decision, governing ADR constraint`.
 ## Description
 
 Executes the accepted evidence-revision-identity decision, whose two halves have
