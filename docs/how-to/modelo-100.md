@@ -102,11 +102,13 @@ evidenced, and every carried figure must still point at the revision it was
 filed under. A blocked report names the dependency in the way - resolve it and
 re-run. See [Verify a draft filing](verification-reports.md).
 
-Export the verified declaration. The full evidence-to-export chain runs end to
-end, executed, on [Prepare a Modelo 303 IVA filing](modelo-303.md); here the
-export and the post-portal steps are shown as display frames, since the filed
-marker records a portal submission and the reconcile pull is a live read from
-AEAT:
+Export the verified declaration. Export is the local finish line. Recording the
+filed marker afterwards is optional and applies only while the obligation
+window is open; it is an internal note that you have already presented the file
+at the portal. The full evidence-to-export chain runs end to end, executed, on
+[Prepare a Modelo 303 IVA filing](modelo-303.md); here the export and the
+post-portal steps are shown as display frames, since the filed marker records a
+portal submission and the reconcile pull is a live read from AEAT:
 
 ```{cli-sequence} modelo-100-export-file
 ```

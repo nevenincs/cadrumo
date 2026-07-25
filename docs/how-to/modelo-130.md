@@ -140,18 +140,22 @@ revisions behave. In short:
 
 Once the draft verifies, export it. Export refuses until every
 deductible-expense row carries linked purchase-invoice evidence (see
-[Attach invoices and receipts](ledger-evidence.md)); this simple Modelo 130
-example omits that evidence, so the export and the post-portal filed marker are
-shown as display frames. The full evidence-to-export chain runs end to end,
-executed, on [Prepare a Modelo 303 IVA filing](modelo-303.md):
+[Attach invoices and receipts](ledger-evidence.md)), so this example registers
+the supplier invoice and attaches it before it calculates. Attach in that
+order: a draft bundles its evidence when you verify it, so an invoice attached
+afterwards does not reach the filing.
 
 ```{cli-sequence} modelo-130-export-file
 :verify: Confirm the export writes a local fichero and the filing stays local.
 ```
 
+Recording the filed marker is optional, and it applies only while the
+obligation window is open. Export is the local finish line; the marker is an
+internal note that you have already presented the file at the portal.
+
 Each computed casilla carries its formula, legal references, and source
 references; show them with the revision view or
-[review the calculation values](review-calculation-values.md). After you record
+[review the calculation values](review-calculation-values.md). If you recorded
 the marker, reconcile against the justificante (see
 [Reconcile a filing](reconcile.md)).
 
