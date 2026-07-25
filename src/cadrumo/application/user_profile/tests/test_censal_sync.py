@@ -25,6 +25,7 @@ from ....core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI
 from ....core.resources import resources
 from ....domain.buckets import BucketEventType
 from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact
+from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.secure_sql import isolated_profile_storage_root
 from ...workflow import WorkflowState
 from .. import (
@@ -40,7 +41,13 @@ from .._orchestration import profile_create_storage_span, register_active_profil
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE_ID = "5d5d5d5d-5d5d-4d5d-8d5d-5d5d5d5d5d5d"
-_SOURCE_URL = "https://www6.agenciatributaria.gob.es/wlpl/BUGC-JDIT/MdcAcceso"
+#: Source URL stamped on the fixture read. Nothing here asserts it — it only
+#: populates a required field — so the origin is deliberately the UNNUMBERED
+#: sede host rather than a numbered one. A numbered host is not invariant:
+#: the same path answers on one www{n}, 404s on several others, and bounces a
+#: session minted elsewhere on another, so pinning one in a fixture would
+#: encode the assumption the host-dispatch work exists to remove.
+_SOURCE_URL = aeat_url("sede", configured_path("sede_paths", "censal_datos"))
 
 
 @pytest.fixture(autouse=True)
