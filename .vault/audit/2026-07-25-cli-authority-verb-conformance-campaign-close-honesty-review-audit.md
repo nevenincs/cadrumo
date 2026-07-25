@@ -214,6 +214,33 @@ The vault check does not catch this: it validates frontmatter and links, not
 whether a record says anything. Structural completeness of records has to be
 asserted separately, which this review did by parsing section bodies.
 
+### closure-state-uncommitted | high | The committed plan understates completion by 31 Steps
+
+The campaign's closure commits landed execution records without the plan file.
+Commit `e081a4d0c7`, whose message states that it closes W03.P09 S84 through
+S89 with execution records, changed six record files and did not touch the
+plan. The same shape recurs across earlier closure commits.
+
+At HEAD the plan reads 122 closed and 132 open. In the working tree it reads
+153 closed and 106 open. Thirty-one closures therefore exist only as
+uncommitted working-tree state, twenty-seven of them authored by prior
+handovers of this campaign and four by this review.
+
+Two consequences. Anyone reading the repository at HEAD — including a future
+handover, and including the completion figures quoted in any close summary —
+sees a materially different campaign state from any agent's working tree. And
+the closure state is held only in an uncommitted file, so it is one careless
+working-tree operation away from being lost, while the evidence it depends on
+is already committed.
+
+The reconciliation in this review was computed against the working tree and
+reported 153 closures each backed by a substantive record, so the closures
+themselves are sound. What is missing is the commit that makes them durable
+and visible. This review deliberately did not commit the twenty-seven peer
+closures: they belong to their authoring handovers, and sweeping another
+agent's plan state under this SHA is the failure this campaign's own
+discipline forbids.
+
 ## Recommendations
 
 Each recommendation below is tracked as a Step with a verification gate, per
@@ -250,3 +277,9 @@ Add a structural assertion that an execution record carries a populated Outcome
 before its Step may be checked. The existing vault check passes empty
 scaffolds, so the honesty property this campaign depends on is currently
 enforced by author discipline alone. Ties to w06-evidence-not-produced.
+
+Commit the plan alongside the execution records in every closure commit, and
+land the 31 closures currently held only in the working tree. Any completion
+figure quoted from HEAD is understated until that happens. The 27 peer
+closures should be landed by their authoring handover rather than swept by a
+later one. Ties to closure-state-uncommitted.
