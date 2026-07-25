@@ -1,0 +1,42 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "preview-maritime-exemption"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.preview_maritime_exemption",
+        "notices": [],
+        "result": {
+          "casilla_values": {},
+          "observations": [],
+          "operation": "modelo.work.preview_maritime_exemption",
+          "retmar_mandatory_filing": false,
+          "retmar_registered": false,
+          "retmar_warning": null,
+          "vessel_flag": null,
+          "vessel_registry": null,
+          "waters_type": null,
+          "worker_class": null
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "review-values-maritime"
+}

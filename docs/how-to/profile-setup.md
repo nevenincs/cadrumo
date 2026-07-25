@@ -319,6 +319,7 @@ matches exactly what you confirmed.
 Script the same changes with the flag verbs:
 
 ```{cli-sequence} profile-setup-descendiente-verbs
+:verify: Confirm the descendiente count returns to zero after the removal.
 ```
 
 `add` takes one `--descendiente` per child as `KEY=VALUE` pairs separated by

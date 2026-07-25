@@ -1,9 +1,12 @@
 @step List the declared descendientes with their positions.
-@static aeat config profile descendiente list
-@blocked unconverted Runs clean in the sandbox probe; nothing blocks it, so it awaits conversion.
+aeat --format json config profile descendiente list
+@expect result.total == 0
 @step Add one descendiente as comma-separated KEY=VALUE pairs.
-@static aeat config profile descendiente add --descendiente NACIMIENTO=2018-04-01,DISCAPACIDAD=0,CONVIVENCIA=true
-@blocked unconverted Runs clean in the sandbox probe; nothing blocks it, so it awaits conversion.
+aeat --format json config profile descendiente add --descendiente NACIMIENTO=2018-04-01,DISCAPACIDAD=0,CONVIVENCIA=true
+@expect result.added == 1
+@expect result.total == 1
 @step Remove the descendiente at position 0.
-@static aeat config profile descendiente remove 0
-@blocked unconverted Runs clean in the sandbox probe; nothing blocks it, so it awaits conversion.
+@result aeat --format json config profile descendiente remove 0
+@expect result.removed_index == 0
+@expect result.total == 0
+@expect exit_code == 0

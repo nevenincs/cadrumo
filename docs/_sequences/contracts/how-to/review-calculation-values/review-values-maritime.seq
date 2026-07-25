@@ -1,3 +1,5 @@
 @step Preview the IRPF exemption for maritime workers.
-  @static aeat app modelo work preview-maritime-exemption
-@blocked unconverted Runs clean in the sandbox probe; nothing blocks it, so it awaits conversion.
+@result aeat --format json app modelo work preview-maritime-exemption
+@expect result.operation == "modelo.work.preview_maritime_exemption"
+@expect result.retmar_registered == false
+@expect exit_code == 0

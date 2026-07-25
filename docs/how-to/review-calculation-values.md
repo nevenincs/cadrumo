@@ -223,6 +223,7 @@ For specialized calculations, the CLI provides evaluation and comparison command
   the IRPF exemption for maritime workers (Art. 7.p LIRPF or REBECA 50%):
   
   ```{cli-sequence} review-values-maritime
+  :verify: Confirm the preview reports the RETMAR registration state.
   ```
   
   The command shows which tax boxes are affected by the exemption and the
