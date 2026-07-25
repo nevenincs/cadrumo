@@ -21,8 +21,10 @@ from ....domain.calculations.registry import CensoModeloEventKind
 from .._censo_036_pull import (
     CENSO_FILED_ON_FACT_PATH,
     CENSO_STATUS_FACT_PATH,
+    causa_casilla_event_kinds,
     censo_facts_from_filed_036,
     classify_censal_event,
+    classify_from_causa_casillas,
     current_censal_state,
     filed_036_declarations,
 )
@@ -156,3 +158,53 @@ def test_the_status_fact_uses_the_path_the_registry_binding_reads() -> None:
     a value nothing populates.
     """
     assert CENSO_STATUS_FACT_PATH == "censo.status"
+
+
+# ── causa-casilla classification (the grounded tier) ────────────────────────
+
+
+def test_every_published_causa_casilla_is_mapped_to_a_lifecycle_tipo() -> None:
+    """All 29 causas from AEAT's PÁGINA 1 table resolve to a tipo.
+
+    The count is the AEAT-published table's own, so a causa added to the
+    registry without its TIPO section — or dropped altogether — fails here
+    rather than silently classifying a filing as a modificación.
+    """
+    mapping = causa_casilla_event_kinds()
+    assert len(mapping) == 29
+    assert set(mapping.values()) == set(CensoModeloEventKind)
+
+
+def test_the_mapping_matches_the_published_table_at_its_boundaries() -> None:
+    """Spot-check the rows that define each tipo's range."""
+    mapping = causa_casilla_event_kinds()
+    assert mapping["110"] is CensoModeloEventKind.ALTA
+    assert mapping["111"] is CensoModeloEventKind.ALTA
+    assert mapping["122"] is CensoModeloEventKind.MODIFICACION
+    assert mapping["146"] is CensoModeloEventKind.MODIFICACION
+    assert mapping["150"] is CensoModeloEventKind.BAJA
+
+
+def test_a_baja_causa_outranks_an_alta_ticked_on_the_same_form() -> None:
+    """A baja ends the enrolment whatever else the form changes."""
+    assert classify_from_causa_casillas(["111", "150"]) is CensoModeloEventKind.BAJA
+
+
+def test_an_alta_outranks_a_modificacion_ticked_alongside_it() -> None:
+    """Modificación only amends an enrolment, so it yields to the alta."""
+    assert classify_from_causa_casillas(["111", "122"]) is CensoModeloEventKind.ALTA
+
+
+def test_no_recognisable_causa_returns_none_rather_than_a_guess() -> None:
+    """The caller must be able to tell evidence from fallback."""
+    assert classify_from_causa_casillas([]) is None
+    assert classify_from_causa_casillas(["999"]) is None
+
+
+def test_the_grounded_tier_needs_no_prose_at_all() -> None:
+    """A modificación is classified from its number, not its wording.
+
+    Casilla 122 is 'Modificación domicilio fiscal'; the number alone is
+    enough, which is the whole advantage over reading the register's prose.
+    """
+    assert classify_from_causa_casillas(["122"]) is CensoModeloEventKind.MODIFICACION

@@ -1,0 +1,542 @@
+# Causa-de-presentación casillas, PÁGINA 1 of the Modelo 036.
+#
+# Numbers and labels are transcribed verbatim from the AEAT-published
+# "Instrucciones Modelo 036", Anexo 3, PÁGINA 1, table columns
+# TIPO / CASILLA / CAUSA DE PRESENTACIÓN, bundled in the corpus at
+#   _data/corpus/aeat_official/instructions/modelo_036/files/
+#     instrucciones-cumplimentacion-pagina-1.html
+#
+# Each is a tick box on the printed form and is therefore boolean and
+# optional: a declaration ticks only the causas that motivate it, and the
+# instructions are explicit that "se deberán rellenar exclusivamente las
+# casillas que sufran alguna modificación". They are `manual` rather than
+# `bound` because their value comes from the filed declaration itself
+# (operator-entered, or lifted by the declaracion-pdf extraction profile),
+# not from a profile fact.
+#
+# The TIPO column is what makes these load-bearing: it maps each causa onto
+# the alta / modificación / baja lifecycle, which is how a filed 036 is
+# classified without reading prose. That mapping lives with the code that
+# consumes it, keyed on these numbers.
+
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.causa-110"
+number = "110"
+label = "Solicitud de Número de Identificación Fiscal (NIF)"
+section = ["declaracion", "causas", "alta"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.causa-111"
+number = "111"
+label = "Alta en el censo de empresarios, profesionales y retenedores"
+section = ["declaracion", "causas", "alta"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.causa-120"
+number = "120"
+label = "Solicitud de NIF definitivo, disponiendo de NIF provisional"
+section = ["declaracion", "causas", "modificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.causa-144"
+number = "144"
+label = "Solicitud de rehabilitación de NIF"
+section = ["declaracion", "causas", "modificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.causa-121"
+number = "121"
+label = "Solicitud de nueva tarjeta acreditativa del NIF"
+section = ["declaracion", "causas", "modificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.causa-142"
+number = "142"
+label = "Modificación y baja de datos de teléfonos y direcciones electrónicas para recibir avisos de la AEAT, TEA Y DGT. (páginas 2A, 2B y 2C)"
+section = ["declaracion", "causas", "modificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.causa-122"
+number = "122"
+label = "Modificación domicilio fiscal. (páginas 2A, 2B y 2C)"
+section = ["declaracion", "causas", "modificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.causa-123"
+number = "123"
+label = "Modificación domicilio social o de gestión administrativa. (páginas 2A y 2B)"
+section = ["declaracion", "causas", "modificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.causa-124"
+number = "124"
+label = "Modificación y baja domicilio a efectos de notificaciones. (páginas 2A, 2B y 2C)"
+section = ["declaracion", "causas", "modificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.causa-125"
+number = "125"
+label = "Modificación de otros datos identificativos/dominio. (páginas 2A, 2B y 2C)"
+section = ["declaracion", "causas", "modificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.causa-126"
+number = "126"
+label = "Modificación datos representantes (página 3)"
+section = ["declaracion", "causas", "modificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.causa-127"
+number = "127"
+label = "Modificación datos relativos a actividades económicas y locales (página 4)"
+section = ["declaracion", "causas", "modificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.causa-128"
+number = "128"
+label = "Modificación de la condición de Gran Empresa o Admón. Pública de presupuesto superior a 6.000.000 de euros (página 5)"
+section = ["declaracion", "causas", "modificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.causa-129"
+number = "129"
+label = "Solicitud de alta/baja en el registro de devolución mensual (página 5)"
+section = ["declaracion", "causas", "modificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.causa-130"
+number = "130"
+label = "Solicitud de alta/baja en el registro de operadores intracomunitarios (página 5)"
+section = ["declaracion", "causas", "modificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.causa-143"
+number = "143"
+label = "Comunicación de opción y renuncia a la llevanza de los Libros registro del IVA a través de la Sede electrónica de la AEAT (página 5)"
+section = ["declaracion", "causas", "modificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.causa-131"
+number = "131"
+label = "Modificación datos relativos al Impuesto sobre el Valor Añadido (página 5)"
+section = ["declaracion", "causas", "modificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.causa-132"
+number = "132"
+label = "Modificación datos relativos al Impuesto sobre la Renta de las Personas Físicas (página 6)"
+section = ["declaracion", "causas", "modificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.causa-133"
+number = "133"
+label = "Modificación datos relativos al Impuesto sobre Sociedades (página 6)"
+section = ["declaracion", "causas", "modificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.causa-134"
+number = "134"
+label = "Modificación datos relativos al Impuesto sobre la Renta de no Residentes correspondiente a establecimientos permanentes o a entidades en atribución de rentas constituidas en el extranjero con presencia en territorio español (página 6)"
+section = ["declaracion", "causas", "modificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.causa-135"
+number = "135"
+label = "Opción/renuncia por el Régimen fiscal especial del Título II de la Ley 49/2002 (página 6)"
+section = ["declaracion", "causas", "modificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.causa-136"
+number = "136"
+label = "Modificación datos relativos a retenciones e ingresos a cuenta (página 7)"
+section = ["declaracion", "causas", "modificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.causa-137"
+number = "137"
+label = "Modificación datos relativos a otros Impuestos (página 7)"
+section = ["declaracion", "causas", "modificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.causa-138"
+number = "138"
+label = "Modificación datos relativos a regímenes especiales del comercio intracomunitario (página 7)"
+section = ["declaracion", "causas", "modificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.causa-139"
+number = "139"
+label = "Modificación datos relativos a la relación de socios, miembros o partícipes (página 8)"
+section = ["declaracion", "causas", "modificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.causa-145"
+number = "145"
+label = "Modificación de datos relativos a Titulares reales (página 10)"
+section = ["declaracion", "causas", "modificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.causa-146"
+number = "146"
+label = "Modificación entidades en liquidación."
+section = ["declaracion", "causas", "modificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.causa-140"
+number = "140"
+label = "Dejar de ejercer todas las actividades empresariales y/o profesionales (personas jurídicas y entidades, sin liquidación. Entidades inactivas)"
+section = ["declaracion", "causas", "modificacion"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+
+[[revisions."2025-02-03-y-siguientes".casillas]]
+id = "decl.causa-150"
+number = "150"
+label = "Baja en el censo de empresarios, profesionales y retenedores"
+section = ["declaracion", "causas", "baja"]
+data_type = "boolean"
+required = false
+input_kind = "manual"
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+    "orden-hac-1526-2024:art-1",
+]
+source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]

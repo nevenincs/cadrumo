@@ -17,14 +17,22 @@ taxpayer's own filed declaration out of their own expediente history is a
 pure read of filed evidence — the same class as every justificante pull
 that already ships, and subject to the same read gate.
 
-Scope, stated honestly: the register row carries the filing's identity and
-lifecycle (which 036 was filed, when, its expediente, and whether it was an
-alta, a modificación or a baja). That is what this module derives. The
-richer censal detail *inside* the declaration — epígrafes IAE, domicilio,
-obligaciones, regímenes — lives in the declaration PDF, and extracting it
-needs the ``modelo-036-declaracion-pdf`` extraction profile to declare those
-target casillas; today it declares exactly one. Deriving what the register
-genuinely carries, and not pretending to the rest, is the point.
+Classification has two tiers, and the module never blurs them. When the
+ticked causa-de-presentación boxes are known, the lifecycle is read from
+AEAT's own numbering: the 036 revision declares all 29 causas from PÁGINA 1
+with their published numbers, and the TIPO column rides on each casilla's
+section path, so classification is registry lookup rather than
+interpretation. The declarations register does not report those boxes — it
+lists that a filing happened, not what the form said — so a row read from
+the register falls back to classifying its causa prose.
+
+Scope, stated honestly: this derives the filing's identity and lifecycle.
+The richer censal detail *inside* the declaration — epígrafes IAE,
+domicilio, obligaciones, regímenes — lives on later pages of the PDF, and
+lifting it needs the ``modelo-036-declaracion-pdf`` extraction profile to
+declare those target casillas against the bundled diseño de registro.
+Deriving what is genuinely available, and not pretending to the rest, is
+the point.
 
 See Also:
     :mod:`cadrumo.application.modelo._m036_lifecycle`
@@ -75,11 +83,75 @@ class Filed036Declaration(BaseModel):
     presented_at: datetime
 
 
-def classify_censal_event(*, tipo_solicitud: str | None, observaciones: str | None) -> CensoModeloEventKind:
-    """Classify a filed 036 as an alta, a modificación, or a baja.
+_CAUSA_CASILLA_PREFIX: Final[str] = "decl.causa-"
 
-    AEAT labels the causa de presentación on the register row rather than
-    exposing it as a code, so the classification reads that prose. The
+#: Lifecycle precedence when a declaration ticks causas of several tipos.
+#: A baja ends the enrolment whatever else the same form changes, and an
+#: alta establishes it; modificación only ever amends an enrolment that
+#: already exists, so it yields to both.
+_EVENT_KIND_PRECEDENCE: Final[tuple[CensoModeloEventKind, ...]] = (
+    CensoModeloEventKind.BAJA,
+    CensoModeloEventKind.ALTA,
+    CensoModeloEventKind.MODIFICACION,
+)
+
+_EVENT_KIND_BY_VALUE: Final[dict[str, CensoModeloEventKind]] = {kind.value: kind for kind in CensoModeloEventKind}
+"""Lookup from a registry section leaf to its lifecycle member."""
+
+
+def causa_casilla_event_kinds() -> dict[str, CensoModeloEventKind]:
+    """Map each causa-de-presentación casilla number onto its lifecycle tipo.
+
+    Derived from the registry rather than restated here. The 036 revision
+    declares every causa casilla with AEAT's own number and carries the
+    TIPO column as the leaf of its ``section`` path, so the mapping is
+    registry data; hardcoding a second copy would be a regulatory value
+    inlined at a call site, and would drift the moment AEAT adds a causa.
+    """
+    from ...domain.calculations.registry import bundled_authority
+
+    definition = bundled_authority().validate_modelo(Modelo.M036.value)
+    mapping: dict[str, CensoModeloEventKind] = {}
+    for revision in definition.revisions.values():
+        for casilla in revision.casillas:
+            if not casilla.id.startswith(_CAUSA_CASILLA_PREFIX):
+                continue
+            # The section leaf IS the enum value: registry section parts are
+            # snake_case ASCII (a schema-hygiene gate enforces it), which is
+            # exactly the spelling CensoModeloEventKind uses. So this is an
+            # equality lookup, not prefix guessing.
+            tipo = casilla.section[-1]
+            if tipo in _EVENT_KIND_BY_VALUE:
+                mapping[casilla.number] = _EVENT_KIND_BY_VALUE[tipo]
+    return mapping
+
+
+def classify_from_causa_casillas(ticked: Sequence[str]) -> CensoModeloEventKind | None:
+    """Classify a filing from the causa casillas its declaration ticks.
+
+    This is the grounded classification: AEAT numbers each causa on
+    PÁGINA 1 and the registry records which lifecycle tipo each number
+    belongs to, so a declaration that reports its ticked boxes needs no
+    prose reading at all.
+
+    Returns ``None`` when nothing recognisable was ticked, so the caller
+    can fall back rather than receive a guess dressed as evidence.
+    """
+    mapping = causa_casilla_event_kinds()
+    kinds = {mapping[number] for number in ticked if number in mapping}
+    if not kinds:
+        return None
+    return next(kind for kind in _EVENT_KIND_PRECEDENCE if kind in kinds)
+
+
+def classify_censal_event(*, tipo_solicitud: str | None, observaciones: str | None) -> CensoModeloEventKind:
+    """Classify a filed 036 from the register row's prose.
+
+    The fallback path. Prefer :func:`classify_from_causa_casillas` whenever
+    the ticked causa boxes are available: those are AEAT's own numbering
+    and need no interpretation. The declarations register does not carry
+    them — it reports a filing, not the form's contents — so a row read
+    from the register is classified from the causa prose it does carry. The
     default is :attr:`CensoModeloEventKind.MODIFICACION`, deliberately: an
     unrecognised label most likely describes a change to an existing
     enrolment, and guessing ALTA would assert a first enrolment that may
@@ -180,8 +252,10 @@ __all__ = [
     "CENSO_FILED_ON_FACT_PATH",
     "CENSO_STATUS_FACT_PATH",
     "Filed036Declaration",
+    "causa_casilla_event_kinds",
     "censo_facts_from_filed_036",
     "classify_censal_event",
+    "classify_from_causa_casillas",
     "current_censal_state",
     "filed_036_declarations",
     "pull_filed_036",
