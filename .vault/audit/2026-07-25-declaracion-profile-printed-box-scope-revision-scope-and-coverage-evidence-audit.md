@@ -325,6 +325,43 @@ self-checking; its truth rests entirely on the reworked round-trip and verificat
 tests, which is an argument for resolving the arbitration properly rather than for
 flipping the flag.
 
+### id-footprint-is-not-the-break-surface | critical | A literal-id walk finds only 3 of the 12 modules that actually break
+
+The 24-module and 40-TOML id census is authoritative for the *id footprint* and must not be
+used as the *break surface*. Re-derived by explicit file walk over `src/cadrumo` and `dev`,
+testing each of the six ids as a literal Python `in` (never a shell regex, where every dot
+is a wildcard), the counts confirm exactly: 24 `.py`, 40 `.toml`, 4 `.md`.
+
+But only 3 of those 24 modules are in the declaración subsystem that the layout change
+actually breaks: the parser-boundary support module, the primitive anti-tautology proof, and
+the fixture generator. The other 9 affected modules — the current-template expectations
+module, the shared parser-boundary support module holding the misnamed real-copy constant,
+the verification-chain support module, three parser-boundary test modules, two
+verification-chain M303 test modules, and the generator driver — reference the ids
+**only through imported symbols**, so a literal-id search cannot see them.
+
+The carrier symbols are the two profile-casilla frozensets, the historical expected table,
+the primitive-computing helper and its typed dict, the corpus-fixture tuple, the draw
+function, the extraction helper, the computed-casilla set, and the resultado-consistency
+assertion. Enumerating the break surface requires walking consumers of *those symbols*, not
+the ids. A plan sized from the id census alone would miss three quarters of the modules it
+has to touch. Conversely, the current-template expectations module carrying 48 expected
+values contains **no** six-id literal at all — its absence from the id census is itself
+independent confirmation that none of those 48 entries measures the dropped layout.
+
+### shared-extraction-helper-couples-six-other-modelos | high | Re-sourcing the anti-tautology proof must not change a helper seven modelos depend on
+
+The extraction helper the anti-tautology proof calls is shared by the verification-chain
+tests for Modelos 111, 115, 123, 130, 131, and 390 as well as 303. The computed-casilla set
+for M303 is shared across three modules, and the resultado-consistency assertion across two.
+
+None of those six other modelos is affected by the M303 profile change itself — their
+profiles are untouched. The risk is in the remedy: the recommended fix for the
+anti-tautology proof is to stop sourcing its primitive from the parse. If that is done by
+altering the shared helper's contract rather than by giving the proof its own
+calculate-path input, the change reaches six unrelated modelos' verification gates. The
+proof needs a new input path of its own; the shared helper should be left alone.
+
 ## Recommendations
 
 Correct the ADR's re-measured section to state that the 2009 profile names five ids, not
@@ -367,6 +404,15 @@ If both revisions are re-scoped, land them in one commit to avoid the shared-sup
 straddle. If only the current revision is re-scoped, the fixture generator's edit takes a
 different shape, gating the legacy primitive draws instead of deleting them, and that
 difference must be stated explicitly in the plan.
+
+Size the plan from the carrier symbols, not from the id census. Walk consumers of the two
+frozensets, the expected tables, the generator's primitive helper, the extraction helper,
+and the resultado-consistency assertion. The id census stays the right instrument for
+answering "which registry data mentions these casillas"; it is the wrong instrument for
+"which modules break".
+
+Give the anti-tautology proof its own calculate-path input rather than changing the shared
+extraction helper, which six other modelos' verification-chain tests depend on.
 
 The open decision itself is not recorded here. It is a single choice for the operator:
 re-scope both M303 revisions in one change, or re-scope only the current revision and
