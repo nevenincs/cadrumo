@@ -140,12 +140,15 @@ PROFILE_BOUND_WRITE_VERB_PATHS: tuple[str, ...] = (
     "app ledger rule apply",
     "app ledger ratios set",
     "app ledger ratios unset",
-    "app ledger payable-invoice add",
-    "app ledger payable-invoice update",
-    "app ledger payable-invoice remove",
-    "app ledger collectible-invoice add",
-    "app ledger collectible-invoice update",
-    "app ledger collectible-invoice remove",
+    # The payable/collectible invoice verbs collapsed into one ``invoice``
+    # family discriminated by ``--kind``; the guard catalogue kept the
+    # pre-collapse spellings, so every invoice mutation fell out of the
+    # profile-bound write guard and was answered NON_PROFILE_BOUND_VERB.
+    # Only the mutating leaves are listed: a bare ``app ledger invoice``
+    # prefix would also capture ``list``/``view``.
+    "app ledger invoice add",
+    "app ledger invoice update",
+    "app ledger invoice remove",
     "app ledger inventory create",
     "app ledger inventory movement add",
     "app ledger inventory valuation preview",
