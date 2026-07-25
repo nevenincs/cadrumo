@@ -107,6 +107,50 @@ clean. Whether a reproducibility probe should also cover a proposed capture chai
 (as opposed to only an already-runnable frame) is open, and is the axis on which
 those twenty-four would be settled.
 
+**Settled 2026-07-25 by a cheaper measurement than the probe.** The residue did
+not need a reproducibility probe to resolve: a capture chain can only draw from a
+frame that runs EARLIER IN ITS OWN SEQUENCE, so counting preceding executed
+frames answers the question directly. Twenty-two of the twenty-four have NO
+preceding executed frame at all, which makes the claim false as stated for all
+twenty-two — there is nothing in-sequence to capture from, and conversion would
+mean authoring a whole new setup chain rather than annotating a capture. Exactly
+one of the twenty-four is a genuine candidate.
+
+The twenty-four decompose as:
+
+- **1 genuine capture candidate** — `troubleshooting/troubleshooting-auth-diagnostics`
+  frame 1 needs `<diagnostic-id>` and does have a preceding executed frame.
+- **16 need a new setup chain authored** — locally-derivable ids
+  (`work-unit-id`, `calculation-revision-id`, `verification-report-id`,
+  `filing-record-id`, `bundle-id`, `relation-id`, `run-id`) with no producing
+  frame in their sequence; nine of these are the `filing-spine` address-by-id
+  family.
+- **4 are pure teaching metavariables** — `<profile-name>`, `<value>`,
+  `<sum-from-303>`, `<ID>=<VALUE>`. These are illustrative prose, never a
+  captured value, so "unconverted" mis-frames them: they are not awaiting
+  conversion.
+- **3 are misclassified and need an externally-owned id** — the two
+  `modelo-036` records need an AEAT `<acuse>`, and `modelo-390-records-audit`
+  frame 1 needs a `<justificante-or-capture-id>`. These belong under
+  `live-aeat` / `operator-artifact`, not `unconverted`; correcting the code
+  lowers the ratchet honestly rather than by conversion.
+
+So the optimistic reading was wrong for 23 of 24 — the same direction as the
+participation frame, and for the same reason: a positive claim about a conversion
+that was never attempted. The open probe-scope question is therefore not blocking
+this residue. It remains open only for already-runnable frames.
+
+Measurement: `dev.docs.sequences.discover_sequences` over the live corpus in this
+checkout, reading each frame's own `blocked.code` and counting non-`STATIC`
+predecessors per sequence. Reconciliation: 185 static frames total, 87 declared
+`unconverted` (equal to the per-page sum committed in
+`unconverted_static_baseline.json`), of which exactly 24 carry a metavariable —
+confirming the figure above from the parser rather than from this document. A
+first pass counting metavariable frames across ALL blocker codes returned 47; that
+is a different question (it includes 15 `external-service`, 7 `live-aeat` and 1
+`sandbox-posture` frames already correctly blocked for other reasons), not a
+contradiction.
+
 The cost of a second run per frame was not measured against the docs-build
 budget. The sweep's own two-run pass covered 66 frames across 34 sequences
 without difficulty, but a per-refresh default multiplies every author's cycle and
