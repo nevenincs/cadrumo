@@ -1260,8 +1260,8 @@ type = "enum"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Taxpayer sex for Modelo 100."
-enum_values = ["1", "2"]
+description = "Sexo del contribuyente para el Modelo 100. Toma los valores del tipo tipo_Sexo del diseno de registro: H (hombre) y M (mujer)."
+enum_values = ["H", "M"]
 model_selectors = ["taxpayer.sex"]
 
 [[sections.fields]]
@@ -1391,8 +1391,8 @@ type = "enum"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Spouse sex for Modelo 100."
-enum_values = ["1", "2"]
+description = "Sexo del conyuge para el Modelo 100. Toma los valores del tipo tipo_Sexo del diseno de registro: H (hombre) y M (mujer)."
+enum_values = ["H", "M"]
 model_selectors = ["spouse.sex"]
 
 [[sections.fields]]
