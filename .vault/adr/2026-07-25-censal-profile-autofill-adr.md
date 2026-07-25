@@ -154,3 +154,17 @@ profile created before this record has no `auth` section and falls back
 to settings, which is the pre-existing behaviour. The censal reader is
 new attack surface against a live authority: it earns its place only with
 the no-write proof, and without that proof it must not ship.
+
+Deleting the register-based pull surfaced a typed-boundary hole that is
+independent of this record and outlives it. The pull wrote a fact at
+`censo.filed_on`, a path the user-profile schema does not declare, and
+stamped it `censo_filed_036`, a token absent from the schema's declared
+provenance enum (`manual_cli`, `setup_wizard`, `modelo_036_import`,
+`aeat_censo_read`, `registry_inference`). Both values passed every gate.
+`UserProfileFact.source` is a length-constrained `str` rather than that
+enum, so the declared value set is documentation at the boundary and not
+a constraint; and nothing cross-checks a fact's `path` against the
+schema's declared field set either. Neither escape was loud, and only
+the surface's total absence of output kept them from reaching a profile.
+Closing this is a follow-up in its own right: it applies to every writer
+of a profile fact, whatever becomes of D3.

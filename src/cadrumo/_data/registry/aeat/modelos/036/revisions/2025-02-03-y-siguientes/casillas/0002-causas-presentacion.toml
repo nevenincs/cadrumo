@@ -14,10 +14,13 @@
 # (operator-entered, or lifted by the declaracion-pdf extraction profile),
 # not from a profile fact.
 #
-# The TIPO column is what makes these load-bearing: it maps each causa onto
-# the alta / modificación / baja lifecycle, which is how a filed 036 is
-# classified without reading prose. That mapping lives with the code that
-# consumes it, keyed on these numbers.
+# The TIPO column rides on each casilla's section path, mapping every causa
+# onto the alta / modificación / baja lifecycle. That is what would let a
+# filed 036 be classified from its ticked boxes rather than from prose.
+# Nothing consumes that mapping today: the reader that did was deleted once
+# a live authenticated walk proved the declarations register carries no 036
+# rows at all. These casillas are kept as the transcribed AEAT form itself,
+# grounded and ready for whichever surface reads a filed 036 next.
 
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.causa-110"
