@@ -98,6 +98,27 @@ def _read(
     )
 
 
+def _placeholder_for(field: object) -> str:
+    """Return a value the schema will accept for one required field.
+
+    Derived from the field's declared type rather than a fixed string. A
+    literal ``"placeholder"`` is only valid for free-text fields: the schema
+    binds enum fields to their declared value set, so a required enum filled
+    with arbitrary text is refused at registration — before any test's own
+    subject is reached, which makes the failure look like the code under test
+    rather than the fixture.
+    """
+    declared = tuple(getattr(field, "enum_values", None) or ())
+    if declared:
+        return str(declared[0])
+    return {
+        "boolean": "true",
+        "date": "2020-01-01",
+        "decimal": "0",
+        "integer": "0",
+    }.get(str(getattr(field, "type", "")), "placeholder")
+
+
 def _required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFact, ...]:
     facts: list[UserProfileFact] = []
     for section in schema.sections:
@@ -107,7 +128,8 @@ def _required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFact, .
             if not field.required:
                 continue
             path = f"{section.key}.{field.key}"
-            facts.append(UserProfileFact(path=path, value=_PROFILE_NIF if path == "identity.tax_id" else "placeholder"))
+            value = _PROFILE_NIF if path == "identity.tax_id" else _placeholder_for(field)
+            facts.append(UserProfileFact(path=path, value=value))
     return tuple(facts)
 
 
@@ -324,6 +346,44 @@ class TestReconciliation:
             )
             assert "contact.postcode" not in {fact.path for fact in outcome.adopted}
             assert ("contact.postcode", aeat_postcode) in outcome.divergences
+
+    def test_an_app_written_clear_does_not_earn_the_operators_protection(
+        self,
+        schema: ProfileSchemaDefinition,
+    ) -> None:
+        """A clear this app wrote is not a declaration to protect.
+
+        The value branch already asked who wrote a value before deciding
+        whether to refresh it; the clear branch did not ask at all, so any
+        cleared path counted as the operator's answer regardless of who
+        cleared it. That would strand the path forever on the strength of a
+        deletion the operator never performed, reporting a divergence at
+        every pull.
+
+        The sibling case above is the other direction and both are needed:
+        the previous behaviour was correct for an operator's clear, so a
+        test of only this direction could be satisfied by dropping the
+        protection entirely.
+        """
+        with profile_create_storage_span(_PROFILE_ID) as routing:
+            state = _register(schema, routing)
+            state = set_active_fields(
+                state,
+                (UserProfileFact(path="contact.postcode", value="08032", source=CENSO_SOURCE_TAG),),
+            )
+            state = set_active_fields(
+                state,
+                (UserProfileFact(path="contact.postcode", value=None, source=CENSO_SOURCE_TAG),),
+            )
+
+            outcome = reconcile_censal_read(
+                state.active_profile_record(schema=schema),
+                censal_facts_from_read(_read(codigo_postal="08033")),
+                incoming_identity=_PROFILE_NIF,
+            )
+
+            assert "contact.postcode" in {fact.path for fact in outcome.adopted}
+            assert "contact.postcode" not in {axis for axis, _ in outcome.divergences}
 
 
 class TestIdentityOwnership:
