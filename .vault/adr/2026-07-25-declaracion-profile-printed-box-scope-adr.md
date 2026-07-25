@@ -145,7 +145,7 @@ Two things the paragraph above does not capture, both of which change the work:
 - **There are TWO M303 extraction profiles, not one.** Both
   `303/revisions/2023-y-siguientes/extraction_profiles/0001-modelo-303-declaracion-pdf.toml`
   and `303/revisions/2009-y-siguientes/extraction_profiles/0001-modelo-303-declaracion-pdf.toml`
-  name the six ids. The Implementation says "The profile drops ..." in the
+  carry these targets. The Implementation says "The profile drops ..." in the
   singular; dropping the targets from only the current revision leaves the
   2009 revision asserting printed boxes the form does not print — the very
   defect this decision exists to remove, preserved in the older revision.
@@ -153,12 +153,41 @@ Two things the paragraph above does not capture, both of which change the work:
   left (with a stated reason) is a decision this ADR should make explicitly
   before a plan is written against it.
 
-Method note: two earlier attempts at this measurement were wrong in opposite
-directions — one used unescaped `.` in a regex (dots matched any character,
-inflating per-id counts), the other misplaced `--include` so every file type was
-searched (reporting 93 modules). Both were instrument defects, not findings. The
-figures above come from the explicit single pass described, which is why they are
-stated with the method attached.
+  **CORRECTION (same day).** An earlier revision of this paragraph said both
+  profiles "name the six ids". That is wrong, and the difference changes the
+  work. Parsed from the `target_casillas` tables: the 2023 profile carries **18**
+  targets including all six; the 2009 profile carries **9** targets including only
+  **five** — `iva.autoconsumo.promotor.base` is absent from it, and the underlying
+  casilla does not exist anywhere in the 2009 revision (zero files mention
+  `autoconsumo`, against one in 2023). Post-drop the target lists become **12**
+  and **4**. So option (A), re-scoping both, removes six ids from one profile and
+  five from the other, and touches no autoconsumo concept in 2009 because there is
+  none to touch.
+
+### The `min_coverage` floor, which the Implementation mandates restating but leaves unnumbered
+
+`min_coverage` is a FRACTION (`Field(ge=0, le=1)`), values over targets. It sits
+at `"1"` today, so every declared target must yield a value — which is why the
+four real annex renders score 0.667 / 0.611 / 0.611 / 0.556 and are all refused.
+
+Measured against the post-drop list of 12 targets, the same four renders score
+**1.0000 / 0.9167 / 0.9167 / 0.8333**. The highest floor all four quarters satisfy
+is therefore **10/12 ≈ 0.8333**, floored by 4T. Anything above that re-arms 4T;
+anything above 11/12 also re-arms 2T and 3T.
+
+The trap this closes: the synthetic corpus scores 1.0 at ANY floor, so leaving
+`min_coverage` at `"1"` keeps the whole suite green while preserving the exact
+defect this decision exists to remove. **The floor cannot be validated by the
+synthetic corpus** — only the annex renders can move it.
+
+Method note: three earlier attempts at these measurements were wrong, none of them
+a finding about the code. One used unescaped `.` in a regex (dots matched any
+character, inflating per-id counts); one misplaced `--include` so every file type
+was searched (reporting 93 modules); and one guessed the profile schema's key
+names (`targets`/`binding_id`) and returned zero targets for both revisions, which
+would have read as "neither profile carries these ids" had it not been obviously
+absurd. The figures above come from parsing the real `target_casillas` tables with
+`tomllib`, which is why each is stated with its method attached.
 
 ## Rationale
 
