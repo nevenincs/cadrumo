@@ -84,11 +84,13 @@ _CLAIM_PATTERNS: Final[tuple[tuple[str, re.Pattern[str], tuple[str, ...]], ...]]
     ),
     (
         "brew tap cadrumo (Homebrew tap)",
-        # The tap is account-scoped (`brew tap nevenincs/tap`), so the slug no
-        # longer carries the product name. Requiring an owner/name slug is what
-        # keeps prose such as "the Homebrew tap opens at public launch" from
-        # matching, since "brew tap opens" has no slash in the following token.
-        re.compile(r"brew\s+tap\s+\S+/\S+", re.IGNORECASE),
+        # The tap is account-scoped, so the slug carries the account rather than
+        # the product and cannot be anchored on "cadrumo". It is anchored on the
+        # account instead: an unrelated third-party tap mentioned in prose
+        # (`brew tap homebrew/cask`) is not a claim about this product, and
+        # requiring a slug keeps "the Homebrew tap opens at public launch" out —
+        # "brew tap opens" has no owner/name token after it.
+        re.compile(r"brew\s+tap\s+nevenincs/\S+", re.IGNORECASE),
         (
             "homebrew-linux-arm64",
             "homebrew-linux-x86-64",
@@ -140,12 +142,45 @@ def _doc_files() -> tuple[Path, ...]:
     return tuple(sources)
 
 
+# A claim is only a claim when the reader is being told to run the command. A
+# line that negates it before the command ("do not install from PyPI yet") is a
+# disclaimer, which the module contract says must not match. The negation must
+# appear BEFORE the command on the same line: scanning the whole line would let
+# an unrelated trailing caveat ("...; do not use sudo") silence a real claim,
+# and silencing a real claim is the failure direction this gate exists to
+# prevent.
+_NEGATION: Final[re.Pattern[str]] = re.compile(
+    r"\b(?:do\s+not|don't|dont|never|avoid|cannot|can't|no\s+need\s+to)\b",
+    re.IGNORECASE,
+)
+
+
+def claim_labels_in_line(line: str) -> tuple[str, ...]:
+    """Return the claim labels a single line positively asserts.
+
+    Scanning is per line rather than per file because ``\\s+`` inside the
+    patterns crosses newlines: against whole-file text a line ending in
+    "Homebrew tap" followed by a line beginning with a path token matches as a
+    tap command. A line is also skipped when the matched command is preceded on
+    that line by a negation, so a disclaimer is not read as an instruction.
+    """
+    labels: list[str] = []
+    for label, pattern, _row_ids in _CLAIM_PATTERNS:
+        match = pattern.search(line)
+        if match is None:
+            continue
+        if _NEGATION.search(line[: match.start()]):
+            continue
+        labels.append(label)
+    return tuple(labels)
+
+
 def _scan_claims() -> list[tuple[Path, str]]:
     """Return ``(doc_path, claim_label)`` pairs for every acquisition claim found.
 
-    Reads each doc file once and tests every pattern against the full text.
-    A single file may contribute multiple distinct claims if it contains
-    patterns for more than one channel.
+    Reads each doc file once and tests every pattern against each line. A
+    single file may contribute multiple distinct claims if it contains patterns
+    for more than one channel.
     """
     found: list[tuple[Path, str]] = []
     for doc in _doc_files():
@@ -153,9 +188,12 @@ def _scan_claims() -> list[tuple[Path, str]]:
             text = doc.read_text(encoding="utf-8")
         except OSError:
             continue
-        for label, pattern, _row_ids in _CLAIM_PATTERNS:
-            if pattern.search(text):
-                found.append((doc, label))
+        seen: set[str] = set()
+        for line in text.splitlines():
+            for label in claim_labels_in_line(line):
+                if label not in seen:
+                    seen.add(label)
+                    found.append((doc, label))
     return found
 
 
@@ -188,6 +226,130 @@ def _passing_evidence_rows() -> frozenset[str]:
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
+# Positive control
+#
+# The corpus scan below finds nothing while every channel is pre-launch, so on
+# its own it would pass without ever evaluating a pattern — green because it is
+# inert rather than because it is satisfied. These cases pin each pattern's
+# behaviour directly, so the gate fails the moment the pattern set stops
+# discriminating, independently of what the documentation currently contains.
+#
+# Each entry: (claim_label, strings that MUST match, strings that MUST NOT).
+# ---------------------------------------------------------------------------
+_PATTERN_CONTROL: Final[tuple[tuple[str, tuple[str, ...], tuple[str, ...]], ...]] = (
+    (
+        "pip install cadrumo (PyPI)",
+        ("pip install cadrumo", "Run `pip install cadrumo` to get started."),
+        ("do not pip install cadrumo yet", "Don't pip install cadrumo before launch."),
+    ),
+    (
+        "uvx cadrumo (PyPI via uvx)",
+        ("uvx cadrumo", "uvx cadrumo --help"),
+        ("do not uvx cadrumo yet",),
+    ),
+    (
+        "scoop install cadrumo (Scoop)",
+        ("scoop install cadrumo", "scoop install nevenincs/cadrumo"),
+        ("scoop install ripgrep", "do not scoop install cadrumo yet"),
+    ),
+    (
+        "brew install cadrumo (Homebrew)",
+        ("brew install cadrumo", "brew install nevenincs/tap/cadrumo"),
+        ("brew install ripgrep", "do not brew install cadrumo yet"),
+    ),
+    (
+        "brew tap cadrumo (Homebrew tap)",
+        ("brew tap nevenincs/tap", "brew tap nevenincs/homebrew-tap"),
+        (
+            # The withheld-state prose this pattern must never read as a command.
+            "The Homebrew tap opens at public launch.",
+            "Release page artifact; Homebrew tap at public launch",
+            # An unrelated third-party tap is not a claim about this product.
+            "brew tap homebrew/cask",
+            "brew tap oven-sh/bun",
+            # A disclaimer is not an instruction.
+            "do not brew tap nevenincs/tap yet",
+        ),
+    ),
+    (
+        "Claude plugin marketplace install",
+        ("https://marketplace.anthropic.com/plugins/cadrumo",),
+        ("https://marketplace.anthropic.com/plugins/something-else",),
+    ),
+    (
+        "MCPB cadrumo package install",
+        ("cadrumo-0.2.1.mcpb", "Download cadrumo.mcpb from the release page."),
+        ("some-other-tool.mcpb",),
+    ),
+)
+
+
+@pytest.mark.parametrize("label, must_match, must_not_match", _PATTERN_CONTROL)
+def test_each_claim_pattern_matches_its_command_and_rejects_its_lookalike(
+    label: str,
+    must_match: tuple[str, ...],
+    must_not_match: tuple[str, ...],
+) -> None:
+    """Pin every pattern's behaviour in both directions against known strings.
+
+    Without this the gate can only be as good as whatever the docs happen to
+    contain, and today they contain no claims at all. A pattern that stopped
+    matching its own install command, or started matching prose, would go
+    unnoticed.
+    """
+    for text in must_match:
+        assert label in claim_labels_in_line(text), f"pattern {label!r} no longer matches its own command: {text!r}"
+    for text in must_not_match:
+        assert label not in claim_labels_in_line(text), f"pattern {label!r} over-matches: {text!r}"
+
+
+def test_every_pattern_is_covered_by_the_positive_control() -> None:
+    """A new pattern must arrive with its own match/no-match cases.
+
+    Otherwise the control silently stops covering the table it is meant to pin.
+    """
+    controlled = {label for label, _match, _reject in _PATTERN_CONTROL}
+    declared = {label for label, _pattern, _rows in _CLAIM_PATTERNS}
+    assert declared == controlled, (
+        "every claim pattern needs positive-control cases; "
+        f"uncontrolled={sorted(declared - controlled)} stale={sorted(controlled - declared)}"
+    )
+
+
+def test_a_line_break_does_not_manufacture_a_tap_claim() -> None:
+    """Whole-file scanning turned a line break into a command; per-line scanning must not.
+
+    ``\\s+`` matches a newline, so against full-file text a line *ending* in
+    "Homebrew tap" followed by a line *beginning* with a path token read as a
+    tap command. The document below is a real reproduction: the tap pattern
+    matches it under ``search()`` over the whole file and does not match any of
+    its lines individually. A document that failed to reproduce the bug would
+    make this test prove nothing.
+    """
+    document = "Install via the Homebrew tap\nnevenincs/cadrumo release page has details.\n"
+    tap_label = "brew tap cadrumo (Homebrew tap)"
+    tap_pattern = next(pattern for label, pattern, _rows in _CLAIM_PATTERNS if label == tap_label)
+
+    # The reproduction is real: whole-file scanning does match this text.
+    assert tap_pattern.search(document) is not None, "document no longer reproduces the cross-newline match"
+
+    # Per-line scanning, which is what the scanner now does, does not.
+    labels = [label for line in document.splitlines() for label in claim_labels_in_line(line)]
+    assert "brew tap cadrumo (Homebrew tap)" not in labels
+
+
+def test_the_scanned_corpus_is_not_empty() -> None:
+    """The corpus scan is only meaningful over real files.
+
+    An empty file list would make the claim scan vacuously clean, which is the
+    failure mode this module already had once.
+    """
+    docs = _doc_files()
+    assert len(docs) > 0, "no user-facing documentation was scanned; the claim gate would pass vacuously"
+    assert _README in docs, "README.md must be part of the scanned acquisition surface"
 
 
 def test_no_unevidenced_channel_claims() -> None:

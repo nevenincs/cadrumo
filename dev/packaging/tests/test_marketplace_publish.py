@@ -187,8 +187,177 @@ def test_a_declared_plugin_with_no_tree_is_refused(tmp_path: Path) -> None:
         publish_cohort_plugins(marketplace=marketplace, cohort=cohort)
 
 
+def _multi_cohort(tmp_path: Path, *, product: str, plugins: dict[str, str], with_trees: set[str]) -> Path:
+    """Build a cohort declaring several plugins, materialising only ``with_trees``."""
+    cohort = tmp_path / f"cohort-multi-{product}"
+    _write_index(
+        cohort,
+        {
+            "name": "neve",
+            "description": "account marketplace",
+            "published_by": product,
+            "plugins": [{"name": name, "source": f"./plugins/{name}"} for name in plugins],
+        },
+    )
+    for name, body in plugins.items():
+        if name in with_trees:
+            _write_plugin(cohort, name, body=body)
+    return cohort
+
+
+def test_a_multi_plugin_cohort_that_refuses_partway_mutates_nothing(tmp_path: Path) -> None:
+    """A refusal must leave the marketplace byte-identical, not half-published.
+
+    Validation used to run inside the mutation loop, so a cohort whose second
+    plugin had no tree refused only after the first had been replaced and left
+    the index unmerged -- a state that is neither the old one nor the new one.
+    """
+    marketplace = tmp_path / "marketplace"
+    _write_index(
+        marketplace,
+        {
+            "name": "neve",
+            "plugins": [{"name": "cadrumo", "source": "./plugins/cadrumo", "published_by": "cadrumo"}],
+        },
+    )
+    _write_plugin(marketplace, "cadrumo", body="published cadrumo")
+    before = {
+        path.relative_to(marketplace).as_posix(): path.read_bytes()
+        for path in sorted(marketplace.rglob("*"))
+        if path.is_file()
+    }
+
+    cohort = _multi_cohort(
+        tmp_path,
+        product="cadrumo",
+        plugins={"cadrumo": "new cadrumo", "cadrumo-extra": "never materialised"},
+        with_trees={"cadrumo"},
+    )
+
+    with pytest.raises(MarketplacePublishError, match="has no tree at"):
+        publish_cohort_plugins(marketplace=marketplace, cohort=cohort)
+
+    after = {
+        path.relative_to(marketplace).as_posix(): path.read_bytes()
+        for path in sorted(marketplace.rglob("*"))
+        if path.is_file()
+    }
+    assert after == before, "a refused publish mutated the marketplace tree"
+
+
+def test_a_well_formed_multi_plugin_cohort_publishes_every_plugin(tmp_path: Path) -> None:
+    """The multi-plugin path must actually work, not merely fail safely."""
+    marketplace = tmp_path / "marketplace"
+    marketplace.mkdir()
+    cohort = _multi_cohort(
+        tmp_path,
+        product="suite",
+        plugins={"alpha": "alpha body", "beta": "beta body"},
+        with_trees={"alpha", "beta"},
+    )
+
+    published = publish_cohort_plugins(marketplace=marketplace, cohort=cohort)
+
+    assert published == ("alpha", "beta")
+    assert (marketplace / "plugins" / "alpha" / "marker.txt").read_text(encoding=_UTF_8) == "alpha body"
+    assert (marketplace / "plugins" / "beta" / "marker.txt").read_text(encoding=_UTF_8) == "beta body"
+
+
+def test_a_cohort_cannot_take_over_a_plugin_another_product_published(tmp_path: Path) -> None:
+    """Name collision is the sibling-deletion bug by another route, and must refuse.
+
+    Narrowing the wholesale replacement stopped a release deleting every
+    sibling plugin. It did not stop a release deleting exactly one, by
+    declaring the name that sibling already owns.
+    """
+    marketplace = tmp_path / "marketplace"
+    _write_index(
+        marketplace,
+        {
+            "name": "neve",
+            "plugins": [{"name": "shared", "source": "./plugins/shared", "published_by": "vaultspec"}],
+        },
+    )
+    _write_plugin(marketplace, "shared", body="vaultspec owns this")
+
+    cohort = _multi_cohort(
+        tmp_path,
+        product="cadrumo",
+        plugins={"shared": "cadrumo tries to take it"},
+        with_trees={"shared"},
+    )
+
+    with pytest.raises(MarketplacePublishError, match="already published by another product"):
+        publish_cohort_plugins(marketplace=marketplace, cohort=cohort)
+
+    # The sibling's bytes and its attribution both survive the refusal.
+    assert (marketplace / "plugins" / "shared" / "marker.txt").read_text(encoding=_UTF_8) == "vaultspec owns this"
+    assert _read_index(marketplace)["plugins"][0]["published_by"] == "vaultspec"
+
+
+def test_a_product_may_republish_its_own_plugin(tmp_path: Path) -> None:
+    """Ownership must not block the ordinary case of a product releasing again."""
+    marketplace = tmp_path / "marketplace"
+    _write_index(
+        marketplace,
+        {
+            "name": "neve",
+            "plugins": [{"name": "cadrumo", "source": "./plugins/cadrumo", "published_by": "cadrumo"}],
+        },
+    )
+    _write_plugin(marketplace, "cadrumo", body="old")
+
+    publish_cohort_plugins(
+        marketplace=marketplace,
+        cohort=_cohort(tmp_path, name="cadrumo", body="new"),
+    )
+
+    assert (marketplace / "plugins" / "cadrumo" / "marker.txt").read_text(encoding=_UTF_8) == "new"
+
+
+def test_an_unattributed_published_entry_is_claimable(tmp_path: Path) -> None:
+    """An entry predating ownership tracking must not deadlock the release adopting it."""
+    marketplace = tmp_path / "marketplace"
+    _write_index(
+        marketplace,
+        {"name": "neve", "plugins": [{"name": "cadrumo", "source": "./plugins/cadrumo"}]},
+    )
+    _write_plugin(marketplace, "cadrumo", body="legacy")
+
+    publish_cohort_plugins(
+        marketplace=marketplace,
+        cohort=_cohort(tmp_path, name="cadrumo", body="adopted"),
+    )
+
+    entry = _read_index(marketplace)["plugins"][0]
+    assert entry["published_by"] == "cadrumo"
+    assert (marketplace / "plugins" / "cadrumo" / "marker.txt").read_text(encoding=_UTF_8) == "adopted"
+
+
+def test_a_multi_plugin_cohort_must_declare_its_publisher(tmp_path: Path) -> None:
+    """Ownership cannot be inferred from a multi-plugin cohort, so it must be declared."""
+    marketplace = tmp_path / "marketplace"
+    marketplace.mkdir()
+    cohort = tmp_path / "unattributed"
+    _write_index(
+        cohort,
+        {
+            "name": "neve",
+            "plugins": [
+                {"name": "alpha", "source": "./plugins/alpha"},
+                {"name": "beta", "source": "./plugins/beta"},
+            ],
+        },
+    )
+    _write_plugin(cohort, "alpha", body="a")
+    _write_plugin(cohort, "beta", body="b")
+
+    with pytest.raises(MarketplacePublishError, match="published_by"):
+        publish_cohort_plugins(marketplace=marketplace, cohort=cohort)
+
+
 def test_merge_replaces_an_entry_the_cohort_renames_rather_than_duplicating_it() -> None:
-    """A cohort entry wins over a published entry of the same name."""
+    """A cohort entry wins over its own published entry, and is stamped with its owner."""
     merged = merge_marketplace_index(
         cohort_index={
             "name": "neve",
@@ -200,4 +369,11 @@ def test_merge_replaces_an_entry_the_cohort_renames_rather_than_duplicating_it()
         },
     )
 
-    assert merged["plugins"] == [{"name": "cadrumo", "source": "./plugins/cadrumo", "version": "0.3.0"}]
+    assert merged["plugins"] == [
+        {
+            "name": "cadrumo",
+            "source": "./plugins/cadrumo",
+            "version": "0.3.0",
+            "published_by": "cadrumo",
+        }
+    ]

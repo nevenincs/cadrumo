@@ -11,9 +11,25 @@ is correct only while exactly one product is served: against a shared
 marketplace it silently deletes every sibling product's plugin on the next
 release of any one product. This module is the narrowed replacement.
 
-Both operations are idempotent: publishing the same cohort twice leaves the tree
-byte-identical, so the caller's "nothing staged, nothing to push" check is the
-one that decides whether a commit happens.
+Publishing the same cohort twice leaves the tree byte-identical, so the caller's
+"nothing staged, nothing to push" check is the one that decides whether a commit
+happens. A refusal leaves the tree untouched: the whole cohort is validated
+before anything is mutated, so a cohort whose second plugin is malformed does not
+leave the first already replaced.
+
+Ownership is recorded on each index entry, so a cohort cannot take over a plugin
+name a different product already published. Without that, the wholesale deletion
+this module replaced would simply return by another route — as a targeted
+overwrite of exactly one sibling rather than all of them.
+
+Known limitation: concurrent publication is not serialised here. Two products
+releasing into one marketplace can interleave clone and push, making the second
+push a non-fast-forward that fails the release. That is a designed-in condition
+under a shared marketplace rather than an edge case, and the remedy belongs in
+the caller — a repository-level concurrency group serialising marketplace
+publication across products, or a re-clone-and-reapply retry on a rejected push.
+This module is safe under that retry because it is a pure function of the
+marketplace tree and the cohort.
 """
 
 from __future__ import annotations
@@ -70,6 +86,27 @@ def _plugin_relative_path(entry: dict[str, Any]) -> Path:
     return relative
 
 
+def _publishing_product(index: dict[str, Any]) -> str:
+    """Return the product this cohort publishes under, used as the ownership key.
+
+    A marketplace index does not name its publisher, so the cohort's own
+    marketplace manifest supplies it. Falling back to the sole declared plugin
+    name keeps a single-plugin cohort working without extra ceremony.
+    """
+    product = index.get("published_by")
+    if isinstance(product, str) and product:
+        return product
+    plugins = index.get("plugins")
+    if isinstance(plugins, list) and len(plugins) == 1 and isinstance(plugins[0], dict):
+        name = plugins[0].get("name")
+        if isinstance(name, str) and name:
+            return name
+    raise MarketplacePublishError(
+        "cohort marketplace index must declare 'published_by' when it publishes more than one plugin, "
+        "so a sibling product's entry cannot be taken over by name collision"
+    )
+
+
 def merge_marketplace_index(
     *,
     cohort_index: dict[str, Any],
@@ -82,13 +119,36 @@ def merge_marketplace_index(
     keeps every published entry the cohort does not itself name, so a sibling
     product's registration survives this product's release. Entries are sorted by
     name so the pushed document is stable regardless of merge order.
+
+    Each entry carries ``published_by``. A cohort may replace an entry it
+    published and is refused an entry another product published, so taking over
+    a sibling's plugin by declaring its name is not silently possible. An entry
+    with no recorded publisher predates ownership tracking and is treated as
+    claimable, since refusing it would deadlock the first release that adopts it.
     """
     declared = _declared_plugins(cohort_index, source=Path("cohort"))
+    product = _publishing_product(cohort_index)
     owned = {entry["name"] for entry in declared}
     published = (existing_index or {}).get("plugins", [])
+
+    stolen = sorted(
+        str(entry["name"])
+        for entry in published
+        if isinstance(entry, dict)
+        and entry.get("name") in owned
+        and isinstance(entry.get("published_by"), str)
+        and entry["published_by"] != product
+    )
+    if stolen:
+        raise MarketplacePublishError(
+            f"cohort for {product!r} declares plugin(s) {stolen} already published by another product; "
+            "refusing to overwrite a sibling's plugin tree and index entry"
+        )
+
+    attributed = [{**entry, "published_by": product} for entry in declared]
     retained = [entry for entry in published if isinstance(entry, dict) and entry.get("name") not in owned]
     document = dict(cohort_index)
-    document["plugins"] = sorted([*declared, *retained], key=lambda entry: str(entry["name"]))
+    document["plugins"] = sorted([*attributed, *retained], key=lambda entry: str(entry["name"]))
     return document
 
 
@@ -105,20 +165,32 @@ def publish_cohort_plugins(*, marketplace: Path, cohort: Path) -> tuple[str, ...
     cohort_index = _read_index(cohort_index_path)
     declared = _declared_plugins(cohort_index, source=cohort_index_path)
 
+    # Validate the WHOLE cohort before touching the marketplace. Validating
+    # inside the mutation loop left a refusal on the Nth plugin with plugins
+    # 1..N-1 already replaced and the index unmerged -- a torn tree that is
+    # neither the old state nor the new one.
+    planned: list[tuple[Path, Path]] = []
     for entry in declared:
         relative = _plugin_relative_path(entry)
         source_tree = cohort / relative
         if not source_tree.is_dir():
             raise MarketplacePublishError(f"cohort plugin {entry['name']!r} has no tree at {source_tree}")
+        planned.append((relative, source_tree))
+
+    # The index merge is the other refusal path (an ownership collision), so it
+    # is computed before any mutation too.
+    published_index_path = marketplace / _INDEX_RELATIVE
+    existing = _read_index(published_index_path) if published_index_path.is_file() else None
+    merged = merge_marketplace_index(cohort_index=cohort_index, existing_index=existing)
+
+    # Everything below this line is mutation, and nothing below it can refuse.
+    for relative, source_tree in planned:
         target = marketplace / relative
         if target.exists():
             shutil.rmtree(target)
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copytree(source_tree, target)
 
-    published_index_path = marketplace / _INDEX_RELATIVE
-    existing = _read_index(published_index_path) if published_index_path.is_file() else None
-    merged = merge_marketplace_index(cohort_index=cohort_index, existing_index=existing)
     published_index_path.parent.mkdir(parents=True, exist_ok=True)
     published_index_path.write_text(
         json.dumps(merged, indent=2, ensure_ascii=False) + "\n",

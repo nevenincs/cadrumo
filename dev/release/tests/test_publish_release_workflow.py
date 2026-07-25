@@ -485,6 +485,24 @@ def test_the_marketplace_push_merges_rather_than_replacing_the_tree() -> None:
     assert "-maxdepth 1" not in marketplace, "marketplace push still wipes the tracked tree wholesale"
 
 
+def test_the_marketplace_push_retries_a_lost_race_and_fails_closed() -> None:
+    """Concurrent publication into the shared marketplace is a designed-in condition.
+
+    Several products releasing into one account marketplace can interleave clone
+    and push, making the later push a non-fast-forward. GitHub concurrency
+    groups are per-repository and cannot serialise across product repos, so the
+    push re-clones and re-applies. Exhausting the retries must fail the release
+    rather than report success on an unpublished marketplace.
+    """
+    marketplace = _command_lines(_step_run("marketplace"))
+    assert "for attempt in" in marketplace, "the marketplace push does not retry a lost race"
+    # The retry must re-clone inside the loop; re-pushing a stale checkout would
+    # simply be rejected again.
+    loop_body = marketplace.split("for attempt in", 1)[1]
+    assert "clone" in loop_body, "the retry does not re-clone, so it would re-push the same stale tree"
+    assert "REFUSED" in marketplace, "an exhausted retry must refuse rather than pass silently"
+
+
 def test_the_scoop_bucket_is_this_repository_and_needs_no_channel_credentials() -> None:
     """Scoop reads a ``bucket/`` subdirectory, so no separate bucket repo is configured.
 

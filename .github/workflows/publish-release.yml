@@ -520,23 +520,42 @@ jobs:
           # Token rides an -c http.extraheader (never the clone URL) so it is not
           # persisted into the runner's .git/config remote.
           auth="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$MARKETPLACE_TOKEN" | base64 | tr -d '\n')"
-          work="$(mktemp -d)"
-          git -c http.extraheader="$auth" clone "https://github.com/${MARKETPLACE_REPO}.git" "$work"
           staged="$(mktemp -d)"
           unzip -q "$bundle" -d "$staged"
-          # The marketplace is account-scoped and may serve sibling products, so
-          # this replaces ONLY the plugin subtrees this cohort declares and
-          # merges its entries into the marketplace index by plugin name. The
-          # earlier wholesale tree replacement would delete a sibling product's
-          # plugin on every release of this one.
-          uv run --frozen python -m dev.packaging.marketplace_publish \
-            --marketplace "$work" --cohort "$staged"
-          git -C "$work" add -A
-          if git -C "$work" diff --cached --quiet; then
-            echo "marketplace already at cadrumo $VERSION; nothing to push"
-          else
-            git -C "$work" -c user.name="cadrumo-release" -c user.email="release@cadrumo.invalid" \
-              commit -m "cadrumo $VERSION"
-            git -C "$work" -c http.extraheader="$auth" push
+          # The marketplace is account-scoped and serves sibling products, so two
+          # products can release into it concurrently: a sibling push landing
+          # between this job's clone and its push makes this push a
+          # non-fast-forward. GitHub concurrency groups are per-repository and so
+          # cannot serialise across product repos, hence a re-clone-and-reapply
+          # retry. This is safe to repeat because the publish step is a pure
+          # function of the marketplace tree and the cohort.
+          published=""
+          for attempt in 1 2 3; do
+            work="$(mktemp -d)"
+            git -c http.extraheader="$auth" clone "https://github.com/${MARKETPLACE_REPO}.git" "$work"
+            # Replaces ONLY the plugin subtrees this cohort declares and merges
+            # its entries by plugin name, refusing a name a sibling published.
+            # The earlier wholesale tree replacement deleted every sibling.
+            uv run --frozen python -m dev.packaging.marketplace_publish \
+              --marketplace "$work" --cohort "$staged"
+            git -C "$work" add -A
+            if git -C "$work" diff --cached --quiet; then
+              echo "marketplace already at cadrumo $VERSION; nothing to push"
+              published="yes"
+            else
+              git -C "$work" -c user.name="cadrumo-release" -c user.email="release@cadrumo.invalid" \
+                commit -m "cadrumo $VERSION"
+              if git -C "$work" -c http.extraheader="$auth" push; then
+                published="yes"
+              else
+                echo "marketplace push rejected on attempt ${attempt}; a sibling product likely pushed first" >&2
+              fi
+            fi
+            rm -rf "$work"
+            [[ -n "$published" ]] && break
+          done
+          rm -rf "$staged"
+          if [[ -z "$published" ]]; then
+            echo "REFUSED: marketplace push lost three consecutive races; re-run this publication." >&2
+            exit 1
           fi
-          rm -rf "$work" "$staged"
