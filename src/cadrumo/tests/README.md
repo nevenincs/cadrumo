@@ -92,6 +92,31 @@ Label only what is irreducibly capability-bound. A case provable
 *without* the capability must stay unlabelled, or it silently leaves
 every automated lane.
 
+#### `os_keychain` is a standing coverage hole
+
+Say it plainly, because no lane will: **the six `os_keychain` cases have
+never been observed green.** CI cannot run them, no agent host can run
+them, and they were excluded from every lane precisely because a host
+that cannot custody a session key can never pass them. Nothing in the
+automated suite covers profile-session custody today.
+
+This was the right trade against the alternative - a test-support
+credential backend would be a production-shaped fake, and writing both
+halves of the split-knowledge pair to disk would make the assertion
+vacuous - but a trade is not a fix. The cases guard a security-critical
+fail-closed path, so treat the hole as live risk rather than as settled.
+
+Closing it takes one run of `just test-os-keychain` from an interactive
+desktop session. Read that as a **recurring** obligation, not a one-time
+sign-off: every change to login, logout, session resume, or session-key
+custody re-opens the hole, and only a desktop run closes it again. A
+green run once does not vouch for the code as it stands now.
+
+The pinned membership set in `test_marker_integrity.py` keeps the hole
+from growing quietly - a test cannot take the label without being
+enrolled there - but it cannot make an unrun test pass. It bounds the
+hole; it does not fill it.
+
 ## Enforcement
 
 `src/cadrumo/tests/test_marker_integrity.py` walks `test_*.py` modules under
