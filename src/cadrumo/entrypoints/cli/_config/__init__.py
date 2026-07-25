@@ -1,7 +1,7 @@
 """User-facing configuration facade.
 
-The ``config history`` sub-command browses the append-only event log
-through :class:`BucketEventHistoryRepository`.
+The ``config profile history`` sub-command browses the append-only event
+log through :class:`BucketEventHistoryRepository`.
 """
 
 from __future__ import annotations
