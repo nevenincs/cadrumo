@@ -502,6 +502,44 @@ class TestConfirmInvoiceDraftFromEvidence:
         reloaded = InvoiceCatalogueRepository(objects=secure_objects).load()
         assert confirmation.invoice.invoice_id in reloaded
 
+    def test_extracting_from_a_catalogue_invoice_id_refuses_on_bytes_not_existence(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+    ) -> None:
+        """A confirmed invoice id is a valid evidence reference with no document.
+
+        ``purchase_invoice_evidence_id`` accepts an id from either space, so pasting
+        the confirmed invoice id where the evidence id goes is a realistic operator
+        slip. The refusal must say the reference carries no document bytes -- telling
+        the operator no such record exists would send them hunting a record that is
+        genuinely there.
+        """
+        pdf_path = tmp_path / "factura.pdf"
+        pdf_path.write_bytes(_text_pdf_bytes(_FULL_INVOICE_LINES))
+        svc = _make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+        confirmation = confirm_invoice_draft_from_evidence(
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.RECEIVED,
+            evidence_id=record.evidence_id,
+            counterparty_name="Acme Suministros SL",
+            settings=isolated_settings,
+            invoice_repository=self._repo(secure_objects),
+        )
+
+        with pytest.raises(PurchaseInvoiceEvidenceInputError) as excinfo:
+            extract_invoice_draft_from_evidence(
+                bucket_id=_BUCKET_ID,
+                evidence_id=confirmation.invoice.invoice_id,
+                settings=isolated_settings,
+            )
+
+        # PurchaseInvoiceEvidenceNotFoundError is a sibling class, not a subclass, so
+        # `pytest.raises` above already excludes the "no such record" refusal.
+        assert excinfo.value.context == {"evidence_id": confirmation.invoice.invoice_id}
+
     def test_confirm_is_idempotent_guarded_on_identical_resolved_fields(
         self,
         isolated_settings: Settings,

@@ -41,7 +41,6 @@ from ...domain.buckets import (
     derive_bucket_event_id,
 )
 from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepositoryProtocol
-from ...domain.iva import InvoiceKind
 from ...domain.modelos import (
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
@@ -60,6 +59,11 @@ from ...domain.usage_ratios import (
     UsageRatioProfile,
     UsageRatioValidationError,
     validate_usage_ratio_reference,
+)
+from ._evidence import PurchaseInvoiceEvidence
+from ._evidence_reference import (
+    EvidenceReferenceOutcome,
+    classify_evidence_reference,
 )
 from ._models import (
     LedgerRemovalBlocker,
@@ -433,13 +437,13 @@ def _verify_evidence_references(
         _verify_attachment_references(command, transaction_id=transaction_id, attachment_store=attachment_store)
 
 
-def _purchase_invoice_evidence_record_exists(bucket_id: str, evidence_id: str) -> bool:
-    """Return True when a ``PurchaseInvoiceEvidence`` record with ``evidence_id`` exists in the bucket.
+def _purchase_invoice_evidence_records(bucket_id: str) -> tuple[PurchaseInvoiceEvidence, ...]:
+    """Return the bucket's registered ``PurchaseInvoiceEvidence`` records.
 
-    Resolves the bucket-scoped encrypted purchase-invoice evidence store written by
-    ``aeat app ledger evidence add`` (the :class:`PurchaseInvoiceEvidence` namespace),
-    distinct from the rich :class:`InvoiceCatalogue` written by invoice-import flows.
-    Local imports mirror this module's existing deferred-import style.
+    Reads the bucket-scoped encrypted purchase-invoice evidence store written by
+    ``aeat app ledger evidence add``, distinct from the rich
+    :class:`InvoiceCatalogue` written by invoice-import flows. Local imports mirror
+    this module's existing deferred-import style.
     """
     from ...adapters.persistence.storage import secure_object_repository_for_bucket
     from ...core.config import load_settings
@@ -449,9 +453,7 @@ def _purchase_invoice_evidence_record_exists(bucket_id: str, evidence_id: str) -
         objects=secure_object_repository_for_bucket(bucket_id, load_settings()),
     )
     document = repository.load(bucket_id)
-    if document is None:
-        return False
-    return any(record.evidence_id == evidence_id for record in document.records)
+    return () if document is None else document.records
 
 
 def _verify_purchase_invoice_evidence(
@@ -459,56 +461,52 @@ def _verify_purchase_invoice_evidence(
     *,
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
 ) -> None:
-    """Verify a purchase-invoice evidence reference resolves to one of two distinct id spaces.
+    """Refuse a purchase-invoice evidence reference that no id space accepts.
 
-    The ``purchase_invoice_evidence_id`` may name either of two bucket-scoped id
-    spaces, checked in order:
-
-    1. A :class:`PurchaseInvoiceEvidence` record minted by ``aeat app ledger
-       evidence add`` (PDF/image evidence registered into the dedicated evidence
-       store) — an id produced by ``evidence add`` must be accepted by
-       ``aeat app ledger attach`` in the same shell session.
-    2. An imported received-invoice id in the rich :class:`InvoiceCatalogue`
-       (bucket match plus :attr:`InvoiceKind.RECEIVED`), written only by the
-       invoice-import flows.
-
-    Ids minted by ``aeat app ledger invoice add`` (slim operator invoice records)
-    are deliberately NOT a valid evidence reference, because that store is
-    kept split from the evidence store; they are refused with an instructive
-    message.
+    The write gate over :func:`classify_evidence_reference`, which owns the
+    definition of the two id spaces, their consultation order, and the
+    bucket-ownership and ``RECEIVED``-kind policy. This function only turns an
+    unacceptable outcome into the operator-facing refusal; it decides nothing about
+    which space an id belongs to, so it cannot drift from the other consumers of the
+    same field.
     """
     evidence_id = command.purchase_invoice_evidence_id
     if evidence_id is None:
         return
-    if _purchase_invoice_evidence_record_exists(command.bucket_id, evidence_id):
+    reference = classify_evidence_reference(
+        evidence_id,
+        bucket_id=command.bucket_id,
+        evidence_records=_purchase_invoice_evidence_records(command.bucket_id),
+        invoices=_invoice_repository(bucket_id=command.bucket_id, repository=invoice_repository).load(),
+    )
+    if reference.is_acceptable:
         return
-    invoices = _invoice_repository(bucket_id=command.bucket_id, repository=invoice_repository).load()
-    invoice = invoices.get(evidence_id)
-    if invoice is None:
+    if reference.outcome is EvidenceReferenceOutcome.UNRESOLVED:
         raise TransactionValidationError(
             "purchase_invoice_evidence_id must reference an existing purchase invoice evidence record "
             "(register one from a PDF/image with `aeat app ledger evidence add`) or an imported "
             "received-invoice id from the invoice catalogue; ids minted by `aeat app ledger invoice add` "
             "are operator invoice records, not evidence references",
-            context={"purchase_invoice_evidence_id": command.purchase_invoice_evidence_id},
+            context={"purchase_invoice_evidence_id": evidence_id},
         )
-    if invoice.bucket_id != command.bucket_id:
+    invoice = reference.invoice
+    assert invoice is not None  # every remaining outcome carries its catalogue invoice
+    if reference.outcome is EvidenceReferenceOutcome.INVOICE_OUTSIDE_BUCKET:
         raise TransactionValidationError(
             "purchase_invoice_evidence_id must belong to the manual ledger command bucket",
             context={
-                "purchase_invoice_evidence_id": command.purchase_invoice_evidence_id,
+                "purchase_invoice_evidence_id": evidence_id,
                 "command_bucket_id": command.bucket_id,
                 "evidence_bucket_id": invoice.bucket_id or "",
             },
         )
-    if invoice.kind is not InvoiceKind.RECEIVED:
-        raise TransactionValidationError(
-            "purchase_invoice_evidence_id must reference a received purchase invoice evidence record",
-            context={
-                "purchase_invoice_evidence_id": command.purchase_invoice_evidence_id,
-                "invoice_kind": invoice.kind.value,
-            },
-        )
+    raise TransactionValidationError(
+        "purchase_invoice_evidence_id must reference a received purchase invoice evidence record",
+        context={
+            "purchase_invoice_evidence_id": evidence_id,
+            "invoice_kind": invoice.kind.value,
+        },
+    )
 
 
 def _verify_attachment_references(

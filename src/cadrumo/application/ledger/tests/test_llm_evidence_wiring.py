@@ -31,7 +31,11 @@ from ....domain.transactions import (
     TransactionDirection,
 )
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from .._evidence import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
+from .._evidence import (
+    PurchaseInvoiceEvidence,
+    PurchaseInvoiceEvidenceInputError,
+    PurchaseInvoiceEvidenceService,
+)
 from .._llm_classification import _resolve_evidence, suggest_llm_classification
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -68,7 +72,7 @@ def _text_pdf(tmp_path: Path, line: str) -> Path:
     return out
 
 
-def _transaction(evidence_id: str | None) -> Transaction:
+def _transaction(evidence_id: str | None, *, attachment_ids: tuple[str, ...] = ()) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id="row-ev",
         booked_date=date(2025, 3, 1),
@@ -95,15 +99,21 @@ def _transaction(evidence_id: str | None) -> Transaction:
     }
     if evidence_id is not None:
         payload["purchase_invoice_evidence_id"] = evidence_id
+    if attachment_ids:
+        payload["attachment_ids"] = attachment_ids
     return Transaction.model_validate(payload)
 
 
-def _add_evidence(profile: TestRuntimeProfile, tmp_path: Path) -> str:
+def _add_evidence_record(profile: TestRuntimeProfile, tmp_path: Path) -> PurchaseInvoiceEvidence:
     svc = PurchaseInvoiceEvidenceService(
         settings=profile.settings,
         bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
     )
-    return svc.add(bucket_id=_BUCKET_ID, source_path=_text_pdf(tmp_path, _INVOICE)).record.evidence_id
+    return svc.add(bucket_id=_BUCKET_ID, source_path=_text_pdf(tmp_path, _INVOICE)).record
+
+
+def _add_evidence(profile: TestRuntimeProfile, tmp_path: Path) -> str:
+    return _add_evidence_record(profile, tmp_path).evidence_id
 
 
 def test_no_linked_evidence_returns_none(profile: TestRuntimeProfile) -> None:
@@ -147,6 +157,52 @@ def test_consented_read_returns_on_host_extracted_text(profile: TestRuntimeProfi
     # Permitted but not acknowledged this invocation -> refused.
     with pytest.raises(PurchaseInvoiceEvidenceInputError):
         _resolve_evidence(txn, bucket_id=_BUCKET_ID, settings=consenting, evidence_acknowledged=False)
+
+
+def test_invoice_space_reference_reads_the_rows_own_attachment(
+    profile: TestRuntimeProfile,
+    tmp_path: Path,
+) -> None:
+    """A reference outside the evidence-record space must not blind the reader.
+
+    ``purchase_invoice_evidence_id`` accepts a catalogue-invoice id, which carries
+    fiscal totals but no document. This path used to look the reference up in the
+    evidence store alone and raise "no record with that id" -- refusing a row that
+    was holding a perfectly readable document in ``attachment_ids`` all along. The
+    reader now falls through to the row's own attachment.
+    """
+    record = _add_evidence_record(profile, tmp_path)
+    txn = _transaction("INV-2026-001-not-in-the-evidence-store", attachment_ids=(record.attachment_id,))
+    consenting: Settings = profile.settings.model_copy(update={"cadrumo_evidence_cloud_upload_permitted": True})
+
+    resolved = _resolve_evidence(
+        txn,
+        bucket_id=_BUCKET_ID,
+        settings=consenting,
+        evidence_acknowledged=True,
+    )
+
+    assert resolved is not None
+    assert resolved.text is not None
+    assert "Acme SL" in resolved.text
+    assert resolved.reference == record.attachment_id
+
+
+def test_reference_without_bytes_or_attachments_refuses_naming_the_reference(
+    profile: TestRuntimeProfile,
+) -> None:
+    """With no bytes anywhere, the refusal must name the reference it could not read.
+
+    The structured context is asserted rather than the prose: the operator-facing
+    wording is owned by one builder and may be reworded, but the refusal must always
+    carry the reference that failed.
+    """
+    txn = _transaction("INV-2026-002-not-in-the-evidence-store")
+
+    with pytest.raises(PurchaseInvoiceEvidenceInputError) as excinfo:
+        _resolve_evidence(txn, bucket_id=_BUCKET_ID, settings=profile.settings, evidence_acknowledged=True)
+
+    assert excinfo.value.context == {"evidence_id": "INV-2026-002-not-in-the-evidence-store"}
 
 
 def test_no_evidence_transaction_does_not_trigger_consent_gate_and_uploads_no_evidence(

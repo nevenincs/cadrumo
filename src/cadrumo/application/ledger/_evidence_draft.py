@@ -124,6 +124,13 @@ from ._evidence_input import (
     resolve_attachment_evidence_input,
     resolve_purchase_invoice_evidence_input,
 )
+from ._evidence_reference import (
+    EvidenceReferenceOutcome,
+    classify_evidence_reference,
+    find_bytes_bearing_evidence_record,
+    refuse_reference_without_document_bytes,
+    refuse_unresolved_evidence_reference,
+)
 from ._evidence_textlayer import extract_evidence_text
 
 __all__ = [
@@ -373,13 +380,13 @@ def extract_invoice_draft_from_evidence(
 
     Raises:
         PurchaseInvoiceEvidenceInputError: When neither or both of
-            *evidence_id* / *attachment_id* are supplied, when the resolved
-            evidence's media type is unsupported, or when a scan-only PDF /
-            image falls back to the on-host vision reader and that reader is
-            disabled for the profile or the local Ollama runtime is
+            *evidence_id* / *attachment_id* are supplied, when *evidence_id*
+            resolves outside the bytes-bearing evidence-record id space (a
+            catalogue-invoice id carries fiscal totals, not a document), when the
+            resolved evidence's media type is unsupported, or when a scan-only
+            PDF / image falls back to the on-host vision reader and that reader
+            is disabled for the profile or the local Ollama runtime is
             unreachable.
-        PurchaseInvoiceEvidenceNotFoundError: When *evidence_id* names no
-            record in *bucket_id*.
     """
     if (evidence_id is None) == (attachment_id is None):
         raise PurchaseInvoiceEvidenceInputError(
@@ -390,11 +397,21 @@ def extract_invoice_draft_from_evidence(
     resolved_settings = settings or _load_settings()
     store = AttachmentStore(objects=secure_object_repository_for_bucket(bucket_id, resolved_settings))
     if evidence_id is not None:
-        record = PurchaseInvoiceEvidenceService(settings=resolved_settings).view(
+        # Both id spaces are consulted so the refusal can be precise: only the
+        # evidence-record space carries document bytes, but a catalogue-invoice id is
+        # a legitimate reference that simply has no document behind it, and must not
+        # be reported as a missing record.
+        reference = classify_evidence_reference(
+            evidence_id,
             bucket_id=bucket_id,
-            evidence_id=evidence_id,
+            evidence_records=PurchaseInvoiceEvidenceService(settings=resolved_settings).list_all(bucket_id=bucket_id),
+            invoices=InvoiceCatalogueRepository(bucket_id=bucket_id).load(),
         )
-        evidence_input = resolve_purchase_invoice_evidence_input(record, store=store)
+        if reference.outcome is EvidenceReferenceOutcome.UNRESOLVED:
+            raise refuse_unresolved_evidence_reference(evidence_id)
+        if reference.record is None:
+            raise refuse_reference_without_document_bytes(evidence_id)
+        evidence_input = resolve_purchase_invoice_evidence_input(reference.record, store=store)
     else:
         assert attachment_id is not None  # narrowed by the exactly-one guard above
         evidence_input = resolve_attachment_evidence_input(attachment_id, store=store)
@@ -550,12 +567,11 @@ def confirm_invoice_draft_from_evidence(
 
     Raises:
         PurchaseInvoiceEvidenceInputError: When neither or both of
-            *evidence_id* / *attachment_id* are supplied, when the resolved
-            evidence has no usable text layer, or when a required field is
-            ``None`` after overrides (extraction found nothing and the
+            *evidence_id* / *attachment_id* are supplied, when *evidence_id*
+            resolves outside the bytes-bearing evidence-record id space, when the
+            resolved evidence has no usable text layer, or when a required field
+            is ``None`` after overrides (extraction found nothing and the
             operator supplied no override).
-        PurchaseInvoiceEvidenceNotFoundError: When *evidence_id* names no
-            record in *bucket_id*.
         InvoiceValidationError: When the resolved fields fail invoice-model
             validation (e.g. an invalid counterparty tax id or IVA rate).
     """
@@ -688,9 +704,19 @@ def _resolve_evidence_attachment_id(
     *evidence_id* is supplied, the linked ``purchase_invoice_evidence`` record's own
     :attr:`~._evidence.PurchaseInvoiceEvidence.attachment_id` is looked up, which is
     a required field and so always names an in-store byte home.
+
+    Resolves the reference through the same
+    :func:`~application.ledger._evidence_reference.find_bytes_bearing_evidence_record`
+    the extraction path used, so the confirm step cannot decide the id belongs to a
+    different space than the extraction did.
     """
     if attachment_id is not None:
         return attachment_id
     assert evidence_id is not None  # narrowed by the caller's exactly-one guard
-    record = PurchaseInvoiceEvidenceService(settings=settings).view(bucket_id=bucket_id, evidence_id=evidence_id)
+    record = find_bytes_bearing_evidence_record(
+        evidence_id,
+        evidence_records=PurchaseInvoiceEvidenceService(settings=settings).list_all(bucket_id=bucket_id),
+    )
+    if record is None:
+        raise refuse_reference_without_document_bytes(evidence_id)
     return record.attachment_id
