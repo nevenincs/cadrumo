@@ -74,8 +74,15 @@ future reader should not spend effort re-deriving what was never recorded.
 
 ## Recommendations
 
-Emit the per-tool argument map alongside the digest, with a test proving the map
-sums to the reported total so it cannot drift from the figure it decomposes. The
+Emit the per-tool argument map alongside the digest. Prove it with TWO
+assertions, not one. A sum-to-total test is necessary and NOT sufficient: the
+first implementation of exactly that specification bucketed every prompt
+argument under a single bogus key, summed correctly, and decomposed nothing --
+passing the stated invariant while defeating the field's whole purpose. The
+second assertion must be on key SHAPE, so an unapproved or catch-all key
+surfaces as an anomaly. A check on a derived quantity's TOTAL cannot validate
+its DECOMPOSITION; those are separate properties and each needs its own
+assertion. The
 entire investigation behind a one-line change existed because the artefact
 preserved a total and not its composition; with the map, the next delta names its
 own tools by subtraction.
