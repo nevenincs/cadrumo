@@ -424,6 +424,64 @@ This is the campaign's most transferable finding. The duplication runner was
 repaired against the same failure mode in an earlier wave, which means the
 project has now hit it four times in four unrelated instruments.
 
+### read-the-subject-not-a-reference-to-it | high | The reasoning-level form of the false-green pattern, hit three times in one wave
+
+The instruments finding above has a counterpart in how this wave reasoned, and
+the two are the same defect at different levels.
+
+Three times, a conclusion about a subject was drawn from an artefact that
+merely mentions the subject. A claim about what a refusal SAYS was drawn from
+the assertion messages of the tests failing against it, rather than from
+invoking the command. A claim about what those tests ASSERT was then drawn from
+the fix's diff, rather than from reading the test file — "the fix added no
+accepted-set assertion, therefore none exists" is a non-sequitur, since absence
+in a diff says nothing about what pre-existed. And a claim about W06 coverage
+was drawn twice from working-tree snapshots rather than from committed state.
+
+The rule, stated at the level that covers all three: read the subject, never an
+artefact that references the subject. Failure output, diffs, log lines and
+working-tree snapshots all reference the subject; none of them is the subject.
+Each was one cheap read away from the real thing.
+
+This is the clean-negative shape at the reasoning level — absence within a
+narrow view read as absence in the world — which is exactly what a gate does
+when it reports a set clean without proving it looked at anything. The
+instruments finding and this one are one defect in two registers, and the
+instruments version is the one that ships.
+
+Worth recording that every instance was caught, and caught cheaply, by going to
+the subject: invoking the verb by hand, reading the test body, reading the
+object store. The expensive part was never the verification.
+
+### pathspec-commit-defeats-the-anti-sweep-guard | high | The staged-set check does not protect a shared document
+
+The commit discipline in force pairs an explicit pathspec with a
+`git diff --cached` inspection to prove the staged set carries only the
+author's hunks. On a shared document that pairing has a hole, and this wave
+walked into it.
+
+A pathspec commit takes WORKING-TREE content for the named paths, bypassing the
+index for exactly those paths. So the staged view can be empty, stale, or
+correct and the commit still publishes whatever another agent has left in the
+tree for that path. The guard inspects the index; the commit does not read it.
+
+Observed directly: commit `83df56f216` carries a peer's full rewrite of an
+audit note under a message describing a much smaller edit of the author's own.
+The peer's write landed between the author's edit and the author's commit, its
+own staged set came back empty, and nothing in the `git diff --cached` check
+could have revealed it. The content was byte-identical to what the peer wrote
+and nothing was lost, but the attribution and the message were wrong, and only
+luck made the outcome benign.
+
+The two protections that actually hold are serialising ownership of a document,
+or committing from a HEAD-anchored patch staged with `git apply --cached` and
+then committing the index with no pathspec — the shape this review used for
+every plan-file change specifically because the plan carried peer closures.
+Note the two guards are not interchangeable: the no-pathspec index commit is
+what protects an entangled file, and the pathspec commit is what protects
+against sweeping a peer's *other* staged files. Which one is correct depends on
+whether the contention is within a file or across files.
+
 ## Recommendations
 
 Each recommendation below is tracked as a Step with a verification gate, per
