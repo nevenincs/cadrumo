@@ -126,6 +126,40 @@ fixture blocks, 3 parser-boundary modules, and roughly 24 modules referencing
 the six ids of which most are engine-side and unaffected. Details and locators
 are in the related research record.
 
+### Sizing independently re-measured before implementation (2026-07-25)
+
+The "roughly 24 modules" figure is **confirmed**: a single pass over
+`src/cadrumo` and `dev`, matching the six ids as literal strings and skipping
+`__pycache__`, finds exactly 24 `.py` modules — 16 tests, 7 registry, 1
+fixture/corpus, and **zero production application modules**. The
+"engine-side and unaffected" characterisation holds, and is sharper than
+stated: the engine reaches these ids through registry TOML, not through Python.
+
+Two things the paragraph above does not capture, both of which change the work:
+
+- **The id footprint is TOML-dominated, not module-dominated.** 40 TOML files
+  carry the six ids (38 registry, 2 extraction profiles) against 24 Python
+  modules. The registry TOMLs are where the edit actually lands; a plan sized on
+  module count alone would understate it by more than half.
+
+- **There are TWO M303 extraction profiles, not one.** Both
+  `303/revisions/2023-y-siguientes/extraction_profiles/0001-modelo-303-declaracion-pdf.toml`
+  and `303/revisions/2009-y-siguientes/extraction_profiles/0001-modelo-303-declaracion-pdf.toml`
+  name the six ids. The Implementation says "The profile drops ..." in the
+  singular; dropping the targets from only the current revision leaves the
+  2009 revision asserting printed boxes the form does not print — the very
+  defect this decision exists to remove, preserved in the older revision.
+  Whether the 2009 revision is re-scoped in the same change or deliberately
+  left (with a stated reason) is a decision this ADR should make explicitly
+  before a plan is written against it.
+
+Method note: two earlier attempts at this measurement were wrong in opposite
+directions — one used unescaped `.` in a regex (dots matched any character,
+inflating per-id counts), the other misplaced `--include` so every file type was
+searched (reporting 93 modules). Both were instrument defects, not findings. The
+figures above come from the explicit single pass described, which is why they are
+stated with the method attached.
+
 ## Rationale
 
 (B) fails on the same criterion the whole exercise is about. Binding
