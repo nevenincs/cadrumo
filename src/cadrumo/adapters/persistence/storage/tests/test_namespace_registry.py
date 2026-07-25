@@ -194,6 +194,45 @@ def test_transaction_participation_index_namespace_is_registered() -> None:
     assert registered.custody_disposition is StorageCustodyDisposition.DERIVED_REBUILDABLE
 
 
+def test_modelo_catalogue_namespaces_pin_their_persisted_addresses() -> None:
+    """The four modelo catalogue namespaces pin their on-disk storage addresses.
+
+    A namespace string is the address previously-written rows live at, and a
+    schema version is the envelope contract, so neither may drift silently: an
+    edit orphans persisted envelopes rather than failing loudly. These four
+    carried a second copy of both values in their domain modules, which acted as
+    an incidental pin until the duplicate authority was removed. This test is the
+    deliberate pin that replaces it, alongside the singleton catalogue object key
+    each of the four addresses its single row by.
+    """
+    from .. import (
+        MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE,
+        MODELO_FILING_RECORD_CATALOGUE_NAMESPACE,
+        MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE,
+        MODELO_WORK_UNIT_CATALOGUE_NAMESPACE,
+    )
+
+    expected_namespaces = {
+        MODELO_WORK_UNIT_CATALOGUE_NAMESPACE: "cadrumo.domain.modelos.work_units",
+        MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE: "cadrumo.domain.modelos.calculation_revisions",
+        MODELO_FILING_RECORD_CATALOGUE_NAMESPACE: "cadrumo.domain.modelos.filing_records",
+        MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE: "cadrumo.domain.modelos.verification_reports",
+    }
+
+    for definition, namespace in expected_namespaces.items():
+        assert definition.namespace == namespace
+        assert definition.schema_version == 1
+        assert definition.require_default_object_key() == SECURE_OBJECT_CATALOGUE_KEY
+        assert definition.sensitivity is SensitivityClass.FINANCIAL
+        # Each must resolve from the registry under its own key, so a definition
+        # cannot satisfy this test while being absent from the authority set.
+        assert STORAGE_NAMESPACE_REGISTRY.namespace_by_key(definition.key) is definition
+
+    # The four are distinct addresses; a copy-paste collapsing two would pass
+    # every per-definition assertion above.
+    assert len(set(expected_namespaces.values())) == 4
+
+
 def test_every_registered_namespace_declares_explicit_custody_disposition() -> None:
     missing = [
         definition.key

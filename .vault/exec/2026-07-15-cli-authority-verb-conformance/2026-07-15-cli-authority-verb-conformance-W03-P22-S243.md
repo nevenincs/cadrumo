@@ -26,6 +26,7 @@ related:
 - Delete the twelve repository constants, the two public participation-index constants, and the two package re-exports.
 - Repoint the four roundtrip probes that read them at the registered definitions.
 - Correct the adapter comment that recorded the duplication as intended.
+- Re-examine what detection the deleted literals had been providing, find four namespace strings left unpinned, and add the deliberate pin that replaces the incidental one.
 
 ## Outcome
 
@@ -41,7 +42,13 @@ Before deleting, each registry value was compared against the literal it replace
 
 The pre-release no-legacy posture governs the two public exports: they were deleted outright rather than aliased, and a tree-wide sweep confirms no surviving reference under source, dev tooling, or docs.
 
-Verified with sixty tests across the four repointed roundtrip modules plus the work-unit module, one hundred and eighty-one across the whole modelo tree, and thirty-four across both namespace adoption gates and the registry suite. Type checking and both lint passes are clean on the touched files, and collect-only is clean at fourteen thousand three hundred and eighty-nine tests.
+Removing a duplicate can remove detection along with it, so the question of what the deleted literals had been doing was put explicitly. They had been an incidental pin. A namespace string is the on-disk address previously-written rows live at, and one of the deleted declarations carried a comment saying so, warning that the string was preserved across a rename to avoid orphaning persisted envelopes. While the probes hardcoded that string, an edit to the registry's namespace would have failed them. Once both sides read the registry, a registry edit moves them together and the probes stay green.
+
+That detection was assumed to have relocated to the registry's own suite, and the assumption was wrong: of the five namespace strings, only the participation index was pinned there. The four catalogue namespaces had no literal pin anywhere. A deliberate pin was therefore added, following the pattern the registry suite already uses for other namespaces, asserting each of the four namespace strings, its schema version, its singleton catalogue object key, its sensitivity, and that it resolves from the registry under its own key. Two guards make it more than a restatement: resolving each definition through the authority set stops a definition satisfying the test while absent from the registry, and asserting the four addresses are distinct catches a copy-paste that collapsed two, which every per-definition assertion would otherwise pass.
+
+The pin was proven capable of failing rather than assumed to work. Renaming the work-unit namespace in the registry made it fail with the expected string diff; the registry file was then restored and confirmed byte-identical to the committed content, with the suite green again at twenty-six tests.
+
+Verified with sixty tests across the four repointed roundtrip modules plus the work-unit module, one hundred and eighty-one across the whole modelo tree, twenty-six across the registry suite carrying the new pin, and thirty-four across both namespace adoption gates and the registry suite. Type checking and both lint passes are clean on the touched files, and collect-only is clean at fourteen thousand three hundred and eighty-nine tests.
 
 ## Notes
 
