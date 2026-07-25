@@ -35,6 +35,8 @@ from .. import (
     censal_facts_from_read,
     open_censo_divergences,
     reconcile_censal_read,
+    record_to_effective_facts,
+    record_to_path_values,
 )
 from .._orchestration import profile_create_storage_span, register_active_profile, set_active_fields
 
@@ -264,6 +266,88 @@ class TestReconciliation:
             )
             diverged = "contact.postcode" in {axis for axis, _ in outcome.divergences}
             assert diverged is expect_divergence, f"source={source} diverged={diverged}"
+
+    @pytest.mark.parametrize(
+        "aeat_postcode",
+        [pytest.param("08032", id="authority-unchanged"), pytest.param("08099", id="authority-changed")],
+    )
+    def test_an_explicitly_cleared_path_is_reported_never_re_adopted(
+        self,
+        schema: ProfileSchemaDefinition,
+        aeat_postcode: str,
+    ) -> None:
+        """A clear is a declaration and survives a pull either way.
+
+        Both cases run because the regression this pins was ASYMMETRIC: the
+        clear survived when AEAT happened to agree and was silently undone
+        when AEAT had moved on, so whether the operator's deletion held
+        depended on the authority rather than on the operator. Parametrising
+        both makes that asymmetry impossible to reintroduce unnoticed.
+        """
+        with profile_create_storage_span(_PROFILE_ID) as routing:
+            state = _register(schema, routing)
+            state = set_active_fields(
+                state,
+                (UserProfileFact(path="contact.postcode", value="08032", source=CENSO_SOURCE_TAG),),
+            )
+            state = set_active_fields(state, (UserProfileFact(path="contact.postcode", value=None),))
+            outcome = reconcile_censal_read(
+                state.active_profile_record(schema=schema),
+                censal_facts_from_read(_read(codigo_postal=aeat_postcode)),
+            )
+            assert "contact.postcode" not in {fact.path for fact in outcome.adopted}
+            assert ("contact.postcode", aeat_postcode) in outcome.divergences
+
+
+class TestEffectiveFactProjection:
+    """The projection the reconciliation adjudicates against."""
+
+    def test_value_and_source_cannot_come_from_different_facts(
+        self,
+        schema: ProfileSchemaDefinition,
+    ) -> None:
+        """One record per path is what makes disagreement structurally impossible."""
+        with profile_create_storage_span(_PROFILE_ID) as routing:
+            state = _register(schema, routing)
+            state = set_active_fields(
+                state,
+                (UserProfileFact(path="contact.postcode", value="11111", source=PROVENANCE_SOURCE_MANUAL_CLI),),
+            )
+            state = set_active_fields(
+                state,
+                (UserProfileFact(path="contact.postcode", value="22222", source=CENSO_SOURCE_TAG),),
+            )
+            effective = record_to_effective_facts(state.active_profile_record(schema=schema))
+            assert effective["contact.postcode"].value == "22222"
+            assert effective["contact.postcode"].source == CENSO_SOURCE_TAG
+
+    def test_a_cleared_path_stays_visible_as_none(self, schema: ProfileSchemaDefinition) -> None:
+        """The value-only projection cannot express a clear; this one must.
+
+        The repository keeps ONE fact per path, so clearing replaces the
+        value with ``None`` rather than appending. ``record_to_path_values``
+        then filters that fact out and the path vanishes entirely — which
+        reads downstream as "never set", indistinguishable from a path the
+        operator never touched. That is the whole reason a value-only view
+        cannot adjudicate a pull: a deliberate deletion and an untouched
+        field look identical.
+
+        Anti-tautology against the shared projection: the same record is read
+        both ways and the assertion is that they DISAGREE in exactly that
+        way, so a future change collapsing them back would fail here.
+        """
+        with profile_create_storage_span(_PROFILE_ID) as routing:
+            state = _register(schema, routing)
+            state = set_active_fields(
+                state,
+                (UserProfileFact(path="contact.postcode", value="08032", source=CENSO_SOURCE_TAG),),
+            )
+            state = set_active_fields(state, (UserProfileFact(path="contact.postcode", value=None),))
+            record = state.active_profile_record(schema=schema)
+            effective = record_to_effective_facts(record)
+            assert "contact.postcode" in effective
+            assert effective["contact.postcode"].value is None
+            assert "contact.postcode" not in record_to_path_values(record)
 
 
 class TestApply:

@@ -244,9 +244,10 @@ if TYPE_CHECKING:
     from ._profile_pointer_transaction import active_profile_pointer_transaction
     from ._profile_repository import ProfileRepository
     from ._projections import (
+        EffectiveFact,
         facts_to_values,
         projection_for_taxpayer,
-        record_to_path_sources,
+        record_to_effective_facts,
         record_to_path_values,
         record_to_values,
         snapshot_to_values,
@@ -334,7 +335,8 @@ _LAZY_EXPORTS: dict[str, str] = {
             (
                 "facts_to_values",
                 "projection_for_taxpayer",
-                "record_to_path_sources",
+                "EffectiveFact",
+                "record_to_effective_facts",
                 "record_to_path_values",
                 "record_to_values",
                 "snapshot_to_values",
@@ -536,6 +538,7 @@ __all__ = [
     "DuplicateProfileCommand",
     "EditProfileFieldCommand",
     "EditProfileSectionCommand",
+    "EffectiveFact",
     "EncryptedProfileBundleError",
     "EncryptedProfileBundleExport",
     "PassphraseAssessment",
@@ -623,7 +626,7 @@ __all__ = [
     "reactivate_profile_with_lifecycle_span",
     "reconcile_censal_read",
     "reconcile_prepared_exports",
-    "record_to_path_sources",
+    "record_to_effective_facts",
     "record_to_path_values",
     "record_to_values",
     "recover_secret_store",

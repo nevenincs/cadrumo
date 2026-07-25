@@ -14,6 +14,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from pydantic import BaseModel
+
+from ...core import STRICT_FROZEN_CONFIG
 from ...domain.deadlines import IVARegime, TaxpayerProfile, taxpayer_profile_from_mapping
 from ...domain.user_profile import (
     ProfileSchemaDefinition,
@@ -121,22 +124,48 @@ def record_to_path_values(record: UserProfileRecord | UserProfileSnapshot | None
     return {fact.path: _render_fact_value(fact.value) for fact in record.facts if fact.value is not None}
 
 
-def record_to_path_sources(record: UserProfileRecord | UserProfileSnapshot | None) -> dict[str, str]:
-    """Project a record into a schema-path-keyed provenance-token mapping.
+class EffectiveFact(BaseModel):
+    """The fact currently in force at one schema path.
 
-    The provenance companion to :func:`record_to_path_values`, resolved by
-    the same last-fact-wins rule over the same filter (facts whose value is
-    not ``None``), so a path's value and its source always describe the same
-    effective fact rather than two different ones.
+    ``value`` is the rendered canonical token, or ``None`` when the path was
+    explicitly CLEARED. A cleared path is not the same as an unset one: it
+    carries an operator decision — *I do not want this on my profile* — and a
+    caller that cannot see the difference will treat the deletion as absence
+    and quietly undo it.
+    """
 
-    Callers that must know WHERE a value came from need this: a value the
-    operator declared and a value an automated pull adopted are
-    indistinguishable by value alone, and treating them alike lets a stale
-    pulled value outrank a fresher authoritative one.
+    model_config = STRICT_FROZEN_CONFIG
+
+    value: str | None = None
+    source: str
+
+
+def record_to_effective_facts(
+    record: UserProfileRecord | UserProfileSnapshot | None,
+) -> dict[str, EffectiveFact]:
+    """Project a record into the effective fact at each schema path.
+
+    Unlike :func:`record_to_path_values`, which resolves the last fact whose
+    value is not ``None`` (correct for callers that want an effective VALUE,
+    since a cleared path has none), this resolves the last fact per path
+    REGARDLESS of value, so an explicit clear stays visible as
+    ``value=None``.
+
+    Returning one record per path rather than parallel value and source
+    mappings is deliberate: two mappings can disagree about which fact is
+    effective, and a value adjudicated against a different fact's provenance
+    is a subtler failure than the one such a split is usually introduced to
+    fix. Here they cannot disagree, because there is only one answer.
     """
     if record is None:
         return {}
-    return {fact.path: fact.source for fact in record.facts if fact.value is not None}
+    effective: dict[str, EffectiveFact] = {}
+    for fact in record.facts:
+        effective[fact.path] = EffectiveFact(
+            value=None if fact.value is None else _render_fact_value(fact.value),
+            source=fact.source,
+        )
+    return effective
 
 
 def projection_for_taxpayer(

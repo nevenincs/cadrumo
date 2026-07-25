@@ -166,6 +166,15 @@ def reconcile_censal_read(
       that does not exist. A censal address change is the likeliest reason
       to pull at all, so this is the path that keeps a profile current.
 
+    A path the operator explicitly CLEARED is never re-adopted, whatever
+    wrote it originally. A clear is a declaration — *I do not want this on
+    my profile* — and it is the one form of declaration a value-only
+    projection cannot show, because a cleared path still projects its
+    previous value. The authority's value is reported as a divergence
+    instead of being written back: the operator's deletion stands, and they
+    still learn that AEAT holds something there, which matters because they
+    file against AEAT's record and not against their profile.
+
     Comparison is exact after a whitespace strip. No per-field
     normalisation is applied: deciding that two differently-written
     cadastral references or postcodes mean the same thing is a guess about
@@ -180,20 +189,27 @@ def reconcile_censal_read(
     Returns:
         The :class:`CensalReconciliation` split.
     """
-    from ._projections import record_to_path_sources, record_to_path_values
+    from ._projections import record_to_effective_facts
 
-    existing = record_to_path_values(record)
-    sources = record_to_path_sources(record)
+    existing = record_to_effective_facts(record)
     adopted: list[UserProfileFact] = []
     divergences: list[tuple[str, str]] = []
     for fact in facts:
-        current = existing.get(fact.path)
+        effective = existing.get(fact.path)
         incoming = str(fact.value)
-        if current is None or not current.strip():
+        if effective is None:
+            # Never set: nothing of the operator's to protect.
+            adopted.append(fact)
+            continue
+        current = effective.value
+        if current is None:
+            # Explicitly cleared: the deletion IS the operator's answer.
+            divergences.append((fact.path, incoming))
+        elif not current.strip():
             adopted.append(fact)
         elif current.strip() == incoming.strip():
             continue
-        elif sources.get(fact.path) == CENSO_SOURCE_TAG:
+        elif effective.source == CENSO_SOURCE_TAG:
             adopted.append(fact)
         else:
             divergences.append((fact.path, incoming))
