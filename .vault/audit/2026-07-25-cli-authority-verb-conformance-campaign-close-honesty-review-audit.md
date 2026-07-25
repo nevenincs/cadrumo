@@ -357,6 +357,61 @@ semantic duplication re-audit across functionality clusters, and the formal
 code review over the campaign diff. None of those were run to completion, and
 none should be recorded as satisfied.
 
+### period-grammar-was-stale-tests | medium | The candidate accept-path regression was four tests stale against the --file conversion
+
+Escalated as a possible functional break — a period token the canonical grammar
+accepts being refused at the boundary — and resolved as neither a regression
+nor an instructive-refusal breach.
+
+All four cases passed the statement path positionally. The verb moved to a
+required `--file` under the pull-and-file standard, so Click refused the
+unexpected argument and every case died at parse time, before any period logic
+ran. That is the whole explanation for the bare usage block: it was Click
+refusing an extra argument, not a period refusal that had lost its accepted-set
+prose.
+
+Driven through `--file`, the real refusal names the accepted tokens and the
+corrected invocation. The instructive-refusal requirement is met, and the three
+message-quality concerns dissolve with it. Fixed at commit `e351ded266`: 18
+passed, previously 4 failed and 14 passed.
+
+Worth recording because the failure mode was well disguised. A stale invocation
+against a renamed option surfaces as a refusal-shaped error at exactly the
+boundary whose refusal text is under scrutiny, which is why it read as a
+grammar defect from the failure output alone. The discriminator was cheap —
+invoke the verb both ways by hand and compare — and no amount of reading the
+assertion messages would have produced it.
+
+The durability point stands regardless: these cases assert against rendered
+operator prose, so a boundary change reds them rather than a behaviour change.
+Asserting the accepted set on the error envelope's structured context would
+survive the next wording pass.
+
+### instruments-assert-unproven-sets | high | Three false-green gates, one shared failure mode, one cheap fix
+
+Consolidating what were three separate observations, because they generalise
+and the generalisation is the actionable part.
+
+The write-guard parity gate collects catalogue entries whose family classifies
+read-only and asserts that set is empty — but an unknown command key classifies
+as not-read-only, so a dead entry never enters the set. The namespace-adoption
+gate walks 879 production files, finds zero subjects, and asserts that empty
+list is empty. A naive lazy command-tree walk yields one leaf and asserts over
+it without error.
+
+Each asserts a property of a set it never proves is non-empty. Each is green.
+None can distinguish "the property holds" from "there was nothing to check".
+
+The fix is a floor assertion — assert the subject count is non-zero, and where
+a plausible size is known, assert against it — which is a few lines per gate
+and would have caught all three. The write-guard gate added in this review
+asserts a minimum leaf count for exactly this reason, so the pattern is already
+demonstrated in-tree.
+
+This is the campaign's most transferable finding. The duplication runner was
+repaired against the same failure mode in an earlier wave, which means the
+project has now hit it four times in four unrelated instruments.
+
 ## Recommendations
 
 Each recommendation below is tracked as a Step with a verification gate, per

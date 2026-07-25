@@ -456,6 +456,8 @@ Run the formal code-review skill, reconcile findings, and prove every accepted A
 - [ ] `W06.P20.S280` - Remove the retired evidence-bundle replay from the modelo-390 records-audit sequence prose, which contradicts its own blocked annotation; `docs/_sequences/contracts/how-to/modelo-390/`.
 - [ ] `W06.P20.S281` - Resolve the seven unallowlisted tokens reddening the period combined-string gate at HEAD; `src/cadrumo/tests/`.
 - [ ] `W06.P20.S282` - Remove the two Code-Stands-Alone violations, a feature tag in a hashing test docstring and vault stems in the duplication disposition fields; `src/cadrumo/core/tests/test_hashing_adoption.py; dev/audit/duplication_dispositions.toml`.
+- [ ] `W06.P20.S283` - Give every set-asserting gate an anti-vacuity floor, asserting the subject count is non-zero before asserting the property, across the write-guard parity, namespace-adoption and tree-walk gates; `src/cadrumo/`.
+- [ ] `W06.P20.S284` - Assert the accepted period tokens on the error envelope structured context rather than on rendered prose, so a wording pass cannot red the grammar cases; `src/cadrumo/entrypoints/cli/tests/test_ledger_period_grammar.py`.
 
 ## Description
 
