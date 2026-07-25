@@ -45,6 +45,26 @@ from ._inventory import (
     repo_path,
     repo_relative,
 )
+from ._size_budget import (
+    CALLABLE_POLICY,
+    MIN_SCANNED_CALLABLES,
+    MIN_SCANNED_MODULES,
+    MODULE_POLICY,
+    SIZE_BUDGET_BASELINE_PATH,
+    BudgetPolicy,
+    EmptyScanError,
+    SizeBudgetBaseline,
+    assert_real_corpus,
+    build_limits,
+    callable_key,
+    evaluate_budget,
+    load_size_budget_baseline,
+    measure_callable_lines,
+    measure_module_lines,
+    scan_callable_lines,
+    scan_module_lines,
+    write_size_budget_baseline,
+)
 
 if TYPE_CHECKING:
     from ._justificante_parse_cache import parse_committed_justificante_fixture
@@ -53,15 +73,30 @@ FIXTURES_DIR: Path = Path(__file__).resolve().parent / "fixtures"
 """Root of the on-disk fixture tree bundled with the package."""
 
 __all__ = [
+    "CALLABLE_POLICY",
     "FIXTURES_DIR",
+    "MIN_SCANNED_CALLABLES",
+    "MIN_SCANNED_MODULES",
+    "MODULE_POLICY",
     "REPO_ROOT",
+    "SIZE_BUDGET_BASELINE_PATH",
     "SRC_CADRUMO",
+    "BudgetPolicy",
+    "EmptyScanError",
+    "SizeBudgetBaseline",
     "aeat_relative",
     "apply_collection_storage_root",
+    "assert_real_corpus",
     "ast_for_path",
+    "build_limits",
+    "callable_key",
     "collection_storage_root",
     "discover_test_control_modules",
+    "evaluate_budget",
     "leaf_name",
+    "load_size_budget_baseline",
+    "measure_callable_lines",
+    "measure_module_lines",
     "module_name",
     "non_test_package_python_files",
     "non_test_python_files_under",
@@ -75,7 +110,10 @@ __all__ = [
     "register_collection_storage_root_cleanup",
     "repo_path",
     "repo_relative",
+    "scan_callable_lines",
+    "scan_module_lines",
     "temporary_env",
+    "write_size_budget_baseline",
 ]
 
 

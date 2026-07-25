@@ -1,4 +1,36 @@
-"""Codebase-wide module and callable size ratchets."""
+"""Codebase-wide module and callable size ratchets, against a generated band.
+
+The limits live in the committed, GENERATED table
+``dev/audit/size_budget_baseline.json`` rather than in a hand-maintained dict
+here. That is the whole point of this module's current shape: the predecessor
+kept per-module pins inline, each documented in prose as sitting at exactly the
+present size with no headroom, and peers then split or shrank those modules
+without lowering the pins. The mechanism kept working while its numbers rotted —
+aggregate positive slack reached 9139 lines, the widest single entry permitted
+1261 lines of regrowth, and thirteen entries had fallen below the DEFAULT limit,
+making the override pure dead weight. Every one of those gates reported green.
+
+So the ratchet is now two-sided and its numbers are machine-written:
+
+* an entry that GROWS past its limit fails, as before, and
+* a limit that DRIFTS above its subject past the declared slack tolerance also
+  fails, because that gap is exactly the window of invisible regrowth.
+
+A stale limit is therefore self-reporting instead of silently permissive, and the
+remedy is one command rather than a hand-edit whose prose decays again:
+``python -m dev.audit.size_budget --write-baseline``, reviewed and committed.
+
+Headroom policy is declared once, in :mod:`._size_budget`, not restated in
+comments that can go stale: a limit is the measured size plus five percent, and
+the tolerated slack is ten percent of the limit, each with a small absolute
+floor. Zero-headroom pinning was the predecessor's stated policy and is what
+produced the churn, because in a tree with many concurrent authors it reds on the
+next landing and gets hand-raised.
+
+Both scans refuse an under-populated corpus, and both ratchet directions carry a
+positive control that drives the real production scanner over a real temporary
+tree, so a pass here cannot be a pass by measuring nothing. No mocks or skips.
+"""
 
 from __future__ import annotations
 
@@ -7,251 +39,286 @@ from pathlib import Path
 
 import pytest
 
-from ._inventory import package_ast_items, package_python_files, repo_relative
+from ._inventory import REPO_ROOT
+from ._size_budget import (
+    CALLABLE_POLICY,
+    MIN_SCANNED_CALLABLES,
+    MIN_SCANNED_MODULES,
+    MODULE_POLICY,
+    SIZE_BUDGET_BASELINE_PATH,
+    EmptyScanError,
+    assert_real_corpus,
+    build_limits,
+    callable_key,
+    evaluate_budget,
+    load_size_budget_baseline,
+    measure_callable_lines,
+    measure_module_lines,
+    scan_callable_lines,
+    scan_module_lines,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_DEFAULT_MODULE_LINE_LIMIT = 1250
-_DEFAULT_CALLABLE_LINE_LIMIT = 180
-_MODULE_LINE_LIMIT_OVERRIDES = {
-    "src/cadrumo/application/modelo/tests/test_export.py": 1585,  # SPLIT-CANDIDATE
-    # SPLIT-CANDIDATE
-    "src/cadrumo/domain/calculations/registry/tests/test_loader_directory_mode.py": 1380,
-    "src/cadrumo/domain/calculations/registry/_workbook_parity.py": 1298,  # SPLIT-CANDIDATE (+6: sys.platform guard so ty resolves winreg only on win32)
-    # Extracted the IRNR/M210 formula-op evaluator family to the sibling
-    # `_formula_runtime_irnr.py` module and the shared error types + numeric
-    # accessor to `_formula_runtime_ops.py` (registry-resolver-family-extraction),
-    # bringing the module from 2069 down to its present size to hold the ceiling.
-    # SPLIT-CANDIDATE: further formula-op families can still be extracted.
-    "src/cadrumo/domain/calculations/registry/_formula_runtime.py": 1835,  # SPLIT-CANDIDATE
-    # M131 EO-modulos engine test carries per-activity coefficient-dataset
-    # tables verified against the AEAT manual worked examples; data-shaped
-    # growth. SPLIT-CANDIDATE: split the per-activity dataset fixtures out.
-    "src/cadrumo/domain/calculations/registry/tests/test_modelo_131_modulos_engine.py": 1517,  # SPLIT-CANDIDATE
-    "src/cadrumo/application/filing/tests/test_export.py": 1270,  # SPLIT-CANDIDATE
-    "src/cadrumo/entrypoints/cli/_modelo.py": 1320,  # SPLIT-CANDIDATE (recovered growth)
-    # Oversize modules pinned to their present size so future work must split
-    # before growing them further. Entries marked SPLIT-CANDIDATE grew past a
-    # prior pin under concurrent feature work and are re-pinned to hold the new
-    # ceiling; their owners should extract submodules during their next pass.
-    "src/cadrumo/application/calculations/_cross_period_clean_state.py": 1535,  # SPLIT-CANDIDATE
-    "src/cadrumo/application/calculations/tests/test_cross_period_clean_state.py": 1645,  # SPLIT-CANDIDATE
-    "src/cadrumo/application/ledger/_llm_classification.py": 1664,  # SPLIT-CANDIDATE (active LLM-ledger growth)
-    # Manual ledger-action surface grew to 1278 under concurrent ledger feature
-    # work; first override, pinned with small headroom per the ship-authorised
-    # rebaseline. That headroom is now spent (1317) under continued ledger
-    # feature work, so this is re-pinned at EXACTLY the present size with NO
-    # headroom: the next line of growth reds this gate again instead of being
-    # absorbed. SPLIT-CANDIDATE: extract manual-command helpers on the next pass.
-    "src/cadrumo/application/ledger/_actions_manual.py": 1317,  # SPLIT-CANDIDATE
-    "src/cadrumo/application/modelo/_verification_actions.py": 1750,  # SPLIT-CANDIDATE
-    # Grew with the state-root derivation table and the per-family growth-lifecycle
-    # settings (log rotation cap/backup, LLM cache/usage/run-telemetry retention,
-    # run-trace + wallet-dump + corpus-cache retention/derivation); re-pinned to
-    # present size. Grew again to 1412 under the active-profile env-source
-    # severance (net +75: the pointer-file writer contract, the removal of the
-    # env slot from the documented inventory, and the surviving-writer prose).
-    # Re-pinned at EXACTLY the present size with no headroom. The split-by-mixin
-    # direction is proven, not theoretical: extracting the LLM and MCP-serving
-    # settings into mixins took this module down by ~104 lines.
-    # SPLIT-CANDIDATE: continue that mixin extraction on the next pass.
-    "src/cadrumo/core/config.py": 1412,  # SPLIT-CANDIDATE
-    # Active live-censo calendar reconciliation is landing in this shared tree;
-    # keep a bounded ceiling so unrelated closeout sweeps can proceed while it settles.
-    # Live-censo calendar reconciliation is actively landing and growing; bounded
-    # settling ceiling (present size + margin) per the rationale below.
-    "src/cadrumo/application/overview/_calendar.py": 1667,  # SPLIT-CANDIDATE
-    "src/cadrumo/application/overview/tests/test_calendar.py": 1396,
-    "src/cadrumo/application/overview/tests/test_calendar_filing_evidence.py": 1530,  # SPLIT-CANDIDATE
-    # secure_objects.py: extracted the raw-row decode/fault-isolation codec
-    # (_list_item_from_raw_row) to the sibling _secure_object_row_codec.py
-    # module alongside the existing secure_object_record_from_row extraction;
-    # that split put it back under the default budget. The WP10 core-complexity
-    # decomposition (1110a630d1) then split its remaining hotspot callables into
-    # named helpers, taking it 1219 -> 1277: the added lines are helper
-    # signatures and docstrings, and radon reports no callable above C. Restoring
-    # the schema-lineage ceiling wording on two iteration docstrings took it
-    # 1277 -> 1279. Pinned at that size.
-    "src/cadrumo/adapters/persistence/storage/sql/secure_objects.py": 1279,  # SPLIT-CANDIDATE
-    # M143/M156/M185/M186/M490/M604/M763/M848 applicability-rule enrollment
-    # (data-shaped dict literal growth); SPLIT-CANDIDATE: extract the rule
-    # table into per-family submodules during the next applicability pass.
-    "src/cadrumo/domain/calculations/registry/_applicability.py": 2156,  # SPLIT-CANDIDATE
-    "src/cadrumo/domain/calculations/registry/_schema.py": 1490,  # SPLIT-CANDIDATE
-    "src/cadrumo/entrypoints/cli/tests/test_registry_cli.py": 1360,  # SPLIT-CANDIDATE (Period construction verbosity)
-    # Regrew to 1296 under concurrent live-command feature work plus
-    # feature/profile branch growth; re-pinned with small headroom per the
-    # ship-authorised rebaseline (mirrors the sibling override in
-    # test_cli_module_size.py).
-    "src/cadrumo/entrypoints/cli/_app_live.py": 1320,  # SPLIT-CANDIDATE
-    # _ledger_payloads.py: extracted the invoice/inventory/evidence sub-app
-    # payload families to the sibling `_ledger_business_payloads.py` module
-    # (registry-resolver-family-extraction, following the module's own
-    # documented split pattern); back under the default budget, override
-    # removed.
-    # _modelo_payloads.py: extracted the `bindings list`/`bindings resolve`
-    # payload family to the sibling `_modelo_bindings_payloads.py` module,
-    # following the split pattern already established by
-    # `_modelo_aux_payloads.py` / `_modelo_revision_payload_parts.py`;
-    # re-pinned to the smaller post-split size.
-    "src/cadrumo/entrypoints/cli/_modelo_payloads.py": 1341,  # SPLIT-CANDIDATE
-    # _record_design.py sat at EXACTLY the 1250 default and was pushed to 1252 by
-    # the ruff 0.15.22 -> 0.16.0 formatter reflow (5d41cdccc2, +8/-6 on this file,
-    # no logic change): the new formatter joins comprehensions and call chains the
-    # old one split. This is toolchain line-wrapping, not acquired complexity, so
-    # a split would be the wrong remedy. Pinned at the reflowed size; NOT marked
-    # SPLIT-CANDIDATE, because the module has not actually grown.
-    "src/cadrumo/domain/calculations/registry/_record_design.py": 1252,
-    # The two CLI modules below mirror the sibling overrides in
-    # test_cli_module_size.py, which is the gate that flagged them; both are
-    # pinned at EXACTLY the present size with no headroom.
-    # _config_payloads.py: login/logout campaign growth (login and logout door
-    # registrations, the hard-cut switch, the profile-export cleartext-window fix).
-    "src/cadrumo/entrypoints/cli/_config_payloads.py": 1266,  # SPLIT-CANDIDATE
-    # _ledger_read_cli.py: invoice-linkage campaign growth (single-transaction
-    # link commit, typed link-inconsistency direction, linkage audit event).
-    "src/cadrumo/entrypoints/cli/_ledger_read_cli.py": 1257,  # SPLIT-CANDIDATE
-    # New peer-introduced modules discovered by the size-budget gate;
-    # pinned at present size pending an owner split pass.
-    "src/cadrumo/adapters/outbound/google/_calc_sheets_apply.py": 1272,  # SPLIT-CANDIDATE (+13: call-time vault-folder Settings deferral, 1d026764cc)
-    "src/cadrumo/adapters/outbound/google/_calc_sheets_pull.py": 1316,  # SPLIT-CANDIDATE (regrew past prior pin)
-    # Extracting caller-override reconciliation out of the calculate-diagnostics
-    # entry (e3caca846b) took this module 1367 -> 1452. Pinned at the
-    # post-decomposition size.
-    "src/cadrumo/application/modelo/_calculation_actions.py": 1452,  # SPLIT-CANDIDATE (regrew past prior pin)
-    "src/cadrumo/application/aggregation/_iva_ledger.py": 1617,  # SPLIT-CANDIDATE
-    # feature/profile branch growth; re-pinned past prior ceiling.
-    "src/cadrumo/application/wizard/_commands.py": 2117,  # SPLIT-CANDIDATE
-    # _loader.py: extracted the locale-translation load/merge/inject pipeline
-    # to the sibling `_loader_locales.py` module (registry-resolver-family-
-    # extraction); was back under the default budget with the override removed,
-    # then regrew past the ceiling from the disk-cache hardening/perf commits
-    # (`21f3875c90`, `17919422a6`, `1f848d087c`). Load-bearing registry compiler;
-    # re-pinned to present size pending an owner split pass rather than a
-    # same-pass extraction.
-    # Regrew again from the fingerprint-count disk-cache eviction helper.
-    "src/cadrumo/domain/calculations/registry/_loader.py": 1445,  # SPLIT-CANDIDATE
-    "src/cadrumo/domain/calculations/registry/_queries.py": 1331,  # SPLIT-CANDIDATE
-    "src/cadrumo/domain/calculations/registry/_ledger_bindings.py": 1440,  # SPLIT-CANDIDATE
-    "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_registry_roles.py": 1373,  # SPLIT-CANDIDATE
-    "src/cadrumo/domain/transactions/_models.py": 1419,  # SPLIT-CANDIDATE
-    "src/cadrumo/entrypoints/cli/_config/__init__.py": 1261,  # SPLIT-CANDIDATE
-    # Authentication lifecycle responsibilities keep this module above the
-    # default budget. The WP2 auth decomposition (d6e1dbf7a3, plus the
-    # signature-typing follow-up e03b9674b8) split its complexity hotspots into
-    # named private helpers, taking it 1436 -> 1575; radon now reports no callable
-    # above C here. Pinned at the post-decomposition size.
-    "src/cadrumo/application/auth/_operator.py": 1575,  # SPLIT-CANDIDATE
-    # The _delete_locked decomposition into named private helpers (f764cc53de)
-    # took this module 1219 -> 1295, its first override. The only callable radon
-    # still rates C is import_ (11). Restoring the sealed-archive durability floor
-    # and the range-gate rationale it pins took it 1295 -> 1312. Pinned at that
-    # size.
-    "src/cadrumo/application/bucket_maintenance/_service.py": 1312,  # SPLIT-CANDIDATE
-    # The WP11 workflow decomposition (d5a365ae08) took this module from exactly
-    # the default budget (1250) to 1292, its first override, by extracting the
-    # engine's stage helpers. Pinned at the post-decomposition size.
-    "src/cadrumo/application/workflow/_engine.py": 1292,  # SPLIT-CANDIDATE
-}
-_CALLABLE_LINE_LIMIT_OVERRIDES = {
-    ("src/cadrumo/application/modelo/_revision_persistence.py", "persist_filed_revision"): 192,  # SPLIT-CANDIDATE
-    ("src/cadrumo/application/modelo/_filing_actions.py", "file_modelo_revision"): 206,  # SPLIT-CANDIDATE
-    # Recovered-feature growth (stash recovery); SPLIT-CANDIDATE: owners extract helpers.
-    ("src/cadrumo/application/filing/__init__.py", "build_draft"): 208,  # SPLIT-CANDIDATE
-    ("src/cadrumo/application/ledger/_actions_classification.py", "bulk_classify_from_csv"): 185,  # SPLIT-CANDIDATE
-    ("src/cadrumo/application/modelo/_export.py", "export_modelo_revision"): 215,  # SPLIT-CANDIDATE
-    ("src/cadrumo/application/modelo/_projection.py", "project_modelo_100_from_m130"): 290,  # SPLIT-CANDIDATE
-    # Oversize callables pinned to their present size so future edits must split
-    # before growing them. The calculate-with-diagnostics entry grew under the
-    # source-mesh/diagnostics work and is re-pinned (SPLIT-CANDIDATE: extract the
-    # diagnostic-collection helpers).
-    (
-        "src/cadrumo/application/modelo/_calculation_actions.py",
-        "calculate_modelo_revision_from_bucket_aggregation_with_diagnostics",
-    ): 234,  # SPLIT-CANDIDATE (regrew past prior pin)
-    # New peer-introduced trusted-mesh-sources entry function; pinned at
-    # present size pending an owner split pass.
-    (
-        "src/cadrumo/application/modelo/_calculation_actions.py",
-        "_calculate_modelo_revision_with_trusted_mesh_sources",
-    ): 184,  # SPLIT-CANDIDATE
-    (
-        "src/cadrumo/domain/calculations/registry/_formula_runtime.py",
-        "calculate_registry_snapshot",
-    ): 228,  # SPLIT-CANDIDATE
-    ("src/cadrumo/entrypoints/cli/_ledger.py", "ledger_classify"): 234,  # SPLIT-CANDIDATE
-    # Extracted LLM ledger CLI verb; SPLIT-CANDIDATE.
-    ("src/cadrumo/entrypoints/cli/_ledger_llm_cli.py", "ledger_saturate_llm"): 187,
-    ("src/cadrumo/application/modelo/_quickfile.py", "run_modelo_quickfile"): 216,  # SPLIT-CANDIDATE
-    (
-        "src/cadrumo/application/modelo/_verification_actions.py",
-        "verify_modelo_revision",
-    ): 231,  # SPLIT-CANDIDATE (regrew past prior pin)
-    ("src/cadrumo/application/overview/_calendar.py", "build_overview_calendar"): 192,  # SPLIT-CANDIDATE
-    ("src/cadrumo/application/user_profile/_custody_carry.py", "_natural_key_resolvers"): 310,  # SPLIT-CANDIDATE
-    ("src/cadrumo/core/observability/_context.py", "run_context"): 195,  # SPLIT-CANDIDATE
-    (
-        "src/cadrumo/entrypoints/cli/_ledger.py",
-        "ledger_add",
-    ): 250,  # SPLIT-CANDIDATE (regrew to 245; small-headroom rebaseline)
-    ("src/cadrumo/application/user_profile/_profile_repository.py", "create"): 188,  # SPLIT-CANDIDATE
-    ("src/cadrumo/application/aggregation/_iva_ledger.py", "_classify_iva_transaction"): 208,  # SPLIT-CANDIDATE
-    ("src/cadrumo/application/modelo/_calculation_actions.py", "_resolve_bucket_source_mesh"): 200,  # SPLIT-CANDIDATE
-    # +1 line from a Drive-folder-help docstring wording tweak; re-pinned to
-    # the present size.
-    ("src/cadrumo/entrypoints/cli/_ledger_lifecycle_cli.py", "ledger_pull_folder"): 181,
-    # MCP SDK handler-registration factory: every `@server.list_tools()` /
-    # `@server.call_tool()` / etc. handler must close over `server`, `window`,
-    # and the persona/telemetry gates built earlier in the function, so the
-    # handlers cannot be hoisted to module level without threading that state
-    # through explicit parameters on every handler. SPLIT-CANDIDATE: extract
-    # the per-capability handler-builder closures (tools/prompts/resources)
-    # into factory helpers that take the shared state as arguments.
-    ("src/cadrumo/entrypoints/mcp/_server.py", "build_server"): 577,  # SPLIT-CANDIDATE (regrew past prior pin)
-    (
-        "src/cadrumo/entrypoints/mcp/_server.py",
-        "_call_tool",
-    ): 218,  # SPLIT-CANDIDATE (+1: telemetry-refusal startup guard, 02b3656095)
-    # New peer-introduced running-preflight recorder; pinned at present size
-    # pending an owner split pass.
-    ("src/cadrumo/application/workflow/_engine.py", "_stage_running_preflight"): 184,  # SPLIT-CANDIDATE
-}
+_REGENERATE = "python -m dev.audit.size_budget --write-baseline"
 
 
-def _aeat_python_files() -> tuple[Path, ...]:
-    return package_python_files(include_data=True)
+def _write_module(root: Path, name: str, lines: int) -> Path:
+    """Write a real module of exactly *lines* physical lines and return its path."""
+    path = root / name
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(f"x{index} = {index}" for index in range(lines)) + "\n", encoding="utf-8")
+    return path
 
 
-def _relative(path: Path) -> str:
-    return repo_relative(path)
+def _write_callable_module(root: Path, name: str, function: str, body_lines: int) -> Path:
+    """Write a real module holding one function whose body spans *body_lines* lines."""
+    path = root / name
+    path.parent.mkdir(parents=True, exist_ok=True)
+    body = "\n".join(f"    x{index} = {index}" for index in range(body_lines))
+    path.write_text(f"def {function}() -> None:\n{body}\n", encoding="utf-8")
+    return path
 
 
-def test_tracked_python_modules_do_not_exceed_line_budgets() -> None:
-    offenders: list[str] = []
-    for path in _aeat_python_files():
-        relative = _relative(path)
-        line_count = len(path.read_text(encoding="utf-8").splitlines())
-        budget = _MODULE_LINE_LIMIT_OVERRIDES.get(relative, _DEFAULT_MODULE_LINE_LIMIT)
-        if line_count > budget:
-            offenders.append(f"{relative}: {line_count} lines > budget {budget}")
+def test_size_budget_baseline_is_committed_and_populated() -> None:
+    """The generated limit table exists and carries real entries.
 
-    assert offenders == [], "Python module size budget exceeded:\n  " + "\n  ".join(offenders)
+    An absent or empty baseline would silently degrade both ratchets to their
+    default limits, which is a quiet loosening rather than a loud failure.
+    """
+    assert SIZE_BUDGET_BASELINE_PATH.is_file(), (
+        f"missing generated size baseline: {SIZE_BUDGET_BASELINE_PATH}. Regenerate it with `{_REGENERATE}`."
+    )
+    baseline = load_size_budget_baseline()
+    assert baseline.modules, "the generated size baseline declares no module limits"
+    assert baseline.callables, "the generated size baseline declares no callable limits"
 
 
-def test_tracked_production_callables_do_not_exceed_line_budgets() -> None:
-    offenders: list[str] = []
-    for path, tree in package_ast_items(include_data=True):
-        relative = _relative(path)
-        if "/tests/" in relative:
-            continue
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
-                continue
-            if node.end_lineno is None:
-                continue
-            line_count = node.end_lineno - node.lineno + 1
-            budget = _CALLABLE_LINE_LIMIT_OVERRIDES.get((relative, node.name), _DEFAULT_CALLABLE_LINE_LIMIT)
-            if line_count > budget:
-                offenders.append(f"{relative}:{node.name}: {line_count} lines > budget {budget}")
+def test_measured_corpus_is_populated() -> None:
+    """The source and AST walks really reach the tree before anything is judged."""
+    modules = measure_module_lines()
+    callables = measure_callable_lines()
+    assert_real_corpus(modules, callables)
+    assert len(modules) >= MIN_SCANNED_MODULES
+    assert len(callables) >= MIN_SCANNED_CALLABLES
 
-    assert offenders == [], "Python callable size budget exceeded:\n  " + "\n  ".join(offenders)
+
+def _synthetic_corpus(count: int) -> dict[str, int]:
+    """Return a populated ``count``-entry stand-in corpus for guard controls."""
+    return {f"m{index}.py": 1 for index in range(count)}
+
+
+def test_empty_corpus_is_refused_rather_than_reported_clean() -> None:
+    """The corpus guard discriminates: a near-empty scan raises instead of passing."""
+    populated_callables = _synthetic_corpus(MIN_SCANNED_CALLABLES)
+    populated_modules = _synthetic_corpus(MIN_SCANNED_MODULES)
+
+    with pytest.raises(EmptyScanError, match="modules"):
+        assert_real_corpus({"a.py": 1}, populated_callables)
+    with pytest.raises(EmptyScanError, match="callables"):
+        assert_real_corpus(populated_modules, {"a.py::f": 1})
+
+    assert_real_corpus(populated_modules, populated_callables)
+
+
+def test_tracked_python_modules_stay_inside_their_declared_band() -> None:
+    """No module grows past its limit, and no module limit outlives its subject."""
+    actuals = measure_module_lines()
+    callables = measure_callable_lines()
+    assert_real_corpus(actuals, callables)
+
+    verdict = evaluate_budget(actuals, load_size_budget_baseline().modules, MODULE_POLICY)
+    assert verdict.over_budget == (), (
+        "Python module size budget exceeded. Extract a cohesive concern into a sibling module; "
+        f"a plain `{_REGENERATE}` will NOT lift a ceiling you broke through:\n  " + "\n  ".join(verdict.over_budget)
+    )
+    assert verdict.stale == (), (
+        "Python module size limits have drifted above their subject, permitting silent regrowth. "
+        f"Re-measure the band with `{_REGENERATE}`:\n  " + "\n  ".join(verdict.stale)
+    )
+
+
+def test_tracked_production_callables_stay_inside_their_declared_band() -> None:
+    """No production callable grows past its limit, and no limit outlives its subject."""
+    modules = measure_module_lines()
+    actuals = measure_callable_lines()
+    assert_real_corpus(modules, actuals)
+
+    verdict = evaluate_budget(actuals, load_size_budget_baseline().callables, CALLABLE_POLICY)
+    assert verdict.over_budget == (), (
+        "Python callable size budget exceeded. Extract named helpers; "
+        f"a plain `{_REGENERATE}` will NOT lift a ceiling you broke through:\n  " + "\n  ".join(verdict.over_budget)
+    )
+    assert verdict.stale == (), (
+        "Python callable size limits have drifted above their subject, permitting silent regrowth. "
+        f"Re-measure the band with `{_REGENERATE}`:\n  " + "\n  ".join(verdict.stale)
+    )
+
+
+def test_module_ratchet_reports_growth_past_its_limit(tmp_path: Path) -> None:
+    """Positive control: the real module scanner names an oversize module and its count.
+
+    The production scan function is driven over a real on-disk tree rather than a
+    stand-in, so this proves the shipped measurement path discriminates, not that
+    a test-local reimplementation of it does.
+    """
+    over = MODULE_POLICY.default_limit + 40
+    _write_module(tmp_path, "grew.py", over)
+    _write_module(tmp_path, "held.py", MODULE_POLICY.default_limit)
+
+    actuals = scan_module_lines(files=sorted(tmp_path.rglob("*.py")), root=tmp_path)
+    assert actuals == {"grew.py": over, "held.py": MODULE_POLICY.default_limit}
+
+    verdict = evaluate_budget(actuals, {}, MODULE_POLICY)
+    assert verdict.over_budget == (f"grew.py: {over} lines > limit {MODULE_POLICY.default_limit}",)
+    assert verdict.stale == ()
+
+
+def test_module_ratchet_reports_a_limit_that_drifted_above_its_subject(tmp_path: Path) -> None:
+    """Positive control: a limit further above actual than tolerated is itself a finding.
+
+    This is the property the predecessor lacked. A shrunk module whose pin was
+    never lowered passed silently; here it is named, with the exact regrowth
+    window it was permitting.
+    """
+    actual = MODULE_POLICY.default_limit + 10
+    _write_module(tmp_path, "shrank.py", actual)
+    actuals = scan_module_lines(files=sorted(tmp_path.rglob("*.py")), root=tmp_path)
+
+    inside = MODULE_POLICY.limit_for(actual)
+    assert evaluate_budget(actuals, {"shrank.py": inside}, MODULE_POLICY).stale == ()
+
+    drifted = actual + MODULE_POLICY.max_slack_for(actual) + 200
+    stale = evaluate_budget(actuals, {"shrank.py": drifted}, MODULE_POLICY).stale
+    assert len(stale) == 1
+    assert stale[0].startswith(f"shrank.py: pinned at {drifted} but measures {actual}")
+    assert "invisible regrowth" in stale[0]
+
+
+def test_module_ratchet_reports_a_limit_the_default_already_covers(tmp_path: Path) -> None:
+    """Positive control: an override for a module now under the default is dead weight."""
+    actual = MODULE_POLICY.default_limit - 300
+    _write_module(tmp_path, "split.py", actual)
+    actuals = scan_module_lines(files=sorted(tmp_path.rglob("*.py")), root=tmp_path)
+
+    stale = evaluate_budget(actuals, {"split.py": MODULE_POLICY.default_limit + 400}, MODULE_POLICY).stale
+    assert len(stale) == 1
+    assert "dead weight" in stale[0]
+
+
+def test_module_ratchet_reports_a_limit_whose_subject_left_the_tree(tmp_path: Path) -> None:
+    """Positive control: a limit naming a vanished module is reported, not ignored."""
+    _write_module(tmp_path, "present.py", 10)
+    actuals = scan_module_lines(files=sorted(tmp_path.rglob("*.py")), root=tmp_path)
+
+    stale = evaluate_budget(actuals, {"deleted.py": 1400}, MODULE_POLICY).stale
+    assert stale == ("deleted.py: pinned at 1400 but absent from the scanned corpus",)
+
+
+def test_callable_ratchet_reports_growth_past_its_limit(tmp_path: Path) -> None:
+    """Positive control: the real callable scanner names an oversize body and its count."""
+    body = CALLABLE_POLICY.default_limit + 20
+    path = _write_callable_module(tmp_path, "grew.py", "grew", body)
+    _write_callable_module(tmp_path, "held.py", "held", CALLABLE_POLICY.default_limit - 1)
+
+    items = tuple(
+        (candidate, ast.parse(candidate.read_text(encoding="utf-8"))) for candidate in sorted(tmp_path.rglob("*.py"))
+    )
+    actuals = scan_callable_lines(items=items, root=tmp_path)
+    measured = len(path.read_text(encoding="utf-8").splitlines())
+    assert actuals[callable_key("grew.py", "grew")] == measured
+
+    verdict = evaluate_budget(actuals, {}, CALLABLE_POLICY)
+    assert verdict.over_budget == (f"grew.py::grew: {measured} lines > limit {CALLABLE_POLICY.default_limit}",)
+
+
+def test_generated_limits_sit_above_their_measured_subject() -> None:
+    """The generator's band is coherent: every generated limit exceeds its actual.
+
+    Guards the arithmetic itself, so a policy edit that inverted the band (a
+    limit at or below the size it was taken from) fails here rather than reddening
+    the whole fleet on the next landing.
+    """
+    actuals = measure_module_lines()
+    limits = build_limits(actuals, MODULE_POLICY)
+    assert limits, "the module limit table generated from the real tree is empty"
+    for key, limit in limits.items():
+        assert limit > actuals[key], f"{key}: generated limit {limit} does not exceed measured {actuals[key]}"
+        assert actuals[key] > MODULE_POLICY.default_limit, f"{key}: generated a limit the default already covers"
+
+
+def test_regeneration_refuses_to_launder_a_live_offender() -> None:
+    """Positive control: re-measuring never lifts a ceiling a subject broke through.
+
+    This is the property that keeps a staleness fix from becoming the very thing
+    the accepted size-budget decision rejected -- raising a ceiling in place of
+    refactoring. A compliant subject is re-banded; an offender keeps its ceiling
+    and stays red until its owner extracts or growth is explicitly accepted.
+    """
+    default = MODULE_POLICY.default_limit
+    actuals = {"offender.py": default + 400, "compliant.py": default + 100}
+    previous = {"offender.py": default + 200, "compliant.py": default + 900}
+
+    clamped = build_limits(actuals, MODULE_POLICY, previous=previous)
+    assert clamped["offender.py"] == default + 200, "an offender's broken ceiling must not be raised"
+    assert evaluate_budget(actuals, clamped, MODULE_POLICY).over_budget == (
+        f"offender.py: {default + 400} lines > limit {default + 200}",
+    )
+
+    assert clamped["compliant.py"] == MODULE_POLICY.limit_for(default + 100), (
+        "a compliant subject is re-banded to its measured size"
+    )
+    assert clamped["compliant.py"] < previous["compliant.py"], "re-banding a compliant subject lowers its ceiling"
+
+    accepted = build_limits(actuals, MODULE_POLICY, previous=previous, accept_growth=True)
+    assert accepted["offender.py"] == MODULE_POLICY.limit_for(default + 400), (
+        "explicit growth acceptance is the only path that raises a broken ceiling"
+    )
+
+
+def test_committed_baseline_matches_a_regeneration_of_itself() -> None:
+    """The committed table is reachable from the tree it claims to describe.
+
+    Not a byte-equality check against current actuals -- peers land continuously,
+    so that would red constantly. This asserts the weaker, durable property: every
+    committed key is one the generator would still emit, so the table cannot carry
+    an entry for a subject the generator no longer considers over budget.
+    """
+    committed = load_size_budget_baseline()
+    module_keys = set(build_limits(measure_module_lines(), MODULE_POLICY))
+    orphans = sorted(set(committed.modules) - module_keys)
+    assert orphans == [], (
+        f"committed module limits no longer generated from the tree; re-measure with `{_REGENERATE}`:\n  "
+        + "\n  ".join(orphans)
+    )
+
+
+def test_baseline_notes_stay_attached_to_a_live_limit() -> None:
+    """Prose notes are the one hand-maintained surface; none may outlive its key."""
+    baseline = load_size_budget_baseline()
+    live = set(baseline.modules) | set(baseline.callables)
+    orphans = sorted(key for key in baseline.notes if key not in live)
+    assert orphans == [], "baseline notes reference keys that carry no limit:\n  " + "\n  ".join(orphans)
+
+
+def test_baseline_notes_carry_no_pinned_numbers() -> None:
+    """Notes are prose only, so they cannot go numerically stale the way pins did.
+
+    The predecessor's decay was numeric claims embedded in prose ("pinned at
+    EXACTLY the present size"). Keeping digits out of the note surface removes
+    the class rather than trusting authors to keep it true.
+    """
+    offenders = [
+        f"{key}: {value}"
+        for key, value in load_size_budget_baseline().notes.items()
+        if any(token.isdigit() and len(token) >= 3 for token in value.replace(",", " ").split())
+    ]
+    assert offenders == [], (
+        "baseline notes must not restate line counts; they decay while the generated limits do not:\n  "
+        + "\n  ".join(offenders)
+    )
+
+
+def test_baseline_path_resolves_under_the_repository() -> None:
+    """The gate reads the same committed artifact the generator writes."""
+    assert SIZE_BUDGET_BASELINE_PATH == REPO_ROOT / "dev" / "audit" / "size_budget_baseline.json"
