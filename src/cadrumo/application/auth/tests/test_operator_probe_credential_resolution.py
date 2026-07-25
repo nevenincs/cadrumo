@@ -27,7 +27,7 @@ from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
-from .._operator import _assert_login_precondition
+from .._operator import _assert_login_precondition, build_live_auth_preflight_report
 from .._operator_probes import (
     _live_auth_identity_kind,
     _live_auth_identity_state,
@@ -188,6 +188,83 @@ def test_settings_still_win_when_the_profile_carries_nothing() -> None:
 
     assert provider_present is True
     assert alignment == "matches"
+
+
+def test_preflight_reports_a_profile_borne_soporte_as_configured() -> None:
+    """The preflight contraste booleans must see the profile too.
+
+    ``nie_soporte_configured`` is what tells the operator whether the
+    non-QR route can complete. Computed from settings alone it read
+    false for a NIE holder whose soporte sits on the encrypted profile,
+    while live authentication resolved it fine.
+    """
+
+    _register_profile(**{"auth.dni_nie": _TAX_ID, "auth.numero_soporte": "E12345678"})
+    with override_settings(
+        cadrumo_clave_movil_dni_nie=None,
+        cadrumo_clave_movil_nie_soporte=None,
+        cadrumo_clave_movil_dni_fecha=None,
+    ):
+        report = build_live_auth_preflight_report(AuthProviderKind.CLAVE_MOVIL.value)
+
+    assert report.nie_soporte_configured is True
+    assert report.dni_fecha_configured is False
+
+
+def test_preflight_reports_a_profile_borne_validity_date_as_configured() -> None:
+    """The DNI holder's mirror of the same report field."""
+
+    _register_profile(**{"auth.dni_nie": _TAX_ID, "auth.fecha_validez": "2030-01-01"})
+    with override_settings(
+        cadrumo_clave_movil_dni_nie=None,
+        cadrumo_clave_movil_nie_soporte=None,
+        cadrumo_clave_movil_dni_fecha=None,
+    ):
+        report = build_live_auth_preflight_report(AuthProviderKind.CLAVE_MOVIL.value)
+
+    assert report.dni_fecha_configured is True
+    assert report.nie_soporte_configured is False
+
+
+def test_preflight_still_reports_an_absent_contraste() -> None:
+    """Neither source holds a contraste, so both booleans stay false.
+
+    The guard against over-reporting: resolving profile-first must not
+    manufacture a contraste the operator never recorded.
+    """
+
+    _register_profile(**{"auth.dni_nie": _TAX_ID})
+    with override_settings(
+        cadrumo_clave_movil_dni_nie=None,
+        cadrumo_clave_movil_nie_soporte=None,
+        cadrumo_clave_movil_dni_fecha=None,
+    ):
+        report = build_live_auth_preflight_report(AuthProviderKind.CLAVE_MOVIL.value)
+
+    assert report.dni_fecha_configured is False
+    assert report.nie_soporte_configured is False
+
+
+def test_preflight_report_carries_no_identity_material() -> None:
+    """The redaction posture must survive the resolver change.
+
+    The report gained a profile read, so this pins that what it gained
+    is booleans only: neither the identity nor either contraste value
+    may appear anywhere in the serialised report.
+    """
+
+    soporte = "E12345678"
+    _register_profile(**{"auth.dni_nie": _TAX_ID, "auth.numero_soporte": soporte})
+    with override_settings(
+        cadrumo_clave_movil_dni_nie=None,
+        cadrumo_clave_movil_nie_soporte=None,
+        cadrumo_clave_movil_dni_fecha=None,
+    ):
+        report = build_live_auth_preflight_report(AuthProviderKind.CLAVE_MOVIL.value)
+
+    serialised = report.model_dump_json()
+    assert soporte not in serialised
+    assert _TAX_ID not in serialised
 
 
 def test_certificate_provider_is_not_probed_for_clave_credentials() -> None:

@@ -33,7 +33,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
 
 from ...core import AuthProviderKind
-from ...core.config import Settings, load_settings, unwrap_optional_secret
+from ...core.config import Settings, load_settings
 from ...core.i18n import tr
 from ...core.time import now
 from .._workflow_auth_models import (
@@ -522,8 +522,17 @@ class _ClaveMovilPreflightFields(TypedDict):
 def _clave_movil_preflight_fields(
     settings: Settings,
     provider_kind: AuthProviderKind | None,
+    *,
+    state: WorkflowState | None = None,
 ) -> _ClaveMovilPreflightFields:
     """Return the Cl@ve Móvil preflight fields, all ``None`` for other providers.
+
+    The two contraste booleans report whether the operator has recorded
+    the value the non-QR form asks for, so they resolve through the
+    shared profile-first resolver rather than the settings fields alone.
+    Reading settings alone told an operator whose contraste lives on the
+    encrypted profile that it was absent, while live authentication
+    resolved it perfectly well.
 
     The redaction posture is unchanged: identity material never enters the
     report, only booleans and the QR/timeout preferences.
@@ -535,11 +544,12 @@ def _clave_movil_preflight_fields(
             "dni_fecha_configured": None,
             "nie_soporte_configured": None,
         }
+    credentials = probe_clave_credentials(provider_kind, settings=settings, state=state)
     return {
         "prefer_non_qr": settings.cadrumo_clave_prefer_non_qr,
         "timeout_ms": settings.cadrumo_clave_movil_timeout_ms,
-        "dni_fecha_configured": bool((settings.cadrumo_clave_movil_dni_fecha or "").strip()),
-        "nie_soporte_configured": bool(unwrap_optional_secret(settings.cadrumo_clave_movil_nie_soporte).strip()),
+        "dni_fecha_configured": bool(credentials is not None and credentials.fecha_validez),
+        "nie_soporte_configured": bool(credentials is not None and credentials.numero_soporte),
     }
 
 
