@@ -31,12 +31,10 @@ from typing import Final
 import pytest
 
 from ..adapters.persistence.storage import (
-    STORAGE_NAMESPACE_REGISTRY,
-    SecureObjectNamespaceDefinition,
-)
-from ..adapters.persistence.storage._namespace_registry import (
     CONFIG_RESET_JOURNAL_DIRNAME,
     LOGIN_THROTTLE_FILENAME,
+    STORAGE_NAMESPACE_REGISTRY,
+    SecureObjectNamespaceDefinition,
     StoragePathKind,
 )
 from ..core import (
