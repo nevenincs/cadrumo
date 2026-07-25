@@ -10,6 +10,16 @@ related:
   - '[[2026-07-25-censal-profile-autofill-research]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `censal-profile-autofill` plan
 
 ### Phase `P01` - Auth credentials on the profile
@@ -39,8 +49,8 @@ Build the sede reader for mis datos censales, pinned to the consulta view and pr
 
 Commit pulled censal facts through the cotejo authority, and delete the register-based pull that reads a surface carrying no censal data.
 
-- [ ] `P03.S07` - Map the identity and address fields read from mis datos censales onto profile schema paths with a provenance token naming the consulta surface, the regime fields being out of scope while they have no route; `src/cadrumo/application/live`.
-- [ ] `P03.S08` - Commit pulled facts through apply_cotejo, adopting only blank paths and reporting every disagreement; `src/cadrumo/application/live`.
+- [x] `P03.S07` - Map the identity and address fields read from mis datos censales onto profile schema paths with a provenance token naming the consulta surface, the regime fields being out of scope while they have no route; `src/cadrumo/application/live`.
+- [x] `P03.S08` - Commit pulled facts through apply_cotejo, adopting only blank paths and reporting every disagreement; `src/cadrumo/application/live`.
 - [x] `P03.S09` - Delete the register-based censal pull, its manager action and its tests, and re-point the causa-casilla mapping it fed; `src/cadrumo/application/live/_censo_036_pull.py`.
 - [ ] `P03.S10` - Verify the whole path live end to end in three phases, a pull onto a blank profile that adopts, a second unchanged pull that is a no-op, and a third pull after the operator edits an adopted value that reports the divergence rather than overwriting it; `src/cadrumo/application/live/tests`.
 - [x] `P03.S14` - Restore aeat config profile censo pull as the live-transport sibling of censo file --file, reading through the censal reader and persisting through apply_cotejo behind the same --apply door, so both transports reconcile identically; `src/cadrumo/entrypoints/cli/_config/_censo_file.py`.
