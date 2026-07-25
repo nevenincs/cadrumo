@@ -76,9 +76,18 @@ def create_work_unit(
     the period must be declared for that revision. The active profile must also
     be ready for the requested modelo work before any record is inserted.
 
-    If the derived work-unit id already exists, the existing record is returned
-    without emitting another creation event. Otherwise a BORRADOR work unit is
-    inserted and a ``MODELO_WORK_UNIT_CREATED`` bucket event is appended.
+    If the derived work-unit id already exists and is still active, the existing
+    record is returned without emitting another creation event. Otherwise a
+    BORRADOR work unit is inserted and a ``MODELO_WORK_UNIT_CREATED`` bucket
+    event is appended.
+
+    A DESCARTADO unit is REFUSED rather than returned. Because the id is
+    content-addressed over exactly the coordinates this function is given, a
+    retry after a discard re-derives the same id, so returning the record handed
+    the caller a unit every downstream verb then reports as absent — stranding
+    that filing target. The refusal states the dead end instead of restating the
+    command that produced it. Recovery needs a supersede transition, which does
+    not exist yet.
     """
     if period.filing_year != filing_year:
         raise WorkUnitMutationRefusedError(
@@ -127,6 +136,23 @@ def create_work_unit(
     )
     existing = catalogue.get(work_unit_id)
     if existing is not None:
+        if existing.state is WorkUnitState.DESCARTADO:
+            raise WorkUnitMutationRefusedError(
+                f"work unit {work_unit_id!r} for {modelo} {filing_year} "
+                f"{period.registry_token} is discarded, and creating it again "
+                "resolves to that same discarded unit because the id is "
+                "content-addressed over exactly these coordinates",
+                translated_message="application.modelo.errors.work_unit_create_discarded",
+                context={
+                    "work_unit_id": work_unit_id,
+                    "state": existing.state.value,
+                    "modelo": modelo,
+                    "filing_year": str(filing_year),
+                    "period": period.registry_token,
+                    "discarded_at": str(existing.discarded_at),
+                    "discarded_by": existing.discarded_by or "",
+                },
+            )
         return existing
     now = clock or _utc_now()
     unit = WorkUnit(
@@ -238,8 +264,9 @@ def rename_work_unit(
         )
     if existing.state is WorkUnitState.DESCARTADO:
         raise WorkUnitMutationRefusedError(
-            f"work unit {work_unit_id!r} is discarded; "
-            "create a fresh work unit on the same modelo / year / period to continue",
+            f"work unit {work_unit_id!r} is discarded, and re-creating the same "
+            "modelo / year / period resolves to this same discarded unit rather "
+            "than a fresh one",
             translated_message="application.modelo.errors.work_unit_mutation_refused",
         )
     now = clock or _utc_now()
