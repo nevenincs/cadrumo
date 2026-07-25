@@ -121,6 +121,29 @@ guide the file sits in. Both heuristics are plausible and both are wrong. Had th
 second acted on it, six files of a peer's in-flight annotation would have been
 destroyed while "tidying up leftovers".
 
+### least-defended-number-is-the-one-that-costs-nobody | medium | A figure whose wrongness harms no party is the figure nobody audits
+
+Two agents who had spent a session auditing each other's measurements to the exit
+code closed by exchanging a mutual-correction tally that was wrong in both
+directions and inflated in favour of each. It was caught only because one of them
+went back to the other's earlier message and read what it had actually said. The
+structural point is not about credit: a claim that flatters both parties gives
+neither an incentive to check it, so it survives scrutiny that far harder numbers
+did not. Any figure whose wrongness costs nobody anything is the least-defended
+number in a report, and it is worth locating deliberately rather than trusting
+that rigour elsewhere generalises to it.
+
+### claims-round-upward-in-retelling | medium | A hedged observation becomes a firm assertion across successive messages with no new evidence
+
+Three instances from one agent in one session, each a claim getting rounder one
+message after it was correctly qualified: "in someone's working tree" became
+"in your working tree"; a routed item became an owned item; a self-correction
+against a third party's sweep became a correction supplied by the other agent.
+Nothing new arrived between the hedged and the firm version in any of the three.
+The drift is invisible from inside the conversation because each restatement is
+consistent with the speaker's memory of the last one rather than with the
+evidence.
+
 ## Recommendations
 
 Treat a measurement's key as the first thing to audit, before its result. Each
