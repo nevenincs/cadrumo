@@ -978,11 +978,11 @@ application:
       cross_period_clean_state_incomplete: La prova d'estat net entre períodes està
         incompleta per al model {modelo} {filing_year} {period}; queden {finding_count}
         troballa(es).
-      deductible_vat_evidence_missing: 'Les files d''IVA deduible del llibre requereixen
-        evidencia de factura de compra vinculada abans d''aquesta accio. Vincula la
+      deductible_vat_evidence_missing: 'Les files d''IVA deduïble del llibre requereixen
+        evidència de factura de compra vinculada abans d''aquesta acció. Vincula la
         factura al moviment del llibre ABANS d''executar work calculate: l''esborrany
-        agrupa la seva evidencia en verificar-lo, de manera que una factura adjuntada
-        despres no arriba a aquesta declaracio.'
+        agrupa la seva evidència en verificar-lo, de manera que una factura adjuntada
+        després no arriba a aquesta declaració.'
       export_cross_bucket_refused: La revisió indicada pertany a un bucket diferent
         del bucket del perfil actiu. Canvia de perfil abans d'exportar.
       export_draft_approval_failed: No s'ha pogut aprovar l'esborrany per a la revisió
@@ -4227,9 +4227,9 @@ cli:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       attachment_help: Id d'adjunt segur a enllaçar amb el moviment; repetir per a
         diversos adjunts
-      finalized_revision_stale: Justificant desat al moviment del llibre, pero el
-        Model %{modelo} %{filing_year} %{period} es va verificar abans que existis
-        i conserva l'evidencia agrupada llavors. Aquesta declaracio no el recollira;
+      finalized_revision_stale: Justificant desat al moviment del llibre, però el
+        Model %{modelo} %{filing_year} %{period} es va verificar abans que existís
+        i conserva l'evidència agrupada llavors. Aquesta declaració no el recollirà;
         recalcular no ho canvia. Vincula les factures abans d'executar work calculate.
       help: Adjuntar objectes d'evidència segura a un moviment del llibre. Crea abans
         un id de justificant de factura de compra amb 'aeat app ledger evidence add

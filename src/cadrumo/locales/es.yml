@@ -985,10 +985,10 @@ application:
         está incompleta para el modelo {modelo} {filing_year} {period}; quedan {finding_count}
         hallazgo(s).
       deductible_vat_evidence_missing: 'Las filas de IVA deducible del libro requieren
-        evidencia de factura de compra vinculada antes de esta accion. Vincula la
+        evidencia de factura de compra vinculada antes de esta acción. Vincula la
         factura al movimiento del libro ANTES de ejecutar work calculate: el borrador
-        agrupa su evidencia al verificarlo, por lo que una factura adjuntada despues
-        no llega a esta declaracion.'
+        agrupa su evidencia al verificarlo, por lo que una factura adjuntada después
+        no llega a esta declaración.'
       export_cross_bucket_refused: La revisión indicada pertenece a un bucket distinto
         del bucket del perfil activo. Cambia de perfil antes de exportar.
       export_draft_approval_failed: No se pudo aprobar el borrador para la revisión
@@ -4261,9 +4261,9 @@ cli:
       attachment_help: Id de adjunto seguro a enlazar con el movimiento; repetir para
         varios adjuntos
       finalized_revision_stale: Justificante guardado en el movimiento del libro,
-        pero el Modelo %{modelo} %{filing_year} %{period} se verifico antes de que
-        existiera y conserva la evidencia agrupada entonces. Esta declaracion no lo
-        recogera; recalcular no lo cambia. Vincula las facturas antes de ejecutar
+        pero el Modelo %{modelo} %{filing_year} %{period} se verificó antes de que
+        existiera y conserva la evidencia agrupada entonces. Esta declaración no lo
+        recogerá; recalcular no lo cambia. Vincula las facturas antes de ejecutar
         work calculate.
       help: Adjuntar objetos de evidencia segura a un movimiento del libro. Crea antes
         un id de justificante de factura de compra con 'aeat app ledger evidence add

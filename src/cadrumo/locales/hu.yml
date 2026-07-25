@@ -915,11 +915,11 @@ application:
       cross_period_clean_state_incomplete: A keresztidőszaki tiszta állapot igazolása
         hiányos a(z) {modelo} {filing_year} {period} modellhez; {finding_count} megállapítás
         maradt.
-      deductible_vat_evidence_missing: 'A levonhato IVA fokonyvi sorokhoz kapcsolt
-        beszerzesi szamla-bizonylat szukseges ehhez a muvelethez. A szamlat a work
-        calculate futtatasa ELOTT kapcsold a fokonyvi sorhoz: a piszkozat a verifikalaskor
-        rogziti a bizonylatait, ezert a kesobb csatolt szamla mar nem kerul be ebbe
-        a bevallasba.'
+      deductible_vat_evidence_missing: 'A levonható IVA főkönyvi sorokhoz kapcsolt
+        beszerzési számla-bizonylat szükséges ehhez a művelethez. A számlát a work
+        calculate futtatása ELŐTT kapcsold a főkönyvi sorhoz: a piszkozat a verifikáláskor
+        rögzíti a bizonylatait, ezért a később csatolt számla már nem kerül be ebbe
+        a bevallásba.'
       export_cross_bucket_refused: A megcímzett revízió nem az aktív profil bucketjéhez
         tartozik. Exportálás előtt váltson profilt.
       export_draft_approval_failed: Nem sikerült jóváhagyni a(z) %{calculation_revision_id}
@@ -4171,10 +4171,10 @@ cli:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
       attachment_help: A tranzakcióhoz csatolandó biztonságos melléklet azonosítója;
         több melléklet esetén ismételje meg.
-      finalized_revision_stale: A bizonylat elmentve a fokonyvi sorhoz, de a(z) %{modelo}
-        %{filing_year} %{period} nyomtatvanyt mar a bizonylat letrejotte elott verifikaltak,
-        es az akkor rogzitett bizonylatokat orzi. Ez a bevallas nem veszi at; az ujraszamolas
-        ezen nem valtoztat. A szamlakat a work calculate elott kapcsold hozza.
+      finalized_revision_stale: A bizonylat elmentve a főkönyvi sorhoz, de a(z) %{modelo}
+        %{filing_year} %{period} nyomtatványt már a bizonylat létrejötte előtt verifikálták,
+        és az akkor rögzített bizonylatokat őrzi. Ez a bevallás nem veszi át; az újraszámolás
+        ezen nem változtat. A számlákat a work calculate előtt kapcsold hozzá.
       help: Biztonságos bizonyítékobjektumok csatolása egyetlen főkönyvi tranzakcióhoz.
         Vásárlásiszámla-bizonyíték azonosítója előbb a 'aeat app ledger evidence add
         PATH' paranccsal hozható létre.
