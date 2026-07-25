@@ -38,6 +38,10 @@ only modules whose name contains the payload token, inside the declared payload 
 application-layer module named for results is outside both filters, so the registration
 decorators never run and the registry never learns the two keys.
 
+Re-run before reporting, at HEAD `593559067c`: `1 failed, 5 passed in 44.04s`, the same
+live-leaf-schema case. The relocated wizard results module is STILL untracked at that HEAD, so the
+hazard is standing rather than resolved.
+
 ## Notes
 
 The gate is non-tautological and it is right: it compares the live tree against the

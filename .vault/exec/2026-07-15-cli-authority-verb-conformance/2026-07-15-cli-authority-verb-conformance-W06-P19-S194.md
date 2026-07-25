@@ -42,6 +42,10 @@ storage package and its bucket subpackage. Four adapters-to-entrypoints sites: t
 verification, manager screen, theme and registration screen tests all reaching the CLI config
 manager frontend.
 
+Re-run before reporting, at HEAD `593559067c`: `Analyzed 3664 files, 17626 dependencies`,
+`Contracts: 3 kept, 2 broken`, the same two contracts. The verdict is a standing tree property, not
+a single-HEAD reading.
+
 ## Notes
 
 An earlier run at HEAD `1844ef2ea0` failed differently and earlier: the configuration

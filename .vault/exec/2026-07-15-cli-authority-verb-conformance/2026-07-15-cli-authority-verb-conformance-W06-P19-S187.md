@@ -38,6 +38,11 @@ committed line parses to nothing. The uncommitted line parses to a cited command
 tokens are the prose words of the refusal explanation, because the reason text contains the
 literal product token and the parser anchors on that token anywhere in the line.
 
+Re-run before reporting, at HEAD `593559067c`, many commits later: identical result,
+`1 failed, 351 passed in 6.76s`, the same sequence-contract case. The offending edit is STILL
+uncommitted at that HEAD, so the failure is standing peer working-tree state rather than a moment
+that has passed.
+
 ## Notes
 
 This exposes a fragility in the instrument as well as peer churn. The parser deliberately
