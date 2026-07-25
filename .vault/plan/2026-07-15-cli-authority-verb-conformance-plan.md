@@ -430,16 +430,22 @@ Run the formal code-review skill, reconcile findings, and prove every accepted A
 - [ ] `W06.P20.S210` - Resolve every in-scope blocker or major finding through its owning implementation Step; `.vault/plan/2026-07-15-cli-authority-verb-conformance-plan.md`.
 - [ ] `W06.P20.S211` - Rerun every focused or full gate invalidated by a corrective edit; `.vault/exec/`.
 - [ ] `W06.P20.S212` - Record a zero-blocker and zero-major formal review verdict; `.vault/audit/`.
-- [ ] `W06.P20.S213` - Confirm every closed implementation Step has an attributable execution record; `.vault/exec/`.
+- [x] `W06.P20.S213` - Confirm every closed implementation Step has an attributable execution record; `.vault/exec/`.
 - [ ] `W06.P20.S214` - Confirm no removed CLI spelling survives in source, locales, tests, docs, schemas, MCP, or suggestions; `.`.
 - [ ] `W06.P20.S215` - Confirm certificate custody, ledger evidence, portable export, hashing, namespaces, filed capture, LLM review, registry projection, and duplication execution each have one canonical owner and no parallel writer, resolver, parser, or command path; `src/cadrumo/; dev/audit/`.
 - [ ] `W06.P20.S216` - Audit every amended ADR decision, including delete-only certificate cutover, atomic ledger evidence, live export routing, 18 plus 4 hashing consolidation, backend replay removal, namespace adoption, filed capture, LLM review, registry as-of behavior, and truthful duplication infrastructure, against code and objective evidence; `.vault/adr/2026-07-15-cli-authority-verb-conformance-adr.md`.
 - [ ] `W06.P20.S217` - Rebuild the feature index after all plan, execution, audit, ADR, research, and reference artifacts are final; `.vault/`.
 - [ ] `W06.P20.S218` - Run the plan structural check and refuse closure while any Step remains open or malformed; `.vault/plan/2026-07-15-cli-authority-verb-conformance-plan.md`.
-- [ ] `W06.P20.S219` - Run feature-scoped Vaultspec checks and resolve every attributable finding; `.vault/`.
-- [ ] `W06.P20.S220` - Run repository-wide Vaultspec checks and triage unrelated residuals honestly; `.vault/`.
-- [ ] `W06.P20.S221` - Run the required fresh-context campaign-close honesty review with explicit audits for duplicated authority, vacuous adoption tests, ignored accepted parameters, partial transaction commits, and false-green quality infrastructure; `.vault/audit/`.
+- [x] `W06.P20.S219` - Run feature-scoped Vaultspec checks and resolve every attributable finding; `.vault/`.
+- [x] `W06.P20.S220` - Run repository-wide Vaultspec checks and triage unrelated residuals honestly; `.vault/`.
+- [x] `W06.P20.S221` - Run the required fresh-context campaign-close honesty review with explicit audits for duplicated authority, vacuous adoption tests, ignored accepted parameters, partial transaction commits, and false-green quality infrastructure; `.vault/audit/`.
 - [ ] `W06.P20.S222` - Mark the plan complete only after every Step, record, gate, blocker, and major finding is closed; `.vault/plan/2026-07-15-cli-authority-verb-conformance-plan.md`.
+- [ ] `W06.P20.S267` - Verify each open W05 Step against its named surface before checking it, never inferring satisfaction from the live command tree alone; `.vault/plan/2026-07-15-cli-authority-verb-conformance-plan.md`.
+- [ ] `W06.P20.S268` - Complete the W06.P18 and W06.P19 evidence, refusing to close any Step whose execution record lacks a command, a non-zero collected count, an exit line, and a HEAD reference; `.vault/exec/`.
+- [ ] `W06.P20.S269` - Decide in a follow-on ADR the criterion by which a command path is profile-bound, then reconcile the 48 unguarded mutation-shaped leaves against it per verb; `src/cadrumo/application/storage_write_policy.py`.
+- [ ] `W06.P20.S270` - Remove the permissive not-read-only default for unknown command keys, or prove every gate resting on it still discriminates an absent key from a live write verb; `src/cadrumo/application/operator_surface/_classification.py`.
+- [ ] `W06.P20.S271` - Assert structurally that an execution record carries a populated Outcome before its Step may be checked, since the vault check passes empty scaffolds; `.vault/exec/`.
+- [ ] `W06.P20.S272` - Commit the plan file alongside execution records in every closure commit, and land the 31 closures currently held only in the working tree; `.vault/plan/2026-07-15-cli-authority-verb-conformance-plan.md`.
 
 ## Description
 
