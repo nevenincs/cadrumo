@@ -95,6 +95,7 @@ filed marker are shown as display frames. The full evidence-to-export chain runs
 end to end, executed, on [Prepare a Modelo 303 IVA filing](modelo-303.md):
 
 ```{cli-sequence} first-quarter-export-file
+:verify: Confirm the export writes a local fichero and the filing stays local.
 ```
 
 A later quarter builds on this one: leave the three prior-period bindings unset
