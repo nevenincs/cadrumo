@@ -654,6 +654,45 @@ is how the misattribution entered; the numbers show one commit added 134 lines
 and the other removed three. Attribute with `git show --numstat` against the
 file, not with the commit subjects that happen to sit near it in the log.
 
+### this-review-swept-a-peer-campaign | high | The reviewer committed 11 peer files under its own SHA, having verified the wrong scope
+
+Recorded against this review rather than about someone else, because the whole
+point of the finding above is that the guard has to be mechanical.
+
+Commit `3f16615f6b`, whose message concerns a size-budget reattribution, carries
+1913 insertions across 13 files. Two are this review's. The other eleven are the
+censal-profile-autofill campaign's live work — a 749-line sede censal-datos
+adapter, its tests, its fixtures, external constants and two generated API
+stubs — staged by their owner and swept by a bare no-pathspec commit.
+
+The verification that failed is the instructive part. The apply-cached plus
+bare-commit shape was chosen correctly, because the plan file is co-authored.
+The index was then checked with a PATH-SCOPED command against the plan file,
+which correctly reported one changed Step row and zero foreign hunks. That
+answer was true and irrelevant. A bare commit takes the whole index, so the
+question it asks is "is the entire index mine?", and a scoped check cannot
+answer it. Eleven files had been staged by their owner during the intervening
+tool calls.
+
+Content is intact — the peer's adapter and fixtures are all present at HEAD —
+so the damage is attribution only. Un-bundling would require reset or revert
+against a commit, both forbidden here and both risking the peer's work, so the
+sweep is accepted rather than repaired, consistent with how every prior
+occurrence in this worktree has been adjudicated.
+
+The rule this yields: the bare commit's precondition is an UNSCOPED
+`git diff --cached --name-only`, read immediately before committing and ideally
+chained into the same command so nothing can be staged between the check and
+the commit. A scoped check before an unscoped commit is a category error, and
+it is one the existing discipline does not name — every prior incident in this
+worktree was a pathspec commit taking working-tree content, which is the
+opposite failure.
+
+Stated plainly because the review's own credibility depends on it: this is the
+same class of defect the review spent its length documenting in gates — a check
+that runs, passes, and does not measure the thing the operation actually
+depends on.
+
 ## Recommendations
 
 Each recommendation below is tracked as a Step with a verification gate, per
