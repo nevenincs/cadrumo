@@ -253,16 +253,16 @@ Replace duplicate and misleading command doors with the accepted grammar without
 
 Remove lock and sandbox-use aliases and expose the accepted logout, switch, and reset start/status/resume grammar.
 
-- [ ] `W04.P11.S96` - Restrict config switch to UUIDs and exact labels including canonical sandbox labels and reject bare sandbox names; `src/cadrumo/entrypoints/cli/_config/_custody.py`.
-- [ ] `W04.P11.S97` - Remove the config profile sandbox use registration and execution path without an alias; `src/cadrumo/entrypoints/cli/_config/_sandbox.py`.
+- [x] `W04.P11.S96` - Restrict config switch to UUIDs and exact labels including canonical sandbox labels and reject bare sandbox names; `src/cadrumo/entrypoints/cli/_config/_custody.py`.
+- [x] `W04.P11.S97` - Remove the config profile sandbox use registration and execution path without an alias; `src/cadrumo/entrypoints/cli/_config/_sandbox.py`.
 - [x] `W04.P11.S98` - Preserve config profile logout as the sole strong local-session logout command; `src/cadrumo/entrypoints/cli/_config/__init__.py`.
 - [x] `W04.P11.S99` - Remove config lock and its weaker session-only execution path without an alias; `src/cadrumo/entrypoints/cli/_config/__init__.py`.
-- [ ] `W04.P11.S100` - Replace flat scoped reset registration with the config reset command group; `src/cadrumo/entrypoints/cli/_config/__init__.py`.
-- [ ] `W04.P11.S101` - Register only reset start, status, and resume with operation, retention, reason, and confirmation options; `src/cadrumo/entrypoints/cli/_config/_reset_cli.py`.
-- [ ] `W04.P11.S102` - Prove exact sandbox labels work through switch while sandbox use and bare names are absent; `src/cadrumo/entrypoints/cli/tests/test_config_profile_sandbox.py`.
+- [x] `W04.P11.S100` - Replace flat scoped reset registration with the config reset command group; `src/cadrumo/entrypoints/cli/_config/__init__.py`.
+- [x] `W04.P11.S101` - Register only reset start, status, and resume with operation, retention, reason, and confirmation options; `src/cadrumo/entrypoints/cli/_config/_reset_cli.py`.
+- [x] `W04.P11.S102` - Prove exact sandbox labels work through switch while sandbox use and bare names are absent; `src/cadrumo/entrypoints/cli/tests/test_config_profile_sandbox.py`.
 - [x] `W04.P11.S103` - Prove switching and strong logout through real persisted custody state; `src/cadrumo/entrypoints/cli/tests/test_config_custody_profile_lifecycle.py`.
-- [ ] `W04.P11.S104` - Prove reset start, status, resume, operation IDs, retention override, reasons, and confirmations across real processes; `src/cadrumo/entrypoints/cli/tests/test_config_reset_lifecycle.py`.
-- [ ] `W04.P11.S237` - Route both config profile export and subject-access-request through the sole portable-export application service and remove direct serialization, target writes, completion events, and static SAR category ownership from the CLI; `src/cadrumo/entrypoints/cli/_config/_profile_bundle.py; src/cadrumo/entrypoints/cli/tests/test_profile_export_roundtrip.py; src/cadrumo/entrypoints/cli/tests/test_profile_subject_access_request.py`.
+- [x] `W04.P11.S104` - Prove reset start, status, resume, operation IDs, retention override, reasons, and confirmations across real processes; `src/cadrumo/entrypoints/cli/tests/test_config_reset_lifecycle.py`.
+- [x] `W04.P11.S237` - Route both config profile export and subject-access-request through the sole portable-export application service and remove direct serialization, target writes, completion events, and static SAR category ownership from the CLI; `src/cadrumo/entrypoints/cli/_config/_profile_bundle.py; src/cadrumo/entrypoints/cli/tests/test_profile_export_roundtrip.py; src/cadrumo/entrypoints/cli/tests/test_profile_subject_access_request.py`.
 
 ### Phase `W04.P12` - Cut over passphrase and recovery commands
 
@@ -291,11 +291,11 @@ Expose distinct auth logout/reset and secure-storage-only certificate secret ope
 
 Remove ledger evidence bypass and fake replay while retaining canonical attach, invoice link, and audit check.
 
-- [ ] `W04.P14.S120` - Restrict ledger link to invoice-only linkage, route it through the atomic application writer, and remove evidence-id and evidence-update result paths; `src/cadrumo/entrypoints/cli/_ledger.py`.
-- [ ] `W04.P14.S121` - Remove modelo audit replay and every call to the backend replay method while retaining only genuine evidence audit check; `src/cadrumo/entrypoints/cli/_modelo_audit_cli.py`.
-- [ ] `W04.P14.S122` - Prove attach remains the sole evidence mutation, invoice link is atomic and invoice-only, and link rejects every removed evidence grammar; `src/cadrumo/entrypoints/cli/tests/test_ledger_link_check_verbs.py`.
-- [ ] `W04.P14.S123` - Prove modelo audit exposes check without replay, backend replay calls, replay result schemas, or synthetic replay events; `src/cadrumo/entrypoints/cli/tests/test_audit_verbs.py`.
-- [ ] `W04.P14.S124` - Assert the accepted root grammar exactly and reject every removed path and option; `src/cadrumo/entrypoints/cli/tests/test_root_grammar_invariants.py`.
+- [x] `W04.P14.S120` - Restrict ledger link to invoice-only linkage, route it through the atomic application writer, and remove evidence-id and evidence-update result paths; `src/cadrumo/entrypoints/cli/_ledger.py`.
+- [x] `W04.P14.S121` - Remove modelo audit replay and every call to the backend replay method while retaining only genuine evidence audit check; `src/cadrumo/entrypoints/cli/_modelo_audit_cli.py`.
+- [x] `W04.P14.S122` - Prove attach remains the sole evidence mutation, invoice link is atomic and invoice-only, and link rejects every removed evidence grammar; `src/cadrumo/entrypoints/cli/tests/test_ledger_link_check_verbs.py`.
+- [x] `W04.P14.S123` - Prove modelo audit exposes check without replay, backend replay calls, replay result schemas, or synthetic replay events; `src/cadrumo/entrypoints/cli/tests/test_audit_verbs.py`.
+- [x] `W04.P14.S124` - Assert the accepted root grammar exactly and reject every removed path and option; `src/cadrumo/entrypoints/cli/tests/test_root_grammar_invariants.py`.
 
 ## Wave `W05` - Migrate contracts, locales, and documentation
 
