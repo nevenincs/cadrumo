@@ -13,7 +13,27 @@ related:
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]"
 ---
 
-# `declaracion-profile-printed-box-scope` adr: `extraction profiles target only what AEAT prints` | (**status:** `proposed`)
+# `declaracion-profile-printed-box-scope` adr: `extraction profiles target only what AEAT prints` | (**status:** `accepted`)
+
+## Operator ruling (2026-07-25): BOTH revisions
+
+Asked whether to re-scope both M303 revisions or only `2023-y-siguientes`, the
+operator ruled **all revisions**. So the six ids leave `2023-y-siguientes` and the
+five present in `2009-y-siguientes` leave it too, in one coherent change. The
+alternative — leaving 2009 asserting five printed boxes the form does not print —
+is rejected.
+
+Two consequences follow directly from the ruling and are binding on the plan:
+
+- The fixture generator's primitive draw block is **deleted**, not gated. Gating
+  behind a legacy-template branch was only required under the rejected option.
+- `2009-y-siguientes` is a live, fully-built authority for filing years 2009-2022
+  (118 casillas, 67 formulas, 94 bindings) whose revision id is asserted by real
+  parser and verification-chain tests over seven fixture PDFs. Its half is real
+  work, not a rename.
+
+The ruling does NOT resolve the arbitration below, which is a correctness
+question rather than a scope question and must be settled in the same change.
 
 ## Problem Statement
 
