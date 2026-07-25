@@ -3,6 +3,19 @@
 The fixtures under ``src/cadrumo/tests/fixtures/aeat-sede/`` are live
 captures from a real sede with NIF, name, expediente sequence, and CSV
 redacted to synthetic but schema-valid placeholders.
+
+Identity is not the whole redaction contract. A capture of an
+AUTHENTICATED page also carries credentials: the session and anti-CSRF
+tokens the forms hold for the live session that produced it. Those are
+not personal data, so a NIF-and-name pass leaves them untouched and a
+personal-data review does not look for them - a real 36-character token
+reached a pending fixture that way, in a field named ``CI1_ISLW``, which
+matches no credential vocabulary and reads as markup noise. Substitute
+every opaque, high-entropy input value with a placeholder of the same
+shape, keeping the markup byte-faithful so the parser still meets the
+real form. Readable censal, navigational and framework values are
+structural and MUST be left alone. ``test_fixture_credential_hygiene``
+enforces this half of the contract.
 """
 
 from __future__ import annotations
