@@ -166,7 +166,7 @@ def censo_pull(
 
     read = asyncio.run(pull_censal_datos())
     projected = censal_facts_from_read(read)
-    reconciliation = reconcile_censal_read(record, projected)
+    reconciliation = reconcile_censal_read(record, projected, incoming_identity=read.identity.nif)
     # Read the EFFECTIVE facts, not the value projection: a path the
     # operator cleared survives here as ``value=None`` where the value
     # projection drops it entirely. That distinction is the whole
