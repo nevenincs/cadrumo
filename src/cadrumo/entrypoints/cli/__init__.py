@@ -49,6 +49,7 @@ from ._stdio import configure_stdio_for_utf8 as _configure_stdio_for_utf8
 _configure_stdio_for_utf8()
 
 from ...core import PRODUCT_IDENTITY as _PRODUCT_IDENTITY
+from ...core import ProfileSessionRefusalReason as _ProfileSessionRefusalReason
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES
 from ...core.i18n import tr
 from ...core.redaction import redact_for_cli_output as _redact_for_cli_output
@@ -488,7 +489,15 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
 #: Persisted-session refusal reasons that mean "this operator never logged
 #: in", as opposed to "a login existed and has since lapsed". The two get
 #: different operator copy: one is an instruction, the other is news.
-_LOGGED_OUT_REFUSALS: frozenset[str] = frozenset({"absent", "keychain_entry_missing"})
+#: Held as enum members rather than their string values so a future rename
+#: cannot silently drop a reason out of this set and flip an operator from
+#: "you are not logged in" to "your session expired".
+_LOGGED_OUT_REFUSALS: frozenset[_ProfileSessionRefusalReason] = frozenset(
+    {
+        _ProfileSessionRefusalReason.ABSENT,
+        _ProfileSessionRefusalReason.KEYCHAIN_ENTRY_MISSING,
+    },
+)
 
 
 def _resume_profile_session_or_refuse(ctx: typer.Context, bucket_id: str) -> None:
@@ -520,16 +529,15 @@ def _resume_profile_session_or_refuse(ctx: typer.Context, bucket_id: str) -> Non
     if _headless_secret_channel_active():
         ctx.with_resource(get_master_key_provider())
         return
-    reason = str(refusal.value)
-    if reason in _LOGGED_OUT_REFUSALS:
+    if refusal in _LOGGED_OUT_REFUSALS:
         raise CliRefusedBoundaryError(
             translated_message="cli.config.errors.profile_session_absent",
-            context={"reason": reason},
+            context={"reason": refusal.value},
             suggestion="aeat config login",
         )
     raise CliRefusedBoundaryError(
         translated_message="cli.config.errors.profile_session_expired",
-        context={"reason": reason},
+        context={"reason": refusal.value},
         suggestion="aeat config login",
     )
 
