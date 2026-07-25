@@ -6,4 +6,4 @@
 @expect exit_code == 0
 @step Write an XLSX snapshot of the whole year instead. XLSX embeds a per-run id, so it is shown as a display frame.
 @static aeat app ledger export --output ./ledger-2026.xlsx --export-format xlsx --year 2026 --period 0A
-@blocked unconverted Runs clean in the sandbox probe; nothing blocks it, so it awaits conversion.
+@blocked nondeterministic-output export_id hashes payload bytes carrying a per-run openpyxl timestamp; the golden cannot be stable.

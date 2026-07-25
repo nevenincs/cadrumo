@@ -134,9 +134,15 @@ class StaticBlocker(StrEnum):
     an unconverted frame must never wear the same marker.
     """
 
-    #: Reads a live AEAT surface — the ``pull`` verb family or the ``app live``
-    #: group. The sandbox runner refuses these outright
-    #: (``_refuse_live_frames``), and live submission is barred project-wide.
+    #: Reads a live AEAT surface. That is the whole criterion, and it is a fact
+    #: about the HANDLER, never about the verb's name: the CLI naming standard
+    #: is one-directional (an AEAT fetch MUST be named ``pull``), so a ``pull``
+    #: name does NOT imply an AEAT fetch. ``ledger pull-folder`` is the worked
+    #: counter-example — it reads Google Drive end to end and belongs under
+    #: :attr:`EXTERNAL_SERVICE`. Note that the runner's live-token scan is
+    #: deliberately fail-closed over argv, so it refuses such a frame anyway;
+    #: that refusal is a reason the frame cannot execute, not evidence about
+    #: which surface it reads.
     LIVE_AEAT = "live-aeat"
     #: Needs an interactive terminal: a wizard prompt, a passphrase read, or a
     #: confirmation the hermetic in-process runner cannot answer.
@@ -151,8 +157,36 @@ class StaticBlocker(StrEnum):
     #: exported profile bundle) that is not, and should not be fabricated as, a
     #: committed fixture.
     OPERATOR_ARTIFACT = "operator-artifact"
+    #: Executes cleanly and still cannot be converted, because its output is not
+    #: reproducible: a golden built from it diverges on the next run. Exit status
+    #: is therefore NOT evidence of convertibility — a stable golden is, and only
+    #: a second execution can show the difference. ``ledger export
+    #: --export-format xlsx`` is the worked case: the envelope's export id is a
+    #: SHA-256 over the written bytes, and openpyxl stamps the workbook with a
+    #: per-run timestamp, so the id changes every time. The remedy is a masking
+    #: decision (widening ``GOLDEN_MASK_FIELDS``) with its own owner and gates,
+    #: not a re-run.
+    NONDETERMINISTIC_OUTPUT = "nondeterministic-output"
+    #: Blocked by the posture of the PAGE's sandbox rather than by anything about
+    #: the verb: the same command converts on one page and refuses on another, so
+    #: no per-verb classifier can ever decide it. The worked evidence is the
+    #: identical transaction-repository lookup that SUCCEEDS on the
+    #: ``ledger-evidence`` page, whose sandbox holds an unlocked bucket session,
+    #: and FAILS on ``troubleshooting``, whose sandbox deliberately holds none —
+    #: measured exit 4, "No active bucket session is open." Deciding this member
+    #: requires running the frame in ITS OWN page's sandbox.
+    SANDBOX_POSTURE = "sandbox-posture"
+    #: Refused because the filing obligation's window is not open in the frozen
+    #: sandbox instant. Stating the condition beats stretching
+    #: :attr:`OPERATOR_ARTIFACT`: nothing is missing, the calendar simply does not
+    #: permit the action yet. Declare it only from the refusal text, never from
+    #: the verb, since the same verb converts inside its window.
+    OBLIGATION_WINDOW = "obligation-window"
     #: No verified blocker: the frame COULD execute and is awaiting conversion.
-    #: Never a justification — a visible, counted debt the ratchet retires.
+    #: Never a justification — a visible, counted debt the ratchet retires. The
+    #: bar is a REPRODUCIBLE run, not a zero exit; see
+    #: :attr:`NONDETERMINISTIC_OUTPUT` for the trap, and run any candidate twice
+    #: before declaring this.
     UNCONVERTED = "unconverted"
 
 

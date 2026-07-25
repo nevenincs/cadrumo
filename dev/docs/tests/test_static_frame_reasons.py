@@ -75,34 +75,58 @@ def test_every_static_frame_states_a_blocked_reason() -> None:
 
 
 def test_live_aeat_reason_matches_the_frames_own_argv() -> None:
-    """``live-aeat`` is declared exactly when the argv carries a live-AEAT token.
+    """A ``live-aeat`` claim must be backed by a live-AEAT token in the frame's argv.
 
-    Both directions are enforced against the runner's OWN token scan — the same
-    function that refuses a live frame at execution — so the declared reason
-    cannot drift from the mechanical fact. A local frame excused as "live AEAT"
-    would hide a convertible frame behind an unfalsifiable claim; a live frame
-    labelled anything else misstates why it is undocumented truth.
+    Enforced against the runner's OWN token scan — the same function that refuses
+    a live frame at execution — so a local frame cannot be excused as "live AEAT"
+    behind an unfalsifiable claim.
+
+    Deliberately ONE-DIRECTIONAL. The converse (a live token obliging a
+    ``live-aeat`` label) looks symmetric and is false: the CLI naming standard
+    only requires that an AEAT fetch BE named ``pull``, never that a ``pull``
+    name means AEAT, and the runner's scan is fail-closed over argv rather than
+    informed about handlers. ``ledger pull-folder`` reads Google Drive end to end
+    while matching the scan, so demanding ``live-aeat`` there would force a false
+    statement about which surface it reads. What a live token DOES establish is
+    covered by :func:`test_live_token_frames_are_never_marked_unconverted`.
     """
-    mislabelled: list[str] = []
-    unlabelled: list[str] = []
-    for page, sequence_id, frame in _static_frames():
-        assert frame.blocked is not None
-        where = f"{page}/{sequence_id} line {frame.line_number}: {frame.command_line}"
-        tokens = live_aeat_tokens(frame)
-        declares_live = frame.blocked.code is StaticBlocker.LIVE_AEAT
-        if declares_live and not tokens:
-            mislabelled.append(where)
-        elif tokens and not declares_live:
-            unlabelled.append(f"{where} (live tokens: {', '.join(tokens)})")
+    mislabelled = [
+        f"{page}/{sequence_id} line {frame.line_number}: {frame.command_line}"
+        for page, sequence_id, frame in _static_frames()
+        if frame.blocked is not None
+        and frame.blocked.code is StaticBlocker.LIVE_AEAT
+        and not live_aeat_tokens(frame)
+    ]
     assert mislabelled == [], (
         "these @static frames claim 'live-aeat' but carry no live-AEAT argv token; "
         "the sandbox would run them, so state the real blocker or convert them:\n  "
         + "\n  ".join(mislabelled)
     )
-    assert unlabelled == [], (
-        "these @static frames carry a live-AEAT argv token but declare another blocker; "
-        f"the runner refuses them for being live, so declare '{StaticBlocker.LIVE_AEAT.value}':\n  "
-        + "\n  ".join(unlabelled)
+
+
+def test_live_token_frames_are_never_marked_unconverted() -> None:
+    """A frame the runner's live scan would refuse is blocked by SOMETHING.
+
+    This is the half of the live-token cross-check that is actually sound. The
+    scan is fail-closed, so a matching frame cannot execute — which rules out
+    ``unconverted`` (the marker that asserts nothing blocks it) without dictating
+    WHICH blocker applies. That distinction is the point: ``ledger pull-folder``
+    matches the scan and is blocked by Google Drive, not by AEAT, so the label it
+    needs is a fact about its handler while the ban on ``unconverted`` is a fact
+    about the scan.
+    """
+    laundered = [
+        f"{page}/{sequence_id} line {frame.line_number}: {frame.command_line} "
+        f"(live tokens: {', '.join(live_aeat_tokens(frame))})"
+        for page, sequence_id, frame in _static_frames()
+        if frame.blocked is not None
+        and frame.blocked.code is StaticBlocker.UNCONVERTED
+        and live_aeat_tokens(frame)
+    ]
+    assert laundered == [], (
+        f"these @static frames are marked '{StaticBlocker.UNCONVERTED.value}' but carry an argv "
+        "token the runner's fail-closed live scan refuses, so they cannot be converted as written; "
+        "state the blocker the handler actually has:\n  " + "\n  ".join(laundered)
     )
 
 

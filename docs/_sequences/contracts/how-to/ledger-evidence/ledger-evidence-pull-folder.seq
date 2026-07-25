@@ -1,3 +1,3 @@
 @step Fetch every PDF and image invoice in one Drive folder at once.
 @static aeat app ledger pull-folder --folder <drive-folder-id-or-url> --note "Q1 supplier invoices"
-@blocked live-aeat Its pull- prefix trips the fail-closed live scan, and it needs an authorised Drive session.
+@blocked external-service Fetches from a Google Drive folder under the drive.file scope; needs OAuth credentials and a live folder.
