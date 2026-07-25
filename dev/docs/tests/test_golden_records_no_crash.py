@@ -31,7 +31,12 @@ from pathlib import Path
 
 import pytest
 
-from dev.docs.sequences import default_docs_root
+from dev.docs.sequences import (
+    FrameKind,
+    default_docs_root,
+    discover_sequences,
+    read_golden,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -141,4 +146,65 @@ def test_no_golden_records_a_crash_as_expected_output() -> None:
         "inverts their gate (green on the breakage, red on the repair). Fix the underlying "
         "fault, then re-record with "
         "'python -m dev.docs.sequences refresh --page <docname>':\n  " + "\n  ".join(offenders)
+    )
+
+
+#: An error-envelope shape in a frame's recorded output. Unlike the crash markers,
+#: these are LEGITIMATE when the frame declares them — a documented refusal is
+#: valuable golden content, not a defect.
+_ERROR_OUTCOME = re.compile(r'"status"\s*:\s*"error"|"error"\s*:\s*\{')
+
+
+def test_a_recorded_error_outcome_is_declared_by_the_frame() -> None:
+    """A golden holding an error outcome must have DECLARED it, not merely recorded it.
+
+    This is the semantic half of the crash-golden hazard, reduced to something
+    mechanical. "Contains an error" is the wrong discriminator: the sole frame in
+    the corpus that records one is ``correct-remove-transaction`` frame 3, whose
+    ``@step`` reads "Confirm the id no longer resolves." and which declares
+    ``@expect error.category == "REFUSED"`` and ``@expect exit_code == 2``. Its
+    outcome AGREES with its documented intent, and that agreement is exactly what
+    makes it correct.
+
+    The inversion is an error nobody asserted. So the check is whether the frame's
+    own ``@expect`` set claims the failure — an ``exit_code`` expectation or an
+    ``error``-rooted path. The runner already refuses an undeclared non-zero exit
+    at execution time, which is why the corpus is clean rather than merely lucky;
+    this asserts the same invariant over committed bytes, so weakening that
+    runtime guard cannot silently let an unasserted failure become an expectation.
+    """
+    discovered, problems = discover_sequences(docs_root=default_docs_root())
+    assert not problems, "sequence discovery reported problems:\n  " + "\n  ".join(problems)
+
+    undeclared: list[str] = []
+    for item in discovered:
+        executed = [frame for frame in item.sequence.frames if frame.kind is not FrameKind.STATIC]
+        if not executed:
+            continue
+        try:
+            golden = read_golden(item.page, item.sequence_id)
+        except Exception:  # noqa: BLE001 - a missing/unreadable golden is another gate's finding
+            continue
+        recorded = list(golden.frames)
+        if len(recorded) != len(executed):
+            continue  # frame-count alignment is the golden store's own contract
+        for index, (parsed, frame) in enumerate(zip(executed, recorded, strict=True)):
+            payload = frame.model_dump() if hasattr(frame, "model_dump") else dict(frame)
+            text = _captured_text({"frames": [payload]})
+            if not _ERROR_OUTCOME.search(text) and payload.get("exit_code", 0) == 0:
+                continue
+            declares = any(
+                assertion.json_path == "exit_code" or assertion.json_path.startswith("error")
+                for assertion in parsed.expects
+            )
+            if not declares:
+                undeclared.append(
+                    f"{item.page}/{item.sequence_id} frame {index} "
+                    f"(exit {payload.get('exit_code')}): {' '.join(parsed.argv)[:80]}"
+                )
+    assert undeclared == [], (
+        "these goldens record a failing outcome that their frame never declared, so the "
+        "broken state has become the expectation. Either assert it deliberately "
+        "('@expect exit_code == <n>' and/or '@expect error.category == \"...\"') when the "
+        "refusal is the point, or fix the cause and re-record:\n  " + "\n  ".join(undeclared)
     )
