@@ -38,6 +38,7 @@ __all__ = [
     "_MODELO_123_CURRENT_EXPECTED_TARGETS",
     "_MODELO_123_HISTORICAL_EXPECTED_TARGETS",
     "_MODELO_130_EXPECTED_TARGETS",
+    "_MODELO_130_SYNTHETIC_FIXTURE",
     "_MODELO_131_SYNTHETIC_FIXTURE",
     "_MODELO_180_SYNTHETIC_FIXTURE",
     "_MODELO_184_SYNTHETIC_FIXTURE",
@@ -51,7 +52,6 @@ __all__ = [
     "_MODELO_369_SYNTHETIC_FIXTURE",
     "_MODELO_720_SYNTHETIC_FIXTURE",
     "_MODELO_840_SYNTHETIC_FIXTURE",
-    "_REAL_DECLARATION_COPY",
     "_REAL_MODELO_190_DECLARATION_COPY",
     "CadrumoError",
     "CasillaId",
@@ -74,7 +74,13 @@ __all__ = [
     "source_pdf_reference_path",
 ]
 
-_REAL_DECLARATION_COPY = FIXTURES_DIR / "justificantes" / "130" / "2024-1T.pdf"
+# Named for what it is. This fixture was previously called
+# _REAL_DECLARATION_COPY, but its sidecar declares
+# ``provenance = "synthetic_generated"`` -- as does every one of the 15 M130
+# justificante fixtures. There is no real-corpus M130 render in the repository
+# for the name to have referred to, and the consuming test's own docstring
+# already said "synthetic" while its name still said "real".
+_MODELO_130_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "130" / "2024-1T.pdf"
 
 _MODELO_349_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "349" / "2024-1T.pdf"
 

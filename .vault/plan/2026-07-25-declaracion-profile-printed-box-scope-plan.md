@@ -11,7 +11,6 @@ related:
   - '[[2026-07-25-declaracion-profile-printed-box-scope-revision-scope-and-coverage-evidence-audit]]'
 ---
 
-
 # `declaracion-profile-printed-box-scope` plan
 
 - [x] `S01` - Drop the six non-printed-box targets from the extraction profile target list, retaining the printed-box targets it already carries, across both revisions per the operator ruling; `extraction profiles, 2 TOML files`.

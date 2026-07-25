@@ -145,18 +145,29 @@ substituting a different one, because which chapter number carries which title i
 not establishable from bundled evidence. Every structured field in all five
 sidecars was already correct; only the prose drifted.
 
-### m130-real-copy-constant-carries-no-sidecar | low | Out of scope, recorded so it is not lost
+### m130-real-copy-constant-carries-no-sidecar | low | WITHDRAWN — the finding was wrong, and the real defect is worse
 
-The analogous Modelo 130 constant, also named for a real declaration copy and
-consumed by a test whose name asserts the same, points at a fixture that carries no
-provenance sidecar at all. Its provenance is therefore neither declared nor
-checkable by the fixture-provenance gate, so the name can be neither confirmed nor
-refuted.
+**CORRECTED 2026-07-26. The claim below is false and is retained only so the
+error is legible.** The original text read that the Modelo 130 constant "points
+at a fixture that carries no provenance sidecar at all", and concluded its
+provenance was undeclared and uncheckable.
 
-This is outside the printed-box feature and was not touched. It is recorded here
-because it is the same question this feature just answered for Modelo 303, and
-because an undeclared provenance on a fixture whose name makes a provenance claim
-is exactly the shape that hid the original defect.
+The sidecar exists. Every one of the 15 Modelo 130 justificante fixtures carries
+one, and the fixture this constant names declares `provenance =
+"synthetic_generated"`, `role = "formula_verification"`.
+
+The error was in the probe, not the tree: the constant resolves to `130/2024-1T`
+and the check was run against `130/2024-0A`, a path that does not exist. An
+absent file was read as an absent declaration. This is the same failure the
+companion finding on the annex sidecars describes — a clean negative accepted as
+evidence without confirming the probe fitted the data — committed while writing
+up that very finding.
+
+The corrected finding is more serious than the withdrawn one. The provenance is
+declared, and the name contradicts it: this is the identical misnaming defect
+found on Modelo 303, not a missing-metadata gap. It is carried forward, with its
+remedy and the gate that now prevents recurrence, in the companion real-render
+and naming-honesty audit.
 
 ## Recommendations
 

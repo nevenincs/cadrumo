@@ -17,6 +17,7 @@ related:
   - '[[2026-07-25-declaracion-profile-printed-box-scope-adr]]'
   - '[[2026-07-25-declaracion-profile-printed-box-scope-layout-blind-corpus-audit]]'
   - '[[2026-07-25-declaracion-profile-printed-box-scope-plan]]'
+  - '[[2026-07-25-declaracion-profile-printed-box-scope-real-render-gate-and-naming-honesty-audit]]'
   - '[[2026-07-25-declaracion-profile-printed-box-scope-research]]'
   - '[[2026-07-25-declaracion-profile-printed-box-scope-revision-scope-and-coverage-evidence-audit]]'
 ---
@@ -34,6 +35,7 @@ Auto-generated index of all documents tagged with `#declaracion-profile-printed-
 ### audit
 
 - `2026-07-25-declaracion-profile-printed-box-scope-layout-blind-corpus-audit` - `declaracion-profile-printed-box-scope` audit: `the corpus that survived a layout change`
+- `2026-07-25-declaracion-profile-printed-box-scope-real-render-gate-and-naming-honesty-audit` - `declaracion-profile-printed-box-scope` audit: `closing the gaps the printed-box audit named`
 - `2026-07-25-declaracion-profile-printed-box-scope-revision-scope-and-coverage-evidence-audit` - `declaracion-profile-printed-box-scope` audit: `revision scope and coverage evidence`
 
 ### exec
