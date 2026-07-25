@@ -6,12 +6,18 @@ present, and the docs language set must equal the runtime
 :class:`~cadrumo.core.external_constants.OutputLanguage` set (minus English, the
 msgid source) exactly - never a second hand-listed authority.
 
-The completeness gate (:func:`test_every_user_page_is_fully_translated`) is
-EXPECTED RED until the Spanish, Catalan, and Hungarian catalogues are translated
-in a later pass. That is the intended state: gettext falls back to English for an
-untranslated segment silently, and this gate inverts that silence into a loud
-per-language, per-page refusal. It carries no skip or xfail - it fails honestly
-today and passes cleanly once the translations land. It is one parametrized test
+The completeness gate (:func:`test_every_user_page_is_fully_translated`) was
+written to be RED until the Spanish, Catalan, and Hungarian catalogues were
+translated, carrying no skip or xfail so it would fail honestly meanwhile. Those
+translations have landed: all three catalogues now read 100% translated with zero
+untranslated and zero fuzzy entries, and the gate passes. Its job from here is
+the reverse of its original one - it holds that completeness rather than
+announcing its absence, so a page added without translations, or an entry that
+goes fuzzy on a msgid change, reds it again.
+
+The silence it inverts is what makes it load-bearing: gettext falls back to
+English for an untranslated segment without complaint, so a reader would simply
+be served the wrong language with no signal anywhere. It is one parametrized test
 per target language, so an incomplete language reports one failure enumerating
 its incomplete pages rather than thousands of per-entry failures.
 """
@@ -75,10 +81,11 @@ def _catalogue_counts(po_path: Path) -> tuple[int, int]:
 def test_every_user_page_is_fully_translated(language: str) -> None:
     """Every user-scope page has a complete catalogue with no untranslated or fuzzy entries.
 
-    EXPECTED RED until the translations land: a page whose catalogue is
-    missing, or carries any untranslated or fuzzy entry, fails the language. The
-    failure enumerates every incomplete page with its untranslated and fuzzy
-    counts so the translation work is sized directly from the gate output.
+    A page whose catalogue is missing, or carries any untranslated or fuzzy
+    entry, fails the language. The failure enumerates every incomplete page with
+    its untranslated and fuzzy counts, so whether it is sizing an initial
+    translation pass or naming the one page that regressed, the gate output is
+    the worklist.
     """
     pages = user_scope_source_pages(_DOCS)
     failures: list[str] = []
