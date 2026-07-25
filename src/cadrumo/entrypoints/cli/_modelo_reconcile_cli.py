@@ -294,8 +294,8 @@ def reconcile_file_verb(
     help=tr(
         "cli.app.modelo.reconcile.history_help",
         default=(
-            "List past reconciliations recorded for the active profile. Reads the append-only "
-            "MODELO_RECONCILED bucket-event history; a convenience read-back, not a stored record."
+            "List past reconciliations recorded for the active profile. Reads the encrypted "
+            "reconciliation records written by each reconcile run."
         ),
     ),
 )

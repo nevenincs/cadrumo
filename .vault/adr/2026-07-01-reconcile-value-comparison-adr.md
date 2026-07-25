@@ -80,6 +80,9 @@ implementation plan.
   registry follow-on tracked against this feature.
 
 **Decision 2 — divergence model + non-lossy history.**
+*Superseded in part by `2026-07-25-reconcile-evidence-relocation-adr`; see the
+note below. The typed taxonomy and the non-lossy-history refusal of 2.A stand
+unchanged — only the storage site named in 2.B moves.*
 - **A. Keep flat `field_name`/`kind` diffs + count-only history.** Rejected: history
   cannot say *which* field diverged (`no-silent-under-declaration` at the audit
   layer).
@@ -91,6 +94,38 @@ implementation plan.
   values) in the `MODELO_RECONCILED` payload and read them back in
   `list_modelo_reconciliations`, replacing the count-only string. `diff_count` stays
   a derived convenience.
+
+**Decision 2 / 2.B superseded — where the diff detail persists.**
+`2026-07-25-reconcile-evidence-relocation-adr` (accepted, option (e)) supersedes
+the *storage site* 2.B chose, and nothing else in this record. The reserved
+`casilla` member landed, and casilla-level reconciliation is what multiplied the
+divergence volume past a limit 2.B never reasoned about: a bucket-event payload
+value is capped at 500 characters, while a single grounded Modelo 100 casilla
+diff encodes to a median 303 (p90 458, max 632). Two divergences were therefore
+unpersistable for 99.6% of that modelo's casillas and 175 overflowed on the
+first alone — the write raised a `ValidationError` before anything was saved, so
+the operator met an unhandled error rather than a reconciliation.
+
+The detail now persists as a `ModeloReconciliationRecord` in the encrypted,
+profile-scoped `MODELO_RECONCILIATION_RECORDS_NAMESPACE` secure-object store,
+co-written with the event in one SQL unit of work; the `MODELO_RECONCILED`
+payload keeps the verdict and the counts. `diffs_detail` is deleted rather than
+migrated, per `no-legacy-compatibility` under `PRE_RELEASE`.
+
+What carries forward unchanged, and is re-affirmed at the new site: the typed
+`ModeloReconciliationDiffKind` taxonomy; the requirement that a `total` or
+`casilla` divergence carry its `legal_refs` / `source_refs`
+(`aeat-calculation-grounding`); the refusal of 2.A's count-only history as
+`no-silent-under-declaration` at the audit layer; and `diff_count` remaining a
+derived convenience. `list_modelo_reconciliations` keeps its return type, so
+`ModeloReconciliationHistoryEntry` and the CLI payload schema are undisturbed.
+The relocation strengthens the provenance constraint rather than relaxing it:
+grounding is **stored, not re-derived**, because re-deriving it at read time
+would resolve the snapshot from modelo, filing year and period per
+`revision-resolution-is-law-determined`, letting a routine re-grounding sweep
+silently rewrite the legal basis of a historical reconciliation.
+
+Decisions 1, 1b, 3, 4 and 5 of this record are untouched.
 
 **Decision 3 — the dead `EVIDENCE_INVALID` verdict.**
 - **A. Remove the member (chosen at implementation).** The parse-failure outcome is

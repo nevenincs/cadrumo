@@ -29,24 +29,38 @@ The path-based service is local-only: it never contacts AEAT and never invokes
 ``require_live_read`` — the computed result is read from the already-persisted
 :class:`~domain.modelos.CalculationRevision`, never a fresh calculation.
 Authenticated live pulls use ``modelo_reconcile_bytes`` after storing captured
-justificante bytes in secure storage. Both paths append a ``MODELO_RECONCILED``
-:class:`~domain.buckets.BucketEvent` through
-:class:`~domain.buckets.BucketEventHistoryRepository`, persisting the
-structured diffs so ``reconcile history`` reports which fields diverged.
+justificante bytes in secure storage.
+
+Both paths persist their outcome twice over, in ONE unit of work: a
+:class:`ModeloReconciliationRecord` carrying the grounded diffs and the
+advisories into the encrypted
+:data:`~adapters.persistence.storage.MODELO_RECONCILIATION_RECORDS_NAMESPACE`
+store, and a slim ``MODELO_RECONCILED``
+:class:`~domain.buckets.BucketEvent` carrying the verdict and the divergence
+count. The detail lives in the record because a bucket-event payload value is
+capped at 500 characters and one grounded Modelo 100 casilla diff already
+encodes to a median 303 — two divergences were unpersistable for 99.6% of that
+modelo's casillas, and 175 overflowed on the first. ``reconcile history``
+reports which fields diverged by reading the record store.
 """
 
 from __future__ import annotations
 
-import json
 from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar, override
 
 from pydantic import BaseModel, Field
 
+from ...adapters.persistence.storage import (
+    MODELO_RECONCILIATION_RECORDS_NAMESPACE,
+    SecureBoundRepository,
+    SensitivityClass,
+    safe_repository_id,
+)
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo
 from ...core.errors import CadrumoError
@@ -148,15 +162,28 @@ class ModeloReconciliationDiffKind(StrEnum):
 
 
 class ModeloReconciliationHistoryEntry(BaseModel):
-    """One past reconciliation read back from the bucket event history.
+    """One past reconciliation read back from the reconciliation record store.
 
-    ``modelo_reconcile`` persists no stored record: a reconciliation is
-    repeatable on demand from the justificante, so the durable trace is the
-    append-only ``MODELO_RECONCILED`` :class:`~domain.buckets.BucketEvent`
-    it emits. This typed entry projects one such event so the operator can
-    enumerate past reconciliation verdicts without re-parsing any evidence.
-    The read path is the same bucket-event catalogue the write path appends
-    into — there is no parallel reconciliation store.
+    ``modelo_reconcile`` DOES persist a stored record. Each run writes a
+    :class:`ModeloReconciliationRecord` into the encrypted profile-scoped
+    :data:`~adapters.persistence.storage.MODELO_RECONCILIATION_RECORDS_NAMESPACE`
+    store, in the same unit of work as the slim ``MODELO_RECONCILED``
+    :class:`~domain.buckets.BucketEvent` it emits. This typed entry projects one
+    such record so the operator can enumerate past reconciliation verdicts, and
+    the grounded divergences behind them, without re-parsing any evidence.
+
+    The dedicated store exists because a bucket-event payload value is capped at
+    500 characters while a single grounded Modelo 100 casilla diff encodes to a
+    median 303, so serialising the detail into the event made a genuinely
+    divergent Modelo 100 reconciliation unpersistable — the write raised before
+    anything was saved. The event keeps the verdict and the divergence count;
+    the record keeps the detail. ``event_id`` is the id of that co-written
+    event, which is also the record's own storage key, so the two surfaces are
+    joined by identity rather than by a field that could drift.
+
+    ``diffs`` carries the grounding that was in force when the reconciliation
+    ran, read straight from the record and never re-derived from the current
+    registry — see :class:`ModeloReconciliationRecord`.
     """
 
     model_config = _STRICT_FROZEN
@@ -220,6 +247,100 @@ class ModeloReconciliationAdvisory(BaseModel):
     code: str = Field(min_length=1)
     message: str = Field(min_length=1)
     context: Mapping[str, str] = Field(default_factory=dict)
+
+
+class ModeloReconciliationRecord(BaseModel):
+    """One persisted reconciliation outcome, in full.
+
+    The durable, auditable copy of a reconciliation: verdict, evidence kind and
+    reference, work unit, the grounded diffs, the advisories, the instant and
+    the actor. It is written to the encrypted profile-scoped
+    :data:`~adapters.persistence.storage.MODELO_RECONCILIATION_RECORDS_NAMESPACE`
+    store in the same unit of work as the ``MODELO_RECONCILED``
+    :class:`~domain.buckets.BucketEvent` whose id it carries, so the event log
+    and the detail store cannot disagree about what was reconciled.
+
+    Grounding is **stored, not re-derived**. Each :class:`ModeloReconciliationDiff`
+    keeps the ``legal_refs`` / ``source_refs`` that were in force when the
+    reconciliation ran. Re-deriving them at read time would resolve the snapshot
+    from modelo, filing year and period per ``revision-resolution-is-law-determined``,
+    so a routine re-grounding sweep that moved a casilla's ``legal_refs`` without
+    moving the revision id would silently rewrite the legal basis of a historical
+    reconciliation — and one that did move the revision id would make the history
+    unreadable. Historical evidence stays self-describing.
+
+    ``source_ref`` is the evidence reference as supplied: an operator filesystem
+    path, or the secure-storage handle on the bytes path. It is stored here at
+    full length; only the bucket-event copy is shortened to fit the payload cap.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    bucket_event_id: str = Field(min_length=1, max_length=128)
+    bucket_id: BucketId
+    work_unit_id: WorkUnitId
+    source_kind: ModeloReconciliationEvidenceKind
+    source_ref: str = ""
+    verdict: ModeloReconciliationVerdict
+    diffs: tuple[ModeloReconciliationDiff, ...] = ()
+    advisories: tuple[ModeloReconciliationAdvisory, ...] = ()
+    actor: str = Field(min_length=1, max_length=64)
+    reconciled_at: datetime
+
+
+def modelo_reconciliation_record_key(*, work_unit_id: str, bucket_event_id: str) -> str:
+    """Return the storage key for one reconciliation of one work unit.
+
+    Keyed ``modelo-reconciliation:{work_unit_id}:{bucket_event_id}``, which
+    settles the two properties the store exists for.
+
+    **N per work unit.** Reconciliation is explicitly repeatable and
+    ``reconcile history`` is a shipped verb, so a key that collapsed runs would
+    destroy the history this store holds. The trailing segment is the
+    content-addressed id of the ``MODELO_RECONCILED`` event this record is
+    co-written with, which folds the reconciliation instant, the actor, the
+    verdict and the divergence count — so every distinct run keys distinctly,
+    while a byte-identical re-emission collapses exactly as the append-only
+    event log itself collapses it.
+
+    **No revision required.** Nothing here derives from a calculation revision.
+    Both :func:`_reconcile_receipt_totals` and
+    :func:`_reconcile_declaracion_casillas` emit a ``no_persisted_revision``
+    advisory and still produce a report, and an identity-header reconcile needs
+    no revision at all; a revision-derived key could not store those runs.
+
+    Both components are validated through
+    :func:`~adapters.persistence.storage.safe_repository_id` before composition,
+    per the secure-object id contract.
+    """
+    safe_repository_id(work_unit_id, context="work_unit_id")
+    safe_repository_id(bucket_event_id, context="bucket_event_id")
+    return f"modelo-reconciliation:{work_unit_id}:{bucket_event_id}"
+
+
+class ModeloReconciliationRecordRepository(SecureBoundRepository[ModeloReconciliationRecord]):
+    """Repository over encrypted SQL-backed reconciliation records.
+
+    Enrols under the shipped IVA-wallet reconciliation-decision precedent: an
+    ``AUDIT``-class, ``PROFILE_LOCAL``, ``STRUCTURED_CUSTODY`` secure-object
+    namespace holding N rows per target. Reads inherit
+    :class:`~adapters.persistence.storage.SecureBoundRepository`'s
+    classification and inner-envelope checks — the latter an EQUALITY against
+    the namespace's declared ``schema_version``, not a ceiling, so a stamp that
+    drifted below current is refused rather than silently accepted.
+    """
+
+    namespace: ClassVar[str] = MODELO_RECONCILIATION_RECORDS_NAMESPACE.namespace
+    sensitivity: ClassVar[SensitivityClass] = MODELO_RECONCILIATION_RECORDS_NAMESPACE.sensitivity
+    schema_version: ClassVar[int] = MODELO_RECONCILIATION_RECORDS_NAMESPACE.schema_version
+    payload_type: ClassVar[type[BaseModel]] = ModeloReconciliationRecord
+
+    @override
+    def extract_identifier(self, payload: ModeloReconciliationRecord) -> str:
+        return modelo_reconciliation_record_key(
+            work_unit_id=payload.work_unit_id,
+            bucket_event_id=payload.bucket_event_id,
+        )
 
 
 class ModeloReconciliationCommand(BaseModel):
@@ -693,12 +814,24 @@ def _finalise_reconciliation(
     advisories: list[ModeloReconciliationAdvisory],
     narrative_subject: str,
 ) -> ModeloReconciliationReport:
-    """Build the report, persist the ``MODELO_RECONCILED`` event, and return the report.
+    """Build the report, persist record and event together, and return the report.
 
     Shared tail of every reconcile path (justificante or declaración): both
     compute their own ``diffs`` / ``advisories`` lists upstream, then converge
-    on the same verdict derivation, report assembly, and append-only
-    bucket-event persistence.
+    on the same verdict derivation, report assembly, and persistence.
+
+    The :class:`ModeloReconciliationRecord` and the append-only
+    ``MODELO_RECONCILED`` :class:`~domain.buckets.BucketEvent` land in ONE SQL
+    unit of work. Both repositories prepare a
+    :class:`~adapters.persistence.storage.SecureObjectWrite` and hand it to the
+    single
+    :meth:`~adapters.persistence.storage.SecureObjectRepository.save_many` call
+    on the shared backend — the same co-emit discipline
+    :func:`~application.modelo._revision_persistence.persist_filed_revision`
+    uses to keep the participation index from drifting from the filing
+    catalogue. Writing them separately would let a crash between the two leave
+    an event log claiming a reconciliation whose detail was never stored, or a
+    record with no event.
     """
     from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ...domain.buckets import (
@@ -727,13 +860,18 @@ def _finalise_reconciliation(
         narrative=narrative,
     )
 
+    # The event carries the verdict and the divergence COUNT only. The
+    # per-divergence detail lives in the reconciliation record below: a payload
+    # value is capped at 500 characters, and one grounded Modelo 100 casilla
+    # diff already encodes to a median 303, so joining them here raised a
+    # ValidationError before anything was written at all.
     event_payload = {
         "work_unit_id": work_unit.work_unit_id,
         "source_kind": source_kind.value,
         "source_path": _bounded_payload_reference(source_ref),
         "verdict": verdict.value,
         "diffs": str(len(diffs)),
-        "diffs_detail": _encode_diffs(diffs),
+        "advisories": str(len(advisories)),
     }
     actor = actor.strip()
     event_id = derive_bucket_event_id(
@@ -760,7 +898,28 @@ def _finalise_reconciliation(
             payload=event_payload,
         ),
     )
-    catalogue_repo.save(next_catalogue)
+    record = ModeloReconciliationRecord(
+        bucket_event_id=event_id,
+        bucket_id=work_unit.bucket_id,
+        work_unit_id=work_unit.work_unit_id,
+        source_kind=source_kind,
+        source_ref=source_ref,
+        verdict=verdict,
+        diffs=tuple(diffs),
+        advisories=tuple(advisories),
+        actor=actor,
+        reconciled_at=reconciled_at,
+    )
+    # One backend, one save_many, one transaction: both repositories are bound
+    # to the same SecureObjectRepository instance so the two writes share a
+    # single session scope and roll back together.
+    objects = catalogue_repo.secure_object_repository
+    objects.save_many(
+        (
+            catalogue_repo.to_secure_object_write(next_catalogue),
+            ModeloReconciliationRecordRepository(objects=objects).to_secure_object_write(record),
+        ),
+    )
 
     return report
 
@@ -1167,36 +1326,6 @@ def _bounded_payload_reference(reference: str) -> str:
     return _REFERENCE_ELISION + reference[-keep:]
 
 
-def _encode_diffs(diffs: list[ModeloReconciliationDiff]) -> str:
-    """Serialise the structured diffs for the ``MODELO_RECONCILED`` payload.
-
-    History persisted only a diff *count*; this JSON string carries *which*
-    fields diverged so ``reconcile history`` is auditable after the fact.
-    """
-    return json.dumps([diff.model_dump(mode="json") for diff in diffs], separators=(",", ":"))
-
-
-def _decode_diffs(raw: str) -> tuple[ModeloReconciliationDiff, ...]:
-    if not raw:
-        return ()
-    try:
-        payload = json.loads(raw)
-    except (ValueError, TypeError):
-        return ()
-    decoded: list[ModeloReconciliationDiff] = []
-    for item in payload:
-        # The strict frozen model does not coerce JSON lists into its
-        # ``tuple[str, ...]`` grounding fields; normalise them on the way in.
-        normalised = dict(item)
-        for grounding in ("legal_refs", "source_refs"):
-            if grounding in normalised:
-                normalised[grounding] = tuple(normalised[grounding])
-        if "diff_kind" in normalised:
-            normalised["diff_kind"] = ModeloReconciliationDiffKind(normalised["diff_kind"])
-        decoded.append(ModeloReconciliationDiff.model_validate(normalised))
-    return tuple(decoded)
-
-
 def _active_profile_tax_id(bucket_id: str) -> str:
     from ..user_profile import build_lifecycle_service, record_to_path_values, record_to_values
 
@@ -1220,47 +1349,48 @@ def list_modelo_reconciliations(
 ) -> tuple[ModeloReconciliationHistoryEntry, ...]:
     """Return every recorded reconciliation in ``bucket_id`` as typed entries.
 
-    ``modelo_reconcile`` stores no record; its durable trace is the
-    ``MODELO_RECONCILED`` :class:`~domain.buckets.BucketEvent` it appends.
-    This read-back enumerates those events from the same
-    :class:`~domain.buckets.BucketEventHistoryRepository` catalogue the
-    write path appends into (no parallel read path), filtered to the active
-    ``bucket_id`` and ordered oldest-first by ``occurred_at``. Each event is
-    projected onto a typed :class:`ModeloReconciliationHistoryEntry` — the
-    verdict, source kind, diff count, actor, and reconciliation instant are
+    Reads the encrypted :class:`ModeloReconciliationRecordRepository` store the
+    write path co-writes with each ``MODELO_RECONCILED``
+    :class:`~domain.buckets.BucketEvent`, filtered to ``bucket_id`` and ordered
+    oldest-first by the reconciliation instant. Each record is projected onto a
+    typed :class:`ModeloReconciliationHistoryEntry` — verdict, source kind, diff
+    count, the grounded diffs themselves, actor, and reconciliation instant are
     preserved, never collapsed to a flat ``dict[str, Any]``.
+
+    The entry's ``event_id`` is the id of the bucket event written in the same
+    unit of work, so an operator reading this history can join straight back to
+    the event log without either side carrying a cross-reference field that
+    could drift.
 
     An optional ``work_unit_id`` narrows the result to one work unit's
     reconciliation history. An empty result (no reconciliations recorded, or
     none for the requested work unit) returns an empty tuple — the clean "no
     reconciliations recorded yet" signal, not an error.
     """
-    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ...domain.buckets import BucketEventType
-
-    catalogue = BucketEventHistoryRepository().load()
-    events = catalogue.for_bucket(bucket_id, event_types=(BucketEventType.MODELO_RECONCILED,))
-    entries: list[ModeloReconciliationHistoryEntry] = []
-    for event in events:
-        payload = dict(event.payload)
-        event_work_unit_id = payload.get("work_unit_id", event.object_id)
-        if work_unit_id is not None and event_work_unit_id != work_unit_id:
-            continue
-        entries.append(
-            ModeloReconciliationHistoryEntry(
-                event_id=event.event_id,
-                bucket_id=event.bucket_id,
-                work_unit_id=event_work_unit_id,
-                source_kind=ModeloReconciliationEvidenceKind(payload["source_kind"]),
-                source_path=payload.get("source_path", ""),
-                verdict=ModeloReconciliationVerdict(payload["verdict"]),
-                diff_count=int(payload.get("diffs", "0")),
-                diffs=_decode_diffs(payload.get("diffs_detail", "")),
-                actor=event.actor,
-                reconciled_at=event.occurred_at,
-            ),
+    records = [
+        record
+        for record in ModeloReconciliationRecordRepository().iter_records()
+        if record.bucket_id == bucket_id and (work_unit_id is None or record.work_unit_id == work_unit_id)
+    ]
+    # Storage order is the object-key digest order, not the reconciliation
+    # order; the event id breaks a tie between two runs sharing an instant so
+    # the listing is stable across reads.
+    records.sort(key=lambda record: (record.reconciled_at, record.bucket_event_id))
+    return tuple(
+        ModeloReconciliationHistoryEntry(
+            event_id=record.bucket_event_id,
+            bucket_id=record.bucket_id,
+            work_unit_id=record.work_unit_id,
+            source_kind=record.source_kind,
+            source_path=record.source_ref,
+            verdict=record.verdict,
+            diff_count=len(record.diffs),
+            diffs=record.diffs,
+            actor=record.actor,
+            reconciled_at=record.reconciled_at,
         )
-    return tuple(entries)
+        for record in records
+    )
 
 
 __all__ = [
@@ -1271,6 +1401,8 @@ __all__ = [
     "ModeloReconciliationDiffKind",
     "ModeloReconciliationEvidenceKind",
     "ModeloReconciliationHistoryEntry",
+    "ModeloReconciliationRecord",
+    "ModeloReconciliationRecordRepository",
     "ModeloReconciliationReport",
     "ModeloReconciliationVerdict",
     "ReconciliationCrossBucketRefusedError",
@@ -1280,4 +1412,5 @@ __all__ = [
     "list_modelo_reconciliations",
     "modelo_reconcile",
     "modelo_reconcile_bytes",
+    "modelo_reconciliation_record_key",
 ]

@@ -3,13 +3,15 @@
 Authority: ``2026-06-10-cli-operator-surface`` decision D7 (read-back
 baseline guarantee); CRUD-matrix audit finding F-07 (no reconciliation-history list).
 
-``modelo_reconcile`` persists no stored record; its durable trace is the
-append-only ``MODELO_RECONCILED`` bucket event. ``list_modelo_reconciliations``
-reads those events back through the same bucket-event catalogue the write path
-appends into (no parallel read path). These tests drive the production path end
-to end on a real isolated bucket: run several reconciliations, list them, assert
-the typed fields, narrow to one work unit, prove an empty bucket lists clean,
-and an anti-tautology proof shows an unreconciled work unit is absent.
+``modelo_reconcile`` persists a stored record per run, co-written with the slim
+``MODELO_RECONCILED`` bucket event in one unit of work.
+``list_modelo_reconciliations`` reads that record store back. These tests drive
+the production path end to end on a real isolated bucket: run several
+reconciliations, list them, assert the typed fields, narrow to one work unit,
+prove an empty bucket lists clean, and an anti-tautology proof shows an
+unreconciled work unit is absent. The store's own format obligations —
+roundtrip, anti-tautology, the N-per-work-unit key, atomicity — live in
+``test_reconciliation_record_store``.
 """
 
 from __future__ import annotations
