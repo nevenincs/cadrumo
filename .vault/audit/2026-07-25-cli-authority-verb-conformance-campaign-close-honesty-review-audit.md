@@ -76,6 +76,40 @@ The same permissive default also classifies `ledger.invoice.list` and
 `ledger.invoice.view` as not-read-only, so that gate's discrimination is weaker
 than its name suggests wherever a key is absent from the risk table.
 
+NARROWED, and the reason matters more than the narrowing. This finding
+originally implied the permissive default was a broad hazard. The P19 audit
+challenged that, enumerated all six consumers, and was right that production is
+safe — but its stated reason was wrong, and checking the reason changed what
+should be recorded.
+
+The claim under challenge was that the default is fail-closed everywhere in
+production. It is fail-closed in the MCP identity gate, which asks whether a
+command is read-only and returns early if so: an unknown key is not read-only,
+so the gate enforces. It is fail-OPEN in the HITL confirmation gate, which
+derives its policy from the destructive, live-write and handoff flags — all
+three default false for an unknown key, so `confirmation_for_tool` returns
+`AUTO_APPROVE` with no user interaction. Verified directly: a literal bogus key
+yields `AUTO_APPROVE, interaction=False`, while `ledger.remove` and
+`modelo.work.file` correctly yield `CONFIRM`.
+
+Production is nonetheless safe, by reachability rather than by direction. The
+HITL gate is only ever called with `descriptor.command_key`, drawn from the
+live descriptor set, so an unclassified key cannot arrive. That is a real
+guarantee and it is also a weaker one than fail-closed: it holds only while
+every caller grounds its key, and nothing enforces that. A future caller
+passing an unvalidated key would silently auto-approve a mutation.
+
+The confirmed narrowing stands: of six consumers, only
+`test_write_policy_mutability_parity.py` consumes the default without first
+grounding its key against the live surface, which is precisely the grounding
+the gate added at `5eaf4b0ee6` supplies. The risk-table parity gate is made
+stricter by the default, and the two agent-eval goldens assert manifest
+membership before classifying.
+
+This is the S283 lesson in a third register. A permissive default is safe only
+as long as its input is proven to be grounded — the same shape as a gate being
+meaningful only as long as its subject is proven to be exercised.
+
 Closed at commit `5eaf4b0ee6` by binding the catalogue to the materialised live
 command tree, with an anti-tautology proof asserting that the pre-collapse
 spellings are rejected and the live ones accepted. Without that proof the new
@@ -531,6 +565,61 @@ to catch exactly this class in others, is the strongest available argument that
 the discipline cannot rest on care. It needs the mechanical form recorded in
 the recommendations: reconciliation reads committed state, and a pattern is
 proven against the data's real shape before its silence is believed.
+
+### untracked-peer-modules-break-live-gates | high | Two uncommitted files are the single largest cause of the failing lanes
+
+Both are untracked working-tree modules from other campaigns, and between them
+they account for the great majority of the integration-lane failures. Neither
+is this campaign's to fix, but the attribution matters because without it the
+lane reads as broad campaign breakage.
+
+A test module under the operator-output package registers the production schema
+key `operator_output.tests.probe` for a command that does not exist. It is the
+sole cause of 128 assertion failures and all 19 setup errors in the integration
+lane, surfacing as a schema-resolution refusal that would otherwise ship an
+argument-free schema. The refusal is the system working correctly. The defect
+is a test module registering a production key at all — a test double reaching
+into the production registry is the shape this project forbids, and it is
+currently invisible because the file is untracked.
+
+A wizard results module holds the `config.profile.create` and
+`config.profile.edit` schemas outside the payload-discovery walk, which only
+imports modules whose name contains `payload`. This breaks the live MCP
+surface, not merely a docs gate: a focused input-schema run fails with a key
+error on `config.profile.create`. It is also the second cause behind the single
+non-identity MCP parity failure recorded elsewhere in this review.
+
+### docs-lane-stalls-and-is-unverified | medium | The documentation lane stops progressing identically at 24 and at 4 workers
+
+Recorded as a finding rather than accepted as a slow run. The docs pytest lane
+stopped progressing at the same point under 24 workers and under 4, with
+roughly 78 GB of memory free and processors at around 60 percent, so it is
+bounded by neither memory nor CPU. Because pytest emits its summary at the end,
+no failure identities were produced at all.
+
+The lane collects 194 cases, so this is not a zero-collection false green. It
+is genuinely unverified in both directions, and a docs-lane result should not
+be quoted either way until someone bisects it with no workers and names the
+module whose worker exits. The elapsed time alone is not the signal — several
+cases spawn full site builds and the module declares a thirty-minute budget.
+
+### rag-index-degradation-measured | medium | The index is far worse than the wave was briefed, and it reports success
+
+The brief described roughly 1027 indexed chunks. The measured figure is 466
+indexed source-code sections against 3982 tracked Python files, with code
+generation reporting `succeeded`.
+
+The consequence is concrete rather than theoretical: all ten semantic sweeps in
+the duplication re-audit missed. The index failed to return the duplication
+runner for a query naming copy-paste detection, the hashing module for a query
+naming file-byte hashing, and the namespace registry for its own name; two
+unrelated probes returned the same file at the same offset. This is the
+documented failure mode where a truncated index answers confidently instead of
+refusing.
+
+Every absence claim in this review was therefore established by reading and
+exact search, and the semantic sweep steps are reported unverified rather than
+clean. The service was not restarted or reindexed by anyone during the wave.
 
 ## Recommendations
 

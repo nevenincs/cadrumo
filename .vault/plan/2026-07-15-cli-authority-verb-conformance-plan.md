@@ -458,6 +458,9 @@ Run the formal code-review skill, reconcile findings, and prove every accepted A
 - [ ] `W06.P20.S282` - Remove the two Code-Stands-Alone violations, a feature tag in a hashing test docstring and vault stems in the duplication disposition fields; `src/cadrumo/core/tests/test_hashing_adoption.py; dev/audit/duplication_dispositions.toml`.
 - [ ] `W06.P20.S283` - Give every set-asserting gate an anti-vacuity floor, asserting the subject count is non-zero before asserting the property, across the write-guard parity, namespace-adoption and tree-walk gates; `src/cadrumo/`.
 - [ ] `W06.P20.S284` - Assert the accepted period tokens on the error envelope structured context rather than on rendered prose, so a wording pass cannot red the grammar cases; `src/cadrumo/entrypoints/cli/tests/test_ledger_period_grammar.py`.
+- [ ] `W06.P20.S285` - Ground the HITL confirmation key against the live descriptor set at the gate itself, so the permissive default cannot auto-approve an unclassified mutation if a future caller passes an unvalidated key; `src/cadrumo/entrypoints/mcp/_hitl.py`.
+- [ ] `W06.P20.S286` - Return the operator-output test probe and the wizard results schemas to their owning campaigns, since a test module registering a production schema key breaks 128 assertions and 19 setup errors while untracked; `src/cadrumo/application/operator_output/; src/cadrumo/application/wizard/`.
+- [ ] `W06.P20.S287` - Bisect the documentation lane with no workers and name the module whose worker exits, since it stalls identically at 24 and at 4 workers and emits no failure identities; `dev/docs/tests/test_docs_build.py`.
 
 ## Description
 
