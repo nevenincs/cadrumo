@@ -6,6 +6,7 @@ import asyncio
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import pytest
 from pydantic import AnyUrl
@@ -570,11 +571,21 @@ async def test_wallet_diagnostic_dump_writes_only_redacted_structural_summary(tm
 
 
 def test_iva_wallet_live_routes_are_centralized_external_constants() -> None:
+    """Both exported URLs come from the registry, on the unnumbered origin.
+
+    This previously asserted each URL equalled a build against
+    ``domains.www1``, which pinned a numbered host inside the test meant to
+    prove the routes are centralised. AEAT assigns the host that answers a
+    session, so asserting one made the test encode the very assumption it
+    was guarding against, and it would have refused a correctly de-pinned
+    URL. Centralisation is the property worth holding; the number was never
+    part of it.
+    """
     assert (
-        f"{_EXTERNAL.aeat.domains.www1}{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"
+        f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"
     ) == IVA_COMPENSATION_WALLET_URL
     assert (
-        f"{_EXTERNAL.aeat.domains.www1}{_EXTERNAL.aeat.pre303.presentation_service_path}"
+        f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.pre303.presentation_service_path}"
     ) == PRE303_PRESENTATION_SERVICE_URL
 
 
@@ -692,3 +703,49 @@ class TestLiveSourceUrlAssertion:
             _assert_source_url_is_a_wallet_read(
                 f"{external.aeat.domains.www6}{external.aeat.sede_paths.declarations_listing}",
             )
+
+
+class TestWalletHostPredicate:
+    """The wallet host check must accept whichever host AEAT dispatched to.
+
+    It was an enumeration of three hosts, which is a hand-maintained
+    approximation of a load balancer's membership and wrong by
+    construction: a fourth numbered host entering the pool was silently
+    refused. Collapsing it to the apex suffix ALIGNS it with the read
+    guard, which already declares ``allowed_host_suffixes`` and therefore
+    already admits any AEAT subdomain. The enumeration was the stricter of
+    the two and the one that was wrong.
+    """
+
+    @pytest.mark.parametrize("origin_name", ["www1", "www2", "www6", "www12", "sede"])
+    def test_every_dispatch_host_is_allowed(self, origin_name: str) -> None:
+        """No numbered host may be privileged over its siblings."""
+        from .._iva_compensation_wallet_parsing import _is_allowed_wallet_host
+
+        external = Settings.external_constants()
+        netloc = urlsplit(getattr(external.aeat.domains, origin_name)).netloc
+        assert _is_allowed_wallet_host(netloc)
+
+    @pytest.mark.parametrize("netloc", ["example.invalid", "agenciatributaria.gob.es.evil.test", ""])
+    def test_a_non_aeat_host_is_refused(self, netloc: str) -> None:
+        """Aligning with the guard must not admit anything off the AEAT apex.
+
+        The suffix-lookalike case is the one that matters: a host ENDING in
+        the apex as a substring rather than as a domain suffix must not
+        pass, or the collapse would be a widening rather than an alignment.
+        """
+        from .._iva_compensation_wallet_parsing import _is_allowed_wallet_host
+
+        assert not _is_allowed_wallet_host(netloc)
+
+    def test_the_wallet_url_names_no_numbered_host(self) -> None:
+        """The exported wallet URL must not assert a host the balancer assigns."""
+        from .._iva_compensation_wallet_parsing import _WALLET_URL
+
+        external = Settings.external_constants()
+        numbered = [
+            name
+            for name in ("www1", "www2", "www3", "www6", "www12")
+            if urlsplit(getattr(external.aeat.domains, name)).netloc in _WALLET_URL
+        ]
+        assert numbered == [], f"the wallet URL pins a numbered host: {numbered}"

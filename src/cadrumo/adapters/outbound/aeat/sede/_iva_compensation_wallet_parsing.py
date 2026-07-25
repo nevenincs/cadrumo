@@ -36,12 +36,16 @@ _ANY_HTTP_URL_ADAPTER: TypeAdapter[AnyHttpUrl] = TypeAdapter(AnyHttpUrl)
 _SPANISH_AMOUNT_RE = re.compile(r"\d{1,3}(?:\.\d{3})*,\d{2}|\d+,\d{2}")
 
 _EXTERNAL = Settings.external_constants()
-_WALLET_URL = f"{_EXTERNAL.aeat.domains.www1}{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"
-_WALLET_HOST = urlsplit(_EXTERNAL.aeat.domains.www1).netloc
-_WALLET_RUNTIME_HOST = urlsplit(_EXTERNAL.aeat.domains.www6).netloc
+_WALLET_PATH = _EXTERNAL.aeat.sede_paths.iva_compensation_wallet
+# Built on the UNNUMBERED origin. AEAT assigns the numbered host that
+# answers a session, so no number can be named here without asserting
+# something the load balancer decides. Navigation never targets this URL
+# directly; it enters through the access selector and is dispatched.
+_WALLET_URL = f"{_EXTERNAL.aeat.domains.sede}{_WALLET_PATH}"
 _SEDE_HOST = urlsplit(_EXTERNAL.aeat.domains.sede).netloc
+_AEAT_HOST_SUFFIX = _EXTERNAL.aeat.domains.host_suffix
 _PRE303 = _EXTERNAL.aeat.pre303
-_PRE303_PRESENTATION_URL = f"{_EXTERNAL.aeat.domains.www1}{_PRE303.presentation_service_path}"
+_PRE303_PRESENTATION_URL = f"{_EXTERNAL.aeat.domains.sede}{_PRE303.presentation_service_path}"
 
 
 def parse_iva_compensation_wallet_html(
@@ -482,12 +486,20 @@ def _wallet_entrypoint_path(raw_url: str) -> str | None:
 
 
 def _is_allowed_wallet_host(netloc: str) -> bool:
+    """Return whether ``netloc`` is an AEAT host this read may have landed on.
+
+    This was an enumeration of three hosts - www1, www6 and the apex -
+    which is a hand-maintained approximation of "whichever host answered".
+    A fourth numbered host entering the pool was silently refused by it.
+
+    The predicate is now the apex suffix, which ALIGNS this check with the
+    read guard rather than loosening it: the guard already declares
+    ``allowed_host_suffixes``, so it admits any AEAT subdomain today. The
+    enumeration was the stricter of the two and the one that was wrong.
+    """
     host = netloc.casefold()
-    return host in {
-        _WALLET_HOST.casefold(),
-        _WALLET_RUNTIME_HOST.casefold(),
-        _SEDE_HOST.casefold(),
-    }
+    apex = _AEAT_HOST_SUFFIX.casefold()
+    return host == apex or host.endswith(f".{apex}")
 
 
 def _normalised_title(soup: BeautifulSoup) -> str:
