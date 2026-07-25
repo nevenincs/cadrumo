@@ -11,7 +11,7 @@ from __future__ import annotations
 import re
 import shlex
 from collections.abc import Callable
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from typing import TYPE_CHECKING, Annotated
 
 import typer
@@ -44,6 +44,7 @@ from ...application.modelo import (
     validate_m349_nif_format,
 )
 from ...core import M210GrossIncomeSourceMode, Modelo, RescateType
+from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import CadrumoError, build_error_envelope, resolve_error_message
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
@@ -466,19 +467,36 @@ def parse_meses_trabajo_hijo_spec(spec: str) -> tuple[str, int]:
 
 
 def optional_decimal_option(raw: str | None, *, translation_key: str, default: str) -> Decimal | None:
-    """Parse an optional decimal CLI option."""
+    """Parse an optional hand-typed euro amount carrying a per-field refusal message.
+
+    The single home for the "optional operator-typed amount whose refusal names
+    its own field" shape. Every caller supplies its own ``translation_key`` /
+    ``default`` pair, which is the only axis they differ on; the accepted grammar
+    is shared and enforced here once.
+
+    Conformance is the canonical euro-amount grammar
+    (:func:`~cadrumo.core.decimal.try_parse_canonical_decimal` with a
+    two-fractional-digit cap): a dot decimal separator, at most euro-cent
+    precision, no thousands grouping, no comma decimal, no scientific notation,
+    no leading ``+``, and no ``NaN``/``Infinity``. The cap is what makes the
+    Spanish thousands shape ``1.000`` refuse rather than silently becoming
+    ``Decimal("1.0")`` — a one-euro figure where the operator meant one
+    thousand. A leading ``-`` still conforms, so a field whose domain forbids a
+    negative amount keeps reporting that through its own validator rather than
+    changing which surface refuses.
+    """
     if raw is None:
         return None
-    try:
-        return Decimal(raw)
-    except (InvalidOperation, ValueError) as exc:
+    parsed = try_parse_canonical_decimal(raw, max_fraction_digits=2)
+    if parsed is None:
         raise typer.BadParameter(
             tr(
                 translation_key,
                 value=raw,
                 default=default,
             ),
-        ) from exc
+        )
+    return parsed
 
 
 def work_calculate_input_bundle_from_cli(
