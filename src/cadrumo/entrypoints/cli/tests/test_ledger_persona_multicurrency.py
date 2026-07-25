@@ -89,7 +89,7 @@ def _match(description: str, rules: list[dict[str, object]]) -> dict[str, object
 
 
 def _import_revolut() -> None:
-    result = _invoke(["app", "ledger", "import", str(_REVOLUT), "--provider", "csv"])
+    result = _invoke(["app", "ledger", "import", "--file", str(_REVOLUT), "--provider", "csv"])
     assert result.exit_code == 0, result.output
 
 

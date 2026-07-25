@@ -80,13 +80,13 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 def _import_corpus() -> None:
     for name in _FILES:
-        result = _invoke(["app", "ledger", "import", str(_CORPUS / name), "--provider", "csv"])
+        result = _invoke(["app", "ledger", "import", "--file", str(_CORPUS / name), "--provider", "csv"])
         assert result.exit_code == 0, f"{name}: {result.output}"
 
 
 def _import_bbva() -> None:
     result = _invoke(
-        ["app", "ledger", "import", str(_CORPUS / "bbva-business-eur.csv"), "--provider", "csv"],
+        ["app", "ledger", "import", "--file", str(_CORPUS / "bbva-business-eur.csv"), "--provider", "csv"],
     )
     assert result.exit_code == 0, result.output
 

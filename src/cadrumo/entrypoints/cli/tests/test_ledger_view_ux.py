@@ -362,7 +362,7 @@ def test_list_and_view_render_accented_descriptions_identically(
         _N26_HEADER + f"2026-04-15,Proveedor SA,{accented},-50.00,EUR,n26-acc\n",
         encoding="utf-8",
     )
-    imported = _invoke(["app", "ledger", "import", str(statement), "--provider", "csv"])
+    imported = _invoke(["app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
     assert imported.exit_code == 0, imported.output
 
     listed = _invoke(["app", "ledger", "list"])

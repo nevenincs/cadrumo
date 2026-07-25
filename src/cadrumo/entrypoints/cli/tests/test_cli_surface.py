@@ -96,7 +96,9 @@ def test_app_ledger_import_dry_run_does_not_persist(tmp_path: Path) -> None:
         "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
         encoding="utf-8",
     )
-    dry = _invoke(["--format", "json", "app", "ledger", "import", str(statement), "--provider", "csv", "--dry-run"])
+    dry = _invoke(
+        ["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv", "--dry-run"]
+    )
     assert dry.exit_code == 0
     result = _json(dry)
     assert result["dry_run"] is True
@@ -447,14 +449,14 @@ def test_app_ledger_import_reimport_review_round_trips_state(tmp_path: Path) -> 
         "2026-04-16,SaaS Vendor,Subscription,-48.40,EUR,n26-002\n",
         encoding="utf-8",
     )
-    imported = _invoke(["--format", "json", "app", "ledger", "import", str(statement), "--provider", "csv"])
+    imported = _invoke(["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
     assert imported.exit_code == 0
     imported_payload = _json(imported)
     assert imported_payload["rows"] == 2
     assert imported_payload["imported"] == 2
     assert imported_payload["skipped"] == 0
 
-    repeated = _invoke(["--format", "json", "app", "ledger", "import", str(statement), "--provider", "csv"])
+    repeated = _invoke(["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
     assert repeated.exit_code == 0
     repeated_payload = _json(repeated)
     assert repeated_payload["rows"] == 2

@@ -1,5 +1,5 @@
 @step Import the quarter's movements so there are rows to classify.
-@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@setup aeat app ledger import --file fixtures/movimientos-2026-1t.csv --provider csv
 @step Select the rows still needing a decision.
 aeat app ledger list --filter period=1T --filter year=2026 --filter classification=NOT_YET_PROCESSED
 @step Export the period as a review snapshot to work from.

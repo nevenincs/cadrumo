@@ -62,7 +62,7 @@ def _register(*, profile_id: str, label: str) -> None:
 
 
 def _import(csv_path: Path) -> None:
-    result = invoke_cached_cli(["app", "ledger", "import", str(csv_path), "--provider", "csv"])
+    result = invoke_cached_cli(["app", "ledger", "import", "--file", str(csv_path), "--provider", "csv"])
     assert result.exit_code == 0, result.output
 
 

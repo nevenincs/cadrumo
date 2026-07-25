@@ -57,7 +57,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 def _import_corpus() -> None:
     for name in _FILES:
-        result = invoke_cached_cli(["app", "ledger", "import", str(_CORPUS / name), "--provider", "csv"])
+        result = invoke_cached_cli(["app", "ledger", "import", "--file", str(_CORPUS / name), "--provider", "csv"])
         assert result.exit_code == 0, f"{name}: {result.output}"
 
 

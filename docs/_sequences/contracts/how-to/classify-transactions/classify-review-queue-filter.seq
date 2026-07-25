@@ -1,5 +1,5 @@
 @step Import the quarter's movements so there is pending work to surface.
-@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@setup aeat app ledger import --file fixtures/movimientos-2026-1t.csv --provider csv
 @step Narrow the queue to ledger-transaction items.
 aeat app review queue --kind ledger_transaction
 @step Narrow the queue to modelo findings for one modelo.

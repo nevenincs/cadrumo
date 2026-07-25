@@ -1,5 +1,5 @@
 @step Import the quarter's movements so there is an expense to classify.
-@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@setup aeat app ledger import --file fixtures/movimientos-2026-1t.csv --provider csv
 @step List the accepted category ids.
 aeat app ledger categories
 @step Classify the expense as business with a category.

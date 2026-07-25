@@ -42,7 +42,7 @@ def _import_two_transactions(tmp_path: Path) -> tuple[str, str]:
     csv_path = tmp_path / "import.csv"
     csv_path.write_text(csv_content, encoding="utf-8")
 
-    result = invoke_cached_cli(["app", "ledger", "import", str(csv_path), "--provider", "csv"])
+    result = invoke_cached_cli(["app", "ledger", "import", "--file", str(csv_path), "--provider", "csv"])
     assert result.exit_code == 0, result.output
 
     listed = invoke_cached_cli(["--format", "json", "app", "ledger", "list"])
@@ -103,7 +103,7 @@ def _import_many_transactions(tmp_path: Path, *, count: int) -> list[str]:
     csv_path = tmp_path / "many.csv"
     csv_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
-    result = invoke_cached_cli(["app", "ledger", "import", str(csv_path), "--provider", "csv"])
+    result = invoke_cached_cli(["app", "ledger", "import", "--file", str(csv_path), "--provider", "csv"])
     assert result.exit_code == 0, result.output
     return [row["transaction_id"] for row in _list_transactions()]
 

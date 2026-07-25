@@ -88,7 +88,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 
 def test_classify_fixture_applies_through_bulk_classify(_isolated_backend: None) -> None:
-    imported = _invoke(["app", "ledger", "import", str(_CORPUS / _ACCOUNT), "--provider", "csv"])
+    imported = _invoke(["app", "ledger", "import", "--file", str(_CORPUS / _ACCOUNT), "--provider", "csv"])
     assert imported.exit_code == 0, imported.output
     result = _invoke(["--format", "json", "app", "ledger", "classify", "--file", str(_FIXTURE)])
     assert result.exit_code == 0, result.output

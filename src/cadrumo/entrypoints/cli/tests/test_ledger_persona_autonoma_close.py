@@ -84,7 +84,7 @@ def _match(description: str, rules: list[dict[str, object]]) -> dict[str, object
 
 def _import_corpus() -> None:
     for name in _FILES:
-        result = _invoke(["app", "ledger", "import", str(_CORPUS / name), "--provider", "csv"])
+        result = _invoke(["app", "ledger", "import", "--file", str(_CORPUS / name), "--provider", "csv"])
         assert result.exit_code == 0, f"{name}: {result.output}"
 
 

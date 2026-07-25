@@ -186,7 +186,7 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
     assert bucket_id is not None
 
     # 2. Import a ledger transaction via CLI (real ingest path).
-    r_ledger = _invoke(["app", "ledger", "import", str(csv), "--provider", "csv"])
+    r_ledger = _invoke(["app", "ledger", "import", "--file", str(csv), "--provider", "csv"])
     assert r_ledger.exit_code == 0, r_ledger.output
 
     # 3. Seed work unit, calculation revision, and filing record via repositories.

@@ -1,5 +1,5 @@
 @step Import and classify the quarter's rows.
-@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@setup aeat app ledger import --file fixtures/movimientos-2026-1t.csv --provider csv
 @setup aeat app ledger classify 71a5db2b --classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
 @setup aeat app ledger classify e3eeac5e --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105
 @step Check the period is ready to calculate.

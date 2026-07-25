@@ -58,7 +58,7 @@ def register_import_commands(app: typer.Typer) -> None:
     @app.command("import", help=tr("cli.ledger.import.help"))
     def ledger_import(
         ctx: typer.Context,
-        path: Path = typer.Argument(..., help=tr("cli.ledger.import.path_help")),
+        file: Path = typer.Option(..., "--file", help=tr("cli.ledger.import.file_help")),
         provider: LedgerProviderID = typer.Option(
             ...,
             "--provider",
@@ -66,7 +66,11 @@ def register_import_commands(app: typer.Typer) -> None:
         ),
         dry_run: bool = typer.Option(False, "--dry-run", help=tr("cli.ledger.import.dry_run_help")),
         verify: bool = typer.Option(False, "--verify", help=tr("cli.ledger.import.verify_help")),
-        file: Path | None = typer.Option(None, "--file", help=tr("cli.ledger.import.file_help")),
+        verify_source: Path | None = typer.Option(
+            None,
+            "--verify-source",
+            help=tr("cli.ledger.import.verify_source_help"),
+        ),
         verbose: bool = typer.Option(False, "--verbose", help=tr("cli.ledger.import.verbose_help")),
         period: str | None = typer.Option(None, "--period", help=tr("cli.ledger.import.period_help")),
         year: int | None = typer.Option(
@@ -98,7 +102,7 @@ def register_import_commands(app: typer.Typer) -> None:
 
         currency_normalizer = CurrencyNormalizationService(rate_provider=default_ecb_rate_provider())
         canonical_period = _optional_canonical_period(period, year=year)
-        import_paths = _resolve_import_paths(path)
+        import_paths = _resolve_import_paths(file)
         file_results = [
             import_ledger_source(
                 LedgerSourceImportCommand(
@@ -107,7 +111,7 @@ def register_import_commands(app: typer.Typer) -> None:
                     provider=normalised_provider,
                     dry_run=dry_run,
                     verify=verify,
-                    source=file,
+                    source=verify_source,
                     period=canonical_period,
                     actor=actor,
                     source_command="aeat app ledger import",

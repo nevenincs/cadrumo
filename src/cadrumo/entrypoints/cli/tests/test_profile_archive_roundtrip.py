@@ -110,7 +110,7 @@ def _seed_transaction(csv_path: Path) -> None:
         "2026-02-10,Client SL,Factura 002,605.00,EUR,txn-archive-001\n",
         encoding="utf-8",
     )
-    r = _invoke(["app", "ledger", "import", str(csv_path), "--provider", "csv"])
+    r = _invoke(["app", "ledger", "import", "--file", str(csv_path), "--provider", "csv"])
     assert r.exit_code == 0, r.output
 
 

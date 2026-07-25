@@ -1,5 +1,5 @@
 @step Import a quarter so there is a row to override.
-@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@setup aeat app ledger import --file fixtures/movimientos-2026-1t.csv --provider csv
 @step Classify the row manually; a manual decision always wins.
 @result aeat --format json app ledger classify e3eeac5e --classification BUSINESS --category-id material_oficina
 @expect result.transaction.business_classification == "BUSINESS"

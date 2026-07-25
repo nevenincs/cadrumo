@@ -54,7 +54,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 
 def _import_bbva() -> None:
-    res = _invoke(["app", "ledger", "import", str(_BBVA), "--provider", "csv"])
+    res = _invoke(["app", "ledger", "import", "--file", str(_BBVA), "--provider", "csv"])
     assert res.exit_code == 0, res.output
 
 
@@ -100,5 +100,5 @@ def test_xlsx_export_roundtrips_back_through_import(tmp_path: Path) -> None:
     # unrecognised layout. Both uphold the offline-backup fidelity invariant —
     # no phantom rows are ever added by a re-import. (Mirrors the canonical CSV
     # export roundtrip invariant.)
-    _invoke(["--format", "json", "app", "ledger", "import", str(out), "--provider", "xlsx"])
+    _invoke(["--format", "json", "app", "ledger", "import", "--file", str(out), "--provider", "xlsx"])
     assert _active_row_count() == before

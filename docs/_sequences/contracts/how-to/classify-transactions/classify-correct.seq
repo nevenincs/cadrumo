@@ -1,5 +1,5 @@
 @step Import the quarter's movements so there is a row to reclassify.
-@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@setup aeat app ledger import --file fixtures/movimientos-2026-1t.csv --provider csv
 @setup aeat app ledger classify e3eeac5e --classification BUSINESS --category-id material_oficina
 @step Re-classify the same row as personal.
 aeat app ledger classify e3eeac5e --classification PERSONAL

@@ -59,7 +59,7 @@ def _import_one_transaction(tmp_path: Path) -> str:
     )
     csv_path = tmp_path / "import.csv"
     csv_path.write_text(csv_content, encoding="utf-8")
-    result = _invoke(["app", "ledger", "import", str(csv_path), "--provider", "csv"])
+    result = _invoke(["app", "ledger", "import", "--file", str(csv_path), "--provider", "csv"])
     assert result.exit_code == 0, result.output
     listed = _invoke(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output

@@ -1,5 +1,5 @@
 @step Import a quarter so there is an unclassified row.
-@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@setup aeat app ledger import --file fixtures/movimientos-2026-1t.csv --provider csv
 @step Find a row that still needs classification.
 aeat app ledger list --filter classification=NOT_YET_PROCESSED
 @step Inspect the row before previewing.
@@ -7,3 +7,4 @@ aeat app ledger list --filter classification=NOT_YET_PROCESSED
 @expect result.transaction.business_classification == "NOT_YET_PROCESSED"
 @step Preview a suggestion for that one row.
 @static aeat app ledger classify e3eeac5e --llm claude
+@blocked external-service Needs a live LLM provider API key; the sandbox contacts no third-party model.

@@ -1,5 +1,5 @@
 @step Import a quarter so there is a transaction to inspect.
-@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@setup aeat app ledger import --file fixtures/movimientos-2026-1t.csv --provider csv
 @step Inspect the transaction.
 aeat app ledger view e3eeac5e
 @step Read the transaction's history.
