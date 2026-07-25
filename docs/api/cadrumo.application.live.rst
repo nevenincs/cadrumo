@@ -14,7 +14,6 @@ Submodules
    :maxdepth: 4
 
    cadrumo.application.live._borrador_100
-   cadrumo.application.live._censo_036_pull
    cadrumo.application.live._errors
    cadrumo.application.live._expedientes
    cadrumo.application.live._filed_capture_finalizer
