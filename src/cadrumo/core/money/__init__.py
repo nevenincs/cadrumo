@@ -30,6 +30,15 @@ def round_to_cents(value: Decimal) -> Decimal:
     Returns:
         A :class:`~decimal.Decimal` quantised to two fractional
         digits using :data:`decimal.ROUND_HALF_UP`.
+
+    Raises:
+        ~decimal.InvalidOperation: When quantising *value* to two fractional
+            digits would exceed the active decimal context's precision — from 27
+            integral digits under the default 28-digit context. Callers reachable
+            from operator input must refuse an out-of-range magnitude at their own
+            boundary rather than let this escape: this function is crossed long
+            before the AEAT export encoder, so it, not the encoder, is the first
+            boundary an unbounded figure meets.
     """
     return value.quantize(CENT, rounding=ROUND_HALF_UP)
 
