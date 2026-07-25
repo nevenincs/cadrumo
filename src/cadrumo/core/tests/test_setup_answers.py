@@ -4,8 +4,8 @@ cadrumo.core.setup_answers.SetupAnswers and the project_answers registration slo
 These tests verify:
 - SetupAnswers is defined in cadrumo.core.setup_answers (not cadrumo.application.wizard).
 - cadrumo.application.wizard._setup_answers.SetupAnswers is the same class object.
-- cadrumo.domain.deadlines._profiles imports SetupAnswers and project_answers from
-  cadrumo.core.setup_answers — no deferred upward application imports survive.
+- cadrumo.domain.deadlines._profiles projects through the core answer table and
+  loads no application wizard module at all.
 - The project_answers registration slot raises before registration and
   dispatches correctly after.
 - SetupAnswers field validation exercises real enum coercion (not mocks).
@@ -73,20 +73,24 @@ def test_setup_answers_catalogue_uses_core_class() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_profiles_imports_setup_answers_from_core() -> None:
-    """cadrumo.domain.deadlines._profiles must import SetupAnswers from cadrumo.core.setup_answers."""
+def test_profiles_projects_through_the_core_answer_table() -> None:
+    """The deadline projection must bind the core projector, not a registered slot.
+
+    The slot existed so the domain could call back into an
+    application-registered projector without importing it. The projection
+    now reads the core answer table directly, which removes the callback
+    rather than merely hiding it, so what this asserts is that the domain
+    holds the core function itself.
+    """
     from ...domain.deadlines import _profiles as profiles_mod
+    from ..setup_answers import project_setup_answers
 
-    # SetupAnswers in the profiles module namespace should be the core class.
-    sa = getattr(profiles_mod, "SetupAnswers", None)
-    assert sa is not None, "_profiles module does not expose SetupAnswers"
-    from ..setup_answers import SetupAnswers
-
-    assert sa is SetupAnswers, f"_profiles.SetupAnswers is {sa!r}, not cadrumo.core.setup_answers.SetupAnswers"
+    bound = getattr(profiles_mod, "project_setup_answers", None)
+    assert bound is project_setup_answers, f"_profiles binds {bound!r}, not the core projector"
 
 
-def test_profiles_import_purity_uses_core_projection_slot() -> None:
-    """Importing _profiles must bind core projection objects without loading the application wizard."""
+def test_profiles_import_purity_never_loads_the_wizard() -> None:
+    """Importing _profiles must not drag in the application wizard package."""
     import subprocess
     import sys
     import textwrap
@@ -96,10 +100,9 @@ def test_profiles_import_purity_uses_core_projection_slot() -> None:
         import sys
 
         profiles = importlib.import_module("cadrumo.domain.deadlines._profiles")
-        from cadrumo.core.setup_answers import SetupAnswers, project_answers
+        from cadrumo.core.setup_answers import project_setup_answers
 
-        assert profiles.SetupAnswers is SetupAnswers
-        assert profiles.project_answers is project_answers
+        assert profiles.project_setup_answers is project_setup_answers
         leaked = sorted(name for name in sys.modules if name.startswith("cadrumo.application.wizard"))
         assert leaked == [], leaked
     """)
