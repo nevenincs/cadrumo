@@ -220,6 +220,30 @@ def test_a_clear_and_a_value_conflict_raise_separate_notices() -> None:
     assert "config.profile.censo.pull.divergences" not in only_cleared
 
 
+def test_the_fiscal_identity_is_reported_in_none_of_the_three_outcomes() -> None:
+    """The identity the read carries is an ownership check, not a reconciled field.
+
+    The projection emits ``identity.tax_id`` so the reconciliation can
+    decide whether the read belongs to this profile at all; past that
+    refusal it skips the path, so it appears in neither the adopted nor
+    the diverging set. Deriving "unchanged" from everything projected
+    would therefore report it as corroborated — and on a profile carrying
+    no identity yet, which the ownership guard deliberately allows as the
+    ordinary first read, that tells the operator AEAT agrees with a value
+    they never recorded.
+
+    Scoping the derivation to the adoptable paths is what keeps the three
+    outcomes about fields the reconciliation actually decides.
+    """
+    from .....application.user_profile import CENSAL_ADOPTABLE_PATHS
+
+    assert "identity.tax_id" not in CENSAL_ADOPTABLE_PATHS
+    source = inspect.getsource(_censo_file.censo_pull)
+    # The derivation must filter on the adoptable set, not on the projection.
+    assert "adoptable = frozenset(CENSAL_ADOPTABLE_PATHS)" in source
+    assert "if fact.path in adoptable and fact.path not in decided" in source
+
+
 def test_a_divergence_whose_values_are_masked_says_so() -> None:
     """A row the operator cannot read is announced, not printed as two hashes.
 

@@ -149,6 +149,7 @@ def censo_pull(
 
     from ....application.live import pull_censal_datos
     from ....application.user_profile import (
+        CENSAL_ADOPTABLE_PATHS,
         apply_censal_read,
         censal_facts_from_read,
         reconcile_censal_read,
@@ -198,11 +199,21 @@ def censo_pull(
     # disagreement, because it is a no-op to WRITE; it is not a no-op to
     # REPORT. Derived here from the projection rather than re-decided, so
     # the split stays the authority's.
+    #
+    # Scoped to the adoptable paths, because the projection also carries the
+    # fiscal identity, which the reconciliation consumes to decide whether
+    # the read belongs to this profile at all and then skips. It is not an
+    # outcome of the reconciliation, so it belongs in none of the three
+    # lists: calling it unchanged would tell an operator whose profile
+    # carries no identity yet - the ordinary first-read case, which the
+    # ownership guard deliberately allows - that AEAT agrees with a value
+    # they never recorded.
+    adoptable = frozenset(CENSAL_ADOPTABLE_PATHS)
     decided = {fact.path for fact in reconciliation.adopted} | {path for path, _ in reconciliation.divergences}
     unchanged = tuple(
         CensoPullFactPayload(path=fact.path, value=str(fact.value), source=fact.source)
         for fact in projected
-        if fact.path not in decided
+        if fact.path in adoptable and fact.path not in decided
     )
     result = CensoPullResult(
         applied=apply,
