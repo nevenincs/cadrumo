@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#profile-setup-flow'
-date: '2026-07-24'
-modified: '2026-07-24'
+date: '2026-07-25'
+modified: '2026-07-25'
 related:
   - '[[2026-07-23-profile-setup-flow-W01-P01-S01]]'
   - '[[2026-07-23-profile-setup-flow-W01-P01-S02]]'

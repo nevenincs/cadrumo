@@ -119,7 +119,7 @@ Roundtrip and anti-tautology coverage for the new persistence surfaces, parity a
 - [x] `W04.P09.S29` - Add roundtrip plus anti-tautology coverage for divergence facts, the setup-incomplete state, and resume projection; `src/cadrumo/application/user_profile/tests/`.
 - [x] `W04.P09.S30` - Verify the portable-export shape against the compatibility lifecycle for every schema addition; `src/cadrumo/domain/user_profile/_portable_export.py`.
 - [x] `W04.P09.S31` - Author the user-facing setup-flow documentation through the documentation workflow with command conformance green; `docs/how-to/`.
-- [ ] `W04.P09.S33` - Run the fresh-context campaign-close honesty review and persist the close audit with every surfaced item tracked; `.vault/audit/`.
+- [x] `W04.P09.S33` - Run the fresh-context campaign-close honesty review and persist the close audit with every surfaced item tracked; `.vault/audit/`.
 - [x] `W04.P09.S37` - Add the AST gate asserting every tr(CONSTANT) call site's constant name carries the locale-key naming convention, closing the scanner-invisible-constant concealment class repo-wide; `src/cadrumo/locales/tests/`.
 
 ## Description
