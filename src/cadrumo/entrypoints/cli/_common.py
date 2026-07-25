@@ -408,10 +408,18 @@ def _optional_canonical_period(period: str | None, *, year: int | None) -> Perio
 
 
 def _parse_iso_date(raw: str, *, label: str) -> _date:
+    from ...core.parsing import parse_iso8601_date
+
     try:
-        return _date.fromisoformat(raw.strip())
+        parsed = parse_iso8601_date(raw.strip())
     except ValueError as exc:
         raise _bad(tr("cli.common.errors.invalid_iso_date", label=label, raw=raw)) from exc
+    if parsed is None:
+        # ``parse_iso8601_date`` treats a blank/empty string as "absent" and
+        # returns ``None`` rather than raising; this gate requires a value,
+        # so blank input refuses with the same message as a malformed one.
+        raise _bad(tr("cli.common.errors.invalid_iso_date", label=label, raw=raw))
+    return parsed
 
 
 def _parse_iso_date_str(raw: str, *, label: str) -> str:
