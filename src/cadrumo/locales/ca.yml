@@ -6960,7 +6960,7 @@ wizard:
     description: Una secció de demostració per provar la funcionalitat de l'assistent
     section:
       title: Secció de demostració
-    title: Demo
+    title: Demostració
   errors:
     blank_integer: Cal un valor enter per a %{prompt_key}.
     blank_path: Cal un camí per a %{prompt_key}.

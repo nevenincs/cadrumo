@@ -1,6 +1,6 @@
 {
   "ca": {
-    "_untranslated_ceiling": 158,
+    "_untranslated_ceiling": 0,
     "application.filing.review.stale_reasons.unknown": "pure placeholder echo of the raw reason string; es.yml uses the same identical fallback alongside translated named reasons",
     "application.storage.calc_sheets.engine.guide.title": "pure placeholder template with only punctuation separators, no natural-language words to translate",
     "application.wizard.next_hint.modelo_work_create": "literal CLI command example, not prose",
