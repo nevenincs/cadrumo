@@ -33,9 +33,15 @@ lines for any of the recognised marker token prefixes.
 
 If no marker is found, the site is recorded as ``(relative-posix-path, line-number)``.
 
-The ratchet records the 99 pre-existing sites found at ratchet history authoring time.
-New sites must either carry a rationale marker or be accompanied by a ratchet
-expansion with a documented reason.
+The ratchet opened at the 99 pre-existing sites found when it was written and is
+now empty: every suppression in the tree carries a rationale marker. New sites
+must carry one too.
+
+The enrolled set is asserted in BOTH directions. Subtracting it from the live
+violations catches a new unmarked suppression; requiring every enrolled pair to
+still BE a live violation catches the opposite drift, where a site is fixed or
+moved and its entry stays behind as an exemption on a line number that now holds
+something else.
 
 Paydown
 -------
@@ -55,14 +61,14 @@ See Also:
         Parameter-level ``Any`` rationale ratchet mirroring the same
         enrollment pattern for parameter-level type escapes.
 
-The type-ignore corpus paid down from 99 enrolled sites to the 7 hard-deferred
-residuals this ratchet guards; every remaining suppression must carry a
-rationale marker or a named, justified ratchet entry.
+The type-ignore corpus paid down from 99 enrolled sites to zero; every
+suppression in production must now carry a rationale marker.
 """
 
 from __future__ import annotations
 
 import re
+from collections.abc import Sequence
 
 import pytest
 
@@ -89,24 +95,37 @@ _CONTEXT_LINES = 3
 _TYPE_IGNORE_RE = re.compile(r"#\s*type:\s*ignore")
 
 # ---------------------------------------------------------------------------
-# Known pre-existing violating sites (ratchet history backlog — 99 sites).
+# Known pre-existing violating sites. The backlog opened at 99 and is now zero:
+# every suppression in the tree carries a rationale marker.
+#
 # Each entry is (relative-posix-path-from-src/cadrumo/, 1-based line number).
+# An entry here is a licence to leave one exact line unmarked, so the set is
+# asserted in BOTH directions. Enrolling a site that is not a real unmarked
+# suppression is what turns a paid-down backlog into a standing exemption at a
+# line number that has since drifted onto unrelated code.
+#
 # DO NOT add new sites — add a rationale marker instead.
-# Remove an entry after adding its marker to lock that site at zero.
 # ---------------------------------------------------------------------------
-_KNOWN_VIOLATING_LINES: frozenset[tuple[str, int]] = frozenset(
-    {
-        # Historical paydowns removed 28 entries, then 3 entries, then
-        # 1 entry; 7 remain.
-        ("application/live/_snapshot_base.py", 511),
-        ("application/workflow/_adapters.py", 105),
-        ("application/workflow/_adapters.py", 110),
-        ("application/workflow/_adapters.py", 144),
-        ("application/workflow/_adapters.py", 151),
-        ("domain/buckets/_event.py", 307),
-        ("entrypoints/cli/_app_live.py", 1681),
-    },
-)
+_KNOWN_VIOLATING_LINES: frozenset[tuple[str, int]] = frozenset()
+
+
+def _unmarked_type_ignore_linenos(lines: Sequence[str]) -> list[int]:
+    """Return 1-based line numbers of suppressions carrying no rationale marker.
+
+    A marker counts when it sits on the suppression's own line or anywhere in
+    the ``_CONTEXT_LINES`` immediately above it.
+    """
+    found: list[int] = []
+    for i, line in enumerate(lines):
+        if not _TYPE_IGNORE_RE.search(line):
+            continue
+        if any(m in line for m in _MARKER_TOKENS):
+            continue
+        start = max(0, i - _CONTEXT_LINES)
+        if any(any(m in prev for m in _MARKER_TOKENS) for prev in lines[start:i]):
+            continue
+        found.append(i + 1)
+    return found
 
 
 def _collect_violations() -> list[tuple[str, int]]:
@@ -117,19 +136,9 @@ def _collect_violations() -> list[tuple[str, int]]:
             source = path.read_text(encoding="utf-8", errors="replace")
         except OSError:
             continue
-        lines = source.splitlines()
-        for i, line in enumerate(lines):
-            if not _TYPE_IGNORE_RE.search(line):
-                continue
-            lineno = i + 1  # 1-based
-            # Check inline on the same line first.
-            if any(m in line for m in _MARKER_TOKENS):
-                continue
-            # Check up to _CONTEXT_LINES preceding lines.
-            start = max(0, i - _CONTEXT_LINES)
-            if any(any(m in prev for m in _MARKER_TOKENS) for prev in lines[start:i]):
-                continue
-            violations.append((aeat_relative(path), lineno))
+        violations.extend(
+            (aeat_relative(path), lineno) for lineno in _unmarked_type_ignore_linenos(source.splitlines())
+        )
     return violations
 
 
@@ -174,3 +183,68 @@ def test_no_new_type_ignore_without_rationale() -> None:
             "Do NOT add to _KNOWN_VIOLATING_LINES — add a marker instead.\n"
             f"Ratchet holds {len(_KNOWN_VIOLATING_LINES)} pre-existing sites for paydown.",
         )
+
+
+def test_ratchet_holds_no_entry_that_has_stopped_describing_a_violation() -> None:
+    """Every enrolled site must still be a real unmarked suppression.
+
+    The ratchet only ever subtracted its enrolled set from the live one, so an
+    entry survived being fixed, moved, or deleted. All seven that were enrolled
+    here had stopped describing anything: the backlog was fully paid down while
+    the entries stayed, pointing at a blank line, at unrelated code, and in one
+    case past the end of its file. That is not cosmetic. An enrolled pair is a
+    licence to leave one exact line unmarked, so a stale entry is a standing
+    exemption waiting for a new suppression to drift onto its line number.
+    """
+    stale = sorted(_KNOWN_VIOLATING_LINES - frozenset(_collect_violations()))
+
+    assert not stale, (
+        f"{len(stale)} ratchet entr(ies) no longer describe an unmarked suppression "
+        "(the site was fixed, moved, or removed). Delete them: while enrolled they "
+        "exempt whatever now occupies that line:\n  " + "\n  ".join(f"{rel}:{lineno}" for rel, lineno in stale)
+    )
+
+
+def test_scan_reads_a_non_empty_corpus() -> None:
+    """A ratchet over zero files reports a clean tree without inspecting one."""
+    files = production_python_files()
+    assert len(files) > 500, f"expected the production corpus, scanned only {len(files)} files"
+
+
+def test_suppression_pattern_discriminates() -> None:
+    """Positive control: the pattern finds real suppressions and rejects prose.
+
+    Asserted against the compiled pattern directly. A pattern that stopped
+    matching would empty the violation list, and an empty list is precisely what
+    the compliant tree this ratchet guards also produces.
+    """
+    token = "# type: " + "ignore"
+    must_match = (f"value = untyped()  {token}", f"value = untyped()  {token}[attr-defined]", "x = y  #type:ignore")
+    must_not_match = ("# the type is ignored downstream", "# typed: ignore", 'note = "type ignore"')
+
+    for probe in must_match:
+        assert _TYPE_IGNORE_RE.search(probe), f"pattern failed to match a real suppression: {probe!r}"
+    for probe in must_not_match:
+        assert not _TYPE_IGNORE_RE.search(probe), f"pattern wrongly matched prose: {probe!r}"
+
+
+def test_detector_reports_an_unmarked_suppression_and_clears_a_marked_one() -> None:
+    """The walk flags an unmarked suppression and honours both marker positions.
+
+    Exercised over synthetic source so the control proves the detector fires
+    rather than proving the tree is currently clean — the two are
+    indistinguishable from the violation list alone.
+    """
+    token = "# type: " + "ignore"
+    marker = "TYPE-IGNORE-RATIONALE-" + "PROBE"
+
+    unmarked = [f"value = untyped()  {token}"]
+    inline_marked = [f"value = untyped()  {token}  # {marker}: third-party stub gap"]
+    block_marked = [f"# {marker}: third-party stub gap", "", f"value = untyped()  {token}"]
+    out_of_range = [f"# {marker}: too far above", "", "", "", f"value = untyped()  {token}"]
+
+    assert _unmarked_type_ignore_linenos(unmarked) == [1]
+    assert _unmarked_type_ignore_linenos(inline_marked) == []
+    assert _unmarked_type_ignore_linenos(block_marked) == []
+    # The context window is bounded, so a marker beyond it must not launder the site.
+    assert _unmarked_type_ignore_linenos(out_of_range) == [5]
