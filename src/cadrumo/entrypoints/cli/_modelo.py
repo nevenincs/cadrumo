@@ -11,7 +11,7 @@ detailed :class:`CasillaObservation` data on command output.
 
 from __future__ import annotations
 
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from typing import Annotated
 
 import click
@@ -48,6 +48,7 @@ from ...application.modelo import (
 )
 from ...core import Period, PeriodError
 from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS
+from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import CadrumoError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
@@ -916,10 +917,16 @@ register_work_run_commands(
 
 def _parse_amendment_casilla(spec: str) -> tuple[CasillaId, Decimal]:
     def _to_decimal(value: str) -> Decimal:
-        try:
-            return Decimal(value.strip())
-        except (InvalidOperation, ValueError) as exc:
-            raise typer.BadParameter(tr("cli.app.modelo.work.set_not_decimal", value=value)) from exc
+        # An amendment restates a casilla on an already-filed declaration, so the
+        # canonical euro-amount grammar applies at full strength: a bare Decimal
+        # call admitted ``1e3``, ``+140000``, ``1_000``, ``.5``, and the
+        # non-finite ``NaN``/``Infinity`` — and a NaN amount compares False to
+        # every threshold, so an under-declaration advisory keyed on ``> 0``
+        # would never fire for it.
+        parsed = try_parse_canonical_decimal(value, max_fraction_digits=2)
+        if parsed is None:
+            raise typer.BadParameter(tr("cli.app.modelo.work.set_not_decimal", value=value))
+        return parsed
 
     key, value = _parse_kv_spec(
         spec,

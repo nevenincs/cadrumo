@@ -25,6 +25,7 @@ from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period
+from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import CadrumoError
 from ...core.logging import get_logger
 from ...core.money import round_to_cents
@@ -293,15 +294,28 @@ def _decimal_overrides(
     *,
     translated_message: str,
 ) -> dict[CasillaId, Decimal]:
+    """Validate operator-supplied ``--casilla`` overrides against the canonical grammar.
+
+    Mirrors :func:`cadrumo.application.modelo._calculate_input._decimal`: the
+    fractional part is deliberately uncapped, because a casilla value may
+    legitimately carry sub-cent precision that the AEAT fixed-width encoder
+    rounds to cents with ``ROUND_HALF_UP`` per the AEAT Instrucciones, so a
+    two-digit cap here would refuse a figure the export layer exists to accept.
+    What the grammar refuses is text whose numeric meaning is not what it
+    appears: scientific notation, a leading ``+``, a comma decimal separator,
+    embedded whitespace, and ``NaN``/``Infinity`` — the last of which compares
+    ``False`` to every threshold, so a projection advisory keyed on ``> 0`` would
+    never fire for it.
+    """
     values: dict[CasillaId, Decimal] = {}
     for key, value in raw.items():
-        try:
-            values[key] = Decimal(value)
-        except (InvalidOperation, ValueError) as exc:
+        parsed = try_parse_canonical_decimal(value)
+        if parsed is None:
             raise ModeloProjectInvalidDecimalOverrideError(
                 context={"key": key, "value": value},
                 translated_message=translated_message,
-            ) from exc
+            )
+        values[key] = parsed
     return values
 
 

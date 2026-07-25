@@ -169,6 +169,73 @@ def test_cli_seed_verb_happy_path(tmp_path: Path) -> None:
     assert stored.available_end_amount == Decimal("1200.50")
 
 
+def test_wallet_amount_refuses_non_canonical_forms() -> None:
+    """The shared wallet amount parser refuses every non-canonical euro form.
+
+    Each form is asserted to be one the bare ``Decimal`` constructor this
+    replaced really does accept, so the test proves a genuine tightening rather
+    than restating the constructor. The headline case is ``1.000``: previously it
+    became ``Decimal("1.0")``, declaring a one-euro carry-forward balance for an
+    operator who meant one thousand.
+    """
+    import typer as _typer
+
+    from .._modelo_iva_wallet_cli import _wallet_amount
+
+    for raw in ("1.000", "1e3", "1E3", "+1200", "1_000", ".5", "1.", "NaN", "-NaN", "Infinity", "-Infinity"):
+        assert isinstance(Decimal(raw), Decimal), raw
+        with pytest.raises(_typer.BadParameter):
+            _wallet_amount(raw)
+
+    for raw in ("1.234,56", "36.500,00", "not-decimal", "1 200"):
+        with pytest.raises(_typer.BadParameter):
+            _wallet_amount(raw)
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        ("1200", Decimal("1200")),
+        ("1200.50", Decimal("1200.50")),
+        ("0", Decimal("0")),
+        ("  1200.50  ", Decimal("1200.50")),
+        # A leading '-' still conforms so the domain's own non-negative refusal
+        # stays the surface that reports a negative balance.
+        ("-1200.50", Decimal("-1200.50")),
+    ],
+)
+def test_wallet_amount_accepts_canonical_forms(raw: str, expected: Decimal) -> None:
+    from .._modelo_iva_wallet_cli import _wallet_amount
+
+    assert _wallet_amount(raw) == expected
+
+
+def test_cli_seed_verb_refuses_spanish_thousands_amount_and_persists_nothing(tmp_path: Path) -> None:
+    """``--amount 1.000`` refuses at the boundary instead of seeding one euro."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SEED_BUCKET_ID):
+        _store_profile_with_nif(_NIF)
+        result = invoke_cached_cli(
+            [
+                "app",
+                "modelo",
+                "iva-wallet",
+                "seed",
+                "--filing-year",
+                "2024",
+                "--period",
+                "4T",
+                "--amount",
+                "1.000",
+                "--confirm",
+            ],
+            env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
+        )
+        stored = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2024, "4T"))
+
+    assert result.exit_code != 0, result.output
+    assert stored is None, "a refused amount must not persist a carry-forward balance"
+
+
 def test_cli_override_verb_records_taxpayer_override_decision(tmp_path: Path) -> None:
     """The override verb records a non-blocking taxpayer_override decision."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SEED_BUCKET_ID):
