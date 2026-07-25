@@ -3,12 +3,22 @@ tags:
   - '#plan'
   - '#profile-login-session'
 date: '2026-07-24'
-modified: '2026-07-24'
+modified: '2026-07-25'
 tier: L3
 related:
   - '[[2026-07-24-profile-login-session-adr]]'
   - '[[2026-07-24-profile-login-session-research]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `profile-login-session` plan
 
@@ -73,8 +83,8 @@ Hard-cut the retired doors: delete `switch` and `config profile logout` with the
 
 Regenerate every documentation and conformance surface for the new grammar and close the campaign only through green gates plus the mandatory fresh-context honesty review.
 
-- [ ] `W03.P07.S16` - Regenerate and update every documentation surface for the new grammar (user docs via the documentation workflow, generated API stubs via python -m dev.docs.apidocs scaffold, docs sequences naming switch or profile logout), verified by scaffold --check clean, the Sphinx nitpicky build gate, and documented-command conformance green; `docs/, dev/docs`.
-- [ ] `W03.P07.S17` - Run the campaign close gates (full-tree collect-only, path-scoped quality gates, formal vaultspec-code-review dispatch) and the mandatory fresh-context honesty review persisted as a vault audit with every surfaced item tracked as a new step or formally deferred, gate is the honesty-review audit document existing before the campaign is declared structurally complete; `.vault/audit (campaign close)`.
+- [x] `W03.P07.S16` - Regenerate and update every documentation surface for the new grammar (user docs via the documentation workflow, generated API stubs via python -m dev.docs.apidocs scaffold, docs sequences naming switch or profile logout), verified by scaffold --check clean, the Sphinx nitpicky build gate, and documented-command conformance green; `docs/, dev/docs`.
+- [x] `W03.P07.S17` - Run the campaign close gates (full-tree collect-only, path-scoped quality gates, formal vaultspec-code-review dispatch) and the mandatory fresh-context honesty review persisted as a vault audit with every surfaced item tracked as a new step or formally deferred, gate is the honesty-review audit document existing before the campaign is declared structurally complete; `.vault/audit (campaign close)`.
 
 ## Description
 

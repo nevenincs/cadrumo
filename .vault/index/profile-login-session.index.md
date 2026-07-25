@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#profile-login-session'
-date: '2026-07-24'
-modified: '2026-07-24'
+date: '2026-07-25'
+modified: '2026-07-25'
 related:
   - '[[2026-07-24-profile-login-session-W01-P01-S01]]'
   - '[[2026-07-24-profile-login-session-W01-P01-S02]]'
@@ -20,7 +20,10 @@ related:
   - '[[2026-07-24-profile-login-session-W02-P05-S13]]'
   - '[[2026-07-24-profile-login-session-W03-P06-S14]]'
   - '[[2026-07-24-profile-login-session-W03-P06-S15]]'
+  - '[[2026-07-24-profile-login-session-W03-P07-S16]]'
+  - '[[2026-07-24-profile-login-session-W03-P07-S17]]'
   - '[[2026-07-24-profile-login-session-adr]]'
+  - '[[2026-07-24-profile-login-session-close-honesty-review-audit]]'
   - '[[2026-07-24-profile-login-session-plan]]'
   - '[[2026-07-24-profile-login-session-research]]'
 ---
@@ -34,6 +37,10 @@ Auto-generated index of all documents tagged with `#profile-login-session`.
 ### adr
 
 - `2026-07-24-profile-login-session-adr` - `profile-login-session` adr: `canonical profile login/logout with persisted session custody` | (**status:** `accepted`)
+
+### audit
+
+- `2026-07-24-profile-login-session-close-honesty-review-audit` - `profile-login-session` audit: `Fresh-context campaign close honesty review`
 
 ### exec
 
@@ -51,6 +58,8 @@ Auto-generated index of all documents tagged with `#profile-login-session`.
 - `2026-07-24-profile-login-session-W02-P05-S13` - Land the end-to-end CLI session lifecycle test (login, decrypting command without prompt in a fresh process, clock-driven idle expiry refusal, re-login, absolute-cap refusal, logout idempotence) using real processes and real storage with no mocks, gate is the module green plus zero prompts observed on the resumed invocation
 - `2026-07-24-profile-login-session-W03-P06-S14` - Delete the switch command and config profile logout registrations and every removed spelling from the write-policy allowlist, error-registry default_suggestion fields, next_action builders, curated operator help, envelope identifiers, operator-harness documents, and MCP mirrors, verified by rg sweeps returning zero hits for the removed spellings plus the operator-harness drift gate green
 - `2026-07-24-profile-login-session-W03-P06-S15` - Sever the environment source for cadrumo_active_profile so the field is populated only by --profile and override_settings, retarget the logout override refusal to the per-invocation --profile case, and sweep every string or doc naming CADRUMO_ACTIVE_PROFILE as an operating mechanism, verified by a settings test proving the env var no longer selects a profile and the existing override-refusal tests retargeted green
+- `2026-07-24-profile-login-session-W03-P07-S16` - Regenerate and update every documentation surface for the new grammar (user docs via the documentation workflow, generated API stubs via python -m dev.docs.apidocs scaffold, docs sequences naming switch or profile logout), verified by scaffold --check clean, the Sphinx nitpicky build gate, and documented-command conformance green
+- `2026-07-24-profile-login-session-W03-P07-S17` - Run the campaign close gates (full-tree collect-only, path-scoped quality gates, formal vaultspec-code-review dispatch) and the mandatory fresh-context honesty review persisted as a vault audit with every surfaced item tracked as a new step or formally deferred, gate is the honesty-review audit document existing before the campaign is declared structurally complete
 
 ### plan
 
