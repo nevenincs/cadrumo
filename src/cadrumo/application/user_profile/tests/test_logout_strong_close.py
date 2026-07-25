@@ -38,6 +38,7 @@ from .._orchestration import (
     profile_create_storage_span,
     register_active_profile,
 )
+from .conftest import lay_down_session_for_live_login, require_keychain_custody
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -90,15 +91,23 @@ def _create_and_login(schema: ProfileSchemaDefinition) -> None:
 class TestStrongClose:
     """Logout removes every artefact that could re-open the session."""
 
-    def test_logout_removes_both_halves_of_the_persisted_session(
+    def test_logout_removes_the_persisted_record_and_clears_the_pointer(
         self,
         schema: ProfileSchemaDefinition,
         _storage_root: Path,
     ) -> None:
+        """Every artefact logout can destroy without consulting the keychain.
+
+        The security-load-bearing negative lives here: the on-disk half is
+        gone and a resume can no longer reconstruct the DEK. Both are
+        decided before ``resume_profile_session`` reaches the keychain, so
+        this stays verifiable on a host that cannot custody a session key.
+        The sibling case below owns the keychain half.
+        """
         _create_and_login(schema)
+        lay_down_session_for_live_login(storage_root=_storage_root, bucket_id=_PROFILE_ID)
         record_path = profile_session_path(storage_root=_storage_root, bucket_id=_PROFILE_ID)
         assert record_path.is_file()
-        assert load_profile_session_key(bucket_id=_PROFILE_ID) is not None
         assert current_active_bucket_session() is not None
 
         signed_out = logout_active_profile()
@@ -106,15 +115,33 @@ class TestStrongClose:
         assert signed_out == _PROFILE_ID
         # 1. the live session is sealed and evicted
         assert current_active_bucket_session() is None
-        # 2. BOTH halves of the split-knowledge session are gone
+        # 2. the on-disk half of the split-knowledge session is gone
         assert not record_path.is_file()
-        assert load_profile_session_key(bucket_id=_PROFILE_ID) is None
         # 3. the pointer is cleared
         assert read_pointer(_storage_root) is None
         assert resolve_active_bucket_id() is None
         # 4. nothing can reconstruct the session any more
         assert resume_active_profile_session(bucket_id=_PROFILE_ID) is ProfileSessionRefusalReason.ABSENT
         assert current_active_bucket_session() is None
+
+    def test_logout_removes_the_keychain_half_of_the_session(
+        self,
+        schema: ProfileSchemaDefinition,
+        _storage_root: Path,
+    ) -> None:
+        """The other half of the split-knowledge pair: the custodied key.
+
+        Reading the session key back is the whole assertion subject, so
+        unlike its sibling this case genuinely requires a usable OS
+        keychain and states that precondition up front.
+        """
+        _create_and_login(schema)
+        require_keychain_custody(storage_root=_storage_root, bucket_id=_PROFILE_ID)
+        assert load_profile_session_key(bucket_id=_PROFILE_ID) is not None
+
+        logout_active_profile()
+
+        assert load_profile_session_key(bucket_id=_PROFILE_ID) is None
 
     def test_logout_seals_the_live_session_key_buffers(
         self,
@@ -174,10 +201,17 @@ class TestIdempotence:
         _storage_root: Path,
     ) -> None:
         _create_and_login(schema)
-        first_authenticated_at = current_active_bucket_session()
-        assert first_authenticated_at is not None
-        original_opened_at = first_authenticated_at.opened_at
+        first_session = current_active_bucket_session()
+        assert first_session is not None
+        original_opened_at = first_session.opened_at
+        # Give logout a real record to destroy, so the re-login below cannot
+        # trivially miss a resume for want of anything to resume from.
+        lay_down_session_for_live_login(storage_root=_storage_root, bucket_id=_PROFILE_ID)
+        record_path = profile_session_path(storage_root=_storage_root, bucket_id=_PROFILE_ID)
+        assert record_path.is_file()
+
         logout_active_profile()
+        assert not record_path.is_file()
 
         # The pointer was cleared, so the profile must be named again; the
         # new session is a genuine re-authentication, not a resumed one.
@@ -185,7 +219,6 @@ class TestIdempotence:
 
         assert outcome.already_authenticated is False
         assert outcome.authenticated_at >= original_opened_at
-        assert profile_session_path(storage_root=_storage_root, bucket_id=_PROFILE_ID).is_file()
 
 
 class TestOverrideRefusal:
@@ -197,6 +230,9 @@ class TestOverrideRefusal:
         _storage_root: Path,
     ) -> None:
         _create_and_login(schema)
+        # Lay a record down so "nothing was torn down" is a real claim with a
+        # destroyable artefact behind it rather than a vacuous one.
+        lay_down_session_for_live_login(storage_root=_storage_root, bucket_id=_PROFILE_ID)
 
         with override_settings(cadrumo_active_profile=_PROFILE_ID), pytest.raises(ProfileLogoutOverrideError):
             logout_active_profile()
@@ -204,3 +240,4 @@ class TestOverrideRefusal:
         # The refusal happens before any teardown: nothing was signed out.
         assert current_active_bucket_session() is not None
         assert profile_session_path(storage_root=_storage_root, bucket_id=_PROFILE_ID).is_file()
+        assert read_pointer(_storage_root) is not None

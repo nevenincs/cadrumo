@@ -27,10 +27,13 @@ primitives — it owns no crypto and no second write path:
   / :func:`~cadrumo.adapters.persistence.storage.master_key.resume_profile_session`)
   that carries the "logged in" state across CLI processes.
 
-Login is idempotent-guarded: a login for a profile whose persisted
+Login is idempotent-guarded: a login for a profile whose PERSISTED
 session is still valid resumes that session as a no-op — no re-prompt, no
-second record, no re-stamped ``authenticated_at``. A login naming a
-DIFFERENT profile first tears the previous profile's session down.
+second record, no re-stamped ``authenticated_at``. The guard is anchored
+to that record and not to process memory, so on a host with no usable
+keychain — where no record is ever written — every login is a genuine
+authentication rather than a no-op. A login naming a DIFFERENT profile
+first tears the previous profile's session down.
 
 :func:`resume_active_profile_session` is the read-side counterpart and the
 SINGLE resume authority: both the login no-op path and the CLI root
@@ -470,10 +473,20 @@ def login_profile(
 def _resume_for_idempotent_login(*, bucket_id: str, now: datetime):
     """Return the resumed record when the idempotent-login guard applies.
 
-    A live session already bound to this bucket is itself the no-op
-    signal; otherwise the persisted record is resumed through the shared
-    :func:`resume_active_profile_session` authority. Returns ``None`` when
-    the profile is genuinely logged out and must authenticate.
+    The guard requires a still-valid PERSISTED record in every case, per
+    ADR Decision 1 ("a login for a profile whose persisted session is
+    still valid returns the existing session as a no-op"). A live session
+    already bound to this bucket only short-circuits the reopen — the
+    record is still peeked, and its absence still means "not idempotent".
+    Otherwise the record is resumed through the shared
+    :func:`resume_active_profile_session` authority.
+
+    Returns ``None`` when the profile must authenticate: either genuinely
+    logged out, or holding a live session that was never persisted because
+    the host had no usable keychain. In that second case a fresh
+    authentication is the fail-closed outcome by design — the no-op is
+    anchored to the AAD-bound, deadline-authenticated record, never to
+    process memory alone.
     """
     from ...adapters.persistence.storage.master_key import resume_profile_session as _peek
 
