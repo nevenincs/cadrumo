@@ -47,6 +47,7 @@ Commit pulled censal facts through the cotejo authority, and delete the register
 - [x] `P03.S14` - Restore aeat config profile censo pull as the live-transport sibling of censo file --file, reading through the censal reader and persisting through apply_cotejo behind the same --apply door, so both transports reconcile identically; `src/cadrumo/entrypoints/cli/_config/_censo_file.py`.
 - [x] `P03.S15` - Offer the censal pull as a manager action gated on the auth mode having everything it needs, unavailable with an instructive refusal until the credentials are complete; `src/cadrumo/entrypoints/cli/_config/_manager_actions.py`.
 - [x] `P03.S21` - Feed the censal ownership refusal from the read itself rather than from a projected tuple named for adoption, so editing that tuple cannot disarm the guard; `src/cadrumo/application/user_profile/_censo_sync.py`.
+- [x] `P03.S22` - Make the clear branch consult provenance as the value branch does, so a clear the app wrote cannot earn the protection reserved for an operator decision; `src/cadrumo/application/user_profile/_censo_sync.py`.
 
 ## Description
 
