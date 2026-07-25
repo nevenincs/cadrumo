@@ -297,6 +297,49 @@ def test_retention_preflight_pauses_before_auth_pointer_or_bucket_mutation(
         assert completed.summary.retention_override_count == 1
 
 
+def test_resume_converges_after_a_target_is_removed_out_of_band(
+    tmp_path: Path,
+) -> None:
+    from .._config_reset_models import (
+        ConfigResetOperationStatus,
+        ConfigResetPauseReason,
+        ConfigResetTargetPhase,
+    )
+    from ..config_reset import resume_config_reset, start_config_reset
+    from ..user_profile import remove_profile_bucket_directory
+
+    with _isolated_reset_root(tmp_path) as root:
+        _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
+        _create_profile(_PROFILE_B_ID, label="Beta operator", tax_id="00000001R")
+        _persist_filing(_PROFILE_B_ID, filing_year=2025, seed="a")
+        _write_active_pointer(root, _PROFILE_A_ID)
+
+        paused = start_config_reset(confirmed=True)
+        assert paused.status is ConfigResetOperationStatus.PAUSED
+        assert paused.pause_reason is ConfigResetPauseReason.RETENTION_UNRESOLVED
+
+        remove_profile_bucket_directory(_PROFILE_B_ID)
+
+        changed = resume_config_reset(paused.operation_id, confirmed=True)
+        assert changed.status is ConfigResetOperationStatus.PAUSED
+        assert changed.pause_reason is ConfigResetPauseReason.TARGET_STATE_CHANGED
+        assert changed.paused_target_ids == (_PROFILE_B_ID,)
+        vanished = next(target for target in changed.targets if target.bucket_id == _PROFILE_B_ID)
+        assert vanished.exists_at_snapshot is False
+        assert vanished.fingerprint is None
+
+        completed = resume_config_reset(changed.operation_id, confirmed=True)
+        assert completed.status is ConfigResetOperationStatus.COMPLETE
+        assert completed.summary is not None
+        assert completed.summary.deleted_count == 1
+        assert completed.summary.already_absent_count == 1
+        phases = {target.bucket_id: target.phase for target in completed.targets}
+        assert phases == {
+            _PROFILE_A_ID: ConfigResetTargetPhase.DELETED,
+            _PROFILE_B_ID: ConfigResetTargetPhase.DELETED,
+        }
+
+
 def test_status_is_a_read_only_journal_view(tmp_path: Path) -> None:
     from .._config_reset_repository import ConfigResetJournalRepository
     from ..config_reset import config_reset_status, start_config_reset

@@ -46,11 +46,17 @@ deliberately asks for full width still gets it.
 from __future__ import annotations
 
 import os
+import re
 import warnings
+from collections.abc import Iterable
 
 import pytest
 
 _ENV_VAR = "CADRUMO_PYTEST_WORKERS"
+
+#: Shape of an xdist worker id: the literal ``gw`` followed by the worker's
+#: zero-based ordinal. Anchored at both ends so a partial match cannot pass.
+_WORKER_ID_PATTERN = re.compile(r"\Agw(\d+)\Z")
 
 #: Worker count ``-n auto`` resolves to when ``CADRUMO_PYTEST_WORKERS`` is
 #: absent or unparseable. Half the 12-wide physical-core default measured on
@@ -87,3 +93,66 @@ def resolve_auto_num_workers(config: pytest.Config) -> int:
             stacklevel=2,
         )
         return DEFAULT_WORKER_CAP
+
+
+def replacement_occurred(worker_ids: Iterable[str], *, worker_count: int) -> bool:
+    """Return whether xdist replaced a crashed worker during the run.
+
+    A run configured for ``worker_count`` workers numbers them ``gw0`` through
+    ``gw{worker_count - 1}``. When a worker crashes, xdist starts a REPLACEMENT
+    and numbers it with the next unused ordinal, so an observed id at or above
+    ``worker_count`` is direct evidence that more workers existed than were
+    configured -- meaning at least one died. That matters because
+    ``LoadScopeScheduling.remove_node`` retains the dead worker in
+    ``registered_collections``, and the crashitem is re-queued onto the
+    replacement, so the run's own pass/fail totals no longer describe the test
+    suite: a re-queued test can be counted twice, and the retained collection
+    can raise ``KeyError`` and surface as an ``INTERNALERROR``. A green run that
+    replaced a worker is therefore not evidence that the suite passed.
+
+    The ordinal comparison is ``>=``, not ``>``: with ``worker_count`` workers
+    the highest legitimate ordinal is ``worker_count - 1``, so ``gw6`` in a
+    6-worker run is already a replacement. That boundary is the whole
+    discriminator, and :mod:`cadrumo.tests.test_worker_count_hook` pins both
+    sides of it.
+
+    Args:
+        worker_ids: The worker ids observed during the run (for example the
+            ``gw0``/``gw1`` values xdist reports per test). Duplicates and
+            ordering are irrelevant -- only the maximum ordinal decides.
+        worker_count: The number of workers the run was configured for; the
+            value :func:`resolve_auto_num_workers` produced on the ``-n auto``
+            path.
+
+    Returns:
+        ``True`` when any observed id carries an ordinal at or above
+        ``worker_count``, so the run's counts are untrustworthy. ``False`` when
+        every observed id falls inside the configured range, including when no
+        ids were observed at all (a run with no workers has no replacement to
+        report).
+
+    Raises:
+        ValueError: If ``worker_count`` is not positive, or if any observed id
+            does not match the ``gw<ordinal>`` shape. An unparseable id is
+            refused rather than skipped ON PURPOSE: silently ignoring ids it
+            cannot read is exactly how a detector becomes decoration -- were
+            xdist to change its id format, a skipping implementation would
+            return ``False`` forever and report a corrupted run as clean, which
+            is the false-green shape this function exists to catch.
+    """
+    if worker_count < 1:
+        msg = f"worker_count must be positive to judge replacement, got {worker_count!r}."
+        raise ValueError(msg)
+    highest_legitimate_ordinal = worker_count - 1
+    for worker_id in worker_ids:
+        match = _WORKER_ID_PATTERN.fullmatch(worker_id)
+        if match is None:
+            msg = (
+                f"Unrecognised xdist worker id {worker_id!r}: expected the "
+                f"'gw<ordinal>' shape. Refusing to judge replacement rather "
+                f"than skipping an id that cannot be read."
+            )
+            raise ValueError(msg)
+        if int(match.group(1)) > highest_legitimate_ordinal:
+            return True
+    return False

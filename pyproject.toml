@@ -837,7 +837,7 @@ search_path = ["src", "stubs"]
 testpaths = ["src/cadrumo", "dev/packaging/tests/test_installed_oracles.py"]
 pythonpath = ["src"]
 python_files = ["test_*.py"]
-addopts = "-n auto --dist=loadfile --tb=short -m 'unit and not external_tool' --strict-markers --ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity"
+addopts = "-n auto --dist=loadfile --tb=short -m 'unit and not external_tool and not os_keychain' --strict-markers --ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity"
 # Per-test wall ceiling: a deadlocked test fails in minutes with a stack dump
 # instead of wedging the whole run for hours (the CI unit lane sat 3-5.5h
 # wedged with idle workers on every recent run). pytest-timeout picks the
@@ -860,6 +860,7 @@ markers = [
   "serial: isolation-sensitive tests that must run without xdist workers (-n0); they mutate or read process-global state (e.g. the active master-key-provider singleton) and flake under -n auto worker interleaving. Run via the serial pass of `just test-integration`.",
   "perf: performance acceptance gates (CPU-time asserts, wall-clock advisory); excluded from every per-push lane and enrolled explicitly in the dispatch-only ci-full lane, where a quiet machine makes the advisory wall numbers meaningful too.",
   "external_tool: tests requiring heavy external tooling the dependency set does not install (LibreOffice, for binary .xls conversion and formula recalculation). Carried ALONGSIDE an execution marker, since the marker-integrity contract requires exactly one of {unit, integration, aeat_live}; the default lane selects `unit and not external_tool`, so this marker -- not the path --ignore beside it -- is what holds these tests out. Enrolled explicitly by `just test-workbook-parity`.",
+  "os_keychain: tests whose assertion subject is the OS credential store itself (that a profile login custodies a session key there, and that a later process resumes the record by unwrapping its DEK under that key). Carried ALONGSIDE an execution marker, like `external_tool`. The capability is a property of the LOGON SESSION, not of the dependency set: a headless CI runner and an agent's SSH network logon reach a real backend that then refuses every credential call, so no keychain-custodied session key can exist there at all. Every lane excludes this marker; `just test-os-keychain` enrols it, and it is meaningful only in an interactive desktop session. Cases provable WITHOUT custody stay in the default lanes -- see the boundary the user_profile tests conftest draws.",
 ]
 
 # ── Coverage (pytest-cov) ────────────────────────────────────────────────────

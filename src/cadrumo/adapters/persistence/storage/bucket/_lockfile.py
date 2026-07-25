@@ -25,6 +25,7 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from .....core import pid_is_alive
 from .....core.config import load_settings as _load_settings
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.logging import get_logger
@@ -94,56 +95,6 @@ def _read_pid(target: Path) -> _PidReadResult:
     except ValueError:
         _log.debug("bucket lockfile pid malformed; treating lock as stale")
         return _PidReadState.INVALID
-
-
-def _pid_is_alive(pid: int) -> bool:
-    """Cross-platform best-effort liveness probe for a holding PID.
-
-    Returns ``True`` when the OS reports the PID as a live process and
-    ``False`` when the OS reports it as gone. A permission error (the PID
-    exists but belongs to another user) is treated as alive: from this
-    process's perspective the lock cannot be safely reclaimed.
-    """
-    if pid <= 0:
-        return False
-    if os.name == "nt":
-        # On Windows ``os.kill(pid, 0)`` reports terminated-but-cached PIDs
-        # as alive until the kernel reclaims the PID, so the probe goes
-        # through ``OpenProcess`` + ``GetExitCodeProcess``: a process whose
-        # exit code is not ``STILL_ACTIVE`` (259) is dead even if its PID
-        # is still allocated.
-        import ctypes
-        from ctypes import wintypes
-
-        process_query_limited_information = 0x1000
-        still_active = 259
-        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
-        handle = kernel32.OpenProcess(process_query_limited_information, False, pid)
-        if not handle:
-            # ``ERROR_INVALID_PARAMETER`` (87) is returned for a PID that
-            # no longer exists; any other failure is treated as alive so
-            # we never delete a foreign-user lockfile.
-            last_error = ctypes.get_last_error()
-            missing = last_error == 87
-            if not missing:
-                _log.debug("bucket lockfile pid liveness probe unavailable; treating holder as alive")
-            return not missing
-        try:
-            code = wintypes.DWORD()
-            ok = kernel32.GetExitCodeProcess(handle, ctypes.byref(code))
-            if not ok:
-                return True
-            return code.value == still_active
-        finally:
-            kernel32.CloseHandle(handle)
-    try:
-        os.kill(pid, 0)
-    except ProcessLookupError:
-        return False
-    except PermissionError:
-        _log.debug("bucket lockfile pid liveness probe denied; treating holder as alive")
-        return True
-    return True
 
 
 def _holding_pid_for_error(pid: _PidReadResult) -> int:
@@ -220,7 +171,7 @@ def _reclaim_if_stale(target: Path) -> None:
     if pid is _PidReadState.UNREADABLE:
         _log.debug("bucket lockfile stale reclaim skipped unreadable lockfile")
         return
-    should_reclaim = pid is _PidReadState.INVALID or (isinstance(pid, int) and not _pid_is_alive(pid))
+    should_reclaim = pid is _PidReadState.INVALID or (isinstance(pid, int) and not pid_is_alive(pid))
     if not should_reclaim:
         return
     # Re-read the PID immediately before unlinking and reclaim only when the

@@ -322,6 +322,81 @@ def test_recovery_rotate_requires_existing_enrollment(tmp_path: Path) -> None:
     assert not path.exists()
 
 
+def test_create_refuses_when_a_competing_enrollment_lands_during_confirmation(tmp_path: Path) -> None:
+    """A CREATE that loses the enrollment race refuses and preserves the winner.
+
+    ``confirm`` is an unbounded interactive pause — the operator is copying down
+    24 words — so the entry-time "already enrolled" check can go stale before
+    the install. Here a second, complete production enrollment runs against the
+    same store from inside that pause, exactly as a concurrent invocation would.
+    The losing CREATE must refuse with the same typed refusal the entry check
+    raises, and must leave the winner's envelope byte-identical: replacing it
+    would silently void a mnemonic its operator was just told to keep.
+    """
+    store_dir = tmp_path / "secrets"
+    provider = _provisioned_file_provider(store_dir)
+    path = _recovery_path(store_dir)
+
+    winner: dict[str, object] = {}
+
+    def _capture(mnemonic: str) -> str:
+        winner["mnemonic"] = mnemonic
+        return mnemonic
+
+    def _confirm_while_a_competitor_enrolls(mnemonic: str) -> str:
+        winner["outcome"] = recovery_create(provider=provider, path=path, created_at=_NOW, confirm=_capture)
+        winner["bytes"] = path.read_bytes()
+        return mnemonic
+
+    assert not path.exists()
+
+    later = datetime(2026, 6, 1, 9, 0, 0, tzinfo=UTC)
+    with pytest.raises(SecretStoreError, match="already enrolled"):
+        recovery_create(
+            provider=provider,
+            path=path,
+            created_at=later,
+            confirm=_confirm_while_a_competitor_enrolls,
+        )
+
+    winning_outcome = winner["outcome"]
+    assert isinstance(winning_outcome, RecoveryEnrollmentOutcome)
+    assert path.read_bytes() == winner["bytes"]
+    assert recovery_status(path=path).recovery_fingerprint == winning_outcome.recovery_fingerprint
+    assert load_recovery_envelope(path).created_at == _NOW
+    # Custody survives: the winner's mnemonic still unwraps the installed envelope.
+    winning_mnemonic = winner["mnemonic"]
+    assert isinstance(winning_mnemonic, str)
+    assert recovery_verify(provider=provider, path=path, mnemonic=winning_mnemonic).verified is True
+
+
+def test_rotate_refuses_when_the_enrollment_disappears_during_confirmation(tmp_path: Path) -> None:
+    """The write-side re-check is mode-symmetric, not a CREATE-only special case.
+
+    A rotation whose envelope is removed during the confirmation pause must
+    refuse rather than quietly completing as a first enrollment.
+    """
+    store_dir = tmp_path / "secrets"
+    provider = _provisioned_file_provider(store_dir)
+    path = _recovery_path(store_dir)
+
+    recovery_create(provider=provider, path=path, created_at=_NOW, confirm=_echo)
+
+    def _confirm_after_the_envelope_is_removed(mnemonic: str) -> str:
+        path.unlink()
+        return mnemonic
+
+    with pytest.raises(SecretStoreError, match="no recovery envelope is enrolled"):
+        recovery_rotate(
+            provider=provider,
+            path=path,
+            created_at=_NOW,
+            confirm=_confirm_after_the_envelope_is_removed,
+        )
+
+    assert not path.exists()
+
+
 def test_recovery_rotate_replaces_envelope_after_confirmation(tmp_path: Path) -> None:
     store_dir = tmp_path / "secrets"
     provider = _provisioned_file_provider(store_dir)

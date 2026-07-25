@@ -1,4 +1,4 @@
-"""Unit tests for the two-tier atomic-write helper in
+"""Unit tests for the three-tier atomic-write helper in
 :mod:`cadrumo.core.atomic_write`.
 
 Every failure test induces a REAL error (a directory occupying the target
@@ -25,6 +25,8 @@ import pytest
 
 from ..atomic_write import (
     _write_all,
+    atomic_write_best_effort_bytes,
+    atomic_write_best_effort_text,
     atomic_write_bytes,
     atomic_write_hardened_bytes,
     atomic_write_hardened_text,
@@ -331,6 +333,84 @@ class TestStandardTier:
 
         assert target.read_bytes() == b"OLD-CONTENT"
         assert _tmp_leftovers(tmp_path) == []
+
+
+class TestBestEffortTier:
+    """Behaviour of :func:`atomic_write_best_effort_bytes` / :func:`atomic_write_best_effort_text`."""
+
+    def test_bytes_roundtrip(self, tmp_path: Path) -> None:
+        target = tmp_path / "payload.bin"
+        atomic_write_best_effort_bytes(target, b"\x00\x01hello\xff")
+        assert target.read_bytes() == b"\x00\x01hello\xff"
+
+    def test_text_roundtrip(self, tmp_path: Path) -> None:
+        target = tmp_path / "payload.txt"
+        atomic_write_best_effort_text(target, "hola\nmundo\n", encoding="utf-8")
+        assert target.read_text(encoding="utf-8") == "hola\nmundo\n"
+
+    def test_creates_parent_directories(self, tmp_path: Path) -> None:
+        target = tmp_path / "a" / "b" / "c" / "payload.bin"
+        atomic_write_best_effort_bytes(target, b"nested")
+        assert target.read_bytes() == b"nested"
+
+    def test_leaves_no_tmp_file_after_success(self, tmp_path: Path) -> None:
+        target = tmp_path / "payload.bin"
+        atomic_write_best_effort_bytes(target, b"clean")
+        assert _tmp_leftovers(tmp_path) == []
+
+    def test_overwrites_existing_target(self, tmp_path: Path) -> None:
+        target = tmp_path / "payload.bin"
+        atomic_write_best_effort_bytes(target, b"first")
+        atomic_write_best_effort_bytes(target, b"second")
+        assert target.read_bytes() == b"second"
+
+    def test_replace_failure_cleans_tmp_and_never_clobbers_target(self, tmp_path: Path) -> None:
+        """A real ``os.replace`` failure (target occupied by a directory)."""
+        target = tmp_path / "payload.bin"
+        target.mkdir()
+        (target / "marker.txt").write_text("still a directory", encoding="utf-8")
+
+        with pytest.raises(OSError):
+            atomic_write_best_effort_bytes(target, b"would-be payload")
+
+        assert target.is_dir()
+        assert (target / "marker.txt").read_text(encoding="utf-8") == "still a directory"
+        assert _tmp_leftovers(tmp_path) == []
+
+    def test_write_failure_cleans_tmp_and_preserves_existing_target(self, tmp_path: Path) -> None:
+        """A real ``handle.write`` failure (wrongly-typed payload mid-write)."""
+        target = tmp_path / "payload.bin"
+        atomic_write_best_effort_bytes(target, b"OLD-CONTENT")
+
+        invalid_payload: Any = "not-bytes"
+        with pytest.raises(TypeError):
+            atomic_write_best_effort_bytes(target, invalid_payload)
+
+        assert target.read_bytes() == b"OLD-CONTENT"
+        assert _tmp_leftovers(tmp_path) == []
+
+    def test_raises_unwrapped_and_does_not_log(
+        self,
+        tmp_path: Path,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        """The best-effort tier never logs; the caller owns catch/log/swallow.
+
+        Unlike the standard and hardened tiers (which log at ERROR before
+        re-raising), this tier is used exclusively by callers that already wrap
+        the call in their own catch with their own message and level. Internal
+        logging here would double-log or contradict the caller's message, so
+        this pins the "raises unwrapped, logs nothing" contract the module
+        docstring documents.
+        """
+        target = tmp_path / "payload.bin"
+        target.mkdir()
+        (target / "marker.txt").write_text("still a directory", encoding="utf-8")
+
+        with caplog.at_level("DEBUG"), pytest.raises(OSError):
+            atomic_write_best_effort_bytes(target, b"would-be payload")
+
+        assert caplog.records == []
 
 
 class TestHardenedTier:

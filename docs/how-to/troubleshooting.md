@@ -198,6 +198,7 @@ Both `participation` verbs read the active profile's encrypted bucket, so they n
 When nothing else recovers the problem, and only then, clear the saved progress of interrupted commands. This command is destructive:
 
 ```{cli-sequence} troubleshooting-reset-progress
+:verify: Confirm the saved interrupted-command progress is cleared for the unlocked profile.
 ```
 
 It removes saved interrupted-command progress and requires `--yes`. Like the participation verbs, it reads the active profile's bucket, so switch to the profile first if it refuses with `No hay una sesion de bucket activa`.

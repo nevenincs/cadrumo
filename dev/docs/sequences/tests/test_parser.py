@@ -638,9 +638,7 @@ def test_static_frame_without_a_blocked_reason_is_refused() -> None:
     could tell which was which.
     """
     problems = _problems("@static aeat config profile list", verify=None)
-    assert any(
-        "must state why it is not executed" in problem and "@blocked" in problem for problem in problems
-    )
+    assert any("must state why it is not executed" in problem and "@blocked" in problem for problem in problems)
 
 
 def test_blocked_code_outside_the_closed_set_is_refused_with_its_options() -> None:
@@ -649,10 +647,7 @@ def test_blocked_code_outside_the_closed_set_is_refused_with_its_options() -> No
         "@static aeat config profile list\n@blocked someday A reason sentence that is long enough.",
         verify=None,
     )
-    assert any(
-        "is not a known blocker" in problem and StaticBlocker.LIVE_AEAT.value in problem
-        for problem in problems
-    )
+    assert any("is not a known blocker" in problem and StaticBlocker.LIVE_AEAT.value in problem for problem in problems)
 
 
 def test_blocked_detail_must_be_more_than_a_restated_code() -> None:

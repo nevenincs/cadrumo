@@ -21,9 +21,9 @@ from dev.packaging.smoke_split_install import (
     _venv_cadrumo,
 )
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
-
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
+
+_REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
 def test_three_wheel_cohort_installs_only_aeat_human_script(tmp_path: Path) -> None:

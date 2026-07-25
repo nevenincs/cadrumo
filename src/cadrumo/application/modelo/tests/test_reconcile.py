@@ -192,6 +192,54 @@ def test_modelo_reconcile_emits_modelo_reconciled_event() -> None:
     assert matching[-1].payload["source_kind"] == "justificante"
 
 
+def test_reconcile_records_its_event_for_an_evidence_path_longer_than_the_payload_cap() -> None:
+    """An over-long evidence reference must not prevent recording the reconciliation.
+
+    ``source_ref`` reaches the ``MODELO_RECONCILED`` payload from
+    ``str(command.source_path)`` — an operator-supplied filesystem path with no
+    length bound of its own — while a payload value is capped at 500
+    characters. A deep directory or a long filename therefore made the
+    reconciliation unrecordable, failing the whole verb on the length of a
+    diagnostic breadcrumb.
+
+    The reference is bounded at construction instead. It must stay within the
+    cap, remain visibly marked as shortened so it cannot be misread as the
+    complete path, and keep the informative tail (the filename) rather than the
+    directory prefix.
+    """
+    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    parsed = parse_justificante(MODELO_130_FIXTURE)
+    long_directory = "/deeply/nested/" + "evidence-archive/" * 40
+    over_long_ref = f"{long_directory}modelo_130_2026Q1.pdf"
+
+    # Premise guard: the reference must genuinely exceed the cap, or this test
+    # proves nothing about the overflow it exists to cover.
+    assert len(over_long_ref) > 500
+
+    report = _reconcile_parsed_justificante(
+        work_unit_id=work_unit_id,
+        source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
+        source_ref=over_long_ref,
+        actor="operator",
+        justificante=parsed,
+    )
+
+    assert report.verdict is ModeloReconciliationVerdict.MATCHES
+    catalogue = BucketEventHistoryRepository().load()
+    matching = [
+        event
+        for event in catalogue.events.values()
+        if event.event_type is BucketEventType.MODELO_RECONCILED and event.object_id == work_unit_id
+    ]
+    assert matching, [event.event_type for event in catalogue.events.values()]
+    recorded = matching[-1].payload["source_path"]
+    assert len(recorded) <= 500
+    assert recorded.startswith("...")
+    assert recorded.endswith("modelo_130_2026Q1.pdf")
+    # Every slot must fit, not only the one under test.
+    assert all(len(value) <= 500 for value in matching[-1].payload.values())
+
+
 def test_modelo_reconcile_refuses_declaration_source_for_unenrolled_modelo() -> None:
     """Casilla-level declaración reconcile is enrolled one modelo at a time.
 

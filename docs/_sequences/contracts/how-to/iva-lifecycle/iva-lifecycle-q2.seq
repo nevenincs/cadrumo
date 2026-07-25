@@ -1,17 +1,22 @@
+@setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01
 @step Record the equipment purchase whose deductible IVA exceeds the quarter's charged IVA.
-@static aeat app ledger add --date 2026-05-12 --amount 1815 --direction OUTGOING --description "equipo informatico" --classification BUSINESS --category-id equipamiento_informatico --taxable-base 1500 --iva-rate 0.21 --iva-amount 315
-@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
-@step Create and calculate the second-quarter return.
-@static aeat app modelo work create --modelo 303 --year 2026 --period 2T
-@blocked unconverted Runs clean in the sandbox probe; nothing blocks it, so it awaits conversion.
+aeat --format json app ledger add --date 2026-05-12 --amount 1815 --direction OUTGOING --description "equipo informatico" --classification BUSINESS --category-id hardware_amortizable --taxable-base 1500 --iva-rate 0.21 --iva-amount 315
+@expect result.transaction.category_id == "hardware_amortizable"
+@expect result.transaction.iva_amount == "315"
+@expect result.transaction.direction == "OUTGOING"
+@step Open the second-quarter Modelo 303 draft.
+@result aeat --format json app modelo work create --modelo 303 --year 2026 --period 2T
+@expect result.name == "303-2026-2T"
+@expect result.revision_id == "2023-y-siguientes"
+@expect exit_code == 0
+@step Calculate, verify, export, and file the credit quarter.
 @static aeat app modelo work calculate --modelo 303 --year 2026 --period 2T
-@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
-@step Verify, export, file, and reconcile the credit quarter.
+@blocked unconverted Needs a filed 2026 1T for the wallet carry; building one here refuses in the cumulative page run, where work file rejects an already-presentado 1T revision.
 @static aeat app modelo work verify --modelo 303 --year 2026 --period 2T
-@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
+@blocked unconverted Same filed-1T premise as the calculate frame; without it verify returns cross_period_dependency_unclean, blockers missing_observation and missing_current_filing_record.
 @static aeat app modelo export --modelo 303 --year 2026 --period 2T --output ./modelo-303-2026-2T.boe
-@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
+@blocked unconverted Refuses REFUSED_MODELO_EXPORT_EVIDENCE_MISSING: the deductible-IVA equipment row needs a linked purchase invoice, and no equipment-invoice fixture is committed.
 @static aeat app modelo work file --modelo 303 --year 2026 --period 2T
-@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
+@blocked unconverted Refuses REFUSED_MODELO_FILING_EVIDENCE_MISSING: the deductible-IVA equipment row needs a linked purchase invoice, and no equipment-invoice fixture is committed.
 @static aeat app modelo reconcile pull --modelo 303 --year 2026 --period 2T
 @blocked live-aeat The pull verb fetches from the AEAT sede; the sandbox refuses live frames.

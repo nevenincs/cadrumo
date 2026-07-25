@@ -56,6 +56,16 @@ from ...domain.modelos import WorkUnitId
 from ._action_errors import WorkUnitNotFoundError
 from ._reconcile_casilla import CasillaDivergence, CasillaDivergenceKind, detect_casilla_divergences
 
+#: Width of a bucket-event payload value. Mirrors the constraint declared on the
+#: payload-value alias in the buckets domain, which is module-private there and
+#: so cannot be imported across the package boundary. The duplication is held
+#: honest by behaviour rather than by the literal: the reconcile tests construct
+#: a real ``BucketEvent``, so a narrowed cap fails them here.
+_MAX_PAYLOAD_VALUE_LENGTH = 500
+
+#: Marks a shortened reference so it cannot be misread as a complete one.
+_REFERENCE_ELISION = "..."
+
 if TYPE_CHECKING:
     from ...adapters.inbound.declaracion import InboundDeclaracionObservation
     from ...core import Period
@@ -244,7 +254,13 @@ class ModeloReconciliationBytesCommand(BaseModel):
     work_unit_id: WorkUnitId
     source_kind: ModeloReconciliationEvidenceKind
     source_bytes: bytes = Field(min_length=1)
-    source_ref: str = Field(min_length=1, max_length=512)
+    # Bounded at the bucket-event payload width, not above it. This reference is
+    # an app-generated secure-storage handle rather than an operator path, so a
+    # value past the cap is an internal defect and belongs refused at validation
+    # where it names the field -- not shortened, which would hide it. The
+    # operator-supplied filesystem path on the sibling command has no bound of
+    # its own and is instead shortened at construction.
+    source_ref: str = Field(min_length=1, max_length=_MAX_PAYLOAD_VALUE_LENGTH)
     actor: str = Field(default="operator", min_length=1, max_length=64)
 
 
@@ -714,7 +730,7 @@ def _finalise_reconciliation(
     event_payload = {
         "work_unit_id": work_unit.work_unit_id,
         "source_kind": source_kind.value,
-        "source_path": source_ref,
+        "source_path": _bounded_payload_reference(source_ref),
         "verdict": verdict.value,
         "diffs": str(len(diffs)),
         "diffs_detail": _encode_diffs(diffs),
@@ -1128,6 +1144,27 @@ def _receipt_total(justificante: Justificante) -> tuple[str | None, Decimal | No
 
 def _format_decimal(value: Decimal) -> str:
     return f"{value:.2f}"
+
+
+def _bounded_payload_reference(reference: str) -> str:
+    """Shorten an evidence reference to fit one bucket-event payload value.
+
+    An evidence reference reaches the payload from an operator-supplied
+    filesystem path, which carries no length bound of its own, so a deep
+    directory or a long filename would otherwise make the reconciliation
+    unrecordable -- failing the whole verb on the length of a diagnostic
+    breadcrumb.
+
+    The tail is kept rather than the head because the filename identifies the
+    artifact while the directory prefix rarely does, and the result is prefixed
+    with an explicit elision marker so a shortened reference is self-evidently
+    shortened. Truncating silently would leave a payload that looks like a
+    complete path and is not.
+    """
+    if len(reference) <= _MAX_PAYLOAD_VALUE_LENGTH:
+        return reference
+    keep = _MAX_PAYLOAD_VALUE_LENGTH - len(_REFERENCE_ELISION)
+    return _REFERENCE_ELISION + reference[-keep:]
 
 
 def _encode_diffs(diffs: list[ModeloReconciliationDiff]) -> str:

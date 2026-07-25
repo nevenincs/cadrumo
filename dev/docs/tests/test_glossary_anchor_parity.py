@@ -35,6 +35,8 @@ from ..terminology._glossary_anchor import glossary_term_anchor
 from ..terminology._search_record import SearchRecordKind
 from ..terminology._unified_record import to_search_record
 
+pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
+
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
@@ -62,8 +64,6 @@ def _glossary_term_anchors() -> set[str]:
     return anchors
 
 
-@pytest.mark.integration
-@pytest.mark.hex_core
 @pytest.mark.parametrize(
     ("headword", "anchor"),
     [
@@ -129,8 +129,6 @@ def _rendered_legal_refs_by_anchor() -> dict[str, set[str]]:
     return by_anchor
 
 
-@pytest.mark.integration
-@pytest.mark.hex_core
 def test_glossary_renders_concept_legal_grounding() -> None:
     """D6: every concept's ``legal_refs`` render on its glossary entry.
 
@@ -169,8 +167,6 @@ def test_glossary_renders_concept_legal_grounding() -> None:
     )
 
 
-@pytest.mark.integration
-@pytest.mark.hex_core
 def test_injected_concept_anchors_resolve_in_glossary() -> None:
     """Every injected concept deep link targets a real glossary term anchor."""
     glossary_anchors = _glossary_term_anchors()
@@ -192,8 +188,6 @@ def test_injected_concept_anchors_resolve_in_glossary() -> None:
     assert not dead, f"injected concept anchors with no glossary term line: {dead}"
 
 
-@pytest.mark.integration
-@pytest.mark.hex_core
 def test_card_summary_is_clean_single_language() -> None:
     """Every injected card's display summary is one clean line, not the blob.
 

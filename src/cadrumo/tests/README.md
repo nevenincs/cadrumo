@@ -62,6 +62,61 @@ Each module carries exactly one layer marker:
 | `hex_entrypoint` | `entrypoints.*` command and presentation surfaces. |
 | `hex_core` | `core.*` foundational cross-cutting utilities and central test harnesses. |
 
+### Supplementary labels
+
+A supplementary label rides *alongside* an execution marker; it never
+replaces one. Unlike the two tiers above it may be declared per class or
+per function, so a module can hold both labelled and unlabelled cases.
+
+| Label | Marks | Enrol with |
+| --- | --- | --- |
+| `docs` | Documentation build, stubs, and docstring structure. | `-m docs` |
+| `serial` | Isolation-sensitive tests that mutate process-global state; they flake under `-n auto`. | `just test-integration-serial` |
+| `perf` | Performance acceptance gates. | the dispatch-only ci-full lane |
+| `external_tool` | Tests needing a binary the dependency set does not install (LibreOffice). | `just test-workbook-parity` |
+| `os_keychain` | Tests whose assertion subject is the OS credential store itself. | `just test-os-keychain` |
+
+Every lane excludes `external_tool` and `os_keychain`, so the label -
+not a path `--ignore` - is what holds those tests out.
+
+Read `os_keychain` as a capability of the **logon session**, not of the
+dependency set. A headless continuous-integration runner, and an agent
+reaching the host over SSH, each hold a network logon that carries no
+credentials: a real credential backend is selected and then refuses
+every call, so no session key can be custodied there at all. Run these
+tests from an interactive desktop session. Selected on a host that
+cannot custody one, they fail at an explicit precondition naming the
+missing capability - a true report of the host, never a defect.
+
+Label only what is irreducibly capability-bound. A case provable
+*without* the capability must stay unlabelled, or it silently leaves
+every automated lane.
+
+#### `os_keychain` is a standing coverage hole
+
+Say it plainly, because no lane will: **the six `os_keychain` cases have
+never been observed green.** CI cannot run them, no agent host can run
+them, and they were excluded from every lane precisely because a host
+that cannot custody a session key can never pass them. Nothing in the
+automated suite covers profile-session custody today.
+
+This was the right trade against the alternative - a test-support
+credential backend would be a production-shaped fake, and writing both
+halves of the split-knowledge pair to disk would make the assertion
+vacuous - but a trade is not a fix. The cases guard a security-critical
+fail-closed path, so treat the hole as live risk rather than as settled.
+
+Closing it takes one run of `just test-os-keychain` from an interactive
+desktop session. Read that as a **recurring** obligation, not a one-time
+sign-off: every change to login, logout, session resume, or session-key
+custody re-opens the hole, and only a desktop run closes it again. A
+green run once does not vouch for the code as it stands now.
+
+The pinned membership set in `test_marker_integrity.py` keeps the hole
+from growing quietly - a test cannot take the label without being
+enrolled there - but it cannot make an unrun test pass. It bounds the
+hole; it does not fill it.
+
 ## Enforcement
 
 `src/cadrumo/tests/test_marker_integrity.py` walks `test_*.py` modules under

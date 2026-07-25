@@ -45,7 +45,6 @@ is out of scope for that naming choice.
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Iterator, Mapping, Sequence
 from datetime import datetime
 from typing import ClassVar, override
@@ -60,6 +59,7 @@ from ...adapters.persistence.storage import (
 )
 from ...core import STRICT_FROZEN_CONFIG, Period
 from ...core.external_constants import UTF_8_ENCODING
+from ...core.hashing import sha256_hex
 from ...core.time import now
 from ...domain.calculations.registry import WithholdingObservation
 from ._errors import AggregationValidationError, t
@@ -94,7 +94,7 @@ def _hashed_perceptor_token(perceptor_tax_id: str) -> str:
             t("aggregation.retenciones.errors.perceptor_nif_blank"),
             context={"field": "perceptor_tax_id"},
         )
-    return hashlib.sha256(token.encode(UTF_8_ENCODING)).hexdigest()
+    return sha256_hex(token.encode(UTF_8_ENCODING))
 
 
 def percepcion_observation_key(

@@ -37,6 +37,7 @@ from .._login_session import (
     resume_active_profile_session,
 )
 from .._orchestration import profile_create_storage_span, register_active_profile
+from .conftest import lay_down_session_for_live_login, require_keychain_custody
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -94,6 +95,7 @@ def _create_profile(schema: ProfileSchemaDefinition, *, profile_id: str, label: 
 class TestFirstLogin:
     """A first login authenticates, opens a session, and mints a resumable record."""
 
+    @pytest.mark.os_keychain
     def test_first_login_mints_a_resumable_persisted_session(
         self,
         schema: ProfileSchemaDefinition,
@@ -102,6 +104,10 @@ class TestFirstLogin:
         _create_profile(schema, profile_id=_PROFILE_A, label="Login operator")
 
         outcome = login_profile()
+
+        # Minting the record IS the custody step, and resuming it below needs
+        # the session key back, so this case cannot run without a keychain.
+        require_keychain_custody(storage_root=_storage_root, bucket_id=_PROFILE_A)
 
         assert outcome.bucket_id == _PROFILE_A
         assert outcome.label == "Login operator"
@@ -154,8 +160,16 @@ class TestFirstLogin:
             login_profile(name="no-such-profile")
 
 
+@pytest.mark.os_keychain
 class TestIdempotentGuard:
-    """A retry against a still-valid session is a no-op, not a second login."""
+    """A retry against a still-valid session is a no-op, not a second login.
+
+    Both cases are custody-bound: the guard fires only when the persisted
+    record can be RESUMED, and resuming unwraps the DEK under the session
+    key held in the OS credential store. Laying a record down without
+    custody would not reach the guard, so neither case has a
+    keychain-free half to keep in the default lane.
+    """
 
     def test_valid_session_retry_is_a_no_op(
         self,
@@ -164,6 +178,9 @@ class TestIdempotentGuard:
     ) -> None:
         _create_profile(schema, profile_id=_PROFILE_A, label="Retry operator")
         first = login_profile()
+        # The guard fires only when the persisted record can be resumed, which
+        # unwraps the DEK under the keychain-held session key.
+        require_keychain_custody(storage_root=_storage_root, bucket_id=_PROFILE_A)
         record_path = profile_session_path(storage_root=_storage_root, bucket_id=_PROFILE_A)
         first_bytes = record_path.read_bytes()
 
@@ -186,10 +203,15 @@ class TestIdempotentGuard:
     def test_retry_with_a_wrong_passphrase_still_no_ops(
         self,
         schema: ProfileSchemaDefinition,
+        _storage_root: Path,
     ) -> None:
         """The guard returns before authentication, so no passphrase is consulted."""
         _create_profile(schema, profile_id=_PROFILE_A, label="Guarded operator")
         first = login_profile()
+        # Without custody the guard cannot fire and the wrong passphrase reaches
+        # the unwrap, raising the very error this case exists to deny. State the
+        # precondition so that failure cannot be misread as a guard defect.
+        require_keychain_custody(storage_root=_storage_root, bucket_id=_PROFILE_A)
         close_active_bucket_session()
 
         second = login_profile(passphrase_callback=lambda: _WRONG_PASSPHRASE)
@@ -210,6 +232,13 @@ class TestCrossProfileHandover:
         _create_profile(schema, profile_id=_PROFILE_B, label="Second operator")
 
         login_profile(name="First operator")
+        # Give the handover a real record to tear down. The teardown path is
+        # keychain-free end to end — the record delete, and the ABSENT refusal
+        # below, are both decided before any keychain call — so laying the
+        # record down directly keeps this case honest on a host that cannot
+        # custody a session key. Whether login MINTS one is a different claim,
+        # owned by TestFirstLogin.
+        lay_down_session_for_live_login(storage_root=_storage_root, bucket_id=_PROFILE_A)
         assert profile_session_path(storage_root=_storage_root, bucket_id=_PROFILE_A).is_file()
 
         handover = login_profile(name="Second operator")
@@ -217,12 +246,14 @@ class TestCrossProfileHandover:
         assert handover.bucket_id == _PROFILE_B
         assert handover.closed_previous_bucket_id == _PROFILE_A
         assert handover.already_authenticated is False
-        # The previous profile's artefacts are gone: both the on-disk record
-        # and its keychain session key, so neither half survives the handover.
+        # The previous profile's on-disk half is gone, and nothing can
+        # reconstruct its key material any more.
         assert not profile_session_path(storage_root=_storage_root, bucket_id=_PROFILE_A).is_file()
         assert resume_active_profile_session(bucket_id=_PROFILE_A) is ProfileSessionRefusalReason.ABSENT
         # The new profile is the selected one and holds the live session.
-        assert profile_session_path(storage_root=_storage_root, bucket_id=_PROFILE_B).is_file()
+        live = current_active_bucket_session()
+        assert live is not None
+        assert live.bucket_id == _PROFILE_B
         pointer = read_pointer(_storage_root)
         assert pointer is not None
         assert pointer.bucket_id == _PROFILE_B
@@ -270,3 +301,61 @@ class TestThrottleAndAuthenticationFailure:
         outcome = login_profile(now=instant + timedelta(seconds=120))
         assert outcome.already_authenticated is False
         assert load_settings().cadrumo_local_storage_root == _storage_root
+
+
+class TestSessionPersistenceContract:
+    """``session_persisted`` couples to disk, and a degraded host fails closed.
+
+    ``ProfileLoginOutcome.session_persisted`` is the application-layer claim
+    for whether the login left a resumable record behind, and this module
+    OWNS it — every other assertion of it reaches it only transitively,
+    through a CLI subprocess. Persisted-session custody hard-requires the OS
+    keychain: a host that cannot custody the session key writes no artefact
+    at all rather than spilling one half of the split-knowledge pair to disk,
+    so the login degrades to a process-scoped session instead of refusing.
+    This case holds on either kind of host by coupling the claim to the
+    filesystem rather than presuming custody.
+    """
+
+    def test_persistence_claim_couples_to_the_on_disk_record(
+        self,
+        schema: ProfileSchemaDefinition,
+        _storage_root: Path,
+    ) -> None:
+        _create_profile(schema, profile_id=_PROFILE_A, label="Contract operator")
+
+        outcome = login_profile()
+
+        # The login succeeds whatever the custody outcome: a live in-process
+        # session is bound before the mint is even attempted, so the
+        # process-scoped half of the contract holds on every host.
+        assert outcome.already_authenticated is False
+        live = current_active_bucket_session()
+        assert live is not None
+        assert live.bucket_id == _PROFILE_A
+
+        # THE COUPLING: the claim must match the filesystem. A login reporting
+        # a saved session without writing one -- or writing one while
+        # reporting otherwise -- fails here on any host.
+        record_path = profile_session_path(storage_root=_storage_root, bucket_id=_PROFILE_A)
+        on_disk = record_path.is_file()
+        assert outcome.session_persisted is on_disk, (
+            f"session_persisted={outcome.session_persisted} disagrees with the on-disk "
+            f"record at {record_path} (is_file={on_disk})"
+        )
+
+        if not outcome.session_persisted:
+            # Fail-closed: the degraded login writes no persisted artefact at
+            # all, and a later process therefore finds nothing to reconstruct.
+            # The shared resume authority reads disk directly (never the live
+            # session) and decides ABSENT before it ever consults the
+            # keychain, so this branch is reachable on a credential-less host.
+            # Drop the process-scoped session first so the "a later process
+            # finds nothing" framing is literal.
+            assert not record_path.is_file()
+            close_active_bucket_session()
+            assert resume_active_profile_session(bucket_id=_PROFILE_A) is ProfileSessionRefusalReason.ABSENT
+        else:
+            # Custody host: the record is on disk, the resumable half of the
+            # split-knowledge pair.
+            assert record_path.is_file()

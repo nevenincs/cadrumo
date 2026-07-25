@@ -256,7 +256,7 @@ jobs:
             --tax-evidence "$tax" \
             --mcp-evidence "$mcp" \
             --acquisition-mechanism brew \
-            --acquisition-source "nevenincs/cadrumo" \
+            --acquisition-source "nevenincs/tap" \
             --destination-kind homebrew-cellar \
             --destination-locator "${{ matrix.id }}" \
             --distribution-evidence-dir "$CADRUMO_HOMEBREW_ROOT/distribution-install-readiness"

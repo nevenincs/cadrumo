@@ -22,6 +22,7 @@ import re
 from functools import lru_cache
 from pathlib import Path
 
+from .....core.hashing import sha256_hex
 from .....core.logging import get_logger
 from ...pdf import extract_pages_text_from_bytes as _extract_pages_text_from_bytes_impl
 from ...pdf import extract_pages_text_with_fast_path as _extract_pages_text_with_fast_path_impl
@@ -132,9 +133,7 @@ _PDFIUM_BYTES_CACHE: dict[str, tuple[str, ...]] = {}
 
 def _extract_pages_text_with_pdfium_from_bytes(pdf_bytes: bytes) -> tuple[str, ...] | None:
     """Return canary-validated pypdfium2 page text for in-memory PDF bytes."""
-    from hashlib import sha256
-
-    digest = sha256(pdf_bytes).hexdigest()
+    digest = sha256_hex(pdf_bytes)
     if digest in _PDFIUM_BYTES_CACHE:
         return _PDFIUM_BYTES_CACHE[digest]
 

@@ -263,7 +263,7 @@ def _emit_crash(exc: Exception) -> NoReturn:
     remedy, and would report an operator-actionable condition as a program
     defect. Forward it verbatim instead, with its own exit code.
     """
-    from ...core.logging import get_logger
+    from ...core.logging import OPERATOR_DOCUMENT_LOG_EXTRA, get_logger
     from ._errors import CliUnexpectedBoundaryError, _unwrap_cadrumo_error, active_profile_label_for_error, write_stderr
 
     typed = _unwrap_cadrumo_error(exc)
@@ -276,7 +276,17 @@ def _emit_crash(exc: Exception) -> NoReturn:
         # `_errors.py`: a typed CadrumoError is an expected, already-classified
         # refusal, and writing its traceback would make `aeat config repair
         # logs` echo an operator-actionable condition back as a live crash.
-        get_logger(__name__).error("cli terminal boundary: unexpected exception", exc_info=exc)
+        #
+        # The extra keeps the record off the stderr handler. This function is
+        # about to write the JSON error document to that same stream, and the
+        # record carries the raw exception and its frames — echoing it would
+        # prepend an unredacted traceback to the translated document and break
+        # any parser reading stderr for the document alone.
+        get_logger(__name__).error(
+            "cli terminal boundary: unexpected exception",
+            exc_info=exc,
+            extra={OPERATOR_DOCUMENT_LOG_EXTRA: True},
+        )
     boundary = typed if typed is not None else CliUnexpectedBoundaryError(exc)
     code = get_registered_error_code(boundary)
     payload = (

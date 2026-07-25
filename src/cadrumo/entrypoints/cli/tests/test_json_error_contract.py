@@ -32,6 +32,7 @@ replacement).
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import textwrap
@@ -221,3 +222,25 @@ def test_crash_funnel_replaces_traceback_with_error_document(tmp_path: Path) -> 
     assert text_run.returncode == 6, text_run.stderr
     assert "Traceback" not in text_run.stderr
     assert not text_run.stderr.lstrip().startswith("{")
+
+    # The traceback is suppressed on stderr but MUST survive in the diagnostic
+    # log, because the document above tells the operator to go read it. Without
+    # this half, the stderr assertions above could be satisfied by deleting the
+    # log call outright and the crash would become untriageable.
+    state_root = tmp_path / "state"
+    logged_run = subprocess.run(
+        [sys.executable, str(script), "boom", "--json"],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=120,
+        check=False,
+        env=os.environ | {"CADRUMO_LOCAL_STORAGE_ROOT": str(state_root)},
+    )
+    assert logged_run.returncode == 6, logged_run.stderr
+    assert "Traceback" not in logged_run.stderr
+    diagnostic_log = state_root / "logs" / "cadrumo.log"
+    assert diagnostic_log.is_file(), f"no diagnostic log under {state_root}"
+    logged = diagnostic_log.read_text(encoding="utf-8", errors="replace")
+    assert "Traceback" in logged, "the crash traceback must reach the diagnostic log"
+    assert "synthetic crash for the terminal funnel" in logged

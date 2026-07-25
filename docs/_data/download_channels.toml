@@ -53,10 +53,14 @@ artifact_kinds = ["scoop-manifest"]
 availability = "public_launch"
 package = "cadrumo"
 registry = "Scoop bucket"
+# Scoop resolves manifests from a `bucket/` subdirectory when one is present, so
+# the product repository serves as its own bucket and no separate bucket
+# repository exists. Every product under the account repeats this layout in its
+# own repository, which is why no bucket repo has to be created per product.
 bucket = "cadrumo"
-bucket_repo = "nevenincs/scoop-cadrumo"
+bucket_repo = "nevenincs/cadrumo"
 install_commands = [
-  "scoop bucket add cadrumo https://github.com/nevenincs/scoop-cadrumo",
+  "scoop bucket add cadrumo https://github.com/nevenincs/cadrumo",
   "scoop install cadrumo",
 ]
 
@@ -68,10 +72,13 @@ artifact_kinds = ["homebrew-formula"]
 availability = "public_launch"
 package = "cadrumo"
 registry = "Homebrew tap"
-tap = "nevenincs/cadrumo"
+# Account-scoped tap serving every product published under this account. The
+# `homebrew-` repo-name prefix is mandatory for the one-argument tap form, so
+# the repo is `nevenincs/homebrew-tap` and the tap name is `nevenincs/tap`.
+tap = "nevenincs/tap"
 install_commands = [
-  "brew tap nevenincs/cadrumo",
-  "brew install nevenincs/cadrumo",
+  "brew tap nevenincs/tap",
+  "brew install nevenincs/tap/cadrumo",
 ]
 
 [[channel]]

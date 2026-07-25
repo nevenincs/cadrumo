@@ -86,7 +86,7 @@ def test_quick_workflow_triggers_on_artifact_relevant_pushes() -> None:
     assert ".vault/**" in push["paths-ignore"]
     assert "**.md" in push["paths-ignore"]
     assert document["concurrency"]["cancel-in-progress"] is True
-    # Future PR flow: same T1 probe, but never fork-PR code on the fleet —
+    # Future pull-request flow: same T1 probe, but never fork code on the fleet —
     # every job must carry the same-repo guard (see test_change_class_tiers).
     assert triggers["pull_request"]["branches"] == ["main"]
 

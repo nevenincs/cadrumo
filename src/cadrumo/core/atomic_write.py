@@ -8,7 +8,7 @@ pattern had accreted across the storage substrate: a standard fsync+replace
 variant (``adapters.persistence.storage.envelope``), a hidden-file variant
 with no fsync, plain-write variants with no fsync at all, and a
 collision-hardened ``O_EXCL`` + mode ``0o600`` variant reserved for the
-master-key store. This module collapses all of that onto two named tiers
+master-key store. This module collapses all of that onto three named tiers
 so a new writer picks one deliberately instead of inventing a fifth dialect:
 
 - **Standard tier** (:func:`atomic_write_bytes`, :func:`atomic_write_text`):
@@ -29,16 +29,30 @@ so a new writer picks one deliberately instead of inventing a fifth dialect:
   unexpected pre-existing tempfile. A memoryview-and-offset loop completes
   short :func:`os.write` calls and refuses a write that makes no progress.
 
-Both tiers guarantee the tempfile is unlinked on ANY failure -- a bare
+- **Best-effort tier** (:func:`atomic_write_best_effort_bytes`,
+  :func:`atomic_write_best_effort_text`): the same tempfile-sibling-plus-
+  :func:`os.replace` mechanics as the standard tier, but deliberately WITHOUT
+  any ``fsync`` call. Reserved for rebuildable derived caches (a compiled-
+  registry pickle, a corpus-text extraction cache, a validation-verdict
+  stamp) where a torn write on crash only costs a recompute on the next
+  process, never data loss -- the fsync cost is not worth paying on a cache
+  write. This tier never logs and never swallows: it raises the underlying
+  exception unwrapped, same as the other two tiers, and leaves the
+  try/except/log/swallow policy entirely to the caller, because every
+  existing best-effort caller already wraps its write in its own catch with
+  its own log level and message and duplicating that here would double-log
+  or contradict it.
+
+Every tier guarantees the tempfile is unlinked on ANY failure -- a bare
 ``try``/``finally`` around the whole sequence, not a narrow ``except
 OSError`` -- so a ``KeyboardInterrupt`` or any other :class:`BaseException`
-mid-write cannot leave an orphan tempfile next to the target. Neither tier
-wraps or translates the underlying exception: callers see the raw
+mid-write cannot leave an orphan tempfile next to the target. No tier wraps
+or translates the underlying exception: callers see the raw
 :class:`OSError` (or whatever the platform raises) so each call site can
 apply its own domain-specific error class, matching the existing
 call-site-owns-its-error-type convention this module's callers already use.
 Payload content is never logged; only the target path and the exception
-type are.
+type are (the best-effort tier logs nothing at all; see above).
 
 The helpers are freestanding primitives at the ``core`` layer with no
 dependency beyond :func:`~cadrumo.core._fsync.fsync_parent_dir`.
@@ -55,6 +69,8 @@ from ._fsync import fsync_parent_dir
 from .logging import get_logger
 
 __all__ = [
+    "atomic_write_best_effort_bytes",
+    "atomic_write_best_effort_text",
     "atomic_write_bytes",
     "atomic_write_hardened_bytes",
     "atomic_write_hardened_text",
@@ -143,6 +159,60 @@ def atomic_write_text(path: Path, text: str, *, encoding: str = "utf-8") -> None
         encoding: Text encoding used to produce the bytes payload.
     """
     atomic_write_bytes(path, text.encode(encoding))
+
+
+def atomic_write_best_effort_bytes(path: Path, data: bytes) -> None:
+    """Atomically write ``data`` to ``path`` (best-effort tier, no fsync).
+
+    Stages a :func:`tempfile.NamedTemporaryFile` sibling in ``path``'s parent
+    directory (created if absent), writes it, then replaces ``path`` with
+    :func:`os.replace`. Unlike the standard and hardened tiers, this tier never
+    calls ``fsync`` on the tempfile or the parent directory: it exists for
+    rebuildable derived caches where a torn write on crash only costs a
+    recompute, not data loss, so the fsync cost is not worth paying on the
+    write. The tempfile is unlinked on any failure, including a
+    :class:`BaseException` raised mid-write. This tier never logs; the caller
+    owns its own catch/log/swallow policy (see the module docstring).
+
+    Args:
+        path: Destination file. Parent directory is created if absent.
+        data: Full file contents to write.
+
+    Raises:
+        OSError: When staging, writing, or replacing the file fails. The
+            original exception propagates unwrapped; the tempfile is
+            cleaned up first.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            dir=path.parent,
+            prefix=f"{path.stem}.",
+            suffix=".tmp",
+            delete=False,
+        ) as handle:
+            tmp_path = Path(handle.name)
+            handle.write(data)
+        os.replace(tmp_path, path)
+        tmp_path = None
+    finally:
+        if tmp_path is not None:
+            tmp_path.unlink(missing_ok=True)
+
+
+def atomic_write_best_effort_text(path: Path, text: str, *, encoding: str = "utf-8") -> None:
+    """Atomically write ``text`` to ``path`` (best-effort tier, text variant).
+
+    Encodes ``text`` and delegates to :func:`atomic_write_best_effort_bytes`;
+    see its docstring for the write sequence and failure semantics.
+
+    Args:
+        path: Destination file. Parent directory is created if absent.
+        text: Full file contents to write.
+        encoding: Text encoding used to produce the bytes payload.
+    """
+    atomic_write_best_effort_bytes(path, text.encode(encoding))
 
 
 def atomic_write_hardened_bytes(path: Path, data: bytes, *, mode: int = _HARDENED_DEFAULT_MODE) -> None:

@@ -33,6 +33,13 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 _ROTATED_PASSPHRASE = "rotated-store-passphrase-9f2a"  # noqa: S105 - test fixture input
 _RECOVERED_PASSPHRASE = "recovered-store-passphrase-4c7b"  # noqa: S105 - test fixture input
 
+# Payload fields whose value is a closed set rather than free text. These are
+# checked against their whole legal range instead of being word-scanned for
+# mnemonic fragments; see the leak test's docstring.
+_CLOSED_VALUE_PAYLOAD_FIELDS: dict[str, frozenset[str]] = {
+    "rotated": frozenset({"true", "false"}),
+}
+
 
 def _history() -> tuple[BucketEvent, ...]:
     """Load every persisted bucket event from the active bucket."""
@@ -156,6 +163,15 @@ def test_no_custody_event_payload_carries_secret_material(tmp_path: Path) -> Non
     prove *that* a custody mutation happened, never to reveal *what* the secret
     was. Asserting per-word (not just the joined phrase) means a payload that
     leaked even a fragment of the mnemonic fails.
+
+    Closed-value witness fields are pinned to their allowed set instead of being
+    word-scanned. BIP-39 draws from ordinary English, so a mnemonic that happens
+    to contain the word "true" would otherwise be reported as leaking through a
+    field that can only ever hold "true" or "false" — a false positive on
+    roughly one run in forty, and one that says nothing about secret exposure.
+    Pinning the value is the stronger assertion: the field is checked against
+    its whole legal range, and every field that *can* carry free text is still
+    scanned per word.
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         current = load_settings().cadrumo_dev_test_database_password.get_secret_value()
@@ -178,6 +194,15 @@ def test_no_custody_event_payload_carries_secret_material(tmp_path: Path) -> Non
             _RECOVERED_PASSPHRASE,
         }
         for event in events:
-            rendered = " ".join((*event.payload.keys(), *event.payload.values(), event.object_id))
+            scanned: list[str] = [*event.payload.keys(), event.object_id]
+            for key, value in event.payload.items():
+                allowed = _CLOSED_VALUE_PAYLOAD_FIELDS.get(key)
+                if allowed is None:
+                    scanned.append(value)
+                    continue
+                assert value in allowed, (
+                    f"event {event.event_type.value} field {key} must hold one of {sorted(allowed)}, got {value!r}"
+                )
+            rendered = " ".join(scanned)
             leaked = sorted(token for token in forbidden if token and token in rendered.split())
             assert not leaked, f"event {event.event_type.value} leaked secret material: {leaked}"

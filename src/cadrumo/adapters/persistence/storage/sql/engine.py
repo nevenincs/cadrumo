@@ -23,7 +23,6 @@ Production code outside those owners must not dispose engines directly.
 
 from __future__ import annotations
 
-from hashlib import sha256
 from pathlib import Path
 from threading import Lock
 
@@ -40,6 +39,7 @@ from .....core.config import (
     load_settings,
 )
 from .....core.external_constants import UTF_8_ENCODING
+from .....core.hashing import sha256_hex
 from .....core.logging import get_logger
 from .....core.paths import resolve_project_path
 from ..errors import StorageError
@@ -61,7 +61,7 @@ _SQLITE_BUSY_TIMEOUT_MS = 5000
 
 def _route_marker(url: str) -> str:
     """Return a stable non-reversible marker for a configured database route."""
-    return sha256(url.encode(UTF_8_ENCODING)).hexdigest()[:16]
+    return sha256_hex(url.encode(UTF_8_ENCODING))[:16]
 
 
 def _normalize_sqlite_url(url: str) -> str:

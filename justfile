@@ -372,11 +372,11 @@ test-ratchets:
 
 # Run the unit test suite in parallel, ignoring workbook parity tests. Quiet progress; failures shown.
 test-unit:
-    @uv run --no-sync pytest -q -rs -n {{pytest_workers}} --dist=loadfile -m 'unit and not external_tool' --ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity
+    @uv run --no-sync pytest -q -rs -n {{pytest_workers}} --dist=loadfile -m 'unit and not external_tool and not os_keychain' --ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity
 
 # Run the unit test suite serially for reruns after a parallel failure.
 test-unit-serial:
-    @uv run --no-sync pytest -q -rs -n0 -m 'unit and not external_tool' --ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity
+    @uv run --no-sync pytest -q -rs -n0 -m 'unit and not external_tool and not os_keychain' --ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity
 
 # Run the integration test suite in two lanes: the bulk in parallel (xdist,
 # excluding serial-marked tests), then the isolation-sensitive `serial`-marked
@@ -384,8 +384,8 @@ test-unit-serial:
 # tests mutate process-global state (the master-key-provider singleton) and
 # flake under `-n auto` interleaving while passing cleanly in isolation.
 test-integration:
-    @uv run --no-sync pytest -q -m "integration and not serial"
-    @uv run --no-sync pytest -q -m "integration and serial and not perf" -n0
+    @uv run --no-sync pytest -q -m "integration and not serial and not os_keychain"
+    @uv run --no-sync pytest -q -m "integration and serial and not perf and not os_keychain" -n0
 
 # Run BOTH lanes in sequence and report them separately. The default pytest
 # invocation is pinned to the unit lane by addopts, so `just test-unit` green
@@ -397,7 +397,17 @@ test-both-lanes:
 
 # Run only the serial (isolation-sensitive) integration lane, no xdist workers.
 test-integration-serial:
-    @uv run --no-sync pytest -q -m "integration and serial and not perf" -n0
+    @uv run --no-sync pytest -q -m "integration and serial and not perf and not os_keychain" -n0
+
+# Run the OS-credential-store custody tests. These carry `os_keychain` alongside
+# their execution marker, and EVERY lane above excludes it, so this recipe is the
+# only way to select them. The capability is a property of the logon session: run
+# this from an INTERACTIVE DESKTOP SESSION. A headless CI runner, or an agent
+# reaching the host over SSH, holds a network logon that carries no credentials,
+# so the store refuses every call and these cases fail at an explicit precondition
+# naming the missing custody -- which is a true report of the host, not a defect.
+test-os-keychain:
+    uv run --no-sync pytest -q -rs -m os_keychain src/cadrumo/application/user_profile/tests src/cadrumo/entrypoints/cli/tests/test_profile_session_root_resume.py
 
 # Run the live test suite. Quiet progress; failures shown.
 test-live:

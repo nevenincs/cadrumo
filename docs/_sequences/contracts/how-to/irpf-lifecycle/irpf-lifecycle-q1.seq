@@ -1,6 +1,12 @@
+@step Record when the activity started so the quarter is a valid obligation.
 @setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01
+@step Register the supplier's purchase invoice as encrypted evidence bytes.
+@setup aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --supplier "Papeleria Central SL" --invoice-number C-2026-0087 --invoice-date 2026-02-11 --taxable-base 500 --iva-rate 0.21 --iva-amount 105
+@capture evidence_id result.evidence_id
+@step Record the quarter's sale.
 @setup aeat app ledger add --date 2026-02-10 --amount 1210 --direction INCOMING --description "venta" --classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210 --idempotency-key irpf-q1-venta
-@setup aeat app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING --description "compra" --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105 --idempotency-key irpf-q1-compra
+@step Record the quarter's expense with its purchase invoice already linked.
+@setup aeat app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING --description "compra" --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105 --purchase-invoice-evidence-id {evidence_id} --idempotency-key irpf-q1-compra
 @step Create the first instalment draft.
 aeat --format json app modelo work create --modelo 130 --year 2026 --period 1T
 @step Calculate it with the three first-period carries passed as zeros.
@@ -8,12 +14,15 @@ aeat --format json app modelo work calculate --modelo 130 --year 2026 --period 1
 @expect result.casilla_values.03 == "500.00"
 @expect result.casilla_values.04 == "100.00"
 @step Verify the instalment before exporting it.
-@result aeat --format json app modelo work verify --modelo 130 --year 2026 --period 1T
+aeat --format json app modelo work verify --modelo 130 --year 2026 --period 1T
 @expect result.granted_verificado_completo == true
+@step Export the verified instalment to the fichero-BOE file you upload yourself.
+@result aeat --format json app modelo export --modelo 130 --year 2026 --period 1T --output ./modelo-130-2026-1T.boe
+@expect result.byte_size == 946
+@expect result.period.code == "1T"
+@expect result.format == "fichero-boe"
 @expect exit_code == 0
-@static aeat app modelo export --modelo 130 --year 2026 --period 1T --output ./modelo-130-2026-1T.boe
-@blocked unconverted Only lacks the seed's invoice-to-row link; linking it before calculate converts it.
 @static aeat app modelo work file --modelo 130 --year 2026 --period 1T
-@blocked unconverted Only lacks the seed's invoice-to-row link; linking it before calculate converts it.
+@blocked unconverted Runs clean on its own; this page's cumulative run files the quarter inside the next quarter's preparation, and one revision cannot be filed twice.
 @static aeat app modelo reconcile pull --modelo 130 --year 2026 --period 1T
 @blocked live-aeat The pull verb fetches from the AEAT sede; the sandbox refuses live frames.

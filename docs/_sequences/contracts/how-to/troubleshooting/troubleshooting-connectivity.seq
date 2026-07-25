@@ -1,3 +1,3 @@
 @step Check that the tool can reach the AEAT website.
 @static aeat config repair connectivity
-@blocked unconverted Runs clean in the sandbox probe; nothing blocks it, so it awaits conversion.
+@blocked unconverted Do NOT convert: measured to really navigate a browser to the AEAT sede, its state tracking live reachability. The accurate code is live-aeat, which the argv-token gate cannot express for this handler.

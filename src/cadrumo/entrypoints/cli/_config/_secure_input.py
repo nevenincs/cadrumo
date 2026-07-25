@@ -10,7 +10,11 @@ history, or logs.
 The stdin channel reads at most :data:`_MAX_SECRETS_STDIN_BYTES` and validates
 the parsed object against a strict ``extra="forbid"`` pydantic model whose secret
 fields are :class:`~pydantic.SecretStr`, so a missing/extra field refuses and the
-values never render in a repr. This module wraps
+values never render in a repr. Parsing rejects a repeated object key at any
+nesting depth (see :func:`_reject_duplicate_object_keys`) rather than silently
+resolving it to its last occurrence, so the strict-parse contract is total: a
+collision can never slip past ``extra="forbid"`` by being resolved before
+pydantic sees the mapping. This module wraps
 :class:`~cadrumo.adapters.persistence.storage.master_key` custody flows such as
 ``config passphrase change`` and ``config recovery verify`` / ``config recover``.
 """
@@ -35,14 +39,37 @@ malformed or hostile stream from being read unboundedly into memory.
 """
 
 
+def _reject_duplicate_object_keys(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    """Build a JSON object from ``pairs``, refusing a repeated key.
+
+    Installed as :func:`json.loads`'s ``object_pairs_hook`` so it runs for
+    every object the decoder builds, including nested ones. Plain
+    :func:`json.loads` silently keeps the LAST occurrence of a duplicate key,
+    which resolves the collision before the strict ``extra="forbid"`` model can
+    ever observe it — a payload assembled from concatenated fragments or a
+    templating bug could then silently rewrap the secret store under a value
+    the caller never intended. The raised message names only the offending
+    KEY (a static field name, e.g. ``"recovery_code"``), never a payload
+    value, so no secret can reach it.
+    """
+    seen: set[str] = set()
+    for key, _value in pairs:
+        if key in seen:
+            raise ValueError(f"duplicate key in secrets-stdin payload: {key!r}")
+        seen.add(key)
+    return dict(pairs)
+
+
 def read_secrets_stdin[SecretsModelT: BaseModel](model: type[SecretsModelT]) -> SecretsModelT:
     """Read one bounded strict-JSON object from stdin and validate it against ``model``.
 
     The payload must be a single JSON object carrying exactly the fields ``model``
     declares (``extra="forbid"``). A payload larger than
     :data:`_MAX_SECRETS_STDIN_BYTES`, invalid UTF-8, non-object JSON, malformed
-    JSON, or a missing/unexpected field refuses with a localised
-    :class:`CliRefusedBoundaryError`; the raw bytes are never echoed or logged.
+    JSON, a repeated object key at any nesting depth (see
+    :func:`_reject_duplicate_object_keys`), or a missing/unexpected field
+    refuses with a localised :class:`CliRefusedBoundaryError`; the raw bytes
+    are never echoed or logged.
     """
     raw = sys.stdin.buffer.read(_MAX_SECRETS_STDIN_BYTES + 1)
     if len(raw) > _MAX_SECRETS_STDIN_BYTES:
@@ -51,7 +78,7 @@ def read_secrets_stdin[SecretsModelT: BaseModel](model: type[SecretsModelT]) -> 
         )
     try:
         decoded = raw.decode(UTF_8_ENCODING)
-        payload = json.loads(decoded)
+        payload = json.loads(decoded, object_pairs_hook=_reject_duplicate_object_keys)
     except (ValueError, UnicodeDecodeError) as exc:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.custody.errors.secrets_stdin_invalid_json",

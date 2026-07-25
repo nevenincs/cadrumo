@@ -1,3 +1,3 @@
 @step Open the paged descendant editor for the active profile.
 @static aeat config profile descendiente
-@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
+@blocked interactive-tty The bare group opens the paged editor; measured exit 2 even after config login, "This console cannot host interactive questions."

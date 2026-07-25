@@ -23,6 +23,25 @@ fold:
 This module exports the cryptographic primitives only; command wiring
 must remain outside the storage substrate.
 
+**Wipeable key material.** Every secret this module mints or recovers —
+the recovery entropy, the mnemonic, the derived recovery KEK, and the
+unwrapped master key — is held in a ``bytearray`` rather than immutable
+``bytes`` / ``str``, so the substrate's :func:`zeroise` primitive can
+overwrite it in place. The recovery surface needs this more than the
+steady-state session path does: its exposure window opens on every mint,
+unwrap, and passphrase change, and an enrollment holds live key material
+across the operator's interactive confirmation. Functions that derive a
+KEK zero it in a ``finally`` before returning; functions that *return*
+key material hand back a buffer the caller is expected to zero once it
+has finished with it.
+
+The honest limit is unchanged from the one the session path already
+discloses: passing a buffer to a ``bytes``-typed cryptographic primitive,
+or reading the mnemonic as a ``str``, materialises a transient immutable
+copy whose lifetime the garbage collector owns. Those copies are bounded
+by a single call; what this module no longer does is hold the *only*
+copy of a secret in a form no wipe primitive can reach.
+
 The encoding follows BIP-39 (Bitcoin Improvement Proposal 0039)
 exactly — 256-bit entropy → 8-bit checksum → 24 11-bit words drawn
 from the canonical English wordlist. The wordlist is bundled at
@@ -36,9 +55,9 @@ import base64
 import binascii
 import hashlib
 import secrets
-from collections.abc import Callable
+from collections.abc import Buffer, Callable
 from pathlib import Path
-from typing import Final
+from typing import Final, Self
 
 from pydantic import BaseModel, Field, ValidationError
 
@@ -54,6 +73,7 @@ from ..crypto import (
 from ..errors import (
     storage_validation_error as _storage_validation_error,
 )
+from ._zeroise import zeroise as _zeroise
 
 _RECOVERY_KEY_SIZE: Final[int] = 32
 _MNEMONIC_WORD_COUNT: Final[int] = 24
@@ -61,20 +81,74 @@ _HKDF_CONTEXT_RECOVERY: Final[bytes] = b"cadrumo.recovery-key.master-wrap.v1"
 _RECOVERY_AAD: Final[bytes] = b"cadrumo.recovery-key.aad.v1"
 
 
-class RecoveryKey(BaseModel):
-    """Frozen container for a 32-byte recovery key + its 24-word mnemonic.
+class RecoveryKey:
+    """Wipeable container for a 32-byte recovery key + its 24-word mnemonic.
 
-    The substrate never persists the raw bytes or the mnemonic; this
-    record exists in memory only at provision time so the CLI can
-    display the mnemonic and the wrapping helper can derive a KEK from
-    the bytes. After display + wrap, both fields are dropped from
-    memory by Python's garbage collection.
+    The substrate never persists the raw entropy or the mnemonic. Both are
+    held in ``bytearray`` buffers rather than immutable ``bytes`` / ``str``
+    so :func:`zeroise` can overwrite them in place once the enrollment has
+    committed, instead of leaving them to the garbage collector.
+
+    This matters more here than on the steady-state session path: an
+    enrollment holds live key material across the operator's *interactive*
+    confirmation, which can last as long as it takes a human to copy down
+    24 words. Immutable material held across that window is unreachable by
+    any wipe primitive for its whole lifetime.
+
+    Deliberately not a pydantic model. The sibling ``BucketSession`` sets
+    the precedent for live key material: a slotted plain class keeps the
+    buffers mutable, and — because there is no ``model_dump_json`` — makes
+    it structurally impossible to serialise the secret by accident.
+
+    Honest contract, identical in kind to the one ``BucketSession``
+    discloses: reading :attr:`mnemonic` materialises a transient ``str``
+    copy whose lifetime the garbage collector owns, and passing
+    :attr:`raw` to a ``bytes``-typed cryptographic primitive materialises a
+    transient ``bytes`` copy for the duration of that call. The buffers this
+    object *holds* are wipeable; those short-lived boundary copies are not.
     """
 
-    model_config = _STRICT_FROZEN
+    __slots__ = ("_mnemonic_buffer", "_raw_buffer")
 
-    raw: bytes = Field(min_length=_RECOVERY_KEY_SIZE, max_length=_RECOVERY_KEY_SIZE)
-    mnemonic: str = Field(min_length=1)
+    def __init__(self, *, raw: Buffer, mnemonic: str) -> None:
+        raw_buffer = bytearray(raw)
+        if len(raw_buffer) != _RECOVERY_KEY_SIZE:
+            raise _storage_validation_error(
+                f"recovery key must be exactly {_RECOVERY_KEY_SIZE} bytes; got {len(raw_buffer)}",
+            )
+        if not mnemonic:
+            raise _storage_validation_error("recovery key mnemonic must not be empty")
+        self._raw_buffer = raw_buffer
+        self._mnemonic_buffer = bytearray(mnemonic.encode(_UTF_8_ENCODING))
+
+    @property
+    def raw(self) -> bytearray:
+        """Return the live 32-byte entropy buffer.
+
+        The buffer itself is returned, not a copy, so :meth:`wipe` reaches
+        every holder of this reference.
+        """
+        return self._raw_buffer
+
+    @property
+    def mnemonic(self) -> str:
+        """Return the 24-word mnemonic, decoded from its wipeable buffer."""
+        return self._mnemonic_buffer.decode(_UTF_8_ENCODING)
+
+    def wipe(self) -> None:
+        """Overwrite the entropy and mnemonic buffers with zero bytes.
+
+        Idempotent: wiping an already-wiped key is a no-op that leaves the
+        buffers zeroed and their lengths unchanged.
+        """
+        _zeroise(self._raw_buffer)
+        _zeroise(self._mnemonic_buffer)
+
+    def __enter__(self) -> Self:
+        return self
+
+    def __exit__(self, *_exc_info: object) -> None:
+        self.wipe()
 
 
 class WrappedMasterKey(BaseModel):
@@ -136,11 +210,13 @@ _WORDLIST: Final[tuple[str, ...]] = _load_wordlist()
 _WORD_TO_INDEX: Final[dict[str, int]] = {w: i for i, w in enumerate(_WORDLIST)}
 
 
-def encode_mnemonic(entropy: bytes) -> str:
+def encode_mnemonic(entropy: Buffer) -> str:
     """Encode 32 bytes of entropy as a 24-word BIP-39 English mnemonic.
 
     Args:
-        entropy: Exactly 32 bytes of cryptographic entropy.
+        entropy: Exactly 32 bytes of cryptographic entropy. Accepts any
+            buffer, so a wipeable ``bytearray`` can be encoded without
+            first being copied into immutable ``bytes``.
 
     Returns:
         A space-joined string of 24 lowercase English words.
@@ -148,21 +224,22 @@ def encode_mnemonic(entropy: bytes) -> str:
     Raises:
         StorageValidationError: When ``entropy`` is not exactly 32 bytes.
     """
-    if len(entropy) != _RECOVERY_KEY_SIZE:
+    entropy_view = memoryview(entropy)
+    if len(entropy_view) != _RECOVERY_KEY_SIZE:
         raise _storage_validation_error(
-            f"BIP-39 24-word encoding requires exactly {_RECOVERY_KEY_SIZE} bytes; got {len(entropy)}",
+            f"BIP-39 24-word encoding requires exactly {_RECOVERY_KEY_SIZE} bytes; got {len(entropy_view)}",
         )
     # ENT (256) + CS (8) = 264 bits -> 24 x 11-bit groups.
     # CS = first 8 bits of SHA-256(entropy).
-    checksum = hashlib.sha256(entropy).digest()[0]
-    payload_int = int.from_bytes(entropy, "big") << 8 | checksum
+    checksum = hashlib.sha256(entropy_view).digest()[0]
+    payload_int = int.from_bytes(entropy_view, "big") << 8 | checksum
     indices: list[int] = []
     for shift in range(_MNEMONIC_WORD_COUNT - 1, -1, -1):
         indices.append((payload_int >> (shift * 11)) & 0x7FF)
     return " ".join(_WORDLIST[i] for i in indices)
 
 
-def decode_mnemonic(mnemonic: str) -> bytes:
+def decode_mnemonic(mnemonic: str) -> bytearray:
     """Decode a 24-word BIP-39 English mnemonic back into 32 bytes of entropy.
 
     Args:
@@ -170,7 +247,8 @@ def decode_mnemonic(mnemonic: str) -> bytes:
             the BIP-39 English wordlist.
 
     Returns:
-        The 32-byte entropy.
+        The 32-byte entropy in a wipeable ``bytearray`` the caller is
+        expected to :func:`zeroise` once it has finished deriving from it.
 
     Raises:
         StorageValidationError: When the mnemonic does not have 24 words, contains
@@ -192,9 +270,10 @@ def decode_mnemonic(mnemonic: str) -> bytes:
     # Split off the 8-bit checksum.
     checksum = payload_int & 0xFF
     entropy_int = payload_int >> 8
-    entropy = entropy_int.to_bytes(_RECOVERY_KEY_SIZE, "big")
+    entropy = bytearray(entropy_int.to_bytes(_RECOVERY_KEY_SIZE, "big"))
     expected = hashlib.sha256(entropy).digest()[0]
     if checksum != expected:
+        _zeroise(entropy)
         raise _storage_validation_error("BIP-39 mnemonic checksum mismatch — verify the words")
     return entropy
 
@@ -202,30 +281,43 @@ def decode_mnemonic(mnemonic: str) -> bytes:
 def generate_recovery_key() -> RecoveryKey:
     """Mint a fresh :class:`RecoveryKey` with 32-byte entropy and its 24-word mnemonic.
 
-    Uses :func:`secrets.token_bytes` for the entropy. The returned
-    record is the only in-memory copy; callers must arrange for the
-    operator to copy or print the mnemonic before the record falls out
-    of scope.
+    Uses :func:`secrets.token_bytes` for the entropy, which is copied into
+    the returned key's wipeable buffers and then zeroed, so the immutable
+    ``bytes`` the generator produced does not outlive this call. The
+    returned record is the only remaining in-memory copy; callers must
+    arrange for the operator to copy or print the mnemonic, then
+    :meth:`RecoveryKey.wipe` it.
     """
-    raw = secrets.token_bytes(_RECOVERY_KEY_SIZE)
-    return RecoveryKey(raw=raw, mnemonic=encode_mnemonic(raw))
+    seed = bytearray(secrets.token_bytes(_RECOVERY_KEY_SIZE))
+    try:
+        return RecoveryKey(raw=seed, mnemonic=encode_mnemonic(seed))
+    finally:
+        _zeroise(seed)
 
 
-def _derive_recovery_kek(recovery_key_bytes: bytes) -> bytes:
-    """Derive the 32-byte KEK that wraps the master key under the recovery key."""
-    return derive_key(
-        key_material=recovery_key_bytes,
-        salt=b"",  # The recovery-key bytes are themselves high-entropy.
-        context=_HKDF_CONTEXT_RECOVERY,
-        length=KEY_SIZE,
+def _derive_recovery_kek(recovery_key_bytes: Buffer) -> bytearray:
+    """Derive the 32-byte KEK that wraps the master key under the recovery key.
+
+    Returns a wipeable ``bytearray``; every caller zeroes it once the wrap
+    or unwrap it seeds has completed.
+    """
+    return bytearray(
+        derive_key(
+            key_material=bytes(recovery_key_bytes),
+            salt=b"",  # The recovery-key bytes are themselves high-entropy.
+            context=_HKDF_CONTEXT_RECOVERY,
+            length=KEY_SIZE,
+        ),
     )
 
 
-def wrap_master_key(*, master_key: bytes, recovery_key: RecoveryKey) -> WrappedMasterKey:
+def wrap_master_key(*, master_key: Buffer, recovery_key: RecoveryKey) -> WrappedMasterKey:
     """Wrap a 32-byte master key under a recovery-key-derived KEK.
 
     Args:
-        master_key: The 32-byte master key to wrap.
+        master_key: The 32-byte master key to wrap. Accepts any buffer, so
+            a wipeable ``bytearray`` need not be copied into immutable
+            ``bytes`` by the caller.
         recovery_key: The recovery key whose bytes seed the wrapping KEK.
 
     Returns:
@@ -236,16 +328,20 @@ def wrap_master_key(*, master_key: bytes, recovery_key: RecoveryKey) -> WrappedM
     Raises:
         StorageValidationError: When ``master_key`` is not exactly 32 bytes.
     """
-    if len(master_key) != KEY_SIZE:
+    master_key_view = memoryview(master_key)
+    if len(master_key_view) != KEY_SIZE:
         raise _storage_validation_error(
-            f"master key must be exactly {KEY_SIZE} bytes; got {len(master_key)}",
+            f"master key must be exactly {KEY_SIZE} bytes; got {len(master_key_view)}",
         )
     kek = _derive_recovery_kek(recovery_key.raw)
-    blob = encrypt_record(master_key, key=kek, associated_data=_RECOVERY_AAD)
+    try:
+        blob = encrypt_record(bytes(master_key_view), key=bytes(kek), associated_data=_RECOVERY_AAD)
+    finally:
+        _zeroise(kek)
     return WrappedMasterKey.from_blob(blob)
 
 
-def unwrap_master_key(*, wrapped: WrappedMasterKey, recovery_key_bytes: bytes) -> bytes:
+def unwrap_master_key(*, wrapped: WrappedMasterKey, recovery_key_bytes: Buffer) -> bytearray:
     """Recover the 32-byte master key from a wrapped record + the recovery-key bytes.
 
     Args:
@@ -254,17 +350,24 @@ def unwrap_master_key(*, wrapped: WrappedMasterKey, recovery_key_bytes: bytes) -
             :func:`decode_mnemonic`).
 
     Returns:
-        The 32-byte master key.
+        The 32-byte master key in a wipeable ``bytearray`` the caller is
+        expected to :func:`zeroise` once it has re-minted custody from it.
 
     Raises:
         StorageValidationError: When ``recovery_key_bytes`` is not exactly 32 bytes.
     """
-    if len(recovery_key_bytes) != _RECOVERY_KEY_SIZE:
+    recovery_view = memoryview(recovery_key_bytes)
+    if len(recovery_view) != _RECOVERY_KEY_SIZE:
         raise _storage_validation_error(
-            f"recovery key must be exactly {_RECOVERY_KEY_SIZE} bytes; got {len(recovery_key_bytes)}",
+            f"recovery key must be exactly {_RECOVERY_KEY_SIZE} bytes; got {len(recovery_view)}",
         )
-    kek = _derive_recovery_kek(recovery_key_bytes)
-    return decrypt_record(wrapped.to_blob(), key=kek, associated_data=_RECOVERY_AAD)
+    kek = _derive_recovery_kek(recovery_view)
+    try:
+        return bytearray(
+            decrypt_record(wrapped.to_blob(), key=bytes(kek), associated_data=_RECOVERY_AAD),
+        )
+    finally:
+        _zeroise(kek)
 
 
 def save_wrapped_master_key(wrapped: WrappedMasterKey, path: Path) -> None:

@@ -3,12 +3,23 @@
 Registers the ``config passphrase`` subgroup, the ``config recovery``
 lifecycle subgroup (``status`` / ``create`` / ``rotate`` / ``verify``), and the
 flat ``config recover`` execution verb. Secrets — passphrases and 24-word
-recovery codes — reach these verbs only through the shared secure-input
-channels in :mod:`._secure_input`: no-echo prompts on the controlling terminal
-or one bounded strict-JSON ``--secrets-stdin`` object. No secret is ever an
-``argv`` value, and no envelope or stdout line ever carries a mnemonic; the
-candidate recovery words are written directly to the controlling terminal and
-must be fully retyped (no echo) before the enrollment commits.
+recovery codes — reach the verbs registered here only through the shared
+secure-input channels in :mod:`._secure_input`: no-echo prompts on the
+controlling terminal or one bounded strict-JSON ``--secrets-stdin`` object. No
+secret is ever an ``argv`` value, and no envelope or stdout line ever carries a
+mnemonic; the candidate recovery words are written directly to the controlling
+terminal and must be fully retyped (no echo) before the enrollment commits.
+
+That two-channel claim is scoped to these verbs, and is narrower than what the
+storage substrate as a whole accepts. The file secret-store backend also reads
+a passphrase from the ``CADRUMO_SECRET_PASSPHRASE`` environment, and falls back
+to an unguarded terminal read when neither is available; that channel remains a
+legitimate way for a non-interactive driver to unlock the store directly. It is
+deliberately not consulted by any verb here. Every custody verb hands the
+master-key provider an explicit callback — a fixed value taken from one of the
+two channels above, or :func:`_prompt_secret_store_passphrase` — so none of
+them can fall through to the environment lookup or to the substrate's
+unguarded read.
 """
 
 from __future__ import annotations
@@ -188,6 +199,22 @@ def _resolve_recover_secrets(secrets_stdin: bool) -> tuple[str, str]:
             translated_message="cli.config.custody.errors.new_passphrase_mismatch",
         )
     return code, new
+
+
+def _prompt_secret_store_passphrase() -> str:
+    """Return the existing secret-store passphrase from the hardened no-echo prompt.
+
+    Bound into the recovery ``create`` / ``rotate`` enrollment, which must
+    unwrap the master key before it can mint a candidate envelope. Without an
+    explicit callback the provider falls back to the storage substrate's own
+    resolver, which consults the environment and then calls
+    :func:`getpass.getpass` directly — a read carrying no real-console
+    precondition, so it blocks forever on a console-less host, and no promotion
+    of an echo-suppression failure to a refusal, so the passphrase can be typed
+    in cleartext. Routing through :func:`prompt_secret_no_echo` puts the store
+    passphrase on the same guarded channel as every other custody secret.
+    """
+    return prompt_secret_no_echo(tr("cli.config.passphrase.current_passphrase_prompt"))
 
 
 def _confirm_candidate_on_terminal(mnemonic: str) -> str:
@@ -396,7 +423,10 @@ def _run_recovery_enrollment(
 
     enroll = rotate_recovery_code if rotate else create_recovery_code
     try:
-        result = enroll(confirm=_confirm_candidate_on_terminal)
+        result = enroll(
+            confirm=_confirm_candidate_on_terminal,
+            passphrase_callback=_prompt_secret_store_passphrase,
+        )
     except RecoveryVerificationError as exc:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.recovery.errors.retype_mismatch",

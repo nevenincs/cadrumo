@@ -370,6 +370,61 @@ def test_recovery_secrets_stdin_is_strict_bounded_json(tmp_path: Path) -> None:
     assert non_object.returncode == 2, _combined(non_object)
 
 
+def test_recovery_secrets_stdin_refuses_oversize_payload(tmp_path: Path) -> None:
+    """A payload past the 8192-byte cap refuses before any JSON parsing is attempted.
+
+    The one branch written specifically to stop an unbounded hostile stream
+    from being read into memory (``_MAX_SECRETS_STDIN_BYTES`` in
+    ``_secure_input.py``) had no regression; this proves it drives the real
+    CLI to a clean refusal rather than hanging, crashing, or reading past the
+    bound.
+    """
+
+    _create_profile(tmp_path)
+
+    oversize_payload = json.dumps({"recovery_code": "a" * 9000})
+    assert len(oversize_payload.encode("utf-8")) > 8192
+
+    oversize = _run_cli(
+        tmp_path,
+        ("config", "recovery", "verify", "--secrets-stdin"),
+        stdin_payload=oversize_payload,
+    )
+    assert oversize.returncode == 2, _combined(oversize)
+    assert "Traceback" not in _combined(oversize)
+
+
+def test_recovery_secrets_stdin_refuses_duplicate_key(tmp_path: Path) -> None:
+    """A repeated JSON key refuses instead of silently resolving to the last value.
+
+    Plain ``json.loads`` collapses a duplicate object key to its last
+    occurrence before the strict ``extra="forbid"`` model can ever observe the
+    collision, so a payload assembled from concatenated fragments or a
+    templating bug could silently rewrap the secret store under a value the
+    caller never intended. Two conflicting ``recovery_code`` values prove the
+    refusal fires rather than the second value being silently accepted.
+    """
+
+    _create_profile(tmp_path)
+    mnemonic, _, enroll_result = _enroll(tmp_path, "create")
+    assert enroll_result.returncode == 0, _combined(enroll_result)
+
+    duplicated_payload = (
+        '{"recovery_code": "definitely not the enrolled recovery code", "recovery_code": ' + json.dumps(mnemonic) + "}"
+    )
+
+    duplicate_key = _run_cli(
+        tmp_path,
+        ("config", "recovery", "verify", "--secrets-stdin"),
+        stdin_payload=duplicated_payload,
+    )
+    assert duplicate_key.returncode == 2, _combined(duplicate_key)
+    assert "Traceback" not in _combined(duplicate_key)
+    # The duplicate is refused outright; the SECOND (real) value must not
+    # have been silently accepted and reported as a successful verification.
+    assert "verified\tyes" not in duplicate_key.stdout
+
+
 def test_recover_refuses_passphrase_mismatch_and_wrong_code(tmp_path: Path) -> None:
     """A confirmation mismatch or a wrong recovery code leaves the vault untouched."""
 

@@ -764,8 +764,16 @@ def _removal_events(
             payload={
                 "source_command": source_command,
                 "reason": reason,
-                "purchase_invoice_evidence_ids": ",".join(purchase_evidence_ids),
-                "attachment_ids": ",".join(attachment_ids),
+                # Counts, never the joined id lists. A payload value is capped at
+                # 500 characters, and attachment ids are hex-64, so eight of them
+                # joined on commas is 519 and the row could not construct the event
+                # recording its own removal. Nothing is lost: each cascaded id is
+                # already carried as the object_id of its own event in this same
+                # batch, emitted above. Both counts are kept rather than only their
+                # sum so the cascade stays decomposable by kind; a count cannot
+                # outgrow the cap.
+                "purchase_invoice_evidence_count": str(len(purchase_evidence_ids)),
+                "attachment_count": str(len(attachment_ids)),
                 "cascade_count": str(len(purchase_evidence_ids) + len(attachment_ids)),
             },
         ),

@@ -15,7 +15,13 @@ from pathlib import Path
 
 import pytest
 
-from .._telemetry import SessionTelemetryWriter, TelemetryRetention, prune_telemetry
+from .._telemetry import (
+    SessionTelemetryWriter,
+    TelemetryRetention,
+    content_sha256,
+    prune_telemetry,
+    read_session_records,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -115,3 +121,40 @@ def test_writer_retention_default_preserves_a_small_directory(tmp_path: Path) ->
     # directory untouched — pruning only bites a long-lived accretion.
     SessionTelemetryWriter(session_id="another", directory=tmp_path)
     assert _names(tmp_path) == {"recent0.jsonl", "recent1.jsonl", "recent2.jsonl"}
+
+
+def test_content_sha256_matches_the_nist_abc_vector() -> None:
+    """``content_sha256`` reproduces the published NIST FIPS 180-4 example vector.
+
+    ``"abc"`` is the canonical SHA-256 worked example (FIPS 180-4, Appendix
+    B.1); the expected digest below is that published literal, never computed
+    by calling ``content_sha256`` (or the project's own ``sha256_hex`` helper)
+    to build its own expectation -- the non-tautological proof of the
+    ``core.hashing.sha256_hex`` delegation this function carries.
+    """
+    assert content_sha256("abc") == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+
+
+def test_writer_persists_a_known_vector_digest_and_roundtrips_the_record(tmp_path: Path) -> None:
+    """A known-vector content digest survives the real JSONL persistence roundtrip.
+
+    Drives :meth:`SessionTelemetryWriter.record` with the NIST FIPS 180-4
+    ``"abc"`` example text as the tool arguments, against a real filesystem
+    (``tmp_path``, no mocks or fakes), and confirms ``arguments_sha256``
+    equals the published digest literal both on the record returned in
+    memory and on the record reloaded from disk through
+    :func:`read_session_records` -- a strict roundtrip proof that the
+    ``sha256_hex`` delegation is byte-identical across the persisted
+    boundary, not only in memory.
+    """
+    expected_digest = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+    writer = SessionTelemetryWriter(session_id="known-vector-session", directory=tmp_path)
+
+    written = writer.record(tool_name="contract", command_key="known.vector", arguments_text="abc")
+
+    assert written.arguments_sha256 == expected_digest
+    assert written.executable_sha256 == ""
+    assert written.result_sha256 == ""
+
+    reloaded = read_session_records(writer.path)
+    assert reloaded == (written,)

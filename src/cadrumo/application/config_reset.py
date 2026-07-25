@@ -416,8 +416,19 @@ def _resume_target_outcome(
     retention_override_reason: str | None,
 ) -> _ResumeTargetOutcome:
     if not assessment.exists:
-        changed = target.exists_at_snapshot and target.phase is not ConfigResetTargetPhase.DELETING
-        return _ResumeTargetOutcome(target=target, changed=changed, blocked=False)
+        if not target.exists_at_snapshot or target.phase is ConfigResetTargetPhase.DELETING:
+            return _ResumeTargetOutcome(target=target, changed=False, blocked=False)
+        # The target was removed out of band below the deleting phase. Re-snapshot it
+        # as absent so this resume pauses once on the state change and the next one
+        # converges; leaving it existing would pause every resume forever.
+        vanished = _update_target(
+            target,
+            exists_at_snapshot=False,
+            fingerprint=None,
+            label=None,
+            status_at_snapshot=None,
+        )
+        return _ResumeTargetOutcome(target=vanished, changed=True, blocked=False)
     current_fingerprint = assessment.fingerprint
     assert current_fingerprint is not None
     fingerprint_changed = (

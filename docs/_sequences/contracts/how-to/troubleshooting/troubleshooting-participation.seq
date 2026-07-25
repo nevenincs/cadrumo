@@ -4,4 +4,4 @@
 @expect exit_code == 0
 @step Look up which finalized filings used one transaction.
 @static aeat app ledger participation <transaction-id>
-@blocked unconverted Shows the addressing form with a metavariable; convert it with a captured real id.
+@blocked sandbox-posture The page's sandbox holds no unlocked bucket session; the lookup opens a decrypting repository. Measured: exit 4.

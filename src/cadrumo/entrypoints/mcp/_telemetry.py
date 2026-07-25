@@ -28,7 +28,6 @@ lost measurement sample, never a correctness dependency.
 from __future__ import annotations
 
 import contextlib
-import hashlib
 import json
 import time
 from pathlib import Path
@@ -37,6 +36,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.config import load_settings
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
+from ...core.hashing import sha256_hex
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -88,7 +88,7 @@ class ToolCallTelemetryRecord(BaseModel):
 
 def content_sha256(text: str) -> str:
     """The one-way content reference telemetry stores instead of a payload."""
-    return hashlib.sha256(text.encode(_UTF_8)).hexdigest()
+    return sha256_hex(text.encode(_UTF_8))
 
 
 def telemetry_dir() -> Path:

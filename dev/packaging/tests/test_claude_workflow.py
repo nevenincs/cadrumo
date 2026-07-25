@@ -2,7 +2,7 @@
 
 Two doctrine-grounded invariants: the CI lane is DETERMINISTIC (the live-model
 Claude session is an operator-local capture per the post-release-distribution
-plan and the 2026-07-19 ADR — never a CI leg, and there is no CI API key by
+plan and standing operator ruling — never a CI leg, and there is no CI API key by
 standing ruling), and the client pin is REAL (the npm-global shim is resolved
 by absolute path with a hard version-drift refusal, because PATH resolution
 picked the operator's auto-updating native client over the pin on the

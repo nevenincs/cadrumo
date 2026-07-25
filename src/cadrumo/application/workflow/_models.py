@@ -46,7 +46,6 @@ See Also:
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Mapping
 from datetime import datetime
 from enum import StrEnum
@@ -67,6 +66,7 @@ from ...core import (
     resolve_active_bucket_id as _resolve_active_bucket_id,
 )
 from ...core.config import override_settings
+from ...core.hashing import sha256_hex
 from ...core.logging import get_logger
 from .._workflow_auth_models import AuthState
 from .._workflow_review_models import (
@@ -506,4 +506,4 @@ def compute_run_id(
     """Return a stable 16-char hex hash for a workflow run."""
     period_segment = _period_identity_segment(period) if period is not None else "-"
     payload = "|".join([tax_id, modelo, period_segment, started_at.isoformat()])
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
+    return sha256_hex(payload.encode("utf-8"))[:16]

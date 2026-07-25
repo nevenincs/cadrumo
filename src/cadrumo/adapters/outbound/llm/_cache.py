@@ -9,7 +9,6 @@ before persistence.
 
 from __future__ import annotations
 
-import hashlib
 import json
 from collections.abc import Mapping
 from datetime import timedelta
@@ -108,9 +107,9 @@ class LLMCache:
             "image_content_addresses": [image.content_sha256 for image in request.images],
         }
         prompt_hash = sha256_hex(prompt_material.encode("utf-8"))
-        args_hash = hashlib.sha256(
+        args_hash = sha256_hex(
             json.dumps(args_payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8"),
-        ).hexdigest()
+        )
         return CacheKey(provider=provider, model=model, prompt_hash=prompt_hash, args_hash=args_hash)
 
     def read(self, request: LLMRequest, provider: LLMProvider, model: str) -> LLMResponse | None:

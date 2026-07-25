@@ -1,4 +1,4 @@
 @static aeat app ledger import --file ./statement.csv --provider auto --dry-run
-@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
+@blocked unconverted Do NOT convert: runs clean on the committed CSV fixture, but the page keeps it display-only so a reader does not import duplicates of the two rows it already added.
 @static aeat app ledger import --file ./statement.csv --provider auto
-@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
+@blocked unconverted Do NOT convert: step 3 then tells the reader to classify imported rows, so a real import here would double the quarter the page has already built.

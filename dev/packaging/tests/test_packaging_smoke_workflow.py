@@ -57,7 +57,7 @@ def _prohibited_aeat_product_forms(surface: str) -> tuple[str, ...]:
 # are free; the label sets are the runner registration contract). Each runs the
 # host-portable `packaging-smoke` aggregate (no Docker, no host package-manager
 # lanes) and publishes per-OS evidence-draft assets so names never collide with
-# the Ubuntu leg (release-asset transport per the release-asset-transport ADR).
+# the Ubuntu leg (release-asset transport, not Actions artifact storage).
 _PORTABLE_LEGS: dict[str, dict[str, object]] = {
     "cadrumo-packaging-smoke-windows": {
         "name": "Cadrumo / Windows / Python 3.13 / wheel artifacts",
@@ -110,7 +110,7 @@ def test_immutable_cohort_is_built_once_and_every_python_row_binds_it() -> None:
     build_surface = "\n".join(str(step.get("run", "")) for step in build["steps"] if "run" in step)
     assert "cadrumo-release-cohort.tar.gz" in build_surface
     assert 'gh release upload "$EVIDENCE_TAG" cadrumo-release-cohort.tar.gz --clobber' in build_commands
-    # Deterministic archive per D5 of the ADR.
+    # Deterministic archive per the ratified transport decision.
     assert "--sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner" in build_surface
 
     # Each OS leg needs the ONE build (so all rows bind one cohort id),

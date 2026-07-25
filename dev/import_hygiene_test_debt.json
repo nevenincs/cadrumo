@@ -345,6 +345,27 @@
         "target_mod": "cadrumo.application.user_profile._bundle_export",
         "imported_names": ["_STAGED_TEMP_SUFFIX"],
         "reason": "White-box reach for the private staged-temp filename suffix, used only to assert that no cleartext staged file survives the maintenance reconcile verb. The suffix is an internal staging-layout detail of the publication service, not a contract any consumer depends on; promoting it would put a filename fragment on the public facade for a single directory-scan assertion. The publication service's operator-facing symbols (the journal repository, the typed reconciliation) ARE promoted and this same test imports them from the facade."
+      },
+      {
+        "importer_path": "src/cadrumo/application/ledger/tests/test_attach_evidence_under_finalized_revision.py",
+        "lineno": 276,
+        "target_mod": "cadrumo.entrypoints.cli._ledger_lifecycle_cli",
+        "imported_names": ["_stale_finalized_revision_notices"],
+        "reason": "White-box test of the private CLI notice builder that warns an attachment landing after a revision was verified will never reach the frozen evidence bundle. Notices are the CLI's own diagnostic channel, so the builder belongs to the CLI layer and has no application-layer promotion candidate; the test asserts the advisory's structured suggestion rather than localized prose, which requires the builder itself. Observation for a future pass: an application-layer test reaching into entrypoints is a layering smell worth revisiting when the ledger-lifecycle advisory surface is next touched, but relocating the builder out of the CLI would contradict the notices-are-the-CLI-channel contract."
+      },
+      {
+        "importer_path": "src/cadrumo/tests/fixtures/manual_annexes/tests/test_manual_annex_provenance.py",
+        "lineno": 39,
+        "target_mod": "cadrumo.adapters.inbound.declaracion._parser",
+        "imported_names": ["_extract_tax_id"],
+        "reason": "White-box use of the parser-internal NIF extraction cascade (three ordered regex strategies) to prove the opposite of what the parser exists to do: an AEAT published facsimile specimen must carry NO taxpayer identity, so the fixture gate asserts extraction REFUSES. The helper is one private step inside parse_declaracion, not a standalone entry point; promoting it would expose a regex cascade as public parser API for a single negative assertion. The same test imports DeclaracionParseError from the public facade."
+      },
+      {
+        "importer_path": "src/cadrumo/tests/test_persisted_format_enrollment.py",
+        "lineno": 166,
+        "target_mod": "cadrumo.adapters.persistence.storage.master_key._master_key_records",
+        "imported_names": ["_WrappedBucketDekDocument"],
+        "reason": "White-box reach for the strict on-disk document model of one bucket's wrapped DEK, used by the persisted-format lineage gate to drive drift in both directions (relaxing schema_version from Literal[1] to int, or extra from forbid to ignore) and require a refusal. The model is an internal envelope shape of the master-key custody layer; promoting a private crypto document model onto the storage facade would publish an implementation detail no consumer constructs, on a security-sensitive surface. The public storage symbols this same test needs (STORAGE_NAMESPACE_REGISTRY, StoragePathKind, the namespace definitions, and the two path-name constants promoted alongside this entry) all come from the facade."
       }
     ]
   }

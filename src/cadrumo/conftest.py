@@ -15,6 +15,7 @@ across all child conftests by pytest).
 from __future__ import annotations
 
 import ast
+import sys
 from collections.abc import Iterator, Mapping
 from pathlib import Path
 
@@ -80,6 +81,68 @@ def source_tree_ast() -> Mapping[Path, ast.AST]:
             continue
     prime_ast_cache(cache)
     return cache
+
+
+@pytest.fixture(autouse=True)
+def _evict_test_bound_bucket_session() -> Iterator[None]:
+    """Evict a bucket session a test bound itself, so none crosses into the next test.
+
+    pytest is an in-process, multi-invocation CLI host and was the last one
+    without this boundary. ``config login`` binds through the deliberately
+    unscoped ``bind_active_bucket_session`` -- correct for the shipped
+    one-process-per-command shape, where the binding must outlive the function
+    and process exit reclaims it. A host that runs many commands in one process
+    carries that binding forward instead. The MCP transport already evicts per
+    request for this reason and the docs-sequence runner adopted the same
+    primitive, so this is the third host adopting an existing boundary rather
+    than a new policy.
+
+    Left bound, an UNSEALED session outlives the test that opened it and stays
+    bound while later tests provision their own buckets, so a subsequent profile
+    read decrypts against the earlier bucket's DEK. The operator-visible result
+    is ``registered_bucket present`` with ``profile_record unreadable`` -- the
+    record exists, the key is wrong. Measured before this landed, one bucket
+    stayed bound across sixteen consecutive tests, then a second took over for
+    the rest of the module.
+
+    Eviction is SELECTIVE, and that is the whole design. Several suites share
+    one bucket runtime across a module on purpose (``filing/conftest.py`` pays
+    the costly provisioning once per module; the ledger action support fixtures
+    do the same), so closing whatever happens to be bound at teardown strands
+    that shared session and fails every later test in the module -- measured, at
+    roughly fifty tests. Comparing session IDENTITY across the test separates
+    the two cases: a module-scoped session is the same object before and after
+    and is left alone, while a session the test bound itself is a different
+    object and is the one that leaks. The re-bind is required because
+    ``close_active_bucket_session`` clears the binding outright rather than
+    restoring the previous value, so a test that logs in underneath a
+    module-scoped runtime would otherwise leave that runtime unbound.
+
+    The boundary is per-TEST, not per-invocation: a persisted session
+    legitimately survives across CLI invocations within one scenario, so
+    evicting per invocation would break real login-then-act flows.
+
+    Cost is nil for tests that never touch storage -- the ``sys.modules`` check
+    returns before importing anything, so the AST ratchets pay nothing.
+    """
+    if "cadrumo.adapters.persistence.storage" not in sys.modules:
+        yield
+        return
+    from .adapters.persistence.storage import current_active_bucket_session
+
+    inherited = current_active_bucket_session()
+    yield
+    bound = current_active_bucket_session()
+    if bound is None or bound is inherited:
+        return
+    from .adapters.persistence.storage import (
+        bind_active_bucket_session,
+        close_active_bucket_session,
+    )
+
+    close_active_bucket_session()
+    if inherited is not None:
+        bind_active_bucket_session(inherited)
 
 
 @pytest.fixture(scope="session", autouse=True)

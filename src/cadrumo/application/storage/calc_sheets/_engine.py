@@ -13,13 +13,13 @@ ledger-evidence facet is supplied separately when the caller has bundled
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Callable, Iterable, Mapping
 from datetime import date
 from decimal import Decimal
 from typing import Final, Literal
 
 from ....core import BindingSourceKind, Period
+from ....core.hashing import sha256_hex
 from ....core.i18n import tr
 from ....domain.calculations.registry import (
     BindingAggregationOp,
@@ -106,7 +106,7 @@ def registry_sha(snapshot: RegistrySnapshot) -> str:
     cross a registry boundary.
     """
     canonical = snapshot.model_dump_json(exclude_none=False, by_alias=False)
-    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:16]
+    return sha256_hex(canonical.encode("utf-8"))[:16]
 
 
 def _guide_paragraphs(snapshot: RegistrySnapshot) -> tuple[str, ...]:

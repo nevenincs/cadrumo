@@ -3,7 +3,7 @@
 @blocked unconverted Runs clean in the sandbox probe; nothing blocks it, so it awaits conversion.
 @step Import an external filing record from official evidence.
 @static aeat app modelo filing-record import <work-unit-id> --evidence-kind aeat_justificante_pdf --evidence-id <justificante-or-capture-id> --set <casilla>=<value>
-@blocked unconverted Shows the addressing form with a metavariable; convert it with a captured real id.
+@blocked operator-artifact Needs a real AEAT justificante PDF and its evidence id; no local chain produces one and it must not be fabricated as a committed fixture.
 @step Inspect, check, export, and replay an evidence bundle by id.
 @static aeat app modelo audit export <bundle-id> --output ./modelo-390-evidence.zip
 @blocked unconverted Shows the addressing form with a metavariable; convert it with a captured real id.

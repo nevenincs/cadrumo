@@ -12,7 +12,6 @@ revision conflicts without exposing plaintext secure-object payloads.
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Iterable
 from datetime import datetime
 
@@ -346,11 +345,7 @@ def remote_mirror_object_key_hmac(namespace: str, object_key: bytes) -> str:
     ``object_key`` bytes so the remote provider sees only deterministic
     ciphertext object identifiers.
     """
-    hasher = hashlib.sha256()
-    hasher.update(namespace.encode())
-    hasher.update(b"\x00")
-    hasher.update(object_key)
-    return hasher.hexdigest()
+    return sha256_hex(namespace.encode() + b"\x00" + object_key)
 
 
 def _manifest_label(namespace: str) -> str:

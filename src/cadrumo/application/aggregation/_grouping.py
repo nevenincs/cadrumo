@@ -120,13 +120,19 @@ def filter_observations_for_modelo[T, AttrValue](
     return tuple(o for o in observations if attribute_fn(o) in eligible)
 
 
-class CasillaObservation(Protocol):
+class LedgerCasillaObservation(Protocol):
     """The read surface a ledger observation exposes to :func:`fold_casilla_observations`.
 
     Every ledger projection declares its own strict observation model carrying
     domain-specific fields (gross amount, deductible amount, withheld amount,
     source jurisdiction). Only these two are load-bearing for the fold: the
     casilla the row feeds, and the transaction id recorded in its provenance.
+
+    Domain-qualified to stay distinct from
+    :class:`~domain.calculations.registry.CasillaObservation`, the concrete
+    formula-runtime carrier: this is a structural read surface over the
+    ledger-projection models, keyed on ``target_casilla_id``, not that model's
+    ``casilla_id`` value shape.
     """
 
     @property
@@ -140,7 +146,7 @@ class CasillaObservation(Protocol):
         ...
 
 
-def fold_casilla_observations[ObservationT: CasillaObservation](
+def fold_casilla_observations[ObservationT: LedgerCasillaObservation](
     observations: Sequence[ObservationT],
     *,
     modelo: str,
@@ -196,7 +202,7 @@ def fold_casilla_observations[ObservationT: CasillaObservation](
 
 
 __all__ = [
-    "CasillaObservation",
+    "LedgerCasillaObservation",
     "filter_observations_for_modelo",
     "fold_casilla_observations",
     "group_and_collect_names",

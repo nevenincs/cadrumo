@@ -33,7 +33,6 @@ from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from enum import StrEnum
-from hashlib import sha256
 from typing import Annotated
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -43,7 +42,7 @@ from ...adapters.persistence.storage import M145_COMMUNICATION_RECORD_NAMESPACE
 from ...core import STRICT_FROZEN_CONFIG, CasillaId, validated_casilla_id_map
 from ...core.decimal import coerce_decimal_strict
 from ...core.errors import resolve_error_message
-from ...core.hashing import content_hash_hex
+from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.identity import BucketId, IdentityError, validate_spanish_tax_id
 from ...core.logging import get_logger
 from ...core.money import round_to_cents
@@ -843,7 +842,7 @@ def export_m145_communication_record(
         encoding=records[0].encoding,
         record_count=len(records),
         byte_length=len(payload),
-        payload_sha256=sha256(payload).hexdigest(),
+        payload_sha256=sha256_hex(payload),
         payload=payload,
         legal_refs=tuple(sorted(str(ref) for ref in layout.legal_refs)),
         source_refs=tuple(sorted(str(ref) for ref in layout.source_refs)),

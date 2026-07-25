@@ -1,22 +1,33 @@
+@step Record when the activity started so both quarters are valid obligations.
+@setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01
+@step Record the first quarter's sale; the same idempotency key keeps a repeat a no-op.
+@setup aeat app ledger add --date 2026-02-10 --amount 1210 --direction INCOMING --description "venta" --classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210 --idempotency-key irpf-q1-venta
+@step Prepare and file the first quarter, the record this quarter's carries read.
+@setup aeat app modelo work create --modelo 130 --year 2026 --period 1T
+@setup aeat app modelo work calculate --modelo 130 --year 2026 --period 1T --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
+@setup aeat app modelo work verify --modelo 130 --year 2026 --period 1T
+@setup aeat app modelo work file --modelo 130 --year 2026 --period 1T
+@step Register this quarter's purchase invoice as encrypted evidence bytes.
+@setup aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --supplier "Papeleria Central SL" --invoice-number C-2026-0142 --invoice-date 2026-06-05 --taxable-base 250 --iva-rate 0.21 --iva-amount 52.50
+@capture material_evidence_id result.evidence_id
 @step Record the second quarter's three movements.
-@static aeat app ledger add --date 2026-04-15 --amount 2420 --direction INCOMING --description "proyecto abril" --classification BUSINESS --taxable-base 2000 --iva-rate 0.21 --iva-amount 420
-@blocked unconverted Runs clean in the sandbox probe; nothing blocks it, so it awaits conversion.
-@static aeat app ledger add --date 2026-05-20 --amount 1210 --direction INCOMING --description "proyecto mayo" --classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
-@blocked unconverted Runs clean in the sandbox probe; nothing blocks it, so it awaits conversion.
-@static aeat app ledger add --date 2026-06-05 --amount 302.50 --direction OUTGOING --description "material" --classification BUSINESS --category-id material_oficina --taxable-base 250 --iva-rate 0.21 --iva-amount 52.50
-@blocked unconverted Runs clean in the sandbox probe; nothing blocks it, so it awaits conversion.
+aeat --format json app ledger add --date 2026-04-15 --amount 2420 --direction INCOMING --description "proyecto abril" --classification BUSINESS --taxable-base 2000 --iva-rate 0.21 --iva-amount 420
+aeat --format json app ledger add --date 2026-05-20 --amount 1210 --direction INCOMING --description "proyecto mayo" --classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
+aeat --format json app ledger add --date 2026-06-05 --amount 302.50 --direction OUTGOING --description "material" --classification BUSINESS --category-id material_oficina --taxable-base 250 --iva-rate 0.21 --iva-amount 52.50 --purchase-invoice-evidence-id {material_evidence_id}
 @step Create the second-quarter draft.
-@static aeat app modelo work create --modelo 130 --year 2026 --period 2T
-@blocked unconverted Runs clean in the sandbox probe; nothing blocks it, so it awaits conversion.
+aeat --format json app modelo work create --modelo 130 --year 2026 --period 2T
 @step Calculate it with no binding zeros; the carries resolve from the filed first quarter.
-@static aeat app modelo work calculate --modelo 130 --year 2026 --period 2T
-@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
-@step Verify, export, file, and reconcile, exactly as in the first quarter.
-@static aeat app modelo work verify --modelo 130 --year 2026 --period 2T
-@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
-@static aeat app modelo export --modelo 130 --year 2026 --period 2T --output ./modelo-130-2026-2T.boe
-@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
+aeat --format json app modelo work calculate --modelo 130 --year 2026 --period 2T
+@step Verify the second quarter, exactly as in the first.
+aeat --format json app modelo work verify --modelo 130 --year 2026 --period 2T
+@expect result.granted_verificado_completo == true
+@step Export the verified quarter to the fichero-BOE file you upload yourself.
+@result aeat --format json app modelo export --modelo 130 --year 2026 --period 2T --output ./modelo-130-2026-2T.boe
+@expect result.byte_size == 946
+@expect result.period.code == "2T"
+@expect result.format == "fichero-boe"
+@expect exit_code == 0
 @static aeat app modelo work file --modelo 130 --year 2026 --period 2T
-@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
+@blocked obligation-window Refused NO_PENDING_OBLIGATION, no pending filing obligation at the current date: the July window is shut at the sandbox's frozen 1 April instant.
 @static aeat app modelo reconcile pull --modelo 130 --year 2026 --period 2T
 @blocked live-aeat The pull verb fetches from the AEAT sede; the sandbox refuses live frames.

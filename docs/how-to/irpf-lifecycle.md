@@ -57,19 +57,24 @@ why Modelo 130 applies: an activity under estimación directa.
 
 Record the first quarter's activity - one sale, one expense. The `--amount`
 is the gross total (taxable base plus IVA), and an expense row needs a
-`--category-id` (list the valid ids with `aeat app ledger categories`). The two
-`ledger add` commands appear as the collapsed setup of the sequence below.
+`--category-id` (list the valid ids with `aeat app ledger categories`).
+
+Register the supplier's invoice for that expense, and link it to the expense
+row before you calculate. An expense row that claims deductible IVA cannot be
+exported or filed without its invoice. A draft bundles its evidence at the
+moment you verify it, so an invoice linked after that never reaches the
+filing. The invoice registration and the two `ledger add` commands appear as
+the collapsed preparation of the sequence below.
 
 Create and calculate the first instalment. Modelo 130 is cumulative, and a
 true first period has no history, so the three prior-period carries are
 passed as zeros - this is the only quarter where you do this. The sequence
-below records the quarter's two rows, creates and calculates the draft, and
-verifies it; the export, file, and reconcile commands that close the quarter
-are shown after the verified result (they run against your own evidenced,
-filed history, not the sandbox):
+below records the quarter's two rows, creates and calculates the draft,
+verifies it, and exports the fichero-BOE file; the file and reconcile
+commands that close the quarter are shown after the exported result:
 
 ```{cli-sequence} irpf-lifecycle-q1
-:verify: Confirm the first instalment verifies before you export it.
+:verify: Confirm the first instalment exports to a fichero-BOE file once it verifies.
 ```
 
 The key figures show the year so far: 1000 earned, 500 spent, and an
@@ -95,20 +100,21 @@ the filing locally with `aeat app modelo work file` while the presentation
 window is open. `work file` saves a local marker only - it does not submit
 anything. The marker is what lets the next quarter's carries resolve from this
 one. Finally, pull the justificante with `aeat app modelo reconcile pull` so the
-official receipt is on record. All three commands (export, file, reconcile pull)
-are shown after the verified result in the sequence above.
+official receipt is on record. Both commands (file, reconcile pull) are shown
+after the exported result in the sequence above.
 
 ## Stage 3: the second and third quarters
 
 The year continues; record each quarter's activity as it happens. For the
-second quarter, say Ana invoices twice and buys once. Now the cumulative
+second quarter, say Ana invoices twice and buys once. Link the purchase
+invoice to that expense row here too, before you calculate. Now the cumulative
 behaviour shows itself: the second-quarter draft calculates with NO `--binding`
-zeros, resolving the carries from the filed first quarter. The whole second
-quarter runs against Ana's evidenced, filed first-quarter record and inside the
-July presentation window, neither of which the frozen documentation sandbox can
-reproduce, so the chain is shown as display frames:
+zeros, resolving the carries from the filed first quarter. The sequence below
+prepares and files that first quarter in its collapsed preparation, then runs
+the whole second quarter through to its exported file:
 
 ```{cli-sequence} irpf-lifecycle-q2
+:verify: Confirm the second quarter verifies and exports with its carries resolved from the filed first quarter.
 ```
 
 Read the revision and compare it with the first quarter's:
@@ -124,6 +130,10 @@ If calculate blocks instead with a cross-period finding, the first quarter
 is not filed and evidenced on your record - go back to stage 2 and file and
 reconcile it. The tool never invents the missing quarter; a visible blank beats
 a guessed zero.
+
+Record this quarter's filing with `aeat app modelo work file` once the July
+window opens. That command is shown as a display frame because it refuses
+outside its presentation window, and `reconcile pull` follows it.
 
 The third quarter is the same chain one period later, with `3T` in place of
 `2T` throughout. Every quarter after the first is this one rhythm.

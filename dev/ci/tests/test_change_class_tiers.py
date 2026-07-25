@@ -1,11 +1,11 @@
-"""Structural gates for the change-class tier topology (ci-discipline ADR).
+"""Structural gates for the change-class tier topology.
 
-The push/PR discipline is tiered by change class — T0 vault/docs churn runs
+The push and pull-request discipline is tiered by change class — T0 vault/docs churn runs
 nothing, T1 code changes run the quick profile, T2 release-artifact-shaping
 changes auto-dispatch the full campaign, T3 releases bind to the
 publish-release gate topology. Classification is structural (path filters and
 workflow topology), so these gates pin the boundaries: the T0 carve-out set,
-the T2 detector's paths, the fork-PR guard on every fleet-facing job, the
+the T2 detector's paths, the fork pull-request guard on every fleet-facing job, the
 repo-wide zero-Actions-artifact posture, and the workflow naming convention.
 """
 
@@ -93,7 +93,7 @@ def test_t0_carve_out_is_shared_by_every_per_push_t1_lane() -> None:
 def test_every_pull_request_workflow_guards_every_job_against_fork_heads() -> None:
     """Every pull_request workflow carries the same-repo guard on every job.
 
-    Fork-PR head code must never execute on the self-hosted fleet.
+    Fork pull-request head code must never execute on the self-hosted fleet.
     """
     for path in sorted({*_WORKFLOWS_DIR.glob("*.yml"), *_WORKFLOWS_DIR.glob("*.yaml")}):
         document = _document(path)
@@ -123,7 +123,7 @@ def test_no_workflow_carries_a_schedule_trigger() -> None:
     """Operator ruling 2026-07-21: manual cadence, no standing compute.
 
     The project is not developed continuously, so every lane is dispatch-,
-    push-, or PR-triggered; a schedule trigger anywhere is creeping standing
+    push-, or pull-request-triggered; a schedule trigger anywhere is creeping standing
     compute this gate refuses.
     """
     for path in sorted({*_WORKFLOWS_DIR.glob("*.yml"), *_WORKFLOWS_DIR.glob("*.yaml")}):

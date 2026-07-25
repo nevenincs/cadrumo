@@ -1,13 +1,13 @@
 """Coverage gate: every injected search record derives exactly one display class.
 
-ADR ``2026-07-15-docs-terminology-search-adr`` D7 makes ``display_class`` a
+The ratified search-record contract makes ``display_class`` a
 closed axis derived once at the injection seam and shipped in the Pagefind meta.
 This gate walks the SAME unified projection the injection consumes -- the real
 approved concept cards, the real casilla projection, and constructed CLI
 command/option records -- and proves :func:`derive_display_class` maps every one
 to exactly one valid :class:`ResultDisplayClass` member, with no record falling
 through to a null/unknown class. A record with no derivable class is a gate
-failure (D7: "a record that maps to no class ... is a unit-gate failure").
+failure: a record that maps to no class is a unit-gate failure.
 
 The concept and casilla records come from the real deterministic projections
 (no live CLI subprocess walk); the CLI records are constructed directly, mirroring

@@ -1,7 +1,7 @@
-"""Kind-agnostic built-site target-resolvability sweep (ADR D2(ii)).
+"""Kind-agnostic built-site target-resolvability sweep.
 
-This is the coarse cross-kind backstop the parent ADR
-(``2026-07-15-docs-terminology-search-adr`` D1/D2) mandates: the single gate
+This is the coarse cross-kind backstop the ratified
+search-record contract mandates: the single gate
 whose absence let three of the four search-record kinds ship dead or
 self-referential deep links with no test noticing. Where the per-kind parity
 gates (``test_glossary_anchor_parity``, ``test_casilla_anchor_parity``,
@@ -17,7 +17,7 @@ a per-kind RST-level view structurally cannot:
 - a query-string hand-off masquerading as a destination (D1 bans ``?`` in a
   record target -- the casilla ``search.html?q=`` punt no per-kind gate covers).
 
-Both layers are wanted (ADR D2); this is layer (ii), the ``-n -W`` analogue for
+Both layers are wanted; this is layer (ii), the ``-n -W`` analogue for
 the injection seam. It walks the ONE unified projection funnel the Pagefind
 injection consumes (:func:`~dev.docs.pagefind_inject._materialise_records`) --
 never a hand re-enumeration of kinds, which would rebuild the exact hardcoding

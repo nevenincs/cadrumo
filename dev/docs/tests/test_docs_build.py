@@ -22,7 +22,50 @@ import pytest
 from cadrumo.tests.env_scope import scoped_env_var
 from dev.docs.i18n import TARGET_LANGUAGES
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
+#: A real nitpicky whole-tree Sphinx build is minutes of work, not seconds, so
+#: the project-wide 300 s per-test ceiling (``pyproject.toml``) cannot hold it.
+#: That ceiling exists to fail a DEADLOCKED test in minutes instead of wedging
+#: the run for hours; a legitimately long build is not a deadlock, and letting
+#: it trip the ceiling produced a faulthandler stack dump carrying no docs
+#: diagnostic at all -- the gate could not report a verdict either way. 1800 s
+#: matches the sibling ``test_built_site_resolvability_sweep`` module, which
+#: runs the same class of work.
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs, pytest.mark.timeout(1800)]
+
+#: Wall ceiling for every spawned subprocess here, set BELOW the per-test
+#: ceiling above so the subprocess timeout wins the race and names itself
+#: (``TimeoutExpired`` reports the command and the limit) instead of pytest
+#: dumping a stack with no indication of which build hung.
+_SUBPROCESS_TIMEOUT_S = 1200
+
+#: Bounded default width for gate builds: parallel enough to finish, small
+#: enough to leave the host usable. Overridable via ``CADRUMO_DOCS_JOBS``.
+_GATE_BUILD_JOBS_DEFAULT = "4"
+
+
+def _gate_build_jobs() -> str:
+    """Resolve the Sphinx ``-j`` width for a gate build.
+
+    A gate wants determinism and a bounded footprint, not peak speed, so this
+    does NOT default to ``auto``. ``auto`` takes one worker per core -- 24 on
+    the current build host -- which is the same unbounded-width pattern
+    ``.github/ci-control-plane.md`` bans for ``pytest -n auto``, and for the
+    same reason: co-resident CI lanes and peer agents already contend for those
+    cores, so an uncapped build starves itself and everything beside it.
+
+    An explicit ``CADRUMO_DOCS_JOBS`` still wins, routed through the shared
+    :func:`~dev.docs.build.docs_build_jobs` resolver so the deployment knob
+    keeps one validation path rather than two.
+
+    Returns:
+        The ``-j`` value string to hand to ``sphinx-build``.
+    """
+    if "CADRUMO_DOCS_JOBS" in os.environ:
+        from dev.docs.build import docs_build_jobs
+
+        return docs_build_jobs(os.environ)
+    return _GATE_BUILD_JOBS_DEFAULT
+
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _DOCS = _REPO_ROOT / "docs"
@@ -180,6 +223,7 @@ def test_changed_docs_validation_does_not_pollute_repository_docs(changed_path: 
         capture_output=True,
         text=True,
         check=False,
+        timeout=_SUBPROCESS_TIMEOUT_S,
     )
     after = _docs_build_entries()
     paths_after = _docs_source_paths()
@@ -216,6 +260,7 @@ def test_single_page_rejects_generated_documentation_sources(generated_page: str
         capture_output=True,
         text=True,
         check=False,
+        timeout=_SUBPROCESS_TIMEOUT_S,
     )
     assert result.returncode != 0
     assert "--single-page does not support generated API/CLI pages" in result.stderr
@@ -231,6 +276,7 @@ def test_tracked_sources_do_not_name_noncanonical_docs_build_roots() -> None:
         capture_output=True,
         text=True,
         check=False,
+        timeout=_SUBPROCESS_TIMEOUT_S,
     )
     assert result.returncode == 0, "git ls-files is required for docs build hygiene"
 
@@ -286,7 +332,7 @@ def test_sphinx_nitpicky_build_is_clean(tmp_path: Path) -> None:
             "-n",
             "-W",
             "-j",
-            "auto",
+            _gate_build_jobs(),
             str(docs_source),
             str(tmp_path / "out"),
         ],
@@ -295,6 +341,7 @@ def test_sphinx_nitpicky_build_is_clean(tmp_path: Path) -> None:
         text=True,
         env=env,
         check=False,
+        timeout=_SUBPROCESS_TIMEOUT_S,
     )
     assert result.returncode == 0, (
         "nitpicky sphinx build reported warnings or errors:\n"
@@ -336,6 +383,7 @@ def _scope_config(scope: str, tmp_path: Path) -> dict[str, object]:
         text=True,
         env=env,
         check=False,
+        timeout=_SUBPROCESS_TIMEOUT_S,
     )
     assert result.returncode == 0, result.stdout + result.stderr
     line = next(row for row in result.stdout.splitlines() if row.startswith("SCOPE_CONFIG="))
@@ -402,7 +450,7 @@ def test_user_scope_build_is_nitpicky_clean_and_excludes_api(tmp_path: Path) -> 
             "-n",
             "-W",
             "-j",
-            "auto",
+            _gate_build_jobs(),
             str(docs_source),
             str(tmp_path / "out"),
         ],
@@ -411,6 +459,7 @@ def test_user_scope_build_is_nitpicky_clean_and_excludes_api(tmp_path: Path) -> 
         text=True,
         env=env,
         check=False,
+        timeout=_SUBPROCESS_TIMEOUT_S,
     )
     assert result.returncode == 0, (
         "nitpicky user-scope build reported warnings or errors:\n"
@@ -462,7 +511,7 @@ def test_localized_user_scope_build_is_nitpicky_clean(tmp_path: Path, language: 
             "-n",
             "-W",
             "-j",
-            "auto",
+            _gate_build_jobs(),
             str(docs_source),
             str(tmp_path / "out"),
         ],
@@ -471,6 +520,7 @@ def test_localized_user_scope_build_is_nitpicky_clean(tmp_path: Path, language: 
         text=True,
         env=env,
         check=False,
+        timeout=_SUBPROCESS_TIMEOUT_S,
     )
     assert result.returncode == 0, (
         f"nitpicky {language} user-scope build reported warnings or errors:\n"
@@ -514,6 +564,7 @@ def test_rendered_site_identity_and_static_marks_are_canonical(tmp_path: Path) -
         text=True,
         env=env,
         check=False,
+        timeout=_SUBPROCESS_TIMEOUT_S,
     )
     assert result.returncode == 0, result.stdout + result.stderr
 
@@ -666,6 +717,7 @@ def _build_html(root: Path) -> tuple[str, Path, str]:
         capture_output=True,
         text=True,
         check=False,
+        timeout=_SUBPROCESS_TIMEOUT_S,
     )
     combined = result.stdout + result.stderr
     assert result.returncode == 0, combined

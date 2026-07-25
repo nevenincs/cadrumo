@@ -44,6 +44,8 @@ from ..glossary_reference import (
     render_glossary,
 )
 
+pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
+
 # dev/docs/tests/test_glossary_reference.py -> parents[3] is the repo root.
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -82,8 +84,6 @@ def _rendered_term_lines(rst: str) -> set[str]:
     return {line[3:] for line in _glossary_body(rst) if _is_term_line(line)}
 
 
-@pytest.mark.integration
-@pytest.mark.hex_core
 def test_only_approved_concepts_render_drafts_excluded() -> None:
     """The glossary renders approved concepts and excludes every draft.
 
@@ -106,8 +106,6 @@ def test_only_approved_concepts_render_drafts_excluded() -> None:
     assert 0 < result.approved_rendered <= approved
 
 
-@pytest.mark.integration
-@pytest.mark.hex_core
 def test_term_lines_are_declared_surfaces_and_aliases_share_one_entry() -> None:
     """Rendered term lines are all declared surfaces; aliases share one entry.
 
@@ -156,8 +154,6 @@ def test_term_lines_are_declared_surfaces_and_aliases_share_one_entry() -> None:
         assert longest_run >= 2, "no entry renders an alias term line beside its headword"
 
 
-@pytest.mark.integration
-@pytest.mark.hex_core
 def test_legal_grounding_links_resolve_to_permalinks() -> None:
     """Concepts with legal_refs render resolved BOE permalink grounding links.
 
@@ -179,8 +175,6 @@ def test_legal_grounding_links_resolve_to_permalinks() -> None:
     assert all(url in catalogue_permalinks for url in rendered_links)
 
 
-@pytest.mark.integration
-@pytest.mark.hex_core
 def test_broader_related_relations_render_as_term_cross_references() -> None:
     """Concept relations render as ``:term:`` cross-references to approved targets.
 
@@ -228,8 +222,6 @@ def test_broader_related_relations_render_as_term_cross_references() -> None:
     assert rendered_edges == expected_edges
 
 
-@pytest.mark.integration
-@pytest.mark.hex_core
 def test_generated_glossary_parses_without_duplicate_term_warning() -> None:
     """A throwaway Sphinx build over the page emits no warnings and registers terms.
 
@@ -286,8 +278,6 @@ def test_generated_glossary_parses_without_duplicate_term_warning() -> None:
         assert registered_terms == rendered_term_lines
 
 
-@pytest.mark.integration
-@pytest.mark.hex_core
 def test_generator_writes_to_gitignored_generated_path(tmp_path: Path) -> None:
     """The generator writes the page under docs/_generated/ (gitignored)."""
     docs = tmp_path / "docs"

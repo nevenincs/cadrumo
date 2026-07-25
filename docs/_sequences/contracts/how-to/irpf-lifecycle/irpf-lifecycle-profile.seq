@@ -1,3 +1,3 @@
 @step Create the taxpayer profile with the identity and activity-start facts.
 @static aeat config profile create ana --quiet --entity-type natural_person --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --activity "consultoria" --activity-start-date 2026-01-01
-@blocked unconverted Only collides with the sandbox's pre-registered profile; a distinct tax id converts it.
+@blocked unconverted Executing it registers a second profile and switches the active profile to it, stranding every later sequence on this page; these values are the reader's own identity.

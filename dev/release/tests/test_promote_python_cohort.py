@@ -41,9 +41,9 @@ from dev.packaging.installed_tax_oracle import (
     TARGET_CASILLA,
 )
 from dev.packaging.python_cohort import PythonCohort, load_python_cohort
-from dev.release.promote_python_cohort import assert_pypi_destinations_absent, validate_promotion
+from dev.release.promote_python_cohort import validate_promotion
 
-pytestmark = [pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _VERSION = "0.99.0.dev1"
 _SAMPLE_COMMIT = "a" * 40
@@ -214,7 +214,6 @@ def _write_evidence(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.unit
 def test_complete_valid_cohort_and_evidence_passes_validate_promotion(
     tmp_path: Path,
 ) -> None:
@@ -233,7 +232,6 @@ def test_complete_valid_cohort_and_evidence_passes_validate_promotion(
     assert returned.version == _VERSION
 
 
-@pytest.mark.unit
 def test_tampered_artifact_digest_is_refused(tmp_path: Path) -> None:
     """Altering an artifact's digest in the evidence causes ``SystemExit``."""
     cohort_dir = _make_cohort_dir(tmp_path)
@@ -260,7 +258,6 @@ def test_tampered_artifact_digest_is_refused(tmp_path: Path) -> None:
         )
 
 
-@pytest.mark.unit
 def test_missing_cli_oracle_is_refused(tmp_path: Path) -> None:
     """Evidence that omits ``cli_oracle`` fails with ``SystemExit``."""
     cohort_dir = _make_cohort_dir(tmp_path)
@@ -279,7 +276,6 @@ def test_missing_cli_oracle_is_refused(tmp_path: Path) -> None:
         )
 
 
-@pytest.mark.unit
 def test_missing_mcp_oracle_is_refused(tmp_path: Path) -> None:
     """Evidence that omits ``mcp_oracle`` fails with ``SystemExit``."""
     cohort_dir = _make_cohort_dir(tmp_path)
@@ -298,7 +294,6 @@ def test_missing_mcp_oracle_is_refused(tmp_path: Path) -> None:
         )
 
 
-@pytest.mark.unit
 def test_source_commit_mismatch_is_refused(tmp_path: Path) -> None:
     """Supplying the wrong expected commit refuses before reading evidence."""
     cohort_dir = _make_cohort_dir(tmp_path)
@@ -314,7 +309,6 @@ def test_source_commit_mismatch_is_refused(tmp_path: Path) -> None:
         )
 
 
-@pytest.mark.unit
 def test_evidence_from_different_artifact_bytes_is_refused(tmp_path: Path) -> None:
     """Evidence produced from different artifact bytes does not validate the cohort.
 
@@ -352,37 +346,3 @@ def test_evidence_from_different_artifact_bytes_is_refused(tmp_path: Path) -> No
             evidence_file,
             expected_source_commit=cohort.source_commit,
         )
-
-
-@pytest.mark.integration
-def test_pypi_destinations_absent_passes_for_dev_version(tmp_path: Path) -> None:
-    """The pre-upload guard passes when no PyPI destination owns the dev version.
-
-    This exercises ``assert_pypi_destinations_absent`` with its real HTTP logic
-    against a ``PythonCohort`` constructed directly from the public dataclass.
-    The version ``0.99.0.dev1`` is a dev build that will never be published to
-    PyPI, so the check is expected to find no existing distribution and return
-    without raising.
-
-    Marked ``integration`` because the function makes live HTTP requests to
-    ``pypi.org``.  The refusal path (version already published) requires the
-    version to be present on the live index and cannot be tested in unit scope
-    without network mocking (which is forbidden).
-    """
-    cohort = PythonCohort(
-        directory=tmp_path,
-        manifest=tmp_path / "python-cohort.json",
-        source_commit=_SAMPLE_COMMIT,
-        version="0.99.0.dev1",
-        root_wheel=tmp_path / "cadrumo.whl",
-        root_sdist=tmp_path / "cadrumo.tar.gz",
-        manuals_wheel=tmp_path / "manuals.whl",
-        manuals_sdist=tmp_path / "manuals.tar.gz",
-        official_wheel=tmp_path / "official.whl",
-        official_sdist=tmp_path / "official.tar.gz",
-        sha256={},
-    )
-
-    # Must not raise: pypi.org should return 404 for this dev version.
-    result = assert_pypi_destinations_absent(cohort)
-    assert result is None

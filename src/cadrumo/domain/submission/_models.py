@@ -23,7 +23,6 @@ See Also:
 
 from __future__ import annotations
 
-import hashlib
 from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
@@ -32,6 +31,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
+from ...core.hashing import sha256_hex
 from ...core.identity import SubjectTaxId
 from ._errors import SubmissionValidationError
 
@@ -174,4 +174,4 @@ def make_submission_id(draft_id: str, attempt_ordinal: int) -> str:
     if attempt_ordinal < 1:
         raise SubmissionValidationError(f"attempt_ordinal must be >= 1, got {attempt_ordinal}")
     payload = f"{draft_id}:{attempt_ordinal}".encode()
-    return hashlib.sha256(payload).hexdigest()[:16]
+    return sha256_hex(payload)[:16]

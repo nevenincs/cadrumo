@@ -1,6 +1,8 @@
 @step List every flag the create command accepts.
-@static aeat config profile create --help
-@blocked unconverted Runs clean in the sandbox probe; nothing blocks it, so it awaits conversion.
+aeat config profile create --help
 @step List every flag the edit command accepts.
-@static aeat config profile edit --help
-@blocked unconverted Runs clean in the sandbox probe; nothing blocks it, so it awaits conversion.
+aeat config profile edit --help
+@step Confirm which profile those flags would apply to.
+@result aeat --format json config profile status
+@expect result.configured == true
+@expect exit_code == 0

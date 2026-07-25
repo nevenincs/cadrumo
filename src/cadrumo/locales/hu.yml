@@ -116,7 +116,7 @@ adapters:
           és próbálja újra.
         open_consent_url_manually: Nyissa meg manuálisan a megjelenített hozzájárulási
           URL-t a böngészőjében.
-        repair_profile_state: Futtassa a `aeat config profile health` parancsot, majd
+        repair_profile_state: Futtassa a `aeat config profile status` parancsot, majd
           javítsa ki vagy váltsa át az aktív profilt, mielőtt újrapróbálja a Google-parancsot.
         run_from_interactive_terminal: Futtassa a 'aeat config google login' parancsot
           interaktív terminálban, elérhető webböngészővel.
@@ -6439,7 +6439,7 @@ errors:
         szükséges.
     stored_data_validation_boundary: Egy tárolt profil vagy munkafolyamat-rekord már
       nem egyezik a várt sémával; a lemezen lévő adatok eltértek a jelenlegi formátumtól.
-      Diagnosztikához és helyreállításhoz futtasd aeat config doctor.
+      Diagnosztikához és helyreállításhoz futtasd aeat config repair.
   transaction:
     import_source_invalid: A forrás nem érvényes főkönyvi dokumentum
     ledger_import_failed: 'A főkönyvi fájl nem importálható: {reason}'

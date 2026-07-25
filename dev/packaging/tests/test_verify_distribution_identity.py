@@ -101,7 +101,7 @@ def test_accepted_mcp_product_tuple_passes_every_real_projection() -> None:
 def test_real_client_display_descriptions_report_missing_bilingual_claim_parity() -> None:
     """All five client-display fields carry approved bilingual pairs with full six-claim parity.
 
-    Revision 2 of the S06 copy record expanded every short client-display field to the
+    Revision 2 of the copy record expanded every short client-display field to the
     full six required claims. All five rows are now compliant=True and
     product_descriptions.ok is True.
     """
@@ -117,14 +117,14 @@ def test_real_client_display_descriptions_report_missing_bilingual_claim_parity(
         "human_confirmation",
         "never_files_live",
     ]
-    # S07 enrolled 2 pairs (plugin + marketplace-plugin); S08 adds the marketplace pair;
-    # S09 adds the mcpb short description and long_description pairs.
+    # Five approved pairs: plugin, marketplace-plugin, marketplace, and the mcpb
+    # short description and long_description.
     assert descriptions["approved_pair_count"] == 5
     assert descriptions["product_review_required"] is False
     # model_facing_descriptions count and sha256 are the sibling rename executor's
     # surface (MCP tool/argument descriptions change as renames land). Only check the
     # stable structural properties here; the sibling updates expected_sha256 in the
-    # verifier when each rename wave lands.
+    # verifier as each rename lands.
     mfd = descriptions["model_facing_descriptions"]
     assert mfd["nonempty"] is True
     assert mfd["language_labels_absent"] is True
@@ -202,7 +202,7 @@ def test_unapproved_semantic_contradiction_cannot_pass_keyword_claim_checks() ->
 def test_cli_exits_zero_and_emits_a_passing_report() -> None:
     """The production CLI exits 0 and emits a passing report once all claims carry parity.
 
-    After Revision 2 of the S06 copy record expanded every short client-display field to
+    After Revision 2 of the copy record expanded every short client-display field to
     all six required claims, the verifier is fully green: namespace, identity, and
     description checks all pass.
 
@@ -252,6 +252,7 @@ def _model_facing_check(
         surfaces=("MCP tool descriptions",),
         count=sum(counts.values()),
         surface_counts=counts,
+        argument_nodes_by_owner={"cadrumo_probe": counts.get("argument", 0)},
         sha256=sha256,
         expected_sha256="a" * 64,
         nonempty=nonempty,
@@ -307,3 +308,43 @@ def test_each_integrity_failure_contributes_its_own_line() -> None:
     assert len(empty_surface) == 1
     assert "tool" in empty_surface[0]
     assert len({blank[0], labelled[0], empty_surface[0]}) == 3
+
+
+def test_the_per_owner_argument_map_decomposes_the_argument_total() -> None:
+    """The map must be present and must SUM to the total it decomposes.
+
+    The four surface totals can say "arguments moved by two" and cannot say
+    which entity moved. That gap cost a four-message investigation whose answer
+    was that it is unrecoverable: the reference the delta had to be measured
+    against preserved a total and not its composition, so no later diff could
+    reach back across it. A map that silently drifted from its own total would
+    reintroduce exactly that.
+    """
+    report = verify_distribution_identity()
+    check = report.model_facing_description_check
+    by_owner = check.argument_nodes_by_owner
+
+    assert by_owner, "the per-owner argument map must not be empty"
+    assert sum(by_owner.values()) == check.surface_counts["argument"], (
+        f"map sums to {sum(by_owner.values())} but the argument surface reports {check.surface_counts['argument']}"
+    )
+    assert all(count > 0 for count in by_owner.values())
+
+
+def test_prompt_arguments_decompose_per_prompt_not_under_one_key() -> None:
+    """Prompt arguments must key per prompt, never collapse under a bare ``prompt``.
+
+    A prompt argument identifier is ``prompt:<prompt-name>:<arg>``, so splitting
+    on the first colon alone buckets every prompt argument under one key. That
+    map sums correctly and decomposes nothing, which is the exact failure this
+    field exists to prevent -- the sum invariant cannot catch it, so this does.
+    """
+    report = verify_distribution_identity()
+    by_owner = report.model_facing_description_check.argument_nodes_by_owner
+
+    assert "prompt" not in by_owner, "prompt arguments collapsed under a single bogus key"
+    prompt_owners = [key for key in by_owner if key.startswith("prompt:")]
+    assert len(prompt_owners) > 1, f"expected many prompt owners, got {prompt_owners}"
+    assert all(key.count(":") == 1 for key in prompt_owners), [k for k in prompt_owners if k.count(":") != 1]
+    tool_owners = [key for key in by_owner if not key.startswith("prompt:")]
+    assert all(":" not in key for key in tool_owners), [k for k in tool_owners if ":" in k]

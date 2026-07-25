@@ -13,10 +13,10 @@ by clock.
 
 from __future__ import annotations
 
-import hashlib
 from pathlib import Path
 
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
+from ...core.hashing import sha256_hex
 from ._live_scoring import LiveScenarioScore
 from ._models import GoldenScenario, LiveTrajectory
 
@@ -33,7 +33,7 @@ def failure_signature(score: LiveScenarioScore) -> str:
             ",".join(sorted(score.invariants.handoff_faithfulness_blocks)),
         ),
     )
-    return hashlib.sha256(basis.encode(_UTF_8)).hexdigest()[:12]
+    return sha256_hex(basis.encode(_UTF_8))[:12]
 
 
 def promote_failure(

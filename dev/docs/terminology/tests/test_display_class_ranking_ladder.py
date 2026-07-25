@@ -1,13 +1,13 @@
-"""Ladder gate: the declared weight table matches ADR D8 verbatim.
+"""Ladder gate: the declared weight table matches the ratified ordering verbatim.
 
-ADR ``2026-07-15-docs-terminology-search-adr`` D8 moves the base-weight table
+The ratified ranking decision moves the base-weight table
 from per-kind to per-display-class and declares ONE user-first ordering:
 general-fact concept cards (``doc``), then ``modelo``, then ``casilla``, then
 ``cli``, then ``technical`` (api / dev machinery) pages last. This gate pins
 that ordering so a future reorder of the declared table fails loudly, and proves
 every display class carries exactly one weight (an unmapped class is a failure).
 
-The expected ordering is derived strictly from the ADR ladder prose, never
+The expected ordering is derived strictly from the ratified ladder prose, never
 copied from the table under test.
 """
 
@@ -36,9 +36,9 @@ def test_every_display_class_carries_exactly_one_weight() -> None:
 
 
 def test_weight_table_orders_the_d8_ladder_verbatim() -> None:
-    """The base weights order ``doc > modelo > casilla > cli > technical`` (D8).
+    """The base weights order ``doc > modelo > casilla > cli > technical``.
 
-    The expected sequence is the ADR D8 user-first ladder prose: general-fact
+    The expected sequence is the ratified user-first ladder prose: general-fact
     concept cards lead, then modelo document cards, then casilla rows, then CLI
     records, then technical (api / dev) pages last.
     """

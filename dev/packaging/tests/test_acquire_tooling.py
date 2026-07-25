@@ -389,7 +389,7 @@ def test_github_release_parser_defaults_to_canonical_repo() -> None:
 def test_homebrew_parser_defaults_to_public_tap() -> None:
     """The Homebrew script defaults to the public tap."""
     args = acquire_homebrew._parser().parse_args(["--cohort-dir", "c", "--evidence-dir", "e"])
-    assert args.tap == "nevenincs/cadrumo"
+    assert args.tap == "nevenincs/tap"
 
 
 def test_claude_plugin_parser_defaults() -> None:

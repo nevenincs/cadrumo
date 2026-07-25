@@ -28,7 +28,8 @@ from ....core.external_constants import (
     PROVENANCE_SOURCE_CENSO_ARTEFACT,
     PROVENANCE_SOURCE_MANUAL_CLI,
 )
-from ....core.i18n import Translatable, tr
+from ....core.i18n import Translatable as tr
+from ....core.i18n import tr as _tr
 from ....domain.deadlines import IVARegime
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, new_profile_id
 from .._catalogue import SETUP_FLOW
@@ -86,7 +87,7 @@ def test_closed_set_token_renders_as_its_choice_label() -> None:
 
     registered = project_registered_values(SETUP_FLOW, record)
 
-    expected = tr(_choice_label_key("iva-regime", IVARegime.SIMPLIFICADO.value))
+    expected = _tr(_choice_label_key("iva-regime", IVARegime.SIMPLIFICADO.value))
     assert registered["iva-regime"] == expected
 
 
@@ -95,8 +96,8 @@ def test_boolean_renders_as_localized_yes_no_pair() -> None:
     yes_record = _record(UserProfileFact(path="iva.roi_enrolled", value=True))
     no_record = _record(UserProfileFact(path="iva.roi_enrolled", value=False))
 
-    assert project_registered_values(SETUP_FLOW, yes_record)["iva-roi-enrolled"] == tr("flows.confirm.yes")
-    assert project_registered_values(SETUP_FLOW, no_record)["iva-roi-enrolled"] == tr("flows.confirm.no")
+    assert project_registered_values(SETUP_FLOW, yes_record)["iva-roi-enrolled"] == _tr("flows.confirm.yes")
+    assert project_registered_values(SETUP_FLOW, no_record)["iva-roi-enrolled"] == _tr("flows.confirm.no")
 
 
 def test_free_text_value_passes_through_verbatim() -> None:
@@ -122,19 +123,19 @@ def _secret_only_flow() -> WizardFlow:
     """
     return WizardFlow(
         id="secretprobe",
-        title=Translatable("wizard.secretprobe.title"),
-        description=Translatable("wizard.secretprobe.description"),
+        title=tr("wizard.secretprobe.title"),
+        description=tr("wizard.secretprobe.description"),
         answers_model=_SecretAnswers,
         sections=(
             WizardSection(
                 id="s",
-                title=Translatable("wizard.secretprobe.section"),
+                title=tr("wizard.secretprobe.section"),
                 questions=(
                     WizardQuestion(
                         id="api-token",
                         profile_key="preferences.api_token",
                         widget=WizardWidget.SECRET,
-                        prompt=Translatable("wizard.secretprobe.api-token.prompt"),
+                        prompt=tr("wizard.secretprobe.api-token.prompt"),
                         choices=(),
                         answer_type=str,
                     ),
@@ -177,6 +178,6 @@ def test_artefact_sourced_fact_carries_the_non_official_suffix() -> None:
         ),
     )
 
-    suffix = tr(REGISTERED_NON_OFFICIAL_SUFFIX_LOCALE_KEY)
+    suffix = _tr(REGISTERED_NON_OFFICIAL_SUFFIX_LOCALE_KEY)
     assert project_registered_values(SETUP_FLOW, artefact_record)["activity-start-date"] == f"2020-01-15 {suffix}"
     assert project_registered_values(SETUP_FLOW, manual_record)["activity-start-date"] == "2020-01-15"

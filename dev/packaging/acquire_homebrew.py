@@ -30,7 +30,9 @@ from dev.packaging.evidence import AcquisitionIdentity, DestinationIdentity
 from dev.packaging.python_cohort import PythonCohort, load_python_cohort
 
 _UTF_8: Final[str] = "utf-8"
-_DEFAULT_TAP: Final[str] = "nevenincs/cadrumo"
+# The account-scoped tap (repo `nevenincs/homebrew-tap`) serving every product
+# published under this account, not a per-product tap.
+_DEFAULT_TAP: Final[str] = "nevenincs/tap"
 _FORMULA_NAME: Final[str] = "cadrumo"
 _DEFAULT_DISTRIBUTION_EVIDENCE_DIR: Final[Path] = Path("var/distribution-install-readiness")
 
