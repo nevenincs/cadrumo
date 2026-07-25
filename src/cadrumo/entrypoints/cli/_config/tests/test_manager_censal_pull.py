@@ -285,6 +285,47 @@ def test_the_summary_counts_all_three_outcomes() -> None:
     assert "3" in summary, "five read, one adopted and one diverging leaves three already matching"
 
 
+def test_the_fiscal_identity_is_never_reported_as_an_outcome() -> None:
+    """The projection carries the identity, but it is not one of the three.
+
+    ``censal_facts_from_read`` emits ``identity.tax_id`` so the ownership
+    guard has an input. The reconciliation consumes it and passes over
+    it, so a count derived by subtracting the two decided sets from
+    everything read sweeps the identity into "already matching" - telling
+    the operator AEAT corroborated it. On a first read onto a profile
+    carrying no identity the guard deliberately allows the read through,
+    so nothing was corroborated, and it is the one row an operator cannot
+    check because both sides render as hashes.
+
+    Reported by censo-pull-verb, which hit the same construction in the
+    CLI verb and fixed it there.
+    """
+    identity = UserProfileFact(path="identity.tax_id", value="00000000T")
+    postcode = UserProfileFact(path="contact.postcode", value="08032")
+
+    # The identity's presence must not move any of the three counts, so
+    # the summary is identical with and without it. Under a subtraction
+    # across everything read it shifts one field out of "already
+    # matching" and into "filled in", which is what this pins.
+    without = _censal_pull_summary(
+        CensalReconciliation(adopted=(postcode,), divergences=()),
+        read_count=2,
+        declared={},
+    )
+    with_identity = _censal_pull_summary(
+        CensalReconciliation(adopted=(postcode, identity), divergences=()),
+        read_count=2,
+        declared={},
+    )
+
+    assert with_identity == without, "the fiscal identity must not move any of the three counts"
+    assert "identity.tax_id" not in with_identity
+    assert _split_divergences(
+        CensalReconciliation(adopted=(), divergences=(("identity.tax_id", "00000000T"),)),
+        {},
+    ) == ((), ()), "an identity divergence is not an outcome either"
+
+
 def test_a_cleared_path_is_reported_apart_from_a_declared_disagreement() -> None:
     """A deletion is an answer, and it does not read like a declaration.
 

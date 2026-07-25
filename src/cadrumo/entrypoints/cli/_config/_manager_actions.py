@@ -122,6 +122,7 @@ def _run_censal_pull() -> ManagerActionOutcome:
     from ....adapters.inbound.tui import ManagerActionOutcome
     from ....application.live import pull_censal_datos
     from ....application.user_profile import (
+        CENSAL_ADOPTABLE_PATHS,
         apply_censal_read,
         censal_facts_from_read,
         reconcile_censal_read,
@@ -147,10 +148,13 @@ def _run_censal_pull() -> ManagerActionOutcome:
     # path may carry the adopted value and no longer look cleared.
     declared = record_to_effective_facts(record)
     reconciliation = reconcile_censal_read(record, facts)
+    # Only the adoptable paths are outcomes the operator is told about;
+    # the projection also carries the identity the ownership guard reads.
+    adoptable_read = sum(1 for fact in facts if fact.path in frozenset(CENSAL_ADOPTABLE_PATHS))
     repository.save(apply_censal_read(state, read))
 
     return ManagerActionOutcome(
-        message=_censal_pull_summary(reconciliation, read_count=len(facts), declared=declared),
+        message=_censal_pull_summary(reconciliation, read_count=adoptable_read, declared=declared),
         overview=build_active_profile_overview(),
     )
 
@@ -190,6 +194,18 @@ def _censal_pull_summary(
     which emits only the two axes that changed something: a field AEAT
     agrees with is neither adopted nor diverging.
 
+    That derivation counts only the ADOPTABLE paths, and the restriction
+    is load-bearing rather than tidiness. The projection also carries
+    ``identity.tax_id``, which the reconciliation consumes for its
+    ownership guard and then passes over - so a subtraction across
+    everything read would sweep the fiscal identity into "already
+    matching" and tell the operator AEAT had corroborated it. On a first
+    read onto a profile carrying no identity the guard deliberately
+    allows the read through, so nothing has been corroborated at all,
+    and it is the one row an operator cannot check for themselves
+    because both sides render as hashes. An ownership check is not an
+    outcome of the reconciliation and belongs in none of the three.
+
     The diverging axis carries two different situations and they do not
     read alike. "You declared X and AEAT says Y" describes an answer the
     operator gave. A path they deliberately CLEARED has no declared
@@ -199,8 +215,11 @@ def _censal_pull_summary(
     their deletion being honoured. They are reported separately, in the
     vocabulary the CLI verb uses for the same two states.
     """
-    adopted = len(reconciliation.adopted)
-    diverging = len(reconciliation.divergences)
+    from ....application.user_profile import CENSAL_ADOPTABLE_PATHS
+
+    adoptable = frozenset(CENSAL_ADOPTABLE_PATHS)
+    adopted = sum(1 for fact in reconciliation.adopted if fact.path in adoptable)
+    diverging = sum(1 for path, _ in reconciliation.divergences if path in adoptable)
     parts = [
         tr(
             "flows.manager.action.censal_pull_done",
@@ -235,9 +254,14 @@ def _split_divergences(
     Returns:
         The cleared paths and the contested paths, in that order.
     """
+    from ....application.user_profile import CENSAL_ADOPTABLE_PATHS
+
+    adoptable = frozenset(CENSAL_ADOPTABLE_PATHS)
     cleared: list[str] = []
     contested: list[str] = []
     for path, _incoming in reconciliation.divergences:
+        if path not in adoptable:
+            continue
         fact = declared.get(path)
         target = cleared if fact is not None and fact.value is None else contested
         target.append(path)
