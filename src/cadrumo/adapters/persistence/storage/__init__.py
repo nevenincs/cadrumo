@@ -19,6 +19,12 @@ The public surface is grouped by contract:
   repositories, :class:`SecureObjectRepository`, and the secure-object work
   records :class:`SecureObjectWrite`, :class:`SecureObjectDeletion`, and
   :class:`SecureObjectNamespaceIntegrity`.
+- Inner-envelope version contract — :func:`inner_envelope_version_is_current`,
+  the non-raising equality predicate every persisted read path applies to the
+  ``schema_version`` of the :class:`Envelope` inside a decrypted payload. The
+  layer-one row gate ``ensure_schema_version_readable`` is deliberately absent
+  from this facade: it is a ceiling, and advertising it here would offer
+  layer-two callers the wrong contract.
 - Encryption substrate — :class:`Envelope`, :class:`CipherEnvelope`,
   :class:`EncryptedBlobStore`, :class:`SecretStore`, :class:`MasterKeyProvider`,
   and the column-level helpers :class:`EncryptedString`,
@@ -182,6 +188,7 @@ from ._rotation import (
     rotate_blob_stores,
     rotate_master_key,
 )
+from ._schema_lineage import inner_envelope_version_is_current
 from .attachment import AttachmentStore
 from .blob_store import (
     BlobManifest,
@@ -527,6 +534,7 @@ __all__ = [
     "get_secret_store",
     "get_sessionmaker",
     "has_active_bucket_session",
+    "inner_envelope_version_is_current",
     "inspect_bucket_storage_runtime",
     "inspect_storage_runtime",
     "load_corpus_manifest",
