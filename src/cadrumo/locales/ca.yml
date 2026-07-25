@@ -6622,12 +6622,6 @@ flows:
       auth_dni_nie: DNI o NIE amb què us identifiqueu
       auth_numero_soporte: Número de suport del document
       auth_provider: Forma d'identificació davant l'AEAT
-      censal_pull: Portar dades censals (036)
-      censal_pull_contested: 'El 036 presentat discrepa del que vau declarar a: %{paths}.
-        No s''ha sobreescrit res.'
-      censal_pull_done: '%{count} dades censals preses de %{filings} declaracions
-        036 presentades.'
-      censal_pull_empty: No consta cap declaració 036 presentada en el període consultat.
       certificate: Certificat
       certificate_active: Certificat actiu
       certificate_done: 'Identificació: %{provider}; certificat actiu: %{name}.'

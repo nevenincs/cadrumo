@@ -1,15 +1,14 @@
 """What the profile manager can do besides edit a field.
 
 The manager page answers "what does my profile hold". These are the
-operations an operator reaches for while looking at that answer: fill it
-in from what they already filed, take a copy away, and choose which
-certificate speaks for them.
+operations an operator reaches for while looking at that answer: take a
+copy of it away, and say how they identify to AEAT.
 
 Each one is a plain callable returning a
 :class:`~cadrumo.adapters.inbound.tui.ManagerActionOutcome`, so the screen
-never learns what a censal declaration or a bundle is — it renders a
-label, calls the callable, and shows the sentence it gets back. That is
-the same injected-door arrangement the rest of this seam uses.
+never learns what a profile bundle or an authentication provider is — it
+renders a label, calls the callable, and shows the sentence it gets back.
+That is the same injected-door arrangement the rest of this seam uses.
 
 Import is deliberately absent. ``aeat config profile import`` feeds
 secrets over stdin and threads an atomic-create callback the screen has no

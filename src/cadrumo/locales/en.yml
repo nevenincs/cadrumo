@@ -6189,12 +6189,6 @@ flows:
       auth_dni_nie: DNI or NIE you identify with
       auth_numero_soporte: Support number printed on the document
       auth_provider: How you identify to AEAT
-      censal_pull: Pull censal data (036)
-      censal_pull_contested: 'The filed 036 disagrees with what you declared at: %{paths}.
-        Nothing was overwritten.'
-      censal_pull_done: '%{count} censal facts taken from %{filings} filed Modelo
-        036 declarations.'
-      censal_pull_empty: No filed Modelo 036 declaration was found in the period searched.
       certificate: Certificate
       certificate_active: Active certificate
       certificate_done: 'Identification: %{provider}; active certificate: %{name}.'
