@@ -822,6 +822,45 @@ equal normalised bodies, so one extra guard clause or a reordered statement pair
 defeats it. A hit is strong evidence and a null is weak. Production only, with a
 twelve-node floor. The four found are a lower bound, not an inventory.
 
+### head-cannot-import-the-wizard-package | critical | A committed importer names an untracked module, so HEAD is broken for anyone who does not already have the file
+
+Found while adjudicating the MCP identity fix, and it is the most consequential
+thing in this review that has nothing to do with this campaign.
+
+The committed `application/wizard/__init__.py` carries a module-level import of
+`._results` at line 89. That module is UNTRACKED. It was introduced by a TUI
+campaign commit that added the importer without adding the module, and it exists
+as an ordinary file in every active agent's working tree — 2489 bytes, present,
+working. So the package imports perfectly for everyone here and cannot import at
+all from a clean checkout of HEAD.
+
+The blast radius is not limited to the wizard. The CLI root reaches
+`application.wizard` submodules to seed the profile-key registry, and importing
+any submodule executes the package initialiser, so the shipped CLI inherits the
+failure on a clean tree. That is consistent with the installed-CLI resolution
+oracle failing, which had been attributed to skew without the cause being named.
+
+This is the worst variant of the shared-worktree attribution problem this review
+has documented repeatedly. Every prior instance broke attribution while
+preserving content. This one breaks the artefact, and it is invisible from
+inside the worktree by construction: no agent can observe it, because every
+agent has the file. Only a clean checkout, a fresh clone, or an installed
+distribution can see it, which is exactly the set of readers nobody is.
+
+It also explains a second-order effect that would otherwise look like a defect
+in the identity fix. Seeding the registry from the MCP server necessarily
+imports the wizard package, which registers two schemas that live in that
+untracked module, so the in-process transport reports 295 command schemas while
+a subprocess reports 293. The transport-parity assertion had been passing only
+because both sides were equally blind to those two — the same
+assert-over-an-unproven-set shape recorded three times already in this review,
+now in a fourth register and this time hiding a genuine under-report rather than
+merely proving nothing.
+
+Not this campaign's to fix, and deliberately not fixed here: committing another
+campaign's untracked module would take ownership of work in flight. It is
+recorded, tracked, and escalated instead.
+
 ## Recommendations
 
 Each recommendation below is tracked as a Step with a verification gate, per
