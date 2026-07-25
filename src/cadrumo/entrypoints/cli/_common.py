@@ -23,15 +23,15 @@ as ``aeat --version``.
 
 from __future__ import annotations
 
-import re as _re
 import sys
 from collections.abc import Iterable, Sequence
 from datetime import date as _date
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from typing import TYPE_CHECKING
 
 import typer
 
+from ...core.decimal import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.output_rendering import render_command_output
@@ -454,23 +454,18 @@ def _parse_optional_iso_date_str(raw: str | None, *, label: str) -> str | None:
 #
 # One accepted grammar for every manual-entry numeric input: a dot decimal
 # separator, an optional one- or two-digit (euro-cent) fractional part, no
-# thousands grouping, no scientific notation, no ``NaN``/``Infinity``. This is
-# the ``_DECIMAL_RE`` shape the declaration-edit path enforces
-# (``cadrumo.application.review._edit``), tightened to a two-digit fractional cap so
-# the Spanish thousands-grouping shape ``1.000`` (a dot followed by three digits)
-# refuses rather than silently becoming ``1.0`` — a silent misparse this
-# closes. ``1234.56`` (two fractional digits) and a bare
-# ``1000`` / ``0`` accept; ``1.000``, ``1.234,56``, ``1e3``, ``NaN``,
-# ``Infinity`` all refuse. The regex runs *before* ``Decimal(...)`` so the
-# refusal carries the instructive, localised message; ``is_finite()`` is
-# asserted as defence-in-depth, mirroring the financial CSV adapter.
+# thousands grouping, no scientific notation, no ``NaN``/``Infinity``. The
+# two-digit fractional cap is what makes the Spanish thousands-grouping shape
+# ``1.000`` (a dot followed by three digits) refuse rather than silently become
+# ``1.0``. ``1234.56`` and a bare ``1000`` / ``0`` accept; ``1.000``,
+# ``1.234,56``, ``1e3``, ``NaN``, ``Infinity`` all refuse.
 #
-# Two variants: the non-negative form (``^\d+(\.\d{1,2})?$``) is canonical for a
-# ledger amount that the absolute-amount convention makes a magnitude (a typed
-# ``-`` is itself a refusal); the signed form (``^-?\d+(\.\d{1,2})?$``) is for a
-# genuinely-signed field. Each call site selects per field.
-_DECIMAL_RE = _re.compile(r"^\d+(\.\d{1,2})?$")
-_SIGNED_DECIMAL_RE = _re.compile(r"^-?\d+(\.\d{1,2})?$")
+# The grammar itself lives in
+# :func:`~cadrumo.core.decimal.try_parse_canonical_decimal`, in ``core`` rather
+# than here, because the application-layer calculate-input boundary needs the
+# same shape and cannot import from ``entrypoints``. What stays here is the
+# thing that is genuinely CLI-owned: the localised, instructive refusal. One
+# grammar, one refusal per boundary.
 
 
 def parse_decimal_amount(raw: str, *, label: str, signed: bool = True) -> Decimal:
@@ -491,15 +486,8 @@ def parse_decimal_amount(raw: str, *, label: str, signed: bool = True) -> Decima
             ``False`` the non-negative variant is used and a negative input
             refuses.
     """
-    stripped = raw.strip()
-    pattern = _SIGNED_DECIMAL_RE if signed else _DECIMAL_RE
-    if pattern.fullmatch(stripped) is None:
-        raise _bad(tr("cli.ledger.errors.invalid_decimal", label=label, raw=raw))
-    try:
-        parsed = Decimal(stripped)
-    except InvalidOperation as exc:
-        raise _bad(tr("cli.ledger.errors.invalid_decimal", label=label, raw=raw)) from exc
-    if not parsed.is_finite():
+    parsed = try_parse_canonical_decimal(raw, signed=signed, max_fraction_digits=2)
+    if parsed is None:
         raise _bad(tr("cli.ledger.errors.invalid_decimal", label=label, raw=raw))
     return parsed
 
