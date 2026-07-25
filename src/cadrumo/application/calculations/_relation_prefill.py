@@ -254,14 +254,52 @@ def _contains_profile_token(raw: str | None, token: str) -> bool | None:
     return token in {item.strip() for item in stripped.replace(";", ",").split(",") if item.strip()}
 
 
-def _pagos_fraccionados_not_applicable_source_modelos(bucket_id: str) -> frozenset[str]:
-    """Return M130/M131 source modelos positively not applicable for the bucket profile.
+def _economic_activity_conditional_source_modelos(snapshot: RegistrySnapshot) -> frozenset[str]:
+    """Return the revision's source modelos whose obligation is conditional on economic activity.
 
-    This mirrors the clean-state profile split: no actividad economica means
-    neither quarterly pagos-fraccionados modelo applies; direct estimation means
-    M130 applies and M131 does not; objective estimation means M131 applies and
-    M130 does not. Missing profile facts fail closed by returning an empty set.
+    The revision's ``dependency_classifications`` rows are the authority for
+    WHICH cross-period source modelos exist only when the taxpayer carries on an
+    economic activity - the mutually exclusive pagos-fraccionados pair (M130
+    estimación directa / M131 estimación objetiva). Reading them keeps the
+    candidate set owned by the :class:`ModeloRevision` under calculation rather
+    than by a modelo list written into this module.
+
+    Deliberately NARROWER than the clean-state gate's ``_non_filer_modelos``,
+    which also carries the ``taxpayer_files_source = false`` arm (the suffered
+    retenciones sources - 111, 123, 184, 190, 193 on Modelo 100). Those sources
+    must never reach the zero-resolution below: they are absent because the
+    PAYER files them, not because no obligation exists, and the retención the
+    taxpayer suffered is a real credit that must be declared. Their relations
+    stay unresolved and operator-supplied; folding them in as zero would strip
+    the credit from the declaration.
     """
+    return frozenset(
+        classification.source_modelo
+        for classification in snapshot.revision.dependency_classifications
+        if classification.conditional_on_economic_activity
+    )
+
+
+def _not_applicable_source_modelos_for_bucket(snapshot: RegistrySnapshot, bucket_id: str) -> frozenset[str]:
+    """Return the revision's economic-activity-conditional sources not applicable to the bucket.
+
+    The registry classification bounds the candidate set
+    (:func:`_economic_activity_conditional_source_modelos`); the profile decides
+    the verdict within it. No actividad económica means no quarterly
+    pagos-fraccionado obligation at all; estimación directa means M130 applies
+    and M131 does not; estimación objetiva means M131 applies and M130 does not
+    (RIRPF art. 110 - the two methods are mutually exclusive). Every arm
+    intersects the registry candidate set, so a source the revision does not
+    declare conditional can never be suppressed here.
+
+    Fail-closed throughout: an absent profile, undeclared income categories, and
+    an economic activity whose estimation regime is undeclared all return the
+    empty set, leaving every source enforced and its relation unresolved rather
+    than folding in a zero the operator never declared.
+    """
+    candidates = _economic_activity_conditional_source_modelos(snapshot)
+    if not candidates:
+        return frozenset()
     values = _profile_path_values_for_bucket(bucket_id)
     if values is None:
         return frozenset()
@@ -271,15 +309,15 @@ def _pagos_fraccionados_not_applicable_source_modelos(bucket_id: str) -> frozens
         _ECONOMIC_ACTIVITY_CATEGORY,
     )
     if has_economic_activity is False:
-        return frozenset({str(Modelo.M130), str(Modelo.M131)})
+        return candidates
     if has_economic_activity is None:
         return frozenset()
 
     estimation_regime = str(values.get("irpf.estimation_regime") or "").strip()
     if estimation_regime in _DIRECT_ESTIMATION_REGIMES:
-        return frozenset({str(Modelo.M131)})
+        return candidates & frozenset({str(Modelo.M131)})
     if estimation_regime == "objetiva":
-        return frozenset({str(Modelo.M130)})
+        return candidates & frozenset({str(Modelo.M130)})
     return frozenset()
 
 
@@ -520,7 +558,7 @@ def resolve_relations_from_local_store(
 
         active_bucket_id = resolve_active_bucket_id()
         not_applicable_source_modelos = (
-            _pagos_fraccionados_not_applicable_source_modelos(active_bucket_id)
+            _not_applicable_source_modelos_for_bucket(snapshot, active_bucket_id)
             if active_bucket_id is not None
             else frozenset()
         )
@@ -752,7 +790,7 @@ class RelationPrefillSourceResolver:
         # resolution and the diagnostic so both see the same scoped requirement set.
         activity_start_date = _activity_start_date_for_bucket(str(context.bucket_id))
         m111_no_retenciones_periods = m111_no_retenciones_periods_for_bucket(str(context.bucket_id))
-        not_applicable_source_modelos = _pagos_fraccionados_not_applicable_source_modelos(str(context.bucket_id))
+        not_applicable_source_modelos = _not_applicable_source_modelos_for_bucket(snapshot, str(context.bucket_id))
         try:
             relation_values = resolve_relations_from_local_store(
                 snapshot,
