@@ -10,16 +10,6 @@ related:
   - '[[2026-07-25-censal-profile-autofill-research]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 # `censal-profile-autofill` plan
 
 ### Phase `P01` - Auth credentials on the profile
@@ -34,7 +24,7 @@ Give an authentication mode somewhere to keep what it needs, on the encrypted pr
 - [x] `P01.S13` - Collect the DNI validity-date contraste in the manager auth form and require a contraste only on the non-QR route, satisfied by either the soporte or the validity date, so the default QR flow and Clave Permanente are not refused; `src/cadrumo/entrypoints/cli/_config/_manager_actions.py`.
 - [x] `P01.S16` - Bind the schema declared provenance set to UserProfileFact, widening it first for the shipped censal token, and gate every shipped fact path and provenance token against the schema; `src/cadrumo/domain/user_profile/_values.py`.
 - [x] `P01.S17` - Declare the renta sex fields with the value set the AEAT registro design defines, and anchor the provenance contract at the schema rather than at a consuming module; `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`.
-- [ ] `P01.S18` - Make the readiness probes no-session contract the subject of a test, asserting the profile read is declined rather than merely survived; `src/cadrumo/application/auth/tests`.
+- [x] `P01.S18` - Make the readiness probes no-session contract the subject of a test, asserting the profile read is declined rather than merely survived; `src/cadrumo/application/auth/tests`.
 
 ### Phase `P02` - Read-only censal reader
 
