@@ -146,12 +146,29 @@ The twenty-four decompose as:
   family.
 - **4 are teaching metavariables, not capture targets** — `<profile-name>`,
   `<value>`, `<sum-from-303>`, `<ID>=<VALUE>`. These are illustrative prose: no
-  chain will ever *capture* them. They remain legitimately `unconverted`,
-  because they are convertible the other way — by substituting a concrete
-  literal value (a real profile name, a real casilla id) plus whatever setup the
-  command needs. Distinguishing the two is the point: "not a capture candidate"
-  does not imply "not a conversion candidate", and an earlier draft of this
-  paragraph wrongly collapsed them.
+  chain will ever *capture* them. Distinguishing that from convertibility is the
+  point: "not a capture candidate" does not imply "not a conversion candidate",
+  and an earlier draft of this paragraph wrongly collapsed them.
+
+  Attempting these four surfaced a sixth misclassification and one taxonomy gap.
+  `censo-update-edit-wizard` invokes `config profile edit` with no `--quiet`, so
+  it prompts for every field: that is `interactive-tty`, and it has been recoded
+  (ratchet 82 → 81). `censo-update-edit-field`, by contrast, must NOT be
+  converted. Its rendering context reads "If the profile still reports missing
+  facts, edit those fields directly", so its metavariables are the instruction —
+  the reader's missing field could be any field. Substituting
+  `docs-sequence-sandbox --activity consultoria` would both duplicate
+  `censo-update-record-facts` frame 0, which already executes exactly that, and
+  narrow a generic remediation step to one specific field. Lowering the ratchet
+  that way would optimise the metric against the page's purpose.
+
+  **The taxonomy gap:** every `StaticBlocker` except `UNCONVERTED` "asserts a
+  VERIFIED impossibility", and `UNCONVERTED` asserts no blocker is known. A
+  deliberately generic illustrative form is neither — it is an authoring choice
+  that should never be converted, yet it currently sits in the bucket a ratchet
+  drives to zero, so the ratchet can never legitimately reach zero. Adding a
+  member is an ADR-level decision and is deliberately NOT improvised here; the
+  gap is recorded so the decision can be made rather than papered over.
 - **5 are misclassified and need an operator-supplied artefact** — the two
   `modelo-036` records need an AEAT `<acuse>`, `modelo-390-records-audit`
   frame 1 needs a `<justificante-or-capture-id>`, and the two `troubleshooting`

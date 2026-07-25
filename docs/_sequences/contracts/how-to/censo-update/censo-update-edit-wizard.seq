@@ -1,3 +1,3 @@
 @step Edit the active profile with the interactive wizard.
 @static aeat config profile edit <profile-name>
-@blocked unconverted Shows the addressing form with a metavariable; convert it with a captured real id.
+@blocked interactive-tty Invokes the profile wizard with no --quiet, so it prompts for every field; the hermetic in-process runner has no terminal to answer it. The scripted equivalent runs as an executed frame in censo-update-record-facts.
