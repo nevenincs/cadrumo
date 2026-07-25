@@ -30,10 +30,10 @@ from typing import TypeGuard, cast
 
 import click
 import pytest
-from dev.docs.cli_reference import _force_lazy_imports
 from typer.main import get_command as _typer_get_command
 
 from ....application.operator_surface import get_operator_surface_contract
+from ._lazy_command_tree import materialise_lazy_subcommands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -78,7 +78,7 @@ def _resolve_live_surface() -> dict[str, dict[str, frozenset[str]]]:
     """
     from .. import app as live_app
 
-    _force_lazy_imports(live_app)
+    materialise_lazy_subcommands(live_app)
     root = _typer_get_command(live_app)
     root.name = live_app.info.name or "cadrumo"
 

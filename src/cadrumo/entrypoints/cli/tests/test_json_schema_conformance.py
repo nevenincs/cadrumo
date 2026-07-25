@@ -23,7 +23,6 @@ from typing import Any, Protocol, TypeGuard, cast
 import click
 import pytest
 import typer
-from dev.docs.cli_reference import _force_lazy_imports
 from typer.main import get_command as _typer_get_command
 
 from ....application.ledger import (
@@ -41,6 +40,7 @@ from ...schema_surface import GROUP_CALLBACK_SCHEMA_KEYS, SCHEMA_KEY_BY_CLI_PATH
 # import here the registry is empty when this test module collects.
 from .. import _config_payloads as _config_payloads
 from .. import _config_sandbox_payloads as _config_sandbox_payloads
+from ._lazy_command_tree import materialise_lazy_subcommands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -190,7 +190,7 @@ def _walk_cli_command_paths(app: typer.Typer) -> set[str]:
     via :data:`_GROUP_CALLBACK_EMIT_KEYS` because the click leaf walk
     cannot reach a callback that does not register as a subcommand.
     """
-    _force_lazy_imports(app)
+    materialise_lazy_subcommands(app)
     root = _typer_get_command(app)
     root.name = app.info.name or PRODUCT_IDENTITY.cli_executable
     # typer.main.get_command is typed to return typer's vendored
