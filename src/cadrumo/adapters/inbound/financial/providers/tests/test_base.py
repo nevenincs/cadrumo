@@ -18,6 +18,7 @@ from ......domain.transactions import RawTransaction, SourceFormat
 from ......tests import FIXTURES_DIR
 from .. import (
     BankStatementParseError,
+    FinancialValidationError,
     ProviderValidation,
     detect_provider,
 )
@@ -86,6 +87,58 @@ def test_parse_amount_value_respects_explicit_decimal_separator() -> None:
     assert parse_amount_value("1,234", decimal_separator=".") == Decimal("1234")
     assert parse_amount_value("1.234,56", decimal_separator=",") == Decimal("1234.56")
     assert parse_amount_value("1,234.56", decimal_separator=".") == Decimal("1234.56")
+
+
+# Scientific notation, with the magnitude the shape really denotes. Sanitisation
+# strips non-numeric characters so a currency symbol is tolerated; for an
+# exponent marker that same strip silently rewrote the magnitude instead of
+# failing, so ``1.23E+05`` (123.000,00) survived as ``1.2305`` and ``2E+10``
+# (20.000.000.000,00) as ``210``. A spreadsheet re-export of a large amount is a
+# real source of this shape.
+_SCIENTIFIC_NOTATION_AMOUNTS = (
+    ("1.23E+05", Decimal("123000")),
+    ("1.23e5", Decimal("123000")),
+    ("2E+10", Decimal("20000000000")),
+    ("1E3", Decimal("1000")),
+)
+
+
+@pytest.mark.parametrize(("raw", "true_magnitude"), _SCIENTIFIC_NOTATION_AMOUNTS)
+def test_parse_amount_value_refuses_scientific_notation(raw: str, true_magnitude: Decimal) -> None:
+    """A scientific-notation amount refuses rather than becoming a wrong number.
+
+    The refusal is the whole point: the old strip produced a *parseable,
+    plausible* value that differed from the true magnitude by orders of
+    magnitude and then fed the ledger and every modelo aggregation built on it.
+    """
+    with pytest.raises(FinancialValidationError):
+        parse_amount_value(raw)
+    # Anchor the severity of the old behaviour: the silently-produced value was
+    # not merely imprecise, it was a different number entirely.
+    assert Decimal(raw) == true_magnitude
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        # Currency symbols and codes stay tolerated — the strip exists for these.
+        ("100 EUR", Decimal("100")),
+        ("€1.234,56", Decimal("1234.56")),
+        # The three sign conventions are unaffected.
+        ("(123.45)", Decimal("-123.45")),
+        ("123.45-", Decimal("-123.45")),
+        ("-99.99", Decimal("-99.99")),
+        # Separator inference is unaffected.
+        ("1.234,56", Decimal("1234.56")),
+        ("1,234.56", Decimal("1234.56")),
+        ("1234.56", Decimal("1234.56")),
+        ("0,00", Decimal("0.00")),
+        ("1234", Decimal("1234")),
+    ],
+)
+def test_parse_amount_value_tolerance_is_unchanged(raw: str, expected: Decimal) -> None:
+    """The exponent refusal must not narrow the bank-export grammar elsewhere."""
+    assert parse_amount_value(raw) == expected
 
 
 # ---------------------------------------------------------------------------

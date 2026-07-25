@@ -43,6 +43,7 @@ cannot silently ship without the declaration.
 from __future__ import annotations
 
 import csv
+import re
 import unicodedata
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Mapping, Sequence
@@ -497,7 +498,9 @@ def parse_amount_value(
         A :class:`Decimal` preserving the printed precision and sign.
 
     Raises:
-        FinancialValidationError: When the value is empty or cannot be parsed.
+        FinancialValidationError: When the value is empty, carries scientific
+            notation (which sanitisation would silently rewrite into a
+            plausible wrong magnitude rather than fail), or cannot be parsed.
     """
     if isinstance(value, Decimal):
         return value
@@ -511,6 +514,16 @@ def parse_amount_value(
     raw = coerce_cell_text(value)
     if not raw:
         raise FinancialValidationError("missing amount value")
+    if _EXPONENT_RE.search(raw):
+        # Sanitisation drops non-numeric characters so a currency symbol or
+        # code (``€1.234,56``, ``100 EUR``) is tolerated. For an exponent
+        # marker that same drop silently rewrites the magnitude instead of
+        # failing: ``1.23E+05`` would survive as ``1.2305`` — a five-orders-of
+        # -magnitude understatement of 123.000,00 that then feeds the ledger
+        # and every modelo aggregation built on it. A spreadsheet re-export of
+        # a large amount is a real source of this shape, so it must refuse
+        # rather than be normalised into a plausible wrong number.
+        raise FinancialValidationError(f"scientific-notation amount value: {raw!r}")
     sanitized, negative = _sanitise_amount_text(raw)
     if not sanitized:
         raise FinancialValidationError(f"unsupported amount value: {raw!r}")
@@ -527,6 +540,12 @@ def parse_amount_value(
         # would otherwise admit non-finite values into the ledger.
         raise FinancialValidationError(f"non-finite amount value: {raw!r}")
     return -amount if negative else amount
+
+
+# A digit, an ``e``/``E``, then an optional sign and a digit: unambiguously an
+# exponent. A currency code adjacent to digits (``100 EUR``) does not match,
+# because no digit follows the ``E``.
+_EXPONENT_RE = re.compile(r"\d\s*[eE]\s*[+-]?\s*\d")
 
 
 def _sanitise_amount_text(raw: str) -> tuple[str, bool]:
