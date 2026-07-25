@@ -158,7 +158,7 @@ def test_registered_check_fires_through_the_snapshot_build_gate() -> None:
     rather than dead code.
 
     The check is scoped to a revision's OWN
-    ``ledger_renta_expense_aggregation`` binding targets (never the
+    ``ledger_renta_gastos_estimacion_directa_aggregation`` binding targets (never the
     universal :func:`first_slice_target_casillas` codomain) -- see
     :mod:`cadrumo.domain.renta._first_slice_routing_integrity` for why a
     revision that declares no such bindings has a legitimately empty
@@ -186,7 +186,7 @@ def test_renta_first_slice_binding_target_casillas_is_revision_scoped() -> None:
     """The per-revision binding-target helper reflects real registry data.
 
     The 2020-2022 Modelo 100 revisions declare no
-    ``ledger_renta_expense_aggregation`` bindings at all -- "Aportaciones a
+    ``ledger_renta_gastos_estimacion_directa_aggregation`` bindings at all -- "Aportaciones a
     mutualidades alternativas" shares the combined ``0186`` Seguridad
     Social casilla on those years rather than the dedicated ``0195`` box
     introduced from 2023 onward. The 2024/2025 revisions declare the full

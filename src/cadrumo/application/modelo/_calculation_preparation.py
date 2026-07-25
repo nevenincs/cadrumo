@@ -235,7 +235,7 @@ def _iva_regime_for_bucket(bucket_id: str) -> str | None:
 _LEDGER_PREFLIGHT_BINDING_SOURCES = frozenset(
     {
         "ledger_iva_aggregation",
-        "ledger_renta_expense_aggregation",
+        "ledger_renta_gastos_estimacion_directa_aggregation",
     },
 )
 _IVA_LEDGER_PREFLIGHT_SOURCE = "ledger_iva_aggregation"

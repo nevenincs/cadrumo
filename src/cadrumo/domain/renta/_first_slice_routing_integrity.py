@@ -1,7 +1,7 @@
 """Snapshot-time referential integrity for the first-slice routing table.
 
 When the registry builds a Modelo 100 snapshot, every casilla id an
-actual ``ledger_renta_expense_aggregation`` binding on THAT revision
+actual ``ledger_renta_gastos_estimacion_directa_aggregation`` binding on THAT revision
 targets MUST be a real casilla on the same revision. A divergence
 between a revision's own bindings and its own casilla set is a
 snapshot-build error, not a silent runtime ``KeyError`` when the renta
@@ -16,7 +16,7 @@ renumbered across Modelo 100 revisions -- for example "Aportaciones a
 mutualidades alternativas" shares a combined casilla with Seguridad
 Social contributions (id ``0186``) on the 2020-2022 revisions but gets
 its own dedicated casilla (id ``0195``) from 2023 onward. Revisions
-that declare no ``ledger_renta_expense_aggregation`` bindings at all
+that declare no ``ledger_renta_gastos_estimacion_directa_aggregation`` bindings at all
 (the ledger-aggregation mechanism did not exist for them yet) have a
 legitimately empty required set; requiring the full universal codomain
 on every revision would fail revisions that never route through it.

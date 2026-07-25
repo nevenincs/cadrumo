@@ -81,7 +81,7 @@ _M130_PRIOR_YEAR_NET_INCOME = Decimal("8000")
 # Manual casillas the M130 engine consumes downstream of casilla 01 (the
 # various retención / deducción slots). Supplied as zero through the caller
 # channel — they are manual_input (not source-owned), so the override is allowed.
-# Casilla 02 (Gastos) is now bound to ledger_renta_gasto_aggregation (a locked
+# Casilla 02 (Gastos) is now bound to ledger_renta_gastos_pago_fraccionado_aggregation (a locked
 # source), so it is NOT supplied here: with no OUTGOING transactions seeded the
 # gasto resolver returns 0, leaving rendimiento neto == ingresos so a wrong
 # income fold would still surface.

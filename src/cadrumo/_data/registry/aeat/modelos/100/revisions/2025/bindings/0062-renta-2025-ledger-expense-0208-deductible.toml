@@ -1,6 +1,6 @@
 [[revisions."2025".bindings]]
 id = "renta-2025-ledger-expense-0208-deductible"
-source = "ledger_renta_expense_aggregation"
+source = "ledger_renta_gastos_estimacion_directa_aggregation"
 selector = { modelo = "100", period = "0A", target_casilla_id = "0208", fact = "deductible_amount_sum" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]

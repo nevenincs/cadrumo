@@ -1062,7 +1062,7 @@
               "readiness": "ledger source",
               "relation_inputs": [],
               "revision": "2019-y-siguientes",
-              "source": "ledger_renta_gasto_aggregation",
+              "source": "ledger_renta_gastos_pago_fraccionado_aggregation",
               "source_refs": [
                 "aeat-dr-130-2019-v12",
                 "aeat-modelo-130-instructions"

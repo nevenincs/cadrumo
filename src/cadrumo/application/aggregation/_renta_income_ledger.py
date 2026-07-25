@@ -403,7 +403,7 @@ def _classify_income_transaction(
     :class:`RentaIncomeLedgerAggregationIssue` for an INCOMING row that fails a
     gate, or ``None`` for an OUTGOING row this income pipeline does not own —
     deductible OUTGOING expenses are aggregated into casilla 02 by the
-    companion ``ledger_renta_gasto_aggregation`` pipeline
+    companion ``ledger_renta_gastos_pago_fraccionado_aggregation`` pipeline
     (:mod:`~._renta_gasto_ledger`), so the income pass skips them silently
     rather than emitting a misleading "expense dropped" advisory.
     """

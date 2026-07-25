@@ -20,7 +20,7 @@ revisions but gets its own dedicated casilla ``0195`` from 2023
 onward), so a target this table names may legitimately be absent from
 an older revision that predates the split. The registered check
 instead asserts that every casilla a REVISION'S OWN
-``ledger_renta_expense_aggregation`` bindings target actually exists on
+``ledger_renta_gastos_estimacion_directa_aggregation`` bindings target actually exists on
 that same revision -- see
 :func:`cadrumo.domain.calculations.registry.renta_first_slice_binding_target_casillas`.
 A regression in either the registry or a revision's own bindings

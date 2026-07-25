@@ -274,7 +274,7 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     ``profile`` and ``relation_prefill`` sources are resolved by the live mesh
     automatically and MUST NOT appear in ``binding_values`` (the lock rejects
     them, and ``relation_prefill`` must be left unset so the enrolled resolver
-    folds from the seeded store).  Ledger sources (``ledger_renta_expense_aggregation``,
+    folds from the seeded store).  Ledger sources (``ledger_renta_gastos_estimacion_directa_aggregation``,
     etc.) are bucket-aggregation-locked — the engine rejects caller overrides of
     those too.  What remains after excluding all resolved/locked sources is the
     set the caller must supply: ``manual_input`` (Anexo-C carry) and
@@ -288,7 +288,7 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
         {
             "profile",
             _RELATION_PREFILL_SOURCE,
-            "ledger_renta_expense_aggregation",
+            "ledger_renta_gastos_estimacion_directa_aggregation",
             "ledger_renta_income_aggregation",
             "ledger_iva_aggregation",
             "ledger_oss_aggregation",

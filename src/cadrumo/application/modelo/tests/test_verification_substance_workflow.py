@@ -79,7 +79,7 @@ def test_m130_casilla_02_gastos_is_ledger_bound_not_manual_blocking(repos: _Repo
     Regression: casilla 02 used to be ``input_kind = manual``,
     so a filer with no gastos was blocked with a MISSING_REQUIRED_CASILLA finding
     until they hand-entered ``--casilla 02=0``. Casilla 02 is now bound to the
-    ``ledger_renta_gasto_aggregation`` source: the gasto resolver
+    ``ledger_renta_gastos_pago_fraccionado_aggregation`` source: the gasto resolver
     populates it from the ledger (0 when there are no expenses), so the
     missing-required gate — which fires only for MANUAL required casillas — never
     flags it. The required=true flag is retained but is inert for a bound casilla.

@@ -150,8 +150,8 @@ _FAMILY_CASES: tuple[
         BindingAggregationOp.SUM,
     ),
     (
-        "ledger_renta_gasto_aggregation",
-        "ledger_renta_gasto_aggregation",
+        "ledger_renta_gastos_pago_fraccionado_aggregation",
+        "ledger_renta_gastos_pago_fraccionado_aggregation",
         {"modelo": "130", "target_casilla_id": _M130_GASTOS_CASILLA, "fact": "deductible_amount_sum"},
         BindingAggregationOp.SUM,
         # An unknown fact value trips the typed selector Literal at build time.
@@ -252,7 +252,7 @@ def test_binding_family_build_gate_contract(
 
 def test_renta_gasto_binding_rejects_legacy_target_casilla_key() -> None:
     binding = _build_binding(
-        source="ledger_renta_gasto_aggregation",
+        source="ledger_renta_gastos_pago_fraccionado_aggregation",
         selector={"modelo": "130", "target_casilla": _M130_GASTOS_CASILLA, "fact": "deductible_amount_sum"},
         op=BindingAggregationOp.SUM,
     )

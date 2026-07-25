@@ -333,14 +333,14 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
     )
     from ...aggregation import (
         LedgerIvaAggregationSourceResolver,
-        LedgerRentaExpenseAggregationSourceResolver,
+        LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
         OssIossLedgerSourceResolver,
     )
 
     source_resolution = merge_source_resolutions(
         [
             LedgerIvaAggregationSourceResolver(transaction_repository=tx_repo).resolve(context),
-            LedgerRentaExpenseAggregationSourceResolver(transaction_repository=tx_repo).resolve(context),
+            LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(transaction_repository=tx_repo).resolve(context),
             LedgerRentaIncomeAggregationSourceResolver(transaction_repository=tx_repo).resolve(context),
             OssIossLedgerSourceResolver(candidates=()).resolve(context),
             InvoiceCatalogueSourceResolver(invoice_repository=invoice_repo).resolve(context),

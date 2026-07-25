@@ -1,7 +1,7 @@
 """Repository-backed Modelo 100 Renta expense aggregation.
 
 This is the annual first-slice expense projection behind the
-``ledger_renta_expense_aggregation`` source. It loads both a
+``ledger_renta_gastos_estimacion_directa_aggregation`` source. It loads both a
 :class:`~domain.transactions.TransactionCatalogue` and a
 :class:`~domain.invoices.InvoiceCatalogue` from the active bucket through
 :class:`~domain.transactions.TransactionCatalogueRepository` and

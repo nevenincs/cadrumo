@@ -92,7 +92,7 @@ _WELL_SHAPED_SELECTORS: dict[str, dict[str, object]] = {
         "flow_direction": "repercutido",
         "fact": "iva_amount_sum",
     },
-    "ledger_renta_expense_aggregation": {
+    "ledger_renta_gastos_estimacion_directa_aggregation": {
         "target_casilla_id": _M130_INGRESOS_CASILLA,
         "fact": "deductible_amount_sum",
     },
@@ -205,7 +205,7 @@ _SUM_DEFAULT_SOURCES: tuple[str, ...] = (
     "ledger_transaction",
     "ledger_oss_aggregation",
     "ledger_iva_aggregation",
-    "ledger_renta_expense_aggregation",
+    "ledger_renta_gastos_estimacion_directa_aggregation",
     "ledger_renta_income_aggregation",
     "profile",
     "prorrata_regularizacion",

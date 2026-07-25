@@ -92,7 +92,7 @@ def seed_m130_expense_transaction(
 
     The OUTGOING sibling of :func:`seed_m130_income_transaction`. Casilla 02 is a
     source-bound casilla aggregated from the ledger via
-    ``ledger_renta_gasto_aggregation``; a deductible gasto is an ACTIVE, EUR,
+    ``ledger_renta_gastos_pago_fraccionado_aggregation``; a deductible gasto is an ACTIVE, EUR,
     OUTGOING, BUSINESS-classified row carrying an IVA-exclusive ``taxable_base``.
     ``amount`` is the (non-negative) magnitude; flow is carried by the direction.
     """

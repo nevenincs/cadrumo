@@ -107,7 +107,7 @@ def test_full_deductible_first_slice_fact_builds_binding_ready_observation() -> 
     observation = build_renta_deductible_expense_observation(fact, result, tax_year=2025)
 
     assert result.status is RentaDeductibilityStatus.ELIGIBLE
-    assert observation.source_kind is BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION
+    assert observation.source_kind is BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION
     assert observation.target_casilla_id == "0186"
     assert observation.filing_date == date(2025, 3, 7)
     assert observation.gross_amount == Decimal("294.00")

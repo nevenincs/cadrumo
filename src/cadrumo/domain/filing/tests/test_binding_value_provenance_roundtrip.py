@@ -103,7 +103,7 @@ def _populated_draft() -> ModeloDraft:
                 binding_id="modelo-130-gastos-ledger",
                 value=Decimal("1200.50"),
                 kind=ModeloValueKind.LITERAL,
-                source=BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION,
+                source=BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
                 legal_refs=("ley-35-2006:art-30",),
                 source_refs=("aeat-m130-2025-gastos",),
             ),

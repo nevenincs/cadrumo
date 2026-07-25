@@ -661,7 +661,7 @@ _BINDING_SOURCE_TO_READINESS: dict[str, str] = {
     "live_observation": "live observation",
     "ledger_iva_aggregation": "ledger source",
     "ledger_oss_aggregation": "ledger source",
-    "ledger_renta_expense_aggregation": "ledger source",
+    "ledger_renta_gastos_estimacion_directa_aggregation": "ledger source",
     "profile": "profile fact",
     "profile_fact": "profile fact",
     "bucket_state": "bucket",

@@ -206,8 +206,8 @@ class RentaDeductibleExpenseObservation(_RentaStrictFrozenModel):
     """Binding-ready Renta expense observation for the first Modelo 100 slice."""
 
     observation_id: str = Field(min_length=1, max_length=160)
-    source_kind: Literal[BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION] = (
-        BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION
+    source_kind: Literal[BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION] = (
+        BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION
     )
     modelo: Literal[Modelo.M100] = Modelo.M100
     period: Literal["0A"] = "0A"

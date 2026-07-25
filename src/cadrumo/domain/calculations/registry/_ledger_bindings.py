@@ -50,7 +50,8 @@ from ._schema import DataBindingDefinition, ModeloRevision
 # set from :class:`~cadrumo.core.BindingSourceKind` (the single source-kind
 # taxonomy). Every binding whose ``source`` is a member reads its values from
 # the bucket-scoped ledger (transaction-classified IVA / OSS aggregation, Renta
-# first-slice income/expense aggregation, the M130 gasto cumulative aggregation,
+# first-slice income and estimación directa gastos aggregation, the M130
+# pago-fraccionado gastos cumulative aggregation,
 # the M151 impatriado Spanish-source base aggregation, or the M210 explicit
 # IRNR income projection). Cross-domain consumers route through this name so the
 # registry stays the single source of truth for ledger readiness.
@@ -59,20 +60,20 @@ __all__ = [
     "ImpatriadoIncomeObservationProtocol",
     "IvaLedgerObservation",
     "OssIossLedgerObservation",
-    "RentaExpenseObservationProtocol",
-    "RentaGastoObservationProtocol",
+    "RentaGastosEstimacionDirectaObservationProtocol",
+    "RentaGastosPagoFraccionadoObservationProtocol",
     "RentaIncomeObservationProtocol",
     "resolve_ledger_impatriado_income_aggregation_binding_values",
     "resolve_ledger_iva_aggregation_binding_values",
     "resolve_ledger_oss_aggregation_binding_values",
-    "resolve_ledger_renta_expense_aggregation_binding_values",
-    "resolve_ledger_renta_gasto_aggregation_binding_values",
+    "resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values",
+    "resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values",
     "resolve_ledger_renta_income_aggregation_binding_values",
     "unsupported_ledger_impatriado_income_observations",
     "unsupported_ledger_iva_observations",
     "unsupported_ledger_oss_observations",
-    "unsupported_ledger_renta_expense_observations",
-    "unsupported_ledger_renta_gasto_observations",
+    "unsupported_ledger_renta_gastos_estimacion_directa_observations",
+    "unsupported_ledger_renta_gastos_pago_fraccionado_observations",
     "unsupported_ledger_renta_income_observations",
     "validate_ledger_impatriado_income_aggregation_binding",
     "validate_ledger_impatriado_income_aggregation_binding_definition",
@@ -80,10 +81,10 @@ __all__ = [
     "validate_ledger_iva_aggregation_binding_definition",
     "validate_ledger_oss_aggregation_binding",
     "validate_ledger_oss_aggregation_binding_definition",
-    "validate_ledger_renta_expense_aggregation_binding",
-    "validate_ledger_renta_expense_aggregation_binding_definition",
-    "validate_ledger_renta_gasto_aggregation_binding",
-    "validate_ledger_renta_gasto_aggregation_binding_definition",
+    "validate_ledger_renta_gastos_estimacion_directa_aggregation_binding",
+    "validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definition",
+    "validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding",
+    "validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition",
     "validate_ledger_renta_income_aggregation_binding",
     "validate_ledger_renta_income_aggregation_binding_definition",
 ]
@@ -621,9 +622,9 @@ def unsupported_ledger_iva_observations(
     return tuple(unsupported)
 
 
-# Ledger Renta deductible-expense aggregation source bindings.
+# Ledger Renta estimación directa gastos aggregation source bindings.
 #
-# These bindings consume first-slice Modelo 100 expense observations produced
+# These bindings consume first-slice Modelo 100 gastos observations produced
 # by the ledger/Renta aggregation layer. They deliberately aggregate already
 # evaluated deductible amounts, so proportionality, legal category eligibility,
 # invoice reconciliation, and period/date filtering stay outside the registry
@@ -633,7 +634,7 @@ def unsupported_ledger_iva_observations(
 # avoids a cross-domain import (domain.calculations -> domain.renta) that
 # would violate the hexagonal direction.
 
-# Casilla IDs covered by the first Renta expense slice (Modelo 100, period 0A).
+# Casilla IDs covered by the first Renta gastos slice (Modelo 100, period 0A).
 # These must stay in sync with the binding selectors in the TOML and with
 # cadrumo.domain.renta._first_slice_routing.FIRST_SLICE_EXPENSE_CASILLAS (the
 # domain-owned SpendingCategory -> casilla routing table this registry-layer
@@ -660,11 +661,11 @@ _RENTA_100_FIRST_SLICE_CASILLAS: frozenset[CasillaId] = _casilla_id_set(
 )
 
 
-class RentaExpenseObservationProtocol(Protocol):
-    """Structural protocol for first-slice Renta expense observations.
+class RentaGastosEstimacionDirectaObservationProtocol(Protocol):
+    """Structural protocol for first-slice Renta estimación directa gastos observations.
 
     The registry only needs these four attributes to resolve
-    ``ledger_renta_expense_aggregation`` bindings; the full
+    ``ledger_renta_gastos_estimacion_directa_aggregation`` bindings; the full
     :class:`~cadrumo.domain.renta.RentaDeductibleExpenseObservation` satisfies
     this protocol without any explicit declaration.
 
@@ -686,8 +687,8 @@ class RentaExpenseObservationProtocol(Protocol):
     def deductible_amount(self) -> Decimal: ...
 
 
-class _RentaLedgerExpenseSelector(BaseModel):
-    """Validated form of a ledger_renta_expense_aggregation binding selector."""
+class _RentaLedgerGastosEstimacionDirectaSelector(BaseModel):
+    """Validated form of a ledger_renta_gastos_estimacion_directa_aggregation binding selector."""
 
     model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
 
@@ -697,55 +698,61 @@ class _RentaLedgerExpenseSelector(BaseModel):
     fact: Literal["deductible_amount_sum"] = "deductible_amount_sum"
 
 
-def _renta_ledger_expense_selector(binding: DataBindingDefinition) -> _RentaLedgerExpenseSelector:
+def _renta_ledger_gastos_estimacion_directa_selector(
+    binding: DataBindingDefinition,
+) -> _RentaLedgerGastosEstimacionDirectaSelector:
     try:
-        return _RentaLedgerExpenseSelector.model_validate(_selector_as_dict(binding))
+        return _RentaLedgerGastosEstimacionDirectaSelector.model_validate(_selector_as_dict(binding))
     except (ValueError, TypeError) as exc:
         raise RegistryValidationError(
-            f"binding {binding.id!r} has malformed ledger_renta_expense_aggregation selector: {exc}",
+            f"binding {binding.id!r} has malformed ledger_renta_gastos_estimacion_directa_aggregation selector: {exc}",
         ) from exc
 
 
-def validate_ledger_renta_expense_aggregation_binding_definition(binding: DataBindingDefinition) -> None:
-    """Validate a ``ledger_renta_expense_aggregation`` binding definition."""
-    if binding.source != BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION:
-        raise RegistryValidationError(f"binding {binding.id!r} is not a ledger_renta_expense_aggregation source")
-    selector = _renta_ledger_expense_selector(binding)
+def validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definition(
+    binding: DataBindingDefinition,
+) -> None:
+    """Validate a ``ledger_renta_gastos_estimacion_directa_aggregation`` binding definition."""
+    if binding.source != BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} is not a ledger_renta_gastos_estimacion_directa_aggregation source"
+        )
+    selector = _renta_ledger_gastos_estimacion_directa_selector(binding)
     if selector.target_casilla_id not in _RENTA_100_FIRST_SLICE_CASILLAS:
         raise RegistryValidationError(
             f"binding {binding.id!r} target_casilla_id {selector.target_casilla_id!r} "
-            "is outside the first Modelo 100 Renta ledger expense slice",
+            "is outside the first Modelo 100 Renta ledger gastos slice",
         )
     op = binding_aggregation_op(binding)
     if op != BindingAggregationOp.SUM:
         raise RegistryValidationError(
-            f"binding {binding.id!r} ledger_renta_expense_aggregation supports only "
+            f"binding {binding.id!r} ledger_renta_gastos_estimacion_directa_aggregation supports only "
             f"aggregation op 'sum', got {op.value!r}",
         )
     if selector.fact != "deductible_amount_sum":
         raise RegistryValidationError(
-            f"binding {binding.id!r} ledger_renta_expense_aggregation supports only "
+            f"binding {binding.id!r} ledger_renta_gastos_estimacion_directa_aggregation supports only "
             f"fact 'deductible_amount_sum', got {selector.fact!r}",
         )
 
 
-def resolve_ledger_renta_expense_aggregation_binding_values(
+def resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values(
     revision: ModeloRevision,
-    observations: Iterable[RentaExpenseObservationProtocol],
+    observations: Iterable[RentaGastosEstimacionDirectaObservationProtocol],
 ) -> dict[BindingId, Decimal]:
-    """Resolve every ``ledger_renta_expense_aggregation`` binding on ``revision``.
+    """Resolve every ``ledger_renta_gastos_estimacion_directa_aggregation`` binding on ``revision``.
 
     Args:
-        revision: The :class:`ModeloRevision` whose renta-expense bindings to resolve.
-        observations: Typed renta-expense observations the bindings aggregate
+        revision: The :class:`ModeloRevision` whose gastos bindings to resolve.
+        observations: Typed gastos observations the bindings aggregate
             via their declared ``selector.fact`` and ``aggregation.op``.
     """
     available = tuple(observations)
     resolved: dict[BindingId, Decimal] = {}
     for binding in revision.bindings:
-        if binding.source != BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION:
+        if binding.source != BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION:
             continue
-        selector = _renta_ledger_expense_selector(binding)
+        selector = _renta_ledger_gastos_estimacion_directa_selector(binding)
         matched = [
             observation
             for observation in available
@@ -757,17 +764,17 @@ def resolve_ledger_renta_expense_aggregation_binding_values(
     return resolved
 
 
-def unsupported_ledger_renta_expense_observations(
+def unsupported_ledger_renta_gastos_estimacion_directa_observations(
     revision: ModeloRevision,
-    observations: Iterable[RentaExpenseObservationProtocol],
-) -> tuple[RentaExpenseObservationProtocol, ...]:
-    """Return the :class:`RentaExpenseObservationProtocol` rows no binding on ``revision`` can consume.
+    observations: Iterable[RentaGastosEstimacionDirectaObservationProtocol],
+) -> tuple[RentaGastosEstimacionDirectaObservationProtocol, ...]:
+    """Return the :class:`RentaGastosEstimacionDirectaObservationProtocol` rows no binding on ``revision`` can consume.
 
     Fail-closed counterpart to
-    :func:`resolve_ledger_renta_expense_aggregation_binding_values`, mirroring
+    :func:`resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values`, mirroring
     :func:`unsupported_ledger_iva_observations`. An observation whose
     modelo/period/target_casilla_id triple matches no
-    ``ledger_renta_expense_aggregation`` binding has its deductible amount
+    ``ledger_renta_gastos_estimacion_directa_aggregation`` binding has its deductible amount
     silently dropped from the filing — a modelling gap, not a legitimate zero.
 
     False-fire guard (``ledger-iva-advisory-only-on-cuota-bearing-categories``
@@ -776,20 +783,20 @@ def unsupported_ledger_renta_expense_observations(
     declarable expense that reaches no casilla is surfaced.
 
     Args:
-        revision: The :class:`ModeloRevision` whose renta-expense bindings define
+        revision: The :class:`ModeloRevision` whose gastos bindings define
             the supported (modelo, period, target_casilla_id) triples.
-        observations: First-slice renta-expense observations to screen.
+        observations: First-slice gastos observations to screen.
 
     Returns:
         Tuple of observations whose non-zero deductible amount is selected by no
-        ``ledger_renta_expense_aggregation`` binding.
+        ``ledger_renta_gastos_estimacion_directa_aggregation`` binding.
     """
     selectors = tuple(
-        _renta_ledger_expense_selector(binding)
+        _renta_ledger_gastos_estimacion_directa_selector(binding)
         for binding in revision.bindings
-        if binding.source == BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION
+        if binding.source == BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION
     )
-    unsupported: list[RentaExpenseObservationProtocol] = []
+    unsupported: list[RentaGastosEstimacionDirectaObservationProtocol] = []
     for observation in observations:
         if observation.deductible_amount == Decimal("0"):
             continue
@@ -809,7 +816,7 @@ def renta_first_slice_binding_target_casillas(revision: ModeloRevision) -> froze
     Unlike :data:`cadrumo.domain.renta._first_slice_routing.FIRST_SLICE_EXPENSE_CASILLAS`
     (the universal BOE-prescribed routing table spanning every filing year the
     application supports), this returns only the casillas a
-    ``ledger_renta_expense_aggregation`` binding on THIS revision actually
+    ``ledger_renta_gastos_estimacion_directa_aggregation`` binding on THIS revision actually
     targets. Older Modelo 100 revisions (2020-2023) declare no such bindings
     at all -- the first-slice ledger-aggregation mechanism did not yet exist
     for them -- so their required set is legitimately empty even though the
@@ -825,13 +832,13 @@ def renta_first_slice_binding_target_casillas(revision: ModeloRevision) -> froze
 
     Args:
         revision: The :class:`ModeloRevision` whose own
-            ``ledger_renta_expense_aggregation`` binding selectors are
+            ``ledger_renta_gastos_estimacion_directa_aggregation`` binding selectors are
             inspected.
     """
     return frozenset(
-        _renta_ledger_expense_selector(binding).target_casilla_id
+        _renta_ledger_gastos_estimacion_directa_selector(binding).target_casilla_id
         for binding in revision.bindings
-        if binding.source == BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION
+        if binding.source == BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION
     )
 
 
@@ -1233,32 +1240,32 @@ def unsupported_ledger_impatriado_income_observations(
     return tuple(unsupported)
 
 
-# Ledger Renta Modelo 130 deductible-expense (gasto) aggregation source bindings.
+# Ledger Renta Modelo 130 pago-fraccionado gastos aggregation source bindings.
 #
 # The OUTGOING sibling of ``ledger_renta_income_aggregation``: M130 casilla 02
-# ("Gastos") accumulates deductible business-expense bases over the same
-# cumulative year-to-date quarterly window the income path uses (RD 439/2007
-# art. 110.2). Mirrors the income resolver exactly — a minimal observation
-# protocol matched only by ``target_casilla_id`` (the revision is M130, so all of
-# its gasto bindings are M130). Deliberately distinct from the M100 first-slice
-# ``ledger_renta_expense_aggregation`` source, whose annual / invoice-evidence /
-# category-profile machinery is constraint-shape-divergent from this simple
-# cumulative sum.
+# ("Gastos") accumulates deductible gastos bases over the same cumulative
+# year-to-date quarterly window the income path uses (RD 439/2007 art. 110.2).
+# Mirrors the income resolver exactly — a minimal observation protocol matched
+# only by ``target_casilla_id`` (the revision is M130, so all of its gastos
+# bindings are M130). Deliberately distinct from
+# ``ledger_renta_gastos_estimacion_directa_aggregation``, whose annual /
+# invoice-evidence / category-profile machinery is constraint-shape-divergent
+# from this simple cumulative sum.
 
-# Casilla IDs that the M130 gasto cumulative aggregation may feed. Validated at
+# Casilla IDs that the M130 gastos cumulative aggregation may feed. Validated at
 # registry load time so a binding targeting any other casilla surfaces before
 # any calculation runs.
 _RENTA_130_GASTO_CASILLAS: frozenset[CasillaId] = _casilla_id_set("_RENTA_130_GASTO_CASILLAS", "02")
 
 
-class RentaGastoObservationProtocol(Protocol):
-    """Structural protocol for M130 deductible-expense (gasto) observations.
+class RentaGastosPagoFraccionadoObservationProtocol(Protocol):
+    """Structural protocol for M130 pago-fraccionado gastos observations.
 
     The registry only needs these two attributes to resolve
-    ``ledger_renta_gasto_aggregation`` bindings; the full
+    ``ledger_renta_gastos_pago_fraccionado_aggregation`` bindings; the full
     :class:`~cadrumo.application.aggregation._renta_gasto_ledger.RentaGastoObservation`
     satisfies this protocol without any explicit declaration. Mirrors
-    :class:`RentaIncomeObservationProtocol` for the expense dimension.
+    :class:`RentaIncomeObservationProtocol` for the gastos dimension.
     """
 
     @property
@@ -1268,8 +1275,8 @@ class RentaGastoObservationProtocol(Protocol):
     def deductible_amount(self) -> Decimal: ...
 
 
-class _RentaLedgerGastoSelector(BaseModel):
-    """Validated form of a ledger_renta_gasto_aggregation binding selector.
+class _RentaLedgerGastosPagoFraccionadoSelector(BaseModel):
+    """Validated form of a ledger_renta_gastos_pago_fraccionado_aggregation binding selector.
 
     ``modelo`` is fixed to the M130 series (the only model sourcing gastos via
     this cumulative path). ``target_casilla_id`` is casilla 02 ("Gastos"). No
@@ -1284,20 +1291,26 @@ class _RentaLedgerGastoSelector(BaseModel):
     fact: Literal["deductible_amount_sum"] = "deductible_amount_sum"
 
 
-def _renta_ledger_gasto_selector(binding: DataBindingDefinition) -> _RentaLedgerGastoSelector:
+def _renta_ledger_gastos_pago_fraccionado_selector(
+    binding: DataBindingDefinition,
+) -> _RentaLedgerGastosPagoFraccionadoSelector:
     try:
-        return _RentaLedgerGastoSelector.model_validate(_selector_as_dict(binding))
+        return _RentaLedgerGastosPagoFraccionadoSelector.model_validate(_selector_as_dict(binding))
     except (ValueError, TypeError) as exc:
         raise RegistryValidationError(
-            f"binding {binding.id!r} has malformed ledger_renta_gasto_aggregation selector: {exc}",
+            f"binding {binding.id!r} has malformed ledger_renta_gastos_pago_fraccionado_aggregation selector: {exc}",
         ) from exc
 
 
-def validate_ledger_renta_gasto_aggregation_binding_definition(binding: DataBindingDefinition) -> None:
-    """Validate a ``ledger_renta_gasto_aggregation`` binding definition."""
-    if binding.source != BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION:
-        raise RegistryValidationError(f"binding {binding.id!r} is not a ledger_renta_gasto_aggregation source")
-    selector = _renta_ledger_gasto_selector(binding)
+def validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition(
+    binding: DataBindingDefinition,
+) -> None:
+    """Validate a ``ledger_renta_gastos_pago_fraccionado_aggregation`` binding definition."""
+    if binding.source != BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} is not a ledger_renta_gastos_pago_fraccionado_aggregation source"
+        )
+    selector = _renta_ledger_gastos_pago_fraccionado_selector(binding)
     if selector.target_casilla_id not in _RENTA_130_GASTO_CASILLAS:
         raise RegistryValidationError(
             f"binding {binding.id!r} target_casilla_id {selector.target_casilla_id!r} "
@@ -1306,35 +1319,35 @@ def validate_ledger_renta_gasto_aggregation_binding_definition(binding: DataBind
     op = binding_aggregation_op(binding)
     if op != BindingAggregationOp.SUM:
         raise RegistryValidationError(
-            f"binding {binding.id!r} ledger_renta_gasto_aggregation supports only "
+            f"binding {binding.id!r} ledger_renta_gastos_pago_fraccionado_aggregation supports only "
             f"aggregation op 'sum', got {op.value!r}",
         )
     if selector.fact != "deductible_amount_sum":
         raise RegistryValidationError(
-            f"binding {binding.id!r} ledger_renta_gasto_aggregation supports only "
+            f"binding {binding.id!r} ledger_renta_gastos_pago_fraccionado_aggregation supports only "
             f"fact 'deductible_amount_sum', got {selector.fact!r}",
         )
 
 
-def resolve_ledger_renta_gasto_aggregation_binding_values(
+def resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values(
     revision: ModeloRevision,
-    observations: Iterable[RentaGastoObservationProtocol],
+    observations: Iterable[RentaGastosPagoFraccionadoObservationProtocol],
 ) -> dict[BindingId, Decimal]:
-    """Resolve every ``ledger_renta_gasto_aggregation`` binding on ``revision``.
+    """Resolve every ``ledger_renta_gastos_pago_fraccionado_aggregation`` binding on ``revision``.
 
     Matches observations by ``target_casilla_id`` and sums their
     ``deductible_amount``, mirroring the income resolver's casilla-keyed fold.
 
     Args:
         revision: The :class:`ModeloRevision` whose gasto bindings are resolved.
-        observations: M130 deductible-expense observations to aggregate over.
+        observations: M130 deductible gastos observations to aggregate over.
     """
     available = tuple(observations)
     resolved: dict[BindingId, Decimal] = {}
     for binding in revision.bindings:
-        if binding.source != BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION:
+        if binding.source != BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION:
             continue
-        selector = _renta_ledger_gasto_selector(binding)
+        selector = _renta_ledger_gastos_pago_fraccionado_selector(binding)
         matched = [
             observation for observation in available if observation.target_casilla_id == selector.target_casilla_id
         ]
@@ -1342,16 +1355,16 @@ def resolve_ledger_renta_gasto_aggregation_binding_values(
     return resolved
 
 
-def unsupported_ledger_renta_gasto_observations(
+def unsupported_ledger_renta_gastos_pago_fraccionado_observations(
     revision: ModeloRevision,
-    observations: Iterable[RentaGastoObservationProtocol],
-) -> tuple[RentaGastoObservationProtocol, ...]:
+    observations: Iterable[RentaGastosPagoFraccionadoObservationProtocol],
+) -> tuple[RentaGastosPagoFraccionadoObservationProtocol, ...]:
     """Return the gasto observations no binding on the :class:`ModeloRevision` ``revision`` can consume.
 
     Fail-closed counterpart to
-    :func:`resolve_ledger_renta_gasto_aggregation_binding_values`, mirroring
+    :func:`resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values`, mirroring
     :func:`unsupported_ledger_renta_income_observations`. An observation whose
-    ``target_casilla_id`` matches no ``ledger_renta_gasto_aggregation`` binding has
+    ``target_casilla_id`` matches no ``ledger_renta_gastos_pago_fraccionado_aggregation`` binding has
     its deductible expense silently dropped — a modelling gap, not a legitimate
     zero (no-silent-under-declaration).
 
@@ -1360,14 +1373,14 @@ def unsupported_ledger_renta_gasto_observations(
     declarable gasto reaching no casilla is surfaced.
 
     Returns:
-        Unsupported :class:`RentaGastoObservationProtocol` observations.
+        Unsupported :class:`RentaGastosPagoFraccionadoObservationProtocol` observations.
     """
     supported_casillas = frozenset(
-        _renta_ledger_gasto_selector(binding).target_casilla_id
+        _renta_ledger_gastos_pago_fraccionado_selector(binding).target_casilla_id
         for binding in revision.bindings
-        if binding.source == BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION
+        if binding.source == BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION
     )
-    unsupported: list[RentaGastoObservationProtocol] = []
+    unsupported: list[RentaGastosPagoFraccionadoObservationProtocol] = []
     for observation in observations:
         if observation.deductible_amount == Decimal("0"):
             continue
@@ -1408,21 +1421,21 @@ def validate_ledger_iva_aggregation_binding(binding: DataBindingDefinition) -> l
     return invariant_diagnostics(binding, "ledger_iva_aggregation", validate_ledger_iva_aggregation_binding_definition)
 
 
-def validate_ledger_renta_expense_aggregation_binding(binding: DataBindingDefinition) -> list[str]:
-    """Validate a ``ledger_renta_expense_aggregation`` binding at registry-build time.
+def validate_ledger_renta_gastos_estimacion_directa_aggregation_binding(binding: DataBindingDefinition) -> list[str]:
+    """Validate a ``ledger_renta_gastos_estimacion_directa_aggregation`` binding at registry-build time.
 
-    Accumulating ``list[str]`` validator over :class:`_RentaLedgerExpenseSelector`;
+    Accumulating ``list[str]`` validator over :class:`_RentaLedgerGastosEstimacionDirectaSelector`;
     runs the fact/aggregation-op invariant at build time through
     :func:`invariant_diagnostics`, whose raise-style body is
-    :func:`validate_ledger_renta_expense_aggregation_binding_definition`.
+    :func:`validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definition`.
     """
-    failures = selector_against_model(binding, _RentaLedgerExpenseSelector)
+    failures = selector_against_model(binding, _RentaLedgerGastosEstimacionDirectaSelector)
     if failures:
         return failures
     return invariant_diagnostics(
         binding,
-        "ledger_renta_expense_aggregation",
-        validate_ledger_renta_expense_aggregation_binding_definition,
+        "ledger_renta_gastos_estimacion_directa_aggregation",
+        validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definition,
     )
 
 
@@ -1444,19 +1457,19 @@ def validate_ledger_renta_income_aggregation_binding(binding: DataBindingDefinit
     )
 
 
-def validate_ledger_renta_gasto_aggregation_binding(binding: DataBindingDefinition) -> list[str]:
-    """Validate a ``ledger_renta_gasto_aggregation`` binding at registry-build time.
+def validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding(binding: DataBindingDefinition) -> list[str]:
+    """Validate a ``ledger_renta_gastos_pago_fraccionado_aggregation`` binding at registry-build time.
 
-    Accumulating ``list[str]`` validator over :class:`_RentaLedgerGastoSelector`;
+    Accumulating ``list[str]`` validator over :class:`_RentaLedgerGastosPagoFraccionadoSelector`;
     runs the casilla / fact / aggregation-op invariant at build time through
     :func:`invariant_diagnostics`, whose raise-style body is
-    :func:`validate_ledger_renta_gasto_aggregation_binding_definition`.
+    :func:`validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition`.
     """
-    failures = selector_against_model(binding, _RentaLedgerGastoSelector)
+    failures = selector_against_model(binding, _RentaLedgerGastosPagoFraccionadoSelector)
     if failures:
         return failures
     return invariant_diagnostics(
         binding,
-        "ledger_renta_gasto_aggregation",
-        validate_ledger_renta_gasto_aggregation_binding_definition,
+        "ledger_renta_gastos_pago_fraccionado_aggregation",
+        validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition,
     )

@@ -135,7 +135,7 @@ def test_outgoing_business_expense_is_skipped_silently_by_income_pipeline() -> N
     """A business OUTGOING row is the gasto pipeline's concern, not income's.
 
     Deductible OUTGOING expenses are aggregated into M130 casilla 02 by the
-    companion ``ledger_renta_gasto_aggregation`` pipeline. The income pass no
+    companion ``ledger_renta_gastos_pago_fraccionado_aggregation`` pipeline. The income pass no
     longer claims the expense was "dropped" — it skips OUTGOING rows silently so
     no spurious advisory surfaces. The deductible-expense aggregation itself is
     proven in ``test_renta_gasto_aggregation.py``.

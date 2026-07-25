@@ -579,8 +579,8 @@ def _resolve_bucket_source_mesh(
         LedgerImpatriadoIncomeAggregationSourceResolver,
         LedgerIrnrIncomeAggregationSourceResolver,
         LedgerIvaAggregationSourceResolver,
-        LedgerRentaExpenseAggregationSourceResolver,
-        LedgerRentaGastoAggregationSourceResolver,
+        LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
+        LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
         LedgerRentaIncomeAggregationSourceResolver,
         OssIossLedgerSourceResolver,
         RetencionesAggregationSourceResolver,
@@ -608,7 +608,7 @@ def _resolve_bucket_source_mesh(
             LedgerIvaAggregationSourceResolver(
                 transaction_repository=memoized_transaction_repository,
             ).resolve(context),
-            LedgerRentaExpenseAggregationSourceResolver(
+            LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
                 transaction_repository=memoized_transaction_repository,
                 invoice_repository=invoice_repository,
             ).resolve(context),
@@ -617,9 +617,9 @@ def _resolve_bucket_source_mesh(
                 transaction_repository=memoized_transaction_repository,
             ).resolve(context),
             # M130 deductible-expense / gasto into casilla 02
-            # (ledger_renta_gasto_aggregation) — the OUTGOING sibling of the
+            # (ledger_renta_gastos_pago_fraccionado_aggregation) — the OUTGOING sibling of the
             # income resolver, same cumulative quarterly window.
-            LedgerRentaGastoAggregationSourceResolver(
+            LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
                 transaction_repository=memoized_transaction_repository,
             ).resolve(context),
             # M151 impatriado (Ley Beckham) Spanish-source base

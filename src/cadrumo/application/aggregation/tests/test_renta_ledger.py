@@ -52,7 +52,7 @@ from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     AggregationValidationError,
     CalculationSourceContext,
-    LedgerRentaExpenseAggregationSourceResolver,
+    LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
     RentaLedgerAggregationIssueReason,
     RentaLedgerExpenseAggregation,
     aggregate_renta_ledger_expenses,
@@ -70,7 +70,7 @@ def _period(year: int, code: str) -> Period:
 def _m100_renta_expense_binding(binding_id: str, casilla_id: str) -> DataBindingDefinition:
     return DataBindingDefinition(
         id=binding_id,
-        source=BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION,
+        source=BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
         selector={
             "modelo": "100",
             "period": "0A",
@@ -285,7 +285,7 @@ def test_repository_backed_aggregation_binds_default_invoice_repository_to_reque
 
 
 def test_renta_filing_aggregation_resolves_registry_bound_inputs(secure_objects: SecureObjectRepository) -> None:
-    """The LedgerRentaExpenseAggregationSourceResolver resolves modelo-100 renta-expense
+    """The LedgerRentaGastosEstimacionDirectaAggregationSourceResolver resolves modelo-100 renta-expense
     ledger bindings from repository-backed transactions, keyed by binding id."""
     transaction = _transaction(
         "row-cli-renta",
@@ -298,7 +298,7 @@ def test_renta_filing_aggregation_resolves_registry_bound_inputs(secure_objects:
     invoice_repo.save(InvoiceCatalogue())
 
     revision = _m100_2025_renta_expense_revision()
-    resolution = LedgerRentaExpenseAggregationSourceResolver(
+    resolution = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
         invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
     ).resolve(
@@ -345,7 +345,7 @@ def test_renta_filing_aggregation_routes_office_software_and_marketing_to_m100_e
     invoice_repo.save(InvoiceCatalogue())
 
     revision = _m100_2025_renta_expense_revision()
-    resolution = LedgerRentaExpenseAggregationSourceResolver(
+    resolution = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
         invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
     ).resolve(
@@ -382,7 +382,7 @@ def test_renta_filing_aggregation_loads_usage_ratios_for_mobile_phone_expenses(
     )
 
     revision = _m100_2025_renta_expense_revision()
-    resolution = LedgerRentaExpenseAggregationSourceResolver(
+    resolution = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
         invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
     ).resolve(

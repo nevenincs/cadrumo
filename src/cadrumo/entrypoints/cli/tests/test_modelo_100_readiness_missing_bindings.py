@@ -89,7 +89,7 @@ def test_modelo_100_readiness_filters_ledger_bindings_after_clean_preflight() ->
     assert preflight_resolved_ids
     preflight_resolved_sources = {bindings_missing_by_id[binding_id]["source"] for binding_id in preflight_resolved_ids}
     assert {
-        "ledger_renta_expense_aggregation",
+        "ledger_renta_gastos_estimacion_directa_aggregation",
         "ledger_renta_income_aggregation",
     } <= preflight_resolved_sources
     assert all(source.startswith("ledger_") for source in preflight_resolved_sources)

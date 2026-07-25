@@ -55895,7 +55895,7 @@
               "readiness": "ledger source",
               "relation_inputs": [],
               "revision": "2025",
-              "source": "ledger_renta_expense_aggregation",
+              "source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "source_refs": [
                 "aeat-renta-2025-manual-parte1"
               ],
@@ -55916,7 +55916,7 @@
               "readiness": "ledger source",
               "relation_inputs": [],
               "revision": "2025",
-              "source": "ledger_renta_expense_aggregation",
+              "source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "source_refs": [
                 "aeat-renta-2025-manual-parte1"
               ],
@@ -55937,7 +55937,7 @@
               "readiness": "ledger source",
               "relation_inputs": [],
               "revision": "2025",
-              "source": "ledger_renta_expense_aggregation",
+              "source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "source_refs": [
                 "aeat-renta-2025-manual-parte1"
               ],
@@ -55958,7 +55958,7 @@
               "readiness": "ledger source",
               "relation_inputs": [],
               "revision": "2025",
-              "source": "ledger_renta_expense_aggregation",
+              "source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "source_refs": [
                 "aeat-renta-2025-manual-parte1"
               ],
@@ -56852,7 +56852,7 @@
               "readiness": "ledger source",
               "relation_inputs": [],
               "revision": "2025",
-              "source": "ledger_renta_expense_aggregation",
+              "source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "source_refs": [
                 "aeat-renta-2025-manual-parte1"
               ],
@@ -56873,7 +56873,7 @@
               "readiness": "ledger source",
               "relation_inputs": [],
               "revision": "2025",
-              "source": "ledger_renta_expense_aggregation",
+              "source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "source_refs": [
                 "aeat-renta-2025-manual-parte1"
               ],
@@ -56894,7 +56894,7 @@
               "readiness": "ledger source",
               "relation_inputs": [],
               "revision": "2025",
-              "source": "ledger_renta_expense_aggregation",
+              "source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "source_refs": [
                 "aeat-renta-2025-manual-parte1"
               ],
@@ -56915,7 +56915,7 @@
               "readiness": "ledger source",
               "relation_inputs": [],
               "revision": "2025",
-              "source": "ledger_renta_expense_aggregation",
+              "source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "source_refs": [
                 "aeat-renta-2025-manual-parte1"
               ],
@@ -56936,7 +56936,7 @@
               "readiness": "ledger source",
               "relation_inputs": [],
               "revision": "2025",
-              "source": "ledger_renta_expense_aggregation",
+              "source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "source_refs": [
                 "aeat-renta-2025-manual-parte1"
               ],
@@ -56957,7 +56957,7 @@
               "readiness": "ledger source",
               "relation_inputs": [],
               "revision": "2025",
-              "source": "ledger_renta_expense_aggregation",
+              "source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "source_refs": [
                 "aeat-renta-2025-manual-parte1"
               ],
@@ -56978,7 +56978,7 @@
               "readiness": "ledger source",
               "relation_inputs": [],
               "revision": "2025",
-              "source": "ledger_renta_expense_aggregation",
+              "source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "source_refs": [
                 "aeat-renta-2025-manual-parte1"
               ],
@@ -56999,7 +56999,7 @@
               "readiness": "ledger source",
               "relation_inputs": [],
               "revision": "2025",
-              "source": "ledger_renta_expense_aggregation",
+              "source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "source_refs": [
                 "aeat-renta-2025-manual-parte1"
               ],
@@ -57020,7 +57020,7 @@
               "readiness": "ledger source",
               "relation_inputs": [],
               "revision": "2025",
-              "source": "ledger_renta_expense_aggregation",
+              "source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "source_refs": [
                 "aeat-renta-2025-manual-parte1"
               ],
@@ -57041,7 +57041,7 @@
               "readiness": "ledger source",
               "relation_inputs": [],
               "revision": "2025",
-              "source": "ledger_renta_expense_aggregation",
+              "source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "source_refs": [
                 "aeat-renta-2025-manual-parte1"
               ],
