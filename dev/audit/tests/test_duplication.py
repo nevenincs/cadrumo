@@ -12,6 +12,7 @@ gates that actually run jscpd over the tree live in ``test_duplication_scan``.
 
 from __future__ import annotations
 
+import ast
 import shutil
 import subprocess
 import tomllib
@@ -152,6 +153,51 @@ def test_console_report_names_unavailability_instead_of_claiming_clean() -> None
     assert "no clones found" not in rendered
 
 
+def _mentions_jscpd_outside_docstrings(path: Path) -> bool:
+    """True when a file references ``jscpd@`` as code, not as prose.
+
+    A Python docstring that quotes the invocation for documentation -- as
+    ``test_duplication_scan`` does to explain what it forces through the
+    ``which`` seam -- is prose describing the one real runner, not a second
+    command-construction site. Stripping docstring line ranges before
+    searching lets the gate tell the two apart without an ever-growing
+    per-file exemption list that would need a new entry every time a test
+    module documents the invocation it exercises.
+
+    Non-Python executables (the justfile, shell/PowerShell scripts) have no
+    docstring concept, so the substring search runs over their full text.
+    Unparsable Python cannot be proven docstring-only, so it counts as a hit
+    rather than being silently skipped.
+    """
+    text = path.read_text(encoding="utf-8")
+    if "jscpd@" not in text:
+        return False
+    if path.suffix != ".py":
+        return True
+    try:
+        tree = ast.parse(text)
+    except SyntaxError:
+        return True
+
+    docstring_lines: set[int] = set()
+    for node in ast.walk(tree):
+        body = getattr(node, "body", None)
+        if not isinstance(node, ast.Module | ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef) or not body:
+            continue
+        first = body[0]
+        is_string_expr = (
+            isinstance(first, ast.Expr) and isinstance(first.value, ast.Constant) and isinstance(first.value.value, str)
+        )
+        if not is_string_expr:
+            continue
+        end = getattr(first, "end_lineno", first.lineno)
+        docstring_lines.update(range(first.lineno, end + 1))
+
+    lines = text.splitlines()
+    stripped = "\n".join(line for lineno, line in enumerate(lines, start=1) if lineno not in docstring_lines)
+    return "jscpd@" in stripped
+
+
 def test_only_one_jscpd_invocation_exists_in_the_tree() -> None:
     """Exactly one module may construct a jscpd command, tree-wide.
 
@@ -165,7 +211,10 @@ def test_only_one_jscpd_invocation_exists_in_the_tree() -> None:
     that can actually EXECUTE a command -- Python, the justfile, and
     shell/PowerShell scripts -- so prose in a ``.vault/`` audit record or the
     dispositions TOML's provenance string does not trip a gate about
-    invocations.
+    invocations. Within a Python file, a docstring quoting the invocation for
+    documentation (see ``test_duplication_scan``) is excluded from the search
+    via :func:`_mentions_jscpd_outside_docstrings`, so a test module can name
+    the literal in prose without needing its own exemption entry here.
     """
     git = shutil.which("git")
     assert git is not None, "git is required to enumerate the tracked tree"
@@ -180,9 +229,10 @@ def test_only_one_jscpd_invocation_exists_in_the_tree() -> None:
     executable_suffixes = {".py", ".sh", ".bash", ".ps1", ".cmd", ".bat"}
     candidates = [rel for rel in tracked if Path(rel).name == "justfile" or Path(rel).suffix in executable_suffixes]
 
-    # The one canonical runner, and this test itself: it quotes the invocation
-    # in a docstring and names the literal it scans for, neither of which is a
-    # second invocation.
+    # The one canonical runner, and this test itself: the runner holds the
+    # real invocation constant, and this test holds the "jscpd@" literal it
+    # searches WITH -- code, not prose, so the docstring exclusion cannot
+    # clear either and both stay named here.
     exempt = {"dev/audit/duplication.py", "dev/audit/tests/test_duplication.py"}
 
     # A tracked path may be absent from the working tree while a peer's
@@ -193,9 +243,7 @@ def test_only_one_jscpd_invocation_exists_in_the_tree() -> None:
     builders = [
         rel
         for rel in candidates
-        if rel not in exempt
-        and (_REPO_ROOT / rel).is_file()
-        and "jscpd@" in (_REPO_ROOT / rel).read_text(encoding="utf-8")
+        if rel not in exempt and (_REPO_ROOT / rel).is_file() and _mentions_jscpd_outside_docstrings(_REPO_ROOT / rel)
     ]
 
     assert builders == [], f"jscpd must be invoked from exactly one runner; found: {builders}"
