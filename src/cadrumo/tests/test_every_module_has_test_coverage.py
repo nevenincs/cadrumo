@@ -90,6 +90,14 @@ _EXEMPTIONS: frozenset[str] = frozenset(
         "src/cadrumo/entrypoints/cli/_app_diagnostics.py",
         "src/cadrumo/entrypoints/cli/_app_diagnostics_telemetry.py",
         "src/cadrumo/entrypoints/cli/_diagnostics_payloads.py",
+        # aeat app maintenance: same _lazy("app", "maintenance", ...) dispatch as
+        # the CLI verb modules above, so the AST walker cannot follow it. Both are
+        # exercised end-to-end by
+        # entrypoints/cli/tests/test_app_maintenance_export_reconcile.py driving
+        # the real CLI through invoke_cached_cli; the payload module is only
+        # reachable through that same dynamically-dispatched command module.
+        "src/cadrumo/entrypoints/cli/_app_maintenance.py",
+        "src/cadrumo/entrypoints/cli/_app_maintenance_payloads.py",
     },
 )
 
