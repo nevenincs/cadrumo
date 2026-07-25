@@ -17,22 +17,61 @@ from __future__ import annotations
 import pytest
 
 from ....domain.user_profile import declared_provenance_sources
+from ... import user_profile as user_profile_package
 from .. import CENSO_SOURCE_TAG
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+#: Naming suffix by which this package publishes a provenance token. The set is
+#: derived from the package's own ``__all__`` rather than listed here, because a
+#: list is what let ``CENSO_DERIVED_SOURCE_TAG`` be published undeclared while a
+#: check naming only its sibling passed.
+_PROVENANCE_EXPORT_SUFFIX = "_SOURCE_TAG"
 
-def test_the_censo_read_token_is_declared_by_the_schema() -> None:
-    """The censal-read provenance must be a token the carrier accepts.
 
-    Were it not declared, every fact the censal sync writes would be
-    refused at construction, and the failure would surface as a broken
-    pull rather than as the undeclared constant it really is.
+def _published_provenance_tokens() -> dict[str, str]:
+    """Return every provenance token this package publishes, by export name."""
+    from .. import __all__ as exported
+
+    return {name: getattr(user_profile_package, name) for name in exported if name.endswith(_PROVENANCE_EXPORT_SUFFIX)}
+
+
+def test_the_scan_finds_the_exports_it_claims_to_check() -> None:
+    """A discovery that matched nothing would pass while proving nothing.
+
+    The gate below asserts an empty violation list, which is worthless
+    unless the discovery actually reaches the package's provenance
+    exports. Renaming the convention without updating the suffix would
+    otherwise silently empty the gate.
     """
 
-    assert CENSO_SOURCE_TAG in declared_provenance_sources(), (
-        f"application defines provenance token {CENSO_SOURCE_TAG!r} which the profile schema does not declare. "
-        "Add it to provenance.source in the schema; do not change what the shipped code stamps."
+    published = _published_provenance_tokens()
+
+    assert published, (
+        f"no export ending {_PROVENANCE_EXPORT_SUFFIX!r} was found in the package; "
+        "the naming convention changed and this gate has stopped checking anything"
+    )
+    assert CENSO_SOURCE_TAG in published.values()
+
+
+def test_every_published_provenance_token_is_declared_by_the_schema() -> None:
+    """Each token the package publishes must be one the carrier accepts.
+
+    Enumerated rather than named. An earlier version checked one token by
+    name and passed while a sibling was published undeclared: no fact
+    could carry it, so a surface stamping it manufactured a record the
+    strict read path would refuse.
+    """
+
+    declared = declared_provenance_sources()
+    undeclared = sorted(
+        f"{name} = {value!r}" for name, value in _published_provenance_tokens().items() if value not in declared
+    )
+
+    assert not undeclared, (
+        f"application publishes provenance token(s) the profile schema does not declare: {undeclared}. "
+        "Declare the token in provenance.source, or delete it if nothing stamps it; "
+        "do not change what shipped code stamps."
     )
 
 

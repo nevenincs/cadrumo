@@ -784,11 +784,11 @@ def test_operator_manual_censo_facts_are_never_treated_as_aeat_verified() -> Non
     nothing stamps the verified censo tags, so the verified-key set stays empty
     for a hand-entered profile and the calendar keeps its unverified posture.
     """
-    from ....application.user_profile import CENSO_DERIVED_SOURCE_TAG, CENSO_SOURCE_TAG
+    from ....application.user_profile import CENSO_SOURCE_TAG
     from ....core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI
     from ....domain.user_profile import UserProfileFact, UserProfileRecord
 
-    verified_sources = {CENSO_SOURCE_TAG, CENSO_DERIVED_SOURCE_TAG}
+    verified_sources = {CENSO_SOURCE_TAG}
     assert PROVENANCE_SOURCE_MANUAL_CLI not in verified_sources
 
     record = UserProfileRecord(

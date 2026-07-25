@@ -12,7 +12,6 @@ from pathlib import Path
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from ....application.user_profile import (
-    CENSO_DERIVED_SOURCE_TAG,
     CENSO_SOURCE_TAG,
     UserProfileLifecycleRepository,
     profile_create_storage_span,
@@ -160,8 +159,8 @@ def _stamp_calendar_enrolment_from_censo() -> None:
         record = repository.load(PRIMARY_PROFILE_ID)
         censo_paths = {
             "iva.regime": CENSO_SOURCE_TAG,
-            "taxpayer_type.entity_type": CENSO_DERIVED_SOURCE_TAG,
-            "taxpayer_type.irpf_income_categories": CENSO_DERIVED_SOURCE_TAG,
+            "taxpayer_type.entity_type": CENSO_SOURCE_TAG,
+            "taxpayer_type.irpf_income_categories": CENSO_SOURCE_TAG,
         }
         facts = [
             fact.model_copy(update={"source": censo_paths[fact.path]}) if fact.path in censo_paths else fact

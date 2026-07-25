@@ -148,7 +148,6 @@ if TYPE_CHECKING:
     )
     from ._censo_sync import (
         CENSAL_ADOPTABLE_PATHS,
-        CENSO_DERIVED_SOURCE_TAG,
         CENSO_SOURCE_TAG,
         CensalIdentityMismatchError,
         CensalReconciliation,
@@ -322,7 +321,6 @@ _LAZY_EXPORTS: dict[str, str] = {
             "._censo_sync",
             (
                 "CENSAL_ADOPTABLE_PATHS",
-                "CENSO_DERIVED_SOURCE_TAG",
                 "CENSO_SOURCE_TAG",
                 "CensalIdentityMismatchError",
                 "CensalReconciliation",
@@ -515,7 +513,6 @@ def __getattr__(name: str):
 
 __all__ = [
     "CENSAL_ADOPTABLE_PATHS",
-    "CENSO_DERIVED_SOURCE_TAG",
     "CENSO_DIVERGENCE_NOTICE_CODE",
     "CENSO_DIVERGENCE_PREFIX",
     "CENSO_SOURCE_TAG",
