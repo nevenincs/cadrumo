@@ -9,8 +9,8 @@ import typer
 
 if TYPE_CHECKING:
     from ....application.auth import ApoderadoService
+    from ....application.workflow import ProfileBucketPointer
 
-from ....application.workflow import ProfileBucketPointer
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from .._common import _emit_envelope

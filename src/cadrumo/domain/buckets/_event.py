@@ -174,6 +174,7 @@ class BucketEventType(StrEnum):
     LEDGER_TRANSACTION_EXPORTED = "ledger.transaction.exported"
     LEDGER_TRANSACTION_SPLIT = "ledger.transaction.split"
     LEDGER_TRANSACTION_MERGED = "ledger.transaction.merged"
+    LEDGER_TRANSACTION_INVOICE_LINKED = "ledger.transaction.invoice.linked"
     LEDGER_CATALOGUE_RESET = "ledger.catalogue.reset"
     LEDGER_SANITIZATION_COMPLETED = "ledger.sanitization.completed"
     PURCHASE_INVOICE_EVIDENCE_ATTACHED = "purchase_invoice_evidence.attached"

@@ -40,7 +40,7 @@ def test_bulk_classify_from_oracle_resolved_at_runtime(tmp_path: Path) -> None:
     classify_csv = tmp_path / "classify.csv"
     classify_csv.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
-    result = _invoke(["--format", "json", "app", "ledger", "classify", "--from-csv", str(classify_csv)])
+    result = _invoke(["--format", "json", "app", "ledger", "classify", "--file", str(classify_csv)])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
     assert payload["applied"] == 12, payload

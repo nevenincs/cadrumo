@@ -1,2 +1,14 @@
+:seed: iva-evidence-2026
+@step Create the work unit for the filing target.
+@setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
+@step Calculate the quarter's IVA from the classified ledger.
+@setup aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T
+@step Verify the calculated draft.
+@setup aeat --format json app modelo work verify --modelo 303 --year 2026 --period 1T
 @step File the current verified revision, recording a local marker only.
-@static aeat app modelo work file --modelo 303 --year 2026 --period 1T
+@result aeat --format json app modelo work file --modelo 303 --year 2026 --period 1T
+@expect exit_code == 0
+@expect result.kind == "internal_filing"
+@expect result.live_submission == false
+@expect result.aeat_accepted == false
+@expect result.status == "vigente"

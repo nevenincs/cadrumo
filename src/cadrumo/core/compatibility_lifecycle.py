@@ -62,6 +62,98 @@ COMPATIBILITY_REGIME: Final[CompatibilityRegime] = CompatibilityRegime.PRE_RELEA
 RELEASED_FORMAT_FLOORS: Final[Mapping[str, int] | None] = None
 
 
+class PersistedFormatClass(StrEnum):
+    """How long one persisted format's bytes must stay readable.
+
+    The durability obligations differ by KIND of persisted data, not by
+    storage mechanism. A taxpayer's filed evidence must survive every
+    future version of this application; the sidecar recording how many
+    login attempts have failed must not, and promising to read a stale one
+    forever would be a liability rather than a guarantee.
+    """
+
+    #: Taxpayer data. Its bytes must stay readable across versions: the
+    #: format carries a durability floor, a per-hop upgrader registry, and
+    #: (post-checkpoint) a committed old-version fixture. Losing the ability
+    #: to read it destroys data no operator can reconstruct.
+    DURABLE = "durable"
+    #: Operational state the application regenerates on demand — a session,
+    #: a throttle sidecar, a crash-recovery journal, a lock. Delete-and-
+    #: refuse is the CORRECT policy in both regimes: a version mismatch
+    #: discards the record and the next operation rebuilds it. These formats
+    #: carry NO durability floor and MUST NOT appear in
+    #: :data:`RELEASED_FORMAT_FLOORS`.
+    REGENERABLE = "regenerable"
+
+
+#: Every persisted format this application writes, and the durability class
+#: it belongs to. This mapping is the CLOSED inventory the enrollment gate
+#: enumerates against: a new persisted format that does not appear here
+#: fails the gate rather than passing by omission. Adding a format here is
+#: a deliberate durability decision, not bookkeeping.
+PERSISTED_FORMATS: Final[Mapping[str, PersistedFormatClass]] = {
+    # Durable — taxpayer data and the key material that unlocks it.
+    "secure_object": PersistedFormatClass.DURABLE,
+    "bundle": PersistedFormatClass.DURABLE,
+    "archive": PersistedFormatClass.DURABLE,
+    "bucket_dek": PersistedFormatClass.DURABLE,
+    "bucket_manifest": PersistedFormatClass.DURABLE,
+    # Regenerable — operational state, discarded and rebuilt on mismatch.
+    "profile_session": PersistedFormatClass.REGENERABLE,
+    "login_throttle": PersistedFormatClass.REGENERABLE,
+    "config_reset_journal": PersistedFormatClass.REGENERABLE,
+    "bucket_lock": PersistedFormatClass.REGENERABLE,
+    "bucket_output_language_hint": PersistedFormatClass.REGENERABLE,
+}
+
+
+def undeclared_persisted_formats(
+    discovered_keys: frozenset[str],
+    declared: Mapping[str, PersistedFormatClass],
+) -> tuple[str, ...]:
+    """Return discovered persisted formats carrying no durability declaration.
+
+    Pure, and deliberately ENUMERATING rather than allowlisting: the caller
+    discovers the live format set from the storage registry, and any key it
+    finds that is absent from ``declared`` is returned as a violation. A new
+    persisted format therefore fails until someone decides whether its bytes
+    are taxpayer data or regenerable state — the decision the durability
+    obligations hang off.
+    """
+    return tuple(sorted(discovered_keys - set(declared)))
+
+
+def stale_persisted_format_declarations(
+    discovered_keys: frozenset[str],
+    declared: Mapping[str, PersistedFormatClass],
+) -> tuple[str, ...]:
+    """Return declared formats no longer present in the discovered set.
+
+    The converse of :func:`undeclared_persisted_formats`: a declaration left
+    behind by a retired format is stale inventory, and a stale entry is what
+    lets the next reader believe a coverage claim that nothing backs.
+    """
+    return tuple(sorted(set(declared) - discovered_keys))
+
+
+def misclassified_floor_keys(
+    released_floors: Mapping[str, int] | None,
+    declared: Mapping[str, PersistedFormatClass],
+) -> tuple[str, ...]:
+    """Return frozen-floor keys that name a regenerable format.
+
+    A durability floor is a promise to keep reading old bytes. Making that
+    promise about a session or a throttle sidecar is not a stronger
+    guarantee — it is an obligation to honour shapes the application is
+    designed to discard, so the checkpoint flip must never freeze a floor
+    for a :attr:`PersistedFormatClass.REGENERABLE` format.
+    """
+    floors = released_floors or {}
+    return tuple(
+        sorted(key for key in floors if declared.get(key) is PersistedFormatClass.REGENERABLE),
+    )
+
+
 def expected_floor(
     regime: CompatibilityRegime,
     format_key: str,
@@ -138,8 +230,13 @@ def lineage_obligations(
 
 __all__ = [
     "COMPATIBILITY_REGIME",
+    "PERSISTED_FORMATS",
     "RELEASED_FORMAT_FLOORS",
     "CompatibilityRegime",
+    "PersistedFormatClass",
     "expected_floor",
     "lineage_obligations",
+    "misclassified_floor_keys",
+    "stale_persisted_format_declarations",
+    "undeclared_persisted_formats",
 ]

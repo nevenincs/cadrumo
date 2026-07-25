@@ -133,6 +133,9 @@ if TYPE_CHECKING:
         publish_prepared_export,
         reconcile_prepared_exports,
     )
+    from ._bundle_export_operation import (
+        ProfileBundleExportJournalRepository,
+    )
     from ._capabilities import (
         CapabilityDecision,
         CapabilitySource,
@@ -349,6 +352,10 @@ _LAZY_EXPORTS: dict[str, str] = {
             ),
         ),
         (
+            "._bundle_export_operation",
+            ("ProfileBundleExportJournalRepository",),
+        ),
+        (
             "._bundle_encryption",
             (
                 "EncryptedProfileBundleError",
@@ -487,6 +494,7 @@ __all__ = [
     "EncryptedProfileBundleExport",
     "PreparedProfileExport",
     "ProfileAlreadyRegisteredError",
+    "ProfileBundleExportJournalRepository",
     "ProfileBundleExportPurpose",
     "ProfileBundleExportReconcileFailure",
     "ProfileBundleExportReconciliation",

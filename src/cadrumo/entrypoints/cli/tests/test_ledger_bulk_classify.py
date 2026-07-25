@@ -1,4 +1,4 @@
-"""CLI surface tests for bulk classify (--from-csv) and rule engine (rule add/apply/list)."""
+"""CLI surface tests for bulk classify (--file) and rule engine (rule add/apply/list)."""
 
 from __future__ import annotations
 
@@ -109,7 +109,7 @@ def _import_many_transactions(tmp_path: Path, *, count: int) -> list[str]:
 
 
 # ---------------------------------------------------------------------------
-# --from-csv tests
+# --file tests
 # ---------------------------------------------------------------------------
 
 
@@ -120,7 +120,7 @@ def test_classify_from_csv_applies_all_valid_rows(tmp_path: Path) -> None:
     csv_file = tmp_path / "classify.csv"
     csv_file.write_text(csv_content, encoding="utf-8")
 
-    result = invoke_cached_cli(["app", "ledger", "classify", "--from-csv", str(csv_file)])
+    result = invoke_cached_cli(["app", "ledger", "classify", "--file", str(csv_file)])
     assert result.exit_code == 0, result.output
 
     by_id = {r["transaction_id"]: r for r in _list_transactions()}
@@ -136,7 +136,7 @@ def test_classify_from_csv_partial_failure_applies_valid_rows(tmp_path: Path) ->
     csv_file.write_text(csv_content, encoding="utf-8")
 
     result = invoke_cached_cli(
-        ["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)],
+        ["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)],
     )
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
@@ -152,7 +152,7 @@ def test_classify_from_csv_all_failed_exits_nonzero(tmp_path: Path) -> None:
     csv_file.write_text(csv_content, encoding="utf-8")
 
     result = invoke_cached_cli(
-        ["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)],
+        ["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)],
     )
     assert result.exit_code != 0, result.output
     envelope = json.loads(result.output)
@@ -178,7 +178,7 @@ def test_classify_from_csv_rejects_pipeline_managed_state(tmp_path: Path) -> Non
     csv_file.write_text(csv_content, encoding="utf-8")
 
     result = invoke_cached_cli(
-        ["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)],
+        ["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)],
     )
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
@@ -195,7 +195,7 @@ def test_classify_from_csv_rejects_unknown_column(tmp_path: Path) -> None:
     csv_file = tmp_path / "badcol.csv"
     csv_file.write_text(csv_content, encoding="utf-8")
 
-    result = invoke_cached_cli(["app", "ledger", "classify", "--from-csv", str(csv_file)])
+    result = invoke_cached_cli(["app", "ledger", "classify", "--file", str(csv_file)])
     assert result.exit_code != 0
 
 
@@ -211,7 +211,7 @@ def test_classify_from_csv_accepts_iva_category_column(tmp_path: Path) -> None:
     )
 
     result = invoke_cached_cli(
-        ["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)],
+        ["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)],
     )
 
     assert result.exit_code == 0, result.output
@@ -231,7 +231,7 @@ def test_classify_from_csv_accepts_irpf_category_column(tmp_path: Path) -> None:
     )
 
     result = invoke_cached_cli(
-        ["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)],
+        ["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)],
     )
 
     assert result.exit_code == 0, result.output
@@ -250,7 +250,7 @@ def test_classify_from_csv_accepts_display_id_prefix(tmp_path: Path) -> None:
     csv_file.write_text(f"transaction_id,classification\n{display_id},BUSINESS\n", encoding="utf-8")
 
     result = invoke_cached_cli(
-        ["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)],
+        ["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)],
     )
 
     assert result.exit_code == 0, result.output
@@ -278,7 +278,7 @@ def test_classify_from_csv_ambiguous_prefix_is_row_failure(tmp_path: Path) -> No
     )
 
     result = invoke_cached_cli(
-        ["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)],
+        ["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)],
     )
 
     assert result.exit_code == 0, result.output
@@ -297,14 +297,14 @@ def test_classify_from_csv_exclusive_with_id(tmp_path: Path) -> None:
     csv_file.write_text(f"transaction_id,classification\n{tx1},BUSINESS\n", encoding="utf-8")
 
     result = invoke_cached_cli(
-        ["app", "ledger", "classify", "--from-csv", str(csv_file), tx1, "--classification", "BUSINESS"],
+        ["app", "ledger", "classify", "--file", str(csv_file), tx1, "--classification", "BUSINESS"],
     )
     assert result.exit_code != 0
 
 
 def test_classify_from_csv_not_found_raises(tmp_path: Path) -> None:
     result = invoke_cached_cli(
-        ["app", "ledger", "classify", "--from-csv", str(tmp_path / "nosuchfile.csv")],
+        ["app", "ledger", "classify", "--file", str(tmp_path / "nosuchfile.csv")],
     )
     assert result.exit_code != 0
 
@@ -491,7 +491,7 @@ def test_rule_priority_order_first_match_wins(tmp_path: Path) -> None:
 
 
 def test_classify_from_csv_persists_iva_facts(tmp_path: Path) -> None:
-    """Bulk --from-csv supplies the same IVA facts single-classify supplies.
+    """Bulk --file supplies the same IVA facts single-classify supplies.
 
     Drives the real bulk-CSV classify against the live ledger backend and
     asserts the persisted transaction carries the supplied
@@ -514,7 +514,7 @@ def test_classify_from_csv_persists_iva_facts(tmp_path: Path) -> None:
     )
 
     result = invoke_cached_cli(
-        ["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)],
+        ["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)],
     )
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
@@ -548,7 +548,7 @@ def test_classify_from_csv_preserves_existing_tax_facts_when_columns_omitted(tmp
     )
 
     result = invoke_cached_cli(
-        ["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)],
+        ["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)],
     )
 
     assert result.exit_code == 0, result.output
@@ -575,7 +575,7 @@ def test_classify_from_csv_blank_optional_tax_cells_preserve_existing_values(tmp
     )
 
     result = invoke_cached_cli(
-        ["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)],
+        ["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)],
     )
 
     assert result.exit_code == 0, result.output
@@ -593,7 +593,7 @@ def test_classify_from_csv_iva_facts_match_single_classify(tmp_path: Path) -> No
     """Bulk and single-id mode persist the supplied IVA facts via the same write path.
 
     tx1 (gross 100.00) is classified through the single positional-id surface and
-    tx2 (gross 200.00) through the bulk ``--from-csv`` surface; each row's
+    tx2 (gross 200.00) through the bulk ``--file`` surface; each row's
     ``taxable_base + iva_amount`` equals its own gross (the shared domain
     invariant). Both surfaces must persist exactly the supplied values,
     proving the bulk path reuses the single-classify primitive rather than a
@@ -620,13 +620,13 @@ def test_classify_from_csv_iva_facts_match_single_classify(tmp_path: Path) -> No
     )
     assert single.exit_code == 0, single.output
 
-    # Bulk-classify tx2 (gross 200.00) with IVA facts via --from-csv.
+    # Bulk-classify tx2 (gross 200.00) with IVA facts via --file.
     csv_file = tmp_path / "bulk_iva.csv"
     csv_file.write_text(
         f"transaction_id,classification,taxable_base,iva_rate,iva_amount\n{tx2},BUSINESS,165.29,0.21,34.71\n",
         encoding="utf-8",
     )
-    bulk = invoke_cached_cli(["app", "ledger", "classify", "--from-csv", str(csv_file)])
+    bulk = invoke_cached_cli(["app", "ledger", "classify", "--file", str(csv_file)])
     assert bulk.exit_code == 0, bulk.output
 
     by_id = {r["transaction_id"]: r for r in _list_transactions()}
@@ -655,7 +655,7 @@ def test_classify_from_csv_rejects_malformed_iva_fact(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     result = invoke_cached_cli(
-        ["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)],
+        ["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)],
     )
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
@@ -676,7 +676,7 @@ def test_classify_from_csv_surplus_cells_are_row_failure(tmp_path: Path) -> None
     )
 
     result = invoke_cached_cli(
-        ["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)],
+        ["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)],
     )
 
     assert result.exit_code == 0, result.output
@@ -693,14 +693,14 @@ def test_classify_from_csv_surplus_cells_are_row_failure(tmp_path: Path) -> None
 
 
 def test_classify_from_csv_accepts_business_pct_for_mixed(tmp_path: Path) -> None:
-    """MIXED rows classify in bulk via --from-csv with a business_pct column."""
+    """MIXED rows classify in bulk via --file with a business_pct column."""
     tx1, _tx2 = _import_two_transactions(tmp_path)
     csv_file = tmp_path / "mixed.csv"
     csv_file.write_text(
         f"transaction_id,classification,category_id,business_pct\n{tx1},MIXED,telefonia_movil,0.50\n",
         encoding="utf-8",
     )
-    result = invoke_cached_cli(["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)])
+    result = invoke_cached_cli(["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)])
     assert result.exit_code == 0, result.output
     assert json.loads(result.output)["result"]["applied"] == 1
     row = {r["transaction_id"]: r for r in _list_transactions()}[tx1]
@@ -722,7 +722,7 @@ def test_classify_from_csv_accepts_usage_ratio_id_for_mixed(tmp_path: Path) -> N
         encoding="utf-8",
     )
 
-    result = invoke_cached_cli(["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)])
+    result = invoke_cached_cli(["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
     assert payload["applied"] == 1, payload
@@ -735,8 +735,8 @@ def test_classify_from_csv_accepts_usage_ratio_id_for_mixed(tmp_path: Path) -> N
 
     stored = _stored_transaction(tx1)
     assert stored.usage_ratio_id == "telefonia_movil"
-    assert stored.classification_reason == "aeat app ledger classify --from-csv"
-    assert stored.edit_lineage[-1].source_command == "aeat app ledger classify --from-csv"
+    assert stored.classification_reason == "aeat app ledger classify --file"
+    assert stored.edit_lineage[-1].source_command == "aeat app ledger classify --file"
 
 
 def test_classify_from_csv_rejects_unknown_usage_ratio_id(tmp_path: Path) -> None:
@@ -749,7 +749,7 @@ def test_classify_from_csv_rejects_unknown_usage_ratio_id(tmp_path: Path) -> Non
         encoding="utf-8",
     )
 
-    result = invoke_cached_cli(["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)])
+    result = invoke_cached_cli(["--format", "json", "app", "ledger", "classify", "--file", str(csv_file)])
     assert result.exit_code != 0, result.output
     payload = json.loads(result.output)["result"]
     assert payload["applied"] == 0, payload

@@ -48,9 +48,10 @@ from ...domain.transactions import (
 )
 from ._common import _bad, _emit_envelope, _state, _tx_repo, parse_decimal_amount
 from ._ledger_support import _emit_update_result, _resolve_id
+from ._modelo_rendering import advisory_notice
 
 if TYPE_CHECKING:
-    from ...application.ledger import LLMSplitSuggestion
+    from ...application.ledger import LLMSplitSuggestion, ManualLedgerTransactionResult
     from ._ledger_payloads import LedgerSplitChildIdPayload, LedgerSplitChildProposalPayload
 
 
@@ -134,7 +135,63 @@ def ledger_attach(
         result.bucket_event_ids,
         command="ledger.attach",
         result_cls=LedgerAttachResult,
+        notices=_stale_finalized_revision_notices(result),
     )
+
+
+def _stale_finalized_revision_notices(result: ManualLedgerTransactionResult) -> list[Notice]:
+    """Warn that each finalized revision citing this row will not pick the evidence up.
+
+    A revision bundles its ledger evidence when it is VERIFIED, and that bundle
+    is frozen. An attachment landing afterwards is stored on the ledger row but
+    never reaches the already-verified filing, so an export or filing gate
+    reading the bundle keeps refusing.
+
+    The advisory deliberately names NO recovery verb, because neither candidate
+    works and both were measured rather than assumed: ``work calculate``
+    re-derives the same content-addressed revision id (evidence is not part of
+    that hash) and returns the existing finalized revision untouched, and
+    ``work discard`` is worse than useless — it marks the work unit
+    ``descartado``, and the follow-up ``work create`` re-derives the SAME
+    work-unit id and hands the discarded unit back, permanently stranding that
+    (modelo, filing year, period) target for the profile. Suggesting either
+    would send the operator further from a working filing, so the guidance is
+    the ordering rule that does work: link invoices before calculating
+    (``aeat-architecture-boundaries``: name a real way forward, never a bare
+    refusal — and never a false one).
+    """
+    return [
+        advisory_notice(
+            "ledger.attach.finalized_revision_stale",
+            tr(
+                "cli.ledger.attach.finalized_revision_stale",
+                modelo=blocker.modelo,
+                filing_year=str(blocker.filing_year),
+                period=blocker.period,
+                default=(
+                    f"Evidence stored on the ledger row, but Modelo {blocker.modelo} "
+                    f"{blocker.filing_year} {blocker.period} was verified before this evidence "
+                    "existed and keeps the evidence bundle captured then. This filing will not "
+                    "pick it up; recalculating does not change that. Link invoices before "
+                    "running work calculate."
+                ),
+            ),
+            suggestion=(
+                "aeat app ledger evidence add PATH; aeat app ledger attach TRANSACTION_ID "
+                "--purchase-invoice-evidence-id EVIDENCE_ID  # before `aeat app modelo work calculate`"
+            ),
+            context={
+                "work_unit_id": blocker.work_unit_id,
+                "calculation_revision_id": blocker.calculation_revision_id,
+                "revision_state": blocker.revision_state,
+                "modelo": blocker.modelo,
+                "filing_year": str(blocker.filing_year),
+                "period": blocker.period,
+                "reason": "finalized_revision_predates_evidence",
+            },
+        )
+        for blocker in result.stale_finalized_revisions
+    ]
 
 
 def _sniff_document_mime_type(reference: str, data: bytes) -> str:

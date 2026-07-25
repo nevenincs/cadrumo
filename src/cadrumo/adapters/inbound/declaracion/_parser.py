@@ -512,12 +512,46 @@ class _TargetClassification:
     ambiguous: CasillaId | None = None
 
 
+_STRICT_PRINTED_AMOUNT_RE = re.compile(rf"^{SPANISH_AMOUNT_GROUP}$")
+"""A fully-formed AEAT-printed monetary amount, anchored end to end.
+
+``SPANISH_AMOUNT_GROUP`` requires the mandatory ``,NN`` decimal tail that AEAT
+prints on every populated money box.
+"""
+
+def _is_own_box_number_of_blank_box(raw: str, printed_number: str | None) -> bool:
+    """Whether ``raw`` is the target's own box number left by a BLANK box.
+
+    ``named_label`` captures the last token on the line. On a real AEAT form a
+    BLANK money box leaves its own printed box number as that last token (e.g.
+    ``"...aplicadas en este periodo ......... 78"`` for box 78), and
+    :func:`parse_spanish_decimal` is deliberately permissive enough to read that
+    ``78`` as ``Decimal("78")`` - fabricating a value the filing never declared.
+
+    The discriminator is deliberately narrow: only a token identical to the
+    target's OWN printed box number is refused. A populated money box prints the
+    ``,NN`` tail (``"3.000,00"``), and a bare integer that is NOT the box number
+    is a genuine value - AEAT prints an explicit bare ``0`` in a zero box
+    (compensacion boxes 87 and 110), and count-valued targets such as the
+    ``total-perceptores`` of the informativas legitimately print a bare count.
+    Keying on the box number keeps all three admissible while refusing the one
+    token that can only be a label.
+    """
+    if printed_number is None:
+        return False
+    token = raw.strip()
+    if _STRICT_PRINTED_AMOUNT_RE.match(token):
+        return False
+    return token == printed_number.strip()
+
+
 def _classify_target(
     target: ExtractionTargetDefinition,
     *,
     pages: tuple[str, ...],
     pages_words: tuple[list[_PdfWord], ...] | None,
     numeric_anchors: dict[CasillaId, str],
+    printed_box_numbers: dict[CasillaId, str] | None = None,
 ) -> _TargetClassification:
     """Resolve one target's hits into a value or a failure category.
 
@@ -540,6 +574,15 @@ def _classify_target(
         return _TargetClassification(ambiguous=casilla_id)
     page_number, raw_value = hits[0]
     if target.value_kind == "amount":
+        # named_label captures the last token on the line, which for a BLANK box
+        # on a real AEAT render is the box's own printed number. Such a box is
+        # absent, not corrupt, so it is reported missing (coverage decides
+        # whether that is tolerable) rather than malformed (which raises hard).
+        if target.match_strategy == "named_label" and _is_own_box_number_of_blank_box(
+            raw_value,
+            (printed_box_numbers or {}).get(casilla_id),
+        ):
+            return _TargetClassification(missing=casilla_id)
         parsed: Decimal | str | None = parse_spanish_decimal(raw_value)
         if parsed is None:
             return _TargetClassification(malformed=casilla_id)
@@ -616,6 +659,7 @@ def _extract_profile_values(
     malformed: list[CasillaId] = []
     ambiguous: list[CasillaId] = []
     numeric_anchors = _numeric_casilla_anchors(profile, revision)
+    printed_box_numbers = _printed_box_numbers(profile, revision)
 
     for target in profile.target_casillas:
         outcome = _classify_target(
@@ -623,6 +667,7 @@ def _extract_profile_values(
             pages=pages,
             pages_words=pages_words,
             numeric_anchors=numeric_anchors,
+            printed_box_numbers=printed_box_numbers,
         )
         if outcome.value is not None:
             values.append(outcome.value)
@@ -667,6 +712,29 @@ def _numeric_casilla_anchors(
             )
         anchors[target.casilla_id] = casilla.number
     return anchors
+
+
+def _printed_box_numbers(
+    profile: ExtractionProfileDefinition,
+    revision: ModeloRevision,
+) -> dict[CasillaId, str]:
+    """Map ``named_label`` target ids to their printed box number, where one exists.
+
+    Feeds :func:`_is_own_box_number_of_blank_box`, which needs to recognise the
+    token a BLANK box leaves behind. Unlike :func:`_numeric_casilla_anchors` this
+    is lenient: a target whose id is not a canonical casilla in ``revision``
+    simply has no box number to compare against, and is left unguarded rather
+    than refused.
+    """
+    revision_casillas_by_id = casillas_by_id(revision)
+    numbers: dict[CasillaId, str] = {}
+    for target in profile.target_casillas:
+        if target.match_strategy != "named_label":
+            continue
+        casilla = revision_casillas_by_id.get(target.casilla_id)
+        if casilla is not None and casilla.number:
+            numbers[target.casilla_id] = casilla.number
+    return numbers
 
 
 def _extract_pages_words(pdf_path: Path) -> tuple[list[_PdfWord], ...]:

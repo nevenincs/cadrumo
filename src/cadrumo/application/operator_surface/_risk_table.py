@@ -86,7 +86,7 @@ COMMAND_RISK: dict[str, CommandRiskDeclaration] = {
     # staged file. That deletion is the whole point (those bytes must not sit on
     # disk), but it is still an unrecoverable local delete, so it is declared
     # destructive rather than classified on the recovery intent behind it.
-    "app.maintenance.profile_bundle_reconcile": CommandRiskDeclaration(destructive=True),
+    "app.maintenance.reconcile": CommandRiskDeclaration(destructive=True),
     "config.auth.apoderado.check": CommandRiskDeclaration(),
     "config.auth.apoderado.clear": CommandRiskDeclaration(destructive=True),
     "config.auth.apoderado.configure": CommandRiskDeclaration(),

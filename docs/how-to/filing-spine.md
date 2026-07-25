@@ -159,6 +159,7 @@ work verify` (the chain sequence above runs it).
 Local filing defaults to the current verified revision:
 
 ```{cli-sequence} filing-spine-file
+:verify: Confirm the filing is recorded locally and nothing is submitted to AEAT.
 ```
 
 `work file` records a local filed marker. It does not submit anything to AEAT.
@@ -187,6 +188,7 @@ If you need a different saved calculation, use `--select` with the visible
 target:
 
 ```{cli-sequence} filing-spine-select
+:verify: Confirm each selector resolves the draft, verified, and filed revisions.
 ```
 
 You can also pass exact IDs on commands that accept them:
@@ -203,11 +205,13 @@ Manage or review the lifecycle of a work unit as it progresses:
 - `rename`: Add or update a friendly display name for the work unit:
   
   ```{cli-sequence} filing-spine-rename
+  :verify: Confirm the work unit carries the new display name.
   ```
 
 - `history`: Review all actions the tool has taken on this filing, in order:
   
   ```{cli-sequence} filing-spine-history
+  :verify: Confirm the history lists the actions taken on this filing.
   ```
 
 - `discard`: Mark the filing workspace as discarded. The tool records this
@@ -215,6 +219,7 @@ Manage or review the lifecycle of a work unit as it progresses:
   or want to replace it with a fresh one:
   
   ```{cli-sequence} filing-spine-discard
+  :verify: Confirm the workspace is marked discarded with its reason.
   ```
   
   The `--reason` text is for your own records only. It is not sent to AEAT.
@@ -228,6 +233,7 @@ and restart it:
 - `runs`: List recent flow runs, from most recent to oldest:
   
   ```{cli-sequence} filing-spine-runs
+  :verify: Confirm recent flow runs are listed newest first.
   ```
 
 - `resume`: Restart an interrupted command using the filing details or the

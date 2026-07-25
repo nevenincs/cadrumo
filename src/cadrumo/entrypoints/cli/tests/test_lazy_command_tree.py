@@ -262,3 +262,78 @@ def test_dispatching_a_subcommand_loads_its_module() -> None:
 
     assert completed.returncode == 0, completed.stderr
     assert completed.stdout.strip() == "loaded"
+
+
+def test_resolving_the_config_group_does_not_import_the_wizard() -> None:
+    """Reaching ``config`` must not build the profile-setup wizard.
+
+    ``build_wizard_command`` reaches the whole wizard dependency tail, and
+    the two wizard verbs used to be CONSTRUCTED at ``_config`` package-import
+    time — so every ``config`` verb, ``login`` included, paid for the wizard
+    before parsing its own arguments. Deferring the import alone would not
+    have held: the module-level call kept the tail eager, so the
+    construction itself moved behind a per-leaf lazy registration.
+
+    The guard is placed on group RESOLUTION rather than on process start
+    because the group is where the regression would reappear: a future
+    contributor adding a module-level wizard call to ``_config`` reds this
+    test without having to notice the cold-start budget at all.
+    """
+
+    completed = _run_python(
+        """
+        import sys
+        from typer.main import get_command
+        from cadrumo.entrypoints.cli import app
+
+        command = get_command(app)
+        command.get_command(None, "config")
+        print("imported" if "cadrumo.application.wizard" in sys.modules else "absent")
+        """,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    assert completed.stdout.strip() == "absent"
+
+
+def test_dispatching_a_wizard_verb_loads_the_wizard() -> None:
+    """The wizard deferral is a delay, not a shutout.
+
+    Counterpart to the absence guard above: an operator who actually asks
+    for ``config profile create`` must still get the fully-built wizard
+    command. Without this, the absence assertion could be satisfied by a
+    verb that had silently become unreachable.
+    """
+
+    completed = _run_python(
+        """
+        from contextlib import redirect_stderr, redirect_stdout
+        from io import StringIO
+        import sys
+        from click.exceptions import Exit as ClickExit
+        from typer.main import get_command
+        from cadrumo.entrypoints.cli import app
+
+        command = get_command(app)
+        stdout = StringIO()
+        stderr = StringIO()
+        try:
+            with redirect_stdout(stdout), redirect_stderr(stderr):
+                result = command.main(
+                    args=["config", "profile", "create", "--help"],
+                    prog_name="aeat",
+                    standalone_mode=False,
+                )
+        except ClickExit as exit_:
+            exit_code = exit_.exit_code
+        else:
+            exit_code = result if isinstance(result, int) else 0
+        assert exit_code == 0, stdout.getvalue() + stderr.getvalue()
+        rendered = stdout.getvalue()
+        assert "--entity-type" in rendered, rendered
+        print("loaded" if "cadrumo.application.wizard" in sys.modules else "missing")
+        """,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    assert completed.stdout.strip() == "loaded"

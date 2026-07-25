@@ -1,2 +1,6 @@
+:seed: filing-spine-303-ledger
+@step Create the work unit for the filing target.
+@setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
 @step Mark the filing workspace as discarded, recording the reason.
-  @static aeat app modelo work discard --modelo 303 --year 2026 --period 1T --reason "re-creating with correct revision" --yes
+@result aeat --format json app modelo work discard --modelo 303 --year 2026 --period 1T --reason "re-creating with correct revision" --yes
+@expect exit_code == 0

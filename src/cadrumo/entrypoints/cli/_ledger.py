@@ -580,12 +580,12 @@ def ledger_update(
     )
 
 
-_FromCsvOpt = Annotated[
+_FileOpt = Annotated[
     str | None,
     typer.Option(
-        "--from-csv",
+        "--file",
         help=tr(
-            "cli.ledger.classify.from_csv_help",
+            "cli.ledger.classify.file_help",
             default=(
                 "Path to a CSV file with columns transaction_id, classification"
                 "[, category_id, business_pct, taxable_base, iva_rate, iva_amount, iva_category, "
@@ -605,7 +605,7 @@ def ledger_classify(
         "--classification",
         help=tr("cli.ledger.classify.classification_help"),
     ),
-    from_csv: _FromCsvOpt = None,
+    file: _FileOpt = None,
     business_pct: str | None = typer.Option(
         None,
         "--business-pct",
@@ -660,7 +660,7 @@ def ledger_classify(
     reject: bool = typer.Option(False, "--reject", help=tr("cli.ledger.classify.reject_help")),
     reason: str | None = typer.Option(None, "--reason", help=tr("cli.ledger.classify.reason_help")),
 ) -> None:
-    """Classify one ledger transaction (positional id), via LLM (--llm), or in bulk (--from-csv)."""
+    """Classify one ledger transaction (positional id), via LLM (--llm), or in bulk (--file)."""
     m210_options = M210LedgerClassifyOptions(
         tipo_renta_code=m210_tipo_renta_code,
         gross_income_amount=m210_gross_income_amount,
@@ -673,7 +673,7 @@ def ledger_classify(
         llm_requested=llm is not None,
         read_evidence=read_evidence,
         saturate=saturate,
-        from_csv=from_csv,
+        file=file,
         auto_split=auto_split,
     )
     if auto_split:
@@ -681,7 +681,7 @@ def ledger_classify(
             ctx,
             transaction_id=transaction_id,
             classification=classification,
-            from_csv=from_csv,
+            file=file,
             provider=llm,
             apply=apply,
             actor=actor,
@@ -697,7 +697,7 @@ def ledger_classify(
             "ctx": ctx,
             "transaction_id": transaction_id,
             "classification": classification,
-            "from_csv": from_csv,
+            "file": file,
             "business_pct": business_pct,
             "provider": llm,
             "apply": apply,
@@ -718,7 +718,7 @@ def ledger_classify(
             ctx,
             transaction_id=transaction_id,
             classification=classification,
-            from_csv=from_csv,
+            file=file,
             iva_category=iva_category,
             actor=actor,
         )
@@ -726,13 +726,13 @@ def ledger_classify(
     state = _state()
     transaction_repository = _tx_repo(state)
 
-    if from_csv is not None:
+    if file is not None:
         ledger_classify_bulk_csv(
             ctx,
             transaction_repository=transaction_repository,
             transaction_id=transaction_id,
             classification=classification,
-            from_csv=from_csv,
+            file=file,
             actor=actor,
         )
         return

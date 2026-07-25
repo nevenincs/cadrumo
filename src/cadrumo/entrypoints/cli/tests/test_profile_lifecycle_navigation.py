@@ -335,7 +335,14 @@ def test_delete_active_profile_states_the_pointer_was_cleared(
     assert "active_profile\t<none>" in deleted.output
     assert "notice\t" in deleted.output
     flat = deleted.output.replace("\n", " ")
-    assert "switch" in flat and "create" in flat
+    # The notice must name recovery verbs that actually resolve. Asserting
+    # the full command path rather than a bare token keeps this honest: a
+    # bare "login" would also match the retired `config profile logout`
+    # spelling, and a retired verb here is precisely the defect the notice
+    # exists to avoid -- the operator lands on it exactly when their
+    # published guide lags a rename.
+    assert "aeat config login" in flat
+    assert "aeat config profile create" in flat
 
 
 def test_delete_non_active_profile_omits_the_cleared_pointer_notice(

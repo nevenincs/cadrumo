@@ -1,6 +1,14 @@
-"""Oracle test for M303 2024 casillas 27/45/69/71 grounded against the AEAT
-Manual practico IVA 2024's own worked example (Cap. 9, "La declaracion-resumen
-anual. Modelo 390", primer trimestre solucion).
+"""Oracle test for M303 2024 casillas 09/11/27/29/33/37/45/46/69/71 grounded
+against the AEAT Manual practico IVA 2024's own worked example (Cap. 9, "La
+declaracion-resumen anual. Modelo 390", primer trimestre solucion).
+
+The two aggregate totals (27, 45) and the resultado chain (69, 71) are graded
+alongside the six per-casilla leaves the same solucion states verbatim (09, 11,
+29, 33, 37 and "Diferencia" = iva.resultado-regimen-general, form_number 46).
+Grading the leaves as well as the totals is what closes the compensating-error
+gap: two offsetting mistakes inside the devengado or deducible sum leave both
+printed totals correct, so a totals-only oracle stays green while the individual
+boxes the operator actually files are wrong.
 
 Ground truth (bundled AEAT Manual practico IVA 2024):
 
@@ -163,6 +171,37 @@ _CASILLA_45: CasillaId = validated_casilla_id("45", surface="_CASILLA_45")
 _CASILLA_RESULTADO_69: CasillaId = validated_casilla_id("iva.resultado", surface="_CASILLA_RESULTADO_69")
 _CASILLA_71: CasillaId = validated_casilla_id("71", surface="_CASILLA_71")
 
+# Per-casilla leaves the same 1T solucion states verbatim (pag. 293-294); see
+# the module docstring for each quoted line.
+_CASILLA_09: CasillaId = validated_casilla_id("09", surface="_CASILLA_09")
+_CASILLA_11: CasillaId = validated_casilla_id("11", surface="_CASILLA_11")
+_CASILLA_29: CasillaId = validated_casilla_id("29", surface="_CASILLA_29")
+_CASILLA_33: CasillaId = validated_casilla_id("33", surface="_CASILLA_33")
+_CASILLA_37: CasillaId = validated_casilla_id("37", surface="_CASILLA_37")
+_CASILLA_RESULTADO_REGIMEN_GENERAL_46: CasillaId = validated_casilla_id(
+    "iva.resultado-regimen-general",
+    surface="_CASILLA_RESULTADO_REGIMEN_GENERAL_46",
+)
+
+_MANUAL_1T_LEAF_FIGURES: dict[CasillaId, Decimal] = {
+    # "Total IVA devengado en Ventas interiores y servicios prestados
+    # (83.000 x 21%): 17.430 euros" (pag. 293).
+    _CASILLA_09: Decimal("17430.00"),
+    # "Adquisiciones intracomunitarias: [(18.000(2) + 3.000(4))] x 21%:
+    # 4.410 euros" (pag. 293) - the devengado leg of the self-assessed AIC.
+    _CASILLA_11: Decimal("4410.00"),
+    # "Total cuotas soportadas en operaciones interiores: 9.870 euros" (pag. 294).
+    _CASILLA_29: Decimal("9870.00"),
+    # "Por cuotas satisfechas en importaciones: (12.000(6) x 21%): 2.520
+    # euros" (pag. 294).
+    _CASILLA_33: Decimal("2520.00"),
+    # "En adquisiciones intracomunitarias: [18.000(2) + 3.000(4)) x 21%]:
+    # 4.410 euros" (pag. 294) - the deducible leg of the same AIC.
+    _CASILLA_37: Decimal("4410.00"),
+    # "Diferencia: 6.288 euros" (pag. 294) - form_number 46, [27]-[45].
+    _CASILLA_RESULTADO_REGIMEN_GENERAL_46: Decimal("6288.00"),
+}
+
 _FILING_YEAR = 2024
 _PERIOD = "1T"
 
@@ -313,6 +352,27 @@ def test_m303_2024_1t_manual_worked_example_devengada_deducible_resultado() -> N
     assert result.values[_CASILLA_71] == Decimal("3288.00")
 
 
+def test_m303_2024_1t_manual_worked_example_per_casilla_leaves() -> None:
+    """Each leaf the manual states verbatim is reproduced in its own casilla.
+
+    Oracle: the same "Liquidacion primer trimestre" solucion (pag. 293-294)
+    prints six per-casilla figures alongside the two totals - 17.430 (09),
+    4.410 (11), 9.870 (29), 2.520 (33), 4.410 (37) and "Diferencia: 6.288"
+    (iva.resultado-regimen-general, form_number 46). Grading the leaves and not
+    only ``27``/``45`` closes the compensating-error gap: two offsetting
+    mistakes inside the devengado or deducible sum leave both totals correct,
+    so a leaf-blind gate stays green while the individual boxes an operator
+    files are wrong. Each expected figure is the manual's own printed euro
+    amount, never a hand-run of the registry formula under test.
+    """
+    result = _calculate(include_recargo=True)
+
+    for casilla_id, expected in _MANUAL_1T_LEAF_FIGURES.items():
+        assert result.values[casilla_id] == expected, (
+            f"casilla {casilla_id!r}: manual states {expected}, engine computed {result.values[casilla_id]}"
+        )
+
+
 def test_casilla_27_anti_tautology_recargo_changes_total_cuota_devengada() -> None:
     """Dropping op (9)'s recargo must lower casilla 27 by exactly the dropped amount.
 
@@ -359,7 +419,14 @@ def test_m303_2024_manual_grounding_is_enrolled_and_raises_independently_grounde
     snapshot = authority.snapshot("303", filing_year=_FILING_YEAR, period=_PERIOD)
     policy = snapshot.verification_policy()
 
-    for casilla_id in (_CASILLA_27, _CASILLA_45, _CASILLA_RESULTADO_69, _CASILLA_71):
+    grounded_here = (
+        _CASILLA_27,
+        _CASILLA_45,
+        _CASILLA_RESULTADO_69,
+        _CASILLA_71,
+        *_MANUAL_1T_LEAF_FIGURES,
+    )
+    for casilla_id in grounded_here:
         assert casilla_id in policy.externally_grounded_casilla_ids
 
     reconciled_casilla_ids = policy.computed_casilla_ids | policy.reconcile_when_present_casilla_ids

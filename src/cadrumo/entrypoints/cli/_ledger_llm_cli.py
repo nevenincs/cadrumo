@@ -188,7 +188,7 @@ def dispatch_autosplit(
     *,
     transaction_id: str | None,
     classification: BusinessClassification | None,
-    from_csv: str | None,
+    file: str | None,
     provider: LLMProvider | None,
     apply: bool,
     actor: str | None,
@@ -217,11 +217,11 @@ def dispatch_autosplit(
                 default="--auto-split requires --read-evidence: the split decision is read from the invoice.",
             ),
         )
-    if classification is not None or from_csv is not None:
+    if classification is not None or file is not None:
         raise _bad(
             tr(
                 "cli.ledger.classify.llm_exclusive",
-                default="--llm cannot be combined with --classification or --from-csv; "
+                default="--llm cannot be combined with --classification or --file; "
                 "the manual path is the explicit operator override.",
             ),
         )
@@ -237,7 +237,7 @@ def dispatch_autosplit(
         raise _bad(
             tr(
                 "cli.ledger.classify.id_required",
-                default="A transaction id is required when --from-csv is not provided.",
+                default="A transaction id is required when --file is not provided.",
             ),
         )
     if provider is not None and not is_llm_provider_available(provider):
@@ -465,7 +465,7 @@ def _emit_llm_single_classify(
 def _validate_classify_llm_options(
     *,
     classification: BusinessClassification | None,
-    from_csv: str | None,
+    file: str | None,
     reject: bool,
     apply: bool,
     transaction_id: str | None,
@@ -481,11 +481,11 @@ def _validate_classify_llm_options(
     by the local vision model, which needs no subprocess provider; a text-layer
     read with no provider is refused instructively downstream by the application.
     """
-    if classification is not None or from_csv is not None:
+    if classification is not None or file is not None:
         raise _bad(
             tr(
                 "cli.ledger.classify.llm_exclusive",
-                default="--llm cannot be combined with --classification or --from-csv; "
+                default="--llm cannot be combined with --classification or --file; "
                 "the manual path is the explicit operator override.",
             ),
         )
@@ -501,7 +501,7 @@ def _validate_classify_llm_options(
         raise _bad(
             tr(
                 "cli.ledger.classify.id_required",
-                default="A transaction id is required when --from-csv is not provided.",
+                default="A transaction id is required when --file is not provided.",
             ),
         )
     if provider is not None and not is_llm_provider_available(provider):
@@ -628,7 +628,7 @@ def _llm_classify_prologue[SuggestionT: (LLMClassificationSuggestion, LLMSaturat
     *,
     suggest_fn: Callable[..., SuggestionT],
     classification: BusinessClassification | None,
-    from_csv: str | None,
+    file: str | None,
     transaction_id: str | None,
     provider: LLMProvider | None,
     apply: bool,
@@ -648,7 +648,7 @@ def _llm_classify_prologue[SuggestionT: (LLMClassificationSuggestion, LLMSaturat
     """
     validated_transaction_id = _validate_classify_llm_options(
         classification=classification,
-        from_csv=from_csv,
+        file=file,
         reject=reject,
         apply=apply,
         transaction_id=transaction_id,
@@ -696,7 +696,7 @@ def ledger_classify_llm(
     *,
     transaction_id: str | None,
     classification: BusinessClassification | None,
-    from_csv: str | None,
+    file: str | None,
     business_pct: str | None,
     provider: LLMProvider | None,
     apply: bool,
@@ -716,13 +716,13 @@ def ledger_classify_llm(
     classification write with ``llm:<model>`` provenance. With ``--reject`` the
     suggestion is recorded as a declined audit event and the row is left
     unchanged. ``--llm`` is mutually exclusive with the manual
-    ``--classification`` / ``--from-csv`` override.
+    ``--classification`` / ``--file`` override.
     """
     prologue = _llm_classify_prologue(
         ctx,
         suggest_fn=suggest_llm_classification,
         classification=classification,
-        from_csv=from_csv,
+        file=file,
         transaction_id=transaction_id,
         provider=provider,
         apply=apply,
@@ -764,7 +764,7 @@ def ledger_saturate_llm(
     *,
     transaction_id: str | None,
     classification: BusinessClassification | None,
-    from_csv: str | None,
+    file: str | None,
     business_pct: str | None,
     provider: LLMProvider | None,
     apply: bool,
@@ -792,7 +792,7 @@ def ledger_saturate_llm(
         ctx,
         suggest_fn=saturate_llm_classification,
         classification=classification,
-        from_csv=from_csv,
+        file=file,
         transaction_id=transaction_id,
         provider=provider,
         apply=apply,
@@ -842,7 +842,7 @@ def ledger_operator_iva_derive(
     *,
     transaction_id: str | None,
     classification: str | None,
-    from_csv: str | None,
+    file: str | None,
     iva_category: IvaCategory | None,
     actor: str | None,
 ) -> None:
@@ -859,17 +859,17 @@ def ledger_operator_iva_derive(
     """
     from ._ledger_payloads import LedgerClassifySingleResult
 
-    if from_csv is not None or classification is not None:
+    if file is not None or classification is not None:
         raise _bad(
             "--saturate without --llm derives the IVA substrate from --iva-category alone; "
-            "it cannot be combined with --classification or --from-csv. Classify the row "
+            "it cannot be combined with --classification or --file. Classify the row "
             "first, then run 'classify <id> --iva-category <category> --saturate'.",
         )
     if transaction_id is None:
         raise _bad(
             tr(
                 "cli.ledger.classify.id_required",
-                default="A transaction id is required when --from-csv is not provided.",
+                default="A transaction id is required when --file is not provided.",
             ),
         )
     if iva_category is None:

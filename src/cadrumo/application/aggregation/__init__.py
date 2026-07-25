@@ -127,6 +127,7 @@ from ._ledger_filing_snapshot import (
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
     evaluate_ledger_filing_staleness,
+    row_fingerprint,
     stale_filed_revisions,
 )
 from ._modelo_bindings import (
@@ -335,6 +336,7 @@ __all__ = [
     "persist_retencion_observations",
     "precedence_ladder_sources",
     "retencion_observation_key",
+    "row_fingerprint",
     "stale_filed_revisions",
     "storage_degradation_resolution",
     "validate_iva_ledger_counterparty_category",

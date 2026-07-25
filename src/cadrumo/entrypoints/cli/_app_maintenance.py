@@ -1,6 +1,6 @@
 """CLI commands for the ``aeat app maintenance`` subcommand group.
 
-Provides ``profile-bundle-reconcile``: a local-only, on-demand sweep that
+Provides ``reconcile``: a local-only, on-demand sweep that
 resolves crash-interrupted portable profile-bundle publications. The export
 service already reconciles before every publication, so an operator who keeps
 exporting never needs this verb. It exists for the case that trigger
@@ -64,16 +64,16 @@ def maintenance() -> None:
 
 
 @app.command(
-    "profile-bundle-reconcile",
+    "reconcile",
     help=tr(
-        "cli.app.maintenance.profile_bundle_reconcile_help",
+        "cli.app.maintenance.reconcile_help",
         default=(
             "Clear profile-bundle exports left unfinished by a crash, removing "
             "any leftover cleartext staged file and recording owed audit events."
         ),
     ),
 )
-def app_maintenance_profile_bundle_reconcile(
+def app_maintenance_reconcile(
     ctx: typer.Context,
     output_language: OutputLanguage | None = typer.Option(
         None,
@@ -111,7 +111,7 @@ def app_maintenance_profile_bundle_reconcile(
     notices = _reconcile_notices(outcome)
     _emit_envelope(
         ctx,
-        command="app.maintenance.profile_bundle_reconcile",
+        command="app.maintenance.reconcile",
         result=result,
         lines=(
             f"reconciled\t{result.reconciled_count}",
@@ -139,7 +139,7 @@ def _reconcile_notices(outcome: ProfileBundleExportReconciliation) -> tuple[Noti
         notices.append(
             Notice(
                 severity=NoticeSeverity.INFO,
-                code="app.maintenance.profile_bundle_reconcile.nothing_to_reconcile",
+                code="app.maintenance.reconcile.nothing_to_reconcile",
                 message=tr(
                     "cli.app.maintenance.reconcile_none_info",
                     default=(
@@ -152,7 +152,7 @@ def _reconcile_notices(outcome: ProfileBundleExportReconciliation) -> tuple[Noti
         notices.append(
             Notice(
                 severity=NoticeSeverity.INFO,
-                code="app.maintenance.profile_bundle_reconcile.cleared",
+                code="app.maintenance.reconcile.cleared",
                 message=tr(
                     "cli.app.maintenance.reconcile_cleared_info",
                     default=(
@@ -170,7 +170,7 @@ def _reconcile_notices(outcome: ProfileBundleExportReconciliation) -> tuple[Noti
         notices.append(
             Notice(
                 severity=NoticeSeverity.WARNING,
-                code="app.maintenance.profile_bundle_reconcile.failures",
+                code="app.maintenance.reconcile.failures",
                 message=tr(
                     "cli.app.maintenance.reconcile_failures_warning",
                     default=(
@@ -181,7 +181,7 @@ def _reconcile_notices(outcome: ProfileBundleExportReconciliation) -> tuple[Noti
                     ),
                     count=str(len(outcome.failures)),
                 ),
-                suggestion="aeat app maintenance profile-bundle-reconcile",
+                suggestion="aeat app maintenance reconcile",
                 context={
                     "failed_count": str(len(outcome.failures)),
                     "journal_ids": ",".join(failure.journal_id for failure in outcome.failures),

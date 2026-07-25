@@ -330,7 +330,7 @@ def bulk_classify_from_csv(
     bucket_id: str,
     csv_text: str,
     actor: str,
-    source_command: str = "aeat app ledger classify --from-csv",
+    source_command: str = "aeat app ledger classify --file",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,

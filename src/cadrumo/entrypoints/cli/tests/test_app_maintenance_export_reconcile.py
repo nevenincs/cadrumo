@@ -1,4 +1,4 @@
-"""Operator-path proofs for ``aeat app maintenance profile-bundle-reconcile``.
+"""Operator-path proofs for ``aeat app maintenance reconcile``.
 
 The export service reconciles before every publication, so an operator who keeps
 exporting never needs this verb. It exists for the one case that trigger
@@ -19,20 +19,20 @@ from pathlib import Path
 import pytest
 
 from ....application.user_profile import (
+    ProfileBundleExportJournalRepository,
     ProfileBundleExportPurpose,
     ProfileBundleExportRequest,
     ProfileBundleExportTransport,
     prepare_profile_export,
 )
 from ....application.user_profile._bundle_export import _STAGED_TEMP_SUFFIX
-from ....application.user_profile._bundle_export_operation import ProfileBundleExportJournalRepository
 from ....domain.user_profile import UserProfilePortableExport
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_RECONCILE_ARGV = ("--format", "json", "app", "maintenance", "profile-bundle-reconcile")
+_RECONCILE_ARGV = ("--format", "json", "app", "maintenance", "reconcile")
 
 
 def _create_profile() -> str:
@@ -149,7 +149,7 @@ def test_the_verb_reports_a_clean_sweep_rather_than_staying_silent(tmp_path: Pat
         assert envelope["result"]["reconciled_count"] == 0
         assert envelope["result"]["failed_count"] == 0
         codes = [notice["code"] for notice in envelope["notices"]]
-        assert codes == ["app.maintenance.profile_bundle_reconcile.nothing_to_reconcile"]
+        assert codes == ["app.maintenance.reconcile.nothing_to_reconcile"]
 
 
 def test_a_failed_sweep_carries_a_warning_notice_and_a_clean_one_does_not(tmp_path: Path) -> None:
@@ -165,7 +165,7 @@ def test_a_failed_sweep_carries_a_warning_notice_and_a_clean_one_does_not(tmp_pa
         assert failed_run.exit_code == 0, failed_run.output
         failed_notices = json.loads(failed_run.output)["notices"]
         assert [notice["severity"] for notice in failed_notices] == ["info", "warning"]
-        assert failed_notices[1]["code"] == "app.maintenance.profile_bundle_reconcile.failures"
+        assert failed_notices[1]["code"] == "app.maintenance.reconcile.failures"
         assert failed_notices[1]["context"]["journal_ids"] == "e" * 64
 
         # The corrupt journal survives, so a second run still warns; remove it
@@ -209,7 +209,7 @@ def test_the_export_path_warns_about_a_journal_the_sweep_could_not_clear(tmp_pat
         )
         assert warning["severity"] == "warning"
         assert warning["context"]["journal_ids"] == corrupt_id
-        assert warning["suggestion"] == "aeat app maintenance profile-bundle-reconcile"
+        assert warning["suggestion"] == "aeat app maintenance reconcile"
 
 
 def test_a_healthy_export_carries_no_reconcile_warning(tmp_path: Path) -> None:

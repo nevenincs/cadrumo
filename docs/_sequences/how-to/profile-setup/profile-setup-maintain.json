@@ -102,7 +102,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "profile_id\t<profile-id>\ndisplay_name\tbruno-copy\nstatus\ttombstoned\nactive_profile\t<none>\nnotice\tThe deleted profile was the active one; the active-profile pointer has been cleared. Run aeat config switch NAME or aeat config profile create NAME to resume work.\n"
+      "text": "profile_id\t<profile-id>\ndisplay_name\tbruno-copy\nstatus\ttombstoned\nactive_profile\t<none>\nnotice\tThe deleted profile was the active one; the active-profile pointer has been cleared. Run aeat config login NAME or aeat config profile create NAME to resume work.\n"
     },
     {
       "argv": [

@@ -30,6 +30,7 @@ from ...domain.buckets import (
     BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
+    append_bucket_event,
 )
 from ...domain.currency import CurrencyNormalizationService
 from ...domain.invoices import InvoiceCatalogueRepositoryProtocol, InvoiceLinkError
@@ -67,6 +68,7 @@ from ._actions_common import (
     _EventSpec,
     _evidence_event_ids,
     _invoice_repository,
+    _is_evidence_only_command,
     _merge_identifier_tuple,
     _mutation_signature,
     _normalise_attachment_patch_ids,
@@ -265,6 +267,8 @@ def link_manual_transaction_invoice(
     source_command: str = "aeat app ledger link",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    occurred_at: datetime | None = None,
 ) -> InvoiceTransactionLinkResult:
     """Establish an atomic invoice-only relationship for one ledger transaction.
 
@@ -276,17 +280,19 @@ def link_manual_transaction_invoice(
     reserved for :func:`attach_manual_transaction_evidence`. Every rejection
     fires before any catalogue write, so a refused link leaves the transaction,
     invoice catalogue, and event history unchanged. The accepted path is
-    equally all-or-nothing: both catalogues are co-committed in one
-    secure-object batch, so no failure can leave one side citing the other
-    without being cited back.
+    equally all-or-nothing: the two catalogues and the
+    :attr:`~cadrumo.domain.buckets.BucketEventType.LEDGER_TRANSACTION_INVOICE_LINKED`
+    audit event are co-committed in one secure-object batch, so no failure can
+    leave one side citing the other without being cited back, and no event can
+    record a link that did not land.
 
     Returns an
     :class:`~cadrumo.application.invoices.InvoiceTransactionLinkResult`.
     """
     from ..invoices import link_invoice_transaction_repositories
 
-    _require_actor(actor, operation="ledger invoice linkage")
-    _require_source_command(source_command, operation="ledger invoice linkage")
+    trimmed_actor = _require_actor(actor, operation="ledger invoice linkage")
+    trimmed_source_command = _require_source_command(source_command, operation="ledger invoice linkage")
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     current = _require_transaction(repository.load(), transaction_id)
     invoices_repo = _invoice_repository(bucket_id=bucket_id, repository=invoice_repository)
@@ -305,12 +311,30 @@ def link_manual_transaction_invoice(
                 "invoice_bucket_id": invoice_record.bucket_id or "",
             },
         )
+    event_repository = _bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
+    event = _build_bucket_event(
+        bucket_id=bucket_id,
+        event_type=BucketEventType.LEDGER_TRANSACTION_INVOICE_LINKED,
+        occurred_at=_normalise_timestamp(occurred_at),
+        actor=trimmed_actor,
+        object_id=current.transaction_id,
+        # Identifiers and the operator's verb only: invoice content (counterparty,
+        # totals, tax id) never enters the event history.
+        payload={
+            "invoice_id": invoice_id,
+            "source_command": trimmed_source_command,
+            "mutation_kind": "invoice_linkage",
+        },
+    )
+    # The event write rides the SAME batch as the two catalogues, so a crash
+    # cannot record a linkage that did not land, nor land one silently.
     return link_invoice_transaction_repositories(
         bucket_id=bucket_id,
         invoice_id=invoice_id,
         transaction_id=current.transaction_id,
         invoice_repository=invoices_repo,
         transaction_repository=repository,
+        extra_writes=(event_repository.to_secure_object_write(append_bucket_event(event_repository.load(), event)),),
     )
 
 
@@ -585,7 +609,14 @@ def update_manual_transaction(
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
     )
-    if blockers:
+    # An evidence-only attachment cannot disturb a finalized revision (stable
+    # transaction id, unchanged row fingerprint, frozen bundled evidence), so it
+    # is exempt from the write guard - otherwise the documented remedy for an
+    # export evidence refusal would itself be blocked by the calculation that
+    # raised it. The cited revisions are reported back as stale so the operator
+    # is told to recalculate; the exemption never widens past evidence fields.
+    evidence_only = _is_evidence_only_command(command, current)
+    if blockers and not evidence_only:
         _raise_finalized_modelo_blocked(
             operation="ledger transaction update",
             transaction_ids=_transaction_modelo_source_ids(current),
@@ -612,7 +643,12 @@ def update_manual_transaction(
         catalogue=_replace_transaction(catalogue, old_transaction_id=transaction_id, replacement=replacement),
         events=events,
     )
-    return _result(command.bucket_id, replacement, tuple(event.event_id for event in events))
+    return _result(
+        command.bucket_id,
+        replacement,
+        tuple(event.event_id for event in events),
+        stale_finalized_revisions=blockers if evidence_only else (),
+    )
 
 
 def _prepare_manual_transaction_update(
@@ -1200,7 +1236,7 @@ def _classification_fields(
         # real "why" behind the decision and takes precedence; the
         # invoking command name remains the fallback for classification
         # paths that carry no operator-supplied reason (e.g. bulk
-        # `--from-csv` rows with no `notes` column).
+        # `--file` rows with no `notes` column).
         "classification_reason": command.notes or command.source_command,
         "classification_confidence": Decimal("1"),
     }

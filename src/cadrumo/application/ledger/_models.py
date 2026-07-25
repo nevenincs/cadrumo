@@ -300,13 +300,22 @@ class ManualLedgerTransactionPatch(BaseModel):
 
 
 class ManualLedgerTransactionResult(BaseModel):
-    """Backend result for a persisted manual ledger transaction mutation."""
+    """Backend result for a persisted manual ledger transaction mutation.
+
+    ``stale_finalized_revisions`` is populated only by an evidence-only
+    attachment that landed on a row a finalized revision cites. Those revisions
+    bundled their ledger evidence BEFORE the attachment, so their frozen bundles
+    no longer show the proof the row now carries: the operator must recalculate
+    for the evidence to reach a draft. The field is structured provenance for the
+    caller to project into an operator notice, never a refusal.
+    """
 
     model_config = _STRICT_FROZEN
 
     ref: BucketTransactionRef
     transaction: Transaction
     bucket_event_ids: tuple[str, ...] = ()
+    stale_finalized_revisions: tuple[LedgerRemovalBlocker, ...] = ()
 
 
 class LedgerTransactionPayload(BaseModel):
@@ -732,7 +741,7 @@ class LedgerExportCommand(BaseModel):
 
 
 class BulkClassifyRow(BaseModel):
-    """One row from a ``ledger classify --from-csv`` CSV input file.
+    """One row from a ``ledger classify --file`` CSV input file.
 
     Required columns: ``transaction_id``, ``classification``.
     Optional columns: ``category_id``, ``business_pct``, ``usage_ratio_id``,
@@ -760,7 +769,7 @@ class BulkClassifyRow(BaseModel):
 
 
 class BulkClassifyFailure(BaseModel):
-    """One failed row from a ``ledger classify --from-csv`` operation."""
+    """One failed row from a ``ledger classify --file`` operation."""
 
     model_config = _STRICT_FROZEN
 
@@ -770,7 +779,7 @@ class BulkClassifyFailure(BaseModel):
 
 
 class BulkClassifyResult(BaseModel):
-    """Aggregate result for a ``ledger classify --from-csv`` operation.
+    """Aggregate result for a ``ledger classify --file`` operation.
 
     Uses partial-success semantics matching the ledger import pattern:
     all parseable rows that pass validation are applied; failures are

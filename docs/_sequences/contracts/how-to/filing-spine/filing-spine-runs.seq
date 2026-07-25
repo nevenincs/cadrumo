@@ -1,2 +1,6 @@
+:seed: filing-spine-303-ledger
+@step Create the work unit for the filing target.
+@setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
 @step List recent flow runs, from most recent to oldest.
-  @static aeat app modelo work runs
+@result aeat --format json app modelo work runs
+@expect exit_code == 0

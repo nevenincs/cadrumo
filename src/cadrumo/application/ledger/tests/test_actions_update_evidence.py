@@ -259,10 +259,15 @@ def test_invoice_linkage_does_not_mutate_evidence(
     assert created.ref.transaction_id in linked.invoice.linked_transaction_ids
     persisted = transaction_repository.load().get(created.ref.transaction_id)
     assert persisted is not None
-    # Evidence preserved verbatim; the invoice link emits no evidence event.
+    # Evidence preserved verbatim.
     assert persisted.purchase_invoice_evidence_id == purchase_evidence.invoice_id
     events_after = [event.event_type for event in event_repository.load().for_bucket(_BUCKET_ID)]
-    assert events_after == events_before
+    # The link emits its own audit event and nothing else: no evidence event is
+    # added or removed, so the evidence history is byte-identical either side.
+    assert [event for event in events_after if event is not BucketEventType.LEDGER_TRANSACTION_INVOICE_LINKED] == (
+        events_before
+    )
+    assert events_after.count(BucketEventType.LEDGER_TRANSACTION_INVOICE_LINKED) == 1
 
 
 def test_failed_attach_leaves_transaction_and_history_unchanged(
