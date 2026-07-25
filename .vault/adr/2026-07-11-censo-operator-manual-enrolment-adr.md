@@ -1,16 +1,39 @@
 ---
 tags:
-  - '#adr'
-  - '#censo-operator-manual-enrolment'
+  - "#adr"
+  - "#censo-operator-manual-enrolment"
 date: '2026-07-11'
-modified: '2026-07-17'
+related:
+  - "[[2026-07-12-censo-operator-manual-enrolment-research]]"
 supersedes:
   - '2026-07-10-censo-g313-launcher-fix-adr'
-related:
-  - '[[2026-07-12-censo-operator-manual-enrolment-research]]'
+superseded_by: '2026-07-25-censal-profile-autofill-adr'
+modified: '2026-07-25'
 ---
+# `censo-operator-manual-enrolment` adr: `censal facts are operator-manual; retire the live censo scrape` | (**status:** `superseded`)
 
-# `censo-operator-manual-enrolment` adr: `censal facts are operator-manual; retire the live censo scrape` | (**status:** `accepted`)
+> **The central factual premise below is disproven. Do not act on it.**
+> This record states that `/wlpl/BUGC-JDIT/MdcAcceso` returns HTTP 404 and
+> that AEAT exposes no read-only censal projection, and concludes that the
+> automated read must be abandoned. The launcher renders: 200, roughly
+> 85KB, eleven tables, carrying the taxpayer's NIF, name and censal
+> information, confirmed on a live authenticated session on 2026-07-25.
+>
+> The 404 was real but was measured against hosts that do not serve the
+> route at all. AEAT dispatches an authenticated session to one of several
+> numbered hosts, and the same path with the same cookies returns 200 on
+> one, a genuine 404 on others, and an auth-gate bounce on another. A 404
+> surviving a valid session is a routing fact about the host, not a fact
+> about the endpoint, and reading it as the latter is what produced this
+> record's conclusion.
+>
+> The reasoning that follows remains sound on its own terms, and its
+> safety argument still binds: reading current census state by operating
+> the modification tool would be a live-write path with extra steps. What
+> changed is the premise that operating the modification tool was the ONLY
+> route. This record's own revival condition - a genuine consulta-only
+> endpoint would justify a new ADR - is met, and
+> `2026-07-25-censal-profile-autofill-adr` is that record.
 
 ## Problem Statement
 

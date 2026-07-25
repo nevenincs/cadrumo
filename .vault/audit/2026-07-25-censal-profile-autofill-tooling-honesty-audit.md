@@ -21,7 +21,9 @@ The second class reports truthfully about a frame narrower than the reliance pla
 
 The third class reports truthfully and completely, and is still unsafe to act on, because the subject is shared and moving, so a true answer has no shelf life. Here no check helps: verification and action cannot be made atomic against a subject other writers hold. The mitigation is to stop sharing the subject.
 
-Only the first class is what "a tool lied" usually means, and it is the least dangerous of the three, because a broken instrument eventually produces an implausible answer. The second and third produce answers that stay plausible indefinitely.
+The fourth class is truthful, complete, timely, and structurally unable to act. The check runs, is correct, and is positioned where its answer cannot stop what it is guarding. The mitigation is positional rather than analytical: the check must sit where a failure halts the operation.
+
+Only the first class is what "a tool lied" usually means, and it is the least dangerous of the four, because a broken instrument eventually produces an implausible answer. The other three produce answers that stay plausible indefinitely.
 
 The audit was written from the session that deleted the register-based censal pull. Two of the instances are that work's own defects rather than tooling, and they are included because they are the quietest members of the same class: values that passed every gate the project has.
 
@@ -75,6 +77,22 @@ This is the second class, and its only member here. Landing a change into a file
 
 The drive's own verification step caught this, which is why nothing was committed and the staged hunks were reversed out with the exact inverse of the apply. But that step can only detect the collision after the fact. Making the apply, the verification and the commit a single uninterruptible step narrowed the window enough to land on retry, and narrowing is the most that can be done: no check can close it, because the subject does not stop moving while the check is read. The resolution is to give the change to the file's owner so the subject is not shared at all.
 
+### verification-positioned-where-it-cannot-refuse | high | a correct check printed alongside the action it guards is decoration
+
+The fourth class, and the only one whose fix is purely positional.
+
+Committing into a worktree where other agents stage concurrently requires confirming the index holds nothing foreign. That confirmation was written into the same shell invocation as the staging and the commit, printing the foreign-file list immediately before proceeding. It ran, it was correct, and it listed six files belonging to another agent - and the commit went ahead anyway, because a printed list is output and nothing was reading it. The commit was saved only by carrying an explicit pathspec, which scoped it to the intended files regardless. Safety came from the instrument, not from the check.
+
+The rule this yields is short enough to keep:
+
+  A verification printed in the same breath as the action it guards is
+  decoration. It has to be able to stop the action, which means it cannot
+  be a line above it in the same command.
+
+It generalises well past version control. A gate that runs after the write it validates, a check mode whose exit code nothing branches on, an assertion inside a block that has already committed its effect, and a report emitted alongside rather than before the decision are all the same defect: the finding is correct and arrives with no authority to refuse. This is distinct from the first class because nothing is misreported, from the second because the frame is right, and from the third because the answer is current. The check is simply in the wrong place to matter.
+
+The repair is mechanical. Where a check must gate an action, the two belong in one construct in which failure halts - a conditional that aborts, a fixture that raises, a gate that runs before the write - and never in sequence with the operator expected to read between them. The same session later did it correctly, making apply, verification and commit a single step that reverses its own staging and exits on any foreign hunk, which is what a check with authority looks like.
+
 ### brief-accurate-when-written-stale-on-arrival | low | coordination messages exhibit the same shape at the human layer
 
 Several instructions in this session were correct when composed and superseded by the time they arrived, because the tree moved in between. Work was assigned that had already landed, an ordering was designed against a state that no longer existed, and a hand-off was briefed around deletions already absent from the committed tree. No message was wrong when sent. This is the same failure as the class above, with the same cause and the same non-fix: the sender verified a state, and the state was shared and moving. It is recorded because it produced real rework, and because the mitigation is identical, namely confirming current state at the moment of acting rather than trusting the most recent report of it.
@@ -91,4 +109,6 @@ Know each instrument's frame, and write the frame down wherever the instrument i
 
 Prefer ownership transfer over window narrowing for shared-subject work. The staged-patch drive is correct and should remain the technique for landing into a file another agent holds, but this session showed its verification step is a detector rather than a guarantee. Where the file has an active owner who is about to edit the same region, handing them the change removes the race instead of scheduling around it, and that is a resolution rather than a workaround. Where no owner is available, the apply, the verification and the commit should be one uninterruptible operation.
 
-Re-verify state at the moment of acting. This applies to agents reading a peer's report and to whoever is coordinating them. A report is a description of a past state, and in this worktree the interval between a report and a decision made on it is routinely long enough for the decision to be wrong. The cheap discipline is a state check immediately before acting, not immediately before deciding.
+Re-verify state at the moment of acting. This applies to agents reading a peer's report and to whoever is coordinating them. A report is a description of a past state, and in this worktree the interval between a report and a decision made on it is routinely long enough for the decision to be wrong. The cheap discipline is a state check immediately before acting, not immediately before deciding. A worked instance: a step was reported closeable from a reading taken against the working tree rather than the committed content, the instruction to close it was issued on that report without an independent check, and the claim became true only because a third agent committed in the interval. Pinning a closure measurement to a single commit and quoting that commit is the repair, and it is cheap enough to apply to every step closure rather than only to contested ones.
+
+Place every gating check where a failure halts. This is the fourth class's whole remedy and it is positional, not analytical: no amount of making the check more correct helps, because the check was already correct. Where the project's guidance recommends confirming something before acting, it should show the two in one construct that aborts, not as adjacent steps with a human or an agent expected to read between them. A printed confirmation is not a gate, and the distinction is invisible in a passing run - the output looks identical whether or not anything is reading it.

@@ -1,13 +1,14 @@
 ---
 tags:
-  - '#adr'
-  - '#censal-profile-autofill'
+  - "#adr"
+  - "#censal-profile-autofill"
 date: '2026-07-25'
-modified: '2026-07-25'
 related:
   - "[[2026-07-25-censal-profile-autofill-research]]"
+supersedes:
+  - '2026-07-11-censo-operator-manual-enrolment-adr'
+modified: '2026-07-25'
 ---
-
 # `censal-profile-autofill` adr: `profile-borne auth credentials and a read-only censal autofill` | (**status:** `accepted`)
 
 > **D3 UNBLOCKED — the 404 finding it was blocked on is stale.**
