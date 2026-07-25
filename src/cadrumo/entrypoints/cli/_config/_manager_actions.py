@@ -60,17 +60,19 @@ def censal_pull_action() -> ManagerAction:
 def _run_censal_pull() -> ManagerActionOutcome:
     """Pull filed 036s, derive the censal facts, and write them."""
     import asyncio
-    from datetime import UTC, datetime
 
     from ....adapters.inbound.tui import ManagerActionOutcome
     from ....application.live._censo_036_pull import censo_facts_from_filed_036, pull_filed_036
     from ....application.user_profile import set_active_field
     from ....application.workflow import workflow_state_repository
     from ....core import require_active_bucket_id
+    from ....core.time import now
     from ._manager_frontend import build_active_profile_overview
 
     bucket_id = require_active_bucket_id()
-    this_year = datetime.now(UTC).year
+    # Through the clock seam, so a frozen-clock test pins the year span
+    # rather than searching a window that moves with the calendar.
+    this_year = now().year
     filings = asyncio.run(
         pull_filed_036(
             bucket_id=bucket_id,
