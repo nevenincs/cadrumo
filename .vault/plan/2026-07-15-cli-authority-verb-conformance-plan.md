@@ -402,7 +402,7 @@ Materialize the CLI, prove schema, locale, docs, and MCP agreement, rerun clone 
 - [ ] `W06.P19.S187` - Run documented-command path and argument conformance against the live tree; `src/cadrumo/entrypoints/cli/tests/test_documented_command_conformance.py`.
 - [ ] `W06.P19.S188` - Run JSON schema registration and output conformance for every live leaf; `src/cadrumo/entrypoints/cli/tests/test_json_schema_conformance.py`.
 - [ ] `W06.P19.S189` - Run self-referential CLI string conformance and reject every removed spelling; `src/cadrumo/entrypoints/cli/tests/test_self_referential_string_conformance.py`.
-- [ ] `W06.P19.S190` - Run suggestion and next-action conformance against the live tree; `src/cadrumo/entrypoints/cli/tests/test_suggestion_command_conformance.py`.
+- [x] `W06.P19.S190` - Run suggestion and next-action conformance against the live tree; `src/cadrumo/entrypoints/cli/tests/test_suggestion_command_conformance.py`.
 - [ ] `W06.P19.S191` - Run four-locale catalogue and rendered-help coverage for every changed path; `src/cadrumo/locales/tests/`.
 - [ ] `W06.P19.S192` - Run generated CLI reference and static-tree conformance; `dev/docs/tests/`.
 - [ ] `W06.P19.S193` - Run the mandatory documentation render-and-verify workflow after final command materialization; `docs/`.
