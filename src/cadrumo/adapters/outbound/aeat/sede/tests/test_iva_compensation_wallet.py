@@ -648,3 +648,47 @@ def test_wallet_read_guard_refuses_non_aeat_host() -> None:
             _READ_GUARD_POLICY,
             RemoteOperation(kind="http", method="GET", url=AnyUrl("https://attacker.example/read/path")),
         )
+
+
+class TestLiveSourceUrlAssertion:
+    """The live read's source-URL check must accept any host AEAT dispatched to.
+
+    The live test itself never runs outside an operator-approved session,
+    so its assertion had never been contradicted. Exercising the assertion
+    LOGIC offline is what turns it from an unexamined claim into a checked
+    one: the live read stays operator-gated, but whether the check would
+    accept a correct read no longer depends on anyone running it.
+    """
+
+    @pytest.mark.parametrize("origin_name", ["www1", "www2", "www6", "www12", "sede"])
+    def test_a_wallet_read_on_any_dispatch_host_is_accepted(self, origin_name: str) -> None:
+        """A successful read is accepted whichever sede host answered."""
+        from .test_iva_compensation_wallet_live import _assert_source_url_is_a_wallet_read
+
+        external = Settings.external_constants()
+        origin = getattr(external.aeat.domains, origin_name)
+        _assert_source_url_is_a_wallet_read(f"{origin}{external.aeat.sede_paths.iva_compensation_wallet}")
+
+    def test_a_non_aeat_host_is_refused(self) -> None:
+        """A URL off the AEAT apex is not a wallet read, whatever its path."""
+        from .test_iva_compensation_wallet_live import _assert_source_url_is_a_wallet_read
+
+        external = Settings.external_constants()
+        with pytest.raises(BaseException, match="not under the AEAT apex"):
+            _assert_source_url_is_a_wallet_read(
+                f"https://example.invalid{external.aeat.sede_paths.iva_compensation_wallet}",
+            )
+
+    def test_another_aeat_route_is_refused(self) -> None:
+        """A different AEAT route on a valid host is not a wallet read.
+
+        Without this the check would accept any AEAT URL at all, which is
+        weaker than the invariant rather than equal to it.
+        """
+        from .test_iva_compensation_wallet_live import _assert_source_url_is_a_wallet_read
+
+        external = Settings.external_constants()
+        with pytest.raises(BaseException, match="not the wallet route"):
+            _assert_source_url_is_a_wallet_read(
+                f"{external.aeat.domains.www6}{external.aeat.sede_paths.declarations_listing}",
+            )
