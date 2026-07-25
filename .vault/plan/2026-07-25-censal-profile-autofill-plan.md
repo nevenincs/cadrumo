@@ -35,7 +35,7 @@ Commit pulled censal facts through the cotejo authority, and delete the register
 
 - [ ] `P03.S07` - Map the read censal fields onto profile schema paths with a provenance token naming the consulta surface; `src/cadrumo/application/live`.
 - [ ] `P03.S08` - Commit pulled facts through apply_cotejo, adopting only blank paths and reporting every disagreement; `src/cadrumo/application/live`.
-- [ ] `P03.S09` - Delete the register-based censal pull, its manager action and its tests, and re-point the causa-casilla mapping it fed; `src/cadrumo/application/live/_censo_036_pull.py`.
+- [x] `P03.S09` - Delete the register-based censal pull, its manager action and its tests, and re-point the causa-casilla mapping it fed; `src/cadrumo/application/live/_censo_036_pull.py`.
 - [ ] `P03.S10` - Verify the whole path live end to end: auth, pull, autofill, and a second pull that reports disagreement instead of overwriting; `src/cadrumo/application/live/tests`.
 
 ## Description
