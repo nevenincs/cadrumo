@@ -114,10 +114,12 @@ def present_profile_manager(*, label: str | None = None) -> None:
     made is already on the encrypted record.
     """
     from ....adapters.inbound.tui import run_profile_manager_tui
+    from ._manager_actions import manager_actions
 
     run_profile_manager_tui(
         build_active_profile_overview(label=label),
         persist=lambda path, value: persist_active_profile_field(path, value, label=label),
+        actions=manager_actions(),
     )
 
 

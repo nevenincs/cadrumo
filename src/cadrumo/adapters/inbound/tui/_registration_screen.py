@@ -195,7 +195,14 @@ class RegistrationApp(App["ProfileRegistrationOutcome | None"]):
             yield Input(id="field-username", value=self._suggested_name)
 
             yield Label(tr("flows.registration.password_label"), classes="field-label")
-            yield Static(tr("flows.registration.password_hint"), classes="field-hint")
+            # The hint names the floor, so it has to be told what the floor
+            # is; the assessor already reports it, and asking it for the
+            # empty string is how this surface learns it without importing
+            # the policy that owns it.
+            yield Static(
+                tr("flows.registration.password_hint", minimum_length=self._assess_passphrase("").minimum_length),
+                classes="field-hint",
+            )
             yield Input(id="field-password", password=True)
             yield Static(id="strength-line")
 

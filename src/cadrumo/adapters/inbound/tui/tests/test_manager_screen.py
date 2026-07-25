@@ -13,7 +13,7 @@ view would fail.
 from __future__ import annotations
 
 import pytest
-from textual.widgets import DataTable, Input
+from textual.widgets import DataTable, Input, Static
 
 from .....application.user_profile import (
     ProfileRepository,
@@ -137,4 +137,111 @@ async def test_a_masked_field_opens_empty_rather_than_prefilled(tmp_path) -> Non
             app.push_screen(FieldEditScreen(masked))
             await pilot.pause()
             assert app.screen.query_one("#edit-input", Input).value == ""
+            app.exit(None)
+
+
+# ── actions ─────────────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_an_action_runs_and_reports_what_it_did(tmp_path) -> None:
+    """The bar renders one button per action and shows its message."""
+    from .. import ManagerAction, ManagerActionOutcome
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        ran: list[str] = []
+
+        def _run() -> ManagerActionOutcome:
+            ran.append("yes")
+            return ManagerActionOutcome(message="DID-THE-THING")
+
+        action = ManagerAction(key="probe", label="Probe", run=_run)
+        app = ProfileManagerApp(_live_overview(), persist=_persist, actions=[action])
+        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            await pilot.click("#action-probe")
+            await pilot.pause()
+            assert ran == ["yes"]
+            assert "DID-THE-THING" in str(app.query_one("#manager-action-result", Static).content)
+            app.exit(None)
+
+
+@pytest.mark.asyncio
+async def test_an_action_that_changed_the_record_redraws_the_page(tmp_path) -> None:
+    """A returned overview replaces the page; withholding one leaves it alone.
+
+    An export writes a file and changes nothing, so it must not redraw —
+    a redraw from stale data is how a page starts lying about storage.
+    """
+    from .. import ManagerAction, ManagerActionOutcome
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        _persist(_EDITED_PATH, "Before")
+        app = ProfileManagerApp(_live_overview(), persist=_persist, actions=[])
+        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            assert _rows(app)[_EDITED_PATH][2] == "Before"
+            app.exit(None)
+
+        # The action writes through the real door, then hands back the page.
+        def _rename() -> ManagerActionOutcome:
+            return ManagerActionOutcome(message="renamed", overview=_persist(_EDITED_PATH, "After"))
+
+        refreshing = ProfileManagerApp(
+            _live_overview(),
+            persist=_persist,
+            actions=[ManagerAction(key="rename", label="Rename", run=_rename)],
+        )
+        async with refreshing.run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            assert _rows(refreshing)[_EDITED_PATH][2] == "Before"
+            await pilot.click("#action-rename")
+            await pilot.pause()
+            assert _rows(refreshing)[_EDITED_PATH][2] == "After"
+            refreshing.exit(None)
+
+
+@pytest.mark.asyncio
+async def test_a_refusing_action_reports_it_instead_of_taking_the_screen_down(tmp_path) -> None:
+    """A door that raises must leave the operator on their page.
+
+    The censal pull reaches the network and the certificate action reads
+    key material; both can refuse for ordinary reasons. Losing the whole
+    screen mid-edit over one of them would be the worse failure.
+    """
+    from .. import ManagerAction, ManagerActionOutcome
+
+    def _refuse() -> ManagerActionOutcome:
+        raise RuntimeError("NO-CERTIFICATE-REGISTERED")
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        app = ProfileManagerApp(
+            _live_overview(),
+            persist=_persist,
+            actions=[ManagerAction(key="boom", label="Boom", run=_refuse)],
+        )
+        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            await pilot.click("#action-boom")
+            await pilot.pause()
+            assert app.is_running, "the screen must survive a refusing action"
+            assert "NO-CERTIFICATE-REGISTERED" in str(app.query_one("#manager-action-result", Static).content)
+            app.exit(None)
+
+
+@pytest.mark.asyncio
+async def test_a_page_with_no_actions_renders_no_action_bar(tmp_path) -> None:
+    """Empty is a valid action set, and shows nothing rather than an empty box."""
+    from textual.css.query import NoMatches
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        app = ProfileManagerApp(_live_overview(), persist=_persist)
+        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            with pytest.raises(NoMatches):
+                app.query_one("#manager-actions")
             app.exit(None)

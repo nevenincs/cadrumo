@@ -26,6 +26,7 @@ See Also:
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, ClassVar, override
 
 from textual.app import App, ComposeResult
@@ -38,9 +39,38 @@ from ....core.i18n import tr
 from ._theme import BASE_CSS, ContentScroll, install_cadrumo_themes, toggle_appearance
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Sequence
 
     from ....application.user_profile import ProfileFieldView, ProfileOverview
+
+
+@dataclass(frozen=True, slots=True)
+class ManagerActionOutcome:
+    """What an action did, as the page needs to know it.
+
+    ``overview`` carries the rebuilt page when the action changed the
+    record, and is ``None`` when it did not — an export writes a file and
+    leaves the profile alone. The screen re-renders only when it is given
+    something new, so a read-only action cannot silently redraw stale data.
+    """
+
+    message: str
+    overview: ProfileOverview | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ManagerAction:
+    """One operation offered alongside the field table.
+
+    The screen knows a label and a callable. What "pull" or "export" mean
+    is the entry point's business, which is why a censal pull and a bundle
+    export can sit side by side here without this module learning what
+    either of them is.
+    """
+
+    key: str
+    label: str
+    run: Callable[[], ManagerActionOutcome]
 
 
 _PRESENT_GLYPH = "●"
@@ -106,6 +136,9 @@ class ProfileManagerApp(App[None]):
         color: $text-muted;
     }
     .manager-section DataTable { height: auto; width: 100%; background: $surface; }
+    #manager-actions { height: auto; width: 100%; }
+    #manager-actions Button { margin: 0 2 0 0; }
+    #manager-action-result { margin: 1 0 0 0; color: $text-muted; }
     #edit-dialog {
         border: thick $accent;
         background: $surface;
@@ -127,9 +160,21 @@ class ProfileManagerApp(App[None]):
         Binding("escape", "quit", "", show=False),
     ]
 
-    def __init__(self, overview: ProfileOverview, *, persist: Callable[[str, str], ProfileOverview]) -> None:
+    def __init__(
+        self,
+        overview: ProfileOverview,
+        *,
+        persist: Callable[[str, str], ProfileOverview],
+        actions: Sequence[ManagerAction] = (),
+    ) -> None:
         super().__init__()
         self.overview = overview
+        self._actions = tuple(actions)
+        """Operations offered above the field table.
+
+        Empty is a valid page: the manager is useful with nothing but its
+        fields, and a host that cannot offer an action should show none
+        rather than a button that refuses."""
         self._persist_field = persist
         """Writes one field and hands back the page as storage now holds it.
 
@@ -145,6 +190,12 @@ class ProfileManagerApp(App[None]):
         yield Static(id="manager-banner", classes="cadrumo-banner")
         yield Static(id="manager-progress")
         with ContentScroll(id="manager-body", classes="cadrumo-scroll"), Vertical(classes="cadrumo-column"):
+            if self._actions:
+                with Vertical(id="manager-actions-panel", classes="cadrumo-panel"):
+                    with Horizontal(id="manager-actions"):
+                        for action in self._actions:
+                            yield Button(action.label, id=f"action-{action.key}")
+                    yield Static(id="manager-action-result")
             for section in self.overview.sections:
                 yield Static(id=f"section-{section.key}", classes="manager-section cadrumo-panel")
         yield Footer()
@@ -154,6 +205,8 @@ class ProfileManagerApp(App[None]):
         self.query_one("#manager-banner", Static).update(
             tr("flows.manager.title", profile=self.overview.label),
         )
+        if self._actions:
+            self.query_one("#manager-actions-panel", Vertical).border_title = tr("flows.manager.actions.section")
         self._render()
 
     # ── rendering ───────────────────────────────────────────────────────
@@ -223,13 +276,45 @@ class ProfileManagerApp(App[None]):
         self.overview = self._persist_field(path, value)
         self._render()
 
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Run the pressed action and report what it did.
+
+        A refusal is reported in the same line as a success rather than
+        raised: the operator is mid-page and an exception would take the
+        whole screen down over, say, a missing certificate.
+        """
+        button_id = event.button.id or ""
+        action = next((item for item in self._actions if f"action-{item.key}" == button_id), None)
+        if action is None:
+            return
+        try:
+            outcome = action.run()
+        except Exception as refusal:
+            self.query_one("#manager-action-result", Static).update(str(refusal))
+            return
+        self.query_one("#manager-action-result", Static).update(outcome.message)
+        if outcome.overview is not None:
+            self.overview = outcome.overview
+            self._render()
+
     def action_toggle_appearance(self) -> None:
         toggle_appearance(self)
 
 
-def run_profile_manager_tui(overview: ProfileOverview, *, persist: Callable[[str, str], ProfileOverview]) -> None:
+def run_profile_manager_tui(
+    overview: ProfileOverview,
+    *,
+    persist: Callable[[str, str], ProfileOverview],
+    actions: Sequence[ManagerAction] = (),
+) -> None:
     """Run the manager to completion against an already-built overview."""
-    ProfileManagerApp(overview, persist=persist).run()
+    ProfileManagerApp(overview, persist=persist, actions=actions).run()
 
 
-__all__ = ["FieldEditScreen", "ProfileManagerApp", "run_profile_manager_tui"]
+__all__ = [
+    "FieldEditScreen",
+    "ManagerAction",
+    "ManagerActionOutcome",
+    "ProfileManagerApp",
+    "run_profile_manager_tui",
+]

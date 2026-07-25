@@ -24,7 +24,13 @@ from ._form_screen import (
     multi_choice_tokens,
     run_form_tui,
 )
-from ._manager_screen import FieldEditScreen, ProfileManagerApp, run_profile_manager_tui
+from ._manager_screen import (
+    FieldEditScreen,
+    ManagerAction,
+    ManagerActionOutcome,
+    ProfileManagerApp,
+    run_profile_manager_tui,
+)
 from ._registration_screen import (
     PassphraseVerdict,
     RegistrationApp,
@@ -69,6 +75,8 @@ __all__ = [
     "FormField",
     "FormFieldKind",
     "FormPage",
+    "ManagerAction",
+    "ManagerActionOutcome",
     "PassphraseVerdict",
     "ProfileManagerApp",
     "RegistrationApp",

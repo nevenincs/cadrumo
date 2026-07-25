@@ -6646,6 +6646,29 @@ flows:
     unsupported_console: Esta consola no puede mostrar preguntas interactivas. Ejecuta
       el flujo desde un terminal real o guíalo con un archivo de respuestas.
   manager:
+    action:
+      abandoned: Sin cambios.
+      auth_provider: Forma de identificación ante la AEAT
+      censal_pull: Traer datos censales (036)
+      censal_pull_done: '%{count} datos censales tomados de %{filings} declaraciones
+        036 presentadas.'
+      censal_pull_empty: No consta ninguna declaración 036 presentada en el periodo
+        consultado.
+      certificate: Certificado
+      certificate_active: Certificado activo
+      certificate_done: 'Identificación: %{provider}; certificado activo: %{name}.'
+      certificate_none: No hay certificados registrados. Regístrelos con 'aeat config
+        certificate register'.
+      export: Exportar copia
+      export_destination: Ruta del archivo de destino
+      export_done: Copia cifrada escrita en %{destination}.
+      export_passphrase: Contraseña que protegerá la copia
+      provider:
+        certificate: Certificado electrónico
+        clave_movil: Cl@ve Móvil
+        clave_permanente: Cl@ve Permanente
+    actions:
+      section: Acciones
     column:
       field: Campo
       state: Estado

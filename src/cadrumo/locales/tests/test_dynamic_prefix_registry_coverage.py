@@ -304,18 +304,17 @@ def _flatten_leaves(node: object, prefix: str = "") -> list[tuple[str, object]]:
 
 #: The complete sanctioned inventory of production call sites that override
 #: the output language outside a ctx-scoped settings override: the wizard's
-#: language machinery only - the pre-walk requested-language entry and the
-#: mid-walk activation hook, both feeding one ExitStack whose lifetime spans
-#: the interactive walk. Any new site must be reviewed here with a reason:
+#: pre-command requested-language entry, whose ExitStack spans the command
+#: body. The mid-walk activation hook that used to sit beside it went with
+#: the interactive walk - there is no walk to re-render mid-way any more.
+#: Any new site must be reviewed here with a reason:
 #: an override entered outside a ctx scope keeps rendering AFTER the command
 #: callback unwinds, which is how a notice renders in the wrong language.
 _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
     {
-        # Non-ctx-scoped (the wizard's language machinery, one ExitStack
-        # spanning the interactive walk) - the surface the wrong-language
-        # bound was proven against:
+        # Non-ctx-scoped (one ExitStack spanning the command body) - the
+        # surface the wrong-language bound was proven against:
         ("application/wizard/_commands.py", "_enter_requested_output_language"),
-        ("application/wizard/_commands.py", "_activate"),
         # Ctx-scoped (entered and unwound inside the command callback's
         # settings scope - safe by construction):
         ("entrypoints/cli/__init__.py", "_root"),

@@ -6494,6 +6494,28 @@ flows:
     unsupported_console: Ez a konzol nem tud interaktív kérdéseket megjeleníteni.
       Indítsd a folyamatot valódi terminálból, vagy vezéreld szkriptelt válaszfájllal.
   manager:
+    action:
+      abandoned: Nem történt változás.
+      auth_provider: Azonosítás módja az AEAT felé
+      censal_pull: Censusadatok lekérése (036)
+      censal_pull_done: '%{count} censusadat származik %{filings} benyújtott 036-os
+        bevallásból.'
+      censal_pull_empty: Nem található benyújtott 036-os bevallás a vizsgált időszakban.
+      certificate: Tanúsítvány
+      certificate_active: Aktív tanúsítvány
+      certificate_done: 'Azonosítás: %{provider}; aktív tanúsítvány: %{name}.'
+      certificate_none: 'Nincs regisztrált tanúsítvány. Regisztráljon egyet: ''aeat
+        config certificate register''.'
+      export: Másolat exportálása
+      export_destination: A célfájl elérési útja
+      export_done: 'A titkosított másolat ide került: %{destination}.'
+      export_passphrase: A másolatot védő jelszó
+      provider:
+        certificate: Elektronikus tanúsítvány
+        clave_movil: Cl@ve Móvil
+        clave_permanente: Cl@ve Permanente
+    actions:
+      section: Műveletek
     column:
       field: Mező
       state: Állapot

@@ -6610,6 +6610,28 @@ flows:
     unsupported_console: Aquesta consola no pot mostrar preguntes interactives. Executa
       el flux des d'un terminal real o guia'l amb un fitxer de respostes.
   manager:
+    action:
+      abandoned: Sense canvis.
+      auth_provider: Forma d'identificació davant l'AEAT
+      censal_pull: Portar dades censals (036)
+      censal_pull_done: '%{count} dades censals preses de %{filings} declaracions
+        036 presentades.'
+      censal_pull_empty: No consta cap declaració 036 presentada en el període consultat.
+      certificate: Certificat
+      certificate_active: Certificat actiu
+      certificate_done: 'Identificació: %{provider}; certificat actiu: %{name}.'
+      certificate_none: No hi ha certificats registrats. Registreu-ne un amb 'aeat
+        config certificate register'.
+      export: Exportar còpia
+      export_destination: Ruta del fitxer de destinació
+      export_done: Còpia xifrada escrita a %{destination}.
+      export_passphrase: Contrasenya que protegirà la còpia
+      provider:
+        certificate: Certificat electrònic
+        clave_movil: Cl@ve Mòbil
+        clave_permanente: Cl@ve Permanent
+    actions:
+      section: Accions
     column:
       field: Camp
       state: Estat

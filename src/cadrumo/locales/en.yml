@@ -6176,6 +6176,28 @@ flows:
     unsupported_console: This console cannot host interactive questions. Run the flow
       from a real terminal, or drive it with a scripted answer file.
   manager:
+    action:
+      abandoned: No changes made.
+      auth_provider: How you identify to AEAT
+      censal_pull: Pull censal data (036)
+      censal_pull_done: '%{count} censal facts taken from %{filings} filed Modelo
+        036 declarations.'
+      censal_pull_empty: No filed Modelo 036 declaration was found in the period searched.
+      certificate: Certificate
+      certificate_active: Active certificate
+      certificate_done: 'Identification: %{provider}; active certificate: %{name}.'
+      certificate_none: No certificates are registered. Register one with 'aeat config
+        certificate register'.
+      export: Export a copy
+      export_destination: Destination file path
+      export_done: Encrypted copy written to %{destination}.
+      export_passphrase: Passphrase that will protect the copy
+      provider:
+        certificate: Electronic certificate
+        clave_movil: Cl@ve Móvil
+        clave_permanente: Cl@ve Permanente
+    actions:
+      section: Actions
     column:
       field: Field
       state: State
