@@ -125,20 +125,28 @@ The twenty-four decompose as:
   `filing-record-id`, `bundle-id`, `relation-id`, `run-id`) with no producing
   frame in their sequence; nine of these are the `filing-spine` address-by-id
   family.
-- **4 are pure teaching metavariables** — `<profile-name>`, `<value>`,
-  `<sum-from-303>`, `<ID>=<VALUE>`. These are illustrative prose, never a
-  captured value, so "unconverted" mis-frames them: they are not awaiting
-  conversion.
+- **4 are teaching metavariables, not capture targets** — `<profile-name>`,
+  `<value>`, `<sum-from-303>`, `<ID>=<VALUE>`. These are illustrative prose: no
+  chain will ever *capture* them. They remain legitimately `unconverted`,
+  because they are convertible the other way — by substituting a concrete
+  literal value (a real profile name, a real casilla id) plus whatever setup the
+  command needs. Distinguishing the two is the point: "not a capture candidate"
+  does not imply "not a conversion candidate", and an earlier draft of this
+  paragraph wrongly collapsed them.
 - **3 are misclassified and need an externally-owned id** — the two
   `modelo-036` records need an AEAT `<acuse>`, and `modelo-390-records-audit`
   frame 1 needs a `<justificante-or-capture-id>`. These belong under
   `live-aeat` / `operator-artifact`, not `unconverted`; correcting the code
   lowers the ratchet honestly rather than by conversion.
 
-So the optimistic reading was wrong for 23 of 24 — the same direction as the
-participation frame, and for the same reason: a positive claim about a conversion
-that was never attempted. The open probe-scope question is therefore not blocking
-this residue. It remains open only for already-runnable frames.
+So the optimistic reading — specifically that *a capture chain* would supply these
+— was wrong for 23 of 24, the same direction as the participation frame and for
+the same reason: a positive claim about a conversion that was never attempted.
+That is a narrower result than "23 are unconvertible": 20 of them (16 + 4) are
+still convertible by authoring setup and substituting literals, which is real
+work rather than an annotation. Only the 3 recoded frames are genuinely
+impossible locally. The open probe-scope question is therefore not blocking this
+residue; it remains open only for already-runnable frames.
 
 Measurement: `dev.docs.sequences.discover_sequences` over the live corpus in this
 checkout, reading each frame's own `blocked.code` and counting non-`STATIC`
