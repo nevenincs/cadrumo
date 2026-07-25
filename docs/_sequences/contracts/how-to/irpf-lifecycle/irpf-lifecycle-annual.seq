@@ -1,20 +1,20 @@
 @step Confirm each dependency's evidence is satisfied.
 @static aeat app modelo work dependencies --modelo 100 --year 2026 --period 0A
-@blocked unconverted Only lacks a registry revision for the year the page names; a covered year converts it.
+@blocked unconverted Refused: no registry revision covers modelo 100 filing year 2026 period 0A. The registry carries 2024 and 2025 only.
 @step Create and calculate the annual declaration.
 @static aeat app modelo work create --modelo 100 --year 2026 --period 0A
-@blocked unconverted Only lacks a registry revision for the year the page names; a covered year converts it.
+@blocked unconverted Refused ERROR_CALCULATIONS_REGISTRY_NO_REVISION_FOR_PERIOD: no registry revision covers modelo 100 filing year 2026 period 0A.
 @static aeat app modelo work calculate --modelo 100 --year 2026 --period 0A
-@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
+@blocked unconverted Refused for want of a work unit, because create refused first: no registry revision covers modelo 100 filing year 2026 period 0A.
 @step Find any manual casillas still missing.
 @static aeat app modelo bindings list --modelo 100 --year 2026 --period 0A --missing
-@blocked unconverted Only lacks a registry revision for the year the page names; a covered year converts it.
+@blocked unconverted Refused: no registry revision covers modelo 100 filing year 2026 period 0A. The registry carries 2024 and 2025 only.
 @step Verify, export, file, and reconcile, the same five moves that closed every quarter.
 @static aeat app modelo work verify --modelo 100 --year 2026 --period 0A
-@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
+@blocked unconverted Refused for want of a work unit, because create refused first: no registry revision covers modelo 100 filing year 2026 period 0A.
 @static aeat app modelo export --modelo 100 --year 2026 --period 0A --output ./modelo-100-2026.boe
-@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
+@blocked unconverted Refused for want of a work unit, because create refused first: no registry revision covers modelo 100 filing year 2026 period 0A.
 @static aeat app modelo work file --modelo 100 --year 2026 --period 0A
-@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
+@blocked unconverted Refused for want of a work unit, because create refused first: no registry revision covers modelo 100 filing year 2026 period 0A.
 @static aeat app modelo reconcile pull --modelo 100 --year 2026 --period 0A
 @blocked live-aeat The pull verb fetches from the AEAT sede; the sandbox refuses live frames.

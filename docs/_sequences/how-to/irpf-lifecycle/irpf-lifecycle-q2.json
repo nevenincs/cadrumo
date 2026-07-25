@@ -23,69 +23,6 @@
     {
       "argv": [
         "aeat",
-        "--format",
-        "json",
-        "app",
-        "ledger",
-        "evidence",
-        "add",
-        "fixtures/factura-material-oficina.pdf",
-        "--supplier",
-        "Papeleria Central SL",
-        "--invoice-number",
-        "C-2026-0087",
-        "--invoice-date",
-        "2026-02-11",
-        "--taxable-base",
-        "500",
-        "--iva-rate",
-        "0.21",
-        "--iva-amount",
-        "105"
-      ],
-      "captures": [
-        {
-          "json_path": "result.evidence_id",
-          "name": "evidence_id",
-          "value": "9a075f52dad08e80"
-        }
-      ],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.evidence.add",
-        "notices": [],
-        "result": {
-          "attachment_id": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
-          "bucket_event_ids": [
-            "23242b36321dbc14fbff281ac7478eee69f63066c137152966db7975d0856c0d"
-          ],
-          "bucket_id": "<bucket-id>",
-          "created_at": "2026-04-01T09:00:00Z",
-          "evidence_id": "9a075f52dad08e80",
-          "invoice_date": "2026-02-11",
-          "invoice_number": "C-2026-0087",
-          "iva_amount": "105",
-          "iva_rate": "0.21",
-          "media_kind": "pdf",
-          "notes": "",
-          "source_path": "fixtures/factura-material-oficina.pdf",
-          "source_sha256": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
-          "supplier": "Papeleria Central SL",
-          "taxable_base": "500",
-          "updated_at": "2026-04-01T09:00:00Z"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
-      "envelope_source": "stdout",
-      "exit_code": 0,
-      "kind": "setup",
-      "stderr_text": null,
-      "text": null
-    },
-    {
-      "argv": [
-        "aeat",
         "app",
         "ledger",
         "add",
@@ -120,30 +57,15 @@
       "argv": [
         "aeat",
         "app",
-        "ledger",
-        "add",
-        "--date",
-        "2026-02-11",
-        "--amount",
-        "605",
-        "--direction",
-        "OUTGOING",
-        "--description",
-        "compra",
-        "--classification",
-        "BUSINESS",
-        "--category-id",
-        "material_oficina",
-        "--taxable-base",
-        "500",
-        "--iva-rate",
-        "0.21",
-        "--iva-amount",
-        "105",
-        "--purchase-invoice-evidence-id",
-        "9a075f52dad08e80",
-        "--idempotency-key",
-        "irpf-q1-compra"
+        "modelo",
+        "work",
+        "create",
+        "--modelo",
+        "130",
+        "--year",
+        "2026",
+        "--period",
+        "1T"
       ],
       "captures": [],
       "envelope": null,
@@ -151,7 +73,395 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "ID\tff6973af70780f2feec6cbe7746745c0b0ffb2e1eb0a308f7aebc24e62b09dd7\nDate\t2026-02-11\nAmount\t605\nDescription\tcompra\nReview status\treviewed\n"
+      "text": "operation\tmodelo.work.create\nstatus\tcreated\nwork_unit_id\t98001b25b2e8cda589a3c69cf943ade7698965c32334048724fa41987b138584\nshort_work_unit_id\t41987b138584\nbucket_id\t<bucket-id>\nmodelo\t130\nfiling_year\t2026\nperiod\t1T\nrevision_id\t2019-y-siguientes\nname\t130-2026-1T\nstate\tdraft\ncurrent_calculation_revision_id\t\nshort_current_calculation_revision_id\t\nfiled_calculation_revision_id\t\nshort_filed_calculation_revision_id\t\ncurrent_filing_record_id\t\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nplazo_closes_on\t2026-04-20\ndays_remaining\t19\nNew work unit created.\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "modelo",
+        "work",
+        "calculate",
+        "--modelo",
+        "130",
+        "--year",
+        "2026",
+        "--period",
+        "1T",
+        "--binding",
+        "modelo-130-resultados-negativos-anteriores=0",
+        "--binding",
+        "modelo-130-pagos-fraccionados-anteriores=0",
+        "--binding",
+        "irpf.previous_year_economic_activity_net_income=0"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "operation\tmodelo.work.calculate\ncalculation_revision_id\t9519c7ad3e86fb605a5a5d0cc5914fb5697dafd03d4c1f994c96e5e50246a809\nwork_unit_id\t98001b25b2e8cda589a3c69cf943ade7698965c32334048724fa41987b138584\nstate\tdraft\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nresult summary  Modelo 130 2026 1T\nrole\tcasilla\tvalue\tlabel\nkey_figure\t03\t1000.00\tNet yield\nkey_figure\t04\t200.00\tFractional payment amount\nkey_figure\t07\t200.00\tPartial result of Section I\nkey_figure\t09\t0.00\tFractional payment amount\nkey_figure\t11\t0.00\tPartial result of Section II\nkey_figure\t12\t200.00\tSum of partial results\nkey_figure\t13\t100.00\tReduction for net yields\nkey_figure\t14\t100.00\tNet amount after reduction\nkey_figure\t17\t100.00\tDifference\nkey_figure\t19\t100.00\tFinal result\ncasilla\t01\t1000\ncasilla\t02\t0\ncasilla\t03\t1000.00\tsubtract(01, 02) = subtract(1000, 0) = 1000.00\ncasilla\t04\t200.00\tmaximum(03, irpf.direct_estimation_fractional_payment_rate) = maximum(1000.00, 20) = 200.00\ncasilla\t05\t0\ncasilla\t06\t0\ncasilla\t07\t200.00\tsubtract(04, 05, 06) = subtract(200.00, 0, 0) = 200.00\ncasilla\t08\t0\ncasilla\t09\t0.00\tpercentage(08, irpf.agriculture_fractional_payment_rate) = percentage(0, 2) = 0.00\ncasilla\t10\t0\ncasilla\t11\t0.00\tsubtract(09, 10) = subtract(0.00, 0) = 0.00\ncasilla\t12\t200.00\tmaximum(07, 11) = maximum(200.00, 0.00) = 200.00\ncasilla\t13\t100.00\tconditional(irpf.previous_year_economic_activity_net_income) = conditional(0) = 100.00\ncasilla\t14\t100.00\tsubtract(12, 13) = subtract(200.00, 100.00) = 100.00\ncasilla\t15\t0.00\tminimum(modelo-130-resultados-negativos-anteriores, 14) = minimum(0, 100.00) = 0.00\ncasilla\t16\t0\ncasilla\t17\t100.00\tsubtract(14, 15, 16) = subtract(100.00, 0.00, 0) = 100.00\ncasilla\t18\t0\ncasilla\t19\t100.00\tsubtract(17, 18) = subtract(100.00, 0) = 100.00\ncasilla\tsaldo-negativo-fin-periodo\t0.00\tmaximum(17) = maximum(100.00) = 0.00\nplazo_closes_on\t2026-04-20\ndays_remaining\t19\nSaved as draft calculation revision 9519c7ad3e86fb605a5a5d0cc5914fb5697dafd03d4c1f994c96e5e50246a809 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 130 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 9519c7ad3e86fb605a5a5d0cc5914fb5697dafd03d4c1f994c96e5e50246a809`.\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "modelo",
+        "work",
+        "verify",
+        "--modelo",
+        "130",
+        "--year",
+        "2026",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "operation\tmodelo.work.verify\nverification_report_id\tf7de2db77d2719830550b5458fbf35634d9596fd452aa931a984c5ccaf508fac\ncalculation_revision_id\t9519c7ad3e86fb605a5a5d0cc5914fb5697dafd03d4c1f994c96e5e50246a809\ncompleteness_status\tcomplete\ngranted_verificado_completo\ttrue\nrun_at\t2026-04-01T09:00:00+00:00\nverified_by\tdocs-sequence-sandbox\nresolved_casilla_id_count\t0\nmissing_required_casilla_id_count\t0\nfinding_count\t2\nfinding\tadvisory\twarning\t\tcross-period dependency scoped out as no-prior-obligation (pre-activity): modelo=100 year=2025 period=0A origin=previous_filing_binding. The period falls strictly before the operator-declared activity-start date 2026-01-01, which has not yet been corroborated against an AEAT censo snapshot.\tConfirm the recorded activity-start date is correct. Once the live AEAT censo read is available, the date will be corroborated and this advisory cleared.\nfinding_legal_refs\t\trd-1065-2007:art-9\nfinding_source_refs\t\taeat-dr-130-2019-v12, aeat-modelo-130-instructions\nfinding\tadvisory\twarning\t\toutput VAT transaction '32ecfd70d4feaa1dc4abe5c9e7b4a0b6b699fc23e2e83436be83780d3cc1469e' declares a positive IVA quota but carries no linked evidence (no purchase invoice and no attachment); attach the supporting document before filing.\tAdvisory only: keep issued/sales invoice support for ledger row 32ecfd70d4feaa1dc4abe5c9e7b4a0b6b699fc23e2e83436be83780d3cc1469e. There is currently no dedicated public CLI path that mints issued-invoice evidence like `aeat app ledger evidence add` does for purchase invoices. If you already have a secure attachment id, link it with `aeat app ledger attach 32ecfd70d4feaa1dc4abe5c9e7b4a0b6b699fc23e2e83436be83780d3cc1469e --attachment-id ATTACHMENT_ID`, then rerun verification.\nfinding_legal_refs\t\tley-37-1992:art-97, rd-1619-2012:art-2\nfinding_source_refs\t\taeat-dr-130-2019-v12, aeat-modelo-130-instructions\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "modelo",
+        "work",
+        "file",
+        "--modelo",
+        "130",
+        "--year",
+        "2026",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "operation\tmodelo.work.file\nfiling_record_id\t2feb11ae91975937345ac14680a0ba32d9bee810d8c3ce6ebb85f76550f3d804\nwork_unit_id\t98001b25b2e8cda589a3c69cf943ade7698965c32334048724fa41987b138584\ncalculation_revision_id\t9519c7ad3e86fb605a5a5d0cc5914fb5697dafd03d4c1f994c96e5e50246a809\nbucket_id\t<bucket-id>\nmodelo\t130\nfiling_year\t2026\nperiod\t1T\nfiled_at\t2026-04-01T09:00:00+00:00\nfiled_by\tdocs-sequence-sandbox\nstatus\tvigente\naeat_accepted\tfalse\nkind\tinternal_filing\nlive_submission\tfalse\nfiling_disambiguation\t(internal only — does not submit to AEAT)\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "evidence",
+        "add",
+        "fixtures/factura-material-oficina.pdf",
+        "--supplier",
+        "Papeleria Central SL",
+        "--invoice-number",
+        "C-2026-0142",
+        "--invoice-date",
+        "2026-06-05",
+        "--taxable-base",
+        "250",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "52.50"
+      ],
+      "captures": [
+        {
+          "json_path": "result.evidence_id",
+          "name": "material_evidence_id",
+          "value": "c8be619067c5822d"
+        }
+      ],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.evidence.add",
+        "notices": [],
+        "result": {
+          "attachment_id": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
+          "bucket_event_ids": [
+            "fc7b88014081caccd7cba87ca69b7c585313bb157c998c29c58abf01423b6ac0"
+          ],
+          "bucket_id": "<bucket-id>",
+          "created_at": "2026-04-01T09:00:00Z",
+          "evidence_id": "c8be619067c5822d",
+          "invoice_date": "2026-06-05",
+          "invoice_number": "C-2026-0142",
+          "iva_amount": "52.50",
+          "iva_rate": "0.21",
+          "media_kind": "pdf",
+          "notes": "",
+          "source_path": "fixtures/factura-material-oficina.pdf",
+          "source_sha256": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
+          "supplier": "Papeleria Central SL",
+          "taxable_base": "250",
+          "updated_at": "2026-04-01T09:00:00Z"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "add",
+        "--date",
+        "2026-04-15",
+        "--amount",
+        "2420",
+        "--direction",
+        "INCOMING",
+        "--description",
+        "proyecto abril",
+        "--classification",
+        "BUSINESS",
+        "--taxable-base",
+        "2000",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "420"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.add",
+        "notices": [],
+        "result": {
+          "bucket_event_ids": [
+            "5ced3bffc1d173e600a79eae72b43b0c87aef06ef68752b923f50e952d9571f7"
+          ],
+          "bucket_id": "<bucket-id>",
+          "review_status": "reviewed",
+          "transaction": {
+            "amount": "2420",
+            "attachment_ids": [],
+            "booked_date": "2026-04-15",
+            "business_classification": "BUSINESS",
+            "business_pct": null,
+            "category_id": null,
+            "classification_confidence": "1",
+            "classification_reason": "aeat app ledger add",
+            "classified_at": "2026-04-01T09:00:00+00:00",
+            "classified_by": "manual",
+            "counterparty": "",
+            "counterparty_eu_member_state": null,
+            "created_at": "2026-04-01T09:00:00+00:00",
+            "currency": "EUR",
+            "date": "2026-04-15",
+            "description": "proyecto abril",
+            "direction": "INCOMING",
+            "fx_rate": null,
+            "irpf_category": null,
+            "iva_amount": "420",
+            "iva_category": null,
+            "iva_rate": "0.21",
+            "lifecycle_state": "ACTIVE",
+            "m210_income_classification": null,
+            "modified_at": "2026-04-01T09:00:00+00:00",
+            "notes": "",
+            "prorrata_reference": null,
+            "purchase_invoice_evidence_id": null,
+            "source_jurisdiction": "ES",
+            "taxable_base": "2000",
+            "transaction_id": "8f06681246d7fa8f5e177223ef6bfbed5cc8b7e8b56776fbf8ac3a022bbedb75",
+            "usage_ratio_id": null,
+            "value_date": null,
+            "value_in_eur": null
+          },
+          "transaction_id": "8f06681246d7fa8f5e177223ef6bfbed5cc8b7e8b56776fbf8ac3a022bbedb75"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "add",
+        "--date",
+        "2026-05-20",
+        "--amount",
+        "1210",
+        "--direction",
+        "INCOMING",
+        "--description",
+        "proyecto mayo",
+        "--classification",
+        "BUSINESS",
+        "--taxable-base",
+        "1000",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "210"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.add",
+        "notices": [],
+        "result": {
+          "bucket_event_ids": [
+            "b0378bf006ba5c9af9bfd0ebd333775eeb9c01dbceaebe4a3f9aa826bc05c165"
+          ],
+          "bucket_id": "<bucket-id>",
+          "review_status": "reviewed",
+          "transaction": {
+            "amount": "1210",
+            "attachment_ids": [],
+            "booked_date": "2026-05-20",
+            "business_classification": "BUSINESS",
+            "business_pct": null,
+            "category_id": null,
+            "classification_confidence": "1",
+            "classification_reason": "aeat app ledger add",
+            "classified_at": "2026-04-01T09:00:00+00:00",
+            "classified_by": "manual",
+            "counterparty": "",
+            "counterparty_eu_member_state": null,
+            "created_at": "2026-04-01T09:00:00+00:00",
+            "currency": "EUR",
+            "date": "2026-05-20",
+            "description": "proyecto mayo",
+            "direction": "INCOMING",
+            "fx_rate": null,
+            "irpf_category": null,
+            "iva_amount": "210",
+            "iva_category": null,
+            "iva_rate": "0.21",
+            "lifecycle_state": "ACTIVE",
+            "m210_income_classification": null,
+            "modified_at": "2026-04-01T09:00:00+00:00",
+            "notes": "",
+            "prorrata_reference": null,
+            "purchase_invoice_evidence_id": null,
+            "source_jurisdiction": "ES",
+            "taxable_base": "1000",
+            "transaction_id": "35753fc4760eb3e6fe93337c5ead13f44d4794a752cf95bbe875826e14fa4cb5",
+            "usage_ratio_id": null,
+            "value_date": null,
+            "value_in_eur": null
+          },
+          "transaction_id": "35753fc4760eb3e6fe93337c5ead13f44d4794a752cf95bbe875826e14fa4cb5"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "add",
+        "--date",
+        "2026-06-05",
+        "--amount",
+        "302.50",
+        "--direction",
+        "OUTGOING",
+        "--description",
+        "material",
+        "--classification",
+        "BUSINESS",
+        "--category-id",
+        "material_oficina",
+        "--taxable-base",
+        "250",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "52.50",
+        "--purchase-invoice-evidence-id",
+        "c8be619067c5822d"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.add",
+        "notices": [],
+        "result": {
+          "bucket_event_ids": [
+            "f0d194503deeea8e669542ef6be5606ee47e6c769e9fc3b6df51183c33cf9852"
+          ],
+          "bucket_id": "<bucket-id>",
+          "review_status": "reviewed",
+          "transaction": {
+            "amount": "302.5",
+            "attachment_ids": [],
+            "booked_date": "2026-06-05",
+            "business_classification": "BUSINESS",
+            "business_pct": null,
+            "category_id": "material_oficina",
+            "classification_confidence": "1",
+            "classification_reason": "aeat app ledger add",
+            "classified_at": "2026-04-01T09:00:00+00:00",
+            "classified_by": "manual",
+            "counterparty": "",
+            "counterparty_eu_member_state": null,
+            "created_at": "2026-04-01T09:00:00+00:00",
+            "currency": "EUR",
+            "date": "2026-06-05",
+            "description": "material",
+            "direction": "OUTGOING",
+            "fx_rate": null,
+            "irpf_category": null,
+            "iva_amount": "52.5",
+            "iva_category": null,
+            "iva_rate": "0.21",
+            "lifecycle_state": "ACTIVE",
+            "m210_income_classification": null,
+            "modified_at": "2026-04-01T09:00:00+00:00",
+            "notes": "",
+            "prorrata_reference": null,
+            "purchase_invoice_evidence_id": "c8be619067c5822d",
+            "source_jurisdiction": "ES",
+            "taxable_base": "250",
+            "transaction_id": "4b2f5ebfaa58fd7ecf2fef3f3726b5c3c110ac2f7b95618af81a7dd248bd7211",
+            "usage_ratio_id": null,
+            "value_date": null,
+            "value_in_eur": null
+          },
+          "transaction_id": "4b2f5ebfaa58fd7ecf2fef3f3726b5c3c110ac2f7b95618af81a7dd248bd7211"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
     },
     {
       "argv": [
@@ -167,7 +477,7 @@
         "--year",
         "2026",
         "--period",
-        "1T"
+        "2T"
       ],
       "captures": [],
       "envelope": {
@@ -187,22 +497,22 @@
           "filed_calculation_revision_id": null,
           "filing_year": 2026,
           "modelo": "130",
-          "name": "130-2026-1T",
+          "name": "130-2026-2T",
           "name_applied": null,
           "operation": "modelo.work.create",
           "period": {
-            "code": "1T",
+            "code": "2T",
             "filing_year": 2026
           },
           "revision_id": "2019-y-siguientes",
           "short_current_calculation_revision_id": null,
           "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "41987b138584",
+          "short_work_unit_id": "cb2a74227a0d",
           "state": "borrador",
           "status": "created",
           "status_message": "New work unit created.",
           "updated_at": "2026-04-01T09:00:00+00:00",
-          "work_unit_id": "98001b25b2e8cda589a3c69cf943ade7698965c32334048724fa41987b138584"
+          "work_unit_id": "13544b6d010278bcb76a834ebf2a9c68c06edcfff7aac0710e03cb2a74227a0d"
         },
         "schema_version": "2",
         "status": "success"
@@ -227,13 +537,7 @@
         "--year",
         "2026",
         "--period",
-        "1T",
-        "--binding",
-        "modelo-130-resultados-negativos-anteriores=0",
-        "--binding",
-        "modelo-130-pagos-fraccionados-anteriores=0",
-        "--binding",
-        "irpf.previous_year_economic_activity_net_income=0"
+        "2T"
       ],
       "captures": [],
       "envelope": {
@@ -244,51 +548,51 @@
           "authorization_state": null,
           "binding_overrides": {
             "irpf.previous_year_economic_activity_net_income": "0",
-            "modelo-130-actividad-economica-gastos-cumulative": "500",
-            "modelo-130-actividad-economica-ingresos-cumulative": "1000",
-            "modelo-130-actividad-economica-ingresos-taxable-base-cumulative": "1000",
-            "modelo-130-actividad-economica-rendimiento-neto-cumulative": "1000",
+            "modelo-130-actividad-economica-gastos-cumulative": "250",
+            "modelo-130-actividad-economica-ingresos-cumulative": "4000",
+            "modelo-130-actividad-economica-ingresos-taxable-base-cumulative": "4000",
+            "modelo-130-actividad-economica-rendimiento-neto-cumulative": "4000",
             "modelo-130-actividad-economica-retenciones-cumulative": "0",
-            "modelo-130-pagos-fraccionados-anteriores": "0",
+            "modelo-130-pagos-fraccionados-anteriores": "200",
             "modelo-130-resultados-negativos-anteriores": "0"
           },
-          "calculation_revision_id": "5b4c684d0fbf3b566ff088ca60cb51a471a4e7b06343fcb94b1d1b160bfef7f5",
+          "calculation_revision_id": "f4f71282a227ef136fe572d018e94d8db3762dd6482a23cb90c3cfd625ceb879",
           "casilla_values": {
-            "01": "1000",
-            "02": "500",
-            "03": "500.00",
-            "04": "100.00",
-            "05": "0",
+            "01": "4000",
+            "02": "250",
+            "03": "3750.00",
+            "04": "750.00",
+            "05": "200.00",
             "06": "0",
-            "07": "100.00",
+            "07": "550.00",
             "08": "0",
             "09": "0.00",
             "10": "0",
             "11": "0.00",
-            "12": "100.00",
+            "12": "550.00",
             "13": "100.00",
-            "14": "0.00",
+            "14": "450.00",
             "15": "0.00",
             "16": "0",
-            "17": "0.00",
+            "17": "450.00",
             "18": "0",
-            "19": "0.00",
+            "19": "450.00",
             "saldo-negativo-fin-periodo": "0.00"
           },
           "created_at": "2026-04-01T09:00:00+00:00",
           "deadline": {
-            "closes_on": "2026-04-20",
+            "closes_on": "2026-07-20",
             "conditional_recargo_preview": null,
             "days_overdue": null,
-            "days_remaining": 19
+            "days_remaining": 110
           },
           "detail_rows": [],
           "filed_at": null,
           "filed_by": null,
           "input_values_by_casilla_id": {
-            "01": "1000",
-            "02": "500",
-            "05": "0",
+            "01": "4000",
+            "02": "250",
+            "05": "200",
             "06": "0"
           },
           "modality": null,
@@ -313,7 +617,7 @@
                 "aeat-dr-130-2019-v12",
                 "aeat-modelo-130-instructions"
               ],
-              "value": "1000"
+              "value": "4000"
             },
             {
               "casilla_id": "02",
@@ -334,7 +638,7 @@
                 "aeat-dr-130-2019-v12",
                 "aeat-modelo-130-instructions"
               ],
-              "value": "500"
+              "value": "250"
             },
             {
               "casilla_id": "03",
@@ -355,14 +659,14 @@
                 "02"
               ],
               "operand_values": [
-                "1000",
-                "500"
+                "4000",
+                "250"
               ],
               "source_refs": [
                 "aeat-dr-130-2019-v12",
                 "aeat-modelo-130-instructions"
               ],
-              "value": "500.00"
+              "value": "3750.00"
             },
             {
               "casilla_id": "04",
@@ -382,14 +686,14 @@
                 "irpf.direct_estimation_fractional_payment_rate"
               ],
               "operand_values": [
-                "500.00",
+                "3750.00",
                 "20"
               ],
               "source_refs": [
                 "aeat-dr-130-2019-v12",
                 "aeat-modelo-130-instructions"
               ],
-              "value": "100.00"
+              "value": "750.00"
             },
             {
               "casilla_id": "05",
@@ -408,7 +712,7 @@
                 "aeat-dr-130-2019-v12",
                 "aeat-modelo-130-instructions"
               ],
-              "value": "0"
+              "value": "200.00"
             },
             {
               "casilla_id": "06",
@@ -450,15 +754,15 @@
                 "06"
               ],
               "operand_values": [
-                "100.00",
-                "0",
+                "750.00",
+                "200.00",
                 "0"
               ],
               "source_refs": [
                 "aeat-dr-130-2019-v12",
                 "aeat-modelo-130-instructions"
               ],
-              "value": "100.00"
+              "value": "550.00"
             },
             {
               "casilla_id": "08",
@@ -572,14 +876,14 @@
                 "11"
               ],
               "operand_values": [
-                "100.00",
+                "550.00",
                 "0.00"
               ],
               "source_refs": [
                 "aeat-dr-130-2019-v12",
                 "aeat-modelo-130-instructions"
               ],
-              "value": "100.00"
+              "value": "550.00"
             },
             {
               "casilla_id": "13",
@@ -623,14 +927,14 @@
                 "13"
               ],
               "operand_values": [
-                "100.00",
+                "550.00",
                 "100.00"
               ],
               "source_refs": [
                 "aeat-dr-130-2019-v12",
                 "aeat-modelo-130-instructions"
               ],
-              "value": "0.00"
+              "value": "450.00"
             },
             {
               "casilla_id": "15",
@@ -650,8 +954,8 @@
                 "14"
               ],
               "operand_values": [
-                "0",
-                "0.00"
+                "0.00",
+                "450.00"
               ],
               "source_refs": [
                 "aeat-dr-130-2019-v12",
@@ -699,7 +1003,7 @@
                 "16"
               ],
               "operand_values": [
-                "0.00",
+                "450.00",
                 "0.00",
                 "0"
               ],
@@ -707,7 +1011,7 @@
                 "aeat-dr-130-2019-v12",
                 "aeat-modelo-130-instructions"
               ],
-              "value": "0.00"
+              "value": "450.00"
             },
             {
               "casilla_id": "18",
@@ -747,14 +1051,14 @@
                 "18"
               ],
               "operand_values": [
-                "0.00",
+                "450.00",
                 "0"
               ],
               "source_refs": [
                 "aeat-dr-130-2019-v12",
                 "aeat-modelo-130-instructions"
               ],
-              "value": "0.00"
+              "value": "450.00"
             },
             {
               "casilla_id": "saldo-negativo-fin-periodo",
@@ -773,7 +1077,7 @@
                 "17"
               ],
               "operand_values": [
-                "0.00"
+                "450.00"
               ],
               "source_refs": [
                 "aeat-dr-130-2019-v12",
@@ -794,7 +1098,7 @@
                 "hu": "Nettó jövedelem"
               },
               "role": "key_figure",
-              "value": "500.00"
+              "value": "3750.00"
             },
             {
               "casilla_id": "04",
@@ -805,7 +1109,7 @@
                 "hu": "Részletfizetés összege"
               },
               "role": "key_figure",
-              "value": "100.00"
+              "value": "750.00"
             },
             {
               "casilla_id": "07",
@@ -816,7 +1120,7 @@
                 "hu": "I. rész részeredménye"
               },
               "role": "key_figure",
-              "value": "100.00"
+              "value": "550.00"
             },
             {
               "casilla_id": "09",
@@ -849,7 +1153,7 @@
                 "hu": "Részeredmények összege"
               },
               "role": "key_figure",
-              "value": "100.00"
+              "value": "550.00"
             },
             {
               "casilla_id": "13",
@@ -871,7 +1175,7 @@
                 "hu": "Csökkentés utáni nettó összeg"
               },
               "role": "key_figure",
-              "value": "0.00"
+              "value": "450.00"
             },
             {
               "casilla_id": "17",
@@ -882,7 +1186,7 @@
                 "hu": "Különbözet"
               },
               "role": "key_figure",
-              "value": "0.00"
+              "value": "450.00"
             },
             {
               "casilla_id": "19",
@@ -893,17 +1197,17 @@
                 "hu": "Végső eredmény"
               },
               "role": "key_figure",
-              "value": "0.00"
+              "value": "450.00"
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 5b4c684d0fbf3b566ff088ca60cb51a471a4e7b06343fcb94b1d1b160bfef7f5 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 130 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 5b4c684d0fbf3b566ff088ca60cb51a471a4e7b06343fcb94b1d1b160bfef7f5`.",
+          "saved_confirmation": "Saved as draft calculation revision f4f71282a227ef136fe572d018e94d8db3762dd6482a23cb90c3cfd625ceb879 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 130 --year 2026 --period 2T` and re-inspect this one with `aeat app modelo work revision f4f71282a227ef136fe572d018e94d8db3762dd6482a23cb90c3cfd625ceb879`.",
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
           "verified_at": null,
           "verified_by": null,
-          "work_unit_id": "98001b25b2e8cda589a3c69cf943ade7698965c32334048724fa41987b138584"
+          "work_unit_id": "13544b6d010278bcb76a834ebf2a9c68c06edcfff7aac0710e03cb2a74227a0d"
         },
         "schema_version": "2",
         "status": "success"
@@ -928,13 +1232,25 @@
         "--year",
         "2026",
         "--period",
-        "1T"
+        "2T"
       ],
       "captures": [],
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.verify",
         "notices": [
+          {
+            "code": "modelo.work.verify.finding.advisory",
+            "context": {
+              "kind": "advisory",
+              "legal_refs": "ley-58-2003:art-119, ley-58-2003:art-120, ley-35-2006:art-99, orden-eha-672-2007:art-1, rd-439-2007:art-110, rd-439-2007:art-95",
+              "severity": "warning",
+              "source_refs": "aeat-modelo-130-instructions"
+            },
+            "message": "cross-period carry used a same-year locally-filed prior period with no external AEAT evidence: modelo=130 year=2026 period=1T origin=previous_filing_binding. The within-year chain is admitted for local export, but the carried value is locally evidenced (app_filing), not AEAT-evidenced; file every period with AEAT externally.",
+            "severity": "warning",
+            "suggestion": "Export and file each period with AEAT externally, then upgrade the local chain with official evidence; use `aeat app live justificante pull` when live access is available, or `aeat app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf --evidence-id CSV --set CASILLA=VALUE` / `aeat app modelo reconcile file WORK_UNIT_ID --file PATH` for evidence you already hold."
+          },
           {
             "code": "modelo.work.verify.finding.advisory",
             "context": {
@@ -960,6 +1276,30 @@
             "suggestion": "Advisory only: keep issued/sales invoice support for ledger row 32ecfd70d4feaa1dc4abe5c9e7b4a0b6b699fc23e2e83436be83780d3cc1469e. There is currently no dedicated public CLI path that mints issued-invoice evidence like `aeat app ledger evidence add` does for purchase invoices. If you already have a secure attachment id, link it with `aeat app ledger attach 32ecfd70d4feaa1dc4abe5c9e7b4a0b6b699fc23e2e83436be83780d3cc1469e --attachment-id ATTACHMENT_ID`, then rerun verification."
           },
           {
+            "code": "modelo.work.verify.finding.advisory",
+            "context": {
+              "kind": "advisory",
+              "legal_refs": "ley-37-1992:art-97, rd-1619-2012:art-2",
+              "severity": "warning",
+              "source_refs": "aeat-dr-130-2019-v12, aeat-modelo-130-instructions"
+            },
+            "message": "output VAT transaction '35753fc4760eb3e6fe93337c5ead13f44d4794a752cf95bbe875826e14fa4cb5' declares a positive IVA quota but carries no linked evidence (no purchase invoice and no attachment); attach the supporting document before filing.",
+            "severity": "warning",
+            "suggestion": "Advisory only: keep issued/sales invoice support for ledger row 35753fc4760eb3e6fe93337c5ead13f44d4794a752cf95bbe875826e14fa4cb5. There is currently no dedicated public CLI path that mints issued-invoice evidence like `aeat app ledger evidence add` does for purchase invoices. If you already have a secure attachment id, link it with `aeat app ledger attach 35753fc4760eb3e6fe93337c5ead13f44d4794a752cf95bbe875826e14fa4cb5 --attachment-id ATTACHMENT_ID`, then rerun verification."
+          },
+          {
+            "code": "modelo.work.verify.finding.advisory",
+            "context": {
+              "kind": "advisory",
+              "legal_refs": "ley-37-1992:art-97, rd-1619-2012:art-2",
+              "severity": "warning",
+              "source_refs": "aeat-dr-130-2019-v12, aeat-modelo-130-instructions"
+            },
+            "message": "output VAT transaction '8f06681246d7fa8f5e177223ef6bfbed5cc8b7e8b56776fbf8ac3a022bbedb75' declares a positive IVA quota but carries no linked evidence (no purchase invoice and no attachment); attach the supporting document before filing.",
+            "severity": "warning",
+            "suggestion": "Advisory only: keep issued/sales invoice support for ledger row 8f06681246d7fa8f5e177223ef6bfbed5cc8b7e8b56776fbf8ac3a022bbedb75. There is currently no dedicated public CLI path that mints issued-invoice evidence like `aeat app ledger evidence add` does for purchase invoices. If you already have a secure attachment id, link it with `aeat app ledger attach 8f06681246d7fa8f5e177223ef6bfbed5cc8b7e8b56776fbf8ac3a022bbedb75 --attachment-id ATTACHMENT_ID`, then rerun verification."
+          },
+          {
             "code": "modelo.work.verify.next_action_granted",
             "context": null,
             "message": "Verification passed. Export the filing artefact with `aeat app modelo export`.",
@@ -968,9 +1308,28 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "5b4c684d0fbf3b566ff088ca60cb51a471a4e7b06343fcb94b1d1b160bfef7f5",
+          "calculation_revision_id": "f4f71282a227ef136fe572d018e94d8db3762dd6482a23cb90c3cfd625ceb879",
           "completeness_status": "complete",
           "findings": [
+            {
+              "casilla_id": null,
+              "expectation_id": null,
+              "kind": "advisory",
+              "legal_refs": [
+                "ley-58-2003:art-119",
+                "ley-58-2003:art-120",
+                "ley-35-2006:art-99",
+                "orden-eha-672-2007:art-1",
+                "rd-439-2007:art-110",
+                "rd-439-2007:art-95"
+              ],
+              "message": "cross-period carry used a same-year locally-filed prior period with no external AEAT evidence: modelo=130 year=2026 period=1T origin=previous_filing_binding. The within-year chain is admitted for local export, but the carried value is locally evidenced (app_filing), not AEAT-evidenced; file every period with AEAT externally.",
+              "next_action": "Export and file each period with AEAT externally, then upgrade the local chain with official evidence; use `aeat app live justificante pull` when live access is available, or `aeat app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf --evidence-id CSV --set CASILLA=VALUE` / `aeat app modelo reconcile file WORK_UNIT_ID --file PATH` for evidence you already hold.",
+              "severity": "warning",
+              "source_refs": [
+                "aeat-modelo-130-instructions"
+              ]
+            },
             {
               "casilla_id": null,
               "expectation_id": null,
@@ -1001,6 +1360,38 @@
                 "aeat-dr-130-2019-v12",
                 "aeat-modelo-130-instructions"
               ]
+            },
+            {
+              "casilla_id": null,
+              "expectation_id": null,
+              "kind": "advisory",
+              "legal_refs": [
+                "ley-37-1992:art-97",
+                "rd-1619-2012:art-2"
+              ],
+              "message": "output VAT transaction '35753fc4760eb3e6fe93337c5ead13f44d4794a752cf95bbe875826e14fa4cb5' declares a positive IVA quota but carries no linked evidence (no purchase invoice and no attachment); attach the supporting document before filing.",
+              "next_action": "Advisory only: keep issued/sales invoice support for ledger row 35753fc4760eb3e6fe93337c5ead13f44d4794a752cf95bbe875826e14fa4cb5. There is currently no dedicated public CLI path that mints issued-invoice evidence like `aeat app ledger evidence add` does for purchase invoices. If you already have a secure attachment id, link it with `aeat app ledger attach 35753fc4760eb3e6fe93337c5ead13f44d4794a752cf95bbe875826e14fa4cb5 --attachment-id ATTACHMENT_ID`, then rerun verification.",
+              "severity": "warning",
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ]
+            },
+            {
+              "casilla_id": null,
+              "expectation_id": null,
+              "kind": "advisory",
+              "legal_refs": [
+                "ley-37-1992:art-97",
+                "rd-1619-2012:art-2"
+              ],
+              "message": "output VAT transaction '8f06681246d7fa8f5e177223ef6bfbed5cc8b7e8b56776fbf8ac3a022bbedb75' declares a positive IVA quota but carries no linked evidence (no purchase invoice and no attachment); attach the supporting document before filing.",
+              "next_action": "Advisory only: keep issued/sales invoice support for ledger row 8f06681246d7fa8f5e177223ef6bfbed5cc8b7e8b56776fbf8ac3a022bbedb75. There is currently no dedicated public CLI path that mints issued-invoice evidence like `aeat app ledger evidence add` does for purchase invoices. If you already have a secure attachment id, link it with `aeat app ledger attach 8f06681246d7fa8f5e177223ef6bfbed5cc8b7e8b56776fbf8ac3a022bbedb75 --attachment-id ATTACHMENT_ID`, then rerun verification.",
+              "severity": "warning",
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ]
             }
           ],
           "granted_verificado_completo": true,
@@ -1008,7 +1399,7 @@
           "operation": "modelo.work.verify",
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "843d948c31f6d42f20bafab52f0b2887027ae02cdd5119fbdc6872487de98101",
+          "verification_report_id": "4f0ab2023010e36e1f7c0e0f58d568c24f005bbc5e1d8913437e4129dd4738c3",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -1033,9 +1424,9 @@
         "--year",
         "2026",
         "--period",
-        "1T",
+        "2T",
         "--output",
-        "./modelo-130-2026-1T.boe"
+        "./modelo-130-2026-2T.boe"
       ],
       "captures": [],
       "envelope": {
@@ -1048,29 +1439,29 @@
               "evidence_status": "local_export_not_official_aeat_filing_evidence",
               "filing_year": "2026",
               "modelo": "130",
-              "period": "1T"
+              "period": "2T"
             },
             "message": "Local export wrote an AEAT-compatible fichero-BOE file only; it is not official AEAT filing evidence. Official evidence comes from AEAT after filing: justificante, consulta de declaraciones presentadas, or CSV cotejo.",
             "severity": "warning",
-            "suggestion": "After filing through AEAT, capture official evidence with `aeat app modelo reconcile pull --modelo 130 --year 2026 --period 1T`, or `aeat app live justificante pull --modelo 130 --year 2026 --period 1T` when live read access is available; otherwise import AEAT justificante/CSV evidence with `aeat app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf --evidence-id CSV --set CASILLA=VALUE`."
+            "suggestion": "After filing through AEAT, capture official evidence with `aeat app modelo reconcile pull --modelo 130 --year 2026 --period 2T`, or `aeat app live justificante pull --modelo 130 --year 2026 --period 2T` when live read access is available; otherwise import AEAT justificante/CSV evidence with `aeat app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf --evidence-id CSV --set CASILLA=VALUE`."
           }
         ],
         "result": {
-          "bucket_event_id": "9ce1e107f3274efedf521e4206f71c5571122d30e64bbb54a91f6b2774e830b9",
+          "bucket_event_id": "78583f5343ad49e1faad59bea609d4360fb5472ff262fea39301be04bcd3033a",
           "bucket_id": "<bucket-id>",
           "byte_size": 946,
-          "calculation_revision_id": "5b4c684d0fbf3b566ff088ca60cb51a471a4e7b06343fcb94b1d1b160bfef7f5",
-          "file_sha256": "53811a0d55fa5f20dd0a84f5edfa7e8d2cb010cd7e69d5a2212eb8f59f69eb6b",
+          "calculation_revision_id": "f4f71282a227ef136fe572d018e94d8db3762dd6482a23cb90c3cfd625ceb879",
+          "file_sha256": "4776b9f5db81874d5ec2b99782b3d0aadc8194b1f035fa5df35a794767fe92d0",
           "filing_year": 2026,
           "format": "fichero-boe",
           "modelo": "130",
           "operation": "modelo.export",
-          "output_path": "modelo-130-2026-1T.boe",
+          "output_path": "modelo-130-2026-2T.boe",
           "period": {
-            "code": "1T",
+            "code": "2T",
             "filing_year": 2026
           },
-          "work_unit_id": "98001b25b2e8cda589a3c69cf943ade7698965c32334048724fa41987b138584"
+          "work_unit_id": "13544b6d010278bcb76a834ebf2a9c68c06edcfff7aac0710e03cb2a74227a0d"
         },
         "schema_version": "2",
         "status": "warning"
@@ -1083,5 +1474,5 @@
     }
   ],
   "golden_schema_version": 1,
-  "sequence_id": "irpf-lifecycle-q1"
+  "sequence_id": "irpf-lifecycle-q2"
 }
