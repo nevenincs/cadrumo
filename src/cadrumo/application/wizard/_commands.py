@@ -33,7 +33,6 @@ persisted typed model is produced identically regardless of frontend.
 
 from __future__ import annotations
 
-import functools
 import inspect
 import typing
 from collections.abc import Callable, Mapping
@@ -63,10 +62,7 @@ from ..flows import (
     FlowAnswerError,
     FlowDefinition,
     FlowPage,
-    FlowState,
     FlowSubmitError,
-    FlowUnsupportedConsoleError,
-    LineFlowFrontend,
     flow_definition_from_wizard_flow,
     run_scripted_flow,
     start_flow,
@@ -80,7 +76,6 @@ from ._errors import WizardMissingFlagError
 from ._format_hints import attach_format_hints
 from ._models import WizardFlow, WizardQuestion, WizardWidget
 from ._persistence import WizardPersistMode
-from ._registered_values import project_registered_values
 from ._setup_legal_validators import attach_setup_legal_validators
 
 #: Which substrate :class:`FlowMode` each wizard verb drives. ``create``
@@ -104,87 +99,6 @@ _SETUP_CHECKPOINT: dict[FlowMode, CheckpointAvailability] = {
 
 
 # KWARGS-RATIONALE-flow-runner: keyword-only frontend seam injected by the caller.
-class InteractiveFlowRunner(typing.Protocol):
-    """Drive one interactive flow run to a submitted state.
-
-    The application default renders the line-mode frontend (a same-layer
-    ``application.flows`` primitive). The CLI entrypoint injects a
-    capability-selecting runner that reaches the full-screen Textual
-    frontend (an inbound adapter the application layer must not import
-    directly), so the paged flow is the operator-facing default while the
-    application stays free of an inbound-adapter dependency.
-    """
-
-    def __call__(
-        self,
-        definition: FlowDefinition,
-        *,
-        mode: FlowMode,
-        registered_values: Mapping[str, str] | None,
-        on_language_activated: Callable[[str, str], bool] | None = None,
-        checkpoint_store: CheckpointStore | None = None,
-    ) -> FlowState:
-        """Run ``definition`` in ``mode`` and return the final flow state.
-
-        ``on_language_activated`` is the mid-walk output-language activator:
-        fired post-commit for each answered page, it re-activates the output
-        language when the ``output-language`` page is committed and reports
-        whether a switch happened so the frontend can re-render. It is
-        ``None`` when the existing language chain (an explicit flag or the
-        environment) already pins the language for the whole run.
-
-        ``checkpoint_store`` is the create-mode facts-as-checkpoint port: a
-        frontend that declares checkpointing AVAILABLE for ``mode`` honours
-        save-and-exit through it. It is ``None`` in a mode whose definition
-        declares checkpointing UNAVAILABLE.
-        """
-        ...
-
-
-def _activation_only_committed_callback(
-    on_language_activated: Callable[[str, str], bool] | None,
-) -> Callable[[str, str], None] | None:
-    """Adapt a language activator to the frontend's post-commit callback.
-
-    The line frontend re-assembles every page's copy on render, so the next
-    page renders under the newly-activated language with no further action;
-    the activator's boolean verdict is therefore discarded here. Returns
-    ``None`` when no activator is supplied so the frontend fires no hook.
-    """
-    if on_language_activated is None:
-        return None
-
-    def _committed(page_key: str, value: str) -> None:
-        on_language_activated(page_key, value)
-
-    return _committed
-
-
-def _line_mode_interactive_runner(
-    definition: FlowDefinition,
-    *,
-    mode: FlowMode,
-    registered_values: Mapping[str, str] | None = None,
-    on_language_activated: Callable[[str, str], bool] | None = None,
-    checkpoint_store: CheckpointStore | None = None,
-) -> FlowState:
-    """Default runner: the line-mode frontend over the one flow engine.
-
-    The line frontend carries no registered-value column, so on-record
-    values are surfaced only through the full-screen review table when the
-    entrypoint injects the capability-selecting runner; the degradation
-    tier walks the same engine, validation, and submit gate. When the
-    definition declares checkpointing AVAILABLE for ``mode`` the injected
-    ``checkpoint_store`` backs the save-and-exit affordance.
-    """
-    del registered_values
-    state, _projection = LineFlowFrontend(
-        definition,
-        checkpoint_store=checkpoint_store,
-        on_answer_committed=_activation_only_committed_callback(on_language_activated),
-    ).run(mode=mode)
-    return state
-
 
 def _choice(values: list[str], *, case_sensitive: bool = True) -> typer._click.types.ParamType:
     """Wrap ``click.Choice`` and present it as ``typer._click.types.ParamType``.
@@ -1115,159 +1029,6 @@ def _load_on_record(profile_id: str) -> UserProfileRecord | None:
         return workflow_state_repository().load().active_profile_record()
 
 
-def _prepare_interactive_flow(
-    flow: WizardFlow,
-    canonical: Mapping[str, str],
-    *,
-    mode: WizardPersistMode,
-    profile_id: str,
-) -> tuple[FlowDefinition, Mapping[str, str] | None]:
-    """Bridge the wizard flow to a seeded flow definition for interactive rendering.
-
-    ``create`` seeds page prefills from the collected canonical values
-    (the environment / explicit output-language, chiefly) and surfaces no
-    registered column. ``edit`` seeds render-time prefills from the
-    profile's on-record TOKEN values (the raw token the operator edits)
-    and, separately, feeds the review table's ``registered_values`` column
-    from the display-ready projection
-    (:func:`~cadrumo.application.wizard._registered_values.project_registered_values`):
-    closed-set tokens render as their choice label, booleans as the
-    localized yes/no pair, and an artefact-sourced fact carries the
-    non-official-evidence suffix. The projection resolves copy at call
-    time — post output-language activation — so the review renders in the
-    operator's chosen language.
-    """
-    definition = _setup_flow_definition(flow, attach_descendants=mode == "create")
-    if mode == "create":
-        return _seed_flow_definition(definition, dict(canonical)), None
-
-    from ..user_profile import record_to_path_values
-
-    record = _load_on_record(profile_id)
-    record_values = record_to_path_values(record)
-    registered_values = project_registered_values(flow, record)
-    seed_by_page_id: dict[str, str] = {}
-    for section in flow.sections:
-        for question in section.questions:
-            if question.profile_key is not None and question.profile_key in record_values:
-                seed_by_page_id[question.id] = record_values[question.profile_key]
-    seed_by_page_id.update(canonical)
-    return _seed_flow_definition(definition, seed_by_page_id), registered_values
-
-
-def _run_interactive_flow(
-    flow: WizardFlow,
-    canonical: Mapping[str, str],
-    *,
-    mode: WizardPersistMode,
-    profile_id: str,
-    profile_name: str,
-    interactive_flow_runner: InteractiveFlowRunner,
-    checkpoint_store: CheckpointStore | None = None,
-) -> tuple[BaseModel, frozenset[str], dict[str, str]]:
-    """Render the paged flow, then project its answers into the typed model.
-
-    Drives the injected frontend runner (full-screen TUI where the host
-    supports it, line mode otherwise) to a submitted flow state, then
-    replays the engine's committed answers through the same scripted
-    projection the non-interactive paths use, so the persisted typed
-    model is produced identically regardless of frontend. ``edit`` scopes
-    the write to the pages the operator actually answered; ``create``
-    writes the full set.
-
-    ``checkpoint_store`` backs create-mode save-and-exit; it is threaded
-    into the runner so the frontend can persist through it. The returned
-    tuple carries the typed answers model, the supplied-question-id scope,
-    and the engine's committed page-keyed answer map (the create-mode
-    completion path persists that map through the same store).
-    """
-    if mode == "create" and checkpoint_store is not None:
-        # Resume seed: an in-progress SETUP_INCOMPLETE profile re-projects
-        # its on-record facts to page prefills so the walk continues from
-        # the prior answers. Explicit flags still override a resumed value.
-        resumed = checkpoint_store.load(flow.id)
-        if resumed:
-            canonical = {**dict(resumed), **dict(canonical)}
-    # The wizard console-refusal taxonomy is registry-pinned to the retired
-    # line-mode surface and relocated by the substrate-retirement stream; reach
-    # it through this package's own public facade so this module carries no
-    # dependency on that surface's private module.
-    from . import WizardEditUnsupportedConsoleError, WizardUnsupportedConsoleError
-
-    definition, registered_values = _prepare_interactive_flow(flow, canonical, mode=mode, profile_id=profile_id)
-    try:
-        final_state = interactive_flow_runner(
-            definition,
-            mode=_FLOW_MODE_BY_WIZARD_MODE[mode],
-            registered_values=registered_values,
-            checkpoint_store=checkpoint_store,
-        )
-    except (FlowUnsupportedConsoleError, WizardUnsupportedConsoleError) as exc:
-        # The shared no-console message points at `profile create`, which
-        # reads as a destructive replacement when an operator hit it via
-        # `profile edit`; re-raise an edit-specific hint that names the
-        # non-interactive `profile edit` patch form instead.
-        if mode == "edit":
-            raise WizardEditUnsupportedConsoleError(
-                translated_message="wizard.errors.unsupported_console_edit",
-                context={"profile_name": profile_name},
-            ) from exc
-        raise WizardUnsupportedConsoleError(
-            translated_message="wizard.errors.unsupported_console",
-        ) from exc
-
-    committed = dict(final_state.answers)
-    # An interactive edit patches exactly the pages the operator answered; a
-    # create writes the full set.
-    supplied_question_ids = frozenset(committed) if mode == "edit" else _all_question_ids(flow)
-    # Coerce the engine's committed answers into the typed model through the
-    # one projection every frontend shares — no second walk, no prompter.
-    answers = _answers_model_from_canonical(flow, committed)
-    return answers, supplied_question_ids, committed
-
-
-def _finish_interactive_create(
-    flow: WizardFlow,
-    answers: BaseModel,
-    committed: Mapping[str, str],
-    *,
-    profile_id: str,
-    checkpoint_store: ProfileFactsCheckpointStore,
-) -> dict[str, str]:
-    """Complete or leave-incomplete an interactive create after the walk returns.
-
-    The profile is minted early and its facts persist through the store, so
-    this decides only the terminal transition. A frontend save-and-exit
-    (``save_exit_persisted``) leaves the profile ``SETUP_INCOMPLETE`` — the
-    facts are already saved and the operator resumes later. A submit runs
-    the filing-baseline gate, ensures the answer set is persisted, then
-    flips the profile ``ACTIVE`` through
-    :func:`~cadrumo.application.user_profile.complete_setup_with_lifecycle_span`
-    (emitting ``PROFILE_SETUP_COMPLETED``) — the completion discard: the
-    status flip is what ends resume-eligibility.
-    """
-    from ..user_profile import complete_setup_with_lifecycle_span
-    from ._persistence import serialise_answers
-
-    profile_values = serialise_answers(flow, answers)
-    if checkpoint_store.save_exit_persisted:
-        return profile_values
-
-    missing_baseline = _missing_filing_baseline_flags(flow, answers)
-    if missing_baseline:
-        raise WizardMissingFlagError(
-            translated_message="application.wizard.errors.create_missing_filing_baseline",
-            context={
-                "flow_id": flow.id,
-                "missing": missing_baseline,
-                "missing_flags": _format_missing_flags(missing_baseline),
-            },
-        )
-    checkpoint_store.persist(committed)
-    complete_setup_with_lifecycle_span(profile_id)
-    return profile_values
-
-
 def _run_full_flow(
     flow: WizardFlow,
     canonical: dict[str, str],
@@ -1277,7 +1038,6 @@ def _run_full_flow(
     profile_name: str,
     profile_id: str,
     mode: WizardPersistMode,
-    interactive_flow_runner: InteractiveFlowRunner = _line_mode_interactive_runner,
     explicit_question_ids: frozenset[str] = frozenset(),
     checkpoint_store: CheckpointStore | None = None,
 ) -> dict[str, str]:
@@ -1343,27 +1103,21 @@ def _run_full_flow(
         )
         supplied_question_ids = _all_question_ids(flow)
     else:
-        answers, supplied_question_ids, committed = _run_interactive_flow(
-            flow,
-            canonical,
-            mode=mode,
-            profile_id=profile_id,
-            profile_name=profile_name,
-            interactive_flow_runner=interactive_flow_runner,
-            checkpoint_store=checkpoint_store,
-        )
-        # Interactive create is the facts-as-checkpoint path: the profile
-        # was minted early and its facts persisted through the store, so a
-        # save-and-exit needs no further write and a submit completes the
-        # setup. Every other route falls through to the shared span below.
-        if mode == "create" and isinstance(checkpoint_store, ProfileFactsCheckpointStore):
-            return _finish_interactive_create(
-                flow,
-                answers,
-                committed,
-                profile_id=profile_id,
-                checkpoint_store=checkpoint_store,
+        # There is no interactive walk here any more. An operator at a
+        # capable terminal was already diverted to the profile manager
+        # before this command ran, so reaching this branch means the host
+        # cannot present a screen at all — and the answer for that host is
+        # the flag form, which is exactly what these refusals name.
+        from . import WizardEditUnsupportedConsoleError, WizardUnsupportedConsoleError
+
+        if mode == "edit":
+            raise WizardEditUnsupportedConsoleError(
+                translated_message="wizard.errors.unsupported_console_edit",
+                context={"profile_name": profile_name},
             )
+        raise WizardUnsupportedConsoleError(
+            translated_message="wizard.errors.unsupported_console",
+        )
 
     # `create` writes the full answer set. An interactive `edit` writes a
     # patch scoped to the pages the operator actually answered
@@ -1421,53 +1175,6 @@ def _enter_requested_output_language(kwargs: dict[str, object], language_stack: 
     requested_language = kwargs.get("output_language")
     if isinstance(requested_language, str) and requested_language in SUPPORTED_OUTPUT_LANGUAGES:
         language_stack.enter_context(override_settings(cadrumo_output_language=requested_language))
-
-
-def _build_mid_walk_language_activation(
-    kwargs: dict[str, object],
-    language_stack: contextlib.ExitStack,
-) -> Callable[[str, str], bool] | None:
-    """Return a mid-walk output-language activator, or ``None`` when precedence forbids it.
-
-    The interactive setup flow asks for the output language on its first
-    page, so committing that answer should re-render the remaining pages in
-    the chosen language. Precedence guards that: an explicit
-    ``--output-language`` flag or a ``CADRUMO_OUTPUT_LANGUAGE`` environment /
-    settings value already pins the language for the whole run, so the
-    mid-walk answer must not override the existing chain — this returns
-    ``None`` and no hook is wired.
-
-    Otherwise the returned callback, fired post-commit for the
-    ``output-language`` page only, enters a settings override scoped to the
-    remainder of the run (tearing down with ``language_stack``) and reports
-    ``True`` so the caller can re-render the next page under the new language.
-    It reacts to no other page — the hook also fires per staged checkbox
-    toggle, so a handler that re-activated on anything else would rebuild on
-    every tick. The committed value may be a secret page's raw answer, so the
-    callback never logs, echoes, or records it; it inspects the value only for
-    the non-secret ``output-language`` page.
-    """
-    requested = kwargs.get("output_language")
-    if isinstance(requested, str) and requested in SUPPORTED_OUTPUT_LANGUAGES:
-        return None
-    from ...core.config import load_settings
-
-    if "cadrumo_output_language" in load_settings().model_fields_set:
-        return None
-
-    def _activate(page_key: str, value: str) -> bool:
-        if page_key != "output-language":
-            return False
-        if not isinstance(value, str) or value not in SUPPORTED_OUTPUT_LANGUAGES:
-            return False
-        from ...core.config import override_settings
-        from ...core.i18n import clear_output_language_cache
-
-        language_stack.enter_context(override_settings(cadrumo_output_language=value))
-        clear_output_language_cache()
-        return True
-
-    return _activate
 
 
 def _render_error_inside_language_override(exc: CadrumoError) -> None:
@@ -1701,7 +1408,6 @@ def _run_wizard_persistence_path(
     accept_defaults: bool,
     profile_name: str,
     profile_id: str,
-    interactive_flow_runner: InteractiveFlowRunner,
     checkpoint_store: CheckpointStore | None = None,
 ) -> dict[str, str]:
     """Dispatch to patch-edit or full-flow persistence."""
@@ -1717,7 +1423,6 @@ def _run_wizard_persistence_path(
         profile_name=profile_name,
         profile_id=profile_id,
         mode=mode,
-        interactive_flow_runner=interactive_flow_runner,
         explicit_question_ids=frozenset(explicit_flags),
         checkpoint_store=checkpoint_store,
     )
@@ -1813,9 +1518,11 @@ def _emit_wizard_success(
     import typer as _typer
 
     from ...core.click_context import json_output_requested
-    from ...core.json_contract import Notice, NoticeSeverity, emit_json_success
+    from ...core.json_contract import Notice, NoticeSeverity
     from ...core.output_rendering import render_command_output
     from ...domain.contribuyente import CCAA
+    from ..operator_output import emit_operator_json_success, sandbox_banner_line, sandbox_notice_for_active_bucket
+    from ._results import ConfigProfileCreateResult, ConfigProfileEditResult
 
     verb = tr("wizard.commands.status.created" if mode == "create" else "wizard.commands.status.updated")
     notices: list[Notice] = [
@@ -1867,25 +1574,28 @@ def _emit_wizard_success(
                 context={"assumed_ccaa": CCAA.MADRID.value},
             )
         )
-    payload: dict[str, object] = {
-        "profile_name": profile_name,
-        "status": verb,
-    }
-    if mode == "create":
-        payload["active_profile"] = profile_name
+    # Populate the envelope-spine active_profile identity anchor. The wizard
+    # sits below the CLI transport's _emit_envelope funnel (it cannot import
+    # it — layering), so it must resolve the label itself. On create the
+    # newly-created profile IS the active one, so its name is the label; on
+    # edit the active profile is not necessarily the edited one, so the
+    # spine stays null (the label is not the wizard's to assert there).
+    active_profile = profile_name if mode == "create" else None
+    result: ConfigProfileCreateResult | ConfigProfileEditResult = (
+        ConfigProfileCreateResult(profile_name=profile_name, status=verb, active_profile=active_profile)
+        if mode == "create"
+        else ConfigProfileEditResult(profile_name=profile_name, status=verb)
+    )
     if json_output_requested():
         command_path = "config.profile.create" if mode == "create" else "config.profile.edit"
-        # Populate the envelope-spine active_profile identity anchor. The
-        # wizard emits through emit_json_success directly rather than the
-        # CLI _emit_envelope funnel that resolves the active label, so it
-        # must supply the label itself. On create the newly-created
-        # profile IS the active one, so its name is the label; on edit
-        # the active profile is not necessarily the edited one, so the
-        # spine stays null (the label is not the wizard's to assert there).
-        active_profile = profile_name if mode == "create" else None
-        emit_json_success(command_path, payload, notices=notices, active_profile=active_profile)
+        # emit_operator_json_success is the one sanctioned direct route to
+        # the envelope: it resolves and prepends the sandbox-active notice
+        # itself, so this call site cannot forget it (there is no other way
+        # to reach SchemaEnvelope for this result from here).
+        emit_operator_json_success(command_path, result, notices=notices, active_profile=active_profile)
         return
 
+    sandbox_notice = sandbox_notice_for_active_bucket()
     lines = [
         f"{tr('application.wizard.output_labels.profile')}\t{profile_name}",
         f"{tr('application.wizard.output_labels.status')}\t{verb}",
@@ -1899,7 +1609,9 @@ def _emit_wizard_success(
         lines.append(resolved_modify_descendants_message)
     if ccaa_defaulted:
         lines.append(ccaa_message)
-    rendered = render_command_output(format_name="text", payload=payload, lines=lines)
+    if sandbox_notice is not None:
+        lines.insert(0, sandbox_banner_line(sandbox_notice))
+    rendered = render_command_output(format_name="text", payload=result, lines=lines)
     _typer.echo(rendered.text)
 
 
@@ -1923,7 +1635,9 @@ def _emit_save_exit_notice(profile_name: str, *, message: str | None = None) -> 
     import typer as _typer
 
     from ...core.click_context import json_output_requested
-    from ...core.json_contract import Notice, NoticeSeverity, emit_json_success
+    from ...core.json_contract import Notice, NoticeSeverity
+    from ..operator_output import emit_operator_json_success, sandbox_banner_line, sandbox_notice_for_active_bucket
+    from ._results import ConfigProfileCreateResult
 
     resume_command = f"aeat config profile create {profile_name}"
     if message is None:
@@ -1935,13 +1649,28 @@ def _emit_save_exit_notice(profile_name: str, *, message: str | None = None) -> 
         suggestion=resume_command,
     )
     if json_output_requested():
-        emit_json_success(
+        # A save-and-exit leaves the profile SETUP_INCOMPLETE (never
+        # created/active), but it still emits under the "config.profile.create"
+        # command path, so the result is the SAME registered
+        # ConfigProfileCreateResult shape with a "saved" status and no
+        # active_profile — never a bespoke dict.
+        result = ConfigProfileCreateResult(
+            profile_name=profile_name,
+            status=tr("wizard.commands.status.saved"),
+            active_profile=None,
+        )
+        # emit_operator_json_success is the one sanctioned direct route to
+        # the envelope — see _emit_wizard_success.
+        emit_operator_json_success(
             "config.profile.create",
-            {"profile_name": profile_name},
+            result,
             notices=[notice],
             active_profile=None,
         )
         return
+    sandbox_notice = sandbox_notice_for_active_bucket()
+    if sandbox_notice is not None:
+        _typer.echo(sandbox_banner_line(sandbox_notice))
     _typer.echo(f"{message}\t{resume_command}")
 
 
@@ -1950,7 +1679,6 @@ def _execute_wizard_command(
     mode: WizardPersistMode,
     *,
     kwargs: dict[str, object],
-    interactive_flow_runner: InteractiveFlowRunner,
 ) -> None:
     """Run the wizard command body after Typer has parsed dynamic flags."""
     profile_name = _require_profile_name(flow, kwargs.pop("profile_name"))
@@ -1993,8 +1721,7 @@ def _execute_wizard_command(
             accept_defaults=accept_defaults,
             profile_name=profile_name,
             profile_id=profile_id,
-            interactive_flow_runner=interactive_flow_runner,
-            checkpoint_store=checkpoint_store,
+                checkpoint_store=checkpoint_store,
         )
     except ValidationError as exc:
         raise _wizard_validation_bad(flow, exc) from exc
@@ -2032,7 +1759,6 @@ def build_wizard_command(
     flow: WizardFlow,
     *,
     mode: WizardPersistMode,
-    interactive_flow_runner: InteractiveFlowRunner | None = None,
 ) -> Callable[..., None]:
     """Return a Typer-compatible callable that runs ``flow``.
 
@@ -2046,16 +1772,15 @@ def build_wizard_command(
     so an operator is never walked through 40-odd questions only to
     have the persistence step reject the work.
 
-    ``interactive_flow_runner`` is the frontend seam an interactive walk
-    renders through; it defaults to the line-mode frontend so the
-    application layer stays self-sufficient, and the CLI entrypoint
-    injects the capability-selecting runner that reaches the full-screen
-    Textual frontend.
+    There is no interactive walk: an operator at a capable terminal is
+    diverted to the profile manager before this command runs, so what is
+    left here is the programmatic contract — flags in, JSON envelope out.
+    An invocation that supplies neither ``--quiet``/``--accept-defaults``
+    nor the values it needs is refused with the flag form named.
     """
     question_params = _question_parameters(flow)
     mode_params = _mode_parameters(flow)
     parameters = (*mode_params, *question_params)
-    runner = interactive_flow_runner or _line_mode_interactive_runner
 
     def _command(**kwargs: object) -> None:
         import contextlib
@@ -2073,18 +1798,8 @@ def build_wizard_command(
             # in the requested language rather than falling back to the
             # default. The override unwinds when the command returns.
             _enter_requested_output_language(kwargs, _language_stack)
-            # When neither an explicit flag nor the environment pins the
-            # language, bind a mid-walk activator so answering the first
-            # (output-language) page re-renders the rest of the walk in the
-            # chosen language; the override tears down with this stack.
-            _activate_language = _build_mid_walk_language_activation(kwargs, _language_stack)
-            active_runner = (
-                functools.partial(runner, on_language_activated=_activate_language)
-                if _activate_language is not None
-                else runner
-            )
             try:
-                _execute_wizard_command(flow, mode, kwargs=kwargs, interactive_flow_runner=active_runner)
+                _execute_wizard_command(flow, mode, kwargs=kwargs)
             except CadrumoError as exc:
                 # Pre-render translated_message INSIDE the override so the
                 # error boundary's renderer (which runs after the ExitStack
@@ -2112,6 +1827,5 @@ def build_wizard_command(
 
 __all__ = [
     "SETUP_FLOW",
-    "InteractiveFlowRunner",
     "build_wizard_command",
 ]

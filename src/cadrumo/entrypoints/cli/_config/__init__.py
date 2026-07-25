@@ -1013,7 +1013,6 @@ def _register_lazy_wizard_leaf(name: str, mode: _WizardPersistMode, **command_kw
 
     def _factory() -> typer.Typer:
         from ....application.wizard import build_wizard_command
-        from ._setup_flow_frontend import run_setup_flow_frontend
 
         leaf = typer.Typer()
         # KWARGS-ANY-RATIONALE-TYPER-COMMAND: `command_kwargs` carries the
@@ -1021,11 +1020,7 @@ def _register_lazy_wizard_leaf(name: str, mode: _WizardPersistMode, **command_kw
         leaf.command(name, **command_kwargs)(  # type: ignore[arg-type]
             _command_error_boundary(
                 _with_manager_frontend(
-                    build_wizard_command(
-                        _get_setup_flow(),
-                        mode=mode,
-                        interactive_flow_runner=run_setup_flow_frontend,
-                    ),
+                    build_wizard_command(_get_setup_flow(), mode=mode),
                     mode=mode,
                 ),
             ),

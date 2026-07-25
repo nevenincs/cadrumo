@@ -15,11 +15,10 @@ persisted fact paths; no localized prose is asserted.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-import typer
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....core.flows import CheckpointAvailability, FlowMode
@@ -27,10 +26,7 @@ from ....domain.buckets import BucketEventType
 from ....domain.user_profile import UserProfileStatus, new_profile_id
 from ....tests.secure_sql import isolated_profile_storage_root
 from ...flows import (
-    CheckpointStore,
     FlowCheckpointError,
-    FlowDefinition,
-    FlowState,
     checkpoint_available,
     flow_definition_from_wizard_flow,
     resume_flow,
@@ -44,12 +40,7 @@ from .. import ProfileFactsCheckpointStore
 from .._catalogue import SETUP_FLOW
 from .._commands import (
     _SETUP_CHECKPOINT,
-    InteractiveFlowRunner,
-    _resolve_profile_id_for_mode,
-    build_wizard_command,
 )
-from .._persistence import WizardPersistMode
-from ._support import scripted_run_over_setup_definition
 from .test_setup_runtime import _scripted_answers_for_individual_declaration
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -194,117 +185,7 @@ def test_resume_flow_carries_a_definition_drift_orphan_as_stale(_backend: Path) 
     assert "a-retired-page-id" not in state.answers
 
 
-# ── command wiring: save-exit (a), submit completion (d), resume (e), discard (f)
-
-
-def _invoke_interactive(mode: WizardPersistMode, runner: InteractiveFlowRunner, args: Sequence[str]) -> None:
-    command = build_wizard_command(SETUP_FLOW, mode=mode, interactive_flow_runner=runner)
-    app = typer.Typer()
-    app.command()(command)
-    typer.main.get_command(app).main(args=list(args), standalone_mode=False)
-
-
-def _submit_runner(tokens: Sequence[str]):
-    """Runner that walks the flow to a submitted state (the operator submits)."""
-
-    def _runner(
-        definition: FlowDefinition,
-        *,
-        mode: FlowMode,
-        registered_values: Mapping[str, str] | None = None,
-        on_language_activated: Callable[[str, str], bool] | None = None,
-        checkpoint_store: CheckpointStore | None = None,
-    ) -> FlowState:
-        del registered_values, on_language_activated, checkpoint_store
-        state, _projection = scripted_run_over_setup_definition(definition, tokens, mode=mode)
-        return state
-
-    return _runner
-
-
-def _save_exit_runner(tokens: Sequence[str]):
-    """Runner that answers the flow then saves-and-exits through the store.
-
-    Mirrors a frontend save-and-exit: the engine reaches a state and the
-    checkpoint port persists it, exactly as ``LineFlowFrontend`` does when the
-    operator picks save-and-exit at review instead of submit.
-    """
-
-    def _runner(
-        definition: FlowDefinition,
-        *,
-        mode: FlowMode,
-        registered_values: Mapping[str, str] | None = None,
-        on_language_activated: Callable[[str, str], bool] | None = None,
-        checkpoint_store: CheckpointStore | None = None,
-    ) -> FlowState:
-        del registered_values, on_language_activated
-        state, _projection = scripted_run_over_setup_definition(definition, tokens, mode=mode)
-        assert checkpoint_store is not None
-        save_checkpoint(definition, state, checkpoint_store)
-        return state
-
-    return _runner
-
-
-def test_interactive_create_save_exit_leaves_the_profile_setup_incomplete(_backend: Path) -> None:
-    tokens = list(_scripted_answers_for_individual_declaration())
-    _invoke_interactive("create", _save_exit_runner(tokens), ["operator"])
-
-    pointer = read_profile_bucket("operator")
-    assert pointer is not None
-    assert pointer.status is UserProfileStatus.SETUP_INCOMPLETE
-    # The answered facts persisted, and no completion event fired.
-    assert _record_values(pointer.bucket_id)["identity.tax_id"] == _TAX_ID
-    assert _setup_completed_event_count(pointer.bucket_id) == 0
-
-
-def test_interactive_create_submit_completes_the_setup_once(_backend: Path) -> None:
-    tokens = list(_scripted_answers_for_individual_declaration())
-    _invoke_interactive("create", _submit_runner(tokens), ["operator"])
-
-    pointer = read_profile_bucket("operator")
-    assert pointer is not None
-    assert pointer.status is UserProfileStatus.ACTIVE
-    assert _record_values(pointer.bucket_id)["identity.tax_id"] == _TAX_ID
-    assert _setup_completed_event_count(pointer.bucket_id) == 1
-
-
-def test_second_create_for_an_incomplete_label_resumes_never_duplicates(_backend: Path) -> None:
-    tokens = list(_scripted_answers_for_individual_declaration())
-    _invoke_interactive("create", _save_exit_runner(tokens), ["operator"])
-    pointer = read_profile_bucket("operator")
-    assert pointer is not None
-
-    # A second create for the same incomplete label resolves to the SAME
-    # bucket (resume) rather than refusing as a duplicate label.
-    resolved = _resolve_profile_id_for_mode(SETUP_FLOW, "create", "operator")
-    assert resolved == pointer.bucket_id
-    # And the prior answers are offered back for the resumed walk.
-    assert (_store(resolved).load(SETUP_FLOW.id) or {})["tax-id"] == _TAX_ID
-
-
-def test_second_create_submit_after_resume_completes_the_profile(_backend: Path) -> None:
-    tokens = list(_scripted_answers_for_individual_declaration())
-    _invoke_interactive("create", _save_exit_runner(tokens), ["operator"])
-    # Re-enter the same label and submit: the incomplete profile completes.
-    _invoke_interactive("create", _submit_runner(tokens), ["operator"])
-
-    pointer = read_profile_bucket("operator")
-    assert pointer is not None
-    assert pointer.status is UserProfileStatus.ACTIVE
-    assert _setup_completed_event_count(pointer.bucket_id) == 1
-
-
-def test_discard_then_fresh_create_starts_clean(_backend: Path) -> None:
-    tokens = list(_scripted_answers_for_individual_declaration())
-    _invoke_interactive("create", _save_exit_runner(tokens), ["operator"])
-    first = read_profile_bucket("operator")
-    assert first is not None
-
-    _store(first.bucket_id).discard(SETUP_FLOW.id)
-    assert read_profile_bucket("operator") is None
-
-    # A fresh create for the freed label mints a brand-new identity.
-    resolved = _resolve_profile_id_for_mode(SETUP_FLOW, "create", "operator")
-    assert resolved != first.bucket_id
+# The command-wiring tests that used to live here drove the retired
+# interactive walk: save-and-exit, submit completion, resume, discard. The
+# walk is gone, so they went with it. What remains is the store itself,
+# which the profile manager's own creation path still mints through.

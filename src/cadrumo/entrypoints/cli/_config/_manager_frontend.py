@@ -3,19 +3,19 @@
 This is the entrypoint seam that lets ``aeat config profile create`` and
 ``edit`` open the full-screen profile manager on a capable terminal, while
 the scripted arms of those same verbs (``--quiet`` / ``--accept-defaults``,
-and any invocation carrying explicit field flags) keep running the
-non-interactive wizard path unchanged.
+and any invocation carrying explicit field flags) run the programmatic
+path and emit a JSON envelope.
 
 The split matters. An operator at a real terminal wants the manager: their
 whole profile on one page, every field editable, nothing gated. A script
-or an agent wants flags and a JSON envelope, with no screen at all. Both
-are the same verb because they are the same intent; only the presentation
+or an agent wants flags and an envelope, with no screen at all. Both are
+the same verb because they are the same intent; only the presentation
 differs, which is exactly the distinction this module owns and neither the
 application layer nor the manager screen needs to know about.
 
-See Also:
-    :mod:`cadrumo.entrypoints.cli._config._setup_flow_frontend`
-        The sibling seam for the paged flow, same shape.
+There is no third route. The paged interactive walk these verbs used to
+fall back to is retired, so a host that can present neither the manager
+nor a screen at all is refused with the flag form named.
 """
 
 from __future__ import annotations

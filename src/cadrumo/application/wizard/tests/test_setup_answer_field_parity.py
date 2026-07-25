@@ -128,8 +128,11 @@ def test_the_table_reads_the_modelo_130_exemption_flag_the_wizard_never_asked_fo
     every taxpayer looked like they had never declared it.
     """
     declared = {"identity.tax_id": "12345678Z", "irpf.professional_income_withholding_ge_70pct": "true"}
+    from_catalogue = project_answers(SETUP_FLOW, declared)
+    assert isinstance(from_catalogue, SetupAnswers)
+
     assert project_setup_answers(declared).professional_income_withholding_ge_70pct is True
-    assert project_answers(SETUP_FLOW, declared).professional_income_withholding_ge_70pct is False
+    assert from_catalogue.professional_income_withholding_ge_70pct is False
 
 
 def _non_default_token(answer_type: type, default: str | None) -> str:

@@ -34,7 +34,6 @@ from __future__ import annotations
 import json
 from collections.abc import Iterator
 from io import StringIO
-from pathlib import Path
 
 import click
 import pytest
@@ -42,11 +41,9 @@ from prompt_toolkit.input import create_pipe_input
 from prompt_toolkit.output.plain_text import PlainTextOutput
 from pydantic import BaseModel
 
-from ....core.config import override_settings
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ....core.i18n import tr
 from ....core.json_contract import NoticeSeverity
-from ....tests.secure_sql import isolated_profile_storage_root
 from ...flows import (
     CopyRef,
     FlowDefinition,
@@ -65,8 +62,6 @@ from .._commands import (
     _setup_flow_definition,
 )
 from .._descendant_group import DESCENDANT_ADOPTION_VALIDATOR_ID, DESCENDANTS_COUNT_PAGE_ID, DESCENDANTS_GROUP_ID
-from .test_setup_flow_frontend import _invoke_interactive, _tokens_with_substitutions
-from .test_setup_runtime import _scripted_answers_for_individual_declaration
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -236,56 +231,7 @@ def test_create_envelope_omits_descendants_via_door_notice(
     assert _MODIFY_DESCENDANTS_DOOR_CODE not in codes
 
 
-@pytest.mark.parametrize(
-    ("profile_language", "foreign_language"),
-    [("en", "es"), ("es", "en")],
-    ids=["en-profile", "es-profile"],
-)
-def test_interactive_edit_command_surfaces_the_staging_honesty_notice(
-    profile_language: str,
-    foreign_language: str,
-    tmp_path: Path,
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    """The real interactive edit command surfaces the staging-honesty message.
-
-    A profile is created, then re-walked with an edit script; the modify
-    run's text output must carry the staging-honesty message so an operator
-    who never pressed save still learns staged edits are discarded on an
-    interrupted modify.
-
-    Language provenance is the sharp half of the assertion: the profile
-    chooses its language on the flow's first page, and the profile is the
-    output-language authority for every later command, so the notice must
-    render in the PROFILE's language and specifically NOT in the other
-    locale. Both directions are pinned — the ``es-profile`` case is the
-    operator's originally reported shape (a Spanish profile must never see
-    the English notice). The expected strings are computed at use time
-    under explicit overrides; an import-time constant renders in whatever
-    locale happens to be ambient at collection and asserts the wrong
-    authority.
-    """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        create_tokens = _tokens_with_substitutions(
-            _scripted_answers_for_individual_declaration(),
-            activity="Software development",
-            output_language=profile_language,
-        )
-        _invoke_interactive("create", create_tokens, ["operator"])
-        capsys.readouterr()
-
-        edit_tokens = _tokens_with_substitutions(
-            _scripted_answers_for_individual_declaration(),
-            activity="Barbería",
-            output_language=profile_language,
-        )
-        _invoke_interactive("edit", edit_tokens, ["operator"])
-        output = capsys.readouterr().out
-
-    with override_settings(cadrumo_output_language=profile_language):
-        profile_language_message = tr("application.wizard.notices.modify_no_resume")
-    with override_settings(cadrumo_output_language=foreign_language):
-        foreign_language_message = tr("application.wizard.notices.modify_no_resume")
-
-    assert profile_language_message in output
-    assert foreign_language_message not in output
+# The interactive-edit staging-honesty test went with the retired walk: the
+# notice it asserted could only fire on an interactive modify, and there is
+# no interactive modify any more. `profile edit` is the flag form, which
+# stages nothing and so has nothing to warn about.
