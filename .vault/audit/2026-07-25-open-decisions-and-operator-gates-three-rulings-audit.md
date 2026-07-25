@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#open-decisions-and-operator-gates'
 date: '2026-07-25'
-modified: '2026-07-25'
+modified: '2026-07-26'
 related:
   - "[[2026-07-25-open-decisions-and-operator-gates-plan]]"
   - "[[2026-07-25-code-dedup-sweep-adr]]"
@@ -131,6 +131,55 @@ evidence-digest option in S03 — it was refuted in place and the original left
 standing. Corrections were appended beside the reasoning they correct rather than
 replacing it, so a later reader can see both what was believed and what was
 measured.
+
+
+### execution-halted-on-the-discovery-gate | critical | the index collapsed a second time, so the remaining new-mechanism work is refused
+
+Execution of the three plans stopped short of the supersede transition and the
+reconcile store, and the reason is the mandatory discovery gate rather than
+effort or judgement.
+
+The code index collapsed a second time during this session: 902 chunks against
+3,681 tracked source files, roughly one to two percent coverage, while
+`degraded_reasons` stayed empty. Because the service reports itself healthy, the
+discovery mandate's refuse-if-unavailable clause never fires on its own — the
+gate silently degrades from search-by-meaning into returning a handful of
+arbitrary files, which is the incident this campaign already recorded as
+critical.
+
+It was confirmed by probe, not by the counter alone. The decisive query — "open a
+new draft calculation revision from a finalized one", which is precisely the
+concept the supersede transition would introduce — returned five chunks of one
+unrelated repository module at scores from 0.06 down to 0.013, with no candidate
+owner of the concept anywhere in the result. A sibling probe on export-evidence
+refusal returned a CLI risk table and a constants module. Two unrelated probes
+collapsing onto irrelevant files is the documented tell.
+
+The work refused is exactly the class the rule protects: a new lifecycle
+transition, a new verb, a new persisted namespace and a new event type. An
+unsearched edit there cannot establish that no canonical owner already exists
+under a name nobody thought to grep, which is how duplicate authorities enter
+this codebase. The rule states that this refusal stands even when a hook, goal or
+plan step mandates the work, and a goal directive was in force — so this is the
+pressure case the rule was written for rather than an edge of it.
+
+The service was deliberately not restarted and no reindex was requested: a
+restart discards the in-progress job and induces a perpetual-reindex state. The
+watcher is armed while a large fleet writes continuously, so each pass truncates
+and restarts. One recovery to 68,502 chunks was observed mid-session and used —
+validated by two unrelated probes returning disjoint correct owners before any
+code was written — and it did not hold.
+
+### remaining-steps-taken-up-by-the-fleet | info | the rulings are being executed by peers, which is the handover working
+
+The remaining steps are not idle. Peer agents delivered the predicate, the
+twenty-site sweep and the structural gate; a peer is adding the reconciliation
+records namespace; and untracked drafts exist for both deferred rulings this
+campaign carried forward — the bucket-manifest durability decision and the
+bucket-event payload-bounding decision, each with its own survey audit. That is
+the intended outcome of ruling rather than building: the decisions became visible
+in plan status and the fleet picked them up. It also means duplicating them here
+would have created the collision the rulings exist to prevent.
 
 ## Recommendations
 
