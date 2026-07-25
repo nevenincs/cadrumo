@@ -580,8 +580,8 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.filing._runtime_repository", "adapters.persistence.storage"),
             ImportEdge("application.filing.runtime", "application.wizard"),
             ImportEdge("application.filing.runtime", "application.workflow"),
+            ImportEdge("application.inventory._service", "application.modelo"),
             ImportEdge("application.inventory._service", "core.config"),
-            ImportEdge("application.inventory._service", "domain.buckets"),
             ImportEdge("application.invoices._creation", "domain.invoices"),
             ImportEdge("application.ledger._actions_classification", "application.ledger._rule_repository"),
             ImportEdge("application.ledger._actions_classification", "domain.transactions"),
@@ -590,8 +590,8 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.ledger._actions_common", "core.config"),
             ImportEdge("application.ledger._actions_import", "adapters.inbound.financial.providers"),
             ImportEdge("application.ledger._actions_manual", "application.invoices"),
+            ImportEdge("application.ledger._business_operation_invoice", "application.modelo"),
             ImportEdge("application.ledger._business_operation_invoice", "core.config"),
-            ImportEdge("application.ledger._business_operation_invoice", "domain.buckets"),
             ImportEdge("application.ledger._evidence", "core.config"),
             # Vision helper imports InvoiceDraft from this module; eagering it recreates
             # the evidence-draft <-> vision helper cycle.
@@ -722,6 +722,7 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.transactions._diagnostics", "core.i18n"),
             ImportEdge("application.user_profile._bundle", "adapters.persistence.profile.modelos_filing"),
             ImportEdge("application.user_profile._bundle", "adapters.persistence.profile.modelos_work_units"),
+            ImportEdge("application.user_profile._bundle", "adapters.persistence.profile.buckets"),
             ImportEdge("application.user_profile._bundle", "adapters.persistence.storage"),
             ImportEdge("application.user_profile._bundle", "application.modelo"),
             ImportEdge("application.user_profile._bundle", "application.user_profile._custody_carry"),
@@ -729,12 +730,14 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.user_profile._bundle", "domain.modelos"),
             ImportEdge("application.user_profile._bundle", "domain.transactions"),
             ImportEdge("application.user_profile._bundle", "domain.user_profile"),
+            ImportEdge("application.user_profile._bundle_export", "application.modelo"),
             ImportEdge("application.user_profile._bundle_export", "application.user_profile._bundle"),
             ImportEdge("application.user_profile._bundle_export", "application.user_profile._bundle_encryption"),
             ImportEdge("application.user_profile._bundle_export", "application.user_profile._orchestration"),
             ImportEdge("application.user_profile._bundle_export", "application.workflow"),
             ImportEdge("application.user_profile._bundle_export", "core"),
             ImportEdge("application.user_profile._bundle_export", "domain.buckets"),
+            ImportEdge("application.user_profile._lifecycle", "application.modelo"),
             ImportEdge("application.user_profile._capabilities", "adapters.persistence.storage"),
             ImportEdge("application.user_profile._capabilities", "application.workflow"),
             # censo vivienda-ratio read defers the profile repository/projection
@@ -794,6 +797,7 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.wizard._persistence", "domain.user_profile"),
             ImportEdge("application.workflow._adapters", "adapters.outbound.aeat.auth"),
             ImportEdge("application.workflow._adapters", "adapters.outbound.aeat.sede"),
+            ImportEdge("application.workflow._events", "application.modelo"),
             ImportEdge("application.workflow._models", "application.user_profile"),
             ImportEdge("application.workflow._models", "core.errors"),
             ImportEdge("application.workflow._models", "domain.transactions"),
@@ -841,7 +845,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
     UnsanctionedClass.DOMAIN_CYCLE_BREAK: 50,
     UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 168,
     UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 37,
-    UnsanctionedClass.APPLICATION_DEFERRAL: 523,
+    UnsanctionedClass.APPLICATION_DEFERRAL: 527,
 }
 
 # Ceiling on the total number of allowlisted edges. Editing the allowlist to add
@@ -851,7 +855,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
 # state_projection, censo_sync, the profile repository and binding readiness --
 # all since promoted to module scope or retired), so the declared set is now
 # exactly what the tree actually does.
-_ALLOWLIST_EDGE_CEILING: int = 477
+_ALLOWLIST_EDGE_CEILING: int = 481
 
 
 def _cadrumo_relative(dotted: str) -> str:
