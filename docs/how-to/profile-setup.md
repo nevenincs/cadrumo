@@ -64,6 +64,7 @@ decisions. For the complete, current list of flags and their accepted values,
 run `aeat config profile create --help` and `aeat config profile edit --help`:
 
 ```{cli-sequence} profile-setup-flag-help
+:verify: Confirm both flag listings run and name the active profile the flags apply to.
 ```
 
 ## Create your profile

@@ -1,3 +1,3 @@
 @step Create a taxpayer profile non-interactively.
-@static aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --activity "consultoria"
-@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
+@static aeat config profile create me --quiet --entity-type natural_person --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --activity "consultoria"
+@blocked unconverted Do NOT convert: measured that creating a second profile switches the active one to "me", reddening this page's clean coherence tier at censo-update-check-profile.

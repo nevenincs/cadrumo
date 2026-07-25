@@ -46,6 +46,7 @@ A profile is your personal taxpayer record inside the tool. Create it with your
 own details:
 
 ```{cli-sequence} quickstart-create-profile
+:verify: Confirm the profile is created and becomes the active profile.
 ```
 
 The name and surnames are required (the export step refuses without them), and

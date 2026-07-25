@@ -1,3 +1,6 @@
+@step Unlock the profile whose saved progress you want to clear.
+@setup aeat config login docs-sequence-sandbox
 @step Clear the saved progress of interrupted commands.
-@static aeat config repair reset-progress --yes
-@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
+@result aeat --format json config repair reset-progress --yes
+@expect result.fingerprint.reason_class == "readable"
+@expect exit_code == 0

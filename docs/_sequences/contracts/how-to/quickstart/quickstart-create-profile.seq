@@ -1,3 +1,5 @@
 @step Create your taxpayer profile with your own details.
-@static aeat config profile create me --quiet --entity-type natural_person --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --activity "consultoria" --activity-start-date 2026-01-01
-@blocked unconverted Only collides with the sandbox's pre-registered profile; a distinct tax id converts it.
+@result aeat --format json config profile create me --quiet --entity-type natural_person --tax-id 87654321X --name "Ana" --surnames "Garcia Lopez" --activity "consultoria" --activity-start-date 2026-01-01
+@expect result.status == "created"
+@expect result.active_profile == "me"
+@expect exit_code == 0
