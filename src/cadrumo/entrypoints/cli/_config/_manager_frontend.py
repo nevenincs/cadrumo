@@ -101,7 +101,13 @@ def persist_active_profile_field(path: str, value: str, *, label: str | None = N
     from ....application.workflow import workflow_state_repository
     from ....domain.user_profile import UserProfileFact
 
-    fact = UserProfileFact(path=path, value=value if value != "" else None)
+    # Strip before deciding blank-versus-value. An exact `!= ""` test persists a
+    # whitespace-only submission as a VALUE, while every reader treats it as
+    # blank — and a reader that adopts on blank then restamps the path as
+    # app-owned, converting the operator's write into one the app may overwrite
+    # freely thereafter. The two surfaces have to agree on what spaces mean, and
+    # this is the boundary that decides it.
+    fact = UserProfileFact(path=path, value=value.strip() or None)
     workflow_state_repository().update(lambda state: set_active_field(state, fact))
     return build_active_profile_overview(label=label)
 

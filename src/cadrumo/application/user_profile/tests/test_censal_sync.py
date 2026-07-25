@@ -31,6 +31,7 @@ from ...workflow import WorkflowState
 from .. import (
     CENSAL_ADOPTABLE_PATHS,
     CENSO_SOURCE_TAG,
+    CensalIdentityMismatchError,
     apply_censal_read,
     censal_facts_from_read,
     open_censo_divergences,
@@ -43,6 +44,11 @@ from .._orchestration import profile_create_storage_span, register_active_profil
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE_ID = "5d5d5d5d-5d5d-4d5d-8d5d-5d5d5d5d5d5d"
+#: The fiscal identity every fixture read carries, and therefore the one the
+#: registered profile must hold. A profile whose tax id is a placeholder could
+#: never match any real read, so the ownership guard would refuse every case and
+#: the tests below would pass for the wrong reason.
+_PROFILE_NIF = "Y0000001Z"
 #: Source URL stamped on the fixture read. Nothing here asserts it — it only
 #: populates a required field — so the origin is deliberately the UNNUMBERED
 #: sede host rather than a numbered one. A numbered host is not invariant:
@@ -65,7 +71,7 @@ def schema() -> ProfileSchemaDefinition:
 
 def _read(
     *,
-    nif: str = "Y0000001Z",
+    nif: str = _PROFILE_NIF,
     apellidos_y_nombre: str = "SANITIZED SURNAME GIVEN",
     codigo_postal: str | None = "08032",
     referencia_catastral: str | None = "0000000AA0000A0000AA",
@@ -98,8 +104,10 @@ def _required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFact, .
         if section.repeatable:
             continue
         for field in section.fields:
-            if field.required:
-                facts.append(UserProfileFact(path=f"{section.key}.{field.key}", value="placeholder"))
+            if not field.required:
+                continue
+            path = f"{section.key}.{field.key}"
+            facts.append(UserProfileFact(path=path, value=_PROFILE_NIF if path == "identity.tax_id" else "placeholder"))
     return tuple(facts)
 
 
@@ -278,11 +286,13 @@ class TestReconciliation:
     ) -> None:
         """A clear is a declaration and survives a pull either way.
 
-        Both cases run because the regression this pins was ASYMMETRIC: the
-        clear survived when AEAT happened to agree and was silently undone
-        when AEAT had moved on, so whether the operator's deletion held
-        depended on the authority rather than on the operator. Parametrising
-        both makes that asymmetry impossible to reintroduce unnoticed.
+        Both cases run, and the reason is NOT that the defect was asymmetric —
+        it was not. Pre-fix, the value-only projection dropped the cleared fact
+        entirely, so the path read as never-set and was adopted whether the
+        authority agreed or differed. Parametrising both pins that symmetry: a
+        future change that protected the clear only when the authority happened
+        to agree would pass one case and fail the other, which is exactly the
+        half-fix worth catching.
         """
         with profile_create_storage_span(_PROFILE_ID) as routing:
             state = _register(schema, routing)
@@ -297,6 +307,58 @@ class TestReconciliation:
             )
             assert "contact.postcode" not in {fact.path for fact in outcome.adopted}
             assert ("contact.postcode", aeat_postcode) in outcome.divergences
+
+
+class TestIdentityOwnership:
+    """A read of another taxpayer is refused, not adjudicated."""
+
+    def test_a_read_of_a_different_taxpayer_refuses_outright(self, schema: ProfileSchemaDefinition) -> None:
+        """The whole read is rejected, not partly adopted and partly reported.
+
+        Adopting it would write a second person's fiscal identity and address
+        onto a profile used to file, with nothing for the operator to see. A
+        divergence row would be the wrong shape too: this is not a
+        disagreement to adjudicate, it is a read that should never have been
+        applied.
+        """
+        with profile_create_storage_span(_PROFILE_ID) as routing:
+            state = _register(schema, routing)
+            state = set_active_fields(
+                state,
+                (UserProfileFact(path="identity.tax_id", value=_PROFILE_NIF, source=CENSO_SOURCE_TAG),),
+            )
+            record = state.active_profile_record(schema=schema)
+            with pytest.raises(CensalIdentityMismatchError):
+                reconcile_censal_read(record, censal_facts_from_read(_read(nif="X1234567L")))
+
+    def test_a_read_carrying_no_identity_refuses(self, schema: ProfileSchemaDefinition) -> None:
+        """Being unable to confirm ownership is not the same as confirming it."""
+        with profile_create_storage_span(_PROFILE_ID) as routing:
+            state = _register(schema, routing)
+            state = set_active_fields(
+                state,
+                (UserProfileFact(path="identity.tax_id", value=_PROFILE_NIF, source=CENSO_SOURCE_TAG),),
+            )
+            record = state.active_profile_record(schema=schema)
+            with pytest.raises(CensalIdentityMismatchError):
+                reconcile_censal_read(record, censal_facts_from_read(_read(nif="   ")))
+
+    def test_a_profile_with_no_recorded_identity_still_adopts(self) -> None:
+        """The ordinary first-read case must keep working; there is nothing to protect."""
+        outcome = reconcile_censal_read(None, censal_facts_from_read(_read(nif="X1234567L")))
+        assert "identity.tax_id" in {fact.path for fact in outcome.adopted}
+
+    def test_the_match_ignores_case_and_surrounding_space(self, schema: ProfileSchemaDefinition) -> None:
+        """A cosmetic difference is not a different taxpayer."""
+        with profile_create_storage_span(_PROFILE_ID) as routing:
+            state = _register(schema, routing)
+            state = set_active_fields(
+                state,
+                (UserProfileFact(path="identity.tax_id", value=" y0000001z ", source=CENSO_SOURCE_TAG),),
+            )
+            record = state.active_profile_record(schema=schema)
+            outcome = reconcile_censal_read(record, censal_facts_from_read(_read(nif="Y0000001Z")))
+            assert "contact.postcode" in {fact.path for fact in outcome.adopted}
 
 
 class TestEffectiveFactProjection:

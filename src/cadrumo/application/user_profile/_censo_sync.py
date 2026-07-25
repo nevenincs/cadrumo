@@ -55,12 +55,59 @@ _log = get_logger(__name__)
 #: Declared profile paths the censal consulta can fill, in emit order. Every
 #: entry is a key declared by the user-profile schema; the reconciliation
 #: refuses to invent one.
+#: The profile's fiscal identity. Load-bearing twice over: it is adoptable onto
+#: a blank profile, and it is what a read must match before ANY of it is applied.
+_TAX_ID_PATH: Final = "identity.tax_id"
+
 CENSAL_ADOPTABLE_PATHS: Final = (
-    "identity.tax_id",
+    _TAX_ID_PATH,
     "contact.fiscal_address",
     "contact.postcode",
     "contact.fiscal_address_cadastral_reference",
 )
+
+
+class CensalIdentityMismatchError(CensoSyncError):
+    """The read belongs to a different taxpayer than the profile."""
+
+
+def _assert_read_belongs_to_this_profile(existing_tax_id: str | None, incoming_tax_id: str | None) -> None:
+    """Refuse a read whose fiscal identity is not the profile's.
+
+    A read of another taxpayer is not a disagreement to adjudicate — it is a
+    read that should never have been applied, so it refuses rather than
+    producing divergence rows. Adopting it would write a second person's
+    fiscal identity and address onto a profile used to file, silently and
+    with nothing for the operator to see.
+
+    The session-level identity guard does not close this: it compares the
+    session NIF to the profile only for one of the three auth providers and
+    returns without comparing for the others, so a read can reach here
+    carrying an identity the profile never claimed.
+
+    A profile with no recorded fiscal identity has nothing to protect and is
+    the ordinary first-read case, so it is allowed. A read carrying no
+    identity refuses: it cannot be attributed to this profile, and being
+    unable to confirm ownership is not the same as confirming it.
+
+    Raises:
+        CensalIdentityMismatchError: When the identities differ, or when the
+            read carries none while the profile does.
+    """
+    existing = (existing_tax_id or "").strip().upper()
+    if not existing:
+        return
+    incoming = (incoming_tax_id or "").strip().upper()
+    if not incoming:
+        raise CensalIdentityMismatchError(
+            "censal read carries no fiscal identity; it cannot be confirmed to belong to this profile",
+            translated_message="application.user_profile.errors.censal_read_identity_absent",
+        )
+    if incoming != existing:
+        raise CensalIdentityMismatchError(
+            "censal read belongs to a different taxpayer than this profile; refusing to apply it",
+            translated_message="application.user_profile.errors.censal_read_identity_mismatch",
+        )
 
 
 class CensalReconciliation(BaseModel):
@@ -192,6 +239,12 @@ def reconcile_censal_read(
     from ._projections import record_to_effective_facts
 
     existing = record_to_effective_facts(record)
+    recorded_identity = existing.get(_TAX_ID_PATH)
+    incoming_identity = next((str(fact.value) for fact in facts if fact.path == _TAX_ID_PATH), None)
+    _assert_read_belongs_to_this_profile(
+        recorded_identity.value if recorded_identity is not None else None,
+        incoming_identity,
+    )
     adopted: list[UserProfileFact] = []
     divergences: list[tuple[str, str]] = []
     for fact in facts:

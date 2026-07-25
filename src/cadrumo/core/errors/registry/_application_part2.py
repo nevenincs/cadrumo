@@ -382,6 +382,19 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.user_profile._censo_sync.CensalIdentityMismatchError",
+        ErrorCode(
+            code="REFUSED_CENSAL_READ_IDENTITY",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.censal_read_identity",
+            default_suggestion=(
+                "Confirm the authenticated session belongs to this profile's taxpayer before pulling censal data."
+            ),
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.user_profile._profile_pointer_transaction.ActiveProfilePointerTransactionError",
         ErrorCode(
             code="INTERNAL_ACTIVE_PROFILE_POINTER_TRANSACTION",

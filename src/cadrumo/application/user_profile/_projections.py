@@ -125,13 +125,21 @@ def record_to_path_values(record: UserProfileRecord | UserProfileSnapshot | None
 
 
 class EffectiveFact(BaseModel):
-    """The fact currently in force at one schema path.
+    """The LAST-DECLARED fact at one schema path, disregarding effective-dating.
 
     ``value`` is the rendered canonical token, or ``None`` when the path was
     explicitly CLEARED. A cleared path is not the same as an unset one: it
     carries an operator decision — *I do not want this on my profile* — and a
     caller that cannot see the difference will treat the deletion as absence
     and quietly undo it.
+
+    "Last-declared" is deliberate wording rather than "in force". A fact
+    carries ``valid_from`` / ``valid_to``, and the record model permits several
+    live facts at one path with different windows; neither this projection nor
+    :func:`record_to_path_values` consults them, so an expired fact still
+    resolves. Nothing sets a window today, which is why the two agree in
+    practice — but that is a property of current data, not of the model, and
+    saying "in force" would claim a guarantee the code does not make.
     """
 
     model_config = STRICT_FROZEN_CONFIG
