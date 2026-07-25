@@ -19,12 +19,13 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Callable
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from typing import Annotated
 
 import typer
 
 from ...application.modelo import preview_maritime_exemption_for_active_profile
+from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import resolve_error_message
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
@@ -216,15 +217,27 @@ def _optional_decimal(
     translation_key: str,
     default: str,
 ) -> Decimal | None:
+    """Validate an optional hand-typed euro amount against the canonical grammar.
+
+    Both amounts this gate serves (``--annual-salary``,
+    ``--gross-navigation-income``) are euro figures an operator types, so the
+    two-fractional-digit cap applies: ``1.000`` refuses rather than silently
+    becoming ``Decimal("1.0")``, and scientific notation, a leading ``+``,
+    comma decimals, and ``NaN``/``Infinity`` refuse with the field's own
+    localised message. The leading ``-`` still conforms here so a negative
+    amount continues to reach the domain's positive-value refusal
+    (:func:`cadrumo.domain.renta.resolve_maritime_exemption`) rather than
+    changing which surface reports it.
+    """
     if value is None:
         return None
-    try:
-        return Decimal(value)
-    except (InvalidOperation, ValueError) as exc:
+    parsed = try_parse_canonical_decimal(value, max_fraction_digits=2)
+    if parsed is None:
         raise typer.BadParameter(
             tr(
                 translation_key,
                 value=value,
                 default=default,
             ),
-        ) from exc
+        )
+    return parsed

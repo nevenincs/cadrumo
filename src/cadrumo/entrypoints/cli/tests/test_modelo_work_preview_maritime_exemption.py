@@ -197,6 +197,82 @@ class TestDa41InactiveGuard:
         assert "BOE-A-2006-20764" in result.output
 
 
+class TestAmountGrammarRefusal:
+    """Non-canonical amount text refuses at the CLI boundary, not silently coerced.
+
+    Both amount options previously ran a bare ``Decimal(value)``, so every form
+    the constructor happens to accept became a real figure: ``1e3`` became
+    ``1000``, ``+36500`` became ``36500``, and the Spanish thousands shape
+    ``36.500`` became ``Decimal("36.5")`` — a thirty-six-euro salary where the
+    operator meant thirty-six thousand five hundred. Each case below drives the
+    real CLI verb and asserts a usage refusal, so a regression that re-widens
+    the grammar fails here rather than filing a wrong figure.
+    """
+
+    @pytest.mark.parametrize(
+        "raw_amount",
+        ["1e3", "+36500", "36.500", "36.500,00", "36500,00", "3 6500", "NaN", "Infinity"],
+    )
+    def test_non_canonical_annual_salary_refuses(self, isolated_backend: None, raw_amount: str) -> None:
+        _register_maritime_profile(
+            overrides={
+                "maritime_worker.worker_class": "trabajador_del_mar",
+                "maritime_worker.vessel_flag": "foreign",
+            },
+        )
+        result = invoke_cached_cli(
+            [
+                "app", "modelo", "work", "preview-maritime-exemption",
+                "--annual-salary", raw_amount,
+                "--qualifying-days", "100",
+            ],
+        )  # fmt: skip
+        # Typer renders a BadParameter as a usage error (exit 2); the run must
+        # not reach the exemption service with a coerced figure.
+        assert result.exit_code != 0, result.output
+        assert "--annual-salary" in result.output
+
+    @pytest.mark.parametrize("raw_amount", ["1e3", "+36500", "36.500", "36500,00"])
+    def test_non_canonical_gross_navigation_income_refuses(
+        self,
+        isolated_backend: None,
+        raw_amount: str,
+    ) -> None:
+        _register_maritime_profile(
+            overrides={
+                "maritime_worker.worker_class": "trabajador_del_mar",
+                "maritime_worker.vessel_registry": "rebeca",
+            },
+        )
+        result = invoke_cached_cli(
+            [
+                "app", "modelo", "work", "preview-maritime-exemption",
+                "--gross-navigation-income", raw_amount,
+            ],
+        )  # fmt: skip
+        assert result.exit_code != 0, result.output
+        assert "--gross-navigation-income" in result.output
+
+    @pytest.mark.parametrize("raw_amount", ["36500", "36500.00", "36500.5", "0.99"])
+    def test_canonical_annual_salary_still_accepted(self, isolated_backend: None, raw_amount: str) -> None:
+        """The tightening refuses only non-canonical text; euro forms still pass."""
+        _register_maritime_profile(
+            overrides={
+                "maritime_worker.worker_class": "trabajador_del_mar",
+                "maritime_worker.vessel_flag": "foreign",
+            },
+        )
+        result = invoke_cached_cli(
+            [
+                "--format", "json",
+                "app", "modelo", "work", "preview-maritime-exemption",
+                "--annual-salary", raw_amount,
+                "--qualifying-days", "100",
+            ],
+        )  # fmt: skip
+        assert result.exit_code == 0, result.output
+
+
 class TestVerbWiringIntegration:
     """The verb reads the active profile and dispatches the service correctly."""
 
