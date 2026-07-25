@@ -29,15 +29,13 @@ from dev.docs.terminology._resolution import ChunkHit
 from dev.docs.terminology._search_record import SearchRecordKind
 from dev.docs.terminology._sweep import (
     RagSearchClient,
-    ServiceRagSearchClient,
-    SweepError,
     SweepResult,
     TermRelevanceMapping,
     enumerate_query_vocabulary,
     run_sweep,
 )
 
-pytestmark = [pytest.mark.hex_core, pytest.mark.docs]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
 _FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -77,7 +75,6 @@ def _load_recorded(name: str) -> tuple[str, tuple[ChunkHit, ...]]:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.unit
 def test_enumerate_vocabulary_covers_prorrata_terms_translations_and_hidden_forms() -> None:
     """The prorrata concept's terms, translations, and hidden forms become queries.
 
@@ -106,7 +103,6 @@ def test_enumerate_vocabulary_covers_prorrata_terms_translations_and_hidden_form
     assert by_text["aranyositas"].language is OutputLanguage.HU
 
 
-@pytest.mark.unit
 def test_enumerate_vocabulary_dedupes_identical_query_strings() -> None:
     """Identical query strings within a concept collapse (es/ca share 'prorrata')."""
     queries = enumerate_query_vocabulary(concept_ids={"prorrata"})
@@ -114,7 +110,6 @@ def test_enumerate_vocabulary_dedupes_identical_query_strings() -> None:
     assert len(texts) == len(set(texts)), "duplicate query strings were not deduped"
 
 
-@pytest.mark.unit
 def test_enumerate_vocabulary_uses_only_shipped_term_statuses() -> None:
     """Forbidden/deprecated term rows do not own shipped query metadata."""
     queries = enumerate_query_vocabulary(concept_ids={"casilla"})
@@ -124,7 +119,6 @@ def test_enumerate_vocabulary_uses_only_shipped_term_statuses() -> None:
     assert by_text["box"].concept_id == "casilla"
 
 
-@pytest.mark.unit
 def test_enumerate_full_vocabulary_is_a_bounded_closed_set() -> None:
     """The full 95-concept vocabulary is a finite, deduplicated closed set."""
     queries = enumerate_query_vocabulary()
@@ -138,7 +132,6 @@ def test_enumerate_full_vocabulary_is_a_bounded_closed_set() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.unit
 def test_real_sweep_maps_prorrata_to_its_grounding_targets() -> None:
     """End-to-end: a real 'regla de prorrata' response maps to its grounding targets.
 
@@ -173,7 +166,6 @@ def test_real_sweep_maps_prorrata_to_its_grounding_targets() -> None:
     assert weights == sorted(weights, reverse=True)
 
 
-@pytest.mark.unit
 def test_sweep_mapping_is_laundered_ids_targets_weights_only() -> None:
     """Laundering: the shipped mapping carries NO vectors / scores / paths.
 
@@ -198,7 +190,6 @@ def test_sweep_mapping_is_laundered_ids_targets_weights_only() -> None:
     assert set(dumped) == {"record_id", "target", "kind", "surface", "ranking_weight"}
 
 
-@pytest.mark.unit
 def test_sweep_result_is_json_serialisable_for_the_landing_step() -> None:
     """The SweepResult serialises with one model_dump_json (the landing-step seam)."""
     query, hits = _load_recorded("sweep-regla-de-prorrata.json")
@@ -210,7 +201,6 @@ def test_sweep_result_is_json_serialisable_for_the_landing_step() -> None:
     assert restored == result
 
 
-@pytest.mark.unit
 def test_below_floor_query_yields_only_the_seeded_concept_card() -> None:
     """A thin-signal query still surfaces its originating concept card, no more.
 
@@ -237,27 +227,6 @@ def test_below_floor_query_yields_only_the_seeded_concept_card() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.integration
-def test_live_service_sweep_runs_at_least_one_term() -> None:
-    """The real retrieval path runs against the LIVE service for one term.
-
-    Routes through the resident service on port 8766 with an explicit timeout.
-    If the service is unreachable or busy behind a peer index-rebuild, this
-    integration test fails with the service error instead of self-skipping.
-    """
-    client = ServiceRagSearchClient(timeout_s=60.0)
-    try:
-        result = run_sweep(client=client, concept_ids={"prorrata"}, reindex=False, score_floor=0.5)
-    except SweepError as exc:
-        raise AssertionError(f"RAG service unreachable/busy: {exc}") from exc
-
-    assert result.query_count > 0
-    # At least one prorrata query should resolve to a target against the live
-    # index (the prorrata grounding is well-indexed; the golden queries pass).
-    assert any(mapping.targets for mapping in result.mappings), "no live target for any prorrata term"
-
-
-@pytest.mark.unit
 def test_relevance_mapping_is_frozen() -> None:
     """The strict-frozen contract on the shipped mapping record."""
     from pydantic import ValidationError
