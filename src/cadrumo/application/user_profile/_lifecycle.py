@@ -19,12 +19,9 @@ from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...core.errors import BaseSeverity
 from ...core.hashing import sha256_hex
 from ...domain.buckets import (
-    BucketEvent,
     BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
-    append_bucket_event,
-    derive_bucket_event_id,
 )
 from ...domain.user_profile import (
     ProfileAlreadyExistsError,
@@ -51,6 +48,8 @@ from ._repository import UserProfileLifecycleRepository
 from ._validation import COMPLETENESS_ISSUE_CODES, ProfileValidationService
 
 _PROFILE_LIFECYCLE_ACTOR = "cadrumo.application.user_profile"
+_PROFILE_EVENT_PAYLOAD_VERSION = 1
+"""Schema version for the payload dict on this service's profile-lifecycle events."""
 _PROFILE_ALREADY_EXISTS_MESSAGE = "profile already exists in the active bucket"
 _PROFILE_TOMBSTONED_RENAME_MESSAGE = "tombstoned profile cannot be renamed"
 _PROFILE_TOMBSTONED_DUPLICATE_MESSAGE = "tombstoned profile cannot be duplicated"
@@ -159,7 +158,17 @@ class ProfileLifecycleService:
             source=command.source,
         )
         next_facts = self._merge_facts(record.facts, (new_fact,))
-        self._reject_invalid(command.profile_id, next_facts)
+        # Editing one field must not be gated on OTHER fields being filled in.
+        # A SETUP_INCOMPLETE profile is filled in a field at a time, so
+        # demanding global completeness here would refuse every edit until the
+        # profile was already complete — an unreachable state, since the only
+        # way to reach it is through this door. The edited value is still
+        # validated for shape; completeness binds at the ACTIVE promotion.
+        self._reject_invalid(
+            command.profile_id,
+            next_facts,
+            require_complete=record.status is not UserProfileStatus.SETUP_INCOMPLETE,
+        )
         result = self._save_updated(record, next_facts)
         event_type = (
             BucketEventType.PROFILE_VALUES_CLEARED if new_fact.value is None else BucketEventType.PROFILE_VALUES_UPDATED
@@ -404,27 +413,19 @@ class ProfileLifecycleService:
         occurred_at: datetime,
         payload: dict[str, str] | None = None,
     ) -> None:
-        payload_body = dict(payload or {})
-        event = BucketEvent(
-            event_id=derive_bucket_event_id(
-                bucket_id=self._repository.bucket_id,
-                event_type=event_type,
-                occurred_at=occurred_at,
-                actor=_PROFILE_LIFECYCLE_ACTOR,
-                object_type=BucketEventObjectType.PROFILE,
-                object_id=object_id,
-                payload=payload_body,
-            ),
+        from ..modelo import emit_bucket_event
+
+        emit_bucket_event(
+            repository=self._events,
             bucket_id=self._repository.bucket_id,
             event_type=event_type,
             occurred_at=occurred_at,
             actor=_PROFILE_LIFECYCLE_ACTOR,
             object_type=BucketEventObjectType.PROFILE,
             object_id=object_id,
-            payload_version=1,
-            payload=payload_body,
+            payload=dict(payload or {}),
+            payload_version=_PROFILE_EVENT_PAYLOAD_VERSION,
         )
-        self._events.save(append_bucket_event(self._events.load(), event))
 
     def _iter_profiles(self) -> Iterable[UserProfileRecord]:
         """Yield every live profile record by delegating to the repository.

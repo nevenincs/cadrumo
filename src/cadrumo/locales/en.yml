@@ -6165,6 +6165,17 @@ flows:
     unexpected_app_type: The interactive screen is not attached to a flow application.
     unsupported_console: This console cannot host interactive questions. Run the flow
       from a real terminal, or drive it with a scripted answer file.
+  manager:
+    column:
+      field: Field
+      state: State
+      value: Value
+    edit:
+      cancel: Cancel
+      save: Save
+    progress: '{present} of {total} fields filled in, {missing} still needed for filing'
+    section_title: '{title} — {present}/{total}'
+    title: 'Profile: {profile}'
   progress:
     current_answer: 'Current answer: {value}'
     current_answer_secret: 'Current answer: (hidden)'

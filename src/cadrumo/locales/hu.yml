@@ -6482,6 +6482,17 @@ flows:
     unexpected_app_type: Az interaktív képernyő nem kapcsolódik folyamat-alkalmazáshoz.
     unsupported_console: Ez a konzol nem tud interaktív kérdéseket megjeleníteni.
       Indítsd a folyamatot valódi terminálból, vagy vezéreld szkriptelt válaszfájllal.
+  manager:
+    column:
+      field: Mező
+      state: Állapot
+      value: Érték
+    edit:
+      cancel: Mégse
+      save: Mentés
+    progress: '{present} / {total} mező kitöltve, {missing} hiányzik a benyújtáshoz'
+    section_title: '{title} — {present}/{total}'
+    title: 'Profil: {profile}'
   progress:
     current_answer: 'Jelenlegi válasz: {value}'
     current_answer_secret: 'Jelenlegi válasz: (rejtett)'

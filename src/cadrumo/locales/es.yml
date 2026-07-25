@@ -6634,6 +6634,17 @@ flows:
       de flujo.
     unsupported_console: Esta consola no puede mostrar preguntas interactivas. Ejecuta
       el flujo desde un terminal real o guíalo con un archivo de respuestas.
+  manager:
+    column:
+      field: Campo
+      state: Estado
+      value: Valor
+    edit:
+      cancel: Cancelar
+      save: Guardar
+    progress: '{present} de {total} campos rellenados, faltan {missing} para presentar'
+    section_title: '{title} — {present}/{total}'
+    title: 'Perfil: {profile}'
   progress:
     current_answer: 'Respuesta actual: {value}'
     current_answer_secret: 'Respuesta actual: (oculta)'

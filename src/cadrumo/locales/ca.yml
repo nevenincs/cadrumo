@@ -6598,6 +6598,17 @@ flows:
       de flux.
     unsupported_console: Aquesta consola no pot mostrar preguntes interactives. Executa
       el flux des d'un terminal real o guia'l amb un fitxer de respostes.
+  manager:
+    column:
+      field: Camp
+      state: Estat
+      value: Valor
+    edit:
+      cancel: Cancel·la
+      save: Desa
+    progress: '{present} de {total} camps emplenats, en falten {missing} per presentar'
+    section_title: '{title} — {present}/{total}'
+    title: 'Perfil: {profile}'
   progress:
     current_answer: 'Resposta actual: {value}'
     current_answer_secret: 'Resposta actual: (oculta)'
