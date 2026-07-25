@@ -269,7 +269,10 @@ def open_session_from_recovery(
 #
 #   * file custody only — mnemonic recovery rewraps the master key, which is a
 #     file-backend concept; keyring and unsecured custody refuse;
-#   * create refuses an existing enrollment and rotate requires one;
+#   * create refuses an existing enrollment and rotate requires one — asserted
+#     both before the operator's confirmation prompt and again immediately
+#     before the write, because that prompt is an unbounded pause during which
+#     a concurrent invocation can change the on-disk enrollment state;
 #   * a candidate mnemonic is fully verified before the prior envelope is ever
 #     replaced (via ``atomically_install_verified_recovery``).
 #
@@ -372,16 +375,14 @@ def recovery_status(*, path: Path) -> RecoveryLifecycleStatus:
     return RecoveryLifecycleStatus(enrolled=True, recovery_fingerprint=envelope.recovery_fingerprint)
 
 
-def _enroll_recovery(
-    *,
-    provider: MasterKeyProvider,
-    path: Path,
-    mode: RecoveryEnrollmentMode,
-    created_at: datetime,
-    confirm: Callable[[str], str],
-) -> RecoveryEnrollmentOutcome:
-    """Stage a candidate envelope, verify the retype, then atomically install it."""
-    file_provider = _require_file_custody(provider)
+def _assert_enrollment_mode_precondition(*, mode: RecoveryEnrollmentMode, path: Path) -> None:
+    """Refuse unless the on-disk enrollment state matches ``mode``.
+
+    ``CREATE`` requires no envelope at ``path``; ``ROTATE`` requires one. The
+    single authority for both refusals, deliberately re-evaluated rather than
+    cached: an enrollment evaluates this twice, and the second evaluation must
+    raise the *same* typed refusal as the first.
+    """
     already_enrolled = path.is_file()
     if mode is RecoveryEnrollmentMode.CREATE and already_enrolled:
         raise SecretStoreError(
@@ -393,6 +394,21 @@ def _enroll_recovery(
             "no recovery envelope is enrolled for this secret store; use recovery create "
             "to enroll one before rotating.",
         )
+
+
+def _enroll_recovery(
+    *,
+    provider: MasterKeyProvider,
+    path: Path,
+    mode: RecoveryEnrollmentMode,
+    created_at: datetime,
+    confirm: Callable[[str], str],
+) -> RecoveryEnrollmentOutcome:
+    """Stage a candidate envelope, verify the retype, then atomically install it."""
+    file_provider = _require_file_custody(provider)
+    # Checked once here so the operator is refused *before* being asked to
+    # transcribe 24 words, and again on the write side of that pause below.
+    _assert_enrollment_mode_precondition(mode=mode, path=path)
 
     # The provider hands back immutable bytes (its own steady-state contract);
     # copy into a wipeable buffer immediately, because this value is then held
@@ -408,6 +424,16 @@ def _enroll_recovery(
         staged_envelope = candidate.envelope
 
         def _verify_candidate() -> None:
+            # `confirm` above is an unbounded interactive pause — the operator is
+            # transcribing and retyping 24 words. A concurrent invocation can
+            # enroll an envelope inside that window, which would turn the CREATE
+            # the entry check refused into a silent replacement, destroying the
+            # custody of a mnemonic the other operator was just told to keep.
+            # Re-asserting here puts the precondition on the same side of the
+            # pause as the write: `atomically_install_verified_recovery` calls
+            # this immediately before `os.replace` and by design asserts nothing
+            # about the mode itself.
+            _assert_enrollment_mode_precondition(mode=mode, path=path)
             if not verify_recovery_mnemonic(envelope=staged_envelope, mnemonic=retyped):
                 raise RecoveryVerificationError(
                     "recovery confirmation did not match the staged recovery code; "
@@ -442,6 +468,11 @@ def recovery_create(
     no-echo retype, and may raise to cancel. The candidate is fully verified
     before any file is written, so a cancelled or mistyped confirmation leaves
     the store with no envelope.
+
+    The "not already enrolled" precondition is re-checked immediately before the
+    write as well as on entry, so an envelope enrolled by a concurrent
+    invocation while ``confirm`` was pending is refused rather than silently
+    replaced.
     """
     return _enroll_recovery(
         provider=provider,
@@ -465,6 +496,11 @@ def recovery_rotate(
     :class:`MasterKeyProvider`. The prior envelope survives a cancelled,
     mistyped, or otherwise unverified candidate untouched, and is atomically
     replaced only after the retype is fully verified.
+
+    The "already enrolled" precondition is re-checked immediately before the
+    write as well as on entry, so a rotation whose envelope disappeared while
+    ``confirm`` was pending refuses rather than quietly completing as a first
+    enrollment.
     """
     return _enroll_recovery(
         provider=provider,
