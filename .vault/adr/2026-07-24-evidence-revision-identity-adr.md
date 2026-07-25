@@ -72,6 +72,26 @@ product should also make the recovery possible, which the signposting does not.
 - The stranded work unit is a second, independent defect. Even if evidence entered
   revision identity, `work create` returning a discarded unit would still be a
   one-way trap for any operator who reaches for discard.
+- Measured against the idempotency contract, the post-attach recalculate COLLAPSES:
+  it returns the existing finalized revision as a matching no-op. It does not refuse,
+  and it does not silently drop. `single-subject-mutation-is-idempotent-guarded`
+  requires a same-key call whose CONTENT differs to refuse naming the divergent
+  fields, but that clause is keyed on the record's declared identity axes, and
+  evidence is deliberately excluded from all three of them — the revision id
+  deriver, the transaction id deriver, and the filing-snapshot fingerprint set. So
+  the system does not model the retry as content-divergent; only the operator does.
+  That gap between the operator's model and the identity model is precisely what
+  this record exists to settle.
+- This is a stale read, not a `no-silent-under-declaration` breach, and the
+  distinction is load-bearing for how urgent the fix is. Nothing is dropped: the
+  attach persists the evidence reference onto the ledger row, the finalized
+  revisions citing that row are returned as stale, and the CLI emits a non-blocking
+  advisory naming the ordering rule and the fact that recalculating will not change
+  it. The forbidden failure mode in that rule — a guarded no-op whose match omits a
+  persisted field, so a retry silently loses a changed value — does not apply,
+  because the changed field is not a field of the calculation revision at all. The
+  frozen bundle not tracking it is the filing-grade immutability guarantee working
+  as designed.
 
 ## Considered options
 
@@ -139,3 +159,9 @@ Signposting has landed, so no operator is silently trapped and the quickstart
 narrative completes end to end in the working order. What remains open is
 recovery for an operator already in the trap, and the stranded work unit, which is
 reachable independently of the evidence question and is the sharper of the two.
+
+Every code claim in this record was re-verified at commit `7079c0f815` and all six
+still hold; none had been closed by intervening work. The stranded work unit is
+confirmed still reachable, and the asymmetry that causes it is now pinned by a test
+asserting that a discarded unit resolves as absent to the natural-lookup selector
+while `work create` still returns it by exact id.
