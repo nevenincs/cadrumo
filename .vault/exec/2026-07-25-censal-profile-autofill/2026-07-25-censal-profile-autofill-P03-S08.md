@@ -9,39 +9,6 @@ related:
   - "[[2026-07-25-censal-profile-autofill-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace censal-profile-autofill with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S08 and 2026-07-25-censal-profile-autofill-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Commit pulled facts through apply_cotejo, adopting only blank paths and reporting every disagreement and ## Scope
-
-- `src/cadrumo/application/live` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Commit pulled facts through apply_cotejo, adopting only blank paths and reporting every disagreement
 
 ## Scope
@@ -112,3 +79,55 @@ model landed while this Step ran. It turned the projection's path-conformance
 test from a convention check into a boundary-enforced one, and its own four
 failing tests and one import-boundary violation are its to reconcile; neither
 touches the files changed here.
+
+Two defects were found in this Step's own reconciliation after it first landed,
+and both are recorded here rather than only in the commits, because the second
+one carries a correction to a claim made during the work.
+
+The first: the split compared values through the path-value projection, which
+carries no provenance, so it could not tell an operator-declared value from one
+a previous read had adopted and gave both the operator-adjudicates protection. A
+value therefore went sticky once first read — an address change at the authority
+produced a reported disagreement instead of a refresh, permanently — and the
+reported row asserted something untrue, because both sides were the authority's,
+one stale and one current. The split now reads the recorded fact's provenance:
+an authority-written value refreshes, and only an operator token earns the
+protection.
+
+The second was found by probing the first fix and is the one worth reading. A
+path the operator explicitly CLEARED was re-adopted on the next read. The blind
+spot behind it: the design reasoned about the operator declaring a DIFFERENT
+value and never about the operator declaring NOTHING, deliberately. A clear is a
+declaration — the operator saying they do not want the field on their profile —
+and it was the one form of declaration the value-only projection could not
+express, because the store keeps one fact per path, clearing replaces the value
+with an empty marker, and the projection filters that fact out, so the path
+vanishes and reads downstream as never-set.
+
+The correction: this was first reported as a regression introduced by the
+provenance fix, on the strength of a probe that measured an asymmetry — the
+clear surviving when the authority agreed and being undone when it differed.
+That asymmetry was an artefact of the probe, which hand-built a record with two
+facts at one path. The store does not behave that way. Against real persisted
+state the path was re-adopted unconditionally, both before and after the
+provenance fix, and so had been present since the feature first landed. The
+wrong version mattered: the age and cause of a defect decide where else to look,
+and "introduced yesterday" points at one commit where "the shared projection
+cannot express this concept" points at every consumer of it. The probe being
+wrong, rather than the system being strange, is the thing to suspect first.
+
+Both fixes carry the guard that would have caught them. The cleared-path test is
+parametrised over the authority agreeing and differing, which pins the
+asymmetry that was mistakenly reported so it can never become real; and the
+projection test asserts the two views DISAGREE about a clear, so a later
+simplification that unified them would look like tidying and fail loudly instead
+of silently restoring the defect.
+
+The provenance-carrying projection replaced its predecessor rather than joining
+it. Returning one record per path — value, source, and the cleared state
+together — makes it structurally impossible for a value to be adjudicated
+against a different fact's provenance, where two parallel mappings could
+disagree about which fact is effective. The widely-consumed path-value
+projection was deliberately left untouched: filtering cleared facts is correct
+for consumers that want an effective value, and changing it to fix this surface
+would have altered unrelated behaviour across the tree.
