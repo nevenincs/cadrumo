@@ -169,7 +169,35 @@ That is the whole argument against closing a wave on presumption. The
 satisfied-at-HEAD conclusion must be established per step against its named
 surface before any W05 step is checked.
 
-### w06-evidence-not-produced | critical | W06 itself is not verified, 36 of 37 records are empty scaffolds
+### w06-evidence-partial | critical | W06 is partly verified, P18 landed 10 of 13 records and P19 landed none
+
+CORRECTION to the entry below, which was written from a snapshot taken while
+both agents were still running and is superseded on the counts. The P18 agent
+subsequently filled 10 of its 13 records. The 36-of-37 figure was accurate when
+taken and wrong within the hour; it is corrected here rather than silently
+edited, because a close review that misreports its own coverage is the failure
+it exists to catch.
+
+Current state: of 37 W06 records, 10 carry evidence and 27 do not. All ten are
+P18. The P19 agent produced 24 scaffolds and no evidence.
+
+P18's landed verdicts are 8 satisfied and 2 failed. Satisfied: auth and
+certificate suites (185 passed), ledger atomicity and rollback (442), profile
+export and subject-access (271), evidence service and audit replay absence
+(25), namespace registry adoption (27), filed observations (185), typed LLM
+review routing (79), and the duplication runner and health report (11).
+
+Two failures need owner attribution before any closure: the passphrase and
+recovery lifecycle suite at 8 failed against 123 passed, and the MCP dispatch,
+identity, input-schema, risk, mutability and telemetry parity suite at 22
+failed against 257 passed. The first is the expected keychain remainder in
+whole or in part; the second is not explained by that and has not been
+triaged. Neither Step is closed.
+
+Still empty in P18: the pointer, switch, logout, reset and bootstrap-policy
+suites, the hashing call-site suites, and the registry as-of query suites.
+
+### w06-evidence-not-produced | critical | Superseded on counts, W06 evidence was not produced within the review window
 
 Thirty-seven execution records exist on disk for phases W06.P18 and W06.P19.
 Thirty-six carry empty Description and Outcome sections: the scaffold exists,
