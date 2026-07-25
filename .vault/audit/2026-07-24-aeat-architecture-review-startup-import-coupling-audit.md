@@ -26,6 +26,17 @@ commit `736a179158`, counting `sys.modules` after resolving the group rather tha
 importing the package, because the root import was always clean and an import-time
 assertion passes vacuously.
 
+A note on this document's own provenance, since the git history is misleading. It landed
+as commit `be23fbfdd3`, whose subject reads `docs(quickstart): execute the filed-marker
+sequence and record the walkthrough`. That subject belongs to unrelated work. Two agents
+were writing commit messages to the same conventionally-named file in a scratchpad
+believed to be per-session but in fact shared across the team, and the peer's text
+overwrote this document's during the interval a stale index lock held the commit. The
+file set in `be23fbfdd3` is correct and was verified; only the message is wrong. The real
+quickstart work is commit `3101115bc2`. The commit was left unamended deliberately: it
+sat two commits deep with peer work built on top, and rewriting shared history to correct
+a subject line is a worse trade than an inaccurate label.
+
 ## Findings
 
 ### four-tail-pullers-one-edge | high | Four independent paths hold the same import edge open, so cutting the named one moves 3 percent
