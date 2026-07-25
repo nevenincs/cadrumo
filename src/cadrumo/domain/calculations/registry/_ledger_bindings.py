@@ -1,4 +1,18 @@
-"""Ledger-backed registry binding helpers."""
+"""Ledger-backed registry binding helpers.
+
+Each ledger source family carries three collaborators. The registered
+``validate_ledger_<family>_aggregation_binding`` is the accumulating
+``list[str]`` validator the registry-build section validator dispatches to; it
+checks the selector shape, then runs the family's op/fact cross-invariant
+through :func:`invariant_diagnostics`. The raise-style
+``validate_ledger_<family>_aggregation_binding_definition`` is that invariant's
+body, and the accumulating validator is its only caller: these op/fact
+invariants are enforced at registry-build time only. The
+``resolve_ledger_<family>_aggregation_binding_values`` resolvers do not call
+the invariant body — each re-parses the selector independently through its own
+private ``_<family>_selector`` helper, which raises on a malformed selector but
+re-checks no op/fact invariant.
+"""
 
 from __future__ import annotations
 
@@ -1107,7 +1121,8 @@ def validate_ledger_impatriado_income_aggregation_binding(binding: DataBindingDe
     """Validate a ``ledger_impatriado_income_aggregation`` binding at registry-build time.
 
     Accumulating ``list[str]`` validator over :class:`_ImpatriadoLedgerIncomeSelector`;
-    lifts the casilla / fact / aggregation-op invariant via the raise-style
+    runs the casilla / fact / aggregation-op invariant at build time through
+    :func:`invariant_diagnostics`, whose raise-style body is
     :func:`validate_ledger_impatriado_income_aggregation_binding_definition`.
     """
     failures = selector_against_model(binding, _ImpatriadoLedgerIncomeSelector)
@@ -1366,9 +1381,12 @@ def validate_ledger_oss_aggregation_binding(binding: DataBindingDefinition) -> l
 
     Accumulating ``list[str]`` validator: validates the selector shape against
     :class:`_OssIossLedgerSelector` (preserving the underlying pydantic field
-    error) then lifts the fact/aggregation-op invariant to build time via the
-    raise-style :func:`validate_ledger_oss_aggregation_binding_definition`, which
-    stays as a defence-in-depth resolve-time re-check.
+    error) then runs the fact/aggregation-op invariant through
+    :func:`invariant_diagnostics`, whose raise-style body is
+    :func:`validate_ledger_oss_aggregation_binding_definition`. This validator is
+    that body's only caller, so the invariant is enforced at registry-build time
+    only; :func:`resolve_ledger_oss_aggregation_binding_values` re-parses the
+    selector independently through :func:`_ledger_oss_selector`.
     """
     failures = selector_against_model(binding, _OssIossLedgerSelector)
     if failures:
@@ -1379,8 +1397,9 @@ def validate_ledger_oss_aggregation_binding(binding: DataBindingDefinition) -> l
 def validate_ledger_iva_aggregation_binding(binding: DataBindingDefinition) -> list[str]:
     """Validate a ``ledger_iva_aggregation`` binding at registry-build time.
 
-    Accumulating ``list[str]`` validator over :class:`_IvaLedgerSelector`; lifts
-    the fact/aggregation-op invariant via the raise-style
+    Accumulating ``list[str]`` validator over :class:`_IvaLedgerSelector`; runs
+    the fact/aggregation-op invariant at build time through
+    :func:`invariant_diagnostics`, whose raise-style body is
     :func:`validate_ledger_iva_aggregation_binding_definition`.
     """
     failures = selector_against_model(binding, _IvaLedgerSelector)
@@ -1393,7 +1412,8 @@ def validate_ledger_renta_expense_aggregation_binding(binding: DataBindingDefini
     """Validate a ``ledger_renta_expense_aggregation`` binding at registry-build time.
 
     Accumulating ``list[str]`` validator over :class:`_RentaLedgerExpenseSelector`;
-    lifts the fact/aggregation-op invariant via the raise-style
+    runs the fact/aggregation-op invariant at build time through
+    :func:`invariant_diagnostics`, whose raise-style body is
     :func:`validate_ledger_renta_expense_aggregation_binding_definition`.
     """
     failures = selector_against_model(binding, _RentaLedgerExpenseSelector)
@@ -1410,7 +1430,8 @@ def validate_ledger_renta_income_aggregation_binding(binding: DataBindingDefinit
     """Validate a ``ledger_renta_income_aggregation`` binding at registry-build time.
 
     Accumulating ``list[str]`` validator over :class:`_RentaLedgerIncomeSelector`;
-    lifts the fact/aggregation-op invariant via the raise-style
+    runs the fact/aggregation-op invariant at build time through
+    :func:`invariant_diagnostics`, whose raise-style body is
     :func:`validate_ledger_renta_income_aggregation_binding_definition`.
     """
     failures = selector_against_model(binding, _RentaLedgerIncomeSelector)
@@ -1427,7 +1448,8 @@ def validate_ledger_renta_gasto_aggregation_binding(binding: DataBindingDefiniti
     """Validate a ``ledger_renta_gasto_aggregation`` binding at registry-build time.
 
     Accumulating ``list[str]`` validator over :class:`_RentaLedgerGastoSelector`;
-    lifts the casilla / fact / aggregation-op invariant via the raise-style
+    runs the casilla / fact / aggregation-op invariant at build time through
+    :func:`invariant_diagnostics`, whose raise-style body is
     :func:`validate_ledger_renta_gasto_aggregation_binding_definition`.
     """
     failures = selector_against_model(binding, _RentaLedgerGastoSelector)

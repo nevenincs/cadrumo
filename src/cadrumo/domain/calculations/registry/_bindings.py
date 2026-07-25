@@ -929,9 +929,13 @@ def _validate_selector_only(selector_model: type[BaseModel]) -> _BindingFamilyVa
 # accumulate every failure across a revision in one pass — replacing the prior
 # split between the raise-style per-source validators and the list-returning
 # selector-shape gate. Each family validator validates the selector shape
-# (preserving the underlying pydantic field error) and lifts that family's
-# op/fact invariants to build time; the raise-style resolve-time helpers remain
-# as defence-in-depth re-checks.
+# (preserving the underlying pydantic field error) and runs that family's
+# op/fact invariants, whose raise-style bodies it reaches through
+# ``invariant_diagnostics``. Those bodies have no other caller, so a family's
+# op/fact invariants are enforced at registry-build time only; the resolvers
+# re-parse their selectors independently through their own private selector
+# helpers, which raise on a malformed selector but re-check no op/fact
+# invariant.
 # ---------------------------------------------------------------------------
 
 
