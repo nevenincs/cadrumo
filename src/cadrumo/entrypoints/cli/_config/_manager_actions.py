@@ -35,6 +35,20 @@ if TYPE_CHECKING:
 _AUTH_PROVIDER_PATH = "auth.provider"
 _AUTH_DNI_NIE_PATH = "auth.dni_nie"
 _AUTH_SOPORTE_PATH = "auth.numero_soporte"
+_AUTH_FECHA_VALIDEZ_PATH = "auth.fecha_validez"
+
+_AUTH_PROFILE_PATHS = (
+    _AUTH_PROVIDER_PATH,
+    _AUTH_DNI_NIE_PATH,
+    _AUTH_SOPORTE_PATH,
+    _AUTH_FECHA_VALIDEZ_PATH,
+)
+"""Every profile path this page collects, in the order it shows them.
+
+The two contraste paths are alternatives rather than a pair: Cl@ve asks a
+NIE holder for the numero de soporte and a DNI holder for the document's
+validity date, so an operator fills in whichever their document carries.
+"""
 
 _CERTIFICATE_KEY = "certificate"
 """Form key for the certificate choice.
@@ -119,11 +133,12 @@ def _run_certificate() -> ManagerActionOutcome:
     belong on the profile beside the data they unlock — not in a dotenv
     file the operator has to find and edit by hand.
 
-    Which fields appear follows the mode. Cl@ve authenticates the person,
-    so it needs their DNI or NIE and the numero de soporte printed on that
-    document. The certificate mode needs none of that and instead selects
-    among the certificates already registered through the CLI verb, which
-    is where a file and a secret belong.
+    Cl@ve authenticates the person, so every Cl@ve mode needs their DNI
+    or NIE. The contraste beside it is read only by the non-QR fallback,
+    and its form follows the document: the numero de soporte for a NIE,
+    the validity date for a DNI. The certificate mode needs none of that
+    and instead selects among the certificates already registered through
+    the CLI verb, which is where a file and a secret belong.
 
     Everything collected lands in the encrypted profile store under the
     ``auth`` section, never a plain file.
@@ -144,14 +159,11 @@ def _run_certificate() -> ManagerActionOutcome:
         return ManagerActionOutcome(message=tr("flows.manager.action.abandoned"))
 
     provider = collected[_AUTH_PROVIDER_PATH]
-    missing = _missing_clave_credentials(provider, collected)
-    if missing:
-        # Cl@ve cannot authenticate without both halves, so refuse here
-        # rather than let the operator discover it at the first pull, and
-        # say which half is absent rather than make them re-read the page.
-        return ManagerActionOutcome(
-            message=tr("flows.manager.action.auth_clave_incomplete", missing=", ".join(missing)),
-        )
+    refusal = _clave_refusal(collected)
+    if refusal is not None:
+        # Refuse here, naming what is absent, rather than let the
+        # operator discover it at the first pull.
+        return ManagerActionOutcome(message=refusal)
 
     chosen_certificate = _commit_auth_choice(collected)
     return ManagerActionOutcome(
@@ -168,10 +180,15 @@ def _auth_form_page(
 ) -> FormPage:
     """Build the page the authentication action shows.
 
-    The mode and both Cl@ve fields are offered unconditionally, seeded
+    The mode and every Cl@ve field are offered unconditionally, seeded
     from whatever the profile already holds. Hiding the credential fields
     until a mode was already chosen would make the page unable to set the
     thing it exists to set.
+
+    Both contraste rows are shown rather than one chosen for the
+    operator: which applies follows the document in their hand, and the
+    page cannot know whether that is a DNI or a NIE. They fill in the one
+    theirs carries and leave the other blank.
 
     The certificate row appears only when a certificate is registered:
     an empty choice list is a dead row, and refusing the whole page for
@@ -215,6 +232,11 @@ def _auth_form_page(
             label=tr("flows.manager.action.auth_numero_soporte"),
             value=on_record.get(_AUTH_SOPORTE_PATH, ""),
         ),
+        FormField(
+            key=_AUTH_FECHA_VALIDEZ_PATH,
+            label=tr("flows.manager.action.auth_fecha_validez"),
+            value=on_record.get(_AUTH_FECHA_VALIDEZ_PATH, ""),
+        ),
     ]
     if certificate_names:
         fields.append(
@@ -233,35 +255,59 @@ def _auth_form_page(
     )
 
 
-def _missing_clave_credentials(provider: str, collected: Mapping[str, str]) -> tuple[str, ...]:
-    """Name the Cl@ve credentials the operator left blank, in page order.
+def _clave_refusal(collected: Mapping[str, str]) -> str | None:
+    """Return the refusal for a Cl@ve answer the flow cannot use, or ``None``.
 
-    Each name is the very label the field carried on the page, so the
-    refusal points at a row the operator just looked at rather than at a
-    profile path they have never seen.
+    What a Cl@ve mode actually needs follows the route rather than the
+    mode. Every Cl@ve mode needs the DNI or NIE that identifies the
+    person. The contraste is read only by the non-QR fallback form, and
+    it is the numero de soporte for a NIE but the document's validity
+    date for a DNI, so it is required exactly when that route is
+    selected and either form satisfies it. Cl@ve Permanente's second
+    half is a password, which lives in the secret store beside the
+    certificate passphrase and never becomes a profile fact.
 
-    The certificate provider authenticates with an installed certificate
-    and needs neither credential, so it is never short of anything.
+    Demanding both fields from every Cl@ve mode - which this page used to
+    do - refuses the default QR flow and Permanente outright, locking out
+    operators whose setup works today.
+
+    The decision routes through the same resolver the live session entry
+    uses, so the page cannot refuse a credential the session would
+    authenticate with: a value already supplied through settings counts,
+    and the profile simply takes precedence over it.
 
     Args:
-        provider: The chosen provider token.
         collected: The values committed on the page.
 
     Returns:
-        The labels of the missing credentials, empty when none are.
+        The refusal to show, or ``None`` when the answer is usable.
     """
+    from ....application.auth import clave_auth_facts_from_profile_values, resolve_clave_credentials
     from ....core import AuthProviderKind
+    from ....core.config import load_settings
 
-    if provider == AuthProviderKind.CERTIFICATE.value:
-        return ()
-    return tuple(
-        label
-        for path, label in (
-            (_AUTH_DNI_NIE_PATH, tr("flows.manager.action.auth_dni_nie")),
-            (_AUTH_SOPORTE_PATH, tr("flows.manager.action.auth_numero_soporte")),
-        )
-        if not collected.get(path, "").strip()
+    settings = load_settings()
+    credentials = resolve_clave_credentials(
+        AuthProviderKind(collected[_AUTH_PROVIDER_PATH]),
+        settings=settings,
+        facts=clave_auth_facts_from_profile_values(collected),
     )
+    if credentials is None:
+        # The certificate provider authenticates with an installed
+        # certificate and needs neither Cl@ve half.
+        return None
+    if not credentials.dni_nie:
+        return tr(
+            "flows.manager.action.auth_clave_incomplete",
+            missing=tr("flows.manager.action.auth_dni_nie"),
+        )
+    if credentials.provider_kind is not AuthProviderKind.CLAVE_MOVIL:
+        return None
+    if not settings.cadrumo_clave_prefer_non_qr:
+        return None
+    if not credentials.contraste:
+        return tr("flows.manager.action.auth_contraste_missing")
+    return None
 
 
 def _commit_auth_choice(collected: Mapping[str, str]) -> str:
@@ -291,8 +337,7 @@ def _commit_auth_choice(collected: Mapping[str, str]) -> str:
     from ....domain.user_profile import UserProfileFact
 
     facts = tuple(
-        UserProfileFact(path=path, value=collected.get(path, "").strip() or None)
-        for path in (_AUTH_PROVIDER_PATH, _AUTH_DNI_NIE_PATH, _AUTH_SOPORTE_PATH)
+        UserProfileFact(path=path, value=collected.get(path, "").strip() or None) for path in _AUTH_PROFILE_PATHS
     )
     workflow_state_repository().update(lambda state: set_active_fields(state, facts))
 

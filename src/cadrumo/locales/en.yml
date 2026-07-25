@@ -257,6 +257,10 @@ adapters:
           movement_already_exists: That inventory movement already exists.
   sede:
     errors:
+      censal_bad_landing: The AEAT censal page did not load correctly; re-authenticate
+        and retry.
+      censal_modification_surface: The AEAT censal read was refused because it landed
+        on a modification page; this reader never changes censal data.
       cotejo_nav_failed: Navigation to the AEAT cotejo page failed; session may have
         expired mid-walk. Run 'aeat config auth test' and retry.
       ejercicio_unavailable: The AEAT declarations register does not offer the requested
@@ -6186,7 +6190,11 @@ flows:
     action:
       abandoned: No changes made.
       auth_clave_incomplete: Cl@ve still needs %{missing}. Nothing was saved.
+      auth_contraste_missing: 'Cl@ve Móvil without QR needs the contraste from your
+        document: the support number for a NIE, or the validity date for a DNI. Nothing
+        was saved.'
       auth_dni_nie: DNI or NIE you identify with
+      auth_fecha_validez: Validity date on the document, YYYY-MM-DD (DNI holders)
       auth_numero_soporte: Support number printed on the document
       auth_provider: How you identify to AEAT
       certificate: Certificate

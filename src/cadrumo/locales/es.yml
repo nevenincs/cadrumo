@@ -290,6 +290,10 @@ adapters:
           movement_already_exists: Ese movimiento de inventario ya existe.
   sede:
     errors:
+      censal_bad_landing: La página de datos censales de la AEAT no se cargó correctamente;
+        vuelve a autenticarte e inténtalo de nuevo.
+      censal_modification_surface: Se rechazó la lectura censal porque aterrizó en
+        una página de modificación; este lector nunca modifica los datos censales.
       cotejo_nav_failed: La navegación a la página de cotejo de AEAT falló; la sesión
         puede haber expirado. Ejecute 'aeat config auth test' y vuelva a intentarlo.
       ejercicio_unavailable: El registro de declaraciones de AEAT no ofrece el ejercicio
@@ -6657,7 +6661,11 @@ flows:
       abandoned: Sin cambios.
       auth_clave_incomplete: A Cl@ve todavía le falta %{missing}. No se ha guardado
         nada.
+      auth_contraste_missing: 'Cl@ve Móvil sin QR necesita el contraste de su documento:
+        el número de soporte si es un NIE, o la fecha de validez si es un DNI. No
+        se ha guardado nada.'
       auth_dni_nie: DNI o NIE con el que se identifica
+      auth_fecha_validez: Fecha de validez del documento, AAAA-MM-DD (para DNI)
       auth_numero_soporte: Número de soporte del documento
       auth_provider: Forma de identificación ante la AEAT
       certificate: Certificado

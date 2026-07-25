@@ -11,13 +11,18 @@ Two properties carry that, and both are pinned here.
 The first is that the page is reachable at all. It used to refuse
 outright when no certificate was registered, which locked out precisely
 the operator it was built for: someone setting up through the screen who
-authenticates with Cl@ve and needs no certificate. The mode and both
-Cl@ve fields are now unconditional, and the certificate row is the only
+authenticates with Cl@ve and needs no certificate. The mode and every
+Cl@ve field are now unconditional, and the certificate row is the only
 part that depends on one being registered.
 
-The second is that a Cl@ve mode missing a credential is refused here,
-naming the absent field, rather than at the first pull, by which point
-the operator has forgotten which page asked for it.
+The second is that the page asks for what the chosen route actually
+reads, and no more. Every Cl@ve mode needs the DNI or NIE. The contraste
+beside it is read only by the non-QR fallback and its form follows the
+document, so it is required exactly on that route and either the soporte
+or the validity date satisfies it; Cl@ve Permanente's second half is a
+password that never becomes a profile fact. Demanding both halves from
+every Cl@ve mode refused the default QR flow and Permanente outright,
+which is the flow-breaking refusal these cases exist to prevent.
 
 The page cases run the real ``FormApp`` under Textual's ``Pilot`` against
 the real page the action builds. Rendered prose is never asserted: it is
@@ -30,6 +35,7 @@ carried, which no choice of words can satisfy by accident.
 from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -39,17 +45,21 @@ from .....adapters.inbound.tui import FormApp, FormPage
 from .....application.user_profile import ProfileRepository, profile_create_storage_span
 from .....application.workflow import workflow_state_repository
 from .....core import AuthProviderKind, require_active_bucket_id
+from .....core.config import override_settings
 from .....core.i18n import tr
 from .....tests.secure_sql import isolated_profile_storage_root
 from .....tests.user_profile import register_minimal_profile
 from .._manager_actions import (
     _AUTH_DNI_NIE_PATH,
+    _AUTH_FECHA_VALIDEZ_PATH,
+    _AUTH_PROFILE_PATHS,
     _AUTH_PROVIDER_PATH,
     _AUTH_SOPORTE_PATH,
     _CERTIFICATE_KEY,
+    _auth_facts_on_record,
     _auth_form_page,
+    _clave_refusal,
     _commit_auth_choice,
-    _missing_clave_credentials,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -102,7 +112,7 @@ async def test_the_page_is_reachable_when_no_certificate_is_registered() -> None
     app = FormApp(_page(certificate_names=()))
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
-        assert list(_rows(app)) == [_AUTH_PROVIDER_PATH, _AUTH_DNI_NIE_PATH, _AUTH_SOPORTE_PATH]
+        assert list(_rows(app)) == list(_AUTH_PROFILE_PATHS)
         assert _CERTIFICATE_KEY not in _rows(app), "an empty choice list must not become a dead row"
         app.exit(None)
 
@@ -113,12 +123,7 @@ async def test_a_registered_certificate_adds_a_row_opened_on_the_active_one() ->
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
         rows = _rows(app)
-        assert list(rows) == [
-            _AUTH_PROVIDER_PATH,
-            _AUTH_DNI_NIE_PATH,
-            _AUTH_SOPORTE_PATH,
-            _CERTIFICATE_KEY,
-        ]
+        assert list(rows) == [*_AUTH_PROFILE_PATHS, _CERTIFICATE_KEY]
         assert rows[_CERTIFICATE_KEY] == "personal"
         app.exit(None)
 
@@ -162,79 +167,142 @@ async def test_an_unanswered_profile_opens_on_a_mode_it_can_actually_use() -> No
 @pytest.mark.asyncio
 async def test_committing_hands_back_every_auth_path_the_action_writes() -> None:
     """The page's output has to carry exactly what the commit half reads."""
-    app = FormApp(
-        _page(
-            on_record={
-                _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
-                _AUTH_DNI_NIE_PATH: "00000000T",
-                _AUTH_SOPORTE_PATH: "ABC123456",
-            },
-        ),
-    )
+    seeded = {
+        _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
+        _AUTH_DNI_NIE_PATH: "00000000T",
+        _AUTH_SOPORTE_PATH: "ABC123456",
+        _AUTH_FECHA_VALIDEZ_PATH: "1990-01-01",
+    }
+    app = FormApp(_page(on_record=seeded))
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
         await pilot.click("#btn-form-save")
         await pilot.pause()
     assert app.collected is not None
-    assert dict(app.collected) == {
-        _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
-        _AUTH_DNI_NIE_PATH: "00000000T",
-        _AUTH_SOPORTE_PATH: "ABC123456",
-    }
+    assert dict(app.collected) == seeded
 
 
-def test_a_clave_mode_missing_both_credentials_names_both_by_their_page_label() -> None:
-    """The refusal points at rows the operator just looked at.
+_NO_CLAVE_SETTINGS: Mapping[str, object] = {
+    "cadrumo_clave_movil_dni_nie": None,
+    "cadrumo_clave_movil_nie_soporte": None,
+    "cadrumo_clave_movil_dni_fecha": None,
+    "cadrumo_clave_permanente_dni_nie": None,
+}
+"""Settings carrying no Cl@ve credential, so the page answer is the only source.
 
-    Naming the profile paths instead would send them hunting for a field
-    label that does not exist on the page.
+Without this the host's own environment could satisfy a credential the
+case means to leave absent, and the refusal case would pass for the wrong
+reason.
+"""
+
+
+def _answer(**values: str) -> dict[str, str]:
+    """Build a committed page answer, defaulting every auth path to blank."""
+    answer = dict.fromkeys(_AUTH_PROFILE_PATHS, "")
+    answer.update(values)
+    return answer
+
+
+def test_the_qr_route_does_not_ask_for_a_contraste_it_never_reads() -> None:
+    """The default Cl@ve Movil route is QR, which reads no contraste.
+
+    Demanding one anyway refused a setup that authenticates perfectly
+    well, which is the flow-breaking refusal D1a corrects.
     """
-    page = _page()
-    missing = _missing_clave_credentials(
-        AuthProviderKind.CLAVE_MOVIL.value,
-        {_AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value, _AUTH_DNI_NIE_PATH: "", _AUTH_SOPORTE_PATH: "  "},
-    )
-    assert missing == (_label_of(page, _AUTH_DNI_NIE_PATH), _label_of(page, _AUTH_SOPORTE_PATH))
+    with override_settings(cadrumo_clave_prefer_non_qr=False, **_NO_CLAVE_SETTINGS):
+        assert (
+            _clave_refusal(
+                _answer(**{_AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value, _AUTH_DNI_NIE_PATH: "00000000T"}),
+            )
+            is None
+        )
+
+
+def test_clave_permanente_is_never_asked_for_a_contraste() -> None:
+    """Permanente's second half is a password, not a contraste.
+
+    It lives in the secret store beside the certificate passphrase and is
+    never a profile fact, so no page answer can supply it and refusing
+    for its absence locks the mode out entirely.
+    """
+    with override_settings(cadrumo_clave_prefer_non_qr=True, **_NO_CLAVE_SETTINGS):
+        assert (
+            _clave_refusal(
+                _answer(
+                    **{
+                        _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_PERMANENTE.value,
+                        _AUTH_DNI_NIE_PATH: "00000000T",
+                    },
+                ),
+            )
+            is None
+        )
 
 
 @pytest.mark.parametrize(
-    ("dni_nie", "numero_soporte", "absent_path"),
-    [
-        ("", "ABC123456", _AUTH_DNI_NIE_PATH),
-        ("00000000T", "", _AUTH_SOPORTE_PATH),
-    ],
+    "provider",
+    [AuthProviderKind.CLAVE_MOVIL, AuthProviderKind.CLAVE_PERMANENTE],
 )
-def test_a_clave_mode_missing_one_credential_names_only_that_one(
-    dni_nie: str,
-    numero_soporte: str,
-    absent_path: str,
-) -> None:
-    missing = _missing_clave_credentials(
-        AuthProviderKind.CLAVE_PERMANENTE.value,
-        {_AUTH_DNI_NIE_PATH: dni_nie, _AUTH_SOPORTE_PATH: numero_soporte},
-    )
-    assert missing == (_label_of(_page(), absent_path),)
+def test_every_clave_mode_needs_the_identity_and_the_refusal_names_it(provider: AuthProviderKind) -> None:
+    """The DNI/NIE identifies the person, so no Cl@ve route works without it."""
+    with override_settings(cadrumo_clave_prefer_non_qr=False, **_NO_CLAVE_SETTINGS):
+        refusal = _clave_refusal(_answer(**{_AUTH_PROVIDER_PATH: provider.value}))
+    assert refusal is not None
+    assert _label_of(_page(), _AUTH_DNI_NIE_PATH) in refusal, "the refusal must name the row the operator saw"
 
 
-def test_a_complete_clave_answer_is_short_of_nothing() -> None:
-    assert (
-        _missing_clave_credentials(
-            AuthProviderKind.CLAVE_MOVIL.value,
-            {_AUTH_DNI_NIE_PATH: "00000000T", _AUTH_SOPORTE_PATH: "ABC123456"},
+def test_the_non_qr_route_refuses_when_neither_contraste_form_is_present() -> None:
+    with override_settings(cadrumo_clave_prefer_non_qr=True, **_NO_CLAVE_SETTINGS):
+        refusal = _clave_refusal(
+            _answer(**{_AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value, _AUTH_DNI_NIE_PATH: "00000000T"}),
         )
-        == ()
-    )
+    assert refusal is not None
+    assert _label_of(_page(), _AUTH_DNI_NIE_PATH) not in refusal, "the identity is present; this is the contraste gap"
+
+
+@pytest.mark.parametrize("contraste_path", [_AUTH_SOPORTE_PATH, _AUTH_FECHA_VALIDEZ_PATH])
+def test_either_contraste_form_satisfies_the_non_qr_route(contraste_path: str) -> None:
+    """Cl@ve asks a NIE holder for the soporte and a DNI holder for the date.
+
+    Exactly one of the two is expected, so requiring the soporte
+    specifically would lock out every DNI holder.
+    """
+    with override_settings(cadrumo_clave_prefer_non_qr=True, **_NO_CLAVE_SETTINGS):
+        assert (
+            _clave_refusal(
+                _answer(
+                    **{
+                        _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
+                        _AUTH_DNI_NIE_PATH: "00000000T",
+                        contraste_path: "VALUE",
+                    },
+                ),
+            )
+            is None
+        )
+
+
+def test_a_credential_supplied_through_settings_is_not_refused_at_the_page() -> None:
+    """The page must not refuse what the session entry would authenticate with.
+
+    An operator who configured Cl@ve through the environment keeps
+    working; the profile takes precedence over settings rather than
+    replacing them.
+    """
+    with override_settings(
+        cadrumo_clave_prefer_non_qr=True,
+        cadrumo_clave_movil_dni_nie="00000000T",
+        cadrumo_clave_movil_nie_soporte="ABC123456",
+        cadrumo_clave_movil_dni_fecha=None,
+        cadrumo_clave_permanente_dni_nie=None,
+    ):
+        assert _clave_refusal(_answer(**{_AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value})) is None
 
 
 def test_the_certificate_mode_needs_neither_clave_credential() -> None:
     """A certificate authenticates on its own, so blank Cl@ve fields are fine."""
-    assert (
-        _missing_clave_credentials(
-            AuthProviderKind.CERTIFICATE.value,
-            {_AUTH_DNI_NIE_PATH: "", _AUTH_SOPORTE_PATH: ""},
-        )
-        == ()
-    )
+    with override_settings(cadrumo_clave_prefer_non_qr=True, **_NO_CLAVE_SETTINGS):
+        assert _clave_refusal(_answer(**{_AUTH_PROVIDER_PATH: AuthProviderKind.CERTIFICATE.value})) is None
 
 
 @pytest.mark.parametrize("locale", _SUPPORTED_LOCALES)
@@ -250,6 +318,23 @@ def test_every_catalogue_renders_the_refusal_with_the_missing_names_in_it(locale
     rendered = tr(key, locale=locale, missing=sentinel)
     assert sentinel in rendered, f"{locale} drops the missing names: {rendered!r}"
     assert rendered != key, f"{locale} still holds its own key as the value"
+    assert "%{" not in rendered, f"{locale} left a placeholder uninterpolated: {rendered!r}"
+
+
+@pytest.mark.parametrize("locale", _SUPPORTED_LOCALES)
+@pytest.mark.parametrize(
+    "key",
+    ["flows.manager.action.auth_contraste_missing", "flows.manager.action.auth_fecha_validez"],
+)
+def test_the_contraste_strings_are_translated_in_every_catalogue(locale: str, key: str) -> None:
+    """A leaf holding its own key renders a dotted path at the operator.
+
+    The honesty ratchet compares locales against English and so cannot
+    see a key that is untranslated in English too; reading the leaf back
+    is what catches it.
+    """
+    rendered = tr(key, locale=locale)
+    assert rendered != key, f"{locale} still holds {key} as its own value"
     assert "%{" not in rendered, f"{locale} left a placeholder uninterpolated: {rendered!r}"
 
 
@@ -296,20 +381,45 @@ def test_committing_writes_the_auth_section_into_the_encrypted_profile() -> None
     A dotenv cannot hold a second profile's different credentials, and an
     operator setting up through the screen cannot edit one at all.
     """
-    chosen = _commit_auth_choice(
-        {
-            _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
-            _AUTH_DNI_NIE_PATH: "00000000T",
-            _AUTH_SOPORTE_PATH: "ABC123456",
-        },
-    )
+    answer = {
+        _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
+        _AUTH_DNI_NIE_PATH: "00000000T",
+        _AUTH_SOPORTE_PATH: "ABC123456",
+        _AUTH_FECHA_VALIDEZ_PATH: "1990-01-01",
+    }
+    chosen = _commit_auth_choice(answer)
 
     assert chosen == "", "no certificate was offered, so none can have been selected"
     assert _auth_facts() == {
         _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
         _AUTH_DNI_NIE_PATH: "00000000T",
         _AUTH_SOPORTE_PATH: "ABC123456",
+        # The schema declares this one a date, so the record holds a typed
+        # date rather than the text the operator typed.
+        _AUTH_FECHA_VALIDEZ_PATH: date(1990, 1, 1),
     }
+
+
+@pytest.mark.usefixtures("active_profile")
+def test_a_stored_date_seeds_the_page_as_text_the_operator_can_resubmit() -> None:
+    """The one path whose stored type is not the type the page shows.
+
+    `fecha_validez` is declared a date, so it comes back off the record as
+    a typed date while every other auth path comes back as text. If the
+    page seeded it in any other form the operator would reopen the screen,
+    see something they did not type, and re-submitting it would be refused
+    by the same schema that accepted it.
+    """
+    _commit_auth_choice(
+        {
+            _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
+            _AUTH_DNI_NIE_PATH: "00000000T",
+            _AUTH_SOPORTE_PATH: "",
+            _AUTH_FECHA_VALIDEZ_PATH: "1990-01-01",
+        },
+    )
+
+    assert _auth_facts_on_record()[_AUTH_FECHA_VALIDEZ_PATH] == "1990-01-01"
 
 
 @pytest.mark.usefixtures("active_profile")
@@ -345,6 +455,7 @@ def test_a_blank_credential_clears_its_fact_rather_than_storing_an_empty_string(
             _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
             _AUTH_DNI_NIE_PATH: "00000000T",
             _AUTH_SOPORTE_PATH: "ABC123456",
+            _AUTH_FECHA_VALIDEZ_PATH: "1990-01-01",
         },
     )
     _commit_auth_choice(
@@ -352,6 +463,7 @@ def test_a_blank_credential_clears_its_fact_rather_than_storing_an_empty_string(
             _AUTH_PROVIDER_PATH: AuthProviderKind.CERTIFICATE.value,
             _AUTH_DNI_NIE_PATH: "",
             _AUTH_SOPORTE_PATH: "   ",
+            _AUTH_FECHA_VALIDEZ_PATH: "  ",
         },
     )
 
@@ -359,6 +471,7 @@ def test_a_blank_credential_clears_its_fact_rather_than_storing_an_empty_string(
     assert facts.get(_AUTH_PROVIDER_PATH) == AuthProviderKind.CERTIFICATE.value
     assert facts.get(_AUTH_DNI_NIE_PATH) is None
     assert facts.get(_AUTH_SOPORTE_PATH) is None
+    assert facts.get(_AUTH_FECHA_VALIDEZ_PATH) is None
 
 
 def test_the_commit_uses_the_plural_door_and_selects_before_activating() -> None:

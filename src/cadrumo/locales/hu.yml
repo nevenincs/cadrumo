@@ -273,6 +273,10 @@ adapters:
           movement_already_exists: Ez a készletmozgás már létezik.
   sede:
     errors:
+      censal_bad_landing: Az AEAT nyilvántartási adatlapja nem töltődött be megfelelően;
+        jelentkezz be újra, és próbáld meg ismét.
+      censal_modification_surface: A nyilvántartási olvasás elutasítva, mert módosító
+        oldalra érkezett; ez az olvasó soha nem módosítja a nyilvántartási adatokat.
       cotejo_nav_failed: Az AEAT cotejo oldalra való navigáció sikertelen volt; a
         munkamenet lejárhatott. Futtassa a 'aeat config auth test' parancsot és próbálja
         újra.
@@ -6505,7 +6509,11 @@ flows:
       abandoned: Nem történt változás.
       auth_clave_incomplete: 'A Cl@ve még ezt igényli: %{missing}. Semmi sem lett
         elmentve.'
+      auth_contraste_missing: 'A QR nélküli Cl@ve Móvil útvonalhoz a dokumentum ellenőrző
+        adata szükséges: NIE esetén a támogatási szám, DNI esetén az érvényességi
+        dátum. Semmi sem lett elmentve.'
       auth_dni_nie: DNI vagy NIE, amellyel azonosítja magát
+      auth_fecha_validez: A dokumentum érvényességi dátuma, ÉÉÉÉ-HH-NN (DNI esetén)
       auth_numero_soporte: A dokumentumon szereplő támogatási szám
       auth_provider: Azonosítás módja az AEAT felé
       certificate: Tanúsítvány
