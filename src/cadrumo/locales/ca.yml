@@ -3697,6 +3697,8 @@ cli:
       import_requires_path: Indica l'argument RUTA del paquet, o executa l'ordre en
         un terminal interactiu perquè se't pregunti.
       import_uuid_collision: El UUID del paquet entra en conflicte amb un perfil existent.
+      manager_closed_created: Perfil '{profile}' creat i a punt. Torna a obrir-lo
+        quan vulguis amb 'aeat config profile edit'.
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF>` first.
       preflight_filing_year_help: Exercici de presentació (quatre dígits).
@@ -3718,6 +3720,7 @@ cli:
         exercici %{filing_year} període %{period}. Executeu `aeat app modelo describe
         %{modelo}` per veure els períodes i revisions vàlids.
       preflight_year_help: Exercici fiscal.
+      registration_abandoned: No s'ha creat cap perfil.
       remove_help: Marcar un perfil com a retirat (les snapshots immutables es conserven)
       remove_name_help: Id del perfil a retirar
       remove_requires_yes: La retirada és destructiva. Torna a executar 'aeat config
@@ -3813,6 +3816,7 @@ cli:
       validate_name_help: Etiqueta opcional del perfil a validar; per defecte el perfil
         actiu.
       view_help: Mostrar els fets d''un perfil (per defecte el perfil actiu)
+      manager_closed: 'Els canvis a ''{profile}'' estan desats.'
     recover:
       errors:
         recovery_code_rejected: El codi de recuperació no ha obert l'embolcall de

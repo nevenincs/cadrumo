@@ -3724,6 +3724,8 @@ cli:
         en un terminal interactivo para que se te pregunte.
       import_uuid_collision: El UUID del paquete entra en conflicto con un perfil
         existente.
+      manager_closed_created: Perfil '{profile}' creado y listo. Vuelve a abrirlo
+        cuando quieras con 'aeat config profile edit'.
       no_active_profile: No hay un perfil activo. Ejecuta `aeat config profile create
         NAME --tax-id <NIF/CIF/DNI/NIE>` primero.
       preflight_filing_year_help: Ejercicio de presentación (cuatro dígitos).
@@ -3745,6 +3747,7 @@ cli:
         %{modelo} ejercicio %{filing_year} periodo %{period}. Ejecute `aeat app modelo
         describe %{modelo}` para ver los periodos y revisiones válidos.
       preflight_year_help: Ejercicio de presentación.
+      registration_abandoned: No se ha creado ningún perfil.
       remove_help: Marcar un perfil como retirado (las snapshots inmutables se conservan)
       remove_name_help: Id del perfil a retirar
       remove_requires_yes: La retirada es destructiva. Ejecuta de nuevo 'aeat config
@@ -3842,6 +3845,7 @@ cli:
       validate_name_help: Etiqueta opcional del perfil a validar; por defecto el perfil
         activo.
       view_help: Mostrar los hechos de un perfil (por defecto el perfil activo)
+      manager_closed: 'Los cambios en ''{profile}'' están guardados.'
     recover:
       errors:
         recovery_code_rejected: El código de recuperación no abrió el envoltorio de

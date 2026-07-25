@@ -56,7 +56,11 @@ from ._sandbox import register_sandbox_commands
 from ._status_rendering import unavailable_profile_record_status as _unavailable_profile_record_status
 
 if TYPE_CHECKING:
+    from typing import Literal
+
     from ....application.workflow import ProfileBucketPointer as _ProfileBucketPointer
+
+    _WizardPersistMode = Literal["create", "edit"]
 
 _log = _get_logger(__name__)
 
@@ -869,7 +873,134 @@ def config_profile_duplicate(
 # construction itself has to move behind the resolution boundary, which
 # is what `LazySubcommand` already provides for groups; `profile` is a
 # `CadrumoTyperGroup`, so the same machinery serves a leaf.
-def _register_lazy_wizard_leaf(name: str, mode: str, **command_kwargs: object) -> None:
+def _with_manager_frontend(wizard_command, *, mode: _WizardPersistMode):
+    """Divert the INTERACTIVE arm of a profile verb onto the manager.
+
+    ``create`` and ``edit`` serve two audiences through one verb. A script
+    or an agent passes field flags (or ``--quiet`` / ``--accept-defaults``)
+    and wants a JSON envelope with no screen; an operator at a terminal
+    wants their whole profile on one page, every field editable, nothing
+    gated. Only the second arm is diverted here — the scripted path keeps
+    the wizard, its flags, and its documented contract untouched.
+
+    ``create`` diverts only when no profile name was supplied, because the
+    name is what the registration screen itself collects. Passing a name
+    keeps the existing scripted behaviour, so nothing already automated
+    changes shape.
+    """
+    import functools
+
+    @functools.wraps(wizard_command)
+    def _dispatch(*args: object, **kwargs: object):
+        from ._manager_frontend import (
+            host_can_run_full_screen,
+            manager_is_the_right_frontend,
+            present_profile_manager,
+            present_registration,
+        )
+
+        named = bool(kwargs.get("profile_name"))
+        if not manager_is_the_right_frontend(
+            mode=mode,
+            scripted=bool(kwargs.get("quiet")) or bool(kwargs.get("accept_defaults")),
+            named=named,
+            explicit_fields=any(
+                value is not None
+                for key, value in kwargs.items()
+                if key not in {"ctx", "profile_name", "quiet", "accept_defaults"}
+            ),
+            full_screen=host_can_run_full_screen(),
+        ):
+            return wizard_command(*args, **kwargs)
+
+        ctx = kwargs.get("ctx")
+        if not isinstance(ctx, typer.Context):
+            # No Typer context to emit an envelope through; the wizard owns
+            # its own output path, so hand the call straight back rather
+            # than rendering a manager whose result could not be reported.
+            return wizard_command(*args, **kwargs)
+        if mode == "create":
+            outcome = present_registration()
+            if outcome is None:
+                _emit_registration_abandoned(ctx)
+                return None
+            present_profile_manager(label=outcome.label)
+            _emit_manager_closed(ctx, outcome.label, created=True)
+            return None
+
+        present_profile_manager()
+        _emit_manager_closed(ctx, _active_profile_label(), created=False)
+        return None
+
+    return _dispatch
+
+
+def _active_profile_label() -> str:
+    """The active profile's operator-facing label, for the closing envelope."""
+    from ....application.user_profile import ProfileRepository
+    from ....core import require_active_bucket_id
+
+    return ProfileRepository().load(require_active_bucket_id()).label
+
+
+def _emit_registration_abandoned(ctx: typer.Context) -> None:
+    """Report a registration the operator left without completing.
+
+    Not an error: leaving the first screen without creating a profile is an
+    ordinary choice, so it emits a success envelope carrying an info notice
+    rather than a refusal.
+    """
+    from ....application.wizard import ConfigProfileCreateResult
+
+    _emit_envelope(
+        ctx,
+        command="config.profile.create",
+        result=ConfigProfileCreateResult(profile_name="", status="abandoned"),
+        lines=[tr("cli.config.profile.registration_abandoned")],
+        notices=[
+            _Notice(
+                code="PROFILE_REGISTRATION_ABANDONED",
+                severity=_NoticeSeverity.INFO,
+                message=tr("cli.config.profile.registration_abandoned"),
+            ),
+        ],
+    )
+
+
+def _emit_manager_closed(ctx: typer.Context, label: str, *, created: bool) -> None:
+    """Report the manager session, naming the profile it operated on.
+
+    The manager persists every edit as it is made, so this envelope closes
+    the session rather than committing it — by the time it renders, the
+    record already holds whatever the operator changed.
+    """
+    from ....application.wizard import ConfigProfileCreateResult, ConfigProfileEditResult
+
+    message = tr(
+        "cli.config.profile.manager_closed_created" if created else "cli.config.profile.manager_closed",
+        profile=label,
+    )
+    result = (
+        ConfigProfileCreateResult(profile_name=label, status="created", active_profile=label)
+        if created
+        else ConfigProfileEditResult(profile_name=label, status="updated")
+    )
+    _emit_envelope(
+        ctx,
+        command="config.profile.create" if created else "config.profile.edit",
+        result=result,
+        lines=[message],
+        notices=[
+            _Notice(
+                code="PROFILE_MANAGER_CLOSED",
+                severity=_NoticeSeverity.INFO,
+                message=message,
+            ),
+        ],
+    )
+
+
+def _register_lazy_wizard_leaf(name: str, mode: _WizardPersistMode, **command_kwargs: object) -> None:
     """Register the `profile` wizard verb `name` as a deferred leaf.
 
     The factory returns a single-command Typer carrying no callback, which
@@ -887,10 +1018,13 @@ def _register_lazy_wizard_leaf(name: str, mode: str, **command_kwargs: object) -
         # help/epilog Typer passthrough captured at registration.
         leaf.command(name, **command_kwargs)(  # type: ignore[arg-type]
             _command_error_boundary(
-                build_wizard_command(
-                    _get_setup_flow(),
+                _with_manager_frontend(
+                    build_wizard_command(
+                        _get_setup_flow(),
+                        mode=mode,
+                        interactive_flow_runner=run_setup_flow_frontend,
+                    ),
                     mode=mode,
-                    interactive_flow_runner=run_setup_flow_frontend,
                 ),
             ),
         )

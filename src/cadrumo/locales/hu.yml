@@ -3650,6 +3650,8 @@ cli:
       import_requires_path: Add meg a csomag ÚTVONAL argumentumát, vagy futtasd interaktív
         terminálban, és a program bekéri.
       import_uuid_collision: A csomagban lévő UUID ütközik egy meglévő profillal.
+      manager_closed_created: A(z) '{profile}' profil létrejött és készen áll. Bármikor
+        újranyithatod az 'aeat config profile edit' paranccsal.
       no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create
         NÉV --tax-id <NIF/CIF/DNI/NIE>`.'
       preflight_filing_year_help: Bevallási év (négy számjegy).
@@ -3672,6 +3674,7 @@ cli:
         app modelo describe %{modelo}` parancsot az érvényes időszakok és revíziók
         megtekintéséhez.
       preflight_year_help: Benyújtási év.
+      registration_abandoned: Nem jött létre profil.
       remove_help: Profil lezárása (a megváltoztathatatlan benyújtási pillanatképek
         megmaradnak).
       remove_name_help: A lezárandó profil azonosítója.
@@ -3772,6 +3775,7 @@ cli:
       validate_name_help: 'A validálandó profil opcionális címkéje; alapértelmezett:
         aktív profil.'
       view_help: 'Egy profil adatainak megjelenítése (alapértelmezés: az aktív profil).'
+      manager_closed: 'A(z) ''{profile}'' módosításai mentve.'
     recover:
       errors:
         recovery_code_rejected: A helyreállítási kód nem nyitotta meg a helyreállítási

@@ -3448,6 +3448,9 @@ cli:
       import_requires_path: Provide the bundle PATH argument, or run in an interactive
         terminal to be prompted.
       import_uuid_collision: The UUID in the bundle conflicts with an existing profile.
+      manager_closed: Changes to '{profile}' are saved.
+      manager_closed_created: Profile '{profile}' created and ready. Reopen it any
+        time with 'aeat config profile edit'.
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF/CIF/DNI/NIE>` first.
       preflight_filing_year_help: Four-digit filing year.
@@ -3469,6 +3472,7 @@ cli:
         filing year %{filing_year} period %{period}. Run `aeat app modelo describe
         %{modelo}` to see the valid periods and revisions.
       preflight_year_help: Filing year.
+      registration_abandoned: No profile was created.
       remove_help: Tombstone a profile (immutable filing snapshots are retained)
       remove_name_help: Profile id to tombstone
       remove_requires_yes: Removal is destructive. Re-run 'aeat config profile delete
