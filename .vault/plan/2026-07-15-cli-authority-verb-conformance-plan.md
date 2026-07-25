@@ -268,24 +268,24 @@ Remove lock and sandbox-use aliases and expose the accepted logout, switch, and 
 
 Replace rekey and overloaded recovery spellings with the accepted secure interactive and secrets-stdin lifecycle.
 
-- [ ] `W04.P12.S105` - Replace config rekey with only config passphrase change and secure input handling; `src/cadrumo/entrypoints/cli/_config/_custody_secret.py`.
-- [ ] `W04.P12.S106` - Replace recovery display and rotation spellings with recovery status, create, and rotate; `src/cadrumo/entrypoints/cli/_config/_custody_secret.py`.
-- [ ] `W04.P12.S107` - Register only recovery verify and flat recover with secrets-stdin and no mnemonic argv; `src/cadrumo/entrypoints/cli/_config/_custody_secret.py`.
-- [ ] `W04.P12.S108` - Write create and rotate candidates directly to the controlling terminal and require full no-echo retype before commit; `src/cadrumo/entrypoints/cli/_config/_custody_secret.py`.
-- [ ] `W04.P12.S109` - Replace obsolete bootstrap exemptions with the exact accepted passphrase and recovery paths; `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`.
-- [ ] `W04.P12.S110` - Prove passphrase change through a real encrypted vault; `src/cadrumo/entrypoints/cli/_config/tests/test_config.py`.
-- [ ] `W04.P12.S111` - Prove recovery status, create, rotate, verify, and recover without serialized mnemonic material; `src/cadrumo/entrypoints/cli/tests/test_config_recovery_lifecycle.py`.
+- [x] `W04.P12.S105` - Replace config rekey with only config passphrase change and secure input handling; `src/cadrumo/entrypoints/cli/_config/_custody_secret.py`.
+- [x] `W04.P12.S106` - Replace recovery display and rotation spellings with recovery status, create, and rotate; `src/cadrumo/entrypoints/cli/_config/_custody_secret.py`.
+- [x] `W04.P12.S107` - Register only recovery verify and flat recover with secrets-stdin and no mnemonic argv; `src/cadrumo/entrypoints/cli/_config/_custody_secret.py`.
+- [x] `W04.P12.S108` - Write create and rotate candidates directly to the controlling terminal and require full no-echo retype before commit; `src/cadrumo/entrypoints/cli/_config/_custody_secret.py`.
+- [x] `W04.P12.S109` - Replace obsolete bootstrap exemptions with the exact accepted passphrase and recovery paths; `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`.
+- [x] `W04.P12.S110` - Prove passphrase change through a real encrypted vault; `src/cadrumo/entrypoints/cli/_config/tests/test_config.py`.
+- [x] `W04.P12.S111` - Prove recovery status, create, rotate, verify, and recover without serialized mnemonic material; `src/cadrumo/entrypoints/cli/tests/test_config_recovery_lifecycle.py`.
 - [ ] `W04.P12.S112` - Prove passphrases, mnemonics, and secret-input values are absent from help and examples; `src/cadrumo/entrypoints/cli/tests/test_help_without_secrets.py`.
-- [ ] `W04.P12.S113` - Prove secure TTY failures and strict bounded secrets-stdin JSON through localized CLI execution; `src/cadrumo/entrypoints/cli/tests/test_tty_error_locale.py`.
-- [ ] `W04.P12.S114` - Align bootstrap and repair-policy inventories with the recovery family and flat recover exception; `src/cadrumo/entrypoints/cli/tests/test_repair_policy_coverage.py`.
+- [x] `W04.P12.S113` - Prove secure TTY failures and strict bounded secrets-stdin JSON through localized CLI execution; `src/cadrumo/entrypoints/cli/tests/test_tty_error_locale.py`.
+- [x] `W04.P12.S114` - Align bootstrap and repair-policy inventories with the recovery family and flat recover exception; `src/cadrumo/entrypoints/cli/tests/test_repair_policy_coverage.py`.
 
 ### Phase `W04.P13` - Cut over auth and certificate commands
 
 Expose distinct auth logout/reset and secure-storage-only certificate secret operations without clear or backend aliases.
 
-- [ ] `W04.P13.S116` - Remove certificate backend selection and key set, remove certificate secrets only by name through secure storage, and expose no compatibility alias or migration surface; `src/cadrumo/entrypoints/cli/_config/_certificate.py`.
-- [ ] `W04.P13.S118` - Prove certificate secret set and remove against real secure storage, including command failure after the secret mutation but before event commit followed by an idempotent retry with one correctly classified event, and reject backend selection, keyring spellings, migration, fallback, and duplicate mutation paths; `src/cadrumo/entrypoints/cli/_config/tests/test_certificate.py`.
-- [ ] `W04.P13.S119` - Require yes for reset start and resume while keeping status non-destructive; `src/cadrumo/entrypoints/cli/tests/test_destructive_verbs_require_yes.py`.
+- [x] `W04.P13.S116` - Remove certificate backend selection and key set, remove certificate secrets only by name through secure storage, and expose no compatibility alias or migration surface; `src/cadrumo/entrypoints/cli/_config/_certificate.py`.
+- [x] `W04.P13.S118` - Prove certificate secret set and remove against real secure storage, including command failure after the secret mutation but before event commit followed by an idempotent retry with one correctly classified event, and reject backend selection, keyring spellings, migration, fallback, and duplicate mutation paths; `src/cadrumo/entrypoints/cli/_config/tests/test_certificate.py`.
+- [x] `W04.P13.S119` - Require yes for reset start and resume while keeping status non-destructive; `src/cadrumo/entrypoints/cli/tests/test_destructive_verbs_require_yes.py`.
 
 ### Phase `W04.P14` - Cut over ledger and audit commands
 
