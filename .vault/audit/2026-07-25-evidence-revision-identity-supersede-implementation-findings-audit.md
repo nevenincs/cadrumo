@@ -234,3 +234,33 @@ What would make the remaining work implementable is a single choice among those
 three, not further investigation. Four separate attempts have now run into the
 same boundary from different directions, which is itself the evidence that the
 boundary is real rather than a gap in the analysis.
+
+
+### The decision is binary, not three-way
+
+A correction to this record's own framing, and it makes the open decision
+simpler than four passes of analysis had left it.
+
+The three branches collapse to one. The trap is that a recalculation returns the
+SAME revision, so no new bundle is captured. Only a different revision id produces
+a new revision; only the deriver's parameters determine that id; and the bundle is
+captured at exactly one site. A persisted record that sits BESIDE the revision —
+the branch that looked like the cheap middle option — cannot change what a
+recalculation returns, so it cannot dissolve the trap at all. It collapses into
+the identity branch or it does nothing.
+
+So the operator is not choosing among three mechanisms. The choice is binary:
+either evidence enters what determines revision identity, in some form, or it does
+not and the current signposted state stands. Everything else is a variation on the
+first, differing only in which carrier does the work and how honestly that carrier
+describes the condition.
+
+That also explains why four independent attempts converged: they were not four
+routes, they were four spellings of one route, and the ADR's Constraints already
+named it. The reservation was correct when written and is now demonstrated rather
+than asserted.
+
+What this buys the decision-maker is that the question needs no further
+investigation and no comparison table — it is a single yes or no on whether
+evidence is a fact about a calculation revision. The implementation follows
+mechanically from that answer.
