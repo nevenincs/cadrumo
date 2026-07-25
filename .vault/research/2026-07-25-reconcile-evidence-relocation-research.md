@@ -87,15 +87,58 @@ This is reachable in production, not only under a fixture. Modelo 100 is enrolle
 casilla set, so a real divergent declaración produces many diffs at once rather than
 one or two.
 
-### A latent sibling: `source_ref` is validated to 512 against a 500-char cap
+### The unbounded-value-in-a-capped-field shape is systemic, not unique to reconcile
 
+`diffs_detail` is not the only field at risk, and the cap has now produced four
+instances of one shape: a variable-length value joined into a single capped payload
+slot.
+
+Two are closed. The ledger-export overflow recorded in
+`2026-05-14-cli-workflow-redesign-w61-p304-s1823-code-review-audit` was fixed with
+bounded metadata. The `ledger reset` overflow recorded as EDGE-HIGH-1 in
+`2026-06-18-aeat-user-docs-hardening-audit` — a joined `removed_transaction_ids`
+string that bricked reset at eight or more rows — is also fixed at HEAD: the reset
+event now carries `"removed_transaction_count": str(len(removed_ids))`
+(`src/cadrumo/application/ledger/_actions_lifecycle.py:550-554`), and
+`removed_transaction_ids` is a `tuple[str, ...]` on the report
+(`src/cadrumo/application/ledger/_models.py:701`) rather than a joined payload value.
+
+Two are live. Besides `diffs_detail`, the `LEDGER_TRANSACTION_REMOVED` event joins two
+unbounded id lists into payload values at
+`src/cadrumo/application/ledger/_actions_lifecycle.py:764-770`:
+`"purchase_invoice_evidence_ids": ",".join(purchase_evidence_ids)` and
+`"attachment_ids": ",".join(attachment_ids)`. `AttachmentId` is exactly hex-64
+(`src/cadrumo/domain/attachments/_ids.py:18`), so seven attachment ids fit at 454
+characters and the eighth overflows at 519; a purchase-invoice evidence id is a
+16-hex-char digest (`src/cadrumo/application/ledger/_evidence.py:136-160`), so
+twenty-nine fit and the thirtieth overflows at 509. Removing one transaction carrying
+eight or more attachments therefore cannot construct its own removal event. The same
+payload already carries `"cascade_count"`, so the bounded-metadata remedy is present
+alongside the unbounded joins rather than instead of them.
+
+A third, narrower inconsistency sits in the reconcile payload itself:
 `ModeloReconciliationBytesCommand.source_ref` is `Field(min_length=1, max_length=512)`
-at `src/cadrumo/application/modelo/_reconcile.py:247`, and the same value is written
-into the payload as `"source_path"`
-(`src/cadrumo/application/modelo/_reconcile.py:717`). A `source_ref` of 501-512
-characters therefore passes the command boundary and then overflows the payload cap.
-This is an independent pre-existing inconsistency in the same payload, not caused by
-the diff detail, and it is not fixed by relocating the diffs.
+at `src/cadrumo/application/modelo/_reconcile.py:247` and is written into the payload
+as `"source_path"` (`src/cadrumo/application/modelo/_reconcile.py:717`), so a
+501-512 character reference passes the command boundary and then overflows the cap.
+
+None of these are fixed by relocating the diffs, and they are named here because they
+bear on whether the right answer is a per-producer relocation or a substrate-level
+guard against joining a variable-length value into a capped slot. The reconcile case is
+distinguished from the other three by what the value IS: the ledger cases join
+identifiers recoverable from their own catalogues, so bounded metadata loses nothing,
+whereas the reconcile detail is the only copy.
+
+### An ADR designs a field to the cap without ratifying it
+
+`2026-05-14-ledger-transaction-lifecycle-adr` Decision 4 specifies a `--reason`
+"free-text up to 500 chars) recorded into the event payload". So a prior decision
+treats the 500-character bound as a given it designs within, which is the closest the
+corpus comes to endorsing the figure. It does not decide or justify the cap, and no
+record does; the `_PayloadValue` type is merely catalogued as an inventory row in
+`2026-05-31-core-authority-types-v2-reference` (at a since-shifted line number). The
+cap therefore remains an un-ratified code-level contract that prior decisions design
+around.
 
 ### The detail round-trips through the app API but no CLI surface renders it
 
@@ -230,21 +273,19 @@ because `discard_work_unit`
 (`src/cadrumo/application/modelo/_work_lifecycle.py:269-310`) is a soft tombstone and
 `catalogue.get(...)` still returns the row.
 
-### The in-house overflow precedent was solved by bounded metadata, but that is lossy here
+### Why the established bounded-metadata remedy is lossy for reconcile
 
-The same failure class was already hit and fixed once. Audit
-`2026-05-14-cli-workflow-redesign-w61-p304-s1823-code-review-audit` records
-`export_ledger_transactions` storing a joined `transaction_ids` list that exceeded the
-cap at about eight rows and raised before persistence. The chosen fix was bounded
-metadata in the payload — row count, byte size, export digest, `transaction_ids_sha256`,
-first and last id — not relocation. `2026-06-18-aeat-user-docs-hardening-audit` records
-a second instance of the same shape.
+The fix chosen for the ledger-export instance was bounded metadata in the payload — row
+count, byte size, export digest, `transaction_ids_sha256`, first and last id. That
+worked because the row identities stayed recoverable from the transaction catalogue, so
+the payload only had to be a pointer to durable data.
 
-That pattern worked because the row identities were recoverable from the transaction
-catalogue, so the payload only needed to be a pointer. Reconcile diff detail is the only
-copy: a count plus digest would return history to exactly the count-only state Decision
-2.A was rejected for. Any option that reduces the payload to bounded metadata must
-therefore put the detail somewhere durable first.
+Reconcile diff detail has no such second home: it is the only copy. A count plus digest
+would therefore return history to exactly the count-only state that Decision 2.A was
+rejected for as `no-silent-under-declaration` at the audit layer. Any option that
+reduces the reconcile payload to bounded metadata must put the detail somewhere durable
+first, which is what makes this a decision rather than an application of the existing
+patch.
 
 ### What was not investigated
 
@@ -276,6 +317,14 @@ roundtrip obligations.
 - `src/cadrumo/entrypoints/cli/_modelo_reconcile_cli.py:129-140`, `:302-372`
 - `src/cadrumo/entrypoints/cli/_modelo_payloads_m036.py:101-120`
 - `src/cadrumo/domain/modelos/_ledger_filing_snapshot.py:216`
+- `src/cadrumo/domain/modelos/_calculation_revision.py:202-226`, `:288-360`, `:549-564`
+- `src/cadrumo/application/modelo/_revision_persistence.py:225-258`
+- `src/cadrumo/application/ledger/_actions_manual.py:612-650`
+- `src/cadrumo/application/ledger/_actions_lifecycle.py:550-554`, `:764-770`
+- `src/cadrumo/application/ledger/_models.py:701`
+- `src/cadrumo/application/ledger/_evidence.py:136-160`
+- `src/cadrumo/domain/attachments/_ids.py:18`
+- `src/cadrumo/entrypoints/cli/_ledger_lifecycle_cli.py:163-193`
 - `src/cadrumo/adapters/persistence/storage/_namespace_registry.py:397`, `:445-464`, `:779`
 - `src/cadrumo/core/compatibility_lifecycle.py:53`, `:62`
 - `src/cadrumo/_data/registry/aeat/modelos/100/revisions` (11,374 casilla grounding entries measured)

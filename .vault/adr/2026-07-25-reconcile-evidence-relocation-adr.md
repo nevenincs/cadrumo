@@ -70,10 +70,26 @@ layer when this surface was designed.
 - The compatibility regime is `PRE_RELEASE`, so a new persisted format enrols at birth
   with no upgrader or durability-floor obligation, and already-persisted overflowing
   values are deleted rather than migrated.
-- An independent latent defect sits in the same payload and is not fixed by relocation:
-  the reconcile command validates `source_ref` to 512 characters while the payload value
-  it is written into caps at 500, so a 501-512 character reference passes the command
-  boundary and then overflows.
+- The shape is systemic. Joining a variable-length value into one capped payload slot
+  has now produced four instances: the ledger-export overflow (fixed with bounded
+  metadata), the `ledger reset` overflow that bricked reset at eight rows (fixed at HEAD,
+  the event now carries a count), the reconcile detail, and a still-live pair in the
+  `LEDGER_TRANSACTION_REMOVED` event that joins `purchase_invoice_evidence_ids` and
+  `attachment_ids`. Attachment ids are hex-64, so seven fit and the eighth overflows at
+  519 characters — removing one transaction with eight or more attachments cannot
+  construct its own removal event. That payload already carries a `cascade_count`, so the
+  remedy sits beside the defect.
+- Reconcile is nonetheless distinguishable from the other three by what the value IS. The
+  ledger cases join identifiers recoverable from their own catalogues, so bounded metadata
+  loses nothing. The reconcile detail is the only copy, which is why the same remedy is
+  lossy here and why this needs a decision rather than the established patch.
+- Two narrower inconsistencies are not fixed by relocation: the reconcile command
+  validates `source_ref` to 512 characters against the 500-character payload slot it is
+  written into, and the live joined-id pair above. Both are independent of this decision.
+- No record ratifies the cap, though one designs to it.
+  `2026-05-14-ledger-transaction-lifecycle-adr` Decision 4 specifies a `--reason` of "up
+  to 500 chars" recorded into the event payload, treating the bound as a given. The figure
+  itself is decided nowhere.
 
 ## Considered options
 
@@ -206,6 +222,10 @@ If (f) is accepted instead, the defect closes cheaply and reconciliation history
 degrades to a verdict and a count, reversing the non-lossy-history decision on purpose
 rather than by accident.
 
-Either way the `source_ref` 512-against-500 inconsistency remains open, and the
-docstring asserting that no parallel reconciliation store exists must be corrected if
-any store is added.
+Either way three things remain open and are independent of this decision: the
+`source_ref` 512-against-500 inconsistency, the live joined-id pair in the
+transaction-removal event that breaks removal at eight attachments, and whether the
+substrate deserves a standing guard against joining a variable-length value into a
+capped payload slot — four instances in, that is a pattern rather than a coincidence.
+The docstring asserting that no parallel reconciliation store exists must be corrected
+if any store is added.
