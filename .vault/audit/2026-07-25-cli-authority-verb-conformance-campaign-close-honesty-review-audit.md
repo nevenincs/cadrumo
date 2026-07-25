@@ -490,6 +490,24 @@ Worth recording that every instance was caught, and caught cheaply, by going to
 the subject: invoking the verb by hand, reading the test body, reading the
 object store. The expensive part was never the verification.
 
+The upstream half of the rule, which this review learned by propagating someone
+else's unverified inference into its own findings. A downstream reader taking a
+claim from a verification report is doing the normal and correct thing; the
+failure was that the report stated an inference drawn from a coincidence in the
+same register as a measurement, so nothing in it invited the one-command test
+that later killed it. Both halves are needed. A report must mark its inferences
+as inferences, and a reader must go to the subject before promoting any claim to
+a finding. Where a report does distinguish the two — as the same author's later
+work did, separating a memory measurement that stood from the conclusion hung on
+it that did not — the reader can act on it safely and the correction costs one
+command instead of a retraction.
+
+A practical corollary for anything written to be read by someone who was not
+present: state the instrument beside the claim. "Four workers reported abnormal
+termination, written inline and independent of buffering" survives scrutiny in a
+way that "the lane stalls at the same point" does not, and the difference is
+visible on the page rather than only to the author.
+
 ### pathspec-commit-defeats-the-anti-sweep-guard | high | The staged-set check does not protect a shared document
 
 The commit discipline in force pairs an explicit pathspec with a
