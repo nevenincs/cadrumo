@@ -49,6 +49,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...domain.calculations.registry import BindingId, CasillaId, RelationId, validated_casilla_id
+from ._common import active_bucket_id_or_refuse
 from ._errors import CliRefusedBoundaryError
 from ._modelo_rendering import short_id
 
@@ -765,6 +766,32 @@ def load_calculation_revision(calculation_revision_id: str) -> CalculationRevisi
     return get_calculation_revision(calculation_revision_id)
 
 
+def resolve_explicit_or_active_bucket_id(bucket_id: str | None) -> str:
+    """Return an explicit ``--bucket-id``, or the active profile bucket when unset.
+
+    Single canonical home for the modelo CLI's ``--bucket-id`` fallback: an
+    explicit override lets an accountant scope the command to one profile bucket
+    on a shared machine, while omitting it addresses the active profile, which is
+    the common single-operator case. A blank explicit value is treated as unset so
+    an empty option never reaches storage scoping as a bucket id.
+
+    The refusal is the operator-facing no-active-profile refusal rather than the
+    domain error raised by :func:`~core.resolve_repository_bucket_id`, because a
+    cold-start CLI invocation must distinguish "no profile registered" from
+    "registered but logged out" in its suggested next command.
+
+    Args:
+        bucket_id: The operator-supplied bucket id, or ``None`` to address the
+            active profile bucket.
+
+    Returns:
+        The resolved bucket id, trimmed.
+    """
+    if bucket_id is not None and bucket_id.strip():
+        return bucket_id.strip()
+    return active_bucket_id_or_refuse()
+
+
 def resolve_default_actor() -> str:
     """Return the active profile display_name, or a permanent fallback label."""
     try:
@@ -800,6 +827,7 @@ __all__ = [
     "parse_revision_selector",
     "parse_row_spec",
     "resolve_default_actor",
+    "resolve_explicit_or_active_bucket_id",
     "selector_bad_parameter",
     "validate_binding_key",
     "validate_calculation_revision_id",

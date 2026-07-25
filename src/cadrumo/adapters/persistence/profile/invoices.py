@@ -46,17 +46,10 @@ def _secure_objects_for_bucket(bucket_id: str) -> SecureObjectRepository:
 
 
 def _resolve_invoice_bucket_id(bucket_id: str | None) -> str:
-    trimmed = (bucket_id or "").strip()
-    if trimmed:
-        return trimmed
-    from ....core import resolve_active_bucket_id
+    """Return an explicit or active profile bucket id for the invoice catalogue."""
+    from ....core import resolve_repository_bucket_id
 
-    active = resolve_active_bucket_id()
-    if active is None:
-        raise InvoicePersistenceError(
-            translated_message="application.workflow.errors.no_active_profile_bucket",
-        )
-    return active
+    return resolve_repository_bucket_id(bucket_id, error_type=InvoicePersistenceError)
 
 
 class InvoiceCatalogueRepository:
