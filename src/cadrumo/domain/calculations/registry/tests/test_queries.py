@@ -13,7 +13,13 @@ from .....core.resources import resources
 from .. import CasillaId, validated_casilla_id
 from .._authority import ValidatedRegistryAuthority
 from .._errors import AmbiguousRevisionSelectionError, NoRevisionForPeriodError, RegistryValidationError
-from .._queries import BindingSelectorQueryProjection, ModeloFormulaRow, RegistryQueryService
+from .._queries import (
+    BindingSelectorQueryProjection,
+    ModeloFormulaRow,
+    RegistryQueryService,
+    ResolvedRegistryQueryContext,
+)
+from .._query_reports import ModeloBindingsReport, ModeloCasillaDetailReport
 from .._schema import InputKind
 from ._loader_directory_mode_support import write_fragmented_revision
 
@@ -453,3 +459,154 @@ def test_scoped_query_honours_the_as_of_validity_window() -> None:
     # selection and refuses rather than silently returning a revision.
     with pytest.raises(NoRevisionForPeriodError):
         service.casillas_for_scope("100", filing_year=2025, period="0A", as_of=date(1990, 1, 1))
+
+
+def _filing_year_covered_by(modelo: str, revision_id: str) -> int:
+    """Return a filing year the named revision itself declares it covers.
+
+    The year is read from the revision's own ``period_selector`` on the registry
+    authority rather than from the query service, so a parity assertion built on
+    it cannot be satisfied by the code under test agreeing with itself.
+    """
+    revision = resources().modelos.authority.validate_modelo(modelo).revisions[revision_id]
+    return next(
+        year
+        for year in range(revision.valid_from.year, revision.valid_from.year + 20)
+        if revision.period_selector.includes_year(year)
+    )
+
+
+def test_scoped_and_unscoped_routes_preserve_both_forms_over_one_projection() -> None:
+    """Both public resolution forms feed one describe projection and stay distinguishable.
+
+    The two resolvers are different selection authorities, so this pins the
+    contract that survives sharing a projection builder: when they land on the
+    same revision every projected field agrees, and the only divergence is the
+    filing scope the unscoped form does not have.
+    """
+    service = _service()
+    unscoped = service.describe_modelo("303", period="1T")
+    filing_year = _filing_year_covered_by("303", unscoped.revision)
+    scoped = service.describe_modelo_for_scope("303", filing_year=filing_year, period="1T")
+
+    assert scoped.revision == unscoped.revision
+    assert (scoped.code, scoped.tax_domain, scoped.revision_ids) == (
+        unscoped.code,
+        unscoped.tax_domain,
+        unscoped.revision_ids,
+    )
+    assert (scoped.casilla_count, scoped.binding_count, scoped.formula_count) == (
+        unscoped.casilla_count,
+        unscoped.binding_count,
+        unscoped.formula_count,
+    )
+
+    # Both public forms are preserved: the unscoped one carries no filing scope,
+    # the scoped one does. Collapsing either into the other would break this.
+    assert (unscoped.filing_year, unscoped.filing_period) == (None, None)
+    assert scoped.filing_year == filing_year
+    assert scoped.filing_period is not None
+    assert scoped.period == unscoped.period == "1T"
+
+
+def test_casillas_formulas_and_bindings_rows_agree_across_both_resolution_forms() -> None:
+    """Every shared row projection is identical on both routes for one revision.
+
+    Casillas, formulas and bindings each build from the shared typed context, so
+    a row set that differed between the scoped and unscoped route would mean a
+    builder had re-derived content from the resolver instead of the context.
+    """
+    service = _service()
+    filing_year = _filing_year_covered_by("303", service.describe_modelo("303", period="1T").revision)
+
+    unscoped_casillas = service.casillas("303", period="1T")
+    scoped_casillas = service.casillas_for_scope("303", filing_year=filing_year, period="1T")
+    assert unscoped_casillas.rows
+    assert scoped_casillas.rows == unscoped_casillas.rows
+
+    unscoped_formulas = service.formulas("303", period="1T")
+    scoped_formulas = service.formulas_for_scope("303", filing_year=filing_year, period="1T")
+    assert unscoped_formulas.rows
+    assert scoped_formulas.rows == unscoped_formulas.rows
+
+    unscoped_bindings = service.bindings("303", period="1T")
+    scoped_bindings = service.bindings_for_scope("303", filing_year=filing_year, period="1T")
+    assert unscoped_bindings.rows
+    assert scoped_bindings.rows == unscoped_bindings.rows
+
+    # The filter arguments still reach the shared builder rather than being
+    # dropped by the context refactor.
+    computed = service.casillas_for_scope(
+        "303",
+        filing_year=filing_year,
+        period="1T",
+        input_kind=InputKind.COMPUTED,
+    )
+    assert computed.rows
+    assert len(computed.rows) < len(scoped_casillas.rows)
+    assert all(row.input_kind == InputKind.COMPUTED for row in computed.rows)
+
+
+def test_bindings_and_casilla_detail_remain_separate_non_substitutable_reports() -> None:
+    """The bindings listing and the single-casilla detail are deliberately different reports.
+
+    Both are reachable from the same resolved context, which is exactly why the
+    distinction needs pinning: one answers "which sources feed this revision",
+    the other "what is this one casilla", and neither can serve the other's
+    question. Substitutability is tested at the contract level, not by shape
+    coincidence.
+    """
+    service = _service()
+    filing_year = _filing_year_covered_by("303", service.describe_modelo("303", period="1T").revision)
+
+    bindings = service.bindings_for_scope("303", filing_year=filing_year, period="1T")
+    detail = service.casilla_for_scope("303", "27", filing_year=filing_year, period="1T")
+
+    assert isinstance(bindings, ModeloBindingsReport)
+    assert isinstance(detail, ModeloCasillaDetailReport)
+
+    binding_fields = set(ModeloBindingsReport.model_fields)
+    detail_fields = set(ModeloCasillaDetailReport.model_fields)
+
+    # The listing carries a row collection the detail has no field for.
+    assert "rows" in binding_fields
+    assert "rows" not in detail_fields
+    # The detail carries per-casilla grounding and the resolved formula the
+    # listing has no field for, so it cannot be projected from the listing.
+    for casilla_only in ("casilla_id", "formula_expression", "legal_refs", "source_refs", "localized_labels"):
+        assert casilla_only in detail_fields
+        assert casilla_only not in binding_fields
+
+    # Both agree on the shared scope spine they take from the one context.
+    assert (bindings.code, bindings.revision, bindings.filing_year, bindings.period) == (
+        detail.code,
+        detail.revision,
+        detail.filing_year,
+        detail.period,
+    )
+    assert detail.casilla_id == "27"
+
+
+def test_resolved_query_context_is_frozen_and_rejects_unknown_fields() -> None:
+    """The shared context cannot be mutated or widened by a projection builder.
+
+    Several builders now read one context instance. If a builder could rebind a
+    field on it, one report could alter what a later report sees, which is the
+    failure the shared-context design has to exclude.
+    """
+    definition = resources().modelos.authority.validate_modelo("303")
+    revision = definition.revisions[_service().describe_modelo("303", period="1T").revision]
+
+    context = ResolvedRegistryQueryContext(definition=definition, revision=revision)
+    # The unscoped form legitimately carries no filing scope.
+    assert (context.filing_year, context.registry_period) == (None, None)
+
+    with pytest.raises(ValidationError):
+        context.filing_year = 2026  # type: ignore[misc]
+
+    # An unknown field is refused rather than silently carried, so a builder
+    # cannot smuggle extra state through the shared context.
+    with pytest.raises(ValidationError):
+        ResolvedRegistryQueryContext.model_validate(
+            {"definition": definition, "revision": revision, "snapshot_fingerprint": "x"},
+        )
