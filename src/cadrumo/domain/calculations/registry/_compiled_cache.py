@@ -46,6 +46,7 @@ import tempfile
 import time
 from pathlib import Path
 
+from ....core.hashing import sha256_hex
 from ._loader_cache import registry_disk_cache_dir, registry_disk_cache_max_entries
 from ._schema import ModeloDefinition, RegistryCatalogues
 
@@ -327,7 +328,7 @@ def _decode_and_validate(raw: bytes) -> CompiledRegistryPayload | None:
 
 def _payload_digest(payload_bytes: bytes) -> bytes:
     """Return the hex SHA-256 of the schema-version-bound payload, as ascii bytes."""
-    return hashlib.sha256(_COMPILED_CACHE_SCHEMA_VERSION + payload_bytes).hexdigest().encode("ascii")
+    return sha256_hex(_COMPILED_CACHE_SCHEMA_VERSION + payload_bytes).encode("ascii")
 
 
 def _digests_equal(left: bytes, right: bytes) -> bool:

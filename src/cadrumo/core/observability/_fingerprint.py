@@ -17,7 +17,7 @@ import time
 from pathlib import Path
 
 from ..config import Settings, load_settings
-from ..hashing import sha256_hex
+from ..hashing import sha256_file, sha256_hex
 from ..logging import get_logger
 
 _log = get_logger(__name__)
@@ -28,11 +28,7 @@ def _file_sha256(path: Path) -> str:
     last_error: PermissionError | None = None
     for attempt in range(5):
         try:
-            h = hashlib.sha256()
-            with path.open("rb") as handle:
-                for chunk in iter(lambda: handle.read(65536), b""):
-                    h.update(chunk)
-            return h.hexdigest()
+            return sha256_file(path)
         except PermissionError as exc:
             last_error = exc
             if attempt == 4:

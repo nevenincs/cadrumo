@@ -32,7 +32,6 @@ an integrity gate, not an authenticity gate; :mod:`._bundle_signing`
 
 from __future__ import annotations
 
-import hashlib
 import io
 import json
 import zipfile
@@ -45,6 +44,7 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..errors import CoreValidationError as _CoreValidationError
+from ..hashing import hash_file as _hash_file
 from ..hashing import sha256_hex as _sha256_hex
 from ..logging import get_logger as _get_logger
 from ..time import now as _clock_now
@@ -192,21 +192,6 @@ class CorpusManifestDiff(BaseModel):
     def is_clean(self) -> bool:
         """Return ``True`` iff every tracked file's hash matches the manifest."""
         return not (self.added or self.removed or self.changed)
-
-
-def _hash_file(path: Path) -> tuple[str, int]:
-    """Return ``(sha256_hex, content_length)`` for ``path``.
-
-    Streams the file in 64 KiB chunks so manuals-sized PDFs do not
-    inflate memory usage.
-    """
-    digest = hashlib.sha256()
-    length = 0
-    with path.open("rb") as handle:
-        while chunk := handle.read(65536):
-            digest.update(chunk)
-            length += len(chunk)
-    return digest.hexdigest(), length
 
 
 def _iter_corpus_files(corpus_root: Path) -> Iterator[Path]:

@@ -20,6 +20,7 @@ from pydantic import AnyHttpUrl, BaseModel, ValidationError
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings, load_settings
+from ...core.hashing import hash_file
 from ...core.logging import get_logger
 from ...core.paths import resolve_relative_subpath
 from ...core.time import now
@@ -341,26 +342,18 @@ def verify_fetched_pdf(manifest: FetchedManualPart, part_root: Path) -> None:
         raise ManifestError(str(exc)) from exc
     if not pdf_path.exists():
         raise ManifestError(f"raw PDF not found at {pdf_path}; run 'aeat manual fetch' to materialise it")
-    sha = hashlib.sha256()
-    length = 0
     try:
-        with pdf_path.open("rb") as handle:
-            while True:
-                chunk = handle.read(_CHUNK_SIZE)
-                if not chunk:
-                    break
-                sha.update(chunk)
-                length += len(chunk)
+        sha256, length = hash_file(pdf_path)
     except OSError as exc:
         raise ManifestError(f"{pdf_path}: cannot read raw PDF ({exc})") from exc
-    if sha.hexdigest() != manifest.sha256:
+    if sha256 != manifest.sha256:
         _logger.error(
             "manual pdf sha256 mismatch %s: computed=%s manifest=%s",
             pdf_path,
-            sha.hexdigest(),
+            sha256,
             manifest.sha256,
         )
-        raise ManifestError(f"{pdf_path}: sha256 mismatch (got {sha.hexdigest()}, manifest {manifest.sha256})")
+        raise ManifestError(f"{pdf_path}: sha256 mismatch (got {sha256}, manifest {manifest.sha256})")
     if length != manifest.content_length:
         _logger.error(
             "manual pdf length mismatch %s: computed=%d manifest=%d",

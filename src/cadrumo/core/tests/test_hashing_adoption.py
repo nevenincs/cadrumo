@@ -44,11 +44,13 @@ _CANONICAL_HELPER = "core/hashing.py"
 #: entry in the SAME commit: the grounding test refuses an entry whose module no
 #: longer hosts a reducible body.
 _REDUCIBLE_ONE_SHOT_BASELINE: dict[str, int] = {
-    "agent/_workspace.py": 1,
     "application/auth/_certificate_sources_operator.py": 1,
     "application/auth/_operator.py": 1,
-    "domain/calculations/registry/_compiled_cache.py": 1,
-    "domain/calculations/registry/_validate_evidence.py": 1,
+    # Delegating this one costs an import line, which pushes the module past the
+    # 300-line reviewability ceiling that test_registry_reviewability.py enforces.
+    # The file keeps `import hashlib` regardless for two non-reducible streaming
+    # digests, so the delegation buys almost nothing; left as-is rather than
+    # degrading the module's prose or raising its size baseline to fit.
     "domain/calculations/registry/_validate_verdict.py": 1,
 }
 

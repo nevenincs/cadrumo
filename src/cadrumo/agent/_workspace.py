@@ -25,7 +25,6 @@ the reviewed harness markdown (no secrets, no tax data) and computes no value.
 from __future__ import annotations
 
 import filecmp
-import hashlib
 import json
 import shutil
 from collections.abc import Mapping, Sequence
@@ -39,6 +38,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from .. import __version__
 from ..core import PRODUCT_IDENTITY
 from ..core.external_constants import UTF_8_ENCODING as _UTF_8
+from ..core.hashing import sha256_hex
 from . import harness_root, iter_operator_rules, iter_personas
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
@@ -481,7 +481,7 @@ def _verify_and_copy_cohort_wheels(cohort: _PluginPythonCohort, artifact_dir: Pa
     wheels = _cohort_wheels(cohort)
     for distribution in _PYTHON_COHORT_WHEELS:
         source = wheels[distribution]
-        actual_digest = hashlib.sha256(source.read_bytes()).hexdigest()
+        actual_digest = sha256_hex(source.read_bytes())
         if actual_digest != cohort.sha256[distribution]:
             raise ValueError(
                 f"cohort artifact digest mismatch for {distribution!r}: "

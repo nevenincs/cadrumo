@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import logging
 import os
@@ -12,6 +11,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from ....core.config import load_settings
+from ....core.hashing import sha256_hex
 from ....core.resources import packaged_data, resolve_companion_binary
 from ._schema import LegalReference, SourceCitation, SourceReference
 from ._text import normalise_corpus_text
@@ -72,7 +72,7 @@ def _read_manual_pdf_sidecar(corpus_path: str, source_path: Path) -> str | None:
     stored_sha256 = data.get("source_sha256")
     if not isinstance(stored_sha256, str):
         return None
-    actual_sha256 = hashlib.sha256(source_path.read_bytes()).hexdigest()
+    actual_sha256 = sha256_hex(source_path.read_bytes())
     if actual_sha256 != stored_sha256:
         _LOGGER.warning(
             "Manual PDF sidecar sha256 mismatch for %s; falling back to on-demand extraction",
