@@ -217,6 +217,7 @@ is in [Upload your exported modelo at the AEAT portal](file-at-aeat.md).
 After a real filing, record the local filing marker:
 
 ```{cli-sequence} quickstart-file
+:verify: Confirm the local filed marker recorded.
 ```
 
 Like export, `work file` refuses a deducted IVA row whose invoice is not linked

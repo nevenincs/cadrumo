@@ -1,4 +1,16 @@
+:seed: autonomo-irpf-2026
+@step Register the supplier's purchase invoice as encrypted evidence bytes.
+@setup aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --supplier "Papeleria Central SL" --invoice-number C-2026-0087 --invoice-date 2026-02-11 --taxable-base 500 --iva-rate 0.21 --iva-amount 105
+@capture evidence_id result.evidence_id
+@step Attach the invoice to the deductible expense BEFORE calculating; a draft bundles its evidence when you verify it.
+@setup aeat app ledger attach e3eeac5e --purchase-invoice-evidence-id {evidence_id}
+@setup aeat --format json app modelo work create --modelo 130 --year 2026 --period 1T
+@setup aeat --format json app modelo work calculate --modelo 130 --year 2026 --period 1T --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
+@setup aeat --format json app modelo work verify --modelo 130 --year 2026 --period 1T
 @step Export the verified draft to a local fichero-BOE.
-@static aeat app modelo export --modelo 130 --year 2026 --period 1T --output ./modelo-130.boe
+aeat --format json app modelo export --modelo 130 --year 2026 --period 1T --output ./modelo-130.boe
 @step After you upload at the portal, record the local filed marker in the obligation window.
-@static aeat app modelo work file --modelo 130 --year 2026 --period 1T
+@result aeat --format json app modelo work file --modelo 130 --year 2026 --period 1T
+@expect exit_code == 0
+@expect result.kind == "internal_filing"
+@expect result.live_submission == false

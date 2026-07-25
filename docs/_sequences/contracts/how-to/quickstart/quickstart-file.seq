@@ -1,1 +1,14 @@
-@static aeat app modelo work file --modelo 130 --year 2026 --period 1T
+:seed: quickstart-ledger
+@step Link the supplier invoice to the expense before calculating.
+@setup aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --supplier "Papeleria Central SL" --invoice-number C-2026-0087 --invoice-date 2026-02-11 --taxable-base 500 --iva-rate 0.21 --iva-amount 105
+@capture evidence_id result.evidence_id
+@setup aeat --format json app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING --description "compra" --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105 --idempotency-key qs-compra
+@capture expense_id result.transaction_id
+@setup aeat app ledger attach {expense_id} --purchase-invoice-evidence-id {evidence_id}
+@step Open, calculate, and verify the first-quarter Modelo 130 draft.
+@setup aeat app modelo work create --modelo 130 --year 2026 --period 1T
+@setup aeat app modelo work calculate --modelo 130 --year 2026 --period 1T --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
+@setup aeat app modelo work verify --modelo 130 --year 2026 --period 1T
+@step Record the local filed marker after you upload through AEAT yourself.
+@result aeat --format json app modelo work file --modelo 130 --year 2026 --period 1T
+@expect exit_code == 0

@@ -146,6 +146,7 @@ shown as display frames. The full evidence-to-export chain runs end to end,
 executed, on [Prepare a Modelo 303 IVA filing](modelo-303.md):
 
 ```{cli-sequence} modelo-130-export-file
+:verify: Confirm the export writes a local fichero and the filing stays local.
 ```
 
 Each computed casilla carries its formula, legal references, and source
