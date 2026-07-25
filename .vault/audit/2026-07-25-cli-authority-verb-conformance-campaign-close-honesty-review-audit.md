@@ -169,7 +169,7 @@ That is the whole argument against closing a wave on presumption. The
 satisfied-at-HEAD conclusion must be established per step against its named
 surface before any W05 step is checked.
 
-### w06-evidence-not-produced | critical | W06 itself is not verified; 12 of 13 records are empty scaffolds
+### w06-evidence-not-produced | critical | W06 itself is not verified, 36 of 37 records are empty scaffolds
 
 Thirty-seven execution records exist on disk for phases W06.P18 and W06.P19.
 Thirty-six carry empty Description and Outcome sections: the scaffold exists,
