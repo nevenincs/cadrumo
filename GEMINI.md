@@ -123,10 +123,18 @@ bind docs and envelope identifiers but do not scan production
 - **Good:** `aeat app live justificante pull`, `pull-all`, `pull-sources`,
   `pull-history`; `aeat app ledger import --file STATEMENT.csv`; a dual-transport
   reconcile as a subgroup `reconcile pull` + `reconcile file --file PATH` with
-  `history` listing prior runs. (The former `aeat config profile censo pull` was
-  retired with the live censo scrape per
-  `2026-07-11-censo-operator-manual-enrolment-adr`; censal facts are
-  operator-manual.)
+  `history` listing prior runs. `aeat config profile censo` is the worked
+  example of that dual-transport shape: `censo file --file` ingests a local
+  artefact and `censo pull` reads the live AEAT censal consulta, both
+  reconciling through the one `apply_cotejo` authority behind the same
+  `--apply` door. (`2026-07-11-censo-operator-manual-enrolment-adr` retired an
+  earlier `censo pull` on a finding that AEAT exposed no read-only censal
+  projection. That premise was disproven by live measurement on 2026-07-25 —
+  the consulta launcher renders — and the ADR is superseded by
+  `2026-07-25-censal-profile-autofill-adr`. Censal facts are no longer
+  operator-manual-only. The retired scrape's write-adjacency hazard still
+  binds: the reader is pinned to the consulta view and fails closed on a
+  filing-tool or procedure-launcher landing.)
 - **Bad:** a new `capture`/`refresh`/`fetch`/`download` verb for an AEAT read, a
   `--source`/`--from-capture` file input, or multiplexing one verb with a
   `--from-sede`/`--from-justificante` flag family — rename to `pull` / `--file`.
