@@ -36,7 +36,6 @@ from ...application.modelo import (
     ModeloRefundElectionNotEligibleError,
     ModeloVerifySelector,
     WorkUnitNotFoundError,
-    derive_taxpayer_files_economic_activity,
     file_modelo_revision,
     require_profile_ready_for_work_unit,
     verify_modelo_revision,
@@ -47,7 +46,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.resources import resources
-from ...domain.calculations.registry import RegistrySnapshotError
+from ...domain.calculations.registry import RegistrySnapshotError, derive_taxpayer_files_economic_activity
 from ...domain.modelos import CalculationRevisionState
 from ._common import _emit_envelope, _profile_to_taxpayer
 from ._modelo_cli_support import load_calculation_revision, load_work_unit

@@ -58,7 +58,10 @@ from ...core.logging import get_logger
 from ...core.time import now as _utc_now
 from ...domain import filing as filing_domain
 from ...domain.buckets import BucketEvent, BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
-from ...domain.calculations.registry import derive_modelo_202_modality
+from ...domain.calculations.registry import (
+    derive_modelo_202_modality,
+    derive_taxpayer_files_economic_activity,
+)
 from ...domain.deadlines import RefundAccount, TaxpayerProfile
 from ...domain.iva import SepaMarca, derive_sepa_marca
 from ...domain.iva_compensation import IvaCompensationReconciliationDecision
@@ -112,7 +115,6 @@ from ._revision_persistence import emit_modelo_bucket_event as _emit_bucket_even
 from ._revision_replay_inputs import revision_filing_replay_inputs
 from ._verification_actions import (
     cross_period_expected_member_sets_from_profile,
-    derive_taxpayer_files_economic_activity,
     require_cross_period_clean_state,
 )
 

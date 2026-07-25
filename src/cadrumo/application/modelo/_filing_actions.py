@@ -50,7 +50,10 @@ from ...core import RefundElection
 from ...core.config import Settings
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol
-from ...domain.calculations.registry import derive_modelo_202_modality
+from ...domain.calculations.registry import (
+    derive_modelo_202_modality,
+    derive_taxpayer_files_economic_activity,
+)
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.modelos import (
     CalculationRevision,
@@ -88,7 +91,6 @@ from ._revision_persistence import persist_filed_revision
 from ._verification_actions import (
     _cross_period_expected_member_sets_from_profile,
     _require_cross_period_clean_state,
-    derive_taxpayer_files_economic_activity,
 )
 from ._workflow_gate import build_revision_workflow_engine as _build_revision_workflow_engine
 from ._workflow_gate import run_revision_workflow_gate as _run_revision_workflow_gate

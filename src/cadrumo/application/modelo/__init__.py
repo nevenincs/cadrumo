@@ -461,10 +461,7 @@ from ._taxation_comparison import (
     compare_taxation_for_work_unit,
     compare_taxation_modes,
 )
-from ._verification_actions import (
-    derive_taxpayer_files_economic_activity,
-    verify_modelo_revision,
-)
+from ._verification_actions import verify_modelo_revision
 from ._work_addressing import (
     ModeloExactWorkUnitTarget,
     ModeloResolvedRevisionProjection,
@@ -767,7 +764,6 @@ __all__ = [
     "decrypt_review_package_for_recipient",
     "derive_m036_declaration_id",
     "derive_m145_communication_record_id",
-    "derive_taxpayer_files_economic_activity",
     "detect_casilla_divergences",
     "discard_work_unit",
     "emit_collab_feedback_countersign_attached_event",

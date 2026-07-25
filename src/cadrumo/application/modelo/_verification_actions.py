@@ -75,6 +75,7 @@ from ...domain.calculations.registry import (
     RegistrySnapshot,
     SourceRefId,
     derive_modelo_202_modality,
+    derive_taxpayer_files_economic_activity,
 )
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.modelos import (
@@ -160,7 +161,6 @@ from ._verification_cross_period import (
     _modelo_202_incomplete_modality_finding,
     _require_cross_period_clean_state,
     _zero_value_previous_filing_binding_ids,
-    derive_taxpayer_files_economic_activity,
 )
 from ._verification_cross_period import (
     _cross_period_clean_state_next_action as _cross_period_clean_state_next_action,
