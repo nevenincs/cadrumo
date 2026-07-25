@@ -20,7 +20,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, Modelo
+from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, Modelo
 from ..calculations.registry import CasillaId
 from ..categories import (
     CategoryCitation,
@@ -36,7 +36,6 @@ from ..contribuyente import CCAA
 from ._errors import RentaValidationError
 from ._first_slice_routing import FIRST_SLICE_EXPENSE_CASILLAS
 
-LEDGER_RENTA_EXPENSE_SOURCE = "ledger_renta_expense_aggregation"
 EUR_CURRENCY: Literal["EUR"] = "EUR"
 
 # Re-export the canonical first-slice routing table. The single source
@@ -207,7 +206,9 @@ class RentaDeductibleExpenseObservation(_RentaStrictFrozenModel):
     """Binding-ready Renta expense observation for the first Modelo 100 slice."""
 
     observation_id: str = Field(min_length=1, max_length=160)
-    source_kind: Literal["ledger_renta_expense_aggregation"] = LEDGER_RENTA_EXPENSE_SOURCE
+    source_kind: Literal[BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION] = (
+        BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION
+    )
     modelo: Literal[Modelo.M100] = Modelo.M100
     period: Literal["0A"] = "0A"
     tax_year: int = Field(ge=2000, le=2099)
@@ -508,7 +509,6 @@ def _require_decimal(value: object, field_name: str) -> None:
 
 
 __all__ = [
-    "LEDGER_RENTA_EXPENSE_SOURCE",
     "RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS",
     "RentaDeductibilityContext",
     "RentaDeductibilityResult",
