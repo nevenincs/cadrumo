@@ -4414,7 +4414,7 @@ cli:
       dry_run_preview: 'Próba futtatás: nem mentett sorok. A fenti számok azt mutatják,
         mi történne valódi importálásnál.'
       empty_directory: 'Nem találhatók importálható kivonatfájlok a könyvtárban: {path}'
-      file_help: Az importált sorok ellenőrzésére használt eredeti fájl.
+      file_help: A bankikivonati fájl vagy könyvtár elérési útja.
       help: Bankikivonatok vagy nyilvántartások importálása a könyvelési főkönyvbe.
       likely_duplicates: '{count} importált sor megegyező dátummal és összeggel szerepel
         a főkönyvben, de eltérő leírással – valószínűleg ugyanannak a mozgásnak a
@@ -4423,12 +4423,12 @@ cli:
       no_rows_imported: 'Nem importáltak bejegyzéseket: a fájl sikeresen elemzett,
         de nem tartalmazott adatsorokat. A banki CSV-nek fejlécsorral kell rendelkeznie
         (dátum, összeg, leírás oszlopokkal), amelyet legalább egy adatsor követ.'
-      path_help: A bankikivonati fájl vagy könyvtár elérési útja.
       period_help: 'Bevallási időszak AEAT tokenként: 1T-4T (negyedévek), 0A (éves),
         01-12 (hónapok). A --year kapcsolóval adja meg az évet.'
       provider_help: 'Kivonatformátum-szolgáltató. Elismert értékek: {providers}'
       verbose_help: Részletes információ megjelenítése importálás közben.
       verify_help: Bejegyzések ellenőrzése importálás után.
+      verify_source_help: Az importált sorok ellenőrzésére használt eredeti fájl.
       year_help: Bevallási év a --period kapcsolóhoz (pl. 2024).
     labels:
       active: Aktív

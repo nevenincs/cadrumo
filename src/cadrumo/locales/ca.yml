@@ -4468,7 +4468,7 @@ cli:
         són una vista prèvia del que una importació real afegiria i ometria.'
       empty_directory: 'No s''han trobat fitxers d''extracte importables al directori:
         {path}'
-      file_help: Fitxer original usat per verificar les files importades.
+      file_help: Ruta a l'arxiu de l'extracte bancari o directori
       help: Importar extractes bancaris o registres al llibre comptable
       likely_duplicates: '{count} fila(es) importada(es) comparteixen data i import
         amb una transacció que ja és al llibre però tenen una descripció diferent:
@@ -4478,12 +4478,12 @@ cli:
         no contenia files de dades. Un CSV bancari ha de tenir una fila de capçalera
         amb una columna de data, import i descripció seguida d''almenys una fila de
         dades.'
-      path_help: Ruta a l'arxiu de l'extracte bancari o directori
       period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres),
         0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
       provider_help: 'Proveïdor del format de l''extracte. Valors reconeguts: {providers}'
       verbose_help: Mostrar informació detallada durant la importació
       verify_help: Verificar les entrades després de la importació
+      verify_source_help: Fitxer original usat per verificar les files importades.
       year_help: Any de declaració per a --period (p. ex. 2024).
     labels:
       active: Actives

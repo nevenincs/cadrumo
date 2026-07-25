@@ -4158,7 +4158,7 @@ cli:
       dry_run_preview: 'Dry run: no rows were saved. The counts above are a preview
         of what a real import would add and skip.'
       empty_directory: 'No importable statement files found in directory: {path}'
-      file_help: Original file used to verify imported rows.
+      file_help: Path to the bank statement file or directory
       help: Import bank statements or records into the accounting ledger
       likely_duplicates: '{count} imported row(s) share a date and amount with a transaction
         already in the ledger but have a different description - a likely duplicate
@@ -4167,12 +4167,12 @@ cli:
       no_rows_imported: 'No entries were imported: the file parsed but contained no
         data rows. A bank CSV must have a header row naming a date, an amount, and
         a description column followed by at least one data row.'
-      path_help: Path to the bank statement file or directory
       period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual),
         01-12 (months). Combine with --year to choose the year.'
       provider_help: 'Statement format provider. Recognised values: {providers}'
       verbose_help: Show detailed information during import
       verify_help: Verify entries after import
+      verify_source_help: Original file used to verify imported rows.
       year_help: Filing year for --period (e.g. 2024).
     labels:
       active: Active

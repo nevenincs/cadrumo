@@ -4502,7 +4502,7 @@ cli:
         son una vista previa de lo que una importación real añadiría y omitiría.'
       empty_directory: 'No se encontraron ficheros de extracto importables en el directorio:
         {path}'
-      file_help: Archivo original usado para verificar las filas importadas.
+      file_help: Ruta al archivo del extracto bancario o directorio
       help: Importar extractos bancarios o registros al libro contable
       likely_duplicates: '{count} fila(s) importada(s) comparten fecha e importe con
         una transacción que ya está en el libro pero tienen una descripción distinta:
@@ -4512,12 +4512,12 @@ cli:
         no contenía filas de datos. Un CSV bancario debe tener una fila de cabecera
         con una columna de fecha, importe y descripción seguida de al menos una fila
         de datos.'
-      path_help: Ruta al archivo del extracto bancario o directorio
       period_help: 'Periodo de declaración como token AEAT: 1T-4T (trimestres), 0A
         (anual), 01-12 (meses). Combínelo con --year para elegir el año.'
       provider_help: 'Proveedor del formato del extracto. Valores reconocidos: {providers}'
       verbose_help: Mostrar información detallada durante la importación
       verify_help: Verificar las entradas después de la importación
+      verify_source_help: Archivo original usado para verificar las filas importadas.
       year_help: Año de declaración para --period (p. ej. 2024).
     labels:
       active: Activas
