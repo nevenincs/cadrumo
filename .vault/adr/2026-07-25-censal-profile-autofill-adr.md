@@ -183,6 +183,47 @@ declared set gains it rather than the code losing it. And the `auth`
 section is enrolled. Neither is new work; both are the schema being made
 true about code that already ships.
 
+**D7a - the catalogue-enrolment half of D7 is WITHDRAWN on evidence; the
+other two instances stand.** D7 named three instances of the schema being
+read as authority and honoured as prose. The second was wrong, and was
+retracted by the agent who had originally reported it after probing the
+real store rather than re-reading the code:
+
+    register: '2030-01-01' ACCEPTED | 'not-a-date' REFUSED
+              '15/03/2030' REFUSED | '2030-13-45' REFUSED | '20300101' REFUSED
+    update:   same, via set_active_fields
+
+The date type IS enforced at the write path.
+`ProfileValidationService._validate_value_type` enforces
+`ProfileFieldType.DATE`, and `test_validation_covers_every_date_typed_field`
+enumerates date fields FROM THE SCHEMA, so `auth.fecha_validez` enrolled
+itself the moment it was declared. The claim that a schema-declared `date`
+was "enforced nowhere" was false.
+
+The root misreading is worth recording because it is a general trap:
+`validate_profile_values` is the **wizard completeness checker** - which
+keys the setup interview asks for, and whether they are required - not a
+type validator. "Unknown key" there means "not part of the interview", not
+"unvalidated". Its `unknown_keys` field has no production consumer at all.
+A catalogue whose name suggests validation, holding a field whose name
+suggests a gap, read as evidence of a hole that a five-line probe against
+the real store disproves.
+
+So the enrolment remedy is dropped, and the parity gate with it. Enrolling
+`auth.*` in that catalogue would put credential prompts into the setup
+interview, creating a second collection path for values the manager surface
+already owns under D6 - the duplicate-authority pattern this project is
+removing. The `auth` section's absence from the wizard catalogue is CORRECT
+BY DESIGN, and a parity gate asserting otherwise would have frozen the
+defect in place as a requirement.
+
+Two remedies survive and are the whole of D7's remaining scope:
+`UserProfileFact.source` validates against the schema's declared provenance
+set (the declared set first gaining `censo_artefact_g313`, which ships and
+is real); and `UserProfileFact.path` validates against the schema's declared
+field set, which is the instance that let `censo.filed_on` be written with
+no complaint and remains unclosed.
+
 **D3 - A new read-only censal reader lives in the sede adapter.** It
 navigates to the consulta view only, through the same authenticated
 session and access-gate path every other live read uses. It exposes no
