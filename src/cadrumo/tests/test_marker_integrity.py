@@ -77,6 +77,36 @@ _HEX_MARKERS = frozenset(
 _EXPECTED_CONFIGURED_MARKERS = (
     _EXECUTION_MARKERS | _HEX_MARKERS | {"docs", "serial", "perf", "external_tool", "os_keychain"}
 )
+_OS_KEYCHAIN_MARKER = "os_keychain"
+#: Every test whose assertion subject IS the OS credential store, by node id.
+#:
+#: This membership is PINNED rather than counted, because ``os_keychain`` removes a
+#: test from every lane including the default ``addopts`` selection. Unpinned, it is
+#: a mute button: any agent meeting a red custody test could add the label and the
+#: test would silently leave the automated lanes with nothing to notice — the same
+#: hazard the locale honesty allowlist is guarded against, and here it sits in front
+#: of a security-critical fail-closed path. A count is not sufficient: it cannot say
+#: WHICH test drifted, and one enrolled plus one dropped nets to zero.
+#:
+#: Adding an entry is a deliberate claim that the case cannot be proven at all
+#: without a credential store. Anything provable without custody stays in the lanes
+#: — see the boundary drawn in the user_profile tests conftest.
+_EXPECTED_OS_KEYCHAIN_TEST_IDS = frozenset(
+    {
+        "src/cadrumo/application/user_profile/tests/test_login_session.py"
+        "::TestFirstLogin::test_first_login_mints_a_resumable_persisted_session",
+        "src/cadrumo/application/user_profile/tests/test_login_session.py"
+        "::TestIdempotentGuard::test_valid_session_retry_is_a_no_op",
+        "src/cadrumo/application/user_profile/tests/test_login_session.py"
+        "::TestIdempotentGuard::test_retry_with_a_wrong_passphrase_still_no_ops",
+        "src/cadrumo/application/user_profile/tests/test_logout_strong_close.py"
+        "::TestStrongClose::test_logout_removes_the_keychain_half_of_the_session",
+        "src/cadrumo/entrypoints/cli/tests/test_profile_session_root_resume.py"
+        "::TestSilentResume::test_valid_session_resumes_with_no_authentication",
+        "src/cadrumo/entrypoints/cli/tests/test_profile_session_root_resume.py"
+        "::TestSilentResume::test_resume_advances_the_idle_deadline",
+    },
+)
 _LEGACY_READ_MARKER = "live_" + "read"
 _LEGACY_WRITE_MARKER = "live_" + "write"
 _LEGACY_DOMAIN_MARKERS = frozenset(
@@ -567,6 +597,49 @@ def _project_test_item_marker_violations(path: Path) -> list[str]:
     return violations
 
 
+def _os_keychain_ids_for_tree(tree: ast.Module, relative: str, module_markers: set[str]) -> list[str]:
+    """Return node ids of tests resolving to ``os_keychain`` in one module tree.
+
+    Reads the same union pytest resolves — the module-level ``pytestmark`` plus the
+    class and function decorators, alias bindings included — so a label applied by
+    any of those routes is seen. Taking only one route would leave the others as
+    unwatched ways to mute a test.
+    """
+    found: list[str] = []
+    aliases = _module_marker_aliases(tree)
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) and node.name.startswith("test_"):
+            if _OS_KEYCHAIN_MARKER in module_markers | _decorator_marker_names(node, aliases):
+                found.append(f"{relative}::{node.name}")
+            continue
+        if not isinstance(node, ast.ClassDef) or not node.name.startswith("Test"):
+            continue
+        class_markers = module_markers | _decorator_marker_names(node, aliases)
+        for child in node.body:
+            if not isinstance(child, ast.FunctionDef | ast.AsyncFunctionDef) or not child.name.startswith("test_"):
+                continue
+            if _OS_KEYCHAIN_MARKER in class_markers | _decorator_marker_names(child, aliases):
+                found.append(f"{relative}::{node.name}::{child.name}")
+    return found
+
+
+def _os_keychain_marked_test_ids() -> list[str]:
+    """Return the node id of every test in the tree carrying ``os_keychain``."""
+    found: list[str] = []
+    for module_path in _unioned_marker_item_modules():
+        module_markers, error = _project_module_marker_names(module_path)
+        if error is not None:
+            continue
+        found.extend(
+            _os_keychain_ids_for_tree(
+                _tree_for_path(module_path),
+                module_path.relative_to(_REPO_ROOT).as_posix(),
+                module_markers,
+            ),
+        )
+    return found
+
+
 @cache
 def _placement_error(path: Path) -> str | None:
     """Validate that module-level ``pytestmark`` is the first test statement."""
@@ -849,6 +922,72 @@ def test_every_test_item_resolves_to_single_execution_and_hex_marker() -> None:
     for module_path in _unioned_marker_item_modules():
         violations.extend(_project_test_item_marker_violations(module_path))
     assert not violations, "test item marker violations:\n" + "\n".join(violations)
+
+
+def test_os_keychain_marker_membership_is_pinned() -> None:
+    """The set of credential-store-bound tests is enumerated, not merely counted.
+
+    Fails in BOTH directions. A test that gained the label without being enrolled
+    here has left every automated lane unannounced, which is how the label becomes
+    a way to silence a red custody test. A test enrolled here that no longer carries
+    it has either been renamed or genuinely returned to the lanes, and the pin must
+    be updated to say so rather than quietly describing a test that is gone.
+    """
+    found = frozenset(_os_keychain_marked_test_ids())
+    unenrolled = sorted(found - _EXPECTED_OS_KEYCHAIN_TEST_IDS)
+    absent = sorted(_EXPECTED_OS_KEYCHAIN_TEST_IDS - found)
+
+    assert not unenrolled, (
+        "these tests carry `os_keychain` without being enrolled in "
+        "_EXPECTED_OS_KEYCHAIN_TEST_IDS, so they left every lane unannounced. "
+        "Enrol them only if they genuinely cannot be proven without a credential "
+        "store; otherwise remove the label:\n" + "\n".join(unenrolled)
+    )
+    assert not absent, (
+        "these enrolled tests no longer carry `os_keychain` (renamed, removed, or "
+        "returned to the default lanes) - update the pin to match:\n" + "\n".join(absent)
+    )
+
+
+def test_os_keychain_scan_sees_every_route_a_label_can_arrive_by() -> None:
+    """Proves the membership scan is not vacuous.
+
+    A pin backed by a blind scanner reports an empty set forever and silently
+    permits the muting it exists to prevent. Each route below is asserted against a
+    synthetic module, including the alias binding the execution-marker detector was
+    once blind to.
+    """
+    tree = ast.parse(
+        "import pytest\n"
+        "pytestmark = [pytest.mark.unit, pytest.mark.hex_core]\n"
+        "_CUSTODY = pytest.mark.os_keychain\n"
+        "@pytest.mark.os_keychain\n"
+        "def test_function_level() -> None: ...\n"
+        "@_CUSTODY\n"
+        "def test_alias_bound() -> None: ...\n"
+        "@pytest.mark.os_keychain\n"
+        "class TestClassLevel:\n"
+        "    def test_inherits_from_class() -> None: ...\n"
+        "class TestPlain:\n"
+        "    @pytest.mark.os_keychain\n"
+        "    def test_method_level() -> None: ...\n"
+        "    def test_unmarked() -> None: ...\n",
+    )
+
+    found = set(_os_keychain_ids_for_tree(tree, "synthetic.py", {"unit", "hex_core"}))
+
+    assert found == {
+        "synthetic.py::test_function_level",
+        "synthetic.py::test_alias_bound",
+        "synthetic.py::TestClassLevel::test_inherits_from_class",
+        "synthetic.py::TestPlain::test_method_level",
+    }
+    # An unlabelled sibling must not be swept in, or the pin would demand entries
+    # for tests that never left the lanes.
+    assert "synthetic.py::TestPlain::test_unmarked" not in found
+    # A module-level label reaches every test in the module.
+    module_wide = set(_os_keychain_ids_for_tree(tree, "synthetic.py", {"unit", "hex_core", _OS_KEYCHAIN_MARKER}))
+    assert "synthetic.py::TestPlain::test_unmarked" in module_wide
 
 
 def test_no_function_level_access_or_domain_markers(marker_policy_inventory: _MarkerPolicyInventory) -> None:
