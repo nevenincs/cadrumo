@@ -217,7 +217,7 @@ def test_a_read_for_a_different_taxpayer_is_refused_outright() -> None:
     record = workflow_state_repository().load().active_profile_record()
 
     with pytest.raises(CensalIdentityMismatchError):
-        reconcile_censal_read(record, censal_facts_from_read(_read(nif="Y0000001Z")))
+        reconcile_censal_read(record, censal_facts_from_read(_read(nif="Y0000001Z")), incoming_identity="Y0000001Z")
 
 
 def _profile_tax_id() -> str:
@@ -401,7 +401,11 @@ def test_a_read_matching_the_profile_is_neither_adopted_nor_diverging() -> None:
     repository = workflow_state_repository()
 
     state = repository.load()
-    first = reconcile_censal_read(state.active_profile_record(), censal_facts_from_read(read))
+    first = reconcile_censal_read(
+        state.active_profile_record(),
+        censal_facts_from_read(read),
+        incoming_identity=read.identity.nif,
+    )
     assert first.adopted, "a blank profile must adopt the read"
     repository.save(apply_censal_read(state, read))
 
@@ -409,6 +413,7 @@ def test_a_read_matching_the_profile_is_neither_adopted_nor_diverging() -> None:
     again = reconcile_censal_read(
         repository.load().active_profile_record(),
         censal_facts_from_read(read),
+        incoming_identity=read.identity.nif,
     )
     assert again.adopted == (), "nothing to adopt when the record already agrees"
     assert again.divergences == (), "agreement is not a disagreement"

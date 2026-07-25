@@ -122,7 +122,6 @@ def _run_censal_pull() -> ManagerActionOutcome:
     from ....adapters.inbound.tui import ManagerActionOutcome
     from ....application.live import pull_censal_datos
     from ....application.user_profile import (
-        CENSAL_ADOPTABLE_PATHS,
         apply_censal_read,
         censal_facts_from_read,
         reconcile_censal_read,
@@ -147,10 +146,10 @@ def _run_censal_pull() -> ManagerActionOutcome:
     # Read the effective facts BEFORE the commit: afterwards a cleared
     # path may carry the adopted value and no longer look cleared.
     declared = record_to_effective_facts(record)
-    reconciliation = reconcile_censal_read(record, facts)
-    # Only the adoptable paths are outcomes the operator is told about;
-    # the projection also carries the identity the ownership guard reads.
-    adoptable_read = sum(1 for fact in facts if fact.path in frozenset(CENSAL_ADOPTABLE_PATHS))
+    reconciliation = reconcile_censal_read(record, facts, incoming_identity=read.identity.nif)
+    # The projection is exactly the adoptable paths now, so every fact it
+    # emits is an outcome the operator is told about.
+    adoptable_read = len(facts)
     repository.save(apply_censal_read(state, read))
 
     return ManagerActionOutcome(

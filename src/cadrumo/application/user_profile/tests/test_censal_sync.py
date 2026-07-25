@@ -197,7 +197,7 @@ class TestReconciliation:
         read projects, because the projection also carries the fiscal identity
         for the ownership check and that path is never adopted.
         """
-        outcome = reconcile_censal_read(None, censal_facts_from_read(_read()))
+        outcome = reconcile_censal_read(None, censal_facts_from_read(_read()), incoming_identity=_PROFILE_NIF)
         assert {fact.path for fact in outcome.adopted} == set(CENSAL_ADOPTABLE_PATHS)
         assert outcome.divergences == ()
 
@@ -208,7 +208,11 @@ class TestReconciliation:
         with profile_create_storage_span(_PROFILE_ID) as routing:
             state = _register(schema, routing)
             state = set_active_fields(state, (UserProfileFact(path="contact.postcode", value="08032"),))
-            outcome = reconcile_censal_read(state.active_profile_record(schema=schema), censal_facts_from_read(_read()))
+            outcome = reconcile_censal_read(
+                state.active_profile_record(schema=schema),
+                censal_facts_from_read(_read()),
+                incoming_identity=_PROFILE_NIF,
+            )
             assert "contact.postcode" not in {fact.path for fact in outcome.adopted}
             assert "contact.postcode" not in {axis for axis, _ in outcome.divergences}
 
@@ -219,7 +223,11 @@ class TestReconciliation:
         with profile_create_storage_span(_PROFILE_ID) as routing:
             state = _register(schema, routing)
             state = set_active_fields(state, (UserProfileFact(path="contact.postcode", value="28001"),))
-            outcome = reconcile_censal_read(state.active_profile_record(schema=schema), censal_facts_from_read(_read()))
+            outcome = reconcile_censal_read(
+                state.active_profile_record(schema=schema),
+                censal_facts_from_read(_read()),
+                incoming_identity=_PROFILE_NIF,
+            )
             assert ("contact.postcode", "08032") in outcome.divergences
             assert "contact.postcode" not in {fact.path for fact in outcome.adopted}
 
@@ -243,6 +251,7 @@ class TestReconciliation:
             outcome = reconcile_censal_read(
                 state.active_profile_record(schema=schema),
                 censal_facts_from_read(_read(codigo_postal="08033")),
+                incoming_identity=_PROFILE_NIF,
             )
             assert "contact.postcode" not in {axis for axis, _ in outcome.divergences}
             refreshed = {fact.path: str(fact.value) for fact in outcome.adopted}
@@ -277,6 +286,7 @@ class TestReconciliation:
             outcome = reconcile_censal_read(
                 state.active_profile_record(schema=schema),
                 censal_facts_from_read(_read(codigo_postal="08033")),
+                incoming_identity=_PROFILE_NIF,
             )
             diverged = "contact.postcode" in {axis for axis, _ in outcome.divergences}
             assert diverged is expect_divergence, f"source={source} diverged={diverged}"
@@ -310,6 +320,7 @@ class TestReconciliation:
             outcome = reconcile_censal_read(
                 state.active_profile_record(schema=schema),
                 censal_facts_from_read(_read(codigo_postal=aeat_postcode)),
+                incoming_identity=_PROFILE_NIF,
             )
             assert "contact.postcode" not in {fact.path for fact in outcome.adopted}
             assert ("contact.postcode", aeat_postcode) in outcome.divergences
@@ -335,7 +346,9 @@ class TestIdentityOwnership:
             )
             record = state.active_profile_record(schema=schema)
             with pytest.raises(CensalIdentityMismatchError):
-                reconcile_censal_read(record, censal_facts_from_read(_read(nif="X1234567L")))
+                reconcile_censal_read(
+                    record, censal_facts_from_read(_read(nif="X1234567L")), incoming_identity="X1234567L"
+                )
 
     def test_a_read_carrying_no_identity_refuses(self, schema: ProfileSchemaDefinition) -> None:
         """Being unable to confirm ownership is not the same as confirming it."""
@@ -347,27 +360,51 @@ class TestIdentityOwnership:
             )
             record = state.active_profile_record(schema=schema)
             with pytest.raises(CensalIdentityMismatchError):
-                reconcile_censal_read(record, censal_facts_from_read(_read(nif="   ")))
+                reconcile_censal_read(record, censal_facts_from_read(_read(nif="   ")), incoming_identity="   ")
 
     def test_a_profile_with_no_recorded_identity_still_adopts(self) -> None:
         """The ordinary first-read case must keep working; there is nothing to protect."""
-        outcome = reconcile_censal_read(None, censal_facts_from_read(_read(nif="X1234567L")))
+        outcome = reconcile_censal_read(
+            None, censal_facts_from_read(_read(nif="X1234567L")), incoming_identity="X1234567L"
+        )
         assert {fact.path for fact in outcome.adopted} == set(CENSAL_ADOPTABLE_PATHS)
 
-    def test_the_fiscal_identity_is_projected_but_never_adopted(self) -> None:
-        """It is carried to decide ownership, and cannot carry information past that.
+    def test_the_fiscal_identity_is_not_projected_at_all(self) -> None:
+        """The projection carries adoptable paths and nothing else.
 
-        A read either belongs to this profile, in which case its identity can
-        only agree, or it does not, in which case the whole read refuses before
-        any path is considered. So the path is emitted for the ownership check
-        and must appear in neither outcome.
+        It used to emit the identity too, purely so the reconciliation
+        could fish it back out for the ownership refusal. That made a
+        tuple named for adoption load-bearing for a guard: removing a
+        path from it would have left the guard with no identity and
+        switched the refusal off, with nothing failing to say so. The
+        guard takes the identity from the read directly now, so the
+        projection is free to be exactly what its name says.
         """
         facts = censal_facts_from_read(_read())
-        assert "identity.tax_id" in {fact.path for fact in facts}
-        assert "identity.tax_id" not in CENSAL_ADOPTABLE_PATHS
-        outcome = reconcile_censal_read(None, facts)
-        assert "identity.tax_id" not in {fact.path for fact in outcome.adopted}
-        assert "identity.tax_id" not in {axis for axis, _ in outcome.divergences}
+
+        assert {fact.path for fact in facts} <= set(CENSAL_ADOPTABLE_PATHS)
+        assert "identity.tax_id" not in {fact.path for fact in facts}
+
+    def test_the_refusal_does_not_depend_on_what_the_projection_emits(
+        self,
+        schema: ProfileSchemaDefinition,
+    ) -> None:
+        """The guard fires on a foreign read even with no facts at all.
+
+        This is the property the coupling destroyed and the reason the
+        input moved: the refusal is answerable from the read alone, so it
+        cannot be disarmed by a change to what gets projected.
+        """
+        with profile_create_storage_span(_PROFILE_ID) as routing:
+            state = _register(schema, routing)
+            state = set_active_fields(
+                state,
+                (UserProfileFact(path="identity.tax_id", value=_PROFILE_NIF, source=CENSO_SOURCE_TAG),),
+            )
+            record = state.active_profile_record(schema=schema)
+
+            with pytest.raises(CensalIdentityMismatchError):
+                reconcile_censal_read(record, (), incoming_identity="X1234567L")
 
     def test_the_match_ignores_case_and_surrounding_space(self, schema: ProfileSchemaDefinition) -> None:
         """A cosmetic difference is not a different taxpayer."""
@@ -378,7 +415,9 @@ class TestIdentityOwnership:
                 (UserProfileFact(path="identity.tax_id", value=" y0000001z ", source=CENSO_SOURCE_TAG),),
             )
             record = state.active_profile_record(schema=schema)
-            outcome = reconcile_censal_read(record, censal_facts_from_read(_read(nif="Y0000001Z")))
+            outcome = reconcile_censal_read(
+                record, censal_facts_from_read(_read(nif="Y0000001Z")), incoming_identity="Y0000001Z"
+            )
             assert "contact.postcode" in {fact.path for fact in outcome.adopted}
 
 

@@ -83,10 +83,11 @@ def _assert_read_belongs_to_this_profile(existing_tax_id: str | None, incoming_t
     fiscal identity and address onto a profile used to file, silently and
     with nothing for the operator to see.
 
-    The session-level identity guard does not close this: it compares the
-    session NIF to the profile only for one of the three auth providers and
-    returns without comparing for the others, so a read can reach here
-    carrying an identity the profile never claimed.
+    The session-level identity guard does not close this even now that it
+    covers every provider: it binds the SESSION to the profile, and a
+    session legitimately bound to this taxpayer can still be pointed at a
+    page describing another. Ownership of the READ is a separate question
+    from ownership of the session, so it is answered separately here.
 
     A profile with no recorded fiscal identity has nothing to protect and is
     the ordinary first-read case, so it is allowed. A read carrying no
@@ -176,28 +177,28 @@ def censal_facts_from_read(result: CensalDatosResult) -> tuple[UserProfileFact, 
     authority in the read for where the boundary falls, so the projection
     declines to guess rather than write a plausible-looking wrong name.
 
-    The fiscal identity is projected but is NOT adoptable. It is carried so
-    the reconciliation can decide whether the read belongs to this profile
-    at all; it is never written, because once that refusal is in force the
-    path cannot carry information either way.
+    The fiscal identity is NOT projected. The reconciliation needs it to
+    decide whether the read belongs to this profile at all, but it takes
+    it from the read directly rather than from here: carrying it in this
+    tuple made a collection named for adoption silently load-bearing for
+    an ownership refusal, so removing a path from the tuple would have
+    switched that refusal off with nothing failing.
 
     Args:
         result: The parsed censal consulta read.
 
     Returns:
-        The projected facts, identity first and then
-        :data:`CENSAL_ADOPTABLE_PATHS` order, omitting any path the read
-        left empty.
+        The projected facts in :data:`CENSAL_ADOPTABLE_PATHS` order,
+        omitting any path the read left empty.
     """
     candidates: dict[str, str | None] = {
-        _TAX_ID_PATH: result.identity.nif,
         "contact.fiscal_address": _compose_address(result.domicilio_fiscal),
         "contact.postcode": result.domicilio_fiscal.codigo_postal,
         "contact.fiscal_address_cadastral_reference": result.domicilio_fiscal.referencia_catastral,
     }
     return tuple(
         UserProfileFact(path=path, value=value, source=CENSO_SOURCE_TAG)
-        for path in (_TAX_ID_PATH, *CENSAL_ADOPTABLE_PATHS)
+        for path in CENSAL_ADOPTABLE_PATHS
         if (value := (candidates[path] or "").strip())
     )
 
@@ -205,6 +206,8 @@ def censal_facts_from_read(result: CensalDatosResult) -> tuple[UserProfileFact, 
 def reconcile_censal_read(
     record: UserProfileRecord | None,
     facts: Sequence[UserProfileFact],
+    *,
+    incoming_identity: str | None,
 ) -> CensalReconciliation:
     """Split projected censal facts into safe adoptions and reported disagreements.
 
@@ -240,7 +243,15 @@ def reconcile_censal_read(
 
     Args:
         record: The active profile record, or ``None`` for a fresh profile.
-        facts: The projected censal facts.
+        facts: The projected censal facts, which are the adoptable paths
+            and nothing else.
+        incoming_identity: The fiscal identity the read carries, taken
+            from the read itself. It is a parameter rather than something
+            recovered from ``facts`` because the ownership refusal below
+            depends on it: routing it through the projection made a
+            collection named for adoption silently load-bearing for a
+            guard, so removing a path from that collection would have
+            switched the guard off with nothing failing.
 
     Returns:
         The :class:`CensalReconciliation` split.
@@ -249,7 +260,6 @@ def reconcile_censal_read(
 
     existing = record_to_effective_facts(record)
     recorded_identity = existing.get(_TAX_ID_PATH)
-    incoming_identity = next((str(fact.value) for fact in facts if fact.path == _TAX_ID_PATH), None)
     _assert_read_belongs_to_this_profile(
         recorded_identity.value if recorded_identity is not None else None,
         incoming_identity,
@@ -257,11 +267,6 @@ def reconcile_censal_read(
     adopted: list[UserProfileFact] = []
     divergences: list[tuple[str, str]] = []
     for fact in facts:
-        if fact.path == _TAX_ID_PATH:
-            # Carried only to decide ownership above. Past that refusal the
-            # identity can only ever agree, so adopting it would be a no-op
-            # and reporting it a divergence would be a contradiction.
-            continue
         effective = existing.get(fact.path)
         incoming = str(fact.value)
         if effective is None:
@@ -302,7 +307,11 @@ def apply_censal_read(state: WorkflowState, result: CensalDatosResult) -> Workfl
     """
     from ._cotejo_apply import CensoDivergence, apply_cotejo
 
-    reconciliation = reconcile_censal_read(state.active_profile_record(), censal_facts_from_read(result))
+    reconciliation = reconcile_censal_read(
+        state.active_profile_record(),
+        censal_facts_from_read(result),
+        incoming_identity=result.identity.nif,
+    )
     return apply_cotejo(
         state,
         adopted=reconciliation.adopted,
