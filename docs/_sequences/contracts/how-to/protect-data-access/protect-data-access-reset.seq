@@ -1,9 +1,9 @@
 @step Start the reset.
 @static aeat config reset start --yes
-@blocked unconverted Runs clean in the sandbox probe; nothing blocks it, so it awaits conversion.
+@blocked nondeterministic-output Emits a fresh 64-hex operation_id per run, which GOLDEN_MASK_FIELDS does not mask.
 @step Check the latest reset operation.
 @static aeat config reset status
-@blocked unconverted Runs clean in the sandbox probe; nothing blocks it, so it awaits conversion.
+@blocked nondeterministic-output Emits a fresh 64-hex operation_id per run, which GOLDEN_MASK_FIELDS does not mask.
 @step Check an exact reset operation.
 @static aeat config reset status --operation-id 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 @blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.

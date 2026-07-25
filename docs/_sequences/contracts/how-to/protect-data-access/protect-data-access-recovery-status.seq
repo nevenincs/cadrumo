@@ -1,3 +1,3 @@
 @step Confirm the recovery key is enrolled without exposing it.
 @static aeat config recovery status
-@blocked unconverted Runs clean in the sandbox probe; nothing blocks it, so it awaits conversion.
+@blocked nondeterministic-output Prints a recovery_path beside the sandbox root, which the path normaliser does not tokenise.
