@@ -62,7 +62,7 @@ from typing import Literal
 from click.testing import Result
 from pydantic import BaseModel, Field, JsonValue
 
-from cadrumo.adapters.persistence.storage import dispose_engine
+from cadrumo.adapters.persistence.storage import close_active_bucket_session, dispose_engine
 from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.config import load_settings, override_settings, suppress_operator_dotenv
 from cadrumo.core.time import frozen_clock
@@ -438,6 +438,10 @@ def sequence_sandbox(
     ``fixtures/...`` input reads the committed artifact's copy and a frame's
     relative ``--output`` lands inside the sandbox, never in the repository.
 
+    Any bound bucket session is evicted on BOTH edges of the scope, so a
+    ``config login`` frame's deliberately unscoped session binding cannot
+    outlive the sandbox that opened it and poison the next one.
+
     Args:
         sequence_id: The owning sequence id, for failure messages.
         sandbox_root: An empty per-sequence directory the sandbox owns.
@@ -463,6 +467,19 @@ def sequence_sandbox(
         shutil.copytree(fixtures, workdir / "fixtures", dirs_exist_ok=True)
 
     dispose_engine()
+    # A login frame binds its BucketSession UNSCOPED (``bind_active_bucket_session``)
+    # so the session outlives the CLI call — correct for a real operator, whose
+    # every command is its own process. This engine invokes the CLI IN-PROCESS, so
+    # without an explicit eviction that binding survives sandbox teardown: the next
+    # sandbox's root callback short-circuits on ``has_active_bucket_session()``
+    # instead of resuming for its own bucket, and the storage runtime then
+    # (correctly) refuses every profile-bound verb because the route bucket (this
+    # sandbox's pointer) is not the session bucket (the previous sandbox's). The
+    # stale session also holds an engine handle on the torn-down sandbox's
+    # database. Evicting on BOTH edges — entry covers a sandbox that raised — is
+    # the same per-call relock discipline the MCP warm in-process transport
+    # applies, through the same canonical primitive.
+    close_active_bucket_session()
     with (
         _neutralized_ambient_env(),
         _isolated_external_tool_env(sandbox_root),
@@ -482,12 +499,15 @@ def sequence_sandbox(
     ):
         _provision_sandbox_profile()
         effective_settings = load_settings()
-        yield SequenceSandbox(
-            storage_root=Path(effective_settings.cadrumo_local_storage_root),
-            workdir=workdir.resolve(),
-            profile_id=SANDBOX_PROFILE_ID,
-            frozen_instant=SANDBOX_INSTANT,
-        )
+        try:
+            yield SequenceSandbox(
+                storage_root=Path(effective_settings.cadrumo_local_storage_root),
+                workdir=workdir.resolve(),
+                profile_id=SANDBOX_PROFILE_ID,
+                frozen_instant=SANDBOX_INSTANT,
+            )
+        finally:
+            close_active_bucket_session()
 
 
 def _interpolation_text(value: CapturedScalar) -> str:

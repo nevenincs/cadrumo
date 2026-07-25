@@ -34,6 +34,7 @@ from .. import (
     SequenceTranscript,
     execute_sequence,
     parse_sequence,
+    sequence_sandbox,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
@@ -158,6 +159,98 @@ class TestSandboxIsolationAndDeterminism:
         assert residual_names <= GOLDEN_MASK_FIELDS
 
         assert rerun.captures == chain_transcript.captures
+
+
+class TestSandboxEvictsBoundBucketSession:
+    """A login frame's unscoped session binding must not outlive its sandbox.
+
+    ``config login`` binds its :class:`BucketSession` through the UNSCOPED
+    ``bind_active_bucket_session`` so the login survives the call — correct for a
+    real operator, whose every command is its own process. This engine invokes
+    the CLI in-process, so the binding otherwise survives sandbox teardown; the
+    next sandbox's root callback then short-circuits on
+    ``has_active_bucket_session()`` instead of resuming for its own bucket, and
+    the storage runtime correctly refuses every profile-bound verb because the
+    route bucket is not the session bucket.
+    """
+
+    _LOGIN_BODY = "\n".join(
+        [
+            "@setup aeat config profile create me --quiet --entity-type natural_person"
+            ' --tax-id 87654321X --name "Ana" --surnames "Garcia Lopez"',
+            "@setup aeat config repair profile --clear-active --yes",
+            "@result aeat --format json config login me",
+            "@expect exit_code == 0",
+        ],
+    )
+
+    def test_login_binding_is_evicted_at_teardown(self, tmp_path: Path) -> None:
+        """A real login binds a real session inside, and nothing survives outside."""
+        from cadrumo.adapters.persistence.storage.master_key import current_active_bucket_session
+        from cadrumo.tests.cli_runner import invoke_cached_cli
+
+        assert current_active_bucket_session() is None, "a prior test leaked a bucket session"
+
+        with sequence_sandbox(sequence_id="runner-session-leak", sandbox_root=tmp_path / "login"):
+            created = invoke_cached_cli(
+                [
+                    "config",
+                    "profile",
+                    "create",
+                    "me",
+                    "--quiet",
+                    "--entity-type",
+                    "natural_person",
+                    "--tax-id",
+                    "87654321X",
+                    "--name",
+                    "Ana",
+                    "--surnames",
+                    "Garcia Lopez",
+                ],
+            )
+            assert created.exit_code == 0, created.stderr
+            cleared = invoke_cached_cli(["config", "repair", "profile", "--clear-active", "--yes"])
+            assert cleared.exit_code == 0, cleared.stderr
+            logged_in = invoke_cached_cli(["--format", "json", "config", "login", "me"])
+            assert logged_in.exit_code == 0, logged_in.stderr
+
+            # Anti-vacuity: the login really bound a session, and for a bucket
+            # that is NOT this sandbox's injected profile — exactly the binding
+            # that used to poison the next sandbox. Without this assertion the
+            # post-teardown check below would pass on a run where nothing bound.
+            bound = current_active_bucket_session()
+            assert bound is not None
+            assert bound.bucket_id != SANDBOX_PROFILE_ID
+
+        assert current_active_bucket_session() is None
+
+    def test_profile_bound_verb_serves_in_the_sandbox_after_a_login_sandbox(self, tmp_path: Path) -> None:
+        """The operator-facing symptom: the NEXT sequence must still be served.
+
+        Executed as two real sequences in two real sandboxes, the shape the
+        ``how-to/troubleshooting`` page runs. With the binding left standing the
+        second sequence exits 4 (``INTEGRITY_STORAGE_VALIDATION``: the database
+        route does not match the active bucket session) and
+        :func:`execute_sequence` raises.
+        """
+        execute_sequence(
+            _result_sequence(self._LOGIN_BODY, sequence_id="runner-session-leak-a"),
+            sandbox_root=tmp_path / "leak-a",
+        )
+
+        follower = execute_sequence(
+            _result_sequence(
+                "@result aeat --format json config auth diagnostics list\n@expect exit_code == 0\n",
+                sequence_id="runner-session-leak-b",
+            ),
+            sandbox_root=tmp_path / "leak-b",
+        )
+
+        result_frame = follower.result_frame
+        assert result_frame.exit_code == 0
+        assert result_frame.envelope is not None
+        assert result_frame.envelope["status"] == "success"
 
 
 class TestLiveAeatRefusal:
@@ -389,9 +482,11 @@ class TestAmbientEnvNeutralisation:
             assert all("PATH" in status.remediation for status in providers)
             assert browser.available is False
             assert browser.remediation == "playwright install chromium"
-            assert os.environ["PATH"] == str(tmp_path / "scope" / "external-tools")
+            # Both pins live BENEATH the sandbox workdir so the golden path
+            # normaliser rewrites their per-run root to ``<sandbox-workdir>``.
+            assert os.environ["PATH"] == str(tmp_path / "scope" / "workdir" / ".external-tools")
             assert os.environ["PLAYWRIGHT_BROWSERS_PATH"] == str(
-                tmp_path / "scope" / "playwright-browsers",
+                tmp_path / "scope" / "workdir" / ".playwright-browsers",
             )
 
         assert os.environ.get("PATH") == original_path
