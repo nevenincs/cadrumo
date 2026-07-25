@@ -45,6 +45,7 @@ __all__ = [
     "_MODELO_202_SYNTHETIC_FIXTURE",
     "_MODELO_232_2016_SYNTHETIC_FIXTURE",
     "_MODELO_232_2018_SYNTHETIC_FIXTURE",
+    "_MODELO_303_SYNTHETIC_FIXTURE",
     "_MODELO_347_SYNTHETIC_FIXTURE",
     "_MODELO_349_SYNTHETIC_FIXTURE",
     "_MODELO_369_SYNTHETIC_FIXTURE",
@@ -52,7 +53,6 @@ __all__ = [
     "_MODELO_840_SYNTHETIC_FIXTURE",
     "_REAL_DECLARATION_COPY",
     "_REAL_MODELO_190_DECLARATION_COPY",
-    "_REAL_MODELO_303_DECLARATION_COPY",
     "CadrumoError",
     "CasillaId",
     "Decimal",
@@ -78,7 +78,15 @@ _REAL_DECLARATION_COPY = FIXTURES_DIR / "justificantes" / "130" / "2024-1T.pdf"
 
 _MODELO_349_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "349" / "2024-1T.pdf"
 
-_REAL_MODELO_303_DECLARATION_COPY = FIXTURES_DIR / "justificantes" / "303" / "2024-1T.pdf"
+# Named for what it is. This fixture was previously called
+# _REAL_MODELO_303_DECLARATION_COPY, but its sidecar declares
+# ``provenance = "synthetic_generated"``: it is produced by this project's own
+# fixture generator, not by AEAT. The old name asserted an external grounding
+# the file does not carry, which is the same class of error as a profile
+# claiming to read boxes the form does not print. There is consequently no
+# real-render M303 parser test in the suite; that gap is real and is recorded
+# rather than papered over by the name.
+_MODELO_303_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "303" / "2024-1T.pdf"
 
 _REAL_MODELO_190_DECLARATION_COPY = FIXTURES_DIR / "justificantes" / "190" / "2024-0A.pdf"
 

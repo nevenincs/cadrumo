@@ -1,24 +1,36 @@
-"""Anti-tautology proof: the M303 engine sums extracted primitive leaves.
+"""Anti-tautology proofs for the M303 devengada chain.
 
-Per the engine-and-fixture co-landing rule and the M303-specific
-synthetic-generator primitive spec, a synthetic-fixture round trip that depends on the engine
-recomputing a total from extracted primitives MUST carry an anti-tautology
-test that proves the engine is actually summing the primitives — not, for
-example, copying the printed total or silently substituting a zero default.
+Two properties are defended here, and they now live on two different paths
+because the declaración extraction profile targets only what AEAT prints.
 
-The probe: parse one M303 corpus PDF, mutate ``iva.repercutido.general``
-(the engine's primary devengada-total summand) by a known delta, re-run the
-engine on the mutated inputs, and assert ``iva.cuota-devengada-total`` shifted
-by exactly that delta. If the engine were copying the printed box-27 total or
-ignoring the primitive entirely, the post-mutation devengada-total would be
-unchanged and the test would fail loudly.
+**The engine sums its primitive leaves** (calculate path). A round trip that
+depends on the engine recomputing a total from per-rate cuota primitives MUST
+carry a proof that the engine is actually summing them — not copying a printed
+total, and not silently substituting a zero default. The probe mutates
+``iva.repercutido.general`` by a known delta and asserts
+``iva.cuota-devengada-total`` shifts by exactly that delta.
+
+This proof used to source its primitive from a parsed corpus PDF. It no longer
+can: the printed AEAT form does not carry per-rate cuota primitives, so the
+profile stopped targeting them, and the printed totals cannot be substituted
+because the engine refuses computed casillas as inputs. The primitive is
+therefore supplied directly, which is how the calculate path supplies it in
+production — from ledger aggregation rather than from a document. The property
+being defended is unchanged; only the input path moved.
+
+**The printed-arithmetic assertion can fail** (parse path). The parse path now
+asserts a property of the document — box 46 == box 27 − box 45 — instead of
+running the engine. An assertion that cannot fail is not a guard, so its
+falsifiability is proven here by perturbing each printed amount in turn and
+confirming refusal.
 
 Grounded authority:
-    Orden EHA/3786/2008 art. 1 (box 27 = total cuota devengada).
-    2023-y-siguientes ``modelo-303-iva-cuota-devengada-total`` formula
-    (revision.toml lines 178-205): add(iva.repercutido.general,
-    iva.repercutido.reducido, iva.repercutido.super-reducido,
-    iva.autorepercutido.intracomunitaria, iva.autoconsumo.promotor.cuota).
+    Orden EHA/3786/2008 art. 1 (box 27 = total cuota devengada,
+    box 45 = total a deducir, box 46 = box 27 - box 45).
+    2023-y-siguientes ``modelo-303-iva-cuota-devengada-total`` formula:
+    add(iva.repercutido.general, iva.repercutido.reducido,
+    iva.repercutido.super-reducido, iva.autorepercutido.intracomunitaria,
+    iva.autoconsumo.promotor.cuota).
 """
 
 from __future__ import annotations
@@ -26,16 +38,16 @@ from __future__ import annotations
 import pytest
 
 from ._verification_chain_support import (
-    _COMPUTED_CASILLAS_M303,
+    _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
     _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
+    _M303_RESULTADO_REGIMEN_GENERAL_CASILLA,
     _M303_STATE_ATTRIBUTION_RATIO_CASILLA,
     BindingId,
     CasillaId,
     Decimal,
+    _assert_m303_printed_resultado_regimen_general_arithmetic,
     _calculate_m303_engine_values_from_inputs,
     _casilla_id,
-    _decimal_inputs_from_extracted_values,
-    _parse_extracted_declaracion_values,
 )
 
 pytestmark = [
@@ -73,35 +85,36 @@ def _run_engine(inputs: dict[CasillaId, Decimal], year: int, period: str) -> dic
     return engine_values
 
 
-def test_m303_engine_sums_extracted_primitives_not_printed_total() -> None:
+def test_m303_engine_sums_supplied_primitives_not_a_printed_total() -> None:
     """Mutating ``iva.repercutido.general`` shifts ``iva.cuota-devengada-total`` by the same delta.
 
-    Proves the engine is summing the primitive leaves rather than copying the
-    printed box-27 total. A passing test guarantees that the verification-chain
-    greens reflect genuine engine recomputation; a regression that lets the
-    printed total leak into the engine (e.g. by an extraction profile change
-    that bypasses the primitives) will fail this test loudly with a
-    devengada-total that did not move under the mutation.
+    Proves the engine sums the primitive leaves. The baseline primitive value is
+    an INPUT, not an expected result, so no external oracle is required: the
+    property under test is the delta identity, which holds for any input.
+
+    Failure modes covered: the engine stops summing the primitive; the engine
+    substitutes a zero default for a supplied primitive; a formula change drops
+    the summand. (The former "extraction copies the printed total instead of the
+    primitive" mode is no longer reachable — extraction does not supply
+    primitives at all — so it is deliberately not claimed here.)
     """
-    extracted = _parse_extracted_declaracion_values(modelo="303", fixture_stem="2023-1T", year=2023, period="1T")
-
-    # Confirm the primitive leaf was extracted; otherwise the mutation probe
-    # is meaningless (we would be poking a key the engine never reads).
-    primitive = extracted.get(_IVA_REPERCUTIDO_GENERAL_CASILLA)
-    assert isinstance(primitive, Decimal), (
-        "ANTI-TAUTOLOGY-PRECONDITION-FAIL: 'iva.repercutido.general' missing or non-Decimal in extracted "
-        "values. The fixture/extraction profile no longer delivers the primitive the engine sums into "
-        f"iva.cuota-devengada-total.\n  got: {primitive!r}"
-    )
-
-    # Baseline inputs: every extracted non-computed Decimal leaf.
-    base_inputs = _decimal_inputs_from_extracted_values(extracted, excluding=_COMPUTED_CASILLAS_M303)
-    base_inputs[_M303_STATE_ATTRIBUTION_RATIO_CASILLA] = Decimal("100")
+    primitive = Decimal("21000.00")
+    base_inputs: dict[CasillaId, Decimal] = {
+        _IVA_REPERCUTIDO_GENERAL_CASILLA: primitive,
+        _M303_STATE_ATTRIBUTION_RATIO_CASILLA: Decimal("100"),
+    }
 
     base_values = _run_engine(base_inputs, 2023, "1T")
     base_devengada = base_values[_M303_CUOTA_DEVENGADA_TOTAL_CASILLA]
 
-    # Mutate the primitive by a known delta and re-run.
+    # A zero baseline would make the delta assertion pass even if the engine
+    # ignored the primitive entirely and returned 0 both times.
+    assert base_devengada == primitive, (
+        "ANTI-TAUTOLOGY-PRECONDITION-FAIL: the engine did not carry the supplied "
+        f"primitive into iva.cuota-devengada-total.\n  supplied = {primitive!r}\n"
+        f"  devengada-total = {base_devengada!r}"
+    )
+
     delta = Decimal("100.00")
     mutated_inputs = dict(base_inputs)
     mutated_inputs[_IVA_REPERCUTIDO_GENERAL_CASILLA] = primitive + delta
@@ -111,12 +124,72 @@ def test_m303_engine_sums_extracted_primitives_not_printed_total() -> None:
     assert mutated_devengada - base_devengada == delta, (
         "ANTI-TAUTOLOGY-FAIL: mutating iva.repercutido.general by "
         f"{delta} should shift iva.cuota-devengada-total by exactly that amount.\n"
-        f"  base iva.repercutido.general    = {primitive!r}\n"
-        f"  base iva.cuota-devengada-total  = {base_devengada!r}\n"
-        f"  mutated iva.repercutido.general = {primitive + delta!r}\n"
+        f"  base iva.repercutido.general      = {primitive!r}\n"
+        f"  base iva.cuota-devengada-total    = {base_devengada!r}\n"
+        f"  mutated iva.repercutido.general   = {primitive + delta!r}\n"
         f"  mutated iva.cuota-devengada-total = {mutated_devengada!r}\n"
-        f"  observed delta                  = {mutated_devengada - base_devengada!r}\n"
-        "Failure modes covered: extraction profile copies printed total instead of primitive; "
-        "engine formula no longer sums the primitive; engine substitutes zero default for the "
-        "supplied primitive."
+        f"  observed delta                    = {mutated_devengada - base_devengada!r}"
     )
+
+
+_PRINTED_27 = Decimal("21000.00")
+_PRINTED_45 = Decimal("4200.00")
+_PRINTED_46 = _PRINTED_27 - _PRINTED_45
+
+
+def _printed_m303_totals() -> dict[CasillaId, Decimal]:
+    return {
+        _M303_CUOTA_DEVENGADA_TOTAL_CASILLA: _PRINTED_27,
+        _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: _PRINTED_45,
+        _M303_RESULTADO_REGIMEN_GENERAL_CASILLA: _PRINTED_46,
+    }
+
+
+def test_m303_printed_arithmetic_assertion_holds_on_a_consistent_document() -> None:
+    """The control: a self-consistent printed triple is accepted."""
+    _assert_m303_printed_resultado_regimen_general_arithmetic(
+        pdf_stem="synthetic-consistent",
+        extracted=_printed_m303_totals(),
+    )
+
+
+@pytest.mark.parametrize(
+    "perturbed_casilla,label",
+    [
+        (_M303_CUOTA_DEVENGADA_TOTAL_CASILLA, "box 27"),
+        (_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA, "box 45"),
+        (_M303_RESULTADO_REGIMEN_GENERAL_CASILLA, "box 46"),
+    ],
+)
+def test_m303_printed_arithmetic_assertion_is_falsifiable(
+    perturbed_casilla: CasillaId,
+    label: str,
+) -> None:
+    """Perturbing any one of the three printed amounts must be refused.
+
+    This is the proof that the parse-path assertion is a guard rather than a
+    decoration. It replaces an engine comparison whose second half was
+    tautological — it compared the engine's resultado against the engine's own
+    ``box 27 - box 45``, which is the registry formula for resultado, so it held
+    by construction and would have passed even at zero.
+    """
+    perturbed = _printed_m303_totals()
+    perturbed[perturbed_casilla] += Decimal("0.01")
+
+    with pytest.raises(AssertionError, match="DOCUMENT-INCONSISTENT"):
+        _assert_m303_printed_resultado_regimen_general_arithmetic(
+            pdf_stem=f"synthetic-perturbed-{label.replace(' ', '-')}",
+            extracted=perturbed,
+        )
+
+
+def test_m303_printed_arithmetic_assertion_refuses_a_missing_box() -> None:
+    """A printed amount absent from the parse is refused, not silently skipped."""
+    incomplete = _printed_m303_totals()
+    del incomplete[_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA]
+
+    with pytest.raises(AssertionError, match="PARSER-GAP"):
+        _assert_m303_printed_resultado_regimen_general_arithmetic(
+            pdf_stem="synthetic-missing-box-45",
+            extracted=incomplete,
+        )

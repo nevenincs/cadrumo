@@ -47,12 +47,6 @@ _M303_CORPUS_STEMS: tuple[str, ...] = tuple(
 
 _M303_CURRENT_PROFILE_CASILLAS: frozenset[str] = frozenset(
     {
-        "iva.repercutido.general",
-        "iva.repercutido.reducido",
-        "iva.repercutido.super-reducido",
-        "iva.autorepercutido.intracomunitaria",
-        "iva.soportado.interiores",
-        "iva.autoconsumo.promotor.base",
         "27",
         "29",
         "37",
@@ -69,11 +63,6 @@ _M303_CURRENT_PROFILE_CASILLAS: frozenset[str] = frozenset(
 )
 _M303_HISTORICAL_PROFILE_CASILLAS: frozenset[str] = frozenset(
     {
-        "iva.repercutido.general",
-        "iva.repercutido.reducido",
-        "iva.repercutido.super-reducido",
-        "iva.autorepercutido.intracomunitaria",
-        "iva.soportado.interiores",
         "27",
         "29",
         "45",
