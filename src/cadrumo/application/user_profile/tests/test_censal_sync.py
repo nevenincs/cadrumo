@@ -191,8 +191,14 @@ class TestReconciliation:
     """Blank paths adopt; equal paths no-op; differing paths are reported."""
 
     def test_blank_paths_are_adopted(self) -> None:
+        """Every ADOPTABLE path adopts onto a blank profile.
+
+        Compared against the adoptable set rather than against everything the
+        read projects, because the projection also carries the fiscal identity
+        for the ownership check and that path is never adopted.
+        """
         outcome = reconcile_censal_read(None, censal_facts_from_read(_read()))
-        assert {fact.path for fact in outcome.adopted} == {fact.path for fact in censal_facts_from_read(_read())}
+        assert {fact.path for fact in outcome.adopted} == set(CENSAL_ADOPTABLE_PATHS)
         assert outcome.divergences == ()
 
     def test_matching_declared_value_is_neither_adopted_nor_reported(
@@ -346,7 +352,22 @@ class TestIdentityOwnership:
     def test_a_profile_with_no_recorded_identity_still_adopts(self) -> None:
         """The ordinary first-read case must keep working; there is nothing to protect."""
         outcome = reconcile_censal_read(None, censal_facts_from_read(_read(nif="X1234567L")))
-        assert "identity.tax_id" in {fact.path for fact in outcome.adopted}
+        assert {fact.path for fact in outcome.adopted} == set(CENSAL_ADOPTABLE_PATHS)
+
+    def test_the_fiscal_identity_is_projected_but_never_adopted(self) -> None:
+        """It is carried to decide ownership, and cannot carry information past that.
+
+        A read either belongs to this profile, in which case its identity can
+        only agree, or it does not, in which case the whole read refuses before
+        any path is considered. So the path is emitted for the ownership check
+        and must appear in neither outcome.
+        """
+        facts = censal_facts_from_read(_read())
+        assert "identity.tax_id" in {fact.path for fact in facts}
+        assert "identity.tax_id" not in CENSAL_ADOPTABLE_PATHS
+        outcome = reconcile_censal_read(None, facts)
+        assert "identity.tax_id" not in {fact.path for fact in outcome.adopted}
+        assert "identity.tax_id" not in {axis for axis, _ in outcome.divergences}
 
     def test_the_match_ignores_case_and_surrounding_space(self, schema: ProfileSchemaDefinition) -> None:
         """A cosmetic difference is not a different taxpayer."""

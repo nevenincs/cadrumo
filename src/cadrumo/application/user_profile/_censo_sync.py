@@ -55,12 +55,21 @@ _log = get_logger(__name__)
 #: Declared profile paths the censal consulta can fill, in emit order. Every
 #: entry is a key declared by the user-profile schema; the reconciliation
 #: refuses to invent one.
-#: The profile's fiscal identity. Load-bearing twice over: it is adoptable onto
-#: a blank profile, and it is what a read must match before ANY of it is applied.
+#: The profile's fiscal identity. Read from the censal projection to decide
+#: OWNERSHIP of the read, and deliberately not adoptable — see below.
 _TAX_ID_PATH: Final = "identity.tax_id"
 
+#: Declared profile paths the censal consulta can fill, in emit order. Every
+#: entry is a key declared by the user-profile schema; the reconciliation
+#: refuses to invent one.
+#:
+#: ``identity.tax_id`` is deliberately ABSENT. Once the ownership refusal is in
+#: force the path can never carry information: a read either belongs to this
+#: profile, in which case its identity can only agree and adopting it is a
+#: no-op, or it does not, in which case the whole read refuses before any path
+#: is considered. A field that cannot carry information should not sit in an
+#: adoptable set, where its presence implies it might.
 CENSAL_ADOPTABLE_PATHS: Final = (
-    _TAX_ID_PATH,
     "contact.fiscal_address",
     "contact.postcode",
     "contact.fiscal_address_cadastral_reference",
@@ -173,22 +182,28 @@ def censal_facts_from_read(result: CensalDatosResult) -> tuple[UserProfileFact, 
     authority in the read for where the boundary falls, so the projection
     declines to guess rather than write a plausible-looking wrong name.
 
+    The fiscal identity is projected but is NOT adoptable. It is carried so
+    the reconciliation can decide whether the read belongs to this profile
+    at all; it is never written, because once that refusal is in force the
+    path cannot carry information either way.
+
     Args:
         result: The parsed censal consulta read.
 
     Returns:
-        The projected facts, in :data:`CENSAL_ADOPTABLE_PATHS` order,
-        omitting any path the read left empty.
+        The projected facts, identity first and then
+        :data:`CENSAL_ADOPTABLE_PATHS` order, omitting any path the read
+        left empty.
     """
     candidates: dict[str, str | None] = {
-        "identity.tax_id": result.identity.nif,
+        _TAX_ID_PATH: result.identity.nif,
         "contact.fiscal_address": _compose_address(result.domicilio_fiscal),
         "contact.postcode": result.domicilio_fiscal.codigo_postal,
         "contact.fiscal_address_cadastral_reference": result.domicilio_fiscal.referencia_catastral,
     }
     return tuple(
         UserProfileFact(path=path, value=value, source=CENSO_SOURCE_TAG)
-        for path in CENSAL_ADOPTABLE_PATHS
+        for path in (_TAX_ID_PATH, *CENSAL_ADOPTABLE_PATHS)
         if (value := (candidates[path] or "").strip())
     )
 
@@ -248,6 +263,11 @@ def reconcile_censal_read(
     adopted: list[UserProfileFact] = []
     divergences: list[tuple[str, str]] = []
     for fact in facts:
+        if fact.path == _TAX_ID_PATH:
+            # Carried only to decide ownership above. Past that refusal the
+            # identity can only ever agree, so adopting it would be a no-op
+            # and reporting it a divergence would be a contradiction.
+            continue
         effective = existing.get(fact.path)
         incoming = str(fact.value)
         if effective is None:
