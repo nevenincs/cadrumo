@@ -2716,7 +2716,8 @@ cli:
           el 21% (art. 90 LISIVA) per calcular la quota meritada. Només aplicable
           al Model 303.'
         autoconsumo_promotor_base_not_decimal: '--autoconsumo-promotor-base ha de
-          ser un import decimal; rebut: {value}'
+          ser un import decimal; s''ha rebut: {value}. Utilitzeu el punt com a separador
+          decimal i sense separador de milers, p. ex. 1234.56.'
         borrador_help: Id del snapshot de borrador del model 100 (complet o prefix
           no ambigu). Els seus valors de binding s'usen només per a bindings marcats
           aeat_prefilled; les sobrescriptures --binding de l'operador sempre tenen
@@ -2953,18 +2954,21 @@ cli:
           Social per baixa de maternitat o paternitat. NO l''incloguis a --casilla
           0003 (Retribucions dineràries).
         prestacion_inss_exenta_not_decimal: '--prestacion-inss-exenta ha de ser un
-          import decimal; s''ha rebut: {value}.'
+          import decimal; s''ha rebut: {value}. Utilitzeu el punt com a separador
+          decimal i sense separador de milers, p. ex. 1234.56.'
         preview_maritime_exemption_annual_salary_help: Salari anual brut en EUR (Decimal).
           Obligatori quan el perfil actiu compleix els requisits de l'Art. 7.p) (vessel_flag=foreign
           o waters_type=international).
         preview_maritime_exemption_annual_salary_not_decimal: '--annual-salary ha
-          de ser un import decimal; s''ha rebut: {value}.'
+          de ser un import decimal; s''ha rebut: {value}. Utilitzeu el punt com a
+          separador decimal i sense separador de milers, p. ex. 1234.56.'
         preview_maritime_exemption_gross_navigation_income_help: Total d'ingressos
           bruts de treball procedents de la navegació en EUR (Decimal). Obligatori
           quan el perfil actiu compleix REBECA (vessel_registry a REBECA / rebeca_eu_eea
           / scheduled_canary_route).
         preview_maritime_exemption_gross_navigation_income_not_decimal: '--gross-navigation-income
-          ha de ser un import decimal; s''ha rebut: {value}.'
+          ha de ser un import decimal; s''ha rebut: {value}. Utilitzeu el punt com
+          a separador decimal i sense separador de milers, p. ex. 1234.56.'
         preview_maritime_exemption_help: Previsualitza l'exempció IRPF del treballador
           del mar (Art. 7.p) LIRPF / REBECA 50%) a partir dels fets maritime_worker
           del perfil actiu. Emet files CasillaObservation tipades amb legal_refs;
@@ -2996,8 +3000,9 @@ cli:
           en forma de capital (DT 12a LIRPF). Fes-lo servir amb --rescate-plan-pensiones-aportaciones-pre-2007
           i --rescate-plan-pensiones-aportaciones-totales perquè l'assistent calculi
           la reducció del 40% i l'injecti a la casella 0011.
-        rescate_plan_pensiones_not_decimal: Els valors --rescate-plan-pensiones-*
-          han de ser imports decimals.
+        rescate_plan_pensiones_not_decimal: 'Els valors --rescate-plan-pensiones-*
+          han de ser imports decimals; s''ha rebut: {value}. Utilitzeu el punt com
+          a separador decimal i sense separador de milers, p. ex. 1234.56.'
         rescate_type_help: 'Tipus de rescat del pla de pensions (DT 12a LIRPF): total
           (tot el capital de cop) o parcial (cobraments esglaonats). És un senyal
           de classificació i provenance, no canvia l''import: la reducció del 40%
@@ -3060,7 +3065,9 @@ cli:
           (Llei 44/2015 art. 14). S'utilitza per comprovar si la reserva ja arriba
           al primer cèntim per sobre del doble del capital social. Necessari amb --sal-beneficio-neto
           i --sal-capital-social.
-        sal_reserva_not_decimal: Els valors --sal-* han de ser imports decimals.
+        sal_reserva_not_decimal: 'Els valors --sal-* han de ser imports decimals;
+          s''ha rebut: {value}. Utilitzeu el punt com a separador decimal i sense
+          separador de milers, p. ex. 1234.56.'
         selector_ambiguous: Més d'una unitat de treball activa coincideix amb aquest
           modelo/any/període. Trieu una revisió del registre o passeu un id explícit
           d unitat de treball. {candidates}
@@ -3697,6 +3704,7 @@ cli:
       import_requires_path: Indica l'argument RUTA del paquet, o executa l'ordre en
         un terminal interactiu perquè se't pregunti.
       import_uuid_collision: El UUID del paquet entra en conflicte amb un perfil existent.
+      manager_closed: Els canvis a '{profile}' estan desats.
       manager_closed_created: Perfil '{profile}' creat i a punt. Torna a obrir-lo
         quan vulguis amb 'aeat config profile edit'.
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
@@ -3816,7 +3824,6 @@ cli:
       validate_name_help: Etiqueta opcional del perfil a validar; per defecte el perfil
         actiu.
       view_help: Mostrar els fets d''un perfil (per defecte el perfil actiu)
-      manager_closed: 'Els canvis a ''{profile}'' estan desats.'
     recover:
       errors:
         recovery_code_rejected: El codi de recuperació no ha obert l'embolcall de

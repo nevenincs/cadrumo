@@ -2533,7 +2533,8 @@ cli:
           converted to the rental estate. The assistant automatically applies 21%
           (Art. 90 LISIVA) to compute the IVA charge. Applicable to Modelo 303 only.'
         autoconsumo_promotor_base_not_decimal: '--autoconsumo-promotor-base must be
-          a decimal amount; received: {value}'
+          a decimal amount; received: {value}. Use a dot decimal separator with no
+          thousands grouping, e.g. 1234.56.'
         borrador_help: Modelo 100 borrador snapshot id (full or unambiguous prefix).
           Snapshot binding values are used only for registry bindings marked aeat_prefilled;
           caller --binding overrides always take precedence.
@@ -2751,18 +2752,21 @@ cli:
           received from Social Security for maternity or paternity leave. Do NOT include
           this in --casilla 0003 (Retribuciones dinerarias).
         prestacion_inss_exenta_not_decimal: '--prestacion-inss-exenta must be a decimal
-          amount; received: {value}.'
+          amount; received: {value}. Use a dot decimal separator with no thousands
+          grouping, e.g. 1234.56.'
         preview_maritime_exemption_annual_salary_help: Gross annual salary in EUR
           (Decimal). Required when the active profile triggers Art. 7.p) eligibility
           (vessel_flag=foreign or waters_type=international).
         preview_maritime_exemption_annual_salary_not_decimal: '--annual-salary must
-          be a decimal amount; received: {value}.'
+          be a decimal amount; received: {value}. Use a dot decimal separator with
+          no thousands grouping, e.g. 1234.56.'
         preview_maritime_exemption_gross_navigation_income_help: Total gross employment
           income from navigation in EUR (Decimal). Required when the active profile
           triggers REBECA eligibility (vessel_registry in REBECA / rebeca_eu_eea /
           scheduled_canary_route).
         preview_maritime_exemption_gross_navigation_income_not_decimal: '--gross-navigation-income
-          must be a decimal amount; received: {value}.'
+          must be a decimal amount; received: {value}. Use a dot decimal separator
+          with no thousands grouping, e.g. 1234.56.'
         preview_maritime_exemption_help: Preview the Art. 7.p) / REBECA maritime worker
           IRPF exemption resolved from the active profile's maritime_worker facts.
           Emits typed CasillaObservation rows with legal_refs; surfaces the RETMAR
@@ -2793,8 +2797,9 @@ cli:
           amount (LIRPF transitional provision 12). Use it with --rescate-plan-pensiones-aportaciones-pre-2007
           and --rescate-plan-pensiones-aportaciones-totales so the assistant calculates
           the 40% reduction and injects it into casilla 0011.
-        rescate_plan_pensiones_not_decimal: --rescate-plan-pensiones-* values must
-          be decimal amounts.
+        rescate_plan_pensiones_not_decimal: '--rescate-plan-pensiones-* values must
+          be decimal amounts; received: {value}. Use a dot decimal separator with
+          no thousands grouping, e.g. 1234.56.'
         rescate_type_help: 'Pension-plan capital rescate type (LIRPF DT 12a): total
           (whole capital at once) or parcial (staged withdrawals). A classification
           and provenance signal, not an amount change: the 40% reduction applies to
@@ -2855,7 +2860,8 @@ cli:
           (Law 44/2015 Art. 14). Used to check whether the reserve has reached the
           first euro cent above twice share capital. Required with --sal-beneficio-neto
           and --sal-capital-social.
-        sal_reserva_not_decimal: --sal-* values must be decimal amounts.
+        sal_reserva_not_decimal: '--sal-* values must be decimal amounts; received:
+          {value}. Use a dot decimal separator with no thousands grouping, e.g. 1234.56.'
         selector_ambiguous: More than one active work unit matches this modelo/year/period.
           Choose a registry revision or pass an explicit work-unit id. {candidates}
         selector_not_found: No active work unit matches this modelo, year, and period.

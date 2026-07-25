@@ -130,12 +130,18 @@ def register_maritime_commands(
         annual_salary_decimal = optional_decimal_option(
             annual_salary,
             translation_key="cli.app.modelo.work.preview_maritime_exemption_annual_salary_not_decimal",
-            default="--annual-salary must be a decimal amount; received: {value}",
+            default=(
+                "--annual-salary must be a decimal amount; received: {value}. "
+                "Use a dot decimal separator with no thousands grouping, e.g. 1234.56."
+            ),
         )
         gross_navigation_decimal = optional_decimal_option(
             gross_navigation_income,
             translation_key=("cli.app.modelo.work.preview_maritime_exemption_gross_navigation_income_not_decimal"),
-            default="--gross-navigation-income must be a decimal amount; received: {value}",
+            default=(
+                "--gross-navigation-income must be a decimal amount; received: {value}. "
+                "Use a dot decimal separator with no thousands grouping, e.g. 1234.56."
+            ),
         )
 
         try:

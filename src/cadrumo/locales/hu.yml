@@ -2666,7 +2666,8 @@ cli:
           a 21%-ot (LISIVA 90. cikk) az esedékes ÁFA kiszámításához. Csak a 303-as
           modellre alkalmazható.'
         autoconsumo_promotor_base_not_decimal: 'Az --autoconsumo-promotor-base értéknek
-          decimális összegnek kell lennie; kapott érték: {value}'
+          decimális összegnek kell lennie; kapott érték: {value}. Használjon tizedespontot
+          ezreselválasztó nélkül, pl. 1234.56.'
         borrador_help: Modelo 100 borrador pillanatkép-azonosítója (teljes vagy egyértelmű
           előtag). A pillanatkép-kötési értékeket csak az aeat_prefilled-ként jelölt
           nyilvántartási kötéseknél használják; a hívó --binding felülbírálatok mindig
@@ -2897,19 +2898,22 @@ cli:
           Adja meg a Társadalombiztosítástól (Seguridad Social) kapott bruttó anyasági
           vagy apasági táppénz összegét. NE adja meg a --casilla 0003 (Retribuciones
           dinerarias) opcióban.
-        prestacion_inss_exenta_not_decimal: '--prestacion-inss-exenta értékének decimálisnak
-          kell lennie; a kapott érték: {value}.'
+        prestacion_inss_exenta_not_decimal: 'A --prestacion-inss-exenta értéknek decimális
+          összegnek kell lennie; kapott érték: {value}. Használjon tizedespontot ezreselválasztó
+          nélkül, pl. 1234.56.'
         preview_maritime_exemption_annual_salary_help: Éves bruttó munkabér EUR-ban
           (Decimal). Akkor kötelező, ha az aktív profil teljesíti az Art. 7.p) feltételeit
           (vessel_flag=foreign vagy waters_type=international).
-        preview_maritime_exemption_annual_salary_not_decimal: '--annual-salary decimális
-          összeg kell legyen; megkapott érték: {value}.'
+        preview_maritime_exemption_annual_salary_not_decimal: 'Az --annual-salary
+          értéknek decimális összegnek kell lennie; kapott érték: {value}. Használjon
+          tizedespontot ezreselválasztó nélkül, pl. 1234.56.'
         preview_maritime_exemption_gross_navigation_income_help: 'Hajózásból származó
           összes bruttó munkajövedelem EUR-ban (Decimal). Akkor kötelező, ha az aktív
           profil teljesíti a REBECA feltételeit (vessel_registry: REBECA / rebeca_eu_eea
           / scheduled_canary_route).'
-        preview_maritime_exemption_gross_navigation_income_not_decimal: '--gross-navigation-income
-          decimális összeg kell legyen; megkapott érték: {value}.'
+        preview_maritime_exemption_gross_navigation_income_not_decimal: 'A --gross-navigation-income
+          értéknek decimális összegnek kell lennie; kapott érték: {value}. Használjon
+          tizedespontot ezreselválasztó nélkül, pl. 1234.56.'
         preview_maritime_exemption_help: Tengeri munkavállalói IRPF-mentesség (Art.
           7.p) LIRPF / REBECA 50%) előzetes számítása az aktív profil maritime_worker
           tényei alapján. Típusos CasillaObservation sorokat ad ki legal_refs adatokkal;
@@ -2943,8 +2947,9 @@ cli:
           bruttó összege (LIRPF 12. átmeneti rendelkezés). Használd együtt a --rescate-plan-pensiones-aportaciones-pre-2007
           és --rescate-plan-pensiones-aportaciones-totales opciókkal, hogy az asszisztens
           kiszámítsa a 40%-os csökkentést és a 0011-es mezőbe írja.
-        rescate_plan_pensiones_not_decimal: A --rescate-plan-pensiones-* értékeknek
-          decimális összegeknek kell lenniük.
+        rescate_plan_pensiones_not_decimal: 'A --rescate-plan-pensiones-* értékeknek
+          decimális összegeknek kell lenniük; kapott érték: {value}. Használjon tizedespontot
+          ezreselválasztó nélkül, pl. 1234.56.'
         rescate_type_help: 'A nyugdíjpénztári tőke visszaváltásának típusa (LIRPF
           DT 12a): total (a teljes tőke egyszerre) vagy parcial (részletekben). Osztályozási
           és eredetjelző jel, nem változtatja meg az összeget: a 40%-os csökkentés
@@ -3008,7 +3013,9 @@ cli:
           törvény 14. cikk). Annak ellenőrzésére szolgál, hogy a tartalék már elérte-e
           a jegyzett tőke kétszeresét egy eurócenttel meghaladó összeget. Szükséges
           a --sal-beneficio-neto és --sal-capital-social opciókkal együtt.
-        sal_reserva_not_decimal: A --sal-* értékeknek decimális összegeknek kell lenniük.
+        sal_reserva_not_decimal: 'A --sal-* értékeknek decimális összegeknek kell
+          lenniük; kapott érték: {value}. Használjon tizedespontot ezreselválasztó
+          nélkül, pl. 1234.56.'
         selector_ambiguous: Több aktív munkaegység illeszkedik erre a modell/év/időszak
           párosra. Válasszon nyilvántartási revíziót vagy adjon meg pontos munkaegység-azonosítót.
           {candidates}
@@ -3650,6 +3657,7 @@ cli:
       import_requires_path: Add meg a csomag ÚTVONAL argumentumát, vagy futtasd interaktív
         terminálban, és a program bekéri.
       import_uuid_collision: A csomagban lévő UUID ütközik egy meglévő profillal.
+      manager_closed: A(z) '{profile}' módosításai mentve.
       manager_closed_created: A(z) '{profile}' profil létrejött és készen áll. Bármikor
         újranyithatod az 'aeat config profile edit' paranccsal.
       no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create
@@ -3775,7 +3783,6 @@ cli:
       validate_name_help: 'A validálandó profil opcionális címkéje; alapértelmezett:
         aktív profil.'
       view_help: 'Egy profil adatainak megjelenítése (alapértelmezés: az aktív profil).'
-      manager_closed: 'A(z) ''{profile}'' módosításai mentve.'
     recover:
       errors:
         recovery_code_rejected: A helyreállítási kód nem nyitotta meg a helyreállítási

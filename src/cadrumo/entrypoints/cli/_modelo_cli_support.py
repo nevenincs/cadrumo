@@ -542,23 +542,35 @@ def work_calculate_input_bundle_from_cli(
             prestacion_inss_exenta=optional_decimal_option(
                 prestacion_inss_exenta,
                 translation_key="cli.app.modelo.work.prestacion_inss_exenta_not_decimal",
-                default="--prestacion-inss-exenta must be a decimal amount; received: {value}",
+                default=(
+                    "--prestacion-inss-exenta must be a decimal amount; received: {value}. "
+                    "Use a dot decimal separator with no thousands grouping, e.g. 1234.56."
+                ),
             ),
             meses_trabajo_con_hijo_menor_3=meses_pairs,
             rescate_plan_pensiones_capital=optional_decimal_option(
                 rescate_plan_pensiones_capital,
                 translation_key="cli.app.modelo.work.rescate_plan_pensiones_not_decimal",
-                default="--rescate-plan-pensiones-* values must be decimals.",
+                default=(
+                    "--rescate-plan-pensiones-* values must be decimal amounts; received: {value}. "
+                    "Use a dot decimal separator with no thousands grouping, e.g. 1234.56."
+                ),
             ),
             rescate_plan_pensiones_aportaciones_pre_2007=optional_decimal_option(
                 rescate_plan_pensiones_aportaciones_pre_2007,
                 translation_key="cli.app.modelo.work.rescate_plan_pensiones_not_decimal",
-                default="--rescate-plan-pensiones-* values must be decimals.",
+                default=(
+                    "--rescate-plan-pensiones-* values must be decimal amounts; received: {value}. "
+                    "Use a dot decimal separator with no thousands grouping, e.g. 1234.56."
+                ),
             ),
             rescate_plan_pensiones_aportaciones_totales=optional_decimal_option(
                 rescate_plan_pensiones_aportaciones_totales,
                 translation_key="cli.app.modelo.work.rescate_plan_pensiones_not_decimal",
-                default="--rescate-plan-pensiones-* values must be decimals.",
+                default=(
+                    "--rescate-plan-pensiones-* values must be decimal amounts; received: {value}. "
+                    "Use a dot decimal separator with no thousands grouping, e.g. 1234.56."
+                ),
             ),
             rescate_plan_pensiones_tipo=rescate_type,
             rescate_plan_pensiones_contingencia_year=contingencia_year,
@@ -566,22 +578,34 @@ def work_calculate_input_bundle_from_cli(
             sal_beneficio_neto=optional_decimal_option(
                 sal_beneficio_neto,
                 translation_key="cli.app.modelo.work.sal_reserva_not_decimal",
-                default="--sal-* values must be decimals.",
+                default=(
+                    "--sal-* values must be decimal amounts; received: {value}. "
+                    "Use a dot decimal separator with no thousands grouping, e.g. 1234.56."
+                ),
             ),
             sal_reserva_dotada=optional_decimal_option(
                 sal_reserva_dotada,
                 translation_key="cli.app.modelo.work.sal_reserva_not_decimal",
-                default="--sal-* values must be decimals.",
+                default=(
+                    "--sal-* values must be decimal amounts; received: {value}. "
+                    "Use a dot decimal separator with no thousands grouping, e.g. 1234.56."
+                ),
             ),
             sal_capital_social=optional_decimal_option(
                 sal_capital_social,
                 translation_key="cli.app.modelo.work.sal_reserva_not_decimal",
-                default="--sal-* values must be decimals.",
+                default=(
+                    "--sal-* values must be decimal amounts; received: {value}. "
+                    "Use a dot decimal separator with no thousands grouping, e.g. 1234.56."
+                ),
             ),
             autoconsumo_promotor_base=optional_decimal_option(
                 autoconsumo_promotor_base,
                 translation_key="cli.app.modelo.work.autoconsumo_promotor_base_not_decimal",
-                default="--autoconsumo-promotor-base must be a decimal amount; received: {value}",
+                default=(
+                    "--autoconsumo-promotor-base must be a decimal amount; received: {value}. "
+                    "Use a dot decimal separator with no thousands grouping, e.g. 1234.56."
+                ),
             ),
         )
     except CadrumoError:
