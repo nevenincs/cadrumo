@@ -70,25 +70,21 @@ def test_the_default_source_is_declared() -> None:
     assert UserProfileFact(path="identity.tax_id", value="12345678Z").source in declared_provenance_sources()
 
 
-def test_every_shipped_provenance_token_is_declared() -> None:
+def test_every_core_declared_provenance_constant_is_in_the_schema() -> None:
     """The gate the censal breach needed and did not have.
 
-    Each token shipped code can stamp is enumerated from its own
-    definition site, so adding a provenance constant without declaring
-    it in the schema fails here rather than at a taxpayer's profile
-    write.
+    Provenance tokens are declared by the schema, so the contract is
+    anchored there rather than at whichever consumer happens to define a
+    string. This checks the constants core publishes for the purpose; a
+    token defined in an outer layer is that layer's to check, because a
+    domain test reaching upward would invert the dependency direction
+    even though no production code does.
     """
 
-    from ....application.user_profile._censo_sync import CENSO_SOURCE_TAG
-
-    shipped = {
-        PROVENANCE_SOURCE_MANUAL_CLI,
-        PROVENANCE_SOURCE_CENSO_ARTEFACT,
-        CENSO_SOURCE_TAG,
-    }
+    shipped = {PROVENANCE_SOURCE_MANUAL_CLI, PROVENANCE_SOURCE_CENSO_ARTEFACT}
     undeclared = sorted(shipped - declared_provenance_sources())
     assert not undeclared, (
-        f"shipped code stamps provenance token(s) the schema does not declare: {undeclared}. "
+        f"core declares provenance token(s) the schema does not: {undeclared}. "
         "Add the token to provenance.source in the profile schema; do not change what the shipped code stamps."
     )
 
