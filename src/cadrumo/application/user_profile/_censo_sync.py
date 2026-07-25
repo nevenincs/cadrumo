@@ -275,8 +275,17 @@ def reconcile_censal_read(
             continue
         current = effective.value
         if current is None:
-            # Explicitly cleared: the deletion IS the operator's answer.
-            divergences.append((fact.path, incoming))
+            # Cleared. Whose deletion it was decides, exactly as it does
+            # for a value: an operator's clear is an answer to protect, and
+            # one this app wrote is not. Asking the same question of both
+            # branches is the point — the value branch consulted provenance
+            # and this one did not, so a clear the app wrote earned the
+            # protection meant for an operator's decision and the path
+            # would never have been re-populated.
+            if effective.source == CENSO_SOURCE_TAG:
+                adopted.append(fact)
+            else:
+                divergences.append((fact.path, incoming))
         elif not current.strip():
             adopted.append(fact)
         elif current.strip() == incoming.strip():
