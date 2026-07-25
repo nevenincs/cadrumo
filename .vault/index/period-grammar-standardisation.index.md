@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#period-grammar-standardisation'
-date: '2026-07-24'
-modified: '2026-07-24'
+date: '2026-07-25'
+modified: '2026-07-25'
 related:
   - '[[2026-06-11-period-grammar-standardisation-W01-P03-S08]]'
   - '[[2026-06-11-period-grammar-standardisation-W02-P07-S21]]'

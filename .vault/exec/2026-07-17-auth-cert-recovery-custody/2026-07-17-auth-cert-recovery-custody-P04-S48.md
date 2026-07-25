@@ -9,9 +9,6 @@ related:
   - "[[2026-07-17-auth-cert-recovery-custody-plan]]"
 ---
 
-
-
-
 # Discriminate a real console from a bare character device before prompting, so a NUL or console-less stdin refuses instead of blocking forever in msvcrt.getwch, and apply the same precondition to the recovery-code terminal display
 
 ## Scope

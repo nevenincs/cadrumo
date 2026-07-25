@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#distribution-harness-identity'
-date: '2026-07-24'
-modified: '2026-07-24'
+date: '2026-07-25'
+modified: '2026-07-25'
 related:
   - '[[2026-07-16-distribution-harness-identity-adr]]'
   - '[[2026-07-16-distribution-harness-identity-research]]'

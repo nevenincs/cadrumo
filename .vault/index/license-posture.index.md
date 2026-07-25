@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#license-posture'
-date: '2026-07-24'
-modified: '2026-07-24'
+date: '2026-07-25'
+modified: '2026-07-25'
 related:
   - '[[2026-07-12-license-posture-adr]]'
   - '[[2026-07-12-license-posture-research]]'

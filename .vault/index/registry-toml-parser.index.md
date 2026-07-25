@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-toml-parser'
-date: '2026-07-24'
-modified: '2026-07-24'
+date: '2026-07-25'
+modified: '2026-07-25'
 related:
   - '[[2026-07-07-registry-toml-parser-adr]]'
   - '[[2026-07-10-registry-toml-parser-research]]'

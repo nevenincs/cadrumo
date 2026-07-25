@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#invoice-catalogue'
-date: '2026-07-24'
-modified: '2026-07-24'
+date: '2026-07-25'
+modified: '2026-07-25'
 related:
   - '[[2026-04-17-invoice-catalogue-adr]]'
   - '[[2026-04-17-invoice-catalogue-plan]]'

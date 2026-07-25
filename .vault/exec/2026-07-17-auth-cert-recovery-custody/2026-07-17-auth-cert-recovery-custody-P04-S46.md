@@ -9,9 +9,6 @@ related:
   - "[[2026-07-17-auth-cert-recovery-custody-plan]]"
 ---
 
-
-
-
 # Refuse in prompt_secret_no_echo when getpass cannot guarantee echo suppression, guarding the win32 sys.__stdin__ identity precondition, promoting GetPassWarning to a typed refusal, and catching OSError, proven by real-subprocess regressions
 
 ## Scope

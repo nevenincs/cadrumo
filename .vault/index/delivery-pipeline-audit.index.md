@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#delivery-pipeline-audit'
-date: '2026-07-24'
-modified: '2026-07-24'
+date: '2026-07-25'
+modified: '2026-07-25'
 related:
   - '[[2026-07-24-delivery-pipeline-audit-adr]]'
   - '[[2026-07-24-delivery-pipeline-audit-audit]]'

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m303-refund-fichero-block'
-date: '2026-07-24'
-modified: '2026-07-24'
+date: '2026-07-25'
+modified: '2026-07-25'
 related:
   - '[[2026-06-24-m303-refund-fichero-block-P01-S01]]'
   - '[[2026-06-24-m303-refund-fichero-block-P01-S02]]'

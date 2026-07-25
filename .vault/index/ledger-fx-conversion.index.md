@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ledger-fx-conversion'
-date: '2026-07-24'
-modified: '2026-07-24'
+date: '2026-07-25'
+modified: '2026-07-25'
 related:
   - '[[2026-06-02-ledger-fx-conversion-adr]]'
   - '[[2026-06-02-ledger-fx-conversion-research]]'

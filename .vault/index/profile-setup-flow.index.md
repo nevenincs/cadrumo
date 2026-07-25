@@ -40,6 +40,7 @@ related:
   - '[[2026-07-23-profile-setup-flow-W04-P09-S29]]'
   - '[[2026-07-23-profile-setup-flow-W04-P09-S30]]'
   - '[[2026-07-23-profile-setup-flow-W04-P09-S31]]'
+  - '[[2026-07-23-profile-setup-flow-W04-P09-S33]]'
   - '[[2026-07-23-profile-setup-flow-W04-P09-S37]]'
   - '[[2026-07-23-profile-setup-flow-adr]]'
   - '[[2026-07-23-profile-setup-flow-integration-shape-audit]]'
@@ -101,6 +102,7 @@ Auto-generated index of all documents tagged with `#profile-setup-flow`.
 - `2026-07-23-profile-setup-flow-W04-P09-S30` - Verify the portable-export shape against the compatibility lifecycle for every schema addition
 - `2026-07-23-profile-setup-flow-W04-P09-S31` - Author the user-facing setup-flow documentation through the documentation workflow with command conformance green
 - `2026-07-23-profile-setup-flow-W04-P09-S37` - Add the AST gate asserting every tr(CONSTANT) call site's constant name carries the locale-key naming convention, closing the scanner-invisible-constant concealment class repo-wide
+- `2026-07-23-profile-setup-flow-W04-P09-S33` - Run the fresh-context campaign-close honesty review and persist the close audit with every surfaced item tracked
 
 ### plan
 

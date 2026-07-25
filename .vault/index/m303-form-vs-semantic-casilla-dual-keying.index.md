@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m303-form-vs-semantic-casilla-dual-keying'
-date: '2026-07-24'
-modified: '2026-07-24'
+date: '2026-07-25'
+modified: '2026-07-25'
 related:
   - '[[2026-06-04-m303-form-vs-semantic-casilla-dual-keying-research]]'
   - '[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-P01-S01]]'

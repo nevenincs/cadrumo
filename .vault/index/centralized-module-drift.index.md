@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#centralized-module-drift'
-date: '2026-07-24'
-modified: '2026-07-24'
+date: '2026-07-25'
+modified: '2026-07-25'
 related:
   - '[[2026-05-27-centralized-module-drift-audit]]'
 ---

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ledger-modelo-crossref'
-date: '2026-07-24'
-modified: '2026-07-24'
+date: '2026-07-25'
+modified: '2026-07-25'
 related:
   - '[[2026-06-10-ledger-modelo-crossref-P01-S01]]'
   - '[[2026-06-10-ledger-modelo-crossref-P01-S02]]'

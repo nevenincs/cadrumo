@@ -9,43 +9,6 @@ related:
   - "[[2026-07-17-ledger-evidence-atomicity-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace ledger-evidence-atomicity with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S23 and 2026-07-17-ledger-evidence-atomicity-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Close the code-review findings on the remediation itself by promoting the one-sided link direction to a core enum consumed by the domain record and the operator payload, carrying typed rows into the notice builder instead of serialised mappings, and cross-linking the concrete repository parameters in the linking docstring, gated on the docstring core-struct module returning green and ## Scope
-
-- `src/cadrumo/core/_invoice_link.py`
-- `src/cadrumo/domain/invoices/_service.py`
-- `src/cadrumo/entrypoints/cli/_ledger_payloads.py`
-- `src/cadrumo/entrypoints/cli/_ledger_read_cli.py`
-- `src/cadrumo/application/invoices/_linking.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Close the code-review findings on the remediation itself by promoting the one-sided link direction to a core enum consumed by the domain record and the operator payload, carrying typed rows into the notice builder instead of serialised mappings, and cross-linking the concrete repository parameters in the linking docstring, gated on the docstring core-struct module returning green
 
 ## Scope

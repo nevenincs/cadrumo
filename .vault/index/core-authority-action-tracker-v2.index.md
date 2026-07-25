@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#core-authority-action-tracker-v2'
-date: '2026-07-24'
-modified: '2026-07-24'
+date: '2026-07-25'
+modified: '2026-07-25'
 related:
   - '[[2026-05-31-core-authority-action-tracker-v2-reference]]'
 ---

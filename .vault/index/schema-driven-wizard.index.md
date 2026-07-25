@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#schema-driven-wizard'
-date: '2026-07-24'
-modified: '2026-07-24'
+date: '2026-07-25'
+modified: '2026-07-25'
 related:
   - '[[2026-05-12-schema-driven-wizard-adr]]'
   - '[[2026-05-12-schema-driven-wizard-phase1-step1-exec]]'

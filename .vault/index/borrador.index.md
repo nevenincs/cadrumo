@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#borrador'
-date: '2026-07-24'
-modified: '2026-07-24'
+date: '2026-07-25'
+modified: '2026-07-25'
 related:
   - '[[2026-05-13-borrador-reference]]'
   - '[[2026-05-13-borrador-research]]'

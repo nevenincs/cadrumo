@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#post-release-distribution'
-date: '2026-07-24'
-modified: '2026-07-24'
+date: '2026-07-25'
+modified: '2026-07-25'
 related:
   - '[[2026-07-17-post-release-distribution-P01-S04]]'
   - '[[2026-07-17-post-release-distribution-P02-S05]]'
@@ -18,6 +18,7 @@ related:
   - '[[2026-07-19-post-release-distribution-adr]]'
   - '[[2026-07-19-post-release-distribution-reference]]'
   - '[[2026-07-21-post-release-distribution-v0-2-1-publication-audit]]'
+  - '[[2026-07-24-post-release-distribution-operator-action-list-reference]]'
 ---
 
 # `post-release-distribution` feature index
@@ -52,3 +53,4 @@ Auto-generated index of all documents tagged with `#post-release-distribution`.
 ### reference
 
 - `2026-07-19-post-release-distribution-reference` - Cadrumo release & orchestration pipeline — holistic review
+- `2026-07-24-post-release-distribution-operator-action-list-reference` - `post-release-distribution` reference: `Operator action list for the 19 externally-blocked steps`

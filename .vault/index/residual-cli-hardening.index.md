@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#residual-cli-hardening'
-date: '2026-07-24'
-modified: '2026-07-24'
+date: '2026-07-25'
+modified: '2026-07-25'
 related:
   - '[[2026-06-12-residual-cli-hardening-code-review-audit]]'
   - '[[2026-06-12-residual-cli-hardening-triage-audit]]'

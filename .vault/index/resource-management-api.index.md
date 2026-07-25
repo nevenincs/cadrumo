@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#resource-management-api'
-date: '2026-07-24'
-modified: '2026-07-24'
+date: '2026-07-25'
+modified: '2026-07-25'
 related:
   - '[[2026-05-16-resource-management-api-adr]]'
   - '[[2026-05-16-resource-management-api-audit]]'

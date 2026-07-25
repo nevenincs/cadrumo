@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#arch-remediation-source-kind-deferrals'
-date: '2026-07-24'
-modified: '2026-07-24'
+date: '2026-07-25'
+modified: '2026-07-25'
 related:
   - '[[2026-07-02-arch-remediation-source-kind-deferrals-S01]]'
   - '[[2026-07-02-arch-remediation-source-kind-deferrals-S02]]'

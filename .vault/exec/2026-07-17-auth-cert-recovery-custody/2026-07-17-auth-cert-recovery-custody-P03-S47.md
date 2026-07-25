@@ -9,9 +9,6 @@ related:
   - "[[2026-07-17-auth-cert-recovery-custody-plan]]"
 ---
 
-
-
-
 # Emit non-secret bucket events for passphrase change and the recovery-code create, rotate, and recover mutations, degrading the trail to a logged no-op when profile storage is locked so it never gates the mutation
 
 ## Scope

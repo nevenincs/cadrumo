@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#desktop-capture-harness'
-date: '2026-07-24'
-modified: '2026-07-24'
+date: '2026-07-25'
+modified: '2026-07-25'
 related:
   - '[[2026-07-21-desktop-capture-harness-adr]]'
   - '[[2026-07-21-desktop-capture-harness-reference]]'

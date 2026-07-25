@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#live-submit-permanently-forbidden'
-date: '2026-07-24'
-modified: '2026-07-24'
+date: '2026-07-25'
+modified: '2026-07-25'
 related:
   - '[[2026-04-27-live-submit-permanently-forbidden-adr]]'
   - '[[2026-04-27-live-submit-permanently-forbidden-issue-116-body-exec]]'

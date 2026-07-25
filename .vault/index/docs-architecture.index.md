@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#docs-architecture'
-date: '2026-07-24'
-modified: '2026-07-24'
+date: '2026-07-25'
+modified: '2026-07-25'
 related:
   - '[[2026-05-30-docs-architecture-W01-P02-S06]]'
   - '[[2026-05-30-docs-architecture-W01-P04-S15]]'

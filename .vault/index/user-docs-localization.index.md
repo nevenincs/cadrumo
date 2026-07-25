@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#user-docs-localization'
-date: '2026-07-24'
-modified: '2026-07-24'
+date: '2026-07-25'
+modified: '2026-07-25'
 related:
   - '[[2026-07-18-user-docs-localization-W01-P01-S01]]'
   - '[[2026-07-18-user-docs-localization-W01-P01-S02]]'

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#prorrata-sectores-diferenciados'
-date: '2026-07-24'
-modified: '2026-07-24'
+date: '2026-07-25'
+modified: '2026-07-25'
 related:
   - '[[2026-07-07-prorrata-sectores-diferenciados-adr]]'
   - '[[2026-07-10-prorrata-sectores-diferenciados-research]]'
