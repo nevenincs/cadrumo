@@ -9,11 +9,10 @@ be unwrapped.
 
 from __future__ import annotations
 
-import os
-import secrets
 from pathlib import Path
 
 from .....core import fsync_parent_dir
+from .....core.atomic_write import atomic_write_text
 from .....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, UTF_8_ENCODING
 from .....core.logging import get_logger
 from .._namespace_registry import BUCKET_OUTPUT_LANGUAGE_HINT_FILENAME
@@ -62,7 +61,7 @@ def write_bucket_output_language_hint(*, storage_root: Path, bucket_id: str, lan
     if normalized is None:
         return False
     target = bucket_output_language_hint_path(storage_root=storage_root, bucket_id=bucket_id)
-    _atomic_write_text(target, normalized + "\n")
+    atomic_write_text(target, normalized + "\n", encoding=UTF_8_ENCODING)
     return True
 
 
@@ -74,25 +73,6 @@ def clear_bucket_output_language_hint(*, storage_root: Path, bucket_id: str) -> 
         fsync_parent_dir(target)
     except FileNotFoundError:
         return
-
-
-def _atomic_write_text(target: Path, text: str) -> None:
-    target.parent.mkdir(parents=True, exist_ok=True)
-    tmp = target.with_name(f"{target.name}.{os.getpid()}.{secrets.token_hex(4)}.tmp")
-    try:
-        with open(tmp, "w", encoding=UTF_8_ENCODING) as handle:
-            handle.write(text)
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(tmp, target)
-        fsync_parent_dir(target)
-    except BaseException:
-        _log.error("bucket output-language hint write failed target=%s", target, exc_info=True)
-        try:
-            tmp.unlink()
-        except OSError:
-            _log.debug("bucket output-language hint temp cleanup failed", exc_info=True)
-        raise
 
 
 __all__ = [

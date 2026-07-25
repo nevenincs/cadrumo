@@ -72,11 +72,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "os.write",
     ): "shared complete-write primitive for the hardened atomic writer's private fd",
     (
-        "src/cadrumo/adapters/persistence/storage/bucket/_output_language_hint.py",
-        "_atomic_write_text",
-        "open",
-    ): "output-language UI preference hint; writes a normalized language-code string, no user financial data",
-    (
         "src/cadrumo/entrypoints/cli/_config/_secure_input.py",
         "write_to_controlling_terminal",
         "open",
