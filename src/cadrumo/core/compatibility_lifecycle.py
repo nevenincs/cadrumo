@@ -154,6 +154,40 @@ def misclassified_floor_keys(
     )
 
 
+def unfloored_durable_formats(
+    released_floors: Mapping[str, int] | None,
+    declared: Mapping[str, PersistedFormatClass],
+) -> tuple[str, ...]:
+    """Return durable formats the frozen floors fail to cover.
+
+    The converse of :func:`misclassified_floor_keys`, and the direction that
+    was missing. That predicate stops a floor being frozen for bytes the
+    application is designed to discard; this one stops taxpayer bytes being
+    left out of the guarantee entirely.
+
+    Without it a checkpoint flip can freeze a proper subset of the durable
+    formats and pass every gate green, because nothing else asserts that a
+    :attr:`PersistedFormatClass.DURABLE` declaration implies a floor. The
+    frozen mapping then reads to every later author as the complete
+    inventory of what the product promises to keep reading, while the
+    formats absent from it silently carry no promise at all — the more
+    dangerous failure, since the omission is invisible precisely where the
+    guarantee is being claimed.
+
+    Returns an empty tuple while ``released_floors`` is ``None``: under
+    ``PRE_RELEASE`` nothing is frozen, so nothing is yet uncovered.
+    """
+    if released_floors is None:
+        return ()
+    return tuple(
+        sorted(
+            key
+            for key, format_class in declared.items()
+            if format_class is PersistedFormatClass.DURABLE and key not in released_floors
+        ),
+    )
+
+
 def expected_floor(
     regime: CompatibilityRegime,
     format_key: str,
@@ -239,4 +273,5 @@ __all__ = [
     "misclassified_floor_keys",
     "stale_persisted_format_declarations",
     "undeclared_persisted_formats",
+    "unfloored_durable_formats",
 ]
