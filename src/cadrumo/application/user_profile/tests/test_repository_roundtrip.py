@@ -78,31 +78,31 @@ def _populated_record() -> UserProfileRecord:
         status=UserProfileStatus.ACTIVE,
         facts=(
             UserProfileFact(
-                path="identity.given_name",
+                path="identity.name",
                 value="Persona",
                 source="manual_cli",
             ),
             UserProfileFact(
-                path="identity.family_name",
+                path="identity.surnames",
                 value="Prueba",
                 source="manual_cli",
             ),
             UserProfileFact(
-                path="residency.municipality_code",
+                path="contact.postcode",
                 value="28079",
-                source="aeat_sede_pull",
+                source="modelo_036_import",
                 valid_from=date(2023, 1, 1),
                 valid_to=date(2024, 12, 31),
             ),
             UserProfileFact(
-                path="iva.recargo_equivalencia.applied",
+                path="contact.fiscal_address_is_habitual_vivienda",
                 value=False,
                 source="manual_cli",
             ),
             UserProfileFact(
-                path="irpf.minimum_personal_amount",
+                path="tax_residence.state_attribution_ratio",
                 value=Decimal("5550.00"),
-                source="aeat_workbook_2024",
+                source="aeat_censo_read",
                 valid_from=date(2024, 1, 1),
             ),
         ),
@@ -131,11 +131,22 @@ def test_user_profile_value_and_snapshot_survive_encrypted_storage_roundtrip(
     assert loaded_record.profile_id != loaded_record.display_name
     assert len(loaded_record.facts) == 5
     assert tuple(f.path for f in loaded_record.facts) == (
-        "identity.given_name",
-        "identity.family_name",
-        "residency.municipality_code",
-        "iva.recargo_equivalencia.applied",
-        "irpf.minimum_personal_amount",
+        "identity.name",
+        "identity.surnames",
+        "contact.postcode",
+        "contact.fiscal_address_is_habitual_vivienda",
+        "tax_residence.state_attribution_ratio",
+    )
+    # Every path and provenance token above is one the schema declares, so
+    # this record is a shape the profile can really hold. The fixture used
+    # invented paths and sources before the schema bound either, which made
+    # it a roundtrip of bytes no profile would ever store.
+    assert tuple(f.source for f in loaded_record.facts) == (
+        "manual_cli",
+        "manual_cli",
+        "modelo_036_import",
+        "manual_cli",
+        "aeat_censo_read",
     )
     # The Decimal fact survives JSON round-trip strictly.
     assert loaded_record.facts[-1].value == Decimal("5550.00")

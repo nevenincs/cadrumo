@@ -1909,8 +1909,15 @@ key = "source"
 type = "enum"
 required = false
 sensitivity = "audit"
-description = "Origen de la información declarada. Si no se indica otro origen, se considera introducida manualmente mediante la línea de comandos."
-enum_values = ["manual_cli", "setup_wizard", "modelo_036_import", "aeat_censo_read", "registry_inference"]
+description = "Origen de la información declarada. Si no se indica otro origen, se considera introducida manualmente mediante la línea de comandos. El origen censo_artefact_g313 identifica los datos leídos de un Certificado de Situación Censal aportado por el contribuyente: es evidencia de canal del operador, nunca verificada por la AEAT."
+enum_values = [
+  "manual_cli",
+  "setup_wizard",
+  "modelo_036_import",
+  "aeat_censo_read",
+  "registry_inference",
+  "censo_artefact_g313",
+]
 
 [[sections.fields]]
 key = "valid_from"
