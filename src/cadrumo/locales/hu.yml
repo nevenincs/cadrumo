@@ -2119,16 +2119,16 @@ cli:
       year_help: Benyújtási év.
     maintenance:
       help: Helyreállítja a megszakadt művelet után maradt helyi állapotot.
-      profile_bundle_reconcile_help: Kitakarítja az összeomlás miatt félbemaradt profilcsomag-exportokat,
-        eltávolítva a visszamaradt titkosítatlan ideiglenes fájlokat és rögzítve az
-        elmaradt naplóbejegyzéseket.
       reconcile_cleared_info: '{count} félbemaradt profilcsomag-export kitakarítva.
         A visszamaradt titkosítatlan ideiglenes fájlok törölve lettek, a lemezre már
         kiírt exportok pedig megkapták a hiányzó naplóbejegyzésüket.'
       reconcile_failures_warning: '{count} félbemaradt profilcsomag-exportot nem sikerült
         kitakarítani, ezért későbbi újrapróbálkozásra megmaradtak. Mindegyikhez maradhat
-        a lemezen egy titkosítatlan ideiglenes fájl. Futtasd újra ezt a parancsot,
-        ha az ok elhárult.'
+        a lemezen egy titkosítatlan ideiglenes fájl. Futtasd újra az ''aeat app maintenance
+        reconcile'' parancsot, ha az ok elhárult.'
+      reconcile_help: Kitakarítja az összeomlás miatt félbemaradt profilcsomag-exportokat,
+        eltávolítva a visszamaradt titkosítatlan ideiglenes fájlokat és rögzítve az
+        elmaradt naplóbejegyzéseket.
       reconcile_none_info: Nem található félbemaradt profilcsomag-export. Korábbi
         futás nem hagyott hátra semmit.
     modelo:
@@ -3588,7 +3588,7 @@ cli:
         legyen.
       export_reconcile_incomplete_warning: Egy korábbi futásból {count} félbemaradt
         profilcsomag-exportot nem sikerült kitakarítani. Mindegyikhez maradhat a lemezen
-        egy titkosítatlan ideiglenes fájl. Futtasd az 'aeat app maintenance profile-bundle-reconcile'
+        egy titkosítatlan ideiglenes fájl. Futtasd az 'aeat app maintenance reconcile'
         parancsot, ha az ok elhárult.
       export_requires_destination: Add meg a --to ÚTVONAL célhelyet a csomagnak, vagy
         futtasd interaktív terminálban, és a program bekéri.

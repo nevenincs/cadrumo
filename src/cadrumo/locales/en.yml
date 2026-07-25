@@ -2023,15 +2023,15 @@ cli:
       year_help: Filing year
     maintenance:
       help: Recover local state left behind by an interrupted operation.
-      profile_bundle_reconcile_help: Clear profile-bundle exports left unfinished
-        by a crash, removing any leftover cleartext staged file and recording owed
-        audit events.
       reconcile_cleared_info: Cleared {count} interrupted profile-bundle export(s).
         Any leftover unencrypted staged file was removed, and an export that had already
         been written to disk received its missing audit record.
       reconcile_failures_warning: '{count} interrupted profile-bundle export(s) could
         not be cleared and were kept for a later attempt. An unencrypted staged file
-        may remain on disk for each. Run this command again once the cause is resolved.'
+        may remain on disk for each. Run ''aeat app maintenance reconcile'' again
+        once the cause is resolved.'
+      reconcile_help: Clear profile-bundle exports left unfinished by a crash, removing
+        any leftover cleartext staged file and recording owed audit events.
       reconcile_none_info: No interrupted profile-bundle export was found. Nothing
         was left behind by a previous run.
     modelo:
@@ -3387,8 +3387,8 @@ cli:
         8 characters.
       export_reconcile_incomplete_warning: '{count} interrupted profile-bundle export(s)
         from an earlier run could not be cleared. An unencrypted staged file may remain
-        on disk for each. Run ''aeat app maintenance profile-bundle-reconcile'' once
-        the cause is resolved.'
+        on disk for each. Run ''aeat app maintenance reconcile'' once the cause is
+        resolved.'
       export_requires_destination: Provide --to PATH for the bundle destination, or
         run in an interactive terminal to be prompted.
       export_requires_transport: Use --encrypt for an encrypted transfer bundle, or

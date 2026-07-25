@@ -2188,16 +2188,16 @@ cli:
       year_help: Ejercicio de presentación
     maintenance:
       help: Recupera el estado local que ha dejado una operación interrumpida.
-      profile_bundle_reconcile_help: Limpia las exportaciones de perfil que un fallo
-        dejó a medias, eliminando cualquier archivo temporal sin cifrar y registrando
-        los eventos de auditoría pendientes.
       reconcile_cleared_info: Se han limpiado {count} exportación(es) de perfil interrumpidas.
         Se ha eliminado cualquier archivo temporal sin cifrar y las exportaciones
         ya escritas en disco han recibido su registro de auditoría pendiente.
       reconcile_failures_warning: No se han podido limpiar {count} exportación(es)
         de perfil interrumpidas y se han conservado para un intento posterior. Puede
         quedar en disco un archivo temporal sin cifrar por cada una. Vuelve a ejecutar
-        este comando cuando se resuelva la causa.
+        'aeat app maintenance reconcile' cuando se resuelva la causa.
+      reconcile_help: Limpia las exportaciones de perfil que un fallo dejó a medias,
+        eliminando cualquier archivo temporal sin cifrar y registrando los eventos
+        de auditoría pendientes.
       reconcile_none_info: No se ha encontrado ninguna exportación de perfil interrumpida.
         Ninguna ejecución anterior ha dejado nada pendiente.
     modelo:
@@ -3661,7 +3661,7 @@ cli:
         debe tener al menos 8 caracteres.
       export_reconcile_incomplete_warning: No se han podido limpiar {count} exportación(es)
         de perfil interrumpidas de una ejecución anterior. Puede quedar en disco un
-        archivo temporal sin cifrar por cada una. Ejecuta 'aeat app maintenance profile-bundle-reconcile'
+        archivo temporal sin cifrar por cada una. Ejecuta 'aeat app maintenance reconcile'
         cuando se resuelva la causa.
       export_requires_destination: Indica --to RUTA como destino del paquete, o ejecuta
         el comando en un terminal interactivo para que se te pregunte.
@@ -4336,6 +4336,9 @@ cli:
       evidence_acknowledged_help: Confirma que leer la evidencia con un proveedor
         en la nube la sube fuera de tu equipo (lo exige la verificación de consentimiento).
       file_exclusive: --file no puede combinarse con un id de transacción ni --classification.
+      file_help: Ruta a un archivo CSV con columnas transaction_id, classification[,
+        category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
+        iva_category, irpf_category].
       file_not_found: 'Archivo CSV no encontrado: %{path}'
       help: Clasificar un movimiento del libro en el perfil activo
       id_help: Id del movimiento del libro a clasificar
@@ -4422,7 +4425,6 @@ cli:
       vision_model_help: Sustituye el modelo de visión local de Ollama para leer una
         factura escaneada o en imagen (p. ej. qwen2.5vl:7b); por defecto usa el modelo
         configurado.
-      file_help: 'Ruta a un archivo CSV con columnas transaction_id, classification[, category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount, iva_category, irpf_category].'
     doclink:
       actor_help: Etiqueta del operador.
       help: Descarga un enlace de documento de Drive y guarda sus bytes como evidencia

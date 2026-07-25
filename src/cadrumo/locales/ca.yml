@@ -2176,16 +2176,16 @@ cli:
       year_help: Exercici de presentació
     maintenance:
       help: Recupera l'estat local que ha deixat una operació interrompuda.
-      profile_bundle_reconcile_help: Neteja les exportacions de perfil que una fallada
-        va deixar a mitges, eliminant qualsevol fitxer temporal sense xifrar i registrant
-        els esdeveniments d'auditoria pendents.
       reconcile_cleared_info: S'han netejat {count} exportació(ns) de perfil interrompudes.
         S'ha eliminat qualsevol fitxer temporal sense xifrar i les exportacions ja
         escrites al disc han rebut el seu registre d'auditoria pendent.
       reconcile_failures_warning: No s'han pogut netejar {count} exportació(ns) de
         perfil interrompudes i s'han conservat per a un intent posterior. Pot quedar
         al disc un fitxer temporal sense xifrar per a cadascuna. Torna a executar
-        aquesta ordre quan es resolgui la causa.
+        'aeat app maintenance reconcile' quan es resolgui la causa.
+      reconcile_help: Neteja les exportacions de perfil que una fallada va deixar
+        a mitges, eliminant qualsevol fitxer temporal sense xifrar i registrant els
+        esdeveniments d'auditoria pendents.
       reconcile_none_info: No s'ha trobat cap exportació de perfil interrompuda. Cap
         execució anterior no ha deixat res pendent.
     modelo:
@@ -3634,7 +3634,7 @@ cli:
         ha de tenir almenys 8 caràcters.
       export_reconcile_incomplete_warning: No s'han pogut netejar {count} exportació(ns)
         de perfil interrompudes d'una execució anterior. Pot quedar al disc un fitxer
-        temporal sense xifrar per a cadascuna. Executa 'aeat app maintenance profile-bundle-reconcile'
+        temporal sense xifrar per a cadascuna. Executa 'aeat app maintenance reconcile'
         quan es resolgui la causa.
       export_requires_destination: Indica --to RUTA com a destinació del paquet, o
         executa l'ordre en un terminal interactiu perquè se't pregunti.
