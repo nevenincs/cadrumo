@@ -111,6 +111,7 @@ class ModeloAmendmentRepository:
             ClassificationError,
             Envelope,
             EnvelopeVersionError,
+            inner_envelope_version_is_current,
             safe_repository_id,
         )
 
@@ -129,7 +130,7 @@ class ModeloAmendmentRepository:
                 f"filing amendment {amendment_id} has classification {envelope.classification}; "
                 f"consumer expected {_AMENDMENT_SENSITIVITY}",
             )
-        if envelope.schema_version > _AMENDMENT_ENVELOPE_VERSION:
+        if not inner_envelope_version_is_current(envelope.schema_version, _AMENDMENT_ENVELOPE_VERSION):
             raise EnvelopeVersionError(
                 f"filing amendment {amendment_id} is at version {envelope.schema_version}; "
                 f"consumer supports up to {_AMENDMENT_ENVELOPE_VERSION}",

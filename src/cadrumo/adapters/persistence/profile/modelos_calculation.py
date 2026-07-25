@@ -142,6 +142,7 @@ class CalculationRevisionCatalogueRepository:
             ClassificationError,
             Envelope,
             EnvelopeVersionError,
+            inner_envelope_version_is_current,
         )
 
         try:
@@ -179,7 +180,7 @@ class CalculationRevisionCatalogueRepository:
                     "actual_classification": envelope.classification.value,
                 },
             )
-        if envelope.schema_version > _CALCULATION_CATALOGUE_VERSION:
+        if not inner_envelope_version_is_current(envelope.schema_version, _CALCULATION_CATALOGUE_VERSION):
             _LOGGER.error(
                 "calculation-revision catalogue envelope version unsupported",
                 extra={

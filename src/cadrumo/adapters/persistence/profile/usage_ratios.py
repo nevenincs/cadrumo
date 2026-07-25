@@ -63,7 +63,7 @@ def load_usage_ratios(*, bucket_id: str, objects: SecureObjectRepository | None 
         bucket_id: Profile bucket identifier.
         objects: Optional :class:`SecureObjectRepository` override; resolved from settings when absent.
     """
-    from ..storage import Envelope
+    from ..storage import Envelope, inner_envelope_version_is_current
     from ..storage.errors import ClassificationError, EnvelopeVersionError
     from ..storage.runtime_repository import secure_object_repository_for_bucket
 
@@ -85,7 +85,7 @@ def load_usage_ratios(*, bucket_id: str, objects: SecureObjectRepository | None 
                 f"usage-ratio profile object has classification {envelope.classification}; "
                 f"consumer expected {_USAGE_RATIO_SENSITIVITY}",
             )
-        if envelope.schema_version > _USAGE_RATIO_VERSION:
+        if not inner_envelope_version_is_current(envelope.schema_version, _USAGE_RATIO_VERSION):
             raise EnvelopeVersionError(
                 f"usage-ratio profile object is at version {envelope.schema_version}; "
                 f"consumer supports up to {_USAGE_RATIO_VERSION}",

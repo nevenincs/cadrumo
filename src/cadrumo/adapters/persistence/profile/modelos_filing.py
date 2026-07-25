@@ -134,6 +134,7 @@ class ModeloRecordCatalogueRepository:
             ClassificationError,
             Envelope,
             EnvelopeVersionError,
+            inner_envelope_version_is_current,
         )
 
         try:
@@ -171,7 +172,7 @@ class ModeloRecordCatalogueRepository:
                     "actual_classification": envelope.classification.value,
                 },
             )
-        if envelope.schema_version > _FILING_CATALOGUE_VERSION:
+        if not inner_envelope_version_is_current(envelope.schema_version, _FILING_CATALOGUE_VERSION):
             _LOGGER.error(
                 "filing-record catalogue envelope version unsupported",
                 extra={

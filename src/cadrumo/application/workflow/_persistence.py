@@ -47,6 +47,7 @@ from ...adapters.persistence.storage import (
     SecureObjectRevisionConflictError,
     SecureObjectWrite,
     StorageError,
+    inner_envelope_version_is_current,
     secure_object_repository_for_active_bucket,
     secure_object_repository_for_cold_bootstrap_state,
 )
@@ -143,7 +144,7 @@ class WorkflowStateRepository:
             raise ClassificationError(
                 f"workflow state has classification {envelope.classification}; consumer expected {_STATE_SENSITIVITY}",
             )
-        if envelope.schema_version > _STATE_VERSION:
+        if not inner_envelope_version_is_current(envelope.schema_version, _STATE_VERSION):
             raise EnvelopeVersionError(
                 f"workflow state is at version {envelope.schema_version}; consumer supports up to {_STATE_VERSION}",
             )
@@ -408,7 +409,7 @@ class WorkflowRunRepository:
             raise ClassificationError(
                 f"workflow run has classification {envelope.classification}; consumer expected {_RUN_SENSITIVITY}",
             )
-        if envelope.schema_version > _RUN_VERSION:
+        if not inner_envelope_version_is_current(envelope.schema_version, _RUN_VERSION):
             raise EnvelopeVersionError(
                 f"workflow run is at version {envelope.schema_version}; consumer supports up to {_RUN_VERSION}",
             )

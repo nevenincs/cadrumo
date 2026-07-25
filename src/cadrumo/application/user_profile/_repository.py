@@ -38,6 +38,7 @@ from ...adapters.persistence.storage import (
     Envelope,
     EnvelopeVersionError,
     SecureObjectRepository,
+    inner_envelope_version_is_current,
 )
 from ...adapters.persistence.storage.bucket import BucketValidationError
 from ...core.logging import get_logger
@@ -292,7 +293,7 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
                     "expected": _USER_PROFILE_VALUE_SENSITIVITY.value,
                 },
             )
-        if envelope.schema_version > _USER_PROFILE_VALUE_VERSION:
+        if not inner_envelope_version_is_current(envelope.schema_version, _USER_PROFILE_VALUE_VERSION):
             raise EnvelopeVersionError(
                 _PROFILE_RECORD_VERSION_MESSAGE,
                 translated_message="application.user_profile.errors.repository_profile_record_version_unsupported",
@@ -481,7 +482,7 @@ class UserProfileSnapshotRepository(_BucketBoundRepository):
                     "expected": _USER_PROFILE_SNAPSHOT_SENSITIVITY.value,
                 },
             )
-        if envelope.schema_version > _USER_PROFILE_SNAPSHOT_VERSION:
+        if not inner_envelope_version_is_current(envelope.schema_version, _USER_PROFILE_SNAPSHOT_VERSION):
             raise EnvelopeVersionError(
                 _PROFILE_SNAPSHOT_VERSION_MESSAGE,
                 translated_message="application.user_profile.errors.repository_profile_snapshot_version_unsupported",

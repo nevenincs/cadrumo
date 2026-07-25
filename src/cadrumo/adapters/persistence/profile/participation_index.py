@@ -93,7 +93,12 @@ class TransactionParticipationIndexRepository:
         Returns an empty :class:`TransactionRevisionParticipationIndex` for that
         transaction when nothing has been persisted yet, rather than raising.
         """
-        from ..storage import ClassificationError, Envelope, EnvelopeVersionError
+        from ..storage import (
+            ClassificationError,
+            Envelope,
+            EnvelopeVersionError,
+            inner_envelope_version_is_current,
+        )
 
         object_key = derive_participation_index_id(transaction_id)
         try:
@@ -126,7 +131,7 @@ class TransactionParticipationIndexRepository:
                     "actual_classification": envelope.classification.value,
                 },
             )
-        if envelope.schema_version > _PARTICIPATION_INDEX_SCHEMA_VERSION:
+        if not inner_envelope_version_is_current(envelope.schema_version, _PARTICIPATION_INDEX_SCHEMA_VERSION):
             _LOGGER.error("participation-index envelope version unsupported")
             raise TransactionParticipationIndexPersistenceError(
                 "participation-index envelope version unsupported",
