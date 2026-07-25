@@ -39,7 +39,7 @@ from typing import TYPE_CHECKING, Final
 from ...adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY, StorageCustodyProfile
 from ...core.errors import CadrumoError
 from ...core.time import now
-from ...domain.buckets import BucketEvent, BucketEventObjectType, BucketEventType
+from ...domain.buckets import BucketEvent, BucketEventObjectType, BucketEventType, emit_bucket_event
 
 if TYPE_CHECKING:
     from ...domain.user_profile import (
@@ -410,7 +410,6 @@ def register_imported_profile_bundle(
             no event is emitted when the restore refuses.
     """
     from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ..modelo import emit_bucket_event
 
     deserialize_profile_bundle(bundle, target_bucket_id=target_bucket_id)
     return emit_bucket_event(

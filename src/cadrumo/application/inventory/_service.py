@@ -29,6 +29,7 @@ from ...domain.buckets import (
     BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
+    emit_bucket_event,
 )
 from ...domain.contribuyente.inventory import (
     InventoryLedger,
@@ -133,8 +134,6 @@ def _emit_inventory_event(
     occurred_at: datetime,
     payload: dict[str, str],
 ) -> str:
-    from ..modelo import emit_bucket_event
-
     event = emit_bucket_event(
         repository=event_repository,
         bucket_id=bucket_id,

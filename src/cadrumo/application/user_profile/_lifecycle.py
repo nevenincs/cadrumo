@@ -22,6 +22,7 @@ from ...domain.buckets import (
     BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
+    emit_bucket_event,
 )
 from ...domain.user_profile import (
     ProfileAlreadyExistsError,
@@ -413,8 +414,6 @@ class ProfileLifecycleService:
         occurred_at: datetime,
         payload: dict[str, str] | None = None,
     ) -> None:
-        from ..modelo import emit_bucket_event
-
         emit_bucket_event(
             repository=self._events,
             bucket_id=self._repository.bucket_id,

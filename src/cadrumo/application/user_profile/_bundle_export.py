@@ -614,8 +614,7 @@ def _emit_export_event(operation: ProfileBundleExportOperation) -> None:
     content-addressed event catalogue then collapses the re-emission to one
     entry.
     """
-    from ...domain.buckets import BucketEventObjectType, BucketEventType
-    from ..modelo import emit_bucket_event
+    from ...domain.buckets import BucketEventObjectType, BucketEventType, emit_bucket_event
     from ._orchestration import _profile_export_runtime
 
     with _profile_export_runtime(operation.profile_id) as event_repository:

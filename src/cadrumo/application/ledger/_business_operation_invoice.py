@@ -57,6 +57,7 @@ from ...domain.buckets import (
     BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
+    emit_bucket_event,
 )
 from ...domain.currency import ExchangeRateProvider
 
@@ -387,8 +388,6 @@ def _emit_invoice_event(
     occurred_at: datetime,
     actor: str,
 ) -> str:
-    from ..modelo import emit_bucket_event
-
     event = emit_bucket_event(
         repository=event_repository,
         bucket_id=record.bucket_id,

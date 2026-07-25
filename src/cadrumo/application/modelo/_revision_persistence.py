@@ -51,9 +51,8 @@ from ...domain.buckets import (
     BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
-    append_bucket_event,
-    derive_bucket_event_id,
 )
+from ...domain.buckets import emit_bucket_event as _emit_domain_bucket_event
 from ...domain.calculations.registry import (
     BindingId,
     CasillaId,
@@ -124,46 +123,31 @@ def emit_bucket_event(
     object_type: BucketEventObjectType,
     object_id: str,
     payload: Mapping[str, str],
-    payload_version: int = _BUCKET_EVENT_PAYLOAD_VERSION,
 ) -> BucketEvent:
-    """Append one :class:`BucketEvent` to the bucket-event-history catalogue.
+    """Emit one :class:`BucketEvent` under the modelo payload contract.
 
-    The returned event is the durable bucket-scoped audit pointer for the domain
-    mutation. Payloads stay compact and reference the owning calculation
-    revision, filing record, or work unit instead of duplicating their full
-    catalogued state.
+    Modelo's narrow wrapper over :func:`~domain.buckets.emit_bucket_event`: it
+    supplies :data:`_BUCKET_EVENT_PAYLOAD_VERSION` so no modelo call site restates
+    it, and adds nothing else. The shared derive-append-save sequence lives in the
+    domain beside :func:`append_bucket_event`, because it composes only bucket
+    domain types and every emitting domain needs it — keeping it here made this
+    module a hub that peer application packages had to reach up into.
 
-    ``payload_version`` is the emitting surface's own payload-schema version. It
-    defaults to the modelo payload contract but is explicit for every other
-    domain, because each event family versions its payload independently: the
-    version is *not* folded into :func:`derive_bucket_event_id`, so a caller that
-    accepted the default would silently restamp its persisted payload contract
-    without changing the payload. Domains that share this emitter therefore pass
-    their own constant.
+    The returned event is the durable bucket-scoped audit pointer for the modelo
+    mutation. Payloads stay compact and reference the owning calculation revision,
+    filing record, or work unit instead of duplicating their catalogued state.
     """
-    event_id = derive_bucket_event_id(
+    return _emit_domain_bucket_event(
+        repository=repository,
         bucket_id=bucket_id,
         event_type=event_type,
         occurred_at=occurred_at,
-        actor=actor.strip(),
+        actor=actor,
         object_type=object_type,
         object_id=object_id,
         payload=payload,
+        payload_version=_BUCKET_EVENT_PAYLOAD_VERSION,
     )
-    event = BucketEvent(
-        event_id=event_id,
-        bucket_id=bucket_id,
-        event_type=event_type,
-        occurred_at=occurred_at,
-        actor=actor.strip(),
-        object_type=object_type,
-        object_id=object_id,
-        payload_version=payload_version,
-        payload=dict(payload),
-    )
-    catalogue = repository.load()
-    repository.save(append_bucket_event(catalogue, event))
-    return event
 
 
 def _source_provenance_trace_sha256(source_provenance: tuple[CalculationSourceRef, ...]) -> str:
