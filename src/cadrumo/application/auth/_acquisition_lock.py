@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, ValidationError
 
-from ...core import STRICT_FROZEN_CONFIG, AuthProviderKind
+from ...core import STRICT_FROZEN_CONFIG, AuthProviderKind, pid_is_alive
 from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n import tr
@@ -289,41 +289,9 @@ def _same_host(hostname: str) -> bool:
 
 
 def _pid_is_running(pid: int) -> bool:
-    if pid <= 0:
-        return False
     if pid == os.getpid():
         return True
-    if os.name == "nt":
-        return _pid_is_running_windows(pid)
-    try:
-        os.kill(pid, 0)
-    except ProcessLookupError:
-        return False
-    except PermissionError:
-        return True
-    return True
-
-
-def _pid_is_running_windows(pid: int) -> bool:
-    import ctypes
-    import sys
-
-    if sys.platform != "win32":  # narrows ctypes.windll to the platform that defines it
-        return False
-
-    process_query_limited_information = 0x1000
-    still_active = 259
-    kernel32 = ctypes.windll.kernel32
-    handle = kernel32.OpenProcess(process_query_limited_information, False, pid)
-    if not handle:
-        return False
-    try:
-        exit_code = ctypes.c_ulong()
-        if not kernel32.GetExitCodeProcess(handle, ctypes.byref(exit_code)):
-            return True
-        return exit_code.value == still_active
-    finally:
-        kernel32.CloseHandle(handle)
+    return pid_is_alive(pid)
 
 
 __all__ = [
