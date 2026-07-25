@@ -10,27 +10,35 @@ related:
 
 # `censal-profile-autofill` adr: `profile-borne auth credentials and a read-only censal autofill` | (**status:** `accepted`)
 
-> **D3 IS BLOCKED ON A FALSE PREMISE AND MUST NOT BE BUILT AS WRITTEN.**
-> D3 assumed a read-only consulta endpoint exists. It does not, on the
-> evidence available: `2026-07-11-censo-operator-manual-enrolment-adr`
-> records a 2026-07-10 authenticated investigation finding that the
-> launcher `/wlpl/BUGC-JDIT/MdcAcceso` - the target both "Mis datos
-> censales" links in this repo's own sede fixtures resolve to - returns
-> HTTP 404, and that AEAT exposes no read-only censal projection at all;
-> the data lives only inside the Censos WEB modification tool. The
-> grounding D3 rested on was a Sede help-page title and a Renta manual
-> mention, neither of which evidences an endpoint. That prior ADR set a
-> revival condition, and this record does not meet it. P02.S04 - a live
-> probe of that launcher - is the gate: if it still 404s or resolves into
-> `BU36-*`/`.zul`, D3 must be re-decided. D1, D2, D4, D5 and D6 stand.
+> **D3 UNBLOCKED — the 404 finding it was blocked on is stale.**
+> This note previously blocked D3, on the grounds that
+> `2026-07-11-censo-operator-manual-enrolment-adr` recorded a 2026-07-10
+> live finding that the launcher `/wlpl/BUGC-JDIT/MdcAcceso` returns HTTP
+> 404 and that AEAT exposed no read-only censal projection. That block was
+> correct on the evidence then available and is now withdrawn: the
+> operator confirms on 2026-07-25 that the launcher renders, as an HTML
+> form carrying their NIF, name and censal information. AEAT evidently
+> restored or re-pathed it in the intervening fortnight. The prior ADR's
+> own revival condition - "a genuine AEAT consulta-only 'datos censales'
+> endpoint would justify a new ADR to restore an automated read" - is
+> therefore met, and this record is that ADR.
 >
-> The S06 proof as written was also wrong. It forbids the token `MOD036`,
-> but the filing tool is `BU36-ASIS/M036/index.zul` and the write sibling
-> is `BUGC-JDIT/ModifDomiDual` - neither contains that token, so the gate
-> would have passed while the reader's only known landing was the
-> modification tool. A revived D3 must fail closed at runtime on any
-> `BU36-*`, `.zul` or `ModifDomiDual` landing, with the static check kept
-> only as the weaker of two walls.
+> Two corrections to D3 as written survive the unblocking:
+>
+> First, the S06 proof was wrong independently of the endpoint question.
+> It forbids the token `MOD036`, but the filing tool is
+> `BU36-ASIS/M036/index.zul` and the write sibling is
+> `BUGC-JDIT/ModifDomiDual` - neither contains that token, so the gate
+> would have passed while the reader sat next to a write surface. The
+> reader MUST fail closed at runtime on any `BU36-*`, `.zul` or
+> `ModifDomiDual` landing, with the static string check kept only as the
+> weaker of two walls.
+>
+> Second, the consulta page carries buttons and AEAT's own help material
+> titles the area "Consulta y modificación", so a modification path is
+> reachable from the page the reader lands on. Reading the rendered DOM is
+> a read; driving a control on it is not. The reader navigates and parses,
+> and never submits, fills or follows a mutating control.
 
 ## Problem Statement
 
