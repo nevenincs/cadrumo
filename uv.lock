@@ -383,7 +383,7 @@ dev = [
     { name = "types-reportlab", specifier = ">=4.4.10.20260408" },
     { name = "types-xlrd", specifier = ">=2.0.0.20260408" },
     { name = "vaultspec-core", specifier = ">=0.1.25" },
-    { name = "vaultspec-rag", extras = ["mcp"], specifier = ">=0.2.28" },
+    { name = "vaultspec-rag", extras = ["mcp"], specifier = ">=0.3.8" },
     { name = "vulture", specifier = ">=2.16" },
 ]
 
@@ -3449,7 +3449,7 @@ wheels = [
 
 [[package]]
 name = "vaultspec-rag"
-version = "0.3.7"
+version = "0.3.8"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -3471,9 +3471,9 @@ dependencies = [
     { name = "vaultspec-core" },
     { name = "watchfiles" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/48/6e/892ba015cd88328b06fe66fb0ef0b7e873971239e68e4044a588c941fd73/vaultspec_rag-0.3.7.tar.gz", hash = "sha256:f2b6a5bc4380dd1f25ac43c89f4330df7aaeca6633d9c74a0383eb569b771620", size = 4213341, upload-time = "2026-07-24T18:04:01.909Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/2f/9b/baad07fc07d5f2b602cbf0ebb07a5d80ab91702a1a9100b47f8e273a37b2/vaultspec_rag-0.3.8.tar.gz", hash = "sha256:e50fb7969ea6bc723eae4753566479cc8f03374fdc1d5763879298bb88f54361", size = 4323983, upload-time = "2026-07-24T23:32:57.386Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/05/95/958d656dcdd51b1ece7e6372d5dcebe260629b7b0034dac3d26fbed654c0/vaultspec_rag-0.3.7-py3-none-any.whl", hash = "sha256:3960fe9e43a892f0f96ef40a1fa547759c9627eb9e1d4c7f17ad588d0cd12ac0", size = 1642100, upload-time = "2026-07-24T18:03:59.937Z" },
+    { url = "https://files.pythonhosted.org/packages/ac/3a/f73ea2ad8a9ae9e15d2c9d614f86d2d545951d7874f2b65ce646efb9841a/vaultspec_rag-0.3.8-py3-none-any.whl", hash = "sha256:8b049c164d42eb902144dfba5274068ef07c9c7a81dd461421897cb29d35272c", size = 1739708, upload-time = "2026-07-24T23:32:55.617Z" },
 ]
 
 [package.optional-dependencies]

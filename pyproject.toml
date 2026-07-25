@@ -344,7 +344,7 @@ dev = [
   # carries the [mcp] extra here (demoted from the base dependency set): it is
   # developer search tooling, so a published product wheel must not ship it.
   "vaultspec-core>=0.1.25",
-  "vaultspec-rag[mcp]>=0.2.28",
+  "vaultspec-rag[mcp]>=0.3.8",
   # Sphinx documentation pipeline — `just docs` builds HTML + Markdown from
   # the Google-style + Sphinx-cross-referenced docstrings under src/cadrumo/.
   "sphinx>=8.1,<9",  # <9: sphinx-hoverxref 1.4.2 (latest) crashes on Sphinx 9's _Opt config repr at config-inited
