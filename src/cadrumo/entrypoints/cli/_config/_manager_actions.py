@@ -30,116 +30,6 @@ from ....core.i18n import tr
 if TYPE_CHECKING:
     from ....adapters.inbound.tui import ManagerAction, ManagerActionOutcome
 
-_CENSAL_PULL_YEARS_BACK = 10
-"""How far back a censal pull looks for filed 036 declarations.
-
-A censal declaration is filed when something changes, so most years are
-legitimately empty and a decade is a cheap way to find the last one that
-was not. Enrolment usually predates any single filing year.
-"""
-
-
-def censal_pull_action() -> ManagerAction:
-    """Fill the censal fields in from the taxpayer's own filed Modelo 036.
-
-    036 IS the censo — it is the declaración censal de alta, modificación
-    y baja, and it is what a person or entity files to enrol in the tax
-    system. So the honest way to learn someone's censal situation is to
-    read the declaration they filed, rather than ask them to retype it.
-
-    This reads their own filed declaration out of their own expediente
-    history, which is a pure read of filed evidence and subject to the
-    same gate as every justificante pull. It never touches the Censos WEB
-    modification tool.
-    """
-    from ....adapters.inbound.tui import ManagerAction
-
-    return ManagerAction(key="censal-pull", label=tr("flows.manager.action.censal_pull"), run=_run_censal_pull)
-
-
-def _run_censal_pull() -> ManagerActionOutcome:
-    """Pull filed 036s, derive the censal facts, and write them."""
-    import asyncio
-
-    from ....adapters.inbound.tui import ManagerActionOutcome
-    from ....application.live._censo_036_pull import (
-        censo_facts_from_filed_036,
-        pull_censal_declaration,
-    )
-    from ....application.user_profile import apply_cotejo
-    from ....application.workflow import workflow_state_repository
-    from ....core import require_active_bucket_id
-    from ....core.time import now
-    from ._manager_frontend import build_active_profile_overview
-
-    bucket_id = require_active_bucket_id()
-    # Through the clock seam, so a frozen-clock test pins the year span
-    # rather than searching a window that moves with the calendar.
-    this_year = now().year
-    # The full pull: find the current filing over the authenticated
-    # Playwright session, then fetch and read that declaration's own PDF.
-    # Reading the register alone says a filing happened; reading the
-    # declaration says what it declared.
-    pulled = asyncio.run(
-        pull_censal_declaration(
-            bucket_id=bucket_id,
-            year_from=this_year - _CENSAL_PULL_YEARS_BACK,
-            year_to=this_year,
-        ),
-    )
-    facts = censo_facts_from_filed_036((pulled[0],)) if pulled is not None else ()
-    if not facts:
-        # No filing found is an ordinary answer, not a failure: a taxpayer
-        # enrolled long ago may have nothing in the window, and stamping a
-        # default would invent an enrolment they never declared.
-        return ManagerActionOutcome(message=tr("flows.manager.action.censal_pull_empty"))
-
-    adopted, contested = _split_against_the_record(facts)
-    if adopted:
-        # Through the single cotejo apply authority, never a parallel
-        # set_active_fields write: a censal artefact-apply must emit exactly
-        # one CENSO_APPLIED event, and the facts carry their own filed-036
-        # provenance token so they land at the non-official evidence tier.
-        repository = workflow_state_repository()
-        repository.save(apply_cotejo(repository.load(), adopted=adopted, divergences=()))
-    if contested:
-        return ManagerActionOutcome(
-            message=tr("flows.manager.action.censal_pull_contested", paths=", ".join(contested)),
-            overview=build_active_profile_overview(),
-        )
-    return ManagerActionOutcome(
-        message=tr("flows.manager.action.censal_pull_done", count=len(adopted), filings=1),
-        overview=build_active_profile_overview(),
-    )
-
-
-def _split_against_the_record(facts):
-    """Split pulled facts into those to adopt and those the operator already answered.
-
-    A filed declaration never silently overwrites what the operator
-    declared themselves. Where the record is blank the pulled value fills
-    it in; where the record already says something different, the pull
-    reports the disagreement and writes nothing at that path, because
-    which of the two is right is the operators call and not this actions.
-
-    The adopt-all commit itself routes through `apply_cotejo`, the same
-    authority the `censo file` door uses. What this split adds is the
-    refusal to adopt over a value the operator already gave: the file door
-    adopts everything because the operator hands it the artefact
-    deliberately, while a pull happens on a button press and must not
-    quietly rewrite an answer on the strength of one.
-    """
-    from ....application.user_profile import ProfileRepository
-    from ....core import require_active_bucket_id
-
-    record = ProfileRepository().load(require_active_bucket_id()).record
-    on_record = {fact.path: str(fact.value) for fact in record.facts if fact.value is not None}
-    adopted = tuple(
-        fact for fact in facts if on_record.get(fact.path, str(fact.value)) == str(fact.value)
-    )
-    contested = tuple(fact.path for fact in facts if fact not in adopted)
-    return adopted, contested
-
 
 def export_action() -> ManagerAction:
     """Write a passphrase-encrypted portable copy of the profile."""
@@ -293,11 +183,10 @@ def _provider_label(kind: object) -> str:
 
 def manager_actions() -> tuple[ManagerAction, ...]:
     """Every action the manager offers, in the order it offers them."""
-    return (censal_pull_action(), export_action(), certificate_action())
+    return (export_action(), certificate_action())
 
 
 __all__ = [
-    "censal_pull_action",
     "certificate_action",
     "export_action",
     "manager_actions",
