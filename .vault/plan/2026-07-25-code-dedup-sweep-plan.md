@@ -10,7 +10,6 @@ related:
   - '[[2026-07-25-code-dedup-sweep-rag-inventory-audit]]'
 ---
 
-
 # `code-dedup-sweep` plan
 
 - [x] `S01` - Land the non-raising inner-envelope equality predicate in the storage substrate beside the existing lineage policy, exported through the storage package facade, leaving ensure_schema_version_readable deliberately absent from that facade because it is the layer-one gate; `src/cadrumo/adapters/persistence/storage/`.

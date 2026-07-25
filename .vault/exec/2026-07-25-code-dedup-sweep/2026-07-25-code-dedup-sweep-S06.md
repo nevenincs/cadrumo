@@ -9,9 +9,6 @@ related:
   - "[[2026-07-25-code-dedup-sweep-plan]]"
 ---
 
-
-
-
 # Rule the bucket-manifest version gap in its own decision record under the durability framing, a fourth persisted format hardcoded at create and passed through on save and read with no version gate of any kind, so a manifest written by a newer application is accepted silently
 
 ## Scope
