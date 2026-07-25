@@ -11,15 +11,24 @@ related:
   - '[[2026-07-23-tui-wizard-substrate-plan]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `profile-bundle-tui` plan
 
-- [ ] `S01` - Build the export FlowDefinition at the entrypoint tier collecting profile as a SELECT over live bucket labels defaulting to the active profile and included only when no NAME argument was given, destination as a PATH, and transport as a SELECT over the canonical ProfileBundleExportTransport values with the encrypted arm as default; `src/cadrumo/entrypoints/cli/_config/_profile_bundle_flow.py`.
-- [ ] `S02` - Carry honest sensitivity copy on the cleartext transport arm so an operator choosing it is told what leaves encrypted storage, since the cleartext arm is the one selection that removes the confidentiality guarantee; `src/cadrumo/entrypoints/cli/_config/_profile_bundle_flow.py`.
-- [ ] `S03` - Build the import FlowDefinition collecting the bundle path as a PATH and, only when --label was not given, an optional label as TEXT; `src/cadrumo/entrypoints/cli/_config/_profile_bundle_flow.py`.
-- [ ] `S04` - Launch the flow from the bundle command only when required values are missing, --secrets-stdin was not passed, and the capability probe reports a prompt-capable host, then proceed through the unchanged canonical calls, envelope, and notices; `src/cadrumo/entrypoints/cli/_config/_profile_bundle.py`.
-- [ ] `S05` - Keep passphrase collection on the pre-existing hidden confirm-retype prompts after the flow exits rather than moving secret entry into the flow, and prove a console-less host cannot reach an echoing fallback; `src/cadrumo/entrypoints/cli/_config/_profile_bundle.py`.
-- [ ] `S06` - Refuse non-interactive under-specified invocations with typed suggestion-carrying errors rather than prompting or defaulting, verified by a headless regression that fails on timeout rather than exercising the helper in isolation; `src/cadrumo/entrypoints/cli/tests/`.
-
+- [x] `S01` - Build the export FlowDefinition at the entrypoint tier collecting profile as a SELECT over live bucket labels defaulting to the active profile and included only when no NAME argument was given, destination as a PATH, and transport as a SELECT over the canonical ProfileBundleExportTransport values with the encrypted arm as default; `src/cadrumo/entrypoints/cli/_config/_profile_bundle_flow.py`.
+- [x] `S02` - Carry honest sensitivity copy on the cleartext transport arm so an operator choosing it is told what leaves encrypted storage, since the cleartext arm is the one selection that removes the confidentiality guarantee; `src/cadrumo/entrypoints/cli/_config/_profile_bundle_flow.py`.
+- [x] `S03` - Build the import FlowDefinition collecting the bundle path as a PATH and, only when --label was not given, an optional label as TEXT; `src/cadrumo/entrypoints/cli/_config/_profile_bundle_flow.py`.
+- [x] `S04` - Launch the flow from the bundle command only when required values are missing, --secrets-stdin was not passed, and the capability probe reports a prompt-capable host, then proceed through the unchanged canonical calls, envelope, and notices; `src/cadrumo/entrypoints/cli/_config/_profile_bundle.py`.
+- [x] `S05` - Keep passphrase collection on the pre-existing hidden confirm-retype prompts after the flow exits rather than moving secret entry into the flow, and prove a console-less host cannot reach an echoing fallback; `src/cadrumo/entrypoints/cli/_config/_profile_bundle.py`.
+- [x] `S06` - Refuse non-interactive under-specified invocations with typed suggestion-carrying errors rather than prompting or defaulting, verified by a headless regression that fails on timeout rather than exercising the helper in isolation; `src/cadrumo/entrypoints/cli/tests/`.
 ## Description
 
 ## Steps
