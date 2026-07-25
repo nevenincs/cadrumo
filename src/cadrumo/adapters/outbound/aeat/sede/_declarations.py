@@ -117,9 +117,50 @@ _SEDE_BASE = _EXTERNAL.aeat.domains.www6
 _SEDE_HOST = urlsplit(_SEDE_BASE).netloc
 _AEAT_HOST_SUFFIX = _EXTERNAL.aeat.domains.host_suffix
 _LISTING_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.declarations_listing}"
-_COTEJO_VIEW = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.cotejo_query}"
-_COTEJO_DOC = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.cotejo_document}"
+_LISTING_PATH = _EXTERNAL.aeat.sede_paths.declarations_listing
+_COTEJO_QUERY_PATH = _EXTERNAL.aeat.sede_paths.cotejo_query
+_COTEJO_DOCUMENT_PATH = _EXTERNAL.aeat.sede_paths.cotejo_document
 _COTEJO_PATH_PREFIX = _EXTERNAL.aeat.sede_paths.cotejo_query
+
+
+def _origin_of(landed_url: str | None) -> str:
+    """Return the scheme and host a read actually landed on.
+
+    AEAT load-balances an authenticated session across its numbered sede
+    hosts: the host that answers is ASSIGNED, not chosen, and a session
+    minted on one may be refused by another. A URL recorded onto stored
+    evidence must therefore name the host the read actually happened on.
+    Reconstructing it from a fixed host writes a false provenance claim -
+    the same class of defect as a casilla carrying legal refs it was not
+    derived from, and for the same reason: the record is what a value is
+    defended with later.
+
+    Falls back to the origin the navigation was issued against when the
+    landed URL is unusable, because that is then the best true answer
+    available rather than a preference.
+    """
+    if landed_url:
+        landed = urlsplit(landed_url)
+        if landed.scheme and landed.netloc:
+            return f"{landed.scheme}://{landed.netloc}"
+    return _SEDE_BASE
+
+
+def _listing_url_for(origin: str, *, modelo: str, ejercicio: int) -> str:
+    """Return the declarations-listing URL for one query against ``origin``."""
+    return f"{origin}{_LISTING_PATH}?MODELO={modelo}&EJERCICIO={ejercicio}"
+
+
+def _cotejo_view_url(origin: str, csv: str) -> str:
+    """Return the cotejo view URL for ``csv`` against ``origin``."""
+    return f"{origin}{_COTEJO_QUERY_PATH}?CSV={csv}"
+
+
+def _cotejo_document_url(origin: str, csv: str) -> str:
+    """Return the cotejo document URL for ``csv`` against ``origin``."""
+    return f"{origin}{_COTEJO_DOCUMENT_PATH}?CSV={csv}"
+
+
 _DECLARATIONS_LISTING_PATH_PREFIX = _EXTERNAL.aeat.sede_paths.declarations_listing.removesuffix("/index.zul")
 
 DEFAULT_NAVIGATION_TIMEOUT_MS: int = 30_000
@@ -719,8 +760,8 @@ async def capture_declaration(
         ref = JustificanteRef(
             csv=csv,
             expediente_id=declaration.expediente_id,
-            cotejo_url=AnyHttpUrl(f"{_COTEJO_VIEW}?CSV={csv}"),
-            pdf_url=AnyHttpUrl(f"{_COTEJO_DOC}?CSV={csv}"),
+            cotejo_url=AnyHttpUrl(_cotejo_view_url(_origin_of(cotejo_url), csv)),
+            pdf_url=AnyHttpUrl(_cotejo_document_url(_origin_of(cotejo_url), csv)),
         )
 
         _assert_read_http("GET", str(ref.pdf_url), policy=read_policy)
@@ -755,7 +796,11 @@ async def capture_declaration(
                 ejercicio=declaration.ejercicio,
                 category_path=("Declaraciones presentadas",),
                 detail_url=AnyHttpUrl(
-                    f"{_LISTING_URL}?MODELO={declaration.modelo}&EJERCICIO={declaration.ejercicio}",
+                    _listing_url_for(
+                        _origin_of(cotejo_url),
+                        modelo=declaration.modelo,
+                        ejercicio=declaration.ejercicio,
+                    ),
                 ),
             ),
             ref=ref,
@@ -856,7 +901,13 @@ async def _capture_filed_declaration_observation_from_row(
         filing_period,
         declaration.expediente_id,
     )
-    listing_url = AnyHttpUrl(f"{_LISTING_URL}?MODELO={declaration.modelo}&EJERCICIO={declaration.ejercicio}")
+    listing_url = AnyHttpUrl(
+        _listing_url_for(
+            _origin_of(getattr(page, "url", None)),
+            modelo=declaration.modelo,
+            ejercicio=declaration.ejercicio,
+        ),
+    )
 
     register_row, register_row_body = _register_row_artefact(declaration, source_url=listing_url)
     artefacts: list[FiledDeclaracionArtefact] = [
@@ -1131,7 +1182,7 @@ async def _capture_row_pdf_artefact(
         )
 
     csv = _extract_csv_from_url(cotejo_url)
-    pdf_url = AnyHttpUrl(f"{_COTEJO_DOC}?CSV={csv}")
+    pdf_url = AnyHttpUrl(_cotejo_document_url(_origin_of(cotejo_url), csv))
     _assert_read_http("GET", str(pdf_url), policy=read_policy)
     response = await context.request.get(str(pdf_url))
     if not (200 <= response.status < 300):
@@ -1187,7 +1238,15 @@ async def _capture_submitted_file_artefact(
     download_url = getattr(download, "url", None)
     source_url = download_url if isinstance(download_url, str) else None
     if not source_url:
-        source_url = str(AnyHttpUrl(f"{_LISTING_URL}?MODELO={declaration.modelo}&EJERCICIO={declaration.ejercicio}"))
+        source_url = str(
+            AnyHttpUrl(
+                _listing_url_for(
+                    _origin_of(getattr(page, "url", None)),
+                    modelo=declaration.modelo,
+                    ejercicio=declaration.ejercicio,
+                ),
+            ),
+        )
     _assert_read_http("GET", source_url, policy=read_policy)
     return (
         FiledDeclaracionArtefact(
