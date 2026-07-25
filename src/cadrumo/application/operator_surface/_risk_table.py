@@ -132,6 +132,12 @@ COMMAND_RISK: dict[str, CommandRiskDeclaration] = {
     "config.profile.archive.inspect": CommandRiskDeclaration(),
     "config.profile.capabilities.set": CommandRiskDeclaration(),
     "config.profile.capabilities.show": CommandRiskDeclaration(),
+    # Reads an operator-supplied censal artefact and, under `--apply`, enrolls
+    # its facts through the single cotejo apply authority. Preview is the
+    # default posture and the write updates profile fields in place, the same
+    # shape as `capabilities.set` and `edit` - it destroys no record, produces
+    # no filing-grade artefact, and never reaches AEAT.
+    "config.profile.censo.file": CommandRiskDeclaration(),
     "config.profile.create": CommandRiskDeclaration(),
     "config.profile.delete": CommandRiskDeclaration(destructive=True),
     "config.profile.descendiente.add": CommandRiskDeclaration(),
