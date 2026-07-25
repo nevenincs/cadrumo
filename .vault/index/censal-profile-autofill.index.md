@@ -10,6 +10,7 @@ related:
   - '[[2026-07-25-censal-profile-autofill-P01-S02]]'
   - '[[2026-07-25-censal-profile-autofill-P01-S03]]'
   - '[[2026-07-25-censal-profile-autofill-P01-S11]]'
+  - '[[2026-07-25-censal-profile-autofill-P01-S12]]'
   - '[[2026-07-25-censal-profile-autofill-P03-S09]]'
   - '[[2026-07-25-censal-profile-autofill-adr]]'
   - '[[2026-07-25-censal-profile-autofill-plan]]'
@@ -37,6 +38,7 @@ Auto-generated index of all documents tagged with `#censal-profile-autofill`.
 - `2026-07-25-censal-profile-autofill-P01-S02` - Resolve Clave credentials from the active profile with a settings fallback, refusing a Clave mode missing either half and naming what is absent
 - `2026-07-25-censal-profile-autofill-P01-S03` - Make the manager authentication action mode-aware over the profile fields, offering certificate selection only when a certificate is registered
 - `2026-07-25-censal-profile-autofill-P01-S11` - Declare the DNI validity-date contraste beside numero_soporte and resolve it profile-first with the settings fallback, refusing a non-QR route that carries neither form
+- `2026-07-25-censal-profile-autofill-P01-S12` - Resolve the Clave credentials in the operator readiness probes and status surfaces through the same profile-first resolver the session entry uses, so a profile-borne credential reports as configured
 - `2026-07-25-censal-profile-autofill-P03-S09` - Delete the register-based censal pull, its manager action and its tests, and re-point the causa-casilla mapping it fed
 
 ### plan

@@ -20,6 +20,7 @@ Give an authentication mode somewhere to keep what it needs, on the encrypted pr
 - [x] `P01.S02` - Resolve Clave credentials from the active profile with a settings fallback, refusing a Clave mode missing either half and naming what is absent; `src/cadrumo/application/auth/_sessions.py`.
 - [ ] `P01.S03` - Make the manager authentication action mode-aware over the profile fields, offering certificate selection only when a certificate is registered; `src/cadrumo/entrypoints/cli/_config/_manager_actions.py`.
 - [x] `P01.S11` - Declare the DNI validity-date contraste beside numero_soporte and resolve it profile-first with the settings fallback, refusing a non-QR route that carries neither form; `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`.
+- [x] `P01.S12` - Resolve the Clave credentials in the operator readiness probes and status surfaces through the same profile-first resolver the session entry uses, so a profile-borne credential reports as configured; `src/cadrumo/application/auth/_operator_probes.py`.
 
 ### Phase `P02` - Read-only censal reader
 
