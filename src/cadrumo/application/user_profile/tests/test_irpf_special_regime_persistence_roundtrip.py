@@ -37,6 +37,7 @@ from ....core.resources import resources
 from ....domain.deadlines import IrpfSpecialRegime
 from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import schema_valid_placeholder
 from ...workflow import WorkflowState
 from .._orchestration import (
     profile_create_storage_span,
@@ -73,7 +74,7 @@ def _required_facts(schema: ProfileSchemaDefinition) -> list[UserProfileFact]:
             continue
         for field in section.fields:
             if field.required:
-                facts.append(UserProfileFact(path=f"{section.key}.{field.key}", value=(field.enum_values[0] if field.enum_values else "placeholder")))
+                facts.append(UserProfileFact(path=f"{section.key}.{field.key}", value=schema_valid_placeholder(field)))
     return facts
 
 

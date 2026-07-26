@@ -27,6 +27,7 @@ from ....domain.user_profile import (
     UserProfileStatus,
 )
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import schema_valid_placeholder
 from ...workflow import (
     WorkflowState,
     read_profile_bucket,
@@ -74,7 +75,7 @@ def _all_required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFac
             continue
         for field in section.fields:
             if field.required:
-                facts.append(UserProfileFact(path=f"{section.key}.{field.key}", value=(field.enum_values[0] if field.enum_values else "placeholder")))
+                facts.append(UserProfileFact(path=f"{section.key}.{field.key}", value=schema_valid_placeholder(field)))
     return tuple(facts)
 
 
