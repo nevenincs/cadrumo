@@ -144,8 +144,8 @@ from ._saturation import (
 )
 from ._schema import (
     CUOTA_LESS_M303_IVA_CATEGORIES,
-    EUMemberState,
     EVIDENCE_EXEMPT_IVA_CATEGORIES,
+    EUMemberState,
     IvaCashAccountingPaymentEvidence,
     IvaCashAccountingTreatment,
     IvaCatalogue,
