@@ -6167,6 +6167,8 @@ errors:
       de referencia o el motor de cálculo pueden estar dañados.
     profile_import_signature: El archivo de perfil no superó la comprobación de firma
       o integridad. No importes archivos de origen no fiable.
+    integrity_storage_bucket_manifest_version_from_future: 'Esta carpeta de perfil fue escrita por una versión más reciente de Cadrumo. Actualiza Cadrumo para abrirla.'
+    integrity_storage_bucket_manifest_version_below_floor: 'Esta carpeta de perfil es anterior al formato más antiguo que esta versión de Cadrumo puede leer.'
   internal:
     cli_outbound_payload_boundary: Cadrumo ha construido un registro interno que no
       ha superado su propia validación. Tu comando era correcto; esto es un defecto

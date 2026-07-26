@@ -22,7 +22,7 @@ import pytest
 from ......core.external_constants import UTF_8_ENCODING
 from ......domain.user_profile import UserProfileStatus
 from .._layout import BucketPaths, bucket_paths
-from .._manifest import BucketManifest, ManifestKdfParams
+from .._manifest import BUCKET_MANIFEST_SCHEMA_VERSION, BucketManifest, ManifestKdfParams
 from .._manifest_io import manifest_path, read_manifest, write_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -56,7 +56,7 @@ def _populated_manifest(bucket_id: str) -> BucketManifest:
             output_length=32,
         ),
         recovery_enrolled=True,
-        schema_version=1,
+        schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
         status=UserProfileStatus.TOMBSTONED,
     )
 

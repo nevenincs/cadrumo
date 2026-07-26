@@ -5727,6 +5727,8 @@ errors:
       or the calculation engine may be corrupted.
     profile_import_signature: The profile archive failed its signature or integrity
       check. Do not import archives from an untrusted source.
+    integrity_storage_bucket_manifest_version_from_future: 'This profile bucket was written by a newer version of Cadrumo. Update Cadrumo to open it.'
+    integrity_storage_bucket_manifest_version_below_floor: 'This profile bucket predates the oldest format this version of Cadrumo can read.'
   internal:
     cli_outbound_payload_boundary: Cadrumo built an internal record that failed its
       own validation. Your command was correct; this is a defect in Cadrumo. Report

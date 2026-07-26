@@ -15,6 +15,7 @@ from ......domain.user_profile import UserProfileStatus
 from ...errors import StorageValidationError
 from .._layout import BucketPaths, bucket_paths, provision_bucket_directory
 from .._manifest import (
+    BUCKET_MANIFEST_SCHEMA_VERSION,
     BucketManifest,
     ManifestKdfParams,
 )
@@ -44,7 +45,7 @@ def _fixture_manifest(*, last_unlocked: bool = True) -> BucketManifest:
         last_unlocked_at=datetime(2026, 5, 14, 13, 30, 0, tzinfo=UTC) if last_unlocked else None,
         kdf_params=kdf,
         recovery_enrolled=True,
-        schema_version=1,
+        schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
         status=UserProfileStatus.ACTIVE,
     )
 

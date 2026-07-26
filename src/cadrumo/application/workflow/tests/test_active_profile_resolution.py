@@ -146,6 +146,7 @@ def _write_live_bucket(root: Path, *, bucket_id: str, label: str) -> None:
     materialises it.
     """
     from ....adapters.persistence.storage.bucket import (
+        BUCKET_MANIFEST_SCHEMA_VERSION,
         BucketManifest,
         bucket_paths,
         provision_bucket_directory,
@@ -164,7 +165,7 @@ def _write_live_bucket(root: Path, *, bucket_id: str, label: str) -> None:
             last_unlocked_at=None,
             kdf_params=KdfParams.default().to_manifest_params(),
             recovery_enrolled=False,
-            schema_version=1,
+            schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
             status=UserProfileStatus.ACTIVE,
         ),
     )
@@ -173,6 +174,7 @@ def _write_live_bucket(root: Path, *, bucket_id: str, label: str) -> None:
 def _tombstone_bucket(root: Path, *, bucket_id: str, label: str) -> None:
     """Write a real tombstoned bucket manifest at ``<root>/buckets/<bucket_id>/``."""
     from ....adapters.persistence.storage.bucket import (
+        BUCKET_MANIFEST_SCHEMA_VERSION,
         BucketManifest,
         bucket_paths,
         provision_bucket_directory,
@@ -191,7 +193,7 @@ def _tombstone_bucket(root: Path, *, bucket_id: str, label: str) -> None:
             last_unlocked_at=None,
             kdf_params=KdfParams.default().to_manifest_params(),
             recovery_enrolled=False,
-            schema_version=1,
+            schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
             status=UserProfileStatus.TOMBSTONED,
         ),
     )

@@ -57,8 +57,20 @@ from ._export_header import ExportArchiveHeader
 from ._keystore_paths import keystore_path, keystore_root, validate_keystore_separation
 from ._layout import BucketPaths, bucket_paths, provision_bucket_directory
 from ._lockfile import acquire_lock, lock_path, release_lock
-from ._manifest import BucketKeySchedule, BucketManifest, ManifestKdfParams
-from ._manifest_io import MISSING_BUCKET_MANIFEST_MESSAGE, manifest_path, read_manifest, write_manifest
+from ._manifest import (
+    BUCKET_MANIFEST_DURABILITY_FLOOR,
+    BUCKET_MANIFEST_SCHEMA_VERSION,
+    BucketKeySchedule,
+    BucketManifest,
+    ManifestKdfParams,
+)
+from ._manifest_io import (
+    MISSING_BUCKET_MANIFEST_MESSAGE,
+    ensure_manifest_schema_readable,
+    manifest_path,
+    read_manifest,
+    write_manifest,
+)
 from ._output_language_hint import (
     clear_bucket_output_language_hint,
     read_bucket_output_language_hint,
@@ -69,6 +81,8 @@ from ._sealed_archive_reader import SealedArchiveContents, read_sealed_archive
 from ._sealed_archive_writer import CADRUMO_BUCKET_BUNDLE_SUFFIX, write_sealed_archive
 
 __all__ = [
+    "BUCKET_MANIFEST_DURABILITY_FLOOR",
+    "BUCKET_MANIFEST_SCHEMA_VERSION",
     "CADRUMO_BUCKET_BUNDLE_SUFFIX",
     "MISSING_BUCKET_MANIFEST_MESSAGE",
     "BucketAlreadyPresentError",
@@ -89,6 +103,7 @@ __all__ = [
     "acquire_lock",
     "bucket_paths",
     "clear_bucket_output_language_hint",
+    "ensure_manifest_schema_readable",
     "keystore_path",
     "keystore_root",
     "lock_path",

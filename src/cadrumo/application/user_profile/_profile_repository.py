@@ -49,6 +49,7 @@ from ...adapters.persistence.storage import (
     dispose_engines_for_bucket,
 )
 from ...adapters.persistence.storage.bucket import (
+    BUCKET_MANIFEST_SCHEMA_VERSION,
     BucketKeySchedule,
     BucketManifest,
     ManifestKdfParams,
@@ -327,7 +328,10 @@ class ProfileRepository:
                     "the create span must mint the per-bucket DEK before manifest registration.",
                 )
             key_schedule = BucketKeySchedule.BUCKET_DEK_V1
-            manifest_schema_version = 2
+            # Sourced from the manifest tier's own constant rather than restated
+            # here. The bare literal this replaces is how the version reached 2
+            # inside an unrelated routing change without announcing itself.
+            manifest_schema_version = BUCKET_MANIFEST_SCHEMA_VERSION
 
             try:
                 # Step 1: stage the bucket directory tree + the plaintext
