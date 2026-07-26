@@ -19,6 +19,8 @@ related:
   - '[[2026-07-25-censal-profile-autofill-P01-S20]]'
   - '[[2026-07-25-censal-profile-autofill-P01-S23]]'
   - '[[2026-07-25-censal-profile-autofill-P01-S24]]'
+  - '[[2026-07-25-censal-profile-autofill-P01-S33]]'
+  - '[[2026-07-25-censal-profile-autofill-P01-S34]]'
   - '[[2026-07-25-censal-profile-autofill-P02-S04]]'
   - '[[2026-07-25-censal-profile-autofill-P02-S05]]'
   - '[[2026-07-25-censal-profile-autofill-P02-S06]]'
@@ -77,6 +79,8 @@ Auto-generated index of all documents tagged with `#censal-profile-autofill`.
 - `2026-07-25-censal-profile-autofill-P03-S22` - Make the clear branch consult provenance as the value branch does, so a clear the app wrote cannot earn the protection reserved for an operator decision
 - `2026-07-25-censal-profile-autofill-P01-S23` - Salvage the authenticated Clave session a post-auth navigation failure was closing unread, so a spent second factor becomes a retryable navigation
 - `2026-07-25-censal-profile-autofill-P01-S24` - Pin the session-identity comparison the certificate provider's only fail-closed check rests on, asserting the refusal and the per-return wiring rather than the expectation alone
+- `2026-07-25-censal-profile-autofill-P01-S33` - Rule on whether a schema-required profile field may be cleared or left never-set after creation, the completeness check keying on fact presence rather than value presence while the overview beside it already keys on value, and place the guard where the state is created rather than at each consumer
+- `2026-07-25-censal-profile-autofill-P01-S34` - Refuse a live session when an active profile carries no fiscal identity, closing the certificate path where a cleared field disarmed both the credential guard and the deferred session comparison, gated by a sweep over the whole provider enum
 - `2026-07-25-censal-profile-autofill-P03-S10` - Verify the whole path live end to end in three phases, a pull onto a blank profile that adopts, a second unchanged pull that is a no-op, and a third pull after the operator edits an adopted value that reports the divergence rather than overwriting it
 
 ### plan
