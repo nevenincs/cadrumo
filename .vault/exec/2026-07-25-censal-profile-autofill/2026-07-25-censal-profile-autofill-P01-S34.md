@@ -108,3 +108,29 @@ this subsystem where documentation asserts a guarantee the code does not make,
 after the credential guard's fail-closed description and the deferred check's
 description of where the certificate is compared. All three were load-bearing
 for a security property, and all three were believed before being tested.
+
+This Step's commit carried two locale hunks not authored here, and the second
+one matters. The locale edits were written several hours earlier, across an
+interruption; the locale tool rewrites whole files; and a commit naming paths
+publishes working-tree content. So the commit published a stale whole-file
+snapshot that re-added a censal message key another campaign had deliberately
+removed in the interim, and reflowed a second key's quoting without changing
+its content.
+
+The consequence was not mis-attribution but a false green. That removal had
+left a message key referenced by code and absent from every catalogue, which
+is precisely what the catalogue parity gate exists to catch. The accidental
+re-add repaired that before the gate ran, so the catalogues are consistent
+today for the wrong reason. Adjudicated as leave-as-is: the pending censal
+change references both keys deliberately, for a never-recorded identity and a
+removed one, so both become legitimate when it lands and removing either now
+would break the gate. The end state is right; the route to it was not.
+
+The guard lesson is the reusable part. The pre-commit check compared the set
+of staged PATHS and was read as confirming the staged CONTENT. Those are
+different questions, and a path-level check cannot see foreign content inside
+a file legitimately owned - which makes it structurally insufficient, not
+merely weak, for any generator that rewrites whole files from a working tree of
+unknown age. It was found only by re-reading the commit's own diffstat well
+after the fact, on noticing that a one-key change reported eight changed lines
+per catalogue.
