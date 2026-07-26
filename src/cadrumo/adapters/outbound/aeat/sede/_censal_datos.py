@@ -590,6 +590,22 @@ async def _navigate_and_parse(
         )
 
 
+def landed_on_censal_path(landing_url: str) -> bool:
+    """Return whether a landing URL has arrived at the censal consulta path.
+
+    The single reader of this condition. The dispatch wait and the judgement
+    that follows it both consult this, so a wait that expires on a page which
+    did land cannot produce a different answer from the check that reports it.
+
+    Args:
+        landing_url: The URL currently loaded.
+
+    Returns:
+        ``True`` when the URL carries the censal consulta path.
+    """
+    return _CENSAL_PATH in landing_url
+
+
 async def _resolve_dispatched_origin(
     page: Any,
     *,
@@ -609,6 +625,16 @@ async def _resolve_dispatched_origin(
     ``sede.`` origin when the selector does not dispatch, so the caller's own
     landing guard still adjudicates the result.
 
+    **Log contract**, because reading a live run depends on it. Exactly one of
+    two records is emitted at info level per call: a ``host=`` record naming
+    the host read off the landed page, or a fallback record naming the
+    unnumbered origin. A numbered host in the ``host=`` record cannot come
+    from the fallback, so it establishes that the session reached a numbered
+    host — though not that the authorize click is what took it there, which
+    this function cannot observe. Neither debug record says anything about
+    dispatch in either direction: one reports only that the wait expired, and
+    the other is the judgement of the landed page.
+
     Args:
         page: The Playwright page to drive.
         browser_session: Session wrapper providing the health-probing navigate.
@@ -626,19 +652,30 @@ async def _resolve_dispatched_origin(
         await page.click(_EXTERNAL.aeat.clave_movil.authorize_button_selector)
         try:
             await page.wait_for_url(
-                lambda url: _CENSAL_PATH in url,
+                landed_on_censal_path,
                 timeout=settings.cadrumo_browser_navigation_timeout_ms,
             )
         except PlaywrightError:
+            # The wait expiring is a fact about the WAIT, never about the
+            # dispatch: the page can land correctly just outside the wait's
+            # window. Say only what happened, and let the single judgement
+            # below decide whether the dispatch arrived.
+            log.debug("censal selector wait expired; judging the landed page instead", exc_info=True)
+        await page.wait_for_load_state(PLAYWRIGHT_WAIT_DOMCONTENTLOADED)
+        # One reader of the condition, evaluated once, after the page settled.
+        if not landed_on_censal_path(getattr(page, "url", "") or ""):
             log.debug(
                 "censal selector dispatch did not reach the censal path; current_url=%s",
                 getattr(page, "url", None),
-                exc_info=True,
             )
-        await page.wait_for_load_state(PLAYWRIGHT_WAIT_DOMCONTENTLOADED)
 
     landed = urlsplit(getattr(page, "url", "") or "")
     if not landed.scheme or not landed.netloc:
+        # Logged because the caller's discriminator reads the absence of the
+        # ``host=`` line below as the fallback's signature, and a silent return
+        # here would leave "the fallback fired" indistinguishable from "the
+        # reader never ran" — two states with different owners.
+        log.info("censal read fell back to the unnumbered origin; the selector did not dispatch")
         return _SEDE_ORIGIN
     origin = f"{landed.scheme}://{landed.netloc}"
     # A dispatch off the AEAT apex must not become the origin we then request.
@@ -745,5 +782,6 @@ __all__ = [
     "fetch_censal_datos",
     "forbidden_censal_landing_marker",
     "is_forbidden_censal_landing",
+    "landed_on_censal_path",
     "parse_censal_datos",
 ]

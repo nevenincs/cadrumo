@@ -32,6 +32,7 @@ from .._censal_datos import (
     censal_datos_url,
     forbidden_censal_landing_marker,
     is_forbidden_censal_landing,
+    landed_on_censal_path,
     parse_censal_datos,
 )
 from .._errors import SedeNavigationError, SedeParseError
@@ -276,6 +277,23 @@ class TestNoWriteSurface:
         pinned = [name for name in ("www1", "www2", "www3", "www6", "www12") if f"domains.{name}" in source]
 
         assert pinned == []
+
+    def test_dispatch_predicate_recognises_the_censal_landing(self) -> None:
+        """The wait and the judgement that follows it read one condition.
+
+        They previously disagreed: a wait expiring on a page that HAD landed
+        made the reader log a dispatch failure, which reads as the fallback
+        having fired when it had not.
+        """
+        assert landed_on_censal_path(censal_datos_url("Y0000001Z"))
+        assert landed_on_censal_path(aeat_url("www6", _AEAT.sede_paths.censal_datos))
+        assert not landed_on_censal_path(f"{_AEAT.domains.sede}{_AEAT.sede_paths.expedientes_resumen}")
+        assert not landed_on_censal_path("")
+
+    def test_dispatch_predicate_is_host_agnostic(self) -> None:
+        """The landing judgement keys on the path, so any dispatch host counts."""
+        for origin in ("www1", "www2", "www6", "www12"):
+            assert landed_on_censal_path(aeat_url(origin, _AEAT.sede_paths.censal_datos))
 
     def test_module_exposes_no_submitting_operation(self) -> None:
         """The public surface offers navigation and parsing only."""
