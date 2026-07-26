@@ -128,6 +128,7 @@ class BucketEventHistoryRepository:
             ClassificationError,
             Envelope,
             EnvelopeVersionError,
+            inner_envelope_version_is_current,
         )
 
         try:
@@ -173,7 +174,7 @@ class BucketEventHistoryRepository:
                 },
                 translated_message="errors.integrity.integrity_storage_classification",
             )
-        if envelope.schema_version > _CATALOGUE_VERSION:
+        if not inner_envelope_version_is_current(envelope.schema_version, _CATALOGUE_VERSION):
             _LOGGER.error(
                 "bucket-event-history catalogue envelope version mismatch schema_version=%d",
                 envelope.schema_version,

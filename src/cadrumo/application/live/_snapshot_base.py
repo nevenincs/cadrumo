@@ -45,6 +45,7 @@ from ...adapters.persistence.storage import (
     Envelope,
     EnvelopeVersionError,
     SecureObjectNamespaceDefinition,
+    inner_envelope_version_is_current,
     secure_object_repository_for_bucket,
 )
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
@@ -486,7 +487,10 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
                 f"{self._domain_label} snapshot {snapshot_label!r} has classification "
                 f"{envelope.classification}; consumer expected {self._namespace_definition.sensitivity}",
             )
-        if envelope.schema_version > self._namespace_definition.schema_version:
+        if not inner_envelope_version_is_current(
+            envelope.schema_version,
+            self._namespace_definition.schema_version,
+        ):
             snapshot_label = requested_snapshot_id or _snapshot_id_of(envelope.payload)
             raise EnvelopeVersionError(
                 f"{self._domain_label} snapshot {snapshot_label!r} is at version "

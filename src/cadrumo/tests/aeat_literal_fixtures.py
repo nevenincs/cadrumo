@@ -42,6 +42,19 @@ LIVE_PARITY_STATE_CREATING_PATH_CANARIES = (
     "/wlpl/PRET/transmision-fichero",
     "/wlpl/PRET/transmitir",
 )
+# The censal consulta page reaches these three write surfaces through its own
+# buttons and links. They are declared here so the censal reader's no-write
+# proof can assert the landing guard refuses the paths that genuinely exist.
+# None of them contains the token ``MOD036``, which is why the guard keys on
+# the landing path instead.
+CENSAL_MODIF_DOMICILIO_FISCAL_PATH_CANARY = "/wlpl/BUGC-JDIT/ModifDomiDual"
+CENSAL_MODIF_DOMICILIO_NOTIF_PATH_CANARY = "/wlpl/BUGC-JDIT/ModifDomiNotif"
+CENSAL_M036_FILING_TOOL_PATH_CANARY = "/wlpl/BU36-ASIS/M036/index.zul"
+CENSAL_WRITE_SURFACE_PATH_CANARIES = (
+    CENSAL_MODIF_DOMICILIO_FISCAL_PATH_CANARY,
+    CENSAL_MODIF_DOMICILIO_NOTIF_PATH_CANARY,
+    CENSAL_M036_FILING_TOOL_PATH_CANARY,
+)
 JUSTIFICANTE_AYUDA_PATH_FIXTURE = "/ayuda"
 JUSTIFICANTE_COTEJO_PATH_PREFIX_FIXTURE = "/Sede/cotejo/CSV="
 JUSTIFICANTE_VERIFY_PATH_FIXTURE = "/verify"
@@ -141,6 +154,10 @@ __all__ = [
     "AEAT_LITERAL_SCAN_TOKENS",
     "AUTH_DIAGNOSTIC_PATH_FIXTURE",
     "BORRADOR_STORAGE_PATH_FIXTURE",
+    "CENSAL_M036_FILING_TOOL_PATH_CANARY",
+    "CENSAL_MODIF_DOMICILIO_FISCAL_PATH_CANARY",
+    "CENSAL_MODIF_DOMICILIO_NOTIF_PATH_CANARY",
+    "CENSAL_WRITE_SURFACE_PATH_CANARIES",
     "CLAVE_MOVIL_BROWSER_GLOBAL_EXPECTED",
     "FILED_ARTEFACT_PATH_FIXTURE",
     "JUSTIFICANTE_AYUDA_PATH_FIXTURE",

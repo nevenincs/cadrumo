@@ -70,7 +70,7 @@ def _required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFact, .
         if section.repeatable:
             continue
         facts.extend(
-            UserProfileFact(path=f"{section.key}.{field.key}", value="placeholder")
+            UserProfileFact(path=f"{section.key}.{field.key}", value=(field.enum_values[0] if field.enum_values else "placeholder"))
             for field in section.fields
             if field.required
         )

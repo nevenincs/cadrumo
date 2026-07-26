@@ -113,6 +113,7 @@ class VerificationReportCatalogueRepository:
             ClassificationError,
             Envelope,
             EnvelopeVersionError,
+            inner_envelope_version_is_current,
         )
 
         try:
@@ -150,7 +151,7 @@ class VerificationReportCatalogueRepository:
                     "actual_classification": envelope.classification.value,
                 },
             )
-        if envelope.schema_version > _VERIFICATION_CATALOGUE_VERSION:
+        if not inner_envelope_version_is_current(envelope.schema_version, _VERIFICATION_CATALOGUE_VERSION):
             _LOGGER.error(
                 "verification-report catalogue envelope version unsupported",
                 extra={

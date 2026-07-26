@@ -961,7 +961,7 @@ def test_calendar_completeness_lists_uncomputable_with_reason() -> None:
     raw = {
         "tax.id": "X1234567L",
         "activity": "design",
-        "iva.regime": "general",
+        "iva.regime": "GENERAL",
     }
     cal = build_overview_calendar(_profile(), rng, today=today, raw_values=raw)
     assert "iva.regime" in cal.completeness.explicitly_set_keys
@@ -981,7 +981,7 @@ def test_calendar_warnings_include_registry_deadline_window_predicates() -> None
     raw = {
         "tax.id": "X1234567L",
         "activity": "design",
-        "iva.regime": "general",
+        "iva.regime": "GENERAL",
     }
 
     cal = build_overview_calendar(_profile(), rng, today=today, raw_values=raw)

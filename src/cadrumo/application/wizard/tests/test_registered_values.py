@@ -181,3 +181,27 @@ def test_artefact_sourced_fact_carries_the_non_official_suffix() -> None:
     suffix = _tr(REGISTERED_NON_OFFICIAL_SUFFIX_LOCALE_KEY)
     assert project_registered_values(SETUP_FLOW, artefact_record)["activity-start-date"] == f"2020-01-15 {suffix}"
     assert project_registered_values(SETUP_FLOW, manual_record)["activity-start-date"] == "2020-01-15"
+
+
+def test_a_cleared_path_is_not_rendered() -> None:
+    """A deliberately cleared fact contributes no entry.
+
+    Behaviour-preservation guard for the move onto the shared effective-fact
+    projection. The value-only projection OMITTED a cleared path, so it was
+    skipped incidentally; the effective-fact projection RETAINS it with a null
+    value so the deletion stays visible, and the renderer must skip it
+    explicitly instead. Without this, the migration could regress into
+    rendering a cleared field as an empty or ``None`` string and nothing would
+    catch it.
+    """
+    cleared = _record(
+        UserProfileFact(path="censo.activity_start_date", value="2020-01-15"),
+        UserProfileFact(path="censo.activity_start_date", value=None),
+    )
+    populated = _record(UserProfileFact(path="censo.activity_start_date", value="2020-01-15"))
+
+    cleared_ids = set(project_registered_values(SETUP_FLOW, cleared))
+    populated_ids = set(project_registered_values(SETUP_FLOW, populated))
+
+    assert populated_ids - cleared_ids, "the populated record must render a page the cleared one does not"
+    assert not any("None" in value for value in project_registered_values(SETUP_FLOW, cleared).values())

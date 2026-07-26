@@ -60,10 +60,18 @@ def _classify_identity_alignment(profile_tax_id: str, provider_identity: str) ->
 def _active_profile_path_values(state: WorkflowState | None = None) -> dict[str, str]:
     """Return the active profile's schema-path values, empty when unreadable.
 
-    A readiness probe reports on configuration; it must never fail
-    because the profile could not be read, so every read fault degrades
-    to an empty mapping and the caller reports the credential as absent.
+    A readiness probe answers questions like "is auth configured" and the
+    operator must be able to ask them before unlocking anything, so the
+    absence of a bucket session is an ordinary state here rather than a
+    fault. The session is checked before the read is attempted: the
+    encrypted store raises through its SQL layer, which wraps the refusal
+    in a driver exception that no domain-level except clause would catch,
+    so declining the doomed read is what keeps the probe answerable.
     """
+    from ...adapters.persistence.storage import has_active_bucket_session
+
+    if state is None and not has_active_bucket_session():
+        return {}
     try:
         from ..user_profile import record_to_path_values
         from ..workflow import workflow_state_repository

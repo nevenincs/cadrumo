@@ -15,6 +15,8 @@ from ....core.resources import resources
 from ....domain.buckets import BucketEventType
 from ....domain.user_profile import (
     ProfileAlreadyExistsError,
+    ProfileFieldDefinition,
+    ProfileFieldType,
     ProfileNotFoundError,
     ProfileSchemaDefinition,
     ProfileSchemaValidationError,
@@ -65,6 +67,25 @@ def _service(secure_objects: SecureObjectRepository, schema: ProfileSchemaDefini
     )
 
 
+def _placeholder_value(field: ProfileFieldDefinition) -> str:
+    """Return a schema-VALID filler for one field.
+
+    A single sentinel used to fill every field regardless of type, which
+    was fine while the schema's declared value sets constrained nothing.
+    Now that an enum field is held to its own declaration, filler for one
+    must be a value that field actually declares — otherwise this helper
+    builds a profile the schema refuses, and every test using it fails for
+    a reason that has nothing to do with what it is testing.
+
+    Declared order is deliberate: taking the first keeps the choice
+    reproducible and makes it obvious the value carries no meaning beyond
+    being legal.
+    """
+    if field.type is ProfileFieldType.ENUM and field.enum_values:
+        return field.enum_values[0]
+    return "placeholder"
+
+
 def _all_required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFact, ...]:
     facts: list[UserProfileFact] = []
     for section in schema.sections:
@@ -72,7 +93,12 @@ def _all_required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFac
             continue
         for field in section.fields:
             if field.required:
-                facts.append(UserProfileFact(path=f"{section.key}.{field.key}", value="placeholder"))
+                facts.append(
+                    UserProfileFact(
+                        path=f"{section.key}.{field.key}",
+                        value=_placeholder_value(field),
+                    ),
+                )
     return tuple(facts)
 
 

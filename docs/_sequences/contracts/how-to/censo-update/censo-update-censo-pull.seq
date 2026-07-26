@@ -1,0 +1,6 @@
+@step Preview the census facts AEAT holds for you.
+@static aeat config profile censo pull
+@blocked live-aeat The pull reads the AEAT sede consulta over an authenticated session; the sandbox refuses live frames.
+@step Record the previewed facts onto the active profile.
+@static aeat config profile censo pull --apply
+@blocked live-aeat The pull reads the AEAT sede consulta over an authenticated session; the sandbox refuses live frames.

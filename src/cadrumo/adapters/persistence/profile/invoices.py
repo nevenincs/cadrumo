@@ -110,7 +110,7 @@ class InvoiceCatalogueRepository:
                 If the envelope schema version is higher than the consumer
                 supports.
         """
-        from ..storage import Envelope
+        from ..storage import Envelope, inner_envelope_version_is_current
 
         record = self._objects.load(
             _INVOICE_NAMESPACE,
@@ -129,7 +129,7 @@ class InvoiceCatalogueRepository:
                 f"invoice catalogue has classification {envelope.classification}; "
                 f"consumer expected {_INVOICE_CATALOGUE_SENSITIVITY}",
             )
-        if envelope.schema_version > _INVOICE_CATALOGUE_VERSION:
+        if not inner_envelope_version_is_current(envelope.schema_version, _INVOICE_CATALOGUE_VERSION):
             from ..storage import EnvelopeVersionError
 
             raise EnvelopeVersionError(

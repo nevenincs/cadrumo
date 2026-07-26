@@ -781,34 +781,15 @@ class BucketHistoryResult(OutputSchema):
 
 
 # Profile wizard / lifecycle verb result schemas
-
-
-@register_schema("config.profile.create")
-class ConfigProfileCreateResult(OutputSchema):
-    """JSON envelope for ``aeat config profile create``.
-
-    The post-create next-step hint is surfaced on the envelope ``notices``
-    channel, not as a bespoke ``next`` field. The lifecycle mutation itself is
-    owned by :class:`ProfileLifecycleService`.
-    """
-
-    profile_name: str
-    status: str
-    active_profile: str | None = None
-
-
-@register_schema("config.profile.edit")
-class ConfigProfileEditResult(OutputSchema):
-    """JSON envelope for ``aeat config profile edit``.
-
-    The post-edit next-step hint is surfaced on the envelope ``notices``
-    channel, not as a bespoke ``next`` field. The payload reports only the
-    edited profile name and mutation status; edited facts remain in secure
-    profile storage.
-    """
-
-    profile_name: str
-    status: str
+#
+# ``config.profile.create`` / ``config.profile.edit`` register in
+# :mod:`application.wizard._results`, not here: the wizard is their actual
+# producer, and it sits below this CLI package in the accepted hexagonal
+# direction, so it cannot construct a class defined up here. Registering the
+# schema at its real producer means constructing it IS the strict
+# validation, rather than a same-shaped pair of classes nothing ever
+# imports existing solely to satisfy the CLI-leaf-has-a-registered-schema
+# conformance gate.
 
 
 @register_schema("config.profile.export")

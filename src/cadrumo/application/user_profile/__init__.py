@@ -147,9 +147,14 @@ if TYPE_CHECKING:
         CensoSyncError,
     )
     from ._censo_sync import (
-        CENSO_DERIVED_SOURCE_TAG,
+        CENSAL_ADOPTABLE_PATHS,
         CENSO_SOURCE_TAG,
+        CensalIdentityMismatchError,
+        CensalReconciliation,
         CensoSyncService,
+        apply_censal_read,
+        censal_facts_from_read,
+        reconcile_censal_read,
     )
     from ._commands import (
         CompleteSetupCommand,
@@ -239,8 +244,10 @@ if TYPE_CHECKING:
     from ._profile_pointer_transaction import active_profile_pointer_transaction
     from ._profile_repository import ProfileRepository
     from ._projections import (
+        EffectiveFact,
         facts_to_values,
         projection_for_taxpayer,
+        record_to_effective_facts,
         record_to_path_values,
         record_to_values,
         snapshot_to_values,
@@ -310,12 +317,26 @@ _LAZY_EXPORTS: dict[str, str] = {
         ("...domain.user_profile", tuple(_DOMAIN_RECORD_NAMES)),
         ("._lifecycle", ("ProfileLifecycleService",)),
         ("._censo_errors", ("CensoSyncError",)),
-        ("._censo_sync", ("CENSO_DERIVED_SOURCE_TAG", "CENSO_SOURCE_TAG", "CensoSyncService")),
+        (
+            "._censo_sync",
+            (
+                "CENSAL_ADOPTABLE_PATHS",
+                "CENSO_SOURCE_TAG",
+                "CensalIdentityMismatchError",
+                "CensalReconciliation",
+                "CensoSyncService",
+                "apply_censal_read",
+                "censal_facts_from_read",
+                "reconcile_censal_read",
+            ),
+        ),
         (
             "._projections",
             (
                 "facts_to_values",
                 "projection_for_taxpayer",
+                "EffectiveFact",
+                "record_to_effective_facts",
                 "record_to_path_values",
                 "record_to_values",
                 "snapshot_to_values",
@@ -491,7 +512,7 @@ def __getattr__(name: str):
 
 
 __all__ = [
-    "CENSO_DERIVED_SOURCE_TAG",
+    "CENSAL_ADOPTABLE_PATHS",
     "CENSO_DIVERGENCE_NOTICE_CODE",
     "CENSO_DIVERGENCE_PREFIX",
     "CENSO_SOURCE_TAG",
@@ -503,6 +524,8 @@ __all__ = [
     "USER_PROFILE_VALUE_NAMESPACE",
     "CapabilityDecision",
     "CapabilitySource",
+    "CensalIdentityMismatchError",
+    "CensalReconciliation",
     "CensoDivergence",
     "CensoSyncError",
     "CensoSyncService",
@@ -515,6 +538,7 @@ __all__ = [
     "DuplicateProfileCommand",
     "EditProfileFieldCommand",
     "EditProfileSectionCommand",
+    "EffectiveFact",
     "EncryptedProfileBundleError",
     "EncryptedProfileBundleExport",
     "PassphraseAssessment",
@@ -565,6 +589,7 @@ __all__ = [
     "UserProfileSnapshotRepository",
     "UserProfileStatus",
     "active_profile_pointer_transaction",
+    "apply_censal_read",
     "apply_cotejo",
     "assess_passphrase",
     "build_lifecycle_service",
@@ -572,6 +597,7 @@ __all__ = [
     "bundle_data_categories",
     "bundle_excluded_data_categories",
     "carried_namespace_definitions",
+    "censal_facts_from_read",
     "censo_divergence_notice",
     "change_passphrase",
     "close_profile_session_artefacts",
@@ -598,7 +624,9 @@ __all__ = [
     "projection_for_taxpayer",
     "publish_prepared_export",
     "reactivate_profile_with_lifecycle_span",
+    "reconcile_censal_read",
     "reconcile_prepared_exports",
+    "record_to_effective_facts",
     "record_to_path_values",
     "record_to_values",
     "recover_secret_store",

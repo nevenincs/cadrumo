@@ -11,7 +11,7 @@ from :mod:`cadrumo.domain.deadlines`.
 from __future__ import annotations
 
 from datetime import date, datetime
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Self
 
@@ -590,95 +590,6 @@ class TaxpayerProfile(BaseModel):
     condition is met. ``None`` when not declared, in which case a triggered
     multiple-pagadores condition surfaces a conservative advisory.
     """
-    days_in_spain: dict[int, int] = Field(default_factory=dict)
-    """Days of physical presence in Spain per calendar year.
-
-    Maps year (e.g. 2024) to number of days. Used to assess proximity to
-    the Art. 9 LIRPF habitual residence threshold (183 days). The advisory
-    ``RESIDENCY_BOUNDARY_NEAR`` is triggered when any declared year falls
-    in the 150-215 day range -- close enough to the threshold that the
-    operator should verify the actual count carefully.
-
-    Recorded via ``--days-in-spain YYYY=NDAYS`` on the profile.
-    """
-
-    @field_validator("days_in_spain", mode="before")
-    @classmethod
-    def _coerce_days_in_spain_keys(cls, value: object) -> object:
-        """Accept JSON-serialised ``dict[int, int]`` where keys arrive as strings.
-
-        ``model_dump_json()`` serialises integer dict keys as JSON string keys
-        (e.g. ``{"2024": 165}``). Without this coercion,
-        ``model_validate_json`` would reject those string keys against the
-        ``dict[int, int]`` annotation. Numeric-string keys are cast to ``int``
-        here; non-numeric keys are left unchanged so the subsequent validation
-        step reports them cleanly.
-        """
-        if not isinstance(value, dict):
-            return value
-        coerced: dict[object, object] = {}
-        for k, v in value.items():
-            if isinstance(k, str) and k.isdigit():
-                coerced[int(k)] = v
-            else:
-                coerced[k] = v
-        return coerced
-
-    @field_validator("cross_period_group_member_rosters", mode="before")
-    @classmethod
-    def _coerce_cross_period_group_member_rosters(cls, value: object) -> object:
-        """Accept JSON arrays for the strict tuple roster field."""
-        if isinstance(value, tuple):
-            return value
-        if isinstance(value, list | set | frozenset):
-            return tuple(value)
-        return value
-
-    @field_validator("irpf_income_categories", mode="before")
-    @classmethod
-    def _coerce_income_categories(cls, value: object) -> object:
-        """Accept any iterable of categories under strict mode.
-
-        ``strict=True`` rejects a JSON array for a ``frozenset`` field,
-        so a model loaded from ``model_dump_json`` would fail. Coercing
-        a list / tuple / set into a ``frozenset`` here keeps the JSON
-        persistence roundtrip loss-free while the field stays a typed,
-        order-independent ``frozenset`` on the model.
-        """
-        if isinstance(value, frozenset):
-            return value
-        if isinstance(value, list | tuple | set):
-            return frozenset(value)
-        return value
-
-    @field_validator(
-        "objective_estimation_prior_year_gross_income_eur",
-        "objective_estimation_prior_year_invoice_gross_income_eur",
-        "objective_estimation_prior_year_agri_livestock_forest_gross_eur",
-        "objective_estimation_prior_year_purchases_eur",
-        "objective_estimation_modulos_module_1_units",
-        "objective_estimation_modulos_module_2_units",
-        "objective_estimation_modulos_module_3_units",
-        "objective_estimation_modulos_module_4_units",
-        "objective_estimation_modulos_module_5_units",
-        "objective_estimation_modulos_module_6_units",
-        "objective_estimation_modulos_module_7_units",
-        mode="before",
-    )
-    @classmethod
-    def _coerce_objective_estimation_decimal(cls, value: object) -> object:
-        """Accept JSON-serialised Decimals for declared EO volume facts."""
-        if value is None or isinstance(value, Decimal):
-            return value
-        if isinstance(value, str):
-            stripped = value.strip()
-            if not stripped:
-                return None
-            try:
-                return Decimal(stripped)
-            except InvalidOperation as exc:
-                raise DeadlineValidationError("objective-estimation declared volume must be a decimal") from exc
-        return value
 
     @model_validator(mode="after")
     def _check_impatriado_requires_start_date(self) -> Self:
@@ -770,21 +681,6 @@ class TaxpayerProfile(BaseModel):
         if self.country_of_fiscal_residence is None:
             return False
         return is_ue_eee_country_code(self.country_of_fiscal_residence)
-
-    @property
-    def residency_boundary_near(self) -> bool:
-        """True when any declared year's presence count falls in the 150-215 day window.
-
-        Art. 9 LIRPF: habitual residence in Spain is presumed when the
-        taxpayer is present for more than 183 days in a calendar year.
-        Days 150-215 form a boundary zone where the actual residency
-        determination requires careful verification -- either because the
-        taxpayer may cross the threshold (150-182) or because they already
-        exceed it but by a modest margin (184-215) that could be disputed.
-
-        Returns ``False`` when ``days_in_spain`` is empty.
-        """
-        return any(150 <= days <= 215 for days in self.days_in_spain.values())
 
 
 _MULTIPLE_PAGADORES_SECONDARY_THRESHOLD = MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR

@@ -36,6 +36,7 @@ from ...adapters.persistence.storage import (
     ClassificationError,
     Envelope,
     EnvelopeVersionError,
+    inner_envelope_version_is_current,
     secure_object_repository_for_bucket,
 )
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
@@ -249,7 +250,10 @@ class VerifyObservationRepository:
                 f"verify observation {observation_label!r} has classification {envelope.classification}; "
                 f"consumer expected {LIVE_VERIFY_OBSERVATION_NAMESPACE.sensitivity}",
             )
-        if envelope.schema_version > LIVE_VERIFY_OBSERVATION_NAMESPACE.schema_version:
+        if not inner_envelope_version_is_current(
+            envelope.schema_version,
+            LIVE_VERIFY_OBSERVATION_NAMESPACE.schema_version,
+        ):
             observation_label = requested_observation_id or envelope.payload.observation_id
             raise EnvelopeVersionError(
                 f"verify observation {observation_label!r} is at version {envelope.schema_version}; "

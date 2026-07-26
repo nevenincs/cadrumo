@@ -122,7 +122,7 @@ def test_advisory_fires_for_married_filer_with_eligible_descendant(
     seeded_bucket: str,
 ) -> None:
     """A married (non-conjunta) Madrid filer with an eligible child also gets the advisory."""
-    _seed(seeded_bucket, _base_facts(**{"renta_taxpayer.marital_status": "casado"}))
+    _seed(seeded_bucket, _base_facts(**{"renta_taxpayer.marital_status": "2"}))
 
     finding = _madrid_nacimiento_adopcion_eligibility_advisory_finding(
         m100_2025_snapshot,

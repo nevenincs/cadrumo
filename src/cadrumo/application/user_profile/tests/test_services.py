@@ -115,6 +115,59 @@ def test_validation_covers_every_date_typed_field(schema: ProfileSchemaDefinitio
         )
 
 
+def test_validation_covers_every_enum_typed_field(schema: ProfileSchemaDefinition) -> None:
+    """An undeclared token is refused on every field the schema types as an enum.
+
+    Enumerated FROM the schema rather than listed here, mirroring the date
+    sibling above, so a newly declared enum field enrols itself and cannot
+    ship unenforced. The probe value is deliberately absurd: any real token
+    risks being legitimately declared by some field and would then pass for
+    the wrong reason.
+    """
+
+    enum_paths = [
+        f"{section.key}.{field.key}"
+        for section in schema.sections
+        for field in section.fields
+        if str(field.type) == "enum"
+    ]
+    assert enum_paths  # the schema declares at least one enum field
+    svc = ProfileValidationService(schema=schema)
+    for path in enum_paths:
+        report = svc.validate_facts(
+            "11111111-1111-4111-8111-111111111111",
+            [UserProfileFact(path=path, value="__undeclared_probe_token__")],
+        )
+        assert any(issue.code == "invalid_enum_value" and issue.path == path for issue in report.issues), (
+            f"enum field {path!r} accepted an undeclared value"
+        )
+
+
+def test_every_declared_enum_value_is_accepted(schema: ProfileSchemaDefinition) -> None:
+    """Every value a field declares must pass its own constraint.
+
+    The refusal test above would be satisfied by a check that rejected
+    everything. This is the other half: each declared token is accepted by
+    the field that declares it, so the constraint cannot pass by being
+    uniformly hostile.
+    """
+
+    svc = ProfileValidationService(schema=schema)
+    for section in schema.sections:
+        for field in section.fields:
+            if str(field.type) != "enum":
+                continue
+            path = f"{section.key}.{field.key}"
+            for declared in field.enum_values:
+                report = svc.validate_facts(
+                    "11111111-1111-4111-8111-111111111111",
+                    [UserProfileFact(path=path, value=declared)],
+                )
+                assert not any(issue.code == "invalid_enum_value" for issue in report.issues), (
+                    f"enum field {path!r} refused its own declared value {declared!r}"
+                )
+
+
 def test_preflight_returns_ready_when_no_modelo_selectors_match(schema: ProfileSchemaDefinition) -> None:
     svc = ProfilePreflightService(schema=schema)
     record = UserProfileRecord(

@@ -1,21 +1,32 @@
 """Schema-lineage policy for persisted secure-object payloads.
 
-Persisted rows carry the ``schema_version`` they were written under, while
-the consumer contract names the current version. This module owns the
-policy that keeps every version from the durability floor to the current
-version readable: the version gate is a *ceiling* — a version above the
-consumer's current version is refused as written-by-a-newer-application,
-and a version below it is readable exactly when the per-hop upgrade chain
-up to the current version is complete. Registered upgraders transform
-decrypted plaintext payload bytes one version step at a time; ciphertext,
-AEAD associated data, and revision-lineage metadata are never rewritten by
-a read.
+A persisted secure object passes **two** version gates on the way to a
+consumer, and they hold deliberately different contracts.
+
+*Layer one* guards the outer SQL row. :func:`ensure_schema_version_readable`
+is a *ceiling* plus an upgrade-chain completeness test: a version above the
+consumer's current version is refused as written-by-a-newer-application, and
+a version below it is readable exactly when the per-hop upgrade chain up to
+the current version is complete. Registered upgraders transform decrypted
+plaintext payload bytes one version step at a time; ciphertext, AEAD
+associated data, and revision-lineage metadata are never rewritten by a read.
+
+*Layer two* guards the ``Envelope`` inside the decrypted payload, and its
+contract is strict EQUALITY — :func:`inner_envelope_version_is_current`.
+Equality is right there precisely because layer one has already refused or
+chain-upgraded the row, so an inner deviation is drift or corruption rather
+than a lineage gap. The two layers are not interchangeable: layer one is
+deliberately absent from the storage package facade so a layer-two caller
+cannot reach for the wrong gate.
 
 The upgrader registry is EMPTY while every registered namespace sits at
 schema version 1. A future schema bump MUST land the one-hop upgrader for
 its namespace in the same change, or the lineage gate
 (``tests/test_schema_lineage.py``) fails — that gate is what makes "a
-version bump strands years-old taxpayer data" structurally impossible.
+version bump strands years-old taxpayer data" structurally impossible. That
+upgrader in turn MUST re-stamp the payload's inner envelope version; see
+:func:`register_secure_object_schema_upgrader` for the obligation and why
+forgetting it is silent at layer one and loud only at layer two.
 :data:`SECURE_OBJECT_DURABILITY_FLOOR` moves forward only deliberately, once
 every version below it is no longer readable by any live consumer.
 
@@ -34,6 +45,12 @@ from .errors import EnvelopeVersionError, StorageValidationError
 #: Upgrades one decrypted plaintext payload from ``from_version`` to
 #: ``from_version + 1`` for its namespace. Pure bytes-to-bytes; never touches
 #: ciphertext or row metadata.
+#:
+#: The payload's OWN inner ``Envelope.schema_version`` is emphatically NOT row
+#: metadata — it is payload content, and re-stamping it to ``from_version + 1``
+#: is part of the hop's job. See
+#: :func:`register_secure_object_schema_upgrader` for why forgetting it is
+#: silent rather than loud.
 SecureObjectSchemaUpgrader = Callable[[bytes], bytes]
 
 #: Oldest secure-object schema version every read path keeps readable.
@@ -53,6 +70,32 @@ def register_secure_object_schema_upgrader(
     A schema bump for a namespace lands its upgrader through this function in
     the same change that raises the namespace's declared ``schema_version``;
     the lineage gate fails until it does.
+
+    **The upgrader MUST re-stamp the payload's inner envelope.** A hop that
+    transforms payload shape but leaves ``Envelope.schema_version`` at
+    ``from_version`` is only half-written, and its failure mode is asymmetric:
+    the row codec re-stamps the OUTER record to the current version
+    unconditionally, so the outer layer will already have declared such a row
+    current by the time anything reads it. The inner stamp moves only if this
+    upgrader moves it.
+
+    That asymmetry is why the obligation is recorded here rather than left to
+    review. The only read-time detector of a forgotten re-stamp is the inner
+    equality contract,
+    :func:`inner_envelope_version_is_current` — layer one cannot see it, because
+    from layer one's perspective nothing is wrong. Every persisted read path
+    applies that equality, so a forgotten re-stamp surfaces as a loud refusal on
+    first read rather than an ambiguous payload reaching a tax calculation.
+
+    The obligation is currently assertable only vacuously: no hop is registered
+    while every namespace sits at its from-birth version, and fabricating an
+    old-shape payload to prove it would invent a shape nothing ever wrote, which
+    the pre-release compatibility regime forbids. The first real hop is
+    therefore the first executable proof, and the change that lands it owes
+    three things in the same commit: the upgrader, a committed pre-bump
+    serialized fixture, and a restorability test that loads those bytes through
+    the real production read path and asserts the inner version arrives at the
+    bumped value.
 
     Raises:
         StorageValidationError: When an upgrader for the hop is already
@@ -172,11 +215,53 @@ def upgrade_secure_object_payload(
     return payload
 
 
+def inner_envelope_version_is_current(stored_version: int, current_version: int) -> bool:
+    """Return whether a decrypted payload's inner envelope sits at the current version.
+
+    This is the *layer two* contract described in the module docstring, and it
+    is an equality rather than a ceiling. By the time a consumer validates the
+    inner :class:`~adapters.persistence.storage.Envelope`, layer one has
+    already refused a future outer row or chain-upgraded an older one to
+    ``current_version``, so the only remaining ways an inner stamp can differ
+    are drift and corruption — neither of which a ceiling detects on the
+    below-current side.
+
+    The below-current side is what gives this predicate its teeth. The row
+    codec re-stamps the OUTER record to the current version unconditionally,
+    while the inner stamp lives in the payload bytes and moves only if a
+    registered upgrader rewrites that field. An upgrader that transforms
+    payload shape but forgets the inner version therefore yields exactly a
+    below-current inner stamp on a row layer one has already declared current,
+    and this equality is the ONLY place that is detectable at read time.
+
+    The predicate **does not raise**, by contract. Callers own their refusal:
+    each read path raises its own exception class carrying its own translated
+    message key and the per-object diagnostics (object key, bucket id,
+    amendment id, observation and snapshot labels) that identify *which* row is
+    unreadable. At least one caller is additionally ordering-sensitive — its
+    raise sits inside a ``try`` whose ``except`` clause names the exception
+    types it expects — so a raising helper would silently re-route that path
+    even though the comparison itself is unchanged.
+
+    Args:
+        stored_version: The ``schema_version`` read from the inner envelope.
+        current_version: The namespace's declared current ``schema_version``,
+            which every caller derives from its
+            :class:`~adapters.persistence.storage.SecureObjectNamespaceDefinition`
+            rather than restating as a literal.
+
+    Returns:
+        ``True`` when the stored version is exactly the current version.
+    """
+    return stored_version == current_version
+
+
 __all__ = [
     "SECURE_OBJECT_DURABILITY_FLOOR",
     "SecureObjectSchemaUpgrader",
     "deregister_secure_object_schema_upgrader",
     "ensure_schema_version_readable",
+    "inner_envelope_version_is_current",
     "missing_upgrade_hops",
     "register_secure_object_schema_upgrader",
     "upgrade_secure_object_payload",

@@ -288,6 +288,10 @@ adapters:
           movement_already_exists: Aquest moviment d'inventari ja existeix.
   sede:
     errors:
+      censal_bad_landing: La pàgina de dades censals de l'AEAT no s'ha carregat correctament;
+        torna a autenticar-te i prova-ho de nou.
+      censal_modification_surface: S'ha rebutjat la lectura censal perquè ha aterrat
+        en una pàgina de modificació; aquest lector mai no modifica les dades censals.
       cotejo_nav_failed: La navegació a la pàgina de cotejo d'AEAT ha fallat; la sessió
         pot haver caducat. Executeu 'aeat config auth test' i torneu-ho a intentar.
       ejercicio_unavailable: El registre de declaracions d'AEAT no ofereix l'exercici
@@ -1133,14 +1137,18 @@ application:
       work_period_token_unrecognised: --period '%{token}' no es reconeix. Indica --year
         %{year} per separat i usa un token de període com 0A, Q1, 1T o 01.
       work_unit_already_discarded: La unitat de treball ja està descartada.
+      work_unit_create_discarded: Aquest objectiu de declaracio es va descartar. Tornar
+        a crear-lo retorna la mateixa unitat de treball descartada, de manera que
+        no es pot reprendre.
       work_unit_discarded_cannot_calculate: La unitat de treball %{work_unit_id} està
         descartada i no es pot calcular. Crea una nova unitat de treball sobre el
         mateix modelo, any i període per continuar.
       work_unit_discarded_cannot_import: La unitat de treball %{work_unit_id} està
         descartada i no es pot importar. Crea una nova unitat de treball sobre el
         mateix modelo, any i període per continuar.
-      work_unit_mutation_refused: La unitat de treball està descartada; creeu una
-        nova unitat de treball per continuar.
+      work_unit_mutation_refused: La unitat de treball esta descartada, i tornar a
+        crear el mateix objectiu de declaracio es rebutja en lloc de retornar una
+        unitat nova.
       work_unit_not_found: No s'ha trobat cap unitat de treball de modelo amb id=%{work_unit_id}.
       work_unit_revision_divergence: La unitat de treball %{work_unit_id} es va crear
         amb la revisió de registre %{work_unit_revision}, però la revisió determinada
@@ -1554,6 +1562,8 @@ application:
         instantània de perfil no és compatible amb aquesta aplicació.
       unsupported_bundle_schema_version: La versió de l'esquema del paquet no és compatible
         amb aquesta versió de l'aplicació.
+      censal_read_identity_absent: 'La lectura censal no inclou cap NIF, de manera que no es pot confirmar que correspongui a aquest perfil.'
+      censal_read_identity_mismatch: 'La lectura censal correspon a un contribuent diferent del d''aquest perfil; no s''ha aplicat.'
     notices:
       censo_divergences_open: '{count} dada/es del perfil encara difereixen del Certificat
         de Situació Censal i resten sense resoldre: {axes}.'
@@ -3594,11 +3604,22 @@ cli:
         non_official_notice: Les dades derivades del certificat són evidència aportada
           per l'operador, mai verificada per l'AEAT; l'alta censal es manté al nivell
           no oficial.
-        pull_help: Descàrrega el teu cens més recent d'AEAT al magatzem d'instantànies
-          d'aquest perfil.
+        pull_cleared_notice: 'L''AEAT continua tenint un valor en {count} camp(s)
+          que vas buidar: {axes}. S''han deixat buits; buidar-los aquí no canvia el
+          registre de l''AEAT.'
+        pull_divergences_notice: 'L''AEAT informa {count} camp(s) de manera diferent
+          del que vas declarar: {axes}. La teva resposta es manté; resol cada discrepància
+          tu mateix.'
+        pull_help: Llegeix la teva identitat i el teu domicili de les dades censals
+          de l'AEAT i previsualitza'ls o inscriu-los al perfil actiu.
+        pull_preview_notice: 'Només previsualització: no s''ha escrit res al perfil.
+          Torna a executar amb --apply per inscriure aquestes dades.'
+        pull_verified_tier_notice: Aquestes dades s'han llegit directament de l'AEAT,
+          de manera que l'alta censal compta com a verificada.
         refresh_help: Descàrrega d'AEAT l'últim cens i desa un snapshot
         show_help: Mostra l'últim cens informat per AEAT per a aquest perfil
         snapshot_id_help: Id de snapshot concret (s'accepten prefixos)
+        pull_withheld_notice: 'Els valors de {count} camp(s) no es mostren: {axes}. Compara''ls tu mateix amb els de l''AEAT; aquesta eina no els imprimeix.'
       create_epilog: 'Perfil mínim per a autònom: --entity-type natural_person --tax-id
         <NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
       create_help: Inicialitza un perfil actiu nou.
@@ -6521,6 +6542,7 @@ errors:
     submission_preflight_error_findings: L'esborrany té {finding_count} incidència(es)
       de severitat ERROR; resol-les abans de presentar.
     unsupported_currency: El codi de moneda indicat no és compatible.
+    censal_read_identity: 'La lectura censal no correspon al contribuent d''aquest perfil.'
   snapshot:
     ambiguous_revision_selection: 'Més d''una revisió del registre coincideix amb
       el model %{modelo_id}: %{candidate_ids}.'
@@ -6619,9 +6641,24 @@ flows:
     action:
       abandoned: Sense canvis.
       auth_clave_incomplete: A Cl@ve encara li falta %{missing}. No s'ha desat res.
+      auth_contraste_missing: 'Cl@ve Mòbil sense QR necessita el contrast del vostre
+        document: el número de suport si és un NIE, o la data de validesa si és un
+        DNI. No s''ha desat res.'
       auth_dni_nie: DNI o NIE amb què us identifiqueu
+      auth_fecha_validez: Data de validesa del document, AAAA-MM-DD (per a DNI)
+      auth_fecha_validez_invalid: Introduïu la data de validesa com a AAAA-MM-DD,
+        per exemple 1990-01-31.
       auth_numero_soporte: Número de suport del document
       auth_provider: Forma d'identificació davant l'AEAT
+      censal_pull: Emplenar amb les dades censals de l'AEAT
+      censal_pull_auth_incomplete: La vostra identificació és incompleta, així que
+        encara no es pot llegir l'AEAT. Completeu-la primer.
+      censal_pull_contested: 'L''AEAT discrepa del que vau declarar a: %{paths}. La
+        vostra resposta es manté; resoleu cada cas vosaltres mateixos.'
+      censal_pull_done: 'Dades censals de l''AEAT llegides: %{adopted} camp(s) emplenats,
+        %{unchanged} ja coincidents, %{diverging} discrepants.'
+      censal_pull_no_provider: Trieu com us identifiqueu davant l'AEAT abans de llegir
+        les vostres dades censals.
       certificate: Certificat
       certificate_active: Certificat actiu
       certificate_done: 'Identificació: %{provider}; certificat actiu: %{name}.'
@@ -6633,6 +6670,7 @@ flows:
         certificate: Certificat electrònic
         clave_movil: Cl@ve Mòbil
         clave_permanente: Cl@ve Permanent
+      censal_pull_cleared: 'L''AEAT encara té un valor per als camps que vau buidar: %{paths}. S''han deixat buits; buidar-los aquí no canvia el registre de l''AEAT.'
     actions:
       section: Accions
     column:

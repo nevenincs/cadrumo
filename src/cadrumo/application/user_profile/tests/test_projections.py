@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -15,11 +16,14 @@ from ...wizard import _catalogue as _wizard_catalogue  # noqa: F401  (registrati
 from .. import (
     facts_to_values,
     projection_for_taxpayer,
+    record_to_effective_facts,
     record_to_path_values,
     record_to_values,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_PROFILE_UUID = "66666666-6666-4666-8666-666666666666"
 
 
 def test_facts_to_values_translates_paths_through_schema_selectors() -> None:
@@ -240,3 +244,75 @@ def test_projection_for_taxpayer_is_the_single_state_projection_authority() -> N
     via_record = projection_for_taxpayer(record)
     via_merged_mapping = projection_for_taxpayer(dict(record_to_path_values(record)) | record_to_values(record))
     assert via_record == via_merged_mapping
+
+
+def test_a_record_with_no_windows_projects_exactly_as_declared() -> None:
+    """The no-op property: window-awareness changes nothing for current data.
+
+    No production writer sets an effective window, so every record in
+    existence today has facts carrying ``valid_from = None``. Ordering by
+    window is a stable sort over equal keys, which preserves declaration
+    order, so the last fact per path is the same one it always was.
+
+    This is the property that makes the change landable without a data
+    migration, so it is asserted rather than assumed.
+    """
+    facts = (
+        UserProfileFact(path="identity.tax_id", value="11111111H"),
+        UserProfileFact(path="identity.tax_id", value="22222222J"),
+        UserProfileFact(path="contact.postcode", value="08032"),
+    )
+    record = UserProfileRecord(profile_id=_PROFILE_UUID, display_name="Operator", facts=facts)
+
+    assert record_to_path_values(record)["identity.tax_id"] == "22222222J", (
+        "declaration order still decides when no window does"
+    )
+    assert record_to_effective_facts(record)["identity.tax_id"].value == "22222222J"
+
+
+def test_the_latest_effective_window_wins_at_one_path() -> None:
+    """Two live facts at one path resolve to the later window, not the later line.
+
+    The record model permits this and the schema declares effective-dating
+    on most of its fields, so it is a state the projections have to answer
+    for. Declaration order here is deliberately the REVERSE of window
+    order, so a projection that ignored the window would return the 2019
+    value.
+    """
+    facts = (
+        UserProfileFact(path="contact.postcode", value="28001", valid_from=date(2024, 1, 1)),
+        UserProfileFact(path="contact.postcode", value="08032", valid_from=date(2019, 1, 1)),
+    )
+    record = UserProfileRecord(profile_id=_PROFILE_UUID, display_name="Operator", facts=facts)
+
+    assert record_to_path_values(record)["contact.postcode"] == "28001"
+    assert record_to_effective_facts(record)["contact.postcode"].value == "28001"
+
+
+def test_a_windowed_fact_supersedes_an_unwindowed_one() -> None:
+    """An absent window means no stated start, so it orders before every stated one."""
+    facts = (
+        UserProfileFact(path="contact.postcode", value="28001", valid_from=date(2024, 1, 1)),
+        UserProfileFact(path="contact.postcode", value="08032"),
+    )
+    record = UserProfileRecord(profile_id=_PROFILE_UUID, display_name="Operator", facts=facts)
+
+    assert record_to_path_values(record)["contact.postcode"] == "28001"
+
+
+def test_the_two_projections_agree_on_which_fact_is_effective() -> None:
+    """The whole point: one concept must not have two resolution rules.
+
+    Before this, one projection resolved by window and the other by list
+    order, and they agreed only because nothing set a window.
+    """
+    facts = (
+        UserProfileFact(path="contact.postcode", value="28001", valid_from=date(2024, 1, 1)),
+        UserProfileFact(path="contact.postcode", value=None, valid_from=date(2019, 1, 1)),
+    )
+    record = UserProfileRecord(profile_id=_PROFILE_UUID, display_name="Operator", facts=facts)
+
+    assert record_to_path_values(record)["contact.postcode"] == "28001"
+    assert record_to_effective_facts(record)["contact.postcode"].value == "28001", (
+        "the value projection and the effective-fact projection must name the same fact"
+    )

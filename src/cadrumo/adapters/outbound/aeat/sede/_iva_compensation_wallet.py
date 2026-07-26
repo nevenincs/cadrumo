@@ -47,8 +47,7 @@ from ._iva_compensation_wallet_parsing import (
     _EXTERNAL,
     _PRE303,
     _SEDE_HOST,
-    _WALLET_HOST,
-    _WALLET_RUNTIME_HOST,
+    _WALLET_PATH,
     _WALLET_URL,
     _assert_own_name_representation_form_html,
     _has_wallet_table,
@@ -71,7 +70,7 @@ if TYPE_CHECKING:
 
 log = get_logger(__name__)
 
-_PRE303_PRESENTATION_URL = f"{_EXTERNAL.aeat.domains.www1}{_PRE303.presentation_service_path}"
+_PRE303_PRESENTATION_URL = f"{_EXTERNAL.aeat.domains.sede}{_PRE303.presentation_service_path}"
 _PRE303_SELECTOR_URL = _EXTERNAL.aeat.clave_movil.selector_access_url_template.format(
     target=quote(_PRE303.presentation_service_path, safe=""),
 )
@@ -87,7 +86,7 @@ _READ_GUARD_POLICY = RemoteStateGuardPolicy(
     id="aeat-sede-iva-compensation-wallet-read",
     evidence_tier="official_source_guidance",
     classification="authenticated_read_surface",
-    allowed_hosts=(_WALLET_HOST, _WALLET_RUNTIME_HOST, _SEDE_HOST),
+    allowed_hosts=(_SEDE_HOST,),
     # Widen to any subdomain under the AEAT apex so a ``www{n}`` load-balancer
     # dispatch (an authenticated pull landing on a sibling host) is tolerated,
     # not refused; success detection stays on the wallet path/content.
@@ -210,7 +209,7 @@ async def fetch_iva_compensation_wallet(
                 authenticated_identity=session.identity_nif,
                 target_year=target_period.filing_year,
                 target_period=target_period,
-                source_url=_WALLET_URL,
+                source_url=_landed_wallet_url(page),
                 captured_at=now(),
                 allow_empty_wallet_shell=wallet_execute_submitted,
             )
@@ -769,6 +768,24 @@ def prune_wallet_diagnostic_dumps(
         except OSError:
             log.debug("wallet diagnostic: could not prune dump file %s", entry, exc_info=True)
     return removed
+
+
+def _landed_wallet_url(page: Page) -> str:
+    """Return the wallet URL naming the host that actually served this read.
+
+    AEAT dispatches an authenticated session to one of its numbered sede
+    hosts, so recording a constructed URL claims the read happened
+    somewhere it may not have. The observation's ``source_url`` is stored
+    evidence and is what the value is defended with later, so it must name
+    the host that answered.
+
+    Falls back to the unnumbered wallet URL when the landing is unreadable,
+    which is the best true answer available rather than a preference.
+    """
+    landed = urlsplit(getattr(page, "url", "") or "")
+    if landed.scheme and landed.netloc:
+        return f"{landed.scheme}://{landed.netloc}{_WALLET_PATH}"
+    return _WALLET_URL
 
 
 def _assert_read_http(method: str, url: str) -> None:

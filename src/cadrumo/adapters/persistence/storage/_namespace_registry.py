@@ -462,6 +462,29 @@ IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE = SecureObjectNamespaceDefin
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
+MODELO_RECONCILIATION_RECORDS_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="modelo_reconciliation_records",
+    namespace="cadrumo.modelo.reconciliation.records",
+    owner="cadrumo.application.modelo",
+    sensitivity=SensitivityClass.AUDIT,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    # N records per work unit, never one that overwrites: reconciliation is
+    # repeatable and `reconcile history` is a shipped verb, so a key that
+    # collapsed runs would destroy the history this store exists to hold. The
+    # trailing segment is the content-addressed id of the MODELO_RECONCILED
+    # bucket event this record is co-written with, which already folds the
+    # reconciliation instant, the actor and the verdict — so it distinguishes
+    # every run and binds record to event by identity rather than by a
+    # cross-reference field that could drift.
+    #
+    # No revision id participates. Both the receipt-total and the
+    # declaracion-casilla reconciles emit a `no_persisted_revision` advisory and
+    # still produce a report, and an identity-header reconcile needs no revision
+    # at all; a revision-derived key could not store those runs.
+    object_key_grammar="modelo-reconciliation:{work_unit_id}:{bucket_event_id}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+)
 IVA_COMPENSATION_HISTORY_NAMESPACE = SecureObjectNamespaceDefinition(
     key="iva_compensation_history",
     namespace="cadrumo.calculations.iva_compensation.history",
@@ -1115,6 +1138,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         WITHHOLDING_OBSERVATIONS_NAMESPACE,
         IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE,
         IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE,
+        MODELO_RECONCILIATION_RECORDS_NAMESPACE,
         IVA_COMPENSATION_HISTORY_NAMESPACE,
         LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE,
         APPLICATION_EVIDENCE_BUNDLE_NAMESPACE,
@@ -1202,6 +1226,7 @@ __all__ = [
     "LLM_USAGE_NAMESPACE",
     "LOGIN_THROTTLE_FILENAME",
     "M145_COMMUNICATION_RECORD_NAMESPACE",
+    "MODELO_RECONCILIATION_RECORDS_NAMESPACE",
     "MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE",
     "MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE",
     "MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE",

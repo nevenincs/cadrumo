@@ -5,6 +5,7 @@
   "separate-pull-requests": false,
   "draft": false,
   "prerelease": false,
+  "bump-minor-pre-major": true,
   "changelog-path": "CHANGELOG.md",
   "packages": {
     ".": {

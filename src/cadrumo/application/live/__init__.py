@@ -352,6 +352,49 @@ async def capture_notifications(*, bucket_id: str):
     return persisted
 
 
+#: Operation label forwarded to the auth service for the censal read, so a
+#: provider prompt (a Cl@ve Móvil push) names the surface it is unlocking.
+LIVE_CENSAL_READ_OPERATION = "live-censal-read"
+
+
+async def pull_censal_datos():
+    """Read the authenticated taxpayer's censal state from AEAT's consulta.
+
+    AEAT publishes the taxpayer's own censal state at *Mis Datos
+    Censales*, and this is the one application-layer door onto it. The
+    flow gates through ``_active_verified_session`` (the
+    ``require_live_read`` + authenticated-session boundary), navigates to
+    the consulta view, and parses the rendered DOM. It never submits a
+    form, and the reader refuses at runtime if AEAT lands it on a censal
+    modification surface — the write sibling is one link away from the
+    page it reads, which is why reading the DOM is the whole of what this
+    door can do.
+
+    It persists nothing and decides nothing. Projecting the read onto
+    profile paths, splitting it against what the operator already
+    declared, and committing the result belong to
+    :func:`~cadrumo.application.user_profile.censal_facts_from_read`,
+    :func:`~cadrumo.application.user_profile.reconcile_censal_read`, and
+    :func:`~cadrumo.application.user_profile.apply_censal_read`, the last
+    routing through the single cotejo apply authority. Keeping
+    acquisition apart from adoption is what lets an operator preview a
+    read without writing anything.
+
+    The taxpayer read is always the authenticated session's own identity:
+    the product does not support acting as a representative, so the NIF
+    comes off the session rather than from a parameter a caller could
+    point at a third party.
+
+    Returns:
+        The parsed :class:`CensalDatosResult`. Nothing is persisted; the
+        caller decides what to adopt.
+    """
+    from ...adapters.outbound.aeat.sede import fetch_censal_datos
+
+    session, settings = await _active_verified_session(operation=LIVE_CENSAL_READ_OPERATION)
+    return await fetch_censal_datos(session, taxpayer_nif=session.identity_nif, settings=settings)
+
+
 async def capture_justificante_snapshot(
     *,
     bucket_id: str,
@@ -474,6 +517,7 @@ __all__ = [
     "BORRADOR_100_SNAPSHOT_NAMESPACE",
     "JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE",
     "JUSTIFICANTE_CAPTURE_SOURCE_KIND",
+    "LIVE_CENSAL_READ_OPERATION",
     "LIVE_EXPEDIENTES_READ_OPERATION",
     "Borrador100Snapshot",
     "Borrador100SnapshotRepository",
@@ -560,6 +604,7 @@ __all__ = [
     "persist_filed_calculation_observation",
     "persist_filed_justificante_metadata",
     "persist_iva_remote_state_acquisition_report",
+    "pull_censal_datos",
     "reconcile_capture",
     "register_capture_as_filing_evidence",
     "register_capture_justificante_metadata",

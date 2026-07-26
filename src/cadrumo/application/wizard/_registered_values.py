@@ -50,27 +50,6 @@ _CONFIRM_TRUE_LOCALE_KEY = "flows.confirm.yes"
 _CONFIRM_FALSE_LOCALE_KEY = "flows.confirm.no"
 
 
-def _value_and_source_maps(
-    record: UserProfileRecord | None,
-) -> tuple[dict[str, str], dict[str, str]]:
-    """Return path-keyed value and provenance-source maps for the record.
-
-    Both maps are last-fact-wins per path, matching
-    :func:`~cadrumo.application.user_profile.record_to_path_values`, so the
-    projected display value and its provenance describe the same effective
-    fact.
-    """
-    from ..user_profile import record_to_path_values
-
-    values = record_to_path_values(record)
-    sources: dict[str, str] = {}
-    if record is not None:
-        for fact in record.facts:
-            if fact.value is not None:
-                sources[fact.path] = fact.source
-    return values, sources
-
-
 def _render_choice_label(question: WizardQuestion, raw: str) -> str:
     """Resolve a closed-set token (or comma-joined token set) to its label(s).
 
@@ -112,15 +91,22 @@ def project_registered_values(
     localized non-official-evidence suffix is appended to the string so the
     operator sees the provenance without a separate channel.
     """
-    values, sources = _value_and_source_maps(record)
+    from ..user_profile import record_to_effective_facts
+
+    effective = record_to_effective_facts(record)
     registered: dict[str, str] = {}
     for section in flow.sections:
         for question in section.questions:
             key = question.profile_key
-            if key is None or key not in values:
+            entry = effective.get(key) if key is not None else None
+            # A CLEARED path is present here with a null value, where the
+            # value-only projection simply omitted it. Skipping it explicitly
+            # keeps the rendered set identical while making the deletion a
+            # case the reader can see rather than an accident of filtering.
+            if entry is None or entry.value is None:
                 continue
-            display = _render_display_value(question, values[key])
-            if sources.get(key) == PROVENANCE_SOURCE_CENSO_ARTEFACT:
+            display = _render_display_value(question, entry.value)
+            if entry.source == PROVENANCE_SOURCE_CENSO_ARTEFACT:
                 display = f"{display} {tr(REGISTERED_NON_OFFICIAL_SUFFIX_LOCALE_KEY)}"
             registered[question.id] = display
     return registered

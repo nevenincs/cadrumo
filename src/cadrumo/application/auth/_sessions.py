@@ -632,10 +632,19 @@ def _prepare_clave_auth(
     operator who has not finished recording their Cl@ve credentials is
     told what is absent before a browser opens rather than part-way
     through an AEAT form.
+
+    The expected identity is returned for EVERY provider, not only the
+    Cl@ve ones. Each provider binds a comparable identity at session
+    bind - the certificate provider parses a normalised NIF/NIE out of
+    the certificate subject and refuses the session outright without one
+    - so there is no provider for which the profile comparison is
+    meaningless, and a provider that returned no expectation would leave
+    the session check silently no-opping.
     """
-    credentials = _resolve_clave_credentials(settings, provider_kind)
+    facts = _active_profile_auth_facts()
+    credentials = _resolve_clave_credentials(settings, provider_kind, facts=facts)
     if credentials is None:
-        return settings, None
+        return settings, facts.tax_id or None
     _require_clave_credentials(settings, credentials)
     expected_identity = _assert_active_profile_identity_matches_provider(credentials)
     return _bind_clave_credentials_to_settings(settings, credentials), expected_identity
@@ -644,20 +653,23 @@ def _prepare_clave_auth(
 def _resolve_clave_credentials(
     settings: Settings,
     provider_kind: AuthProviderKind,
+    *,
+    facts: ClaveAuthFacts | None = None,
 ) -> ClaveCredentials | None:
     """Resolve the Cl@ve halves for ``provider_kind`` from the active profile.
 
-    Reads the profile record through the lifecycle service, which needs
-    an unlocked bucket session. A readiness probe that already holds the
-    profile's values should call :func:`resolve_clave_credentials`
-    directly rather than pay for a second read.
+    Reads the profile record through the lifecycle service when the
+    caller does not already hold its facts; that read needs an unlocked
+    bucket session. A readiness probe that already holds the profile's
+    values should call :func:`resolve_clave_credentials` directly rather
+    than pay for a second read.
     """
     if provider_kind is AuthProviderKind.CERTIFICATE:
         return None
     return resolve_clave_credentials(
         provider_kind,
         settings=settings,
-        facts=_active_profile_auth_facts(),
+        facts=facts if facts is not None else _active_profile_auth_facts(),
     )
 
 
@@ -727,8 +739,21 @@ def _require_clave_credentials(settings: Settings, credentials: ClaveCredentials
 def _assert_active_profile_identity_matches_provider(
     credentials: ClaveCredentials | None,
 ) -> str | None:
-    """Fail closed before live auth can bind one taxpayer's session to another profile."""
-    if credentials is None or credentials.provider_kind is not AuthProviderKind.CLAVE_MOVIL:
+    """Fail closed before live auth can bind one taxpayer's session to another profile.
+
+    Applies to every Cl@ve mode. It once returned early for anything but
+    Cl@ve Movil, so two of the three providers were promised a
+    fail-closed check they never received: the configured credential was
+    never compared to the profile, and because no expectation was
+    returned the session check downstream had nothing to compare either
+    and silently passed.
+
+    The certificate provider has no operator-configured credential to
+    compare here - its identity exists only once the certificate is
+    read at session bind - so it is checked there rather than exempted,
+    and the caller supplies the profile identity as the expectation.
+    """
+    if credentials is None:
         return None
     if not credentials.profile_tax_id:
         raise AuthProfileIdentityMismatchError(

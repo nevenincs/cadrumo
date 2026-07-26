@@ -263,7 +263,12 @@ class TransactionCatalogueRepository:
             StoredTransactionDriftError: If a row payload fails pydantic schema
                 validation on deserialization.
         """
-        from ..storage import ClassificationError, Envelope, EnvelopeVersionError
+        from ..storage import (
+            ClassificationError,
+            Envelope,
+            EnvelopeVersionError,
+            inner_envelope_version_is_current,
+        )
         from ..storage.crypto import secure_object_key_digest
 
         index_ids = self._load_index_ids()
@@ -313,7 +318,7 @@ class TransactionCatalogueRepository:
                     },
                     translated_message="errors.integrity.integrity_storage_classification",
                 )
-            if envelope.schema_version > _TX_CATALOGUE_VERSION:
+            if not inner_envelope_version_is_current(envelope.schema_version, _TX_CATALOGUE_VERSION):
                 raise EnvelopeVersionError(
                     context={
                         "namespace": TX_BUCKET_NAMESPACE,

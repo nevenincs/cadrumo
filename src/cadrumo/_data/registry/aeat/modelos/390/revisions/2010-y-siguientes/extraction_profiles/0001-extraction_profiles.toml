@@ -24,7 +24,11 @@ target_casillas = [
     # These are NOT supplied as engine inputs (input_kind = "computed").
     {casilla_id = "iva.anual.cuota-devengada-total", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Total\s+cuotas\s+IVA\s+y\s+recargo\s+de\s+equivalencia'},
     {casilla_id = "iva.anual.cuota-deducible-total", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Suma\s+de\s+deducciones'},
-    {casilla_id = "iva.anual.resultado-regimen-general", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Resultado\s+r[eé]gimen\s+general\s+\(47\s*-\s*64\)'},
+    # The box-number reference tolerates internal spacing: the real AEAT render
+    # kerns "(47 - 64)" so text extraction yields "(4 7 - 64)", and the stricter
+    # pattern silently dropped box 65 on every real render while matching the
+    # generated corpus. Measured against the bundled AEAT manual annex.
+    {casilla_id = "iva.anual.resultado-regimen-general", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Resultado\s+r[eé]gimen\s+general\s+\(\s*4\s*7\s*-\s*64\s*\)'},
     {casilla_id = "iva.anual.compensacion-ultimo-periodo-97", match_strategy = "named_label", value_kind = "amount", label_pattern = '\{?\s*A\s+compensar'},
     {casilla_id = "iva.anual.compensacion-generada-ejercicio-no-97", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuotas\s+pendientes\s+de\s+compensaci[oó]n\s+generadas\s+en\s+el\s+ejercicio'},
 ]

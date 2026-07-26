@@ -103,7 +103,8 @@ class ModeloReconciliationHistoryRowPayload(OutputSchema):
 
     Projects the typed
     :class:`ModeloReconciliationHistoryEntry`
-    read back from the ``MODELO_RECONCILED`` bucket event: the event id, the
+    read back from the encrypted reconciliation-record store: the id of the
+    ``MODELO_RECONCILED`` bucket event co-written with that record, the
     reconciled :obj:`WorkUnitId`, the evidence source kind and path, the
     verdict, the per-casilla diff count, the actor, and the reconciliation
     instant.

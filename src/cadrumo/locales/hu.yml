@@ -273,6 +273,10 @@ adapters:
           movement_already_exists: Ez a készletmozgás már létezik.
   sede:
     errors:
+      censal_bad_landing: Az AEAT nyilvántartási adatlapja nem töltődött be megfelelően;
+        jelentkezz be újra, és próbáld meg ismét.
+      censal_modification_surface: A nyilvántartási olvasás elutasítva, mert módosító
+        oldalra érkezett; ez az olvasó soha nem módosítja a nyilvántartási adatokat.
       cotejo_nav_failed: Az AEAT cotejo oldalra való navigáció sikertelen volt; a
         munkamenet lejárhatott. Futtassa a 'aeat config auth test' parancsot és próbálja
         újra.
@@ -1068,14 +1072,16 @@ application:
         meg külön: --year %{year}, és használjon időszak-tokent, például 0A, Q1, 1T
         vagy 01.'
       work_unit_already_discarded: A munkakérés már el van vetve.
+      work_unit_create_discarded: Ezt a bevallasi celt elvetettek. Az ismetelt letrehozas
+        ugyanazt az elvetett munkaegyseget adja vissza, igy nem folytathato.
       work_unit_discarded_cannot_calculate: A(z) %{work_unit_id} munkaegység el lett
         dobva, nem számítható. Hozz létre új munkaegységet ugyanazon modell, év és
         időszak alapján a folytatáshoz.
       work_unit_discarded_cannot_import: A(z) %{work_unit_id} munkaegység el lett
         dobva, nem importálható. Hozz létre új munkaegységet ugyanazon modell, év
         és időszak alapján a folytatáshoz.
-      work_unit_mutation_refused: A munkakérés el van vetve; új munkakérést kell létrehozni
-        a folytatáshoz.
+      work_unit_mutation_refused: A munkaegyseg el van vetve, es ugyanannak a bevallasi
+        celnak az ujboli letrehozasa elutasitasra kerul uj egyseg helyett.
       work_unit_not_found: 'Nem található modell munkaegység ezzel az azonosítóval:
         %{work_unit_id}.'
       work_unit_revision_divergence: A(z) %{work_unit_id} munkaegység a(z) %{work_unit_revision}
@@ -1489,6 +1495,8 @@ application:
         ez az alkalmazás nem támogatja.
       unsupported_bundle_schema_version: A csomag sémaverziója nem támogatott ebben
         az alkalmazásverzióban.
+      censal_read_identity_absent: 'A nyilvántartási olvasás nem tartalmazott adóazonosítót, ezért nem erősíthető meg, hogy ehhez a profilhoz tartozik.'
+      censal_read_identity_mismatch: 'A nyilvántartási olvasás egy másik adózóhoz tartozik, nem ehhez a profilhoz; nem került alkalmazásra.'
     notices:
       censo_divergences_open: '{count} profiladat továbbra is eltér a Certificado
         de Situación Censal tanúsítványtól és megoldatlan: {axes}.'
@@ -3545,12 +3553,24 @@ cli:
         non_official_notice: A tanúsítványból származó adatok az operátor által szolgáltatott
           bizonyítékok, sosem AEAT által ellenőrzöttek; a censal nyilvántartás nem
           hivatalos szinten marad.
-        pull_help: Letölti a legfrissebb censo-t az AEAT-tól e profil pillanatkép-tárolójába.
+        pull_cleared_notice: 'Az AEAT még mindig tárol értéket {count} olyan mezőnél,
+          amelyet kiürítettél: {axes}. Ezek üresen maradtak; az itteni törlés nem
+          módosítja az AEAT nyilvántartását.'
+        pull_divergences_notice: 'Az AEAT {count} mezőt a bevallott válaszodtól eltérően
+          közöl: {axes}. A te válaszod marad érvényben; mindegyik eltérést neked kell
+          rendezned.'
+        pull_help: Beolvassa a személyazonosságodat és a lakcímedet az AEAT nyilvántartási
+          adataiból, majd előnézetet ad vagy rögzíti azokat az aktív profilban.
+        pull_preview_notice: 'Csak előnézet: a profilba semmi nem került. Az adatok
+          rögzítéséhez futtasd újra a --apply kapcsolóval.'
+        pull_verified_tier_notice: Ezek az adatok közvetlenül az AEAT-tól származnak,
+          ezért a nyilvántartásba vétel igazoltnak számít.
         refresh_help: A legfrissebb nyilvántartás letöltése az AEAT-ból és pillanatkép
           mentése.
         show_help: Az AEAT által legutóbb jelentett nyilvántartás megjelenítése erre
           a profilra.
         snapshot_id_help: Konkrét pillanatkép-azonosító (előtagok elfogadva).
+        pull_withheld_notice: '{count} mező értékét nem jelenítjük meg: {axes}. Hasonlítsd össze magad az AEAT adataival; ez az eszköz nem írja ki őket.'
       create_epilog: 'Minimális önálló vállalkozói profil: --entity-type natural_person
         --tax-id <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet
         --accept-defaults'
@@ -6409,6 +6429,7 @@ errors:
     submission_preflight_error_findings: A tervezetben {finding_count} ERROR súlyosságú
       megállapítás van; javítsa ezeket benyújtás előtt.
     unsupported_currency: A megadott devizakód nem támogatott.
+    censal_read_identity: 'A nyilvántartási olvasás nem ehhez a profilhoz tartozó adózóé.'
   snapshot:
     ambiguous_revision_selection: 'Egynél több nyilvántartási revízió illeszkedik
       a(z) %{modelo_id} modellhez: %{candidate_ids}.'
@@ -6505,9 +6526,24 @@ flows:
       abandoned: Nem történt változás.
       auth_clave_incomplete: 'A Cl@ve még ezt igényli: %{missing}. Semmi sem lett
         elmentve.'
+      auth_contraste_missing: 'A QR nélküli Cl@ve Móvil útvonalhoz a dokumentum ellenőrző
+        adata szükséges: NIE esetén a támogatási szám, DNI esetén az érvényességi
+        dátum. Semmi sem lett elmentve.'
       auth_dni_nie: DNI vagy NIE, amellyel azonosítja magát
+      auth_fecha_validez: A dokumentum érvényességi dátuma, ÉÉÉÉ-HH-NN (DNI esetén)
+      auth_fecha_validez_invalid: Az érvényességi dátumot ÉÉÉÉ-HH-NN alakban adja
+        meg, például 1990-01-31.
       auth_numero_soporte: A dokumentumon szereplő támogatási szám
       auth_provider: Azonosítás módja az AEAT felé
+      censal_pull: Kitöltés az AEAT censusadataiból
+      censal_pull_auth_incomplete: Az azonosítása hiányos, ezért az AEAT még nem olvasható.
+        Előbb egészítse ki.
+      censal_pull_contested: 'Az AEAT eltér az Ön bevallásától itt: %{paths}. Az Ön
+        válasza marad érvényben; oldja meg egyenként.'
+      censal_pull_done: 'AEAT censusadatok beolvasva: %{adopted} mező kitöltve, %{unchanged}
+        már egyezett, %{diverging} eltér.'
+      censal_pull_no_provider: A censusadatok beolvasása előtt válassza ki, hogyan
+        azonosítja magát az AEAT felé.
       certificate: Tanúsítvány
       certificate_active: Aktív tanúsítvány
       certificate_done: 'Azonosítás: %{provider}; aktív tanúsítvány: %{name}.'
@@ -6519,6 +6555,7 @@ flows:
         certificate: Elektronikus tanúsítvány
         clave_movil: Cl@ve Móvil
         clave_permanente: Cl@ve Permanente
+      censal_pull_cleared: 'Az AEAT-nál még szerepel érték az Ön által kiürített mezőkhöz: %{paths}. Ezek üresen maradtak; a kiürítés itt nem módosítja az AEAT nyilvántartását.'
     actions:
       section: Műveletek
     column:

@@ -10,23 +10,51 @@ never embeds an operator's tax amounts into source or snapshots.
 from __future__ import annotations
 
 from datetime import date
+from urllib.parse import urlsplit
 
 import pytest
 
 from ......application.auth import ensure_authenticated_aeat_session
 from ......core import AuthProviderKind, Modelo, Period
-from ......core.config import load_settings
+from ......core.config import Settings, load_settings
 from ......core.errors import CadrumoError
 from ......tests.live_gate import requires_live_enabled
 from .....persistence.storage import get_master_key_provider
 from .._errors import SedeError
 from .._iva_compensation_wallet import (
-    IVA_COMPENSATION_WALLET_URL,
     PRE303_PRESENTATION_SERVICE_URL,
     fetch_iva_compensation_wallet,
 )
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]
+
+
+def _assert_source_url_is_a_wallet_read(source_url: str) -> None:
+    """Assert the recorded URL is a wallet read, without pinning which host served it.
+
+    AEAT load-balances an authenticated session across its numbered sede
+    hosts, so the host that answers is assigned rather than chosen. The
+    invariant a successful read genuinely satisfies is therefore that the
+    URL is the wallet ROUTE on some host under the AEAT apex - not that it
+    equals a URL built against one particular host.
+
+    This check previously asserted whole-URL equality against a constant
+    pinned to a single numbered host, which fails a successful read that
+    landed anywhere else: the assertion refused correct behaviour. It had
+    never been contradicted because nothing runs this test outside an
+    operator-approved live session, so it was an unexamined claim rather
+    than a test that broke. The replacement is deliberately no stronger
+    than the invariant, since a stronger one could not be exercised here
+    either and would only re-occupy the same slot.
+    """
+    external = Settings.external_constants()
+    landed = urlsplit(source_url)
+    host_suffix = external.aeat.domains.host_suffix
+    apex = urlsplit(host_suffix).netloc or host_suffix
+    if not landed.netloc.casefold().endswith(apex.casefold()):
+        pytest.fail(f"live IVA wallet source URL is not under the AEAT apex: {landed.netloc!r}")
+    if landed.path != external.aeat.sede_paths.iva_compensation_wallet:
+        pytest.fail(f"live IVA wallet source URL is not the wallet route: {landed.path!r}")
 
 
 @pytest.mark.asyncio
@@ -66,8 +94,7 @@ async def test_fetch_iva_compensation_wallet_live_returns_read_observation() -> 
         pytest.fail("live IVA wallet observation target modelo was not 303")
     if observation.target_year != target_year or observation.target_period != target_period:
         pytest.fail("live IVA wallet observation target period did not match requested period")
-    if str(observation.source_url) != IVA_COMPENSATION_WALLET_URL:
-        pytest.fail("live IVA wallet observation source URL did not match configured wallet URL")
+    _assert_source_url_is_a_wallet_read(str(observation.source_url))
     if observation.raw_sha256 is None:
         pytest.fail("live IVA wallet observation did not include raw evidence hash")
     if not all(row.mode == "read" for row in observation.rows):

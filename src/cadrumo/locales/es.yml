@@ -290,6 +290,10 @@ adapters:
           movement_already_exists: Ese movimiento de inventario ya existe.
   sede:
     errors:
+      censal_bad_landing: La página de datos censales de la AEAT no se cargó correctamente;
+        vuelve a autenticarte e inténtalo de nuevo.
+      censal_modification_surface: Se rechazó la lectura censal porque aterrizó en
+        una página de modificación; este lector nunca modifica los datos censales.
       cotejo_nav_failed: La navegación a la página de cotejo de AEAT falló; la sesión
         puede haber expirado. Ejecute 'aeat config auth test' y vuelva a intentarlo.
       ejercicio_unavailable: El registro de declaraciones de AEAT no ofrece el ejercicio
@@ -1139,14 +1143,18 @@ application:
       work_period_token_unrecognised: --period '%{token}' no se reconoce. Indica --year
         %{year} por separado y usa un token de periodo como 0A, Q1, 1T o 01.
       work_unit_already_discarded: La unidad de trabajo ya está descartada.
+      work_unit_create_discarded: Este objetivo de declaracion fue descartado. Volver
+        a crearlo devuelve la misma unidad de trabajo descartada, por lo que no se
+        puede reanudar.
       work_unit_discarded_cannot_calculate: La unidad de trabajo %{work_unit_id} está
         descartada y no puede calcularse. Crea una nueva unidad de trabajo sobre el
         mismo modelo, ejercicio y periodo para continuar.
       work_unit_discarded_cannot_import: La unidad de trabajo %{work_unit_id} está
         descartada y no puede importarse. Crea una nueva unidad de trabajo sobre el
         mismo modelo, ejercicio y periodo para continuar.
-      work_unit_mutation_refused: La unidad de trabajo está descartada; cree una nueva
-        unidad de trabajo para continuar.
+      work_unit_mutation_refused: La unidad de trabajo esta descartada, y volver a
+        crear el mismo objetivo de declaracion se rechaza en lugar de devolver una
+        unidad nueva.
       work_unit_not_found: No existe ninguna unidad de trabajo de modelo con id=%{work_unit_id}.
       work_unit_revision_divergence: La unidad de trabajo %{work_unit_id} se creó
         con la revisión de registro %{work_unit_revision}, pero la revisión determinada
@@ -1563,6 +1571,8 @@ application:
         instantánea de perfil es más reciente de lo que admite esta aplicación.
       unsupported_bundle_schema_version: La versión del esquema del paquete no es
         compatible con esta versión de la aplicación.
+      censal_read_identity_absent: 'La lectura censal no incluye ningún NIF, por lo que no puede confirmarse que corresponda a este perfil.'
+      censal_read_identity_mismatch: 'La lectura censal corresponde a un contribuyente distinto al de este perfil; no se ha aplicado.'
     notices:
       censo_divergences_open: '{count} dato(s) del perfil siguen difiriendo del Certificado
         de Situación Censal y quedan sin resolver: {axes}.'
@@ -3620,11 +3630,22 @@ cli:
         non_official_notice: Los datos derivados del certificado son evidencia aportada
           por el operador, nunca verificada por la AEAT; el alta censal permanece
           en el nivel no oficial.
-        pull_help: Descarga tu censo más reciente de AEAT al almacén de instantáneas
-          de este perfil.
+        pull_cleared_notice: 'La AEAT sigue teniendo un valor en {count} campo(s)
+          que vaciaste: {axes}. Se han dejado vacíos; vaciarlos aquí no cambia el
+          registro de la AEAT.'
+        pull_divergences_notice: 'La AEAT informa {count} campo(s) de forma distinta
+          a lo que declaraste: {axes}. Tu respuesta se mantiene; resuelve cada discrepancia
+          tú mismo.'
+        pull_help: Lee tu identidad y tu domicilio de los datos censales de la AEAT
+          y previsualiza o inscríbelos en el perfil activo.
+        pull_preview_notice: 'Solo previsualización: no se ha escrito nada en el perfil.
+          Vuelve a ejecutar con --apply para inscribir estos datos.'
+        pull_verified_tier_notice: Estos datos se han leído directamente de la AEAT,
+          por lo que el alta censal cuenta como verificada.
         refresh_help: Descarga de AEAT el último censo y guarda un snapshot
         show_help: Muestra el último censo informado por AEAT para este perfil
         snapshot_id_help: Id de snapshot concreto (se aceptan prefijos)
+        pull_withheld_notice: 'Los valores de {count} campo(s) no se muestran: {axes}. Compáralos tú mismo con los de la AEAT; esta herramienta no los imprime.'
       create_epilog: 'Perfil mínimo para autónomo: --entity-type natural_person --tax-id
         <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
       create_help: Inicializa un nuevo perfil activo.
@@ -6559,6 +6580,7 @@ errors:
     submission_preflight_error_findings: El borrador tiene {finding_count} incidencia(s)
       de severidad ERROR; resuélvelas antes de presentar.
     unsupported_currency: El código de moneda indicado no es compatible.
+    censal_read_identity: 'La lectura censal no corresponde al contribuyente de este perfil.'
   snapshot:
     ambiguous_revision_selection: 'Más de una revisión del registro coincide con el
       modelo %{modelo_id}: %{candidate_ids}.'
@@ -6657,9 +6679,24 @@ flows:
       abandoned: Sin cambios.
       auth_clave_incomplete: A Cl@ve todavía le falta %{missing}. No se ha guardado
         nada.
+      auth_contraste_missing: 'Cl@ve Móvil sin QR necesita el contraste de su documento:
+        el número de soporte si es un NIE, o la fecha de validez si es un DNI. No
+        se ha guardado nada.'
       auth_dni_nie: DNI o NIE con el que se identifica
+      auth_fecha_validez: Fecha de validez del documento, AAAA-MM-DD (para DNI)
+      auth_fecha_validez_invalid: Introduzca la fecha de validez como AAAA-MM-DD,
+        por ejemplo 1990-01-31.
       auth_numero_soporte: Número de soporte del documento
       auth_provider: Forma de identificación ante la AEAT
+      censal_pull: Rellenar con los datos censales de la AEAT
+      censal_pull_auth_incomplete: Su identificación está incompleta, así que aún
+        no se puede leer la AEAT. Complétela primero.
+      censal_pull_contested: 'La AEAT discrepa de lo que usted declaró en: %{paths}.
+        Su respuesta se mantiene; resuelva cada caso usted mismo.'
+      censal_pull_done: 'Datos censales de la AEAT leídos: %{adopted} campo(s) rellenados,
+        %{unchanged} ya coincidentes, %{diverging} discrepantes.'
+      censal_pull_no_provider: Elija cómo se identifica ante la AEAT antes de leer
+        sus datos censales.
       certificate: Certificado
       certificate_active: Certificado activo
       certificate_done: 'Identificación: %{provider}; certificado activo: %{name}.'
@@ -6671,6 +6708,7 @@ flows:
         certificate: Certificado electrónico
         clave_movil: Cl@ve Móvil
         clave_permanente: Cl@ve Permanente
+      censal_pull_cleared: 'La AEAT todavía tiene un valor para los campos que usted vació: %{paths}. Se han dejado vacíos; vaciarlos aquí no cambia el registro de la AEAT.'
     actions:
       section: Acciones
     column:

@@ -131,18 +131,34 @@ class ProfileValidationService:
     ) -> tuple[ProfileValidationIssue, ...]:
         """Reject a fact whose value does not satisfy its declared field type.
 
-        Currently enforces :attr:`ProfileFieldType.DATE`: a date field
-        must carry a real ISO-8601 calendar day in the zero-padded
-        ``YYYY-MM-DD`` layout. A :class:`datetime.date` is already
-        valid; a string is accepted only when it matches that layout
-        and :meth:`datetime.date.fromisoformat` parses it — together
-        that rejects a non-ISO layout (``15/03/1978``), the compact
-        basic form (``19780315``), an impossible month or day
-        (``1978-13-45``), a non-calendar day (``1978-02-30``), and
-        plain garbage (``not-a-date``) without any hand-rolled
-        calendar maths.
+        Enforces :attr:`ProfileFieldType.DATE`: a date field must carry a
+        real ISO-8601 calendar day in the zero-padded ``YYYY-MM-DD``
+        layout. A :class:`datetime.date` is already valid; a string is
+        accepted only when it matches that layout and
+        :meth:`datetime.date.fromisoformat` parses it — together that
+        rejects a non-ISO layout (``15/03/1978``), the compact basic form
+        (``19780315``), an impossible month or day (``1978-13-45``), a
+        non-calendar day (``1978-02-30``), and plain garbage
+        (``not-a-date``) without any hand-rolled calendar maths.
+
+        Enforces :attr:`ProfileFieldType.ENUM` against the field's own
+        declared ``enum_values``. Those declarations were previously
+        advisory: an enum field accepted any token at all and stored it
+        unchanged, so a closed set that every reader treated as
+        authoritative constrained nothing, and a value carrying the wrong
+        vocabulary could sit in a profile indefinitely without any check
+        able to fail.
+
+        The schema arrives here by injection, so a caller validating
+        against a synthetic schema is checked against ITS declarations
+        rather than the shipped ones — which is why enum enforcement
+        belongs at this boundary and not on the fact carrier.
         """
-        if field.type is not ProfileFieldType.DATE or fact.value is None:
+        if fact.value is None:
+            return ()
+        if field.type is ProfileFieldType.ENUM:
+            return self._validate_enum_value(field, fact)
+        if field.type is not ProfileFieldType.DATE:
             return ()
         if isinstance(fact.value, date):
             return ()
@@ -153,6 +169,30 @@ class ProfileValidationService:
                 return (self._invalid_date_issue(field, fact),)
             return ()
         return (self._invalid_date_issue(field, fact),)
+
+    @staticmethod
+    def _validate_enum_value(
+        field: ProfileFieldDefinition,
+        fact: UserProfileFact,
+    ) -> tuple[ProfileValidationIssue, ...]:
+        """Reject an enum-typed value outside the field's declared set.
+
+        Comparison is exact rather than case-folded. The declared sets are
+        case-significant and inconsistent between fields by design — some
+        carry AEAT's own uppercase tokens, others the profile's lowercase
+        vocabulary — so folding would silently admit a spelling the
+        declaring authority does not use.
+        """
+        if str(fact.value) in field.enum_values:
+            return ()
+        return (
+            ProfileValidationIssue(
+                severity=BaseSeverity.ERROR,
+                code="invalid_enum_value",
+                path=fact.path,
+                message=(f"field {fact.path!r} must be one of {list(field.enum_values)}; got {fact.value!r}"),
+            ),
+        )
 
     @staticmethod
     def _invalid_date_issue(

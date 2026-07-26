@@ -40,6 +40,7 @@ from ....persistence.storage import (
     EnvelopeVersionError,
     MasterKeyProvider,
     SecureObjectRepository,
+    inner_envelope_version_is_current,
     secure_object_repository_for_active_bucket,
 )
 from ._errors import ExpedienteNotFoundError, SedeValidationError
@@ -189,7 +190,7 @@ class FiledDeclaracionObservationStore:
                 f"filed-declaration observation {object_key} has classification {envelope.classification}; "
                 f"consumer expected {_OBSERVATION_CLASSIFICATION}",
             )
-        if envelope.schema_version > _OBSERVATION_ENVELOPE_VERSION:
+        if not inner_envelope_version_is_current(envelope.schema_version, _OBSERVATION_ENVELOPE_VERSION):
             raise EnvelopeVersionError(
                 f"filed-declaration observation {object_key} is at version {envelope.schema_version}; "
                 f"consumer supports up to {_OBSERVATION_ENVELOPE_VERSION}",
@@ -216,7 +217,7 @@ class FiledDeclaracionObservationStore:
                     f"filed-declaration observation {record.object_key!r} has classification "
                     f"{envelope.classification}; consumer expected {_OBSERVATION_CLASSIFICATION}",
                 )
-            if envelope.schema_version > _OBSERVATION_ENVELOPE_VERSION:
+            if not inner_envelope_version_is_current(envelope.schema_version, _OBSERVATION_ENVELOPE_VERSION):
                 raise EnvelopeVersionError(
                     f"filed-declaration observation {record.object_key!r} is at version "
                     f"{envelope.schema_version}; consumer supports up to {_OBSERVATION_ENVELOPE_VERSION}",
@@ -288,7 +289,7 @@ class FiledDeclaracionObservationStore:
                 f"IVA wallet observation {object_key} has classification {envelope.classification}; "
                 f"consumer expected {_IVA_WALLET_CLASSIFICATION}",
             )
-        if envelope.schema_version > _IVA_WALLET_ENVELOPE_VERSION:
+        if not inner_envelope_version_is_current(envelope.schema_version, _IVA_WALLET_ENVELOPE_VERSION):
             raise EnvelopeVersionError(
                 f"IVA wallet observation {object_key} is at version {envelope.schema_version}; "
                 f"consumer supports up to {_IVA_WALLET_ENVELOPE_VERSION}",
@@ -317,7 +318,7 @@ class FiledDeclaracionObservationStore:
                     f"IVA wallet observation {record.object_key!r} has classification {envelope.classification}; "
                     f"consumer expected {_IVA_WALLET_CLASSIFICATION}",
                 )
-            if envelope.schema_version > _IVA_WALLET_ENVELOPE_VERSION:
+            if not inner_envelope_version_is_current(envelope.schema_version, _IVA_WALLET_ENVELOPE_VERSION):
                 raise EnvelopeVersionError(
                     f"IVA wallet observation {record.object_key!r} is at version {envelope.schema_version}; "
                     f"consumer supports up to {_IVA_WALLET_ENVELOPE_VERSION}",

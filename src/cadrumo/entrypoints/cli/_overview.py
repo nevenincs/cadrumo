@@ -244,12 +244,9 @@ def _live_censo_verified_profile_keys(record) -> tuple[str, ...]:
     """Return profile paths whose current value was stamped from live censo sync."""
     if record is None:
         return ()
-    from ...application.user_profile import (
-        CENSO_DERIVED_SOURCE_TAG,
-        CENSO_SOURCE_TAG,
-    )
+    from ...application.user_profile import CENSO_SOURCE_TAG
 
-    verified_sources = {CENSO_SOURCE_TAG, CENSO_DERIVED_SOURCE_TAG}
+    verified_sources = {CENSO_SOURCE_TAG}
     return tuple(
         sorted(
             {fact.path for fact in record.facts if fact.path.strip() and fact.source in verified_sources},

@@ -11,8 +11,11 @@ that bind the regime itself, plus the cross-version fixture-coverage harness.
 - **One-way coherence.** ``RELEASED_FORMAT_FLOORS`` is populated if and only
   if the regime is ``RELEASED``. The frozen floors and the regime constant
   can never drift apart.
-- **Enrollment.** Every key in a populated ``RELEASED_FORMAT_FLOORS`` names a
-  live persisted-format tier.
+- **Enrollment, both directions.** Every key in a populated
+  ``RELEASED_FORMAT_FLOORS`` names a live persisted-format tier, AND every
+  format declared ``DURABLE`` carries a floor. The second direction is what
+  stops a flip freezing a proper subset of the durable formats and passing
+  green while the frozen mapping reads as a complete inventory.
 
 The whole mechanism is DORMANT today: the regime is ``PRE_RELEASE``,
 ``RELEASED_FORMAT_FLOORS`` is ``None``, the fixture corpus is empty, and every
@@ -34,10 +37,13 @@ import pytest
 
 from ..core import (
     COMPATIBILITY_REGIME,
+    PERSISTED_FORMATS,
     RELEASED_FORMAT_FLOORS,
     CompatibilityRegime,
+    PersistedFormatClass,
     expected_floor,
     lineage_obligations,
+    unfloored_durable_formats,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -121,6 +127,87 @@ def test_every_released_floor_key_names_a_live_format_tier() -> None:
         f"RELEASED_FORMAT_FLOORS names non-tier format keys {unknown}; every frozen "
         f"floor must map to a live persisted-format tier {sorted(_CANONICAL_FORMAT_KEYS)}"
     )
+
+
+def test_every_durable_format_carries_a_frozen_floor() -> None:
+    """Enrollment, the other direction: a durable format may not be left uncovered.
+
+    The sibling gate above stops a frozen floor naming a format that is not a
+    live tier. Nothing asserted the converse, so a checkpoint flip could freeze
+    a proper SUBSET of the durable formats and pass every gate green — and the
+    frozen mapping would then read to every later author as the complete
+    inventory of what the product promises to keep reading.
+
+    Vacuously green today (``RELEASED_FORMAT_FLOORS`` is ``None``); the
+    predicate's teeth are proven directly below with synthetic mappings.
+    """
+    uncovered = unfloored_durable_formats(RELEASED_FORMAT_FLOORS, PERSISTED_FORMATS)
+    assert uncovered == (), (
+        f"persisted format(s) {uncovered} are declared DURABLE but carry no frozen floor. "
+        "A durability guarantee that silently omits taxpayer bytes is worse than none, because "
+        "the omission is invisible exactly where the guarantee is claimed. Either enroll each "
+        "format (a floor constant, a version ceiling, an upgrader registry, and a tier gate) or "
+        "reclassify it REGENERABLE in PERSISTED_FORMATS if its bytes are genuinely rebuildable — "
+        "in the same commit that freezes the floors"
+    )
+
+
+@pytest.mark.parametrize(
+    ("floors", "expected"),
+    [
+        # The exact shape the checkpoint would take today: the three canonical
+        # tiers frozen, the two durable formats with no floor machinery omitted.
+        (
+            {"secure_object": 1, "bundle": 3, "archive": 3},
+            ("bucket_dek", "bucket_manifest"),
+        ),
+        # One omission is still an omission.
+        (
+            {"secure_object": 1, "bundle": 3, "archive": 3, "bucket_manifest": 2},
+            ("bucket_dek",),
+        ),
+        # Freezing only the substrate leaves every other durable format bare.
+        (
+            {"secure_object": 1},
+            ("archive", "bucket_dek", "bucket_manifest", "bundle"),
+        ),
+    ],
+)
+def test_the_enrollment_predicate_names_every_uncovered_durable_format(
+    floors: dict[str, int],
+    expected: tuple[str, ...],
+) -> None:
+    """Non-vacuity: the live gate above is green only because nothing is frozen yet.
+
+    Each case is a real mapping the flip commit could plausibly land, driven
+    through the real predicate against the real declaration table. Without
+    these the gate would pass just as happily if the predicate always returned
+    an empty tuple.
+    """
+    assert unfloored_durable_formats(floors, PERSISTED_FORMATS) == expected
+
+
+def test_the_enrollment_predicate_accepts_a_complete_freeze() -> None:
+    """The other half of non-vacuity: the predicate is not simply always-failing.
+
+    A mapping covering every durable format returns clean, so the parametrised
+    rejections above are discriminating rather than vacuously strict.
+    """
+    complete = {key: 1 for key, value in PERSISTED_FORMATS.items() if value is PersistedFormatClass.DURABLE}
+    assert unfloored_durable_formats(complete, PERSISTED_FORMATS) == ()
+
+
+def test_a_regenerable_format_is_never_required_to_carry_a_floor() -> None:
+    """Regenerable state is excluded by construction, not by an allowlist.
+
+    A floor is a promise to keep reading old bytes; making it about a session
+    or a throttle sidecar would be an obligation to honour shapes the
+    application deliberately discards.
+    """
+    regenerable = sorted(key for key, value in PERSISTED_FORMATS.items() if value is PersistedFormatClass.REGENERABLE)
+    assert regenerable, "the declaration table must carry regenerable formats for this to mean anything"
+    durable_only = {key: 1 for key, value in PERSISTED_FORMATS.items() if value is PersistedFormatClass.DURABLE}
+    assert unfloored_durable_formats(durable_only, PERSISTED_FORMATS) == ()
 
 
 def test_fixture_corpus_root_exists() -> None:

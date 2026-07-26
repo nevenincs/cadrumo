@@ -7,11 +7,13 @@ registration and changes.
 This guide covers Modelo 036. Modelo 037 is superseded and not used in this
 workflow.
 
-You enter census facts by hand. The tool does not read your censo from AEAT:
-AEAT publishes no read-only census view, and the only sede surface that shows
-census data is the census *modification* tool, which this application never
-operates. The tool does not file Modelo 036, does not submit changes to AEAT,
-and does not modify AEAT records.
+You fill census facts three ways: pull them from AEAT, read them from a
+certificate you downloaded, or enter them by hand. The pull reads AEAT's own
+*Mis Datos Censales* consulta and fills your identity and address; it cannot
+reach the regime facts, so you enter those yourself.
+
+The tool never files Modelo 036, never submits changes to AEAT, and never
+modifies AEAT records. The pull reads and stops there.
 
 ## Before you start
 
@@ -72,6 +74,55 @@ place of `docs-sequence-sandbox`:
 Copy each value from your Modelo 036 copy or the AEAT sede exactly. Do not
 guess a regime or a start date.
 
+## Pull your census facts from AEAT
+
+AEAT publishes your current census position at *Mis Datos Censales*. Pull it
+into the active profile. The first step previews; the second records:
+
+```{cli-sequence} censo-update-censo-pull
+```
+
+Nothing is written until you add `--apply`.
+
+Authenticate first; see
+[Authenticate with AEAT](authenticate-with-aeat.md). The pull reads your own
+record and takes your fiscal ID from the authenticated session, so you cannot
+point it at another taxpayer.
+
+### What the pull reports
+
+Every field comes back as one of three outcomes.
+
+**Adopted** — the profile had no answer, so AEAT's value fills it.
+
+**Unchanged** — you and AEAT already agree.
+
+**Diverging** — you and AEAT disagree. The pull reports the difference and
+writes nothing. You decide which is right, then correct the profile or your
+censo. A value you declared is never overwritten. A field you deliberately
+cleared stays cleared, and the pull tells you AEAT still holds a value for it.
+
+Once the pull has filled a blank field, a later pull refreshes that same field
+when AEAT's value changes — it filled it, so it may update it. Anything you
+declared yourself stays yours.
+
+### What the pull cannot fill
+
+The pull fills your fiscal ID, fiscal address, postcode, and cadastral
+reference.
+
+It does not fill your regime facts — activity, tax regime, IVA regime,
+enrollment. AEAT publishes no read-only surface that carries them. Enter those
+by hand as described below.
+
+It does not split your name. AEAT returns surnames and given names as one
+string, and a wrong split is worse than a blank field, so the pull leaves both
+alone.
+
+If a pull returns a record whose fiscal ID is not your profile's, it refuses
+outright rather than reporting a difference. A read of someone else's census
+is not a disagreement to weigh.
+
 (import-certificado-situacion-censal)=
 ## Import a Certificado de Situación Censal
 
@@ -130,10 +181,14 @@ For modelo-specific readiness, use profile preflight:
 
 ## Keep the facts current
 
-Your AEAT census can change - a new activity, a regime change, a baja. The
-application cannot detect that drift. Re-check the profile against your latest
-Modelo 036 copy whenever you file a censo change, and before you plan a new
-filing year.
+Your AEAT census can change - a new activity, a regime change, a baja.
+
+Pull again to catch drift in your identity and address. The pull reports
+anything AEAT now holds that your profile does not.
+
+The pull cannot see a regime change, so re-check those fields against your
+latest Modelo 036 copy whenever you file a censo change, and before you plan a
+new filing year.
 
 ## Next steps
 

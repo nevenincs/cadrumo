@@ -13,8 +13,8 @@ generic base class that captures that shared shape exactly once. Concrete
 subclasses override the four class-level descriptors (``namespace``,
 ``payload_type``, ``sensitivity``, ``schema_version``) and implement
 ``extract_identifier``; they inherit ``envelope_path_for``,
-``lock_target_for``, ``load``, ``save``, ``delete``, ``iter_ids``, and
-``iter_records`` for free.
+``lock_target_for``, ``load``, ``save``, ``to_secure_object_write``,
+``delete``, ``iter_ids``, and ``iter_records`` for free.
 
 The base class does NOT replace
 :class:`adapters.persistence.storage.SecureObjectRepository`; it
@@ -29,6 +29,7 @@ from typing import ClassVar, cast
 
 from pydantic import BaseModel
 
+from .....core import SecureObjectWrite
 from .....core.classification import SensitivityClass
 from .....core.config import Settings
 from .....core.logging import get_logger
@@ -214,14 +215,7 @@ class SecureBoundRepository[T: BaseModel]:
         The natural id is recovered from the payload via
         :meth:`extract_identifier`.
         """
-        identifier = self.extract_identifier(payload)
-        safe_repository_id(identifier, context="identifier")
-        envelope = self._envelope_cls()(
-            schema_version=self.schema_version,
-            written_at=now(),
-            classification=self.sensitivity,
-            payload=payload,
-        )
+        identifier, envelope = self._identified_envelope(payload)
         self._objects.save(
             namespace=self.namespace,
             object_key=identifier,
@@ -235,6 +229,53 @@ class SecureBoundRepository[T: BaseModel]:
             self.namespace,
             identifier,
         )
+
+    def to_secure_object_write(
+        self,
+        payload: T,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
+        """Return the prepared upsert for ``payload`` without committing it.
+
+        The caller hands the returned
+        :class:`adapters.persistence.storage.SecureObjectWrite` to
+        :meth:`adapters.persistence.storage.SecureObjectRepository.save_many`
+        (or ``apply_batch``) alongside a sibling repository's write, so both
+        land in ONE SQL unit of work and a crash between them is impossible.
+        That is the same co-emit shape the filing path already uses to keep the
+        participation index from drifting from the filing catalogue; the
+        catalogue repositories expose ``to_secure_object_write`` for exactly
+        this, and this method extends it to every envelope-bound repository.
+
+        The write carries the identical
+        :class:`adapters.persistence.storage.Envelope`, classification and
+        schema version :meth:`save` would persist directly — both build it
+        through :meth:`_identified_envelope`, so the committed and the prepared
+        forms cannot drift apart.
+        """
+        identifier, envelope = self._identified_envelope(payload)
+        return SecureObjectWrite(
+            namespace=self.namespace,
+            object_key=identifier,
+            classification=self.sensitivity,
+            schema_version=self.schema_version,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+            expected_revision_id=expected_revision_id,
+        )
+
+    def _identified_envelope(self, payload: T) -> tuple[str, Envelope[BaseModel]]:
+        """Return the validated natural id and the stamped envelope for ``payload``."""
+        identifier = self.extract_identifier(payload)
+        safe_repository_id(identifier, context="identifier")
+        envelope = self._envelope_cls()(
+            schema_version=self.schema_version,
+            written_at=now(),
+            classification=self.sensitivity,
+            payload=payload,
+        )
+        return identifier, envelope
 
     def delete(self, identifier: str) -> bool:
         """Remove the row for ``identifier``; return whether a row was deleted."""

@@ -41,6 +41,43 @@ _FieldPath = Annotated[
 _DisplayName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=160)]
 _Source = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=80)]
 
+
+def declared_provenance_sources() -> frozenset[str]:
+    """Return the provenance tokens the user-profile schema declares.
+
+    Read through the schema loader rather than cached here, so a caller
+    that swaps the schema sees its declared set rather than a stale copy;
+    the loader owns the caching.
+    """
+    from ._loader import load_user_profile_schema
+
+    return frozenset(load_user_profile_schema().field("provenance.source").enum_values)
+
+
+def declared_field_paths() -> frozenset[str]:
+    """Return the ``section.field`` paths the user-profile schema declares."""
+    from ._loader import load_user_profile_schema
+
+    schema = load_user_profile_schema()
+    return frozenset(f"{section.key}.{field.key}" for section in schema.sections for field in section.fields)
+
+
+def section_field_key(path: str) -> str:
+    """Reduce a fact path to the ``section.field`` form the schema declares.
+
+    A repeatable section addresses its rows by index
+    (``activities.0.iae_epigraph``), and the schema declares the field
+    once rather than per row, so the index is dropped before the
+    declared set is consulted.
+    """
+    head, _, tail = path.partition(".")
+    if not tail:
+        return path
+    if "." in tail and tail.split(".", 1)[0].isdigit():
+        tail = tail.split(".", 1)[1]
+    return f"{head}.{tail.split('.', 1)[0]}"
+
+
 type UserProfileFactValue = str | bool | int | Decimal | date | None
 
 # A JSON-encoded canonical Decimal never carries an insignificant leading
@@ -140,6 +177,25 @@ class UserProfileFact(BaseModel):
     @classmethod
     def _restore_typed_value(cls, value: object) -> object:
         return _coerce_profile_fact_value(value)
+
+    @field_validator("source")
+    @classmethod
+    def _validate_declared_source(cls, value: str) -> str:
+        """Refuse a provenance token the schema does not declare.
+
+        The schema declares the provenance set as a closed enum, so a
+        length-constrained string bound nothing and a typo persisted
+        silently as a new, unqueryable origin. A token that is genuinely
+        in use belongs in the declared set; widening the schema is the
+        way to add one, not stamping it and hoping.
+        """
+        declared = declared_provenance_sources()
+        if value not in declared:
+            raise UserProfileValidationError(
+                f"provenance source {value!r} is not declared by the profile schema; "
+                f"declared sources are {', '.join(sorted(declared))}",
+            )
+        return value
 
     @model_validator(mode="after")
     def _validate_window(self) -> UserProfileFact:
