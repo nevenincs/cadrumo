@@ -43,6 +43,7 @@ Give an authentication mode somewhere to keep what it needs, on the encrypted pr
 - [x] `P01.S33` - Rule on whether a schema-required profile field may be cleared or left never-set after creation, the completeness check keying on fact presence rather than value presence while the overview beside it already keys on value, and place the guard where the state is created rather than at each consumer; `src/cadrumo/application/user_profile/_validation.py`.
 - [x] `P01.S34` - Refuse a live session when an active profile carries no fiscal identity, closing the certificate path where a cleared field disarmed both the credential guard and the deferred session comparison, gated by a sweep over the whole provider enum; `src/cadrumo/application/auth/_sessions.py`.
 - [x] `P01.S35` - Make a schema-required field bind per row on repeatable sections, closing both the declaration that enforced nothing and the completeness count an operator read as permanently wrong, through one helper both surfaces share; `src/cadrumo/application/user_profile/_completeness.py`.
+- [x] `P01.S36` - Record the per-activity modulos precondition at the divergence predicate in every revision carrying it, and the mixed-scope warning at the profile schema, so the reasoning sits where the promoting change would be made rather than in a record; `src/cadrumo/_data/registry/aeat/modelos/131`.
 
 ### Phase `P02` - Read-only censal reader
 
