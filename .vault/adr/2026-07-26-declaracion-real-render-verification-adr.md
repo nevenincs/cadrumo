@@ -98,9 +98,16 @@ and operator-facing display. The remedy is always to populate or read `form_numb
 A profile whose targets include engine-computed casillas reopens the parser-versus-
 engine impedance. Twenty of twenty-nine profiles do so, and nine of those belong to
 modelos outside the enrolled reconcile set, where the arbitration has never been
-made. That is not a live defect, because the path refuses loudly rather than
-silently, and it is deliberately **not** decided here: it needs its own evidence and
-its own record. It is named so it is not mistaken for settled.
+made. It is deliberately **not** decided here: it needs its own evidence and its own
+record. It is named so it is not mistaken for settled.
+
+**Provisional, pending verification.** An earlier revision of this paragraph stated
+that this is "not a live defect, because the path refuses loudly rather than
+silently". That claim was carried from a worker report and adopted here without being
+verified against the production path, which is the failure this feature has already
+recorded twice. The counts are measured; the loudly-versus-silently behaviour is not,
+and a silent discard would make this a live defect rather than a deferred one. A
+follow-on record settles it; until then no reader should rest on it.
 
 ## Rationale
 
