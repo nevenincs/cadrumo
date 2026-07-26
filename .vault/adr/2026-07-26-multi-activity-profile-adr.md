@@ -55,6 +55,13 @@ A taxpayer running two economic activities cannot be represented. The profile
 schema declares the activities section repeatable, and no surface writes, reads
 or models more than one row of it.
 
+**This is not bigger in scope than it first reads - it is differently shaped:
+less to invent, more to reconcile.** The read half of the pattern already ships
+for a sibling section under an accepted decision, so the work is a migration
+with a missing writer rather than a design job. That difference decides who
+should do it and in what order, and it is the reason the migration ruling below
+is a precondition rather than a verification step.
+
 The decision is needed now because the declaration and the implementation have
 already been mistaken for each other twice. The flag was nearly stripped as
 incorrect before the AEAT diseño settled the cardinality, and a separate gate was
@@ -121,10 +128,13 @@ any módulos unit slot is shared across activities. The last of these can change
 the shape of a per-activity model rather than only its necessity, so it belongs
 before design rather than after.
 
-Semantic discovery is unavailable in **both** halves at the time of writing - the
-code index reports a terminal successful state at a section count far below the
-tree's size, and the vault index is mid-rebuild. The two fail independently and
-were checked separately; this record happens to catch both down at once. It is
+Semantic discovery was not relied on at the time of writing. The two indexes fail
+independently and must be checked separately, and **no state field is evidence
+either way** - one index reported a terminal successful state at a section count
+far below the tree's size, while the other reported `running` and nonetheless
+answered correctly under a two-probe check. Neither `succeeded` nor `running`
+tells you anything; only a probe does. This record was authored without a usable
+code index. It is
 therefore authored from evidence already in the vault and from targeted search,
 not from fresh semantic discovery, and an implementation must substitute an
 exhaustive search over the bounded surface and say so rather than reporting that
