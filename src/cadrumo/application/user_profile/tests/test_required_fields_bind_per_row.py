@@ -143,16 +143,21 @@ def test_presence_is_not_whitespace_stripped_here() -> None:
     is the one guarding a live AEAT read. Tightening it here would break
     the agreement the previous test locks in, so it must be a decision
     rather than a side effect.
+
+    The whitespace goes in a field that is still REQUIRED. An optional field
+    is absent from the missing set whatever it holds, so asserting on one
+    would pass without exercising the whitespace rule at all.
     """
 
     _register_active()
+    row = [fact for fact in _complete_socio_row(0) if not fact.path.endswith(".name")]
     _append_facts(
-        *_complete_socio_row(0)[:4],
-        UserProfileFact(path=f"{_SOCIOS}.0.role", value="   "),
+        *row,
+        UserProfileFact(path=f"{_SOCIOS}.0.name", value="   "),
     )
     record = build_lifecycle_service(bucket_id=_BUCKET_ID).read(_BUCKET_ID)
 
-    assert f"{_SOCIOS}.0.role" not in build_profile_overview(record).missing_required
+    assert f"{_SOCIOS}.0.name" not in build_profile_overview(record).missing_required
 
 
 @pytest.fixture(autouse=True)

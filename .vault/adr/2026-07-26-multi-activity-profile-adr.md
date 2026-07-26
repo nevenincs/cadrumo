@@ -191,10 +191,17 @@ by index or by amount. Choosing by position would make row order load-bearing
 when nothing else in the section treats it that way, and choosing by amount
 would invent a criterion the form does not state.
 
-The new reader derives its required-field set from the schema rather than
-restating it. The reference records that the shipped resolver restates it and has
-already drifted by one field; that drift is a defect to reconcile in passing, not
-a pattern to copy.
+**A resolver enforces what its row model consumes; the schema declares what the
+profile must hold; those are legitimately different sets.** The new reader
+therefore derives its required set from the row it builds, and neither restates
+the schema by hand nor inherits it wholesale.
+
+This corrects an earlier version of this record, which ruled that the reader
+should derive from the schema. That would have made a reader enforce fields the
+modelo does not carry - a new defect introduced by the rule meant to prevent
+one. The shipped resolver's set differing from the schema's turned out not to be
+drift at all: the field it omits is one the form does not carry per member, so
+the resolver enforces exactly what it consumes and is correct.
 
 ## Rationale
 
@@ -208,9 +215,18 @@ form-layout artefact and a legal text, produced by different processes, agree
 that the fact is plural. That agreement is what makes this a decision about
 implementation rather than about modelling.
 
-Choosing to derive rather than restate the required set is the campaign's own
-finding applied forward: a declaration that nothing enforces, and an enforcement
-that restates a declaration, are the same defect seen from two sides.
+The campaign's own finding applies forward, with its resolution corrected. A
+declaration that nothing enforces, and an enforcement that restates a
+declaration, are the same defect seen from two sides - **but the answer is not to
+make them match. It is to ask of each set what question it answers.**
+
+Measured in this section family, the two cases resolve in opposite directions. A
+required field that feeds a readiness gate, a calendar check and seven operator
+surfaces is a declaration that is right and an enforcement that is missing. A
+required field the form does not carry per row and no code reads is a
+declaration that is wrong. Making either "match" its counterpart would fix one
+and break the other, which is why the rule has to be about the question rather
+than the agreement.
 
 ## Consequences
 
