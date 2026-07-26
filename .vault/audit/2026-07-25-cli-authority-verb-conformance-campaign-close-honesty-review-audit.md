@@ -878,12 +878,35 @@ be mechanical rather than motivated.
 The second is a distinction that matters for the held MCP fix and was almost
 lost: **tracking is not enrolment.** The module is now in HEAD, but the schema
 manifest still populates itself by importing modules named `*_payloads` under
-two known payload packages, and this module is neither. Its two schemas remain
-outside the manifest, so the transport divergence that blocks the identity fix —
-in-process reporting 295 command schemas against a subprocess reporting 293 —
-survives the commit untouched. The broken-HEAD half is closed; the
-under-reporting half is not, and the sequencing condition set for landing the
-identity fix is therefore only half satisfied.
+two known payload packages, and this module is neither.
+
+**That claim was wrong, and measuring it rather than reasoning about it is what
+showed so.** The reasoning was sound and the premise was not. The walked payload
+module `_config_payloads.py` imports the two result classes from the wizard
+package at module level, so importing it executes the decorators that register
+those schemas. Enrolment was never by filename; it was by that import chain.
+
+What actually produced the 293-versus-295 divergence was the broken HEAD itself.
+The walk tolerates a payload module failing to import — it collects the failure
+and continues — so while the results module was untracked, importing
+`_config_payloads` raised, the walk swallowed it, and exactly those two schemas
+went missing. Committing the module repaired the import and with it the count.
+
+Measured at HEAD after that commit: a tree extracted with `git archive`
+containing no untracked files reports **295 schemas, both profile schemas
+present, zero import failures**, identical to the working tree. The
+transport-parity suite passes 8 of 8 with the held identity fix applied. So
+tracking WAS sufficient, the enrolment step opened against this claim is
+unnecessary, and the sequencing condition set for the identity fix is fully
+satisfied on this axis.
+
+Recorded rather than quietly corrected because the error is instructive. A
+swallowed import failure presents as a missing entry, which looks exactly like
+something never having been enrolled — and the difference is invisible until you
+read the count and the failure list together. The walk reports its failures;
+nobody had looked at them. That is the same shape as everything else in this
+review: the instrument was telling the truth and no one was reading the part
+that mattered.
 
 ## Recommendations
 
