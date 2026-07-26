@@ -47,6 +47,7 @@ this taxonomy check.
 from __future__ import annotations
 
 import warnings
+from typing import Protocol
 
 import pytest
 
@@ -195,7 +196,22 @@ def fail_session_on_held_serials(session: pytest.Session) -> None:
         session.exitstatus = pytest.ExitCode.USAGE_ERROR
 
 
-def report_held_serials(terminalreporter: object) -> None:
+class _TerminalWriter(Protocol):
+    """The two writer methods this reporter needs from pytest's terminal.
+
+    Declared structurally rather than importing ``TerminalReporter`` from
+    ``_pytest.terminal``: that is a private module whose shape is not a
+    published contract, and the parameter was previously typed ``object``
+    with a blanket attribute-access ignore, which suppressed any real
+    error alongside the two it was aimed at.
+    """
+
+    def write_sep(self, sep: str, title: str, **markup: bool) -> None: ...
+
+    def write_line(self, line: str, **markup: bool) -> None: ...
+
+
+def report_held_serials(terminalreporter: _TerminalWriter) -> None:
     """Name the held tests and the invocation that would run them.
 
     Args:
@@ -203,8 +219,8 @@ def report_held_serials(terminalreporter: object) -> None:
     """
     if not _held_from_workers:
         return
-    write_sep = terminalreporter.write_sep  # type: ignore[attr-defined]
-    write_line = terminalreporter.write_line  # type: ignore[attr-defined]
+    write_sep = terminalreporter.write_sep
+    write_line = terminalreporter.write_line
     write_sep("=", "SERIAL TESTS HELD BACK", red=True, bold=True)
     write_line(
         f"{len(_held_from_workers)} isolation-sensitive tests were NOT RUN: they cannot be "

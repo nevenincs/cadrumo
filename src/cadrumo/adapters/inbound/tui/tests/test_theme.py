@@ -39,15 +39,15 @@ from .. import (
 )
 from .._theme import BASE_CSS, SCROLLBAR_CELLS
 
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
-    from textual.app import App
-
 pytestmark = [
     pytest.mark.unit,
     pytest.mark.hex_inbound_adapter,
 ]
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from textual.app import App
 
 
 # ── WCAG 2.1 contrast, recomputed from the published formula ────────────────

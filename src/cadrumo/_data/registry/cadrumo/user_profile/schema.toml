@@ -567,10 +567,19 @@ description = "Importe de renta o base imponible atribuido a este socio en el Mo
 model_selectors = ["attribution_entity_socios.base_imponible_assigned"]
 legal_refs = ["ley-35-2006:art-87", "ley-35-2006:art-89", "orden-hap-2250-2015:art-3"]
 
+# NOT required, deliberately. Modelo 184's socio record carries no per-member
+# legal role: its "clave tipo de partícipe" is residency (residente, no
+# residente sin establecimiento permanente, con establecimiento permanente),
+# and the socio/comunero/partícipe distinction sits at entity level in the
+# declaration, following from the entity's own type. Nothing in this tree reads
+# this field. Requiring it made every socio row carry an answer no form asks
+# for. The field is kept rather than retired because its legal grounding points
+# at an attribution treatment that has not been built; requiring it again needs
+# a consumer first.
 [[sections.fields]]
 key = "role"
 type = "enum"
-required = true
+required = false
 sensitivity = "identity"
 effective_dated = true
 description = "Legal member role inside the attribution entity."

@@ -714,3 +714,97 @@ def test_list_and_get_verification_reports_real_registry(repos: Repos) -> None:
             verification_repository=vr_repo,
         )
     assert excinfo.value.translated_message == "application.modelo.errors.verification_report_not_found"
+
+
+def test_mark_verificado_completo_refuses_a_ledger_derived_revision(repos: Repos) -> None:
+    """A revision carrying ledger contributors must go through verify.
+
+    A ledger-derived revision owes a bundled evidence record pegged to its
+    snapshot fingerprint, and that bundle is built inside verify's granted
+    branch. This transition does not run verify, so promoting through it
+    produced a VERIFICADO_COMPLETO revision indistinguishable from a granted
+    one while skipping the evidence bundle, the ledger-drift check and the
+    clean-state gates -- and export then accepts it on the snapshot alone,
+    a reference to a bundle that was never written.
+
+    The refusal keys on the contributor set rather than the state, so it
+    leaves every non-ledger caller of this transition untouched.
+    """
+    wu_repo, cr_repo, _, _, bv_repo = repos
+    work_unit = seed_work_unit(
+        wu_repo,
+        modelo="111",
+        filing_year=2026,
+        period="1T",
+        revision_id="2019-y-siguientes",
+    )
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs={
+            M111_EMPLOYMENT_WITHHELD_CASILLA: Decimal("180.25"),
+            M111_PROFESSIONAL_WITHHELD_CASILLA: Decimal("12.10"),
+            M111_PRIZE_WITHHELD_CASILLA: Decimal("300.00"),
+            M111_IMAGE_RIGHTS_WITHHELD_CASILLA: Decimal("14.40"),
+            M111_FORESTRY_WITHHELD_CASILLA: Decimal("25.00"),
+            M111_IMPUTED_INCOME_WITHHELD_CASILLA: Decimal("0.50"),
+            M111_ACTIVITY_COUNT_CASILLA: Decimal("7.00"),
+            M111_ACTIVITY_AMOUNT_CASILLA: Decimal("8.00"),
+            M111_ACTIVITY_WITHHELD_CASILLA: Decimal("9.00"),
+            M111_TOTAL_WITHHELD_CASILLA: Decimal("40.00"),
+        },
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=T1,
+    )
+    # Anti-tautology control: the identical calculation WITHOUT contributors
+    # promotes cleanly, so the refusal below is the contributor set and not
+    # some other property of the revision.
+    assert revision.source_transaction_ids == ()
+    promoted = mark_revision_verificado_completo(
+        revision.calculation_revision_id,
+        actor="operator-A",
+        calculation_repository=cr_repo,
+        work_unit_repository=wu_repo,
+        clock=T2,
+    )
+    assert promoted.state is CalculationRevisionState.VERIFICADO_COMPLETO
+
+    # The same inputs WITH ledger contributors. Built through calculate rather
+    # than model_copy: contributors are part of the content-addressed id, so a
+    # copied revision fails its own self-validation.
+    ledger_derived = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs={
+            M111_EMPLOYMENT_WITHHELD_CASILLA: Decimal("180.25"),
+            M111_PROFESSIONAL_WITHHELD_CASILLA: Decimal("12.10"),
+            M111_PRIZE_WITHHELD_CASILLA: Decimal("300.00"),
+            M111_IMAGE_RIGHTS_WITHHELD_CASILLA: Decimal("14.40"),
+            M111_FORESTRY_WITHHELD_CASILLA: Decimal("25.00"),
+            M111_IMPUTED_INCOME_WITHHELD_CASILLA: Decimal("0.50"),
+            M111_ACTIVITY_COUNT_CASILLA: Decimal("7.00"),
+            M111_ACTIVITY_AMOUNT_CASILLA: Decimal("8.00"),
+            M111_ACTIVITY_WITHHELD_CASILLA: Decimal("9.00"),
+            M111_TOTAL_WITHHELD_CASILLA: Decimal("40.00"),
+        },
+        source_transaction_ids=("a" * 64, "b" * 64),
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=T3,
+    )
+    assert ledger_derived.source_transaction_ids == ("a" * 64, "b" * 64)
+
+    with pytest.raises(CalculationRevisionStateError) as refusal:
+        mark_revision_verificado_completo(
+            ledger_derived.calculation_revision_id,
+            actor="operator-A",
+            calculation_repository=cr_repo,
+            work_unit_repository=wu_repo,
+            clock=T3,
+        )
+
+    assert "2" in str(refusal.value)
+    reloaded = cr_repo.load().get(ledger_derived.calculation_revision_id)
+    assert reloaded is not None
+    assert reloaded.state is CalculationRevisionState.BORRADOR

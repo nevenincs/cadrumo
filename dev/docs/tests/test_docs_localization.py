@@ -88,6 +88,7 @@ def test_every_user_page_is_fully_translated(language: str) -> None:
     the worklist.
     """
     pages = user_scope_source_pages(_DOCS)
+    assert pages, f"no user-scope source pages found under {_DOCS}; this gate scanned nothing"
     failures: list[str] = []
     for page in pages:
         po_path = _catalogue_path(language, page)
@@ -114,8 +115,10 @@ def test_translations_introduce_no_machine_text_dashes(language: str) -> None:
     bound is the source's own count per entry, never zero.
     """
     dashes = ("—", "–")
+    pages = user_scope_source_pages(_DOCS)
+    assert pages, f"no user-scope source pages found under {_DOCS}; this gate scanned nothing"
     failures: list[str] = []
-    for page in user_scope_source_pages(_DOCS):
+    for page in pages:
         po_path = _catalogue_path(language, page)
         if not po_path.is_file():
             continue
@@ -214,6 +217,10 @@ def test_no_orphan_catalogues(language: str) -> None:
     source page, enumerating any orphan whose source is gone.
     """
     expected = {Path(page).with_suffix(".po").as_posix() for page in user_scope_source_pages(_DOCS)}
+    assert expected, (
+        f"no user-scope source pages found under {_DOCS}; every committed catalogue would read as "
+        "an orphan, so an empty page set cannot be treated as a clean result"
+    )
     lc_messages = _LOCALES / language / "LC_MESSAGES"
     present = {po.relative_to(lc_messages).as_posix() for po in lc_messages.rglob("*.po")}
     orphans = sorted(present - expected)

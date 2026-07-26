@@ -42,10 +42,10 @@ from .._relation_prefill import (
     _not_applicable_source_modelos_for_bucket,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
 if TYPE_CHECKING:
     from ....domain.calculations.registry import RegistrySnapshot
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 #: Modelo 100 filing years whose revisions declare the pagos-fraccionados dependency pair.
 _M100_YEARS: tuple[int, ...] = (2021, 2022, 2023, 2024, 2025)
