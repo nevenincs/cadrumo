@@ -356,9 +356,12 @@ def register_active_profile(
             the new profile can inherit data from an existing bucket.
         status: The birth lifecycle state — ``ACTIVE`` (default) for a
             complete registration, ``SETUP_INCOMPLETE`` for the
-            interactive setup flow's early mint, which reserves the tax id
-            while modelo work stays refused until
-            :func:`complete_setup_with_lifecycle_span` lands.
+            interactive setup flow's early mint, whose modelo work stays
+            refused until :func:`complete_setup_with_lifecycle_span`
+            lands. The early mint reserves a tax id only when it is given
+            one: ``enforce_unique_tax_id`` compares the facts supplied,
+            and a first persist before the tax-id page is answered
+            supplies none.
 
     This function is a thin
     :class:`~cadrumo.application.workflow.WorkflowState` coordinator: the

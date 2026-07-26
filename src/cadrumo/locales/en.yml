@@ -6257,6 +6257,7 @@ flows:
     edit:
       cancel: Cancel
       save: Save
+      required_blank: '{field} is required, so it cannot be left blank. Enter a value, or cancel to leave it unchanged.'
     progress: '{present} of {total} fields filled in, {missing} still needed for filing'
     section_title: '{title} — {present}/{total}'
     title: 'Profile: {profile}'

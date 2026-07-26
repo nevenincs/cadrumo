@@ -233,7 +233,18 @@ class ProfileValidationService:
         self,
         facts: tuple[UserProfileFact, ...],
     ) -> tuple[ProfileValidationIssue, ...]:
-        present = {self._section_field_key(fact.path) for fact in facts}
+        # Presence is VALUE-bearing, never fact-bearing. A cleared field is a
+        # fact carrying ``value=None``, so keying on the fact existing let a
+        # clear not merely evade this check but affirmatively SATISFY it:
+        # clearing a required field silenced the very issue its absence
+        # raises. The overview built from the same record already reads
+        # presence this way, so the enforcing surface now agrees with the one
+        # the operator is shown.
+        present = {
+            self._section_field_key(fact.path)
+            for fact in facts
+            if fact.value is not None and self._render_fact_value(fact.value) != ""
+        }
         values = {fact.path: self._render_fact_value(fact.value) for fact in facts if fact.value is not None}
         issues: list[ProfileValidationIssue] = []
         for section in self._schema.sections:

@@ -33,7 +33,7 @@ from ....domain.user_profile import UserProfileStatus
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...user_profile import (
-    EditProfileFieldCommand,
+    ProfileRepository,
     RegisterProfileCommand,
     build_lifecycle_service,
     profile_create_storage_span,
@@ -45,6 +45,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "77777777-7777-4777-8777-777777777777"
 _TAX_ID = "12345678Z"
+_TAX_ID_PATH = "identity.tax_id"
 
 
 def _register_active() -> None:
@@ -60,13 +61,32 @@ def _register_active() -> None:
 
 
 def _register_active_then_clear_identity() -> None:
-    """Reach the proven exploit state: ACTIVE, with its fiscal id removed."""
+    """Reach the proven exploit state: ACTIVE, with its fiscal id removed.
+
+    Built below the validated edit door deliberately. That door now
+    refuses to clear a schema-required field, which is what closed the
+    operator-reachable route to this state. These guards exist for the
+    case where it is reached some OTHER way, so the fixture has to reach
+    it some other way too — driving it through the door would now fail
+    at setup and prove nothing about the guards.
+    """
     _register_active()
-    service = build_lifecycle_service(bucket_id=_BUCKET_ID)
-    assert service.read(_BUCKET_ID).status is UserProfileStatus.ACTIVE
-    service.edit_field(
-        EditProfileFieldCommand(profile_id=_BUCKET_ID, path="identity.tax_id", value=None),
+    repository = ProfileRepository()
+    aggregate = repository.load(_BUCKET_ID)
+    assert aggregate.record.status is UserProfileStatus.ACTIVE
+    cleared = tuple(
+        fact.model_copy(update={"value": None}) if fact.path == _TAX_ID_PATH else fact
+        for fact in aggregate.record.facts
     )
+    repository.save(
+        aggregate.model_copy(update={"record": aggregate.record.model_copy(update={"facts": cleared})}),
+    )
+    assert not _stored_tax_id(), "the fixture must actually have cleared the identity"
+
+
+def _stored_tax_id() -> object | None:
+    record = ProfileRepository().load(_BUCKET_ID).record
+    return next((fact.value for fact in record.facts if fact.path == _TAX_ID_PATH), None)
 
 
 @pytest.mark.parametrize("kind", list(AuthProviderKind))

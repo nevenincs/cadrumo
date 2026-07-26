@@ -6577,6 +6577,7 @@ flows:
     edit:
       cancel: Mégse
       save: Mentés
+      required_blank: 'A(z) {field} kötelező, ezért nem maradhat üresen. Adj meg egy értéket, vagy a mégse gombbal hagyd változatlanul.'
     progress: '{present} / {total} mező kitöltve, {missing} hiányzik a benyújtáshoz'
     section_title: '{title} — {present}/{total}'
     title: 'Profil: {profile}'

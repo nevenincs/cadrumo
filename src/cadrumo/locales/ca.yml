@@ -6692,6 +6692,7 @@ flows:
     edit:
       cancel: Cancel·la
       save: Desa
+      required_blank: '{field} és obligatori, així que no pot quedar en blanc. Introdueix un valor o cancel·la per deixar-lo sense canvis.'
     progress: '{present} de {total} camps emplenats, en falten {missing} per presentar'
     section_title: '{title} — {present}/{total}'
     title: 'Perfil: {profile}'

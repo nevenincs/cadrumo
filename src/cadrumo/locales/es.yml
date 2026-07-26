@@ -6732,6 +6732,7 @@ flows:
     edit:
       cancel: Cancelar
       save: Guardar
+      required_blank: '{field} es obligatorio, así que no puede quedar en blanco. Introduce un valor o cancela para dejarlo sin cambios.'
     progress: '{present} de {total} campos rellenados, faltan {missing} para presentar'
     section_title: '{title} — {present}/{total}'
     title: 'Perfil: {profile}'

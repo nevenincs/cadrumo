@@ -57,9 +57,17 @@ class RegisterProfileCommand(BaseModel):
 
     ``status`` selects the registration arm: ``ACTIVE`` (the default) for
     a complete registration, ``SETUP_INCOMPLETE`` for the interactive
-    setup flow's early mint (the record is live and its tax id reserved,
-    but modelo work is refused until :class:`CompleteSetupCommand` lands).
-    A tombstoned registration is refused — a profile is never born dead.
+    setup flow's early mint (the record is live, but modelo work is
+    refused until :class:`CompleteSetupCommand` lands). A tombstoned
+    registration is refused — a profile is never born dead.
+
+    The early mint does NOT reserve a tax id. Uniqueness is enforced
+    against the facts the mint is given, and the setup flow's first
+    persist contributes no fact for an unanswered or blank tax-id page,
+    so a mint that happens before that answer carries no identity to
+    reserve. Completeness is also deferred on this arm, so nothing
+    refuses the empty record. A mint that DOES carry the answered fact
+    reserves it normally.
     """
 
     model_config = _STRICT_FROZEN
