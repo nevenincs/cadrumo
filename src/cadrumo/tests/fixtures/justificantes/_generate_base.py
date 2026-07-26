@@ -33,6 +33,20 @@ from reportlab.pdfgen import canvas
 
 from ....core.external_constants import UTF_8_ENCODING, load_external_constants
 
+SYNTHETIC_SANITIZER_VERSION = "0.1.0-synthetic"
+"""Sidecar ``sanitizer_version`` for a generator-produced specimen.
+
+Deliberately distinct from the production ``SANITIZER_VERSION``: that one
+stamps a REAL AEAT document put through the redaction pipeline, while this
+one stamps a specimen the generator authored outright, which was never
+sanitised because it never carried taxpayer data. A reader comparing the two
+values is asking which of those two histories a fixture has, so collapsing
+them would erase the distinction the provenance gate exists to check.
+
+Named here rather than inlined at the write site so both halves of that pair
+have a declared home and can be cross-referenced.
+"""
+
 
 @dataclass(frozen=True)
 class _Fixture:
@@ -161,7 +175,7 @@ def _write_sidecar(pdf_path: Path, modelo: str, ejercicio: str, tax_id: str) -> 
         "output_sha256": pdf_sha256,
         "source_size_bytes": len(pdf_bytes),
         "output_size_bytes": len(pdf_bytes),
-        "sanitizer_version": "0.1.0-synthetic",
+        "sanitizer_version": SYNTHETIC_SANITIZER_VERSION,
         "determinism_flags": {
             "deterministic_id": True,
             "static_id": False,
