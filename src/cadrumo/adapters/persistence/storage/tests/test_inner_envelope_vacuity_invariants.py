@@ -44,7 +44,7 @@ import annotated_types
 import pytest
 from pydantic import BaseModel, Field
 
-from .....tests._inventory import production_python_files, repo_relative
+from .....tests import production_python_files, repo_relative
 from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from .._schema_lineage import SECURE_OBJECT_DURABILITY_FLOOR
 from ..envelope import Envelope

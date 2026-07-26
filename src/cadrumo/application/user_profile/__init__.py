@@ -202,6 +202,7 @@ if TYPE_CHECKING:
         verify_recovery_code,
     )
     from ._custody_carry import (
+        TYPED_CATEGORY_NAMESPACES,
         carried_namespace_definitions,
         restore_carried_objects,
         serialize_carried_objects,
@@ -511,7 +512,12 @@ _LAZY_EXPORTS: dict[str, str] = {
         ("._integrity", ("ProfileIntegrityError",)),
         (
             "._custody_carry",
-            ("carried_namespace_definitions", "restore_carried_objects", "serialize_carried_objects"),
+            (
+                "TYPED_CATEGORY_NAMESPACES",
+                "carried_namespace_definitions",
+                "restore_carried_objects",
+                "serialize_carried_objects",
+            ),
         ),
     )
     for name in names
@@ -535,6 +541,7 @@ __all__ = [
     "PASSPHRASE_MINIMUM_LENGTH",
     "SUPPORTED_BUNDLE_SCHEMA_VERSIONS",
     "TAX_ID_FACT_PATH",
+    "TYPED_CATEGORY_NAMESPACES",
     "USER_PROFILE_SNAPSHOT_NAMESPACE",
     "USER_PROFILE_VALUE_NAMESPACE",
     "CapabilityDecision",

@@ -39,7 +39,7 @@ from ._collab import register_collab_commands
 from ._custody import register_custody_commands
 from ._descendiente import register_descendiente_commands
 from ._errors import ConfigBoundaryError as _ConfigBoundaryError
-from ._manager_dispatch import register_lazy_wizard_leaf
+from ._manager_dispatch import register_lazy_wizard_leaf as _register_lazy_wizard_leaf
 from ._profile_bundle import register_profile_bundle_commands
 from ._profile_readiness import (
     _emit_profile_record_missing,
@@ -850,7 +850,7 @@ def config_profile_duplicate(
     )
 
 
-register_lazy_wizard_leaf(
+_register_lazy_wizard_leaf(
     "create",
     "create",
     help=tr(
@@ -868,7 +868,7 @@ register_lazy_wizard_leaf(
 )
 
 
-register_lazy_wizard_leaf(
+_register_lazy_wizard_leaf(
     "edit",
     "edit",
     help=tr(
