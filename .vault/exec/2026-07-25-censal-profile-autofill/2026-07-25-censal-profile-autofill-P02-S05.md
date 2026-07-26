@@ -99,17 +99,47 @@ verification therefore widens the window it is guarding. The shapes that close i
 are a pathspec commit that never stages, or a stage-and-commit with no separable
 gap.
 
-THE SELECTOR DISPATCH IS UNTESTED AGAINST A LIVE SESSION. The parse layer is
-proven against real markup; the dispatch layer is proven only by construction,
-because the executor was instructed not to open a live session. A future live
-exercise must not read a successful pull as proof that dispatch worked: the
-resolver falls back to the unnumbered origin when the selector does not dispatch,
-and that origin may well serve the route, so a green run is consistent with the
-fallback having fired. The discriminating evidence is the log line the resolver
-emits naming the dispatched host; its absence, or a landing on the unnumbered
-origin, means the fallback ran and dispatch remains unproven. This is recorded
-here rather than in the module because process metadata does not belong in source
-and such a comment would rot on first exercise.
+THE SELECTOR DISPATCH WAS UNTESTED AGAINST A LIVE SESSION AT THE TIME OF
+WRITING, AND IS NOW CONFIRMED. The original caveat is kept below rather than
+replaced, because what was believed and what settled it are both worth having.
+
+As recorded at close: the parse layer was proven against real markup while the
+dispatch layer was proven only by construction, because the executor was
+instructed not to open a live session. A future live exercise was warned not to
+read a successful pull as proof that dispatch worked, since the resolver falls
+back to the unnumbered origin when the selector does not dispatch and that origin
+may serve the route, making a green run consistent with the fallback having
+fired. The discriminating evidence was specified as the log record naming the
+dispatched host: its absence, or a landing on the unnumbered origin, would mean
+the fallback ran and dispatch remained unproven. That caveat was recorded here
+rather than in the module because process metadata does not belong in source and
+such a comment would rot on first exercise.
+
+Superseded on the day after close by a live run performed by a peer agent holding
+an authenticated session. The resolver reported a numbered host, which the
+fallback cannot produce, and the read completed against the censal consulta path.
+Dispatch is confirmed in production and the construction-only qualification no
+longer applies.
+
+The same run exposed a defect in the instrument that the discriminator existed to
+read, which is the part worth carrying forward. The dispatch wait and the check
+that reported its outcome held two opinions about one condition, so a wait
+expiring on a page that HAD landed correctly logged a dispatch failure — a
+successful dispatch reporting itself as a failed one. A human reading that log
+would have concluded the selector does not work. It was closed by making one
+predicate the single reader of that condition, reducing the expiry record to a
+statement about the wait alone, and logging the previously-silent fallback return
+so that its absence is no longer ambiguous between the fallback firing and the
+reader never running. Writing the discriminator down BEFORE it was needed is what
+made the misreport visible rather than persuasive.
+
+One correction to the original caveat's reasoning, from a peer's measurement on
+the declarations surface: the assumption that the fallback origin "may serve the
+route" is not universally safe. That unnumbered origin returns a genuine 404 for
+at least one other sede route. So falling back is not a soft degradation
+everywhere — on some routes it is a guaranteed failure. Whether it serves the
+censal route specifically has not been measured, and should not be assumed in
+either direction.
 
 Three profile-field mappings were refused rather than guessed, and each remains
 open work for whoever writes censal facts. The taxpayer sex field cannot be
