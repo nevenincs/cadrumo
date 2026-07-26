@@ -77,9 +77,13 @@ implementing the access half and finding it crashes; the measurements are in
   through a shipped, legally-grounded predicate rather than a new one.
 - That predicate takes a domain aggregate; the helpers hold a flat mapping, and
   the one sanctioned coercion between them is strict (audit, predicate-access).
-- A production site has already taken the restating route for this same schema's
-  required set and drifted from it (audit, adjacent-concept; tracked as its own
-  finding against the atribucion member resolver).
+- A resolver's required set and the schema's required set are legitimately
+  different: the resolver enforces what its row model consumes, the schema
+  declares what the profile must hold. Making one derive from the other would
+  force a resolver to enforce fields its modelo does not carry.
+- The same section family holds a second instance of this record's own defect: a
+  field declared required that no form carries and no code reads, so the
+  declaration is a wall an operator must satisfy for nothing.
 - The registry layer already solved the shape of "each family declares its own
   validator, dispatched by a closed kind" in
   `2026-06-14-bindings-interface-hardening-adr`.
@@ -97,11 +101,12 @@ consumers, so it must be shared and therefore named anyway, and until it is the
 emission regresses every profile with no rows in any repeatable section.
 
 **Read the income categories and entity type directly from the value mapping.**
-Two lines, obviously correct, and rejected: it is a fourth restatement of a
-concept that already has three, and the drifted resolver above is what that
-costs. The refusal must be stated explicitly in the implementation, because the
-next reader will otherwise reach for it on exactly the grounds that make it
-tempting.
+Two lines, obviously correct, and rejected: it is a fourth statement of a concept
+that already has three, and the concept is a policy about which taxpayer owes
+something rather than a local detail, so every copy is a place the policy can
+diverge without anything failing. The refusal must be stated explicitly in the
+implementation, because the next reader will otherwise reach for it on exactly
+the grounds that make it tempting.
 
 **Build the taxpayer aggregate inside the helper via the existing coercion.**
 Rejected on principle rather than circumstance: that coercion is strict and
@@ -163,11 +168,21 @@ surfaces, it must live in the shared helper, and once it lives there it needs a
 name - so the naming is forced by the requirement rather than chosen for
 convenience.
 
-Against the direct read, the argument is no longer hypothetical. The atribucion
-member resolver restated this schema's required set and is missing a field the
-schema declares. That is the same shortcut, in production, drifted, in the same
-schema - which is why the refusal is stated in the implementation rather than
-left to judgement.
+Against the direct read, the force is that the concept being copied is a policy
+about which taxpayer owes something, not a local detail. A fourth copy diverges
+silently, because nothing fails when two statements of the same policy disagree -
+they simply answer differently for the taxpayer who sits between them. That is
+why the refusal is stated in the implementation rather than left to judgement.
+
+This record deliberately does not argue that a resolver restating the schema is
+itself the hazard. The neighbouring attribution resolver enforces four of the
+schema's five required fields, and that is correct rather than drifted: it
+enforces exactly what its row model consumes, and the fifth field is one the
+modelo does not carry per member at all. A resolver's required set and the
+schema's are legitimately different sets answering different questions - what
+this declaration must be filed with, versus what this profile must hold. An
+implementation that made either derive from the other would break the one that
+is currently right.
 
 ## Consequences
 
