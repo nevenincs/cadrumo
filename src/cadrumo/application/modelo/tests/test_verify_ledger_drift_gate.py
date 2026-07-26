@@ -271,3 +271,40 @@ def test_a_ledger_derived_draft_carries_the_anchor_the_gate_compares(tmp_path: P
             row_fingerprint(_row(tx_repo, sale.transaction_id)),
             row_fingerprint(_row(tx_repo, purchase.transaction_id)),
         }
+
+
+def test_the_drift_anchor_does_not_move_any_revision_id() -> None:
+    """The anchor is excluded from the content-addressed revision identity.
+
+    Writing a field onto every ledger-derived draft is one refactor away from
+    being a repository-wide identity event: if the anchor participated in
+    ``derive_calculation_revision_id``, every revision id would move. It does
+    not, and this pins that as an assertion rather than an inherited belief —
+    two ids derived from identical inputs must be equal, and the deriver must
+    not accept the anchor at all.
+    """
+    import inspect
+
+    from ....domain.modelos import derive_calculation_revision_id
+
+    parameters = inspect.signature(derive_calculation_revision_id).parameters
+    assert "ledger_filing_snapshot" not in parameters
+
+    # The runtime enforcement is the model's own self-validation: constructing a
+    # CalculationRevision whose id differs from the derived id raises. The
+    # sibling export test builds one that carries no anchor and validates, and
+    # the drift-gate tests build drafts that DO carry one and validate equally —
+    # which is the property holding in practice, not just in the signature.
+    assert derive_calculation_revision_id(
+        work_unit_id="a1b2c3d4" * 8,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        casilla_values={},
+        source_transaction_ids=("beef1234" * 8,),
+    ) == derive_calculation_revision_id(
+        work_unit_id="a1b2c3d4" * 8,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        casilla_values={},
+        source_transaction_ids=("beef1234" * 8,),
+    )
