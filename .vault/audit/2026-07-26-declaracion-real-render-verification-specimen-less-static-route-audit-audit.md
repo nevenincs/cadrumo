@@ -161,19 +161,24 @@ casilla ids one-to-one.
 
 Cross-referencing the 20 profiles with an R8 hit against this set: 11 profiles
 (the five `100` revisions, `111`, `130`, `190`, both `303` revisions, `390`) belong
-to enrolled modelos, where the reconcile arbitration this audit related records
-describe is the intended, designed consumer of the intersection. The other nine --
-`115`, both `123` revisions, all three `131` revisions, `180`, `193`, `202`
--- are NOT in the enrolled set, so a reconcile attempt against one of their
-formula-computed targets is refused cleanly today rather than silently
-double-counted or discarded. This is not a live defect (the refusal is loud, and
-no-silent-under-declaration class harm is not occurring), but it is nine profiles
-where the printed-versus-primitive impedance the ADR flagged as project-wide,
-rather than Modelo-303 trivia, has not yet been arbitrated by any mechanism because
-none applies to them yet. The governing `declaracion-real-render-verification` ADR
-now records this same nine-profile scope in its Constraints section, naming it a
-non-live defect that is deliberately left undecided pending its own evidence -- this
-audit's measurement is what let that scope be named exactly rather than gestured at.
+to enrolled modelos, where the reconcile arbitration is the intended, designed
+consumer of the intersection. The other nine -- `115`, both `123` revisions, all
+three `131` revisions, `180`, `193`, `202` -- are NOT in the enrolled set. The scope
+named here (this nine-profile list) is this audit's own measurement.
+
+**Correction, recorded rather than silently fixed.** This finding originally claimed
+the nine refuse "cleanly" and "loudly", citing the enrolled-set docstring's own
+stated behaviour and, in a later revision, the governing ADR as though the ADR
+independently confirmed it. Both were circular: the docstring was not the executing
+code, and the ADR had adopted the same unverified claim from this audit's own
+original wording, so citing it back was not corroboration. A companion research
+audit under this feature (`r8-arbitration-enrollment-readiness`) has since read
+`_require_declaration_enrolled_modelo` directly and confirmed the refusal fires
+before `parse_declaracion` is invoked and before any file opens, for all nine, and
+that the bytes-based reconcile path refuses the declaration source kind
+unconditionally for every modelo. The claim is therefore now genuinely confirmed,
+by that companion document's direct code reading -- not by this sentence, and not
+by the ADR, which records the same correction for the same reason.
 
 ### r8-reconcile-docstring-misstates-modelo-202-declaracion-pdf-surface | high | the enrolled-set docstring gives a factually false reason for excluding Modelo 202
 
