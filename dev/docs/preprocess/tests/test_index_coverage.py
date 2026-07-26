@@ -59,6 +59,35 @@ def test_extraction_sidecars_are_excluded_from_the_expected_set() -> None:
     assert not sidecars, f"sidecars re-entered the walker expected set: {sorted(sidecars)[:5]}"
 
 
+def test_only_zero_byte_sources_are_dropped_from_the_expected_set() -> None:
+    """The expected set drops zero-byte sources, and nothing else.
+
+    A zero-byte source is rejected by the indexer's admission policy
+    (``SOURCE_EMPTY``) and can never appear in the index metadata, so keeping
+    it in the expected set would red the coverage gate permanently. That
+    carve-out has to stay exactly that narrow: this asserts every path the
+    walker scanned but the expected set omits is genuinely zero bytes, so the
+    exclusion cannot be widened into an allowlist that hides a real staleness
+    miss.
+    """
+    from vaultspec_rag.indexer._codebase_indexer import CodebaseIndexer
+
+    indexer = CodebaseIndexer(
+        root_dir=_REPO_ROOT,
+        model=None,  # ty: ignore[invalid-argument-type]  # reason: scan_files() is model-free per its docstring
+        store=None,  # ty: ignore[invalid-argument-type]  # reason: scan_files() is store-free per its docstring
+    )
+    data_prefix = "src/cadrumo/_data/"
+    scanned = {
+        rel
+        for rel in (path.resolve().relative_to(_REPO_ROOT.resolve()).as_posix() for path in indexer.scan_files())
+        if rel.startswith(data_prefix)
+    }
+    dropped = scanned - expected_data_files(_REPO_ROOT)
+    non_empty = sorted(rel for rel in dropped if (_REPO_ROOT / rel).stat().st_size > 0)
+    assert not non_empty, f"expected set dropped file(s) that carry content: {non_empty}"
+
+
 def test_no_supported_data_file_is_unindexed() -> None:
     """ZERO walker-indexable ``_data`` files are absent from the index.
 
