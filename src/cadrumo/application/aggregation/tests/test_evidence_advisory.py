@@ -6,8 +6,12 @@ The diagnostics pair a transaction's IVA settlement side with its evidence prese
 * it fires exactly one ``missing_transaction_evidence`` diagnostic on a positive
   OUTGOING BUSINESS expense with deductible IVA and no evidence, and on a
   positive INCOMING output-IVA row with no evidence;
-* it does NOT fire when the row carries an attachment or a purchase invoice
-  (the evidence-present counter-case);
+* it does NOT fire on a deductible row carrying a purchase invoice, and DOES
+  still fire on one carrying only a generic attachment, because LIVA art. 97
+  enumerates the documents that establish the right to deduct;
+* it does NOT fire on an output-IVA row carrying any linked document, which is
+  the deliberate asymmetry: art. 97 governs deduction only, and no CLI path
+  mints issued-invoice evidence;
 * it does NOT fire on the false-positive set: a cuota-less (exempt) IVA
   category, a PERSONAL / non-business row, a zero-amount row, or a non-ACTIVE
   lifecycle state.
@@ -122,8 +126,34 @@ def test_advisory_fires_on_incoming_cuota_bearing_income_without_evidence() -> N
     assert diagnostics[0].source_kind == MISSING_OUTPUT_VAT_EVIDENCE_SOURCE_KIND
 
 
-def test_advisory_silent_when_attachment_present() -> None:
+def test_deductible_row_still_fires_when_only_a_generic_attachment_is_present() -> None:
+    """A bare attachment does not establish the right to deduct, so the gap stands.
+
+    This assertion is inverted from what it was. The predicate previously treated
+    any attachment as sufficient on both sides, which held a BLOCKING gate to a
+    laxer standard than the statute it cites: LIVA art. 97 enumerates the
+    documents that establish the right to deduct and an attachment -- a bank
+    statement, a delivery note, a photograph -- is not among them.
+    """
     tx = _tx("expense-with-attachment", attachment_ids=("a" * 64,))
+    diagnostics = missing_evidence_advisory_observations([tx])
+    assert len(diagnostics) == 1
+    assert diagnostics[0].source_kind == MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND
+    assert diagnostics[0].binding_id == tx.transaction_id
+
+
+def test_output_row_stays_silent_when_only_a_generic_attachment_is_present() -> None:
+    """The output side keeps the looser test, and that asymmetry is deliberate.
+
+    Art. 97 governs the right to deduct and says nothing about evidencing output
+    IVA, and no CLI path mints issued-invoice evidence. Tightening this side would
+    refuse a taxpayer who has no way to comply, so any linked document silences it.
+    """
+    tx = _tx(
+        "income-with-attachment",
+        direction=TransactionDirection.INCOMING,
+        attachment_ids=("a" * 64,),
+    )
     assert missing_evidence_advisory_observations([tx]) == ()
 
 
@@ -199,14 +229,25 @@ def test_advisory_silent_on_internal_transfer() -> None:
 
 
 def test_advisory_fires_once_per_significant_row_in_a_mixed_batch() -> None:
-    """Only the two significant evidence-less rows in a mixed batch fire."""
+    """Only the significant evidence-short rows in a mixed batch fire.
+
+    The deductible row carrying only a generic attachment is among them: an
+    attachment is not one of the documents art. 97 enumerates, so it leaves the
+    deduction unsupported. The invoice-bearing row is the silent counter-case
+    that keeps this from passing vacuously.
+    """
     rows = [
         _tx("sig-expense", direction=TransactionDirection.OUTGOING),
         _tx("sig-income", direction=TransactionDirection.INCOMING),
         _tx("has-attachment", attachment_ids=("b" * 64,)),
+        _tx("has-invoice", purchase_invoice_evidence_id="pinv-batch"),
         _tx("personal", business_classification=BusinessClassification.PERSONAL),
         _tx("exempt", iva_category=IvaCategory.DOMESTIC_EXEMPT),
     ]
     diagnostics = missing_evidence_advisory_observations(rows)
     fired_ids = {diagnostic.binding_id for diagnostic in diagnostics}
-    assert fired_ids == {rows[0].transaction_id, rows[1].transaction_id}
+    assert fired_ids == {
+        rows[0].transaction_id,
+        rows[1].transaction_id,
+        rows[2].transaction_id,
+    }
