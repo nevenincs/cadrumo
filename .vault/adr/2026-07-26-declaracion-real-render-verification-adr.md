@@ -7,6 +7,7 @@ modified: '2026-07-26'
 related:
   - "[[2026-07-25-declaracion-profile-printed-box-scope-adr]]"
   - "[[2026-07-26-declaracion-real-render-verification-plan]]"
+  - '[[2026-07-26-declaracion-real-render-verification-specimen-less-static-route-audit-audit]]'
 ---
 
 # `declaracion-real-render-verification` adr: `what grounds a declaracion_pdf profile's claims` | (**status:** `accepted`)
@@ -43,6 +44,57 @@ all, so the third question governs most of the estate.
   the error the printed-box decision avoided when it refused to assume the 1T shape.
 - `artefact_kind` is a free-form `str` carrying two spellings for one concept, 18
   `declaration_pdf` against 11 `declaracion`, while production selects on `surface`.
+
+## Considered options
+
+**(A) Decide each question as it arises, per profile.** Rejected. The three questions
+below were each answered at least twice during one sweep, in one case in opposite
+directions, and the cost is not the deciding but the re-litigating.
+
+**(B) Verify only the profiles that have specimens, and say nothing about the rest.**
+Rejected, and it is the tempting option because it produces a clean green report. It
+would leave 22 profiles carrying an implied pass they have not earned, which is the
+condition that let six unprintable casillas survive in a profile for months.
+
+**(C) Derive a coverage floor for every profile from whatever evidence exists, even
+one specimen.** Rejected. A floor from one specimen encodes that filer's shape and
+refuses valid filings that differ, which is a worse failure than the vacuous floor it
+replaces because it harms a real taxpayer rather than merely hiding a defect.
+
+**(D) Fix the printed-box-number hazard by correcting `number` on the affected
+casillas.** Rejected on measurement: `number` feeds revision-identity validation,
+completeness validation, record-design coverage and operator-facing display, and for
+the informativas its positional-range values are correct for what the field means.
+The reading is wrong, not the data.
+
+**(E) Record the decisions once, apply them across the estate, and name what cannot
+be decided.** Chosen. D1 through D4 below.
+
+## Implementation
+
+`_printed_box_numbers` reads `form_number` and treats the printed number as unknown
+when it is absent, rather than falling through to `number`. The six casillas whose
+printed number is not recorded have `form_number` populated from the bundled renders.
+`number` is not touched on any casilla.
+
+Coverage floors are set only where more than one specimen agrees. Modelo 111 keeps
+its zero floor because four specimens put the worst case at 1 of 29; Modelo 390 keeps
+its zero floor because it has one specimen and no floor can be grounded; Modelo 130
+keeps its zero floor with neither justification, and is recorded as an evidence gap
+rather than as a settled decision. In every case the exact extracted-set assertion is
+the operative gate.
+
+Every profile with a specimen is enrolled in the real-render gate, which runs the
+production extraction path and asserts the profile accepts the render at its own
+declared floor. Profiles without a specimen are enrolled in the evidence register
+instead, naming the routes blocked and the specimen class that would unblock them.
+
+Selection of a declaration-PDF profile matches `surface` and `accepted_artefact_kinds`
+everywhere, including in tests.
+
+The grounding for all of the above is the companion static route audit and the
+printed-box scope audits recorded under this feature and its predecessor, which carry
+the per-profile measurements and the method that produced each number.
 
 ## Decisions
 
