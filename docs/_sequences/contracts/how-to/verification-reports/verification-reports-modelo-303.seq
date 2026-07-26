@@ -5,6 +5,10 @@ aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
 @step Calculate the draft from the classified ledger.
 aeat --format json app modelo work calculate {work_unit_id}
 @capture calculation_revision_id result.calculation_revision_id
+@step Register and attach the supplier invoice; a deductible IVA row cannot be verified without it.
+@setup aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --supplier "Papeleria Central SL" --invoice-number C-2026-0087 --invoice-date 2026-02-11 --taxable-base 500 --iva-rate 0.21 --iva-amount 105
+@capture evidence_id result.evidence_id
+@setup aeat app ledger attach e3eeac5e --purchase-invoice-evidence-id {evidence_id}
 @step Verify the draft; the run saves a report you can reopen.
 aeat --format json app modelo work verify {calculation_revision_id}
 @capture verification_report_id result.verification_report_id
