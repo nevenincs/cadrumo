@@ -185,22 +185,34 @@ def emit_manager_closed(ctx: typer.Context, label: str, *, created: bool) -> Non
     )
 
 
-def register_lazy_wizard_leaf(name: str, mode: WizardPersistMode, **command_kwargs: object) -> None:
+def register_lazy_wizard_leaf(
+    name: str,
+    mode: WizardPersistMode,
+    *,
+    # `help` shadows the builtin deliberately: it is Typer's own parameter
+    # name, and renaming it here would break the passthrough at the call site.
+    help: str,
+    epilog: str | None = None,
+) -> None:
     """Register the `profile` wizard verb `name` as a deferred leaf.
 
     The factory returns a single-command Typer carrying no callback, which
     Typer materialises as a plain :class:`click.Command` rather than a
     group — so the leaf resolves exactly as an eagerly-registered one,
     having imported the wizard only when the operator asks for it.
+
+    ``help`` and ``epilog`` are named rather than collected into a kwargs
+    bag: they are the only two Typer passthroughs any caller uses, and a
+    bag typed ``object`` forced a blanket type-ignore over the whole
+    registration call, which suppressed real argument errors alongside the
+    one it was aimed at.
     """
 
     def _factory() -> typer.Typer:
         from ....application.wizard import build_wizard_command
 
         leaf = typer.Typer()
-        # KWARGS-ANY-RATIONALE-TYPER-COMMAND: `command_kwargs` carries the
-        # help/epilog Typer passthrough captured at registration.
-        leaf.command(name, **command_kwargs)(  # type: ignore[arg-type]
+        leaf.command(name, help=help, epilog=epilog)(
             _command_error_boundary(
                 with_manager_frontend(
                     build_wizard_command(_get_setup_flow(), mode=mode),
