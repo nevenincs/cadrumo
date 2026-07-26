@@ -29,6 +29,7 @@ import pytest
 from pydantic import SecretStr
 
 from ...adapters.persistence.storage.bucket import (
+    BUCKET_MANIFEST_SCHEMA_VERSION,
     BucketManifest,
     ManifestKdfParams,
     provision_bucket_directory,
@@ -117,6 +118,14 @@ def _register_active_profile(*, overrides: Mapping[str, str] | None = None) -> s
 
 
 def _stage_profile_manifest(root: Path, bucket_id: str) -> None:
+    """Stage a readable manifest for ``bucket_id`` under ``root``.
+
+    ``schema_version`` tracks :data:`BUCKET_MANIFEST_SCHEMA_VERSION` rather
+    than a literal: a manifest below the read path's durability floor is
+    refused before the profile record is ever consulted, so a stale literal
+    silently reroutes every health assertion here to ``manifest_unreadable``
+    instead of the state under test.
+    """
     paths = provision_bucket_directory(root, bucket_id)
     write_manifest(
         paths,
@@ -135,7 +144,7 @@ def _stage_profile_manifest(root: Path, bucket_id: str) -> None:
                 output_length=32,
             ),
             recovery_enrolled=False,
-            schema_version=1,
+            schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
             status=UserProfileStatus.ACTIVE,
         ),
     )
