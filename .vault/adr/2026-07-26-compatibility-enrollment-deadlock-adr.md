@@ -149,12 +149,21 @@ checkable rather than asserted.
 - Accepted cost: a validating write ingress adds a full model validation per manifest
   write. Manifest writes are rare lifecycle operations, so the cost is immaterial
   against a silently vanished profile.
-- Outstanding, and NOT closed here: enrolling `bucket_manifest` and `bucket_dek` with
-  their floor machinery, both flip prerequisites. The manifest half is specified by
-  its own accepted record. The DEK half is declarative — a named current-version
-  constant, a floor, and a tier gate — because its document version is already a
-  strict `Literal[1]` refusing both drift directions; if it turns out to require any
-  change to key bytes, wrapping, or schedule, that is owner-gated and must stop.
+- Both flip prerequisites are now CLOSED. `bucket_manifest` and `bucket_dek` carry
+  named current-version constants, durability floors, and tier lineage gates, landed
+  in `445fb59cd0`. The manifest additionally gained the read-side range gate its own
+  record specified, with the two directions carrying distinct translated reasons. The
+  DEK enrollment was declarative as predicted and touched no key derivation, wrapping,
+  schedule enum, or document shape; a bump of its `Literal` remains owner-gated, and
+  the new tier gate is what makes such a bump loud.
+- Flip-readiness is now demonstrable rather than argued: the candidate mapping
+  freezing all five durable formats passes the unknown-key, misclassification and
+  uncovered-durable directions simultaneously, and `expected_floor` resolves under
+  `RELEASED` for both newly enrolled formats. That mapping was unrepresentable before
+  this record.
+- Six test fixtures were found writing version-1 manifests that production has not
+  written since the schema reached 2. They were already stale and now source the
+  constant; the range gate is what surfaced them.
 - Carried forward for the first `cipher_schema_version` bump: the rotation path
   reconstructs a cipher envelope by enumeration and carries that defaultable field
   explicitly. Latent-benign today because default and current are both 1, so a drop
