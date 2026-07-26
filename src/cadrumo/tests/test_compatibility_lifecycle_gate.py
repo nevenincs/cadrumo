@@ -12,10 +12,15 @@ that bind the regime itself, plus the cross-version fixture-coverage harness.
   if the regime is ``RELEASED``. The frozen floors and the regime constant
   can never drift apart.
 - **Enrollment, both directions.** Every key in a populated
-  ``RELEASED_FORMAT_FLOORS`` names a live persisted-format tier, AND every
-  format declared ``DURABLE`` carries a floor. The second direction is what
-  stops a flip freezing a proper subset of the durable formats and passing
-  green while the frozen mapping reads as a complete inventory.
+  ``RELEASED_FORMAT_FLOORS`` names a declared, non-regenerable persisted
+  format, AND every format declared ``DURABLE`` carries a floor. The second
+  direction is what stops a flip freezing a proper subset of the durable
+  formats and passing green while the frozen mapping reads as a complete
+  inventory. Both directions read the ONE declaration in
+  :data:`PERSISTED_FORMATS` through the core predicates; neither restates the
+  key set. A hand-listed mirror here previously went stale against that
+  declaration and made the two directions contradict each other, so that no
+  flip mapping could satisfy both — latent, because both were vacuously green.
 
 The whole mechanism is DORMANT today: the regime is ``PRE_RELEASE``,
 ``RELEASED_FORMAT_FLOORS`` is ``None``, the fixture corpus is empty, and every
@@ -43,19 +48,14 @@ from ..core import (
     PersistedFormatClass,
     expected_floor,
     lineage_obligations,
+    misclassified_floor_keys,
     unfloored_durable_formats,
+    unknown_floor_keys,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _DISTRIBUTION_NAME: Final[str] = "cadrumo"
-
-#: The persisted-format tiers a released floor key may name: the secure-object
-#: substrate, the portable profile bundle, and the sealed archive. The
-#: canonical key set the enrollment invariant validates against.
-_CANONICAL_FORMAT_KEYS: Final[frozenset[str]] = frozenset(
-    {"secure_object", "bundle", "archive"},
-)
 
 #: The current on-disk version of each released format, populated in the flip
 #: commit alongside :data:`RELEASED_FORMAT_FLOORS` so the coverage harness can
@@ -117,15 +117,37 @@ def test_every_flip_time_constant_moves_together() -> None:
 
 
 def test_every_released_floor_key_names_a_live_format_tier() -> None:
-    """Enrollment: a populated floor mapping may only name real tiers.
+    """Enrollment: a populated floor mapping may only name real, durable tiers.
 
-    Vacuously green today (``RELEASED_FORMAT_FLOORS`` is ``None``).
+    The reference set is DERIVED from :data:`PERSISTED_FORMATS` through the
+    core predicates rather than restated here. It used to be a hand-listed
+    mirror of three keys, and the mirror went stale the moment the declaration
+    grew to five: the sibling gate below requires every DURABLE format to carry
+    a floor, so with ``bucket_dek`` and ``bucket_manifest`` declared durable but
+    absent from the hand-list, enrolling them failed THIS gate while omitting
+    them failed that one. No flip mapping could satisfy both. Both were
+    vacuously green, so the contradiction was latent rather than red.
+
+    Deriving makes that deadlock unrepresentable rather than merely resolved:
+    the two gates now read one declaration, so widening the inventory cannot
+    put them out of step again.
+
+    Vacuously green today (``RELEASED_FORMAT_FLOORS`` is ``None``); the
+    predicates' teeth are proven directly below with synthetic mappings.
     """
-    floors = RELEASED_FORMAT_FLOORS or {}
-    unknown = set(floors) - _CANONICAL_FORMAT_KEYS
-    assert unknown == set(), (
-        f"RELEASED_FORMAT_FLOORS names non-tier format keys {unknown}; every frozen "
-        f"floor must map to a live persisted-format tier {sorted(_CANONICAL_FORMAT_KEYS)}"
+    unknown = unknown_floor_keys(RELEASED_FORMAT_FLOORS, PERSISTED_FORMATS)
+    assert unknown == (), (
+        f"RELEASED_FORMAT_FLOORS names format key(s) {unknown} that no PERSISTED_FORMATS "
+        "declaration governs. A floor is a promise to keep reading bytes; a key naming no "
+        "declared format promises durability with nothing on the other end of it. Declare "
+        "the format in PERSISTED_FORMATS, or drop the floor key"
+    )
+    misclassified = misclassified_floor_keys(RELEASED_FORMAT_FLOORS, PERSISTED_FORMATS)
+    assert misclassified == (), (
+        f"RELEASED_FORMAT_FLOORS freezes a floor for REGENERABLE format(s) {misclassified}. "
+        "A durability floor for state the application is designed to discard is not a "
+        "stronger guarantee, it is an obligation to honour shapes nothing needs to keep. "
+        "Drop the floor key, or reclassify the format DURABLE if its bytes are taxpayer data"
     )
 
 
@@ -208,6 +230,65 @@ def test_a_regenerable_format_is_never_required_to_carry_a_floor() -> None:
     assert regenerable, "the declaration table must carry regenerable formats for this to mean anything"
     durable_only = {key: 1 for key, value in PERSISTED_FORMATS.items() if value is PersistedFormatClass.DURABLE}
     assert unfloored_durable_formats(durable_only, PERSISTED_FORMATS) == ()
+
+
+@pytest.mark.parametrize(
+    ("floors", "expected"),
+    [
+        # A typo'd key promises durability for bytes no declaration governs.
+        ({"secure_object": 1, "bucket_manifets": 2}, ("bucket_manifets",)),
+        # A floor left behind by a format retired from the declaration table.
+        ({"secure_object": 1, "retired_format": 4}, ("retired_format",)),
+        # Reported sorted, and independently of the regenerable check.
+        ({"zzz_unknown": 1, "aaa_unknown": 2}, ("aaa_unknown", "zzz_unknown")),
+    ],
+)
+def test_the_unknown_key_predicate_names_every_undeclared_floor_key(
+    floors: dict[str, int],
+    expected: tuple[str, ...],
+) -> None:
+    """Non-vacuity: the live gate is green only because nothing is frozen yet.
+
+    Driven through the real predicate against the real declaration table.
+    Without these the gate would pass just as happily if the predicate always
+    returned an empty tuple — which is the failure mode that let a hand-listed
+    reference set go stale here unnoticed in the first place.
+    """
+    assert unknown_floor_keys(floors, PERSISTED_FORMATS) == expected
+
+
+def test_the_unknown_key_predicate_accepts_the_complete_durable_freeze() -> None:
+    """The other half of non-vacuity, and the deadlock proof.
+
+    The exact mapping the flip must land — every DURABLE format, derived from
+    the declaration — passes BOTH enrollment directions at once. Under the
+    superseded hand-listed reference set this mapping was impossible: it failed
+    the unknown-key direction on ``bucket_dek`` and ``bucket_manifest`` while
+    any mapping omitting them failed the uncovered-durable direction. That no
+    mapping could satisfy both is the contradiction this asserts is gone.
+    """
+    complete = {key: 1 for key, value in PERSISTED_FORMATS.items() if value is PersistedFormatClass.DURABLE}
+    assert len(complete) >= 4, (
+        f"expected the durable inventory to exceed the retired hand-list of three; got {complete}"
+    )
+    assert unknown_floor_keys(complete, PERSISTED_FORMATS) == ()
+    assert misclassified_floor_keys(complete, PERSISTED_FORMATS) == ()
+    assert unfloored_durable_formats(complete, PERSISTED_FORMATS) == ()
+
+
+def test_a_regenerable_floor_key_is_declared_but_still_refused() -> None:
+    """The two floor-key directions are distinct checks, not one restated.
+
+    A regenerable format IS declared, so the unknown-key predicate passes it;
+    only the misclassification predicate refuses it. Asserting both here stops
+    a later simplification collapsing them into one and silently dropping a
+    direction.
+    """
+    regenerable = sorted(key for key, value in PERSISTED_FORMATS.items() if value is PersistedFormatClass.REGENERABLE)
+    assert regenerable, "the declaration table must carry regenerable formats for this to mean anything"
+    floors = {"secure_object": 1, regenerable[0]: 1}
+    assert unknown_floor_keys(floors, PERSISTED_FORMATS) == ()
+    assert misclassified_floor_keys(floors, PERSISTED_FORMATS) == (regenerable[0],)
 
 
 def test_fixture_corpus_root_exists() -> None:

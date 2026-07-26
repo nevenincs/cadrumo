@@ -154,6 +154,33 @@ def misclassified_floor_keys(
     )
 
 
+def unknown_floor_keys(
+    released_floors: Mapping[str, int] | None,
+    declared: Mapping[str, PersistedFormatClass],
+) -> tuple[str, ...]:
+    """Return frozen-floor keys naming a format the inventory has never heard of.
+
+    :func:`misclassified_floor_keys` catches a floor frozen for a format
+    declared REGENERABLE. Neither it nor :func:`unfloored_durable_formats`
+    catches a floor key that appears in ``declared`` at all — a typo, or a
+    format retired from :data:`PERSISTED_FORMATS` while its floor stayed
+    behind. Such a key promises durability for bytes no declaration governs,
+    which is a claim with nothing on the other end of it.
+
+    Together with its two siblings this closes the key-set relation in both
+    directions: every floor key names a declared format, no floor key names a
+    regenerable one, and every durable format carries a floor. That triple is
+    what lets the enrollment gate derive its reference set from
+    :data:`PERSISTED_FORMATS` instead of restating it as a hand-listed mirror
+    that goes stale the moment the declaration grows.
+
+    Returns an empty tuple while ``released_floors`` is ``None``: under
+    ``PRE_RELEASE`` nothing is frozen, so no key can be unknown.
+    """
+    floors = released_floors or {}
+    return tuple(sorted(set(floors) - set(declared)))
+
+
 def unfloored_durable_formats(
     released_floors: Mapping[str, int] | None,
     declared: Mapping[str, PersistedFormatClass],
@@ -274,4 +301,5 @@ __all__ = [
     "stale_persisted_format_declarations",
     "undeclared_persisted_formats",
     "unfloored_durable_formats",
+    "unknown_floor_keys",
 ]
