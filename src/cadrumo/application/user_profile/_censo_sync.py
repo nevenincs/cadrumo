@@ -93,35 +93,43 @@ def _assert_read_belongs_to_this_profile(
     page describing another. Ownership of the READ is a separate question
     from ownership of the session, so it is answered separately here.
 
-    Three states, not two, which is why this takes the effective FACT rather
-    than its value:
+    A profile with NO fiscal identity refuses, and the two ways it can be
+    missing are kept apart because they need different things said to the
+    operator:
 
-    * the path was NEVER SET — genuinely the first read, nothing to protect,
-      allowed;
-    * the path was CLEARED — the operator deleted a field the schema requires,
-      which is not a licence to accept anyone's census. Refused, because a
-      deletion says nothing about whose record this is;
-    * the path holds a value — compared, and a mismatch refuses.
+    * NEVER SET — the profile is still mid-setup. One mints with zero facts,
+      since completeness is only gated once setup finishes, so this is not a
+      half-built edge case but the ordinary state of an unfinished profile.
+      The operator is told to record their fiscal ID and how.
+    * CLEARED — the operator deleted a field the schema requires. Refused even
+      when the read carries the identity the profile used to hold: this guard
+      answers whether ownership can be CONFIRMED, and a deletion says nothing
+      about whose record a page describes.
 
-    A value-only view collapses the first two into "blank" and would accept a
-    stranger's census onto a profile whose identity had been deliberately
-    removed.
+    There is no first-read allowance. Removing it is the point rather than an
+    oversight: both states previously read as "nothing to compare against, so
+    accept", which is the fail-open shape this guard exists to remove.
+
+    Requiring the identity first takes nothing from the operator. The pull does
+    not fill the fiscal ID — it only reads it to confirm ownership — so there
+    is nothing to be gained by pulling before stating who you are, and the ID
+    is required to complete the profile in any case.
 
     Raises:
-        CensalIdentityMismatchError: When the identities differ, when the
-            profile's identity was cleared, or when the read carries none
-            while the profile does.
+        CensalIdentityMismatchError: When the profile records no fiscal
+            identity, when the read carries none, or when the two differ.
     """
     if recorded_identity is None:
-        return
-    if recorded_identity.value is None:
+        raise CensalIdentityMismatchError(
+            "this profile records no fiscal identity yet, so a censal read cannot be confirmed to belong to it",
+            translated_message="application.user_profile.errors.censal_read_identity_unset",
+        )
+    if recorded_identity.value is None or not recorded_identity.value.strip():
         raise CensalIdentityMismatchError(
             "this profile's fiscal identity was cleared, so a censal read cannot be confirmed to belong to it",
             translated_message="application.user_profile.errors.censal_read_identity_cleared",
         )
     existing = recorded_identity.value.strip().upper()
-    if not existing:
-        return
     incoming = (incoming_tax_id or "").strip().upper()
     if not incoming:
         raise CensalIdentityMismatchError(

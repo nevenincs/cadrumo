@@ -24,7 +24,7 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI
 from ....core.resources import resources
 from ....domain.buckets import BucketEventType
-from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact
+from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.secure_sql import isolated_profile_storage_root
 from ...workflow import WorkflowState
@@ -133,6 +133,24 @@ def _required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFact, .
     return tuple(facts)
 
 
+def _record_with_cleared_identity() -> UserProfileRecord:
+    """Build a record whose fiscal identity was set and then cleared.
+
+    Constructed directly rather than through the sanctioned write path: that
+    path now refuses to clear a schema-required field, which is the outer wall
+    against this state. The ownership guard is the inner wall, and proving an
+    inner wall requires reaching the state the outer one prevents.
+    """
+    return UserProfileRecord(
+        profile_id=_PROFILE_ID,
+        display_name="Cleared identity",
+        facts=(
+            UserProfileFact(path="identity.tax_id", value=_PROFILE_NIF),
+            UserProfileFact(path="identity.tax_id", value=None),
+        ),
+    )
+
+
 def _register(schema: ProfileSchemaDefinition, routing_profile_id: str) -> WorkflowState:
     return register_active_profile(
         WorkflowState(),
@@ -212,16 +230,27 @@ class TestProjection:
 class TestReconciliation:
     """Blank paths adopt; equal paths no-op; differing paths are reported."""
 
-    def test_blank_paths_are_adopted(self) -> None:
-        """Every ADOPTABLE path adopts onto a blank profile.
+    def test_blank_paths_are_adopted(self, schema: ProfileSchemaDefinition) -> None:
+        """Every ADOPTABLE path adopts when the profile leaves it blank.
 
-        Compared against the adoptable set rather than against everything the
-        read projects, because the projection also carries the fiscal identity
-        for the ownership check and that path is never adopted.
+        Uses a registered profile rather than an empty record: the subject here
+        is blank ADOPTABLE paths, and a record with no fiscal identity now
+        refuses at the ownership guard before adoption is reached. Passing
+        ``None`` would test the guard while claiming to test adoption.
+
+        Compared against the adoptable set rather than everything the read
+        projects, since the fiscal identity is read for ownership and never
+        adopted.
         """
-        outcome = reconcile_censal_read(None, censal_facts_from_read(_read()), incoming_identity=_PROFILE_NIF)
-        assert {fact.path for fact in outcome.adopted} == set(CENSAL_ADOPTABLE_PATHS)
-        assert outcome.divergences == ()
+        with profile_create_storage_span(_PROFILE_ID) as routing:
+            state = _register(schema, routing)
+            outcome = reconcile_censal_read(
+                state.active_profile_record(schema=schema),
+                censal_facts_from_read(_read()),
+                incoming_identity=_PROFILE_NIF,
+            )
+            assert {fact.path for fact in outcome.adopted} == set(CENSAL_ADOPTABLE_PATHS)
+            assert outcome.divergences == ()
 
     def test_matching_declared_value_is_neither_adopted_nor_reported(
         self,
@@ -422,12 +451,17 @@ class TestIdentityOwnership:
             with pytest.raises(CensalIdentityMismatchError):
                 reconcile_censal_read(record, censal_facts_from_read(_read(nif="   ")), incoming_identity="   ")
 
-    def test_a_profile_with_no_recorded_identity_still_adopts(self) -> None:
-        """The ordinary first-read case must keep working; there is nothing to protect."""
-        outcome = reconcile_censal_read(
-            None, censal_facts_from_read(_read(nif="X1234567L")), incoming_identity="X1234567L"
-        )
-        assert {fact.path for fact in outcome.adopted} == set(CENSAL_ADOPTABLE_PATHS)
+    def test_a_profile_with_no_recorded_identity_refuses(self) -> None:
+        """There is no first-read allowance; a blank profile cannot confirm ownership.
+
+        A profile can carry no identity fact at all -- one mints that way while
+        setup is unfinished -- so "nothing to compare against" is not a rare
+        edge but the ordinary state of an incomplete profile. Accepting a
+        census on that basis is the fail-open shape this guard exists to
+        remove.
+        """
+        with pytest.raises(CensalIdentityMismatchError):
+            reconcile_censal_read(None, censal_facts_from_read(_read(nif="X1234567L")), incoming_identity="X1234567L")
 
     def test_the_fiscal_identity_is_not_projected_at_all(self) -> None:
         """The projection carries adoptable paths and nothing else.
@@ -479,6 +513,21 @@ class TestIdentityOwnership:
                 record, censal_facts_from_read(_read(nif="Y0000001Z")), incoming_identity="Y0000001Z"
             )
             assert "contact.postcode" in {fact.path for fact in outcome.adopted}
+
+    def test_the_apply_path_refuses_a_foreign_read_too(self, schema: ProfileSchemaDefinition) -> None:
+        """The commit door refuses identically to the preview.
+
+        Exercised through a MISMATCHING identity rather than a cleared one:
+        both refusals leave the guard by the same raise, and a mismatch is
+        reachable through the sanctioned write path, whereas a cleared
+        required field is not. This proves the apply door consults the guard
+        at all -- the property that would otherwise be guarded in code and
+        unguarded in coverage.
+        """
+        with profile_create_storage_span(_PROFILE_ID) as routing:
+            state = _register(schema, routing)
+            with pytest.raises(CensalIdentityMismatchError):
+                apply_censal_read(state, _read(nif="X1234567L"))
 
 
 class TestEffectiveFactProjection:
@@ -558,69 +607,67 @@ class TestApply:
 class TestClearedIdentityIsNotAFirstRead:
     """A deleted fiscal identity is not the same as never having had one."""
 
-    def test_a_cleared_identity_refuses_a_foreign_read(self, schema: ProfileSchemaDefinition) -> None:
-        """Clearing a required field is not a licence to accept anyone's census.
+    def test_a_cleared_identity_refuses_a_foreign_read(self) -> None:
+        """A deleted required field is not a licence to accept anyone's census.
 
-        Reachable in practice: registration refuses a profile with no fiscal
-        identity, but clearing it afterwards is accepted, and a value-only view
-        of the record cannot tell that deletion apart from a first read.
+        The cleared record is built DIRECTLY rather than through the write
+        path, because the write path now refuses to clear a schema-required
+        field -- the root cause, fixed separately. That refusal is the outer
+        wall; this guard is the inner one, and an inner wall has to be provable
+        without assuming the outer one holds. Constructing the state directly
+        is what keeps this test meaningful if the outer wall ever moves.
         """
-        with profile_create_storage_span(_PROFILE_ID) as routing:
-            state = _register(schema, routing)
-            state = set_active_fields(state, (UserProfileFact(path="identity.tax_id", value=None),))
-            record = state.active_profile_record(schema=schema)
-            with pytest.raises(CensalIdentityMismatchError):
-                reconcile_censal_read(
-                    record,
-                    censal_facts_from_read(_read(nif="X1234567L")),
-                    incoming_identity="X1234567L",
-                )
+        with pytest.raises(CensalIdentityMismatchError) as refusal:
+            reconcile_censal_read(
+                _record_with_cleared_identity(),
+                censal_facts_from_read(_read(nif="X1234567L")),
+                incoming_identity="X1234567L",
+            )
+        assert (refusal.value.translated_message or "").endswith("censal_read_identity_cleared")
 
-    def test_a_cleared_identity_refuses_even_its_own_taxpayers_read(
-        self,
-        schema: ProfileSchemaDefinition,
-    ) -> None:
+    def test_a_cleared_identity_refuses_even_its_own_taxpayers_read(self) -> None:
         """The refusal is about being unable to confirm, not about mismatching.
 
         A deletion says nothing about whose record this is, so it cannot
         confirm ownership even when the read happens to carry the identity the
         profile used to hold.
         """
-        with profile_create_storage_span(_PROFILE_ID) as routing:
-            state = _register(schema, routing)
-            state = set_active_fields(state, (UserProfileFact(path="identity.tax_id", value=None),))
-            record = state.active_profile_record(schema=schema)
-            with pytest.raises(CensalIdentityMismatchError):
-                reconcile_censal_read(
-                    record,
-                    censal_facts_from_read(_read(nif=_PROFILE_NIF)),
-                    incoming_identity=_PROFILE_NIF,
-                )
+        with pytest.raises(CensalIdentityMismatchError):
+            reconcile_censal_read(
+                _record_with_cleared_identity(),
+                censal_facts_from_read(_read(nif=_PROFILE_NIF)),
+                incoming_identity=_PROFILE_NIF,
+            )
 
-    def test_a_never_set_identity_still_adopts(self) -> None:
-        """Anti-tautology: the genuine first read must NOT be caught by the fix.
+    def test_a_never_set_identity_refuses_with_its_own_message(self) -> None:
+        """Never-set refuses too, and says something different from cleared.
 
-        A guard that refused both states would pass the two tests above while
-        breaking the case the allowance exists for. `None` here is a record
-        with no fact at that path at all, which is what "never set" means to
-        the effective-fact projection.
+        The two states need different things said: a mid-setup operator is told
+        to record their fiscal ID, while a cleared one is told their identity
+        was removed. Asserting the distinct translation keys is what stops a
+        later simplification collapsing them into one refusal and losing the
+        instruction the mid-setup operator needs.
         """
-        outcome = reconcile_censal_read(
-            None,
-            censal_facts_from_read(_read(nif="X1234567L")),
-            incoming_identity="X1234567L",
-        )
-        assert {fact.path for fact in outcome.adopted} == set(CENSAL_ADOPTABLE_PATHS)
+        with pytest.raises(CensalIdentityMismatchError) as unset:
+            reconcile_censal_read(
+                None,
+                censal_facts_from_read(_read(nif="X1234567L")),
+                incoming_identity="X1234567L",
+            )
+        assert (unset.value.translated_message or "").endswith("censal_read_identity_unset")
 
-    def test_the_apply_path_refuses_a_cleared_identity_too(self, schema: ProfileSchemaDefinition) -> None:
-        """The commit refuses identically, not only the preview.
+    def test_a_populated_matching_identity_still_proceeds(self, schema: ProfileSchemaDefinition) -> None:
+        """Anti-tautology: the guard must not refuse everything.
 
-        The refusal lives in the reconciliation precisely so both doors answer
-        the same way; a guard on apply alone would show an operator a preview
-        full of adoptions the commit then rejects.
+        Removing the allowance makes three of the four cases refusals, so
+        without this the suite would pass against a guard that rejected every
+        read -- which would break the feature entirely while looking safe.
         """
         with profile_create_storage_span(_PROFILE_ID) as routing:
             state = _register(schema, routing)
-            state = set_active_fields(state, (UserProfileFact(path="identity.tax_id", value=None),))
-            with pytest.raises(CensalIdentityMismatchError):
-                apply_censal_read(state, _read(nif="X1234567L"))
+            outcome = reconcile_censal_read(
+                state.active_profile_record(schema=schema),
+                censal_facts_from_read(_read()),
+                incoming_identity=_PROFILE_NIF,
+            )
+            assert {fact.path for fact in outcome.adopted} == set(CENSAL_ADOPTABLE_PATHS)
