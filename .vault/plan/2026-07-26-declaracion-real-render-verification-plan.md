@@ -55,7 +55,7 @@ Measure and bound route R12, the filer-chosen render language
 
 Open defects and decisions this campaign measured but did not close
 
-- [ ] `P04.S15` - Populate form_number on the seventeen remaining inert blank-box guards across nine modelos, M180 and M193 and M349 fichero-BOE targets plus seven decl.ejercicio targets, a live fabrication-producing defect; `src/cadrumo/_data/registry/aeat/modelos`.
+- [ ] `P04.S15` - Populate form_number on the remaining inert blank-box guards, seven armed from AEAT instructions and three Modelo 193 targets blocked for want of any published box number or specimen; `src/cadrumo/_data/registry/aeat/modelos`.
 - [ ] `P04.S16` - Scope the M100 parser follow-on ADR covering the shared pdfplumber primitive, the estate-wide named_label capture contract, and the M100 floor under D2; `.vault/adr`.
 - [ ] `P04.S17` - Decide whether Modelo 202 is enrolled in casilla-level reconcile, now that its profile is confirmed to exist and D5 governs enrolment; `.vault/adr, src/cadrumo/application/modelo`.
 - [ ] `P04.S18` - Decide the disposition of verify_declaracion, a modelo-agnostic comparison mechanism with zero callers outside its own tests; `src/cadrumo/application/verification`.
