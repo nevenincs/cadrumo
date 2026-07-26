@@ -940,6 +940,33 @@ Two things hold the line: a load-bearing comment and the live-leaf-versus-regist
 gate. Only the gate is a real guard, and it was confirmed by running it rather
 than by reading it.
 
+### mcp-identity-fix-landed | high | The campaign's one production defect is closed, and it landed owing nothing
+
+Landed at `0918c3f7a7`, four files, after being held overnight on two blockers
+that both dissolved rather than being negotiated away.
+
+The first dissolved when a peer bridged the schema-name filter, ending the
+transport divergence. The second dissolved by better engineering: the held
+version reached the seeding authority through two deferred function-local
+imports, which would have added sites to the unsanctioned-import ratchet and
+required an allowlist entry plus a ceiling raise. I authorised exactly that.
+The landed version instead imports the authority at module level in both call
+sites, and its commit adds **zero** function-local imports — so it owed the
+ratchet nothing and correctly touched none of it.
+
+That is worth recording as a disposition, not just an outcome. Faced with a
+gate that its change would have moved, the verification phase restructured the
+change rather than raising the gate, and did so after being given permission to
+raise it. Raising a ceiling is the documented remedy and would have been
+defensible; not needing to is better, and the difference is invisible unless
+someone checks what the commit actually contains.
+
+Consequently the lazy-import ratchet's residual red — 52 live domain
+cycle-break sites against a ceiling of 50, and two ceilings carrying slack — is
+**entirely peer drift**, with nothing attributable to this campaign. That
+completes the attribution picture recorded elsewhere in this review: no failing
+lane, and now no ratchet, carries a defect owned here.
+
 ## Recommendations
 
 Each recommendation below is tracked as a Step with a verification gate, per
