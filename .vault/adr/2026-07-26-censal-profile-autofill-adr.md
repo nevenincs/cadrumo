@@ -65,6 +65,15 @@ established by implementing the emission half and finding it inert, then
 implementing the access half and finding it crashes; the measurements are in
 `2026-07-26-censal-profile-autofill-repeatable-required-field-emission-audit`.
 
+The defect appears a second time in a sibling section, which is why this record
+treats it as a shape rather than as one field's problem. The attribution socios
+section declares a member role required, and no form carries it and no code reads
+it - the modelo's per-member field is residency, and the distinction that role
+names sits at entity level. So one section declares something right that nothing
+enforces, and its sibling declares something that nothing needs. Both are the
+schema asserting what no consumer honours, and a fix shaped only around the first
+would leave the second standing.
+
 ## Considerations
 
 - Emitting unconditionally regresses the displayed-completeness defect verbatim;
@@ -168,11 +177,24 @@ surfaces, it must live in the shared helper, and once it lives there it needs a
 name - so the naming is forced by the requirement rather than chosen for
 convenience.
 
-Against the direct read, the force is that the concept being copied is a policy
-about which taxpayer owes something, not a local detail. A fourth copy diverges
-silently, because nothing fails when two statements of the same policy disagree -
-they simply answer differently for the taxpayer who sits between them. That is
-why the refusal is stated in the implementation rather than left to judgement.
+Against the direct read, the argument is not hypothetical and the instance is
+this record's own history. The concept already has three statements: the setup
+wizard's per-question visibility condition, the IVA-regime requirement predicate,
+and the legally-grounded one carrying LIRPF art. 99 and RIRPF art. 109. **A
+fourth was ruled and withdrawn this evening**, and only because the third was
+found by sweeping alternative names - the ruling that would have created it named
+the existing predicate in its own brief without connecting the two.
+
+So the direct read is not a hazard the record is imagining. It is the exact route
+by which the fourth statement would have entered, attempted in this file, hours
+ago, by someone holding the pointer to the thing being duplicated.
+
+The copy is also worse than an ordinary duplicate. The canonical predicate is
+three-valued and legally grounded: undeclared income categories answer neither
+yes nor no, and that answer fails closed by design. A direct read would have to
+re-derive those semantics, and a later change to the legal basis would update the
+predicate and leave the copy behind, answering differently for the taxpayer who
+sits between them without anything failing.
 
 This record deliberately does not argue that a resolver restating the schema is
 itself the hazard. The neighbouring attribution resolver enforces four of the
