@@ -168,6 +168,15 @@ real upstream, the path actually arrives" arm. An anti-tautology arm alone prove
 the guard would fire given input and cannot prove anything supplies it, which is
 how the first attempt passed while being inert.
 
+The emission half relaxes nothing, but the applicability gate does, and that
+needs checking before it lands rather than after. A field that becomes
+conditionally required stops being unconditionally required, so any existing test
+standing on the unconditional form keeps passing while proving nothing - it now
+holds for every value rather than for the one it was written about. Such a test
+does not fail and does not appear in the diff. Before adding the condition,
+enumerate what depends on the declaration being unconditional and decide for each
+whether it still asserts anything.
+
 ## Rationale
 
 The knockout is the consumer split. Every alternative that avoids a new symbol
