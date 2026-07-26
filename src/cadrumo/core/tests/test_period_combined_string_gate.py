@@ -101,6 +101,12 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         text=_text(r"justificantes.*\.pdf"),
     ),
     AllowlistRule(
+        path=_path(r"^src/cadrumo/adapters/inbound/declaracion/tests/test_parser_source_digest_identity\.py$"),
+        reason="source-digest identity test reads a real justificante PDF by its official filename",
+        pattern_names=frozenset({"year-qualified quarterly token"}),
+        text=_text(r"justificantes.*\.pdf"),
+    ),
+    AllowlistRule(
         path=_path(
             r"^src/cadrumo/adapters/inbound/declaracion/tests/(?:"
             r"_parser_boundary_support|_verification_chain_support|"
