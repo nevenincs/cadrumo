@@ -741,6 +741,26 @@ legal_refs = [
     "rd-439-2007:art-31",
 ]
 
+# THE TWELVE objective_estimation_* FIELDS BELOW MIX TWO SCOPES WHILE LOOKING
+# UNIFORM. Do not reshape them as one group.
+#
+# The four prior_year_* fields are per-TAXPAYER: they carry the exclusion
+# limits, which the law computes over the conjunto de actividades, so a single
+# flat value is correct for them.
+#
+# The eight modulos_* fields are per-ACTIVITY. Orden HFP/1359/2023
+# (Instrucciones, Rendimiento anual) defines the figure as the sum of the
+# rendimientos of each activity, each obtained by running the Fases procedure
+# for that activity, and the M036 diseño records several activities with their
+# own epígrafes. One flat set can therefore hold one activity's módulos, and a
+# taxpayer with two módulos activities cannot be represented here.
+#
+# That is a modelling gap rather than a live defect today, because nothing in
+# the calculation path reads these fields — the M131 módulos casillas carry no
+# binding and are operator input. The precondition that keeps it harmless is
+# recorded at the M131 divergence-advisory predicate, which is where a change
+# would make it matter.
+
 [[sections.fields]]
 key = "objective_estimation_prior_year_gross_income_eur"
 type = "decimal"
