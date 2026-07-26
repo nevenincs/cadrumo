@@ -93,6 +93,7 @@ from ..live import (
 from ..modelo import (
     M036DeclarationResult,
     M145CommunicationRecord,
+    ModeloReconciliationRecordRepository,
     m036_declaration_object_key,
     m145_communication_record_object_key,
 )
@@ -230,6 +231,16 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
         return iva_wallet_decision_event_key(payload.decision)
 
     resolvers["cadrumo.calculations.iva_wallet.reconciliation_decision_events"] = _iva_wallet_event_key
+
+    # --- Modelo reconciliation records (SecureBoundRepository) ----------------
+    # The key is composite (work unit plus the co-written bucket event id), but
+    # the resolver never parses a key: it re-derives one from the decrypted
+    # payload, and both components are stored fields. So the generic bound
+    # resolver recovers it exactly.
+    def _reconciliation_records_repo() -> ModeloReconciliationRecordRepository:
+        return ModeloReconciliationRecordRepository()
+
+    resolvers["cadrumo.modelo.reconciliation.records"] = _bound_resolver(_reconciliation_records_repo)
 
     # --- Audit trail ---------------------------------------------------------
     resolvers["cadrumo.domain.buckets.event_history"] = _fixed_resolver(SECURE_OBJECT_CATALOGUE_KEY)
