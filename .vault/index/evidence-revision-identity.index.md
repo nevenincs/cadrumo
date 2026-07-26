@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#evidence-revision-identity'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-26'
+modified: '2026-07-26'
 related:
   - '[[2026-07-24-evidence-revision-identity-adr]]'
   - '[[2026-07-25-evidence-revision-identity-S01]]'
@@ -15,6 +15,7 @@ related:
   - '[[2026-07-25-evidence-revision-identity-plan]]'
   - '[[2026-07-25-evidence-revision-identity-supersede-identity-conflict-audit]]'
   - '[[2026-07-25-evidence-revision-identity-supersede-implementation-findings-audit]]'
+  - '[[2026-07-26-evidence-revision-identity-adr]]'
 ---
 
 # `evidence-revision-identity` feature index
@@ -26,6 +27,7 @@ Auto-generated index of all documents tagged with `#evidence-revision-identity`.
 ### adr
 
 - `2026-07-24-evidence-revision-identity-adr` - `evidence-revision-identity` adr: `bundled evidence and calculation revision identity` | (**status:** `accepted`)
+- `2026-07-26-evidence-revision-identity-adr` - `evidence-revision-identity` adr: `the deductible evidence gap blocks at verify, and stays out of revision identity` | (**status:** `accepted`)
 
 ### audit
 

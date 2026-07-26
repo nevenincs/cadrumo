@@ -894,9 +894,9 @@ application:
       cross_period_clean_state_incomplete: Cross-period clean-state proof is incomplete
         for modelo {modelo} {filing_year} {period}; {finding_count} finding(s) remain.
       deductible_vat_evidence_missing: 'Deductible IVA ledger rows require linked
-        purchase invoice evidence before this action. Link the invoice to the ledger
-        row BEFORE running work calculate: a draft bundles its evidence when you verify
-        it, so an invoice attached after that does not reach this filing.'
+        purchase invoice evidence. Link the invoice to the ledger row, then run work
+        verify again: verification refuses to complete while a deductible row has
+        no invoice, so the draft is still open and picks the evidence up.'
       export_cross_bucket_refused: The addressed revision belongs to a bucket other
         than the active profile bucket. Switch profile before exporting.
       export_draft_approval_failed: Could not approve the draft for calculation revision

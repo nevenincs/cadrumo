@@ -986,11 +986,10 @@ application:
       cross_period_clean_state_incomplete: La prova d'estat net entre períodes està
         incompleta per al model {modelo} {filing_year} {period}; queden {finding_count}
         troballa(es).
-      deductible_vat_evidence_missing: 'Les files d''IVA deduïble del llibre requereixen
-        evidència de factura de compra vinculada abans d''aquesta acció. Vincula la
-        factura al moviment del llibre ABANS d''executar work calculate: l''esborrany
-        agrupa la seva evidència en verificar-lo, de manera que una factura adjuntada
-        després no arriba a aquesta declaració.'
+      deductible_vat_evidence_missing: 'Les linies del llibre amb IVA deduible requereixen
+        una factura de compra vinculada. Vincula la factura a la linia i torna a executar
+        work verify: la verificacio no es completa mentre una linia deduible no tingui
+        factura, de manera que l''esborrany continua obert i recull l''evidencia.'
       export_cross_bucket_refused: La revisió indicada pertany a un bucket diferent
         del bucket del perfil actiu. Canvia de perfil abans d'exportar.
       export_draft_approval_failed: No s'ha pogut aprovar l'esborrany per a la revisió

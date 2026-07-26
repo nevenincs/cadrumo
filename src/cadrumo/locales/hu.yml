@@ -924,11 +924,10 @@ application:
       cross_period_clean_state_incomplete: A keresztidőszaki tiszta állapot igazolása
         hiányos a(z) {modelo} {filing_year} {period} modellhez; {finding_count} megállapítás
         maradt.
-      deductible_vat_evidence_missing: 'A levonható IVA főkönyvi sorokhoz kapcsolt
-        beszerzési számla-bizonylat szükséges ehhez a művelethez. A számlát a work
-        calculate futtatása ELŐTT kapcsold a főkönyvi sorhoz: a piszkozat a verifikáláskor
-        rögzíti a bizonylatait, ezért a később csatolt számla már nem kerül be ebbe
-        a bevallásba.'
+      deductible_vat_evidence_missing: 'A levonhato afat tartalmazo konyvelesi sorokhoz
+        kapcsolt bejovo szamla szukseges. Kapcsold a szamlat a sorhoz, majd futtasd
+        ujra a work verify parancsot: az ellenorzes nem fejezodik be, amig egy levonhato
+        sorhoz nincs szamla, igy a piszkozat nyitva marad es atveszi a bizonylatot.'
       export_cross_bucket_refused: A megcímzett revízió nem az aktív profil bucketjéhez
         tartozik. Exportálás előtt váltson profilt.
       export_draft_approval_failed: Nem sikerült jóváhagyni a(z) %{calculation_revision_id}

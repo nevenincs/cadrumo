@@ -993,11 +993,10 @@ application:
       cross_period_clean_state_incomplete: La prueba de estado limpio entre periodos
         está incompleta para el modelo {modelo} {filing_year} {period}; quedan {finding_count}
         hallazgo(s).
-      deductible_vat_evidence_missing: 'Las filas de IVA deducible del libro requieren
-        evidencia de factura de compra vinculada antes de esta acción. Vincula la
-        factura al movimiento del libro ANTES de ejecutar work calculate: el borrador
-        agrupa su evidencia al verificarlo, por lo que una factura adjuntada después
-        no llega a esta declaración.'
+      deductible_vat_evidence_missing: 'Las lineas del libro con IVA deducible requieren
+        una factura de compra vinculada. Vincula la factura a la linea y vuelve a
+        ejecutar work verify: la verificacion no se completa mientras una linea deducible
+        carezca de factura, por lo que el borrador sigue abierto y recoge la evidencia.'
       export_cross_bucket_refused: La revisión indicada pertenece a un bucket distinto
         del bucket del perfil activo. Cambia de perfil antes de exportar.
       export_draft_approval_failed: No se pudo aprobar el borrador para la revisión
