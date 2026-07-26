@@ -35,6 +35,7 @@ from ...core.async_cleanup import AsyncResourceCleanupError, close_async_resourc
 from ...core.errors import CadrumoError
 from ...core.logging import get_logger
 from ...core.time import now, validate_utc_aware
+from ...domain.user_profile import UserProfileStatus
 from ..auth_credentials import ActiveCertificateCredentials
 from . import select_provider
 from ._acquisition_lock import (
@@ -644,6 +645,7 @@ def _prepare_clave_auth(
     facts = _active_profile_auth_facts()
     credentials = _resolve_clave_credentials(settings, provider_kind, facts=facts)
     if credentials is None:
+        _assert_profile_identity_available_for_deferred_check(facts)
         return settings, facts.tax_id or None
     _require_clave_credentials(settings, credentials)
     expected_identity = _assert_active_profile_identity_matches_provider(credentials)
@@ -736,6 +738,35 @@ def _require_clave_credentials(settings: Settings, credentials: ClaveCredentials
         )
 
 
+def _assert_profile_identity_available_for_deferred_check(facts: ClaveAuthFacts) -> None:
+    """Refuse a provider whose only identity check is deferred when there is nothing to defer to.
+
+    A provider with no operator-configured credential - the certificate
+    provider - skips the comparison above, and its identity is instead
+    compared at session bind against the profile's fiscal id. That
+    deferral is sound only while the profile HAS a fiscal id. Cleared, the
+    expectation is empty, the session comparison returns without
+    comparing, and neither guard refuses: one absent field disarms both.
+
+    A profile promoted to ACTIVE recorded a fiscal id to get there, so a
+    blank one is a deliberate later clear and is refused. A profile still
+    in setup may never have recorded one yet and legitimately needs a
+    session to finish setting up, so it authenticates - the read it
+    performs is what must refuse, and that guard belongs to the read.
+
+    No status at all means no profile record was read, which is a
+    different condition with its own refusals upstream; answering it here
+    would tell an operator with no profile to restore a field on it.
+    """
+    if facts.tax_id:
+        return
+    if facts.profile_status in (None, UserProfileStatus.SETUP_INCOMPLETE):
+        return
+    raise AuthProfileIdentityMismatchError(
+        translated_message="application.auth.sessions.errors.profile_identity_cleared",
+    )
+
+
 def _assert_active_profile_identity_matches_provider(
     credentials: ClaveCredentials | None,
 ) -> str | None:
@@ -817,9 +848,14 @@ class ClaveAuthFacts(BaseModel):
     dni_nie: str = ""
     numero_soporte: str = ""
     fecha_validez: str = ""
+    profile_status: UserProfileStatus | None = None
 
 
-def clave_auth_facts_from_profile_values(values: Mapping[str, str]) -> ClaveAuthFacts:
+def clave_auth_facts_from_profile_values(
+    values: Mapping[str, str],
+    *,
+    profile_status: UserProfileStatus | None = None,
+) -> ClaveAuthFacts:
     """Read the auth facts out of a profile's schema-path value mapping.
 
     The projection a readiness surface already holds is enough to resolve
@@ -827,12 +863,18 @@ def clave_auth_facts_from_profile_values(values: Mapping[str, str]) -> ClaveAuth
     opening the profile record a second time. ``identity.tax_id`` is read
     here only in its canonical path form; the lifecycle reader applies
     the selector fallback before calling this.
+
+    ``profile_status`` distinguishes a profile that has NOT YET recorded
+    its fiscal identity from one whose identity was recorded and later
+    cleared. Only the record carries that, so a caller holding just a
+    value mapping leaves it unset and is treated as the stricter case.
     """
     return ClaveAuthFacts(
         tax_id=_normalise_tax_identity(values.get("identity.tax_id")),
         dni_nie=_normalise_tax_identity(values.get("auth.dni_nie")),
         numero_soporte=_normalise_credential(values.get("auth.numero_soporte")),
         fecha_validez=_normalise_credential(values.get("auth.fecha_validez")),
+        profile_status=profile_status,
     )
 
 
@@ -880,7 +922,7 @@ def _active_profile_auth_facts() -> ClaveAuthFacts:
         # canonical path so the shared reader sees one shape.
         selector_values = record_to_values(record)
         path_values["identity.tax_id"] = str(selector_values.get("tax.id") or "")
-    return clave_auth_facts_from_profile_values(path_values)
+    return clave_auth_facts_from_profile_values(path_values, profile_status=record.status)
 
 
 def _assert_session_identity_matches_expected(session: object, expected_identity: str | None) -> None:

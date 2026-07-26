@@ -261,6 +261,8 @@ adapters:
         and retry.
       censal_modification_surface: The AEAT censal read was refused because it landed
         on a modification page; this reader never changes censal data.
+      censal_no_dispatch: The AEAT access selector did not open the censal page on
+        a working server; re-authenticate and try again.
       cotejo_nav_failed: Navigation to the AEAT cotejo page failed; session may have
         expired mid-walk. Run 'aeat config auth test' and retry.
       ejercicio_unavailable: The AEAT declarations register does not offer the requested
@@ -294,7 +296,6 @@ adapters:
         failed.
       session_expired_nav_failed: The AEAT declarations register did not load; your
         session has likely expired. Run 'aeat config auth test' and retry.
-      censal_no_dispatch: 'The AEAT access selector did not open the censal page on a working server; re-authenticate and try again.'
 aggregation:
   grouping:
     errors:
@@ -549,6 +550,9 @@ application:
           read. Run `aeat config auth logout` and then `aeat config auth test`.
         no_session: No active AEAT session; run `aeat config auth test` before reading
           AEAT data.
+        profile_identity_cleared: Live AEAT authentication needs the active profile's
+          fiscal ID, and this profile has none. Restore identity.tax_id on the profile,
+          then authenticate again.
         profile_tax_id_missing: Cl@ve Móvil live auth requires the active profile
           to carry identity.tax_id.
         provider_close_failed: AEAT browser session could not be closed safely; retry
@@ -1395,6 +1399,8 @@ application:
         status does not match the secure record.'
       censal_read_identity_absent: The censal read carried no tax identity, so it
         cannot be confirmed to belong to this profile.
+      censal_read_identity_cleared: This profile's fiscal ID was cleared, so a censal
+        read cannot be confirmed to belong to it. Restore the fiscal ID and pull again.
       censal_read_identity_mismatch: The censal read belongs to a different taxpayer
         than this profile; it was not applied.
       duplicate_tax_id: Tax id '%{tax_id}' is already used by profile '%{profile}';

@@ -277,6 +277,8 @@ adapters:
         jelentkezz be újra, és próbáld meg ismét.
       censal_modification_surface: A nyilvántartási olvasás elutasítva, mert módosító
         oldalra érkezett; ez az olvasó soha nem módosítja a nyilvántartási adatokat.
+      censal_no_dispatch: Az AEAT hozzáférés-választója nem nyitotta meg a nyilvántartási
+        oldalt működő kiszolgálón; jelentkezz be újra, és próbáld meg ismét.
       cotejo_nav_failed: Az AEAT cotejo oldalra való navigáció sikertelen volt; a
         munkamenet lejárhatott. Futtassa a 'aeat config auth test' parancsot és próbálja
         újra.
@@ -312,7 +314,6 @@ adapters:
       session_expired_nav_failed: Az AEAT nyilatkozatnyilvántartó nem töltött be;
         a munkamenet valószínűleg lejárt. Futtassa a 'aeat config auth test' parancsot
         és próbálja újra.
-      censal_no_dispatch: 'Az AEAT hozzáférés-választója nem nyitotta meg a nyilvántartási oldalt működő kiszolgálón; jelentkezz be újra, és próbáld meg ismét.'
 aggregation:
   grouping:
     errors:
@@ -572,6 +573,9 @@ application:
           Futtassa az `aeat config auth logout`, majd az `aeat config auth test` parancsot.
         no_session: Nincs aktív AEAT munkamenet; futtassa a `aeat config auth test`
           parancsot az AEAT adatok olvasása előtt.
+        profile_identity_cleared: Az élő AEAT-hitelesítéshez szükséges az aktív profil
+          adóazonosítója, ez a profil pedig nem tartalmaz ilyet. Állítsa vissza az
+          identity.tax_id mezőt a profilban, majd hitelesítsen újra.
         profile_tax_id_missing: A Cl@ve Móvil élő hitelesítés megköveteli, hogy az
           aktív profil rendelkezzen identity.tax_id-val.
         provider_close_failed: Az AEAT böngészőmunkamenetet nem sikerült biztonságosan
@@ -1451,6 +1455,9 @@ application:
         nem egyezik a biztonságos rekorddal.'
       censal_read_identity_absent: A nyilvántartási olvasás nem tartalmazott adóazonosítót,
         ezért nem erősíthető meg, hogy ehhez a profilhoz tartozik.
+      censal_read_identity_cleared: Ennek a profilnak az adóazonosítója ki lett ürítve,
+        ezért nem erősíthető meg, hogy a nyilvántartási olvasás hozzá tartozik. Állítsa
+        vissza az adóazonosítót, majd futtassa újra a lekérdezést.
       censal_read_identity_mismatch: A nyilvántartási olvasás egy másik adózóhoz tartozik,
         nem ehhez a profilhoz; nem került alkalmazásra.
       duplicate_tax_id: A(z) "%{tax_id}" adóazonosítót már a(z) "%{profile}" profil

@@ -294,6 +294,8 @@ adapters:
         vuelve a autenticarte e inténtalo de nuevo.
       censal_modification_surface: Se rechazó la lectura censal porque aterrizó en
         una página de modificación; este lector nunca modifica los datos censales.
+      censal_no_dispatch: El selector de acceso de la AEAT no abrió la página censal
+        en un servidor operativo; vuelve a autenticarte e inténtalo de nuevo.
       cotejo_nav_failed: La navegación a la página de cotejo de AEAT falló; la sesión
         puede haber expirado. Ejecute 'aeat config auth test' y vuelva a intentarlo.
       ejercicio_unavailable: El registro de declaraciones de AEAT no ofrece el ejercicio
@@ -332,7 +334,6 @@ adapters:
       session_expired_nav_failed: El registro de declaraciones de AEAT no se cargó;
         la sesión probablemente ha expirado. Ejecute 'aeat config auth test' y vuelva
         a intentarlo.
-      censal_no_dispatch: 'El selector de acceso de la AEAT no abrió la página censal en un servidor operativo; vuelve a autenticarte e inténtalo de nuevo.'
 aggregation:
   grouping:
     errors:
@@ -613,6 +614,9 @@ application:
           leer. Ejecuta `aeat config auth logout` y después `aeat config auth test`.
         no_session: No hay sesión AEAT activa; ejecuta `aeat config auth test` antes
           de leer datos AEAT.
+        profile_identity_cleared: La autenticación en directo con la AEAT necesita
+          el NIF del perfil activo, y este perfil no lo tiene. Restaure identity.tax_id
+          en el perfil y vuelva a autenticarse.
         profile_tax_id_missing: La autenticación Cl@ve Móvil en directo requiere que
           el perfil activo tenga identity.tax_id.
         provider_close_failed: No se pudo cerrar de forma segura la sesión del navegador
@@ -1525,6 +1529,9 @@ application:
         estado de ciclo de vida del manifiesto no coincide con el registro seguro.'
       censal_read_identity_absent: La lectura censal no incluye ningún NIF, por lo
         que no puede confirmarse que corresponda a este perfil.
+      censal_read_identity_cleared: El NIF de este perfil se ha vaciado, por lo que
+        no puede confirmarse que la lectura censal le corresponda. Restaure el NIF
+        y vuelva a ejecutar la consulta.
       censal_read_identity_mismatch: La lectura censal corresponde a un contribuyente
         distinto al de este perfil; no se ha aplicado.
       duplicate_tax_id: El NIF '%{tax_id}' ya lo usa el perfil '%{profile}'; un contribuyente
