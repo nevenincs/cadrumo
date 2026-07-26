@@ -431,13 +431,12 @@ def test_an_ungated_commit_would_be_caught() -> None:
     assert not _apply_call_is_gated(nested)
 
 
-def test_the_module_docstring_no_longer_declares_the_pull_retired() -> None:
+def test_the_module_docstring_does_not_declare_the_pull_retired() -> None:
     """The door's own prose is a live operator instruction, not a stale claim.
 
-    The module previously stated the ``pull`` sibling was retired and
-    would return only under a future accepted ADR. That ADR is accepted
-    and this is the verb; a docstring still saying otherwise would tell
-    the next reader the surface they are looking at does not exist.
+    The module docstring must not describe the ``pull`` sibling as
+    retired. An operator who meets that word here concludes the surface
+    in front of them does not exist, and stops looking for it.
     """
     source = Path(inspect.getfile(_censo_file)).read_text(encoding="utf-8")
     docstring = ast.get_docstring(ast.parse(source)) or ""
