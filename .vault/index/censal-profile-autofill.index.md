@@ -17,6 +17,8 @@ related:
   - '[[2026-07-25-censal-profile-autofill-P01-S18]]'
   - '[[2026-07-25-censal-profile-autofill-P01-S19]]'
   - '[[2026-07-25-censal-profile-autofill-P01-S20]]'
+  - '[[2026-07-25-censal-profile-autofill-P01-S23]]'
+  - '[[2026-07-25-censal-profile-autofill-P01-S24]]'
   - '[[2026-07-25-censal-profile-autofill-P02-S04]]'
   - '[[2026-07-25-censal-profile-autofill-P02-S05]]'
   - '[[2026-07-25-censal-profile-autofill-P02-S06]]'
@@ -32,6 +34,7 @@ related:
   - '[[2026-07-25-censal-profile-autofill-plan]]'
   - '[[2026-07-25-censal-profile-autofill-research]]'
   - '[[2026-07-25-censal-profile-autofill-tooling-honesty-audit]]'
+  - '[[2026-07-26-censal-profile-autofill-campaign-close-honesty-review-audit]]'
 ---
 
 # `censal-profile-autofill` feature index
@@ -47,6 +50,7 @@ Auto-generated index of all documents tagged with `#censal-profile-autofill`.
 ### audit
 
 - `2026-07-25-censal-profile-autofill-tooling-honesty-audit` - `censal-profile-autofill` audit: `tooling honesty`
+- `2026-07-26-censal-profile-autofill-campaign-close-honesty-review-audit` - `censal-profile-autofill` audit: `campaign close honesty review`
 
 ### exec
 
@@ -71,6 +75,8 @@ Auto-generated index of all documents tagged with `#censal-profile-autofill`.
 - `2026-07-25-censal-profile-autofill-P03-S15` - Offer the censal pull as a manager action gated on the auth mode having everything it needs, unavailable with an instructive refusal until the credentials are complete
 - `2026-07-25-censal-profile-autofill-P03-S21` - Feed the censal ownership refusal from the read itself rather than from a projected tuple named for adoption, so editing that tuple cannot disarm the guard
 - `2026-07-25-censal-profile-autofill-P03-S22` - Make the clear branch consult provenance as the value branch does, so a clear the app wrote cannot earn the protection reserved for an operator decision
+- `2026-07-25-censal-profile-autofill-P01-S23` - Salvage the authenticated Clave session a post-auth navigation failure was closing unread, so a spent second factor becomes a retryable navigation
+- `2026-07-25-censal-profile-autofill-P01-S24` - Pin the session-identity comparison the certificate provider's only fail-closed check rests on, asserting the refusal and the per-return wiring rather than the expectation alone
 - `2026-07-25-censal-profile-autofill-P03-S10` - Verify the whole path live end to end in three phases, a pull onto a blank profile that adopts, a second unchanged pull that is a no-op, and a third pull after the operator edits an adopted value that reports the divergence rather than overwriting it
 
 ### plan
