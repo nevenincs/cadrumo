@@ -37,9 +37,12 @@ reconciled to that expectation. The team lead confirmed independently
 that 19 was wrong, attributed per modelo, crediting a modelo
 specimen to every one of its revisions, and that 22, attributed per
 profile, is correct -- a profile is what gets exercised, not a
-modelo. The governing ADR declaracion-real-render-verification
-independently states "twenty-two of twenty-nine profiles have no
-specimen at all", corroborating the measurement from a second source.
+modelo. The governing ADR declaracion-real-render-verification also
+states "twenty-two of twenty-nine profiles have no specimen at all",
+but this is not a second source: the ADR adopted that figure from this
+Step's own measurement, the same way the team lead adopted it in
+place of their own count of 19. Citing it back as corroboration would
+manufacture agreement out of one observation.
 
 The sharpest consequence: 100/2024 and 100/2025 carry no specimen
 of their own despite Modelo 100 being one of the four modelos with

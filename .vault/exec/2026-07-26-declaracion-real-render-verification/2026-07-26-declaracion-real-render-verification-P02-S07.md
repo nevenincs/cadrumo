@@ -38,12 +38,19 @@ targets. Cross-referencing against the reconcile module enrolled set
 profiles belonging to enrolled modelos, where the intersection is the
 designed input to the reconcile arbitration, and 9 profiles (115,
 both 123 revisions, all three 131 revisions, 180, 193, 202)
-belonging to modelos outside the enrolled set, where a reconcile
-attempt is refused cleanly today rather than silently mishandled.
-The governing ADR declaracion-real-render-verification now records
-this same nine-profile scope in its Constraints section as a
-non-live defect deliberately left undecided pending its own evidence,
-which this measurement made possible to state exactly.
+belonging to modelos outside the enrolled set. At the time this Step
+closed, the claim that this refuses cleanly rather than silently
+mishandling the value rested on the enrolled-set docstring's own
+stated behaviour, not on independently reading the function body --
+and the governing ADR was cited back here as though it independently
+confirmed the same claim, which was circular, since the ADR had
+adopted it from this campaign's own then-unverified wording. A
+companion research audit (r8-arbitration-enrollment-readiness) has
+since read _require_declaration_enrolled_modelo directly and confirmed
+the refusal fires before parse_declaracion is invoked and before any
+file opens; that companion document, not this sentence, is the actual
+grounding now. The nine-profile scope named here remains this Step's
+own measurement.
 
 Also found: the enrolled-set docstring gives Modelo 202 as an example
 of a modelo with no declaracion_pdf surface at all, which is false --
