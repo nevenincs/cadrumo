@@ -114,6 +114,16 @@ def test_the_pull_offers_no_way_to_aim_the_read_at_anybody() -> None:
     A subject parameter anywhere on this path would be a way to ask AEAT
     for someone else's censal data, so the absence is the safety
     property and is pinned rather than assumed.
+
+    This is one half of that property. It fixes WHOSE census the read
+    describes - the authenticated session's, with no way to redirect it.
+    The other half is that the reconciliation refuses a read describing
+    anyone but the profile's own taxpayer, below in
+    ``test_a_read_for_a_different_taxpayer_is_refused_outright``. Both are
+    load-bearing: this one means a session cannot be aimed elsewhere, that
+    one means a read obtained some other way is not adopted anyway.
+    Removing either leaves the remaining test still passing while the
+    composition no longer holds.
     """
     import inspect
 
@@ -211,6 +221,16 @@ def test_a_read_for_a_different_taxpayer_is_refused_outright() -> None:
     The manager surfaces this rather than crashing on it - the screen
     catches an action's refusal and renders it as a line, so an operator
     sees the reason instead of losing the page.
+
+    This is the second half of the pull's safety property, paired with
+    ``test_the_pull_offers_no_way_to_aim_the_read_at_anybody`` above. That
+    one fixes whose census is fetched; this one fixes whose census may be
+    adopted. The comparison is made against the identity carried IN THE
+    READ, never against the session - ``reconcile_censal_read`` takes no
+    session parameter and cannot consult one. So the session selects the
+    SUBJECT of the read and cannot influence whether the read is ACCEPTED,
+    which is why a session bound to another taxpayer cannot write their
+    data onto this profile: it yields their census, and this refuses it.
     """
     from .....application.user_profile import CensalIdentityMismatchError
 
