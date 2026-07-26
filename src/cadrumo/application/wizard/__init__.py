@@ -43,6 +43,7 @@ from ._checkpoint_store import (
     checkpoint_facts_from_answers,
 )
 from ._commands import build_wizard_command
+from ._compiler import ensure_profile_keys_registered
 from ._copy_sources import (
     register_profile_copy_sources,
     resolve_profile_schema_copy,
@@ -139,6 +140,7 @@ __all__ = [
     "checkpoint_facts_from_answers",
     "descendant_answers_from_record",
     "descendant_facts_from_answers",
+    "ensure_profile_keys_registered",
     "load_active_taxpayer_profile",
     "persist_descendant_door_answers",
     "project_answers",
