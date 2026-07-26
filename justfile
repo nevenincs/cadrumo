@@ -398,6 +398,20 @@ test-integration:
     @uv run --no-sync pytest -q -m "integration and not serial and not os_keychain"
     @uv run --no-sync pytest -q -m "integration and serial and not perf and not os_keychain" -n0
 
+# Run the dev/ tooling gates that no other lane reaches. `testpaths` in
+# pyproject names only `src/cadrumo` plus one packaging file, and CI's dev step
+# names only dev/ci, dev/packaging, dev/quality, and dev/release -- so these ten
+# directories were collected by NOTHING and 19 of their tests had been failing
+# unobserved, including the duplication-disposition gate and the whole shipped
+# documentation-search corpus. The marker expression is stated explicitly for
+# the reason `packaging-smoke-preflight-tests` states it: these directories are
+# mixed-marker, so inheriting the default `-m 'unit and ...'` would silently
+# deselect the integration contracts and still exit zero. Coverage is guarded by
+# `src/cadrumo/tests/test_dev_tree_lane_coverage.py`, which fails when a new
+# test directory appears under `dev/` that no lane names.
+test-dev-tooling:
+    @uv run --no-sync pytest -q -m "unit or integration" dev/audit/tests dev/deploy/tests dev/env/tests dev/tests dev/registry/matrix/tests dev/registry/newmodelo/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests
+
 # Run BOTH lanes in sequence and report them separately. The default pytest
 # invocation is pinned to the unit lane by addopts, so `just test-unit` green
 # says nothing about the ~3k integration tests; this is the recipe to reach for
