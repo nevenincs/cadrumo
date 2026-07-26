@@ -21,11 +21,19 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Iterator
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.bucket import bucket_paths, manifest_path
+from ....adapters.persistence.storage.bucket import (
+    BucketKeySchedule,
+    BucketManifest,
+    bucket_paths,
+    manifest_path,
+    read_manifest,
+    write_manifest,
+)
 from ....adapters.persistence.storage.master_key import KdfParams
 from ....core import BucketPointer, read_pointer, write_pointer
 from ....domain.user_profile import (
@@ -752,3 +760,76 @@ def test_load_surfaces_setup_incomplete_status_drift(_backend: Path) -> None:
 
     with pytest.raises(ProfileIntegrityError, match="profile physical stores disagree on lifecycle status"):
         _load(repository, created.profile_id)
+
+
+# Manifest fields ``ProfileRepository.save`` derives from the aggregate it is
+# handed. Every other manifest field is state ``save`` does NOT own and must
+# carry across from the manifest already on disk.
+_SAVE_OWNED_MANIFEST_FIELDS: frozenset[str] = frozenset(
+    {
+        "bucket_id",
+        "label",
+        "created_at",
+        "kdf_params",
+        "recovery_enrolled",
+        "schema_version",
+        "status",
+    },
+)
+
+
+def test_save_carries_every_field_it_does_not_own(_backend: Path) -> None:
+    """``save`` preserves every manifest field it does not derive from the aggregate.
+
+    ``save`` reconstructs the manifest field by field, so a field left out of
+    that constructor does not fail — it silently takes its model default. That
+    is not hypothetical: ``session_absolute_minutes`` was omitted while
+    ``idle_lock_minutes`` beside it was carried, so every save reset the
+    absolute login-session expiry to ``None`` and the operator's deliberately
+    shortened session silently lengthened to the configured default.
+
+    The carry set is derived from the model rather than listed, so a field
+    added to :class:`BucketManifest` later is covered here the moment it
+    exists: it lands in ``carried`` automatically and must survive. Each is
+    seeded to a NON-DEFAULT value first, because a field left at its default
+    survives a drop indistinguishably from being carried — which is exactly why
+    the original defect was invisible.
+    """
+    repository = ProfileRepository()
+    created = _create(repository, label="Carry Operator", facts=_VALID_FACTS)
+    paths = bucket_paths(_backend, created.profile_id)
+
+    carried = set(BucketManifest.model_fields) - _SAVE_OWNED_MANIFEST_FIELDS
+    assert carried, "no unowned manifest fields found; the carry contract has nothing to protect"
+
+    # Seed every carried field to a value distinguishable from its default.
+    seeded = read_manifest(paths).model_copy(
+        update={
+            "last_unlocked_at": datetime(2026, 3, 4, 5, 6, 7, tzinfo=UTC),
+            "idle_lock_minutes": 17,
+            "session_absolute_minutes": 33,
+            "key_schedule": BucketKeySchedule.BUCKET_DEK_V1,
+        },
+    )
+    assert set(seeded.model_dump()) >= carried, "seeded manifest does not cover every carried field"
+    for field in carried:
+        assert getattr(seeded, field) is not None, (
+            f"carried field {field!r} was not seeded to a non-default value; a field left at its "
+            "default cannot distinguish 'carried' from 'silently reset'"
+        )
+    write_manifest(paths, seeded)
+
+    with profile_storage_session(created.profile_id):
+        repository.save(repository.load(created.profile_id))
+
+    persisted = read_manifest(paths)
+    dropped = {
+        field: (getattr(seeded, field), getattr(persisted, field))
+        for field in carried
+        if getattr(persisted, field) != getattr(seeded, field)
+    }
+    assert dropped == {}, (
+        "save() silently reset manifest field(s) it does not own, shown as "
+        f"field: (before, after) -> {dropped}; every field save() does not derive from the "
+        "aggregate must be carried across from the manifest on disk"
+    )
