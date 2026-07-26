@@ -26,11 +26,11 @@ related:
 
 Verify against real AEAT renders, extend the gate
 
-- [ ] `P01.S01` - Verify M390 against its untested real_corpus specimen 2021-0A, covering routes R2 kerning drift and R6 bbox fragility, on a profile with a confirmed R2 defect; `src/cadrumo/_data/registry/aeat/modelos/390, declaracion tests`.
-- [ ] `P01.S02` - Verify M111 against its four real specimens, 29 bbox targets under a vacuous zero floor, covering routes R3 and R6; `src/cadrumo/_data/registry/aeat/modelos/111, declaracion tests`.
+- [x] `P01.S01` - Verify M390 against its untested real_corpus specimen 2021-0A, covering routes R2 kerning drift and R6 bbox fragility, on a profile with a confirmed R2 defect; `src/cadrumo/_data/registry/aeat/modelos/390, declaracion tests`.
+- [x] `P01.S02` - Verify M111 against its four real specimens, 29 bbox targets under a vacuous zero floor, covering routes R3 and R6; `src/cadrumo/_data/registry/aeat/modelos/111, declaracion tests`.
 - [ ] `P01.S03` - Verify M100 across its five revisions against three real specimens, covering routes R4 over-strict floor and R10 multi-revision blind spot; `src/cadrumo/_data/registry/aeat/modelos/100, declaracion tests`.
-- [ ] `P01.S04` - Verify M190 against its real specimen, covering route R4; `src/cadrumo/_data/registry/aeat/modelos/190, declaracion tests`.
-- [ ] `P01.S05` - Fold every verified specimen into the shared real-render gate and prove the gate bites for each; `src/cadrumo/adapters/inbound/declaracion/tests`.
+- [x] `P01.S04` - Verify M190 against its real specimen, covering route R4; `src/cadrumo/_data/registry/aeat/modelos/190, declaracion tests`.
+- [x] `P01.S05` - Fold every verified specimen into the shared real-render gate and prove the gate bites for each; `src/cadrumo/adapters/inbound/declaracion/tests`.
 
 ### Phase `P02` - Specimen-less profiles
 
