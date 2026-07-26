@@ -95,6 +95,12 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         text=_text(r"justificantes/.*\.pdf"),
     ),
     AllowlistRule(
+        path=_path(r"^src/cadrumo/application/modelo/tests/test_reconciliation_record_store\.py$"),
+        reason="reconciliation-record roundtrip fixture uses a representative justificante PDF filename",
+        pattern_names=frozenset({"year-qualified quarterly token"}),
+        text=_text(r"justificantes.*\.pdf"),
+    ),
+    AllowlistRule(
         path=_path(
             r"^src/cadrumo/adapters/inbound/declaracion/tests/(?:"
             r"_parser_boundary_support|_verification_chain_support|"
