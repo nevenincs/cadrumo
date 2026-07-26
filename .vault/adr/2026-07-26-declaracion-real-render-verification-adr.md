@@ -9,6 +9,7 @@ related:
   - "[[2026-07-26-declaracion-real-render-verification-plan]]"
   - '[[2026-07-26-declaracion-real-render-verification-specimen-less-static-route-audit-audit]]'
   - '[[2026-07-26-declaracion-real-render-verification-r8-arbitration-enrollment-readiness-audit]]'
+  - '[[2026-07-26-declaracion-real-render-verification-adversarial-verification-of-campaign-claims-audit]]'
 ---
 
 # `declaracion-real-render-verification` adr: `what grounds a declaracion_pdf profile's claims` | (**status:** `accepted`)
@@ -162,11 +163,18 @@ so none is enrollable today, and that is an evidence gap under D3 rather than a
 backlog item.
 
 The historical enrolment order is recorded as *not* being a discriminator: git
-history shows the six enrolled modelos were added in three batches over five days in
-development sequence, and Modelo 130 — enrolled first, with zero specimens — is the
-counter-example that rules out any retrospective evidential rationale. Five of the six
-happen to have specimens; that is a coincidence of order, not a policy that was
-followed.
+history shows the six enrolled modelos were added in three batches spanning 2 days
+18 hours in development sequence, and Modelo 130 — enrolled first, with zero
+specimens — is the counter-example that rules out any retrospective evidential
+rationale. Five of the six happen to have specimens; that is a coincidence of order,
+not a policy that was followed.
+
+(An earlier revision of this paragraph said "five days". The measured span between
+the first and last enrolment commits is 2 days 18 hours 51 minutes. The error did not
+touch the ordering argument, which rests on M130 rather than on the span, but a wrong
+number sitting beside a sound conclusion lends it unearned precision — and this one
+was caught only by an adversarial pass that re-derived it from git rather than
+re-reading the claim.)
 
 ## Constraints
 
