@@ -110,19 +110,24 @@ jobs:
             4. Ensure the source Packaging Smoke run sealed its evidence draft
                (release tag evidence-smoke-<run id> carrying
                cadrumo-release-cohort.tar.gz and evidence-manifest.json).
-            5. Dispatch the Scoop and Homebrew acquisition workflows against that
-               smoke run and note their run ids (they mint the scoop + homebrew
-               distribution-evidence rows).
-            6. Mint the four claude-* rows locally
-               (`python -m dev.packaging.emit_real_client_evidence ...`) and upload
-               them to a release (`gh release create <tag> --draft <row json...>`);
-               note that tag.
+            5. ONLY for a channel this release actually CLAIMS (availability
+               "available" in docs/_data/download_channels.toml): dispatch that
+               channel's acquisition workflow against the smoke run and note its
+               run id. A bootstrap publication claims no such channel, and these
+               runs CANNOT succeed before one — they install the manifest and
+               formula that a first publication has to write.
+            6. Likewise only once a host-extension channel is claimed: mint the
+               four claude-* rows locally
+               (`python -m dev.packaging.emit_real_client_evidence ...`), upload
+               them to a release (`gh release create <tag> --draft <row json...>`),
+               and note that tag.
             7. Set repository variable CADRUMO_PUBLISH_ENABLED=true to arm this
                workflow.
 
-          Once 1-6 are done, set CADRUMO_PUBLISH_ENABLED=true and re-dispatch with
-          the packaging_run_id, scoop_run_id, homebrew_run_id, and
-          claude_evidence_release inputs.
+          Gate 2 DERIVES which acquisition inputs a release needs from the
+          channels it claims, so supply only those and leave the rest empty.
+          Today's descriptor claims the python (registry) channel alone, so the
+          bootstrap dispatch carries packaging_run_id and nothing else.
           EOF
             exit 1
           fi
