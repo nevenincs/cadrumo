@@ -111,6 +111,7 @@ from ..aggregation import (
     CalculationSourceDiagnostic,
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
+    evaluate_ledger_filing_staleness,
     missing_evidence_advisory_observations,
 )
 from ..calculations import CalculationObservationRepository, CrossPeriodExpectedMemberSet
@@ -380,6 +381,115 @@ _MISSING_EVIDENCE_LEGAL_REFS: tuple[str, ...] = (
 )
 
 
+def _ledger_drift_findings(
+    *,
+    target: CalculationRevision,
+    work_unit: WorkUnit,
+    transaction_repository: TransactionCatalogueRepository | None,
+) -> list[ModeloVerificationFinding]:
+    """Refuse a draft whose contributing ledger rows moved since it was calculated.
+
+    Verify targets the work unit's current revision and reads the LIVE ledger
+    for evidence while taking casilla values from the STORED draft. Those two
+    views are only the same view if nothing changed in between. An operator who
+    meets the blocking deductible-evidence finding, reclassifies the row to drop
+    the deduction, and re-verifies WITHOUT recalculating makes them disagree:
+    the evidence gate sees a row that is no longer deductible and raises
+    nothing, while the casilla values still assert the deduction. Granting there
+    freezes an evidence bundle over an over-declaration, and the wrong ordering
+    was never refused.
+
+    The comparison is the draft's own ledger anchor against the live rows,
+    through the same staleness evaluator that already guards finalized
+    revisions. The anchor's fingerprint covers tax facts only, so a reclassify
+    moves it and an evidence attach does not — which is what lets this refuse
+    the stale-draft path without refusing the attach-and-re-verify recovery the
+    deductible-evidence promotion depends on.
+
+    A ledger-derived draft with NO anchor is refused on the same terms rather
+    than passed. It was calculated before the anchor existed, so whether its
+    values still match the ledger is unknown, and an unknown is not a pass
+    (``no-silent-under-declaration``). Both branches resolve to the same
+    operator move, which is why they carry the same instruction.
+
+    This never recomputes. A verify that quietly recalculated would mint values
+    the operator never saw and file them under a report they never read.
+    """
+    if not target.source_transaction_ids:
+        return []
+    if target.state is not CalculationRevisionState.BORRADOR:
+        return []
+    tx_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=work_unit.bucket_id)
+    anchor = target.ledger_filing_snapshot
+    if anchor is None:
+        return [_ledger_drift_finding(work_unit=work_unit, target=target, changed=0, removed=0, anchored=False)]
+    verdict = evaluate_ledger_filing_staleness(anchor, tx_repo.load())
+    if not verdict.is_stale:
+        return []
+    return [
+        _ledger_drift_finding(
+            work_unit=work_unit,
+            target=target,
+            changed=len(verdict.changed),
+            removed=len(verdict.removed),
+            anchored=True,
+        ),
+    ]
+
+
+def _ledger_drift_finding(
+    *,
+    work_unit: WorkUnit,
+    target: CalculationRevision,
+    changed: int,
+    removed: int,
+    anchored: bool,
+) -> ModeloVerificationFinding:
+    """Build the blocking drift finding, naming the command that moves the operator on.
+
+    ``next_action`` names ``calculate``, not ``verify``. A refusal that names
+    the command the operator just ran restates their position instead of
+    resolving it, and this campaign has already had to fix that once.
+
+    The message carries COUNTS rather than a joined id list. A finding message
+    is capped at 500 characters and a contributor set is unbounded, so joining
+    the drifted ids is the same defect shape that has now been found six times
+    across the bucket-event payloads — and the ids are recoverable from the
+    recalculate this refusal instructs anyway.
+    """
+    detail = (
+        f"{changed} contributing row(s) changed and {removed} were removed since this draft was calculated"
+        if anchored
+        else "this draft carries no record of the ledger state it was calculated from"
+    )
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        message=(
+            f"the ledger no longer matches the stored calculation for modelo {work_unit.modelo} "
+            f"{work_unit.filing_year} {work_unit.period.registry_token}: {detail}. "
+            "Verifying it would grant over casilla values the ledger no longer supports."
+        ),
+        next_action=(
+            f"Recalculate first with `aeat app modelo work calculate {work_unit.work_unit_id}`, "
+            "then verify the revision that produces."
+        ),
+        legal_refs=_LEDGER_DRIFT_LEGAL_REFS,
+        source_refs=_optional_observation_refs(target.observations, "source_refs"),
+    )
+
+
+#: Grounding for the drift refusal. A declaración must reflect the operator's
+#: real accounting records (LIVA art. 164.1.4 the IVA declaration duty, RD
+#: 1619/2012 art. 2 the invoicing duty that fixes what those records say), so
+#: filing values the ledger no longer supports is not a filing the operator may
+#: complete.
+_LEDGER_DRIFT_LEGAL_REFS: tuple[str, ...] = (
+    "ley-37-1992:art-164",
+    "rd-1619-2012:art-2",
+)
+
+
 def _missing_evidence_findings(
     *,
     target: CalculationRevision,
@@ -451,9 +561,17 @@ def _missing_evidence_findings(
                 ),
                 message=diagnostic.message,
                 next_action=(
+                    # Two routes out, and they do NOT share a next step. Attaching
+                    # the invoice is value-neutral, so re-verifying the same draft
+                    # is correct. Reclassifying the row changes what the casillas
+                    # should say, so the draft is stale and verify will refuse it
+                    # until a recalculate produces a revision that matches the
+                    # ledger. Naming only "rerun verification" sent the operator
+                    # who took the second route straight into that refusal.
                     f"Register the supplier invoice with `aeat app ledger evidence add PATH`, attach it with "
                     f"`aeat app ledger attach {diagnostic.binding_id} --purchase-invoice-evidence-id EVIDENCE_ID`, "
-                    "then rerun verification."
+                    "then rerun verification. If instead you reclassify the row to drop the deduction, "
+                    "recalculate before verifying."
                     if is_deductible_gap
                     else (
                         f"Advisory only: keep issued/sales invoice support for ledger row {diagnostic.binding_id}. "
@@ -531,6 +649,16 @@ def _collect_verification_gate_findings(
     )
     findings.extend(
         _missing_evidence_findings(
+            target=target,
+            work_unit=work_unit,
+            transaction_repository=transaction_repository,
+        ),
+    )
+    # Runs beside the evidence gate, not inside it: that gate reads the live
+    # ledger while the casilla values come from the stored draft, and this is
+    # what refuses the case where those two views have drifted apart.
+    findings.extend(
+        _ledger_drift_findings(
             target=target,
             work_unit=work_unit,
             transaction_repository=transaction_repository,

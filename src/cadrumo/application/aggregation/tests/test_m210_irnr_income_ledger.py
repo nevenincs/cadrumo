@@ -463,6 +463,16 @@ def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusi
             transaction_repository=transaction_repository,
             clock=_CLOCK,
         ).revision
+        # The verify half of this test moved to
+        # test_m210_ledger_mode_evidence_bundle_records_no_manual_gross_income.
+        # It cannot run here any more, and the two guards that make it
+        # impossible are both correct. Verifying AFTER these mutations is a
+        # stale draft, which the ledger-drift gate refuses: the only
+        # contributing row moves twice below, its gross income amount and then
+        # its jurisdiction, so granting would freeze 900.00 over a ledger that
+        # no longer says 900.00 or even ES. Verifying BEFORE them finalizes the
+        # revision, and the ledger then refuses to mutate a row a finalized
+        # revision cites. What is left here is the staleness half.
         update_manual_transaction_fields(
             bucket_id=_BUCKET_ID,
             transaction_id=es_id,
@@ -492,18 +502,6 @@ def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusi
             occurred_at=_CLOCK,
         )
         jurisdiction_staleness = evaluate_ledger_filing_staleness(jurisdiction_snapshot, transaction_repository.load())
-        verification = verify_modelo_revision(
-            ledger.calculation_revision_id,
-            actor="operator",
-            workflow_profile=TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime.GENERAL),
-            work_unit_repository=work_repository,
-            calculation_repository=calculation_repository,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-            settings=ready_clave_settings("12345678Z"),
-            clock=_CLOCK,
-        )
-        verified_ledger = calculation_repository.load().get(ledger.calculation_revision_id)
 
     assert manual.m210_gross_income_source_mode is M210GrossIncomeSourceMode.MANUAL
     assert manual.casilla_values["rendimientos_integros"] == Decimal("777.00")
@@ -538,11 +536,78 @@ def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusi
     assert evidence_row.m210_gross_income_amount == ledger.casilla_values["rendimientos_integros"]
     assert evidence_row.m210_payer_id == "ES-PAGADOR-210"
     assert "trlirnr-rdleg-5-2004:art-13.1" in evidence_row.legal_refs
+    assert classification_staleness.changed == (es_id,)
+    assert jurisdiction_staleness.changed == (es_id,)
+
+
+def test_m210_ledger_mode_evidence_bundle_records_no_manual_gross_income(tmp_path: Path) -> None:
+    """Ledger mode keeps [5] out of the bundle's manual fact basis.
+
+    The verify half of the authority-exclusivity test above, which can no
+    longer live there: that test mutates its only contributing row to exercise
+    the staleness verdicts, and a granted verify is impossible on either side of
+    those mutations. Verifying after them is a stale draft the ledger-drift gate
+    refuses; verifying before them finalizes the revision, and the ledger then
+    refuses to mutate a row a finalized revision cites. Both guards are correct,
+    so the assertion moved to a revision whose ledger never moves.
+
+    What it pins is the authority split reaching the persisted evidence: in
+    ledger mode ``rendimientos_integros`` is derived from the rows, so it must
+    NOT also appear as an operator-supplied manual fact.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
+        _seed_m210_profile(objects=runtime.repository)
+        transaction_repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=runtime.repository)
+        event_repository = BucketEventHistoryRepository(objects=runtime.repository)
+        _create_income(
+            label="bundle-es",
+            source_jurisdiction="ES",
+            classification=_classification("01", Decimal("900.00")),
+            transaction_repository=transaction_repository,
+            event_repository=event_repository,
+        )
+        snapshot = resources().modelos.authority.snapshot("210", filing_year=2025, period="0A")
+        work_repository = WorkUnitCatalogueRepository()
+        calculation_repository = CalculationRevisionCatalogueRepository()
+        work_unit = create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo="210",
+            filing_year=2025,
+            period=_PERIOD,
+            revision_id=snapshot.revision.id,
+            repository=work_repository,
+            clock=_CLOCK,
+        )
+        ledger = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            actor="operator",
+            casilla_inputs={},
+            text_casilla_inputs={"tipo_renta": "general"},
+            m210_official_tipo_renta_code="01",
+            m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
+            work_unit_repository=work_repository,
+            calculation_repository=calculation_repository,
+            bucket_event_repository=event_repository,
+            transaction_repository=transaction_repository,
+            clock=_CLOCK,
+        ).revision
+
+        verification = verify_modelo_revision(
+            ledger.calculation_revision_id,
+            actor="operator",
+            workflow_profile=TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime.GENERAL),
+            work_unit_repository=work_repository,
+            calculation_repository=calculation_repository,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+            settings=ready_clave_settings("12345678Z"),
+            clock=_CLOCK,
+        )
+        verified_ledger = calculation_repository.load().get(ledger.calculation_revision_id)
+
     assert verification.granted_verificado_completo is True
     assert verified_ledger is not None
     assert verified_ledger.ledger_filing_evidence is not None
     assert all(
         entry.casilla_id != "rendimientos_integros" for entry in verified_ledger.ledger_filing_evidence.manual_entries
     )
-    assert classification_staleness.changed == (es_id,)
-    assert jurisdiction_staleness.changed == (es_id,)

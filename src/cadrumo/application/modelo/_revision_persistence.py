@@ -69,6 +69,7 @@ from ...domain.modelos import (
     CalculationRevisionState,
     CalculationSourceIssue,
     CalculationSourceRef,
+    LedgerFilingSnapshot,
     ModeloDetailRow,
     ModeloRecord,
     ModeloRecordCatalogue,
@@ -189,6 +190,7 @@ def persist_calculation_revision(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol,
+    ledger_filing_snapshot: LedgerFilingSnapshot | None = None,
     m210_official_tipo_renta_code: str | None = None,
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None,
 ) -> CalculationRevision:
@@ -206,6 +208,13 @@ def persist_calculation_revision(
     calculation source mesh) so the persisted revision records which resolver
     mesh and which upstream source objects produced it. It is additive and does
     NOT participate in ``derive_calculation_revision_id``.
+
+    ``ledger_filing_snapshot`` pins the ledger state the casilla values were
+    computed FROM, for a ledger-derived draft. It is the anchor the verify-time
+    drift gate compares against the live ledger, and it exists because the
+    snapshot is otherwise captured only on a granted verify — leaving exactly
+    the drafts that need guarding with nothing to compare. A granted verify
+    overwrites it, alongside the evidence bundle, with the state it froze.
 
     The emitted :class:`BucketEvent` uses the revision id as ``object_id`` and
     includes a ``has_provenance`` payload flag plus a ``source_provenance_count``
@@ -269,6 +278,7 @@ def persist_calculation_revision(
         source_provenance=source_provenance,
         source_issues=source_issues,
         detail_rows=detail_rows,
+        ledger_filing_snapshot=ledger_filing_snapshot,
         created_at=now,
         updated_at=now,
     )
