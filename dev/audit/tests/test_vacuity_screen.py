@@ -1,0 +1,202 @@
+"""Prove the vacuity screen reports the shape it claims and not its opposite.
+
+The screen had no test. It shipped as a worklist generator whose output was read
+and acted on, while nothing established that it distinguished an unguarded
+corpus scan from a paired detector control -- which is the same class of
+unproven instrument the screen itself exists to hunt.
+
+Every case here drives the real :func:`screen` over a synthetic tree written to
+a temporary root, so the assertions are about behaviour rather than about the
+shape of the source. An injectable root is used deliberately in preference to
+patching module state: the production entry point already takes a root, so the
+test exercises the real call path rather than a rearranged one.
+
+The regression pinned by ``test_a_literal_input_control_does_not_exempt_its
+_module`` is not hypothetical. Teaching :func:`proves_it_scanned` to accept
+equality against a non-empty literal removed 14 false positives and, in the same
+change, silenced a genuine finding: that predicate governs the MODULE-level
+exemption, so a control running on a planted dictionary began vouching for
+sibling gates that walk four shipped catalogues. Proving a detector works says
+nothing about whether the corpus it is pointed at exists. The two signals are
+now separate functions, and this case is what keeps them separate.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+from textwrap import dedent
+
+import pytest
+
+from ..vacuity_screen import screen
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def _write_screened_tree(root: Path, module_name: str, source: str) -> None:
+    """Materialise a synthetic screened tree containing one test module.
+
+    Both screened trees are created because the screen refuses a missing one,
+    which is itself a property worth not tripping over accidentally here.
+    """
+    package = root / "src" / "cadrumo" / "tests"
+    package.mkdir(parents=True, exist_ok=True)
+    (root / "dev").mkdir(parents=True, exist_ok=True)
+    (package / module_name).write_text(dedent(source), encoding="utf-8")
+
+
+def _flagged_names(root: Path) -> set[str]:
+    scanned, flagged = screen(root)
+    assert scanned > 0, "the screen walked no modules, so its verdict would be meaningless"
+    return {name for _, name, _ in flagged}
+
+
+def test_an_unguarded_corpus_scan_is_flagged(tmp_path: Path) -> None:
+    """The defect shape must be reported: empty assertion, nothing proving a walk."""
+    _write_screened_tree(
+        tmp_path,
+        "test_probe.py",
+        """
+        def test_no_offenders_anywhere() -> None:
+            failures = [path for path in walk_the_tree() if is_bad(path)]
+            assert failures == []
+        """,
+    )
+
+    assert "test_no_offenders_anywhere" in _flagged_names(tmp_path)
+
+
+def test_a_paired_detector_control_is_not_flagged(tmp_path: Path) -> None:
+    """The quiet half of a control is not an unguarded scan.
+
+    Its empty assertion is the point of the test, and the non-empty assertion
+    beside it proves the detector ran.
+    """
+    _write_screened_tree(
+        tmp_path,
+        "test_probe.py",
+        """
+        def test_detector_discriminates() -> None:
+            assert offenders({"a.b": "bad"}) == ["a.b"]
+            assert offenders({"c.d": "fine"}) == []
+        """,
+    )
+
+    assert _flagged_names(tmp_path) == set()
+
+
+def test_a_module_level_corpus_proof_exempts_its_siblings(tmp_path: Path) -> None:
+    """A lower bound on the shared substrate vouches for the whole module.
+
+    This is the off-module guard the screen's docstring sanctions: emptiness of
+    the substrate would fail loudly in the sibling assertion.
+    """
+    _write_screened_tree(
+        tmp_path,
+        "test_probe.py",
+        """
+        def test_corpus_is_present() -> None:
+            assert len(CATALOGUE) >= 100
+
+        def test_no_offenders_anywhere() -> None:
+            assert [key for key in CATALOGUE if is_bad(key)] == []
+        """,
+    )
+
+    assert _flagged_names(tmp_path) == set()
+
+
+def test_a_literal_input_control_does_not_exempt_its_module(tmp_path: Path) -> None:
+    """A control on planted input must not vouch for a real corpus scan.
+
+    The regression this pins: folding the literal-input signal into the
+    module-level predicate silences every genuine finding in any file that also
+    contains a detector control, which is most gate modules in the tree. The
+    control itself stays unflagged; its sibling corpus scan must not.
+    """
+    _write_screened_tree(
+        tmp_path,
+        "test_probe.py",
+        """
+        def test_detector_discriminates() -> None:
+            assert offenders({"a.b": "bad"}) == ["a.b"]
+            assert offenders({"c.d": "fine"}) == []
+
+        def test_no_offenders_in_the_shipped_catalogue() -> None:
+            assert [key for key in load_catalogue() if is_bad(key)] == []
+        """,
+    )
+
+    flagged = _flagged_names(tmp_path)
+    assert "test_no_offenders_in_the_shipped_catalogue" in flagged, (
+        "a corpus scan was exempted by a sibling control that only ever ran on planted input"
+    )
+    assert "test_detector_discriminates" not in flagged, "the control itself is not vacuity and must stay unflagged"
+
+
+@pytest.mark.parametrize("empty", ["set()", "frozenset()", "list()", "dict()", "tuple()"])
+def test_a_constructed_empty_counts_as_emptiness(tmp_path: Path, empty: str) -> None:
+    """A constructed empty is the same claim as a literal one.
+
+    An empty set has no literal spelling in Python, so a reader matching only
+    literals is structurally blind to it rather than merely incomplete. This
+    blind spot was found by the screen failing to flag a test in this very
+    module that used ``== set()``; without these cases the branch closing it
+    would ship unexercised, since no module in the tree currently writes an
+    unguarded scan that way.
+    """
+    _write_screened_tree(
+        tmp_path,
+        "test_probe.py",
+        f"""
+        def test_no_offenders_anywhere() -> None:
+            assert collect_offenders() == {empty}
+        """,
+    )
+
+    assert "test_no_offenders_anywhere" in _flagged_names(tmp_path)
+
+
+def test_a_populated_constructor_call_is_not_emptiness(tmp_path: Path) -> None:
+    """``set(["a"])`` asserts a non-empty result and must not read as emptiness.
+
+    The negative control for the case above: matching a bare constructor NAME
+    rather than an argument-free CALL would swallow every populated one too, and
+    the screen would flag tests that prove exactly what it wants proven.
+    """
+    _write_screened_tree(
+        tmp_path,
+        "test_probe.py",
+        """
+        def test_offenders_are_found() -> None:
+            assert collect_offenders() == set(["a"])
+        """,
+    )
+
+    assert _flagged_names(tmp_path) == set()
+
+
+def test_a_zero_count_assertion_counts_as_emptiness(tmp_path: Path) -> None:
+    """``== 0`` is the same defect wearing a different spelling."""
+    _write_screened_tree(
+        tmp_path,
+        "test_probe.py",
+        """
+        def test_count_is_zero() -> None:
+            assert len(collect_offenders()) == 0
+        """,
+    )
+
+    assert "test_count_is_zero" in _flagged_names(tmp_path)
+
+
+def test_a_missing_screened_tree_refuses_rather_than_reporting_clean(tmp_path: Path) -> None:
+    """A screen that walked nothing must never look like a clean tree.
+
+    Without this the instrument's own worst failure mode -- reporting zero
+    findings because it scanned zero files -- is indistinguishable from success.
+    """
+    (tmp_path / "src" / "cadrumo" / "tests").mkdir(parents=True)
+
+    with pytest.raises(SystemExit, match="screened tree is missing"):
+        screen(tmp_path)

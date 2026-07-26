@@ -37,8 +37,38 @@ from pathlib import Path
 SCREENED_TREES = ("src/cadrumo/tests", "dev")
 
 
+#: Builtins whose no-argument call constructs an empty collection. ``set()`` has
+#: no literal spelling at all, so a screen reading only literals is structurally
+#: blind to the one empty collection Python forces you to write as a call.
+_EMPTY_CONSTRUCTORS = frozenset({"set", "frozenset", "list", "tuple", "dict"})
+
+
+def _is_empty_collection(node: ast.expr) -> bool:
+    """True when ``node`` denotes an empty collection, literal or constructed."""
+    if isinstance(node, ast.List | ast.Tuple | ast.Set):
+        return not node.elts
+    if isinstance(node, ast.Dict):
+        return not node.keys
+    if isinstance(node, ast.Call):
+        return (
+            isinstance(node.func, ast.Name)
+            and node.func.id in _EMPTY_CONSTRUCTORS
+            and not node.args
+            and not node.keywords
+        )
+    return False
+
+
 def asserts_emptiness(node: ast.stmt) -> bool:
-    """True when ``node`` asserts a collection is empty or a count is zero."""
+    """True when ``node`` asserts a collection is empty or a count is zero.
+
+    Constructed empties count alongside literal ones. ``assert x == set()`` is
+    the same claim as ``assert x == []`` and carries the same risk, but ``set()``
+    is a call rather than a literal -- and an empty set has no literal spelling
+    in Python, so a reader that matched only literals could never see it. That
+    blind spot was found by this screen failing to flag a test in its own suite
+    that used precisely that spelling.
+    """
     if not isinstance(node, ast.Assert):
         return False
     test = node.test
@@ -47,9 +77,7 @@ def asserts_emptiness(node: ast.stmt) -> bool:
     if not (isinstance(test, ast.Compare) and len(test.ops) == 1 and isinstance(test.ops[0], ast.Eq)):
         return False
     right = test.comparators[0]
-    if isinstance(right, ast.List | ast.Tuple | ast.Set) and not right.elts:
-        return True
-    if isinstance(right, ast.Dict) and not right.keys:
+    if _is_empty_collection(right):
         return True
     return isinstance(right, ast.Constant) and right.value == 0
 
@@ -59,6 +87,12 @@ def proves_it_scanned(node: ast.stmt) -> bool:
 
     Any of these fails when the walk returns nothing, which is the property that
     separates a measured clean result from a blind one.
+
+    This predicate governs the MODULE-level exemption, so it must speak only to
+    the shared substrate. Equality against a planted literal is deliberately NOT
+    accepted here -- see :func:`asserts_a_non_empty_result` for why that is a
+    function-scoped signal and why conflating the two silently weakens the
+    screen.
     """
     if not isinstance(node, ast.Assert):
         return False
@@ -66,6 +100,56 @@ def proves_it_scanned(node: ast.stmt) -> bool:
     if isinstance(test, ast.Compare) and len(test.ops) == 1:
         return isinstance(test.ops[0], ast.GtE | ast.Gt | ast.In)
     return isinstance(test, ast.Name | ast.Call)
+
+
+def _is_non_empty_literal(node: ast.expr) -> bool:
+    """True when ``node`` is a literal no empty walk could have produced."""
+    if isinstance(node, ast.List | ast.Tuple | ast.Set):
+        return bool(node.elts)
+    if isinstance(node, ast.Dict):
+        return bool(node.keys)
+    return (
+        isinstance(node, ast.Constant)
+        and isinstance(node.value, int)
+        and not isinstance(node.value, bool)
+        and node.value != 0
+    )
+
+
+def asserts_a_non_empty_result(node: ast.stmt) -> bool:
+    """True when ``node`` asserts a call produced a specific non-empty value.
+
+    This is what makes a paired detector control not vacuous. A function
+    asserting ``detector(planted) == ["a.b"]`` alongside
+    ``detector(clean) == []`` is the anti-tautology proof itself: the empty
+    assertion is the quiet half of a control, not an unguarded corpus scan.
+    Without this distinction the screen flagged every such pair in the tree --
+    14 of 22 entries on the worklist -- burying the genuine findings under the
+    tests that do the most to prevent the defect being screened for.
+
+    Deliberately FUNCTION-scoped, and deliberately excluded from
+    :func:`proves_it_scanned`. Accepting it there would let a literal-input
+    control satisfy the module-level exemption and silence every genuine corpus
+    scan in the same file. That is not hypothetical: doing exactly that
+    suppressed a real finding in the locale-honesty module, whose controls run
+    on planted dictionaries while its sibling gates walk four shipped
+    catalogues. Proving a detector works says nothing about whether the corpus
+    it is pointed at exists.
+
+    Conservative about what counts as non-empty. A bare string comparison is
+    excluded even though it also proves execution, because over-accepting
+    produces this screen's dangerous error -- real vacuity left unflagged --
+    while under-accepting only produces noise.
+    """
+    if not isinstance(node, ast.Assert):
+        return False
+    test = node.test
+    return (
+        isinstance(test, ast.Compare)
+        and len(test.ops) == 1
+        and isinstance(test.ops[0], ast.Eq)
+        and _is_non_empty_literal(test.comparators[0])
+    )
 
 
 def screen(root: Path) -> tuple[int, list[tuple[str, str, int]]]:
@@ -90,6 +174,8 @@ def screen(root: Path) -> tuple[int, list[tuple[str, str, int]]]:
                 if not any(asserts_emptiness(n) for n in body):
                     continue
                 if module_proves or any(proves_it_scanned(n) for n in body):
+                    continue
+                if any(asserts_a_non_empty_result(n) for n in body):
                     continue
                 flagged.append((path.relative_to(root).as_posix(), func.name, func.lineno))
     return scanned, flagged
