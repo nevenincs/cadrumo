@@ -322,10 +322,10 @@ and a field-set reconciliation rather than indexing alone - the diseño row is
 is (description, cnae, iae_epigraph), so two diseño fields have no profile home and one
 profile field has no diseño counterpart.
 
-Template: the attribution-member aggregation module is a complete worked indexed reader
+Template: `src/cadrumo/application/aggregation/_atribucion_member.py:31` is a complete worked indexed reader
 - it enumerates indexed paths, groups by row, checks required fields per row and stamps
 per-row provenance. It has no writer, which is the same gap one section over. Do not
-copy the cotejo-apply indexed writer: it is the only indexed writer that ships and it is
+copy `src/cadrumo/application/user_profile/_cotejo_apply.py:83`: it is the only indexed writer that ships and it is
 not a repeatable section, but an object-typed field carrying row structure through an
 ad-hoc path convention with sub-fields undeclared in the schema. It works and it is the
 wrong shape to generalise.
@@ -376,31 +376,40 @@ belongs with its owner alongside the four placement violations. It also explains
 stale count: a number describing a shared ratchet has no owner, so nobody re-derives it
 in transit - the file list is attributable, the count is not.
 
-### composition-reproduction-still-open | medium | Both guards are proven inert; the end-to-end path is indicated and unexecuted
+### composition-reproduction-ran-and-did-not-reproduce | medium | The guards are inert as reported; the composition is harmless for a reason nobody had stated, and the original framing was too strong
 
-Open, and correctly so. The certificate provider paired with a profile carrying no
-fiscal identity was shown by execution to reach neither refusing guard: the credential
-guard returns before its blank check because that provider has no operator-configured
-credential, and the deferred session comparison admits because the expectation it would
-compare against is derived from the field that is absent. Both halves executed.
+Closed by execution after being carried as unverified. The unexecuted half was run,
+and it did not reproduce - which is a result rather than a non-event, because what
+stops it was not any of the three defences built for it.
 
-What was not executed is whether a foreign-identity session reaches the read that
-adopts. The guards were exercised by constructing a session directly, which proves the
-guards do not refuse and does not prove the path is reachable. The reasoning that it is
-reachable - a certificate provider mints its identity from the certificate subject, so
-a wrong certificate produces a foreign-identity session natively inside the active
-bucket, requiring no cross-bucket visibility - is read from source and not run.
+The guards are inert exactly as measured. For the certificate provider the credential
+guard returns before its blank check, having no operator-configured credential to
+compare, and the deferred session comparison admits because the expectation it would
+compare against is derived from the very field that is absent. Both halves executed;
+that stands.
 
-This is not operator-gated, unlike the post-auth salvage. Nothing in the chain needs a
-live authority read: the adoption half was already driven by execution, the guard half
-was driven headlessly, and the remaining piece is minting a certificate session with a
-chosen subject, which the auth test support already does with an arbitrary subject name
-including the compound form the identity parse reads. It is assignable to whoever holds
-the reproduction harness.
+What was never true is the implication drawn from it. The reproduction established, by
+tracing all three call sites, that the ownership guard's `incoming_identity` comes from
+the READ and never from the session - `apply_censal_read` passes the read's identity,
+and so do the file-ingest and manager-action call sites. **The guard compares the
+profile's recorded identity against the identity in the document; the session's
+identity is not an input to that comparison at any point.** So a certificate session
+bearing another taxpayer cannot by itself cause that taxpayer's data to be adopted.
+What would have to happen is that the read comes back describing them, which is
+precisely what the guard refuses.
 
-The plan step covering it stays unchecked. That is the flagged-unverified claim
-surviving as a checkbox that refuses to close rather than decaying into an assumption,
-which is the outcome the disclosure was for.
+The certificate provider's role in the original finding was therefore real but
+**indirect**: it explained why no expectation existed for the deferred auth check, not
+a channel by which a foreign identity reached the adoption. The finding's guard-level
+claims survive; its composed severity does not, and this entry supersedes the stronger
+reading rather than quietly narrowing it.
+
+Two things this leaves. The property is load-bearing and undeclared, which is the same
+shape as the accidental protection recorded elsewhere in this document - so it is being
+pinned by a test rather than left as an incidental consequence of how the parameters
+are wired. And the honest sequence is worth keeping: the claim was flagged unverified,
+survived as an unchecked step rather than decaying into an assumption, and was retired
+by being run. The disclosure did its job; the run is what settled it.
 
 ### rulings-overturned-by-their-own-evidence | medium | Three decisions were reversed by measurement after being ruled, and the reversals share a shape
 
