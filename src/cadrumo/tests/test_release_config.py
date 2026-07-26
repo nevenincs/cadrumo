@@ -87,6 +87,14 @@ class ReleasePleaseConfig(BaseModel):
     separate_pull_requests: bool = Field(alias="separate-pull-requests")
     draft: bool
     prerelease: bool
+    #: Whether a BREAKING CHANGE below 1.0.0 bumps the minor rather than
+    #: jumping to a major. Declared explicitly because leaving it unset is not
+    #: a neutral position: release-please defaults it to false, under which a
+    #: breaking commit takes 0.x straight to 1.0.0 - and 1.0.0 is coupled by a
+    #: tripwire to flipping COMPATIBILITY_REGIME to RELEASED, which freezes the
+    #: per-format durability floors one way. The default would therefore decide
+    #: a data-durability question on the evidence of a renamed CLI flag.
+    bump_minor_pre_major: bool = Field(alias="bump-minor-pre-major")
     changelog_path: str = Field(alias="changelog-path")
     packages: dict[str, ReleasePleasePackage]
     changelog_sections: list[ChangelogSection] = Field(alias="changelog-sections")
@@ -210,6 +218,18 @@ def test_release_please_config_is_well_formed() -> None:
 
     assert config.release_type == "python"
     assert config.changelog_path == "CHANGELOG.md"
+    # Pinned, not merely declared. release-please defaults this to false, under
+    # which a BREAKING CHANGE takes 0.x straight to 1.0.0 - and the compatibility
+    # tripwire couples 1.0.0 to flipping COMPATIBILITY_REGIME to RELEASED, which
+    # freezes the per-format durability floors one way with no rollback in code.
+    # Accepting the key without pinning its value would let a silent flip back to
+    # false re-arm that path, so the decision is asserted here rather than left to
+    # whatever the tool defaults to.
+    assert config.bump_minor_pre_major is True, (
+        "bump-minor-pre-major must stay true while COMPATIBILITY_REGIME is PRE_RELEASE: "
+        "flipping it lets a breaking commit cut 1.0.0, which the compatibility tripwire "
+        "treats as a released-data durability commitment"
+    )
     assert "." in config.packages
     root_pkg = config.packages["."]
     assert root_pkg.package_name == "cadrumo"
