@@ -61,12 +61,19 @@ by adjusting the profile to match itself.
 
 Modelo 100 is deliberately absent from the real-corpus specimen table. Its three
 real renders print the box number in a smaller font overlapping the amount's own
-x-range, word assembly merges the two, and every one of its 21 targets therefore
+x-range, the two merge into one token, and every one of its 21 targets therefore
 yields a value that is neither the printed amount nor a parse failure -- while
 coverage scores 1.0 and satisfies the profile's floor of 1. Listing it here with
 weakened assertions would reproduce the green-suite-over-a-broken-profile
-pathology this module exists to end, so it is excluded until the merge is fixed
-where it happens, in word assembly.
+pathology this module exists to end, so it is excluded, and the exclusion is
+asserted below rather than merely described here.
+
+The merge happens in text extraction, not in the word path: these targets are
+``named_label``, which reads page text. Separating the two fonts is necessary but
+not sufficient, because the box number is printed after the value and
+``named_label`` captures the last token on the line, so the separated form yields
+the box number instead. Repairing it needs a second, estate-wide change to what
+"the value on this line" means, which is why it is not done here.
 
 See Also:
     :mod:`~tests.fixtures.manual_annexes.tests.test_manual_annex_provenance`
@@ -548,4 +555,69 @@ def test_the_suite_still_exercises_the_blank_box_tolerance() -> None:
     assert any(coverage < Decimal(1) for coverage in coverages.values()), (
         "no bundled AEAT render exercises a blank optional box any more; the coverage "
         f"floors are no longer evidenced by these specimens: {coverages}"
+    )
+
+
+_M100_EXCLUDED_REVISIONS: tuple[tuple[str, int, str], ...] = (
+    ("100", 2021, "0A"),
+    ("100", 2022, "0A"),
+    ("100", 2023, "0A"),
+)
+"""The Modelo 100 revisions that have a real render, and are excluded anyway."""
+
+
+@pytest.mark.parametrize("modelo,filing_year,period", _M100_EXCLUDED_REVISIONS, ids=lambda v: str(v))
+def test_modelo_100_is_excluded_because_its_values_are_not_the_printed_amounts(
+    modelo: str,
+    filing_year: int,
+    period: str,
+) -> None:
+    """Modelo 100 is absent from the table above, and this is why.
+
+    Its three real renders print the box number in a six-point font whose x-range
+    overlaps the nine-point amount. Word assembly merges the two, so every target
+    yields a number that is neither the printed amount nor a parse failure --
+    casilla ``0545`` extracts as ``10010000.50405`` where the form prints
+    ``1.001.000,00`` and the box number ``0545``. Coverage scores 1.0 and
+    satisfies the profile's floor of 1 while not one value is the one on the page.
+
+    This is not a pass, and it must not be readable as one. What is asserted is
+    the *limitation*: the extracted values do not agree with what the sanitiser
+    declares it wrote, so this profile cannot be enrolled above. An author who
+    enrols Modelo 100 has to delete this test, and deleting it means reading why.
+
+    It is a deliberately weak claim, and weak in a single direction. If the merge
+    is repaired the values become the printed amounts, this test fails, and the
+    correct response is to enrol Modelo 100 in ``_REAL_SPECIMENS`` and delete
+    this. Failure here is the good outcome.
+
+    Its sensitivity was measured rather than assumed, and it is narrower than it
+    looks: driving a repaired extraction over ``2021-0A`` makes exactly one of 19
+    recovered targets agree with the declared constant. The other 18 print
+    ``1.001.000,00``, which the manifest does not declare at all -- the sanitiser
+    is length-preserving and wrote the eight-character constant into
+    eight-character fields and a twelve-character variant into twelve-character
+    ones, while recording only the former. So one target carries this gate, and a
+    repair that somehow left ``0510`` merged would slip past it.
+
+    See the campaign record for the measurements: no ``bbox_anchored`` value
+    offset can express the overlapping layout, and the merge happens in text
+    extraction rather than in the word path the profile's strategy would reach.
+    """
+    specimen = _RealRenderSpecimen(modelo, f"{filing_year}-{period}", filing_year, period, frozenset())
+    constants = _sanitiser_amount_constants(specimen)
+    amounts = _extracted_amounts(specimen)
+
+    assert amounts, (
+        f"{specimen.label}: extraction returned nothing, so the exclusion below describes "
+        f"a state this profile is no longer in"
+    )
+
+    agreeing = {c: v for c, v in amounts.items() if v in constants}
+
+    assert not agreeing, (
+        f"{specimen.label}: {len(agreeing)} target(s) now extract the amount the sanitiser "
+        f"declares it wrote ({agreeing}). The box-number merge this exclusion documents may "
+        f"be fixed -- re-measure, and if so enrol Modelo 100 in the real-render table above "
+        f"and delete this test rather than adjusting it"
     )
