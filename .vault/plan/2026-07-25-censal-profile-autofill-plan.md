@@ -39,6 +39,7 @@ Give an authentication mode somewhere to keep what it needs, on the encrypted pr
 - [x] `P01.S20` - Retire the dead censo-derived provenance token and make its gate enumerate the published set rather than naming one member; `src/cadrumo/application/user_profile`.
 - [ ] `P01.S23` - Salvage the authenticated Clave session a post-auth navigation failure was closing unread, so a spent second factor becomes a retryable navigation; `src/cadrumo/adapters/outbound/aeat/auth/_clave_movil.py`.
 - [x] `P01.S24` - Pin the session-identity comparison the certificate provider's only fail-closed check rests on, asserting the refusal and the per-return wiring rather than the expectation alone; `src/cadrumo/application/auth/tests/test_session_identity_comparison.py`.
+- [ ] `P01.S28` - Reproduce whether a certificate provider paired with a cleared profile identity reaches any refusing guard at all, treating the composed two-agent report as unsettled until execution decides it either way, and naming what stops the read if anything does; `src/cadrumo/application/auth/_sessions.py`.
 
 ### Phase `P02` - Read-only censal reader
 
@@ -47,6 +48,8 @@ Build the sede reader for mis datos censales, pinned to the consulta view and pr
 - [x] `P02.S04` - Discover the authenticated consulta URL and DOM for mis datos censales against a live session and record the selectors; `src/cadrumo/adapters/outbound/aeat/sede`.
 - [x] `P02.S05` - Build the read-only censal reader in the sede adapter over the shared authenticated session and access gate; `src/cadrumo/adapters/outbound/aeat/sede`.
 - [x] `P02.S06` - Prove the reader cannot write, failing closed at runtime on any BU36- or .zul or ModifDomiDual landing and on the /Sede/procedimientoini/ launcher prefix, with a static string check kept only as the weaker of two walls; `src/cadrumo/adapters/outbound/aeat/sede/tests`.
+- [ ] `P02.S29` - DEFERRED pending an operator probe, decide whether the capture-path read guard's host set should follow the module default it documents, the answer turning on what AEAT actually serves rather than on anything the tree can settle; `src/cadrumo/adapters/outbound/aeat/sede`.
+- [ ] `P02.S30` - DEFERRED as unmeasured rather than cleared, assess the five remaining pinned readers the host-pinning sweep never individually examined, which the closed item carried forward instead of resolving; `src/cadrumo/adapters/outbound/aeat`.
 
 ### Phase `P03` - Autofill and retirement
 
@@ -60,6 +63,11 @@ Commit pulled censal facts through the cotejo authority, and delete the register
 - [x] `P03.S15` - Offer the censal pull as a manager action gated on the auth mode having everything it needs, unavailable with an instructive refusal until the credentials are complete; `src/cadrumo/entrypoints/cli/_config/_manager_actions.py`.
 - [x] `P03.S21` - Feed the censal ownership refusal from the read itself rather than from a projected tuple named for adoption, so editing that tuple cannot disarm the guard; `src/cadrumo/application/user_profile/_censo_sync.py`.
 - [x] `P03.S22` - Make the clear branch consult provenance as the value branch does, so a clear the app wrote cannot earn the protection reserved for an operator decision; `src/cadrumo/application/user_profile/_censo_sync.py`.
+- [x] `P03.S25` - Bind the operator guide's account of what the censal pull fills to CENSAL_ADOPTABLE_PATHS with a both-directions parity gate, the page having promised the fiscal ID it never adopts while the ownership guard's deliberate first-read allowance kept the failure silent for a blank-identity operator; `docs/how-to/censo-update.md`.
+- [ ] `P03.S26` - Prove by execution whether the ownership guard reads a deliberately cleared identity as a first read, and close the adoption path if it does, a cleared identity being an operator decision rather than an absent one; `src/cadrumo/application/user_profile/_censo_sync.py`.
+- [ ] `P03.S27` - Rewrite this campaign's censo pull door docstring to assert what the test pins in the present tense with no narration of the module's previous state, then re-run the marker-integrity gate and quote its exit line rather than re-reading the file; `src/cadrumo/entrypoints/cli/_config/tests/test_censo_pull_verb.py`.
+- [ ] `P03.S31` - DEFERRED as out of scope for the window-order work, decide whether the effective-dating projections should honour valid_to so an expired window stops projecting, the site recording the gap in place; `src/cadrumo/application/user_profile/_projections.py`.
+- [ ] `P03.S32` - DEFERRED as a property of the authority's surface, keep the regime facts operator-entered while AEAT publishes no read-only surface carrying them, this being the one deferral no effort inside this campaign can close; `src/cadrumo/application/live`.
 
 ## Description
 
