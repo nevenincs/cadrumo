@@ -9,9 +9,6 @@ related:
   - "[[2026-07-25-account-distribution-standard-plan]]"
 ---
 
-
-
-
 # DONE as reviewed instructions, nothing pushed to either repository. Reference authored covering both developer CLIs, grounded in structured API reads of the live repositories on 2026-07-25 and attributing every fact to what it was read from. The consequential finding is that the derived matrix does NOT select the managed installers for these two, because their users can be assumed to hold the toolchain, so vaultspec-core's existing in-repository bucket is RETIRED rather than migrated into the shared repository, which is the opposite of the dashboard instruction and easy to get backwards. vaultspec-rag needs only the standalone-executable tier it currently lacks. Neither product declares a tag trigger, verified
 
 ## Scope

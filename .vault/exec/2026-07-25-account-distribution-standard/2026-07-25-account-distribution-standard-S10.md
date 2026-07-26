@@ -9,9 +9,6 @@ related:
   - "[[2026-07-25-account-distribution-standard-plan]]"
 ---
 
-
-
-
 # DONE as reviewed instructions, nothing pushed. Reference authored for vaultspec-dashboard, which the derived matrix places at the full channel set because its users cannot be assumed to hold the toolchain, so its bucket manifest DOES migrate into the shared repository. It opens with a blocking user-facing defect found during the review, the committed bucket/vaultspec.json is unusable three ways over, its hash is sixty-four zeros, the asset its URL names has never existed at that release because the real assets carry no version in their filename, and it pins 0.1.2 while the newest release v0.1.4 carries zero assets, so an install fails at download. The manifest also claims the unqualified family name, matching the winget defect. Its backward-bump guard is preserved as the shared tested module rather than only as intent
 
 ## Scope

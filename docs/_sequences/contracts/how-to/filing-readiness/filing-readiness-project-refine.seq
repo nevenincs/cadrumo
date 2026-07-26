@@ -1,3 +1,3 @@
 @step Refine the projection with withholdings, personal circumstances, or specific boxes.
-@static aeat app modelo project --year 2026 --ccaa cataluna --casilla 0513=1150 --binding KEY=VALUE
-@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
+@static aeat app modelo project --year 2026 --ccaa cataluna --casilla 0513=1150 --binding renta-2026-modelo-111-retenciones-periodicas=1200
+@blocked unconverted Measured exit 2: no registry revision covers Modelo 100 filing year 2026, and on a covered year the projection also needs the date-valued profile facts a Renta filer declares.

@@ -15,16 +15,6 @@ related:
   - '[[2026-07-17-post-release-distribution-audit]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 # `post-release-distribution` plan
 
 ### Phase `P01` - Prove local channel artifacts in real acquisition environments

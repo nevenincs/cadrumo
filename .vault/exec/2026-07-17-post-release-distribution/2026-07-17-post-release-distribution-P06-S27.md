@@ -9,9 +9,6 @@ related:
   - "[[2026-07-17-post-release-distribution-plan]]"
 ---
 
-
-
-
 # Supersede the topology ADR through the pipeline rather than the in-place rewrite already landed, the superseding record must answer the two deleted objections, sibling-serving answered by the shared repo and no-precedent answered by verda-cloud/homebrew-tap carrying Formula and bucket together, and must reconcile the scoop-runner-topology ADR explicitly as unaffected because it rules on which runner executes the lane not where manifests live. Ownership is with account-distribution-lead if its account-wide ruling subsumes the cadrumo scope, asked 2026-07-25 and awaiting reply. GATE, vault check all passes and the superseded record carries superseded_by
 
 ## Scope

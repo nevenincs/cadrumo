@@ -87,6 +87,7 @@ To see the reference number for a saved filing:
 After you have the `work_unit_id`, address the same saved work by ID:
 
 ```{cli-sequence} filing-spine-address-by-id
+:verify: Confirm the reference number addresses the same saved filing across status, calculate, and revisions.
 ```
 
 Prefer the visible target for hand-run commands. Use the reference number when
@@ -111,6 +112,7 @@ global, but the filing work is selected on each command. To work on a different
 filing, pass a different visible target or pass a different `work_unit_id`:
 
 ```{cli-sequence} filing-spine-other-target
+:verify: Confirm the second quarter resolves as a separate filing target.
 ```
 
 ## A calculation revision is one saved result
@@ -139,6 +141,7 @@ If you need to view one specific saved calculation, type its reference number
 after the command:
 
 ```{cli-sequence} filing-spine-revision-by-id
+:verify: Confirm the reference number resolves one saved calculation and its values.
 ```
 
 Reference numbers to know:
@@ -194,6 +197,7 @@ target:
 You can also pass exact IDs on commands that accept them:
 
 ```{cli-sequence} filing-spine-exact-ids
+:verify: Confirm the exact reference numbers verify, file, and export the same revision.
 ```
 
 For the complete option list, see the [CLI reference](../cli/index.rst).

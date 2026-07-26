@@ -1,6 +1,6 @@
 @step List a 303 quarter's saved revisions.
 @static aeat app modelo work revisions --modelo 303 --year 2025 --period 1T
-@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
+@blocked unconverted Reads fine once 2025/1T is filed, but an isolated run must file it and that refuses here: work file rejects an already-presentado revision instead of returning the existing record.
 @step Inspect the filed revision for that quarter.
 @static aeat app modelo work revision --modelo 303 --year 2025 --period 1T --select filed
-@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
+@blocked unconverted Reads fine once 2025/1T is filed, but an isolated run must file it and that refuses here: work file rejects an already-presentado revision instead of returning the existing record.

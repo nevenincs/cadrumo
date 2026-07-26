@@ -9,9 +9,6 @@ related:
   - "[[2026-07-25-account-distribution-standard-plan]]"
 ---
 
-
-
-
 # DONE in this tree, BLOCKED externally. The publication authority now lands both the cadrumo formula and the cadrumo bucket manifest in the one shared account repository, each push staging exactly its own product-scoped path, so a second product is one more formula file plus one more manifest file and creates nothing. Proven by a conformance predicate over the parsed workflow with a real negative control, the predicate rejects the pre-change in-repository push on its content and five substantive properties are rejected against the pre-change workflow, so the gate is not vacuous. The files cannot actually land until the operator creates nevenincs/homebrew-tap, which returned 404 on a structured query at 2026-07-25
 
 ## Scope

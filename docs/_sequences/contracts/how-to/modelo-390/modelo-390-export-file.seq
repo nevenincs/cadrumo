@@ -1,9 +1,9 @@
 @step Export the verified revision to a local fichero-BOE.
 @static aeat app modelo export --modelo 390 --year 2025 --period 0A --output ./modelo-390-2025.boe
-@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
+@blocked unconverted Needs the four filed 2025 quarters, which only this page's single-use annual preparation supplies; repeating it refuses because work file rejects an already-presentado revision.
 @step After you upload at the portal, record the local filed marker.
 @static aeat app modelo work file --modelo 390 --year 2025 --period 0A
-@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
+@blocked unconverted Needs the four filed 2025 quarters, which only this page's single-use annual preparation supplies; repeating it refuses because work file rejects an already-presentado revision.
 @step Reconcile the justificante against the filed record.
 @static aeat app modelo reconcile file --modelo 390 --year 2025 --period 0A --file ./390-2025-justificante.pdf
 @blocked operator-artifact Needs a real AEAT justificante PDF carrying a CSV; the bundled annex specimens carry none.

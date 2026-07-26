@@ -1,3 +1,13 @@
+:seed: intracomunitario-2026
+@step Declare the intra-community obligation so the quarter is a pending filing obligation.
+@setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01 --does-intracomunitario
+@setup aeat --format json app modelo work create --modelo 349 --year 2026 --period 1T
+@setup aeat --format json app modelo work calculate --modelo 349 --year 2026 --period 1T
+@setup aeat --format json app modelo work verify --modelo 349 --year 2026 --period 1T
 @step After you upload at the portal, record the local filed marker in the obligation window.
-@static aeat app modelo work file --modelo 349 --year 2026 --period 1T
-@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
+@result aeat --format json app modelo work file --modelo 349 --year 2026 --period 1T
+@expect result.modelo == "349"
+@expect result.filing_year == 2026
+@expect result.status == "vigente"
+@expect result.aeat_accepted == false
+@expect exit_code == 0

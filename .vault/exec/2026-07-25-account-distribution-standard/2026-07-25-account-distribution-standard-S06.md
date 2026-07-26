@@ -9,9 +9,6 @@ related:
   - "[[2026-07-25-account-distribution-standard-plan]]"
 ---
 
-
-
-
 # DONE. Both committed release pointers, the bucket manifest and the tap formula, are guarded against a backward bump before the push commits, because ordinary merge semantics can otherwise resurrect an older pointer and un-publish a newer version with no workflow failing. Ported from the sort -V shell idiom that vaultspec-core and vaultspec-dashboard each reinvented independently, into a tested module handling both pointer shapes, reading the formula version from its release-asset URL since the generated formula carries no version stanza, comparing numerically so 0.2.10 correctly beats 0.2.9, and refusing an unreadable pointer rather than treating it as absent, which is the failure mode that would silently disable the guard exactly when repository state is unexpected. Twenty-nine real-behaviour tests over real files, and the workflow gate pins that the guard reads the clone before the copy, since checking after would compare the file with itself
 
 ## Scope

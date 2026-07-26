@@ -9,9 +9,6 @@ related:
   - "[[2026-07-25-account-distribution-standard-plan]]"
 ---
 
-
-
-
 # DONE. The required evidence set now derives from the channels a release actually claims, computed as the union of those channels' declared evidence rows, floored at the language-native registry so it can never collapse to nothing and leave the readiness gate measuring zero. No gate was weakened and no row was removed, all eleven rows survive as ALL_DISTRIBUTION_ROWS and a channel still cannot be claimed without its passing row, what changed is only that an unclaimed channel no longer blocks a claimed one. The documentation claims gate was deliberately re-anchored on the FULL set rather than the claimed subset, because a documentation claim is itself the act of claiming a channel, and it gained an anti-vacuity test asserting every declared row is reachable by some claim pattern
 
 ## Scope

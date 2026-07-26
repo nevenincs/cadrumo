@@ -9,9 +9,6 @@ related:
   - "[[2026-07-25-account-distribution-standard-plan]]"
 ---
 
-
-
-
 # DONE, with a finding. No cadrumo workflow declares a tag trigger, verified by parsing the trigger block of all fourteen workflow files rather than grepping them, so there was nothing to remove here and this step closes as already-conformant rather than as work performed. Converted into a regression gate so it stays true, publication must be dispatch-only and a tag filter on the publication authority now fails the suite. The defect this step was written for lives in the sibling products, and the removal instruction is carried in their migration references
 
 ## Scope

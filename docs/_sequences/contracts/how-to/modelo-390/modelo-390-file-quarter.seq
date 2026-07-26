@@ -1,3 +1,3 @@
 @step Record the local filed marker for one 303 quarter, in its obligation window.
 @static aeat app modelo work file --modelo 303 --year 2025 --period 1T
-@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
+@blocked sandbox-posture This page's annual chain files 2025/1T ahead of here, so the same revision refuses: "current revision is in state 'presentado'; filing requires a verified-complete revision".

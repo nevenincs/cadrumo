@@ -85,10 +85,12 @@ Export the verified declaration:
 ```
 
 After you file at the portal, record the local marker, then
-[reconcile against the justificante](reconcile.md). The marker records a filing
-you have already presented at the portal, so it is shown as a display frame:
+[reconcile against the justificante](reconcile.md). The marker needs a pending
+filing obligation, so the preparation below declares the intra-community
+obligation on the profile first:
 
 ```{cli-sequence} modelo-349-file
+:verify: Confirm the local filed marker records the quarter without claiming AEAT accepted it.
 ```
 
 The marker is optional and only applies while the obligation window is open;

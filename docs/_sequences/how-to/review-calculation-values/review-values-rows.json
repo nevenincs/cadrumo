@@ -1,0 +1,385 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "edit",
+        "docs-sequence-sandbox",
+        "--quiet",
+        "--entity-type",
+        "attribution_entity"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "Profile\tdocs-sequence-sandbox\nStatus\tupdated\nNext\taeat app modelo work create\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "create",
+        "--modelo",
+        "184",
+        "--year",
+        "2024",
+        "--period",
+        "0A",
+        "--revision",
+        "2015-y-siguientes"
+      ],
+      "captures": [
+        {
+          "json_path": "result.work_unit_id",
+          "name": "work_unit_id",
+          "value": "752b0a6641a6bbd10b51bbfc5ffbbaf83ccedd8eb5797f2d43f57dafa4840b6c"
+        }
+      ],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.create",
+        "notices": [],
+        "result": {
+          "applicability_guard_bypassed": false,
+          "bucket_id": "<bucket-id>",
+          "causante_ccaa": null,
+          "created_at": "2026-04-01T09:00:00+00:00",
+          "current_calculation_revision_id": null,
+          "current_filing_record_id": null,
+          "discard_reason": null,
+          "discarded_at": null,
+          "discarded_by": null,
+          "filed_calculation_revision_id": null,
+          "filing_year": 2024,
+          "modelo": "184",
+          "name": "184-2024-0A",
+          "name_applied": null,
+          "operation": "modelo.work.create",
+          "period": {
+            "code": "0A",
+            "filing_year": 2024
+          },
+          "revision_id": "2015-y-siguientes",
+          "short_current_calculation_revision_id": null,
+          "short_filed_calculation_revision_id": null,
+          "short_work_unit_id": "7dafa4840b6c",
+          "state": "borrador",
+          "status": "created",
+          "status_message": "New work unit created.",
+          "updated_at": "2026-04-01T09:00:00+00:00",
+          "work_unit_id": "752b0a6641a6bbd10b51bbfc5ffbbaf83ccedd8eb5797f2d43f57dafa4840b6c"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "calculate",
+        "752b0a6641a6bbd10b51bbfc5ffbbaf83ccedd8eb5797f2d43f57dafa4840b6c",
+        "--row",
+        "miembro nif=45678912S porcentaje=60 importe=10000",
+        "--row",
+        "miembro nif=00000001R porcentaje=40 importe=5000"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.calculate",
+        "notices": [
+          {
+            "code": "modelo.work.calculate.plazo_vencido_unassessed_preview",
+            "context": {
+              "article_27_assessment_status": "unassessed",
+              "closes_on": "2025-02-28",
+              "conditional_recargo_preview_band": "after_12_months",
+              "conditional_recargo_preview_interest_applies": "True",
+              "conditional_recargo_preview_pct": "15.00",
+              "conditional_recargo_preview_reference_on": "2026-04-01",
+              "days_overdue": "397",
+              "legal_refs": "ley-58-2003:art-27.2"
+            },
+            "message": "WARNING: voluntary filing period expired (Art. 27 LGT). The displayed rate is an unassessed preview; this application does not determine surcharge or interest liability.",
+            "severity": "warning",
+            "suggestion": null
+          }
+        ],
+        "result": {
+          "authorization_state": null,
+          "binding_overrides": {},
+          "calculation_revision_id": "54c0d3277e8e3bdde2bd2de304e61b331191191adcc4d0e42a205dbf0c6d46ab",
+          "casilla_values": {
+            "decl.ejercicio": "2024",
+            "decl.tipo-declaracion": "0",
+            "tipo2.clave": "0",
+            "tipo2.miembro-nif": "0",
+            "tipo2.renta-atribuible-importe": "0",
+            "tipo2.subclave": "0"
+          },
+          "created_at": "2026-04-01T09:00:00+00:00",
+          "deadline": {
+            "closes_on": "2025-02-28",
+            "conditional_recargo_preview": {
+              "assessment_status": "unassessed",
+              "band_id": "after_12_months",
+              "interest_applies": true,
+              "legal_ref": "ley-58-2003:art-27.2",
+              "rate_reference_on": "2026-04-01",
+              "surcharge_pct": "15.00"
+            },
+            "days_overdue": 397,
+            "days_remaining": null
+          },
+          "detail_rows": [
+            {
+              "fields": {
+                "importe": "10000",
+                "nif": "sha256:1a1d79e0",
+                "nombre": "",
+                "pais": "ES",
+                "porcentaje": "60"
+              },
+              "index": 1,
+              "row_type": "miembro"
+            },
+            {
+              "fields": {
+                "importe": "5000",
+                "nif": "sha256:5637d0fd",
+                "nombre": "",
+                "pais": "ES",
+                "porcentaje": "40"
+              },
+              "index": 2,
+              "row_type": "miembro"
+            }
+          ],
+          "filed_at": null,
+          "filed_by": null,
+          "input_values_by_casilla_id": {
+            "decl.ejercicio": "2024"
+          },
+          "modality": null,
+          "modality_reason": null,
+          "observations": [
+            {
+              "casilla_id": "decl.ejercicio",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-1",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2025"
+              ],
+              "value": "2024"
+            },
+            {
+              "casilla_id": "decl.tipo-declaracion",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-1",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "casilla_id": "tipo2.clave",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-88",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2025",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "casilla_id": "tipo2.miembro-nif",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-86",
+                "ley-35-2006:art-87",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2025",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "casilla_id": "tipo2.renta-atribuible-importe",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-86",
+                "ley-35-2006:art-87",
+                "ley-35-2006:art-88",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2025",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "casilla_id": "tipo2.subclave",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-88",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2025",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            }
+          ],
+          "operation": "modelo.work.calculate",
+          "relation_overrides": {},
+          "result_summary": [
+            {
+              "casilla_id": "decl.ejercicio",
+              "label": "Tax year the return refers to",
+              "localized_labels": {
+                "ca": "Exercici a què es refereix la declaració",
+                "en": "Tax year the return refers to",
+                "hu": "A bevallás tárgyát képező adóév"
+              },
+              "role": "key_figure",
+              "value": "2024"
+            },
+            {
+              "casilla_id": "decl.tipo-declaracion",
+              "label": "Type of return (original / replacement / supplementary)",
+              "localized_labels": {
+                "ca": "Tipus de declaració (originària / substitutiva / complementària)",
+                "en": "Type of return (original / replacement / supplementary)",
+                "hu": "A bevallás típusa (eredeti / helyettesítő / kiegészítő)"
+              },
+              "role": "key_figure",
+              "value": "0"
+            },
+            {
+              "casilla_id": "tipo2.clave",
+              "label": "Attributed-income type key (A=movable capital, C=real-estate capital, D=economic activities, F=gains/losses excl. transfer, G=gains/losses on transfer, I=IRPF deductions, J=IS deductions, K=withholdings borne, L=excess negative income from no-treaty countries)",
+              "localized_labels": {
+                "ca": "Clau del tipus de renda atribuïda (A=capital mobiliari, C=capital immobiliari, D=activitats econòmiques, F=guanys/pèrdues sense transmissió, G=guanys/pèrdues per transmissió, I=deduccions IRPF, J=deduccions IS, K=retencions suportades, L=excés de rendes negatives de països sense conveni)",
+                "en": "Attributed-income type key (A=movable capital, C=real-estate capital, D=economic activities, F=gains/losses excl. transfer, G=gains/losses on transfer, I=IRPF deductions, J=IS deductions, K=withholdings borne, L=excess negative income from no-treaty countries)",
+                "hu": "A hozzárendelt jövedelem típuskódja (A=ingó vagyoni tőke, C=ingatlan vagyoni tőke, D=gazdasági tevékenységek, F=nyereség/veszteség átruházás nélkül, G=nyereség/veszteség átruházással, I=IRPF-levonások, J=IS-levonások, K=viselt visszatartások, L=nem szerződéses országokból származó negatív jövedelem többlete)"
+              },
+              "role": "key_figure",
+              "value": "0"
+            },
+            {
+              "casilla_id": "tipo2.subclave",
+              "label": "Attributed-income subtype key (granularity by domestic/foreign geographic origin, applicable reductions, etc.)",
+              "localized_labels": {
+                "ca": "Subclau del tipus de renda atribuïda (granularitat per origen geogràfic Espanya/estranger, reduccions aplicables, etc.)",
+                "en": "Attributed-income subtype key (granularity by domestic/foreign geographic origin, applicable reductions, etc.)",
+                "hu": "A hozzárendelt jövedelem altípuskódja (belföldi/külföldi eredet szerinti részletezés, alkalmazandó csökkentések stb.)"
+              },
+              "role": "key_figure",
+              "value": "0"
+            },
+            {
+              "casilla_id": "tipo2.miembro-nif",
+              "label": "NIF of the entity member to whom the income is attributed (partner, co-owner, heir, participant)",
+              "localized_labels": {
+                "ca": "NIF del membre de l'entitat al qual s'atribueix la renda (soci, comuner, hereu, partícip)",
+                "en": "NIF of the entity member to whom the income is attributed (partner, co-owner, heir, participant)",
+                "hu": "Az entitás azon tagjának adóazonosítója, akinek a jövedelmet hozzárendelik (tag, résztulajdonos, örökös, résztvevő)"
+              },
+              "role": "key_figure",
+              "value": "0"
+            },
+            {
+              "casilla_id": "tipo2.renta-atribuible-importe",
+              "label": "Amount of income attributable / net return attributable to the entity member (unsigned, no decimal comma, in euros)",
+              "localized_labels": {
+                "ca": "Import de la renda atribuïble / rendiment net atribuïble al membre de l'entitat (sense signe, sense coma decimal, en euros)",
+                "en": "Amount of income attributable / net return attributable to the entity member (unsigned, no decimal comma, in euros)",
+                "hu": "A hozzárendelhető jövedelem / az entitás tagjának hozzárendelhető nettó hozam összege (előjel nélkül, tizedesvessző nélkül, euróban)"
+              },
+              "role": "key_figure",
+              "value": "0"
+            }
+          ],
+          "saved": true,
+          "saved_confirmation": "Saved as draft calculation revision 54c0d3277e8e3bdde2bd2de304e61b331191191adcc4d0e42a205dbf0c6d46ab (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 184 --year 2024 --period 0A` and re-inspect this one with `aeat app modelo work revision 54c0d3277e8e3bdde2bd2de304e61b331191191adcc4d0e42a205dbf0c6d46ab`.",
+          "state": "borrador",
+          "superseded_at": null,
+          "updated_at": "2026-04-01T09:00:00+00:00",
+          "verified_at": null,
+          "verified_by": null,
+          "work_unit_id": "752b0a6641a6bbd10b51bbfc5ffbbaf83ccedd8eb5797f2d43f57dafa4840b6c"
+        },
+        "schema_version": "2",
+        "status": "warning"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "review-values-rows"
+}

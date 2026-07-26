@@ -1,0 +1,20 @@
+---
+generated: true
+tags:
+  - '#index'
+  - '#settings-route-derivation-cost'
+date: '2026-07-25'
+modified: '2026-07-25'
+related:
+  - '[[2026-07-25-settings-route-derivation-cost-research]]'
+---
+
+# `settings-route-derivation-cost` feature index
+
+Auto-generated index of all documents tagged with `#settings-route-derivation-cost`.
+
+## Documents
+
+### research
+
+- `2026-07-25-settings-route-derivation-cost-research` - `settings-route-derivation-cost` research: `Per-handle Settings re-derivation cost on the repository-handle path`

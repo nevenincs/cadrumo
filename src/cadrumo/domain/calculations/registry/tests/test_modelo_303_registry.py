@@ -67,7 +67,6 @@ _M303_PRORRATA_REGULARIZACION_SOURCE_PERIODS = ("1T", "2T", "3T", "4T")
 _M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION = {
     "2009-y-siguientes": frozenset(
         {
-            "ley-37-1992:art-84",
             "ley-37-1992:art-88",
             "ley-37-1992:art-90",
             "ley-37-1992:art-91",
@@ -80,9 +79,6 @@ _M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION = {
     ),
     "2023-y-siguientes": frozenset(
         {
-            "ley-37-1992:art-9",
-            "ley-37-1992:art-79",
-            "ley-37-1992:art-84",
             "ley-37-1992:art-88",
             "ley-37-1992:art-90",
             "ley-37-1992:art-91",

@@ -25,6 +25,12 @@ import pytest
 import typer
 from typer.main import get_command as _typer_get_command
 
+# ``config.profile.create`` / ``config.profile.edit`` register in
+# application.wizard._results (their real producer), not a CLI payload
+# module; import it here for the same reason as the two imports below —
+# without it SCHEMA_REGISTRY lacks both keys at collection time and
+# test_registered_schema_envelope_round_trips silently skips them.
+from ....application import wizard as wizard
 from ....application.ledger import (
     LedgerCatalogueResetReport,
     LedgerRemovalBlocker,
@@ -450,6 +456,83 @@ def test_cli_has_no_bare_emit_definition_import_or_call() -> None:
     assert violations == [], (
         "Bare CLI emit route detected; every CLI result must route through "
         "_emit_envelope with a registered OutputSchema. Violations:\n  " + "\n  ".join(violations)
+    )
+
+
+# ---------------------------------------------------------------------
+# emit_json_success bypass gate
+# ---------------------------------------------------------------------
+#
+# test_cli_has_no_bare_emit_definition_import_or_call (above) catches a
+# bespoke ``_emit`` re-implementation, but it is scoped to
+# ``entrypoints/cli`` and matches only the literal name ``_emit`` — it
+# cannot see a command surface OUTSIDE that root calling
+# core.json_contract.emit_json_success directly under its real name. The
+# setup wizard (application.wizard._commands) did exactly that: it built a
+# raw dict and called emit_json_success itself, bypassing both the
+# sandbox-active notice _emit_envelope injects for every other command and
+# the strict registered OutputSchema validation. emit_json_success itself
+# cannot carry the sandbox notice — core.json_contract must not import the
+# adapters that read a bucket manifest — so
+# application.operator_output.emit_operator_json_success is the one
+# funnel that resolves and injects it before delegating to the low-level
+# primitive. This gate scans both entrypoints/cli AND application (every
+# layer that can emit CLI JSON) for a bare emit_json_success import or
+# call outside that one funnel and its one documented exception.
+_EMIT_JSON_SUCCESS_ALLOWED_MODULES: frozenset[str] = frozenset(
+    {
+        # The sanctioned funnel: the only place a bare call is the
+        # implementation, not a bypass.
+        "src/cadrumo/application/operator_output/_emit.py",
+        # The CLI transport's own --help / --version metadata-invocation
+        # fast path deliberately skips sandbox/active-profile resolution
+        # entirely for performance (see _emit_envelope); this is its one
+        # direct low-level call, forcing active_profile to None itself
+        # rather than routing through the funnel.
+        "src/cadrumo/entrypoints/cli/_common.py",
+    }
+)
+
+
+def test_no_bare_emit_json_success_call() -> None:
+    """Only the sanctioned funnel (and its one documented exception) may call ``emit_json_success``.
+
+    AST-scans every non-test module under ``entrypoints/cli`` and
+    ``application`` for a bare import or call of
+    ``emit_json_success`` (by name, attribute, or aliased import) outside
+    :data:`_EMIT_JSON_SUCCESS_ALLOWED_MODULES`. This is the structural
+    guarantee that the sandbox-active indicator cannot be dropped by a
+    future command surface that forgets to ask for it: there is exactly
+    one legitimate way to reach :class:`SchemaEnvelope` for an
+    operator-facing result.
+    """
+    roots = (Path("src/cadrumo/entrypoints/cli"), Path("src/cadrumo/application"))
+    violations: list[str] = []
+    for root in roots:
+        for path in sorted(root.rglob("*.py")):
+            if path.name.startswith("test_") or path.name == "conftest.py":
+                continue
+            relative = path.as_posix()
+            if relative in _EMIT_JSON_SUCCESS_ALLOWED_MODULES:
+                continue
+            tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+            for node in ast.walk(tree):
+                if isinstance(node, ast.ImportFrom):
+                    for alias in node.names:
+                        if alias.name == "emit_json_success":
+                            violations.append(f"{relative}:{node.lineno}: imports emit_json_success")
+                    continue
+                if not isinstance(node, ast.Call):
+                    continue
+                if isinstance(node.func, ast.Name) and node.func.id == "emit_json_success":
+                    violations.append(f"{relative}:{node.lineno}: calls emit_json_success")
+                elif isinstance(node.func, ast.Attribute) and node.func.attr == "emit_json_success":
+                    violations.append(f"{relative}:{node.lineno}: calls attribute emit_json_success")
+    assert violations == [], (
+        "Bare emit_json_success route detected outside "
+        "application.operator_output.emit_operator_json_success; every operator-facing "
+        "JSON success must route through that funnel so the sandbox-active notice "
+        "cannot be dropped. Violations:\n  " + "\n  ".join(violations)
     )
 
 

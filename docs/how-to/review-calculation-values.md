@@ -165,6 +165,7 @@ For registry relation values, calculation accepts repeatable
 registry/help text identifies the relation you need:
 
 ```{cli-sequence} review-values-relation
+:verify: Confirm the supplied relation value is recorded on the saved calculation.
 ```
 
 ## Add rows for list-based forms (184, 232, 347, 349)
@@ -177,9 +178,10 @@ Supply each record with a repeatable `--row` input.
 Each `--row` starts with the record type, followed by its fields:
 
 ```{cli-sequence} review-values-rows
+:verify: Confirm the supplied member records save into the calculation.
 ```
 
-Take `<work-unit-id>` from the `work_unit_id` field that `work create` prints.
+Take the work-unit id from the `work_unit_id` field that `work create` prints.
 For these multi-record modelos, pass the work-unit id as the positional argument
 rather than the `--modelo / --year / --period` flags used elsewhere on this page.
 
@@ -210,6 +212,7 @@ For specialized calculations, the CLI provides evaluation and comparison command
   `Ninguna unidad de trabajo activa`:
 
   ```{cli-sequence} review-values-m100-create
+  :verify: Confirm the annual Modelo 100 draft exists for the filing year.
   ```
 
   

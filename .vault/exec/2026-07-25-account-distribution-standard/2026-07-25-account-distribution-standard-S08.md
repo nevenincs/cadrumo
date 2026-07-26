@@ -9,9 +9,6 @@ related:
   - "[[2026-07-25-account-distribution-standard-plan]]"
 ---
 
-
-
-
 # DONE. The day-one checklist a new product follows is written as a numbered sequence covering the version authority, the two workflows and the no-tag-trigger requirement, the three-property channel-set evaluation, the two shared-repository files, workload identity federation, and the name-derivation rule. Placed in RELEASING.md rather than under docs/ deliberately, on two grounds, it is maintainer rather than taxpayer-facing documentation and docs/ is the taxpayer surface, and the fail-closed documentation claims gate scans docs/ for acquisition claims so a checklist quoting install commands there would correctly red the gate
 
 ## Scope

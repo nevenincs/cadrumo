@@ -892,7 +892,7 @@ def ledger_operator_iva_derive(
             transaction_id=resolved_id,
             iva_category=iva_category,
             actor=actor or resolve_active_bucket_id() or "operator",
-            source_command="aeat app ledger classify --iva-category --saturate",
+            source_command=LlmReviewInvocationOrigin.CLASSIFY_IVA_CATEGORY_SATURATE.source_command,
             transaction_repository=transaction_repository,
         )
     except TransactionValidationError as exc:

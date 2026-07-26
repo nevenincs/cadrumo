@@ -98,7 +98,6 @@ was rejected for reversing a documented content-addressing invariant; this one
 uses that invariant exactly as designed — it changes what legitimately feeds an
 existing identity axis, not what identity means.
 
-
 ### the-source-issue-route-does-not-fit-either | critical | third iteration, and the carrier is semantically wrong for this condition
 
 The mechanism recommended above was pressed further before being planned, and it
@@ -136,7 +135,6 @@ semantics. The recurring cause is that revision identity is deliberately closed
 over tax facts, and evidence is deliberately outside it. Any recovery path must
 either reopen that boundary or add a record beside it, and choosing which is the
 decision the governing ADR reserved from the start.
-
 
 ### the-sequence-frame-backlog-is-triaged-not-pending | medium | S07's work is done, and its reason code now misnames the result
 
@@ -209,7 +207,6 @@ establishing that no canonical owner already existed — rather than merely
 satisfying its form. It found a shipped supersession state and an existing
 identity axis that a blind implementation would have duplicated.
 
-
 ### Terminus, and what was checked to establish it
 
 The implementable surface of this feature is exhausted. Every remaining row was
@@ -234,7 +231,6 @@ What would make the remaining work implementable is a single choice among those
 three, not further investigation. Four separate attempts have now run into the
 same boundary from different directions, which is itself the evidence that the
 boundary is real rather than a gap in the analysis.
-
 
 ### The decision is binary, not three-way
 

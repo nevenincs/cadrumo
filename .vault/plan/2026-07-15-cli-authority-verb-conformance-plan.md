@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#cli-authority-verb-conformance'
 date: '2026-07-15'
-modified: '2026-07-25'
+modified: '2026-07-26'
 tier: L3
 related:
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
@@ -135,7 +135,7 @@ Replace scope reset with a durable target-scoped roll-forward operation composed
 - [x] `W02.P05.S64` - Invoke target-scoped auth reset and delete canonical secure-storage certificate secrets before each target deletion without certificate keyring reconciliation or migration; `src/cadrumo/application/config_reset.py`.
 - [x] `W02.P05.S65` - Invoke strong profile logout for the active reset target and reconcile dangling pointers through the core authority; `src/cadrumo/application/config_reset.py`.
 - [x] `W02.P05.S66` - Persist deleting ownership before deletion and completion after each irreversible transition; `src/cadrumo/application/config_reset.py`.
-- [ ] `W02.P05.S67` - Reacquire locks and recheck fingerprints and retention during roll-forward resume without mutating on status; `src/cadrumo/application/config_reset.py`.
+- [x] `W02.P05.S67` - Reacquire locks and recheck fingerprints and retention during roll-forward resume without mutating on status; `src/cadrumo/application/config_reset.py`.
 - [x] `W02.P05.S68` - Prove target discovery includes live, tombstoned, and dangling-pointer buckets but excludes cold defaults; `src/cadrumo/application/tests/test_config_reset.py`.
 - [x] `W02.P05.S69` - Prove every reset phase boundary resumes honestly in a fresh child process; `src/cadrumo/application/tests/test_config_reset_recovery.py`.
 - [x] `W02.P05.S70` - Prove sorted locking, writer pauses, reset exclusion, retention recheck, and renewed confirmation with real processes; `src/cadrumo/adapters/persistence/storage/bucket/_lockfile.py; src/cadrumo/adapters/persistence/storage/bucket/tests/test_lockfile.py; src/cadrumo/adapters/persistence/storage/master_key/_master_key.py; src/cadrumo/adapters/persistence/storage/master_key/_master_key_ephemeral.py; src/cadrumo/adapters/persistence/storage/master_key/_provider_session.py; src/cadrumo/application/bucket_maintenance/_service.py; src/cadrumo/application/tests/test_config_reset_concurrency.py`.
@@ -163,42 +163,42 @@ Remove evidence, export, hashing, replay, namespace, filed-capture, LLM-review, 
 
 Remove the generic evidence patch route and preserve invoice linking only through atomic application operations.
 
-- [ ] `W03.P08.S81` - Make generic manual-field updates refuse all evidence fields, reserve evidence catalogue and provenance mutation for attach, and expose a single atomic invoice-only linkage writer; `src/cadrumo/application/ledger/_actions_manual.py; src/cadrumo/application/ledger/__init__.py`.
-- [ ] `W03.P08.S82` - Prove direct evidence patches fail, invoice linkage cannot mutate evidence, and failed attach or link leaves transaction, evidence catalogue, provenance, and event history unchanged; `src/cadrumo/application/ledger/tests/test_actions_update_evidence.py`.
-- [ ] `W03.P08.S83` - Prove create-time and attach-time evidence validation enforce the same missing and cross-bucket policy; `src/cadrumo/application/ledger/tests/test_actions_create_evidence_validation.py`.
-- [ ] `W03.P08.S224` - Make evidence-driven LLM splitting persist the parent transition, every child, inherited validated evidence links, provenance, classifications, and events in one atomic application transaction without generic field patching; `src/cadrumo/application/ledger/_actions_split_merge.py; src/cadrumo/application/ledger/_llm_classification.py`.
-- [ ] `W03.P08.S225` - Prove every LLM split child inherits the parent evidence and provenance consistently and any child validation or persistence failure leaves the parent, children, catalogue, and event history unchanged; `src/cadrumo/application/ledger/tests/test_llm_evidence_split_apply.py; src/cadrumo/application/ledger/tests/test_llm_evidence_split.py`.
+- [x] `W03.P08.S81` - Make generic manual-field updates refuse all evidence fields, reserve evidence catalogue and provenance mutation for attach, and expose a single atomic invoice-only linkage writer; `src/cadrumo/application/ledger/_actions_manual.py; src/cadrumo/application/ledger/__init__.py`.
+- [x] `W03.P08.S82` - Prove direct evidence patches fail, invoice linkage cannot mutate evidence, and failed attach or link leaves transaction, evidence catalogue, provenance, and event history unchanged; `src/cadrumo/application/ledger/tests/test_actions_update_evidence.py`.
+- [x] `W03.P08.S83` - Prove create-time and attach-time evidence validation enforce the same missing and cross-bucket policy; `src/cadrumo/application/ledger/tests/test_actions_create_evidence_validation.py`.
+- [x] `W03.P08.S224` - Make evidence-driven LLM splitting persist the parent transition, every child, inherited validated evidence links, provenance, classifications, and events in one atomic application transaction without generic field patching; `src/cadrumo/application/ledger/_actions_split_merge.py; src/cadrumo/application/ledger/_llm_classification.py`.
+- [x] `W03.P08.S225` - Prove every LLM split child inherits the parent evidence and provenance consistently and any child validation or persistence failure leaves the parent, children, catalogue, and event history unchanged; `src/cadrumo/application/ledger/tests/test_llm_evidence_split_apply.py; src/cadrumo/application/ledger/tests/test_llm_evidence_split.py`.
 
 ### Phase `W03.P09` - Centralize profile export
 
 Move portable and subject-access exports onto one crash-reconcilable application service with typed purpose.
 
-- [ ] `W03.P09.S84` - Define typed portable-transfer and subject-access export purposes, requests, results, target identity, and categories derived from the actual portable bundle schema and carried registered namespaces while keeping sealed recovery archives separate; `src/cadrumo/application/user_profile/_commands.py; src/cadrumo/application/user_profile/_bundle.py`.
-- [ ] `W03.P09.S85` - Persist non-secret profile export operation states atomically outside the target artifact; `src/cadrumo/application/user_profile/_bundle_export_operation.py`.
-- [ ] `W03.P09.S86` - Implement one locked target serialization with restrictive temporary files, file fsync, durable PREPARED state, atomic replace, parent-directory fsync, post-publish COMPLETED event, and honest PREPARED recovery; `src/cadrumo/application/user_profile/_bundle_export.py`.
-- [ ] `W03.P09.S87` - Re-export the typed profile export service as the sole public export orchestration API; `src/cadrumo/application/user_profile/__init__.py`.
-- [ ] `W03.P09.S88` - Prove portable-transfer and subject-access purposes use the same service and bundle schema, derive categories from serialized fields and registry-carried namespaces, and retain distinct purpose metadata; `src/cadrumo/application/user_profile/tests/test_bundle_export.py`.
-- [ ] `W03.P09.S89` - Prove restrictive temporary permissions, same-target exclusion, every PREPARED and replace crash window, parent-directory durability, and fresh-process reconciliation without premature completion events; `src/cadrumo/application/user_profile/tests/test_bundle_export_recovery.py`.
+- [x] `W03.P09.S84` - Define typed portable-transfer and subject-access export purposes, requests, results, target identity, and categories derived from the actual portable bundle schema and carried registered namespaces while keeping sealed recovery archives separate; `src/cadrumo/application/user_profile/_commands.py; src/cadrumo/application/user_profile/_bundle.py`.
+- [x] `W03.P09.S85` - Persist non-secret profile export operation states atomically outside the target artifact; `src/cadrumo/application/user_profile/_bundle_export_operation.py`.
+- [x] `W03.P09.S86` - Implement one locked target serialization with restrictive temporary files, file fsync, durable PREPARED state, atomic replace, parent-directory fsync, post-publish COMPLETED event, and honest PREPARED recovery; `src/cadrumo/application/user_profile/_bundle_export.py`.
+- [x] `W03.P09.S87` - Re-export the typed profile export service as the sole public export orchestration API; `src/cadrumo/application/user_profile/__init__.py`.
+- [x] `W03.P09.S88` - Prove portable-transfer and subject-access purposes use the same service and bundle schema, derive categories from serialized fields and registry-carried namespaces, and retain distinct purpose metadata; `src/cadrumo/application/user_profile/tests/test_bundle_export.py`.
+- [x] `W03.P09.S89` - Prove restrictive temporary permissions, same-target exclusion, every PREPARED and replace crash window, parent-directory durability, and fresh-process reconciliation without premature completion events; `src/cadrumo/application/user_profile/tests/test_bundle_export_recovery.py`.
 
 ### Phase `W03.P10` - Remove residual hashing and replay duplication
 
 Delegate eighteen exact one-shot digests and four reducible file-hash bodies to core, add a recurrence gate, and remove the check-shaped replay backend until real replay exists.
 
-- [ ] `W03.P10.S90` - Delegate review-package recipient fingerprints to core sha256_hex; `src/cadrumo/application/modelo/_review_package_recipient_registry.py`.
-- [ ] `W03.P10.S91` - Prove recipient fingerprints against known vectors and encrypted registry roundtrip; `src/cadrumo/application/modelo/tests/test_review_package_recipient_registry.py`.
-- [ ] `W03.P10.S92` - Delegate MCP telemetry content digests to core sha256_hex; `src/cadrumo/entrypoints/mcp/_telemetry.py`.
-- [ ] `W03.P10.S93` - Prove telemetry UTF-8 digests against known vectors and retained-record roundtrip; `src/cadrumo/entrypoints/mcp/tests/test_telemetry_retention.py`.
-- [ ] `W03.P10.S226` - Delegate declaracion parser and pdfplumber one-shot PDF digests to core sha256_hex without changing byte inputs or digest representation; `src/cadrumo/adapters/inbound/declaracion/_parser.py; src/cadrumo/adapters/inbound/declaracion/_parsers/_pdfplumber_backend.py`.
-- [ ] `W03.P10.S227` - Delegate Clave Movil, outbound LLM cache, and agent evaluation one-shot fingerprints to core sha256_hex while preserving truncation and exact encoded inputs; `src/cadrumo/adapters/outbound/aeat/auth/_clave_movil_support.py; src/cadrumo/adapters/outbound/llm/_cache.py; src/cadrumo/agent/eval/_flywheel.py`.
-- [ ] `W03.P10.S228` - Delegate storage rotation, SQL engine, and calculation-sheet one-shot identifiers to core sha256_hex while preserving exact payload construction and truncation; `src/cadrumo/adapters/persistence/storage/_rotation.py; src/cadrumo/adapters/persistence/storage/sql/engine.py; src/cadrumo/application/storage/calc_sheets/_engine.py`.
-- [ ] `W03.P10.S229` - Delegate perception, retention, and calculation observation object-key digests to core sha256_hex while preserving the exact normalized key bytes; `src/cadrumo/application/aggregation/_percepciones_observations_repository.py; src/cadrumo/application/aggregation/_retencion_observations_repository.py; src/cadrumo/application/calculations/_observations_repository.py`.
-- [ ] `W03.P10.S230` - Delegate filing import, M145 communication, workflow, and submission one-shot identifiers to core sha256_hex while preserving structured inputs, truncation, and public values; `src/cadrumo/application/filing/_import.py; src/cadrumo/application/modelo/_m145_communication_records.py; src/cadrumo/application/workflow/_models.py; src/cadrumo/domain/submission/_models.py`.
-- [ ] `W03.P10.S231` - Delegate whole-file corpus manifest hashing to core hash_file without changing manifest semantics; `src/cadrumo/core/corpus_manifest/__init__.py`.
-- [ ] `W03.P10.S232` - Retain observability file-read retry semantics while delegating successful file-digest mechanics to core hash_file; `src/cadrumo/core/observability/_fingerprint.py`.
-- [ ] `W03.P10.S233` - Delegate local manuals file verification to core hash_file while retaining the distinct network-stream hashing path; `src/cadrumo/domain/manuals/_fetch.py`.
-- [ ] `W03.P10.S234` - Preserve the mirror object-key structured byte contract but delegate its one-shot digest to sha256_hex without converting it to HMAC; `src/cadrumo/adapters/outbound/storage/_mirror_manifest.py`.
-- [ ] `W03.P10.S235` - Add an AST recurrence gate that rejects new reducible production SHA-256 constructor and one-shot hexdigest bodies while allowing streaming, HMAC, HKDF, X509, and digest-byte uses; `src/cadrumo/core/tests/test_hashing_adoption.py`.
-- [ ] `W03.P10.S236` - Remove EvidenceBundleService replay, its public export, and backend tests while preserving evidence check and unrelated observability replay facilities; `src/cadrumo/application/evidence/_service.py; src/cadrumo/application/evidence/__init__.py; src/cadrumo/application/evidence/tests/test_evidence.py`.
+- [x] `W03.P10.S90` - Delegate review-package recipient fingerprints to core sha256_hex; `src/cadrumo/application/modelo/_review_package_recipient_registry.py`.
+- [x] `W03.P10.S91` - Prove recipient fingerprints against known vectors and encrypted registry roundtrip; `src/cadrumo/application/modelo/tests/test_review_package_recipient_registry.py`.
+- [x] `W03.P10.S92` - Delegate MCP telemetry content digests to core sha256_hex; `src/cadrumo/entrypoints/mcp/_telemetry.py`.
+- [x] `W03.P10.S93` - Prove telemetry UTF-8 digests against known vectors and retained-record roundtrip; `src/cadrumo/entrypoints/mcp/tests/test_telemetry_retention.py`.
+- [x] `W03.P10.S226` - Delegate declaracion parser and pdfplumber one-shot PDF digests to core sha256_hex without changing byte inputs or digest representation; `src/cadrumo/adapters/inbound/declaracion/_parser.py; src/cadrumo/adapters/inbound/declaracion/_parsers/_pdfplumber_backend.py`.
+- [x] `W03.P10.S227` - Delegate Clave Movil, outbound LLM cache, and agent evaluation one-shot fingerprints to core sha256_hex while preserving truncation and exact encoded inputs; `src/cadrumo/adapters/outbound/aeat/auth/_clave_movil_support.py; src/cadrumo/adapters/outbound/llm/_cache.py; src/cadrumo/agent/eval/_flywheel.py`.
+- [x] `W03.P10.S228` - Delegate storage rotation, SQL engine, and calculation-sheet one-shot identifiers to core sha256_hex while preserving exact payload construction and truncation; `src/cadrumo/adapters/persistence/storage/_rotation.py; src/cadrumo/adapters/persistence/storage/sql/engine.py; src/cadrumo/application/storage/calc_sheets/_engine.py`.
+- [x] `W03.P10.S229` - Delegate perception, retention, and calculation observation object-key digests to core sha256_hex while preserving the exact normalized key bytes; `src/cadrumo/application/aggregation/_percepciones_observations_repository.py; src/cadrumo/application/aggregation/_retencion_observations_repository.py; src/cadrumo/application/calculations/_observations_repository.py`.
+- [x] `W03.P10.S230` - Delegate filing import, M145 communication, workflow, and submission one-shot identifiers to core sha256_hex while preserving structured inputs, truncation, and public values; `src/cadrumo/application/filing/_import.py; src/cadrumo/application/modelo/_m145_communication_records.py; src/cadrumo/application/workflow/_models.py; src/cadrumo/domain/submission/_models.py`.
+- [x] `W03.P10.S231` - Delegate whole-file corpus manifest hashing to core hash_file without changing manifest semantics; `src/cadrumo/core/corpus_manifest/__init__.py`.
+- [x] `W03.P10.S232` - Retain observability file-read retry semantics while delegating successful file-digest mechanics to core hash_file; `src/cadrumo/core/observability/_fingerprint.py`.
+- [x] `W03.P10.S233` - Delegate local manuals file verification to core hash_file while retaining the distinct network-stream hashing path; `src/cadrumo/domain/manuals/_fetch.py`.
+- [x] `W03.P10.S234` - Preserve the mirror object-key structured byte contract but delegate its one-shot digest to sha256_hex without converting it to HMAC; `src/cadrumo/adapters/outbound/storage/_mirror_manifest.py`.
+- [x] `W03.P10.S235` - Add an AST recurrence gate that rejects new reducible production SHA-256 constructor and one-shot hexdigest bodies while allowing streaming, HMAC, HKDF, X509, and digest-byte uses; `src/cadrumo/core/tests/test_hashing_adoption.py`.
+- [x] `W03.P10.S236` - Remove EvidenceBundleService replay, its public export, and backend tests while preserving evidence check and unrelated observability replay facilities; `src/cadrumo/application/evidence/_service.py; src/cadrumo/application/evidence/__init__.py; src/cadrumo/application/evidence/tests/test_evidence.py`.
 
 ### Phase `W03.P22` - Centralize secure-object namespace authority
 

@@ -105,12 +105,12 @@ re-run. See [Verify a draft filing](verification-reports.md).
 Export the verified declaration. Export is the local finish line. Recording the
 filed marker afterwards is optional and applies only while the obligation
 window is open; it is an internal note that you have already presented the file
-at the portal. The full evidence-to-export chain runs end to end, executed, on
-[Prepare a Modelo 303 IVA filing](modelo-303.md); here the export and the
-post-portal steps are shown as display frames, since the filed marker records a
-portal submission and the reconcile pull is a live read from AEAT:
+at the portal. The Renta 2025 window opens on 8 April 2026, after the date this
+guide's examples run at, so the filed marker is shown as a display frame here,
+as is the reconcile pull, which reads from AEAT:
 
 ```{cli-sequence} modelo-100-export-file
+:verify: Confirm the verified declaration exports to a local file.
 ```
 
 See [Reconcile a filing](reconcile.md) for the reconciliation verdicts.

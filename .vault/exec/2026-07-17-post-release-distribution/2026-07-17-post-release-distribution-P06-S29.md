@@ -9,9 +9,6 @@ related:
   - "[[2026-07-17-post-release-distribution-plan]]"
 ---
 
-
-
-
 # Re-audit the six step annotations the review flagged, three claim partial unblocking where only a redundant clause was struck and three moved their blocker from private to nonexistent, restate each as the blocker it actually carries today. GATE, every P01 and P03 row names a blocker that is true at the time of reading
 
 ## Scope

@@ -97,9 +97,7 @@ _RE_XLS_BARE = re.compile(r'"\.xls"')
 # XLS_EXTENSION. The alias and the assertion pinning it to the constant are
 # the one authorised escape; ``test_xls_escape_still_needs_its_escape`` fails
 # if the construct justifying it ever disappears.
-_XLS_LITERAL_ALIAS_ESCAPE: Path = (
-    _SRC_ROOT / "domain" / "calculations" / "registry" / "_workbook_parity_models.py"
-)
+_XLS_LITERAL_ALIAS_ESCAPE: Path = _SRC_ROOT / "domain" / "calculations" / "registry" / "_workbook_parity_models.py"
 
 
 def test_no_bare_xls_extension_literals() -> None:

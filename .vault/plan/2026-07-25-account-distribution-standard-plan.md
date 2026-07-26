@@ -12,7 +12,6 @@ related:
   - '[[2026-07-25-account-distribution-standard-research]]'
 ---
 
-
 # `account-distribution-standard` plan
 
 - [ ] `S01` - Create the single shared public distribution repository holding Formula for Homebrew and bucket for Scoop, named so Homebrew reaches it as an account tap, OPERATOR-GATED because repository creation is outward-facing and was deliberately left undone; `operator action, gh repo create nevenincs/homebrew-tap --public`.

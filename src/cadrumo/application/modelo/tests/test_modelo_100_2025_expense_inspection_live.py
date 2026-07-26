@@ -262,7 +262,9 @@ def test_sofia_m100_2025_work_create_and_calculate_exposes_0186_and_0199(
     snapshot = resources().modelos.authority.snapshot("100", filing_year=_YEAR, period=_ANNUAL_PERIOD)
     binding_by_id = {binding.id: binding for binding in snapshot.revision.bindings}
     assert str(binding_by_id[_M100_SS_BINDING].source) == "ledger_renta_gastos_estimacion_directa_aggregation"
-    assert str(binding_by_id[_M100_OTHER_EXPENSES_BINDING].source) == "ledger_renta_gastos_estimacion_directa_aggregation"
+    assert (
+        str(binding_by_id[_M100_OTHER_EXPENSES_BINDING].source) == "ledger_renta_gastos_estimacion_directa_aggregation"
+    )
 
     result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
@@ -282,5 +284,6 @@ def test_sofia_m100_2025_work_create_and_calculate_exposes_0186_and_0199(
     assert Decimal(values[_M100_SS_CASILLA]) + Decimal(values[_M100_OTHER_EXPENSES_CASILLA]) == Decimal("5940.00")
     assert set(result.revision.source_transaction_ids) >= {transaction.transaction_id for transaction in transactions}
     assert not any(
-        diagnostic.source_kind == "ledger_renta_gastos_estimacion_directa_aggregation" for diagnostic in result.source_diagnostics
+        diagnostic.source_kind == "ledger_renta_gastos_estimacion_directa_aggregation"
+        for diagnostic in result.source_diagnostics
     ), result.source_diagnostics

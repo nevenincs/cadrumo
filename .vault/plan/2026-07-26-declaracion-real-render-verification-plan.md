@@ -64,6 +64,7 @@ Open defects and decisions this campaign measured but did not close
 - [ ] `P04.S21` - Bring the borrador fixture corpus under the provenance discipline, adding sidecars and gate coverage, since it has neither and is wholly generated; `src/cadrumo/tests/fixtures/borrador, src/cadrumo/domain/calculations/registry/tests`.
 - [x] `P04.S22` - Measure the ledger evidence text layer against a size-aware segmentation change, the second and more consequential unmeasured consumer since it reads taxpayer financial documents; `src/cadrumo/application/ledger`.
 - [ ] `P04.S23` - Find a size-aware mechanism that leaves the ledger evidence path byte-identical, or scope it to the declaracion entry point instead of the shared primitive; `src/cadrumo/adapters/inbound/pdf, src/cadrumo/adapters/inbound/declaracion`.
+- [ ] `P04.S24` - Correct the seven decl.ejercicio targets declared value_kind amount on what is a tax year, a schema mis-declaration rather than a guard gap; `src/cadrumo/_data/registry/aeat/modelos`.
 
 ## Description
 

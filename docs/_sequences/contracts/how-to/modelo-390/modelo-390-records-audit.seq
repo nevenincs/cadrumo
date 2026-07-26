@@ -1,9 +1,11 @@
 @step Review the local filing records for the target.
-@static aeat app modelo filing-record list
-@blocked unconverted Runs clean in the sandbox probe; nothing blocks it, so it awaits conversion.
+@result aeat --format json app modelo filing-record list
+@expect result.operation == "modelo.filing_record.list"
+@expect result.include_superseded == false
+@expect exit_code == 0
 @step Import an external filing record from official evidence.
 @static aeat app modelo filing-record import <work-unit-id> --evidence-kind aeat_justificante_pdf --evidence-id <justificante-or-capture-id> --set <casilla>=<value>
 @blocked operator-artifact Needs a real AEAT justificante PDF and its evidence id; no local chain produces one and it must not be fabricated as a committed fixture.
 @step Inspect, check, export, and replay an evidence bundle by id.
 @static aeat app modelo audit export <bundle-id> --output ./modelo-390-evidence.zip
-@blocked unconverted Shows the addressing form with a metavariable; convert it with a captured real id.
+@blocked unconverted No aeat verb creates an evidence bundle, so no id exists to address: the audit show, check and export verbs only read bundles, and nothing in the CLI writes one.

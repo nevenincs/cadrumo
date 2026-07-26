@@ -9,9 +9,6 @@ related:
   - "[[2026-07-25-account-distribution-standard-plan]]"
 ---
 
-
-
-
 # DONE. The channel matrix is now derived data rather than a per-product list, the descriptor carries a matrix block holding the three product properties and every channel declares its tier, and derived_tiers evaluates the account rule over them. The descriptor refuses at load when the declared channels disagree with the derived set, in either direction, so neither dropping a channel nor acquiring one the rule excludes can pass unseen. Cadrumo evaluates to registry plus standalone-executable plus the three managed installers plus host-extension, and the two tiers it does not yet ship are declared in pending_tiers so the gap is visible data rather than a silent absence
 
 ## Scope

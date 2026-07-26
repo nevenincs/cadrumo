@@ -98,7 +98,7 @@ def _emit_envelope(
 ) -> None:
     """Render a typed result through JSON or text output.
 
-    JSON mode goes through :func:`emit_json_success`
+    JSON mode goes through :func:`~cadrumo.application.operator_output.emit_operator_json_success`
     so the payload is wrapped in the shared
     :class:`SchemaEnvelope` spine
     ``{"schema_version": ..., "command": ..., "status": ..., "result": ...,
@@ -109,11 +109,16 @@ def _emit_envelope(
     When the active profile bucket is a sandbox
     (:func:`~cadrumo.application.bucket_maintenance.is_sandbox_label`), a
     persistent info :class:`Notice` naming the sandbox is prepended to
-    ``notices`` (JSON mode) and a matching banner line is prepended ahead
-    of ``lines`` (text mode), so an operator can never mistake a sandbox
-    run for a run against the real profile. The indicator is added here,
-    once, rather than by each of the ~100 command handlers that call this
-    helper — see :func:`_active_sandbox_notice`.
+    ``notices`` (JSON mode, via
+    :func:`~cadrumo.application.operator_output.emit_operator_json_success`)
+    and a matching banner line is prepended ahead of ``lines`` (text mode),
+    so an operator can never mistake a sandbox run for a run against the
+    real profile. The indicator is resolved by
+    :func:`~cadrumo.application.operator_output.sandbox_notice_for_active_bucket`,
+    shared with the setup wizard's own success emitters
+    (:mod:`cadrumo.application.wizard._commands`), which sit below this CLI
+    package and route through the same funnel rather than a second
+    implementation.
 
     Args:
         ctx: Typer context (used to discover the requested output format).
@@ -132,86 +137,40 @@ def _emit_envelope(
             notices into ``lines`` themselves so JSON and text cannot
             drift.
     """
-    from ...core.json_contract import emit_json_success
-
     metadata_invocation = _is_metadata_invocation()
-    sandbox_notice = None if metadata_invocation else _active_sandbox_notice()
-    resolved_notices: tuple[Notice, ...]
-    if sandbox_notice is None:
-        resolved_notices = tuple(notices) if notices is not None else ()
-    else:
-        resolved_notices = (sandbox_notice, *notices) if notices is not None else (sandbox_notice,)
-
     format_name = _format_of(ctx)
     if format_name == _FORMAT_JSON:
-        active_profile = None if metadata_invocation else _active_profile_label()
-        emit_json_success(command, result, notices=resolved_notices, active_profile=active_profile)
+        if metadata_invocation:
+            # The ``--help`` / ``--version`` fast path stays off the
+            # sandbox/active-profile resolution entirely — active_profile is
+            # forced to ``None`` and no sandbox lookup runs, matching the
+            # existing metadata-invocation contract, and it never imports
+            # ``application.operator_output`` at all. This is the one
+            # documented direct call to the low-level primitive, allowlisted
+            # in test_json_schema_conformance.py.
+            from ...core.json_contract import emit_json_success
+
+            emit_json_success(command, result, notices=notices or (), active_profile=None)
+            return
+        from ...application.operator_output import emit_operator_json_success
+
+        active_profile = _active_profile_label()
+        emit_operator_json_success(command, result, notices=notices or (), active_profile=active_profile)
         return
     # Route non-JSON paths through render_command_output so unsupported
     # ``--format`` values (e.g. ``xml``) raise the shared refusal contract.
     # ``render_command_output``
     # ignores ``payload`` outside JSON mode and emits the line iterator.
-    rendered_lines = lines if sandbox_notice is None else (f"SANDBOX\t{sandbox_notice.message}", *lines)
+    rendered_lines = lines
+    if not metadata_invocation:
+        from ...application.operator_output import sandbox_banner_line, sandbox_notice_for_active_bucket
+
+        sandbox_notice = sandbox_notice_for_active_bucket()
+        if sandbox_notice is not None:
+            rendered_lines = (sandbox_banner_line(sandbox_notice), *lines)
     rendered = render_command_output(format_name=format_name, payload=result, lines=rendered_lines)
     if rendered.text:
         typer.echo(rendered.text)
-
-
-def _active_sandbox_notice() -> Notice | None:
-    """Return the persistent sandbox-active :class:`Notice`, or ``None``.
-
-    Resolves the active bucket id through the same core precedence chain
-    every command uses (:func:`~cadrumo.core.resolve_active_bucket_id`), then
-    reads its plaintext manifest label directly through the light
-    ``adapters.persistence.storage.bucket`` primitives — the same tolerant
-    read :func:`~cadrumo.application.workflow.read_profile_bucket_by_id`
-    performs, but reached without importing the heavy ``workflow`` /
-    ``bucket_maintenance`` facades (which pull the registry) — and checks it
-    against the reserved sandbox label prefix
-    (:data:`~cadrumo.core.external_constants.SANDBOX_LABEL_PREFIX`). This keeps
-    the state-free CLI surface (``cadrumo`` / ``--help`` / ``--version``, which
-    reach this helper via :func:`_emit_envelope`) off the registry-loading
-    import path, honouring this module's lazy-import contract. Returns
-    ``None`` when no profile is active, the active bucket's manifest is
-    absent, unreadable, or fails strict validation, or the active profile
-    is not a sandbox, so a real profile's output is never annotated and a
-    corrupt/torn manifest degrades this purely-advisory indicator rather
-    than breaking every command's output. The manifest is deliberately
-    re-read on every call (no caching) so a mid-process ``switch`` is
-    reflected on the very next command.
-    """
-    from ...adapters.persistence.storage import StorageValidationError
-    from ...adapters.persistence.storage.bucket import bucket_paths, manifest_path, read_manifest
-    from ...core import FormerProductStateError, resolve_active_bucket_id
-    from ...core.config import load_settings
-    from ...core.external_constants import SANDBOX_LABEL_PREFIX
-    from ...core.json_contract import Notice, NoticeSeverity
-
-    try:
-        bucket_id = resolve_active_bucket_id()
-        if bucket_id is None:
-            return None
-        paths = bucket_paths(load_settings().cadrumo_local_storage_root, bucket_id)
-        if not manifest_path(paths).is_file():
-            return None
-        label = read_manifest(paths).label
-    except (FormerProductStateError, StorageValidationError, ValueError):
-        return None
-    if not label.startswith(SANDBOX_LABEL_PREFIX):
-        return None
-    return Notice(
-        severity=NoticeSeverity.INFO,
-        code="config.profile.sandbox.active_indicator",
-        message=tr(
-            "cli.config.profile.sandbox.active_indicator_info",
-            default=(
-                "You are operating inside the sandbox %{label}, not a real profile; "
-                "every command runs against this isolated, discardable bucket."
-            ),
-            label=label,
-        ),
-        suggestion="aeat config profile sandbox discard",
-    )
 
 
 def _active_profile_label() -> str | None:
@@ -221,7 +180,9 @@ def _active_profile_label() -> str | None:
     every command uses (:func:`~cadrumo.core.resolve_active_bucket_id`), then
     reads its plaintext manifest label
     (:func:`~cadrumo.application.workflow.read_profile_bucket_by_id`) — the
-    same non-secret display name :func:`_active_sandbox_notice` reads,
+    same non-secret display name
+    :func:`~cadrumo.application.operator_output.sandbox_notice_for_active_bucket`
+    reads,
     never opening the encrypted per-bucket database and never touching the
     redacted profile/bucket UUID. Returns ``None`` when no profile is
     active, Cadrumo has rejected a legacy product-state location, or the manifest is
