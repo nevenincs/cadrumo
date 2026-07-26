@@ -1,0 +1,169 @@
+"""Bind the publication dispatch's source demand to the claimed-channel set.
+
+The property under test is a *coupling*, so the negative control matters more
+than the positive case: it is easy to write a derivation that happens to agree
+with today's descriptor while being insensitive to it. Each tightening test here
+therefore mutates a channel's availability and asserts the demand moves with it.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Final
+
+import pytest
+
+from dev.docs.download_matrix import Availability, DownloadDescriptor, claimed_channels, load_descriptor
+from dev.packaging.publication_inputs import (
+    COHORT_INPUT,
+    SOURCE_INPUT_BY_CHANNEL,
+    _emit_outputs,
+    demanded_inputs,
+    main,
+    missing_sources,
+    refusals,
+    unmapped_claimed_channels,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+_SCOOP: Final[str] = "scoop"
+_HOMEBREW: Final[str] = "homebrew"
+
+
+def _with_availability(
+    descriptor: DownloadDescriptor,
+    channel_id: str,
+    availability: Availability,
+) -> DownloadDescriptor:
+    """Return ``descriptor`` with one channel's availability replaced."""
+    channels = tuple(
+        channel.model_copy(update={"availability": availability}) if channel.id == channel_id else channel
+        for channel in descriptor.channel
+    )
+    return descriptor.model_copy(update={"channel": channels})
+
+
+def test_every_channel_in_the_shipped_descriptor_has_a_known_evidence_source() -> None:
+    """No channel can become claimed and find itself unsourced."""
+    descriptor = load_descriptor()
+    unsourced = sorted(c.id for c in descriptor.channel if c.id not in SOURCE_INPUT_BY_CHANNEL)
+    assert not unsourced, (
+        f"channel(s) {unsourced} have no entry in SOURCE_INPUT_BY_CHANNEL; flipping one to "
+        "'available' would refuse the publication instead of demanding its evidence"
+    )
+
+
+def test_todays_descriptor_demands_only_the_cohort_because_only_python_is_claimed() -> None:
+    """The registry floor is the whole claim, so it is the whole demand.
+
+    This is the bootstrap case the fixed input list deadlocked on: the Scoop and
+    Homebrew acquisition runs cannot succeed before a first publication writes
+    the manifest and formula they install.
+    """
+    descriptor = load_descriptor()
+    assert sorted(c.id for c in claimed_channels(descriptor)) == ["python"]
+    assert demanded_inputs(descriptor) == (COHORT_INPUT,)
+    assert missing_sources(descriptor, {COHORT_INPUT: "30216592706"}) == ()
+    assert refusals(descriptor, {COHORT_INPUT: "30216592706"}) == ()
+
+
+def test_the_cohort_input_is_demanded_even_though_it_is_not_channel_evidence() -> None:
+    """It carries the published bytes, so its absence is always a refusal."""
+    descriptor = load_descriptor()
+    (line,) = refusals(descriptor, {COHORT_INPUT: "   "})
+    assert COHORT_INPUT in line
+    assert line.startswith("REFUSED:")
+
+
+@pytest.mark.parametrize(
+    ("channel_id", "expected_input"),
+    [(_SCOOP, "scoop_run_id"), (_HOMEBREW, "homebrew_run_id")],
+)
+def test_claiming_a_channel_makes_its_source_mandatory(channel_id: str, expected_input: str) -> None:
+    """The negative control: the demand must move when the claim moves.
+
+    A derivation insensitive to availability would pass the assertion above and
+    fail here, which is the whole point of asserting both.
+    """
+    descriptor = load_descriptor()
+    assert expected_input not in demanded_inputs(descriptor)
+
+    claimed = _with_availability(descriptor, channel_id, Availability.AVAILABLE)
+    assert expected_input in demanded_inputs(claimed)
+
+    # Dispatched without it, the publication now refuses and names the channel.
+    (line,) = refusals(claimed, {COHORT_INPUT: "1"})
+    assert expected_input in line
+    assert channel_id in line
+
+
+def test_one_source_can_prove_several_claimed_channels_and_is_demanded_once() -> None:
+    """The two host-extension channels share one operator evidence release."""
+    descriptor = load_descriptor()
+    both = _with_availability(
+        _with_availability(descriptor, "claude-plugin", Availability.AVAILABLE),
+        "mcpb",
+        Availability.AVAILABLE,
+    )
+    demanded = demanded_inputs(both)
+    assert demanded.count("claude_evidence_release") == 1
+    (line,) = refusals(both, {COHORT_INPUT: "1"})
+    assert "claude-plugin" in line
+    assert "mcpb" in line
+
+
+def test_a_claimed_channel_with_no_known_source_refuses_rather_than_passing() -> None:
+    """Fail-closed: an unsourced claim is a hole, never an absent requirement."""
+    descriptor = load_descriptor()
+    orphan = descriptor.channel[0].model_copy(
+        update={
+            "id": "unknown-channel",
+            "availability": Availability.AVAILABLE,
+            "artifact_kinds": (),
+            "evidence_rows": ("unknown-row",),
+        },
+    )
+    # model_copy bypasses validation by design; the descriptor's own validators
+    # would reject the empty kinds tuple, and this test is about the derivation.
+    widened = descriptor.model_copy(update={"channel": (*descriptor.channel, orphan)})
+    assert unmapped_claimed_channels(widened) == ("unknown-channel",)
+    assert any("unknown-channel" in line for line in refusals(widened, {COHORT_INPUT: "1"}))
+
+
+def test_emitted_outputs_cover_every_known_input_in_both_states(tmp_path: Path) -> None:
+    """The workflow guards on these booleans, so every input needs one."""
+    output = tmp_path / "github_output"
+    output.touch()
+    _emit_outputs(load_descriptor(), output)
+    emitted = dict(line.split("=", 1) for line in output.read_text(encoding="utf-8").splitlines() if line)
+    assert emitted == {
+        "need_packaging_run_id": "true",
+        "need_scoop_run_id": "false",
+        "need_homebrew_run_id": "false",
+        "need_claude_evidence_release": "false",
+    }
+
+
+def test_main_refuses_an_empty_cohort_input_and_emits_nothing(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The CLI the workflow calls must exit non-zero before writing outputs."""
+    output = tmp_path / "github_output"
+    output.touch()
+    for name in {*SOURCE_INPUT_BY_CHANNEL.values(), COHORT_INPUT}:
+        monkeypatch.delenv(name.upper(), raising=False)
+    assert main(["--github-output", str(output)]) == 1
+    assert output.read_text(encoding="utf-8") == ""
+
+
+def test_main_accepts_a_registry_only_dispatch(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The bootstrap dispatch: cohort only, no acquisition runs to point at."""
+    output = tmp_path / "github_output"
+    output.touch()
+    for name in SOURCE_INPUT_BY_CHANNEL.values():
+        monkeypatch.delenv(name.upper(), raising=False)
+    monkeypatch.setenv(COHORT_INPUT.upper(), "30216592706")
+    assert main(["--github-output", str(output)]) == 0
+    assert "need_scoop_run_id=false" in output.read_text(encoding="utf-8")

@@ -23,17 +23,28 @@ on:
         description: Successful Cadrumo Packaging Smoke run (sealed cohort + 3 python rows)
         required: true
         type: string
+      # The three acquisition-evidence inputs are optional AT THE DISPATCH FORM
+      # only. Whether each is actually required is DERIVED from the channels this
+      # release claims (dev/packaging/publication_inputs.py, same authority the
+      # readiness gate derives its blocking row set from): a claimed channel
+      # whose input is empty refuses in Gate 2. Declaring them required here
+      # instead deadlocked the first publication — the Scoop and Homebrew
+      # acquisition runs install the manifest and formula out of the shared
+      # repository, which no publication has written yet.
       scoop_run_id:
-        description: Successful Cadrumo Scoop Acquisition run (scoop-windows-x86-64 row)
-        required: true
+        description: Successful Cadrumo Scoop Acquisition run (required once the scoop channel is claimed)
+        required: false
+        default: ""
         type: string
       homebrew_run_id:
-        description: Successful Cadrumo Homebrew Acquisition run (3 homebrew rows)
-        required: true
+        description: Successful Cadrumo Homebrew Acquisition run (required once the homebrew channel is claimed)
+        required: false
+        default: ""
         type: string
       claude_evidence_release:
-        description: Release tag holding the operator's four claude-* rows (draft is fine)
-        required: true
+        description: Release tag holding the four claude-* rows (required once a host-extension channel is claimed)
+        required: false
+        default: ""
         type: string
       dry_run:
         description: Validate everything, publish nothing (runs Gate 1+2 fully, skips Gate 3)
@@ -117,6 +128,49 @@ jobs:
           fi
           echo "Operator opt-in present; proceeding to cohort validation."
 
+      - name: Require the release environment to carry a human approval gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          # Prerequisite 2 above INSTRUCTS the operator to create the `release`
+          # environment "with required reviewers - that approval click is the
+          # human release gate", and the publish job's own comment repeats the
+          # claim. Nothing verified it. An environment created without reviewers
+          # satisfies `environment: release` perfectly well and runs the
+          # promotion with no human in the loop, so the single most consequential
+          # safety property of this workflow was documented and unenforced.
+          #
+          # Fail-closed on a real publication: an API failure means the gate
+          # could not be CONFIRMED, which is not the same as confirmed present.
+          # A dry_run publishes nothing, so it warns and proceeds - the
+          # validate-everything-publish-nothing diagnostic stays usable before
+          # the environment is fully configured.
+          if ! rules="$(gh api "repos/${GITHUB_REPOSITORY}/environments/release" --jq '[.protection_rules[].type]|join(",")' 2>&1)"; then
+            reason="the release environment could not be read: ${rules}"
+          elif [[ ",${rules}," != *",required_reviewers,"* ]]; then
+            reason="the release environment has no required_reviewers rule (found: ${rules:-none})"
+          else
+            echo "Human approval gate present on the release environment: ${rules}"
+            exit 0
+          fi
+          if [[ "${DRY_RUN}" == "true" ]]; then
+            echo "::warning::${reason}. A dry_run publishes nothing, so this is not fatal here, but a real publication will refuse until required reviewers are set."
+            exit 0
+          fi
+          cat >&2 <<EOF
+          REFUSED: ${reason}.
+
+          This workflow's design places the human release gate on the \`release\`
+          environment's required-reviewers approval. Without that rule the
+          promotion would upload to PyPI and every public channel with no human
+          in the loop, which is not what prerequisite 2 promises.
+
+          Fix: Settings -> Environments -> release -> Deployment protection rules
+          -> tick "Required reviewers" and add the operator. Then re-dispatch.
+          EOF
+          exit 1
+
   # ---------------------------------------------------------------------------
   # Gate 2 - validate the retained cohort WITHOUT rebuilding. Verifies the
   # source run identity, downloads the stored cohort + installed evidence, and
@@ -180,7 +234,16 @@ jobs:
           version: "0.11.29"
           python-version: "3.13"
 
-      - name: Verify the scoop and homebrew acquisition run identities
+      - name: Require an evidence source for every channel this release claims
+        run: |
+          # Derived, not fixed. An acquisition input is mandatory precisely when
+          # some CLAIMED channel sources its evidence from it, read off the same
+          # descriptor the readiness gate below derives its blocking rows from,
+          # so the two can never disagree. A claimed channel with no known source
+          # refuses rather than publishing unproven.
+          uv run --frozen python -m dev.packaging.publication_inputs
+
+      - name: Verify the supplied acquisition run identities
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -189,6 +252,9 @@ jobs:
           # Deep integrity - that its rows belong to THIS release - is enforced by
           # the readiness gate below, which refuses any row not bound to the sealed
           # cohort; these checks establish provenance up front.
+          #
+          # An empty id reaches here only for an UNCLAIMED channel: the step above
+          # already refused any claimed channel dispatched without its source.
           check_run() {
             run_json="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$1")"
             test "$(jq -r .conclusion <<<"$run_json")" = "success"
@@ -196,8 +262,12 @@ jobs:
             test "$(jq -r .event <<<"$run_json")" = "workflow_dispatch"
             test "$(jq -r .head_repository.full_name <<<"$run_json")" = "$GITHUB_REPOSITORY"
           }
-          check_run "$SCOOP_RUN_ID" ".github/workflows/packaging-scoop.yml"
-          check_run "$HOMEBREW_RUN_ID" ".github/workflows/packaging-homebrew.yml"
+          if [ -n "$SCOOP_RUN_ID" ]; then
+            check_run "$SCOOP_RUN_ID" ".github/workflows/packaging-scoop.yml"
+          fi
+          if [ -n "$HOMEBREW_RUN_ID" ]; then
+            check_run "$HOMEBREW_RUN_ID" ".github/workflows/packaging-homebrew.yml"
+          fi
 
       - name: Download and verify every evidence draft, then aggregate the rows
         env:
@@ -219,12 +289,22 @@ jobs:
           }
           verify "evidence-smoke-$PACKAGING_RUN_ID"    "$PACKAGING_RUN_ID" \
             ".github/workflows/packaging-smoke.yml"    "$EVIDENCE_DOWNLOAD/rows-raw/packaging"
-          verify "evidence-scoop-$SCOOP_RUN_ID"        "$SCOOP_RUN_ID" \
-            ".github/workflows/packaging-scoop.yml"    "$EVIDENCE_DOWNLOAD/rows-raw/scoop"
-          verify "evidence-homebrew-$HOMEBREW_RUN_ID"  "$HOMEBREW_RUN_ID" \
-            ".github/workflows/packaging-homebrew.yml" "$EVIDENCE_DOWNLOAD/rows-raw/homebrew"
-          gh release download "$CLAUDE_EVIDENCE_RELEASE" --pattern 'claude-*.json' \
-            --dir "$EVIDENCE_DOWNLOAD/rows-raw/claude"
+          # Each optional source is aggregated when supplied. Skipping an absent
+          # one cannot smuggle a channel past the gate: the readiness gate below
+          # derives its required rows from the claimed channels, so an unclaimed
+          # channel demands no row and a claimed one was already refused above.
+          if [ -n "$SCOOP_RUN_ID" ]; then
+            verify "evidence-scoop-$SCOOP_RUN_ID"      "$SCOOP_RUN_ID" \
+              ".github/workflows/packaging-scoop.yml"  "$EVIDENCE_DOWNLOAD/rows-raw/scoop"
+          fi
+          if [ -n "$HOMEBREW_RUN_ID" ]; then
+            verify "evidence-homebrew-$HOMEBREW_RUN_ID"  "$HOMEBREW_RUN_ID" \
+              ".github/workflows/packaging-homebrew.yml" "$EVIDENCE_DOWNLOAD/rows-raw/homebrew"
+          fi
+          if [ -n "$CLAUDE_EVIDENCE_RELEASE" ]; then
+            gh release download "$CLAUDE_EVIDENCE_RELEASE" --pattern 'claude-*.json' \
+              --dir "$EVIDENCE_DOWNLOAD/rows-raw/claude"
+          fi
           mkdir -p "$RELEASE_COHORT_DIR"
           tar -xzf "$EVIDENCE_DOWNLOAD/rows-raw/packaging/cadrumo-release-cohort.tar.gz" \
             -C "$RELEASE_COHORT_DIR"
@@ -333,12 +413,20 @@ jobs:
           }
           verify_rows "evidence-smoke-$PACKAGING_RUN_ID"   "$PACKAGING_RUN_ID" \
             ".github/workflows/packaging-smoke.yml"    packaging
-          verify_rows "evidence-scoop-$SCOOP_RUN_ID"       "$SCOOP_RUN_ID" \
-            ".github/workflows/packaging-scoop.yml"    scoop
-          verify_rows "evidence-homebrew-$HOMEBREW_RUN_ID" "$HOMEBREW_RUN_ID" \
-            ".github/workflows/packaging-homebrew.yml" homebrew
-          gh release download "$CLAUDE_EVIDENCE_RELEASE" --pattern 'claude-*.json' \
-            --dir "$EVIDENCE_FINAL_DIR/attach"
+          # Optional sources: supplied for every channel this release claims
+          # (Gate 2 refused otherwise), absent only for channels it does not.
+          if [ -n "$SCOOP_RUN_ID" ]; then
+            verify_rows "evidence-scoop-$SCOOP_RUN_ID"     "$SCOOP_RUN_ID" \
+              ".github/workflows/packaging-scoop.yml"  scoop
+          fi
+          if [ -n "$HOMEBREW_RUN_ID" ]; then
+            verify_rows "evidence-homebrew-$HOMEBREW_RUN_ID" "$HOMEBREW_RUN_ID" \
+              ".github/workflows/packaging-homebrew.yml" homebrew
+          fi
+          if [ -n "$CLAUDE_EVIDENCE_RELEASE" ]; then
+            gh release download "$CLAUDE_EVIDENCE_RELEASE" --pattern 'claude-*.json' \
+              --dir "$EVIDENCE_FINAL_DIR/attach"
+          fi
 
       # Fail-closed publication tripwire (reconciled D9): rows are scrubbed at
       # mint time, so this SWEEPS and never rewrites — any residual runner
