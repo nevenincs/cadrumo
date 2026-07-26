@@ -21,6 +21,8 @@ related:
   - '[[2026-07-25-censal-profile-autofill-P01-S24]]'
   - '[[2026-07-25-censal-profile-autofill-P01-S33]]'
   - '[[2026-07-25-censal-profile-autofill-P01-S34]]'
+  - '[[2026-07-25-censal-profile-autofill-P01-S35]]'
+  - '[[2026-07-25-censal-profile-autofill-P01-S36]]'
   - '[[2026-07-25-censal-profile-autofill-P02-S04]]'
   - '[[2026-07-25-censal-profile-autofill-P02-S05]]'
   - '[[2026-07-25-censal-profile-autofill-P02-S06]]'
@@ -32,6 +34,9 @@ related:
   - '[[2026-07-25-censal-profile-autofill-P03-S15]]'
   - '[[2026-07-25-censal-profile-autofill-P03-S21]]'
   - '[[2026-07-25-censal-profile-autofill-P03-S22]]'
+  - '[[2026-07-25-censal-profile-autofill-P03-S25]]'
+  - '[[2026-07-25-censal-profile-autofill-P03-S26]]'
+  - '[[2026-07-25-censal-profile-autofill-P03-S27]]'
   - '[[2026-07-25-censal-profile-autofill-adr]]'
   - '[[2026-07-25-censal-profile-autofill-plan]]'
   - '[[2026-07-25-censal-profile-autofill-research]]'
@@ -81,7 +86,12 @@ Auto-generated index of all documents tagged with `#censal-profile-autofill`.
 - `2026-07-25-censal-profile-autofill-P01-S24` - Pin the session-identity comparison the certificate provider's only fail-closed check rests on, asserting the refusal and the per-return wiring rather than the expectation alone
 - `2026-07-25-censal-profile-autofill-P01-S33` - Rule on whether a schema-required profile field may be cleared or left never-set after creation, the completeness check keying on fact presence rather than value presence while the overview beside it already keys on value, and place the guard where the state is created rather than at each consumer
 - `2026-07-25-censal-profile-autofill-P01-S34` - Refuse a live session when an active profile carries no fiscal identity, closing the certificate path where a cleared field disarmed both the credential guard and the deferred session comparison, gated by a sweep over the whole provider enum
+- `2026-07-25-censal-profile-autofill-P01-S35` - Make a schema-required field bind per row on repeatable sections, closing both the declaration that enforced nothing and the completeness count an operator read as permanently wrong, through one helper both surfaces share
+- `2026-07-25-censal-profile-autofill-P01-S36` - Record the per-activity modulos precondition at the divergence predicate in every revision carrying it, and the mixed-scope warning at the profile schema, so the reasoning sits where the promoting change would be made rather than in a record
 - `2026-07-25-censal-profile-autofill-P03-S10` - Verify the whole path live end to end in three phases, a pull onto a blank profile that adopts, a second unchanged pull that is a no-op, and a third pull after the operator edits an adopted value that reports the divergence rather than overwriting it
+- `2026-07-25-censal-profile-autofill-P03-S25` - Bind the operator guide's account of what the censal pull fills to CENSAL_ADOPTABLE_PATHS with a both-directions parity gate, the page having promised the fiscal ID it never adopts while the ownership guard's deliberate first-read allowance kept the failure silent for a blank-identity operator
+- `2026-07-25-censal-profile-autofill-P03-S26` - Prove by execution whether the ownership guard reads a deliberately cleared identity as a first read, and close the adoption path if it does, a cleared identity being an operator decision rather than an absent one
+- `2026-07-25-censal-profile-autofill-P03-S27` - Rewrite this campaign's censo pull door docstring to assert what the test pins in the present tense with no narration of the module's previous state, then re-run the marker-integrity gate and quote its exit line rather than re-reading the file
 
 ### plan
 
