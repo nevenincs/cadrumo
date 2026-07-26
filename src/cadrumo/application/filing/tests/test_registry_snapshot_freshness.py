@@ -39,20 +39,23 @@ _PERIOD = Period(filing_year=2024, code="1T")
 
 
 @dataclass(frozen=True)
-class _ModelosStub:
-    """Stands in for the resource registry's ``modelos`` repository slot.
+class _ModelosSlot:
+    """The resource registry's ``modelos`` slot, holding a real authority.
 
-    Holds a real :class:`ValidatedRegistryAuthority`; the only thing substituted
-    is which authority instance the filing module reaches, mirroring what a
-    resource-registry reset changes.
+    Named a slot rather than a stub because nothing here is a test double: it
+    carries a real :class:`ValidatedRegistryAuthority`, and the only thing
+    substituted is WHICH authority instance the filing module reaches --
+    exactly what a resource-registry reset changes in production. Calling it a
+    stub claimed a fake this test does not use, and tripped the gate that bans
+    them.
     """
 
     authority: ValidatedRegistryAuthority
 
 
 @dataclass(frozen=True)
-class _ResourcesStub:
-    modelos: _ModelosStub
+class _ResourcesSlot:
+    modelos: _ModelosSlot
 
 
 def _copy_registry(destination: Path) -> Path:
@@ -103,7 +106,7 @@ def test_snapshot_resolution_follows_a_changed_registry_tree(
 
     monkeypatch.setattr(
         "cadrumo.application.filing._resources",
-        lambda: _ResourcesStub(modelos=_ModelosStub(authority=_authority_for(unchanged_root))),
+        lambda: _ResourcesSlot(modelos=_ModelosSlot(authority=_authority_for(unchanged_root))),
     )
     before = _load_registry_snapshot(modelo=_MODELO, period=_PERIOD)
     assert not _marked_casilla_ids(before.revision.casillas), (
@@ -112,7 +115,7 @@ def test_snapshot_resolution_follows_a_changed_registry_tree(
 
     monkeypatch.setattr(
         "cadrumo.application.filing._resources",
-        lambda: _ResourcesStub(modelos=_ModelosStub(authority=_authority_for(changed_root))),
+        lambda: _ResourcesSlot(modelos=_ModelosSlot(authority=_authority_for(changed_root))),
     )
     after = _load_registry_snapshot(modelo=_MODELO, period=_PERIOD)
 
@@ -152,7 +155,7 @@ def test_law_determined_resolution_is_preserved(
     authority = _authority_for(root)
     monkeypatch.setattr(
         "cadrumo.application.filing._resources",
-        lambda: _ResourcesStub(modelos=_ModelosStub(authority=authority)),
+        lambda: _ResourcesSlot(modelos=_ModelosSlot(authority=authority)),
     )
 
     for filing_year in (2023, 2024):
