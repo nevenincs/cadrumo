@@ -42,6 +42,7 @@ related:
   - '[[2026-07-25-censal-profile-autofill-plan]]'
   - '[[2026-07-25-censal-profile-autofill-research]]'
   - '[[2026-07-25-censal-profile-autofill-tooling-honesty-audit]]'
+  - '[[2026-07-26-censal-profile-autofill-adr]]'
   - '[[2026-07-26-censal-profile-autofill-campaign-close-honesty-review-audit]]'
   - '[[2026-07-26-censal-profile-autofill-repeatable-required-field-emission-audit]]'
 ---
@@ -55,6 +56,7 @@ Auto-generated index of all documents tagged with `#censal-profile-autofill`.
 ### adr
 
 - `2026-07-25-censal-profile-autofill-adr` - `censal-profile-autofill` adr: `profile-borne auth credentials and a read-only censal autofill` | (**status:** `accepted`)
+- `2026-07-26-censal-profile-autofill-adr` - `censal-profile-autofill` adr: `repeatable required field emission and predicate access` | (**status:** `proposed`)
 
 ### audit
 
