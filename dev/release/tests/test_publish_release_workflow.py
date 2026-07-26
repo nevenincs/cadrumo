@@ -112,6 +112,11 @@ def _document() -> Any:
     return yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
 
 
+def _collapse_spaces(text: str) -> str:
+    """Collapse runs of spaces/tabs so assertions bind substance, not alignment."""
+    return re.sub(r"[ \t]+", " ", text)
+
+
 def _run_surface(job: Mapping[str, object]) -> str:
     steps = job["steps"]
     assert isinstance(steps, list)
@@ -211,22 +216,26 @@ def test_validate_promotes_without_rebuild() -> None:
 
 
 def test_validate_aggregates_all_eleven_rows_from_authoritative_sources() -> None:
-    """Gate 2 pulls every channel's rows from its own run and re-checks 11/11, no weakening.
+    """Gate 2 pulls every channel's rows from its own run, no weakening.
 
-    Eleven is the true bound set: ``REQUIRED_DISTRIBUTION_ROWS`` carries exactly
+    Eleven is the full producible set: ``ALL_DISTRIBUTION_ROWS`` carries exactly
     3 python + 1 scoop + 3 homebrew + 4 claude-* rows, and Gate 2 aggregates the
     same partition (packaging smoke draft, scoop, homebrew, and the operator's
-    claude evidence release).
+    claude evidence release). How many of the eleven BLOCK is derived from the
+    claimed channels by the readiness gate, which this job still runs.
+
+    Matching is whitespace-normalised: the property is that each tag is derived
+    from its own run-id input, not the column the continuation happens to sit in.
     """
     validate = _document()["jobs"]["validate"]
-    surface = _run_surface(validate)
+    surface = _collapse_spaces(_run_surface(validate))
 
     # Each channel's rows come verified from its authoritative run's evidence
     # draft; the tags are DERIVED from the run-id inputs (no free-form evidence
     # tag input except the operator's claude release, which has no backing run).
-    assert 'verify "evidence-smoke-$PACKAGING_RUN_ID"    "$PACKAGING_RUN_ID"' in surface
-    assert 'verify "evidence-scoop-$SCOOP_RUN_ID"        "$SCOOP_RUN_ID"' in surface
-    assert 'verify "evidence-homebrew-$HOMEBREW_RUN_ID"  "$HOMEBREW_RUN_ID"' in surface
+    assert 'verify "evidence-smoke-$PACKAGING_RUN_ID" "$PACKAGING_RUN_ID"' in surface
+    assert 'verify "evidence-scoop-$SCOOP_RUN_ID" "$SCOOP_RUN_ID"' in surface
+    assert 'verify "evidence-homebrew-$HOMEBREW_RUN_ID" "$HOMEBREW_RUN_ID"' in surface
     assert 'gh release download "$CLAUDE_EVIDENCE_RELEASE"' in surface
 
     # Trusted-source predicate on the smoke run (ci-speed redesign): a
@@ -246,6 +255,76 @@ def test_validate_aggregates_all_eleven_rows_from_authoritative_sources() -> Non
     # The readiness gate still enforces the complete bound row set (no weakening).
     assert "dev.release.readiness" in surface
     assert "--evidence-dir" in surface
+
+
+def test_preflight_enforces_the_human_approval_gate_it_promises() -> None:
+    """The required-reviewers rule is verified, not merely instructed.
+
+    ``environment: release`` is satisfied by an environment with NO protection
+    rules, so the publish job would promote to PyPI and every public channel
+    with no human in the loop while prerequisite 2's text still claimed "that
+    approval click is the human release gate". The live environment was in
+    exactly that state when this gate was written.
+    """
+    preflight = _document()["jobs"]["operator-preflight"]
+    surface = _run_surface(preflight)
+    assert "environments/release" in surface, "nothing reads the environment's protection rules"
+    assert "required_reviewers" in surface
+    # Fail-closed: an unreadable environment is NOT a confirmed gate.
+    assert "could not be read" in surface
+    # ...but a dry_run publishes nothing, so the diagnostic stays usable.
+    assert "::warning::" in surface
+    assert "DRY_RUN" in surface
+    # The publish job is still the thing the environment protects.
+    assert _document()["jobs"]["publish"]["environment"] == "release"
+
+
+def test_acquisition_inputs_are_optional_at_the_form_and_derived_at_the_gate() -> None:
+    """The bootstrap deadlock stays closed without loosening a single guarantee.
+
+    A Scoop or Homebrew acquisition run installs the manifest or formula out of
+    the shared repository, so it cannot succeed before a first publication writes
+    that pointer -- and the first publication could not be dispatched without it.
+    The inputs are therefore optional AT THE FORM; whether each is actually
+    required is derived at Gate 2 from the channels the release claims, the same
+    authority the readiness gate derives its blocking rows from.
+
+    The paired assertions are the control: optional-at-the-form is only safe
+    BECAUSE the derivation step runs, so this test fails if either half is
+    dropped.
+    """
+    document = _document()
+    inputs = document[True]["workflow_dispatch"]["inputs"]
+    for name in ("scoop_run_id", "homebrew_run_id", "claude_evidence_release"):
+        assert inputs[name]["required"] is False, f"{name} must not deadlock the first publication"
+        assert inputs[name]["default"] == "", f"{name} must default empty, not to a fabricated id"
+    # The cohort itself is never optional: it carries the published bytes.
+    assert inputs["packaging_run_id"]["required"] is True
+
+    surface = _run_surface(document["jobs"]["validate"])
+    assert "dev.packaging.publication_inputs" in surface, (
+        "optional inputs are only safe because Gate 2 derives which are mandatory; "
+        "without this step a claimed channel could be published unproven"
+    )
+    # The derivation must run BEFORE the aggregation it authorises.
+    assert surface.index("dev.packaging.publication_inputs") < surface.index("evidence_release verify")
+    # And the readiness gate still runs, so the row set is enforced regardless.
+    assert "dev.release.readiness" in surface
+
+
+def test_absent_optional_sources_are_skipped_not_fabricated() -> None:
+    """Both jobs guard each optional aggregation on a non-empty id.
+
+    An unguarded ``verify "evidence-scoop-"`` would resolve to a nonexistent tag
+    and fail the publication for a channel the release does not even claim.
+    """
+    document = _document()
+    for job_name in ("validate", "publish"):
+        surface = _collapse_spaces(_run_surface(document["jobs"][job_name]))
+        for variable in ("SCOOP_RUN_ID", "HOMEBREW_RUN_ID", "CLAUDE_EVIDENCE_RELEASE"):
+            assert f'if [ -n "${variable}" ]; then' in surface, (
+                f"{job_name} consumes ${variable} without a presence guard"
+            )
 
 
 def test_workflow_row_count_prose_matches_the_full_distribution_set() -> None:
