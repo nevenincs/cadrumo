@@ -464,36 +464,44 @@ class ProfileRepository:
 
         The manifest projection this method owns is exactly ``label``,
         ``kdf_params``, ``recovery_enrolled``, ``schema_version`` and
-        ``status``. Every other manifest field is preserved verbatim.
+        ``status``. Every other manifest field is carried across from the
+        manifest already on disk.
 
-        That contract is expressed by mutating the manifest already on
-        disk rather than rebuilding one field by field, and the
-        difference is load-bearing. Under reconstruction a field left
-        out does not fail — it silently takes its model default, which
-        is how ``session_absolute_minutes`` was reset to ``None`` on
-        every save while ``idle_lock_minutes`` beside it survived. That
-        field feeds the absolute login-session expiry, so dropping it
-        silently lengthened a session the operator had deliberately
-        shortened. Copy-and-update makes the omission impossible instead
-        of merely fixed: a field added to the manifest later is carried
-        by construction, without this method being touched.
+        The manifest is rebuilt field by field rather than copy-updated,
+        deliberately. Enumeration is riskier in one direction — a field
+        left out does not fail, it silently takes its model default,
+        which is how ``session_absolute_minutes`` was once reset to
+        ``None`` on every save while ``idle_lock_minutes`` beside it
+        survived, silently lengthening an absolute login session the
+        operator had deliberately shortened. That risk is now owned by
+        ``test_every_manifest_writer_preserves_the_fields_it_does_not_own``,
+        whose carry set is DERIVED from the model, so a new manifest
+        field reddens it until someone classifies the field as owned or
+        carried. Copy-update would instead preserve a new field silently
+        and nobody would ever make that decision — on a durable format
+        the forced decision is worth more than automatic preservation.
 
-        ``bucket_id`` and ``created_at`` are deliberately not restated
-        from the aggregate. They are bucket identity, not a projection
-        this writer owns, and their agreement with the aggregate is
-        already asserted by ``verify_profile_integrity`` at load.
+        ``bucket_id`` and ``created_at`` are restated from the aggregate
+        rather than carried; ``verify_profile_integrity`` asserts their
+        agreement at load, so a disagreement surfaces as drift rather
+        than being quietly written over.
         """
         paths = bucket_paths(self._root, aggregate.profile_id)
+        current_manifest = read_manifest(paths)
         write_manifest(
             paths,
-            read_manifest(paths).model_copy(
-                update={
-                    "label": aggregate.label,
-                    "kdf_params": aggregate.kdf_params,
-                    "recovery_enrolled": aggregate.recovery_enrolled,
-                    "schema_version": aggregate.manifest_schema_version,
-                    "status": aggregate.status,
-                },
+            BucketManifest(
+                bucket_id=aggregate.profile_id,
+                label=aggregate.label,
+                created_at=aggregate.created_at,
+                last_unlocked_at=current_manifest.last_unlocked_at,
+                kdf_params=aggregate.kdf_params,
+                recovery_enrolled=aggregate.recovery_enrolled,
+                idle_lock_minutes=current_manifest.idle_lock_minutes,
+                session_absolute_minutes=current_manifest.session_absolute_minutes,
+                key_schedule=current_manifest.key_schedule,
+                schema_version=aggregate.manifest_schema_version,
+                status=aggregate.status,
             ),
         )
         self._lifecycle_repository(aggregate.profile_id).save(aggregate.record)

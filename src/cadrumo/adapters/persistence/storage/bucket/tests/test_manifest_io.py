@@ -202,3 +202,44 @@ def test_manifest_datetimes_are_written_as_rfc3339_offset_datetimes(tmp_path: Pa
     document = tomllib.loads(text)
     assert document["created_at"] == manifest.created_at
     assert document["last_unlocked_at"] == manifest.last_unlocked_at
+
+
+def test_write_refuses_an_invalid_manifest_and_writes_no_bytes(tmp_path: Path) -> None:
+    """The write ingress validates, so an invalid instance never reaches disk.
+
+    ``model_copy(update=...)`` skips validation, which is precisely how an
+    invalid instance can exist in memory: several manifest writers mutate that
+    way. ``idle_lock_minutes`` carries ``gt=0``, so setting it to ``0`` through
+    ``model_copy`` produces a genuinely constraint-violating manifest without
+    fabricating any persisted shape.
+
+    Refusing at write time rather than on the next read matters on this format
+    specifically: the bucket-scan path swallows manifest read failures, so a
+    deferred refusal would not surface as an error — the profile would simply
+    disappear from the operator's listing.
+    """
+    paths = provision_bucket_directory(tmp_path, "alpha")
+    write_manifest(paths, _fixture_manifest())
+    good_bytes = manifest_path(paths).read_bytes()
+
+    invalid = _fixture_manifest().model_copy(update={"idle_lock_minutes": 0})
+    with pytest.raises(StorageValidationError):
+        write_manifest(paths, invalid)
+
+    assert manifest_path(paths).read_bytes() == good_bytes, (
+        "write_manifest refused the invalid manifest but had already replaced the file; "
+        "the validation must happen before any byte is serialised or written"
+    )
+
+
+def test_the_write_validation_accepts_a_valid_manifest(tmp_path: Path) -> None:
+    """The other half: the ingress is discriminating, not always-refusing.
+
+    Without this the refusal above would pass just as happily if the ingress
+    rejected everything, which would be a gate that cannot distinguish the
+    property it guards.
+    """
+    paths = provision_bucket_directory(tmp_path, "alpha")
+    valid = _fixture_manifest().model_copy(update={"idle_lock_minutes": 1})
+    write_manifest(paths, valid)
+    assert read_manifest(paths).idle_lock_minutes == 1
