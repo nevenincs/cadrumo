@@ -553,3 +553,74 @@ class TestApply:
                 divergence.axis for divergence in open_censo_divergences(state.active_profile_record(schema=schema))
             }
             assert "contact.postcode" in axes
+
+
+class TestClearedIdentityIsNotAFirstRead:
+    """A deleted fiscal identity is not the same as never having had one."""
+
+    def test_a_cleared_identity_refuses_a_foreign_read(self, schema: ProfileSchemaDefinition) -> None:
+        """Clearing a required field is not a licence to accept anyone's census.
+
+        Reachable in practice: registration refuses a profile with no fiscal
+        identity, but clearing it afterwards is accepted, and a value-only view
+        of the record cannot tell that deletion apart from a first read.
+        """
+        with profile_create_storage_span(_PROFILE_ID) as routing:
+            state = _register(schema, routing)
+            state = set_active_fields(state, (UserProfileFact(path="identity.tax_id", value=None),))
+            record = state.active_profile_record(schema=schema)
+            with pytest.raises(CensalIdentityMismatchError):
+                reconcile_censal_read(
+                    record,
+                    censal_facts_from_read(_read(nif="X1234567L")),
+                    incoming_identity="X1234567L",
+                )
+
+    def test_a_cleared_identity_refuses_even_its_own_taxpayers_read(
+        self,
+        schema: ProfileSchemaDefinition,
+    ) -> None:
+        """The refusal is about being unable to confirm, not about mismatching.
+
+        A deletion says nothing about whose record this is, so it cannot
+        confirm ownership even when the read happens to carry the identity the
+        profile used to hold.
+        """
+        with profile_create_storage_span(_PROFILE_ID) as routing:
+            state = _register(schema, routing)
+            state = set_active_fields(state, (UserProfileFact(path="identity.tax_id", value=None),))
+            record = state.active_profile_record(schema=schema)
+            with pytest.raises(CensalIdentityMismatchError):
+                reconcile_censal_read(
+                    record,
+                    censal_facts_from_read(_read(nif=_PROFILE_NIF)),
+                    incoming_identity=_PROFILE_NIF,
+                )
+
+    def test_a_never_set_identity_still_adopts(self) -> None:
+        """Anti-tautology: the genuine first read must NOT be caught by the fix.
+
+        A guard that refused both states would pass the two tests above while
+        breaking the case the allowance exists for. `None` here is a record
+        with no fact at that path at all, which is what "never set" means to
+        the effective-fact projection.
+        """
+        outcome = reconcile_censal_read(
+            None,
+            censal_facts_from_read(_read(nif="X1234567L")),
+            incoming_identity="X1234567L",
+        )
+        assert {fact.path for fact in outcome.adopted} == set(CENSAL_ADOPTABLE_PATHS)
+
+    def test_the_apply_path_refuses_a_cleared_identity_too(self, schema: ProfileSchemaDefinition) -> None:
+        """The commit refuses identically, not only the preview.
+
+        The refusal lives in the reconciliation precisely so both doors answer
+        the same way; a guard on apply alone would show an operator a preview
+        full of adoptions the commit then rejects.
+        """
+        with profile_create_storage_span(_PROFILE_ID) as routing:
+            state = _register(schema, routing)
+            state = set_active_fields(state, (UserProfileFact(path="identity.tax_id", value=None),))
+            with pytest.raises(CensalIdentityMismatchError):
+                apply_censal_read(state, _read(nif="X1234567L"))

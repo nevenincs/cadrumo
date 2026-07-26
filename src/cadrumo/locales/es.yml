@@ -1575,6 +1575,7 @@ application:
         instantánea de perfil es más reciente de lo que admite esta aplicación.
       unsupported_bundle_schema_version: La versión del esquema del paquete no es
         compatible con esta versión de la aplicación.
+      censal_read_identity_cleared: 'El NIF de este perfil se ha vaciado, por lo que no puede confirmarse que la lectura censal le corresponda. Restaure el NIF y vuelva a ejecutar la consulta.'
     notices:
       censo_divergences_open: '{count} dato(s) del perfil siguen difiriendo del Certificado
         de Situación Censal y quedan sin resolver: {axes}.'

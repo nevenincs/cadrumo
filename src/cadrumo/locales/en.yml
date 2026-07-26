@@ -1445,6 +1445,7 @@ application:
         is newer than this application supports.
       unsupported_bundle_schema_version: The bundle schema version is not supported
         by this application version.
+      censal_read_identity_cleared: 'This profile''s fiscal ID was cleared, so a censal read cannot be confirmed to belong to it. Restore the fiscal ID and pull again.'
     notices:
       censo_divergences_open: '{count} profile field(s) still diverge from the Certificado
         de Situación Censal and remain unresolved: {axes}.'

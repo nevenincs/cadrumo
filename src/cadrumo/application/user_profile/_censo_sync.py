@@ -42,6 +42,7 @@ if TYPE_CHECKING:
     from ...adapters.outbound.aeat.sede import CensalDatosResult, CensalDomicilio
     from ...domain.user_profile import UserProfileRecord
     from ..workflow import WorkflowState
+    from ._projections import EffectiveFact
     from ._repository import UserProfileLifecycleRepository
 
 CENSO_SOURCE_TAG: Final = "aeat_censo_read"
@@ -74,7 +75,10 @@ class CensalIdentityMismatchError(CensoSyncError):
     """The read belongs to a different taxpayer than the profile."""
 
 
-def _assert_read_belongs_to_this_profile(existing_tax_id: str | None, incoming_tax_id: str | None) -> None:
+def _assert_read_belongs_to_this_profile(
+    recorded_identity: EffectiveFact | None,
+    incoming_tax_id: str | None,
+) -> None:
     """Refuse a read whose fiscal identity is not the profile's.
 
     A read of another taxpayer is not a disagreement to adjudicate — it is a
@@ -89,16 +93,33 @@ def _assert_read_belongs_to_this_profile(existing_tax_id: str | None, incoming_t
     page describing another. Ownership of the READ is a separate question
     from ownership of the session, so it is answered separately here.
 
-    A profile with no recorded fiscal identity has nothing to protect and is
-    the ordinary first-read case, so it is allowed. A read carrying no
-    identity refuses: it cannot be attributed to this profile, and being
-    unable to confirm ownership is not the same as confirming it.
+    Three states, not two, which is why this takes the effective FACT rather
+    than its value:
+
+    * the path was NEVER SET — genuinely the first read, nothing to protect,
+      allowed;
+    * the path was CLEARED — the operator deleted a field the schema requires,
+      which is not a licence to accept anyone's census. Refused, because a
+      deletion says nothing about whose record this is;
+    * the path holds a value — compared, and a mismatch refuses.
+
+    A value-only view collapses the first two into "blank" and would accept a
+    stranger's census onto a profile whose identity had been deliberately
+    removed.
 
     Raises:
-        CensalIdentityMismatchError: When the identities differ, or when the
-            read carries none while the profile does.
+        CensalIdentityMismatchError: When the identities differ, when the
+            profile's identity was cleared, or when the read carries none
+            while the profile does.
     """
-    existing = (existing_tax_id or "").strip().upper()
+    if recorded_identity is None:
+        return
+    if recorded_identity.value is None:
+        raise CensalIdentityMismatchError(
+            "this profile's fiscal identity was cleared, so a censal read cannot be confirmed to belong to it",
+            translated_message="application.user_profile.errors.censal_read_identity_cleared",
+        )
+    existing = recorded_identity.value.strip().upper()
     if not existing:
         return
     incoming = (incoming_tax_id or "").strip().upper()
@@ -259,11 +280,7 @@ def reconcile_censal_read(
     from ._projections import record_to_effective_facts
 
     existing = record_to_effective_facts(record)
-    recorded_identity = existing.get(_TAX_ID_PATH)
-    _assert_read_belongs_to_this_profile(
-        recorded_identity.value if recorded_identity is not None else None,
-        incoming_identity,
-    )
+    _assert_read_belongs_to_this_profile(existing.get(_TAX_ID_PATH), incoming_identity)
     adopted: list[UserProfileFact] = []
     divergences: list[tuple[str, str]] = []
     for fact in facts:
