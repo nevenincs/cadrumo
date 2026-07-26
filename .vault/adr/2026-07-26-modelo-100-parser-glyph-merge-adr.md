@@ -9,7 +9,7 @@ related:
   - '[[2026-07-26-declaracion-real-render-verification-campaign-close-honesty-review-audit]]'
 ---
 
-# `modelo-100-parser-glyph-merge` adr: `how to stop the parser fabricating amounts from merged box-number glyphs` | (**status:** `proposed`)
+# `modelo-100-parser-glyph-merge` adr: `how to stop the parser fabricating amounts from merged box-number glyphs` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -128,6 +128,43 @@ Not implemented, and deliberately so. What implementation would require, in orde
 Until step 3 is answered, option (D) stands and Modelo 100 remains excluded from the
 real-render gate with its exclusion evidenced.
 
+### Step 1 result, measured 2026-07-26: the borrador question is undecidable, and why
+
+Step 1 was run and it does not return an answer. It returns the reason there cannot
+be one yet, which is more useful.
+
+Measured across all three bundled borrador Modelo 100 fixtures: mixed font sizes are
+present (9.0, 10.0, 11.0), but there are **zero** small-over-large x-range overlaps on
+any shared row, and **zero** malformed money-shaped tokens — no instance of the
+comma-not-two-digits-from-the-end signature the declaración merge produces.
+
+**That clean negative is worthless as evidence, and must not be read as "the borrador
+is clean".** All three fixtures carry `Producer = ReportLab PDF Library`, are one page
+and roughly 1.9 KB, and yield 49 words each; the generator that made them,
+`_generate.py`, sits in the same directory. They are this project's own output. A
+generated fixture cannot exhibit a defect that arises from AEAT's rendering, so the
+probe confirms only that our generator does not overlap glyphs — which was never in
+question.
+
+**The repository holds no real AEAT borrador render of any modelo.** So Q1's borrador
+half is blocked on exactly the evidence gap that governs the rest of this work, and
+option (D) stands for that reason rather than for want of effort.
+
+Two further findings fell out, and both are worse than the blocked measurement:
+
+- **The borrador corpus reproduces the structural weakness that hid the original
+  defect**, one layer over. It is authored to match the extractor, so a green borrador
+  suite measures the generator's conventions rather than AEAT's — the same condition
+  that let six unprintable casillas survive in the Modelo 303 profile for months.
+- **Borrador fixtures carry no provenance sidecars at all**, and the provenance gate
+  scans only `justificantes/`. So they are outside the fixture-provenance discipline
+  entirely: nothing declares what they are, and nothing would notice if a real
+  specimen were swapped in or a synthetic one swapped out. That is a weaker position
+  than the declaración corpus was in even before this campaign started.
+
+Step 2, the ledger evidence text layer, remains unrun and is the more consequential of
+the two, since it reads taxpayer financial documents.
+
 ## Constraints
 
 The governing `declaracion-real-render-verification` decisions bind here. D2 governs
@@ -166,7 +203,15 @@ declaración estate was measured. That measurement is the gating work, not the f
 
 If the borrador lead proves out, this stops being a Modelo 100 declaration defect and
 becomes a rendering-convention defect affecting every AEAT surface that prints a box
-number beside an amount, which would change the shape of the answer.
+number beside an amount, which would change the shape of the answer. As measured, the
+lead can be neither confirmed nor refuted: the borrador corpus is wholly generated, so
+it is structurally incapable of exhibiting the defect. The lead stays open rather than
+closed, and anyone who later reads the borrador suite as green should read this
+paragraph first.
+
+The borrador corpus's own gaps are now the nearer problem: no provenance sidecars, no
+gate coverage, and a corpus authored to match its extractor. Those are fixable without
+a real render, unlike the question they currently block.
 
 ## Codification candidates
 
