@@ -1499,7 +1499,7 @@ application:
         ez az alkalmazás nem támogatja.
       unsupported_bundle_schema_version: A csomag sémaverziója nem támogatott ebben
         az alkalmazásverzióban.
-      censal_read_identity_cleared: 'Ennek a profilnak az adóazonosítója ki lett ürítve, ezért nem erősíthető meg, hogy a nyilvántartási olvasás hozzá tartozik. Állítsa vissza az adóazonosítót, majd futtassa újra a lekérdezést.'
+      censal_read_identity_unset: 'Rögzítse az adóazonosítóját, mielőtt lekérdezi a nyilvántartását: ennek a profilnak még nincs, ezért a lekérdezés nem tudja megerősíteni, hogy az AEAT által visszaadott rekord az Öné. Futtassa az aeat config profile edit parancsot a megadásához.'
     notices:
       censo_divergences_open: '{count} profiladat továbbra is eltér a Certificado
         de Situación Censal tanúsítványtól és megoldatlan: {axes}.'
