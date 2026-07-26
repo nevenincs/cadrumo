@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#test-harness-honesty'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-26'
+modified: '2026-07-26'
 related:
   - '[[2026-07-25-test-harness-honesty-S01]]'
   - '[[2026-07-25-test-harness-honesty-S04]]'
@@ -15,6 +15,7 @@ related:
   - '[[2026-07-25-test-harness-honesty-adr]]'
   - '[[2026-07-25-test-harness-honesty-false-green-gates-audit]]'
   - '[[2026-07-25-test-harness-honesty-plan]]'
+  - '[[2026-07-26-test-harness-honesty-research]]'
 ---
 
 # `test-harness-honesty` feature index
@@ -43,3 +44,7 @@ Auto-generated index of all documents tagged with `#test-harness-honesty`.
 ### plan
 
 - `2026-07-25-test-harness-honesty-plan` - `test-harness-honesty` plan
+
+### research
+
+- `2026-07-26-test-harness-honesty-research` - `test-harness-honesty` research: `{topic}`
