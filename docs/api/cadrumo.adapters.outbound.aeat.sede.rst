@@ -20,6 +20,7 @@ Submodules
    cadrumo.adapters.outbound.aeat.sede._censal_datos
    cadrumo.adapters.outbound.aeat.sede._declarations
    cadrumo.adapters.outbound.aeat.sede._declarations_diagnostics
+   cadrumo.adapters.outbound.aeat.sede._declarations_fetch
    cadrumo.adapters.outbound.aeat.sede._declarations_listbox
    cadrumo.adapters.outbound.aeat.sede._declarations_observations
    cadrumo.adapters.outbound.aeat.sede._declarations_remote

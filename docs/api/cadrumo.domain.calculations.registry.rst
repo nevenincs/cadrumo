@@ -53,6 +53,7 @@ Submodules
    cadrumo.domain.calculations.registry._invoice_bindings
    cadrumo.domain.calculations.registry._irnr_ledger_bindings
    cadrumo.domain.calculations.registry._ledger_bindings
+   cadrumo.domain.calculations.registry._ledger_impatriado_bindings
    cadrumo.domain.calculations.registry._legal
    cadrumo.domain.calculations.registry._live_parity
    cadrumo.domain.calculations.registry._loader
