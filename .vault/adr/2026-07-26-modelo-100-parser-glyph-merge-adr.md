@@ -92,11 +92,16 @@ would repeat the generalisation this line of work exists to correct.
 
 The three coupled decisions, stated so they are not mistaken for one:
 
-**Q1 — May the shared inbound-PDF primitive change its word segmentation?** The fix
-belongs in `adapters/inbound/pdf/_pdfplumber.py`, not in the declaración parser.
-Measured, that primitive has **three production consumers**: the declaración adapter,
-the borrador adapter, and the ledger evidence text layer. Only the first has been
-measured. The other two must be, before this can be answered.
+**Q1 — May the shared inbound-PDF primitive change its word segmentation?**
+**Answered: no, not by the prototyped mechanism.** The fix belongs in
+`adapters/inbound/pdf/_pdfplumber.py`, not in the declaración parser. That primitive
+has three production consumers: the declaración adapter (measured — only Modelo 100
+moves), the borrador adapter (undecidable — its corpus is wholly generated), and the
+ledger evidence text layer (measured — a real invoice's line structure changes, and
+that path parses invoice amounts by label-anchored regex). See the two step results
+below. Q1 is reopened in a narrower form: find a mechanism that leaves the ledger path
+byte-identical, or scope the change to the declaración entry point rather than the
+shared primitive.
 
 **Q2 — May the `named_label` capture contract change estate-wide?** The trailing-
 box-number rule changes what "the value on this line" means for all 158 `named_label`
@@ -162,8 +167,48 @@ Two further findings fell out, and both are worse than the blocked measurement:
   specimen were swapped in or a synthetic one swapped out. That is a weaker position
   than the declaración corpus was in even before this campaign started.
 
-Step 2, the ledger evidence text layer, remains unrun and is the more consequential of
-the two, since it reads taxpayer financial documents.
+### Step 2 result, measured 2026-07-26: the shared-primitive change is NOT safe as prototyped, and Q1 is answered
+
+Unlike the borrador corpus, the ledger evidence corpus contains genuinely external
+documents with declared provenance, so this question was answerable. Measured across
+all nine PDFs it consumes — four adversarial synthetics, a scanned invoice, a real
+ZUGFeRD invoice from `mustangproject`, and three N26 bank statements — comparing
+today's `page.extract_text()` against a size-aware variant, page by page:
+
+- **13 pages of real bank statements: byte-identical.**
+- Adversarial and scanned fixtures: identical or unreadable either way.
+- **The one real text-native invoice changed on both of its pages.**
+
+The change is bounded and worth stating precisely, because "changed" alone would
+overstate it. Character counts are identical (1203 and 573 unchanged), no numeric
+token is lost or gained, and page 2's numeric sequence is identical. What moves is
+**line grouping and reading order**: `2 Joghurt Banane 5,5000 50Stk 7% 275,00` becomes
+`2` on its own line followed by the rest, and a heading relocates.
+
+**That is enough to answer Q1 as no.** The evidence text feeds
+`_evidence_draft.build_invoice_draft`, which parses the supplier tax id, invoice
+number, date, taxable base, IVA rate, IVA amount and grand total by **label-anchored
+regex over the text** — mechanically the same class as `named_label`, and dependent on
+a label staying adjacent to its value. A reordering that separates the two would
+silently change a parsed invoice amount. On this specimen the labelled amounts survive;
+one specimen is not a licence.
+
+**The constraint is on the mechanism, not the goal.** The probe used
+`extract_text(extra_attrs=["size"])`, which splits words on size change and alters line
+assembly as a side effect. A narrower implementation — splitting words for capture
+while preserving line assembly, or applying size awareness only on the declaración
+entry point rather than in the shared primitive — may well leave the ledger path
+byte-identical. That is the design question the fix now has to answer, and it is a
+better-posed question than the one this record started with.
+
+So: Q1 is answered no for the prototyped mechanism, and reopened as "find a mechanism
+that is byte-identical here". Option (D) continues to stand.
+
+One measurement caveat, stated because it bounds the result: the corpus holds exactly
+**one** real text-native invoice. The scanned specimen has no usable text layer and the
+adversarial ones are this project's own output, so the invoice evidence for this
+conclusion is n=1. The bank-statement evidence is stronger at 13 pages across three
+real statements.
 
 ## Constraints
 
