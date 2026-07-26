@@ -448,8 +448,8 @@ def _parse_projection_binding_overrides(
 ) -> tuple[dict[BindingId, Decimal], dict[BindingId, str]]:
     """Split caller binding overrides into the Decimal and enum channels.
 
-    The split is decided by the binding's REGISTRY-DECLARED channel, never by
-    parse success. Deciding it by parse success inverted the test: a decimal
+    The split is decided by the binding's REGISTRY-DECLARED channel, as carried
+    on the :class:`ModeloRevision`, never by parse success. Deciding it by parse success inverted the test: a decimal
     binding whose value failed to parse was silently reclassified as an enum
     string, so a Spanish-convention operator's ``--binding <id>=1.234,56`` was
     accepted as the literal text ``"1.234,56"`` on the enum channel instead of

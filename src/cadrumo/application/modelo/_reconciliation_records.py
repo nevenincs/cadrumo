@@ -115,7 +115,10 @@ class ModeloReconciliationRecordRepository(SecureBoundRepository[ModeloReconcili
 
     Enrols under the shipped IVA-wallet reconciliation-decision precedent: an
     ``AUDIT``-class, ``PROFILE_LOCAL``, ``STRUCTURED_CUSTODY`` secure-object
-    namespace holding N rows per target. Reads inherit
+    namespace holding N rows per target. The
+    :class:`SensitivityClass` is taken from the namespace declaration rather
+    than restated here, so the class a row is written under and the class the
+    namespace advertises cannot diverge. Reads inherit
     :class:`~adapters.persistence.storage.SecureBoundRepository`'s
     classification and inner-envelope checks — the latter an EQUALITY against
     the namespace's declared ``schema_version``, not a ceiling, so a stamp that

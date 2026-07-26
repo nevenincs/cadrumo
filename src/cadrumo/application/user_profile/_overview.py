@@ -17,9 +17,12 @@ editable at any time; ``missing_required`` names what filing will
 eventually need, so the surface can show progress without ever refusing
 to display a profile that is not finished.
 
-Secret-classed values never leave this module in the clear: a masked
-field carries :data:`MASKED_PLACEHOLDER` as its value and reports
-``masked``, so no caller can render a secret by accident.
+Secret-classed values never leave this module in the clear: a field whose
+declared :class:`SensitivityClass` is ``SECRET`` carries
+:data:`MASKED_PLACEHOLDER` as its value and reports ``masked``, so no
+caller can render a secret by accident. The class is read from the
+schema's own declaration rather than from a list of field names kept
+here, so a newly-declared secret is masked the moment it is declared.
 
 See Also:
     :class:`~cadrumo.application.user_profile.ProfilePreflightService`
@@ -152,7 +155,7 @@ def build_profile_overview(
     need to see the blanks.
 
     Args:
-        record: The profile whose values populate the view.
+        record: The :class:`UserProfileRecord` whose values populate the view.
         label: Operator-facing display name; falls back to the record's own.
         schema: Optional schema override; the canonical schema when omitted.
 
