@@ -101,7 +101,7 @@ import pytest
 from .....core.resources import resources
 from .....tests import FIXTURES_DIR
 from ...pdf import parse_spanish_decimal
-from .._parser import _extract_profile_values, extract_pages_text
+from .._parser import _extract_profile_values, _select_extraction_profile, extract_pages_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -244,13 +244,24 @@ _REAL_SPECIMENS: tuple[_RealRenderSpecimen, ...] = (
 
 
 def _declaracion_profile(specimen: _AnnexSpecimen | _RealRenderSpecimen):
-    """Select the profile exactly as :func:`_select_extraction_profile` does.
+    """Select the profile by CALLING :func:`_select_extraction_profile`.
 
-    Selecting on ``artefact_kind`` instead would silently return nothing for half
-    the tree: that field is a free-form ``str`` and the registry splits it between
-    ``"declaracion"`` and ``"declaration_pdf"``, so the mismatch reads as "this
-    modelo has no declaration profile" rather than as an error. ``surface`` is the
-    closed enum the production selector keys on.
+    This gate exists to prove a profile can read a real AEAT render, which is
+    only true of the profile production would actually choose. It previously
+    re-implemented the selector's filter, so the two could diverge silently and
+    the gate would keep certifying a profile the parser no longer selects --
+    the assertion would still pass while testing the wrong subject.
+
+    The re-implementation was also a live trap in its own right: selecting on
+    ``artefact_kind`` rather than ``surface`` returns nothing for half the tree,
+    because that field is a free-form ``str`` the registry splits between
+    ``"declaracion"`` and ``"declaration_pdf"``, and the miss reads as "this
+    modelo has no declaration profile" rather than as an error. Calling the
+    selector removes the opportunity to get that wrong twice.
+
+    A modelo with no declaration profile, or more than one, now raises
+    :class:`DeclaracionParseError` from the selector itself rather than a local
+    assertion -- the same refusal an operator would meet.
     """
     snapshot = resources().modelos.authority.snapshot(
         specimen.modelo,
@@ -258,15 +269,7 @@ def _declaracion_profile(specimen: _AnnexSpecimen | _RealRenderSpecimen):
         period=specimen.period,
     )
     revision = snapshot.revision
-    profiles = [
-        p
-        for p in revision.extraction_profiles
-        if p.surface == "declaracion_pdf" and "declaration_pdf" in p.accepted_artefact_kinds
-    ]
-    assert len(profiles) == 1, (
-        f"{specimen.label}: expected exactly one declaracion_pdf profile, got {sorted(p.id for p in profiles)}"
-    )
-    return profiles[0], revision
+    return _select_extraction_profile(snapshot, extraction_profile_id=None), revision
 
 
 def _extracted_amounts(specimen: _AnnexSpecimen | _RealRenderSpecimen) -> dict[str, object]:
