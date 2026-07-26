@@ -81,6 +81,27 @@ record states were true when written; only the inference drawn from them fails,
 and it fails for the reason the record itself gives, having been written
 without reliable search.
 
+### gate-unproven-until-it-bites | high | two gates in one session reported safety they did not provide
+
+Two independently authored gates in this campaign were false green, and neither
+failure was visible by reading the test.
+
+The reconciliation store's first atomicity test stayed green when the production
+co-emit was split into two sequential saves. It built its own writes and
+exercised the batching primitive rather than the code composing it, and nothing
+observable on the success path distinguishes one batch from two. It failed open
+— the test was wrong while the production code was correct — so a later
+regression would have shipped unnoticed.
+
+The payload gate recorded here returned clean against the very file whose
+overflow prompted the work. It matched payload dicts passed inline as a keyword
+while the reconcile payload is built into a local and passed later, so it
+reported safety about the single case it was built for.
+
+Both were found the same way and by no other means: by making the production
+code wrong on purpose and checking whether the gate noticed. Inspection did not
+find them, and in both cases the authors had read their own tests closely.
+
 ### unratified-cap | medium | the bound had no declared home
 
 The 500-character cap was an inline literal in the domain model. No record
@@ -129,3 +150,17 @@ constraint.
 Should a guard be ruled in, keep its exemption list self-expiring: an exemption
 that outlives the site it excuses is a hole, and this survey found the reconcile
 exemption went stale within the hour as the relocation work landed.
+
+Treat a new gate as unproven until it has been shown to bite on a deliberate
+regression of the thing it guards. Restore from a copy taken beforehand; never
+reach for a destructive git operation to undo the regression. This is the only
+technique that found either false green recorded above, and it costs minutes
+against a gate that would otherwise report safety indefinitely.
+
+The corollary is about where the risk sits once a gate does bite. A gate that
+cannot prove a value bounded and therefore flags it is behaving correctly; the
+judgement moves into the allowlist, where each entry asserts something the
+detector cannot see. So the allowlist is what a future reviewer must read, not
+the detector. An entry that earns its place states why the value cannot grow; an
+entry added to quiet a flag is the regression this guard exists to prevent, and
+it will look identical in the diff.
