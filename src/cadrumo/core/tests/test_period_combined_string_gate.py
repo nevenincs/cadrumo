@@ -97,7 +97,7 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
     AllowlistRule(
         path=_path(r"^src/cadrumo/application/modelo/tests/test_reconciliation_record_store\.py$"),
         reason="reconciliation-record roundtrip fixture uses a representative justificante PDF filename",
-        pattern_names=frozenset({"year-qualified quarterly token"}),
+        pattern_names=frozenset({"calendar quarter token"}),
         text=_text(r"justificantes.*\.pdf"),
     ),
     AllowlistRule(
