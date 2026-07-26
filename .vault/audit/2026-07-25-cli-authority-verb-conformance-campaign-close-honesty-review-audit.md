@@ -502,6 +502,16 @@ work did, separating a memory measurement that stood from the conclusion hung on
 it that did not — the reader can act on it safely and the correction costs one
 command instead of a retraction.
 
+The sharpest statement of why this must be mechanical came from the phase whose
+claims it cost. Its three withdrawals were not produced by being careful — they
+were produced by someone asking for the evidence, and the evidence being cheap:
+a numstat, a control-character view of a log, one grep. **Every one of those
+claims would have survived a more careful reading of the same artefact.** That
+is the whole argument. Care spent on the wrong artefact does not converge on the
+truth however much of it is applied, so the discipline cannot be "read more
+carefully"; it has to be "go to the subject", as a step someone can be asked for
+and can execute without judgement.
+
 A practical corollary for anything written to be read by someone who was not
 present: state the instrument beside the claim. "Four workers reported abnormal
 termination, written inline and independent of buffering" survives scrutiny in a
