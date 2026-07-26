@@ -81,10 +81,20 @@ jobs:
           channel and cannot run until the operator has completed ALL of the
           following (none can be done by an agent):
 
-            1. Register PyPI Trusted Publishing for cadrumo, cadrumo-data-manuals,
-               and cadrumo-data-official (publisher: this repo, workflow
-               publish-release.yml, environment release) at
-               https://pypi.org/manage/account/publishing/.
+            1. Register PyPI Trusted Publishing for all three projects. Publisher
+               in every case: this repo, workflow publish-release.yml, environment
+               `release` — this workflow declares exactly ONE environment and the
+               PyPI upload runs inside it, so any other environment name fails the
+               OIDC exchange. The registration PATH differs by whether the project
+               already exists on PyPI:
+                 - cadrumo-data-manuals and cadrumo-data-official ALREADY EXIST
+                   (name reservations published at 0.0.0), so add the publisher
+                   from EACH project's own "Manage -> Settings -> Publishing"
+                   page. PyPI rejects a pending publisher for a name that exists.
+                 - cadrumo does NOT exist on PyPI yet, so add a PENDING publisher
+                   at https://pypi.org/manage/account/publishing/. The project is
+                   created by the first successful upload — until then the name is
+                   unreserved.
             2. Create the `release` GitHub Environment with required reviewers
                (the operator) - that approval click is the human release gate.
             3. Provide the two shared, PRODUCT-NEUTRAL channel targets. The
