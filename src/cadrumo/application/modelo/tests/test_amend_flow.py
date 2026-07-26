@@ -664,3 +664,62 @@ def test_amend_revision_carries_casilla_observations(repos: _Repos) -> None:
     assert observed[_AMEND_INCOME_CASILLA].value == Decimal("1100")
     # the non-overridden casilla carries the baseline value
     assert observed[_AMEND_EXPENSE_CASILLA].value == new_revision.casilla_values[_AMEND_EXPENSE_CASILLA]
+
+
+def test_amend_baseline_carries_no_ledger_contributors(repos: _Repos) -> None:
+    """An amendment baseline is an imported filing, so it has no ledger rows.
+
+    This pins the fact the export evidence guard silently depends on. The
+    amend path mints its own BORRADOR -> VERIFICADO_COMPLETO -> PRESENTADO
+    transitions in-process and never calls ``verify_modelo_revision``, so
+    ``_persist_verified_revision_evidence`` — which lives inside verify's
+    granted branch — never runs for an amendment. An amendment therefore
+    reaches an export-admitted state carrying neither snapshot nor bundle.
+
+    That is only safe because the amendment also carries no
+    ``source_transaction_ids``: the export guard returns early on an empty
+    contributor set, so it never reaches the refusal. The emptiness is
+    structural rather than incidental — ``amend_modelo_revision`` refuses a
+    baseline without ``external_evidence``, and the external-import path
+    builds its revision without contributors — but nothing asserted it, and
+    the safety of a filing-grade guard should not rest on an unstated
+    property of a different module.
+
+    If a future path lets an imported baseline carry ledger contributors,
+    this fails, and it should: that amendment would reach export with
+    contributors and no evidence, which the guard refuses. The fix then
+    belongs on the amend path, not on the guard.
+    """
+    outcome = _drive_amend_creates_complementaria(repos)
+    _, cr_repo, _, _, _ = repos
+    new_revision = get_calculation_revision(outcome.new_filing.calculation_revision_id, calculation_repository=cr_repo)
+
+    assert outcome.baseline_revision.source_transaction_ids == ()
+    assert new_revision.source_transaction_ids == ()
+    # The amendment genuinely reaches an export-admitted state with no evidence;
+    # the empty contributor set is the only reason that is not a refusal.
+    assert new_revision.state is CalculationRevisionState.PRESENTADO
+    assert new_revision.ledger_filing_snapshot is None
+    assert new_revision.ledger_filing_evidence is None
+
+
+def test_export_guard_would_refuse_an_amendment_carrying_contributors(repos: _Repos) -> None:
+    """The latent half: contributors without evidence IS refused.
+
+    The sibling test pins that an amendment carries no contributors. This
+    one pins what the guard does if that ever stops holding, so the pair
+    states the whole invariant rather than half of it — the reachability
+    fact and the consequence are recorded together.
+    """
+    from .._export import ModeloExportEvidenceMissingError, _raise_if_ledger_export_evidence_missing
+
+    outcome = _drive_amend_creates_complementaria(repos)
+    _, cr_repo, _, _, _ = repos
+    new_revision = get_calculation_revision(outcome.new_filing.calculation_revision_id, calculation_repository=cr_repo)
+
+    # As built, the guard passes: no contributors, so nothing to evidence.
+    _raise_if_ledger_export_evidence_missing(new_revision)
+
+    with_contributors = new_revision.model_copy(update={"source_transaction_ids": ("a" * 64,)})
+    with pytest.raises(ModeloExportEvidenceMissingError):
+        _raise_if_ledger_export_evidence_missing(with_contributors)
