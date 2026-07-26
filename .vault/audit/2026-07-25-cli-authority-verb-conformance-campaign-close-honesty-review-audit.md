@@ -903,10 +903,42 @@ satisfied on this axis.
 Recorded rather than quietly corrected because the error is instructive. A
 swallowed import failure presents as a missing entry, which looks exactly like
 something never having been enrolled — and the difference is invisible until you
-read the count and the failure list together. The walk reports its failures;
-nobody had looked at them. That is the same shape as everything else in this
-review: the instrument was telling the truth and no one was reading the part
-that mattered.
+read the count and the failure list together.
+
+**CORRECTED AGAIN — the correction above was itself wrong in its reason.** The
+conclusion held, S295 is unnecessary and the identity fix is unblocked, but the
+explanation was fabricated out of present state. The verification phase caught
+it by testing the claim rather than agreeing with it.
+
+Enrolment IS filename-filtered, exactly as originally recorded. The population
+walk imports `*payload*`-named modules under two declared payload packages and
+never reaches the wizard results module, which is under neither and carries no
+such name. What changed is not that the claim was always false; it is that a fix
+landed at `92b0dfd10b` on the morning of 2026-07-26 — thirteen hours after the
+finding was filed, and a descendant of the HEAD it was measured at — bridging
+the filter by importing the two result classes into a module the walk already
+visits. That fix's own comment states the mechanism verbatim and marks the
+imports LOAD-BEARING. Attributing the repair to the untracked-module commit was
+wrong as well: that one fixed a broken import, not the enrolment.
+
+So the true sequence is: the finding was correct when made, a peer repaired it in
+the interim, and this review then measured the repaired state and invented a
+history in which the problem had never existed.
+
+The method failure is precise and worth more than the finding. Presence was
+confirmed; history was not. `git log -S` on the import line answers "when did
+this arrive" in one command — the same command that settled the size-budget
+attribution earlier in this same review. The tool was in hand, recently used,
+and not reached for, because the present state was consistent with the story
+being told. Consistency with a story is not evidence for it.
+
+A fragility created by the fix, surfaced by the verification phase. The bridge is
+written in the re-export idiom, each name imported and rebound to itself, which
+is visually indistinguishable from a redundant re-export that a tidy-up would
+delete. Deleting it silently drops both profile verbs from the MCP surface again.
+Two things hold the line: a load-bearing comment and the live-leaf-versus-registry
+gate. Only the gate is a real guard, and it was confirmed by running it rather
+than by reading it.
 
 ## Recommendations
 
