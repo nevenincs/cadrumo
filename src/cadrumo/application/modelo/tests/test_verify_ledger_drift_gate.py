@@ -53,6 +53,8 @@ from .test_modelo_303_deductible_evidence_gate import (
     _workflow_profile,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
 _Repos = tuple[
     WorkUnitCatalogueRepository,
     CalculationRevisionCatalogueRepository,
@@ -61,8 +63,6 @@ _Repos = tuple[
     BucketEventHistoryRepository,
     TransactionCatalogueRepository,
 ]
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _AT = datetime(2026, 4, 20, 12, 0, tzinfo=UTC)
 
