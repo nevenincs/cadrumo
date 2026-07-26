@@ -240,6 +240,13 @@ if TYPE_CHECKING:
         set_active_field,
         set_active_fields,
     )
+    from ._overview import (
+        MASKED_PLACEHOLDER,
+        ProfileFieldView,
+        ProfileOverview,
+        ProfileSectionView,
+        build_profile_overview,
+    )
     from ._preflight import ProfilePreflightService
     from ._profile_pointer_transaction import active_profile_pointer_transaction
     from ._profile_repository import ProfileRepository
@@ -251,6 +258,14 @@ if TYPE_CHECKING:
         record_to_path_values,
         record_to_values,
         snapshot_to_values,
+    )
+    from ._registration import (
+        PASSPHRASE_MINIMUM_LENGTH,
+        PassphraseAssessment,
+        ProfileRegistrationError,
+        ProfileRegistrationOutcome,
+        assess_passphrase,
+        register_profile_with_credentials,
     )
     from ._repository import (
         USER_PROFILE_SNAPSHOT_NAMESPACE,

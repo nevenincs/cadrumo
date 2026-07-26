@@ -40,7 +40,7 @@
     "src/cadrumo/core/config.py": 1412,
     "src/cadrumo/domain/calculations/registry/_applicability.py": 1739,
     "src/cadrumo/domain/calculations/registry/_formula_runtime.py": 1667,
-    "src/cadrumo/domain/calculations/registry/_ledger_bindings.py": 1440,
+    "src/cadrumo/domain/calculations/registry/_ledger_bindings.py": 1325,
     "src/cadrumo/domain/calculations/registry/_loader.py": 1353,
     "src/cadrumo/domain/calculations/registry/_record_design.py": 1315,
     "src/cadrumo/domain/calculations/registry/_schema.py": 1483,
