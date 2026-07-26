@@ -23,7 +23,7 @@ from pathlib import Path
 import pytest
 
 from ....core.config import override_settings
-from ....core.json_contract import NoticeSeverity, OutputSchema, register_schema
+from ....core.json_contract import NoticeSeverity, OutputSchema
 from ....tests.secure_sql import isolated_profile_storage_root
 from .. import emit_operator_json_success, sandbox_banner_line, sandbox_notice_for_active_bucket
 
@@ -33,9 +33,23 @@ _MANIFEST_CREATED_AT = datetime(2026, 7, 25, 9, 0, 0, tzinfo=UTC)
 _SANDBOX_CODE = "config.profile.sandbox.active_indicator"
 
 
-@register_schema("operator_output.tests.probe")
 class _ProbeResult(OutputSchema):
-    """Throwaway registered result schema, local to this test module."""
+    """Throwaway result schema, local to this test module.
+
+    Deliberately NOT bound with ``register_schema``. The emit funnel takes the
+    command path as an opaque string and never consults ``SCHEMA_REGISTRY``, so
+    registration contributed nothing to what these tests assert — while the
+    decorator ran at IMPORT time and left ``operator_output.tests.probe`` in a
+    process-global registry permanently.
+
+    That key names no CLI command, and the MCP input-schema builder resolves
+    every registered key against the Typer tree, refusing an unresolvable one
+    rather than shipping an argument-free schema. So importing this module
+    poisoned that build for the whole session: any run whose collected set
+    included both this file and the MCP tests failed ~128 of them, with or
+    without xdist workers. ``register_schema``'s own contract says to register
+    concrete command leaves only; this was not one.
+    """
 
     label: str
 
