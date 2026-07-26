@@ -113,6 +113,22 @@ log = get_logger(__name__)
 
 
 _EXTERNAL = Settings.external_constants()
+# The one numbered host still named in a live reader, and it is measured
+# rather than assumed. AEAT assigns the answering host per session, so a
+# named number is normally wrong -- the censal and IVA-wallet readers name
+# none. This one stays because the obvious de-pin does not work: requesting
+# the declarations listing on the UNNUMBERED sede origin with a valid
+# session attached returns a genuine 404, landing on the requested host
+# rather than bouncing. Confirmed on a live authenticated session,
+# 2026-07-26.
+#
+# The readers that carry no number reach their surface through the Cl@ve
+# access selector and let AEAT dispatch. This module has no selector entry,
+# so it cannot be dispatched; giving it one is new navigation behaviour
+# rather than removing a pin, and is tracked separately.
+#
+# Recorded URLs do NOT use this constant. They name the host that actually
+# answered, because a recorded URL is a claim about where a read happened.
 _SEDE_BASE = _EXTERNAL.aeat.domains.www6
 _SEDE_HOST = urlsplit(_SEDE_BASE).netloc
 _AEAT_HOST_SUFFIX = _EXTERNAL.aeat.domains.host_suffix
