@@ -8,6 +8,7 @@ related:
   - "[[2026-07-25-declaracion-profile-printed-box-scope-adr]]"
   - "[[2026-07-26-declaracion-real-render-verification-plan]]"
   - '[[2026-07-26-declaracion-real-render-verification-specimen-less-static-route-audit-audit]]'
+  - '[[2026-07-26-declaracion-real-render-verification-r8-arbitration-enrollment-readiness-audit]]'
 ---
 
 # `declaracion-real-render-verification` adr: `what grounds a declaracion_pdf profile's claims` | (**status:** `accepted`)
@@ -68,7 +69,7 @@ the informativas its positional-range values are correct for what the field mean
 The reading is wrong, not the data.
 
 **(E) Record the decisions once, apply them across the estate, and name what cannot
-be decided.** Chosen. D1 through D4 below.
+be decided.** Chosen. D1 through D5 below.
 
 ## Implementation
 
@@ -138,6 +139,35 @@ Any consumer selecting a declaration-PDF profile matches `surface ==
 authored against `artefact_kind` silently missed 18 of 29 profiles, which is how this
 was found.
 
+**D5 — Registry readiness is necessary but not sufficient to enrol a modelo in
+casilla-level declaration reconcile. A real render is also required.**
+
+The enrolment criterion recorded in the code is that a modelo's extraction profile
+"line up with its registry casilla ids one-to-one". Measured, that criterion is
+already satisfied by all nine unenrolled profiles: every target resolves to a real
+casilla with no duplicates, and every engine-computed target is already declared in
+its revision's computed set. On that criterion alone, all nine could be enrolled
+today.
+
+They may not be, because the criterion is insufficient and Modelo 390 is the proof.
+It satisfied registry readiness completely, and its first real render scored 1 of 10
+— nine printed boxes unread, because the filer had chosen English and the patterns
+were Spanish. Registry readiness establishes that the *vocabulary* matches. It says
+nothing about whether the profile can read the *document*, which is the only thing
+reconcile actually depends on.
+
+Enrolment therefore requires at least one real or facsimile render of that modelo,
+verified through the real-render gate. All nine unenrolled profiles are specimen-less,
+so none is enrollable today, and that is an evidence gap under D3 rather than a
+backlog item.
+
+The historical enrolment order is recorded as *not* being a discriminator: git
+history shows the six enrolled modelos were added in three batches over five days in
+development sequence, and Modelo 130 — enrolled first, with zero specimens — is the
+counter-example that rules out any retrospective evidential rationale. Five of the six
+happen to have specimens; that is a coincidence of order, not a policy that was
+followed.
+
 ## Constraints
 
 The engine's compute-from-primitives design remains out of scope and untouched, as
@@ -153,13 +183,19 @@ modelos outside the enrolled reconcile set, where the arbitration has never been
 made. It is deliberately **not** decided here: it needs its own evidence and its own
 record. It is named so it is not mistaken for settled.
 
-**Provisional, pending verification.** An earlier revision of this paragraph stated
-that this is "not a live defect, because the path refuses loudly rather than
-silently". That claim was carried from a worker report and adopted here without being
-verified against the production path, which is the failure this feature has already
-recorded twice. The counts are measured; the loudly-versus-silently behaviour is not,
-and a silent discard would make this a live defect rather than a deferred one. A
-follow-on record settles it; until then no reader should rest on it.
+**Resolved, and it is not a live defect.** This paragraph previously asserted that
+the path "refuses loudly rather than silently" on a worker report adopted without
+checking, and was marked provisional for that reason. It has since been verified by
+reading the production path directly: the enrolment guard refuses before
+`parse_declaracion` is called and before any file is opened, for all nine profiles,
+and the bytes-based reconcile refuses the declaration source kind unconditionally for
+every modelo. The refusal is real and it precedes parsing entirely.
+
+The claim is therefore now confirmed rather than assumed. It is recorded this way,
+rather than silently corrected, because the first version was right by luck: it was
+adopted from a report and cited back as corroboration by that same report, and a
+verification that had gone the other way would have made this a live defect across
+nine profiles.
 
 ## Rationale
 

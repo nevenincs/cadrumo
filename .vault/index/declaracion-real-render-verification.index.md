@@ -16,6 +16,7 @@ related:
   - '[[2026-07-26-declaracion-real-render-verification-P02-S09]]'
   - '[[2026-07-26-declaracion-real-render-verification-adr]]'
   - '[[2026-07-26-declaracion-real-render-verification-plan]]'
+  - '[[2026-07-26-declaracion-real-render-verification-r8-arbitration-enrollment-readiness-audit]]'
   - '[[2026-07-26-declaracion-real-render-verification-specimen-less-static-route-audit-audit]]'
 ---
 
@@ -31,6 +32,7 @@ Auto-generated index of all documents tagged with `#declaracion-real-render-veri
 
 ### audit
 
+- `2026-07-26-declaracion-real-render-verification-r8-arbitration-enrollment-readiness-audit` - `declaracion-real-render-verification` audit: `what deciding the R8 reconcile-enrollment arbitration would take`
 - `2026-07-26-declaracion-real-render-verification-specimen-less-static-route-audit-audit` - `declaracion-real-render-verification` audit: `static route audit across all 29 declaracion_pdf profiles`
 
 ### exec
