@@ -685,7 +685,7 @@ class TestLiveSourceUrlAssertion:
         from .test_iva_compensation_wallet_live import _assert_source_url_is_a_wallet_read
 
         external = Settings.external_constants()
-        with pytest.raises(BaseException, match="not under the AEAT apex"):
+        with pytest.raises(pytest.fail.Exception, match="not under the AEAT apex"):
             _assert_source_url_is_a_wallet_read(
                 f"https://example.invalid{external.aeat.sede_paths.iva_compensation_wallet}",
             )
@@ -699,7 +699,7 @@ class TestLiveSourceUrlAssertion:
         from .test_iva_compensation_wallet_live import _assert_source_url_is_a_wallet_read
 
         external = Settings.external_constants()
-        with pytest.raises(BaseException, match="not the wallet route"):
+        with pytest.raises(pytest.fail.Exception, match="not the wallet route"):
             _assert_source_url_is_a_wallet_read(
                 f"{external.aeat.domains.www6}{external.aeat.sede_paths.declarations_listing}",
             )

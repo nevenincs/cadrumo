@@ -186,7 +186,13 @@
         "--period",
         "1T"
       ],
-      "captures": [],
+      "captures": [
+        {
+          "json_path": "result.work_unit_id",
+          "name": "work_unit_id",
+          "value": "98f076c6ff3f4ab123206dc06d9bf9a6dbfe1d9c0b213ae4483b87619640518f"
+        }
+      ],
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.create",
@@ -246,7 +252,13 @@
         "--period",
         "1T"
       ],
-      "captures": [],
+      "captures": [
+        {
+          "json_path": "result.calculation_revision_id",
+          "name": "revision_id",
+          "value": "50dadd637c97cc6b63afdfc52e477532ddc78cc8bad203041d4bffba21e55a4d"
+        }
+      ],
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.calculate",
@@ -3293,12 +3305,7 @@
         "modelo",
         "work",
         "verify",
-        "--modelo",
-        "303",
-        "--year",
-        "2026",
-        "--period",
-        "1T"
+        "50dadd637c97cc6b63afdfc52e477532ddc78cc8bad203041d4bffba21e55a4d"
       ],
       "captures": [],
       "envelope": {
@@ -3417,7 +3424,7 @@
       },
       "envelope_source": "stdout",
       "exit_code": 0,
-      "kind": "setup",
+      "kind": "command",
       "stderr_text": null,
       "text": null
     },
@@ -3429,51 +3436,36 @@
         "app",
         "modelo",
         "work",
-        "status",
-        "--modelo",
-        "303",
-        "--year",
-        "2026",
-        "--period",
-        "1T"
+        "file",
+        "50dadd637c97cc6b63afdfc52e477532ddc78cc8bad203041d4bffba21e55a4d"
       ],
       "captures": [],
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.work.status",
-        "notices": [
-          {
-            "code": "modelo.work.status.next_action",
-            "context": null,
-            "message": "Draft or recalculate this unit with `aeat app modelo work calculate`, then verify the draft with `aeat app modelo work verify`.",
-            "severity": "info",
-            "suggestion": "aeat app modelo work calculate 98f076c6ff3f4ab123206dc06d9bf9a6dbfe1d9c0b213ae4483b87619640518f"
-          }
-        ],
+        "command": "modelo.work.file",
+        "notices": [],
         "result": {
+          "aeat_accepted": false,
+          "amends_filing_record_id": null,
           "bucket_id": "<bucket-id>",
-          "causante_ccaa": null,
-          "created_at": "2026-04-01T09:00:00+00:00",
-          "current_calculation_revision_id": "50dadd637c97cc6b63afdfc52e477532ddc78cc8bad203041d4bffba21e55a4d",
-          "current_filing_record_id": null,
-          "discard_reason": null,
-          "discarded_at": null,
-          "discarded_by": null,
-          "filed_calculation_revision_id": null,
+          "calculation_revision_id": "50dadd637c97cc6b63afdfc52e477532ddc78cc8bad203041d4bffba21e55a4d",
+          "external_evidence": null,
+          "filed_at": "2026-04-01T09:00:00+00:00",
+          "filed_by": "docs-sequence-sandbox",
+          "filing_record_id": "d3aba9a63f88b624c7f8483921985a37366c57258ec6dc383c8c8da5488b60a4",
           "filing_year": 2026,
+          "kind": "internal_filing",
+          "live_submission": false,
           "modelo": "303",
-          "name": "303-2026-1T",
-          "operation": "modelo.work.status",
+          "notes": null,
+          "operation": "modelo.work.file",
           "period": {
             "code": "1T",
             "filing_year": 2026
           },
-          "revision_id": "2023-y-siguientes",
-          "short_current_calculation_revision_id": "ffba21e55a4d",
-          "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "87619640518f",
-          "state": "borrador",
-          "updated_at": "2026-04-01T09:00:00+00:00",
+          "status": "vigente",
+          "superseded_at": null,
+          "superseded_by_filing_record_id": null,
           "work_unit_id": "98f076c6ff3f4ab123206dc06d9bf9a6dbfe1d9c0b213ae4483b87619640518f"
         },
         "schema_version": "2",
@@ -3493,12 +3485,9 @@
         "app",
         "modelo",
         "export",
-        "--modelo",
-        "303",
-        "--year",
-        "2026",
-        "--period",
-        "1T",
+        "98f076c6ff3f4ab123206dc06d9bf9a6dbfe1d9c0b213ae4483b87619640518f",
+        "--revision",
+        "50dadd637c97cc6b63afdfc52e477532ddc78cc8bad203041d4bffba21e55a4d",
         "--output",
         "./modelo-303.boe"
       ],
@@ -3548,5 +3537,5 @@
     }
   ],
   "golden_schema_version": 1,
-  "sequence_id": "verification-reports-export-check"
+  "sequence_id": "filing-spine-exact-ids"
 }

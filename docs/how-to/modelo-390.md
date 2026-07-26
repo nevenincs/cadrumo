@@ -216,10 +216,14 @@ The annual calculation uses the annual ledger window for 390 ledger-backed IVA
 aggregates. For 303-derived values, the registry defines the binding IDs and the
 source periods. If those binding values are not already available to the
 calculation, inspect the missing binding list and supply reviewed values
-explicitly. The reviewed sums come from your own 303 review, so this override is
-shown as a display frame:
+explicitly. The reviewed sums come from your own 303 review; the example below
+passes the ones this guide's year produces (1470.00 devengada, 105.00 deducible,
+1365.00 régimen-general), and its preparation only creates the annual draft, so
+the annual ledger totals stay at zero while the reconciliation casillas carry the
+supplied figures:
 
 ```{cli-sequence} modelo-390-supply-binding
+:verify: Confirm the supplied 303-derived values land on the annual reconciliation casillas.
 ```
 
 Use reviewed numbers, not placeholders. If the reviewed 303 history is missing
@@ -277,13 +281,15 @@ chain above, so the export and the post-portal steps here are display frames:
 Upload the exported file through AEAT's official channel; the full checklist is
 in [Upload your exported modelo at the AEAT portal](file-at-aeat.md). Review your
 filing records with `filing-record list` and `filing-record view`. `work file`
-is an internal local marker; it does not submit anything to AEAT. If the annual
-return was filed outside this local workflow, import an external filing record
-only from official evidence, and inspect any evidence bundle a verification or
-export workflow created with the audit commands. These address records and
-bundles by id, so they are display frames:
+is an internal local marker; it does not submit anything to AEAT. The listing
+below runs in a sandbox that filed nothing, so it reports no records; your own
+listing carries one row per filing you recorded. If the annual return was filed
+outside this local workflow, import an external filing record only from official
+evidence. That import needs the official receipt, and the evidence-bundle read
+beneath it addresses a bundle by id, so both stay display frames:
 
 ```{cli-sequence} modelo-390-records-audit
+:verify: Confirm the local filing records read back.
 ```
 
 ## What Modelo 390 does not check for you

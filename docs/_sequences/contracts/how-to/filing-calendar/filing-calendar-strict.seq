@@ -1,3 +1,3 @@
 @step Generate a strict calendar window (refuses while a profile check such as censo.enrolment_unverified is unresolved).
 @static aeat app overview calendar --from 2026-01-01 --to 2026-12-31
-@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
+@blocked operator-artifact Measured exit 2 listing censo.enrolment_unverified: clearing it needs profile facts stamped with AEAT censo-sync provenance, an authority artefact no local write path produces or may fabricate.

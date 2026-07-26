@@ -1,3 +1,6 @@
+@step Declare the natural-person taxpayer type the annual Renta declaration belongs to.
+@setup aeat config profile edit docs-sequence-sandbox --quiet --entity-type natural_person
 @step Create the Modelo 100 draft the comparison needs.
-  @static aeat app modelo work create --modelo 100 --year 2026 --period 0A
-@blocked unconverted Only lacks a registry revision for the year the page names; a covered year converts it.
+@result aeat --format json app modelo work create --modelo 100 --year 2025 --period 0A
+@expect result.modelo == "100"
+@expect exit_code == 0

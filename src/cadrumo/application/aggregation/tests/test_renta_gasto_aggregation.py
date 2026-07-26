@@ -532,7 +532,9 @@ def test_domain_resolver_folds_gasto_observations_into_the_m130_casilla_02_bindi
     catalogue = TransactionCatalogue.from_transactions((feb, apr))
     aggregation = aggregate_renta_gasto_ledger(catalogue, bucket_id="test", period=_Q2_2024)
 
-    resolved = resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values(revision, aggregation.observations)
+    resolved = resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values(
+        revision, aggregation.observations
+    )
 
     # Both rows fall in the 2T cumulative window; expected = the input bases summed.
     assert resolved[binding.id] == sum((feb_base, apr_base), Decimal("0"))

@@ -1,3 +1,7 @@
+@setup aeat --format json app modelo work create --modelo 390 --year 2025 --period 0A
 @step Supply reviewed 303-derived values explicitly when the calculation lacks them.
-@static aeat app modelo work calculate --modelo 390 --year 2025 --period 0A --binding modelo-390-prev-303-cuota-devengada-total=<sum-from-303> --binding modelo-390-prev-303-cuota-deducible-total=<sum-from-303> --binding modelo-390-prev-303-resultado-regimen-general=<sum-from-303>
-@blocked unconverted Shows the addressing form with a metavariable; convert it with a captured real id.
+@result aeat --format json app modelo work calculate --modelo 390 --year 2025 --period 0A --binding modelo-390-prev-303-cuota-devengada-total=1470.00 --binding modelo-390-prev-303-cuota-deducible-total=105.00 --binding modelo-390-prev-303-resultado-regimen-general=1365.00
+@expect result.casilla_values["iva.anual.reconciliacion.devengada-303"] == "1470.00"
+@expect result.casilla_values["iva.anual.reconciliacion.deducible-303"] == "105.00"
+@expect result.casilla_values["iva.anual.reconciliacion.resultado-303"] == "1365.00"
+@expect exit_code == 0

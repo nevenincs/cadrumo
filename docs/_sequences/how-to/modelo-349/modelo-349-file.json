@@ -1,0 +1,447 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "invoice",
+        "catalogue",
+        "wizard",
+        "--kind",
+        "issued",
+        "--counterparty-nif",
+        "DE811569869",
+        "--counterparty-name",
+        "Muenchner Handels GmbH",
+        "--invoice-number",
+        "F-2026-IC-01",
+        "--invoice-date",
+        "2026-02-10",
+        "--taxable-base",
+        "5000",
+        "--iva-rate",
+        "0",
+        "--country-code",
+        "DE",
+        "--operation-type",
+        "E"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "invoice_id\t86f7f4a0abb1ddec95074d9ba002cddce7bd6b3a879ddc74d6ed424eb2094d2b\nkind\tissued\ncounterparty_name\tMuenchner Handels GmbH\ncounterparty_tax_id\tDE811569869\ninvoice_number\tF-2026-IC-01\nissued_at\t2026-02-10\ngrand_total\t5000.00\ncurrency\tEUR\noperation_type\tE\nlinked_transaction_ids\t\nalready_existed\tFalse\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "invoice",
+        "catalogue",
+        "wizard",
+        "--kind",
+        "issued",
+        "--counterparty-nif",
+        "FR40123456824",
+        "--counterparty-name",
+        "Lyon Services SARL",
+        "--invoice-number",
+        "F-2026-IC-02",
+        "--invoice-date",
+        "2026-03-05",
+        "--taxable-base",
+        "3000",
+        "--iva-rate",
+        "0",
+        "--country-code",
+        "FR",
+        "--operation-type",
+        "S"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "invoice_id\t0af0b63e6244ac6a3cc3f4365945d1835730d2985ada6dd9652df59143371209\nkind\tissued\ncounterparty_name\tLyon Services SARL\ncounterparty_tax_id\tFR40123456824\ninvoice_number\tF-2026-IC-02\nissued_at\t2026-03-05\ngrand_total\t3000.00\ncurrency\tEUR\noperation_type\tS\nlinked_transaction_ids\t\nalready_existed\tFalse\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "edit",
+        "docs-sequence-sandbox",
+        "--quiet",
+        "--accept-defaults",
+        "--activity-start-date",
+        "2026-01-01",
+        "--does-intracomunitario"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "Profile\tdocs-sequence-sandbox\nStatus\tupdated\nNext\taeat app modelo work create\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "create",
+        "--modelo",
+        "349",
+        "--year",
+        "2026",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.create",
+        "notices": [],
+        "result": {
+          "applicability_guard_bypassed": false,
+          "bucket_id": "<bucket-id>",
+          "causante_ccaa": null,
+          "created_at": "2026-04-01T09:00:00+00:00",
+          "current_calculation_revision_id": null,
+          "current_filing_record_id": null,
+          "discard_reason": null,
+          "discarded_at": null,
+          "discarded_by": null,
+          "filed_calculation_revision_id": null,
+          "filing_year": 2026,
+          "modelo": "349",
+          "name": "349-2026-1T",
+          "name_applied": null,
+          "operation": "modelo.work.create",
+          "period": {
+            "code": "1T",
+            "filing_year": 2026
+          },
+          "revision_id": "2020-y-siguientes",
+          "short_current_calculation_revision_id": null,
+          "short_filed_calculation_revision_id": null,
+          "short_work_unit_id": "5b1a3542189e",
+          "state": "borrador",
+          "status": "created",
+          "status_message": "New work unit created.",
+          "updated_at": "2026-04-01T09:00:00+00:00",
+          "work_unit_id": "300d50b8cf23e3328bfd095cb845fe0700f181278b98c70e07475b1a3542189e"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "calculate",
+        "--modelo",
+        "349",
+        "--year",
+        "2026",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.calculate",
+        "notices": [],
+        "result": {
+          "authorization_state": null,
+          "binding_overrides": {
+            "iva-349-declarante-importe-operaciones": "8000",
+            "iva-349-declarante-importe-operaciones-adquisicion": "0",
+            "iva-349-declarante-importe-rectificaciones": "0",
+            "iva-349-declarante-importe-rectificaciones-adquisicion": "0",
+            "iva-349-declarante-numero-operadores": "2",
+            "iva-349-declarante-numero-operadores-adquisicion": "0",
+            "iva-349-declarante-numero-rectificaciones": "0",
+            "iva-349-declarante-numero-rectificaciones-adquisicion": "0"
+          },
+          "calculation_revision_id": "963aceb15d60baa295c89e07b243765814a61e4c1e2fbf4761ad56d8adafe720",
+          "casilla_values": {
+            "decl.importe-operaciones": "8000.00",
+            "decl.importe-rectificaciones": "0",
+            "decl.numero-operadores": "2",
+            "decl.numero-rectificaciones": "0"
+          },
+          "created_at": "2026-04-01T09:00:00+00:00",
+          "deadline": {
+            "closes_on": "2026-04-20",
+            "conditional_recargo_preview": null,
+            "days_overdue": null,
+            "days_remaining": 19
+          },
+          "detail_rows": [
+            {
+              "fields": {
+                "clave_operacion": "E",
+                "codigo_pais": "DE",
+                "importe": "5000.00",
+                "nif_comunitario": "DE811569869",
+                "razon_social": "Muenchner Handels GmbH"
+              },
+              "index": 1,
+              "row_type": "operador"
+            },
+            {
+              "fields": {
+                "clave_operacion": "S",
+                "codigo_pais": "FR",
+                "importe": "3000.00",
+                "nif_comunitario": "FR40123456824",
+                "razon_social": "Lyon Services SARL"
+              },
+              "index": 2,
+              "row_type": "operador"
+            }
+          ],
+          "filed_at": null,
+          "filed_by": null,
+          "input_values_by_casilla_id": {
+            "decl.importe-operaciones": "8000",
+            "decl.importe-rectificaciones": "0",
+            "decl.numero-operadores": "2",
+            "decl.numero-rectificaciones": "0"
+          },
+          "modality": null,
+          "modality_reason": null,
+          "observations": [
+            {
+              "casilla_id": "decl.importe-operaciones",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-eha-769-2010:art-1",
+                "orden-hac-174-2020:art-1",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-349-2020-current",
+                "aeat-modelo-349-procedure"
+              ],
+              "value": "8000.00"
+            },
+            {
+              "casilla_id": "decl.importe-rectificaciones",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-eha-769-2010:art-1",
+                "orden-hac-174-2020:art-1",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-349-2020-current",
+                "aeat-modelo-349-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "casilla_id": "decl.numero-operadores",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-eha-769-2010:art-1",
+                "orden-hac-174-2020:art-1",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-349-2020-current",
+                "aeat-modelo-349-procedure"
+              ],
+              "value": "2"
+            },
+            {
+              "casilla_id": "decl.numero-rectificaciones",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-eha-769-2010:art-1",
+                "orden-hac-174-2020:art-1",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-349-2020-current",
+                "aeat-modelo-349-procedure"
+              ],
+              "value": "0"
+            }
+          ],
+          "operation": "modelo.work.calculate",
+          "relation_overrides": {},
+          "result_summary": [],
+          "saved": true,
+          "saved_confirmation": "Saved as draft calculation revision 963aceb15d60baa295c89e07b243765814a61e4c1e2fbf4761ad56d8adafe720 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 349 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 963aceb15d60baa295c89e07b243765814a61e4c1e2fbf4761ad56d8adafe720`.",
+          "state": "borrador",
+          "superseded_at": null,
+          "updated_at": "2026-04-01T09:00:00+00:00",
+          "verified_at": null,
+          "verified_by": null,
+          "work_unit_id": "300d50b8cf23e3328bfd095cb845fe0700f181278b98c70e07475b1a3542189e"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "verify",
+        "--modelo",
+        "349",
+        "--year",
+        "2026",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.verify",
+        "notices": [
+          {
+            "code": "modelo.work.verify.next_action_granted",
+            "context": null,
+            "message": "Verification passed. Export the filing artefact with `aeat app modelo export`.",
+            "severity": "info",
+            "suggestion": "aeat app modelo export"
+          }
+        ],
+        "result": {
+          "calculation_revision_id": "963aceb15d60baa295c89e07b243765814a61e4c1e2fbf4761ad56d8adafe720",
+          "completeness_status": "complete",
+          "findings": [],
+          "granted_verificado_completo": true,
+          "missing_required_casilla_ids": [],
+          "operation": "modelo.work.verify",
+          "resolved_casilla_ids": [
+            "op.codigo-pais",
+            "op.nif-comunitario",
+            "op.apellidos-razon-social",
+            "op.clave-operacion",
+            "op.base-imponible",
+            "rect.ejercicio-rectificado",
+            "rect.periodo-rectificado",
+            "rect.base-rectificada",
+            "rect.base-anterior"
+          ],
+          "run_at": "2026-04-01T09:00:00+00:00",
+          "verification_report_id": "62642d2a4b60383eb20e059a6fe5f66dcc486fd66f47ff9e984201857313a9cd",
+          "verified_by": "docs-sequence-sandbox"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "file",
+        "--modelo",
+        "349",
+        "--year",
+        "2026",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.file",
+        "notices": [],
+        "result": {
+          "aeat_accepted": false,
+          "amends_filing_record_id": null,
+          "bucket_id": "<bucket-id>",
+          "calculation_revision_id": "963aceb15d60baa295c89e07b243765814a61e4c1e2fbf4761ad56d8adafe720",
+          "external_evidence": null,
+          "filed_at": "2026-04-01T09:00:00+00:00",
+          "filed_by": "docs-sequence-sandbox",
+          "filing_record_id": "f9bee3a181ba1c466f26a6df3ca3f979a13d8dee1ed7635910d25657f5b57513",
+          "filing_year": 2026,
+          "kind": "internal_filing",
+          "live_submission": false,
+          "modelo": "349",
+          "notes": null,
+          "operation": "modelo.work.file",
+          "period": {
+            "code": "1T",
+            "filing_year": 2026
+          },
+          "status": "vigente",
+          "superseded_at": null,
+          "superseded_by_filing_record_id": null,
+          "work_unit_id": "300d50b8cf23e3328bfd095cb845fe0700f181278b98c70e07475b1a3542189e"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "modelo-349-file"
+}

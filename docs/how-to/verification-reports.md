@@ -132,10 +132,12 @@ ones under **missing required casillas**.
 your ledger or another source is `bound`, and `--casilla` refuses it with
 `cannot override bucket-derived source-bound casillas`. Fix the source for those.
 See [Review your calculation values](review-calculation-values.md). Check which
-kind a box is, then supply the value for a manual one and recalculate:
+kind a box is, then supply the value for a manual one and recalculate. The
+example supplies box 44, the prorrata regularisation, and the recalculation
+carries it into the deductible total:
 
 ```{cli-sequence} verification-reports-incomplete
-:verify: Confirm you can read each box's input kind before supplying a manual value.
+:verify: Confirm the supplied manual value reaches the recalculated deductible total.
 ```
 
 Then [re-run verification](#after-any-fix-re-run-verification). For the full
@@ -179,7 +181,7 @@ where the filing stands, then retry the export once verification grants
 verified-complete:
 
 ```{cli-sequence} verification-reports-export-check
-:verify: Confirm you can read where a filing stands before exporting.
+:verify: Confirm the export succeeds once the saved calculation is verified.
 ```
 
 ## More than one filing matches

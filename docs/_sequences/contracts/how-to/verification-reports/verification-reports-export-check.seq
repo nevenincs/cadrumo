@@ -1,8 +1,12 @@
+:seed: iva-evidence-2026
 @setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
+@setup aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T
+@setup aeat --format json app modelo work verify --modelo 303 --year 2026 --period 1T
 @step Check where your filing stands.
-@result aeat --format json app modelo work status --modelo 303 --year 2026 --period 1T
+aeat --format json app modelo work status --modelo 303 --year 2026 --period 1T
 @expect result.modelo == "303"
-@expect exit_code == 0
 @step Once verification grants verified-complete, retry the export.
-@static aeat app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
-@blocked unconverted No verified blocker; the sandbox refusal is fixable state, not an impossibility.
+@result aeat --format json app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
+@expect result.modelo == "303"
+@expect result.filing_year == 2026
+@expect exit_code == 0

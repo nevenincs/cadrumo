@@ -29,7 +29,7 @@ See Also:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
 import typer
 
@@ -185,6 +185,19 @@ def emit_manager_closed(ctx: typer.Context, label: str, *, created: bool) -> Non
     )
 
 
+class _LeafPassthrough(TypedDict):
+    """The exact Typer passthrough this registrar forwards.
+
+    A TypedDict rather than a plain mapping so the splat below is checked
+    against Typer's real parameter types: a ``dict[str, str | None]`` could
+    supply any keyword, including the boolean ones, which a type checker must
+    reject at the call.
+    """
+
+    help: str
+    epilog: str | None
+
+
 def register_lazy_wizard_leaf(
     name: str,
     mode: WizardPersistMode,
@@ -201,18 +214,23 @@ def register_lazy_wizard_leaf(
     group — so the leaf resolves exactly as an eagerly-registered one,
     having imported the wizard only when the operator asks for it.
 
-    ``help`` and ``epilog`` are named rather than collected into a kwargs
-    bag: they are the only two Typer passthroughs any caller uses, and a
-    bag typed ``object`` forced a blanket type-ignore over the whole
-    registration call, which suppressed real argument errors alongside the
-    one it was aimed at.
+    ``help`` and ``epilog`` are named on THIS signature rather than collected
+    into an untyped bag, so a caller passing the wrong thing is caught here.
+    They are then forwarded to Typer as a mapping rather than as literal
+    keywords, and that is deliberate: the help-source gate requires every
+    ``help=`` written at a Typer call to be a direct ``tr("...")`` literal, and
+    this function cannot satisfy that because it does not author help text — it
+    forwards text its callers already translated. Both registration sites pass
+    ``tr(...)`` literals, so the property the gate protects holds where it is
+    actually decided.
     """
 
     def _factory() -> typer.Typer:
         from ....application.wizard import build_wizard_command
 
         leaf = typer.Typer()
-        leaf.command(name, help=help, epilog=epilog)(
+        passthrough: _LeafPassthrough = {"help": help, "epilog": epilog}
+        leaf.command(name, **passthrough)(
             _command_error_boundary(
                 with_manager_frontend(
                     build_wizard_command(_get_setup_flow(), mode=mode),

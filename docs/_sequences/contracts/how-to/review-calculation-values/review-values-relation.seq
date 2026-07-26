@@ -1,3 +1,7 @@
+:seed: renta-2025
+@step Open the annual Modelo 100 work unit for the filing year.
+@setup aeat --format json app modelo work create --modelo 100 --year 2025 --period 0A
 @step Supply a registry relation value during calculation.
-@static aeat app modelo work calculate --modelo 100 --year 2026 --period 0A --relation <relation-id>=<decimal>
-@blocked unconverted Shows the addressing form with a metavariable; convert it with a captured real id.
+@result aeat --format json app modelo work calculate --modelo 100 --year 2025 --period 0A --casilla 0003=24000 --binding renta-2025-certificado-trabajo-retenciones=2400 --binding renta-2025-base-liquidable-negativa-general-anterior=0 --relation renta-2025-rel-130-pagos-fraccionados=450
+@expect result.relation_overrides["renta-2025-rel-130-pagos-fraccionados"] == "450"
+@expect exit_code == 0

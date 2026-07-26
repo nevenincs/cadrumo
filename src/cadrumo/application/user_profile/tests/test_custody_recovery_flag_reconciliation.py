@@ -26,7 +26,13 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.bucket import BucketManifest, bucket_paths, read_manifest, write_manifest
+from ....adapters.persistence.storage.bucket import (
+    BucketManifest,
+    BucketPaths,
+    bucket_paths,
+    read_manifest,
+    write_manifest,
+)
 from ....core.config import load_settings
 from ....tests.secure_sql import isolated_runtime_profile
 from .._custody import create_recovery_code, inspect_recovery_status, recovery_wrap_path
@@ -34,7 +40,7 @@ from .._custody import create_recovery_code, inspect_recovery_status, recovery_w
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 
-def _manifest_paths(bucket_id: str) -> object:
+def _manifest_paths(bucket_id: str) -> BucketPaths:
     return bucket_paths(Path(load_settings().cadrumo_local_storage_root), bucket_id)
 
 

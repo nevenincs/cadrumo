@@ -911,7 +911,8 @@ def test_switch_accepts_a_sandbox_bucket_uuid() -> None:
 def test_sandbox_active_indicator_helper_degrades_silently_on_a_corrupt_active_manifest() -> None:
     """The indicator helper itself must never raise on a corrupt active manifest.
 
-    Exercises :func:`~cadrumo.entrypoints.cli._common._active_sandbox_notice`
+    Exercises
+    :func:`~cadrumo.application.operator_output.sandbox_notice_for_active_bucket`
     directly against a bucket whose manifest is torn/corrupt AND is the
     currently active bucket (``CADRUMO_ACTIVE_PROFILE`` points at it). This
     isolates the indicator's own defensive handling: the helper must
@@ -922,9 +923,9 @@ def test_sandbox_active_indicator_helper_degrades_silently_on_a_corrupt_active_m
     corruption.
     """
     from ....adapters.persistence.storage.bucket import bucket_paths, manifest_path
+    from ....application.operator_output import sandbox_notice_for_active_bucket
     from ....application.workflow import read_profile_bucket
     from ....core.config import load_settings, override_settings
-    from .._common import _active_sandbox_notice
 
     create_profile_via_cli("main")
     assert _invoke(("config", "profile", "sandbox", "create", "torn", "--from-profile", "main")).exit_code == 0
@@ -936,7 +937,7 @@ def test_sandbox_active_indicator_helper_degrades_silently_on_a_corrupt_active_m
     manifest_file.write_text("not = [valid toml", encoding="utf-8")
 
     with override_settings(cadrumo_active_profile=live_pointer.bucket_id):
-        assert _active_sandbox_notice() is None
+        assert sandbox_notice_for_active_bucket() is None
 
 
 def test_sandbox_active_indicator_absent_when_a_non_active_sandbox_manifest_is_corrupt() -> None:

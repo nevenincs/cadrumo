@@ -28,6 +28,7 @@ from ....domain.modelos import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
+    VerificationReport,
     WorkUnit,
     derive_calculation_revision_id,
     derive_work_unit_id,
@@ -473,7 +474,7 @@ def test_a_blocked_verify_is_recoverable_by_attaching_and_verifying_again(
             _calculate_irene_revision(profile.repository)
         )
 
-        def _verify() -> object:
+        def _verify() -> VerificationReport:
             return verify_modelo_revision(
                 revision.calculation_revision_id,
                 actor="operator",

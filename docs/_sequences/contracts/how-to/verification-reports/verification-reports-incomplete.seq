@@ -1,7 +1,10 @@
+:seed: autonomo-irpf-2026
+@setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
 @step Check which input kind each box is; only manual boxes accept --casilla.
-@result aeat --format json app modelo casillas 303 --period 1T
+aeat --format json app modelo casillas 303 --period 1T
 @expect result.modelo == "303"
-@expect exit_code == 0
 @step Supply a manual casilla's value and recalculate.
-@static aeat app modelo work calculate --modelo 303 --year 2026 --period 1T --casilla <ID>=<VALUE>
-@blocked unconverted Shows the addressing form with a metavariable; convert it with a captured real id.
+@result aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T --casilla 44=150.00
+@expect result.casilla_values.44 == "150.00"
+@expect result.casilla_values["iva.cuota-deducible-total"] == "255.00"
+@expect exit_code == 0
