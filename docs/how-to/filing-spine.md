@@ -122,7 +122,7 @@ has its own reference number, the calculation-revision-id, which `calculate`
 creates and which is separate from the work-unit-id.
 
 When you run `aeat app modelo work calculate`, Cadrumo saves a draft calculation
-revision (the chain sequence above runs it).
+revision, run by the chain sequence above.
 
 Running calculation again does not overwrite the old result. Every saved
 calculation is immutable: earlier revisions stay on disk exactly as they

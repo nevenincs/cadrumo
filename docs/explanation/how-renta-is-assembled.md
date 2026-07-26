@@ -32,8 +32,8 @@ filing year:
   These come from your taxpayer profile, one binding per fact (the
   `renta-2025-profile-*` rows in the listing).
 - **Ledger aggregations.** What your activity earned and spent: the year's
-  classified income and deductible expense rows, aggregated per casilla (the
-  `renta-2025-ledger-*` rows). This is the same ledger your quarterly
+  classified income and deductible expense rows, aggregated per casilla and
+  listed as the `renta-2025-ledger-*` rows. This is the same ledger your quarterly
   filings read - Renta reads the whole year at once.
 - **Prior filings folded in.** What you already reported during the year:
   the Modelo 130 or 131 instalments you paid, and the retenciones reported
@@ -42,7 +42,7 @@ filing year:
   filed records, not from AEAT.
 - **Last year's declaration.** What carries across years: a negative base
   liquidable from an earlier Renta carries forward from your own filed
-  prior declaration (the listing labels this source `previous_filing`), so
+  prior declaration, listed under the source `previous_filing`, so
   this year's declaration can offset it.
 
 Everything else - employment income details, capital income, deductions the

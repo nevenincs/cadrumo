@@ -38,8 +38,8 @@ current_calculation_revision_id`. Run `aeat app modelo work calculate` (see
 saved draft, then come back here.
 
 List the calculation revisions for one filing, show the current revision's
-persisted casilla values, then verify the current draft (the setup steps create
-and calculate the draft the reads below inspect):
+persisted casilla values, then verify the current draft, which the setup steps
+above create and calculate for the reads below to inspect:
 
 ```{cli-sequence} review-values-review-saved
 :verify: Confirm the saved calculation lists, shows values, and verifies.
