@@ -40,6 +40,7 @@ from ...core.classification import SensitivityClass
 # runtime; deferring it to TYPE_CHECKING leaves the model undefined and every
 # construction raises. The rest of the domain surface is annotation-only.
 from ...domain.user_profile import UserProfileStatus, load_user_profile_schema
+from ._completeness import missing_required_field_paths
 from ._projections import record_to_path_values
 
 if TYPE_CHECKING:
@@ -162,7 +163,14 @@ def build_profile_overview(
     values = record_to_path_values(record)
 
     sections: list[ProfileSectionView] = []
-    missing_required: list[str] = []
+    # Row-aware, and it has to be: a repeatable section's rows live at
+    # ``section.INDEX.field``, so testing the unindexed path reported every
+    # such required field as missing on every profile forever - the
+    # completeness count an operator reads was permanently wrong. Stripping
+    # the index would not have fixed it either, because a section with no
+    # rows has no facts to strip; the rule that was missing is that an
+    # absent row demands nothing.
+    missing_required: list[str] = list(missing_required_field_paths(resolved_schema, values))
     for section in resolved_schema.sections:
         field_views: list[ProfileFieldView] = []
         for field in section.fields:
@@ -170,8 +178,6 @@ def build_profile_overview(
             raw = values.get(path)
             masked = _mask_field(path=path, label=field.description, sensitivity=field.sensitivity)
             present = raw is not None and raw != ""
-            if field.required and not present:
-                missing_required.append(path)
             field_views.append(
                 ProfileFieldView(
                     path=path,

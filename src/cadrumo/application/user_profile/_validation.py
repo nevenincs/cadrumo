@@ -26,7 +26,12 @@ from . import (
     ProfileValidationIssue,
     ProfileValidationReport,
 )
-from ._completeness import IVA_REGIME_PATH, conditional_profile_missing_required, iva_regime_required
+from ._completeness import (
+    IVA_REGIME_PATH,
+    conditional_profile_missing_required,
+    iva_regime_required,
+    missing_required_field_paths,
+)
 
 _ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 """The single accepted date layout: zero-padded ``YYYY-MM-DD``.
@@ -240,32 +245,26 @@ class ProfileValidationService:
         # raises. The overview built from the same record already reads
         # presence this way, so the enforcing surface now agrees with the one
         # the operator is shown.
-        present = {
-            self._section_field_key(fact.path)
-            for fact in facts
-            if fact.value is not None and self._render_fact_value(fact.value) != ""
-        }
+        # Repeatable sections were skipped wholesale here, so 13 of the 15
+        # fields the schema declares required were never reached and the
+        # declaration bound nothing. Removing that skip alone would have been
+        # wrong in BOTH directions at once, because the presence set drops the
+        # row index: an empty section would raise (demanding every taxpayer
+        # hold an attribution entity) while a second, incomplete row would
+        # pass. The shared row-aware helper is what makes "required" mean
+        # per-row, and the overview reads the same one so the enforcing
+        # surface and the displayed one cannot drift apart again.
         values = {fact.path: self._render_fact_value(fact.value) for fact in facts if fact.value is not None}
-        issues: list[ProfileValidationIssue] = []
-        for section in self._schema.sections:
-            if section.repeatable:
-                continue
-            for field in section.fields:
-                if not field.required:
-                    continue
-                path = f"{section.key}.{field.key}"
-                if path == IVA_REGIME_PATH and not iva_regime_required(values):
-                    continue
-                if path not in present:
-                    issues.append(
-                        ProfileValidationIssue(
-                            severity=BaseSeverity.ERROR,
-                            code=REQUIRED_FIELD_MISSING_CODE,
-                            path=path,
-                            message=f"required field {path} is missing",
-                        ),
-                    )
-        return tuple(issues)
+        return tuple(
+            ProfileValidationIssue(
+                severity=BaseSeverity.ERROR,
+                code=REQUIRED_FIELD_MISSING_CODE,
+                path=path,
+                message=f"required field {path} is missing",
+            )
+            for path in missing_required_field_paths(self._schema, values)
+            if not (path == IVA_REGIME_PATH and not iva_regime_required(values))
+        )
 
     def _conditional_completeness_issues(
         self,

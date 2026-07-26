@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
+from typing import TYPE_CHECKING
 
 from ...domain.deadlines import EntityType, FiscalResidency, IrpfIncomeCategory, irnr_representante_fiscal_required
+
+if TYPE_CHECKING:
+    from ...domain.user_profile import ProfileSchemaDefinition
 
 FISCAL_RESIDENCY_PATH = "taxpayer_type.fiscal_residency"
 COUNTRY_OF_FISCAL_RESIDENCE_PATH = "taxpayer_type.country_of_fiscal_residence"
@@ -60,6 +64,59 @@ def iva_regime_required(values: Mapping[str, object]) -> bool:
     return IrpfIncomeCategory.ACTIVIDAD_ECONOMICA.value in categories
 
 
+def missing_required_field_paths(
+    schema: ProfileSchemaDefinition,
+    values: Mapping[str, str],
+) -> tuple[str, ...]:
+    """Report which schema-required field paths a value mapping leaves unsatisfied.
+
+    A repeatable section is validated PER ROW. Every row that exists must
+    carry every required field of its section, and a section with no rows
+    reports nothing - a taxpayer with no attribution entities is not
+    incomplete for lacking one. Reading it per SECTION instead would demand
+    at least one row of every repeatable section, which would make an
+    ordinary profile permanently invalid.
+
+    Row identity is the index segment (``socios.0.nif``). A repeatable fact
+    written WITHOUT an index is treated as a single implicit row rather
+    than ignored, because a producer currently writes one that way; that
+    divergence is tracked on its own and this function deliberately does
+    not prejudge it, it only avoids dropping the field from validation.
+
+    Presence is value-bearing but NOT whitespace-stripped, matching the
+    surfaces that consume this. Tightening it here would silently change
+    what counts as a filled field.
+    """
+    present = {path for path, value in values.items() if value != ""}
+    missing: list[str] = []
+    for section in schema.sections:
+        required = tuple(field.key for field in section.fields if field.required)
+        if not required:
+            continue
+        if not section.repeatable:
+            missing.extend(f"{section.key}.{key}" for key in required if f"{section.key}.{key}" not in present)
+            continue
+        for row, populated in _rows_of(section.key, present).items():
+            prefix = f"{section.key}.{row}." if row else f"{section.key}."
+            missing.extend(f"{prefix}{key}" for key in required if key not in populated)
+    return tuple(missing)
+
+
+def _rows_of(section_key: str, present: Iterable[str]) -> dict[str, set[str]]:
+    """Group a section's populated paths by row, keying an unindexed path as one implicit row."""
+    rows: dict[str, set[str]] = {}
+    for path in present:
+        head, _, tail = path.partition(".")
+        if head != section_key or not tail:
+            continue
+        index, _, field = tail.partition(".")
+        if field and index.isdigit():
+            rows.setdefault(index, set()).add(field)
+        elif not field:
+            rows.setdefault("", set()).add(index)
+    return rows
+
+
 def _has_value(values: Mapping[str, object], path: str) -> bool:
     return bool(_token(values.get(path)))
 
@@ -81,4 +138,5 @@ __all__ = [
     "conditional_profile_missing_required",
     "conditional_profile_required_paths",
     "iva_regime_required",
+    "missing_required_field_paths",
 ]
