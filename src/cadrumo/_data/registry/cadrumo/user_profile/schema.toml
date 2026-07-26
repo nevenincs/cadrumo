@@ -755,11 +755,15 @@ legal_refs = [
 # own epígrafes. One flat set can therefore hold one activity's módulos, and a
 # taxpayer with two módulos activities cannot be represented here.
 #
-# That is a modelling gap rather than a live defect today, because nothing in
-# the calculation path reads these fields — the M131 módulos casillas carry no
-# binding and are operator input. The precondition that keeps it harmless is
-# recorded at the M131 divergence-advisory predicate, which is where a change
-# would make it matter.
+# That is a modelling gap rather than a live defect today, on this evidence: no
+# registry file references these paths or their model selectors, the M131
+# módulos casillas carry no binding and are operator input, and the only
+# production readers are the setup wizard. That was established by literal
+# search, which would not see a consumer that reaches profile facts generically
+# without naming a path — so read it as "no declared consumer found", not as a
+# proof that none exists. The precondition that keeps it harmless is recorded at
+# the M131 divergence-advisory predicate, which is where a change would make it
+# matter.
 
 [[sections.fields]]
 key = "objective_estimation_prior_year_gross_income_eur"
