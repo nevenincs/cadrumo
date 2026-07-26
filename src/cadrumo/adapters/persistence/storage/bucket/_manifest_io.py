@@ -22,7 +22,11 @@ from .._namespace_registry import BUCKET_MANIFEST_FILENAME
 from ..errors import StorageValidationError
 from ._errors import BucketValidationError
 from ._layout import BucketPaths
-from ._manifest import BucketManifest
+from ._manifest import (
+    BUCKET_MANIFEST_DURABILITY_FLOOR,
+    BUCKET_MANIFEST_SCHEMA_VERSION,
+    BucketManifest,
+)
 
 MISSING_BUCKET_MANIFEST_MESSAGE = "bucket manifest is missing"
 _BUCKET_VALIDATION_MESSAGE_KEY = "errors.integrity.integrity_storage_bucket_validation"
@@ -36,6 +40,48 @@ def manifest_path(paths: BucketPaths) -> Path:
 def manifest_validation_error(message: str) -> StorageValidationError:
     """Build the typed, localized :class:`StorageValidationError` used by manifest I/O."""
     return StorageValidationError(message, translated_message=_BUCKET_VALIDATION_MESSAGE_KEY)
+
+
+def ensure_manifest_schema_readable(schema_version: int) -> None:
+    """Refuse a bucket-manifest version this application cannot read.
+
+    A ceiling with a durability floor, matching the sealed-archive tier rather
+    than the secure-object tier: the manifest carries no upgrade dispatch, so
+    there is nothing to transform an older layout and the two ends of the range
+    are the whole contract. Under ``PRE_RELEASE`` the floor equals the current
+    version, which makes this an equality today; it widens to a real range at
+    the checkpoint without a second edit.
+
+    The two directions are distinguished deliberately. Above the ceiling is
+    "upgrade the application" and is recoverable by the operator; below the floor
+    is "this bucket predates the guarantee" and is not. Collapsing them into one
+    message would tell an operator with a newer bucket that their data is too
+    old, which is both wrong and alarming.
+
+    Raises:
+        StorageValidationError: When the version is above the current version or
+            below the durability floor.
+    """
+    if schema_version > BUCKET_MANIFEST_SCHEMA_VERSION:
+        raise StorageValidationError(
+            f"bucket manifest is at schema version {schema_version}; this application supports up to "
+            f"{BUCKET_MANIFEST_SCHEMA_VERSION}",
+            translated_message="errors.integrity.integrity_storage_bucket_manifest_version_from_future",
+            context={
+                "schema_version": str(schema_version),
+                "max_supported": str(BUCKET_MANIFEST_SCHEMA_VERSION),
+            },
+        )
+    if schema_version < BUCKET_MANIFEST_DURABILITY_FLOOR:
+        raise StorageValidationError(
+            f"bucket manifest is at schema version {schema_version}; this application reads no lower than "
+            f"{BUCKET_MANIFEST_DURABILITY_FLOOR}",
+            translated_message="errors.integrity.integrity_storage_bucket_manifest_version_below_floor",
+            context={
+                "schema_version": str(schema_version),
+                "durability_floor": str(BUCKET_MANIFEST_DURABILITY_FLOOR),
+            },
+        )
 
 
 def _format_scalar(value: object) -> str:
@@ -151,9 +197,17 @@ def read_manifest(paths: BucketPaths) -> BucketManifest:
     Returns:
         A strict-validated :class:`BucketManifest`.
 
+    The version is range-gated before the manifest is returned: a version above
+    the current one was written by a newer application, and a version below the
+    durability floor predates what this build can read. Until now the manifest
+    was the only persisted format with a ``schema_version`` field and no gate of
+    any kind on it, so a foreign version was accepted silently and flowed into
+    the key-schedule discriminator and the plaintext lifecycle mirror.
+
     Raises:
-        StorageValidationError: When the manifest cannot be read, cannot be parsed, or
-            is missing the lifecycle status key.
+        StorageValidationError: When the manifest cannot be read, cannot be
+            parsed, is missing the lifecycle status key, or carries a schema
+            version outside the readable range.
     """
     target = manifest_path(paths)
     try:
@@ -171,11 +225,14 @@ def read_manifest(paths: BucketPaths) -> BucketManifest:
     payload.setdefault("session_absolute_minutes", None)
     if "status" not in payload:
         raise manifest_validation_error("bucket manifest is missing required lifecycle status")
-    return BucketManifest.model_validate(payload)
+    manifest = BucketManifest.model_validate(payload)
+    ensure_manifest_schema_readable(manifest.schema_version)
+    return manifest
 
 
 __all__ = [
     "MISSING_BUCKET_MANIFEST_MESSAGE",
+    "ensure_manifest_schema_readable",
     "manifest_path",
     "manifest_validation_error",
     "read_manifest",

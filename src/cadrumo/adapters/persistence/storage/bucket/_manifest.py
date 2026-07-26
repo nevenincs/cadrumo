@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, Final
 
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
@@ -68,6 +68,26 @@ class BucketKeySchedule(StrEnum):
     """Data-key schedule used by encrypted records in this bucket."""
 
     BUCKET_DEK_V1 = "bucket-dek-v1"
+
+
+#: Current on-disk schema version of a bucket manifest.
+#:
+#: Named here rather than restated at the create call site, so the manifest can
+#: enroll in the durability machinery alongside the other persisted formats. The
+#: value reached 2 when the key schedule became a stored discriminator, and that
+#: bump rode an unrelated routing change without announcing itself — the axis has
+#: already moved once unobserved, on the field that decides how a bucket's bytes
+#: are unlocked.
+BUCKET_MANIFEST_SCHEMA_VERSION: Final[int] = 2
+
+#: Oldest bucket-manifest schema version the read path keeps readable.
+#:
+#: Equal to the current version: the manifest tier carries no upgrade dispatch,
+#: so a floor below current would have no mechanism behind it. Raising the
+#: version therefore forces an explicit decision in the same change — raise the
+#: floor too (dropping older manifests, the pre-release posture), or land a
+#: version-aware reader with an old-manifest restorability test.
+BUCKET_MANIFEST_DURABILITY_FLOOR: Final[int] = 2
 
 
 class BucketManifest(BaseModel):

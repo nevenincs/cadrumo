@@ -6131,6 +6131,8 @@ errors:
       dades de referència o el motor de càlcul poden estar malmesos.
     profile_import_signature: L'arxiu de perfil no ha superat la comprovació de signatura
       o integritat. No importis arxius d'origen no fiable.
+    integrity_storage_bucket_manifest_version_from_future: 'Aquesta carpeta de perfil es va escriure amb una versió més recent de Cadrumo. Actualitza Cadrumo per obrir-la.'
+    integrity_storage_bucket_manifest_version_below_floor: 'Aquesta carpeta de perfil és anterior al format més antic que aquesta versió de Cadrumo pot llegir.'
   internal:
     cli_outbound_payload_boundary: Cadrumo ha construït un registre intern que no
       ha superat la seva pròpia validació. La teva ordre era correcta; això és un

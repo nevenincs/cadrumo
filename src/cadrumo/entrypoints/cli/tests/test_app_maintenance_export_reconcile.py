@@ -82,6 +82,22 @@ def _reconcile_json() -> dict[str, object]:
     return payload
 
 
+def _first_row(rows: object) -> dict[str, object]:
+    """Return the first envelope row, asserting it really is a keyed record.
+
+    ``json.loads`` yields ``object``, and a bare ``isinstance(x, dict)`` narrows
+    only to ``dict[Unknown, Unknown]`` — whose key type is ``Never``, so every
+    subsequent ``row["field"]`` is rejected. Rebuilding the row with string keys
+    gives a genuinely typed mapping, and asserts the shape the envelope contract
+    promises rather than suppressing the question.
+    """
+    assert isinstance(rows, list)
+    assert rows, "expected at least one row"
+    row = rows[0]
+    assert isinstance(row, dict)
+    return {str(key): value for key, value in row.items()}
+
+
 def test_the_verb_clears_an_abandoned_crash_orphan_and_its_cleartext_staged_file(tmp_path: Path) -> None:
     # The case the pre-flight trigger cannot reach: the operator crashed and
     # never exported again. Only this verb clears the bundle bytes.
@@ -100,10 +116,9 @@ def test_the_verb_clears_an_abandoned_crash_orphan_and_its_cleartext_staged_file
 
         assert payload["reconciled_count"] == 1
         assert payload["failed_count"] == 0
-        reconciled = payload["reconciled"]
-        assert isinstance(reconciled, list)
-        assert reconciled[0]["operation_id"] == prepared.operation.operation_id
-        assert reconciled[0]["destination"] == str(destination)
+        first = _first_row(payload["reconciled"])
+        assert first["operation_id"] == prepared.operation.operation_id
+        assert first["destination"] == str(destination)
         # The cleartext bundle bytes are gone from disk, and no export ran.
         assert not staged.exists()
         assert not destination.exists()
@@ -127,11 +142,10 @@ def test_the_verb_reports_an_isolated_failure_without_dropping_its_journal(tmp_p
 
         assert payload["reconciled_count"] == 1
         assert payload["failed_count"] == 1
-        failed = payload["failed"]
-        assert isinstance(failed, list)
-        assert failed[0]["journal_id"] == corrupt_id
-        assert failed[0]["destination"] is None
-        assert failed[0]["reason"] == "ProfileBundleExportJournalCorruptError"
+        first = _first_row(payload["failed"])
+        assert first["journal_id"] == corrupt_id
+        assert first["destination"] is None
+        assert first["reason"] == "ProfileBundleExportJournalCorruptError"
         # Kept for a retry rather than dropped.
         assert corrupt_path.is_file()
 

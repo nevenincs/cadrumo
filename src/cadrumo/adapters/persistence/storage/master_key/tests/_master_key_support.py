@@ -6,6 +6,7 @@ from pathlib import Path
 from ......core.config import SecretStoreBackend, Settings
 from ......domain.user_profile import UserProfileStatus
 from ...bucket import (
+    BUCKET_MANIFEST_SCHEMA_VERSION,
     BucketKeySchedule,
     BucketManifest,
     ManifestKdfParams,
@@ -51,7 +52,7 @@ def _write_registered_bucket(
             idle_lock_minutes=idle_lock_minutes,
             session_absolute_minutes=session_absolute_minutes,
             key_schedule=key_schedule,
-            schema_version=1,
+            schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
             status=UserProfileStatus.ACTIVE,
         ),
     )
