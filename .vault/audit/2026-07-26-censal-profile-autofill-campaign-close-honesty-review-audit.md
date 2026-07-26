@@ -378,15 +378,31 @@ in transit - the file list is attributable, the count is not.
 
 ### composition-reproduction-ran-and-did-not-reproduce | medium | The guards are inert as reported; the composition is harmless for a reason nobody had stated, and the original framing was too strong
 
-Closed by execution after being carried as unverified. The unexecuted half was run,
-and it did not reproduce - which is a result rather than a non-event, because what
-stops it was not any of the three defences built for it.
+Closed by execution after being carried as unverified. The unexecuted half was run and
+it does not reproduce - **blocked by the fixes this campaign landed, not by anything
+pre-existing**, which is the stronger of the two possible results because it
+demonstrates the defence rather than arguing it.
 
-The guards are inert exactly as measured. For the certificate provider the credential
-guard returns before its blank check, having no operator-configured credential to
-compare, and the deferred session comparison admits because the expectation it would
-compare against is derived from the very field that is absent. Both halves executed;
-that stands.
+Three routes, each refused by a named layer:
+
+    cleared identity   -> refused at auth, and again at the read
+    never-set identity -> proceeds through auth by design, refused at the read
+    control (intact)   -> adopts three paths
+
+The control is what makes the other two readable. A probe whose only outcomes are
+refusals cannot distinguish "refused" from "cannot proceed", and this one earned that
+caution twice over: the harness first produced a **false refusal** from its own missing
+manifest, which would have read as a defence at a layer defending nothing, and the
+positive control caught a summariser defect that would otherwise have left a
+refusal-only probe looking healthy while being structurally incapable of reporting a
+success.
+
+The guards are inert exactly as measured, and that stands. For the certificate provider
+the credential guard returns before its blank check, having no operator-configured
+credential to compare, and the deferred session comparison admits because the
+expectation it would compare against is derived from the very field that is absent.
+Both halves executed. The auth layer's own refusal, above, is the one added since -
+which is why the cleared path is now refused twice rather than passing through.
 
 What was never true is the implication drawn from it. The reproduction established, by
 tracing all three call sites, that the ownership guard's `incoming_identity` comes from
