@@ -8,11 +8,21 @@ six casillas the printed form does not carry, refuse every real render, and stay
 green for the entire time it was broken.
 
 This module is the counterweight. It runs the production extraction path over
-the bundled AEAT-published annex specimens, which are the official forms filled
-with AEAT's own worked-example figures and rendered by AEAT's publication
-toolchain. They are external authority: nothing in this repository authored
-their layout, so a profile that stops matching them has genuinely drifted from
-the document rather than from a convention.
+two families of externally-authored render, and nothing in this repository
+authored the layout of either, so a profile that stops matching them has
+genuinely drifted from the document rather than from a convention:
+
+- The AEAT-published annex specimens: the official forms filled with AEAT's own
+  worked-example figures and rendered by AEAT's publication toolchain. Because
+  the figures are AEAT's, these support arithmetic checks against the form's own
+  printed totals.
+- The sanitised real-corpus specimens: genuine filed declarations retrieved from
+  the sede, redacted for identity. Their layout, their printed labels and their
+  blank boxes are AEAT's, but every monetary amount was overwritten by the
+  sanitiser with a single constant declared in the specimen's own sidecar
+  manifest. They are therefore layout and label evidence, not value evidence:
+  no printed arithmetic holds across them, and the sidecar constant is the
+  external authority the extracted amounts are checked against instead.
 
 What is asserted, and why each part earns its place:
 
@@ -30,6 +40,14 @@ What is asserted, and why each part earns its place:
   worked example -- a box the filer legitimately left blank -- not a parser
   defect, and pinning them keeps a real pattern regression from being waved
   through as "just another optional blank".
+- Every extracted amount on a sanitised render equals the constant the
+  sanitiser declared it wrote. This is the substitution detector for the family
+  that has no printed arithmetic: a pattern that drifted onto a neighbouring
+  token, or that captured a box number merged into the amount, yields something
+  other than the declared constant and fails here even though the casilla set
+  and the coverage ratio both hold.
+- A blank box on a real render does not fabricate a value from its own printed
+  box number. Exercised on the one bundled real render that carries such a box.
 - Across the whole suite at least one specimen is short of full coverage. This
   is the anti-vacuity guard: if every specimen scored 1.0 the assertions above
   would pass against a corpus that had stopped exercising the blank-box
@@ -37,21 +55,36 @@ What is asserted, and why each part earns its place:
 
 Expected values are grounded in the printed documents, not computed from the
 profile under test: the covered and absent sets were read off the AEAT renders,
-so this module fails if the profile drifts and cannot be satisfied by adjusting
-the profile to match itself.
+and the amount constant is read from the sanitiser's manifest rather than from
+the profile, so this module fails if the profile drifts and cannot be satisfied
+by adjusting the profile to match itself.
+
+Modelo 100 is deliberately absent from the real-corpus specimen table. Its three
+real renders print the box number in a smaller font overlapping the amount's own
+x-range, word assembly merges the two, and every one of its 21 targets therefore
+yields a value that is neither the printed amount nor a parse failure -- while
+coverage scores 1.0 and satisfies the profile's floor of 1. Listing it here with
+weakened assertions would reproduce the green-suite-over-a-broken-profile
+pathology this module exists to end, so it is excluded until the merge is fixed
+where it happens, in word assembly.
 
 See Also:
     :mod:`~tests.fixtures.manual_annexes.tests.test_manual_annex_provenance`
         The provenance gate over the same specimens.
     :func:`~adapters.inbound.declaracion.parse_declaracion`
-        The full parser boundary, which cannot consume these specimens: they
+        The full parser boundary. It cannot consume the annex specimens, which
         carry no NIF and are refused at the identity step by design, which is
-        why coverage is exercised at the extraction layer here.
+        why coverage is exercised at the extraction layer for both families
+        uniformly. The real-corpus specimens do carry a sanitised NIF and are
+        driven end to end by the per-modelo boundary tests; what those cannot
+        express, and this module adds, is the coverage floor a profile declares
+        and the provenance premise the measurement rests on.
 """
 
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
@@ -60,12 +93,15 @@ import pytest
 
 from .....core.resources import resources
 from .....tests import FIXTURES_DIR
+from ...pdf import parse_spanish_decimal
 from .._parser import _extract_profile_values, extract_pages_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 _ANNEX_DIR = FIXTURES_DIR / "manual_annexes"
+_JUSTIFICANTE_DIR = FIXTURES_DIR / "justificantes"
 _EXPECTED_PROVENANCE = "aeat_published_facsimile"
+_EXPECTED_REAL_PROVENANCE = "real_corpus"
 
 
 @dataclass(frozen=True)
@@ -124,19 +160,110 @@ _SPECIMENS: tuple[_AnnexSpecimen, ...] = (
 )
 
 
-def _declaracion_profile(specimen: _AnnexSpecimen):
+@dataclass(frozen=True)
+class _RealRenderSpecimen:
+    """One sanitised real filed declaration and what it is expected to yield.
+
+    Distinct from :class:`_AnnexSpecimen` in what it can prove. AEAT authored the
+    layout, the printed labels and the blank boxes, but the sanitiser overwrote
+    every monetary amount with one constant, so these specimens ground label and
+    layout claims and cannot ground arithmetic ones.
+    """
+
+    modelo: str
+    stem: str
+    filing_year: int
+    period: str
+    absent: frozenset[str]
+    """Targets the profile declares that this render legitimately does not carry.
+
+    Read off the printed document: a box the filer left blank, or one printed on
+    a form page this render omits.
+    """
+
+    count_valued: frozenset[str] = frozenset()
+    """Covered targets whose printed value is a count of people, not an amount.
+
+    The sanitiser rewrites amounts only, so a count is exempt from the constant
+    check below. Membership is read off the printed column header (``N.o de
+    perceptores``, ``Numero total de percepciones``).
+    """
+
+    @property
+    def pdf(self) -> Path:
+        return _JUSTIFICANTE_DIR / self.modelo / f"{self.stem}.pdf"
+
+    @property
+    def sidecar(self) -> Path:
+        return _JUSTIFICANTE_DIR / self.modelo / f"{self.stem}.json"
+
+    @property
+    def label(self) -> str:
+        return f"{self.modelo}/{self.stem}"
+
+
+# Modelo 390: the only bundled real annual summary, and the only bundled render
+# AEAT issued in English rather than Spanish. It prints form pages 1, 3, 4 and 6
+# only -- page 3 opens on "5. Transactions made under the general system
+# (continued)" with no preceding start -- so the four devengado rate rows and box
+# 47 sit on a page this document does not contain. Box 662 is printed and blank.
+_M390_REAL_ABSENT = frozenset(
+    {
+        "iva.anual.repercutido.super-reducido",
+        "iva.anual.repercutido.reducido",
+        "iva.anual.repercutido.general",
+        "iva.anual.autorepercutido.intracomunitaria",
+        "iva.anual.cuota-devengada-total",
+        "iva.anual.compensacion-generada-ejercicio-no-97",
+    },
+)
+
+# Modelo 111: this filer declared only rendimientos de actividades economicas, so
+# boxes 07/08/09 carry values and every other perceptor section is printed blank.
+# The fourth quarter is sparser still: its sidecar declares a single amount
+# replacement, against six for each of the first three.
+_M111_TARGETS = frozenset(f"{n:02d}" for n in range(1, 31)) - {"29"}
+_M111_COVERED_QUARTERLY = frozenset({"07", "08", "09", "28", "30"})
+_M111_COVERED_FOURTH = frozenset({"30"})
+
+_REAL_SPECIMENS: tuple[_RealRenderSpecimen, ...] = (
+    _RealRenderSpecimen("390", "2021-0A", 2021, "0A", _M390_REAL_ABSENT),
+    _RealRenderSpecimen("111", "2024-1T", 2024, "1T", _M111_TARGETS - _M111_COVERED_QUARTERLY, frozenset({"07"})),
+    _RealRenderSpecimen("111", "2024-2T", 2024, "2T", _M111_TARGETS - _M111_COVERED_QUARTERLY, frozenset({"07"})),
+    _RealRenderSpecimen("111", "2024-3T", 2024, "3T", _M111_TARGETS - _M111_COVERED_QUARTERLY, frozenset({"07"})),
+    _RealRenderSpecimen("111", "2024-4T", 2024, "4T", _M111_TARGETS - _M111_COVERED_FOURTH),
+    _RealRenderSpecimen("190", "2024-0A", 2024, "0A", frozenset(), frozenset({"decl.total-percepciones"})),
+)
+
+
+def _declaracion_profile(specimen: _AnnexSpecimen | _RealRenderSpecimen):
+    """Select the profile exactly as :func:`_select_extraction_profile` does.
+
+    Selecting on ``artefact_kind`` instead would silently return nothing for half
+    the tree: that field is a free-form ``str`` and the registry splits it between
+    ``"declaracion"`` and ``"declaration_pdf"``, so the mismatch reads as "this
+    modelo has no declaration profile" rather than as an error. ``surface`` is the
+    closed enum the production selector keys on.
+    """
     snapshot = resources().modelos.authority.snapshot(
         specimen.modelo,
         filing_year=specimen.filing_year,
         period=specimen.period,
     )
     revision = snapshot.revision
-    profile = next(p for p in revision.extraction_profiles if p.artefact_kind == "declaracion")
-    return profile, revision
+    profiles = [
+        p
+        for p in revision.extraction_profiles
+        if p.surface == "declaracion_pdf" and "declaration_pdf" in p.accepted_artefact_kinds
+    ]
+    assert len(profiles) == 1, (
+        f"{specimen.label}: expected exactly one declaracion_pdf profile, got {sorted(p.id for p in profiles)}"
+    )
+    return profiles[0], revision
 
 
-def _extract(specimen: _AnnexSpecimen) -> tuple[frozenset[str], frozenset[str], Decimal]:
-    """Run the production extraction path; return (covered, declared, coverage)."""
+def _extracted_amounts(specimen: _AnnexSpecimen | _RealRenderSpecimen) -> dict[str, object]:
+    """Run the production extraction path; return casilla id to printed value."""
     profile, revision = _declaracion_profile(specimen)
     pages = extract_pages_text(specimen.pdf)
     values = _extract_profile_values(
@@ -145,10 +272,53 @@ def _extract(specimen: _AnnexSpecimen) -> tuple[frozenset[str], frozenset[str], 
         revision=revision,
         source_pdf_path=specimen.pdf,
     )
-    covered = frozenset(str(v.casilla_id) for v in values)
+    return {str(v.casilla_id): v.printed_value for v in values}
+
+
+def _as_amount(
+    specimen: _AnnexSpecimen | _RealRenderSpecimen,
+    amounts: dict[str, object],
+    casilla_id: str,
+) -> Decimal:
+    """Read one extracted target as a money amount, refusing any other shape.
+
+    ``ExtractedCasilla.printed_value`` is widened to carry text and enum targets
+    too, so a money box that came back as a raw string would otherwise reach an
+    arithmetic comparison and fail there as a type error rather than as the
+    parser defect it is.
+    """
+    value = amounts[casilla_id]
+    assert isinstance(value, Decimal), (
+        f"{specimen.label}: {casilla_id!r} extracted as {value!r}, which is not a money amount"
+    )
+    return value
+
+
+def _extract(specimen: _AnnexSpecimen | _RealRenderSpecimen) -> tuple[frozenset[str], frozenset[str], Decimal]:
+    """Run the production extraction path; return (covered, declared, coverage)."""
+    profile, _revision = _declaracion_profile(specimen)
+    covered = frozenset(_extracted_amounts(specimen))
     declared = frozenset(str(t.casilla_id) for t in profile.target_casillas)
     coverage = Decimal(len(covered)) / Decimal(len(declared))
     return covered, declared, coverage
+
+
+def _sanitiser_amount_constants(specimen: _RealRenderSpecimen) -> frozenset[Decimal]:
+    """The amounts the sanitiser declares it wrote into this render.
+
+    Read from the specimen's own manifest, which is authored by the redaction
+    tool and not by any extraction profile, so agreement with it is evidence the
+    parser read the intended token rather than a neighbour.
+    """
+    sidecar = json.loads(specimen.sidecar.read_text(encoding="utf-8"))
+    replacements = sidecar["replacements_applied"]
+    parsed = {parse_spanish_decimal(str(entry["synthetic"])) for entry in replacements}
+    constants = frozenset(value for value in parsed if isinstance(value, Decimal))
+    assert constants, (
+        f"{specimen.label}: sidecar declares no amount replacement, so the extracted "
+        f"amounts below would have no external authority to be checked against"
+    )
+    return constants
 
 
 @pytest.mark.parametrize("specimen", _SPECIMENS, ids=lambda s: s.label)
@@ -223,18 +393,143 @@ def test_modelo_390_extracted_totals_satisfy_the_forms_own_printed_arithmetic() 
     Grounded authority: the printed label of casilla 65 on the Modelo 390 form.
     """
     specimen = next(s for s in _SPECIMENS if s.modelo == "390")
-    profile, revision = _declaracion_profile(specimen)
-    pages = extract_pages_text(specimen.pdf)
-    values = _extract_profile_values(pages, profile, revision=revision, source_pdf_path=specimen.pdf)
-    amounts = {str(v.casilla_id): v.printed_value for v in values}
+    amounts = _extracted_amounts(specimen)
 
-    devengada = amounts["iva.anual.cuota-devengada-total"]
-    deducible = amounts["iva.anual.cuota-deducible-total"]
-    resultado = amounts["iva.anual.resultado-regimen-general"]
+    devengada = _as_amount(specimen, amounts, "iva.anual.cuota-devengada-total")
+    deducible = _as_amount(specimen, amounts, "iva.anual.cuota-deducible-total")
+    resultado = _as_amount(specimen, amounts, "iva.anual.resultado-regimen-general")
 
     assert resultado == devengada - deducible, (
         f"{specimen.label}: printed box 65 {resultado!r} != box 47 {devengada!r} - "
         f"box 64 {deducible!r} = {devengada - deducible!r}"
+    )
+
+
+@pytest.mark.parametrize("specimen", _REAL_SPECIMENS, ids=lambda s: s.label)
+def test_real_corpus_specimen_is_still_a_sanitised_aeat_filing(specimen: _RealRenderSpecimen) -> None:
+    """The premise of the real-corpus assertions below.
+
+    These specimens are the only bundled evidence of how AEAT lays out a filed
+    declaration. If one were replaced by generated output the assertions below
+    would keep passing while measuring this project's own conventions again.
+    """
+    sidecar = json.loads(specimen.sidecar.read_text(encoding="utf-8"))
+
+    assert sidecar["provenance"] == _EXPECTED_REAL_PROVENANCE, (
+        f"{specimen.label}: provenance is {sidecar['provenance']!r}, so the coverage "
+        f"below would no longer be measuring a real AEAT render"
+    )
+
+
+@pytest.mark.parametrize("specimen", _REAL_SPECIMENS, ids=lambda s: s.label)
+def test_profile_accepts_the_real_filed_declaration(specimen: _RealRenderSpecimen) -> None:
+    """The profile reads a genuine filed declaration without refusing it.
+
+    ``_extract_profile_values`` applies the profile's own ``min_coverage`` and
+    ``failure_semantics``, so a non-raising call is the whole claim. Modelo 390
+    read one of ten targets here until its labels were widened: AEAT issues the
+    sede justificante in the language the filer chose, this render is in English,
+    and the profile's Spanish-only patterns matched none of it.
+    """
+    profile, _revision = _declaracion_profile(specimen)
+    covered, declared, coverage = _extract(specimen)
+
+    assert coverage >= profile.min_coverage, (
+        f"{specimen.label}: coverage {coverage} below the profile floor {profile.min_coverage}; "
+        f"absent: {sorted(declared - covered)}"
+    )
+
+
+@pytest.mark.parametrize("specimen", _REAL_SPECIMENS, ids=lambda s: s.label)
+def test_real_filed_declaration_yields_exactly_the_expected_casillas(
+    specimen: _RealRenderSpecimen,
+) -> None:
+    """The extracted set is exactly what the printed document carries.
+
+    Asserted as a set rather than a count because a ratio hides substitution, and
+    because every one of these profiles declares a coverage floor that a ratio
+    alone cannot police: Modelo 390 and Modelo 111 both floor at zero, which no
+    document can fall below.
+    """
+    covered, declared, _coverage = _extract(specimen)
+    expected_covered = declared - specimen.absent
+
+    assert covered == expected_covered, (
+        f"{specimen.label}: extracted set drifted from the printed document.\n"
+        f"  unexpectedly absent: {sorted(expected_covered - covered)}\n"
+        f"  unexpectedly present: {sorted(covered - expected_covered)}"
+    )
+
+
+@pytest.mark.parametrize("specimen", _REAL_SPECIMENS, ids=lambda s: s.label)
+def test_real_render_amounts_equal_the_constant_the_sanitiser_declares(
+    specimen: _RealRenderSpecimen,
+) -> None:
+    """Every extracted amount is the value the redaction manifest says is there.
+
+    The substitution detector for renders that carry no usable arithmetic. The
+    casilla set and the coverage ratio both survive a pattern that captured the
+    wrong token on the right line; this does not, because the sanitiser's
+    constant is declared in the specimen's sidecar and is not something an
+    extraction profile can influence.
+
+    Count-valued targets are exempt and named per specimen: the sanitiser
+    rewrites monetary amounts only, so a perceptor count is printed unchanged.
+    """
+    constants = _sanitiser_amount_constants(specimen)
+    amounts = _extracted_amounts(specimen)
+
+    drifted = {
+        casilla_id: value
+        for casilla_id, value in amounts.items()
+        if casilla_id not in specimen.count_valued and value not in constants
+    }
+
+    assert not drifted, (
+        f"{specimen.label}: extracted amounts are not the sanitiser constant "
+        f"{sorted(str(c) for c in constants)}, so these targets read a token the "
+        f"redaction manifest does not account for: {drifted}"
+    )
+
+    for casilla_id in sorted(specimen.count_valued & set(amounts)):
+        value = amounts[casilla_id]
+        assert isinstance(value, Decimal) and value == value.to_integral_value() and value >= 0, (
+            f"{specimen.label}: count target {casilla_id!r} yielded {value!r}, which is not a non-negative whole count"
+        )
+
+
+def test_blank_box_on_a_real_render_does_not_fabricate_its_own_box_number() -> None:
+    """A blank money box is reported absent, not read as its printed box number.
+
+    ``named_label`` captures the last token on the line, and on a real AEAT form
+    a blank money box leaves its own printed box number as that token. Modelo 390
+    box 662 is printed and blank on the bundled real render, so without the
+    guard the profile would report 662 euros of cuotas pendientes de compensacion
+    that the filing never declared.
+
+    This is the only bundled real render that exercises the guard end to end. It
+    became reachable only once the label was widened to the English wording AEAT
+    printed here: before that the target missed on the label and never reached
+    the blank-box arm at all.
+    """
+    specimen = next(s for s in _REAL_SPECIMENS if s.modelo == "390")
+    profile, _revision = _declaracion_profile(specimen)
+    target_id = "iva.anual.compensacion-generada-ejercicio-no-97"
+    pages = extract_pages_text(specimen.pdf)
+    full_text = "\n".join(pages)
+
+    target = next(t for t in profile.target_casillas if str(t.casilla_id) == target_id)
+    assert target.label_pattern is not None
+    assert re.search(target.label_pattern, full_text, re.IGNORECASE), (
+        f"{specimen.label}: the label for {target_id!r} is not present in this render, so "
+        f"its absence below would prove nothing about the blank-box guard"
+    )
+
+    amounts = _extracted_amounts(specimen)
+
+    assert target_id not in amounts, (
+        f"{specimen.label}: {target_id!r} is blank on the printed render but extraction "
+        f"yielded {amounts.get(target_id)!r}, fabricated from its own box number"
     )
 
 
@@ -248,7 +543,7 @@ def test_the_suite_still_exercises_the_blank_box_tolerance() -> None:
     uninformative as the synthetic corpus and the floors they justify are no
     longer evidenced.
     """
-    coverages = {specimen.label: _extract(specimen)[2] for specimen in _SPECIMENS}
+    coverages = {specimen.label: _extract(specimen)[2] for specimen in (*_SPECIMENS, *_REAL_SPECIMENS)}
 
     assert any(coverage < Decimal(1) for coverage in coverages.values()), (
         "no bundled AEAT render exercises a blank optional box any more; the coverage "
