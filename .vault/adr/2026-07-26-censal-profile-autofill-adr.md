@@ -38,26 +38,36 @@ would leave the second standing.
 
 ## Considerations
 
-- Emitting unconditionally regresses the displayed-completeness defect verbatim;
-  the per-section condition is load-bearing rather than tidiness (audit,
+Each line carries how its claim was established, because the record's status
+marks the decision unaccepted and says nothing about which supporting facts have
+been checked. **Measured** means run in this campaign and reproducible from the
+audit; **read** means taken from a named artefact; **open** means neither.
+
+- **Measured.** Emitting unconditionally regresses the displayed-completeness
+  defect verbatim - thirteen fields on an employee-only taxpayer against one
+  today; the per-section condition is load-bearing rather than tidiness (audit,
   blanket-emission).
-- The required-field helper and the conditional-requirement helper serve
-  different, overlapping consumer sets, and only the first reaches the operator's
-  overview (audit, consumer-split).
-- The policy for who owes an activity description is already settled and routes
-  through a shipped, legally-grounded predicate rather than a new one.
-- That predicate takes a domain aggregate; the helpers hold a flat mapping, and
-  the one sanctioned coercion between them is strict (audit, predicate-access).
-- A resolver's required set and the schema's required set are legitimately
-  different: the resolver enforces what its row model consumes, the schema
-  declares what the profile must hold. Making one derive from the other would
-  force a resolver to enforce fields its modelo does not carry.
-- The same section family holds a second instance of this record's own defect: a
-  field declared required that no form carries and no code reads, so the
-  declaration is a wall an operator must satisfy for nothing.
-- The registry layer already solved the shape of "each family declares its own
-  validator, dispatched by a closed kind" in
-  `2026-06-14-bindings-interface-hardening-adr`.
+- **Measured.** The required-field helper and the conditional-requirement helper
+  serve different, overlapping consumer sets, and only the first reaches the
+  operator's overview. Enumerated by callers, which is closed by construction
+  (audit, consumer-split).
+- **Read**, from the settled policy for who owes an activity description: it
+  routes through a shipped, legally-grounded predicate rather than a new one.
+- **Measured.** That predicate takes a domain aggregate; the helpers hold a flat
+  mapping, and the one sanctioned coercion between them is strict - established
+  by wiring it in and observing five tests fail (audit, predicate-access).
+- **Read**, from the bundled M184 diseno by a second agent: a resolver's required
+  set and the schema's required set are legitimately different. The resolver
+  enforces what its row model consumes, the schema declares what the profile must
+  hold. Making one derive from the other would force a resolver to enforce fields
+  its modelo does not carry. This record earlier asserted the opposite from a set
+  comparison; the artefact overturned it.
+- **Read**, same source: the section family holds a second instance of this
+  record's own defect - a field declared required that no form carries and no
+  code reads, so the declaration is a wall an operator must satisfy for nothing.
+- **Read**, from `2026-06-14-bindings-interface-hardening-adr`: the registry layer
+  already solved the shape of "each family declares its own validator, dispatched
+  by a closed kind".
 
 ## Considered options
 
@@ -92,8 +102,9 @@ It remains the right long-term home if a second section ever needs a condition.
 
 ## Constraints
 
-The applicability question is open and cannot be closed by search: whether a
-per-section applicability mechanism already exists elsewhere in the tree. Four
+**Open**, and the only claim in this record that is neither measured nor read:
+whether a per-section applicability mechanism already exists elsewhere in the
+tree. It cannot be closed by search. Four
 concepts in this campaign were found under names no sweep would reach, two of
 them by reading a neighbouring decision rather than by searching. A mechanism of
 that kind can be named anything, so a symbol sweep samples rather than proves.
