@@ -34,7 +34,11 @@ inferred from a directory listing. Revision year ranges were read from each
 revision `valid_from` / `valid_to` / `period_selector` to attribute fixture years
 to the correct revision where a modelo has more than one. The full working set was
 29 `declaracion_pdf` profiles across 20 modelos, re-confirmed against the working
-tree at the time of writing.
+tree at the time of writing. This selection matches the governing ADR's D4
+(profile selection is by `surface`, never `artefact_kind`) independently, since it
+was reached from the profile schema rather than from that decision. D1 (the printed
+box number lives on `form_number`, not `number`) does not bear on any measurement
+here: every intersection and comparison below keys on casilla `id`, never `number`.
 
 Steps `P02.S06`-`P02.S09` are closed against this document rather than
 individual per-step exec records. `vaultspec-core vault add exec` refuses any
@@ -66,6 +70,17 @@ document can score below zero, so the coverage arm of a `min_coverage = 0` /
 there. `modelo-111-declaracion-pdf` and `modelo-130-declaracion-pdf` share the
 identical vacuity, previously unconfirmed outside the M390 case.
 
+The governing ADR (`declaracion-real-render-verification`, D2) now settles two of
+the three on the evidence this audit measured: `111` keeps its zero floor because
+four specimens exist and the worst case is 1 of 29 absent, and `390` keeps its zero
+floor for the opposite reason, having exactly one specimen, so no floor can be set
+from it under D2 ("where only one specimen exists, no floor is set"). `130` is
+different from both: per the `R11` register below it carries zero specimens of any
+kind, so its vacuous floor is not yet grounded the way `111` and `390` are under
+D2 -- it remains an undecided D3 evidence gap rather than a settled case, and
+should not be read as resolved by the same reasoning that now covers its two
+siblings.
+
 ### r4-over-strict-unit-floor-spans-23-profiles | high | every profile with min_coverage of 1 refuses any real filing missing even one target, ranked by exposure
 
 23 of the 29 profiles carry `min_coverage = "1"` or `1.0` with
@@ -81,7 +96,11 @@ through unchanged; present on 4450 casillas project-wide, spanning 68 of the 91
 registry-modelo/revision pairs, but declared on only a subset of casillas in any
 given revision) is the strongest available exposure signal where it exists, because
 it is the registry asserting -- not this audit inferring -- that a target may
-legitimately be absent from a real filing. Ranked by that signal:
+legitimately be absent from a real filing. Where the field is absent from a
+profile's targets entirely, as on the five `100` revisions, the ranking below falls
+back to a qualitative reading of the target labels, and that fallback is called out
+explicitly rather than blended with the registry-asserted tiers, because the two are
+different strengths of evidence. Ranked by that signal:
 
 - Fully self-declared optional (every target `required = False`), the sharpest
   exposure in the set: `131/2024`, `131/2025`, `131/2026` (15 of 15 targets each),
@@ -151,7 +170,10 @@ double-counted or discarded. This is not a live defect (the refusal is loud, and
 no-silent-under-declaration class harm is not occurring), but it is nine profiles
 where the printed-versus-primitive impedance the ADR flagged as project-wide,
 rather than Modelo-303 trivia, has not yet been arbitrated by any mechanism because
-none applies to them yet.
+none applies to them yet. The governing `declaracion-real-render-verification` ADR
+now records this same nine-profile scope in its Constraints section, naming it a
+non-live defect that is deliberately left undecided pending its own evidence -- this
+audit's measurement is what let that scope be named exactly rather than gestured at.
 
 ### r8-reconcile-docstring-misstates-modelo-202-declaracion-pdf-surface | high | the enrolled-set docstring gives a factually false reason for excluding Modelo 202
 
@@ -266,7 +288,9 @@ match pattern validated on one revision generalises to the others).
 22 data rows above (`111/2019-y-siguientes`, the one modelo not appearing, is
 excluded because its single revision already has a real_corpus specimen). Every
 row is an evidence gap, not a pass -- none of the routes named above should be
-read as satisfied for these profiles until a specimen closes it.
+read as satisfied for these profiles until a specimen closes it, which is the exact
+posture the governing ADR codifies as D3 ("an untestable profile is an evidence
+gap, never a pass").
 
 ## Recommendations
 
