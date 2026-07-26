@@ -61,6 +61,38 @@ verifiable before the promotion and is refused after it. So the documents
 instruct an operator through a flow that now stops — and the stop is correct.
 The documentation is what is wrong, not the gate.
 
+### the fix already exists in a sibling seed | high | copy it, do not author it
+
+The remedy does not need designing. `docs/_sequences/seeds/iva-evidence-2026.seq`
+already carries it, on the SAME transaction:
+
+```
+@setup aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf     --supplier "Papeleria Central SL" --invoice-number C-2026-0087     --invoice-date 2026-02-11 --taxable-base 500 --iva-rate 0.21 --iva-amount 105
+@capture evidence_id result.evidence_id
+@setup aeat app ledger attach e3eeac5e --purchase-invoice-evidence-id {evidence_id}
+```
+
+`autonomo-irpf-2026.seq` classifies the same `e3eeac5e` with the same
+`--taxable-base 500 --iva-rate 0.21 --iva-amount 105` and then stops. Appending
+those two frames is the whole change, and the fixture PDF is already committed.
+
+The matching amounts matter and should be preserved: a resolved purchase invoice
+OVERRIDES the row's taxable base and IVA, so an invoice declaring different
+figures would silently move casilla values rather than only satisfying the
+evidence gate. Here they are identical, so the attach is value-neutral.
+
+### the cost is the golden refresh, not the edit | medium | ten-plus sequences ride this seed
+
+`autonomo-irpf-2026` is the seed for at least ten contracts across
+`verification-reports`, `first-quarterly-filing`, `modelo-130` and
+`modelo-303`. Adding setup frames changes every one of their recorded outputs,
+so the edit is two lines and the verification is a full refresh of that seed's
+dependents, each executing real CLI commands.
+
+That asymmetry is why this record stops at the handoff: the edit is safe and
+proven, and leaving its dependents half-refreshed would make the corpus worse
+than the single failure it has now.
+
 ## Recommendations
 
 Update the three sequences to teach the ordering the promotion makes mandatory:
