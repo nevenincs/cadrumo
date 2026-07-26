@@ -274,6 +274,9 @@ semantic_role = "iva_anual_cuota_devengada_total"
 required = false
 input_kind = "computed"
 formula = "modelo-390-iva-anual-cuota-devengada-total"
+# Printed box number, read off the bundled AEAT annual-summary render:
+# "Total cuotas IVA y recargo de equivalencia (34 + 36 + ...) ... 47 88.416,00".
+form_number = "47"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 export_refs = ["modelo-390-page-02-casilla-total-cuota-devengada"]
@@ -288,6 +291,9 @@ semantic_role = "iva_anual_cuota_deducible_total"
 required = false
 input_kind = "computed"
 formula = "modelo-390-iva-anual-cuota-deducible-total"
+# Printed box number, read off the bundled AEAT annual-summary render:
+# "Suma de deducciones (49 + 513 + ...) ... 64 68.202,00".
+form_number = "64"
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 export_refs = ["modelo-390-page-04-casilla-total-cuota-deducible"]
@@ -302,6 +308,9 @@ semantic_role = "iva_anual_resultado_regimen_general"
 required = false
 input_kind = "computed"
 formula = "modelo-390-iva-anual-resultado-regimen-general"
+# Printed box number, read off the bundled AEAT annual-summary render:
+# "Resultado regimen general (4 7 - 64) ... 65 20.214,00".
+form_number = "65"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 export_refs = ["modelo-390-page-04-casilla-resultado-regimen-general"]
