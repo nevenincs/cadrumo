@@ -332,6 +332,7 @@ adapters:
       session_expired_nav_failed: El registro de declaraciones de AEAT no se cargó;
         la sesión probablemente ha expirado. Ejecute 'aeat config auth test' y vuelva
         a intentarlo.
+      censal_no_dispatch: 'El selector de acceso de la AEAT no abrió la página censal en un servidor operativo; vuelve a autenticarte e inténtalo de nuevo.'
 aggregation:
   grouping:
     errors:
@@ -1522,6 +1523,10 @@ application:
         la identidad del manifiesto no coincide con el registro seguro.'
       aggregate_status_mismatch: 'El almacenamiento del perfil no es coherente: el
         estado de ciclo de vida del manifiesto no coincide con el registro seguro.'
+      censal_read_identity_absent: La lectura censal no incluye ningún NIF, por lo
+        que no puede confirmarse que corresponda a este perfil.
+      censal_read_identity_mismatch: La lectura censal corresponde a un contribuyente
+        distinto al de este perfil; no se ha aplicado.
       duplicate_tax_id: El NIF '%{tax_id}' ya lo usa el perfil '%{profile}'; un contribuyente
         debe tener un solo perfil.
       lifecycle_profile_already_exists: Ya existe un perfil en el bucket activo.
@@ -1570,8 +1575,6 @@ application:
         instantánea de perfil es más reciente de lo que admite esta aplicación.
       unsupported_bundle_schema_version: La versión del esquema del paquete no es
         compatible con esta versión de la aplicación.
-      censal_read_identity_absent: 'La lectura censal no incluye ningún NIF, por lo que no puede confirmarse que corresponda a este perfil.'
-      censal_read_identity_mismatch: 'La lectura censal corresponde a un contribuyente distinto al de este perfil; no se ha aplicado.'
     notices:
       censo_divergences_open: '{count} dato(s) del perfil siguen difiriendo del Certificado
         de Situación Censal y quedan sin resolver: {axes}.'
@@ -3641,10 +3644,11 @@ cli:
           Vuelve a ejecutar con --apply para inscribir estos datos.'
         pull_verified_tier_notice: Estos datos se han leído directamente de la AEAT,
           por lo que el alta censal cuenta como verificada.
+        pull_withheld_notice: 'Los valores de {count} campo(s) no se muestran: {axes}.
+          Compáralos tú mismo con los de la AEAT; esta herramienta no los imprime.'
         refresh_help: Descarga de AEAT el último censo y guarda un snapshot
         show_help: Muestra el último censo informado por AEAT para este perfil
         snapshot_id_help: Id de snapshot concreto (se aceptan prefijos)
-        pull_withheld_notice: 'Los valores de {count} campo(s) no se muestran: {axes}. Compáralos tú mismo con los de la AEAT; esta herramienta no los imprime.'
       create_epilog: 'Perfil mínimo para autónomo: --entity-type natural_person --tax-id
         <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
       create_help: Inicializa un nuevo perfil activo.
@@ -6216,6 +6220,8 @@ errors:
     bootstrap_already_complete: El arranque del almacenamiento seguro ya está completo.
       Usa aeat config login NAME para activar un perfil existente o aeat config profile
       create NAME para añadir otro perfil.
+    censal_read_identity: La lectura censal no corresponde al contribuyente de este
+      perfil.
     clave_credentials_incomplete: Al modo de autenticación Cl@ve seleccionado le falta
       una credencial que necesita.
     ledger_preflight: La comprobación previa del libro rechazó la ejecución del modelo
@@ -6579,7 +6585,6 @@ errors:
     submission_preflight_error_findings: El borrador tiene {finding_count} incidencia(s)
       de severidad ERROR; resuélvelas antes de presentar.
     unsupported_currency: El código de moneda indicado no es compatible.
-    censal_read_identity: 'La lectura censal no corresponde al contribuyente de este perfil.'
   snapshot:
     ambiguous_revision_selection: 'Más de una revisión del registro coincide con el
       modelo %{modelo_id}: %{candidate_ids}.'
@@ -6690,6 +6695,9 @@ flows:
       censal_pull: Rellenar con los datos censales de la AEAT
       censal_pull_auth_incomplete: Su identificación está incompleta, así que aún
         no se puede leer la AEAT. Complétela primero.
+      censal_pull_cleared: 'La AEAT todavía tiene un valor para los campos que usted
+        vació: %{paths}. Se han dejado vacíos; vaciarlos aquí no cambia el registro
+        de la AEAT.'
       censal_pull_contested: 'La AEAT discrepa de lo que usted declaró en: %{paths}.
         Su respuesta se mantiene; resuelva cada caso usted mismo.'
       censal_pull_done: 'Datos censales de la AEAT leídos: %{adopted} campo(s) rellenados,
@@ -6707,7 +6715,6 @@ flows:
         certificate: Certificado electrónico
         clave_movil: Cl@ve Móvil
         clave_permanente: Cl@ve Permanente
-      censal_pull_cleared: 'La AEAT todavía tiene un valor para los campos que usted vació: %{paths}. Se han dejado vacíos; vaciarlos aquí no cambia el registro de la AEAT.'
     actions:
       section: Acciones
     column:
