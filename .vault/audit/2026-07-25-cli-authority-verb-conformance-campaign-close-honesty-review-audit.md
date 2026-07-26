@@ -967,6 +967,52 @@ cycle-break sites against a ceiling of 50, and two ceilings carrying slack — i
 completes the attribution picture recorded elsewhere in this review: no failing
 lane, and now no ratchet, carries a defect owned here.
 
+### closing-verdict | critical | The campaign is not structurally complete, and should not be marked so
+
+Measured at close: **158 of 284 Steps closed, 126 open.** Every closed Step has
+a substantive execution record and there are no empty scaffolds — verified by
+parsing record bodies rather than counting files, because 37 records existed at
+one point of which 36 carried no evidence.
+
+**Complete and evidenced.** Waves W01 through W04, 148 Steps, all with
+attributable records. The campaign's one live production defect — MCP identity
+resolving through a registry nothing on that path seeded — is closed at
+`0918c3f7a7`, proven by a real stdio subprocess rather than a passing test. The
+five operator-facing surfaces the conformance gates do not scan were swept
+against the live 289-leaf tree and are clean, after three dead operator
+instructions were fixed. A fail-open in the profile-bound write guard was found
+and closed with a gate bound to the live command tree.
+
+**Not complete.** W05 stands at 1 of 55. Its target grammar is visibly present
+in the live tree, which is why it was handed over as landed — but the single
+W05 Step this review actually checked against its named surface was the one
+genuinely undone, and it was concealing the write-guard fail-open. Satisfaction
+must be established per Step against its surface, not inferred from the tree.
+W06 stands at 9 of 81, and 29 of its open Steps are follow-ups this review
+created rather than pre-existing work.
+
+**The strongest positive finding, and it took attribution rather than counting
+to reach.** No feature-owned regression has been identified in any failing lane
+or in the unsanctioned-import ratchet. The unit and integration failures are
+peer working-tree churn and environmental keychain deselection; the size-budget
+breach is a peer TUI commit's, established by numstat against the file; the
+ratchet red is peer drift, established by confirming the landing commit adds
+zero function-local imports. "Nine failures outstanding" and "nine failures,
+none ours" are different closes and only attribution distinguishes them.
+
+**Honest remainders, stated so the closure cannot imply otherwise.** The
+keychain-marked custody cases have never been observed green in any lane and
+were not verified here. The documentation lane is unverified in both directions
+and its worker terminations are unexplained. The semantic index ran at 466
+indexed sections against 3982 tracked files while reporting success, so every
+absence claim rests on reading and exact search, and the semantic sweep Steps
+are recorded unverified rather than clean.
+
+Recommendation: do not check the final Step. The campaign is well-executed and
+substantially unfinished, and those are not in tension — the open surface is
+enumerated as 126 tracked Steps rather than implied, which is the outcome a
+close review is for.
+
 ## Recommendations
 
 Each recommendation below is tracked as a Step with a verification gate, per
