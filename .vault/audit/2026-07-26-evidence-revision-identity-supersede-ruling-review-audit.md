@@ -130,6 +130,79 @@ was healthy and materially useful: its first result for the supersede concept
 was the 2026-07-26 successor record, which is how this review discovered HEAD
 had moved before ruling on a stale premise.
 
+### stranding-check-the-escape-paths-are-open | high | a taxpayer who cannot produce the factura is not stranded, and every surface between reclassify and export was verified open
+
+The redirect asked whether the promotion trades a recovery dead end for a
+filing dead end for the lost-receipt taxpayer. It does not, on two grounds. The
+legal ground: LIVA art. 97 is constitutive AND enumerative - the bundled
+authoritative text (`ley-37-1992.html`, anchor `#a97`) reads "Sólo podrán
+ejercitar el derecho a la deducción los empresarios o profesionales que estén
+en posesión del documento justificativo de su derecho" and then closes the set:
+"únicamente se considerarán documentos justificativos ... La factura original".
+A taxpayer who cannot produce the factura has no right to deduct, so the
+refusal refuses an assertion the law does not grant; it does not block a lawful
+filing. The mechanical ground, traced surface by surface: the blocked draft
+stays BORRADOR, and the finalized-modelo guard refuses ledger mutation only on
+VERIFICADO_COMPLETO / PRESENTADO / PRESENTADO_SUPERSEDIDO participation -
+BORRADOR participation is advisory-only (`_actions_common.py`), and update
+requires only an ACTIVE row. The taxpayer forgoes the deduction honestly with
+`ledger update` (clear the IVA quota and carry the gross as cost - the standard
+treatment for non-deductible IVA - or reclassify the row), recalculates, and
+the persist site has no single-draft constraint: a changed input set derives a
+new id, mints a new BORRADOR beside the old one and repoints the work unit
+(`_revision_persistence.py`). Verify reads the live catalogue, the finding no
+longer fires, the grant freezes a clean bundle, and export follows. Filing
+without the deduction remains available at every step; no surface refuses in
+between.
+
+### promotion-door-was-left-open-by-the-governing-adr | medium | the severity promotion exercises an explicit conditional in the accepted evidence-enforcement decision, which settles the sign-off criterion
+
+The governing evidence-enforcement decision states verbatim that the advisory
+"stays advisory while legitimately evidence-free cases exist; the section
+explicitly leaves room to upgrade individual category rules to BLOCKING once
+the evidence-free escape hatch for that category is closed". The promotion is
+the exercise of that door on the deductible side, where the hatch is closed by
+the statute already cited on the finding, while the output side stays advisory
+because no CLI path mints issued-invoice evidence - the over-blocking test
+applied by the implementer on the half where it bites. This answers the
+sharpened sign-off question: operator-visible refusal policy at verify is
+ADR-governed territory with an accepted decision already reserving the
+upgrade path, not a class reserved for the operator; the reserved class in the
+parent record remains revision identity and the frozen bundle, and the
+promotion touches neither. An ADR was the correct instrument and one was used.
+The ratification recommendation stands on process hygiene - the campaign that
+benefits certified its own authority - not on any identified overreach.
+
+### stale-draft-reverify-after-reclassification | medium | the reclassify escape has a wrong-order hazard the attach escape does not, in a pre-existing class
+
+Verify re-reads the live catalogue for the FINDING but performs no
+computed-vs-stored re-derivation of casilla values against the ledger. After a
+value-affecting mutation on a draft-cited row - the reclassify escape above -
+re-verifying the OLD draft therefore grants over stale casilla values that
+still assert the deduction, freezing an internally inconsistent bundle. This
+class is pre-existing and documented (the removal path's advisory comment in
+`_actions_common.py` states that a draft citing a removed row "will assert an
+income/expense no longer in the books on the next verify/file"), and it is not
+introduced by the promotion. But the promotion makes the deductible gap the
+most-travelled instance of it, and its remedy text "then rerun verification" is
+exactly right for attach (evidence is value-neutral on an OUTGOING row) and
+wrong for reclassify (value-affecting; recalculate must come first), with
+nothing refusing the wrong order. A follow-on decision should weigh a
+verify-time ledger-drift gate for BORRADOR drafts; the decision is named here,
+not taken.
+
+### blocking-predicate-is-laxer-than-its-statute | low | any attachment silences the art-97 gate while the statute admits only the factura original
+
+`_row_has_linked_evidence` (`_evidence_advisory.py`) is satisfied by a
+`purchase_invoice_evidence_id` OR any `attachment_ids` entry, so any linked
+document silences the BLOCKING finding, while art. 97 Dos admits únicamente the
+factura original (and the import/ICA documents) as justificativo. The
+enforcement predicate is weaker than the statute it cites - in the taxpayer's
+favour, so it is a laxity rather than a stranding, and possibly deliberate
+breadth since an attachment may BE the invoice. A follow-on tightening
+candidate is keying the deductible side on the purchase-invoice axis
+specifically; named, not decided.
+
 ## Recommendations
 
 Adopt no further mechanism work: the trap is dissolved at its cause, both
@@ -142,3 +215,15 @@ records or a close-audit note for the superseded rows, per the plan-closure
 discipline. Treat the confident answers of the degraded code index as a
 standing hazard until its owner rebuilds it; this review adds a fourth
 measured instance.
+
+On the redirect's questions specifically: the landed mechanism is sound and
+needs no operator sign-off - the upgrade door was reserved by an accepted
+decision and exercised per category, and the stranding concern is answered by
+the open reclassify-and-recalculate path plus the art. 97 enumerative reading,
+corroborated against the bundled authoritative text rather than a paraphrase.
+Closing S03 through S09 as RESOLVED BY S10 is sound in substance because the
+unbuildability argument was actually made and recorded before the withdrawal,
+not asserted after it; the exec-record gap above remains the one closure
+defect. Two named follow-on decisions for an owner: a verify-time ledger-drift
+gate for BORRADOR drafts, and tightening the deductible evidence predicate to
+the purchase-invoice axis.
