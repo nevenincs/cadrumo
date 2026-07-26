@@ -93,7 +93,7 @@ def test_a_row_that_exists_must_carry_every_required_field() -> None:
     """The enforcing half: `required` on a row-field now binds.
 
     Asserted on a SECOND row while the first is complete, because that is
-    the case the index-dropping presence set would wave through - the
+    the case the index-dropping presence set would admit - the
     first row's value satisfies the unindexed path for both.
     """
 
