@@ -9,39 +9,6 @@ related:
   - "[[2026-07-15-cli-authority-verb-conformance-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace cli-authority-verb-conformance with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S287 and 2026-07-15-cli-authority-verb-conformance-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Bisect the documentation lane with no workers and name the module whose worker exits, since it stalls identically at 24 and at 4 workers and emits no failure identities and ## Scope
-
-- `dev/docs/tests/test_docs_build.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Bisect the documentation lane with no workers and name the module whose worker exits, since it stalls identically at 24 and at 4 workers and emits no failure identities
 
 ## Scope
@@ -148,3 +115,47 @@ looks exactly like a stalled process.
 
 The semantic code index remained degraded throughout, at 466 code sections against 3982 tracked
 Python files while reporting success. Nothing here rests on it.
+
+## Serial run: fate and partial result
+
+THE RUN DID NOT COMPLETE. It was terminated with the session, not by me and not by
+its own failure. It ran from roughly 23:55 to 00:38, about 43 minutes, reached 71
+of 194 cases, and its log carries no exit line. Whatever the remaining 123 cases
+would have shown is unknown and is not reconstructed here.
+
+It nonetheless produced the first per-test evidence this lane has ever yielded,
+and two of the three things it establishes do not decay.
+
+DOES NOT DECAY — no serial stall through 71 cases. Every case ran to a verdict
+and the run was advancing normally when it was killed. Crucially the resolvability
+sweep, the single 840-second full-build test that the parallel lane appeared to
+hang on, COMPLETED. So did 14 of the 22 cases in the build module, including both
+nitpicky build gates. Nothing in the first 71 cases stalls with no workers.
+
+DOES NOT DECAY — the instrument works. Per-test lines through OS-level redirection
+recovered failure identities that the lane had never surrendered before, because
+pytest writes its summary only at the end and every previous attempt was killed
+before reaching it. That is a method result and it stands regardless of what the
+tree now holds.
+
+DECAYS, AND IS THEREFORE NOT REPORTED AS CURRENT — the seven named failures. They
+were measured at HEAD `ce933291d9`. HEAD is now `f20a3c74f1`, one hundred and
+twenty commits later. Two of them, the api-stub gate and the live-leaf schema
+gate, are already attributed elsewhere in this campaign to peer work that has
+since been partly addressed. Quoting any of the seven as the lane's current state
+would repeat the error of reporting a count taken at a HEAD that has moved. They
+are recorded in the run log as a starting point for whoever re-runs this, not as
+a finding.
+
+A NON-FINDING, stated because its shape invites the mistake. The last line of the
+log names a localised build case with no verdict beside it. That is the case that
+was IN FLIGHT when the process was killed. It is not a stalling case, and the fact
+that a killed run leaves exactly the same trace as a stalled one is the whole
+reason this investigation went wrong twice already.
+
+WHAT IS STILL NOT ESTABLISHED. Whether the lane completes serially, and which
+module terminates a worker under xdist. The second remains the live question and
+the re-scope is correct. A future attempt should run the lane to completion in a
+context that survives an idle session, and should let a worker-parallel run finish
+rather than killing it, capturing with per-test lines so each worker's cases are
+attributable.
