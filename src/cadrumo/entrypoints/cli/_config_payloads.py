@@ -18,19 +18,10 @@ from ...application.wizard import ConfigProfileCreateResult as ConfigProfileCrea
 from ...application.wizard import ConfigProfileEditResult as ConfigProfileEditResult
 from ._schemas import OutputSchema, register_schema
 
-# The two re-exports above are LOAD-BEARING, not convenience. Registry population
-# runs through `_ensure_result_schemas_registered`, which imports every
-# ``*payload*`` module under `_PAYLOAD_PACKAGES`. The wizard's results module -
-# where these two schemas are declared, at their real producer - is under neither
-# package and carries no ``payload`` in its name, so discovery never reaches it.
-# The CLI imported the wizard by other routes and looked fine; the MCP tool
-# builder does not, and it filters `command_schema_refs()` on the registry, so
-# both verbs silently vanished from the MCP surface and an installed server
-# answered `unknown command: config.profile.create`. Importing them from a module
-# discovery ALREADY visits runs the registration wherever the registry is
-# populated, while leaving it declared where it belongs. `register_schema` is
-# idempotent for the same class, so this cannot re-introduce the duplicate
-# registration that moving them out of here fixed.
+# LOAD-BEARING re-exports: `_ensure_result_schemas_registered` populates the
+# registry from ``*payload*`` modules under `_PAYLOAD_PACKAGES` only, and the
+# wizard module declaring these two schemas is under neither - without this import
+# both verbs drop off the MCP surface. `register_schema` is idempotent per class.
 
 if TYPE_CHECKING:
     from ...application.auth import AuthConfigureResult
@@ -798,18 +789,10 @@ class BucketHistoryResult(OutputSchema):
 
 # Profile wizard / lifecycle verb result schemas
 #
-# ``config.profile.create`` / ``config.profile.edit`` register in
-# :mod:`application.wizard._results`, not here: the wizard is their actual
-# producer, and it sits below this CLI package in the accepted hexagonal
-# direction, so it cannot construct a class defined up here. Registering the
-# schema at its real producer means constructing it IS the strict
-# validation, rather than a same-shaped pair of classes nothing ever
-# imports existing solely to satisfy the CLI-leaf-has-a-registered-schema
-# conformance gate.
-#
-# Their registration is nonetheless reached from here, by the re-export at the
-# top of this module. See the note on that import: it is load-bearing, not
-# convenience.
+# ``config.profile.create`` / ``config.profile.edit`` are declared at their real
+# producer in :mod:`application.wizard._results`, which sits below this package in
+# the hexagonal direction and cannot construct a class defined up here. The
+# re-export at the top is what makes registry discovery reach them.
 
 
 @register_schema("config.profile.export")
