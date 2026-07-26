@@ -28,10 +28,10 @@ from ....core.resources import bundled_path
 from ....domain.calculations.registry import ValidatedRegistryAuthority
 from .. import _load_registry_snapshot
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
 if TYPE_CHECKING:
     from ....domain.calculations.registry import CasillaDefinition
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _EDIT_MARKER = "FRESHNESS-PROBE "
 _MODELO = "130"
