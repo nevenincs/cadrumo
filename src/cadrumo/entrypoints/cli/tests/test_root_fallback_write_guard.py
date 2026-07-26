@@ -303,6 +303,16 @@ def _live_leaf_paths() -> tuple[str, ...]:
 
     leaves: list[str] = []
 
+    # `command` stays `object` and the suppression below is load-bearing, not
+    # laziness. Typer vendors its own click: the real runtime chain here is
+    # `CadrumoTyperGroup -> typer.core.TyperGroup -> typer._click.core.Command`,
+    # which shares NO ancestry with `click.core.Command` -- `isinstance(root,
+    # click.Command)` is False, measured. So the walker genuinely hands a
+    # typer-vendored command to a real `click.Context`, and that works only
+    # because the two are structurally compatible. Annotating `click.Command`
+    # here type-checks but asserts a subtype relation that does not hold, and
+    # the tests fail on it. Removing the suppression honestly needs an adapter
+    # across the two hierarchies, which is a design decision, not a cleanup.
     def walk(command: object, prefix: list[str], parent: click.Context | None) -> None:
         ctx = click.Context(command, info_name=prefix[-1] if prefix else "aeat", parent=parent)  # type: ignore[arg-type]
         names = list(command.list_commands(ctx)) if hasattr(command, "list_commands") else []
