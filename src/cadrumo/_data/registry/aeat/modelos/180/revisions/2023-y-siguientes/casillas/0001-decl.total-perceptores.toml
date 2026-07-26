@@ -1,6 +1,7 @@
 [[revisions.2023-y-siguientes.casillas]]
 id = "decl.total-perceptores"
 number = "136-144"
+form_number = "01"
 label = "Numero total de perceptores"
 section = ["declarante", "resumen"]
 data_type = "integer"

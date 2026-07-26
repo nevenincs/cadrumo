@@ -1,6 +1,7 @@
 [[revisions.2023-y-siguientes.casillas]]
 id = "decl.base-total"
 number = "145-160"
+form_number = "02"
 label = "Base retenciones e ingresos a cuenta total"
 section = ["declarante", "resumen"]
 data_type = "money"

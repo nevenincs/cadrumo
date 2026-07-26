@@ -1,6 +1,7 @@
 [[revisions."2020-y-siguientes".casillas]]
 id = "decl.numero-operadores"
 number = "138-146"
+form_number = "01"
 label = "Numero total de operadores intracomunitarios"
 section = ["declarante", "resumen"]
 data_type = "integer"
@@ -15,6 +16,7 @@ source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure"]
 [[revisions."2020-y-siguientes".casillas]]
 id = "decl.importe-operaciones"
 number = "147-161"
+form_number = "02"
 label = "Importe de las operaciones intracomunitarias"
 section = ["declarante", "resumen"]
 data_type = "money"
@@ -29,6 +31,7 @@ source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure"]
 [[revisions."2020-y-siguientes".casillas]]
 id = "decl.numero-rectificaciones"
 number = "162-170"
+form_number = "03"
 label = "Numero total de operadores intracomunitarios con rectificaciones"
 section = ["declarante", "resumen"]
 data_type = "integer"
@@ -43,6 +46,7 @@ source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure"]
 [[revisions."2020-y-siguientes".casillas]]
 id = "decl.importe-rectificaciones"
 number = "171-185"
+form_number = "04"
 label = "Importe de las rectificaciones"
 section = ["declarante", "resumen"]
 data_type = "money"
