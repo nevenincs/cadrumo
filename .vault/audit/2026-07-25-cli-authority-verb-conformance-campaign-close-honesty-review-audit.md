@@ -861,6 +861,30 @@ Not this campaign's to fix, and deliberately not fixed here: committing another
 campaign's untracked module would take ownership of work in flight. It is
 recorded, tracked, and escalated instead.
 
+RESOLVED, by its owner, before the escalation was delivered. The owning campaign
+committed the module as `b482927401`, whose subject names the defect exactly —
+"commit the results module HEAD already imports". Verified empirically rather
+than by file presence: a HEAD-only tree extracted with `git archive`, containing
+no untracked files at all, imports the wizard package successfully and exports
+the result classes. The shipped CLI is no longer broken on a clean checkout.
+
+Two things worth keeping from how this resolved. The first check reported the
+module untracked; twenty minutes later it was tracked, and only re-running
+against the current HEAD caught that. That is the fifth time in this review a
+conclusion drawn at one HEAD was falsified at another, and the first time the
+staleness worked in the campaign's favour — which is exactly why the rule has to
+be mechanical rather than motivated.
+
+The second is a distinction that matters for the held MCP fix and was almost
+lost: **tracking is not enrolment.** The module is now in HEAD, but the schema
+manifest still populates itself by importing modules named `*_payloads` under
+two known payload packages, and this module is neither. Its two schemas remain
+outside the manifest, so the transport divergence that blocks the identity fix —
+in-process reporting 295 command schemas against a subprocess reporting 293 —
+survives the commit untouched. The broken-HEAD half is closed; the
+under-reporting half is not, and the sequencing condition set for landing the
+identity fix is therefore only half satisfied.
+
 ## Recommendations
 
 Each recommendation below is tracked as a Step with a verification gate, per
