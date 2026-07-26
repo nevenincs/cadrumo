@@ -74,6 +74,24 @@ hardcoded required set into a second section. The schema-derived per-row check
 landed separately in this campaign, so a reader can derive the set instead of
 restating it.
 
+### One field of the profile row is inert
+
+`activities.cnae` has **no reader and no writer** anywhere in the tree - zero
+occurrences of the path in source or registry data, against a positive control
+showing its sibling `activities.description` at more than a hundred sites. It is
+declared in the schema and consumed by nothing.
+
+The AEAT side has no counterpart for it either, so it is not a mapping problem:
+the field exists on the profile alone and is used by neither party.
+
+### The AEAT activity row is a triple, and the diseño carries it per slot
+
+`Sección I.A.E.` appears nine times in the M036 diseño - once per numbered
+activity slot across the two módulos casillas, plus the primary activity
+register. The row AEAT records is *(descripción, sección, grupo/epígrafe, tipo de
+actividad)*, and the sección is what disambiguates an epígrafe, which is unique
+only within its sección.
+
 ### The one indexed writer that ships is not a model for this
 
 `src/cadrumo/application/user_profile/_cotejo_apply.py` writes indexed paths, and

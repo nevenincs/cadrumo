@@ -121,10 +121,20 @@ any módulos unit slot is shared across activities. The last of these can change
 the shape of a per-activity model rather than only its necessity, so it belongs
 before design rather than after.
 
-Semantic code discovery is unavailable at the time of writing - the code index is
-truncated while the vault index is healthy, and the two fail independently. Any
-implementation must substitute an exhaustive targeted search over the bounded
-surface and say so, rather than reporting that discovery came back clean.
+Semantic discovery is unavailable in **both** halves at the time of writing - the
+code index reports a terminal successful state at a section count far below the
+tree's size, and the vault index is mid-rebuild. The two fail independently and
+were checked separately; this record happens to catch both down at once. It is
+therefore authored from evidence already in the vault and from targeted search,
+not from fresh semantic discovery, and an implementation must substitute an
+exhaustive search over the bounded surface and say so rather than reporting that
+discovery came back clean.
+
+One consequence of that is worth stating rather than leaving implicit: this
+record cannot rule out that some part of this capability already exists under a
+name nobody searched. That has happened twice in the parent campaign, and the
+reference's finding - that the read half already ships - is itself an instance
+found only by reading an adjacent accepted decision rather than by searching.
 
 ## Implementation
 
@@ -146,10 +156,30 @@ modelo that wants one. The projection is where the singular casilla is served,
 and keeping it explicitly a projection is what stops the plural fact being
 re-collapsed later.
 
-A **field-set reconciliation** deciding, for each field the AEAT row carries and
-the profile row lacks and vice versa, whether it is added, mapped or deliberately
-absent. Indexing without this makes the section countable but still unable to
-express what the form records.
+**The profile row is decided here rather than deferred**, because indexing a row
+whose shape is wrong only makes the wrong shape countable. Per field:
+
+*Descripción* and *grupo o epígrafe* keep their existing profile fields and map to
+the AEAT row directly. *Sección I.A.E.* is **added**: the reference records it
+carried per activity slot throughout the diseño, and an epígrafe identifies an
+activity only within its sección, so a row without it cannot address the activity
+it claims to. *Tipo de actividad* is **added** on the same grounds - it is part of
+the triple AEAT records per slot, not a derived classification.
+
+*CNAE* is **retired from the row**. It has no AEAT counterpart, and the reference
+measures it as having no reader and no writer anywhere in the tree. Carrying an
+inert field into a new row model would give the row a fourth member that no
+consumer can use and no form expects. Retiring a declared schema field is a
+change to persisted shape, so it is called out as its own step rather than folded
+into the row work.
+
+A **principal-activity rule**, because the modelo asks which activity is
+principal and that is a declaration rather than a lookup. The row carries an
+explicit marker. Exactly one row is principal by construction when the section
+holds one row; several rows with none marked **refuses** rather than selecting
+by index or by amount. Choosing by position would make row order load-bearing
+when nothing else in the section treats it that way, and choosing by amount
+would invent a criterion the form does not state.
 
 The new reader derives its required-field set from the schema rather than
 restating it. The reference records that the shipped resolver restates it and has
