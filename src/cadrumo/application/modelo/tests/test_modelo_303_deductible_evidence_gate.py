@@ -298,9 +298,22 @@ def _persist_legacy_verified_revision(
     return legacy
 
 
-def test_modelo_303_verify_warns_deductible_vat_missing_evidence_and_output_gap(
+def test_modelo_303_verify_blocks_on_deductible_gap_and_only_warns_on_the_output_gap(
     secure_objects: SecureObjectRepository,
 ) -> None:
+    """A deductible gap refuses the grant; an output gap stays advisory.
+
+    This inverts the previous expectation deliberately. The condition used to be
+    advisory here and a hard refusal at export and local filing, so verify froze
+    a gap-carrying bundle onto a revision that could then never be exported and,
+    because the revision id is content-addressed over tax facts that an evidence
+    attach does not change, could never be superseded either. Blocking at verify
+    is what makes that state unreachable instead of merely unexportable.
+
+    The output side is NOT promoted, and the asymmetry is the point: deducting
+    input IVA requires the factura, while no CLI path mints issued-invoice
+    evidence, so blocking output IVA would refuse a taxpayer who cannot comply.
+    """
     revision, sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = _calculate_irene_revision(
         secure_objects,
     )
@@ -325,13 +338,13 @@ def test_modelo_303_verify_warns_deductible_vat_missing_evidence_and_output_gap(
         clock=_VERIFIED_AT,
     )
 
-    assert report.granted_verificado_completo is True
-    assert report.completeness_status is VerificationCompletenessStatus.COMPLETE
+    assert report.granted_verificado_completo is False
+    assert report.completeness_status is VerificationCompletenessStatus.BLOCKED
     blocking = [
         finding for finding in report.findings if finding.severity is ModeloVerificationFindingSeverity.BLOCKING
     ]
     warning = [finding for finding in report.findings if finding.severity is ModeloVerificationFindingSeverity.WARNING]
-    assert blocking == []
+    assert blocking != []
     expected_source_refs = tuple(dict.fromkeys(ref for obs in revision.observations for ref in obs.source_refs))
     evidence_findings = [
         finding for finding in report.findings if "VAT" in finding.message and ("no linked evidence" in finding.message)
@@ -345,16 +358,20 @@ def test_modelo_303_verify_warns_deductible_vat_missing_evidence_and_output_gap(
         for finding in evidence_findings
         for source_ref in finding.source_refs
     )
+    # The deductible finding is the BLOCKING one, and its next_action is now
+    # true rather than aspirational: a blocked verify captures no bundle and
+    # leaves the draft open, so attaching and re-verifying really does work.
     assert any(
-        finding.kind is ModeloVerificationFindingKind.ADVISORY
+        finding.kind is ModeloVerificationFindingKind.BLOCKING_RULE
         and purchase.transaction_id in finding.message
         and "deductible VAT" in finding.message
         and "aeat app ledger evidence add" in (finding.next_action or "")
+        and "rerun verification" in (finding.next_action or "")
         and (
             f"aeat app ledger attach {purchase.transaction_id} --purchase-invoice-evidence-id"
             in (finding.next_action or "")
         )
-        for finding in warning
+        for finding in blocking
     )
     assert any(
         finding.kind is ModeloVerificationFindingKind.ADVISORY
@@ -366,10 +383,14 @@ def test_modelo_303_verify_warns_deductible_vat_missing_evidence_and_output_gap(
         and f"aeat app ledger attach {sale.transaction_id} --attachment-id" in finding.next_action
         for finding in warning
     )
+    # The load-bearing half: a blocked verify must leave NO frozen bundle and a
+    # still-open draft. If either moved, the operator would be locked out of the
+    # target exactly as before, and the promotion would have changed the message
+    # rather than the outcome.
     stored = cr_repo.load().get(revision.calculation_revision_id)
     assert stored is not None
-    assert stored.state is CalculationRevisionState.VERIFICADO_COMPLETO
-    assert stored.ledger_filing_evidence is not None
+    assert stored.state is CalculationRevisionState.BORRADOR
+    assert stored.ledger_filing_evidence is None
 
 
 def test_modelo_303_verify_uses_attached_purchase_invoice_evidence(
@@ -429,6 +450,86 @@ def test_modelo_303_verify_uses_attached_purchase_invoice_evidence(
         ]
         assert len(purchase_rows) == 1
         assert purchase_rows[0].purchase_invoice_evidence_id == evidence.record.evidence_id
+
+
+def test_a_blocked_verify_is_recoverable_by_attaching_and_verifying_again(
+    tmp_path: Path,
+) -> None:
+    """The recovery the whole promotion rests on: block, attach, re-verify, grant.
+
+    The sibling test above attaches BEFORE the first verify, which was the only
+    ordering that ever worked. This one drives the ordering an operator actually
+    reaches: verify first, hit the refusal, then fix it. It is the case that was
+    a permanent dead end before the promotion, because verify granted over the
+    gap and froze a bundle onto a revision whose content-addressed id an evidence
+    attach cannot change.
+
+    It also pins that the idempotent re-verify guard does not fire here. That
+    guard keys on a non-BORRADOR state, so a blocked revision must stay BORRADOR
+    for the second verify to do real work rather than return the first report.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        revision, _sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = (
+            _calculate_irene_revision(profile.repository)
+        )
+
+        def _verify() -> object:
+            return verify_modelo_revision(
+                revision.calculation_revision_id,
+                actor="operator",
+                workflow_profile=_workflow_profile(),
+                settings=ready_clave_settings(_TAX_ID),
+                work_unit_repository=wu_repo,
+                calculation_repository=cr_repo,
+                filing_repository=filing_repo,
+                verification_repository=vr_repo,
+                bucket_event_repository=event_repo,
+                transaction_repository=tx_repo,
+                clock=_VERIFIED_AT,
+            )
+
+        blocked = _verify()
+        assert blocked.granted_verificado_completo is False
+        assert blocked.completeness_status is VerificationCompletenessStatus.BLOCKED
+        after_block = cr_repo.load().get(revision.calculation_revision_id)
+        assert after_block is not None
+        assert after_block.state is CalculationRevisionState.BORRADOR
+        assert after_block.ledger_filing_evidence is None
+
+        invoice = tmp_path / "supplier-invoice.pdf"
+        invoice.write_bytes(b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n")
+        evidence = PurchaseInvoiceEvidenceService(
+            settings=profile.settings,
+            bucket_event_repository=event_repo,
+        ).add(bucket_id=_BUCKET_ID, source_path=invoice)
+        attach_manual_transaction_evidence(
+            bucket_id=_BUCKET_ID,
+            transaction_id=purchase.transaction_id,
+            purchase_invoice_evidence_id=evidence.record.evidence_id,
+            actor="operator",
+            transaction_repository=tx_repo,
+            bucket_event_repository=event_repo,
+            occurred_at=_VERIFIED_AT,
+        )
+
+        granted = _verify()
+        assert granted.granted_verificado_completo is True
+        assert granted.completeness_status is VerificationCompletenessStatus.COMPLETE
+        assert granted.verification_report_id != blocked.verification_report_id
+
+        settled = cr_repo.load().get(revision.calculation_revision_id)
+        assert settled is not None
+        assert settled.state is CalculationRevisionState.VERIFICADO_COMPLETO
+        assert settled.ledger_filing_evidence is not None
+        purchase_rows = [
+            row for row in settled.ledger_filing_evidence.rows if row.transaction_id == purchase.transaction_id
+        ]
+        assert len(purchase_rows) == 1
+        assert purchase_rows[0].purchase_invoice_evidence_id == evidence.record.evidence_id
+        # The revision id never moved. That is the point of ruling against
+        # folding evidence into identity: no calculation differs, so no new
+        # revision was needed to carry the fix.
+        assert settled.calculation_revision_id == revision.calculation_revision_id
 
 
 def _work_unit() -> WorkUnit:

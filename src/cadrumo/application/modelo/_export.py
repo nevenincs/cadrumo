@@ -1034,13 +1034,17 @@ def export_modelo_revision(
         revision,
         error_type=ModeloExportEvidenceMissingError,
         surface="export",
-        # The linking commands are only half the answer: this revision bundled its
-        # evidence at verify, so attaching now does NOT unblock this export. The
-        # ordering clause is the part that actually works, and the message says why.
+        # Defence in depth over a state verify no longer lets form: the deductible
+        # evidence gap now BLOCKS the verified-complete transition, so a revision
+        # cannot reach export carrying one. Reaching here means a revision finalized
+        # before that gate existed, or a gap that appeared after it was frozen --
+        # both recoverable by re-verifying, because a blocked verify captures no
+        # bundle and leaves the draft open. The suggestion no longer says "before
+        # calculate": that was true only while verify granted over the gap.
         suggestion=(
             "aeat app ledger evidence add PATH; "
-            "aeat app ledger attach TRANSACTION_ID --purchase-invoice-evidence-id EVIDENCE_ID  "
-            "# link BEFORE `aeat app modelo work calculate`"
+            "aeat app ledger attach TRANSACTION_ID --purchase-invoice-evidence-id EVIDENCE_ID; "
+            "aeat app modelo work verify"
         ),
     )
     work_unit = wu_repo.load().get(revision.work_unit_id)
