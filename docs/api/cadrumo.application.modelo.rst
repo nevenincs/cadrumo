@@ -71,6 +71,7 @@ Submodules
    cadrumo.application.modelo._quickfile
    cadrumo.application.modelo._reconcile
    cadrumo.application.modelo._reconcile_casilla
+   cadrumo.application.modelo._reconciliation_records
    cadrumo.application.modelo._registry_discovery
    cadrumo.application.modelo._registry_helpers
    cadrumo.application.modelo._registry_resources

@@ -56,12 +56,14 @@ from .._reconcile import (
     ModeloReconciliationDiff,
     ModeloReconciliationDiffKind,
     ModeloReconciliationEvidenceKind,
-    ModeloReconciliationRecord,
-    ModeloReconciliationRecordRepository,
     ModeloReconciliationVerdict,
     _reconcile_parsed_justificante,
-    list_modelo_reconciliations,
     modelo_reconcile,
+)
+from .._reconciliation_records import (
+    ModeloReconciliationRecord,
+    ModeloReconciliationRecordRepository,
+    list_modelo_reconciliations,
     modelo_reconciliation_record_key,
 )
 
