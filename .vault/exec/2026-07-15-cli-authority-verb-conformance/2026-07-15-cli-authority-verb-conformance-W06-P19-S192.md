@@ -56,3 +56,38 @@ The JSON schema conformance suite recorded under S188 is green over the same sta
 does not compare the live leaf set against the registry.
 
 The semantic code index was degraded throughout this Phase: the service reported `Source code sections: 466` against 3982 tracked Python files while declaring its code generation succeeded. No absence recorded here rests on a semantic miss.
+
+## Status at 2026-07-26: fixed, and the diagnosis held
+
+CLOSED. The two profile-verb schemas ARE enrolled at HEAD `990ddbb860`. Measured
+directly: the production discovery walk reports zero load failures, 295 registered
+schemas, and both `config.profile.create` and `config.profile.edit` present. The
+gate that originally caught this now passes 6 of 6, where it reported 1 failed and
+5 passed when this record was written.
+
+The finding above was correct when it was made and was fixed thirteen hours later,
+not mistaken. The record is updated rather than withdrawn, and the distinction
+matters for the reason below.
+
+The fix is commit `92b0dfd10b`, "restore the two profile verbs to the MCP surface",
+landed 2026-07-26 at 11:30 and a descendant of the HEAD this record measured at
+2026-07-25 22:07. It does NOT change the discovery walk. It adds two module-level
+imports of the wizard result classes into a module the walk already reaches, so
+importing that module transitively runs the registration decorators. The fix's own
+comment restates this record's diagnosis almost word for word: the registry is
+populated from payload-named modules under the declared payload packages only, the
+wizard module declaring these two schemas is under neither, and without the import
+both verbs drop off the MCP surface.
+
+So enrolment IS still filename-filtered. What changed is that a deliberate bridge
+now spans the filter. Any later reading that concludes filename filtering was never
+the mechanism will mis-describe why the bridge has to exist.
+
+RESIDUAL FRAGILITY, recorded because the fix's shape invites removal. The bridge is
+written in the re-export idiom, importing each name and rebinding it to itself. That
+is visually indistinguishable from a redundant re-export, and the obvious tidy-up is
+to delete it. Doing so silently drops both verbs from the MCP surface again. Two
+things currently hold that line: the comment marking the import load-bearing, and the
+live-leaf-versus-registry gate, which fails when either key goes missing. The gate is
+the real guard; the comment is a courtesy. Confirmed by running the gate, not by
+reading it.
