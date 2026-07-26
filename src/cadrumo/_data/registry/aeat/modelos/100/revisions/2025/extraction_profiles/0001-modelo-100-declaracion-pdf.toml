@@ -120,5 +120,11 @@ legal_refs = [
     "ley-35-2006:art-79",
     "ley-35-2006:art-99",
     "ley-35-2006:art-103",
+    # Carried by target casilla 0604 (pagos fraccionados ingresados por
+    # actividades economicas) and omitted here, unlike the 2021-2023 siblings.
+    "rd-439-2007:art-109",
+    "rd-439-2007:art-110",
+    # Carried by every one of this revision's target casillas.
+    "orden-hac-277-2026:art-3",
 ]
 source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure"]
