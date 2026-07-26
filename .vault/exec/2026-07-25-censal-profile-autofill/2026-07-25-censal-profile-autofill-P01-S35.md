@@ -84,12 +84,27 @@ than assumed, so giving either its own copy of the rule fails a test.
 Verification: the four affected suites pass at 772, and the new gate at 4.
 Lint, format and type check clean on the changed modules.
 
-Both anti-tautology mutations behaved as the fix predicts. Restoring the skip
-reds exactly the per-row enforcement case and leaves the rest green. Switching
-to the per-section reading is more emphatic than expected: it does not merely
-report an ordinary profile incomplete, it makes profile registration refuse
-outright, so all four cases fail at fixture setup. That is the production
-breakage the obvious one-line repair would have shipped.
+Three mutations were run against the finished work. Restoring the skip reds
+exactly the per-row enforcement case and leaves the rest green. Reverting only
+the displayed surface's grouping returns it to twelve unsatisfiable paths
+against the shipped schema - five partner columns, five attribution columns,
+two ratio columns - which is the defect verbatim. Every case exercises the
+shipped schema rather than a synthetic one, deliberately: the reason this
+survived is that the pre-existing completeness tests inject a two-section
+fixture with no repeatable sections, so they are green against a schema that
+structurally cannot exhibit the defect.
+
+The third mutation is the reason the assess-first path was correct, and it is
+recorded here as that rather than as a curiosity. Switching to the per-section
+reading was expected to report an ordinary profile incomplete - a wrong number
+on a screen. It does something else: profile registration REFUSES, and all
+four cases fail at fixture setup rather than at their assertions. So the
+obvious one-line repair would not have shipped a bad count, it would have
+shipped a product that cannot create an ordinary taxpayer profile. That is a
+different severity class, and nothing in the diff distinguishes the two - the
+line removed is the same line either way. It is discoverable only by running
+the wrong version and watching WHERE it fails, which is why "propose, do not
+implement" was worth the delay it cost.
 
 ## Notes
 
@@ -104,7 +119,16 @@ editing a file another campaign was holding. It was run once that cleared, and
 it held: an ordinary taxpayer draws thirteen errors, while a partner row
 missing four of its five required fields draws none. Worth stating that the
 gap between reading and running was real and was closed rather than assumed
-away.
+away - a claim flagged as unexecuted either retires by being run or quietly
+becomes an assumption, and which of the two happens depends on whoever picks
+the work up.
+
+The two findings landing together is better argued from what the change does
+to a screen than from the code sharing a helper. Fixing only the displayed
+half would quiet an indicator that currently always fires, so its failure
+direction becomes a real missing field going unnoticed - and the enforcement
+half is what covers that. A display fix shipped alone would have made the
+surface calmer and less trustworthy at the same time.
 
 The whitespace treatment is deliberately unchanged. These surfaces count a
 whitespace-only value as present while the censal read strips before comparing
