@@ -15,7 +15,7 @@ from __future__ import annotations
 from collections.abc import Iterator, Mapping, ValuesView
 from datetime import datetime
 from enum import StrEnum
-from typing import Annotated, override
+from typing import Annotated, Final, override
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
@@ -49,10 +49,67 @@ _PayloadKey = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=64),
 ]
+
+BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH: Final[int] = 500
+"""Maximum length of a single bucket-event payload value.
+
+The bound keeps the append-only event log bounded per event: the log is a
+substrate every service in the application writes to, so one unbounded
+producer degrades a shared surface rather than only its own.
+
+**A payload value is a fixed-width fact, never a variable-length join.** The
+bound is enforced by refusal, not truncation — a silently shortened audit
+value is worse than a refused write — so a producer that joins a collection
+into one value stops being able to record its own event once the collection
+grows. Six occurrences of that shape have been found, each independently:
+joined attachment ids on transaction removal, joined child ids on ledger
+split and on merge, an unbounded evidence path, an unbounded export row set,
+and the reconcile diff detail. Identifiers are commonly 64-char SHA-256
+digests, so the ceiling is reached at eight joined ids (519 characters) —
+low enough to be reachable by ordinary use.
+
+A producer holding a collection has exactly three sanctioned options:
+
+- emit a **count** (``*_count``) when the members are recoverable from their
+  own catalogue or from sibling events in the same batch;
+- emit a **digest** (``sha256_hex`` over the joined members) when the set
+  must stay verifiable but need not be enumerable from the log;
+- give the detail a **durable home of its own** when the event log is its
+  only copy, and leave the event carrying verdict plus count.
+
+:func:`~cadrumo.domain.buckets.payload_value_fits` answers the bound without
+constructing an event. The static gate
+``domain/buckets/tests/test_payload_value_bounding.py`` refuses a new join
+into a payload value at authoring time, which is where every one of the six
+occurrences should have been caught.
+"""
+
 _PayloadValue = Annotated[
     str,
-    StringConstraints(strip_whitespace=True, min_length=0, max_length=500),
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=0,
+        max_length=BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH,
+    ),
 ]
+
+
+def payload_value_fits(value: str) -> bool:
+    """Return whether ``value`` fits a bucket-event payload slot.
+
+    Lets a producer check the bound before it builds an event, rather than
+    discovering it as a :class:`pydantic.ValidationError` raised after the
+    surrounding work has already been done. Whitespace is stripped first, to
+    match how :class:`BucketEvent` validates.
+
+    Args:
+        value: Candidate payload value.
+
+    Returns:
+        ``True`` when the stripped value is within
+        :data:`BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH`.
+    """
+    return len(value.strip()) <= BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH
 
 
 class BucketEventType(StrEnum):

@@ -87,11 +87,13 @@ from ._errors import (
     BucketsError,
 )
 from ._event import (
+    BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH,
     BucketEvent,
     BucketEventHistoryCatalogue,
     BucketEventObjectType,
     BucketEventType,
     derive_bucket_event_id,
+    payload_value_fits,
 )
 from ._event_repository import (
     BucketEventHistoryPersistenceError,
@@ -101,6 +103,7 @@ from ._event_repository import (
 from ._protocols import BucketEventHistoryRepositoryProtocol
 
 __all__ = [
+    "BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH",
     "BucketArchiveRefusedError",
     "BucketBrowseError",
     "BucketDeleteRefusedError",
@@ -120,4 +123,5 @@ __all__ = [
     "append_bucket_event",
     "derive_bucket_event_id",
     "emit_bucket_event",
+    "payload_value_fits",
 ]
