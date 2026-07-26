@@ -1,0 +1,120 @@
+---
+tags:
+  - '#exec'
+  - '#censal-profile-autofill'
+date: '2026-07-26'
+modified: '2026-07-26'
+step_id: 'S35'
+related:
+  - "[[2026-07-25-censal-profile-autofill-plan]]"
+---
+
+<!-- FRONTMATTER RULES:
+     tags: one directory tag (hardcoded #exec) and one feature tag.
+     Replace censal-profile-autofill with a kebab-case feature tag, e.g. #foo-bar.
+     Additional tags may be appended below the required pair.
+
+     modified: CLI-maintained last-modified stamp; set at scaffold time,
+     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
+
+     step_id is the originating Step's canonical identifier, e.g. S01.
+     The S35 and 2026-07-25-censal-profile-autofill-plan placeholders are machine-filled by
+     `vaultspec-core vault add exec`; do not fill them by hand.
+
+     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
+     parent plan.
+
+     DO NOT add fields beyond those scaffolded; metadata lives
+     only in the frontmatter. -->
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
+     - NEVER use [[wiki-links]] or markdown links in the document body.
+     - NEVER reference file paths in the body. If you must name a source file,
+       class, or function, use inline backtick code: `src/module.py`. -->
+
+<!-- STEP RECORD:
+     This file represents one Step from the originating plan. Identified
+     by its canonical leaf identifier (S##) and ancestor display path.
+     The Make a schema-required field bind per row on repeatable sections, closing both the declaration that enforced nothing and the completeness count an operator read as permanently wrong, through one helper both surfaces share and ## Scope
+
+- `src/cadrumo/application/user_profile/_completeness.py` placeholders below are machine-filled
+     by `vaultspec-core vault add exec` from the originating Step row;
+     do not fill them by hand. -->
+
+# Make a schema-required field bind per row on repeatable sections, closing both the declaration that enforced nothing and the completeness count an operator read as permanently wrong, through one helper both surfaces share
+
+## Scope
+
+- `src/cadrumo/application/user_profile/_completeness.py`
+
+## Description
+
+- Establish by execution that the enforcing validator reaches only two of the
+  fifteen fields the schema declares required, the remaining thirteen being
+  row-fields of repeatable sections it skips wholesale.
+- Establish that the displayed surface does not skip them but tests the
+  unindexed path, so it reports twelve fields missing on a profile the
+  lifecycle validator has just accepted.
+- Establish that a third surface, the compiled key registry behind profile
+  health, covers one of the thirteen, so all three disagree.
+- Prove that removing the skip alone is wrong in both directions at once,
+  rather than carrying that claim forward as read.
+- Confirm the blast radius by counting every indexed row in the tree before
+  proposing anything.
+- Add one row-aware helper deciding which required paths a value mapping
+  leaves unsatisfied, and route both surfaces through it so they cannot drift.
+- Treat an unindexed fact in a repeatable section as a single implicit row
+  rather than dropping it from validation, without settling why a producer
+  writes one that way.
+- Gate the rule per row, including the second-row case the index-dropping
+  presence set would wave through, and pin the deliberate whitespace looseness.
+
+## Outcome
+
+A schema-required field on a repeatable row now binds per row, and a valid
+profile no longer reads as incomplete. A section with no rows raises nothing,
+so a taxpayer is not incomplete for lacking a section they have no business
+having.
+
+The two surfaces read one helper. They previously disagreed about the same
+question against the same record, and the agreement is now asserted rather
+than assumed, so giving either its own copy of the rule fails a test.
+
+Verification: the four affected suites pass at 772, and the new gate at 4.
+Lint, format and type check clean on the changed modules.
+
+Both anti-tautology mutations behaved as the fix predicts. Restoring the skip
+reds exactly the per-row enforcement case and leaves the rest green. Switching
+to the per-section reading is more emphatic than expected: it does not merely
+report an ordinary profile incomplete, it makes profile registration refuse
+outright, so all four cases fail at fixture setup. That is the production
+breakage the obvious one-line repair would have shipped.
+
+## Notes
+
+Two findings, one change. They were filed separately and correctly so - one is
+a declaration that binds nothing, the other is a number an operator reads - but
+there is a single rule underneath, and writing it twice in two modules is how
+the two surfaces came to disagree in the first place.
+
+The claim that the one-line repair fails in both directions was carried for a
+while as reasoned-from-source rather than executed, because confirming it meant
+editing a file another campaign was holding. It was run once that cleared, and
+it held: an ordinary taxpayer draws thirteen errors, while a partner row
+missing four of its five required fields draws none. Worth stating that the
+gap between reading and running was real and was closed rather than assumed
+away.
+
+The whitespace treatment is deliberately unchanged. These surfaces count a
+whitespace-only value as present while the censal read strips before comparing
+and would refuse it. That divergence fails safe, since the strict surface is
+the one guarding a live external read, and tightening it here would silently
+break the agreement this change establishes. It is pinned by a test so that
+changing it has to be a decision.
+
+The unindexed-fact treatment is a deliberate non-decision. A producer writes a
+repeatable section's field without an index, so the helper counts it as one
+implicit row; dropping it would have removed a field from validation while
+fixing twelve others. Why the producer does that is a separate question and is
+not answered here.
