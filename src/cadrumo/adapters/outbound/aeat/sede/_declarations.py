@@ -123,9 +123,23 @@ _EXTERNAL = Settings.external_constants()
 # 2026-07-26.
 #
 # The readers that carry no number reach their surface through the Cl@ve
-# access selector and let AEAT dispatch. This module has no selector entry,
-# so it cannot be dispatched; giving it one is new navigation behaviour
-# rather than removing a pin, and is tracked separately.
+# access selector and let AEAT dispatch. This module has no selector entry
+# and deliberately does not get one, for two measured reasons.
+#
+# This host is not only a navigation string: it is also a lookup key. The
+# capture path resolves its read-guard policy by matching this hostname
+# against the registry's declared allowed_hosts for the declarations read
+# surface, and requires exactly one match. That lookup never reads the host
+# a navigation actually landed on, so routing navigation through the
+# selector would change no outcome -- and de-pinning the lookup as well
+# matches zero declarations and raises, failing every capture at the
+# guard's own resolution step.
+#
+# The selector's failure path also leads somewhere worse than here. When it
+# does not dispatch, the reference implementation falls back to the
+# unnumbered origin -- the host measured above returning 404 for this exact
+# route -- so both of its failure modes reach a host known not to serve the
+# listing, while this constant names one known to serve it.
 #
 # Recorded URLs do NOT use this constant. They name the host that actually
 # answered, because a recorded URL is a claim about where a read happened.
