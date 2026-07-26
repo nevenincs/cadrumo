@@ -49,7 +49,7 @@ def _smallest(pattern: str) -> Path:
 def test_rule_file_is_wellformed_and_targets_the_hook() -> None:
     """Every rule routes a corpus pattern through the hook adapter command."""
     data = tomllib.loads(_RULE_FILE.read_text(encoding="utf-8"))
-    assert data["version"] == 1
+    assert data["version"] == 2
     rules = data["rule"]
     assert len(rules) == 5
     for rule in rules:
@@ -57,6 +57,10 @@ def test_rule_file_is_wellformed_and_targets_the_hook() -> None:
         assert _HOOK_COMMAND in rule["command"]
         assert rule["on_error"] == "skip"
         assert rule["timeout_s"] > 0
+        # Schema v2 requires an explicit content domain and extractor version
+        # on every rule; the corpus sources are all indexed as documents.
+        assert rule["target"] == "document"
+        assert rule["extractor_version"]
     patterns = {rule["pattern"] for rule in rules}
     assert patterns == {
         "src/cadrumo/_data/corpus/normatives/html/*.html",

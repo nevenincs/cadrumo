@@ -15,19 +15,19 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ....core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
+from ....core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT, PROVENANCE_SOURCE_MANUAL_CLI
 from ....core.resources import resources
 from ....domain.buckets import BucketEventType
 from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...workflow import WorkflowState
+from ...workflow import WorkflowState, workflow_state_repository
 from .. import (
     CensoDivergence,
     apply_cotejo,
     censo_divergence_notice,
     open_censo_divergences,
 )
-from .._orchestration import profile_create_storage_span, register_active_profile
+from .._orchestration import profile_create_storage_span, register_active_profile, set_active_fields
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

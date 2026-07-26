@@ -8,35 +8,52 @@
 # Validated by `vaultspec-rag preprocess check` (strict repo gate in
 # dev/docs/preprocess/tests/test_hook.py); trial a single file with
 # `vaultspec-rag preprocess run-one <path>`.
+#
+# Schema v2 (vaultspec-rag >= 0.3): every rule declares the content domain it
+# owns (`target`) and a caller-managed `extractor_version` for cache and
+# content-fingerprint invalidation. Bump `extractor_version` whenever the hook
+# adapter's extraction output changes so stale cached extractions are dropped;
+# it tracks the hook's `1.0` output schema (UPSTREAM_SCHEMA_VERSION /
+# PREPROCESS_SCHEMA_VERSION in dev/docs/preprocess).
 
-version = 1
+version = 2
 
 [[rule]]
 pattern = "src/cadrumo/_data/corpus/normatives/html/*.html"
 command = "uv run --no-sync python -m dev.docs.preprocess.hook {path}"
+target = "document"
+extractor_version = "1.0"
 on_error = "skip"
 timeout_s = 120
 
 [[rule]]
 pattern = "src/cadrumo/_data/corpus/**/*.pdf"
 command = "uv run --no-sync python -m dev.docs.preprocess.hook {path}"
+target = "document"
+extractor_version = "1.0"
 on_error = "skip"
 timeout_s = 300
 
 [[rule]]
 pattern = "src/cadrumo/_data/corpus/**/*.xls"
 command = "uv run --no-sync python -m dev.docs.preprocess.hook {path}"
+target = "document"
+extractor_version = "1.0"
 on_error = "skip"
 timeout_s = 300
 
 [[rule]]
 pattern = "src/cadrumo/_data/corpus/**/*.xlsm"
 command = "uv run --no-sync python -m dev.docs.preprocess.hook {path}"
+target = "document"
+extractor_version = "1.0"
 on_error = "skip"
 timeout_s = 300
 
 [[rule]]
 pattern = "src/cadrumo/_data/corpus/**/*.xlsx"
 command = "uv run --no-sync python -m dev.docs.preprocess.hook {path}"
+target = "document"
+extractor_version = "1.0"
 on_error = "skip"
 timeout_s = 300
