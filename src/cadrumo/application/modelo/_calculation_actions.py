@@ -1445,6 +1445,20 @@ def mark_revision_verificado_completo(
             f"calculation revision {calculation_revision_id!r} is in state "
             f"{existing.state.value!r}; only DRAFT revisions can be marked verified-complete",
         )
+    if existing.source_transaction_ids:
+        # A ledger-derived revision owes a bundled evidence record pegged to its
+        # snapshot fingerprint, and that bundle is built inside verify's granted
+        # branch. This transition does not run verify, so promoting here would
+        # produce a VERIFICADO_COMPLETO revision indistinguishable from a granted
+        # one while silently skipping the evidence bundle, the ledger-drift check
+        # and the clean-state gates. Export then accepts it on the snapshot alone,
+        # which is a reference to a bundle that was never written.
+        raise CalculationRevisionStateError(
+            f"calculation revision {calculation_revision_id!r} derives "
+            f"{len(existing.source_transaction_ids)} casilla contributor(s) from the ledger; "
+            "a ledger-derived revision must be promoted through verification so its evidence "
+            "bundle is captured. Run the verify path instead of marking it verified-complete.",
+        )
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     work_unit = wu_repo.load().get(existing.work_unit_id)
     if work_unit is None:
