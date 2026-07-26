@@ -76,6 +76,65 @@ Both guards are correct and the collision is real, so the assertions were split
 rather than weakened. The staleness half stays; the evidence-bundle half moved to
 its own test on a revision whose ledger never moves. No coverage was dropped.
 
+### The bypass finalize paths leave a ledger-derived revision with no evidence bundle
+
+Pre-existing, unmasked by this work rather than caused by it, and left for a
+deliberate pass rather than fixed here.
+
+Two paths promote a revision to verified-complete without running verify's
+findings and without building an evidence bundle: the amendment path, and the
+public mark-verified API. `ledger-derived-revisions-bundle-evidence` requires
+every revision deriving a casilla from the ledger to bundle its typed evidence,
+so a ledger-derived revision finalized through either path already violated that
+rule before anything here changed.
+
+The anchor made the consequence reachable at the export boundary. A ledger-derived
+draft now carries a snapshot, so promoting it through a bypass yields
+snapshot-present with bundle-absent, and the export evidence gate returns early
+on exactly that combination. Before the anchor, such a revision carried neither
+field and the export refused it; after, the export allows it. So the anchor
+removed an accident that had been masking the upstream violation.
+
+The fix is NOT to tighten the export gate. That was attempted here and reverted:
+it broke `test_export_allows_ledger_revision_with_snapshot_reference`, which
+asserts the allowance correctly. The allowance is for a *resolvable* reference,
+and a snapshot pointing at a bundle that was never built is a dangling one — the
+carve-out's precondition fails for these revisions, so the gate is fine and its
+input is wrong. The remedy belongs on the bypass paths: either bundle the
+evidence there, or refuse a ledger-derived revision through them. Both are
+filing-grade changes to a path this pass did not scope.
+
+One fact makes the whole thing legible and is easy to miss: the test protecting
+the allowance builds its snapshot-without-evidence revision **synthetically**.
+Before the anchor that state was essentially unreachable in production, because
+the grant path writes the snapshot and the bundle in the same transition. So the
+test was asserting an allowance nothing real could produce, which is why the
+widening went unnoticed and why tightening the gate looked plausible.
+
+### One legal rule, two evidence standards, recorded rather than swept
+
+The verify-time deductible test was tightened to the purchase-invoice axis on
+LIVA art. 97 being enumerative. The sibling test over the frozen bundle, which
+serves the export and internal-filing refusals, is still satisfied by any
+attachment. Same rule, two standards.
+
+Tightening the second one was judged the wrong trade. Verify now blocks a
+deductible row lacking deduction-grade evidence, so no revision finalized after
+that promotion reaches the bundle gate carrying one; tightening changes behaviour
+only for revisions finalized before it. For those there is no recovery — the
+bundle is frozen and never recomputed, a finalized revision cannot be
+re-verified because the idempotent guard returns the existing granting report,
+and recalculating returns the same content-addressed revision because attaching
+an invoice changes no tax fact. That is a permanent dead end, the failure class
+this campaign closes. An unreachable divergence is the cheaper of the two.
+
+The refusal message names purchase-invoice evidence while the test accepts any
+attachment, which reads as an overclaim but is not one in practice: a row only
+reaches that message with no evidence of any kind, where an invoice is exactly
+what is needed. It misleads a reader of the module, not an operator. The
+divergence is therefore answered with a comment at the predicate, and neither
+predicate was touched.
+
 ## Recommendations
 
 The gate is implemented, so these record what was decided rather than what remains.
@@ -101,11 +160,14 @@ is capped at 500 characters and a contributor set is unbounded — the same shap
 found six times across the bucket-event payloads. The identifiers are recoverable
 from the recalculate the refusal instructs.
 
-**Left open, deliberately.** The export evidence gate accepts a present ledger
-snapshot in place of a bundled evidence record. Storing snapshots on drafts does
-not reach it — export refuses a draft state first, and the grant path always
-writes evidence alongside the snapshot — but the substitution is a pre-existing
-looseness worth a later look. Not touched here.
+**The export snapshot allowance is sound and must not be tightened.** The
+evidence rule requires bundled evidence "or a resolvable in-system reference to
+it", so the export gate accepting a snapshot in place of the bundle is the
+rule's own allowance, not a gap. Calling it looseness — as an earlier draft of
+this record did — is how a later pass manufactures a false finding, which is the
+pattern this repository keeps generating. Recorded here so it is not reopened.
+
+What IS wrong sits upstream of that gate, and has its own finding below.
 
 **Practice worth keeping.** Both this gate and the payload-bounding gate landed
 the same week were found to have a false green only by making the production code
