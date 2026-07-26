@@ -84,18 +84,29 @@ digest was confirmed to match.
 
 ## Notes
 
-Two defects found here cannot be fixed from the files this step owns and are
-reported rather than closed.
-
-The blank-box guard is inert on three of this profile's targets:
+The blank-box guard was inert on three of this profile's targets:
 `iva.anual.cuota-devengada-total`, `iva.anual.cuota-deducible-total` and
 `iva.anual.resultado-regimen-general` each carry a `casilla.number` equal to
 their own casilla id string rather than the printed 47, 64 and 65. The guard
-compares the captured token against that field, so it can never match, and a
-blank box 64 on a future render would be read as 64 euros. The printed lines end
-in the box number before the value, so the hazard is concrete rather than
-theoretical. Correcting `number` means editing casilla TOMLs, which are not
-extraction-profile TOMLs and so fall outside this step's grant.
+compared the captured token against that field, so it could never match, and a
+blank box 64 would have been read as 64 euros. The printed lines end in the box
+number before the value, so the hazard was concrete rather than theoretical.
+
+This is now fixed, and the fix was not where it first appeared to be. `number` is
+reviewed AEAT record-design metadata; the printed box number is `form_number`,
+and the precedent was already in the tree on Modelo 303, whose casilla 46 carries
+`number` equal to its id and `form_number` of 46. The guard now reads
+`form_number`, falling back to `number` only when it is all digits, which
+preserves the accidental agreement that carried the numerically named casillas.
+`form_number` is populated on the three, each read off the bundled render. The
+data those casillas carry in `number` was never corrected and must not be: it
+feeds revision-identity validation, completeness validation, record-design
+coverage and operator-facing display.
+
+Recorded separately and deliberately not fixed: those three casillas carry
+`number` equal to their own casilla id string, which is not record-design
+metadata by any reading. Whatever it is, it is a placeholder sitting in a
+reviewed field.
 
 The semantic code index was truncated throughout, roughly 1027 chunks against
 roughly 4546 files, while reporting itself healthy with an empty
