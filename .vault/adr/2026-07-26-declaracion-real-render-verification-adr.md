@@ -10,6 +10,7 @@ related:
   - '[[2026-07-26-declaracion-real-render-verification-specimen-less-static-route-audit-audit]]'
   - '[[2026-07-26-declaracion-real-render-verification-r8-arbitration-enrollment-readiness-audit]]'
   - '[[2026-07-26-declaracion-real-render-verification-adversarial-verification-of-campaign-claims-audit]]'
+  - '[[2026-07-26-declaracion-real-render-verification-campaign-close-honesty-review-audit]]'
 ---
 
 # `declaracion-real-render-verification` adr: `what grounds a declaracion_pdf profile's claims` | (**status:** `accepted`)
@@ -78,6 +79,21 @@ be decided.** Chosen. D1 through D5 below.
 when it is absent, rather than falling through to `number`. The six casillas whose
 printed number is not recorded have `form_number` populated from the bundled renders.
 `number` is not touched on any casilla.
+
+**That closes six of twenty-three known instances. Seventeen remain open and are a
+live defect.** An earlier revision of this paragraph stopped at the sentence above,
+which read as though the hazard were closed; a reader who trusted this record and
+never opened an exec record would not have learned the rest existed. The remaining
+seventeen are Modelo 180 ×3, Modelo 193 ×3 and Modelo 349 ×4 carrying fichero-BOE
+positional ranges exactly as Modelo 190 did, plus seven `decl.ejercicio` targets
+carrying `ejercicio` strings. Each can still return a box number as a monetary value
+when its box is blank.
+
+They were not swept with the six because the obvious remedy is worse than the defect:
+failing closed on a bare integer would refuse real perceptor counts of 3, 2 and 5, an
+explicit printed `0` in a rectificaciones box, and an ejercicio year of 2024 — trading
+a fabricated value for a fabricated refusal. The remedy is to populate `form_number`
+on nine further modelos' casillas, which is a separate pass and is tracked as one.
 
 Coverage floors are set only where more than one specimen agrees. Modelo 111 keeps
 its zero floor because four specimens put the worst case at 1 of 29; Modelo 390 keeps
@@ -237,6 +253,27 @@ The value-level claim available from `real_corpus` specimens is weaker than it l
 their amounts are a sanitiser constant, so they can prove a substitution occurred but
 cannot corroborate an arithmetic relationship. Only the AEAT-published facsimiles
 support a printed-arithmetic cross-check.
+
+**The sidecar manifests under-describe what the sanitiser actually wrote, and this is
+recorded here because it existed only as a phrase in conversation until now.** The
+three Modelo 100 specimens each declare a single replacement constant, `1.000,00`. The
+sanitiser is length-preserving, so it in fact wrote two forms: `1.000,00` into
+eight-character fields and `1.001.000,00` into twelve-character ones, in a ratio of
+roughly 55 to 17 per specimen. Both are legitimate sanitiser output; neither is
+taxpayer data. But the manifest names only the first.
+
+The consequence is specific and easy to get wrong. A test that grounds a value claim
+on "the extracted amount equals the manifest's declared constant" is checking against
+an incomplete description of the document, and will report a correct extraction as a
+failure. This campaign's own real-render gate has exactly that check, which is one
+reason Modelo 100 cannot be policed by it even after the parser defect is fixed. It
+also means an earlier gating condition I imposed — that a fix was incomplete unless it
+yielded the declared constant — was unsatisfiable by construction.
+
+This is a fixture-metadata defect, not a parser defect and not a redaction leak: 54
+unrelated boxes carrying an identical value cannot be real taxpayer data. It is
+recorded rather than fixed, because correcting the manifests is a corpus change
+outside this campaign's scope.
 
 ## Codification candidates
 

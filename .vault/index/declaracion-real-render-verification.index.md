@@ -15,6 +15,8 @@ related:
   - '[[2026-07-26-declaracion-real-render-verification-P02-S08]]'
   - '[[2026-07-26-declaracion-real-render-verification-P02-S09]]'
   - '[[2026-07-26-declaracion-real-render-verification-adr]]'
+  - '[[2026-07-26-declaracion-real-render-verification-adversarial-verification-of-campaign-claims-audit]]'
+  - '[[2026-07-26-declaracion-real-render-verification-campaign-close-honesty-review-audit]]'
   - '[[2026-07-26-declaracion-real-render-verification-plan]]'
   - '[[2026-07-26-declaracion-real-render-verification-r8-arbitration-enrollment-readiness-audit]]'
   - '[[2026-07-26-declaracion-real-render-verification-specimen-less-static-route-audit-audit]]'
@@ -32,6 +34,8 @@ Auto-generated index of all documents tagged with `#declaracion-real-render-veri
 
 ### audit
 
+- `2026-07-26-declaracion-real-render-verification-adversarial-verification-of-campaign-claims-audit` - `declaracion-real-render-verification` audit: `adversarial verification of this campaign's own load-bearing claims`
+- `2026-07-26-declaracion-real-render-verification-campaign-close-honesty-review-audit` - `declaracion-real-render-verification` audit: `campaign-close honesty review, read as a fresh inheritor`
 - `2026-07-26-declaracion-real-render-verification-r8-arbitration-enrollment-readiness-audit` - `declaracion-real-render-verification` audit: `what deciding the R8 reconcile-enrollment arbitration would take`
 - `2026-07-26-declaracion-real-render-verification-specimen-less-static-route-audit-audit` - `declaracion-real-render-verification` audit: `static route audit across all 29 declaracion_pdf profiles`
 
