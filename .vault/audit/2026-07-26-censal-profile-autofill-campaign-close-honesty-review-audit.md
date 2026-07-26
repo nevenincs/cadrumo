@@ -222,6 +222,231 @@ bookkeeping. The post-auth navigation salvage is unverified pending a live run: 
 second factor cannot be reproduced without one, so landed-and-tested is as far as the
 tree can take it. The record should make it impossible to read that Step as verified.
 
+### required-field-binds-for-nobody | high | A required field on a zero-row repeatable section is emitted for no taxpayer, and the obvious consumer of the fix crashes the validator
+
+Open. Established by censal-sync building it twice and committing nothing; recorded
+here because the implementing module was deleted rather than parked, so this text is
+the only surviving record of a design that was proved correct.
+
+Two independent blockers, either sufficient.
+
+The first is that suppression can only subtract. Raw emission was measured across three
+populations with the section repeatable:
+
+    salaried              -> ['iva.regime']
+    declares actividad    -> ['iva.regime']
+    legal entity          -> ['iva.regime']
+
+`activities.description` is emitted for nobody. The row loop finds no rows in a
+zero-row section and produces nothing, identically for every taxpayer, so the
+accidental protection over-spares: it also shields the taxpayer who declared an
+economic activity and never named it, which is the case the gate existed to make
+loud. A call-site filter can only remove entries from that set; delivering the missing
+case requires an addition, which means changing the row loop itself. The scope is not
+`activities` - it is every required field on every zero-row repeatable section, 13 of
+the schema's 15.
+
+The second is access, and it is a closed door worth naming because the wrong function
+is the one a later author will find. **Do not consume `projection_for_taxpayer`.** It
+passes every structural check: sibling module to `_completeness.py`, accepts the
+mapping shape the validator already holds, import edge already allowlisted, docstring
+claiming it is the canonical coercion path. It was adopted on those grounds and broke
+five tests, because underneath it is a strict coercion that raises on any undeclared
+token:
+
+    ValidationError: 1 validation error for SetupAnswers
+    output_language
+      Value error, '__undeclared_probe_token__' is not a valid OutputLanguage
+
+That input is a test deliberately feeding a bad token and expecting an issue to be
+reported. Wired through the projection, the validator crashes instead of reporting, on
+exactly the input it exists to catch. The principle generalises past this function: a
+validator cannot depend on a strict projection of the data it validates, because its
+input is untrusted by definition and a strict coercion assumes the opposite. Signature
+fit is not contract fit - a strict coercion and a tolerant projection have identical
+signatures.
+
+The policy is inherited rather than reopened: required when the legally grounded
+economic-activity predicate is not False, or when the entity is legal or attribution -
+two arms, two reasons, routed through the existing predicate rather than a new one.
+Blast radius measured at six fixture files.
+
+The gate design is proved correct and should be rebuilt from this spec rather than
+re-derived. Its anti-tautology arm, flipping the repeatable flag off in memory:
+
+    salaried,           repeatable off -> not reported  (spares it)
+    declares actividad, repeatable off -> reported      (charges it)
+
+Blanket emission is wrong: `attribution_entity_socios`, `properties` and `usage_ratios`
+are correctly silent when empty. Conditional emission needs a per-section applicability
+predicate and the schema has no such key - its complete set is description,
+effective_dated, enum_values, export_headers, fields, key, legal_refs, maximum,
+minimum, model_selectors, nullable, repeatable, required, schedule_predicates,
+sensitivity, title, type.
+
+Precedent favours making the declaration bind rather than removing it: the enum-values
+finding earlier in this campaign resolved the same shape by making them bind. The row
+loop's silence on empty sections is a deliberate decision landed the same day, so
+partially reversing it needs its own decision record rather than an amendment.
+
+### multi-activity-capability-unscoped | high | The schema declares a repeatable section that nothing writes, reads by index, or models as a collection
+
+Open, and a new capability rather than a fix. Established across two agents, entirely
+by measurement.
+
+Nine production surfaces across four layers address the section unindexed, with zero
+indexed production usage. The index-dropping normalizer has exactly one production call
+site and no consumer normalizes, so writing an indexed path today silently blanks the
+readiness gate, the calendar enrolment check and seven CLI status sites - a missing key
+reads as "not declared" rather than erroring. A taxpayer with two IAE epigraphs cannot
+be represented through any surface.
+
+The cardinality is authoritative, bounded, and confirmed by two artefacts of different
+kinds. The bundled M036 diseño carries four numbered activity slots for each of two
+casillas; its página 4 record is the primary activity register and maps one-to-one onto
+the profile section; and the diseño's own worked example ships two page-4 records in a
+single declaration. Separately, Orden HFP/1359/2023 states the rendimiento is the sum
+of the rendimientos of each activity and that the procedure runs per activity. A form
+layout and a legal text, produced by different processes, agreeing.
+
+The projection trap is worth recording because both agents fell into it: the Renta
+casilla asking for one epigraph is a projection over the row set, not evidence the
+underlying fact is singular. A singular casilla does not imply a singular fact.
+
+What the capability needs: a writer, since nothing writes indexed rows for any
+repeatable section; index-aware readers replacing the nine flat lookups; a
+collection-valued downstream model, since the deadlines profile constructs the epigraph
+as one scalar; a principal-activity projection for the modelo that genuinely wants one;
+and a field-set reconciliation rather than indexing alone - the diseño row is
+(descripción, sección I.A.E., grupo/epígrafe, tipo de actividad) while the profile row
+is (description, cnae, iae_epigraph), so two diseño fields have no profile home and one
+profile field has no diseño counterpart.
+
+Template: the attribution-member aggregation module is a complete worked indexed reader
+- it enumerates indexed paths, groups by row, checks required fields per row and stamps
+per-row provenance. It has no writer, which is the same gap one section over. Do not
+copy the cotejo-apply indexed writer: it is the only indexed writer that ships and it is
+not a repeatable section, but an object-typed field carrying row structure through an
+ad-hoc path convention with sub-fields undeclared in the schema. It works and it is the
+wrong shape to generalise.
+
+Three items are recorded as unverified and must not be inherited as done. The empirical
+surface sweep is unrun - both agents swept literals with the same tool, which
+corroborated rather than confirmed, and a reader reaching the values without naming a
+path is invisible to both. The two-activity módulos calculation is unrun, so the
+predicted false advisory on a correct filing remains inference. And two questions are
+unanswered: whether the other renta modelo's estimación-objetiva section shares the flat
+shape, and whether any módulos unit slot is genuinely shared across activities - the
+second changes how a per-activity model should be shaped rather than whether it is
+needed, so it belongs before design.
+
+The per-activity precondition is already recorded in the code at three revision
+predicate sites and at the profile schema, with the órden quoted and the reason it is a
+note rather than a gate, so this scoping need not re-derive it.
+
+### marker-gate-red-across-four-campaigns | medium | A gate went red and stayed red because nothing runs it before a commit, and its sister check fires on ordinary English
+
+Open and not this campaign's to remediate. Established by the lead, refined here.
+
+The pytestmark-placement check is red with four violations, one per active peer
+campaign. A hypothesis that the gate arrived red in a tree-wide rename was tested and
+falsified: none of the four files existed at that commit. The gate was green and four
+campaigns each broke it, three of them landing after the first violation - and a
+campaign adding to an already-red gate cannot distinguish its own breakage from the
+standing red, which is how a red gate becomes self-sustaining.
+
+The attribution method is worth keeping. Last-touching commit identifies who last wrote
+a file, not who introduced a violation, and the shared git identity cannot discriminate
+agents at all. Here the add-commit is decisive because all four files were created
+after the gate existed, so whoever added the file added the violation. That is stronger
+than blame and it is why this attribution can be trusted where a last-touched one could
+not.
+
+Why it went unnoticed, measured: this worktree has no pre-commit hook. The hooks path
+holds only post-phase git-lfs hooks and there is no pre-commit configuration, so a gate
+is red only where somebody happens to run it.
+
+The refinement changes what the finding is. The sister check bans a bare token that is
+also ordinary English, and this agent tripped it with a docstring using the word in its
+normal sense about an hour after another campaign had cleared its own violation from
+the same check. The fix was to reword a docstring, not to remove campaign metadata,
+because there was none to remove. **A gate whose remedy is rewording rather than
+correcting trains authors to write for the gate instead of the reader**, and that
+belongs with its owner alongside the four placement violations. It also explains a
+stale count: a number describing a shared ratchet has no owner, so nobody re-derives it
+in transit - the file list is attributable, the count is not.
+
+### composition-reproduction-still-open | medium | Both guards are proven inert; the end-to-end path is indicated and unexecuted
+
+Open, and correctly so. The certificate provider paired with a profile carrying no
+fiscal identity was shown by execution to reach neither refusing guard: the credential
+guard returns before its blank check because that provider has no operator-configured
+credential, and the deferred session comparison admits because the expectation it would
+compare against is derived from the field that is absent. Both halves executed.
+
+What was not executed is whether a foreign-identity session reaches the read that
+adopts. The guards were exercised by constructing a session directly, which proves the
+guards do not refuse and does not prove the path is reachable. The reasoning that it is
+reachable - a certificate provider mints its identity from the certificate subject, so
+a wrong certificate produces a foreign-identity session natively inside the active
+bucket, requiring no cross-bucket visibility - is read from source and not run.
+
+This is not operator-gated, unlike the post-auth salvage. Nothing in the chain needs a
+live authority read: the adoption half was already driven by execution, the guard half
+was driven headlessly, and the remaining piece is minting a certificate session with a
+chosen subject, which the auth test support already does with an arbitrary subject name
+including the compound form the identity parse reads. It is assignable to whoever holds
+the reproduction harness.
+
+The plan step covering it stays unchecked. That is the flagged-unverified claim
+surviving as a checkbox that refuses to close rather than decaying into an assumption,
+which is the outcome the disclosure was for.
+
+### rulings-overturned-by-their-own-evidence | medium | Three decisions were reversed by measurement after being ruled, and the reversals share a shape
+
+Recorded because the reversals are more instructive than the rulings.
+
+A schema flag was going to be stripped as incorrect until the M036 diseño falsified the
+premise underneath - that a singular casilla implies a singular fact. The evidence that
+settled it was a document neither party had consulted, not better reasoning about the
+document they had.
+
+A new predicate was ruled and withdrawn when a third shipped implementation was found
+under a name nobody had searched, legally grounded and three-valued where the ruled one
+was two-valued. That is the second time in this campaign a concept already existed under
+an unsearched name.
+
+A gate was cleared to implement and then proved undeliverable by building it, with the
+implementing work discarded. The build was the measurement.
+
+The shape they share: each ruling was sound on the evidence held at the time, and each
+was overturned by an artefact rather than by an argument. **When a conclusion rests on
+one authoritative document, the second reader's job is to find a different document, not
+to re-read the first.** Agreement reached by the same route is corroboration, not
+confirmation.
+
+### method-findings-worth-carrying | low | Four generalisations that outlived the findings that produced them
+
+An anti-tautology arm proves a guard would fire given its input; it cannot prove
+anything supplies that input. A gate can compile, pass its own mutation proof, and be
+wholly inert because nothing upstream hands it the path. Pair every "given X the guard
+refuses" with "given the real upstream, X arrives" - write the expected-fail case.
+
+Signature fit is not contract fit. A strict coercion and a tolerant projection have
+identical signatures, and the structural checks that normally establish suitability -
+module location, accepted type, allowlisted import edge, a docstring claiming
+canonicality - were all satisfied by the wrong function.
+
+A magic value in a selection is a decision that needs a stated criterion. A `-1` index
+chooses an element; which element, and why that one, is a rule that belongs written down
+rather than implied by the subscript.
+
+The two semantic indexes have independent health, so unavailability must name which one.
+One reported a terminal successful state at a handful of sections while the other was
+fully usable; a blanket refusal would have wrongly blocked the decision search that
+resolved a real blocker. A terminal state is worthless evidence either way - only
+section count against tree size means anything.
+
 ## Recommendations
 
 Separate proving an input is populated from proving the consumer refuses, wherever a
