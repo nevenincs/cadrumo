@@ -46,6 +46,7 @@ Submodules
    cadrumo.application.modelo._history
    cadrumo.application.modelo._iva_wallet_gate
    cadrumo.application.modelo._iva_wallet_seed
+   cadrumo.application.modelo._ledger_drift_gate
    cadrumo.application.modelo._ledger_evidence_gate
    cadrumo.application.modelo._local_observation_actions
    cadrumo.application.modelo._local_observation_spreadsheet

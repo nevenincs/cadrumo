@@ -284,6 +284,11 @@ def _draft_ledger_anchor(
 ) -> LedgerFilingSnapshot | None:
     """Return the ledger snapshot this calculation consumed, or ``None``.
 
+    Pins the ledger state these casilla values were computed FROM, so verify can
+    later detect that the contributing rows moved underneath a draft. Without it
+    a draft has no anchor at all: the snapshot is otherwise captured only on a
+    granted verify, which is exactly the drafts that need guarding.
+
     The anchor for the verify-time drift gate. A ledger-derived draft records
     the fingerprints of the rows its casilla values were computed from, so a
     later verify can tell whether those rows still say what they said. The
@@ -466,22 +471,16 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     )
 
     now = clock or _utc_now()
-    # Pin the ledger state these casilla values were computed FROM, so verify can
-    # later detect that the contributing rows moved underneath a draft. Without
-    # this anchor a draft has none: the snapshot is otherwise captured only on a
-    # granted verify, which is exactly the drafts that need guarding. Non-ledger
-    # revisions get no anchor and need none -- nothing can drift under them.
-    draft_ledger_snapshot = _draft_ledger_anchor(
-        work_unit=work_unit,
-        source_transaction_ids=source_transaction_ids,
-        transaction_repository=ledger_preflight_transaction_repository,
-        captured_at=now,
-    )
     return persist_calculation_revision(
         work_unit_id=work_unit_id,
         work_unit=work_unit,
         work_units=work_units,
-        ledger_filing_snapshot=draft_ledger_snapshot,
+        ledger_filing_snapshot=_draft_ledger_anchor(
+            work_unit=work_unit,
+            source_transaction_ids=source_transaction_ids,
+            transaction_repository=ledger_preflight_transaction_repository,
+            captured_at=now,
+        ),
         input_values_by_casilla_id={**replay_payloads.input_values_by_casilla_id, **resolved_text_inputs},
         binding_overrides=replay_payloads.binding_overrides,
         row_binding_values=replay_payloads.row_binding_values,
