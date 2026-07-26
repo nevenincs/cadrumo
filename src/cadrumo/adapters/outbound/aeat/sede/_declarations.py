@@ -135,11 +135,12 @@ _EXTERNAL = Settings.external_constants()
 # matches zero declarations and raises, failing every capture at the
 # guard's own resolution step.
 #
-# The selector's failure path also leads somewhere worse than here. When it
-# does not dispatch, the reference implementation falls back to the
-# unnumbered origin -- the host measured above returning 404 for this exact
-# route -- so both of its failure modes reach a host known not to serve the
-# listing, while this constant names one known to serve it.
+# The selector's failure path also leads nowhere better than here. Its
+# reference implementation refuses outright when the selector does not
+# dispatch, rather than degrading to the unnumbered origin, so that path
+# reaches no host at all; and a dispatch to a host that does not serve this
+# listing reaches a 404 there. Neither failure mode arrives at a host known
+# to serve the route, while this constant names one that does.
 #
 # Recorded URLs do NOT use this constant. They name the host that actually
 # answered, because a recorded URL is a claim about where a read happened.
