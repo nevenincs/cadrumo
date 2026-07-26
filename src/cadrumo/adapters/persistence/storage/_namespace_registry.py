@@ -7,13 +7,20 @@ treatment applied by the substrate for every object in that namespace.
 
 from __future__ import annotations
 
-from enum import StrEnum
 from pathlib import Path
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.classification import SensitivityClass
+from ._namespace_taxonomy import (
+    _CUSTODY_PROFILE_DISPOSITIONS,
+    StorageCustodyDisposition,
+    StorageCustodyProfile,
+    StorageNamespaceScope,
+    StoragePathKind,
+    StorageRemoteMirrorPolicy,
+)
 from .errors import NamespaceRegistryError
 
 SECURE_OBJECT_SCHEMA_VERSION_V1 = 1
@@ -46,58 +53,6 @@ FORMER_PRODUCT_NAMESPACE_PREFIXES = ("aeat.", "aeat-test.", "aeat-tests.")
 def is_former_product_namespace(namespace: str) -> bool:
     """Return whether ``namespace`` uses a retired product-owned prefix."""
     return namespace.startswith(FORMER_PRODUCT_NAMESPACE_PREFIXES)
-
-
-class StorageNamespaceScope(StrEnum):
-    """Logical custody scope for a secure-object namespace."""
-
-    PROFILE_LOCAL = "profile_local"
-    BUCKET_LOCAL = "bucket_local"
-    PROCESS_LOCAL = "process_local"
-
-
-class StorageCustodyDisposition(StrEnum):
-    """Transport custody disposition for one secure-object namespace."""
-
-    STRUCTURED_CUSTODY = "structured_custody"
-    FULL_CUSTODY_ONLY = "full_custody_only"
-    DERIVED_REBUILDABLE = "derived_rebuildable"
-    PROCESS_LOCAL = "process_local"
-
-
-class StorageCustodyProfile(StrEnum):
-    """Secure-object custody transport profile."""
-
-    FULL = "full"
-    STRUCTURED = "structured"
-
-
-_CUSTODY_PROFILE_DISPOSITIONS: dict[StorageCustodyProfile, frozenset[StorageCustodyDisposition]] = {
-    StorageCustodyProfile.FULL: frozenset(
-        {
-            StorageCustodyDisposition.STRUCTURED_CUSTODY,
-            StorageCustodyDisposition.FULL_CUSTODY_ONLY,
-        },
-    ),
-    StorageCustodyProfile.STRUCTURED: frozenset({StorageCustodyDisposition.STRUCTURED_CUSTODY}),
-}
-
-
-class StorageRemoteMirrorPolicy(StrEnum):
-    """Remote-provider mirroring policy for one secure-object namespace."""
-
-    CIPHERTEXT_WITH_METADATA = "ciphertext_with_metadata"
-    LOCAL_ONLY = "local_only"
-    TEST_ONLY = "test_only"
-
-
-class StoragePathKind(StrEnum):
-    """Persistent storage hierarchy node kind."""
-
-    DIRECTORY = "directory"
-    FILE = "file"
-    LOGICAL_SQL = "logical_sql"
-    BLOB_OBJECT = "blob_object"
 
 
 class SecureObjectNamespaceDefinition(BaseModel):

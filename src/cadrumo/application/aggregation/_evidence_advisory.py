@@ -9,9 +9,18 @@ unconsumed-declarable-IVA advisory and follows the
 pass in silence, and let the filing-grade verification layer decide which
 legally grounded side blocks.
 
-The trigger set is deliberately narrow. An advisory fires only on an
-``ACTIVE`` business/mixed row with a strictly-positive IVA quota and no linked
-evidence. Explicit exempt / zero-rated / not-subject IVA categories and
+What counts as evidence differs by side, and the difference is statutory rather
+than a severity preference. LIVA art. 97 is enumerative — "únicamente se
+considerarán documentos justificativos del derecho a la deducción" followed by a
+closed list — so only the purchase-invoice axis silences the deductible side. The
+output side has no equivalent constitutive requirement and no CLI path that mints
+issued-invoice evidence, so any linked document silences it. Holding the
+deductible side to the looser test would leave the blocking gate laxer than the
+statute it cites.
+
+The trigger set is deliberately narrow. A diagnostic fires only on an ``ACTIVE``
+business/mixed row with a strictly-positive IVA quota that lacks the evidence its
+side requires. Explicit exempt / zero-rated / not-subject IVA categories and
 non-declarable sentinels are excluded because they do not route an M303 quota.
 Rows with no explicit ``iva_category`` but with a positive ``iva_amount`` remain
 in scope: the IVA aggregation layer derives their domestic category from the
@@ -64,8 +73,33 @@ def _positive_iva_quota(transaction: Transaction) -> bool:
 
 
 def _row_has_linked_evidence(transaction: Transaction) -> bool:
-    """Return whether the row already carries any linked evidence."""
+    """Return whether the row carries any linked evidence at all.
+
+    This is the OUTPUT-IVA test, where the requirement is visibility rather than
+    legal sufficiency. Use :func:`_row_has_deduction_grade_evidence` for the
+    deductible side, which is held to a stricter, statutory standard.
+    """
     return bool(transaction.purchase_invoice_evidence_id) or bool(transaction.attachment_ids)
+
+
+def _row_has_deduction_grade_evidence(transaction: Transaction) -> bool:
+    """Return whether the row carries evidence capable of supporting a deduction.
+
+    LIVA art. 97 is enumerative, not merely constitutive: "únicamente se
+    considerarán documentos justificativos del derecho a la deducción" followed
+    by a closed list — the original factura, the intra-community supplier's
+    factura, the customs liquidation document on an import, and the factura or
+    justificante contable under reverse charge. A generic attachment is not in
+    that list, so a bank statement, a delivery note or a photograph cannot make a
+    deduction defensible however plausible it looks.
+
+    The purchase-invoice evidence axis is the carrier for every one of those four
+    document classes; the record's supplier and invoice metadata are optional
+    precisely so a customs liquidation or a justificante contable can be
+    registered through it. Accepting a bare attachment here would hold the
+    blocking gate to a laxer standard than the statute it cites.
+    """
+    return bool(transaction.purchase_invoice_evidence_id)
 
 
 def _is_cuota_bearing_iva_category(category: IvaCategory | None) -> bool:
@@ -103,18 +137,30 @@ def _flow_for_transaction(transaction: Transaction) -> IvaFlowDirection | None:
 
 
 def _transaction_missing_evidence_flow(transaction: Transaction) -> IvaFlowDirection | None:
-    """Return the IVA flow requiring evidence, or ``None`` when out of scope."""
+    """Return the IVA flow requiring evidence, or ``None`` when out of scope.
+
+    The evidence test is applied per settlement side rather than once up front,
+    because the two sides answer to different standards. The deductible side is
+    held to LIVA art. 97's closed list of documents that establish the right to
+    deduct; the output side, which has no equivalent constitutive requirement and
+    no CLI path that mints issued-invoice evidence, is satisfied by any linked
+    document. That asymmetry mirrors the per-category severity split downstream,
+    where only the deductible finding blocks.
+    """
     if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
         return None
     if transaction.business_classification not in _EVIDENCE_EXPECTING_BUSINESS_STATES:
         return None
     if not _positive_iva_quota(transaction):
         return None
-    if _row_has_linked_evidence(transaction):
-        return None
     if not _is_cuota_bearing_iva_category(transaction.iva_category):
         return None
-    return _flow_for_transaction(transaction)
+    flow = _flow_for_transaction(transaction)
+    if flow is None:
+        return None
+    if is_deducible_flow(flow):
+        return None if _row_has_deduction_grade_evidence(transaction) else flow
+    return None if _row_has_linked_evidence(transaction) else flow
 
 
 def transaction_missing_deductible_vat_evidence(transaction: Transaction) -> bool:
@@ -134,17 +180,20 @@ def _missing_evidence_diagnostic(
     *,
     role: str,
     source_kind: str,
+    gap: str,
 ) -> CalculationSourceDiagnostic:
-    """Build the missing-evidence diagnostic for one IVA-bearing row."""
+    """Build the missing-evidence diagnostic for one IVA-bearing row.
+
+    ``gap`` states what is actually absent, which differs by side. Saying "no
+    attachment" on a deductible row that carries one would be false, and a
+    refusal an operator can disprove by looking at the row teaches them to
+    distrust the gate.
+    """
     return CalculationSourceDiagnostic(
         reason="missing_transaction_evidence",
         source_kind=source_kind,
         binding_id=transaction.transaction_id,
-        message=(
-            f"{role} transaction {transaction.transaction_id!r} declares a positive "
-            f"IVA quota but carries no linked evidence (no purchase invoice "
-            f"and no attachment); attach the supporting document before filing."
-        ),
+        message=(f"{role} transaction {transaction.transaction_id!r} declares a positive IVA quota but {gap}."),
     )
 
 
@@ -155,15 +204,18 @@ def missing_evidence_advisory_observations(
 
     A :class:`CalculationSourceDiagnostic` (reason
     ``missing_transaction_evidence``) is emitted for each ``ACTIVE``
-    business/mixed row with a strictly-positive IVA quota and no linked
-    evidence that is either:
+    business/mixed row with a strictly-positive IVA quota that lacks the evidence
+    its settlement side requires:
 
-    - a deductible input-IVA row (a supplier purchase invoice/evidence is
-      required for filing-grade verification), or
+    - a deductible input-IVA row carrying no purchase-invoice evidence. A generic
+      attachment does NOT satisfy this side: LIVA art. 97 enumerates the
+      documents that establish the right to deduct and an attachment is not among
+      them. This diagnostic blocks verification downstream.
     - an output-IVA row whose IVA category is legally expected to bear a
       devengada cuota — i.e. not in
-      :data:`~cadrumo.domain.iva.EVIDENCE_EXEMPT_IVA_CATEGORIES`
-      (the issued-invoice evidence gap remains visible).
+      :data:`~cadrumo.domain.iva.EVIDENCE_EXEMPT_IVA_CATEGORIES` — carrying no
+      linked evidence of any kind (the issued-invoice evidence gap remains
+      visible but advisory).
 
     Rows that legitimately bear no evidence requirement — non-business /
     personal, exempt / zero-rated / not-subject / sentinel IVA categories, no
@@ -187,6 +239,12 @@ def missing_evidence_advisory_observations(
                     transaction,
                     role="deductible VAT",
                     source_kind=MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND,
+                    gap=(
+                        "carries no purchase invoice evidence; LIVA art. 97 lists the "
+                        "documents that establish the right to deduct, and a generic "
+                        "attachment is not one of them, so register the invoice and "
+                        "link it before filing"
+                    ),
                 ),
             )
         elif is_devengada_flow(flow):
@@ -195,6 +253,10 @@ def missing_evidence_advisory_observations(
                     transaction,
                     role="output VAT",
                     source_kind=MISSING_OUTPUT_VAT_EVIDENCE_SOURCE_KIND,
+                    gap=(
+                        "carries no linked evidence (no purchase invoice and no "
+                        "attachment); attach the supporting document before filing"
+                    ),
                 ),
             )
     return tuple(diagnostics)

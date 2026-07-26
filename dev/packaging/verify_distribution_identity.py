@@ -213,7 +213,7 @@ _APPROVED_PRODUCT_DESCRIPTION_PAIRS: Final[dict[tuple[str, str], frozenset[tuple
     ),
 }
 _EXPECTED_MODEL_FACING_DESCRIPTION_SHA256: Final[str] = (
-    "64108a20c53a5096619d15cd49f9a21d64c15c402d86c269e98c9e5a63d4c66b"
+    "969d726a12c11f0f526ccebdb275173877f45ab8b2bd1dbc99ef3e68097fbd5e"
 )
 # Self-locator for the drift remedy. The digest above pins a surface that ANY
 # CLI verb or option change moves, so the readers who redden it are usually

@@ -56,6 +56,26 @@ legal_refs = ["rd-439-2007:art-110"]
 # authoritative over the operator's declared figure (Fases 2ª/3ª correcting
 # factors, which the taxpayer may legitimately claim, are intentionally not
 # modelled yet), so it stays a prompt, never a BLOCKING_RULE.
+#
+# PRECONDITION BEFORE PROMOTING THIS, or before binding casilla 01 to the
+# engine. The engine reads ONE activity's inputs — a single epígrafe and seven
+# unit casillas — while Orden HFP/1359/2023 (Instrucciones, Rendimiento anual)
+# defines the figure per activity and summed: "El rendimiento neto resultará de
+# la suma de los rendimientos netos que correspondan a cada una de las
+# actividades", and "el rendimiento neto correspondiente a cada actividad se
+# obtendrá aplicando el procedimiento establecido a continuación". Casilla 01
+# is itself named "Suma de rendimientos netos".
+#
+# So for a taxpayer with two módulos activities the computed reference covers
+# one of them. That is harmless while this stays ADVISORY and casilla 01 stays
+# operator-declared — the divergence is a prompt, and this predicate already
+# expects divergence from unmodelled Fases. Making the engine authoritative
+# would UNDER-DECLARE that taxpayer instead, silently, because the engine
+# cannot see inputs that are not there to read: the profile stores a single
+# flat set (irpf.objective_estimation_modulos_*, eight fields, one epígrafe).
+# Per-activity módulos inputs have to exist first. This is deliberately a note
+# and not a gate — refusing the binding outright would also refuse it once the
+# inputs are per-activity, which is the state we want to reach.
 [[revisions."2026".verification_predicates]]
 predicate_id = "modelo-131-2026-modulos-computed-diverges-de-c01"
 expression = 'advisory_when_computed_diverges(["01", "modulos-rendimiento-neto-actividad"])'

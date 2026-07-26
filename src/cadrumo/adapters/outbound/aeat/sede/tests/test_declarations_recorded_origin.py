@@ -9,13 +9,20 @@ capture that landed anywhere else.
 
 This gate covers the RECORDING half of the module: the origin used to
 build a ``source_url``, ``detail_url``, ``cotejo_url`` or ``pdf_url``.
-The module's initial NAVIGATION host is still pinned and is deliberately
-out of scope here - it cannot be resolved from a landing, because this
-reader has no access-selector entry to be dispatched through, and whether
-the unnumbered origin serves the listing route is an open question
-awaiting a live probe. That half is tracked separately; a source-wide
-"no numbered host" scan therefore cannot pass yet and is not attempted,
-because a gate that cannot pass teaches nobody anything.
+
+The module's initial NAVIGATION host is still pinned, and that is now a
+measured decision rather than an open question. Requesting the
+declarations listing on the unnumbered sede origin with a valid session
+returns a genuine 404, landing on the requested host rather than
+bouncing, so the obvious de-pin would break a working reader. The readers
+that name no host reach their surface through the Cl@ve access selector
+and let AEAT dispatch; this module has no selector entry, so giving it
+one is new navigation behaviour rather than removing a pin, and is
+tracked separately.
+
+A source-wide "no numbered host" scan therefore still cannot pass, and is
+still not attempted - a gate that cannot pass teaches nobody anything.
+What changed is that the reason is evidence rather than an assumption.
 """
 
 from __future__ import annotations

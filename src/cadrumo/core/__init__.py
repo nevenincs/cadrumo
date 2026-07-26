@@ -165,6 +165,7 @@ from .compatibility_lifecycle import (
     stale_persisted_format_declarations,
     undeclared_persisted_formats,
     unfloored_durable_formats,
+    unknown_floor_keys,
 )
 from .external_constants import M347_THRESHOLD_EUR
 from .product_identity import AEAT_AUTHORITY_SHORT_NAME, PRODUCT_IDENTITY, IdentityReferent, ProductIdentity
@@ -330,6 +331,7 @@ __all__: list[str] = [
     "to_str_keyed_dict",
     "undeclared_persisted_formats",
     "unfloored_durable_formats",
+    "unknown_floor_keys",
     "validated_casilla_id",
     "validated_casilla_id_map",
     "write_pointer",

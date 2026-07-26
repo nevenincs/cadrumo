@@ -33,6 +33,7 @@ from ....domain.user_profile import (
     UserProfileRecord,
 )
 from ....tests.secure_sql import TestRuntimeProfile, isolated_profile_storage_root, isolated_runtime_profile
+from ....tests.user_profile import schema_valid_placeholder
 from ...user_profile import RegisterProfileCommand, profile_storage_session
 from ...workflow import read_profile_bucket_by_id
 from .._contracts import ExportBucketCommand, ImportBucketCommand, InspectBucketArchiveCommand
@@ -75,7 +76,7 @@ def _all_required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFac
         for field in section.fields:
             if field.required:
                 path = f"{section.key}.{field.key}"
-                facts_by_path[path] = UserProfileFact(path=path, value=(field.enum_values[0] if field.enum_values else "placeholder"))
+                facts_by_path[path] = UserProfileFact(path=path, value=schema_valid_placeholder(field))
     facts_by_path.update(
         {
             "taxpayer_type.entity_type": UserProfileFact(

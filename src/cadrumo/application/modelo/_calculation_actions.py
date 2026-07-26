@@ -73,6 +73,7 @@ from ...domain.modelos import (
     CalculationRevisionState,
     CalculationSourceIssue,
     CalculationSourceRef,
+    LedgerFilingSnapshot,
     Modelo210AgrupacionRentaRow,
     ModeloDetailRow,
     WorkUnit,
@@ -274,6 +275,44 @@ def calculate_modelo_revision(
     )
 
 
+def _draft_ledger_anchor(
+    *,
+    work_unit: WorkUnit,
+    source_transaction_ids: tuple[str, ...],
+    transaction_repository: TransactionCatalogueRepository | None,
+    captured_at: datetime,
+) -> LedgerFilingSnapshot | None:
+    """Return the ledger snapshot this calculation consumed, or ``None``.
+
+    Pins the ledger state these casilla values were computed FROM, so verify can
+    later detect that the contributing rows moved underneath a draft. Without it
+    a draft has no anchor at all: the snapshot is otherwise captured only on a
+    granted verify, which is exactly the drafts that need guarding.
+
+    The anchor for the verify-time drift gate. A ledger-derived draft records
+    the fingerprints of the rows its casilla values were computed from, so a
+    later verify can tell whether those rows still say what they said. The
+    fingerprint covers tax facts only — amount, classification, taxable base,
+    IVA and IRPF category, lifecycle state — so it moves when a reclassify
+    invalidates the computed values and stays put when an evidence attach does
+    not. That discrimination is what lets the gate refuse a stale draft without
+    refusing the attach-and-re-verify recovery.
+
+    Returns ``None`` for a revision with no contributing rows: nothing can
+    drift under it, and storing an empty snapshot would only add noise.
+    """
+    if not source_transaction_ids:
+        return None
+    from ..aggregation import compute_ledger_filing_snapshot
+
+    tx_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=work_unit.bucket_id)
+    return compute_ledger_filing_snapshot(
+        source_transaction_ids=source_transaction_ids,
+        catalogue=tx_repo.load(),
+        captured_at=captured_at,
+    )
+
+
 def _calculate_modelo_revision_with_trusted_mesh_sources(
     work_unit_id: str,
     *,
@@ -436,6 +475,12 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         work_unit_id=work_unit_id,
         work_unit=work_unit,
         work_units=work_units,
+        ledger_filing_snapshot=_draft_ledger_anchor(
+            work_unit=work_unit,
+            source_transaction_ids=source_transaction_ids,
+            transaction_repository=ledger_preflight_transaction_repository,
+            captured_at=now,
+        ),
         input_values_by_casilla_id={**replay_payloads.input_values_by_casilla_id, **resolved_text_inputs},
         binding_overrides=replay_payloads.binding_overrides,
         row_binding_values=replay_payloads.row_binding_values,

@@ -42,6 +42,7 @@ from ....core.resources import resources
 from ....domain.buckets import BucketArchiveRefusedError, BucketRestoreRefusedError
 from ....domain.user_profile import ProfileNotFoundError, ProfileSchemaDefinition, UserProfileFact
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ....tests.user_profile import schema_valid_placeholder
 from ...user_profile import RegisterProfileCommand
 from .. import ArchiveBucketCommand, BucketMaintenanceService, RestoreBucketCommand
 
@@ -59,7 +60,7 @@ def _all_required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFac
             continue
         for field in section.fields:
             if field.required:
-                facts.append(UserProfileFact(path=f"{section.key}.{field.key}", value=(field.enum_values[0] if field.enum_values else "placeholder")))
+                facts.append(UserProfileFact(path=f"{section.key}.{field.key}", value=schema_valid_placeholder(field)))
     return tuple(facts)
 
 

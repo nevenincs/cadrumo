@@ -49,6 +49,8 @@ from .._reconcile import (
     ModeloReconciliationEvidenceKind,
     ModeloReconciliationVerdict,
     _reconcile_parsed_justificante,
+)
+from .._reconciliation_records import (
     list_modelo_reconciliations,
 )
 

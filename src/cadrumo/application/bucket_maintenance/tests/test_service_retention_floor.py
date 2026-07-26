@@ -33,6 +33,7 @@ from ....domain.modelos import (
 from ....domain.retention import RetentionBlockingRecord, RetentionFloorAssessment, RetentionFloorError
 from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ....tests.user_profile import schema_valid_placeholder
 from ...user_profile import RegisterProfileCommand
 from .. import AssessBucketDeletionCommand, BucketMaintenanceService, DeleteBucketCommand
 
@@ -54,7 +55,7 @@ def _all_required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFac
             continue
         for field in section.fields:
             if field.required:
-                facts.append(UserProfileFact(path=f"{section.key}.{field.key}", value=(field.enum_values[0] if field.enum_values else "placeholder")))
+                facts.append(UserProfileFact(path=f"{section.key}.{field.key}", value=schema_valid_placeholder(field)))
     return tuple(facts)
 
 

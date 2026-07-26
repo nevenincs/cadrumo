@@ -26,7 +26,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.bucket import bucket_paths, read_manifest, write_manifest
+from ....adapters.persistence.storage.bucket import BucketManifest, bucket_paths, read_manifest, write_manifest
 from ....core.config import load_settings
 from ....tests.secure_sql import isolated_runtime_profile
 from .._custody import create_recovery_code, inspect_recovery_status, recovery_wrap_path
@@ -136,3 +136,49 @@ def test_unenrolled_store_reports_false_without_creating_an_envelope(tmp_path: P
         assert status.recovery_fingerprint is None
         assert _mirror(runtime.bucket_id) is False
         assert not recovery_wrap_path().is_file(), "a status read must never mint an envelope"
+
+
+def test_the_mirror_write_preserves_every_field_it_does_not_own(tmp_path: Path) -> None:
+    """The recovery mirror owns ``recovery_enrolled`` and must touch nothing else.
+
+    This is the sixth manifest writer, completing the set the sibling
+    preservation gate covers for the five repository writers. It is included
+    despite being a single-field ``model_copy`` — a shape that cannot drop a
+    field by construction — precisely so that a later conversion to
+    field-by-field reconstruction is caught here rather than shipping as a
+    silent reset, which is exactly what happened to the profile save writer.
+
+    Every defaultable field is seeded NON-default first. ``_manifest_io``
+    omits a ``None``-valued optional on write and re-``setdefault``s it on
+    read, so a field left at its default is indistinguishable on disk from one
+    silently reset.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+        _enroll()
+        paths = _manifest_paths(runtime.bucket_id)
+
+        seeded = read_manifest(paths).model_copy(
+            update={
+                "idle_lock_minutes": 17,
+                "session_absolute_minutes": 33,
+                "recovery_enrolled": False,
+            },
+        )
+        write_manifest(paths, seeded)
+
+        # Drive the real reconciliation, which must flip the mirror back to true.
+        assert inspect_recovery_status().recovery_enrolled is True
+
+        persisted = read_manifest(paths)
+        assert persisted.recovery_enrolled is True, "the mirror write must have actually run"
+
+        preserved = set(BucketManifest.model_fields) - {"recovery_enrolled"}
+        dropped = {
+            field: (getattr(seeded, field), getattr(persisted, field))
+            for field in preserved
+            if getattr(persisted, field) != getattr(seeded, field)
+        }
+        assert dropped == {}, (
+            "the recovery-enrollment mirror changed manifest field(s) outside its own "
+            f"projection, shown as field: (before, after) -> {dropped}"
+        )

@@ -40,8 +40,9 @@ from decimal import Decimal
 
 import pytest
 
+from .....core.resources import resources
 from .....domain.calculations.registry import ExtractionTargetDefinition, validated_casilla_id
-from .._parser import _classify_target, _TargetClassification
+from .._parser import _classify_target, _printed_box_numbers, _TargetClassification
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -75,6 +76,36 @@ _PENDIENTE_POSTERIORES_ZERO_LINE = (
 _PERCEPTORES_LABEL = r"Numero\s+total\s+de\s+perceptores"
 _PERCEPTORES_LINE = "Numero total de perceptores 3"
 
+# Verbatim from the Modelo 390 annual-summary render, deducible block. This box
+# was unguarded until its casilla gained a form_number: the guard read `number`,
+# which on this semantically-named casilla is its own id string and can never
+# equal a captured token, so a blank box 64 returned 64,00 EUR of deductions.
+_M390_DEDUCCIONES_LABEL = r"(?:Suma\s+de\s+deducciones|Total\s+deductions)"
+_M390_DEDUCCIONES_POPULATED_LINE = (
+    "Suma de deducciones (49 + 513 + 51 + 521 + 53 + 55 + 57 + 59 + 598 + 61 + 661 + 62 + 652 + 63 + 522) "
+    "....................... 64 68.202,00"
+)
+_M390_DEDUCCIONES_BLANK_LINE = (
+    "Suma de deducciones (49 + 513 + 51 + 521 + 53 + 55 + 57 + 59 + 598 + 61 + 661 + 62 + 652 + 63 + 522) "
+    "....................... 64"
+)
+
+# Verbatim from the Modelo 190 resumen page. Same defect, sharper consequence:
+# this profile floors at 1.0, so a fabricated 2,00 EUR would have SATISFIED the
+# coverage floor rather than tripping it. Its `number` is the fichero-BOE
+# positional range "145-160", which is correct for what that field means.
+_M190_PERCEPCIONES_LABEL = r"Importe\s+total\s+de\s+las\s+percepciones"
+_M190_PERCEPCIONES_POPULATED_LINE = (
+    "Importe total de las percepciones relacionadas "
+    "................................................................................."
+    "................................................................ 02 1.000,00"
+)
+_M190_PERCEPCIONES_BLANK_LINE = (
+    "Importe total de las percepciones relacionadas "
+    "................................................................................."
+    "................................................................ 02"
+)
+
 
 def _target(casilla_id: str, label_pattern: str) -> ExtractionTargetDefinition:
     return ExtractionTargetDefinition(
@@ -106,8 +137,25 @@ def _classify(
     [
         ("iva.compensacion-aplicada-periodo", _COMPENSACION_APLICADA_LABEL, _COMPENSACION_BLANK_LINE, "78"),
         ("37", _ADQUISICIONES_LABEL, _ADQUISICIONES_BLANK_LINE, "37"),
+        (
+            "iva.anual.cuota-deducible-total",
+            _M390_DEDUCCIONES_LABEL,
+            _M390_DEDUCCIONES_BLANK_LINE,
+            "64",
+        ),
+        (
+            "decl.percepciones-total",
+            _M190_PERCEPCIONES_LABEL,
+            _M190_PERCEPCIONES_BLANK_LINE,
+            "02",
+        ),
     ],
-    ids=["compensacion-aplicada-box-78-blank", "adquisiciones-cuota-box-37-blank"],
+    ids=[
+        "compensacion-aplicada-box-78-blank",
+        "adquisiciones-cuota-box-37-blank",
+        "m390-deducciones-box-64-blank",
+        "m190-percepciones-box-02-blank",
+    ],
 )
 def test_blank_box_is_absent_not_its_own_box_number(
     casilla_id: str,
@@ -154,12 +202,28 @@ def test_blank_box_is_absent_not_its_own_box_number(
         # A count-valued target: the informativas declare total-perceptores as an
         # "amount" and AEAT prints it as a bare integer. It must survive the guard.
         ("decl.total-perceptores", _PERCEPTORES_LABEL, _PERCEPTORES_LINE, "01", Decimal("3")),
+        (
+            "iva.anual.cuota-deducible-total",
+            _M390_DEDUCCIONES_LABEL,
+            _M390_DEDUCCIONES_POPULATED_LINE,
+            "64",
+            Decimal("68202.00"),
+        ),
+        (
+            "decl.percepciones-total",
+            _M190_PERCEPCIONES_LABEL,
+            _M190_PERCEPCIONES_POPULATED_LINE,
+            "02",
+            Decimal("1000.00"),
+        ),
     ],
     ids=[
         "compensacion-aplicada-3000",
         "adquisiciones-cuota-4410",
         "pendiente-posteriores-printed-bare-zero",
         "total-perceptores-printed-bare-count",
+        "m390-deducciones-68202",
+        "m190-percepciones-1000",
     ],
 )
 def test_populated_box_still_extracts_its_printed_amount(
@@ -184,3 +248,70 @@ def test_populated_box_still_extracts_its_printed_amount(
         f"malformed={outcome.malformed!r}, ambiguous={outcome.ambiguous!r})"
     )
     assert outcome.value.printed_value == expected
+
+
+@pytest.mark.parametrize(
+    "modelo,filing_year,period,expected_printed",
+    [
+        (
+            "390",
+            2021,
+            "0A",
+            {
+                "iva.anual.cuota-devengada-total": "47",
+                "iva.anual.cuota-deducible-total": "64",
+                "iva.anual.resultado-regimen-general": "65",
+            },
+        ),
+        (
+            "190",
+            2024,
+            "0A",
+            {
+                "decl.total-percepciones": "01",
+                "decl.percepciones-total": "02",
+                "decl.retenciones-total": "03",
+            },
+        ),
+    ],
+    ids=["modelo-390-totals", "modelo-190-resumen"],
+)
+def test_the_guard_is_actually_armed_for_semantically_named_casillas(
+    modelo: str,
+    filing_year: int,
+    period: str,
+    expected_printed: dict[str, str],
+) -> None:
+    """The guard resolves a real printed box number for these targets.
+
+    The cases above prove the guard refuses a blank box when it is told the box
+    number. This proves it is told: the whole defect was that it was not.
+
+    ``_printed_box_numbers`` read ``number``, which is reviewed AEAT
+    record-design metadata. On a numerically-named casilla that happens to equal
+    the printed number, so the guard worked by accident; on a semantically-named
+    one it is the casilla id or a fichero-BOE positional range, which no captured
+    token can equal, so these six targets were silently unguarded. The printed
+    numbers below are read off the bundled AEAT renders, not from the casilla
+    records under test.
+
+    Asserting the resolved value rather than mere presence is what makes this
+    bite: reverting to ``number`` still returns an entry for every target, and
+    only the value shows it is the wrong one.
+    """
+    snapshot = resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
+    revision = snapshot.revision
+    profile = next(
+        p
+        for p in revision.extraction_profiles
+        if p.surface == "declaracion_pdf" and "declaration_pdf" in p.accepted_artefact_kinds
+    )
+
+    printed = {str(k): v for k, v in _printed_box_numbers(profile, revision).items()}
+
+    for casilla_id, expected in expected_printed.items():
+        assert printed.get(casilla_id) == expected, (
+            f"M{modelo} {casilla_id!r}: blank-box guard resolves printed box number "
+            f"{printed.get(casilla_id)!r}, but the AEAT render prints {expected!r}; a blank "
+            f"box would be read as {expected} euros"
+        )

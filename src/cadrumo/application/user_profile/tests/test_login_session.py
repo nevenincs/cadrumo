@@ -30,6 +30,7 @@ from ....core.resources import resources
 from ....core.time import now as _now
 from ....domain.user_profile import ProfileNotFoundError, ProfileSchemaDefinition, UserProfileFact
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import schema_valid_placeholder
 from ...workflow import WorkflowState
 from .._login_session import (
     ProfileLoginThrottledError,
@@ -70,7 +71,7 @@ def _required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFact, .
         if section.repeatable:
             continue
         facts.extend(
-            UserProfileFact(path=f"{section.key}.{field.key}", value=(field.enum_values[0] if field.enum_values else "placeholder"))
+            UserProfileFact(path=f"{section.key}.{field.key}", value=schema_valid_placeholder(field))
             for field in section.fields
             if field.required
         )

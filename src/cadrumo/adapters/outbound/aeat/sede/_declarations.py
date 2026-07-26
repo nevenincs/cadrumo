@@ -113,6 +113,37 @@ log = get_logger(__name__)
 
 
 _EXTERNAL = Settings.external_constants()
+# The one numbered host still named in a live reader, and it is measured
+# rather than assumed. AEAT assigns the answering host per session, so a
+# named number is normally wrong -- the censal and IVA-wallet readers name
+# none. This one stays because the obvious de-pin does not work: requesting
+# the declarations listing on the UNNUMBERED sede origin with a valid
+# session attached returns a genuine 404, landing on the requested host
+# rather than bouncing. Confirmed on a live authenticated session,
+# 2026-07-26.
+#
+# The readers that carry no number reach their surface through the Cl@ve
+# access selector and let AEAT dispatch. This module has no selector entry
+# and deliberately does not get one, for two measured reasons.
+#
+# This host is not only a navigation string: it is also a lookup key. The
+# capture path resolves its read-guard policy by matching this hostname
+# against the registry's declared allowed_hosts for the declarations read
+# surface, and requires exactly one match. That lookup never reads the host
+# a navigation actually landed on, so routing navigation through the
+# selector would change no outcome -- and de-pinning the lookup as well
+# matches zero declarations and raises, failing every capture at the
+# guard's own resolution step.
+#
+# The selector's failure path also leads nowhere better than here. Its
+# reference implementation refuses outright when the selector does not
+# dispatch, rather than degrading to the unnumbered origin, so that path
+# reaches no host at all; and a dispatch to a host that does not serve this
+# listing reaches a 404 there. Neither failure mode arrives at a host known
+# to serve the route, while this constant names one that does.
+#
+# Recorded URLs do NOT use this constant. They name the host that actually
+# answered, because a recorded URL is a claim about where a read happened.
 _SEDE_BASE = _EXTERNAL.aeat.domains.www6
 _SEDE_HOST = urlsplit(_SEDE_BASE).netloc
 _AEAT_HOST_SUFFIX = _EXTERNAL.aeat.domains.host_suffix

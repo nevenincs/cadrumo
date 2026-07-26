@@ -277,6 +277,8 @@ adapters:
         jelentkezz be újra, és próbáld meg ismét.
       censal_modification_surface: A nyilvántartási olvasás elutasítva, mert módosító
         oldalra érkezett; ez az olvasó soha nem módosítja a nyilvántartási adatokat.
+      censal_no_dispatch: Az AEAT hozzáférés-választója nem nyitotta meg a nyilvántartási
+        oldalt működő kiszolgálón; jelentkezz be újra, és próbáld meg ismét.
       cotejo_nav_failed: Az AEAT cotejo oldalra való navigáció sikertelen volt; a
         munkamenet lejárhatott. Futtassa a 'aeat config auth test' parancsot és próbálja
         újra.
@@ -571,6 +573,9 @@ application:
           Futtassa az `aeat config auth logout`, majd az `aeat config auth test` parancsot.
         no_session: Nincs aktív AEAT munkamenet; futtassa a `aeat config auth test`
           parancsot az AEAT adatok olvasása előtt.
+        profile_identity_cleared: Az élő AEAT-hitelesítéshez szükséges az aktív profil
+          adóazonosítója, ez a profil pedig nem tartalmaz ilyet. Állítsa vissza az
+          identity.tax_id mezőt a profilban, majd hitelesítsen újra.
         profile_tax_id_missing: A Cl@ve Móvil élő hitelesítés megköveteli, hogy az
           aktív profil rendelkezzen identity.tax_id-val.
         provider_close_failed: Az AEAT böngészőmunkamenetet nem sikerült biztonságosan
@@ -924,11 +929,10 @@ application:
       cross_period_clean_state_incomplete: A keresztidőszaki tiszta állapot igazolása
         hiányos a(z) {modelo} {filing_year} {period} modellhez; {finding_count} megállapítás
         maradt.
-      deductible_vat_evidence_missing: 'A levonható IVA főkönyvi sorokhoz kapcsolt
-        beszerzési számla-bizonylat szükséges ehhez a művelethez. A számlát a work
-        calculate futtatása ELŐTT kapcsold a főkönyvi sorhoz: a piszkozat a verifikáláskor
-        rögzíti a bizonylatait, ezért a később csatolt számla már nem kerül be ebbe
-        a bevallásba.'
+      deductible_vat_evidence_missing: 'A levonhato afat tartalmazo konyvelesi sorokhoz
+        kapcsolt bejovo szamla szukseges. Kapcsold a szamlat a sorhoz, majd futtasd
+        ujra a work verify parancsot: az ellenorzes nem fejezodik be, amig egy levonhato
+        sorhoz nincs szamla, igy a piszkozat nyitva marad es atveszi a bizonylatot.'
       export_cross_bucket_refused: A megcímzett revízió nem az aktív profil bucketjéhez
         tartozik. Exportálás előtt váltson profilt.
       export_draft_approval_failed: Nem sikerült jóváhagyni a(z) %{calculation_revision_id}
@@ -1449,6 +1453,13 @@ application:
         nem egyezik a biztonságos rekorddal.'
       aggregate_status_mismatch: 'A profiltárolás inkonzisztens: a manifest életciklus-állapota
         nem egyezik a biztonságos rekorddal.'
+      censal_read_identity_absent: A nyilvántartási olvasás nem tartalmazott adóazonosítót,
+        ezért nem erősíthető meg, hogy ehhez a profilhoz tartozik.
+      censal_read_identity_cleared: Ennek a profilnak az adóazonosítója ki lett ürítve,
+        ezért nem erősíthető meg, hogy a nyilvántartási olvasás hozzá tartozik. Állítsa
+        vissza az adóazonosítót, majd futtassa újra a lekérdezést.
+      censal_read_identity_mismatch: A nyilvántartási olvasás egy másik adózóhoz tartozik,
+        nem ehhez a profilhoz; nem került alkalmazásra.
       duplicate_tax_id: A(z) "%{tax_id}" adóazonosítót már a(z) "%{profile}" profil
         használja; egy adózónak egy profilja lehet.
       lifecycle_profile_already_exists: Már létezik profil az aktív bucketben.
@@ -1495,8 +1506,7 @@ application:
         ez az alkalmazás nem támogatja.
       unsupported_bundle_schema_version: A csomag sémaverziója nem támogatott ebben
         az alkalmazásverzióban.
-      censal_read_identity_absent: 'A nyilvántartási olvasás nem tartalmazott adóazonosítót, ezért nem erősíthető meg, hogy ehhez a profilhoz tartozik.'
-      censal_read_identity_mismatch: 'A nyilvántartási olvasás egy másik adózóhoz tartozik, nem ehhez a profilhoz; nem került alkalmazásra.'
+      censal_read_identity_unset: 'Rögzítse az adóazonosítóját, mielőtt lekérdezi a nyilvántartását: ennek a profilnak még nincs, ezért a lekérdezés nem tudja megerősíteni, hogy az AEAT által visszaadott rekord az Öné. Futtassa az aeat config profile edit parancsot a megadásához.'
     notices:
       censo_divergences_open: '{count} profiladat továbbra is eltér a Certificado
         de Situación Censal tanúsítványtól és megoldatlan: {axes}.'
@@ -3565,12 +3575,13 @@ cli:
           rögzítéséhez futtasd újra a --apply kapcsolóval.'
         pull_verified_tier_notice: Ezek az adatok közvetlenül az AEAT-tól származnak,
           ezért a nyilvántartásba vétel igazoltnak számít.
+        pull_withheld_notice: '{count} mező értékét nem jelenítjük meg: {axes}. Hasonlítsd
+          össze magad az AEAT adataival; ez az eszköz nem írja ki őket.'
         refresh_help: A legfrissebb nyilvántartás letöltése az AEAT-ból és pillanatkép
           mentése.
         show_help: Az AEAT által legutóbb jelentett nyilvántartás megjelenítése erre
           a profilra.
         snapshot_id_help: Konkrét pillanatkép-azonosító (előtagok elfogadva).
-        pull_withheld_notice: '{count} mező értékét nem jelenítjük meg: {axes}. Hasonlítsd össze magad az AEAT adataival; ez az eszköz nem írja ki őket.'
       create_epilog: 'Minimális önálló vállalkozói profil: --entity-type natural_person
         --tax-id <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet
         --accept-defaults'
@@ -6085,6 +6096,7 @@ errors:
     bootstrap_already_complete: A biztonságos tároló beállítása már befejeződött.
       Használja az aeat config login NÉV parancsot egy meglévő profil aktiválásához,
       vagy az aeat config profile create NÉV parancsot másik profil hozzáadásához.
+    censal_read_identity: A nyilvántartási olvasás nem ehhez a profilhoz tartozó adózóé.
     clave_credentials_incomplete: A kiválasztott Cl@ve hitelesítési módból hiányzik
       egy szükséges hitelesítő adat.
     ledger_preflight: A főkönyvi előzetes ellenőrzés elutasította a modellfuttatást,
@@ -6429,7 +6441,6 @@ errors:
     submission_preflight_error_findings: A tervezetben {finding_count} ERROR súlyosságú
       megállapítás van; javítsa ezeket benyújtás előtt.
     unsupported_currency: A megadott devizakód nem támogatott.
-    censal_read_identity: 'A nyilvántartási olvasás nem ehhez a profilhoz tartozó adózóé.'
   snapshot:
     ambiguous_revision_selection: 'Egynél több nyilvántartási revízió illeszkedik
       a(z) %{modelo_id} modellhez: %{candidate_ids}.'
@@ -6538,6 +6549,8 @@ flows:
       censal_pull: Kitöltés az AEAT censusadataiból
       censal_pull_auth_incomplete: Az azonosítása hiányos, ezért az AEAT még nem olvasható.
         Előbb egészítse ki.
+      censal_pull_cleared: 'Az AEAT-nál még szerepel érték az Ön által kiürített mezőkhöz:
+        %{paths}. Ezek üresen maradtak; a kiürítés itt nem módosítja az AEAT nyilvántartását.'
       censal_pull_contested: 'Az AEAT eltér az Ön bevallásától itt: %{paths}. Az Ön
         válasza marad érvényben; oldja meg egyenként.'
       censal_pull_done: 'AEAT censusadatok beolvasva: %{adopted} mező kitöltve, %{unchanged}
@@ -6555,7 +6568,6 @@ flows:
         certificate: Elektronikus tanúsítvány
         clave_movil: Cl@ve Móvil
         clave_permanente: Cl@ve Permanente
-      censal_pull_cleared: 'Az AEAT-nál még szerepel érték az Ön által kiürített mezőkhöz: %{paths}. Ezek üresen maradtak; a kiürítés itt nem módosítja az AEAT nyilvántartását.'
     actions:
       section: Műveletek
     column:
@@ -6565,6 +6577,7 @@ flows:
     edit:
       cancel: Mégse
       save: Mentés
+      required_blank: 'A(z) {field} kötelező, ezért nem maradhat üresen. Adj meg egy értéket, vagy a mégse gombbal hagyd változatlanul.'
     progress: '{present} / {total} mező kitöltve, {missing} hiányzik a benyújtáshoz'
     section_title: '{title} — {present}/{total}'
     title: 'Profil: {profile}'

@@ -30,6 +30,7 @@ from ....domain.buckets import (
 )
 from ....domain.user_profile import ProfileExportError, ProfileSchemaDefinition, UserProfileFact
 from ....tests.secure_sql import TestRuntimeProfile, isolated_profile_storage_root, isolated_runtime_profile
+from ....tests.user_profile import schema_valid_placeholder
 from ...modelo import (
     M145CommunicationCreateCommand,
     create_m145_communication_record,
@@ -63,7 +64,7 @@ def _required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFact, .
         for field in section.fields:
             if field.required:
                 path = f"{section.key}.{field.key}"
-                facts[path] = UserProfileFact(path=path, value=(field.enum_values[0] if field.enum_values else "placeholder"))
+                facts[path] = UserProfileFact(path=path, value=schema_valid_placeholder(field))
     facts.update(
         {
             "taxpayer_type.entity_type": UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),

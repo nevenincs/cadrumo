@@ -108,8 +108,10 @@ declared yourself stays yours.
 
 ### What the pull cannot fill
 
-The pull fills your fiscal ID, fiscal address, postcode, and cadastral
-reference.
+The pull fills your fiscal address, postcode, and cadastral reference.
+
+It does not fill your fiscal ID. It reads your fiscal ID to confirm the record
+AEAT returned is yours, and never writes it.
 
 It does not fill your regime facts — activity, tax regime, IVA regime,
 enrollment. AEAT publishes no read-only surface that carries them. Enter those

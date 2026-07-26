@@ -179,3 +179,93 @@ def test_full_custody_carry_restores_evidence_bytes_and_audit_trail(tmp_path: Pa
             from ....adapters.persistence.profile.justificante import JustificanteRepository
 
             assert JustificanteRepository().load(justificante_csv) is not None
+
+
+def _seed_reconciliation_record(bucket_id: str) -> str:
+    """Persist one grounded reconciliation record in the active bucket."""
+    from ...modelo import (
+        ModeloReconciliationAdvisory,
+        ModeloReconciliationDiff,
+        ModeloReconciliationDiffKind,
+        ModeloReconciliationEvidenceKind,
+        ModeloReconciliationRecord,
+        ModeloReconciliationRecordRepository,
+        ModeloReconciliationVerdict,
+    )
+
+    record = ModeloReconciliationRecord(
+        bucket_event_id="e" * 64,
+        bucket_id=bucket_id,
+        work_unit_id="a1b2c3d4" * 8,
+        source_kind=ModeloReconciliationEvidenceKind.DECLARATION,
+        source_ref="/operator/evidence/modelo-100-declaracion.pdf",
+        verdict=ModeloReconciliationVerdict.MISMATCHES,
+        diffs=(
+            ModeloReconciliationDiff(
+                field_name="0604",
+                work_unit_value="1234.56",
+                evidence_value="1200.00",
+                kind="casilla_value_mismatch",
+                diff_kind=ModeloReconciliationDiffKind.CASILLA,
+                legal_refs=("ley-35-2006:art-79",),
+                source_refs=("aeat:manual-renta-2024",),
+            ),
+        ),
+        advisories=(
+            ModeloReconciliationAdvisory(
+                code="totals_not_reconciled",
+                message="filed totals were not reconciled",
+                context={"reason": "no_persisted_revision"},
+            ),
+        ),
+        actor="operator",
+        reconciled_at=_INSTANT,
+    )
+    ModeloReconciliationRecordRepository().save(record)
+    return record.bucket_event_id
+
+
+def test_reconciliation_records_survive_the_custody_carry_with_grounding(tmp_path: Path) -> None:
+    """A profile that has reconciled can be exported and restored.
+
+    The namespace is registered at STRUCTURED_CUSTODY, which enrols it in the
+    carried set, and the serialise path is fail-closed: a populated carried
+    namespace with no natural-key resolver raises. So without a registered
+    resolver, exporting the profile of ANY operator who had ever run a
+    reconciliation raised — the store persisted fine and failed at the boundary
+    that carries it.
+
+    This drives the real defect rather than the gate that guards it: seed a
+    record, serialise, restore into a recipient bucket whose DEK is different,
+    and read it back. The distinct DEK is the condition that breaks a
+    digest-based carry, so the natural key must be re-derived from the payload
+    for this to pass — which is exactly what the bound resolver does, and why
+    the composite key is no obstacle.
+    """
+    from ....adapters.persistence.storage import StorageCustodyProfile
+    from ...modelo import ModeloReconciliationRecordRepository, list_modelo_reconciliations
+
+    with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
+        source_bucket = runtime.primary.bucket_id
+        target_bucket = runtime.secondary.bucket_id
+        event_id = _seed_reconciliation_record(source_bucket)
+
+        # Serialising must not raise, and must actually carry the namespace.
+        carried = serialize_carried_objects(bucket_id=source_bucket, profile=StorageCustodyProfile.STRUCTURED)
+        assert "cadrumo.modelo.reconciliation.records" in {obj.namespace for obj in carried}
+
+        with runtime.switch_to_secondary():
+            assert tuple(ModeloReconciliationRecordRepository().iter_records()) == ()
+
+            restore_carried_objects(carried, target_bucket_id=target_bucket)
+
+            restored = tuple(ModeloReconciliationRecordRepository().iter_records())
+            assert len(restored) == 1
+            assert restored[0].bucket_event_id == event_id
+            # Grounding survives the re-key, through the public read API.
+            entries = list_modelo_reconciliations(bucket_id=source_bucket)
+            assert len(entries) == 1
+            assert entries[0].diffs[0].legal_refs == ("ley-35-2006:art-79",)
+            assert entries[0].diffs[0].source_refs == ("aeat:manual-renta-2024",)
+            # Advisories survive too, read off the restored record itself.
+            assert restored[0].advisories[0].context == {"reason": "no_persisted_revision"}

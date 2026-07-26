@@ -461,6 +461,30 @@ class ProfileRepository:
         re-written so the two label copies never drift. The
         active-profile pointer is not touched — selecting a profile is
         a distinct operation.
+
+        The manifest projection this method owns is exactly ``label``,
+        ``kdf_params``, ``recovery_enrolled``, ``schema_version`` and
+        ``status``. Every other manifest field is carried across from the
+        manifest already on disk.
+
+        The manifest is rebuilt field by field rather than copy-updated,
+        deliberately. Enumeration is riskier in one direction — a field
+        left out does not fail, it silently takes its model default,
+        which is how ``session_absolute_minutes`` was once reset to
+        ``None`` on every save while ``idle_lock_minutes`` beside it
+        survived, silently lengthening an absolute login session the
+        operator had deliberately shortened. That risk is now owned by
+        ``test_every_manifest_writer_preserves_the_fields_it_does_not_own``,
+        whose carry set is DERIVED from the model, so a new manifest
+        field reddens it until someone classifies the field as owned or
+        carried. Copy-update would instead preserve a new field silently
+        and nobody would ever make that decision — on a durable format
+        the forced decision is worth more than automatic preservation.
+
+        ``bucket_id`` and ``created_at`` are restated from the aggregate
+        rather than carried; ``verify_profile_integrity`` asserts their
+        agreement at load, so a disagreement surfaces as drift rather
+        than being quietly written over.
         """
         paths = bucket_paths(self._root, aggregate.profile_id)
         current_manifest = read_manifest(paths)
@@ -474,6 +498,7 @@ class ProfileRepository:
                 kdf_params=aggregate.kdf_params,
                 recovery_enrolled=aggregate.recovery_enrolled,
                 idle_lock_minutes=current_manifest.idle_lock_minutes,
+                session_absolute_minutes=current_manifest.session_absolute_minutes,
                 key_schedule=current_manifest.key_schedule,
                 schema_version=aggregate.manifest_schema_version,
                 status=aggregate.status,

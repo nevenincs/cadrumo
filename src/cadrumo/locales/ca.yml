@@ -292,6 +292,8 @@ adapters:
         torna a autenticar-te i prova-ho de nou.
       censal_modification_surface: S'ha rebutjat la lectura censal perquè ha aterrat
         en una pàgina de modificació; aquest lector mai no modifica les dades censals.
+      censal_no_dispatch: El selector d'accés de l'AEAT no ha obert la pàgina censal
+        en un servidor operatiu; torna a autenticar-te i prova-ho de nou.
       cotejo_nav_failed: La navegació a la pàgina de cotejo d'AEAT ha fallat; la sessió
         pot haver caducat. Executeu 'aeat config auth test' i torneu-ho a intentar.
       ejercicio_unavailable: El registre de declaracions d'AEAT no ofereix l'exercici
@@ -606,6 +608,9 @@ application:
           llegir. Executa `aeat config auth logout` i després `aeat config auth test`.
         no_session: No hi ha sessió AEAT activa; executa `aeat config auth test` abans
           de llegir dades AEAT.
+        profile_identity_cleared: L'autenticació en directe amb l'AEAT necessita el
+          NIF del perfil actiu, i aquest perfil no en té cap. Restaureu identity.tax_id
+          al perfil i torneu a autenticar-vos.
         profile_tax_id_missing: L'autenticació Cl@ve Móvil en directe requereix que
           el perfil actiu tingui identity.tax_id.
         provider_close_failed: No s'ha pogut tancar de manera segura la sessió del
@@ -986,11 +991,10 @@ application:
       cross_period_clean_state_incomplete: La prova d'estat net entre períodes està
         incompleta per al model {modelo} {filing_year} {period}; queden {finding_count}
         troballa(es).
-      deductible_vat_evidence_missing: 'Les files d''IVA deduïble del llibre requereixen
-        evidència de factura de compra vinculada abans d''aquesta acció. Vincula la
-        factura al moviment del llibre ABANS d''executar work calculate: l''esborrany
-        agrupa la seva evidència en verificar-lo, de manera que una factura adjuntada
-        després no arriba a aquesta declaració.'
+      deductible_vat_evidence_missing: 'Les linies del llibre amb IVA deduible requereixen
+        una factura de compra vinculada. Vincula la factura a la linia i torna a executar
+        work verify: la verificacio no es completa mentre una linia deduible no tingui
+        factura, de manera que l''esborrany continua obert i recull l''evidencia.'
       export_cross_bucket_refused: La revisió indicada pertany a un bucket diferent
         del bucket del perfil actiu. Canvia de perfil abans d'exportar.
       export_draft_approval_failed: No s'ha pogut aprovar l'esborrany per a la revisió
@@ -1514,6 +1518,13 @@ application:
         la identitat del manifest no coincideix amb el registre segur.'
       aggregate_status_mismatch: 'L''emmagatzematge del perfil no és coherent: l''estat
         de cicle de vida del manifest no coincideix amb el registre segur.'
+      censal_read_identity_absent: La lectura censal no inclou cap NIF, de manera
+        que no es pot confirmar que correspongui a aquest perfil.
+      censal_read_identity_cleared: El NIF d'aquest perfil s'ha buidat, de manera
+        que no es pot confirmar que la lectura censal li correspongui. Restaureu el
+        NIF i torneu a executar la consulta.
+      censal_read_identity_mismatch: La lectura censal correspon a un contribuent
+        diferent del d'aquest perfil; no s'ha aplicat.
       duplicate_tax_id: El NIF '%{tax_id}' ja l'utilitza el perfil '%{profile}'; un
         contribuent ha de tenir un sol perfil.
       lifecycle_profile_already_exists: Ja existeix un perfil al bucket actiu.
@@ -1562,8 +1573,7 @@ application:
         instantània de perfil no és compatible amb aquesta aplicació.
       unsupported_bundle_schema_version: La versió de l'esquema del paquet no és compatible
         amb aquesta versió de l'aplicació.
-      censal_read_identity_absent: 'La lectura censal no inclou cap NIF, de manera que no es pot confirmar que correspongui a aquest perfil.'
-      censal_read_identity_mismatch: 'La lectura censal correspon a un contribuent diferent del d''aquest perfil; no s''ha aplicat.'
+      censal_read_identity_unset: 'Registreu el vostre NIF abans de consultar el vostre cens: aquest perfil encara no en té cap, de manera que la consulta no pot confirmar que el registre que retorna l''AEAT sigui vostre. Executeu aeat config profile edit per afegir-lo.'
     notices:
       censo_divergences_open: '{count} dada/es del perfil encara difereixen del Certificat
         de Situació Censal i resten sense resoldre: {axes}.'
@@ -3616,10 +3626,11 @@ cli:
           Torna a executar amb --apply per inscriure aquestes dades.'
         pull_verified_tier_notice: Aquestes dades s'han llegit directament de l'AEAT,
           de manera que l'alta censal compta com a verificada.
+        pull_withheld_notice: 'Els valors de {count} camp(s) no es mostren: {axes}.
+          Compara''ls tu mateix amb els de l''AEAT; aquesta eina no els imprimeix.'
         refresh_help: Descàrrega d'AEAT l'últim cens i desa un snapshot
         show_help: Mostra l'últim cens informat per AEAT per a aquest perfil
         snapshot_id_help: Id de snapshot concret (s'accepten prefixos)
-        pull_withheld_notice: 'Els valors de {count} camp(s) no es mostren: {axes}. Compara''ls tu mateix amb els de l''AEAT; aquesta eina no els imprimeix.'
       create_epilog: 'Perfil mínim per a autònom: --entity-type natural_person --tax-id
         <NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
       create_help: Inicialitza un perfil actiu nou.
@@ -6182,6 +6193,7 @@ errors:
     bootstrap_already_complete: L'arrencada de l'emmagatzematge segur ja està completa.
       Fes servir aeat config login NAME per activar un perfil existent o aeat config
       profile create NAME per afegir-ne un altre.
+    censal_read_identity: La lectura censal no correspon al contribuent d'aquest perfil.
     clave_credentials_incomplete: Al mode d'autenticació Cl@ve seleccionat li falta
       una credencial que necessita.
     ledger_preflight: La comprovació prèvia del llibre ha rebutjat l'execució del
@@ -6542,7 +6554,6 @@ errors:
     submission_preflight_error_findings: L'esborrany té {finding_count} incidència(es)
       de severitat ERROR; resol-les abans de presentar.
     unsupported_currency: El codi de moneda indicat no és compatible.
-    censal_read_identity: 'La lectura censal no correspon al contribuent d''aquest perfil.'
   snapshot:
     ambiguous_revision_selection: 'Més d''una revisió del registre coincideix amb
       el model %{modelo_id}: %{candidate_ids}.'
@@ -6653,6 +6664,8 @@ flows:
       censal_pull: Emplenar amb les dades censals de l'AEAT
       censal_pull_auth_incomplete: La vostra identificació és incompleta, així que
         encara no es pot llegir l'AEAT. Completeu-la primer.
+      censal_pull_cleared: 'L''AEAT encara té un valor per als camps que vau buidar:
+        %{paths}. S''han deixat buits; buidar-los aquí no canvia el registre de l''AEAT.'
       censal_pull_contested: 'L''AEAT discrepa del que vau declarar a: %{paths}. La
         vostra resposta es manté; resoleu cada cas vosaltres mateixos.'
       censal_pull_done: 'Dades censals de l''AEAT llegides: %{adopted} camp(s) emplenats,
@@ -6670,7 +6683,6 @@ flows:
         certificate: Certificat electrònic
         clave_movil: Cl@ve Mòbil
         clave_permanente: Cl@ve Permanent
-      censal_pull_cleared: 'L''AEAT encara té un valor per als camps que vau buidar: %{paths}. S''han deixat buits; buidar-los aquí no canvia el registre de l''AEAT.'
     actions:
       section: Accions
     column:
@@ -6680,6 +6692,7 @@ flows:
     edit:
       cancel: Cancel·la
       save: Desa
+      required_blank: '{field} és obligatori, així que no pot quedar en blanc. Introdueix un valor o cancel·la per deixar-lo sense canvis.'
     progress: '{present} de {total} camps emplenats, en falten {missing} per presentar'
     section_title: '{title} — {present}/{total}'
     title: 'Perfil: {profile}'

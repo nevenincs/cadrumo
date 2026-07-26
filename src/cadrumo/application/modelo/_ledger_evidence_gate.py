@@ -42,6 +42,32 @@ def _enum_or_none[EnumT: StrEnum](enum_type: type[EnumT], value: str | None) -> 
 
 
 def _row_has_linked_evidence(row: LedgerEvidenceRow) -> bool:
+    """Return whether the bundled row carries any linked evidence at all.
+
+    This is DELIBERATELY looser than the verify-time deductible test, which was
+    tightened to the purchase-invoice axis because LIVA art. 97 enumerates the
+    documents that support a deduction. Two standards for one legal rule is a
+    real divergence, and it is recorded rather than swept, because closing it
+    here would cost more than it buys.
+
+    Verify now blocks a deductible row lacking deduction-grade evidence, so no
+    revision finalized after that promotion can reach this gate carrying one.
+    Tightening this copy therefore changes behaviour only for revisions
+    finalized BEFORE it — and for those there is no way out: the bundle is
+    frozen and never recomputed, a finalized revision cannot be re-verified (the
+    idempotent guard returns the existing granting report), and recalculating
+    returns the same content-addressed revision because attaching an invoice
+    does not change any tax fact. That is a permanent dead end, which is the
+    failure class this surface's own campaign exists to close. An unreachable
+    divergence is the cheaper of the two.
+
+    The refusal message below says "purchase invoice evidence" while this test
+    accepts any attachment, which reads as an overclaim. It is not one in
+    practice: a row only reaches that message with NO evidence of any kind, and
+    an invoice is then exactly what the operator needs. The mismatch misleads a
+    reader of this file, not an operator, which is why it is answered with this
+    comment rather than a message change.
+    """
     return bool(row.purchase_invoice_evidence_id) or bool(row.attachment_ids)
 
 

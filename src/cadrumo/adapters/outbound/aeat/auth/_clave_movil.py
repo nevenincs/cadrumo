@@ -811,6 +811,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
             target_path=target_path,
             selector_url=selector_url,
             attempt_context=attempt_context,
+            storage_state_path=storage_state_path,
         )
 
         authenticated_at = now()
@@ -853,8 +854,18 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
         target_path: str,
         selector_url: str,
         attempt_context: dict[str, object],
+        storage_state_path: Path,
     ) -> tuple[BrowserContextLike, Mapping[str, object], str | None, str | None]:
-        """Drive the fresh Cl@ve Móvil login page to a captured storage state."""
+        """Drive the fresh Cl@ve Móvil login page to a captured storage state.
+
+        On failure the context is salvaged before it is closed. AEAT
+        presents its representation dialogue only after Cl@ve has
+        authenticated, so a failure at that point means the operator's
+        approval already succeeded and the context holds a live session -
+        and closing it unread was spending a second factor to recover from
+        a navigation error. The same is true of a landing wait that times
+        out after an approval AEAT has already processed.
+        """
         context: BrowserContextLike | None = None
         page: BrowserPageLike | None = None
         try:
@@ -883,6 +894,12 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
                     await self._dump_diagnostic(page, reason=f"fresh-login-exception:{type(exc).__name__}")
                 except Exception as _exc:
                     log.debug("ClaveMovilAuthProvider: diagnostic dump suppressed: %s", _exc, exc_info=True)
+            await self._salvage_session_before_teardown(
+                context,
+                storage_state_path=storage_state_path,
+                dni_nie=dni_nie,
+                page=page,
+            )
             context_closed = await self._close_context(context, reason="fresh-login cleanup")
             self._context = None if context_closed else context
             session_closed = await self._close_browser_session(session_like)
@@ -995,6 +1012,62 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
                 ),
             ) from exc
         return verification_code
+
+    async def _salvage_session_before_teardown(
+        self,
+        context: BrowserContextLike | None,
+        *,
+        storage_state_path: Path,
+        dni_nie: str,
+        page: BrowserPageLike | None,
+    ) -> None:
+        """Persist whatever session the failing context holds, if any.
+
+        Best-effort by construction: every failure here is logged and
+        swallowed so the original login error stays the one the caller
+        sees. Salvaging must never turn a diagnosable failure into a
+        confusing one.
+
+        A state carrying no cookies is not saved. That is a fact about the
+        capture rather than a guess about the operator: a context that
+        never reached an authenticated page has nothing to reuse, and
+        writing it would leave a record the reuse probe rejects at the
+        cost of a browser launch.
+
+        A salvaged session is NOT assumed usable. It is persisted so the
+        reuse path can judge it, and that path already probes before
+        trusting - an unusable one is rejected and the caller falls
+        through to a fresh login, which is exactly what happens today.
+        The upside is asymmetric: at worst a wasted probe, at best the
+        operator keeps the approval they already gave.
+        """
+        if context is None:
+            return
+        try:
+            storage_state = await context.storage_state()
+            cookies = storage_state.get("cookies") if isinstance(storage_state, Mapping) else None
+            if not cookies:
+                log.debug("ClaveMovilAuthProvider: nothing to salvage, captured state carries no cookies")
+                return
+            authenticated_at = now()
+            metadata = ClaveMovilSessionMetadata(
+                identity_nif=dni_nie,
+                authenticated_at=authenticated_at,
+                idle_deadline=authenticated_at + AEAT_SESSION_IDLE_TTL,
+                storage_state_sha256=_session_store.storage_state_sha256(storage_state),
+                used_non_qr_fallback=self._settings.cadrumo_clave_prefer_non_qr,
+                verification_code=None,
+                landing_url=getattr(page, "url", None),
+            )
+            self._persist_session(storage_state_path, storage_state=storage_state, metadata=metadata)
+        except Exception as exc:
+            log.debug(
+                "ClaveMovilAuthProvider: post-auth session salvage suppressed: %s",
+                exc,
+                exc_info=True,
+            )
+            return
+        log.info("ClaveMovilAuthProvider: salvaged the authenticated session from a failed post-auth navigation")
 
     async def _persist_fresh_session(
         self,

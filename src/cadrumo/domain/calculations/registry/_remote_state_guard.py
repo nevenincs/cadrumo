@@ -315,6 +315,10 @@ class RemoteStateGuardResult(RemoteStateGuardModel):
 def remote_state_policy_from_cross_reference(decision: LiveCrossReferenceDecision) -> RemoteStateGuardPolicy:
     """Build the executable remote-state guard policy for a registry cross-reference.
 
+    A policy built here admits exactly the hosts its own surface declares and
+    no sibling subdomains; see the note at the construction site for why the
+    host-suffix widening is deliberately not applied to every policy.
+
     Returns:
         The :class:`RemoteStateGuardPolicy` derived from the cross-reference decision.
     """
@@ -332,6 +336,18 @@ def remote_state_policy_from_cross_reference(decision: LiveCrossReferenceDecisio
         classification = "authenticated_read_surface"
     else:
         classification = "integration_test_service"
+    # ``allowed_host_suffixes`` is deliberately NOT set here. Its absence is a
+    # decision, not an omission -- an omission invites the next reader to
+    # complete it, and the completion is one line whose diff reads like a bug
+    # fix. Setting it would widen EVERY policy this builder produces to any
+    # subdomain under an AEAT apex, authenticated read surfaces included. A
+    # policy built here therefore admits exactly the hosts its own surface
+    # declares, and no siblings.
+    #
+    # This is not a prohibition: a surface whose reads genuinely span AEAT's
+    # numbered pool is entitled to that pool. Declare it on that surface's own
+    # ``allowed_hosts``, so the widening stays scoped to the surface measured
+    # to need it and every other policy stays as narrow as it was written.
     return RemoteStateGuardPolicy(
         id=decision.guard_policy_id,
         evidence_tier=evidence_tier,

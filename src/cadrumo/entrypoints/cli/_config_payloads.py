@@ -14,7 +14,14 @@ from typing import TYPE_CHECKING
 
 from pydantic import ConfigDict
 
+from ...application.wizard import ConfigProfileCreateResult as ConfigProfileCreateResult
+from ...application.wizard import ConfigProfileEditResult as ConfigProfileEditResult
 from ._schemas import OutputSchema, register_schema
+
+# LOAD-BEARING re-exports: `_ensure_result_schemas_registered` populates the
+# registry from ``*payload*`` modules under `_PAYLOAD_PACKAGES` only, and the
+# wizard module declaring these two schemas is under neither - without this import
+# both verbs drop off the MCP surface. `register_schema` is idempotent per class.
 
 if TYPE_CHECKING:
     from ...application.auth import AuthConfigureResult
@@ -782,14 +789,10 @@ class BucketHistoryResult(OutputSchema):
 
 # Profile wizard / lifecycle verb result schemas
 #
-# ``config.profile.create`` / ``config.profile.edit`` register in
-# :mod:`application.wizard._results`, not here: the wizard is their actual
-# producer, and it sits below this CLI package in the accepted hexagonal
-# direction, so it cannot construct a class defined up here. Registering the
-# schema at its real producer means constructing it IS the strict
-# validation, rather than a same-shaped pair of classes nothing ever
-# imports existing solely to satisfy the CLI-leaf-has-a-registered-schema
-# conformance gate.
+# ``config.profile.create`` / ``config.profile.edit`` are declared at their real
+# producer in :mod:`application.wizard._results`, which sits below this package in
+# the hexagonal direction and cannot construct a class defined up here. The
+# re-export at the top is what makes registry discovery reach them.
 
 
 @register_schema("config.profile.export")

@@ -48,7 +48,6 @@
     "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_registry_roles.py": 1383,
     "src/cadrumo/domain/transactions/_models.py": 1486,
     "src/cadrumo/entrypoints/cli/_app_live.py": 1361,
-    "src/cadrumo/entrypoints/cli/_config/__init__.py": 1261,
     "src/cadrumo/entrypoints/cli/_ledger_read_cli.py": 1320,
     "src/cadrumo/entrypoints/cli/_modelo.py": 1352,
     "src/cadrumo/entrypoints/cli/_modelo_payloads.py": 1377

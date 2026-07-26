@@ -152,7 +152,8 @@ def test_the_provenance_comparison_rejects_a_mismatch() -> None:
     the real marker must not resolve to the synthetic provenance, and the
     markers must be distinguishable in the first place.
     """
-    assert _marker("_REAL_MODELO_999_DECLARATION_COPY") == _REAL_MARKER
+    real_marker = _marker("_REAL_MODELO_999_DECLARATION_COPY")
+    assert real_marker == _REAL_MARKER
     assert _marker("_MODELO_999_SYNTHETIC_FIXTURE") == _SYNTHETIC_MARKER
     assert _marker("_MODELO_999_FIXTURE") is None
 
@@ -161,4 +162,4 @@ def test_the_provenance_comparison_rejects_a_mismatch() -> None:
     # The exact shape both historical defects took: a real-marked name over a
     # sidecar declaring generated output must be classified as a mismatch.
     declared = "synthetic_generated"
-    assert declared != _PROVENANCE_FOR_MARKER[_marker("_REAL_MODELO_999_DECLARATION_COPY")]
+    assert declared != _PROVENANCE_FOR_MARKER[real_marker]

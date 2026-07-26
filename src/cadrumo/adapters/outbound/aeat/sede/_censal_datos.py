@@ -516,14 +516,17 @@ async def fetch_censal_datos(
     return await _navigate_and_parse(storage_state, taxpayer_nif=taxpayer_nif, settings=settings)
 
 
-def censal_datos_url(taxpayer_nif: str, *, origin: str = _SEDE_ORIGIN) -> str:
+def censal_datos_url(taxpayer_nif: str, *, origin: str) -> str:
     """Build the censal consulta URL for one taxpayer against a resolved origin.
+
+    ``origin`` is required and has no default. It previously defaulted to the
+    unnumbered ``sede.`` origin, which let a caller build a URL against a host
+    that is not known to serve this route while believing it was the reader's
+    own address. The live read passes the host it read off the landed page.
 
     Args:
         taxpayer_nif: The authenticated taxpayer's own tax identifier.
-        origin: Scheme and host AEAT dispatched the session to. Defaults to
-            the unnumbered ``sede.`` origin; the live read passes the host it
-            read off the landed page rather than assuming a number.
+        origin: Scheme and host AEAT dispatched the session to.
 
     Returns:
         The absolute consulta URL, query-escaped.
@@ -590,6 +593,22 @@ async def _navigate_and_parse(
         )
 
 
+def landed_on_censal_path(landing_url: str) -> bool:
+    """Return whether a landing URL has arrived at the censal consulta path.
+
+    The single reader of this condition. The dispatch wait and the judgement
+    that follows it both consult this, so a wait that expires on a page which
+    did land cannot produce a different answer from the check that reports it.
+
+    Args:
+        landing_url: The URL currently loaded.
+
+    Returns:
+        ``True`` when the URL carries the censal consulta path.
+    """
+    return _CENSAL_PATH in landing_url
+
+
 async def _resolve_dispatched_origin(
     page: Any,
     *,
@@ -605,9 +624,18 @@ async def _resolve_dispatched_origin(
 
     The one control driven here is the selector's own authorize button, which
     is an authentication dispatch rather than a censal control; it is declared
-    in the policy's allowed browser actions. Falls back to the unnumbered
-    ``sede.`` origin when the selector does not dispatch, so the caller's own
-    landing guard still adjudicates the result.
+    in the policy's allowed browser actions. When the selector does not
+    dispatch, this REFUSES rather than degrading to the unnumbered origin —
+    see the raise site for why a fallback produced an illegible failure.
+
+    **Log contract**, because reading a live run depends on it. A ``host=``
+    record at info level is emitted on the resolved path only, and names the
+    host read off the landed page. It therefore establishes that the session
+    reached a numbered host — though not that the authorize click is what took
+    it there, which this function cannot observe. Its absence means the reader
+    either never ran or refused. Neither debug record says anything about
+    dispatch in either direction: one reports only that the wait expired, and
+    the other is the judgement of the landed page.
 
     Args:
         page: The Playwright page to drive.
@@ -616,6 +644,10 @@ async def _resolve_dispatched_origin(
 
     Returns:
         An origin string such as ``"https://www12.agenciatributaria.gob.es"``.
+
+    Raises:
+        SedeNavigationError: When the selector does not dispatch the session to
+            a host whose origin can be read off the landed page.
     """
     _assert_read_http("GET", _CENSAL_SELECTOR_URL)
     await browser_session.navigate(page, _CENSAL_SELECTOR_URL)
@@ -626,20 +658,47 @@ async def _resolve_dispatched_origin(
         await page.click(_EXTERNAL.aeat.clave_movil.authorize_button_selector)
         try:
             await page.wait_for_url(
-                lambda url: _CENSAL_PATH in url,
+                landed_on_censal_path,
                 timeout=settings.cadrumo_browser_navigation_timeout_ms,
             )
         except PlaywrightError:
+            # The wait expiring is a fact about the WAIT, never about the
+            # dispatch: the page can land correctly just outside the wait's
+            # window. Say only what happened, and let the single judgement
+            # below decide whether the dispatch arrived.
+            log.debug("censal selector wait expired; judging the landed page instead", exc_info=True)
+        await page.wait_for_load_state(PLAYWRIGHT_WAIT_DOMCONTENTLOADED)
+        # One reader of the condition, evaluated once, after the page settled.
+        if not landed_on_censal_path(getattr(page, "url", "") or ""):
             log.debug(
                 "censal selector dispatch did not reach the censal path; current_url=%s",
                 getattr(page, "url", None),
-                exc_info=True,
             )
-        await page.wait_for_load_state(PLAYWRIGHT_WAIT_DOMCONTENTLOADED)
 
     landed = urlsplit(getattr(page, "url", "") or "")
     if not landed.scheme or not landed.netloc:
-        return _SEDE_ORIGIN
+        # REFUSE rather than fall back to the unnumbered origin. This branch
+        # once degraded to that origin on the assumption it "may well serve
+        # the route"; a measurement on a sibling sede route found it returning
+        # a genuine 404 with a valid session, so the assumption does not hold
+        # in general and is unmeasured here. Worse, a fallback failure is
+        # ILLEGIBLE downstream: the 404 body carries no censal table, so it
+        # surfaces as a page-shape change blaming AEAT, or as a bad landing
+        # telling the operator to re-authenticate — two confidently wrong
+        # diagnoses for one dispatch failure. Refusing here names the actual
+        # cause at the point it occurred.
+        raise SedeNavigationError(
+            "AEAT censal access selector did not dispatch the session to a numbered sede host, "
+            "so no origin could be read off the landed page. The read is refused rather than "
+            "retried against the unnumbered origin, which is not known to serve this route.",
+            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+            translated_message=tr("adapters.sede.errors.censal_no_dispatch"),
+            context={"selector_url": _CENSAL_SELECTOR_URL, "landing_url": getattr(page, "url", None)},
+            suggestion=(
+                "Re-authenticate (run `aeat config auth status`) and retry. If the selector keeps "
+                "failing to dispatch, AEAT may be serving a maintenance interstitial; retry later."
+            ),
+        )
     origin = f"{landed.scheme}://{landed.netloc}"
     # A dispatch off the AEAT apex must not become the origin we then request.
     _assert_read_http("GET", f"{origin}{_CENSAL_PATH}")
@@ -745,5 +804,6 @@ __all__ = [
     "fetch_censal_datos",
     "forbidden_censal_landing_marker",
     "is_forbidden_censal_landing",
+    "landed_on_censal_path",
     "parse_censal_datos",
 ]

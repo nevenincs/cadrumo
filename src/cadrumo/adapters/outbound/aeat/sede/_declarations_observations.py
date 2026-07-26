@@ -99,6 +99,17 @@ _M303_DISPONIBLE_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-dispo
 _M303_POSTERIOR_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
 _M303_RESULTADO_CASILLA: Final[CasillaId] = _casilla_id("iva.resultado")
 _M303_GENERADA_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-generada-periodo")
+# This URL is never requested. Only its HOSTNAME is read, and it is a LOOKUP
+# KEY: _read_guard_policy_from_snapshot below matches it against the registry's
+# declared allowed_hosts for the declarations read surface and requires exactly
+# one match, so this constant selects the safety policy every capture runs
+# under. Point it at a different host, or make it follow the host a navigation
+# actually landed on, and the lookup matches zero declarations and raises --
+# failing every capture at the guard's own resolution step rather than
+# degrading. The reader in _declarations.py builds the same string from the
+# same two constants for its navigation; that copy is the one that is merely a
+# URL. Changing either alone silently separates where a read goes from which
+# policy adjudicates it.
 _LISTING_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.declarations_listing}"
 
 type FiledDeclaracionArtefactSink = Callable[

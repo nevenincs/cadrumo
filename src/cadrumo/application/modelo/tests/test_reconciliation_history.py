@@ -38,10 +38,12 @@ from ...workflow import workflow_state_repository
 from .._reconcile import (
     ModeloReconciliationCommand,
     ModeloReconciliationEvidenceKind,
-    ModeloReconciliationHistoryEntry,
     ModeloReconciliationVerdict,
-    list_modelo_reconciliations,
     modelo_reconcile,
+)
+from .._reconciliation_records import (
+    ModeloReconciliationHistoryEntry,
+    list_modelo_reconciliations,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

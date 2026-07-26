@@ -137,6 +137,7 @@ from ._iva_wallet_gate import (
 from ._iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
 )
+from ._ledger_drift_gate import ledger_drift_findings
 from ._m210_agrupacion_renta import m210_agrupacion_renta_verification_findings
 from ._m210_convenio_lob_advisory import _m210_convenio_lob_advisory_finding
 from ._m303_m349_reconcile import m303_m349_intracom_reconcile_findings
@@ -393,11 +394,21 @@ def _missing_evidence_findings(
     projects each
     :class:`~cadrumo.application.aggregation.CalculationSourceDiagnostic`
     (reason ``missing_transaction_evidence``) into a
-    :class:`ModeloVerificationFinding`. Deductible input-IVA and output-IVA gaps
-    remain advisory on the verify path. A revision with no contributing
-    transactions, or whose significant rows all carry evidence, yields no
-    findings. Later filing/export finish lines may still refuse unsupported
-    deductible IVA.
+    :class:`ModeloVerificationFinding`. A deductible input-IVA gap BLOCKS the
+    verified-complete transition; an output-IVA gap stays advisory. A revision
+    with no contributing transactions, or whose significant rows all carry
+    evidence, yields no findings.
+
+    The split is deliberate and legally grounded rather than a severity
+    preference. Deducting input IVA requires the original factura, so a
+    deductible row without one is not a filing the operator may complete. Output
+    IVA has no equivalent constitutive requirement and no CLI path that mints
+    issued-invoice evidence, so blocking it would refuse a taxpayer who has no
+    way to comply.
+
+    Blocking here is what keeps the export and local-filing refusals on the same
+    condition unreachable rather than merely later: they remain in place as
+    defence in depth over a state this gate no longer lets form.
     """
     if not target.source_transaction_ids:
         return []
@@ -415,13 +426,43 @@ def _missing_evidence_findings(
         is_deductible_gap = diagnostic.source_kind == MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND
         findings.append(
             ModeloVerificationFinding(
-                kind=ModeloVerificationFindingKind.ADVISORY,
-                severity=ModeloVerificationFindingSeverity.WARNING,
+                # The deductible side BLOCKS here; the output-IVA side stays advisory.
+                # One condition was previously classified two ways at two lifecycle
+                # points: advisory at verify, which grants and freezes a gap-carrying
+                # bundle, then a hard refusal at export and at local filing. Blocking
+                # at verify is what makes those later refusals unreachable rather than
+                # merely later -- a non-granting verify captures no bundle and leaves
+                # the revision BORRADOR, so the operator can attach the invoice and
+                # re-verify, which is exactly what next_action tells them to do.
+                # LIVA art. 97 makes the factura constitutive of the right to deduct,
+                # so the evidence-free escape hatch the governing evidence-enforcement
+                # decision required before promoting a category is closed on this side.
+                # It is NOT closed for output IVA: no CLI path mints issued-invoice
+                # evidence, so promoting that side would over-block a taxpayer who has
+                # no way to satisfy it.
+                kind=(
+                    ModeloVerificationFindingKind.BLOCKING_RULE
+                    if is_deductible_gap
+                    else ModeloVerificationFindingKind.ADVISORY
+                ),
+                severity=(
+                    ModeloVerificationFindingSeverity.BLOCKING
+                    if is_deductible_gap
+                    else ModeloVerificationFindingSeverity.WARNING
+                ),
                 message=diagnostic.message,
                 next_action=(
+                    # Two routes out, and they do NOT share a next step. Attaching
+                    # the invoice is value-neutral, so re-verifying the same draft
+                    # is correct. Reclassifying the row changes what the casillas
+                    # should say, so the draft is stale and verify will refuse it
+                    # until a recalculate produces a revision that matches the
+                    # ledger. Naming only "rerun verification" sent the operator
+                    # who took the second route straight into that refusal.
                     f"Register the supplier invoice with `aeat app ledger evidence add PATH`, attach it with "
                     f"`aeat app ledger attach {diagnostic.binding_id} --purchase-invoice-evidence-id EVIDENCE_ID`, "
-                    "then rerun verification."
+                    "then rerun verification. If instead you reclassify the row to drop the deduction, "
+                    "recalculate before verifying."
                     if is_deductible_gap
                     else (
                         f"Advisory only: keep issued/sales invoice support for ledger row {diagnostic.binding_id}. "
@@ -502,6 +543,17 @@ def _collect_verification_gate_findings(
             target=target,
             work_unit=work_unit,
             transaction_repository=transaction_repository,
+        ),
+    )
+    # Runs beside the evidence gate, not inside it: that gate reads the live
+    # ledger while the casilla values come from the stored draft, and this is
+    # what refuses the case where those two views have drifted apart.
+    findings.extend(
+        ledger_drift_findings(
+            target=target,
+            work_unit=work_unit,
+            transaction_repository=transaction_repository,
+            source_refs=_optional_observation_refs(target.observations, "source_refs"),
         ),
     )
     return findings, resolved_casilla_ids, missing_required_casilla_ids

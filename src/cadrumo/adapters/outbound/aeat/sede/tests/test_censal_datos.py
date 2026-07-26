@@ -13,11 +13,13 @@ rather than a hypothetical one.
 
 from __future__ import annotations
 
+import inspect
 from datetime import date
 
 import pytest
 
 from ......core.config import Settings
+from ......core.i18n import tr
 from ......tests import FIXTURES_DIR
 from ......tests.aeat_literal_fixtures import (
     CENSAL_WRITE_SURFACE_PATH_CANARIES,
@@ -29,12 +31,14 @@ from .._censal_datos import (
     CensalDatosResult,
     _assert_read_http,
     _assert_read_landing,
+    _resolve_dispatched_origin,
     censal_datos_url,
     forbidden_censal_landing_marker,
     is_forbidden_censal_landing,
+    landed_on_censal_path,
     parse_censal_datos,
 )
-from .._errors import SedeNavigationError, SedeParseError
+from .._errors import SedeFailureMode, SedeNavigationError, SedeParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -230,7 +234,7 @@ class TestNoWriteSurface:
         for landing in _REAL_WRITE_LANDINGS:
             assert is_forbidden_censal_landing(landing)
             assert forbidden_censal_landing_marker(landing) is not None
-        safe = censal_datos_url("Y0000001Z")
+        safe = censal_datos_url("Y0000001Z", origin=_AEAT.domains.sede)
         assert not is_forbidden_censal_landing(safe)
         assert forbidden_censal_landing_marker(safe) is None
 
@@ -240,7 +244,7 @@ class TestNoWriteSurface:
         Pairs with the refusal cases above: a guard that refused everything
         would make those assertions meaningless.
         """
-        _assert_read_landing(censal_datos_url("Y0000001Z"))
+        _assert_read_landing(censal_datos_url("Y0000001Z", origin=_AEAT.domains.sede))
 
     def test_read_guard_refuses_a_write_method(self) -> None:
         """No censal navigation may use a mutating HTTP method."""
@@ -276,6 +280,62 @@ class TestNoWriteSurface:
         pinned = [name for name in ("www1", "www2", "www3", "www6", "www12") if f"domains.{name}" in source]
 
         assert pinned == []
+
+    def test_dispatch_predicate_recognises_the_censal_landing(self) -> None:
+        """The wait and the judgement that follows it read one condition.
+
+        They previously disagreed: a wait expiring on a page that HAD landed
+        made the reader log a dispatch failure, which reads as the fallback
+        having fired when it had not.
+        """
+        assert landed_on_censal_path(censal_datos_url("Y0000001Z", origin=_AEAT.domains.sede))
+        assert landed_on_censal_path(aeat_url("www6", _AEAT.sede_paths.censal_datos))
+        assert not landed_on_censal_path(f"{_AEAT.domains.sede}{_AEAT.sede_paths.expedientes_resumen}")
+        assert not landed_on_censal_path("")
+
+    def test_dispatch_predicate_is_host_agnostic(self) -> None:
+        """The landing judgement keys on the path, so any dispatch host counts."""
+        for origin in ("www1", "www2", "www6", "www12"):
+            assert landed_on_censal_path(aeat_url(origin, _AEAT.sede_paths.censal_datos))
+
+    def test_url_builder_requires_an_explicit_origin(self) -> None:
+        """No caller may build a censal URL against an assumed host.
+
+        The origin once defaulted to the unnumbered sede origin, which let a
+        caller address a host that is not known to serve this route while
+        believing it was the reader's own address.
+        """
+        import inspect
+
+        origin = inspect.signature(censal_datos_url).parameters["origin"]
+
+        assert origin.default is inspect.Parameter.empty
+
+    def test_dispatch_failure_refuses_rather_than_degrading(self) -> None:
+        """A selector that does not dispatch is refused, not retried elsewhere.
+
+        Falling back to the unnumbered origin produced an illegible failure:
+        that origin returns a genuine 404 on a sibling sede route, and a 404
+        body carries no censal table, so the dispatch failure resurfaced as a
+        page-shape change blaming AEAT or as a prompt to re-authenticate.
+        """
+        source = inspect.getsource(_resolve_dispatched_origin)
+
+        assert "return _SEDE_ORIGIN" not in source
+        assert "SedeNavigationError" in source
+
+    def test_dispatch_refusal_names_its_cause_and_is_localised(self) -> None:
+        """The refusal must be legible: a typed failure mode and a translated message."""
+        with pytest.raises(SedeNavigationError) as excinfo:
+            raise SedeNavigationError(
+                "probe",
+                failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+                translated_message=tr("adapters.sede.errors.censal_no_dispatch"),
+            )
+
+        assert excinfo.value.failure_mode == "live_navigation_failed"
+        assert excinfo.value.translated_message
+        assert "adapters.sede.errors" not in excinfo.value.translated_message
 
     def test_module_exposes_no_submitting_operation(self) -> None:
         """The public surface offers navigation and parsing only."""

@@ -723,9 +723,32 @@ def _printed_box_numbers(
 
     Feeds :func:`_is_own_box_number_of_blank_box`, which needs to recognise the
     token a BLANK box leaves behind. Unlike :func:`_numeric_casilla_anchors` this
-    is lenient: a target whose id is not a canonical casilla in ``revision``
-    simply has no box number to compare against, and is left unguarded rather
-    than refused.
+    is lenient: a target whose printed number the registry does not record simply
+    has no box number to compare against, and is left unguarded rather than
+    refused.
+
+    The printed number is ``form_number``. ``number`` is reviewed AEAT
+    record-design metadata answering a different question, and it coincides with
+    the printed number only when the casilla id is itself numeric -- so reading
+    it worked by accident for numerically-named casillas and failed silently for
+    semantically-named ones, whose ``number`` is an id string or a fichero-BOE
+    positional range that no captured token can ever equal. Those targets were
+    therefore unguarded, and a blank box returned its own printed number as a
+    monetary value.
+
+    ``number`` is still accepted as a fallback, but only when it is a plausible
+    printed box number, so the accidental agreement that carried the numerically
+    named casillas keeps working without re-admitting the record-design strings
+    that caused the defect.
+
+    A target whose printed number is unknown stays UNGUARDED rather than failing
+    closed on a bare-integer token. Failing closed was measured against the
+    corpus and would refuse genuine values: the informativa perceptor counts
+    (``3``, ``2``, ``5``), an explicit zero in a rectificaciones box, and the
+    ``ejercicio`` year, none of which are box numbers. Refusing those would trade
+    one fabricated value for a different one, so the remaining unguarded targets
+    are recorded as an evidence gap to be closed by populating ``form_number``,
+    not papered over here.
     """
     revision_casillas_by_id = casillas_by_id(revision)
     numbers: dict[CasillaId, str] = {}
@@ -733,8 +756,13 @@ def _printed_box_numbers(
         if target.match_strategy != "named_label":
             continue
         casilla = revision_casillas_by_id.get(target.casilla_id)
-        if casilla is not None and casilla.number:
-            numbers[target.casilla_id] = casilla.number
+        if casilla is None:
+            continue
+        printed = casilla.form_number or None
+        if printed is None and casilla.number and casilla.number.strip().isdigit():
+            printed = casilla.number
+        if printed:
+            numbers[target.casilla_id] = printed
     return numbers
 
 

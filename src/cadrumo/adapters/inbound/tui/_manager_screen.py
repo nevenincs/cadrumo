@@ -135,6 +135,13 @@ class ProfileManagerApp(App[None]):
         background: $surface;
         color: $text-muted;
     }
+    #manager-notice {
+        dock: top;
+        height: auto;
+        width: 100%;
+        padding: 0 2;
+        color: $error;
+    }
     .manager-section DataTable { height: auto; width: 100%; background: $surface; }
     #manager-actions { height: auto; width: 100%; }
     #manager-actions Button { margin: 0 2 0 0; }
@@ -189,6 +196,7 @@ class ProfileManagerApp(App[None]):
     def compose(self) -> ComposeResult:
         yield Static(id="manager-banner", classes="cadrumo-banner")
         yield Static(id="manager-progress")
+        yield Static(id="manager-notice")
         with ContentScroll(id="manager-body", classes="cadrumo-scroll"), Vertical(classes="cadrumo-column"):
             if self._actions:
                 with Vertical(id="manager-actions-panel", classes="cadrumo-panel"):
@@ -213,6 +221,7 @@ class ProfileManagerApp(App[None]):
 
     def _render(self) -> None:
         """Rebuild the progress line and every section table from the overview."""
+        self.query_one("#manager-notice", Static).update("")
         self.query_one("#manager-progress", Static).update(
             tr(
                 "flows.manager.progress",
@@ -267,14 +276,36 @@ class ProfileManagerApp(App[None]):
         def _apply(value: str | None) -> None:
             if value is None:
                 return
+            # A blank submission is a CLEAR downstream, so on a required
+            # field it asks to remove something the schema says must be
+            # there. Refuse at the box rather than letting the write door
+            # raise: dismissing the dialog is how "leave this alone" is
+            # expressed, and an empty box is not that.
+            if field.required and not value.strip():
+                self._notify(tr("flows.manager.edit.required_blank", field=field.label))
+                return
             self._persist(field.path, value)
 
         return _apply
 
     def _persist(self, path: str, value: str) -> None:
-        """Write one field through the injected door and re-render."""
-        self.overview = self._persist_field(path, value)
+        """Write one field through the injected door and re-render.
+
+        A refusal is reported in the notice line rather than raised, for
+        the same reason the action buttons catch: the operator is mid-page
+        and an exception would take the whole screen down over one
+        rejected value.
+        """
+        try:
+            self.overview = self._persist_field(path, value)
+        except Exception as refusal:
+            self._notify(str(refusal))
+            return
         self._render()
+
+    def _notify(self, message: str) -> None:
+        """Show one refusal above the tables until the next successful edit."""
+        self.query_one("#manager-notice", Static).update(message)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Run the pressed action and report what it did.

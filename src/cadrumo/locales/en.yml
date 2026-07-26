@@ -261,6 +261,8 @@ adapters:
         and retry.
       censal_modification_surface: The AEAT censal read was refused because it landed
         on a modification page; this reader never changes censal data.
+      censal_no_dispatch: The AEAT access selector did not open the censal page on
+        a working server; re-authenticate and try again.
       cotejo_nav_failed: Navigation to the AEAT cotejo page failed; session may have
         expired mid-walk. Run 'aeat config auth test' and retry.
       ejercicio_unavailable: The AEAT declarations register does not offer the requested
@@ -548,6 +550,9 @@ application:
           read. Run `aeat config auth logout` and then `aeat config auth test`.
         no_session: No active AEAT session; run `aeat config auth test` before reading
           AEAT data.
+        profile_identity_cleared: Live AEAT authentication needs the active profile's
+          fiscal ID, and this profile has none. Restore identity.tax_id on the profile,
+          then authenticate again.
         profile_tax_id_missing: Cl@ve Móvil live auth requires the active profile
           to carry identity.tax_id.
         provider_close_failed: AEAT browser session could not be closed safely; retry
@@ -894,9 +899,9 @@ application:
       cross_period_clean_state_incomplete: Cross-period clean-state proof is incomplete
         for modelo {modelo} {filing_year} {period}; {finding_count} finding(s) remain.
       deductible_vat_evidence_missing: 'Deductible IVA ledger rows require linked
-        purchase invoice evidence before this action. Link the invoice to the ledger
-        row BEFORE running work calculate: a draft bundles its evidence when you verify
-        it, so an invoice attached after that does not reach this filing.'
+        purchase invoice evidence. Link the invoice to the ledger row, then run work
+        verify again: verification refuses to complete while a deductible row has
+        no invoice, so the draft is still open and picks the evidence up.'
       export_cross_bucket_refused: The addressed revision belongs to a bucket other
         than the active profile bucket. Switch profile before exporting.
       export_draft_approval_failed: Could not approve the draft for calculation revision
@@ -1392,6 +1397,12 @@ application:
         profile identity does not match the secure record.'
       aggregate_status_mismatch: 'Profile storage is inconsistent: the manifest lifecycle
         status does not match the secure record.'
+      censal_read_identity_absent: The censal read carried no tax identity, so it
+        cannot be confirmed to belong to this profile.
+      censal_read_identity_cleared: This profile's fiscal ID was cleared, so a censal
+        read cannot be confirmed to belong to it. Restore the fiscal ID and pull again.
+      censal_read_identity_mismatch: The censal read belongs to a different taxpayer
+        than this profile; it was not applied.
       duplicate_tax_id: Tax id '%{tax_id}' is already used by profile '%{profile}';
         one taxpayer must have one profile.
       lifecycle_profile_already_exists: A profile already exists in the active bucket.
@@ -1440,8 +1451,7 @@ application:
         is newer than this application supports.
       unsupported_bundle_schema_version: The bundle schema version is not supported
         by this application version.
-      censal_read_identity_absent: 'The censal read carried no tax identity, so it cannot be confirmed to belong to this profile.'
-      censal_read_identity_mismatch: 'The censal read belongs to a different taxpayer than this profile; it was not applied.'
+      censal_read_identity_unset: 'Record your fiscal ID before pulling your census: this profile has none yet, so the pull cannot confirm the record AEAT returns is yours. Run aeat config profile edit to add it.'
     notices:
       censo_divergences_open: '{count} profile field(s) still diverge from the Certificado
         de Situación Censal and remain unresolved: {axes}.'
@@ -3366,10 +3376,11 @@ cli:
           with --apply to enroll these facts.'
         pull_verified_tier_notice: These facts were read from AEAT itself, so the
           censo enrolment counts as verified.
+        pull_withheld_notice: 'The values for {count} field(s) are withheld from output:
+          {axes}. Compare them yourself against AEAT; this tool will not print them.'
         refresh_help: Download the latest censo from AEAT and save a snapshot
         show_help: Show the latest censo AEAT reported for this profile
         snapshot_id_help: Specific snapshot id (prefixes accepted)
-        pull_withheld_notice: 'The values for {count} field(s) are withheld from output: {axes}. Compare them yourself against AEAT; this tool will not print them.'
       create_epilog: 'Minimal freelancer profile: --entity-type natural_person --tax-id
         <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
       create_help: Initialize a new active profile.
@@ -5774,6 +5785,7 @@ errors:
     bootstrap_already_complete: Secure storage bootstrap is already complete. Use
       aeat config login NAME to activate an existing profile or aeat config profile
       create NAME to add another profile.
+    censal_read_identity: The censal read does not belong to this profile's taxpayer.
     clave_credentials_incomplete: The selected Cl@ve authentication mode is missing
       a credential it needs.
     ledger_preflight: Ledger preflight rejected the modelo run because it is not yet
@@ -6112,7 +6124,6 @@ errors:
     submission_preflight_error_findings: Draft has {finding_count} ERROR-severity
       finding(s); resolve them before submission.
     unsupported_currency: The currency code provided is not supported.
-    censal_read_identity: 'The censal read does not belong to this profile''s taxpayer.'
   snapshot:
     ambiguous_revision_selection: 'More than one registry revision matches modelo
       %{modelo_id}: %{candidate_ids}.'
@@ -6218,6 +6229,8 @@ flows:
       censal_pull: Fill in from AEAT censal data
       censal_pull_auth_incomplete: Your identification is incomplete, so AEAT cannot
         be read yet. Complete it first.
+      censal_pull_cleared: 'AEAT still holds a value for the fields you cleared: %{paths}.
+        They were left empty; clearing here does not change AEAT''s record.'
       censal_pull_contested: 'AEAT differs from what you declared at: %{paths}. Your
         answer stands; resolve each one yourself.'
       censal_pull_done: 'AEAT censal data read: %{adopted} field(s) filled in, %{unchanged}
@@ -6235,7 +6248,6 @@ flows:
         certificate: Electronic certificate
         clave_movil: Cl@ve Móvil
         clave_permanente: Cl@ve Permanente
-      censal_pull_cleared: 'AEAT still holds a value for the fields you cleared: %{paths}. They were left empty; clearing here does not change AEAT''s record.'
     actions:
       section: Actions
     column:
@@ -6245,6 +6257,7 @@ flows:
     edit:
       cancel: Cancel
       save: Save
+      required_blank: '{field} is required, so it cannot be left blank. Enter a value, or cancel to leave it unchanged.'
     progress: '{present} of {total} fields filled in, {missing} still needed for filing'
     section_title: '{title} — {present}/{total}'
     title: 'Profile: {profile}'

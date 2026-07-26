@@ -117,13 +117,21 @@ def _resolve_condition(
     return parent.profile_key, condition.equals
 
 
-def _register_compiled_keys() -> None:
-    """Register compiled PROFILE_KEYS into the domain registry at import time.
+def ensure_profile_keys_registered() -> None:
+    """Register compiled PROFILE_KEYS into the domain registry, idempotently.
 
-    Called once when this module is first imported. The domain's
-    :func:`~cadrumo.domain.contribuyente._keys.register_profile_keys` receives the
-    compiled tuple so the domain layer never needs to import application
-    modules to populate its registry.
+    Called once when this module is first imported, so importing the wizard
+    package is sufficient to seed the registry. It is also the public seam an
+    entrypoint calls at its own initialisation, because the domain registry is
+    process-global and the domain layer may not pull upward to seed itself
+    (DB-17): a host that never imports this package would otherwise read an
+    empty registry and raise
+    :class:`~cadrumo.domain.contribuyente.ProfileKeysRegistrationError`.
+
+    Repeat calls are no-ops:
+    :func:`~cadrumo.domain.contribuyente._keys.register_profile_keys` returns
+    early when the compiled tuple equals the registered one, so an entrypoint
+    may call this unconditionally without ordering knowledge.
     """
     from ...domain.contribuyente import register_profile_keys
     from . import _catalogue  # local import to avoid circular dependency at module level
@@ -131,6 +139,6 @@ def _register_compiled_keys() -> None:
     register_profile_keys(compile_profile_keys(_catalogue.WIZARD_FLOWS))
 
 
-_register_compiled_keys()
+ensure_profile_keys_registered()
 
 __all__ = ["compile_profile_keys"]

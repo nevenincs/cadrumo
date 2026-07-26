@@ -32,6 +32,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...adapters.persistence.storage import StorageValidationError
 from ...agent import iter_personas, operator_rules_text
 from ...application.user_profile import TAX_ID_FACT_PATH
+from ...application.wizard import ensure_profile_keys_registered
 from ...application.workflow import assess_active_profile_health_with_session, read_profile_bucket_by_id
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...core.i18n import tr
@@ -263,7 +264,16 @@ def build_whoami_identity() -> WhoamiIdentity:
     absent or unreadable profile (it returns a degraded status), and label
     resolution is guarded, so this read-only identity probe is safe to call on
     every session and before every mutation.
+
+    The health assessment counts the process-global profile-key registry, which
+    the domain layer cannot seed for itself, so this function seeds it through
+    :func:`~application.wizard.ensure_profile_keys_registered` before reading.
+    The call is idempotent and deliberately made here rather than left to the
+    caller: this probe is reached both through the server handlers and directly,
+    so depending on an initialisation order the caller must remember is what
+    made a real server answer every identity call with a registration error.
     """
+    ensure_profile_keys_registered()
     health = assess_active_profile_health_with_session()
     label: str | None = None
     if health.active_profile is not None:

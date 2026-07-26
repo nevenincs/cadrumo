@@ -25,13 +25,9 @@ from ....core.json_contract import NoticeSeverity as _NoticeSeverity
 from ....core.logging import get_logger as _get_logger
 from ....core.wizard_catalogue import get_setup_flow as _get_setup_flow
 from .._command_suggestions import CadrumoTyperGroup as _CadrumoTyperGroup
-from .._command_suggestions import LazySubcommand as _LazySubcommand
-from .._command_suggestions import register_lazy_subcommand as _register_lazy_subcommand
 from .._common import _emit_envelope, _no_active_profile_refusal
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
-from .._errors import command_error_boundary as _command_error_boundary
-from .._errors import decorate_typer_app as _decorate_typer_app
 from ._apoderado import apoderado_app, register_apoderado_commands
 from ._auth import auth_app
 from ._auth_diagnostics import auth_diagnostics_app
@@ -43,6 +39,7 @@ from ._collab import register_collab_commands
 from ._custody import register_custody_commands
 from ._descendiente import register_descendiente_commands
 from ._errors import ConfigBoundaryError as _ConfigBoundaryError
+from ._manager_dispatch import register_lazy_wizard_leaf
 from ._profile_bundle import register_profile_bundle_commands
 from ._profile_readiness import (
     _emit_profile_record_missing,
@@ -56,11 +53,8 @@ from ._sandbox import register_sandbox_commands
 from ._status_rendering import unavailable_profile_record_status as _unavailable_profile_record_status
 
 if TYPE_CHECKING:
-    from typing import Literal
-
     from ....application.workflow import ProfileBucketPointer as _ProfileBucketPointer
 
-    _WizardPersistMode = Literal["create", "edit"]
 
 _log = _get_logger(__name__)
 
@@ -856,181 +850,7 @@ def config_profile_duplicate(
     )
 
 
-# `create` and `edit` are two closures off the same wizard flow,
-# each bound to its verb. The `create` closure refuses a name that
-# already has a manifest; the `edit` closure refuses a name that has
-# none. The verb — not a runtime-detected pointer — is the authority
-# for the create-vs-edit branch.
-#
-# Both are registered as per-LEAF lazy subcommands rather than built at
-# package-import time. `build_wizard_command` reaches
-# `application.wizard` -> `application.workflow` -> `application.filing`
-# -> the justificante PDF adapter, so constructing these two closures
-# eagerly made every other `config` verb — `login` included — pay for the
-# wizard's whole dependency tail before parsing its own arguments.
-# Deferring only the *import* would not have helped: the closures were
-# CONSTRUCTED at module level, so the call kept the tail eager. The
-# construction itself has to move behind the resolution boundary, which
-# is what `LazySubcommand` already provides for groups; `profile` is a
-# `CadrumoTyperGroup`, so the same machinery serves a leaf.
-def _with_manager_frontend(wizard_command, *, mode: _WizardPersistMode):
-    """Divert the INTERACTIVE arm of a profile verb onto the manager.
-
-    ``create`` and ``edit`` serve two audiences through one verb. A script
-    or an agent passes field flags (or ``--quiet`` / ``--accept-defaults``)
-    and wants a JSON envelope with no screen; an operator at a terminal
-    wants their whole profile on one page, every field editable, nothing
-    gated. Only the second arm is diverted here — the scripted path keeps
-    the wizard, its flags, and its documented contract untouched.
-
-    A profile name on the command line does NOT send ``create`` back to the
-    flow: it prefills the registration screen's name field. Routing on it
-    was a mistake -- ``config profile create NAME`` is the documented usage,
-    so it meant the operator met the old paged flow every time and the new
-    surface was effectively unreachable.
-    """
-    import functools
-
-    @functools.wraps(wizard_command)
-    def _dispatch(*args: object, **kwargs: object):
-        from ._manager_frontend import (
-            host_can_run_full_screen,
-            manager_is_the_right_frontend,
-            present_profile_manager,
-            present_registration,
-        )
-
-        if not manager_is_the_right_frontend(
-            mode=mode,
-            scripted=bool(kwargs.get("quiet")) or bool(kwargs.get("accept_defaults")),
-            explicit_fields=any(
-                value is not None
-                for key, value in kwargs.items()
-                if key not in {"ctx", "profile_name", "quiet", "accept_defaults"}
-            ),
-            full_screen=host_can_run_full_screen(),
-        ):
-            return wizard_command(*args, **kwargs)
-
-        ctx = kwargs.get("ctx")
-        if not isinstance(ctx, typer.Context):
-            # No Typer context to emit an envelope through; the wizard owns
-            # its own output path, so hand the call straight back rather
-            # than rendering a manager whose result could not be reported.
-            return wizard_command(*args, **kwargs)
-        if mode == "create":
-            supplied = kwargs.get("profile_name")
-            outcome = present_registration(
-                suggested_name=supplied if isinstance(supplied, str) else None,
-            )
-            if outcome is None:
-                _emit_registration_abandoned(ctx)
-                return None
-            present_profile_manager(label=outcome.label)
-            _emit_manager_closed(ctx, outcome.label, created=True)
-            return None
-
-        present_profile_manager()
-        _emit_manager_closed(ctx, _active_profile_label(), created=False)
-        return None
-
-    return _dispatch
-
-
-def _active_profile_label() -> str:
-    """The active profile's operator-facing label, for the closing envelope."""
-    from ....application.user_profile import ProfileRepository
-    from ....core import require_active_bucket_id
-
-    return ProfileRepository().load(require_active_bucket_id()).label
-
-
-def _emit_registration_abandoned(ctx: typer.Context) -> None:
-    """Report a registration the operator left without completing.
-
-    Not an error: leaving the first screen without creating a profile is an
-    ordinary choice, so it emits a success envelope carrying an info notice
-    rather than a refusal.
-    """
-    from ....application.wizard import ConfigProfileCreateResult
-
-    _emit_envelope(
-        ctx,
-        command="config.profile.create",
-        result=ConfigProfileCreateResult(profile_name="", status="abandoned"),
-        lines=[tr("cli.config.profile.registration_abandoned")],
-        notices=[
-            _Notice(
-                code="PROFILE_REGISTRATION_ABANDONED",
-                severity=_NoticeSeverity.INFO,
-                message=tr("cli.config.profile.registration_abandoned"),
-            ),
-        ],
-    )
-
-
-def _emit_manager_closed(ctx: typer.Context, label: str, *, created: bool) -> None:
-    """Report the manager session, naming the profile it operated on.
-
-    The manager persists every edit as it is made, so this envelope closes
-    the session rather than committing it — by the time it renders, the
-    record already holds whatever the operator changed.
-    """
-    from ....application.wizard import ConfigProfileCreateResult, ConfigProfileEditResult
-
-    message = tr(
-        "cli.config.profile.manager_closed_created" if created else "cli.config.profile.manager_closed",
-        profile=label,
-    )
-    result = (
-        ConfigProfileCreateResult(profile_name=label, status="created", active_profile=label)
-        if created
-        else ConfigProfileEditResult(profile_name=label, status="updated")
-    )
-    _emit_envelope(
-        ctx,
-        command="config.profile.create" if created else "config.profile.edit",
-        result=result,
-        lines=[message],
-        notices=[
-            _Notice(
-                code="PROFILE_MANAGER_CLOSED",
-                severity=_NoticeSeverity.INFO,
-                message=message,
-            ),
-        ],
-    )
-
-
-def _register_lazy_wizard_leaf(name: str, mode: _WizardPersistMode, **command_kwargs: object) -> None:
-    """Register the `profile` wizard verb `name` as a deferred leaf.
-
-    The factory returns a single-command Typer carrying no callback, which
-    Typer materialises as a plain :class:`click.Command` rather than a
-    group — so the leaf resolves exactly as an eagerly-registered one,
-    having imported the wizard only when the operator asks for it.
-    """
-
-    def _factory() -> typer.Typer:
-        from ....application.wizard import build_wizard_command
-
-        leaf = typer.Typer()
-        # KWARGS-ANY-RATIONALE-TYPER-COMMAND: `command_kwargs` carries the
-        # help/epilog Typer passthrough captured at registration.
-        leaf.command(name, **command_kwargs)(  # type: ignore[arg-type]
-            _command_error_boundary(
-                _with_manager_frontend(
-                    build_wizard_command(_get_setup_flow(), mode=mode),
-                    mode=mode,
-                ),
-            ),
-        )
-        return leaf
-
-    _register_lazy_subcommand("profile", _LazySubcommand(name, _factory, decorate=_decorate_typer_app))
-
-
-_register_lazy_wizard_leaf(
+register_lazy_wizard_leaf(
     "create",
     "create",
     help=tr(
@@ -1048,7 +868,7 @@ _register_lazy_wizard_leaf(
 )
 
 
-_register_lazy_wizard_leaf(
+register_lazy_wizard_leaf(
     "edit",
     "edit",
     help=tr(

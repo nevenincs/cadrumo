@@ -13,6 +13,8 @@ import base64
 from datetime import datetime
 from pathlib import Path
 
+from pydantic import ValidationError
+
 from .....core import parse_toml_text
 from .....core.atomic_write import atomic_write_text
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
@@ -114,8 +116,23 @@ def write_manifest(paths: BucketPaths, manifest: BucketManifest) -> None:
     default, but ``write_manifest`` must never provision an un-provisioned
     bucket; :func:`~cadrumo.application.user_profile` (or the equivalent
     bucket-provisioning call site) owns directory creation.
+
+    The instance is re-validated before a byte is serialised, making this
+    the single validating write ingress symmetric to
+    :func:`read_manifest`'s validating read ingress. That symmetry is not
+    decoration: several writers mutate a manifest through
+    ``model_copy(update=...)``, which SKIPS validation, so without this
+    check a constraint-violating value reaches disk and is refused only on
+    the next read. On this format a deferred refusal is not "caught later"
+    -- the bucket-scan path swallows manifest read failures, so the profile
+    would simply vanish from the operator's listing with no signal. Refusing
+    at write time surfaces the fault inside the operation that caused it.
     """
     target = manifest_path(paths)
+    try:
+        BucketManifest.model_validate(manifest.model_dump(mode="python"))
+    except ValidationError as exc:
+        raise manifest_validation_error("bucket manifest is not valid and was not written") from exc
     payload = _serialise_manifest(manifest)
     try:
         if not target.parent.is_dir():

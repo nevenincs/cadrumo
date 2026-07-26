@@ -264,7 +264,14 @@ def _build_split_state(
             "reason": reason.strip(),
             "split_group_id": split_group_id,
             "parent_transaction_id": parent.transaction_id,
-            "child_transaction_ids": ",".join(child_ids),
+            # A count, never the joined child ids. A payload value is capped at
+            # 500 characters and a transaction id is a 64-char SHA-256 digest,
+            # so eight children joined on commas is 519 and a split into eight
+            # or more could not construct the event recording it — the same
+            # arithmetic that broke transaction removal at eight attachments.
+            # Nothing is lost: every child carries this split_group_id as a
+            # required field, and the group id is in this payload, so the cohort
+            # is recoverable from the transaction catalogue.
             "child_count": str(len(child_ids)),
         },
     )
@@ -859,7 +866,11 @@ def _build_merge_event(
             "split_group_id": split_group_id,
             "parent_transaction_id": parent.transaction_id,
             "merged_transaction_id": merged_transaction.transaction_id,
-            "source_child_ids": ",".join(sorted_child_ids),
+            # A count, never the joined source ids, for the reason given on the
+            # split event above: eight 64-char ids joined is 519 characters
+            # against a 500-character payload slot, so merging eight or more
+            # children could not record its own event. The cohort stays
+            # recoverable through the split_group_id carried here.
             "child_count": str(len(sorted_child_ids)),
         },
     )
