@@ -120,7 +120,7 @@ def _seed_ready_profile(bucket_id: str, objects: SecureObjectRepository | None =
         UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
         UserProfileFact(path="activities.description", value="economic activity"),
         UserProfileFact(path="iva.regime", value="GENERAL"),
-        UserProfileFact(path="provenance.source", value="test_fixture"),
+        UserProfileFact(path="provenance.source", value="manual_cli"),
         UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
     ]
     if is_legal_entity:
@@ -162,7 +162,7 @@ def _seed_m100_profile_facts(bucket_id: str, objects: SecureObjectRepository | N
             UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
             UserProfileFact(path="activities.description", value="salaried income"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="provenance.source", value="test_fixture"),
+            UserProfileFact(path="provenance.source", value="manual_cli"),
             UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
             UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo"),
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),

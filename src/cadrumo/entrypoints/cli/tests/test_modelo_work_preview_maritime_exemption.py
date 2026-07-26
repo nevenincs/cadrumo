@@ -241,7 +241,7 @@ class TestAmountGrammarRefusal:
         _register_maritime_profile(
             overrides={
                 "maritime_worker.worker_class": "trabajador_del_mar",
-                "maritime_worker.vessel_registry": "rebeca",
+                "maritime_worker.vessel_registry": "REBECA",
             },
         )
         result = invoke_cached_cli(

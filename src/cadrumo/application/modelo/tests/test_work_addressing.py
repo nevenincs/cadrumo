@@ -49,7 +49,7 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
     UserProfileFact(path="activities.description", value="economic activity"),
     UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="provenance.source", value="test_fixture"),
+    UserProfileFact(path="provenance.source", value="manual_cli"),
     UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
     UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
     UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),

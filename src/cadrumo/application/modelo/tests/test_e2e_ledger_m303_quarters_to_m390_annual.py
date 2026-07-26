@@ -425,7 +425,7 @@ def _store_irene_sl_profile(secure_objects: SecureObjectRepository) -> None:
                 UserProfileFact(path="iva.regime", value="GENERAL"),
                 UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
                 UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
-                UserProfileFact(path="provenance.source", value="test_fixture"),
+                UserProfileFact(path="provenance.source", value="manual_cli"),
                 UserProfileFact(path="censo.activity_start_date", value=date(_IRENE_YEAR, 1, 1)),
             ),
             created_at=_T0,

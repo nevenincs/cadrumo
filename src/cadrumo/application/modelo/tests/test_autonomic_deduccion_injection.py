@@ -66,7 +66,7 @@ def test_conjunta_declaration_is_fail_closed_no_auto_claim() -> None:
 
 
 def test_married_filer_is_fail_closed_no_auto_claim() -> None:
-    facts = _facts(**{"renta_taxpayer.marital_status": "casado"})
+    facts = _facts(**{"renta_taxpayer.marital_status": "2"})
     inject_derived_autonomic_deduccion_facts(facts, 2025)
     assert facts[_COUNT_KEY] == Decimal("0")
 

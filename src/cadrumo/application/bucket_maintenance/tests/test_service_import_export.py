@@ -75,7 +75,7 @@ def _all_required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFac
         for field in section.fields:
             if field.required:
                 path = f"{section.key}.{field.key}"
-                facts_by_path[path] = UserProfileFact(path=path, value="placeholder")
+                facts_by_path[path] = UserProfileFact(path=path, value=(field.enum_values[0] if field.enum_values else "placeholder"))
     facts_by_path.update(
         {
             "taxpayer_type.entity_type": UserProfileFact(
