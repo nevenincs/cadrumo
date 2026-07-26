@@ -67,6 +67,7 @@ def test_catalogue_msgids_match_current_source(language: str, fresh_pot: Path) -
     straight from the gate output.
     """
     pages = user_scope_source_pages(_DOCS)
+    assert pages, f"no user-scope source pages found under {_DOCS}; this gate scanned nothing"
     drift: list[str] = []
     for page in pages:
         source_ids = _msgid_set(fresh_pot / Path(page).with_suffix(".pot"))

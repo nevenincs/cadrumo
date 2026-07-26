@@ -103,6 +103,7 @@ def _linked_anchors(tree: ast.AST) -> set[str]:
 
 def test_core_struct_anchors_are_unambiguous() -> None:
     """Every declared anchor resolves to exactly one class at its canonical module."""
+    assert CORE_STRUCTS, "the core-struct anchor set is empty; this gate would pass by scanning nothing"
     problems: list[str] = []
     for name, dotted in CORE_STRUCTS.items():
         base = SRC_CADRUMO.parent / Path(*dotted.split("."))

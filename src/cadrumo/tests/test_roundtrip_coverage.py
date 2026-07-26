@@ -170,6 +170,9 @@ def test_persistence_boundary_roundtrip_tests_exist() -> None:
     test file.  Missing files indicate a boundary was declared without a
     roundtrip test — a roundtrip-discipline violation.
     """
+    assert _BOUNDARY_ROUNDTRIP_INVENTORY, (
+        "the persistence-boundary inventory is empty; this gate would assert coverage over nothing"
+    )
     missing: list[str] = []
     for boundary_label, rel_path in _BOUNDARY_ROUNDTRIP_INVENTORY:
         full_path = repo_path(rel_path)

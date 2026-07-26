@@ -71,6 +71,7 @@ def test_hardened_error_keys_resolve_in_catalogues() -> None:
     If the catalogue has no entry for the key python-i18n returns the key
     unchanged; the assertion below rejects that outcome.
     """
+    assert _HARDENED_ERROR_KEYS, "the hardened-error key inventory is empty; this gate would resolve nothing and pass"
     failures: list[str] = []
     for key in sorted(_HARDENED_ERROR_KEYS):
         for locale in _SUPPORTED_LOCALES:

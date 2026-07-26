@@ -35,6 +35,13 @@ def test_every_source_module_has_a_stub() -> None:
     manager = ApiStubManager(src_cadrumo=_SRC_CADRUMO, docs_api=_DOCS_API)
     drift = manager.check()
 
+    # Proof of scan: a walk that found no modules reports exactly what a
+    # conformant tree reports, so the clean result below is only evidence
+    # if the source tree was genuinely enumerated.
+    assert any(_SRC_CADRUMO.rglob("*.py")), (
+        f"no source modules found under {_SRC_CADRUMO}; the stub check scanned nothing"
+    )
+
     messages: list[str] = []
     if drift.missing_stubs:
         listed = "\n  ".join(drift.missing_stubs)
