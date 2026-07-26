@@ -14,7 +14,23 @@ from typing import TYPE_CHECKING
 
 from pydantic import ConfigDict
 
+from ...application.wizard import ConfigProfileCreateResult as ConfigProfileCreateResult
+from ...application.wizard import ConfigProfileEditResult as ConfigProfileEditResult
 from ._schemas import OutputSchema, register_schema
+
+# The two re-exports above are LOAD-BEARING, not convenience. Registry population
+# runs through `_ensure_result_schemas_registered`, which imports every
+# ``*payload*`` module under `_PAYLOAD_PACKAGES`. The wizard's results module -
+# where these two schemas are declared, at their real producer - is under neither
+# package and carries no ``payload`` in its name, so discovery never reaches it.
+# The CLI imported the wizard by other routes and looked fine; the MCP tool
+# builder does not, and it filters `command_schema_refs()` on the registry, so
+# both verbs silently vanished from the MCP surface and an installed server
+# answered `unknown command: config.profile.create`. Importing them from a module
+# discovery ALREADY visits runs the registration wherever the registry is
+# populated, while leaving it declared where it belongs. `register_schema` is
+# idempotent for the same class, so this cannot re-introduce the duplicate
+# registration that moving them out of here fixed.
 
 if TYPE_CHECKING:
     from ...application.auth import AuthConfigureResult
@@ -790,6 +806,10 @@ class BucketHistoryResult(OutputSchema):
 # validation, rather than a same-shaped pair of classes nothing ever
 # imports existing solely to satisfy the CLI-leaf-has-a-registered-schema
 # conformance gate.
+#
+# Their registration is nonetheless reached from here, by the re-export at the
+# top of this module. See the note on that import: it is load-bearing, not
+# convenience.
 
 
 @register_schema("config.profile.export")
