@@ -297,15 +297,11 @@ from ._reconcile import (
     ModeloReconciliationDiff,
     ModeloReconciliationDiffKind,
     ModeloReconciliationEvidenceKind,
-    ModeloReconciliationHistoryEntry,
-    ModeloReconciliationRecord,
-    ModeloReconciliationRecordRepository,
     ModeloReconciliationReport,
     ModeloReconciliationVerdict,
     ReconciliationCrossBucketRefusedError,
     ReconciliationDeclaracionSourceUnsupportedError,
     ReconciliationEvidenceInvalidError,
-    list_modelo_reconciliations,
     modelo_reconcile,
     modelo_reconcile_bytes,
 )
@@ -313,6 +309,12 @@ from ._reconcile_casilla import (
     CasillaDivergence,
     CasillaDivergenceKind,
     detect_casilla_divergences,
+)
+from ._reconciliation_records import (
+    ModeloReconciliationHistoryEntry,
+    ModeloReconciliationRecord,
+    ModeloReconciliationRecordRepository,
+    list_modelo_reconciliations,
 )
 from ._registry_discovery import (
     declared_modelo_period_tokens,
