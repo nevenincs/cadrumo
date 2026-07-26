@@ -10,16 +10,6 @@ related:
   - '[[2026-07-25-censal-profile-autofill-research]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 # `censal-profile-autofill` plan
 
 ### Phase `P01` - Auth credentials on the profile
@@ -37,6 +27,7 @@ Give an authentication mode somewhere to keep what it needs, on the encrypted pr
 - [x] `P01.S18` - Make the readiness probes no-session contract the subject of a test, asserting the profile read is declined rather than merely survived; `src/cadrumo/application/auth/tests`.
 - [x] `P01.S19` - Hold every auth provider to the identity guard, since each binds a comparable NIF at session bind and an absent expectation silently disarms the downstream session check; `src/cadrumo/application/auth/_sessions.py`.
 - [x] `P01.S20` - Retire the dead censo-derived provenance token and make its gate enumerate the published set rather than naming one member; `src/cadrumo/application/user_profile`.
+- [ ] `P01.S23` - Salvage the authenticated Clave session a post-auth navigation failure was closing unread, so a spent second factor becomes a retryable navigation; `src/cadrumo/adapters/outbound/aeat/auth/_clave_movil.py`.
 
 ### Phase `P02` - Read-only censal reader
 
