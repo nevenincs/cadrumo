@@ -166,4 +166,12 @@ def test_law_determined_resolution_is_preserved(
             f"filing year {filing_year} resolved revision {resolved.revision.id!r}, but the "
             f"registry authority selects {expected.revision.id!r} for that context"
         )
+        # Asserted rather than assumed: filing_period is Optional on the
+        # snapshot schema, so dereferencing it unguarded would surface a
+        # missing period as an AttributeError inside the comparison rather
+        # than as the failure it is. A snapshot resolved for a period must
+        # carry one.
+        assert resolved.filing_period is not None, (
+            f"snapshot for filing year {filing_year} carries no filing_period"
+        )
         assert resolved.filing_period.filing_year == filing_year
