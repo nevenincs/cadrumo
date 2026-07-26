@@ -462,34 +462,38 @@ class ProfileRepository:
         active-profile pointer is not touched — selecting a profile is
         a distinct operation.
 
-        The manifest is reconstructed field by field rather than copied,
-        so every field this method does NOT own must be carried across
-        explicitly from ``current_manifest``. A field left out does not
-        fail — it silently takes its model default, which is how
-        ``session_absolute_minutes`` was reset to ``None`` on every save
-        while ``idle_lock_minutes`` beside it survived. That field feeds
-        the absolute login-session expiry, so dropping it silently
-        lengthened a session the operator had deliberately shortened.
-        ``test_save_carries_every_field_it_does_not_own`` pins the whole
-        carry set against exactly that class of omission; extend it when
-        a field is added, in the same change.
+        The manifest projection this method owns is exactly ``label``,
+        ``kdf_params``, ``recovery_enrolled``, ``schema_version`` and
+        ``status``. Every other manifest field is preserved verbatim.
+
+        That contract is expressed by mutating the manifest already on
+        disk rather than rebuilding one field by field, and the
+        difference is load-bearing. Under reconstruction a field left
+        out does not fail — it silently takes its model default, which
+        is how ``session_absolute_minutes`` was reset to ``None`` on
+        every save while ``idle_lock_minutes`` beside it survived. That
+        field feeds the absolute login-session expiry, so dropping it
+        silently lengthened a session the operator had deliberately
+        shortened. Copy-and-update makes the omission impossible instead
+        of merely fixed: a field added to the manifest later is carried
+        by construction, without this method being touched.
+
+        ``bucket_id`` and ``created_at`` are deliberately not restated
+        from the aggregate. They are bucket identity, not a projection
+        this writer owns, and their agreement with the aggregate is
+        already asserted by ``verify_profile_integrity`` at load.
         """
         paths = bucket_paths(self._root, aggregate.profile_id)
-        current_manifest = read_manifest(paths)
         write_manifest(
             paths,
-            BucketManifest(
-                bucket_id=aggregate.profile_id,
-                label=aggregate.label,
-                created_at=aggregate.created_at,
-                last_unlocked_at=current_manifest.last_unlocked_at,
-                kdf_params=aggregate.kdf_params,
-                recovery_enrolled=aggregate.recovery_enrolled,
-                idle_lock_minutes=current_manifest.idle_lock_minutes,
-                session_absolute_minutes=current_manifest.session_absolute_minutes,
-                key_schedule=current_manifest.key_schedule,
-                schema_version=aggregate.manifest_schema_version,
-                status=aggregate.status,
+            read_manifest(paths).model_copy(
+                update={
+                    "label": aggregate.label,
+                    "kdf_params": aggregate.kdf_params,
+                    "recovery_enrolled": aggregate.recovery_enrolled,
+                    "schema_version": aggregate.manifest_schema_version,
+                    "status": aggregate.status,
+                },
             ),
         )
         self._lifecycle_repository(aggregate.profile_id).save(aggregate.record)

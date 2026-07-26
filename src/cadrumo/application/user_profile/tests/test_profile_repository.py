@@ -762,47 +762,35 @@ def test_load_surfaces_setup_incomplete_status_drift(_backend: Path) -> None:
         _load(repository, created.profile_id)
 
 
-# Manifest fields ``ProfileRepository.save`` derives from the aggregate it is
-# handed. Every other manifest field is state ``save`` does NOT own and must
-# carry across from the manifest already on disk.
-_SAVE_OWNED_MANIFEST_FIELDS: frozenset[str] = frozenset(
-    {
-        "bucket_id",
-        "label",
-        "created_at",
-        "kdf_params",
-        "recovery_enrolled",
-        "schema_version",
-        "status",
-    },
-)
+# ── manifest writer preservation ───────────────────────────────────
+
+# Every manifest writer, mapped to the projection that writer OWNS. Each
+# writer must leave the complement of its own set untouched.
+#
+# ``save`` is the only one that ever rebuilt the manifest field by field; the
+# rest mutate the manifest on disk. Reconstruction is the shape that made the
+# defect possible, because an omitted field is silently legal and takes its
+# model default, whereas an omitted UPDATE key simply preserves. Parametrising
+# over all of them pins the contract regardless of which idiom a writer uses.
+_WRITER_OWNED_MANIFEST_FIELDS: dict[str, frozenset[str]] = {
+    "save": frozenset({"label", "kdf_params", "recovery_enrolled", "schema_version", "status"}),
+    "rename": frozenset({"label"}),
+    "delete": frozenset({"status"}),
+    "reactivate": frozenset({"status"}),
+    "complete_setup": frozenset({"status"}),
+}
 
 
-def test_save_carries_every_field_it_does_not_own(_backend: Path) -> None:
-    """``save`` preserves every manifest field it does not derive from the aggregate.
+def _seed_every_defaultable_manifest_field(paths) -> BucketManifest:
+    """Write a manifest whose every defaultable field carries a NON-default value.
 
-    ``save`` reconstructs the manifest field by field, so a field left out of
-    that constructor does not fail — it silently takes its model default. That
-    is not hypothetical: ``session_absolute_minutes`` was omitted while
-    ``idle_lock_minutes`` beside it was carried, so every save reset the
-    absolute login-session expiry to ``None`` and the operator's deliberately
-    shortened session silently lengthened to the configured default.
-
-    The carry set is derived from the model rather than listed, so a field
-    added to :class:`BucketManifest` later is covered here the moment it
-    exists: it lands in ``carried`` automatically and must survive. Each is
-    seeded to a NON-DEFAULT value first, because a field left at its default
-    survives a drop indistinguishably from being carried — which is exactly why
-    the original defect was invisible.
+    This is the fixture rule that defeats the invisibility. ``_manifest_io``
+    serialises a ``None``-valued optional by omitting it and re-``setdefault``s
+    it on read, so a dropped optional looks identical on disk to one that was
+    never set. A field left at its default therefore cannot distinguish
+    'preserved' from 'silently reset' — which is exactly why the original
+    ``session_absolute_minutes`` drop survived unnoticed.
     """
-    repository = ProfileRepository()
-    created = _create(repository, label="Carry Operator", facts=_VALID_FACTS)
-    paths = bucket_paths(_backend, created.profile_id)
-
-    carried = set(BucketManifest.model_fields) - _SAVE_OWNED_MANIFEST_FIELDS
-    assert carried, "no unowned manifest fields found; the carry contract has nothing to protect"
-
-    # Seed every carried field to a value distinguishable from its default.
     seeded = read_manifest(paths).model_copy(
         update={
             "last_unlocked_at": datetime(2026, 3, 4, 5, 6, 7, tzinfo=UTC),
@@ -811,25 +799,66 @@ def test_save_carries_every_field_it_does_not_own(_backend: Path) -> None:
             "key_schedule": BucketKeySchedule.BUCKET_DEK_V1,
         },
     )
-    assert set(seeded.model_dump()) >= carried, "seeded manifest does not cover every carried field"
-    for field in carried:
-        assert getattr(seeded, field) is not None, (
-            f"carried field {field!r} was not seeded to a non-default value; a field left at its "
-            "default cannot distinguish 'carried' from 'silently reset'"
-        )
+    defaultable = {name for name, field in BucketManifest.model_fields.items() if not field.is_required()}
+    unseeded = {name for name in defaultable if getattr(seeded, name) is None}
+    assert unseeded == set(), (
+        f"defaultable manifest field(s) {sorted(unseeded)} were left at their default; a field at "
+        "its default cannot distinguish 'preserved' from 'silently reset', so this fixture would "
+        "stop detecting the defect it exists for"
+    )
     write_manifest(paths, seeded)
+    return seeded
+
+
+@pytest.mark.parametrize("writer", sorted(_WRITER_OWNED_MANIFEST_FIELDS))
+def test_every_manifest_writer_preserves_the_fields_it_does_not_own(_backend: Path, writer: str) -> None:
+    """Each writer leaves every manifest field outside its own projection verbatim.
+
+    A manifest writer owns a named projection and nothing else. ``save`` once
+    rebuilt the manifest field by field and omitted ``session_absolute_minutes``
+    while carrying ``idle_lock_minutes`` from the line above it, so every save
+    silently reset the absolute login-session expiry to its default — an
+    operator's deliberately shortened session lengthened by an unrelated rename
+    or recovery enrolment, with no visible signal.
+
+    The preserved set is derived as the complement of the writer's owned set
+    rather than listed, so a field added to :class:`BucketManifest` later is
+    covered for every writer the moment it exists. Driven through the real
+    repository and the real manifest IO — no mocks, no monkeypatching.
+    """
+    repository = ProfileRepository()
+    created = (
+        _create_setup_incomplete(repository, label="Preserve Operator", facts=_VALID_FACTS)
+        if writer == "complete_setup"
+        else _create(repository, label="Preserve Operator", facts=_VALID_FACTS)
+    )
+    if writer == "reactivate":
+        with profile_storage_session(created.profile_id):
+            repository.delete(created.profile_id)
+
+    paths = bucket_paths(_backend, created.profile_id)
+    seeded = _seed_every_defaultable_manifest_field(paths)
+
+    preserved = set(BucketManifest.model_fields) - _WRITER_OWNED_MANIFEST_FIELDS[writer]
+    assert preserved, f"writer {writer!r} claims to own every manifest field; nothing left to preserve"
 
     with profile_storage_session(created.profile_id):
-        repository.save(repository.load(created.profile_id))
+        if writer == "save":
+            repository.save(repository.load(created.profile_id))
+        elif writer == "rename":
+            repository.rename(created.profile_id, new_label="Renamed Operator")
+        else:
+            getattr(repository, writer)(created.profile_id)
 
     persisted = read_manifest(paths)
     dropped = {
         field: (getattr(seeded, field), getattr(persisted, field))
-        for field in carried
+        for field in preserved
         if getattr(persisted, field) != getattr(seeded, field)
     }
     assert dropped == {}, (
-        "save() silently reset manifest field(s) it does not own, shown as "
-        f"field: (before, after) -> {dropped}; every field save() does not derive from the "
-        "aggregate must be carried across from the manifest on disk"
+        f"{writer}() changed manifest field(s) outside its declared projection "
+        f"{sorted(_WRITER_OWNED_MANIFEST_FIELDS[writer])}, shown as field: (before, after) -> "
+        f"{dropped}. A writer owns its projection and must leave every other field verbatim; "
+        "prefer model_copy(update=...) naming only the fields the writer changes"
     )
