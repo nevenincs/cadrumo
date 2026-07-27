@@ -8,7 +8,7 @@ from ._parser_boundary_m111_support import (
     _M111_CASILLA_30,
     _M111_CORPUS_IDS,
     _M111_CORPUS_PARAMS,
-    _M111_POSITIVE_EXPECTED_VALUES,
+    _M111_EXPECTED_VALUES_BY_STEM,
 )
 from ._parser_boundary_support import (
     _MODELO_111_EXPECTED_TARGETS,
@@ -59,20 +59,18 @@ def test_parser_extracts_modelo_111_casillas_from_corpus(pdf_stem: str, year: in
     assert _M111_CASILLA_30 in values, (
         f"{pdf_stem}: expected casilla {_M111_CASILLA_30!r} in extracted values, got {set(values.keys())!r}"
     )
-    assert values[_M111_CASILLA_30] == Decimal("1000.00"), (
-        f"{pdf_stem}: casilla {_M111_CASILLA_30!r} expected Decimal('1000.00'), got {values[_M111_CASILLA_30]!r}"
-    )
 
-    if pdf_stem == "2024-4T":
-        assert set(values.keys()) == {_M111_CASILLA_30}, (
-            f"{pdf_stem}: negative filing should yield only casilla '30', got {set(values.keys())!r}"
-        )
-        return
-
-    assert set(_M111_POSITIVE_EXPECTED_VALUES) <= set(values), (
-        f"{pdf_stem}: expected casillas 07/08/09/28/30, got {set(values.keys())!r}"
+    # Exact map, not a subset: the extracted set IS the claim. A ratio or a
+    # subset check survives a bbox anchor that stopped resolving one column
+    # while another started, and the three-column layout is exactly where that
+    # can happen. Each quarter's amounts are distinct from every other
+    # quarter's, so a cross-fixture misread names itself too.
+    expected = _M111_EXPECTED_VALUES_BY_STEM[pdf_stem]
+    assert values == expected, (
+        f"{pdf_stem}: extracted casillas drifted from what the render prints.\n"
+        f"  unexpectedly absent: {sorted(set(expected) - set(values))}\n"
+        f"  unexpectedly present: {sorted(set(values) - set(expected))}\n"
+        f"  differing: {sorted(k for k in set(expected) & set(values) if values[k] != expected[k])}"
     )
-    for casilla_id, expected_value in _M111_POSITIVE_EXPECTED_VALUES.items():
-        assert values[casilla_id] == expected_value, (
-            f"{pdf_stem}: casilla {casilla_id!r} expected {expected_value!r}, got {values[casilla_id]!r}"
-        )
+    for value in values.values():
+        assert isinstance(value, Decimal), f"{pdf_stem}: expected a Decimal instance, got {value!r}"

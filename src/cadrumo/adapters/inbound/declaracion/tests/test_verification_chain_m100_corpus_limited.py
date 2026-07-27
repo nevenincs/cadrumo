@@ -25,38 +25,38 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 def test_verification_chain_m100_engine_corpus_limited() -> None:
     """Engine runs against M100 extracted inputs; verifies CORPUS-LIMITED verdict.
 
-    GROUNDED authority: real AEAT corpus PDFs (sanitised) committed at
-    src/cadrumo/tests/fixtures/justificantes/100/2022-0A.pdf (representative
-    specimen; the same sanitisation pattern applies to 2023-0A).
+    WHAT THIS PROVES, AND WHAT IT NO LONGER CLAIMS.
 
-    This test read the 2021 specimen until that file was replaced by a generated
-    one, because the real 2021 render carried an identity the sanitiser never
-    overwrote. The verdict below is a claim about what a SANITISED REAL render
-    can and cannot support, so it has to be measured on a sanitised real render;
-    a generated specimen prints clean amounts and would make the guard below pass
-    for the opposite reason. 2022-0A is the same filer, the same layout family
-    and the same redaction constant, and the 2022 revision declares the same
-    binding and relation ids as 2021, so the move is a year swap and nothing
-    more.
+    This test was authored against a sanitised REAL render, and its verdict was
+    a claim about that render: every amount had been overwritten with one
+    constant, so no printed arithmetic held and no formula closure could be
+    checked. The claim was "this corpus cannot ground the calculation", and the
+    evidence was the corpus.
 
-    Empirical finding: the M100 corpus PDFs have all amounts replaced with the
-    uniform synthetic value ~1.001.000,00 (EUR). pdfplumber merges the adjacent
-    casilla box number into the value token, producing garbage values like
-    Decimal('1001000.001071') for casilla 0171. These values are not
-    arithmetically consistent with each other; any formula closure will fail.
+    All three M100 renders have since been withdrawn -- they carried personal
+    data the redaction pipeline never wrote -- and replaced by generated
+    specimens. The verdict is UNCHANGED and its reason has moved. The printed
+    amounts are now probes chosen by the fixture generator, deliberately not
+    derived from any formula, so they still cannot ground a calculation; what
+    has gone is the ability to say anything at all about a real filing.
 
-    This test confirms the CORPUS-LIMITED verdict:
-      1. The engine runs without RegistryValidationError when supplied the
-         appropriate binding and relation values.
-      2. Engine-computed closure casillas (0545, 0546) do not match their
-         sanitised extracted counterparts, confirming the sanitisation artefact
-         is the blocker, not a formula or profile defect.
-      3. The engine correctly computes 0545 and 0546 from the actual tax
-         bracket tables applied to the extracted 0505 value, proving the
-         formula DAG is structurally sound.
+    What survives here is structural, and is worth keeping:
+      1. The engine runs without RegistryValidationError on inputs that came out
+         of the real parser, over a real registry snapshot. That is the parse ->
+         engine seam, and nothing else exercises it for M100.
+      2. Every closure casilla the formula DAG declares (0545, 0546, 0585, 0586)
+         reaches the engine result rather than dropping out of evaluation order.
+      3. The engine computes a positive 0545 from the actual tax bracket tables
+         applied to the extracted 0505, so the bracket lookup is wired.
+      4. The engine's 0545/0546 differ from the PRINTED 0545/0546. On the
+         withdrawn renders that difference proved the redaction constant was the
+         blocker. Here it proves the printed probes are not engine output --
+         which is the property that stops any later reader from mistaking this
+         fixture for a calculation oracle.
 
-    Verdict: EXTRACTION-ONLY (CORPUS-LIMITED) - no path to VERIFIED from this
-    corpus without un-sanitised real PDF values.
+    Verdict: EXTRACTION-ONLY. There is no path to VERIFIED from this fixture,
+    and an AEAT-authoritative M100 figure would have to come from the bundled
+    oracle corpora instead.
 
     Legal grounding: Ley 35/2006 arts. 50, 62-68; RD 439/2007 Disposicion Final.
     """

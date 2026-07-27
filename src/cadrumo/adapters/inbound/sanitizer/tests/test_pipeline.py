@@ -29,14 +29,18 @@ from .._records import NameReplacement, NifReplacement, TokenMap
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
-# A real committed sanitised justificante; its SHA-256 is catalogued in
-# fixtures.SANITIZED_SHAS, so the already-sanitised refuse guard fires
-# against it without any test-side patching of the known-SHA set.
+# A committed justificante whose SHA-256 is catalogued in
+# fixtures.SANITIZED_SHAS, so the already-sanitised refuse guard fires against
+# it without any test-side patching of the known-SHA set.
 #
-# It must be a genuine sanitiser OUTPUT and not merely a catalogued fixture: the
-# guard under test is "this file has already been through the pipeline". The
-# sibling 2021-0A.pdf was this specimen until it was replaced by a generated
-# file, which the pipeline has never seen.
+# HONEST NOTE ON WHAT THIS NOW EXERCISES. The guard's purpose is "refuse a file
+# that has already been through the pipeline", and this pointer used to name a
+# genuine sanitiser OUTPUT. Every real sanitised render has since been withdrawn
+# (each carried identity the pipeline never wrote), so no such file remains in
+# the tree. What is left tests the MECHANISM -- a catalogued SHA is refused, and
+# the refusal can be opted out of per call -- against a catalogued file that the
+# pipeline never produced. The mechanism is the part with a regression risk; the
+# provenance of the input is not something the guard reads.
 _SANITISED_FIXTURE_PDF = FIXTURES_DIR / "justificantes" / "100" / "2022-0A.pdf"
 _REAL_NIE_CANARY = "Y1234567X"
 _REAL_NAME_CANARY = "PERSONA PRUEBA UNO"

@@ -506,16 +506,23 @@ MODELO_111_DECLARACION_FIXTURE = FIXTURES_DIR / "justificantes" / "111" / "2024-
 """Synthetic-generated M111 declaración PDF for ejercicio 2024, 1T. Extraction
 confirmed by ``test_parser_extracts_modelo_111_casillas_from_corpus``
 (``adapters/inbound/declaracion/tests/test_parser_boundary_m111.py``): prints
-casillas 07/08/09/28/30, both `28` and `30` at `1000.00`."""
+casillas 07/08/09/28/30.
+
+Its perceptor count, base and retención are distinct values, and each quarter
+carries different amounts. While this was a redacted real render every money box
+held the same ``1000.00``, so the mismatch assertion below could have been
+reading any of them."""
 
 _M111_2024_1T_REVISION_ID = "2019-y-siguientes"
 """Law-determined registry revision for M111 filing_year=2024, period=1T."""
 
-# `computed_casilla_ids` for this revision is exactly {28, 30}; both are
-# printed by the fixture at 1000.00, so a matching seed compares cleanly.
+# `computed_casilla_ids` for this revision is exactly {28, 30}. Both are printed
+# at 2371.20, which is the form's own arithmetic rather than a repeat: with only
+# epígrafe 3 filled and no prior autoliquidación, `28 = 03+06+...+27` reduces to
+# `09` and `30 = 28 - 29` reduces to `28`.
 _M111_2024_1T_MATCHING_CASILLA_VALUES: dict[str, Decimal] = {
-    "28": Decimal("1000.00"),
-    "30": Decimal("1000.00"),
+    "28": Decimal("2371.20"),
+    "30": Decimal("2371.20"),
 }
 
 
@@ -565,7 +572,7 @@ def test_reconcile_file_kind_declaration_m111_catches_casilla_divergence(
     filed declaración is CAUGHT as a typed `casilla` diff, not a silent
     identity `matches`."""
     mismatched = dict(_M111_2024_1T_MATCHING_CASILLA_VALUES)
-    mismatched["30"] = Decimal("1250.00")  # fixture prints 1000.00
+    mismatched["30"] = Decimal("1250.00")  # fixture prints 2371.20
     work_unit_id = _seed_m111_work_unit_with_revision(casilla_values=mismatched)
 
     result = invoke_cached_cli(
@@ -584,7 +591,7 @@ def test_reconcile_file_kind_declaration_m111_catches_casilla_divergence(
     assert result.exit_code == 0, result.output
     assert "source_kind\tdeclaration" in result.output
     assert "verdict\tmismatches" in result.output
-    assert "diff\t30\twork_unit=1250.00\tevidence=1000.00" in result.output
+    assert "diff\t30\twork_unit=1250.00\tevidence=2371.20" in result.output
 
 
 # --- Modelo 390 (IVA resumen anual): compound iva.anual.* casilla ids -------
@@ -779,12 +786,12 @@ def test_reconcile_file_kind_declaration_m190_catches_casilla_divergence(
 # computed for the 2024 revision), but until now had no CLI-level coverage at
 # all -- every other enrolled modelo carried a matches/mismatch pair.
 #
-# The 2022-2023 real-corpus specimens under `justificantes/100/` CANNOT seed a
-# clean-match test: they are sanitised to synthetic `1.000,00` amounts and
-# pdfplumber merges the adjacent box number onto the value token, so the
-# extracted Decimals are valid instances but not meaningful figures. Their own
-# parser-boundary test asserts `isinstance(..., Decimal)` only and states that
-# exact-value assertions would be tautological against that artefact. The
+# The 2021-2023 specimens under `justificantes/100/` are generated layout
+# replacements for withdrawn real renders. They reproduce the box-number-over-
+# amount overlap those renders carried, and print distinct amounts rather than
+# the single redaction constant, so their parser-boundary test now asserts the
+# exact per-casilla map. They are still not seeded here: this section covers the
+# 2024 revision's reconcile scope, not the 2021-2023 ones. The
 # 2024/2025 fixtures are DR-faithful synthetic specimens built from the bundled
 # AEAT Diseno de Registro field dictionaries, and they print clean stamped
 # values -- the grounding tier the registry profile itself declares

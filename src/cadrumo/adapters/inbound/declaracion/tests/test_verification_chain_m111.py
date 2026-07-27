@@ -20,8 +20,9 @@ That splits the coverage in two, matching what each fixture class can support:
   committed renders. They are ``role = "parser_anchor"`` specimens, so parse
   fidelity is exactly what they are evidence of.
 * :func:`test_verification_chain_m111_aggregates_the_epigrafes_the_orden_names`
-  drives the arithmetic with distinct probe amounts, which a parser_anchor
-  render cannot supply because redaction collapsed its amounts to one constant.
+  drives the arithmetic with distinct probe amounts of its own. A parser_anchor
+  render cannot supply them: it prints five casillas out of the nine the sum
+  needs, whatever its amounts are.
 """
 
 from __future__ import annotations
@@ -109,11 +110,12 @@ def test_verification_chain_m111_parses_each_committed_render(
     """Each committed M111 render parses to exactly the casilla set it declares.
 
     This is a PARSE-FIDELITY test over ``role = "parser_anchor"`` fixtures, and
-    that is the whole of its claim. The specimens are real AEAT renders
-    (``provenance = "real_corpus"``) whose layout and labels are authoritative;
-    the redaction pipeline replaced every amount with the uniform placeholder
-    ``1000.00``, so their numbers are not evidence of anything and no arithmetic
-    is asserted against them here. The role is checked rather than assumed, so a
+    that is the whole of its claim. The specimens WERE real AEAT renders; they
+    were withdrawn for carrying name-shaped strings the redaction pipeline never
+    wrote, and what stands in their place reproduces their printed layout. Their
+    numbers are probes chosen by the fixture generator, so no arithmetic is
+    asserted against them here -- the aggregation test below drives that from
+    its own probes instead. The role is checked rather than assumed, so a
     fixture re-stamped as a formula specimen cannot silently land in a
     parse-fidelity test.
 

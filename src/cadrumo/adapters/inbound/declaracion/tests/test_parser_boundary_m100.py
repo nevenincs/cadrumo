@@ -5,10 +5,10 @@ from __future__ import annotations
 import pytest
 
 from ._parser_boundary_m100_support import (
-    _M100_2021_EXPECTED_VALUES,
     _M100_CORPUS_IDS,
     _M100_CORPUS_PARAMS,
     _M100_EXPECTED_CASILLAS,
+    _M100_EXPECTED_VALUES_BY_STEM,
 )
 from ._parser_boundary_support import (
     FIXTURES_DIR,
@@ -34,22 +34,18 @@ def test_parser_extracts_modelo_100_profile_targets_from_corpus(pdf_stem: str, y
     - Chunk 3 (6 casillas): actividades-economicas ED detail -- 0180/0218/0223/0224/0226/0231.
     - Chunk 4 (1 casilla): ED leaf input -- 0171 (ingresos de explotacion).
 
-    Ground truth is derived from reading the printed declaracion PDF text directly.
-
-    What each specimen can be asserted against differs, and the difference is
-    the point. 2022-0A and 2023-0A are sanitised real renders: the redaction
-    pipeline wrote one constant into every money box, so every target holds the
-    same number and an exact-value assertion would distinguish nothing -- a
-    pattern that drifted onto the line above would satisfy it. Those two are
-    asserted as ``isinstance(..., Decimal)`` only. 2021-0A is a generated
-    replacement (the real 2021 render carried an identity the sanitiser never
-    overwrote) and its amounts are all DISTINCT, so each value identifies the
-    line it came from and the exact map IS assertable.
-
-    Both AEAT renders print the box number in a smaller font overlapping the
+    All three specimens are generated replacements: the real renders carried
+    personal data the redaction pipeline never wrote and could not stay in the
+    repository. Each reproduces the layout facts the profile depends on --
+    notably that AEAT prints the box number in a smaller font overlapping the
     amount, which ``extract_text`` merges into one token
-    (``1.001.000,005045``); the generated specimen reproduces that overlap, so
-    all three exercise the word-based amount capture that keeps the two apart.
+    (``1.001.000,005045``) and only the word-based capture keeps apart.
+
+    Because a generated render can print DISTINCT amounts where the redaction
+    pipeline wrote one constant everywhere, the exact per-casilla map is
+    assertable here for the first time. That is the assertion that catches a
+    label pattern drifting onto a neighbouring line, which the old
+    ``isinstance(..., Decimal)`` check could not.
 
     Casillas deferred (0570/0571 cuota liquida estatal/autonomica pre-incrementada):
     both body and summary sections carry identical short labels in 2023 with no
@@ -88,13 +84,8 @@ def test_parser_extracts_modelo_100_profile_targets_from_corpus(pdf_stem: str, y
             f"{pdf_stem}: casilla {casilla_id!r} expected a Decimal instance, got {values[casilla_id]!r}"
         )
 
-    if pdf_stem != "2021-0A":
-        # A sanitised real render: one constant in every box, so there is
-        # nothing an exact-value assertion could tell apart.
-        return
-
     extracted = {str(casilla_id): value for casilla_id, value in values.items()}
-    expected = {casilla_id: Decimal(amount) for casilla_id, amount in _M100_2021_EXPECTED_VALUES.items()}
+    expected = {casilla_id: Decimal(amount) for casilla_id, amount in _M100_EXPECTED_VALUES_BY_STEM[pdf_stem].items()}
 
     assert extracted == expected, (
         f"{pdf_stem}: extraction read a different amount than the document prints. "
