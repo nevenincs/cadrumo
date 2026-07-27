@@ -1,3 +1,38 @@
+"""Cross-modelo relation and binding wiring tests.
+
+WHAT THESE TESTS VERIFY: that the cross-modelo value channels are wired and
+arithmetically closed — relation-source requirements resolve to observations,
+observations fold into relation values, relation values reach the declared
+target casilla, and previous-filing bindings sum the selector's casillas.
+
+WHAT THEY DO NOT VERIFY: that any amount is the figure AEAT would print. The
+monetary values these tests compare against come from the justificante PDF
+fixtures, and those amounts are NOT an AEAT oracle:
+
+* The M111/M190 fixtures are ``role = "parser_anchor"`` real-corpus specimens.
+  Their amounts were replaced by the redaction pipeline with the uniform
+  placeholder ``1000.00``; only their layout and labels survive sanitisation.
+* The M180 fixture is ``role = "formula_verification"``,
+  ``provenance = "synthetic_generated"`` — its amounts are hand-authored
+  literals in ``tests/fixtures/justificantes/_generate_misc_a.py``, chosen to
+  be internally consistent, not sourced from AEAT.
+
+Both sides of every monetary assertion below are therefore derived from the
+same fixture value, so the assertions are closure checks: replacing every
+fixture amount with an arbitrary number leaves all of them passing. That is
+the honest description of this module's power, and the coverage is still
+worth having — it is what catches a broken fold, a dropped relation, a
+mis-declared binding selector, or a resolution that silently returns zero.
+
+WHERE A REAL ORACLE PLUGS IN: an AEAT-authoritative figure for these modelos
+belongs in the bundled oracle corpora (``corpus/manual_oracles/`` or
+``corpus/parity_replays/renta_web_open/``) keyed by
+``expected_by_casilla_id``, with the casilla declared in the revision's
+``externally_grounded_casilla_ids``. That route is cross-checked in both
+directions by ``test_external_oracle_grounding_enrolled.py``. No modelo
+exercised here (111, 180, 190) has such an oracle today.
+"""
+
 from __future__ import annotations
 
 import json
@@ -149,7 +184,9 @@ def _fixture_pdf_text(modelo: str, fixture_stem: str = "2024-0A") -> str:
         f"{pdf_path} fixture sidecar must declare real or synthetic provenance"
     )
     assert sidecar.get("role") in {"formula_verification", "parser_anchor"}, (
-        f"{pdf_path} fixture sidecar must declare an oracle role"
+        f"{pdf_path} fixture sidecar must declare its role "
+        "(see `fixture-provenance-declared-in-sidecar`); note that NEITHER role "
+        "asserts the printed amounts are AEAT-authoritative"
     )
     with pdfplumber.open(pdf_path) as pdf:
         return "\n".join(page.extract_text() or "" for page in pdf.pages)
@@ -157,6 +194,14 @@ def _fixture_pdf_text(modelo: str, fixture_stem: str = "2024-0A") -> str:
 
 @cache
 def _annual_summary_fixture_values(modelo: str, fixture_stem: str = "2024-0A") -> dict[CasillaId, Decimal]:
+    """Read the resumen-anual amounts a justificante fixture PRINTS.
+
+    These are printed values, not AEAT-authoritative figures: the M190 fixture
+    is a redacted ``parser_anchor`` whose amounts are the placeholder
+    ``1000.00``, and the M180 fixture's amounts are generator literals. Tests
+    use them as a self-consistent reference to close the fold arithmetic
+    against — see the module docstring for what that does and does not prove.
+    """
     text = _fixture_pdf_text(modelo, fixture_stem)
     values: dict[CasillaId, Decimal] = {}
     for casilla_id, pattern in _ANNUAL_SUMMARY_FIXTURE_PATTERNS[modelo].items():
@@ -170,12 +215,17 @@ def _spanish_decimal(raw: str) -> Decimal:
     return Decimal(raw.replace(".", "").replace(",", "."))
 
 
-def _grounded_quarterly_source_values(total: Decimal) -> tuple[Decimal, Decimal, Decimal, Decimal]:
-    """Shape a fixture annual total into non-uniform source observations.
+def _split_total_across_quarters(total: Decimal) -> tuple[Decimal, Decimal, Decimal, Decimal]:
+    """Split a fixture annual total into four non-uniform quarterly parts.
 
-    The fixture total remains the expected oracle.  These values are only source
-    observations, spread across all four periods so copy/partial-period
-    regressions do not accidentally match the annual fixture.
+    The split is deliberately uneven (1/10, 2/10, 3/10, remainder) so a fold
+    that copies one quarter, or sums only some periods, cannot accidentally
+    reproduce the annual total.
+
+    The total being split is a fixture-printed amount, NOT an AEAT figure (see
+    the module docstring). Reassembling it therefore proves the fold arithmetic
+    closes over the four periods; it proves nothing about the amount's
+    correctness against AEAT.
     """
     if total == Decimal("0"):
         return (Decimal("0"), Decimal("0"), Decimal("0"), Decimal("0"))
@@ -183,12 +233,12 @@ def _grounded_quarterly_source_values(total: Decimal) -> tuple[Decimal, Decimal,
     return (unit, unit * Decimal("2"), unit * Decimal("3"), total - (unit * Decimal("6")))
 
 
-def _m180_grounded_relation_source_values() -> dict[CasillaId, tuple[Decimal, ...]]:
+def _m180_fixture_relation_source_values() -> dict[CasillaId, tuple[Decimal, ...]]:
     fixture_values = _annual_summary_fixture_values("180")
     return _casilla_decimal_sequences(
         {
-            "02": _grounded_quarterly_source_values(fixture_values[_DECL_BASE_TOTAL_CASILLA]),
-            "03": _grounded_quarterly_source_values(fixture_values[_DECL_RETENCIONES_TOTAL_CASILLA]),
+            "02": _split_total_across_quarters(fixture_values[_DECL_BASE_TOTAL_CASILLA]),
+            "03": _split_total_across_quarters(fixture_values[_DECL_RETENCIONES_TOTAL_CASILLA]),
         }
     )
 
@@ -334,7 +384,7 @@ _ANNUAL_SUMMARY_RELATION_CASES = (
         "180",
         2022,
         "2019-2022",
-        _m180_grounded_relation_source_values,
+        _m180_fixture_relation_source_values,
         "modelo-180-115-perceptores-anual",
         frozenset({"modelo-180-rel-115-base-anual", "modelo-180-rel-115-retenciones-anual"}),
         "modelo-180-rel-115-base-anual",
@@ -345,7 +395,7 @@ _ANNUAL_SUMMARY_RELATION_CASES = (
         "180",
         2026,
         "2023-y-siguientes",
-        _m180_grounded_relation_source_values,
+        _m180_fixture_relation_source_values,
         "modelo-180-115-perceptores-anual",
         frozenset({"modelo-180-rel-115-base-anual", "modelo-180-rel-115-retenciones-anual"}),
         "modelo-180-rel-115-base-anual",
@@ -356,7 +406,7 @@ _ANNUAL_SUMMARY_RELATION_CASES = (
         "180",
         2027,
         "2023-y-siguientes",
-        _m180_grounded_relation_source_values,
+        _m180_fixture_relation_source_values,
         "modelo-180-115-perceptores-anual",
         frozenset({"modelo-180-rel-115-base-anual", "modelo-180-rel-115-retenciones-anual"}),
         "modelo-180-rel-115-base-anual",
@@ -401,6 +451,14 @@ def test_annual_summary_cross_dependency_calculation_resolves_quarterly_filings(
     retenciones_relation_id: str,
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
+    """Quarterly source observations fold into the annual summary casillas.
+
+    Closure check, not a grounding check: the quarterly parts are derived by
+    splitting the fixture's own printed annual total, so reassembling that
+    total proves the fold sums all four periods and routes through the declared
+    relation. The total itself is a fixture amount, not an AEAT figure (module
+    docstring).
+    """
     snapshot = registry_snapshot(modelo, filing_year, "0A")
     source_values = source_values_factory()
     requirements = relation_source_requirements(snapshot.revision, filing_year=filing_year, period="0A")
@@ -444,6 +502,20 @@ def test_annual_summary_cross_dependency_calculation_resolves_quarterly_filings(
 def test_modelo_190_calculation_resolves_modelo_111_quarterly_filings(
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
+    """M111 quarterly percepciones/retenciones fold into the M190 annual summary.
+
+    Structural coverage this genuinely provides: the ten expected M111->M190
+    relations all resolve, the retired per-quarter perceptor source casillas
+    stay retired, the withholding binding aggregates detail observations into
+    ``decl.total-percepciones``, and the annual totals reach their target
+    casillas through the declared operand refs.
+
+    NOT a grounding check. The M190 fixture is a redacted ``parser_anchor``:
+    its printed amounts are the placeholder ``1000.00`` and its perceptor
+    figure is a count, not money. Both sides of every monetary assertion here
+    are derived from that same placeholder, so the comparisons close
+    arithmetically regardless of what the amount is (module docstring).
+    """
     fixture_values = _annual_summary_fixture_values("190")
     detail_nif, detail_clave, detail_percepcion, detail_retencion = _m190_fixture_detail_observation()
     assert detail_clave == "G"
@@ -452,8 +524,8 @@ def test_modelo_190_calculation_resolves_modelo_111_quarterly_filings(
 
     snapshot = registry_snapshot("190", 2024, "0A")
     requirements = relation_source_requirements(snapshot.revision, filing_year=2024, period="0A")
-    percepciones_quarterly = _grounded_quarterly_source_values(fixture_values[_M190_PERCEPCIONES_TOTAL_CASILLA])
-    retenciones_quarterly = _grounded_quarterly_source_values(fixture_values[_M190_RETENCIONES_TOTAL_CASILLA])
+    percepciones_quarterly = _split_total_across_quarters(fixture_values[_M190_PERCEPCIONES_TOTAL_CASILLA])
+    retenciones_quarterly = _split_total_across_quarters(fixture_values[_M190_RETENCIONES_TOTAL_CASILLA])
     observations = _observations_from_requirements(
         requirements,
         lambda requirement, period_index: _m190_fixture_relation_source_value(

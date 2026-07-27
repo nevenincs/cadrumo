@@ -48,8 +48,13 @@ def test_verification_chain_m123_engine_recomputes_closure_casillas(
 ) -> None:
     """Engine recomputes M123 closure casillas from leaf inputs.
 
-    GROUNDED authority: synthetic fixtures from AEAT-published Diseno de Registro
-    committed at src/cadrumo/tests/fixtures/justificantes/123/.
+    FIXTURE, NOT ORACLE: the specimens under
+    src/cadrumo/tests/fixtures/justificantes/123/ are
+    ``provenance = "synthetic_generated"``. Their field layout follows the
+    AEAT-published Diseno de Registro (genuinely AEAT-grounded, and what the
+    parse assertions rest on); their AMOUNTS are hand-authored generator
+    literals with no AEAT authority. The closures below prove the formula DAG
+    agrees with the fixtures' own numbers, not with AEAT.
 
     2023-1T (2019-2023 revision):
       06 = 03 + 05  (total liquidacion)

@@ -45,9 +45,16 @@ _M115_QUARTERLY_VALUES: dict[str, dict[CasillaId, Decimal]] = {
 def test_verification_chain_m180_engine_recomputes_closure_casillas_from_m115_relations_and_binding() -> None:
     """Engine recomputes M180 annual closure casillas from M115 relations and binding values.
 
-    GROUNDED authority: synthetic M180 fixture at
-    src/cadrumo/tests/fixtures/justificantes/180/2024-0A.pdf, derived from
-    AEAT Orden HAP/1732/2014 printed form structure.  The fixture prints:
+    FIXTURE, NOT ORACLE: the M180 specimen at
+    src/cadrumo/tests/fixtures/justificantes/180/2024-0A.pdf is
+    ``provenance = "synthetic_generated"``. Its LABELS and layout are grounded
+    in the AEAT Orden HAP/1732/2014 printed form (that grounding is real and is
+    what makes the parse assertions meaningful); its AMOUNTS are hand-authored
+    literals in ``tests/fixtures/justificantes/_generate_misc_a.py`` and carry
+    no AEAT authority. This test therefore proves the M115->M180 chain resolves
+    and closes, not that the totals are what AEAT would compute.
+
+    The fixture prints:
       decl.total-perceptores = 3       (dedicated annual perceptor binding)
       decl.base-total        = 12000.00 (sum of M115 casilla 02 across 4 quarters)
       decl.retenciones-total =  2280.00 (sum of M115 casilla 03 across 4 quarters)

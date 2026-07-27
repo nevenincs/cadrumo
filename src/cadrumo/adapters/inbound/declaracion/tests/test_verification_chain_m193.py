@@ -45,8 +45,14 @@ _M123_QUARTERLY_VALUES: dict[str, dict[CasillaId, Decimal]] = {
 def test_verification_chain_m193_engine_recomputes_closure_casillas_from_m123_relations_and_binding() -> None:
     """Engine recomputes M193 annual closure casillas from M123 relations and binding values.
 
-    GROUNDED authority: synthetic M193 fixture at
-    src/cadrumo/tests/fixtures/justificantes/193/2024-0A.pdf.  The fixture prints:
+    FIXTURE, NOT ORACLE: the M193 specimen at
+    src/cadrumo/tests/fixtures/justificantes/193/2024-0A.pdf is
+    ``provenance = "synthetic_generated"``. Its labels are modelled on the AEAT
+    printed form; its AMOUNTS are hand-authored generator literals with no AEAT
+    authority. This test proves the M123->M193 chain resolves and closes, not
+    that the totals match AEAT.
+
+    The fixture prints:
       decl.total-perceptores = 2      (dedicated annual perceptor binding)
       decl.base-total        = 8000.00 (sum of M123 casilla 06 across 4 quarters)
       decl.retenciones-total = 1520.00 (sum of M123 casilla 09 across 4 quarters)

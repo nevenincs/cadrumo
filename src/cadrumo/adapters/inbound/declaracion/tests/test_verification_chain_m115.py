@@ -36,9 +36,14 @@ _M115_CLOSURE_CASILLAS: tuple[CasillaId, ...] = (
 def test_verification_chain_m115_engine_recomputes_retenciones_and_resultado() -> None:
     """Engine recomputes casilla 03 (retenciones) and 05 (resultado) from leaf inputs.
 
-    GROUNDED authority: synthetic fixture generated from AEAT-published Diseno de
-    Registro DR xls (aeat-dr-115-2019-v13) committed at
-    src/cadrumo/tests/fixtures/justificantes/115/2024-1T.pdf.
+    FIXTURE, NOT ORACLE: the specimen at
+    src/cadrumo/tests/fixtures/justificantes/115/2024-1T.pdf is
+    ``provenance = "synthetic_generated"``. Its FIELD LAYOUT is generated from
+    the AEAT-published Diseno de Registro DR xls (aeat-dr-115-2019-v13) — that
+    part is genuinely AEAT-grounded and is what the parse assertions rest on.
+    Its AMOUNTS are hand-authored generator literals and carry no AEAT
+    authority, so the closure below proves the formulas agree with the
+    fixture's own numbers, not with AEAT.
 
     Chain:
       1. parse_declaracion -> extracted casillas 01 (perceptores), 02 (base),
@@ -51,8 +56,9 @@ def test_verification_chain_m115_engine_recomputes_retenciones_and_resultado() -
     Legal grounding: RD 439/2007 art.100, art.108; Ley 35/2006 art.99, art.101;
     Orden 2000-11-20 apartado primero.
 
-    Verdict: VERIFIED - the percent formula for retenciones and the subtract formula
-    for resultado both match the synthetic AEAT-grounded fixture.
+    Verdict: the percent formula for retenciones and the subtract formula for
+    resultado both close against the fixture's own printed values. Not an
+    AEAT-verified verdict — see FIXTURE, NOT ORACLE above.
     """
     extracted = _parse_extracted_declaracion_values(modelo="115", fixture_stem="2024-1T", year=2024, period="1T")
 
