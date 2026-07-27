@@ -40,7 +40,7 @@ Land the per-revision governance stamp end to end: core enum, strict revision sc
 - [x] `P01.S04` - add governance-stamp loader tests covering roundtrip, fail-closed default on absence, refusal of incoherent stamp combinations, and an anti-tautology mutation proof; `src/cadrumo/domain/calculations/registry/tests/test_governance_stamp.py`.
 - [ ] `P01.S33` - refuse a blank or whitespace-only reviewed_by and engineered_by so a stamp cannot claim signoff while naming nobody, bound reviewed_at against a future date, and tighten the bundled-tree invariant from not-null to non-blank; `src/cadrumo/domain/calculations/registry/_schema.py`.
 - [ ] `P01.S34` - derive the governance field set from a marker on the field declarations so a fifth governance scalar enrols itself into the placement refusal instead of silently escaping it; `src/cadrumo/domain/calculations/registry/_schema.py`.
-- [ ] `P01.S35` - derive the embedded core-type set for the compiled cache key from the compiled models annotations rather than a remembered hand list, or assert the derived set is a subset of the list, covering the ten unenrolled types including the core Modelo enum; `src/cadrumo/domain/calculations/registry/_compiled_cache.py`.
+- [x] `P01.S35` - derive the embedded core-type set for the compiled cache key from the compiled models annotations rather than a remembered hand list, or assert the derived set is a subset of the list, covering the ten unenrolled types including the core Modelo enum; `src/cadrumo/domain/calculations/registry/_compiled_cache.py`.
 
 ### Phase `P02` - fact lifts into src libraries
 
