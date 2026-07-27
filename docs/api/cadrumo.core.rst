@@ -52,6 +52,7 @@ Submodules
    cadrumo.core._config_support
    cadrumo.core._config_timeouts
    cadrumo.core._credentials
+   cadrumo.core._external_oracle_corpus
    cadrumo.core._foreign_asset_obligation
    cadrumo.core._fsync
    cadrumo.core._google_credential_source
