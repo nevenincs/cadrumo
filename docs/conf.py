@@ -611,6 +611,15 @@ nitpick_ignore_regex = [
         r"^(FieldInfo|MinLen|MaxLen|NoneType|EllipsisType|Annotated|"
         r"Strict[A-Za-z]*|[A-Za-z]*Constraints|_PydanticGeneralMetadata)$",
     ),
+    # Autodoc's ``show-inheritance`` renders a base class by its BARE name, so a
+    # TUI class deriving from Textual emits ``Widget`` rather than
+    # ``textual.widget.Widget``. The vendored inventory carries the qualified
+    # target as ``py:class`` — verified by reading the entry — so the link is not
+    # dead, merely unreachable from the short form autodoc emits. The short-name
+    # bridge above resolves bare names only against IN-TREE objects by design,
+    # and widening it to intersphinx would risk binding a bare project name to a
+    # same-named third-party target.
+    (r"py:class", r"^Widget$"),
     # ``Buffer`` is the real stdlib ``collections.abc.Buffer`` (PEP 688, 3.12+),
     # used as an annotation across the master-key recovery surface. autodoc
     # renders an annotation by its BARE name, so the reference emitted is

@@ -2,7 +2,7 @@
 
 Every full-screen surface the operator meets — the profile manager, the
 paged flow frontend, the read-only status page — renders through the two
-:class:`~textual.theme.Theme` objects declared here, and lays its content
+``textual.theme.Theme`` objects declared here, and lays its content
 out with :data:`BASE_CSS`. This module is the single source of truth for
 the terminal look, so a screen never hardcodes a colour or a column
 width, and the light and dark appearances cannot drift apart.
