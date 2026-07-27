@@ -9,6 +9,7 @@ from ._parser_boundary_m111_support import (
     _M111_CORPUS_IDS,
     _M111_CORPUS_PARAMS,
     _M111_EXPECTED_VALUES_BY_STEM,
+    _M111_FORM_TIED_CASILLAS,
 )
 from ._parser_boundary_support import (
     _MODELO_111_EXPECTED_TARGETS,
@@ -74,3 +75,37 @@ def test_parser_extracts_modelo_111_casillas_from_corpus(pdf_stem: str, year: in
     )
     for value in values.values():
         assert isinstance(value, Decimal), f"{pdf_stem}: expected a Decimal instance, got {value!r}"
+
+
+def test_the_expected_maps_keep_their_discriminating_power() -> None:
+    """The guard on the guard: the quarters must stay tellable apart.
+
+    The exact-map assertion above is only stronger than the constant check it
+    replaced BECAUSE the amounts differ. The withdrawn renders printed one
+    redaction constant into every money box of all four quarters, so nothing
+    could distinguish a cross-column misread from a test reading the wrong
+    quarter's file.
+
+    Within a quarter this asserts less than the Modelo 100 sibling, and the
+    difference is principled rather than an oversight: casillas 09, 28 and 30
+    are REQUIRED to repeat, because with one epigrafe filled and no prior
+    autoliquidacion ``28 = 03+...+27`` reduces to ``09`` and ``30 = 28 - 29``
+    reduces to ``28``. Forcing them apart would print a form contradicting its
+    own stated formula. So the assertion is: every casilla the form leaves free
+    differs from the ones it does not constrain, and every quarter differs from
+    every other.
+    """
+    stems = sorted(_M111_EXPECTED_VALUES_BY_STEM)
+    resultado_by_stem = {stem: _M111_EXPECTED_VALUES_BY_STEM[stem][_M111_CASILLA_30] for stem in stems}
+    assert len(set(resultado_by_stem.values())) == len(stems), (
+        f"casilla 30 must differ in every quarter or a test reading the wrong quarter's "
+        f"fixture would go unnoticed; got {resultado_by_stem}"
+    )
+
+    for stem in stems:
+        amounts = _M111_EXPECTED_VALUES_BY_STEM[stem]
+        unconstrained = [value for casilla_id, value in amounts.items() if casilla_id not in _M111_FORM_TIED_CASILLAS]
+        assert len(set(unconstrained)) == len(unconstrained), (
+            f"{stem}: the perceptor count and the base are independent of the retencion chain, "
+            f"so they must be distinct; got {unconstrained}"
+        )

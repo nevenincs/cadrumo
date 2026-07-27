@@ -29,6 +29,45 @@ provenance-vs-``/Producer`` cross-check in
 sidecar claiming ``synthetic_generated`` on a PDF without the generator
 signature. That gate owns the mis-stamp check; this one does not restate it.
 
+THE LIVE POSITIVE CONTROL, AND WHY IT IS NOT COMMITTED. The scans above are
+absence assertions over already-sanitised artefacts. What they cannot show is
+that the gate and the sanitiser AGREE: that a document the sanitiser really
+processed passes the scan when checked against the manifest the sanitiser
+really emitted. Every other proof in this module feeds a hand-written sidecar,
+so a sanitiser that wrote a synthetic it forgot to record -- or recorded under a
+different normalisation -- would false-positive on its own output, and a gate
+that fires on correct output is a gate that gets silenced. That is the failure
+mode the original hole came from.
+
+:func:`test_the_gate_and_the_sanitiser_agree_end_to_end` closes it by building a
+PRE-SANITISATION specimen: a document deliberately carrying checksum-valid
+identity tokens, which the gate must FLAG, which the real ``sanitize_pdf`` then
+processes, and whose output the gate must find CLEAN against the sanitiser's own
+``replacements_applied``. Until the withdrawn real renders were replaced, the
+leaking fixtures themselves were that control; replacing them removed it, and
+this restores it.
+
+The specimen is GENERATED IN-TEST and never committed. That is a deliberate
+choice over the alternatives -- a new provenance value, or its own directory --
+and the reasons are structural rather than aesthetic:
+
+- A file that deliberately carries identity-shaped tokens is the one kind of
+  file that must never enter git history, because history outlives every
+  intention about it. That is the lesson the whole fixture replacement was
+  about.
+- It needs no exclusion at all. ``_real_corpus_fixtures`` walks COMMITTED
+  artefacts under the package root, so an in-memory specimen is outside the
+  scope by construction. A committed one would have to be taught to the scanner,
+  and a scanner that knows about a specific specimen is the per-fixture
+  allowlist ``fixture-provenance-declared-in-sidecar`` forbids, whatever it is
+  called.
+- Nothing is lost by it: ``sanitize_pdf`` takes bytes, not a path, so the
+  end-to-end path is identical either way.
+
+Its tokens are checksum-valid because the detectors verify checksums and would
+not fire otherwise, and they are built from all-zero and all-one bodies so no
+reader can mistake them for a real document or account.
+
 HANDLING RULE. No assertion in this module can print a matched value. Findings
 carry a pattern class, a surface, and an offset, and that is all the failure
 message renders.
@@ -40,8 +79,11 @@ import json
 from pathlib import Path
 
 import pytest
+from pydantic import SecretStr
 
 from .....tests._inventory import SRC_CADRUMO
+from .. import sanitize_pdf
+from .._records import IbanReplacement, NameReplacement, NifReplacement, TokenMap
 from ._residual_identity_scan import (
     CHECKSUM_VERIFIED_KINDS,
     ResidualKind,
@@ -58,6 +100,23 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 #: the mod-97 completion of an all-zero BBAN.
 _FAKE_NIF = "00000000T"
 _FAKE_IBAN = "ES8200000000000000000000"
+_PLANTED_NAME = "NOMBRE DE PRUEBA CERO"
+"""The name the pre-sanitisation specimen carries before the sanitiser rewrites it.
+
+Names carry no checksum, so this is never a blocking finding; it is here because
+a specimen the sanitiser rewrites on only one axis would not exercise the
+manifest across the categories a real ``TokenMap`` declares.
+"""
+
+#: What the sanitiser writes IN PLACE of the planted values.
+#:
+#: Both are checksum-valid, and deliberately DIFFERENT from the planted pair, so
+#: a sanitiser that failed to rewrite anything would leave the planted values in
+#: place and the end-to-end control would still fire. All-one bodies keep them
+#: as obviously synthetic on sight as the all-zero originals.
+_SYNTHETIC_NIF = "Y0000001S"
+_SYNTHETIC_IBAN = "ES6011111111111111111111"
+_SYNTHETIC_NAME = "APELLIDO APELLIDO NOMBRE"
 
 
 def _real_corpus_fixtures() -> list[tuple[Path, Path]]:
@@ -206,6 +265,117 @@ def test_advisory_kinds_are_excluded_from_the_blocking_tier() -> None:
     assert {ResidualKind.NIF_NIE, ResidualKind.IBAN} == CHECKSUM_VERIFIED_KINDS
     assert ResidualKind.EMAIL not in CHECKSUM_VERIFIED_KINDS
     assert ResidualKind.PHONE not in CHECKSUM_VERIFIED_KINDS
+
+
+def test_the_gate_and_the_sanitiser_agree_end_to_end() -> None:
+    """A document the sanitiser really processed passes its own manifest.
+
+    The live positive control. Three claims in sequence, and each one is load
+    bearing:
+
+    1. The gate FLAGS the pre-sanitisation specimen. Without this the rest could
+       pass on a document that never carried anything, which is exactly how an
+       absence assertion goes quietly vacuous.
+    2. The real :func:`sanitize_pdf` processes it -- no stub, no hand-built
+       output.
+    3. The gate finds the OUTPUT clean when checked against the sanitiser's own
+       ``replacements_applied``. This is the seam nothing else covers: every
+       other proof here supplies a sidecar written by the test, so a synthetic
+       the sanitiser wrote but failed to record would go unnoticed until it
+       false-positived on a real operator's file.
+
+    The specimen plants its identity on two different surfaces -- DocInfo and a
+    content stream -- because the sanitiser treats them separately and a fix that
+    covered only one would still satisfy a single-surface specimen.
+    """
+    source = _pre_sanitisation_specimen()
+
+    before = scan_for_residual_identities(source, {"replacements_applied": []})
+    assert {finding.kind for finding in before} == {ResidualKind.NIF_NIE, ResidualKind.IBAN}, (
+        "the pre-sanitisation specimen must be visibly dirty to the gate, or the clean "
+        f"result below proves nothing; got kinds {sorted(k.value for k in {f.kind for f in before})}"
+    )
+
+    result = sanitize_pdf(source, _pre_sanitisation_token_map())
+    sidecar = {"replacements_applied": [row.model_dump() for row in result.replacements_applied]}
+
+    after = scan_for_residual_identities(result.output_bytes, sidecar)
+    assert not after, (
+        "the residual gate flags genuine sanitiser output when checked against the manifest "
+        "the sanitiser itself emitted. Either a real value survived, or a synthetic the "
+        "sanitiser wrote is missing from replacements_applied -- both make this gate fire on "
+        "correct output, which is how a gate gets silenced.\n"
+        + "\n".join(f"  {finding.describe()}" for finding in after)
+    )
+
+
+def test_the_end_to_end_control_depends_on_a_complete_manifest() -> None:
+    """Anti-vacuity proof for the control above: drop a row, and it must fire.
+
+    The clean result above could hold for the wrong reason -- if the scan simply
+    found nothing identity-shaped in the output, the manifest would be
+    irrelevant and the seam would still be uncovered. Removing the NIF row from
+    the sanitiser's own manifest must therefore turn the output dirty, which
+    proves the output really does carry a checksum-valid synthetic and that the
+    manifest really is what accounts for it.
+    """
+    result = sanitize_pdf(_pre_sanitisation_specimen(), _pre_sanitisation_token_map())
+    rows = [row.model_dump() for row in result.replacements_applied]
+    without_nif = [row for row in rows if row["synthetic"] != _SYNTHETIC_NIF]
+    assert len(without_nif) < len(rows), "the sanitiser must have recorded the NIF replacement"
+
+    findings = scan_for_residual_identities(result.output_bytes, {"replacements_applied": without_nif})
+
+    assert ResidualKind.NIF_NIE in {finding.kind for finding in findings}, (
+        "dropping the NIF row from the manifest left the scan clean, so the end-to-end control "
+        "above is not actually checking the output against the manifest"
+    )
+
+
+def _pre_sanitisation_specimen() -> bytes:
+    """A document deliberately carrying checksum-valid identity, never committed.
+
+    See the module docstring for why this is generated rather than stored. The
+    values are the same obviously-fake pair the planted-identity proofs use, so
+    a reader meets one vocabulary rather than two.
+    """
+    import io
+
+    from reportlab.lib.pagesizes import A4
+    from reportlab.pdfgen import canvas
+
+    buffer = io.BytesIO()
+    pdf_canvas = canvas.Canvas(buffer, pagesize=A4, invariant=True)
+    # DocInfo: a surface the sanitiser scrubs separately from page content.
+    pdf_canvas.setTitle(f"Justificante {_FAKE_NIF}")
+    pdf_canvas.setAuthor(_PLANTED_NAME)
+    pdf_canvas.setFont("Helvetica", 10)
+    pdf_canvas.drawString(50, 760, f"NIF: {_FAKE_NIF}")
+    pdf_canvas.drawString(50, 740, f"Apellidos y nombre: {_PLANTED_NAME}")
+    pdf_canvas.drawString(50, 720, f"Codigo Cuenta Cliente (IBAN): {_FAKE_IBAN}")
+    pdf_canvas.showPage()
+    pdf_canvas.save()
+    return buffer.getvalue()
+
+
+def _pre_sanitisation_token_map() -> TokenMap:
+    """The operator-supplied rewrite for the specimen above.
+
+    The synthetics are themselves checksum-valid -- a placeholder has to be, or
+    it would not round-trip through the parsers that read these documents -- and
+    that is precisely why the manifest matters: after sanitisation the output
+    still contains identity-shaped, checksum-valid values, and only
+    ``replacements_applied`` distinguishes them from a residual.
+    """
+    return TokenMap(
+        nif=(NifReplacement(real=SecretStr(_FAKE_NIF), synthetic=_SYNTHETIC_NIF, surface_label="taxpayer NIF"),),
+        name=(
+            NameReplacement(real=SecretStr(_PLANTED_NAME), synthetic=_SYNTHETIC_NAME, surface_label="taxpayer name"),
+        ),
+        iban=(
+            IbanReplacement(real=SecretStr(_FAKE_IBAN), synthetic=_SYNTHETIC_IBAN, surface_label="domiciliacion IBAN"),
+        ),
+    )
 
 
 def _pdf_bytes_containing(text: str) -> bytes:

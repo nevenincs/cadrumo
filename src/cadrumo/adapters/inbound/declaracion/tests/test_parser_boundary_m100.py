@@ -92,3 +92,40 @@ def test_parser_extracts_modelo_100_profile_targets_from_corpus(pdf_stem: str, y
         f"Every printed amount here is distinct, so a mismatch names the target that "
         f"drifted onto a neighbouring line rather than merely changing value."
     )
+
+
+def test_the_expected_maps_keep_their_discriminating_power() -> None:
+    """The guard on the guard: the expected amounts must stay distinct.
+
+    The exact-map assertion above is only stronger than the constant-substitution
+    check it replaced BECAUSE the amounts differ. Measured on the withdrawn
+    renders, which printed one redaction constant into every box, a target that
+    drifted onto a neighbouring line read the same number and the old check
+    passed; with distinct amounts the same drift fails. A well-meaning edit that
+    made these uniform -- or that copied one year's block over another -- would
+    leave every test in this module green while silently restoring exactly the
+    blindness the replacement removed.
+
+    Two properties, because two different mistakes are possible. Within a
+    specimen, distinctness is what catches a cross-LINE misread. Across the
+    three, per-casilla distinctness is what catches a test or a fixture reading
+    the wrong YEAR.
+    """
+    for stem, amounts in _M100_EXPECTED_VALUES_BY_STEM.items():
+        values = list(amounts.values())
+        assert len(set(values)) == len(values), (
+            f"{stem}: expected amounts must be pairwise distinct, or the exact-map assertion "
+            f"cannot tell a cross-line misread from a correct read; "
+            f"{len(values) - len(set(values))} duplicate(s)"
+        )
+
+    stems = sorted(_M100_EXPECTED_VALUES_BY_STEM)
+    shared_casillas = set.intersection(*(set(_M100_EXPECTED_VALUES_BY_STEM[stem]) for stem in stems))
+    assert shared_casillas, "the specimens must declare overlapping casillas for this to assert anything"
+    for casilla_id in sorted(shared_casillas):
+        per_year = [_M100_EXPECTED_VALUES_BY_STEM[stem][casilla_id] for stem in stems]
+        assert len(set(per_year)) == len(per_year), (
+            f"casilla {casilla_id!r} carries the same amount in more than one ejercicio "
+            f"({dict(zip(stems, per_year, strict=True))}), so a fixture or test reading the "
+            f"wrong year's specimen would go unnoticed"
+        )

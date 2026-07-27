@@ -41,6 +41,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 # the refusal can be opted out of per call -- against a catalogued file that the
 # pipeline never produced. The mechanism is the part with a regression risk; the
 # provenance of the input is not something the guard reads.
+#
+# The coverage that withdrawal DID cost -- an end-to-end run over a document the
+# sanitiser really processed -- was restored rather than accepted, in
+# `test_residual_identity_absence.test_the_gate_and_the_sanitiser_agree_end_to_end`.
+# It builds a pre-sanitisation specimen in memory, requires the residual gate to
+# flag it, runs this pipeline over it, and requires the gate to find the output
+# clean against the manifest this pipeline emitted. That is the seam no test
+# covered before: every other proof supplies a hand-written sidecar.
 _SANITISED_FIXTURE_PDF = FIXTURES_DIR / "justificantes" / "100" / "2022-0A.pdf"
 _REAL_NIE_CANARY = "Y1234567X"
 _REAL_NAME_CANARY = "PERSONA PRUEBA UNO"

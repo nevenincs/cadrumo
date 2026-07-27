@@ -17,6 +17,18 @@ _M111_CORPUS_PARAMS: tuple[tuple[str, int, str], ...] = (
 )
 _M111_CORPUS_IDS: tuple[str, ...] = tuple(stem for stem, _year, _period in _M111_CORPUS_PARAMS)
 
+_M111_FORM_TIED_CASILLAS: frozenset[CasillaId] = frozenset(
+    {_M111_CASILLA_09, _M111_CASILLA_28, _M111_CASILLA_30},
+)
+"""Casillas whose printed values the FORM ties together on these renders.
+
+With one epigrafe filled and no prior autoliquidacion, ``28`` is the sum that
+reduces to ``09`` and ``30 = 28 - 29`` reduces to ``28``. They are therefore
+expected to repeat, and a distinctness guard must exempt them rather than
+demanding a form that contradicts its own stated formula. Named here so the
+exemption is a declared property of the form and not a literal in an assertion.
+"""
+
 _M111_EXPECTED_VALUES_BY_STEM: dict[str, dict[CasillaId, Decimal]] = {
     "2024-1T": {
         _M111_CASILLA_07: Decimal("3"),
