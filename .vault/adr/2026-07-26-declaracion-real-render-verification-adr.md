@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#declaracion-real-render-verification'
 date: '2026-07-26'
-modified: '2026-07-26'
+modified: '2026-07-27'
 related:
   - "[[2026-07-25-declaracion-profile-printed-box-scope-adr]]"
   - "[[2026-07-26-declaracion-real-render-verification-plan]]"
@@ -11,6 +11,7 @@ related:
   - '[[2026-07-26-declaracion-real-render-verification-r8-arbitration-enrollment-readiness-audit]]'
   - '[[2026-07-26-declaracion-real-render-verification-adversarial-verification-of-campaign-claims-audit]]'
   - '[[2026-07-26-declaracion-real-render-verification-campaign-close-honesty-review-audit]]'
+  - '[[2026-07-27-declaracion-real-render-verification-modelo-100-manifest-reconciliation-gap-audit]]'
 ---
 
 # `declaracion-real-render-verification` adr: `what grounds a declaracion_pdf profile's claims` | (**status:** `accepted`)
@@ -274,6 +275,32 @@ This is a fixture-metadata defect, not a parser defect and not a redaction leak:
 unrelated boxes carrying an identical value cannot be real taxpayer data. It is
 recorded rather than fixed, because correcting the manifests is a corpus change
 outside this campaign's scope.
+
+**Resolved 2026-07-27, and the manifests turn out not to be wrong.** The related
+puzzle — manifests declaring 124, 133 and 137 amount replacements while only 70, 74
+and 78 amounts render — is fully explained with no remainder, and the explanation is
+neither of the two mechanisms first suspected.
+
+`"1.001.000,00"[4:12]` is exactly `"1.000,00"`. The long form literally contains the
+short form as a substring at a fixed offset. Verified at the raw content-stream byte
+level with `pikepdf`, bypassing the text layer entirely: every long-form occurrence has
+the short form nested at that offset, 54 of 54, 59 of 59 and 59 of 59 across the three
+specimens with zero exceptions. The arithmetic closes exactly — 124−70, 133−74 and
+137−78 are 54, 59 and 59, matching the independently measured long-form counts.
+
+So whatever produces `replacements_applied` counts two events for every long-form box:
+the twelve-character run, and again the eight-character substring inside it. The
+manifests **over-count distinct events; they do not fabricate or misdescribe**. Every
+declared row is a genuine byte-level match that existed and was redacted.
+
+Both alternatives were ruled out by direct inspection rather than by elimination: there
+is no AcroForm carrying separate invisible field values, no `OCProperties`,
+`StructTreeRoot` or `MarkInfo` indicating tagged-PDF duplication, and none of the
+double-strike character rendering found on another modelo earlier in this campaign.
+
+The practical consequence is that declaring both constants is sufficient. The
+row-count over-counting needs no fix of its own, because nothing found in this campaign
+reads that count for anything beyond inspection.
 
 ## Codification candidates
 
