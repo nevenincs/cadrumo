@@ -3,22 +3,12 @@ tags:
   - '#plan'
   - '#declaracion-real-render-verification'
 date: '2026-07-26'
-modified: '2026-07-26'
+modified: '2026-07-27'
 tier: L2
 related:
   - '[[2026-07-25-declaracion-profile-printed-box-scope-adr]]'
   - '[[2026-07-25-declaracion-profile-printed-box-scope-real-render-gate-and-naming-honesty-audit]]'
 ---
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `declaracion-real-render-verification` plan
 
@@ -46,10 +36,10 @@ Static route audit and evidence-gap register
 Measure and bound route R12, the filer-chosen render language
 
 - [x] `P03.S10` - Measure route R12 language exposure across all 29 declaracion_pdf profiles, separating targets that depend on Spanish prose from those anchored on box numbers or numerals; `src/cadrumo/_data/registry/aeat/modelos`.
-- [ ] `P03.S11` - Widen every label pattern for which a bundled render evidences the wording, inventing none; `src/cadrumo/_data/registry/aeat/modelos/390`.
-- [ ] `P03.S12` - Register the fully-exposed profiles as D3 evidence gaps naming the English-render specimen class that would unblock each; `.vault/exec`.
-- [ ] `P03.S13` - Assess whether per-profile bilingual alternation is the right shape or merely the reachable one, and record the structural alternative; `.vault/exec`.
-- [ ] `P03.S14` - Add the Modelo 100 boundary gate asserting the exclusion and its stated reason, green and not mistakable for a pass; `src/cadrumo/adapters/inbound/declaracion/tests`.
+- [x] `P03.S11` - Widen every label pattern for which a bundled render evidences the wording, inventing none; `src/cadrumo/_data/registry/aeat/modelos/390`.
+- [x] `P03.S12` - Register the fully-exposed profiles as D3 evidence gaps naming the English-render specimen class that would unblock each; `.vault/exec`.
+- [x] `P03.S13` - Assess whether per-profile bilingual alternation is the right shape or merely the reachable one, and record the structural alternative; `.vault/exec`.
+- [x] `P03.S14` - Add the Modelo 100 boundary gate asserting the exclusion and its stated reason, green and not mistakable for a pass; `src/cadrumo/adapters/inbound/declaracion/tests`.
 
 ### Phase `P04` - Tracked deferrals
 
