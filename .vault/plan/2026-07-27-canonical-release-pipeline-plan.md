@@ -51,7 +51,7 @@ Invert the promote job around irreversibility per P5: every reversible destinati
 
 Execute the repo-side half of issue 618: the retiring upload workflow and its conformance test are deleted with every reference swept, leaving Gate 3 the sole publication authority in the tree. The registry-side registration and environment deletions are the operator's OP-6 half.
 
-- [ ] `P03.S07` - Delete the retiring upload workflow and its conformance test and sweep every reference, gate: rg -i pypi-upload across the tree returns only vault records and history, and uv run --no-sync pytest dev/release/tests -q passes clean after the deletion; `.github/workflows/pypi-upload.yml, dev/release/tests/test_pypi_upload_workflow.py`.
+- [x] `P03.S07` - Delete the retiring upload workflow and its conformance test and sweep every reference, gate: rg -i pypi-upload across the tree returns only vault records and history, and uv run --no-sync pytest dev/release/tests -q passes clean after the deletion; `.github/workflows/pypi-upload.yml, dev/release/tests/test_pypi_upload_workflow.py`.
 
 ### Phase `P04` - Marketplace supersession mechanism
 
