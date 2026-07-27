@@ -41,7 +41,7 @@ from pathlib import Path
 
 import pytest
 
-from .....tests import FIXTURES_DIR
+from .....tests._inventory import SRC_CADRUMO
 from ._residual_identity_scan import (
     CHECKSUM_VERIFIED_KINDS,
     ResidualKind,
@@ -61,18 +61,48 @@ _FAKE_IBAN = "ES8200000000000000000000"
 
 
 def _real_corpus_fixtures() -> list[tuple[Path, Path]]:
-    """Every committed fixture whose sidecar declares real provenance."""
-    fixture_root = FIXTURES_DIR / "justificantes"
-    if not fixture_root.is_dir():
-        return []
+    """Every committed artefact whose sidecar declares real provenance.
+
+    Walks the whole package, not one fixture directory. The module docstring
+    above promises the scope is READ from each sidecar so a new real specimen
+    enrols "automatically the moment it lands"; scanning only
+    ``fixtures/justificantes`` did not keep that promise. Four real-provenance
+    artefacts live outside it in the ledger evidence corpus and were never
+    scanned once.
+
+    The narrowing also made this gate unsatisfiable the moment it landed. Its
+    two justificante specimens had just been replaced with synthetic ones
+    because they leaked, so the directory held no real specimen at all, and the
+    non-emptiness guard below fired with a message asserting that NO committed
+    fixture declares ``real_corpus`` -- while four do. A gate reporting a red
+    on a false premise is worse than a silent one, because the premise is what
+    a reader carries away.
+
+    Both sidecar conventions in the tree are honoured: ``X.pdf`` beside
+    ``X.json`` for the justificante fixtures, and ``X.<ext>`` beside
+    ``X.<ext>.provenance.json`` for the evidence corpus. Non-PDF artefacts are
+    included because the scan reads bytes and a JPEG can carry an identity in
+    its metadata exactly as a PDF can in a content stream.
+    """
     pairs: list[tuple[Path, Path]] = []
-    for pdf_path in sorted(fixture_root.rglob("*.pdf")):
-        sidecar_path = pdf_path.with_suffix(".json")
-        if not sidecar_path.is_file():
+    seen: set[Path] = set()
+    for sidecar_path in sorted(SRC_CADRUMO.rglob("*.json")):
+        if "__pycache__" in sidecar_path.parts:
             continue
-        sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
-        if sidecar.get("provenance") == "real_corpus":
-            pairs.append((pdf_path, sidecar_path))
+        name = sidecar_path.name
+        if name.endswith(".provenance.json"):
+            target = sidecar_path.parent / name[: -len(".provenance.json")]
+        else:
+            target = sidecar_path.with_suffix(".pdf")
+        if not target.is_file() or target in seen:
+            continue
+        try:
+            sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            continue
+        if isinstance(sidecar, dict) and sidecar.get("provenance") == "real_corpus":
+            seen.add(target)
+            pairs.append((target, sidecar_path))
     return pairs
 
 
