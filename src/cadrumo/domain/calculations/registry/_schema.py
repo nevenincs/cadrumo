@@ -23,7 +23,7 @@ from pydantic import (
     model_validator,
 )
 
-from ....core import Period, TaxDomain
+from ....core import REVIEWED_REVISION_REVIEW_STATUSES, Period, RevisionReviewStatus, TaxDomain
 from ....core.aggregation import BindingAggregation, BindingSourceKind, BindingTypedEnumKind
 from ....core.classification import SensitivityClass
 from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
@@ -141,6 +141,7 @@ from ._schema_base import (
     ModeloFilingCapability,
     RegistryModel,
     ReviewStatus,
+    RevisionReviewStatusField,
     SensitivityClassField,
     SourceCitation,
     SourceCitationText,
@@ -1233,6 +1234,13 @@ class ModeloRevision(RegistryModel):
 
     The field is mandatory at validation time: every revision must cite the
     Ordenes that approve or amend the form for its applicability window.
+
+    The governance stamp — ``engineered_by``, ``review_status``, ``reviewed_by``,
+    ``reviewed_at`` — is the revision's *declared* provenance. Authorship and
+    signoff are facts about the people and agents who built the revision, so
+    nothing in the tree can derive them. The whole block is optional and its
+    absence reads as :attr:`RevisionReviewStatus.PENDING_REVIEW`: an unstamped
+    revision is a visible unreviewed backlog entry, never a silent pass.
     """
 
     id: RevisionId
@@ -1267,11 +1275,42 @@ class ModeloRevision(RegistryModel):
     verification_predicates: tuple[VerificationPredicateDefinition, ...] = ()
     continuidad_validation: Literal["advisory", "strict"] = "advisory"
     casilla_continuidad_evolutions: tuple[CasillaContinuidadEvolutionDefinition, ...] = ()
+    engineered_by: str | None = Field(default=None, min_length=1)
+    review_status: RevisionReviewStatusField = RevisionReviewStatus.PENDING_REVIEW
+    reviewed_by: str | None = Field(default=None, min_length=1)
+    reviewed_at: date | None = None
 
     @model_validator(mode="after")
     def _validate_window(self) -> ModeloRevision:
         if self.valid_to is not None and self.valid_to < self.valid_from:
             raise RegistryValidationError("revision valid_to must be on or after valid_from")
+        return self
+
+    @model_validator(mode="after")
+    def _validate_governance_stamp(self) -> ModeloRevision:
+        """Bind the reviewer identity to the claim that a review happened.
+
+        A reviewed status without a reviewer or a date is an unfalsifiable
+        claim, and a reviewer recorded against ``pending_review`` is a review
+        the status denies. Both directions refuse so the stamp cannot say one
+        thing on the status axis and another on the attribution axis.
+        """
+        companions = {"reviewed_by": self.reviewed_by, "reviewed_at": self.reviewed_at}
+        if self.review_status in REVIEWED_REVISION_REVIEW_STATUSES:
+            missing = sorted(name for name, value in companions.items() if value is None)
+            if missing:
+                raise RegistryValidationError(
+                    f"revision {self.id!r} declares review_status={self.review_status.value!r} but omits "
+                    f"{missing!r}; a reviewed revision must name its reviewer and the date of review",
+                )
+            return self
+        present = sorted(name for name, value in companions.items() if value is not None)
+        if present:
+            raise RegistryValidationError(
+                f"revision {self.id!r} declares review_status="
+                f"{RevisionReviewStatus.PENDING_REVIEW.value!r} but also declares {present!r}; "
+                f"record the review by advancing review_status, or drop the reviewer fields",
+            )
         return self
 
 

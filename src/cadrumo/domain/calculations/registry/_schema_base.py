@@ -2,6 +2,8 @@
 
 The ``SensitivityClassField`` alias coerces registry ``output_sensitivity``
 tokens into :class:`SensitivityClass` members before strict schema validation.
+``RevisionReviewStatusField`` does the same for the per-revision governance
+stamp's ``review_status`` token.
 """
 
 from __future__ import annotations
@@ -10,7 +12,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, Field, field_validator
 
-from ....core import STRICT_FROZEN_CONFIG
+from ....core import STRICT_FROZEN_CONFIG, RevisionReviewStatus
 from ....core.classification import SensitivityClass
 from ._errors import RegistryValidationError
 from ._ids import LegalRefId, SourceRefId
@@ -25,6 +27,7 @@ __all__ = [
     "ModeloFilingCapability",
     "RegistryModel",
     "ReviewStatus",
+    "RevisionReviewStatusField",
     "SensitivityClassField",
     "SourceCitation",
     "SourceCitationText",
@@ -41,6 +44,27 @@ def _coerce_sensitivity_class(value: object) -> object:
 
 
 SensitivityClassField = Annotated[SensitivityClass, BeforeValidator(_coerce_sensitivity_class)]
+
+
+def _coerce_revision_review_status(value: object) -> object:
+    if isinstance(value, RevisionReviewStatus):
+        return value
+    if isinstance(value, str):
+        return RevisionReviewStatus(value)
+    return value
+
+
+RevisionReviewStatusField = Annotated[RevisionReviewStatus, BeforeValidator(_coerce_revision_review_status)]
+"""Registry ``review_status`` token coerced into a :class:`RevisionReviewStatus` member.
+
+Registry schema models validate under ``strict=True``, which refuses a bare TOML
+string for an enum-typed field, so the governance stamp needs this coercion hop
+exactly as ``output_sensitivity`` does. An unknown token raises out of the enum
+constructor and surfaces as a registry load failure naming the offending value.
+
+Distinct from :data:`ReviewStatus` below, which is the legal catalogue's own
+single-valued review vocabulary and governs a different subject.
+"""
 
 CalculationClass = Literal["filing", "informative", "summary"]
 ModeloFilingCapability = Literal["borrador", "renta_ledger_default"]
