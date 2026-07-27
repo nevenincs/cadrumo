@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#conformance-cli'
 date: '2026-07-27'
-modified: '2026-07-27'
+modified: '2026-07-28'
 tier: L2
 related:
   - '[[2026-07-27-conformance-cli-adr]]'
@@ -47,9 +47,9 @@ Lift the test-trapped conformance facts into importable typed libraries under sr
 - [x] `P02.S06` - re-point the external-oracle grounding gate at the lifted library in the same commit, keeping both honesty directions asserted; `src/cadrumo/domain/calculations/registry/tests/test_external_oracle_grounding_enrolled.py`.
 - [x] `P02.S07` - extract the fichero-BOE required-applicable casilla derivation into one shared public function consumed by the export gate; `src/cadrumo/application/filing/_export.py`.
 - [x] `P02.S08` - re-point the export completeness and fichero-BOE parity tests at the shared required-set derivation, removing the mirrored duplicate; `src/cadrumo/application/filing/tests`.
-- [ ] `P02.S09` - add the classification-coherence checker (calculation_class vs tax_domain vs core modelo constants, plus the declared-but-dead axis census) as an importable typed fact-builder; `src/cadrumo/domain/calculations/registry/_classification_coherence.py`.
+- [x] `P02.S09` - add the classification-coherence checker (calculation_class vs tax_domain vs core modelo constants, plus the declared-but-dead axis census) as an importable typed fact-builder; `src/cadrumo/domain/calculations/registry/_classification_coherence.py`.
 - [ ] `P02.S10` - add the per-revision conformance profile composer with strict typed row models, composing model-law coverage, support matrix, registry-scope diagnostics, authorization state, external grounding, and governance stamps; `src/cadrumo/application/registry/_conformance.py`.
-- [ ] `P02.S11` - add structure-and-wiring tests for the classification-coherence checker grounded in the live registry tree; `src/cadrumo/domain/calculations/registry/tests/test_classification_coherence.py`.
+- [x] `P02.S11` - add structure-and-wiring tests for the classification-coherence checker grounded in the live registry tree; `src/cadrumo/domain/calculations/registry/tests/test_classification_coherence.py`.
 - [ ] `P02.S12` - add structure-and-wiring tests for the conformance profile composer, asserting provenance fields and degraded-mode labelling, never author-invented numeric expectations; `src/cadrumo/application/registry/tests/test_conformance_profile.py`.
 
 ### Phase `P03` - conformance governance CLI in dev
