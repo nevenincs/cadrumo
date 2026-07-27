@@ -526,6 +526,14 @@ audit-health-report:
 audit-health-report-json:
     @uv run --no-sync python -m dev.audit.report --json
 
+# Show conformance status across all modelo revisions and compare against the
+# committed baseline. ``report`` exits 0 always (a screen); ``audit`` exits 0
+# here too (screen posture without ``--check``). To gate on the baseline use
+# ``audit --check`` directly or run the CI integration test in ci-full.yml.
+audit-registry-conformance:
+    @uv run --no-sync python -m dev.registry.conformance report
+    @uv run --no-sync python -m dev.registry.conformance audit
+
 # ── Documentation ────────────────────────────────────────────────────────────
 
 # Build changed narrative and API reference documents.
