@@ -85,20 +85,40 @@ No action beyond awareness: in a shared worktree a long suite reports on a head
 that has moved, so an attribution made from its output must be re-checked
 against the current tree before it is believed in either direction.
 
-### The documentation lane is not green, for reasons outside this campaign
+### The documentation lane is not green, and one of those failures was mine to fix
 
-Six failures remain in the documentation lane at current head, none attributable
-to this work. Two are locale catalogue drift against peer working-tree changes
-present since the session began. One is a page-coherence failure where a
-documented sequence creates a work unit the command surface now refuses for a
-profile without the relevant economic activity. One is a documented-command
-conformance failure where an audit sequence cites a verb the live surface does
-not provide.
+This finding was written wrong on the first pass and is corrected here, because
+the error it contains is more instructive than the finding.
 
-The last two are the same class and need a domain decision this campaign has no
-standing to make: which audit verbs should exist, and which profile paths the
-documentation should describe. They are reported rather than absorbed, and the
-runbook Step does not claim that lane green.
+The first version recorded a documented-command conformance failure as needing
+"a domain decision this campaign has no standing to make: which audit verbs
+should exist". That was an assumption inherited from the failure message rather
+than a reading of the code. The sequence file was correct and the GATE was
+wrong: its extractor anchored on the product name anywhere in a line, so a
+blocked-reason sentence reading "No aeat verb creates an evidence bundle" was
+parsed as a citation and the rest of the sentence resolved as a verb path. The
+annotation directives had been skipped only because their syntax happens not to
+contain the product name, making the whole scheme depend on documentation prose
+never using it. Fixed under the commit subject `fix(docs-gate): skip prose
+directives by rule, not by vocabulary coincidence`; that suite now passes.
+
+The remaining failures were then re-checked on the same basis rather than
+assumed, and they are genuinely outside this campaign.
+
+Catalogue drift spans nineteen of fifty-eight pages in one locale alone, across
+documents this campaign never touched, and the catalogue files themselves are
+peer working-tree changes right now. The remedy is a tree-wide re-sync that
+would sweep every other campaign's documentation work into this one and leave an
+untranslated delta, so it is left to the owners of that work.
+
+Page coherence fails on three pages rather than the one first recorded, each a
+cumulative-run failure where a later frame depends on state an earlier one did
+not leave. One of those pages has peer working-tree changes in its own locale
+catalogue, so it is under active edit by somebody else.
+
+The lesson generalises past this instance: a failure message names a symptom and
+frequently implies a cause, and adopting the implied cause without reading the
+code is how a gate defect gets recorded as a domain question and then survives.
 
 ### One Step is genuinely blocked, and its pairing was deliberately broken
 
