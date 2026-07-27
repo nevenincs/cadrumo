@@ -12,6 +12,42 @@ against superseded law with no signal to the operator.
 These tests use two real registry trees and two real authorities. Nothing about
 the snapshot resolution is substituted; only the process resource registry is
 re-pointed, which is what a resource-registry reset does in production.
+
+Known debt: the re-pointing goes through ``monkeypatch``, so this module is the
+one site keeping ``tests.test_monkeypatch_inventory`` red. It is recorded rather
+than fixed because both obvious fixes are wrong, and the second one is wrong in
+a way that looks right.
+
+There is no honest seam today. ``core.resources.resources()`` is a cached
+factory, ``ResourceRegistry`` is frozen and slotted, and its ``modelos`` slot is
+built from a default factory rather than from Settings, so no Settings override
+can re-point it. Swapping ``monkeypatch.setattr`` for a hand-rolled
+save/restore on the same private target would only hide the construct from the
+inventory's AST matcher, which is evasion rather than a fix.
+
+Adding a scoped ``override_resources`` to ``core.resources`` was tried and
+reverted: ``tests.test_override_seam_singularity`` forbids that shape with no
+allowlist and no baseline, because two seams of exactly that shape shipped and
+hid before. ``override_settings`` is sanctioned only because it has real
+production callers scoping a call tree; a seam existing for one test is, in
+that gate's words, a test-hook setter rather than production dependency
+injection.
+
+**The remaining option carries a trap.** That gate points instead at threading
+the dependency through a parameter, and ``_load_registry_snapshot`` has exactly
+one production caller (``build_draft``), with the sibling
+:mod:`adapters.inbound.declaracion._parser` already using that pattern. But
+adding an ``authority`` parameter would let a naive ``@cache`` key on
+``(modelo, period, authority)`` instead of ``(modelo, period)``, so the
+two-distinct-authorities setup below would stop colliding and the behavioural
+test would pass with the defect present. Threading the parameter therefore
+WEAKENS the very test being migrated unless it is restructured around a single
+authority over a mutating tree — which then also depends on the authority's own
+fingerprint invalidation, and that must be confirmed rather than assumed or the
+result is a false green.
+
+Anyone taking this on owns that restructuring and the confirmation, not just
+the signature change.
 """
 
 from __future__ import annotations
