@@ -115,6 +115,15 @@ trailing-box-number rule there. Text assembly never changes, so **ledger and bor
 are untouched by construction rather than by measurement** — which is a stronger
 guarantee than any before-and-after comparison could give.
 
+**Independently confirmed by the coordinator before this decision was recorded**,
+because the whole guarantee rests on it and it originated from a single report. Three
+checks, all agreeing: the word-extraction functions import pdfplumber locally and open
+it directly inside the parser module; the shared `pdf` package exposes no word surface
+at all; and nothing outside the declaración package imports those functions, while
+every pdfplumber reference in the ledger and borrador code is to text extraction. This
+feature has twice had to break a citation loop, so a claim that converts a measured
+risk into no risk was not taken on one source.
+
 This supersedes the framing that Q1 blocked everything. Q2 narrows with it: the
 capture change is confined to one strategy's implementation rather than altering what
 "the value on this line" means estate-wide. Q3 is unaffected and still governed by D2
