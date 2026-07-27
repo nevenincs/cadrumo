@@ -109,10 +109,30 @@ Of the ten left, Modelo 193's three are genuinely blocked: its bundled instructi
 state no box numbers, it has no specimen, and its casilla structure being identical to
 Modelo 180's makes inferring 01/02/03 tempting and inadmissible. The other seven are
 `decl.ejercicio` targets and a milder, different defect — measured across the estate,
-281 targets carry a `value_kind` and exactly those seven disagree with their own
-casilla's `data_type`. Those casillas are `required`, so a blank one means a malformed
-document rather than a legitimate blank, which makes the fabrication hazard there
-largely theoretical and the fix a coherence correction.
+281 targets carry a `value_kind` and those seven disagree with their own casilla's
+`data_type` **under a rule that distinguishes `year` from `integer`**. Those casillas
+are `required`, so a blank one means a malformed document rather than a legitimate
+blank, which makes the fabrication hazard there largely theoretical and the fix a
+coherence correction.
+
+**Corrected 2026-07-27, and the qualification above is the correction.** This
+paragraph originally read "exactly those seven disagree", and elsewhere I called the
+fix "the last incoherence in the estate". Both overstated. The seven surface only
+because my probe treated `year` as non-money — a discrimination I made silently and
+never stated, and `amount` over `integer` is a defensible reading. Swept by the naive
+rule of `value_kind` against `data_type` and nothing else, the answer is **four**, and
+they are *different* rows: `decl.event-kind`, `decl.tipo-ejercicio` twice, and
+`decl.tipo-declaracion`, all `enum` over `text` or `integer`. Those four are
+unadjudicated rather than fixed, since the schema enforces no distinction between
+`enum` and `text`, which is exactly what makes their status arguable.
+
+Two consequences worth carrying. "The last incoherence" was a completeness claim
+smuggled in on the back of a count, and a completeness claim is strictly stronger and
+strictly less checkable than the measurement it rode on — it tells the next reader to
+stop looking. And the payoff I claimed, that a gate could now assert this invariant
+without an exemption list, does not follow: a gate written against the naive rule
+would be wrong in both directions at once, missing the seven and flagging four nobody
+has ruled on. A derived assertion is only as good as the rule it derives from.
 
 Coverage floors are set only where more than one specimen agrees. Modelo 111 keeps
 its zero floor because four specimens put the worst case at 1 of 29; Modelo 390 keeps
