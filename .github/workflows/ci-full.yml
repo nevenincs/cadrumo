@@ -94,7 +94,7 @@ jobs:
       - name: Tooling and workflow conformance gates
         # Dev-tree ceiling raised over the 300 s ini default: real install/
         # harness tests legitimately run 300-900 s (see ci.yml).
-        run: uv run --no-sync pytest -q -n 8 --timeout=900 -m "unit or (integration and not serial)" dev/ci/tests dev/packaging/tests dev/quality/tests dev/release/tests
+        run: uv run --no-sync pytest -q -n 8 --timeout=900 -m "unit or (integration and not serial)" dev/ci/tests dev/packaging/tests dev/quality/tests dev/release/tests dev/tests
 
       - name: Channel artifact conformance (Homebrew formula, Scoop manifest, mcpb bundle)
         # These fourteen tests bind the generated formula and manifest to a real
