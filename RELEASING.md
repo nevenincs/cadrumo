@@ -593,7 +593,7 @@ release cohort archive (`cadrumo-release-cohort.tar.gz` from the smoke evidence 
 eleven `DistributionEvidence` rows from their authoritative drafts: 3 python from the
 smoke draft, 1 scoop, 3 homebrew, and the 4 operator `claude-*` rows from the
 evidence release. The per-OS smoke build cohorts are deliberately NOT part of the
-publication chain. Re-points `promote_python_cohort --check-pypi-only` at the sealed
+publication chain. Re-points `promote_python_cohort --emit-version-only` at the sealed
 cohort's `python/` bytes to guard the PyPI version against overwrite and emit the
 version. Runs `dev.release.readiness --json --skip-network --cohort-dir
 var/promotion/release-cohort --evidence-dir var/promotion/evidence/rows`; the sealed

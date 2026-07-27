@@ -43,7 +43,12 @@ See Also:
 
 from __future__ import annotations
 
+import argparse
 import json
+import subprocess
+import sys
+import urllib.error
+import urllib.request
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Final
@@ -53,6 +58,7 @@ from packaging.version import InvalidVersion, Version
 from dev.release.burned_versions import burn_reason, is_burned
 
 _UTF_8: Final[str] = "utf-8"
+_PROBE_TIMEOUT_S: Final[int] = 20
 
 #: The three projects one cohort publishes together. A conflict on any one of
 #: them refuses the whole cohort: they ship as a set and a partial set is not a
@@ -152,6 +158,68 @@ def version_conflicts(
     return tuple(refusals)
 
 
+def pypi_projects_owning(version: str, *, projects: Iterable[str] = PYPI_PROJECTS) -> tuple[str, ...]:
+    """Return the projects whose index already carries ``version``.
+
+    A 404 is the only answer that means "free". Any other failure refuses
+    rather than being read as absence: an unreachable index cannot prove a
+    version is available, and treating a network error as a clean result is how
+    a guard silently permits the collision it exists to catch.
+    """
+    owning: list[str] = []
+    for project in projects:
+        request = urllib.request.Request(  # fixed HTTPS index endpoint.
+            f"https://pypi.org/pypi/{project}/{version}/json",
+            headers={"Accept": "application/json"},
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=_PROBE_TIMEOUT_S) as response:  # noqa: S310
+                response.read(1)
+        except urllib.error.HTTPError as exc:
+            if exc.code == 404:
+                continue
+            raise VersionIdentityError(f"index check failed for {project}: HTTP {exc.code}") from exc
+        except urllib.error.URLError as exc:
+            raise VersionIdentityError(f"index check failed for {project}: {exc.reason}") from exc
+        owning.append(project)
+    return tuple(owning)
+
+
+def _forge_refs(endpoint: str, jq: str) -> tuple[str, ...]:
+    """Return forge ref names, refusing rather than defaulting to empty."""
+    try:
+        completed = subprocess.run(  # noqa: S603 - fixed argv, no shell.
+            ["gh", "api", endpoint, "--paginate", "--jq", jq],  # noqa: S607 - resolved from PATH like every dev gate.
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=_PROBE_TIMEOUT_S * 3,
+        )
+    except FileNotFoundError as exc:
+        raise VersionIdentityError("forge check needs the gh CLI on PATH") from exc
+    except subprocess.TimeoutExpired as exc:
+        raise VersionIdentityError(f"forge check timed out for {endpoint}") from exc
+    except subprocess.CalledProcessError as exc:
+        raise VersionIdentityError(f"forge check failed for {endpoint}: {exc.stderr.strip()}") from exc
+    return tuple(line.strip() for line in completed.stdout.splitlines() if line.strip())
+
+
+def forge_tags_owning(version: str, *, repository: str) -> tuple[str, ...]:
+    """Return tags matching ``version``, whether or not a release wraps them."""
+    tags = _forge_refs(f"repos/{repository}/tags", ".[].name")
+    return tuple(tag for tag in tags if tag in {version, f"v{version}"})
+
+
+def forge_releases_owning(version: str, *, repository: str) -> tuple[str, ...]:
+    """Return releases matching ``version``, drafts included.
+
+    Drafts are included deliberately: a draft holds its tag, so creation would
+    fail after the irreversible index upload had already happened.
+    """
+    tags = _forge_refs(f"repos/{repository}/releases", ".[].tag_name")
+    return tuple(tag for tag in tags if tag in {version, f"v{version}"})
+
+
 def assert_version_available(
     version: str,
     *,
@@ -175,3 +243,49 @@ def assert_version_available(
     if refusals:
         joined = "\n  - ".join(refusals)
         raise VersionIdentityError(f"version {version} is not available to publish:\n  - {joined}")
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Refuse a candidate version that any destination already owns.
+
+    One authority invoked from two places: cohort seal time, where refusing
+    costs nothing but a re-run, and publication Gate 2, where it is the last
+    check before an irreversible upload.
+    """
+    parser = argparse.ArgumentParser(description="Refuse a version any destination already owns.")
+    parser.add_argument("--version", required=True)
+    parser.add_argument("--repository", required=True, help="owner/name of the forge repository")
+    parser.add_argument(
+        "--skip-network",
+        action="store_true",
+        help="check only the manifest floor and the burned ledger (offline pre-flight)",
+    )
+    args = parser.parse_args(argv)
+
+    owning: tuple[str, ...] = ()
+    tags: tuple[str, ...] = ()
+    releases: tuple[str, ...] = ()
+    try:
+        if not args.skip_network:
+            owning = pypi_projects_owning(args.version)
+            tags = forge_tags_owning(args.version, repository=args.repository)
+            releases = forge_releases_owning(args.version, repository=args.repository)
+
+        assert_version_available(
+            args.version,
+            owning_projects=owning,
+            existing_tags=tags,
+            existing_releases=releases,
+        )
+    except VersionIdentityError as exc:
+        # An operator reads this at a refusal, so it must be the message and not
+        # a traceback with the message buried at the bottom.
+        print(f"REFUSED: {exc}", file=sys.stderr)
+        return 1
+    scope = "floor and ledger only" if args.skip_network else "every destination"
+    print(f"version {args.version} is available to publish ({scope} checked)")
+    return 0
+
+
+if __name__ == "__main__":  # pragma: no cover - CLI entry
+    raise SystemExit(main())

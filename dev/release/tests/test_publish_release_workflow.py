@@ -207,7 +207,14 @@ def test_validate_promotes_without_rebuild() -> None:
     # sealed cohort's installed behaviour is proven by the DistributionEvidence
     # rows the readiness gate reads.
     assert "--name cadrumo-python-cohort" not in surface
-    assert "--check-pypi-only" in surface
+    assert "--emit-version-only" in surface
+    # The partial guard is gone, not merely bypassed: asking a narrower version
+    # of the same question in a second place is how the tag and release
+    # namespaces went unchecked while the index check passed.
+    assert "--check-pypi-only" not in surface
+    # And the authority that asks EVERY destination runs before any write.
+    assert "dev.release.version_identity" in surface
+    assert surface.index("dev.release.version_identity") > surface.index("--emit-version-only")
     # Every channel's rows arrive hash-verified from its evidence draft.
     assert "dev.packaging.evidence_release verify" in surface
     # No publish verb in the read-only validate gate.

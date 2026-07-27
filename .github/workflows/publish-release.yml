@@ -328,19 +328,35 @@ jobs:
           find "$EVIDENCE_DOWNLOAD/rows-raw" -name '*.json' ! -name 'evidence-manifest.json' \
             ! -name 'debug-*' -exec cp {} "$EVIDENCE_DOWNLOAD/rows/" \;
 
-      - name: Guard the PyPI destination against overwrite and emit the version
+      - name: Emit the sealed cohort's version for the publish job
         id: validate
         run: |
-          # Re-point the promotion guard at the SEALED cohort's python bytes (the
-          # exact wheels/sdists PyPI will ship): confirm no PyPI project already
-          # owns this version, and emit the version for the publish job. The
+          # Re-point at the SEALED cohort's python bytes (the exact wheels and
+          # sdists PyPI will ship) and emit the version for the publish job. The
           # sealed cohort's installed-behavior binding is enforced below by the
           # readiness gate over the DistributionEvidence rows, not by the per-OS
           # smoke-build evidence (which describes different bytes).
           uv run --frozen python -m dev.release.promote_python_cohort \
             --cohort-dir "$RELEASE_COHORT_DIR/python" \
-            --check-pypi-only \
+            --emit-version-only \
             --github-output "$GITHUB_OUTPUT"
+
+      - name: Refuse a version any destination already owns
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # One authority, every destination. The guard this replaces asked only
+          # whether a package index owned the version, and it PASSED on the day
+          # it mattered because the index was the single destination that did
+          # NOT: a published release did, so promotion reached the irreversible
+          # upload and then failed creating a release that already existed.
+          # Four independently sufficient conflicts are checked here - the three
+          # indexes, the tag and release namespaces including drafts, the
+          # monotonic manifest floor, and the burned-version ledger - after the
+          # version is known and before any destination is written.
+          uv run --frozen python -m dev.release.version_identity \
+            --version "${{ steps.validate.outputs.version }}" \
+            --repository "$GITHUB_REPOSITORY"
 
       - name: Require the complete blocking distribution evidence set
         env:
