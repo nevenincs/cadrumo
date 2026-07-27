@@ -67,9 +67,9 @@ Open defects and decisions this campaign measured but did not close
 - [x] `P04.S24` - Correct the seven decl.ejercicio targets declared value_kind amount on what is a tax year, a schema mis-declaration rather than a guard gap; `src/cadrumo/_data/registry/aeat/modelos`.
 - [ ] `P04.S25` - Make every synthetic fixture generator set the canonical producer signature, since only one of three does and the provenance gate's discriminator rests on that invariant holding; `src/cadrumo/tests/fixtures`.
 - [x] `P04.S26` - Anchor numeric_casilla on form_number rather than record-design number, closing at scale the same defect D1 corrected for the blank-box guard; `src/cadrumo/adapters/inbound/declaracion`.
-- [ ] `P04.S27` - Implement the word-level Modelo 100 fix inside the parser, after re-running the committed real-render gate with the size attribute to clear the bbox word-ordering risk; `src/cadrumo/adapters/inbound/declaracion`.
+- [x] `P04.S27` - Implement the word-level Modelo 100 fix inside the parser, after re-running the committed real-render gate with the size attribute to clear the bbox word-ordering risk; `src/cadrumo/adapters/inbound/declaracion`.
 - [ ] `P04.S28` - Adjudicate the four enum-over-non-enum targets the naive coherence rule surfaces, which are arguable rather than settled since the schema enforces no enum-versus-text distinction; `src/cadrumo/_data/registry/aeat/modelos`.
-- [ ] `P04.S29` - Register the Modelo 100 coverage floor as an evidence gap under D2, since three specimens from one filer with every box populated cannot ground one; `.vault/exec, src/cadrumo/_data/registry/aeat/modelos/100`.
+- [x] `P04.S29` - Register the Modelo 100 coverage floor as an evidence gap under D2, since three specimens from one filer with every box populated cannot ground one; `.vault/exec, src/cadrumo/_data/registry/aeat/modelos/100`.
 
 ## Description
 
