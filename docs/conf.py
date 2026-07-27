@@ -611,6 +611,19 @@ nitpick_ignore_regex = [
         r"^(FieldInfo|MinLen|MaxLen|NoneType|EllipsisType|Annotated|"
         r"Strict[A-Za-z]*|[A-Za-z]*Constraints|_PydanticGeneralMetadata)$",
     ),
+    # ``Buffer`` is the real stdlib ``collections.abc.Buffer`` (PEP 688, 3.12+),
+    # used as an annotation across the master-key recovery surface. autodoc
+    # renders an annotation by its BARE name, so the reference emitted is
+    # ``Buffer`` rather than ``collections.abc.Buffer``, and this gate builds
+    # with ``CADRUMO_DOCS_OFFLINE`` set, so no stdlib inventory is loaded to
+    # resolve either spelling. Same category as ``NoneType`` above: a genuine
+    # type with no reachable target here, not a typo.
+    #
+    # This surfaced only once the sequence-golden hook stopped aborting the
+    # nitpicky build at ``builder-inited``. Cross-reference resolution had never
+    # run to completion before, so this was the first cross-reference finding the
+    # gate had ever produced.
+    (r"py:class", r"^Buffer$"),
     # Bare ``TypeVar`` parameters (``TPayload``, ``PayloadT``, ``T_co``) and the
     # single-letter PEP 695 type parameters used in ``class Foo[T, K: Hashable]``
     # generic syntax (``K``, ``V``) are not documentable objects; they appear in
