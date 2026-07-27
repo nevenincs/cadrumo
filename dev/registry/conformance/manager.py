@@ -119,6 +119,7 @@ __all__ = [
     "render_coverage",
     "render_report",
     "reset_conformance_cache",
+    "vacuity_warning",
 ]
 
 NOT_MEASURED: Final[str] = "n/a"
@@ -1109,6 +1110,22 @@ def render_coverage(coverage: CoverageReport) -> str:
         "every independent-check figure is coverage of independent checking, never correctness",
     )
     return "\n".join(lines)
+
+
+def vacuity_warning(report: ConformanceReport) -> str | None:
+    """Return the warning record for a screen that composed nothing, or :data:`None`.
+
+    The screens keep their zero exit — refusal belongs to ``audit`` — but an
+    empty render that said nothing would be indistinguishable from a clean
+    registry, which is the false-green shape this whole surface exists to
+    remove. A record line rather than prose, so a caller greps it.
+    """
+    if report.rows:
+        return None
+    return (
+        'warning rows=0 detail="composed no revision rows at all; every count above is vacuous '
+        'and describes the read, not the registry"'
+    )
 
 
 def render_audit(result: ConformanceAuditResult) -> str:

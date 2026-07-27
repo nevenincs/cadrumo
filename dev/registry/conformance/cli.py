@@ -76,6 +76,7 @@ from .manager import (
     render_audit,
     render_coverage,
     render_report,
+    vacuity_warning,
 )
 
 app = typer.Typer(
@@ -281,20 +282,10 @@ def stamp(
 
 
 def _warn_if_vacuous(composed: ConformanceReport) -> None:
-    """Emit a greppable warning when the screen rendered nothing at all.
-
-    The screen keeps its zero exit — refusal belongs to the ``audit`` verb — but
-    an empty render that said nothing would be indistinguishable from a clean
-    registry, which is the exact false-green shape this whole surface exists to
-    remove. The warning is a record line so a caller greps it rather than
-    reading prose.
-    """
-    if composed.rows:
-        return
-    typer.echo(
-        'warning rows=0 detail="composed no revision rows at all; every count above is vacuous '
-        'and describes the read, not the registry"',
-    )
+    """Echo the vacuity warning when the screen rendered nothing at all."""
+    warning = vacuity_warning(composed)
+    if warning is not None:
+        typer.echo(warning)
 
 
 __all__ = ["app"]
