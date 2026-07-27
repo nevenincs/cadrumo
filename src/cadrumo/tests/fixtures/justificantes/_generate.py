@@ -70,27 +70,39 @@ from ._generate_misc_b import (
     _Modelo347Fixture,
     _Modelo840Fixture,
 )
-from ._generate_modelo_100_2021 import (
-    _MODELO_100_2021_FIXTURES,
-    _draw_modelo_100_2021,
-    _Modelo1002021Fixture,
+from ._generate_modelo_100_corpus import (
+    _MODELO_100_CORPUS_FIXTURES,
+    _draw_modelo_100_corpus,
+    _Modelo100CorpusFixture,
 )
 from ._generate_modelo_100_current import (
     _MODELO_100_CURRENT_YEAR_FIXTURES,
     _draw_modelo_100_current_year,
     _Modelo100CurrentYearFixture,
 )
+from ._generate_modelo_111 import (
+    _MODELO_111_FIXTURES,
+    _draw_modelo_111,
+    _Modelo111Fixture,
+)
 from ._generate_modelo_190 import (
     _MODELO_190_FIXTURES,
     _draw_modelo_190,
     _Modelo190Fixture,
+)
+from ._generate_modelo_390_english import (
+    _MODELO_390_ENGLISH_FIXTURES,
+    _draw_modelo_390_english,
+    _Modelo390EnglishFixture,
 )
 
 __all__ = [
     "_FIXTURES",
     "_Fixture",
     "_Modelo036Fixture",
+    "_Modelo100CorpusFixture",
     "_Modelo100CurrentYearFixture",
+    "_Modelo111Fixture",
     "_Modelo115Fixture",
     "_Modelo123Fixture",
     "_Modelo130CorpusFixture",
@@ -106,9 +118,9 @@ __all__ = [
     "_Modelo349Fixture",
     "_Modelo369Fixture",
     "_Modelo390CorpusFixture",
+    "_Modelo390EnglishFixture",
     "_Modelo720Fixture",
     "_Modelo840Fixture",
-    "_Modelo1002021Fixture",
     "main",
 ]
 
@@ -386,21 +398,51 @@ def main() -> None:
         print(f"wrote {target}")
         _write_sidecar(target, "100", fixture.ejercicio, fixture.tax_id)
 
-    for fixture in _MODELO_100_2021_FIXTURES:
+    for fixture in _MODELO_100_CORPUS_FIXTURES:
         target = out_dir / fixture.filename
         target.parent.mkdir(parents=True, exist_ok=True)
         c = canvas.Canvas(str(target), pagesize=A4, invariant=True)
         c.setTitle(f"Declaracion Modelo 100 {fixture.ejercicio} 0A")
         c.setAuthor("aeat test fixtures")
-        c.setSubject("synthetic declaracion fixture m100 2021 layout")
+        c.setSubject("synthetic declaracion fixture m100 annual corpus layout")
         c.setCreator("aeat fixture generator")
         c.setProducer("aeat-test-fixture-generator")
-        _draw_modelo_100_2021(c, fixture)
+        _draw_modelo_100_corpus(c, fixture)
         c.showPage()
         c.save()
         print(f"wrote {target}")
         # A layout replacement, not a formula specimen: its amounts are probes.
         _write_sidecar(target, "100", fixture.ejercicio, fixture.tax_id, role="parser_anchor")
+
+    for fixture in _MODELO_111_FIXTURES:
+        target = out_dir / fixture.filename
+        target.parent.mkdir(parents=True, exist_ok=True)
+        c = canvas.Canvas(str(target), pagesize=A4, invariant=True)
+        c.setTitle(f"Declaracion Modelo 111 {fixture.ejercicio} {fixture.periodo}")
+        c.setAuthor("aeat test fixtures")
+        c.setSubject("synthetic declaracion fixture m111 quarterly layout")
+        c.setCreator("aeat fixture generator")
+        c.setProducer("aeat-test-fixture-generator")
+        _draw_modelo_111(c, fixture)
+        c.showPage()
+        c.save()
+        print(f"wrote {target}")
+        _write_sidecar(target, "111", fixture.ejercicio, fixture.tax_id, role="parser_anchor")
+
+    for fixture in _MODELO_390_ENGLISH_FIXTURES:
+        target = out_dir / fixture.filename
+        target.parent.mkdir(parents=True, exist_ok=True)
+        c = canvas.Canvas(str(target), pagesize=A4, invariant=True)
+        c.setTitle(f"Modelo 390 {fixture.ejercicio} 0A")
+        c.setAuthor("aeat test fixtures")
+        c.setSubject("synthetic declaracion fixture m390 english render")
+        c.setCreator("aeat fixture generator")
+        c.setProducer("aeat-test-fixture-generator")
+        _draw_modelo_390_english(c, fixture)
+        c.showPage()
+        c.save()
+        print(f"wrote {target}")
+        _write_sidecar(target, "390", fixture.ejercicio, fixture.tax_id, role="parser_anchor")
 
     for fixture in _MODELO_190_FIXTURES:
         target = out_dir / fixture.filename
