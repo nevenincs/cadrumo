@@ -125,15 +125,46 @@ backlog (`pending operator re-stamp` markers) is only REPORTED by marker
 mining, explicitly labelled heuristic; restructuring the legal-catalogue
 schema is out of scope. Classification drift is reported, not canonicalized.
 
-**One-way boundary (hardened).** `src/cadrumo/**` must never import `dev.*`
-(existing import-hygiene family) and must never read `dev/**` paths at
-runtime — no baseline, worklist, report, or config under `dev/` may be
-consumed by shipped code; everything shipped code needs lives under
-`src/cadrumo`. The dev CLI consumes `src/cadrumo` only through public
-top-level facades. Ratchet baselines and rendered reports live under
-`dev/registry/conformance/` and are consumed only by dev-side code and
-dev-side pytest gates. A dedicated boundary test extends the hygiene gate to
-assert no `src/cadrumo` module embeds a `dev/` path literal.
+**One-way boundary (hardened).** Every wheel-shipped module under
+`src/cadrumo` must never import `dev.*` (existing import-hygiene family) and
+must never read `dev/**` paths at runtime — no baseline, worklist, report, or
+config under `dev/` may be consumed by shipped code; everything shipped code
+needs lives under `src/cadrumo`. The rule scopes to SHIPPED modules: a
+wheel-excluded test tree may reach into `dev/` (the pre-existing hygiene gate
+legitimately reads a `dev/` test-debt baseline today), because such a reach
+cannot follow the package to an installed user. The dev CLI consumes
+`src/cadrumo` only through public top-level facades. Ratchet baselines and
+rendered reports live under `dev/registry/conformance/` and are consumed only
+by dev-side code and dev-side pytest gates.
+
+Boundary-detector ownership is SINGLE-AUTHORITY. The detection logic — both
+the `dev.*` import family and the `dev/` path-literal family — lives in the
+existing hygiene scanner under `dev/`, which already owns the import family
+and the baseline machinery; the `src/cadrumo` boundary test asserts against
+that one authority rather than re-implementing it. Two independently-authored
+detectors were considered and rejected: the duplication had already diverged
+within a single campaign (the shipped-`conftest.py` case existed in one copy
+only), and a silently-forked authority is worse than either alternative. The
+src-side test importing `dev.*` is not a boundary violation, because a test
+module is wheel-excluded and the scan's own imports have no bearing on the
+shipped surface it measures.
+
+**Degraded-mode labelling is row-level, not container-level.** A `--no-validate`
+read stamps EVERY emitted row and finding as unvalidated, never only the
+enclosing audit object. A container-level flag is lost the moment a renderer
+serialises the rows or a composer merges them with rows from a validated
+source, at which point a degraded row is indistinguishable from an
+authoritative one — the precise misreading this ADR's risk section exists to
+prevent.
+
+**The filing-year grounding resolver stays off the public facade.** A
+period-agnostic, non-raising revision resolver must not sit in the same public
+namespace as the law-determined resolver, which resolves a filing-year and
+period pair and raises when none or several match: the inviting name is one
+autocomplete away from a calculation path silently dropping the period axis
+and abstaining where the law requires a refusal. It stays private to the
+grounding fold, or is exposed under a name that cannot be mistaken for the
+law-determined path if a cross-package consumer genuinely needs it.
 
 **Gate posture and ratchets.** Screen-first: `report`/`coverage` always exit
 0; `audit --check` is the only gating exit, backed by shrink-only JSON
