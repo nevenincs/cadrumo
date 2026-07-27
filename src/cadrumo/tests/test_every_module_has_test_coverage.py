@@ -38,7 +38,7 @@ from pathlib import Path
 
 import pytest
 
-from ._inventory import SRC_CADRUMO, ast_for_path, module_name, package_python_files, repo_relative
+from ._inventory import REPO_ROOT, SRC_CADRUMO, ast_for_path, module_name, package_python_files, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -54,8 +54,6 @@ _EXEMPTIONS: frozenset[str] = frozenset(
         # _playwright.py requires a running browser; browser integration tests
         # live in a separate live-test suite.
         "src/cadrumo/adapters/outbound/aeat/_playwright.py",
-        # Locale scaffold tooling; exercised via CLI integration tests.
-        "src/cadrumo/locales/scaffold.py",
         # Typer subcommand modules registered via _lazy(...) in
         # entrypoints/cli/__init__.py (importlib.import_module on a
         # string arg); the AST walker cannot follow dynamic dispatch.
@@ -80,7 +78,7 @@ _EXEMPTIONS: frozenset[str] = frozenset(
         "src/cadrumo/entrypoints/cli/_registry_corpus_payloads.py",
         "src/cadrumo/entrypoints/cli/_registry_payloads.py",
         # `python -m` entry point; not pytest-importable surface.
-        # locales/__main__ dispatches into locales/scaffold.py.
+        # locales/__main__ dispatches into locales/cli.py.
         "src/cadrumo/locales/__main__.py",
         # aeat app diagnostics: same _lazy(...) dispatch as the CLI verb
         # modules above; only reachable via the dynamically-dispatched
@@ -338,4 +336,31 @@ def test_every_production_module_is_reachable_from_a_test() -> None:
         "import graph from any test entrypoint. Either author a real-\n"
         "behavior test, route the module through an existing covered\n"
         "aggregator, or exempt it in _EXEMPTIONS with a rationale.\n\n" + "\n".join(f"  {g}" for g in sorted(gaps))
+    )
+
+
+def test_every_exemption_still_names_a_live_module() -> None:
+    """An exemption whose module no longer exists must fail, not sit quietly.
+
+    A stale entry is worse than no entry. It costs nothing while the path is
+    absent, and the moment anyone creates a module at that path it silently
+    exempts it from the coverage requirement -- a rubber stamp granted by
+    someone who never saw the file. This gate's whole value is that every
+    exemption was a deliberate judgement about a specific module, and an entry
+    outliving its module quietly converts one into a blanket.
+
+    Found live: ``src/cadrumo/locales/scaffold.py`` sat here exempted, and
+    ``git log`` shows no commit ever placed a file at that path. The comment
+    beside a neighbouring entry also claimed ``locales/__main__`` dispatches
+    into it, when it dispatches into ``locales/cli.py``. Both were removed with
+    this gate, which is the only reason either was noticed.
+    """
+    dead = sorted(entry for entry in _EXEMPTIONS if not (REPO_ROOT / entry).is_file())
+
+    assert not dead, (
+        f"{len(dead)} exemption(s) name a module that no longer exists, so each is a "
+        "standing waiver for a path nobody has reviewed:\n"
+        + "\n".join(f"  {entry}" for entry in dead)
+        + "\n\nDelete the entry. If the module moved, exempt its new path only after "
+        "confirming the original rationale still holds there."
     )
