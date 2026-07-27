@@ -28,12 +28,18 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from pydantic import BaseModel, Field, ValidationError
 
 from .....core import TaxDomain
 from .....core.resources import bundled_path
 from .._classification_coherence import (
+    _MAX_DETAIL_LENGTH,
+    _TRUNCATION_SUFFIX,
+    ClassificationCoherenceFinding,
     DeclaredAxis,
     RegistryClassificationAudit,
+    _bounded_detail,
+    _field_max_length,
     audit_bundled_classification_coherence,
     build_classification_coherence_audit,
 )
@@ -446,8 +452,152 @@ def test_a_modelo_with_many_blockers_is_reported_rather_than_refused() -> None:
         ),
     )
     finding = audit.findings_of_kind("informative_axis_divergence")[0]
-    assert len(finding.detail) <= 512
+    assert _MAX_DETAIL_LENGTH is not None
+    assert len(finding.detail) <= _MAX_DETAIL_LENGTH
     assert "further blocker" in finding.detail, "the unrendered blockers must still be counted"
     assert len(audit.rows[0].informative_class_blockers) == len(casillas), (
         "the row keeps every blocker even though the sentence samples them"
     )
+
+
+def test_the_detail_bound_is_read_from_the_field_it_must_satisfy() -> None:
+    """The clamp's bound IS the field's constraint, not a copy of its number.
+
+    A hand-copied literal beside the field it mirrors is only correct until
+    someone edits one of the two. Reading the constraint makes the pair
+    inseparable: lowering the field bound lowers the clamp in the same edit.
+    """
+    assert _field_max_length(ClassificationCoherenceFinding, "detail") == _MAX_DETAIL_LENGTH
+    assert _MAX_DETAIL_LENGTH is not None, "the finding's detail must stay bounded, or the clamp means nothing"
+
+    over_bound = "x" * (_MAX_DETAIL_LENGTH + 1)
+    with pytest.raises(ValidationError):
+        ClassificationCoherenceFinding(
+            kind="informative_axis_divergence",
+            modelo="130",
+            subject="130",
+            detail=over_bound,
+        )
+
+
+def test_the_bound_reader_reads_the_declared_constraint() -> None:
+    """The reader reports what a field declares, in both the bounded and unbounded cases.
+
+    Without this, a reader that always returned the finding's own 512 would
+    satisfy the binding assertion above while reading nothing at all.
+    """
+
+    class _NarrowlyBounded(BaseModel):
+        text: str = Field(min_length=1, max_length=40)
+
+    class _Unbounded(BaseModel):
+        text: str
+
+    assert _field_max_length(_NarrowlyBounded, "text") == 40
+    assert _field_max_length(_Unbounded, "text") is None
+
+
+def test_a_detail_over_the_bound_is_truncated_to_exactly_the_bound() -> None:
+    """The truncation branch itself, exercised rather than reasoned about.
+
+    The fold's own worst case sits inside the bound (see the headroom test
+    below), so nothing else in this module reaches this branch. Driving it
+    directly is what turns the clamp from assumed-correct into proven-correct.
+    """
+    assert _MAX_DETAIL_LENGTH is not None
+
+    at_bound = "y" * _MAX_DETAIL_LENGTH
+    assert _bounded_detail(at_bound) == at_bound, "a detail exactly at the bound must pass through untouched"
+
+    over_bound = "y" * (_MAX_DETAIL_LENGTH + 50)
+    clamped = _bounded_detail(over_bound)
+    assert len(clamped) == _MAX_DETAIL_LENGTH
+    assert clamped.endswith(_TRUNCATION_SUFFIX)
+    assert clamped.startswith(over_bound[: _MAX_DETAIL_LENGTH - len(_TRUNCATION_SUFFIX)])
+
+
+def test_lowering_the_bound_moves_the_clamp() -> None:
+    """The clamp cuts where the bound says, not where a remembered number said.
+
+    The assertion the hand-copied literal could never fail: with the number
+    duplicated, lowering the field constraint left the clamp cutting at the old
+    length and nothing anywhere flipped.
+    """
+    detail = "z" * 200
+
+    assert _bounded_detail(detail, max_length=100) != _bounded_detail(detail, max_length=150)
+    assert len(_bounded_detail(detail, max_length=100)) == 100
+    assert len(_bounded_detail(detail, max_length=150)) == 150
+    assert _bounded_detail(detail, max_length=None) == detail, "an unbounded field needs no clamp"
+
+
+def test_the_clamp_is_what_keeps_an_oversized_detail_constructible() -> None:
+    """Remove the clamp and the finding refuses to construct; keep it and it validates.
+
+    The load-bearing proof. The fold is a governance read over a tree it does not
+    own, so a finding that raises while being CONSTRUCTED aborts the whole read
+    on exactly the disagreement it exists to surface.
+    """
+    assert _MAX_DETAIL_LENGTH is not None
+    oversized = "modelo 100 declares " + "w" * _MAX_DETAIL_LENGTH
+
+    with pytest.raises(ValidationError):
+        ClassificationCoherenceFinding(
+            kind="informative_axis_divergence",
+            modelo="100",
+            subject="100",
+            detail=oversized,
+        )
+
+    survived = ClassificationCoherenceFinding(
+        kind="informative_axis_divergence",
+        modelo="100",
+        subject="100",
+        detail=_bounded_detail(oversized),
+    )
+    assert len(survived.detail) == _MAX_DETAIL_LENGTH
+    assert survived.detail.endswith(_TRUNCATION_SUFFIX)
+
+
+def test_the_worst_case_the_registry_schema_permits_needs_no_truncation() -> None:
+    """The sampler leaves real headroom under the bound, and this measures it.
+
+    Built from ids at their schema maxima — a 128-character revision id and a
+    64-character casilla id — so it is the longest divergence sentence legal
+    registry data can produce. It must not be truncated: a truncated finding has
+    silently dropped the prose a reader needs. If a widened id bound or a longer
+    sentence template eats the margin, the clamp starts firing on real data and
+    this flips, which is the early warning the clamp itself cannot give.
+    """
+    revision_id = "r" + "x" * 126 + "z"
+    casilla_id = "c" + "x" * 62 + "z"
+    assert len(revision_id) == 128, "the revision id must sit at its schema maximum"
+    assert len(casilla_id) == 64, "the casilla id must sit at its schema maximum"
+
+    widest = CasillaDefinition(
+        id=casilla_id,
+        number="01",
+        label="importe",
+        section=("totales",),
+        input_kind=InputKind.BOUND,
+        binding="b1",
+        legal_refs=_LEGAL_REFS,
+        source_refs=_SOURCE_REFS,
+    )
+    second = widest.model_copy(update={"id": "d" + "x" * 62 + "z", "number": "02", "binding": "b2"})
+    audit = _audit(
+        _modelo(
+            "100",
+            calculation_class="filing",
+            tax_domain=TaxDomain.INFORMATIVE,
+            revision=_revision(revision_id, casillas=(widest, second)),
+        ),
+    )
+
+    detail = audit.findings_of_kind("informative_axis_divergence")[0].detail
+    assert _MAX_DETAIL_LENGTH is not None
+    assert not detail.endswith(_TRUNCATION_SUFFIX), (
+        f"the widest legal divergence sentence is being truncated at {len(detail)} characters; "
+        "the sampler no longer keeps real findings inside the field bound"
+    )
+    assert len(detail) < _MAX_DETAIL_LENGTH

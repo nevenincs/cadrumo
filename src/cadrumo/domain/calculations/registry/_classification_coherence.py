@@ -85,8 +85,8 @@ from ._validate_revision_rules import validate_informative_class_invariant
 #: The ``calculation_class`` value naming the informative enforcement posture.
 _INFORMATIVE_CLASS: Final[CalculationClass] = "informative"
 
-#: Upper bound on a finding's ``detail``, mirroring the field constraint.
-_MAX_DETAIL_LENGTH: Final[int] = 512
+#: Appended to a clamped ``detail`` so a truncated sentence reads as truncated.
+_TRUNCATION_SUFFIX: Final[str] = "…"
 
 #: Blockers rendered verbatim into a finding's prose before the rest is counted.
 #: A modelo can carry one blocker per casilla, so the full list belongs on
@@ -115,6 +115,24 @@ DeclaredAxisStatus = Literal["exercised", "unused"]
 """Whether any TOML in the tree declares an axis, or the surface is dead."""
 
 
+def _field_max_length(model: type[BaseModel], field_name: str) -> int | None:
+    """Return the ``max_length`` constraint declared on ``model``'s ``field_name``.
+
+    Read from the field's own constraint metadata rather than copied as a second
+    literal, so a clamp that exists to satisfy a bound cannot outlive a change to
+    it: lowering the field bound lowers the clamp in the same edit.
+
+    Returns:
+        The declared upper bound, or :data:`None` when the field declares none —
+        in which case there is nothing to clamp against.
+    """
+    for constraint in model.model_fields[field_name].metadata:
+        declared = getattr(constraint, "max_length", None)
+        if declared is not None:
+            return int(declared)
+    return None
+
+
 class ClassificationModel(BaseModel):
     """Strict frozen base for classification-coherence facts."""
 
@@ -134,6 +152,12 @@ class ClassificationCoherenceFinding(ClassificationModel):
     modelo: ModeloId
     subject: str = Field(min_length=1, max_length=160)
     detail: str = Field(min_length=1, max_length=512)
+
+
+#: Upper bound on a finding's ``detail``, READ FROM the field constraint above
+#: rather than duplicated as a second literal beside it. :data:`None` would mean
+#: the field declares no bound and nothing needs clamping.
+_MAX_DETAIL_LENGTH: Final[int | None] = _field_max_length(ClassificationCoherenceFinding, "detail")
 
 
 class DeclaredAxisUsage(ClassificationModel):
@@ -387,16 +411,24 @@ def _render_blockers(blockers: tuple[str, ...]) -> str:
     return f"{sample}; and {remainder} further blocker{'s' if remainder > 1 else ''}"
 
 
-def _bounded_detail(detail: str) -> str:
-    """Clamp ``detail`` to the field's own bound.
+def _bounded_detail(detail: str, *, max_length: int | None = _MAX_DETAIL_LENGTH) -> str:
+    """Clamp ``detail`` to the finding field's own declared bound.
 
-    Defensive rather than cosmetic: registry-authored ids and labels flow into
-    these sentences, so a long one must truncate the prose rather than raise a
-    validation error and abort the whole governance read.
+    Defensive rather than cosmetic, and the LAST of two layers: the blocker
+    sampler keeps the sentence short in the cases the fold can foresee, and this
+    keeps a sentence that outgrew the bound anyway from raising a validation
+    error and aborting the whole governance read. Registry-authored ids flow into
+    these sentences, so their combined worst case moves whenever an id bound or a
+    sentence template does.
+
+    ``max_length`` defaults to the bound derived from the field and is injectable
+    so a test can prove the clamp TRACKS the bound rather than restating a
+    number. :data:`None` disables clamping, which is the correct behaviour for an
+    unbounded field.
     """
-    if len(detail) <= _MAX_DETAIL_LENGTH:
+    if max_length is None or len(detail) <= max_length:
         return detail
-    return f"{detail[: _MAX_DETAIL_LENGTH - 1]}…"
+    return f"{detail[: max_length - len(_TRUNCATION_SUFFIX)]}{_TRUNCATION_SUFFIX}"
 
 
 def _informative_class_blockers(modelo: ModeloDefinition) -> tuple[str, ...]:
