@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import ast
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Final
 
@@ -168,6 +169,28 @@ def asserts_a_non_empty_result(node: ast.stmt) -> bool:
     )
 
 
+def with_called_helpers(body: list[ast.AST], helpers: Mapping[str, list[ast.AST]]) -> list[ast.AST]:
+    """Return ``body`` plus the bodies of same-module helpers it calls.
+
+    A proof of scan is often best placed at the corpus SOURCE rather than at each
+    consumer: three gates walk one ``_markdown_docs()`` helper, so guarding the
+    helper means a fourth consumer added later inherits the proof instead of
+    forgetting it. Reading only the test body punishes exactly that shape, and a
+    screen that re-flags a gate after it has been correctly guarded teaches its
+    reader that guarding is pointless.
+
+    One level, and only helpers the test actually calls. Following the call graph
+    transitively would drift back toward the module-wide credit this screen
+    deliberately replaced, where a proof anywhere in a file silenced every scan
+    in it.
+    """
+    called = {node.func.id for node in body if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
+    extended = list(body)
+    for name in sorted(called & set(helpers)):
+        extended.extend(helpers[name])
+    return extended
+
+
 def referenced_names(nodes: list[ast.AST]) -> frozenset[str]:
     """Return every bare name the nodes read, as a proxy for the corpus in play."""
     return frozenset(node.id for node in nodes if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load))
@@ -216,13 +239,18 @@ def screen(root: Path) -> tuple[int, list[tuple[str, str, int]]]:
             except (SyntaxError, UnicodeDecodeError):
                 continue
             proofs = module_proofs_by_corpus(parsed)
+            helpers = {
+                node.name: list(ast.walk(node))
+                for node in ast.walk(parsed)
+                if isinstance(node, ast.FunctionDef) and not node.name.startswith("test_")
+            }
             for func in ast.walk(parsed):
                 if not isinstance(func, ast.FunctionDef) or not func.name.startswith("test_"):
                     continue
                 body = list(ast.walk(func))
                 if not any(asserts_emptiness(n) for n in body):
                     continue
-                if any(proves_it_scanned(n) for n in body):
+                if any(proves_it_scanned(n) for n in with_called_helpers(body, helpers)):
                     continue
                 names = referenced_names(body)
                 if any(proof & names for proof in proofs):

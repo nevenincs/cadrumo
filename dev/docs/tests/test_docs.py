@@ -293,6 +293,7 @@ def test_em_dash_count_ratchets_down_in_docs_prose() -> None:
     """
     baseline: dict[str, int] = json.loads(_EM_DASH_BASELINE_PATH.read_text(encoding="utf-8"))
     current = _em_dash_counts()
+    assert current, "no docs prose was counted; an empty corpus ratchets to zero without prose changing"
     problems: list[str] = []
     for page in sorted(current):
         count = current[page]

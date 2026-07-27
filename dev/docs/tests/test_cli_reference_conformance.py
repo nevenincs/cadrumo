@@ -247,6 +247,8 @@ def test_documented_schema_classes_match_registry() -> None:
 
     _populate_schema_registry()
     # Parse the freshly-rendered pages for (registry_key -> documented_class_name) pairs.
+    rendered = _rendered_reference()
+    assert rendered, "no reference pages were rendered; every documented class trivially matches over nothing"
     documented: dict[str, str] = {}
     for rel_path, content in sorted(_rendered_reference().items()):
         if rel_path in _NON_FAMILY_PAGES:

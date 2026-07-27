@@ -119,7 +119,9 @@ def test_no_catalogue_leaf_echoes_its_own_key(locale: str) -> None:
     """
     manager = LocaleManager(_LOCALES_DIR.parent, _LOCALES_DIR)
     catalogue = manager.load_locale(_LOCALES_DIR / f"{locale}.yml")
-    echoes = sorted(key for key in manager.get_yaml_keys(catalogue) if _leaf_value(catalogue, key) == key)
+    keys = manager.get_yaml_keys(catalogue)
+    assert keys, f"{locale}.yml yielded no keys; no leaf can echo its own key in an empty catalogue"
+    echoes = sorted(key for key in keys if _leaf_value(catalogue, key) == key)
     assert not echoes, (
         f"{locale}.yml stores {len(echoes)} key(s) as their own value, which the renderer "
         f"treats as untranslated: {echoes[:5]}. Author them with "

@@ -57,6 +57,8 @@ def test_every_filled_value_is_admissible_for_its_field() -> None:
     strings.
     """
     declared = _field_index()
+    assert declared, "the profile field index is empty; no filled value can be judged against nothing"
+    assert _REQUIRED_PLACEHOLDERS, "the required-placeholder table is empty; there is nothing to judge"
 
     refused = [
         f"{path} -> {value!r} not in {list(field.enum_values)}"

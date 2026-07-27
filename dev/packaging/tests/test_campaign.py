@@ -16,6 +16,7 @@ _JUSTFILE = Path(__file__).resolve().parents[3] / "justfile"
 
 def test_profiles_reference_registered_lanes_only() -> None:
     """Every profile entry resolves to a registered lane."""
+    assert _PROFILES, "no packaging profiles are declared; every profile trivially references known lanes"
     for profile, lane_names in _PROFILES.items():
         unknown = set(lane_names) - set(_LANES)
         assert not unknown, f"profile {profile} references unknown lanes: {sorted(unknown)}"

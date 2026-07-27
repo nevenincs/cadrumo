@@ -50,6 +50,7 @@ def _with_availability(
 def test_every_channel_in_the_shipped_descriptor_has_a_known_evidence_source() -> None:
     """No channel can become claimed and find itself unsourced."""
     descriptor = load_descriptor()
+    assert descriptor.channel, "the shipped descriptor declares no channels; every channel is trivially sourced"
     unsourced = sorted(c.id for c in descriptor.channel if c.id not in SOURCE_INPUT_BY_CHANNEL)
     assert not unsourced, (
         f"channel(s) {unsourced} have no entry in SOURCE_INPUT_BY_CHANNEL; flipping one to "

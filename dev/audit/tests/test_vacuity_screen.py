@@ -247,3 +247,51 @@ def test_an_attribute_corpus_guard_clears_the_hit(tmp_path: Path) -> None:
     )
 
     assert _flagged_names(tmp_path) == set()
+
+
+def test_a_guard_inside_a_called_helper_clears_the_hit(tmp_path: Path) -> None:
+    """A proof placed at the corpus source counts for the gates that call it.
+
+    Guarding the helper is the better shape when several gates share one corpus:
+    a consumer added later inherits the proof instead of forgetting it. Reading
+    only the test body would re-flag a gate that had just been correctly
+    guarded, which teaches its reader that guarding does not clear the hit.
+    """
+    _write_screened_tree(
+        tmp_path,
+        "test_probe.py",
+        """
+        def _pages():
+            found = discover()
+            assert found
+            return found
+
+        def test_no_offenders() -> None:
+            assert [p for p in _pages() if is_bad(p)] == []
+        """,
+    )
+
+    assert _flagged_names(tmp_path) == set()
+
+
+def test_a_guard_in_an_uncalled_helper_does_not_clear_the_hit(tmp_path: Path) -> None:
+    """Helper credit is for helpers the test actually calls, not any helper.
+
+    Without this the credit degenerates back toward module-wide: an unrelated
+    helper carrying a proof would vouch for every scan in the file.
+    """
+    _write_screened_tree(
+        tmp_path,
+        "test_probe.py",
+        """
+        def _unrelated():
+            found = discover()
+            assert found
+            return found
+
+        def test_no_offenders() -> None:
+            assert [p for p in walk_somewhere_else() if is_bad(p)] == []
+        """,
+    )
+
+    assert _flagged_names(tmp_path) == {"test_no_offenders"}
