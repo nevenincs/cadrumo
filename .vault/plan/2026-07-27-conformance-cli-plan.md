@@ -38,6 +38,9 @@ Land the per-revision governance stamp end to end: core enum, strict revision sc
 - [x] `P01.S02` - add optional governance scalars engineered_by, review_status, reviewed_by, reviewed_at to ModeloRevision with a model validator refusing reviewed_by or reviewed_at unless review_status is beyond pending_review, absence defaulting to pending_review; `src/cadrumo/domain/calculations/registry/_schema.py`.
 - [x] `P01.S03` - hydrate the governance scalars from revision.toml in the TOML compiler, rejecting unknown or misplaced governance keys loudly; `src/cadrumo/domain/calculations/registry/_loader.py`.
 - [x] `P01.S04` - add governance-stamp loader tests covering roundtrip, fail-closed default on absence, refusal of incoherent stamp combinations, and an anti-tautology mutation proof; `src/cadrumo/domain/calculations/registry/tests/test_governance_stamp.py`.
+- [ ] `P01.S33` - refuse a blank or whitespace-only reviewed_by and engineered_by so a stamp cannot claim signoff while naming nobody, bound reviewed_at against a future date, and tighten the bundled-tree invariant from not-null to non-blank; `src/cadrumo/domain/calculations/registry/_schema.py`.
+- [ ] `P01.S34` - derive the governance field set from a marker on the field declarations so a fifth governance scalar enrols itself into the placement refusal instead of silently escaping it; `src/cadrumo/domain/calculations/registry/_schema.py`.
+- [ ] `P01.S35` - derive the embedded core-type set for the compiled cache key from the compiled models annotations rather than a remembered hand list, or assert the derived set is a subset of the list, covering the ten unenrolled types including the core Modelo enum; `src/cadrumo/domain/calculations/registry/_compiled_cache.py`.
 
 ### Phase `P02` - fact lifts into src libraries
 
@@ -51,11 +54,12 @@ Lift the test-trapped conformance facts into importable typed libraries under sr
 - [x] `P02.S10` - add the per-revision conformance profile composer with strict typed row models, composing model-law coverage, support matrix, registry-scope diagnostics, authorization state, external grounding, and governance stamps; `src/cadrumo/application/registry/_conformance.py`.
 - [x] `P02.S11` - add structure-and-wiring tests for the classification-coherence checker grounded in the live registry tree; `src/cadrumo/domain/calculations/registry/tests/test_classification_coherence.py`.
 - [x] `P02.S12` - add structure-and-wiring tests for the conformance profile composer, asserting provenance fields and degraded-mode labelling, never author-invented numeric expectations; `src/cadrumo/application/registry/tests/test_conformance_profile.py`.
-- [ ] `P02.S25` - attribute the year-less bundled oracle payload modelo-303-prorrata-general-regularizacion to its declared filing year and reconcile the three figures that are neither computed nor enrolled in the M303 2023-y-siguientes revision, treating any genuine gap as an under-declaration finding; `src/cadrumo/_data/corpus/manual_oracles`.
+- [ ] `P02.S25` - widen the oracle attribution rule to read the payload declared modelo and filing year rather than keying solely on the filename, once the malformed payload and the casilla 44 modelling have landed, so the corpus enters the honesty relation without false positives; `src/cadrumo/domain/calculations/registry/_external_grounding.py`.
 - [x] `P02.S26` - restore an independent registry-grounded oracle for the fichero-BOE required-applicable set so a relaxation of the predicate in either direction flips an assertion, remediating the review finding required-set-oracle-collapse; `src/cadrumo/application/filing/tests`.
 - [ ] `P02.S28` - parse each bundled oracle payload through a strict typed model so the declared source_kind token actually hydrates and an unknown token refuses at the boundary, removing the last untyped mapping read in the grounding fold; `src/cadrumo/domain/calculations/registry/_external_grounding.py`.
 - [ ] `P02.S30` - split the scenario input figures out of the M303 prorrata oracle expected-by-casilla map and rename the payload to carry its filing year so its genuine expected figure enters the honesty relation; `src/cadrumo/_data/corpus/manual_oracles`.
 - [ ] `P02.S31` - model M303 casilla 44 regularizacion prorrata as a computed casilla grounded in LIVA art 105-106 with the AEAT manual figure as its external oracle expectation, closing a computable value left to operator entry; `src/cadrumo/_data/registry/aeat/modelos/303`.
+- [ ] `P02.S36` - bind the classification finding detail bound to the field it mirrors and add the missing case whose single blocker exceeds it so the truncation branch is proven rather than reasoned; `src/cadrumo/domain/calculations/registry/_classification_coherence.py`.
 
 ### Phase `P03` - conformance governance CLI in dev
 
@@ -86,6 +90,7 @@ Run the real gates, persist the first conformance report as an audit, and close 
 - [ ] `P05.S23` - run the first real conformance report over the bundled registry and persist the findings as a vault audit document; `.vault/audit`.
 - [ ] `P05.S24` - run the fresh-context campaign-close honesty review and track every surfaced item as a new step or a formally deferred follow-up; `.vault/audit`.
 - [ ] `P05.S32` - amend the ADR boundary wording to name every wheel-shipped module under src/cadrumo and rule the two open questions on single-versus-dual boundary-detector authority and on whether the filing-year grounding resolver belongs on the public registry facade; `.vault/adr`.
+- [ ] `P05.S37` - extend the fragment placement refusal to the remaining legally load-bearing revision scalars legal_refs, orden_aplicabilidad and valid_to, closing the last instance of the readability hazard the governance refusal proved worth closing; `src/cadrumo/domain/calculations/registry/_loader.py`.
 
 ## Parallelization
 
