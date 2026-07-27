@@ -49,6 +49,25 @@ all, so the third question governs most of the estate.
 - `artefact_kind` is a free-form `str` carrying two spellings for one concept, 18
   `declaration_pdf` against 11 `declaracion`, while production selects on `surface`.
 
+**Every count in this record is a dated observation, not a property.** Measured
+2026-07-26 to 2026-07-27 against the tree at that time, by raw `tomllib` walk over the
+registry and by loading revisions through the authority. Re-derive before relying on
+any of them; several moved during the campaign and were corrected in place.
+
+This anchor is retrofitted, and the omission is the point. A companion ruling from this
+same week holds that a count without an as-of anchor or a stated method is a defect,
+because nothing fails when it goes stale — and this record carried nine count-bearing
+statements with no anchor at all while that ruling was being written. Two of its
+figures had already gone stale and been corrected before anyone noticed the record had
+no anchor to correct them against.
+
+One count here is known rule-dependent rather than merely dated: the coherence
+measurement in the Implementation section. Three sweeps of nominally the same question
+returned seven, four and 114 because they differ on population, on which `value_kind`
+and `data_type` values count as equivalent, and on which are distinct — not because
+the registry changed. A derived figure is only meaningful with its rule stated, which
+is why that one carries its rule inline.
+
 ## Considered options
 
 **(A) Decide each question as it arises, per profile.** Rejected. The three questions
