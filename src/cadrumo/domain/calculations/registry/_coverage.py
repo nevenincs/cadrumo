@@ -25,11 +25,18 @@ from ._validate import RegistryValidator
 CoverageGateStatus = Literal["satisfied", "gap"]
 RequiredCoverageTier = Literal["legal_authority", "official_source_guidance", "layout_authority"]
 
-_REQUIRED_COVERAGE_TIERS: tuple[RequiredCoverageTier, ...] = (
+REQUIRED_COVERAGE_TIERS: tuple[RequiredCoverageTier, ...] = (
     "legal_authority",
     "official_source_guidance",
     "layout_authority",
 )
+"""The evidence tiers a revision cannot be filing-grade without.
+
+Public because the distinction is load-bearing outside this module too: a gap on
+one of these is a failure, while a gap on ``executable_parity_evidence`` is a
+reported absence, and a consumer that cannot tell them apart reports an expected
+absence as a defect.
+"""
 
 
 class CoverageModel(BaseModel):
@@ -123,7 +130,7 @@ def audit_registry_model_law_coverage(
             ledger = build_model_law_coverage_ledger(snapshot)
             ledgers.append(ledger)
             gates = {gate.tier: gate for gate in ledger.gates}
-            for tier in _REQUIRED_COVERAGE_TIERS:
+            for tier in REQUIRED_COVERAGE_TIERS:
                 gate = gates[tier]
                 if gate.status == "gap":
                     required_gate_failures.append(f"modelo {modelo.id} revision {revision.id}: {tier} coverage gap")

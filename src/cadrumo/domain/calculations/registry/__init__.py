@@ -240,9 +240,11 @@ from ._corpus_catalogue import (
     verify_source_file,
 )
 from ._coverage import (
+    REQUIRED_COVERAGE_TIERS,
     EvidenceTierCoverageGate,
     ModelLawCoverageLedger,
     RegistryCoverageAudit,
+    RequiredCoverageTier,
     audit_registry_model_law_coverage,
     build_model_law_coverage_ledger,
 )
@@ -497,6 +499,7 @@ from ._validate_references import (
     CrossDomainSnapshotCheck,
     register_cross_domain_snapshot_check,
 )
+from ._validate_registry_scope import validate_registry_scope
 from ._validate_revision_identity import revision_casilla_identity_failures, revision_reference_identity_failures
 from ._workbook_parity import (
     SyntheticInputSet,
@@ -541,6 +544,7 @@ __all__ = [
     "KNOWN_VERIFICATION_PREDICATE_OPERATORS",
     "LEDGER_BINDING_SOURCE_KINDS",
     "MODELO_303_IVA_COMPENSATION_BINDING_ID",
+    "REQUIRED_COVERAGE_TIERS",
     "AeatNifIvaCheckerOracle",
     "AeatNifIvaObservation",
     "AmbiguousRevisionSelectionError",
@@ -729,6 +733,7 @@ __all__ = [
     "RentaWebOpenOracle",
     "RentaWebOpenReplayDriver",
     "RentaWebOpenSyntheticProfile",
+    "RequiredCoverageTier",
     "ResolvedConstruct",
     "ResolvedConstructMember",
     "ResolvedExportLayout",
@@ -940,6 +945,7 @@ __all__ = [
     "validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definition",
     "validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition",
     "validate_ledger_renta_income_aggregation_binding_definition",
+    "validate_registry_scope",
     "validate_renta_web_open_expected_casilla_ids",
     "validate_renta_web_open_expected_casilla_values",
     "validate_retenciones_aggregation_binding",
