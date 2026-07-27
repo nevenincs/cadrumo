@@ -107,6 +107,27 @@ def _publishing_product(index: dict[str, Any]) -> str:
     )
 
 
+def superseded_names(index: dict[str, Any]) -> frozenset[str]:
+    """Return the plugin names this cohort declares it retires.
+
+    Supersession is DECLARED by the cohort rather than held as a delete list in
+    the tool, for two reasons. A standing delete authority decoupled from any
+    release is the shape of the incident that made the ownership rule necessary.
+    And a declaration ships in every later cohort, so retirement becomes an
+    enforced invariant rather than a one-time act: a replay, an old manifest, or
+    a stranger claiming the abandoned name is refused again, whereas a hand
+    deletion is forgotten the moment it completes.
+    """
+    raw = index.get("supersedes")
+    if raw is None:
+        return frozenset()
+    if not isinstance(raw, list) or not all(isinstance(name, str) and name for name in raw):
+        raise MarketplacePublishError(
+            "cohort marketplace index 'supersedes' must be a list of non-empty plugin names",
+        )
+    return frozenset(raw)
+
+
 def merge_marketplace_index(
     *,
     cohort_index: dict[str, Any],
@@ -129,7 +150,18 @@ def merge_marketplace_index(
     declared = _declared_plugins(cohort_index, source=Path("cohort"))
     product = _publishing_product(cohort_index)
     owned = {entry["name"] for entry in declared}
+    superseded = superseded_names(cohort_index)
     published = (existing_index or {}).get("plugins", [])
+
+    # A name cannot be both claimed and retired by one cohort: the two verbs
+    # disagree about what the published tree should end up holding, and silently
+    # preferring either is worse than refusing.
+    contradiction = sorted(owned & superseded)
+    if contradiction:
+        raise MarketplacePublishError(
+            f"cohort for {product!r} both declares and supersedes plugin(s) {contradiction}; "
+            "a rename claims the new name and retires the old one, never the same name twice"
+        )
 
     stolen = sorted(
         str(entry["name"])
@@ -145,8 +177,32 @@ def merge_marketplace_index(
             "refusing to overwrite a sibling's plugin tree and index entry"
         )
 
+    # Supersession obeys the ownership rule UNCHANGED. A cohort may retire a
+    # name it published, or one with no recorded publisher, which is exactly the
+    # set it could already claim and overwrite wholesale. It may not retire a
+    # sibling's, so the guard that exists because a wholesale replacement once
+    # deleted every sibling is not weakened by one bit -- same bounds, one more
+    # verb.
+    not_ours = sorted(
+        str(entry["name"])
+        for entry in published
+        if isinstance(entry, dict)
+        and entry.get("name") in superseded
+        and isinstance(entry.get("published_by"), str)
+        and entry["published_by"] != product
+    )
+    if not_ours:
+        raise MarketplacePublishError(
+            f"cohort for {product!r} supersedes plugin(s) {not_ours} published by another product; "
+            "retiring a sibling's plugin is the deletion this guard exists to prevent"
+        )
+
     attributed = [{**entry, "published_by": product} for entry in declared]
-    retained = [entry for entry in published if isinstance(entry, dict) and entry.get("name") not in owned]
+    retained = [
+        entry
+        for entry in published
+        if isinstance(entry, dict) and entry.get("name") not in owned and entry.get("name") not in superseded
+    ]
     document = dict(cohort_index)
     document["plugins"] = sorted([*attributed, *retained], key=lambda entry: str(entry["name"]))
     return document
@@ -183,6 +239,23 @@ def publish_cohort_plugins(*, marketplace: Path, cohort: Path) -> tuple[str, ...
     existing = _read_index(published_index_path) if published_index_path.is_file() else None
     merged = merge_marketplace_index(cohort_index=cohort_index, existing_index=existing)
 
+    # Superseded subtrees are resolved from the PUBLISHED index, before any
+    # mutation, for the same reason the merge is: the entry names its own path,
+    # and once the index is rewritten that path is gone.
+    retiring: list[Path] = []
+    for name in sorted(superseded_names(cohort_index)):
+        entry = next(
+            (
+                item
+                for item in (existing or {}).get("plugins", [])
+                if isinstance(item, dict) and item.get("name") == name
+            ),
+            None,
+        )
+        if entry is None:
+            continue
+        retiring.append(_plugin_relative_path(entry))
+
     # Everything below this line is mutation, and nothing below it can refuse.
     for relative, source_tree in planned:
         target = marketplace / relative
@@ -190,6 +263,11 @@ def publish_cohort_plugins(*, marketplace: Path, cohort: Path) -> tuple[str, ...
             shutil.rmtree(target)
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copytree(source_tree, target)
+
+    for relative in retiring:
+        retired = marketplace / relative
+        if retired.is_dir():
+            shutil.rmtree(retired)
 
     published_index_path.parent.mkdir(parents=True, exist_ok=True)
     published_index_path.write_text(
