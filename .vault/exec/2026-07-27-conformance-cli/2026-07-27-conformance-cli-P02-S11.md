@@ -72,6 +72,14 @@ Surrounding gates: `ruff format` and `ruff check` clean, `ty check` all checks
 passed, `pyright` 0 errors 0 warnings, and the relative-imports gate silent.
 The registry test suite runs 3036 passed, 1 failed.
 
+A sixteenth test was added after a self-review read of the fold found it would
+RAISE rather than report on a divergence carrying many invariant blockers. The
+test injects a modelo with 40 bound casillas, asserts the finding's detail
+stays inside its bound, asserts the unrendered blockers are still counted in
+the prose, and asserts the row retains every blocker. Reverting the fix fails
+it, so it is a real regression gate rather than a restatement. Final run: `16
+passed`.
+
 ## Notes
 
 Two failures encountered are peer-owned, not this step's, and are recorded here

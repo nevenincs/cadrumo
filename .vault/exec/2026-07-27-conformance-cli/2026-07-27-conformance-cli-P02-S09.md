@@ -99,6 +99,25 @@ docstring link gate passes 3 tests.
 
 ## Notes
 
+A self-review read after the mutation run found a latent defect in the module
+as first committed and it was fixed in a follow-on commit. The informative-class
+invariant emits one blocker per offending casilla, and every blocker was joined
+into the finding's detail, which the schema bounds at 512 characters. A modelo
+carrying about a dozen bound casillas therefore overflowed the bound and raised
+a validation error while constructing the finding, aborting the whole
+governance read on precisely the divergence the fold exists to report. The live
+tree hid it completely: none of the 24 current divergences carries a blocker, so
+the path is unreachable today and becomes reachable the moment an author sets
+the informative tax domain on a computation-heavy modelo.
+
+The fix is two-layered on purpose. Detail rendering now samples one blocker and
+counts the rest, and every detail is clamped to the field bound before the
+finding is constructed. The sampling keeps the sentence readable; the clamp is
+what guarantees no registry-authored id or label can make a finding refuse to
+exist. The complete blocker list stays on the row, where it always was. The
+clamp was verified to be the actual raise-guard by neutering the sampler alone
+and observing a truncated detail rather than an exception.
+
 Fixture-sidecar provenance (`real_corpus` against `synthetic_generated`) was in
 the requested census list but is deliberately excluded and documented as such
 in the module. Those sidecars are test fixtures with no registry schema model,
