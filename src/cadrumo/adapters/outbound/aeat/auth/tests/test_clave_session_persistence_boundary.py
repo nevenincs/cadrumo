@@ -29,6 +29,7 @@ from pathlib import Path
 import pytest
 
 from ......core.auth_session_keys import aeat_auth_session_storage_state_path
+from ......core.config import Settings
 from ......tests.secure_sql import isolated_runtime_profile
 from .. import _session_store
 
@@ -38,6 +39,9 @@ _BUCKET_ID = "clave-session-persistence-boundary"
 _STEM = "clave-movil-storage"
 _IDENTITY = "12345678Z"
 _AUTHENTICATED_AT = datetime(2026, 7, 26, 9, 0, 0, tzinfo=UTC)
+
+
+_AEAT_DOMAINS = Settings.external_constants().aeat.domains
 
 
 #: A storage state shaped like the one a real context yields: a cookie
@@ -51,7 +55,7 @@ def _storage_state(*, cookie_value: str = "synthetic-session-value") -> dict[str
             {
                 "name": "JSESSIONID",
                 "value": cookie_value,
-                "domain": ".agenciatributaria.gob.es",
+                "domain": f".{_AEAT_DOMAINS.host_suffix}",
                 "path": "/",
                 "expires": -1,
                 "httpOnly": True,
@@ -59,7 +63,7 @@ def _storage_state(*, cookie_value: str = "synthetic-session-value") -> dict[str
                 "sameSite": "Lax",
             },
         ],
-        "origins": [{"origin": "https://www2.agenciatributaria.gob.es", "localStorage": []}],
+        "origins": [{"origin": _AEAT_DOMAINS.www2, "localStorage": []}],
     }
 
 

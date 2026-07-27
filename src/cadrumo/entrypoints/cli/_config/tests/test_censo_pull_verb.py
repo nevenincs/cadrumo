@@ -28,9 +28,15 @@ from typing import Any
 import pytest
 import typer
 
+from .....core.config import Settings
 from .....tests.cli_runner import invoke_cached_cli
 from .. import _censo_file
 from .._censo_payloads import CensoPullDivergencePayload, CensoPullFactPayload, CensoPullResult
+
+_AEAT = Settings.external_constants().aeat
+#: The censal consulta landing, assembled from the declared sede origin and
+#: path rather than restated, so a route change reaches this payload too.
+_CENSAL_CONSULTA_URL = f"{_AEAT.domains.sede}{_AEAT.sede_paths.censal_datos}"
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -327,7 +333,7 @@ def test_a_populated_result_renders_every_outcome_through_the_real_emit_path() -
     contested = CensoPullDivergencePayload(path="identity.tax_id", profile_value="00000000T", aeat_value="99999999R")
     result = CensoPullResult(
         applied=True,
-        source_url="https://sede.agenciatributaria.gob.es/wlpl/BUGC-JDIT/MdcAcceso",
+        source_url=_CENSAL_CONSULTA_URL,
         adopted=(adopted,),
         unchanged=(unchanged,),
         divergences=(cleared, contested),

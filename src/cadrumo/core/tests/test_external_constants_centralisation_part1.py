@@ -159,17 +159,21 @@ def test_binary_mime_consumers_alias_core_constant() -> None:
         expected=BINARY_MIME_TYPE,
         import_message="_google_drive must import BINARY_MIME_TYPE from cadrumo.core.external_constants",
     )
+    # The sede consumer is the artefact FETCH path, which stamps the content
+    # type on a downloaded declaration. It was split out of _declarations in
+    # 0c21a98804; the constant travelled with the code that uses it, so this
+    # names the module that reads it today rather than the one it left.
     _assert_module_constant_identity(
-        module_name="cadrumo.adapters.outbound.aeat.sede._declarations",
+        module_name="cadrumo.adapters.outbound.aeat.sede._declarations_fetch",
         attr_name="_BINARY_MIME_TYPE",
         expected=BINARY_MIME_TYPE,
-        import_message="_declarations must import BINARY_MIME_TYPE under the alias _BINARY_MIME_TYPE",
+        import_message="_declarations_fetch must import BINARY_MIME_TYPE under the alias _BINARY_MIME_TYPE",
     )
 
     sig = inspect.signature(EncryptedBlobStore.put)
     assert sig.parameters["content_type"].default == BINARY_MIME_TYPE
-    declarations = importlib.import_module("cadrumo.adapters.outbound.aeat.sede._declarations")
-    assert declarations._BINARY_MIME_TYPE == "application/octet-stream"
+    declarations_fetch = importlib.import_module("cadrumo.adapters.outbound.aeat.sede._declarations_fetch")
+    assert declarations_fetch._BINARY_MIME_TYPE == "application/octet-stream"
 
 
 # ---------------------------------------------------------------------------
