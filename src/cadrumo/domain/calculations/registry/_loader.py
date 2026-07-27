@@ -29,6 +29,7 @@ from ._loader_cache import (
     toml_file_fingerprint,
 )
 from ._schema import (
+    REVISION_GOVERNANCE_FIELDS,
     LegalParameter,
     LegalReference,
     ModeloDefinition,
@@ -416,11 +417,18 @@ def _merge_revision_manifest(path: Path, expected_revision_id: str, merged_revis
 
     In the fragmented layout the ``revision.toml`` manifest carries ONLY scalar
     revision metadata (label, valid_from/valid_to, period_selector, legal_refs,
-    source_refs, orden_aplicabilidad, continuidad_validation). Every per-section
+    source_refs, orden_aplicabilidad, continuidad_validation) plus the declared
+    governance stamp (:data:`REVISION_GOVERNANCE_FIELDS`). Every per-section
     array-of-tables (bindings, casillas, formulas, verification_expectations, …)
     and the completeness_manifest live in per-section fragment subdirectories;
     an inline section table in ``revision.toml`` is a loud load error naming the
     fragmented layout.
+
+    The governance stamp is manifest-only in the other direction too: it is an
+    authorship and signoff claim about the whole revision, so
+    :func:`_merge_revision_fragment_field` refuses it inside a section fragment
+    rather than letting a stamp hide among thousands of fragment files where no
+    reviewer would look for it.
     """
     raw_revision_table = _read_single_revision_table(path, expected_revision_id)
     for key, value in raw_revision_table.items():
@@ -447,6 +455,12 @@ def _merge_revision_fragment_field(
     value: object,
     merged_revision: dict[str, object],
 ) -> None:
+    if key in REVISION_GOVERNANCE_FIELDS:
+        raise RegistryLoadError(
+            f"{path}: revision governance field {key!r} must be declared in the revision's revision.toml "
+            f"manifest, not in a per-section fragment; the stamp is a claim about the whole revision and "
+            f"must be readable in one place",
+        )
     if key == _REVISION_CONSTRUCTS:
         if not isinstance(value, tuple):
             raise RegistryLoadError(f"{path}: revision fragment field 'constructs' must be an array")

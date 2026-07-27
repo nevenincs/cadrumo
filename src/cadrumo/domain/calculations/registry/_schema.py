@@ -1314,6 +1314,18 @@ class ModeloRevision(RegistryModel):
         return self
 
 
+REVISION_GOVERNANCE_FIELDS: frozenset[str] = frozenset(
+    {"engineered_by", "review_status", "reviewed_by", "reviewed_at"},
+)
+"""The :class:`ModeloRevision` fields that make up the declared governance stamp.
+
+The stamp is an authorship and signoff claim about a whole revision, so it must
+be readable in one place: the revision's own ``revision.toml`` manifest. The
+loader refuses these keys anywhere else in the fragment tree. Named here beside
+the field declarations so a rename is caught at one site.
+"""
+
+
 class ModeloDefinition(RegistryModel):
     id: ModeloId
     title: str
