@@ -26,6 +26,8 @@ _IDENTITY_HEADING_KEYS = {
 _PROSE_KEYS = {
     "ca": {
         "errors.auth.auth_former_product_session_state",
+        "errors.integrity.integrity_storage_bucket_manifest_version_below_floor",
+        "errors.integrity.integrity_storage_bucket_manifest_version_from_future",
         "errors.internal.cli_outbound_payload_boundary",
         "adapters.google.calc_sheets.errors.foreign_spreadsheet_not_owned",
         "adapters.google.oauth_flow.errors.profile_state_unresolved",
@@ -41,6 +43,8 @@ _PROSE_KEYS = {
     },
     "en": {
         "errors.auth.auth_former_product_session_state",
+        "errors.integrity.integrity_storage_bucket_manifest_version_below_floor",
+        "errors.integrity.integrity_storage_bucket_manifest_version_from_future",
         "errors.internal.cli_outbound_payload_boundary",
         "adapters.google.calc_sheets.errors.foreign_spreadsheet_not_owned",
         "adapters.google.oauth_flow.errors.profile_state_unresolved",
@@ -54,6 +58,8 @@ _PROSE_KEYS = {
     },
     "es": {
         "errors.auth.auth_former_product_session_state",
+        "errors.integrity.integrity_storage_bucket_manifest_version_below_floor",
+        "errors.integrity.integrity_storage_bucket_manifest_version_from_future",
         "errors.internal.cli_outbound_payload_boundary",
         "adapters.outbound.storage.google_drive.errors.former_vault_folder",
         "cli.config.passphrase.confirm_new_passphrase_prompt",
@@ -65,6 +71,8 @@ _PROSE_KEYS = {
     },
     "hu": {
         "errors.auth.auth_former_product_session_state",
+        "errors.integrity.integrity_storage_bucket_manifest_version_below_floor",
+        "errors.integrity.integrity_storage_bucket_manifest_version_from_future",
         "errors.internal.cli_outbound_payload_boundary",
         "adapters.outbound.storage.google_drive.errors.former_vault_folder",
         "cli.config.passphrase.confirm_new_passphrase_prompt",

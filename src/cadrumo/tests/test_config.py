@@ -164,25 +164,27 @@ class TestStatusDetailUrlTemplate:
         assert settings.cadrumo_certificate_path is None
         assert settings.cadrumo_certificate_password_secret is None
 
-    def test_legacy_product_dotenv_keys_are_excluded_without_weakening_unknown_key_validation(
-        self, tmp_path: Path
-    ) -> None:
-        """Cadrumo starts fresh while retaining strict validation for unrelated dotenv keys."""
-        env_path = tmp_path / ".env"
-        env_path.write_text(
-            "\n".join(
-                (
-                    "AEAT_LOCAL_STORAGE_ROOT=legacy-state-root",
-                    "AEAT_SECRET_PASSPHRASE=legacy-secret-value",
-                    "CADRUMO_AUTH_PROVIDER=certificate",
-                )
-            )
-            + "\n",
-            encoding="utf-8",
-        )
+    def test_a_former_product_dotenv_key_is_refused_like_any_other_unknown_key(self, tmp_path: Path) -> None:
+        """A stale ``AEAT_*`` product key in a dotenv refuses; it is not silently dropped.
 
-        class LegacyProductEnvSettings(Settings):
-            """Settings variant bound to a real legacy-product dotenv file."""
+        Former-product settings names (``AEAT_LOCAL_STORAGE_ROOT``,
+        ``AEAT_SECRET_PASSPHRASE`` and their siblings) once had a dedicated
+        exclusion list filtering them out of the settings sources. That list was
+        deleted deliberately, so the names now meet the model's ordinary
+        ``extra="forbid"`` boundary like any other key mapping to no field.
+
+        Worth pinning because the two behaviours are easy to confuse and only
+        one is honest: silently dropping the key leaves an operator believing a
+        setting is in force while nothing reads it, whereas refusing names the
+        stale key at startup. Authority-owned ``AEAT_*`` settings are
+        unaffected — they map to real fields — and the closing case proves a
+        valid key is still read once the stale ones are gone, so the refusal is
+        about the unknown name rather than the ``AEAT_`` prefix.
+        """
+        env_path = tmp_path / ".env"
+
+        class FormerProductEnvSettings(Settings):
+            """Settings variant bound to a real dotenv file under test."""
 
             model_config = SettingsConfigDict(
                 env_file=env_path,
@@ -190,14 +192,19 @@ class TestStatusDetailUrlTemplate:
                 env_ignore_empty=True,
             )
 
-        with _isolated_aeat_env():
-            settings = LegacyProductEnvSettings(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
-        assert settings.cadrumo_local_storage_root != Path("legacy-state-root")
-        assert settings.cadrumo_auth_provider is AuthProviderKind.CERTIFICATE
+        for stale in ("AEAT_LOCAL_STORAGE_ROOT=legacy-state-root", "AEAT_SECRET_PASSPHRASE=legacy-secret-value"):
+            env_path.write_text(f"{stale}\nCADRUMO_AUTH_PROVIDER=certificate\n", encoding="utf-8")
+            with _isolated_aeat_env(), pytest.raises(pydantic.ValidationError):
+                FormerProductEnvSettings(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
 
         env_path.write_text("UNRELATED_CADRUMO_TYPO=1\n", encoding="utf-8")
         with _isolated_aeat_env(), pytest.raises(pydantic.ValidationError):
-            LegacyProductEnvSettings(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
+            FormerProductEnvSettings(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
+
+        env_path.write_text("CADRUMO_AUTH_PROVIDER=certificate\n", encoding="utf-8")
+        with _isolated_aeat_env():
+            settings = FormerProductEnvSettings(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
+        assert settings.cadrumo_auth_provider is AuthProviderKind.CERTIFICATE
 
     def test_relative_env_paths_resolve_from_project_root(self, tmp_path: Path) -> None:
         """Relative env-backed paths must anchor to PROJECT_ROOT, not the process cwd."""
