@@ -19,6 +19,10 @@ AEAT_LEGACY_APEX_CANARY = "aeat.es"
 AEAT_LEGACY_SEDE_CANARY = f"sede.{AEAT_LEGACY_APEX_CANARY}"
 CLAVE_MOVIL_BROWSER_GLOBAL_EXPECTED = _AEAT.clave_movil.obtener_clave_movil_browser_global
 UNKNOWN_AEAT_SUBDOMAIN_CANARY = f"www9.{_AEAT.domains.host_suffix}"
+#: A host ENDING in the AEAT apex as a substring rather than as a domain
+#: suffix. Any guard that admits it is doing a substring match where it meant
+#: a suffix match, which an attacker-registered domain satisfies trivially.
+AEAT_SUFFIX_LOOKALIKE_HOST_CANARY = f"{_AEAT.domains.host_suffix}.evil.test"
 UNKNOWN_AEAT_STATE_SURFACE_PATH_CANARY = "/wlpl/unsafe-state-surface"
 UNKNOWN_AEAT_STATE_SURFACE_URL_CANARY = (
     f"https://{UNKNOWN_AEAT_SUBDOMAIN_CANARY}{UNKNOWN_AEAT_STATE_SURFACE_PATH_CANARY}"

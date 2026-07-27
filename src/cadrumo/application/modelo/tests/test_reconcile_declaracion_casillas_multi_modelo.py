@@ -58,10 +58,12 @@ from ....tests.user_profile import register_minimal_profile
 from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
 from .._reconcile import (
+    _reconcile_parsed_declaracion,
+)
+from .._reconciliation_records import (
     ModeloReconciliationDiffKind,
     ModeloReconciliationEvidenceKind,
     ModeloReconciliationVerdict,
-    _reconcile_parsed_declaracion,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

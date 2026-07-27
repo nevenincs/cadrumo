@@ -19,6 +19,7 @@ from ......domain.calculations.registry import (
     RemoteOperation,
     assert_remote_operation_allowed,
 )
+from ......tests.aeat_literal_fixtures import AEAT_SUFFIX_LOOKALIKE_HOST_CANARY
 from ...browser import Profile, opened_browser_page, shared_playwright_runtime
 from .._errors import SedeNavigationError, SedeParseError
 from .._iva_compensation_wallet import (
@@ -726,7 +727,7 @@ class TestWalletHostPredicate:
         netloc = urlsplit(getattr(external.aeat.domains, origin_name)).netloc
         assert _is_allowed_wallet_host(netloc)
 
-    @pytest.mark.parametrize("netloc", ["example.invalid", "agenciatributaria.gob.es.evil.test", ""])
+    @pytest.mark.parametrize("netloc", ["example.invalid", AEAT_SUFFIX_LOOKALIKE_HOST_CANARY, ""])
     def test_a_non_aeat_host_is_refused(self, netloc: str) -> None:
         """Aligning with the guard must not admit anything off the AEAT apex.
 

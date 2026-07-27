@@ -109,7 +109,11 @@ jobs:
         # The docs-marked tests (nitpicky warnings-as-errors Sphinx build,
         # module-to-stub correspondence, and CLI reference drift/conformance)
         # plus doc8 and interrogate. Multi-minute by design; dispatch cadence.
-        run: just docs-check
+        # 8 workers, never auto: the docs lane's pytest previously inherited
+        # `-n auto` from the pyproject addopts, invisible to the run-line
+        # gate; the explicit argument applies the same 24/3 machine-aware
+        # sizing every other lane declares (.github/ci-control-plane.md).
+        run: just docs-check 8
 
       - name: Audit dependencies for known CVEs
         # Scans the locked dependency graph against the PyPI Advisory

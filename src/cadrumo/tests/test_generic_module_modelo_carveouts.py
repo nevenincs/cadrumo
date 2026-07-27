@@ -119,6 +119,7 @@ def _per_modelo_tokens(tree: ast.AST) -> set[str]:
 def test_per_modelo_token_set_does_not_exceed_baseline(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """Each named generic module carries only previously reviewed per-modelo tokens."""
     inventory = {aeat_relative(path): tree for path, tree in production_ast_items(source_tree_ast)}
+    assert _RATCHET_BASELINE, "the ratchet baseline is empty; no named module can exceed a baseline that lists none"
     violations: list[str] = []
     for relative_path, baseline in sorted(_RATCHET_BASELINE.items()):
         tree = inventory.get(relative_path)

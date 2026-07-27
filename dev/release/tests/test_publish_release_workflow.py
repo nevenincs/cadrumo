@@ -312,6 +312,77 @@ def test_acquisition_inputs_are_optional_at_the_form_and_derived_at_the_gate() -
     assert "dev.release.readiness" in surface
 
 
+#: The dispatch inputs Gate 2 demands only when a channel claims them.
+_DERIVED_INPUTS: Final[tuple[str, ...]] = ("scoop_run_id", "homebrew_run_id", "claude_evidence_release")
+
+#: Words that make a mention of a derived input conditional rather than flat.
+_CONDITIONAL_MARKERS: Final[tuple[str, ...]] = ("claim", "only", "empty", "deriv")
+
+
+def _unconditional_input_mentions(prose: str) -> list[str]:
+    """Return refusal lines that name a derived input with no conditional marker.
+
+    The operator never sees the derivation run; they see this refusal. So an
+    instruction naming one of these inputs flatly -- "re-dispatch with
+    scoop_run_id" -- walks the operator straight back into the bootstrap
+    deadlock the derivation exists to break, however correct the gate is.
+    """
+    return [
+        line.strip()
+        for line in prose.splitlines()
+        if any(name in line.lower() for name in _DERIVED_INPUTS)
+        and not any(marker in line.lower() for marker in _CONDITIONAL_MARKERS)
+    ]
+
+
+def test_operator_instructions_never_present_a_derived_input_as_unconditional() -> None:
+    """The prose the operator reads must agree with the gate that refuses them."""
+    document = _document()
+    steps = document["jobs"]["operator-preflight"]["steps"]
+    (opt_in,) = [step for step in steps if "opt-in" in str(step.get("name", "")).lower()]
+    prose = str(opt_in["run"])
+
+    assert not _unconditional_input_mentions(prose), (
+        "the opt-in refusal instructs the operator to supply an input that Gate 2 "
+        "demands only for a claimed channel; that is the bootstrap deadlock as prose"
+    )
+    # Vacuously satisfiable by deleting the explanation, so require it explicitly.
+    assert re.search(r"deriv", prose, re.IGNORECASE), (
+        "the refusal must tell the operator that the acquisition inputs are derived "
+        "from the claimed channels, or the empty-input dispatch looks like an omission"
+    )
+
+
+@pytest.mark.parametrize(
+    "offending",
+    [
+        pytest.param(
+            "re-dispatch with the packaging_run_id, scoop_run_id, homebrew_run_id, and\n"
+            "claude_evidence_release inputs.",
+            id="the-deadlocked-instruction-this-gate-retired",
+        ),
+        pytest.param("5. Note the scoop_run_id and homebrew_run_id.", id="flat-numbered-prerequisite"),
+        pytest.param("Supply claude_evidence_release before arming.", id="single-input-imperative"),
+    ],
+)
+def test_the_instruction_predicate_flags_every_unconditional_shape(offending: str) -> None:
+    """Negative control: the property is not vacuous on today's prose."""
+    assert _unconditional_input_mentions(offending)
+
+
+@pytest.mark.parametrize(
+    "benign",
+    [
+        pytest.param("scoop_run_id is required once the scoop channel is claimed.", id="claim-scoped"),
+        pytest.param("Leave homebrew_run_id empty on a bootstrap dispatch.", id="empty-scoped"),
+        pytest.param("Gate 2 derives whether claude_evidence_release is needed.", id="derivation-scoped"),
+    ],
+)
+def test_the_instruction_predicate_leaves_conditional_prose_alone(benign: str) -> None:
+    """It must not force the prose to stop naming the inputs at all."""
+    assert not _unconditional_input_mentions(benign)
+
+
 def test_absent_optional_sources_are_skipped_not_fabricated() -> None:
     """Both jobs guard each optional aggregation on a non-empty id.
 

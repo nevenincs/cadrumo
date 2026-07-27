@@ -140,8 +140,16 @@ def _production_legal_ref_literals() -> dict[str, tuple[str, ...]]:
 
 
 def _direct_string_literals(node: ast.AST) -> tuple[tuple[str, int], ...]:
+    """Return every directly-written string literal in ``node``, ignoring empty ones.
+
+    An empty literal is a "no reference yet" default rather than a reference —
+    ``source_ref: str = ""`` on a persisted record declares the field unset, not
+    a citation of the empty catalogue key. It can never resolve, because no
+    catalogue is keyed on the empty string, so admitting it would report every
+    such default as an unresolvable reference while catching nothing real.
+    """
     if isinstance(node, ast.Constant) and isinstance(node.value, str):
-        return ((node.value, node.lineno),)
+        return ((node.value, node.lineno),) if node.value.strip() else ()
     if isinstance(node, ast.Tuple | ast.List | ast.Set):
         values: list[tuple[str, int]] = []
         for item in node.elts:

@@ -29,6 +29,7 @@ if TYPE_CHECKING:
 __all__ = [
     "check_sequence_goldens",
     "emit_cli_tree",
+    "should_check_sequences",
     "should_emit_cli_tree",
 ]
 
@@ -37,6 +38,13 @@ __all__ = [
 _FORCE_EMIT_ENV = "CADRUMO_DOCS_FORCE_CLI_TREE"
 #: Skip the ``cli-tree.json`` projection unconditionally.
 _SKIP_EMIT_ENV = "CADRUMO_DOCS_SKIP_CLI_TREE"
+#: Skip the golden check unconditionally. The check's verdict depends only on
+#: the enrolled pages, the committed goldens, and the CLI's behaviour — never
+#: on the build's scope, language, or builder — so a caller driving SEVERAL
+#: builds over one docs tree in one verification lane may run the check once
+#: (the pytest goldens gate) and skip the byte-identical repeats. Production
+#: builds never set this; the hook stays connected and red-on-divergence.
+_SKIP_CHECK_ENV = "CADRUMO_DOCS_SKIP_SEQUENCE_CHECK"
 
 
 def should_emit_cli_tree(output_path: Path, *, specific_sources: list[Path] | None) -> bool:
@@ -87,6 +95,21 @@ def emit_cli_tree(app: Sphinx, *, specific_sources: list[Path] | None = None) ->
     write_cli_tree(output_path)
 
 
+def should_check_sequences() -> bool:
+    """Return whether this build must run the cli-sequence golden check.
+
+    ``True`` unless the explicit ``CADRUMO_DOCS_SKIP_SEQUENCE_CHECK`` opt-out is
+    set. The opt-out exists for a verification lane that drives several Sphinx
+    builds over the same docs tree (full scope, user scope, one per language):
+    the check subprocess pins its own environment (English output, scrubbed
+    ``CADRUMO_*``), so its verdict is identical across those builds, and the
+    lane runs it exactly once through the dedicated pytest goldens gate instead
+    of once per build. No production build path sets the opt-out, so a real
+    docs build keeps failing on a golden divergence.
+    """
+    return not os.environ.get(_SKIP_CHECK_ENV)
+
+
 def _config_root(app: Sphinx, name: str) -> Path | None:
     """Return a directory-typed Sphinx config seam as a ``Path``, or ``None``."""
     value = getattr(app.config, name, None)
@@ -112,15 +135,24 @@ def check_sequence_goldens(app: Sphinx, *, pages: list[str] | None = None) -> No
     """
     from dev.docs.sequences import check_sequences_in_subprocess, refresh_invocation
 
+    if not should_check_sequences():
+        return
     docs_root = Path(app.srcdir)
     goldens_root = _config_root(app, "cadrumo_sequences_goldens_root")
 
     problems: list[str] = []
     if pages is None:
+        # A full build checks every enrolled page; shard the pages across a
+        # BOUNDED pool of child interpreters (each sequence keeps its own fresh
+        # hermetic sandbox, so execution is unchanged — only the scheduling
+        # is). Width 4 is the same bounded-not-auto footprint the gate builds
+        # use for Sphinx ``-j`` (see ``.github/ci-control-plane.md`` on sizing
+        # for co-residency, never for the whole machine).
         problems.extend(
             check_sequences_in_subprocess(
                 docs_root=docs_root,
                 goldens_root=goldens_root,
+                jobs=4,
             ),
         )
     else:

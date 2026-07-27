@@ -398,6 +398,35 @@ test-integration:
     @uv run --no-sync pytest -q -m "integration and not serial and not os_keychain"
     @uv run --no-sync pytest -q -m "integration and serial and not perf and not os_keychain" -n0
 
+# Run the dev/ tooling gates that no other lane reaches. `testpaths` in
+# pyproject names only `src/cadrumo` plus one packaging file, and CI's dev step
+# names only dev/ci, dev/packaging, dev/quality, and dev/release -- so these ten
+# directories were collected by NOTHING and 19 of their tests had been failing
+# unobserved, including the duplication-disposition gate and the whole shipped
+# documentation-search corpus. The marker expression is stated explicitly for
+# the reason `packaging-smoke-preflight-tests` states it: these directories are
+# mixed-marker, so inheriting the default `-m 'unit and ...'` would silently
+# deselect the integration contracts and still exit zero. Coverage is guarded by
+# `src/cadrumo/tests/test_dev_tree_lane_coverage.py`, which fails when a new
+# test directory appears under `dev/` that no lane names.
+test-dev-tooling:
+    @uv run --no-sync pytest -q -m "(unit or integration) and not resident_service" dev/audit/tests dev/deploy/tests dev/env/tests dev/tests dev/registry/matrix/tests dev/registry/newmodelo/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests
+
+# Enrol the tests that query the resident vaultspec-rag search service. Held out
+# of every other lane by the `resident_service` marker, because the service is a
+# separate product this project does not install and its own isolation guard
+# refuses the HTTP call under pytest -- so from a plain invocation these fail on
+# the harness before the corpus is ever consulted.
+#
+# READ BEFORE TRUSTING A GREEN RESULT. This recipe assumes a started AND fully
+# indexed service. A truncated index answers confidently rather than refusing,
+# so these gates can pass thinly against a partial corpus. Confirm the index is
+# whole before reading a pass as evidence; `just check-rag` reports status, and a
+# section count far below the tracked file count means the answers are worthless
+# even though nothing errored.
+test-resident-service:
+    @uv run --no-sync pytest -q -m "resident_service" dev/docs/preprocess/tests dev/docs/terminology/tests
+
 # Run BOTH lanes in sequence and report them separately. The default pytest
 # invocation is pinned to the unit lane by addopts, so `just test-unit` green
 # says nothing about the ~3k integration tests; this is the recipe to reach for
@@ -541,8 +570,11 @@ docs-langs:
     uv run --no-sync python -m dev.docs.build --scope user --language hu
 
 # Run docstring structure and Sphinx build checks. Quiet pytest progress.
-docs-check:
-    @uv run --no-sync pytest -q dev/docs/tests dev/docs/apidocs/tests src/cadrumo/tests/test_docstring_core_struct_links.py -m docs
+# `workers` bounds the pytest-xdist lane: CI passes 8 (machine-aware sizing,
+# .github/ci-control-plane.md — three runners share the 24-core box); local
+# development keeps the `auto` default per the same control plane.
+docs-check workers="auto":
+    @uv run --no-sync pytest -q -n {{workers}} dev/docs/tests dev/docs/apidocs/tests src/cadrumo/tests/test_docstring_core_struct_links.py -m docs
     @uv run --no-sync doc8 docs
     @uv run --no-sync interrogate -c pyproject.toml src/cadrumo
 

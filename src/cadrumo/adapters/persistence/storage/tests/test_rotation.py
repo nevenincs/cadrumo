@@ -28,6 +28,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from .....core.external_constants import UTF_8_ENCODING
 from .....tests.master_key import EphemeralMasterKeyProvider
 from .. import (
+    CipherEnvelope,
     EncryptedBlobStore,
     Envelope,
     RotationPlanEntry,
@@ -728,3 +729,80 @@ class TestRotationLockTargetAlignment:
 
         with exclusive_file_lock(rotation_lock_target):
             pass
+
+
+# Fields rotation OWNS: it re-encrypts under a new key, so the ciphertext
+# metadata and the write timestamp are its output. Every other CipherEnvelope
+# field is state rotation must carry across from the envelope on disk.
+_ROTATION_OWNED_CIPHER_FIELDS: frozenset[str] = frozenset({"written_at", "encryption"})
+
+#: A value no model default can supply, so a dropped carry is observable.
+#: Without it the carry test is vacuous while default == current.
+_NON_DEFAULT_CIPHER_VERSION = 7
+
+
+def test_rotation_carries_every_cipher_envelope_field_it_does_not_own(
+    tmp_path: Path,
+    alice: EphemeralMasterKeyProvider,
+    bob: EphemeralMasterKeyProvider,
+) -> None:
+    """Rotation reconstructs the cipher envelope, so an omitted field resets silently.
+
+    ``rotate_master_key`` rebuilds :class:`CipherEnvelope` field by field rather
+    than copy-updating it. A field left out of that constructor does not fail --
+    it takes the model default, which is the same shape that silently reset the
+    absolute session expiry on every profile save.
+
+    The seeded envelope is stamped to a NON-DEFAULT ``cipher_schema_version``
+    first, and that is what makes this test an instrument rather than a
+    decoration. Written at its default the test cannot fail: today the default
+    equals the current value, so dropping the carry resets 1 to 1 and before and
+    after compare equal. That was verified empirically -- with the carry removed
+    from the reconstruction the naive form of this test still passed, which is
+    the same "a field at its default cannot distinguish carried from reset" trap
+    that hid the profile-save defect.
+
+    Stamping the value on disk is a synthetic input to a mechanism, not a
+    fabricated persisted shape being tolerated: nothing reads it back as a
+    legacy format, and no migration branch is invented for it.
+
+    The carried set is DERIVED from the model, so a field added to
+    :class:`CipherEnvelope` later reddens this until someone classifies it as
+    rotation-owned or carried.
+    """
+    store = tmp_path / "drafts"
+    store.mkdir()
+    target = store / "draft-carry.envelope.json"
+    _seed_envelope(target, provider=alice, hkdf_context=_HKDF_CONTEXT_DRAFT)
+
+    carried = set(CipherEnvelope.model_fields) - _ROTATION_OWNED_CIPHER_FIELDS
+    assert carried, "rotation claims to own every cipher-envelope field; nothing left to carry"
+
+    seeded = CipherEnvelope.model_validate_json(target.read_text(encoding=UTF_8_ENCODING)).model_copy(
+        update={"cipher_schema_version": _NON_DEFAULT_CIPHER_VERSION},
+    )
+    target.write_text(seeded.model_dump_json(), encoding=UTF_8_ENCODING)
+    before = CipherEnvelope.model_validate_json(target.read_text(encoding=UTF_8_ENCODING))
+    for field in carried:
+        assert getattr(before, field) != CipherEnvelope.model_fields[field].default, (
+            f"carried field {field!r} was seeded at its model default, so this test cannot "
+            "distinguish 'carried' from 'silently reset' -- seed it to a non-default value"
+        )
+
+    rotate_master_key(
+        (RotationPlanEntry(store_dir=store, hkdf_context=_HKDF_CONTEXT_DRAFT),),
+        old_master_key_provider=alice,
+        new_master_key_provider=bob,
+    )
+
+    after = CipherEnvelope.model_validate_json(target.read_text(encoding=UTF_8_ENCODING))
+    dropped = {
+        field: (getattr(before, field), getattr(after, field))
+        for field in carried
+        if getattr(after, field) != getattr(before, field)
+    }
+    assert dropped == {}, (
+        "rotation changed cipher-envelope field(s) outside its declared projection "
+        f"{sorted(_ROTATION_OWNED_CIPHER_FIELDS)}, shown as field: (before, after) -> {dropped}; "
+        "every field rotation does not derive from the re-encryption must be carried across"
+    )

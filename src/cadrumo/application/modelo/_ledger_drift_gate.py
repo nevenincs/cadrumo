@@ -64,6 +64,12 @@ def ledger_drift_findings(
 
     The comparison is the draft's own ledger anchor against the live rows,
     through the same staleness evaluator that guards finalized revisions. The
+    two views it holds apart are exactly the two arguments: ``target`` is the
+    stored :class:`CalculationRevision` the casilla values came from, and
+    ``transaction_repository`` is the live
+    :class:`TransactionCatalogueRepository` the evidence gate reads. When it is
+    ``None`` the repository is opened against the work unit's own bucket, so
+    the live side is never silently absent. The
     anchor's fingerprint covers tax facts only, so a reclassify moves it and an
     evidence attach does not — which is what lets this refuse the stale-draft
     path without refusing the attach-and-re-verify recovery the

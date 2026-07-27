@@ -150,7 +150,8 @@ def classify_evidence_reference(
         evidence_id: The reference stored on the transaction.
         bucket_id: Bucket the reference must belong to.
         evidence_records: The bucket's registered evidence records.
-        invoices: The bucket's invoice catalogue.
+        invoices: The bucket's :class:`InvoiceCatalogue`, consulted only after
+            the evidence-record space misses.
 
     Returns:
         :class:`EvidenceReference`: The outcome plus whichever record backs it.

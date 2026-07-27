@@ -26,14 +26,16 @@ from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
 from .._reconcile import (
     ModeloReconciliationCommand,
-    ModeloReconciliationEvidenceKind,
-    ModeloReconciliationVerdict,
     ReconciliationCrossBucketRefusedError,
     ReconciliationDeclaracionSourceUnsupportedError,
     ReconciliationEvidenceInvalidError,
     WorkUnitNotFoundError,
     _reconcile_parsed_justificante,
     modelo_reconcile,
+)
+from .._reconciliation_records import (
+    ModeloReconciliationEvidenceKind,
+    ModeloReconciliationVerdict,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

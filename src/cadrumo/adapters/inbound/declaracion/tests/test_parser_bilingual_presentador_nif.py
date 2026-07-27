@@ -6,17 +6,32 @@ only the label beside it changes. A filer who downloaded their receipt from an
 English-language sede session must be able to reconcile it exactly like anyone
 else, so the parser anchors on both renderings.
 
-The anchor fixture is the real-corpus Modelo 390 2021-0A receipt, a genuine
-sanitised AEAT filing (its sidecar declares ``provenance = real_corpus``,
-``role = parser_anchor``) that renders in English and lays the value out ABOVE
-its label. Before this coverage existed the parser refused it outright with
+The anchor fixture is the Modelo 390 2021-0A receipt. It WAS a genuine
+sanitised AEAT filing, and that is where every property below came from: it
+rendered in English, and it laid the tax id out ABOVE its label rather than
+after it. Before it was bundled the parser refused it outright with
 ``tax_id_unresolved``, because both of its patterns hardcoded the Spanish
-``NIF Presentador`` literal.
+``NIF Presentador`` literal, and its detector looked only for
+``Modelo``/``Ejercicio``. Two independent single-render assumptions on one
+document.
 
-These tests ground themselves in the fixture rather than in assumptions: the
-expected tax id is read back from the sidecar's declared sanitiser
-replacements, and the English render is asserted to actually BE English, so the
-coverage cannot quietly become vacuous if a fixture is regenerated.
+That render has been WITHDRAWN. It carried name-shaped strings the redaction
+pipeline never wrote, and it could not stay in the repository. What stands in
+its place is a generated reproduction that reproduces those properties
+deliberately -- the English markers, the value-above-label order, the English
+header stamp, and a NIF-shaped expediente decoy printed above its own label in
+exactly the position an unanchored value pattern would grab.
+
+Read the consequence honestly. This module still gates the regression it was
+built for, because that regression was written down. It is no longer evidence
+that AEAT produces such a render, because the artefact that was that evidence is
+gone; if AEAT's English receipt carries some further property nobody recorded,
+nothing here will catch it.
+
+These tests still ground themselves in the fixture rather than in assumptions:
+the expected tax id is read back from the sidecar's declared replacements, and
+the English render is asserted to actually BE English, so the coverage cannot
+quietly become vacuous if the fixture is regenerated in Spanish.
 
 See Also:
     :func:`~adapters.inbound.declaracion.parse_declaracion`
@@ -41,7 +56,7 @@ from .._parser import _extract_tax_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
-#: Real sanitised AEAT M390 receipt that renders in English.
+#: Generated reproduction of the withdrawn real AEAT M390 English receipt.
 _ENGLISH_RENDER = ("390", "2021-0A", 2021, "0A")
 #: Spanish-render M390 receipts covering the same modelo and period.
 _SPANISH_RENDERS = (("390", "2022-0A", 2022, "0A"), ("390", "2023-0A", 2023, "0A"))
@@ -89,17 +104,23 @@ def _pdf_text(modelo: str, stem: str) -> str:
         return "\n".join(page.extract_text() or "" for page in pdf.pages)
 
 
-def test_anchor_fixture_is_a_real_english_render() -> None:
-    """The premise of this module: the anchor really is a real English receipt.
+def test_anchor_fixture_still_renders_in_english() -> None:
+    """The premise of this module: the anchor is an ENGLISH receipt.
 
-    Guards the rest of the coverage. If the fixture were regenerated as a
-    Spanish synthetic specimen, the bilingual tests below would still pass
-    while testing nothing — this test fails loudly instead.
+    Guards the rest of the coverage. Every test below distinguishes the English
+    render from the Spanish one, so a fixture regenerated in Spanish would leave
+    them all passing while testing nothing — this fails loudly instead.
+
+    The provenance assertion reads ``synthetic_generated`` because the real
+    render was withdrawn and this is its reproduction. That is a weaker premise
+    than the one it replaces and it is asserted anyway, so a future
+    re-stamping cannot quietly reinstate a claim of external provenance this
+    file cannot support.
     """
     modelo, stem, _year, _period = _ENGLISH_RENDER
     sidecar = _sidecar(modelo, stem)
 
-    assert sidecar["provenance"] == "real_corpus"
+    assert sidecar["provenance"] == "synthetic_generated"
     assert sidecar["role"] == "parser_anchor"
     text = _pdf_text(modelo, stem)
     assert all(marker in text for marker in _ENGLISH_MARKERS), (
@@ -107,7 +128,7 @@ def test_anchor_fixture_is_a_real_english_render() -> None:
     )
 
 
-def test_parses_the_real_english_render_receipt() -> None:
+def test_parses_the_english_render_receipt() -> None:
     """The English-render receipt parses instead of refusing.
 
     This is the regression gate. The same call previously raised

@@ -29,10 +29,27 @@ from .._records import NameReplacement, NifReplacement, TokenMap
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
-# A real committed sanitised justificante; its SHA-256 is catalogued in
-# fixtures.SANITIZED_SHAS, so the already-sanitised refuse guard fires
-# against it without any test-side patching of the known-SHA set.
-_SANITISED_FIXTURE_PDF = FIXTURES_DIR / "justificantes" / "100" / "2021-0A.pdf"
+# A committed justificante whose SHA-256 is catalogued in
+# fixtures.SANITIZED_SHAS, so the already-sanitised refuse guard fires against
+# it without any test-side patching of the known-SHA set.
+#
+# HONEST NOTE ON WHAT THIS NOW EXERCISES. The guard's purpose is "refuse a file
+# that has already been through the pipeline", and this pointer used to name a
+# genuine sanitiser OUTPUT. Every real sanitised render has since been withdrawn
+# (each carried identity the pipeline never wrote), so no such file remains in
+# the tree. What is left tests the MECHANISM -- a catalogued SHA is refused, and
+# the refusal can be opted out of per call -- against a catalogued file that the
+# pipeline never produced. The mechanism is the part with a regression risk; the
+# provenance of the input is not something the guard reads.
+#
+# The coverage that withdrawal DID cost -- an end-to-end run over a document the
+# sanitiser really processed -- was restored rather than accepted, in
+# `test_residual_identity_absence.test_the_gate_and_the_sanitiser_agree_end_to_end`.
+# It builds a pre-sanitisation specimen in memory, requires the residual gate to
+# flag it, runs this pipeline over it, and requires the gate to find the output
+# clean against the manifest this pipeline emitted. That is the seam no test
+# covered before: every other proof supplies a hand-written sidecar.
+_SANITISED_FIXTURE_PDF = FIXTURES_DIR / "justificantes" / "100" / "2022-0A.pdf"
 _REAL_NIE_CANARY = "Y1234567X"
 _REAL_NAME_CANARY = "PERSONA PRUEBA UNO"
 _SYNTHETIC_NIE = "Y0000001S"

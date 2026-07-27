@@ -26,6 +26,7 @@ from ..adapters.persistence.storage import (
     secure_object_repository_for_active_bucket,
 )
 from ..adapters.persistence.storage.bucket import (
+    BUCKET_MANIFEST_SCHEMA_VERSION,
     BucketKeySchedule,
     BucketManifest,
     BucketPaths,
@@ -100,7 +101,7 @@ def _provision_bucket_dek_v1_session(
             kdf_params=KdfParams.default().to_manifest_params(),
             recovery_enrolled=False,
             key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
-            schema_version=2,
+            schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
             status=UserProfileStatus.ACTIVE,
         ),
     )

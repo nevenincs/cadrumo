@@ -4,6 +4,9 @@
 aeat --format json app modelo work calculate --modelo 130 --year 2026 --period 1T --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
 @step Review the saved revision.
 aeat --format json app modelo work revision --modelo 130 --year 2026 --period 1T
+@setup aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --supplier "Papeleria Central SL" --invoice-number C-2026-0093 --invoice-date 2026-02-11 --taxable-base 500 --iva-rate 0.21 --iva-amount 105
+@capture evidence_id result.evidence_id
+@setup aeat app ledger attach e3eeac5e --purchase-invoice-evidence-id {evidence_id}
 @step Verify the draft before you export it.
 @result aeat --format json app modelo work verify --modelo 130 --year 2026 --period 1T
 @expect result.granted_verificado_completo == true

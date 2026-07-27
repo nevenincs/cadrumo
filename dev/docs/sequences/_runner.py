@@ -47,6 +47,7 @@ executed, the exit code, the verbatim output, the parsed envelope document
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 import shutil
@@ -660,6 +661,43 @@ def _capture_values(
     return tuple(captured)
 
 
+def _drop_handlers_bound_to_a_dead_stream() -> None:
+    """Detach root handlers whose stream has been closed under them.
+
+    Sibling eviction to the ``close_active_bucket_session()`` calls above, for
+    the same reason and against the same hazard: this engine invokes the CLI
+    IN-PROCESS, so state a real operator would discard with the process instead
+    survives into the next frame.
+
+    The mechanism, confirmed rather than assumed.
+    :func:`cadrumo.core.logging.configure_logging` installs its stderr handler
+    with ``"stream": "ext://sys.stderr"``, which ``dictConfig`` resolves to the
+    stream object live AT THAT MOMENT, and the function is idempotent behind a
+    module-global. The FIRST CLI invocation in the process therefore fixes the
+    handler to whatever ``sys.stderr`` then was -- and every frame here runs
+    under Click's ``CliRunner``, which has replaced it with a per-invocation
+    capture buffer. That buffer dies with the frame; the handler does not. Every
+    later log record is then written to a closed stream, and the stdlib prints
+    its ``--- Logging error ---`` block to the real stderr, where it lands in the
+    NEXT frame's captured output and diverges that frame's golden.
+
+    This is exactly why the fault reads as intermittent and why sharding hides
+    it: whether it fires depends on whether the process's first configure
+    happened inside a capture, and a sharded run gives each child a fresh
+    process that configures cleanly. A green from the fast path is therefore
+    not evidence the fault is gone.
+
+    Detaching is narrow on purpose. Only handlers whose own stream reports
+    itself closed are removed, so a handler on the real stderr, or on a live
+    capture, is untouched; the next ``configure_logging`` in a fresh process
+    installs its own.
+    """
+    for handler in list(logging.getLogger().handlers):
+        stream = getattr(handler, "stream", None)
+        if stream is not None and getattr(stream, "closed", False):
+            logging.getLogger().removeHandler(handler)
+
+
 def _invoke_frame(args: tuple[str, ...]) -> Result:
     """Invoke the cached CLI, retrying only on the transient registry-write race.
 
@@ -669,6 +707,7 @@ def _invoke_frame(args: tuple[str, ...]) -> Result:
     genuine failure and the retry loop is skipped entirely rather than
     burning bounded-retry latency in front of it.
     """
+    _drop_handlers_bound_to_a_dead_stream()
     result = invoke_cached_cli(list(args))
     if os.environ.get("CI"):
         return result

@@ -37,6 +37,7 @@ from ...core import STRICT_FROZEN_CONFIG
 from ...core.logging import get_logger
 from ...domain.user_profile import UserProfileFact
 from ._censo_errors import CensoSyncError
+from ._cotejo_apply import CensoDivergence, apply_cotejo
 
 if TYPE_CHECKING:
     from ...adapters.outbound.aeat.sede import CensalDatosResult, CensalDomicilio
@@ -240,6 +241,12 @@ def reconcile_censal_read(
 ) -> CensalReconciliation:
     """Split projected censal facts into safe adoptions and reported disagreements.
 
+    Every decision below is taken against the operator's own
+    :class:`UserProfileRecord`, read as the ordered fact history rather than a
+    flattened value map: which side wrote a path, and whether it was later
+    cleared, are facts about that history and are invisible in a value-only
+    projection.
+
     A path the record leaves blank is adopted. A path whose recorded value
     already equals the read is a no-op and is emitted as neither. A path
     where the two differ is decided by WHO wrote the recorded value:
@@ -348,8 +355,6 @@ def apply_censal_read(state: WorkflowState, result: CensalDatosResult) -> Workfl
     Returns:
         The updated workflow state; the caller persists it.
     """
-    from ._cotejo_apply import CensoDivergence, apply_cotejo
-
     reconciliation = reconcile_censal_read(
         state.active_profile_record(),
         censal_facts_from_read(result),

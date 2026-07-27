@@ -55,8 +55,18 @@ class _ProbeResult(OutputSchema):
 
 
 def _write_bucket_manifest(root: Path, *, bucket_id: str, label: str) -> None:
-    """Write a real plaintext ``manifest.toml``, exactly as ``profile create`` does."""
+    """Write a real plaintext ``manifest.toml``, exactly as ``profile create`` does.
+
+    ``schema_version`` is taken from :data:`BUCKET_MANIFEST_SCHEMA_VERSION`
+    rather than restated as a literal. The manifest read path refuses anything
+    below :data:`BUCKET_MANIFEST_DURABILITY_FLOOR`, and the sandbox indicator
+    treats that refusal as "not a sandbox" — so a fixture pinned to a stale
+    literal does not fail loudly, it silently stops producing the notice these
+    tests assert. Binding to the constant keeps the fixture on whatever the
+    writer currently emits.
+    """
     from ....adapters.persistence.storage.bucket import (
+        BUCKET_MANIFEST_SCHEMA_VERSION,
         BucketManifest,
         bucket_paths,
         provision_bucket_directory,
@@ -75,7 +85,7 @@ def _write_bucket_manifest(root: Path, *, bucket_id: str, label: str) -> None:
             last_unlocked_at=None,
             kdf_params=KdfParams.default().to_manifest_params(),
             recovery_enrolled=False,
-            schema_version=1,
+            schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
             status=UserProfileStatus.ACTIVE,
         ),
     )

@@ -32,7 +32,7 @@ from .._golden_queries import (
     run_query,
 )
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.resident_service]
 
 # dev/docs/preprocess/tests/test_golden_queries.py -> parents[4] is repo root.
 _REPO_ROOT = Path(__file__).resolve().parents[4]

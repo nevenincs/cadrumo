@@ -196,7 +196,7 @@ class EffectiveFact(BaseModel):
 def record_to_effective_facts(
     record: UserProfileRecord | UserProfileSnapshot | None,
 ) -> dict[str, EffectiveFact]:
-    """Project a record into the effective fact at each schema path.
+    """Project a :class:`UserProfileRecord` into the effective fact at each schema path.
 
     Unlike :func:`record_to_path_values`, which resolves the last fact whose
     value is not ``None`` (correct for callers that want an effective VALUE,

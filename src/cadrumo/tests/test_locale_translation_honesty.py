@@ -71,6 +71,21 @@ def _load_allowlist() -> dict[str, set[str]]:
     return result
 
 
+def _catalogue_leaves(locale_code: str) -> dict[str, str]:
+    """Return one shipped catalogue's flattened leaves, refusing an empty one.
+
+    The proof of scan lives here rather than at each gate because several gates
+    read the same four catalogues: guarding the reader means one added later
+    inherits it instead of forgetting it. An empty catalogue carries no blank
+    value, no key echo and no reserved token, so each of those gates would
+    report exactly what a clean catalogue reports.
+    """
+    raw = yaml.safe_load((_LOCALES_DIR / f"{locale_code}.yml").read_text(encoding="utf-8"))
+    leaves = _flatten(raw if isinstance(raw, dict) else {})
+    assert leaves, f"{locale_code}.yml flattened to no leaves; every honesty gate over it is vacuous"
+    return leaves
+
+
 def _load_metadata_ceiling(locale_code: str, field: str) -> int | None:
     """Return one integer ``_``-prefixed metadata field for *locale_code*."""
 
@@ -146,8 +161,8 @@ def test_no_catalogue_value_carries_a_reserved_interpolation_token() -> None:
 
     failures: list[str] = []
     for locale_code in ("ca", "en", "es", "hu"):
-        locale_raw = yaml.safe_load((_LOCALES_DIR / f"{locale_code}.yml").read_text(encoding="utf-8"))
-        offenders = _reserved_token_offenders(_flatten(locale_raw if isinstance(locale_raw, dict) else {}))
+        leaves = _catalogue_leaves(locale_code)
+        offenders = _reserved_token_offenders(leaves)
         if offenders:
             failures.append(
                 f"{locale_code}.yml carries {len(offenders)} value(s) with a reserved interpolation "
@@ -183,8 +198,8 @@ def test_key_echo_count_matches_the_pinned_ceiling() -> None:
 
     failures: list[str] = []
     for locale_code in ("ca", "en", "es", "hu"):
-        locale_raw = yaml.safe_load((_LOCALES_DIR / f"{locale_code}.yml").read_text(encoding="utf-8"))
-        offenders = _key_echo_offenders(_flatten(locale_raw if isinstance(locale_raw, dict) else {}))
+        leaves = _catalogue_leaves(locale_code)
+        offenders = _key_echo_offenders(leaves)
         ceiling = _load_metadata_ceiling(locale_code, "_key_echo_ceiling") or 0
         if len(offenders) < ceiling:
             failures.append(
@@ -212,8 +227,8 @@ def test_no_catalogue_value_is_blank() -> None:
 
     failures: list[str] = []
     for locale_code in ("ca", "en", "es", "hu"):
-        locale_raw = yaml.safe_load((_LOCALES_DIR / f"{locale_code}.yml").read_text(encoding="utf-8"))
-        offenders = _blank_offenders(_flatten(locale_raw if isinstance(locale_raw, dict) else {}))
+        leaves = _catalogue_leaves(locale_code)
+        offenders = _blank_offenders(leaves)
         if offenders:
             failures.append(
                 f"{locale_code}.yml carries {len(offenders)} blank value(s). Author the value via "
@@ -237,14 +252,12 @@ def test_translated_values_differ_from_en_unless_allowlisted() -> None:
     (lower) observed count.
     """
     allowlist = _load_allowlist()
-    en_raw = yaml.safe_load((_LOCALES_DIR / "en.yml").read_text(encoding="utf-8"))
-    en_keys = _flatten(en_raw if isinstance(en_raw, dict) else {})
+    en_keys = _catalogue_leaves("en")
     failures: list[str] = []
 
     for locale_code in ("ca", "es", "hu"):
         locale_allows = allowlist.get(locale_code, set())
-        locale_raw = yaml.safe_load((_LOCALES_DIR / f"{locale_code}.yml").read_text(encoding="utf-8"))
-        locale_keys = _flatten(locale_raw if isinstance(locale_raw, dict) else {})
+        locale_keys = _catalogue_leaves(locale_code)
 
         offenders = [
             key

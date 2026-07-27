@@ -55,7 +55,7 @@
 
 [meta]
 generated_from = "just audit-duplication (jscpd@4.2.0)"
-observed_groups = 11
+observed_groups = 14
 duplicated_pct = "0.07"
 files_analyzed = 1311
 source_root = "src/cadrumo"
@@ -92,8 +92,8 @@ governing_audit = "2026-07-16-cli-authority-verb-conformance-duplication-authori
 # `observed_groups` plus that one extra, tracked group.
 [summary]
 cluster_owned = 1
-intentional = 5
-advisory_residue = 5
+intentional = 7
+advisory_residue = 6
 actionable = 1
 
 # ---------------------------------------------------------------------------
@@ -135,6 +135,16 @@ classification = "intentional"
 where = ["entrypoints/cli/_modelo_work_revision_payloads.py [49-66]", "entrypoints/cli/_modelo_work_wizard_payloads.py [57-74]"]
 rationale = "Sibling payload models sharing field structure across distinct typed payloads; Typer/schema presentation structure, not one authority."
 
+[[group]]
+classification = "intentional"
+where = ["adapters/outbound/aeat/sede/_censal_datos.py [49-76]", "adapters/outbound/aeat/sede/_notifications.py [36-63]"]
+rationale = "Import preamble, the same residue two entries above already record for the oracle and ledger-projection pairs. Both are sede readers, so both import the same navigation substrate (browser session factory, storage state, wait constants, the three sede error types, the remote-state guard). What follows the preamble does not match: the censal reader is pinned to the consulta view and fails closed on a filing-tool or procedure-launcher landing, while the notifications reader pins a numbered host. A preamble cannot be deduplicated without the re-export shim the architecture rules forbid."
+
+[[group]]
+classification = "intentional"
+where = ["adapters/inbound/tui/_form_screen.py [119-129]", "adapters/inbound/tui/_manager_screen.py [103-113]"]
+rationale = "Constraint-divergent, excluded by the substitutability pre-filter. The matched block is the input row plus the actions row of a modal edit dialog, but the two dialogs disagree on both halves of what an edit MEANS: the manager variant starts a masked field EMPTY rather than pre-filled (pre-filling would submit the placeholder dots back as the literal new value) and dismisses with the raw input, while the form variant pre-fills and routes save through _submit() so a refusal can render in its #edit-refusal slot, which the manager dialog does not carry. Consolidating either direction would add masking where it is unwanted or drop validation where it is load-bearing."
+
 # ---------------------------------------------------------------------------
 # advisory-residue: low-value duplication left as visible debt (not a mandate)
 # ---------------------------------------------------------------------------
@@ -163,6 +173,11 @@ rationale = "Sibling ledger-model field blocks share structure; low-value residu
 classification = "advisory-residue"
 where = ["application/diagnostics_run_health.py [663-670]", "application/diagnostics_run_health.py [571-577]"]
 rationale = "Repeated health-metric shaping block within one module; low-value residue."
+
+[[group]]
+classification = "advisory-residue"
+where = ["adapters/inbound/tui/_form_screen.py [187-199]", "adapters/inbound/tui/_form_screen.py [106-118]"]
+rationale = "TextEditScreen and OneChoiceEditScreen share a modal chrome: BINDINGS, the field-holding __init__, and the compose head (Vertical#edit-dialog, Label#edit-label, the optional Static#edit-path hint) and tail (Horizontal#edit-actions with cancel and save). Unlike the cross-file TUI pair above, this residue IS substitutable -- roughly six lines of chrome plus __init__ could move to a shared base. Recorded as visible debt rather than consolidated here for two reasons: this is another campaign's live surface, and Textual compose bodies are declarative widget trees where hiding the head and tail behind helper generators trades a readable tree for a smaller line count. Named rather than classified as intentional so the owning campaign can take the extraction on its own terms; do not read this entry as a verdict that it should not happen."
 
 # ---------------------------------------------------------------------------
 # actionable: resolved in this commit (below jscpd's min-lines/min-tokens

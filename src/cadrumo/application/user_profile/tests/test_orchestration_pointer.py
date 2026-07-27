@@ -23,6 +23,7 @@ import pytest
 
 from ....adapters.persistence.storage import LockAcquisitionError
 from ....adapters.persistence.storage.bucket import (
+    BUCKET_MANIFEST_SCHEMA_VERSION,
     BucketKeySchedule,
     BucketManifest,
     manifest_path,
@@ -127,7 +128,7 @@ def test_repository_failed_create_restores_exact_pointer_bytes_under_outer_owner
             kdf_params=KdfParams.default().to_manifest_params(),
             recovery_enrolled=False,
             key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
-            schema_version=2,
+            schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
             status=UserProfileStatus.ACTIVE,
         ),
     )

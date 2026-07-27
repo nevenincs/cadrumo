@@ -28,6 +28,7 @@ import pytest
 from click.testing import Result
 
 from ....adapters.persistence.storage.bucket import (
+    BUCKET_MANIFEST_SCHEMA_VERSION,
     BucketManifest,
     ManifestKdfParams,
     provision_bucket_directory,
@@ -83,7 +84,7 @@ def _stage_setup_incomplete_manifest(*, bucket_id: str, label: str) -> None:
                 output_length=32,
             ),
             recovery_enrolled=False,
-            schema_version=2,
+            schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
             status=UserProfileStatus.SETUP_INCOMPLETE,
         ),
     )

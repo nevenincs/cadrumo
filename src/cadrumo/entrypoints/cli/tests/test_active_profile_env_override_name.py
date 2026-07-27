@@ -130,7 +130,8 @@ def _write_second_live_bucket_sharing_label(label: str) -> None:
     path through the entrypoint normalizer.
     """
     from ....adapters.persistence.storage.bucket import (
-        BucketManifest,
+        BUCKET_MANIFEST_SCHEMA_VERSION,
+    BucketManifest,
         bucket_paths,
         provision_bucket_directory,
         write_manifest,
@@ -151,7 +152,7 @@ def _write_second_live_bucket_sharing_label(label: str) -> None:
             last_unlocked_at=None,
             kdf_params=KdfParams.default().to_manifest_params(),
             recovery_enrolled=False,
-            schema_version=1,
+            schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
             status=UserProfileStatus.ACTIVE,
         ),
     )

@@ -14,6 +14,7 @@ from datetime import UTC, datetime
 import pytest
 
 from ....adapters.persistence.storage.bucket import (
+    BUCKET_MANIFEST_SCHEMA_VERSION,
     BucketKeySchedule,
     BucketManifest,
     ManifestKdfParams,
@@ -45,7 +46,7 @@ def _manifest(*, bucket_id: str = _BUCKET_ID, label: str = "Test label") -> Buck
             output_length=32,
         ),
         recovery_enrolled=False,
-        schema_version=1,
+        schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
         status=UserProfileStatus.ACTIVE,
         key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
     )

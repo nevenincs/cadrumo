@@ -30,7 +30,7 @@ artefact_kind = "declaration_pdf"
 accepted_artefact_kinds = ["declaration_pdf"]
 parser = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
 target_casillas = [
-    {casilla_id = "decl.ejercicio", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Ejercicio:'},
+    {casilla_id = "decl.ejercicio", match_strategy = "named_label", value_kind = "text", label_pattern = 'Ejercicio:'},
     {casilla_id = "decl.periodo", match_strategy = "named_label", value_kind = "text", label_pattern = 'Per[ií]odo:'},
 ]
 # Patterns grounded against DR369e21.xlsx field descriptions ("2. Ejercicio y período.

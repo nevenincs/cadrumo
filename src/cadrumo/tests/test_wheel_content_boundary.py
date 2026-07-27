@@ -165,6 +165,7 @@ def test_wheel_keeps_corpus_derived_surfaces(wheel_members: frozenset[str]) -> N
             m.startswith(f"{_WHEEL_CORPUS_PREFIX}normatives/html/") and m.endswith(".html")
         ),
     }
+    assert wheel_members, "the wheel listed no members; every corpus surface would read as absent or present alike"
     missing = sorted(name for name, pred in surfaces.items() if not any(pred(member) for member in wheel_members))
     assert not missing, (
         f"the wheel is missing corpus derived surface(s) {missing!r}; the corpus-binary exclude over-stripped payload "

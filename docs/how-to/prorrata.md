@@ -103,7 +103,7 @@ sector. Declare the sector first, or fix the id.
 
 ## Read the settlement advisories
 
-When you calculate the year-end Modelo 303 (the 4T settlement), the tool may
+When you calculate the year-end Modelo 303 for the 4T settlement, the tool may
 surface non-blocking advisories:
 
 - **Especial may be mandatory** - when the taxpayer computes under general

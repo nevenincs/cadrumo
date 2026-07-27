@@ -5,7 +5,7 @@ artefact_kind = "declaration_pdf"
 accepted_artefact_kinds = ["declaration_pdf"]
 parser = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
 target_casillas = [
-    {casilla_id = "decl.ejercicio", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Ejercicio'},
+    {casilla_id = "decl.ejercicio", match_strategy = "named_label", value_kind = "text", label_pattern = 'Ejercicio'},
 ]
 # decl.ejercicio label_pattern grounded against:
 # AEAT-published diseño de registro DR_Modelo_184_2025.pdf, downloaded 2026-05-27 from

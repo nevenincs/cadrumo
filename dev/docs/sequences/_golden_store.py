@@ -53,6 +53,7 @@ from ._runner import CapturedValue, EnvelopeSource, SequenceTranscript
 from ._schema import FrameKind, SequenceId
 
 __all__ = [
+    "PACKAGE_VERSION_TOKEN",
     "REPO_ROOT_TOKEN",
     "SANDBOX_STORAGE_ROOT_TOKEN",
     "SANDBOX_WORKDIR_TOKEN",
@@ -83,6 +84,16 @@ SANDBOX_WORKDIR_TOKEN: str = "<sandbox-workdir>"  # noqa: S105 - a display place
 #: machine-portable once the checkout root is tokenised the same value-anchored
 #: way as the per-run sandbox paths.
 REPO_ROOT_TOKEN: str = "<repo-root>"  # noqa: S105 - a display placeholder, not a secret
+
+#: Stands in for the running package version in captured output.
+#:
+#: A golden must not carry a version literal. Docs are rendered FROM the golden,
+#: so a captured "CADRUMO 0.2.1" is a hardcoded version in user-facing
+#: documentation: it rots at the next release, and it silently disagrees with
+#: the version the reader actually has. The version is release-managed in one
+#: place, so the golden stores this token and the render substitutes the live
+#: value back.
+PACKAGE_VERSION_TOKEN: str = "<version>"  # noqa: S105 - a display placeholder, not a secret
 
 _PATH_TOKENS: tuple[str, ...] = (
     SANDBOX_STORAGE_ROOT_TOKEN,
@@ -268,6 +279,18 @@ def masked_envelope_values(transcript: SequenceTranscript) -> frozenset[str]:
     return frozenset(values)
 
 
+def _running_version() -> str:
+    """Return the version the running package declares.
+
+    Read from the package's single release-managed declaration rather than from
+    installed distribution metadata, which reports whatever wheel happens to be
+    in the environment and disagrees with the checkout after a version reset.
+    """
+    from cadrumo import __version__
+
+    return __version__
+
+
 def normalise_text_output(
     text: str,
     *,
@@ -277,14 +300,21 @@ def normalise_text_output(
 ) -> str:
     """Apply the declared narrow text normalisation.
 
-    Exactly two token families are normalised — nothing else: the per-run and
+    Exactly three token families are normalised — nothing else: the per-run and
     machine-specific paths (sandbox storage root, workdir, and the repository
     checkout root, in both native and POSIX slash forms, longest first so nested
-    paths collapse correctly) become stable tokens, and the centrally-masked
-    surrogate-id values become the mask sentinel. No regex wildcards, no fuzzy
+    paths collapse correctly) become stable tokens, the centrally-masked
+    surrogate-id values become the mask sentinel, and the running package
+    version becomes :data:`PACKAGE_VERSION_TOKEN`. No regex wildcards, no fuzzy
     matching: the result is compared by exact string equality.
+
+    The version family exists because docs are rendered FROM these goldens, so a
+    captured version literal is a hardcoded version in user-facing prose. It is
+    value-anchored on the exact declared version like every other replacement,
+    never a digit pattern, so it cannot over-match an unrelated number.
     """
     replacements = _path_replacements(storage_root=storage_root, workdir=workdir)
+    replacements.append((_running_version(), PACKAGE_VERSION_TOKEN))
     for value in masked_values:
         if value:
             replacements.append((value, MASK_SENTINEL))

@@ -37,5 +37,6 @@ def test_narrative_guides_exist() -> None:
 def test_guides_are_wired_into_the_index() -> None:
     """Each narrative guide must be referenced from the documentation index."""
     index = (_DOCS / "index.md").read_text(encoding="utf-8")
+    assert _GUIDES, "the guide inventory is empty; every guide is trivially referenced when there are none"
     unreferenced = [name for name in _GUIDES if name not in index]
     assert not unreferenced, f"guides not referenced in docs/index.md toctree: {unreferenced}"

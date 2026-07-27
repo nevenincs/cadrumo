@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from decimal import Decimal
 from pathlib import Path
 
 from ._parser_boundary_support import (
@@ -22,7 +21,7 @@ _M232_PROFILE_CASILLAS: frozenset[CasillaId] = frozenset(
         _DECL_CNAE_CASILLA,
     },
 )
-_M232_FIXTURE_PARAMS: tuple[tuple[Path, int, str, Decimal], ...] = (
-    (_MODELO_232_2016_SYNTHETIC_FIXTURE, 2016, "2016-2017", Decimal("2016")),
-    (_MODELO_232_2018_SYNTHETIC_FIXTURE, 2018, "2018-y-siguientes", Decimal("2018")),
+_M232_FIXTURE_PARAMS: tuple[tuple[Path, int, str, str], ...] = (
+    (_MODELO_232_2016_SYNTHETIC_FIXTURE, 2016, "2016-2017", "2016"),
+    (_MODELO_232_2018_SYNTHETIC_FIXTURE, 2018, "2018-y-siguientes", "2018"),
 )

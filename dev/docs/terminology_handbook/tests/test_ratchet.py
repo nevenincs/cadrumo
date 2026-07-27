@@ -84,8 +84,8 @@ def test_bundled_handbook_curation_backlog_does_not_exceed_committed_baseline() 
 
     assert result.passed
     assert result.violations == ()
-    assert result.report.draft_count == result.baseline.draft_count == 75
-    assert len(result.report.empty_short_description) == result.baseline.empty_short_description_count == 75
+    assert result.report.draft_count == result.baseline.draft_count == 57
+    assert len(result.report.empty_short_description) == result.baseline.empty_short_description_count == 57
 
 
 def test_ratchet_allows_curation_progress(tmp_path: Path) -> None:

@@ -13,6 +13,7 @@ import logging
 import pytest
 
 from ...config import override_settings
+from ...external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from .. import _render
 from .._render import output_language
 
@@ -121,6 +122,30 @@ def test_locale_load_failure_is_logged_with_traceback(caplog: pytest.LogCaptureF
     assert records
     assert records[-1].exc_info is not None
     assert "FileNotFoundError" in records[-1].getMessage()
+
+
+def test_profile_language_resolver_returning_an_unsupported_code_falls_back() -> None:
+    """A resolver answering a code this build does not ship resolves to ``None``.
+
+    The registered resolver reports whatever the active profile holds, and the
+    supported set is owned here rather than by the profile schema — so the two
+    can legitimately disagree, most obviously when a shipped locale is retired
+    while a profile written under the older set still names it. Normalising an
+    unrecognised code to ``None`` is what lets resolution continue to the
+    settings default instead of asking the renderer for a catalogue that is not
+    there.
+    """
+    prior_resolver = _render._profile_language_resolver
+
+    try:
+        _render.register_profile_language_resolver(lambda: "zz")
+        assert _render._active_profile_output_language() is None
+
+        supported = next(iter(SUPPORTED_OUTPUT_LANGUAGES))
+        _render.register_profile_language_resolver(lambda: supported)
+        assert _render._active_profile_output_language() == supported
+    finally:
+        _render._profile_language_resolver = prior_resolver
 
 
 def test_profile_language_resolver_failure_logs_type_not_secret_message(

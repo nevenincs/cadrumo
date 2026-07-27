@@ -42,6 +42,7 @@ __all__ = [
     "_MODELO_131_SYNTHETIC_FIXTURE",
     "_MODELO_180_SYNTHETIC_FIXTURE",
     "_MODELO_184_SYNTHETIC_FIXTURE",
+    "_MODELO_190_SYNTHETIC_FIXTURE",
     "_MODELO_193_SYNTHETIC_FIXTURE",
     "_MODELO_202_SYNTHETIC_FIXTURE",
     "_MODELO_232_2016_SYNTHETIC_FIXTURE",
@@ -52,7 +53,6 @@ __all__ = [
     "_MODELO_369_SYNTHETIC_FIXTURE",
     "_MODELO_720_SYNTHETIC_FIXTURE",
     "_MODELO_840_SYNTHETIC_FIXTURE",
-    "_REAL_MODELO_190_DECLARATION_COPY",
     "CadrumoError",
     "CasillaId",
     "Decimal",
@@ -94,7 +94,17 @@ _MODELO_349_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "349" / "2024-1
 # rather than papered over by the name.
 _MODELO_303_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "303" / "2024-1T.pdf"
 
-_REAL_MODELO_190_DECLARATION_COPY = FIXTURES_DIR / "justificantes" / "190" / "2024-0A.pdf"
+# Named for what it is. This was previously _REAL_MODELO_190_DECLARATION_COPY,
+# and the name was true: a real filed resumen anual, sanitised. It is now a
+# generated specimen, because the real one carried identity the sanitiser never
+# replaced and could not stay in the repository. The replacement reproduces the
+# printed layout the tests read -- the three numbered summary lines, the
+# perceptor identity row, the clave/subclave line, the wrapped amount row -- and
+# nothing beyond it. Modelo 190 consequently has NO externally-authored render
+# in the tree any more; what a real one would still have caught is AEAT
+# behaviour nobody has thought to look for, and that gap is real rather than
+# closed by this file.
+_MODELO_190_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "190" / "2024-0A.pdf"
 
 _MODELO_840_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "840" / "2024-0A.pdf"
 

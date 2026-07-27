@@ -185,8 +185,24 @@ def _output_view(golden_frame: GoldenFrame) -> dict[str, str]:
         # dumping it again would double-encode the display into `\n`-escape noise.
         return {"format": "json", "body": canonicalise(mask_document(golden_frame.envelope))}
     if golden_frame.text:
-        return {"format": "text", "body": golden_frame.text}
+        return {"format": "text", "body": _with_live_version(golden_frame.text)}
     return {"format": "empty", "body": ""}
+
+
+def _with_live_version(body: str) -> str:
+    """Substitute the running version back into a rendered golden body.
+
+    The golden stores :data:`PACKAGE_VERSION_TOKEN` rather than a version
+    literal, so it never rots at a release and never disagrees with the build the
+    reader has. Rendering resolves it from the package's single release-managed
+    declaration, which is what makes the displayed version derived rather than
+    hardcoded. A body carrying no token is returned unchanged.
+    """
+    from cadrumo import __version__
+
+    from .sequences._golden_store import PACKAGE_VERSION_TOKEN
+
+    return body.replace(PACKAGE_VERSION_TOKEN, __version__)
 
 
 def _stderr_view(golden_frame: GoldenFrame) -> dict[str, str] | None:

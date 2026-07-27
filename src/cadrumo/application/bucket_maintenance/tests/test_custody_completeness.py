@@ -293,8 +293,7 @@ def test_typed_category_namespaces_are_load_bearing_exclusions_from_the_generic_
     absent from the generic carry.
     """
     from ....adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY, StorageCustodyProfile
-    from ...user_profile import carried_namespace_definitions
-    from ...user_profile._custody_carry import TYPED_CATEGORY_NAMESPACES
+    from ...user_profile import TYPED_CATEGORY_NAMESPACES, carried_namespace_definitions
 
     assert len(TYPED_CATEGORY_NAMESPACES) == 5
 

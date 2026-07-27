@@ -472,6 +472,7 @@ def test_family4_no_underscore_named_entries_in_any_facade_all() -> None:
     the same way, not silenced by an allowlist entry.
     """
     facades = discover_facades()
+    assert facades, "no package facades were discovered; a clean underscore scan over zero facades is not a clean tree"
     violations = find_underscore_in_all_violations(facades)
 
     offenders = sorted(f"{v.package}.{v.name} ({v.path})" for v in violations)
@@ -530,6 +531,7 @@ def test_no_shipped_module_imports_the_unshipped_dev_tooling() -> None:
     recording a tolerated exception.
     """
     py_files = sorted(p for p in PKG_ROOT.rglob("*.py") if "__pycache__" not in p.parts)
+    assert py_files, f"no shipped modules found under {PKG_ROOT}; a hard-zero gate over an empty scan is not a zero"
     violations = find_dev_tooling_import_violations(py_files)
 
     offenders = [f"{v.importer_path}:{v.lineno} -> {v.target_mod}" for v in violations]

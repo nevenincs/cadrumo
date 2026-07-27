@@ -481,13 +481,6 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             # widget/i18n reach on the same cold-start budget.
             ImportEdge("application.wizard._commands", "application.wizard"),
             ImportEdge("application.wizard._commands", "application.wizard._widgets"),
-            ImportEdge("application.wizard._commands", "core.i18n"),
-            # cotejo page family and outcome projection: deferred so the
-            # wizard package imports without the censo domain or the
-            # user-profile fact surface on the cold-start path.
-            ImportEdge("application.wizard._cotejo", "domain.censo"),
-            ImportEdge("application.wizard._cotejo", "domain.user_profile"),
-            ImportEdge("application.wizard._cotejo", "application.user_profile"),
             # descendant door: defers the record schema and repository reach
             # until the door actually opens.
             ImportEdge("application.wizard._descendant_door", "domain.user_profile"),
@@ -856,7 +849,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
     UnsanctionedClass.DOMAIN_CYCLE_BREAK: 50,
     UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 168,
     UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 37,
-    UnsanctionedClass.APPLICATION_DEFERRAL: 533,
+    UnsanctionedClass.APPLICATION_DEFERRAL: 527,
 }
 
 # Ceiling on the total number of allowlisted edges. Editing the allowlist to add
@@ -865,8 +858,18 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
 # existed were struck (the auth operator/certificate-sources reach, config_reset,
 # state_projection, censo_sync, the profile repository and binding readiness --
 # all since promoted to module scope or retired), so the declared set is now
-# exactly what the tree actually does.
-_ALLOWLIST_EDGE_CEILING: int = 486
+# exactly what the tree actually does. A later pass struck four more on the same
+# basis (the wizard cotejo family's three domain/user-profile reaches and the
+# _commands i18n reach), and promoted three deferrals to module scope: the auth
+# operator probe's storage reach, the censo sync's cotejo-apply reach, and the
+# user-profile values module's two schema-loader reaches. None of the three had
+# a cycle behind it -- the loader is already imported ahead of _values by the
+# package initializer, and the storage package was already eagerly present via
+# _operator_scope -- so the deferral bought nothing. The reconcile edge that
+# briefly sat here was retired the same way once the five reconciliation value
+# types moved to the record module that owns them, which removed the cycle
+# rather than documenting it.
+_ALLOWLIST_EDGE_CEILING: int = 482
 
 
 def _cadrumo_relative(dotted: str) -> str:
@@ -1102,7 +1105,11 @@ def test_no_unclassified_unsanctioned_import_site() -> None:
     reviewed allowlist entry with its class, reason, and disposition.
     """
     allowlisted = _allowlisted_edges()
-    violations = [site for site in _discover_unsanctioned_sites() if site.edge not in allowlisted]
+    sites = _discover_unsanctioned_sites()
+    assert sites, (
+        "the unsanctioned-import discovery found no sites at all; this policy gate would pass over an empty walk"
+    )
+    violations = [site for site in sites if site.edge not in allowlisted]
     assert not violations, (
         "Unsanctioned function-local first-party import(s) with no allowlist entry.\n"
         "Each is neither one of the five sanctioned classes nor a declared allowlist edge:\n"

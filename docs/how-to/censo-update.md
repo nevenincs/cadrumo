@@ -93,17 +93,17 @@ point it at another taxpayer.
 
 Every field comes back as one of three outcomes.
 
-**Adopted** — the profile had no answer, so AEAT's value fills it.
+**Adopted**: the profile had no answer, so AEAT's value fills it.
 
-**Unchanged** — you and AEAT already agree.
+**Unchanged**: you and AEAT already agree.
 
-**Diverging** — you and AEAT disagree. The pull reports the difference and
+**Diverging**: you and AEAT disagree. The pull reports the difference and
 writes nothing. You decide which is right, then correct the profile or your
 censo. A value you declared is never overwritten. A field you deliberately
 cleared stays cleared, and the pull tells you AEAT still holds a value for it.
 
 Once the pull has filled a blank field, a later pull refreshes that same field
-when AEAT's value changes — it filled it, so it may update it. Anything you
+when AEAT's value changes. It filled it, so it may update it. Anything you
 declared yourself stays yours.
 
 ### What the pull cannot fill
@@ -113,7 +113,7 @@ The pull fills your fiscal address, postcode, and cadastral reference.
 It does not fill your fiscal ID. It reads your fiscal ID to confirm the record
 AEAT returned is yours, and never writes it.
 
-It does not fill your regime facts — activity, tax regime, IVA regime,
+It does not fill your regime facts: activity, tax regime, IVA regime,
 enrollment. AEAT publishes no read-only surface that carries them. Enter those
 by hand as described below.
 
@@ -150,7 +150,7 @@ gave in setup, the profile keeps a record of the divergence and
 Reading the certificate's contents is not yet active: the command currently
 refuses every document while layout coverage for AEAT-issued certificates is
 being completed, and tells you so. Until then, enter the facts by hand as
-described above — the command's interface is stable and this page applies
+described above. The command's interface is stable, and this page applies
 unchanged once reading activates.
 ```
 

@@ -28,8 +28,17 @@ _M131_CLOSURE_CASILLAS: tuple[CasillaId, ...] = (
 def test_verification_chain_m131_engine_recomputes_closure_casillas() -> None:
     """Engine recomputes M131 closure casillas from leaf inputs.
 
-    GROUNDED authority: synthetic fixture committed at
-    src/cadrumo/tests/fixtures/justificantes/131/2024-1T.pdf.
+    FIXTURE, NOT ORACLE: the specimen at
+    src/cadrumo/tests/fixtures/justificantes/131/2024-1T.pdf is
+    ``provenance = "synthetic_generated"``, ``role = "formula_verification"``.
+    Its layout and labels are modelled on the AEAT printed form, but its
+    AMOUNTS are hand-authored literals in
+    ``tests/fixtures/justificantes/_generate_misc_b.py`` — chosen to be
+    internally consistent, not sourced from AEAT. They are therefore not an
+    external oracle, and this test cannot detect a formula that is wrong
+    against AEAT while remaining self-consistent. What it does detect is a
+    formula DAG that stops closing over its own leaves.
+
     The fixture encodes filing year 2026 (detected from PDF header).
     Registry revision '2026' is used.
 
@@ -51,7 +60,9 @@ def test_verification_chain_m131_engine_recomputes_closure_casillas() -> None:
     Legal grounding: RD 439/2007 art.110, art.95; Orden EHA/672/2007 art.1;
     Orden HFP/1359/2023 art.4.
 
-    Verdict: VERIFIED - all four formula closure casillas match fixture values.
+    Verdict: the four closure casillas match the fixture's own printed values,
+    i.e. the formula DAG closes. This is NOT an AEAT-verified verdict — see
+    FIXTURE, NOT ORACLE above.
     """
     extracted = _parse_extracted_declaracion_values(
         modelo="131",
@@ -74,9 +85,16 @@ def test_verification_chain_m131_engine_recomputes_closure_casillas() -> None:
         binding_values=binding_values,
     )
 
+    # Every declared closure casilla must actually be present. The previous
+    # `continue`-on-absent form meant a parse regression that dropped all four
+    # would leave this test green while asserting nothing.
+    missing = [closure_id for closure_id in _M131_CLOSURE_CASILLAS if closure_id not in extracted]
+    assert not missing, (
+        f"PARSER-GAP [M131/yr=2026-1T]: closure casillas {missing} absent from extracted "
+        f"values {sorted(extracted)}; the closure check would have been skipped silently."
+    )
+
     for closure_id in _M131_CLOSURE_CASILLAS:
-        if closure_id not in extracted:
-            continue
         _assert_engine_closure_matches_extracted_decimal(
             label="M131/yr=2026-1T",
             engine_values=engine_values,

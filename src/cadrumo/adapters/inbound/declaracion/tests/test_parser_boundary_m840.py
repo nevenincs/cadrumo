@@ -11,15 +11,14 @@ from ._parser_boundary_casillas import (
 from ._parser_boundary_support import (
     _MODELO_840_SYNTHETIC_FIXTURE,
     CasillaId,
-    Decimal,
     _expected_period,
     parse_declaracion,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
-_M840_EXPECTED_VALUES: dict[CasillaId, Decimal | str] = {
-    _M840_EJERCICIO_CASILLA: Decimal("2024"),
+_M840_EXPECTED_VALUES: dict[CasillaId, str] = {
+    _M840_EJERCICIO_CASILLA: "2024",
     _M840_TIPO_DECLARACION_CASILLA: "Alta",
 }
 

@@ -48,6 +48,7 @@ def _static_frames() -> list[tuple[str, str, object]]:
     """Return every ``(page, sequence_id, frame)`` triple of static frames."""
     discovered, problems = discover_sequences(docs_root=default_docs_root())
     assert not problems, "sequence discovery reported problems:\n  " + "\n  ".join(problems)
+    assert discovered, "sequence discovery found no pages; a corpus-wide frame guarantee over nothing is vacuous"
     return [
         (item.page, item.sequence_id, frame)
         for item in discovered

@@ -9,6 +9,25 @@
 #
 # TRLIRNR Art 10 is the representante-fiscal authority for M210.
 
+[legal."orden-eha-3290-2008:art-6"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3290-2008-art-6.html#a6"
+document_id = "BOE-A-2008-18497"
+article = "6"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-18497#a6"
+published_at = 2008-11-17
+effective_from = 2008-11-18
+review_status = "reviewed"
+reviewed_at = 2026-07-27
+reviewed_by = "agent-authored from BOE-A-2008-18497#a6 downloaded from boe.es; operator to re-stamp"
+notes = "Orden EHA/3290/2008 articulo 6: aprueba el modelo 296. Articulo 1 of the same orden approves modelo 216 and is bundled separately; the pre-existing excerpt covers only that article, which is why 296 read as ungrounded."
+required_text = [
+    "Aprobación del modelo 296",
+    "Se aprueba el modelo 296",
+]
+
 [legal."trlirnr-rdleg-5-2004:art-2"]
 evidence_tier = "legal_authority"
 authority = "boe"

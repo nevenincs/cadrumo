@@ -7,7 +7,6 @@ import pytest
 from ._parser_boundary_support import (
     _MODELO_369_SYNTHETIC_FIXTURE,
     CasillaId,
-    Decimal,
     _casilla_id,
     _expected_period,
     parse_declaracion,
@@ -17,8 +16,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 _DECL_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.ejercicio")
 _DECL_PERIODO_CASILLA: CasillaId = _casilla_id("decl.periodo")
-_M369_EXPECTED_VALUES: dict[CasillaId, Decimal | str] = {
-    _DECL_EJERCICIO_CASILLA: Decimal("2024"),
+_M369_EXPECTED_VALUES: dict[CasillaId, str] = {
+    _DECL_EJERCICIO_CASILLA: "2024",
     _DECL_PERIODO_CASILLA: "1T",
 }
 

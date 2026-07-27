@@ -5,7 +5,7 @@ artefact_kind = "declaration_pdf"
 accepted_artefact_kinds = ["declaration_pdf"]
 parser = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
 target_casillas = [
-    {casilla_id = "decl.ejercicio", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Ejercicio\s+de\s+devengo'},
+    {casilla_id = "decl.ejercicio", match_strategy = "named_label", value_kind = "text", label_pattern = 'Ejercicio\s+de\s+devengo'},
     {casilla_id = "decl.tipo-ejercicio", match_strategy = "named_label", value_kind = "enum", label_pattern = 'Tipo\s+de\s+ejercicio'},
     {casilla_id = "decl.cnae", match_strategy = "named_label", value_kind = "text", label_pattern = 'C\.N\.A\.E\.?\s+actividad\s+principal'},
 ]

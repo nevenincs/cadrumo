@@ -562,11 +562,14 @@ def _classify_target(
     value is returned as an :class:`ExtractedCasilla`.
     """
     casilla_id = target.casilla_id
+    printed_number = (printed_box_numbers or {}).get(casilla_id)
     if target.match_strategy == "bbox_anchored":
         if pages_words is None:
             # No word data available (bytes-mode or missing file); treat as missing.
             return _TargetClassification(missing=casilla_id)
         hits = _find_bbox_casilla_hits(pages_words, target)
+    elif target.match_strategy == "named_label" and target.value_kind == "amount" and pages_words is not None:
+        hits = _find_named_label_word_hits(pages_words, target, printed_number=printed_number)
     else:
         hits = _find_casilla_hits(pages, target, numeric_anchors=numeric_anchors)
     if not hits:
@@ -581,7 +584,7 @@ def _classify_target(
         # whether that is tolerable) rather than malformed (which raises hard).
         if target.match_strategy == "named_label" and _is_own_box_number_of_blank_box(
             raw_value,
-            (printed_box_numbers or {}).get(casilla_id),
+            printed_number,
         ):
             return _TargetClassification(missing=casilla_id)
         parsed: Decimal | str | None = parse_spanish_decimal(raw_value)
@@ -599,6 +602,80 @@ def _classify_target(
             extraction_confidence=1.0,
         ),
     )
+
+
+_LINE_Y_TOLERANCE: float = 3.0
+"""Maximum vertical distance (points) between words treated as one printed line."""
+
+
+def _words_by_line(words: list[_PdfWord]) -> list[list[_PdfWord]]:
+    """Group one page's words into printed lines, each sorted left to right."""
+    lines: list[tuple[float, list[_PdfWord]]] = []
+    for word in sorted(words, key=lambda w: (float(w["top"]), float(w["x0"]))):
+        top = float(word["top"])
+        for line_top, line in lines:
+            if abs(line_top - top) <= _LINE_Y_TOLERANCE:
+                line.append(word)
+                break
+        else:
+            lines.append((top, [word]))
+    return [sorted(line, key=lambda w: float(w["x0"])) for _top, line in lines]
+
+
+def _find_named_label_word_hits(
+    pages_words: tuple[list[_PdfWord], ...],
+    target: ExtractionTargetDefinition,
+    *,
+    printed_number: str | None,
+) -> list[tuple[int, str]]:
+    """Find a ``named_label`` amount by reading the line's WORDS, not its text.
+
+    The text layer merges glyph runs by horizontal position, so where AEAT prints
+    the box number in a smaller font overlapping the amount's own span -- Modelo
+    100 does this on every money box -- the two arrive as one token whose digits
+    interleave. The correct amount is then not a substring of that token at any
+    position, so no rule applied to the text can recover it.
+
+    Word extraction requests the font size, which separates the two runs because
+    pdfplumber will not join words of differing size. This reads the line from
+    that word list instead, so the amount and the box number stay distinct.
+
+    The value is the line's last word, as on the text path. When that word is the
+    target's own printed box number the box is either blank or the layout prints
+    the number after the value; the preceding word decides which, and it is taken
+    only when it is a well-formed printed amount. Otherwise the box number is
+    returned unchanged so the blank-box guard still sees it and reports the target
+    absent.
+    """
+    label = target.label_pattern or re.escape(target.casilla_id)
+    pattern = re.compile(rf"^\s*{label}", re.IGNORECASE)
+
+    hits: list[tuple[int, str]] = []
+    for page_index, words in enumerate(pages_words, start=1):
+        if not words:
+            continue
+        for line in _words_by_line(words):
+            text = " ".join(word["text"] for word in line)
+            match = pattern.search(text)
+            if match is None:
+                continue
+            if not text[match.end() :].strip():
+                # The label with nothing after it is a section heading, not a
+                # populated row. The text path excludes these by requiring a
+                # trailing value token; without the same condition a form that
+                # prints its heading in capitals matches twice and the target is
+                # reported ambiguous. Modelo 100 prints two such headings.
+                continue
+            raw = line[-1]["text"].strip()
+            if (
+                printed_number is not None
+                and raw == printed_number.strip()
+                and len(line) >= 2
+                and _STRICT_PRINTED_AMOUNT_RE.match(line[-2]["text"].strip())
+            ):
+                raw = line[-2]["text"].strip()
+            hits.append((page_index, raw))
+    return hits
 
 
 def _raise_extraction_failed(
@@ -644,12 +721,19 @@ def _extract_profile_values(
     when only a path is available, and reports malformed or ambiguous targets as
     hard parse failures.
     """
-    # Load word-position data lazily only when bbox_anchored targets exist.
-    # Prefer in-memory bytes so decrypted declaration PDFs never touch disk;
-    # fall back to a real source file only when bytes are not supplied.
+    # Load word-position data lazily, for the two strategies that need it:
+    # bbox_anchored resolves entirely in word space, and named_label amount
+    # targets read the line's words so a box number printed over the amount stays
+    # a separate token. Prefer in-memory bytes so decrypted declaration PDFs never
+    # touch disk; fall back to a real source file only when bytes are not
+    # supplied. A profile with neither kind of target never pays for the pass.
     pages_words: tuple[list[_PdfWord], ...] | None = None
-    has_bbox_targets = any(t.match_strategy == "bbox_anchored" for t in profile.target_casillas)
-    if has_bbox_targets:
+    needs_words = any(
+        target.match_strategy == "bbox_anchored"
+        or (target.match_strategy == "named_label" and target.value_kind == "amount")
+        for target in profile.target_casillas
+    )
+    if needs_words:
         if pdf_bytes is not None:
             pages_words = _extract_pages_words_from_bytes(pdf_bytes)
         elif source_pdf_path is not None and source_pdf_path.is_file():
@@ -699,7 +783,27 @@ def _numeric_casilla_anchors(
     profile: ExtractionProfileDefinition,
     revision: ModeloRevision,
 ) -> dict[CasillaId, str]:
-    """Map canonical target ids to the printed numbers used by ``numeric_casilla``."""
+    """Map canonical target ids to the printed numbers used by ``numeric_casilla``.
+
+    The printed number is ``form_number``, the same field the blank-box guard
+    reads. ``number`` is reviewed AEAT record-design metadata and coincides with
+    the printed number only when the casilla id is itself numeric, so reading it
+    works by accident for numerically-named casillas and yields an id string or a
+    fichero-BOE positional range for semantically-named ones. This strategy
+    anchors on the printed number at line start, so such an anchor can never
+    match and the target silently drops out of every extraction.
+
+    Every ``numeric_casilla`` target in the registry today happens to carry a
+    numeric ``number``, so nothing is currently mis-anchored -- but that is the
+    same accident that hid the defect in the blank-box guard, and it would end the
+    moment a semantically-named casilla is given this strategy.
+
+    Unlike :func:`_printed_box_numbers` this refuses rather than degrading. A
+    missing printed number leaves the guard without a safety net, which is
+    tolerable; here it means the target cannot be addressed at all, which is a
+    registry-integrity error of the same kind as a target naming a casilla that
+    does not exist.
+    """
     revision_casillas_by_id = casillas_by_id(revision)
     anchors: dict[CasillaId, str] = {}
     for target in profile.target_casillas:
@@ -711,7 +815,17 @@ def _numeric_casilla_anchors(
                 f"extraction profile {profile.id!r} target {target.casilla_id!r} "
                 f"is not a canonical casilla.id in revision {revision.id!r}",
             )
-        anchors[target.casilla_id] = casilla.number
+        printed = casilla.form_number or None
+        if printed is None and casilla.number and casilla.number.strip().isdigit():
+            printed = casilla.number
+        if printed is None:
+            raise DeclaracionParseError(
+                f"extraction profile {profile.id!r} target {target.casilla_id!r} anchors on a "
+                f"printed box number, but revision {revision.id!r} records none: form_number is "
+                f"unset and number is {casilla.number!r}, which is record-design metadata rather "
+                f"than a printed box number",
+            )
+        anchors[target.casilla_id] = printed
     return anchors
 
 
@@ -777,7 +891,7 @@ def _extract_pages_words(pdf_path: Path) -> tuple[list[_PdfWord], ...]:
 
     try:
         with pdfplumber.open(pdf_path) as pdf:
-            return tuple(page.extract_words() or [] for page in pdf.pages)
+            return tuple(page.extract_words(extra_attrs=["size"]) or [] for page in pdf.pages)
     except Exception as exc:
         _logger.debug(
             "pdfplumber word extraction failed for <input-pdf>: %s",
@@ -798,7 +912,7 @@ def _extract_pages_words_from_bytes(pdf_bytes: bytes) -> tuple[list[_PdfWord], .
 
     try:
         with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
-            return tuple(page.extract_words() or [] for page in pdf.pages)
+            return tuple(page.extract_words(extra_attrs=["size"]) or [] for page in pdf.pages)
     except Exception as exc:
         _logger.debug(
             "pdfplumber word extraction failed for <input-pdf>: %s",

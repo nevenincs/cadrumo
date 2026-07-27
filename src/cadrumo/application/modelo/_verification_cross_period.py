@@ -5,6 +5,13 @@ into :class:`~domain.modelos.ModeloVerificationFinding` rows. It can inspect
 the target :class:`~domain.modelos.CalculationRevision` for explicit zero
 previous-filing binding overrides before deciding whether a prior-year carry
 requires upstream filing evidence.
+
+The taxpayer-side inputs it consults - the declared activity start date, the
+Modelo 202 modality, and whether economic activity is filed at all - are read
+from the workflow's :class:`TaxpayerProfile`, the same record the deadline
+engine uses to decide which obligations exist in the first place. Reading the
+suppression signals from that one record is what keeps the verification gate
+and the calendar from disagreeing about whether a prior period was ever due.
 """
 
 from __future__ import annotations

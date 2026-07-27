@@ -15,6 +15,7 @@ seams (``CADRUMO_DOCS_FORCE_CLI_TREE`` / ``CADRUMO_DOCS_SKIP_CLI_TREE``).
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from types import SimpleNamespace
 from typing import cast
@@ -24,7 +25,19 @@ from sphinx.application import Sphinx
 
 from cadrumo.tests.env_scope import scoped_env_var
 from dev.docs.cli_tree import default_cli_tree_path
-from dev.docs.sequence_build_gate import emit_cli_tree, should_emit_cli_tree
+from dev.docs.sequence_build_gate import (
+    check_sequence_goldens,
+    emit_cli_tree,
+    should_check_sequences,
+    should_emit_cli_tree,
+)
+
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+
+#: A captured package version in a golden. Value-shaped, not a bare number:
+#: it must match the product banner form so an unrelated numeric in captured
+#: output can never be mistaken for a version.
+_VERSION_LITERAL_RE = re.compile(r"CADRUMO \d+\.\d+\.\d+")
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -87,3 +100,60 @@ def test_emit_skips_incremental_build_leaving_artifact_untouched(tmp_path: Path)
     emit_cli_tree(app, specific_sources=[tmp_path / "index.md"])
 
     assert output.read_text(encoding="utf-8") == sentinel
+
+
+def test_sequence_check_runs_by_default() -> None:
+    """With no opt-out set, every build runs the golden check."""
+    assert should_check_sequences() is True
+
+
+def test_sequence_check_skip_env_suppresses_the_check(tmp_path: Path) -> None:
+    """``CADRUMO_DOCS_SKIP_SEQUENCE_CHECK`` short-circuits before any execution.
+
+    The stand-in app's ``srcdir`` points at an EMPTY directory: an unskipped
+    check would spawn the engine subprocess against it and, at minimum, pay
+    seconds of interpreter/app import — while the skip path must return before
+    reading ``srcdir`` at all. The guard decision is pinned here; the
+    divergence-reds proof for the UNSKIPPED hook lives in
+    ``test_sequence_goldens.TestBothSurfacesRedOnDivergence``.
+    """
+    with scoped_env_var("CADRUMO_DOCS_SKIP_SEQUENCE_CHECK", "1"):
+        assert should_check_sequences() is False
+        app = cast(Sphinx, SimpleNamespace(srcdir=str(tmp_path / "never-read"), config=SimpleNamespace()))
+        check_sequence_goldens(app, pages=None)
+
+
+def test_no_golden_carries_a_version_literal() -> None:
+    """A committed golden must not hardcode a package version.
+
+    Docs are rendered FROM these goldens, so a captured ``CADRUMO 0.2.1`` is a
+    hardcoded version in user-facing documentation. It rots at the next release
+    and silently disagrees with the build the reader actually has -- which is
+    exactly what happened: two goldens froze 0.2.1, the version declaration was
+    later reset, and the docs build then failed on a divergence whose suggested
+    remedy would have baked the stale number back in.
+
+    The version is normalised to a token when a golden is stored and resolved
+    back to the running version when the page is rendered, so the reader sees a
+    real version that is derived rather than frozen.
+    """
+    goldens = sorted((_REPO_ROOT / "docs" / "_sequences").rglob("*.json"))
+    assert goldens, "no sequence goldens were found; this gate would pass over an empty corpus"
+
+    offenders = [
+        f"{path.relative_to(_REPO_ROOT).as_posix()}: {match.group(0)}"
+        for path in goldens
+        for match in _VERSION_LITERAL_RE.finditer(path.read_text(encoding="utf-8"))
+    ]
+    assert offenders == [], (
+        "sequence golden(s) carry a hardcoded package version. Docs render from these files, so the "
+        "literal becomes a stale version in user-facing prose at the next release. Re-record with "
+        f"`python -m dev.docs.sequences refresh --page <page>` so the version normalises to a token: {offenders}"
+    )
+
+
+def test_the_version_literal_detector_discriminates() -> None:
+    """Anti-tautology: the pattern catches a real capture and spares the token."""
+    assert _VERSION_LITERAL_RE.findall('"text": "CADRUMO 0.2.1\n"') == ["CADRUMO 0.2.1"]
+    assert _VERSION_LITERAL_RE.findall('"text": "CADRUMO 10.20.30\n"') == ["CADRUMO 10.20.30"]
+    assert _VERSION_LITERAL_RE.findall('"text": "CADRUMO <version>\n"') == []

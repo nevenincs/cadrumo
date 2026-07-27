@@ -133,6 +133,14 @@ def expected_data_files(repo_root: Path) -> set[str]:
     excluded via ``.vaultragignore`` (in favour of its extraction sidecar) is
     not in this set, so the coverage check treats it as legitimately absent.
 
+    ``scan_files`` stops at those filters, one step short of the indexer's
+    admission policy: a zero-byte source yields no chunks and the indexer
+    converges it as ``SOURCE_EMPTY`` (an admission rejection, recorded and
+    never retried), so it never earns a ``code_index_meta.json`` entry no
+    matter how often the reindex runs. Such a file is therefore dropped here
+    too - keeping it would make the coverage gate permanently and
+    unfixably red on, for example, an empty package ``__init__.py``.
+
     Args:
         repo_root: Repository root.
 
@@ -154,9 +162,13 @@ def expected_data_files(repo_root: Path) -> set[str]:
     data_prefix = f"{_DATA_RELROOT}/"
     expected: set[str] = set()
     for path in scanned:
-        rel = path.resolve().relative_to(repo_root.resolve()).as_posix()
-        if rel.startswith(data_prefix):
-            expected.add(rel)
+        resolved = path.resolve()
+        rel = resolved.relative_to(repo_root.resolve()).as_posix()
+        if not rel.startswith(data_prefix):
+            continue
+        if resolved.is_file() and resolved.stat().st_size == 0:
+            continue
+        expected.add(rel)
     return expected
 
 

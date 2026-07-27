@@ -92,10 +92,27 @@ def test_clean_install_defaults_to_spanish(isolated_language_state: None) -> Non
     assert output_language() == "es"
 
 
-def test_unsupported_profile_output_language_falls_back_to_settings_default(
+def test_unsupported_profile_output_language_is_refused_at_the_edit_door(
     isolated_language_state: None,
 ) -> None:
+    """The profile can never come to hold an unsupported language code.
+
+    ``preferences.output_language`` is a schema enum, and the edit door
+    validates against the schema, so the only writer refuses ``"zz"`` rather
+    than storing it for the resolver to cope with later. Resolution is
+    unaffected and still answers the settings default.
+
+    This asserts the enforcement POINT, which the resolver-level fallback it
+    replaced could not: that test seeded an unsupported value and watched the
+    resolver shrug, which stopped being reachable once the field became an
+    enum. The resolver's own tolerance of an unsupported code is still covered
+    where it belongs, against the registered resolver seam in
+    ``core.i18n.tests.test_render_override``.
+    """
     del isolated_language_state
-    _seed_profile_language("zz")
+    from ..domain.user_profile import ProfileSchemaValidationError
+
+    with pytest.raises(ProfileSchemaValidationError):
+        _seed_profile_language("zz")
 
     assert output_language() == "es"

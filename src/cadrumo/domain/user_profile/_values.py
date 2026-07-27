@@ -24,6 +24,7 @@ from ...core.identity import ProfileId as _ProfileId
 from ...core.parsing import parse_bool, parse_iso8601_date
 from ...core.time import now as utc_now
 from ._errors import UserProfileValidationError
+from ._loader import load_user_profile_schema
 
 _SnapshotId = Annotated[
     str,
@@ -49,15 +50,11 @@ def declared_provenance_sources() -> frozenset[str]:
     that swaps the schema sees its declared set rather than a stale copy;
     the loader owns the caching.
     """
-    from ._loader import load_user_profile_schema
-
     return frozenset(load_user_profile_schema().field("provenance.source").enum_values)
 
 
 def declared_field_paths() -> frozenset[str]:
     """Return the ``section.field`` paths the user-profile schema declares."""
-    from ._loader import load_user_profile_schema
-
     schema = load_user_profile_schema()
     return frozenset(f"{section.key}.{field.key}" for section in schema.sections for field in section.fields)
 

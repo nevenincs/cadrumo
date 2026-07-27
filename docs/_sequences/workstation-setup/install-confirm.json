@@ -11,7 +11,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "CADRUMO 0.2.1\n"
+      "text": "CADRUMO <version>\n"
     },
     {
       "argv": [
