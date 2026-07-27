@@ -9,7 +9,7 @@ related:
   - "[[2026-07-27-conformance-cli-plan]]"
 ---
 
-# model M303 casilla 44 regularizacion prorrata as a computed casilla grounded in LIVA art 105-106 with the AEAT manual figure as its external oracle expectation, closing a computable value left to operator entry
+# correct the prorrata percentage rounding from the shared integer code, which rounds half-up, to a rounding that always rounds upward as LIVA article 104.Dos.2 requires, adding the new rounding code rather than changing the shared vocabulary
 
 ## Scope
 
@@ -17,111 +17,158 @@ related:
 
 ## Description
 
-- Verified the Step's premise against the loaded registry snapshot, the live
-  source mesh, and the bundled BOE text before authoring anything.
-- REFUSED the Step's action. Casilla 44 is not modelled as a computed casilla,
-  because doing so would model one value under two mechanisms and would change
-  filing output for a case the current design deliberately refuses to guess at.
-- Corrected instead the stale registry comment whose false premise produced the
-  finding this Step was raised from.
+- Verified the rounding direction against the bundled consolidated law, then
+  against the live BOE consolidated text, before touching anything.
+- Reproduced the defect through the real registry engine on BOTH live M303
+  revisions and recorded the before figures.
+- Added a new closed-vocabulary rounding code that always takes the result to
+  the next unit up, leaving the shared half-up code untouched for its other
+  consumer.
+- Taught BOTH interpreters of the rounding vocabulary the new code: the
+  calculate-path runtime and the workbook renderer.
+- Re-pointed the prorrata percentage formula on both live revisions and recorded
+  the binding provision at each change site.
+- Added a grounding gate that pins the direction, pins that the shared code is
+  unchanged, proves its own ratio set discriminates, and compares the registry
+  against the independent domain authority.
 
 ## Outcome
 
-The Step is DEFERRED, not completed, and its row stays open. Every limb of its
-premise was disproven against the tree.
+The defect is real, was live on both M303 revisions, and is closed.
 
-The value is not left to operator entry. Modelo 303 casilla 44 is materialised on
-the live calculate path by an enrolled source resolver. Its binding source kind is
-in neither the deferred nor the reserved set, so the disposition fold classifies
-it as enrolled; the staging seam runs from the bucket-aggregation calculate action
-and hands the resolver the four current-year source casillas, and the resolver
-returns casilla 44 as a bound input alongside the binding value.
+The provision is LIVA article 104, apartado Dos. Its closing paragraph reads
+"La prorrata de deduccion resultante de la aplicacion de los criterios
+anteriores se redondeara en la unidad superior". It is the ONLY clause matching
+`redonde` in the whole of Ley 37/1992, so the direction is not a matter of
+interpretation. Three independent witnesses were read: the bundled per-article
+extraction, the bundled full consolidated law, and the live BOE consolidated
+text fetched at the `#a104` block anchor, which agree verbatim. The article
+heading is "Articulo 104. La prorrata general." in both the bundle and live BOE,
+so the article number has not been renumbered.
 
-There is a binding. The revision declares
-`modelo-303-prorrata-regularizacion-casilla-44`, source `prorrata_regularizacion`,
-selector output `modelo_303_casilla_44`, over the four source casillas
-`iva.cuota-deducible-total`, `iva.prorrata-volumen-con-derecho`,
-`iva.prorrata-volumen-total` and `iva.prorrata-porcentaje` across 1T to 4T. The
-originating finding recorded no formula and no binding; the no-formula half is
-right and deliberate, the no-binding half is wrong.
+The Step row and the originating audit both cited article 104.Dos.2. The
+apartado's numbered items 1 and 2 are the numerator and the denominator; the
+rounding sentence is the CLOSING paragraph of apartado Dos, after item 2. The
+grounding recorded in code therefore names article 104.Dos rather than
+104.Dos.2. Article 102.Dos, which the domain module cites for the same rule, is
+about autoconsumos and does not carry it; that miscitation is reported below and
+was not corrected here.
 
-The formula is not expressible. LIVA art. 105.Cuatro derives the regularizacion
-from the PROVISIONAL percentage and the year's cuotas soportadas. Art. 105.Uno
-fixes the provisional percentage as the PRIOR year's definitive, held in the
-profile-scoped prorrata register or a stamped prior-year settlement observation;
-art. 105.Seis applies the percentage to the cuotas soportadas of the whole ano
-natural, which for the regularised quarters is a cross-quarter cumulative sum over
-prior-period observations. The loaded revision declares exactly three prorrata
-casillas and no provisional-percentage casilla and no cross-quarter cumulative
-deducible casilla, so neither operand is reachable by a single-period registry
-formula over this revision's own casillas, bindings, relations, or parameters.
+Both live revisions were affected, not one. The formula
+`modelo-303-iva-prorrata-porcentaje` is declared identically in the
+2009-y-siguientes and the 2023-y-siguientes fragments, and both carried the
+shared half-up code. The rounding sentence has stood unamended since the
+original 1992 publication, so it binds both, and correcting only the current
+revision would have left the defect live for every amended filing of a year
+before 2023.
 
-Modelling it anyway would break two standing rules and one safety property. It
-would model one cross-period fold-in under two mechanisms at once, a formula and
-an already-enrolled binding, which the canonical-mechanism rule exists to forbid.
-It would also require the formula to produce a value when the provisional
-percentage cannot be resolved; today that case produces no value and a visible
-advisory naming the missing carry, so a formula would replace a loud refusal with
-a silent default in a fourth-quarter settlement box.
+Measured before and after, through the real registry engine, per revision. The
+2009-y-siguientes revision at filing year 2020 and the 2023-y-siguientes
+revision at filing year 2024 produced identical figures at each step. A ratio of
+55,2 % returned 55 before and returns 56 after; 60,1 % returned 60 and returns
+61; 70,4 % returned 70 and returns 71. The two AEAT manual figures did NOT move:
+the manual's provisional 72,72 % stays 73 and its definitive 55,55 % stays 56,
+both before and after, which is the check that the correction is a correction
+and not a fixture-breaking guess. An exact 50,0 % stays 50 after the change,
+because taking a result to the unidad superior raises a fractional result and
+does not add a unit to an exact one.
 
-The Step's suggested grounding is partly wrong and the correct grounding is
-already present. The audit proposed LIVA articles 105 and 106. Article 106 is the
-prorrata ESPECIAL regime, a different mechanism that routes each input by its
-exclusive use rather than regularising a general percentage, and it is not the
-basis of casilla 44. The binding provision is art. 105.Cuatro, read against
-art. 105.Uno for the provisional percentage, art. 105.Seis for the base, and
-art. 104 for the definitive percentage. Casilla 44 already declares
-`ley-37-1992:art-104` and `ley-37-1992:art-105` and correctly omits art. 106, and
-the catalogue entry for art-105 already exists at legal-authority tier with a
-corpus reference into the bundled consolidated law, a document id, and required
-text quoting the .Uno and .Cuatro clauses verbatim. Its notes already name
-casilla 44 as the home of the regularizacion. No legal-catalogue work was needed
-and none was invented.
+The shared vocabulary was extended, never redefined. A new rounding-code member
+was added for the always-up direction; the existing half-up member is unchanged
+and now carries its own regression pin. The registry declares 1307 rounding
+values today: 1304 half-up money-to-cents, and three whole-unit values, of which
+the two corrected here were the prorrata percentage on each revision. The one
+remaining half-up whole-unit consumer is the Modelo 123 perceptor-count total,
+where the operands are already integers and no provision directs a rounding
+side, so half-up is correct there and it was deliberately left alone. Six
+further occurrences of a `rounding` key in the registry belong to a DIFFERENT
+axis, the verification-expectation tolerance field, and are outside this
+vocabulary.
 
-The no-silent-under-declaration guard the finding assumed missing already exists.
-The revision declares an ADVISORY verification predicate asserting that a declared
-annual prorrata volume implies a non-zero casilla 44, grounded in art-104 and
-art-105, so a blank box on a filing that declares annual volumes already prompts
-rather than passing silently.
+The rounding vocabulary has eight consumers and TWO interpreters, and both
+interpreters had to be taught the new code. The declaration site is the closed
+enum plus its hydration validator; the schema field on the formula definition
+and its re-export carry it; the package facade exports it. The first interpreter
+is the calculate-path rounding applier, reached from its single call site in the
+formula runtime. The second interpreter is the workbook renderer, which maps the
+code to a live spreadsheet function and stamps the rule name onto two record
+models. The eighth consumer is the revision-diff comparison, which compares
+codes for equality and is code-agnostic. Handling the new code in only the first
+interpreter would have made the workbook render a nearest-unit rounding while
+the calculate path rounds up, which is exactly the pull-versus-calculate
+divergence the one-aggregation-path rule exists to prevent; the renderer now
+emits the ceiling function. Its error path already refuses an unhandled code
+loudly, so a future code that skips it fails rather than silently rendering the
+wrong rounding.
 
-What was landed instead is a comment-only correction at the change site. The
-predicate file stated that the binding was provisioned but casilla 44 stayed
-manual until the live resolver and calculation-order seam could materialise
-current-year values. Both have been in service for some time, so the text was a
-stale premise sitting exactly where a reader would look, and a reviewer converted
-it into a wrong finding. It now states why the casilla is deliberately
-formula-less rather than pending, and names the one genuinely open question.
+The direction ambiguity was resolved rather than assumed. Rounding toward
+positive infinity and rounding away from zero differ for a negative operand. The
+target casilla declares a non-negative sign with a zero minimum and a hundred
+maximum in the registry, so the two readings coincide for every value this code
+can currently see; the runtime docstring records the precondition and states
+that a future negative-capable target must declare which reading its provision
+means before enrolling.
 
-The open question is mechanism declaration, not computation. The casilla could
-honestly declare `input_kind = "bound"` against the existing binding, so the
-registry states the linkage the resolver currently makes in application code, and
-so the present-source-no-value guard fires an unresolved-binding diagnostic
-instead of relying on the advisory predicate alone. That is a filing-grade
-behaviour change on a settlement box and a mechanism-ownership decision, which the
-campaign's own review said should be ruled by a follow-on decision record rather
-than settled by an executor. It is not attempted here.
+No legal-catalogue work was needed and none was invented. The catalogue entry
+for the article already exists at legal-authority tier with a corpus reference
+into the bundled per-article file at its own anchor, the BOE document id, the
+permalink, and a required-text list whose FIRST entry is the rounding sentence
+verbatim. Its notes already state that the percentage is rounded up to the
+unidad superior. Its review provenance is honest agent authorship pending
+operator re-stamp and was not touched. The formula already declared the article
+in its legal references. Because no legal entry changed, the atomicity
+constraint between registry files and legal entries is satisfied trivially.
 
-Verification run: registry validation reports verified true over 73 modelos, 90
-revisions, 15774 casillas and 568 legal references; the M303 and prorrata
-grounding suites 177 passed; the full prorrata surface across 25 modules 178
-passed. The engine chain was independently confirmed to reproduce the AEAT
-manual's figures from the manual's raw givens, yielding 73 and 56 for the two
-percentages, 934,40 and 716,80 for the two deductions, and -217,60 with direction
-ingreso for casilla 44.
+The new gate was proven capable of failing, twice, by mutation. Reverting the
+2023 revision declaration to the shared code produced six failures against
+sixteen passes, all on that revision. Mutating the runtime's new branch back to
+half-up produced twelve failures against ten passes, symmetrically across both
+revisions. The gate also caught its own vacuity while being written: a candidate
+volume pair at exactly 76,5 % was rejected by the discrimination test because
+half-up already rounds a half upward, so that pair could not have detected a
+regression; it was replaced with 76,4 %.
+
+Verification run. Registry tree verification reports verified true over 73
+modelos, 90 revisions, 15774 casillas, 1256 formulas and 568 legal references,
+which includes the required-text corpus check on every legal reference. The new
+gate is 22 passed. The calc-sheets, offline-versus-online conformance, registry
+and IVA domain suites together are 3394 passed. The whole prorrata surface is
+231 passed under parallel workers and 231 passed again with workers disabled, so
+no serial test was held out of the result. Format and lint are clean on all five
+changed source files. The project type gate reports 18 diagnostics, none in any
+file this Step touched. The API stub tree is conformant with no drift.
 
 ## Notes
 
 Semantic discovery was waived for this campaign by operator directive: the
 vaultspec-rag index is broken and the service is stopped, so grounding was done
-with ripgrep plus whole-file reads and confirmed against the loaded registry
-snapshot rather than fragment listings, per the fragmented-registry rule.
+with ripgrep plus whole-file reads, confirmed against the loaded registry
+snapshot rather than fragment listings, and against the bundled corpus plus a
+live BOE fetch for the legal text.
 
-The legal text was read from the bundled consolidated law rather than any
-secondary source. Article 105's five relevant clauses were extracted from the
-bundled corpus file at its own anchor and quoted against the catalogue entry's
-required text; article 106 was read from the same extraction and confirmed to be
-the especial regime, which is what rules it out as grounding for this casilla.
+This record replaces an earlier one written against a different Step action. The
+row originally asked for casilla 44 to be modelled as a computed casilla; that
+action was refused on evidence and the row was subsequently rewritten to the
+rounding correction, which the earlier executor discovered while grounding the
+refusal. The scaffold was regenerated so the heading matches the current row.
 
-Nothing in the registry's schema, predicates, formulas, bindings, or values was
-changed. Only a comment was rewritten, and the registry was reloaded and
-revalidated afterwards to confirm it.
+Two defects were observed outside this Step's scope and are reported rather than
+fixed.
+
+The domain prorrata module attributes the rounding rule, and the general
+prorrata formula itself, to article 102.Uno and 102.Dos in its module docstring
+and in the comment directly above the rounding call. Article 102 is "Regla de
+prorrata" and its apartado Dos is about autoconsumos; the formula and the
+rounding both live in article 104.Dos. The module's arithmetic is correct and
+was the authority this Step reconciled the registry against, so nothing computes
+wrongly, but a reader sent to article 102 will not find the rule. The correction
+is a comment-only change in a module this Step did not otherwise touch and
+belongs in its own change.
+
+The two live M303 revisions disagree on the no-prorrata-data branch. When the
+total volume is zero the 2023 revision returns 100, with a comment grounding
+that in the full right to deduct and naming the defect it closed; the 2009
+revision still returns 0, which would zero every deduction for a fully taxable
+trader who simply declared no prorrata volumes. That is the same class of defect
+the newer revision already fixed, still live for amended filings of years before
+2023. It needs its own grounded Step and was not touched here.
