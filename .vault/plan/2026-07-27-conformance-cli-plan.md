@@ -59,7 +59,7 @@ Lift the test-trapped conformance facts into importable typed libraries under sr
 - [x] `P02.S28` - parse each bundled oracle payload through a strict typed model so the declared source_kind token actually hydrates and an unknown token refuses at the boundary, removing the last untyped mapping read in the grounding fold; `src/cadrumo/domain/calculations/registry/_external_grounding.py`.
 - [x] `P02.S30` - split the scenario input figures out of the M303 prorrata oracle expected-by-casilla map and rename the payload to carry its filing year so its genuine expected figure enters the honesty relation; `src/cadrumo/_data/corpus/manual_oracles`.
 - [ ] `P02.S31` - model M303 casilla 44 regularizacion prorrata as a computed casilla grounded in LIVA art 105-106 with the AEAT manual figure as its external oracle expectation, closing a computable value left to operator entry; `src/cadrumo/_data/registry/aeat/modelos/303`.
-- [ ] `P02.S36` - bind the classification finding detail bound to the field it mirrors and add the missing case whose single blocker exceeds it so the truncation branch is proven rather than reasoned; `src/cadrumo/domain/calculations/registry/_classification_coherence.py`.
+- [x] `P02.S36` - bind the classification finding detail bound to the field it mirrors and add the missing case whose single blocker exceeds it so the truncation branch is proven rather than reasoned; `src/cadrumo/domain/calculations/registry/_classification_coherence.py`.
 
 ### Phase `P03` - conformance governance CLI in dev
 

@@ -13,6 +13,11 @@ Verbs:
 * ``coverage`` -- per-axis measured counts against their real populations.
 * ``audit [--check]`` -- the shrink-only ratchet against the committed
   baseline. ``--check`` is the ONLY gating exit in this whole surface.
+* ``stamp`` -- write a revision's DECLARED governance provenance. It cannot
+  write ``operator_reviewed``: this CLI is agent-driven, and an agent recording
+  an operator's signoff is the exact dishonesty the feature exists to detect.
+  The schema still accepts the value, so the operator signs off by editing
+  ``revision.toml`` directly.
 
 ``report`` and ``coverage`` ALWAYS exit 0, deliberately. The picture they render
 is currently a bad one — ninety unreviewed revisions, five dead schema axes, an
@@ -60,6 +65,7 @@ from typing import Annotated
 
 import typer
 
+from ._stamp import StampableReviewStatus, StampError, stamp_revision
 from .manager import (
     ConformanceReport,
     build_coverage_report,
@@ -203,6 +209,75 @@ def audit(
     typer.echo(render_audit(result))
     if check and not result.passed:
         raise typer.Exit(code=1)
+
+
+@app.command("stamp")
+def stamp(
+    modelo: Annotated[str, typer.Argument(help="Modelo id to stamp, e.g. 130.")],
+    revision: Annotated[str, typer.Argument(help="Revision id to stamp, e.g. 2019-y-siguientes.")],
+    engineered_by: Annotated[
+        str | None,
+        typer.Option("--engineered-by", help="Who built this revision."),
+    ] = None,
+    clear_engineered_by: Annotated[
+        bool,
+        typer.Option("--clear-engineered-by", help="Drop the authorship claim so a wrong name is correctable."),
+    ] = False,
+    review_status: Annotated[
+        StampableReviewStatus | None,
+        typer.Option(
+            "--review-status",
+            help=(
+                "How far the review has progressed. operator_reviewed is deliberately absent: this "
+                "CLI is agent-driven and cannot record a human's signoff. Author it in revision.toml."
+            ),
+        ),
+    ] = None,
+    reviewed_by: Annotated[
+        str | None,
+        typer.Option("--reviewed-by", help="Who reviewed it. Required when advancing the status."),
+    ] = None,
+    reviewed_at: Annotated[
+        datetime | None,
+        typer.Option("--reviewed-at", formats=["%Y-%m-%d"], help="Date of review. Defaults to today."),
+    ] = None,
+) -> None:
+    """Write one modelo revision's declared governance provenance.
+
+    Writes ONLY the four governance scalars, and ONLY into the revision's own
+    ``revision.toml`` manifest: a stamp declared inside a per-section fragment
+    once merged silently and won, so a revision could read unstamped while the
+    compiled snapshot claimed a completed review. Advancing the status to
+    ``agent_reviewed`` records a reviewer and a date. Returning it to
+    ``pending_review`` drops the declared reviewer, because the schema refuses a
+    reviewer attached to a review the status denies; but naming a reviewer while
+    the status stays ``pending_review`` is REFUSED rather than dropped, so a
+    caller is never told the write succeeded while their claim was discarded.
+
+    The stamp is validated by the real revision schema before anything is
+    written, and the whole modelo is re-loaded through the real loader
+    afterwards; a manifest the loader would reject is restored to its previous
+    bytes rather than left on disk.
+    """
+    resolved_date = reviewed_at.date() if reviewed_at is not None else None
+    if review_status is StampableReviewStatus.AGENT_REVIEWED and resolved_date is None:
+        # Defaulted rather than demanded: the review being recorded is happening
+        # now, so today is the true date. It is echoed back so the written value
+        # is never implicit.
+        resolved_date = datetime.now(tz=UTC).date()
+    try:
+        result = stamp_revision(
+            modelo,
+            revision,
+            engineered_by=engineered_by,
+            clear_engineered_by=clear_engineered_by,
+            review_status=review_status,
+            reviewed_by=reviewed_by,
+            reviewed_at=resolved_date,
+        )
+    except StampError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    typer.echo(result.render())
 
 
 def _warn_if_vacuous(composed: ConformanceReport) -> None:
