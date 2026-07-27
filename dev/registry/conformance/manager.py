@@ -114,6 +114,7 @@ __all__ = [
     "load_baseline",
     "load_conformance_report",
     "load_locale_coverage_index",
+    "record_baseline",
     "render_audit",
     "render_coverage",
     "render_report",
@@ -143,6 +144,12 @@ that is fully covered.
 
 #: Committed ratchet baseline, read only by this dev-side package.
 _BASELINE_FILENAME: Final[str] = "conformance-baseline.json"
+
+#: Command recorded on a captured baseline, so the artefact names its producer.
+_RECORD_COMMAND: Final[str] = "python -m dev.registry.conformance audit --record"
+
+#: Default cadence stamped on a captured baseline.
+_DEFAULT_REVIEW_CADENCE: Final[str] = "revisit whenever a stamping or grounding campaign lands"
 
 
 class ConformanceModel(BaseModel):
@@ -497,6 +504,12 @@ class ConformanceBaseline(ConformanceModel):
         recorded_at: When the baseline was captured.
         source: The command that produced it.
         review_cadence: When the ceilings are expected to be revisited.
+        note: Why this capture happened and under what tree conditions.
+            Mandatory and non-empty, because in a shared worktree a baseline is
+            a snapshot of a MOVING tree: a capture taken while a peer's
+            half-landed change is present records their state as everyone's
+            ceiling, and a re-record with no stated reason is indistinguishable
+            from silencing a real regression.
         ceilings: Shrink-only backlog and defect counters.
         floors: Anti-vacuity population minimums.
     """
@@ -504,6 +517,7 @@ class ConformanceBaseline(ConformanceModel):
     recorded_at: str = Field(min_length=1)
     source: str = Field(min_length=1)
     review_cadence: str = Field(min_length=1)
+    note: str = Field(min_length=1)
     ceilings: ConformanceRatchetCeilings
     floors: ConformanceVacuityFloors
 
@@ -566,6 +580,63 @@ def load_baseline(path: Path | None = None) -> ConformanceBaseline:
     except json.JSONDecodeError as exc:
         raise SystemExit(f"{resolved}: conformance baseline is not valid JSON: {exc}") from exc
     return ConformanceBaseline.model_validate(raw)
+
+
+def record_baseline(
+    report: ConformanceReport,
+    *,
+    note: str,
+    recorded_at: str,
+    review_cadence: str = _DEFAULT_REVIEW_CADENCE,
+    source: str = _RECORD_COMMAND,
+    path: Path | None = None,
+) -> ConformanceBaseline:
+    """Write a baseline captured from ``report`` and return it.
+
+    Generated from a real run rather than hand-authored, so a committed ceiling
+    is always a number the tool actually measured. Refuses a degraded report
+    outright: three axes are unmeasured under the degraded read and would be
+    frozen as clean zeros nothing established.
+
+    Args:
+        report: The freshly composed report to capture.
+        note: Why this capture happened and under what tree conditions.
+        recorded_at: The capture date.
+        review_cadence: When the ceilings should next be revisited.
+        source: The command that produced the capture.
+        path: Optional override for tests. Defaults to the committed baseline.
+
+    Returns:
+        The written :class:`ConformanceBaseline`.
+
+    Raises:
+        SystemExit: The report is degraded, or composed no rows at all.
+    """
+    if not report.registry_validated:
+        raise SystemExit(
+            "refusing to record a baseline from a degraded read: evidence-tier coverage, the "
+            "support probe, and the derived authorization were never measured, and freezing them "
+            "as zero would state a fact nobody established",
+        )
+    if not report.rows:
+        raise SystemExit(
+            "refusing to record a baseline from a report with zero revision rows; every ceiling "
+            "would be zero and every floor unmeetable",
+        )
+    baseline = ConformanceBaseline(
+        recorded_at=recorded_at,
+        source=source,
+        review_cadence=review_cadence,
+        note=note,
+        ceilings=_current_ceilings(report),
+        floors=_current_floors(report),
+    )
+    resolved = baseline_path() if path is None else path
+    resolved.write_text(
+        json.dumps(baseline.model_dump(mode="json"), indent=2, sort_keys=True) + "\n",
+        encoding=UTF_8_ENCODING,
+    )
+    return baseline
 
 
 @lru_cache(maxsize=2)

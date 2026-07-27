@@ -11,13 +11,16 @@ Verbs:
 
 * ``report`` -- every conformance axis, one row per modelo revision.
 * ``coverage`` -- per-axis measured counts against their real populations.
+* ``audit [--check]`` -- the shrink-only ratchet against the committed
+  baseline. ``--check`` is the ONLY gating exit in this whole surface.
 
-Both ALWAYS exit 0, deliberately. The picture they render is currently a bad
-one — ninety unreviewed revisions, five dead schema axes, an
+``report`` and ``coverage`` ALWAYS exit 0, deliberately. The picture they render
+is currently a bad one — ninety unreviewed revisions, five dead schema axes, an
 independent-check coverage under five per cent — and a screen that refused to
 render would leave that backlog unread while teaching every peer to route
 around the tool. A fact earns a gating exit when its worklist empties, which is
-what the ``audit`` verb is for.
+what ``audit --check`` is for: it does not demand the backlog be clean, only
+that it not GROW.
 
 Reading the output
 ------------------
@@ -51,6 +54,8 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+from pathlib import Path
 from typing import Annotated
 
 import typer
@@ -58,7 +63,11 @@ import typer
 from .manager import (
     ConformanceReport,
     build_coverage_report,
+    check_conformance_ratchet,
+    load_baseline,
     load_conformance_report,
+    record_baseline,
+    render_audit,
     render_coverage,
     render_report,
 )
@@ -124,6 +133,76 @@ def coverage(as_json: _AsJson = False, no_validate: _NoValidate = False) -> None
         return
     typer.echo(render_coverage(projected))
     _warn_if_vacuous(composed)
+
+
+@app.command("audit")
+def audit(
+    check: Annotated[
+        bool,
+        typer.Option(
+            "--check",
+            help="Gate: exit 1 when a backlog counter grew past its ceiling or a population fell below its floor.",
+        ),
+    ] = False,
+    record: Annotated[
+        bool,
+        typer.Option("--record", help="Capture the current counters as the committed baseline. Requires --note."),
+    ] = False,
+    note: Annotated[
+        str | None,
+        typer.Option("--note", help="Why this baseline capture happened and under what tree conditions."),
+    ] = None,
+    baseline: Annotated[
+        Path | None,
+        typer.Option("--baseline", help="Read or write this baseline file instead of the committed one."),
+    ] = None,
+    no_validate: _NoValidate = False,
+) -> None:
+    """Compare the current conformance counters against the committed baseline.
+
+    Two directions are checked and reported separately, because they fail for
+    opposite reasons. A CEILING violation means a backlog or defect count GREW:
+    somebody added an unreviewed revision, a grounding finding, a classification
+    incoherence. A FLOOR violation means a measurement population FELL: the run
+    examined fewer revisions, casillas, oracle payloads, or locale leaves than
+    the baseline proves it must, so every clean ceiling above it is vacuous and
+    cannot be trusted. Floors are reported first for that reason.
+
+    Without ``--check`` this is a screen and exits 0 whatever it finds.
+    """
+    if check and record:
+        raise SystemExit(
+            "--check and --record are opposite operations: one refuses a moved counter, the other "
+            "accepts it as the new ceiling. Run them separately so the acceptance is a visible act",
+        )
+    if no_validate and (check or record):
+        raise SystemExit(
+            "--no-validate cannot back a gate or a baseline capture: under the degraded read the "
+            "evidence-tier coverage, support-probe, and authorization axes are never measured, so "
+            "their counters would read clean while nothing checked them",
+        )
+
+    composed = load_conformance_report(validate=not no_validate)
+    if record:
+        if not note or not note.strip():
+            raise SystemExit(
+                "--record requires --note stating why the baseline moved and under what tree "
+                "conditions it was captured; an unexplained re-record is indistinguishable from "
+                "silencing a real regression",
+            )
+        written = record_baseline(
+            composed,
+            note=note.strip(),
+            recorded_at=datetime.now(tz=UTC).date().isoformat(),
+            path=baseline,
+        )
+        typer.echo(f"recorded baseline recorded_at={written.recorded_at} rows={composed.revision_count}")
+        return
+
+    result = check_conformance_ratchet(composed, load_baseline(baseline))
+    typer.echo(render_audit(result))
+    if check and not result.passed:
+        raise typer.Exit(code=1)
 
 
 def _warn_if_vacuous(composed: ConformanceReport) -> None:

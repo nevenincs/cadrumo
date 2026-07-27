@@ -1,0 +1,27 @@
+{
+  "ceilings": {
+    "grounding_findings": 0,
+    "locale_unavailable_modelos": 0,
+    "modelo_scope_classification_findings": 24,
+    "required_coverage_gap_rows": 0,
+    "revisions_without_engineered_by": 90,
+    "scope_diagnostics": 0,
+    "unattributed_oracle_payloads": 0,
+    "unmatched_oracle_evidence": 0,
+    "unreviewed_revisions": 90,
+    "untranslated_locale_labels": 21609,
+    "unused_declared_axes": 5
+  },
+  "floors": {
+    "audited_locale_leaves": 47376,
+    "bundled_oracle_payloads": 21,
+    "composed_modelos": 73,
+    "composed_revisions": 90,
+    "declared_grounding_claims": 58,
+    "reconciled_casillas": 1261
+  },
+  "note": "First capture of the conformance ratchet, taken at HEAD 33129cc83f. Registry DATA and the bundled oracle corpus were both at HEAD with no working-tree modification, so no peer WIP is folded into these counters; peer edits were present on the registry schema and governance-stamp test modules only, which change no registry declaration. The M303 prorrata oracle rename and its scenario-input split had just landed, which is why unattributed_oracle_payloads and grounding_findings both capture as zero after reading 1 and 3 respectively earlier the same day.",
+  "recorded_at": "2026-07-27",
+  "review_cadence": "revisit whenever a stamping or grounding campaign lands",
+  "source": "python -m dev.registry.conformance audit --record"
+}
