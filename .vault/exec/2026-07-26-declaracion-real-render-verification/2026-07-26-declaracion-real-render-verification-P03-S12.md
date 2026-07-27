@@ -65,13 +65,19 @@ decides that modelo only, so nineteen specimens would be needed to close the
 register outright. That is the argument for treating the structural alternative
 as the real remedy rather than specimen acquisition, which is assessed separately.
 
-The register is also not the whole hazard. It counts renders in another language,
-because that is the failure this campaign observed and can evidence. AEAT's sede
-serves the co-official languages as well, and a Catalan or Galician render would
-defeat a Spanish-and-English alternation exactly as an English one defeats a
-Spanish-only pattern. No such render is bundled, so this is stated as a bound on
-what the register covers rather than as a measured finding: the register is a
-lower bound on the exposure, not an estimate of it.
+The register is also not the whole hazard, and the part it omits is inference
+rather than measurement. It counts renders in another language because that is
+the failure this campaign observed and can evidence. AEAT's sede serves the
+co-official languages as well, and a Catalan or Galician render would defeat a
+Spanish-and-English alternation exactly as an English one defeats a Spanish-only
+pattern -- but **nothing in this repository evidences that**. No sidecar carries a
+language field and no bundled document mentions either language, so the claim
+rests on how the sede is known to work.
+
+Stated as a bound rather than an estimate: the register is a lower bound on the
+exposure. Anyone claiming the render-language route closed should say which
+languages that claim covers, because closing it for English is what the evidence
+can support.
 
 The semantic code index was truncated throughout, roughly 1027 chunks against
 roughly 4546 files, while reporting itself healthy. No semantic result was relied

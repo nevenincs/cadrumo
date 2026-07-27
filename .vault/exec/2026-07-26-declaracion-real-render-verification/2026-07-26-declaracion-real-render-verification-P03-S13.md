@@ -32,12 +32,20 @@ Four reasons alternation is the wrong axis, in descending order of how much they
 should weigh.
 
 **It does not close the problem, only the observed instance.** AEAT's sede serves
-the co-official languages, so a Spanish-and-English alternation is defeated by a
-Catalan or Galician render exactly as a Spanish-only pattern is defeated by an
-English one. Each additional language needs its own branch on each of 154
+the co-official languages, so a Spanish-and-English alternation would be defeated
+by a Catalan or Galician render exactly as a Spanish-only pattern was defeated by
+an English one. Each additional language needs its own branch on each of 154
 targets, and under D3 each branch needs a render evidencing its wording, which
 the repository does not have. A remedy that requires N specimens per modelo to
 reach N languages is not a remedy.
+
+**Catalan and Galician are inference, and nothing in this repository evidences
+them.** No sidecar carries a language field and no bundled document mentions
+either. The argument stands on how the sede is known to work rather than on
+anything measured here, and it should be repeated as inference wherever the
+render-language route is discussed -- including anywhere its closure is claimed.
+The one thing that is measured is that the language axis is real at all, which
+the English Modelo 390 render established.
 
 **It rots silently, in the same way as the defect it patches.** An alternate
 branch that stops matching produces the original failure -- a dropped box on a
@@ -49,10 +57,32 @@ revision, with no gate able to check them absent a specimen per language.
 five revisions of Modelo 100 alone account for 105 of them. Every new revision
 re-authors the alternates.
 
-**The alternative is already in the schema and already proven on real evidence.**
-The single target that survived on the English Modelo 390 render was its one
-`bbox_anchored` target, which anchors on the printed box number. AEAT translates
-the labels and does not translate the numbers.
+**The alternative is already in the schema, and the evidence for it is one
+measured point plus a structural reason to expect it generalises.** The single
+target that survived on the English Modelo 390 render was its one
+`bbox_anchored` target, and AEAT translates labels while leaving box numbers
+alone.
+
+That claim has been checked as hard as the corpus allows, and the honest
+statement is narrower than "confirmed". The repository holds exactly **one**
+cross-language empirical point: Modelo 390's box 49 is `bbox_anchored` and both a
+Spanish facsimile and the English real render exist for it. Measured directly,
+the anchor word sits at x0=412.81 in Spanish and x0=411.89 in English -- under a
+point apart, both inside the anchor window -- so that column genuinely did not
+reflow under translation. One target on one modelo is real evidence and better
+than none, and it is not 102 targets confirmed.
+
+The structural reason is what carries the rest: these strategies match on digits
+and geometry rather than on prose, so there is no mechanism by which translating
+a label would change what they match. That is a sound expectation, not a
+measurement, and it should be read as one until more cross-language renders
+exist.
+
+The exposed half of the partition needs no such caveat. All 158 `named_label`
+patterns were checked three ways -- none lacking an alphabetic run, none
+acronym-shaped, none merely cognate-dependent -- with the twenty thinnest read by
+hand, and an independent re-derivation reproduced the 158 / 102 / 22 census by
+raw TOML parsing without the authority object model. That partition is exact.
 
 **The structural answer is therefore to anchor on the printed box number wherever
 the form prints one in a separable position**, migrating `named_label` targets to
