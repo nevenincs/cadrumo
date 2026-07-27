@@ -74,8 +74,18 @@ _HEX_MARKERS = frozenset(
 # alongside their execution marker, every lane excludes it, and
 # ``just test-os-keychain`` enrols it. Everything provable without custody stays
 # in the default lanes.
+# ``resident_service`` follows the same supplementary-label pattern for a
+# precondition that is a property of a RUNNING LOCAL SERVICE rather than of the
+# dependency set: the vaultspec-rag search daemon is a separate product this
+# project does not install, and under pytest its own isolation guard refuses the
+# HTTP call outright, so the tests that query it cannot pass from a plain
+# invocation regardless of corpus health. Tests whose assertion subject IS what
+# that service returns carry the label alongside their execution marker, every
+# lane excludes it, and ``just test-resident-service`` enrols it.
 _EXPECTED_CONFIGURED_MARKERS = (
-    _EXECUTION_MARKERS | _HEX_MARKERS | {"docs", "serial", "perf", "external_tool", "os_keychain"}
+    _EXECUTION_MARKERS
+    | _HEX_MARKERS
+    | {"docs", "serial", "perf", "external_tool", "os_keychain", "resident_service"}
 )
 _OS_KEYCHAIN_MARKER = "os_keychain"
 #: Every test whose assertion subject IS the OS credential store, by node id.

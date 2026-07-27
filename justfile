@@ -410,7 +410,22 @@ test-integration:
 # `src/cadrumo/tests/test_dev_tree_lane_coverage.py`, which fails when a new
 # test directory appears under `dev/` that no lane names.
 test-dev-tooling:
-    @uv run --no-sync pytest -q -m "unit or integration" dev/audit/tests dev/deploy/tests dev/env/tests dev/tests dev/registry/matrix/tests dev/registry/newmodelo/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests
+    @uv run --no-sync pytest -q -m "(unit or integration) and not resident_service" dev/audit/tests dev/deploy/tests dev/env/tests dev/tests dev/registry/matrix/tests dev/registry/newmodelo/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests
+
+# Enrol the tests that query the resident vaultspec-rag search service. Held out
+# of every other lane by the `resident_service` marker, because the service is a
+# separate product this project does not install and its own isolation guard
+# refuses the HTTP call under pytest -- so from a plain invocation these fail on
+# the harness before the corpus is ever consulted.
+#
+# READ BEFORE TRUSTING A GREEN RESULT. This recipe assumes a started AND fully
+# indexed service. A truncated index answers confidently rather than refusing,
+# so these gates can pass thinly against a partial corpus. Confirm the index is
+# whole before reading a pass as evidence; `just check-rag` reports status, and a
+# section count far below the tracked file count means the answers are worthless
+# even though nothing errored.
+test-resident-service:
+    @uv run --no-sync pytest -q -m "resident_service" dev/docs/preprocess/tests dev/docs/terminology/tests
 
 # Run BOTH lanes in sequence and report them separately. The default pytest
 # invocation is pinned to the unit lane by addopts, so `just test-unit` green
