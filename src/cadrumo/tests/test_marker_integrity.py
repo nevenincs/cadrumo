@@ -78,9 +78,7 @@ _HEX_MARKERS = frozenset(
 # of a RUNNING LOCAL SERVICE rather than of the dependency set; enrolled by
 # ``just test-resident-service``. Full rationale on the pyproject registration.
 _EXPECTED_CONFIGURED_MARKERS = (
-    _EXECUTION_MARKERS
-    | _HEX_MARKERS
-    | {"docs", "serial", "perf", "external_tool", "os_keychain", "resident_service"}
+    _EXECUTION_MARKERS | _HEX_MARKERS | {"docs", "serial", "perf", "external_tool", "os_keychain", "resident_service"}
 )
 _OS_KEYCHAIN_MARKER = "os_keychain"
 #: Every test whose assertion subject IS the OS credential store, by node id.
@@ -1099,6 +1097,8 @@ def test_live_test_opt_in_token_is_not_used_by_production_aeat_live_paths() -> N
 
 def test_test_modules_live_under_tests_directories_and_use_test_prefix() -> None:
     """Every test module must live below a ``tests`` directory and use ``test_``."""
+    scanned = [path for root in _TEST_TOPOLOGY_ROOTS for path in root.rglob("test_*.py")]
+    assert scanned, "the topology walk found no test modules; misplacement cannot be detected in an empty scan"
     misplaced = [
         str(path.relative_to(_REPO_ROOT))
         for root in _TEST_TOPOLOGY_ROOTS

@@ -472,6 +472,7 @@ def test_family4_no_underscore_named_entries_in_any_facade_all() -> None:
     the same way, not silenced by an allowlist entry.
     """
     facades = discover_facades()
+    assert facades, "no package facades were discovered; a clean underscore scan over zero facades is not a clean tree"
     violations = find_underscore_in_all_violations(facades)
 
     offenders = sorted(f"{v.package}.{v.name} ({v.path})" for v in violations)

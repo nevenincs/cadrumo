@@ -91,7 +91,12 @@ def _captured_text(document: dict[str, object]) -> str:
 
 
 def _read_corpus() -> list[tuple[Path, str]]:
-    """Return ``(path, captured_text)`` for every readable golden."""
+    """Return ``(path, captured_text)`` for every readable golden.
+
+    Refuses an empty corpus at the source: the gate over it asserts no golden
+    records a crash as expected output, and no crash marker can be found in
+    nothing.
+    """
     corpus: list[tuple[Path, str]] = []
     for path in _golden_paths():
         try:
@@ -100,6 +105,7 @@ def _read_corpus() -> list[tuple[Path, str]]:
             pytest.fail(f"unreadable golden {path}: {exc}")
         if isinstance(document, dict) and "frames" in document:
             corpus.append((path, _captured_text(document)))
+    assert corpus, "the golden-record corpus is empty; no crash marker can be found in nothing"
     return corpus
 
 

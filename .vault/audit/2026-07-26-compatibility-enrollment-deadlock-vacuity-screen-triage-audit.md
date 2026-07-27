@@ -94,18 +94,49 @@ This is a genuine over-clearing risk in the opposite direction from the over-rep
 the docstring already declares, and it is not among the four shapes that docstring says
 the screen cannot see.
 
+### Re-triage after narrowing the exemption, and what the first pass under-measured
+
+The limitation above was acted on rather than left recorded, and measuring it showed
+the first pass had under-stated it. Module-wide credit was silencing 110 functions —
+more than five times the 32-item worklist it was hiding them behind, so the majority
+of the screen's true population was invisible when the first triage ran. Any
+conclusion above about proportions is therefore about the visible tenth, not the whole.
+
+Dropping module credit entirely was tried and rejected on evidence: 274 flagged,
+mostly ordinary behaviour tests, which is not a worklist anyone reads. The credit is
+now matched by CORPUS NAME — a sibling asserting the shared substrate is populated
+still vouches for scans over that substrate, and no longer vouches for one it never
+touched. That preserved every existing screen test unchanged, which is the signal
+that it narrowed the credit rather than redefining it.
+
+A second gap surfaced immediately: `proves_it_scanned` read only names and calls, so
+`assert Settings.model_fields` did not clear its own gate. A guard that does not clear
+the hit teaches its reader that guarding is pointless, which is the fastest way to get
+a screen ignored. Attribute and subscript reads now count.
+
+Of the 110 surfaced, 30 genuinely walk a corpus. Eleven are now guarded, and the
+serious ones are worth naming: both CLI reference gates enumerate the live command
+tree through a subprocess, so an empty walk meant every command was documented and
+every leaf had a schema; the shipped-module gate calls itself a hard zero with no
+baseline and no allowlist while walking an unguarded tree; the production-module
+coverage gate and the test-topology gate both scan trees that, empty, report no gaps
+and no misplacement. Each guarded corpus was measured non-empty rather than assumed —
+1370 production modules, 1509 reachable, 253 facades, 787 discovery sites — so the
+guards are satisfied by measurement, not by construction.
+
+Thirteen corpus-walking hits remain unguarded, and roughly 84 further hits are
+absence assertions, subprocess exit codes and ordinary behaviour tests needing no
+work. The list is not closed and this says so.
+
 ## Recommendations
 
-Do not promote the screen to a CI gate. Its two declared false-positive classes are
-real and were the majority of this worklist — 22 of 32 flagged functions needed no work
-— so a gate would cry wolf at a 69% false-positive rate. It stays a screen, run at the
-swarm-audit cadence.
+Do not promote the screen to a CI gate. Its declared false-positive classes are real
+and remain the majority of the worklist, so a gate would cry wolf. It stays a screen,
+run at the swarm-audit cadence.
 
-Consider narrowing `proves_it_scanned` from module scope to function scope, accepting
-the resulting increase in false positives, since a false positive costs one read and
-the over-clearing above costs a silently unguarded gate. Not done here: it would
-re-flag functions this pass has already classified, and the re-triage should be
-deliberate rather than a side effect.
+The narrowing this pass recommended has been DONE, and by corpus name rather than by
+dropping module credit — see the re-triage section above for why the wholesale form
+was rejected on measurement.
 
 Treat the four accept-half proof-pair hits as the screen's known blind spot when
 re-running it. They will re-flag every time and are correct as written; a future pass

@@ -51,6 +51,7 @@ def _strip_fenced_blocks(text: str) -> str:
             out.append("")
     return "\n".join(out)
 
+
 # The em-dash (U+2014). Its per-page counts ratchet DOWN from a checked-in
 # baseline; a page may only decrease, a page absent from the baseline starts at
 # zero, and a page below its baseline passes (so a prose sweep never reds the
@@ -99,6 +100,8 @@ def _em_dash_counts() -> dict[str, int]:
         if count:
             counts[path.relative_to(_DOCS_ROOT).as_posix()] = count
     return counts
+
+
 _DANGEROUS_COMMAND_PATTERNS = (
     re.compile(r"\brm\s+-rf\b"),
     re.compile(r"\bRemove-Item\b.*\s-(?:Recurse|r)\b", re.IGNORECASE),
@@ -118,8 +121,16 @@ _RETIRED_GIT_CLEAN_PATTERN = re.compile(r"\bgit\s+clean\s+-[^\n]*f\b")
 
 
 def _markdown_docs() -> tuple[Path, ...]:
-    """Return checked-in markdown documentation pages."""
-    return tuple(sorted(path for path in _DOCS_ROOT.rglob("*.md") if "_build" not in path.parts))
+    """Return checked-in markdown documentation pages.
+
+    Refuses an empty result rather than returning one. Three gates scan this
+    corpus for violations and assert the offender list is empty; over an empty
+    corpus each reports exactly what a clean corpus reports, so the proof of
+    scan belongs here, once, rather than at each call site.
+    """
+    pages = tuple(sorted(path for path in _DOCS_ROOT.rglob("*.md") if "_build" not in path.parts))
+    assert pages, f"no markdown documentation pages found under {_DOCS_ROOT}"
+    return pages
 
 
 def _shell_fence_commands(path: Path) -> list[tuple[int, str]]:

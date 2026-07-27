@@ -110,7 +110,12 @@ def proves_it_scanned(node: ast.stmt) -> bool:
     test = node.test
     if isinstance(test, ast.Compare) and len(test.ops) == 1:
         return isinstance(test.ops[0], ast.GtE | ast.Gt | ast.In)
-    return isinstance(test, ast.Name | ast.Call)
+    # Attribute and subscript reads count alongside bare names and calls: a
+    # corpus is as often reached as ``Model.model_fields`` or ``data["rows"]``
+    # as it is as a local. Omitting them made the screen re-flag a gate that
+    # had just been guarded, which teaches its reader that guarding does not
+    # clear the hit.
+    return isinstance(test, ast.Name | ast.Call | ast.Attribute | ast.Subscript)
 
 
 def _is_non_empty_literal(node: ast.expr) -> bool:

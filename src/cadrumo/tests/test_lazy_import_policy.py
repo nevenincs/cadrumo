@@ -1105,7 +1105,11 @@ def test_no_unclassified_unsanctioned_import_site() -> None:
     reviewed allowlist entry with its class, reason, and disposition.
     """
     allowlisted = _allowlisted_edges()
-    violations = [site for site in _discover_unsanctioned_sites() if site.edge not in allowlisted]
+    sites = _discover_unsanctioned_sites()
+    assert sites, (
+        "the unsanctioned-import discovery found no sites at all; this policy gate would pass over an empty walk"
+    )
+    violations = [site for site in sites if site.edge not in allowlisted]
     assert not violations, (
         "Unsanctioned function-local first-party import(s) with no allowlist entry.\n"
         "Each is neither one of the five sanctioned classes nor a declared allowlist edge:\n"

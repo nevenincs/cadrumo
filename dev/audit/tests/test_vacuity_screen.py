@@ -226,3 +226,24 @@ def test_a_proof_about_another_corpus_does_not_exempt_a_scan(tmp_path: Path) -> 
     )
 
     assert _flagged_names(tmp_path) == {"test_no_offenders_in_pages"}
+
+
+def test_an_attribute_corpus_guard_clears_the_hit(tmp_path: Path) -> None:
+    """A corpus reached as an attribute proves the scan as well as a bare name.
+
+    ``assert Model.model_fields`` is the same claim as ``assert rows``. Reading
+    only names and calls made the screen re-flag a gate immediately after it was
+    correctly guarded, which trains its reader that guarding does not clear the
+    hit -- the fastest way to make a screen ignored.
+    """
+    _write_screened_tree(
+        tmp_path,
+        "test_probe.py",
+        """
+        def test_every_field_is_described() -> None:
+            assert Settings.model_fields
+            assert [n for n, f in Settings.model_fields.items() if not f.description] == []
+        """,
+    )
+
+    assert _flagged_names(tmp_path) == set()

@@ -323,7 +323,11 @@ def test_every_production_module_is_reachable_from_a_test() -> None:
     behavior coverage, not gate green-ness.
     """
     production_modules = _collect_production_modules()
+    assert production_modules, "no production modules were collected; a coverage gate over an empty tree has no gaps"
     reachable = _cached_transitively_reachable_from_tests()
+    assert reachable, (
+        "the test-reachability walk found nothing reachable; every module would read as a gap or none would"
+    )
     gaps: list[str] = []
     for module in production_modules:
         if _has_import_graph_coverage(module, reachable):
