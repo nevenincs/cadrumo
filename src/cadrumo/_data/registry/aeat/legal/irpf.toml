@@ -1557,6 +1557,25 @@ required_text = [
     "CÓDIGO PROVINCIA",
 ]
 
+[legal."orden-hap-1608-2014:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-1608-2014-art-1.html#a1"
+document_id = "BOE-A-2014-9225"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-9225#a1"
+published_at = 2014-09-10
+effective_from = 2014-09-11
+review_status = "reviewed"
+reviewed_at = 2026-07-27
+reviewed_by = "agent-authored from BOE-A-2014-9225#a1 downloaded from boe.es; operator to re-stamp"
+notes = "Orden HAP/1608/2014 articulo 1: aprueba el modelo 187 y sus disenos fisicos y logicos. Bundled because modelos 187, 188 and 194 previously cited orden-eha-3377-2011:art-1, whose own text approves modelo 193; that entry is correct and the citations to it were not."
+required_text = [
+    "Se aprueba el modelo 187",
+    "Aprobación del modelo 187 y de los diseños físicos y lógicos",
+]
+
 [legal."orden-eha-3377-2011:art-1"]
 evidence_tier = "legal_authority"
 authority = "boe"
