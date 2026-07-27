@@ -110,10 +110,18 @@ casilla_id = "iva.cuota-devengada-total"
 [[revisions.2009-y-siguientes.formulas.expression.args]]
 casilla_id = "iva.cuota-deducible-total"
 
+# LIVA art. 104.Dos closes its apartado with "La prorrata de deducción
+# resultante de la aplicación de los criterios anteriores se redondeará en la
+# unidad superior", so this percentage takes the NEXT unit up, never the
+# nearest one: 55,2 % is a 56 % deduction right. The shared "integer" code is
+# half-up and would have returned 55, understating the deduction for every
+# ratio whose fractional part is at or below one half. The sentence has stood
+# unamended since BOE-A-1992-28740, so it binds this revision exactly as it
+# binds 2023-y-siguientes.
 [[revisions.2009-y-siguientes.formulas]]
 id = "modelo-303-iva-prorrata-porcentaje"
 target_casilla_id = "iva.prorrata-porcentaje"
-rounding = "integer"
+rounding = "integer-ceiling"
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-102", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
