@@ -45,8 +45,8 @@ Lift the test-trapped conformance facts into importable typed libraries under sr
 
 - [ ] `P02.S05` - lift the registry-wide external-oracle grounding fold (per-modelo oracle inventory, revision selection, both-direction honesty facts) into a new importable module exported through the registry facade; `src/cadrumo/domain/calculations/registry/_external_grounding.py`.
 - [ ] `P02.S06` - re-point the external-oracle grounding gate at the lifted library in the same commit, keeping both honesty directions asserted; `src/cadrumo/domain/calculations/registry/tests/test_external_oracle_grounding_enrolled.py`.
-- [ ] `P02.S07` - extract the fichero-BOE required-applicable casilla derivation into one shared public function consumed by the export gate; `src/cadrumo/application/filing/_export.py`.
-- [ ] `P02.S08` - re-point the export completeness and fichero-BOE parity tests at the shared required-set derivation, removing the mirrored duplicate; `src/cadrumo/application/filing/tests`.
+- [x] `P02.S07` - extract the fichero-BOE required-applicable casilla derivation into one shared public function consumed by the export gate; `src/cadrumo/application/filing/_export.py`.
+- [x] `P02.S08` - re-point the export completeness and fichero-BOE parity tests at the shared required-set derivation, removing the mirrored duplicate; `src/cadrumo/application/filing/tests`.
 - [ ] `P02.S09` - add the classification-coherence checker (calculation_class vs tax_domain vs core modelo constants, plus the declared-but-dead axis census) as an importable typed fact-builder; `src/cadrumo/domain/calculations/registry/_classification_coherence.py`.
 - [ ] `P02.S10` - add the per-revision conformance profile composer with strict typed row models, composing model-law coverage, support matrix, registry-scope diagnostics, authorization state, external grounding, and governance stamps; `src/cadrumo/application/registry/_conformance.py`.
 - [ ] `P02.S11` - add structure-and-wiring tests for the classification-coherence checker grounded in the live registry tree; `src/cadrumo/domain/calculations/registry/tests/test_classification_coherence.py`.
