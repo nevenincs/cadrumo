@@ -360,10 +360,19 @@ jobs:
           # before an irreversible index upload. Same single authority, so the
           # two answers cannot disagree; the version comes from the declaration
           # the cohort build is about to stamp into the artifacts.
+          # --scope seal, NOT the publication scope. Sealing is not shipping:
+          # this lane builds and proves a cohort on every push, and between
+          # releases the declared version legitimately EQUALS the manifest floor
+          # because the bump has not happened yet. Enforcing the floor here
+          # refused every build in exactly the interval this lane works in.
+          # Everything that makes a collision impossible still applies: a
+          # version some destination already owns, or one that is burned, is
+          # refused when sealing too.
           version="$(uv run --no-sync python -c 'import tomllib,pathlib; print(tomllib.loads(pathlib.Path("pyproject.toml").read_text(encoding="utf-8"))["project"]["version"])')"
           uv run --no-sync python -m dev.release.version_identity \
             --version "$version" \
-            --repository "$GITHUB_REPOSITORY"
+            --repository "$GITHUB_REPOSITORY" \
+            --scope seal
 
       - name: Build the immutable full release cohort
         run: uv run --no-sync python -m dev.packaging.release_cohort build --output var/release-cohort

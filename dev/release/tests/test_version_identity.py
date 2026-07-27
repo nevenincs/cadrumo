@@ -200,3 +200,53 @@ def test_the_exemption_is_per_row_not_per_version() -> None:
 def test_unrelated_versions_are_ignored_entirely() -> None:
     """A different version's release is not this version's collision."""
     assert releases_owning([f"v0.4.0 {_THEIRS}"], _CLEAN, own_source_commit=_OURS) == ()
+
+
+def test_sealing_is_permitted_at_the_floor_but_publishing_is_not(tmp_path: Path) -> None:
+    """The two call sites need different strictness, and this is the case.
+
+    Between releases the declared version EQUALS the manifest floor, because the
+    bump has not happened yet. The packaging lane builds and proves a cohort on
+    every push during exactly that interval, so enforcing the floor at seal time
+    refuses every build the lane exists to perform - which is what it did, on
+    every push, until this split.
+
+    Publishing at the floor still refuses, because there it means the bump was
+    forgotten and shipping would mint a version already recorded as reached.
+    """
+    floor = _floor_file(tmp_path, "0.0.0")
+    assert_version_available("0.0.0", manifest_path=floor, enforce_floor=False)
+    with pytest.raises(VersionIdentityError, match="not above the recorded floor"):
+        assert_version_available("0.0.0", manifest_path=floor, enforce_floor=True)
+
+
+@pytest.mark.parametrize("enforce_floor", [True, False])
+def test_a_burned_version_is_refused_at_both_scopes(enforce_floor: bool, tmp_path: Path) -> None:
+    """Relaxing the floor must not relax anything that prevents a collision.
+
+    The floor answers "did you bump"; the ledger and the destination checks
+    answer "can this version exist at all". Only the first is deferred.
+    """
+    with pytest.raises(VersionIdentityError, match="burned"):
+        assert_version_available(
+            "0.2.1",
+            manifest_path=_floor_file(tmp_path, "0.0.0"),
+            enforce_floor=enforce_floor,
+        )
+
+
+@pytest.mark.parametrize("enforce_floor", [True, False])
+def test_an_owned_destination_is_refused_at_both_scopes(enforce_floor: bool, tmp_path: Path) -> None:
+    """Sealing a cohort at a version some destination already holds is still refused."""
+    for kwargs in (
+        {"owning_projects": ["cadrumo"]},
+        {"existing_tags": ["v9.9.9"]},
+        {"existing_releases": ["v9.9.9"]},
+    ):
+        with pytest.raises(VersionIdentityError):
+            assert_version_available(
+                _CLEAN,
+                manifest_path=_floor_file(tmp_path, "0.0.0"),
+                enforce_floor=enforce_floor,
+                **kwargs,
+            )

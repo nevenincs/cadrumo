@@ -258,18 +258,32 @@ def assert_version_available(
     existing_tags: Iterable[str] = (),
     existing_releases: Iterable[str] = (),
     manifest_path: Path | None = None,
+    enforce_floor: bool = True,
 ) -> None:
     """Raise unless no destination owns ``version`` and no rule forbids it.
 
     The refusal names every owning destination, so the operator learns the whole
     problem from one run rather than one collision at a time.
+
+    ``enforce_floor`` distinguishes the two call sites, and the distinction is
+    load-bearing rather than a convenience. Sealing a cohort is not publishing
+    one: the packaging lane builds and proves a cohort on every push, and
+    between releases the declared version legitimately EQUALS the manifest floor
+    because the bump has not happened yet. Requiring a candidate above the floor
+    before a cohort may be BUILT therefore refuses every build in the interval
+    where the lane does its work, which is the state the lane exists to prevent.
+
+    Everything that makes a collision impossible survives at both sites: a
+    version an index, tag, or release namespace already owns is refused when
+    sealing, and so is a burned one. Only "you have not bumped yet" is deferred
+    to publication, where it means what it says.
     """
     refusals = version_conflicts(
         version,
         owning_projects=owning_projects,
         existing_tags=existing_tags,
         existing_releases=existing_releases,
-        floor=manifest_floor(manifest_path),
+        floor=manifest_floor(manifest_path) if enforce_floor else None,
     )
     if refusals:
         joined = "\n  - ".join(refusals)
@@ -289,6 +303,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--own-source-commit",
         help="exempt a release already created by THIS cohort, so a re-dispatch converges",
+    )
+    parser.add_argument(
+        "--scope",
+        choices=("seal", "publish"),
+        default="publish",
+        help=(
+            "seal: refuse only a version some destination already owns or that is burned, "
+            "which is what a cohort BUILD must satisfy. publish: additionally require the "
+            "version to exceed the manifest floor, which is what shipping must satisfy."
+        ),
     )
     parser.add_argument(
         "--skip-network",
@@ -315,14 +339,16 @@ def main(argv: list[str] | None = None) -> int:
             owning_projects=owning,
             existing_tags=tags,
             existing_releases=releases,
+            enforce_floor=args.scope == "publish",
         )
     except VersionIdentityError as exc:
         # An operator reads this at a refusal, so it must be the message and not
         # a traceback with the message buried at the bottom.
         print(f"REFUSED: {exc}", file=sys.stderr)
         return 1
-    scope = "floor and ledger only" if args.skip_network else "every destination"
-    print(f"version {args.version} is available to publish ({scope} checked)")
+    reach = "floor and ledger only" if args.skip_network else "every destination"
+    verb = "seal" if args.scope == "seal" else "publish"
+    print(f"version {args.version} is available to {verb} ({reach} checked)")
     return 0
 
 

@@ -337,3 +337,32 @@ def test_the_version_identity_guard_runs_before_the_cohort_is_built() -> None:
     # publication gate invokes, so the two answers cannot disagree.
     assert "dev.release.version_identity" in surface
     assert "--repository" in surface
+
+
+def test_the_seal_guard_uses_the_seal_scope_not_the_publication_scope() -> None:
+    """Sealing is not shipping, and conflating them stopped every build.
+
+    The publication scope additionally requires the version to exceed the
+    manifest floor. Between releases the declared version EQUALS that floor,
+    because the bump has not happened yet, so applying the publication scope
+    here refused every packaging run in exactly the interval this lane works in.
+    Every collision check still applies at seal scope; only the did-you-bump
+    question is deferred to publication, where it means what it says.
+    """
+    document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
+    build = document["jobs"]["build-release-cohort"]
+    # Comment lines are excluded deliberately. The first version of this test
+    # matched the whole run surface, and passed against a mutated workflow
+    # because the explanatory COMMENT above the invocation contains the very
+    # string it asserted. A gate satisfied by its own prose proves nothing.
+    commands = [
+        line.strip()
+        for step in build["steps"]
+        if "run" in step
+        for line in str(step["run"]).splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    ]
+    invocation = "\n".join(commands)
+    assert "dev.release.version_identity" in invocation
+    assert "--scope seal" in commands, "the seal lane must not enforce the publication floor"
+    assert "--scope publish" not in commands, "the publication scope refuses every build between releases"
