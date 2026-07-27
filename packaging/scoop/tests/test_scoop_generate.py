@@ -12,7 +12,12 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
-from dev.packaging.smoke_core import _build_companion_wheels, _build_wheel, _run
+from dev.packaging.smoke_core import (
+    _build_companion_wheels,
+    _build_wheel,
+    _commit_defined_build_root,
+    _run,
+)
 from dev.packaging.uv_constraints import export_runtime_constraints
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
@@ -100,8 +105,15 @@ def built_cohort(tmp_path_factory: pytest.TempPathFactory) -> BuiltCohort:
     assert uv is not None
     root_dir = tmp_path_factory.mktemp("scoop-cohort")
     build_dir = root_dir / "build"
-    root = _build_wheel(_REPO_ROOT, build_dir, uv)
-    manuals, official = _build_companion_wheels(_REPO_ROOT, build_dir, uv)
+    # Build from a commit-defined root, not the working tree: in the shared
+    # worktree a peer's uncommitted edit would otherwise ride into the wheels,
+    # and the manifest this test asserts on would describe bytes matching no
+    # commit. On a clean checkout this IS the tree, so CI pays nothing.
+    # ``_build_wheel`` still takes the real repository as well, because its
+    # tracked-data queries need Git and the extract has no ``.git``.
+    build_root = _commit_defined_build_root(_REPO_ROOT, build_dir)
+    root = _build_wheel(_REPO_ROOT, build_dir, uv, build_root=build_root)
+    manuals, official = _build_companion_wheels(build_dir, uv, build_root=build_root)
     cohort_dir = root_dir / "cohort"
     copied_root, copied_manuals, copied_official = _copy_cohort(
         (root, manuals, official),

@@ -11,7 +11,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 
 import pytest
-from dev.packaging.smoke_core import _run
+from dev.packaging.smoke_core import _commit_defined_build_root, _run
 from dev.packaging.smoke_sdist_core import _build_sdist
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
@@ -53,10 +53,15 @@ def built_cohort(tmp_path_factory: pytest.TempPathFactory) -> BuiltCohort:
     assert uv is not None
     root_dir = tmp_path_factory.mktemp("homebrew-cohort")
     build_dir = root_dir / "build"
-    root = _build_sdist(_REPO_ROOT, build_dir, uv)
+    # Build from a commit-defined root, not the working tree: in the shared
+    # worktree a peer's uncommitted edit would otherwise ride into the sdist,
+    # and the formula this test asserts on would describe bytes matching no
+    # commit. On a clean checkout this IS the tree, so CI pays nothing.
+    build_root = _commit_defined_build_root(_REPO_ROOT, build_dir)
+    root = _build_sdist(build_dir, uv, build_root=build_root)
     companion_dir = build_dir / "companions"
-    manuals_project = _REPO_ROOT / "packaging" / "cadrumo_data_manuals"
-    official_project = _REPO_ROOT / "packaging" / "cadrumo_data_official"
+    manuals_project = build_root / "packaging" / "cadrumo_data_manuals"
+    official_project = build_root / "packaging" / "cadrumo_data_official"
     _run([uv, "build", "--sdist", "--out-dir", str(companion_dir)], cwd=manuals_project)
     _run([uv, "build", "--sdist", "--out-dir", str(companion_dir)], cwd=official_project)
     manuals = next(companion_dir.glob("cadrumo_data_manuals-*.tar.gz"))
@@ -156,14 +161,17 @@ def test_formula_is_deterministic_and_binds_the_real_cohort(
     )
     assert "mcp" in resources
     assert "tzdata" not in resources
-    # 67 locked + 2 data companions + 3 isolation-disabled build backends
+    # 70 locked + 2 data companions + 3 isolation-disabled build backends
     # (setuptools -- the venv from `python -m venv` ships none and Homebrew
     # installs resources --no-deps; setuptools-scm for argon2; maturin for
-    # cryptography) = 72.
+    # cryptography) = 75. The locked count rose from 67 when `textual` became a
+    # runtime dependency for the flow frontend and brought linkify-it-py and
+    # uc-micro-py in with it; the drift went unseen because this test could not
+    # reach its assertions while its fixture was erroring at setup.
     assert "setuptools" in resources
     assert "setuptools-scm" in resources
     assert "maturin" in resources
-    assert len(resources) == 72
+    assert len(resources) == 75
     assert all(url.startswith("https://") for url, _digest in resources.values())
     # macOS is ARM-only (Intel dropped 2026-07-21), so no resource is macOS
     # conditional any more and the on_macos block disappears entirely; Linux
