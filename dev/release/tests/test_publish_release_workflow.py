@@ -978,3 +978,34 @@ def test_no_workflow_consumes_per_os_cohort_for_publication() -> None:
             if "download-artifact" in uses and isinstance(with_block, Mapping):
                 name = str(with_block.get("name", ""))
                 assert not name.startswith("cadrumo-python-cohort"), job_name
+
+
+def test_the_irreversible_upload_runs_after_every_reversible_write() -> None:
+    """Ordering is the invariant, and it is the one that was wrong.
+
+    Every destination above the index upload is reversible: a release and its
+    assets can be deleted, a tag removed, and the channel pushes are ordinary
+    git commits that can be reverted. An index upload is permanent and burns the
+    version the moment it lands.
+
+    Running it first meant a failure in any later step stranded the index
+    holding bytes that matched no release, with no way back -- which is exactly
+    what a version collision produced. Ordered last, a failure before it unwinds
+    completely, and a failure at it leaves every channel serving release assets,
+    none of which depend on the index.
+    """
+    steps = _document()["jobs"]["publish"]["steps"]
+    names = [str(step.get("name", "")) for step in steps]
+    upload = next(index for index, name in enumerate(names) if "PyPI" in name)
+
+    reversible = (
+        "Create the GitHub release",
+        "download-latest.json",
+        "Scoop manifest",
+        "Homebrew formula",
+        "marketplace",
+    )
+    for fragment in reversible:
+        position = next(index for index, name in enumerate(names) if fragment in name)
+        assert position < upload, f"{fragment!r} is reversible and must run before the irreversible upload"
+    assert upload == len(names) - 1, "the irreversible upload must be the final step, with nothing after it to fail"

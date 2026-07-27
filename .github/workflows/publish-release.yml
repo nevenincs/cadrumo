@@ -487,20 +487,6 @@ jobs:
             --directory "$RELEASE_COHORT_DIR" \
             "${sweep_tokens[@]}"
 
-      - name: Publish the three distributions to PyPI via Trusted Publishing (OIDC)
-        run: |
-          # uv exchanges the id-token for a short-lived PyPI token (Trusted
-          # Publishing); it uploads the SEALED cohort's stored wheels/sdists (the
-          # exact bytes every other channel ships and the oracle-emit legs proved)
-          # from cadrumo-release-cohort/python and never builds.
-          uv publish --trusted-publishing always \
-            "$RELEASE_COHORT_DIR"/python/cadrumo-"$VERSION"-py3-none-any.whl \
-            "$RELEASE_COHORT_DIR"/python/cadrumo-"$VERSION".tar.gz \
-            "$RELEASE_COHORT_DIR"/python/cadrumo_data_manuals-"$VERSION"-py3-none-any.whl \
-            "$RELEASE_COHORT_DIR"/python/cadrumo_data_manuals-"$VERSION".tar.gz \
-            "$RELEASE_COHORT_DIR"/python/cadrumo_data_official-"$VERSION"-py3-none-any.whl \
-            "$RELEASE_COHORT_DIR"/python/cadrumo_data_official-"$VERSION".tar.gz
-
       - name: Create the GitHub release with every cohort asset
         env:
           GH_TOKEN: ${{ github.token }}
@@ -744,3 +730,27 @@ jobs:
             echo "REFUSED: marketplace push lost three consecutive races; re-run this publication." >&2
             exit 1
           fi
+
+      # LAST, and deliberately so. Every write above this point is reversible:
+      # a release and its assets can be deleted, a tag can be removed, and the
+      # channel pushes are ordinary git commits that can be reverted. This one
+      # cannot - an index upload is permanent, and the version is burned the
+      # moment it lands. Running it first meant a failure in any later step left
+      # the index holding bytes that matched no release, with no way back.
+      #
+      # Ordered last, a failure before this point unwinds completely, and a
+      # failure HERE leaves every channel serving release assets, none of which
+      # depend on the index. Re-dispatching the same cohort then converges.
+      - name: Publish the three distributions to PyPI via Trusted Publishing (OIDC)
+        run: |
+          # uv exchanges the id-token for a short-lived PyPI token (Trusted
+          # Publishing); it uploads the SEALED cohort's stored wheels/sdists (the
+          # exact bytes every other channel ships and the oracle-emit legs proved)
+          # from cadrumo-release-cohort/python and never builds.
+          uv publish --trusted-publishing always \
+            "$RELEASE_COHORT_DIR"/python/cadrumo-"$VERSION"-py3-none-any.whl \
+            "$RELEASE_COHORT_DIR"/python/cadrumo-"$VERSION".tar.gz \
+            "$RELEASE_COHORT_DIR"/python/cadrumo_data_manuals-"$VERSION"-py3-none-any.whl \
+            "$RELEASE_COHORT_DIR"/python/cadrumo_data_manuals-"$VERSION".tar.gz \
+            "$RELEASE_COHORT_DIR"/python/cadrumo_data_official-"$VERSION"-py3-none-any.whl \
+            "$RELEASE_COHORT_DIR"/python/cadrumo_data_official-"$VERSION".tar.gz
