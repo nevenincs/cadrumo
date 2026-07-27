@@ -70,6 +70,7 @@ from cadrumo.core import RevisionReviewStatus
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import (
+    REVISION_GOVERNANCE_FIELDS,
     ModeloRevision,
     PeriodSelector,
     RegistryError,
@@ -103,13 +104,24 @@ class StampableReviewStatus(StrEnum):
     AGENT_REVIEWED = "agent_reviewed"
 
 
+#: Emit order for the governance scalars, chosen so a manifest reads
+#: authorship first and the review claim after it.
+_EMIT_ORDER: Final[tuple[str, ...]] = ("engineered_by", "review_status", "reviewed_by", "reviewed_at")
+
 GOVERNANCE_KEYS: Final[tuple[str, ...]] = (
-    "engineered_by",
-    "review_status",
-    "reviewed_by",
-    "reviewed_at",
+    *(key for key in _EMIT_ORDER if key in REVISION_GOVERNANCE_FIELDS),
+    *sorted(REVISION_GOVERNANCE_FIELDS - set(_EMIT_ORDER)),
 )
-"""The four scalars this writer owns, in the order it emits them."""
+"""The governance scalars this writer owns, in the order it emits them.
+
+The SET is the shipped :data:`REVISION_GOVERNANCE_FIELDS`, never a second copy:
+that set is derived from the field declarations themselves and is the sole input
+to the loader's fragment refusal, so a fifth governance scalar added to the model
+must reach this writer without anybody remembering to update it. Only the ORDER
+is chosen here, and a field the emit order does not name is appended rather than
+dropped — an unordered field is a cosmetic gap, an unwritable one is a
+capability hole.
+"""
 
 #: Registry path segment pattern. A segment carrying a separator, a parent
 #: reference, or a drive letter would escape the registry root on join, so the

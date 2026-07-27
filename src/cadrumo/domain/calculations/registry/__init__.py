@@ -442,6 +442,7 @@ from ._schedules import applicable_filing_schedules, evaluate_profile_conditions
 from ._schema import (
     KNOWN_PROFILE_FLAG_ADVISORY_FIELDS,
     KNOWN_VERIFICATION_PREDICATE_OPERATORS,
+    REVISION_GOVERNANCE_FIELDS,
     ApplicationLinkDefinition,
     BboxAnchorSpec,
     BracketEntry,
@@ -545,6 +546,7 @@ __all__ = [
     "LEDGER_BINDING_SOURCE_KINDS",
     "MODELO_303_IVA_COMPENSATION_BINDING_ID",
     "REQUIRED_COVERAGE_TIERS",
+    "REVISION_GOVERNANCE_FIELDS",
     "AeatNifIvaCheckerOracle",
     "AeatNifIvaObservation",
     "AmbiguousRevisionSelectionError",
