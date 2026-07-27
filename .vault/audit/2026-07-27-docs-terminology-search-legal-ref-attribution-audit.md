@@ -72,6 +72,34 @@ argues, correctly, that a taxpayer who RECEIVES a certificate under `187` has
 genuine reason to look the form up. A taxpayer who personally fills in a `145`
 for their employer has more, not less.
 
+### correct-provisions-identified-not-bundled | high | the right ordenes are nameable, and their text is absent
+
+The corpus was searched for the provision that actually approves each of the
+three mis-attributed modelos. None is bundled, and the search says so precisely
+rather than returning nothing.
+
+Every bundled file that appears to approve `187`, `188` or `194` is CITING the
+original in the standard Spanish legal form — "la Orden de 4 de septiembre de
+2014, por la que se aprueba el modelo 187, se modifica…". A pattern that allowed
+any text between "modelo" and the number returned nine files for `187`, which is
+impossible for a form approved once; reading the matched sentence rather than
+counting the matches is what exposed it. A tightened check confirms no bundled
+file carries the approval as its OWN operative text for any of the three.
+
+The citations do name the originals unambiguously:
+
+- `187` — Orden of 4 September 2014
+- `188` — Orden of 17 November 1999
+- `194` — Orden of 18 November 1999
+
+So this is not a research problem any more, it is a corpus-acquisition one. The
+provisions exist, they are identified, and grounding these three citations
+requires bundling their text. Until that happens the citations cannot be
+corrected honestly: replacing one unverifiable reference with another the corpus
+cannot check would satisfy the evidence gate while repeating the defect, which is
+the specific failure `legal-grounding-verifies-bundled-authoritative-corpus`
+exists to prevent.
+
 ## Recommendations
 
 Correct the four mis-attributed citations, and treat that as legal-authority work
