@@ -354,9 +354,15 @@ jobs:
           # indexes, the tag and release namespaces including drafts, the
           # monotonic manifest floor, and the burned-version ledger - after the
           # version is known and before any destination is written.
+          # --own-source-commit exempts a release THIS cohort already created,
+          # so a re-dispatch after a later step failed converges instead of
+          # being refused by its own prior attempt. A release on any other
+          # commit stays a genuine collision: the exemption is identity, not a
+          # bypass, and cannot launder a foreign release.
           uv run --frozen python -m dev.release.version_identity \
             --version "${{ steps.validate.outputs.version }}" \
-            --repository "$GITHUB_REPOSITORY"
+            --repository "$GITHUB_REPOSITORY" \
+            --own-source-commit "${{ steps.source-run.outputs.source_commit }}"
 
       - name: Require the complete blocking distribution evidence set
         env:
@@ -510,11 +516,26 @@ jobs:
             echo "$duplicate_basenames" >&2
             exit 1
           fi
-          gh release create "v$VERSION" "${assets[@]}" \
-            --repo "$GITHUB_REPOSITORY" \
-            --target "$SOURCE_COMMIT" \
-            --title "Cadrumo v$VERSION" \
-            --notes "Immutable tested cohort v$VERSION promoted without rebuild from packaging-smoke run $PACKAGING_RUN_ID."
+          # Idempotent against this cohort's own prior attempt. A re-dispatch
+          # after a later step failed must converge, not refuse: the release it
+          # finds is the one IT created, from this same source commit, so
+          # re-uploading the same assets over it is the correct convergence.
+          # A release on a DIFFERENT commit is a genuine collision and was
+          # already refused by the identity guard in Gate 2.
+          if existing="$(gh release view "v$VERSION" --repo "$GITHUB_REPOSITORY" --json targetCommitish --jq .targetCommitish 2>/dev/null)"; then
+            if [[ "$existing" != "$SOURCE_COMMIT" ]]; then
+              echo "release v$VERSION targets $existing, not this cohort's $SOURCE_COMMIT" >&2
+              exit 1
+            fi
+            echo "release v$VERSION already exists for this cohort; re-uploading its assets"
+            gh release upload "v$VERSION" "${assets[@]}" --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "v$VERSION" "${assets[@]}" \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$SOURCE_COMMIT" \
+              --title "Cadrumo v$VERSION" \
+              --notes "Immutable tested cohort v$VERSION promoted without rebuild from packaging-smoke run $PACKAGING_RUN_ID."
+          fi
 
       # Runtime progressive-enhancement payload for the docs download page
       # (initDownloadCards in docs/_static/cadrumo-docs.js). This is a read-only
@@ -747,7 +768,16 @@ jobs:
           # Publishing); it uploads the SEALED cohort's stored wheels/sdists (the
           # exact bytes every other channel ships and the oracle-emit legs proved)
           # from cadrumo-release-cohort/python and never builds.
+          #
+          # --check-url makes a partial upload converge instead of failing. Six
+          # files go up and the upload is not atomic, so a network fault after
+          # the third leaves three published and three not; without this, the
+          # re-dispatch dies on the first already-present file and the remaining
+          # three can never be uploaded. This is the one destination where a
+          # half-finished write cannot be undone, so converging is the only
+          # available remedy.
           uv publish --trusted-publishing always \
+            --check-url https://pypi.org/simple/ \
             "$RELEASE_COHORT_DIR"/python/cadrumo-"$VERSION"-py3-none-any.whl \
             "$RELEASE_COHORT_DIR"/python/cadrumo-"$VERSION".tar.gz \
             "$RELEASE_COHORT_DIR"/python/cadrumo_data_manuals-"$VERSION"-py3-none-any.whl \

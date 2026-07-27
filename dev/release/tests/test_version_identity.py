@@ -21,6 +21,7 @@ from dev.release.version_identity import (
     VersionIdentityError,
     assert_version_available,
     manifest_floor,
+    releases_owning,
     version_conflicts,
 )
 
@@ -165,3 +166,37 @@ def test_assert_names_every_owner_in_one_message(tmp_path: Path) -> None:
 def test_assert_passes_a_genuinely_available_version(tmp_path: Path) -> None:
     """The permit path must work against the real reader, not only the core."""
     assert_version_available(_CLEAN, manifest_path=_floor_file(tmp_path, "0.0.0"))
+
+
+_OURS: str = "aaaaaaaaaaaaaaaa"
+_THEIRS: str = "bbbbbbbbbbbbbbbb"
+
+
+def test_our_own_prior_release_is_exempted_so_a_redispatch_converges() -> None:
+    """Ordering the upload last only helps if re-dispatch is actually possible.
+
+    A re-dispatch after a mid-run failure finds the release IT created. Refusing
+    that would make the recovery path unreachable and the ordering pointless.
+    """
+    entries = [f"v{_CLEAN} {_OURS}"]
+    assert releases_owning(entries, _CLEAN, own_source_commit=_OURS) == ()
+    # Without the exemption the same row is an owner, which is what makes the
+    # exemption load-bearing rather than incidental.
+    assert releases_owning(entries, _CLEAN) == (f"v{_CLEAN}",)
+
+
+def test_a_release_on_another_commit_is_never_exempted() -> None:
+    """The exemption is identity, not a bypass: it cannot launder a stranger."""
+    entries = [f"v{_CLEAN} {_THEIRS}"]
+    assert releases_owning(entries, _CLEAN, own_source_commit=_OURS) == (f"v{_CLEAN}",)
+
+
+def test_the_exemption_is_per_row_not_per_version() -> None:
+    """Ours and a stranger's can both carry the tag; only ours is exempt."""
+    entries = [f"v{_CLEAN} {_OURS}", f"v{_CLEAN} {_THEIRS}"]
+    assert releases_owning(entries, _CLEAN, own_source_commit=_OURS) == (f"v{_CLEAN}",)
+
+
+def test_unrelated_versions_are_ignored_entirely() -> None:
+    """A different version's release is not this version's collision."""
+    assert releases_owning([f"v0.4.0 {_THEIRS}"], _CLEAN, own_source_commit=_OURS) == ()

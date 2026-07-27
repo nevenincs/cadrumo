@@ -210,14 +210,45 @@ def forge_tags_owning(version: str, *, repository: str) -> tuple[str, ...]:
     return tuple(tag for tag in tags if tag in {version, f"v{version}"})
 
 
-def forge_releases_owning(version: str, *, repository: str) -> tuple[str, ...]:
+def forge_releases_owning(version: str, *, repository: str, own_source_commit: str | None = None) -> tuple[str, ...]:
     """Return releases matching ``version``, drafts included.
 
     Drafts are included deliberately: a draft holds its tag, so creation would
     fail after the irreversible index upload had already happened.
+
+    ``own_source_commit`` exempts this cohort's OWN prior attempt. A re-dispatch
+    after a later step failed must converge rather than refuse, and the release
+    it finds is the one it created, from this same commit. A release on any
+    other commit is a genuine collision and stays refused -- the exemption is
+    identity, not a bypass, so it cannot launder a foreign release.
     """
-    tags = _forge_refs(f"repos/{repository}/releases", ".[].tag_name")
-    return tuple(tag for tag in tags if tag in {version, f"v{version}"})
+    entries = _forge_refs(f"repos/{repository}/releases", '.[] | .tag_name + " " + (.target_commitish // "")')
+    return releases_owning(entries, version, own_source_commit=own_source_commit)
+
+
+def releases_owning(
+    entries: Iterable[str],
+    version: str,
+    *,
+    own_source_commit: str | None = None,
+) -> tuple[str, ...]:
+    """Return owning tags from ``"<tag> <commit>"`` rows, exempting our own.
+
+    Split from the network shell so the exemption rule is provable against real
+    rows rather than re-implemented by a test. It is the rule most worth
+    proving: getting it wrong either makes recovery impossible, by refusing a
+    re-dispatch its own prior attempt, or launders a foreign release, by
+    exempting one it should have refused.
+    """
+    owning: list[str] = []
+    for entry in entries:
+        tag, _, target = entry.partition(" ")
+        if tag not in {version, f"v{version}"}:
+            continue
+        if own_source_commit is not None and target.strip() == own_source_commit:
+            continue
+        owning.append(tag)
+    return tuple(owning)
 
 
 def assert_version_available(
@@ -256,6 +287,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--version", required=True)
     parser.add_argument("--repository", required=True, help="owner/name of the forge repository")
     parser.add_argument(
+        "--own-source-commit",
+        help="exempt a release already created by THIS cohort, so a re-dispatch converges",
+    )
+    parser.add_argument(
         "--skip-network",
         action="store_true",
         help="check only the manifest floor and the burned ledger (offline pre-flight)",
@@ -269,7 +304,11 @@ def main(argv: list[str] | None = None) -> int:
         if not args.skip_network:
             owning = pypi_projects_owning(args.version)
             tags = forge_tags_owning(args.version, repository=args.repository)
-            releases = forge_releases_owning(args.version, repository=args.repository)
+            releases = forge_releases_owning(
+                args.version,
+                repository=args.repository,
+                own_source_commit=args.own_source_commit,
+            )
 
         assert_version_available(
             args.version,
