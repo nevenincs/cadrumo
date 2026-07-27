@@ -1018,10 +1018,17 @@ def required_applicable_casilla_ids(
     they are excluded: a blank slot for them is a valid zero, not a
     structurally-thin file.
 
-    This is the single derivation authority shared by the completeness gate
-    (:func:`assert_export_mirrors_manifest`) and the parity regression tests.
-    Both call this function instead of re-deriving the set locally, so a change
-    to the required-set semantics propagates to all consumers in one place.
+    This is the single derivation authority behind the completeness gate
+    (:func:`assert_export_mirrors_manifest`), so a change to the required-set
+    semantics propagates to every production consumer in one place.
+
+    The regression tests deliberately do NOT consume this function as their
+    expectation: they pin it against an independent partition read straight off the
+    :class:`CasillaCollection`. A test whose expected set comes from the subject
+    itself can only detect that the subject was called, never that its semantics
+    changed -- and a relaxation here silently drops a casilla out of the pre-write
+    gate, letting a structurally-thin fichero-BOE ship behind a valid SHA-256
+    digest. Do not "de-duplicate" the tests onto this function.
 
     Args:
         manifest: Revision's
@@ -1041,12 +1048,15 @@ def required_applicable_casilla_ids(
         :func:`assert_export_mirrors_manifest`
             Gate that enforces this required set before writing bytes.
     """
-    return frozenset(
-        casilla.casilla_id
-        for casilla in manifest.casillas
-        if (schema := collection.get(casilla.casilla_id)) is not None
-        and (schema.formula is not None or schema.required)
-    ) & representable
+    return (
+        frozenset(
+            casilla.casilla_id
+            for casilla in manifest.casillas
+            if (schema := collection.get(casilla.casilla_id)) is not None
+            and (schema.formula is not None or schema.required)
+        )
+        & representable
+    )
 
 
 def assert_export_mirrors_manifest(

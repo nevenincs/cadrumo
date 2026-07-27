@@ -23,7 +23,7 @@ from typing import Any
 import pytest
 
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaFieldKind
+from ....domain.calculations.registry import CasillaFieldKind, CasillaId, validated_casilla_id
 from ....domain.filing import FilingExportError
 from .._export import (
     _assert_casilla_metadata_fidelity,
@@ -48,6 +48,7 @@ from ._export_support import (
     _modelo_130_export_headers,
     _modelo_200_export_headers,
     _modelo_390_export_headers,
+    _required_set_partition,
     _schema_provider,
 )
 
@@ -120,6 +121,141 @@ def test_complete_draft_reaches_disk_for_every_required_casilla() -> None:
         # Parity: every required computed/schema-required casilla reaches disk for a complete draft.
         missing = sorted(required_applicable - rendered)
         assert not missing, f"modelo {modelo} complete draft omits required casillas: {missing}"
+
+
+# Named per-clause anchors for the required-set predicate, as
+# (modelo, calculation-result casilla, schema-required formula-less casilla).
+# Only some shipped revisions exercise BOTH clauses -- most covered modelos derive
+# every required casilla from a formula -- so the corpus-wide mirror below could
+# stay green with the "or schema.required" clause dead everywhere. These anchors
+# pin the two revisions that do exercise it: if a registry change empties either
+# clause's witness class here, this test reds loudly instead of leaving the clause
+# silently unpinned. The ids are never trusted on their own -- the test re-reads
+# the registry to confirm WHY each one qualifies before asserting membership.
+_PREDICATE_CLAUSE_ANCHORS: tuple[tuple[str, str, str], ...] = (
+    ("130", "03", "02"),
+    ("200", "DP200014:00552", "00501"),
+)
+
+
+def _covered_case(modelo: str) -> _CoveredCase:
+    return next(case for case in _COVERED if case[0] == modelo)
+
+
+def test_required_applicable_set_mirrors_the_registry_predicate() -> None:
+    # Independent-oracle pin for the required-set predicate. The production
+    # derivation is compared against a partition read straight off the registry
+    # CasillaSchema (formula / required) rather than against itself, so relaxing
+    # either clause of the predicate is caught here. Each clause is asserted
+    # separately before the exhaustive equality so a relaxation names the class it
+    # dropped rather than failing on an opaque set difference.
+    for modelo, _build_draft_fn, headers_fn, filing_year, period in _COVERED:
+        provider = _schema_provider(filing_year=filing_year, period=period, modelos=(modelo,))
+        subview = provider.get_subview(modelo)
+        layout = subview.export_layouts[0]
+        manifest = subview.completeness_manifest
+        assert manifest is not None, modelo
+        headers = headers_fn()
+        representable = boe_representable_casilla_ids(layout, headers=headers, schema_provider=provider)
+
+        oracle = _required_set_partition(modelo=modelo, provider=provider, layout=layout, headers=headers)
+        subject = required_applicable_casilla_ids(
+            manifest,
+            collection=provider.get_collection(modelo),
+            representable=representable,
+        )
+
+        # Clause 1 -- a casilla declaring a formula is a calculation RESULT: a blank
+        # slot means the calculation did not populate it.
+        assert oracle.calculation_results, (
+            f"modelo {modelo}: no representable manifest casilla declares a formula, so the "
+            f"calculation-result clause of the required-set predicate is unpinned for this modelo"
+        )
+        dropped_results = sorted(oracle.calculation_results - subject)
+        assert not dropped_results, (
+            f"modelo {modelo}: casillas the registry declares a formula for are missing from the "
+            f"required-applicable set, so they would render as blank slots behind a valid digest: {dropped_results}"
+        )
+
+        # Clause 2 -- a schema-required casilla with no formula is an input the
+        # taxpayer must supply: a blank slot is an omission, not a zero.
+        dropped_required = sorted(oracle.schema_required_inputs - subject)
+        assert not dropped_required, (
+            f"modelo {modelo}: casillas the registry marks required (and declares no formula for) are "
+            f"missing from the required-applicable set, so a fichero-BOE could be written with those "
+            f"slots blank: {dropped_required}"
+        )
+
+        # Exclusion -- optional operator inputs stay OUT, so the gate does not
+        # false-panic on a blank slot that is a legitimate zero.
+        leaked_optional = sorted(oracle.optional_inputs & subject)
+        assert not leaked_optional, (
+            f"modelo {modelo}: optional operator-input casillas (no formula, not required) leaked into "
+            f"the required-applicable set and would false-panic a valid filing: {leaked_optional}"
+        )
+
+        # Exhaustive: nothing outside the two required classes reaches the set.
+        assert subject == oracle.required_applicable, (
+            f"modelo {modelo}: required-applicable set diverges from the registry-derived partition; "
+            f"unexpected {sorted(subject - oracle.required_applicable)}, "
+            f"absent {sorted(oracle.required_applicable - subject)}"
+        )
+
+
+def test_required_applicable_set_pins_both_predicate_clauses_at_named_anchors() -> None:
+    # The corpus-wide mirror above is exhaustive but self-balancing: were a clause's
+    # witness class to empty across every covered modelo, the mirror would still
+    # agree and the clause would go unpinned. These named anchors fix that, and each
+    # is justified from the registry before membership is asserted -- the id is the
+    # anchor, the registry declaration is the reason.
+    for modelo, result_id, required_id in _PREDICATE_CLAUSE_ANCHORS:
+        _modelo, _build_draft_fn, headers_fn, filing_year, period = _covered_case(modelo)
+        provider = _schema_provider(filing_year=filing_year, period=period, modelos=(modelo,))
+        subview = provider.get_subview(modelo)
+        layout = subview.export_layouts[0]
+        manifest = subview.completeness_manifest
+        assert manifest is not None, modelo
+        headers = headers_fn()
+        representable = boe_representable_casilla_ids(layout, headers=headers, schema_provider=provider)
+        collection = provider.get_collection(modelo)
+        manifest_ids = {entry.casilla_id for entry in manifest.casillas}
+        subject = required_applicable_casilla_ids(manifest, collection=collection, representable=representable)
+
+        result_casilla: CasillaId = validated_casilla_id(result_id, surface="required_set_clause_anchor")
+        required_casilla: CasillaId = validated_casilla_id(required_id, surface="required_set_clause_anchor")
+
+        # Ground the calculation-result anchor: the registry must declare a formula
+        # for it, and the official record must file a slot the manifest lists.
+        result_schema = collection.get(result_casilla)
+        assert result_schema is not None, f"modelo {modelo}: anchor {result_id} is absent from the casilla collection"
+        assert result_schema.formula is not None, (
+            f"modelo {modelo}: anchor {result_id} no longer declares a formula, so it no longer witnesses "
+            f"the calculation-result clause; re-anchor on a casilla that does"
+        )
+        assert result_casilla in manifest_ids and result_casilla in representable, modelo
+        assert result_casilla in subject, (
+            f"modelo {modelo}: casilla {result_id} declares a formula (calculation RESULT) and the official "
+            f"record files a slot for it, so it must be required before the fichero-BOE bytes are written"
+        )
+
+        # Ground the schema-required anchor: the registry must mark it required AND
+        # declare no formula, so it witnesses the second clause and nothing else.
+        required_schema = collection.get(required_casilla)
+        assert required_schema is not None, f"modelo {modelo}: anchor {required_id} is absent from the collection"
+        assert required_schema.formula is None, (
+            f"modelo {modelo}: anchor {required_id} now declares a formula, so it would be caught by the "
+            f"calculation-result clause and no longer witnesses the schema-required clause; re-anchor it"
+        )
+        assert required_schema.required, (
+            f"modelo {modelo}: anchor {required_id} is no longer registry-required, so it no longer witnesses "
+            f"the schema-required clause; re-anchor on a casilla that is"
+        )
+        assert required_casilla in manifest_ids and required_casilla in representable, modelo
+        assert required_casilla in subject, (
+            f"modelo {modelo}: casilla {required_id} is registry-required and declares no formula, and the "
+            f"official record files a slot for it, so it must be required before the fichero-BOE bytes are "
+            f"written; dropping it lets a .boe ship with that slot blank behind a valid SHA-256 digest"
+        )
 
 
 def test_complete_draft_exports_without_panic(tmp_path: Path) -> None:

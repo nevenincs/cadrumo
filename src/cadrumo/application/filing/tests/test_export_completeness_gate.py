@@ -16,15 +16,16 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.calculations.registry import CasillaId
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.filing import FilingExportError, ModeloDraft, ModeloValueKind
-from .._export import boe_representable_casilla_ids, export_draft, required_applicable_casilla_ids
-from ..runtime import ExportLayoutDefinition, RegistrySchemaAccessor
+from .._export import export_draft
+from ..runtime import RegistrySchemaAccessor
 from ._export_support import (
     _approved_modelo_390_registry_draft,
     _approved_registry_draft,
     _modelo_130_export_headers,
     _modelo_390_export_headers,
+    _required_set_partition,
     _schema_provider,
 )
 
@@ -66,15 +67,28 @@ _COMPLETENESS_GATE_CASES = (
 )
 
 
-def _required_applicable(
-    modelo: str, provider: RegistrySchemaAccessor, layout: ExportLayoutDefinition, headers: dict[str, str]
-) -> frozenset[CasillaId]:
-    subview = provider.get_subview(modelo)
-    manifest = subview.completeness_manifest
-    assert manifest is not None
-    representable = boe_representable_casilla_ids(layout, headers=headers, schema_provider=provider)
-    collection = provider.get_collection(modelo)
-    return required_applicable_casilla_ids(manifest, collection=collection, representable=representable)
+def _valued_casilla_ids(draft: ModeloDraft) -> set[CasillaId]:
+    """Return the casillas the draft carries a real value for (EMPTY rows excluded)."""
+    return {value.casilla_id for value in draft.values if value.value is not None}
+
+
+def _emptied_draft(draft: ModeloDraft, casilla_id: CasillaId) -> ModeloDraft:
+    """Return ``draft`` with ``casilla_id`` demoted to the production EMPTY shape.
+
+    The casilla id stays present in ``draft.values`` -- that is the real production
+    thin state, since ``build_draft`` emits a row for every declared casilla and
+    marks an unsupplied one EMPTY (``value=None``). Only the value goes away, so the
+    slot would render blank on disk.
+    """
+    thin_values = tuple(
+        value.model_copy(update={"value": None, "kind": ModeloValueKind.EMPTY})
+        if value.casilla_id == casilla_id
+        else value
+        for value in draft.values
+    )
+    thin_draft: ModeloDraft = draft.model_copy(update={"values": thin_values})
+    assert casilla_id in {value.casilla_id for value in thin_draft.values}
+    return thin_draft
 
 
 @pytest.mark.parametrize("case_factory", _COMPLETENESS_GATE_CASES)
@@ -103,35 +117,84 @@ def test_thin_fixed_width_draft_panics_before_writing(
     # EMPTY (value=None), so its id is present in draft.values even though it would
     # render as a blank slot. The gate must key on value presence, not id
     # membership, so setting a required-applicable casilla to EMPTY must panic.
+    #
+    # The emptied casilla is chosen from the registry-derived partition, NOT from
+    # the production required-set derivation: picking it from the subject would make
+    # this test follow a relaxed predicate to a casilla that predicate still
+    # requires, so it would keep passing while a required casilla silently left the
+    # gate. Both required classes are exercised where the revision declares them, so
+    # relaxing either clause of the predicate strands a witness this test empties.
     case = case_factory()
     provider = case.provider_factory()
     draft = case.draft_factory()
     headers = case.headers_factory()
     layout = provider.get_subview(case.modelo).export_layouts[0]
+    oracle = _required_set_partition(modelo=case.modelo, provider=provider, layout=layout, headers=headers)
+    valued = _valued_casilla_ids(draft)
 
-    required_applicable = _required_applicable(case.modelo, provider, layout, headers)
-    present_valued = sorted(
-        required_applicable & {value.casilla_id for value in draft.values if value.value is not None}
-    )
-    assert present_valued, f"modelo {case.modelo}: fixture must declare at least one required-applicable casilla"
-    emptied = present_valued[0]
+    exercised: list[str] = []
+    for class_name, class_ids in (
+        ("calculation-result", oracle.calculation_results),
+        ("schema-required", oracle.schema_required_inputs),
+    ):
+        candidates = sorted(class_ids & valued)
+        if not candidates:
+            continue
+        emptied = candidates[0]
+        output = tmp_path / f"{case.modelo}-thin-{class_name}.txt"
 
-    thin_values = tuple(
-        value.model_copy(update={"value": None, "kind": ModeloValueKind.EMPTY})
-        if value.casilla_id == emptied
-        else value
-        for value in draft.values
+        with pytest.raises(FilingExportError) as exc_info:
+            export_draft(_emptied_draft(draft, emptied), output_path=output, headers=headers, schema_provider=provider)
+
+        # The panic names the emptied casilla and never writes the thin file.
+        assert emptied in str(exc_info.value), (class_name, emptied)
+        assert "structurally-thin" in str(exc_info.value), class_name
+        assert not output.exists(), class_name
+        exercised.append(class_name)
+
+    assert exercised, (
+        f"modelo {case.modelo}: fixture must carry a value for at least one required-applicable casilla, "
+        f"otherwise this gate assertion is vacuous"
     )
-    # The emptied casilla id is STILL present in draft.values (the production
-    # failure mode), just with no value.
-    thin_draft = draft.model_copy(update={"values": thin_values})
-    assert emptied in {value.casilla_id for value in thin_draft.values}
-    output = tmp_path / f"{case.modelo}-thin.txt"
+
+
+def test_schema_required_formula_less_casilla_panics_when_emptied(tmp_path: Path) -> None:
+    # End-to-end pin for the second clause of the required-set predicate, on the
+    # revision that exercises it. Modelo 130 casilla 02 (gastos) declares no formula
+    # -- the taxpayer supplies it -- but the registry marks it required, so a blank
+    # slot for it is an omission, not a valid zero. The parametrized thin-draft test
+    # above covers whichever class the fixture happens to populate; this one names
+    # the class directly, so relaxing the predicate to formulas alone cannot be
+    # absorbed by falling through to a formula casilla the relaxed gate still
+    # catches. Its qualification is read from the registry, never assumed from the id.
+    modelo = "130"
+    casilla = validated_casilla_id("02", surface="test_export_completeness_gate.schema_required_anchor")
+    provider = _schema_provider(modelos=(modelo,))
+    draft = _approved_registry_draft()
+    headers = _modelo_130_export_headers()
+    layout = provider.get_subview(modelo).export_layouts[0]
+
+    schema = provider.get_collection(modelo).get(casilla)
+    assert schema is not None, f"modelo {modelo}: casilla {casilla} is absent from the registry collection"
+    assert schema.formula is None, (
+        f"modelo {modelo}: casilla {casilla} now declares a formula, so it no longer witnesses the "
+        f"schema-required clause; re-anchor this test on a required, formula-less casilla"
+    )
+    assert schema.required, (
+        f"modelo {modelo}: casilla {casilla} is no longer registry-required, so it no longer witnesses the "
+        f"schema-required clause; re-anchor this test on a required, formula-less casilla"
+    )
+    oracle = _required_set_partition(modelo=modelo, provider=provider, layout=layout, headers=headers)
+    assert casilla in oracle.schema_required_inputs
+    assert casilla in _valued_casilla_ids(draft), (
+        f"modelo {modelo}: fixture must supply casilla {casilla} for this thin-state reproduction to bite"
+    )
+
+    output = tmp_path / f"{modelo}-schema-required-thin.txt"
 
     with pytest.raises(FilingExportError) as exc_info:
-        export_draft(thin_draft, output_path=output, headers=headers, schema_provider=provider)
+        export_draft(_emptied_draft(draft, casilla), output_path=output, headers=headers, schema_provider=provider)
 
-    # The panic names the emptied casilla and never writes the thin file.
-    assert emptied in str(exc_info.value)
+    assert casilla in str(exc_info.value)
     assert "structurally-thin" in str(exc_info.value)
     assert not output.exists()
