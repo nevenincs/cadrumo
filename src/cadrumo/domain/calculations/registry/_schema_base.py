@@ -8,6 +8,7 @@ stamp's ``review_status`` token.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, Field, field_validator
@@ -18,11 +19,13 @@ from ._errors import RegistryValidationError
 from ._ids import LegalRefId, SourceRefId
 
 __all__ = [
+    "GOVERNANCE_STAMP",
     "CalculationClass",
     "ContinuidadId",
     "DateAxis",
     "EvidenceTier",
     "FormulaOperator",
+    "GovernanceStampMarker",
     "LegalRefs",
     "ModeloFilingCapability",
     "RegistryModel",
@@ -32,6 +35,7 @@ __all__ = [
     "SourceCitation",
     "SourceCitationText",
     "SourceRefs",
+    "governance_stamp_fields",
 ]
 
 
@@ -65,6 +69,39 @@ constructor and surfaces as a registry load failure naming the offending value.
 Distinct from :data:`ReviewStatus` below, which is the legal catalogue's own
 single-valued review vocabulary and governs a different subject.
 """
+
+
+@dataclass(frozen=True, slots=True)
+class GovernanceStampMarker:
+    """``Annotated`` metadata enrolling one field into the governance stamp.
+
+    Governance-ness is not derivable from a field's annotation - the stamp holds
+    a free-text attribution, a closed status enum and a date, shapes that a
+    dozen non-governance fields share - so the enrolment has to be declared.
+    Declaring it *at the field* rather than in a second hand-kept list is the
+    point: the list can be forgotten when a field is added, and the field set is
+    the sole input to the loader's refusal that keeps a stamp out of the
+    fragment tree, so a forgotten entry silently reopens that laundering route.
+    """
+
+
+GOVERNANCE_STAMP = GovernanceStampMarker()
+"""The singleton marker attached to every governance-stamp field declaration."""
+
+
+def governance_stamp_fields(model: type[BaseModel]) -> frozenset[str]:
+    """Return the names of ``model``'s fields marked :data:`GOVERNANCE_STAMP`.
+
+    Reads the marker back out of pydantic's retained ``Annotated`` metadata, so
+    a field carrying the marker - including one added by a subclass - enrols
+    itself without any second list being edited.
+    """
+    return frozenset(
+        name
+        for name, field in model.model_fields.items()
+        if any(isinstance(meta, GovernanceStampMarker) for meta in field.metadata)
+    )
+
 
 CalculationClass = Literal["filing", "informative", "summary"]
 ModeloFilingCapability = Literal["borrador", "renta_ledger_default"]

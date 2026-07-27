@@ -133,6 +133,7 @@ __all__ = [
 
 from ._convenio import ConvenioAuthority
 from ._schema_base import (
+    GOVERNANCE_STAMP,
     CalculationClass,
     DateAxis,
     EvidenceTier,
@@ -146,6 +147,7 @@ from ._schema_base import (
     SourceCitation,
     SourceCitationText,
     SourceRefs,
+    governance_stamp_fields,
 )
 from ._schema_extraction import BboxAnchorSpec, ExtractionProfileDefinition, ExtractionTargetDefinition
 from ._schema_formula import (
@@ -1275,10 +1277,10 @@ class ModeloRevision(RegistryModel):
     verification_predicates: tuple[VerificationPredicateDefinition, ...] = ()
     continuidad_validation: Literal["advisory", "strict"] = "advisory"
     casilla_continuidad_evolutions: tuple[CasillaContinuidadEvolutionDefinition, ...] = ()
-    engineered_by: str | None = None
-    review_status: RevisionReviewStatusField = RevisionReviewStatus.PENDING_REVIEW
-    reviewed_by: str | None = None
-    reviewed_at: date | None = None
+    engineered_by: Annotated[str | None, GOVERNANCE_STAMP] = None
+    review_status: Annotated[RevisionReviewStatusField, GOVERNANCE_STAMP] = RevisionReviewStatus.PENDING_REVIEW
+    reviewed_by: Annotated[str | None, GOVERNANCE_STAMP] = None
+    reviewed_at: Annotated[date | None, GOVERNANCE_STAMP] = None
 
     @field_validator("engineered_by", "reviewed_by")
     @classmethod
@@ -1371,15 +1373,21 @@ one contributor a re-run rather than bricking the registry.
 """
 
 
-REVISION_GOVERNANCE_FIELDS: frozenset[str] = frozenset(
-    {"engineered_by", "review_status", "reviewed_by", "reviewed_at"},
-)
+REVISION_GOVERNANCE_FIELDS: frozenset[str] = governance_stamp_fields(ModeloRevision)
 """The :class:`ModeloRevision` fields that make up the declared governance stamp.
 
 The stamp is an authorship and signoff claim about a whole revision, so it must
 be readable in one place: the revision's own ``revision.toml`` manifest. The
-loader refuses these keys anywhere else in the fragment tree. Named here beside
-the field declarations so a rename is caught at one site.
+loader refuses these keys anywhere else in the fragment tree, and this set is
+that refusal's sole input.
+
+Derived from the :data:`GOVERNANCE_STAMP` marker on the field declarations
+rather than hand-listed. A hand-written list catches a rename - the names stop
+matching real fields - but cannot catch an *addition*: a fifth governance
+scalar added to the model and forgotten here would stay absent from the refusal
+and become silently declarable in any of the section fragments, where the
+merged value wins and ``revision.toml`` still reads unstamped. Marking the
+field is now the whole of enrolling it.
 """
 
 

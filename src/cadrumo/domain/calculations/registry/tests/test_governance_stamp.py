@@ -10,11 +10,13 @@ from __future__ import annotations
 import re
 from datetime import date, timedelta
 from pathlib import Path
+from typing import Annotated
 
 import pytest
 
 from .....core import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
 from .....core.resources import bundled_path
+from .. import _loader
 from .._errors import RegistryLoadError
 from .._loader import load_modelo_directory, load_registry_tree
 from .._schema import (
@@ -22,6 +24,7 @@ from .._schema import (
     REVISION_REVIEW_DATE_CEILING,
     ModeloRevision,
 )
+from .._schema_base import GOVERNANCE_STAMP, governance_stamp_fields
 from ._loader_directory_mode_support import (
     _standard_manifest_text,
     _standard_revision_preamble_text,
@@ -238,9 +241,7 @@ def test_a_date_below_the_signoff_horizon_still_loads(tmp_path: Path) -> None:
     year the project can plausibly run.
     """
     latest = REVISION_REVIEW_DATE_CEILING - timedelta(days=1)
-    stamp = (
-        f'review_status = "operator_reviewed"\nreviewed_by = "operator"\nreviewed_at = {latest.isoformat()}\n'
-    )
+    stamp = f'review_status = "operator_reviewed"\nreviewed_by = "operator"\nreviewed_at = {latest.isoformat()}\n'
 
     assert _load_revision(_write_modelo(tmp_path, manifest_extra=stamp)).reviewed_at == latest
 
@@ -291,6 +292,59 @@ def test_governance_field_set_names_only_real_revision_fields() -> None:
     """Anti-rot: a renamed field must not silently orphan the placement gate."""
     assert REVISION_GOVERNANCE_FIELDS
     assert set(ModeloRevision.model_fields) >= REVISION_GOVERNANCE_FIELDS
+
+
+def test_governance_field_set_is_exactly_todays_declared_stamp() -> None:
+    """Pin the derived set, so a marker lost in a rebase is a red test."""
+    declared_today = {"engineered_by", "review_status", "reviewed_by", "reviewed_at"}
+
+    assert declared_today == REVISION_GOVERNANCE_FIELDS
+
+
+def test_the_placement_refusal_reads_the_derived_set_itself() -> None:
+    """The loader gate and the declarations must be one set, not two.
+
+    Deriving the set is worthless if the loader consults a second copy, so this
+    pins the gate's input to the object the declarations produce.
+    """
+    assert _loader.REVISION_GOVERNANCE_FIELDS is REVISION_GOVERNANCE_FIELDS
+
+
+def test_a_new_marked_field_enrols_itself_without_editing_the_field_set() -> None:
+    """The addition case a hand-written list cannot catch.
+
+    A fifth governance scalar is added to the model here carrying nothing but
+    the marker. The derivation must pick it up - and an unmarked field added
+    beside it must stay out, so the enrolment tracks the marker rather than
+    merely counting new fields.
+    """
+
+    class _CountersignedRevision(ModeloRevision):
+        countersigned_by: Annotated[str | None, GOVERNANCE_STAMP] = None
+        internal_note: str | None = None
+
+    derived = governance_stamp_fields(_CountersignedRevision)
+
+    assert "countersigned_by" in derived
+    assert derived == REVISION_GOVERNANCE_FIELDS | {"countersigned_by"}
+    assert "internal_note" not in derived
+
+
+def test_dropping_the_marker_drops_the_field_from_the_gate() -> None:
+    """Anti-tautology: the same field, marked and unmarked, flips the assertion.
+
+    Without this pairing the enrolment proof above could be passing because the
+    derivation returns every field a subclass declares.
+    """
+
+    class _MarkedRevision(ModeloRevision):
+        countersigned_by: Annotated[str | None, GOVERNANCE_STAMP] = None
+
+    class _UnmarkedRevision(ModeloRevision):
+        countersigned_by: str | None = None
+
+    assert "countersigned_by" in governance_stamp_fields(_MarkedRevision)
+    assert "countersigned_by" not in governance_stamp_fields(_UnmarkedRevision)
 
 
 def test_bundled_revisions_carry_a_coherent_stamp() -> None:
