@@ -294,10 +294,11 @@ def stamp_revision(
 
     Raises:
         StampError: Nothing was supplied to write, an authorship claim was
-            supplied together with its clearing, the revision is not a compiled
-            record in the tree, the resulting stamp is one the schema refuses,
-            or the written tree no longer loads. In the last case the manifest
-            is restored to its previous bytes before the error is raised.
+            supplied together with its clearing, an identity names nobody, the
+            revision is not a compiled record in the tree, the resulting stamp
+            is one the schema refuses, or the written tree no longer loads. In
+            the last case the manifest is restored to its previous bytes before
+            the error is raised.
     """
     if engineered_by is not None and clear_engineered_by:
         raise StampError("engineered_by and clear_engineered_by contradict each other; supply one")
@@ -306,6 +307,8 @@ def stamp_revision(
             "nothing to stamp: supply at least one of engineered_by, clear_engineered_by, "
             "review_status, reviewed_by, reviewed_at",
         )
+    engineered_by = _named_identity(engineered_by, "engineered_by")
+    reviewed_by = _named_identity(reviewed_by, "reviewed_by")
 
     manifest = revision_manifest_path(modelo, revision, registry_root=registry_root)
     modelo_dir = manifest.parent.parent.parent
@@ -342,6 +345,28 @@ def stamp_revision(
         written=rendered,
         removed=removed,
     )
+
+
+def _named_identity(value: str | None, field: str) -> str | None:
+    """Return ``value`` trimmed, refusing a provenance claim that names nobody.
+
+    A whitespace-only identity is the shape of a claim with no claimant: the
+    manifest asserts a person or an agent built or reviewed the revision while
+    naming neither, and a minimum-length check alone accepts it. The schema is
+    the deeper gate for what a stored identity may be; this is the CLI boundary
+    refusing to WRITE a value it can already see is empty of content, and
+    trimming what it does write so a trailing newline never becomes part of a
+    name.
+    """
+    if value is None:
+        return None
+    trimmed = value.strip()
+    if not trimmed:
+        raise StampError(
+            f"{field} names nobody: a provenance claim must identify the person or agent it "
+            "attributes the work to, and whitespace identifies neither",
+        )
+    return trimmed
 
 
 def _assert_revision_is_compiled(modelo_dir: Path, *, modelo: str, revision: str) -> None:

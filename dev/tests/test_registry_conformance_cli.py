@@ -555,3 +555,32 @@ def test_stamp_refuses_when_nothing_was_supplied_to_write(registry_copy: Path) -
     """A no-op write would report success while changing nothing."""
     with pytest.raises(StampError, match="nothing to stamp"):
         stamp_revision(_STAMPED_MODELO, _STAMPED_REVISION, registry_root=registry_copy)
+
+
+@pytest.mark.parametrize("field", ["engineered_by", "reviewed_by"])
+def test_stamp_refuses_a_provenance_claim_that_names_nobody(registry_copy: Path, field: str) -> None:
+    """A whitespace identity is a claim with no claimant, so it is never written."""
+    manifest = _manifest_of(registry_copy)
+    before = manifest.read_text(encoding=UTF_8_ENCODING)
+    arguments: dict[str, object] = {field: "   "}
+    if field == "reviewed_by":
+        arguments["review_status"] = StampableReviewStatus.AGENT_REVIEWED
+        arguments["reviewed_at"] = date(2026, 7, 27)
+
+    with pytest.raises(StampError, match="names nobody"):
+        stamp_revision(_STAMPED_MODELO, _STAMPED_REVISION, registry_root=registry_copy, **arguments)  # type: ignore[arg-type]
+
+    assert manifest.read_text(encoding=UTF_8_ENCODING) == before
+
+
+def test_stamp_trims_a_padded_identity_before_writing_it(registry_copy: Path) -> None:
+    """Padding never becomes part of a name; the flip is that the stored value differs."""
+    stamp_revision(
+        _STAMPED_MODELO,
+        _STAMPED_REVISION,
+        engineered_by="  conformance-cli gate\n",
+        registry_root=registry_copy,
+    )
+
+    revision = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert revision.engineered_by == "conformance-cli gate"
