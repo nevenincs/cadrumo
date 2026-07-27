@@ -61,6 +61,26 @@ say.
   manifests declare only the first, so any check grounded on the declared constant is
   checking against an incomplete description of the document.
 
+**Anchor.** Every count in this record is a dated observation. The figures above were
+measured 2026-07-26 through the production extraction path over the three bundled
+Modelo 100 specimens and the eighteen profiles that have fixtures; the two step
+results carry their own dates inline. Re-derive before relying on any of them.
+
+Two are already superseded by the implementation and are left standing with this note
+rather than rewritten, because the difference between them is the finding. The
+prototype's **19 of 21** became **21 of 21**: the two stragglers were not the regex
+artefact this record calls them but genuine ambiguity, a capitalised section heading
+matching a case-insensitive label, and restoring the value-token condition the text
+path always carried recovered both. And the claim that the isolated pathway "already
+exists and runs in production today" was verified and still incomplete — word data
+loaded only for profiles declaring `bbox_anchored` targets, which Modelo 100 does not,
+so the first implementation was a measured no-op on the very profile it was written
+for.
+
+Both were corrected in the implementation record. Neither would have surfaced from
+re-reading this one, which is the argument for the anchor rather than for the
+correction.
+
 ## Considered options
 
 **(A) Fix it in the registry profile.** Not available. Measured on casilla `0545`:
