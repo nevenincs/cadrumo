@@ -96,6 +96,10 @@ _EMBEDDED_SCHEMA_CORE_SYMBOLS = (
     ("cadrumo.core.classification", "SensitivityClass"),
     ("cadrumo.core", "Period"),  # defined in cadrumo.core._period, re-exported at the facade
     ("cadrumo.core", "TaxDomain"),  # defined in cadrumo.core._tax_domain, re-exported at the facade
+    # Every ModeloRevision pickles its governance stamp's review_status as a
+    # RevisionReviewStatus member, so a new member or a changed value alters the
+    # compiled objects without touching any registry module.
+    ("cadrumo.core", "RevisionReviewStatus"),  # defined in cadrumo.core._revision_review
 )
 
 
