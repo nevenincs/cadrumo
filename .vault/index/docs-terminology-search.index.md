@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#docs-terminology-search'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-27'
+modified: '2026-07-27'
 related:
   - '[[2026-06-10-docs-terminology-search-W01-P01-S01]]'
   - '[[2026-06-10-docs-terminology-search-W01-P01-S02]]'
@@ -74,6 +74,8 @@ related:
   - '[[2026-07-13-docs-terminology-search-research]]'
   - '[[2026-07-15-docs-terminology-search-adr]]'
   - '[[2026-07-15-docs-terminology-search-audit]]'
+  - '[[2026-07-27-docs-terminology-search-modelo-concept-grounding-reference]]'
+  - '[[2026-07-27-docs-terminology-search-modelo-enrolment-scope-audit]]'
 ---
 
 # `docs-terminology-search` feature index
@@ -101,6 +103,7 @@ Auto-generated index of all documents tagged with `#docs-terminology-search`.
 - `2026-06-15-docs-terminology-search-audit` - `docs-terminology-search` audit: `search corpus performance and result-quality drive`
 - `2026-07-13-docs-terminology-search-audit` - `docs-terminology-search` audit: `campaign close honesty review`
 - `2026-07-15-docs-terminology-search-audit` - `docs-terminology-search` audit: `D7/D8 controller iconography and re-ranking honesty review`
+- `2026-07-27-docs-terminology-search-modelo-enrolment-scope-audit` - `docs-terminology-search` audit: `modelo enrolment scope`
 
 ### exec
 
@@ -159,6 +162,10 @@ Auto-generated index of all documents tagged with `#docs-terminology-search`.
 - `2026-06-10-docs-terminology-search-plan` - `docs-terminology-search` `terminology handbook and precompiled docs search epic` plan
 - `2026-06-15-docs-terminology-search-plan` - `docs-terminology-search` plan: grounding and glossary follow-up
 - `2026-07-13-docs-terminology-search-plan` - `docs-terminology-search` plan
+
+### reference
+
+- `2026-07-27-docs-terminology-search-modelo-concept-grounding-reference` - `docs-terminology-search` reference: `modelo concept grounding`
 
 ### research
 
