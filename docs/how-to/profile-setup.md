@@ -78,7 +78,7 @@ Run the guided wizard when you're setting up a profile for the first time:
 
 The wizard is a full-page, question-by-question walk. Answer one page, move to
 the next; go back to change an earlier answer at any time. The first page asks
-for your output language — answer it and the rest of the wizard renders in the
+for your output language. Answer it and the rest of the wizard renders in the
 language you chose. The pages then walk your identity, fiscal residence,
 economic activity, IVA, enrollment, family situation (including your
 descendientes), recurring obligations, and service preferences, ending on a
@@ -86,7 +86,7 @@ review page that shows every answer before anything is committed. Questions are
 conditional: the wizard only asks what applies to the answers you already gave.
 
 Each page explains its choices and shows the expected format for dates,
-amounts, and identifiers, and refuses an invalid value on the spot — a
+amounts, and identifiers, and refuses an invalid value on the spot. A
 malformed date or tax identifier never reaches your stored profile.
 
 The wizard prompts for your master-key passphrase before it stores
@@ -106,7 +106,7 @@ incomplete profile so you can spot it later.
 
 Resume by running the same create command again with the same profile name.
 The wizard picks up where you left off with your earlier answers in place.
-Answer the remaining pages and confirm the review page to complete setup — the
+Answer the remaining pages and confirm the review page to complete setup. The
 profile then becomes active and ready for `aeat app` commands.
 
 Descendientes are the one exception on resume: the wizard asks for them again
@@ -289,12 +289,12 @@ Re-run the wizard over an existing profile to change its facts:
 Edit mode walks the same pages with your current answers in place. Change what
 you need, then confirm the review page. Nothing is written until you confirm:
 edits stay staged during the walk, and an interrupted edit discards them all.
-There is no save-and-exit in edit mode — finish the walk in one sitting. The
+There is no save-and-exit in edit mode. Finish the walk in one sitting. The
 tool tells you both things at the end of every interactive edit, so an edit
 never silently half-applies.
 
 Descendientes are not part of profile edit. Manage them with the
-[descendiente command](#manage-your-descendants) below — the edit summary
+[descendiente command](#manage-your-descendants) below. The edit summary
 reminds you of this every time.
 
 For a scripted change, pass `--quiet` with only the flags you want to change;
@@ -314,7 +314,7 @@ Open the paged descendant editor:
 
 The editor shows your declared descendientes, lets you change any answer, add
 one, or reduce the count, and commits the complete set when you confirm.
-Reducing the count removes the descendientes beyond it — the stored set always
+Reducing the count removes the descendientes beyond it. The stored set always
 matches exactly what you confirmed.
 
 Script the same changes with the flag verbs:
@@ -327,7 +327,7 @@ Script the same changes with the flag verbs:
 commas. `NACIMIENTO` (birth date, `AAAA-MM-DD`) is required; `ADOPCION`,
 `DISCAPACIDAD` (`0`, `33`, or `65`), `CONVIVENCIA`, `CUSTODIA`,
 `MESES_TRABAJO` (`0`–`12`), `GASTOS_GUARDERIA`, and `NIF` are optional. A
-descendiente without a tax identifier is fine — leave `NIF` out. `remove`
+descendiente without a tax identifier is fine. Leave `NIF` out. `remove`
 takes the position from `list`, counting from `0`.
 
 ## Maintain your profile
@@ -342,7 +342,7 @@ duplicate, and export the profile to a portable JSON file:
 What each step does:
 
 - **Edit** re-runs the wizard, or changes only the flags you pass with
-  `--quiet` — see [Modify your profile](#modify-your-profile). Run `show`,
+  `--quiet`. See [Modify your profile](#modify-your-profile). Run `show`,
   `status`, or `validate` again after editing.
 - **Rename** changes only the visible label; the active-profile pointer follows
   it.

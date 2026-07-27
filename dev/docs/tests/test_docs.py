@@ -62,7 +62,6 @@ _EM_DASH_BASELINE_PATH = Path(__file__).resolve().parent / "emdash_baseline.json
 # LLM-tell phrases banned outright from reader-facing prose (word-boundary,
 # case-insensitive). Kept modest to avoid false positives.
 _LLM_MARKERS = (
-    "Note that",
     "Additionally,",
     "It's worth noting",
     "Keep in mind",
@@ -76,15 +75,36 @@ _LLM_MARKERS = (
 )
 
 
-def _marker_pattern(marker: str) -> re.Pattern[str]:
-    """Compile a case-insensitive word-boundary pattern for one LLM-tell marker."""
-    pattern = r"\b" + re.escape(marker)
+#: LLM-tell phrases that are a tell only when they OPEN a sentence, because the
+#: same words are ordinary English mid-sentence. "Note that" is the worked
+#: example: banned as a sentence opener, but "it is an internal note that you
+#: have already presented the file" is correct prose that a word-boundary match
+#: flags anyway. Rewording good prose to satisfy a pattern that does not fit the
+#: data is the wrong direction, so the pattern carries the sentence constraint.
+_LLM_MARKERS_SENTENCE_INITIAL = ("Note that",)
+
+#: Matches at the start of a line, or immediately after sentence-ending
+#: punctuation. Each lookbehind is fixed-width, which Python's ``re`` requires.
+_SENTENCE_START = r"(?:^|(?<=[.!?]\s)|(?<=[.!?]\s\s))"
+
+
+def _marker_pattern(marker: str, *, sentence_initial: bool = False) -> re.Pattern[str]:
+    """Compile a case-insensitive pattern for one LLM-tell marker.
+
+    ``sentence_initial`` anchors the marker to a sentence opening. Without it a
+    ban on a common English word sequence over-matches, and a gate that forces
+    correct prose to be reworded teaches its reader to distrust it.
+    """
+    pattern = (_SENTENCE_START if sentence_initial else "") + r"\b" + re.escape(marker)
     if marker[-1].isalnum():
         pattern += r"\b"
-    return re.compile(pattern, re.IGNORECASE)
+    return re.compile(pattern, re.IGNORECASE | re.MULTILINE)
 
 
-_LLM_MARKER_RES = tuple((marker, _marker_pattern(marker)) for marker in _LLM_MARKERS)
+_LLM_MARKER_RES = tuple(
+    [(marker, _marker_pattern(marker)) for marker in _LLM_MARKERS]
+    + [(marker, _marker_pattern(marker, sentence_initial=True)) for marker in _LLM_MARKERS_SENTENCE_INITIAL]
+)
 
 
 def _prose(text: str) -> str:
@@ -244,6 +264,45 @@ def test_llm_marker_patterns_discriminate() -> None:
         )
         assert not pattern.search(f"Some prose. X{marker}Y then more."), (
             f"marker {marker!r} matches inside a longer word (pattern {pattern.pattern!r})"
+        )
+
+
+def test_a_sentence_initial_marker_ignores_the_same_words_mid_sentence() -> None:
+    """The ban catches the tell and leaves ordinary English alone.
+
+    "Note that" opening a sentence is the LLM tell. The same two words as a noun
+    plus a relative pronoun are correct prose, and two how-to pages carry exactly
+    that: "it is an internal note that you have already presented the file". A
+    word-boundary match flagged both, and the only ways out are rewording good
+    prose or narrowing the pattern. Rewording to satisfy an instrument that does
+    not fit the data is how a gate gets edited instead of read.
+    """
+    pattern = _marker_pattern("Note that", sentence_initial=True)
+
+    assert pattern.search("Note that the deadline moves."), "a sentence-opening tell must still be caught"
+    assert pattern.search("Run the export. Note that the file stays local."), (
+        "a tell opening a later sentence must still be caught"
+    )
+    assert not pattern.search("it is an internal note that you have already presented the file"), (
+        "the noun 'note' plus a relative pronoun is ordinary prose and must not be flagged"
+    )
+    assert not pattern.search("Keep a short note that records the reference."), (
+        "a mid-sentence noun phrase must not be flagged"
+    )
+
+
+def test_every_sentence_initial_marker_is_anchored() -> None:
+    """Anti-vacuity: the sentence-initial set is non-empty and really anchored.
+
+    Without this the set could silently empty, or its patterns could lose the
+    anchor, and the test above would still pass while the distinction it exists
+    for had stopped being made.
+    """
+    assert _LLM_MARKERS_SENTENCE_INITIAL, "the sentence-initial marker set is empty; nothing is being anchored"
+    for marker in _LLM_MARKERS_SENTENCE_INITIAL:
+        pattern = _marker_pattern(marker, sentence_initial=True)
+        assert not pattern.search(f"a preceding clause {marker.lower()} continues"), (
+            f"marker {marker!r} is not anchored to a sentence opening"
         )
 
 
