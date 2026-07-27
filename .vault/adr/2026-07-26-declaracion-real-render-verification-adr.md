@@ -49,6 +49,29 @@ all, so the third question governs most of the estate.
 - `artefact_kind` is a free-form `str` carrying two spellings for one concept, 18
   `declaration_pdf` against 11 `declaracion`, while production selects on `surface`.
 
+**Evidence withdrawn from the corpus, 2026-07-27, and it touches this record's
+grounding.** Two of the nine `real_corpus` specimens — Modelo 100 `2021-0A` and
+Modelo 190 `2024-0A` — were found to carry taxpayer identity the redaction pipeline
+never replaced, and are being removed. That is mandatory and correct, and it costs this
+campaign evidence it relied on.
+
+Modelo 190's six `form_number` values were read off `2024-0A`, the only externally
+authored Modelo 190 render in the repository. The grounding was sound when made and
+observed directly from the printed page, but **it is no longer reproducible**: the
+document cannot remain and no other Modelo 190 render exists. Those values should be
+read as observed-then-withdrawn rather than as verifiable, and re-confirmed against
+AEAT's published instructions the way Modelo 180 and Modelo 349 were, since that route
+needs no specimen.
+
+The Modelo 100 coverage measurement loses one of three specimens. Its conclusion is
+unaffected — all three were one filer with every box populated, which is why D2 already
+refused to ground a floor on them — but the remaining evidence is thinner than this
+record describes.
+
+A wider question follows and is not this campaign's to answer: the pipeline missed
+identity on two of nine specimens, so the other seven are not known-clean until someone
+checks them by the same method.
+
 **Every count in this record is a dated observation, not a property.** Measured
 2026-07-26 to 2026-07-27 against the tree at that time, by raw `tomllib` walk over the
 registry and by loading revisions through the authority. Re-derive before relying on
