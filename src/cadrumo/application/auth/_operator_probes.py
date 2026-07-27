@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
+from ...adapters.persistence.storage import has_active_bucket_session
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import AuthProviderKind
 from ...core.config import Settings, load_settings
@@ -68,8 +69,6 @@ def _active_profile_path_values(state: WorkflowState | None = None) -> dict[str,
     in a driver exception that no domain-level except clause would catch,
     so declining the doomed read is what keeps the probe answerable.
     """
-    from ...adapters.persistence.storage import has_active_bucket_session
-
     if state is None and not has_active_bucket_session():
         return {}
     try:
