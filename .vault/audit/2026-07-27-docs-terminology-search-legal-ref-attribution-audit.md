@@ -100,6 +100,47 @@ cannot check would satisfy the evidence gate while repeating the defect, which i
 the specific failure `legal-grounding-verifies-bundled-authoritative-corpus`
 exists to prevent.
 
+### the-complete-acquisition-list | high | eight ungrounded modelos, resolved into three distinct causes
+
+`345` is now grounded and needed no acquisition at all: its citation was correct
+and only its pin was loose, carrying the bare "Se aprueba el modelo" with no form
+number, so the evidence gate was confirming that SOME form is approved rather
+than that `345` is. Corrected against the corpus text and proven to bite.
+
+The remaining eight resolve into three causes, each established by reading the
+approval sentences rather than by counting matches.
+
+| Modelo | Approving provision | Bundled? |
+|---|---|---|
+| `187` | Orden HAP/1608/2014, de 4 de septiembre | no |
+| `188` | Orden de 17 de noviembre de 1999 | no |
+| `194` | Orden de 18 de noviembre de 1999 | no |
+| `128` | Orden de 17 de noviembre de 1999 | no |
+| `296` | Orden EHA/3290/2008, de 6 de noviembre | PARTIAL — see below |
+| `117` | not named anywhere in the bundle | — |
+| `126` | not named anywhere in the bundle | — |
+| `220` | not named anywhere in the bundle | — |
+
+`296` is the instructive one and its own sub-finding. That orden IS bundled, and
+modelo `216` is verified against it — so the obvious reading is that `296` should
+ground there too. It does not: the bundled file is a **1385-byte excerpt carrying
+only articles 1 and 4**, both about `216`, and "modelo 296" occurs zero times in
+it. The orden approves both forms; the excerpt covers one.
+
+That trap generalises past this case. A `corpus_ref` pointing at a thin excerpt
+makes a provision look ABSENT when it is merely out of frame, and the grounding
+pass already counted 48 of 136 entries sitting on excerpts under 1500 characters.
+Anyone concluding "the corpus does not contain this" from a failed search must
+first check whether the file is the provision or a slice of it.
+
+Two probe errors are recorded because both nearly became findings. A pattern
+allowing 40 characters between "modelo" and the number reported nine files
+approving `187`, which is impossible for a form approved once. And a window
+regex reaching backwards for the nearest "Orden ..." attributed EHA/3290/2008 to
+`296` from a sentence about a different clause — right conclusion, wrong
+evidence, and it would have been quoted as proof. Reading the matched sentence
+corrected both.
+
 ## Recommendations
 
 Correct the four mis-attributed citations, and treat that as legal-authority work
