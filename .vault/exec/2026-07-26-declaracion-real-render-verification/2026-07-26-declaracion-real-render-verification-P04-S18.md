@@ -9,39 +9,6 @@ related:
   - "[[2026-07-26-declaracion-real-render-verification-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace declaracion-real-render-verification with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S18 and 2026-07-26-declaracion-real-render-verification-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Decide the disposition of verify_declaracion, a modelo-agnostic comparison mechanism with zero callers outside its own tests and ## Scope
-
-- `src/cadrumo/application/verification` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Decide the disposition of verify_declaracion, a modelo-agnostic comparison mechanism with zero callers outside its own tests
 
 ## Scope
@@ -69,3 +36,17 @@ The practical consequence is that enrolling it today means designing a new opera
 The finding was cross-checked against a parallel audit from another campaign that had reached the no-callers conclusion independently. Its claims reproduced, which is corroboration from a genuinely separate source rather than the citation loop this feature has had to break twice.
 
 The disposition deliberately stops short of a recommendation to delete or to wire. Both are defensible and the choice depends on whether the fresh-compute capability is wanted, which is not this campaign's question.
+
+## Decision, taken 2026-07-27
+
+**Neither wired nor deleted. Declared.** The Step originally closed with a characterisation and no decision, which a consistency sweep caught, and reopening it produced a different answer than the first pass had reached.
+
+The reachability finding was right and its framing was wrong. `verify_declaracion` has zero production *callers* and no entrypoint surface, which is what made "abandoned partial build" look correct. But three production modules cite it in their docstrings as the canonical statement of the scoping policy they implement -- the reconcile path and the casilla comparison both describe their own treatment by reference to it, as "the same policy verify_declaracion consumes" and "mirrors verify_declaracion's treatment".
+
+So it is not dormant capability. It is an unwired **reference implementation** that documentation depends on, and nobody had said so. That is why it read as dead code: its current role was real and undeclared.
+
+Deleting it would remove the definition three docstrings point at, leaving them citing nothing. Wiring it still requires designing an operator verb under a command vocabulary that has since narrowed, which is real work and not this campaign's. Both were the wrong question.
+
+The disposition is to **declare the role it already has**: state in its own docstring that it is the reference implementation of the registry-declared reconciliation scope, that it is deliberately unwired, and that the enrolled reconcile path implements the same policy against a persisted revision where this one computes fresh. That makes it safe from a future dead-code sweep and makes the citation direction explicit. Tracked as its own Step.
+
+Wiring remains available and is not foreclosed. What is foreclosed is deleting it as unreachable, which was the likely outcome of leaving it undeclared.
