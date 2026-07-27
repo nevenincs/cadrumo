@@ -413,3 +413,41 @@ def test_declared_axis_census_is_excluded_from_the_coherence_verdict() -> None:
     assert audit.unused_axes != (), "the injected tree exercises no tracked axis"
     assert audit.findings == ()
     assert audit.ok is True
+
+
+def test_a_modelo_with_many_blockers_is_reported_rather_than_refused() -> None:
+    """A heavily blocked divergence must not overflow the finding's own bound.
+
+    The invariant produces one blocker per offending casilla, so rendering them
+    all into the finding's prose would exceed its length constraint and raise
+    while CONSTRUCTING the report — aborting the whole governance read on
+    exactly the disagreement it exists to surface. The complete list stays on
+    the row; the sentence carries a sample and a count.
+    """
+    casillas = tuple(
+        CasillaDefinition(
+            id=f"c{index}",
+            number=f"{index:02d}",
+            label="importe",
+            section=("totales",),
+            input_kind=InputKind.BOUND,
+            binding=f"b{index}",
+            legal_refs=_LEGAL_REFS,
+            source_refs=_SOURCE_REFS,
+        )
+        for index in range(40)
+    )
+    audit = _audit(
+        _modelo(
+            "100",
+            calculation_class="filing",
+            tax_domain=TaxDomain.INFORMATIVE,
+            revision=_revision(casillas=casillas),
+        ),
+    )
+    finding = audit.findings_of_kind("informative_axis_divergence")[0]
+    assert len(finding.detail) <= 512
+    assert "further blocker" in finding.detail, "the unrendered blockers must still be counted"
+    assert len(audit.rows[0].informative_class_blockers) == len(casillas), (
+        "the row keeps every blocker even though the sentence samples them"
+    )

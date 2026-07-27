@@ -85,6 +85,15 @@ from ._validate_revision_rules import validate_informative_class_invariant
 #: The ``calculation_class`` value naming the informative enforcement posture.
 _INFORMATIVE_CLASS: Final[CalculationClass] = "informative"
 
+#: Upper bound on a finding's ``detail``, mirroring the field constraint.
+_MAX_DETAIL_LENGTH: Final[int] = 512
+
+#: Blockers rendered verbatim into a finding's prose before the rest is counted.
+#: A modelo can carry one blocker per casilla, so the full list belongs on
+#: :attr:`ModeloClassificationRow.informative_class_blockers` and only a sample
+#: reaches the sentence.
+_RENDERED_BLOCKER_SAMPLE: Final[int] = 1
+
 ClassificationFindingKind = Literal[
     "informative_axis_divergence",
     "non_registry_modelo_defined_in_tree",
@@ -305,9 +314,9 @@ def _build_row(
                 kind="non_registry_modelo_defined_in_tree",
                 modelo=modelo.id,
                 subject=modelo.id,
-                detail=(
+                detail=_bounded_detail(
                     f"modelo {modelo.id} is declared to have no registry definition, yet the loaded tree "
-                    "compiles one for it"
+                    "compiles one for it",
                 ),
             ),
         )
@@ -317,9 +326,9 @@ def _build_row(
                 kind="registry_modelo_absent_from_modelo_enum",
                 modelo=modelo.id,
                 subject=modelo.id,
-                detail=(
+                detail=_bounded_detail(
                     f"modelo {modelo.id} is defined in the registry tree but no core modelo identifier names "
-                    "it, so it is unreachable through the typed identifier surface"
+                    "it, so it is unreachable through the typed identifier surface",
                 ),
             ),
         )
@@ -351,7 +360,7 @@ def _informative_divergence_finding(
     else:
         held, absent = "tax_domain = 'informative'", f"calculation_class = '{modelo.calculation_class}'"
         forcing = (
-            f"the informative-class invariant forbids the value here ({'; '.join(blockers)})"
+            f"the informative-class invariant forbids the value here ({_render_blockers(blockers)})"
             if blockers
             else "the informative-class invariant would permit the value, so nothing in the tree forces the divergence"
         )
@@ -359,8 +368,35 @@ def _informative_divergence_finding(
         kind="informative_axis_divergence",
         modelo=modelo.id,
         subject=modelo.id,
-        detail=f"modelo {modelo.id} declares {held} but {absent}; {forcing}",
+        detail=_bounded_detail(f"modelo {modelo.id} declares {held} but {absent}; {forcing}"),
     )
+
+
+def _render_blockers(blockers: tuple[str, ...]) -> str:
+    """Render a sample of ``blockers`` plus a count of the rest.
+
+    A modelo can produce one blocker per casilla, so joining them all would
+    overflow the finding's ``detail`` bound and make constructing the finding
+    raise — on precisely the disagreement this fold exists to report. The
+    complete list stays on the row.
+    """
+    sample = "; ".join(blockers[:_RENDERED_BLOCKER_SAMPLE])
+    remainder = len(blockers) - _RENDERED_BLOCKER_SAMPLE
+    if remainder <= 0:
+        return sample
+    return f"{sample}; and {remainder} further blocker{'s' if remainder > 1 else ''}"
+
+
+def _bounded_detail(detail: str) -> str:
+    """Clamp ``detail`` to the field's own bound.
+
+    Defensive rather than cosmetic: registry-authored ids and labels flow into
+    these sentences, so a long one must truncate the prose rather than raise a
+    validation error and abort the whole governance read.
+    """
+    if len(detail) <= _MAX_DETAIL_LENGTH:
+        return detail
+    return f"{detail[: _MAX_DETAIL_LENGTH - 1]}…"
 
 
 def _informative_class_blockers(modelo: ModeloDefinition) -> tuple[str, ...]:
@@ -393,10 +429,10 @@ def _dependency_findings(modelo: ModeloDefinition) -> list[ClassificationCoheren
                         kind="dependency_conditional_activity_without_filing",
                         modelo=modelo.id,
                         subject=str(dependency.id),
-                        detail=(
+                        detail=_bounded_detail(
                             f"modelo {modelo.id} revision {revision.id}: dependency {dependency.id} is "
                             "conditional_on_economic_activity while taxpayer_files_source is false, so it "
-                            "conditions a filing the taxpayer never makes"
+                            "conditions a filing the taxpayer never makes",
                         ),
                     ),
                 )
