@@ -13,7 +13,7 @@ reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2022-14168 consolidated HTML from BOE on 2026-07-01"
 notes = "Orden HFP/823/2022 articulo 1: aprueba el Modelo 345 y sus disenos de registro."
 required_text = [
-    "Se aprueba el modelo",
+    "Se aprueba el modelo 345",
     "anexo de la presente orden",
     "tres primeros",
 ]
