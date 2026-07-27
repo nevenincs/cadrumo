@@ -1032,6 +1032,63 @@ def _paramref_role(name, rawtext, text, lineno, inliner, options=None, content=N
     return [nodes.literal(rawtext, label)], []
 
 
+def _convert_markdown_fences_in_inherited_docstrings(app, what, name, obj, options, lines):
+    """Rewrite Markdown code fences in inherited docstrings as RST literal blocks.
+
+    Same remedy as the ``:paramref:`` role and ``.. legacy::`` directive shims
+    above, for a different upstream: keep inherited third-party prose readable
+    instead of erroring the nitpicky gate.
+
+    Textual documents ``Widget.compose`` — which every screen in
+    ``adapters.inbound.tui`` inherits — with a Markdown fenced block::
+
+        ```python
+        def compose(self) -> ComposeResult:
+            yield Label("Press the button below:")
+        ```
+
+    Sphinx parses reStructuredText, where ```` ``` ```` opens an inline literal
+    that never closes and the indented body reads as a stray block quote. That
+    single upstream docstring produced 18 of the 22 warnings this gate reported
+    the first time it ever completed: "Inline literal start-string without
+    end-string", "Inline interpreted text ... without end-string", and "Block
+    quote ends without a blank line", once per inheriting screen.
+
+    Rewriting rather than suppressing is deliberate. Suppressing the ``docutils``
+    category would hide the identical warnings in OUR OWN docstrings, where they
+    are real markup defects worth failing on; dropping
+    ``autodoc_inherit_docstrings`` would silently delete inherited prose the API
+    pages legitimately carry. This converts the fence to an RST literal block and
+    leaves the body verbatim, so the reader sees the example the upstream author
+    wrote.
+
+    Args:
+        app: The Sphinx application (unused).
+        what: The kind of object being documented (unused).
+        name: The fully-qualified object name (unused).
+        obj: The object being documented (unused).
+        options: The autodoc options in force (unused).
+        lines: The docstring lines, mutated IN PLACE as autodoc requires.
+    """
+    if not any(line.lstrip().startswith("```") for line in lines):
+        return
+    converted: list[str] = []
+    inside = False
+    for line in lines:
+        stripped = line.lstrip()
+        if stripped.startswith("```"):
+            if inside:
+                inside = False
+                converted.append("")
+            else:
+                inside = True
+                converted.append("::")
+                converted.append("")
+            continue
+        converted.append(f"   {line}" if inside else line)
+    lines[:] = converted
+
+
 class _LegacyDirective(Directive):
     """Render SQLAlchemy's ``.. legacy::`` admonition as a generic note.
 
@@ -1239,6 +1296,7 @@ def setup(app):
                     continue
         check_sequence_goldens(app, pages=pages)
 
+    app.connect("autodoc-process-docstring", _convert_markdown_fences_in_inherited_docstrings)
     app.connect("builder-inited", _resolve_deferred_models)
     app.connect("builder-inited", _generate_cli_reference)
     app.connect("builder-inited", _generate_glossary_reference)
