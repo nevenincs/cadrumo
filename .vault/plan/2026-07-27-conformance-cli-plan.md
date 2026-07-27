@@ -58,8 +58,9 @@ Lift the test-trapped conformance facts into importable typed libraries under sr
 - [x] `P02.S26` - restore an independent registry-grounded oracle for the fichero-BOE required-applicable set so a relaxation of the predicate in either direction flips an assertion, remediating the review finding required-set-oracle-collapse; `src/cadrumo/application/filing/tests`.
 - [x] `P02.S28` - parse each bundled oracle payload through a strict typed model so the declared source_kind token actually hydrates and an unknown token refuses at the boundary, removing the last untyped mapping read in the grounding fold; `src/cadrumo/domain/calculations/registry/_external_grounding.py`.
 - [x] `P02.S30` - split the scenario input figures out of the M303 prorrata oracle expected-by-casilla map and rename the payload to carry its filing year so its genuine expected figure enters the honesty relation; `src/cadrumo/_data/corpus/manual_oracles`.
-- [ ] `P02.S31` - model M303 casilla 44 regularizacion prorrata as a computed casilla grounded in LIVA art 105-106 with the AEAT manual figure as its external oracle expectation, closing a computable value left to operator entry; `src/cadrumo/_data/registry/aeat/modelos/303`.
+- [ ] `P02.S31` - correct the prorrata percentage rounding from the shared integer code, which rounds half-up, to a rounding that always rounds upward as LIVA article 104.Dos.2 requires, adding the new rounding code rather than changing the shared vocabulary; `src/cadrumo/_data/registry/aeat/modelos/303`.
 - [x] `P02.S36` - bind the classification finding detail bound to the field it mirrors and add the missing case whose single blocker exceeds it so the truncation branch is proven rather than reasoned; `src/cadrumo/domain/calculations/registry/_classification_coherence.py`.
+- [ ] `P02.S38` - declare the prorrata percentage casilla in the external grounding claims now that both preconditions of the oracle-evidence rule are satisfied and verified, so the AEAT manual figure becomes an enforced independent check; `src/cadrumo/_data/registry/aeat/modelos/303`.
 
 ### Phase `P03` - conformance governance CLI in dev
 
@@ -77,9 +78,9 @@ Ship the python -m dev.registry.conformance Typer trio: report, coverage, audit 
 Make the one-way src/dev boundary enforceable, wire the CI gate, and regenerate the API docs stubs.
 
 - [x] `P04.S18` - add the dev-path isolation gate asserting no shipped module imports dev.* or embeds a dev/ path literal, with an injectable-root anti-tautology proof; `src/cadrumo/tests/test_dev_path_isolation.py`.
-- [ ] `P04.S19` - add the dev-side pytest wrapper gate running the conformance audit --check against the committed baseline; `dev/tests/test_registry_conformance_gate.py`.
+- [x] `P04.S19` - add the dev-side pytest wrapper gate running the conformance audit --check against the committed baseline; `dev/tests/test_registry_conformance_gate.py`.
 - [ ] `P04.S20` - regenerate the API reference stubs for the new src modules via the apidocs scaffold CLI and land the deltas with the source change; `docs/api`.
-- [ ] `P04.S21` - wire a conformance recipe invoking python -m dev.registry.conformance report and audit into the task runner; `justfile`.
+- [x] `P04.S21` - wire a conformance recipe invoking python -m dev.registry.conformance report and audit into the task runner; `justfile`.
 - [x] `P04.S27` - widen the dev-path literal detection to the realistic PROJECT_ROOT join, os.path.join, f-string and backslash forms, invert the test that pins the hole open, and mirror the missing shipped conftest case, remediating the review finding dev-path-literal-hole; `src/cadrumo/tests/test_dev_path_isolation.py`.
 
 ### Phase `P05` - verification and closeout
