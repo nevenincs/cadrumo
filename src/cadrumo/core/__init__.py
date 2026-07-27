@@ -8,7 +8,9 @@ modules can import without depending outward.
 The public facade groups stable surfaces. Immutable modelling primitives
 include :data:`STRICT_FROZEN_CONFIG`, :class:`CasillaId`, :class:`Modelo`,
 :class:`Period`, :class:`StandardPeriodCode`, ``PeriodKind``,
-:class:`TaxDomain`, :class:`RefundElection`, :class:`ResultDisposition`, and
+:class:`TaxDomain`, :class:`RefundElection`, :class:`ResultDisposition`,
+:class:`RevisionReviewStatus` with its derived
+:data:`REVIEWED_REVISION_REVIEW_STATUSES` companion set, and
 the lazily resolved :class:`BindingSourceKind` registry-source taxonomy.
 Obligation-coverage mappings expose :data:`OUT_OF_SCOPE_OBLIGATIONS` and
 :data:`UNMODELED_OBLIGATIONS`, the codified AEAT modelo sets the overview
@@ -154,6 +156,7 @@ from ._result_disposition import (
     result_disposition_casilla_ids,
     result_disposition_is_refund,
 )
+from ._revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
 from ._tax_domain import TaxDomain
 from ._toml import freeze_toml, freeze_toml_value, parse_toml_text, read_toml, to_str_keyed_dict
 from .compatibility_lifecycle import (
@@ -241,6 +244,7 @@ __all__: list[str] = [
     "PERSISTED_FORMATS",
     "PRODUCT_IDENTITY",
     "RELEASED_FORMAT_FLOORS",
+    "REVIEWED_REVISION_REVIEW_STATUSES",
     "STRICT_FROZEN_CONFIG",
     "UNMODELED_OBLIGATIONS",
     "AmendmentKindRegime",
@@ -284,6 +288,7 @@ __all__: list[str] = [
     "RegistryPeriodCode",
     "RescateType",
     "ResultDisposition",
+    "RevisionReviewStatus",
     "SectorDiferenciadoLetra",
     "SecureObjectWrite",
     "ServiceCapability",
