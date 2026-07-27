@@ -445,16 +445,6 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             # persistence-adapter home (was a domain.modelos deferral).
             ImportEdge("application.modelo._iva_wallet_seed", "adapters.persistence.profile.modelos_calculation"),
             ImportEdge("application.modelo._reconcile", "adapters.persistence.profile.modelos_calculation"),
-            # reconcile <-> reconciliation_records is a genuine two-way cycle,
-            # not a cold-start budget: _reconciliation_records imports the four
-            # verdict/diff/advisory/evidence-kind value types from _reconcile at
-            # module scope, so _reconcile cannot import the record and its
-            # repository back at module scope. Breaking it properly means moving
-            # those four types into _reconciliation_records -- which is what its
-            # own docstring says the split IS ("the nouns of reconciliation,
-            # separated from the verb") -- and that relocation belongs to the
-            # campaign that owns both modules, not to a gate sweep.
-            ImportEdge("application.modelo._reconcile", "application.modelo._reconciliation_records"),
             ImportEdge("application.user_profile._bundle", "adapters.persistence.profile.modelos_calculation"),
             # transactions catalogue repository ports-inversion: the
             # concrete TransactionCatalogueRepository moved to the persistence adapter,
@@ -859,7 +849,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
     UnsanctionedClass.DOMAIN_CYCLE_BREAK: 50,
     UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 168,
     UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 37,
-    UnsanctionedClass.APPLICATION_DEFERRAL: 528,
+    UnsanctionedClass.APPLICATION_DEFERRAL: 527,
 }
 
 # Ceiling on the total number of allowlisted edges. Editing the allowlist to add
@@ -875,8 +865,11 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
 # user-profile values module's two schema-loader reaches. None of the three had
 # a cycle behind it -- the loader is already imported ahead of _values by the
 # package initializer, and the storage package was already eagerly present via
-# _operator_scope -- so the deferral bought nothing.
-_ALLOWLIST_EDGE_CEILING: int = 483
+# _operator_scope -- so the deferral bought nothing. The reconcile edge that
+# briefly sat here was retired the same way once the five reconciliation value
+# types moved to the record module that owns them, which removed the cycle
+# rather than documenting it.
+_ALLOWLIST_EDGE_CEILING: int = 482
 
 
 def _cadrumo_relative(dotted: str) -> str:

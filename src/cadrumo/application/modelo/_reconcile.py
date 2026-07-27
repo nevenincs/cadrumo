@@ -49,7 +49,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
-from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -63,6 +62,15 @@ from ...core.time import now
 from ...domain.modelos import WorkUnitId
 from ._action_errors import WorkUnitNotFoundError
 from ._reconcile_casilla import CasillaDivergence, CasillaDivergenceKind, detect_casilla_divergences
+from ._reconciliation_records import (
+    ModeloReconciliationAdvisory,
+    ModeloReconciliationDiff,
+    ModeloReconciliationDiffKind,
+    ModeloReconciliationEvidenceKind,
+    ModeloReconciliationRecord,
+    ModeloReconciliationRecordRepository,
+    ModeloReconciliationVerdict,
+)
 
 #: Width of a bucket-event payload value. Mirrors the constraint declared on the
 #: payload-value alias in the buckets domain, which is module-private there and
@@ -110,99 +118,6 @@ of four ``bbox_anchored`` targets) stay outside this set and are refused;
 real-PDF ``bbox_anchored`` extraction quality for the newly enrolled modelos
 remains Tier-R and is tracked separately, blocked on #332-337.
 """
-
-
-class ModeloReconciliationEvidenceKind(StrEnum):
-    """Closed external-evidence labels accepted by reconciliation commands.
-
-    ``DECLARATION`` performs casilla-level reconciliation for modelos in
-    :data:`_DECLARATION_CASILLA_RECONCILE_MODELOS`; other modelos raise
-    :class:`ReconciliationDeclaracionSourceUnsupportedError`.
-    """
-
-    JUSTIFICANTE = "justificante"
-    DECLARATION = "declaration"
-
-
-class ModeloReconciliationVerdict(StrEnum):
-    """Closed verdict catalogue for :class:`ModeloReconciliationReport`.
-
-    Closed set: ``matches`` / ``mismatches``. A reconcile that reaches a report
-    has already parsed its evidence; an unparseable justificante is surfaced as
-    the typed ``ReconciliationEvidenceInvalidError`` refusal
-    (``REFUSED_RECONCILIATION_EVIDENCE_INVALID``) before any report is built, so
-    there is no ``evidence_invalid`` verdict shell. Any expansion requires a
-    design decision and must not add shells.
-    """
-
-    MATCHES = "matches"
-    MISMATCHES = "mismatches"
-
-
-class ModeloReconciliationDiffKind(StrEnum):
-    """Closed category for a :class:`ModeloReconciliationDiff`.
-
-    ``header_field`` — a receipt-identity disagreement (modelo, ejercicio,
-    period, tax id). ``total`` — a filed-amount disagreement between the
-    receipt total and the canonical computed result casilla. ``casilla`` — a
-    per-casilla value disagreement between the persisted computed revision and
-    a filed declaración, emitted for modelos enrolled in
-    :data:`_DECLARATION_CASILLA_RECONCILE_MODELOS`
-    (:func:`application.modelo._reconcile_casilla.detect_casilla_divergences`).
-    """
-
-    HEADER_FIELD = "header_field"
-    TOTAL = "total"
-    CASILLA = "casilla"
-
-
-class ModeloReconciliationDiff(BaseModel):
-    """One disagreement between work unit / profile / computed state and evidence.
-
-    ``diff_kind`` is the closed category (header field, filed total, or
-    per-casilla). ``kind`` remains the specific mismatch token
-    (``modelo_mismatch``, ``total_ingresar_mismatch``,
-    ``casilla_value_mismatch``, ``casilla_missing_in_filed``,
-    ``casilla_extra_in_filed``, …). A ``total`` or ``casilla`` diff carries the
-    reconciling verification expectation's / casilla's ``legal_refs`` /
-    ``source_refs`` so the divergence surfaces with its legal grounding
-    (``aeat-calculation-grounding``); header diffs carry empty grounding. For a
-    ``casilla`` diff, ``field_name`` is the casilla id and ``work_unit_value`` /
-    ``evidence_value`` carry the computed / filed decimal strings (empty when
-    the corresponding side carried no value, per
-    :class:`~application.modelo._reconcile_casilla.CasillaDivergenceKind`).
-    """
-
-    model_config = _STRICT_FROZEN
-
-    field_name: str = Field(min_length=1)
-    work_unit_value: str = ""
-    evidence_value: str = ""
-    kind: str = Field(min_length=1)
-    diff_kind: ModeloReconciliationDiffKind = ModeloReconciliationDiffKind.HEADER_FIELD
-    legal_refs: tuple[str, ...] = ()
-    source_refs: tuple[str, ...] = ()
-
-
-class ModeloReconciliationAdvisory(BaseModel):
-    """One non-blocking reconciliation advisory (surfaced as a CLI ``Notice``).
-
-    Carries a stable ``code`` (``totals_not_reconciled`` /
-    ``identity_anchor_unverified``), an operator-facing ``message``, and
-    structured ``context`` (the reason, the anchor, the modelo). The CLI folds
-    each advisory into a typed :class:`~core.json_contract.Notice` on the
-    envelope's ``notices`` channel per
-    ``cli-notices-are-the-only-diagnostic-channel`` — an advisory is never a
-    bespoke result field. Advisories never flip the verdict: they disclose that
-    a comparison could not be performed (so identity-only ``matches`` is never a
-    silent false green), not that a value diverged.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    code: str = Field(min_length=1)
-    message: str = Field(min_length=1)
-    context: Mapping[str, str] = Field(default_factory=dict)
 
 
 class ModeloReconciliationCommand(BaseModel):
@@ -703,7 +618,6 @@ def _finalise_reconciliation(
         append_bucket_event,
         derive_bucket_event_id,
     )
-    from ._reconciliation_records import ModeloReconciliationRecord, ModeloReconciliationRecordRepository
 
     verdict = ModeloReconciliationVerdict.MATCHES if not diffs else ModeloReconciliationVerdict.MISMATCHES
     narrative = (
