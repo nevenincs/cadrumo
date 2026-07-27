@@ -6,5 +6,5 @@ tax_domain = "cross_tax"
 cadence = "quarterly"
 jurisdiction = "ES-AEAT"
 output_sensitivity = "financial"
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+legal_refs = ["orden-1999-11-17:apartado-primero", "ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
 source_refs = ["aeat-modelo-128-procedure", "boe-modelo-128-form-text", "boe-modelo-128-form-layout"]

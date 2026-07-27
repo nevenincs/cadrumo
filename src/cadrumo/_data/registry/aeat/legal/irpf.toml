@@ -1557,6 +1557,63 @@ required_text = [
     "CÓDIGO PROVINCIA",
 ]
 
+[legal."orden-1999-11-17:apartado-primero"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-1999-11-17-apartado-primero.html#apartado-primero"
+document_id = "BOE-A-1999-22372"
+article = "apartado-primero"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1999-22372"
+published_at = 1999-11-20
+effective_from = 1999-11-21
+review_status = "reviewed"
+reviewed_at = 2026-07-27
+reviewed_by = "agent-authored from BOE-A-1999-22372 downloaded from boe.es; operator to re-stamp"
+notes = "Orden de 17 de noviembre de 1999 apartado Primero: aprueba los modelos 128 de declaracion-documento de ingreso."
+required_text = [
+    "Aprobación de los modelos 128",
+    "Se aprueban los modelos 128 en pesetas y en euros",
+]
+
+[legal."orden-1999-11-17:apartado-quinto"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-1999-11-17-apartado-quinto.html#apartado-quinto"
+document_id = "BOE-A-1999-22372"
+article = "apartado-quinto"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1999-22372"
+published_at = 1999-11-20
+effective_from = 1999-11-21
+review_status = "reviewed"
+reviewed_at = 2026-07-27
+reviewed_by = "agent-authored from BOE-A-1999-22372 downloaded from boe.es; operator to re-stamp"
+notes = "Orden de 17 de noviembre de 1999 apartado Quinto: aprueba los modelos 188 del resumen anual de retenciones e ingresos a cuenta."
+required_text = [
+    "Aprobación de los modelos 188",
+    "Se aprueban los modelos 188 en pesetas y en euros",
+]
+
+[legal."orden-1999-11-18:apartado-cuarto"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-1999-11-18-apartado-cuarto.html#apartado-cuarto"
+document_id = "BOE-A-1999-22309"
+article = "apartado-cuarto"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1999-22309"
+published_at = 1999-11-19
+effective_from = 1999-11-20
+review_status = "reviewed"
+reviewed_at = 2026-07-27
+reviewed_by = "agent-authored from BOE-A-1999-22309 downloaded from boe.es; operator to re-stamp"
+notes = "Orden de 18 de noviembre de 1999 apartado Cuarto: aprueba los modelos 193 y 194 del resumen anual de retenciones e ingresos a cuenta."
+required_text = [
+    "Aprobación de los modelos 193 y 194",
+    "Se aprueban los modelos 194 en pesetas y en euros",
+]
+
 [legal."orden-hap-1608-2014:art-1"]
 evidence_tier = "legal_authority"
 authority = "boe"
