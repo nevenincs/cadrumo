@@ -37,7 +37,7 @@ Land the per-revision governance stamp end to end: core enum, strict revision sc
 - [x] `P01.S01` - add the RevisionReviewStatus StrEnum (pending_review, agent_reviewed, operator_reviewed) to the core closed-value-set surface and export it through the core facade; `src/cadrumo/core`.
 - [x] `P01.S02` - add optional governance scalars engineered_by, review_status, reviewed_by, reviewed_at to ModeloRevision with a model validator refusing reviewed_by or reviewed_at unless review_status is beyond pending_review, absence defaulting to pending_review; `src/cadrumo/domain/calculations/registry/_schema.py`.
 - [x] `P01.S03` - hydrate the governance scalars from revision.toml in the TOML compiler, rejecting unknown or misplaced governance keys loudly; `src/cadrumo/domain/calculations/registry/_loader.py`.
-- [ ] `P01.S04` - add governance-stamp loader tests covering roundtrip, fail-closed default on absence, refusal of incoherent stamp combinations, and an anti-tautology mutation proof; `src/cadrumo/domain/calculations/registry/tests/test_governance_stamp.py`.
+- [x] `P01.S04` - add governance-stamp loader tests covering roundtrip, fail-closed default on absence, refusal of incoherent stamp combinations, and an anti-tautology mutation proof; `src/cadrumo/domain/calculations/registry/tests/test_governance_stamp.py`.
 
 ### Phase `P02` - fact lifts into src libraries
 
