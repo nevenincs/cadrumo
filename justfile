@@ -574,7 +574,7 @@ docs-langs:
 # .github/ci-control-plane.md — three runners share the 24-core box); local
 # development keeps the `auto` default per the same control plane.
 docs-check workers="auto":
-    @uv run --no-sync pytest -q -n {{workers}} dev/docs/tests dev/docs/apidocs/tests src/cadrumo/tests/test_docstring_core_struct_links.py -m docs
+    @uv run --no-sync pytest -q -n {{workers}} dev/docs/tests dev/docs/apidocs/tests src/cadrumo/tests/test_docstring_core_struct_links.py -m "docs or unit or (integration and not serial)"
     @uv run --no-sync doc8 docs
     @uv run --no-sync interrogate -c pyproject.toml src/cadrumo
 
