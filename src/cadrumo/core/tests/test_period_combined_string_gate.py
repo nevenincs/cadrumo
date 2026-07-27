@@ -116,7 +116,7 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
             r"test_parser_boundary_synthetic_models|test_parser_privacy_redaction|"
             r"test_parser_synthetic_fixtures|test_verification_chain_part1|"
             r"test_verification_chain_part2|test_verification_chain_part3|"
-            r"test_verification_chain_m\d+(?:_historical)?"
+            r"test_verification_chain_m\d+(?:_historical)?|test_real_render_extraction_coverage"
             r")\.py$"
         ),
         reason="declaracion parser corpus tests pin external justificante fixture filenames and source labels",
@@ -350,6 +350,17 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
     AllowlistRule(
         path=_path(r"^docs/how-to/(?:quickstart|modelo-390|irpf-lifecycle|iva-lifecycle)\.md$"),
         reason="docs preserve justificante/export filename examples, not period input grammar",
+        pattern_names=frozenset({"year-qualified quarterly token"}),
+    ),
+    AllowlistRule(
+        path=_path(r"^docs/_sequences/"),
+        reason=(
+            "recorded CLI transcripts: the token appears in the opaque work-unit display name, "
+            "its text-mode render, and operator-chosen --output filenames. Every command in these "
+            "captures passes the canonical split grammar (--year YYYY --period CODE) and every "
+            "envelope carries the typed {filing_year, code} period, so no period input depends "
+            "on the combined form"
+        ),
         pattern_names=frozenset({"year-qualified quarterly token"}),
     ),
     AllowlistRule(

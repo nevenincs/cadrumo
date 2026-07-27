@@ -44,6 +44,7 @@ from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     BucketAggregationCalculationResult,
     ModeloAggregationBindingError,
+    ModeloProfileReadinessError,
     assert_no_novel_source_kinds,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
     create_work_unit,
@@ -248,22 +249,39 @@ def test_s08_atribucion_member_profile_source_resolves_m184_rows(
     assert [row.importe for row in member_rows] == [Decimal("6000"), Decimal("4000")]
 
 
-def test_s08_atribucion_member_missing_base_emits_source_issue_not_zero(
+def test_s08_atribucion_member_missing_base_refuses_and_never_calculates_a_zero(
     tmp_path: Path,
 ) -> None:
-    """Missing assigned base is diagnosed; the resolver does not derive it from share percentage."""
-    incomplete_facts = tuple(
-        fact
-        for fact in _ATTRIBUTION_PROFILE_FACTS
-        if fact.path != "attribution_entity_socios.1.base_imponible_assigned"
-    )
+    """A member row missing its assigned base refuses by name; nothing resolves to zero.
+
+    The property is unchanged — a missing assigned base must never be derived
+    from the share percentage or quietly become zero — but the layer that
+    enforces it moved. ``attribution_entity_socios.1.base_imponible_assigned``
+    is a required schema field, so the profile readiness gate refuses both work
+    unit creation and calculation, naming the missing path and the edit verb
+    that fixes it. That is strictly louder than the source diagnostic it now
+    shadows: the operator is told what to supply instead of reading a
+    diagnostic attached to a revision that was computed anyway.
+
+    Sequenced so the refusal under test is the CALCULATION one rather than the
+    creation one: the profile is saved complete, the work unit created, and the
+    fact then withdrawn. This is the reachable ordering — a work unit outliving
+    a fact it depends on — and it proves the gate re-runs rather than trusting
+    the readiness established at creation.
+    """
+    profile_facts = tuple(_ATTRIBUTION_PROFILE_FACTS)
+    missing_path = "attribution_entity_socios.1.base_imponible_assigned"
+    incomplete_facts = tuple(fact for fact in profile_facts if fact.path != missing_path)
+    assert len(incomplete_facts) == len(profile_facts) - 1, "the withdrawn fact is not in the fixture"
+
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
-        UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(
+        profile_repository = UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects)
+        profile_repository.save(
             UserProfileRecord(
                 profile_id=_BUCKET_ID,
-                display_name="Incomplete M184 attribution profile",
-                facts=incomplete_facts,
+                display_name="M184 attribution profile",
+                facts=profile_facts,
                 created_at=_T0,
                 updated_at=_T0,
             ),
@@ -271,23 +289,33 @@ def test_s08_atribucion_member_missing_base_emits_source_issue_not_zero(
         wu_repo, cr_repo, tx_repo, invoice_repo = _repos(objects)
         work_unit = _seed(wu_repo, modelo="184", filing_year=2026, period="0A", revision_id="2015-y-siguientes")
 
-        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-            work_unit.work_unit_id,
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            transaction_repository=tx_repo,
-            invoice_repository=invoice_repo,
-            clock=_T1,
+        profile_repository.save(
+            UserProfileRecord(
+                profile_id=_BUCKET_ID,
+                display_name="M184 attribution profile",
+                facts=incomplete_facts,
+                created_at=_T0,
+                updated_at=_T0,
+            ),
         )
 
-    source_issues = [
-        d for d in result.source_diagnostics if d.source_kind == "atribucion_member" and d.reason == "source_issue"
-    ]
-    assert len(source_issues) == 1
-    assert "base_imponible_assigned" in source_issues[0].message
-    assert result.revision.row_binding_values["modelo-184-member-row-nif"] == {"1": "22222222B"}
-    assert result.revision.row_binding_values["modelo-184-member-row-base-assigned"] == {"1": "4000"}
-    assert "0" not in set(result.revision.row_binding_values["modelo-184-member-row-base-assigned"].values())
+        with pytest.raises(ModeloProfileReadinessError) as refusal:
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+                work_unit.work_unit_id,
+                work_unit_repository=wu_repo,
+                calculation_repository=cr_repo,
+                transaction_repository=tx_repo,
+                invoice_repository=invoice_repo,
+                clock=_T1,
+            )
+
+        # No revision was persisted, so there is no zero-bearing row to read
+        # back: the refusal happened before any value was resolved.
+        assert cr_repo.load().for_work_unit(work_unit.work_unit_id) == ()
+
+    context = refusal.value.context or {}
+    assert missing_path in str(context.get("missing", "")), context
+    assert context.get("modelo") == "184"
 
 
 # ---------------------------------------------------------------------------
