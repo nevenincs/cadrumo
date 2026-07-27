@@ -154,6 +154,31 @@ _ANNUAL_SUMMARY_FIXTURE_PATTERNS: dict[str, dict[CasillaId, str]] = {
         ),
     },
 }
+#: Quarterly probe amounts for the M111 -> M190 fold.
+#:
+#: PROBES, NOT AN ORACLE. These are chosen by this test and assert no tax fact.
+#: They are DISTINCT and non-round on purpose: a fold tested with four equal
+#: amounts cannot be told apart from a max, a first-element pick, or a
+#: hardcoded constant, which is why the previous fixture-placeholder version of
+#: this test survived having every amount replaced by an arbitrary number.
+#: Their sums (12345.60 and 1740.73) are the expected annual totals, and no
+#: individual probe equals a sum, so a partial fold is visible too.
+_M190_PERCEPCIONES_PROBE_QUARTERS: tuple[Decimal, Decimal, Decimal, Decimal] = (
+    Decimal("1234.56"),
+    Decimal("2345.67"),
+    Decimal("3456.78"),
+    Decimal("5308.59"),
+)
+_M190_RETENCIONES_PROBE_QUARTERS: tuple[Decimal, Decimal, Decimal, Decimal] = (
+    Decimal("185.18"),
+    Decimal("351.85"),
+    Decimal("518.52"),
+    Decimal("685.18"),
+)
+#: A second clave for the same perceptor, so the count_distinct aggregation is
+#: exercised against more than one (perceptor, clave) pair. "A" is trabajo
+#: (empleados) against the fixture perceptor's "G" actividades profesionales.
+_M190_SECOND_CLAVE = "A"
 _M190_REL_111_ACTIVIDADES_DINERARIO = "modelo-190-rel-111-actividades-dinerario-importe-anual"
 _M190_REL_111_RETENCIONES = "modelo-190-rel-111-retenciones-anual"
 _M190_EXPECTED_RELATION_IDS = frozenset(
@@ -176,6 +201,22 @@ def _casilla_decimal_sequences(values: Mapping[object, tuple[Decimal, ...]]) -> 
     return validated_casilla_id_map(values, surface="cross-dependency relation source casillas")
 
 
+#: The role each fixture this module reads is REQUIRED to declare.
+#:
+#: The two roles are not interchangeable. A ``parser_anchor`` is a real AEAT
+#: render kept for parse fidelity, and the redaction pipeline replaced its
+#: amounts with a uniform placeholder; a ``formula_verification`` specimen is
+#: synthetic and its amounts are at least internally consistent. Asserting the
+#: exact expected role per fixture -- rather than accepting either -- is what
+#: keeps a placeholder-bearing render from being read as a calculation
+#: expectation. The single-expected-role shape mirrors the manual-annex
+#: provenance gate and the bilingual presentador parser test.
+_EXPECTED_FIXTURE_ROLE: dict[str, str] = {
+    "180": "formula_verification",
+    "190": "parser_anchor",
+}
+
+
 @cache
 def _fixture_pdf_text(modelo: str, fixture_stem: str = "2024-0A") -> str:
     pdf_path = FIXTURES_DIR / "justificantes" / modelo / f"{fixture_stem}.pdf"
@@ -183,10 +224,13 @@ def _fixture_pdf_text(modelo: str, fixture_stem: str = "2024-0A") -> str:
     assert sidecar.get("provenance") in {"real_corpus", "synthetic_generated"}, (
         f"{pdf_path} fixture sidecar must declare real or synthetic provenance"
     )
-    assert sidecar.get("role") in {"formula_verification", "parser_anchor"}, (
-        f"{pdf_path} fixture sidecar must declare its role "
-        "(see `fixture-provenance-declared-in-sidecar`); note that NEITHER role "
-        "asserts the printed amounts are AEAT-authoritative"
+    expected_role = _EXPECTED_FIXTURE_ROLE[modelo]
+    assert sidecar.get("role") == expected_role, (
+        f"{pdf_path} fixture sidecar declares role {sidecar.get('role')!r}, but this module "
+        f"reads M{modelo} as {expected_role!r}. The two roles are not interchangeable: a "
+        f"parser_anchor carries redaction placeholders where a formula_verification specimen "
+        f"carries internally-consistent amounts, so swapping one for the other silently "
+        f"changes what every assertion downstream is worth."
     )
     with pdfplumber.open(pdf_path) as pdf:
         return "\n".join(page.extract_text() or "" for page in pdf.pages)
@@ -504,35 +548,51 @@ def test_modelo_190_calculation_resolves_modelo_111_quarterly_filings(
 ) -> None:
     """M111 quarterly percepciones/retenciones fold into the M190 annual summary.
 
-    Structural coverage this genuinely provides: the ten expected M111->M190
-    relations all resolve, the retired per-quarter perceptor source casillas
-    stay retired, the withholding binding aggregates detail observations into
-    ``decl.total-percepciones``, and the annual totals reach their target
-    casillas through the declared operand refs.
+    WHAT IS ASSERTED, AND ON WHAT AUTHORITY. Two different claims, with two
+    different grounds:
 
-    NOT a grounding check. The M190 fixture is a redacted ``parser_anchor``:
-    its printed amounts are the placeholder ``1000.00`` and its perceptor
-    figure is a count, not money. Both sides of every monetary assertion here
-    are derived from that same placeholder, so the comparisons close
-    arithmetically regardless of what the amount is (module docstring).
+    * The M190 annual totals equal the sum of the four M111 quarters. This is a
+      CONSISTENCY INVARIANT entailed by RIRPF art. 108: §1 obliges the retenedor
+      to declare, each quarter, "las cantidades retenidas y de los ingresos a
+      cuenta que correspondan por el trimestre natural inmediato anterior", and
+      §2 obliges an annual declaration of "las retenciones e ingresos a cuenta
+      efectuados". Both cover the same quantity and the four natural quarters
+      partition the year, so a truthful pair must reconcile. It is NOT a
+      computation M190 performs -- the M190 diseño defines its totals as sums
+      over its own type-2 perceptor records -- and no stated reconciliation
+      REQUIREMENT was located in the bundled corpus (a bounded negative over the
+      material held, not a claim about what AEAT requires).
+    * Everything else here is engine wiring: the ten M111->M190 relations
+      resolve, the retired per-quarter perceptor source casillas stay retired,
+      the withholding binding aggregates detail records, and the totals reach
+      their targets through the declared operand refs.
+
+    PROBE VALUES, NOT AN ORACLE. The quarterly amounts below are chosen by this
+    test, and are deliberately DISTINCT and non-round. No tax fact is asserted
+    by them and no filing is claimed: they exist to discriminate a genuine sum
+    from a max, a first-element pick, a last-write-wins, or a hardcoded
+    constant. Identical amounts cannot tell those apart, which is exactly why
+    the earlier version of this test -- which folded the fixture's uniform
+    ``1000.00`` redaction placeholder -- passed with every amount replaced by
+    an arbitrary number.
+
+    The M190 fixture is a ``parser_anchor``, so its printed amounts are
+    placeholders and are NOT used as expected values here. It is still read,
+    for the two things a parse anchor legitimately supplies: the perceptor
+    identity row and the clave G/01 classification.
     """
-    fixture_values = _annual_summary_fixture_values("190")
-    detail_nif, detail_clave, detail_percepcion, detail_retencion = _m190_fixture_detail_observation()
+    detail_nif, detail_clave, _placeholder_percepcion, _placeholder_retencion = _m190_fixture_detail_observation()
     assert detail_clave == "G"
-    assert detail_percepcion == fixture_values[_M190_PERCEPCIONES_TOTAL_CASILLA]
-    assert detail_retencion == fixture_values[_M190_RETENCIONES_TOTAL_CASILLA]
 
     snapshot = registry_snapshot("190", 2024, "0A")
     requirements = relation_source_requirements(snapshot.revision, filing_year=2024, period="0A")
-    percepciones_quarterly = _split_total_across_quarters(fixture_values[_M190_PERCEPCIONES_TOTAL_CASILLA])
-    retenciones_quarterly = _split_total_across_quarters(fixture_values[_M190_RETENCIONES_TOTAL_CASILLA])
     observations = _observations_from_requirements(
         requirements,
         lambda requirement, period_index: _m190_fixture_relation_source_value(
             requirement,
             period_index,
-            percepciones_quarterly=percepciones_quarterly,
-            retenciones_quarterly=retenciones_quarterly,
+            percepciones_quarterly=_M190_PERCEPCIONES_PROBE_QUARTERS,
+            retenciones_quarterly=_M190_RETENCIONES_PROBE_QUARTERS,
         ),
     )
 
@@ -544,21 +604,49 @@ def test_modelo_190_calculation_resolves_modelo_111_quarterly_filings(
     )
     observed_source_casillas = {requirement.source_casilla_ids[0] for requirement in requirements}
     assert not (observed_source_casillas & _RETIRED_M190_M111_PERCEPCIONES_SOURCE_CASILLAS)
+    expected_percepciones_annual = sum(_M190_PERCEPCIONES_PROBE_QUARTERS, Decimal("0"))
+    expected_retenciones_annual = sum(_M190_RETENCIONES_PROBE_QUARTERS, Decimal("0"))
     expected_relation_values = dict.fromkeys(_M190_EXPECTED_RELATION_IDS, Decimal("0"))
-    expected_relation_values[_M190_REL_111_ACTIVIDADES_DINERARIO] = fixture_values[_M190_PERCEPCIONES_TOTAL_CASILLA]
-    expected_relation_values[_M190_REL_111_RETENCIONES] = fixture_values[_M190_RETENCIONES_TOTAL_CASILLA]
+    expected_relation_values[_M190_REL_111_ACTIVIDADES_DINERARIO] = expected_percepciones_annual
+    expected_relation_values[_M190_REL_111_RETENCIONES] = expected_retenciones_annual
     assert relation_values == expected_relation_values
+    # Three records for ONE perceptor: the clave G percepcion appears twice (as
+    # it would for a professional invoicing in two different quarters) and a
+    # clave A percepcion once. The binding declares
+    # `aggregation = { op = "count_distinct" }` over distinct
+    # (perceptor, clave, subclave) type-2 records, so the annual "numero total
+    # de percepciones" must be 2, not 3. A plain record count returns 3 here,
+    # which is precisely the per-quarter double-count the dedicated withholding
+    # binding replaced.
     withholding_observations = (
         _withholding_observation(
             "m190-2024-0A-detail-1",
             detail_nif,
             detail_clave,
-            percibido_dinerario=detail_percepcion,
-            retencion_practicada=detail_retencion,
+            percibido_dinerario=_M190_PERCEPCIONES_PROBE_QUARTERS[0],
+            retencion_practicada=_M190_RETENCIONES_PROBE_QUARTERS[0],
+        ),
+        _withholding_observation(
+            "m190-2024-0A-detail-2",
+            detail_nif,
+            detail_clave,
+            percibido_dinerario=_M190_PERCEPCIONES_PROBE_QUARTERS[1],
+            retencion_practicada=_M190_RETENCIONES_PROBE_QUARTERS[1],
+        ),
+        _withholding_observation(
+            "m190-2024-0A-detail-3",
+            detail_nif,
+            _M190_SECOND_CLAVE,
+            percibido_dinerario=_M190_PERCEPCIONES_PROBE_QUARTERS[2],
+            retencion_practicada=_M190_RETENCIONES_PROBE_QUARTERS[2],
         ),
     )
     binding_values = resolve_withholding_binding_values(snapshot.revision, withholding_observations)
-    assert binding_values[_M190_PERCEPCIONES_BINDING] == fixture_values[_M190_TOTAL_PERCEPCIONES_CASILLA]
+    assert binding_values[_M190_PERCEPCIONES_BINDING] == Decimal("2"), (
+        "modelo-190-percepciones-anual must count DISTINCT (perceptor, clave, subclave) "
+        f"records, so two clave {detail_clave} rows plus one clave {_M190_SECOND_CLAVE} row "
+        f"for one perceptor is 2, not 3; got {binding_values[_M190_PERCEPCIONES_BINDING]!r}"
+    )
     result = calculate_registry_snapshot(
         snapshot,
         inputs=resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
@@ -569,9 +657,9 @@ def test_modelo_190_calculation_resolves_modelo_111_quarterly_filings(
 
     entries = {entry.target_casilla_id: entry for entry in result.entries}
     assert _M190_TOTAL_PERCEPCIONES_CASILLA not in entries
-    assert result.values[_M190_TOTAL_PERCEPCIONES_CASILLA] == fixture_values[_M190_TOTAL_PERCEPCIONES_CASILLA]
-    assert result.values[_M190_PERCEPCIONES_TOTAL_CASILLA] == fixture_values[_M190_PERCEPCIONES_TOTAL_CASILLA]
-    assert result.values[_M190_RETENCIONES_TOTAL_CASILLA] == fixture_values[_M190_RETENCIONES_TOTAL_CASILLA]
+    assert result.values[_M190_TOTAL_PERCEPCIONES_CASILLA] == Decimal("2")
+    assert result.values[_M190_PERCEPCIONES_TOTAL_CASILLA] == expected_percepciones_annual
+    assert result.values[_M190_RETENCIONES_TOTAL_CASILLA] == expected_retenciones_annual
     assert len(entries[_M190_PERCEPCIONES_TOTAL_CASILLA].operand_refs) == 9
     assert entries[_M190_RETENCIONES_TOTAL_CASILLA].operand_refs == ("modelo-190-rel-111-retenciones-anual",)
 

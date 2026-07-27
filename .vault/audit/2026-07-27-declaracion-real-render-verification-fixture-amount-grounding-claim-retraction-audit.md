@@ -135,6 +135,82 @@ would look for a test function whose every assertion is dominated by a
 conditional, or would compare assertion-execution counts across parametrised
 cases and flag a case that executes none.
 
+### accepted-adr-was-being-violated | high | the role axis already decided this, and one assertion erased it
+
+The `verification-fixture-roles` ADR (status accepted) puts two orthogonal axes
+on every fixture sidecar: `provenance` (`real_corpus` / `synthetic_generated`)
+and `role` (`parser_anchor` / `formula_verification`). It describes a real
+sanitised specimen as a "parser-fidelity anchor" and a synthetic one as a
+"formula-verification specimen", and states that synthetic specimens are the
+ones carrying "formula-derived ground truth".
+
+So the project had already decided the question. These were not merely sloppy
+docstrings; they were an accepted decision being violated, because
+`test_cross_dependency_calculations.py` and `test_verification_chain_m111.py`
+consumed `parser_anchor` fixtures as calculation oracles.
+
+The enforcement gap sat inside the offending file. Its sidecar assertion read
+the exact field that would have refused it, accepted BOTH values, and called
+the result "an oracle role". The ADR is explicit that `role` is "descriptive and
+enables future role-specific assertions" — nothing enforced it, which is how
+this drifted. The codebase already held the correct single-expected-role shape
+twice, in the manual-annex provenance gate and in the bilingual presentador
+parser test, so this was an outlier rather than an unsolved problem.
+
+### definitional-sum-modelos-need-probes-not-numeric-oracles | high | 111, 180 and 190 carry no rate, so a numeric AEAT example is not their grounding artefact
+
+Measured over the registry formula tree: modelo 111 declares only `add` and
+`subtract`, modelo 180 only `copy`, modelo 190 only `add` and `copy`. There is
+no rate, bracket, coefficient or percentage in any of the three. Closed by
+construction on the `op = "..."` literal, which a formula cannot declare
+without.
+
+That changes what "grounded" means for them. AEAT states casilla 28 in prose —
+"la suma de las retenciones e ingresos a cuenta que, por todos los conceptos, se
+hayan hecho constar en los epígrafes anteriores" — and the M111 registry
+revision already declares that formula with a `source_citations` entry requiring
+exactly that wording. For a definitional sum the órden's stated aggregation IS
+the grounding artefact; a numeric worked example would add nothing, because
+there is no rate that could be wrong while the structure is right.
+
+The real defect in the M111 test was therefore not that its amounts were
+inauthentic but that they were IDENTICAL. `1000 + 1000 + 1000` cannot
+distinguish a sum from a max, a first-element pick, or a hardcoded constant.
+Distinct probe values can, and asserting no tax fact, they are not fabrication.
+
+This also refines the earlier finding on generator circularity: engine-derived
+ground truth is genuinely circular for a rate-bearing modelo, but for a
+definitional sum it is circular only if derived by RUNNING the engine.
+Independently implementing the órden's stated rule — which is what the probe
+tests now do — is legitimate.
+
+The correspondence between which modelos have bundled manual oracles
+(100, 200, 202, 303, 322, 353, 390 — all rate-bearing) and which do not
+(111, 180, 190 — all pure aggregation) therefore looks like the existing design
+rather than an oversight.
+
+### 111-to-190-is-entailed-not-stated | medium | the four-quarters-equal-the-annual claim is a consistency invariant, not a reconciliation rule
+
+RIRPF art. 108 §1 obliges a quarterly declaration of "las cantidades retenidas y
+de los ingresos a cuenta que correspondan por el trimestre natural inmediato
+anterior"; §2 obliges an annual declaration of "las retenciones e ingresos a
+cuenta efectuados". Both cover the same quantity, and the four natural quarters
+partition the year, so a truthful pair must reconcile.
+
+It is entailed, not stated. It is not a computation modelo 190 performs — the
+190 diseño defines its totals as sums over its own type-2 perceptor records —
+and no stated reconciliation REQUIREMENT was located in the bundled corpus. That
+negative is bounded: it is over the material held, not a claim about what AEAT
+requires anywhere.
+
+Two bundled-corpus gaps support that bound and are operator corpus-refresh items
+rather than fixable here. The modelo 111 órden excerpt is 1,519 bytes carrying
+only the Article 1 approval clause, with no casilla instructions and no anexo.
+The RIRPF art. 108 excerpt is partial, carrying §§1–2 while the full article
+continues into the certificado and the relación nominativa de perceptores.
+`legal-grounding-verifies-bundled-authoritative-corpus` names exactly this case
+and prescribes flagging it rather than trusting the snippet.
+
 ## Recommendations
 
 Retract the claim, keep the coverage. Applied in this pass: the cross-modelo
@@ -162,6 +238,23 @@ Treat the borrador circularity as a separate decision. It is a different defect
 class from the placeholder-amount sites and warrants its own disposition rather
 than being folded into this retraction.
 
+Enforce the role axis wherever a fixture supplies a value, rather than only in
+the two files corrected here. The assertion shape is settled — a single expected
+role per fixture, as the manual-annex and bilingual-presentador tests already
+do — and the corrected sidecar check in the cross-modelo module is a third
+instance. A gate that refused any `parser_anchor` fixture supplying a
+calculation expectation would close the class rather than these instances, and
+would have caught both defects. It is NOT built here: whether such a gate
+already exists somewhere is an open-by-nature question, and the truncated code
+index cannot close it. Scoped and held deliberately.
+
+Do NOT record 111, 180 and 190 as missing-oracle gaps. That recommendation was
+considered and is argued against above: on the definitional-sum finding these
+modelos do not need numeric AEAT oracles, so a loudly-failing gate demanding one
+would assert a requirement the law does not impose and could only be turned
+green by manufacturing figures. What they needed was discriminating probes,
+which is what landed.
+
 ## Context
 
 Evidence for every measurement in this audit was produced by pytest plugins that
@@ -172,9 +265,30 @@ module docstring says: the coverage is structural, catching a broken fold, a
 dropped relation, a mis-declared binding selector, or a resolution that silently
 returns zero, and nothing about AEAT correctness.
 
-What remains ungrounded, for the agent sourcing AEAT worked examples: modelos
-111, 180 and 190 have no bundled per-casilla oracle of either kind. The specific
-figures a real oracle would need to supply are the M111 quarterly retenciones
-leaves and totals for casillas 28 and 30, the M180 annual `decl.base-total` and
-`decl.retenciones-total`, and the M190 annual `decl.percepciones-total`,
-`decl.retenciones-total` and `decl.total-percepciones`.
+A second pass, after the fixture-role ADR and the AEAT casilla instructions came
+to light, replaced the placeholder-derived monetary assertions in the two
+tainted modules with distinct probe amounts and proved the replacements
+discriminate. Four mutations, all run with `-n0`:
+
+- Engine returns a MAX for casilla 28 instead of the nine-operand sum: the M111
+  aggregation test fails, `999.99` against an expected `4999.95`. Under the old
+  placeholder inputs — one non-zero leaf of `1000.00` — max and sum are equal
+  and this would have passed.
+- Every epígrafe probe made identical: the aggregation test still passes, but
+  the probe-distinctness guard fails, so the discriminating power cannot be
+  quietly removed by a well-meaning edit.
+- The M190 quarterly fold made degenerate, every period reading period 0: the
+  cross-modelo test fails with `4938.24` against `12345.60` and `740.72`
+  against `1740.73`.
+- The original amount mutation, every fixture amount replaced by an arbitrary
+  number: still 13 passed. That is now the CORRECT result for the M190 path,
+  which no longer reads fixture amounts at all; the M180 path is a
+  `formula_verification` specimen, the class the ADR designates for exactly
+  this use.
+
+What remains genuinely ungrounded is narrower than it first appeared. For 111,
+180 and 190 nothing does — they are definitional aggregations whose rule is the
+grounding artefact, and the engine is now proven to implement it. The bundled
+corpus gaps recorded above (the 111 órden excerpt and the partial art. 108) are
+operator corpus-refresh items, not calculation gaps. A rate-bearing modelo
+without a bundled oracle would be a real gap; none of these three is one.
