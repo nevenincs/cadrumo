@@ -351,6 +351,20 @@ jobs:
       - name: Sync frozen development environment
         run: uv sync --frozen
 
+      - name: Refuse to seal a version any destination already owns
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Asked here as well as at publication Gate 2, because refusing at seal
+          # time costs one re-run while refusing at Gate 2 is the last check
+          # before an irreversible index upload. Same single authority, so the
+          # two answers cannot disagree; the version comes from the declaration
+          # the cohort build is about to stamp into the artifacts.
+          version="$(uv run --no-sync python -c 'import tomllib,pathlib; print(tomllib.loads(pathlib.Path("pyproject.toml").read_text(encoding="utf-8"))["project"]["version"])')"
+          uv run --no-sync python -m dev.release.version_identity \
+            --version "$version" \
+            --repository "$GITHUB_REPOSITORY"
+
       - name: Build the immutable full release cohort
         run: uv run --no-sync python -m dev.packaging.release_cohort build --output var/release-cohort
 
