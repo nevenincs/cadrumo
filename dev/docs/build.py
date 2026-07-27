@@ -382,6 +382,12 @@ def docs_build_jobs(env: Mapping[str, str]) -> str:
     parallel-safe regardless. A set value must be ``auto`` or a positive
     integer worker count.
 
+    Windows note: Sphinx parallel workers require ``os.fork``
+    (``sphinx.util.parallel.parallel_available`` is ``False`` on win32), so on
+    a Windows host every ``-j`` value degrades to a serial build. The knob
+    only ever changes POSIX builds; tuning it locally on Windows measures
+    nothing.
+
     Args:
         env: The build environment mapping to read the override from.
 

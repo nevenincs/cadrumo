@@ -1,9 +1,13 @@
 """Documentation build conformance gate.
 
-Runs a real nitpicky, warnings-as-errors Sphinx build and asserts it
-succeeds. Every unresolved cross-reference or malformed directive fails the
-build. The test carries the active ``unit`` and ``hex_core`` markers; it builds into a ``tmp_path`` and
-sets ``CADRUMO_DOCS_OFFLINE`` so intersphinx inventories are not fetched.
+Asserts the docs build machinery's hygiene contracts and the focused rendered
+surfaces (identity page, sequence widget), each in a ``tmp_path`` with
+``CADRUMO_DOCS_OFFLINE`` set so intersphinx inventories are not fetched. The
+heavy whole-tree ``-n -W`` builds live one-per-module beside this file
+(``test_docs_build_full_scope``, ``test_docs_build_user_scope``,
+``test_docs_build_localized``) so pytest-xdist's per-file distribution runs
+them concurrently; their shared machinery is
+:mod:`dev.docs.tests._sphinx_build_harness`.
 """
 
 from __future__ import annotations
@@ -20,7 +24,6 @@ from pathlib import Path
 import pytest
 
 from cadrumo.tests.env_scope import scoped_env_var
-from dev.docs.i18n import TARGET_LANGUAGES
 
 #: A real nitpicky whole-tree Sphinx build is minutes of work, not seconds, so
 #: the project-wide 300 s per-test ceiling (``pyproject.toml``) cannot hold it.
@@ -37,35 +40,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs, pytest.m
 #: (``TimeoutExpired`` reports the command and the limit) instead of pytest
 #: dumping a stack with no indication of which build hung.
 _SUBPROCESS_TIMEOUT_S = 1200
-
-#: Bounded default width for gate builds: parallel enough to finish, small
-#: enough to leave the host usable. Overridable via ``CADRUMO_DOCS_JOBS``.
-_GATE_BUILD_JOBS_DEFAULT = "4"
-
-
-def _gate_build_jobs() -> str:
-    """Resolve the Sphinx ``-j`` width for a gate build.
-
-    A gate wants determinism and a bounded footprint, not peak speed, so this
-    does NOT default to ``auto``. ``auto`` takes one worker per core -- 24 on
-    the current build host -- which is the same unbounded-width pattern
-    ``.github/ci-control-plane.md`` bans for ``pytest -n auto``, and for the
-    same reason: co-resident CI lanes and peer agents already contend for those
-    cores, so an uncapped build starves itself and everything beside it.
-
-    An explicit ``CADRUMO_DOCS_JOBS`` still wins, routed through the shared
-    :func:`~dev.docs.build.docs_build_jobs` resolver so the deployment knob
-    keeps one validation path rather than two.
-
-    Returns:
-        The ``-j`` value string to hand to ``sphinx-build``.
-    """
-    if "CADRUMO_DOCS_JOBS" in os.environ:
-        from dev.docs.build import docs_build_jobs
-
-        return docs_build_jobs(os.environ)
-    return _GATE_BUILD_JOBS_DEFAULT
-
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _DOCS = _REPO_ROOT / "docs"
@@ -300,56 +274,6 @@ def test_tracked_sources_do_not_name_noncanonical_docs_build_roots() -> None:
     )
 
 
-def test_sphinx_nitpicky_build_is_clean(tmp_path: Path) -> None:
-    """The nitpicky, warnings-as-errors build must succeed.
-
-    Uses the ``dummy`` builder, not ``html``: the gate only asserts that the
-    full parse and cross-reference resolution (where ``-n`` nitpicky warnings
-    fire) raise no warnings under ``-W``; it does not need rendered HTML, so
-    rendered-page emission is skipped. ``-j auto`` parallelises the autodoc read across
-    every core, since the cost is dominated by importing and introspecting the
-    several-hundred ``automodule`` stubs. Together these cut the build from tens
-    of minutes to a fraction without weakening the check.
-
-    Args:
-        tmp_path: Pytest-provided isolated output directory.
-    """
-    docs_source = tmp_path / "docs-source"
-    shutil.copytree(_DOCS, docs_source, ignore=shutil.ignore_patterns("_build", "cli"))
-    env = {
-        **os.environ,
-        "CADRUMO_DOCS_OFFLINE": "1",
-        "CADRUMO_DOCS_PROJECT_ROOT": str(_REPO_ROOT),
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "cadrumo-docs-state"),
-    }
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "sphinx",
-            "-b",
-            "dummy",
-            "-n",
-            "-W",
-            "-j",
-            _gate_build_jobs(),
-            str(docs_source),
-            str(tmp_path / "out"),
-        ],
-        cwd=_REPO_ROOT,
-        capture_output=True,
-        text=True,
-        env=env,
-        check=False,
-        timeout=_SUBPROCESS_TIMEOUT_S,
-    )
-    assert result.returncode == 0, (
-        "nitpicky sphinx build reported warnings or errors:\n"
-        + (result.stdout or "")[-6000:]
-        + (result.stderr or "")[-6000:]
-    )
-
-
 def _scope_config(scope: str, tmp_path: Path) -> dict[str, object]:
     """Evaluate the scope-conditional ``docs/conf.py`` config under one build scope.
 
@@ -417,118 +341,6 @@ def test_docs_scope_config_switches_autodoc_and_api_exclusion(tmp_path: Path) ->
     assert full["resolves_deferred"] is True
 
 
-def test_user_scope_build_is_nitpicky_clean_and_excludes_api(tmp_path: Path) -> None:
-    """A real user-scope ``-n -W`` build succeeds, excludes docs/api, keeps user pages.
-
-    The operator-facing surface builds clean under nitpicky warnings-as-errors
-    with ``CADRUMO_DOCS_SCOPE=user``: the API autodoc tree is excluded from the
-    read set (so the application is never imported to render it) and the scoped
-    API-reference suppression resolves the handful of user->api links, while every
-    other reference class still reds the gate. The enrolled user pages (and their
-    executed cli-sequence directives) build. Full scope is covered by
-    :func:`test_sphinx_nitpicky_build_is_clean`.
-
-    Args:
-        tmp_path: Pytest-provided isolated output directory.
-    """
-    docs_source = tmp_path / "docs-source"
-    shutil.copytree(_DOCS, docs_source, ignore=shutil.ignore_patterns("_build", "cli"))
-    env = {
-        **os.environ,
-        "CADRUMO_DOCS_OFFLINE": "1",
-        "CADRUMO_DOCS_SCOPE": "user",
-        "CADRUMO_DOCS_PROJECT_ROOT": str(_REPO_ROOT),
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "cadrumo-docs-state"),
-    }
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "sphinx",
-            "-b",
-            "dummy",
-            "-n",
-            "-W",
-            "-j",
-            _gate_build_jobs(),
-            str(docs_source),
-            str(tmp_path / "out"),
-        ],
-        cwd=_REPO_ROOT,
-        capture_output=True,
-        text=True,
-        env=env,
-        check=False,
-        timeout=_SUBPROCESS_TIMEOUT_S,
-    )
-    assert result.returncode == 0, (
-        "nitpicky user-scope build reported warnings or errors:\n"
-        + (result.stdout or "")[-6000:]
-        + (result.stderr or "")[-6000:]
-    )
-    combined = result.stdout + result.stderr
-    # An enrolled user page built; the excluded API tree was never read (no api
-    # docname in the read set) and no residual api reference survived the scoped
-    # suppression to reach the warning stream.
-    assert "how-to/quickstart" in combined
-    assert "api/cadrumo" not in combined
-
-
-@pytest.mark.parametrize("language", TARGET_LANGUAGES)
-def test_localized_user_scope_build_is_nitpicky_clean(tmp_path: Path, language: str) -> None:
-    """A per-language user-scope ``-n -W`` build succeeds for every translation target.
-
-    The localized documentation matrix that the docs CI grows: each Spanish,
-    Catalan, and Hungarian target builds the operator surface under nitpicky
-    warnings-as-errors with ``CADRUMO_DOCS_LANGUAGE`` set, reading the committed
-    ``docs/locales/<lang>`` catalogues. An untranslated or fuzzy segment falls
-    back to English at render time - that fallback is refused by the separate
-    completeness gate, not here - so the structural build must be as clean in
-    every language as it is in English (:func:`test_user_scope_build_is_nitpicky_clean_and_excludes_api`
-    covers the English source). The full autodoc build stays English-only.
-
-    Args:
-        tmp_path: Pytest-provided isolated output directory.
-        language: The BCP-47 translation target to build.
-    """
-    docs_source = tmp_path / "docs-source"
-    shutil.copytree(_DOCS, docs_source, ignore=shutil.ignore_patterns("_build", "cli"))
-    env = {
-        **os.environ,
-        "CADRUMO_DOCS_OFFLINE": "1",
-        "CADRUMO_DOCS_SCOPE": "user",
-        "CADRUMO_DOCS_LANGUAGE": language,
-        "CADRUMO_DOCS_PROJECT_ROOT": str(_REPO_ROOT),
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "cadrumo-docs-state"),
-    }
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "sphinx",
-            "-b",
-            "dummy",
-            "-n",
-            "-W",
-            "-j",
-            _gate_build_jobs(),
-            str(docs_source),
-            str(tmp_path / "out"),
-        ],
-        cwd=_REPO_ROOT,
-        capture_output=True,
-        text=True,
-        env=env,
-        check=False,
-        timeout=_SUBPROCESS_TIMEOUT_S,
-    )
-    assert result.returncode == 0, (
-        f"nitpicky {language} user-scope build reported warnings or errors:\n"
-        + (result.stdout or "")[-6000:]
-        + (result.stderr or "")[-6000:]
-    )
-
-
 def test_rendered_site_identity_and_static_marks_are_canonical(tmp_path: Path) -> None:
     """A real focused HTML build and shipped SVGs expose the canonical identity."""
     from bs4 import BeautifulSoup
@@ -545,6 +357,11 @@ def test_rendered_site_identity_and_static_marks_are_canonical(tmp_path: Path) -
         "CADRUMO_DOCS_MASTER_DOC": "index",
         "CADRUMO_DOCS_SINGLE_PAGE": "1",
         "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "cadrumo-docs-state"),
+        # This gate reads the RENDERED index page's identity marks only; the
+        # cli-sequence golden check and the cli-tree projection are enforced by
+        # their dedicated gates and are not part of this page's assertions.
+        "CADRUMO_DOCS_SKIP_SEQUENCE_CHECK": "1",
+        "CADRUMO_DOCS_SKIP_CLI_TREE": "1",
     }
     result = subprocess.run(
         [
