@@ -10,6 +10,16 @@ related:
   - '[[2026-07-25-declaracion-profile-printed-box-scope-real-render-gate-and-naming-honesty-audit]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `declaracion-real-render-verification` plan
 
 ### Phase `P01` - Evidence-backed profiles
@@ -53,10 +63,11 @@ Open defects and decisions this campaign measured but did not close
 - [x] `P04.S20` - Wire D4 so it stays true, by having the real-render gate import the production profile selector rather than hand-copying its logic; `src/cadrumo/adapters/inbound/declaracion/tests`.
 - [ ] `P04.S21` - Bring the borrador and n26 fixture corpora under the provenance discipline, since neither carries sidecars nor gate coverage and their generators do not set the producer signature the gate's discriminator depends on; `src/cadrumo/tests/fixtures/borrador, src/cadrumo/domain/calculations/registry/tests`.
 - [x] `P04.S22` - Measure the ledger evidence text layer against a size-aware segmentation change, the second and more consequential unmeasured consumer since it reads taxpayer financial documents; `src/cadrumo/application/ledger`.
-- [ ] `P04.S23` - Find a size-aware mechanism that leaves the ledger evidence path byte-identical, or scope it to the declaracion entry point instead of the shared primitive; `src/cadrumo/adapters/inbound/pdf, src/cadrumo/adapters/inbound/declaracion`.
+- [x] `P04.S23` - Find a size-aware mechanism that leaves the ledger evidence path byte-identical, or scope it to the declaracion entry point instead of the shared primitive; `src/cadrumo/adapters/inbound/pdf, src/cadrumo/adapters/inbound/declaracion`.
 - [ ] `P04.S24` - Correct the seven decl.ejercicio targets declared value_kind amount on what is a tax year, a schema mis-declaration rather than a guard gap; `src/cadrumo/_data/registry/aeat/modelos`.
 - [ ] `P04.S25` - Make every synthetic fixture generator set the canonical producer signature, since only one of three does and the provenance gate's discriminator rests on that invariant holding; `src/cadrumo/tests/fixtures`.
 - [x] `P04.S26` - Anchor numeric_casilla on form_number rather than record-design number, closing at scale the same defect D1 corrected for the blank-box guard; `src/cadrumo/adapters/inbound/declaracion`.
+- [ ] `P04.S27` - Implement the word-level Modelo 100 fix inside the parser, after re-running the committed real-render gate with the size attribute to clear the bbox word-ordering risk; `src/cadrumo/adapters/inbound/declaracion`.
 
 ## Description
 

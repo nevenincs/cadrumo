@@ -3,10 +3,11 @@ tags:
   - '#adr'
   - '#modelo-100-parser-glyph-merge'
 date: '2026-07-26'
-modified: '2026-07-26'
+modified: '2026-07-27'
 related:
   - "[[2026-07-26-declaracion-real-render-verification-adr]]"
   - '[[2026-07-26-declaracion-real-render-verification-campaign-close-honesty-review-audit]]'
+  - '[[2026-07-27-declaracion-real-render-verification-ledger-safe-fix-mechanisms-for-modelo-100-audit]]'
 ---
 
 # `modelo-100-parser-glyph-merge` adr: `how to stop the parser fabricating amounts from merged box-number glyphs` | (**status:** `accepted`)
@@ -76,7 +77,19 @@ but it is not a fix and it would strand the modelo.
 **(C) Size-aware segmentation plus a trailing-box-number capture rule.** The
 prototyped combination, and the only measured path to correct values. It is what
 this record exists to decide, because it is three coupled changes rather than one
-fix.
+fix. **Chosen, in the word-level form recorded as D1** — applied to word extraction
+inside the parser rather than to the shared text primitive.
+
+**(E) Split the merged token at capture, changing no extraction at all.** Proposed as
+the most attractive candidate and **refuted by measurement**, which is worth recording
+because it was the option that would have cost nothing. It assumed the merged text was
+the amount followed by the box number, recoverable by a string operation. It is not.
+Casilla `0545` extracts as `1.001.0000,50405`, not `1.001.000,000545`: the box
+number's bounding box sits *inside* the amount's span, so the digits are interleaved by
+x-position and **the correct amount is not a substring of the merged text at any
+position**. No capture-time string rule can recover it. The trailing-box-number rule
+only becomes applicable once the runs are already separated, which is precisely what
+requesting the size attribute does.
 
 **(D) Leave it, with the exclusion pinned.** The current state. Modelo 100 is
 excluded from the real-render gate with the exclusion evidenced rather than assumed,
@@ -85,10 +98,37 @@ until (C) is decided — but it leaves a modelo whose every extracted value is w
 
 ## Decisions
 
-**None. This record scopes the problem and names what must be measured before any
-of it can be decided.** It is `proposed` deliberately: two of the three changes reach
-subsystems nobody has measured, and deciding them from the declaración evidence alone
-would repeat the generalisation this line of work exists to correct.
+**D1 — The fix is word-level, lives entirely in the declaración parser, and does not
+touch the shared primitive.** Decided 2026-07-27, once a mechanism was found that
+answers Q1's narrow reopened form.
+
+The premise that made Q1 look blocking was wrong. Declaración has **two independent
+extraction axes**, not one. The shared `adapters/inbound/pdf` primitive backs only the
+text-string functions — the ones ledger and borrador call. The word-extraction
+functions call pdfplumber **directly inside the parser**, never through the shared
+module, and are not in either consumer's import graph. So an isolated pathway already
+exists and runs in production today; it simply does not request the size attribute.
+
+The mechanism is therefore: request size on word extraction, have `named_label`
+capture consult that word data for amount-kind targets, and apply the
+trailing-box-number rule there. Text assembly never changes, so **ledger and borrador
+are untouched by construction rather than by measurement** — which is a stronger
+guarantee than any before-and-after comparison could give.
+
+This supersedes the framing that Q1 blocked everything. Q2 narrows with it: the
+capture change is confined to one strategy's implementation rather than altering what
+"the value on this line" means estate-wide. Q3 is unaffected and still governed by D2
+of the parent record.
+
+**What is not yet cleared, and must be before this lands.** The same word-extraction
+function backs `bbox_anchored`, which carries the currently-passing real-render gate
+for Modelos 390, 111 and 190. Adding the size attribute *does* change the returned
+word lists there — header and footer text reorganises on 390, duplicate-match ordering
+swaps on 111. Narrowed by direct probe: every specific box-number-pattern match on all
+three returns identical text and coordinates, with only list order differing where
+there were two hits. That is real evidence the risk is narrow and it is **not** the
+same as re-running the committed gate, which the probe could not do. Re-running it is
+the precondition for landing.
 
 The three coupled decisions, stated so they are not mistaken for one:
 
