@@ -10,6 +10,34 @@ related:
 
 # `declaracion-real-render-verification` audit: `S15 form_number sourcing: a measured negative result`
 
+> **SUPERSEDED 2026-07-27. Its central negative result is false, and seven of the
+> seventeen targets were sourced twenty-eight minutes after this was written.**
+>
+> This record concludes that no printed box number can be sourced for any of the
+> seventeen targets. The very next commit in this campaign, `1a7c2ef704`, populated
+> `form_number` on seven of them — Modelo 349's four and Modelo 180's three — from
+> the bundled AEAT **instructions** corpus, which this audit did not check.
+> `instr_mod_349` names Casilla 01 through 04 against their labels and
+> `modelo-180-ayuda-resumen-datos` names Casilla01 through 03. Modelo 180's own
+> registry binding had in fact been citing that file as `required_text` since it was
+> authored, so the evidence was inside the registry the entire time.
+>
+> What survives: Modelo 193's three targets are genuinely unsourceable, confirmed
+> separately by running the real extractor over its bundled nota informativa, grepping
+> its procedure HTML, and checking all five `required_text` citations in its registry
+> TOMLs. Its structure being identical to Modelo 180's makes inferring 01/02/03
+> tempting and inadmissible. The seven `decl.ejercicio` targets are a different and
+> milder problem and were resolved as a type-coherence fix.
+>
+> This annotation exists because a corpus consistency sweep found the record standing
+> unmarked and unreferenced, reading as a live dead end. **A negative result is the one
+> kind of finding that tells a reader not to look**, so leaving it uncorrected costs
+> more than a stale count would: a stale number invites re-measurement, while "this
+> cannot be done" removes the reason to try. The lesson is not that the conclusion was
+> careless — it was measured against the corpus tree it searched — but that a negative
+> result should name the sources it checked, so the next reader can see which it did
+> not.
+
 ## Scope
 
 Evidence for plan step `P04.S15`, which asks that `form_number` be populated on

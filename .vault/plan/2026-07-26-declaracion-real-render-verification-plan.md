@@ -10,6 +10,16 @@ related:
   - '[[2026-07-25-declaracion-profile-printed-box-scope-real-render-gate-and-naming-honesty-audit]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `declaracion-real-render-verification` plan
 
 ### Phase `P01` - Evidence-backed profiles
@@ -48,7 +58,7 @@ Open defects and decisions this campaign measured but did not close
 - [ ] `P04.S15` - Populate form_number on the remaining inert blank-box guards, seven armed from AEAT instructions and three Modelo 193 targets blocked for want of any published box number or specimen; `src/cadrumo/_data/registry/aeat/modelos`.
 - [x] `P04.S16` - Scope the M100 parser follow-on ADR covering the shared pdfplumber primitive, the estate-wide named_label capture contract, and the M100 floor under D2; `.vault/adr`.
 - [x] `P04.S17` - Decide whether Modelo 202 is enrolled in casilla-level reconcile, now that its profile is confirmed to exist and D5 governs enrolment; `.vault/adr, src/cadrumo/application/modelo`.
-- [x] `P04.S18` - Decide the disposition of verify_declaracion, a modelo-agnostic comparison mechanism with zero callers outside its own tests; `src/cadrumo/application/verification`.
+- [ ] `P04.S18` - Decide whether verify_declaracion is wired or deleted, a modelo-agnostic comparison mechanism characterised as an abandoned partial build but whose disposition is still untaken; `src/cadrumo/application/verification`.
 - [x] `P04.S19` - Correct the Modelo 100 sidecar manifests to declare both sanitiser constants, since the length-preserving sanitiser wrote two forms while the manifests name one; `src/cadrumo/tests/fixtures/justificantes/100`.
 - [x] `P04.S20` - Wire D4 so it stays true, by having the real-render gate import the production profile selector rather than hand-copying its logic; `src/cadrumo/adapters/inbound/declaracion/tests`.
 - [ ] `P04.S21` - Bring the borrador and n26 fixture corpora under the provenance discipline, since neither carries sidecars nor gate coverage and their generators do not set the producer signature the gate's discriminator depends on; `src/cadrumo/tests/fixtures/borrador, src/cadrumo/domain/calculations/registry/tests`.
@@ -59,6 +69,7 @@ Open defects and decisions this campaign measured but did not close
 - [x] `P04.S26` - Anchor numeric_casilla on form_number rather than record-design number, closing at scale the same defect D1 corrected for the blank-box guard; `src/cadrumo/adapters/inbound/declaracion`.
 - [ ] `P04.S27` - Implement the word-level Modelo 100 fix inside the parser, after re-running the committed real-render gate with the size attribute to clear the bbox word-ordering risk; `src/cadrumo/adapters/inbound/declaracion`.
 - [ ] `P04.S28` - Adjudicate the four enum-over-non-enum targets the naive coherence rule surfaces, which are arguable rather than settled since the schema enforces no enum-versus-text distinction; `src/cadrumo/_data/registry/aeat/modelos`.
+- [ ] `P04.S29` - Register the Modelo 100 coverage floor as an evidence gap under D2, since three specimens from one filer with every box populated cannot ground one; `.vault/exec, src/cadrumo/_data/registry/aeat/modelos/100`.
 
 ## Description
 
