@@ -123,6 +123,15 @@ design obligation on the un-armed pipeline.
   authorities) was rejected because divergent paths cannot prove which
   authority published which bytes. Today's two-lane state is that option,
   armed by a single variable.
+- Executed 2026-07-27, after acceptance: the operator carried out the P1
+  disposition (both partial releases and their remote tags deleted, the
+  local rc tag removed, deletion metadata captured off-repo first) and ruled
+  every version declaration reset to `0.0.0` — the only version this
+  repository has ever actually published (the two companion name
+  reservations). The reset makes the declarations truthful, and it re-arms
+  the `0.2.0`/`0.2.1` collision: the monotonic floor now sits below numbers
+  the public was able to download for weeks. That event triggers the P3
+  burned-version amendment below.
 
 ## Considered options
 
@@ -148,7 +157,7 @@ design obligation on the un-armed pipeline.
   artefact — a standing implicit availability claim — and the never-delivered
   history is fully reconstructible from git history and the vault without
   keeping a misleading public surface. The version NUMBERS stay burned either
-  way (P3's monotonic floor), so keeping the pages buys nothing.
+  way (P3's burned-version ledger), so keeping the pages buys nothing.
 
 **Version advancement ownership (ruling P2).**
 
@@ -229,10 +238,12 @@ survives with its sign flipped — the sealed cohort `30216592706` cannot be
 relabelled, so it is a superseded candidate, and the first complete release
 ships a freshly sealed cohort at a fresh version. That version is not
 hand-picked: release-please computes it over the conventional-commit history
-from the manifest floor `0.2.1` (`bump-minor-pre-major: true`; expected
-minor, `0.3.0`), and a version number ever stamped on any artefact — shipped,
-partial, or abandoned — is never reused, which P3's monotonic floor enforces
-mechanically. Disposition of the partial artefacts: the `v0.2.0` and
+from the release-please manifest floor — reset to `0.0.0` on 2026-07-27 by
+operator ruling after the deletions, so the expected first computed version
+is `0.1.0` under `bump-minor-pre-major: true` — and a version number ever
+stamped on a publicly exposed artefact is never reused, which P3 enforces
+mechanically through the burned-version ledger together with the monotonic
+floor. Disposition of the partial artefacts: the `v0.2.0` and
 `v0.2.1` releases and their remote tags are deleted as never-delivered
 (operator-executed, OP-5), because `releases/latest` currently resolves to a
 partial artefact — a standing implicit availability claim the readiness ADR
@@ -269,10 +280,30 @@ PyPI projects; the `v<version>` tag and release namespace, draft or published
 — the check whose absence arms today's stranding; the tap and bucket pointer
 manifests (the monotonic backward-bump guard the account standard already
 mandates); and the marketplace preflight owned by the delivery sibling. The
-guard additionally enforces the monotonic floor: the candidate version must
-be strictly greater than the release-please manifest's recorded version, so
-deleting a never-delivered release (P1) cannot resurrect its number — the
-manifest, not the destination's live state, is what burns a version. One
+guard additionally enforces two memory clauses, because the destination's
+live state forgets. First, the monotonic floor: the candidate version must
+be strictly greater than the release-please manifest's recorded version —
+which, after the 2026-07-27 reset of every declaration to `0.0.0`, also
+structurally refuses `0.0.0` itself. Second, the burned-version ledger,
+added by amendment on the day the reset re-armed the very collision this
+record closes: with the floor at `0.0.0`, the guard would re-admit the whole
+`0.0.1`–`0.2.1` range, yet `0.2.0` and `0.2.1` were publicly downloadable
+for weeks before their deletion, so a re-mint would put different bytes
+under a version string the public has already seen — and no floor can
+express that, because the protected fact is no longer "the highest version
+reached" but "these specific numbers were exposed". The ledger is an
+explicit committed list, seeded with `0.2.0` and `0.2.1`, owned and read by
+the same guard authority (a data file under the release tooling, covered by
+the guard's tests) and refused regardless of floor or live destination
+state. It exists precisely because deletion erases the destination-side
+evidence of exposure: it is the durable memory of what the world may hold.
+Its discipline is two rules. Append-only: an entry is never removed, because
+public exposure cannot be revoked, so there is no unburn — silent or
+otherwise. And deletion-burns: every outward deletion of a release, tag, or
+index version adds that version to the ledger in the same change, so
+disposing of an artefact and burning its number are one act, never two. The
+rc tag stays unledgered: it never left the local worktree, so nothing was
+exposed. One
 tested authority implements it, and it runs twice: cheaply at cohort seal
 (P2) and authoritatively in Gate 2, so a stale candidate and a fresh
 collision are both refused before anything irreversible happens.
@@ -358,10 +389,13 @@ can be proven on the easiest case it will ever have.
 - The re-versioned release re-earns its evidence rows on fresh digests —
   release latency increases by one full evidence cycle, accepted as the cost
   of digest-bound proof.
-- Until the implementing plan lands, the collision remains armed: nothing in
-  this record changes the live workflows, so the guard blind spot and the
-  irreversible-first ordering persist in the meantime. The record's teeth
-  arrive with its plan; naming that gap is what keeps the interim honest.
+- Execution state, updated 2026-07-27: the P1 disposition is executed
+  (releases and remote tags deleted, rc tag removed, every declaration reset
+  to `0.0.0`) and the two-lane hazard ends with the #618 deletions. The
+  guard blind spot and the irreversible-first ordering persist until the
+  implementing plan lands — and until the burned-version ledger exists,
+  nothing at all refuses the `0.2.0`/`0.2.1` range, so the ledger is the
+  plan's first guard deliverable.
 - Operator decision points owned by this record: **OP-5** ratify the P1
   disposition and execute its outward-facing half — delete the `v0.2.0` and
   `v0.2.1` releases and their remote tags as never-delivered (the abandonment
