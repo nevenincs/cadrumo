@@ -232,3 +232,28 @@ def test_aeat_human_cli_and_authority_forms_are_allowed(surface: str) -> None:
 def test_former_aeat_product_forms_are_rejected(surface: str, expected_family: str) -> None:
     """Former import, package, install, and source families remain prohibited."""
     assert expected_family in _prohibited_aeat_product_forms(surface)
+
+
+def test_full_lane_runs_the_channel_generator_tests_explicitly_and_serially() -> None:
+    """The fourteen generator tests must be selected by an actual lane.
+
+    Nothing ran them before: the per-push lanes scope to dev/ paths AND exclude
+    serial, the pathless invocations inherit testpaths that cannot reach
+    packaging/, and the acquisition workflows invoke the generators but never
+    their tests. Two independent breakages accumulated there unobserved.
+
+    Explicit paths and -n0 are the assertion, not incidental style. A
+    marker-filtered xdist run HOLDS serial tests out while reporting a clean
+    pass, which is the same false green that hid those breakages, so selecting
+    them by marker alone would reinstate it.
+    """
+    document = yaml.safe_load(_FULL_WORKFLOW.read_text(encoding="utf-8"))
+    steps = document["jobs"]["cadrumo-full-conformance"]["steps"]
+    generator = next(
+        (str(step["run"]) for step in steps if "packaging/homebrew/tests" in str(step.get("run", ""))),
+        None,
+    )
+    assert generator is not None, "no lane selects the Homebrew generator tests"
+    assert "packaging/scoop/tests" in generator, "the Scoop generator tests share this lane"
+    assert "-n0" in generator, "serial tests must run single-worker or they are held out silently"
+    assert "-m serial" in generator, "the lane must select the serial marker these tests carry"

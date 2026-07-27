@@ -96,6 +96,21 @@ jobs:
         # harness tests legitimately run 300-900 s (see ci.yml).
         run: uv run --no-sync pytest -q -n 8 --timeout=900 -m "unit or (integration and not serial)" dev/ci/tests dev/packaging/tests dev/quality/tests dev/release/tests
 
+      - name: Channel generator conformance (Homebrew formula, Scoop manifest)
+        # These fourteen tests bind the generated formula and manifest to a real
+        # built cohort, and until now NOTHING ran them: the per-push lanes scope
+        # to dev/ paths AND exclude serial, the pathless invocations inherit
+        # testpaths that cannot reach packaging/, and the acquisition workflows
+        # invoke the generators but never their tests. Two independent breakages
+        # accumulated there unobserved as a result.
+        #
+        # Explicit paths and -n0, never marker selection alone: a marker-filtered
+        # xdist run HOLDS serial tests out while still reporting a clean pass,
+        # which is the same false green that hid the breakages. Sized into this
+        # lane rather than per-push because the tests build real sdists and
+        # wheels, costing minutes the per-push budget cannot absorb.
+        run: uv run --no-sync pytest -q -n0 --timeout=900 -m serial packaging/homebrew/tests packaging/scoop/tests
+
       - name: Serving-path performance gate
         # perf-marked, excluded from every per-push lane (a shared machine
         # steals wall-clock from co-resident jobs): the hard assert is PROCESS
