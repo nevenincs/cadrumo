@@ -33,12 +33,12 @@ from .....tests.cli_runner import invoke_cached_cli
 from .. import _censo_file
 from .._censo_payloads import CensoPullDivergencePayload, CensoPullFactPayload, CensoPullResult
 
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
 _AEAT = Settings.external_constants().aeat
 #: The censal consulta landing, assembled from the declared sede origin and
 #: path rather than restated, so a route change reaches this payload too.
 _CENSAL_CONSULTA_URL = f"{_AEAT.domains.sede}{_AEAT.sede_paths.censal_datos}"
-
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 #: Fetch verbs the CLI pull-and-file standard forbids for an AEAT read.
 _FORBIDDEN_FETCH_VERBS = frozenset({"capture", "refresh", "fetch", "download", "sync", "get"})
