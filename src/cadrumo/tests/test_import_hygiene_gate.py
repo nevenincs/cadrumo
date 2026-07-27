@@ -530,6 +530,7 @@ def test_no_shipped_module_imports_the_unshipped_dev_tooling() -> None:
     recording a tolerated exception.
     """
     py_files = sorted(p for p in PKG_ROOT.rglob("*.py") if "__pycache__" not in p.parts)
+    assert py_files, f"no shipped modules found under {PKG_ROOT}; a hard-zero gate over an empty scan is not a zero"
     violations = find_dev_tooling_import_violations(py_files)
 
     offenders = [f"{v.importer_path}:{v.lineno} -> {v.target_mod}" for v in violations]

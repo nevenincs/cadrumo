@@ -200,3 +200,29 @@ def test_a_missing_screened_tree_refuses_rather_than_reporting_clean(tmp_path: P
 
     with pytest.raises(SystemExit, match="screened tree is missing"):
         screen(tmp_path)
+
+
+def test_a_proof_about_another_corpus_does_not_exempt_a_scan(tmp_path: Path) -> None:
+    """Module-level credit is same-corpus, not module-wide.
+
+    The sibling above vouches for ``CATALOGUE`` and is credited to a scan over
+    ``CATALOGUE``. It must NOT be credited to a scan over ``PAGES``, which
+    nothing has established is non-empty: that scan reports exactly what a
+    clean corpus reports and exactly what an empty one reports.
+
+    Crediting module-wide was the original shape and it laundered 110 functions
+    tree-wide -- more than five times the worklist it was hiding them behind.
+    """
+    _write_screened_tree(
+        tmp_path,
+        "test_probe.py",
+        """
+        def test_catalogue_is_present() -> None:
+            assert len(CATALOGUE) >= 100
+
+        def test_no_offenders_in_pages() -> None:
+            assert [page for page in PAGES if is_bad(page)] == []
+        """,
+    )
+
+    assert _flagged_names(tmp_path) == {"test_no_offenders_in_pages"}

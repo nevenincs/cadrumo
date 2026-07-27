@@ -55,6 +55,7 @@ def test_extraction_sidecars_are_excluded_from_the_expected_set() -> None:
     be double-indexed.
     """
     expected = expected_data_files(_REPO_ROOT)
+    assert expected, "the walker produced no expected data files; an empty set trivially contains no sidecars"
     sidecars = {p for p in expected if ".extracted." in p}
     assert not sidecars, f"sidecars re-entered the walker expected set: {sorted(sidecars)[:5]}"
 

@@ -16,6 +16,14 @@ itself. Two classes of expected false positive are known and are not bugs here.
   fail loudly in a sibling gate that asserts a concrete known path is present.
   Such a guard counts, and a hit whose substrate carries one is not a finding.
 
+That second exemption is SAME-CORPUS, not module-wide. A sibling asserting the
+shared substrate is populated vouches only for scans over that same substrate;
+it does not vouch for a scan over a corpus it never touched. Crediting it
+module-wide was the original shape, and it silenced 110 functions tree-wide —
+more than five times the worklist it was hiding them behind. The credit is
+matched by name, so a scan reaching its corpus through a call rather than a bare
+name gets none and is flagged, which is the safe direction.
+
 What it does NOT see, stated so the coverage is not overread: it detects one of
 the four known shapes only. A gate asserting a TOTAL where the property is a
 DECOMPOSITION passes this screen, as does a pattern that compiles but cannot
@@ -155,6 +163,39 @@ def asserts_a_non_empty_result(node: ast.stmt) -> bool:
     )
 
 
+def referenced_names(nodes: list[ast.AST]) -> frozenset[str]:
+    """Return every bare name the nodes read, as a proxy for the corpus in play."""
+    return frozenset(node.id for node in nodes if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load))
+
+
+def module_proofs_by_corpus(parsed: ast.AST) -> list[frozenset[str]]:
+    """Return, per module-level proof-of-scan, the corpus names it vouches for.
+
+    A module-level proof is credited to a sibling only when the two speak about
+    the same corpus. That is the distinction between the guard the screen
+    sanctions and the laundering it must not perform.
+
+    Crediting a proof to the WHOLE module was the original shape, and it silences
+    a scan over a corpus the proof never touched: one ``assert len(PAGES) >= 100``
+    vouches for a sibling walking ``CATALOGUES``, which nothing has established is
+    non-empty. Same-corpus credit keeps the sanctioned case — the sibling that
+    asserts the shared substrate is populated — while refusing the unrelated one.
+
+    Name-level, not dataflow. A scan reaching its corpus through a call rather
+    than a bare name gets no credit and is flagged, which is the safe direction:
+    this screen's dangerous error is real vacuity left unflagged, and its cheap
+    error is one extra read.
+    """
+    proofs: list[frozenset[str]] = []
+    for node in ast.walk(parsed):
+        if not isinstance(node, ast.FunctionDef):
+            continue
+        for statement in ast.walk(node):
+            if proves_it_scanned(statement) and isinstance(statement, ast.Assert):
+                proofs.append(referenced_names(list(ast.walk(statement))))
+    return proofs
+
+
 def screen(root: Path) -> tuple[int, list[tuple[str, str, int]]]:
     """Return the module count screened and the flagged ``(path, function, line)``."""
     flagged: list[tuple[str, str, int]] = []
@@ -169,14 +210,17 @@ def screen(root: Path) -> tuple[int, list[tuple[str, str, int]]]:
                 parsed = ast.parse(path.read_text(encoding=_UTF_8))
             except (SyntaxError, UnicodeDecodeError):
                 continue
-            module_proves = any(proves_it_scanned(n) for n in ast.walk(parsed))
+            proofs = module_proofs_by_corpus(parsed)
             for func in ast.walk(parsed):
                 if not isinstance(func, ast.FunctionDef) or not func.name.startswith("test_"):
                     continue
                 body = list(ast.walk(func))
                 if not any(asserts_emptiness(n) for n in body):
                     continue
-                if module_proves or any(proves_it_scanned(n) for n in body):
+                if any(proves_it_scanned(n) for n in body):
+                    continue
+                names = referenced_names(body)
+                if any(proof & names for proof in proofs):
                     continue
                 if any(asserts_a_non_empty_result(n) for n in body):
                     continue

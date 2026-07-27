@@ -145,6 +145,7 @@ def test_every_live_leaf_is_documented() -> None:
     from dev.docs.cli_reference import collect_live_leaf_paths_in_subprocess
 
     live_keys = set(collect_live_leaf_paths_in_subprocess())
+    assert live_keys, "the live CLI walk enumerated no leaves; this gate would pass over an empty tree"
     documented_keys = _rendered_doc_registry_keys()
 
     missing_from_docs = sorted(live_keys - documented_keys)
@@ -163,6 +164,7 @@ def test_every_documented_path_resolves_to_a_live_command() -> None:
     from dev.docs.cli_reference import collect_live_leaf_paths_in_subprocess
 
     live_keys = set(collect_live_leaf_paths_in_subprocess())
+    assert live_keys, "the live CLI walk enumerated no leaves; this gate would pass over an empty tree"
     documented_keys = _rendered_doc_registry_keys()
 
     orphan_docs = sorted(documented_keys - live_keys)
@@ -193,6 +195,7 @@ def test_schema_registry_entries_map_to_live_commands_or_group_callbacks() -> No
 
     _populate_schema_registry()
     live_keys = set(collect_live_leaf_paths_in_subprocess())
+    assert live_keys, "the live CLI walk enumerated no leaves; this gate would pass over an empty tree"
     registry_keys = set(SCHEMA_REGISTRY.keys())
     expected_reachable = live_keys | _GROUP_CALLBACK_EMIT_KEYS
 
@@ -221,6 +224,7 @@ def test_every_live_leaf_has_a_registered_schema() -> None:
 
     _populate_schema_registry()
     live_keys = set(collect_live_leaf_paths_in_subprocess())
+    assert live_keys, "the live CLI walk enumerated no leaves; this gate would pass over an empty tree"
     registry_keys = set(SCHEMA_REGISTRY.keys())
 
     unregistered = sorted(live_keys - registry_keys)
