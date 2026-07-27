@@ -59,7 +59,10 @@ related:
 
 ## Outcome
 
-Both files deleted in commit `e028be1a9e`.
+Both files deleted in the commit subject `chore(release): retire the second PyPI
+lane, its premise is void`. Cited by subject rather than by hash: the branch
+history was rewritten after this record was written, so the original hash no
+longer resolves. Subjects survive a rewrite; hashes do not.
 
 Gate one: the tree-wide reference sweep returns no match outside the vault. The
 records that document the retirement remain, which is what the gate expects.
