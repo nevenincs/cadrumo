@@ -309,6 +309,33 @@ root. Never use a maintainer's real taxpayer profile for release verification.
 
 Run every command from the repository root on a clean `main` branch.
 
+**The bump is the first act of a release cycle, not a step you reach later.** A
+cohort is stamped with whatever version the declarations hold when it is built,
+so building before bumping mints a cohort under the previous release's number.
+That is not a recoverable mistake once anything ships: a package index upload is
+permanent, and the number is burned whether or not the upload was intended.
+
+The version is computed, never chosen. `release-please` derives it from
+conventional-commit history against the floor recorded in
+`.release-please-manifest.json`; with `bump-minor-pre-major` a feature commit
+takes the next minor. Do not hand-pick a number to match an expectation.
+
+Two guards enforce this and both refuse rather than warn:
+
+- The cohort seal step refuses to build a version any destination already owns,
+  so a skipped bump is caught when the cost is one re-run.
+- Publication Gate 2 asks the same question again immediately before the first
+  write, covering the case where a cohort was sealed earlier and dispatched
+  later.
+
+Both consult `dev/release/burned_versions.json`, an append-only ledger of
+numbers that may never be minted again. A version enters it whenever an outward
+artefact carrying it is deleted, **in the same change as the deletion** —
+disposing of an artefact and burning its number are one act, never two. The
+ledger exists because deleting a release erases the destination-side evidence
+that the number was ever exposed, while anyone who fetched those bytes still
+holds them.
+
 1. Update `main` and run the readiness gate:
 
    ```console
@@ -656,6 +683,32 @@ runs the installed behavior oracles, and emits a reacquisition evidence row. The
 docs-claims gate fails any README or docs page that advertises a channel without a
 passing reacquisition row for that channel. Land install-claim docs updates only after
 all applicable reacquisition lanes pass.
+
+#### Distribution-complete tripwire
+
+A release is not distribution-complete until the documentation site describes it.
+Publication attaches a download payload to the release, and the documentation
+site reads that payload at its next publish — so until a documentation publish
+runs, the download page still describes the previous release.
+
+This is deliberate and bounded rather than a defect. Documentation publication is
+a release *consequence*, never a *gate*: a strict multi-root site build inside
+the publication path would let a documentation defect strand a half-published
+release, and the index upload cannot be unwound. The page falls back to its
+offline channel table when the payload is absent, so it degrades to a floor and
+never to a lie.
+
+The tripwire is therefore procedural, and closing it is part of the release:
+
+```console
+just docs-deploy
+```
+
+Once the deploy role exists (operator decision OP-3), the `Cadrumo Docs Publish`
+workflow runs this automatically on `release: published` and this step becomes a
+verification rather than an action. Until then it is a human act, and a release
+left without it is not finished — it is a release whose documentation still
+advertises its predecessor.
 
 ## Report release problems
 
