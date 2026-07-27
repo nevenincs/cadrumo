@@ -133,6 +133,22 @@ pass already counted 48 of 136 entries sitting on excerpts under 1500 characters
 Anyone concluding "the corpus does not contain this" from a failed search must
 first check whether the file is the provision or a slice of it.
 
+A mechanical sweep for the shape was attempted and produced nothing usable, which
+is recorded so it is not rebuilt. Checking whether each cited article appears in
+its own corpus file returns seven candidates, and six are artefacts of the
+naming convention: a per-article excerpt such as
+`orden-hac-2572-2003-art-1.html` carries the article in its FILENAME and opens
+"Primero. Aprobación del modelo…", using an ordinal rather than "Artículo 1", so
+the article is the file and cannot be found inside it. The seventh is a
+211,000-character full orden where the missing token is more likely a casilla
+than an article.
+
+The `296` case was not of that shape anyway. Its cited article IS present; what
+is absent is a DIFFERENT article approving a different form, which no
+"is the cited article here" check models. Detection would need the excerpt's
+coverage compared against the full provision, and the full provision is exactly
+what the bundle lacks — so the check cannot be built from bundled data alone.
+
 Two probe errors are recorded because both nearly became findings. A pattern
 allowing 40 characters between "modelo" and the number reported nine files
 approving `187`, which is impossible for a form approved once. And a window
