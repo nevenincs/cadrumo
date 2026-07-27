@@ -15,7 +15,9 @@ related:
   - '[[2026-07-27-conformance-cli-P02-S07]]'
   - '[[2026-07-27-conformance-cli-P02-S08]]'
   - '[[2026-07-27-conformance-cli-P02-S09]]'
+  - '[[2026-07-27-conformance-cli-P02-S10]]'
   - '[[2026-07-27-conformance-cli-P02-S11]]'
+  - '[[2026-07-27-conformance-cli-P02-S12]]'
   - '[[2026-07-27-conformance-cli-P02-S26]]'
   - '[[2026-07-27-conformance-cli-P04-S18]]'
   - '[[2026-07-27-conformance-cli-P04-S27]]'
@@ -50,7 +52,9 @@ Auto-generated index of all documents tagged with `#conformance-cli`.
 - `2026-07-27-conformance-cli-P02-S07` - extract the fichero-BOE required-applicable casilla derivation into one shared public function consumed by the export gate
 - `2026-07-27-conformance-cli-P02-S08` - re-point the export completeness and fichero-BOE parity tests at the shared required-set derivation, removing the mirrored duplicate
 - `2026-07-27-conformance-cli-P02-S09` - add the classification-coherence checker (calculation_class vs tax_domain vs core modelo constants, plus the declared-but-dead axis census) as an importable typed fact-builder
+- `2026-07-27-conformance-cli-P02-S10` - add the per-revision conformance profile composer with strict typed row models, composing model-law coverage, support matrix, registry-scope diagnostics, authorization state, external grounding, and governance stamps
 - `2026-07-27-conformance-cli-P02-S11` - add structure-and-wiring tests for the classification-coherence checker grounded in the live registry tree
+- `2026-07-27-conformance-cli-P02-S12` - add structure-and-wiring tests for the conformance profile composer, asserting provenance fields and degraded-mode labelling, never author-invented numeric expectations
 - `2026-07-27-conformance-cli-P02-S26` - restore an independent registry-grounded oracle for the fichero-BOE required-applicable set so a relaxation of the predicate in either direction flips an assertion, remediating the review finding required-set-oracle-collapse
 - `2026-07-27-conformance-cli-P04-S18` - add the dev-path isolation gate asserting no shipped module imports dev.* or embeds a dev/ path literal, with an injectable-root anti-tautology proof
 - `2026-07-27-conformance-cli-P04-S27` - widen the dev-path literal detection to the realistic PROJECT_ROOT join, os.path.join, f-string and backslash forms, invert the test that pins the hole open, and mirror the missing shipped conftest case, remediating the review finding dev-path-literal-hole
