@@ -32,7 +32,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 # A real committed sanitised justificante; its SHA-256 is catalogued in
 # fixtures.SANITIZED_SHAS, so the already-sanitised refuse guard fires
 # against it without any test-side patching of the known-SHA set.
-_SANITISED_FIXTURE_PDF = FIXTURES_DIR / "justificantes" / "100" / "2021-0A.pdf"
+#
+# It must be a genuine sanitiser OUTPUT and not merely a catalogued fixture: the
+# guard under test is "this file has already been through the pipeline". The
+# sibling 2021-0A.pdf was this specimen until it was replaced by a generated
+# file, which the pipeline has never seen.
+_SANITISED_FIXTURE_PDF = FIXTURES_DIR / "justificantes" / "100" / "2022-0A.pdf"
 _REAL_NIE_CANARY = "Y1234567X"
 _REAL_NAME_CANARY = "PERSONA PRUEBA UNO"
 _SYNTHETIC_NIE = "Y0000001S"

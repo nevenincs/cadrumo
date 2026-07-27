@@ -6,10 +6,14 @@ accepted_artefact_kinds = ["declaration_pdf"]
 parser = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
 target_casillas = [
     # Cuota-chain closure casillas — first chunk.
-    # All label_patterns tested against 2021-0A.pdf, 2022-0A.pdf, 2023-0A.pdf corpus.
-    # Sanitised corpus replaces real amounts with 1.000,00; pdfplumber merges the adjacent
-    # box number onto the value token. Values parse to valid Decimal instances but are not
-    # equal to 1000.00 due to the merged box number.  Tests assert isinstance(..., Decimal).
+    # All label_patterns were authored against the 2021-0A.pdf, 2022-0A.pdf and 2023-0A.pdf
+    # renders. AEAT prints the box number in a smaller font overlapping the amount, so
+    # pdfplumber's text view merges the two into one token; the named_label amount capture
+    # reads the line's words instead and keeps them apart.
+    # The 2021-0A specimen is now a generated reproduction of that layout (the real render
+    # carried an identity the redaction pipeline never wrote) and prints distinct amounts, so
+    # its extracted values are asserted exactly. 2022-0A and 2023-0A remain sanitised real
+    # renders carrying one constant in every box, asserted as Decimal instances only.
     #
     # 0545 — cuota íntegra estatal (ley-35-2006:art-63)
     {casilla_id = "0545", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuota\s+[íi]ntegra\s+estatal\s*\['},
@@ -72,8 +76,8 @@ target_casillas = [
     # casillas 0172-0179 are absent from this summary form — only their total (0180) is shown.
     # The formula 0180 = sum(0171..0179) therefore cannot be verified from the corpus alone.
     # Corpus sanitisation (all amounts replaced with 1.001.000,00) further prevents arithmetic
-    # verification of any closure — documented by
-    # test_verification_chain_part3.py::test_verification_chain_m100_engine_corpus_limited.
+    # verification of any closure on the real 2022/2023 renders — documented by
+    # test_verification_chain_m100_corpus_limited.py, which measures that verdict on 2022-0A.
     #
     # 0171 — ingresos de explotación (ley-35-2006:art-27, art-28, art-30, art-31, art-32; leaf input for 0180)
     {casilla_id = "0171", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Ingresos\s+de\s+explotaci[oó]n'},

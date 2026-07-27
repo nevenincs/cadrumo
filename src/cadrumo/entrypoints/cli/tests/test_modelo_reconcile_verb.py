@@ -686,17 +686,22 @@ def test_reconcile_file_kind_declaration_m390_catches_casilla_divergence(
 # --- Modelo 190 (resumen anual de retenciones): compound decl.* ids ---------
 
 MODELO_190_DECLARACION_FIXTURE = FIXTURES_DIR / "justificantes" / "190" / "2024-0A.pdf"
-"""Synthetic-generated M190 declaración PDF for ejercicio 2024, 0A."""
+"""Synthetic-generated M190 declaración PDF for ejercicio 2024, 0A.
+
+Its three printed casillas are DISTINCT values. They were all the sanitiser's
+single ``1.000,00`` placeholder while this was a redacted real render, which
+meant the mismatch assertion below could have been reading either money box and
+would have passed either way."""
 
 _M190_2024_0A_REVISION_ID = "2024-y-siguientes"
 """Law-determined registry revision for M190 filing_year=2024, period=0A."""
 
 # `computed_casilla_ids` for this revision has 3 entries, all printed by the
-# fixture: percepciones-total=1000.00, retenciones-total=1000.00,
+# fixture: percepciones-total=12345.60, retenciones-total=1851.84,
 # total-percepciones=1 (a headcount, still a Decimal-typed casilla).
 _M190_2024_0A_MATCHING_CASILLA_VALUES: dict[str, Decimal] = {
-    "decl.percepciones-total": Decimal("1000.00"),
-    "decl.retenciones-total": Decimal("1000.00"),
+    "decl.percepciones-total": Decimal("12345.60"),
+    "decl.retenciones-total": Decimal("1851.84"),
     "decl.total-percepciones": Decimal("1"),
 }
 
@@ -745,7 +750,7 @@ def test_reconcile_file_kind_declaration_m190_catches_casilla_divergence(
     disagrees with the filed declaración is CAUGHT as a typed `casilla` diff,
     not a silent identity `matches`."""
     mismatched = dict(_M190_2024_0A_MATCHING_CASILLA_VALUES)
-    mismatched["decl.retenciones-total"] = Decimal("1500.00")  # fixture prints 1000.00
+    mismatched["decl.retenciones-total"] = Decimal("1500.00")  # fixture prints 1851.84
     work_unit_id = _seed_m190_work_unit_with_revision(casilla_values=mismatched)
 
     result = invoke_cached_cli(
@@ -764,7 +769,7 @@ def test_reconcile_file_kind_declaration_m190_catches_casilla_divergence(
     assert result.exit_code == 0, result.output
     assert "source_kind\tdeclaration" in result.output
     assert "verdict\tmismatches" in result.output
-    assert "diff\tdecl.retenciones-total\twork_unit=1500.00\tevidence=1000.00" in result.output
+    assert "diff\tdecl.retenciones-total\twork_unit=1500.00\tevidence=1851.84" in result.output
 
 
 # --- Modelo 100 (IRPF annual): printed Renta casilla ids ------------------
@@ -774,7 +779,7 @@ def test_reconcile_file_kind_declaration_m190_catches_casilla_divergence(
 # computed for the 2024 revision), but until now had no CLI-level coverage at
 # all -- every other enrolled modelo carried a matches/mismatch pair.
 #
-# The 2021-2023 real-corpus specimens under `justificantes/100/` CANNOT seed a
+# The 2022-2023 real-corpus specimens under `justificantes/100/` CANNOT seed a
 # clean-match test: they are sanitised to synthetic `1.000,00` amounts and
 # pdfplumber merges the adjacent box number onto the value token, so the
 # extracted Decimals are valid instances but not meaningful figures. Their own

@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ._parser_boundary_support import (
-    _REAL_MODELO_190_DECLARATION_COPY,
+    _MODELO_190_SYNTHETIC_FIXTURE,
     CasillaId,
     Decimal,
     _expected_casilla_values,
@@ -15,18 +15,23 @@ from ._parser_boundary_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
+# The three amounts the fixture prints. They are DISTINCT from one another
+# because the specimen this replaced printed the sanitiser's single redaction
+# constant into both money boxes, so a target that crossed
+# ``percepciones-total`` with ``retenciones-total`` read the same number and
+# this assertion held anyway.
 _M190_EXPECTED_VALUES: dict[CasillaId, Decimal] = _expected_casilla_values(
     {
         "decl.total-percepciones": Decimal("1"),
-        "decl.percepciones-total": Decimal("1000.00"),
-        "decl.retenciones-total": Decimal("1000.00"),
+        "decl.percepciones-total": Decimal("12345.60"),
+        "decl.retenciones-total": Decimal("1851.84"),
     },
 )
 
 
-def test_parser_extracts_modelo_190_targets_from_real_redacted_declaration_copy() -> None:
+def test_parser_extracts_modelo_190_targets_from_declaration_copy() -> None:
     filing = parse_declaracion(
-        _REAL_MODELO_190_DECLARATION_COPY,
+        _MODELO_190_SYNTHETIC_FIXTURE,
         modelo_override="190",
         año_override=2024,
         period_override="0A",

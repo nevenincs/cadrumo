@@ -66,10 +66,10 @@ overlapping the amount's own x-range, the two merged into one token, and all 21
 targets yielded a value that was neither the printed amount nor a parse failure
 while coverage scored 1.0 against a floor of 1. It is enrolled now that
 ``named_label`` amount capture reads the line's words rather than its text, which
-keeps the two runs separate; all 21 targets recover the printed amount on all
-three specimens.
+keeps the two runs separate; all 21 targets recover the printed amount on both
+remaining specimens.
 
-Its coverage floor is a separate question and is NOT settled by that. All three
+Its coverage floor is a separate question and is NOT settled by that. Both
 specimens come from one filer and every box is populated, so they cannot ground a
 floor: they show what a complete Modelo 100 yields, not what the form yields
 across filings. The floor of 1 stands as inherited rather than evidenced, and a
@@ -233,18 +233,30 @@ _M111_TARGETS = frozenset(f"{n:02d}" for n in range(1, 31)) - {"29"}
 _M111_COVERED_QUARTERLY = frozenset({"07", "08", "09", "28", "30"})
 _M111_COVERED_FOURTH = frozenset({"30"})
 
+# Two specimens left this table rather than drifting out of it, and the reason
+# is not a parser fact. Modelo 190 2024-0A and Modelo 100 2021-0A each carried
+# identity the redaction pipeline never replaced -- a checksum-valid IBAN on the
+# Modelo 100, a control-letter-valid tax id, an address and a phone number on
+# the Modelo 190 -- and could not stay in the repository. Their replacements are
+# generated, so they cannot stand here: every assertion below rests on the
+# premise that nothing in this project authored the layout, and a generated file
+# breaks that premise no matter how faithfully it reproduces the printed page.
+#
+# What that costs is stated rather than absorbed. Modelo 190 now has NO
+# externally-authored render at all, so this module no longer measures that form
+# against anything AEAT produced. Modelo 100 keeps 2022-0A and 2023-0A, which
+# are the same filer and the same layout family, so its coverage claim survives
+# on two specimens instead of three.
 _REAL_SPECIMENS: tuple[_RealRenderSpecimen, ...] = (
     _RealRenderSpecimen("390", "2021-0A", 2021, "0A", _M390_REAL_ABSENT),
     _RealRenderSpecimen("111", "2024-1T", 2024, "1T", _M111_TARGETS - _M111_COVERED_QUARTERLY, frozenset({"07"})),
     _RealRenderSpecimen("111", "2024-2T", 2024, "2T", _M111_TARGETS - _M111_COVERED_QUARTERLY, frozenset({"07"})),
     _RealRenderSpecimen("111", "2024-3T", 2024, "3T", _M111_TARGETS - _M111_COVERED_QUARTERLY, frozenset({"07"})),
     _RealRenderSpecimen("111", "2024-4T", 2024, "4T", _M111_TARGETS - _M111_COVERED_FOURTH),
-    _RealRenderSpecimen("190", "2024-0A", 2024, "0A", frozenset(), frozenset({"decl.total-percepciones"})),
-    # Modelo 100: three annual declarations from one filer. Every target is
+    # Modelo 100: two annual declarations from one filer. Every target is
     # populated, so nothing is absent -- these are the only bundled specimens that
     # exercise a fully-completed form, which is why the anti-vacuity guard below
     # matters more now than it did.
-    _RealRenderSpecimen("100", "2021-0A", 2021, "0A", frozenset()),
     _RealRenderSpecimen("100", "2022-0A", 2022, "0A", frozenset()),
     _RealRenderSpecimen("100", "2023-0A", 2023, "0A", frozenset()),
 )

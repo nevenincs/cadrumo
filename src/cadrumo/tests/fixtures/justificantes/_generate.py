@@ -70,10 +70,20 @@ from ._generate_misc_b import (
     _Modelo347Fixture,
     _Modelo840Fixture,
 )
+from ._generate_modelo_100_2021 import (
+    _MODELO_100_2021_FIXTURES,
+    _draw_modelo_100_2021,
+    _Modelo1002021Fixture,
+)
 from ._generate_modelo_100_current import (
     _MODELO_100_CURRENT_YEAR_FIXTURES,
     _draw_modelo_100_current_year,
     _Modelo100CurrentYearFixture,
+)
+from ._generate_modelo_190 import (
+    _MODELO_190_FIXTURES,
+    _draw_modelo_190,
+    _Modelo190Fixture,
 )
 
 __all__ = [
@@ -87,6 +97,7 @@ __all__ = [
     "_Modelo131Fixture",
     "_Modelo180Fixture",
     "_Modelo184Fixture",
+    "_Modelo190Fixture",
     "_Modelo193Fixture",
     "_Modelo202Fixture",
     "_Modelo232Fixture",
@@ -97,6 +108,7 @@ __all__ = [
     "_Modelo390CorpusFixture",
     "_Modelo720Fixture",
     "_Modelo840Fixture",
+    "_Modelo1002021Fixture",
     "main",
 ]
 
@@ -373,6 +385,37 @@ def main() -> None:
         c.save()
         print(f"wrote {target}")
         _write_sidecar(target, "100", fixture.ejercicio, fixture.tax_id)
+
+    for fixture in _MODELO_100_2021_FIXTURES:
+        target = out_dir / fixture.filename
+        target.parent.mkdir(parents=True, exist_ok=True)
+        c = canvas.Canvas(str(target), pagesize=A4, invariant=True)
+        c.setTitle(f"Declaracion Modelo 100 {fixture.ejercicio} 0A")
+        c.setAuthor("aeat test fixtures")
+        c.setSubject("synthetic declaracion fixture m100 2021 layout")
+        c.setCreator("aeat fixture generator")
+        c.setProducer("aeat-test-fixture-generator")
+        _draw_modelo_100_2021(c, fixture)
+        c.showPage()
+        c.save()
+        print(f"wrote {target}")
+        # A layout replacement, not a formula specimen: its amounts are probes.
+        _write_sidecar(target, "100", fixture.ejercicio, fixture.tax_id, role="parser_anchor")
+
+    for fixture in _MODELO_190_FIXTURES:
+        target = out_dir / fixture.filename
+        target.parent.mkdir(parents=True, exist_ok=True)
+        c = canvas.Canvas(str(target), pagesize=A4, invariant=True)
+        c.setTitle(f"Modelo 190 {fixture.ejercicio} 0A")
+        c.setAuthor("aeat test fixtures")
+        c.setSubject("synthetic declaracion fixture m190 resumen anual")
+        c.setCreator("aeat fixture generator")
+        c.setProducer("aeat-test-fixture-generator")
+        _draw_modelo_190(c, fixture)
+        c.showPage()
+        c.save()
+        print(f"wrote {target}")
+        _write_sidecar(target, "190", fixture.ejercicio, fixture.tax_id, role="parser_anchor")
 
     for fixture in _MODELO_390_CORPUS_FIXTURES:
         target = out_dir / fixture.filename

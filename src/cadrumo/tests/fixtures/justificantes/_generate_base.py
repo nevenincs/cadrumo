@@ -153,13 +153,30 @@ def _draw(c: canvas.Canvas, fixture: _Fixture) -> None:
     c.drawString(20 * mm, y, _VERIFY_URL)
 
 
-def _write_sidecar(pdf_path: Path, modelo: str, ejercicio: str, tax_id: str) -> None:
+def _write_sidecar(
+    pdf_path: Path,
+    modelo: str,
+    ejercicio: str,
+    tax_id: str,
+    *,
+    role: str = "formula_verification",
+) -> None:
     """Write a sanitiser-manifest sidecar JSON for a synthetic fixture PDF.
 
     The sidecar format mirrors the real sanitiser manifest consumed by
     ``test_corpus_sidecar_roundtrip.py``'s ``_load_ground_truth``.  The
     ``replacements_applied`` list must contain a ``SANITIZED{modelo}{ejercicio}``
     token so the roundtrip test can derive the expected CSV ground truth.
+
+    ``role`` and ``provenance`` are ORTHOGONAL axes, per the accepted
+    verification-fixture-roles decision: provenance records where the bytes came
+    from, role records what the specimen is kept for. Everything this generator
+    writes is ``synthetic_generated``, but a synthetic specimen authored to
+    reproduce a real form's printed layout is a ``parser_anchor`` and not a
+    ``formula_verification`` one -- its amounts are probes, and a reader that
+    took them for internally-consistent figures would be reading them for more
+    than they are worth. The default is the common case; a layout replacement
+    passes ``role="parser_anchor"`` explicitly.
 
     The pdf_path must already exist (written by the caller before calling this).
     """
@@ -170,7 +187,7 @@ def _write_sidecar(pdf_path: Path, modelo: str, ejercicio: str, tax_id: str) -> 
         # gate: this writer only ever emits synthetic, generator-produced
         # specimens (the PDF carries /Producer = "aeat-test-fixture-generator").
         "provenance": "synthetic_generated",
-        "role": "formula_verification",
+        "role": role,
         "source_sha256": pdf_sha256,
         "output_sha256": pdf_sha256,
         "source_size_bytes": len(pdf_bytes),

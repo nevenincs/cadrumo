@@ -4,7 +4,12 @@ from __future__ import annotations
 
 import pytest
 
-from ._parser_boundary_m100_support import _M100_CORPUS_IDS, _M100_CORPUS_PARAMS, _M100_EXPECTED_CASILLAS
+from ._parser_boundary_m100_support import (
+    _M100_2021_EXPECTED_VALUES,
+    _M100_CORPUS_IDS,
+    _M100_CORPUS_PARAMS,
+    _M100_EXPECTED_CASILLAS,
+)
 from ._parser_boundary_support import (
     FIXTURES_DIR,
     Decimal,
@@ -30,11 +35,21 @@ def test_parser_extracts_modelo_100_profile_targets_from_corpus(pdf_stem: str, y
     - Chunk 4 (1 casilla): ED leaf input -- 0171 (ingresos de explotacion).
 
     Ground truth is derived from reading the printed declaracion PDF text directly.
-    The sanitised corpus replaces real monetary values with 1.000,00 synthetic values.
-    pdfplumber merges the adjacent box number onto the value token (e.g.
-    ``1.001.000,005045``) so the extracted Decimal is a valid instance but does not
-    equal 1000.00. All casillas are asserted as isinstance(..., Decimal) only;
-    exact-value assertions would be tautological against the corpus artefact.
+
+    What each specimen can be asserted against differs, and the difference is
+    the point. 2022-0A and 2023-0A are sanitised real renders: the redaction
+    pipeline wrote one constant into every money box, so every target holds the
+    same number and an exact-value assertion would distinguish nothing -- a
+    pattern that drifted onto the line above would satisfy it. Those two are
+    asserted as ``isinstance(..., Decimal)`` only. 2021-0A is a generated
+    replacement (the real 2021 render carried an identity the sanitiser never
+    overwrote) and its amounts are all DISTINCT, so each value identifies the
+    line it came from and the exact map IS assertable.
+
+    Both AEAT renders print the box number in a smaller font overlapping the
+    amount, which ``extract_text`` merges into one token
+    (``1.001.000,005045``); the generated specimen reproduces that overlap, so
+    all three exercise the word-based amount capture that keeps the two apart.
 
     Casillas deferred (0570/0571 cuota liquida estatal/autonomica pre-incrementada):
     both body and summary sections carry identical short labels in 2023 with no
@@ -67,12 +82,22 @@ def test_parser_extracts_modelo_100_profile_targets_from_corpus(pdf_stem: str, y
     # ambiguous. It remains a candidate for a future chunk with multiline context anchoring.
     assert set(values.keys()) == _M100_EXPECTED_CASILLAS
 
-    # pdfplumber merges the adjacent box number onto the value token in all corpus
-    # specimens; each extracted value is a valid Decimal but does not equal 1000.00.
     # Ground truth: the label patterns locate the correct body line in the printed form.
-    # 0510 (base liquidable del ahorro) is zero in this corpus because the specimen has
-    # no ahorro income; parse_spanish_decimal still returns a valid Decimal.
     for casilla_id in values:
         assert isinstance(values[casilla_id], Decimal), (
             f"{pdf_stem}: casilla {casilla_id!r} expected a Decimal instance, got {values[casilla_id]!r}"
         )
+
+    if pdf_stem != "2021-0A":
+        # A sanitised real render: one constant in every box, so there is
+        # nothing an exact-value assertion could tell apart.
+        return
+
+    extracted = {str(casilla_id): value for casilla_id, value in values.items()}
+    expected = {casilla_id: Decimal(amount) for casilla_id, amount in _M100_2021_EXPECTED_VALUES.items()}
+
+    assert extracted == expected, (
+        f"{pdf_stem}: extraction read a different amount than the document prints. "
+        f"Every printed amount here is distinct, so a mismatch names the target that "
+        f"drifted onto a neighbouring line rather than merely changing value."
+    )

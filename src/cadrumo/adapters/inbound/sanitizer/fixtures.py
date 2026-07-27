@@ -25,8 +25,11 @@ from __future__ import annotations
 # fixture lands.
 SANITIZED_SHAS: frozenset[str] = frozenset(
     {
-        # 100/{2021,2022,2023}-0A.pdf — IRPF anual
-        "eceeb78005b7afa247cc2544f1022fec879164f24c8f1a6048f2fbc826f1e7f1",
+        # 100/{2021,2022,2023}-0A.pdf — IRPF anual. 2021-0A is a generated
+        # layout replacement rather than a sanitiser output; it is listed for
+        # the same reason the generated 130 fixtures below are, so that pointing
+        # the sanitiser at any committed fixture refuses.
+        "7033cc4a78d92db125ab61484189380e4791cc27340c62df1e0ccfd6031ef854",
         "55db81f29ac0947ff1d9e7442ffbb84c17798313bf83bd8a61801779e260e70d",
         "d300d49a8ce4400f220748d3da317fbb5369557095c2f70cc5da89bcd72105ac",
         # 111/2024-{1T,2T,3T,4T}.pdf — retenciones quarterly 2024
@@ -53,8 +56,9 @@ SANITIZED_SHAS: frozenset[str] = frozenset(
         "09c9ad0793b02c2010e8ea41276edf7550e602254f9b2893913cab92bb3d1b4e",
         "f2fe642e06e75d61c60860f6aaf06ab89b1a5b3fdd3f1e7f5c8c1f2c6fc38e8d",
         "88bcc09b0bf384ce5cfce12d1a8eebe56f8eec716d8f7fa38358573de97c461f",
-        # 190/2024-0A.pdf — resumen anual retenciones 2024
-        "5bf3d4be88dbb62c4b698ff2e53b56ffb49643a3d7270a1a94b86fb6ca3b6b89",
+        # 190/2024-0A.pdf — resumen anual retenciones 2024 (generated layout
+        # replacement, see the note on 100/2021-0A above)
+        "0c3fe8d99600feeda72962e3bfadecae255d21580416ae623a5ed57817350296",
         # 303/2021-{2T,3T,4T}.pdf — IVA quarterly 2021
         "e3da4439b3b8fff2adb12e8574c06e38e391b2578b9dd90b556a7d1e744c0e42",
         "4fdd9ff5f74be9ac5d6aae8851218769fc1b66829e0223fe4651990312c4a68e",
