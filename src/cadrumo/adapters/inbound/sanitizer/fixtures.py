@@ -20,67 +20,102 @@ PII surface against an existing capture).
 
 from __future__ import annotations
 
-# Lowercase hex SHA-256 of every committed sanitised PDF under
-# ``src/cadrumo/tests/fixtures/justificantes/``. Updated whenever a new
-# fixture lands.
+# Lowercase hex SHA-256 of every committed PDF under
+# ``src/cadrumo/tests/fixtures/justificantes/``.
+#
+# DO NOT hand-edit. Regenerated from the committed tree and pinned by
+# ``tests/test_sanitized_sha_catalogue.py``, which fails on drift. Hand
+# maintenance is what broke it: 32 of 41 entries matched no committed fixture
+# and 53 of 62 fixtures were absent, so the refuse-if-already-sanitised guard
+# covered nine fixtures while reading as though it covered all of them. A
+# regenerated fixture changes its SHA and nothing made the list follow.
 SANITIZED_SHAS: frozenset[str] = frozenset(
     {
-        # 100/{2021,2022,2023}-0A.pdf — IRPF anual. 2021-0A is a generated
-        # layout replacement rather than a sanitiser output; it is listed for
-        # the same reason the generated 130 fixtures below are, so that pointing
-        # the sanitiser at any committed fixture refuses.
-        "7033cc4a78d92db125ab61484189380e4791cc27340c62df1e0ccfd6031ef854",
-        "55db81f29ac0947ff1d9e7442ffbb84c17798313bf83bd8a61801779e260e70d",
-        "d300d49a8ce4400f220748d3da317fbb5369557095c2f70cc5da89bcd72105ac",
-        # 111/2024-{1T,2T,3T,4T}.pdf — retenciones quarterly 2024
-        "ffbb5281e812abf09a7cdbdc2509707a4bb18754064a60a4636dee57a96e5bef",
-        "3ea14170b5e49ee206884817896ebddf718f4d024f6cb24f6e6f22ed78202d30",
-        "8d428cc8226a750ae58fbf7dfc51284b7a208c3fec74689435e21ef45b5f9d16",
-        "4848107bfd105a58b36f69f147180416ac3e666cf2dde95618ab72d175d7089e",
-        # 130/2021-{2T,3T,4T}.pdf — IRPF fraccionado quarterly 2021
-        "a87ba7ae6b992303fc1e1f596cfa840485f2d376a1aefb6fc711d970e93fdec1",
-        "95693414d41848682a7dcfd81a07dd952ae67ed5daa85a77a2e22b1579258d9c",
-        "1e4031bac89f6d0ea5406c481f67e15e6c2d84dee0f1e01c5e9e0df3b2924666",
-        # 130/2022-{1T,2T,3T,4T}.pdf — IRPF fraccionado quarterly 2022
-        "bac8b754707c3c407b4c260c8664b55fc5858f284043c68f5df73594abb80c3d",
-        "53c4e743259aef13c1f1543f70f83fd1c182a3ace7fd1d4b9ae362348a1225b7",
-        "1f6d31f8a0c008cc7b4a3d95793fd6862b5faf20f8836d486fcfe11af19c9625",
-        "0ac08ae81da9ec100d4aa30023d792e38faf71b4a9c70bca41203c0683b44ede",
-        # 130/2023-{1T,2T,3T,4T}.pdf — IRPF fraccionado quarterly 2023
-        "6cb2fd1900df14ff3dd71ced0f3daa6d66c1de766548db67783ff3f5d7b13387",
-        "39201ffe1a06ee1a8cda25b103ca5296417099e75e16176bdf5b78533dd488a4",
-        "a65d3865d7afbb0eb665b663b778ccb04bb3d810c93f8e704e0af419c28ac122",
-        "b7e093dcb2bd293d0d93f72af50c9522e98752536dbe3fccdc747236ea697bd1",
-        # 130/2024-{1T,2T,3T,4T}.pdf — IRPF fraccionado quarterly 2024
-        "7412ae6370585d41df446c0275f4323b112de92466ca2d7280c34292d9933784",
-        "09c9ad0793b02c2010e8ea41276edf7550e602254f9b2893913cab92bb3d1b4e",
-        "f2fe642e06e75d61c60860f6aaf06ab89b1a5b3fdd3f1e7f5c8c1f2c6fc38e8d",
-        "88bcc09b0bf384ce5cfce12d1a8eebe56f8eec716d8f7fa38358573de97c461f",
-        # 190/2024-0A.pdf — resumen anual retenciones 2024 (generated layout
-        # replacement, see the note on 100/2021-0A above)
+        # 036: 2025-0A.pdf, 2025-alta.pdf
+        "b9ee9a65069344a09d456dbd820e335b24cbba771988f3dd84b8d1546f4c83bd",
+        # (byte-identical to an entry above: 2025-alta.pdf)
+        # 100: 2021-0A.pdf, 2022-0A.pdf, 2023-0A.pdf, 2024-0A.pdf, 2025-0A.pdf
+        "a983084723897ec5fa75078d62d10f8bf7ec0a47148d90dae7d1a05eb77ab6ab",
+        "ce4a9e39f04237a8a752cd6e6596db1bbec364ba2893c3a2f3e44e8543587066",
+        "996fb37e2b98ce0e8d359e4df2f61fc913a337bcb0a620cc6183b81deb32d66f",
+        "a40ecc2b700c41353092ffd7f84fa843bc3e9a1e2a4ac2baf3ddecb1259c06f9",
+        "837f9fa8a4f6cc9befd594e1006728b53159ebf5ee3f27582ece7dae38fc3e9a",
+        # 111: 2024-1T.pdf, 2024-2T.pdf, 2024-3T.pdf, 2024-4T.pdf
+        "00a083d5b131ba0964c4c57b069880e884c249d984bb67793253f0b050fbe88f",
+        "8289b74ca3bba03db1c9e676f918e4cd29b614db738a81ab94600efc73d78a42",
+        "3b8a833c3185933f1b546be4976363baab411fba3c1da7986ea9a1a43ffcc2c1",
+        "d9287f5bd606981ae440ffa1fe7a2cdce834d21662d692af42b5bbb0f442754a",
+        # 115: 2024-1T.pdf
+        "6dd56c9af75422126fa9eebdd838114144230dd7cac877a5cdd14e3304c2b56e",
+        # 123: 2023-1T.pdf, 2024-1T.pdf
+        "d673ee28a00fb17c5d89812da90fa288014cdd1ae8f1c3613965ad8bc89397b0",
+        "0cd78b29226c2bdafa42de43c6befc2150f0099958d72c26a9f503b9f95750c3",
+        # 130: 2021-2T.pdf, 2021-3T.pdf, 2021-4T.pdf, 2022-1T.pdf, 2022-2T.pdf, 2022-3T.pdf, 2022-4T.pdf, 2023-1T.pdf,
+        # 2023-2T.pdf, 2023-3T.pdf, 2023-4T.pdf, 2024-1T.pdf, 2024-2T.pdf, 2024-3T.pdf, 2024-4T.pdf
+        "4e933965cfb9b9da402c893a35394bd05e6fced2d357ec05da84503021b7b6b2",
+        "31dc911283752fe1b395177103293a1582236eadac792076d7caddb0528d2b25",
+        "b7814f22ec13eff692eb0e977cf163fa75df800e4847a6a04584df48b2da1b58",
+        "036f5bebeee35d805240e71c66330434e0490876a2c1636c3aee7b3e70cd000f",
+        "3942dbe79e4901caec4825f1d3fec2d79c29834f30d0e8509f5f0b06b8955397",
+        "7e5245143d70e4afc4eb31751ff2b95212c45fbb6b51834dce35207edc35af89",
+        "9f103cc191ba8ef0b0143d2faaca5eba03bc3aa6581d0574b7b46ca56367059a",
+        "75c57f90e7a2f65966aa244deb87e42870abb6167c0ed8fa0359f89e485d844c",
+        "600447201728923fd64c1f21ea3c22be04ada4d7a618a941ca6610c1978b61b1",
+        "c2792c34690901f1f797167311a7f8c53079465d65573681d0c18a21eaf5a30e",
+        "d40a6ac7456d910e2ad130fb6646473cce8afd64e3213dd6d1d561a8f22acada",
+        "6017498d590354d710bb07da11f1200c7ad5e44f054067c0e502ffba850df437",
+        "9d9e3c79a387f38cb7993439b5e74f2acdfb61525b6dce926bb6e141c0b5d48c",
+        "4488ec660b657b09f3a6817f097317b266d4aee526d145833ec43988f4d16891",
+        "c207ac193196df125c03b3c3573efdfb07b785b1cad8630032dda0f0ce1f4dc2",
+        # 131: 2024-1T.pdf
+        "7970d4c257a8329e0eafd946bd4bb4e9e980b8bd99eba493bad5c436af21c866",
+        # 180: 2024-0A.pdf
+        "13af0b50b94d9d805807860d4ea166667d9d33dbada33f216a5f1c272990f059",
+        # 184: 2024-0A.pdf
+        "7c67044b4609fc6911002d09f05863179f15bf527c36339da8468ffc637ef8cd",
+        # 190: 2024-0A.pdf
         "0c3fe8d99600feeda72962e3bfadecae255d21580416ae623a5ed57817350296",
-        # 303/2021-{2T,3T,4T}.pdf — IVA quarterly 2021
-        "e3da4439b3b8fff2adb12e8574c06e38e391b2578b9dd90b556a7d1e744c0e42",
-        "4fdd9ff5f74be9ac5d6aae8851218769fc1b66829e0223fe4651990312c4a68e",
-        "66d1fcd791fe7d7c1d1feceb2fe7e63b82ef1ec79e36bf206d8a1a6cbe75b774",
-        # 303/2022-{1T,2T,3T,4T}.pdf — IVA quarterly 2022
-        "ade3e98502918bff35d80c3664163f126400be367ca8fb302a3de5fc871cdc1e",
-        "0b4bac8036ccea2c39bd36efc072c87a38f9e001f051179589cfa0e4160e133e",
-        "f086c1a5a524d731d9daf8ea2fac645808199808adff94a6960113f8f0a6387e",
-        "50f09074a6273b934a76f741f6a7fc0a2cdbb11ab7960e1584a63ff32670ccaa",
-        # 303/2023-{1T,2T,3T,4T}.pdf — IVA quarterly 2023
-        "11b2645064637681791637eb02896d4dfda474ca7755f2d690eb5affbaddec82",
-        "25b417fd6925cdca4982884e94a802f393f7e11362cf26ca34f601b213600c96",
-        "8283100efa3f70331965cc986f09107445462f0ea9650473c087ecc5f8bc9ca7",
-        "7d1a618028d98f78baa804850e5f0963754cf6fdea0ca05255c8bc488934017d",
-        # 303/2024-{1T,2T,3T,4T}.pdf — IVA quarterly 2024
-        "53e69e77c61cb8aa23bec7c8acb0849fea56cc237c59f1d7ffc5887f53fb7048",
-        "a3ff9bf99bb6386a3f565ed39a0e43394c0fa9de617e087a1ee80ea31f3e8906",
-        "24d4c76e17ce3a940b895ad536263fc748c472b390dfa583f0c2b7af8b87ccbc",
-        "6b7b5d4b2f3f3a33d1a16ea88fb70dfa0c1763f8378c2a7ad819c1fb4e4a81fe",
-        # 390/{2021,2022,2023}-0A.pdf — IVA anual
-        "08351411dbd84e5c1aad616a591d631235720d7071b7a75a954e718e02aa55e5",
-        "90289d14d5292a95b71f98f9c1a8b1794072a3460b7b289527abe287abcf21bc",
-        "0ddec4d94235931aca58dcb959cf400f4b3e2595beb6d98ecb43bd9cb8a92ec4",
+        # 193: 2024-0A.pdf
+        "a3483a59f47a9b70c717dcdd99c7ecce9f6febf8afefb54758f7c11d8f9d60f7",
+        # 202: 2025-1P.pdf
+        "17f8dc56f54e670ff3cc0d29daa1feebe1d05a6b1c91fac58e15624fb75bf745",
+        # 232: 2016-0A.pdf, 2018-0A.pdf
+        "70e972741f559c87c254e7fcbd406366adcec72e65d1fd16becf08912f6aa4b0",
+        "f751ed778d98fbaf21e2b0c40fdbd24a0543476cb5fa0efdf6bf65a43602f1ad",
+        # 303: 2021-2T.pdf, 2021-3T.pdf, 2021-4T.pdf, 2022-1T.pdf, 2022-2T.pdf, 2022-3T.pdf, 2022-4T.pdf, 2023-1T.pdf,
+        # 2023-2T.pdf, 2023-3T.pdf, 2023-4T.pdf, 2024-1T.pdf, 2024-2T.pdf, 2024-3T.pdf, 2024-4T.pdf
+        "bd2f1d0b0a0f0462fe3ee016d43012c41ef68a93d6905b1326dba0fae81c2574",
+        "eb0e4cfffbb6250f91a34ed3465c0090185c0d5265d8167f82b561910f1a4df6",
+        "ac47144dc01e5c66d193ebedba88b2ff3122036ccc06a2ae6c421a04a0c4112b",
+        "6fa9ae025da54a0560719059df3a4302499a345686f54e219a00f87ea8ff8666",
+        "beebfce3ad50128445181d9ad9bc7c7198a5855999985207efbf95577906a49f",
+        "1fe0a24a2b3703cdb53b99c05cf8cb6eb8283373238ce8fc8c38a15791c37468",
+        "6907c7a3fa93ae4e45a85e94a5685ab11cfef06fd390a45263299f6f282bf172",
+        "20f3443d3928456dd4de547e0855520136561e9f3797dc2e4b1c27f324a90f18",
+        "e31f975fe40467cb53ff532462dec8c83e6a9c779bd72aebe01de6070ca16eb9",
+        "0642a40a5c5b41c84e15be9cd6ef6d6ffdf1f5eae82a68d940d88a007a6bdccf",
+        "2704e1071a9af5065d7215629dc22b3c692a71191568b5645a17239fbc6883d4",
+        "87f08c73c210d47f76786cb6435194021bd8890b36cf603b81180f71c4e00a3b",
+        "9523ebb8611311640d9783a65948e34c9e1c2775dc1015d78d2bac8a713d1b84",
+        "3848389ab546f62b47733cdb9a6a95db887968280f2b0d75dc5f6cdc31408c71",
+        "adafe65bb8253d0d2a40c7a0cbce22862371feb20d2634cb89d7c5207c728c60",
+        # 347: 2024-0A.pdf
+        "40088f3b1ef7333acde39cb6a784920aa0f1b535e2fc0df94e549d652d0a537e",
+        # 349: 2024-1T.pdf
+        "b7809017399b74bfe015baef4c55697081e0ffcfaf02f4181a60fe9ead2f1b3b",
+        # 369: 2024-1T.pdf
+        "9d71e92c24830c8b83e9b272b19bf29a6d4f91818dcd5b979e36668996e7cec6",
+        # 390: 2021-0A.pdf, 2022-0A.pdf, 2023-0A.pdf
+        "a070df623c2bcb61f7a1c521b4e5e93de389b09c3283e20eea024c45ad09ad63",
+        "794d2c7d99653b010389114fbd017f8907ab594a2c6c45ccfda725ba245dc6a4",
+        "8847c831f1ecf2e6096ccfa52aeaa9b95f1814ab0e7e76a491cead4b5c4fa801",
+        # 720: 2024-0A.pdf
+        "3d4f681c43be5af5c5504bef4b5e5476520aae13ed98e5ae150ea5b709c2f3dc",
+        # 840: 2024-0A.pdf
+        "4d7c26b58706f6269c01620fe5e875f27fb401a9164fff1dfa986bc76e474349",
+        # top-level: modelo_100_2025A.pdf, modelo_130_2026Q1.pdf, modelo_303_2026Q1.pdf
+        "2e6621c9706c0dc4ca9c177f327a01a6a7808565531ccf497b39ac86e28bda9c",
+        "4d3a3045c77e0e1b446a1c1d95dd530582c8bb78cc60033a238dc024ab494e1e",
+        "a128a5074a196d4284b6078eb55af577cad2484e4fdd02ea2974ee063e215f03",
     },
 )
