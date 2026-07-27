@@ -60,8 +60,8 @@ from .....domain.calculations.registry import (
     RemoteStateGuardPolicy,
     assert_remote_operation_allowed,
 )
-from .._playwright import PlaywrightError
-from ..browser import default_browser_session_factory
+from .._playwright import Page, PlaywrightError
+from ..browser import BrowserSession, DefaultBrowserSession, default_browser_session_factory
 from ._auth_state import storage_state_for_session
 from ._browser_constants import PLAYWRIGHT_WAIT_DOMCONTENTLOADED
 from ._errors import SedeFailureMode, SedeNavigationError, SedeParseError
@@ -610,9 +610,9 @@ def landed_on_censal_path(landing_url: str) -> bool:
 
 
 async def _resolve_dispatched_origin(
-    page: Any,
+    page: Page,
     *,
-    browser_session: Any,
+    browser_session: BrowserSession | DefaultBrowserSession,
     settings: Settings,
 ) -> str:
     """Return the scheme+host AEAT dispatched this session to.
