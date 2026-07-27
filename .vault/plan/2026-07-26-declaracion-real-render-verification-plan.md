@@ -10,16 +10,6 @@ related:
   - '[[2026-07-25-declaracion-profile-printed-box-scope-real-render-gate-and-naming-honesty-audit]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 # `declaracion-real-render-verification` plan
 
 ### Phase `P01` - Evidence-backed profiles
@@ -56,7 +46,7 @@ Measure and bound route R12, the filer-chosen render language
 Open defects and decisions this campaign measured but did not close
 
 - [ ] `P04.S15` - Populate form_number on the remaining inert blank-box guards, seven armed from AEAT instructions and three Modelo 193 targets blocked for want of any published box number or specimen; `src/cadrumo/_data/registry/aeat/modelos`.
-- [ ] `P04.S16` - Scope the M100 parser follow-on ADR covering the shared pdfplumber primitive, the estate-wide named_label capture contract, and the M100 floor under D2; `.vault/adr`.
+- [x] `P04.S16` - Scope the M100 parser follow-on ADR covering the shared pdfplumber primitive, the estate-wide named_label capture contract, and the M100 floor under D2; `.vault/adr`.
 - [x] `P04.S17` - Decide whether Modelo 202 is enrolled in casilla-level reconcile, now that its profile is confirmed to exist and D5 governs enrolment; `.vault/adr, src/cadrumo/application/modelo`.
 - [x] `P04.S18` - Decide the disposition of verify_declaracion, a modelo-agnostic comparison mechanism with zero callers outside its own tests; `src/cadrumo/application/verification`.
 - [x] `P04.S19` - Correct the Modelo 100 sidecar manifests to declare both sanitiser constants, since the length-preserving sanitiser wrote two forms while the manifests name one; `src/cadrumo/tests/fixtures/justificantes/100`.
