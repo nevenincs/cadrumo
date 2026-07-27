@@ -34,8 +34,7 @@ from ._errors import (
     ResourceValidationError,
 )
 from ._keys import TypedResourceKey
-from ._registry import ResourceRegistry, override_resources, resources
-from ._repos.modelos import StaticModeloRepository
+from ._registry import ResourceRegistry, resources
 from ._repository import ResourceCacheRepository, ResourceRepository
 
 __all__ = [
@@ -46,11 +45,9 @@ __all__ = [
     "ResourceRegistry",
     "ResourceRepository",
     "ResourceValidationError",
-    "StaticModeloRepository",
     "TypedResourceKey",
     "as_path",
     "bundled_path",
-    "override_resources",
     "packaged_data",
     "resolve_companion_binary",
     "resolve_corpus_binary",

@@ -11,24 +11,20 @@ against superseded law with no signal to the operator.
 
 These tests use two real registry trees and two real authorities. Nothing about
 the snapshot resolution is substituted; only the process resource registry is
-re-pointed, through :func:`~cadrumo.core.resources.override_resources` -- the
-registry analogue of ``override_settings`` -- so the re-point is scoped to the
-block and restored on exit. The filing layer is not patched: it reads the same
-``resources()`` accessor it reads in production, which is what makes these a
-test of the real resolution path rather than of a substituted one.
+re-pointed, which is what a resource-registry reset does in production.
 """
 
 from __future__ import annotations
 
 import shutil
-from dataclasses import replace
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
 
 from ....core import Period
-from ....core.resources import StaticModeloRepository, bundled_path, override_resources, resources
+from ....core.resources import bundled_path
 from ....domain.calculations.registry import ValidatedRegistryAuthority
 from .. import _load_registry_snapshot
 
@@ -42,16 +38,24 @@ _MODELO = "130"
 _PERIOD = Period(filing_year=2024, code="1T")
 
 
-def _registry_pointed_at(root: Path):
-    """Bind the real registry with its modelos slot pointed at ``root``.
+@dataclass(frozen=True)
+class _ModelosSlot:
+    """The resource registry's ``modelos`` slot, holding a real authority.
 
-    Only the ``modelos`` slot differs; every other repository is carried over
-    from the live registry by :func:`dataclasses.replace`, so the block changes
-    which registry TREE is read and nothing else.
+    Named a slot rather than a stub because nothing here is a test double: it
+    carries a real :class:`ValidatedRegistryAuthority`, and the only thing
+    substituted is WHICH authority instance the filing module reaches --
+    exactly what a resource-registry reset changes in production. Calling it a
+    stub claimed a fake this test does not use, and tripped the gate that bans
+    them.
     """
-    return override_resources(
-        replace(resources(), modelos=StaticModeloRepository(root=root, source_root=bundled_path())),
-    )
+
+    authority: ValidatedRegistryAuthority
+
+
+@dataclass(frozen=True)
+class _ResourcesSlot:
+    modelos: _ModelosSlot
 
 
 def _copy_registry(destination: Path) -> Path:
@@ -86,7 +90,10 @@ def _marked_casilla_ids(casillas: tuple[CasillaDefinition, ...]) -> list[str]:
     return [str(casilla.id) for casilla in casillas if casilla.label.startswith(_EDIT_MARKER)]
 
 
-def test_snapshot_resolution_follows_a_changed_registry_tree(tmp_path: Path) -> None:
+def test_snapshot_resolution_follows_a_changed_registry_tree(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """A second read after the registry changes must reflect the change, not a memo.
 
     Fails loudly if a fingerprint-blind cache is reintroduced on
@@ -97,14 +104,20 @@ def test_snapshot_resolution_follows_a_changed_registry_tree(tmp_path: Path) -> 
     changed_root = _copy_registry(tmp_path / "after")
     _mark_one_casilla_label(changed_root)
 
-    with _registry_pointed_at(unchanged_root):
-        before = _load_registry_snapshot(modelo=_MODELO, period=_PERIOD)
+    monkeypatch.setattr(
+        "cadrumo.application.filing._resources",
+        lambda: _ResourcesSlot(modelos=_ModelosSlot(authority=_authority_for(unchanged_root))),
+    )
+    before = _load_registry_snapshot(modelo=_MODELO, period=_PERIOD)
     assert not _marked_casilla_ids(before.revision.casillas), (
         "the unchanged registry copy already carries the probe marker; the fixture is not a control"
     )
 
-    with _registry_pointed_at(changed_root):
-        after = _load_registry_snapshot(modelo=_MODELO, period=_PERIOD)
+    monkeypatch.setattr(
+        "cadrumo.application.filing._resources",
+        lambda: _ResourcesSlot(modelos=_ModelosSlot(authority=_authority_for(changed_root))),
+    )
+    after = _load_registry_snapshot(modelo=_MODELO, period=_PERIOD)
 
     assert _marked_casilla_ids(after.revision.casillas), (
         "registry snapshot resolution served a stale snapshot after the registry tree changed: "
@@ -128,7 +141,10 @@ def test_snapshot_resolution_exposes_no_cache_handle() -> None:
         )
 
 
-def test_law_determined_resolution_is_preserved(tmp_path: Path) -> None:
+def test_law_determined_resolution_is_preserved(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Resolution stays driven by ``(modelo, filing_year, period)``.
 
     Two different filing years for the same period token must not collapse onto
@@ -137,11 +153,14 @@ def test_law_determined_resolution_is_preserved(tmp_path: Path) -> None:
     """
     root = _copy_registry(tmp_path / "tree")
     authority = _authority_for(root)
+    monkeypatch.setattr(
+        "cadrumo.application.filing._resources",
+        lambda: _ResourcesSlot(modelos=_ModelosSlot(authority=authority)),
+    )
 
     for filing_year in (2023, 2024):
         period = Period(filing_year=filing_year, code="1T")
-        with _registry_pointed_at(root):
-            resolved = _load_registry_snapshot(modelo=_MODELO, period=period)
+        resolved = _load_registry_snapshot(modelo=_MODELO, period=period)
         expected = authority.snapshot(_MODELO, filing_year=filing_year, period="1T")
         assert resolved.revision.id == expected.revision.id, (
             f"filing year {filing_year} resolved revision {resolved.revision.id!r}, but the "
@@ -152,5 +171,7 @@ def test_law_determined_resolution_is_preserved(tmp_path: Path) -> None:
         # missing period as an AttributeError inside the comparison rather
         # than as the failure it is. A snapshot resolved for a period must
         # carry one.
-        assert resolved.filing_period is not None, f"snapshot for filing year {filing_year} carries no filing_period"
+        assert resolved.filing_period is not None, (
+            f"snapshot for filing year {filing_year} carries no filing_period"
+        )
         assert resolved.filing_period.filing_year == filing_year
