@@ -80,3 +80,31 @@ campaign's own thesis applied to its own tooling.
 
 Semantic code discovery remained unusable throughout; every claim rests on direct
 reads and executed measurement.
+
+## Correction, same day
+
+The worklist figure above understated the finding, and the record is corrected
+rather than left standing. A peer tightened the module-level exemption to require
+SAME-CORPUS proof, on the same reasoning this step applied one level down: a
+sibling asserting one substrate is populated vouches for a scan over that
+substrate, not over a corpus it never touched. Crediting it module-wide silenced
+110 functions tree-wide.
+
+The worklist is 123, not 19. Of those, 104 were newly exposed by that tightening
+and 19 are the set this step measured. So "every remaining entry is a genuine
+scan or a legitimate absence assertion" was a claim about a screen that was
+itself still laundering, and the honest number was always higher.
+
+The reflex on seeing 123 was that the instrument had regressed to noise, which is
+the objection this step raised when the screen flagged fourteen paired controls.
+That reflex was checked rather than acted on, and it was wrong. Two newly-exposed
+entries were read in full and both are real: one iterates a helper call and
+asserts the result empty, so the entire marker gate would pass vacuously if that
+helper ever returned nothing; the other reads a fixture attribute with the same
+exposure. Reaching a corpus through a call rather than a bare name is exactly the
+case the tightened credit refuses, and refusing it is correct.
+
+The lesson is narrower than "the screen was wrong again". Both times the screen's
+own exemption logic was the defect, and both times it was found by someone
+distrusting a number rather than the code. A count that moves by 5x is a prompt
+to read two entries, not to conclude anything.
