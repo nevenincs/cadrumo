@@ -12,6 +12,29 @@ related:
 
 # `declaracion-real-render-verification` audit: `campaign-close honesty review, read as a fresh inheritor`
 
+> **LARGELY ACTIONED, 2026-07-27. Read the findings below as the state on 2026-07-26,
+> not as open items.** This review was correct when written and its verdict — the
+> campaign is not structurally complete — still stands. But at least six of its
+> findings have since been closed, and nothing here said so until now, which is the
+> same propagation failure it was itself convened to catch.
+>
+> Actioned since: the printed-box hazard count moved from six-of-twenty-three armed to
+> thirteen, with the remainder split into two unlike problems rather than one backlog;
+> the seventeen inert guards are tracked as Steps rather than living in a Notes
+> paragraph; the plan row still reading nineteen specimen-less profiles was corrected
+> to twenty-two; the missing `P01.S03` exec record exists and carries the Modelo 100
+> handover; the Modelo 202 enrolment question is decided; and R12 was defined,
+> measured, attacked and partially remediated.
+>
+> What has **not** been actioned and remains live: `D2` and `D3` are still documentary
+> conventions with no gate that would fail if violated, and Modelo 193's three guards
+> are still blocked on evidence that does not exist.
+>
+> A second honesty review is intended once the Modelo 100 fix lands. This annotation
+> exists so that until then a reader does not act on findings already closed — the
+> failure mode this record's own finding about untracked deferrals describes, applied
+> to itself.
+
 ## Scope
 
 Campaign-close honesty review, read in the posture of a fresh inheritor: I did

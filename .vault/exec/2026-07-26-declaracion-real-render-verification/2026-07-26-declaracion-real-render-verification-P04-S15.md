@@ -32,7 +32,15 @@ Modelo 180's own binding already cited that same file, carrying "Casilla01 Numer
 
 Modelo 193's three targets are genuinely blocked. Its two bundled instruction files state no box numbers and it has no specimen. Its casilla structure is identical to Modelo 180's, which makes inferring 01/02/03 tempting and inadmissible; that inference is the one this line of work exists to refuse.
 
-The seven decl.ejercicio targets are a different defect and a milder one. Measured across the whole estate, 281 targets carry a value_kind and exactly seven disagree with their own casilla's declared data_type: value_kind is amount while the casilla declares data_type year. The other 274 are coherent. So this is one systematic mistake repeated for a single casilla concept, not estate-wide rot.
+The seven decl.ejercicio targets are a different defect and a milder one. They declare value_kind amount while their casilla declares data_type year.
+
+CORRECTED 2026-07-27. This paragraph originally read that 281 targets carry a value_kind, that exactly seven disagree, and that the other 274 are coherent. Withdraw all three figures and the conclusion drawn from them.
+
+Two later sweeps returned four and 114 for what was nominally the same question, and the disagreement is not about the registry. It is about three rules none of us stated. POPULATION: 281 against 478, because the sweeps enumerate different target sets. EQUIVALENCE: every sweep including the supposedly naive one silently treated amount and money as compatible, and the truly unqualified rule returns 371. DISCRIMINATION: whether year is distinct from integer, and enum from text, changes the answer and was never declared.
+
+So the original claim was not a measurement of the registry, it was a measurement of one unstated rule-set, presented as a property of the estate. The follow-on claim that this was one systematic mistake rather than estate-wide rot does not survive either: under one stated equivalence the residual is 114 rows across 39 distinct triples and at least eight discrimination axes.
+
+This record is corrected because a corpus consistency sweep caught it standing while the ADR that inherited the same figure had already been corrected. The figure originated here, so leaving it would have left the retracted version as the apparently authoritative source.
 
 Its severity is lower than the other ten. Those casillas are required, so a blank ejercicio is a malformed document rather than a legitimate optional blank, and the blank-box hazard is largely theoretical there. It is a type-coherence defect worth correcting, not a live fabrication path.
 
