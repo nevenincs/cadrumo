@@ -15,7 +15,7 @@ accepted_artefact_kinds = ["declaration_pdf"]
 parser = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
 target_casillas = [
     {casilla_id = "decl.tipo-declaracion", match_strategy = "named_label", value_kind = "enum", label_pattern = '15\s*Declaraci[oó]n\s+de:'},
-    {casilla_id = "decl.ejercicio", match_strategy = "named_label", value_kind = "amount", label_pattern = '14\s*Ejercicio:'},
+    {casilla_id = "decl.ejercicio", match_strategy = "named_label", value_kind = "text", label_pattern = '14\s*Ejercicio:'},
 ]
 confidence = "strict"
 corpus_round_trip_verified = true
