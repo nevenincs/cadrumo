@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#test-harness-honesty'
-date: '2026-07-26'
-modified: '2026-07-26'
+date: '2026-07-27'
+modified: '2026-07-27'
 related:
   - '[[2026-07-25-test-harness-honesty-S01]]'
   - '[[2026-07-25-test-harness-honesty-S04]]'
@@ -12,10 +12,13 @@ related:
   - '[[2026-07-25-test-harness-honesty-S06]]'
   - '[[2026-07-25-test-harness-honesty-S07]]'
   - '[[2026-07-25-test-harness-honesty-S08]]'
+  - '[[2026-07-25-test-harness-honesty-S09]]'
+  - '[[2026-07-25-test-harness-honesty-S11]]'
+  - '[[2026-07-25-test-harness-honesty-S12]]'
+  - '[[2026-07-25-test-harness-honesty-S13]]'
   - '[[2026-07-25-test-harness-honesty-adr]]'
   - '[[2026-07-25-test-harness-honesty-false-green-gates-audit]]'
   - '[[2026-07-25-test-harness-honesty-plan]]'
-  - '[[2026-07-26-test-harness-honesty-research]]'
 ---
 
 # `test-harness-honesty` feature index
@@ -40,11 +43,11 @@ Auto-generated index of all documents tagged with `#test-harness-honesty`.
 - `2026-07-25-test-harness-honesty-S06` - VERIFIED-SOUND RECORD, the held-serial escalation mechanism is unwired by design rather than dead code, recorded so a later reader does not fix a mechanism that is deliberately inert
 - `2026-07-25-test-harness-honesty-S07` - VERIFIED-SOUND RECORD, the majority of the audited gate surface carries genuine positive controls, recorded so a later audit does not re-derive the same negative result
 - `2026-07-25-test-harness-honesty-S08` - Sweep the remaining survivor and conformance gates for the vacuous-pattern shape this audit found twice in one day, in the bare-literal scan and in the documentation claims gate, asserting each pattern against a known-match and a known-reject rather than trusting that a green gate is measuring anything
+- `2026-07-25-test-harness-honesty-S11` - Reconcile the duplication disposition record against a fresh live scan
+- `2026-07-25-test-harness-honesty-S12` - Audit the gate surface for checks reachable only through a marker-scoped or narrowed selection
+- `2026-07-25-test-harness-honesty-S09` - Triage the empty-assert functions the screen flags
+- `2026-07-25-test-harness-honesty-S13` - Close the stale-fixture family by requiring a test to bind a persisted record's version constant rather than restate its value, since two bucket-manifest fixtures kept writing schema_version=1 after the durability floor moved to 2 and neither failed loudly because both read paths treat the resulting raise as an ordinary degraded state, and the gate found five further stale sites on its first run
 
 ### plan
 
 - `2026-07-25-test-harness-honesty-plan` - `test-harness-honesty` plan
-
-### research
-
-- `2026-07-26-test-harness-honesty-research` - `test-harness-honesty` research: `{topic}`
