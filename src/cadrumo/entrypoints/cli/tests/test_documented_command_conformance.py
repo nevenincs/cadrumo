@@ -115,6 +115,12 @@ _FENCE_RE = re.compile(r"```[^\n]*\n(.*?)```", re.DOTALL)
 # (``aeat-config``) — ``aeat`` is the one human CLI executable the docs cite.
 _AEAT_TOKEN_RE = re.compile(r"(?:^|[\s$|&(;])aeat(?=\s|$)")
 
+# cli-sequence directives whose payload is FREE PROSE, not an invocation. A
+# reason sentence may legitimately name the product ("No aeat verb creates an
+# evidence bundle"), and without this the sentence after that word is parsed as
+# a verb path and reported as a command that does not resolve.
+_PROSE_DIRECTIVE_RE = re.compile(r"^@(?:blocked|capture|expect|note)\b")
+
 # Global options declared on the root callback. Accepted at any position before
 # the subcommand path and validated against the root command's own params, so
 # this set is a documentation aid only — the authoritative source is the live
@@ -332,11 +338,20 @@ def _parse_command_line(line: str) -> _CitedCommand | None:
     """
     cleaned = _strip_inline_comment(line).strip()
     cleaned = _LINE_CONTINUATION_RE.sub("", cleaned).strip()
+    # Prose-carrying cli-sequence directives are skipped EXPLICITLY rather than
+    # incidentally. ``@capture`` and ``@expect`` were skipped only because their
+    # syntax happens to exclude the ``aeat`` token, which made the whole scheme
+    # depend on documentation prose never using the product name -- and
+    # ``@blocked`` broke it: a reason reading "No aeat verb creates an evidence
+    # bundle" was parsed as a citation, and the remainder of the sentence was
+    # resolved as a verb path. Naming the prose directives states the rule
+    # instead of relying on a coincidence of vocabulary.
+    if _PROSE_DIRECTIVE_RE.match(cleaned):
+        return None
     # Some doc lines prefix the command with a shell sigil or a tab-led label.
     # A cli-sequence frame's ``@setup`` / ``@result`` sigil precedes the ``aeat``
-    # token and is dropped here by anchoring on ``aeat``;
-    # ``@capture`` / ``@expect`` lines carry no ``aeat`` token and are
-    # skipped upstream, so a frame line validates like any other cited invocation.
+    # token and is dropped here by anchoring on ``aeat``, so a frame line
+    # validates like any other cited invocation.
     m = _AEAT_TOKEN_RE.search(cleaned)
     if m is None:
         return None
@@ -1199,3 +1214,26 @@ def test_aeat_fence_baseline_is_well_formed_and_the_gate_scans_the_live_surface(
             assert isinstance(allowed, int) and not isinstance(allowed, bool) and allowed >= 0, (
                 f"{baseline_path.name} entry {page!r} must be a non-negative integer count, got {allowed!r}"
             )
+
+
+def test_a_blocked_reason_naming_the_product_is_not_parsed_as_a_command() -> None:
+    """Prose directives are skipped by rule, not by vocabulary coincidence.
+
+    ``@capture`` and ``@expect`` were skipped only because their syntax happens
+    to exclude the product name, which made the scheme depend on documentation
+    prose never using that word. A ``@blocked`` reason reading "No aeat verb
+    creates an evidence bundle" broke exactly that assumption: the sentence
+    after the product name was resolved as a verb path and reported as a
+    command that does not exist.
+    """
+    reason = "@blocked unconverted No aeat verb creates an evidence bundle, so no id exists to address."
+    assert _parse_command_line(reason) is None
+
+    for directive in ("@capture work_unit_id result.work_unit_id", '@expect result.status == "ok"'):
+        assert _parse_command_line(directive) is None
+
+    # The skip is scoped to prose directives: a real frame still parses, so the
+    # fix cannot hide an invocation that should have been checked.
+    frame = _parse_command_line("@setup aeat app modelo work create --modelo 303")
+    assert frame is not None
+    assert frame.verb_tokens[:3] == ("app", "modelo", "work")
