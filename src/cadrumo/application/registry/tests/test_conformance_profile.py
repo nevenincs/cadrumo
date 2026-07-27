@@ -415,6 +415,29 @@ def test_missing_grounding_row_refuses_rather_than_dropping_the_revision(
     assert dropped_revision in str(excinfo.value)
 
 
+def test_empty_coverage_gap_list_is_separable_from_unmeasured_coverage(
+    degraded_profile: RegistryConformanceProfile,
+    validated_profile: RegistryConformanceProfile,
+) -> None:
+    """An empty gap list must not read as a clean bill of health on an unmeasured profile."""
+    assert degraded_profile.required_coverage_gap_rows == ()
+    assert len(degraded_profile.coverage_unmeasured_rows) == degraded_profile.composed_revision_count
+
+    assert validated_profile.coverage_unmeasured_rows == ()
+    assert set(validated_profile.required_coverage_gap_rows) <= set(validated_profile.rows)
+
+
+def test_classification_finding_count_is_named_for_its_modelo_scope(
+    validated_profile: RegistryConformanceProfile,
+) -> None:
+    """The modelo-level count repeats across a modelo's revisions, so its name says so."""
+    by_modelo: dict[str, set[int]] = {}
+    for row in validated_profile.rows:
+        by_modelo.setdefault(row.modelo, set()).add(row.modelo_classification_finding_count)
+
+    assert all(len(counts) == 1 for counts in by_modelo.values())
+
+
 def test_declared_axis_census_reaches_the_profile(degraded_profile: RegistryConformanceProfile) -> None:
     """A dead schema axis must be visible as unused rather than silently passing."""
     assert degraded_profile.declared_axis_usage

@@ -393,8 +393,14 @@ class RevisionConformanceRow(ConformanceModel):
         return len(self.external_grounding.findings)
 
     @property
-    def classification_finding_count(self) -> int:
-        """Classification-coherence findings carried by this row's modelo."""
+    def modelo_classification_finding_count(self) -> int:
+        """Classification-coherence findings carried by this row's MODELO.
+
+        Named for its scope because it is a modelo-level count repeated on every
+        revision row of that modelo. Summing it across rows multiplies each
+        finding by the modelo's revision count; count the findings on the
+        classification audit itself instead.
+        """
         return len(self.modelo_classification.findings)
 
 
@@ -466,8 +472,24 @@ class RegistryConformanceProfile(ConformanceModel):
 
     @property
     def required_coverage_gap_rows(self) -> tuple[RevisionConformanceRow, ...]:
-        """Rows whose evidence-tier coverage leaves a mandatory tier unbacked."""
+        """Rows whose evidence-tier coverage leaves a mandatory tier unbacked.
+
+        Read this together with :attr:`coverage_unmeasured_rows`. A degraded
+        profile has no coverage on any row, so this is empty there — and an
+        empty gap list means "nothing was measured", not "nothing is missing".
+        Rendering the two counts side by side is what keeps those apart.
+        """
         return tuple(row for row in self.rows if row.has_required_coverage_gap)
+
+    @property
+    def coverage_unmeasured_rows(self) -> tuple[RevisionConformanceRow, ...]:
+        """Rows whose evidence-tier coverage was not computed at all.
+
+        The denominator that stops an empty
+        :attr:`required_coverage_gap_rows` from reading as a clean bill of
+        health on a profile that never measured coverage in the first place.
+        """
+        return tuple(row for row in self.rows if row.model_law_coverage is None)
 
     @property
     def independent_check_coverage(self) -> float | None:
@@ -614,6 +636,13 @@ def audit_bundled_registry_conformance(*, validate: bool = True) -> RegistryConf
 
     Returns:
         The composed :class:`RegistryConformanceProfile`.
+
+    Raises:
+        RegistryValidationError: When ``validate`` is :data:`True` and the tree
+            fails validation. The coverage audit re-runs registry validation
+            itself, so it can refuse a tree the authority accepted on a cached
+            verdict — a validated read that reports rather than hides that is
+            the intended behaviour, and ``validate=False`` is the way past it.
     """
     registry_root = _bundled_path("registry", "aeat")
     inventory = _load_bundled_external_oracle_inventory()
