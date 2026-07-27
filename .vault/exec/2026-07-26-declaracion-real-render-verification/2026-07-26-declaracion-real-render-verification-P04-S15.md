@@ -9,39 +9,6 @@ related:
   - "[[2026-07-26-declaracion-real-render-verification-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace declaracion-real-render-verification with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S15 and 2026-07-26-declaracion-real-render-verification-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Populate form_number on the seventeen remaining inert blank-box guards across nine modelos, M180 and M193 and M349 fichero-BOE targets plus seven decl.ejercicio targets, a live fabrication-producing defect and ## Scope
-
-- `src/cadrumo/_data/registry/aeat/modelos` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Populate form_number on the seventeen remaining inert blank-box guards across nine modelos, M180 and M193 and M349 fichero-BOE targets plus seven decl.ejercicio targets, a live fabrication-producing defect
 
 ## Scope
@@ -71,7 +38,11 @@ Its severity is lower than the other ten. Those casillas are required, so a blan
 
 ## Notes
 
-The decl.ejercicio correction was deliberately not attempted here. Changing value_kind from amount to text changes the extracted type from Decimal to str, the domain filing protocol documents these casillas as plain integers, and five test modules assert on them. That is a typed-boundary change with real blast radius and it deserves its own scoped work rather than an opportunistic edit; it is tracked separately.
+The decl.ejercicio correction was deliberately not attempted here, and the reason given was wrong.
+
+CORRECTED 2026-07-27. This record argued the change was a typed-boundary change with real blast radius, citing the domain filing protocol documenting these casillas as plain integers and five test modules asserting on them. An independent trace of every production consumer found the extracted casilla value has none. Reconcile and verify both read a separate top-level declaracion.ejercicio string populated by template detection, not the casilla-keyed value; the calculation-side filing_year binding independently synthesizes its own value from the work unit's known year; and none of the seven affected modelos are reconcile-enrolled. The only consumer of the specific extracted entry is the parser-boundary tests.
+
+So it is a contained fix: flip value_kind to text, update the test assertions. The protocol prose I cited describes a different field. Declining it was still the right call at the time, since the blast radius was unmeasured and I said so, but the stated reason did not survive measurement and should not be repeated.
 
 One claim was withdrawn during this work. An earlier pass reported Modelo 349's casilla 03 as mislabelled, its label appearing identical to casilla 01's. It is not: the label reads "Numero total de operadores intracomunitarios con rectificaciones" and the probe had truncated it at 44 characters. The registry is correct and the finding was an artefact of the instrument.
 
