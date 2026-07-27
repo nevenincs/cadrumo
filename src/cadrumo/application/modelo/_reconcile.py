@@ -111,12 +111,25 @@ Modelo 130 and 111 target printed numeric ids directly; Modelo 303 and 390 mix
 printed ids with the compound ``iva.*`` ids already extracted and reconciled
 pre-filing; Modelo 190 targets the compound ``decl.*`` summary ids. The same
 casilla-id vocabulary carries through to the after-filing reconcile here.
-Modelos whose extraction profile has not yet been authored (e.g. Modelo 200 — no
-``declaracion_pdf`` surface at all) or whose casilla-id alignment has not yet
-been confirmed (e.g. Modelo 202, which does carry a ``declaracion_pdf`` profile
-of four ``bbox_anchored`` targets) stay outside this set and are refused;
-real-PDF ``bbox_anchored`` extraction quality for the newly enrolled modelos
-remains Tier-R and is tracked separately, blocked on #332-337.
+A modelo outside this set is refused rather than silently degraded. **This
+docstring deliberately no longer enumerates why each one is out**, because that
+enumeration has now drifted twice: it first claimed Modelo 202 had no
+``declaracion_pdf`` surface (it has one, of four ``bbox_anchored`` targets), and
+the correction then claimed its casilla-id alignment was unconfirmed (it is
+confirmed complete). A per-modelo reason recorded here is a copy of a fact that
+lives in the registry and in the evidence corpus, and it goes stale whenever
+either moves, without anything failing.
+
+The two real gates are worth stating once, generically. A modelo needs its
+extraction profile's casilla ids to line up with the vocabulary its
+``verification_policy`` reconciles, and it needs a real or facsimile render
+verified through the real-render gate — registry readiness alone is not
+sufficient, because a profile can satisfy it completely and still read almost
+nothing off an actual document. To find out where a given modelo stands, read
+the registry and the fixture provenance rather than this paragraph.
+
+Real-PDF ``bbox_anchored`` extraction quality for the enrolled modelos remains
+Tier-R and is tracked separately, blocked on #332-337.
 """
 
 
