@@ -19,10 +19,11 @@ genuinely drifted from the document rather than from a convention:
 - The sanitised real-corpus specimens: genuine filed declarations retrieved from
   the sede, redacted for identity. Their layout, their printed labels and their
   blank boxes are AEAT's, but every monetary amount was overwritten by the
-  sanitiser with a single constant declared in the specimen's own sidecar
-  manifest. They are therefore layout and label evidence, not value evidence:
-  no printed arithmetic holds across them, and the sidecar constant is the
-  external authority the extracted amounts are checked against instead.
+  sanitiser, which is length-preserving and so renders its replacement in more
+  than one printed width. They are therefore layout and label evidence, not value
+  evidence: no printed arithmetic holds across them, and the amounts the
+  specimen's own sidecar accounts for are the external authority the extracted
+  values are checked against instead.
 
 What is asserted, and why each part earns its place:
 
@@ -40,12 +41,12 @@ What is asserted, and why each part earns its place:
   worked example -- a box the filer legitimately left blank -- not a parser
   defect, and pinning them keeps a real pattern regression from being waved
   through as "just another optional blank".
-- Every extracted amount on a sanitised render equals the constant the
-  sanitiser declared it wrote. This is the substitution detector for the family
-  that has no printed arithmetic: a pattern that drifted onto a neighbouring
-  token, or that captured a box number merged into the amount, yields something
-  other than the declared constant and fails here even though the casilla set
-  and the coverage ratio both hold.
+- Every extracted amount on a sanitised render is one the specimen's sidecar
+  accounts for. This is the substitution detector for the family that has no
+  printed arithmetic: a pattern that drifted onto a neighbouring token, or that
+  captured a box number merged into the amount, yields something the sidecar
+  does not account for and fails here even though the casilla set and the
+  coverage ratio both hold.
 - A blank box on a real render does not fabricate a value from its own printed
   box number. Exercised on the one bundled real render that carries such a box.
 - Across the whole suite at least one specimen is short of full coverage. This
@@ -55,7 +56,7 @@ What is asserted, and why each part earns its place:
 
 Expected values are grounded in the printed documents, not computed from the
 profile under test: the covered and absent sets were read off the AEAT renders,
-and the amount constant is read from the sanitiser's manifest rather than from
+and the accepted amounts are read from the specimen's sidecar rather than from
 the profile, so this module fails if the profile drifts and cannot be satisfied
 by adjusting the profile to match itself.
 
@@ -314,18 +315,32 @@ def _extract(specimen: _AnnexSpecimen | _RealRenderSpecimen) -> tuple[frozenset[
 
 
 def _sanitiser_amount_constants(specimen: _RealRenderSpecimen) -> frozenset[Decimal]:
-    """The amounts the sanitiser declares it wrote into this render.
+    """Every amount the specimen's own manifest accounts for.
 
-    Read from the specimen's own manifest, which is authored by the redaction
-    tool and not by any extraction profile, so agreement with it is evidence the
-    parser read the intended token rather than a neighbour.
+    Read from the sidecar, which is authored by the redaction tooling and not by
+    any extraction profile, so agreement with it is evidence the parser read the
+    intended token rather than a neighbour.
+
+    Two sources, because the sanitiser's own record is not a complete
+    description of the document. ``replacements_applied`` names the nominal
+    constant it wrote; the sanitiser is length-preserving, so writing that
+    constant into fields of differing printed width renders more than one form.
+    A sidecar that carries ``rendered_amount_forms`` declares the forms measured
+    on the page, and both are accepted -- treating the nominal constant as the
+    only legitimate value is how a genuine printed amount comes to look like a
+    parser defect.
+
+    Among the bundled specimens only Modelo 100 renders a form its
+    ``replacements_applied`` does not name; every other one matches exactly, and
+    for those this reduces to the single declared constant.
     """
     sidecar = json.loads(specimen.sidecar.read_text(encoding="utf-8"))
-    replacements = sidecar["replacements_applied"]
-    parsed = {parse_spanish_decimal(str(entry["synthetic"])) for entry in replacements}
+    declared = {str(entry["synthetic"]) for entry in sidecar["replacements_applied"]}
+    rendered = {str(form["value"]) for form in sidecar.get("rendered_amount_forms", {}).get("forms", ())}
+    parsed = {parse_spanish_decimal(token) for token in declared | rendered}
     constants = frozenset(value for value in parsed if isinstance(value, Decimal))
     assert constants, (
-        f"{specimen.label}: sidecar declares no amount replacement, so the extracted "
+        f"{specimen.label}: sidecar accounts for no amount at all, so the extracted "
         f"amounts below would have no external authority to be checked against"
     )
     return constants
@@ -594,14 +609,14 @@ def test_modelo_100_is_excluded_because_its_values_are_not_the_printed_amounts(
     correct response is to enrol Modelo 100 in ``_REAL_SPECIMENS`` and delete
     this. Failure here is the good outcome.
 
-    Its sensitivity was measured rather than assumed, and it is narrower than it
-    looks: driving a repaired extraction over ``2021-0A`` makes exactly one of 19
-    recovered targets agree with the declared constant. The other 18 print
-    ``1.001.000,00``, which the manifest does not declare at all -- the sanitiser
-    is length-preserving and wrote the eight-character constant into
-    eight-character fields and a twelve-character variant into twelve-character
-    ones, while recording only the former. So one target carries this gate, and a
-    repair that somehow left ``0510`` merged would slip past it.
+    Its sensitivity is measured rather than assumed, and it was re-measured after
+    the sidecars were corrected. Driving a repaired extraction over each of the
+    three specimens now makes all 19 recovered targets agree, so any of them
+    failing to be merged would trip this. It was one of 19 beforehand: the other
+    18 print ``1.001.000,00``, a form the manifests did not declare because the
+    sanitiser is length-preserving and recorded only the eight-character variant
+    it nominally wrote. A gate resting on one target has been widened to rest on
+    all of them by fixing the description of the corpus rather than the gate.
 
     See the campaign record for the measurements: no ``bbox_anchored`` value
     offset can express the overlapping layout, and the merge happens in text
