@@ -317,15 +317,22 @@ def build_external_grounding_audit(
     rows: list[RevisionExternalGroundingRow] = []
     matched_evidence_keys: set[tuple[str, int]] = set()
     corpora_for = inventory.corpora_for
+    attributed_filing_years = inventory.attributed_filing_years
 
     for modelo in modelo_tuple:
         revisions = tuple(sorted(modelo.revisions.values(), key=lambda item: item.id))
+        # Resolved once per modelo rather than once per (revision, filing year):
+        # the resolution answers "which revision owns this year", so it does not
+        # depend on the revision being built.
+        resolved_years: dict[str, list[int]] = {}
+        for candidate_modelo, filing_year in attributed_filing_years:
+            if candidate_modelo != modelo.id:
+                continue
+            owner = select_revision_for_filing_year(revisions, filing_year)
+            if owner is not None:
+                resolved_years.setdefault(owner.id, []).append(filing_year)
         for revision in revisions:
-            filing_years = tuple(
-                filing_year
-                for candidate_modelo, filing_year in inventory.attributed_filing_years
-                if candidate_modelo == modelo.id and select_revision_for_filing_year(revisions, filing_year) is revision
-            )
+            filing_years = tuple(resolved_years.get(revision.id, ()))
             matched_evidence_keys.update((modelo.id, filing_year) for filing_year in filing_years)
             rows.append(
                 _build_row(
