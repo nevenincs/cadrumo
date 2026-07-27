@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import override
 
 import pytest
@@ -18,9 +19,11 @@ from .. import (
     TypedResourceKey,
     as_path,
     bundled_path,
+    override_resources,
     packaged_data,
     resources,
 )
+from .._repos import ManualRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -183,3 +186,77 @@ def test_resources_registry_clear_empties_every_repository() -> None:
     registry.clear()
 
     assert registry.modelos._cache == {}
+
+
+def test_resources_returns_the_cached_registry_when_no_override_is_bound() -> None:
+    """The default path is unchanged: repeated calls hand back one cached instance."""
+    resources.cache_clear()
+
+    first = resources()
+    second = resources()
+
+    assert first is second
+
+
+def test_override_resources_binds_the_supplied_registry_for_the_block() -> None:
+    """Inside the block ``resources()`` answers the bound registry, not the cached one."""
+    resources.cache_clear()
+    cached = resources()
+    replacement = replace(cached, manuals=ManualRepository())
+    assert replacement is not cached
+
+    with override_resources(replacement) as bound:
+        assert bound is replacement
+        assert resources() is replacement
+
+    assert resources() is cached
+
+
+def test_override_resources_restores_the_prior_registry_on_exception() -> None:
+    """A raise inside the block must not leave the override bound.
+
+    The failure this forbids is silent and cross-test: an override that escapes
+    its block re-points every later caller in the process at a registry naming
+    somebody else's tree, and the symptom surfaces far from the cause.
+    """
+    resources.cache_clear()
+    cached = resources()
+    replacement = replace(cached, manuals=ManualRepository())
+
+    with pytest.raises(RuntimeError, match="probe"), override_resources(replacement):
+        assert resources() is replacement
+        raise RuntimeError("probe")
+
+    assert resources() is cached
+
+
+def test_override_resources_nests_and_unwinds_in_order() -> None:
+    """Nested blocks restore the enclosing registry rather than the process cache."""
+    resources.cache_clear()
+    cached = resources()
+    outer = replace(cached, manuals=ManualRepository())
+    inner = replace(cached, manuals=ManualRepository())
+
+    with override_resources(outer):
+        with override_resources(inner):
+            assert resources() is inner
+        assert resources() is outer
+
+    assert resources() is cached
+
+
+def test_resources_keeps_its_documented_cache_handle() -> None:
+    """``resources.cache_clear()`` stays part of the surface after the override seam.
+
+    Callers already depend on it to rebuild the registry after mutating
+    Settings, so moving the cache onto a private builder without re-exposing
+    the handle would have broken them silently at the call site.
+    """
+    assert callable(resources.cache_clear)
+    assert callable(resources.cache_info)
+
+    resources.cache_clear()
+    first = resources()
+    resources.cache_clear()
+
+    assert resources() is not first
