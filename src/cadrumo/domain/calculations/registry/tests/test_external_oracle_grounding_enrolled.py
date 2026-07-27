@@ -108,10 +108,12 @@ def test_every_bundled_oracle_payload_is_accounted_for() -> None:
 
     Every bundled payload is attributed today, so the gap set is empty and this
     assertion currently proves only that no payload vanished. The recorded-gap
-    half is not dead: it fired on a real payload until the M303 prorrata oracle
-    was renamed to carry its filing year, and the next year-less or
-    unresolvable-year payload lands straight back in it rather than being
-    silently dropped.
+    half is not dead, but it is now narrower than it was: attribution reads a
+    payload's declared modelo and filing year before falling back to its name,
+    so a self-describing payload under a year-less name is attributed rather
+    than recorded as a gap. What still lands here is a payload no reading can
+    place — a Renta WEB Open replay, which declares neither axis, under a name
+    that encodes neither — or one whose year resolves to no single revision.
     """
     inventory = load_bundled_external_oracle_inventory()
 

@@ -31,9 +31,15 @@ from .._external_grounding import (
     ExternalOracleEvidence,
     ManualWorkedExamplePayload,
     RentaWebOpenReplayPayload,
+    UnattributedOraclePayload,
+    _attribution_from_payload_name,
     _parse_oracle_payload,
     _read_oracle_payload,
 )
+
+#: A payload name carrying no filing year, the shape that used to demote a
+#: fully self-describing payload to an attribution gap.
+_YEAR_LESS_NAME = "modelo-303-prorrata-definitiva.json"
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -43,15 +49,24 @@ def _bundled_payloads(corpus: ExternalOracleCorpus) -> list[Path]:
     return sorted(Path(bundled_path(*_ORACLE_CORPUS_DIRECTORIES[corpus])).glob("modelo-*.json"))
 
 
-def _stage(tmp_path: Path, corpus: ExternalOracleCorpus, source: Path, payload: object) -> Path:
+def _stage(
+    tmp_path: Path,
+    corpus: ExternalOracleCorpus,
+    source: Path,
+    payload: object,
+    *,
+    name: str | None = None,
+) -> Path:
     """Write ``payload`` into a tmp copy of ``corpus``'s directory, under ``source``'s name.
 
     The staged directory carries the real corpus subtree's own leaf name, so
     the refusal diagnostics quote the same directory an operator would see.
+    ``name`` overrides the filename when the case under test is about the name
+    itself.
     """
     directory = tmp_path.joinpath(*_ORACLE_CORPUS_DIRECTORIES[corpus])
     directory.mkdir(parents=True, exist_ok=True)
-    staged = directory / source.name
+    staged = directory / (source.name if name is None else name)
     staged.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
     return staged
 
@@ -247,6 +262,142 @@ def test_a_non_canonical_casilla_key_is_refused(tmp_path: Path) -> None:
         _read_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, staged)
 
     assert "expected_by_casilla_id" in str(caught.value)
+
+
+def test_a_year_less_name_does_not_demote_a_payload_that_declares_its_own_axes(tmp_path: Path) -> None:
+    """A self-describing payload is attributed from what it declares, not from its name.
+
+    The name is one statement of where a payload's figures belong; the declared
+    ``modelo`` and ``filing_year`` are another, and the manual corpus requires
+    both. Keying attribution on the name alone made a naming slip enough to put
+    an AEAT figure outside both directions of the honesty relation, reported as
+    an attribution gap rather than checked.
+    """
+    source = _bundled_payloads(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE)[0]
+    original = json.loads(source.read_text(encoding="utf-8"))
+
+    staged = _stage(
+        tmp_path,
+        ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE,
+        source,
+        original,
+        name=_YEAR_LESS_NAME,
+    )
+    # Pins the premise: the case is only about the declared axes if the name
+    # genuinely carries none, so a name that quietly parsed would make the
+    # assertion below pass for the wrong reason.
+    assert _attribution_from_payload_name(staged) == (None, None)
+
+    loaded = _read_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, staged)
+
+    assert isinstance(loaded, ExternalOracleEvidence)
+    assert loaded.modelo == original["modelo"]
+    assert loaded.filing_year == original["filing_year"]
+    assert loaded.casilla_ids == tuple(sorted(original["expected_by_casilla_id"]))
+
+
+def test_a_payload_declaring_nothing_under_a_year_less_name_is_still_a_recorded_gap(tmp_path: Path) -> None:
+    """Widening attribution does not silently absorb a payload nothing can place.
+
+    The Renta WEB Open replays declare no modelo and no filing year, so for that
+    corpus the name is the only reading there is. With both readings silent the
+    payload is still recorded as an attribution gap rather than dropped, which
+    is what keeps the accounting relation total.
+    """
+    source = _bundled_payloads(ExternalOracleCorpus.RENTA_WEB_OPEN_REPLAY)[0]
+    original = json.loads(source.read_text(encoding="utf-8"))
+
+    control = _stage(tmp_path / "control", ExternalOracleCorpus.RENTA_WEB_OPEN_REPLAY, source, original)
+    assert isinstance(_read_oracle_payload(ExternalOracleCorpus.RENTA_WEB_OPEN_REPLAY, control), ExternalOracleEvidence)
+
+    staged = _stage(
+        tmp_path / "renamed",
+        ExternalOracleCorpus.RENTA_WEB_OPEN_REPLAY,
+        source,
+        original,
+        name=_YEAR_LESS_NAME,
+    )
+    loaded = _read_oracle_payload(ExternalOracleCorpus.RENTA_WEB_OPEN_REPLAY, staged)
+
+    assert isinstance(loaded, UnattributedOraclePayload)
+    assert loaded.gap == "payload_name_lacks_modelo_and_filing_year"
+    assert loaded.payload_name == _YEAR_LESS_NAME
+
+
+def test_a_declared_filing_year_contradicting_the_name_is_refused(tmp_path: Path) -> None:
+    """The two readings disagreeing is a finding, not something to prefer a side of.
+
+    Reading the declared axes does not make the name advisory. When both speak
+    and disagree, exactly one of them is wrong and nothing here can know which,
+    so the refusal quotes both readings rather than attributing the figures to
+    a revision the file's own name denies.
+    """
+    source = _bundled_payloads(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE)[0]
+    original = json.loads(source.read_text(encoding="utf-8"))
+    declared_year = int(original["filing_year"])
+
+    control = _stage(tmp_path / "control", ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, source, original)
+    assert isinstance(
+        _read_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, control),
+        ExternalOracleEvidence,
+    )
+
+    contradicting = _stage(
+        tmp_path / "mutated",
+        ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE,
+        source,
+        {**original, "filing_year": declared_year - 1},
+    )
+    with pytest.raises(RegistryValidationError) as caught:
+        _read_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, contradicting)
+
+    message = str(caught.value)
+    assert str(declared_year - 1) in message
+    assert str(declared_year) in message
+
+
+def test_a_declared_modelo_contradicting_the_name_is_refused(tmp_path: Path) -> None:
+    """The modelo axis is held on the same terms as the filing year."""
+    source = _bundled_payloads(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE)[0]
+    original = json.loads(source.read_text(encoding="utf-8"))
+    declared_modelo = str(original["modelo"])
+    other_modelo = "303" if declared_modelo != "303" else "130"
+
+    contradicting = _stage(
+        tmp_path,
+        ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE,
+        source,
+        {**original, "modelo": other_modelo},
+    )
+    with pytest.raises(RegistryValidationError) as caught:
+        _read_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, contradicting)
+
+    message = str(caught.value)
+    assert other_modelo in message
+    assert declared_modelo in message
+
+
+def test_both_readings_agree_across_the_whole_shipped_manual_corpus() -> None:
+    """The cross-check is exercised by real data, and no manual payload can be a gap.
+
+    Anti-vacuity floor for the two contradiction refusals above: they would pass
+    on an empty premise if no shipped payload ever stated both axes. Every
+    manual worked-example payload states both, and its name states them too, so
+    every shipped file passes through the comparison rather than around it.
+    """
+    payloads = _bundled_payloads(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE)
+    assert payloads, "no manual worked-example payloads were discovered"
+
+    for path in payloads:
+        parsed = _parse_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, path)
+        name_modelo, name_year = _attribution_from_payload_name(path)
+        assert (parsed.modelo, parsed.filing_year) == (name_modelo, name_year), (
+            f"{path.name}: declared attribution disagrees with the payload name"
+        )
+        assert isinstance(
+            _read_oracle_payload(ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE, path),
+            ExternalOracleEvidence,
+        )
 
 
 def test_the_payload_models_cover_every_corpus_directory() -> None:

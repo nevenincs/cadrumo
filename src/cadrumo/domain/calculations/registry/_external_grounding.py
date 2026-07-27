@@ -116,7 +116,13 @@ OracleAttributionGap = Literal[
     "payload_name_lacks_modelo_and_filing_year",
     "no_registry_revision_covers_filing_year",
 ]
-"""Why a bundled oracle payload's evidence could not be attributed to a revision."""
+"""Why a bundled oracle payload's evidence could not be attributed to a revision.
+
+``payload_name_lacks_modelo_and_filing_year`` is reached only when BOTH readings
+are silent: the payload declares no modelo and filing year of its own AND its
+name does not encode them. A payload declaring either axis is attributed from
+what it declares, so the name is a cross-check rather than the sole key.
+"""
 
 ExternalGroundingFindingKind = Literal[
     "oracle_casilla_not_computed",
@@ -639,53 +645,76 @@ def _parse_oracle_payload(
     return payload
 
 
+def _attribution_from_payload_name(payload_path: Path) -> tuple[ModeloId | None, int | None]:
+    """Read the ``modelo-<id>-<year>-<scenario>.json`` naming convention off a payload.
+
+    Returns ``(None, None)`` when the name does not follow the convention. The
+    two axes are read together because the convention encodes them together: a
+    name that fails the shape carries neither, so there is no partial reading to
+    salvage.
+    """
+    parts = payload_path.stem.split("-")
+    if len(parts) < 3 or parts[0] != "modelo" or not parts[1] or not parts[2].isdigit():
+        return (None, None)
+    return (parts[1], int(parts[2]))
+
+
 def _read_oracle_payload(
     corpus: ExternalOracleCorpus,
     payload_path: Path,
 ) -> ExternalOracleEvidence | UnattributedOraclePayload:
-    """Read one ``modelo-<id>-<year>-<scenario>.json`` payload into typed evidence.
+    """Read one bundled payload into typed evidence, attributed to a modelo and year.
 
     Every payload is parsed through its corpus's strict model first, including
-    one the filename cannot attribute: a file the fold cannot place is still a
-    file whose contents must be well-formed, and validating only the
+    one that cannot be attributed at all: a file the fold cannot place is still
+    a file whose contents must be well-formed, and validating only the
     attributable ones would leave the boundary open exactly where the least is
     known about the payload.
 
-    The filename remains the attribution key. The payload's own ``modelo`` and
-    ``filing_year`` are cross-checked against the filename-derived values when
-    declared, so a misnamed file cannot silently misattribute its evidence; the
-    Renta WEB Open replays declare neither, hence the filename fallback.
+    Attribution reads the DECLARED axes first and falls back to the
+    ``modelo-<id>-<year>-<scenario>.json`` naming convention, rather than
+    keying on the name alone. Both are real statements of the same fact, and a
+    payload declaring its modelo and filing year has said where its figures
+    belong whatever it is called; keying solely on the name made a naming slip
+    silently demote a fully self-describing payload to an attribution gap, where
+    its AEAT figures sit outside both directions of the honesty relation. The
+    Renta WEB Open replays declare neither axis, so the name remains the only
+    reading for that corpus.
+
+    Where both sources speak, they must agree. A disagreement is refused by
+    name, quoting both readings, rather than resolved by preferring one side:
+    the two disagree only when one of them is wrong, and which one is wrong is
+    not something this function can know. Silently taking the declared value
+    would attribute figures to a revision the file's own name denies.
     """
     payload = _parse_oracle_payload(corpus, payload_path)
-    parts = payload_path.stem.split("-")
-    if len(parts) < 3 or parts[0] != "modelo" or not parts[1] or not parts[2].isdigit():
+    name_modelo_id, name_filing_year = _attribution_from_payload_name(payload_path)
+    if payload.modelo is not None and name_modelo_id is not None and payload.modelo != name_modelo_id:
+        raise RegistryValidationError(
+            f"{payload_path.name}: payload modelo {payload.modelo!r} does not match filename modelo {name_modelo_id!r}",
+        )
+    if payload.filing_year is not None and name_filing_year is not None and payload.filing_year != name_filing_year:
+        raise RegistryValidationError(
+            f"{payload_path.name}: payload filing_year {payload.filing_year!r} does not match filename year "
+            f"{name_filing_year!r}",
+        )
+    modelo_id = payload.modelo if payload.modelo is not None else name_modelo_id
+    filing_year = payload.filing_year if payload.filing_year is not None else name_filing_year
+    if modelo_id is None or filing_year is None:
         return UnattributedOraclePayload(
             corpus=corpus,
             payload_name=payload_path.name,
             gap="payload_name_lacks_modelo_and_filing_year",
             detail=(
-                f"{payload_path.name}: name does not encode modelo-<id>-<filing-year>, so its expected values "
-                "cannot be attributed to a modelo revision"
+                f"{payload_path.name}: the payload declares no modelo and filing year and its name does not "
+                "encode modelo-<id>-<filing-year>, so its expected values cannot be attributed to a modelo "
+                "revision"
             ),
-        )
-    filename_modelo_id = parts[1]
-    filename_year = int(parts[2])
-    declared_modelo_id = filename_modelo_id if payload.modelo is None else payload.modelo
-    declared_year = filename_year if payload.filing_year is None else payload.filing_year
-    if declared_modelo_id != filename_modelo_id:
-        raise RegistryValidationError(
-            f"{payload_path.name}: payload modelo {declared_modelo_id!r} does not match filename modelo "
-            f"{filename_modelo_id!r}",
-        )
-    if declared_year != filename_year:
-        raise RegistryValidationError(
-            f"{payload_path.name}: payload filing_year {declared_year!r} does not match filename year "
-            f"{filename_year!r}",
         )
     return ExternalOracleEvidence(
         corpus=corpus,
         payload_name=payload_path.name,
-        modelo=declared_modelo_id,
-        filing_year=declared_year,
+        modelo=modelo_id,
+        filing_year=filing_year,
         casilla_ids=tuple(sorted(payload.expected_by_casilla_id)),
     )
