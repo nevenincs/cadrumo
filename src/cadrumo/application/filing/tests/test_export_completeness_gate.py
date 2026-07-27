@@ -18,7 +18,7 @@ import pytest
 
 from ....domain.calculations.registry import CasillaId
 from ....domain.filing import FilingExportError, ModeloDraft, ModeloValueKind
-from .._export import boe_representable_casilla_ids, export_draft
+from .._export import boe_representable_casilla_ids, export_draft, required_applicable_casilla_ids
 from ..runtime import ExportLayoutDefinition, RegistrySchemaAccessor
 from ._export_support import (
     _approved_modelo_390_registry_draft,
@@ -68,21 +68,13 @@ _COMPLETENESS_GATE_CASES = (
 
 def _required_applicable(
     modelo: str, provider: RegistrySchemaAccessor, layout: ExportLayoutDefinition, headers: dict[str, str]
-) -> set[CasillaId]:
-    # Mirror the gate's required set: calculation RESULTS (formula) and
-    # schema-required casillas that are representable. Optional inputs are excluded.
+) -> frozenset[CasillaId]:
     subview = provider.get_subview(modelo)
     manifest = subview.completeness_manifest
     assert manifest is not None
     representable = boe_representable_casilla_ids(layout, headers=headers, schema_provider=provider)
     collection = provider.get_collection(modelo)
-    required = {
-        casilla.casilla_id
-        for casilla in manifest.casillas
-        if (schema := collection.get(casilla.casilla_id)) is not None
-        and (schema.formula is not None or schema.required)
-    }
-    return required & representable
+    return required_applicable_casilla_ids(manifest, collection=collection, representable=representable)
 
 
 @pytest.mark.parametrize("case_factory", _COMPLETENESS_GATE_CASES)

@@ -167,6 +167,7 @@ from ._export import (
     export_draft,
     export_layout_renderability_reason,
     render_layout,
+    required_applicable_casilla_ids,
     verify_export,
 )
 from ._history_models import ModeloHistory, ModeloHistoryEntry
@@ -915,6 +916,7 @@ __all__ = [
     "make_amendment_id",
     "refresh_review_status",
     "render_layout",
+    "required_applicable_casilla_ids",
     "summarise_calculation",
     "unapprove_draft",
     "verify_export",

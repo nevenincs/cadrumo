@@ -31,6 +31,7 @@ from .._export import (
     boe_representable_casilla_ids,
     export_draft,
     rendered_casilla_ids,
+    required_applicable_casilla_ids,
 )
 from ..runtime import CasillaRecordMetadata
 from ._export_support import (
@@ -106,16 +107,11 @@ def test_complete_draft_reaches_disk_for_every_required_casilla() -> None:
 
         representable = boe_representable_casilla_ids(layout, headers=headers, schema_provider=provider)
         rendered = rendered_casilla_ids(layout, draft=draft, headers=headers, schema_provider=provider)
-        # Mirror the gate's required set: calculation RESULTS (formula) and
-        # schema-required casillas that are representable. Optional inputs are excluded
-        # (a blank optional input is a valid zero, not a thin file).
-        collection = provider.get_collection(modelo)
-        required_applicable = {
-            casilla.casilla_id
-            for casilla in manifest.casillas
-            if (schema := collection.get(casilla.casilla_id)) is not None
-            and (schema.formula is not None or schema.required)
-        } & representable
+        required_applicable = required_applicable_casilla_ids(
+            manifest,
+            collection=provider.get_collection(modelo),
+            representable=representable,
+        )
 
         # Non-vacuous: the gate is genuinely active for this modelo.
         assert required_applicable, (
