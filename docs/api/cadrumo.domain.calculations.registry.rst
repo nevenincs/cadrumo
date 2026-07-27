@@ -29,6 +29,7 @@ Submodules
    cadrumo.domain.calculations.registry._censo_modelos
    cadrumo.domain.calculations.registry._checker_oracle_flow
    cadrumo.domain.calculations.registry._citation_blocklist
+   cadrumo.domain.calculations.registry._classification_coherence
    cadrumo.domain.calculations.registry._compiled_cache
    cadrumo.domain.calculations.registry._constructs
    cadrumo.domain.calculations.registry._convenio
