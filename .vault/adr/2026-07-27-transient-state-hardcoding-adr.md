@@ -42,6 +42,11 @@ and baselines), and name what must not be swept, before they land anything.
   lifecycle; an over-broad sweep does real harm.
 - Sound identity-keyed patterns already ship in this tree to converge on
   (research, convergence-targets section).
+- A live self-correction by the dispatching coordinator (one coherence
+  question, three probes, answers 7 vs 4 vs 114 under unstated rules; a
+  landed change justified as closing "the last incoherence") proves that a
+  derivation with unstated rules and a completeness claim built on it are
+  failure modes of their own (research, worked-example section).
 - Rule codification is retired (2026-07-13); this ADR is the governing record,
   enforced by the gates themselves, not by a new always-on rule.
 
@@ -120,6 +125,39 @@ Two adjacent classes are ruled legitimate and are not ratchets-in-disguise:
 - **Anti-vacuity floors with deliberate declared slack** (minimum-scanned
   bounds): legitimate, because they measure instrument health against an
   order-of-magnitude bound, not the tree against itself.
+
+### Derived assertions and completeness claims
+
+Replacing a checked-in count with a derivation is not automatically the fix:
+a derived assertion is only as good as the rule it derives from, and an
+unstated discrimination inside that rule is the same defect wearing better
+clothes. The live worked example (research, worked-example section): one
+registry coherence question yielded 7, 4, or 114 "mismatches" under three
+probes whose population, equivalence, and discrimination rules were each
+unstated - the first probe silently distinguished `year` from `integer`, the
+second silently equated them, and every probe silently equated `amount` with
+`money`. A gate built on any one of those rules would be wrong in both
+directions at once relative to what its readers expect.
+
+A derived gate is therefore legitimate only when all three of its rules are
+declared data in the gate itself:
+
+- **Population rule** - what is enumerated (which revisions, which targets),
+  stated, so two derivations enumerate the same set.
+- **Equivalence and discrimination rules** - the compatibility mapping the
+  comparison applies (e.g. a declared kind-to-dtype table saying amount~money
+  holds and year~integer does not), a checked table, never an implicit `!=`.
+- **Adjudication set** - any pairing the declared rules cannot settle from an
+  authority is an identity-keyed, reasoned entry awaiting or recording its
+  ruling - never silently absorbed into either side of the rule.
+
+Completeness claims are ruled separately and more strictly. "The last
+incoherence", "zero remaining", "all N enrolled" is strictly stronger than a
+count and strictly less checkable, and it instructs the next reader to stop
+looking. A completeness claim may be made only as the live output of such a
+declared-rule gate (green at a stated anchor), and in prose only with the
+rule and anchor attached ("the probe under rule R returns empty at SHA X").
+An unanchored exhaustion claim is a worse defect than the count it upgrades.
 
 ### Remedies per class (sites enumerated in the research, T1-T4)
 

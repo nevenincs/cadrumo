@@ -195,6 +195,46 @@ same module: tolerance bands (`default_limit`, `headroom_ratio`, `slack_ratio`,
   measured from real renders and justified against them (dispatch brief; the
   campaign's ADR is linked from its feature index).
 
+### Worked example, live: an estate measurement is a function of its probe rules
+
+Three probes of one question - "which extraction-profile targets' `value_kind`
+disagrees with their casilla's `data_type`?" - returned three incompatible
+answers, each presented or presentable as "the" measurement:
+
+- The coordinator's sweep: "281 targets carry a `value_kind` and exactly seven
+  disagree", used to justify a landed change as closing "the last incoherence
+  in the estate". The seven exist only under an unstated discrimination
+  (`year` distinguished from `integer`). Reported by the coordinator
+  2026-07-27, self-corrected the same day.
+- An independent sweep under the naive rule (`value_kind != data_type`,
+  nothing else): four rows, none of them among the seven - `enum`-over-`text`
+  and `enum`-over-`integer` pairings the first probe never adjudicated (the
+  schema enforces no enum/text distinction). Reported with the correction.
+- This research's reproduction (raw `tomllib` walk over every
+  `extraction_profiles/*.toml` and sibling `casillas/*.toml` fragment under
+  `src/cadrumo/_data/registry/aeat/modelos/`, all revisions, no authority
+  load): 478 target rows carrying `value_kind` (77 with no casilla pairing
+  resolved by the raw walk), 371 literal mismatches - because `value_kind`
+  says `amount` where `data_type` says `money`, so even the "naive" rule
+  embeds an unstated equivalence - and 114 residual rows (39 distinct
+  casilla-kind-dtype triples) under the single stated equivalence
+  amount~money, spanning at least eight distinct discrimination axes:
+  text/year, text/period_code, amount/integer, amount/decimal, amount/year,
+  amount/text, enum/text or enum/integer, and text over refinement types
+  (nif, name, province_code, postal_code, municipality_code). Measured twice with identical results at HEADs `4ce8da72d6` and
+  `5eac4410e7` (no registry working-tree modifications present), 2026-07-27.
+
+The three numbers (7, 4, 114) do not disagree about the registry; they
+disagree about three rules nobody stated: the POPULATION rule (which
+revisions and targets are enumerated - 281 vs 478), the EQUIVALENCE rule
+(amount~money assumed by everyone silently; amount~decimal, text~nif
+undecided), and the DISCRIMINATION rule (year vs integer; enum vs text).
+A derived count with any of the three unstated is irreproducible, and a
+completeness claim built on it ("the last incoherence") is wrong the moment
+a second party derives with different rules. The raw-walk numbers above are
+themselves a third rule-set, not a refutation of the other two - which is
+the finding.
+
 ### Not investigated, and limits
 
 An `rg` sweep cannot see a census hidden behind one indirection
@@ -225,4 +265,4 @@ are not free-standing claims.
 - `src/cadrumo/domain/calculations/registry/tests/test_aeat_nif_iva_oracle.py:95-110`
 - `dev/import_hygiene_baseline.json`, `dev/import_hygiene_test_debt.json`
 - Audit stem `2026-07-25-test-harness-honesty-false-green-gates-audit`
-- HEAD at measurement: commit `d1e91cb00f2d`
+- HEAD at measurement: commit `d1e91cb00f2d` (gate inventory); commits `4ce8da72d6`, `5eac4410e7` (coherence-probe reproduction, identical results)
