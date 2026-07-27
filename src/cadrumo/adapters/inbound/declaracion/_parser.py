@@ -699,7 +699,27 @@ def _numeric_casilla_anchors(
     profile: ExtractionProfileDefinition,
     revision: ModeloRevision,
 ) -> dict[CasillaId, str]:
-    """Map canonical target ids to the printed numbers used by ``numeric_casilla``."""
+    """Map canonical target ids to the printed numbers used by ``numeric_casilla``.
+
+    The printed number is ``form_number``, the same field the blank-box guard
+    reads. ``number`` is reviewed AEAT record-design metadata and coincides with
+    the printed number only when the casilla id is itself numeric, so reading it
+    works by accident for numerically-named casillas and yields an id string or a
+    fichero-BOE positional range for semantically-named ones. This strategy
+    anchors on the printed number at line start, so such an anchor can never
+    match and the target silently drops out of every extraction.
+
+    Every ``numeric_casilla`` target in the registry today happens to carry a
+    numeric ``number``, so nothing is currently mis-anchored -- but that is the
+    same accident that hid the defect in the blank-box guard, and it would end the
+    moment a semantically-named casilla is given this strategy.
+
+    Unlike :func:`_printed_box_numbers` this refuses rather than degrading. A
+    missing printed number leaves the guard without a safety net, which is
+    tolerable; here it means the target cannot be addressed at all, which is a
+    registry-integrity error of the same kind as a target naming a casilla that
+    does not exist.
+    """
     revision_casillas_by_id = casillas_by_id(revision)
     anchors: dict[CasillaId, str] = {}
     for target in profile.target_casillas:
@@ -711,7 +731,17 @@ def _numeric_casilla_anchors(
                 f"extraction profile {profile.id!r} target {target.casilla_id!r} "
                 f"is not a canonical casilla.id in revision {revision.id!r}",
             )
-        anchors[target.casilla_id] = casilla.number
+        printed = casilla.form_number or None
+        if printed is None and casilla.number and casilla.number.strip().isdigit():
+            printed = casilla.number
+        if printed is None:
+            raise DeclaracionParseError(
+                f"extraction profile {profile.id!r} target {target.casilla_id!r} anchors on a "
+                f"printed box number, but revision {revision.id!r} records none: form_number is "
+                f"unset and number is {casilla.number!r}, which is record-design metadata rather "
+                f"than a printed box number",
+            )
+        anchors[target.casilla_id] = printed
     return anchors
 
 
