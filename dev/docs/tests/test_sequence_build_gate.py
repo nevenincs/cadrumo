@@ -24,7 +24,12 @@ from sphinx.application import Sphinx
 
 from cadrumo.tests.env_scope import scoped_env_var
 from dev.docs.cli_tree import default_cli_tree_path
-from dev.docs.sequence_build_gate import emit_cli_tree, should_emit_cli_tree
+from dev.docs.sequence_build_gate import (
+    check_sequence_goldens,
+    emit_cli_tree,
+    should_check_sequences,
+    should_emit_cli_tree,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -87,3 +92,24 @@ def test_emit_skips_incremental_build_leaving_artifact_untouched(tmp_path: Path)
     emit_cli_tree(app, specific_sources=[tmp_path / "index.md"])
 
     assert output.read_text(encoding="utf-8") == sentinel
+
+
+def test_sequence_check_runs_by_default() -> None:
+    """With no opt-out set, every build runs the golden check."""
+    assert should_check_sequences() is True
+
+
+def test_sequence_check_skip_env_suppresses_the_check(tmp_path: Path) -> None:
+    """``CADRUMO_DOCS_SKIP_SEQUENCE_CHECK`` short-circuits before any execution.
+
+    The stand-in app's ``srcdir`` points at an EMPTY directory: an unskipped
+    check would spawn the engine subprocess against it and, at minimum, pay
+    seconds of interpreter/app import — while the skip path must return before
+    reading ``srcdir`` at all. The guard decision is pinned here; the
+    divergence-reds proof for the UNSKIPPED hook lives in
+    ``test_sequence_goldens.TestBothSurfacesRedOnDivergence``.
+    """
+    with scoped_env_var("CADRUMO_DOCS_SKIP_SEQUENCE_CHECK", "1"):
+        assert should_check_sequences() is False
+        app = cast(Sphinx, SimpleNamespace(srcdir=str(tmp_path / "never-read"), config=SimpleNamespace()))
+        check_sequence_goldens(app, pages=None)

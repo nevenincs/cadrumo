@@ -64,6 +64,7 @@ __all__ = [
     "COHERENCE_TIER_PREFIX",
     "DiscoveredSequence",
     "check_page_coherence",
+    "check_page_coherence_in_subprocess",
     "check_sequences",
     "check_sequences_in_subprocess",
     "default_docs_root",
@@ -400,47 +401,32 @@ def check_sequences(
     return tuple(all_problems), tuple(advisories)
 
 
-def check_sequences_in_subprocess(
-    *,
-    docs_root: Path | None = None,
-    goldens_root: Path | None = None,
-    page: str | None = None,
-    sequence_id: str | None = None,
-    timeout: float = 3600,
-) -> tuple[str, ...]:
-    """Run the golden check in a fresh English-pinned interpreter.
+def _english_pinned_env() -> dict[str, str]:
+    """Return the scrubbed, English-pinned environment for a check child.
 
-    CLI help strings are resolved while the command tree is imported. A
-    long-lived pytest or Sphinx process may already have materialised that tree
-    under another locale, so changing settings in-process cannot make its help
-    English again. The child still uses :func:`check_sequences`; the process
-    boundary only guarantees the language premise before the first CLI import.
-
-    Returns:
-        An empty tuple on success, or one complete child diagnostic report on
-        a golden divergence.
-
-    Raises:
-        SequenceEngineError: When the child cannot run the check surface.
+    CLI help strings are resolved while the command tree is imported, so the
+    language premise must hold BEFORE the child's first CLI import; ambient
+    ``CADRUMO_*`` / ``AEAT_*`` operator state is dropped for the same
+    determinism reason the sandbox scrubs it.
     """
-    command = [sys.executable, "-m", "dev.docs.sequences", "check"]
-    if docs_root is not None:
-        command.extend(("--docs-root", str(docs_root)))
-    if goldens_root is not None:
-        command.extend(("--goldens-root", str(goldens_root)))
-    if page is not None:
-        command.extend(("--page", page))
-    if sequence_id is not None:
-        command.extend(("--sequence", sequence_id))
-
     environment = {key: value for key, value in os.environ.items() if not key.upper().startswith(("CADRUMO_", "AEAT_"))}
     environment["CADRUMO_OUTPUT_LANGUAGE"] = "en"
     environment["PYTHONIOENCODING"] = _UTF_8
     environment["PYTHONUTF8"] = "1"
+    return environment
+
+
+def _run_check_child(command: list[str], *, timeout: float) -> tuple[str, ...]:
+    """Run one check child; return its report tuple (empty on a clean pass).
+
+    Raises:
+        SequenceEngineError: When the child cannot run the check surface
+            (any exit other than 0 or 1).
+    """
     result = subprocess.run(  # noqa: S603 - fixed interpreter and module entrypoint.
         command,
         cwd=Path(__file__).resolve().parents[3],
-        env=environment,
+        env=_english_pinned_env(),
         capture_output=True,
         text=True,
         encoding=_UTF_8,
@@ -454,6 +440,149 @@ def check_sequences_in_subprocess(
         return (report,)
     raise SequenceEngineError(
         f"cli-sequence check subprocess failed (exit {result.returncode}):\n{report or '<no output>'}",
+    )
+
+
+def _scoped_check_command(
+    *,
+    page: str,
+    docs_root: Path | None,
+    goldens_root: Path | None,
+    coherence: bool,
+) -> list[str]:
+    """Build one page-scoped ``check`` child command line."""
+    command = [sys.executable, "-m", "dev.docs.sequences", "check", "--page", page]
+    if coherence:
+        command.append("--coherence")
+    if docs_root is not None:
+        command.extend(("--docs-root", str(docs_root)))
+    if goldens_root is not None and not coherence:
+        command.extend(("--goldens-root", str(goldens_root)))
+    return command
+
+
+def _check_pages_in_subprocesses(
+    *,
+    docs_root: Path | None,
+    goldens_root: Path | None,
+    jobs: int,
+    timeout: float,
+    coherence: bool = False,
+) -> tuple[str, ...]:
+    """Shard the unscoped check across page-scoped children, ``jobs`` at a time.
+
+    Verdict parity with the serial unscoped run holds because sequences are
+    hermetically independent (each executes in its own fresh sandbox) and the
+    only CROSS-page discovery fault — a duplicate sequence id declared on two
+    pages — is re-detected here by the parent's own unscoped discovery pass
+    (parse-only, no execution) and prepended to the merged report. A page-local
+    discovery fault is reported by both the parent and its page's child; on an
+    already-red gate the repetition is cosmetic.
+
+    Returns:
+        The merged report tuple: the parent discovery problems (if any)
+        followed by one complete diagnostic report per failing page child.
+        Empty on a clean pass.
+    """
+    from concurrent.futures import ThreadPoolExecutor
+
+    discovered, discovery_problems = discover_sequences(docs_root=docs_root)
+    counts: dict[str, int] = {}
+    for item in discovered:
+        counts[item.page] = counts.get(item.page, 0) + 1
+    # Longest page first: with bounded workers, scheduling the heaviest pages
+    # early keeps the tail short (the largest page bounds the ideal wall).
+    pages = sorted(counts, key=lambda page: counts[page], reverse=True)
+
+    reports: list[str] = []
+    if discovery_problems:
+        reports.append("\n".join(f"FAIL: {problem}" for problem in discovery_problems))
+    if pages:
+        commands = [
+            _scoped_check_command(page=page, docs_root=docs_root, goldens_root=goldens_root, coherence=coherence)
+            for page in pages
+        ]
+        with ThreadPoolExecutor(max_workers=max(1, jobs)) as pool:
+            for child_report in pool.map(lambda command: _run_check_child(command, timeout=timeout), commands):
+                reports.extend(child_report)
+    return tuple(reports)
+
+
+def check_sequences_in_subprocess(
+    *,
+    docs_root: Path | None = None,
+    goldens_root: Path | None = None,
+    page: str | None = None,
+    sequence_id: str | None = None,
+    timeout: float = 3600,
+    jobs: int = 1,
+) -> tuple[str, ...]:
+    """Run the golden check in fresh English-pinned interpreter(s).
+
+    CLI help strings are resolved while the command tree is imported. A
+    long-lived pytest or Sphinx process may already have materialised that tree
+    under another locale, so changing settings in-process cannot make its help
+    English again. The children still use :func:`check_sequences`; the process
+    boundary only guarantees the language premise before the first CLI import.
+
+    ``jobs`` bounds the page-sharded parallel mode for an UNSCOPED check: with
+    ``jobs > 1`` and no ``page``/``sequence_id`` scoping, the enrolled pages
+    run as concurrent page-scoped children (each sequence keeps its own fresh
+    hermetic sandbox, so execution is unchanged — only the scheduling is).
+    A scoped call, or ``jobs=1``, keeps the single-child path.
+
+    Returns:
+        An empty tuple on success, or the complete child diagnostic report(s)
+        on a golden divergence.
+
+    Raises:
+        SequenceEngineError: When a child cannot run the check surface.
+    """
+    if jobs > 1 and page is None and sequence_id is None:
+        return _check_pages_in_subprocesses(
+            docs_root=docs_root,
+            goldens_root=goldens_root,
+            jobs=jobs,
+            timeout=timeout,
+        )
+    command = [sys.executable, "-m", "dev.docs.sequences", "check"]
+    if docs_root is not None:
+        command.extend(("--docs-root", str(docs_root)))
+    if goldens_root is not None:
+        command.extend(("--goldens-root", str(goldens_root)))
+    if page is not None:
+        command.extend(("--page", page))
+    if sequence_id is not None:
+        command.extend(("--sequence", sequence_id))
+    return _run_check_child(command, timeout=timeout)
+
+
+def check_page_coherence_in_subprocess(
+    *,
+    docs_root: Path | None = None,
+    timeout: float = 3600,
+    jobs: int = 1,
+) -> tuple[str, ...]:
+    """Run the page-coherence tier in English-pinned child interpreter(s).
+
+    The subprocess sibling of :func:`check_page_coherence`, with the same
+    page-sharded ``jobs`` bound as :func:`check_sequences_in_subprocess`:
+    coherence is a strictly page-scoped property (one sandbox per page, state
+    accumulating only within the page), so pages are independent and shard
+    cleanly.
+
+    Returns:
+        An empty tuple on success, or the complete diagnostic report(s).
+
+    Raises:
+        SequenceEngineError: When a child cannot run the check surface.
+    """
+    return _check_pages_in_subprocesses(
+        docs_root=docs_root,
+        goldens_root=None,
+        jobs=jobs,
+        timeout=timeout,
+        coherence=True,
     )
 
 

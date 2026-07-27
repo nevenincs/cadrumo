@@ -46,7 +46,7 @@ from dev.docs.sequences import (
     SequenceGolden,
     SequenceTranscript,
     build_golden,
-    check_page_coherence,
+    check_page_coherence_in_subprocess,
     check_sequences,
     check_sequences_in_subprocess,
     compare_transcript_to_golden,
@@ -209,8 +209,15 @@ class TestCommittedGoldensCleanGate:
     """
 
     def test_every_committed_golden_matches_live_execution(self) -> None:
-        """Every enrolled sequence re-executes clean against its committed golden."""
-        problems = check_sequences_in_subprocess()
+        """Every enrolled sequence re-executes clean against its committed golden.
+
+        Page-sharded across 8 bounded child interpreters: each sequence still
+        executes in its own fresh hermetic sandbox, so the verdict is identical
+        to the serial run — only the scheduling changes. Width 8 is the
+        machine-aware CI lane size (24 cores / 3 co-resident lanes, the same
+        bound the pytest lanes use; ``.github/ci-control-plane.md``).
+        """
+        problems = check_sequences_in_subprocess(jobs=8)
         assert problems == (), "cli-sequence goldens diverge from live execution:\n" + "\n".join(problems)
 
 
@@ -378,6 +385,29 @@ class TestBothSurfacesRedOnDivergence:
         assert "golden expects 99" in stderr, stderr
         assert "python -m dev.docs.sequences refresh" in stderr, stderr
 
+    def test_sharded_check_matches_the_serial_verdict_red_and_green(
+        self,
+        tmp_path: Path,
+        _hermetic_env: None,
+    ) -> None:
+        """The page-sharded parallel check (jobs > 1) is verdict-identical.
+
+        Green on the correct committed golden, red — naming the exact injected
+        divergence — once the golden is corrupted. This pins the sharded
+        scheduling path the lane-wide gates run with, through real child
+        interpreters against a real fixture tree.
+        """
+        docs_root, goldens_root = _write_fixture_docs(tmp_path)
+        golden_path = _refresh_fixture_golden(docs_root, goldens_root)
+
+        clean = check_sequences_in_subprocess(docs_root=docs_root, goldens_root=goldens_root, jobs=2)
+        assert clean == (), clean
+
+        _corrupt_golden_exit_code(golden_path)
+        problems = check_sequences_in_subprocess(docs_root=docs_root, goldens_root=goldens_root, jobs=2)
+        assert problems != ()
+        assert any("golden expects 99" in problem for problem in problems), problems
+
     def test_clean_goldens_pass_both_surfaces_green(
         self,
         tmp_path: Path,
@@ -410,5 +440,8 @@ class TestPageCoherenceGate:
     """
 
     def test_every_enrolled_page_is_coherent_top_to_bottom(self) -> None:
-        problems = check_page_coherence()
+        """Coherence is a page-scoped property (one sandbox per page, state
+        accumulating only within the page), so pages shard cleanly across the
+        same bounded 8-wide child pool as the goldens gate above."""
+        problems = check_page_coherence_in_subprocess(jobs=8)
         assert problems == (), "enrolled pages are not coherent under cumulative execution:\n" + "\n".join(problems)
