@@ -72,6 +72,25 @@ A wider question follows and is not this campaign's to answer: the pipeline miss
 identity on two of nine specimens, so the other seven are not known-clean until someone
 checks them by the same method.
 
+**And the manifest is not that method.** This is the sharper half, and it is the second
+instance of a class this campaign already documented. The sidecars declare
+`surfaces_scrubbed` and `replacements_applied` — a record of what the sanitiser did —
+and identity the sanitiser never touched was in the bytes regardless. A manifest can
+only describe the substitutions a pipeline made; it is structurally incapable of
+reporting what the pipeline failed to notice.
+
+The first instance was benign: the Modelo 100 manifests under-described what was
+rendered, declaring one constant where the length-preserving sanitiser wrote two. The
+same shape here is not benign, because the thing the manifest cannot see is a real
+taxpayer's IBAN. So a green provenance gate, a complete-looking manifest and a
+`real_corpus` declaration were all simultaneously true of a file that could not remain
+in the repository.
+
+Whatever confirms a specimen is clean before commit has to read the bytes for identity
+patterns independently of what the pipeline claims about them. Nothing in this
+repository currently does that, which is why two specimens reached committed, pushed
+history.
+
 **Every count in this record is a dated observation, not a property.** Measured
 2026-07-26 to 2026-07-27 against the tree at that time, by raw `tomllib` walk over the
 registry and by loading revisions through the authority. Re-derive before relying on
