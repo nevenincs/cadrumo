@@ -157,6 +157,49 @@ regex reaching backwards for the nearest "Orden ..." attributed EHA/3290/2008 to
 evidence, and it would have been quoted as proof. Reading the matched sentence
 corrected both.
 
+### acquisition-is-specified-and-proven-feasible | high | three documents, four modelos, identified and verified
+
+The acquisition is no longer open-ended. Each missing provision is identified by
+BOE number, retrieved from the official source, and confirmed to approve its
+modelo in its OWN operative text rather than by citing a prior orden.
+
+| BOE id | Orden | Approves | Verified operative text |
+|---|---|---|---|
+| `BOE-A-2014-9225` | HAP/1608/2014, de 4 de septiembre | `187` | "Artículo 1. Aprobación del modelo 187 y de los diseños físicos y lógicos. 1. Se aprueba el modelo 187, «Declaración informativa de acciones o participaciones…»" |
+| `BOE-A-1999-22372` | de 17 de noviembre de 1999 | `128`, `188` | "se aprueban los modelos 128, en pesetas y en euros, de declaración-documento de ingreso y los modelos 188, en pesetas y en euros, del resumen anual…" |
+| `BOE-A-1999-22309` | de 18 de noviembre de 1999 | `194` (with 123, 193) | approves modelos 123 and 193 alongside 194 |
+
+Three documents therefore resolve FOUR of the eight ungrounded modelos, because
+two of them approve a family rather than a single form. Each was located by
+searching the official gazette for the approval language the bundled corpus
+already quoted — so the corpus's own citations were accurate all along; what was
+missing was the cited text, not the citation.
+
+TWO CONTRACTS ANYONE DOING THE WIRING MUST NOT GET WRONG.
+
+The retrieved bytes are valid UTF-8 and decode correctly. A first read rendered
+"declaración" with a replacement character, which looks exactly like a
+mis-encoded download and invites re-encoding the file to "fix" it. It was the
+console, not the data: the same bytes decode cleanly as UTF-8 and contain
+"declaración-documento", while ISO-8859-1 decodes without error and produces the
+WRONG string. Re-encoding would have corrupted the text while appearing to
+repair it, and `required_text` authored from the corrupted version would then
+have matched its own corruption — a green gate over a fabricated corpus.
+
+The bundled convention is an EXCERPT, not the whole document. Existing files run
+from a few hundred bytes to full ordenes, and the thin ones are what produced the
+modelo-296 trap recorded above. Whoever extracts these must state which articles
+the excerpt covers, because an excerpt that silently omits an article makes a
+real provision look absent.
+
+WHAT WAS DELIBERATELY NOT DONE. The registry wiring — corpus files, legal
+entries, and the `legal_refs` swap on four modelos — is not attempted here. It is
+mechanical now, but it is filing-grade legal data behind a validator that fails
+the whole registry load on an inconsistency, and the project rule requires an
+agent-prepared legal entry to carry honest `reviewed_by` provenance pending
+operator re-stamp rather than being stamped reviewed. Doing it carefully is worth
+more than doing it quickly, and the unknown that made it hard is now gone.
+
 ## Recommendations
 
 Correct the four mis-attributed citations, and treat that as legal-authority work
