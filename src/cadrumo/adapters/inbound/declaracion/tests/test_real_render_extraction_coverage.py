@@ -60,21 +60,20 @@ and the accepted amounts are read from the specimen's sidecar rather than from
 the profile, so this module fails if the profile drifts and cannot be satisfied
 by adjusting the profile to match itself.
 
-Modelo 100 is deliberately absent from the real-corpus specimen table. Its three
-real renders print the box number in a smaller font overlapping the amount's own
-x-range, the two merge into one token, and every one of its 21 targets therefore
-yields a value that is neither the printed amount nor a parse failure -- while
-coverage scores 1.0 and satisfies the profile's floor of 1. Listing it here with
-weakened assertions would reproduce the green-suite-over-a-broken-profile
-pathology this module exists to end, so it is excluded, and the exclusion is
-asserted below rather than merely described here.
+Modelo 100 was excluded from this table for as long as its extracted values were
+not the amounts on the page. AEAT prints its box numbers in a smaller font
+overlapping the amount's own x-range, the two merged into one token, and all 21
+targets yielded a value that was neither the printed amount nor a parse failure
+while coverage scored 1.0 against a floor of 1. It is enrolled now that
+``named_label`` amount capture reads the line's words rather than its text, which
+keeps the two runs separate; all 21 targets recover the printed amount on all
+three specimens.
 
-The merge happens in text extraction, not in the word path: these targets are
-``named_label``, which reads page text. Separating the two fonts is necessary but
-not sufficient, because the box number is printed after the value and
-``named_label`` captures the last token on the line, so the separated form yields
-the box number instead. Repairing it needs a second, estate-wide change to what
-"the value on this line" means, which is why it is not done here.
+Its coverage floor is a separate question and is NOT settled by that. All three
+specimens come from one filer and every box is populated, so they cannot ground a
+floor: they show what a complete Modelo 100 yields, not what the form yields
+across filings. The floor of 1 stands as inherited rather than evidenced, and a
+filer legitimately leaving one optional box blank would be refused by it.
 
 See Also:
     :mod:`~tests.fixtures.manual_annexes.tests.test_manual_annex_provenance`
@@ -241,6 +240,13 @@ _REAL_SPECIMENS: tuple[_RealRenderSpecimen, ...] = (
     _RealRenderSpecimen("111", "2024-3T", 2024, "3T", _M111_TARGETS - _M111_COVERED_QUARTERLY, frozenset({"07"})),
     _RealRenderSpecimen("111", "2024-4T", 2024, "4T", _M111_TARGETS - _M111_COVERED_FOURTH),
     _RealRenderSpecimen("190", "2024-0A", 2024, "0A", frozenset(), frozenset({"decl.total-percepciones"})),
+    # Modelo 100: three annual declarations from one filer. Every target is
+    # populated, so nothing is absent -- these are the only bundled specimens that
+    # exercise a fully-completed form, which is why the anti-vacuity guard below
+    # matters more now than it did.
+    _RealRenderSpecimen("100", "2021-0A", 2021, "0A", frozenset()),
+    _RealRenderSpecimen("100", "2022-0A", 2022, "0A", frozenset()),
+    _RealRenderSpecimen("100", "2023-0A", 2023, "0A", frozenset()),
 )
 
 
@@ -573,69 +579,4 @@ def test_the_suite_still_exercises_the_blank_box_tolerance() -> None:
     assert any(coverage < Decimal(1) for coverage in coverages.values()), (
         "no bundled AEAT render exercises a blank optional box any more; the coverage "
         f"floors are no longer evidenced by these specimens: {coverages}"
-    )
-
-
-_M100_EXCLUDED_REVISIONS: tuple[tuple[str, int, str], ...] = (
-    ("100", 2021, "0A"),
-    ("100", 2022, "0A"),
-    ("100", 2023, "0A"),
-)
-"""The Modelo 100 revisions that have a real render, and are excluded anyway."""
-
-
-@pytest.mark.parametrize("modelo,filing_year,period", _M100_EXCLUDED_REVISIONS, ids=lambda v: str(v))
-def test_modelo_100_is_excluded_because_its_values_are_not_the_printed_amounts(
-    modelo: str,
-    filing_year: int,
-    period: str,
-) -> None:
-    """Modelo 100 is absent from the table above, and this is why.
-
-    Its three real renders print the box number in a six-point font whose x-range
-    overlaps the nine-point amount. Word assembly merges the two, so every target
-    yields a number that is neither the printed amount nor a parse failure --
-    casilla ``0545`` extracts as ``10010000.50405`` where the form prints
-    ``1.001.000,00`` and the box number ``0545``. Coverage scores 1.0 and
-    satisfies the profile's floor of 1 while not one value is the one on the page.
-
-    This is not a pass, and it must not be readable as one. What is asserted is
-    the *limitation*: the extracted values do not agree with what the sanitiser
-    declares it wrote, so this profile cannot be enrolled above. An author who
-    enrols Modelo 100 has to delete this test, and deleting it means reading why.
-
-    It is a deliberately weak claim, and weak in a single direction. If the merge
-    is repaired the values become the printed amounts, this test fails, and the
-    correct response is to enrol Modelo 100 in ``_REAL_SPECIMENS`` and delete
-    this. Failure here is the good outcome.
-
-    Its sensitivity is measured rather than assumed, and it was re-measured after
-    the sidecars were corrected. Driving a repaired extraction over each of the
-    three specimens now makes all 19 recovered targets agree, so any of them
-    failing to be merged would trip this. It was one of 19 beforehand: the other
-    18 print ``1.001.000,00``, a form the manifests did not declare because the
-    sanitiser is length-preserving and recorded only the eight-character variant
-    it nominally wrote. A gate resting on one target has been widened to rest on
-    all of them by fixing the description of the corpus rather than the gate.
-
-    See the campaign record for the measurements: no ``bbox_anchored`` value
-    offset can express the overlapping layout, and the merge happens in text
-    extraction rather than in the word path the profile's strategy would reach.
-    """
-    specimen = _RealRenderSpecimen(modelo, f"{filing_year}-{period}", filing_year, period, frozenset())
-    constants = _sanitiser_amount_constants(specimen)
-    amounts = _extracted_amounts(specimen)
-
-    assert amounts, (
-        f"{specimen.label}: extraction returned nothing, so the exclusion below describes "
-        f"a state this profile is no longer in"
-    )
-
-    agreeing = {c: v for c, v in amounts.items() if v in constants}
-
-    assert not agreeing, (
-        f"{specimen.label}: {len(agreeing)} target(s) now extract the amount the sanitiser "
-        f"declares it wrote ({agreeing}). The box-number merge this exclusion documents may "
-        f"be fixed -- re-measure, and if so enrol Modelo 100 in the real-render table above "
-        f"and delete this test rather than adjusting it"
     )
