@@ -725,6 +725,15 @@ jobs:
           for attempt in 1 2 3; do
             work="$(mktemp -d)"
             git -c http.extraheader="$auth" clone "https://github.com/${MARKETPLACE_REPO}.git" "$work"
+            # Fail-closed supersession check, re-run on EVERY release and not
+            # only the one that retires a name. Supersession that is merely
+            # performed can be undone by a replay, a stale manifest, or a
+            # stranger claiming the abandoned name; supersession that is
+            # verified stays true. It refuses while a retired entry, an
+            # unreferenced retired tree, or metadata still naming the old
+            # identity survives.
+            uv run --frozen python -m dev.packaging.marketplace_publish \
+              --marketplace "$work" --cohort "$staged" --verify-supersession
             # Replaces ONLY the plugin subtrees this cohort declares and merges
             # its entries by plugin name, refusing a name a sibling published.
             # The earlier wholesale tree replacement deleted every sibling.

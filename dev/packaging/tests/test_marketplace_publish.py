@@ -21,6 +21,7 @@ import pytest
 
 from dev.packaging.marketplace_publish import (
     MarketplacePublishError,
+    assert_supersession_complete,
     merge_marketplace_index,
     publish_cohort_plugins,
     superseded_names,
@@ -509,3 +510,87 @@ def test_the_shipped_cohort_manifest_retires_the_former_product_identity() -> No
     declared = {entry["name"] for entry in index["plugins"]}
     assert "aeat" not in declared, "the retired identity must not also be claimed"
     assert "cadrumo" in declared
+
+
+def _published_marketplace(tmp_path: Path, *, plugins: list[dict[str, Any]], **index: Any) -> Path:
+    marketplace = tmp_path / "verified"
+    document: dict[str, Any] = {
+        "name": "neve",
+        "description": "account marketplace",
+        "owner": {"name": "publisher"},
+        "plugins": plugins,
+    }
+    document.update(index)
+    _write_index(marketplace, document)
+    return marketplace
+
+
+def test_the_preflight_passes_once_the_retired_identity_is_gone(tmp_path: Path) -> None:
+    """The permit case, or the refusals below prove nothing."""
+    marketplace = _published_marketplace(tmp_path, plugins=[{"name": "cadrumo", "source": "./plugins/cadrumo"}])
+    assert_supersession_complete(
+        marketplace=marketplace,
+        cohort=_superseding_cohort(tmp_path, name="cadrumo", retires=["aeat"]),
+    )
+
+
+def test_the_preflight_refuses_while_the_retired_entry_is_live(tmp_path: Path) -> None:
+    """Two identities for one product must never both be published."""
+    marketplace = _published_marketplace(
+        tmp_path,
+        plugins=[{"name": "cadrumo", "source": "./plugins/cadrumo"}, {"name": "aeat", "source": "./plugins/aeat"}],
+    )
+    with pytest.raises(MarketplacePublishError, match="still live in the marketplace index"):
+        assert_supersession_complete(
+            marketplace=marketplace,
+            cohort=_superseding_cohort(tmp_path, name="cadrumo", retires=["aeat"]),
+        )
+
+
+def test_the_preflight_refuses_an_unreferenced_retired_tree(tmp_path: Path) -> None:
+    """A tree with no index entry is still fetchable by direct path.
+
+    Dropping the entry but leaving the directory looks clean in the index and
+    still serves the old identity to anyone who knows the path.
+    """
+    marketplace = _published_marketplace(tmp_path, plugins=[{"name": "cadrumo", "source": "./plugins/cadrumo"}])
+    _write_plugin(marketplace, "aeat", body="orphaned")
+    with pytest.raises(MarketplacePublishError, match="remain on disk without an index entry"):
+        assert_supersession_complete(
+            marketplace=marketplace,
+            cohort=_superseding_cohort(tmp_path, name="cadrumo", retires=["aeat"]),
+        )
+
+
+@pytest.mark.parametrize(
+    ("overrides", "fragment"),
+    [
+        pytest.param({"description": "the aeat tax assistant"}, "description", id="description"),
+        pytest.param({"owner": {"name": "AEAT tax assistant project"}}, "owner.name", id="owner-name"),
+    ],
+)
+def test_the_preflight_refuses_metadata_that_still_names_the_retired_identity(
+    overrides: dict[str, Any],
+    fragment: str,
+    tmp_path: Path,
+) -> None:
+    """A half-renamed marketplace cannot tell a reader which half is true."""
+    marketplace = _published_marketplace(
+        tmp_path,
+        plugins=[{"name": "cadrumo", "source": "./plugins/cadrumo"}],
+        **overrides,
+    )
+    with pytest.raises(MarketplacePublishError, match=fragment):
+        assert_supersession_complete(
+            marketplace=marketplace,
+            cohort=_superseding_cohort(tmp_path, name="cadrumo", retires=["aeat"]),
+        )
+
+
+def test_a_cohort_that_retires_nothing_is_not_checked(tmp_path: Path) -> None:
+    """The preflight is scoped to declared retirements, not a general scan."""
+    marketplace = _published_marketplace(
+        tmp_path,
+        plugins=[{"name": "cadrumo", "source": "./plugins/cadrumo"}, {"name": "aeat", "source": "./plugins/aeat"}],
+    )
+    assert_supersession_complete(marketplace=marketplace, cohort=_cohort(tmp_path, name="cadrumo", body="x"))

@@ -277,12 +277,80 @@ def publish_cohort_plugins(*, marketplace: Path, cohort: Path) -> tuple[str, ...
     return tuple(sorted(str(entry["name"]) for entry in declared))
 
 
+def assert_supersession_complete(*, marketplace: Path, cohort: Path) -> None:
+    """Refuse while a retired identity, or its metadata, is still live.
+
+    Fail-closed and re-run on every release, not only the one that retires the
+    name. Supersession that is merely *performed* can be undone by a replay, a
+    stale manifest, or a stranger claiming the abandoned name; supersession that
+    is *verified* stays true. This is the difference between a state and an
+    invariant.
+
+    Account metadata is checked with the entries because the identity flip is
+    one event: a marketplace whose plugin list says the new name while its
+    description still advertises the old one is half-renamed, and a reader
+    cannot tell which half is authoritative.
+    """
+    cohort_index = _read_index(cohort / _INDEX_RELATIVE)
+    retired = superseded_names(cohort_index)
+    if not retired:
+        return
+
+    published_index_path = marketplace / _INDEX_RELATIVE
+    if not published_index_path.is_file():
+        return
+    published = _read_index(published_index_path)
+
+    live = sorted(
+        str(entry["name"])
+        for entry in published.get("plugins", [])
+        if isinstance(entry, dict) and entry.get("name") in retired
+    )
+    if live:
+        raise MarketplacePublishError(
+            f"retired plugin identity {live} is still live in the marketplace index; "
+            "two identities for one product must never both be published",
+        )
+
+    surviving_trees = sorted(name for name in retired if (marketplace / "plugins" / name).is_dir())
+    if surviving_trees:
+        raise MarketplacePublishError(
+            f"retired plugin tree(s) {surviving_trees} remain on disk without an index entry; "
+            "an unreferenced tree is still fetchable and still advertises the old identity",
+        )
+
+    stale_metadata = sorted(
+        field for field in ("description",) if any(name in str(published.get(field, "")).lower() for name in retired)
+    )
+    owner = published.get("owner")
+    if isinstance(owner, dict) and any(name in str(owner.get("name", "")).lower() for name in retired):
+        stale_metadata.append("owner.name")
+    if stale_metadata:
+        raise MarketplacePublishError(
+            f"marketplace {sorted(stale_metadata)} still names the retired identity; "
+            "the rename is one event, so metadata and entries retire together",
+        )
+
+
 def main(argv: list[str] | None = None) -> int:
     """Publish a cohort's plugin trees into a marketplace checkout, refusing instructively."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--marketplace", required=True, type=Path, help="checkout of the marketplace repository")
     parser.add_argument("--cohort", required=True, type=Path, help="unpacked marketplace tree from the release cohort")
+    parser.add_argument(
+        "--verify-supersession",
+        action="store_true",
+        help="check only that no retired identity survives, publishing nothing",
+    )
     args = parser.parse_args(argv)
+    if args.verify_supersession:
+        try:
+            assert_supersession_complete(marketplace=args.marketplace, cohort=args.cohort)
+        except MarketplacePublishError as exc:
+            print(f"REFUSED: {exc}", file=sys.stderr)
+            return 1
+        print("no retired plugin identity survives in the marketplace")
+        return 0
     try:
         published = publish_cohort_plugins(marketplace=args.marketplace, cohort=args.cohort)
     except MarketplacePublishError as exc:
