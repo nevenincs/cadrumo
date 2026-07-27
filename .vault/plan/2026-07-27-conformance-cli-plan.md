@@ -43,8 +43,8 @@ Land the per-revision governance stamp end to end: core enum, strict revision sc
 
 Lift the test-trapped conformance facts into importable typed libraries under src/cadrumo and re-point their gates without weakening them.
 
-- [ ] `P02.S05` - lift the registry-wide external-oracle grounding fold (per-modelo oracle inventory, revision selection, both-direction honesty facts) into a new importable module exported through the registry facade; `src/cadrumo/domain/calculations/registry/_external_grounding.py`.
-- [ ] `P02.S06` - re-point the external-oracle grounding gate at the lifted library in the same commit, keeping both honesty directions asserted; `src/cadrumo/domain/calculations/registry/tests/test_external_oracle_grounding_enrolled.py`.
+- [x] `P02.S05` - lift the registry-wide external-oracle grounding fold (per-modelo oracle inventory, revision selection, both-direction honesty facts) into a new importable module exported through the registry facade; `src/cadrumo/domain/calculations/registry/_external_grounding.py`.
+- [x] `P02.S06` - re-point the external-oracle grounding gate at the lifted library in the same commit, keeping both honesty directions asserted; `src/cadrumo/domain/calculations/registry/tests/test_external_oracle_grounding_enrolled.py`.
 - [x] `P02.S07` - extract the fichero-BOE required-applicable casilla derivation into one shared public function consumed by the export gate; `src/cadrumo/application/filing/_export.py`.
 - [x] `P02.S08` - re-point the export completeness and fichero-BOE parity tests at the shared required-set derivation, removing the mirrored duplicate; `src/cadrumo/application/filing/tests`.
 - [ ] `P02.S09` - add the classification-coherence checker (calculation_class vs tax_domain vs core modelo constants, plus the declared-but-dead axis census) as an importable typed fact-builder; `src/cadrumo/domain/calculations/registry/_classification_coherence.py`.
