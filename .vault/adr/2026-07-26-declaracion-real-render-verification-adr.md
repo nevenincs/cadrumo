@@ -96,6 +96,24 @@ explicit printed `0` in a rectificaciones box, and an ejercicio year of 2024 —
 a fabricated value for a fabricated refusal. The remedy is to populate `form_number`
 on nine further modelos' casillas, which is a separate pass and is tracked as one.
 
+**Updated 2026-07-27: thirteen of the twenty-three are now armed, and the ten
+remaining are two unlike problems rather than one backlog.** Seven more were grounded
+without any specimen, because AEAT's own published instructions state printed box
+numbers directly — Modelo 349's four and Modelo 180's three. Modelo 180's binding had
+in fact been citing that very file as `required_text` since it was authored, so the
+evidence sat in the registry the whole time without ever reaching the field the parser
+reads. The first place to look for a printed box number is what the registry already
+cites.
+
+Of the ten left, Modelo 193's three are genuinely blocked: its bundled instructions
+state no box numbers, it has no specimen, and its casilla structure being identical to
+Modelo 180's makes inferring 01/02/03 tempting and inadmissible. The other seven are
+`decl.ejercicio` targets and a milder, different defect — measured across the estate,
+281 targets carry a `value_kind` and exactly those seven disagree with their own
+casilla's `data_type`. Those casillas are `required`, so a blank one means a malformed
+document rather than a legitimate blank, which makes the fabrication hazard there
+largely theoretical and the fix a coherence correction.
+
 Coverage floors are set only where more than one specimen agrees. Modelo 111 keeps
 its zero floor because four specimens put the worst case at 1 of 29; Modelo 390 keeps
 its zero floor because it has one specimen and no floor can be grounded; Modelo 130
