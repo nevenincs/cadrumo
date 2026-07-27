@@ -110,7 +110,7 @@
         "command": "ledger.split",
         "notices": [],
         "result": {
-          "bucket_event_id": "3bb972b4ba9b83278983bcf4de07f729ea526421c6a2b12a4faaf35e725ea7dc",
+          "bucket_event_id": "0dd721341b0758df0aa4baaab3e24ad7dd79c3a2f90f5f2fc17856dfe491a21f",
           "bucket_id": "<bucket-id>",
           "child_transaction_ids": [
             "1b0fd2c9fafa252d7171b1eb52b04e07e5502ee839c6312f52b5915826fecd26",
@@ -160,7 +160,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "Bucket\t<profile-id>\nID\t1fa07beedceb057f55a3aab56aa756e9dab983c332573ee6bdb1e77bb0e16570\nEvent count\t2\n2026-04-01T09:00:00+00:00\tledger.transaction.created\t808c7c37fdc6678905928147c14d45cb7e28450f8c87c917c27a3b61f6406388\n2026-04-01T09:00:00+00:00\tledger.transaction.split\t3bb972b4ba9b83278983bcf4de07f729ea526421c6a2b12a4faaf35e725ea7dc\n"
+      "text": "Bucket\t<profile-id>\nID\t1fa07beedceb057f55a3aab56aa756e9dab983c332573ee6bdb1e77bb0e16570\nEvent count\t2\n2026-04-01T09:00:00+00:00\tledger.transaction.created\t808c7c37fdc6678905928147c14d45cb7e28450f8c87c917c27a3b61f6406388\n2026-04-01T09:00:00+00:00\tledger.transaction.split\t0dd721341b0758df0aa4baaab3e24ad7dd79c3a2f90f5f2fc17856dfe491a21f\n"
     },
     {
       "argv": [
@@ -201,14 +201,13 @@
             {
               "actor": "<profile-id>",
               "bucket_id": "<bucket-id>",
-              "event_id": "3bb972b4ba9b83278983bcf4de07f729ea526421c6a2b12a4faaf35e725ea7dc",
+              "event_id": "0dd721341b0758df0aa4baaab3e24ad7dd79c3a2f90f5f2fc17856dfe491a21f",
               "event_type": "ledger.transaction.split",
               "object_id": "1fa07beedceb057f55a3aab56aa756e9dab983c332573ee6bdb1e77bb0e16570",
               "object_type": "ledger_transaction",
               "occurred_at": "2026-04-01T09:00:00Z",
               "payload": {
                 "child_count": "2",
-                "child_transaction_ids": "1b0fd2c9fafa252d7171b1eb52b04e07e5502ee839c6312f52b5915826fecd26,10d57b2761019c6163df9458af1558ec576bf67884a64b25328b9affc93c1274",
                 "parent_transaction_id": "1fa07beedceb057f55a3aab56aa756e9dab983c332573ee6bdb1e77bb0e16570",
                 "reason": "mixed receipt",
                 "source_command": "aeat app ledger split",

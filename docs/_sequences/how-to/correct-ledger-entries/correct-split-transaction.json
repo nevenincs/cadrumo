@@ -116,7 +116,7 @@
         "command": "ledger.split",
         "notices": [],
         "result": {
-          "bucket_event_id": "7f035a3ff5f63583d04503666a5c9b8f4cd25de7e34cd508fc1489d72cfc32a6",
+          "bucket_event_id": "2960d40c4f90dbaa25b1c462ce52210f4b2cc4ab1904c6c78c08739e821fbf1b",
           "bucket_id": "<bucket-id>",
           "child_transaction_ids": [
             "9cc7a2639a30fcead52f62683cdc1c627a8b47cb43ff333f01b19e7f37245b49",
