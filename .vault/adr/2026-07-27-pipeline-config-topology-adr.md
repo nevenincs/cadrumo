@@ -12,7 +12,7 @@ related:
   - '[[2026-07-20-release-asset-transport-adr]]'
 ---
 
-# `pipeline-config-topology` adr: `four homes for pipeline configuration: repo for shapes, environments for values, runners for machine state, the operator's vault for cross-project facts` | (**status:** `proposed`)
+# `pipeline-config-topology` adr: `four homes for pipeline configuration: repo for shapes, environments for values, runners for machine state, the operator's vault for cross-project facts` | (**status:** `accepted`)
 
 ## Problem Statement
 

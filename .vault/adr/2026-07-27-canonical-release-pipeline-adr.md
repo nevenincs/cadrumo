@@ -14,7 +14,7 @@ related:
   - '[[2026-07-27-pipeline-config-topology-adr]]'
 ---
 
-# `canonical-release-pipeline` adr: `the docs and landing delivery leg of the canonical release pipeline: AWS stays for cadrumo.neve.md, docs publish is an automated release consequence, and the stale marketplace identity retires by declared supersession` | (**status:** `proposed`)
+# `canonical-release-pipeline` adr: `the docs and landing delivery leg of the canonical release pipeline: AWS stays for cadrumo.neve.md, docs publish is an automated release consequence, and the stale marketplace identity retires by declared supersession` | (**status:** `accepted`)
 
 ## Problem Statement
 

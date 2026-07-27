@@ -13,7 +13,7 @@ related:
   - '[[2026-07-25-account-distribution-standard-adr]]'
 ---
 
-# `publication-lane-consolidation` adr: `one publication authority per destination: 0.2.1 is abandoned and the first complete release takes a fresh version, the bump precedes the build, the guard checks every destination, and the irreversible act goes last` | (**status:** `proposed`)
+# `publication-lane-consolidation` adr: `one publication authority per destination: 0.2.1 is abandoned and the first complete release takes a fresh version, the bump precedes the build, the guard checks every destination, and the irreversible act goes last` | (**status:** `accepted`)
 
 ## Problem Statement
 
