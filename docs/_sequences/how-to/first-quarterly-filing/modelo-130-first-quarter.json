@@ -863,6 +863,87 @@
         "--format",
         "json",
         "app",
+        "ledger",
+        "evidence",
+        "add",
+        "fixtures/factura-material-oficina.pdf",
+        "--supplier",
+        "Papeleria Central SL",
+        "--invoice-number",
+        "C-2026-0091",
+        "--invoice-date",
+        "2026-02-11",
+        "--taxable-base",
+        "500",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "105"
+      ],
+      "captures": [
+        {
+          "json_path": "result.evidence_id",
+          "name": "evidence_id",
+          "value": "6240043c20137c38"
+        }
+      ],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.evidence.add",
+        "notices": [],
+        "result": {
+          "attachment_id": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
+          "bucket_event_ids": [
+            "34cec9329f76be036db60e8843baaf0e3e4cfa9fb5e59a8d264b49b8ef39edc8"
+          ],
+          "bucket_id": "<bucket-id>",
+          "created_at": "2026-04-01T09:00:00Z",
+          "evidence_id": "6240043c20137c38",
+          "invoice_date": "2026-02-11",
+          "invoice_number": "C-2026-0091",
+          "iva_amount": "105",
+          "iva_rate": "0.21",
+          "media_kind": "pdf",
+          "notes": "",
+          "source_path": "fixtures/factura-material-oficina.pdf",
+          "source_sha256": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
+          "supplier": "Papeleria Central SL",
+          "taxable_base": "500",
+          "updated_at": "2026-04-01T09:00:00Z"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "attach",
+        "e3eeac5e",
+        "--purchase-invoice-evidence-id",
+        "6240043c20137c38"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "ID\te3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d\nDate\t2026-02-11\nAmount\t605\nDescription\tCompra de material de oficina proveedor local\nReview status\treviewed\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
         "modelo",
         "work",
         "verify",
@@ -896,18 +977,6 @@
             "message": "output VAT transaction '71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518' declares a positive IVA quota but carries no linked evidence (no purchase invoice and no attachment); attach the supporting document before filing.",
             "severity": "warning",
             "suggestion": "Advisory only: keep issued/sales invoice support for ledger row 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518. There is currently no dedicated public CLI path that mints issued-invoice evidence like `aeat app ledger evidence add` does for purchase invoices. If you already have a secure attachment id, link it with `aeat app ledger attach 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518 --attachment-id ATTACHMENT_ID`, then rerun verification."
-          },
-          {
-            "code": "modelo.work.verify.finding.advisory",
-            "context": {
-              "kind": "advisory",
-              "legal_refs": "ley-37-1992:art-97, rd-1619-2012:art-2",
-              "severity": "warning",
-              "source_refs": "aeat-dr-130-2019-v12, aeat-modelo-130-instructions"
-            },
-            "message": "deductible VAT transaction 'e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d' declares a positive IVA quota but carries no linked evidence (no purchase invoice and no attachment); attach the supporting document before filing.",
-            "severity": "warning",
-            "suggestion": "Register the supplier invoice with `aeat app ledger evidence add PATH`, attach it with `aeat app ledger attach e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d --purchase-invoice-evidence-id EVIDENCE_ID`, then rerun verification."
           },
           {
             "code": "modelo.work.verify.next_action_granted",
@@ -951,22 +1020,6 @@
                 "aeat-dr-130-2019-v12",
                 "aeat-modelo-130-instructions"
               ]
-            },
-            {
-              "casilla_id": null,
-              "expectation_id": null,
-              "kind": "advisory",
-              "legal_refs": [
-                "ley-37-1992:art-97",
-                "rd-1619-2012:art-2"
-              ],
-              "message": "deductible VAT transaction 'e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d' declares a positive IVA quota but carries no linked evidence (no purchase invoice and no attachment); attach the supporting document before filing.",
-              "next_action": "Register the supplier invoice with `aeat app ledger evidence add PATH`, attach it with `aeat app ledger attach e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d --purchase-invoice-evidence-id EVIDENCE_ID`, then rerun verification.",
-              "severity": "warning",
-              "source_refs": [
-                "aeat-dr-130-2019-v12",
-                "aeat-modelo-130-instructions"
-              ]
             }
           ],
           "granted_verificado_completo": true,
@@ -974,7 +1027,7 @@
           "operation": "modelo.work.verify",
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "705d3e7620a401d0ec4bf5248909999586355ee888ce174b9ab9caff3ae3ee39",
+          "verification_report_id": "9ca924378ac4cfd8a10be991664c0055ae1847c122bb04a18bde0e7ab13b0750",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
