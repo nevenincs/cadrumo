@@ -67,11 +67,11 @@ Lift the test-trapped conformance facts into importable typed libraries under sr
 Ship the python -m dev.registry.conformance Typer trio: report, coverage, audit --check, and stamp verbs over the src fact libraries.
 
 - [x] `P03.S13` - build the pure manager composing the src fact facades plus ModeloLocaleManager coverage rows, with typed payload models and a self-labelling no-validate degraded mode; `dev/registry/conformance/manager.py`.
-- [ ] `P03.S14` - build the Typer cli and __main__ with report and coverage verbs, greppable key=value text rows and strict --json payloads; `dev/registry/conformance`.
-- [ ] `P03.S15` - add the audit verb with --check gating exit, shrink-only JSON baseline, anti-vacuity floor, and empty-input SystemExit refusal; `dev/registry/conformance/cli.py`.
-- [ ] `P03.S16` - add the stamp verb writing the per-revision governance scalars with vocabulary and coherence validation; `dev/registry/conformance/_stamp.py`.
-- [ ] `P03.S17` - add dev-side CLI behaviour tests covering every verb, the ratchet, the vacuity refusal, and the degraded-mode labelling; `dev/tests/test_registry_conformance_cli.py`.
-- [ ] `P03.S29` - surface unattributed oracle payloads and unmatched evidence as report and coverage rows with a shrink-only floor so the attribution gap gains a reader instead of remaining a field nothing consumes; `dev/registry/conformance`.
+- [x] `P03.S14` - build the Typer cli and __main__ with report and coverage verbs, greppable key=value text rows and strict --json payloads; `dev/registry/conformance`.
+- [x] `P03.S15` - add the audit verb with --check gating exit, shrink-only JSON baseline, anti-vacuity floor, and empty-input SystemExit refusal; `dev/registry/conformance/cli.py`.
+- [x] `P03.S16` - add the stamp verb writing the per-revision governance scalars with vocabulary and coherence validation; `dev/registry/conformance/_stamp.py`.
+- [x] `P03.S17` - add dev-side CLI behaviour tests covering every verb, the ratchet, the vacuity refusal, and the degraded-mode labelling; `dev/tests/test_registry_conformance_cli.py`.
+- [x] `P03.S29` - surface unattributed oracle payloads and unmatched evidence as report and coverage rows with a shrink-only floor so the attribution gap gains a reader instead of remaining a field nothing consumes; `dev/registry/conformance`.
 
 ### Phase `P04` - boundary hardening and gates
 
