@@ -121,9 +121,31 @@ def _kebab(value: str) -> str:
 
 
 def _walk_modelos() -> Iterator[EnrolmentCandidate]:
-    from cadrumo.core import Modelo
+    """Yield a candidate per REGISTRY-BACKED modelo.
+
+    ``Modelo`` is a typing device, not a glossary. It exists so production code
+    references a modelo through an enum member rather than a bare three-digit
+    literal, so it necessarily carries every code the codebase mentions --
+    including the retired and code-referenced-only forms the codebase itself
+    declares in ``NON_REGISTRY_MODELOS`` as having no registry definition.
+
+    Walking the whole enum conflated "identifier the code references" with
+    "concept a taxpayer looks up". The cost was measurable and invisible: 76 of
+    the enum's 149 members are non-registry, and enrolling them made the
+    Handbook report 118 unenrolled concepts against a committed 117 -- a backlog
+    that would have tripled the curation ratchet, produced entirely by a change
+    made in a different subsystem for unrelated reasons. Nobody saw it because
+    the gate that reports it lived in a directory no test lane collected.
+
+    Excluding them creates and deletes nothing. It narrows the candidate set to
+    the forms this product actually models, which is what
+    ``glossary-concepts-are-taxpayer-facing`` asks of an approved concept.
+    """
+    from cadrumo.core import NON_REGISTRY_MODELOS, Modelo
 
     for modelo in sorted(Modelo, key=lambda member: member.value):
+        if modelo in NON_REGISTRY_MODELOS:
+            continue
         yield EnrolmentCandidate(
             concept_id=f"modelo-{modelo.value}",
             domain=ConceptDomain.MODELO,

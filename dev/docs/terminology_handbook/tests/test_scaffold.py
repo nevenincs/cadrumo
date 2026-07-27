@@ -422,10 +422,28 @@ def test_real_enrolment_candidates_are_concept_grade_and_bounded() -> None:
     candidates = collect_enrolment_candidates()
     # Bounded concept-grade set, not per-casilla (18,885) nor per-legal (262).
     assert 0 < len(candidates) < 1000
-    # Every modelo enrols exactly one concept.
-    from cadrumo.core import Modelo
+    # Every REGISTRY-BACKED modelo enrols exactly one concept, and no
+    # non-registry one does. This loop previously ran over the whole ``Modelo``
+    # enum, which is a typing device rather than a glossary: it necessarily
+    # carries every code the codebase mentions, including the 76 members the
+    # codebase itself declares in NON_REGISTRY_MODELOS as having no registry
+    # definition. Enrolling those made the Handbook report 118 unenrolled
+    # concepts against a committed 117 and would have tripled the curation
+    # ratchet, entirely as a side effect of a typing change made elsewhere.
+    #
+    # The assertion this replaces was about GRANULARITY -- modelos are the
+    # concept-grade axis, unlike casillas -- and that intent is unchanged here.
+    # What narrowed is which modelos, not the axis.
+    from cadrumo.core import NON_REGISTRY_MODELOS, Modelo
 
     for modelo in Modelo:
-        assert f"modelo-{modelo.value}" in candidates
+        concept_id = f"modelo-{modelo.value}"
+        if modelo in NON_REGISTRY_MODELOS:
+            assert concept_id not in candidates, (
+                f"{concept_id} has no registry definition, so it is an identifier the code "
+                "references rather than a concept a taxpayer looks up"
+            )
+        else:
+            assert concept_id in candidates
     # No legal-provision concepts are scaffolded (projected at compile time).
     assert not any(c.domain is ConceptDomain.LEGAL for c in candidates.values())

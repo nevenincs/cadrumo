@@ -298,11 +298,18 @@ def test_check_detects_drift_on_missing_concept(tmp_path: Path) -> None:
 def test_default_enrolment_excludes_cli_verbs_and_is_bounded() -> None:
     candidates = collect_enrolment_candidates()
     # Candidates are every registry entity that COULD become a concept; the
-    # concept-grade curation happens downstream (202 candidates currently reduce
-    # to 117 committed concepts). The set tracks the registry, which has grown
-    # since the original 82-snapshot: 149 modelo + 18 regimen + 21 periodo +
-    # 14 concepto = 202. Update this count when the registry gains an entity.
-    assert len(candidates) == 202
+    # concept-grade curation happens downstream. The set tracks the registry:
+    # 73 modelo + 18 regimen + 21 periodo + 14 concepto = 126. Update this count
+    # when the registry gains an entity.
+    #
+    # The modelo term was 149 -- the whole ``Modelo`` enum -- until it was
+    # narrowed to the 73 members carrying a registry definition. The enum is a
+    # typing device that necessarily includes every code the codebase mentions,
+    # so 76 retired or code-referenced-only forms were being offered as glossary
+    # concepts. That is why this count sat at 202 while only 117 concepts were
+    # committed: the gap was not curation backlog, it was mostly candidates that
+    # should never have been candidates.
+    assert len(candidates) == 126
     # The real structural invariants -- no verb/legal enrolment, and no domain
     # outside the four concept-grade families -- must hold regardless of count.
     allowed = {ConceptDomain.MODELO, ConceptDomain.REGIMEN, ConceptDomain.PERIODO, ConceptDomain.CONCEPTO}
