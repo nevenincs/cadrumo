@@ -570,8 +570,11 @@ docs-langs:
     uv run --no-sync python -m dev.docs.build --scope user --language hu
 
 # Run docstring structure and Sphinx build checks. Quiet pytest progress.
-docs-check:
-    @uv run --no-sync pytest -q dev/docs/tests dev/docs/apidocs/tests src/cadrumo/tests/test_docstring_core_struct_links.py -m docs
+# `workers` bounds the pytest-xdist lane: CI passes 8 (machine-aware sizing,
+# .github/ci-control-plane.md — three runners share the 24-core box); local
+# development keeps the `auto` default per the same control plane.
+docs-check workers="auto":
+    @uv run --no-sync pytest -q -n {{workers}} dev/docs/tests dev/docs/apidocs/tests src/cadrumo/tests/test_docstring_core_struct_links.py -m docs
     @uv run --no-sync doc8 docs
     @uv run --no-sync interrogate -c pyproject.toml src/cadrumo
 
