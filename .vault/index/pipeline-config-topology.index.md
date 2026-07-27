@@ -17,4 +17,4 @@ Auto-generated index of all documents tagged with `#pipeline-config-topology`.
 
 ### adr
 
-- `2026-07-27-pipeline-config-topology-adr` - `pipeline-config-topology` adr: `four homes for pipeline configuration: repo for shapes, environments for values, runners for machine state, the operator's vault for cross-project facts` | (**status:** `proposed`)
+- `2026-07-27-pipeline-config-topology-adr` - `pipeline-config-topology` adr: `four homes for pipeline configuration: repo for shapes, environments for values, runners for machine state, the operator's vault for cross-project facts` | (**status:** `accepted`)

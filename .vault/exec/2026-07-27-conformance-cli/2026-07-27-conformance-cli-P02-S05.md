@@ -20,9 +20,12 @@ related:
 - Add `ExternalOracleCorpus` to `src/cadrumo/core/_external_oracle_corpus.py` as the
   closed source-kind taxonomy over the two bundled oracle corpora, exported through
   the core facade. The `aeat_manual_worked_example` member's value is byte-identical
-  to the `source_kind` token those payloads already store, so a stored token hydrates
-  to its member; the replay corpus declares no such token and its member simply names
-  the corpus.
+  to the `source_kind` token those payloads already store; the replay corpus declares
+  no such token and its member simply names the corpus. This Step did NOT wire that
+  correspondence: the corpus is assigned from the directory-to-enum map, nothing reads
+  the stored token, and the enum docstring's claim that a stored token hydrates and an
+  unknown one is refused was an overclaim at this Step, corrected by S28 in both the
+  docstring and the code.
 - Add `src/cadrumo/domain/calculations/registry/_external_grounding.py` carrying the
   fold as strict frozen pydantic models: `ExternalOracleEvidence` (one payload's
   expected-value inventory attributed to a modelo and filing year),

@@ -1275,10 +1275,43 @@ class ModeloRevision(RegistryModel):
     verification_predicates: tuple[VerificationPredicateDefinition, ...] = ()
     continuidad_validation: Literal["advisory", "strict"] = "advisory"
     casilla_continuidad_evolutions: tuple[CasillaContinuidadEvolutionDefinition, ...] = ()
-    engineered_by: str | None = Field(default=None, min_length=1)
+    engineered_by: str | None = None
     review_status: RevisionReviewStatusField = RevisionReviewStatus.PENDING_REVIEW
-    reviewed_by: str | None = Field(default=None, min_length=1)
+    reviewed_by: str | None = None
     reviewed_at: date | None = None
+
+    @field_validator("engineered_by", "reviewed_by")
+    @classmethod
+    def _attribution_names_somebody(cls, value: str | None, info: ValidationInfo) -> str | None:
+        """Refuse an attribution that is declared but names nobody.
+
+        A length constraint counts whitespace, so ``reviewed_by = "   "`` would
+        satisfy one while leaving the claim exactly as unfalsifiable as the
+        omission :meth:`_validate_governance_stamp` refuses — and a blank
+        reviewer renders in a conformance report as a signed-off revision.
+        Omission is the honest way to say nobody reviewed it.
+        """
+        if value is not None and not value.strip():
+            raise RegistryValidationError(
+                f"revision governance field {info.field_name!r} must name somebody; "
+                f"omit the field instead of declaring it blank",
+            )
+        return value
+
+    @field_validator("reviewed_at")
+    @classmethod
+    def _reviewed_at_is_within_the_signoff_horizon(cls, value: date | None) -> date | None:
+        """Refuse a signoff date no auditor could ever check.
+
+        See :data:`REVISION_REVIEW_DATE_CEILING` for why the horizon is a fixed
+        calendar date rather than a reading of the local clock.
+        """
+        if value is not None and value >= REVISION_REVIEW_DATE_CEILING:
+            raise RegistryValidationError(
+                f"revision governance field 'reviewed_at' is {value.isoformat()}, beyond the signoff horizon "
+                f"{REVISION_REVIEW_DATE_CEILING.isoformat()}; a review dated there records no signoff anyone can check",
+            )
+        return value
 
     @model_validator(mode="after")
     def _validate_window(self) -> ModeloRevision:
@@ -1312,6 +1345,30 @@ class ModeloRevision(RegistryModel):
                 f"record the review by advancing review_status, or drop the reviewer fields",
             )
         return self
+
+
+REVISION_REVIEW_DATE_CEILING: date = date(2100, 1, 1)
+"""Exclusive upper bound on a governance stamp's ``reviewed_at`` signoff date.
+
+A signoff dated beyond any living reviewer's horizon is not a signoff: it is a
+sentinel or a template artefact wearing a date, and it renders in a conformance
+report as an operator countersignature. The bound refuses that class.
+
+The ceiling is a fixed calendar date rather than a reading of the local clock,
+deliberately. The registry is the authority behind every calculation the
+application performs, so a validation rule that consults the wall clock makes
+the shipped tree's validity a property of the machine that loads it: a
+container whose clock is behind reality, or a stamp written the other side of a
+timezone boundary, would refuse the whole registry and take the product with
+it. A false refusal here costs incomparably more than a missed absurd date, and
+a fixed ceiling is identical on every machine in every year.
+
+The bound is therefore an absurdity floor, not a freshness check: it catches the
+sentinel (``3999-12-31``, ``9999-12-31``) that no auditor could ever check, and
+deliberately does not catch a near-future typo. Freshness is a governance
+question for the dev-side conformance audit, where consulting the clock costs
+one contributor a re-run rather than bricking the registry.
+"""
 
 
 REVISION_GOVERNANCE_FIELDS: frozenset[str] = frozenset(

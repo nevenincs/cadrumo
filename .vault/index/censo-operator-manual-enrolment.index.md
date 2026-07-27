@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#censo-operator-manual-enrolment'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-27'
+modified: '2026-07-27'
 related:
   - '[[2026-07-11-censo-operator-manual-enrolment-P01-S01]]'
   - '[[2026-07-11-censo-operator-manual-enrolment-P01-S02]]'
@@ -31,7 +31,7 @@ Auto-generated index of all documents tagged with `#censo-operator-manual-enrolm
 
 ### adr
 
-- `2026-07-11-censo-operator-manual-enrolment-adr` - `censo-operator-manual-enrolment` adr: `censal facts are operator-manual; retire the live censo scrape` | (**status:** `accepted`)
+- `2026-07-11-censo-operator-manual-enrolment-adr` - `censo-operator-manual-enrolment` adr: `censal facts are operator-manual; retire the live censo scrape` | (**status:** `superseded`)
 
 ### audit
 

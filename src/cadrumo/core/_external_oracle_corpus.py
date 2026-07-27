@@ -15,10 +15,13 @@ the axis, and neither owns it.
 
 :attr:`ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE` carries a value
 byte-identical to the ``source_kind`` token stored in the manual-oracle
-payloads, so a stored token hydrates to its member and an unknown token is
-refused at the boundary rather than silently reclassified. The Renta WEB Open
-replay payloads declare no ``source_kind`` at all; their member value names the
-corpus that holds them and is not a stored token.
+payloads. The registry-domain grounding fold parses each payload through a
+strict model that hydrates that token to this member, refuses an unrecognised
+one, and refuses a recognised one that contradicts the corpus directory the
+payload was found in — so the value is load-bearing there, not decorative.
+The Renta WEB Open replay payloads declare no ``source_kind`` at all; their
+member value names the corpus that holds them and is not a stored token, and
+the same cross-check binds one if a replay ever declares it.
 """
 
 from __future__ import annotations

@@ -41,7 +41,7 @@ from .._calculation_source_staging import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _ORACLE_PATH = Path(
-    bundled_path("corpus", "manual_oracles", "modelo-303-prorrata-general-regularizacion.json"),
+    bundled_path("corpus", "manual_oracles", "modelo-303-2025-prorrata-general-regularizacion.json"),
 )
 _BUCKET_ID = "prorrata-source-timing"
 _FILING_YEAR = 2025
@@ -64,6 +64,14 @@ _PORCENTAJE_ID: CasillaId = validated_casilla_id("iva.prorrata-porcentaje", surf
 # 137-138: the fourth quarter supports 160 EUR of input IVA before applying the
 # definitive 56% prorrata. This is copied from the bundled oracle notes.
 _MANUAL_FOURTH_QUARTER_INPUT_IVA = Decimal("160.00")
+# The same example's current-year 'n' operations: locales 25.000 EUR con derecho
+# and viviendas 20.000 EUR exentas sin derecho, so the annual total volume is
+# 45.000 EUR. These are the scenario's GIVENS, fed to the engine, so they are
+# named constants quoting the manual rather than entries in the oracle payload's
+# `expected_by_casilla_id`, which is reserved for casillas the registry engine
+# computes and a verification expectation reconciles.
+_MANUAL_CURRENT_YEAR_CON_DERECHO = Decimal("25000.00")
+_MANUAL_CURRENT_YEAR_TOTAL = Decimal("45000.00")
 
 
 def _oracle_payload() -> dict[str, Any]:
@@ -105,8 +113,8 @@ def test_prorrata_regularizacion_source_values_are_materialised_by_registry_engi
         work_unit=work_unit,
         casilla_inputs={
             _SOPORTADO_INTERIORES_ID: _MANUAL_FOURTH_QUARTER_INPUT_IVA,
-            _VOLUMEN_CON_DERECHO_ID: _oracle_expected(_VOLUMEN_CON_DERECHO_ID),
-            _VOLUMEN_TOTAL_ID: _oracle_expected(_VOLUMEN_TOTAL_ID),
+            _VOLUMEN_CON_DERECHO_ID: _MANUAL_CURRENT_YEAR_CON_DERECHO,
+            _VOLUMEN_TOTAL_ID: _MANUAL_CURRENT_YEAR_TOTAL,
         },
         backend_casilla_inputs=None,
         binding_values={"modelo-303-compensacion-pendiente-anteriores": Decimal("0.00")},
@@ -116,8 +124,8 @@ def test_prorrata_regularizacion_source_values_are_materialised_by_registry_engi
     assert tuple(materialised.values) == _PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS
     assert materialised.missing_casilla_ids == ()
     assert materialised.unresolved_casilla_ids == ()
-    assert materialised.values[_VOLUMEN_CON_DERECHO_ID] == _oracle_expected(_VOLUMEN_CON_DERECHO_ID)
-    assert materialised.values[_VOLUMEN_TOTAL_ID] == _oracle_expected(_VOLUMEN_TOTAL_ID)
+    assert materialised.values[_VOLUMEN_CON_DERECHO_ID] == _MANUAL_CURRENT_YEAR_CON_DERECHO
+    assert materialised.values[_VOLUMEN_TOTAL_ID] == _MANUAL_CURRENT_YEAR_TOTAL
     assert materialised.values[_PORCENTAJE_ID] == _oracle_expected(_PORCENTAJE_ID)
     assert materialised.values[_CUOTA_DEDUCIBLE_TOTAL_ID] == _MANUAL_FOURTH_QUARTER_INPUT_IVA
     assert _VOLUMEN_CON_DERECHO_ID in materialised.initial_casilla_ids

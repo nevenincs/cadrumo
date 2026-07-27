@@ -13,6 +13,7 @@ related:
   - '[[2026-07-25-test-harness-honesty-S07]]'
   - '[[2026-07-25-test-harness-honesty-S08]]'
   - '[[2026-07-25-test-harness-honesty-S09]]'
+  - '[[2026-07-25-test-harness-honesty-S10]]'
   - '[[2026-07-25-test-harness-honesty-S11]]'
   - '[[2026-07-25-test-harness-honesty-S12]]'
   - '[[2026-07-25-test-harness-honesty-S13]]'
@@ -46,6 +47,7 @@ Auto-generated index of all documents tagged with `#test-harness-honesty`.
 - `2026-07-25-test-harness-honesty-S11` - Reconcile the duplication disposition record against a fresh live scan
 - `2026-07-25-test-harness-honesty-S12` - Audit the gate surface for checks reachable only through a marker-scoped or narrowed selection
 - `2026-07-25-test-harness-honesty-S09` - Triage the empty-assert functions the screen flags
+- `2026-07-25-test-harness-honesty-S10` - Extend the vacuity screen, and search for escapes that outlived their reasons
 - `2026-07-25-test-harness-honesty-S13` - Close the stale-fixture family by requiring a test to bind a persisted record's version constant rather than restate its value, since two bucket-manifest fixtures kept writing schema_version=1 after the durability floor moved to 2 and neither failed loudly because both read paths treat the resulting raise as an ordinary degraded state, and the gate found five further stale sites on its first run
 
 ### plan

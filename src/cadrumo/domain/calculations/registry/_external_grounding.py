@@ -36,6 +36,19 @@ numerator mirrors the per-verdict computation in
 (declared grounding intersected with the reconciled set), so the registry-wide
 signal and the per-filing signal are the same quantity at different scopes.
 
+Reading the corpora
+-------------------
+
+Every bundled payload is parsed through its corpus's own strict frozen model
+(:class:`ManualWorkedExamplePayload`, :class:`RentaWebOpenReplayPayload`), never
+as an untyped mapping. That is what makes the ``source_kind`` token
+load-bearing: the manual corpus declares it, it hydrates to an
+:class:`~cadrumo.core.ExternalOracleCorpus` member, and it is cross-checked
+against the directory the file was found in. A payload declaring a corpus other
+than its directory's is refused by name rather than reclassified to whichever
+corpus owns the directory — a silent reclassification would put a provenance on
+``evidence_corpora`` that the figures do not have.
+
 Reading the registry
 --------------------
 
@@ -56,11 +69,11 @@ from __future__ import annotations
 import json
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Final, Literal
+from typing import Annotated, Final, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, BeforeValidator, Field, ValidationError
 
-from ....core import STRICT_FROZEN_CONFIG, CasillaId, ExternalOracleCorpus, validated_casilla_id
+from ....core import STRICT_FROZEN_CONFIG, CasillaId, ExternalOracleCorpus
 from ....core.resources import bundled_path
 from ._errors import RegistryValidationError
 from ._ids import ModeloId, RevisionId
@@ -74,8 +87,30 @@ _ORACLE_CORPUS_DIRECTORIES: Final[Mapping[ExternalOracleCorpus, tuple[str, ...]]
     ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE: ("corpus", "manual_oracles"),
 }
 
-#: Payload key carrying the per-casilla AEAT-authoritative expected values.
-_EXPECTED_BY_CASILLA_ID: Final[str] = "expected_by_casilla_id"
+
+def _coerce_external_oracle_corpus(value: object) -> object:
+    """Coerce a stored ``source_kind`` token to its canonical corpus member.
+
+    The bundled payloads are JSON, so the corpus arrives as a plain string
+    while the schema is strict. This is the boundary hydration that makes the
+    stored token load-bearing: an unrecognised token is refused here, with the
+    accepted set enumerated, rather than reaching the fold as free text.
+    """
+    if isinstance(value, ExternalOracleCorpus):
+        return value
+    if isinstance(value, str):
+        try:
+            return ExternalOracleCorpus(value)
+        except ValueError:
+            raise RegistryValidationError(
+                f"source_kind {value!r} is not a recognised ExternalOracleCorpus member; "
+                f"expected one of {[member.value for member in ExternalOracleCorpus]}",
+            ) from None
+    raise RegistryValidationError(f"source_kind must be a string, got {type(value).__name__!r}")
+
+
+ExternalOracleCorpusValue = Annotated[ExternalOracleCorpus, BeforeValidator(_coerce_external_oracle_corpus)]
+"""Annotated :class:`ExternalOracleCorpus` that hydrates a stored JSON token."""
 
 OracleAttributionGap = Literal[
     "payload_name_lacks_modelo_and_filing_year",
@@ -95,6 +130,77 @@ class ExternalGroundingModel(BaseModel):
     """Strict frozen base for external-grounding facts."""
 
     model_config = STRICT_FROZEN_CONFIG
+
+
+class BundledOraclePayload(ExternalGroundingModel):
+    """What every bundled oracle payload carries, whichever corpus holds it.
+
+    The corpus files are read through a model rather than as an untyped
+    mapping, so every axis the fold consumes is validated once at the boundary
+    and an undeclared key is refused rather than ignored.
+
+    Only the genuine intersection lives here — where the evidence came from,
+    and the figures themselves. The attribution axes are corpus-dependent and
+    are declared by each corpus's own model, never narrowed from an optional
+    base field: the manual worked-example payloads state their modelo, filing
+    year, and corpus token outright, while the Renta WEB Open replays state
+    none of the three.
+    """
+
+    raw_evidence_locator: str = Field(min_length=1, max_length=1024)
+    expected_by_casilla_id: Mapping[CasillaId, str]
+
+
+class ManualWorkedExamplePayload(BundledOraclePayload):
+    """An AEAT Manual practico worked-example oracle payload.
+
+    Every attribution axis is declared by this corpus, including the
+    ``source_kind`` token whose value is byte-identical to its
+    :class:`~cadrumo.core.ExternalOracleCorpus` member, so an unknown token
+    fails enum hydration and a known-but-wrong token fails the directory
+    cross-check in :func:`_parse_oracle_payload`.
+    """
+
+    modelo: ModeloId
+    filing_year: int = Field(ge=1979, le=2999)
+    source_kind: ExternalOracleCorpusValue
+    scenario_id: str = Field(min_length=1, max_length=255)
+    notes: str = Field(min_length=1, max_length=16384)
+
+
+class RentaWebOpenReplayPayload(BundledOraclePayload):
+    """A Renta WEB Open open-simulator replay capture.
+
+    Carries the simulator's own rendered labels alongside the casilla-keyed
+    projection, and the AS-OBSERVED figures beside the expected ones, so the
+    capture stays auditable against the live surface it was taken from.
+
+    This corpus declares no ``source_kind``, modelo, or filing year: the corpus
+    directory and the payload filename carry those axes. They are modelled as
+    optional rather than absent so the corpus cross-check still binds a replay
+    that ever grows a token — an optional field is where a check quietly stops
+    applying. They are NOT given a value-bearing default, which would answer
+    the cross-check with the very token it verifies.
+    """
+
+    modelo: ModeloId | None = None
+    filing_year: int | None = Field(default=None, ge=1979, le=2999)
+    source_kind: ExternalOracleCorpusValue | None = None
+    scenario_id: str | None = Field(default=None, min_length=1, max_length=255)
+    expected: Mapping[str, str]
+    observed: Mapping[str, str]
+    observed_by_casilla_id: Mapping[CasillaId, str]
+    profile_overrides: Mapping[str, str] | None = None
+
+
+#: Every corpus's payload model, as one union the reader can attribute from.
+type OraclePayload = ManualWorkedExamplePayload | RentaWebOpenReplayPayload
+
+#: The strict model each corpus's payloads are parsed through.
+_ORACLE_PAYLOAD_MODELS: Final[Mapping[ExternalOracleCorpus, type[OraclePayload]]] = {
+    ExternalOracleCorpus.RENTA_WEB_OPEN_REPLAY: RentaWebOpenReplayPayload,
+    ExternalOracleCorpus.AEAT_MANUAL_WORKED_EXAMPLE: ManualWorkedExamplePayload,
+}
 
 
 class ExternalOracleEvidence(ExternalGroundingModel):
@@ -495,17 +601,62 @@ def _build_row(
     )
 
 
+def _parse_oracle_payload(
+    corpus: ExternalOracleCorpus,
+    payload_path: Path,
+) -> OraclePayload:
+    """Parse one bundled payload through its corpus's strict model.
+
+    Two refusals live here, both loud and neither tolerant of a shape nothing
+    ships today. The model itself refuses a payload missing a field its corpus
+    declares, carrying an undeclared key, or naming a ``source_kind`` outside
+    :class:`~cadrumo.core.ExternalOracleCorpus`. The cross-check then refuses a
+    payload whose declared corpus token contradicts the directory it was found
+    in — the case a directory-keyed read would silently reclassify, reporting a
+    provenance the figures do not have.
+
+    Args:
+        corpus: The corpus the containing directory belongs to, per
+            :data:`_ORACLE_CORPUS_DIRECTORIES`.
+        payload_path: The payload file to read.
+
+    Raises:
+        RegistryValidationError: When the payload violates its corpus's model,
+            or declares a corpus token other than ``corpus``.
+    """
+    model = _ORACLE_PAYLOAD_MODELS[corpus]
+    try:
+        payload = model.model_validate(json.loads(payload_path.read_text(encoding="utf-8")))
+    except ValidationError as exc:
+        raise RegistryValidationError(
+            f"{payload_path.name}: bundled oracle payload does not satisfy {model.__name__}: {exc}",
+        ) from exc
+    if payload.source_kind is not None and payload.source_kind is not corpus:
+        raise RegistryValidationError(
+            f"{payload_path.name}: declared source_kind {payload.source_kind.value!r} contradicts the corpus "
+            f"directory {payload_path.parent.name!r}, which holds the {corpus.value!r} corpus",
+        )
+    return payload
+
+
 def _read_oracle_payload(
     corpus: ExternalOracleCorpus,
     payload_path: Path,
 ) -> ExternalOracleEvidence | UnattributedOraclePayload:
     """Read one ``modelo-<id>-<year>-<scenario>.json`` payload into typed evidence.
 
-    The payload's own ``modelo`` and ``filing_year`` fields are authoritative
-    when present and are cross-checked against the filename-derived values, so
-    a misnamed file cannot silently misattribute its evidence. The Renta WEB
-    Open replays declare neither field, hence the filename fallback.
+    Every payload is parsed through its corpus's strict model first, including
+    one the filename cannot attribute: a file the fold cannot place is still a
+    file whose contents must be well-formed, and validating only the
+    attributable ones would leave the boundary open exactly where the least is
+    known about the payload.
+
+    The filename remains the attribution key. The payload's own ``modelo`` and
+    ``filing_year`` are cross-checked against the filename-derived values when
+    declared, so a misnamed file cannot silently misattribute its evidence; the
+    Renta WEB Open replays declare neither, hence the filename fallback.
     """
+    payload = _parse_oracle_payload(corpus, payload_path)
     parts = payload_path.stem.split("-")
     if len(parts) < 3 or parts[0] != "modelo" or not parts[1] or not parts[2].isdigit():
         return UnattributedOraclePayload(
@@ -519,10 +670,8 @@ def _read_oracle_payload(
         )
     filename_modelo_id = parts[1]
     filename_year = int(parts[2])
-    payload = json.loads(payload_path.read_text(encoding="utf-8"))
-    declared_modelo_id = str(payload.get("modelo", filename_modelo_id)).strip() or filename_modelo_id
-    declared_year_value = payload.get("filing_year", filename_year)
-    declared_year = int(declared_year_value) if declared_year_value is not None else filename_year
+    declared_modelo_id = filename_modelo_id if payload.modelo is None else payload.modelo
+    declared_year = filename_year if payload.filing_year is None else payload.filing_year
     if declared_modelo_id != filename_modelo_id:
         raise RegistryValidationError(
             f"{payload_path.name}: payload modelo {declared_modelo_id!r} does not match filename modelo "
@@ -533,14 +682,10 @@ def _read_oracle_payload(
             f"{payload_path.name}: payload filing_year {declared_year!r} does not match filename year "
             f"{filename_year!r}",
         )
-    expected = payload.get(_EXPECTED_BY_CASILLA_ID, {})
-    casilla_ids = tuple(
-        sorted(validated_casilla_id(key, surface=f"{payload_path.name}.{_EXPECTED_BY_CASILLA_ID}") for key in expected),
-    )
     return ExternalOracleEvidence(
         corpus=corpus,
         payload_name=payload_path.name,
         modelo=declared_modelo_id,
         filing_year=declared_year,
-        casilla_ids=casilla_ids,
+        casilla_ids=tuple(sorted(payload.expected_by_casilla_id)),
     )

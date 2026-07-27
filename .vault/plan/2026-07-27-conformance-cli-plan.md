@@ -65,7 +65,7 @@ Lift the test-trapped conformance facts into importable typed libraries under sr
 
 Ship the python -m dev.registry.conformance Typer trio: report, coverage, audit --check, and stamp verbs over the src fact libraries.
 
-- [ ] `P03.S13` - build the pure manager composing the src fact facades plus ModeloLocaleManager coverage rows, with typed payload models and a self-labelling no-validate degraded mode; `dev/registry/conformance/manager.py`.
+- [x] `P03.S13` - build the pure manager composing the src fact facades plus ModeloLocaleManager coverage rows, with typed payload models and a self-labelling no-validate degraded mode; `dev/registry/conformance/manager.py`.
 - [ ] `P03.S14` - build the Typer cli and __main__ with report and coverage verbs, greppable key=value text rows and strict --json payloads; `dev/registry/conformance`.
 - [ ] `P03.S15` - add the audit verb with --check gating exit, shrink-only JSON baseline, anti-vacuity floor, and empty-input SystemExit refusal; `dev/registry/conformance/cli.py`.
 - [ ] `P03.S16` - add the stamp verb writing the per-revision governance scalars with vocabulary and coherence validation; `dev/registry/conformance/_stamp.py`.
@@ -89,7 +89,7 @@ Run the real gates, persist the first conformance report as an audit, and close 
 - [ ] `P05.S22` - run the full-tree collect-only gate and the scoped registry, filing, and dev suites, recording failure signatures and triaging owner vs peer churn; `src/cadrumo`.
 - [ ] `P05.S23` - run the first real conformance report over the bundled registry and persist the findings as a vault audit document; `.vault/audit`.
 - [ ] `P05.S24` - run the fresh-context campaign-close honesty review and track every surfaced item as a new step or a formally deferred follow-up; `.vault/audit`.
-- [ ] `P05.S32` - amend the ADR boundary wording to name every wheel-shipped module under src/cadrumo and rule the two open questions on single-versus-dual boundary-detector authority and on whether the filing-year grounding resolver belongs on the public registry facade; `.vault/adr`.
+- [x] `P05.S32` - amend the ADR boundary wording to name every wheel-shipped module under src/cadrumo and rule the two open questions on single-versus-dual boundary-detector authority and on whether the filing-year grounding resolver belongs on the public registry facade; `.vault/adr`.
 - [ ] `P05.S37` - extend the fragment placement refusal to the remaining legally load-bearing revision scalars legal_refs, orden_aplicabilidad and valid_to, closing the last instance of the readability hazard the governance refusal proved worth closing; `src/cadrumo/domain/calculations/registry/_loader.py`.
 
 ## Parallelization

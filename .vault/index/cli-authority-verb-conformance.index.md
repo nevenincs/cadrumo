@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-authority-verb-conformance'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-27'
+modified: '2026-07-27'
 related:
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S01]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S02]]'
@@ -155,6 +155,52 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-W04-P14-S123]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W04-P14-S124]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S223]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P18-S177]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P18-S178]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P18-S179]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P18-S180]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P18-S181]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P18-S182]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P18-S183]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P18-S241]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P18-S262]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P18-S263]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P18-S264]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P18-S265]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P18-S266]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S185]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S186]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S187]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S188]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S189]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S190]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S191]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S192]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S193]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S194]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S195]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S196]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S197]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S198]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S199]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S200]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S201]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S202]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S203]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S204]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S205]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S206]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S207]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S208]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S213]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S219]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S220]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S221]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S277]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S287]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S293]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S294]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S295]]'
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
   - '[[2026-07-15-cli-authority-verb-conformance-audit]]'
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
@@ -165,6 +211,8 @@ related:
   - '[[2026-07-16-cli-authority-verb-conformance-s37-auth-cutover-audit]]'
   - '[[2026-07-17-cli-authority-verb-conformance-audit]]'
   - '[[2026-07-17-cli-authority-verb-conformance-exec]]'
+  - '[[2026-07-25-cli-authority-verb-conformance-campaign-close-honesty-review-audit]]'
+  - '[[2026-07-25-cli-authority-verb-conformance-period-grammar-refusal-audit]]'
 ---
 
 # `cli-authority-verb-conformance` feature index
@@ -184,6 +232,8 @@ Auto-generated index of all documents tagged with `#cli-authority-verb-conforman
 - `2026-07-16-cli-authority-verb-conformance-duplication-authority-audit` - `cli-authority-verb-conformance` audit: `Duplication authority and CLI conformance campaign`
 - `2026-07-16-cli-authority-verb-conformance-s37-auth-cutover-audit` - `cli-authority-verb-conformance` audit: `S37 auth logout/reset cutover review`
 - `2026-07-17-cli-authority-verb-conformance-audit` - `cli-authority-verb-conformance` audit: `Rescope and split closure`
+- `2026-07-25-cli-authority-verb-conformance-campaign-close-honesty-review-audit` - `cli-authority-verb-conformance` audit: `Campaign-close honesty review`
+- `2026-07-25-cli-authority-verb-conformance-period-grammar-refusal-audit` - `cli-authority-verb-conformance` audit: `period grammar refusal`
 
 ### exec
 
@@ -337,6 +387,52 @@ Auto-generated index of all documents tagged with `#cli-authority-verb-conforman
 - `2026-07-15-cli-authority-verb-conformance-W04-P14-S122` - Prove attach remains the sole evidence mutation, invoice link is atomic and invoice-only, and link rejects every removed evidence grammar
 - `2026-07-15-cli-authority-verb-conformance-W04-P14-S123` - Prove modelo audit exposes check without replay, backend replay calls, replay result schemas, or synthetic replay events
 - `2026-07-15-cli-authority-verb-conformance-W04-P14-S124` - Assert the accepted root grammar exactly and reject every removed path and option
+- `2026-07-15-cli-authority-verb-conformance-W06-P18-S177` - Run focused pointer, switch, logout, reset, and bootstrap-policy suites against real persisted state
+- `2026-07-15-cli-authority-verb-conformance-W06-P18-S178` - Run passphrase and recovery lifecycle suites against real encrypted vaults and secure input channels
+- `2026-07-15-cli-authority-verb-conformance-W06-P18-S179` - Run auth and certificate suites against real storage and provider boundaries
+- `2026-07-15-cli-authority-verb-conformance-W06-P18-S180` - Run ledger attach, atomic invoice-link, LLM split inheritance, and failure-rollback suites and prove no generic evidence bypass or partial child commit can execute
+- `2026-07-15-cli-authority-verb-conformance-W06-P18-S181` - Run application and live CLI profile-export suites across real fresh processes, target contention, schema-derived SAR categories, and every crash window
+- `2026-07-15-cli-authority-verb-conformance-W06-P18-S182` - Run evidence service and modelo audit suites and prove the replay method, command, schema, event, tests, and documentation cannot execute or be discovered
+- `2026-07-15-cli-authority-verb-conformance-W06-P18-S183` - Run MCP dispatch, identity, input-schema, risk, mutability, and telemetry parity suites
+- `2026-07-15-cli-authority-verb-conformance-W06-P18-S241` - Run hashing vector, truncation, file-retry, network-stream, mirror-key, and AST recurrence suites for all 18 one-shot and four reducible call sites
+- `2026-07-15-cli-authority-verb-conformance-W06-P18-S262` - Run namespace registry and non-vacuous production adoption suites and reject duplicate declarations across every production root
+- `2026-07-15-cli-authority-verb-conformance-W06-P18-S263` - Run filed single, bulk, source, history-ordering, and strict IVA suites against real persisted observations and artefacts
+- `2026-07-15-cli-authority-verb-conformance-W06-P18-S264` - Run the typed LLM review workflow and both CLI routing modes against real persistence and subprocess model boundaries
+- `2026-07-15-cli-authority-verb-conformance-W06-P18-S265` - Run scoped and unscoped registry query suites across historical as-of boundaries and projection parity
+- `2026-07-15-cli-authority-verb-conformance-W06-P18-S266` - Run the direct duplication runner and health-report suites and prove every unavailable or malformed execution is visibly amber rather than green
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S185` - Materialize the complete lazy CLI tree in a fresh process and assert every leaf path is unique
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S186` - Compare the materialized tree with the accepted additions and removals and fail on unplanned leaf loss
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S187` - Run documented-command path and argument conformance against the live tree
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S188` - Run JSON schema registration and output conformance for every live leaf
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S189` - Run self-referential CLI string conformance and reject every removed spelling
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S190` - Run suggestion and next-action conformance against the live tree
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S191` - Run four-locale catalogue and rendered-help coverage for every changed path
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S192` - Run generated CLI reference and static-tree conformance
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S193` - Run the mandatory documentation render-and-verify workflow after final command materialization
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S194` - Run a fresh uncached import graph and require all five contracts
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S195` - Run Ruff against every feature-owned Python file
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S196` - Run the complete feature-owned real-behavior test inventory
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S197` - Run the feature-surface-gate skill against only feature-owned paths
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S198` - Run repository ratchets for skips, test doubles, monkeypatching, tautology, markers, and discovery drift
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S199` - Run full collect-only and classify every collection failure by owner
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S200` - Run the complete unit suite and record the attributable result
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S201` - Run the complete serial integration suite and record the attributable result
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S202` - Run the complete documentation build and conformance gate
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S203` - Run the authoritative typed duplication runner and require zero clones for green, clone findings for amber, and unavailable, failed, timed-out, non-zero, or unparseable execution for explicit amber-unavailable without false green
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S204` - Dispatch a fresh Luna xhigh agent swarm over every audited functionality cluster
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S205` - Rerun Vaultspec-RAG semantic searches across certificate custody, ledger evidence, export, hashing, replay, namespaces, filed capture, LLM review, registry queries, and duplication infrastructure
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S206` - Confirm every semantic candidate with exact declaration, import, export, caller, writer, persistence, CLI, schema, locale, test, documentation, and generated-artifact searches before classification
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S207` - Record canonical owner, surviving consumers, removed declarations, bypass disposition, and non-vacuous adoption evidence for every amended functionality cluster
+- `2026-07-15-cli-authority-verb-conformance-W06-P19-S208` - Record unrelated concurrent failures separately without claiming global green
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S213` - Confirm every closed implementation Step has an attributable execution record
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S219` - Run feature-scoped Vaultspec checks and resolve every attributable finding
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S220` - Run repository-wide Vaultspec checks and triage unrelated residuals honestly
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S221` - Run the required fresh-context campaign-close honesty review with explicit audits for duplicated authority, vacuous adoption tests, ignored accepted parameters, partial transaction commits, and false-green quality infrastructure
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S287` - Bisect the documentation lane with no workers and name the module whose worker exits, since it stalls identically at 24 and at 4 workers and emits no failure identities
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S277` - Seed the profile-key registry on the MCP path itself rather than relying on a wizard import side effect, and prove whoami through a real stdio subprocess client
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S293` - Escalate to the owning TUI campaign that the committed wizard package initialiser imports an untracked results module, so a clean checkout of HEAD cannot import the wizard or run the shipped CLI
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S294` - Land the proven MCP identity seeding fix once the wizard results module is committed, so both transports report the same schema count and the parity assertion is no longer comparing two equally blind sets
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S295` - Closed as unnecessary, a peer fix bridged the payload-name filter by importing the wizard result classes into a walked module, so enrolment is filename-filtered still and the divergence ended when that bridge landed
 
 ### plan
 

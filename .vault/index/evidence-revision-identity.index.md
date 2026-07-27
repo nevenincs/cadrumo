@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#evidence-revision-identity'
-date: '2026-07-26'
-modified: '2026-07-26'
+date: '2026-07-27'
+modified: '2026-07-27'
 related:
   - '[[2026-07-24-evidence-revision-identity-adr]]'
   - '[[2026-07-25-evidence-revision-identity-S01]]'
@@ -22,6 +22,7 @@ related:
   - '[[2026-07-25-evidence-revision-identity-supersede-identity-conflict-audit]]'
   - '[[2026-07-25-evidence-revision-identity-supersede-implementation-findings-audit]]'
   - '[[2026-07-26-evidence-revision-identity-adr]]'
+  - '[[2026-07-26-evidence-revision-identity-promotion-broke-documented-flows-audit]]'
   - '[[2026-07-26-evidence-revision-identity-supersede-ruling-review-audit]]'
 ---
 
@@ -41,6 +42,7 @@ Auto-generated index of all documents tagged with `#evidence-revision-identity`.
 - `2026-07-25-evidence-revision-identity-operator-walkthrough-audit` - `evidence-revision-identity` audit: `operator walkthrough`
 - `2026-07-25-evidence-revision-identity-supersede-identity-conflict-audit` - `evidence-revision-identity` audit: `the supersede transition the ADR mandates is unrepresentable under the revision-id invariant`
 - `2026-07-25-evidence-revision-identity-supersede-implementation-findings-audit` - `evidence-revision-identity` audit: `what the supersede design meets in the code`
+- `2026-07-26-evidence-revision-identity-promotion-broke-documented-flows-audit` - `evidence-revision-identity` audit: `the deductible-evidence promotion breaks three documented walkthroughs`
 - `2026-07-26-evidence-revision-identity-supersede-ruling-review-audit` - `evidence-revision-identity` audit: `supersede ruling review`
 
 ### exec

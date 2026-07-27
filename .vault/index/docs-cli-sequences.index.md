@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#docs-cli-sequences'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-27'
+modified: '2026-07-27'
 related:
   - '[[2026-07-13-docs-cli-sequences-W01-P01-S01]]'
   - '[[2026-07-13-docs-cli-sequences-W01-P01-S02]]'
@@ -50,6 +50,7 @@ related:
   - '[[2026-07-13-docs-cli-sequences-research]]'
   - '[[2026-07-14-docs-cli-sequences-audit]]'
   - '[[2026-07-25-docs-cli-sequences-static-frame-conversion-audit]]'
+  - '[[2026-07-27-docs-cli-sequences-sequence-runner-stream-lifecycle-audit]]'
 ---
 
 # `docs-cli-sequences` feature index
@@ -67,6 +68,7 @@ Auto-generated index of all documents tagged with `#docs-cli-sequences`.
 - `2026-07-13-docs-cli-sequences-audit` - `docs-cli-sequences` audit: `docs-cli-sequences codification candidates and follow-up register`
 - `2026-07-14-docs-cli-sequences-audit` - `docs-cli-sequences` audit: `operator mandatory-display remediation`
 - `2026-07-25-docs-cli-sequences-static-frame-conversion-audit` - `docs-cli-sequences` audit: `static-frame conversion: what the measurements missed`
+- `2026-07-27-docs-cli-sequences-sequence-runner-stream-lifecycle-audit` - `docs-cli-sequences` audit: `sequence runner stream lifecycle`
 
 ### exec
 

@@ -8,7 +8,7 @@ verify the double rather than the claim.
 from __future__ import annotations
 
 import re
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 import pytest
@@ -17,7 +17,11 @@ from .....core import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
 from .....core.resources import bundled_path
 from .._errors import RegistryLoadError
 from .._loader import load_modelo_directory, load_registry_tree
-from .._schema import REVISION_GOVERNANCE_FIELDS, ModeloRevision
+from .._schema import (
+    REVISION_GOVERNANCE_FIELDS,
+    REVISION_REVIEW_DATE_CEILING,
+    ModeloRevision,
+)
 from ._loader_directory_mode_support import (
     _standard_manifest_text,
     _standard_revision_preamble_text,
@@ -174,6 +178,73 @@ def test_pending_status_carrying_reviewer_fields_is_refused(tmp_path: Path, stam
         load_modelo_directory(_write_modelo(tmp_path, manifest_extra=stamp))
 
 
+@pytest.mark.parametrize(
+    "stamp",
+    [
+        pytest.param('engineered_by = ""\n', id="engineered-by-empty"),
+        pytest.param('engineered_by = "   "\n', id="engineered-by-spaces"),
+        pytest.param('engineered_by = "\\t"\n', id="engineered-by-tab"),
+        pytest.param(
+            'review_status = "operator_reviewed"\nreviewed_by = ""\nreviewed_at = 2026-07-27\n',
+            id="reviewed-by-empty",
+        ),
+        pytest.param(
+            'review_status = "operator_reviewed"\nreviewed_by = "   "\nreviewed_at = 2026-07-27\n',
+            id="reviewed-by-spaces",
+        ),
+        pytest.param(
+            'review_status = "operator_reviewed"\nreviewed_by = "\\t"\nreviewed_at = 2026-07-27\n',
+            id="reviewed-by-tab",
+        ),
+    ],
+)
+def test_blank_attribution_is_refused(tmp_path: Path, stamp: str) -> None:
+    """An attribution that names nobody is the claim the stamp exists to refuse.
+
+    A present-but-blank ``reviewed_by`` carries a reviewed status past the
+    companion check while naming no reviewer, which is exactly as unfalsifiable
+    as the omission the companion check refuses.
+    """
+    with pytest.raises(RegistryLoadError, match="must name somebody"):
+        load_modelo_directory(_write_modelo(tmp_path, manifest_extra=stamp))
+
+
+def test_the_blank_refusal_is_about_emptiness_not_the_whitespace_character(tmp_path: Path) -> None:
+    """Differential proof: the same padded value loads once it names somebody.
+
+    Without this pairing the refusal above could be passing because the loader
+    rejects whitespace in an attribution at all rather than an empty claim.
+    """
+    stamp = 'review_status = "operator_reviewed"\nreviewed_by = "  operator  "\nreviewed_at = 2026-07-27\n'
+
+    revision = _load_revision(_write_modelo(tmp_path, manifest_extra=stamp))
+
+    assert revision.reviewed_by == "  operator  "
+
+
+def test_reviewed_at_beyond_the_signoff_horizon_is_refused(tmp_path: Path) -> None:
+    """A sentinel date cannot denote a signoff any auditor could check."""
+    stamp = 'review_status = "operator_reviewed"\nreviewed_by = "operator"\nreviewed_at = 3999-12-31\n'
+
+    with pytest.raises(RegistryLoadError, match="signoff horizon"):
+        load_modelo_directory(_write_modelo(tmp_path, manifest_extra=stamp))
+
+
+def test_a_date_below_the_signoff_horizon_still_loads(tmp_path: Path) -> None:
+    """Differential proof: the bound is a boundary, not a blanket date refusal.
+
+    The horizon is a fixed calendar date rather than a reading of the local
+    clock, so this assertion holds identically on every machine and in every
+    year the project can plausibly run.
+    """
+    latest = REVISION_REVIEW_DATE_CEILING - timedelta(days=1)
+    stamp = (
+        f'review_status = "operator_reviewed"\nreviewed_by = "operator"\nreviewed_at = {latest.isoformat()}\n'
+    )
+
+    assert _load_revision(_write_modelo(tmp_path, manifest_extra=stamp)).reviewed_at == latest
+
+
 def test_unknown_review_status_token_is_refused(tmp_path: Path) -> None:
     """The status vocabulary is closed at load time, not at a later branch."""
     with pytest.raises(RegistryLoadError, match="RevisionReviewStatus"):
@@ -230,8 +301,14 @@ def test_bundled_revisions_carry_a_coherent_stamp() -> None:
 
     for revision in revisions:
         companions = (revision.reviewed_by, revision.reviewed_at)
+        assert revision.engineered_by is None or revision.engineered_by.strip(), revision.id
         if revision.review_status in REVIEWED_REVISION_REVIEW_STATUSES:
             assert all(value is not None for value in companions), revision.id
+            # not-null is satisfied by a blank reviewer, which names nobody.
+            assert revision.reviewed_by is not None
+            assert revision.reviewed_by.strip(), revision.id
+            assert revision.reviewed_at is not None
+            assert revision.reviewed_at < REVISION_REVIEW_DATE_CEILING, revision.id
         else:
             assert revision.review_status is RevisionReviewStatus.PENDING_REVIEW, revision.id
             assert all(value is None for value in companions), revision.id

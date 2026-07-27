@@ -17,4 +17,4 @@ Auto-generated index of all documents tagged with `#publication-lane-consolidati
 
 ### adr
 
-- `2026-07-27-publication-lane-consolidation-adr` - `publication-lane-consolidation` adr: `one publication authority per destination: the published release owns v0.2.1, the bump precedes the build, the guard checks every destination, and the irreversible act goes last` | (**status:** `proposed`)
+- `2026-07-27-publication-lane-consolidation-adr` - `publication-lane-consolidation` adr: `one publication authority per destination: 0.2.1 is abandoned and the first complete release takes a fresh version, the bump precedes the build, the guard checks every destination, and the irreversible act goes last` | (**status:** `accepted`)

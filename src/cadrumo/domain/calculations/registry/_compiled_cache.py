@@ -34,18 +34,25 @@ and rebuildable: on any mismatch, delete and recompute -- never migrated.
 
 from __future__ import annotations
 
+import enum
 import hashlib
 import hmac
-import importlib
 import inspect
 import logging
 import pickle
 import sys
 import time
+import typing
+from collections.abc import Iterable, Iterator
 from pathlib import Path
+from typing import Final, NamedTuple
 
+from pydantic import BaseModel
+
+from ....core.aggregation import BindingSourceKind
 from ....core.atomic_write import atomic_write_best_effort_bytes
 from ....core.hashing import sha256_hex
+from ._bindings import selector_model_for_source
 from ._loader_cache import registry_disk_cache_dir, registry_disk_cache_max_entries
 from ._schema import ModeloDefinition, RegistryCatalogues
 
@@ -71,39 +78,145 @@ _LOGGER = logging.getLogger(__name__)
 
 _REGISTRY_TREE_CACHE_SCHEMA_VERSION = "legal-parameter-refs-v1"
 
-_EMBEDDED_SCHEMA_CORE_SYMBOLS = (
-    # Cross-package core TYPES that are EMBEDDED in the pickled compiled
-    # (modelos, catalogues) objects. The registry-package hash below covers the
-    # schema MODELS and the compiler/resolvers, but the compiled objects also
-    # embed core primitives defined OUTSIDE the registry package -- a change to
-    # one of these (a new BindingSourceKind member, a BindingAggregation field,
-    # a SensitivityClass value, a Period/TaxDomain shape) alters the pickled
-    # object semantics without touching any registry module, so it must be in
-    # the key too.
-    #
-    # Each entry is a ``(public_module, symbol)`` pair, NOT a raw defining-module
-    # path: ``service-imports-via-top-level-reexports`` /
-    # ``dynamic-import-targets-the-public-facade`` bind an importlib target to the
-    # owning package's PUBLIC facade, never a private ``_submodule``. Period and
-    # TaxDomain are re-exported at the ``cadrumo.core`` facade, so we name the
-    # facade and let :func:`inspect.getsourcefile` on the symbol locate the TRUE
-    # defining file (``_period.py`` / ``_tax_domain.py``) to hash -- the
-    # invalidation follows the definition, not the facade's ``__init__``. Extend
-    # this tuple when a new core type becomes embedded in the compiled objects;
-    # `test_embedded_schema_core_modules_all_resolve` guards it against drift to a
-    # symbol that no longer resolves to a real source file.
-    ("cadrumo.core.aggregation", "BindingSourceKind"),  # + BindingAggregation / BindingTypedEnumKind (same file)
-    ("cadrumo.core.classification", "SensitivityClass"),
-    ("cadrumo.core", "Period"),  # defined in cadrumo.core._period, re-exported at the facade
-    ("cadrumo.core", "TaxDomain"),  # defined in cadrumo.core._tax_domain, re-exported at the facade
-    # Every ModeloRevision pickles its governance stamp's review_status as a
-    # RevisionReviewStatus member, so a new member or a changed value alters the
-    # compiled objects without touching any registry module.
-    ("cadrumo.core", "RevisionReviewStatus"),  # defined in cadrumo.core._revision_review
-)
+_REGISTRY_PACKAGE_DIR: Final[Path] = Path(__file__).resolve().parent
+"""The registry package directory -- the source surface hashed wholesale below."""
+
+_CADRUMO_PACKAGE_DIR: Final[Path] = _REGISTRY_PACKAGE_DIR.parents[2]
+"""The ``cadrumo`` package root (``registry`` -> ``calculations`` -> ``domain`` -> ``cadrumo``).
+
+The boundary that separates a FIRST-PARTY embedded type (hashed) from a stdlib
+or third-party one (not ours to invalidate on). ``test_package_roots_are_the_real_directories``
+pins the parent count so a package relocation reds loudly instead of silently
+classifying every first-party type as foreign.
+"""
+
+_UNDERIVABLE_EMBEDDED_TYPES_MARKER: Final[str] = "embedded-foreign-types-underivable"
+"""Folded into the key when the derivation itself fails, keeping it deterministic."""
 
 
-def _compute_loader_code_fingerprint() -> str:
+class _EmbeddedForeignType(NamedTuple):
+    """One first-party type the compiled payload embeds from outside the registry package.
+
+    ``marker`` is the stable ``module.qualname`` identity, ``relative_source`` the
+    defining file's path under the ``cadrumo`` package root (machine-independent,
+    so the fingerprint does not move with the checkout location), and
+    ``source_path`` the absolute file whose bytes are hashed.
+    """
+
+    marker: str
+    relative_source: str
+    source_path: Path
+
+
+def _compiled_payload_root_models() -> tuple[type[BaseModel], ...]:
+    """Return every model an unpickled compiled payload can reconstruct objects from.
+
+    The two schema roots plus every concrete binding-selector model. The selector
+    models are deliberately included because they are NOT reachable from the
+    schema annotations: :attr:`DataBindingDefinition.selector` is typed as an
+    open :class:`~pydantic.BaseModel` and its concrete family model is chosen at
+    validation time from the discriminated-selector table, so an annotation walk
+    from :class:`ModeloDefinition` alone cannot see the IVA / renta / modelo
+    enums those selectors embed -- which is exactly how ``Modelo``,
+    ``IvaCategory`` and their siblings sat unhashed. Enumerating the table
+    through its own public accessor keeps that half DERIVED as well: a new
+    selector family must register there to work at all, so it enrols itself.
+    """
+    selectors = {
+        model for model in (selector_model_for_source(kind) for kind in BindingSourceKind) if model is not None
+    }
+    ordered = sorted(selectors, key=lambda model: (model.__module__, model.__qualname__))
+    return (ModeloDefinition, RegistryCatalogues, *ordered)
+
+
+def _iter_annotation_types(annotation: object) -> Iterator[type]:
+    """Yield every concrete type a pydantic field annotation can hold at runtime.
+
+    Unwraps type aliases, ``Annotated`` metadata, unions, and container
+    parameters, and -- the case that hid the core ``Modelo`` enum -- yields the
+    ENUM CLASS behind each member of a ``Literal[...]`` of enum members, because
+    such a field pickles a real enum instance even though the annotation names
+    only its values.
+    """
+    if isinstance(annotation, typing.TypeAliasType):
+        yield from _iter_annotation_types(annotation.__value__)
+        return
+    origin = typing.get_origin(annotation)
+    if origin is typing.Literal:
+        for arg in typing.get_args(annotation):
+            if isinstance(arg, enum.Enum):
+                yield type(arg)
+        return
+    if origin is not None:
+        for arg in typing.get_args(annotation):
+            yield from _iter_annotation_types(arg)
+        if isinstance(origin, type):
+            yield origin
+        return
+    if isinstance(annotation, type):
+        yield annotation
+
+
+def _classify_foreign_type(candidate: type) -> _EmbeddedForeignType | None:
+    """Return ``candidate`` as an embedded foreign type, or ``None`` if it is not one.
+
+    ``None`` for anything without source on disk (a builtin, a C extension) and
+    for anything defined inside the ``cadrumo`` registry package or outside the
+    ``cadrumo`` package altogether: the former is already hashed wholesale, the
+    latter is not ours to invalidate on.
+    """
+    try:
+        source_file = inspect.getsourcefile(candidate)
+    except (TypeError, OSError):
+        return None
+    if source_file is None:
+        return None
+    path = Path(source_file).resolve()
+    if not path.is_relative_to(_CADRUMO_PACKAGE_DIR) or path.is_relative_to(_REGISTRY_PACKAGE_DIR):
+        return None
+    return _EmbeddedForeignType(
+        marker=f"{candidate.__module__}.{candidate.__qualname__}",
+        relative_source=path.relative_to(_CADRUMO_PACKAGE_DIR).as_posix(),
+        source_path=path,
+    )
+
+
+def _derive_embedded_foreign_types(
+    roots: Iterable[type[BaseModel]] | None = None,
+) -> tuple[_EmbeddedForeignType, ...]:
+    """Derive every first-party non-registry type the compiled payload embeds.
+
+    Walks ``roots`` (defaulting to :func:`_compiled_payload_root_models`)
+    recursively over ``model_fields`` annotations, descending into every nested
+    :class:`~pydantic.BaseModel` it meets, and collects the types defined inside
+    ``cadrumo`` but outside the registry package. This replaces a remembered
+    hand list: the cache key can no longer omit an embedded type because an
+    author forgot to enrol it. ``roots`` is injectable so a test can prove the
+    derivation DETECTS a newly embedded type rather than merely restating
+    today's set.
+
+    Returns:
+        The derived types, ordered by marker so the fingerprint is deterministic.
+    """
+    pending: list[type[BaseModel]] = list(_compiled_payload_root_models() if roots is None else roots)
+    visited_models: set[type[BaseModel]] = set()
+    found: dict[str, _EmbeddedForeignType] = {}
+    while pending:
+        model = pending.pop()
+        if model in visited_models:
+            continue
+        visited_models.add(model)
+        for field in model.model_fields.values():
+            for candidate in _iter_annotation_types(field.annotation):
+                if issubclass(candidate, BaseModel):
+                    pending.append(candidate)
+                foreign = _classify_foreign_type(candidate)
+                if foreign is not None:
+                    found[foreign.marker] = foreign
+    return tuple(found[marker] for marker in sorted(found))
+
+
+def _compute_loader_code_fingerprint(roots: Iterable[type[BaseModel]] | None = None) -> str:
     """Return a content hash of the loader/compiler/schema source.
 
     The compiled-registry cache stores COMPILED ``(modelos, catalogues)``
@@ -118,49 +231,57 @@ def _compute_loader_code_fingerprint() -> str:
 
     * every registry-package module (excluding its tests) -- the schema models,
       the compiler, and the resolvers; and
-    * the cross-package core types embedded in the compiled objects
-      (:data:`_EMBEDDED_SCHEMA_CORE_SYMBOLS`). Each is named by its PUBLIC facade
-      module plus symbol; the facade is imported, the symbol resolved, and
-      :func:`inspect.getsourcefile` locates the symbol's TRUE defining file to
-      hash -- so a change to the private module that DEFINES the type (e.g.
-      ``core/_period.py``) invalidates the cache even though the key names only
-      the public facade (``cadrumo.core``).
+    * every first-party type embedded in the compiled objects from OUTSIDE the
+      registry package, DERIVED from the compiled models' own annotations by
+      :func:`_derive_embedded_foreign_types` rather than remembered in a hand
+      list. Each derived type contributes its ``module.qualname`` marker and the
+      bytes of its TRUE defining file, so a change to the private module that
+      defines it (``core/_period.py``, ``domain/iva/_schema.py``) invalidates the
+      cache even though no registry module moved.
 
     Any change to either surface yields a new key, so pre-change caches can never
     be served. Best-effort per surface: an unreadable registry tree (e.g. a
     zip-imported install) falls back to the interpreter version + bytecode cache
-    tag; a core symbol that cannot be imported, resolved, or located on disk
-    folds in a stable marker so the key stays deterministic and distinct rather
-    than crashing.
+    tag; a derivation or a source read that fails folds in a stable marker so the
+    key stays deterministic and distinct rather than crashing.
+
+    Args:
+        roots: Models to derive the embedded foreign types from. Injected for
+            test isolation; production derives them from the compiled payload's
+            own roots.
     """
     hasher = hashlib.sha256()
     try:
-        package_dir = Path(__file__).resolve().parent
         source_files = sorted(
-            path for path in package_dir.rglob("*.py") if "tests" not in path.relative_to(package_dir).parts
+            path
+            for path in _REGISTRY_PACKAGE_DIR.rglob("*.py")
+            if "tests" not in path.relative_to(_REGISTRY_PACKAGE_DIR).parts
         )
         for path in source_files:
-            hasher.update(path.relative_to(package_dir).as_posix().encode("utf-8"))
+            hasher.update(path.relative_to(_REGISTRY_PACKAGE_DIR).as_posix().encode("utf-8"))
             hasher.update(path.read_bytes())
     except OSError:
         hasher.update(sys.version.encode("utf-8"))
         hasher.update((sys.implementation.cache_tag or "").encode("utf-8"))
 
-    for facade_module, symbol_name in _EMBEDDED_SCHEMA_CORE_SYMBOLS:
-        marker = f"{facade_module}:{symbol_name}"
+    try:
+        embedded = _derive_embedded_foreign_types(roots)
+    except Exception:  # pragma: no cover - derivation is pure introspection over imported models
+        _LOGGER.debug("Could not derive the embedded foreign types for the cache key", exc_info=True)
+        hasher.update(_UNDERIVABLE_EMBEDDED_TYPES_MARKER.encode("utf-8"))
+        return hasher.hexdigest()
+
+    read_sources: set[str] = set()
+    for item in embedded:
+        hasher.update(item.marker.encode("utf-8"))
+        if item.relative_source in read_sources:
+            continue
+        read_sources.add(item.relative_source)
+        hasher.update(item.relative_source.encode("utf-8"))
         try:
-            module = importlib.import_module(facade_module)
-            # Unwrap so a decorated callable resolves to its underlying source;
-            # a class/enum has no ``__wrapped__`` and is returned unchanged.
-            symbol = inspect.unwrap(getattr(module, symbol_name))
-            source_file = inspect.getsourcefile(symbol)
-            if source_file is None:
-                hasher.update(f"unresolved:{marker}".encode())
-                continue
-            hasher.update(marker.encode("utf-8"))
-            hasher.update(Path(source_file).read_bytes())
-        except (OSError, ImportError, AttributeError, TypeError):
-            hasher.update(f"unresolved:{marker}".encode())
+            hasher.update(item.source_path.read_bytes())
+        except OSError:
+            hasher.update(f"unreadable:{item.relative_source}".encode())
     return hasher.hexdigest()
 
 

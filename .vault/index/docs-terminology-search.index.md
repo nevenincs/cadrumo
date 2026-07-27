@@ -74,6 +74,7 @@ related:
   - '[[2026-07-13-docs-terminology-search-research]]'
   - '[[2026-07-15-docs-terminology-search-adr]]'
   - '[[2026-07-15-docs-terminology-search-audit]]'
+  - '[[2026-07-27-docs-terminology-search-legal-ref-attribution-audit]]'
   - '[[2026-07-27-docs-terminology-search-modelo-concept-grounding-reference]]'
   - '[[2026-07-27-docs-terminology-search-modelo-enrolment-scope-audit]]'
 ---
@@ -103,6 +104,7 @@ Auto-generated index of all documents tagged with `#docs-terminology-search`.
 - `2026-06-15-docs-terminology-search-audit` - `docs-terminology-search` audit: `search corpus performance and result-quality drive`
 - `2026-07-13-docs-terminology-search-audit` - `docs-terminology-search` audit: `campaign close honesty review`
 - `2026-07-15-docs-terminology-search-audit` - `docs-terminology-search` audit: `D7/D8 controller iconography and re-ranking honesty review`
+- `2026-07-27-docs-terminology-search-legal-ref-attribution-audit` - `docs-terminology-search` audit: `legal ref attribution`
 - `2026-07-27-docs-terminology-search-modelo-enrolment-scope-audit` - `docs-terminology-search` audit: `modelo enrolment scope`
 
 ### exec

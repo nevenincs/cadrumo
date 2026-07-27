@@ -2,7 +2,7 @@
 
 The oracle figures are the AEAT Manual practico IVA 2025 prorrata-general example
 (pages 137-138), bundled in
-`corpus/manual_oracles/modelo-303-prorrata-general-regularizacion.json`: the
+`corpus/manual_oracles/modelo-303-2025-prorrata-general-regularizacion.json`: the
 current-year operations are viviendas 20.000 EUR (exempt, sin derecho) and
 locales 25.000 EUR (con derecho), giving an annual con-derecho volume of
 25.000 EUR, an annual total volume of 45.000 EUR, and a definitive prorrata of
@@ -45,12 +45,21 @@ from .._prorrata_regularizacion import build_prorrata_declared_volume_divergence
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _ORACLE_PATH = Path(
-    bundled_path("corpus", "manual_oracles", "modelo-303-prorrata-general-regularizacion.json"),
+    bundled_path("corpus", "manual_oracles", "modelo-303-2025-prorrata-general-regularizacion.json"),
 )
 
 # The augmenting excluded operation: a one-off non-habitual inmueble sale that
 # would otherwise be con-derecho output volume (LIVA art. 104.Tres 4.º).
 _EXCLUDED_NON_HABITUAL_INMUEBLE_SALE = Decimal("33000.00")
+
+# The manual's current-year 'n' operations: locales 25.000 EUR con derecho and
+# viviendas 20.000 EUR exentas sin derecho, annual total 45.000 EUR. These are
+# the scenario's GIVENS (input_kind=manual casillas), so they are named
+# constants quoting the manual rather than entries in the payload's
+# `expected_by_casilla_id`, which is reserved for casillas the registry engine
+# computes and a verification expectation reconciles.
+_MANUAL_CURRENT_YEAR_CON_DERECHO = Decimal("25000.00")
+_MANUAL_CURRENT_YEAR_TOTAL = Decimal("45000.00")
 
 
 def _oracle_payload() -> dict[str, Any]:
@@ -110,8 +119,8 @@ def test_art_104_tres_exclusion_reproduces_aeat_manual_prorrata_percentage() -> 
     45.000 and the definitive percentage equals the manual's 56%.
     """
     payload = _oracle_payload()
-    manual_con_derecho = _oracle_decimal(payload, "iva.prorrata-volumen-con-derecho")
-    manual_total = _oracle_decimal(payload, "iva.prorrata-volumen-total")
+    manual_con_derecho = _MANUAL_CURRENT_YEAR_CON_DERECHO
+    manual_total = _MANUAL_CURRENT_YEAR_TOTAL
     manual_percentage = _oracle_decimal(payload, "iva.prorrata-porcentaje")
     manual_sin_derecho = manual_total - manual_con_derecho
 
@@ -154,8 +163,8 @@ def test_without_art_104_tres_exclusion_the_manual_percentage_is_not_reproduced(
     manual's 56%, proving the exclusion is load-bearing rather than a no-op.
     """
     payload = _oracle_payload()
-    manual_con_derecho = _oracle_decimal(payload, "iva.prorrata-volumen-con-derecho")
-    manual_total = _oracle_decimal(payload, "iva.prorrata-volumen-total")
+    manual_con_derecho = _MANUAL_CURRENT_YEAR_CON_DERECHO
+    manual_total = _MANUAL_CURRENT_YEAR_TOTAL
     manual_percentage = _oracle_decimal(payload, "iva.prorrata-porcentaje")
     manual_sin_derecho = manual_total - manual_con_derecho
 

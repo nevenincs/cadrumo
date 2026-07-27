@@ -2,7 +2,7 @@
 
 No bundled AEAT *Manual práctico IVA* prorrata-ESPECIAL worked-example oracle
 ships in the corpus (only the general-prorrata regularización oracle
-``modelo-303-prorrata-general-regularizacion.json`` exists). Per the
+``modelo-303-2025-prorrata-general-regularizacion.json`` exists). Per the
 prorrata-especial policy, this verification therefore uses a hand-constructed
 per-ejercicio register plus a ledger scenario driven end-to-end through the
 PRODUCTION aggregation path (``aggregate_iva_ledger_observations_from_repositories``

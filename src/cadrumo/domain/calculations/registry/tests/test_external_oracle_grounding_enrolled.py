@@ -106,9 +106,12 @@ def test_every_bundled_oracle_payload_is_accounted_for() -> None:
     therefore surface either as attributed evidence or as an explicitly
     recorded attribution gap.
 
-    This is the live case, not a hypothetical: one bundled manual oracle names
-    no filing year in its filename, so it carries real AEAT figures that reach
-    no revision. It is reported rather than discarded.
+    Every bundled payload is attributed today, so the gap set is empty and this
+    assertion currently proves only that no payload vanished. The recorded-gap
+    half is not dead: it fired on a real payload until the M303 prorrata oracle
+    was renamed to carry its filing year, and the next year-less or
+    unresolvable-year payload lands straight back in it rather than being
+    silently dropped.
     """
     inventory = load_bundled_external_oracle_inventory()
 
