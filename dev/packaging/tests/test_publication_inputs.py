@@ -8,11 +8,14 @@ therefore mutates a channel's availability and asserts the demand moves with it.
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Iterator
+from contextlib import ExitStack, contextmanager
 from pathlib import Path
 from typing import Final
 
 import pytest
 
+from cadrumo.tests.env_scope import scoped_env_var
 from dev.docs.download_matrix import Availability, DownloadDescriptor, claimed_channels, load_descriptor
 from dev.packaging.publication_inputs import (
     COHORT_INPUT,
@@ -145,25 +148,44 @@ def test_emitted_outputs_cover_every_known_input_in_both_states(tmp_path: Path) 
     }
 
 
-def test_main_refuses_an_empty_cohort_input_and_emits_nothing(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+@contextmanager
+def _workflow_inputs(*, absent: Iterable[str], present: dict[str, str] | None = None) -> Iterator[None]:
+    """Pin the workflow's GitHub Actions input slots for the with-block.
+
+    ``main`` reads its inputs from ``os.environ`` under the upper-cased input
+    names, so a test that asserts a refusal has to prove the slot is genuinely
+    ABSENT rather than merely unset in this process's own view — an ambient
+    value left by a CI runner would otherwise satisfy the demand and turn the
+    refusal case green for the wrong reason.
+
+    Routed through :func:`~cadrumo.tests.env_scope.scoped_env_var`, the
+    project's single authoritative os.environ scope, rather than a local
+    save/restore or pytest's monkeypatch fixture.
+    """
+    with ExitStack() as stack:
+        for name in sorted(absent):
+            stack.enter_context(scoped_env_var(name.upper(), None))
+        for name, value in sorted((present or {}).items()):
+            stack.enter_context(scoped_env_var(name.upper(), value))
+        yield
+
+
+def test_main_refuses_an_empty_cohort_input_and_emits_nothing(tmp_path: Path) -> None:
     """The CLI the workflow calls must exit non-zero before writing outputs."""
     output = tmp_path / "github_output"
     output.touch()
-    for name in {*SOURCE_INPUT_BY_CHANNEL.values(), COHORT_INPUT}:
-        monkeypatch.delenv(name.upper(), raising=False)
-    assert main(["--github-output", str(output)]) == 1
+    with _workflow_inputs(absent={*SOURCE_INPUT_BY_CHANNEL.values(), COHORT_INPUT}):
+        assert main(["--github-output", str(output)]) == 1
     assert output.read_text(encoding="utf-8") == ""
 
 
-def test_main_accepts_a_registry_only_dispatch(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_main_accepts_a_registry_only_dispatch(tmp_path: Path) -> None:
     """The bootstrap dispatch: cohort only, no acquisition runs to point at."""
     output = tmp_path / "github_output"
     output.touch()
-    for name in SOURCE_INPUT_BY_CHANNEL.values():
-        monkeypatch.delenv(name.upper(), raising=False)
-    monkeypatch.setenv(COHORT_INPUT.upper(), "30216592706")
-    assert main(["--github-output", str(output)]) == 0
+    with _workflow_inputs(
+        absent=SOURCE_INPUT_BY_CHANNEL.values(),
+        present={COHORT_INPUT: "30216592706"},
+    ):
+        assert main(["--github-output", str(output)]) == 0
     assert "need_scoop_run_id=false" in output.read_text(encoding="utf-8")

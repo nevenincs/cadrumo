@@ -31,6 +31,9 @@ from __future__ import annotations
 import ast
 import sys
 from pathlib import Path
+from typing import Final
+
+_UTF_8: Final[str] = "utf-8"
 
 #: Trees carrying gate modules. Both are required to exist: a screen that
 #: silently walked nothing would be the very defect it hunts.
@@ -163,7 +166,7 @@ def screen(root: Path) -> tuple[int, list[tuple[str, str, int]]]:
         for path in base.rglob("test_*.py"):
             scanned += 1
             try:
-                parsed = ast.parse(path.read_text(encoding="utf-8"))
+                parsed = ast.parse(path.read_text(encoding=_UTF_8))
             except (SyntaxError, UnicodeDecodeError):
                 continue
             module_proves = any(proves_it_scanned(n) for n in ast.walk(parsed))
