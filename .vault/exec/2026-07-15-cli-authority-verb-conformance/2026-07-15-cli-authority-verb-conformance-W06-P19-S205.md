@@ -92,3 +92,39 @@ This Step stays OPEN. The semantic sweep it asks for cannot be performed, and
 recording it satisfied on a substitute would be exactly the false green this
 campaign exists to remove. The structural scan under the sibling Step is a
 substitute for the DISCOVERY, not for this Step's own instrument.
+
+## Closed 2026-07-28 by operator direction: instrument withdrawn, not satisfied
+
+CLOSED AS FORMALLY DEFERRED. The semantic sweep this row asks for was never
+performed and is not claimed. The operator directed that the RAG dependency be
+dropped for this campaign, which settles a row that no amount of further work
+here could.
+
+Final measurement of the instrument, taken at close: **0 indexed source-code
+sections and 0 vault documents**, with no index generations reported at all.
+That is worse than every earlier reading in this record - 466 sections when the
+row was first attempted, 20 when it was re-measured hours later, and now none.
+The service is not degraded; it is empty.
+
+Nothing was restarted or rebuilt. A restart discards an in-progress index and
+produces a perpetual reindex, and an interrupted rebuild truncates what
+survives, so repairing it was always an operator action rather than an agent
+one. The operator has now ruled it out of scope instead.
+
+WHAT COVERS THE DISCOVERY, and what does not. The sibling swarm row substituted
+a structural AST instrument for the discovery half: identifiers normalised to
+positional placeholders, strings blanked, docstrings stripped, bodies hashed, so
+a concept implemented twice under different names still collides - which is
+precisely the duplication a token matcher cannot see. Its discrimination was
+proven against a hand-built twin pair and an unrelated control before any result
+was trusted, over 1411 production modules and 4250 hashed bodies. That
+substitute covered the DISCOVERY. It does not cover THIS row's instrument, and
+this record does not pretend otherwise.
+
+The honest residue, stated so the closure cannot be misread: no semantic sweep
+across the ten named clusters was completed by this campaign. If a future
+campaign repairs the index, this row is the one to rerun, and its ten clusters
+are listed above.
+
+Closed at HEAD `90c03889b42a475ddac08693704a37f080350270` on operator direction, with the work unperformed and
+recorded as such.
