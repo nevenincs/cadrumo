@@ -440,7 +440,7 @@ def build_external_grounding_audit(
         for candidate_modelo, filing_year in attributed_filing_years:
             if candidate_modelo != modelo.id:
                 continue
-            owner = select_revision_for_filing_year(revisions, filing_year)
+            owner = _select_revision_for_filing_year(revisions, filing_year)
             if owner is not None:
                 resolved_years.setdefault(owner.id, []).append(filing_year)
         for revision in revisions:
@@ -494,11 +494,11 @@ def audit_bundled_external_grounding() -> RegistryExternalGroundingAudit:
     )
 
 
-def select_revision_for_filing_year(
+def _select_revision_for_filing_year(
     revisions: Sequence[ModeloRevision],
     filing_year: int,
 ) -> ModeloRevision | None:
-    """Resolve the single :class:`ModeloRevision` applicable to ``filing_year``.
+    """Attribute bundled oracle evidence of ``filing_year`` to one revision.
 
     Tries a direct revision-id match first (the Modelo 100 convention, where
     the revision id IS the filing-year string), then falls back to declared
@@ -514,6 +514,19 @@ def select_revision_for_filing_year(
     and raises when none or several match. Oracle evidence is captured per
     filing year with no period axis, and a governance fold must report an
     unresolvable year rather than abort the whole registry read on it.
+
+    **Module-private, and it must stay that way.** This resolver answers an
+    evidence-attribution question ("which revision does this captured oracle
+    payload belong to"), never the legal question ("which revision governs
+    this filing"). Standing on the registry package facade beside
+    :func:`select_revision` it would be one autocomplete away from a
+    calculation path that holds only a filing year: that path would silently
+    drop the period axis and, on an unresolvable year, receive ``None`` and
+    abstain exactly where the law-determined resolver refuses. Abstention is
+    the right answer for a governance fold reading captured evidence and the
+    wrong answer for anything that computes, verifies, files, or exports. If a
+    consumer outside this fold ever genuinely needs it, expose it under a name
+    that reads as evidence attribution rather than law — never under this one.
 
     Returns:
         The single applicable revision, or ``None`` when no revision matches

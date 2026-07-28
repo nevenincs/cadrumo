@@ -269,7 +269,6 @@ from ._external_grounding import (
     audit_bundled_external_grounding,
     build_external_grounding_audit,
     load_bundled_external_oracle_inventory,
-    select_revision_for_filing_year,
 )
 from ._period_offset_math import same_ejercicio_prior_quarter_anchors
 from ._export import (
@@ -927,7 +926,6 @@ __all__ = [
     "save_parity_tape",
     "scan_workbook",
     "select_revision",
-    "select_revision_for_filing_year",
     "selector_as_dict",
     "selector_model_for_source",
     "stamp_bundled_registry_verdict",
