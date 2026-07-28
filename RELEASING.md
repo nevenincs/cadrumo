@@ -16,7 +16,7 @@ stub was retired.
 For the full pipeline review and gap analysis see
 `.vault/reference/2026-07-19-post-release-distribution-reference.md`.
 
-## Release at a glance (5 stages)
+## Release at a glance (6 stages)
 
 | Stage | Where | What |
 | --- | --- | --- |
@@ -25,6 +25,7 @@ For the full pipeline review and gap analysis see
 | 2. Channel proofs | CI (3 manual dispatches) + operator real-client captures | Scoop, Homebrew, Claude acquisition; mint 4 claude rows |
 | 3. Readiness gate | Local, human | Aggregate every row the claimed channels require; `just release-readiness-json` must report `"ok": true` |
 | 4. Publish | CI (`publish-release.yml`, human approval required) | Gate 1 opt-in → Gate 2 validate → Gate 3 publish → reacquire |
+| 5. Reacquire + docs | Local, human | Run the reacquisition lanes, unlock the docs-claims gate, `just docs-deploy` |
 
 ## Repository identity
 
@@ -814,7 +815,7 @@ regression, or a supported-environment miscalculation.
 
 9. Prepare a new patch version across all three distributions. Never overwrite or reuse
    `X.Y.Z`. Apply the hotfix cycle time from `docs/_release_checklist.yaml`, then
-   repeat all five stages of the release pipeline.
+   repeat all six stages of the release pipeline.
 
 10. Update the GitHub Release and `docs/updates.md` with the yank, affected scope,
     mitigation, and corrected version. Keep embargoed security details private until
