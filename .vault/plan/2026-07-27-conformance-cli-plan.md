@@ -64,7 +64,9 @@ Lift the test-trapped conformance facts into importable typed libraries under sr
 - [x] `P02.S38` - declare the prorrata percentage casilla in the external grounding claims now that both preconditions of the oracle-evidence rule are satisfied and verified, so the AEAT manual figure becomes an enforced independent check; `src/cadrumo/_data/registry/aeat/modelos/303`.
 - [x] `P02.S40` - take the filing-year grounding resolver off the public registry facade or rename it so it cannot be mistaken for the law-determined resolver, implementing the ADR ruling that currently has no code; `src/cadrumo/domain/calculations/registry/__init__.py`.
 - [ ] `P02.S44` - carry the validated label onto the classification row and finding models so a degraded read stays labelled when its findings are flattened, implementing the ADR ruling on row-level labelling; `src/cadrumo/domain/calculations/registry/_classification_coherence.py`.
-- [ ] `P02.S45` - bind the registry prorrata percentage formula to the domain prorrata function with a parity gate over ratios that discriminate between the two roundings, closing the two-authorities condition that hid the rounding defect; `src/cadrumo/domain/iva/_prorrata.py`.
+- [x] `P02.S45` - bind the registry prorrata percentage formula to the domain prorrata function with a parity gate over ratios that discriminate between the two roundings, closing the two-authorities condition that hid the rounding defect; `src/cadrumo/domain/iva/_prorrata.py`.
+- [ ] `P02.S47` - reconcile the zero-volume prorrata branch between the two M303 revisions, where the older revision returns zero and would zero every deduction for a fully-taxable trader who declared no prorrata volumes, grounding the correction as the newer revision already does; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes`.
+- [ ] `P02.S48` - correct the prorrata module docstring and rounding comment which cite the autoconsumo article rather than the article that actually establishes the formula and the upward rounding, so a reader sent to it finds the rule; `src/cadrumo/domain/iva/_prorrata.py`.
 
 ### Phase `P03` - conformance governance CLI in dev
 
