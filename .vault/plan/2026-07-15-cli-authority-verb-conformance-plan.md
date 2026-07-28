@@ -333,7 +333,7 @@ Move all four locale catalogues plus help, risk, error, and MCP mirrors to the a
 - [x] `W05.P16.S143` - Reconcile intentional identical-locale declarations after the grammar migration; `src/cadrumo/locales/_intentional_identical.json`.
 - [x] `W05.P16.S144` - Require four-locale parity and reject orphaned locale nodes for removed grammar; `src/cadrumo/locales/tests/test_audit.py`.
 - [x] `W05.P16.S145` - Classify passphrase, recovery, reset start and resume, portable profile export, and subject-access export under exact risk keys, with both cleartext export purposes carrying the same handoff classification; `src/cadrumo/application/operator_surface/_risk_table.py`.
-- [x] `W05.P16.S146` - Replace stale help records with accepted profile, recovery, certificate, reset, ledger, and audit descriptions; `src/cadrumo/application/operator_surface/_help.py`.
+- [ ] `W05.P16.S146` - Replace stale help records with accepted profile, recovery, certificate, reset, ledger, and audit descriptions; `src/cadrumo/application/operator_surface/_help.py`.
 - [x] `W05.P16.S147` - Update remaining operator-surface contract notes to the accepted grammar and authority semantics; `src/cadrumo/application/operator_surface/_contract.py`.
 - [x] `W05.P16.S148` - Replace flat reset and legacy custody next actions with registered accepted commands; `src/cadrumo/core/errors/registry/_application_part1.py`.
 - [x] `W05.P16.S149` - Assert operator help, risk, mutability, schema, and live-registration inventories remain exact mirrors; `src/cadrumo/entrypoints/cli/tests/test_operator_surface_contract_drift.py`.
@@ -382,18 +382,18 @@ Run focused real-behavior evidence, whole-surface conformance, duplication re-au
 Exercise every canonical authority with real encrypted storage, processes, locks, certificate services, and CLI invocation.
 
 - [ ] `W06.P18.S177` - Run focused pointer, switch, logout, reset, and bootstrap-policy suites against real persisted state; `src/cadrumo/entrypoints/cli/tests/`.
-- [ ] `W06.P18.S178` - Run passphrase and recovery lifecycle suites against real encrypted vaults and secure input channels; `src/cadrumo/entrypoints/cli/_config/tests/`.
-- [ ] `W06.P18.S179` - Run auth and certificate suites against real storage and provider boundaries; `src/cadrumo/application/auth/tests/`.
-- [ ] `W06.P18.S180` - Run ledger attach, atomic invoice-link, LLM split inheritance, and failure-rollback suites and prove no generic evidence bypass or partial child commit can execute; `src/cadrumo/application/ledger/tests/`.
-- [ ] `W06.P18.S181` - Run application and live CLI profile-export suites across real fresh processes, target contention, schema-derived SAR categories, and every crash window; `src/cadrumo/application/user_profile/tests/; src/cadrumo/entrypoints/cli/tests/test_profile_export_roundtrip.py; src/cadrumo/entrypoints/cli/tests/test_profile_subject_access_request.py`.
-- [ ] `W06.P18.S182` - Run evidence service and modelo audit suites and prove the replay method, command, schema, event, tests, and documentation cannot execute or be discovered; `src/cadrumo/application/evidence/tests/test_evidence.py; src/cadrumo/entrypoints/cli/tests/test_audit_verbs.py`.
-- [ ] `W06.P18.S183` - Run MCP dispatch, identity, input-schema, risk, mutability, and telemetry parity suites; `src/cadrumo/entrypoints/mcp/tests/`.
-- [ ] `W06.P18.S241` - Run hashing vector, truncation, file-retry, network-stream, mirror-key, and AST recurrence suites for all 18 one-shot and four reducible call sites; `src/cadrumo/core/tests/; src/cadrumo/adapters/; src/cadrumo/application/; src/cadrumo/domain/; src/cadrumo/entrypoints/mcp/tests/`.
-- [ ] `W06.P18.S262` - Run namespace registry and non-vacuous production adoption suites and reject duplicate declarations across every production root; `src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py; src/cadrumo/application/tests/test_namespace_registry_adoption.py`.
-- [ ] `W06.P18.S263` - Run filed single, bulk, source, history-ordering, and strict IVA suites against real persisted observations and artefacts; `src/cadrumo/application/live/tests/`.
-- [ ] `W06.P18.S264` - Run the typed LLM review workflow and both CLI routing modes against real persistence and subprocess model boundaries; `src/cadrumo/application/ledger/tests/; src/cadrumo/entrypoints/cli/tests/`.
-- [ ] `W06.P18.S265` - Run scoped and unscoped registry query suites across historical as-of boundaries and projection parity; `src/cadrumo/domain/calculations/registry/tests/; src/cadrumo/application/modelo/tests/`.
-- [ ] `W06.P18.S266` - Run the direct duplication runner and health-report suites and prove every unavailable or malformed execution is visibly amber rather than green; `src/cadrumo/tests/test_dev_audit_report.py`.
+- [x] `W06.P18.S178` - Run passphrase and recovery lifecycle suites against real encrypted vaults and secure input channels; `src/cadrumo/entrypoints/cli/_config/tests/`.
+- [x] `W06.P18.S179` - Run auth and certificate suites against real storage and provider boundaries; `src/cadrumo/application/auth/tests/`.
+- [x] `W06.P18.S180` - Run ledger attach, atomic invoice-link, LLM split inheritance, and failure-rollback suites and prove no generic evidence bypass or partial child commit can execute; `src/cadrumo/application/ledger/tests/`.
+- [x] `W06.P18.S181` - Run application and live CLI profile-export suites across real fresh processes, target contention, schema-derived SAR categories, and every crash window; `src/cadrumo/application/user_profile/tests/; src/cadrumo/entrypoints/cli/tests/test_profile_export_roundtrip.py; src/cadrumo/entrypoints/cli/tests/test_profile_subject_access_request.py`.
+- [x] `W06.P18.S182` - Run evidence service and modelo audit suites and prove the replay method, command, schema, event, tests, and documentation cannot execute or be discovered; `src/cadrumo/application/evidence/tests/test_evidence.py; src/cadrumo/entrypoints/cli/tests/test_audit_verbs.py`.
+- [x] `W06.P18.S183` - Run MCP dispatch, identity, input-schema, risk, mutability, and telemetry parity suites; `src/cadrumo/entrypoints/mcp/tests/`.
+- [x] `W06.P18.S241` - Run hashing vector, truncation, file-retry, network-stream, mirror-key, and AST recurrence suites for all 18 one-shot and four reducible call sites; `src/cadrumo/core/tests/; src/cadrumo/adapters/; src/cadrumo/application/; src/cadrumo/domain/; src/cadrumo/entrypoints/mcp/tests/`.
+- [x] `W06.P18.S262` - Run namespace registry and non-vacuous production adoption suites and reject duplicate declarations across every production root; `src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py; src/cadrumo/application/tests/test_namespace_registry_adoption.py`.
+- [x] `W06.P18.S263` - Run filed single, bulk, source, history-ordering, and strict IVA suites against real persisted observations and artefacts; `src/cadrumo/application/live/tests/`.
+- [x] `W06.P18.S264` - Run the typed LLM review workflow and both CLI routing modes against real persistence and subprocess model boundaries; `src/cadrumo/application/ledger/tests/; src/cadrumo/entrypoints/cli/tests/`.
+- [x] `W06.P18.S265` - Run scoped and unscoped registry query suites across historical as-of boundaries and projection parity; `src/cadrumo/domain/calculations/registry/tests/; src/cadrumo/application/modelo/tests/`.
+- [x] `W06.P18.S266` - Run the direct duplication runner and health-report suites and prove every unavailable or malformed execution is visibly amber rather than green; `src/cadrumo/tests/test_dev_audit_report.py`.
 
 ### Phase `W06.P19` - Run whole-surface conformance and duplication audits
 
