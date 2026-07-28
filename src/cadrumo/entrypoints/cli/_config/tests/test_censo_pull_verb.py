@@ -52,7 +52,7 @@ def _censo_commands() -> dict[str, Any]:
     command mapping, not the class identity.
     """
     group = typer.main.get_command(_censo_file.censo_app)
-    commands = group.commands
+    commands = group.commands  # ty: ignore[unresolved-attribute]  # reason: Typer's vendored Command carries .commands but is not a click.Group subclass
     assert commands, "the censo group exposes no subcommands"
     return commands
 

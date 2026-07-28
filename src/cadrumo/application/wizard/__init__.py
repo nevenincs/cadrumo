@@ -102,8 +102,6 @@ from ._status import (
 from ._widgets import validate_widget_answer
 
 __all__ = [
-    "COTEJO_LOCALE_KEYS",
-    "COTEJO_SECTION_ID",
     "DESCENDANTS_COUNT_PAGE_ID",
     "DESCENDANTS_GROUP_ID",
     "DESCENDANT_DOOR_LOCALE_KEYS",

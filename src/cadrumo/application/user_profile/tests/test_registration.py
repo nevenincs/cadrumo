@@ -20,6 +20,8 @@ It is the regression for exactly that defect.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from ....adapters.persistence.storage.errors import MasterKeyPassphraseMismatchError
@@ -44,7 +46,7 @@ _WRONG_PASSPHRASE = "not-the-operator-chosen-secret"  # noqa: S105 - synthetic t
 # ── the credential actually protects the bucket ─────────────────────────────
 
 
-def test_operator_passphrase_keys_the_bucket_not_the_ambient_setting(tmp_path) -> None:
+def test_operator_passphrase_keys_the_bucket_not_the_ambient_setting(tmp_path: Path) -> None:
     """The registered bucket answers to the operator's passphrase alone.
 
     The fixture configures an ambient ``cadrumo_secret_passphrase``. If the
@@ -78,7 +80,7 @@ def test_operator_passphrase_keys_the_bucket_not_the_ambient_setting(tmp_path) -
             ).get_master_key()
 
 
-def test_registration_creates_an_addressable_profile_with_no_tax_facts(tmp_path) -> None:
+def test_registration_creates_an_addressable_profile_with_no_tax_facts(tmp_path: Path) -> None:
     """A profile exists from a label and a passphrase — no tax data required.
 
     This is the paradigm the door exists to serve: creation is instantaneous
@@ -109,14 +111,14 @@ def test_registration_creates_an_addressable_profile_with_no_tax_facts(tmp_path)
 # ── refusals ────────────────────────────────────────────────────────────────
 
 
-def test_blank_label_is_refused_before_any_bucket_is_created(tmp_path) -> None:
+def test_blank_label_is_refused_before_any_bucket_is_created(tmp_path: Path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         with pytest.raises(ProfileRegistrationError):
             register_profile_with_credentials(label="   ", passphrase=_OPERATOR_PASSPHRASE)
         assert not list(storage_root.glob("*/manifest.json")), "no bucket may survive a refused registration"
 
 
-def test_short_passphrase_is_refused_before_any_bucket_is_created(tmp_path) -> None:
+def test_short_passphrase_is_refused_before_any_bucket_is_created(tmp_path: Path) -> None:
     """The refusal lands before the span, so no half-made profile is stranded.
 
     The provider would refuse a short passphrase on its own, but only once
@@ -130,7 +132,7 @@ def test_short_passphrase_is_refused_before_any_bucket_is_created(tmp_path) -> N
         assert not list(storage_root.glob("*/manifest.json")), "no bucket may survive a refused registration"
 
 
-def test_duplicate_label_is_refused(tmp_path) -> None:
+def test_duplicate_label_is_refused(tmp_path: Path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(label="Same Label", passphrase=_OPERATOR_PASSPHRASE)
         with pytest.raises(ProfileAlreadyRegisteredError):
