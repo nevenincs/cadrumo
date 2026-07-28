@@ -899,6 +899,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
                 storage_state_path=storage_state_path,
                 dni_nie=dni_nie,
                 page=page,
+                target_path=target_path,
             )
             context_closed = await self._close_context(context, reason="fresh-login cleanup")
             self._context = None if context_closed else context
@@ -1013,6 +1014,44 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
             ) from exc
         return verification_code
 
+    def _salvageable_landing_url(self, observed_url: str | None, *, target_path: str) -> str | None:
+        """Return ``observed_url`` when it is a landing a later probe may reuse, else ``None``.
+
+        A salvaged session's recorded landing URL is not decoration: it
+        becomes :attr:`ClaveMovilSessionDetail.landing_url`, which
+        :meth:`_verify_in_work` resolves as the probe target when the caller
+        names none. So whatever is recorded here is navigated to on the next
+        resume.
+
+        A failing fresh login is, by construction, still somewhere in the
+        Cl@ve flow — the access selector, the representation dialogue, or the
+        push-wait page. Recording one of those makes the salvaged session
+        probe back into the flow it was salvaged out of, and
+        :meth:`_is_authenticated_aeat_landing` refuses every Cl@ve marker, so
+        that probe cannot report a valid session however live the cookies
+        are. A salvaged session recorded that way is therefore rejected on
+        every resume: the repair persists a session the reuse path is
+        guaranteed to refuse.
+
+        Recording ``None`` does not promise the resume succeeds. It gives the
+        salvaged session the ordinary persisted-session route — the selector
+        URL for the default target, which AEAT dispatches through when the
+        cookies are still good — rather than a target whose refusal is
+        settled before the navigation runs.
+
+        Args:
+            observed_url: The URL the failing page was on, if any.
+            target_path: The path the login was navigating toward.
+
+        Returns:
+            The observed URL when it is an authenticated AEAT landing, else ``None``.
+        """
+        if not observed_url:
+            return None
+        if not self._is_authenticated_aeat_landing(landing_url=observed_url, target_path=target_path):
+            return None
+        return observed_url
+
     async def _salvage_session_before_teardown(
         self,
         context: BrowserContextLike | None,
@@ -1020,6 +1059,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
         storage_state_path: Path,
         dni_nie: str,
         page: BrowserPageLike | None,
+        target_path: str,
     ) -> None:
         """Persist whatever session the failing context holds, if any.
 
@@ -1040,6 +1080,17 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
         through to a fresh login, which is exactly what happens today.
         The upside is asymmetric: at worst a wasted probe, at best the
         operator keeps the approval they already gave.
+
+        The landing URL is recorded only when a later probe may reuse it;
+        :meth:`_salvageable_landing_url` states why a Cl@ve-flow URL is
+        dropped rather than stored.
+
+        Args:
+            context: The failing browser context, if one was created.
+            storage_state_path: Encrypted session path to write.
+            dni_nie: The identity the login was run for.
+            page: The failing page, if one was opened.
+            target_path: The path the login was navigating toward.
         """
         if context is None:
             return
@@ -1057,7 +1108,10 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
                 storage_state_sha256=_session_store.storage_state_sha256(storage_state),
                 used_non_qr_fallback=self._settings.cadrumo_clave_prefer_non_qr,
                 verification_code=None,
-                landing_url=getattr(page, "url", None),
+                landing_url=self._salvageable_landing_url(
+                    getattr(page, "url", None),
+                    target_path=target_path,
+                ),
             )
             self._persist_session(storage_state_path, storage_state=storage_state, metadata=metadata)
         except Exception as exc:
