@@ -29,8 +29,10 @@ than delivered. Neither ever reached a package index, but both were downloadable
 from the source forge for weeks, so both are burned.
 
 See Also:
+    :func:`read_ledger`
+        The reader, as a pure function of the ledger file it is handed.
     :func:`burned_versions`
-        The ledger contents, parsed and validated.
+        The shipped ledger's contents, parsed and validated.
     :func:`is_burned`
         The membership question the identity guard asks.
 """
@@ -91,18 +93,33 @@ def _parse_entry(raw: object, *, index: int) -> BurnedVersion:
     return BurnedVersion(version=version, burned_on=burned_on, reason=reason)
 
 
-@lru_cache(maxsize=1)
-def burned_versions() -> tuple[BurnedVersion, ...]:
-    """Return every burned version, in ledger order.
+def read_ledger(path: Path) -> tuple[BurnedVersion, ...]:
+    """Return every burned version recorded at ``path``, in ledger order.
+
+    The reader is a pure function of the file it is handed: which ledger to read
+    is the caller's decision, so refusing a malformed ledger can be exercised
+    against a real file rather than by re-pointing a module global.
 
     Refuses a duplicate version outright. A number appearing twice means two
     different burns claim the same version with different evidence, and there is
     no safe way to choose between them.
+
+    Args:
+        path: The ledger JSON document to parse.
+
+    Returns:
+        Every :class:`BurnedVersion` in ``path``, in the order the file lists
+        them.
+
+    Raises:
+        BurnedVersionLedgerError: If the ledger is absent, is not valid JSON,
+            does not carry a ``burned`` list, holds an under-specified entry, or
+            names one version more than once.
     """
     try:
-        payload = json.loads(LEDGER_PATH.read_text(encoding=_UTF_8))
+        payload = json.loads(path.read_text(encoding=_UTF_8))
     except FileNotFoundError as exc:
-        raise BurnedVersionLedgerError(f"burned-version ledger is absent at {LEDGER_PATH}") from exc
+        raise BurnedVersionLedgerError(f"burned-version ledger is absent at {path}") from exc
     except json.JSONDecodeError as exc:
         raise BurnedVersionLedgerError(f"burned-version ledger is not valid JSON: {exc}") from exc
     if not isinstance(payload, dict) or not isinstance(payload.get("burned"), list):
@@ -114,6 +131,16 @@ def burned_versions() -> tuple[BurnedVersion, ...]:
             raise BurnedVersionLedgerError(f"burned-version ledger lists {entry.version} more than once")
         seen.add(entry.version)
     return entries
+
+
+@lru_cache(maxsize=1)
+def burned_versions() -> tuple[BurnedVersion, ...]:
+    """Return every version the shipped ledger burns, in ledger order.
+
+    Returns:
+        The parsed contents of :data:`LEDGER_PATH`.
+    """
+    return read_ledger(LEDGER_PATH)
 
 
 def is_burned(version: str) -> bool:

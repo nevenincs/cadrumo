@@ -9,156 +9,116 @@ performance nit: a snapshot pinned from before a registry change decides which
 revision's norms a filing is computed under, so a stale one computes a filing
 against superseded law with no signal to the operator.
 
-These tests use two real registry trees and two real authorities. Nothing about
-the snapshot resolution is substituted; only the process resource registry is
-re-pointed, which is what a resource-registry reset does in production.
+The property this module owns is therefore narrow and exact: *a resolved
+snapshot's lifetime must be the authority's, not the process's*. Everything below
+runs against the real process authority over the real bundled registry. No
+collaborator is substituted and nothing here is a test double.
 
-Known debt: the re-pointing goes through ``monkeypatch``, so this module is the
-one site keeping ``tests.test_monkeypatch_inventory`` red. It is recorded rather
-than fixed because both obvious fixes are wrong, and the second one is wrong in
-a way that looks right.
+**How the behavioural proof works, and why it is shaped this way.** A memo above
+:func:`_load_registry_snapshot` is invisible while the authority's own snapshot
+cache is warm, because both layers hand back the same object. It becomes visible
+the instant the layer below is invalidated: a memo-free resolution rebuilds the
+snapshot, yielding a new object, while a memoized one returns the object it
+pinned. So the test resolves once, evicts exactly that entry from the authority's
+cache, and resolves again, asserting the second result is a rebuilt object. The
+eviction is invalidation of real state, not substitution of a collaborator:
+nothing is re-pointed, replaced, or restored, and the two resolutions carry
+byte-identical arguments.
 
-There is no honest seam today. ``core.resources.resources()`` is a cached
-factory, ``ResourceRegistry`` is frozen and slotted, and its ``modelos`` slot is
-built from a default factory rather than from Settings, so no Settings override
-can re-point it. Swapping ``monkeypatch.setattr`` for a hand-rolled
-save/restore on the same private target would only hide the construct from the
-inventory's AST matcher, which is evasion rather than a fix.
+**Why not the shapes that were rejected.** This module previously re-pointed the
+process resource registry at a second authority over a second copy of the
+registry tree, so one ``(modelo, period)`` could resolve two ways. That worked
+only through ``monkeypatch``, and the obvious removals are each wrong. A
+hand-rolled save/restore on the same private target hides the construct from the
+inventory's AST matcher instead of removing it. A scoped ``override_resources``
+in ``core.resources`` is the exact shape ``tests.test_override_seam_singularity``
+forbids with no allowlist and no baseline; ``override_settings`` is sanctioned
+only because it has real production callers scoping a call tree, and a seam
+existing for one test is a test-hook setter rather than production dependency
+injection. The third shape carries a trap worth keeping on the record: threading
+an ``authority`` parameter through would let a naive ``@cache`` key on
+``(modelo, period, authority)`` instead of ``(modelo, period)``, so a
+two-distinct-authorities setup stops colliding and the behavioural test passes
+with the defect present — removing the substitution that way silently guts the
+test. The eviction proof is immune to that trap precisely because it varies
+nothing a memo could key on.
 
-Adding a scoped ``override_resources`` to ``core.resources`` was tried and
-reverted: ``tests.test_override_seam_singularity`` forbids that shape with no
-allowlist and no baseline, because two seams of exactly that shape shipped and
-hid before. ``override_settings`` is sanctioned only because it has real
-production callers scoping a call tree; a seam existing for one test is, in
-that gate's words, a test-hook setter rather than production dependency
-injection.
-
-**The remaining option carries a trap.** That gate points instead at threading
-the dependency through a parameter, and ``_load_registry_snapshot`` has exactly
-one production caller (``build_draft``), with the sibling
-:mod:`adapters.inbound.declaracion._parser` already using that pattern. But
-adding an ``authority`` parameter would let a naive ``@cache`` key on
-``(modelo, period, authority)`` instead of ``(modelo, period)``, so the
-two-distinct-authorities setup below would stop colliding and the behavioural
-test would pass with the defect present. Threading the parameter therefore
-WEAKENS the very test being migrated unless it is restructured around a single
-authority over a mutating tree — which then also depends on the authority's own
-fingerprint invalidation, and that must be confirmed rather than assumed or the
-result is a false green.
-
-Anyone taking this on owns that restructuring and the confirmation, not just
-the signature change.
+**What is deliberately not re-asserted here.** That a changed registry tree
+re-derives through a freshly loaded authority is the registry layer's own
+contract, proven there against a minimal synthetic tree by
+``test_authority_uses_fingerprint_backed_process_cache_and_invalidates`` in
+:mod:`cadrumo.domain.calculations.registry.tests.test_authority`. Re-proving it
+at this layer would mean copying and re-validating the whole bundled tree —
+minutes per run — to restate a fact the owning layer already covers.
 """
 
 from __future__ import annotations
 
-import shutil
-from dataclasses import dataclass
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
 
 from ....core import Period
-from ....core.resources import bundled_path
-from ....domain.calculations.registry import ValidatedRegistryAuthority
+from ....core.resources import resources
 from .. import _load_registry_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 if TYPE_CHECKING:
-    from ....domain.calculations.registry import CasillaDefinition
+    from ....domain.calculations.registry import RegistrySnapshot, ValidatedRegistryAuthority
 
-_EDIT_MARKER = "FRESHNESS-PROBE "
 _MODELO = "130"
 _PERIOD = Period(filing_year=2024, code="1T")
 
 
-@dataclass(frozen=True)
-class _ModelosSlot:
-    """The resource registry's ``modelos`` slot, holding a real authority.
-
-    Named a slot rather than a stub because nothing here is a test double: it
-    carries a real :class:`ValidatedRegistryAuthority`, and the only thing
-    substituted is WHICH authority instance the filing module reaches --
-    exactly what a resource-registry reset changes in production. Calling it a
-    stub claimed a fake this test does not use, and tripped the gate that bans
-    them.
-    """
-
-    authority: ValidatedRegistryAuthority
-
-
-@dataclass(frozen=True)
-class _ResourcesSlot:
-    modelos: _ModelosSlot
-
-
-def _copy_registry(destination: Path) -> Path:
-    """Copy the bundled registry tree to ``destination`` and return the new root."""
-    root = destination / "aeat"
-    shutil.copytree(bundled_path("registry", "aeat"), root)
-    return root
-
-
-def _first_casilla_fragment(root: Path) -> Path:
-    """Return the first casilla fragment of the modelo under test."""
-    casillas_dir = next((root / "modelos" / _MODELO).rglob("casillas"))
-    fragments = sorted(casillas_dir.glob("*.toml"))
-    assert fragments, f"registry copy carries no casilla fragments under {casillas_dir}"
-    return fragments[0]
-
-
-def _mark_one_casilla_label(root: Path) -> None:
-    """Prefix exactly one casilla label in ``root`` so the change is observable."""
-    fragment = _first_casilla_fragment(root)
-    original = fragment.read_text(encoding="utf-8")
-    edited = original.replace('label = "', f'label = "{_EDIT_MARKER}', 1)
-    assert edited != original, f"no casilla label found to mark in {fragment}"
-    fragment.write_text(edited, encoding="utf-8")
-
-
-def _authority_for(root: Path) -> ValidatedRegistryAuthority:
-    return ValidatedRegistryAuthority.load(root, source_root=bundled_path())
-
-
-def _marked_casilla_ids(casillas: tuple[CasillaDefinition, ...]) -> list[str]:
-    return [str(casilla.id) for casilla in casillas if casilla.label.startswith(_EDIT_MARKER)]
-
-
-def test_snapshot_resolution_follows_a_changed_registry_tree(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
+def _evict_from_the_authority_cache(
+    authority: ValidatedRegistryAuthority,
+    snapshot: RegistrySnapshot,
 ) -> None:
-    """A second read after the registry changes must reflect the change, not a memo.
+    """Drop exactly the authority cache entry currently holding ``snapshot``.
+
+    Matched on the cached value rather than on a reconstructed key, so the
+    eviction stays correct if the authority's cache key ever gains a dimension.
+    When no entry matches, nothing is evicted and the caller's next resolution
+    returns the same object, which fails the assertion loudly rather than
+    reporting a green on an eviction that never happened.
+    """
+    for key, cached in list(authority._snapshots.items()):
+        if cached is snapshot:
+            del authority._snapshots[key]
+
+
+def test_snapshot_resolution_is_not_memoized_above_the_authority() -> None:
+    """Invalidating the authority's snapshot cache must reach the filing resolver.
 
     Fails loudly if a fingerprint-blind cache is reintroduced on
-    ``_load_registry_snapshot``: the second call would return the first tree's
-    snapshot, and the marked label would be invisible.
+    ``_load_registry_snapshot``: that memo would outlive the authority's own
+    cache entry, so the second resolution would return the pinned object instead
+    of a rebuilt one.
     """
-    unchanged_root = _copy_registry(tmp_path / "before")
-    changed_root = _copy_registry(tmp_path / "after")
-    _mark_one_casilla_label(changed_root)
+    authority = resources().modelos.authority
 
-    monkeypatch.setattr(
-        "cadrumo.application.filing._resources",
-        lambda: _ResourcesSlot(modelos=_ModelosSlot(authority=_authority_for(unchanged_root))),
-    )
-    before = _load_registry_snapshot(modelo=_MODELO, period=_PERIOD)
-    assert not _marked_casilla_ids(before.revision.casillas), (
-        "the unchanged registry copy already carries the probe marker; the fixture is not a control"
+    first = _load_registry_snapshot(modelo=_MODELO, period=_PERIOD)
+    warm = _load_registry_snapshot(modelo=_MODELO, period=_PERIOD)
+    assert warm is first, (
+        "control: while the authority holds this snapshot, every resolution must hand back "
+        "that one object; if it does not, object identity cannot distinguish a rebuild from "
+        "a memo and the assertion below would prove nothing"
     )
 
-    monkeypatch.setattr(
-        "cadrumo.application.filing._resources",
-        lambda: _ResourcesSlot(modelos=_ModelosSlot(authority=_authority_for(changed_root))),
-    )
-    after = _load_registry_snapshot(modelo=_MODELO, period=_PERIOD)
+    _evict_from_the_authority_cache(authority, first)
+    rebuilt = _load_registry_snapshot(modelo=_MODELO, period=_PERIOD)
 
-    assert _marked_casilla_ids(after.revision.casillas), (
-        "registry snapshot resolution served a stale snapshot after the registry tree changed: "
-        "a cache above the loader is keyed without the registry-tree fingerprint, so a filing "
-        "would be computed under a superseded revision's norms"
+    assert rebuilt is not first, (
+        "registry snapshot resolution returned the snapshot it had resolved before the "
+        "authority's cache entry was evicted: a cache above the loader is keyed without the "
+        "registry-tree fingerprint, so it outlives the authority that owns invalidation and "
+        "a filing would be computed under a superseded revision's norms"
+    )
+    assert rebuilt.revision.id == first.revision.id, (
+        f"rebuilding the snapshot changed the resolved revision from {first.revision.id!r} to "
+        f"{rebuilt.revision.id!r}; the registry tree did not change, so resolution is not "
+        "deterministic for one filing context"
     )
 
 
@@ -177,22 +137,14 @@ def test_snapshot_resolution_exposes_no_cache_handle() -> None:
         )
 
 
-def test_law_determined_resolution_is_preserved(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_law_determined_resolution_is_preserved() -> None:
     """Resolution stays driven by ``(modelo, filing_year, period)``.
 
     Two different filing years for the same period token must not collapse onto
     one another, and the resolved revision must be the one the registry's own
     temporal selection returns for that context.
     """
-    root = _copy_registry(tmp_path / "tree")
-    authority = _authority_for(root)
-    monkeypatch.setattr(
-        "cadrumo.application.filing._resources",
-        lambda: _ResourcesSlot(modelos=_ModelosSlot(authority=authority)),
-    )
+    authority = resources().modelos.authority
 
     for filing_year in (2023, 2024):
         period = Period(filing_year=filing_year, code="1T")
