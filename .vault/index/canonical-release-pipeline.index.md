@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#canonical-release-pipeline'
-date: '2026-07-27'
-modified: '2026-07-27'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-07-27-canonical-release-pipeline-P01-S01]]'
   - '[[2026-07-27-canonical-release-pipeline-P01-S02]]'
@@ -19,6 +19,7 @@ related:
   - '[[2026-07-27-canonical-release-pipeline-P05-S11]]'
   - '[[2026-07-27-canonical-release-pipeline-P05-S12]]'
   - '[[2026-07-27-canonical-release-pipeline-P06-S13]]'
+  - '[[2026-07-27-canonical-release-pipeline-P06-S14]]'
   - '[[2026-07-27-canonical-release-pipeline-P06-S15]]'
   - '[[2026-07-27-canonical-release-pipeline-P06-S16]]'
   - '[[2026-07-27-canonical-release-pipeline-P07-S17]]'
@@ -62,6 +63,7 @@ Auto-generated index of all documents tagged with `#canonical-release-pipeline`.
 - `2026-07-27-canonical-release-pipeline-P06-S16` - Run the fresh-context honesty review against the campaign closure summary and persist it as a vault audit with every surfaced item tracked as a new Step or formally deferred with a named follow-up, gate: the audit document exists under .vault/audit and uv run --no-sync vaultspec-core vault plan status reports no checked Step without an exec record
 - `2026-07-27-canonical-release-pipeline-P07-S17` - Wire the Homebrew and Scoop generator tests into the full-CI lane as a dedicated explicit-path serial invocation of packaging/homebrew/tests and packaging/scoop/tests, honoring their serial marker with a single-worker run rather than excluding it, sized into ci-full deliberately because their real sdist and wheel builds cost minutes that the per-push budget cannot absorb, gate: uv run --no-sync pytest packaging/homebrew/tests packaging/scoop/tests -q -n0 -m serial passes locally at 14 of 14 and a lane conformance test pins the ci-full invocation covering both paths
 - `2026-07-27-canonical-release-pipeline-P07-S18` - Add the lane-reachability gate asserting every test_*.py under the repository is selected by at least one declared pytest lane, computing reachability from pyproject testpaths, justfile recipes, and every workflow pytest invocation with both the path scope AND the marker expression modeled, since this incident's tests were excluded twice over, gate: uv run --no-sync pytest dev/ci/tests -q -k reachability passes and its injectable-root self-test plants an orphaned test file and asserts the gate reds
+- `2026-07-27-canonical-release-pipeline-P06-S14` - Remove the CI-refusal guard from the docs publisher in the same change that binds the consequence workflow to the protected docs environment, gate: uv run --no-sync pytest dev/deploy/tests -q passes with the guard's absence asserted and the build path exercised under CI markers, deployment against the live stack is BLOCKED on OP-3 and flagged non-local
 
 ### plan
 

@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#canonical-release-pipeline'
 date: '2026-07-27'
-modified: '2026-07-27'
+modified: '2026-07-28'
 tier: L2
 related:
   - '[[2026-07-27-canonical-release-pipeline-adr]]'
@@ -73,7 +73,7 @@ Extend the standing doc-privacy gate with the cross-project identifier class and
 Land the automated docs consequence workflow and retire the CI-refusal guard in the same change, both gated on the operator's OP-3 provisioning, then codify the bump-first runbook and the distribution-complete tripwire. Ordered last because it improves the pipeline rather than guarding it.
 
 - [x] `P06.S13` - Author the docs consequence workflow triggered on release published and by dispatch, running on the self-hosted fleet, reading the deploy role from an environment-scoped variable with zero stored credentials, alerting on failure and never blocking the release, gate: a workflow conformance test pins the trigger set, runner labels, OIDC permissions, and the absence of secret literals and passes locally, live execution is BLOCKED on OP-3 and flagged non-local; `.github/workflows/docs-publish.yml, dev/deploy/tests/`.
-- [ ] `P06.S14` - Remove the CI-refusal guard from the docs publisher in the same change that binds the consequence workflow to the protected docs environment, gate: uv run --no-sync pytest dev/deploy/tests -q passes with the guard's absence asserted and the build path exercised under CI markers, deployment against the live stack is BLOCKED on OP-3 and flagged non-local; `dev/deploy/docs_static_site.py, dev/deploy/frontend_static_site.py, dev/deploy/tests/`.
+- [x] `P06.S14` - Remove the CI-refusal guard from the docs publisher in the same change that binds the consequence workflow to the protected docs environment, gate: uv run --no-sync pytest dev/deploy/tests -q passes with the guard's absence asserted and the build path exercised under CI markers, deployment against the live stack is BLOCKED on OP-3 and flagged non-local; `dev/deploy/docs_static_site.py, dev/deploy/frontend_static_site.py, dev/deploy/tests/`.
 - [x] `P06.S15` - Codify the release runbook with the bump-first release-please step, the docs consequence, the distribution-complete tripwire, and the 0.1.0 first-version expectation, sweeping user docs where they describe the release flow, gate: uv run --no-sync pytest dev/docs/tests -m docs -q and the documented-command conformance test pass; `docs/, dev/docs/tests/`.
 - [x] `P06.S16` - Run the fresh-context honesty review against the campaign closure summary and persist it as a vault audit with every surfaced item tracked as a new Step or formally deferred with a named follow-up, gate: the audit document exists under .vault/audit and uv run --no-sync vaultspec-core vault plan status reports no checked Step without an exec record; `.vault/audit/`.
 
