@@ -56,3 +56,7 @@ Parallel command: `uv run --no-sync pytest -q -p no:cacheprovider -n auto --dist
 Collected 286, passed 286, failed 0, skipped 0. Exit line: `286 passed, 6 warnings in 84.81s`, exit code 0. HEAD at run time was `1437055950f5b8f4082d323578294fc32ad1d9fe`.
 
 Serial command: `uv run --no-sync pytest -q -p no:cacheprovider -n0 --tb=no -m "serial and not os_keychain and not external_tool and not perf" src/cadrumo/entrypoints/mcp/tests`. Collected 18, ran 17 passed, 1 skipped, 286 deselected. Exit line: `17 passed, 1 skipped, 286 deselected in 357.02s`, exit code 0. The skip is the POSIX-reparent session test, correctly deselected on Windows. The OS-keychain selection collected nothing.
+
+## Post-freeze re-run required — in-flight changes expand MCP scope
+
+Step reopened: three in-flight uncommitted files land directly inside `src/cadrumo/entrypoints/mcp/tests/`, the scope this Step runs: `mcp/_hitl.py` (new 36-line production module), `mcp/tests/test_hitl_and_live_write.py` (new 22-line suite), `mcp/tests/test_write_policy_mutability_parity.py` (new 28-line suite). Both new test files will increase the collected count from 286 parallel and the HITL module adds production behaviour the live-write gate will verify. Post-freeze re-run will record the updated count and exit line. The two root-cause fixes (`6b2edc7301`, `73f06fa1f2`) are committed and stable; the re-run is to capture the expanded suite, not to re-investigate those fixes.

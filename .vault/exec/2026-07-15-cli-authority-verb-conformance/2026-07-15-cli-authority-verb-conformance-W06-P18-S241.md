@@ -52,3 +52,7 @@ One incidental defect surfaced while reading the gate. Its module docstring name
 ## Re-measurement note at HEAD `1437055950`
 
 Both unrelated failures attributed above are closed at the current HEAD. The profile-keys registration defect is resolved by `6b2edc7301`; the combined-period-string gate is confirmed green by `84e55bde57`, which re-ran the gate at HEAD and found `1 passed` where the prior record had `1 failed`. Neither fix touches hashing; the hashing subject remains satisfied and the two unrelated failures no longer cloud the whole-directory result. The scope directories were not re-run in full at this HEAD, but the specific two failing tests are confirmed fixed by their respective owners.
+
+## Post-freeze re-run required — in-flight changes add tests inside S241 scope
+
+Step reopened: two in-flight uncommitted files land inside scope directories this Step covers. `src/cadrumo/application/operator_surface/tests/test_classification_parity.py` (new 38-line suite) falls inside the `application/` scope. `src/cadrumo/entrypoints/mcp/tests/test_write_policy_mutability_parity.py` (new 28-line suite) falls inside the `entrypoints/mcp/tests/` scope. Both expand the collected count; neither touches the hashing subject. The hashing verdict is satisfied and stable. Post-freeze re-run will record the updated count and exit line against a clean committed HEAD.
