@@ -466,9 +466,31 @@ class ConformanceRatchetCeilings(ConformanceModel):
     Every field is a BACKLOG or DEFECT count. Lowering one requires editing the
     committed baseline, which is the point: the edit is the visible record that
     the backlog moved.
+
+    Why the review backlog is TWO counters
+    --------------------------------------
+
+    ``unreviewed_revisions`` counts only the ``pending_review`` census, and the
+    stamp verb is DESIGNED to move it: an agent may write ``agent_reviewed``
+    freely, so a sweep across every revision drives that counter from the full
+    registry to zero while this audit stays green throughout. The governing
+    decision's whole rationale for a three-state vocabulary is that it makes the
+    backlog visible instead of laundering it into prose, and one gated counter
+    covering two of the three tiers reintroduces exactly that collapse at the
+    only place anything is enforced.
+
+    ``revisions_without_operator_review`` is therefore the counter CI protects.
+    It counts every revision whose declared status is not
+    :attr:`~cadrumo.core.RevisionReviewStatus.OPERATOR_REVIEWED`, so the stamp
+    verb cannot move it at all — that value is outside the vocabulary this CLI
+    will write, enforced at the writer's own boundary rather than by its type
+    hints. Agent review remains a real, visible axis on the coverage screen; it
+    is simply not progress against the operator backlog, because it is not the
+    same backlog.
     """
 
     unreviewed_revisions: int = Field(ge=0)
+    revisions_without_operator_review: int = Field(ge=0)
     revisions_without_engineered_by: int = Field(ge=0)
     grounding_findings: int = Field(ge=0)
     modelo_scope_classification_findings: int = Field(ge=0)
@@ -1166,9 +1188,19 @@ def render_audit(result: ConformanceAuditResult) -> str:
 
 
 def _current_ceilings(report: ConformanceReport) -> ConformanceRatchetCeilings:
-    """Project the report's shrink-only backlog and defect counters."""
+    """Project the report's shrink-only backlog and defect counters.
+
+    Both review counters read the same census, and the subtraction rather than a
+    second sum is deliberate: every revision the census does not record as
+    operator-reviewed lacks operator review, whatever tier it does declare, so a
+    fourth status added to the vocabulary tomorrow enrols itself in the operator
+    backlog instead of silently escaping it.
+    """
     return ConformanceRatchetCeilings(
         unreviewed_revisions=report.review_status_census.get(RevisionReviewStatus.PENDING_REVIEW.value, 0),
+        revisions_without_operator_review=(
+            report.revision_count - report.review_status_census.get(RevisionReviewStatus.OPERATOR_REVIEWED.value, 0)
+        ),
         revisions_without_engineered_by=report.revision_count - report.engineered_by_declared_count,
         grounding_findings=report.grounding_finding_count,
         modelo_scope_classification_findings=report.modelo_scope_classification_finding_count,

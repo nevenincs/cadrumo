@@ -5,6 +5,7 @@
     "modelo_scope_classification_findings": 24,
     "required_coverage_gap_rows": 0,
     "revisions_without_engineered_by": 90,
+    "revisions_without_operator_review": 90,
     "scope_diagnostics": 0,
     "unattributed_oracle_payloads": 0,
     "unmatched_oracle_evidence": 0,
@@ -20,7 +21,7 @@
     "declared_grounding_claims": 58,
     "reconciled_casillas": 1261
   },
-  "note": "First capture of the conformance ratchet, taken at HEAD 33129cc83f. Registry DATA and the bundled oracle corpus were both at HEAD with no working-tree modification, so no peer WIP is folded into these counters; peer edits were present on the registry schema and governance-stamp test modules only, which change no registry declaration. The M303 prorrata oracle rename and its scenario-input split had just landed, which is why unattributed_oracle_payloads and grounding_findings both capture as zero after reading 1 and 3 respectively earlier the same day.",
+  "note": "First capture of the conformance ratchet, taken at HEAD 33129cc83f. Registry DATA and the bundled oracle corpus were both at HEAD with no working-tree modification, so no peer WIP is folded into these counters; peer edits were present on the registry schema and governance-stamp test modules only, which change no registry declaration. The M303 prorrata oracle rename and its scenario-input split had just landed, which is why unattributed_oracle_payloads and grounding_findings both capture as zero after reading 1 and 3 respectively earlier the same day. Amended 2026-07-28 to seed the new revisions_without_operator_review ceiling. That key alone was added, at the value a real audit --record measured (90, every revision in the tree, since nothing carries an operator signoff); no other counter was re-recorded. A full capture at that moment would additionally have raised the declared_grounding_claims floor from 58 to 59, which belongs to the peer step that landed the M303 prorrata percentage oracle and is that step's record to make, not this one's.",
   "recorded_at": "2026-07-27",
   "review_cadence": "revisit whenever a stamping or grounding campaign lands",
   "source": "python -m dev.registry.conformance audit --record"

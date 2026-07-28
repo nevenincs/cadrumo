@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import json
 import shutil
+from collections.abc import Sequence
 from datetime import date
 from pathlib import Path
 
@@ -52,6 +53,7 @@ from ..registry.conformance._stamp import (
 from ..registry.conformance.cli import app
 from ..registry.conformance.manager import (
     NOT_MEASURED,
+    ConformanceBaseline,
     ConformanceReport,
     baseline_path,
     build_conformance_report,
@@ -59,6 +61,8 @@ from ..registry.conformance.manager import (
     check_conformance_ratchet,
     load_baseline,
     load_conformance_report,
+    record_baseline,
+    render_audit,
     render_coverage,
     render_report,
     vacuity_warning,
@@ -378,6 +382,122 @@ def test_recording_a_baseline_requires_a_stated_reason(tmp_path: Path) -> None:
 
     assert result.exit_code != 0
     assert not (tmp_path / "new.json").exists()
+
+
+def _with_review_statuses(
+    report: ConformanceReport,
+    statuses: Sequence[RevisionReviewStatus],
+) -> ConformanceReport:
+    """Return the real report with every row's declared review status replaced.
+
+    The census is recomputed from the rows rather than set independently, so the
+    two never disagree and a counter reading the census is measuring the same
+    tree the rows describe. Only the governance axis moves; every other fact
+    stays the one the real registry produced.
+    """
+    rows = tuple(
+        row.model_copy(update={"review_status": status.value})
+        for row, status in zip(report.rows, statuses, strict=True)
+    )
+    census = {member.value: 0 for member in RevisionReviewStatus}
+    for status in statuses:
+        census[status.value] += 1
+    return report.model_copy(update={"rows": rows, "review_status_census": census})
+
+
+def _ceiling_line(rendered: str, counter: str) -> str:
+    return next(line for line in rendered.splitlines() if line.startswith(f"ceiling counter={counter} "))
+
+
+def _baseline_captured_from(report: ConformanceReport, path: Path) -> ConformanceBaseline:
+    """Capture a baseline from ``report`` through the real recording path."""
+    record_baseline(report, note="captured by the conformance CLI gate", recorded_at="2026-07-28", path=path)
+    return load_baseline(path)
+
+
+def test_an_agent_review_sweep_empties_the_pending_ceiling_but_not_the_operator_ceiling(
+    validated_report: ConformanceReport,
+) -> None:
+    """The act the CLI is DESIGNED to allow must not read as progress on the gated number.
+
+    ``stamp --review-status agent_reviewed`` is a legitimate verb an agent may
+    run across every revision in the tree. Doing so drives the pending census to
+    zero. If that census is the only gated review counter, the one number CI
+    protects reaches zero without a single human signoff, and the three-state
+    vocabulary collapses back into the two-state laundering it was introduced to
+    remove. The operator counter must sit still through exactly that sweep.
+    """
+    total = validated_report.revision_count
+    swept = _with_review_statuses(validated_report, [RevisionReviewStatus.AGENT_REVIEWED] * total)
+
+    rendered = render_audit(check_conformance_ratchet(swept, load_baseline()))
+
+    assert "ceiling counter=unreviewed_revisions current=0 " in rendered
+    assert f"current={total} " in _ceiling_line(rendered, "revisions_without_operator_review")
+    # The sweep is not itself a regression: nothing grew, so the audit still
+    # passes. What must not happen is the operator backlog reading as cleared.
+    assert check_conformance_ratchet(swept, load_baseline()).passed
+
+
+def test_a_lost_operator_signoff_reds_the_operator_ceiling_the_pending_ceiling_cannot_see(
+    validated_report: ConformanceReport,
+    tmp_path: Path,
+) -> None:
+    """The decisive flip: one regression, invisible to the old counter, caught by the new.
+
+    Both states are fully agent-or-operator reviewed, so the pending census is
+    zero in each and ``unreviewed_revisions`` is flat across the regression. The
+    only difference is that one revision's operator signoff became an agent
+    review. Before this ceiling existed the audit passed on that; it must now
+    fail, and it must name the counter that moved.
+    """
+    total = validated_report.revision_count
+    signed = _with_review_statuses(
+        validated_report,
+        [RevisionReviewStatus.OPERATOR_REVIEWED] * 10 + [RevisionReviewStatus.AGENT_REVIEWED] * (total - 10),
+    )
+    regressed = _with_review_statuses(
+        validated_report,
+        [RevisionReviewStatus.OPERATOR_REVIEWED] * 9 + [RevisionReviewStatus.AGENT_REVIEWED] * (total - 9),
+    )
+    baseline = _baseline_captured_from(signed, tmp_path / "signed.json")
+
+    assert check_conformance_ratchet(signed, baseline).passed
+
+    result = check_conformance_ratchet(regressed, baseline)
+    assert not result.passed
+    assert any(
+        item == f"revisions_without_operator_review grew from {total - 10} to {total - 9}"
+        for item in result.ratchet_violations
+    ), result.ratchet_violations
+    # The old counter is blind to it: zero pending in both states.
+    assert all("unreviewed_revisions" not in item for item in result.ratchet_violations)
+
+
+def test_the_operator_ceiling_gates_the_real_cli_at_the_committed_baseline(tmp_path: Path) -> None:
+    """The new counter has teeth in the shipped verb, not only in a fold.
+
+    Same command, same tree, one lowered ceiling: the exit code flips. Without
+    this the field could be committed, rendered, and never actually consulted by
+    the gate.
+    """
+    seeded = _baseline_with(tmp_path / "lowered.json", ceiling="revisions_without_operator_review", delta=-1)
+    result = CliRunner().invoke(app, ["audit", "--check", "--baseline", str(seeded)])
+
+    assert result.exit_code == 1, result.stdout
+    assert "revisions_without_operator_review grew" in result.stdout
+
+
+def test_the_committed_baseline_seeds_the_operator_backlog_at_its_true_value() -> None:
+    """A ceiling seeded above the measurement would license a silent regression.
+
+    Nothing in the tree carries an operator signoff today, so the honest ceiling
+    is every composed revision. A committed value larger than that would leave
+    headroom for revisions to lose their signoff without the gate noticing.
+    """
+    baseline = load_baseline()
+
+    assert baseline.ceilings.revisions_without_operator_review == baseline.floors.composed_revisions
 
 
 def _baseline_with(path: Path, *, ceiling: str | None = None, floor: str | None = None, delta: int = 0) -> Path:
