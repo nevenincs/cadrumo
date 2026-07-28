@@ -161,6 +161,24 @@ _MARKETPLACE_PLUGINS_SUBDIR = "plugins"
 # The relative source the marketplace manifest points at, resolved from the
 # marketplace repo root (the directory holding ``.claude-plugin/``).
 _MARKETPLACE_PLUGIN_SOURCE = f"./{_MARKETPLACE_PLUGINS_SUBDIR}/{_PLUGIN_NAME}"
+# The prior plugin identity this product retires, declared as data the publisher
+# reads at merge time.
+#
+# It rides a SIDECAR beside the manifest rather than a field inside it, and the
+# reason is measured rather than stylistic: the manifest is governed by the live
+# ``claude plugin validate --strict`` oracle, and that oracle REJECTS the field.
+# Two marketplace trees generated from this emitter, identical but for the key,
+# validate as pass (exit 0) and fail (exit 1, "Unknown field 'supersedes'.
+# Claude Code ignores it at load time"). So the manifest is the wrong home twice
+# over: the declaration would be ignored by the very consumer the manifest
+# exists for, and carrying it would force a choice between a red gate and
+# retiring the oracle. The sidecar keeps the served manifest byte-shaped exactly
+# as the validator accepts while the declaration still ships with every cohort,
+# which is the property the retirement rests on -- it is re-verified on every
+# publication, so a replay, a stale manifest, or a stranger reclaiming the
+# abandoned name is refused again rather than once.
+_MARKETPLACE_SUPERSEDES_MANIFEST = "supersedes.json"
+_MARKETPLACE_SUPERSEDED_PLUGINS = ("aeat",)
 
 
 def _plugin_version() -> str:
@@ -583,10 +601,21 @@ def materialise_marketplace(
     manifest and the plugin it serves cannot drift. ``version`` and
     ``persona_default`` pass straight through to the plugin emission.
 
+    Also emits the ``.claude-plugin/supersedes.json`` sidecar naming the prior
+    plugin identities this product retires, which the publisher reads at merge
+    time. It is a sidecar rather than a manifest field because the strict plugin
+    validator rejects unknown manifest fields; see the constant's comment for the
+    measurement.
+
     Returns:
         :class:`MarketplaceManifest` describing the marketplace tree written.
     """
     _write_json(output_dir / _PLUGIN_DIR, _MARKETPLACE_MANIFEST, _marketplace_manifest_document())
+    _write_json(
+        output_dir / _PLUGIN_DIR,
+        _MARKETPLACE_SUPERSEDES_MANIFEST,
+        {"supersedes": list(_MARKETPLACE_SUPERSEDED_PLUGINS)},
+    )
     plugin = materialise_plugin(
         output_dir / _MARKETPLACE_PLUGINS_SUBDIR / _PLUGIN_NAME,
         version=version,

@@ -36,6 +36,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -43,6 +44,12 @@ from typing import Any, Final
 
 _UTF_8: Final[str] = "utf-8"
 _INDEX_RELATIVE: Final[Path] = Path(".claude-plugin") / "marketplace.json"
+# The retirement declaration rides beside the manifest, not inside it, because
+# ``claude plugin validate --strict`` rejects an unknown manifest field and
+# Claude Code ignores it at load time. The generator's constant comment carries
+# the measurement; this constant is the reading half of the same contract.
+_SUPERSEDES_RELATIVE: Final[Path] = Path(".claude-plugin") / "supersedes.json"
+_SUPERSEDES_KEY: Final[str] = "supersedes"
 
 
 class MarketplacePublishError(RuntimeError):
@@ -57,6 +64,34 @@ def _read_index(path: Path) -> dict[str, Any]:
     if not isinstance(document, dict):
         raise MarketplacePublishError(f"{path} must contain a JSON object")
     return document
+
+
+def _read_cohort_index(cohort: Path) -> dict[str, Any]:
+    """Read a cohort's marketplace index with its supersession sidecar overlaid.
+
+    The cohort's manifest and the served one differ in exactly one respect: the
+    cohort declares which prior identities it retires, and the served manifest
+    must not, because the strict plugin validator rejects that field. Keeping the
+    two files separate on disk but overlaying them here means every consumer
+    below works on one dict and none of them needs to know where the declaration
+    was stored.
+
+    Declaring it in both places is refused rather than resolved. A cohort built
+    before the sidecar existed carries it in the manifest and still works; one
+    carrying both is ambiguous about which the publisher obeys, and silently
+    preferring either is how a retirement quietly stops happening.
+    """
+    index = _read_index(cohort / _INDEX_RELATIVE)
+    sidecar_path = cohort / _SUPERSEDES_RELATIVE
+    if not sidecar_path.is_file():
+        return index
+    if _SUPERSEDES_KEY in index:
+        raise MarketplacePublishError(
+            f"cohort declares {_SUPERSEDES_KEY!r} in both {_INDEX_RELATIVE.as_posix()} and "
+            f"{_SUPERSEDES_RELATIVE.as_posix()}; the sidecar is the only home, because the served "
+            "manifest must keep the shape the strict plugin validator accepts"
+        )
+    return {**index, _SUPERSEDES_KEY: _read_index(sidecar_path).get(_SUPERSEDES_KEY)}
 
 
 def _declared_plugins(index: dict[str, Any], *, source: Path) -> list[dict[str, Any]]:
@@ -204,6 +239,11 @@ def merge_marketplace_index(
         if isinstance(entry, dict) and entry.get("name") not in owned and entry.get("name") not in superseded
     ]
     document = dict(cohort_index)
+    # The published manifest is the one Claude Code loads, and the strict
+    # validator rejects an unknown field there. The retirement is a cohort-side
+    # declaration and the invariant check reads it from the cohort, so dropping
+    # it here costs the guarantee nothing and keeps the served document valid.
+    document.pop(_SUPERSEDES_KEY, None)
     document["plugins"] = sorted([*attributed, *retained], key=lambda entry: str(entry["name"]))
     return document
 
@@ -218,7 +258,7 @@ def publish_cohort_plugins(*, marketplace: Path, cohort: Path) -> tuple[str, ...
     cohort_index_path = cohort / _INDEX_RELATIVE
     if not cohort_index_path.is_file():
         raise MarketplacePublishError(f"cohort marketplace index missing: {cohort_index_path}")
-    cohort_index = _read_index(cohort_index_path)
+    cohort_index = _read_cohort_index(cohort)
     declared = _declared_plugins(cohort_index, source=cohort_index_path)
 
     # Validate the WHOLE cohort before touching the marketplace. Validating
@@ -277,6 +317,34 @@ def publish_cohort_plugins(*, marketplace: Path, cohort: Path) -> tuple[str, ...
     return tuple(sorted(str(entry["name"]) for entry in declared))
 
 
+def _names_retired_identity(value: str, retired: frozenset[str], *, prose: bool) -> bool:
+    """Return whether ``value`` still names a retired identity, per its field kind.
+
+    The two kinds cannot share one test, and collapsing them is not a near miss.
+    This product retired the plugin name ``aeat`` while its marketplace copy
+    necessarily names AEAT the Spanish tax authority -- "read-only toward AEAT" is
+    mandated prose, not residue of the old name. A bare substring test reads that
+    authority as the retired plugin and refuses EVERY publication forever, so the
+    fail-closed guard becomes a permanent outage that looks exactly like the guard
+    working correctly.
+
+    An identity FIELD (``owner.name``) is a claim about who this is, so a bare
+    token there is stale branding and is refused. PROSE is a sentence that may
+    legitimately mention the authority, so it is tested for identity-SHAPED
+    references only: an install handle (``plugin@marketplace``) or a served path
+    (``plugins/name``). Those forms name a plugin and nothing else, and a
+    description that genuinely was not rewritten still carries one, because that
+    is how a marketplace advertises a plugin.
+    """
+    haystack = value.lower()
+    if prose:
+        return any(
+            f"plugins/{name}" in haystack or f"@{name}" in haystack or f"{name}@" in haystack for name in retired
+        )
+    tokens = {token for token in re.split(r"[^a-z0-9]+", haystack) if token}
+    return bool(tokens & retired)
+
+
 def assert_supersession_complete(*, marketplace: Path, cohort: Path) -> None:
     """Refuse while a retired identity, or its metadata, is still live.
 
@@ -291,7 +359,7 @@ def assert_supersession_complete(*, marketplace: Path, cohort: Path) -> None:
     description still advertises the old one is half-renamed, and a reader
     cannot tell which half is authoritative.
     """
-    cohort_index = _read_index(cohort / _INDEX_RELATIVE)
+    cohort_index = _read_cohort_index(cohort)
     retired = superseded_names(cohort_index)
     if not retired:
         return
@@ -320,10 +388,12 @@ def assert_supersession_complete(*, marketplace: Path, cohort: Path) -> None:
         )
 
     stale_metadata = sorted(
-        field for field in ("description",) if any(name in str(published.get(field, "")).lower() for name in retired)
+        field
+        for field in ("description",)
+        if _names_retired_identity(str(published.get(field, "")), retired, prose=True)
     )
     owner = published.get("owner")
-    if isinstance(owner, dict) and any(name in str(owner.get("name", "")).lower() for name in retired):
+    if isinstance(owner, dict) and _names_retired_identity(str(owner.get("name", "")), retired, prose=False):
         stale_metadata.append("owner.name")
     if stale_metadata:
         raise MarketplacePublishError(
