@@ -431,7 +431,7 @@ Run the formal code-review skill, reconcile findings, and prove every accepted A
 - [x] `W06.P20.S209` - Invoke vaultspec-code-review over the complete feature diff for safety, intent, boundary direction, and test quality; `.`.
 - [x] `W06.P20.S210` - Resolve every in-scope blocker or major finding through its owning implementation Step; `.vault/plan/2026-07-15-cli-authority-verb-conformance-plan.md`.
 - [x] `W06.P20.S211` - Rerun every focused or full gate invalidated by a corrective edit; `.vault/exec/`.
-- [ ] `W06.P20.S212` - Record a zero-blocker and zero-major formal review verdict; `.vault/audit/`.
+- [x] `W06.P20.S212` - Record a zero-blocker and zero-major formal review verdict; `.vault/audit/`.
 - [x] `W06.P20.S213` - Confirm every closed implementation Step has an attributable execution record; `.vault/exec/`.
 - [x] `W06.P20.S214` - Confirm no removed CLI spelling survives in source, locales, tests, docs, schemas, MCP, or suggestions; `.`.
 - [x] `W06.P20.S215` - Confirm certificate custody, ledger evidence, portable export, hashing, namespaces, filed capture, LLM review, registry projection, and duplication execution each have one canonical owner and no parallel writer, resolver, parser, or command path; `src/cadrumo/; dev/audit/`.
