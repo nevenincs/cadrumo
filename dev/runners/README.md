@@ -156,23 +156,40 @@ cohort-seal failure rather than as a missing-tool error. Installing into the
 volume rather than the container's writable layer is the whole point: a
 recreated container keeps the tools.
 
-**Homebrew is a third class again: a whole tree, not a binary or a package.**
-The Homebrew acquisition lane runs `brew` from the canonical
-`/home/linuxbrew/.linuxbrew/bin/brew`, and the stock image has no Homebrew at
-all — a rebuilt container fails that lane's very first step,
-`Verify declared Homebrew release row`, on `test -x "$BREW_PATH"`. Install it
-into the volume and symlink the canonical path at it, so a rebuild keeps the
-tree:
+**Homebrew is a third class again: a whole tree, not a binary or a package —
+and it is the one thing that must NOT go in the volume.** The acquisition lane
+runs `brew` from the canonical `/home/linuxbrew/.linuxbrew/bin/brew`, and the
+stock image has no Homebrew at all, so a rebuilt container fails that lane's
+very first step, `Verify declared Homebrew release row`, on `test -x
+"$BREW_PATH"`. Install it at the real canonical path:
 
 ```bash
 sudo apt-get install -y build-essential procps file git
-sudo mkdir -p /home/runner/tools/linuxbrew && sudo chown runner:runner /home/runner/tools/linuxbrew
-sudo ln -sfn /home/runner/tools/linuxbrew /home/linuxbrew
+sudo mkdir -p /home/linuxbrew && sudo chown runner:runner /home/linuxbrew
 git clone https://github.com/Homebrew/brew /home/linuxbrew/.linuxbrew/Homebrew
 mkdir -p /home/linuxbrew/.linuxbrew/bin
 ln -sfn ../Homebrew/bin/brew /home/linuxbrew/.linuxbrew/bin/brew
 /home/linuxbrew/.linuxbrew/bin/brew update --force
 ```
+
+**Do not put the tree in the volume and symlink `/home/linuxbrew` at it.** That
+is the obvious way to make it survive a rebuild, and it breaks `brew link`:
+`brew --prefix` still answers `/home/linuxbrew/.linuxbrew` correctly, so the
+install proceeds all the way through building every resource before failing at
+the very end with
+
+```
+An unexpected error occurred during the `brew link` step
+Permission denied @ dir_s_mkdir - /linuxbrew
+```
+
+Homebrew computes relative link traversals against the RESOLVED path. Through a
+symlink the real path is deeper than the canonical one, so the `..` walk climbs
+too far and lands at `/linuxbrew` on the filesystem root. Verify with `readlink
+-f "$(command -v brew)"` — it must contain no symlink indirection.
+
+So Homebrew is the one dependency that genuinely does not survive a container
+rebuild. Reinstall it, and prefer a correct install over a durable one.
 
 Clone with full history: a `--depth=1` clone leaves `brew --version` reporting
 "shallow or no git repository" and Homebrew refuses to work from it.
