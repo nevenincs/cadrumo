@@ -73,6 +73,24 @@ fact from who signed it off, and a blanket "the resolved status must be
 stampable" rule would refuse an honest authorship claim for a reason that has
 nothing to do with authorship.
 
+A new reviewer must restate the date
+------------------------------------
+
+An omitted argument keeps whatever the manifest declares, which is right for
+every scalar except the reviewer and the date together. A lone ``reviewed_by``
+merged onto the DECLARED ``reviewed_at``, so a new claim was recorded against an
+old claim's date — measured as ``agent:second`` inheriting ``2026-01-15`` from
+``agent:first`` — and the record then stated that a person reviewed a revision on
+a day they did not.
+
+The rule is a refusal rather than a defaulted date. Defaulting to today would
+close the smear equally, and would silently rewrite the date of a real review
+whenever a caller only meant to correct a misspelt name, so the tool would be
+trading one false date for another with no way to tell them apart. Refusing makes
+the caller say which act they are performing. It fires only on a CHANGE of
+reviewer against a declared date: restating the same reviewer inherits a date
+that is still that reviewer's own, and a first review has nothing to inherit.
+
 Why the stamp is manifest-only
 ------------------------------
 
@@ -408,6 +426,7 @@ def stamp_revision(
         manifest=manifest,
         requested=(review_status, reviewed_by, reviewed_at),
     )
+    _assert_a_new_reviewer_restates_the_date(declared, reviewed_by=reviewed_by, reviewed_at=reviewed_at)
     resolved = _resolve_stamp(
         declared,
         engineered_by=engineered_by,
@@ -538,6 +557,65 @@ def _assert_review_axis_is_writable(
         "reviewer identity and date that are underivable by construction, so nothing could restore "
         "them. Both advancing and clearing that claim are edits to the manifest, made by the same hand "
         "that made the claim. engineered_by is unaffected and remains writable.",
+    )
+
+
+def _assert_a_new_reviewer_restates_the_date(
+    declared: _Stamp,
+    *,
+    reviewed_by: str | None,
+    reviewed_at: date | None,
+) -> None:
+    """Refuse a reviewer change that would inherit the previous reviewer's date.
+
+    An omitted field keeps whatever the manifest declares, which is right for
+    every scalar except this pair. With a reviewer supplied and no date, the
+    merge carried the DECLARED ``reviewed_at`` forward, so a new claim was
+    recorded against an old claim's date: ``--reviewed-by agent:second`` over a
+    stamp of ``agent:first / 2026-01-15`` produced
+    ``agent_reviewed | agent:second | 2026-01-15``. In the one axis that is
+    declared rather than derived, that is a record stating a person reviewed a
+    revision on a day they did not.
+
+    Ruling: REFUSE, rather than default the date to today. Both close the smear
+    and they differ in what they do to a typo correction. Defaulting silently
+    rewrites the date whenever the name moves, so correcting a misspelt reviewer
+    would move a real review's date to today — trading one false date for
+    another, and the tool would be unable to say which. Refusing makes the caller
+    state which act they are performing: today for a genuine re-review, the
+    original date to correct the name. That is the same shape this module already
+    applies to a reviewer supplied against ``pending_review``, which is refused
+    rather than quietly dropped, and it follows the standing rule here that
+    nothing writes a claim the caller did not make.
+
+    The CLI's today-defaulting is deliberately NOT widened to cover this path.
+    It fires when a status is supplied, where "the review is happening now" is
+    true by construction; a lone reviewer change carries no such warrant.
+
+    Narrow on purpose. It fires only on a CHANGE of reviewer against a declared
+    date: restating the same reviewer inherits a date that is still that
+    reviewer's own, moving only the date is an explicit act, and a first review
+    has no declared date to inherit.
+
+    Args:
+        declared: The stamp the manifest already carries.
+        reviewed_by: The requested reviewer, or :data:`None`.
+        reviewed_at: The requested review date, or :data:`None`.
+
+    Raises:
+        StampError: A different reviewer was supplied with no date while the
+            manifest declares one.
+    """
+    if reviewed_by is None or reviewed_at is not None:
+        return
+    if declared.reviewed_at is None or declared.reviewed_by is None or reviewed_by == declared.reviewed_by:
+        return
+    raise StampError(
+        f"refusing to record reviewed_by {reviewed_by!r} without a date: the manifest declares the "
+        f"review as {declared.reviewed_by!r} on {declared.reviewed_at.isoformat()}, and an omitted date "
+        "would carry that date onto the new reviewer, recording them as having reviewed the revision on "
+        "a day they did not. State the date the claim belongs to: today's date for a review happening "
+        "now, or the declared date when correcting the spelling of the same review's reviewer.",
     )
 
 

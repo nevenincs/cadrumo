@@ -283,6 +283,14 @@ def stamp(
         # Defaulted rather than demanded: the review being recorded is happening
         # now, so today is the true date. It is echoed back so the written value
         # is never implicit.
+        #
+        # Deliberately NOT widened to a lone ``--reviewed-by``. That path used to
+        # inherit the declared reviewer's date and record a person as having
+        # reviewed on a day they did not, and the writer now REFUSES it rather
+        # than defaulting: a reviewer change carries no warrant that the review
+        # is happening now, and defaulting would silently move a real review's
+        # date whenever a caller only meant to correct a misspelt name. Widening
+        # this condition would re-open that trade. See the writer's own rule.
         resolved_date = datetime.now(tz=UTC).date()
     try:
         result = stamp_revision(

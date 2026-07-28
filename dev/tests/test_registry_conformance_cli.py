@@ -1237,12 +1237,131 @@ def test_the_review_axis_guard_reads_the_vocabulary_and_not_one_hardcoded_status
         _STAMPED_MODELO,
         _STAMPED_REVISION,
         reviewed_by="agent:second",
+        reviewed_at=date(2026, 7, 28),
         registry_root=registry_copy,
     )
 
     revision = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
     assert revision.review_status is RevisionReviewStatus.AGENT_REVIEWED
     assert revision.reviewed_by == "agent:second"
+    # The date is restated with the reviewer rather than inherited: this case
+    # used to leave 2026-07-27 standing against a reviewer who did not review
+    # then, which is the smear the writer now refuses.
+    assert revision.reviewed_at == date(2026, 7, 28)
+
+
+def _stamp_a_first_review(root: Path, *, reviewer: str, reviewed: date) -> None:
+    """Seed a real declared agent review through the real writer."""
+    stamp_revision(
+        _STAMPED_MODELO,
+        _STAMPED_REVISION,
+        review_status=StampableReviewStatus.AGENT_REVIEWED,
+        reviewed_by=reviewer,
+        reviewed_at=reviewed,
+        registry_root=root,
+    )
+
+
+def test_stamp_refuses_a_new_reviewer_that_does_not_restate_the_date(registry_copy: Path) -> None:
+    """A re-attributed review must not inherit the previous reviewer's date.
+
+    An omitted argument keeps what the manifest declares, which is right for
+    every scalar except this pair: with a reviewer supplied and no date the merge
+    carried the DECLARED date forward, so ``agent:second`` was recorded as having
+    reviewed the revision on ``agent:first``'s date. In the one axis that is
+    declared rather than derived, the record then states that a person reviewed a
+    revision on a day they did not, and nothing downstream can tell.
+
+    The CLI's today-defaulting does not cover this path either — it fires only
+    when a status is supplied — so the refusal has to live at the writer, which
+    is also the boundary a driver script reaches.
+
+    The byte assertion is load-bearing: a refusal raised after the rewrite would
+    leave the smeared claim on disk and still satisfy ``pytest.raises``.
+    """
+    _stamp_a_first_review(registry_copy, reviewer="agent:first", reviewed=date(2026, 1, 15))
+    manifest = _manifest_of(registry_copy)
+    before = manifest.read_bytes()
+
+    with pytest.raises(StampError, match="without a date"):
+        stamp_revision(
+            _STAMPED_MODELO,
+            _STAMPED_REVISION,
+            reviewed_by="agent:second",
+            registry_root=registry_copy,
+        )
+
+    assert manifest.read_bytes() == before
+    revision = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert revision.reviewed_by == "agent:first"
+    assert revision.reviewed_at == date(2026, 1, 15)
+
+
+def test_a_new_reviewer_stating_the_date_is_served(registry_copy: Path) -> None:
+    """The paired half: re-attributing a review is legal when the date is stated.
+
+    Without this, a guard refusing every reviewer change would satisfy the
+    refusal above while making the tool unable to correct its own record, and no
+    other assertion here would notice. Both the correction shape and the
+    re-review shape are exercised: the same date restated for a typo fix, and a
+    new date for a review happening now.
+    """
+    _stamp_a_first_review(registry_copy, reviewer="agent:frist", reviewed=date(2026, 1, 15))
+
+    stamp_revision(
+        _STAMPED_MODELO,
+        _STAMPED_REVISION,
+        reviewed_by="agent:first",
+        reviewed_at=date(2026, 1, 15),
+        registry_root=registry_copy,
+    )
+    corrected = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert corrected.reviewed_by == "agent:first"
+    assert corrected.reviewed_at == date(2026, 1, 15)
+
+    stamp_revision(
+        _STAMPED_MODELO,
+        _STAMPED_REVISION,
+        reviewed_by="agent:second",
+        reviewed_at=date(2026, 7, 28),
+        registry_root=registry_copy,
+    )
+    re_reviewed = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert re_reviewed.reviewed_by == "agent:second"
+    assert re_reviewed.reviewed_at == date(2026, 7, 28)
+
+
+def test_restating_the_same_reviewer_or_only_the_date_stays_legal(registry_copy: Path) -> None:
+    """The refusal keys on a CHANGE of reviewer, not on the reviewer argument.
+
+    Two acts inherit a date honestly and must stay served. Restating the same
+    reviewer inherits a date that is still that reviewer's own, so there is no
+    claim to smear; and moving only the date is an explicit statement about the
+    date, which is the opposite of inheriting one. A guard written as "refuse a
+    reviewer with no date" would pass the refusal case above while breaking both
+    of these.
+    """
+    _stamp_a_first_review(registry_copy, reviewer="agent:first", reviewed=date(2026, 1, 15))
+
+    stamp_revision(
+        _STAMPED_MODELO,
+        _STAMPED_REVISION,
+        reviewed_by="agent:first",
+        registry_root=registry_copy,
+    )
+    restated = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert restated.reviewed_by == "agent:first"
+    assert restated.reviewed_at == date(2026, 1, 15)
+
+    stamp_revision(
+        _STAMPED_MODELO,
+        _STAMPED_REVISION,
+        reviewed_at=date(2026, 7, 28),
+        registry_root=registry_copy,
+    )
+    redated = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert redated.reviewed_by == "agent:first"
+    assert redated.reviewed_at == date(2026, 7, 28)
 
 
 def test_governance_keys_track_the_shipped_field_set() -> None:
