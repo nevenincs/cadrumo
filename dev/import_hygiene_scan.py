@@ -595,7 +595,16 @@ def names_dev_directory(value: str) -> bool:
     * An **absolute** ``/dev/...`` value is a POSIX device node, not the repo
       tree. Shipped code opens ``"/dev/tty"`` to read a secret without echo and
       is correct to do so; firing there would red the gate on sound code and
-      teach the next author to weaken it.
+      teach the next author to weaken it. What actually delivers that silence
+      today is the segment-equality rule below, not the ``startswith("/")``
+      guard: an absolute value splits to a LEADING EMPTY segment, the
+      relative-marker skip advances over ``.`` and ``..`` only, so the scan
+      compares ``""`` against ``dev`` and stops. The explicit guard is
+      defence-in-depth against exactly one future widening -- folding ``""``
+      into the relative-marker skip so ``"/dev/x"`` normalises like
+      ``"./dev/x"``, which would otherwise re-open the device-path false
+      positive with no test naming it. Keep the guard and the marker set in
+      view together; neither is redundant with the other under that change.
     * A segment must **equal** ``dev``. ``devengada``, ``devolucion``,
       ``device`` and ``dev.example.com`` are all near-misses this codebase
       really contains.
@@ -633,6 +642,12 @@ def _continues_into_dev_directory(text: str) -> bool:
     absolute path. That preceding-interpolation requirement is what keeps a
     plain ``f"/dev/null"`` out: with nothing interpolated before it, the value
     is an absolute device path and is judged by :func:`names_dev_directory`.
+
+    The empty leading segment carries the other half: the tail must BEGIN with
+    a separator, so ``dev`` sits directly under the interpolated root. A tail
+    like ``"-sandbox/dev/notes.json"`` glues the interpolation into its own
+    first segment, naming a ``dev`` directory one level below a DIFFERENT tree
+    -- not this repository's.
     """
     segments = _posix_segments(text)
     return len(segments) >= 2 and segments[0] == "" and segments[1] == DEV_TOOLING_ROOT
@@ -688,8 +703,6 @@ def _call_assembled_dev_segment(node: ast.Call) -> str | None:
         if len(node.args) < 2:
             return None
     elif name not in _PATH_FACTORY_CALLABLES:
-        return None
-    if not node.args:
         return None
     if any(_is_bare_dev_segment(arg) for arg in node.args):
         return f'{name}(...) with a "{DEV_TOOLING_ROOT}" path segment'

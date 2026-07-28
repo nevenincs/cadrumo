@@ -50,15 +50,29 @@ can never read as a clean tree.
 The standard this module holds itself to is stronger than "every form has a
 test": **every discriminating branch of the shared detector must flip at least
 one test here when it is removed.**  Form coverage alone does not deliver that.
-Three branches once satisfied it while being individually droppable — the
-``join`` arity guard, the newline rejection, and the left-hand operand of a
-path join — because the fixtures that exercised their neighbours produced the
-same verdict with the branch gone.  Each now has a proof written to isolate it:
-a one-argument ``join`` whose sole argument is the bare ``"dev"`` constant, a
-multi-line NON-docstring string (docstring fixtures are skipped before the
-newline check is reached), and a ``"dev" / root`` join with the segment on the
-left.  When adding a branch to the detector, add the fixture that fails without
-it — not merely one that covers the same form.
+Five branches have now been caught failing it while being individually
+droppable, because the fixtures that exercised their neighbours produced the
+same verdict with the branch gone.  Each has a proof written to isolate it:
+
+* the ``join`` arity guard — a one-argument ``join`` whose sole argument is the
+  bare ``"dev"`` constant;
+* the newline rejection — a multi-line NON-docstring string, since docstring
+  fixtures are skipped before the newline check is reached;
+* the left-hand operand of a path join — a ``"dev" / root`` join;
+* the requirement that an interpolation PRECEDE an f-string's constant tail —
+  an f-string device path, ``f"/dev/null"``;
+* the requirement that such a tail begin with a separator —
+  ``f"{root}-sandbox/dev/notes.json"``, another tree's ``dev`` directory.
+
+Two further branches survive a mutation with nothing red, and are kept as
+declared redundancy rather than pinned: ``if not node.args`` in the call-join
+reader was dead (``any`` over an empty sequence is already false) and has been
+deleted, and the absolute-path guard in ``names_dev_directory`` is
+defence-in-depth whose stated protection a different mechanism delivers — its
+docstring now says so, so no future reader hunts for the fixture that proves
+it.  When adding a branch to the detector, add the fixture that fails without
+it — not merely one that covers the same form — or record in the detector why
+no such fixture exists.
 """
 
 from __future__ import annotations
@@ -474,6 +488,55 @@ def test_path_scanner_does_not_fire_on_posix_device_paths(tmp_path: Path) -> Non
     )
 
     assert violations == [], f"the scanner fired on a POSIX device path, which is not the dev tree: {violations!r}"
+
+
+def test_path_scanner_does_not_fire_on_an_fstring_device_path(tmp_path: Path) -> None:
+    """An f-string device path MUST stay silent, and only one branch keeps it so.
+
+    The plain-constant device fixture above cannot reach the f-string arm at
+    all, so it says nothing about it — and an f-string tail carries the device
+    path in exactly the shape the tail reader accepts: ``"/dev/null"`` splits
+    to an empty leading segment followed by ``dev``.  What holds it out is the
+    requirement that an interpolation PRECEDE the constant, which no other
+    fixture here exercises: ``f"{root}/dev/x.json"`` fires by design, and the
+    near-miss f-strings interpolate a non-dev tail.  Drop the
+    preceding-interpolation requirement and this is the only test that reds.
+
+    Both forms are planted: the fully-constant ``f"/dev/null"`` (still parsed
+    as an f-string node, never folded to a plain constant) and the realistic
+    ``f"/dev/{name}"``, whose interpolation sits AFTER the device path and so
+    must not license it either.
+    """
+    violations = _scan_planted_paths(
+        tmp_path,
+        "cadrumo/fstring_device_paths.py",
+        'def null_sink():\n    return open(f"/dev/null", "w")\ndef terminal(name):\n    return open(f"/dev/{name}")\n',
+    )
+
+    assert violations == [], f"the scanner fired on an f-string POSIX device path: {violations!r}"
+
+
+def test_path_scanner_does_not_fire_on_a_mid_path_dev_segment_after_an_interpolation(tmp_path: Path) -> None:
+    """``f"{root}-sandbox/dev/notes.json"`` names another tree's ``dev``, and MUST stay silent.
+
+    The f-string tail reader accepts a constant only where the interpolation IS
+    the root — the tail has to begin with a separator, so ``dev`` sits directly
+    beneath it.  Here the interpolation is glued into the tail's own first
+    segment, so the path resolves under a sibling of the repo root and its
+    ``dev`` directory is one level below a different tree.
+
+    That empty-leading-segment requirement is droppable without this fixture:
+    every other f-string case here either has no ``dev`` segment at all or
+    already begins with the separator, so each returns the same verdict with
+    the requirement gone.  This is the one plant that distinguishes it.
+    """
+    violations = _scan_planted_paths(
+        tmp_path,
+        "cadrumo/sibling_tree.py",
+        'def sibling_notes(root):\n    return open(f"{root}-sandbox/dev/notes.json")\n',
+    )
+
+    assert violations == [], f"the scanner read another tree's dev/ directory as this repository's: {violations!r}"
 
 
 def test_path_scanner_does_not_fire_on_spanish_stems_or_dev_substrings(tmp_path: Path) -> None:
