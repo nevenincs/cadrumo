@@ -117,6 +117,53 @@ def locale_root(docs_root: Path) -> Path:
     return docs_root / "locales"
 
 
+#: Wall-clock ceiling for a shelled documentation build, in seconds.
+#:
+#: Generous rather than tight: the full-scope nitpicky build is documented
+#: in-tree at roughly 840 seconds, and the gettext extraction below covers a
+#: subset of that page set. The point is not to be fast, it is to be BOUNDED -
+#: an unbounded shell call converts any upstream hang into an indefinite lane
+#: wedge with no diagnostic, which is exactly how a hanging gettext build cost
+#: three separate investigations before anyone read a stack trace. It reproduces
+#: at zero pytest workers, so it is not a parallelism artefact.
+_SHELL_TIMEOUT_S: Final[float] = 900.0
+
+
+def _run_bounded(
+    command: list[str],
+    *,
+    cwd: Path,
+    env: dict[str, str] | None,
+    what: str,
+) -> subprocess.CompletedProcess[bytes]:
+    """Run ``command`` with a wall-clock bound, failing loudly on timeout.
+
+    Args:
+        command: The argument vector to execute.
+        cwd: Working directory for the child.
+        env: Environment mapping, or ``None`` to inherit.
+        what: Human-readable name of the step, used in the timeout message.
+
+    Returns:
+        The completed process.
+
+    Raises:
+        SystemExit: If the command exceeds :data:`_SHELL_TIMEOUT_S`, naming the
+            step, the bound and the command so the failure is diagnosable
+            instead of presenting as a silent stall.
+    """
+    try:
+        return subprocess.run(command, cwd=cwd, env=env, check=False, timeout=_SHELL_TIMEOUT_S)
+    except subprocess.TimeoutExpired as exc:
+        rendered = " ".join(command)
+        raise SystemExit(
+            f"{what} exceeded its {_SHELL_TIMEOUT_S:.0f}s bound and was terminated. "
+            f"Command: {rendered}. A hang here presents to pytest as an unresponsive "
+            "worker (`node down: Not properly terminated`) or as a lane that stops "
+            "emitting output, so it is reported here as a named failure instead."
+        ) from exc
+
+
 def extract_pot(repo_root: Path, out_dir: Path | None = None) -> Path:
     """Extract user-scope POT message templates into ``docs/locales/pot``.
 
@@ -164,7 +211,7 @@ def extract_pot(repo_root: Path, out_dir: Path | None = None) -> Path:
         str(docs_root),
         str(out_dir),
     ]
-    result = subprocess.run(command, cwd=repo_root, env=env, check=False)
+    result = _run_bounded(command, cwd=repo_root, env=env, what="gettext POT extraction")
     if result.returncode != 0:
         raise SystemExit(result.returncode)
     return out_dir
@@ -203,7 +250,7 @@ def update_catalogues(repo_root: Path, languages: tuple[str, ...] = TARGET_LANGU
     ]
     for language in languages:
         command.extend(["-l", language])
-    result = subprocess.run(command, cwd=repo_root, check=False)
+    result = _run_bounded(command, cwd=repo_root, env=None, what="sphinx-intl catalogue update")
     if result.returncode != 0:
         raise SystemExit(result.returncode)
 
