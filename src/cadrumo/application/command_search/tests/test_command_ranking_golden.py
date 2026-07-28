@@ -82,7 +82,15 @@ def test_no_retired_command_key_remains_searchable() -> None:
     is caught too.
     """
     keys = {descriptor.command_key for descriptor in build_tool_descriptors()}
-    assert keys, "the descriptor set is empty, so this gate would pass while checking nothing"
+    # Anti-vacuity floor. Asserting the retired keys are ABSENT passes trivially
+    # when the descriptor set is empty OR merely truncated: a handful of
+    # descriptors makes every retired key absent while proving nothing. The live
+    # surface carries ~292 command keys, so pin a plausible floor well below that
+    # and far above a collapsed lazy walk, catching a truncated set that a bare
+    # non-empty check would wave through.
+    assert len(keys) >= 200, (
+        f"descriptor set resolved only {len(keys)} keys, so this gate would pass while checking nothing"
+    )
 
     retired = {
         "config.lock": "custody lock door, removed in favour of passphrase/recovery",

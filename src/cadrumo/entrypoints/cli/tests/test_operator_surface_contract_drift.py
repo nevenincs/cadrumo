@@ -121,6 +121,25 @@ def test_operator_surface_contract_covers_the_live_tree() -> None:
     live = _resolve_live_surface()
     declared = _declared_surface()
 
+    # Anti-vacuity floor. A symmetric-difference assertion over two empty maps
+    # passes while checking nothing, and the lazy-Typer tree is a documented
+    # false-green vector: an isinstance-gated or unmaterialised walk yields a
+    # single leaf (or none) and terminates silently. Pin the resolved surface
+    # against its known shape so a collapsed walk reds here rather than passing
+    # a mirror of two empty inventories. The floors sit comfortably below the
+    # live counts (2 roots, 23 families, 151 sub-verbs) yet far above the
+    # single-leaf blind-walk failure.
+    live_family_total = sum(len(families) for families in live.values())
+    live_sub_verb_total = sum(len(sub) for families in live.values() for sub in families.values())
+    assert set(live) == _PINNED_ROOTS, f"live surface did not resolve both pinned roots: {sorted(live)}"
+    assert live_family_total >= 20, (
+        f"live tree resolved only {live_family_total} families; the lazy walk likely collapsed"
+    )
+    assert live_sub_verb_total >= 120, (
+        f"live tree resolved only {live_sub_verb_total} sub-verbs; the lazy walk likely collapsed"
+    )
+    assert declared, "the operator-surface contract declared no families, so this gate would check nothing"
+
     lines: list[str] = []
     for root in sorted(set(live) | set(declared)):
         live_families = live.get(root, {})
