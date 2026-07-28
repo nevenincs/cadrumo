@@ -68,7 +68,7 @@ Lift the test-trapped conformance facts into importable typed libraries under sr
 - [x] `P02.S47` - reconcile the zero-volume prorrata branch between the two M303 revisions, where the older revision returns zero and would zero every deduction for a fully-taxable trader who declared no prorrata volumes, grounding the correction as the newer revision already does; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes`.
 - [x] `P02.S48` - correct the prorrata module docstring and rounding comment which cite the autoconsumo article rather than the article that actually establishes the formula and the upward rounding, so a reader sent to it finds the rule; `src/cadrumo/domain/iva/_prorrata.py`.
 - [x] `P02.S58` - correct the especial-prorrata mandatory predicate which applies a strict greater-than where the law says exceeds by ten percent or more, so exact equality currently fails to trip a mandatory regime switch; `src/cadrumo/domain/iva/_prorrata.py`.
-- [ ] `P02.S59` - declare the full-right-to-deduct article on the prorrata formula legal refs of both M303 revisions rather than only on the enclosing construct, as a coherent two-revision change; `src/cadrumo/_data/registry/aeat/modelos/303`.
+- [x] `P02.S59` - declare the full-right-to-deduct article on the prorrata formula legal refs of both M303 revisions rather than only on the enclosing construct, as a coherent two-revision change; `src/cadrumo/_data/registry/aeat/modelos/303`.
 
 ### Phase `P03` - conformance governance CLI in dev
 
