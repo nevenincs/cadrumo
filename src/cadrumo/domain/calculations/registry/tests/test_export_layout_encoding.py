@@ -126,7 +126,7 @@ def test_the_stored_token_still_hydrates_to_its_member() -> None:
     """
     layout = ExportLayoutDefinition(
         id="layout.token",
-        format="fixed_width",
+        format="fixed_width",  # pyright: ignore[reportArgumentType]  # reason: passing the raw on-disk token is what this asserts
         source_refs=("aeat-src-1",),
         legal_refs=("ley-37-1992:art-1",),
         records=(_record(record_id="record.a", encoding="latin-1"),),
@@ -147,7 +147,7 @@ def test_an_unrecognised_export_format_token_is_refused_naming_the_accepted_set(
     with pytest.raises(ValidationError) as refusal:
         ExportLayoutDefinition(
             id="layout.bad",
-            format="fichero_boe",
+            format="fichero_boe",  # pyright: ignore[reportArgumentType]  # reason: passing the raw on-disk token is what this asserts
             source_refs=("aeat-src-1",),
             legal_refs=("ley-37-1992:art-1",),
             records=(),

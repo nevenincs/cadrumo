@@ -29,6 +29,7 @@ from typing import TYPE_CHECKING
 import typer
 from pydantic import BaseModel, ConfigDict, SecretStr
 
+from ....core import NIST_PASSPHRASE_MIN_LENGTH
 from ....core.errors import CadrumoError as _CadrumoError
 from ....core.errors import resolve_error_message as _resolve_error_message
 from ....core.external_constants import OutputLanguage
@@ -95,7 +96,7 @@ def _resolve_import_passphrase(secrets_stdin: bool) -> str:
 
 
 if TYPE_CHECKING:
-    from ....application.user_profile import ProfileBundleExportReconcileFailure
+    from ....application.user_profile import ProfileBundleExportReconcileFailure, ProfileBundleExportResult
     from ....domain.user_profile import UserProfilePortableExport, UserProfileRecord
 
 
@@ -282,6 +283,92 @@ def _reconcile_failure_notices(
     )
 
 
+def _export_passphrase_or_none(encrypted_mode: bool, *, secrets_stdin: bool) -> str | None:
+    """Collect and floor-check the bundle passphrase, or ``None`` for cleartext.
+
+    The length floor is checked HERE, before anything is serialized, so a
+    too-short passphrase never reaches a written bundle.
+    """
+    if not encrypted_mode:
+        return None
+    passphrase = _resolve_export_passphrase(secrets_stdin)
+    if len(passphrase) < NIST_PASSPHRASE_MIN_LENGTH:
+        raise _CliRefusedBoundaryError(translated_message="cli.config.profile.export_passphrase_too_short")
+    return passphrase
+
+
+def _emit_export_envelope(
+    ctx: typer.Context,
+    *,
+    export: ProfileBundleExportResult,
+    out: Path,
+    encrypted: bool,
+) -> None:
+    """Render the written bundle, leading with the notice its transport earns.
+
+    A cleartext bundle carries the loud sensitivity warning; an encrypted one
+    carries its own. Both are repeated as text lines because the envelope
+    renders notices only in JSON mode.
+    """
+    from .._config_payloads import ConfigProfileExportResult
+
+    transport_notice = _build_encrypted_export_notice(out) if encrypted else _build_export_sensitivity_notice(out)
+    notices = (transport_notice, *_reconcile_failure_notices(export.reconcile_failures))
+    transport = "passphrase-encrypted" if encrypted else "cleartext-local"
+    export_result = ConfigProfileExportResult(
+        profile_id=export.profile_id,
+        display_name=export.display_name,
+        out=str(export.destination),
+        schema_version=export.bundle_schema_version,
+    )
+    _emit_envelope(
+        ctx,
+        command="config.profile.export",
+        result=export_result,
+        lines=(
+            f"profile_id\t{export_result.profile_id}",
+            f"display_name\t{export_result.display_name}",
+            f"out\t{out}",
+            f"transport\t{transport}",
+            f"schema_version\t{export_result.schema_version}",
+            *(f"{notice.severity.value.upper()}\t{notice.message}" for notice in notices),
+        ),
+        notices=notices,
+    )
+
+
+def _complete_export_request_interactively(
+    *,
+    name: str | None,
+    out: Path | None,
+    encrypt: bool,
+    cleartext_local: bool,
+) -> tuple[str | None, Path | None, bool, bool]:
+    """Fill the export options the operator left unspecified, when a console allows it.
+
+    Returns the four options unchanged on a host with no interactive
+    capability, so the caller's own refusals still apply — the interactive
+    flow is an affordance, never a precondition. The transport choice is
+    adopted only when the operator named NEITHER flag; an explicit
+    ``--encrypt`` or ``--cleartext-local`` is theirs and is not overridden.
+    """
+    from ._profile_bundle_flow import collect_export_request_interactively, interactive_capability
+
+    capability = interactive_capability()
+    if capability is None:
+        return name, out, encrypt, cleartext_local
+    collected = collect_export_request_interactively(
+        name=name,
+        destination=out,
+        encrypt=encrypt,
+        cleartext_local=cleartext_local,
+        capability=capability,
+    )
+    if encrypt or cleartext_local:
+        return collected.profile_name, collected.destination, encrypt, cleartext_local
+    return collected.profile_name, collected.destination, collected.encrypt, not collected.encrypt
+
+
 def _register_profile_export_command(profile_app: typer.Typer) -> None:
     @profile_app.command(
         "export",
@@ -344,96 +431,54 @@ def _register_profile_export_command(profile_app: typer.Typer) -> None:
         )
         from ....application.workflow import ProfileLabelAmbiguousError
         from ....domain.user_profile import ProfileNotFoundError
-        from .._config_payloads import ConfigProfileExportResult
 
         _activate_subcommand_output_language(ctx, output_language)
         # ``--secrets-stdin`` only carries the encryption passphrase, so it
         # implies the encrypted transport.
         encrypted_mode = encrypt or secrets_stdin
         if not secrets_stdin and (out is None or (not encrypted_mode and not cleartext_local)):
-            from ._profile_bundle_flow import collect_export_request_interactively, interactive_capability
-
-            capability = interactive_capability()
-            if capability is not None:
-                collected = collect_export_request_interactively(
-                    name=name,
-                    destination=out,
-                    encrypt=encrypt,
-                    cleartext_local=cleartext_local,
-                    capability=capability,
-                )
-                name = collected.profile_name
-                out = collected.destination
-                if not encrypt and not cleartext_local:
-                    encrypt = collected.encrypt
-                    cleartext_local = not collected.encrypt
-                encrypted_mode = encrypt or secrets_stdin
+            name, out, encrypt, cleartext_local = _complete_export_request_interactively(
+                name=name,
+                out=out,
+                encrypt=encrypt,
+                cleartext_local=cleartext_local,
+            )
+            encrypted_mode = encrypt or secrets_stdin
         if out is None:
             raise _CliRefusedBoundaryError(
                 translated_message="cli.config.profile.export_requires_destination",
                 suggestion="aeat config profile export NAME --to bundle.json --encrypt",
             )
         _validate_export_transport_options(encrypt=encrypted_mode, cleartext_local=cleartext_local)
-        passphrase: str | None = None
-        if encrypted_mode:
-            passphrase = _resolve_export_passphrase(secrets_stdin)
-            if len(passphrase) < 8:
-                raise _CliRefusedBoundaryError(
-                    translated_message="cli.config.profile.export_passphrase_too_short",
-                )
+        passphrase = _export_passphrase_or_none(encrypted_mode, secrets_stdin=secrets_stdin)
+        request = ProfileBundleExportRequest(
+            profile_name=name,
+            destination=out,
+            purpose=ProfileBundleExportPurpose.PORTABLE_TRANSFER,
+            transport=(
+                ProfileBundleExportTransport.CLEARTEXT_LOCAL
+                if passphrase is None
+                else ProfileBundleExportTransport.PASSPHRASE_ENCRYPTED
+            ),
+            passphrase=SecretStr(passphrase) if passphrase is not None else None,
+        )
         try:
-            export = export_profile_bundle(
-                ProfileBundleExportRequest(
-                    profile_name=name,
-                    destination=out,
-                    purpose=ProfileBundleExportPurpose.PORTABLE_TRANSFER,
-                    transport=(
-                        ProfileBundleExportTransport.CLEARTEXT_LOCAL
-                        if passphrase is None
-                        else ProfileBundleExportTransport.PASSPHRASE_ENCRYPTED
-                    ),
-                    passphrase=SecretStr(passphrase) if passphrase is not None else None,
-                ),
-            )
+            export = export_profile_bundle(request)
         except ProfileLabelAmbiguousError as exc:
             raise _CliRefusedBoundaryError(
                 translated_message="errors.refused.refused_profile_label_ambiguous",
             ) from exc
         except ProfileNotFoundError as exc:
+            # A missing profile means two different things: the operator named
+            # one that does not exist, or they named none and there is no
+            # active profile to default to. Each gets its own refusal.
             if name is None:
                 raise _no_active_profile_refusal() from exc
             raise _CliRefusedBoundaryError(
                 translated_message="cli.config.profile.unknown_profile",
                 context={"name": name},
             ) from exc
-        if passphrase is None:
-            notices = (_build_export_sensitivity_notice(out),)
-            transport = "cleartext-local"
-        else:
-            notices = (_build_encrypted_export_notice(out),)
-            transport = "passphrase-encrypted"
-        notices = (*notices, *_reconcile_failure_notices(export.reconcile_failures))
-
-        export_result = ConfigProfileExportResult(
-            profile_id=export.profile_id,
-            display_name=export.display_name,
-            out=str(export.destination),
-            schema_version=export.bundle_schema_version,
-        )
-        _emit_envelope(
-            ctx,
-            command="config.profile.export",
-            result=export_result,
-            lines=(
-                f"profile_id\t{export.profile_id}",
-                f"display_name\t{export.display_name}",
-                f"out\t{out}",
-                f"transport\t{transport}",
-                f"schema_version\t{export.bundle_schema_version}",
-                *(f"{notice.severity.value.upper()}\t{notice.message}" for notice in notices),
-            ),
-            notices=notices,
-        )
+        _emit_export_envelope(ctx, export=export, out=out, encrypted=passphrase is not None)
 
 
 def _build_export_sensitivity_notice(out: Path) -> Notice:
