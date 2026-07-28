@@ -12,9 +12,9 @@ from .._schema import (
     CasillaConstraints,
     ModeloDefinition,
     ProfilePredicateDefinition,
-    VerificationPredicateDefinition,
 )
 from .._schema_input_kind import InputKind
+from .._schema_verification import VerificationPredicateDefinition
 from .._validate import RegistryValidator
 from ._referential_integrity_support import (
     REFERENCE_LEGAL_ID,

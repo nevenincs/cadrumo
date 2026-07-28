@@ -31,8 +31,8 @@ import re as _re
 from collections.abc import Mapping
 
 from ._ids import CasillaId
-from ._schema import KNOWN_PROFILE_FLAG_ADVISORY_FIELDS
 from ._schema_surfaces import CasillaDefinition
+from ._schema_verification import KNOWN_PROFILE_FLAG_ADVISORY_FIELDS
 
 __all__ = [
     "_CASILLA_LIST_OPERATORS",
@@ -50,7 +50,7 @@ __all__ = [
 # The known predicate operator set was previously a module-level constant
 # here that mirrored the runtime evaluator's regex set. Drift between the
 # two was a silent-pass hazard. The canonical set now lives at
-# cadrumo.domain.calculations.registry._schema.KNOWN_VERIFICATION_PREDICATE_OPERATORS
+# cadrumo.domain.calculations.registry._schema_verification.KNOWN_VERIFICATION_PREDICATE_OPERATORS
 # and both the validator (here) and a gate test against the runtime
 # evaluator reference it.
 def _predicate_operator_name(expression: str) -> str | None:

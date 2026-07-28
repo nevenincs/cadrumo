@@ -10,7 +10,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ._ids import CasillaId
-from ._schema import KNOWN_VERIFICATION_PREDICATE_OPERATORS, LegalReference, ModeloRevision, SourceReference
+from ._schema import LegalReference, ModeloRevision, SourceReference
+from ._schema_verification import KNOWN_VERIFICATION_PREDICATE_OPERATORS
 from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import _missing_refs
 from ._validate_verification_predicates import (

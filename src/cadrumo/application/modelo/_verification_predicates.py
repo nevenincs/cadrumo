@@ -340,7 +340,7 @@ def _evaluate_predicate_expression(
     """Return True when the predicate holds, False when it is violated.
 
     Supports the DSL operators registered in
-    :data:`~domain.calculations.registry._schema.KNOWN_VERIFICATION_PREDICATE_OPERATORS`:
+    :data:`~domain.calculations.registry._schema_verification.KNOWN_VERIFICATION_PREDICATE_OPERATORS`:
 
     - ``all_nonzero(["id1", "id2", ...])`` — all ids must have a non-zero value.
     - ``any_nonzero(["id1", "id2", ...])`` — at least one id must have a non-zero value.

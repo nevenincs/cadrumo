@@ -439,8 +439,6 @@ from ._runtime_graph import (
 )
 from ._schedules import applicable_filing_schedules, evaluate_profile_conditions, profile_condition_matches
 from ._schema import (
-    KNOWN_PROFILE_FLAG_ADVISORY_FIELDS,
-    KNOWN_VERIFICATION_PREDICATE_OPERATORS,
     REVISION_GOVERNANCE_FIELDS,
     REVISION_MANIFEST_ONLY_FIELDS,
     ApplicationLinkDefinition,
@@ -482,12 +480,17 @@ from ._schema import (
     RelationDefinition,
     SourceReference,
     SupportRemovalDecisionDefinition,
-    VerificationPredicateDefinition,
     WorkbookParityReference,
 )
 from ._schema_input_kind import InputKind, InputKindValue
 from ._schema_rounding import RegistryRoundingCode
-from ._schema_verification import RegistryVerificationPolicy, VerificationExpectationDefinition
+from ._schema_verification import (
+    KNOWN_PROFILE_FLAG_ADVISORY_FIELDS,
+    KNOWN_VERIFICATION_PREDICATE_OPERATORS,
+    RegistryVerificationPolicy,
+    VerificationExpectationDefinition,
+    VerificationPredicateDefinition,
+)
 from ._snapshot import build_snapshot
 from ._temporal import select_revision
 from ._validate import RegistryValidator
