@@ -609,9 +609,9 @@ def test_the_worst_case_the_registry_schema_permits_needs_no_truncation() -> Non
 def test_degraded_read_stamps_every_row_and_finding_unvalidated() -> None:
     """A non-validating read stamps both the row and each finding as unvalidated.
 
-    The ADR ruling is that the label rides every emitted artefact, not only the
-    enclosing audit, so a consumer iterating rows or flattening findings can
-    still distinguish a degraded read from a validated one.
+    The label rides every emitted artefact, not only the enclosing audit, so a
+    consumer iterating rows or flattening findings can still distinguish a
+    degraded read from a validated one.
     """
     audit = _audit(
         _modelo("130", calculation_class="informative", tax_domain=TaxDomain.IRPF),
