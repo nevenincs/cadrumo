@@ -376,6 +376,14 @@ A portable profile file contains taxpayer data, including the tax identifier,
 activity, and local filing history. Store it as sensitive tax data, and don't
 attach it to a support request unless you've removed personal details.
 
+Two related outputs are easy to confuse with this one. `aeat config profile
+subject-access-request` writes the *same* bundle, framed as a data-subject
+right-of-access response - so a cleartext bundle carries the same handoff risk
+whichever purpose produced it. The sealed custody archive is a different thing
+again: it is the encrypted backup you restore from, and neither export is a
+substitute for it. See
+[import, export, and evidence](../reference/import-export-and-evidence.md).
+
 Sign out without deleting the profile using `aeat config logout`.
 Logout closes the active storage session, discards its in-memory keys, disposes
 the bucket engines, and clears the local active-profile pointer:

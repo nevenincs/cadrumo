@@ -370,7 +370,7 @@ Use the mandatory structured documentation workflow to update guides and referen
 - [ ] `W05.P17.S174` - Regenerate terminology coverage from authoritative sources and reject removed command tokens; `src/cadrumo/_data/terminology/evaluation/coverage-report.json`.
 - [ ] `W05.P17.S175` - Validate every regenerated sequence against its directive and command contract; `dev/docs/tests/test_sequence_contract.py`.
 - [ ] `W05.P17.S176` - Build Sphinx with warnings as errors and verify references, tree, links, and sequences; `dev/docs/tests/test_docs_build.py`.
-- [ ] `W05.P17.S239` - Rewrite profile export and subject-access documentation around the shared durable service, schema-derived categories, equivalent cleartext handoff risk, and separate sealed recovery archive; `docs/how-to/profile-setup.md; docs/reference/import-export-and-evidence.md; docs/reference/commands-and-configuration.md`.
+- [x] `W05.P17.S239` - Rewrite profile export and subject-access documentation around the shared durable service, schema-derived categories, equivalent cleartext handoff risk, and separate sealed recovery archive; `docs/how-to/profile-setup.md; docs/reference/import-export-and-evidence.md; docs/reference/commands-and-configuration.md`.
 - [x] `W05.P17.S240` - Remove evidence audit replay from all user documentation, generated reference expectations, examples, and terminology projections while retaining audit check; `docs/; dev/docs/; src/cadrumo/_data/terminology/`.
 
 ## Wave `W06` - Prove conformance and close the campaign
