@@ -915,6 +915,70 @@ def test_an_accepted_weakening_is_written_and_the_acceptance_reaches_the_real_ve
     assert load_baseline(seeded).ceilings.grounding_findings == validated_report.grounding_finding_count
 
 
+def test_a_recorded_baseline_lands_as_the_bytes_it_serialised(
+    validated_report: ConformanceReport,
+    tmp_path: Path,
+) -> None:
+    """The capture is a byte write, so nothing translates the file's terminators.
+
+    ``record_baseline`` wrote through ``write_text``, which re-encodes under the
+    platform's newline convention. On Windows every capture therefore expanded
+    the baseline's LF terminators to CRLF, and ``git`` — normalising under
+    ``text=auto eol=lf`` — reported no change at all, so the artefact the gate
+    READS differed from its committed bytes for every reader that is not git.
+    Measured on the tree that carried it: 28 LF terminators in 1932 committed
+    bytes against 28 CRLF ones in 1960 on disk, with ``git diff`` silent.
+
+    Three assertions, in the order they matter. The file must not have existed
+    and must exist non-empty afterwards, so the case cannot pass on a path
+    nothing wrote — the failure mode this campaign met three times on the stamp
+    writer. The bytes must carry no carriage return, which is what flips: no
+    value in the payload contains one, so any CR in the file was inserted by the
+    write. And the bytes must equal the serialisation of the model the function
+    RETURNED, so a writer that silently wrote something else than it reported is
+    caught too.
+
+    The CR assertion is decisive only where the platform translates, which is
+    where the defect was measured; on a platform whose line separator is already
+    LF it holds trivially and the byte-equality assertion carries the case.
+    """
+    path = tmp_path / "captured.json"
+    assert not path.exists()
+
+    written = record_baseline(
+        validated_report,
+        note="a capture proving the writer does not translate terminators",
+        recorded_at="2026-07-28",
+        path=path,
+    )
+    raw = path.read_bytes()
+
+    assert raw, "the capture must actually have written something"
+    assert b"\r" not in raw, "the capture translated the file's terminators"
+    expected = json.dumps(written.model_dump(mode="json"), indent=2, sort_keys=True) + "\n"
+    assert raw == expected.encode(UTF_8_ENCODING)
+
+
+def test_the_committed_baseline_on_disk_matches_its_committed_terminators() -> None:
+    """The artefact the gate reads must not have been rewritten by a capture.
+
+    The defect above was invisible in review precisely because ``git diff`` stays
+    clean through ``text=auto eol=lf`` normalisation while the working tree
+    carries the rewrite, so nothing but a byte read could see it. This is that
+    byte read, standing over the real committed file: the baseline is checked out
+    LF on every platform by its git attribute, so a carriage return here means a
+    capture rewrote the file after checkout and the on-disk artefact has drifted
+    from the committed one.
+    """
+    raw = baseline_path().read_bytes()
+
+    assert raw, "the committed baseline must exist and be non-empty"
+    assert b"\r" not in raw, (
+        "the committed baseline on disk carries translated terminators; a capture rewrote it after "
+        "checkout and git cannot see the difference"
+    )
+
+
 def _baseline_with(path: Path, *, ceiling: str | None = None, floor: str | None = None, delta: int = 0) -> Path:
     """Write a copy of the committed baseline with exactly one counter moved."""
     raw = json.loads(baseline_path().read_text(encoding=UTF_8_ENCODING))

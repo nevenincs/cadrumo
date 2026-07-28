@@ -754,9 +754,16 @@ def record_baseline(
                 "one never heals on its own. If the movement is real and intended, re-run with the "
                 "acceptance flag and say in the note which counter moved and why.",
             )
-    resolved.write_text(
-        json.dumps(baseline.model_dump(mode="json"), indent=2, sort_keys=True) + "\n",
-        encoding=UTF_8_ENCODING,
+    # BYTES, not text, for the same reason the governance writer reads and writes
+    # bytes: ``write_text`` re-encodes under the platform's newline convention, so
+    # on Windows every capture expanded this file's LF terminators to CRLF while
+    # git — which normalises under ``text=auto eol=lf`` — reported no change at
+    # all. The committed baseline and the baseline on disk therefore differed for
+    # every reader that is not git, and this file is the artefact the gate READS.
+    # Measured on the tree that carried it: the HEAD blob held 28 LF terminators
+    # in 1932 bytes, the working tree 28 CRLF ones in 1960, ``git diff`` silent.
+    resolved.write_bytes(
+        (json.dumps(baseline.model_dump(mode="json"), indent=2, sort_keys=True) + "\n").encode(UTF_8_ENCODING),
     )
     return baseline
 
