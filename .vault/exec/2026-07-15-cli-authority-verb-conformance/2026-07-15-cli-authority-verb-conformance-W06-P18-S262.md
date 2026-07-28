@@ -41,6 +41,12 @@ The semantic code index was degraded for the whole of this wave, reporting itsel
 
 The adoption gate's emptiness is a direct consequence of the campaign succeeding: the earlier Steps removed the duplicate literals it was written to catch. Its own docstring anticipates literals that no longer exist. Left as is it will pass forever regardless of what happens to the registry, so it is a candidate for either an anti-vacuity floor of its own or retirement in favour of the storage-side gate.
 
-## Post-freeze re-run required — in-flight expansion to adoption gate
+## Post-freeze re-measurement at HEAD `9c4b780e1aed5c41938e16eaed2eccdcbddd3cfd`
 
-Step reopened: `src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry_adoption.py` is undergoing significant expansion (+100 lines) in the in-flight uncommitted working tree. This file is in the adapter-storage test directory, the same area as the storage-side gate named in this Step's scope, and likely addresses the adoption-gate weakness noted in the outcome: the application-side adoption test finding zero usages and asserting a vacuously-true empty-offence list. The current command runs two specific named files and would not automatically pick up any changes to this file unless it is in scope. Post-freeze re-run should verify the exact file paths and update the command if needed to capture the expanded adoption gate. The storage-side invariant satisfaction recorded above is stable and not affected by the in-flight change.
+Verdict: SATISFIED. The adoption-gate weakness recorded in the original outcome is resolved.
+
+The committed tree added `src/cadrumo/application/tests/test_storage_namespace_adoption.py` (8 test functions), which directly replaces the vacuous literal-membership check with three structural production-root scans: recognition through the registry itself, redeclaration detection via AST walk over the whole package, and per-consumer binding verification. This gate is non-vacuous by construction: a re-hardcoded literal would repopulate the offence list and cause a failure.
+
+Command: `uv run --no-sync pytest -q -p no:cacheprovider -n auto --dist=loadfile --tb=no --no-header -m "(unit or integration) and not serial and not os_keychain and not external_tool and not perf" src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py src/cadrumo/application/tests/test_namespace_registry_adoption.py src/cadrumo/application/tests/test_storage_namespace_adoption.py`.
+
+Collected 37, passed 37, failed 0, skipped 0. Exit line: `37 passed in 44.24s`, exit code 0. The storage-side invariant from the original reading is unchanged and satisfied. The previously-weak application-side adoption gate is now substantive: the new file's 8 tests walk the production tree, detect raw-literal redeclarations, and verify per-consumer bindings, with a non-vacuous anti-tautology proof embedded.

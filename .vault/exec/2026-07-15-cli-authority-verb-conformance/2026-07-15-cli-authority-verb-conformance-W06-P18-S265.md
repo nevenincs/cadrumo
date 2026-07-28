@@ -51,6 +51,10 @@ Combined command over both scope directories: `uv run --no-sync pytest src/cadru
 
 Collected 4399, passed 4399, failed 0, skipped 0. Exit line: `4399 passed, 2 warnings in 530.99s`, exit code 0. HEAD at run time was `1437055950f5b8f4082d323578294fc32ad1d9fe`. The four worker-artefact failures from the prior second pass (three cross-domain registration races, one external-constants model validation against uncommitted peer work) are absent: the cross-domain registration cases are stable with workers at this HEAD and the external-constants file is now committed.
 
-## Post-freeze re-run required — in-flight changes to registry production and tests
+## Post-freeze re-measurement at HEAD `9c4b780e1aed5c41938e16eaed2eccdcbddd3cfd`
 
-Step reopened: four in-flight uncommitted files fall directly inside `src/cadrumo/domain/calculations/registry/`, the scope this Step covers. `domain/calculations/registry/_classification_coherence.py` (4-line change) modifies the classification module that `test_lifecycle.py` depends on and that caused 2 of the S177 failures via profile schema validation. `domain/calculations/registry/_export.py` (4-line change) modifies the export module. `domain/calculations/registry/tests/test_export.py` (14-line change, net reduction) modifies the export test directly in scope. `domain/calculations/registry/__init__.py` (2 additions) re-exports new symbols. The re-measurement at `1437055950` showed 4399 passed with no failures; after the in-flight changes commit the count may shift and the test_export modifications may alter coverage. Post-freeze re-run will record the updated baseline. The as-of invariant satisfaction is stable and not endangered by these changes.
+Verdict: SATISFIED. Count unchanged at 4399; four changed registry files did not add or remove tests.
+
+Command: `uv run --no-sync pytest src/cadrumo/domain/calculations/registry/tests/ src/cadrumo/application/modelo/tests/ -n auto --dist=loadfile -m "not os_keychain" -q --tb=no --no-header`.
+
+Collected 4399, passed 4399, failed 0, skipped 0. Exit line: `4399 passed, 2 warnings in 789.89s`, exit code 0. The four previously-uncommitted files now committed (`_classification_coherence.py`, `_export.py`, `tests/test_export.py`, `__init__.py`) introduced no regressions and the test count is identical to the prior reading at `1437055950`. The as-of invariant is unaffected.

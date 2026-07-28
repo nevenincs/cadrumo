@@ -362,9 +362,9 @@ Use the mandatory structured documentation workflow to update guides and referen
 - [x] `W05.P17.S166` - Rewrite bank-import examples to separate evidence attach from invoice link; `docs/how-to/import-bank-statements.md`.
 - [x] `W05.P17.S167` - Align the how-to index with logout, passphrase, recovery, and reset lifecycle terminology; `docs/how-to/index.md`.
 - [x] `W05.P17.S168` - Align the command and configuration overview with the accepted hierarchy and security semantics; `docs/reference/commands-and-configuration.md`.
-- [ ] `W05.P17.S169` - Regenerate data-access sequence goldens from real accepted commands; `docs/_sequences/how-to/protect-data-access/`.
-- [ ] `W05.P17.S170` - Regenerate authentication sequence goldens for login, logout, reset, and certificate secrets; `docs/_sequences/how-to/authenticate-with-aeat/`.
-- [ ] `W05.P17.S171` - Regenerate bank-import sequence goldens for attach and invoice link; `docs/_sequences/how-to/import-bank-statements/`.
+- [x] `W05.P17.S169` - Regenerate data-access sequence goldens from real accepted commands; `docs/_sequences/how-to/protect-data-access/`.
+- [x] `W05.P17.S170` - Regenerate authentication sequence goldens for login, logout, reset, and certificate secrets; `docs/_sequences/how-to/authenticate-with-aeat/`.
+- [x] `W05.P17.S171` - Regenerate bank-import sequence goldens for attach and invoice link; `docs/_sequences/how-to/import-bank-statements/`.
 - [x] `W05.P17.S172` - Regenerate CLI reference pages from the live command tree and prove removed pages are absent; `dev/docs/tests/test_cli_reference_conformance.py`.
 - [x] `W05.P17.S173` - Regenerate the static CLI tree from the live command tree and verify exact accepted paths; `dev/docs/tests/test_cli_tree.py`.
 - [x] `W05.P17.S174` - Regenerate terminology coverage from authoritative sources and reject removed command tokens; `src/cadrumo/_data/terminology/evaluation/coverage-report.json`.
@@ -381,7 +381,7 @@ Run focused real-behavior evidence, whole-surface conformance, duplication re-au
 
 Exercise every canonical authority with real encrypted storage, processes, locks, certificate services, and CLI invocation.
 
-- [ ] `W06.P18.S177` - Run focused pointer, switch, logout, reset, and bootstrap-policy suites against real persisted state; `src/cadrumo/entrypoints/cli/tests/`.
+- [x] `W06.P18.S177` - Run focused pointer, switch, logout, reset, and bootstrap-policy suites against real persisted state; `src/cadrumo/entrypoints/cli/tests/`.
 - [x] `W06.P18.S178` - Run passphrase and recovery lifecycle suites against real encrypted vaults and secure input channels; `src/cadrumo/entrypoints/cli/_config/tests/`.
 - [x] `W06.P18.S179` - Run auth and certificate suites against real storage and provider boundaries; `src/cadrumo/application/auth/tests/`.
 - [x] `W06.P18.S180` - Run ledger attach, atomic invoice-link, LLM split inheritance, and failure-rollback suites and prove no generic evidence bypass or partial child commit can execute; `src/cadrumo/application/ledger/tests/`.

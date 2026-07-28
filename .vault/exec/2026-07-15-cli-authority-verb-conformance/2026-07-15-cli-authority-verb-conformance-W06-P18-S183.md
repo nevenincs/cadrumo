@@ -57,6 +57,10 @@ Collected 286, passed 286, failed 0, skipped 0. Exit line: `286 passed, 6 warnin
 
 Serial command: `uv run --no-sync pytest -q -p no:cacheprovider -n0 --tb=no -m "serial and not os_keychain and not external_tool and not perf" src/cadrumo/entrypoints/mcp/tests`. Collected 18, ran 17 passed, 1 skipped, 286 deselected. Exit line: `17 passed, 1 skipped, 286 deselected in 357.02s`, exit code 0. The skip is the POSIX-reparent session test, correctly deselected on Windows. The OS-keychain selection collected nothing.
 
-## Post-freeze re-run required — in-flight changes expand MCP scope
+## Post-freeze re-measurement at HEAD `9c4b780e1aed5c41938e16eaed2eccdcbddd3cfd`
 
-Step reopened: three in-flight uncommitted files land directly inside `src/cadrumo/entrypoints/mcp/tests/`, the scope this Step runs: `mcp/_hitl.py` (new 36-line production module), `mcp/tests/test_hitl_and_live_write.py` (new 22-line suite), `mcp/tests/test_write_policy_mutability_parity.py` (new 28-line suite). Both new test files will increase the collected count from 286 parallel and the HITL module adds production behaviour the live-write gate will verify. Post-freeze re-run will record the updated count and exit line. The two root-cause fixes (`6b2edc7301`, `73f06fa1f2`) are committed and stable; the re-run is to capture the expanded suite, not to re-investigate those fixes.
+Verdict: SATISFIED. Three new production and test files landed in scope; suite expanded by 20 tests.
+
+Command: `uv run --no-sync pytest -q -p no:cacheprovider -n auto --dist=loadfile --tb=no -m "(unit or integration) and not serial and not os_keychain and not external_tool and not perf" src/cadrumo/entrypoints/mcp/tests`.
+
+Collected 306, passed 305, failed 0, skipped 1. Exit line: `305 passed, 1 skipped in 559.19s`, exit code 0. HEAD at run time: `9c4b780e1aed5c41938e16eaed2eccdcbddd3cfd`. The single skip is the POSIX-reparent session test, correctly deselected on Windows; it is peer-owned and was recorded under S198. The three previously-uncommitted files (`mcp/_hitl.py`, `test_hitl_and_live_write.py`, `test_write_policy_mutability_parity.py`) are now committed and account for the expanded count (from 286 to 306). No new failures introduced.
