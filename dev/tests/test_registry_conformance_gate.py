@@ -5,8 +5,12 @@ separate process so the CI lane sees a non-zero exit when the committed
 baseline has regressed — rather than relying on a developer to run the verb
 by hand and notice.
 
-Two proofs are required, per the campaign plan's "a gate never observed
-failing is not a gate" mandate:
+Two proofs are required, because a gate never observed failing is not a gate.
+A green run alone cannot distinguish a check that is working from one that has
+stopped checking — a broken invocation, a swallowed exit code, or a baseline
+comparison that reads nothing all produce the same passing result. Only a run
+that is made to fail, on a regression seeded for the purpose, shows the gate
+still has teeth:
 
 Green path
     The real registry at HEAD, compared against the committed baseline,
@@ -25,9 +29,6 @@ Lane
     processes). Enrolled in ``ci-full.yml`` — the manual-dispatch 120-minute
     lane — because the composer walks every revision in the bundled registry
     and the real run takes minutes, beyond the per-push budget.
-
-RAG discovery mandate waived: the vaultspec-rag service was unavailable at
-execution time. Grounding performed via ``rg`` plus whole-file reads.
 """
 
 from __future__ import annotations

@@ -483,11 +483,12 @@ def test_stamp_refuses_a_reviewer_that_reads_as_an_already_qualified_attribution
 def test_a_qualified_reviewer_name_that_is_not_a_status_stays_legal(registry_copy: Path) -> None:
     """The paired half: the refusal is the STATUS prefix, never the separator.
 
-    ``agent:opus-executor`` is the convention this campaign's own records use,
-    and the join was never ambiguous — no status value carries a colon, so the
-    tier is everything before the first one. A blanket colon refusal would
-    satisfy the spoof test above while breaking every honest caller, and no
-    other assertion here would notice.
+    A role-qualified identity such as ``agent:opus-executor`` is how an
+    automated reviewer names itself, and its colon is a role prefix rather than
+    a status one. The join was never ambiguous — no status value carries a
+    colon, so the tier is everything before the first one. A blanket colon
+    refusal would satisfy the spoof test above while breaking every honest
+    caller, and no other assertion here would notice.
     """
     result = stamp_revision(
         _STAMPED_MODELO,
@@ -1142,7 +1143,7 @@ def operator_signed_copy(registry_copy: Path) -> Path:
     """A real modelo copy whose revision carries a hand-authored operator signoff.
 
     Seeded by appending the four scalars to the manifest, which is exactly the
-    path the governing decision keeps legal for the operator: the schema accepts
+    path deliberately left legal for the operator: the schema accepts
     ``operator_reviewed`` and this CLI cannot write it, so a genuine signoff can
     only ever arrive as a hand edit. The seed is proved to have compiled before
     any test reads it, so a test asserting a refusal cannot be passing because
@@ -1791,14 +1792,17 @@ def test_the_stamp_command_turns_a_writer_refusal_into_a_parameter_error(registr
 
 
 def test_the_stamp_command_refuses_to_re_attribute_an_operator_signoff(operator_signed_copy: Path) -> None:
-    """The S53 refusal, confirmed through the real app rather than at the writer.
+    """The re-attribution refusal, proved through the app rather than the writer.
 
-    The finding was reported as reproduced end to end and could not be
-    re-confirmed that way, because the verb exposed no registry root and the only
-    tree it could reach was the shipped one. With a root it reaches a copy, so the
-    refusal is now proved on the surface an operator actually drives — and on
-    bytes, because a refusal raised after the rewrite would leave the
-    re-attributed signoff on disk and still produce a non-zero exit.
+    Every other test of this refusal calls ``stamp_revision`` directly, which
+    leaves the command's own argument parsing and error translation unproved. It
+    could not be reached at all until the verb accepted a registry root: without
+    one the only tree the command can address is the shipped registry, so
+    exercising it end to end would have meant writing a fabricated review into
+    the bundled data.
+
+    The byte assertion is load-bearing: a refusal raised after the rewrite would
+    leave the re-attributed signoff on disk and still produce a non-zero exit.
     """
     manifest = _manifest_of(operator_signed_copy)
     before = manifest.read_bytes()
