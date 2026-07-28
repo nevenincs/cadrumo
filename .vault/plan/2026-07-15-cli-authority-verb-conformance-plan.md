@@ -387,12 +387,12 @@ Exercise every canonical authority with real encrypted storage, processes, locks
 - [x] `W06.P18.S180` - Run ledger attach, atomic invoice-link, LLM split inheritance, and failure-rollback suites and prove no generic evidence bypass or partial child commit can execute; `src/cadrumo/application/ledger/tests/`.
 - [x] `W06.P18.S181` - Run application and live CLI profile-export suites across real fresh processes, target contention, schema-derived SAR categories, and every crash window; `src/cadrumo/application/user_profile/tests/; src/cadrumo/entrypoints/cli/tests/test_profile_export_roundtrip.py; src/cadrumo/entrypoints/cli/tests/test_profile_subject_access_request.py`.
 - [x] `W06.P18.S182` - Run evidence service and modelo audit suites and prove the replay method, command, schema, event, tests, and documentation cannot execute or be discovered; `src/cadrumo/application/evidence/tests/test_evidence.py; src/cadrumo/entrypoints/cli/tests/test_audit_verbs.py`.
-- [ ] `W06.P18.S183` - Run MCP dispatch, identity, input-schema, risk, mutability, and telemetry parity suites; `src/cadrumo/entrypoints/mcp/tests/`.
-- [ ] `W06.P18.S241` - Run hashing vector, truncation, file-retry, network-stream, mirror-key, and AST recurrence suites for all 18 one-shot and four reducible call sites; `src/cadrumo/core/tests/; src/cadrumo/adapters/; src/cadrumo/application/; src/cadrumo/domain/; src/cadrumo/entrypoints/mcp/tests/`.
-- [ ] `W06.P18.S262` - Run namespace registry and non-vacuous production adoption suites and reject duplicate declarations across every production root; `src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py; src/cadrumo/application/tests/test_namespace_registry_adoption.py`.
+- [x] `W06.P18.S183` - Run MCP dispatch, identity, input-schema, risk, mutability, and telemetry parity suites; `src/cadrumo/entrypoints/mcp/tests/`.
+- [x] `W06.P18.S241` - Run hashing vector, truncation, file-retry, network-stream, mirror-key, and AST recurrence suites for all 18 one-shot and four reducible call sites; `src/cadrumo/core/tests/; src/cadrumo/adapters/; src/cadrumo/application/; src/cadrumo/domain/; src/cadrumo/entrypoints/mcp/tests/`.
+- [x] `W06.P18.S262` - Run namespace registry and non-vacuous production adoption suites and reject duplicate declarations across every production root; `src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py; src/cadrumo/application/tests/test_namespace_registry_adoption.py`.
 - [x] `W06.P18.S263` - Run filed single, bulk, source, history-ordering, and strict IVA suites against real persisted observations and artefacts; `src/cadrumo/application/live/tests/`.
 - [x] `W06.P18.S264` - Run the typed LLM review workflow and both CLI routing modes against real persistence and subprocess model boundaries; `src/cadrumo/application/ledger/tests/; src/cadrumo/entrypoints/cli/tests/`.
-- [ ] `W06.P18.S265` - Run scoped and unscoped registry query suites across historical as-of boundaries and projection parity; `src/cadrumo/domain/calculations/registry/tests/; src/cadrumo/application/modelo/tests/`.
+- [x] `W06.P18.S265` - Run scoped and unscoped registry query suites across historical as-of boundaries and projection parity; `src/cadrumo/domain/calculations/registry/tests/; src/cadrumo/application/modelo/tests/`.
 - [x] `W06.P18.S266` - Run the direct duplication runner and health-report suites and prove every unavailable or malformed execution is visibly amber rather than green; `src/cadrumo/tests/test_dev_audit_report.py`.
 
 ### Phase `W06.P19` - Run whole-surface conformance and duplication audits
@@ -428,7 +428,7 @@ Materialize the CLI, prove schema, locale, docs, and MCP agreement, rerun clone 
 
 Run the formal code-review skill, reconcile findings, and prove every accepted ADR requirement before declaring completion.
 
-- [ ] `W06.P20.S209` - Invoke vaultspec-code-review over the complete feature diff for safety, intent, boundary direction, and test quality; `.`.
+- [x] `W06.P20.S209` - Invoke vaultspec-code-review over the complete feature diff for safety, intent, boundary direction, and test quality; `.`.
 - [ ] `W06.P20.S210` - Resolve every in-scope blocker or major finding through its owning implementation Step; `.vault/plan/2026-07-15-cli-authority-verb-conformance-plan.md`.
 - [ ] `W06.P20.S211` - Rerun every focused or full gate invalidated by a corrective edit; `.vault/exec/`.
 - [ ] `W06.P20.S212` - Record a zero-blocker and zero-major formal review verdict; `.vault/audit/`.
