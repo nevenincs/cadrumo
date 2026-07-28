@@ -1403,6 +1403,9 @@ application:
         read cannot be confirmed to belong to it. Restore the fiscal ID and pull again.
       censal_read_identity_mismatch: The censal read belongs to a different taxpayer
         than this profile; it was not applied.
+      censal_read_identity_unset: 'Record your fiscal ID before pulling your census:
+        this profile has none yet, so the pull cannot confirm the record AEAT returns
+        is yours. Run aeat config profile edit to add it.'
       duplicate_tax_id: Tax id '%{tax_id}' is already used by profile '%{profile}';
         one taxpayer must have one profile.
       lifecycle_profile_already_exists: A profile already exists in the active bucket.
@@ -1451,7 +1454,6 @@ application:
         is newer than this application supports.
       unsupported_bundle_schema_version: The bundle schema version is not supported
         by this application version.
-      censal_read_identity_unset: 'Record your fiscal ID before pulling your census: this profile has none yet, so the pull cannot confirm the record AEAT returns is yours. Run aeat config profile edit to add it.'
     notices:
       censo_divergences_open: '{count} profile field(s) still diverge from the Certificado
         de Situación Censal and remain unresolved: {axes}.'
@@ -4554,6 +4556,9 @@ cli:
         section_modelo: Modelo
         section_overview: Overview
         section_review_and_registry: Review and registry
+        modelo_audit_show: 'Show the evidence audit for a filing revision.'
+        modelo_audit_check: 'Check bundled evidence for a filing revision.'
+        modelo_audit_export: 'Export the evidence audit for a filing revision.'
       config:
         auth_configure: Configure an authentication provider.
         auth_logout: End local authentication sessions while preserving provider configuration.
@@ -4561,6 +4566,9 @@ cli:
         auth_reset: Remove local authentication configuration and stored credentials.
         auth_status: Show configured authentication state.
         auth_test: Check local authentication readiness.
+        certificate_check: Check the active certificate credential.
+        certificate_secret_remove: Remove the stored certificate secret.
+        certificate_secret_set: Store the certificate secret in secure storage.
         diagnostics_logs: Show the configured log path and recent lines.
         diagnostics_quarantine: Quarantine unreadable secure objects.
         diagnostics_repair: Diagnose local configuration and storage health.
@@ -4573,8 +4581,10 @@ cli:
         paragraph_storage_isolation: For an isolated blank state, set CADRUMO_LOCAL_STORAGE_ROOT,
           CADRUMO_SECRET_STORE_BACKEND=file, CADRUMO_SECRET_STORE_DIR, and CADRUMO_SECRET_PASSPHRASE;
           logs default under that storage root.
+        passphrase_change: Change the passphrase that protects local data.
         profile_delete: Delete a profile after explicit confirmation.
         profile_duplicate: Copy a profile to a new id.
+        profile_export: Export a portable profile bundle.
         profile_history: Inspect the append-only profile event history.
         profile_list: List profile facts.
         profile_login: Log in to a profile and make it the active one.
@@ -4582,14 +4592,21 @@ cli:
         profile_rename: Rename a profile and move its bucket.
         profile_show: Show one profile's facts.
         profile_status: Show active profile readiness.
+        recover: Recover local access with a recovery mnemonic.
+        recovery_create: Enrol a recovery mnemonic.
+        recovery_rotate: Rotate the recovery mnemonic.
+        recovery_status: Show recovery-mnemonic enrolment status.
+        recovery_verify: Verify a recovery mnemonic without using it.
         reset_resume: Continue an incomplete reset operation.
         reset_start: Start a new irreversible reset of every locally stored profile.
         reset_status: Show reset operation status without changing local data.
         section_authentication: Authentication
+        section_custody: Passphrase and recovery custody
         section_diagnostics: Diagnostics
         section_first_run: First run
         section_profile_inspection: Profile inspection
         section_profile_lifecycle: Profile lifecycle
+        profile_sar: 'Export a subject-access data package.'
       root:
         diagnostics_live_filed: List captured filed-return observations.
         diagnostics_overview: Summarize active workspace readiness.
@@ -5678,6 +5695,10 @@ errors:
     integrity_repair_integrity: A repair-integrity invariant or decision contract
       was violated.
     integrity_storage_blob: A stored object's SHA-256 hash disagrees with its manifest.
+    integrity_storage_bucket_manifest_version_below_floor: This profile bucket predates
+      the oldest format this version of Cadrumo can read.
+    integrity_storage_bucket_manifest_version_from_future: This profile bucket was
+      written by a newer version of Cadrumo. Update Cadrumo to open it.
     integrity_storage_bucket_validation: A bucket parameter or manifest field failed
       validation.
     integrity_storage_classification: A record's declared sensitivity class is incompatible
@@ -5727,8 +5748,6 @@ errors:
       or the calculation engine may be corrupted.
     profile_import_signature: The profile archive failed its signature or integrity
       check. Do not import archives from an untrusted source.
-    integrity_storage_bucket_manifest_version_from_future: 'This profile bucket was written by a newer version of Cadrumo. Update Cadrumo to open it.'
-    integrity_storage_bucket_manifest_version_below_floor: 'This profile bucket predates the oldest format this version of Cadrumo can read.'
   internal:
     cli_outbound_payload_boundary: Cadrumo built an internal record that failed its
       own validation. Your command was correct; this is a defect in Cadrumo. Report
@@ -6258,8 +6277,9 @@ flows:
       value: Value
     edit:
       cancel: Cancel
+      required_blank: '{field} is required, so it cannot be left blank. Enter a value,
+        or cancel to leave it unchanged.'
       save: Save
-      required_blank: '{field} is required, so it cannot be left blank. Enter a value, or cancel to leave it unchanged.'
     progress: '{present} of {total} fields filled in, {missing} still needed for filing'
     section_title: '{title} — {present}/{total}'
     title: 'Profile: {profile}'

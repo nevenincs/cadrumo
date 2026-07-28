@@ -1460,6 +1460,10 @@ application:
         vissza az adóazonosítót, majd futtassa újra a lekérdezést.
       censal_read_identity_mismatch: A nyilvántartási olvasás egy másik adózóhoz tartozik,
         nem ehhez a profilhoz; nem került alkalmazásra.
+      censal_read_identity_unset: 'Rögzítse az adóazonosítóját, mielőtt lekérdezi
+        a nyilvántartását: ennek a profilnak még nincs, ezért a lekérdezés nem tudja
+        megerősíteni, hogy az AEAT által visszaadott rekord az Öné. Futtassa az aeat
+        config profile edit parancsot a megadásához.'
       duplicate_tax_id: A(z) "%{tax_id}" adóazonosítót már a(z) "%{profile}" profil
         használja; egy adózónak egy profilja lehet.
       lifecycle_profile_already_exists: Már létezik profil az aktív bucketben.
@@ -1506,7 +1510,6 @@ application:
         ez az alkalmazás nem támogatja.
       unsupported_bundle_schema_version: A csomag sémaverziója nem támogatott ebben
         az alkalmazásverzióban.
-      censal_read_identity_unset: 'Rögzítse az adóazonosítóját, mielőtt lekérdezi a nyilvántartását: ennek a profilnak még nincs, ezért a lekérdezés nem tudja megerősíteni, hogy az AEAT által visszaadott rekord az Öné. Futtassa az aeat config profile edit parancsot a megadásához.'
     notices:
       censo_divergences_open: '{count} profiladat továbbra is eltér a Certificado
         de Situación Censal tanúsítványtól és megoldatlan: {axes}.'
@@ -4837,6 +4840,9 @@ cli:
         section_modelo: Nyomtatvány
         section_overview: Áttekintés
         section_review_and_registry: Felülvizsgálat és nyilvántartás
+        modelo_audit_show: 'Megjeleníti egy bevallásrevízió bizonyíték-auditját.'
+        modelo_audit_check: 'Ellenőrzi egy bevallásrevízió csomagolt bizonyítékait.'
+        modelo_audit_export: 'Exportálja egy bevallásrevízió bizonyíték-auditját.'
       config:
         auth_configure: Hitelesítési szolgáltató konfigurálása.
         auth_logout: A helyi hitelesítési munkamenetek lezárása a beállítások megőrzésével.
@@ -4844,6 +4850,10 @@ cli:
         auth_reset: A helyi hitelesítési beállítások és tárolt hitelesítő adatok eltávolítása.
         auth_status: Beállított hitelesítési állapot megjelenítése.
         auth_test: Helyi hitelesítési készség ellenőrzése.
+        certificate_check: Ellenőrzi az aktív tanúsítvány hitelesítő adatait.
+        certificate_secret_remove: Eltávolítja a tárolt tanúsítvány-titkot.
+        certificate_secret_set: A tanúsítvány titkos kulcsát a biztonságos tárolóba
+          menti.
         diagnostics_logs: A beállított naplóútvonal és a legújabb sorok megjelenítése.
         diagnostics_quarantine: Olvashatatlan biztonságos objektumok karanténba helyezése.
         diagnostics_repair: Helyi konfiguráció és tár állapotának diagnosztikája.
@@ -4857,8 +4867,10 @@ cli:
           az env változókat; CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_BACKEND=file,
           CADRUMO_SECRET_STORE_DIR és CADRUMO_SECRET_PASSPHRASE; a naplók alapértelmezés
           szerint ezen tárhelygyökér alatt vannak.
+        passphrase_change: Módosítja a helyi adatokat védő jelszót.
         profile_delete: Profil törlése explicit megerősítés után.
         profile_duplicate: Profil másolása új azonosítóra.
+        profile_export: Hordozható profilcsomagot exportál.
         profile_history: Az append-only profil eseménytörténet megtekintése.
         profile_list: Profiladatok listázása.
         profile_login: Bejelentkezés egy profilba, és aktívvá tétele.
@@ -4866,16 +4878,23 @@ cli:
         profile_rename: Profil átnevezése és mappájának áthelyezése.
         profile_show: Egy profil adatainak megjelenítése.
         profile_status: Az aktív profil készültségének megjelenítése.
+        recover: Helyreállítja a helyi hozzáférést egy helyreállítási kifejezéssel.
+        recovery_create: Helyreállítási kifejezést regisztrál.
+        recovery_rotate: Lecseréli a helyreállítási kifejezést.
+        recovery_status: Megjeleníti a helyreállítási kifejezés regisztrációs állapotát.
+        recovery_verify: Ellenőriz egy helyreállítási kifejezést anélkül, hogy felhasználná.
         reset_resume: Folytat egy befejezetlen visszaállítási műveletet.
         reset_start: Visszafordíthatatlan visszaállítást indít minden helyben tárolt
           profilra.
         reset_status: A helyi adatok módosítása nélkül megjeleníti a visszaállítási
           művelet állapotát.
         section_authentication: Hitelesítés
+        section_custody: Jelszó és helyreállítás őrzése
         section_diagnostics: Diagnosztika
         section_first_run: Első futtatás
         section_profile_inspection: Profiladatok vizsgálata
         section_profile_lifecycle: Profil életciklusa
+        profile_sar: 'Érintetti hozzáférési adatcsomagot exportál.'
       root:
         diagnostics_live_filed: Rögzített benyújtott bevallás-megfigyelések listázása.
         diagnostics_overview: Az aktív munkaterület készültségének összefoglalása.
@@ -5987,6 +6006,10 @@ errors:
     integrity_repair_integrity: Egy javítási-integritási invariáns vagy döntési szerződés
       sérült.
     integrity_storage_blob: Egy tárolt objektum SHA-256 hashje eltér a manifeszttől.
+    integrity_storage_bucket_manifest_version_below_floor: Ez a profilmappa régebbi
+      annál a formátumnál, amelyet a Cadrumo e verziója még olvasni tud.
+    integrity_storage_bucket_manifest_version_from_future: Ezt a profilmappát a Cadrumo
+      újabb verziója írta. Frissítsd a Cadrumót a megnyitásához.
     integrity_storage_bucket_validation: Egy gyűjtőparaméter vagy manifestmező nem
       teljesítette az érvényesítést.
     integrity_storage_classification: Egy rekord deklarált érzékenységi osztálya nem
@@ -6037,8 +6060,6 @@ errors:
       vagy a számítási motor sérült lehet.
     profile_import_signature: A profil-archívum nem ment át az aláírás- vagy integritás-ellenőrzésen.
       Ne importáljon archívumot nem megbízható forrásból.
-    integrity_storage_bucket_manifest_version_from_future: 'Ezt a profilmappát a Cadrumo újabb verziója írta. Frissítsd a Cadrumót a megnyitásához.'
-    integrity_storage_bucket_manifest_version_below_floor: 'Ez a profilmappa régebbi annál a formátumnál, amelyet a Cadrumo e verziója még olvasni tud.'
   internal:
     cli_outbound_payload_boundary: A Cadrumo olyan belső rekordot épített, amely nem
       felelt meg a saját érvényesítésének. A parancsod helyes volt; ez a Cadrumo hibája.
@@ -6578,8 +6599,9 @@ flows:
       value: Érték
     edit:
       cancel: Mégse
+      required_blank: A(z) {field} kötelező, ezért nem maradhat üresen. Adj meg egy
+        értéket, vagy a mégse gombbal hagyd változatlanul.
       save: Mentés
-      required_blank: 'A(z) {field} kötelező, ezért nem maradhat üresen. Adj meg egy értéket, vagy a mégse gombbal hagyd változatlanul.'
     progress: '{present} / {total} mező kitöltve, {missing} hiányzik a benyújtáshoz'
     section_title: '{title} — {present}/{total}'
     title: 'Profil: {profile}'
