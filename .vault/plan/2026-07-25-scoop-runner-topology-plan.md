@@ -75,6 +75,14 @@ The row is green only when a dispatched acquisition run publishes a
 signal counts, and no locally minted or hand-written row is admissible in its
 place.
 
+One consequence of pinning the runner label is worth knowing before the host
+exists. Previously a dispatch failed within seconds at the docker-mode
+preflight. Now, with no runner carrying the label, a dispatch instead waits for
+a matching runner and is bounded only by the job timeout. That is the honest
+behaviour, since the job genuinely cannot run anywhere else, and the queue
+state names the labels it is waiting for, but it reads as a hang rather than a
+refusal to anyone who dispatches the lane before provisioning the host.
+
 ## Context
 
 Accepted ADR carrying no plan. Rules which runner executes the Scoop evidence lane, orthogonal to where Scoop manifests live, which the account-distribution-standard ADR settles.
