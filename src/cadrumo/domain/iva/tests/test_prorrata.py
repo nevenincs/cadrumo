@@ -110,7 +110,7 @@ _INVALID_SECTOR_ID_CASES = (
 
 
 def test_general_percentage_is_100_when_all_operations_grant_right() -> None:
-    """LIVA art. 102.Uno identity: ratio = total / total = 100%."""
+    """LIVA art. 104.Dos identity: ratio = total / total = 100%."""
 
     inputs = ProrrataInputs(
         operaciones_con_derecho_deduccion=Decimal("100000"),
@@ -128,7 +128,7 @@ def test_general_percentage_is_100_when_all_operations_grant_right() -> None:
 
 
 def test_general_percentage_is_zero_when_no_operations_grant_right() -> None:
-    """LIVA art. 102.Uno identity: ratio = 0 / total = 0%."""
+    """LIVA art. 104.Dos identity: ratio = 0 / total = 0%."""
 
     inputs = ProrrataInputs(
         operaciones_con_derecho_deduccion=Decimal("0"),
@@ -184,12 +184,12 @@ def test_general_percentage_zero_total_defaults_to_100() -> None:
 
 # ---------------------------------------------------------------------------
 # ROUND_CEILING contract — anchored in TJUE C-488/07 (Royal Bank of Scotland)
-# and LIVA art. 102.Dos.
+# and the closing paragraph of LIVA art. 104.Dos.
 # ---------------------------------------------------------------------------
 
 
 def test_general_percentage_rounds_up_when_fraction_exceeds_whole() -> None:
-    """LIVA art. 102.Dos: any fraction above a whole integer rounds UP.
+    """LIVA art. 104.Dos: any fraction above a whole integer rounds UP.
 
     Inputs producing exactly 76.0001% must yield 77%, not 76%. This is
     the TJUE C-488/07 (Royal Bank of Scotland) rounding-up obligation
@@ -230,12 +230,12 @@ def test_general_percentage_does_not_round_up_exact_whole_integer() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Per-input classification under art. 103 LIVA.
+# Per-input classification under art. 106.Uno LIVA.
 # ---------------------------------------------------------------------------
 
 
 def test_classify_input_deduction_cases() -> None:
-    """LIVA art. 103.Uno classification rules for exclusive and common inputs."""
+    """LIVA art. 106.Uno classification rules for exclusive and common inputs."""
 
     for case in _INPUT_DEDUCTION_CASES:
         classification, input_iva_amount, general_percentage, expected_percentage, expected_amount = case
@@ -249,12 +249,12 @@ def test_classify_input_deduction_cases() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Especial-mandatory threshold (LIVA art. 103.Dos).
+# Especial-mandatory threshold (LIVA art. 103.Dos.2.º).
 # ---------------------------------------------------------------------------
 
 
 def test_especial_mandatory_cases() -> None:
-    """LIVA art. 103.Dos strict +10% boundary and zero-deduction defences."""
+    """LIVA art. 103.Dos.2.º strict +10% boundary and zero-deduction defences."""
 
     for deduction_pairs, expected in _ESPECIAL_MANDATORY_CASES:
         for general_deduction, especial_deduction in deduction_pairs:
