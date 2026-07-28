@@ -117,9 +117,24 @@ not move a manifest. The orthogonality is the same one the standard states
 internally — a repository name and a bucket directory are disjoint constraints —
 extended one axis further to the runner that consumes them.
 
-Where the two axes do meet is at a single downstream gate: a green
-`scoop-windows-x86-64` acquisition row requires **both** an execution host this
-record provisions **and** a published `bucket/cadrumo.json` in the shared
-repository the standard names. Either one missing leaves the row honestly
-unminted. That is a conjunction of two independent preconditions, not a conflict
-between two rulings, and neither record supersedes any part of the other.
+Where the two axes meet is at the **public reacquisition** lane, not at this
+record's acquisition row. That distinction was stated the wrong way round when
+this subsection was first written and is corrected here against the shipped
+harnesses.
+
+The clean acquisition gate stages its own bucket: the lane rewrites the
+cohort-bound manifest to local artefact paths, commits it into a throwaway git
+repository, and adds that as a Scoop bucket over a `file:` URI, so the whole
+install-update-uninstall-reinstall cycle runs against verified local bytes. Its
+emitted acquisition source is that local bucket URI, and the evidence model
+places no public-URL constraint on the field. The `scoop-windows-x86-64` row
+therefore has exactly **one** remaining precondition, the execution host this
+record provisions — a published manifest is not among them.
+
+The public reacquisition script is the lane that installs from a published
+bucket source rather than staging a local one, and it refuses instructively when
+that bucket does not yet serve the package. That row, and the install-claim
+documentation gated on it, is where this record's host and the standard's
+destination are both required at once. Even there it is a conjunction of two
+independent preconditions, not a conflict between two rulings, and neither
+record supersedes any part of the other.
