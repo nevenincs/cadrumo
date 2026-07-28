@@ -355,7 +355,7 @@ Move all four locale catalogues plus help, risk, error, and MCP mirrors to the a
 Use the mandatory structured documentation workflow to update guides and references, then regenerate CLI-owned documentation outputs.
 
 - [ ] `W05.P17.S161` - Invoke the mandatory vaultspec-documentation workflow and keep its render-and-verify gate active for this Phase; `docs/`.
-- [ ] `W05.P17.S162` - Rewrite data-access protection procedures for passphrase, recovery, logout, quarantine, and reset; `docs/how-to/protect-data-access.md`.
+- [x] `W05.P17.S162` - Rewrite data-access protection procedures for passphrase, recovery, logout, quarantine, and reset; `docs/how-to/protect-data-access.md`.
 - [ ] `W05.P17.S163` - Rewrite authentication procedures for login, logout, reset, and backend-free certificate secrets; `docs/how-to/authenticate-with-aeat.md`.
 - [ ] `W05.P17.S164` - Rewrite profile setup and navigation for exact switch labels and strong logout; `docs/how-to/profile-setup.md`.
 - [ ] `W05.P17.S165` - Rewrite ledger evidence guidance to separate attach from invoice-only link; `docs/how-to/ledger-evidence.md`.
@@ -459,7 +459,7 @@ Run the formal code-review skill, reconcile findings, and prove every accepted A
 - [x] `W06.P20.S281` - Resolve the seven unallowlisted tokens reddening the period combined-string gate at HEAD; `src/cadrumo/tests/`.
 - [x] `W06.P20.S282` - Remove the two Code-Stands-Alone violations, a feature tag in a hashing test docstring and vault stems in the duplication disposition fields; `src/cadrumo/core/tests/test_hashing_adoption.py; dev/audit/duplication_dispositions.toml`.
 - [ ] `W06.P20.S283` - Give every set-asserting gate an anti-vacuity floor, asserting the subject count is non-zero before asserting the property, across the write-guard parity, namespace-adoption and tree-walk gates; `src/cadrumo/`.
-- [ ] `W06.P20.S284` - Assert the accepted period tokens on the error envelope structured context rather than on rendered prose, so a wording pass cannot red the grammar cases; `src/cadrumo/entrypoints/cli/tests/test_ledger_period_grammar.py`.
+- [x] `W06.P20.S284` - Assert the accepted period tokens on the error envelope structured context rather than on rendered prose, so a wording pass cannot red the grammar cases; `src/cadrumo/entrypoints/cli/tests/test_ledger_period_grammar.py`.
 - [ ] `W06.P20.S285` - Ground the HITL confirmation key against the live descriptor set at the gate itself, so the permissive default cannot auto-approve an unclassified mutation if a future caller passes an unvalidated key; `src/cadrumo/entrypoints/mcp/_hitl.py`.
 - [ ] `W06.P20.S286` - Return the operator-output test probe and the wizard results schemas to their owning campaigns, since a test module registering a production schema key breaks 128 assertions and 19 setup errors while untracked; `src/cadrumo/application/operator_output/; src/cadrumo/application/wizard/`.
 - [ ] `W06.P20.S287` - Identify the docs-lane workers reporting node-down abnormal termination, four at 24 workers and two at 4, letting a parallel run complete rather than killing it and capturing verbosely so each worker's lines are attributable; `dev/docs/tests/test_docs_build.py`.
