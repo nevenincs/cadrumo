@@ -44,6 +44,10 @@ related:
 - Keep the vacuity floor, every firing proof, every silence proof, and the
   shipped-`conftest.py` case, retargeted at the shared detector and its return
   shapes.
+- Probe every discriminating branch of the consolidated detector by removing it
+  and re-running, rather than assuming form coverage implies branch coverage.
+- Add the three isolating fixtures the probe proved missing, and record the
+  completeness standard they imply in the module docstring.
 
 ## Outcome
 
@@ -75,10 +79,12 @@ Verification, actually run and quoted:
   `=== FAMILY 5: shipped modules importing the unshipped dev tooling: 0 total ===`
   and
   `=== FAMILY 6: shipped modules building a path into the dev tree: 0 total ===`.
-- Boundary gate under the DEFAULT selector: `18 passed in 26.99s`. Re-run
-  unfiltered and serial (`-n0 -m ""`) to defeat a marker-selection false pass:
-  `18 passed in 81.87s`. The counts match, so no test is being silently held
-  out of the default lane.
+- Boundary gate at the consolidation commit, DEFAULT selector:
+  `18 passed in 26.99s`; unfiltered and serial (`-n0 -m ""`) to defeat a
+  marker-selection false pass: `18 passed in 81.87s`. After the branch-proof
+  commit: `21 passed in 15.76s` and `21 passed in 14.23s` respectively. The
+  counts match across selectors in both states, so no test is being silently
+  held out of the default lane.
 - The scanner's own suite, unaffected: `13 passed in 1.11s`.
 - Every form fired and every near-miss stayed silent when driven directly
   through the consolidated detector: literal `1 hit(s) ['literal']`, relative
@@ -111,8 +117,48 @@ After reverting all three the gate returned to `18 passed in 16.28s`, and the
 scanner diff returned to exactly the additive hunk set it had before the
 mutations, with zero mutation residue in the file.
 
-Landed as `6ed41c74b7` over the explicit pathspec pair
-`import_hygiene_scan.py` and `test_dev_path_isolation.py`.
+**Those three mutations were not enough, and the self-review that followed is
+the more useful half of this record.** Killing a whole detector proves the
+gate is wired; it says nothing about whether each BRANCH is individually
+pinned. Six further mutations, one per discriminating branch, were run against
+the consolidated detector. Three flipped a test as they should: dropping the
+relative-marker skip, dropping the interpolated-f-string tail, and dropping the
+docstring skip each killed exactly one. THREE FLIPPED NOTHING - the whole gate
+stayed green at 18 passed with the branch removed:
+
+- the `join` arity-of-two guard, because `"".join(parts)` has no bare `"dev"`
+  argument to match and the two-argument path forms are permitted by the guard
+  anyway, so neither existing fixture could tell whether the guard was there;
+- the newline rejection, because every prose fixture was a docstring and was
+  skipped by node id before the newline check was reached;
+- the left-hand operand of a path join, because the anchored-join fixture only
+  ever put the segment on the right.
+
+All three were faithfully preserved from the pre-consolidation detector, so
+this is inherited rather than introduced - but a branch nobody can flip is a
+branch the next refactor deletes with the suite still green, which is precisely
+the risk this Step exists to remove. Leaving them unproven would have shipped a
+consolidation that looked complete and was not.
+
+Three isolating fixtures now pin them, each derived from what the branch is FOR
+rather than from what the code does: `"x".join("dev")` (a one-argument join
+whose sole argument IS the bare constant), a multi-line non-docstring module
+constant, and `"dev" / PROJECT_ROOT`. Expected behaviour was confirmed against
+the specification before the assertions were written - the first two silent,
+the third firing as `path_join`.
+
+Re-probed after the fixtures landed: each of the three mutations now fails
+exactly one named test, `1 failed, 20 passed` in every case, where all three
+were `18 passed` clean before. The module docstring records the standard this
+implies - every discriminating branch must flip a test; form coverage alone
+does not deliver that.
+
+Landed as two commits: `6ed41c74b7` (the consolidation) over the explicit
+pathspec pair `import_hygiene_scan.py` and `test_dev_path_isolation.py`, and
+`3357998d7f` (the three branch proofs) over `test_dev_path_isolation.py`. The
+second is a separate commit rather than an amendment because the first was
+already reachable in a shared worktree, and the split is what makes the
+self-review visible in history instead of dissolved into the change it audits.
 
 ## Notes
 
