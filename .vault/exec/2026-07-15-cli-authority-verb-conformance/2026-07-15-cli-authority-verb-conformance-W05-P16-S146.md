@@ -151,3 +151,41 @@ unresolved design question about whether the curated overview should enumerate a
 family per surface at all. That belongs in a plan ruling. Left open with the
 evidence, per the instruction that a genuinely-contested row stay open rather
 than be inferred satisfied from the live command tree.
+
+## Closed 2026-07-28: adjudicated on the staleness reading
+
+Supersedes the "stays open" note above. The open/closed choice hinged on which
+reading of "replace stale help records" governs, and that reading has now been
+adjudicated: the row's subject is STALENESS, and nothing in the surface is
+stale.
+
+The surface facts are unchanged and unambiguous. Every command the three curated
+help documents cite uses the accepted grammar, resolves against the live Typer
+tree, and carries no removed spelling -- reset appears in its nested
+`start`/`status`/`resume` form, profile logout and login are the accepted verbs,
+ledger cites attach rather than any evidence-bypass grammar, and no retired
+custody verb (`lock`, `rekey`, `sandbox use`) appears anywhere. There is no stale
+record to replace, so under the row's actual verb the surface is satisfied.
+
+What remains true and is explicitly NOT claimed here: `recovery`, `certificate`
+and `audit` have zero curated entries. That is absence of curated coverage, not
+staleness, and it is affirmed as correct rather than treated as unfinished. The
+curated help is a deliberate workflow subset -- its footer directs the operator
+to `aeat config --help` and `aeat app --help` for the full subtrees -- so
+enumerating a family per surface is the wrong goal, as the prior adjudication
+itself judged likely. This record does not claim those three families carry
+descriptions; it claims the surface carries no stale record, which is the row's
+requirement.
+
+Evidence, which the earlier record bodies lacked. The gate enforcing this surface
+resolves every command cited in the three curated help documents against the live
+Click tree, and the suggestion-conformance gate rejects any removed spelling in
+the same corpus. Command: `uv run --no-sync pytest -p no:cacheprovider -n0 -m
+integration -o addopts=""
+src/cadrumo/entrypoints/cli/tests/test_root_help_shape.py::test_curated_help_command_rows_resolve_in_real_typer_tree
+src/cadrumo/entrypoints/cli/tests/test_root_help_shape.py::test_config_and_app_help_use_curated_subtree_shape
+src/cadrumo/entrypoints/cli/tests/test_suggestion_command_conformance.py`.
+Collected 10, `10 passed in 19.57s`, exit code 0, at HEAD
+`ab8f62b3770ab84e8e0d62f90131259f8303c568`. The curated-help gate discriminates:
+injecting `aeat config lock` into a help document reds it with `No such command
+'lock'`, then restored. Closed.
