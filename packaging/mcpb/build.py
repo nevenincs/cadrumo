@@ -50,11 +50,13 @@ _REQUIRED_COHORT_ENV: Final[str] = "CADRUMO_MCP_COHORT_SHA256"
 _STORAGE_ROOT_ENV: Final[str] = "CADRUMO_LOCAL_STORAGE_ROOT"
 _SERVER_ENTRY_POINT: Final[str] = "src/server.py"
 _SERVE_ENTRY_POINT: Final[str] = "src/_serve.py"
-#: The manifest launch: ``uv run --no-project`` runs the bootstrap on a bare
-#: interpreter with NO project resolution, so the per-session ``uv run`` project
-#: resolve/sync (robustness research F4) is paid only on the very first launch,
-#: inside the bootstrap, and never again. Every later session direct-execs the
-#: provisioned venv interpreter.
+#: The manifest launch: ``uv run --no-project`` skips the per-session project
+#: resolve/sync (robustness research F4), paying it only on the very first
+#: launch, inside the bootstrap, and never again. ``--no-project`` suppresses
+#: project SYNC but still selects ``<bundle>/.venv`` as the environment
+#: (measured: ``sys.prefix`` equals the bundle venv), so on every warm launch the
+#: bootstrap already runs inside the provisioned cohort and serves in-process
+#: rather than spawning a second interpreter for it.
 _LAUNCH_ARGS: Final[list[str]] = ["run", "--no-project", "--directory", "${__dirname}", _SERVER_ENTRY_POINT]
 _ZIP_TIMESTAMP: Final[tuple[int, int, int, int, int, int]] = (1980, 1, 1, 0, 0, 0)
 # The real server entry, run by the PROVISIONED venv interpreter. It verifies the
@@ -283,10 +285,35 @@ def _assign_to_job(job, pid):
         kernel32.CloseHandle(wintypes.HANDLE(handle))
 
 
+def _running_in_bundle_venv():
+    # ``uv run --no-project --directory <bundle>`` skips project SYNC but still
+    # selects <bundle>/.venv as the environment, so on every warm launch this
+    # interpreter already IS the provisioned venv (measured: sys.prefix equals
+    # the bundle .venv). When that holds there is nothing to hand off to.
+    try:
+        return Path(sys.prefix).resolve() == _VENV.resolve()
+    except OSError:
+        return False
+
+
 def main():
     python = _venv_python()
     if not _is_provisioned(python):
         _provision()
+        # Cold path only. This interpreter was selected before the venv was
+        # populated, so it cannot import the cohort just installed into it;
+        # hand off to a fresh one below.
+    elif _running_in_bundle_venv():
+        # Warm path - every launch after the first. Run the real entry IN THIS
+        # PROCESS instead of spawning a second interpreter for it, which on
+        # Windows costs two processes (the venv trampoline plus the base
+        # interpreter it starts). runpy executes _serve.py as __main__, so the
+        # cohort digest verification and the server start stay in that one file
+        # and are not duplicated here.
+        import runpy
+
+        runpy.run_path(str(_SERVE), run_name="__main__")
+        return
     if sys.platform == "win32":
         # CPython's os.exec* on Windows joins argv with spaces WITHOUT
         # quoting, so a bundle under a spaced path (every real install:
@@ -295,15 +322,15 @@ def main():
         # path as the script. Supervise instead; the extra shim process
         # still skips uv resolution on every warm launch.
         #
-        # This supervision is a deliberate, load-bearing cost: it is why the
-        # bundle spends 2 interpreters where a direct exec would spend 1. It
-        # buys correct quoting under spaced install paths AND, via the job
-        # object, a kernel guarantee that the server cannot outlive this
-        # process. The server independently anchors itself to the real MCP
-        # client (it resolves the stdin pipe creator, not this bootstrap), so
-        # the two mechanisms cover different failures: the job object reaps the
-        # child when the bootstrap dies, the client watchdog reaps it when the
-        # whole chain above - including the client - is gone.
+        # Reached on the FIRST launch only (and if the venv is somehow not the
+        # active environment); the warm path above serves in-process and spawns
+        # nothing. The supervision buys correct quoting under spaced install
+        # paths AND, via the job object, a kernel guarantee that the server
+        # cannot outlive this process. The server independently anchors itself
+        # to the real MCP client (it resolves the stdin pipe creator, not this
+        # bootstrap), so the two mechanisms cover different failures: the job
+        # object reaps the child when the bootstrap dies, the client watchdog
+        # reaps it when the whole chain above - including the client - is gone.
         job = _kill_on_close_job()
         child = subprocess.Popen([str(python), str(_SERVE)])
         if job is not None:

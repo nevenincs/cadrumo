@@ -334,6 +334,13 @@ cache/
 /.tmp_*/
 /.tmp-*/
 
+# Debug evidence captures from failing gates and packaging runs. These hold
+# raw tool output, so they routinely carry operator home paths and host names
+# (the privacy gate's untracked scan catches them there). The repository is
+# public: an accidental `git add -A` would publish that, and after the commit
+# removal is a history rewrite rather than an edit. Ephemeral, never in git.
+/dbg/
+
 # Top-level scratch outputs (one-shot agent runs, encoded blobs,
 # tmp text dumps, accidental absolute-path filenames). Never durable.
 /tmp_*.txt

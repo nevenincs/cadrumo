@@ -16,15 +16,16 @@ stub was retired.
 For the full pipeline review and gap analysis see
 `.vault/reference/2026-07-19-post-release-distribution-reference.md`.
 
-## Release at a glance (5 stages)
+## Release at a glance (6 stages)
 
 | Stage | Where | What |
 | --- | --- | --- |
-| 0. Version + tag | Local, human | Bump 8 surfaces, `uv lock`, commit, tag, push main + tag |
+| 0. Version + tag | Local, human | Bump 7 surfaces, `uv lock`, commit, tag, push main + tag |
 | 1. Build + prove | CI (`packaging-smoke.yml`, auto-triggered by push) | 3-OS smoke, build immutable release cohort, 3 oracle-emit rows |
 | 2. Channel proofs | CI (3 manual dispatches) + operator real-client captures | Scoop, Homebrew, Claude acquisition; mint 4 claude rows |
-| 3. Readiness gate | Local, human | Aggregate 11 rows; `just release-readiness-json` must report `"ok": true` |
+| 3. Readiness gate | Local, human | Aggregate every row the claimed channels require; `just release-readiness-json` must report `"ok": true` |
 | 4. Publish | CI (`publish-release.yml`, human approval required) | Gate 1 opt-in → Gate 2 validate → Gate 3 publish → reacquire |
+| 5. Reacquire + docs | Local, human | Run the reacquisition lanes, unlock the docs-claims gate, `just docs-deploy` |
 
 ## Repository identity
 
@@ -336,7 +337,7 @@ ledger exists because deleting a release erases the destination-side evidence
 that the number was ever exposed, while anyone who fetched those bytes still
 holds them.
 
-1. Update `main` and run the readiness gate:
+1. Update `main` and run the pre-bump subset of the readiness gate:
 
    ```console
    git switch main
@@ -344,9 +345,22 @@ holds them.
    just release-readiness-json
    ```
 
-   If the JSON does not report `"ok": true`, or any blocking check does not report
-   `"passed": true`, stop. The GitHub-backed blocker check must report no open
-   `priority:P0-blocker` issue.
+   At this point in the cycle the gate is **expected to report `"ok": false`** on the
+   two cohort-bound blocking checks, `distribution-evidence-complete` and
+   `generated-surface-versions`. Both require a local `var/release-cohort/` built at
+   the checked-out commit and carrying the tag `v{version}`, and no such cohort
+   exists until Stage 1 builds it from the tagged commit — so demanding them here
+   would gate the bump on a state only a post-bump release can reach. They are the
+   release gate at Stage 3, where `"ok": true` is required.
+
+   What must hold **now** is every check that does not depend on a cohort:
+   `project-names-canonical`, `version-surfaces-agree`, `changelog-ready`, and — when
+   `gh` can reach the tracker — no open `priority:P0-blocker` issue. If any of those
+   four fails, stop.
+
+   The same expectation applies to `just release-apply` in step 4: it refuses on the
+   identical cohort-bound check, so read its printed checklist and apply the items by
+   hand.
 
 2. Run the release and packaging checks:
 
@@ -369,7 +383,7 @@ holds them.
    The command must exit zero and create a non-empty `var/release/release-please.log`.
    Compare the proposal with every commit since the preceding tag.
 
-4. Set one `X.Y.Z` version across all **eight** release surfaces. Run `just
+4. Set one `X.Y.Z` version across all **seven** release surfaces. Run `just
    release-apply` to see the printed checklist, then apply each item by hand:
 
    - `.release-please-manifest.json`
@@ -377,15 +391,24 @@ holds them.
    - `packaging/cadrumo_data_manuals/pyproject.toml` — `[project].version`
    - `packaging/cadrumo_data_official/pyproject.toml` — `[project].version`
    - `src/cadrumo/__init__.py` — `__version__`
-   - `packaging/mcpb/manifest.json` — `"version"` (enforced by
-     `check_version_surfaces_agree` in `dev/release/readiness.py`)
    - `CHANGELOG.md` — prepend the release block using the dry-run log as source
    - `uv.lock` — regenerate with `uv lock && uv lock --check`
+
+   **Do not touch `packaging/mcpb/manifest.json`.** Its tracked `"version"` is a
+   synthetic sentinel (`0.0.0`); `packaging/mcpb/build.py` stamps the real cohort
+   version over it at build time, and `check_version_surfaces_agree`
+   (`dev/release/readiness.py`) refuses any other tracked literal because a
+   real-looking value there would masquerade as an authority. The built bundle's
+   stamped version is bound to the cohort by `check_generated_surface_versions`
+   instead. Bumping it fails the blocking version gate.
 
    Also update both exact companion dependency pins in `pyproject.toml`:
    `cadrumo-data-manuals==X.Y.Z` and `cadrumo-data-official==X.Y.Z`.
 
-5. Rerun the readiness gate and companion parity test; both must pass:
+5. Rerun the readiness gate and companion parity test. Confirm
+   `version-surfaces-agree` now reports the new version and still passes; the two
+   cohort-bound checks named in step 1 remain expected failures until Stage 3. The
+   lock check and both test commands must pass outright:
 
    ```console
    just release-readiness
@@ -394,19 +417,19 @@ holds them.
    uv run --no-sync pytest dev/packaging/tests/test_cadrumo_data_distribution.py::test_companion_version_matches_root_distribution -q
    ```
 
-6. Stage and commit all eight release surfaces together:
+6. Stage and commit all seven release surfaces together:
 
    ```console
    git add \
      .release-please-manifest.json pyproject.toml \
      packaging/cadrumo_data_manuals/pyproject.toml \
      packaging/cadrumo_data_official/pyproject.toml \
-     src/cadrumo/__init__.py packaging/mcpb/manifest.json \
+     src/cadrumo/__init__.py \
      CHANGELOG.md uv.lock
    git commit -m "chore(release): vX.Y.Z"
    ```
 
-   If the staged diff contains any path outside those eight, stop.
+   If the staged diff contains any path outside those seven, stop.
 
 ### Stage 0b: release-candidate soak (non-hotfix releases)
 
@@ -462,8 +485,10 @@ The push to `main` automatically triggers the `Cadrumo Packaging Smoke` workflow
 - Three per-OS smoke legs (Linux X64, Windows X64, macOS ARM64) proving wheel
   installation, bundled data, extras, split, and browser lanes.
 - `build-release-cohort`: builds the **one immutable release cohort** on exactly
-  CPython 3.13 / uv 0.11.29 from a fresh clean clone with `SOURCE_DATE_EPOCH` and
-  `PYTHONHASHSEED=0`. The cohort holds 13 files: 6 Python dist files,
+  CPython 3.13, under any uv, from a fresh clean clone with `SOURCE_DATE_EPOCH` and
+  `PYTHONHASHSEED=0`. The uv version is recorded in the cohort's build identity
+  rather than pinned, so reproducibility is checked by comparing build identities
+  instead of being enforced by refusing to build when the toolchain moves. The cohort holds 13 files: 6 Python dist files,
   `python-cohort.json`, 2 Claude plugin zips, `cadrumo.json` (Scoop manifest),
   `cadrumo.rb` (Homebrew formula), `cadrumo-X.Y.Z.mcpb`, and `release-cohort.json`.
   The cohort id is a SHA-256 over the complete artifact set; CI never rebuilds these
@@ -502,7 +527,9 @@ gh workflow run packaging-claude.yml \
 Each workflow verifies source-run identity (success, `packaging-smoke.yml`, `push`,
 `main`, same repo, matching `head_sha`) before proceeding.
 
-- `packaging-scoop.yml` (self-hosted Windows, disposable Windows container):
+- `packaging-scoop.yml` (self-hosted Windows, native, pinned to the
+  `windows-scoop`-labelled runner so it lands in the dedicated non-admin runner
+  user's own Scoop profile and never touches the fleet's Docker daemon):
   hash-verifies and installs
   the smoke draft's cohorts, generates the Scoop manifest, runs the oracles, and
   publishes the `scoop-windows-x86-64` `DistributionEvidence` row onto its own sealed
@@ -532,8 +559,19 @@ real-client captures.
 ### Stage 3: readiness aggregation
 
 The readiness gate (`just release-readiness-json`, backed by `dev/release/readiness.py`)
-requires all 11 `DistributionEvidence` rows in `var/distribution-install-readiness/`
+requires a passing `DistributionEvidence` row in `var/distribution-install-readiness/`
+for every row the **claimed** channels own — the union over channels marked
+`availability = "available"` in `docs/_data/download_channels.toml`, floored at the
+language-native registry (`required_evidence_rows`, `dev/docs/download_matrix.py`) —
 alongside a local `var/release-cohort/` at the release commit and tag.
+
+The table below lists all eleven rows any channel *can* produce; it is not the
+obligation. Flipping a channel to `available` immediately re-arms every row it owns,
+so confirm the live required set before collecting:
+
+```console
+uv run --no-sync python -c "from dev.release.readiness import REQUIRED_DISTRIBUTION_ROWS; print(REQUIRED_DISTRIBUTION_ROWS)"
+```
 
 | Row | Emission path | CI automated? |
 | --- | --- | --- |
@@ -549,8 +587,8 @@ alongside a local `var/release-cohort/` at the release commit and tag.
 | `claude-desktop-plugin` | Operator: `emit_real_client_evidence` | Manual (operator real-client capture) |
 | `claude-desktop-mcpb` | Operator: `emit_real_client_evidence` | Manual (operator real-client capture) |
 
-**Aggregating the rows:** the eight CI-minted rows (three `python-*`, `scoop-windows-x86-64`,
-four `homebrew-*`) ride their runs' draft evidence releases
+**Aggregating the rows:** the seven CI-minted rows (three `python-*`, `scoop-windows-x86-64`,
+three `homebrew-*`) ride their runs' draft evidence releases
 (`evidence-<lane>-<run id>`) as flat `{row_id}-{evidence_id}.json` assets. Collect
 them into `var/distribution-install-readiness/` with:
 
@@ -559,7 +597,7 @@ just release-collect-evidence <smoke-run-id> <scoop-run-id> <homebrew-run-id>
 ```
 
 The four `claude-*` rows are minted locally by the operator's `emit_real_client_evidence`
-runs above and already live in that directory. Once all eleven are present, verify:
+runs above and already live in that directory. Once every required row is present, verify:
 
 ```console
 just release-readiness-json
@@ -603,8 +641,8 @@ ids.
 Gate 2 derives each lane's evidence tag from its run-id input, downloads and
 hash-verifies every draft's assets against its sealed `evidence-manifest.json` and
 the Actions API run record, checks each acquisition run's identity, and re-verifies
-all eleven rows against the sealed cohort — so the local
-`just release-collect-evidence` 11/11 is reproduced hard in CI, never trusted.
+every required row against the sealed cohort — so the local
+`just release-collect-evidence` count is reproduced hard in CI, never trusted.
 
 The workflow runs three sequential jobs:
 
@@ -616,16 +654,16 @@ and prints a full prerequisite checklist if not. Nothing is uploaded.
 checks, each acquisition run (`packaging-scoop.yml` / `packaging-homebrew.yml`,
 `workflow_dispatch`, same repo, success). Downloads and hash-verifies the **sealed**
 release cohort archive (`cadrumo-release-cohort.tar.gz` from the smoke evidence draft
-— the single source of every channel's bytes, PyPI included) and aggregates all
-eleven `DistributionEvidence` rows from their authoritative drafts: 3 python from the
-smoke draft, 1 scoop, 3 homebrew, and the 4 operator `claude-*` rows from the
-evidence release. The per-OS smoke build cohorts are deliberately NOT part of the
+— the single source of every channel's bytes, PyPI included) and aggregates every
+required `DistributionEvidence` row from its authoritative draft — up to 3 python from
+the smoke draft, 1 scoop, 3 homebrew, and the 4 operator `claude-*` rows, as the
+claimed channels demand — from the evidence release. The per-OS smoke build cohorts are deliberately NOT part of the
 publication chain. Re-points `promote_python_cohort --emit-version-only` at the sealed
 cohort's `python/` bytes to guard the PyPI version against overwrite and emit the
 version. Runs `dev.release.readiness --json --skip-network --cohort-dir
 var/promotion/release-cohort --evidence-dir var/promotion/evidence/rows`; the sealed
 cohort's installed behaviour is proven per-OS by the `DistributionEvidence` rows, not
-by the smoke build. Gate 2 passes only with all 11 rows present and verified.
+by the smoke build. Gate 2 passes only with every required row present and verified.
 
 **Gate 3 — publish** (`environment: release`, human approval required). After the
 approval click, the job re-downloads and re-verifies the sealed cohort archive and
@@ -637,8 +675,8 @@ fail-closed `evidence_release leak-sweep` over everything about to be attached
   exact bytes every other channel ships and the oracle-emit legs proved) via
   `uv publish --trusted-publishing always` (OIDC; no API token needed once configured).
 - Creates `gh release create vX.Y.Z --target <source_commit>` attaching every file
-  found in the release-cohort directory (13 files) plus the eleven verified evidence
-  rows and the three per-lane evidence manifests, so the published release is
+  found in the release-cohort directory (13 files) plus every verified evidence
+  row and the per-lane evidence manifests, so the published release is
   self-evidencing and draft GC can never orphan a shipped audit trail. An empty asset
   set fails hard.
 - Pushes `scoop/cadrumo.json` to this repository's own `bucket/cadrumo.json` using the
@@ -777,7 +815,7 @@ regression, or a supported-environment miscalculation.
 
 9. Prepare a new patch version across all three distributions. Never overwrite or reuse
    `X.Y.Z`. Apply the hotfix cycle time from `docs/_release_checklist.yaml`, then
-   repeat all five stages of the release pipeline.
+   repeat all six stages of the release pipeline.
 
 10. Update the GitHub Release and `docs/updates.md` with the yank, affected scope,
     mitigation, and corrected version. Keep embargoed security details private until

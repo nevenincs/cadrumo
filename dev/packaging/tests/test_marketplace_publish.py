@@ -26,6 +26,7 @@ from dev.packaging.marketplace_publish import (
     publish_cohort_plugins,
     superseded_names,
 )
+from dev.packaging.marketplace_publish import _read_cohort_index as read_cohort_index
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -504,12 +505,45 @@ def test_the_shipped_cohort_manifest_retires_the_former_product_identity() -> No
     the declaration that retires it on the first publication and keeps refusing
     its resurrection on every later one.
     """
-    manifest = Path(__file__).resolve().parents[3] / "packaging" / "marketplace" / _INDEX
-    index = json.loads(manifest.read_text(encoding=_UTF_8))
+    scaffold = Path(__file__).resolve().parents[3] / "packaging" / "marketplace"
+    index = read_cohort_index(scaffold)
     assert superseded_names(index) == frozenset({"aeat"})
     declared = {entry["name"] for entry in index["plugins"]}
     assert "aeat" not in declared, "the retired identity must not also be claimed"
     assert "cadrumo" in declared
+
+    # The declaration must NOT sit in the served manifest. `claude plugin
+    # validate --strict` rejects the unknown field and Claude Code ignores it at
+    # load, so moving it back there would trade a live retirement for a red gate.
+    served = json.loads((scaffold / _INDEX).read_text(encoding=_UTF_8))
+    assert "supersedes" not in served
+
+
+def test_the_generated_cohort_declares_the_retirement_not_only_the_scaffold(tmp_path: Path) -> None:
+    """The artifact that publishes must carry the declaration, not its sibling.
+
+    The scaffold above is a checked-in copy; what a release actually pushes is
+    the marketplace tree the generator emits into the cohort bundle. Asserting
+    only the scaffold leaves the two free to diverge, and a divergence there is
+    silent: the publisher would read an empty retirement set, the preflight would
+    return early having nothing to verify, and the retired identity would survive
+    every publication with no gate reporting anything.
+    """
+    from cadrumo.agent import materialise_marketplace
+
+    generated = tmp_path / "generated-marketplace"
+    materialise_marketplace(generated)
+    assert superseded_names(read_cohort_index(generated)) == frozenset({"aeat"})
+    assert "supersedes" not in json.loads((generated / _INDEX).read_text(encoding=_UTF_8))
+
+
+def test_declaring_the_retirement_in_both_homes_is_refused(tmp_path: Path) -> None:
+    """Two homes are ambiguous, and silently preferring one hides a lost retirement."""
+    cohort = _superseding_cohort(tmp_path, name="cadrumo", retires=["aeat"])
+    sidecar = cohort / ".claude-plugin" / "supersedes.json"
+    sidecar.write_text(json.dumps({"supersedes": ["aeat"]}) + "\n", encoding=_UTF_8)
+    with pytest.raises(MarketplacePublishError, match="the sidecar is the only home"):
+        read_cohort_index(cohort)
 
 
 def _published_marketplace(tmp_path: Path, *, plugins: list[dict[str, Any]], **index: Any) -> Path:
@@ -565,7 +599,8 @@ def test_the_preflight_refuses_an_unreferenced_retired_tree(tmp_path: Path) -> N
 @pytest.mark.parametrize(
     ("overrides", "fragment"),
     [
-        pytest.param({"description": "the aeat tax assistant"}, "description", id="description"),
+        pytest.param({"description": "install aeat@neve to file your taxes"}, "description", id="description-handle"),
+        pytest.param({"description": "served from ./plugins/aeat"}, "description", id="description-path"),
         pytest.param({"owner": {"name": "AEAT tax assistant project"}}, "owner.name", id="owner-name"),
     ],
 )
@@ -585,6 +620,49 @@ def test_the_preflight_refuses_metadata_that_still_names_the_retired_identity(
             marketplace=marketplace,
             cohort=_superseding_cohort(tmp_path, name="cadrumo", retires=["aeat"]),
         )
+
+
+def test_naming_the_tax_authority_in_prose_is_not_a_stale_identity(tmp_path: Path) -> None:
+    """The retired plugin name is also the tax authority's name, and prose may say it.
+
+    This is the case that makes the guard usable rather than a permanent outage.
+    The shipped marketplace description says the assistant is "read-only toward
+    AEAT" in English and "frente a la AEAT" in Spanish, which is required copy
+    about the authority, not residue of the retired plugin identity. A substring
+    test cannot tell those apart and would refuse every publication forever,
+    which reads as the guard working while nothing can ever ship.
+    """
+    marketplace = _published_marketplace(
+        tmp_path,
+        plugins=[{"name": "cadrumo", "source": "./plugins/cadrumo"}],
+        description="Cadrumo: read-only toward AEAT, it never files. Español: frente a la AEAT.",
+    )
+    assert_supersession_complete(
+        marketplace=marketplace,
+        cohort=_superseding_cohort(tmp_path, name="cadrumo", retires=["aeat"]),
+    )
+
+
+def test_the_real_generated_description_survives_the_preflight(tmp_path: Path) -> None:
+    """The guard must permit the description this product actually publishes.
+
+    The case above is hand-written and could drift from the shipped copy. This one
+    runs the preflight against the generator's own bilingual description, so the
+    guard is proven against the exact bytes a release pushes rather than a
+    paraphrase of them.
+    """
+    from cadrumo.agent import materialise_marketplace
+
+    cohort = tmp_path / "generated-cohort"
+    materialise_marketplace(cohort)
+    shipped = json.loads((cohort / _INDEX).read_text(encoding=_UTF_8))
+    marketplace = _published_marketplace(
+        tmp_path,
+        plugins=[{"name": "cadrumo", "source": "./plugins/cadrumo"}],
+        description=shipped["description"],
+        owner=shipped["owner"],
+    )
+    assert_supersession_complete(marketplace=marketplace, cohort=cohort)
 
 
 def test_a_cohort_that_retires_nothing_is_not_checked(tmp_path: Path) -> None:

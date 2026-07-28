@@ -77,11 +77,22 @@ _CENTRALIZED_ADDRESSING_FORBIDDEN_NAMES = {
 
 
 def _modelo_cli_modules() -> tuple[Path, ...]:
-    return tuple(
+    modules = tuple(
         path
         for path in package_python_files()
         if path.parent == _CLI_ROOT and path.name.startswith(_MODELO_MODULE_PREFIX)
     )
+    # Floor at the corpus source. Every structural guard below iterates this set
+    # and asserts an offender list is empty; that green is meaningless if the set
+    # is empty. A rename of the ``_modelo`` module prefix or a relocation of
+    # ``_CLI_ROOT`` would empty the corpus and pass identically to a clean surface,
+    # so the modelo-CLI decomposition would be unguarded and silent.
+    assert len(modules) > 10, (
+        f"discovered only {len(modules)} modelo CLI modules under {_CLI_ROOT}; the scan "
+        "corpus collapsed (a prefix rename or package relocation), so an empty offender "
+        "list below would mean 'nothing was checked' rather than 'nothing is wrong'"
+    )
+    return modules
 
 
 def _production_modelo_cli_modules() -> tuple[Path, ...]:

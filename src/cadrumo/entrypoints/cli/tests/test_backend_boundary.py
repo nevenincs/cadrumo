@@ -97,8 +97,32 @@ def _defined_symbols(tree: ast.Module) -> set[str]:
     }
 
 
+def _all_cli_modules() -> tuple[Path, ...]:
+    """Every CLI source module, floored so a relocated tree cannot silently empty.
+
+    The boundary scans below walk this tree and assert an offender list is empty.
+    That green is meaningless if the walk found nothing: a package relocation or a
+    rename of ``_CLI_ROOT`` would empty the corpus and pass identically to a clean
+    tree. Asserting a floor at the corpus source means every consumer inherits the
+    proof that the walk actually reached the CLI surface.
+    """
+    modules = tuple(sorted(_CLI_ROOT.rglob("*.py")))
+    assert len(modules) > 100, (
+        f"scanned only {len(modules)} CLI modules under {_CLI_ROOT}; the scan corpus "
+        "collapsed (a package relocation or rename), so an empty offender list below would "
+        "mean 'nothing was checked' rather than 'nothing is wrong'"
+    )
+    return modules
+
+
 def _iter_cli_test_files() -> tuple[Path, ...]:
-    return tuple(sorted(_CLI_ROOT.rglob("test_*.py")))
+    files = tuple(sorted(_CLI_ROOT.rglob("test_*.py")))
+    assert len(files) > 100, (
+        f"scanned only {len(files)} CLI test modules under {_CLI_ROOT}; the scan corpus "
+        "collapsed (a package relocation or rename), so an empty offence list would mean "
+        "'nothing was checked' rather than 'nothing is wrong'"
+    )
+    return files
 
 
 def _invoke_help(*args: str) -> str:
@@ -385,15 +409,18 @@ def test_profile_backend_schema_deleted_package_has_no_surviving_imports() -> No
         PROJECT_ROOT / "src" / "cadrumo" / "application",
         PROJECT_ROOT / "src" / "cadrumo" / "entrypoints",
     )
+    scanned_files = [path for root in search_roots for path in sorted(root.rglob("*.py")) if path != Path(__file__)]
+    assert len(scanned_files) > 500, (
+        f"scanned only {len(scanned_files)} modules under application/ and entrypoints/; the "
+        "scan corpus collapsed (a package relocation or rename), so an empty offender list "
+        "below would mean 'nothing was checked' rather than 'nothing is wrong'"
+    )
     offenders: list[str] = []
-    for root in search_roots:
-        for path in sorted(root.rglob("*.py")):
-            if path == Path(__file__):
-                continue
-            text = path.read_text(encoding="utf-8")
-            for token in forbidden_tokens:
-                if token in text:
-                    offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}: {token}")
+    for path in scanned_files:
+        text = path.read_text(encoding="utf-8")
+        for token in forbidden_tokens:
+            if token in text:
+                offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}: {token}")
     assert offenders == [], "retired application-profile references survive:\n  " + "\n  ".join(offenders)
 
 
@@ -426,7 +453,7 @@ def test_per_modelo_aggregation_duplicate_cli_surfaces_stay_absent() -> None:
         "aggregate_foreign_assets_720",
     )
     offenders: list[str] = []
-    for path in sorted(_CLI_ROOT.rglob("*.py")):
+    for path in _all_cli_modules():
         if path.name.startswith("test_"):
             continue
         text = path.read_text(encoding="utf-8")
@@ -451,7 +478,7 @@ def test_censo_modelo_foundation_stays_backend_owned() -> None:
         "historical_metadata_only",
     )
     offenders: list[str] = []
-    for path in sorted(_CLI_ROOT.rglob("*.py")):
+    for path in _all_cli_modules():
         if path.name.startswith("test_"):
             continue
         text = path.read_text(encoding="utf-8")
@@ -577,7 +604,7 @@ def test_registry_corpus_cli_ownership_is_registry_only() -> None:
         'typer.Typer(name="manuals"',
     )
     offenders: list[str] = []
-    for path in sorted(_CLI_ROOT.rglob("*.py")):
+    for path in _all_cli_modules():
         if path == canonical or path.name.startswith("test_"):
             continue
         text = path.read_text(encoding="utf-8")
@@ -593,7 +620,7 @@ def test_cli_observability_wrapper_module_is_absent_from_command_tree() -> None:
     assert not wrapper_path.exists()
 
     offences: list[str] = []
-    for path in sorted(_CLI_ROOT.rglob("*.py")):
+    for path in _all_cli_modules():
         if path.name.startswith("test_"):
             continue
         text = path.read_text(encoding="utf-8")

@@ -51,11 +51,20 @@ def test_release_apply_names_every_version_authority_and_only_the_named_tag() ->
 
     assert "packaging/cadrumo_data_manuals/pyproject.toml" in rendered
     assert "packaging/cadrumo_data_official/pyproject.toml" in rendered
-    # G7: the .mcpb manifest is the eighth version surface readiness blocks on
-    # (check_version_surfaces_agree), so the printed checklist must name it and
-    # stage all eight authorities - otherwise an operator bump leaves readiness red.
-    assert "packaging/mcpb/manifest.json" in rendered
-    assert "eight release authorities" in rendered
+    # The .mcpb manifest is NOT a bumped surface. Its tracked "version" is a
+    # synthetic sentinel that `check_version_surfaces_agree` requires to stay
+    # put (`dev/release/readiness.py`), because a real-looking literal there
+    # would masquerade as an authority; `packaging/mcpb/build.py` stamps the
+    # real cohort version over it at build time. Instructing a bump there fails
+    # the blocking version gate, so the checklist names SEVEN authorities and
+    # must not stage the manifest.
+    #
+    # Asserted on the instruction and the staged set, not on the bare path:
+    # the checklist mentions the manifest precisely to say "do not touch it",
+    # so a substring check for the path alone would pass either way.
+    assert "seven release authorities" in rendered
+    assert "Update packaging/mcpb/manifest.json" not in rendered
+    assert "src/cadrumo/__init__.py CHANGELOG.md uv.lock" in rendered
     assert "mandatory base dependency pins" in rendered
     assert "cadrumo-data-manuals==X.Y.Z" in rendered
     assert "cadrumo-data-official==X.Y.Z" in rendered

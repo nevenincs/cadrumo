@@ -446,8 +446,15 @@ test-integration-serial:
 # reaching the host over SSH, holds a network logon that carries no credentials,
 # so the store refuses every call and these cases fail at an explicit precondition
 # naming the missing custody -- which is a true report of the host, not a defect.
+#
+# Runs with -n0 deliberately. The OS credential store is MACHINE-global, and these
+# cases mint and remove session keys under fixed bucket ids, so xdist workers delete
+# each other's keys: under -n auto the logout case fails at its own precondition,
+# having had its key removed by a peer worker mid-test. That reads as a custody
+# failure and is really a collision. Serial is not a speed compromise here, it is
+# the only correct way to exercise a shared external store.
 test-os-keychain:
-    uv run --no-sync pytest -q -rs -m os_keychain src/cadrumo/application/user_profile/tests src/cadrumo/entrypoints/cli/tests/test_profile_session_root_resume.py
+    uv run --no-sync pytest -q -rs -n0 -m os_keychain src/cadrumo/application/user_profile/tests src/cadrumo/entrypoints/cli/tests/test_profile_session_root_resume.py
 
 # Run the live test suite. Quiet progress; failures shown.
 test-live:
@@ -786,7 +793,6 @@ release-apply:
     echo "  3. Update packaging/cadrumo_data_manuals/pyproject.toml [project].version."
     echo "  4. Update packaging/cadrumo_data_official/pyproject.toml [project].version."
     echo "  5. Update src/cadrumo/__init__.py __version__ to the new version."
-    echo "  5b. Update packaging/mcpb/manifest.json \"version\" to the new version."
     echo "  6. Update both mandatory base dependency pins in pyproject.toml:"
     echo "       cadrumo-data-manuals==X.Y.Z"
     echo "       cadrumo-data-official==X.Y.Z"
@@ -795,8 +801,8 @@ release-apply:
     echo "       uv lock"
     echo "       uv lock --check"
     echo "       just release-readiness"
-    echo "  9. Stage all eight release authorities:"
-    echo "       git add .release-please-manifest.json pyproject.toml packaging/cadrumo_data_manuals/pyproject.toml packaging/cadrumo_data_official/pyproject.toml src/cadrumo/__init__.py packaging/mcpb/manifest.json CHANGELOG.md uv.lock"
+    echo "  9. Stage all seven release authorities (NOT packaging/mcpb/manifest.json -- its tracked version is the build-stamped sentinel):"
+    echo "       git add .release-please-manifest.json pyproject.toml packaging/cadrumo_data_manuals/pyproject.toml packaging/cadrumo_data_official/pyproject.toml src/cadrumo/__init__.py CHANGELOG.md uv.lock"
     echo "  10. Commit:"
     echo '       git commit -m "chore(release): vX.Y.Z"'
     echo "  11. Tag:"
@@ -835,7 +841,6 @@ release-apply:
     Write-Host "  3. Update packaging/cadrumo_data_manuals/pyproject.toml [project].version."
     Write-Host "  4. Update packaging/cadrumo_data_official/pyproject.toml [project].version."
     Write-Host "  5. Update src/cadrumo/__init__.py __version__ to the new version."
-    Write-Host "  5b. Update packaging/mcpb/manifest.json 'version' to the new version."
     Write-Host "  6. Update both mandatory base dependency pins in pyproject.toml:"
     Write-Host "       cadrumo-data-manuals==X.Y.Z"
     Write-Host "       cadrumo-data-official==X.Y.Z"
@@ -844,8 +849,8 @@ release-apply:
     Write-Host "       uv lock"
     Write-Host "       uv lock --check"
     Write-Host "       just release-readiness"
-    Write-Host "  9. Stage all eight release authorities:"
-    Write-Host "       git add .release-please-manifest.json pyproject.toml packaging/cadrumo_data_manuals/pyproject.toml packaging/cadrumo_data_official/pyproject.toml src/cadrumo/__init__.py packaging/mcpb/manifest.json CHANGELOG.md uv.lock"
+    Write-Host "  9. Stage all seven release authorities (NOT packaging/mcpb/manifest.json -- its tracked version is the build-stamped sentinel):"
+    Write-Host "       git add .release-please-manifest.json pyproject.toml packaging/cadrumo_data_manuals/pyproject.toml packaging/cadrumo_data_official/pyproject.toml src/cadrumo/__init__.py CHANGELOG.md uv.lock"
     Write-Host "  10. Commit:"
     Write-Host '       git commit -m "chore(release): vX.Y.Z"'
     Write-Host "  11. Tag:"

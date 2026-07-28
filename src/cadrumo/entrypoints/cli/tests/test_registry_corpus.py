@@ -217,6 +217,24 @@ def test_manuals_list_accepts_year_filter() -> None:
 # ---------------------------------------------------------------------------
 
 
+def _cli_source_modules(cli_root: Path) -> list[Path]:
+    """Return the non-test CLI source modules, floored at the corpus source.
+
+    Both root-verb boundary scans below walk this tree and assert an empty
+    offender map; that green is meaningless if the walk found nothing. A rename
+    of ``_CLI_ROOT`` or a package relocation would empty the corpus and pass
+    identically to a clean tree, so the floor here guarantees every consumer's
+    walk actually reached the CLI surface.
+    """
+    modules = [py_file for py_file in cli_root.rglob("*.py") if not py_file.name.startswith("test_")]
+    assert len(modules) > 100, (
+        f"scanned only {len(modules)} CLI modules under {cli_root}; the scan corpus collapsed (a "
+        "package relocation or rename), so an empty offender map would mean 'nothing was checked' "
+        "rather than 'nothing is wrong'"
+    )
+    return modules
+
+
 def test_no_top_level_normatives_or_manual_root_verb_is_registered() -> None:
     """The CLI root is restricted to ``aeat config`` and ``aeat app``
     only. A top-level ``cadrumo normatives`` or ``cadrumo manual`` verb is
@@ -233,9 +251,7 @@ def test_no_top_level_normatives_or_manual_root_verb_is_registered() -> None:
         "name='manuales'",
     )
     offenders: dict[Path, list[str]] = {}
-    for py_file in cli_root.rglob("*.py"):
-        if py_file.name.startswith("test_"):
-            continue
+    for py_file in _cli_source_modules(cli_root):
         # The canonical registration of the ``manuals`` (plural)
         # sub-Typer happens inside ``registry.py`` via
         # ``app.add_typer(manuals_app, name="manuals")``. That is
@@ -325,12 +341,10 @@ def test_no_aeat_normatives_or_manual_fetch_verb_under_app_registry() -> None:
         "@manuals_app.command('fetch'",
     )
     offenders: dict[Path, list[str]] = {}
-    for py_file in cli_root.rglob("*.py"):
-        # Test files legitimately quote the forbidden patterns as
-        # search strings in their own boundary scans — excluding
-        # them avoids self-flagging without weakening the check.
-        if py_file.name.startswith("test_"):
-            continue
+    # Test files legitimately quote the forbidden patterns as search strings in
+    # their own boundary scans; the helper excludes them, and floors the corpus so
+    # a collapsed walk cannot green this scan.
+    for py_file in _cli_source_modules(cli_root):
         text = py_file.read_text(encoding="utf-8")
         hits = [needle for needle in forbidden_command_names if needle in text]
         if hits:

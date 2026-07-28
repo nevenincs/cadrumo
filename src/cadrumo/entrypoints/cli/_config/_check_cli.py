@@ -4,7 +4,7 @@ For every external service, reports the active profile's capability posture, the
 dependency availability (from the typed probes), and the exact remediation for any
 gap. Exits non-zero when a capability the profile opted into has a missing
 dependency — the operator asked for a service that is not provisioned. Named
-``check`` because ``config doctor`` is a retired command path.
+``check`` because the older ``doctor`` command path is retired.
 """
 
 from __future__ import annotations

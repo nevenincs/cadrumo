@@ -82,6 +82,36 @@ jobs:
           df -h /
           free -m
 
+      # The dev-environment lane (Ubuntu superset only) starts every declared
+      # developer command, and pyright is a thin Python wrapper that runs the
+      # real analyser as JavaScript. With no `node` on PATH the wrapper
+      # downloads its own Node, and that build needs libatomic.so.1, which the
+      # self-hosted runner image does not ship: the loader fails and the lane
+      # dies at exit 127 having never reached pyright. Reproduced in a clean
+      # container of the runner's exact image digest, where putting the image's
+      # own bundled Node on PATH instead makes `pyright --version` succeed.
+      # Prefer that Node over downloading a second one: it is already present,
+      # needs no network, and is the runtime the runner itself uses.
+      - name: Ensure a Node runtime is on PATH for the dev lane
+        run: |
+          if command -v node >/dev/null 2>&1; then
+            echo "node already on PATH: $(node --version)"
+            exit 0
+          fi
+          for bin in \
+            "$RUNNER_TOOL_CACHE"/node/*/x64/bin \
+            /home/runner/externals/node24/bin \
+            /home/runner/externals/node20/bin
+          do
+            if [ -x "$bin/node" ] && "$bin/node" --version >/dev/null 2>&1; then
+              echo "$bin" >> "$GITHUB_PATH"
+              echo "added $bin to PATH ($("$bin/node" --version))"
+              exit 0
+            fi
+          done
+          echo "no usable node runtime on this runner; the dev lane's pyright check cannot run" >&2
+          exit 1
+
       - name: Cadrumo immutable-cohort packaging campaign
         # Machine-aware sizing (.github/ci-control-plane.md): the workstation's 24
         # logical CPUs are shared by THREE runners, so the preflight pytest

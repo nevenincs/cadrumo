@@ -242,6 +242,73 @@ def test_bootstrap_require_min_uv_refuses_a_below_floor_uv(tmp_path: Path) -> No
     assert "0.1.0" in message
 
 
+def test_bootstrap_warm_path_serves_in_process_without_spawning(tmp_path: Path) -> None:
+    """A provisioned bundle runs the real entry in-process, spawning nothing.
+
+    Every launch after the first pays this path, and on Windows a spawn here
+    costs two processes (the venv trampoline plus the base interpreter it
+    starts). The premise is that ``uv run --no-project --directory <bundle>``
+    still selects ``<bundle>/.venv``, so the bootstrap already IS the
+    provisioned environment; the guard is ``sys.prefix``.
+
+    Proven by making the subprocess module fail loudly: if the bootstrap tries
+    to spawn on the warm path the test fails rather than silently regressing to
+    the old process count. ``_serve.py`` is replaced by a marker-writing stub so
+    no real cohort or server is needed.
+    """
+    bundle = tmp_path / "extension"
+    (bundle / "src").mkdir(parents=True)
+    venv = bundle / ".venv"
+    venv.mkdir()
+    marker = tmp_path / "served.txt"
+    (bundle / "src" / "_serve.py").write_text(
+        f"open({str(marker)!r}, 'w', encoding='utf-8').write('served in ' + str(__import__('os').getpid()))\n",
+        encoding="utf-8",
+    )
+
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setenv("CADRUMO_MCP_COHORT_SHA256", '{"cadrumo": "abc"}')
+        namespace = _load_bootstrap_namespace(bundle)
+        venv_python = cast("Callable[[], Path]", namespace["_venv_python"])()
+        venv_python.parent.mkdir(parents=True, exist_ok=True)
+        venv_python.write_text("", encoding="utf-8")
+        cast("Path", namespace["_MARKER"]).write_text('{"cadrumo": "abc"}', encoding="utf-8")
+
+        # Stand in for "this interpreter is the bundle venv" without building a
+        # real venv, then make any spawn attempt a hard failure.
+        namespace["_running_in_bundle_venv"] = lambda: True
+
+        class _NoSpawn:
+            def __getattr__(self, name: str) -> object:
+                message = f"the warm path spawned a process via subprocess.{name}"
+                raise AssertionError(message)
+
+        namespace["subprocess"] = _NoSpawn()
+        cast("Callable[[], None]", namespace["main"])()
+
+    assert marker.exists(), "the warm path did not run the real entry at all"
+    assert marker.read_text(encoding="utf-8").startswith("served in "), marker.read_text(encoding="utf-8")
+
+
+def test_bootstrap_warm_path_guard_requires_the_bundle_venv(tmp_path: Path) -> None:
+    """Serving in-process is gated on actually being the provisioned venv.
+
+    The saving is only sound when this interpreter carries the installed cohort.
+    An interpreter outside the bundle venv must fall through to the handoff, or
+    a launch that resolved some other environment would try to serve without the
+    cohort importable.
+    """
+    bundle = tmp_path / "extension"
+    (bundle / "src").mkdir(parents=True)
+    (bundle / ".venv").mkdir()
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setenv("CADRUMO_MCP_COHORT_SHA256", '{"cadrumo": "abc"}')
+        namespace = _load_bootstrap_namespace(bundle)
+        in_venv = cast("Callable[[], bool]", namespace["_running_in_bundle_venv"])
+        # This test process is not the bundle venv, so the guard must decline.
+        assert in_venv() is False
+
+
 def test_bootstrap_supervised_server_cannot_outlive_a_killed_bootstrap(tmp_path: Path) -> None:
     """Killing the bootstrap reaps the server it supervises, leaving no orphan.
 

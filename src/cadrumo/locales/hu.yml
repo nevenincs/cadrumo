@@ -4763,6 +4763,11 @@ cli:
     allow_identical_locale_help: A frissítendő locale kódja.
     allow_identical_reason_help: Miért egyezik jogosan ez a szöveg az angollal.
     app_help: Lokalizációs katalógusok ellenőrzése és sablonjainak létrehozása.
+    audit:
+      locale_help: A sema-lokalis vizsgalatot a kivalasztott nyelvekre korlatozza.
+      modelo_help: A sema-lokalis vizsgalatot egyetlen modelo azonositora korlatozza.
+      modelos_help: Tartalmazza minden konyvtar modu modelo sema-lokalis allapotat.
+      revision_help: A sema-lokalis vizsgalatot egyetlen revizio azonositora korlatozza.
     canonicalize_product_identity:
       locale_help: Csak ezt a támogatott nyelvi katalógust frissítse.
     modelo:
@@ -4823,6 +4828,9 @@ cli:
         live_filed_capture: Csak olvasható megfigyelés letöltése az AEAT-ből.
         live_filed_capture_sources: Letöltési forráslehetőségek listázása.
         live_filed_list: Helyileg rögzített benyújtott bevallás-megfigyelések listázása.
+        modelo_audit_check: Ellenőrzi egy bevallásrevízió csomagolt bizonyítékait.
+        modelo_audit_export: Exportálja egy bevallásrevízió bizonyíték-auditját.
+        modelo_audit_show: Megjeleníti egy bevallásrevízió bizonyíték-auditját.
         modelo_bindings: Nyilvántartási kötésfedettség vizsgálata.
         modelo_describe: Egy nyomtatvány-revízió leírása.
         modelo_list: Támogatott nyomtatványok listázása.
@@ -4840,9 +4848,6 @@ cli:
         section_modelo: Nyomtatvány
         section_overview: Áttekintés
         section_review_and_registry: Felülvizsgálat és nyilvántartás
-        modelo_audit_show: 'Megjeleníti egy bevallásrevízió bizonyíték-auditját.'
-        modelo_audit_check: 'Ellenőrzi egy bevallásrevízió csomagolt bizonyítékait.'
-        modelo_audit_export: 'Exportálja egy bevallásrevízió bizonyíték-auditját.'
       config:
         auth_configure: Hitelesítési szolgáltató konfigurálása.
         auth_logout: A helyi hitelesítési munkamenetek lezárása a beállítások megőrzésével.
@@ -4876,6 +4881,7 @@ cli:
         profile_login: Bejelentkezés egy profilba, és aktívvá tétele.
         profile_logout: Az aktív profil munkamenetének lezárása.
         profile_rename: Profil átnevezése és mappájának áthelyezése.
+        profile_sar: Érintetti hozzáférési adatcsomagot exportál.
         profile_show: Egy profil adatainak megjelenítése.
         profile_status: Az aktív profil készültségének megjelenítése.
         recover: Helyreállítja a helyi hozzáférést egy helyreállítási kifejezéssel.
@@ -4894,7 +4900,6 @@ cli:
         section_first_run: Első futtatás
         section_profile_inspection: Profiladatok vizsgálata
         section_profile_lifecycle: Profil életciklusa
-        profile_sar: 'Érintetti hozzáférési adatcsomagot exportál.'
       root:
         diagnostics_live_filed: Rögzített benyújtott bevallás-megfigyelések listázása.
         diagnostics_overview: Az aktív munkaterület készültségének összefoglalása.

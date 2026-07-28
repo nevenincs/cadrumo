@@ -133,19 +133,43 @@ def status(
     ctx: typer.Context,
     modelos: Annotated[
         bool,
-        typer.Option("--modelos", help="Include the schema-local state of every directory-mode modelo."),
+        typer.Option(
+            "--modelos",
+            help=tr(
+                "cli.locales.audit.modelos_help",
+                default="Include the schema-local state of every directory-mode modelo.",
+            ),
+        ),
     ] = False,
     modelo_id: Annotated[
         str | None,
-        typer.Option("--modelo", help="Restrict the schema-local scan to one modelo id."),
+        typer.Option(
+            "--modelo",
+            help=tr(
+                "cli.locales.audit.modelo_help",
+                default="Restrict the schema-local scan to one modelo id.",
+            ),
+        ),
     ] = None,
     revision_id: Annotated[
         str | None,
-        typer.Option("--revision", help="Restrict the schema-local scan to one revision id."),
+        typer.Option(
+            "--revision",
+            help=tr(
+                "cli.locales.audit.revision_help",
+                default="Restrict the schema-local scan to one revision id.",
+            ),
+        ),
     ] = None,
     locales: Annotated[
         list[OutputLanguage] | None,
-        typer.Option("--locale", help="Restrict the schema-local scan to selected locales."),
+        typer.Option(
+            "--locale",
+            help=tr(
+                "cli.locales.audit.locale_help",
+                default="Restrict the schema-local scan to selected locales.",
+            ),
+        ),
     ] = None,
     registry_root: RegistryRootOpt = None,
 ) -> None:

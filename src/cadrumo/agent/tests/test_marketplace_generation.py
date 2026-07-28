@@ -27,6 +27,7 @@ _UTF_8 = "utf-8"
 
 _REPO_ROOT = Path(__file__).resolve().parents[4]
 _SCAFFOLD_MANIFEST = _REPO_ROOT / "packaging" / "marketplace" / ".claude-plugin" / "marketplace.json"
+_SCAFFOLD_SUPERSEDES = _REPO_ROOT / "packaging" / "marketplace" / ".claude-plugin" / "supersedes.json"
 
 
 def test_marketplace_manifest_is_schema_shaped_and_resolves_to_the_plugin(tmp_path: Path) -> None:
@@ -77,6 +78,31 @@ def test_checked_in_marketplace_scaffold_matches_the_generator(tmp_path: Path) -
     generated = json.loads((tmp_path / ".claude-plugin" / "marketplace.json").read_text(encoding=_UTF_8))
     scaffold = json.loads(_SCAFFOLD_MANIFEST.read_text(encoding=_UTF_8))
     assert scaffold == generated
+
+
+def test_the_supersedes_sidecar_is_emitted_and_matches_the_scaffold(tmp_path: Path) -> None:
+    """The retirement declaration ships beside the manifest, and cannot drift either.
+
+    Covering the sidecar explicitly, because the manifest comparison above cannot
+    see it: with the sidecar emission removed the manifests still match exactly,
+    so that assertion stays green while the retirement silently stops shipping.
+
+    It lives beside the manifest rather than inside it because the strict plugin
+    validator rejects an unknown manifest field, which the sibling validator test
+    would catch; asserting its absence here states the constraint where a reader
+    tempted to inline it will look.
+    """
+    materialise_marketplace(tmp_path)
+    emitted = tmp_path / ".claude-plugin" / "supersedes.json"
+    assert emitted.is_file(), "the retirement declaration must ship with every cohort"
+
+    generated = json.loads(emitted.read_text(encoding=_UTF_8))
+    assert generated == {"supersedes": ["aeat"]}
+    scaffold = json.loads(_SCAFFOLD_SUPERSEDES.read_text(encoding=_UTF_8))
+    assert scaffold == generated
+
+    manifest = json.loads((tmp_path / ".claude-plugin" / "marketplace.json").read_text(encoding=_UTF_8))
+    assert "supersedes" not in manifest
 
 
 def test_emitted_marketplace_passes_claude_validate_strict_when_cli_present(tmp_path: Path) -> None:

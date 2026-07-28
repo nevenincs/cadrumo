@@ -870,8 +870,18 @@ def test_augmented_live_unit():
 
 def test_project_tests_outside_source_tree_do_not_skip() -> None:
     """Project tests outside ``src/cadrumo`` must not self-skip or xfail."""
+    project_modules = project_test_control_modules()
+    # Floor the corpus: this walk covers the project test trees outside
+    # ``src/cadrumo`` (the sibling guardrail floors only the in-tree discovery, not
+    # this one). A relocation of those roots would empty the walk and pass the
+    # self-skip ban vacuously.
+    assert len(project_modules) > 20, (
+        f"discovered only {len(project_modules)} project test modules outside src/cadrumo; the "
+        "scan corpus collapsed (a test-root relocation or rename), so an empty violation list "
+        "would mean 'nothing was checked' rather than 'nothing is wrong'"
+    )
     violations: list[str] = []
-    for module_path in project_test_control_modules():
+    for module_path in project_modules:
         tree = ast_for_path(module_path)
         if tree is None:
             continue

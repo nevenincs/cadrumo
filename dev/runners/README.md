@@ -128,6 +128,109 @@ ssh <macos-build-host> '
 
 (Copy `cleanup-macos.sh` to the runner root first, e.g. `scp dev/runners/cleanup-macos.sh <macos-build-host>:~/actions-runner/`.)
 
+## Linux container provisioning (`runner-entry-linux.sh`)
+
+The two Linux runners are containers built from the stock
+`ghcr.io/actions/actions-runner` image, so everything that makes them *these*
+runners lives outside the image. Two rules follow, and both were learned by
+outage rather than by design.
+
+**The entrypoint belongs in the runner's own state volume, never on a host
+path.** `runner-entry-linux.sh` is copied to `/home/runner/entry.sh` inside the
+`cadrumo-runner-state-<n>` volume and the container is created with
+`--entrypoint /home/runner/entry.sh`. A container whose entrypoint is
+bind-mounted from a scratch or temp directory dies the moment that directory is
+cleaned up: Docker recreates the missing bind source as an empty **directory**,
+exec fails, and the container exits **127** and stays down *even with*
+`--restart always`. The tell is a mount whose source is a temp path, which
+`Test-Path` reports as existing while reading it errors with "is a directory".
+
+**Tools the image does not ship belong in the volume too**, under
+`/home/runner/tools/bin`, which the entrypoint prepends to `PATH`. The image
+carries `jq`, `git`, `curl`, `tar` and the docker client; it does **not** carry
+`gh`. Workflows install `just` and `uv` themselves through actions, but nothing
+installs `gh` — it is assumed present, as it is on GitHub-hosted runners. When
+it is absent, `dev.release.version_identity` fails its forge check with
+`REFUSED: forge check needs the gh CLI on PATH`, which surfaces mid-release as a
+cohort-seal failure rather than as a missing-tool error. Installing into the
+volume rather than the container's writable layer is the whole point: a
+recreated container keeps the tools.
+
+**Homebrew is a third class again: a whole tree, not a binary or a package —
+and it is the one thing that must NOT go in the volume.** The acquisition lane
+runs `brew` from the canonical `/home/linuxbrew/.linuxbrew/bin/brew`, and the
+stock image has no Homebrew at all, so a rebuilt container fails that lane's
+very first step, `Verify declared Homebrew release row`, on `test -x
+"$BREW_PATH"`. Install it at the real canonical path:
+
+```bash
+sudo apt-get install -y build-essential procps file git
+sudo mkdir -p /home/linuxbrew && sudo chown runner:runner /home/linuxbrew
+git clone https://github.com/Homebrew/brew /home/linuxbrew/.linuxbrew/Homebrew
+mkdir -p /home/linuxbrew/.linuxbrew/bin
+ln -sfn ../Homebrew/bin/brew /home/linuxbrew/.linuxbrew/bin/brew
+/home/linuxbrew/.linuxbrew/bin/brew update --force
+```
+
+**Do not put the tree in the volume and symlink `/home/linuxbrew` at it.** That
+is the obvious way to make it survive a rebuild, and it breaks `brew link`:
+`brew --prefix` still answers `/home/linuxbrew/.linuxbrew` correctly, so the
+install proceeds all the way through building every resource before failing at
+the very end with
+
+```
+An unexpected error occurred during the `brew link` step
+Permission denied @ dir_s_mkdir - /linuxbrew
+```
+
+Homebrew computes relative link traversals against the RESOLVED path. Through a
+symlink the real path is deeper than the canonical one, so the `..` walk climbs
+too far and lands at `/linuxbrew` on the filesystem root. Verify with `readlink
+-f "$(command -v brew)"` — it must contain no symlink indirection.
+
+So Homebrew is the one dependency that genuinely does not survive a container
+rebuild. Reinstall it, and prefer a correct install over a durable one.
+
+Clone with full history: a `--depth=1` clone leaves `brew --version` reporting
+"shallow or no git repository" and Homebrew refuses to work from it.
+
+**Some gaps are apt packages, not binaries.** The dev lane runs `pyright`, whose
+bundled node needs `libatomic.so.1`; the stock image does not carry it, and
+without it the lane dies `exit 127` with `error while loading shared libraries:
+libatomic.so.1`. A shared library cannot live in the volume the way `gh` does,
+so it must be reinstalled whenever the container is rebuilt:
+
+```bash
+docker exec <container> sudo apt-get update -qq
+docker exec <container> sudo apt-get install -y libatomic1
+```
+
+Recreate a Linux runner like this (the volume already holds `config.sh`,
+`run.sh`, `.runner`, `.credentials`, and `.env`, so it does **not** re-register):
+
+```bash
+docker create --name cadrumo-runner-linux-2 --restart always \
+  --user runner -w /home/runner \
+  -v cadrumo-runner-state-2:/home/runner \
+  -v /run/host-services/docker.proxy.sock:/var/run/docker.sock \
+  -e RUNNER_MANUALLY_TRAP_SIG=1 -e ACTIONS_RUNNER_PRINT_LOG_TO_STDOUT=1 \
+  --entrypoint /home/runner/entry.sh ghcr.io/actions/actions-runner:latest
+```
+
+Verify both classes before trusting the runner with a release lane — each gap
+costs a full smoke run to rediscover, and neither announces itself as a
+missing-dependency error:
+
+```bash
+docker exec <container> bash -lc 'command -v gh && gh --version'
+docker exec <container> bash -lc 'ldconfig -p | grep -q libatomic && echo libatomic ok'
+```
+
+Do **not** keep a broken container around as a rollback: `cleanup-linux.sh`
+runs `docker container prune` on every job completion, which removes *stopped*
+containers, so a retained-but-stopped container is reaped by the next job that
+finishes anywhere on the host.
+
 ## Restart discipline
 
 **Never restart a runner mid-job.** Poll busy state first and only restart an

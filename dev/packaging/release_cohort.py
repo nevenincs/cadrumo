@@ -44,7 +44,6 @@ _UTF_8: Final[str] = "utf-8"
 _ZIP_TIMESTAMP: Final[tuple[int, int, int, int, int, int]] = (1980, 1, 1, 0, 0, 0)
 _RELEASE_BASE: Final[str] = "https://github.com/nevenincs/cadrumo/releases/download"
 _REQUIRED_PYTHON_VERSION: Final[str] = "3.13.11"
-_REQUIRED_UV_VERSION: Final[str] = "0.11.29"
 _BUILD_CONSTRAINTS: Final[Path] = Path("packaging/build-system-constraints.txt")
 
 
@@ -255,9 +254,20 @@ def _build_identity(clean_root: Path) -> BuildIdentity:
         raise SystemExit("uv is required to construct the release cohort")
     uv_version = _run([uv, "--version"], cwd=clean_root).stdout.strip()
     observed_uv = uv_version.split(maxsplit=2)
-    if len(observed_uv) < 2 or observed_uv[:2] != ["uv", _REQUIRED_UV_VERSION]:
+    # Any uv builds the cohort. The version is RECORDED rather than pinned, so
+    # reproducibility is an auditable coordinate instead of a precondition: two
+    # cohorts are byte-comparable when their build identities agree, and the
+    # identity now says which uv produced each. A hard pin bought that guarantee
+    # by refusing to build at all whenever uv moved, which stopped releases on
+    # an ordinary toolchain upgrade.
+    #
+    # The shape is still checked. An unparseable `uv --version` means the probe
+    # did not return what we think it did, and stamping that into the manifest
+    # would put a fabricated coordinate on every artifact built from it.
+    if len(observed_uv) < 2 or observed_uv[0] != "uv":
         raise SystemExit(
-            f"release cohort requires uv {_REQUIRED_UV_VERSION}, got {uv_version!r}",
+            f"could not read a uv version from {uv_version!r}; "
+            "the cohort records the build's uv, so an unreadable one cannot be stamped",
         )
     python_version = platform.python_version()
     if platform.python_implementation() != "CPython" or python_version != _REQUIRED_PYTHON_VERSION:
