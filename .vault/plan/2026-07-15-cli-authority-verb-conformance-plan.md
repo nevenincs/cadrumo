@@ -436,8 +436,8 @@ Run the formal code-review skill, reconcile findings, and prove every accepted A
 - [x] `W06.P20.S214` - Confirm no removed CLI spelling survives in source, locales, tests, docs, schemas, MCP, or suggestions; `.`.
 - [x] `W06.P20.S215` - Confirm certificate custody, ledger evidence, portable export, hashing, namespaces, filed capture, LLM review, registry projection, and duplication execution each have one canonical owner and no parallel writer, resolver, parser, or command path; `src/cadrumo/; dev/audit/`.
 - [x] `W06.P20.S216` - Audit every amended ADR decision, including delete-only certificate cutover, atomic ledger evidence, live export routing, 18 plus 4 hashing consolidation, backend replay removal, namespace adoption, filed capture, LLM review, registry as-of behavior, and truthful duplication infrastructure, against code and objective evidence; `.vault/adr/2026-07-15-cli-authority-verb-conformance-adr.md`.
-- [ ] `W06.P20.S217` - Rebuild the feature index after all plan, execution, audit, ADR, research, and reference artifacts are final; `.vault/`.
-- [ ] `W06.P20.S218` - Run the plan structural check and refuse closure while any Step remains open or malformed; `.vault/plan/2026-07-15-cli-authority-verb-conformance-plan.md`.
+- [x] `W06.P20.S217` - Rebuild the feature index after all plan, execution, audit, ADR, research, and reference artifacts are final; `.vault/`.
+- [x] `W06.P20.S218` - Run the plan structural check and refuse closure while any Step remains open or malformed; `.vault/plan/2026-07-15-cli-authority-verb-conformance-plan.md`.
 - [x] `W06.P20.S219` - Run feature-scoped Vaultspec checks and resolve every attributable finding; `.vault/`.
 - [x] `W06.P20.S220` - Run repository-wide Vaultspec checks and triage unrelated residuals honestly; `.vault/`.
 - [x] `W06.P20.S221` - Run the required fresh-context campaign-close honesty review with explicit audits for duplicated authority, vacuous adoption tests, ignored accepted parameters, partial transaction commits, and false-green quality infrastructure; `.vault/audit/`.

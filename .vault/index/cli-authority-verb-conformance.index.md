@@ -191,6 +191,24 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S159]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S160]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S223]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S161]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S162]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S163]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S164]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S165]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S166]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S167]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S168]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S169]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S170]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S171]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S172]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S173]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S174]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S175]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S176]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S239]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P17-S240]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P18-S177]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P18-S178]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P18-S179]]'
@@ -228,15 +246,46 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S206]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S207]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P19-S208]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S209]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S210]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S211]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S213]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S214]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S215]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S216]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S219]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S220]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S221]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S267]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S268]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S269]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S270]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S271]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S272]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S273]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S274]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S275]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S276]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S277]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S278]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S279]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S280]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S281]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S282]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S283]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S284]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S285]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S286]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S287]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S288]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S289]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S290]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S291]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S292]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S293]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S294]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S295]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S296]]'
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
   - '[[2026-07-15-cli-authority-verb-conformance-audit]]'
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
@@ -249,6 +298,8 @@ related:
   - '[[2026-07-17-cli-authority-verb-conformance-exec]]'
   - '[[2026-07-25-cli-authority-verb-conformance-campaign-close-honesty-review-audit]]'
   - '[[2026-07-25-cli-authority-verb-conformance-period-grammar-refusal-audit]]'
+  - '[[2026-07-28-cli-authority-verb-conformance-adr]]'
+  - '[[2026-07-28-cli-authority-verb-conformance-formal-close-review-audit]]'
 ---
 
 # `cli-authority-verb-conformance` feature index
@@ -260,6 +311,7 @@ Auto-generated index of all documents tagged with `#cli-authority-verb-conforman
 ### adr
 
 - `2026-07-15-cli-authority-verb-conformance-adr` - `cli-authority-verb-conformance` adr: `Single backend authorities and cost-aware CLI verbs` | (**status:** `accepted`)
+- `2026-07-28-cli-authority-verb-conformance-adr` - `cli-authority-verb-conformance` adr: `Profile-bound command criterion` | (**status:** `accepted`)
 
 ### audit
 
@@ -270,6 +322,7 @@ Auto-generated index of all documents tagged with `#cli-authority-verb-conforman
 - `2026-07-17-cli-authority-verb-conformance-audit` - `cli-authority-verb-conformance` audit: `Rescope and split closure`
 - `2026-07-25-cli-authority-verb-conformance-campaign-close-honesty-review-audit` - `cli-authority-verb-conformance` audit: `Campaign-close honesty review`
 - `2026-07-25-cli-authority-verb-conformance-period-grammar-refusal-audit` - `cli-authority-verb-conformance` audit: `period grammar refusal`
+- `2026-07-28-cli-authority-verb-conformance-formal-close-review-audit` - `cli-authority-verb-conformance` audit: `Formal close review`
 
 ### exec
 
@@ -505,6 +558,55 @@ Auto-generated index of all documents tagged with `#cli-authority-verb-conforman
 - `2026-07-15-cli-authority-verb-conformance-W05-P16-S158` - Prove canonical switch identity gating and removed sandbox-use unavailability
 - `2026-07-15-cli-authority-verb-conformance-W05-P16-S159` - Prove generated MCP input schemas for every accepted changed command
 - `2026-07-15-cli-authority-verb-conformance-W05-P16-S160` - Refresh command-search expectations only for accepted keys and reject removed tokens
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S161` - Invoke the mandatory vaultspec-documentation workflow and keep its render-and-verify gate active for this Phase
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S162` - Rewrite data-access protection procedures for passphrase, recovery, logout, quarantine, and reset
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S163` - Rewrite authentication procedures for login, logout, reset, and backend-free certificate secrets
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S164` - Rewrite profile setup and navigation for exact switch labels and strong logout
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S165` - Rewrite ledger evidence guidance to separate attach from invoice-only link
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S166` - Rewrite bank-import examples to separate evidence attach from invoice link
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S167` - Align the how-to index with logout, passphrase, recovery, and reset lifecycle terminology
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S168` - Align the command and configuration overview with the accepted hierarchy and security semantics
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S169` - Regenerate data-access sequence goldens from real accepted commands
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S170` - Regenerate authentication sequence goldens for login, logout, reset, and certificate secrets
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S171` - Regenerate bank-import sequence goldens for attach and invoice link
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S172` - Regenerate CLI reference pages from the live command tree and prove removed pages are absent
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S173` - Regenerate the static CLI tree from the live command tree and verify exact accepted paths
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S174` - Regenerate terminology coverage from authoritative sources and reject removed command tokens
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S175` - Validate every regenerated sequence against its directive and command contract
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S176` - Build Sphinx with warnings as errors and verify references, tree, links, and sequences
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S239` - Rewrite profile export and subject-access documentation around the shared durable service, schema-derived categories, equivalent cleartext handoff risk, and separate sealed recovery archive
+- `2026-07-15-cli-authority-verb-conformance-W05-P17-S240` - Remove evidence audit replay from all user documentation, generated reference expectations, examples, and terminology projections while retaining audit check
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S209` - Invoke vaultspec-code-review over the complete feature diff for safety, intent, boundary direction, and test quality
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S210` - Resolve every in-scope blocker or major finding through its owning implementation Step
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S211` - Rerun every focused or full gate invalidated by a corrective edit
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S214` - Confirm no removed CLI spelling survives in source, locales, tests, docs, schemas, MCP, or suggestions
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S215` - Confirm certificate custody, ledger evidence, portable export, hashing, namespaces, filed capture, LLM review, registry projection, and duplication execution each have one canonical owner and no parallel writer, resolver, parser, or command path
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S216` - Audit every amended ADR decision, including delete-only certificate cutover, atomic ledger evidence, live export routing, 18 plus 4 hashing consolidation, backend replay removal, namespace adoption, filed capture, LLM review, registry as-of behavior, and truthful duplication infrastructure, against code and objective evidence
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S267` - Verify each open W05 Step against its named surface before checking it, never inferring satisfaction from the live command tree alone
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S268` - Complete the W06.P18 and W06.P19 evidence, refusing to close any Step whose execution record lacks a command, a non-zero collected count, an exit line, and a HEAD reference
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S269` - Decide in a follow-on ADR the criterion by which a command path is profile-bound, then reconcile the 48 unguarded mutation-shaped leaves against it per verb
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S270` - Remove the permissive not-read-only default for unknown command keys, or prove every gate resting on it still discriminates an absent key from a live write verb
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S271` - Assert structurally that an execution record carries a populated Outcome before its Step may be checked, since the vault check passes empty scaffolds
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S272` - Commit the plan file alongside execution records in every closure commit, and land the 31 closures currently held only in the working tree
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S273` - Make a stale import-linter ignore fail loudly and distinctly from a contract breach, so an aborted run cannot read as a quiet one
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S274` - Resolve the two broken layered contracts with their owning campaigns, without widening the ignore list
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S275` - Teach the documented-command conformance parser to recognise a blocked-row marker rather than reading its prose as a command path
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S276` - Attribute the two P18 failures before any closure, 8 in the passphrase and recovery lifecycle suite and 22 in the MCP parity suite, separating the expected keychain remainder from real defects
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S278` - Give the namespace-registry adoption gate an anti-vacuity floor and every production root, since it currently finds zero subjects and asserts an empty list
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S279` - Refer the config CLI module size breach to the peer TUI campaign that caused it, since the module stood at 1254 lines inside budget before the manager-from-create commit added 134
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S280` - Remove the retired evidence-bundle replay from the modelo-390 records-audit sequence prose, which contradicts its own blocked annotation
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S281` - Resolve the seven unallowlisted tokens reddening the period combined-string gate at HEAD
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S282` - Remove the two Code-Stands-Alone violations, a feature tag in a hashing test docstring and vault stems in the duplication disposition fields
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S283` - Give every set-asserting gate an anti-vacuity floor, asserting the subject count is non-zero before asserting the property, across the write-guard parity, namespace-adoption and tree-walk gates
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S284` - Assert the accepted period tokens on the error envelope structured context rather than on rendered prose, so a wording pass cannot red the grammar cases
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S285` - Ground the HITL confirmation key against the live descriptor set at the gate itself, so the permissive default cannot auto-approve an unclassified mutation if a future caller passes an unvalidated key
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S286` - Return the operator-output test probe and the wizard results schemas to their owning campaigns, since a test module registering a production schema key breaks 128 assertions and 19 setup errors while untracked
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S288` - Retire the M100 casilla-accessor hand-copy onto the public numeric_casilla_value it duplicates, in a module already importing both that ops module and the error class the copy raises
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S289` - Route the modelo evidence-covers-snapshot copy onto the public assert_evidence_covers_snapshot, and retire the cross-package private import the aggregation test uses to reach it
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S290` - Give the byte-identical FTS or-group builder one shared leaf home, since both copies sit in application packages that may not reach into each other
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S291` - Route the filing export-field overlap predicate onto the registry copy, the only admissible canonical home across that layer boundary
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S292` - Extract the shared journal-repository file substrate, noting the two classes are constraint-shape divergent so this is extraction rather than replacement
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S296` - Guard the load-bearing wizard schema re-exports against a tidy-up deletion, since the re-export idiom looks redundant and removing it silently drops both profile verbs from the MCP surface
 
 ### plan
 
