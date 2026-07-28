@@ -8,12 +8,16 @@ patterns are grounded in that real template family.
 
 from __future__ import annotations
 
+import hashlib
+import json
 from dataclasses import dataclass
 from pathlib import Path
 
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
+
+from ... import FIXTURE_PROVENANCE_SYNTHETIC, SYNTHETIC_FIXTURE_PRODUCER
 
 
 @dataclass(frozen=True)
@@ -291,6 +295,35 @@ def _draw_page(c: canvas.Canvas, lines: tuple[str, ...]) -> None:
         y -= _LINE
 
 
+def write_provenance_sidecar(pdf_path: Path) -> Path:
+    """Write the provenance sidecar the fixture gates read for ``pdf_path``.
+
+    Everything this generator emits is generator-produced, so the declaration
+    is unconditional. It is written by the generator rather than by hand so it
+    cannot drift from the bytes it describes.
+
+    Returns:
+        The sidecar path written, ``<stem>.json`` beside the PDF.
+    """
+    pdf_bytes = pdf_path.read_bytes()
+    sidecar = pdf_path.with_suffix(".json")
+    sidecar.write_text(
+        json.dumps(
+            {
+                "provenance": FIXTURE_PROVENANCE_SYNTHETIC,
+                "role": "parser_anchor",
+                "output_sha256": hashlib.sha256(pdf_bytes).hexdigest(),
+                "output_size_bytes": len(pdf_bytes),
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return sidecar
+
+
 def main() -> None:
     """Regenerate every committed synthetic PDF fixture."""
     out_dir = Path(__file__).parent
@@ -301,12 +334,17 @@ def main() -> None:
         c.setAuthor("aeat test fixtures")
         c.setSubject("synthetic N26 savings statement fixture")
         c.setCreator("aeat fixture generator")
-        c.setProducer("reportlab")
+        # Previously "reportlab", which carries no synthetic signal: the
+        # provenance discriminator reads an unsignatured producer as evidence
+        # of real origin, so these generated statements presented as real bank
+        # documents to any gate that asked.
+        c.setProducer(SYNTHETIC_FIXTURE_PRODUCER)
         for page_lines in fixture.pages:
             _draw_page(c, page_lines)
             c.showPage()
         c.save()
-        print(f"wrote {target}")
+        sidecar = write_provenance_sidecar(target)
+        print(f"wrote {target} + {sidecar.name}")
 
 
 if __name__ == "__main__":

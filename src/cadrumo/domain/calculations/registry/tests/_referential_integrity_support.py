@@ -46,9 +46,9 @@ from .._schema import (
     RelationDefinition,
     SourceReference,
     SupportRemovalDecisionDefinition,
-    VerificationExpectationDefinition,
     WorkbookParityReference,
 )
+from .._schema_verification import VerificationExpectationDefinition
 from .._snapshot import build_validated_snapshot
 from .._validate_references import check_all_id_references
 

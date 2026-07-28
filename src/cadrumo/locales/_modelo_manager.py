@@ -471,6 +471,26 @@ class ModeloLocaleManager:
         valid: _ExpectedKeysByTarget,
     ) -> list[Path]:
         """Align one fragmented locale target, preserving translated leaves."""
+        changed, present = self._prune_fragment_leaves(target, valid=valid)
+        for field in (ModeloLocaleFieldKind.LABELS, ModeloLocaleFieldKind.HELP):
+            missing = sorted(_keys_for_target(expected, target, field) - present[field])
+            for written in self._append_missing_leaves(target, field=field, missing=missing):
+                if written not in changed:
+                    changed.append(written)
+        return changed
+
+    def _prune_fragment_leaves(
+        self,
+        target: ModeloLocaleFileTarget,
+        *,
+        valid: _ExpectedKeysByTarget,
+    ) -> tuple[list[Path], dict[ModeloLocaleFieldKind, set[str]]]:
+        """Drop leaves the registry no longer declares, keeping translated ones.
+
+        Returns the fragment files rewritten and, per field kind, the key set
+        still present after the prune — which is what decides the leaves the
+        append pass has to add.
+        """
         fragment_dir = self.resolve_target_path(target).with_suffix("")
         changed: list[Path] = []
         present: dict[ModeloLocaleFieldKind, set[str]] = {
@@ -493,23 +513,36 @@ class ModeloLocaleManager:
             present[ModeloLocaleFieldKind.HELP].update(help_text)
             if labels != current.labels or help_text != current.help:
                 changed.append(self._write_translation_path(path, labels=labels, help_text=help_text))
+        return changed, present
 
-        for field in (ModeloLocaleFieldKind.LABELS, ModeloLocaleFieldKind.HELP):
-            missing = sorted(_keys_for_target(expected, target, field) - present[field])
-            while missing:
-                path = self._fragment_append_target(target, field)
-                current = self._load_translation_path(target, path)
-                table = dict(current.table(field))
-                room = self.fragment_leaf_capacity - len(table)
-                batch, missing = missing[:room], missing[room:]
-                for key in batch:
-                    table[key] = key
-                labels = table if field is ModeloLocaleFieldKind.LABELS else dict(current.labels)
-                help_text = table if field is ModeloLocaleFieldKind.HELP else dict(current.help)
-                written = self._write_translation_path(path, labels=labels, help_text=help_text)
-                if written not in changed:
-                    changed.append(written)
-        return changed
+    def _append_missing_leaves(
+        self,
+        target: ModeloLocaleFileTarget,
+        *,
+        field: ModeloLocaleFieldKind,
+        missing: list[str],
+    ) -> list[Path]:
+        """Scaffold ``missing`` keys as placeholders, filling fragments to capacity.
+
+        Each pass takes only as many keys as the current append target has room
+        for, then rolls to the next fragment, so no fragment exceeds
+        :attr:`fragment_leaf_capacity`. A scaffolded leaf's value is its own key,
+        which is what marks it untranslated.
+        """
+        written_paths: list[Path] = []
+        remaining = missing
+        while remaining:
+            path = self._fragment_append_target(target, field)
+            current = self._load_translation_path(target, path)
+            table = dict(current.table(field))
+            room = self.fragment_leaf_capacity - len(table)
+            batch, remaining = remaining[:room], remaining[room:]
+            for key in batch:
+                table[key] = key
+            labels = table if field is ModeloLocaleFieldKind.LABELS else dict(current.labels)
+            help_text = table if field is ModeloLocaleFieldKind.HELP else dict(current.help)
+            written_paths.append(self._write_translation_path(path, labels=labels, help_text=help_text))
+        return written_paths
 
     def _fragment_append_target(self, target: ModeloLocaleFileTarget, field: ModeloLocaleFieldKind) -> Path:
         """Return the fragment file that accepts new ``field`` leaves for ``target``.

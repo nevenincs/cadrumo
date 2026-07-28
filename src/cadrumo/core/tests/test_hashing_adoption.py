@@ -1,9 +1,9 @@
 """Recurrence gate: no NEW reducible one-shot SHA-256 body lands in production.
 
-`core.hashing.sha256_hex` is the canonical one-shot bytes->hex digest. The
-`cli-authority-verb-conformance` decision delegates the audited production
-bodies to it, and this AST recurrence gate is what stops the pattern coming
-back: it prevents a NEW reducible ``sha256(<data>).hexdigest()`` body from
+`core.hashing.sha256_hex` is the canonical one-shot bytes->hex digest. Every
+audited production body delegates to it, and this AST recurrence gate is what
+stops the pattern coming back: it prevents a NEW reducible
+``sha256(<data>).hexdigest()`` body from
 landing while allowing the non-substitutable cryptographic uses it must never
 block: incremental/streaming hashing, keyed HMAC, key derivation (HKDF), X509
 fingerprints, and raw digest-byte uses.

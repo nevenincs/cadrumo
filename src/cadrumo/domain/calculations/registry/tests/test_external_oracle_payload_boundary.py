@@ -37,11 +37,11 @@ from .._external_grounding import (
     _read_oracle_payload,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
 #: A payload name carrying no filing year, the shape that used to demote a
 #: fully self-describing payload to an attribution gap.
 _YEAR_LESS_NAME = "modelo-303-prorrata-definitiva.json"
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _bundled_payloads(corpus: ExternalOracleCorpus) -> list[Path]:

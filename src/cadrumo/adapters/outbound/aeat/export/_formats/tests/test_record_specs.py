@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 from openpyxl import load_workbook
 
+from .......core import ExportLayoutFormat
 from .......core.resources import bundled_path, resources
 from .......domain.calculations.registry import (
     CasillaFieldKind,
@@ -55,7 +56,7 @@ def _fixed_width_layout_cases() -> tuple[_LayoutCase, ...]:
     for modelo in resources().modelos.authority.modelos:
         for revision in modelo.revisions.values():
             for layout in derive_export_layouts_from_bindings(revision):
-                if layout.format == "fixed_width":
+                if layout.format is ExportLayoutFormat.FIXED_WIDTH:
                     cases.append((modelo, revision, layout))
     return tuple(cases)
 

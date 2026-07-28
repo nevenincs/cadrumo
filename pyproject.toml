@@ -420,6 +420,13 @@ extend-exclude = [
   # docs-migration probe scripts, not package code.
   "add_frontmatter.py",
   "test_docs.py",
+  # Ruff 0.16 formats Python blocks embedded in Markdown. The `.vault/` corpus
+  # and `.agents/` handovers are removable development scaffolding whose code
+  # blocks are historical records of what a decision looked like when it was
+  # taken; reformatting them rewrites the record and is barred by the vaultspec
+  # hand-edit rules. Narrative docs under `docs/` stay in scope.
+  ".vault",
+  ".agents",
 ]
 
 [tool.ruff.lint]
@@ -496,6 +503,11 @@ convention = "google"
 "dev/audit/complexity.py" = ["S603"]
 "dev/audit/report.py" = ["S603"]
 "dev/audit/semantic.py" = ["S603"]
+# The checkout-drift screen and its cases invoke read-only git verbs with a
+# `shutil.which`-resolved executable and a fixed argv; the only interpolated
+# value is a repository root the caller already owns.
+"dev/audit/checkout_drift.py" = ["S603"]
+"dev/audit/tests/test_checkout_drift.py" = ["S603"]
 "dev/docs/build.py" = ["S603"]
 "dev/docs/i18n.py" = ["S603"]
 "dev/docs/serve.py" = ["S603"]
@@ -508,6 +520,10 @@ convention = "google"
 # The shard-plugin gate collect-probes via `sys.executable -m pytest` with a
 # fixed argv over in-test-authored sample modules.
 "dev/quality/tests/test_shard.py" = ["S603"]
+# The conformance-gate anti-vacuity proof drives `sys.executable -m
+# dev.registry.conformance` with a fixed argv plus a tmp_path-authored seeded
+# baseline; no untrusted input reaches subprocess.
+"dev/tests/test_registry_conformance_gate.py" = ["S603"]
 # The release audit-state gate resolves `gh` via `shutil.which` (or accepts an
 # explicit resolved path for tests) before invoking it with a fixed argv;
 # ruff's S603 heuristic cannot see the resolved-executable contract.
@@ -665,6 +681,9 @@ convention = "google"
 # (partial paths resolved from PATH by design), mirroring the src/cadrumo
 # wheel-build gates.
 "dev/packaging/tests/test_cadrumo_data_distribution.py" = ["S603", "S607"]
+# The stdio-lifetime watchdog can only be proven against real spawned processes
+# and real pipes; every argv is a fixed `sys.executable -c <literal>`.
+"src/cadrumo/entrypoints/mcp/tests/test_stdio_lifetime.py" = ["S603", "S607"]
 "src/cadrumo/adapters/persistence/storage/bucket/tests/test_lockfile.py" = ["S603"]
 "src/cadrumo/adapters/persistence/storage/tests/test_substrate_smoke.py" = ["S603"]
 "src/cadrumo/domain/calculations/registry/tests/test_cross_domain_snapshot_registration.py" = ["S603"]

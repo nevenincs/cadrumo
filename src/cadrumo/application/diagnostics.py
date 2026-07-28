@@ -933,29 +933,7 @@ def _profile_check(
         )
     unset_findings = _unset_profile_key_findings(state)
     if not report.profile_ready:
-        missing_required = tuple(f for f in unset_findings if f.requirement == "required")
-        # Fall back to the wizard report's missing-required tuple when the
-        # record probe is unavailable, so the row still names what is wrong.
-        if not missing_required:
-            missing_required = tuple(
-                DiagnosticFinding(summary=key, requirement="required") for key in report.missing_required
-            )
-        enrolment_findings = tuple(
-            DiagnosticFinding(summary=key, requirement="required")
-            for key in report.missing_enrolment
-            if key not in {f.summary.split(" — ", 1)[0] for f in missing_required}
-        )
-        return DiagnosticCheck(
-            name="profile.readiness",
-            status="warn",
-            summary=tr(
-                "cli.diagnostics.summary.profile_missing_keys",
-                default="Profile is missing %{count} required key(s)",
-                count=len(missing_required) + len(enrolment_findings),
-            ),
-            next_action=_PROFILE_EDIT_COMMAND,
-            findings=missing_required + enrolment_findings,
-        )
+        return _profile_not_ready_check(report, unset_findings=unset_findings)
     return DiagnosticCheck(
         name="profile.readiness",
         status="ok",
@@ -966,6 +944,42 @@ def _profile_check(
             total=report.profile_total_keys,
         ),
         findings=unset_findings,
+    )
+
+
+def _profile_not_ready_check(
+    report: WizardStatusReport,
+    *,
+    unset_findings: tuple[DiagnosticFinding, ...],
+) -> DiagnosticCheck:
+    """Render the readiness row for a profile still missing required keys.
+
+    Prefers the record probe's own findings; when it is unavailable the row
+    falls back to the wizard report's missing-required tuple so it still
+    names what is wrong rather than reporting an empty warning. Enrolment
+    keys already named by a required finding are not repeated.
+    """
+    missing_required = tuple(f for f in unset_findings if f.requirement == "required")
+    if not missing_required:
+        missing_required = tuple(
+            DiagnosticFinding(summary=key, requirement="required") for key in report.missing_required
+        )
+    already_named = {finding.summary.split(" — ", 1)[0] for finding in missing_required}
+    enrolment_findings = tuple(
+        DiagnosticFinding(summary=key, requirement="required")
+        for key in report.missing_enrolment
+        if key not in already_named
+    )
+    return DiagnosticCheck(
+        name="profile.readiness",
+        status="warn",
+        summary=tr(
+            "cli.diagnostics.summary.profile_missing_keys",
+            default="Profile is missing %{count} required key(s)",
+            count=len(missing_required) + len(enrolment_findings),
+        ),
+        next_action=_PROFILE_EDIT_COMMAND,
+        findings=missing_required + enrolment_findings,
     )
 
 

@@ -8,7 +8,6 @@ generated output envelopes.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from typing import Annotated, Literal
@@ -23,7 +22,7 @@ from pydantic import (
     model_validator,
 )
 
-from ....core import REVIEWED_REVISION_REVIEW_STATUSES, Period, RevisionReviewStatus, TaxDomain
+from ....core import Period, RevisionReviewStatus, TaxDomain
 from ....core.aggregation import BindingAggregation, BindingSourceKind, BindingTypedEnumKind
 from ....core.classification import SensitivityClass
 from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
@@ -57,9 +56,19 @@ from ._ids import (
     WorkbookOutputId,
     WorkbookParityRefId,
 )
+from ._schema_governance import (
+    validate_attribution_names_somebody,
+    validate_governance_stamp_coherence,
+    validate_reviewed_at_within_horizon,
+)
 from ._schema_input_kind import InputKind, InputKindValue
 from ._schema_rounding import RegistryRoundingCode as RegistryRoundingCode
 from ._schema_rounding import RegistryRoundingCodeValue
+from ._schema_verification import (
+    RegistryVerificationPolicy,
+    VerificationExpectationDefinition,
+    VerificationPredicateDefinition,
+)
 
 __all__ = [
     "AlgorithmBindingDefinition",
@@ -427,71 +436,6 @@ class WorkbookParityReference(RegistryModel):
         if self.workbook_source not in self.source_refs:
             raise RegistryValidationError(
                 f"workbook parity reference {self.id!r} source_refs must include workbook_source",
-            )
-        return self
-
-
-class VerificationExpectationDefinition(RegistryModel):
-    id: VerificationExpectationId
-    computed_casilla_ids: tuple[CasillaId, ...]
-    reconcile_when_present_casilla_ids: tuple[CasillaId, ...] = ()
-    externally_grounded_casilla_ids: tuple[CasillaId, ...] = ()
-    reconciliation_total_casilla_ids: Mapping[Literal["ingresar", "devolver"], CasillaId] = Field(
-        default_factory=dict,
-    )
-    tolerance: DecimalValue
-    rounding: str
-    min_coverage: DecimalValue = Field(ge=Decimal("0"), le=Decimal("1"))
-    discrepancy_causes: tuple[
-        Literal["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"],
-        ...,
-    ] = Field(min_length=1)
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
-
-    @field_validator("computed_casilla_ids")
-    @classmethod
-    def _computed_casilla_ids_unique(cls, value: tuple[CasillaId, ...]) -> tuple[CasillaId, ...]:
-        if len(set(value)) != len(value):
-            raise RegistryValidationError("verification expectation computed_casilla_ids must be unique")
-        return value
-
-    @field_validator("reconcile_when_present_casilla_ids")
-    @classmethod
-    def _reconcile_when_present_unique(cls, value: tuple[CasillaId, ...]) -> tuple[CasillaId, ...]:
-        if len(set(value)) != len(value):
-            raise RegistryValidationError(
-                "verification expectation reconcile_when_present_casilla_ids must be unique",
-            )
-        return value
-
-    @field_validator("externally_grounded_casilla_ids")
-    @classmethod
-    def _externally_grounded_unique(cls, value: tuple[CasillaId, ...]) -> tuple[CasillaId, ...]:
-        if len(set(value)) != len(value):
-            raise RegistryValidationError(
-                "verification expectation externally_grounded_casilla_ids must be unique",
-            )
-        return value
-
-    @model_validator(mode="after")
-    def _reconcile_when_present_disjoint(self) -> VerificationExpectationDefinition:
-        overlap = set(self.reconcile_when_present_casilla_ids) & set(self.computed_casilla_ids)
-        if overlap:
-            raise RegistryValidationError(
-                "verification expectation reconcile_when_present_casilla_ids must be disjoint from "
-                f"computed_casilla_ids (overlap: {sorted(overlap)})",
-            )
-        return self
-
-    @model_validator(mode="after")
-    def _externally_grounded_subset(self) -> VerificationExpectationDefinition:
-        reconciled = set(self.computed_casilla_ids) | set(self.reconcile_when_present_casilla_ids)
-        outside = set(self.externally_grounded_casilla_ids) - reconciled
-        if outside:
-            raise RegistryValidationError(
-                "verification expectation externally_grounded_casilla_ids must be a subset of "
-                f"computed_casilla_ids | reconcile_when_present_casilla_ids (outside: {sorted(outside)})",
             )
         return self
 
@@ -926,308 +870,6 @@ class FormulaDefinition(RegistryModel):
     source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
 
 
-KNOWN_PROFILE_FLAG_ADVISORY_FIELDS: frozenset[str] = frozenset(
-    {
-        "art109_activity_income_withholding_ge_70pct",
-        # ue_eee_status: TaxpayerProfile derived property (True iff
-        # country_of_fiscal_residence is an EU/EEA code, post-Brexit). Consumed
-        # by profile_flag_enabled directly and by
-        # casilla_equals_implies_profile_flag for the M210 IRNR
-        # tipo_renta="ue_residente" residence cross-check.
-        "ue_eee_status",
-    },
-)
-
-
-KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
-    {
-        # advisory_when_positive(["casilla_id"]) — single-casilla positive
-        # advisory: FIRES (ADVISORY shown) iff the one named casilla resolves
-        # strictly > 0. The minimal "this box is populated, review the
-        # downstream treatment" prompt for a value the calculation chain does
-        # not yet fully model. ADVISORY-only (no BLOCKING_RULE branch). Authored
-        # for the Modelo 100 anualidades por alimentos a favor de los hijos
-        # (casilla 0527): the separate-escala treatment (LIRPF art. 64 / art. 75)
-        # is applied without the statutory mínimo-por-descendientes gating in the
-        # current cuota chain, so a payer declaring anualidades may be
-        # under-taxed — surfaced as a non-blocking prompt to review the cuota,
-        # per no-silent-under-declaration, pending the full separate-escala
-        # modelling. Single casilla id, so it routes through the generic
-        # _casilla_list_predicate_failures (arity 1) at registry build; see the
-        # advisory_when_positive branch in _evaluate_advisory_predicate_fires.
-        "advisory_when_positive",
-        "advisory_when_ratio_ge",
-        "all_nonzero",
-        # at_most_one_positive(["id1", "id2", ...]) — mutual-exclusion
-        # invariant: no more than one listed casilla may resolve strictly > 0.
-        # As a BLOCKING_RULE it refuses overstatement shapes where alternative
-        # calculation lanes are both populated. As an ADVISORY it fires on the
-        # same contradiction without blocking. Authored for Modelo 202
-        # modalidad art. 40.3 clave 32, whose official instructions say
-        # "clave [18] (o clave [26])": B1 and B2 resultado-previo lanes are
-        # alternatives, and the arithmetic formula can only add the two
-        # zero-default lanes safely when at most one is positive.
-        "at_most_one_positive",
-        "any_nonzero",
-        "cap_le_when_positive",
-        # casilla_equals_implies_nonzero(["antecedent_casilla_id", "literal",
-        # "consequent_casilla_id"]) — categorical-conditional material
-        # implication: when the operator-entered raw text value of the named
-        # TEXT antecedent casilla equals the literal, the named consequent
-        # (Decimal) casilla must be non-zero. ADVISORY-only (no BLOCKING_RULE
-        # branch is implemented), mirroring the existing equals (BLOCKING-only)
-        # / advisory_when_ratio_ge (ADVISORY-only) asymmetry. Authored for the
-        # M210 IRNR inmobiliaria branch (tipo_renta == "inmobiliaria" implies a
-        # non-zero base_imponible), the one shape implies_nonzero cannot
-        # express because its trigger is a categorical equality, not a
-        # numeric antecedent. See the casilla_equals_implies_nonzero branch in
-        # _evaluate_advisory_predicate_fires.
-        "casilla_equals_implies_nonzero",
-        # casilla_equals_implies_profile_flag(["antecedent_casilla_id", "literal",
-        # "profile_field"]) — categorical-antecedent / profile-state-consequent
-        # conditional advisory: FIRES (ADVISORY shown) when the operator-entered
-        # raw text value of the named TEXT antecedent casilla equals the literal
-        # AND the named boolean TaxpayerProfile field/property is False.
-        # ADVISORY-only (no BLOCKING_RULE branch is implemented), sibling of
-        # casilla_equals_implies_nonzero (whose consequent reads a Decimal
-        # casilla) and profile_flag_enabled (whose antecedent is
-        # unconditional). Authored for the M210 IRNR
-        # tipo_renta="ue_residente" reduced-rate election (TRLIRNR Art 25.1.a):
-        # the categorical rate choice was not cross-checked against the
-        # declared country_of_fiscal_residence, so a non-EU/EEA filer could
-        # self-declare the reduced 19% rate reserved for EU/EEE residents. See
-        # the casilla_equals_implies_profile_flag branch in
-        # _evaluate_advisory_predicate_fires.
-        "casilla_equals_implies_profile_flag",
-        # casilla_equals_implies_diverges(["antecedent_casilla_id", "literal",
-        # "casilla_a_id", "casilla_b_id"]) — categorical-conditional
-        # divergence check: when the operator-entered raw text value of the
-        # named TEXT antecedent casilla equals the literal, the two named
-        # (Decimal) casillas must not differ by more than one cent.
-        # ADVISORY-only (no BLOCKING_RULE branch is implemented), sibling of
-        # casilla_equals_implies_nonzero (consequent test "== 0") and
-        # advisory_when_computed_diverges (no categorical gate). Authored for
-        # the M131/M100 estimación-objetiva índice corrector de exceso (b.3),
-        # incompatible per Orden HAC/1347/2024 Anexo II instrucción 2.3 with
-        # the índices correctores especiales (a.2 autotaxi, a.4 transporte de
-        # mercancías/mudanzas) for the activities that carry both. See the
-        # casilla_equals_implies_diverges branch in
-        # _evaluate_advisory_predicate_fires.
-        "casilla_equals_implies_diverges",
-        # deduccion_requires_adquisicion_before(["amount_casilla_id",
-        # "acquisition_date_casilla_id", "construction_date_casilla_id",
-        # "cutoff_iso"]) — eligibility-conditional advisory: FIRES (ADVISORY
-        # shown) when the named amount (Decimal) casilla is strictly positive
-        # (a deducción is claimed) AND neither eligibility signal is present —
-        # the acquisition-date TEXT casilla holding a date strictly before the
-        # cutoff, nor the construction-date TEXT casilla being non-empty. The
-        # one no-silent-over-declaration shape the numeric/categorical operators
-        # cannot express because its trigger combines a claimed amount with a
-        # DATE-threshold eligibility test read from the operator-entered raw
-        # text. ADVISORY-only (no BLOCKING_RULE branch). Authored for the
-        # Modelo 100 deducción por inversión en vivienda habitual, whose
-        # transitional régimen (LIRPF DT 18ª) admits only dwellings acquired
-        # before 01-01-2013 (or pre-2013 construction). See the
-        # deduccion_requires_adquisicion_before branch in
-        # _evaluate_advisory_predicate_fires.
-        "deduccion_requires_adquisicion_before",
-        # advisory_when_computed_diverges(["declared_id", "computed_id"]) —
-        # table-driven-engine-vs-operator-declared discrepancy: FIRES (ADVISORY
-        # shown) when the named COMPUTED reference casilla resolves strictly >
-        # 0 (the table-driven engine has coverage for the declared activity)
-        # AND it differs from the named operator-declared casilla by more than
-        # one cent. A zero computed casilla holds trivially (the engine has no
-        # table coverage for the declared epígrafe/módulos — nothing to
-        # compare against, so no advisory). ADVISORY-only (no BLOCKING_RULE
-        # branch is implemented): the computed reference intentionally omits
-        # fases 2ª/3ª correcting factors the taxpayer may legitimately claim,
-        # so a discrepancy is a prompt to review, not a refusal. Authored for
-        # the M131 estimación-objetiva módulos engine (casilla 01 "Suma de
-        # rendimientos netos" vs the internal
-        # modulos-rendimiento-neto-actividad reference), guarding against a
-        # silent under-declaration. See the
-        # advisory_when_computed_diverges branch in
-        # _evaluate_advisory_predicate_fires.
-        "advisory_when_computed_diverges",
-        # equals(["lhs_id", "rhs_id"]) — consistency invariant: the two named
-        # casillas must hold the same value. Authored for the M303 official
-        # Diseño box projections (Stage 2): each numbered box copies a semantic
-        # source, so box == source must hold for VERIFICADO_COMPLETO. The
-        # projection cannot drift within one evaluation; the predicate's value is
-        # catching a future mis-edit (a box re-flipped to manual, or a projection
-        # pointed at the wrong source). See the equals branch in
-        # _evaluate_predicate_expression.
-        "equals",
-        "implies_any_nonzero",
-        "implies_nonzero",
-        "profile_field_required",
-        # profile_flag_enabled("profile_field_name") — profile-state advisory:
-        # FIRES (ADVISORY shown) iff the named boolean TaxpayerProfile field is
-        # true. ADVISORY-only. Authored for the M130 Art. 109 activity-income
-        # coverage fact, where the legal 70% test is declared in the
-        # profile/deadline layer, not inferred from a casilla-amount ratio.
-        "profile_flag_enabled",
-        # roll_forward_balances(["closing_id", "opening_id", "applied_id",
-        # "base_id"]) — carry-forward stock continuity: the closing balance must
-        # reconcile to opening − applied + max(0, −base) within a one-cent
-        # tolerance. The arithmetic continuity primitive the predicate language
-        # lacked; authored for the Modelo 200 BIN total-pendiente roll-forward
-        # (00671 = 00670 − DP200014:00547 + max(0, −DP200014:00552)) and general
-        # to any "stock = prior stock − consumed + newly-generated-from-a-signed-
-        # base" carry (BIN, pending credits, recargo carryforward). As a
-        # BLOCKING_RULE it holds when the balance reconciles; as an ADVISORY it
-        # fires when it does not. See the roll_forward_balances branch in
-        # _evaluate_predicate_expression / _evaluate_advisory_predicate_fires.
-        "roll_forward_balances",
-    },
-)
-
-
-class VerificationPredicateDefinition(RegistryModel):
-    """A cross-casilla invariant that must hold for VERIFICADO_COMPLETO to be granted.
-
-    Layer 2 of the hybrid verification strategy.  Layer 1 handles
-    single-casilla required gates via ``CasillaDefinition.required``; this
-    class handles multi-casilla structural invariants (e.g. ``if ingresos
-    is non-zero then rendimiento neto must also be present``).
-
-    ``expression`` uses a minimal predicate DSL:
-
-    - ``advisory_when_positive(["casilla_id"])`` — single-casilla positive
-      advisory: FIRES (ADVISORY shown) iff the one named casilla value is
-      strictly ``> 0``. A zero or absent value holds trivially (no advisory).
-      ADVISORY-only: no ``BLOCKING_RULE`` branch is implemented (a positive box
-      is not itself an error — the advisory only prompts an operator review).
-      Authored for the Modelo 100 anualidades por alimentos a favor de los
-      hijos (casilla 0527), whose separate-escala treatment (LIRPF art. 64 for
-      the state scale, art. 75 for the autonomic scale) is applied in the
-      current cuota chain without the statutory mínimo-por-descendientes
-      gating, so a payer declaring anualidades may be under-taxed; the advisory
-      surfaces a non-blocking prompt to review the cuota pending the full
-      separate-escala modelling, per no-silent-under-declaration. Routes through
-      the generic single-casilla-list validation (exact arity 1) at registry
-      build. See the ``advisory_when_positive`` branch in
-      ``_evaluate_advisory_predicate_fires``.
-    - ``all_nonzero(["id1", "id2", ...])`` — every listed casilla value must
-      be non-zero (i.e. the filing invariant requires them all to be present
-      and non-zero simultaneously).
-    - ``any_nonzero(["id1", "id2", ...])`` — at least one listed casilla
-      value must be non-zero.
-    - ``at_most_one_positive(["id1", "id2", ...])`` — no more than one
-      listed casilla may be strictly positive. Missing values read as zero.
-      Authored for alternative result lanes such as Modelo 202 art. 40.3
-      claves 18/26, where the downstream formula uses both zero-default
-      lanes but the official instruction permits only one positive lane.
-    - ``cap_le_when_positive(["limited_id", "ceiling_id"])`` — when the
-      ceiling casilla is strictly positive, the limited casilla MUST NOT
-      exceed the ceiling, enforcing AEAT cap rules like Modelo 131 C11 ≤ C10
-      and Modelo 130 C15 ≤ C14 ("en ningún caso podrá
-      figurar... un importe superior a la cantidad positiva consignada").
-      Predicate holds when ceiling ≤ 0; the cap applies only when the
-      operator's gross liability is positive.
-    - ``implies_nonzero(["antecedent_id", "consequent_id"])`` — material
-      implication with a strictly-positive antecedent test: predicate
-      holds iff ``casilla_values[antecedent] <= 0`` OR
-      ``casilla_values[consequent] != 0``. Authored for AEAT cuota-mínima
-      invariants of the shape "cuando C01 sea positivo, C07 debe ser
-      distinta de cero" (M131 EO cuota mínima, M130/M303 régimen
-      simplificado analogues). The antecedent is strictly-positive rather
-      than non-zero to mirror the regulatory phrasing; a casilla with a
-      negative value does not trigger the implication. A missing
-      consequent value evaluates to ``Decimal(0)`` and therefore
-      violates the predicate when the antecedent is positive.
-    - ``implies_any_nonzero(["antecedent_id", "c1_id", "c2_id", ...])`` —
-      the N-consequent generalisation of ``implies_nonzero``: predicate
-      holds iff ``casilla_values[antecedent] <= 0`` OR **at least one**
-      listed consequent is non-zero. Authored for the Modelo 303
-      official-Diseño contradiction where a computed total
-      (``iva.cuota-devengada-total``, ``iva.cuota-deducible-total``) is
-      strictly positive but **every** constituent official numbered box
-      (the dr303 base/cuota tranche cells the operator transcribes to the
-      AEAT sede) is still zero — a silent under-declaration the verify
-      gate would otherwise grant with zero findings. ADVISORY (the
-      official numbered boxes are an operator-entered layer the calculate
-      path does not auto-populate, so the contradiction is surfaced as a
-      non-blocking alert rather than a refusal). The first consequent
-      slot onward is the constituent set; a single consequent reduces to
-      ``implies_nonzero``.
-    - ``profile_field_required("profile_field_name", "applicability_filter")``
-      — profile-state-aware conditional non-zero requirement. Returns
-      ``True`` (predicate holds) when the named ``applicability_filter``
-      evaluates ``False`` against the TaxpayerProfile, OR when the named
-      profile field is present and non-empty. Returns ``False``
-      (predicate violated) only when the applicability filter activates
-      AND the profile field is ``None`` / empty. A sibling of
-      ``implies_nonzero`` — the conditional non-zero requirement is the
-      same semantic shape, but the gating signal is profile state (e.g.
-      fiscal_residency, ue_eee_status) rather than another casilla value.
-      First use site: M210 representante-fiscal gate (TRLIRNR Art 10).
-    - ``profile_flag_enabled("profile_field_name")`` — profile-state
-      advisory: predicate FIRES (ADVISORY shown) iff the named boolean
-      TaxpayerProfile field is true. ADVISORY-only. Authored for the Modelo
-      130 Art. 109 activity-income coverage profile fact: the legal 70%
-      threshold is an income-coverage/profile fact, not a ratio between
-      retenciones amount and gross income casillas.
-    - ``casilla_equals_implies_nonzero(["antecedent_casilla_id", "literal",
-      "consequent_casilla_id"])`` — categorical-conditional material
-      implication: predicate FIRES (ADVISORY shown) iff the operator-entered
-      raw text value of the named antecedent (TEXT) casilla equals the
-      literal AND the named consequent (Decimal) casilla is zero. A missing
-      or differing antecedent value holds trivially (no advisory), same
-      convention as the numeric-antecedent operators. ADVISORY-only: no
-      ``BLOCKING_RULE`` branch is implemented, mirroring the existing
-      ``equals`` (BLOCKING-only) / ``advisory_when_ratio_ge`` (ADVISORY-only)
-      asymmetry. Authored for the M210 IRNR inmobiliaria branch, the one
-      shape ``implies_nonzero`` cannot express because its trigger is a
-      categorical equality (``tipo_renta == "inmobiliaria"``) rather than
-      a numeric antecedent, guarding against a silent under-declaration.
-    - ``deduccion_requires_adquisicion_before(["amount_casilla_id",
-      "acquisition_date_casilla_id", "construction_date_casilla_id",
-      "cutoff_iso"])`` — eligibility-conditional advisory: FIRES (ADVISORY
-      shown) iff the named amount (Decimal) casilla is strictly positive (a
-      deducción is claimed) AND no pre-cutoff eligibility signal is recorded,
-      i.e. the acquisition-date TEXT casilla does NOT hold a date strictly
-      before ``cutoff_iso`` AND the construction-date TEXT casilla is empty. A
-      claimed amount with a pre-cutoff acquisition date, a non-empty
-      construction date, or a zero/absent amount holds trivially (no advisory).
-      ADVISORY-only: no ``BLOCKING_RULE`` branch is implemented, mirroring the
-      ``casilla_equals_implies_nonzero`` / ``advisory_when_ratio_ge``
-      ADVISORY-only convention. Authored for the Modelo 100 deducción por
-      inversión en vivienda habitual, whose transitional régimen (LIRPF DT 18ª)
-      admits only dwellings acquired before 01-01-2013 (or pre-2013
-      construction); a post-2013 acquirer claiming the abolished deducción
-      would silently over-declare the deducción (under-declare tax), the
-      no-silent-under-declaration shape neither ``implies_nonzero`` (numeric
-      antecedent) nor ``casilla_equals_implies_nonzero`` (categorical text
-      equality) can express because its trigger is a DATE threshold.
-    - ``casilla_equals_implies_diverges(["antecedent_casilla_id", "literal",
-      "casilla_a_id", "casilla_b_id"])`` — categorical-conditional divergence
-      check: predicate FIRES (ADVISORY shown) iff the operator-entered raw
-      text value of the named antecedent (TEXT) casilla equals the literal
-      AND the two named (Decimal) casillas differ by more than one cent. A
-      missing or differing antecedent value, or two casillas within a cent of
-      each other, holds trivially (no advisory). Sibling of
-      ``casilla_equals_implies_nonzero`` (that operator's consequent test is
-      "== 0"; this operator's is "casilla_a != casilla_b"). ADVISORY-only: no
-      ``BLOCKING_RULE`` branch is implemented, mirroring the
-      ``casilla_equals_implies_nonzero`` / ``advisory_when_computed_diverges``
-      ADVISORY-only convention. Authored for the M131/M100 estimación-objetiva
-      índice corrector de exceso (b.3): Orden HAC/1347/2024 Anexo II
-      instrucción 2.3 declares the índice corrector de exceso INCOMPATIBLE
-      with the índices correctores especiales (a.2 autotaxi, a.4 transporte de
-      mercancías/mudanzas) for the activities that carry both — a
-      no-silent-under-declaration shape neither ``implies_nonzero`` (numeric
-      antecedent) nor ``advisory_when_computed_diverges`` (no categorical
-      gate) can express because the trigger combines a categorical epígrafe
-      equality with a Decimal-pair divergence.
-    """
-
-    predicate_id: str = Field(min_length=1, max_length=128)
-    legal_refs: LegalRefs
-    expression: str = Field(min_length=1, max_length=512)
-    finding_kind: Literal["BLOCKING_RULE", "ADVISORY"] = "BLOCKING_RULE"
-
-
 class ModeloRevision(RegistryModel):
     """A single versioned form layout and calculation ruleset for one modelo.
 
@@ -1240,11 +882,10 @@ class ModeloRevision(RegistryModel):
     Ordenes that approve or amend the form for its applicability window.
 
     The governance stamp — ``engineered_by``, ``review_status``, ``reviewed_by``,
-    ``reviewed_at`` — is the revision's *declared* provenance. Authorship and
-    signoff are facts about the people and agents who built the revision, so
-    nothing in the tree can derive them. The whole block is optional and its
-    absence reads as :attr:`RevisionReviewStatus.PENDING_REVIEW`: an unstamped
-    revision is a visible unreviewed backlog entry, never a silent pass.
+    ``reviewed_at`` — is the revision's *declared* provenance, optional and
+    fail-closed to :attr:`RevisionReviewStatus.PENDING_REVIEW` on absence. Its
+    rules and the reasoning behind them live in :mod:`.._schema_governance`,
+    which the validators below delegate to.
     """
 
     id: RevisionId
@@ -1287,35 +928,14 @@ class ModeloRevision(RegistryModel):
     @field_validator("engineered_by", "reviewed_by")
     @classmethod
     def _attribution_names_somebody(cls, value: str | None, info: ValidationInfo) -> str | None:
-        """Refuse an attribution that is declared but names nobody.
-
-        A length constraint counts whitespace, so ``reviewed_by = "   "`` would
-        satisfy one while leaving the claim exactly as unfalsifiable as the
-        omission :meth:`_validate_governance_stamp` refuses — and a blank
-        reviewer renders in a conformance report as a signed-off revision.
-        Omission is the honest way to say nobody reviewed it.
-        """
-        if value is not None and not value.strip():
-            raise RegistryValidationError(
-                f"revision governance field {info.field_name!r} must name somebody; "
-                f"omit the field instead of declaring it blank",
-            )
-        return value
+        """Refuse an attribution that is declared but names nobody."""
+        return validate_attribution_names_somebody(value, field_name=info.field_name)
 
     @field_validator("reviewed_at")
     @classmethod
     def _reviewed_at_is_within_the_signoff_horizon(cls, value: date | None) -> date | None:
-        """Refuse a signoff date no auditor could ever check.
-
-        See :data:`REVISION_REVIEW_DATE_CEILING` for why the horizon is a fixed
-        calendar date rather than a reading of the local clock.
-        """
-        if value is not None and value >= REVISION_REVIEW_DATE_CEILING:
-            raise RegistryValidationError(
-                f"revision governance field 'reviewed_at' is {value.isoformat()}, beyond the signoff horizon "
-                f"{REVISION_REVIEW_DATE_CEILING.isoformat()}; a review dated there records no signoff anyone can check",
-            )
-        return value
+        """Refuse a signoff date no auditor could ever check."""
+        return validate_reviewed_at_within_horizon(value)
 
     @model_validator(mode="after")
     def _validate_window(self) -> ModeloRevision:
@@ -1325,71 +945,23 @@ class ModeloRevision(RegistryModel):
 
     @model_validator(mode="after")
     def _validate_governance_stamp(self) -> ModeloRevision:
-        """Bind the reviewer identity to the claim that a review happened.
-
-        A reviewed status without a reviewer or a date is an unfalsifiable
-        claim, and a reviewer recorded against ``pending_review`` is a review
-        the status denies. Both directions refuse so the stamp cannot say one
-        thing on the status axis and another on the attribution axis.
-        """
-        companions = {"reviewed_by": self.reviewed_by, "reviewed_at": self.reviewed_at}
-        if self.review_status in REVIEWED_REVISION_REVIEW_STATUSES:
-            missing = sorted(name for name, value in companions.items() if value is None)
-            if missing:
-                raise RegistryValidationError(
-                    f"revision {self.id!r} declares review_status={self.review_status.value!r} but omits "
-                    f"{missing!r}; a reviewed revision must name its reviewer and the date of review",
-                )
-            return self
-        present = sorted(name for name, value in companions.items() if value is not None)
-        if present:
-            raise RegistryValidationError(
-                f"revision {self.id!r} declares review_status="
-                f"{RevisionReviewStatus.PENDING_REVIEW.value!r} but also declares {present!r}; "
-                f"record the review by advancing review_status, or drop the reviewer fields",
-            )
+        """Bind the reviewer identity to the claim that a review happened."""
+        validate_governance_stamp_coherence(
+            revision_id=self.id,
+            review_status=self.review_status,
+            reviewed_by=self.reviewed_by,
+            reviewed_at=self.reviewed_at,
+        )
         return self
-
-
-REVISION_REVIEW_DATE_CEILING: date = date(2100, 1, 1)
-"""Exclusive upper bound on a governance stamp's ``reviewed_at`` signoff date.
-
-A signoff dated beyond any living reviewer's horizon is not a signoff: it is a
-sentinel or a template artefact wearing a date, and it renders in a conformance
-report as an operator countersignature. The bound refuses that class.
-
-The ceiling is a fixed calendar date rather than a reading of the local clock,
-deliberately. The registry is the authority behind every calculation the
-application performs, so a validation rule that consults the wall clock makes
-the shipped tree's validity a property of the machine that loads it: a
-container whose clock is behind reality, or a stamp written the other side of a
-timezone boundary, would refuse the whole registry and take the product with
-it. A false refusal here costs incomparably more than a missed absurd date, and
-a fixed ceiling is identical on every machine in every year.
-
-The bound is therefore an absurdity floor, not a freshness check: it catches the
-sentinel (``3999-12-31``, ``9999-12-31``) that no auditor could ever check, and
-deliberately does not catch a near-future typo. Freshness is a governance
-question for the dev-side conformance audit, where consulting the clock costs
-one contributor a re-run rather than bricking the registry.
-"""
 
 
 REVISION_GOVERNANCE_FIELDS: frozenset[str] = governance_stamp_fields(ModeloRevision)
 """The :class:`ModeloRevision` fields that make up the declared governance stamp.
 
-The stamp is an authorship and signoff claim about a whole revision, so it must
-be readable in one place: the revision's own ``revision.toml`` manifest. The
-loader refuses these keys anywhere else in the fragment tree, and this set is
-that refusal's sole input.
-
-Derived from the :data:`GOVERNANCE_STAMP` marker on the field declarations
-rather than hand-listed. A hand-written list catches a rename - the names stop
-matching real fields - but cannot catch an *addition*: a fifth governance
-scalar added to the model and forgotten here would stay absent from the refusal
-and become silently declarable in any of the section fragments, where the
-merged value wins and ``revision.toml`` still reads unstamped. Marking the
-field is now the whole of enrolling it.
+Derived from the :data:`GOVERNANCE_STAMP` marker on the field declarations rather
+than hand-listed, and the sole input to the loader's placement refusal. See
+:mod:`.._schema_governance` for why the stamp must be readable in the manifest
+alone and why marking the field is the whole of enrolling it.
 
 This set is the stamp VOCABULARY, narrower than
 :data:`REVISION_MANIFEST_ONLY_FIELDS`: it is what the conformance tooling reads
@@ -1402,21 +974,11 @@ REVISION_MANIFEST_ONLY_FIELDS: frozenset[str] = manifest_only_fields(ModeloRevis
 
 A superset of :data:`REVISION_GOVERNANCE_FIELDS` by construction, since
 :class:`GovernanceStampMarker` is a :class:`ManifestOnlyMarker`. Beyond the
-governance stamp it carries the legally load-bearing scalars: ``legal_refs``
-(the law the revision stands on), ``orden_aplicabilidad`` (the ordenes that
-approve the form for its window) and ``valid_to`` (the date the revision stops
-applying).
-
-Those three share the governance stamp's readability hazard and raise its
-stakes. A revision compiles from its manifest plus up to several hundred
-section fragments, and ``orden_aplicabilidad`` is an append array, so a fragment
-declaring one silently ADDS an approving orden the manifest never names;
-``valid_to`` and ``legal_refs`` merge in wherever the manifest is silent, so a
-fragment thousands deep can close a revision's validity window or supply its
-entire legal grounding while ``revision.toml`` reads as though it did neither.
-Governance provenance and legal grounding are different subjects, which is why
-they are different markers, but the placement guarantee they need is the same
-one, and the loader refuses both sets in the same place.
+governance stamp it carries the legally load-bearing scalars ``legal_refs``,
+``orden_aplicabilidad`` and ``valid_to``, which share the stamp's readability
+hazard and raise its stakes; :mod:`.._schema_governance` records how a deep
+fragment can otherwise supply a revision's legal grounding while
+``revision.toml`` reads as though it did not.
 """
 
 
@@ -1453,37 +1015,6 @@ class RegistryCatalogues(RegistryModel):
     sources: Mapping[SourceRefId, SourceReference]
     parameters: Mapping[str, LegalParameter] = Field(default_factory=dict)
     convenio: ConvenioAuthority = Field(default_factory=ConvenioAuthority.empty)
-
-
-@dataclass(frozen=True, slots=True)
-class RegistryVerificationPolicy:
-    """Folded verification policy across a snapshot's verification expectations.
-
-    Owns the registry-grounded projection (union of computed casilla ids, the
-    union of reconcile-when-present casilla ids, the strictest tolerance, the
-    strictest coverage floor) so the application verification surface consumes
-    it rather than re-deriving the fold.
-
-    ``computed_casilla_ids`` are the coverage-gated reconciliation targets: a
-    filing that fails to reconcile them below ``min_coverage`` is NEEDS_REVIEW.
-    ``reconcile_when_present_casilla_ids`` are value-reconciled when the filing
-    prints them (a filed-vs-computed divergence surfaces a discrepancy) but are
-    excluded from the coverage denominator, so enrolling a situational casilla
-    can never lower coverage and flip a legitimate filing's verdict.
-
-    ``externally_grounded_casilla_ids`` is the third, orthogonal axis: of the
-    casillas a filing reconciles (``computed_casilla_ids`` or
-    ``reconcile_when_present_casilla_ids``), which have an AEAT-authoritative
-    independent oracle expected value backing their reconciliation, rather than
-    only the app's own engine.
-    """
-
-    expectation_ids: tuple[VerificationExpectationId, ...]
-    computed_casilla_ids: frozenset[CasillaId]
-    reconcile_when_present_casilla_ids: frozenset[CasillaId]
-    externally_grounded_casilla_ids: frozenset[CasillaId]
-    tolerance: Decimal
-    min_coverage: Decimal
 
 
 class RegistrySnapshot(RegistryModel):

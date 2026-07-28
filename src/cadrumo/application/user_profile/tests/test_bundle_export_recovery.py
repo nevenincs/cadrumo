@@ -23,6 +23,7 @@ import sys
 from datetime import timedelta
 from pathlib import Path
 from textwrap import dedent
+from typing import override
 
 import pytest
 
@@ -700,6 +701,7 @@ class _RepositoryWithAVanishingJournal(ProfileBundleExportJournalRepository):
         super().__init__()
         self._vanished = vanished
 
+    @override
     def _journal_paths(self) -> tuple[Path, ...]:
         return (*super()._journal_paths(), self._vanished)
 

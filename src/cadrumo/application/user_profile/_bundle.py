@@ -76,6 +76,47 @@ SUPPORTED_BUNDLE_SCHEMA_VERSIONS: frozenset[int] = frozenset(
 )
 
 
+def _stamped_bundle_version(payload: dict[str, object], *, expected_written_version: int | None) -> int:
+    """Read the payload's own stamped schema version, refusing a contradiction.
+
+    A stamped version that disagrees with the one its transport envelope
+    declares is refused BEFORE any upgrade runs: the two must agree about
+    what shape the bytes are in, or an upgrade hop would be chosen from the
+    wrong claim.
+    """
+    written_version = payload.get("bundle_schema_version")
+    if not isinstance(written_version, int) or isinstance(written_version, bool):
+        raise UnsupportedBundleSchemaVersionError(
+            f"bundle payload carries no integer bundle_schema_version (got {written_version!r})",
+        )
+    if expected_written_version is not None and written_version != expected_written_version:
+        raise UnsupportedBundleSchemaVersionError(
+            f"bundle payload is stamped bundle_schema_version {written_version} but its "
+            f"transport envelope declares {expected_written_version}",
+        )
+    return written_version
+
+
+def _refuse_unreadable_bundle_version(written_version: int) -> None:
+    """Refuse a version this build cannot read, above the ceiling or below the floor."""
+    supported = ",".join(str(version) for version in sorted(SUPPORTED_BUNDLE_SCHEMA_VERSIONS))
+    context = {"bundle_schema_version": str(written_version), "supported_versions": supported}
+    if written_version > BUNDLE_SCHEMA_VERSION:
+        raise UnsupportedBundleSchemaVersionError(
+            f"bundle_schema_version {written_version} was written by a newer application; "
+            f"this application reads up to version {BUNDLE_SCHEMA_VERSION}",
+            context=context,
+            translated_message="application.user_profile.errors.unsupported_bundle_schema_version",
+        )
+    if written_version < BUNDLE_DURABILITY_FLOOR:
+        raise UnsupportedBundleSchemaVersionError(
+            f"bundle_schema_version {written_version!r} is not supported; "
+            f"supported versions: {sorted(SUPPORTED_BUNDLE_SCHEMA_VERSIONS)}",
+            context=context,
+            translated_message="application.user_profile.errors.unsupported_bundle_schema_version",
+        )
+
+
 def validate_bundle_payload(
     raw_json: bytes | str,
     *,
@@ -108,37 +149,8 @@ def validate_bundle_payload(
     payload = json.loads(raw_json)
     if not isinstance(payload, dict):
         raise UnsupportedBundleSchemaVersionError("bundle payload is not a JSON object")
-    written_version = payload.get("bundle_schema_version")
-    if not isinstance(written_version, int) or isinstance(written_version, bool):
-        raise UnsupportedBundleSchemaVersionError(
-            f"bundle payload carries no integer bundle_schema_version (got {written_version!r})",
-        )
-    if expected_written_version is not None and written_version != expected_written_version:
-        raise UnsupportedBundleSchemaVersionError(
-            f"bundle payload is stamped bundle_schema_version {written_version} but its "
-            f"transport envelope declares {expected_written_version}",
-        )
-    supported = ",".join(str(version) for version in sorted(SUPPORTED_BUNDLE_SCHEMA_VERSIONS))
-    if written_version > BUNDLE_SCHEMA_VERSION:
-        raise UnsupportedBundleSchemaVersionError(
-            f"bundle_schema_version {written_version} was written by a newer application; "
-            f"this application reads up to version {BUNDLE_SCHEMA_VERSION}",
-            context={
-                "bundle_schema_version": str(written_version),
-                "supported_versions": supported,
-            },
-            translated_message="application.user_profile.errors.unsupported_bundle_schema_version",
-        )
-    if written_version < BUNDLE_DURABILITY_FLOOR:
-        raise UnsupportedBundleSchemaVersionError(
-            f"bundle_schema_version {written_version!r} is not supported; "
-            f"supported versions: {sorted(SUPPORTED_BUNDLE_SCHEMA_VERSIONS)}",
-            context={
-                "bundle_schema_version": str(written_version),
-                "supported_versions": supported,
-            },
-            translated_message="application.user_profile.errors.unsupported_bundle_schema_version",
-        )
+    written_version = _stamped_bundle_version(payload, expected_written_version=expected_written_version)
+    _refuse_unreadable_bundle_version(written_version)
     for hop in range(written_version, BUNDLE_SCHEMA_VERSION):
         upgrader = BUNDLE_PAYLOAD_UPGRADERS.get(hop)
         if upgrader is None:

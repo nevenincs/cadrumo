@@ -105,6 +105,7 @@ from pydantic import BaseModel, Field
 from ...core import NON_REGISTRY_MODELOS as _NON_REGISTRY_MODELOS
 from ...core import REVIEWED_REVISION_REVIEW_STATUSES as _REVIEWED_REVISION_REVIEW_STATUSES
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
+from ...core import ExportLayoutFormat
 from ...core import Modelo as _Modelo
 from ...core import RevisionReviewStatus as _RevisionReviewStatus
 from ...core.access_gate import ModeloAuthorization as _ModeloAuthorization
@@ -710,8 +711,8 @@ def _capability_facts(revision: _ModeloRevision, *, modelo_id: str) -> RevisionC
     return RevisionCapabilityFacts(
         calc_grade=bool(_calculation_closure_casilla_ids(revision, modelo_id)),
         has_completeness_manifest=revision.completeness_manifest is not None,
-        has_fixed_width_export="fixed_width" in export_formats,
-        has_xml_dictionary_export="xml_dictionary" in export_formats,
+        has_fixed_width_export=ExportLayoutFormat.FIXED_WIDTH in export_formats,
+        has_xml_dictionary_export=ExportLayoutFormat.XML_DICTIONARY in export_formats,
         extraction_profile_count=len(revision.extraction_profiles),
         casilla_count=len(revision.casillas),
         formula_count=len(revision.formulas),

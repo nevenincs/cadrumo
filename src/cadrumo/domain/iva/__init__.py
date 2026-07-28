@@ -103,6 +103,7 @@ from ._oss import (
     regime_allows_deduction,
 )
 from ._prorrata import (
+    EspecialMandatoryRule,
     InputClassification,
     ProrrataInputDeduction,
     ProrrataInputs,
@@ -119,6 +120,7 @@ from ._prorrata import (
     compute_regularizacion_prorrata_anual,
     compute_sectoral_prorrata,
     deductible_percentage_for,
+    especial_mandatory_rule,
     is_especial_mandatory,
     requires_sectoral_separation,
     sum_deductible_amounts,
@@ -177,6 +179,7 @@ __all__ = [
     "CustomerTaxStatus",
     "DeductionScope",
     "EUMemberState",
+    "EspecialMandatoryRule",
     "InputClassification",
     "InvoiceKind",
     "IossFilerRole",
@@ -236,6 +239,7 @@ __all__ = [
     "deductible_percentage_for",
     "derive_flow_for_classification",
     "derive_sepa_marca",
+    "especial_mandatory_rule",
     "invoice_line_to_iva_observation",
     "is_deducible_flow",
     "is_devengada_flow",

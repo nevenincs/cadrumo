@@ -20,7 +20,7 @@ from collections.abc import Mapping
 
 from ...core.flows import FlowMode
 from ._definition import FlowDefinition, FlowRepeatingGroup
-from ._engine import FlowState, start_flow, visible_sequence
+from ._engine import FlowState, VisiblePage, start_flow, visible_sequence
 from ._validators import run_answer_validation
 
 
@@ -51,17 +51,7 @@ def resume_flow(
         for entry in visible_sequence(definition, state):
             if entry.key in state.answers or entry.key not in remaining:
                 continue
-            raw = remaining.pop(entry.key)
-            canonical, verdicts = run_answer_validation(entry.page, raw)
-            if any(not verdict.ok for verdict in verdicts):
-                # Rejected by the current definition: stale, not committed.
-                state = state.model_copy(update={"stale": frozenset(state.stale | {entry.key})})
-            else:
-                new_answers = dict(state.answers)
-                new_answers[entry.key] = canonical
-                counts = dict(state.instance_counts)
-                _seed_counts(definition, entry.key, canonical, counts)
-                state = state.model_copy(update={"answers": new_answers, "instance_counts": counts})
+            state = _commit_persisted_answer(definition, state, entry, raw=remaining.pop(entry.key))
             progressed = True
         if not progressed:
             break
@@ -73,6 +63,29 @@ def resume_flow(
 
     cursor = _first_unanswered(definition, state)
     return state.model_copy(update={"cursor": cursor, "visited": (cursor,) if cursor else ()})
+
+
+def _commit_persisted_answer(
+    definition: FlowDefinition,
+    state: FlowState,
+    entry: VisiblePage,
+    *,
+    raw: str,
+) -> FlowState:
+    """Re-enter one persisted answer through the current definition's validation.
+
+    An answer the current validators reject is carried as stale rather than
+    committed: it stays visible on review instead of being dropped, and it
+    never lands as a committed answer the operator did not re-confirm.
+    """
+    canonical, verdicts = run_answer_validation(entry.page, raw)
+    if any(not verdict.ok for verdict in verdicts):
+        return state.model_copy(update={"stale": frozenset(state.stale | {entry.key})})
+    new_answers = dict(state.answers)
+    new_answers[entry.key] = canonical
+    counts = dict(state.instance_counts)
+    _seed_counts(definition, entry.key, canonical, counts)
+    return state.model_copy(update={"answers": new_answers, "instance_counts": counts})
 
 
 def _seed_counts(

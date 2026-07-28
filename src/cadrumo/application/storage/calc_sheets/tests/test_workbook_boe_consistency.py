@@ -29,7 +29,7 @@ from datetime import date
 import pytest
 
 from .....application.filing import build_runtime_schema_provider
-from .....core import Period
+from .....core import ExportLayoutFormat, Period
 from .....core.resources import resources
 from .....domain.calculations.registry import CasillaFieldKind, ExportLayoutDefinition, RegistrySnapshot
 from .. import build_export_plan
@@ -76,7 +76,7 @@ def _boe_representable_ids(modelo: str, year: int, period: str) -> set[str]:
 
 
 def _fixed_width_layout_casilla_slots(layout: ExportLayoutDefinition) -> set[str]:
-    assert layout.format == "fixed_width", f"expected a fixed-width BOE layout, got {layout.format!r}"
+    assert layout.format is ExportLayoutFormat.FIXED_WIDTH, f"expected a fixed-width BOE layout, got {layout.format!r}"
     direct_slots = {
         field.casilla_id
         for record in layout.records

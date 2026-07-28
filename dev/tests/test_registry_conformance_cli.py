@@ -14,7 +14,15 @@ absence-is-not-zero rule is proved by rendering two reports differing only in a
 oracle attribution gap is proved by injecting one real gap record and watching
 it reach all three surfaces that must show it; and the stamp rollback is proved
 by making the post-write reload genuinely fail and asserting the manifest went
-back.
+back ON BYTES.
+
+That last one is the campaign's worked example of how a proof rots. It staged a
+malformed sibling fragment before calling the writer, but the pre-write check
+loads the same tree the post-write reload does, so the refusal landed BEFORE any
+write and the restore was never reached. Every assertion still passed, because a
+file that was never written is trivially unchanged. The failure now originates in
+the written bytes themselves, and the mtime is pinned and asserted to MOVE, so
+the case cannot silently slide back into the pre-write branch.
 
 Registry-wide counts are asserted against the committed baseline's own floors
 rather than against literals, because the registry grows: a hard-coded ``90``
@@ -25,9 +33,11 @@ assertion instead of reading it.
 from __future__ import annotations
 
 import json
+import os
+import re
 import shutil
 from collections.abc import Sequence
-from datetime import date
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
@@ -51,14 +61,18 @@ from ..registry.conformance._stamp import (
     GOVERNANCE_KEYS,
     StampableReviewStatus,
     StampError,
+    bundled_registry_root,
+    revision_manifest_path,
     stamp_revision,
 )
 from ..registry.conformance.cli import app
 from ..registry.conformance.manager import (
     NOT_MEASURED,
     ConformanceBaseline,
+    ConformanceProgressFloors,
     ConformanceReport,
     baseline_path,
+    baseline_weakenings,
     build_conformance_report,
     build_coverage_report,
     check_conformance_ratchet,
@@ -258,7 +272,19 @@ def test_coverage_reports_a_dead_axis_against_a_real_population(validated_report
 # reviewer attribution: the status column and the name column must be read together
 # --------------------------------------------------------------------------- #
 
-_OPERATOR_NAME = "Gergely Wootsch"
+#: A fictional, person-shaped reviewer name.
+#:
+#: The misreading these surfaces defend against is a HUMAN name rendering
+#: identically under both review tiers, so the fixture value has to look like a
+#: person — two words, a space, and no colon, since the colon is the tier
+#: separator the writer refuses inside a name. A token like ``reviewer-1`` would
+#: exercise a shape the production surface never meets.
+#:
+#: It is deliberately fictional. A real person's name in tracked source is
+#: identifying data whatever its purpose, and the repository-wide privacy lint
+#: bans it; the constant is named for the SHAPE it supplies rather than for any
+#: role, so nothing here reads as an invitation to substitute a real one.
+_PERSON_REVIEWER_NAME = "Marta Ejemplo"
 
 
 def _report_with_review(
@@ -293,13 +319,17 @@ def _report_with_review(
     )
 
 
-def _reviewer_field(rendered: str, modelo: str, revision: str) -> str:
-    line = next(
+def _row_line(rendered: str, modelo: str, revision: str) -> str:
+    return next(
         item
         for item in rendered.splitlines()
         if item.startswith("row ") and f" modelo={modelo} " in item and f" revision={revision} " in item
     )
-    return line.split("reviewed_by=", 1)[1].split(" reviewed_at=", 1)[0]
+
+
+def _reviewer_field(rendered: str, modelo: str, revision: str) -> str:
+    line = _row_line(rendered, modelo, revision)
+    return line.split("reviewed_by_attribution=", 1)[1].split(" reviewed_at=", 1)[0]
 
 
 def test_an_agent_tier_review_naming_a_person_cannot_render_as_an_operator_signoff(
@@ -315,11 +345,15 @@ def test_an_agent_tier_review_naming_a_person_cannot_render_as_an_operator_signo
     row, same name, different tier, different rendering.
     """
     row = validated_profile.rows[0]
-    agent = _report_with_review(validated_profile, status=RevisionReviewStatus.AGENT_REVIEWED, reviewer=_OPERATOR_NAME)
+    agent = _report_with_review(
+        validated_profile,
+        status=RevisionReviewStatus.AGENT_REVIEWED,
+        reviewer=_PERSON_REVIEWER_NAME,
+    )
     operator = _report_with_review(
         validated_profile,
         status=RevisionReviewStatus.OPERATOR_REVIEWED,
-        reviewer=_OPERATOR_NAME,
+        reviewer=_PERSON_REVIEWER_NAME,
     )
 
     agent_field = _reviewer_field(render_report(agent), row.modelo, row.revision)
@@ -328,10 +362,10 @@ def test_an_agent_tier_review_naming_a_person_cannot_render_as_an_operator_signo
     assert agent_field != operator_field
     assert "agent_reviewed" in agent_field
     assert "operator_reviewed" in operator_field
-    assert _OPERATOR_NAME in agent_field
+    assert _PERSON_REVIEWER_NAME in agent_field
     # The bare name is never the whole rendered value, which is what a scanning
     # reader would otherwise take at face value.
-    assert agent_field != json.dumps(_OPERATOR_NAME)
+    assert agent_field != json.dumps(_PERSON_REVIEWER_NAME)
 
 
 def test_the_attribution_is_computed_by_the_projection_and_carried_into_json(
@@ -345,12 +379,12 @@ def test_the_attribution_is_computed_by_the_projection_and_carried_into_json(
     composed = _report_with_review(
         validated_profile,
         status=RevisionReviewStatus.AGENT_REVIEWED,
-        reviewer=_OPERATOR_NAME,
+        reviewer=_PERSON_REVIEWER_NAME,
     )
     row = composed.rows[0]
 
-    assert row.reviewed_by == _OPERATOR_NAME
-    assert row.reviewed_by_attribution == f"agent_reviewed:{_OPERATOR_NAME}"
+    assert row.reviewed_by == _PERSON_REVIEWER_NAME
+    assert row.reviewed_by_attribution == f"agent_reviewed:{_PERSON_REVIEWER_NAME}"
     assert json.loads(composed.model_dump_json())["rows"][0]["reviewed_by_attribution"] == row.reviewed_by_attribution
 
 
@@ -371,7 +405,109 @@ def test_a_revision_claiming_no_review_is_never_joined_to_a_tier(
     assert reviewer_attribution(RevisionReviewStatus.PENDING_REVIEW.value, None) is None
 
     rendered = render_report(validated_report)
-    assert f"reviewed_by={NOT_MEASURED}" in rendered
+    assert f"reviewed_by_attribution={NOT_MEASURED}" in rendered
+
+
+def test_the_reviewer_key_carries_one_value_across_both_surfaces(
+    validated_profile: RegistryConformanceProfile,
+) -> None:
+    """One key name, one value, whichever surface reads it.
+
+    The first pass at qualifying the reviewer rendered the joined form in TEXT
+    under the key ``reviewed_by`` while the payload's ``reviewed_by`` stayed the
+    raw name. The two surfaces then disagreed under the same symbol, and the one
+    a program reads carried the bare name — the exact reading the join was added
+    to prevent, reintroduced by the fix for it.
+
+    This asserts the reconciliation directly: every key the text row emits and
+    the payload also declares must carry the same rendered value, and the text
+    must not emit a bare reviewer column at all.
+    """
+    composed = _report_with_review(
+        validated_profile,
+        status=RevisionReviewStatus.AGENT_REVIEWED,
+        reviewer=_PERSON_REVIEWER_NAME,
+    )
+    row = composed.rows[0]
+    rendered = render_report(composed)
+    line = _row_line(rendered, row.modelo, row.revision)
+    payload = json.loads(composed.model_dump_json())["rows"][0]
+
+    # The one key both surfaces name carries the one value, and the raw name is
+    # NOT it: without the fix this assertion reads the raw name in JSON against
+    # the qualified form in text and fails.
+    assert _reviewer_field(rendered, row.modelo, row.revision) == json.dumps(payload["reviewed_by_attribution"])
+    assert payload["reviewed_by_attribution"] != payload["reviewed_by"]
+    # The bare reviewer column is gone from text, so no key name can disagree.
+    assert " reviewed_by=" not in line
+    # And the payload still declares the raw datum, documented to be read beside
+    # its attribution rather than alone.
+    assert payload["reviewed_by"] == _PERSON_REVIEWER_NAME
+    assert payload["reviewed_by_attribution"] == f"{RevisionReviewStatus.AGENT_REVIEWED.value}:{_PERSON_REVIEWER_NAME}"
+
+
+@pytest.mark.parametrize(
+    "spoof",
+    [
+        f"operator_reviewed:{_PERSON_REVIEWER_NAME}",
+        f"OPERATOR_REVIEWED:{_PERSON_REVIEWER_NAME}",
+        "agent_reviewed:somebody",
+    ],
+)
+def test_stamp_refuses_a_reviewer_that_reads_as_an_already_qualified_attribution(
+    registry_copy: Path,
+    spoof: str,
+) -> None:
+    """The one field with no vocabulary must not be able to forge one.
+
+    The joined attribution is parsed at its first separator and is unambiguous
+    whatever the name holds. The RAW ``reviewed_by`` is the exposed field: a
+    payload consumer can read it alone, and a reviewer recorded as
+    ``operator_reviewed:<name>`` is then indistinguishable from a genuine
+    operator attribution. That is an agent-tier stamp readable as a human
+    signoff without ever writing the status this CLI refuses to write.
+    """
+    manifest = _manifest_of(registry_copy)
+    before = manifest.read_bytes()
+
+    with pytest.raises(StampError, match="already-qualified attribution"):
+        stamp_revision(
+            _STAMPED_MODELO,
+            _STAMPED_REVISION,
+            review_status=StampableReviewStatus.AGENT_REVIEWED,
+            reviewed_by=spoof,
+            reviewed_at=date(2026, 7, 28),
+            registry_root=registry_copy,
+        )
+
+    assert manifest.read_bytes() == before
+
+
+def test_a_qualified_reviewer_name_that_is_not_a_status_stays_legal(registry_copy: Path) -> None:
+    """The paired half: the refusal is the STATUS prefix, never the separator.
+
+    A role-qualified identity such as ``agent:opus-executor`` is how an
+    automated reviewer names itself, and its colon is a role prefix rather than
+    a status one. The join was never ambiguous — no status value carries a
+    colon, so the tier is everything before the first one. A blanket colon
+    refusal would satisfy the spoof test above while breaking every honest
+    caller, and no other assertion here would notice.
+    """
+    result = stamp_revision(
+        _STAMPED_MODELO,
+        _STAMPED_REVISION,
+        review_status=StampableReviewStatus.AGENT_REVIEWED,
+        reviewed_by="agent:opus-executor",
+        reviewed_at=date(2026, 7, 28),
+        registry_root=registry_copy,
+    )
+
+    assert result.written["reviewed_by"] == '"agent:opus-executor"'
+    revision = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert revision.reviewed_by == "agent:opus-executor"
+    assert reviewer_attribution(RevisionReviewStatus.AGENT_REVIEWED.value, revision.reviewed_by) == (
+        "agent_reviewed:agent:opus-executor"
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -454,13 +590,13 @@ def test_audit_check_passes_at_the_committed_baseline() -> None:
 
 def test_audit_check_fails_when_one_ceiling_is_lowered(tmp_path: Path) -> None:
     """Same command, same tree, one moved counter: the exit code MUST flip."""
-    seeded = _baseline_with(tmp_path / "lowered.json", ceiling="unreviewed_revisions", delta=-1)
+    seeded = _baseline_with(tmp_path / "lowered.json", ceiling="modelo_scope_classification_findings", delta=-1)
     result = CliRunner().invoke(app, ["audit", "--check", "--baseline", str(seeded)])
 
     assert result.exit_code == 1, result.stdout
     assert "passed=false" in result.stdout
     assert "violation kind=ratchet" in result.stdout
-    assert "unreviewed_revisions grew" in result.stdout
+    assert "modelo_scope_classification_findings grew" in result.stdout
 
 
 def test_audit_check_fails_when_one_floor_is_raised(tmp_path: Path) -> None:
@@ -544,47 +680,51 @@ def _ceiling_line(rendered: str, counter: str) -> str:
     return next(line for line in rendered.splitlines() if line.startswith(f"ceiling counter={counter} "))
 
 
+def _progress_line(rendered: str, counter: str) -> str:
+    return next(line for line in rendered.splitlines() if line.startswith(f"progress counter={counter} "))
+
+
 def _baseline_captured_from(report: ConformanceReport, path: Path) -> ConformanceBaseline:
     """Capture a baseline from ``report`` through the real recording path."""
     record_baseline(report, note="captured by the conformance CLI gate", recorded_at="2026-07-28", path=path)
     return load_baseline(path)
 
 
-def test_an_agent_review_sweep_empties_the_pending_ceiling_but_not_the_operator_ceiling(
+def test_an_agent_review_sweep_fills_the_review_floor_but_not_the_operator_floor(
     validated_report: ConformanceReport,
 ) -> None:
     """The act the CLI is DESIGNED to allow must not read as progress on the gated number.
 
     ``stamp --review-status agent_reviewed`` is a legitimate verb an agent may
-    run across every revision in the tree. Doing so drives the pending census to
-    zero. If that census is the only gated review counter, the one number CI
-    protects reaches zero without a single human signoff, and the three-state
-    vocabulary collapses back into the two-state laundering it was introduced to
-    remove. The operator counter must sit still through exactly that sweep.
+    run across every revision in the tree. Doing so drives the review floor to
+    the full registry. If that were the only gated review counter, the one number
+    CI protects would read complete without a single human signoff, and the
+    three-state vocabulary would collapse back into the two-state laundering it
+    was introduced to remove. The operator floor must sit still through exactly
+    that sweep.
     """
     total = validated_report.revision_count
     swept = _with_review_statuses(validated_report, [RevisionReviewStatus.AGENT_REVIEWED] * total)
 
     rendered = render_audit(check_conformance_ratchet(swept, load_baseline()))
 
-    assert "ceiling counter=unreviewed_revisions current=0 " in rendered
-    assert f"current={total} " in _ceiling_line(rendered, "revisions_without_operator_review")
-    # The sweep is not itself a regression: nothing grew, so the audit still
-    # passes. What must not happen is the operator backlog reading as cleared.
+    assert f"current={total} " in _progress_line(rendered, "reviewed_revisions")
+    assert "progress counter=operator_reviewed_revisions current=0 " in rendered
+    # The sweep is not itself a regression: nothing was lost, so the audit still
+    # passes. What must not happen is the operator floor reading as satisfied.
     assert check_conformance_ratchet(swept, load_baseline()).passed
 
 
-def test_a_lost_operator_signoff_reds_the_operator_ceiling_the_pending_ceiling_cannot_see(
+def test_a_lost_operator_signoff_reds_the_operator_floor_the_review_floor_cannot_see(
     validated_report: ConformanceReport,
     tmp_path: Path,
 ) -> None:
-    """The decisive flip: one regression, invisible to the old counter, caught by the new.
+    """The decisive flip: one regression, invisible to the broader counter, caught by the narrow one.
 
-    Both states are fully agent-or-operator reviewed, so the pending census is
-    zero in each and ``unreviewed_revisions`` is flat across the regression. The
-    only difference is that one revision's operator signoff became an agent
-    review. Before this ceiling existed the audit passed on that; it must now
-    fail, and it must name the counter that moved.
+    Both states are fully agent-or-operator reviewed, so ``reviewed_revisions``
+    is the full registry in each and is flat across the regression. The only
+    difference is that one revision's operator signoff became an agent review.
+    The audit must fail on it and must name the counter that moved.
     """
     total = validated_report.revision_count
     signed = _with_review_statuses(
@@ -601,47 +741,302 @@ def test_a_lost_operator_signoff_reds_the_operator_ceiling_the_pending_ceiling_c
 
     result = check_conformance_ratchet(regressed, baseline)
     assert not result.passed
-    assert any(
-        item == f"revisions_without_operator_review grew from {total - 10} to {total - 9}"
-        for item in result.ratchet_violations
-    ), result.ratchet_violations
-    # The old counter is blind to it: zero pending in both states.
-    assert all("unreviewed_revisions" not in item for item in result.ratchet_violations)
+    # Asserted as the WHOLE violation set, not with a substring exclusion: the
+    # broad counter's name is a suffix of the narrow one, so
+    # "reviewed_revisions fell" matches the operator sentence too and an
+    # exclusion phrased that way is a false negative waiting to happen.
+    moved = [item.split(" fell", 1)[0] for item in result.progress_violations]
+    assert moved == ["operator_reviewed_revisions"], result.progress_violations
+    assert result.progress_violations[0].startswith("operator_reviewed_revisions fell from 10 to 9")
+    assert not result.ratchet_violations
 
 
-def test_the_operator_ceiling_gates_the_real_cli_at_the_committed_baseline(tmp_path: Path) -> None:
+def test_the_operator_floor_gates_the_real_cli_at_the_committed_baseline(tmp_path: Path) -> None:
     """The new counter has teeth in the shipped verb, not only in a fold.
 
-    Same command, same tree, one lowered ceiling: the exit code flips. Without
-    this the field could be committed, rendered, and never actually consulted by
-    the gate.
+    Same command, same tree, one raised floor: the exit code flips. Without this
+    the field could be committed, rendered, and never actually consulted by the
+    gate.
     """
-    seeded = _baseline_with(tmp_path / "lowered.json", ceiling="revisions_without_operator_review", delta=-1)
+    seeded = _baseline_with(tmp_path / "raised.json", progress="operator_reviewed_revisions", delta=1)
     result = CliRunner().invoke(app, ["audit", "--check", "--baseline", str(seeded)])
 
     assert result.exit_code == 1, result.stdout
-    assert "revisions_without_operator_review grew" in result.stdout
+    assert "violation kind=progress" in result.stdout
+    assert "operator_reviewed_revisions fell" in result.stdout
 
 
-def test_the_committed_baseline_seeds_the_operator_backlog_at_its_true_value() -> None:
-    """A ceiling seeded above the measurement would license a silent regression.
+def test_the_committed_operator_floor_equals_what_the_tool_measures(
+    validated_report: ConformanceReport,
+    tmp_path: Path,
+) -> None:
+    """A floor below the measurement licenses a regression the gate cannot see.
 
-    Nothing in the tree carries an operator signoff today, so the honest ceiling
-    is every composed revision. A committed value larger than that would leave
-    headroom for revisions to lose their signoff without the gate noticing.
+    Anchored to a FRESH measurement, not to another committed number. An earlier
+    form of this test asserted the operator counter equalled the
+    ``composed_revisions`` floor, which is a CENSUS FACT — true only while
+    nothing in the tree carries an operator signoff — dressed as a seeding rule.
+    It would have failed on the campaign's first genuine signoff for a reason
+    having nothing to do with seeding.
+
+    The invariant that survives is the one worth keeping: the committed floor
+    equals what the tool measures right now. Below the measurement is slack, and
+    a revision can lose its signoff inside it without the gate noticing; above it
+    the gate is already red. Either way the answer is to re-record the baseline,
+    which is what the failure message should send a reader to do.
     """
-    baseline = load_baseline()
+    measured = _baseline_captured_from(validated_report, tmp_path / "measured.json")
+    committed = load_baseline()
 
-    assert baseline.ceilings.revisions_without_operator_review == baseline.floors.composed_revisions
+    assert committed.progress.operator_reviewed_revisions == (measured.progress.operator_reviewed_revisions), (
+        "the committed operator floor has drifted from the measurement; re-record the baseline"
+    )
 
 
-def _baseline_with(path: Path, *, ceiling: str | None = None, floor: str | None = None, delta: int = 0) -> Path:
+def _report_with_one_more_grounding_finding(report: ConformanceReport) -> ConformanceReport:
+    """Return the real report with one extra grounding finding: a RAISED ceiling."""
+    return report.model_copy(update={"grounding_finding_count": report.grounding_finding_count + 1})
+
+
+def _report_with_one_fewer_revision(report: ConformanceReport) -> ConformanceReport:
+    """Return the real report having composed one revision fewer: a LOWERED floor.
+
+    Deliberately a MIXED movement, not a single unambiguous one. Alongside the
+    dropped revision the seeded report carries one classification finding fewer
+    and one agent-reviewed revision more, so a capture of it STRENGTHENS a
+    ceiling and STRENGTHENS a progress floor while weakening one vacuity floor.
+    A guard that refused any movement at all would satisfy the refusal assertion
+    just as well, so the mixture is what makes the direction separation provable
+    across all three counter families rather than assumed.
+
+    The census is moved with the count so the two never disagree, and the
+    revision that survives as agent-reviewed is one the real tree left pending.
+    """
+    census = dict(report.review_status_census)
+    census[RevisionReviewStatus.PENDING_REVIEW.value] -= 2
+    census[RevisionReviewStatus.AGENT_REVIEWED.value] += 1
+    return report.model_copy(
+        update={
+            "rows": report.rows[:-1],
+            "revision_count": report.revision_count - 1,
+            "review_status_census": census,
+            "modelo_scope_classification_finding_count": report.modelo_scope_classification_finding_count - 1,
+        },
+    )
+
+
+def test_recording_refuses_a_capture_that_raises_a_ceiling(
+    validated_report: ConformanceReport,
+    tmp_path: Path,
+) -> None:
+    """A capture is an acceptance, so accepting a grown backlog must be deliberate.
+
+    ``--record`` guarded only the report in isolation: not degraded, non-empty
+    rows, non-empty note. None of those compare it against the baseline it is
+    about to overwrite, and the note requirement proves only that a sentence was
+    typed, never that it describes the movement.
+    """
+    path = tmp_path / "committed.json"
+    _baseline_captured_from(validated_report, path)
+
+    with pytest.raises(SystemExit, match="weakens the ratchet"):
+        record_baseline(
+            _report_with_one_more_grounding_finding(validated_report),
+            note="a capture that accepts a grown backlog",
+            recorded_at="2026-07-28",
+            path=path,
+        )
+
+    assert load_baseline(path).ceilings.grounding_findings == validated_report.grounding_finding_count
+
+
+def test_recording_refuses_a_capture_that_lowers_a_floor(
+    validated_report: ConformanceReport,
+    tmp_path: Path,
+) -> None:
+    """The direction that never heals, and the one the whole guard exists for.
+
+    A raised ceiling is loud: the backlog it permits shows on the census and the
+    next honest capture pulls it back. A floor lowered by a capture taken while a
+    peer's half-landed change has removed revisions is silent forever, and from
+    then on a genuinely half-read tree passes the anti-vacuity check that exists
+    to catch precisely that.
+
+    The seeded report strengthens one ceiling and one progress floor while
+    lowering one vacuity floor, so this also asserts the guard reads all three
+    directions separately instead of refusing any movement at all.
+    """
+    path = tmp_path / "committed.json"
+    _baseline_captured_from(validated_report, path)
+    shrunken = _report_with_one_fewer_revision(validated_report)
+
+    with pytest.raises(SystemExit) as refusal:
+        record_baseline(
+            shrunken,
+            note="a capture taken while the tree was half read",
+            recorded_at="2026-07-28",
+            path=path,
+        )
+
+    assert "composed_revisions would fall" in str(refusal.value)
+    assert load_baseline(path).floors.composed_revisions == validated_report.revision_count
+
+    # The three directions are read separately: the strengthened ceiling and the
+    # strengthened progress floor must not be reported as weakenings, or the
+    # guard is refusing movement rather than weakening and the refusal teaches
+    # nothing.
+    candidate = _baseline_captured_from(shrunken, tmp_path / "candidate.json")
+    committed = load_baseline(path)
+    total = validated_report.revision_count
+    assert baseline_weakenings(candidate, committed) == (
+        f"floor composed_revisions would fall from {total} to {total - 1}, demanding less measurement",
+    )
+    assert (
+        candidate.ceilings.modelo_scope_classification_findings
+        < committed.ceilings.modelo_scope_classification_findings
+    )
+    assert candidate.progress.reviewed_revisions > committed.progress.reviewed_revisions
+
+
+def test_recording_a_strengthened_baseline_needs_no_acceptance(
+    validated_report: ConformanceReport,
+    tmp_path: Path,
+) -> None:
+    """The paired half: tightening the ratchet must stay frictionless.
+
+    Without this, a guard that refused EVERY difference would satisfy both
+    refusals above while making the ordinary act of recording progress require a
+    flag that says the opposite of what happened.
+    """
+    path = tmp_path / "committed.json"
+    _baseline_captured_from(_report_with_one_more_grounding_finding(validated_report), path)
+
+    written = record_baseline(
+        validated_report,
+        note="the finding was fixed; tightening the ceiling",
+        recorded_at="2026-07-28",
+        path=path,
+    )
+
+    assert written.ceilings.grounding_findings == validated_report.grounding_finding_count
+    assert load_baseline(path).ceilings.grounding_findings == validated_report.grounding_finding_count
+
+
+def test_an_accepted_weakening_is_written_and_the_acceptance_reaches_the_real_verb(
+    validated_report: ConformanceReport,
+    tmp_path: Path,
+) -> None:
+    """The escape hatch exists, is explicit, and is wired to the shipped verb.
+
+    A refusal with no sanctioned way past it teaches the next author to edit the
+    baseline by hand, which is the unrecorded act the guard was added to remove.
+    """
+    path = tmp_path / "committed.json"
+    _baseline_captured_from(validated_report, path)
+
+    written = record_baseline(
+        _report_with_one_more_grounding_finding(validated_report),
+        note="the finding is real and accepted for now",
+        recorded_at="2026-07-28",
+        path=path,
+        accept_weakening=True,
+    )
+
+    assert written.ceilings.grounding_findings == validated_report.grounding_finding_count + 1
+
+    # Same command, same tree, one seeded baseline that the live measurement
+    # would raise: the exit code flips on the flag alone.
+    seeded = _baseline_with(tmp_path / "cli.json", ceiling="grounding_findings", delta=-1)
+    arguments = ["audit", "--record", "--note", "a real capture", "--baseline", str(seeded)]
+
+    refused = CliRunner().invoke(app, arguments)
+    accepted = CliRunner().invoke(app, [*arguments, "--accept-weakening"])
+
+    assert refused.exit_code != 0, refused.stdout
+    assert accepted.exit_code == 0, accepted.stdout
+    assert load_baseline(seeded).ceilings.grounding_findings == validated_report.grounding_finding_count
+
+
+def test_a_recorded_baseline_lands_as_the_bytes_it_serialised(
+    validated_report: ConformanceReport,
+    tmp_path: Path,
+) -> None:
+    """The capture is a byte write, so nothing translates the file's terminators.
+
+    ``record_baseline`` wrote through ``write_text``, which re-encodes under the
+    platform's newline convention. On Windows every capture therefore expanded
+    the baseline's LF terminators to CRLF, and ``git`` — normalising under
+    ``text=auto eol=lf`` — reported no change at all, so the artefact the gate
+    READS differed from its committed bytes for every reader that is not git.
+    Measured on the tree that carried it: 28 LF terminators in 1932 committed
+    bytes against 28 CRLF ones in 1960 on disk, with ``git diff`` silent.
+
+    Three assertions, in the order they matter. The file must not have existed
+    and must exist non-empty afterwards, so the case cannot pass on a path
+    nothing wrote — the failure mode this campaign met three times on the stamp
+    writer. The bytes must carry no carriage return, which is what flips: no
+    value in the payload contains one, so any CR in the file was inserted by the
+    write. And the bytes must equal the serialisation of the model the function
+    RETURNED, so a writer that silently wrote something else than it reported is
+    caught too.
+
+    The CR assertion is decisive only where the platform translates, which is
+    where the defect was measured; on a platform whose line separator is already
+    LF it holds trivially and the byte-equality assertion carries the case.
+    """
+    path = tmp_path / "captured.json"
+    assert not path.exists()
+
+    written = record_baseline(
+        validated_report,
+        note="a capture proving the writer does not translate terminators",
+        recorded_at="2026-07-28",
+        path=path,
+    )
+    raw = path.read_bytes()
+
+    assert raw, "the capture must actually have written something"
+    assert b"\r" not in raw, "the capture translated the file's terminators"
+    expected = json.dumps(written.model_dump(mode="json"), indent=2, sort_keys=True) + "\n"
+    assert raw == expected.encode(UTF_8_ENCODING)
+
+
+def test_the_committed_baseline_on_disk_matches_its_committed_terminators() -> None:
+    """The artefact the gate reads must not have been rewritten by a capture.
+
+    The defect above was invisible in review precisely because ``git diff`` stays
+    clean through ``text=auto eol=lf`` normalisation while the working tree
+    carries the rewrite, so nothing but a byte read could see it. This is that
+    byte read, standing over the real committed file: the baseline is checked out
+    LF on every platform by its git attribute, so a carriage return here means a
+    capture rewrote the file after checkout and the on-disk artefact has drifted
+    from the committed one.
+    """
+    raw = baseline_path().read_bytes()
+
+    assert raw, "the committed baseline must exist and be non-empty"
+    assert b"\r" not in raw, (
+        "the committed baseline on disk carries translated terminators; a capture rewrote it after "
+        "checkout and git cannot see the difference"
+    )
+
+
+def _baseline_with(
+    path: Path,
+    *,
+    ceiling: str | None = None,
+    floor: str | None = None,
+    progress: str | None = None,
+    delta: int = 0,
+) -> Path:
     """Write a copy of the committed baseline with exactly one counter moved."""
     raw = json.loads(baseline_path().read_text(encoding=UTF_8_ENCODING))
     if ceiling is not None:
         raw["ceilings"][ceiling] += delta
     if floor is not None:
         raw["floors"][floor] += delta
+    if progress is not None:
+        raw["progress"][progress] += delta
     path.write_text(json.dumps(raw, indent=2), encoding=UTF_8_ENCODING)
     return path
 
@@ -760,6 +1155,345 @@ def test_stamp_refuses_an_out_of_vocabulary_status_string_without_touching_the_m
     assert manifest.read_bytes() == before
 
 
+#: The same fictional person, written as an operator's own signoff attribution.
+#: Declared once because five assertions below read it back off the compiled
+#: revision, and a hand-copied literal in any of them would let a rewrite that
+#: changed the seed pass while the assertion checked the old value.
+_OPERATOR_SIGNATORY = f"{_PERSON_REVIEWER_NAME} (operator)"
+
+_OPERATOR_SIGNOFF = f"""engineered_by = "the operator, by hand"
+review_status = "operator_reviewed"
+reviewed_by = "{_OPERATOR_SIGNATORY}"
+reviewed_at = 2026-07-01
+"""
+
+
+@pytest.fixture
+def operator_signed_copy(registry_copy: Path) -> Path:
+    """A real modelo copy whose revision carries a hand-authored operator signoff.
+
+    Seeded by appending the four scalars to the manifest, which is exactly the
+    path deliberately left legal for the operator: the schema accepts
+    ``operator_reviewed`` and this CLI cannot write it, so a genuine signoff can
+    only ever arrive as a hand edit. The seed is proved to have compiled before
+    any test reads it, so a test asserting a refusal cannot be passing because
+    the fixture never established the state it refuses to touch.
+    """
+    manifest = _manifest_of(registry_copy)
+    manifest.write_text(
+        manifest.read_text(encoding=UTF_8_ENCODING).rstrip("\n") + "\n" + _OPERATOR_SIGNOFF,
+        encoding=UTF_8_ENCODING,
+    )
+    revision = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert revision.review_status is RevisionReviewStatus.OPERATOR_REVIEWED
+    assert revision.reviewed_by == _OPERATOR_SIGNATORY
+    return registry_copy
+
+
+@pytest.mark.parametrize(
+    ("label", "arguments"),
+    [
+        ("substitution", {"reviewed_by": "agent:opus-executor", "reviewed_at": date(2026, 7, 28)}),
+        ("reviewer_alone", {"reviewed_by": "agent:opus-executor"}),
+        ("date_alone", {"reviewed_at": date(2026, 7, 28)}),
+        ("erasure", {"review_status": StampableReviewStatus.PENDING_REVIEW}),
+        ("downgrade", {"review_status": StampableReviewStatus.AGENT_REVIEWED, "reviewed_by": "agent:x"}),
+    ],
+)
+def test_stamp_refuses_to_touch_the_review_axis_of_an_operator_signed_revision(
+    operator_signed_copy: Path,
+    label: str,
+    arguments: dict[str, object],
+) -> None:
+    """The effective status governs, not only the requested one.
+
+    Coercing the REQUESTED status closed the creation of a false operator claim
+    and left its ATTRIBUTION writable. With no status supplied the coercion
+    never fires and the merge falls through to the status the manifest already
+    declares, so a lone ``reviewed_by`` wrote an agent's name against a declared
+    ``operator_reviewed``: a manifest naming an agent as the operator's
+    signatory. Nothing could see it — the operator ceiling counts revisions
+    LACKING a signoff and this one still had one — and the overwritten identity
+    and date are underivable, so nothing could restore them either.
+
+    ``erasure`` is parametrised alongside substitution deliberately. Clearing a
+    signoff DOES red the ratchet, but only after the name is already gone, so
+    the ratchet catches the destruction while only this refusal prevents it.
+
+    The byte assertion is the load-bearing half: a refusal raised after the
+    rewrite would leave the false claim on disk and still satisfy
+    ``pytest.raises``.
+    """
+    manifest = _manifest_of(operator_signed_copy)
+    before = manifest.read_bytes()
+
+    with pytest.raises(StampError, match="already declares review_status 'operator_reviewed'"):
+        stamp_revision(
+            _STAMPED_MODELO,
+            _STAMPED_REVISION,
+            registry_root=operator_signed_copy,
+            **arguments,  # type: ignore[arg-type]
+        )
+
+    assert manifest.read_bytes() == before, label
+    revision = load_modelo_directory(operator_signed_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert revision.review_status is RevisionReviewStatus.OPERATOR_REVIEWED
+    assert revision.reviewed_by == _OPERATOR_SIGNATORY
+    assert revision.reviewed_at == date(2026, 7, 1)
+
+
+def test_an_authorship_claim_on_an_operator_signed_revision_is_still_served(
+    operator_signed_copy: Path,
+) -> None:
+    """The paired half: authorship is ORTHOGONAL to signoff and must stay writable.
+
+    Without this, a blanket "the resolved status must be stampable" rule would
+    satisfy every refusal above while refusing an honest ``engineered_by`` write
+    for a reason that has nothing to do with authorship, and no other assertion
+    in this file would notice. Who built a revision is a different fact from who
+    signed it off, so the write is served AND the signoff survives it intact.
+    """
+    result = stamp_revision(
+        _STAMPED_MODELO,
+        _STAMPED_REVISION,
+        engineered_by="conformance-cli campaign",
+        registry_root=operator_signed_copy,
+    )
+
+    assert result.written["engineered_by"] == '"conformance-cli campaign"'
+    assert result.removed == ()
+    revision = load_modelo_directory(operator_signed_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert revision.engineered_by == "conformance-cli campaign"
+    assert revision.review_status is RevisionReviewStatus.OPERATOR_REVIEWED
+    assert revision.reviewed_by == _OPERATOR_SIGNATORY
+    assert revision.reviewed_at == date(2026, 7, 1)
+
+
+def test_the_review_axis_guard_reads_the_status_the_compiled_revision_carries(
+    operator_signed_copy: Path,
+) -> None:
+    """The guard's input is the AUTHORITY, not a second reading of the manifest.
+
+    The compiled revision is what every consumer of this registry sees, and the
+    writer already loads it to prove the revision exists. Reading the declared
+    status off the manifest text instead made the guard agree with the authority
+    only because the loader refuses governance keys declared in a section
+    fragment — the laundering path that refusal exists to close — so the guard's
+    correctness rested on the mechanism it exists to complement.
+
+    This asserts the two facts that make the swap meaningful: the compiled record
+    carries the signoff, and the writer refuses on it.
+    """
+    compiled = load_modelo_directory(operator_signed_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert compiled.review_status is RevisionReviewStatus.OPERATOR_REVIEWED
+
+    with pytest.raises(StampError, match=f"already declares review_status '{compiled.review_status.value}'"):
+        stamp_revision(
+            _STAMPED_MODELO,
+            _STAMPED_REVISION,
+            reviewed_by="agent:opus-executor",
+            reviewed_at=date(2026, 7, 28),
+            registry_root=operator_signed_copy,
+        )
+
+
+def test_a_governance_stamp_hidden_in_a_fragment_never_reaches_the_writer(registry_copy: Path) -> None:
+    """The exhibit for why the guard reads the compiled record.
+
+    A section fragment declaring the revision table with an operator signoff is
+    the laundering shape: it would win the merge, so the compiled revision would
+    claim a completed human review while ``revision.toml`` reads unstamped. The
+    loader refuses it today, which is why the manifest text and the compiled
+    record cannot currently disagree — and is precisely why a guard reading the
+    manifest text was circular, since the case it would mis-handle is the case
+    that refusal exists to prevent.
+
+    Two assertions with different jobs. The write MUST NOT land, which stays true
+    whichever mechanism refuses it. And the refusal today is the LOADER's, which
+    is the tripwire: if that ever changes, this construction has become live and
+    the compiled-status guard is what stands in front of it, so the second
+    assertion failing is a signal to read this test rather than to delete it.
+    """
+    manifest = _manifest_of(registry_copy)
+    before = manifest.read_bytes()
+    laundered = manifest.parent / "casillas" / "zzz-laundered.toml"
+    laundered.write_text(
+        f'[revisions."{_STAMPED_REVISION}"]\n'
+        'review_status = "operator_reviewed"\n'
+        f'reviewed_by = "{_OPERATOR_SIGNATORY}"\n'
+        "reviewed_at = 2026-07-01\n",
+        encoding=UTF_8_ENCODING,
+    )
+
+    with pytest.raises(StampError) as refusal:
+        stamp_revision(
+            _STAMPED_MODELO,
+            _STAMPED_REVISION,
+            reviewed_by="agent:opus-executor",
+            reviewed_at=date(2026, 7, 28),
+            registry_root=registry_copy,
+        )
+
+    assert manifest.read_bytes() == before
+    assert "must be declared in the revision's revision.toml manifest" in str(refusal.value), (
+        "the loader no longer refuses a governance stamp declared in a fragment; the compiled record "
+        "and the manifest text can now disagree, which is the case the review-axis guard reads the "
+        "compiled record to survive"
+    )
+
+
+def test_the_review_axis_guard_reads_the_vocabulary_and_not_one_hardcoded_status(
+    registry_copy: Path,
+) -> None:
+    """A revision inside the vocabulary is untouched by the guard.
+
+    The guard's predicate is membership of :class:`StampableReviewStatus`, never
+    the single token ``operator_reviewed``, so a fourth status added to the core
+    vocabulary without being added here enrols itself in the refusal. The other
+    direction has to hold too: a revision already stamped ``agent_reviewed`` is
+    a claim this CLI DID make, so restating it must remain legal or the tool
+    could never correct its own record.
+    """
+    stamp_revision(
+        _STAMPED_MODELO,
+        _STAMPED_REVISION,
+        review_status=StampableReviewStatus.AGENT_REVIEWED,
+        reviewed_by="agent:first",
+        reviewed_at=date(2026, 7, 27),
+        registry_root=registry_copy,
+    )
+
+    stamp_revision(
+        _STAMPED_MODELO,
+        _STAMPED_REVISION,
+        reviewed_by="agent:second",
+        reviewed_at=date(2026, 7, 28),
+        registry_root=registry_copy,
+    )
+
+    revision = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert revision.review_status is RevisionReviewStatus.AGENT_REVIEWED
+    assert revision.reviewed_by == "agent:second"
+    # The date is restated with the reviewer rather than inherited: this case
+    # used to leave 2026-07-27 standing against a reviewer who did not review
+    # then, which is the smear the writer now refuses.
+    assert revision.reviewed_at == date(2026, 7, 28)
+
+
+def _stamp_a_first_review(root: Path, *, reviewer: str, reviewed: date) -> None:
+    """Seed a real declared agent review through the real writer."""
+    stamp_revision(
+        _STAMPED_MODELO,
+        _STAMPED_REVISION,
+        review_status=StampableReviewStatus.AGENT_REVIEWED,
+        reviewed_by=reviewer,
+        reviewed_at=reviewed,
+        registry_root=root,
+    )
+
+
+def test_stamp_refuses_a_new_reviewer_that_does_not_restate_the_date(registry_copy: Path) -> None:
+    """A re-attributed review must not inherit the previous reviewer's date.
+
+    An omitted argument keeps what the manifest declares, which is right for
+    every scalar except this pair: with a reviewer supplied and no date the merge
+    carried the DECLARED date forward, so ``agent:second`` was recorded as having
+    reviewed the revision on ``agent:first``'s date. In the one axis that is
+    declared rather than derived, the record then states that a person reviewed a
+    revision on a day they did not, and nothing downstream can tell.
+
+    The CLI's today-defaulting does not cover this path either — it fires only
+    when a status is supplied — so the refusal has to live at the writer, which
+    is also the boundary a driver script reaches.
+
+    The byte assertion is load-bearing: a refusal raised after the rewrite would
+    leave the smeared claim on disk and still satisfy ``pytest.raises``.
+    """
+    _stamp_a_first_review(registry_copy, reviewer="agent:first", reviewed=date(2026, 1, 15))
+    manifest = _manifest_of(registry_copy)
+    before = manifest.read_bytes()
+
+    with pytest.raises(StampError, match="without a date"):
+        stamp_revision(
+            _STAMPED_MODELO,
+            _STAMPED_REVISION,
+            reviewed_by="agent:second",
+            registry_root=registry_copy,
+        )
+
+    assert manifest.read_bytes() == before
+    revision = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert revision.reviewed_by == "agent:first"
+    assert revision.reviewed_at == date(2026, 1, 15)
+
+
+def test_a_new_reviewer_stating_the_date_is_served(registry_copy: Path) -> None:
+    """The paired half: re-attributing a review is legal when the date is stated.
+
+    Without this, a guard refusing every reviewer change would satisfy the
+    refusal above while making the tool unable to correct its own record, and no
+    other assertion here would notice. Both the correction shape and the
+    re-review shape are exercised: the same date restated for a typo fix, and a
+    new date for a review happening now.
+    """
+    _stamp_a_first_review(registry_copy, reviewer="agent:frist", reviewed=date(2026, 1, 15))
+
+    stamp_revision(
+        _STAMPED_MODELO,
+        _STAMPED_REVISION,
+        reviewed_by="agent:first",
+        reviewed_at=date(2026, 1, 15),
+        registry_root=registry_copy,
+    )
+    corrected = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert corrected.reviewed_by == "agent:first"
+    assert corrected.reviewed_at == date(2026, 1, 15)
+
+    stamp_revision(
+        _STAMPED_MODELO,
+        _STAMPED_REVISION,
+        reviewed_by="agent:second",
+        reviewed_at=date(2026, 7, 28),
+        registry_root=registry_copy,
+    )
+    re_reviewed = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert re_reviewed.reviewed_by == "agent:second"
+    assert re_reviewed.reviewed_at == date(2026, 7, 28)
+
+
+def test_restating_the_same_reviewer_or_only_the_date_stays_legal(registry_copy: Path) -> None:
+    """The refusal keys on a CHANGE of reviewer, not on the reviewer argument.
+
+    Two acts inherit a date honestly and must stay served. Restating the same
+    reviewer inherits a date that is still that reviewer's own, so there is no
+    claim to smear; and moving only the date is an explicit statement about the
+    date, which is the opposite of inheriting one. A guard written as "refuse a
+    reviewer with no date" would pass the refusal case above while breaking both
+    of these.
+    """
+    _stamp_a_first_review(registry_copy, reviewer="agent:first", reviewed=date(2026, 1, 15))
+
+    stamp_revision(
+        _STAMPED_MODELO,
+        _STAMPED_REVISION,
+        reviewed_by="agent:first",
+        registry_root=registry_copy,
+    )
+    restated = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert restated.reviewed_by == "agent:first"
+    assert restated.reviewed_at == date(2026, 1, 15)
+
+    stamp_revision(
+        _STAMPED_MODELO,
+        _STAMPED_REVISION,
+        reviewed_at=date(2026, 7, 28),
+        registry_root=registry_copy,
+    )
+    redated = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert redated.reviewed_by == "agent:first"
+    assert redated.reviewed_at == date(2026, 7, 28)
+
+
 def test_governance_keys_track_the_shipped_field_set() -> None:
     """The writer's key set IS the loader's, not a second copy of it."""
     assert set(GOVERNANCE_KEYS) == set(REVISION_GOVERNANCE_FIELDS)
@@ -845,36 +1579,140 @@ def test_returning_a_revision_to_the_backlog_drops_the_reviewer(registry_copy: P
     assert revision.reviewed_at is None
 
 
-def test_stamp_restores_the_manifest_when_the_written_tree_no_longer_loads(registry_copy: Path) -> None:
-    """The rollback is proved by a reload that genuinely fails, not by a stubbed one.
+def _non_governance_lines(raw: bytes) -> list[bytes]:
+    """Split on the raw LF byte, keeping each line's remaining terminator bytes.
 
-    A malformed sibling fragment is dropped into the revision directory AFTER the
-    pre-write check has been shown to pass, so the failure lands in the
-    post-write reload — the only place the restore can be exercised. Without the
-    restore the manifest would carry the new stamp and this assertion flips.
+    Splitting the raw bytes rather than decoding leaves a CRLF line carrying its
+    trailing carriage return, so a run that rewrote the file's terminators
+    produces different elements here even though the decoded text is identical.
+    The governance predicate is written out independently rather than imported from
+    the writer, so this comparison cannot agree with a broken implementation by
+    sharing its definition of which lines may move.
+
+    Trailing empty elements are dropped because the writer deliberately collapses
+    a manifest to exactly one terminating newline, and the shipped manifests end
+    with a blank line. That is a one-byte EOF normalisation, not the whole-file
+    terminator rewrite this comparison exists to catch, and the caller asserts
+    the terminator count separately so dropping them here hides neither.
+    """
+    pattern = re.compile(rf"\s*(?:{'|'.join(GOVERNANCE_KEYS)})\s*=")
+    lines = [line for line in raw.split(b"\n") if not pattern.match(line.decode(UTF_8_ENCODING))]
+    while lines and not lines[-1].strip():
+        lines.pop()
+    return lines
+
+
+def _pin_mtime(path: Path) -> float:
+    """Set a distant fixed mtime and return it, so a write is observable.
+
+    The pre-write refusal and the post-write restore leave byte-identical files,
+    so bytes alone cannot say which branch ran. A write moves the mtime and a
+    refusal does not, which distinguishes them without a mock, a patch, or a
+    hook in production code.
+    """
+    os.utime(path, (1_000_000_000, 1_000_000_000))
+    return path.stat().st_mtime
+
+
+def test_a_malformed_sibling_fragment_is_refused_before_anything_is_written(registry_copy: Path) -> None:
+    """A tree that already fails to load is refused by the PRE-write check.
+
+    Kept as its own case because it used to be mislabelled as the rollback
+    proof. It is a real and useful refusal — a tree the loader rejects must not
+    be stamped — but nothing is written on this path, so its manifest assertion
+    is true whatever the restore does. Naming it for the branch it actually
+    exercises stops the next reader inheriting the same misreading.
     """
     manifest = _manifest_of(registry_copy)
-    stamp_revision(
-        _STAMPED_MODELO,
-        _STAMPED_REVISION,
-        engineered_by="first stamp",
-        registry_root=registry_copy,
-    )
-    before = manifest.read_text(encoding=UTF_8_ENCODING)
+    before = manifest.read_bytes()
+    original_mtime = _pin_mtime(manifest)
 
     broken = manifest.parent / "casillas" / "zzzz-broken.toml"
     broken.write_text("this is not valid TOML = = =\n", encoding=UTF_8_ENCODING)
 
-    with pytest.raises(StampError):
+    with pytest.raises(StampError, match="registry refuses to load the modelo"):
         stamp_revision(
             _STAMPED_MODELO,
             _STAMPED_REVISION,
-            engineered_by="second stamp that must not survive",
+            engineered_by="a stamp that must not survive",
             registry_root=registry_copy,
         )
 
-    assert manifest.read_text(encoding=UTF_8_ENCODING) == before
-    assert "second stamp that must not survive" not in before
+    assert manifest.stat().st_mtime == original_mtime, "the pre-write refusal must not touch the file"
+    assert manifest.read_bytes() == before
+
+
+def test_stamp_restores_the_manifest_when_the_written_tree_no_longer_loads(registry_copy: Path) -> None:
+    """The rollback, proved by a reload the WRITE ITSELF makes fail.
+
+    The failure has to originate in the written bytes, because the pre-write
+    check loads the same tree the post-write reload does: any breakage staged
+    beforehand is caught before a byte is written, and the restore never runs.
+    An identity carrying an interior newline is the honest trigger. It survives
+    the trim, which strips only the ends; the schema probe accepts it, because a
+    newline in a string is nothing pydantic objects to; and the rendered basic
+    string then carries a literal newline, which TOML forbids. So the manifest
+    the writer produced is one the loader rejects — exactly the event the
+    two-phase design exists for — and the restore is what keeps it off disk.
+
+    Two assertions carry the proof. The mtime is pinned first and must MOVE,
+    which is what pins this test to the post-write branch: without it the case
+    silently degrades into the pre-write one, which is the trap the previous
+    version of this test fell into and passed under for three review rounds. And
+    the comparison is on BYTES, not ``read_text``, which decodes under universal
+    newlines and normalises away the exact difference the module's "the original
+    bytes are restored" claim is about: on Windows the restore expanded all
+    eight LF terminators of this manifest to CRLF and grew it from 422 to 430
+    bytes, and the text comparison called that clean.
+    """
+    manifest = _manifest_of(registry_copy)
+    before = manifest.read_bytes()
+    original_mtime = _pin_mtime(manifest)
+
+    with pytest.raises(StampError, match="registry refuses to load the modelo"):
+        stamp_revision(
+            _STAMPED_MODELO,
+            _STAMPED_REVISION,
+            engineered_by="a stamp\nthat must not survive",
+            registry_root=registry_copy,
+        )
+
+    assert manifest.stat().st_mtime != original_mtime, "the restore was never reached; nothing was written"
+    assert manifest.read_bytes() == before
+    assert b"must not survive" not in before
+
+
+def test_a_successful_stamp_leaves_every_other_line_byte_identical(registry_copy: Path) -> None:
+    """The writer claims a line editor; this measures whether it is one.
+
+    The rollback assertion above can only ever exercise the restore. A
+    SUCCESSFUL write was never measured on bytes at all, and it was the worse
+    case: writing through ``write_text`` rewrote every terminator in the file, so
+    a one-line stamp landed as a whole-file rewrite. In a shared worktree that is
+    invisible in review, because ``git diff`` normalises line endings under
+    ``text=auto`` while the working tree carries the rewrite.
+
+    Comparing the non-governance lines as raw byte slices is what flips: under a
+    terminator rewrite every single element differs, while under a true line edit
+    none do.
+    """
+    manifest = _manifest_of(registry_copy)
+    before = manifest.read_bytes()
+
+    stamp_revision(
+        _STAMPED_MODELO,
+        _STAMPED_REVISION,
+        engineered_by="conformance-cli gate",
+        review_status=StampableReviewStatus.AGENT_REVIEWED,
+        reviewed_by="agent:conformance-cli-gate",
+        reviewed_at=date(2026, 7, 27),
+        registry_root=registry_copy,
+    )
+    after = manifest.read_bytes()
+
+    assert after != before, "the stamp must actually have written something"
+    assert _non_governance_lines(after) == _non_governance_lines(before)
+    assert after.count(b"\x0d\x0a") == before.count(b"\x0d\x0a")
 
 
 def test_stamp_refuses_an_identifier_that_would_escape_the_registry_root(registry_copy: Path) -> None:
@@ -926,3 +1764,477 @@ def test_stamp_trims_a_padded_identity_before_writing_it(registry_copy: Path) ->
 
     revision = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
     assert revision.engineered_by == "conformance-cli gate"
+
+
+# --------------------------------------------------------------------------- #
+# stamp: the Typer command layer, exercised end to end
+# --------------------------------------------------------------------------- #
+
+
+def _stamp_cli(root: Path, *arguments: str) -> object:
+    """Invoke the real ``stamp`` verb against a byte copy of a shipped modelo tree."""
+    return CliRunner().invoke(
+        app,
+        ["stamp", _STAMPED_MODELO, _STAMPED_REVISION, *arguments, "--registry-root", str(root)],
+    )
+
+
+def test_the_stamp_command_defaults_the_review_date_to_today(registry_copy: Path) -> None:
+    """The command layer's own logic, exercised through the real app for the first time.
+
+    ``stamp_revision`` has always accepted a registry root and this verb never
+    passed one, so the only CLI-level stamp coverage that could exist was a
+    refusal caught at the parse boundary: the today-defaulting of ``reviewed_at``
+    and the translation of a writer refusal into a parameter error had no
+    end-to-end test of any kind. Neither is reachable from the writer's own tests,
+    because neither lives in the writer.
+
+    The flip is sharp because the schema requires a date alongside a reviewed
+    status: without the default this same invocation is refused rather than
+    served, so the exit code and the compiled date move together.
+    """
+    result = _stamp_cli(registry_copy, "--review-status", "agent_reviewed", "--reviewed-by", "agent:opus-executor")
+
+    assert result.exit_code == 0, result.stdout
+    revision = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert revision.review_status is RevisionReviewStatus.AGENT_REVIEWED
+    assert revision.reviewed_at == datetime.now(tz=UTC).date()
+    # Echoed back, so the written value is never implicit to the caller.
+    assert f"reviewed_at={revision.reviewed_at.isoformat()}" in result.stdout
+
+
+def test_the_stamp_command_turns_a_writer_refusal_into_a_parameter_error(registry_copy: Path) -> None:
+    """A refusal must reach the operator as an instructive parameter error.
+
+    Without the translation the writer's exception escapes the command and the
+    caller meets a traceback: same refusal, no message they can act on, and a
+    different exit code. Both halves are asserted, so removing the translation
+    flips the code AND the visible reason.
+    """
+    manifest = _manifest_of(registry_copy)
+    before = manifest.read_bytes()
+
+    result = _stamp_cli(registry_copy, "--engineered-by", "   ")
+
+    assert result.exit_code == 2, result.output
+    assert "names nobody" in result.output
+    assert manifest.read_bytes() == before
+
+
+def test_the_stamp_command_refuses_to_re_attribute_an_operator_signoff(operator_signed_copy: Path) -> None:
+    """The re-attribution refusal, proved through the app rather than the writer.
+
+    Every other test of this refusal calls ``stamp_revision`` directly, which
+    leaves the command's own argument parsing and error translation unproved. It
+    could not be reached at all until the verb accepted a registry root: without
+    one the only tree the command can address is the shipped registry, so
+    exercising it end to end would have meant writing a fabricated review into
+    the bundled data.
+
+    The byte assertion is load-bearing: a refusal raised after the rewrite would
+    leave the re-attributed signoff on disk and still produce a non-zero exit.
+    """
+    manifest = _manifest_of(operator_signed_copy)
+    before = manifest.read_bytes()
+
+    result = _stamp_cli(operator_signed_copy, "--reviewed-by", "agent:opus-executor", "--reviewed-at", "2026-07-28")
+
+    assert result.exit_code != 0
+    assert "already declares review_status 'operator_reviewed'" in result.output
+    assert manifest.read_bytes() == before
+    revision = load_modelo_directory(operator_signed_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert revision.reviewed_by == _OPERATOR_SIGNATORY
+
+
+@pytest.mark.parametrize(
+    "spelling",
+    [f"[revisions.'{_STAMPED_REVISION}']", f'[ revisions."{_STAMPED_REVISION}" ]'],
+)
+def test_a_header_the_loader_accepts_but_the_line_editor_cannot_address_is_refused(
+    registry_copy: Path,
+    spelling: str,
+) -> None:
+    """The branch a coverage pragma called unreachable, reached.
+
+    The pragma's stated ground was that the governance read proves the table
+    exists. It proves the table exists in PARSED TOML, and the line editor
+    compares against one exact spelling of the header LINE. Both spellings here
+    are valid TOML for the same table, and the assertion that the tree still LOADS
+    is the load-bearing one: it is what makes the manifest a real authoring state
+    rather than a broken file the pre-write check would have caught first.
+
+    It fails safe, so the cost was never a bad write — it was a comment telling
+    the next reader a branch cannot happen when it can, and a caller left with a
+    manifest the registry accepts and this writer says it has no header for.
+    """
+    manifest = _manifest_of(registry_copy)
+    canonical = f'[revisions."{_STAMPED_REVISION}"]'
+    rewritten = manifest.read_text(encoding=UTF_8_ENCODING).replace(canonical, spelling, 1)
+    manifest.write_bytes(rewritten.encode(UTF_8_ENCODING))
+    before = manifest.read_bytes()
+
+    revision = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert revision.id == _STAMPED_REVISION, "the rewritten header must still compile, or this proves nothing"
+
+    with pytest.raises(StampError, match="is not present as a whole line"):
+        stamp_revision(
+            _STAMPED_MODELO,
+            _STAMPED_REVISION,
+            engineered_by="conformance-cli gate",
+            registry_root=registry_copy,
+        )
+
+    assert manifest.read_bytes() == before
+
+
+# --------------------------------------------------------------------------- #
+# audit: a growing registry versus a regressing one
+# --------------------------------------------------------------------------- #
+
+
+def _report_with_one_more_revision(report: ConformanceReport) -> ConformanceReport:
+    """Return the real report as if a ninety-first revision had landed unstamped.
+
+    The row is a real composed row re-keyed, so every derived count it feeds
+    moves the way a genuine addition would; the census and the population move
+    with it, and the new revision declares no governance because that is what a
+    peer landing a revision mid-campaign actually produces.
+    """
+    pending = RevisionReviewStatus.PENDING_REVIEW.value
+    arrival = report.rows[-1].model_copy(
+        update={"revision": f"{report.rows[-1].revision}-arriving", "review_status": pending},
+    )
+    census = dict(report.review_status_census)
+    census[pending] += 1
+    return report.model_copy(
+        update={
+            "rows": (*report.rows, arrival),
+            "revision_count": report.revision_count + 1,
+            "review_status_census": census,
+        },
+    )
+
+
+def _report_with_locale_labels(
+    report: ConformanceReport,
+    *,
+    required_delta: int,
+    translated_delta: int,
+) -> ConformanceReport:
+    """Return the real report with the FIRST audited locale's leaf counts moved.
+
+    One locale only, so the registry-wide sums move by exactly the deltas asked
+    for and the assertion can name the arithmetic instead of a magic number.
+    """
+    first, *rest = report.locale_axis
+    moved = first.model_copy(
+        update={
+            "labels_required": first.labels_required + required_delta,
+            "labels_translated": first.labels_translated + translated_delta,
+        },
+    )
+    return report.model_copy(update={"locale_axis": (moved, *rest)})
+
+
+def test_a_ninety_first_revision_landing_unstamped_leaves_the_gate_green(
+    validated_report: ConformanceReport,
+    tmp_path: Path,
+) -> None:
+    """The immediate failure this Step exists to remove, simulated end to end.
+
+    Under the retired shape all three review counters were shrink-only ceilings
+    pinned at the full population, so this exact arrival took every one of them
+    past its ceiling and reddened the only gating exit the surface has. Recording
+    the new state was then refused unless the operator asserted a deliberate
+    weakening, so an honest registry addition and a loosening of the ratchet came
+    through the same door.
+
+    The population moves and the recorded work does not, which is the whole
+    content of the fix, so both halves are asserted: the gate passes AND every
+    progress floor is byte-identical across the arrival. Asserting only the pass
+    would hold just as well if the counters had been deleted.
+    """
+    grown = _report_with_one_more_revision(validated_report)
+
+    assert grown.revision_count == validated_report.revision_count + 1
+    result = check_conformance_ratchet(grown, load_baseline())
+
+    assert result.passed, result.violations
+    # Read through the real capture path rather than a helper mirroring it: a
+    # second copy of the projection would agree with a broken original.
+    before = _baseline_captured_from(validated_report, tmp_path / "before.json").progress
+    after = _baseline_captured_from(grown, tmp_path / "after.json").progress
+    for field_name in ConformanceProgressFloors.model_fields:
+        assert getattr(after, field_name) == getattr(before, field_name), field_name
+
+
+def test_a_new_revision_stays_green_even_once_the_stamping_campaign_is_underway(
+    validated_report: ConformanceReport,
+    tmp_path: Path,
+) -> None:
+    """The case that decides between progress floors and a ratio ceiling.
+
+    At today's total backlog a ratio ceiling would survive the arrival by
+    coincidence: ninety of ninety unreviewed is a fraction of 1.0, and
+    ninety-one of ninety-one is still 1.0. The choice only shows once the
+    campaign has made progress, so this seeds a baseline at forty agent-reviewed
+    revisions of ninety and then lands the ninety-first unstamped.
+
+    The backlog fraction genuinely worsens — that is asserted here rather than
+    reasoned, because it is the premise of the ruling — and the gate stays green
+    anyway, because the recorded work is intact. A ratio ceiling would red on
+    every peer's registry addition for the whole duration of the campaign this
+    surface exists to support, which is the same complaint arriving later and
+    harder to read.
+    """
+    total = validated_report.revision_count
+    underway = _with_review_statuses(
+        validated_report,
+        [RevisionReviewStatus.AGENT_REVIEWED] * 40 + [RevisionReviewStatus.PENDING_REVIEW] * (total - 40),
+    )
+    baseline = _baseline_captured_from(underway, tmp_path / "underway.json")
+    grown = _report_with_one_more_revision(underway)
+    grown_progress = _baseline_captured_from(grown, tmp_path / "grown.json").progress
+
+    before = baseline.progress.reviewed_revisions / underway.revision_count
+    after = grown_progress.reviewed_revisions / grown.revision_count
+    assert after < before, "the seeded arrival must genuinely worsen the reviewed fraction, or this proves nothing"
+
+    result = check_conformance_ratchet(grown, baseline)
+    assert result.passed, result.violations
+    assert grown_progress.reviewed_revisions == baseline.progress.reviewed_revisions
+
+
+def test_a_lost_translation_reds_the_gate_even_while_the_registry_grows(
+    validated_report: ConformanceReport,
+    tmp_path: Path,
+) -> None:
+    """The other direction, and it must survive the growth that used to mask nothing.
+
+    The retired ceiling capped leaves left UNTRANSLATED, which every new casilla
+    raises by one per audited locale — so it reddened on registry growth and said
+    nothing about translation being lost. The floor counts leaves ACTUALLY
+    TRANSLATED, so the two cases separate: here the required population grows by
+    five and one authored leaf is deleted at the same time, and the gate reds on
+    the deletion rather than on the growth.
+
+    The paired case below is what makes this non-vacuous: the same growth without
+    the deletion must stay green, or the floor would just be the old ceiling
+    wearing a new name.
+    """
+    baseline = _baseline_captured_from(validated_report, tmp_path / "committed.json")
+    regressed = _report_with_locale_labels(validated_report, required_delta=5, translated_delta=-1)
+
+    result = check_conformance_ratchet(regressed, baseline)
+
+    assert not result.passed
+    assert any(
+        item.startswith(
+            f"translated_locale_labels fell from {validated_report.translated_locale_labels} to "
+            f"{validated_report.translated_locale_labels - 1}",
+        )
+        for item in result.progress_violations
+    ), result.progress_violations
+    assert not result.ratchet_violations, "growth in required leaves must not read as a defect"
+
+
+def test_new_casillas_adding_untranslated_leaves_leave_the_gate_green(
+    validated_report: ConformanceReport,
+    tmp_path: Path,
+) -> None:
+    """The paired half: registry growth alone must not red the translation gate.
+
+    Every new casilla adds one required leaf per audited locale and translates
+    none of them, which is exactly the movement the retired ceiling punished.
+    Without this case the floor above could be satisfied by a counter that simply
+    never fires.
+    """
+    baseline = _baseline_captured_from(validated_report, tmp_path / "committed.json")
+    grown = _report_with_locale_labels(validated_report, required_delta=5, translated_delta=0)
+
+    assert grown.audited_locale_leaves == validated_report.audited_locale_leaves + 5
+    result = check_conformance_ratchet(grown, baseline)
+
+    assert result.passed, result.violations
+
+
+# --------------------------------------------------------------------------- #
+# stamp: the shipped tree is reachable only by naming it
+# --------------------------------------------------------------------------- #
+
+
+def _shipped_manifest() -> Path:
+    """The SHIPPED Modelo 130 manifest — the file the incident actually wrote to."""
+    return bundled_registry_root() / "modelos" / _STAMPED_MODELO / "revisions" / _STAMPED_REVISION / "revision.toml"
+
+
+def _flat(text: str) -> str:
+    """Strip a rich error panel back to bare characters for substring assertions.
+
+    A parameter error is rendered inside a bordered, width-wrapped panel, so a
+    long value — a registry path is the case here — is broken across lines with
+    box glyphs and padding inserted at the seam. A naive ``in result.output``
+    then passes or fails on the terminal width of whoever runs the suite, which
+    is a flake dressed as an assertion. Removing whitespace and the border glyphs
+    from both sides compares the characters the message actually carries.
+    """
+    return "".join(text.split()).replace("│", "")
+
+
+def test_the_writer_refuses_to_be_called_without_naming_a_registry_tree() -> None:
+    """Dropping the root is a TypeError at the call, not a write to shipped data.
+
+    This is the incident reproduced as the mutation that caused it. A test
+    mutation upstream dropped ``registry_root=`` from one call site; the
+    parameter defaulted to the bundled AEAT tree, and the suite wrote an
+    ``agent_reviewed`` stamp naming an agent and today's date into the shipped
+    Modelo 130 manifest. The parameter now has no default, so the same omission
+    cannot construct a call at all.
+
+    Asserted on the message rather than on the bare exception type, because a
+    ``TypeError`` from any other cause would satisfy a bare ``pytest.raises`` and
+    prove nothing about this argument. No manifest assertion is made here on
+    purpose: binding fails before the function body runs, so "the file is
+    unchanged" would hold however this code behaved — the always-true assertion
+    this campaign keeps finding.
+    """
+    with pytest.raises(TypeError, match="registry_root"):
+        stamp_revision(_STAMPED_MODELO, _STAMPED_REVISION, engineered_by="agent:opus-executor")  # type: ignore[call-arg]
+
+    with pytest.raises(TypeError, match="registry_root"):
+        revision_manifest_path(_STAMPED_MODELO, _STAMPED_REVISION)  # type: ignore[call-arg]
+
+
+def test_the_stamp_command_refuses_when_no_registry_tree_is_named() -> None:
+    """The forgotten flag no longer resolves to the shipped registry.
+
+    Before this Step the identical invocation wrote a fabricated agent review
+    into the bundled Modelo 130 manifest. The byte assertion is load-bearing
+    here, unlike at the writer boundary: this call really did reach a write path,
+    so an unchanged shipped manifest is a fact about the refusal rather than
+    about argument binding.
+
+    The message assertions prove the command BODY ran, which matters because a
+    refusal raised at the parse boundary would also exit non-zero while proving
+    nothing about the resolution rule under test.
+    """
+    shipped = _shipped_manifest()
+    before = shipped.read_bytes()
+
+    result = CliRunner().invoke(
+        app,
+        ["stamp", _STAMPED_MODELO, _STAMPED_REVISION, "--engineered-by", "agent:opus-executor"],
+    )
+
+    assert result.exit_code == 2, result.output
+    flat = _flat(result.output)
+    assert _flat("--registry-root") in flat
+    assert _flat("--bundled-registry") in flat
+    assert shipped.read_bytes() == before, "a refused stamp must leave the shipped registry untouched"
+
+
+def test_the_stamp_command_refuses_two_registry_trees_at_once(registry_copy: Path) -> None:
+    """Naming both doors is a contradiction, and guessing one would be worse.
+
+    The two flags resolve to different trees by construction, so silently
+    preferring either would send a write somewhere the caller did not ask for —
+    the same failure the undefaulted root closes, arriving through
+    over-specification instead of under-specification.
+    """
+    shipped = _shipped_manifest()
+    before = shipped.read_bytes()
+
+    result = CliRunner().invoke(
+        app,
+        [
+            "stamp",
+            _STAMPED_MODELO,
+            _STAMPED_REVISION,
+            "--engineered-by",
+            "agent:opus-executor",
+            "--registry-root",
+            str(registry_copy),
+            "--bundled-registry",
+        ],
+    )
+
+    assert result.exit_code == 2, result.output
+    assert _flat("two different trees") in _flat(result.output)
+    assert shipped.read_bytes() == before
+    revision = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert revision.engineered_by is None, "the copy must not have been stamped either"
+
+
+def test_a_registry_root_that_resolves_to_the_shipped_tree_is_refused_by_name() -> None:
+    """Two doors to shipped data, one of them silent, is the state this closes.
+
+    ``--bundled-registry`` earns its keep only if it is the ONLY way there: a
+    path that happens to resolve to the bundled tree reaches the same file while
+    reading, in the command line and in shell history, like an ordinary sandbox
+    run. The refusal names the flag that says what is happening.
+    """
+    shipped = _shipped_manifest()
+    before = shipped.read_bytes()
+
+    result = CliRunner().invoke(
+        app,
+        [
+            "stamp",
+            _STAMPED_MODELO,
+            _STAMPED_REVISION,
+            "--engineered-by",
+            "agent:opus-executor",
+            "--registry-root",
+            str(bundled_registry_root()),
+        ],
+    )
+
+    assert result.exit_code == 2, result.output
+    assert _flat("--bundled-registry") in _flat(result.output)
+    assert shipped.read_bytes() == before
+
+
+def test_the_bundled_flag_really_reaches_the_shipped_tree_and_still_writes_nothing() -> None:
+    """The override is proved to resolve where it claims, without stamping shipped data.
+
+    A refusal test that never reached the intended tree would pass for the wrong
+    reason, so the resolution is proved by driving the flag at a modelo id the
+    shipped registry does not declare and reading WHERE the writer says it
+    looked: the reported path is under the bundled root, which only this flag can
+    produce. Nothing is written, because the manifest-existence check refuses
+    before any governance line is rendered.
+    """
+    bundled = bundled_registry_root()
+    absent_modelo = "999"
+    assert not (bundled / "modelos" / absent_modelo).exists(), "the probe modelo must genuinely be absent"
+
+    result = CliRunner().invoke(
+        app,
+        ["stamp", absent_modelo, _STAMPED_REVISION, "--engineered-by", "agent:opus-executor", "--bundled-registry"],
+    )
+
+    assert result.exit_code == 2, result.output
+    flat = _flat(result.output)
+    assert _flat("no revision manifest to stamp") in flat
+    assert _flat(str(bundled / "modelos" / absent_modelo)) in flat
+    assert not (bundled / "modelos" / absent_modelo).exists(), "the probe must have created nothing"
+
+
+def test_a_named_sandbox_root_is_served_while_the_shipped_tree_stays_untouched(registry_copy: Path) -> None:
+    """The other direction: the refusals above must not have closed the verb.
+
+    A safety change that also broke the working path would show up as four green
+    refusal tests and nothing to say whether the tool still functions, so the
+    served case is asserted beside them — and the shipped manifest is asserted
+    unchanged in the SUCCESS case too, which is the one place a leak would
+    actually land bytes.
+    """
+    shipped = _shipped_manifest()
+    before = shipped.read_bytes()
+
+    result = _stamp_cli(registry_copy, "--engineered-by", "agent:opus-executor")
+
+    assert result.exit_code == 0, result.output
+    revision = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert revision.engineered_by == "agent:opus-executor"
+    assert shipped.read_bytes() == before

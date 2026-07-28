@@ -85,11 +85,13 @@ Submodules
    cadrumo.domain.calculations.registry._schema_base
    cadrumo.domain.calculations.registry._schema_extraction
    cadrumo.domain.calculations.registry._schema_formula
+   cadrumo.domain.calculations.registry._schema_governance
    cadrumo.domain.calculations.registry._schema_input_kind
    cadrumo.domain.calculations.registry._schema_references
    cadrumo.domain.calculations.registry._schema_rounding
    cadrumo.domain.calculations.registry._schema_scalars
    cadrumo.domain.calculations.registry._schema_surfaces
+   cadrumo.domain.calculations.registry._schema_verification
    cadrumo.domain.calculations.registry._snapshot
    cadrumo.domain.calculations.registry._source_evidence_fingerprint
    cadrumo.domain.calculations.registry._support_matrix

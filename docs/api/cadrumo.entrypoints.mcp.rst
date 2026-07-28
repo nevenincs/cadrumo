@@ -31,6 +31,7 @@ Submodules
    cadrumo.entrypoints.mcp._resources
    cadrumo.entrypoints.mcp._result_thinning
    cadrumo.entrypoints.mcp._server
+   cadrumo.entrypoints.mcp._stdio_lifetime
    cadrumo.entrypoints.mcp._surface
    cadrumo.entrypoints.mcp._telemetry
    cadrumo.entrypoints.mcp._terminology_tools

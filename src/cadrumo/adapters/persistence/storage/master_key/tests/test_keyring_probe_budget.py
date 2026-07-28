@@ -45,7 +45,7 @@ def _active_keyring_backend(backend: object) -> Iterator[None]:
     import keyring
 
     previous = keyring.get_keyring()
-    keyring.set_keyring(backend)  # type: ignore[arg-type]
+    keyring.set_keyring(backend)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # reason: the probe fixtures are deliberately unusable stand-ins, not KeyringBackend subclasses
     try:
         yield
     finally:

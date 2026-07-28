@@ -13,7 +13,7 @@ from __future__ import annotations
 import pytest
 
 from ....domain.calculations.registry import CasillaFieldKind, CasillaId
-from .._export import _did_page_suppressed, boe_representable_casilla_ids, rendered_casilla_ids
+from .._export_parity import _did_page_suppressed, boe_representable_casilla_ids, rendered_casilla_ids
 from ._export_support import (
     _approved_registry_draft,
     _modelo_130_export_headers,

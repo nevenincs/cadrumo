@@ -1,10 +1,10 @@
-"""Passphrase-strength advisory banding for operator-facing credential entry.
+"""Passphrase policy: the enforced length floor and its advisory banding.
 
 The only *enforced* passphrase policy is the length floor
-(:data:`~cadrumo.adapters.persistence.storage.master_key.NIST_PASSPHRASE_MIN_LENGTH`),
-which the master-key provider applies at the point of use. This module adds
-the advisory band a credential surface renders beside the field so the
-operator gets feedback while typing rather than a refusal after submitting.
+(:data:`NIST_PASSPHRASE_MIN_LENGTH`), which the master-key provider applies
+at the point of use. This module adds the advisory band a credential surface
+renders beside the field so the operator gets feedback while typing rather
+than a refusal after submitting.
 
 The distinction is deliberate and load-bearing. NIST SP 800-63B §5.1.1.2
 explicitly recommends *against* imposing composition rules — "verifiers
@@ -20,6 +20,14 @@ from __future__ import annotations
 
 from enum import StrEnum
 from typing import Final
+
+#: NIST SP 800-63B §5.1.1.1 verifier-side minimum passphrase length. This is
+#: the one passphrase rule that refuses rather than advises: the master-key
+#: provider enforces it when unwrapping, and credential surfaces read it to
+#: reject a short candidate before submission. It lives here, beside the
+#: advisory bands it anchors, because a published verifier floor is policy
+#: rather than a property of any one persistence backend.
+NIST_PASSPHRASE_MIN_LENGTH: Final[int] = 8
 
 #: Length at which a passphrase is banded STRONG regardless of composition.
 #: Grounded in the NIST SP 800-63B §5.1.1.2 guidance that length is the
@@ -69,9 +77,11 @@ def character_class_count(candidate: str) -> int:
 def assess_passphrase_strength(candidate: str, *, minimum_length: int) -> PassphraseStrength:
     """Band ``candidate`` for display beside a passphrase field.
 
-    ``minimum_length`` is the enforced verifier minimum, supplied by the
-    caller rather than imported here so this core module stays free of a
-    dependency on the persistence adapter that owns the constant.
+    ``minimum_length`` is the enforced verifier minimum. It stays an explicit
+    parameter — rather than defaulting to :data:`NIST_PASSPHRASE_MIN_LENGTH` —
+    so a caller banding a candidate against a stricter floor than the one the
+    master-key provider enforces cannot silently band it against the looser
+    published minimum instead.
 
     A candidate shorter than the minimum is :attr:`PassphraseStrength.TOO_SHORT`
     — the one band that corresponds to a refusal. Above it, length dominates:
@@ -92,6 +102,7 @@ def assess_passphrase_strength(candidate: str, *, minimum_length: int) -> Passph
 __all__ = [
     "LENGTH_ALONE_IS_STRONG",
     "LENGTH_FAIR_FLOOR",
+    "NIST_PASSPHRASE_MIN_LENGTH",
     "PassphraseStrength",
     "assess_passphrase_strength",
     "character_class_count",

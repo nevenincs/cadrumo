@@ -36,7 +36,12 @@ from typing import Any, Final
 
 import pytest
 from dev.packaging.python_cohort import load_python_cohort
-from dev.packaging.smoke_core import _build_companion_wheels, _build_wheel, _run
+from dev.packaging.smoke_core import (
+    _build_companion_wheels,
+    _build_wheel,
+    _commit_defined_build_root,
+    _run,
+)
 from dev.packaging.smoke_mcpb import _MCPB_CLI_VERSION, run_mcpb_smoke
 from dev.packaging.smoke_sdist_core import _build_sdist
 
@@ -107,22 +112,29 @@ def _write_cohort_manifest(
 
 
 def _build_real_cohort(work: Path) -> Path:
-    """Build the six-file canonical cohort from the current tree, like the build test."""
+    """Build the six-file canonical cohort from a commit-defined root.
+
+    Mirrors the build test: the cohort the installed client is bound to must
+    correspond to a commit, or a peer's uncommitted edit in this shared worktree
+    rides into the wheels and the install proof describes bytes matching no
+    commit. On a clean checkout the extract is the tree, so CI pays nothing.
+    """
     uv = shutil.which("uv")
     assert uv is not None, "uv is required to build the MCPB client-install cohort"
     cohort_dir = work / "cohort"
     cohort_dir.mkdir()
-    root_wheel = _build_wheel(_REPO_ROOT, work, uv)
-    manuals_wheel, official_wheel = _build_companion_wheels(_REPO_ROOT, work, uv)
-    root_sdist = _build_sdist(_REPO_ROOT, work, uv)
+    build_root = _commit_defined_build_root(_REPO_ROOT, work)
+    root_wheel = _build_wheel(_REPO_ROOT, work, uv, build_root=build_root)
+    manuals_wheel, official_wheel = _build_companion_wheels(work, uv, build_root=build_root)
+    root_sdist = _build_sdist(work, uv, build_root=build_root)
     companion_sdists = work / "companion-sdists"
     _run(
         [uv, "build", "--sdist", "--out-dir", str(companion_sdists)],
-        cwd=_REPO_ROOT / "packaging" / "cadrumo_data_manuals",
+        cwd=build_root / "packaging" / "cadrumo_data_manuals",
     )
     _run(
         [uv, "build", "--sdist", "--out-dir", str(companion_sdists)],
-        cwd=_REPO_ROOT / "packaging" / "cadrumo_data_official",
+        cwd=build_root / "packaging" / "cadrumo_data_official",
     )
     manuals_sdist = next(companion_sdists.glob("cadrumo_data_manuals-*.tar.gz"))
     official_sdist = next(companion_sdists.glob("cadrumo_data_official-*.tar.gz"))

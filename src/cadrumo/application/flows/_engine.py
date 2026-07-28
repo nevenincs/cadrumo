@@ -120,20 +120,37 @@ def visible_sequence(definition: FlowDefinition, state: FlowState) -> tuple[Visi
                 if _page_visible(item, state.answers, instance_prefix=None):
                     result.append(VisiblePage(key=item.id, page=item, section_id=section.id))
                 continue
-            for index in range(_instance_count(item, state)):
-                prefix = f"{item.id}{REPEATING_INSTANCE_SEPARATOR}{index}"
-                for page in item.pages:
-                    if _page_visible(page, state.answers, instance_prefix=prefix):
-                        result.append(
-                            VisiblePage(
-                                key=f"{prefix}.{page.id}",
-                                page=page,
-                                section_id=section.id,
-                                group_id=item.id,
-                                instance_index=index,
-                            ),
-                        )
+            result.extend(_visible_group_pages(item, state, section_id=section.id))
     return tuple(result)
+
+
+def _visible_group_pages(
+    group: FlowRepeatingGroup,
+    state: FlowState,
+    *,
+    section_id: str,
+) -> list[VisiblePage]:
+    """Expand one repeating group into its live instances' visible pages.
+
+    Each instance carries its own answer prefix, so a page inside instance
+    ``n`` gates against instance ``n``'s siblings rather than the group's
+    first instance.
+    """
+    pages: list[VisiblePage] = []
+    for index in range(_instance_count(group, state)):
+        prefix = f"{group.id}{REPEATING_INSTANCE_SEPARATOR}{index}"
+        pages.extend(
+            VisiblePage(
+                key=f"{prefix}.{page.id}",
+                page=page,
+                section_id=section_id,
+                group_id=group.id,
+                instance_index=index,
+            )
+            for page in group.pages
+            if _page_visible(page, state.answers, instance_prefix=prefix)
+        )
+    return pages
 
 
 def answer(definition: FlowDefinition, state: FlowState, page_key: str, raw: str) -> FlowState:

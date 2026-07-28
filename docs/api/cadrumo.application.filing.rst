@@ -16,6 +16,7 @@ Submodules
    cadrumo.application.filing._calculate
    cadrumo.application.filing._complementaria
    cadrumo.application.filing._export
+   cadrumo.application.filing._export_parity
    cadrumo.application.filing._export_xml_dictionary
    cadrumo.application.filing._history_models
    cadrumo.application.filing._history_repository

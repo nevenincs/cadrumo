@@ -65,6 +65,13 @@ just provision
 
 Run `just doctor` again after each change to confirm the gap is closed.
 
+## Work on the modelo registry
+
+The registry conformance tool reports how much of the modelo registry is
+checked, and records who engineered and reviewed each revision. Read
+[REGISTRY-CONFORMANCE.md](REGISTRY-CONFORMANCE.md) before stamping a revision or
+moving the conformance baseline.
+
 ## Releases
 
 Release mechanics, publication gates, and rollback live in

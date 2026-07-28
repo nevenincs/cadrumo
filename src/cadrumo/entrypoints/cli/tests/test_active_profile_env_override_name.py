@@ -131,7 +131,7 @@ def _write_second_live_bucket_sharing_label(label: str) -> None:
     """
     from ....adapters.persistence.storage.bucket import (
         BUCKET_MANIFEST_SCHEMA_VERSION,
-    BucketManifest,
+        BucketManifest,
         bucket_paths,
         provision_bucket_directory,
         write_manifest,

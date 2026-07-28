@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import io
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
@@ -563,36 +564,31 @@ def _classify_target(
     """
     casilla_id = target.casilla_id
     printed_number = (printed_box_numbers or {}).get(casilla_id)
-    if target.match_strategy == "bbox_anchored":
-        if pages_words is None:
-            # No word data available (bytes-mode or missing file); treat as missing.
-            return _TargetClassification(missing=casilla_id)
-        hits = _find_bbox_casilla_hits(pages_words, target)
-    elif target.match_strategy == "named_label" and target.value_kind == "amount" and pages_words is not None:
-        hits = _find_named_label_word_hits(pages_words, target, printed_number=printed_number)
-    else:
-        hits = _find_casilla_hits(pages, target, numeric_anchors=numeric_anchors)
-    if not hits:
+    hits = _target_hits(
+        target,
+        pages=pages,
+        pages_words=pages_words,
+        numeric_anchors=numeric_anchors,
+        printed_number=printed_number,
+    )
+    if hits is None or not hits:
         return _TargetClassification(missing=casilla_id)
     if len(hits) > 1:
         return _TargetClassification(ambiguous=casilla_id)
     page_number, raw_value = hits[0]
-    if target.value_kind == "amount":
+    if target.value_kind != "amount":
+        # "text" and "enum" value kinds: store the raw captured token as-is.
+        parsed: Decimal | str | None = raw_value
+    else:
         # named_label captures the last token on the line, which for a BLANK box
         # on a real AEAT render is the box's own printed number. Such a box is
         # absent, not corrupt, so it is reported missing (coverage decides
         # whether that is tolerable) rather than malformed (which raises hard).
-        if target.match_strategy == "named_label" and _is_own_box_number_of_blank_box(
-            raw_value,
-            printed_number,
-        ):
+        if target.match_strategy == "named_label" and _is_own_box_number_of_blank_box(raw_value, printed_number):
             return _TargetClassification(missing=casilla_id)
-        parsed: Decimal | str | None = parse_spanish_decimal(raw_value)
+        parsed = parse_spanish_decimal(raw_value)
         if parsed is None:
             return _TargetClassification(malformed=casilla_id)
-    else:
-        # "text" and "enum" value kinds: store the raw captured token as-is.
-        parsed = raw_value
     return _TargetClassification(
         value=ExtractedCasilla(
             casilla_id=casilla_id,
@@ -602,6 +598,29 @@ def _classify_target(
             extraction_confidence=1.0,
         ),
     )
+
+
+def _target_hits(
+    target: ExtractionTargetDefinition,
+    *,
+    pages: tuple[str, ...],
+    pages_words: tuple[list[_PdfWord], ...] | None,
+    numeric_anchors: dict[CasillaId, str],
+    printed_number: str | None,
+) -> list[tuple[int, str]] | None:
+    """Find the target's hits with the strategy its definition declares.
+
+    Returns ``None`` when a ``bbox_anchored`` target has no word data to
+    resolve against (bytes-mode or a missing file), which the caller treats
+    as a missing target rather than a failure.
+    """
+    if target.match_strategy == "bbox_anchored":
+        if pages_words is None:
+            return None
+        return _find_bbox_casilla_hits(pages_words, target)
+    if target.match_strategy == "named_label" and target.value_kind == "amount" and pages_words is not None:
+        return _find_named_label_word_hits(pages_words, target, printed_number=printed_number)
+    return _find_casilla_hits(pages, target, numeric_anchors=numeric_anchors)
 
 
 _LINE_Y_TOLERANCE: float = 3.0
@@ -666,16 +685,25 @@ def _find_named_label_word_hits(
                 # prints its heading in capitals matches twice and the target is
                 # reported ambiguous. Modelo 100 prints two such headings.
                 continue
-            raw = line[-1]["text"].strip()
-            if (
-                printed_number is not None
-                and raw == printed_number.strip()
-                and len(line) >= 2
-                and _STRICT_PRINTED_AMOUNT_RE.match(line[-2]["text"].strip())
-            ):
-                raw = line[-2]["text"].strip()
-            hits.append((page_index, raw))
+            hits.append((page_index, _named_label_line_value(line, printed_number=printed_number)))
     return hits
+
+
+def _named_label_line_value(line: list[_PdfWord], *, printed_number: str | None) -> str:
+    """Pick the value word from one matched ``named_label`` line.
+
+    The value is the line's last word, as on the text path. When that word is
+    the target's own printed box number the box is either blank or the layout
+    prints the number after the value; the preceding word decides which, and
+    it is taken only when it is a well-formed printed amount. Otherwise the
+    box number is returned unchanged so the blank-box guard still sees it and
+    reports the target absent.
+    """
+    raw = line[-1]["text"].strip()
+    if printed_number is None or raw != printed_number.strip() or len(line) < 2:
+        return raw
+    preceding = line[-2]["text"].strip()
+    return preceding if _STRICT_PRINTED_AMOUNT_RE.match(preceding) else raw
 
 
 def _raise_extraction_failed(
@@ -727,56 +755,89 @@ def _extract_profile_values(
     # a separate token. Prefer in-memory bytes so decrypted declaration PDFs never
     # touch disk; fall back to a real source file only when bytes are not
     # supplied. A profile with neither kind of target never pays for the pass.
-    pages_words: tuple[list[_PdfWord], ...] | None = None
-    needs_words = any(
-        target.match_strategy == "bbox_anchored"
-        or (target.match_strategy == "named_label" and target.value_kind == "amount")
-        for target in profile.target_casillas
-    )
-    if needs_words:
-        if pdf_bytes is not None:
-            pages_words = _extract_pages_words_from_bytes(pdf_bytes)
-        elif source_pdf_path is not None and source_pdf_path.is_file():
-            pages_words = _extract_pages_words(source_pdf_path)
-
-    values: list[ExtractedCasilla] = []
-    missing: list[CasillaId] = []
-    malformed: list[CasillaId] = []
-    ambiguous: list[CasillaId] = []
+    pages_words = _load_pages_words(profile, source_pdf_path=source_pdf_path, pdf_bytes=pdf_bytes)
     numeric_anchors = _numeric_casilla_anchors(profile, revision)
     printed_box_numbers = _printed_box_numbers(profile, revision)
 
-    for target in profile.target_casillas:
-        outcome = _classify_target(
+    outcomes = _partition_target_outcomes(
+        _classify_target(
             target,
             pages=pages,
             pages_words=pages_words,
             numeric_anchors=numeric_anchors,
             printed_box_numbers=printed_box_numbers,
         )
-        if outcome.value is not None:
-            values.append(outcome.value)
-        elif outcome.malformed is not None:
-            malformed.append(outcome.malformed)
-        elif outcome.ambiguous is not None:
-            ambiguous.append(outcome.ambiguous)
-        elif outcome.missing is not None:
-            missing.append(outcome.missing)
+        for target in profile.target_casillas
+    )
 
-    coverage = Decimal(len(values)) / Decimal(len(profile.target_casillas))
+    coverage = Decimal(len(outcomes.values)) / Decimal(len(profile.target_casillas))
     # Raise when extraction quality is degraded (ambiguous or malformed hits) or when
     # coverage falls below the configured threshold.  Missing casillas are acceptable
     # as long as coverage meets the threshold — partial filings legitimately omit
     # zero or not-applicable casillas (e.g. M130 real-corpus PDFs).
-    if ambiguous or malformed or coverage < profile.min_coverage:
+    if outcomes.ambiguous or outcomes.malformed or coverage < profile.min_coverage:
         _raise_extraction_failed(
             profile,
-            missing=missing,
-            malformed=malformed,
-            ambiguous=ambiguous,
+            missing=outcomes.missing,
+            malformed=outcomes.malformed,
+            ambiguous=outcomes.ambiguous,
             coverage=coverage,
         )
-    return tuple(values)
+    return tuple(outcomes.values)
+
+
+def _load_pages_words(
+    profile: ExtractionProfileDefinition,
+    *,
+    source_pdf_path: Path | None,
+    pdf_bytes: bytes | None,
+) -> tuple[list[_PdfWord], ...] | None:
+    """Load word-position data, but only for a profile whose targets need it.
+
+    ``bbox_anchored`` resolves entirely in word space, and ``named_label``
+    amount targets read the line's words so a box number printed over the
+    amount stays a separate token. Prefers in-memory bytes so decrypted
+    declaration PDFs never touch disk, falling back to a real source file
+    only when bytes are not supplied. A profile with neither kind of target
+    never pays for the pass.
+    """
+    needs_words = any(
+        target.match_strategy == "bbox_anchored"
+        or (target.match_strategy == "named_label" and target.value_kind == "amount")
+        for target in profile.target_casillas
+    )
+    if not needs_words:
+        return None
+    if pdf_bytes is not None:
+        return _extract_pages_words_from_bytes(pdf_bytes)
+    if source_pdf_path is not None and source_pdf_path.is_file():
+        return _extract_pages_words(source_pdf_path)
+    return None
+
+
+@dataclass(frozen=True)
+class _ExtractionOutcomes:
+    """Every target's classification, sorted into the four report buckets."""
+
+    values: list[ExtractedCasilla]
+    missing: list[CasillaId]
+    malformed: list[CasillaId]
+    ambiguous: list[CasillaId]
+
+
+def _partition_target_outcomes(classifications: Iterable[_TargetClassification]) -> _ExtractionOutcomes:
+    """Sort each target's classification into its report bucket."""
+    outcomes = _ExtractionOutcomes(values=[], missing=[], malformed=[], ambiguous=[])
+    for outcome in classifications:
+        if outcome.value is not None:
+            outcomes.values.append(outcome.value)
+        elif outcome.malformed is not None:
+            outcomes.malformed.append(outcome.malformed)
+        elif outcome.ambiguous is not None:
+            outcomes.ambiguous.append(outcome.ambiguous)
+        elif outcome.missing is not None:
+            outcomes.missing.append(outcome.missing)
+    return outcomes
 
 
 def _numeric_casilla_anchors(

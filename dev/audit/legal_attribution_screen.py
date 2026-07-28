@@ -62,6 +62,12 @@ import tomllib
 from pathlib import Path
 from typing import Final, NamedTuple
 
+#: Declared locally rather than imported from ``cadrumo.core``: ``dev/`` is
+#: unshipped tooling and must not reach into the shipped package's internals,
+#: so every dev module carries its own constant (see the sibling screens in
+#: this package).
+_UTF_8: Final[str] = "utf-8"
+
 _LEGAL_DIR: Final = Path("src/cadrumo/_data/registry/aeat/legal")
 
 #: Phrases a Spanish approving provision uses. Matched accent-insensitively
@@ -129,7 +135,7 @@ def load_legal_entries(root: Path) -> dict[str, tuple[str, ...]]:
     if not legal_dir.is_dir():
         raise SystemExit(f"legal catalogue is missing, so the result would be meaningless: {legal_dir}")
     for path in sorted(legal_dir.glob("*.toml")):
-        data = tomllib.loads(path.read_text(encoding="utf-8"))
+        data = tomllib.loads(path.read_text(encoding=_UTF_8))
         for entry_id, body in data.get("legal", {}).items():
             entries[entry_id] = tuple(body.get("required_text", ()))
     return entries

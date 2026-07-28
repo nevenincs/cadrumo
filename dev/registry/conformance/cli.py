@@ -1,7 +1,7 @@
 """Developer CLI for modelo registry conformance governance.
 
 A dev / maintenance module CLI invoked as ``python -m dev.registry.conformance``,
-mirroring the ``dev.registry.matrix``, ``cadrumo.locales`` and
+mirroring the ``dev.registry.newmodelo``, ``cadrumo.locales`` and
 ``dev.docs.terminology_handbook`` precedents. It is NOT part of the operator
 ``aeat config`` / ``aeat app`` surface, so it does not bear on the
 two-CLI-roots architecture rule; like ``apidocs`` it emits plain English
@@ -53,8 +53,9 @@ See Also:
         Pure folds and renderers behind every verb here.
     :func:`~application.registry.audit_bundled_registry_conformance`
         Shipped composer the manager reads.
-    :mod:`~dev.registry.matrix.cli`
-        Sibling registry capability-matrix CLI.
+    :mod:`~entrypoints.cli._modelo_discovery_cli`
+        Operator-facing support-matrix command over the same shipped capability
+        authority ``report`` probes per revision.
 """
 
 from __future__ import annotations
@@ -65,7 +66,7 @@ from typing import Annotated
 
 import typer
 
-from ._stamp import StampableReviewStatus, StampError, stamp_revision
+from ._stamp import StampableReviewStatus, StampError, bundled_registry_root, stamp_revision
 from .manager import (
     ConformanceReport,
     build_coverage_report,
@@ -148,7 +149,10 @@ def audit(
         bool,
         typer.Option(
             "--check",
-            help="Gate: exit 1 when a backlog counter grew past its ceiling or a population fell below its floor.",
+            help=(
+                "Gate: exit 1 when a defect counter grew past its ceiling, a measurement population "
+                "fell below its floor, or recorded provenance fell below its progress floor."
+            ),
         ),
     ] = False,
     record: Annotated[
@@ -163,19 +167,48 @@ def audit(
         Path | None,
         typer.Option("--baseline", help="Read or write this baseline file instead of the committed one."),
     ] = None,
+    accept_weakening: Annotated[
+        bool,
+        typer.Option(
+            "--accept-weakening",
+            help=(
+                "Take a capture that raises a ceiling or lowers a floor. Refused without this, "
+                "because a lowered floor lets a half-read tree pass the anti-vacuity check forever."
+            ),
+        ),
+    ] = False,
     no_validate: _NoValidate = False,
 ) -> None:
     """Compare the current conformance counters against the committed baseline.
 
-    Two directions are checked and reported separately, because they fail for
-    opposite reasons. A CEILING violation means a backlog or defect count GREW:
-    somebody added an unreviewed revision, a grounding finding, a classification
-    incoherence. A FLOOR violation means a measurement population FELL: the run
-    examined fewer revisions, casillas, oracle payloads, or locale leaves than
-    the baseline proves it must, so every clean ceiling above it is vacuous and
-    cannot be trusted. Floors are reported first for that reason.
+    Three directions are checked and reported separately, because they fail for
+    different reasons and want different responses.
+
+    A CEILING violation means a DEFECT count grew: a grounding finding, a
+    classification incoherence, an unattributed oracle payload. A VACUITY FLOOR
+    violation means a measurement population FELL — fewer revisions, casillas,
+    oracle payloads, or locale leaves than the baseline proves the run must
+    reach — so every clean counter beside it is vacuous and cannot be trusted,
+    which is why it is reported first. A PROGRESS FLOOR violation means declared
+    provenance or translation was LOST: a signoff erased, an authorship claim
+    dropped, a translated leaf deleted. For the review axis that work is
+    underivable by construction, so nothing in the tree can reconstruct it.
+
+    Population growth is deliberately NOT gated. The review and translation
+    counters used to be shrink-only ceilings pinned at the full population, so
+    the ninety-first revision reddened all three at once and the only sanctioned
+    way past the refusal was the flag that says a capture is deliberately
+    suspicious. Counting the work DONE instead of the work OUTSTANDING separates
+    the two terms: a new revision moves the population and leaves progress alone.
 
     Without ``--check`` this is a screen and exits 0 whatever it finds.
+
+    ``--record`` is compared against the baseline already on disk in the same
+    three directions and refuses a capture that weakens any of them unless
+    ``--accept-weakening`` says so. The floor directions are why the guard
+    exists: a raised ceiling shows up on the census and the next honest capture
+    pulls it back, while a floor lowered by a capture taken over a half-landed
+    tree is silent forever.
     """
     if check and record:
         raise SystemExit(
@@ -202,6 +235,7 @@ def audit(
             note=note.strip(),
             recorded_at=datetime.now(tz=UTC).date().isoformat(),
             path=baseline,
+            accept_weakening=accept_weakening,
         )
         typer.echo(f"recorded baseline recorded_at={written.recorded_at} rows={composed.revision_count}")
         return
@@ -242,6 +276,27 @@ def stamp(
         datetime | None,
         typer.Option("--reviewed-at", formats=["%Y-%m-%d"], help="Date of review. Defaults to today."),
     ] = None,
+    registry_root: Annotated[
+        Path | None,
+        typer.Option(
+            "--registry-root",
+            help=(
+                "Registry tree root to stamp. Required unless --bundled-registry names the shipped "
+                "tree instead; there is no default, because the only value a default could have is "
+                "the shipped registry."
+            ),
+        ),
+    ] = None,
+    bundled_registry: Annotated[
+        bool,
+        typer.Option(
+            "--bundled-registry",
+            help=(
+                "Stamp the SHIPPED AEAT registry that ships in the wheel. The only door to it, and "
+                "unmistakable by design: a forgotten flag can no longer send a write there."
+            ),
+        ),
+    ] = False,
 ) -> None:
     """Write one modelo revision's declared governance provenance.
 
@@ -259,12 +314,35 @@ def stamp(
     written, and the whole modelo is re-loaded through the real loader
     afterwards; a manifest the loader would reject is restored to its previous
     bytes rather than left on disk.
+
+    The target tree must be NAMED. Exactly one of ``--registry-root`` and
+    ``--bundled-registry`` is required and there is no default, because the only
+    value a default could have is the shipped registry — and it did have it. A
+    caller one layer up that dropped the root sent this verb at the bundled
+    Modelo 130 manifest and left a fabricated agent review in shipped data, and a
+    second reviewer reported an unattributable stamp appearing in the tree the
+    same session. Stamping the shipped registry stays legal, because declaring
+    authorship and agent review over it is what the verb is for; it is simply no
+    longer something that can happen because a flag was forgotten.
+
+    ``--registry-root`` pointed at the bundled tree is refused for the same
+    reason: two doors to shipped data, one of them not saying so, is the state
+    this closes. The refusal names the flag that does say so.
     """
+    root = _resolve_registry_root(registry_root, bundled_registry=bundled_registry)
     resolved_date = reviewed_at.date() if reviewed_at is not None else None
     if review_status is StampableReviewStatus.AGENT_REVIEWED and resolved_date is None:
         # Defaulted rather than demanded: the review being recorded is happening
         # now, so today is the true date. It is echoed back so the written value
         # is never implicit.
+        #
+        # Deliberately NOT widened to a lone ``--reviewed-by``. That path used to
+        # inherit the declared reviewer's date and record a person as having
+        # reviewed on a day they did not, and the writer now REFUSES it rather
+        # than defaulting: a reviewer change carries no warrant that the review
+        # is happening now, and defaulting would silently move a real review's
+        # date whenever a caller only meant to correct a misspelt name. Widening
+        # this condition would re-open that trade. See the writer's own rule.
         resolved_date = datetime.now(tz=UTC).date()
     try:
         result = stamp_revision(
@@ -275,10 +353,63 @@ def stamp(
             review_status=review_status,
             reviewed_by=reviewed_by,
             reviewed_at=resolved_date,
+            registry_root=root,
         )
     except StampError as exc:
         raise typer.BadParameter(str(exc)) from exc
     typer.echo(result.render())
+
+
+def _resolve_registry_root(registry_root: Path | None, *, bundled_registry: bool) -> Path:
+    """Resolve the tree to stamp, refusing anything that leaves the target implicit.
+
+    Three refusals, one rule: the tree a write lands in is stated by the caller,
+    never inferred.
+
+    Neither flag is a refusal rather than a bundled-tree default, which is the
+    whole change — the default WAS the bundled tree, and a caller that forgot to
+    pass a root wrote a fabricated review into shipped data. Both flags together
+    is a refusal because the two answers cannot be reconciled and picking one
+    would guess. And ``--registry-root`` resolved to the bundled tree is a
+    refusal because it is a second, silent door to shipped data: the point of
+    ``--bundled-registry`` is that reaching the shipped registry is visible in
+    the command line and in shell history, and a path that happens to resolve
+    there is not.
+
+    Args:
+        registry_root: The root the caller named, or :data:`None`.
+        bundled_registry: Whether the caller asked for the shipped tree by name.
+
+    Returns:
+        The resolved registry root to stamp.
+
+    Raises:
+        click.exceptions.BadParameter: Neither door was named, both were, or the
+            named path resolves to the shipped tree.
+    """
+    bundled = bundled_registry_root()
+    if bundled_registry and registry_root is not None:
+        raise typer.BadParameter(
+            f"--registry-root {str(registry_root)!r} and --bundled-registry name two different trees; "
+            "supply exactly one",
+        )
+    if bundled_registry:
+        return bundled
+    if registry_root is None:
+        raise typer.BadParameter(
+            "no registry tree named: pass --registry-root PATH for a copy, or --bundled-registry to "
+            f"stamp the shipped AEAT registry at {bundled}. There is deliberately no default: the "
+            "only value it could have is the shipped registry, and a caller that forgot the flag "
+            "wrote a fabricated review into it.",
+        )
+    if registry_root.resolve() == bundled:
+        raise typer.BadParameter(
+            f"--registry-root {str(registry_root)!r} resolves to the shipped AEAT registry at "
+            f"{bundled}. Writing there is legal and is what this verb is for, but it is stated with "
+            "--bundled-registry so the act is visible in the command line rather than hidden in a "
+            "path that happens to resolve there.",
+        )
+    return registry_root
 
 
 def _warn_if_vacuous(composed: ConformanceReport) -> None:

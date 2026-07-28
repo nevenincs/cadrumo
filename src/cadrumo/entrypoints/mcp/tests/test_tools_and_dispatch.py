@@ -11,7 +11,7 @@ from typer._click.core import Command as ClickCommand
 from typer.main import get_command as _typer_get_command
 
 from .._annotations import annotation_coverage_gaps
-from .._dispatch import command_key_for_tool, tool_name_for_command
+from .._dispatch import command_key_for_tool, is_exposable_command, tool_name_for_command
 from .._input_schema import (
     JsonType,
     SchemaResolutionError,
@@ -103,6 +103,70 @@ def test_descriptor_argv_places_format_json_at_root_and_maps_named_arguments() -
     # The resolved path uses the hyphenated command name click dispatches on.
     pull = by_key["app.live.iva_wallet.pull"].verb_schema
     assert cli_argv_for(pull, {})[2:5] == ["app", "live", "iva-wallet"]
+
+
+#: Command keys retired from the accepted CLI surface. Each is absent from the
+#: live registrations, so the MCP surface must neither describe nor dispatch it.
+#: Listed literally rather than derived, because deriving "what is absent" from
+#: the same registration the descriptors are built from would restate the
+#: implementation instead of pinning the retirement.
+_RETIRED_COMMAND_KEYS: tuple[str, ...] = (
+    "config.lock",
+    "config.rekey",
+    "config.recovery",
+    "config.sandbox.use",
+    "modelo.audit.replay",
+)
+
+#: The accepted successors that must be present. They are the positive control
+#: for the retirement assertions below.
+_ACCEPTED_SUCCESSOR_KEYS: tuple[str, ...] = (
+    "config.passphrase.change",
+    "config.recovery.status",
+    "config.reset.resume",
+)
+
+
+def test_retired_command_keys_are_neither_described_nor_dispatchable() -> None:
+    """A retired key gets no descriptor and no tool-name round-trip.
+
+    The positive control runs FIRST and is not decoration. Every assertion
+    below is an absence, and an absence proves nothing unless the same lookup
+    is shown to find something when it should: a descriptor set that failed to
+    build, or a round-trip that always returned ``None``, would satisfy the
+    retirement checks while measuring nothing at all.
+    """
+
+    descriptors = build_tool_descriptors()
+    keys = [descriptor.command_key for descriptor in descriptors]
+    exposed = set(keys)
+
+    for accepted in _ACCEPTED_SUCCESSOR_KEYS:
+        assert accepted in exposed, f"positive control failed: {accepted} is not exposed"
+        assert command_key_for_tool(tool_name_for_command(accepted), command_keys=keys) == accepted
+
+    for retired in _RETIRED_COMMAND_KEYS:
+        assert retired not in exposed, f"retired key still exposed as an MCP tool: {retired}"
+        assert command_key_for_tool(tool_name_for_command(retired), command_keys=keys) is None, (
+            f"retired key still dispatchable: {retired}"
+        )
+
+
+def test_exposability_is_a_filter_and_not_a_registration_guard() -> None:
+    """Records what stops a retired key, because it is not the exposability check.
+
+    ``is_exposable_command`` only removes the root landing keys, so it answers
+    ``True`` for a key that is not registered at all. What actually keeps a
+    retired verb off the surface is that descriptors are built from the
+    registered schema refs. Pinning this stops a later reader from adding a
+    retirement to the exposability filter and believing that is the guard, and
+    stops the opposite error of reading the permissive answer as a leak.
+    """
+
+    exposed = {descriptor.command_key for descriptor in build_tool_descriptors()}
+    for retired in _RETIRED_COMMAND_KEYS:
+        assert is_exposable_command(retired) is True
+        assert retired not in exposed
 
 
 def test_annotation_coverage_is_total_over_the_descriptor_set() -> None:

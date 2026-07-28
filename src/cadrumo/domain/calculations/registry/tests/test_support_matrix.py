@@ -1,10 +1,15 @@
 """Real-behaviour tests for the typed per-modelo support-matrix registry.
 
-Mirrors the coverage shape of ``dev/registry/matrix/tests/test_manager.py``
-(the contributor-facing capability probe this module composes) and adds
-ground-truth coverage for the fields that probe does not carry: declared
-casilla renames, deprecation (support-removal) decisions, and AEAT-portal
-cross-references.
+Covers every field of the row against the real bundled registry: the capability
+predicates probed on the modelo's latest revision, and the declared casilla
+renames, deprecation (support-removal) decisions, and AEAT-portal
+cross-references the row projects from that revision's own declarations.
+
+These tests are the only coverage of those predicates. A second copy of them
+lived in the developer tooling, and its docstring and this one declared each
+other as mirrors, so a reader arriving at either was told the authority was
+elsewhere. The duplicate was retired; this module is where the predicates are
+proved.
 
 See Also:
     :func:`~domain.calculations.registry.build_support_matrix`
@@ -18,15 +23,13 @@ See Also:
         authority directly.
     :mod:`~entrypoints.cli._modelo_support_matrix_payloads`
         JSON payload schemas for the ``modelo.support_matrix`` command.
-    :mod:`~dev.registry.matrix`
-        Contributor-facing capability matrix mirrored by this production
-        support surface.
 """
 
 from __future__ import annotations
 
 import pytest
 
+from .....core import ExportLayoutFormat
 from .. import bundled_authority
 from .._support_matrix import ModeloEntry, build_support_matrix
 
@@ -69,7 +72,8 @@ def test_modelo_100_uses_xml_dictionary_export_not_fixed_width() -> None:
 def test_dormant_modelos_are_not_calc_grade() -> None:
     """Ground truth: informative/no-calculation modelos report calc_grade False, never a fabricated positive.
 
-    Mirrors the dormant enumeration used by ``dev.registry.matrix``'s manager tests.
+    The enumeration is the registry's own set of informative-only modelos, read
+    off the tree rather than inherited from any other test module.
     """
     entries = _entries()
 
@@ -164,8 +168,8 @@ def test_build_support_matrix_is_never_a_fabricated_positive() -> None:
         assert entry.revision_count == len(modelo.revisions)
         assert entry.latest_revision_id == revision.id
         assert entry.latest_revision_valid_from == revision.valid_from
-        assert entry.has_fixed_width_export == ("fixed_width" in expected_formats)
-        assert entry.has_xml_dictionary_export == ("xml_dictionary" in expected_formats)
+        assert entry.has_fixed_width_export == (ExportLayoutFormat.FIXED_WIDTH in expected_formats)
+        assert entry.has_xml_dictionary_export == (ExportLayoutFormat.XML_DICTIONARY in expected_formats)
         assert entry.has_extractor == bool(revision.extraction_profiles)
         assert entry.extraction_profile_count == len(revision.extraction_profiles)
         assert entry.has_completeness_manifest == (revision.completeness_manifest is not None)

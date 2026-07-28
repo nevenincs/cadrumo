@@ -23,6 +23,7 @@ from dev.release.burned_versions import (
     burn_reason,
     burned_versions,
     is_burned,
+    read_ledger,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -70,6 +71,16 @@ def test_the_shipped_ledger_file_is_where_the_reader_looks() -> None:
     assert LEDGER_PATH.parent == Path(__file__).resolve().parents[1]
 
 
+def test_the_shipped_accessor_reads_the_shipped_ledger_through_the_same_reader() -> None:
+    """``burned_versions`` is ``read_ledger`` over :data:`LEDGER_PATH`, nothing else.
+
+    The refusal cases below exercise :func:`read_ledger` against real files. That
+    only guards the shipped path if the shipped accessor is that same reader over
+    the shipped ledger, so the identity is asserted rather than assumed.
+    """
+    assert burned_versions() == read_ledger(LEDGER_PATH)
+
+
 @pytest.mark.parametrize(
     ("payload", "fragment"),
     [
@@ -94,7 +105,6 @@ def test_reader_refuses_every_under_specified_shape(
     payload: dict[str, object],
     fragment: str,
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Each malformed shape refuses by name rather than parsing to an empty set.
 
@@ -103,32 +113,46 @@ def test_reader_refuses_every_under_specified_shape(
     """
     ledger = tmp_path / "burned_versions.json"
     ledger.write_text(json.dumps(payload), encoding="utf-8")
-    monkeypatch.setattr("dev.release.burned_versions.LEDGER_PATH", ledger)
-    burned_versions.cache_clear()
     with pytest.raises(BurnedVersionLedgerError, match=fragment):
-        burned_versions()
-    burned_versions.cache_clear()
+        read_ledger(ledger)
 
 
-def test_a_duplicated_version_refuses(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_a_duplicated_version_refuses(tmp_path: Path) -> None:
     """Two burns claiming one version have conflicting evidence; refuse both."""
     entry = {"version": "2.0.0", "burned_on": "2026-07-27", "reason": "y" * 50}
     ledger = tmp_path / "burned_versions.json"
     ledger.write_text(json.dumps({"burned": [entry, {**entry, "reason": "z" * 50}]}), encoding="utf-8")
-    monkeypatch.setattr("dev.release.burned_versions.LEDGER_PATH", ledger)
-    burned_versions.cache_clear()
     with pytest.raises(BurnedVersionLedgerError, match="more than once"):
-        burned_versions()
-    burned_versions.cache_clear()
+        read_ledger(ledger)
 
 
-def test_an_absent_ledger_refuses_rather_than_reading_empty(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_an_absent_ledger_refuses_rather_than_reading_empty(tmp_path: Path) -> None:
     """A deleted ledger must not read as "nothing is burned"."""
-    monkeypatch.setattr("dev.release.burned_versions.LEDGER_PATH", tmp_path / "absent.json")
-    burned_versions.cache_clear()
     with pytest.raises(BurnedVersionLedgerError, match="absent"):
-        burned_versions()
-    burned_versions.cache_clear()
+        read_ledger(tmp_path / "absent.json")
+
+
+def test_a_well_formed_ledger_parses_every_entry(tmp_path: Path) -> None:
+    """The refusals above only mean something if the accepted shape is accepted.
+
+    Without this control every refusal test would pass against a reader that
+    rejected outright, and the parametrised cases could not distinguish a
+    precise refusal from a blanket one.
+    """
+    ledger = tmp_path / "burned_versions.json"
+    ledger.write_text(
+        json.dumps(
+            {
+                "burned": [
+                    {"version": "3.0.0", "burned_on": "2026-07-27", "reason": "q" * 50},
+                    {"version": "3.1.0", "burned_on": "2026-07-28", "reason": "r" * 50},
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    entries = read_ledger(ledger)
+
+    assert [entry.version for entry in entries] == ["3.0.0", "3.1.0"]
+    assert entries[1].burned_on == date(2026, 7, 28)

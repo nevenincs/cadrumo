@@ -137,8 +137,7 @@ def test_formula_is_deterministic_and_binds_the_real_cohort(
         "    end"
     ) in formula
     assert (
-        'venv.pip_install resources.reject { |r| '
-        '["argon2-cffi-bindings", "cryptography"].include?(r.name) }'
+        'venv.pip_install resources.reject { |r| ["argon2-cffi-bindings", "cryptography"].include?(r.name) }'
     ) in formula
     assert 'venv.pip_install resource("argon2-cffi-bindings"), build_isolation: false' in formula
     # cryptography's maturin backend shells out to the `maturin` executable, so

@@ -26,7 +26,7 @@ from urllib.parse import urlsplit
 
 from pydantic import AnyHttpUrl
 
-from .....core import Modelo, Period
+from .....core import ExportLayoutFormat, Modelo, Period
 from .....core.config import Settings
 from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
 from .....core.hashing import sha256_hex
@@ -289,7 +289,7 @@ def _submitted_file_coverage_for_casillas(
         if snapshot.modelo.id == Modelo.M303 and "has no exports" in str(exc):
             return 1.0
         raise
-    if resolved_layout.layout.format == "xml_dictionary" or _is_modelo_303_page_03_fallback(casillas):
+    if resolved_layout.layout.format is ExportLayoutFormat.XML_DICTIONARY or _is_modelo_303_page_03_fallback(casillas):
         return 1.0
     parsed = parse_export_payload(
         resolved_layout.layout,

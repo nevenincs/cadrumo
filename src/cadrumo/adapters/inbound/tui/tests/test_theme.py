@@ -18,7 +18,7 @@ rather than a smoke test.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pytest
 from textual.containers import Vertical
@@ -208,8 +208,13 @@ def _registration_screen() -> RegistrationApp:
     return RegistrationApp(assess=assess_passphrase, register=attempt_registration)
 
 
-def _gutters(app: App[object]) -> tuple[int, int]:
-    """Return the empty cells left and right of the centred content column."""
+def _gutters(app: App[Any]) -> tuple[int, int]:
+    """Return the empty cells left and right of the centred content column.
+
+    ``App`` is invariant in its return type, so this reads any app rather
+    than ``App[object]`` alone: the measurement touches screen geometry only
+    and never the value the app eventually returns.
+    """
     screen = app.screen.region
     column = app.query_one(".cadrumo-column", Vertical).region
     return (column.x - screen.x, (screen.x + screen.width) - (column.x + column.width))

@@ -131,11 +131,28 @@ def _in_window_order(facts: Sequence[UserProfileFact]) -> tuple[UserProfileFact,
     ordering by window here is what makes that answer the in-force one.
 
     The rule is the one the record resolvers already use - sort on
-    ``valid_from``, absent windows first, and let the last win. It is
-    matched rather than improved deliberately: a resolver that also
-    honoured ``valid_to`` would be a better rule and a different
-    decision, and having two better-rules disagree is the situation this
-    change exists to end.
+    ``valid_from``, absent windows first, and let the last win.
+
+    ``valid_to`` is deliberately NOT consulted, and the reason is that
+    honouring it needs an ``as_of`` date the caller supplies, not the
+    clock. Expiry is only meaningful relative to some instant, and the
+    only instant available here is "now"; a projection that dropped
+    expired facts against ``date.today()`` would return different values
+    for the same record on different days. These projections feed filing
+    inputs and completeness checks, where the effective instant is the
+    PERIOD being filed rather than the day the command runs - so an
+    implicit-today rule would resolve a 2024 filing against 2026's
+    calendar, and would do it silently. Dropping a path also reads
+    downstream as unset rather than expired, so a required field whose
+    window closed would surface as missing rather than as ended.
+
+    Honouring expiry therefore means threading an explicit ``as_of``
+    through every caller, each deciding the instant its own read is
+    effective at. That is a different change; until it is made,
+    supersession is expressed by recording a later ``valid_from`` at the
+    same path, which this ordering already resolves. A ``valid_to`` that
+    nothing supersedes is reported to the operator by the profile
+    validation surface rather than silently ignored.
 
     The sort is stable, so a record whose facts carry no window at all
     keeps its declaration order exactly. Nothing in production sets a
@@ -181,10 +198,11 @@ class EffectiveFact(BaseModel):
     is deliberately the same rule rather than a better one, so no two
     readers can disagree about which fact is effective.
 
-    One thing it still does NOT do: ``valid_to`` is not consulted, so a
-    fact whose window has expired continues to resolve. That is the
-    existing rule's limit, shared with the record resolvers, and not a
-    property of this projection alone.
+    ``valid_to`` is not consulted, so a fact whose window has closed still
+    resolves. That is the shared rule rather than a limit of this
+    projection, and :func:`_in_window_order` carries the reason: expiry
+    needs an ``as_of`` the caller supplies, and resolving it against the
+    clock would make one record project differently on different days.
     """
 
     model_config = STRICT_FROZEN_CONFIG

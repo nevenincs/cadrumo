@@ -25,7 +25,7 @@ from .. import (
     build_runtime_schema_provider,
     export_draft,
 )
-from .._export import boe_representable_casilla_ids
+from .._export_parity import boe_representable_casilla_ids
 from ..runtime import RegistrySchemaAccessor
 
 _HEX_DIGEST = "a" * 64

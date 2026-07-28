@@ -43,7 +43,6 @@
     "src/cadrumo/domain/calculations/registry/_ledger_bindings.py": 1325,
     "src/cadrumo/domain/calculations/registry/_loader.py": 1353,
     "src/cadrumo/domain/calculations/registry/_record_design.py": 1315,
-    "src/cadrumo/domain/calculations/registry/_schema.py": 1483,
     "src/cadrumo/domain/calculations/registry/_workbook_parity.py": 1361,
     "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_registry_roles.py": 1383,
     "src/cadrumo/domain/transactions/_models.py": 1486,

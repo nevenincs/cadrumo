@@ -155,40 +155,58 @@ def catalogue_status(manager: LocaleManager) -> tuple[CatalogueStatusRecord, ...
     }
     reference_leaves = leaves_by_file.get(_REFERENCE_LOCALE_FILE, {})
 
-    records: list[CatalogueStatusRecord] = []
-    for locale_file, leaves in leaves_by_file.items():
-        locale_code = locale_file.removesuffix(".yml")
-        allowed_keys = {
-            key for key in allowlist.get(locale_code, {}) if not key.startswith("_") and key != _PENDING_BUCKET_KEY
-        }
-        counts = dict.fromkeys(CatalogueLeafState, 0)
-        for key in required_keys:
-            state = classify_catalogue_leaf(
-                key,
-                leaves.get(key),
-                reference_value=reference_leaves.get(key),
-                is_reference_locale=locale_file == _REFERENCE_LOCALE_FILE,
-                allowlisted=key in allowed_keys,
-            )
-            counts[state] += 1
-        not_required = [key for key in leaves if key not in required_keys]
-        namespace_exempted = sum(1 for key in not_required if _covered_by_namespace(key, namespace_prefixes))
-        records.append(
-            CatalogueStatusRecord(
-                locale_file=locale_file,
-                required=len(required_keys),
-                authored=counts[CatalogueLeafState.AUTHORED],
-                key_echo=counts[CatalogueLeafState.KEY_ECHO],
-                blank=counts[CatalogueLeafState.BLANK],
-                unbindable=counts[CatalogueLeafState.UNBINDABLE],
-                identical_allowlisted=counts[CatalogueLeafState.IDENTICAL_ALLOWLISTED],
-                identical_pending=counts[CatalogueLeafState.IDENTICAL_PENDING],
-                absent=counts[CatalogueLeafState.ABSENT],
-                extra=len(not_required) - namespace_exempted,
-                namespace_exempted=namespace_exempted,
-            ),
+    return tuple(
+        _catalogue_record(
+            locale_file=locale_file,
+            leaves=leaves,
+            required_keys=required_keys,
+            reference_leaves=reference_leaves,
+            allowlist=allowlist,
+            namespace_prefixes=namespace_prefixes,
         )
-    return tuple(records)
+        for locale_file, leaves in leaves_by_file.items()
+    )
+
+
+def _catalogue_record(
+    *,
+    locale_file: str,
+    leaves: dict[str, str],
+    required_keys: set[str],
+    reference_leaves: dict[str, str],
+    allowlist: dict[str, dict[str, object]],
+    namespace_prefixes: tuple[str, ...],
+) -> CatalogueStatusRecord:
+    """Partition one catalogue's leaves into the honest per-state counts."""
+    locale_code = locale_file.removesuffix(".yml")
+    allowed_keys = {
+        key for key in allowlist.get(locale_code, {}) if not key.startswith("_") and key != _PENDING_BUCKET_KEY
+    }
+    counts = dict.fromkeys(CatalogueLeafState, 0)
+    for key in required_keys:
+        state = classify_catalogue_leaf(
+            key,
+            leaves.get(key),
+            reference_value=reference_leaves.get(key),
+            is_reference_locale=locale_file == _REFERENCE_LOCALE_FILE,
+            allowlisted=key in allowed_keys,
+        )
+        counts[state] += 1
+    not_required = [key for key in leaves if key not in required_keys]
+    namespace_exempted = sum(1 for key in not_required if _covered_by_namespace(key, namespace_prefixes))
+    return CatalogueStatusRecord(
+        locale_file=locale_file,
+        required=len(required_keys),
+        authored=counts[CatalogueLeafState.AUTHORED],
+        key_echo=counts[CatalogueLeafState.KEY_ECHO],
+        blank=counts[CatalogueLeafState.BLANK],
+        unbindable=counts[CatalogueLeafState.UNBINDABLE],
+        identical_allowlisted=counts[CatalogueLeafState.IDENTICAL_ALLOWLISTED],
+        identical_pending=counts[CatalogueLeafState.IDENTICAL_PENDING],
+        absent=counts[CatalogueLeafState.ABSENT],
+        extra=len(not_required) - namespace_exempted,
+        namespace_exempted=namespace_exempted,
+    )
 
 
 def _string_leaves(raw_leaves: dict[str, object]) -> dict[str, str]:

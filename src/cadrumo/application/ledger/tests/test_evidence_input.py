@@ -127,7 +127,7 @@ def test_record_without_in_store_attachment_is_unconstructable() -> None:
     carries no byte-custody guard, because it cannot be reached.
     """
     with pytest.raises(ValidationError) as excinfo:
-        PurchaseInvoiceEvidence(
+        PurchaseInvoiceEvidence(  # type: ignore[call-arg]  # pyright: ignore[reportCallIssue]  # ty: ignore[missing-argument]  # reason: omitting attachment_id is the refusal under test
             evidence_id="ev-orphan",
             bucket_id=_BUCKET_ID,
             source_path="/some/cleartext/path.pdf",

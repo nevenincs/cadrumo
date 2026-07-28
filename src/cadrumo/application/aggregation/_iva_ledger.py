@@ -215,8 +215,8 @@ class IvaLedgerProrrataApportionment(BaseModel):
 class AnnualDeducibleTotalsByRegime(BaseModel):
     """The ejercicio's whole-year deducible IVA cuota under both prorrata regimes.
 
-    The settlement input to the LIVA art. 103.Dos.2 +10% mandatory-especial
-    check (``build_prorrata_especial_mandatory_advisory``): art. 103.Dos.2 makes
+    The settlement input to the LIVA art. 103.Dos.2.º mandatory-especial
+    check (``build_prorrata_especial_mandatory_advisory``): art. 103.Dos.2.º makes
     prorrata especial obligatory when the deducción under the general regime
     exceeds the deducción under the especial regime by ten percent or more.
     ``deduction_under_general`` is mechanically derivable for any bucket (art. 104
@@ -907,7 +907,7 @@ def _unclassified_deducible_soportado_count(
     contribution lands on at least one deducible cuota binding (the registry
     selector decides membership; no category is hard-coded here). An observation
     with no declared ``input_classification`` is one the art. 106 especial total
-    cannot honestly route, so the general filer must classify it before the +10%
+    cannot honestly route, so the general filer must classify it before the art. 103.Dos.2.º
     check can run. The signal drives the CHECK-vs-PROMPT branch in the settlement
     collector.
     """
@@ -931,7 +931,7 @@ def compute_annual_deducible_totals_by_regime(
 ) -> AnnualDeducibleTotalsByRegime | None:
     """Compute the ejercicio's deducible IVA cuota under both prorrata regimes.
 
-    The plumbing for the LIVA art. 103.Dos.2 +10% mandatory-especial settlement
+    The plumbing for the LIVA art. 103.Dos.2.º mandatory-especial settlement
     check. Aggregates the ejercicio's annual IVA observations ONCE
     (:func:`aggregate_iva_ledger_observations_from_repositories` over the
     canonical ``0A`` annual :class:`~core.Period`), then resolves
@@ -945,7 +945,7 @@ def compute_annual_deducible_totals_by_regime(
 
     Returns ``None`` when no register apportionment resolves for the ejercicio
     (prorrata inapplicable), when the register is sectorized (LIVA arts. 9.1.c /
-    101 — the art-103.Dos.2 comparison composes per sector, a named v1 deferral),
+    101 — the art-103.Dos.2.º comparison composes per sector, a named v1 deferral),
     or when the revision declares no deducible cuota bindings. A negative
     deducible total (an adjustment-heavy degenerate case the art-103.Dos.2
     comparison is undefined over) also returns ``None`` so the check stays silent
@@ -966,7 +966,7 @@ def compute_annual_deducible_totals_by_regime(
         :class:`AnnualDeducibleTotalsByRegime`
             The frozen record returned.
         :func:`~application.calculations.build_prorrata_especial_mandatory_advisory`
-            Consumes the two totals to build the +10% advisory.
+            Consumes the two totals to build the mandatory-especial advisory.
     """
     period = Period.from_year_and_code(ejercicio, "0A")
     aggregation = aggregate_iva_ledger_observations_from_repositories(
@@ -979,7 +979,7 @@ def compute_annual_deducible_totals_by_regime(
     if apportionment is None:
         return None
     if apportionment.sector_apportionments:
-        # Sectorized register: the art-103.Dos.2 comparison composes per sector,
+        # Sectorized register: the art-103.Dos.2.º comparison composes per sector,
         # a named v1 deferral (LIVA arts. 9.1.c / 101). No branch in v1.
         return None
     deducible_binding_ids = _deducible_cuota_binding_ids(revision)

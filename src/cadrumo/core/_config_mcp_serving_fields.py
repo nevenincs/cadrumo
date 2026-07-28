@@ -14,6 +14,8 @@ See Also:
     :mod:`~entrypoints.mcp._transport`
         Warm/subprocess transport dispatch that consumes the capture-wait and
         wedge-threshold bounds.
+    :mod:`~entrypoints.mcp._stdio_lifetime`
+        Client-lifetime watchdog gated by the stdio-watchdog kill switch.
 """
 
 from __future__ import annotations
@@ -46,6 +48,18 @@ class CadrumoMcpServingSettings(CadrumoLlmSettings):
             "degrading to the supervised subprocess transport. Bounds the blast radius of a "
             "slow or hung in-process verb: a call never queues forever behind the capture. "
             "Comfortably covers a normal warm call's sub-second-to-low-single-digit hold."
+        ),
+    )
+    cadrumo_mcp_stdio_watchdog: bool = Field(
+        default=True,
+        description=(
+            "Whether the MCP stdio server anchors its lifetime to the client process. The "
+            "stdio contract is 'exit on stdin EOF', but on Windows an inherited pipe handle "
+            "can keep stdin open after the spawning client is gone, so EOF never arrives and "
+            "the server runs indefinitely - holding its warm caches and never running the "
+            "interpreter-exit hooks that zeroise bound bucket sessions. The watchdog reaps the "
+            "server when its client dies. Disable only to diagnose the watchdog itself: with it "
+            "off, stdin EOF is the sole exit path and a leaked server is unreapable."
         ),
     )
     cadrumo_mcp_wedge_threshold_seconds: float = Field(

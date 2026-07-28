@@ -48,6 +48,23 @@ def _settings_has_explicit_output_language() -> bool:
     return raw in SUPPORTED_OUTPUT_LANGUAGES
 
 
+def _hint_via_label(name: str) -> str | None:
+    """Resolve an operator-typed profile label to its bucket's language hint.
+
+    Returns ``None`` when the name matches no live profile, which is the
+    correct outcome for a UUID that simply carries no hint and for a label
+    that names nothing. The manifest scan reads plaintext files, so it does
+    not depend on the target bucket's DEK being intact.
+    """
+    from ....application.user_profile import resolve_profile_output_language_hint
+    from ....application.workflow import read_profile_bucket
+
+    pointer = read_profile_bucket(name)
+    if pointer is None:
+        return None
+    return resolve_profile_output_language_hint(pointer.bucket_id)
+
+
 def _pin_render_language_to_target_bucket(ctx: typer.Context, *, bucket_id: str) -> None:
     """Pin the render locale to the failed login target's bucket hint.
 
@@ -59,6 +76,12 @@ def _pin_render_language_to_target_bucket(ctx: typer.Context, *, bucket_id: str)
     bucket-local file readable without the (corrupt) DEK, so it can pin the
     render locale to the target the operator was logging in to. Skipped when
     the operator supplied an explicit language.
+
+    ``bucket_id`` carries whatever the operator typed, which is a label at
+    least as often as a UUID. A label resolves no bucket-local hint on its
+    own, so it is resolved to its UUID through the manifest scan first: that
+    scan reads plaintext ``manifest.toml`` files and so stays readable under
+    exactly the corrupt-DEK condition this helper exists to serve.
     """
     if _settings_has_explicit_output_language():
         return
@@ -68,6 +91,8 @@ def _pin_render_language_to_target_bucket(ctx: typer.Context, *, bucket_id: str)
     from ....core.i18n import clear_output_language_cache
 
     language = resolve_profile_output_language_hint(bucket_id)
+    if language is None:
+        language = _hint_via_label(bucket_id)
     if language is None:
         return
     ctx.with_resource(override_settings(cadrumo_output_language=language))
@@ -151,11 +176,12 @@ def _register_login_command(app: typer.Typer) -> None:
         except SecretStoreError:
             # The target could not be unlocked (a wrong passphrase, a
             # corrupt bucket DEK); render the refusal in the target's own
-            # output language rather than the previous selection's. Only a
-            # UUID target resolves a bucket-local hint here -- login owns
+            # output language rather than the previous selection's. Both a
+            # UUID and a label resolve a bucket-local hint here: login owns
             # label resolution internally and does not surface the resolved
-            # id on the failure path -- and a label simply finds no hint and
-            # falls back to the default resolution.
+            # id on the failure path, so the helper re-resolves a label
+            # through the plaintext manifest scan, which stays readable
+            # while the target's DEK is corrupt.
             if name is not None:
                 _pin_render_language_to_target_bucket(ctx, bucket_id=name)
             raise

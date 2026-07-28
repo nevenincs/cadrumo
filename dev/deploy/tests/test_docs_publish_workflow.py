@@ -20,6 +20,7 @@ from typing import Any
 
 import pytest
 import yaml
+from dev.deploy import docs_static_site
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -91,6 +92,21 @@ def test_it_refuses_instructively_before_it_is_provisioned() -> None:
     assert "REFUSED" in body
     assert "OP-3" in body, "the refusal must name the operator decision that unblocks it"
     assert "least-privilege" in body
+
+
+def test_the_publish_step_exports_the_role_under_the_publisher_own_name() -> None:
+    """The workflow half of the authority transfer, pinned to the code half.
+
+    The publisher no longer refuses automation outright; it requires this
+    identifier instead. Exported under any other name the publisher would refuse
+    a fully provisioned run, and the failure would look like missing
+    provisioning rather than a naming drift, so the two halves are pinned
+    together here.
+    """
+    variable = docs_static_site._DEPLOY_ROLE_VARIABLE
+    publish = next(step for step in _job()["steps"] if "docs_static_site" in str(step.get("run", "")))
+    assert variable in publish.get("env", {}), f"the publish step must export {variable!r}"
+    assert publish["env"][variable] == f"${{{{ vars.{variable} }}}}"
 
 
 def test_a_documentation_failure_cannot_unwind_the_release() -> None:

@@ -37,6 +37,12 @@ _REQUIRED_ARTIFACTS = (
     "pagefind/pagefind-ui.css",
 )
 _DOCTREE_EXCLUDES = (".doctrees/*", "*/.doctrees/*")
+# Automation markers every hosted and self-hosted runner sets.
+_CI_MARKERS = ("CI", "GITHUB_ACTIONS")
+# The delivery role identifier, published to the job by the protected
+# environment. Its presence is what distinguishes the sanctioned automated
+# publish from any other automated run on a shared fleet.
+_DEPLOY_ROLE_VARIABLE = "CADRUMO_DOCS_DEPLOY_ROLE"
 _ENDPOINT_TIMEOUT_SECONDS = 20
 _LEGACY_DOCS_URL = "https://neve.md/cadrumo/docs"
 _MISSING_DOCS_PATH = "__cadrumo-delivery-missing__.html"
@@ -554,11 +560,45 @@ def _verify_public_delivery(target: DeploymentTarget) -> None:
         )
 
 
-def _require_human_publish_environment() -> None:
-    """Refuse publishing when a continuous-integration marker is present."""
-    markers = tuple(name for name in ("CI", "GITHUB_ACTIONS") if name in os.environ)
-    if markers:
-        raise SystemExit("Refusing Cadrumo documentation publish from CI: " + ", ".join(markers))
+def _require_authorized_publish_environment() -> None:
+    """Permit an automated publish only from the provisioned delivery environment.
+
+    A blanket continuous-integration refusal used to stand here, and it is
+    deliberately gone: the documentation site is published as a release
+    consequence, so an automated publish is a supported authority rather than an
+    accident. What that refusal protected against survives, because the property
+    worth keeping was never "no automation" but "no surprise publish".
+
+    The distinction is load-bearing on a shared self-hosted fleet. A co-resident
+    automated run may inherit an ambient cloud session and would then never need
+    the federated role at all, so the delivery workflow's own identity is the
+    only thing that separates the sanctioned publish from an accidental one. An
+    automated run must therefore name itself: the deploy role identifier is
+    published to the job as an environment-scoped variable, so it is present
+    only inside the protected delivery environment, and it exists at all only
+    once the operator has provisioned the role.
+
+    Two consequences follow, both intended. Before provisioning this refuses
+    every automated run exactly as its predecessor did, so the permission opens
+    when the role exists rather than when this change lands. And a local human
+    session carries no automation marker, so the local publish authority is
+    untouched in either state.
+
+    The variable's environment scoping is an operator provisioning property, not
+    something this process can verify from the inside; it is the same trust the
+    workflow's own role assumption rests on.
+    """
+    markers = tuple(name for name in _CI_MARKERS if name in os.environ)
+    if not markers:
+        return
+    if os.environ.get(_DEPLOY_ROLE_VARIABLE, "").strip():
+        return
+    raise SystemExit(
+        "Refusing Cadrumo documentation publish from an unprovisioned automated environment "
+        f"({', '.join(markers)}): {_DEPLOY_ROLE_VARIABLE} is unset or empty. The delivery "
+        "workflow supplies it from the protected environment once the operator has created "
+        "the deploy role. A local human publish sets no automation marker and is unaffected.",
+    )
 
 
 def _provision(aws: str, repo_root: Path) -> int:
@@ -572,7 +612,7 @@ def _provision(aws: str, repo_root: Path) -> int:
 
 def _publish(aws: str, repo_root: Path) -> int:
     """Build, validate, upload, and invalidate the fixed Cadrumo documentation site."""
-    _require_human_publish_environment()
+    _require_authorized_publish_environment()
     _authenticated_account_id(aws, repo_root)
     target = _stack_target(aws, repo_root)
     _verify_distribution_alias(aws, repo_root, target.distribution_id)

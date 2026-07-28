@@ -29,6 +29,7 @@ import pytest
 from ....adapters.persistence.storage.bucket import (
     BucketKeySchedule,
     BucketManifest,
+    BucketPaths,
     bucket_paths,
     manifest_path,
     read_manifest,
@@ -781,7 +782,7 @@ _WRITER_OWNED_MANIFEST_FIELDS: dict[str, frozenset[str]] = {
 }
 
 
-def _seed_every_defaultable_manifest_field(paths) -> BucketManifest:
+def _seed_every_defaultable_manifest_field(paths: BucketPaths) -> BucketManifest:
     """Write a manifest whose every defaultable field carries a NON-default value.
 
     This is the fixture rule that defeats the invisibility. ``_manifest_io``

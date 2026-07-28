@@ -294,7 +294,17 @@ def write_baseline(baseline: Baseline, is_test_run: bool, path: Path = _BASELINE
     for scope in ("production", "tests"):
         if scope in document:
             ordered[scope] = document[scope]
-    path.write_text(json.dumps(ordered, indent=2, ensure_ascii=False) + "\n", encoding=_UTF_8)
+    # newline="\n" pins the terminator. The default translates on write, and
+    # the committed baseline is a gate INPUT: a translated capture leaves the
+    # bytes the gate reads differing from the bytes that were reviewed, while
+    # `.gitattributes` normalisation keeps `git diff` silent about it. Measured
+    # on 2026-07-28 this file carried 660 CRLF terminators on disk against a
+    # committed blob with none.
+    path.write_text(
+        json.dumps(ordered, indent=2, ensure_ascii=False) + "\n",
+        encoding=_UTF_8,
+        newline="\n",
+    )
 
 
 @dataclass(frozen=True)

@@ -143,7 +143,6 @@ _STATE_ROOT_DERIVED_DIRS: dict[str, str] = {
 }
 
 
-
 _NON_ENVIRONMENT_SELECTION_NAMES: Final[frozenset[str]] = frozenset({"CADRUMO_ACTIVE_PROFILE"})
 """Settings names that no environment source may populate.
 
@@ -164,11 +163,7 @@ never selection.
 
 def _without_severed_names(env_vars: Mapping[str, str | None]) -> dict[str, str | None]:
     """Drop the names no environment source may populate."""
-    return {
-        name: value
-        for name, value in env_vars.items()
-        if name.upper() not in _NON_ENVIRONMENT_SELECTION_NAMES
-    }
+    return {name: value for name, value in env_vars.items() if name.upper() not in _NON_ENVIRONMENT_SELECTION_NAMES}
 
 
 class _CadrumoEnvSettingsSource(EnvSettingsSource):

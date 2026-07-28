@@ -43,16 +43,30 @@ Four reading rules are load-bearing, and every renderer below preserves them.
 * **The degraded label rides on every row.** ``registry_validated`` is emitted
   per row, never only on the envelope, so a filtered or re-sorted rendering
   cannot present a degraded row as validated authority.
-* **A reviewer never renders without its tier.** ``reviewed_by`` is free text by
-  necessity — reviewer identity cannot be constrained to a vocabulary — so
+* **A reviewer never renders without its tier, under ONE key name.**
+  ``reviewed_by`` is free text by necessity — reviewer identity cannot be
+  constrained to a vocabulary — so
   ``--review-status agent_reviewed --reviewed-by "<a person's name>"`` writes
   cleanly and is a legitimate stamp. The status column is honest about it and
   the reviewer column is not, and a reader scanning ninety rows reads the name.
-  The text row therefore renders the reviewer as ``<status>:<name>``, so the two
-  columns cannot be read independently; the JSON payload keeps the raw
-  ``reviewed_by`` and carries the joined form alongside it as
-  ``reviewed_by_attribution``. This closes the PRESENTATION half only. Nothing
-  here can make an attribution TRUE, and no gate should pretend otherwise.
+  Both surfaces therefore carry ``reviewed_by_attribution``, the reviewer joined
+  to the tier that claimed them, and it carries the SAME value in each.
+
+  The first attempt at this rendered the joined form in text under the key
+  ``reviewed_by`` while JSON's ``reviewed_by`` stayed the raw name, so one key
+  name carried two different values depending on which surface you read — and
+  the surface a program reads was the bare one, which is the reading the join
+  exists to prevent. Text now names the joined field exactly as the payload does
+  and does not emit a bare reviewer column at all; the payload still carries the
+  raw ``reviewed_by``, because it is the datum the manifest declares, documented
+  as a field to read beside its attribution rather than alone.
+
+  The attribution is parseable at its FIRST separator whatever the name
+  contains, so ``agent:opus-executor`` is unambiguous and stays legal. What the
+  writer refuses is a reviewer whose own leading segment is a status token: such
+  a value, read raw, is indistinguishable from an already-qualified attribution.
+  This closes the PRESENTATION half only. Nothing here can make an attribution
+  TRUE, and no gate should pretend otherwise.
 
 One double-count is worth naming because the shipped composer warns about it:
 ``modelo_scope_classification_findings`` is a MODELO-level count repeated on
@@ -108,6 +122,7 @@ __all__ = [
     "NOT_MEASURED",
     "ConformanceAuditResult",
     "ConformanceBaseline",
+    "ConformanceProgressFloors",
     "ConformanceRatchetCeilings",
     "ConformanceReport",
     "ConformanceVacuityFloors",
@@ -118,6 +133,7 @@ __all__ = [
     "RevisionConformancePayload",
     "RevisionLocaleCoverage",
     "baseline_path",
+    "baseline_weakenings",
     "build_conformance_report",
     "build_coverage_report",
     "check_conformance_ratchet",
@@ -416,9 +432,16 @@ class ConformanceReport(ConformanceModel):
     locale_unavailable_modelos: tuple[str, ...]
 
     @property
-    def untranslated_locale_labels(self) -> int:
-        """Required label leaves with no authored translation, across audited locales."""
-        return sum(item.labels_required - item.labels_translated for item in self.locale_axis)
+    def translated_locale_labels(self) -> int:
+        """Authored label leaves across audited locales — translation already achieved.
+
+        The complement, "leaves left untranslated", was what the ratchet used to
+        cap, and it is the wrong quantity to cap: every new casilla adds one
+        required leaf per audited locale, so the untranslated count rises on an
+        honest registry addition that translates nothing away. What must not
+        happen is a translation being LOST, and that is this number falling.
+        """
+        return sum(item.labels_translated for item in self.locale_axis)
 
     @property
     def audited_locale_leaves(self) -> int:
@@ -482,35 +505,45 @@ class CoverageReport(ConformanceModel):
 class ConformanceRatchetCeilings(ConformanceModel):
     """Shrink-only ceilings: each counter may stay flat or fall, never grow.
 
-    Every field is a BACKLOG or DEFECT count. Lowering one requires editing the
-    committed baseline, which is the point: the edit is the visible record that
-    the backlog moved.
+    Every field is a DEFECT count whose right value is zero, or a defect backlog
+    being burnt down. Lowering one requires re-recording the committed baseline,
+    which is the point: the capture is the visible record that the defect count
+    moved.
 
-    Why the review backlog is TWO counters
-    --------------------------------------
+    What is deliberately NOT here
+    -----------------------------
 
-    ``unreviewed_revisions`` counts only the ``pending_review`` census, and the
-    stamp verb is DESIGNED to move it: an agent may write ``agent_reviewed``
-    freely, so a sweep across every revision drives that counter from the full
-    registry to zero while this audit stays green throughout. The governing
-    decision's whole rationale for a three-state vocabulary is that it makes the
-    backlog visible instead of laundering it into prose, and one gated counter
-    covering two of the three tiers reintroduces exactly that collapse at the
-    only place anything is enforced.
+    Four counters used to live in this class and no longer do:
+    ``unreviewed_revisions``, ``revisions_without_operator_review``,
+    ``revisions_without_engineered_by``, and ``untranslated_locale_labels``.
+    They are not defect counts — they are POPULATION MINUS PROGRESS, and a
+    shrink-only ceiling on that quantity gates the wrong term.
 
-    ``revisions_without_operator_review`` is therefore the counter CI protects.
-    It counts every revision whose declared status is not
-    :attr:`~cadrumo.core.RevisionReviewStatus.OPERATOR_REVIEWED`, so the stamp
-    verb cannot move it at all — that value is outside the vocabulary this CLI
-    will write, enforced at the writer's own boundary rather than by its type
-    hints. Agent review remains a real, visible axis on the coverage screen; it
-    is simply not progress against the operator backlog, because it is not the
-    same backlog.
+    Each was pinned at the full population, so the ninety-first revision took all
+    three review counters past their ceilings and reddened the only gating exit
+    this surface has. The same held per casilla for the locale counter: every new
+    casilla adds one required leaf per audited locale, so an ordinary registry
+    addition raised it without a single translation being lost. Worse, the
+    sanctioned way past the resulting refusal was ``--accept-weakening``, whose
+    documented purpose is to take a capture that is deliberately suspicious — so
+    an honest population increase and a deliberate loosening of the ratchet
+    arrived through the same door, and the operator had to assert the second in
+    order to record the first.
+
+    A RATIO ceiling against ``composed_revisions`` was the obvious alternative
+    and was rejected on arithmetic. It survives today only because the backlog is
+    total: ninety of ninety unreviewed is a fraction of 1.0, and a ninety-first
+    unreviewed revision is still 1.0. The moment the stamping campaign makes
+    progress the problem returns — with forty of ninety unreviewed the ceiling
+    fraction is 0.4444, and one peer landing an unstamped revision gives
+    forty-one of ninety-one, 0.4505, which reds. That is the same complaint
+    arriving later and harder to read, and it would red continuously through
+    exactly the campaign this surface exists to support.
+
+    :class:`ConformanceProgressFloors` carries them instead, inverted into the
+    term that actually needs protecting. See that class for why.
     """
 
-    unreviewed_revisions: int = Field(ge=0)
-    revisions_without_operator_review: int = Field(ge=0)
-    revisions_without_engineered_by: int = Field(ge=0)
     grounding_findings: int = Field(ge=0)
     modelo_scope_classification_findings: int = Field(ge=0)
     required_coverage_gap_rows: int = Field(ge=0)
@@ -519,7 +552,71 @@ class ConformanceRatchetCeilings(ConformanceModel):
     unused_declared_axes: int = Field(ge=0)
     scope_diagnostics: int = Field(ge=0)
     locale_unavailable_modelos: int = Field(ge=0)
-    untranslated_locale_labels: int = Field(ge=0)
+
+
+class ConformanceProgressFloors(ConformanceModel):
+    """Grow-only progress: declared provenance and translation already achieved.
+
+    Every field counts WORK DONE, so each may rise or stay flat and may never
+    fall. This is the inversion of the four population-pinned ceilings that used
+    to sit on :class:`ConformanceRatchetCeilings`, and the inversion is the whole
+    fix: a backlog count is ``population - progress``, and growth in it does not
+    say which term moved. Splitting the two makes the gate answer the question it
+    can actually answer.
+
+    A ninety-first revision raises the population and leaves progress untouched,
+    so every floor here stays satisfied and the gate is silent — which is right,
+    because nothing regressed. Erasing one revision's signoff, dropping one
+    authorship claim, or deleting one translated leaf lowers progress below its
+    committed floor, and the gate reds naming the counter — which is also right,
+    because that work is gone and, for the review axis, is underivable by
+    construction and cannot be reconstructed from the tree.
+
+    What is lost by the change, stated plainly: nothing now gates the ARRIVAL of
+    unstamped revisions. That is deliberate. New modelo revisions are the product
+    working, the stamping campaign is what closes their provenance, and a gate
+    that reddened on every peer's registry addition would be routed around within
+    a week. The arrival stays visible on the census and the coverage screen,
+    which is where an unenforced fact belongs.
+
+    Why the review axis is TWO floors
+    ---------------------------------
+
+    ``reviewed_revisions`` counts every revision declaring any review at all, and
+    the stamp verb is DESIGNED to move it: an agent may write ``agent_reviewed``
+    freely, so a sweep across the tree drives it from zero to the full registry.
+    The governing decision's rationale for a three-state vocabulary is that it
+    makes the backlog visible instead of laundering it into prose, and one gated
+    counter covering two of the three tiers reintroduces exactly that collapse at
+    the only place anything is enforced.
+
+    ``operator_reviewed_revisions`` is therefore the counter CI protects. The
+    stamp verb cannot move it at all — that value is outside the vocabulary this
+    CLI will write, enforced at the writer's own boundary rather than by its type
+    hints — so it rises only by a human editing a manifest, and falls only by a
+    human signoff being destroyed. Agent review remains a real, visible axis; it
+    is simply not progress against the operator floor, because it is not the same
+    claim.
+
+    Read as a direct census count rather than as ``population - other tiers``:
+    for a FLOOR the direct count is exact, and a fourth status added to the
+    vocabulary tomorrow cannot inflate it. The subtraction that
+    ``reviewed_revisions`` does use carries the opposite property for the
+    opposite reason — any revision the census does not record as pending has SOME
+    review declared, whatever tier a future vocabulary adds.
+
+    Attributes:
+        reviewed_revisions: Revisions declaring any review tier beyond pending.
+        operator_reviewed_revisions: Revisions carrying an operator signoff.
+        revisions_with_engineered_by: Revisions naming who engineered them.
+        translated_locale_labels: Authored schema-local label leaves, summed over
+            audited locales.
+    """
+
+    reviewed_revisions: int = Field(ge=0)
+    operator_reviewed_revisions: int = Field(ge=0)
+    revisions_with_engineered_by: int = Field(ge=0)
+    translated_locale_labels: int = Field(ge=0)
 
 
 class ConformanceVacuityFloors(ConformanceModel):
@@ -552,8 +649,9 @@ class ConformanceBaseline(ConformanceModel):
             half-landed change is present records their state as everyone's
             ceiling, and a re-record with no stated reason is indistinguishable
             from silencing a real regression.
-        ceilings: Shrink-only backlog and defect counters.
+        ceilings: Shrink-only defect counters.
         floors: Anti-vacuity population minimums.
+        progress: Grow-only provenance and translation already achieved.
     """
 
     recorded_at: str = Field(min_length=1)
@@ -562,6 +660,7 @@ class ConformanceBaseline(ConformanceModel):
     note: str = Field(min_length=1)
     ceilings: ConformanceRatchetCeilings
     floors: ConformanceVacuityFloors
+    progress: ConformanceProgressFloors
 
 
 class ConformanceAuditResult(ConformanceModel):
@@ -570,20 +669,31 @@ class ConformanceAuditResult(ConformanceModel):
     Attributes:
         report: The report the comparison was taken over.
         baseline: The committed baseline it was compared against.
-        ratchet_violations: Counters that GREW past their ceiling.
+        ratchet_violations: Defect counters that GREW past their ceiling.
         vacuity_violations: Populations that FELL below their floor, meaning the
             run examined less than the baseline proves it must.
+        progress_violations: Declared provenance or translation that was LOST,
+            meaning work recorded in the tree is no longer there.
     """
 
     report: ConformanceReport
     baseline: ConformanceBaseline
     ratchet_violations: tuple[str, ...]
     vacuity_violations: tuple[str, ...]
+    progress_violations: tuple[str, ...]
 
     @property
     def violations(self) -> tuple[str, ...]:
-        """Every violation, vacuity first because it invalidates the ratchet reading."""
-        return (*self.vacuity_violations, *self.ratchet_violations)
+        """Every violation, ordered by how much of the reading each one invalidates.
+
+        Vacuity first: a shrunken measurement makes every clean counter below it
+        meaningless, so it has to be read before anything else. Progress next: a
+        lost signoff or translation is destroyed work, and for the review axis it
+        is underivable by construction, so nothing in the tree can reconstruct
+        it. Ratchet last: a grown defect count is a real regression and a fixable
+        one.
+        """
+        return (*self.vacuity_violations, *self.progress_violations, *self.ratchet_violations)
 
     @property
     def passed(self) -> bool:
@@ -624,6 +734,54 @@ def load_baseline(path: Path | None = None) -> ConformanceBaseline:
     return ConformanceBaseline.model_validate(raw)
 
 
+def baseline_weakenings(candidate: ConformanceBaseline, committed: ConformanceBaseline) -> tuple[str, ...]:
+    """Name every counter ``candidate`` would move in the WEAKENING direction.
+
+    Weakening has two shapes and they are opposite movements. A CEILING that
+    RISES permits more backlog than the committed one; a FLOOR that FALLS
+    demands less measurement. Both make the gate accept a tree the committed
+    baseline refuses, which is the whole content of "the ratchet moved the wrong
+    way", and neither is visible in a capture that simply overwrites.
+
+    The floor direction is the one that needs a guard. A raised ceiling
+    self-heals loudly: the backlog it now permits shows up on the census and the
+    coverage screen, and the next honest capture pulls it back down. A lowered
+    floor is silent forever. A capture taken while a peer's half-landed change
+    has removed revisions from the tree permanently lowers ``composed_revisions``,
+    and from then on a genuinely half-read tree passes the anti-vacuity check
+    that exists to catch exactly that.
+
+    Args:
+        candidate: The baseline a capture is about to write.
+        committed: The baseline already on disk.
+
+    Returns:
+        One sentence per weakened counter, ceilings first, empty when the
+        capture only strengthens or leaves every counter flat.
+    """
+    weakened: list[str] = []
+    for field_name in ConformanceRatchetCeilings.model_fields:
+        proposed = getattr(candidate.ceilings, field_name)
+        allowed = getattr(committed.ceilings, field_name)
+        if proposed > allowed:
+            weakened.append(f"ceiling {field_name} would rise from {allowed} to {proposed}, permitting more defects")
+    for field_name in ConformanceVacuityFloors.model_fields:
+        proposed = getattr(candidate.floors, field_name)
+        required = getattr(committed.floors, field_name)
+        if proposed < required:
+            weakened.append(
+                f"floor {field_name} would fall from {required} to {proposed}, demanding less measurement",
+            )
+    for field_name in ConformanceProgressFloors.model_fields:
+        proposed = getattr(candidate.progress, field_name)
+        required = getattr(committed.progress, field_name)
+        if proposed < required:
+            weakened.append(
+                f"progress {field_name} would fall from {required} to {proposed}, forgetting recorded work",
+            )
+    return tuple(weakened)
+
+
 def record_baseline(
     report: ConformanceReport,
     *,
@@ -632,6 +790,7 @@ def record_baseline(
     review_cadence: str = _DEFAULT_REVIEW_CADENCE,
     source: str = _RECORD_COMMAND,
     path: Path | None = None,
+    accept_weakening: bool = False,
 ) -> ConformanceBaseline:
     """Write a baseline captured from ``report`` and return it.
 
@@ -640,6 +799,13 @@ def record_baseline(
     outright: three axes are unmeasured under the degraded read and would be
     frozen as clean zeros nothing established.
 
+    A capture over an EXISTING baseline is also compared against it. The three
+    prior guards — not degraded, non-empty rows, non-empty note — all describe
+    the report in isolation, so a capture could raise a ceiling or lower a floor
+    without anything saying so, and the note requirement only proves a sentence
+    was typed, never that it describes the movement. Every weakened counter is
+    now named, and accepting one is an explicit act.
+
     Args:
         report: The freshly composed report to capture.
         note: Why this capture happened and under what tree conditions.
@@ -647,12 +813,16 @@ def record_baseline(
         review_cadence: When the ceilings should next be revisited.
         source: The command that produced the capture.
         path: Optional override for tests. Defaults to the committed baseline.
+        accept_weakening: Take the weakened counters deliberately. Absent a
+            prior baseline there is nothing to weaken and this has no effect.
 
     Returns:
         The written :class:`ConformanceBaseline`.
 
     Raises:
-        SystemExit: The report is degraded, or composed no rows at all.
+        SystemExit: The report is degraded, composed no rows at all, or would
+            weaken a counter against the baseline already on disk without
+            ``accept_weakening``.
     """
     if not report.registry_validated:
         raise SystemExit(
@@ -672,11 +842,31 @@ def record_baseline(
         note=note,
         ceilings=_current_ceilings(report),
         floors=_current_floors(report),
+        progress=_current_progress(report),
     )
     resolved = baseline_path() if path is None else path
-    resolved.write_text(
-        json.dumps(baseline.model_dump(mode="json"), indent=2, sort_keys=True) + "\n",
-        encoding=UTF_8_ENCODING,
+    if resolved.exists() and not accept_weakening:
+        weakened = baseline_weakenings(baseline, load_baseline(resolved))
+        if weakened:
+            listed = "\n  ".join(weakened)
+            raise SystemExit(
+                "refusing to record a baseline that weakens the ratchet:\n  "
+                f"{listed}\n"
+                "A rising ceiling permits a backlog the committed baseline refuses; a falling floor "
+                "lets a half-read tree pass the anti-vacuity check that exists to catch it, and that "
+                "one never heals on its own. If the movement is real and intended, re-run with the "
+                "acceptance flag and say in the note which counter moved and why.",
+            )
+    # BYTES, not text, for the same reason the governance writer reads and writes
+    # bytes: ``write_text`` re-encodes under the platform's newline convention, so
+    # on Windows every capture expanded this file's LF terminators to CRLF while
+    # git — which normalises under ``text=auto eol=lf`` — reported no change at
+    # all. The committed baseline and the baseline on disk therefore differed for
+    # every reader that is not git, and this file is the artefact the gate READS.
+    # Measured on the tree that carried it: the HEAD blob held 28 LF terminators
+    # in 1932 bytes, the working tree 28 CRLF ones in 1960, ``git diff`` silent.
+    resolved.write_bytes(
+        (json.dumps(baseline.model_dump(mode="json"), indent=2, sort_keys=True) + "\n").encode(UTF_8_ENCODING),
     )
     return baseline
 
@@ -984,15 +1174,16 @@ def check_conformance_ratchet(
     report: ConformanceReport,
     baseline: ConformanceBaseline,
 ) -> ConformanceAuditResult:
-    """Compare a report against the committed baseline in both directions.
+    """Compare a report against the committed baseline in all three directions.
 
     Args:
         report: The freshly composed report.
-        baseline: The committed ceilings and floors.
+        baseline: The committed ceilings, floors, and progress floors.
 
     Returns:
-        A :class:`ConformanceAuditResult` naming every grown backlog counter and
-        every shrunken measurement population.
+        A :class:`ConformanceAuditResult` naming every grown defect counter,
+        every shrunken measurement population, and every lost provenance or
+        translation claim.
 
     Raises:
         SystemExit: The report composed no rows at all. A ratchet over an empty
@@ -1024,11 +1215,23 @@ def check_conformance_ratchet(
                 "ratchet reading above cannot be trusted",
             )
 
+    current_progress = _current_progress(report)
+    progress: list[str] = []
+    for field_name in ConformanceProgressFloors.model_fields:
+        current = getattr(current_progress, field_name)
+        required = getattr(baseline.progress, field_name)
+        if current < required:
+            progress.append(
+                f"{field_name} fell from {required} to {current}; declared work the baseline "
+                "recorded is no longer in the tree",
+            )
+
     return ConformanceAuditResult(
         report=report,
         baseline=baseline,
         ratchet_violations=tuple(ratchet),
         vacuity_violations=tuple(vacuity),
+        progress_violations=tuple(progress),
     )
 
 
@@ -1070,10 +1273,14 @@ def render_report(report: ConformanceReport) -> str:
                 registry_validated=row.registry_validated,
                 review_status=row.review_status,
                 engineered_by=row.engineered_by,
-                # The TIER-QUALIFIED form, deliberately, not the raw name: a
-                # scanning reader takes in one reviewer column, and a bare name
-                # under an agent-tier review reads as an operator signoff.
-                reviewed_by=row.reviewed_by_attribution,
+                # Named EXACTLY as the payload names it, and carrying exactly
+                # what the payload carries. Rendering the joined form under the
+                # key ``reviewed_by`` — while the payload's ``reviewed_by`` held
+                # the raw name — made one key name mean two different things
+                # across two surfaces, and the surface a program reads was the
+                # bare one. No bare reviewer column is emitted here: the joined
+                # form contains the name, so nothing is lost by omitting it.
+                reviewed_by_attribution=row.reviewed_by_attribution,
                 reviewed_at=row.reviewed_at,
                 calc_grade=row.calc_grade,
                 casillas=row.casillas,
@@ -1176,6 +1383,7 @@ def render_audit(result: ConformanceAuditResult) -> str:
     """Render the ratchet comparison, violations first."""
     current = _current_ceilings(result.report)
     floors = _current_floors(result.report)
+    progress = _current_progress(result.report)
     lines = [
         _kv_line(
             "audit",
@@ -1183,6 +1391,7 @@ def render_audit(result: ConformanceAuditResult) -> str:
             passed=result.passed,
             ratchet_violations=len(result.ratchet_violations),
             vacuity_violations=len(result.vacuity_violations),
+            progress_violations=len(result.progress_violations),
             baseline_recorded_at=result.baseline.recorded_at,
         ),
     ]
@@ -1204,26 +1413,24 @@ def render_audit(result: ConformanceAuditResult) -> str:
         )
         for field_name in ConformanceVacuityFloors.model_fields
     )
+    lines.extend(
+        _kv_line(
+            "progress",
+            counter=field_name,
+            current=getattr(progress, field_name),
+            required=getattr(result.baseline.progress, field_name),
+        )
+        for field_name in ConformanceProgressFloors.model_fields
+    )
     lines.extend(_kv_line("violation", kind="vacuity", detail=item) for item in result.vacuity_violations)
+    lines.extend(_kv_line("violation", kind="progress", detail=item) for item in result.progress_violations)
     lines.extend(_kv_line("violation", kind="ratchet", detail=item) for item in result.ratchet_violations)
     return "\n".join(lines)
 
 
 def _current_ceilings(report: ConformanceReport) -> ConformanceRatchetCeilings:
-    """Project the report's shrink-only backlog and defect counters.
-
-    Both review counters read the same census, and the subtraction rather than a
-    second sum is deliberate: every revision the census does not record as
-    operator-reviewed lacks operator review, whatever tier it does declare, so a
-    fourth status added to the vocabulary tomorrow enrols itself in the operator
-    backlog instead of silently escaping it.
-    """
+    """Project the report's shrink-only defect counters."""
     return ConformanceRatchetCeilings(
-        unreviewed_revisions=report.review_status_census.get(RevisionReviewStatus.PENDING_REVIEW.value, 0),
-        revisions_without_operator_review=(
-            report.revision_count - report.review_status_census.get(RevisionReviewStatus.OPERATOR_REVIEWED.value, 0)
-        ),
-        revisions_without_engineered_by=report.revision_count - report.engineered_by_declared_count,
         grounding_findings=report.grounding_finding_count,
         modelo_scope_classification_findings=report.modelo_scope_classification_finding_count,
         required_coverage_gap_rows=report.required_coverage_gap_row_count,
@@ -1232,7 +1439,29 @@ def _current_ceilings(report: ConformanceReport) -> ConformanceRatchetCeilings:
         unused_declared_axes=len(report.unused_declared_axes),
         scope_diagnostics=report.scope_diagnostic_count,
         locale_unavailable_modelos=len(report.locale_unavailable_modelos),
-        untranslated_locale_labels=report.untranslated_locale_labels,
+    )
+
+
+def _current_progress(report: ConformanceReport) -> ConformanceProgressFloors:
+    """Project the grow-only provenance and translation the tree already carries.
+
+    ``reviewed_revisions`` subtracts the pending census from the population
+    rather than summing the reviewed tiers, so a fourth status added to the
+    vocabulary tomorrow counts as review instead of silently escaping the floor.
+    ``operator_reviewed_revisions`` reads its census entry directly, because for
+    that floor the exact count is the claim and a subtraction would credit any
+    future tier with a signoff it does not carry.
+    """
+    return ConformanceProgressFloors(
+        reviewed_revisions=(
+            report.revision_count - report.review_status_census.get(RevisionReviewStatus.PENDING_REVIEW.value, 0)
+        ),
+        operator_reviewed_revisions=report.review_status_census.get(
+            RevisionReviewStatus.OPERATOR_REVIEWED.value,
+            0,
+        ),
+        revisions_with_engineered_by=report.engineered_by_declared_count,
+        translated_locale_labels=report.translated_locale_labels,
     )
 
 
@@ -1261,6 +1490,14 @@ def reviewer_attribution(review_status: str, reviewed_by: str | None) -> str | N
     ``operator_reviewed`` by convention, which is a rule a reader has to know
     before the column is safe — and the reader who does not know it is the one
     this join exists to protect.
+
+    The result is parseable at its FIRST separator, whatever the reviewer name
+    contains: no status value carries a colon, so everything before the first
+    one is the tier and everything after it is the name. A reviewer such as
+    ``agent:opus-executor`` is therefore unambiguous and stays legal. The
+    hazard the writer refuses is narrower and is about the RAW field, not this
+    one: a reviewer whose own leading segment is a status token reads, on its
+    own, as an already-qualified attribution.
     """
     if reviewed_by is None:
         return None

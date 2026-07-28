@@ -21,8 +21,8 @@ from .._schema import (
     ExtractionTargetDefinition,
     ModeloRevision,
     ParameterDefinition,
-    VerificationPredicateDefinition,
 )
+from .._schema_verification import VerificationPredicateDefinition
 from .._validate import RegistryValidator
 from ._registry_schema_support import (
     _as_communication_revision,

@@ -12,11 +12,16 @@
 # download page falls back to its offline channel table when the payload is
 # absent, so it degrades to a floor and never to a lie.
 #
-# INERT UNTIL PROVISIONED. The deploy role does not exist yet (operator decision
-# OP-3), and the publisher additionally refuses to run under CI by design. Both
-# are deliberate: this workflow is authored so the shape is reviewable and its
-# conformance is gated, and it refuses instructively rather than failing
-# obscurely until the role and the protected environment exist.
+# INERT UNTIL PROVISIONED, in one place rather than two. The deploy role does
+# not exist yet (operator decision OP-3), so this workflow refuses instructively
+# in its first step rather than failing obscurely later.
+#
+# The publisher's blanket refusal to run under automation is gone, because
+# publishing the site from here is now a supported authority rather than an
+# accident. It did not become unguarded: the publisher requires the role
+# identifier this job exports below, which the protected environment supplies
+# only once the role exists. So the permission opens on provisioning, not on a
+# commit, and every automated run outside this environment is still refused.
 name: Cadrumo Docs Publish
 
 on:
@@ -93,7 +98,12 @@ jobs:
 
       - name: Publish the documentation site
         env:
-          DOCS_DEPLOY_ROLE: ${{ vars.CADRUMO_DOCS_DEPLOY_ROLE }}
+          # The publisher reads this variable by name: its presence is how an
+          # automated run proves it is this environment-bound job rather than
+          # some other job on the shared fleet that happens to hold an ambient
+          # cloud session. Exported under the publisher's own name, so the two
+          # halves cannot drift apart silently.
+          CADRUMO_DOCS_DEPLOY_ROLE: ${{ vars.CADRUMO_DOCS_DEPLOY_ROLE }}
         run: |
           uv run --no-sync python -m dev.deploy.docs_static_site publish \
             --confirm publish-cadrumo-docs

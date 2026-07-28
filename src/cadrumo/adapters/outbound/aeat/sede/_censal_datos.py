@@ -105,6 +105,31 @@ _READ_GUARD_POLICY = RemoteStateGuardPolicy(
     allowed_hosts=(_SEDE_HOST,),
     # Widened to the AEAT apex so whichever ``www{n}`` the selector dispatches
     # to is admitted; success detection stays on the censal path and marker.
+    #
+    # This is a DELIBERATE divergence from the posture
+    # ``remote_state_policy_from_cross_reference`` takes, which sets no host
+    # suffixes so a policy admits exactly the hosts its surface declares. That
+    # posture carves out a surface whose reads genuinely span AEAT's numbered
+    # pool, and this is one: the route is entered through the host-agnostic
+    # selector and AEAT assigns the number per session, so the answering host
+    # is not knowable when the policy is built.
+    #
+    # The carve-out's own remedy is to ENUMERATE the pool on ``allowed_hosts``,
+    # which is what the declarations cross-references do (``www1``, ``www6``
+    # declared in registry TOML). That remedy is not available here yet and the
+    # reason is external: which numbered hosts serve the censal route is a fact
+    # about AEAT, and this tree carries no observation of it. Some numbered
+    # hosts do not serve the route and others refuse a session minted
+    # elsewhere, so the set cannot be inferred from the ones that serve
+    # declarations.
+    #
+    # Narrowing therefore waits on an operator probe: authenticate, run the
+    # censal read repeatedly, and collect the ``host=`` values
+    # ``_resolve_dispatched_origin`` logs. Enough runs to see the pool repeat
+    # gives the enumeration; until then the apex widening is the honest
+    # statement of what is known. Note the host guard is not the no-write wall
+    # -- ``_FORBIDDEN_LANDING_MARKERS`` is -- so the widening does not loosen
+    # the write refusal.
     allowed_host_suffixes=(_AEAT_HOST_SUFFIX,),
     allowed_browser_action_patterns=_EXTERNAL.aeat.live_safety.censal_browser_action_patterns,
     synthetic_data_allowed=False,

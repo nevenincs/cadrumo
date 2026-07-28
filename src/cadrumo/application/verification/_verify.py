@@ -89,6 +89,42 @@ def verify_declaracion(
 ) -> VerificationVerdict:
     """Compare the printed casilla values against a registry snapshot.
 
+    **Deliberately unwired reference implementation. Do not delete as dead code.**
+
+    This function has no production caller and no entrypoint surface, which is
+    what makes it read as an abandoned build on a reachability sweep. It is
+    not. It is the canonical statement of the registry-declared reconciliation
+    scope -- the fold of a revision's verification expectations into a
+    :class:`~domain.calculations.registry.RegistryVerificationPolicy`, and the
+    rule that ``computed_casilla_ids`` is compared in full while
+    ``reconcile_when_present_casilla_ids`` is compared only where the document
+    actually prints it -- and other modules define their own behaviour by
+    pointing here rather than restating it.
+
+    Deleting it would leave those citations resolving to nothing, so the
+    reference is load-bearing even though the call graph is empty. Wiring it
+    remains available and is not foreclosed; it needs an operator verb designed
+    under the current two-family command vocabulary, which is a separate
+    decision from this one.
+
+    Callers that cite it, confirmed by search rather than assumed:
+
+    - :mod:`application.modelo._reconcile` and
+      :mod:`application.modelo._reconcile_casilla` describe their own scoping
+      as "the same policy" and as mirroring this treatment. They are the two
+      production modules that depend on this definition.
+    - :mod:`application.verification._schema` cites it for a different reason:
+      its :class:`DiscrepancyCause` categories mirror this classifier, not its
+      scope.
+    - Seven Modelo 100 grounded-oracle tests under
+      ``domain.calculations.registry.tests`` describe the projection they
+      assert against as "the projection ``verify_declaracion`` consumes".
+
+    The enrolled reconcile path is not a replacement and retiring this in its
+    favour would lose a capability rather than remove a duplicate: it compares
+    against a persisted :class:`~domain.modelos.CalculationRevision`, where
+    this computes fresh from the printed inputs and needs no revision to exist.
+
     Args:
         declaracion: The parsed filing returned by
             :func:`cadrumo.adapters.inbound.declaracion.parse_declaracion`.

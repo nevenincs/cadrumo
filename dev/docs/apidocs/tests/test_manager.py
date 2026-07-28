@@ -101,6 +101,92 @@ def test_check_detects_stale_stub_content(tmp_path: pytest.TempPathFactory) -> N
     assert not drift.is_conformant
 
 
+def test_check_detects_a_terminator_translated_stub(tmp_path: pytest.TempPathFactory) -> None:
+    """check() reports a stub whose terminators were translated after it was written.
+
+    This is the case a decoded-text comparison structurally cannot reach.
+    ``Path.read_text`` is universal-newline, so the planted CRLF bytes decode
+    to exactly the canonical string — the middle assertion below asserts that
+    equality outright, which is the comparison the check used to perform and
+    pass. Git is equally blind: the repository normalises to LF on the index
+    side, so the same file shows no diff. The stale verdict at the end is
+    therefore the only reader in the system that can see this drift at all.
+    """
+    from pathlib import Path
+
+    repo_root = Path(__file__).resolve().parents[4]
+    src_cadrumo = repo_root / "src" / "cadrumo"
+    docs_api = tmp_path / "api"
+
+    manager = ApiStubManager(src_cadrumo=src_cadrumo, docs_api=docs_api)
+    manager.scaffold()
+    assert manager.check().is_conformant, "the tree must be clean before the drift is planted"
+
+    target = docs_api / "cadrumo.core.errors.rst"
+    canonical = target.read_bytes()
+    assert b"\r\n" not in canonical, "the generator must emit line feeds for the plant to mean anything"
+
+    target.write_bytes(canonical.replace(b"\n", b"\r\n"))
+
+    assert target.read_text(encoding="utf-8") == canonical.decode("utf-8"), (
+        "the planted file must still decode to the canonical text, or this proves nothing "
+        "about the comparison that normalised terminators away"
+    )
+
+    drift = manager.check()
+    assert "cadrumo.core.errors" in drift.stale_stubs
+    assert not drift.is_conformant
+
+
+def test_scaffold_writes_line_feed_terminators(tmp_path: pytest.TempPathFactory) -> None:
+    """Every stub the generator writes carries line feeds, on every platform.
+
+    Without the explicit newline the writer translates on write, which is how
+    a check that reads through the same translation came to be blind to its
+    own output.
+    """
+    from pathlib import Path
+
+    repo_root = Path(__file__).resolve().parents[4]
+    src_cadrumo = repo_root / "src" / "cadrumo"
+    docs_api = tmp_path / "api"
+
+    manager = ApiStubManager(src_cadrumo=src_cadrumo, docs_api=docs_api)
+    result = manager.scaffold()
+
+    stubs = sorted(docs_api.glob("*.rst"))
+    assert len(stubs) == result.written, "the scan must cover every stub the run reported writing"
+
+    translated = [stub.name for stub in stubs if b"\r\n" in stub.read_bytes()]
+    assert not translated, f"the generator translated terminators in {len(translated)} stubs: {translated[:5]}"
+
+
+def test_scaffold_rewrites_a_terminator_translated_stub(tmp_path: pytest.TempPathFactory) -> None:
+    """scaffold() restores a translated stub instead of counting it unchanged.
+
+    The skip-if-current branch shares the comparison with check(), so a text
+    comparison would have skipped this file forever and left the drift on disk
+    permanently.
+    """
+    from pathlib import Path
+
+    repo_root = Path(__file__).resolve().parents[4]
+    src_cadrumo = repo_root / "src" / "cadrumo"
+    docs_api = tmp_path / "api"
+
+    manager = ApiStubManager(src_cadrumo=src_cadrumo, docs_api=docs_api)
+    manager.scaffold()
+
+    target = docs_api / "cadrumo.core.errors.rst"
+    canonical = target.read_bytes()
+    target.write_bytes(canonical.replace(b"\n", b"\r\n"))
+
+    second = manager.scaffold()
+
+    assert second.written == 1, f"expected the one translated stub to be rewritten, got {second.written}"
+    assert target.read_bytes() == canonical
+
+
 def test_scaffold_removes_stale_stub(tmp_path: pytest.TempPathFactory) -> None:
     """scaffold() removes stubs whose backing module no longer exists.
 

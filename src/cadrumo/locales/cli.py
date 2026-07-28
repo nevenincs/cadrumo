@@ -164,6 +164,27 @@ def status(
         _echo_catalogue_status(record)
     if not modelos and modelo_id is None:
         return
+    _echo_modelo_scan(
+        registry_root=registry_root,
+        modelo_id=modelo_id,
+        revision_id=revision_id,
+        locales=locales,
+    )
+
+
+def _echo_modelo_scan(
+    *,
+    registry_root: Path | None,
+    modelo_id: str | None,
+    revision_id: str | None,
+    locales: list[OutputLanguage] | None,
+) -> None:
+    """Echo the schema-local state of every scanned modelo revision.
+
+    Scans every modelo when none is named, and translates a modelo-locale
+    refusal into the CLI's own bad-parameter refusal so an unknown modelo or
+    revision names the offending option rather than escaping as a traceback.
+    """
     modelo_manager = _modelo_manager(registry_root)
     scan_locales = tuple(locales) if locales else _MODELO_STATUS_LOCALES
     modelo_ids = (modelo_id,) if modelo_id is not None else modelo_manager.modelo_ids()

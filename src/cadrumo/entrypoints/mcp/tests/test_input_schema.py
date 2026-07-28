@@ -36,6 +36,74 @@ def test_every_exposable_key_has_a_non_bag_schema() -> None:
         assert "args" not in rendered["properties"]
 
 
+#: The accepted commands whose CLI shape changed, each paired with the resolved
+#: CLI path click dispatches on. All three families are NESTED two levels under
+#: ``config``, which is the shape the earlier flat keys did not exercise.
+_ACCEPTED_CHANGED_COMMANDS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("config.passphrase.change", ("config", "passphrase", "change")),
+    ("config.recovery.status", ("config", "recovery", "status")),
+    ("config.recovery.create", ("config", "recovery", "create")),
+    ("config.recovery.rotate", ("config", "recovery", "rotate")),
+    ("config.recovery.verify", ("config", "recovery", "verify")),
+    ("config.reset.start", ("config", "reset", "start")),
+    ("config.reset.status", ("config", "reset", "status")),
+    ("config.reset.resume", ("config", "reset", "resume")),
+)
+
+
+def test_every_accepted_changed_command_derives_a_nested_schema() -> None:
+    """Each changed command is exposable AND derives a typed nested schema.
+
+    The membership assertion is the point. The sweep above iterates whatever
+    happens to be exposable and asserts a shape over it, so a command silently
+    dropping out of the exposable set removes itself from that sweep and the
+    floor of two hundred absorbs the loss without a failure. Naming these keys
+    makes their disappearance a red test rather than a smaller corpus.
+    """
+
+    exposable = _exposable_keys()
+    schemas = build_verb_input_schemas(exposable)
+
+    for key, cli_path in _ACCEPTED_CHANGED_COMMANDS:
+        assert key in exposable, f"accepted changed command is no longer exposable: {key}"
+        schema = schemas[key]
+        rendered = schema.json_schema()
+        assert rendered["type"] == "object"
+        assert rendered["additionalProperties"] is False
+        assert "args" not in rendered["properties"], f"{key} fell back to the retired args bag"
+        assert schema.cli_path == cli_path
+        assert schema.parameters, f"{key} derived an empty parameter list"
+
+
+def test_the_nested_reset_family_derives_each_verbs_own_arguments() -> None:
+    """The changed commands are checked for real parameters, not just shape.
+
+    Every assertion in the sweep above holds for a schema that resolved the
+    right command path and read none of its parameters, so at least one family
+    is read for its contents.
+
+    The reset family discriminates itself: an operation id addresses an
+    EXISTING operation, so ``status`` and ``resume`` take one while ``start``,
+    which creates the operation, does not. A derivation that emitted one
+    parameter set for the whole group would fail this, which is what makes it
+    evidence of per-verb derivation rather than of a family default.
+    """
+
+    schemas = build_verb_input_schemas(_exposable_keys())
+
+    def names(key: str) -> set[str]:
+        return {parameter.name for parameter in schemas[key].parameters}
+
+    assert "operation_id" in names("config.reset.resume")
+    assert "operation_id" in names("config.reset.status")
+    assert "operation_id" not in names("config.reset.start")
+
+    # Resume carries the confirmation and retention arguments that status does
+    # not, so the two are distinguished on more than the shared id.
+    assert {"yes", "override_retention", "reason"} <= names("config.reset.resume")
+    assert names("config.reset.status") == {"operation_id"}
+
+
 def test_positional_argument_is_not_an_option() -> None:
     schemas = build_verb_input_schemas(_exposable_keys())
     calculate = schemas["modelo.work.calculate"]

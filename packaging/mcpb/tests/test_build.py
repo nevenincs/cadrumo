@@ -10,6 +10,8 @@ import shutil
 import stat
 import subprocess
 import sys
+import textwrap
+import time
 import tomllib
 import zipfile
 from collections.abc import Callable
@@ -19,7 +21,12 @@ from typing import cast
 
 import pytest
 from dev.packaging.python_cohort import load_python_cohort
-from dev.packaging.smoke_core import _build_companion_wheels, _build_wheel, _run
+from dev.packaging.smoke_core import (
+    _build_companion_wheels,
+    _build_wheel,
+    _commit_defined_build_root,
+    _run,
+)
 from dev.packaging.smoke_sdist_core import _build_sdist
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
@@ -90,17 +97,24 @@ def real_cohort(tmp_path_factory: pytest.TempPathFactory) -> Path:
     work = tmp_path_factory.mktemp("mcpb-real-cohort")
     cohort_dir = work / "cohort"
     cohort_dir.mkdir()
-    root_wheel = _build_wheel(_REPO_ROOT, work, uv)
-    manuals_wheel, official_wheel = _build_companion_wheels(_REPO_ROOT, work, uv)
-    root_sdist = _build_sdist(_REPO_ROOT, work, uv)
+    # Build from a commit-defined root, not the working tree. In this shared
+    # worktree a peer's uncommitted edit would otherwise ride into the wheels,
+    # and the cohort this bundle binds would describe bytes matching no commit.
+    # On a clean checkout this IS the tree, so CI pays nothing. The wheel build
+    # still takes the real repository too, because its tracked-data queries need
+    # Git and the extract has no ``.git``.
+    build_root = _commit_defined_build_root(_REPO_ROOT, work)
+    root_wheel = _build_wheel(_REPO_ROOT, work, uv, build_root=build_root)
+    manuals_wheel, official_wheel = _build_companion_wheels(work, uv, build_root=build_root)
+    root_sdist = _build_sdist(work, uv, build_root=build_root)
     companion_sdists = work / "companion-sdists"
     _run(
         [uv, "build", "--sdist", "--out-dir", str(companion_sdists)],
-        cwd=_REPO_ROOT / "packaging" / "cadrumo_data_manuals",
+        cwd=build_root / "packaging" / "cadrumo_data_manuals",
     )
     _run(
         [uv, "build", "--sdist", "--out-dir", str(companion_sdists)],
-        cwd=_REPO_ROOT / "packaging" / "cadrumo_data_official",
+        cwd=build_root / "packaging" / "cadrumo_data_official",
     )
     manuals_sdist = next(companion_sdists.glob("cadrumo_data_manuals-*.tar.gz"))
     official_sdist = next(companion_sdists.glob("cadrumo_data_official-*.tar.gz"))
@@ -228,6 +242,92 @@ def test_bootstrap_require_min_uv_refuses_a_below_floor_uv(tmp_path: Path) -> No
     assert "0.1.0" in message
 
 
+def test_bootstrap_supervised_server_cannot_outlive_a_killed_bootstrap(tmp_path: Path) -> None:
+    """Killing the bootstrap reaps the server it supervises, leaving no orphan.
+
+    On Windows the bootstrap cannot ``execv`` (CPython joins argv without
+    quoting, and every real install lives under a spaced path), so it supervises
+    the real server as a child. A plain child survives its parent's death and
+    becomes a leaked MCP server holding its warm caches forever. The job object
+    is what makes that impossible, and this proves it against real processes
+    rather than trusting the flag.
+
+    On POSIX the bootstrap ``execv``s, so there is no second process and no
+    orphan is structurally possible; the assertion there is that no supervision
+    is attempted at all.
+    """
+    (tmp_path / "src").mkdir(parents=True)
+    namespace = _load_bootstrap_namespace(tmp_path)
+    if os.name != "nt":
+        # The POSIX branch replaces the process image; nothing to supervise.
+        assert "os.execv" in cast("str", BUILD._BOOTSTRAP_SOURCE)
+        return
+
+    make_job = cast("Callable[[], object]", namespace["_kill_on_close_job"])
+    assign = cast("Callable[[object, int], None]", namespace["_assign_to_job"])
+
+    # A parent that builds the job, spawns a long-lived grandchild into it, and
+    # then blocks - standing in for the bootstrap supervising the real server.
+    parent_code = textwrap.dedent(
+        f"""
+        import subprocess, sys, time
+        sys.path.insert(0, {str(tmp_path / "src")!r})
+        ns = {{"__file__": {str(tmp_path / "src" / "server.py")!r}, "__name__": "probe"}}
+        exec(compile(open({str(tmp_path / "src" / "bootstrap_src.py")!r}, encoding="utf-8").read(), "s", "exec"), ns)
+        job = ns["_kill_on_close_job"]()
+        child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(300)"])
+        ns["_assign_to_job"](job, child.pid)
+        print(child.pid, flush=True)
+        time.sleep(300)
+        """
+    )
+    (tmp_path / "src" / "bootstrap_src.py").write_text(cast("str", BUILD._BOOTSTRAP_SOURCE), encoding="utf-8")
+    assert make_job() is not None, "the job object could not be created"
+    assert callable(assign)
+
+    parent = subprocess.Popen(  # noqa: S603 - fixed argv, test-owned source
+        [sys.executable, "-c", parent_code],
+        stdout=subprocess.PIPE,
+        text=True,
+    )
+    grandchild_pid = 0
+    try:
+        assert parent.stdout is not None
+        grandchild_pid = int(parent.stdout.readline())
+        # The grandchild is genuinely running before the kill.
+        assert _pid_running(grandchild_pid), "the supervised child never started"
+        parent.kill()
+        parent.wait(timeout=60)
+        deadline = time.monotonic() + 30
+        while time.monotonic() < deadline:
+            if not _pid_running(grandchild_pid):
+                break
+            time.sleep(0.5)
+        assert not _pid_running(grandchild_pid), (
+            "the supervised server outlived its bootstrap; it would have leaked as an orphan"
+        )
+    finally:
+        if parent.poll() is None:
+            parent.kill()
+        if grandchild_pid:
+            subprocess.run(  # noqa: S603 - fixed argv
+                ["taskkill", "/PID", str(grandchild_pid), "/F"],  # noqa: S607 - Windows system tool from PATH
+                capture_output=True,
+                check=False,
+            )
+
+
+def _pid_running(pid: int) -> bool:
+    """Whether *pid* is a live process (Windows), by enumeration not OpenProcess."""
+    completed = subprocess.run(  # noqa: S603 - fixed argv
+        ["tasklist", "/FI", f"PID eq {pid}", "/NH"],  # noqa: S607 - Windows system tool from PATH
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return str(pid) in completed.stdout
+
+
 def test_bootstrap_require_min_uv_accepts_an_at_or_above_floor_uv(tmp_path: Path) -> None:
     """A launcher reporting a version above the floor passes without SystemExit."""
     (tmp_path / "src").mkdir(parents=True)
@@ -352,9 +452,7 @@ def test_build_contains_exact_wheels_and_canonical_digest_binding(
         bootstrap = archive.read("src/server.py").decode()
         launcher = archive.read("src/_serve.py").decode()
     # The staged constraints file pins the transitive closure from the tested lock.
-    constraint_lines = [
-        line for line in constraints.splitlines() if line and not line.startswith("#")
-    ]
+    constraint_lines = [line for line in constraints.splitlines() if line and not line.startswith("#")]
     assert constraint_lines
     assert all("==" in line for line in constraint_lines)
     expected_sha256 = {

@@ -74,6 +74,7 @@ from ...domain.iva import (
     RegularizacionProrrataResult,
     compute_prorrata_definitiva_anual,
     compute_regularizacion_prorrata_anual,
+    especial_mandatory_rule,
     is_especial_mandatory,
     m303_annual_settlement_period_order,
 )
@@ -1080,9 +1081,10 @@ def build_prorrata_regularizacion_advisory(
     return result, diagnostic
 
 
-#: The binding provision of the +10% mandatory-especial obligation (LIVA art.
-#: 103.Dos.2, "cuando el montante total de las cuotas deducibles ... exceda en un
-#: 10 por ciento o más ... por aplicación de la regla de prorrata especial").
+#: The binding provision of the mandatory-especial obligation (LIVA art.
+#: 103.Dos.2.º, "cuando el montante total de las cuotas deducibles ... exceda en
+#: un 10 por ciento o más ... por aplicación de la regla de prorrata especial" in
+#: the redaction in force from filing year 2015; twenty percent before it).
 _ESPECIAL_MANDATORY_LEGAL_REF: Final = "ley-37-1992:art-103"
 
 
@@ -1092,12 +1094,13 @@ def build_prorrata_especial_mandatory_advisory(
     deduction_under_especial: Decimal,
     ejercicio: int,
 ) -> Notice | None:
-    """Build the LIVA art. 103.Dos.2 +10% mandatory-especial settlement advisory.
+    """Build the LIVA art. 103.Dos.2.º mandatory-especial settlement advisory.
 
     At settlement (4T / 0A), once the ejercicio's deducción computed under the
-    general regime and under the especial regime are both known, art. 103.Dos.2
+    general regime and under the especial regime are both known, art. 103.Dos.2.º
     makes prorrata especial OBLIGATORY when the general-regime deduction exceeds
-    the especial-regime deduction by ten percent or more
+    the especial-regime deduction by the margin in force for that ejercicio —
+    ten percent or more from 2015, more than twenty percent before it
     (:func:`~domain.iva.is_especial_mandatory`). This surfaces that obligation as
     a NON-BLOCKING warning :class:`~core.json_contract.Notice` so the operator
     elects and records especial before filing; it NEVER refuses the in-progress
@@ -1115,11 +1118,13 @@ def build_prorrata_especial_mandatory_advisory(
             prorrata especial regime (per-input art. 106 routing).
         ejercicio: The filing year being settled (for the message and context).
     """
-    if not is_especial_mandatory(deduction_under_general, deduction_under_especial):
+    if not is_especial_mandatory(deduction_under_general, deduction_under_especial, year=ejercicio):
         return None
+    rule = especial_mandatory_rule(ejercicio)
+    exceso = f"en un {rule.margin_percentage}% o más" if rule.inclusive else f"en más de un {rule.margin_percentage}%"
     message = (
-        f"Prorrata especial obligatoria para {ejercicio} (LIVA art. 103.Dos.2): la deducción por "
-        f"prorrata general ({deduction_under_general}) supera en un 10% o más la deducción por prorrata "
+        f"Prorrata especial obligatoria para {ejercicio} (LIVA art. 103.Dos.2.º): la deducción por "
+        f"prorrata general ({deduction_under_general}) supera {exceso} la deducción por prorrata "
         f"especial ({deduction_under_especial}). Aplique y registre la prorrata especial del ejercicio; "
         "este aviso no bloquea la presentación."
     )
@@ -1132,6 +1137,12 @@ def build_prorrata_especial_mandatory_advisory(
             "regime": ProrrataRegisterRegime.ESPECIAL.value,
             "deduction_under_general": str(deduction_under_general),
             "deduction_under_especial": str(deduction_under_especial),
+            # The art. 103.Dos.2.º margin actually applied, and whether reaching
+            # it sufficed. Both are year-dependent (twenty percent exclusive
+            # before 2015, ten percent inclusive after), so an operator reading
+            # the envelope can tell which redaction produced the obligation.
+            "margin_percentage": str(rule.margin_percentage),
+            "margin_inclusive": "true" if rule.inclusive else "false",
             "legal_refs": _ESPECIAL_MANDATORY_LEGAL_REF,
         },
     )

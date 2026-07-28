@@ -81,7 +81,7 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from .....tests._inventory import SRC_CADRUMO
+from .....tests import SRC_CADRUMO
 from .. import sanitize_pdf
 from .._records import IbanReplacement, NameReplacement, NifReplacement, TokenMap
 from ._residual_identity_scan import (
@@ -92,14 +92,23 @@ from ._residual_identity_scan import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
-#: Obviously-fake identities used to prove the scanner actually fires.
+#: Synthetic specimen identities PLANTED to prove the scanner actually fires.
 #:
 #: Both are checksum-valid but built from all-zero bodies so neither can
 #: resemble a real document or account. ``00000000T`` is the AEAT control letter
 #: for body ``0`` (``TRWAGMYFPDXBNJZSQVHLCKE[0]``); ``ES82`` + twenty zeros is
 #: the mod-97 completion of an all-zero BBAN.
-_FAKE_NIF = "00000000T"
-_FAKE_IBAN = "ES8200000000000000000000"
+#:
+#: Named for what they ARE -- values planted into a specimen -- rather than for
+#: what they are not. They are a positive control, not a test double: nothing
+#: here stands in for a collaborator, and the real ``sanitize_pdf`` processes
+#: them. The ``mock/fake/stub/spy/dummy`` vocabulary is banned tree-wide by
+#: ``tests/test_mock_inventory.py`` precisely because it reads as substitution,
+#: which would misdescribe these and mask a real double elsewhere. ``_PLANTED_``
+#: also pairs with the ``_SYNTHETIC_`` values below, so the specimen's before
+#: and after sides are one vocabulary.
+_PLANTED_NIF = "00000000T"
+_PLANTED_IBAN = "ES8200000000000000000000"
 _PLANTED_NAME = "NOMBRE DE PRUEBA CERO"
 """The name the pre-sanitisation specimen carries before the sanitiser rewrites it.
 
@@ -210,7 +219,7 @@ def test_scanner_flags_a_planted_identity_the_sidecar_does_not_account_for() -> 
     checksum-valid identities into a document whose sidecar declares no
     replacements must produce exactly two blocking findings.
     """
-    planted = _pdf_bytes_containing(f"NIF {_FAKE_NIF} IBAN {_FAKE_IBAN}")
+    planted = _pdf_bytes_containing(f"NIF {_PLANTED_NIF} IBAN {_PLANTED_IBAN}")
     findings = scan_for_residual_identities(planted, {"replacements_applied": []})
     kinds = {finding.kind for finding in findings}
     assert kinds == {ResidualKind.NIF_NIE, ResidualKind.IBAN}, (
@@ -227,11 +236,11 @@ def test_scanner_does_not_flag_a_value_the_sidecar_accounts_for() -> None:
     this test ever fails, the gate has become a noise generator and will be
     silenced -- the failure mode that left the original hole open.
     """
-    planted = _pdf_bytes_containing(f"NIF {_FAKE_NIF} IBAN {_FAKE_IBAN}")
+    planted = _pdf_bytes_containing(f"NIF {_PLANTED_NIF} IBAN {_PLANTED_IBAN}")
     sidecar = {
         "replacements_applied": [
-            {"synthetic": _FAKE_NIF},
-            {"synthetic": _FAKE_IBAN},
+            {"synthetic": _PLANTED_NIF},
+            {"synthetic": _PLANTED_IBAN},
         ]
     }
     assert scan_for_residual_identities(planted, sidecar) == ()
@@ -336,8 +345,8 @@ def _pre_sanitisation_specimen() -> bytes:
     """A document deliberately carrying checksum-valid identity, never committed.
 
     See the module docstring for why this is generated rather than stored. The
-    values are the same obviously-fake pair the planted-identity proofs use, so
-    a reader meets one vocabulary rather than two.
+    values are the same all-zero planted pair the planted-identity proofs use,
+    so a reader meets one vocabulary rather than two.
     """
     import io
 
@@ -347,12 +356,12 @@ def _pre_sanitisation_specimen() -> bytes:
     buffer = io.BytesIO()
     pdf_canvas = canvas.Canvas(buffer, pagesize=A4, invariant=True)
     # DocInfo: a surface the sanitiser scrubs separately from page content.
-    pdf_canvas.setTitle(f"Justificante {_FAKE_NIF}")
+    pdf_canvas.setTitle(f"Justificante {_PLANTED_NIF}")
     pdf_canvas.setAuthor(_PLANTED_NAME)
     pdf_canvas.setFont("Helvetica", 10)
-    pdf_canvas.drawString(50, 760, f"NIF: {_FAKE_NIF}")
+    pdf_canvas.drawString(50, 760, f"NIF: {_PLANTED_NIF}")
     pdf_canvas.drawString(50, 740, f"Apellidos y nombre: {_PLANTED_NAME}")
-    pdf_canvas.drawString(50, 720, f"Codigo Cuenta Cliente (IBAN): {_FAKE_IBAN}")
+    pdf_canvas.drawString(50, 720, f"Codigo Cuenta Cliente (IBAN): {_PLANTED_IBAN}")
     pdf_canvas.showPage()
     pdf_canvas.save()
     return buffer.getvalue()
@@ -368,12 +377,14 @@ def _pre_sanitisation_token_map() -> TokenMap:
     ``replacements_applied`` distinguishes them from a residual.
     """
     return TokenMap(
-        nif=(NifReplacement(real=SecretStr(_FAKE_NIF), synthetic=_SYNTHETIC_NIF, surface_label="taxpayer NIF"),),
+        nif=(NifReplacement(real=SecretStr(_PLANTED_NIF), synthetic=_SYNTHETIC_NIF, surface_label="taxpayer NIF"),),
         name=(
             NameReplacement(real=SecretStr(_PLANTED_NAME), synthetic=_SYNTHETIC_NAME, surface_label="taxpayer name"),
         ),
         iban=(
-            IbanReplacement(real=SecretStr(_FAKE_IBAN), synthetic=_SYNTHETIC_IBAN, surface_label="domiciliacion IBAN"),
+            IbanReplacement(
+                real=SecretStr(_PLANTED_IBAN), synthetic=_SYNTHETIC_IBAN, surface_label="domiciliacion IBAN"
+            ),
         ),
     )
 

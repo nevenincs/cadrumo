@@ -272,6 +272,39 @@ legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-43"]
 
+# Casilla 44 is `input_kind = "manual"` with NO formula BY DECISION, not by
+# omission. LIVA art. 105.Cuatro settles the definitive prorrata in the year's
+# last declaracion-liquidacion and regularises the provisional deductions; the
+# regularisation amount therefore needs TWO operands that are not casillas of
+# this revision. The provisional percentage is art. 105.Uno - "el porcentaje de
+# deduccion provisionalmente aplicable cada ano natural sera el fijado como
+# definitivo para el ano precedente" - i.e. the PRIOR ejercicio's definitive
+# percentage, held in the profile-scoped encrypted prorrata register, and the
+# cuotas soportadas base is art. 105.Seis - "la suma de las cuotas soportadas
+# ... durante el ano natural correspondiente" - a sum ACROSS the regularised
+# quarters. A registry formula evaluates within one period against this
+# revision's own casillas, so neither operand is expressible as a formula
+# argument; a formula could only be written by inventing a value when the
+# cross-period carry is unresolvable, which would replace a visible advisory
+# with a silent default in a fourth-quarter settlement box.
+#
+# The value is NOT left to the operator. It is produced by the
+# `modelo-303-prorrata-regularizacion-casilla-44` binding
+# (`source = "prorrata_regularizacion"`, `regularizacion_output =
+# "modelo_303_casilla_44"`), whose resolver is enrolled on the live calculate
+# path and feeds casilla 44 as a bound input; when the provisional carry or the
+# current-year source casillas do not resolve it returns unresolved-binding
+# diagnostics rather than a zero. That cross-period carry is the one canonical
+# mechanism for this value, so adding a formula would model one fold-in twice.
+#
+# The remaining silent-under-declaration risk - a declared annual prorrata
+# volume with casilla 44 left blank - is closed by the ADVISORY predicate
+# authored in this revision's `verification_expectations/` fragments, mirroring
+# the sibling 2023-y-siguientes revision. Art. 105 has exactly one amendment
+# (Ley 14/2000, in force 2001-01-01, touching apartado Tres only), so apartados
+# Uno, Cuatro and Seis are textually identical across both revision windows -
+# this revision opens in 2009, after that amendment - and the same reasoning
+# binds each.
 [[revisions.2009-y-siguientes.casillas]]
 id = "44"
 number = "44"

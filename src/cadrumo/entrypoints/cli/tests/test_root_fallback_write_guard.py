@@ -314,13 +314,13 @@ def _live_leaf_paths() -> tuple[str, ...]:
     # the tests fail on it. Removing the suppression honestly needs an adapter
     # across the two hierarchies, which is a design decision, not a cleanup.
     def walk(command: object, prefix: list[str], parent: click.Context | None) -> None:
-        ctx = click.Context(command, info_name=prefix[-1] if prefix else "aeat", parent=parent)  # type: ignore[arg-type]
-        names = list(command.list_commands(ctx)) if hasattr(command, "list_commands") else []
+        ctx = click.Context(command, info_name=prefix[-1] if prefix else "aeat", parent=parent)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+        names = list(command.list_commands(ctx)) if hasattr(command, "list_commands") else []  # ty: ignore[call-non-callable]
         if not names:
             leaves.append(" ".join(prefix))
             return
         for name in sorted(names):
-            child = command.get_command(ctx, name)  # type: ignore[attr-defined]
+            child = command.get_command(ctx, name)  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
             if child is not None:
                 walk(child, [*prefix, name], ctx)
 

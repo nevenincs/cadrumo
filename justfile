@@ -410,7 +410,7 @@ test-integration:
 # `src/cadrumo/tests/test_dev_tree_lane_coverage.py`, which fails when a new
 # test directory appears under `dev/` that no lane names.
 test-dev-tooling:
-    @uv run --no-sync pytest -q -m "(unit or integration) and not resident_service" dev/audit/tests dev/deploy/tests dev/env/tests dev/tests dev/registry/matrix/tests dev/registry/newmodelo/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests
+    @uv run --no-sync pytest -q -m "(unit or integration) and not resident_service" dev/audit/tests dev/deploy/tests dev/env/tests dev/tests dev/registry/newmodelo/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests
 
 # Enrol the tests that query the resident vaultspec-rag search service. Held out
 # of every other lane by the `resident_service` marker, because the service is a
@@ -499,6 +499,13 @@ audit-dead-code:
 audit-duplication:
     @uv run --no-sync python -m dev.audit.duplication
 
+# Terminators rewritten after checkout are invisible to `git diff` and to every
+# text-mode reader. This is a screen and always exits 0; apply the shrink-only
+# ceiling with `python -m dev.audit.checkout_drift --check`.
+# Count tracked files whose on-disk bytes differ from their committed bytes.
+audit-checkout-drift:
+    @uv run --no-sync python -m dev.audit.checkout_drift
+
 # Perform an on-demand semantic search query delegating to the running RAG daemon.
 audit-rag QUERY:
     @uv run --no-sync vaultspec-rag search "{{QUERY}}" --port 8766 --timeout 45.0
@@ -512,6 +519,8 @@ audit-all:
     -@just audit-dead-code
     @echo "=== duplication ==="
     -@just audit-duplication
+    @echo "=== checkout drift ==="
+    -@just audit-checkout-drift
     @echo "=== security ==="
     -@just check-security
 

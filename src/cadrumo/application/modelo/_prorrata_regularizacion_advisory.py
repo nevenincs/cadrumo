@@ -60,6 +60,7 @@ from decimal import Decimal
 from ...core import BindingSourceKind, Modelo, Period, ProrrataRegisterRegime
 from ...domain.calculations.registry import CasillaId, ModeloRevision
 from ...domain.iva import (
+    especial_mandatory_rule,
     is_m303_annual_settlement_period,
     m303_annual_settlement_order_key,
 )
@@ -89,7 +90,7 @@ _CUOTA_DEDUCIBLE_TOTAL_SEMANTIC_ROLE = "iva_cuota_deducible_total"
 
 _PENDING_PROVISIONAL_SOURCE_KIND = "prorrata_regularizacion_provisional_pending"
 
-#: Shared ``source_kind`` for both LIVA art. 103.Dos.2 +10% mandatory-especial
+#: Shared ``source_kind`` for both LIVA art. 103.Dos.2.º mandatory-especial
 #: settlement diagnostics — the CHECK-branch obligation advisory and the
 #: PROMPT-branch classify-to-enable advisory. The distinguishing ``reason``
 #: (``prorrata_especial_obligatoria`` vs ``prorrata_especial_check_unavailable``)
@@ -184,7 +185,7 @@ def collect_prorrata_regularizacion_diagnostics(
         A tuple of advisories. At the settlement period it may carry the
         casilla-44 regularización advisory (or the pending-percentage advisory),
         the per-period missing-provisional-carry advisory, and the LIVA
-        art. 103.Dos.2 +10% mandatory-especial advisory (the obligation check
+        art. 103.Dos.2.º mandatory-especial advisory (the obligation check
         when both regime totals are honestly computable, or the
         classify-to-enable prompt for a general filer whose especial total is
         not yet derivable). Empty when no advisory fires (non-settlement period,
@@ -203,7 +204,7 @@ def collect_prorrata_regularizacion_diagnostics(
     if not is_m303_annual_settlement_period(Period.from_year_and_code(filing_year, period_token)):
         return missing_carry_diagnostics
 
-    # LIVA art. 103.Dos.2 +10% mandatory-especial settlement check / prompt. This
+    # LIVA art. 103.Dos.2.º mandatory-especial settlement check / prompt. This
     # is independent of the casilla-44 regularización below (it reads the annual
     # ledger totals under both regimes, not the current period's casilla_values),
     # so it is computed once here and appended to every settlement return path —
@@ -272,7 +273,7 @@ def _especial_mandatory_diagnostics(
     filing_year: int,
     bucket_id: str | None,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Return the LIVA art. 103.Dos.2 +10% mandatory-especial settlement diagnostic.
+    """Return the LIVA art. 103.Dos.2.º mandatory-especial settlement diagnostic.
 
     Computes the ejercicio's whole-year deducible IVA cuota under both prorrata
     regimes (one annual aggregation, two apportionment passes) and branches on
@@ -280,7 +281,7 @@ def _especial_mandatory_diagnostics(
 
     * CHECK branch (register regime ESPECIAL — the general shadow is mechanical —
       or regime GENERAL with every deducible soportado row classified): run the
-      real +10% comparison through
+      real art. 103.Dos.2.º comparison through
       :func:`~application.calculations.build_prorrata_especial_mandatory_advisory`
       and surface its message verbatim as a ``prorrata_especial_obligatoria``
       diagnostic. A non-breach returns nothing (no noise).
@@ -322,14 +323,20 @@ def _especial_mandatory_diagnostics(
             ),
         )
 
+    rule = especial_mandatory_rule(filing_year)
+    exceso = (
+        f"en un {rule.margin_percentage} por ciento o más"
+        if rule.inclusive
+        else f"en más de un {rule.margin_percentage} por ciento"
+    )
     return (
         CalculationSourceDiagnostic(
             reason="prorrata_especial_check_unavailable",
             source_kind=_ESPECIAL_MANDATORY_SOURCE_KIND,
             message=(
                 f"La prorrata especial puede ser obligatoria para {filing_year} (LIVA art. 103.Dos.2.º: "
-                "se aplica cuando las cuotas deducibles por prorrata general exceden en un 10 por ciento "
-                "o más de las que resultarían por la regla especial). La comprobación requiere clasificar "
+                f"se aplica cuando las cuotas deducibles por prorrata general exceden {exceso} "
+                "de las que resultarían por la regla especial). La comprobación requiere clasificar "
                 "el uso de cada cuota soportada (art. 106): declare '--input-classification' en las "
                 "operaciones del ejercicio y, en su caso, ejecute 'app ledger prorrata elect-especial "
                 f"--ejercicio {filing_year}'. Quedan {totals.unclassified_deducible_count} operaciones sin clasificar."
