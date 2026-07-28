@@ -136,7 +136,7 @@ Run the real gates, persist the first conformance report as an audit, and close 
 - [x] `P05.S73` - author a decision record governing the IVA prorrata corrections this campaign made and list it on the plan, since eleven steps changed computed tax outcomes under an ADR that authorises only a governance surface; `.vault/adr`.
 - [x] `P05.S74` - rule the capability-fact duplication between the conformance composer and the registry matrix CLI, which independently recompute the same predicates, applying the single-authority answer this campaign already chose for the boundary detector; `dev/registry/matrix/manager.py`.
 - [x] `P05.S75` - correct the two step records that misstate their own state, one claiming this campaign left the tree-wide gates clear and one closing while its stated precondition had not landed; `.vault/exec`.
-- [ ] `P05.S76` - open a follow-up feature tracking the four measurement-audit recommendations so ninety unreviewed revisions, twenty-four classification divergences and five unused schema axes have an owner rather than living as prose; `.vault`.
+- [x] `P05.S76` - open a follow-up feature tracking the four measurement-audit recommendations so ninety unreviewed revisions, twenty-four classification divergences and five unused schema axes have an owner rather than living as prose; `.vault`.
 
 ## Parallelization
 
