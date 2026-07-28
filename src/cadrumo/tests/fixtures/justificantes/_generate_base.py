@@ -32,6 +32,7 @@ from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
 from ....core.external_constants import UTF_8_ENCODING, load_external_constants
+from .. import FIXTURE_PROVENANCE_SYNTHETIC
 
 SYNTHETIC_SANITIZER_VERSION = "0.1.0-synthetic"
 """Sidecar ``sanitizer_version`` for a generator-produced specimen.
@@ -185,8 +186,8 @@ def _write_sidecar(
     sidecar_data = {
         # Fixture-provenance declaration consumed by the verification-source
         # gate: this writer only ever emits synthetic, generator-produced
-        # specimens (the PDF carries /Producer = "aeat-test-fixture-generator").
-        "provenance": "synthetic_generated",
+        # specimens, whose PDFs carry SYNTHETIC_FIXTURE_PRODUCER as /Producer.
+        "provenance": FIXTURE_PROVENANCE_SYNTHETIC,
         "role": role,
         "source_sha256": pdf_sha256,
         "output_sha256": pdf_sha256,
