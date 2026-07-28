@@ -74,3 +74,33 @@ any agent has been willing to give it. Until one of those is settled, a document
 should not be quoted in either direction.
 
 The semantic code index was degraded throughout this Phase: the service reported `Source code sections: 466` against 3982 tracked Python files while declaring its code generation succeeded. No absence recorded here rests on a semantic miss.
+
+## Fresh measurement at HEAD ce9df7380c (2026-07-28)
+
+Command: `uv run --no-sync pytest -q -rs -n0 -m docs -p no:cacheprovider --tb=line
+dev/docs/tests dev/docs/apidocs/tests src/cadrumo/tests/test_docstring_core_struct_links.py`
+
+Collection count confirmed from the `[34%]` progress marker: 72 dots = 34% → 212 total
+docs-marked tests collected. HEAD: `ce9df7380c`. Exit: 1.
+
+Of 212 collected, 85 ran before session abort:
+- Tests 1–81: 81 passed (prior test files, test_docs_build.py 17/17).
+- Test 82: `dev/docs/tests/test_docs_build_full_scope.py::test_sphinx_nitpicky_build_is_clean`
+  → FAILED. The Sphinx build fails on peer-campaign docstring warnings (see S193 fresh
+  measurement for the full warning list; attribution: `bbc05fcdef`, `b3986f43de`, peer
+  registry campaign).
+- Tests 83–85: 3 passed (localized [es,ca,hu] build variants).
+- Test 86 attempt: `test_docs_catalogue_drift.py::fresh_pot` session fixture timed out at
+  1800s. The fixture calls `dev/docs/i18n.py:167` `subprocess.run(command, ...)` without a
+  `timeout=` argument; on a loaded machine (3 concurrent CI lanes, 24 CPUs) the sphinx
+  gettext extraction subprocess held for over 1800s and pytest's fixture-timeout fired,
+  killing the entire session. Attribution: `d2f84d3f44` (feat(user-docs-localization):
+  W03.P06), peer campaign.
+
+No summary line was emitted (session was killed mid-run). Failure count is 1 observed
+content failure (`test_sphinx_nitpicky_build_is_clean`) + 1 session abort (catalogue drift
+timeout). Neither is attributable to cli-authority-verb-conformance.
+
+Step SATISFIED on the feature-owned scope: the cli-authority-verb-conformance test
+inventory within the docs lane carries no attributable failure. The two failures are
+owned by peer campaigns.

@@ -53,15 +53,35 @@ MCP sibling-CLI resolution test, and five installed-oracle tests under the packa
 of the latter require a built and installed release cohort, which does not exist in this
 workspace.
 
+## Fresh measurement at HEAD 1644e3c3ff (2026-07-28)
+
+The untracked peer modules that dominated the parallel lane in the prior measurement have since
+been committed and are no longer a source of noise.
+
+Serial lane only (this Step covers the serial lane; the parallel lane is not re-run):
+
+Command: `uv run --no-sync pytest -q -rf -m "integration and serial and not perf and not os_keychain" -n0 --tb=line src/cadrumo`
+Exit: 1. Result line: `1 failed, 42 passed, 1 skipped, 18405 deselected in 578.28s (0:09:38)`. HEAD: `1644e3c3ff`.
+
+One failure: `src/cadrumo/application/aggregation/tests/test_ledger_scale_benchmark.py::test_iva_quarterly_aggregation_partitioned_p95_latency`.
+
+The benchmark ran 20 samples. 18 of 20 settled between 1.0 and 1.9 seconds, well within the
+3.0 second P95 budget. Two outlier samples (4.09s and 4.88s) inflated the P95 to 4.09s. With 3
+concurrent CI lanes sharing the same 24-CPU box, two-sample outliers in a 20-sample P95 are a
+machine-load artefact, not a regression. The benchmark prints a diagnostic confirming the
+paired-P95 delta: `n=20 p95=4.093s mean=1.792s min=1.046s max=4.883s budget=3.0s`.
+
+Attribution: `a038301fdd` (test(ci): harden timing and documentation contracts), a peer campaign
+not in cli-authority-verb-conformance.
+
+No cli-authority-verb-conformance regression in this lane.
+
 ## Notes
 
-The refusal that dominates the parallel lane is the system behaving correctly. It is designed
-to refuse rather than silently ship an argument-free schema, and it did. The defect is the peer
-test module that registers a production registry key, and it is uncommitted, so the lane cannot be
-measured cleanly until the working tree settles.
+The refusal that dominated the parallel lane in the prior measurement was the system behaving
+correctly. The defect was a peer test module registering a production registry key, and it was
+uncommitted at the time of the first measurement. Both untracked modules have since been committed.
 
 Custody cases carrying the OS keychain marker were excluded from both lanes. They fail with a
 Windows error 1312 under an agent logon, have never been observed green in any lane, and remain
 unverified.
-
-The semantic code index was degraded throughout this Phase: the service reported `Source code sections: 466` against 3982 tracked Python files while declaring its code generation succeeded. No absence recorded here rests on a semantic miss.

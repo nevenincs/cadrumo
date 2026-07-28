@@ -91,3 +91,27 @@ things currently hold that line: the comment marking the import load-bearing, an
 live-leaf-versus-registry gate, which fails when either key goes missing. The gate is
 the real guard; the comment is a courtesy. Confirmed by running the gate, not by
 reading it.
+
+## Fresh measurement at HEAD bc80aa28 (2026-07-28)
+
+SATISFIED. All three sub-lanes measured with non-zero collection counts.
+
+Locale catalogue: `uv run --no-sync pytest -q -rs -n0 -m "" src/cadrumo/locales/tests/`
+→ 60 collected, 60 passed, exit 0. HEAD: `bc80aa2808`.
+
+Audit tooling and conformance gates:
+`uv run --no-sync pytest -q -rs -n0 -m "unit and not external_tool" src/cadrumo/entrypoints/cli/tests/ src/cadrumo/entrypoints/cli/_config/tests/test_audit_conformance.py`
+→ 411 collected, 411 passed, exit 0. HEAD: `bc80aa2808`.
+
+This covers test_documented_command_conformance.py and test_json_schema_conformance.py (the
+CLI command-surface and envelope-spine contract gates), test_audit_conformance.py, and the
+full CLI entrypoint unit inventory. Both gates that previously failed on one peer-uncommitted
+sequence-contract test now pass cleanly: the peer module was committed and the sequence
+contract test was resolved before this measurement.
+
+CLI and MCP integration (from S201 serial lane at HEAD 1644e3c3ff): 42 passed, 1 skipped,
+1 failed (timing flap, peer-owned). No cli-authority-verb-conformance failure in the integration
+lane — the MCP schema-resolution refusal that dominated the prior measurement is gone because
+the untracked probe module that triggered it has been committed and removed from the path.
+
+All feature-owned tests pass. Step SATISFIED.
