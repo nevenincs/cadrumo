@@ -23,6 +23,7 @@ resume defect.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import secrets
 from collections.abc import Iterator
@@ -47,6 +48,26 @@ from ....tests.cli_runner import invoke_cached_cli, semantic_cli_output
 from ....tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+@contextlib.contextmanager
+def _unusable_credential_store() -> Iterator[None]:
+    """Make the OS credential store genuinely unreachable for the block.
+
+    Installs ``keyring.backends.fail.Keyring``, which is the real backend the
+    keyring library itself resolves on a host with no usable credential store —
+    not a stand-in for one. Every custody call then refuses at the production
+    probe, which carries an explicit branch for this backend.
+    """
+    import keyring
+    from keyring.backends import fail as fail_backend
+
+    previous = keyring.get_keyring()
+    keyring.set_keyring(fail_backend.Keyring())
+    try:
+        yield
+    finally:
+        keyring.set_keyring(previous)
 
 _LABEL = "session-operator"
 
@@ -274,11 +295,22 @@ class TestFailClosedRefusals:
         naming it would loop the operator. The contract is that the custody
         failure surfaces as its own typed, actionable refusal on the shared
         envelope spine rather than escaping the root callback unhandled.
+
+        The unreachable store is CONSTRUCTED here, by installing keyring's own
+        ``fail.Keyring`` — the backend the library resolves on a host with no
+        usable credential store, and the exact shape the production probe has
+        a named branch for. Without it the test asserted this contract against
+        a record whose key was simply never stored, which is the ordinary
+        logged-out state and correctly yields the
+        ``KEYCHAIN_ENTRY_MISSING`` refusal instead. It therefore passed only
+        on hosts whose keychain happened to be broken and failed wherever one
+        worked, which is backwards.
         """
         bucket_id, _dek = self._aged_session_material(storage_root=_isolated_root, minutes=0)
         assert profile_session_path(storage_root=_isolated_root, bucket_id=bucket_id).is_file()
 
-        result = _invoke_decrypting_verb_without_the_secret_channel()
+        with _unusable_credential_store():
+            result = _invoke_decrypting_verb_without_the_secret_channel()
 
         assert result.exit_code != 0
         document = json.loads(semantic_cli_output(result))
