@@ -80,9 +80,23 @@ _FULL_RIGHT_TO_DEDUCT = Decimal("100")
 _NO_DEDUCTION_RIGHT = Decimal("0")
 
 
-def _registry_percentage(filing_year: int, con_derecho: Decimal, total: Decimal) -> Decimal:
+#: The settlement period and a mid-year quarter, with the liquidation date each
+#: closes on. The prorrata percentage formula carries no date or period term, so
+#: it should not move between them; probing both is what makes that a measured
+#: fact rather than a reading of the expression.
+_SETTLEMENT_PERIOD = ("4T", (12, 31))
+_MID_YEAR_PERIOD = ("1T", (3, 31))
+
+
+def _registry_percentage(
+    filing_year: int,
+    con_derecho: Decimal,
+    total: Decimal,
+    period: tuple[str, tuple[int, int]] = _SETTLEMENT_PERIOD,
+) -> Decimal:
     """The prorrata percentage via the real registry snapshot and formula runtime."""
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=filing_year, period="4T")
+    period_token, (close_month, close_day) = period
+    snapshot = resources().modelos.authority.snapshot("303", filing_year=filing_year, period=period_token)
     declared = {binding.id for binding in snapshot.revision.bindings}
     binding_values: dict[str, Decimal] = {
         binding_id: Decimal("100") if binding_id.endswith("state-attribution-ratio") else Decimal("0")
@@ -103,7 +117,7 @@ def _registry_percentage(filing_year: int, con_derecho: Decimal, total: Decimal)
         snapshot,
         inputs=inputs,
         binding_values=binding_values,
-        date_context={"filing_period": date(filing_year, 12, 31)},
+        date_context={"filing_period": date(filing_year, close_month, close_day)},
     )
     return result.values[_PORCENTAJE_ID]
 
@@ -226,6 +240,25 @@ def test_both_live_revisions_declare_the_same_prorrata_formula_grounding() -> No
     assert len(by_revision) == len(_LIVE_FILING_YEARS), "the probe years must resolve to distinct revisions"
     assert len(set(by_revision.values())) == 1, (
         f"the live M303 revisions ground the prorrata percentage formula differently: {by_revision}"
+    )
+
+
+@pytest.mark.parametrize("filing_year", _LIVE_FILING_YEARS)
+def test_no_volume_branch_holds_in_a_mid_year_period_too(filing_year: int) -> None:
+    """The branch is not a settlement-period effect, on either revision.
+
+    Modelo 303 genuinely does behave differently at settlement — the art.
+    105.Cuatro regularización is due once a year — so "the percentage is the
+    same in a mid-year quarter" is worth measuring rather than reading off the
+    formula expression. This assertion carries the mid-year axis that the
+    single-filing-year Modelo 303 regression used to be the only holder of, so
+    retiring that regression loses no coverage.
+    """
+    percentage = _registry_percentage(filing_year, Decimal("0"), Decimal("0"), period=_MID_YEAR_PERIOD)
+
+    assert percentage == _FULL_RIGHT_TO_DEDUCT
+    assert percentage == _registry_percentage(filing_year, Decimal("0"), Decimal("0")), (
+        "the no-volume prorrata percentage must not depend on the filing period"
     )
 
 
