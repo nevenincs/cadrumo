@@ -499,6 +499,13 @@ audit-dead-code:
 audit-duplication:
     @uv run --no-sync python -m dev.audit.duplication
 
+# Terminators rewritten after checkout are invisible to `git diff` and to every
+# text-mode reader. This is a screen and always exits 0; apply the shrink-only
+# ceiling with `python -m dev.audit.checkout_drift --check`.
+# Count tracked files whose on-disk bytes differ from their committed bytes.
+audit-checkout-drift:
+    @uv run --no-sync python -m dev.audit.checkout_drift
+
 # Perform an on-demand semantic search query delegating to the running RAG daemon.
 audit-rag QUERY:
     @uv run --no-sync vaultspec-rag search "{{QUERY}}" --port 8766 --timeout 45.0
@@ -512,6 +519,8 @@ audit-all:
     -@just audit-dead-code
     @echo "=== duplication ==="
     -@just audit-duplication
+    @echo "=== checkout drift ==="
+    -@just audit-checkout-drift
     @echo "=== security ==="
     -@just check-security
 

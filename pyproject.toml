@@ -503,6 +503,11 @@ convention = "google"
 "dev/audit/complexity.py" = ["S603"]
 "dev/audit/report.py" = ["S603"]
 "dev/audit/semantic.py" = ["S603"]
+# The checkout-drift screen and its cases invoke read-only git verbs with a
+# `shutil.which`-resolved executable and a fixed argv; the only interpolated
+# value is a repository root the caller already owns.
+"dev/audit/checkout_drift.py" = ["S603"]
+"dev/audit/tests/test_checkout_drift.py" = ["S603"]
 "dev/docs/build.py" = ["S603"]
 "dev/docs/i18n.py" = ["S603"]
 "dev/docs/serve.py" = ["S603"]
