@@ -354,12 +354,12 @@ Move all four locale catalogues plus help, risk, error, and MCP mirrors to the a
 
 Use the mandatory structured documentation workflow to update guides and references, then regenerate CLI-owned documentation outputs.
 
-- [ ] `W05.P17.S161` - Invoke the mandatory vaultspec-documentation workflow and keep its render-and-verify gate active for this Phase; `docs/`.
+- [x] `W05.P17.S161` - Invoke the mandatory vaultspec-documentation workflow and keep its render-and-verify gate active for this Phase; `docs/`.
 - [x] `W05.P17.S162` - Rewrite data-access protection procedures for passphrase, recovery, logout, quarantine, and reset; `docs/how-to/protect-data-access.md`.
 - [x] `W05.P17.S163` - Rewrite authentication procedures for login, logout, reset, and backend-free certificate secrets; `docs/how-to/authenticate-with-aeat.md`.
 - [x] `W05.P17.S164` - Rewrite profile setup and navigation for exact switch labels and strong logout; `docs/how-to/profile-setup.md`.
 - [x] `W05.P17.S165` - Rewrite ledger evidence guidance to separate attach from invoice-only link; `docs/how-to/ledger-evidence.md`.
-- [ ] `W05.P17.S166` - Rewrite bank-import examples to separate evidence attach from invoice link; `docs/how-to/import-bank-statements.md`.
+- [x] `W05.P17.S166` - Rewrite bank-import examples to separate evidence attach from invoice link; `docs/how-to/import-bank-statements.md`.
 - [x] `W05.P17.S167` - Align the how-to index with logout, passphrase, recovery, and reset lifecycle terminology; `docs/how-to/index.md`.
 - [x] `W05.P17.S168` - Align the command and configuration overview with the accepted hierarchy and security semantics; `docs/reference/commands-and-configuration.md`.
 - [ ] `W05.P17.S169` - Regenerate data-access sequence goldens from real accepted commands; `docs/_sequences/how-to/protect-data-access/`.
@@ -371,7 +371,7 @@ Use the mandatory structured documentation workflow to update guides and referen
 - [ ] `W05.P17.S175` - Validate every regenerated sequence against its directive and command contract; `dev/docs/tests/test_sequence_contract.py`.
 - [ ] `W05.P17.S176` - Build Sphinx with warnings as errors and verify references, tree, links, and sequences; `dev/docs/tests/test_docs_build.py`.
 - [ ] `W05.P17.S239` - Rewrite profile export and subject-access documentation around the shared durable service, schema-derived categories, equivalent cleartext handoff risk, and separate sealed recovery archive; `docs/how-to/profile-setup.md; docs/reference/import-export-and-evidence.md; docs/reference/commands-and-configuration.md`.
-- [ ] `W05.P17.S240` - Remove evidence audit replay from all user documentation, generated reference expectations, examples, and terminology projections while retaining audit check; `docs/; dev/docs/; src/cadrumo/_data/terminology/`.
+- [x] `W05.P17.S240` - Remove evidence audit replay from all user documentation, generated reference expectations, examples, and terminology projections while retaining audit check; `docs/; dev/docs/; src/cadrumo/_data/terminology/`.
 
 ## Wave `W06` - Prove conformance and close the campaign
 
