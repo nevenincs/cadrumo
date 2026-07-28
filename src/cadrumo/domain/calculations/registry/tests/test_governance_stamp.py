@@ -22,6 +22,7 @@ from .._loader import load_modelo_directory, load_registry_tree
 from .._schema import (
     REVISION_GOVERNANCE_FIELDS,
     REVISION_REVIEW_DATE_CEILING,
+    REVISION_REVIEW_DATE_FLOOR,
     ModeloRevision,
 )
 from .._schema_base import GOVERNANCE_STAMP, governance_stamp_fields
@@ -246,6 +247,28 @@ def test_a_date_below_the_signoff_horizon_still_loads(tmp_path: Path) -> None:
     assert _load_revision(_write_modelo(tmp_path, manifest_extra=stamp)).reviewed_at == latest
 
 
+def test_reviewed_at_before_the_signoff_floor_is_refused(tmp_path: Path) -> None:
+    """A sentinel date from before the year 2000 cannot denote a signoff anyone can verify."""
+    stamp = 'review_status = "operator_reviewed"\nreviewed_by = "operator"\nreviewed_at = 1970-01-01\n'
+
+    with pytest.raises(RegistryLoadError, match="signoff floor"):
+        load_modelo_directory(_write_modelo(tmp_path, manifest_extra=stamp))
+
+
+def test_a_date_at_the_signoff_floor_still_loads(tmp_path: Path) -> None:
+    """Differential proof: the floor is a boundary, not a blanket refusal of older dates.
+
+    The floor is a fixed calendar date (same rationale as the ceiling), so this
+    assertion holds identically on every machine and in every year the project
+    can plausibly run. A date exactly at the floor must load; one day before it
+    must refuse (proven in the paired refusal test above).
+    """
+    at_floor = REVISION_REVIEW_DATE_FLOOR
+    stamp = f'review_status = "operator_reviewed"\nreviewed_by = "operator"\nreviewed_at = {at_floor.isoformat()}\n'
+
+    assert _load_revision(_write_modelo(tmp_path, manifest_extra=stamp)).reviewed_at == at_floor
+
+
 def test_unknown_review_status_token_is_refused(tmp_path: Path) -> None:
     """The status vocabulary is closed at load time, not at a later branch."""
     with pytest.raises(RegistryLoadError, match="RevisionReviewStatus"):
@@ -362,6 +385,7 @@ def test_bundled_revisions_carry_a_coherent_stamp() -> None:
             assert revision.reviewed_by is not None
             assert revision.reviewed_by.strip(), revision.id
             assert revision.reviewed_at is not None
+            assert revision.reviewed_at >= REVISION_REVIEW_DATE_FLOOR, revision.id
             assert revision.reviewed_at < REVISION_REVIEW_DATE_CEILING, revision.id
         else:
             assert revision.review_status is RevisionReviewStatus.PENDING_REVIEW, revision.id

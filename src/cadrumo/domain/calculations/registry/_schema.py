@@ -1307,13 +1307,20 @@ class ModeloRevision(RegistryModel):
     def _reviewed_at_is_within_the_signoff_horizon(cls, value: date | None) -> date | None:
         """Refuse a signoff date no auditor could ever check.
 
-        See :data:`REVISION_REVIEW_DATE_CEILING` for why the horizon is a fixed
-        calendar date rather than a reading of the local clock.
+        See :data:`REVISION_REVIEW_DATE_CEILING` and :data:`REVISION_REVIEW_DATE_FLOOR`
+        for why the horizon is a fixed calendar date rather than a reading of the
+        local clock.
         """
         if value is not None and value >= REVISION_REVIEW_DATE_CEILING:
             raise RegistryValidationError(
                 f"revision governance field 'reviewed_at' is {value.isoformat()}, beyond the signoff horizon "
                 f"{REVISION_REVIEW_DATE_CEILING.isoformat()}; a review dated there records no signoff anyone can check",
+            )
+        if value is not None and value < REVISION_REVIEW_DATE_FLOOR:
+            raise RegistryValidationError(
+                f"revision governance field 'reviewed_at' is {value.isoformat()}, before the signoff floor "
+                f"{REVISION_REVIEW_DATE_FLOOR.isoformat()}; a review dated that far in the past records no "
+                "signoff anyone can verify",
             )
         return value
 
@@ -1367,11 +1374,29 @@ timezone boundary, would refuse the whole registry and take the product with
 it. A false refusal here costs incomparably more than a missed absurd date, and
 a fixed ceiling is identical on every machine in every year.
 
-The bound is therefore an absurdity floor, not a freshness check: it catches the
+The bound is therefore an absurdity ceiling, not a freshness check: it catches the
 sentinel (``3999-12-31``, ``9999-12-31``) that no auditor could ever check, and
 deliberately does not catch a near-future typo. Freshness is a governance
 question for the dev-side conformance audit, where consulting the clock costs
 one contributor a re-run rather than bricking the registry.
+"""
+
+REVISION_REVIEW_DATE_FLOOR: date = date(2000, 1, 1)
+"""Inclusive lower bound on a governance stamp's ``reviewed_at`` signoff date.
+
+A signoff predating the year 2000 is a sentinel or a template artefact: the
+Unix epoch (``1970-01-01``), common template placeholders (``1900-01-01``,
+``0001-01-01``), or a date so remote it cannot record a real signoff of any
+revision in this registry. Each renders in a conformance report as a valid
+countersignature while naming a date no auditor can verify. The bound refuses
+that class.
+
+The floor is a fixed calendar date for the same reason the ceiling is: a
+validation rule that consults the wall clock makes the registry's validity a
+property of the loading machine — a container whose clock is off would refuse
+the whole registry. A fixed floor is identical on every machine in every year,
+and is an absurdity floor rather than a freshness gate: it catches sentinel
+dates decades in the past, not a review stamped last year.
 """
 
 
