@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 from functools import lru_cache
 from io import BufferedReader, BytesIO
 from pathlib import Path
+from typing import Final
 
 import pdfplumber
 import pypdfium2 as pdfium
@@ -904,16 +905,21 @@ def _pdf_record_heading_name(line: str) -> str | None:
     return f"Tipo {match.group('record')} - {title}"
 
 
+# The column-header spellings AEAT prints across diseño-de-registro PDFs.
+# Each variant is a list of required column groups; a group holds the
+# interchangeable spellings of one column, so a line matches a variant when
+# every group contributes at least one token.
+_PDF_HEADER_VARIANTS: Final[tuple[tuple[tuple[str, ...], ...], ...]] = (
+    (("POSICIONES", "POSICIÓN"), ("NATURALEZA",), ("DESCRIPCI",)),
+    (("Nº POSIC",), ("LON",), ("TIPO",), ("DESCRIPCI",)),
+    (("POSITIONS",), ("NATURE",), ("DESCRIPTION",)),
+)
+
+
 def _is_pdf_header(line: str) -> bool:
     normalised = line.upper()
-    return (
-        (
-            ("POSICIONES" in normalised or "POSICIÓN" in normalised)
-            and "NATURALEZA" in normalised
-            and "DESCRIPCI" in normalised
-        )
-        or ("Nº POSIC" in normalised and "LON" in normalised and "TIPO" in normalised and "DESCRIPCI" in normalised)
-        or ("POSITIONS" in normalised and "NATURE" in normalised and "DESCRIPTION" in normalised)
+    return any(
+        all(any(token in normalised for token in column) for column in variant) for variant in _PDF_HEADER_VARIANTS
     )
 
 

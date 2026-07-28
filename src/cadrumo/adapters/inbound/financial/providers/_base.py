@@ -502,15 +502,9 @@ def parse_amount_value(
             notation (which sanitisation would silently rewrite into a
             plausible wrong magnitude rather than fail), or cannot be parsed.
     """
-    if isinstance(value, Decimal):
-        return value
-    if isinstance(value, int):
-        return Decimal(value)
-    if isinstance(value, float):
-        coerced = coerce_decimal(value)
-        if coerced is None:
-            raise FinancialValidationError(f"unsupported float value: {value!r}")
-        return coerced
+    numeric = _already_numeric_amount(value)
+    if numeric is not None:
+        return numeric
     raw = coerce_cell_text(value)
     if not raw:
         raise FinancialValidationError("missing amount value")
@@ -540,6 +534,26 @@ def parse_amount_value(
         # would otherwise admit non-finite values into the ledger.
         raise FinancialValidationError(f"non-finite amount value: {raw!r}")
     return -amount if negative else amount
+
+
+def _already_numeric_amount(value: object) -> Decimal | None:
+    """Return the value as a Decimal when it arrives already numeric.
+
+    ``None`` means the cell is text and must go through the full parse. A
+    float is re-parsed via its ``str`` rather than fed to ``Decimal``
+    directly, so the printed precision survives instead of the binary
+    expansion.
+    """
+    if isinstance(value, Decimal):
+        return value
+    if isinstance(value, int):
+        return Decimal(value)
+    if not isinstance(value, float):
+        return None
+    coerced = coerce_decimal(value)
+    if coerced is None:
+        raise FinancialValidationError(f"unsupported float value: {value!r}")
+    return coerced
 
 
 # A digit, an ``e``/``E``, then an optional sign and a digit: unambiguously an
