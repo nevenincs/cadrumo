@@ -33,7 +33,10 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from cadrumo.application.registry import RegistryConformanceProfile
+from cadrumo.application.registry import (
+    RegistryConformanceProfile,
+    audit_bundled_registry_conformance,
+)
 from cadrumo.core import ExternalOracleCorpus, RevisionReviewStatus
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.resources import bundled_path
@@ -65,6 +68,7 @@ from ..registry.conformance.manager import (
     render_audit,
     render_coverage,
     render_report,
+    reviewer_attribution,
     vacuity_warning,
 )
 
@@ -84,6 +88,17 @@ def validated_report() -> ConformanceReport:
 def degraded_report() -> ConformanceReport:
     """The same registry read through the non-validating loader."""
     return load_conformance_report(validate=False)
+
+
+@pytest.fixture(scope="module")
+def validated_profile() -> RegistryConformanceProfile:
+    """The shipped composer's own output, before this package projects it.
+
+    Needed whole rather than as a projected report so a governance stamp can be
+    moved on a REAL row and the join under test can be computed by the real
+    projection rather than by the test.
+    """
+    return audit_bundled_registry_conformance(validate=True)
 
 
 @pytest.fixture
@@ -237,6 +252,126 @@ def test_coverage_reports_a_dead_axis_against_a_real_population(validated_report
         assert "measured=0" in line
         assert f"population={validated_report.declared_axis_population[axis]}" in line
         assert "UNUSED, never passing" in line
+
+
+# --------------------------------------------------------------------------- #
+# reviewer attribution: the status column and the name column must be read together
+# --------------------------------------------------------------------------- #
+
+_OPERATOR_NAME = "Gergely Wootsch"
+
+
+def _report_with_review(
+    profile: RegistryConformanceProfile,
+    *,
+    status: RevisionReviewStatus,
+    reviewer: str,
+) -> ConformanceReport:
+    """Project the real profile with its first row carrying a real review stamp.
+
+    The governance stamp is moved on the composed row and the report is built by
+    the real projection, so ``reviewed_by_attribution`` is computed by the code
+    under test rather than assembled by this helper.
+    """
+    first = profile.rows[0]
+    stamped = first.model_copy(
+        update={
+            "governance": first.governance.model_copy(
+                update={
+                    "review_status": status,
+                    "reviewed_by": reviewer,
+                    "reviewed_at": date(2026, 7, 28),
+                },
+            ),
+        },
+    )
+    return build_conformance_report(
+        profile.model_copy(update={"rows": (stamped, *profile.rows[1:])}),
+        locale_index={},
+        locale_unavailable_modelos=(),
+        oracle_inventory=load_bundled_external_oracle_inventory(),
+    )
+
+
+def _reviewer_field(rendered: str, modelo: str, revision: str) -> str:
+    line = next(
+        item
+        for item in rendered.splitlines()
+        if item.startswith("row ") and f" modelo={modelo} " in item and f" revision={revision} " in item
+    )
+    return line.split("reviewed_by=", 1)[1].split(" reviewed_at=", 1)[0]
+
+
+def test_an_agent_tier_review_naming_a_person_cannot_render_as_an_operator_signoff(
+    validated_profile: RegistryConformanceProfile,
+) -> None:
+    """The decisive flip: change ONLY the tier and the reviewer column must change.
+
+    ``reviewed_by`` is free text by necessity, so
+    ``--review-status agent_reviewed --reviewed-by "<a person's name>"`` writes
+    cleanly and is a legitimate stamp. While the reviewer rendered bare, the two
+    tiers produced a byte-identical reviewer column and a reader scanning ninety
+    rows read the name. This asserts the columns are no longer independent: same
+    row, same name, different tier, different rendering.
+    """
+    row = validated_profile.rows[0]
+    agent = _report_with_review(validated_profile, status=RevisionReviewStatus.AGENT_REVIEWED, reviewer=_OPERATOR_NAME)
+    operator = _report_with_review(
+        validated_profile,
+        status=RevisionReviewStatus.OPERATOR_REVIEWED,
+        reviewer=_OPERATOR_NAME,
+    )
+
+    agent_field = _reviewer_field(render_report(agent), row.modelo, row.revision)
+    operator_field = _reviewer_field(render_report(operator), row.modelo, row.revision)
+
+    assert agent_field != operator_field
+    assert "agent_reviewed" in agent_field
+    assert "operator_reviewed" in operator_field
+    assert _OPERATOR_NAME in agent_field
+    # The bare name is never the whole rendered value, which is what a scanning
+    # reader would otherwise take at face value.
+    assert agent_field != json.dumps(_OPERATOR_NAME)
+
+
+def test_the_attribution_is_computed_by_the_projection_and_carried_into_json(
+    validated_profile: RegistryConformanceProfile,
+) -> None:
+    """The payload keeps the raw name AND the qualified form, so JSON reads it too.
+
+    A consumer filtering on ``reviewed_by`` alone would otherwise reach the same
+    misreading the text render was hardened against.
+    """
+    composed = _report_with_review(
+        validated_profile,
+        status=RevisionReviewStatus.AGENT_REVIEWED,
+        reviewer=_OPERATOR_NAME,
+    )
+    row = composed.rows[0]
+
+    assert row.reviewed_by == _OPERATOR_NAME
+    assert row.reviewed_by_attribution == f"agent_reviewed:{_OPERATOR_NAME}"
+    assert json.loads(composed.model_dump_json())["rows"][0]["reviewed_by_attribution"] == row.reviewed_by_attribution
+
+
+def test_a_revision_claiming_no_review_is_never_joined_to_a_tier(
+    validated_report: ConformanceReport,
+) -> None:
+    """Absence stays absence: an unreviewed row must not gain a manufactured claim.
+
+    The registry schema pairs the reviewer identity with a status beyond
+    ``pending_review`` and refuses either alone, so a row with no reviewer is a
+    row asserting no review. Joining it to its status would print a claim the
+    manifest does not make.
+    """
+    unreviewed = [row for row in validated_report.rows if row.reviewed_by is None]
+
+    assert unreviewed, "expected at least one revision declaring no reviewer"
+    assert all(row.reviewed_by_attribution is None for row in unreviewed)
+    assert reviewer_attribution(RevisionReviewStatus.PENDING_REVIEW.value, None) is None
+
+    rendered = render_report(validated_report)
+    assert f"reviewed_by={NOT_MEASURED}" in rendered
 
 
 # --------------------------------------------------------------------------- #

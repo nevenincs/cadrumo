@@ -43,6 +43,16 @@ Four reading rules are load-bearing, and every renderer below preserves them.
 * **The degraded label rides on every row.** ``registry_validated`` is emitted
   per row, never only on the envelope, so a filtered or re-sorted rendering
   cannot present a degraded row as validated authority.
+* **A reviewer never renders without its tier.** ``reviewed_by`` is free text by
+  necessity — reviewer identity cannot be constrained to a vocabulary — so
+  ``--review-status agent_reviewed --reviewed-by "<a person's name>"`` writes
+  cleanly and is a legitimate stamp. The status column is honest about it and
+  the reviewer column is not, and a reader scanning ninety rows reads the name.
+  The text row therefore renders the reviewer as ``<status>:<name>``, so the two
+  columns cannot be read independently; the JSON payload keeps the raw
+  ``reviewed_by`` and carries the joined form alongside it as
+  ``reviewed_by_attribution``. This closes the PRESENTATION half only. Nothing
+  here can make an attribution TRUE, and no gate should pretend otherwise.
 
 One double-count is worth naming because the shipped composer warns about it:
 ``modelo_scope_classification_findings`` is a MODELO-level count repeated on
@@ -119,6 +129,7 @@ __all__ = [
     "render_coverage",
     "render_report",
     "reset_conformance_cache",
+    "reviewer_attribution",
     "vacuity_warning",
 ]
 
@@ -207,7 +218,14 @@ class RevisionConformancePayload(ConformanceModel):
             authority. Repeated per row so a renderer cannot drop the label.
         review_status: Declared review progress; ``pending_review`` on absence.
         engineered_by: Declared author, or :data:`None` when undeclared.
-        reviewed_by: Declared reviewer, or :data:`None`.
+        reviewed_by: Declared reviewer, RAW, or :data:`None`. Read it beside
+            ``reviewed_by_attribution``, never alone: an agent-tier review may
+            legitimately name a person, and this field cannot tell you which
+            tier claimed them.
+        reviewed_by_attribution: The reviewer joined to the tier that claimed
+            them, or :data:`None` when no review is declared. The form the text
+            renderer prints, carried in the payload so a JSON consumer reading
+            only the reviewer column reaches the same qualified answer.
         reviewed_at: ISO date of the declared review, or :data:`None`.
         calc_grade: Whether the revision's calculation closure is non-empty.
         casillas: Casillas declared on the revision.
@@ -257,6 +275,7 @@ class RevisionConformancePayload(ConformanceModel):
     review_status: str
     engineered_by: str | None
     reviewed_by: str | None
+    reviewed_by_attribution: str | None
     reviewed_at: str | None
     calc_grade: bool
     casillas: int = Field(ge=0)
@@ -1051,7 +1070,10 @@ def render_report(report: ConformanceReport) -> str:
                 registry_validated=row.registry_validated,
                 review_status=row.review_status,
                 engineered_by=row.engineered_by,
-                reviewed_by=row.reviewed_by,
+                # The TIER-QUALIFIED form, deliberately, not the raw name: a
+                # scanning reader takes in one reviewer column, and a bare name
+                # under an agent-tier review reads as an operator signoff.
+                reviewed_by=row.reviewed_by_attribution,
                 reviewed_at=row.reviewed_at,
                 calc_grade=row.calc_grade,
                 casillas=row.casillas,
@@ -1226,6 +1248,25 @@ def _current_floors(report: ConformanceReport) -> ConformanceVacuityFloors:
     )
 
 
+def reviewer_attribution(review_status: str, reviewed_by: str | None) -> str | None:
+    """Join a declared reviewer to the review tier that claimed them.
+
+    Returns :data:`None` when no reviewer is declared, which is exactly when no
+    review is claimed: the registry schema pairs the reviewer identity with a
+    status beyond ``pending_review`` and refuses either alone. Absence therefore
+    stays absence and is never joined to a tier nobody asserted.
+
+    Applied to EVERY tier rather than only to ``agent_reviewed``. Qualifying one
+    tier and leaving the other bare would make a bare name mean
+    ``operator_reviewed`` by convention, which is a rule a reader has to know
+    before the column is safe — and the reader who does not know it is the one
+    this join exists to protect.
+    """
+    if reviewed_by is None:
+        return None
+    return f"{review_status}:{reviewed_by}"
+
+
 def _authorized_modelo_count(rows: Sequence[RevisionConformancePayload]) -> int:
     """Count distinct modelos whose derived authorization is granted."""
     return len({row.modelo for row in rows if row.modelo_authorization == "authorized"})
@@ -1324,6 +1365,7 @@ def _payload_row(
         review_status=governance.review_status.value,
         engineered_by=governance.engineered_by,
         reviewed_by=governance.reviewed_by,
+        reviewed_by_attribution=reviewer_attribution(governance.review_status.value, governance.reviewed_by),
         reviewed_at=None if governance.reviewed_at is None else governance.reviewed_at.isoformat(),
         calc_grade=capabilities.calc_grade,
         casillas=capabilities.casilla_count,
