@@ -63,27 +63,17 @@ def run_scripted_flow(
         if queue:
             raw = queue.popleft()
             consumed += 1
-        elif not _page_required(definition, state, target) and target in defaults_map:
-            raw = defaults_map[target]
-        elif not _page_required(definition, state, target):
-            raw = ""
         else:
-            raise FlowAnswerError(
-                translated_message="application.flows.errors.scripted_queue_underflow",
-                context={"page_key": target, "consumed_count": consumed},
+            raw = _starved_page_answer(
+                definition,
+                state,
+                target,
+                defaults_map=defaults_map,
+                consumed=consumed,
             )
         state = jump_to(definition, state, target)
         state = answer(definition, state, target, raw)
-        if target in state.verdicts:
-            raise FlowAnswerError(
-                translated_message="application.flows.errors.scripted_answer_rejected",
-                context={
-                    "page_key": target,
-                    "message_keys": tuple(
-                        verdict.message_key for verdict in state.verdicts[target] if verdict.message_key
-                    ),
-                },
-            )
+        _refuse_rejected_answer(state, target)
         state = next_page(definition, state)
 
     if queue:
@@ -93,6 +83,42 @@ def run_scripted_flow(
         )
     projection = assert_submit_eligible(definition, state)
     return state, projection
+
+
+def _starved_page_answer(
+    definition: FlowDefinition,
+    state: FlowState,
+    page_key: str,
+    *,
+    defaults_map: Mapping[str, str],
+    consumed: int,
+) -> str:
+    """Answer a page the token queue can no longer feed.
+
+    An OPTIONAL page falls back to its declared default, or to empty when it
+    has none — the accept-defaults mode. A REQUIRED page always consumes a
+    real token, so reaching it with an empty queue is caller/runtime drift
+    and refuses, naming the starved page and the counts.
+    """
+    if not _page_required(definition, state, page_key):
+        return defaults_map.get(page_key, "")
+    raise FlowAnswerError(
+        translated_message="application.flows.errors.scripted_queue_underflow",
+        context={"page_key": page_key, "consumed_count": consumed},
+    )
+
+
+def _refuse_rejected_answer(state: FlowState, page_key: str) -> None:
+    """Refuse when the committed answer failed the page's validators."""
+    if page_key not in state.verdicts:
+        return
+    raise FlowAnswerError(
+        translated_message="application.flows.errors.scripted_answer_rejected",
+        context={
+            "page_key": page_key,
+            "message_keys": tuple(verdict.message_key for verdict in state.verdicts[page_key] if verdict.message_key),
+        },
+    )
 
 
 def _first_unanswered(definition: FlowDefinition, state: FlowState) -> str | None:
