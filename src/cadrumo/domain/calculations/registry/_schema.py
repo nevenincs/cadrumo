@@ -134,6 +134,7 @@ __all__ = [
 from ._convenio import ConvenioAuthority
 from ._schema_base import (
     GOVERNANCE_STAMP,
+    MANIFEST_ONLY,
     CalculationClass,
     DateAxis,
     EvidenceTier,
@@ -148,6 +149,7 @@ from ._schema_base import (
     SourceCitationText,
     SourceRefs,
     governance_stamp_fields,
+    manifest_only_fields,
 )
 from ._schema_extraction import BboxAnchorSpec, ExtractionProfileDefinition, ExtractionTargetDefinition
 from ._schema_formula import (
@@ -1248,13 +1250,13 @@ class ModeloRevision(RegistryModel):
     id: RevisionId
     label: str | None = None
     valid_from: date
-    valid_to: date | None = None
+    valid_to: Annotated[date | None, MANIFEST_ONLY] = None
     period_selector: PeriodSelector
-    legal_refs: LegalRefs
+    legal_refs: Annotated[LegalRefs, MANIFEST_ONLY]
     source_refs: SourceRefs
     # Required by validate_orden_aplicabilidad; kept default-empty so the
     # validator can report a grounded registry failure instead of a parse error.
-    orden_aplicabilidad: tuple[LegalRefId, ...] = ()
+    orden_aplicabilidad: Annotated[tuple[LegalRefId, ...], MANIFEST_ONLY] = ()
     parameters: tuple[ParameterDefinition, ...] = ()
     casillas: tuple[CasillaDefinition, ...] = ()
     formulas: tuple[FormulaDefinition, ...] = ()
@@ -1388,6 +1390,33 @@ scalar added to the model and forgotten here would stay absent from the refusal
 and become silently declarable in any of the section fragments, where the
 merged value wins and ``revision.toml`` still reads unstamped. Marking the
 field is now the whole of enrolling it.
+
+This set is the stamp VOCABULARY, narrower than
+:data:`REVISION_MANIFEST_ONLY_FIELDS`: it is what the conformance tooling reads
+as declared provenance and what the stamp writer emits, so a field pinned to
+the manifest for legal-grounding reasons must not appear here.
+"""
+
+REVISION_MANIFEST_ONLY_FIELDS: frozenset[str] = manifest_only_fields(ModeloRevision)
+"""Every :class:`ModeloRevision` field that may be declared only in ``revision.toml``.
+
+A superset of :data:`REVISION_GOVERNANCE_FIELDS` by construction, since
+:class:`GovernanceStampMarker` is a :class:`ManifestOnlyMarker`. Beyond the
+governance stamp it carries the legally load-bearing scalars: ``legal_refs``
+(the law the revision stands on), ``orden_aplicabilidad`` (the ordenes that
+approve the form for its window) and ``valid_to`` (the date the revision stops
+applying).
+
+Those three share the governance stamp's readability hazard and raise its
+stakes. A revision compiles from its manifest plus up to several hundred
+section fragments, and ``orden_aplicabilidad`` is an append array, so a fragment
+declaring one silently ADDS an approving orden the manifest never names;
+``valid_to`` and ``legal_refs`` merge in wherever the manifest is silent, so a
+fragment thousands deep can close a revision's validity window or supply its
+entire legal grounding while ``revision.toml`` reads as though it did neither.
+Governance provenance and legal grounding are different subjects, which is why
+they are different markers, but the placement guarantee they need is the same
+one, and the loader refuses both sets in the same place.
 """
 
 
