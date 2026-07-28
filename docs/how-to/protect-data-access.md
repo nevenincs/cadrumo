@@ -100,6 +100,13 @@ If you have neither the passphrase nor the recovery words, the encrypted
 data is permanently unreadable. The only way forward is a reset (below),
 which deletes it.
 
+Do not reset when only *some* records fail to open. Quarantine them first.
+Quarantine moves each unreadable record, still encrypted, into an archive
+inside the same storage and leaves every readable record untouched, so it
+deletes nothing and can be previewed before it runs. Recover the passphrase
+later and the archived records are still there. See
+[diagnose and repair your local setup](troubleshooting.md).
+
 (run-without-a-passphrase-prompt)=
 ## Run without a passphrase prompt
 
@@ -162,6 +169,6 @@ instructions.
   see where encrypted custody ends and deliberate plaintext handoffs begin.
 - [Set up your taxpayer profile](profile-setup.md) - create, export, and
   import profiles.
-- [Diagnose and repair your local setup](troubleshooting.md) - for storage
-  or integrity problems that do not need a reset.
+- [Diagnose and repair your local setup](troubleshooting.md) - quarantine
+  unreadable records and fix storage or integrity problems without a reset.
 - [CLI reference](../cli/index.rst) - full option reference.

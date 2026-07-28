@@ -252,18 +252,72 @@ def audit_layering(repo_root: Path) -> DimensionReport:
     broken = [line.strip() for line in output.splitlines() if line.strip().endswith("BROKEN")]
     kept = [line.strip() for line in output.splitlines() if line.strip().endswith("KEPT")]
 
-    if result.returncode != 0 or broken:
+    # A run that ABORTED is not a run that found violations, and the two must
+    # not share a report. import-linter aborts before evaluating anything when
+    # an ignore_imports entry matches nothing, so a single stale entry disables
+    # the whole contract family; it exits non-zero and prints NO contract
+    # results at all. Classified only by exit code that reads as "contracts
+    # broken", and classified only by `broken` being empty it would read as
+    # GREEN. Both are wrong in the same dangerous direction: the gate did not
+    # run. Compare what was EVALUATED against what is DECLARED.
+    declared = _declared_contract_count(repo_root)
+    evaluated = len(kept) + len(broken)
+    if declared and evaluated != declared:
         return DimensionReport(
             name="layering",
             status=Status.RED,
-            headline=f"{len(broken)} import-linter contract(s) broken",
+            headline=(
+                f"import-linter evaluated {evaluated} of {declared} declared contract(s); "
+                "the run aborted rather than reporting a breach"
+            ),
+            details=[
+                "A stale `ignore_imports` entry matching nothing aborts the whole run before any "
+                "contract is checked, so this is a rotted gate configuration, not a layering "
+                "violation. Run `just check-imports` and read the error naming the unmatched entry.",
+                *broken,
+            ],
+        )
+
+    if broken:
+        return DimensionReport(
+            name="layering",
+            status=Status.RED,
+            headline=f"{len(broken)} of {evaluated} import-linter contract(s) broken",
             details=[*broken, "run `just check-imports` locally for the full violating-edge report"],
         )
+
+    if result.returncode != 0:
+        return DimensionReport(
+            name="layering",
+            status=Status.RED,
+            headline=(
+                f"import-linter exited {result.returncode} while reporting all {evaluated} "
+                "contract(s) kept; the signal is self-contradictory"
+            ),
+            details=["run `just check-imports` locally and read the full output"],
+        )
+
     return DimensionReport(
         name="layering",
         status=Status.GREEN,
-        headline=f"all {len(kept)} import-linter contract(s) kept",
+        headline=f"all {evaluated} of {declared} import-linter contract(s) kept",
     )
+
+
+def _declared_contract_count(repo_root: Path) -> int:
+    """Return how many contracts ``.importlinter`` declares, or 0 if unreadable.
+
+    The floor for the layering dimension. Without it a run that evaluated
+    nothing is indistinguishable from a run that evaluated everything cleanly,
+    which is the precise failure that left five contracts unchecked for an
+    extended period while the dimension read as unremarkable.
+    """
+    config = repo_root / ".importlinter"
+    try:
+        text = config.read_text(encoding=_UTF_8, errors="replace")
+    except OSError:
+        return 0
+    return sum(1 for line in text.splitlines() if line.strip().startswith("[importlinter:contract:"))
 
 
 # ---------------------------------------------------------------------------

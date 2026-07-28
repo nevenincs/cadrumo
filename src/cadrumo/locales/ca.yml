@@ -1525,6 +1525,10 @@ application:
         NIF i torneu a executar la consulta.
       censal_read_identity_mismatch: La lectura censal correspon a un contribuent
         diferent del d'aquest perfil; no s'ha aplicat.
+      censal_read_identity_unset: 'Registreu el vostre NIF abans de consultar el vostre
+        cens: aquest perfil encara no en té cap, de manera que la consulta no pot
+        confirmar que el registre que retorna l''AEAT sigui vostre. Executeu aeat
+        config profile edit per afegir-lo.'
       duplicate_tax_id: El NIF '%{tax_id}' ja l'utilitza el perfil '%{profile}'; un
         contribuent ha de tenir un sol perfil.
       lifecycle_profile_already_exists: Ja existeix un perfil al bucket actiu.
@@ -1573,7 +1577,6 @@ application:
         instantània de perfil no és compatible amb aquesta aplicació.
       unsupported_bundle_schema_version: La versió de l'esquema del paquet no és compatible
         amb aquesta versió de l'aplicació.
-      censal_read_identity_unset: 'Registreu el vostre NIF abans de consultar el vostre cens: aquest perfil encara no en té cap, de manera que la consulta no pot confirmar que el registre que retorna l''AEAT sigui vostre. Executeu aeat config profile edit per afegir-lo.'
     notices:
       censo_divergences_open: '{count} dada/es del perfil encara difereixen del Certificat
         de Situació Censal i resten sense resoldre: {axes}.'
@@ -4875,6 +4878,9 @@ cli:
         section_modelo: Models fiscals
         section_overview: Estat general
         section_review_and_registry: Revisió i registre
+        modelo_audit_show: 'Mostra l''auditoria d''evidències d''una revisió de declaració.'
+        modelo_audit_check: 'Comprova les evidències incloses d''una revisió de declaració.'
+        modelo_audit_export: 'Exporta l''auditoria d''evidències d''una revisió de declaració.'
       config:
         auth_configure: Configurar el proveïdor d'autenticació amb l'AEAT.
         auth_logout: Tancar les sessions locals d'autenticació i conservar la configuració.
@@ -4883,6 +4889,9 @@ cli:
           desades.
         auth_status: Mostrar l'estat actual de l'autenticació amb l'AEAT.
         auth_test: Provar l'autenticació amb l'AEAT.
+        certificate_check: Comprova la credencial de certificat activa.
+        certificate_secret_remove: Elimina el secret del certificat emmagatzemat.
+        certificate_secret_set: Desa el secret del certificat a l'emmagatzematge segur.
         diagnostics_logs: Consultar els registres de diagnòstic de l'aplicació.
         diagnostics_quarantine: Gestionar els elements en quarantena.
         diagnostics_repair: Executar comprovacions de salut i reparar l'estat de l'aplicació.
@@ -4898,8 +4907,10 @@ cli:
           CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_BACKEND=file, CADRUMO_SECRET_STORE_DIR
           i CADRUMO_SECRET_PASSPHRASE; els logs queden per defecte sota aquest directori
           d'emmagatzematge.
+        passphrase_change: Canvia la contrasenya que protegeix les dades locals.
         profile_delete: Eliminar un perfil de contribuent.
         profile_duplicate: Duplicar un perfil de contribuent existent.
+        profile_export: Exporta un paquet portàtil del perfil.
         profile_history: Inspecciona l'historial append-only d'esdeveniments del perfil.
         profile_list: Llistar els perfils de contribuent disponibles.
         profile_login: Inicia la sessió en un perfil i el converteix en l'actiu.
@@ -4907,16 +4918,23 @@ cli:
         profile_rename: Reanomenar un perfil de contribuent.
         profile_show: Mostrar les dades del perfil actiu.
         profile_status: Mostrar l'estat del perfil actiu.
+        recover: Recupera l'accés local amb una frase de recuperació.
+        recovery_create: Registra una frase de recuperació.
+        recovery_rotate: Renova la frase de recuperació.
+        recovery_status: Mostra l'estat de registre de la frase de recuperació.
+        recovery_verify: Verifica una frase de recuperació sense utilitzar-la.
         reset_resume: Reprèn una operació de reinici incompleta.
         reset_start: Inicia un reinici irreversible nou de tots els perfils emmagatzemats
           localment.
         reset_status: Mostra l'estat d'una operació de reinici sense modificar dades
           locals.
         section_authentication: Autenticació AEAT
+        section_custody: Custòdia de contrasenya i recuperació
         section_diagnostics: Diagnòstic
         section_first_run: Primera execució
         section_profile_inspection: Inspecció del perfil
         section_profile_lifecycle: Cicle de vida del perfil
+        profile_sar: 'Exporta un paquet de dades d''accés de l''interessat.'
       root:
         diagnostics_live_filed: Diagnosticar les declaracions presentades capturades
           en viu.
@@ -6079,6 +6097,11 @@ errors:
     integrity_repair_integrity: La comprovació d'integritat de reparació ha fallat.
     integrity_storage_blob: El resum SHA-256 d'un objecte emmagatzemat no coincideix
       amb el del seu manifest.
+    integrity_storage_bucket_manifest_version_below_floor: Aquesta carpeta de perfil
+      és anterior al format més antic que aquesta versió de Cadrumo pot llegir.
+    integrity_storage_bucket_manifest_version_from_future: Aquesta carpeta de perfil
+      es va escriure amb una versió més recent de Cadrumo. Actualitza Cadrumo per
+      obrir-la.
     integrity_storage_bucket_validation: Un paràmetre del dipòsit o camp del manifest
       no ha superat la validació.
     integrity_storage_classification: La classe de sensibilitat declarada d'un registre
@@ -6131,8 +6154,6 @@ errors:
       dades de referència o el motor de càlcul poden estar malmesos.
     profile_import_signature: L'arxiu de perfil no ha superat la comprovació de signatura
       o integritat. No importis arxius d'origen no fiable.
-    integrity_storage_bucket_manifest_version_from_future: 'Aquesta carpeta de perfil es va escriure amb una versió més recent de Cadrumo. Actualitza Cadrumo per obrir-la.'
-    integrity_storage_bucket_manifest_version_below_floor: 'Aquesta carpeta de perfil és anterior al format més antic que aquesta versió de Cadrumo pot llegir.'
   internal:
     cli_outbound_payload_boundary: Cadrumo ha construït un registre intern que no
       ha superat la seva pròpia validació. La teva ordre era correcta; això és un
@@ -6693,8 +6714,9 @@ flows:
       value: Valor
     edit:
       cancel: Cancel·la
+      required_blank: '{field} és obligatori, així que no pot quedar en blanc. Introdueix
+        un valor o cancel·la per deixar-lo sense canvis.'
       save: Desa
-      required_blank: '{field} és obligatori, així que no pot quedar en blanc. Introdueix un valor o cancel·la per deixar-lo sense canvis.'
     progress: '{present} de {total} camps emplenats, en falten {missing} per presentar'
     section_title: '{title} — {present}/{total}'
     title: 'Perfil: {profile}'

@@ -94,6 +94,7 @@ from ._credentials import (
 )
 from ._export_layout_format import ExportLayoutFormat
 from ._external_oracle_corpus import ExternalOracleCorpus
+from ._fts_query import fts_or_group
 from ._google_credential_source import GoogleCredentialSourceKind
 from ._hex import HEX_PATTERN_64, HEX_PATTERN_128
 from ._iban import IBAN_SHAPE_RE, iban_mod_97
@@ -319,6 +320,7 @@ __all__: list[str] = [
     "freeze_toml",
     "freeze_toml_value",
     "fsync_parent_dir",
+    "fts_or_group",
     "iban_mod_97",
     "lineage_obligations",
     "misclassified_floor_keys",

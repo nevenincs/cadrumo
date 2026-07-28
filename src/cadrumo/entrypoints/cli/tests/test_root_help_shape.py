@@ -144,6 +144,58 @@ def test_curated_help_command_rows_resolve_in_real_typer_tree() -> None:
                 assert "No such command" not in result.output
 
 
+# The custody and audit families the curated help MUST cite, keyed by the live
+# command prefix that identifies each. The sibling resolve gate above proves a
+# cited command exists; it is blind to a family the help simply OMITS, which is
+# exactly how this surface once claimed coverage of recovery, certificate and
+# audit while citing none of them. Each prefix is a live family: the passphrase
+# custody verb, the recovery lifecycle group, the flat recover verb, the
+# certificate credential custody group, and the modelo evidence-audit group.
+_REQUIRED_HELP_FAMILIES: dict[str, str] = {
+    "passphrase custody": "aeat config passphrase",
+    "recovery lifecycle": "aeat config recovery",
+    "recovery recover": "aeat config recover",
+    "certificate custody": "aeat config auth certificate",
+    "modelo audit": "aeat app modelo audit",
+}
+
+
+def _curated_help_commands() -> list[str]:
+    return [
+        entry.command
+        for surface in ("root", "config", "app")
+        for section in build_help_document(surface).sections
+        for entry in section.entries
+    ]
+
+
+def test_curated_help_covers_custody_and_audit_families() -> None:
+    """The curated help must CITE the custody and audit families, not just resolve what it cites.
+
+    A surface omission is silent to the resolve and suggestion-conformance gates:
+    they check that every cited command exists, never that a required family is
+    cited at all. This gate closes that hole for the families the Step names.
+
+    A prefix matches a citation when the citation is the family verb itself or a
+    child of it (``prefix`` or ``prefix`` + a space), so ``aeat config recover``
+    does not spuriously satisfy the ``aeat config recovery`` group.
+    """
+    commands = _curated_help_commands()
+    assert len(commands) >= 40, (
+        f"curated help cited only {len(commands)} commands; the documents look empty or collapsed"
+    )
+
+    missing = sorted(
+        name
+        for name, prefix in _REQUIRED_HELP_FAMILIES.items()
+        if not any(command == prefix or command.startswith(prefix + " ") for command in commands)
+    )
+    assert not missing, (
+        f"the curated help omits required families entirely: {missing}. A family the operator cannot "
+        "discover from the curated surface is the silent-omission failure this gate exists to catch"
+    )
+
+
 def test_installed_console_base_command_starts_clean_workspace(tmp_path: Path) -> None:
     cli_executable = _installed_cli_executable()
 

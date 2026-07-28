@@ -81,3 +81,41 @@ def test_a_live_write_declaration_forces_non_read_only() -> None:
     # read-only regardless of its family mutability (the permanent block axis).
     risk = CommandRiskDeclaration(live_write=True)
     assert risk.live_write
+
+
+def test_the_by_key_default_classifies_an_absent_key_fail_closed() -> None:
+    """The permissive by-key default is fail-CLOSED, which is why it stays.
+
+    ``command_classification`` resolves an unknown family to ``LOCAL_STATE_MUTATING``,
+    so a key that names no live command classifies non-read-only. Every
+    read-only-gated consumer depends on this direction: the MCP identity gate
+    returns early only for a read-only command, so an absent or retired key makes
+    it enforce; the risk-table parity gate uses the same non-read-only default to
+    catch an undeclared mutating verb. Removing the default -- raising on an
+    unknown family -- would turn those clean refusals into crashes, so the default
+    is kept and this pins its fail-closed direction.
+    """
+    absent = command_classification("totally.bogus.absent.key")
+    assert absent.read_only is False
+    assert absent.destructive is False
+    assert absent.handoff is False
+    assert absent.live_write is False
+
+
+def test_classification_alone_cannot_distinguish_an_absent_key_from_a_live_command() -> None:
+    """An absent key classifies identically to an unclassified live write verb.
+
+    This is the cost of the permissive default and the reason every consumer that
+    must tell the two apart grounds its key against the live surface FIRST -- the
+    write-guard catalogue gate binds to the materialised command tree, the
+    risk-table parity gate screens the exposed descriptor set, and the HITL
+    confirmation gate grounds its auto-approve path against the descriptor set.
+    The default is safe only under that grounding, so a new consumer must ground
+    too rather than trust the classification alone.
+    """
+    absent = command_classification("totally.bogus.absent.key")
+    live_local_mutation = command_classification("ledger.add")
+    axes = ("read_only", "destructive", "handoff", "live_write")
+    assert tuple(getattr(absent, axis) for axis in axes) == tuple(
+        getattr(live_local_mutation, axis) for axis in axes
+    ), "an absent key must be indistinguishable from a live non-destructive mutation at the classification level"

@@ -37,6 +37,15 @@ Logging in changes which local ledger, modelo drafts, and filing markers `aeat
 app` commands use. The login verb is `aeat config login`, not `aeat config
 profile login`.
 
+Name the profile exactly. `aeat config login` accepts a profile UUID or the
+exact label, and nothing else: a partial name, a different capitalisation, or a
+shortened form is refused rather than guessed at. Omit the name to log in to
+the profile already selected. The refusal is deliberate - guessing which
+taxpayer you meant is how filings end up under the wrong one.
+
+Log out with `aeat config logout` when you finish. Logout closes the storage
+session and clears the active-profile selection; it deletes nothing.
+
 ## Decide your facts before you start
 
 Profile setup asks a series of questions. Most are conditional: the answers you
@@ -366,6 +375,14 @@ is for restoring into a different storage root:
 A portable profile file contains taxpayer data, including the tax identifier,
 activity, and local filing history. Store it as sensitive tax data, and don't
 attach it to a support request unless you've removed personal details.
+
+Two related outputs are easy to confuse with this one. `aeat config profile
+subject-access-request` writes the *same* bundle, framed as a data-subject
+right-of-access response - so a cleartext bundle carries the same handoff risk
+whichever purpose produced it. The sealed custody archive is a different thing
+again: it is the encrypted backup you restore from, and neither export is a
+substitute for it. See
+[import, export, and evidence](../reference/import-export-and-evidence.md).
 
 Sign out without deleting the profile using `aeat config logout`.
 Logout closes the active storage session, discards its in-memory keys, disposes

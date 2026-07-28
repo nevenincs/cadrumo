@@ -30,13 +30,30 @@ import typer
 
 from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
-from ....core import Period
+from ....core import Period, StandardPeriodCode
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from .._common import _canonical_period, _filter_canonical_period
+from .._common import _canonical_period, _filter_canonical_period, _LedgerPeriodRefusal
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+def _expected_span_shaped_tokens() -> frozenset[str]:
+    """Return the span-shaped registry tokens, derived from the enum + span rule.
+
+    Independent of the production ``--period`` normaliser: iterate every
+    :class:`StandardPeriodCode` member and keep those whose ``(year, token)``
+    :class:`Period` carries a calendar date span. The instalment claves
+    (``1P``-``4P``) have no span and are excluded, as do the extended-union forms
+    (which are not enum members). This is the specification the ledger
+    ``--period`` boundary must advertise; the grammar cases assert the boundary's
+    advertised set equals it, so a wrong advertised set — or the old hardcoded
+    ``{1T, 0A}`` prose — fails the comparison rather than passing silently.
+    """
+    return frozenset(
+        member.value for member in StandardPeriodCode if Period.from_year_and_code(2024, member.value).has_date_span()
+    )
 
 
 # --- Strict resolution: (AEAT token, --year) -> typed Period date span --------
@@ -46,6 +63,11 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 # operator grammar; the year arrives through ``--year``. The pair resolves to a
 # typed :class:`Period` date span the ledger filters by — there is no
 # intermediate calendar string.
+#
+# The table exercises EVERY span-shaped token, not a sample: 2024 is a leap year,
+# so the February span ends on the 29th. ``test_token_year_span_table_exercises
+# _every_span_shaped_token`` asserts this covers exactly the derived span-shaped
+# set, so a newly-added span-shaped enum member cannot go unexercised.
 _TOKEN_YEAR_SPAN = (
     ("1T", 2024, "1T", date(2024, 1, 1), date(2024, 3, 31)),
     ("2T", 2024, "2T", date(2024, 4, 1), date(2024, 6, 30)),
@@ -53,7 +75,16 @@ _TOKEN_YEAR_SPAN = (
     ("4T", 2024, "4T", date(2024, 10, 1), date(2024, 12, 31)),
     ("0A", 2024, "0A", date(2024, 1, 1), date(2024, 12, 31)),
     ("01", 2024, "01", date(2024, 1, 1), date(2024, 1, 31)),
+    ("02", 2024, "02", date(2024, 2, 1), date(2024, 2, 29)),
     ("03", 2024, "03", date(2024, 3, 1), date(2024, 3, 31)),
+    ("04", 2024, "04", date(2024, 4, 1), date(2024, 4, 30)),
+    ("05", 2024, "05", date(2024, 5, 1), date(2024, 5, 31)),
+    ("06", 2024, "06", date(2024, 6, 1), date(2024, 6, 30)),
+    ("07", 2024, "07", date(2024, 7, 1), date(2024, 7, 31)),
+    ("08", 2024, "08", date(2024, 8, 1), date(2024, 8, 31)),
+    ("09", 2024, "09", date(2024, 9, 1), date(2024, 9, 30)),
+    ("10", 2024, "10", date(2024, 10, 1), date(2024, 10, 31)),
+    ("11", 2024, "11", date(2024, 11, 1), date(2024, 11, 30)),
     ("12", 2024, "12", date(2024, 12, 1), date(2024, 12, 31)),
 )
 _CALENDAR_SHAPES = ("2024Q1", "2024-03", "2024", "2026Q4", "2025-12")
@@ -103,17 +134,41 @@ def test_registry_union_validator_is_the_token_authority() -> None:
 # --- Calendar shapes now REFUSE -----------------------------------------------
 
 
-def test_calendar_shape_refuses_naming_aeat_tokens_and_year() -> None:
-    """A calendar shape is no longer accepted; it refuses, naming the AEAT tokens and --year."""
+def test_token_year_span_table_exercises_every_span_shaped_token() -> None:
+    """The resolution fixture covers exactly the derived span-shaped token set.
 
+    Anti-vacuity: a newly-added span-shaped :class:`StandardPeriodCode` member (or
+    a dropped table row) fails this equality, so
+    :func:`test_aeat_token_plus_year_resolves_to_period` cannot silently stop
+    exercising a token. Nine of the seventeen were previously untested.
+    """
+
+    covered = {row[0] for row in _TOKEN_YEAR_SPAN}
+    assert covered == _expected_span_shaped_tokens()
+
+
+def test_calendar_shape_refuses_advertising_accepted_tokens_as_data() -> None:
+    """A calendar shape refuses, carrying the accepted token set as structured data.
+
+    Load-bearing assertion: the refusal advertises the accepted span-shaped
+    tokens on the structured carrier the JSON error envelope's context is built
+    from (:attr:`_LedgerPeriodRefusal.accepted_period_tokens`), compared against
+    the set derived independently from the enum plus the span rule — never the
+    refusal's own message. A wording pass on the rendered prose therefore cannot
+    red this case. One thin, wording-tolerant check keeps the human refusal
+    instructive per the CLI-boundary contract.
+    """
+
+    expected = _expected_span_shaped_tokens()
+    assert len(expected) == 17  # 1T-4T, 0A, 01-12; instalment claves 1P-4P carry no span
     for calendar_shape in _CALENDAR_SHAPES:
         with pytest.raises(typer.BadParameter) as excinfo:
             _canonical_period(calendar_shape, year=2024)
-        message = str(excinfo.value)
-        # The refusal names the AEAT token grammar and the --year argument.
-        assert "1T" in message, calendar_shape
-        assert "0A" in message, calendar_shape
-        assert "--year" in message, calendar_shape
+        refusal = excinfo.value
+        assert isinstance(refusal, _LedgerPeriodRefusal), calendar_shape
+        assert frozenset(refusal.accepted_period_tokens) == expected, calendar_shape
+        message = str(refusal)
+        assert "1T" in message and "--year" in message, calendar_shape
 
 
 def test_year_qualified_hybrid_refuses() -> None:
@@ -130,15 +185,23 @@ def test_year_qualified_hybrid_refuses() -> None:
             _canonical_period(hybrid, year=2024)
 
 
-def test_invalid_token_refuses_naming_aeat_tokens() -> None:
-    """A genuinely-invalid token refuses, naming the AEAT token grammar and --year."""
+def test_invalid_token_refuses_advertising_accepted_tokens_as_data() -> None:
+    """A genuinely-invalid token refuses, carrying the accepted set as structured data.
 
+    Same structured contract as the calendar-shape case: the accepted span-shaped
+    set rides on the refusal's carrier and is compared against the enum-derived
+    set, so the grammar case survives a wording pass on the message.
+    """
+
+    expected = _expected_span_shaped_tokens()
     for invalid_token in _INVALID_TOKENS:
         with pytest.raises(typer.BadParameter) as excinfo:
             _canonical_period(invalid_token, year=2024)
-        message = str(excinfo.value)
-        assert "1T" in message, invalid_token
-        assert "--year" in message, invalid_token
+        refusal = excinfo.value
+        assert isinstance(refusal, _LedgerPeriodRefusal), invalid_token
+        assert frozenset(refusal.accepted_period_tokens) == expected, invalid_token
+        message = str(refusal)
+        assert "1T" in message and "--year" in message, invalid_token
 
 
 def test_empty_period_refuses() -> None:
@@ -274,6 +337,43 @@ def test_preflight_calendar_shape_refuses(_isolated_backend: None) -> None:
     result = invoke_cached_cli(["app", "ledger", "preflight", "--period", "2026Q1", "--year", "2026"])
     assert result.exit_code != 0, result.output
     assert "1T" in result.output
+
+
+def _error_context(output: str) -> dict[str, object]:
+    """Return the ``error.context`` object from the shared-spine JSON document."""
+    for line in output.splitlines():
+        candidate = line.strip()
+        if candidate.startswith("{"):
+            document = json.loads(candidate)
+            assert document["status"] == "error", document
+            error = document["error"]
+            assert isinstance(error, dict), error
+            context = error["context"]
+            assert isinstance(context, dict), f"context is not an object: {context!r}"
+            return {str(name): value for name, value in context.items()}
+    raise AssertionError(f"no JSON error document found in output:\n{output}")
+
+
+def test_period_refusal_advertises_accepted_tokens_on_error_envelope(_isolated_backend: None) -> None:
+    """A JSON-mode ``--period`` refusal carries the accepted set on the error context.
+
+    Real cached CLI, ``--format json``: a calendar shape refuses and the
+    shared-spine error document's structured ``context`` advertises the accepted
+    span-shaped tokens, compared against the enum-derived set. Proves the refusal
+    site's structured carrier reaches the operator-facing envelope — not merely
+    the exception object — so automation reads the accepted grammar as data. The
+    ``accepted_periods`` key deliberately avoids the ``token`` substring the
+    error-context scrubber redacts.
+    """
+
+    result = invoke_cached_cli(
+        ["--format", "json", "app", "ledger", "status", "--period", "2024Q1", "--year", "2024"],
+    )
+    assert result.exit_code != 0, result.output
+    context = _error_context(result.output)
+    advertised = context["accepted_periods"]
+    assert isinstance(advertised, str), context
+    assert frozenset(advertised.split(", ")) == _expected_span_shaped_tokens()
 
 
 def _write_import_statement(path: Path) -> None:

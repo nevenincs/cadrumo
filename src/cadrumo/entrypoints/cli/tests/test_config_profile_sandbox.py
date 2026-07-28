@@ -824,10 +824,10 @@ def test_sandbox_active_indicator_absent_when_no_profile_is_active() -> None:
 def test_sandbox_active_indicator_names_the_currently_active_sandbox_after_switch() -> None:
     """Switching between two sandboxes updates the banner's named sandbox on the next command.
 
-    ``switch`` is the single accepted selector: a sandbox is entered by its
-    canonical ``sandbox:<name>`` label (the removed ``sandbox use`` door had
+    ``config login`` is the single accepted selector: a sandbox is entered by
+    its canonical ``sandbox:<name>`` label (the removed ``sandbox use`` door had
     no separate authority — it delegated to the same select-lifecycle-span
-    primitive ``switch`` uses).
+    primitive ``config login`` uses).
     """
     create_profile_via_cli("main")
     assert _invoke(("config", "profile", "sandbox", "create", "zeta", "--from-profile", "main")).exit_code == 0
@@ -848,11 +848,11 @@ def test_sandbox_active_indicator_names_the_currently_active_sandbox_after_switc
 
 
 def test_sandbox_use_command_is_absent() -> None:
-    """``sandbox use`` was removed with no alias; only ``switch`` selects a sandbox.
+    """``sandbox use`` was removed with no alias; only ``config login`` selects a sandbox.
 
     The grammar carries exactly one selection door: ``config profile sandbox
     use`` no longer exists, so invoking it fails as an unknown sub-command and
-    ``switch`` remains the accepted selector — proven by the sibling
+    ``config login`` remains the accepted selector — proven by the sibling
     ``..._after_switch`` test entering the sandbox by its canonical label.
     """
     create_profile_via_cli("main")

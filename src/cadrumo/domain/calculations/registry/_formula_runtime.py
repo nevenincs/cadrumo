@@ -52,7 +52,7 @@ from ._formula_runtime_ops import (
     UnresolvedFormulaOutcomeError as _UnresolvedFormulaOutcomeError,
 )
 from ._formula_runtime_ops import (
-    numeric_casilla_value as _m210_numeric_casilla_value,
+    numeric_casilla_value as _numeric_casilla_value,
 )
 from ._formula_text_inputs import validate_text_input_targets as _validate_text_input_targets
 from ._formula_text_inputs import validated_text_input_casilla_ids as _validated_text_input_casilla_ids
@@ -748,11 +748,11 @@ def _evaluate_m100_resolve_renta_inmobiliaria_imputada(
     op = "m100_resolve_renta_inmobiliaria_imputada"
     args = _m100_resolve_imputed_rent_args(expression)
 
-    catastral_value = _m100_numeric_casilla_value(args.catastral_value_casilla_id, ctx)
-    disposal_days = _m100_numeric_casilla_value(args.disposal_days_casilla_id, ctx)
+    catastral_value = _numeric_casilla_value(args.catastral_value_casilla_id, ctx)
+    disposal_days = _numeric_casilla_value(args.disposal_days_casilla_id, ctx)
     mixed_use = _m100_boolean_casilla_value(args.mixed_use_flag_casilla_id, ctx, op=op)
-    disposal_percentage = _m100_numeric_casilla_value(args.disposal_percentage_casilla_id, ctx)
-    mixed_use_days = _m100_numeric_casilla_value(args.mixed_use_days_casilla_id, ctx)
+    disposal_percentage = _numeric_casilla_value(args.disposal_percentage_casilla_id, ctx)
+    mixed_use_days = _numeric_casilla_value(args.mixed_use_days_casilla_id, ctx)
     is_revised = _m100_revised_cadastral_value_flag(args.revised_flag_casilla_id, ctx)
 
     if catastral_value < _ZERO:
@@ -885,24 +885,8 @@ def _m100_revised_cadastral_value_flag(casilla_id: CasillaId, ctx: _EvalContext)
     )
 
 
-def _m100_numeric_casilla_value(casilla_id: CasillaId, ctx: _EvalContext) -> Decimal:
-    if casilla_id not in ctx.values:
-        if casilla_id in ctx.unresolved_casilla_ids:
-            raise _UnresolvedFormulaDependencyError((casilla_id,))
-        raise RegistryValidationError(
-            f"casilla {casilla_id!r} referenced before evaluation",
-            translated_message="errors.calc.casilla_referenced_before_evaluation",
-            context={"casilla_id": casilla_id},
-        )
-    value = ctx.values[casilla_id]
-    ctx.operand_refs.append(casilla_id)
-    ctx.operand_casilla_refs.append(casilla_id)
-    ctx.operand_values.append(value)
-    return value
-
-
 def _m100_boolean_casilla_value(casilla_id: CasillaId, ctx: _EvalContext, *, op: str) -> bool:
-    value = _m100_numeric_casilla_value(casilla_id, ctx)
+    value = _numeric_casilla_value(casilla_id, ctx)
     if value not in {_ZERO, _ONE}:
         raise RegistryValidationError(
             "M100 Art.85 boolean casilla must be 0 or 1",
@@ -1032,7 +1016,7 @@ def _m100_eo_agraria_read_indice(casilla_id: CasillaId, ctx: _EvalContext) -> De
             value = _ZERO
         ctx.operand_values.append(value)
         return value
-    return _m210_numeric_casilla_value(casilla_id, ctx)
+    return _numeric_casilla_value(casilla_id, ctx)
 
 
 def _evaluate_m100_resolve_eo_agraria_indices_correctores(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
@@ -1074,7 +1058,7 @@ def _evaluate_m100_resolve_eo_agraria_indices_correctores(expression: FormulaExp
     that activity.
     """
     args = _m100_resolve_eo_agraria_indices_correctores_args(expression)
-    minorado = _m210_numeric_casilla_value(args.minorado_casilla_id, ctx)
+    minorado = _numeric_casilla_value(args.minorado_casilla_id, ctx)
     ctx.operand_refs.append(args.minorado_casilla_id)
     ctx.operand_casilla_refs.append(args.minorado_casilla_id)
     if minorado <= _ZERO:
@@ -1211,7 +1195,7 @@ def _evaluate_m303_resolve_modulos_iva_cuota_devengada(expression: FormulaExpres
         return _ZERO
     total = _ZERO
     for modulo_index, modulo_casilla_id in enumerate(args.modulo_unit_casilla_ids, start=1):
-        units = _m210_numeric_casilla_value(modulo_casilla_id, ctx)
+        units = _numeric_casilla_value(modulo_casilla_id, ctx)
         if units == _ZERO:
             continue
         coefficient = _m303_modulos_iva_coefficient(

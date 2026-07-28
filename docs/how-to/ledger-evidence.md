@@ -23,7 +23,7 @@ means 21 %:
 
 The command prints the evidence ID. Note the full ID down - later commands need it. Add what you know now; update the rest later.
 
-## Link an evidence record to a transaction
+## Attach an evidence record to a transaction
 
 Attach the evidence record to the transaction it supports. The sequence records
 an evidence file and an expense, then attaches one to the other:
@@ -33,6 +33,8 @@ an evidence file and an expense, then attaches one to the other:
 ```
 
 A transaction carries at most one purchase-invoice evidence record. The command refuses a second one, and refuses re-attaching the same one.
+
+Do not reach for `aeat app ledger link` here. `attach` and `link` are different operations on the same transaction: `attach` carries the evidence document, while `link` binds the transaction to an entry in the enriched invoice catalogue and requires `--invoice-id`. That id comes from an imported, reconciled, or `invoice catalogue create` entry - it is not the id `aeat app ledger invoice add` prints.
 
 For most receipts and invoices, `--purchase-invoice-evidence-id` above is the path to use; the evidence id comes straight from `evidence add`.
 

@@ -124,6 +124,7 @@ from ._iva_ledger import (
     validate_iva_ledger_observations,
 )
 from ._ledger_filing_snapshot import (
+    assert_evidence_covers_snapshot,
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
     evaluate_ledger_filing_staleness,
@@ -313,6 +314,7 @@ __all__ = [
     "aggregate_retenciones_190",
     "aggregate_retenciones_193",
     "aggregation_period_for_modelo",
+    "assert_evidence_covers_snapshot",
     "build_binding_source_dispositions",
     "business_proportion",
     "collect_unhandled_source_diagnostics",

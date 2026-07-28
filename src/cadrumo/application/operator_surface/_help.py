@@ -323,6 +323,14 @@ def _config_help() -> HelpDocument:
                         command="aeat config profile history",
                         description=tr("cli.operator_surface.help.config.profile_history"),
                     ),
+                    HelpEntry(
+                        command="aeat config profile export",
+                        description=tr("cli.operator_surface.help.config.profile_export"),
+                    ),
+                    HelpEntry(
+                        command="aeat config profile subject-access-request",
+                        description=tr("cli.operator_surface.help.config.profile_sar"),
+                    ),
                 ),
             ),
             HelpSection(
@@ -351,6 +359,47 @@ def _config_help() -> HelpDocument:
                     HelpEntry(
                         command="aeat config auth reset",
                         description=tr("cli.operator_surface.help.config.auth_reset"),
+                    ),
+                    HelpEntry(
+                        command="aeat config auth certificate check",
+                        description=tr("cli.operator_surface.help.config.certificate_check"),
+                    ),
+                    HelpEntry(
+                        command="aeat config auth certificate secret set",
+                        description=tr("cli.operator_surface.help.config.certificate_secret_set"),
+                    ),
+                    HelpEntry(
+                        command="aeat config auth certificate secret remove",
+                        description=tr("cli.operator_surface.help.config.certificate_secret_remove"),
+                    ),
+                ),
+            ),
+            HelpSection(
+                title=tr("cli.operator_surface.help.config.section_custody"),
+                entries=(
+                    HelpEntry(
+                        command="aeat config passphrase change",
+                        description=tr("cli.operator_surface.help.config.passphrase_change"),
+                    ),
+                    HelpEntry(
+                        command="aeat config recovery status",
+                        description=tr("cli.operator_surface.help.config.recovery_status"),
+                    ),
+                    HelpEntry(
+                        command="aeat config recovery create",
+                        description=tr("cli.operator_surface.help.config.recovery_create"),
+                    ),
+                    HelpEntry(
+                        command="aeat config recovery rotate",
+                        description=tr("cli.operator_surface.help.config.recovery_rotate"),
+                    ),
+                    HelpEntry(
+                        command="aeat config recovery verify",
+                        description=tr("cli.operator_surface.help.config.recovery_verify"),
+                    ),
+                    HelpEntry(
+                        command="aeat config recover",
+                        description=tr("cli.operator_surface.help.config.recover"),
                     ),
                 ),
             ),
@@ -503,6 +552,18 @@ def _app_help() -> HelpDocument:
                     HelpEntry(
                         command="aeat app modelo m036",
                         description=tr("cli.operator_surface.help.app.modelo_m036"),
+                    ),
+                    HelpEntry(
+                        command="aeat app modelo audit show",
+                        description=tr("cli.operator_surface.help.app.modelo_audit_show"),
+                    ),
+                    HelpEntry(
+                        command="aeat app modelo audit check",
+                        description=tr("cli.operator_surface.help.app.modelo_audit_check"),
+                    ),
+                    HelpEntry(
+                        command="aeat app modelo audit export",
+                        description=tr("cli.operator_surface.help.app.modelo_audit_export"),
                     ),
                 ),
             ),

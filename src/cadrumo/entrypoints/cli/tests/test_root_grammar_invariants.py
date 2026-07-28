@@ -243,7 +243,7 @@ def test_config_reset_rejects_the_retired_scope_flag() -> None:
 def test_config_profile_sandbox_use_door_is_unmounted() -> None:
     """`config profile sandbox use` was removed with no alias.
 
-    `switch` is the single accepted selector; a sandbox is entered by its
+    `config login` is the single accepted selector; a sandbox is entered by its
     canonical `sandbox:<name>` label through `config login`. The second
     selection door must not resolve."""
 

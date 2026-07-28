@@ -304,6 +304,57 @@ def _ledger_aeat_token(token: str) -> str | None:
     return registry_period
 
 
+#: Year used only to probe whether a token maps to a calendar date span. The
+#: span shape depends on the token's cadence, not the year, so any supported
+#: year answers identically; it never leaks into an operator-supplied period.
+_ACCEPTED_PERIOD_PROBE_YEAR = 2024
+
+
+def _ledger_period_accepted_tokens() -> tuple[str, ...]:
+    """Return the span-shaped registry tokens the ledger ``--period`` accepts.
+
+    Derived from the same rule :func:`_canonical_period` applies: a
+    :class:`StandardPeriodCode` member the ledger normalises
+    (:func:`_ledger_aeat_token`) AND whose ``(year, token)`` :class:`Period`
+    carries a calendar date span. The instalment claves (``1P``-``4P``) and the
+    extended-union members resolve to no span and are excluded, so the advertised
+    accepted set is computed from the acceptance rule and can never drift from
+    what the boundary actually admits — a new span-shaped enum member is
+    advertised automatically.
+    """
+    from ...core import Period, PeriodError, StandardPeriodCode
+
+    accepted: list[str] = []
+    for member in StandardPeriodCode:
+        normalised = _ledger_aeat_token(member.value)
+        if normalised is None:
+            continue
+        try:
+            resolved = Period.from_year_and_code(_ACCEPTED_PERIOD_PROBE_YEAR, normalised)
+        except PeriodError:
+            continue
+        if resolved.has_date_span():
+            accepted.append(normalised)
+    return tuple(accepted)
+
+
+class _LedgerPeriodRefusal(typer.BadParameter):
+    """A ``--period`` refusal that carries the accepted token set as structured data.
+
+    Subclasses :class:`typer.BadParameter` so the boundary behaviour is unchanged
+    — an instructive usage refusal with the usage exit code — while exposing the
+    machine-readable accepted-token set on :attr:`accepted_period_tokens`. The
+    terminal JSON handler threads that set into the error envelope's structured
+    ``context``, so automation reads the accepted grammar as data rather than
+    scraping the rendered range notation, and a wording pass on the message
+    cannot change the advertised set.
+    """
+
+    def __init__(self, message: str, *, accepted_period_tokens: tuple[str, ...]) -> None:
+        super().__init__(message)
+        self.accepted_period_tokens: tuple[str, ...] = accepted_period_tokens
+
+
 def _canonical_period(period: str, *, year: int) -> Period:
     """Resolve a strict AEAT ``--period`` token plus ``--year`` to a :class:`Period`.
 
@@ -335,7 +386,10 @@ def _canonical_period(period: str, *, year: int) -> Period:
             # A registry-valid token the ledger cannot filter by (an instalment
             # clave such as ``1P``): refuse with the AEAT-token guidance below.
 
-    raise _bad(tr("cli.common.errors.period_unrecognised", raw=period))
+    raise _LedgerPeriodRefusal(
+        tr("cli.common.errors.period_unrecognised", raw=period),
+        accepted_period_tokens=_ledger_period_accepted_tokens(),
+    )
 
 
 def _filter_canonical_period(token: str, *, year: int) -> Period:

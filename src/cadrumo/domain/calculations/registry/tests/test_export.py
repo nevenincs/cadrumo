@@ -30,11 +30,11 @@ from .._binding_selector_utils import (
     binding_export_selector,
 )
 from .._export import (
-    _export_fields_overlap,
     _ExportJustification,
     _ExportPadding,
     _justification_for_binding_data_type,
     _padding_for_binding_data_type,
+    export_fields_overlap,
 )
 from .._schema import DataBindingDefinition, ExportFieldDefinition
 
@@ -144,7 +144,7 @@ def _binding(
 
 
 # ---------------------------------------------------------------------------
-# _export_fields_overlap
+# export_fields_overlap
 # ---------------------------------------------------------------------------
 
 
@@ -165,7 +165,7 @@ def test_export_fields_overlap_returns_false_when_position_is_incomplete(
     left = _field(field_id="a", offset=left_offset, length=left_length)
     right = _field(field_id="b", offset=right_offset, length=right_length)
 
-    assert _export_fields_overlap(left, right) is False
+    assert export_fields_overlap(left, right) is False
 
 
 def test_export_fields_overlap_detects_partial_overlap() -> None:
@@ -173,14 +173,14 @@ def test_export_fields_overlap_detects_partial_overlap() -> None:
     left = _field(field_id="a", offset=0, length=5)
     right = _field(field_id="b", offset=3, length=5)
 
-    assert _export_fields_overlap(left, right) is True
+    assert export_fields_overlap(left, right) is True
 
 
 def test_export_fields_overlap_detects_full_overlap_when_offsets_match() -> None:
     left = _field(field_id="a", offset=10, length=4)
     right = _field(field_id="b", offset=10, length=4)
 
-    assert _export_fields_overlap(left, right) is True
+    assert export_fields_overlap(left, right) is True
 
 
 def test_export_fields_overlap_returns_false_for_adjacent_fields() -> None:
@@ -188,14 +188,14 @@ def test_export_fields_overlap_returns_false_for_adjacent_fields() -> None:
     left = _field(field_id="a", offset=0, length=5)
     right = _field(field_id="b", offset=5, length=5)
 
-    assert _export_fields_overlap(left, right) is False
+    assert export_fields_overlap(left, right) is False
 
 
 def test_export_fields_overlap_returns_false_for_separated_fields() -> None:
     left = _field(field_id="a", offset=0, length=5)
     right = _field(field_id="b", offset=20, length=5)
 
-    assert _export_fields_overlap(left, right) is False
+    assert export_fields_overlap(left, right) is False
 
 
 # ---------------------------------------------------------------------------

@@ -84,10 +84,7 @@ from ...domain.modelos import (
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
     CalculationSourceIssue,
-    LedgerFilingEvidence,
-    LedgerFilingSnapshot,
     ManualFactBasisEntry,
-    ModeloError,
     ModeloRecordCatalogueRepositoryProtocol,
     ModeloValidationError,
     ModeloVerificationFinding,
@@ -109,6 +106,7 @@ from ...domain.modelos import (
 from ..aggregation import (
     MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND,
     CalculationSourceDiagnostic,
+    assert_evidence_covers_snapshot,
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
     missing_evidence_advisory_observations,
@@ -351,24 +349,6 @@ def _manual_fact_basis_entries(
             m210_gross_income_source_mode is M210GrossIncomeSourceMode.LEDGER and casilla == "rendimientos_integros"
         )
     )
-
-
-def _assert_evidence_covers_snapshot(snapshot: LedgerFilingSnapshot, evidence: LedgerFilingEvidence) -> None:
-    """Guarantee the bundled evidence covers every fingerprinted contributor.
-
-    The evidence and the fingerprint snapshot are projected from the same
-    ``source_transaction_ids``; this invariant assertion makes a silent
-    contributor omission impossible to ship — the evidence row set MUST equal the
-    fingerprint row set.
-    """
-    snapshot_ids = {row.transaction_id for row in snapshot.rows}
-    evidence_ids = {row.transaction_id for row in evidence.rows}
-    if snapshot_ids != evidence_ids:
-        missing = sorted(snapshot_ids - evidence_ids)
-        extra = sorted(evidence_ids - snapshot_ids)
-        raise ModeloError(
-            f"ledger filing evidence does not cover the fingerprint snapshot: missing={missing} extra={extra}",
-        )
 
 
 #: Legal grounding for missing IVA evidence. Deducting input IVA requires the
@@ -998,7 +978,7 @@ def _persist_verified_revision_evidence(
             m210_gross_income_source_mode=target.m210_gross_income_source_mode,
         ),
     )
-    _assert_evidence_covers_snapshot(filing_snapshot, filing_evidence)
+    assert_evidence_covers_snapshot(filing_snapshot, filing_evidence)
     verified = target.model_copy(
         update={
             "state": CalculationRevisionState.VERIFICADO_COMPLETO,

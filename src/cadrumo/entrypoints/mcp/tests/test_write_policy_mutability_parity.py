@@ -81,6 +81,34 @@ def _path_to_command_key(path: str) -> str:
 
 
 def test_every_write_policy_verb_is_in_a_mutating_family() -> None:
+    # Anti-vacuity floor. The screen below collects write-policy catalogue entries
+    # whose family classifies read-only and asserts the set is empty. An empty
+    # catalogue -- or a screen that can never see a read-only classification --
+    # produces exactly that same green while checking nothing, so pin the corpus
+    # size and prove the screen discriminates before trusting its silence.
+    assert len(PROFILE_BOUND_WRITE_VERB_PATHS) >= 40, (
+        f"write-policy catalogue collapsed to {len(PROFILE_BOUND_WRITE_VERB_PATHS)} entries; a green "
+        "result below would mean 'nothing was screened' rather than 'nothing is wrong'"
+    )
+
+    # Hostile-input probe: a genuinely read-only command placed under the same
+    # screen IS flagged. `registry.inspect` reads bundled registry data and the
+    # manifest classifies its family read-only, so were it mislabelled a write
+    # verb this screen would surface it. This proves the screen is not vacuously
+    # empty because nothing at all can classify read-only.
+    assert command_classification("registry.inspect").read_only, (
+        "registry.inspect no longer classifies read-only, so the discrimination probe below is void"
+    )
+    injected = sorted(
+        key
+        for path in (*PROFILE_BOUND_WRITE_VERB_PATHS, "app registry inspect")
+        if command_classification(key := _path_to_command_key(path)).read_only
+    )
+    assert injected == ["registry.inspect"], (
+        "the read-only screen failed to flag a read-only command injected into the write set, so it "
+        f"could not flag a real read-only writer either: {injected}"
+    )
+
     read_only_writers = sorted(
         key
         for path in PROFILE_BOUND_WRITE_VERB_PATHS

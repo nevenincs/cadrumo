@@ -71,3 +71,25 @@ def test_a_hypothetical_live_write_would_be_blocked() -> None:
     # BLOCK rail is real, not vacuous.
     with _declared_live_write("modelo.work.submit"):
         assert confirmation_for_tool(command_key="modelo.work.submit") is ConfirmationPolicy.BLOCK
+
+
+def test_an_unclassified_key_is_refused_not_auto_approved() -> None:
+    # The permissive classification default makes an unknown key classify
+    # all-false, which without grounding reaches AUTO_APPROVE - a future caller
+    # passing an unvalidated key would silently auto-approve a mutation. The gate
+    # grounds its auto-approve path against the live descriptor set, so a key that
+    # names no exposed command is refused rather than auto-approved.
+    bogus_key = "totally.bogus.unclassified.key"
+    assert bogus_key not in {descriptor.command_key for descriptor in build_tool_descriptors()}
+    with pytest.raises(ValueError, match="names no exposed command"):
+        confirmation_for_tool(command_key=bogus_key)
+
+
+def test_grounding_still_auto_approves_real_exposed_commands() -> None:
+    # Counterpart to the refusal above: the grounding must not refuse a genuine
+    # exposed command whose classification is auto-approve. Real read and
+    # non-destructive-mutation descriptors still auto-approve, so the refusal is
+    # scoped to unclassified keys, not the whole auto-approve tier.
+    for command_key in ("registry.inspect", "overview.status", "ledger.add"):
+        assert command_key in {descriptor.command_key for descriptor in build_tool_descriptors()}
+        assert confirmation_for_tool(command_key=command_key) is ConfirmationPolicy.AUTO_APPROVE
