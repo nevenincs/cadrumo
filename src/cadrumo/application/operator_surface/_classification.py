@@ -112,6 +112,27 @@ def _family_mutability_map() -> dict[str, OperatorMutability]:
 
 
 def _mutability_for(command_key: str) -> OperatorMutability:
+    """Resolve a command's mutability from its family, defaulting to mutating.
+
+    The ``LOCAL_STATE_MUTATING`` default for a family token this map does not
+    know is DELIBERATE and fail-CLOSED, and it MUST NOT be removed. Every
+    read-only-gated consumer relies on it: the MCP identity gate returns early
+    only for a read-only command, so an unknown or retired key -- not read-only --
+    makes the gate enforce; the risk-table no-silent-default parity gate uses it
+    to make an undeclared mutating verb classify non-read-only and so be caught.
+    Raising on an unknown family instead would turn the identity gate's
+    retired-key refusal into a crash and defeat the parity gate's stricter read.
+
+    The cost of the default is that it cannot distinguish an ABSENT key from a
+    live write verb -- both classify non-read-only -- so a consumer that needs
+    that distinction MUST ground its key against the live surface first. The
+    write-guard catalogue gate binds to the materialised command tree, the
+    risk-table parity gate screens the exposed descriptor set, and the HITL
+    confirmation gate grounds its auto-approve path against the descriptor set,
+    exactly so this permissive default cannot silently auto-approve an
+    unclassified command. A new consumer of :func:`command_classification` must
+    ground its key the same way.
+    """
     tokens = command_key.split(".")
     family_token = tokens[1] if tokens[0] in {"config", "app"} and len(tokens) > 1 else tokens[0]
     return _family_mutability_map().get(family_token, OperatorMutability.LOCAL_STATE_MUTATING)

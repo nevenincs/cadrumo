@@ -11,6 +11,7 @@ deterministic backstop beneath it.
 from __future__ import annotations
 
 from enum import StrEnum
+from functools import lru_cache
 
 from ...application.operator_surface import command_classification
 
@@ -47,6 +48,20 @@ def requires_user_interaction(policy: ConfirmationPolicy) -> bool:
     return policy is ConfirmationPolicy.CONFIRM
 
 
+@lru_cache(maxsize=1)
+def _live_command_keys() -> frozenset[str]:
+    """Return the command keys the live MCP descriptor surface exposes.
+
+    The auto-approve grounding source for :func:`confirmation_for_tool`. The
+    import is deferred (and the result cached, since the descriptor set is
+    process-stable) to keep this module free of a load-time dependency on the
+    descriptor builder, which reaches the whole CLI tree.
+    """
+    from ._tools import build_tool_descriptors
+
+    return frozenset(descriptor.command_key for descriptor in build_tool_descriptors())
+
+
 def confirmation_for_tool(*, command_key: str) -> ConfirmationPolicy:
     """Return the confirmation tier for one tool.
 
@@ -56,14 +71,35 @@ def confirmation_for_tool(*, command_key: str) -> ConfirmationPolicy:
     approval; a destructive or filing-handoff verb requires confirmation;
     everything else (reads and non-destructive local mutations) auto-approves.
 
+    Auto-approve is the ONLY tier a command key can reach purely by classifying
+    all-false, which is exactly what an unknown key does through
+    :func:`command_classification`'s permissive default. So the auto-approve path
+    is grounded here against the live descriptor set rather than trusting every
+    caller to pass a validated key: a key that names no exposed command reaches
+    this branch only because it is unclassified, and it is refused rather than
+    silently auto-approved. The block and confirm tiers fire from the declared
+    classification first, so a declared (even unexposed) live-write or destructive
+    verb still resolves correctly.
+
     Returns:
         :class:`ConfirmationPolicy` selected for the command.
+
+    Raises:
+        ValueError: When ``command_key`` names no exposed command and would
+            otherwise auto-approve - an unclassified mutation must never
+            auto-approve through the permissive default.
     """
     classification = command_classification(command_key)
     if classification.live_write:
         return ConfirmationPolicy.BLOCK
     if classification.destructive or classification.handoff:
         return ConfirmationPolicy.CONFIRM
+    if command_key not in _live_command_keys():
+        raise ValueError(
+            f"confirmation_for_tool refuses to auto-approve {command_key!r}: it names no exposed "
+            "command, so it classified all-false through the permissive default rather than as a "
+            "known safe command - ground the key against the live descriptor set before calling"
+        )
     return ConfirmationPolicy.AUTO_APPROVE
 
 
