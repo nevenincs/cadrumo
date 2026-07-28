@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#cli-authority-verb-conformance'
 date: '2026-07-15'
-modified: '2026-07-26'
+modified: '2026-07-28'
 tier: L3
 related:
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
@@ -316,7 +316,7 @@ Update typed envelopes, operation mappings, write-policy tokens, and static comm
 - [ ] `W05.P15.S134` - Update nested command-path token handling and examples for passphrase, recovery, auth, and reset groups; `src/cadrumo/entrypoints/cli/_errors.py`.
 - [ ] `W05.P15.S135` - Replace the rekey recovery diagnostic with config passphrase change; `src/cadrumo/adapters/persistence/storage/master_key/_master_key.py`.
 - [ ] `W05.P15.S136` - Replace verify-recovery terminology with config recovery verify in the recovery contract; `src/cadrumo/adapters/persistence/storage/master_key/_recovery_facade.py`.
-- [ ] `W05.P15.S137` - Assert exact new schema keys, removed-key absence, exclusivity, and secret-free results; `src/cadrumo/entrypoints/cli/tests/test_json_schema_conformance.py`.
+- [x] `W05.P15.S137` - Assert exact new schema keys, removed-key absence, exclusivity, and secret-free results; `src/cadrumo/entrypoints/cli/tests/test_json_schema_conformance.py`.
 - [ ] `W05.P15.S138` - Update root fallback write classification without accepting removed command paths; `src/cadrumo/entrypoints/cli/tests/test_root_fallback_write_guard.py`.
 - [ ] `W05.P15.S238` - Remove certificate backend selectors and replay-specific fields from every payload and schema projection while preserving independent master-key keyring custody contracts; `src/cadrumo/entrypoints/cli/_config_payloads.py; src/cadrumo/entrypoints/cli/_modelo_aux_payloads.py; src/cadrumo/entrypoints/cli/tests/test_json_schema_conformance.py`.
 
