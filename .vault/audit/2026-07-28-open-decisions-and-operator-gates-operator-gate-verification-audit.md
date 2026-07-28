@@ -361,6 +361,35 @@ so bulk deletion signs the user out of live services. Once a plain
 `keyring.set_password` succeeds on this host, the six cases become runnable and the
 row can be closed on evidence.
 
+### s04-observed-green-after-clearing-our-own-residue | high | the six cases pass, and the store was full of this project's test leavings
+
+The saturated store turned out to be mostly ours. Of 652 credential entries, 552
+matched the strict shape of a project test session key — a bare UUID account under
+this application's session service — while the remaining 100 were the owner's real
+logins for design tooling, source hosting, mail and single sign-on. Removing our
+own residue is cleanup rather than a decision about someone's credentials, so the
+552 were deleted by exact pattern and every unrelated entry was left untouched. All
+551 remaining deletions succeeded, the store fell to 103 entries, and a plain
+keychain write immediately succeeded again.
+
+The suite was then run from this interactive session and all six custody-bound
+cases pass. Per the row's own wording they had never been observed green on any
+host, so this is the first time.
+
+One real defect surfaced on the way, and it would have kept the row red even on a
+healthy store. Run through the recipe as written, one case fails at its own
+precondition: the credential store is MACHINE-global, these cases mint and remove
+session keys under fixed bucket identifiers, and the default parallel runner puts
+them on separate workers that delete each other's keys mid-test. The failure reads
+as missing custody and is really a collision. The recipe now pins the serial runner
+with the reasoning recorded inline, and the prescribed command passes end to end.
+
+The accumulation itself is not yet explained and is deliberately not guessed at.
+The leaked entries carry random identifiers while these six tests use fixed ones,
+so they come from elsewhere, and a measured run of the profile unit lane leaked
+none. What is established is that entries accumulate somewhere and nothing prunes
+them, which is enough to act on without inventing a culprit.
+
 ## Recommendations
 
 Re-ground S09 as discharged, citing the absence of any default-branch write
@@ -414,11 +443,19 @@ from introducing what the sweep just proved absent. A diff-scoped run is cheap,
 and the 59 false positives should be pinned as a baseline so the signal stays
 readable rather than trained-away.
 
-Prune the Windows credential store before attempting S04 again, and re-word the
-row: its blocker is not the agent's session context but a saturated store that
-refuses every writer on this host. Confirm the fix with a bare
-`keyring.set_password` rather than by running the suite, so a failure is
-attributed to custody rather than to the code under test.
+Find and close the session-key leak, because the store will refill and re-block
+this row. The measurement to start from is the one taken here: count the session
+entries before and after a lane, and run the integration and CLI lanes rather than
+the unit lane, which leaked none. The durable fix is that whatever mints a session
+in a test removes it at teardown, so the machine-global store is left as the test
+found it. Until that lands, the periodic prune is a chore this row will keep
+paying.
+
+Re-word S04's rationale. It attributes the blockage to the agent's session context
+and prescribes an interactive desktop session, and both are wrong: the store
+refused every writer on this host regardless of session, and it is now green from
+exactly the context the row says cannot work. Diagnose a future failure by which
+call fails rather than by who is running it.
 
 Raise the cohort-build toolchain pin or the local uv, independently of this
 campaign. The clean-source reproducibility test refuses with "release cohort

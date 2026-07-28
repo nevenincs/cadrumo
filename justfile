@@ -446,8 +446,15 @@ test-integration-serial:
 # reaching the host over SSH, holds a network logon that carries no credentials,
 # so the store refuses every call and these cases fail at an explicit precondition
 # naming the missing custody -- which is a true report of the host, not a defect.
+#
+# Runs with -n0 deliberately. The OS credential store is MACHINE-global, and these
+# cases mint and remove session keys under fixed bucket ids, so xdist workers delete
+# each other's keys: under -n auto the logout case fails at its own precondition,
+# having had its key removed by a peer worker mid-test. That reads as a custody
+# failure and is really a collision. Serial is not a speed compromise here, it is
+# the only correct way to exercise a shared external store.
 test-os-keychain:
-    uv run --no-sync pytest -q -rs -m os_keychain src/cadrumo/application/user_profile/tests src/cadrumo/entrypoints/cli/tests/test_profile_session_root_resume.py
+    uv run --no-sync pytest -q -rs -n0 -m os_keychain src/cadrumo/application/user_profile/tests src/cadrumo/entrypoints/cli/tests/test_profile_session_root_resume.py
 
 # Run the live test suite. Quiet progress; failures shown.
 test-live:
