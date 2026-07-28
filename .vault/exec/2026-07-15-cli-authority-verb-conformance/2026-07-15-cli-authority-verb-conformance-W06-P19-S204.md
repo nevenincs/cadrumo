@@ -132,3 +132,40 @@ The semantic code index was degraded throughout this Phase: the service reported
 sections: 466` against 3982 tracked Python files while declaring its code generation succeeded.
 The service was not restarted and not reindexed. No absence recorded here rests on a semantic
 miss.
+
+
+## Re-verified 2026-07-28 at HEAD `a4534b8a2bfbf9d9d95eed883f98d2098a437ec0`
+
+Written three days after the sections above, against a tree that has moved. The
+figures below supersede any that conflict; nothing above is edited, so the
+original measurement stays readable next to what it became.
+
+The four actionable clusters and the extraction candidate this Step discovered
+have all been REMEDIATED. Each became its own Step and each has landed: the
+M100 casilla-accessor copy retired onto the public accessor, the modelo
+evidence-covers-snapshot copy routed onto the public assertion with its
+cross-package private import removed, the byte-identical FTS or-group builder
+given one shared leaf home, the filing export-field overlap predicate routed
+onto the registry copy, and the journal-repository substrate extracted rather
+than replaced, the two classes being constraint-shape divergent.
+
+Confirmed independently rather than accepted from the commits. A fresh
+structural scan was run with the same normalisation principle - every local
+identifier rewritten to a positional placeholder, every string blanked, the
+docstring stripped, the body hashed - and its discrimination proven before use
+against a hand-built twin pair and an unrelated control. Corpus: 1411
+production modules, 4250 bodies hashed at a 70-node floor, 0 unparseable. NONE
+of the four retired clusters appears in the result. The retirements are real.
+
+The scan surfaces 39 collision groups, 25 spanning more than one file. Those
+are NOT reported as duplication here and must not be read as such: the
+substitutability pre-filter has not been applied to them, and a prior pass in
+this project that skipped that filter reached a 96 percent false-positive rate,
+52 of 54 sites blocked by constraint incompatibility. Several are visibly
+idiomatic on inspection - repository `load` templates, two-attribute `__init__`
+bodies, `_*_unique` validators. They are recorded as a lower bound needing
+per-cluster adjudication, which is the honest handover rather than a finding.
+
+The instrument's limit, restated because it governs how the null is read: it
+collides only exactly-equal normalised bodies, so one extra guard clause or a
+reordered statement pair defeats it. A hit is strong evidence; a null is weak.

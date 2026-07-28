@@ -77,3 +77,44 @@ on this side. Every result in this Phase is therefore bound to a named HEAD, and
 mattered the gate was re-run and the second reading recorded alongside the first.
 
 The semantic code index was degraded throughout this Phase: the service reported `Source code sections: 466` against 3982 tracked Python files while declaring its code generation succeeded. No absence recorded here rests on a semantic miss.
+
+## Concurrent failures at HEAD bc80aa2808
+
+Updated failure catalog at re-measurement. No global green is claimed.
+
+S192 — dev/docs/tests/: 3 peer-owned failures. `test_generated_page_is_fresh` and
+`test_settings_fields_all_present_in_env_example` from MCP stdio watchdog setting not
+reflected in docs (commit `faa8643ece`). `test_sphinx_nitpicky_build_is_clean` from
+four docstring-reference warnings across relocation commits `286db29da0`, `914c59ad07`,
+`279bd29bfc`, and registry commit `8bec35ac37`.
+
+S198 — nine repository ratchets: 4 peer-owned failures. Monkeypatch: `dev/deploy/tests/`
+(commit `b6a10f9105`). Relative imports and skip/xfail: `src/cadrumo/entrypoints/mcp/tests/`
+(commit `faa8643ece`). Mock inventory: `dev/docs/apidocs/tests/` and `dev/docs/tests/`
+(commit `9f59f32595`).
+
+S203 — duplication: 13 clones (AMBER). One new pair (censal-datos campaign) vs original
+reading of 12. No feature-owned pair in either reading.
+
+No feature-owned regression in any failing lane at HEAD `bc80aa2808`.
+
+
+## Re-verified 2026-07-28 at HEAD `a4534b8a2bfbf9d9d95eed883f98d2098a437ec0`
+
+Written three days after the sections above, against a tree that has moved. The
+figures below supersede any that conflict; nothing above is edited, so the
+original measurement stays readable next to what it became.
+
+The discipline this Step records - no global green claimed, unrelated failures
+attributed separately - is unchanged and remains correct. Two of its specific
+attributions are superseded.
+
+The two broken layering contracts are no longer broken. All five are evaluated
+and kept at this HEAD, and the remedy was removal of the violating edges by
+their owning campaigns rather than a widened ignore list.
+
+The remaining ratchet and marker failures it attributes to other campaigns were
+not re-measured here and are carried forward as recorded, still attributed
+elsewhere. The Step's claim was never that the tree is green; it was that this
+campaign's surface is not what is red, and that claim is strengthened rather
+than weakened by the contracts having since gone green.

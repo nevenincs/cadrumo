@@ -418,11 +418,11 @@ Materialize the CLI, prove schema, locale, docs, and MCP agreement, rerun clone 
 - [ ] `W06.P19.S201` - Run the complete serial integration suite and record the attributable result; `src/cadrumo/`.
 - [ ] `W06.P19.S202` - Run the complete documentation build and conformance gate; `docs/`.
 - [ ] `W06.P19.S203` - Run the authoritative typed duplication runner and require zero clones for green, clone findings for amber, and unavailable, failed, timed-out, non-zero, or unparseable execution for explicit amber-unavailable without false green; `dev/audit/duplication.py; dev/audit/report.py; justfile`.
-- [ ] `W06.P19.S204` - Dispatch a fresh Luna xhigh agent swarm over every audited functionality cluster; `src/cadrumo/`.
+- [x] `W06.P19.S204` - Dispatch a fresh Luna xhigh agent swarm over every audited functionality cluster; `src/cadrumo/`.
 - [ ] `W06.P19.S205` - Rerun Vaultspec-RAG semantic searches across certificate custody, ledger evidence, export, hashing, replay, namespaces, filed capture, LLM review, registry queries, and duplication infrastructure; `src/cadrumo/; dev/audit/`.
-- [ ] `W06.P19.S206` - Confirm every semantic candidate with exact declaration, import, export, caller, writer, persistence, CLI, schema, locale, test, documentation, and generated-artifact searches before classification; `src/cadrumo/; dev/; docs/; .github/; justfile`.
-- [ ] `W06.P19.S207` - Record canonical owner, surviving consumers, removed declarations, bypass disposition, and non-vacuous adoption evidence for every amended functionality cluster; `.vault/audit/`.
-- [ ] `W06.P19.S208` - Record unrelated concurrent failures separately without claiming global green; `.vault/exec/`.
+- [x] `W06.P19.S206` - Confirm every semantic candidate with exact declaration, import, export, caller, writer, persistence, CLI, schema, locale, test, documentation, and generated-artifact searches before classification; `src/cadrumo/; dev/; docs/; .github/; justfile`.
+- [x] `W06.P19.S207` - Record canonical owner, surviving consumers, removed declarations, bypass disposition, and non-vacuous adoption evidence for every amended functionality cluster; `.vault/audit/`.
+- [x] `W06.P19.S208` - Record unrelated concurrent failures separately without claiming global green; `.vault/exec/`.
 
 ### Phase `W06.P20` - Perform formal review and completion audit
 

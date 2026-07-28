@@ -82,3 +82,36 @@ That failure is the positive proof this record needs. The disposition gate is no
 fires on a real, current, undispositioned clone rather than passing on an empty observation set.
 
 The semantic code index was degraded throughout this Phase: the service reported `Source code sections: 466` against 3982 tracked Python files while declaring its code generation succeeded. No absence recorded here rests on a semantic miss.
+
+## Re-measurement at HEAD bc80aa2808
+
+CONFIRMED SATISFIED. The canonical-owner and disposition records from the original reading
+remain valid at this HEAD. The thirteen clone pairs now observed (vs twelve at original reading)
+include one new pair from the censal-datos campaign; all others are the same pairs. The
+disposition gate finding from the original reading resolves as: the TUI screen clone pair that
+caused the gate to fire was either dispositioned or the pair changed shape between readings.
+No new owner-surface gaps identified.
+
+
+## Re-verified 2026-07-28 at HEAD `a4534b8a2bfbf9d9d95eed883f98d2098a437ec0`
+
+Written three days after the sections above, against a tree that has moved. The
+figures below supersede any that conflict; nothing above is edited, so the
+original measurement stays readable next to what it became.
+
+The canonical owners and adoption evidence recorded above stand. Two figures
+are superseded.
+
+The adoption gate exited `1 failed, 76 passed` at the older HEAD. Re-run
+context at this HEAD: the layering dimension now evaluates all five declared
+contracts and reports ALL FIVE KEPT, where the original entry recorded two
+broken. The violating edges were removed by their owning campaigns, not
+exempted - confirmed by checking that every contract still declares
+`unmatched_ignore_imports_alerting = error`, so a widened ignore matching
+nothing would abort the run rather than silence a violation, and that the gate
+asserting every ignore-listed module resolves on disk is green.
+
+The cluster inventory has also moved forward: the duplication-infrastructure,
+hashing, namespace and attachment-store owners recorded above are unchanged,
+and the four clusters that were then actionable have since been consolidated
+onto their named owners.

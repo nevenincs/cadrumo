@@ -58,3 +58,27 @@ re-run. An empty result from a pattern that cannot match the data is not evidenc
 this Phase treated it as a defect in the query rather than a finding.
 
 The semantic code index was degraded throughout this Phase: the service reported `Source code sections: 466` against 3982 tracked Python files while declaring its code generation succeeded. No absence recorded here rests on a semantic miss.
+
+
+## Re-verified 2026-07-28 at HEAD `a4534b8a2bfbf9d9d95eed883f98d2098a437ec0`
+
+Written three days after the sections above, against a tree that has moved. The
+figures below supersede any that conflict; nothing above is edited, so the
+original measurement stays readable next to what it became.
+
+The confirmations recorded above stand, and their conclusions have since been
+acted on rather than left as findings: every cluster this Step resolved by
+exact search now has its canonical owner in place, the four duplicate
+declarations it identified having been retired under their own Steps.
+
+Re-confirmed at this HEAD by exact search rather than by re-reading the entry:
+the four retired symbols no longer collide in a fresh structural scan over 1411
+production modules and 4250 hashed bodies. The confirmation method is unchanged
+- exact search over declarations, consumers, writers and the live command tree,
+plus reading the owning modules - because the semantic instrument is still
+unusable and is now measurably worse, at 20 indexed sections.
+
+One correction to how this Step's result should be read. It is SATISFIED as a
+confirmation method, not as evidence that no unconfirmed candidate remains: the
+fresh scan surfaces 25 cross-file collision groups that have NOT been through
+the substitutability pre-filter. They are a named residue, not a clean sheet.
