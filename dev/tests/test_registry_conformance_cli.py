@@ -69,6 +69,7 @@ from ..registry.conformance.manager import (
     ConformanceBaseline,
     ConformanceReport,
     baseline_path,
+    baseline_weakenings,
     build_conformance_report,
     build_coverage_report,
     check_conformance_ratchet,
@@ -734,16 +735,184 @@ def test_the_operator_ceiling_gates_the_real_cli_at_the_committed_baseline(tmp_p
     assert "revisions_without_operator_review grew" in result.stdout
 
 
-def test_the_committed_baseline_seeds_the_operator_backlog_at_its_true_value() -> None:
-    """A ceiling seeded above the measurement would license a silent regression.
+def test_the_committed_operator_ceiling_equals_what_the_tool_measures(
+    validated_report: ConformanceReport,
+    tmp_path: Path,
+) -> None:
+    """A ceiling above the measurement licenses a regression the gate cannot see.
 
-    Nothing in the tree carries an operator signoff today, so the honest ceiling
-    is every composed revision. A committed value larger than that would leave
-    headroom for revisions to lose their signoff without the gate noticing.
+    Anchored to a FRESH measurement, not to another committed number. The
+    previous form asserted the operator ceiling equalled the ``composed_revisions``
+    floor, which is a CENSUS FACT — true only while nothing in the tree carries
+    an operator signoff — dressed as a seeding rule. It would have failed on the
+    campaign's first genuine signoff, for a reason having nothing to do with
+    seeding, and the cheapest fix available to whoever met that failure would
+    have been to delete it.
+
+    The invariant that survives is the one worth keeping: the committed ceiling
+    equals what the tool measures right now. Above the measurement is headroom,
+    and a revision can lose its signoff inside it without the gate noticing.
+    Below it the gate is already red. Either way the answer is to re-record the
+    baseline, which is what the failure message should send a reader to do.
     """
-    baseline = load_baseline()
+    measured = _baseline_captured_from(validated_report, tmp_path / "measured.json")
+    committed = load_baseline()
 
-    assert baseline.ceilings.revisions_without_operator_review == baseline.floors.composed_revisions
+    assert committed.ceilings.revisions_without_operator_review == (
+        measured.ceilings.revisions_without_operator_review
+    ), "the committed operator ceiling has drifted from the measurement; re-record the baseline"
+
+
+def _report_with_one_more_grounding_finding(report: ConformanceReport) -> ConformanceReport:
+    """Return the real report with one extra grounding finding: a RAISED ceiling."""
+    return report.model_copy(update={"grounding_finding_count": report.grounding_finding_count + 1})
+
+
+def _report_with_one_fewer_revision(report: ConformanceReport) -> ConformanceReport:
+    """Return the real report having composed one revision fewer: a LOWERED floor.
+
+    The census is moved with the count so the two never disagree, and a
+    ``pending_review`` row is the one dropped so the ceilings MOVE DOWNWARD while
+    the floor moves down too. A capture of this report therefore strengthens two
+    ceilings and weakens one floor at once, which is the mixture the guard has
+    to read correctly rather than a single unambiguous movement.
+    """
+    census = dict(report.review_status_census)
+    census[RevisionReviewStatus.PENDING_REVIEW.value] -= 1
+    return report.model_copy(
+        update={
+            "rows": report.rows[:-1],
+            "revision_count": report.revision_count - 1,
+            "review_status_census": census,
+        },
+    )
+
+
+def test_recording_refuses_a_capture_that_raises_a_ceiling(
+    validated_report: ConformanceReport,
+    tmp_path: Path,
+) -> None:
+    """A capture is an acceptance, so accepting a grown backlog must be deliberate.
+
+    ``--record`` guarded only the report in isolation: not degraded, non-empty
+    rows, non-empty note. None of those compare it against the baseline it is
+    about to overwrite, and the note requirement proves only that a sentence was
+    typed, never that it describes the movement.
+    """
+    path = tmp_path / "committed.json"
+    _baseline_captured_from(validated_report, path)
+
+    with pytest.raises(SystemExit, match="weakens the ratchet"):
+        record_baseline(
+            _report_with_one_more_grounding_finding(validated_report),
+            note="a capture that accepts a grown backlog",
+            recorded_at="2026-07-28",
+            path=path,
+        )
+
+    assert load_baseline(path).ceilings.grounding_findings == validated_report.grounding_finding_count
+
+
+def test_recording_refuses_a_capture_that_lowers_a_floor(
+    validated_report: ConformanceReport,
+    tmp_path: Path,
+) -> None:
+    """The direction that never heals, and the one the whole guard exists for.
+
+    A raised ceiling is loud: the backlog it permits shows on the census and the
+    next honest capture pulls it back. A floor lowered by a capture taken while a
+    peer's half-landed change has removed revisions is silent forever, and from
+    then on a genuinely half-read tree passes the anti-vacuity check that exists
+    to catch precisely that.
+
+    The seeded report strengthens two ceilings while lowering one floor, so this
+    also asserts the guard reads the two directions separately instead of
+    refusing any movement at all.
+    """
+    path = tmp_path / "committed.json"
+    _baseline_captured_from(validated_report, path)
+    shrunken = _report_with_one_fewer_revision(validated_report)
+
+    with pytest.raises(SystemExit) as refusal:
+        record_baseline(
+            shrunken,
+            note="a capture taken while the tree was half read",
+            recorded_at="2026-07-28",
+            path=path,
+        )
+
+    assert "composed_revisions would fall" in str(refusal.value)
+    assert load_baseline(path).floors.composed_revisions == validated_report.revision_count
+
+    # The two directions are read separately: the strengthened ceilings must not
+    # be reported as weakenings, or the guard is refusing movement rather than
+    # weakening and the refusal teaches nothing.
+    candidate = _baseline_captured_from(shrunken, tmp_path / "candidate.json")
+    committed = load_baseline(path)
+    total = validated_report.revision_count
+    assert baseline_weakenings(candidate, committed) == (
+        f"floor composed_revisions would fall from {total} to {total - 1}, demanding less measurement",
+    )
+    assert candidate.ceilings.unreviewed_revisions < committed.ceilings.unreviewed_revisions
+
+
+def test_recording_a_strengthened_baseline_needs_no_acceptance(
+    validated_report: ConformanceReport,
+    tmp_path: Path,
+) -> None:
+    """The paired half: tightening the ratchet must stay frictionless.
+
+    Without this, a guard that refused EVERY difference would satisfy both
+    refusals above while making the ordinary act of recording progress require a
+    flag that says the opposite of what happened.
+    """
+    path = tmp_path / "committed.json"
+    _baseline_captured_from(_report_with_one_more_grounding_finding(validated_report), path)
+
+    written = record_baseline(
+        validated_report,
+        note="the finding was fixed; tightening the ceiling",
+        recorded_at="2026-07-28",
+        path=path,
+    )
+
+    assert written.ceilings.grounding_findings == validated_report.grounding_finding_count
+    assert load_baseline(path).ceilings.grounding_findings == validated_report.grounding_finding_count
+
+
+def test_an_accepted_weakening_is_written_and_the_acceptance_reaches_the_real_verb(
+    validated_report: ConformanceReport,
+    tmp_path: Path,
+) -> None:
+    """The escape hatch exists, is explicit, and is wired to the shipped verb.
+
+    A refusal with no sanctioned way past it teaches the next author to edit the
+    baseline by hand, which is the unrecorded act the guard was added to remove.
+    """
+    path = tmp_path / "committed.json"
+    _baseline_captured_from(validated_report, path)
+
+    written = record_baseline(
+        _report_with_one_more_grounding_finding(validated_report),
+        note="the finding is real and accepted for now",
+        recorded_at="2026-07-28",
+        path=path,
+        accept_weakening=True,
+    )
+
+    assert written.ceilings.grounding_findings == validated_report.grounding_finding_count + 1
+
+    # Same command, same tree, one seeded baseline that the live measurement
+    # would raise: the exit code flips on the flag alone.
+    seeded = _baseline_with(tmp_path / "cli.json", ceiling="grounding_findings", delta=-1)
+    arguments = ["audit", "--record", "--note", "a real capture", "--baseline", str(seeded)]
+
+    refused = CliRunner().invoke(app, arguments)
+    accepted = CliRunner().invoke(app, [*arguments, "--accept-weakening"])
+
+    assert refused.exit_code != 0, refused.stdout
+    assert accepted.exit_code == 0, accepted.stdout
+    assert load_baseline(seeded).ceilings.grounding_findings == validated_report.grounding_finding_count
 
 
 def _baseline_with(path: Path, *, ceiling: str | None = None, floor: str | None = None, delta: int = 0) -> Path:

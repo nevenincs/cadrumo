@@ -163,6 +163,16 @@ def audit(
         Path | None,
         typer.Option("--baseline", help="Read or write this baseline file instead of the committed one."),
     ] = None,
+    accept_weakening: Annotated[
+        bool,
+        typer.Option(
+            "--accept-weakening",
+            help=(
+                "Take a capture that raises a ceiling or lowers a floor. Refused without this, "
+                "because a lowered floor lets a half-read tree pass the anti-vacuity check forever."
+            ),
+        ),
+    ] = False,
     no_validate: _NoValidate = False,
 ) -> None:
     """Compare the current conformance counters against the committed baseline.
@@ -176,6 +186,13 @@ def audit(
     cannot be trusted. Floors are reported first for that reason.
 
     Without ``--check`` this is a screen and exits 0 whatever it finds.
+
+    ``--record`` is compared against the baseline already on disk in the same
+    two directions, and refuses a capture that would raise a ceiling or lower a
+    floor unless ``--accept-weakening`` says so. The floor direction is why: a
+    raised ceiling shows up on the census and the next honest capture pulls it
+    back, while a floor lowered by a capture taken over a half-landed tree is
+    silent forever and disarms the anti-vacuity check permanently.
     """
     if check and record:
         raise SystemExit(
@@ -202,6 +219,7 @@ def audit(
             note=note.strip(),
             recorded_at=datetime.now(tz=UTC).date().isoformat(),
             path=baseline,
+            accept_weakening=accept_weakening,
         )
         typer.echo(f"recorded baseline recorded_at={written.recorded_at} rows={composed.revision_count}")
         return

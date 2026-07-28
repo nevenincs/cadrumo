@@ -132,6 +132,7 @@ __all__ = [
     "RevisionConformancePayload",
     "RevisionLocaleCoverage",
     "baseline_path",
+    "baseline_weakenings",
     "build_conformance_report",
     "build_coverage_report",
     "check_conformance_ratchet",
@@ -638,6 +639,47 @@ def load_baseline(path: Path | None = None) -> ConformanceBaseline:
     return ConformanceBaseline.model_validate(raw)
 
 
+def baseline_weakenings(candidate: ConformanceBaseline, committed: ConformanceBaseline) -> tuple[str, ...]:
+    """Name every counter ``candidate`` would move in the WEAKENING direction.
+
+    Weakening has two shapes and they are opposite movements. A CEILING that
+    RISES permits more backlog than the committed one; a FLOOR that FALLS
+    demands less measurement. Both make the gate accept a tree the committed
+    baseline refuses, which is the whole content of "the ratchet moved the wrong
+    way", and neither is visible in a capture that simply overwrites.
+
+    The floor direction is the one that needs a guard. A raised ceiling
+    self-heals loudly: the backlog it now permits shows up on the census and the
+    coverage screen, and the next honest capture pulls it back down. A lowered
+    floor is silent forever. A capture taken while a peer's half-landed change
+    has removed revisions from the tree permanently lowers ``composed_revisions``,
+    and from then on a genuinely half-read tree passes the anti-vacuity check
+    that exists to catch exactly that.
+
+    Args:
+        candidate: The baseline a capture is about to write.
+        committed: The baseline already on disk.
+
+    Returns:
+        One sentence per weakened counter, ceilings first, empty when the
+        capture only strengthens or leaves every counter flat.
+    """
+    weakened: list[str] = []
+    for field_name in ConformanceRatchetCeilings.model_fields:
+        proposed = getattr(candidate.ceilings, field_name)
+        allowed = getattr(committed.ceilings, field_name)
+        if proposed > allowed:
+            weakened.append(f"ceiling {field_name} would rise from {allowed} to {proposed}, permitting more backlog")
+    for field_name in ConformanceVacuityFloors.model_fields:
+        proposed = getattr(candidate.floors, field_name)
+        required = getattr(committed.floors, field_name)
+        if proposed < required:
+            weakened.append(
+                f"floor {field_name} would fall from {required} to {proposed}, demanding less measurement",
+            )
+    return tuple(weakened)
+
+
 def record_baseline(
     report: ConformanceReport,
     *,
@@ -646,6 +688,7 @@ def record_baseline(
     review_cadence: str = _DEFAULT_REVIEW_CADENCE,
     source: str = _RECORD_COMMAND,
     path: Path | None = None,
+    accept_weakening: bool = False,
 ) -> ConformanceBaseline:
     """Write a baseline captured from ``report`` and return it.
 
@@ -654,6 +697,13 @@ def record_baseline(
     outright: three axes are unmeasured under the degraded read and would be
     frozen as clean zeros nothing established.
 
+    A capture over an EXISTING baseline is also compared against it. The three
+    prior guards — not degraded, non-empty rows, non-empty note — all describe
+    the report in isolation, so a capture could raise a ceiling or lower a floor
+    without anything saying so, and the note requirement only proves a sentence
+    was typed, never that it describes the movement. Every weakened counter is
+    now named, and accepting one is an explicit act.
+
     Args:
         report: The freshly composed report to capture.
         note: Why this capture happened and under what tree conditions.
@@ -661,12 +711,16 @@ def record_baseline(
         review_cadence: When the ceilings should next be revisited.
         source: The command that produced the capture.
         path: Optional override for tests. Defaults to the committed baseline.
+        accept_weakening: Take the weakened counters deliberately. Absent a
+            prior baseline there is nothing to weaken and this has no effect.
 
     Returns:
         The written :class:`ConformanceBaseline`.
 
     Raises:
-        SystemExit: The report is degraded, or composed no rows at all.
+        SystemExit: The report is degraded, composed no rows at all, or would
+            weaken a counter against the baseline already on disk without
+            ``accept_weakening``.
     """
     if not report.registry_validated:
         raise SystemExit(
@@ -688,6 +742,18 @@ def record_baseline(
         floors=_current_floors(report),
     )
     resolved = baseline_path() if path is None else path
+    if resolved.exists() and not accept_weakening:
+        weakened = baseline_weakenings(baseline, load_baseline(resolved))
+        if weakened:
+            listed = "\n  ".join(weakened)
+            raise SystemExit(
+                "refusing to record a baseline that weakens the ratchet:\n  "
+                f"{listed}\n"
+                "A rising ceiling permits a backlog the committed baseline refuses; a falling floor "
+                "lets a half-read tree pass the anti-vacuity check that exists to catch it, and that "
+                "one never heals on its own. If the movement is real and intended, re-run with the "
+                "acceptance flag and say in the note which counter moved and why.",
+            )
     resolved.write_text(
         json.dumps(baseline.model_dump(mode="json"), indent=2, sort_keys=True) + "\n",
         encoding=UTF_8_ENCODING,
