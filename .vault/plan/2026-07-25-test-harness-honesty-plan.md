@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#test-harness-honesty'
 date: '2026-07-25'
-modified: '2026-07-27'
+modified: '2026-07-28'
 tier: L1
 related:
   - '[[2026-07-25-test-harness-honesty-false-green-gates-audit]]'
@@ -23,8 +23,8 @@ related:
 # `test-harness-honesty` plan
 
 - [x] `S01` - CLOSED at commit ad2d2e3eda, the bare-.xls scan pattern carried a doubled backslash so it could never match a real literal and passed over four live sites, now corrected with three routed through the canonical constants, one documented Literal-alias escape guarded by a justification test, a positive control asserting every survivor pattern matches its target and rejects near-misses, and a non-empty-corpus assertion, verified by reintroducing a bare literal and observing the gate name the exact file and line; `src/cadrumo/tests/test_enum_constant_extraction_inventory.py`.
-- [ ] `S02` - Signal a degraded state on the semantic discovery service so a truncated index either refuses to answer or marks its answers untrustworthy, because the governing rule makes an agent refuse coding work when the service is DOWN while a service that ANSWERS from a partial index never trips that refusal and returns a confident empty result for a concept that does have a canonical owner, measured at 1027 code sections against roughly 4546 files with an empty degraded-reasons list; `external, vaultspec-rag repository not this tree`.
-- [ ] `S03` - Assess whether the code index can converge at all while a committing fleet re-triggers its rebuild through the file watcher, since the degraded window is not self-limiting and chunk counts were observed climbing while the job identifier changed; `external, vaultspec-rag repository not this tree`.
+- [x] `S02` - FORMALLY DEFERRED to the discovery service's own repository, signal a degraded state on the semantic discovery service so a truncated index either refuses to answer or marks its answers untrustworthy, because the governing rule makes an agent refuse coding work when the service is DOWN while a service that ANSWERS from a partial index never trips that refusal, re-measured on 2026-07-28 against this tree's project-local store where the truncated case still carries no signal and status reports code as not indexed yet beside 70054 answering sections; `external, vaultspec-rag repository not this tree`.
+- [x] `S03` - FORMALLY DEFERRED with its named mechanism unmeasured, assess whether the code index can converge at all while a committing fleet re-triggers its rebuild through the file watcher, answered in the operative sense on 2026-07-28 by measurement showing non-convergence under fleet load caused by deliberate peer server stop calls from four worktrees against the one machine-global instance rather than by watcher re-trigger, which remains unmeasured and is not measurable from this tree; `external, vaultspec-rag repository not this tree`.
 - [x] `S04` - Make the packaging preflight recipe state its marker selection explicitly, because it inherits the default marker expression over a mixed-marker directory and silently drops 106 of 330 tests while exiting zero, and the dropped modules are those named for the packaging smoke, Scoop, Homebrew, and Docker workflows the recipe gates; `justfile, dev/packaging/tests/`.
 - [x] `S05` - Refresh the module size-budget pins that are documented as having no headroom while sitting far above actual, since a stale ceiling permits silent regrowth up to the gap and the gate reports green throughout; `src/cadrumo/tests/test_data_size_budget.py`.
 - [x] `S06` - VERIFIED-SOUND RECORD, the held-serial escalation mechanism is unwired by design rather than dead code, recorded so a later reader does not fix a mechanism that is deliberately inert; `src/cadrumo/tests/_marker_hook.py`.

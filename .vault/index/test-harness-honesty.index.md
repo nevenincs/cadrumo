@@ -7,6 +7,8 @@ date: '2026-07-28'
 modified: '2026-07-28'
 related:
   - '[[2026-07-25-test-harness-honesty-S01]]'
+  - '[[2026-07-25-test-harness-honesty-S02]]'
+  - '[[2026-07-25-test-harness-honesty-S03]]'
   - '[[2026-07-25-test-harness-honesty-S04]]'
   - '[[2026-07-25-test-harness-honesty-S05]]'
   - '[[2026-07-25-test-harness-honesty-S06]]'
@@ -51,6 +53,8 @@ Auto-generated index of all documents tagged with `#test-harness-honesty`.
 - `2026-07-25-test-harness-honesty-S09` - Triage the empty-assert functions the screen flags
 - `2026-07-25-test-harness-honesty-S10` - Extend the vacuity screen, and search for escapes that outlived their reasons
 - `2026-07-25-test-harness-honesty-S13` - Close the stale-fixture family by requiring a test to bind a persisted record's version constant rather than restate its value, since two bucket-manifest fixtures kept writing schema_version=1 after the durability floor moved to 2 and neither failed loudly because both read paths treat the resulting raise as an ordinary degraded state, and the gate found five further stale sites on its first run
+- `2026-07-25-test-harness-honesty-S02` - FORMALLY DEFERRED to the discovery service's own repository, signal a degraded state on the semantic discovery service so a truncated index either refuses to answer or marks its answers untrustworthy, because the governing rule makes an agent refuse coding work when the service is DOWN while a service that ANSWERS from a partial index never trips that refusal, re-measured on 2026-07-28 against this tree's project-local store where the truncated case still carries no signal and status reports code as not indexed yet beside 70054 answering sections
+- `2026-07-25-test-harness-honesty-S03` - FORMALLY DEFERRED with its named mechanism unmeasured, assess whether the code index can converge at all while a committing fleet re-triggers its rebuild through the file watcher, answered in the operative sense on 2026-07-28 by measurement showing non-convergence under fleet load caused by deliberate peer server stop calls from four worktrees against the one machine-global instance rather than by watcher re-trigger, which remains unmeasured and is not measurable from this tree
 
 ### plan
 
