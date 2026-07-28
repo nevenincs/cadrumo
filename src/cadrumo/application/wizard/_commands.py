@@ -41,8 +41,10 @@ from typing import TYPE_CHECKING, Annotated
 
 if TYPE_CHECKING:
     from ...core.errors import CadrumoError
+    from ...core.json_contract import Notice
     from ...domain.user_profile import UserProfileRecord
     from ..workflow import WorkflowState
+    from ._results import ConfigProfileCreateResult, ConfigProfileEditResult
 
 import contextlib
 import re
@@ -1493,37 +1495,17 @@ def _emit_wizard_success(
     here. ``None`` falls back to resolving it now (the direct, walk-less
     callers).
     """
-    import typer as _typer
-
     from ...core.click_context import json_output_requested
-    from ...core.json_contract import Notice, NoticeSeverity
-    from ...core.output_rendering import render_command_output
     from ...domain.contribuyente import CCAA
-    from ..operator_output import emit_operator_json_success, sandbox_banner_line, sandbox_notice_for_active_bucket
+    from ..operator_output import emit_operator_json_success
     from ._results import ConfigProfileCreateResult, ConfigProfileEditResult
 
     verb = tr("wizard.commands.status.created" if mode == "create" else "wizard.commands.status.updated")
-    notices: list[Notice] = [
-        Notice(
-            severity=NoticeSeverity.INFO,
-            code=f"config.profile.{'create' if mode == 'create' else 'edit'}.next_step",
-            message=tr("application.wizard.output_labels.next"),
-            suggestion=next_command,
-        )
-    ]
     resolved_modify_no_resume_message = (
         modify_no_resume_message
         if modify_no_resume_message is not None
         else tr("application.wizard.notices.modify_no_resume")
     )
-    if modify_no_resume:
-        notices.append(
-            Notice(
-                severity=NoticeSeverity.INFO,
-                code=_MODIFY_NO_RESUME_CODE,
-                message=resolved_modify_no_resume_message,
-            )
-        )
     resolved_modify_descendants_message = (
         modify_descendants_message
         if modify_descendants_message is not None
@@ -1533,25 +1515,17 @@ def _emit_wizard_success(
             command=_DESCENDIENTE_DOOR_COMMAND,
         )
     )
-    if modify_descendants_via_door:
-        notices.append(
-            Notice(
-                severity=NoticeSeverity.INFO,
-                code=_MODIFY_DESCENDANTS_DOOR_CODE,
-                message=resolved_modify_descendants_message,
-                suggestion=_DESCENDIENTE_DOOR_COMMAND,
-            )
-        )
     ccaa_message = tr("application.wizard.notices.ccaa_defaulted", ccaa=CCAA.MADRID.value)
-    if ccaa_defaulted:
-        notices.append(
-            Notice(
-                severity=NoticeSeverity.WARNING,
-                code=f"config.profile.{'create' if mode == 'create' else 'edit'}.ccaa_defaulted",
-                message=ccaa_message,
-                context={"assumed_ccaa": CCAA.MADRID.value},
-            )
-        )
+    notices = _wizard_success_notices(
+        mode,
+        next_command=next_command,
+        modify_no_resume=modify_no_resume,
+        modify_no_resume_message=resolved_modify_no_resume_message,
+        modify_descendants_via_door=modify_descendants_via_door,
+        modify_descendants_message=resolved_modify_descendants_message,
+        ccaa_defaulted=ccaa_defaulted,
+        ccaa_message=ccaa_message,
+    )
     # Populate the envelope-spine active_profile identity anchor. The wizard
     # sits below the CLI transport's _emit_envelope funnel (it cannot import
     # it — layering), so it must resolve the label itself. On create the
@@ -1573,7 +1547,41 @@ def _emit_wizard_success(
         emit_operator_json_success(command_path, result, notices=notices, active_profile=active_profile)
         return
 
-    sandbox_notice = sandbox_notice_for_active_bucket()
+    _echo_wizard_success_text(
+        mode,
+        profile_name,
+        verb=verb,
+        next_command=next_command,
+        result=result,
+        disclosures=(
+            (modify_no_resume, resolved_modify_no_resume_message),
+            (modify_descendants_via_door, resolved_modify_descendants_message),
+            (ccaa_defaulted, ccaa_message),
+        ),
+    )
+
+
+def _echo_wizard_success_text(
+    mode: WizardPersistMode,
+    profile_name: str,
+    *,
+    verb: str,
+    next_command: str,
+    result: ConfigProfileCreateResult | ConfigProfileEditResult,
+    disclosures: tuple[tuple[bool, str], ...],
+) -> None:
+    """Render the success payload as tab-separated operator text.
+
+    Every disclosure that rides the notices channel is repeated here: the
+    envelope renders ``notices`` only in JSON mode, so one left off these
+    lines would be visible to automation and invisible to the operator
+    running the verb plainly.
+    """
+    import typer as _typer
+
+    from ...core.output_rendering import render_command_output
+    from ..operator_output import sandbox_banner_line, sandbox_notice_for_active_bucket
+
     lines = [
         f"{tr('application.wizard.output_labels.profile')}\t{profile_name}",
         f"{tr('application.wizard.output_labels.status')}\t{verb}",
@@ -1581,16 +1589,70 @@ def _emit_wizard_success(
     if mode == "create":
         lines.append(f"{tr('application.wizard.output_labels.active_profile')}\t{profile_name}")
     lines.append(f"{tr('application.wizard.output_labels.next')}\t{next_command}")
-    if modify_no_resume:
-        lines.append(resolved_modify_no_resume_message)
-    if modify_descendants_via_door:
-        lines.append(resolved_modify_descendants_message)
-    if ccaa_defaulted:
-        lines.append(ccaa_message)
+    lines.extend(message for enabled, message in disclosures if enabled)
+    sandbox_notice = sandbox_notice_for_active_bucket()
     if sandbox_notice is not None:
         lines.insert(0, sandbox_banner_line(sandbox_notice))
     rendered = render_command_output(format_name="text", payload=result, lines=lines)
     _typer.echo(rendered.text)
+
+
+def _wizard_success_notices(
+    mode: WizardPersistMode,
+    *,
+    next_command: str,
+    modify_no_resume: bool,
+    modify_no_resume_message: str,
+    modify_descendants_via_door: bool,
+    modify_descendants_message: str,
+    ccaa_defaulted: bool,
+    ccaa_message: str,
+) -> list[Notice]:
+    """Build the success envelope's notices: the next step plus each disclosure.
+
+    Every message arrives pre-rendered because the final envelope is a
+    command-level disclosure and must render in the language the command
+    entered with, not one a mid-walk output-language switch left behind.
+    """
+    from ...core.json_contract import Notice, NoticeSeverity
+    from ...domain.contribuyente import CCAA
+
+    verb_key = "create" if mode == "create" else "edit"
+    notices = [
+        Notice(
+            severity=NoticeSeverity.INFO,
+            code=f"config.profile.{verb_key}.next_step",
+            message=tr("application.wizard.output_labels.next"),
+            suggestion=next_command,
+        ),
+    ]
+    if modify_no_resume:
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.INFO,
+                code=_MODIFY_NO_RESUME_CODE,
+                message=modify_no_resume_message,
+            ),
+        )
+    if modify_descendants_via_door:
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.INFO,
+                code=_MODIFY_DESCENDANTS_DOOR_CODE,
+                message=modify_descendants_message,
+                suggestion=_DESCENDIENTE_DOOR_COMMAND,
+            ),
+        )
+    if ccaa_defaulted:
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code=f"config.profile.{verb_key}.ccaa_defaulted",
+                message=ccaa_message,
+                context={"assumed_ccaa": CCAA.MADRID.value},
+            ),
+        )
+    return notices
 
 
 _SAVE_EXIT_RESUME_CODE = "config.profile.create.saved_resume_later"
