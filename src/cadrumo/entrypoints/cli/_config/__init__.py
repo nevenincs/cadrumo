@@ -50,10 +50,15 @@ from ._repair_cli import register_repair_maintenance_commands
 from ._repair_profile import register_repair_profile_command
 from ._reset_cli import register_reset_commands
 from ._sandbox import register_sandbox_commands
+from ._status_rendering import blocked_readiness_status as _blocked_readiness_status
 from ._status_rendering import unavailable_profile_record_status as _unavailable_profile_record_status
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from ....application.user_profile import ProfileValidationReport as _ProfileValidationReport
     from ....application.workflow import ProfileBucketPointer as _ProfileBucketPointer
+    from ....domain.user_profile import UserProfileRecord as _UserProfileRecord
 
 
 _log = _get_logger(__name__)
@@ -197,6 +202,29 @@ def _atomic_create_profile(*, display_name, facts, profile_id: str | None = None
     return profile_id
 
 
+def _profile_list_lines(
+    rows: Sequence[_ProfileBucketPointer],
+    *,
+    active: str | None,
+    active_label: str | None,
+) -> list[str]:
+    """Render the profile listing rows, marking the active profile.
+
+    The trailing status token keys on the stable machine value so a
+    ``setup_incomplete`` profile — listed and resumable, but not yet
+    workable — is never rendered indistinguishably from a workable
+    ``active`` one.
+    """
+    lines = [f"active_profile\t{active_label or '<none>'}"]
+    if not rows:
+        lines.append("profiles\t<none>")
+        return lines
+    lines.extend(
+        f"{'*' if pointer.bucket_id == active else ' '}\t{pointer.label}\t{pointer.status.value}" for pointer in rows
+    )
+    return lines
+
+
 def _profile_setup_incomplete_notices(pointers: Sequence[_ProfileBucketPointer]) -> list[_Notice]:
     """Build the non-blocking advisory for profiles still completing setup.
 
@@ -263,17 +291,7 @@ def config_list(
             for pointer in rows
         ],
     )
-    if not rows:
-        lines = [f"active_profile\t{active_label or '<none>'}", "profiles\t<none>"]
-    else:
-        lines = [f"active_profile\t{active_label or '<none>'}"]
-        for pointer in rows:
-            marker = "*" if pointer.bucket_id == active else " "
-            # The trailing status token keys on the stable machine value so a
-            # ``setup_incomplete`` profile (listed and resumable, but not yet
-            # workable) is never rendered indistinguishably from a workable
-            # ``active`` one.
-            lines.append(f"{marker}\t{pointer.label}\t{pointer.status.value}")
+    lines = _profile_list_lines(rows, active=active, active_label=active_label)
     # An incomplete profile is visible but not workable; surface that as a
     # non-blocking advisory on the typed Notice channel rather than a silent
     # active-looking row (per the CLI-notice diagnostic contract).
@@ -282,64 +300,110 @@ def config_list(
     _emit_envelope(ctx, command="config.profile.list", result=result, lines=lines, notices=notices)
 
 
-@profile_app.command("show", help=tr("cli.config.profile.show_help"))
-def config_profile_show(
-    ctx: typer.Context,
-    name: str | None = typer.Argument(None, help=tr("cli.config.profile.show_name_help")),
-    output_language: _OutputLanguage | None = typer.Option(
-        None,
-        "--output-language",
-        "--language",
-        help=tr("cli.config.auth.output_language_help"),
-    ),
-) -> None:
-    """View one profile's facts (defaults to the active profile).
+def _record_validity_verdict(*, is_tombstoned: bool, blocking_count: int, issue_count: int) -> tuple[str, str]:
+    """Return the localised verdict prose and its machine ``record_validity`` row.
 
-    Emits a ``record_validity`` header line carrying the validation
-    outcome of the canonical ProfileValidationService — the persisted
-    record's schema validity, a distinct notion from the *filing
-    readiness* gate reported by ``config profile status``. When blocking
-    issues exist, the command exits with code 2 after rendering the report
-    so operators discover the failure on stdout and via the shell exit
-    status.
+    ``show`` reports *record validity* (does the persisted profile record
+    satisfy its schema?), a distinct notion from the *filing readiness* gate
+    that ``config profile status`` reports (does the profile carry the facts
+    needed to start filing — tax_id and an activity?). Both surfaces once
+    printed the bare token ``readiness`` with ``ready``/``blocked``, so a
+    schema-valid but onboarding-incomplete profile read as a
+    self-contradiction (``show: ready`` vs ``status: blocked``). ``show``
+    emits ``record_validity`` with ``valid``/``invalid`` instead, so the two
+    measures no longer collide.
     """
-    _activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile import ProfileValidationService, record_to_path_values
-    from ....domain.user_profile import ProfileNotFoundError, load_user_profile_schema
+    if is_tombstoned:
+        prose = tr("cli.config.profile.show.summary_tombstoned", default="Profile record is tombstoned.")
+        return prose, "record_validity\ttombstoned"
+    if blocking_count:
+        prose = tr(
+            "cli.config.profile.show.summary_invalid",
+            default="Profile record is invalid: %{count} blocking issue(s).",
+            count=blocking_count,
+        )
+        return prose, f"record_validity\tinvalid\tissues={blocking_count}"
+    prose = tr("cli.config.profile.show.summary_valid", default="Profile record is valid.")
+    return prose, f"record_validity\tvalid\tissues={issue_count}"
 
-    if name is not None:
-        # ``show`` is the inspect surface: a tombstoned profile is still
-        # resolvable by name so the operator can confirm a delete and
-        # read the retained record. The verb renders the tombstoned
-        # status; it never reports the profile as a live ``ready`` one.
-        from ....application.workflow import ProfileLabelAmbiguousError as _ProfileLabelAmbiguousError
-        from ....application.workflow import resolve_profile_bucket as _resolve_profile_bucket
 
-        try:
-            pointer = _resolve_profile_bucket(name, include_tombstoned=True)
-        except _ProfileLabelAmbiguousError as exc:
-            # ``ProfileLabelAmbiguousError`` is a ``WorkflowError``, NOT a
-            # ``ValueError``; refuse clearly with the dedicated ambiguity
-            # message rather than escaping to an unhandled traceback.
-            raise _CliRefusedBoundaryError(
-                translated_message="errors.refused.refused_profile_label_ambiguous",
-            ) from exc
-        except ValueError as exc:
-            raise _CliRefusedBoundaryError(
-                translated_message="cli.config.profile.unknown_profile",
-                context={"name": name},
-            ) from exc
-        if pointer is None:
-            raise _CliRefusedBoundaryError(
-                translated_message="cli.config.profile.unknown_profile",
-                context={"name": name},
-            )
-    else:
+def _record_validity_lines(
+    *,
+    record: _UserProfileRecord,
+    report: _ProfileValidationReport,
+    blocking_count: int,
+    is_tombstoned: bool,
+    values: Mapping[str, object],
+) -> list[str]:
+    """Render the ``show`` text report for one profile record.
+
+    Only the leading verdict is prose: the tab-separated key/value rows
+    mirror the JSON envelope and key on stable machine identifiers, so they
+    are deliberately not localised. The verdict line is what the
+    ``--language`` / ``--output-language`` flag visibly affects.
+    """
+    prose, validity_row = _record_validity_verdict(
+        is_tombstoned=is_tombstoned,
+        blocking_count=blocking_count,
+        issue_count=len(report.issues),
+    )
+    lines = [
+        prose,
+        validity_row,
+        f"profile_id\t{record.profile_id}",
+        f"display_name\t{record.display_name}",
+        f"status\t{record.status.value}",
+    ]
+    lines.extend(
+        f"{issue.severity.value}\t{issue.code}\t{issue.path or '-'}\t{issue.message}" for issue in report.issues
+    )
+    lines.extend(f"{path}\t{value}" for path, value in sorted(values.items()))
+    return lines
+
+
+def _resolve_show_pointer(name: str | None) -> _ProfileBucketPointer:
+    """Resolve the profile ``show`` inspects, by name or the active pointer.
+
+    ``show`` is the inspect surface: a tombstoned profile stays resolvable by
+    name so the operator can confirm a delete and read the retained record.
+    The verb renders the tombstoned status; it never reports the profile as a
+    live ``ready`` one.
+    """
+    if name is None:
         pointer = _resolve_active_profile_pointer()
         if pointer is None:
             raise _no_active_profile_refusal()
+        return pointer
+
+    from ....application.workflow import ProfileLabelAmbiguousError as _ProfileLabelAmbiguousError
+    from ....application.workflow import resolve_profile_bucket as _resolve_profile_bucket
+
+    unknown = _CliRefusedBoundaryError(
+        translated_message="cli.config.profile.unknown_profile",
+        context={"name": name},
+    )
     try:
-        record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
+        pointer = _resolve_profile_bucket(name, include_tombstoned=True)
+    except _ProfileLabelAmbiguousError as exc:
+        # ``ProfileLabelAmbiguousError`` is a ``WorkflowError``, NOT a
+        # ``ValueError``; refuse clearly with the dedicated ambiguity
+        # message rather than escaping to an unhandled traceback.
+        raise _CliRefusedBoundaryError(
+            translated_message="errors.refused.refused_profile_label_ambiguous",
+        ) from exc
+    except ValueError as exc:
+        raise unknown from exc
+    if pointer is None:
+        raise unknown
+    return pointer
+
+
+def _read_record_for_show(ctx: typer.Context, pointer: _ProfileBucketPointer) -> _UserProfileRecord:
+    """Read the profile record, rendering the unreadable/missing report and exiting 2."""
+    from ....domain.user_profile import ProfileNotFoundError
+
+    try:
+        return _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
     except ProfileNotFoundError as exc:
         _emit_profile_record_missing(
             ctx,
@@ -368,6 +432,35 @@ def config_profile_show(
             error=boundary,
         )
         raise typer.Exit(code=2) from boundary
+
+
+@profile_app.command("show", help=tr("cli.config.profile.show_help"))
+def config_profile_show(
+    ctx: typer.Context,
+    name: str | None = typer.Argument(None, help=tr("cli.config.profile.show_name_help")),
+    output_language: _OutputLanguage | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
+    """View one profile's facts (defaults to the active profile).
+
+    Emits a ``record_validity`` header line carrying the validation
+    outcome of the canonical ProfileValidationService — the persisted
+    record's schema validity, a distinct notion from the *filing
+    readiness* gate reported by ``config profile status``. When blocking
+    issues exist, the command exits with code 2 after rendering the report
+    so operators discover the failure on stdout and via the shell exit
+    status.
+    """
+    _activate_subcommand_output_language(ctx, output_language)
+    from ....application.user_profile import ProfileValidationService, record_to_path_values
+    from ....domain.user_profile import load_user_profile_schema
+
+    pointer = _resolve_show_pointer(name)
+    record = _read_record_for_show(ctx, pointer)
     from ....domain.user_profile import UserProfileStatus
     from .._config_payloads import ConfigProfileShowResult, ProfileFactPayload, ProfileIssuePayload
 
@@ -392,43 +485,13 @@ def config_profile_show(
         ],
         facts=[ProfileFactPayload(path=path, value=str(value)) for path, value in sorted(values.items())],
     )
-    lines: list[str] = []
-    # ``show`` reports *record validity* (does the persisted profile record
-    # satisfy its schema?), a distinct notion from the *filing readiness*
-    # gate that ``config profile status`` reports (does the profile carry
-    # the facts needed to start filing — tax_id and an activity?). The two
-    # surfaces previously both printed the bare token ``readiness`` with the
-    # words ``ready``/``blocked``, so a schema-valid but onboarding-incomplete
-    # profile read as a self-contradiction (``show: ready`` vs
-    # ``status: blocked``). ``show`` now emits the ``record_validity`` token
-    # with ``valid``/``invalid`` so the two measures no longer collide.
-    # The tab-separated ``key\tvalue`` lines below (``record_validity``,
-    # ``profile_id``, the fact paths, …) mirror the JSON envelope and key on
-    # stable machine identifiers, so they are deliberately not localised. This
-    # leading verdict line is the operator-facing prose the ``--language`` /
-    # ``--output-language`` flag localises, so the flag has a visible effect on
-    # the ``show`` output.
-    if is_tombstoned:
-        lines.append(tr("cli.config.profile.show.summary_tombstoned", default="Profile record is tombstoned."))
-        lines.append("record_validity\ttombstoned")
-    elif blocking:
-        lines.append(
-            tr(
-                "cli.config.profile.show.summary_invalid",
-                default="Profile record is invalid: %{count} blocking issue(s).",
-                count=len(blocking),
-            ),
-        )
-        lines.append(f"record_validity\tinvalid\tissues={len(blocking)}")
-    else:
-        lines.append(tr("cli.config.profile.show.summary_valid", default="Profile record is valid."))
-        lines.append(f"record_validity\tvalid\tissues={len(report.issues)}")
-    lines.append(f"profile_id\t{record.profile_id}")
-    lines.append(f"display_name\t{record.display_name}")
-    lines.append(f"status\t{record.status.value}")
-    for issue in report.issues:
-        lines.append(f"{issue.severity.value}\t{issue.code}\t{issue.path or '-'}\t{issue.message}")
-    lines.extend(f"{path}\t{value}" for path, value in sorted(values.items()))
+    lines = _record_validity_lines(
+        record=record,
+        report=report,
+        blocking_count=len(blocking),
+        is_tombstoned=is_tombstoned,
+        values=values,
+    )
     from ....application.user_profile import censo_divergence_notice
 
     divergence_notice = censo_divergence_notice(record)
@@ -1048,22 +1111,14 @@ def config_status(
         raise typer.Exit(code=2)
     values = record_to_path_values(record)
     if profile_health.status == "incomplete":
-        result = ConfigStatusResult(
+        result, lines = _blocked_readiness_status(
             active_profile=active_profile,
             profile_id=active_uuid,
-            tax_id_present=bool(values.get("identity.tax_id")),
-            activity_present=bool(values.get("activities.description")),
-            configured=False,
-            next_action=profile_health.next_action,
+            values=values,
+            line_next_action=profile_health.next_action,
+            result_next_action=profile_health.next_action,
+            missing_required=profile_health.missing_required,
         )
-        lines = [
-            f"profile\t{active_profile}",
-            "readiness\tblocked",
-            f"identity.tax_id\t{'present' if values.get('identity.tax_id') else 'missing'}",
-            f"activities.description\t{'present' if values.get('activities.description') else 'missing'}",
-        ]
-        lines.extend(f"{path}\tmissing" for path in profile_health.missing_required)
-        lines.append(f"next_action\t{profile_health.next_action}")
         _emit_envelope(ctx, command="config.profile.status", result=result, lines=lines)
         return
     # ``status`` reports the same profile-wide filing baseline as the modelo
@@ -1074,22 +1129,14 @@ def config_status(
 
     baseline_missing = modelo_work_profile_baseline_missing_paths(record)
     if baseline_missing:
-        result = ConfigStatusResult(
+        result, blocked_lines = _blocked_readiness_status(
             active_profile=active_profile,
-            tax_id_present=bool(values.get("identity.tax_id")),
-            activity_present=bool(values.get("activities.description")),
-            configured=False,
+            profile_id=None,
+            values=values,
+            line_next_action=f"aeat config profile edit {active_profile}",
+            result_next_action=None,
         )
-        if active_profile is None:
-            lines = (tr("cli.config.status.empty_profile"),)
-        else:
-            lines = (
-                f"profile\t{active_profile}",
-                "readiness\tblocked",
-                f"identity.tax_id\t{'present' if values.get('identity.tax_id') else 'missing'}",
-                f"activities.description\t{'present' if values.get('activities.description') else 'missing'}",
-                f"next_action\taeat config profile edit {active_profile}",
-            )
+        lines = (tr("cli.config.status.empty_profile"),) if active_profile is None else blocked_lines
         _emit_envelope(ctx, command="config.profile.status", result=result, lines=lines)
         return
     try:
