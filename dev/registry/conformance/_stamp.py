@@ -113,6 +113,36 @@ This writer must not open a second one. It writes ONLY to the revision's own
 revision has been confirmed to exist as a COMPILED record rather than as a
 directory that happens to be on disk.
 
+The target tree is never implicit
+---------------------------------
+
+``registry_root`` has no default. It once defaulted to the bundled AEAT tree,
+which made the shipped registry the target of every call that simply forgot to
+name one — and that is not a hypothetical. A test mutation that dropped the
+root pass-through one caller upstream sent the whole suite's stamp invocations
+at the shipped Modelo 130 manifest and wrote a fabricated agent review into it:
+
+.. code-block:: toml
+
+    review_status = "agent_reviewed"
+    reviewed_by = "agent:opus-executor"
+    reviewed_at = 2026-07-28
+
+It was recoverable only because the write is a three-line append to a file under
+version control, and a second reviewer separately reported a fabricated stamp
+appearing in the shipped tree without being able to attribute it. A default that
+is the most consequential possible value is a default nobody should have to
+remember to override.
+
+So the parameter is REQUIRED, and dropping it is now a :exc:`TypeError` at the
+call rather than a write to shipped data — the exact mutation that caused the
+incident is unconstructible. The shipped tree is still stampable, because
+declaring authorship and agent review over it is the whole point of the verb;
+it is reachable only by NAMING it, through :func:`bundled_registry_root` and the
+CLI flag that calls it. ``importlib.resources`` documents the bundled path as
+read-only for callers, so this module is the one place allowed to say otherwise
+and it says so out loud.
+
 Refuse before writing, then prove the write
 -------------------------------------------
 
@@ -175,6 +205,7 @@ __all__ = [
     "StampError",
     "StampResult",
     "StampableReviewStatus",
+    "bundled_registry_root",
     "revision_manifest_path",
     "stamp_revision",
 ]
@@ -317,13 +348,33 @@ class StampResult:
         return " ".join(parts)
 
 
-def revision_manifest_path(modelo: str, revision: str, *, registry_root: Path | None = None) -> Path:
+def bundled_registry_root() -> Path:
+    """Return the shipped AEAT registry tree root, resolved.
+
+    The ONE place in this package that names the shipped tree. Every write path
+    takes its root as a required argument, so reaching the bundled data is an act
+    a caller performs by calling this function — never something that happens
+    because an argument was omitted.
+
+    ``importlib.resources`` hands this path out as read-only by contract, and for
+    every other consumer in the project it is. The governance stamp is the single
+    sanctioned exception: authorship and agent-review provenance cannot be derived
+    from the tree, so somebody has to write it into the tree. Isolating that
+    exception behind a named function keeps it greppable and keeps the exception
+    from spreading by default.
+    """
+    return Path(bundled_path("registry", "aeat")).resolve()
+
+
+def revision_manifest_path(modelo: str, revision: str, *, registry_root: Path) -> Path:
     """Resolve one revision's ``revision.toml`` manifest under the registry root.
 
     Args:
         modelo: Modelo id, e.g. ``"130"``.
         revision: Revision id, e.g. ``"2019-y-siguientes"``.
-        registry_root: Registry tree root. Defaults to the bundled AEAT tree.
+        registry_root: Registry tree root to resolve under. REQUIRED: see the
+            module's own account of what the bundled-tree default cost. Address
+            the shipped registry with :func:`bundled_registry_root`.
 
     Returns:
         The resolved manifest path.
@@ -340,7 +391,7 @@ def revision_manifest_path(modelo: str, revision: str, *, registry_root: Path | 
                 f"{label} id {segment!r} is not a plain registry identifier; accepted shape is "
                 "letters, digits, dot, dash and underscore, starting with a letter or digit",
             )
-    root = (bundled_path("registry", "aeat") if registry_root is None else registry_root).resolve()
+    root = registry_root.resolve()
     manifest = (root / "modelos" / modelo / "revisions" / revision / "revision.toml").resolve()
     if not manifest.is_relative_to(root):
         raise StampError(f"{manifest}: resolved outside the registry root {root}")
@@ -361,7 +412,7 @@ def stamp_revision(
     review_status: StampableReviewStatus | None = None,
     reviewed_by: str | None = None,
     reviewed_at: date | None = None,
-    registry_root: Path | None = None,
+    registry_root: Path,
 ) -> StampResult:
     """Write the declared governance scalars for one modelo revision.
 
@@ -390,7 +441,11 @@ def stamp_revision(
         review_status: How far its review has progressed.
         reviewed_by: Who reviewed it.
         reviewed_at: When they reviewed it.
-        registry_root: Registry tree root. Defaults to the bundled AEAT tree.
+        registry_root: Registry tree root to write under. REQUIRED and
+            deliberately undefaulted: it once defaulted to the bundled AEAT tree
+            and a caller that dropped the argument wrote a fabricated review into
+            shipped data. Omitting it is now a :exc:`TypeError` at the call.
+            Address the shipped registry with :func:`bundled_registry_root`.
 
     Returns:
         The :class:`StampResult` describing what changed.

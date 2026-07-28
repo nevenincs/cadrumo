@@ -65,7 +65,7 @@ from typing import Annotated
 
 import typer
 
-from ._stamp import StampableReviewStatus, StampError, stamp_revision
+from ._stamp import StampableReviewStatus, StampError, bundled_registry_root, stamp_revision
 from .manager import (
     ConformanceReport,
     build_coverage_report,
@@ -265,11 +265,22 @@ def stamp(
         typer.Option(
             "--registry-root",
             help=(
-                "Registry tree root to stamp. Defaults to the bundled AEAT tree. Present so this verb "
-                "can be exercised against a copy instead of the shipped registry."
+                "Registry tree root to stamp. Required unless --bundled-registry names the shipped "
+                "tree instead; there is no default, because the only value a default could have is "
+                "the shipped registry."
             ),
         ),
     ] = None,
+    bundled_registry: Annotated[
+        bool,
+        typer.Option(
+            "--bundled-registry",
+            help=(
+                "Stamp the SHIPPED AEAT registry that ships in the wheel. The only door to it, and "
+                "unmistakable by design: a forgotten flag can no longer send a write there."
+            ),
+        ),
+    ] = False,
 ) -> None:
     """Write one modelo revision's declared governance provenance.
 
@@ -288,14 +299,21 @@ def stamp(
     afterwards; a manifest the loader would reject is restored to its previous
     bytes rather than left on disk.
 
-    ``--registry-root`` exists so this command can be run at all without writing
-    to the shipped registry. The writer has always accepted a root and this verb
-    never passed one, so every CLI-level behaviour here — the today-defaulting of
-    the review date, the translation of a writer refusal into a parameter error —
-    had no end-to-end coverage of any kind, and a finding about the writer could
-    not be reproduced through the real app. The containment check is relative to
-    whatever root it is given, so pointing it at a copy loses no safety.
+    The target tree must be NAMED. Exactly one of ``--registry-root`` and
+    ``--bundled-registry`` is required and there is no default, because the only
+    value a default could have is the shipped registry — and it did have it. A
+    caller one layer up that dropped the root sent this verb at the bundled
+    Modelo 130 manifest and left a fabricated agent review in shipped data, and a
+    second reviewer reported an unattributable stamp appearing in the tree the
+    same session. Stamping the shipped registry stays legal, because declaring
+    authorship and agent review over it is what the verb is for; it is simply no
+    longer something that can happen because a flag was forgotten.
+
+    ``--registry-root`` pointed at the bundled tree is refused for the same
+    reason: two doors to shipped data, one of them not saying so, is the state
+    this closes. The refusal names the flag that does say so.
     """
+    root = _resolve_registry_root(registry_root, bundled_registry=bundled_registry)
     resolved_date = reviewed_at.date() if reviewed_at is not None else None
     if review_status is StampableReviewStatus.AGENT_REVIEWED and resolved_date is None:
         # Defaulted rather than demanded: the review being recorded is happening
@@ -319,11 +337,63 @@ def stamp(
             review_status=review_status,
             reviewed_by=reviewed_by,
             reviewed_at=resolved_date,
-            registry_root=registry_root,
+            registry_root=root,
         )
     except StampError as exc:
         raise typer.BadParameter(str(exc)) from exc
     typer.echo(result.render())
+
+
+def _resolve_registry_root(registry_root: Path | None, *, bundled_registry: bool) -> Path:
+    """Resolve the tree to stamp, refusing anything that leaves the target implicit.
+
+    Three refusals, one rule: the tree a write lands in is stated by the caller,
+    never inferred.
+
+    Neither flag is a refusal rather than a bundled-tree default, which is the
+    whole change — the default WAS the bundled tree, and a caller that forgot to
+    pass a root wrote a fabricated review into shipped data. Both flags together
+    is a refusal because the two answers cannot be reconciled and picking one
+    would guess. And ``--registry-root`` resolved to the bundled tree is a
+    refusal because it is a second, silent door to shipped data: the point of
+    ``--bundled-registry`` is that reaching the shipped registry is visible in
+    the command line and in shell history, and a path that happens to resolve
+    there is not.
+
+    Args:
+        registry_root: The root the caller named, or :data:`None`.
+        bundled_registry: Whether the caller asked for the shipped tree by name.
+
+    Returns:
+        The resolved registry root to stamp.
+
+    Raises:
+        click.exceptions.BadParameter: Neither door was named, both were, or the
+            named path resolves to the shipped tree.
+    """
+    bundled = bundled_registry_root()
+    if bundled_registry and registry_root is not None:
+        raise typer.BadParameter(
+            f"--registry-root {str(registry_root)!r} and --bundled-registry name two different trees; "
+            "supply exactly one",
+        )
+    if bundled_registry:
+        return bundled
+    if registry_root is None:
+        raise typer.BadParameter(
+            "no registry tree named: pass --registry-root PATH for a copy, or --bundled-registry to "
+            f"stamp the shipped AEAT registry at {bundled}. There is deliberately no default: the "
+            "only value it could have is the shipped registry, and a caller that forgot the flag "
+            "wrote a fabricated review into it.",
+        )
+    if registry_root.resolve() == bundled:
+        raise typer.BadParameter(
+            f"--registry-root {str(registry_root)!r} resolves to the shipped AEAT registry at "
+            f"{bundled}. Writing there is legal and is what this verb is for, but it is stated with "
+            "--bundled-registry so the act is visible in the command line rather than hidden in a "
+            "path that happens to resolve there.",
+        )
+    return registry_root
 
 
 def _warn_if_vacuous(composed: ConformanceReport) -> None:

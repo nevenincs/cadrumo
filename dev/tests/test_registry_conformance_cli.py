@@ -61,6 +61,8 @@ from ..registry.conformance._stamp import (
     GOVERNANCE_KEYS,
     StampableReviewStatus,
     StampError,
+    bundled_registry_root,
+    revision_manifest_path,
     stamp_revision,
 )
 from ..registry.conformance.cli import app
@@ -1855,3 +1857,185 @@ def test_a_header_the_loader_accepts_but_the_line_editor_cannot_address_is_refus
         )
 
     assert manifest.read_bytes() == before
+
+
+# --------------------------------------------------------------------------- #
+# stamp: the shipped tree is reachable only by naming it
+# --------------------------------------------------------------------------- #
+
+
+def _shipped_manifest() -> Path:
+    """The SHIPPED Modelo 130 manifest — the file the incident actually wrote to."""
+    return bundled_registry_root() / "modelos" / _STAMPED_MODELO / "revisions" / _STAMPED_REVISION / "revision.toml"
+
+
+def _flat(text: str) -> str:
+    """Strip a rich error panel back to bare characters for substring assertions.
+
+    A parameter error is rendered inside a bordered, width-wrapped panel, so a
+    long value — a registry path is the case here — is broken across lines with
+    box glyphs and padding inserted at the seam. A naive ``in result.output``
+    then passes or fails on the terminal width of whoever runs the suite, which
+    is a flake dressed as an assertion. Removing whitespace and the border glyphs
+    from both sides compares the characters the message actually carries.
+    """
+    return "".join(text.split()).replace("│", "")
+
+
+def test_the_writer_refuses_to_be_called_without_naming_a_registry_tree() -> None:
+    """Dropping the root is a TypeError at the call, not a write to shipped data.
+
+    This is the incident reproduced as the mutation that caused it. A test
+    mutation upstream dropped ``registry_root=`` from one call site; the
+    parameter defaulted to the bundled AEAT tree, and the suite wrote an
+    ``agent_reviewed`` stamp naming an agent and today's date into the shipped
+    Modelo 130 manifest. The parameter now has no default, so the same omission
+    cannot construct a call at all.
+
+    Asserted on the message rather than on the bare exception type, because a
+    ``TypeError`` from any other cause would satisfy a bare ``pytest.raises`` and
+    prove nothing about this argument. No manifest assertion is made here on
+    purpose: binding fails before the function body runs, so "the file is
+    unchanged" would hold however this code behaved — the always-true assertion
+    this campaign keeps finding.
+    """
+    with pytest.raises(TypeError, match="registry_root"):
+        stamp_revision(_STAMPED_MODELO, _STAMPED_REVISION, engineered_by="agent:opus-executor")  # type: ignore[call-arg]
+
+    with pytest.raises(TypeError, match="registry_root"):
+        revision_manifest_path(_STAMPED_MODELO, _STAMPED_REVISION)  # type: ignore[call-arg]
+
+
+def test_the_stamp_command_refuses_when_no_registry_tree_is_named() -> None:
+    """The forgotten flag no longer resolves to the shipped registry.
+
+    Before this Step the identical invocation wrote a fabricated agent review
+    into the bundled Modelo 130 manifest. The byte assertion is load-bearing
+    here, unlike at the writer boundary: this call really did reach a write path,
+    so an unchanged shipped manifest is a fact about the refusal rather than
+    about argument binding.
+
+    The message assertions prove the command BODY ran, which matters because a
+    refusal raised at the parse boundary would also exit non-zero while proving
+    nothing about the resolution rule under test.
+    """
+    shipped = _shipped_manifest()
+    before = shipped.read_bytes()
+
+    result = CliRunner().invoke(
+        app,
+        ["stamp", _STAMPED_MODELO, _STAMPED_REVISION, "--engineered-by", "agent:opus-executor"],
+    )
+
+    assert result.exit_code == 2, result.output
+    flat = _flat(result.output)
+    assert _flat("--registry-root") in flat
+    assert _flat("--bundled-registry") in flat
+    assert shipped.read_bytes() == before, "a refused stamp must leave the shipped registry untouched"
+
+
+def test_the_stamp_command_refuses_two_registry_trees_at_once(registry_copy: Path) -> None:
+    """Naming both doors is a contradiction, and guessing one would be worse.
+
+    The two flags resolve to different trees by construction, so silently
+    preferring either would send a write somewhere the caller did not ask for —
+    the same failure the undefaulted root closes, arriving through
+    over-specification instead of under-specification.
+    """
+    shipped = _shipped_manifest()
+    before = shipped.read_bytes()
+
+    result = CliRunner().invoke(
+        app,
+        [
+            "stamp",
+            _STAMPED_MODELO,
+            _STAMPED_REVISION,
+            "--engineered-by",
+            "agent:opus-executor",
+            "--registry-root",
+            str(registry_copy),
+            "--bundled-registry",
+        ],
+    )
+
+    assert result.exit_code == 2, result.output
+    assert _flat("two different trees") in _flat(result.output)
+    assert shipped.read_bytes() == before
+    revision = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert revision.engineered_by is None, "the copy must not have been stamped either"
+
+
+def test_a_registry_root_that_resolves_to_the_shipped_tree_is_refused_by_name() -> None:
+    """Two doors to shipped data, one of them silent, is the state this closes.
+
+    ``--bundled-registry`` earns its keep only if it is the ONLY way there: a
+    path that happens to resolve to the bundled tree reaches the same file while
+    reading, in the command line and in shell history, like an ordinary sandbox
+    run. The refusal names the flag that says what is happening.
+    """
+    shipped = _shipped_manifest()
+    before = shipped.read_bytes()
+
+    result = CliRunner().invoke(
+        app,
+        [
+            "stamp",
+            _STAMPED_MODELO,
+            _STAMPED_REVISION,
+            "--engineered-by",
+            "agent:opus-executor",
+            "--registry-root",
+            str(bundled_registry_root()),
+        ],
+    )
+
+    assert result.exit_code == 2, result.output
+    assert _flat("--bundled-registry") in _flat(result.output)
+    assert shipped.read_bytes() == before
+
+
+def test_the_bundled_flag_really_reaches_the_shipped_tree_and_still_writes_nothing() -> None:
+    """The override is proved to resolve where it claims, without stamping shipped data.
+
+    A refusal test that never reached the intended tree would pass for the wrong
+    reason, so the resolution is proved by driving the flag at a modelo id the
+    shipped registry does not declare and reading WHERE the writer says it
+    looked: the reported path is under the bundled root, which only this flag can
+    produce. Nothing is written, because the manifest-existence check refuses
+    before any governance line is rendered.
+    """
+    bundled = bundled_registry_root()
+    absent_modelo = "999"
+    assert not (bundled / "modelos" / absent_modelo).exists(), "the probe modelo must genuinely be absent"
+
+    result = CliRunner().invoke(
+        app,
+        ["stamp", absent_modelo, _STAMPED_REVISION, "--engineered-by", "agent:opus-executor", "--bundled-registry"],
+    )
+
+    assert result.exit_code == 2, result.output
+    flat = _flat(result.output)
+    assert _flat("no revision manifest to stamp") in flat
+    assert _flat(str(bundled / "modelos" / absent_modelo)) in flat
+    assert not (bundled / "modelos" / absent_modelo).exists(), "the probe must have created nothing"
+
+
+def test_a_named_sandbox_root_is_served_while_the_shipped_tree_stays_untouched(registry_copy: Path) -> None:
+    """The other direction: the refusals above must not have closed the verb.
+
+    A safety change that also broke the working path would show up as four green
+    refusal tests and nothing to say whether the tool still functions, so the
+    served case is asserted beside them — and the shipped manifest is asserted
+    unchanged in the SUCCESS case too, which is the one place a leak would
+    actually land bytes.
+    """
+    shipped = _shipped_manifest()
+    before = shipped.read_bytes()
+
+    result = _stamp_cli(registry_copy, "--engineered-by", "agent:opus-executor")
+
+    assert result.exit_code == 0, result.output
+    revision = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert revision.engineered_by == "agent:opus-executor"
+    assert shipped.read_bytes() == before
