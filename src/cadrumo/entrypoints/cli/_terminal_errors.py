@@ -280,9 +280,29 @@ def _build_parse_time_refusal(exc: BaseException) -> CliRefusedBoundaryError:
     detail = str(format_message()) if callable(format_message) else str(exc)
     localised = _localise_parse_failure(exc, detail, _parse_time_output_language())
     if localised is None:
-        return CliRefusedBoundaryError(detail)
+        return CliRefusedBoundaryError(detail, context=_structured_refusal_context(exc))
     message, context = localised
     return CliRefusedBoundaryError(message, context=context or None)
+
+
+def _structured_refusal_context(exc: BaseException) -> dict[str, str] | None:
+    """Return structured facts a callback refusal attached to itself, if any.
+
+    A callback-raised refusal may carry machine-readable facts for the error
+    envelope's ``context`` beyond the click-internal parse patterns re-keyed by
+    :func:`_localise_parse_failure`. The ledger ``--period`` refusal attaches the
+    accepted span-shaped token set so automation reads the accepted grammar as
+    data rather than scraping the rendered range notation. Read defensively so an
+    ordinary click failure carrying no such attribute is unaffected.
+
+    The emitted context key is ``accepted_periods`` rather than
+    ``accepted_period_tokens``: the error-context scrubber redacts any key
+    containing ``token``, so the attribute name is kept off the wire key.
+    """
+    tokens = getattr(exc, "accepted_period_tokens", None)
+    if isinstance(tokens, tuple) and tokens and all(isinstance(token, str) for token in tokens):
+        return {"accepted_periods": ", ".join(tokens)}
+    return None
 
 
 def _emit_crash(exc: Exception) -> NoReturn:
