@@ -98,7 +98,7 @@ Make the one-way src/dev boundary enforceable, wire the CI gate, and regenerate 
 - [x] `P04.S21` - wire a conformance recipe invoking python -m dev.registry.conformance report and audit into the task runner; `justfile`.
 - [x] `P04.S27` - widen the dev-path literal detection to the realistic PROJECT_ROOT join, os.path.join, f-string and backslash forms, invert the test that pins the hole open, and mirror the missing shipped conftest case, remediating the review finding dev-path-literal-hole; `src/cadrumo/tests/test_dev_path_isolation.py`.
 - [x] `P04.S41` - consolidate the boundary detection onto the single hygiene scanner authority the ADR chose, deleting the duplicated inline import detector and its stale pending-ruling heading while keeping the injectable-root proof local; `src/cadrumo/tests/test_dev_path_isolation.py`.
-- [ ] `P04.S56` - pin the two detector branches whose individual mutation flips nothing with fixtures for an interpolated device path and an interpolated mid-path segment, and either delete the two redundant branches or correct the docstring that credits one with protection a different mechanism delivers; `dev/import_hygiene_scan.py`.
+- [x] `P04.S56` - pin the two detector branches whose individual mutation flips nothing with fixtures for an interpolated device path and an interpolated mid-path segment, and either delete the two redundant branches or correct the docstring that credits one with protection a different mechanism delivers; `dev/import_hygiene_scan.py`.
 
 ### Phase `P05` - verification and closeout
 
