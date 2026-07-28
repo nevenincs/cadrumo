@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#censal-profile-autofill'
-date: '2026-07-26'
-modified: '2026-07-26'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-07-25-censal-profile-autofill-P01-S01]]'
   - '[[2026-07-25-censal-profile-autofill-P01-S02]]'
@@ -27,6 +27,8 @@ related:
   - '[[2026-07-25-censal-profile-autofill-P02-S04]]'
   - '[[2026-07-25-censal-profile-autofill-P02-S05]]'
   - '[[2026-07-25-censal-profile-autofill-P02-S06]]'
+  - '[[2026-07-25-censal-profile-autofill-P02-S29]]'
+  - '[[2026-07-25-censal-profile-autofill-P02-S30]]'
   - '[[2026-07-25-censal-profile-autofill-P03-S07]]'
   - '[[2026-07-25-censal-profile-autofill-P03-S08]]'
   - '[[2026-07-25-censal-profile-autofill-P03-S09]]'
@@ -38,6 +40,8 @@ related:
   - '[[2026-07-25-censal-profile-autofill-P03-S25]]'
   - '[[2026-07-25-censal-profile-autofill-P03-S26]]'
   - '[[2026-07-25-censal-profile-autofill-P03-S27]]'
+  - '[[2026-07-25-censal-profile-autofill-P03-S31]]'
+  - '[[2026-07-25-censal-profile-autofill-P03-S32]]'
   - '[[2026-07-25-censal-profile-autofill-adr]]'
   - '[[2026-07-25-censal-profile-autofill-plan]]'
   - '[[2026-07-25-censal-profile-autofill-research]]'
@@ -98,6 +102,10 @@ Auto-generated index of all documents tagged with `#censal-profile-autofill`.
 - `2026-07-25-censal-profile-autofill-P03-S25` - Bind the operator guide's account of what the censal pull fills to CENSAL_ADOPTABLE_PATHS with a both-directions parity gate, the page having promised the fiscal ID it never adopts while the ownership guard's deliberate first-read allowance kept the failure silent for a blank-identity operator
 - `2026-07-25-censal-profile-autofill-P03-S26` - Prove by execution whether the ownership guard reads a deliberately cleared identity as a first read, and close the adoption path if it does, a cleared identity being an operator decision rather than an absent one
 - `2026-07-25-censal-profile-autofill-P03-S27` - Rewrite this campaign's censo pull door docstring to assert what the test pins in the present tense with no narration of the module's previous state, then re-run the marker-integrity gate and quote its exit line rather than re-reading the file
+- `2026-07-25-censal-profile-autofill-P02-S29` - DEFERRED pending an operator probe, decide whether the capture-path read guard's host set should follow the module default it documents, the answer turning on what AEAT actually serves rather than on anything the tree can settle
+- `2026-07-25-censal-profile-autofill-P02-S30` - DEFERRED as unmeasured rather than cleared, assess the five remaining pinned readers the host-pinning sweep never individually examined, which the closed item carried forward instead of resolving
+- `2026-07-25-censal-profile-autofill-P03-S31` - DEFERRED as out of scope for the window-order work, decide whether the effective-dating projections should honour valid_to so an expired window stops projecting, the site recording the gap in place
+- `2026-07-25-censal-profile-autofill-P03-S32` - DEFERRED as a property of the authority's surface, keep the regime facts operator-entered while AEAT publishes no read-only surface carrying them, this being the one deferral no effort inside this campaign can close
 
 ### plan
 
