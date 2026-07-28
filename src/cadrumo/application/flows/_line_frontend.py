@@ -52,7 +52,7 @@ from ._errors import FlowCheckpointError, FlowRunAbandonedError, FlowUnsupported
 from ._review import ReviewProjection, assert_submit_eligible, review
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Mapping
 
     from prompt_toolkit.input import Input
     from prompt_toolkit.output import Output
@@ -192,6 +192,13 @@ class LineFlowFrontend:
                 section=entry.section_id,
             ),
         )
+        self._render_page_copy(copy)
+        self._render_current_answer(state, entry)
+        requirement_key = "flows.progress.required" if entry.page.required else "flows.progress.optional"
+        self._emit(tr(requirement_key))
+
+    def _render_page_copy(self, copy: PageCopy) -> None:
+        """Emit the page's guidance blocks: help, format hint, failures, legal zone."""
         if copy.help:
             self._emit(copy.help)
         if copy.format_hint:
@@ -203,96 +210,121 @@ class LineFlowFrontend:
                 self._emit(tr("flows.progress.legal_ref", ref=legal_ref.ref, label=legal_ref.label))
             else:
                 self._emit(legal_ref.ref)
+
+    def _render_current_answer(self, state: FlowState, entry: VisiblePage) -> None:
+        """Echo the committed answer, masking a SECRET page's value."""
         current = state.answers.get(entry.key)
-        if current:
-            # A SECRET page's committed value must never reach the terminal
-            # or a captured session log; render a fixed masked marker while
-            # the raw answer stays only in the engine state.
-            if entry.page.widget is FlowWidgetKind.SECRET:
-                self._emit(tr("flows.progress.current_answer_secret"))
-            else:
-                self._emit(tr("flows.progress.current_answer", value=current))
-        requirement_key = "flows.progress.required" if entry.page.required else "flows.progress.optional"
-        self._emit(tr(requirement_key))
+        if not current:
+            return
+        # A SECRET page's committed value must never reach the terminal
+        # or a captured session log; render a fixed masked marker while
+        # the raw answer stays only in the engine state.
+        if entry.page.widget is FlowWidgetKind.SECRET:
+            self._emit(tr("flows.progress.current_answer_secret"))
+        else:
+            self._emit(tr("flows.progress.current_answer", value=current))
 
     def _prompt_widget(self, entry: VisiblePage, copy: PageCopy, *, current: str | None) -> str:
+        """Prompt the page's widget and return the raw answer token.
+
+        The per-widget construction is a table rather than a ``match`` so
+        each widget's prompt is one small, independently readable unit and
+        adding a kind is a table row. A kind absent from the table raises
+        rather than falling through to ``None``: the previous ``match`` had
+        no default arm, so an unhandled widget silently returned ``None``
+        from a ``str``-typed call.
+        """
         prompt = copy.prompt
         default = current if current is not None else (entry.page.default or "")
         try:
-            match entry.page.widget:
-                case FlowWidgetKind.TEXT | FlowWidgetKind.INTEGER | FlowWidgetKind.DATE | FlowWidgetKind.DECIMAL:
-                    return self._stringify(
-                        self._ask(questionary.text(prompt, default=default, input=self._input, output=self._output)),
-                    )
-                case FlowWidgetKind.SECRET:
-                    return self._stringify(
-                        self._ask(questionary.password(prompt, input=self._input, output=self._output)),
-                    )
-                case FlowWidgetKind.CONFIRM:
-                    result = self._ask(
-                        questionary.confirm(
-                            prompt,
-                            default=default.strip().lower() in {"true", "yes", "1", "y"},
-                            input=self._input,
-                            output=self._output,
-                        ),
-                    )
-                    if result is True:
-                        return "true"
-                    if result is False:
-                        return "false"
-                    return self._stringify(result)
-                case FlowWidgetKind.PATH:
-                    return self._stringify(
-                        self._ask(questionary.path(prompt, default=default, input=self._input, output=self._output)),
-                    )
-                case FlowWidgetKind.SELECT:
-                    return self._stringify(
-                        self._ask(
-                            questionary.select(
-                                prompt,
-                                choices=self._render_choices(copy),
-                                default=default or None,
-                                input=self._input,
-                                output=self._output,
-                            ),
-                        ),
-                    )
-                case FlowWidgetKind.COMPARE_SELECT:
-                    choices = self._render_choices(copy)
-                    choices.append(
-                        questionary.Choice(
-                            title=f"{len(choices) + 1}. {tr('flows.compare_select.defer_label')}",
-                            value=DEFER_TOKEN,
-                        ),
-                    )
-                    return self._stringify(
-                        self._ask(
-                            questionary.select(
-                                prompt,
-                                choices=choices,
-                                default=default or None,
-                                input=self._input,
-                                output=self._output,
-                            ),
-                        ),
-                    )
-                case FlowWidgetKind.CHECKBOX:
-                    result = self._ask(
-                        questionary.checkbox(
-                            prompt,
-                            choices=self._render_choices(copy),
-                            input=self._input,
-                            output=self._output,
-                        ),
-                    )
-                    if not isinstance(result, list):
-                        return ""
-                    return ",".join(str(item) for item in result)
+            return self._widget_prompts()[entry.page.widget](prompt, default, copy)
         except _NO_CONSOLE_ERRORS as exc:
             raise FlowUnsupportedConsoleError(
                 translated_message="flows.errors.unsupported_console",
             ) from exc
+
+    def _prompt_text_widget(self, prompt: str, default: str, copy: PageCopy) -> str:
+        return self._stringify(
+            self._ask(questionary.text(prompt, default=default, input=self._input, output=self._output)),
+        )
+
+    def _prompt_secret_widget(self, prompt: str, default: str, copy: PageCopy) -> str:
+        return self._stringify(self._ask(questionary.password(prompt, input=self._input, output=self._output)))
+
+    def _prompt_confirm_widget(self, prompt: str, default: str, copy: PageCopy) -> str:
+        result = self._ask(
+            questionary.confirm(
+                prompt,
+                default=default.strip().lower() in {"true", "yes", "1", "y"},
+                input=self._input,
+                output=self._output,
+            ),
+        )
+        if result is True:
+            return "true"
+        if result is False:
+            return "false"
+        return self._stringify(result)
+
+    def _prompt_path_widget(self, prompt: str, default: str, copy: PageCopy) -> str:
+        return self._stringify(
+            self._ask(questionary.path(prompt, default=default, input=self._input, output=self._output)),
+        )
+
+    def _prompt_select_widget(self, prompt: str, default: str, copy: PageCopy) -> str:
+        return self._select_one(prompt, default, self._render_choices(copy))
+
+    def _prompt_compare_select_widget(self, prompt: str, default: str, copy: PageCopy) -> str:
+        choices = self._render_choices(copy)
+        choices.append(
+            questionary.Choice(
+                title=f"{len(choices) + 1}. {tr('flows.compare_select.defer_label')}",
+                value=DEFER_TOKEN,
+            ),
+        )
+        return self._select_one(prompt, default, choices)
+
+    def _prompt_checkbox_widget(self, prompt: str, default: str, copy: PageCopy) -> str:
+        result = self._ask(
+            questionary.checkbox(
+                prompt,
+                choices=self._render_choices(copy),
+                input=self._input,
+                output=self._output,
+            ),
+        )
+        if not isinstance(result, list):
+            return ""
+        return ",".join(str(item) for item in result)
+
+    def _select_one(self, prompt: str, default: str, choices: list[questionary.Choice]) -> str:
+        """Run a single-choice select over already-rendered choices."""
+        return self._stringify(
+            self._ask(
+                questionary.select(
+                    prompt,
+                    choices=choices,
+                    default=default or None,
+                    input=self._input,
+                    output=self._output,
+                ),
+            ),
+        )
+
+    def _widget_prompts(self) -> Mapping[FlowWidgetKind, Callable[[str, str, PageCopy], str]]:
+        """Map every widget kind to the bound prompt that builds it."""
+        return {
+            FlowWidgetKind.TEXT: self._prompt_text_widget,
+            FlowWidgetKind.INTEGER: self._prompt_text_widget,
+            FlowWidgetKind.DATE: self._prompt_text_widget,
+            FlowWidgetKind.DECIMAL: self._prompt_text_widget,
+            FlowWidgetKind.SECRET: self._prompt_secret_widget,
+            FlowWidgetKind.CONFIRM: self._prompt_confirm_widget,
+            FlowWidgetKind.PATH: self._prompt_path_widget,
+            FlowWidgetKind.SELECT: self._prompt_select_widget,
+            FlowWidgetKind.COMPARE_SELECT: self._prompt_compare_select_widget,
+            FlowWidgetKind.CHECKBOX: self._prompt_checkbox_widget,
+        }
 
     def _render_choices(self, copy: PageCopy) -> list[questionary.Choice]:
         rendered: list[questionary.Choice] = []
@@ -317,8 +349,30 @@ class LineFlowFrontend:
         return state
 
     def _review_round(self, state: FlowState) -> tuple[str, FlowState, bool]:
+        """Render the review listing, ask for one action, and apply it.
+
+        Returns the chosen action, the resulting state, and whether the
+        review loop is finished.
+        """
         projection = review(self._definition, state)
         self._emit(tr("flows.review.header", answered=projection.answered_count))
+        rows_by_number = self._render_review_listing(state, projection)
+        action = self._ask_review_action(state, projection)
+
+        if action == _REVIEW_ACTION_SUBMIT:
+            return action, state, True
+        if action == _REVIEW_ACTION_SAVE_EXIT:
+            return action, self._save_and_exit(state), True
+        if action == _REVIEW_ACTION_RESTART:
+            return action, self._restart_if_confirmed(state), False
+        return action, self._edit_by_number(state, rows_by_number), False
+
+    def _render_review_listing(self, state: FlowState, projection: ReviewProjection) -> dict[str, str]:
+        """Emit the section-grouped review rows and blockers.
+
+        Returns the mapping from the number shown beside each row to the
+        page key it addresses, which is what edit-by-number resolves against.
+        """
         prompts = {
             entry.key: assemble_page_copy(entry.page).prompt for entry in visible_sequence(self._definition, state)
         }
@@ -347,7 +401,10 @@ class LineFlowFrontend:
         for verdict in projection.blocking:
             if verdict.message_key:
                 self._emit(tr(verdict.message_key, **verdict.context))
+        return rows_by_number
 
+    def _ask_review_action(self, state: FlowState, projection: ReviewProjection) -> str:
+        """Offer the actions this state permits and return the chosen one."""
         actions = [questionary.Choice(title=tr("flows.review.action_edit"), value=_REVIEW_ACTION_EDIT)]
         if projection.submit_eligible:
             actions.insert(0, questionary.Choice(title=tr("flows.review.action_submit"), value=_REVIEW_ACTION_SUBMIT))
@@ -358,43 +415,37 @@ class LineFlowFrontend:
         else:
             self._emit(tr("flows.review.save_unavailable", mode=state.mode.value))
         actions.append(questionary.Choice(title=tr("flows.review.action_restart"), value=_REVIEW_ACTION_RESTART))
+        return self._select_one(tr("flows.review.action_prompt"), "", actions)
 
-        action = self._stringify(
-            self._ask(
-                questionary.select(
-                    tr("flows.review.action_prompt"),
-                    choices=actions,
-                    input=self._input,
-                    output=self._output,
-                ),
+    def _save_and_exit(self, state: FlowState) -> FlowState:
+        """Persist the checkpoint the save-and-exit action promises."""
+        # ``run`` refused at start when an available mode lacked a store, so
+        # reaching here without one is unreachable by construction; the
+        # refusal is the defence-in-depth backstop, never a silent no-save exit.
+        if self._store is None:
+            raise FlowCheckpointError(
+                translated_message="flows.errors.checkpoint_store_missing",
+                context={"flow_id": self._definition.id, "mode": state.mode.value},
+            )
+        save_checkpoint(self._definition, state, self._store)
+        return state
+
+    def _restart_if_confirmed(self, state: FlowState) -> FlowState:
+        """Restart the flow only on an explicit confirmation."""
+        confirmed = self._ask(
+            questionary.confirm(
+                tr("flows.review.restart_confirm"),
+                default=False,
+                input=self._input,
+                output=self._output,
             ),
         )
-        if action == _REVIEW_ACTION_SUBMIT:
-            return action, state, True
-        if action == _REVIEW_ACTION_SAVE_EXIT:
-            # ``run`` refused at start when an available mode lacked a
-            # store, so reaching this arm without one is unreachable by
-            # construction; the refusal below is the defence-in-depth
-            # backstop, never a silent no-save exit.
-            if self._store is None:
-                raise FlowCheckpointError(
-                    translated_message="flows.errors.checkpoint_store_missing",
-                    context={"flow_id": self._definition.id, "mode": state.mode.value},
-                )
-            save_checkpoint(self._definition, state, self._store)
-            return action, state, True
-        if action == _REVIEW_ACTION_RESTART:
-            confirmed = self._ask(
-                questionary.confirm(
-                    tr("flows.review.restart_confirm"),
-                    default=False,
-                    input=self._input,
-                    output=self._output,
-                ),
-            )
-            if confirmed is True:
-                return action, restart_flow(self._definition, state), False
-            return action, state, False
+        if confirmed is True:
+            return restart_flow(self._definition, state)
+        return state
+
+    def _edit_by_number(self, state: FlowState, rows_by_number: dict[str, str]) -> FlowState:
+        """Re-ask the page the operator names by its listing number."""
         target_number = self._stringify(
             self._ask(
                 questionary.text(
@@ -407,33 +458,37 @@ class LineFlowFrontend:
         target_key = rows_by_number.get(target_number)
         if target_key is None:
             self._emit(tr("flows.review.edit_unknown", number=target_number))
-            return action, state, False
+            return state
         entry = next(
             (item for item in visible_sequence(self._definition, state) if item.key == target_key),
             None,
         )
         if entry is None:
-            # A stale orphan — an answer whose page a gating change or a
-            # shrunk group removed from the visible sequence — cannot be
-            # re-asked, but it must stay resolvable: the recovery
-            # affordance is a confirmed reset that clears the orphaned
-            # answer, unblocking submission without silent loss.
-            if page_status(state, target_key) is PageStatus.STALE:
-                confirmed = questionary.confirm(
-                    tr("flows.review.reset_stale_confirm", page_key=target_key),
-                    default=False,
-                    input=self._input,
-                    output=self._output,
-                ).ask()
-                if confirmed is True:
-                    state = reset_page(self._definition, state, target_key)
-                    self._emit(tr("flows.review.reset_stale_done", page_key=target_key))
-                return action, state, False
-            self._emit(tr("flows.review.edit_not_editable", page_key=target_key))
-            return action, state, False
+            return self._resolve_orphan(state, target_key)
         state = jump_to(self._definition, state, target_key)
-        state = self._ask_page(state, entry)
-        return action, state, False
+        return self._ask_page(state, entry)
+
+    def _resolve_orphan(self, state: FlowState, target_key: str) -> FlowState:
+        """Offer the recovery affordance for an answer with no visible page.
+
+        A stale orphan — an answer whose page a gating change or a shrunk
+        group removed from the visible sequence — cannot be re-asked, but it
+        must stay resolvable: the affordance is a confirmed reset that clears
+        the orphaned answer, unblocking submission without silent loss.
+        """
+        if page_status(state, target_key) is not PageStatus.STALE:
+            self._emit(tr("flows.review.edit_not_editable", page_key=target_key))
+            return state
+        confirmed = questionary.confirm(
+            tr("flows.review.reset_stale_confirm", page_key=target_key),
+            default=False,
+            input=self._input,
+            output=self._output,
+        ).ask()
+        if confirmed is True:
+            state = reset_page(self._definition, state, target_key)
+            self._emit(tr("flows.review.reset_stale_done", page_key=target_key))
+        return state
 
     def _ask(self, question: questionary.Question) -> object:
         """Run one prompt to an answer, mapping Ctrl-C to a typed abandonment.
