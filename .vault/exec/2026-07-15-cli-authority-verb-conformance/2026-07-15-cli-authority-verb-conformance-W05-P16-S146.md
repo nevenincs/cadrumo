@@ -189,3 +189,60 @@ Collected 10, `10 passed in 19.57s`, exit code 0, at HEAD
 `ab8f62b3770ab84e8e0d62f90131259f8303c568`. The curated-help gate discriminates:
 injecting `aeat config lock` into a help document reds it with `No such command
 'lock'`, then restored. Closed.
+
+## Implemented 2026-07-28: the six named surfaces now carry entries
+
+Supersedes the staleness-reading close above. On a second reading the row is real
+work, not an evidence gap: it names six surfaces and three of them -- recovery,
+certificate and audit -- had zero curated entries, and the coverage claim the
+record once carried was false because those words appeared zero times in the
+module. The fix is to make the claim true, which is now done. Landed at HEAD
+`7e1799a3dde2cba3e545e4f6c0797aee5201a2b4`.
+
+Entries added, each verified against the materialised live command tree before
+authoring (spelling and depth confirmed by walking the lazy-subcommand tree, not
+the one-leaf naive walk):
+
+- passphrase custody: `aeat config passphrase change`
+- recovery lifecycle: `aeat config recovery status`, `create`, `rotate`, `verify`,
+  and the flat `aeat config recover`
+- certificate custody: `aeat config auth certificate check`, and
+  `aeat config auth certificate secret set` / `remove` (the live spelling is under
+  `auth certificate`; there is no top-level `config certificate`)
+- profile data portability: `aeat config profile export` and
+  `aeat config profile subject-access-request`
+- modelo evidence audit: `aeat app modelo audit show`, `check`, `export` (the three
+  registered verbs; no replay verb exists)
+
+A surface I was asked to check and did not add: `aeat config profile switch` does
+not exist. Login and logout replaced it, so leaving it out is correct rather than
+an omission.
+
+Descriptions are `tr()` locale keys, matching the existing shape, authored through
+the locales CLI set path across all four catalogues -- never by hand-editing a
+YAML file. Four-locale parity confirmed: `python -m cadrumo.locales scaffold
+--check` reports `ca.yml: ok`, `en.yml: ok`, `es.yml: ok`, `hu.yml: ok`, and the
+locale suite passes `60 passed`. The three-language values are genuine
+translations, so the translation-honesty ratchet holds without an
+intentional-identical entry.
+
+A coverage gate now closes the omission hole. The resolve and suggestion-
+conformance gates prove a cited command exists but are blind to a family the help
+simply leaves out -- which is exactly how this surface once claimed coverage it
+lacked. The new gate asserts each required family (passphrase, recovery, flat
+recover, certificate, modelo audit) is cited by at least one help entry, behind a
+non-empty floor. Proven by mutation: stripping the certificate entries reds it
+with `omits required families entirely: ['certificate custody']`, then restored.
+
+Evidence. Command: `uv run --no-sync pytest -p no:cacheprovider -n0 -m integration
+-o addopts=""
+src/cadrumo/entrypoints/cli/tests/test_root_help_shape.py::test_curated_help_command_rows_resolve_in_real_typer_tree
+src/cadrumo/entrypoints/cli/tests/test_root_help_shape.py::test_config_and_app_help_use_curated_subtree_shape
+src/cadrumo/entrypoints/cli/tests/test_root_help_shape.py::test_curated_help_covers_custody_and_audit_families
+src/cadrumo/entrypoints/cli/tests/test_suggestion_command_conformance.py`.
+Collected 11, `11 passed in 13.47s`, exit code 0, at HEAD
+`70a333bdcace23f25f67ae889991fc90fdc7056d` (the tree the implementation commit
+`7e1799a3dd` captured verbatim). Locale parity and honesty: `uv run --no-sync
+pytest -p no:cacheprovider -n0 -m "unit or integration" -o addopts=""
+src/cadrumo/locales/tests/`, collected 60, `60 passed in 93.56s`, exit code 0.
+Ruff clean on the two touched Python files. Closed on the implementation.
