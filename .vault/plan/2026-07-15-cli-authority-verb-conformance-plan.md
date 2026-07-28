@@ -430,12 +430,12 @@ Run the formal code-review skill, reconcile findings, and prove every accepted A
 
 - [x] `W06.P20.S209` - Invoke vaultspec-code-review over the complete feature diff for safety, intent, boundary direction, and test quality; `.`.
 - [x] `W06.P20.S210` - Resolve every in-scope blocker or major finding through its owning implementation Step; `.vault/plan/2026-07-15-cli-authority-verb-conformance-plan.md`.
-- [ ] `W06.P20.S211` - Rerun every focused or full gate invalidated by a corrective edit; `.vault/exec/`.
+- [x] `W06.P20.S211` - Rerun every focused or full gate invalidated by a corrective edit; `.vault/exec/`.
 - [ ] `W06.P20.S212` - Record a zero-blocker and zero-major formal review verdict; `.vault/audit/`.
 - [x] `W06.P20.S213` - Confirm every closed implementation Step has an attributable execution record; `.vault/exec/`.
 - [x] `W06.P20.S214` - Confirm no removed CLI spelling survives in source, locales, tests, docs, schemas, MCP, or suggestions; `.`.
 - [x] `W06.P20.S215` - Confirm certificate custody, ledger evidence, portable export, hashing, namespaces, filed capture, LLM review, registry projection, and duplication execution each have one canonical owner and no parallel writer, resolver, parser, or command path; `src/cadrumo/; dev/audit/`.
-- [ ] `W06.P20.S216` - Audit every amended ADR decision, including delete-only certificate cutover, atomic ledger evidence, live export routing, 18 plus 4 hashing consolidation, backend replay removal, namespace adoption, filed capture, LLM review, registry as-of behavior, and truthful duplication infrastructure, against code and objective evidence; `.vault/adr/2026-07-15-cli-authority-verb-conformance-adr.md`.
+- [x] `W06.P20.S216` - Audit every amended ADR decision, including delete-only certificate cutover, atomic ledger evidence, live export routing, 18 plus 4 hashing consolidation, backend replay removal, namespace adoption, filed capture, LLM review, registry as-of behavior, and truthful duplication infrastructure, against code and objective evidence; `.vault/adr/2026-07-15-cli-authority-verb-conformance-adr.md`.
 - [ ] `W06.P20.S217` - Rebuild the feature index after all plan, execution, audit, ADR, research, and reference artifacts are final; `.vault/`.
 - [ ] `W06.P20.S218` - Run the plan structural check and refuse closure while any Step remains open or malformed; `.vault/plan/2026-07-15-cli-authority-verb-conformance-plan.md`.
 - [x] `W06.P20.S219` - Run feature-scoped Vaultspec checks and resolve every attributable finding; `.vault/`.
