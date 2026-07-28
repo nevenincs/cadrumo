@@ -106,6 +106,7 @@ class ProfileValidationService:
             issues.extend(self._validate_one_fact(fact))
         issues.extend(self._required_field_issues(facts))
         issues.extend(self._conditional_completeness_issues(facts))
+        issues.extend(self._unenforced_expiry_issues(facts))
         return ProfileValidationReport(
             profile_id=profile_id,
             schema_version=self._schema.version,
@@ -233,6 +234,55 @@ class ProfileValidationService:
                 ),
             )
         return ()
+
+    @staticmethod
+    def _unenforced_expiry_issues(
+        facts: tuple[UserProfileFact, ...],
+    ) -> tuple[ProfileValidationIssue, ...]:
+        """Report a ``valid_to`` that ends nothing, because no reader consults it.
+
+        The effective-window resolvers order on ``valid_from`` and take the
+        last fact per path; ``valid_to`` is not consulted, since honouring
+        expiry needs an ``as_of`` the caller supplies rather than the clock.
+        An operator who records an end date is therefore describing a state
+        the profile does not enter.
+
+        The warning is scoped to the case where that is true. A closed
+        window on a fact some LATER fact supersedes is accurate
+        bookkeeping - the later ``valid_from`` already ends it, and warning
+        there would report correct records as suspect. Only the effective
+        fact's own ``valid_to`` is inert, because nothing after it takes
+        over, so the path keeps projecting past the date the operator gave.
+
+        Selection reuses the projection's own ordering rather than
+        restating it. A second copy of the rule could drift from the one
+        the readers use, and this check is only meaningful while it names
+        exactly the fact they resolve to.
+
+        Args:
+            facts: Every fact on the record, in declaration order.
+
+        Returns:
+            One WARNING per path whose effective fact carries a ``valid_to``.
+        """
+        from ._projections import _in_window_order
+
+        effective: dict[str, UserProfileFact] = {}
+        for fact in _in_window_order(facts):
+            effective[fact.path] = fact
+        return tuple(
+            ProfileValidationIssue(
+                severity=BaseSeverity.WARNING,
+                code="effective_window_end_not_enforced",
+                path=path,
+                message=(
+                    f"path {path!r} declares valid_to {fact.valid_to.isoformat()!r} but the value "
+                    f"keeps resolving after it; record a later valid_from at {path!r} to supersede it"
+                ),
+            )
+            for path, fact in effective.items()
+            if fact.valid_to is not None
+        )
 
     def _required_field_issues(
         self,
