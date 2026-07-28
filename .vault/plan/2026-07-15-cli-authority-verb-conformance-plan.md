@@ -446,7 +446,7 @@ Run the formal code-review skill, reconcile findings, and prove every accepted A
 - [ ] `W06.P20.S268` - Complete the W06.P18 and W06.P19 evidence, refusing to close any Step whose execution record lacks a command, a non-zero collected count, an exit line, and a HEAD reference; `.vault/exec/`.
 - [ ] `W06.P20.S269` - Decide in a follow-on ADR the criterion by which a command path is profile-bound, then reconcile the 48 unguarded mutation-shaped leaves against it per verb; `src/cadrumo/application/storage_write_policy.py`.
 - [ ] `W06.P20.S270` - Remove the permissive not-read-only default for unknown command keys, or prove every gate resting on it still discriminates an absent key from a live write verb; `src/cadrumo/application/operator_surface/_classification.py`.
-- [ ] `W06.P20.S271` - Assert structurally that an execution record carries a populated Outcome before its Step may be checked, since the vault check passes empty scaffolds; `.vault/exec/`.
+- [x] `W06.P20.S271` - Assert structurally that an execution record carries a populated Outcome before its Step may be checked, since the vault check passes empty scaffolds; `.vault/exec/`.
 - [x] `W06.P20.S272` - Commit the plan file alongside execution records in every closure commit, and land the 31 closures currently held only in the working tree; `.vault/plan/2026-07-15-cli-authority-verb-conformance-plan.md`.
 - [ ] `W06.P20.S273` - Make a stale import-linter ignore fail loudly and distinctly from a contract breach, so an aborted run cannot read as a quiet one; `.importlinter`.
 - [ ] `W06.P20.S274` - Resolve the two broken layered contracts with their owning campaigns, without widening the ignore list; `.importlinter`.
