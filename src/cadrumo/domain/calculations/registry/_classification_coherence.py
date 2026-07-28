@@ -146,12 +146,19 @@ class ClassificationCoherenceFinding(ClassificationModel):
     is about when the modelo id alone is too coarse — a revision id, or a
     dependency-classification id — and repeats the modelo id otherwise, so a
     renderer can always print a stable second column.
+
+    ``registry_validated`` mirrors the audit-level flag down onto each finding so
+    the label is not lost when findings are extracted through the container's
+    :attr:`RegistryClassificationAudit.findings` property: a consumer that
+    flattens findings across rows still knows whether each one came from a
+    validated authority read or a degraded non-validating one.
     """
 
     kind: ClassificationFindingKind
     modelo: ModeloId
     subject: str = Field(min_length=1, max_length=160)
     detail: str = Field(min_length=1, max_length=512)
+    registry_validated: bool
 
 
 #: Upper bound on a finding's ``detail``, READ FROM the field constraint above
@@ -186,6 +193,10 @@ class ModeloClassificationRow(ClassificationModel):
     Emitted for EVERY modelo in the tree, including fully coherent ones, so a
     modelo with nothing to report is a visible clean row rather than an absent
     one.
+
+    ``registry_validated`` mirrors the audit-level flag so a consumer that
+    iterates rows directly, rather than reading the enclosing audit, can still
+    tell whether the row came from a validated authority read or a degraded one.
     """
 
     modelo: ModeloId
@@ -197,6 +208,7 @@ class ModeloClassificationRow(ClassificationModel):
     declared_non_registry: bool
     known_modelo_code: bool
     findings: tuple[ClassificationCoherenceFinding, ...]
+    registry_validated: bool
 
     @property
     def informative_axes_agree(self) -> bool:
@@ -289,6 +301,7 @@ def build_classification_coherence_audit(
             modelo,
             non_registry_modelo_codes=non_registry_modelo_codes,
             known_modelo_codes=known_modelo_codes,
+            registry_validated=registry_validated,
         )
         for modelo in modelo_tuple
     )
@@ -321,6 +334,7 @@ def _build_row(
     *,
     non_registry_modelo_codes: frozenset[str],
     known_modelo_codes: frozenset[str],
+    registry_validated: bool,
 ) -> ModeloClassificationRow:
     """Build one modelo's classification row and every finding it carries."""
     by_class = modelo.calculation_class == _INFORMATIVE_CLASS
@@ -331,7 +345,11 @@ def _build_row(
 
     findings: list[ClassificationCoherenceFinding] = []
     if by_class != by_domain:
-        findings.append(_informative_divergence_finding(modelo, by_class=by_class, blockers=blockers))
+        findings.append(
+            _informative_divergence_finding(
+                modelo, by_class=by_class, blockers=blockers, registry_validated=registry_validated
+            )
+        )
     if declared_non_registry:
         findings.append(
             ClassificationCoherenceFinding(
@@ -342,6 +360,7 @@ def _build_row(
                     f"modelo {modelo.id} is declared to have no registry definition, yet the loaded tree "
                     "compiles one for it",
                 ),
+                registry_validated=registry_validated,
             ),
         )
     if not known_code:
@@ -354,9 +373,10 @@ def _build_row(
                     f"modelo {modelo.id} is defined in the registry tree but no core modelo identifier names "
                     "it, so it is unreachable through the typed identifier surface",
                 ),
+                registry_validated=registry_validated,
             ),
         )
-    findings.extend(_dependency_findings(modelo))
+    findings.extend(_dependency_findings(modelo, registry_validated=registry_validated))
 
     return ModeloClassificationRow(
         modelo=modelo.id,
@@ -368,6 +388,7 @@ def _build_row(
         declared_non_registry=declared_non_registry,
         known_modelo_code=known_code,
         findings=tuple(findings),
+        registry_validated=registry_validated,
     )
 
 
@@ -376,6 +397,7 @@ def _informative_divergence_finding(
     *,
     by_class: bool,
     blockers: tuple[str, ...],
+    registry_validated: bool,
 ) -> ClassificationCoherenceFinding:
     """Describe an informative-axis divergence together with what forces it, if anything."""
     if by_class:
@@ -393,6 +415,7 @@ def _informative_divergence_finding(
         modelo=modelo.id,
         subject=modelo.id,
         detail=_bounded_detail(f"modelo {modelo.id} declares {held} but {absent}; {forcing}"),
+        registry_validated=registry_validated,
     )
 
 
@@ -444,7 +467,9 @@ def _informative_class_blockers(modelo: ModeloDefinition) -> tuple[str, ...]:
     return tuple(validate_informative_class_invariant(candidate))
 
 
-def _dependency_findings(modelo: ModeloDefinition) -> list[ClassificationCoherenceFinding]:
+def _dependency_findings(
+    modelo: ModeloDefinition, *, registry_validated: bool
+) -> list[ClassificationCoherenceFinding]:
     """Report dependency classifications whose two filing flags cannot both hold.
 
     ``conditional_on_economic_activity`` narrows WHEN the taxpayer files the
@@ -466,6 +491,7 @@ def _dependency_findings(modelo: ModeloDefinition) -> list[ClassificationCoheren
                             "conditional_on_economic_activity while taxpayer_files_source is false, so it "
                             "conditions a filing the taxpayer never makes",
                         ),
+                        registry_validated=registry_validated,
                     ),
                 )
     return findings

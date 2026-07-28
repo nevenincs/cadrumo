@@ -477,6 +477,7 @@ def test_the_detail_bound_is_read_from_the_field_it_must_satisfy() -> None:
             modelo="130",
             subject="130",
             detail=over_bound,
+            registry_validated=False,
         )
 
 
@@ -547,6 +548,7 @@ def test_the_clamp_is_what_keeps_an_oversized_detail_constructible() -> None:
             modelo="100",
             subject="100",
             detail=oversized,
+            registry_validated=False,
         )
 
     survived = ClassificationCoherenceFinding(
@@ -554,6 +556,7 @@ def test_the_clamp_is_what_keeps_an_oversized_detail_constructible() -> None:
         modelo="100",
         subject="100",
         detail=_bounded_detail(oversized),
+        registry_validated=False,
     )
     assert len(survived.detail) == _MAX_DETAIL_LENGTH
     assert survived.detail.endswith(_TRUNCATION_SUFFIX)
@@ -601,3 +604,67 @@ def test_the_worst_case_the_registry_schema_permits_needs_no_truncation() -> Non
         "the sampler no longer keeps real findings inside the field bound"
     )
     assert len(detail) < _MAX_DETAIL_LENGTH
+
+
+def test_degraded_read_stamps_every_row_and_finding_unvalidated() -> None:
+    """A non-validating read stamps both the row and each finding as unvalidated.
+
+    The ADR ruling is that the label rides every emitted artefact, not only the
+    enclosing audit, so a consumer iterating rows or flattening findings can
+    still distinguish a degraded read from a validated one.
+    """
+    audit = _audit(
+        _modelo("130", calculation_class="informative", tax_domain=TaxDomain.IRPF),
+    )
+    assert audit.registry_validated is False
+    assert len(audit.rows) == 1
+    assert audit.rows[0].registry_validated is False
+    assert len(audit.findings) == 1, "the divergent modelo must produce a finding"
+    assert all(finding.registry_validated is False for finding in audit.findings)
+    assert all(finding.registry_validated is False for finding in audit.rows[0].findings)
+
+
+def test_validated_read_stamps_every_row_and_finding_validated() -> None:
+    """A validated-authority read stamps both the row and each finding as validated.
+
+    The other half of the anti-tautology pair: a stamper that always wrote
+    False would satisfy the degraded test above.
+    """
+    audit = build_classification_coherence_audit(
+        (_modelo("130", calculation_class="informative", tax_domain=TaxDomain.IRPF),),
+        non_registry_modelo_codes=_NO_NON_REGISTRY_CODES,
+        known_modelo_codes=frozenset({"130"}),
+        registry_validated=True,
+    )
+    assert audit.registry_validated is True
+    assert audit.rows[0].registry_validated is True
+    assert len(audit.findings) == 1, "the divergent modelo must produce a finding"
+    assert all(finding.registry_validated is True for finding in audit.findings)
+
+
+def test_flattened_findings_preserve_the_validated_label() -> None:
+    """The label is not lost when findings are extracted through the container's property.
+
+    A degraded audit and a validated audit over the same content produce
+    findings that carry different labels; flattening via ``audit.findings``
+    must preserve, not erase, the per-finding stamp.
+    """
+    divergent = _modelo("130", calculation_class="informative", tax_domain=TaxDomain.IRPF)
+
+    degraded = _audit(divergent)
+    validated = build_classification_coherence_audit(
+        (divergent,),
+        non_registry_modelo_codes=_NO_NON_REGISTRY_CODES,
+        known_modelo_codes=frozenset({"130"}),
+        registry_validated=True,
+    )
+
+    degraded_findings = degraded.findings
+    validated_findings = validated.findings
+    assert len(degraded_findings) == 1
+    assert len(validated_findings) == 1
+    assert degraded_findings[0].registry_validated is False
+    assert validated_findings[0].registry_validated is True
+    assert degraded_findings[0].registry_validated is not validated_findings[0].registry_validated, (
+        "the two reads over identical content must produce findings with opposite labels"
+    )
