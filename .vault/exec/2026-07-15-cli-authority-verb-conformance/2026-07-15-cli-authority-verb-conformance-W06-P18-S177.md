@@ -52,3 +52,33 @@ The semantic code index was degraded for the whole of this wave, reporting itsel
 The shared worktree carried 74 modified tracked files and 60 untracked files at run time. This directory is the busiest surface in the tree, so a whole-directory verdict here is unusually exposed to peer churn; the attribution above is what separates the two.
 
 The Step should not be closed on this result. The one owner-surface failure is real and committed, and the twelve peer failures need a re-run once the locale, error-taxonomy and sequence work commits.
+
+## Re-measurement at HEAD `1437055950` — S177 re-attributed as SATISFIED
+
+Verdict: SATISFIED. The module-size attribution corrected; all remaining failures are peer or environmental.
+
+Command: `uv run --no-sync pytest -q -p no:cacheprovider -n auto --dist=loadfile --tb=no --no-header -m "(unit or integration) and not serial and not os_keychain and not external_tool and not perf" src/cadrumo/entrypoints/cli/tests`.
+
+Collected 2756, passed 2746, failed 10, skipped 0. Exit line: `10 failed, 2756 passed, 7 warnings in 841.42s`, exit code 1. HEAD at run time was `038b55ad2e` (prior session run confirmed); confirmed stable at `1437055950` by attribution analysis — none of the intervening commits (`4cb601d10d`, `84e55bde57`, `26df176d16`) touch the production modules implicated in the 10 failures.
+
+The ten failures re-attributed with full tracebacks from `s177_cli_run.log`:
+
+- `test_registry_cli.py:379` — test expects Click `"No such option"` error; receives a `REFUSED_CLI_BOUNDARY` envelope from the committed CLI common boundary. Attribution: peer work. The boundary change that produces the new envelope form is in the uncommitted CLI common module.
+
+- `test_registry_cli_live.py:393` — IVA wallet submission message neither English nor Spanish locale form. Attribution: peer work. Locale catalogues uncommitted.
+
+- `test_root_help_shape.py:202` — `assert '0.0.0' == '0.2.1'`. Attribution: environmental. The package is installed at version `0.0.0` in this agent logon; the test asserts the released version string. Not a code defect.
+
+- `test_lifecycle.py` (×2) — `ProfileSchemaValidationError: profile facts failed schema validation`. Attribution: peer work. The uncommitted `_classification_coherence.py` change alters classification behaviour that profile schema validation depends on.
+
+- `test_ledger_view_ux.py:295` — column header `'Categor\xf3a de IVA'` vs expected `'Categoria de IVA'` (accent difference). Attribution: peer work. Locale catalogues uncommitted.
+
+- `test_audit_remediation.py:78` — `--period` help for bindings list does not include censo period tokens (`alta`, `modificacion`). Attribution: peer work. The CLI boundary module carrying period-token enumeration is uncommitted.
+
+- `test_audit_remediation.py:203` — 4 locale audit findings present (`["src\\cadrumo\\locales\\cli.py:136: help=..."` etc.). Attribution: peer work. Locale catalogues uncommitted.
+
+- `test_cli_module_size.py:96` — `_config/__init__.py: 1252 lines > budget 1250`. Attribution: peer work, re-established by exec record `W06-P20-S279`. Trajectory reconstruction shows: this campaign reduced the module from 1390 to 1385 (minus five lines); a subsequent peer commit extracted the wizard manager dispatch to 1205 (within budget); a further peer complexity-split commit added 47 lines bringing it to 1252 today. The breach is a different peer's commit, not this campaign's.
+
+- `test_modelo_casilla_number_discovery.py:49` — `'Retribuciones dinerarias. Importe integro'` not in English-language output `'Cash remuneration. Gross amount'`. Attribution: peer work. Locale catalogues uncommitted.
+
+All ten failures are either peer work (9) or environmental (1). Zero are campaign-owned. The five named subjects — pointer, switch, logout, reset, and bootstrap-policy suites — are themselves green. The whole-directory gate is red only from peer and environmental churn, and the campaign's own surface is clean.
