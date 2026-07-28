@@ -429,7 +429,7 @@ Materialize the CLI, prove schema, locale, docs, and MCP agreement, rerun clone 
 Run the formal code-review skill, reconcile findings, and prove every accepted ADR requirement before declaring completion.
 
 - [x] `W06.P20.S209` - Invoke vaultspec-code-review over the complete feature diff for safety, intent, boundary direction, and test quality; `.`.
-- [ ] `W06.P20.S210` - Resolve every in-scope blocker or major finding through its owning implementation Step; `.vault/plan/2026-07-15-cli-authority-verb-conformance-plan.md`.
+- [x] `W06.P20.S210` - Resolve every in-scope blocker or major finding through its owning implementation Step; `.vault/plan/2026-07-15-cli-authority-verb-conformance-plan.md`.
 - [ ] `W06.P20.S211` - Rerun every focused or full gate invalidated by a corrective edit; `.vault/exec/`.
 - [ ] `W06.P20.S212` - Record a zero-blocker and zero-major formal review verdict; `.vault/audit/`.
 - [x] `W06.P20.S213` - Confirm every closed implementation Step has an attributable execution record; `.vault/exec/`.
@@ -472,6 +472,7 @@ Run the formal code-review skill, reconcile findings, and prove every accepted A
 - [x] `W06.P20.S294` - Land the proven MCP identity seeding fix once the wizard results module is committed, so both transports report the same schema count and the parity assertion is no longer comparing two equally blind sets; `src/cadrumo/entrypoints/mcp/_server.py; src/cadrumo/entrypoints/mcp/_harness_tools.py; src/cadrumo/application/wizard/_compiler.py`.
 - [x] `W06.P20.S295` - Closed as unnecessary, a peer fix bridged the payload-name filter by importing the wizard result classes into a walked module, so enrolment is filename-filtered still and the divergence ended when that bridge landed; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
 - [x] `W06.P20.S296` - Guard the load-bearing wizard schema re-exports against a tidy-up deletion, since the re-export idiom looks redundant and removing it silently drops both profile verbs from the MCP surface; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
+- [ ] `W06.P20.S297` - Give every corpus-scanning emptiness gate a non-zero subject floor, or prove per gate that its corpus cannot silently empty, since 87 in-surface gates assert an offender list empty without proving they scanned anything and a path rename would green them while the forbidden condition survives; `src/cadrumo/; dev/`.
 
 ## Description
 
