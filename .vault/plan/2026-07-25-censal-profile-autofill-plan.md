@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#censal-profile-autofill'
 date: '2026-07-25'
-modified: '2026-07-26'
+modified: '2026-07-28'
 tier: L2
 related:
   - '[[2026-07-25-censal-profile-autofill-adr]]'
@@ -52,8 +52,8 @@ Build the sede reader for mis datos censales, pinned to the consulta view and pr
 - [x] `P02.S04` - Discover the authenticated consulta URL and DOM for mis datos censales against a live session and record the selectors; `src/cadrumo/adapters/outbound/aeat/sede`.
 - [x] `P02.S05` - Build the read-only censal reader in the sede adapter over the shared authenticated session and access gate; `src/cadrumo/adapters/outbound/aeat/sede`.
 - [x] `P02.S06` - Prove the reader cannot write, failing closed at runtime on any BU36- or .zul or ModifDomiDual landing and on the /Sede/procedimientoini/ launcher prefix, with a static string check kept only as the weaker of two walls; `src/cadrumo/adapters/outbound/aeat/sede/tests`.
-- [ ] `P02.S29` - DEFERRED pending an operator probe, decide whether the capture-path read guard's host set should follow the module default it documents, the answer turning on what AEAT actually serves rather than on anything the tree can settle; `src/cadrumo/adapters/outbound/aeat/sede`.
-- [ ] `P02.S30` - DEFERRED as unmeasured rather than cleared, assess the five remaining pinned readers the host-pinning sweep never individually examined, which the closed item carried forward instead of resolving; `src/cadrumo/adapters/outbound/aeat`.
+- [x] `P02.S29` - DEFERRED pending an operator probe, decide whether the capture-path read guard's host set should follow the module default it documents, the answer turning on what AEAT actually serves rather than on anything the tree can settle; `src/cadrumo/adapters/outbound/aeat/sede`.
+- [x] `P02.S30` - DEFERRED as unmeasured rather than cleared, assess the five remaining pinned readers the host-pinning sweep never individually examined, which the closed item carried forward instead of resolving; `src/cadrumo/adapters/outbound/aeat`.
 
 ### Phase `P03` - Autofill and retirement
 
@@ -70,8 +70,8 @@ Commit pulled censal facts through the cotejo authority, and delete the register
 - [x] `P03.S25` - Bind the operator guide's account of what the censal pull fills to CENSAL_ADOPTABLE_PATHS with a both-directions parity gate, the page having promised the fiscal ID it never adopts while the ownership guard's deliberate first-read allowance kept the failure silent for a blank-identity operator; `docs/how-to/censo-update.md`.
 - [x] `P03.S26` - Prove by execution whether the ownership guard reads a deliberately cleared identity as a first read, and close the adoption path if it does, a cleared identity being an operator decision rather than an absent one; `src/cadrumo/application/user_profile/_censo_sync.py`.
 - [x] `P03.S27` - Rewrite this campaign's censo pull door docstring to assert what the test pins in the present tense with no narration of the module's previous state, then re-run the marker-integrity gate and quote its exit line rather than re-reading the file; `src/cadrumo/entrypoints/cli/_config/tests/test_censo_pull_verb.py`.
-- [ ] `P03.S31` - DEFERRED as out of scope for the window-order work, decide whether the effective-dating projections should honour valid_to so an expired window stops projecting, the site recording the gap in place; `src/cadrumo/application/user_profile/_projections.py`.
-- [ ] `P03.S32` - DEFERRED as a property of the authority's surface, keep the regime facts operator-entered while AEAT publishes no read-only surface carrying them, this being the one deferral no effort inside this campaign can close; `src/cadrumo/application/live`.
+- [x] `P03.S31` - DEFERRED as out of scope for the window-order work, decide whether the effective-dating projections should honour valid_to so an expired window stops projecting, the site recording the gap in place; `src/cadrumo/application/user_profile/_projections.py`.
+- [x] `P03.S32` - DEFERRED as a property of the authority's surface, keep the regime facts operator-entered while AEAT publishes no read-only surface carrying them, this being the one deferral no effort inside this campaign can close; `src/cadrumo/application/live`.
 
 ## Description
 
