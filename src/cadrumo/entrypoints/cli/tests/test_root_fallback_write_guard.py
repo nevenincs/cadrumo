@@ -15,6 +15,7 @@ from ....application.storage_write_policy import (
     is_profile_bound_write_verb_path,
 )
 from ....core.paths import PROJECT_ROOT
+from .._bootstrap_exempt import is_bootstrap_exempt
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -227,7 +228,7 @@ def test_bootstrap_safe_probes_still_run_on_root_fallback_database(tmp_path: Pat
         assert "No active profile" not in output
 
 
-def test_config_switch_remains_recovery_path_on_root_fallback_database(tmp_path: Path) -> None:
+def test_config_login_remains_recovery_path_on_root_fallback_database(tmp_path: Path) -> None:
     """`config login` reaches profile resolution instead of the root-fallback guard."""
 
     result = _run_cadrumo(tmp_path, ("config", "login", "does-not-exist"))
@@ -391,3 +392,117 @@ def test_cli_root_delegates_route_classification_to_backend_policy() -> None:
     assert "StorageRouteKind" not in root_source
     assert "_ROOT_FALLBACK_GUARDED_VERB_PATHS" not in root_source
     assert "inspect_storage_write_policy" in root_source
+
+
+# ---------------------------------------------------------------------------
+# The profile-bound criterion, enforced rather than hand-maintained
+# ---------------------------------------------------------------------------
+
+#: Final tokens under ``app`` whose mutation of active-bucket state is
+#: UNAMBIGUOUS across every family that mounts them.
+#:
+#: Deliberately narrow, and the exclusions are the interesting part. ``verify``,
+#: ``export``, ``extract``, ``reconcile``, ``preview`` and ``wizard`` are NOT
+#: here, because the same token means different things in different families:
+#: ``app modelo work verify`` mutates revision state while ``app registry
+#: verify`` reads bundled data, and ``app modelo export`` writes a file rather
+#: than bucket state. Sorting those requires reading each verb, which is a
+#: per-verb judgement and must not be performed mechanically -- a first cut of
+#: this gate did exactly that and flagged eleven registry-read and
+#: file-writing leaves as unguarded mutations.
+#:
+#: So this set buys a real, total guarantee over the verbs whose semantics are
+#: not in doubt, and the ambiguous tail is tracked as a named residue rather
+#: than silently swept into either half.
+_APP_MUTATION_TOKENS: frozenset[str] = frozenset(
+    {
+        "add",
+        "allocate",
+        "apply",
+        "archive",
+        "attach",
+        "classify",
+        "confirm",
+        "create",
+        "discard",
+        "exclude",
+        "import",
+        "link",
+        "merge",
+        "remove",
+        "rename",
+        "restore",
+        "resume",
+        "seed",
+        "set",
+        "split",
+        "stash",
+        "track",
+        "unset",
+        "update",
+    }
+)
+
+
+def _app_leaves() -> tuple[str, ...]:
+    """Live leaf paths under the ``app`` root."""
+
+    return tuple(leaf for leaf in _live_leaf_paths() if leaf.split()[:1] == ["app"])
+
+
+def test_every_unambiguously_mutating_app_leaf_is_guarded_or_bootstrap_exempt() -> None:
+    """A mutating ``app`` leaf must be guarded OR exempt, and never neither.
+
+    ``aeat app`` commands operate on the active profile bucket by definition,
+    so a leaf that mutates one while sitting outside BOTH the profile-bound
+    write guard and the bootstrap exemption is unreachable by either safety
+    mechanism: it is answered ``NON_PROFILE_BOUND_VERB`` and the root write
+    guard cannot refuse it under any storage route. That is the same fail-open
+    that let every invoice mutation escape the guard after a verb rename, found
+    only by asking the policy directly rather than by reading the catalogue.
+
+    Stated as a rule so the catalogue is enforced rather than curated. Nine
+    leaves were outside both mechanisms when this gate was written -- evidence
+    confirm, ledger restore, three invoice-catalogue verbs, justificante pull,
+    iva-wallet seed, m145 create and work resume. This gate is what stops the
+    tenth.
+    """
+
+    leaves = _app_leaves()
+    assert len(leaves) > 100, f"materialisation failed; only {len(leaves)} app leaves walked"
+
+    mutating = [leaf for leaf in leaves if leaf.split()[-1] in _APP_MUTATION_TOKENS]
+    assert len(mutating) > 20, (
+        f"only {len(mutating)} unambiguously-mutating app leaves found; the token set has "
+        "collapsed against the live tree and this gate would pass while checking almost nothing"
+    )
+
+    unreachable = sorted(
+        leaf for leaf in mutating if not is_profile_bound_write_verb_path(leaf) and not is_bootstrap_exempt(leaf)
+    )
+
+    assert unreachable == [], (
+        "mutating `app` leaf/leaves reachable by NEITHER the profile-bound write guard NOR the "
+        f"bootstrap exemption, so no storage-route refusal can apply to them: {unreachable}. "
+        "Add each to `PROFILE_BOUND_WRITE_VERB_PATHS`, or to `BOOTSTRAP_EXEMPT_VERB_PATHS` if it "
+        "must legitimately run before a profile is unlocked."
+    )
+
+
+def test_mutation_token_set_still_matches_live_verbs() -> None:
+    """Every token in the set must name at least one live ``app`` leaf.
+
+    The anti-vacuity companion. The gate above proves a property over the
+    leaves the token set selects; this proves the set still selects real
+    verbs. A token left behind by a rename silently narrows the guarantee, and
+    a set that drifted entirely out of the tree would let the gate above pass
+    over an empty selection while looking identical.
+    """
+
+    live_tokens = {leaf.split()[-1] for leaf in _app_leaves()}
+    dead = sorted(_APP_MUTATION_TOKENS - live_tokens)
+
+    assert dead == [], (
+        f"mutation token(s) naming no live app verb: {dead}. Each silently narrows the "
+        "criterion gate's coverage; remove it or restore the verb it was written for."
+    )
