@@ -99,6 +99,12 @@ Command:
 
 `collected 20 items`; exit line `============================= 20 passed in 10.45s =============================`; exit code 0. Run against HEAD `a868582fc26403720df2eb3d62954a7caacacb42`.
 
+Re-verified at the committed HEAD after landing: same command reports `collected 20
+items`, `============================= 20 passed in 9.62s =============================`,
+exit code 0, at HEAD `561388a9be7143987c119dbe87394aba65067a78` (parent
+`d53a0f0556a28a2926a9b77fb46db85906458323` — a peer commit landed between the first
+measurement and this one, touching none of the subject files).
+
 Every added assertion was mutation-checked in an in-process probe rebinding module
 state (no file edit, no transient red for peers):
 
