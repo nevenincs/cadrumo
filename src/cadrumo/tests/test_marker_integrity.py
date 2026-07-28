@@ -836,15 +836,25 @@ def _is_test_infrastructure_path(path: Path) -> bool:
 def _production_live_test_opt_in_violations() -> list[str]:
     """Return production modules that mention the pytest live-test opt-in token."""
     violations: list[str] = []
+    scanned = 0
     for root in _LIVE_TEST_OPT_IN_SCAN_ROOTS:
         for path in root.rglob("*.py"):
             relative = path.relative_to(_REPO_ROOT)
             if relative in _LIVE_TEST_OPT_IN_AUTHORITY_FILES or _is_test_infrastructure_path(path):
                 continue
+            scanned += 1
             source = path.read_text(encoding="utf-8")
             hits = [token for token in _LIVE_TEST_OPT_IN_TOKENS if token in source]
             if hits:
                 violations.append(f"{relative}: {', '.join(hits)}")
+    # Floor the production-source scan: a relocation of any scan root would empty
+    # this walk and pass identically to a clean tree, so the opt-in-leak guard would
+    # be silently vacuous.
+    assert scanned > 200, (
+        f"scanned only {scanned} production modules under the live-test-opt-in scan roots; the "
+        "scan corpus collapsed (a package relocation or rename), so an empty violation list "
+        "would mean 'nothing was checked' rather than 'nothing is wrong'"
+    )
     return violations
 
 

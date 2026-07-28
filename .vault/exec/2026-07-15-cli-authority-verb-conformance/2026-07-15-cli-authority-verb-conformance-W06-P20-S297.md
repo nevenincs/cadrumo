@@ -58,6 +58,7 @@ related:
 - Floor the runtime-text-file corpus of the retired-command-phrase gate, the two source-and-docs scan corpora of the retired-custody and retired-reset spelling gates, and the tracked-executable corpus of the single-jscpd-runner gate.
 - Fix a live vacuity defect the new floor exposed: the retired-command-phrase gate computed its repository root one directory too shallow, so it had been scanning zero files and passing vacuously since inception; correct the root depth and resolve the one benign match it then surfaced (a module docstring documenting the retired command path) by rewording the prose.
 - Mutation-check every floor by collapsing its corpus in a throwaway probe and confirming the gate fails on the floor rather than passing.
+- Second pass, the source-tests tranche: floor the production-source live-test-opt-in walk in the marker-integrity gate, and floor the outside-source-tree project-test walk in the skip/xfail gate; both mutation-checked. Read and exclude the remaining tranche candidates as already-controlled (sibling discovery floors, self-flooring bidirectional pins, structurally-non-empty constant unions, documented pre-flip dormancy, and detector controls over injected or synthetic input).
 
 ## Outcome
 
@@ -85,8 +86,33 @@ Excluded after reading (verified false positives of the heuristic):
 - Doc-privacy tracked/untracked ban gates: the root is `git rev-parse --show-toplevel` (raises on a non-repo) and the module carries planted-leak anti-tautology controls, so the corpus cannot silently empty.
 - Duplication coverage-read gate: a deliberate empty-tuple input to a property test, not a corpus scan.
 
+Second pass — the `src/cadrumo/tests/` tranche plus the `dev/audit` remainder.
+
+Command (the two floored gates in isolation):
+
+`uv run --no-sync pytest src/cadrumo/tests/test_marker_integrity.py::test_live_test_opt_in_token_is_not_used_by_production_aeat_live_paths src/cadrumo/tests/test_no_skip_xfail.py::test_project_tests_outside_source_tree_do_not_skip -m "unit or integration" -p no:cacheprovider -q`
+
+Collected and passed: 2 (non-zero). Exit line: `2 passed in 24.08s`. HEAD at run: `efefe0e8b594529bf0db784f8dc5b4134937147f`.
+
+Floored (2 gate functions across 2 files), each mutation-verified to fail on a collapsed corpus:
+
+- Marker-integrity gate: floor the production-source live-test-opt-in walk (`src/cadrumo/{adapters,application,core,entrypoints}`, 1015 modules, floor 200). Fires at 0 (mutation confirmed).
+- Skip/xfail gate: floor the outside-source-tree project-test walk (158 modules, floor 20); the sibling discovery guardrail floors only the in-tree corpus, not this one. Fires at 0 (mutation confirmed).
+
+Excluded after reading (already-controlled; ~41 candidates across this tranche):
+
+- Dev-path-isolation (11): detector silence proofs over injected synthetic roots, and the module already carries a live-scan vacuity floor.
+- Marker-integrity (9 of 10): floored via the sibling that asserts the shared module inventory reaches `src/cadrumo`, or self-flooring bidirectional pins that red on collapse via equality against a non-empty expected set, or fixture-based over that same floored inventory.
+- Mock-inventory (4) and broad-exception-raises (3): consume a fixture over the shared control-module inventory, floored by a sibling discovery guardrail.
+- Skip/xfail (2 of 4): fixture-based over the floored discovery corpus; one is a detector silence control over synthetic input.
+- Persisted-format-enrollment (3): one structurally floored by a non-empty constant union, one whose registry a sibling subscripts (loud on collapse), one documented as intentional pre-flip dormancy under the compatibility-lifecycle regime.
+- Import-hygiene (2): one pins the committed baseline value (not a scan); one is a detector silence control over planted modules.
+- Console-script-imports (2): a subprocess return-code equals-zero (not an empty collection); a fixed-path absence assertion.
+- Legal-attribution-screen (3): detector controls over synthetic catalogue entries.
+
 ## Notes
 
 - The retired-command-phrase gate was a live instance of the exact defect this Step hunts: its repository-root literal was one directory too shallow, so its two runtime surfaces resolved to non-existent paths and it scanned zero files while passing green. The new floor surfaced it; correcting the root then surfaced one benign match — a module docstring stating the old command path is retired — resolved by rewording so the literal no longer appears while the meaning is preserved. This is a production-source edit inside the campaign surface, made only after confirming no peer WIP on the file.
 - The floored consumers in the backend-boundary and architecture-boundaries gates inherit their floor from a called helper; the ad-hoc candidate scanner is function-scoped and cannot see an out-of-function floor, so it will still list those consumers. That is expected and is why the mutation-check, not the scanner, is the proof.
-- RESIDUE (Step left OPEN). The completed boundary is the corpus-scanning emptiness gates in the CLI/entrypoints surface plus the `dev/audit` single-jscpd-runner gate. NOT yet read or actioned: the remaining in-surface candidates under `src/cadrumo/tests/` (the canonical vacuity screen flags ~40 there, e.g. the marker-integrity, mock-inventory, monkeypatch-inventory, import-hygiene, no-skip-xfail, compatibility-lifecycle, and codebase-size-budget gates), under `src/cadrumo/application/user_profile/` and `bucket_maintenance/` (mostly behavioural recovery tests, likely false positives, unconfirmed), and the remaining `src/cadrumo/entrypoints/cli/tests/` conformance gates (json-schema, documented-command, determinism, registry-cli-live). Each needs the same read-then-classify pass before touching. A follow-up run should start from the canonical vacuity screen worklist (`python -m dev.audit.vacuity_screen`) intersected with the in-surface trees.
+- The second-pass full-module run of `test_marker_integrity.py` and `test_no_skip_xfail.py` also reported three failures in functions this Step did not edit — `test_module_pytestmark_is_first_test_statement`, `test_source_test_comments_and_docstrings_do_not_reference_campaign_metadata`, and `test_no_skip_or_xfail_shortcuts` (the last firing on two `pytest.skip` calls in the MCP stdio-lifetime test). Those files are committed at HEAD and outside this campaign's surface, and both floored gates pass in isolation, so the three are pre-existing peer/HEAD debt distinguished from this Step's work, not a regression it introduced.
+- RESIDUE (Step left OPEN). Completed so far: the corpus-scanning emptiness gates in the CLI/entrypoints surface (first pass), the genuine gates in the `src/cadrumo/tests/` tranche (marker-integrity, no-skip-xfail), and the `dev/audit` gates (duplication runner, legal-attribution screen). The remaining `src/cadrumo/tests/` candidates read this pass are excluded as already-controlled. NOT yet read or actioned: the in-surface candidates under `src/cadrumo/application/user_profile/` and `bucket_maintenance/` (mostly behavioural recovery tests, likely false positives, unconfirmed), and the remaining `src/cadrumo/entrypoints/cli/tests/` conformance gates from the ad-hoc scanner (json-schema, documented-command, determinism, registry-cli-live, ledger-evidence). Each needs the same read-then-classify pass before touching. A follow-up run should start from the ad-hoc scanner list intersected with those two trees, cross-checked against the canonical vacuity screen. The `dev/docs`, `dev/packaging`, and `dev/deploy` candidates are peer surfaces and explicitly out of this campaign's scope.
