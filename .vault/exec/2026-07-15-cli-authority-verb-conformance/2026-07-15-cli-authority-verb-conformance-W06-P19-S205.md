@@ -93,12 +93,12 @@ recording it satisfied on a substitute would be exactly the false green this
 campaign exists to remove. The structural scan under the sibling Step is a
 substitute for the DISCOVERY, not for this Step's own instrument.
 
-## Closed 2026-07-28 by operator direction: instrument withdrawn, not satisfied
+## Held OPEN 2026-07-28 by operator direction: instrument withdrawn
 
-CLOSED AS FORMALLY DEFERRED. The semantic sweep this row asks for was never
+HELD OPEN, NOT DEFERRED AND NOT SATISFIED. The semantic sweep this row asks for was never
 performed and is not claimed. The operator directed that the RAG dependency be
-dropped for this campaign, which settles a row that no amount of further work
-here could.
+dropped for this campaign AND that this row stay open, so it is carried as
+visibly unfinished rather than closed under a deferral label.
 
 Final measurement of the instrument, taken at close: **0 indexed source-code
 sections and 0 vault documents**, with no index generations reported at all.
@@ -126,5 +126,6 @@ across the ten named clusters was completed by this campaign. If a future
 campaign repairs the index, this row is the one to rerun, and its ten clusters
 are listed above.
 
-Closed at HEAD `90c03889b42a475ddac08693704a37f080350270` on operator direction, with the work unperformed and
-recorded as such.
+Held open at HEAD `90c03889b42a475ddac08693704a37f080350270` on operator direction. The work is unperformed, the row
+stays unchecked, and the campaign cannot report itself complete while it does -
+which is the accurate state.
