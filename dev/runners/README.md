@@ -156,6 +156,17 @@ cohort-seal failure rather than as a missing-tool error. Installing into the
 volume rather than the container's writable layer is the whole point: a
 recreated container keeps the tools.
 
+**Some gaps are apt packages, not binaries.** The dev lane runs `pyright`, whose
+bundled node needs `libatomic.so.1`; the stock image does not carry it, and
+without it the lane dies `exit 127` with `error while loading shared libraries:
+libatomic.so.1`. A shared library cannot live in the volume the way `gh` does,
+so it must be reinstalled whenever the container is rebuilt:
+
+```bash
+docker exec <container> sudo apt-get update -qq
+docker exec <container> sudo apt-get install -y libatomic1
+```
+
 Recreate a Linux runner like this (the volume already holds `config.sh`,
 `run.sh`, `.runner`, `.credentials`, and `.env`, so it does **not** re-register):
 
@@ -168,8 +179,14 @@ docker create --name cadrumo-runner-linux-2 --restart always \
   --entrypoint /home/runner/entry.sh ghcr.io/actions/actions-runner:latest
 ```
 
-Verify with `docker exec <container> bash -lc 'command -v gh && gh --version'`
-before trusting the runner with a release lane.
+Verify both classes before trusting the runner with a release lane — each gap
+costs a full smoke run to rediscover, and neither announces itself as a
+missing-dependency error:
+
+```bash
+docker exec <container> bash -lc 'command -v gh && gh --version'
+docker exec <container> bash -lc 'ldconfig -p | grep -q libatomic && echo libatomic ok'
+```
 
 Do **not** keep a broken container around as a rollback: `cleanup-linux.sh`
 runs `docker container prune` on every job completion, which removes *stopped*
