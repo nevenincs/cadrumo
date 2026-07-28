@@ -9,39 +9,6 @@ related:
   - "[[2026-07-15-cli-authority-verb-conformance-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace cli-authority-verb-conformance with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S158 and 2026-07-15-cli-authority-verb-conformance-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Prove canonical switch identity gating and removed sandbox-use unavailability and ## Scope
-
-- `src/cadrumo/entrypoints/mcp/tests/test_identity_gate.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Prove canonical switch identity gating and removed sandbox-use unavailability
 
 ## Scope
@@ -50,12 +17,33 @@ related:
 
 ## Description
 
-- Run the identity-gate tests and confirm canonical switch gating and the unavailability of the removed sandbox-use door.
+- Read the module for each half of the row separately rather than accepting a passing gate as covering both.
+- Confirm the canonical switch half is genuinely proven, across the pure logic and the wired server.
+- Find the sandbox-use half absent, with a positive control proving the search could have found it.
+- Assert the retired keys are absent from the identity-changing set and from the exposed surface.
+- Establish what the gate does with a retired key rather than only that it is gone.
+- Assert the fail-closed answer, and prove it is the gate answering by showing a confirmed session admits the same call.
 
 ## Outcome
 
-The named gate passes with fourteen tests, proving the canonical switch identity gating and the absence of the removed sandbox-use door. It is the behavioural counterpart to the reading of the gate module: the module shows the closed verb set, and these tests prove the re-arm and clear behaviour that set is supposed to produce.
+Half the row was proven and half was not. Both are now.
+
+The canonical switch half was already strong and was left untouched. The module drives the pure decision logic and the real built server, proves an unconfirmed first mutation is refused, that an identity read clears it, that every member of the identity-changing set re-arms it, and that the refusal is byte-identical on the direct and `execute` paths.
+
+Corrected claim: an earlier version of this record stated the gate proves "the absence of the removed sandbox-use door". It did not. The token `sandbox` appeared nowhere in the module before this change, established with a positive control on the same tool and path against a token the module does carry.
+
+Two cases were added. The first asserts the canonical switch is in the identity-changing set, is exposed, and is allowed by the gate, and only then asserts the retired sandbox-use keys are in neither the set nor the exposed surface. The control runs first deliberately: every remaining claim is an absence, and an emptied set or a descriptor build returning nothing would satisfy them all while proving nothing.
+
+The second case is the one worth keeping. Unavailability is a fact about today, so the gate's behaviour on a retired key is pinned as well: a key absent from the risk table classifies all-false, which means not read-only, so the gate treats a sandbox-use verb as an ordinary mutating call and refuses it on an unconfirmed session rather than waving it through by name as the retired design did. That property survives someone re-registering the verb without reading the gate module. The same case then shows a CONFIRMED session admits the identical call, which is what proves the refusal is the gate deciding rather than a dead key path refusing everything.
+
+Measured on the CLI side rather than assumed: no sandbox-use key is registered, and the surviving sandbox family is eight `config.profile.sandbox` verbs with no `use` among them.
+
+Each new assertion was mutation-proved by feeding it the canonical switch where a retired key is expected; both flipped to failure.
+
+`uv run --no-sync pytest src/cadrumo/entrypoints/mcp -m "unit or integration"` reported `285 passed, 6 warnings in 83.02s`. `ruff check`, `ruff format --check` and `ty check` all reported clean.
 
 ## Notes
 
-No code change was required by this Step. The implementing change had already landed under the successor plans this document was rescoped into, so the row was stale rather than unexecuted. The Step is closed as verified-satisfied against its named surface, per the Wave W06 instruction that each open W05 Step be verified against that surface before being checked and never inferred from the live command tree alone.
+The gate's own docstring already said login is what enters a sandbox, by its canonical label. That sentence is why the source row was genuinely satisfied and is also why this test row looked satisfied: the reasoning was recorded at the site, so a reader checking the module found the right answer and could reasonably assume the tests carried it. They did not, and prose at the implementation is not a gate.
+
+Not verified: whether any `config.profile.sandbox` verb changes which profile is active without passing through `config.login`. If one does, it would need to re-arm the gate and does not today. That was noticed while reading the identity-changing set and is outside this row, which is about the retired `use` door.

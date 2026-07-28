@@ -17,6 +17,7 @@ from typing import Any, cast
 import anyio
 import pytest
 
+from ....application.operator_surface import command_classification
 from .._dispatch import tool_name_for_command
 from .._harness_tools import HARNESS_LOAD_TOOL, WHOAMI_TOOL
 from .._identity_gate import (
@@ -118,6 +119,56 @@ def test_every_identity_read_command_clears_the_gate() -> None:
         state = SessionIdentityState()
         assert identity_gate_refusal(read_key, state=state) is None
         assert state.identity_confirmed is True
+
+
+#: The sandbox-entry keys the identity gate no longer knows about. Entering a
+#: sandbox now happens through the canonical ``config.login`` switch, which
+#: carries a ``sandbox:<name>`` label, so these have no registration and no
+#: place in the gate's identity-changing set.
+_RETIRED_SANDBOX_USE_KEYS: tuple[str, ...] = ("config.sandbox.use", "sandbox.use")
+
+
+def test_the_canonical_switch_carries_the_identity_change_not_a_sandbox_verb() -> None:
+    """The gate re-arms on the canonical switch, and knows no sandbox-use verb.
+
+    The positive control is stated first and is load-bearing: every claim
+    below is an absence, and a set that had been emptied, or a descriptor
+    build that returned nothing, would satisfy all of them while proving
+    nothing.
+    """
+
+    exposed = {descriptor.command_key for descriptor in build_tool_descriptors()}
+
+    assert "config.login" in ACTIVE_IDENTITY_CHANGING_COMMANDS
+    assert "config.login" in exposed
+    assert identity_gate_refusal("config.login", state=SessionIdentityState()) is None
+
+    for retired in _RETIRED_SANDBOX_USE_KEYS:
+        assert retired not in ACTIVE_IDENTITY_CHANGING_COMMANDS
+        assert retired not in exposed
+
+
+def test_a_reappearing_sandbox_use_verb_would_fail_closed_rather_than_pass() -> None:
+    """Unavailability is not the only guarantee worth holding, so the fallback is pinned.
+
+    A key absent from the risk table classifies all-false, which means NOT
+    read-only. The gate therefore treats a sandbox-use verb as an ordinary
+    mutating call and refuses it on an unconfirmed session, rather than
+    waving it through as it once did by name. This is the property that
+    survives someone re-registering the verb without re-reading this module.
+    """
+
+    for retired in _RETIRED_SANDBOX_USE_KEYS:
+        assert command_classification(retired).read_only is False
+        assert identity_gate_refusal(retired, state=SessionIdentityState()) is not None
+
+    # ...and it is a refusal on the UNCONFIRMED session specifically, not a
+    # blanket block: a confirmed session lets the same call through, so the
+    # assertion above is measuring the gate and not a dead key path.
+    confirmed = SessionIdentityState()
+    confirmed.record_identity_read()
+    for retired in _RETIRED_SANDBOX_USE_KEYS:
+        assert identity_gate_refusal(retired, state=confirmed) is None
 
 
 def test_elicitation_echo_names_the_label_never_empty() -> None:
