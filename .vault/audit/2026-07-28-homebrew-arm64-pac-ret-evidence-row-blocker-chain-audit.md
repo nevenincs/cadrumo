@@ -74,8 +74,14 @@ The service does report the shortfall honestly in its own search response, which
 
 - **The formula this feature exists to fix was unshippable as specified.** The guarded form failed the strict formula audit on the macOS leg, and it had never been audited before because the existing macOS evidence row was minted from a cohort predating the guard. Fixed in the generator, with the pin rewritten to anchor on the whole guard-opening line — the bare condition also appears inside the corrected form, so the obvious assertion would have passed while pinning nothing.
 
+### Corrected after review
+
+An earlier revision of this section claimed the local readiness signal needs hardening, on the grounds that no check binds the cohort's version to the declared one. **That recommendation is withdrawn as redundant.** The stale cohort IS refused, by a stronger rule one check earlier: `distribution-evidence-complete` compares the cohort's source COMMIT against the checked-out commit and blocks on mismatch. Commit identity subsumes version identity here — a version match could still pass against a foreign commit, whereas a commit match cannot carry a foreign version, because the cohort's version is derived from the wheel metadata built at that commit. Adding the version assertion would buy nothing, and adding a burned-version check to the local report would duplicate the guard that already runs at both CI gates.
+
+What survives is only a presentation point: the surface-consistency line reads PASS while naming a superseded version, which is confusing in isolation even though the report's overall verdict is correctly red for the right reason.
+
 ### Still open
 
 - The evidence row itself is not yet minted. What blocks it now is only the remaining run, not a structural refusal.
 
-- The local readiness signal remains misleading: no check binds the cohort's version to the declared one, so a green surface-consistency line can report a version the declarations have moved past. Worth one assertion; it is a signal defect, not a shipping hazard.
+- A cosmetic residue: 174 translation-catalogue headers still name the abandoned version. No gate binds them, and the next catalogue refresh regenerates them from the declared version, so they self-heal; they are not a release blocker.
