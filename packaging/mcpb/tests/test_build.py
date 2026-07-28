@@ -21,7 +21,12 @@ from typing import cast
 
 import pytest
 from dev.packaging.python_cohort import load_python_cohort
-from dev.packaging.smoke_core import _build_companion_wheels, _build_wheel, _run
+from dev.packaging.smoke_core import (
+    _build_companion_wheels,
+    _build_wheel,
+    _commit_defined_build_root,
+    _run,
+)
 from dev.packaging.smoke_sdist_core import _build_sdist
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
@@ -92,17 +97,24 @@ def real_cohort(tmp_path_factory: pytest.TempPathFactory) -> Path:
     work = tmp_path_factory.mktemp("mcpb-real-cohort")
     cohort_dir = work / "cohort"
     cohort_dir.mkdir()
-    root_wheel = _build_wheel(_REPO_ROOT, work, uv)
-    manuals_wheel, official_wheel = _build_companion_wheels(_REPO_ROOT, work, uv)
-    root_sdist = _build_sdist(_REPO_ROOT, work, uv)
+    # Build from a commit-defined root, not the working tree. In this shared
+    # worktree a peer's uncommitted edit would otherwise ride into the wheels,
+    # and the cohort this bundle binds would describe bytes matching no commit.
+    # On a clean checkout this IS the tree, so CI pays nothing. The wheel build
+    # still takes the real repository too, because its tracked-data queries need
+    # Git and the extract has no ``.git``.
+    build_root = _commit_defined_build_root(_REPO_ROOT, work)
+    root_wheel = _build_wheel(_REPO_ROOT, work, uv, build_root=build_root)
+    manuals_wheel, official_wheel = _build_companion_wheels(work, uv, build_root=build_root)
+    root_sdist = _build_sdist(work, uv, build_root=build_root)
     companion_sdists = work / "companion-sdists"
     _run(
         [uv, "build", "--sdist", "--out-dir", str(companion_sdists)],
-        cwd=_REPO_ROOT / "packaging" / "cadrumo_data_manuals",
+        cwd=build_root / "packaging" / "cadrumo_data_manuals",
     )
     _run(
         [uv, "build", "--sdist", "--out-dir", str(companion_sdists)],
-        cwd=_REPO_ROOT / "packaging" / "cadrumo_data_official",
+        cwd=build_root / "packaging" / "cadrumo_data_official",
     )
     manuals_sdist = next(companion_sdists.glob("cadrumo_data_manuals-*.tar.gz"))
     official_sdist = next(companion_sdists.glob("cadrumo_data_official-*.tar.gz"))
