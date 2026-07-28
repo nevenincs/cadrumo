@@ -87,6 +87,11 @@ Ship the python -m dev.registry.conformance Typer trio: report, coverage, audit 
 - [x] `P03.S54` - write and roll back the manifest through raw bytes so a refused stamp truly restores the file rather than rewriting every line ending, and assert the restoration on bytes instead of normalised text; `dev/registry/conformance/_stamp.py`.
 - [x] `P03.S55` - reconcile the reviewer column between the text and JSON surfaces so one key name never carries two different values, and refuse a reviewer value containing the tier separator so the qualified form stays unambiguously parseable; `dev/registry/conformance/manager.py`.
 - [x] `P03.S57` - compare a recorded baseline against the committed one and surface every counter moving in the weakening direction, and re-anchor the seed invariant to a freshly measured ceiling so the first genuine operator signoff does not red it; `dev/registry/conformance/manager.py`.
+- [x] `P03.S62` - write the conformance baseline through raw bytes as the manifest writer now does, closing the same line-ending defect in the second dev-side writer where the on-disk artefact the gate reads already differs from its committed bytes for every reader that is not git; `dev/registry/conformance/manager.py`.
+- [x] `P03.S63` - default the review date on a reviewer-only restatement so a re-attributed review cannot inherit the previous reviewer date and record a person as having reviewed on a day they did not; `dev/registry/conformance/_stamp.py`.
+- [x] `P03.S64` - read the declared review status off the compiled revision the writer already loads rather than off the manifest text, so the signoff guard stops depending on the fragment refusal it exists to complement; `dev/registry/conformance/_stamp.py`.
+- [x] `P03.S65` - give the stamp CLI command an injectable registry root so its own date defaulting and error translation can be exercised without writing to the shipped registry, and correct the coverage pragma that calls a reachable branch unreachable; `dev/registry/conformance/cli.py`.
+- [ ] `P03.S67` - refuse a stamp write against the bundled registry tree or require the root explicitly, closing the hazard that let a test mutation write a fabricated review into the shipped modelo manifest; `dev/registry/conformance/cli.py`.
 
 ### Phase `P04` - boundary hardening and gates
 
@@ -99,6 +104,7 @@ Make the one-way src/dev boundary enforceable, wire the CI gate, and regenerate 
 - [x] `P04.S27` - widen the dev-path literal detection to the realistic PROJECT_ROOT join, os.path.join, f-string and backslash forms, invert the test that pins the hole open, and mirror the missing shipped conftest case, remediating the review finding dev-path-literal-hole; `src/cadrumo/tests/test_dev_path_isolation.py`.
 - [x] `P04.S41` - consolidate the boundary detection onto the single hygiene scanner authority the ADR chose, deleting the duplicated inline import detector and its stale pending-ruling heading while keeping the injectable-root proof local; `src/cadrumo/tests/test_dev_path_isolation.py`.
 - [x] `P04.S56` - pin the two detector branches whose individual mutation flips nothing with fixtures for an interpolated device path and an interpolated mid-path segment, and either delete the two redundant branches or correct the docstring that credits one with protection a different mechanism delivers; `dev/import_hygiene_scan.py`.
+- [ ] `P04.S68` - write the two sibling audit baselines and the generated api stubs through explicit newline handling, and fix the stub drift check which reads with universal newlines so a translated stub compares equal to the writer that translated it; `dev/docs/apidocs/manager.py`.
 
 ### Phase `P05` - verification and closeout
 
@@ -115,6 +121,8 @@ Run the real gates, persist the first conformance report as an audit, and close 
 - [x] `P05.S52` - reconcile the registry revision diff test whose changed-formula expectation this campaign moved when it corrected the prorrata rounding on both M303 revisions, fixing whichever side is actually wrong rather than re-anchoring the test to make it pass; `src/cadrumo/application/registry/tests/test_diff.py`.
 - [x] `P05.S60` - widen or retire the single-filing-year M303 regression that pinned only the newer revision, which is what let the older revision keep returning a zero prorrata percentage undetected; `src/cadrumo/domain/calculations/registry/tests`.
 - [x] `P05.S61` - extract the verification-predicate concern out of the registry schema module, which now sits one line under its size ceiling so the next peer edit reds a gate they did not break; `src/cadrumo/domain/calculations/registry/_schema.py`.
+- [ ] `P05.S66` - take the whole verification-predicate concern out of the registry schema module in one commit that also owns and removes its size-budget baseline entry, since the concern is larger than the pinned band allows and half-taking it would scatter one concept across two modules; `src/cadrumo/domain/calculations/registry/_schema.py`.
+- [ ] `P05.S69` - measure and gate the tree-wide terminator drift where over a thousand tracked files carry on-disk bytes differing from their committed bytes while git diff stays silent, so the class is bounded rather than known only anecdotally; `dev/audit`.
 
 ## Parallelization
 
