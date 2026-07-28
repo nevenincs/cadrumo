@@ -130,6 +130,30 @@ conformant. No drift detected.` — no module was added, so no stub moved.
 
 ## Notes
 
+**Correction: this Step closed without one of its two stated preconditions.**
+The originating Step row conditions the widening on it running "once the
+malformed payload AND the casilla 44 modelling have landed". Only the first had.
+The malformed payload was corrected by the preceding renaming Step, which is
+recorded above. The casilla 44 modelling — the M303 regularización prorrata
+cuota casilla, which is still an input rather than a computed value carrying the
+AEAT manual figure as its oracle expectation — never landed during this Step and
+is now tracked as its own Step. This record described neither fact, so a reader
+would take both preconditions as satisfied.
+
+It was nonetheless safe to proceed, for a reason this record already evidences
+but never connects to the precondition. The preconditions exist so the widening
+cannot move an attribution while the corpus is still mid-correction. The
+widening moved nothing: the full fold was dumped before and after and the two
+dumps are byte-identical, so no payload changed attribution, no finding
+appeared, and no gate changed colour. A change proven to be a no-op against the
+live corpus cannot be contingent on a corpus correction that has not happened —
+the casilla 44 modelling adds a declared grounding, which the fold reads, but it
+cannot retroactively alter how a payload that never moved was attributed.
+
+What this Step could not do without the missing precondition is prove the
+widening handles the casilla 44 grounding once it exists. That is the honest
+residual, and it belongs to the Step that lands the modelling.
+
 **Discovery waiver.** The mandatory semantic-discovery probe was explicitly
 waived by the operator for this campaign: the semantic index is broken and its
 service is stopped, with a standing instruction not to start, restart, reindex

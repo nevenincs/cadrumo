@@ -83,7 +83,30 @@ facade already exposed what the import wanted.
 
 One failure remains and is genuinely another campaign's: a module marker declared
 after an assignment in a docs-sequences test. It is a one-line move available to
-its owner, and this campaign's half of that gate is clear.
+its owner.
+
+**Correction.** This record originally closed the sentence above with "and this
+campaign's half of that gate is clear." That was false when written. The
+repository-wide privacy lint was red at the time on eight lines of this
+campaign's own conformance CLI test module, which carried the operator's real
+name in tracked source — introduced by this campaign's commit and carried
+forward by four later ones. It is owner-caused, it was not among the five
+regressions this record enumerates as absorbed, and it reds the per-push lane
+rather than a manual one, so it was the most consequential failure outstanding
+and the record named none of it.
+
+The reason the triage missed it is structural and worth stating rather than
+excusing. The scoped suites were selected by the trees this campaign EDITED. The
+privacy gate does not live in any of them; it lives in the quality tree and
+scans the whole repository, so a gate reddened by this campaign's edits but
+resident elsewhere fell outside the selection entirely. The full-tree gate that
+did run was collect-only, which imports every module and asserts nothing, so it
+could not see an assertion failure either. Between the two, a tree-wide gate
+that reads a file you changed has no route into a triage keyed on where you
+changed it.
+
+The leak was found later by the campaign-close honesty review and is closed
+under a separate Step.
 
 A methodological error worth recording. The first capture piped pytest through
 `tail` before the background file was written, so the log carried only the summary
