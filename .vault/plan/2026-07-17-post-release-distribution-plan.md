@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#post-release-distribution'
 date: '2026-07-17'
-modified: '2026-07-25'
+modified: '2026-07-28'
 tier: L2
 related:
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
@@ -14,6 +14,16 @@ related:
   - '[[2026-07-19-post-release-distribution-reference]]'
   - '[[2026-07-17-post-release-distribution-audit]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `post-release-distribution` plan
 
@@ -75,7 +85,7 @@ Track every finding the close honesty review raised as a step with a verificatio
 - [x] `P06.S27` - Supersede the topology ADR through the pipeline rather than the in-place rewrite already landed, the superseding record must answer the two deleted objections, sibling-serving answered by the shared repo and no-precedent answered by verda-cloud/homebrew-tap carrying Formula and bucket together, and must reconcile the scoop-runner-topology ADR explicitly as unaffected because it rules on which runner executes the lane not where manifests live. Ownership is with account-distribution-lead if its account-wide ruling subsumes the cadrumo scope, asked 2026-07-25 and awaiting reply. GATE, vault check all passes and the superseded record carries superseded_by; `.vault/adr`.
 - [x] `P06.S28` - CORRECTED 2026-07-25. The closure reports declared the TOPOLOGY work complete, which it is and which was reviewed, but did not scope that claim, so they read as a claim over the whole post-release-distribution plan, which is not complete. The plan stands at 12 of 35 with 23 open. Of those 23, seven are operator-gated, three need a host or runner the worktree does not have, nine chain to the operator-held publish at P03.S13, and four are agent work, the honesty-review rows in this phase. The remainder is therefore overwhelmingly operator-blocked rather than incomplete engineering, and no closure claim may be made over the plan until those close or are formally deferred. GATE, this correction is recorded and vault plan status is the ratio any future claim must cite; `.vault/plan/2026-07-17-post-release-distribution-plan.md`.
 - [x] `P06.S29` - Re-audit the six step annotations the review flagged, three claim partial unblocking where only a redundant clause was struck and three moved their blocker from private to nonexistent, restate each as the blocker it actually carries today. GATE, every P01 and P03 row names a blocker that is true at the time of reading; `.vault/plan/2026-07-17-post-release-distribution-plan.md`.
-- [ ] `P06.S30` - DONE 2026-07-25. Swept the plan rows naming retired distribution variables against the live variable set, which is exactly HOMEBREW_TAP_REPO and CLAUDE_MARKETPLACE_REPO. P04.S23 named the retired CADRUMO_MARKETPLACE_REPO and now names the live one. P03.S13 additionally asserted that the scoop, homebrew and marketplace variables and tokens are all set, which is false, Scoop needs neither and the two renamed secrets do not exist yet because secrets cannot be renamed, so that row now names the two missing secrets as a remaining operator precondition. GATE, no plan row outside this one names a variable absent from the live repository variable set; `.vault/plan/2026-07-17-post-release-distribution-plan.md`.
+- [x] `P06.S30` - DONE 2026-07-25. Swept the plan rows naming retired distribution variables against the live variable set, which is exactly HOMEBREW_TAP_REPO and CLAUDE_MARKETPLACE_REPO. P04.S23 named the retired CADRUMO_MARKETPLACE_REPO and now names the live one. P03.S13 additionally asserted that the scoop, homebrew and marketplace variables and tokens are all set, which is false, Scoop needs neither and the two renamed secrets do not exist yet because secrets cannot be renamed, so that row now names the two missing secrets as a remaining operator precondition. GATE, no plan row outside this one names a variable absent from the live repository variable set; `.vault/plan/2026-07-17-post-release-distribution-plan.md`.
 - [x] `P06.S31` - DONE 7d20b2d984, the docs-claims gate now measures, a positive control asserts every pattern against a must-match and a must-not-match string and a guard requires a new pattern to arrive with its own cases, the retired tap pattern fails 2 of 4 control cases so the control discriminates. GATE, uv run --no-sync pytest dev/docs/tests/test_distribution_claims.py collects 12 and passes; `dev/docs/tests/test_distribution_claims.py`.
 - [x] `P06.S32` - DONE 7d20b2d984, the three tap-pattern over-broadenings are closed, scanning moved per line so a cross-newline match cannot form and the regression document genuinely reproduces the whole-file match, the pattern re-anchored on the account so a third-party tap is not a claim, and a negation preceding the command marks a disclaimer. GATE, the positive control carries all three strings as must-not-match cases; `dev/docs/tests/test_distribution_claims.py`.
 - [x] `P06.S33` - DONE 7d20b2d984, marketplace publish is atomic, the whole cohort validates before any mutation so a refusal leaves the tree byte-identical, and the multi-plugin case that was entirely uncovered now has both a refusal test and a success test. GATE, the pre-fix loop leaves a torn tree so the atomicity test discriminates; `dev/packaging/marketplace_publish.py`.

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#scoop-runner-topology'
 date: '2026-07-22'
-modified: '2026-07-22'
+modified: '2026-07-28'
 related:
   - "[[2026-07-21-post-release-distribution-v0-2-1-publication-audit]]"
 ---
@@ -92,3 +92,34 @@ the runner service; this is the sole remaining gate on the row.
   new ADR.
 - Until the operator provisions the runner, the row stays honestly unminted —
   no SDK-driven or faked evidence is admissible.
+
+### Reconciliation with the account distribution standard
+
+Two accepted records name Scoop, and a reader meeting both should not have to
+derive their relationship. `2026-07-25-account-distribution-standard-adr` is
+**unaffected by this record, and this record is unaffected by it**, because the
+two decide disjoint axes.
+
+This record decides the **execution host** of the Scoop evidence lane: the
+`scoop-windows-x86-64` row is minted on a native Windows self-hosted runner
+under a dedicated non-admin user, and the shared Docker daemon stays in
+Linux-container mode so the standing Linux runners are untouched. It says
+nothing about where a Scoop manifest is published.
+
+The account distribution standard decides the **artefact destination**: one
+shared account repository, `nevenincs/homebrew-tap`, serves `Formula/` for
+Homebrew and `bucket/` for Scoop, so a user runs one bucket-add ever regardless
+of product count. It says nothing about which machine executes an acquisition.
+
+Neither decision constrains the other. Changing the publication target does not
+change which host can run a Scoop install, and changing the runner topology does
+not move a manifest. The orthogonality is the same one the standard states
+internally — a repository name and a bucket directory are disjoint constraints —
+extended one axis further to the runner that consumes them.
+
+Where the two axes do meet is at a single downstream gate: a green
+`scoop-windows-x86-64` acquisition row requires **both** an execution host this
+record provisions **and** a published `bucket/cadrumo.json` in the shared
+repository the standard names. Either one missing leaves the row honestly
+unminted. That is a conjunction of two independent preconditions, not a conflict
+between two rulings, and neither record supersedes any part of the other.
