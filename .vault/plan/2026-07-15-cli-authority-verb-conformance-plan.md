@@ -473,6 +473,7 @@ Run the formal code-review skill, reconcile findings, and prove every accepted A
 - [x] `W06.P20.S295` - Closed as unnecessary, a peer fix bridged the payload-name filter by importing the wizard result classes into a walked module, so enrolment is filename-filtered still and the divergence ended when that bridge landed; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
 - [x] `W06.P20.S296` - Guard the load-bearing wizard schema re-exports against a tidy-up deletion, since the re-export idiom looks redundant and removing it silently drops both profile verbs from the MCP surface; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
 - [ ] `W06.P20.S297` - Give every corpus-scanning emptiness gate a non-zero subject floor, or prove per gate that its corpus cannot silently empty, since 87 in-surface gates assert an offender list empty without proving they scanned anything and a path rename would green them while the forbidden condition survives; `src/cadrumo/; dev/`.
+- [x] `W06.P20.S298` - Remove the two feature-owned size-budget regressions this campaign introduced, the payload module pushed to 1251 by the wizard-bridge guard comment and the config help builder pushed to 195 by the custody and audit rows, since the campaign close claims no feature-owned regression exists; `src/cadrumo/entrypoints/cli/_config_payloads.py; src/cadrumo/application/operator_surface/_help.py`.
 
 ## Description
 

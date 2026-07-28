@@ -790,10 +790,9 @@ class BucketHistoryResult(OutputSchema):
 # ``config.profile.create`` / ``config.profile.edit`` are declared at their real
 # producer in :mod:`application.wizard._results`, which sits below this package in
 # the hexagonal direction and cannot construct a class defined up here. They
-# register through the sibling :mod:`_wizard_payloads` module (see the header note
-# above), which the payload-discovery walk imports; there is NO wizard re-export in
-# THIS module — it was moved out so the ``config`` group no longer pulled the
-# wizard dependency tail into every ``config`` verb at group-resolution time.
+# register through the sibling :mod:`_wizard_payloads`, which the payload walk
+# imports. There is NO wizard re-export HERE: it moved out so the ``config``
+# group stopped pulling the wizard dependency tail into every ``config`` verb.
 
 
 @register_schema("config.profile.export")
