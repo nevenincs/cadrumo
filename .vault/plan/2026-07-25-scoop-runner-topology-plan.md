@@ -39,6 +39,34 @@ removing everything it introduced. Nothing about that needs a container: Scoop
 is user-scope and needs no admin. What it does need is a Windows user profile
 that is not shared with interactive work, on a machine the fleet already owns.
 
+What the two host rows actually require, measured on the workstation on
+2026-07-28 rather than inferred.
+
+The existing Windows runner for this repository is not a shortcut. It runs
+interactively under the operator's own account, and that account is a member of
+Administrators, so relabelling it would be refused by the lane's own privilege
+preflight. No dedicated non-admin user exists yet. Creating one needs
+administrator rights, which an agent session on this box does not have and
+should not take.
+
+The provisioning is three moves. Create a standard local user for the lane and
+do not add it to Administrators. Sign in as that user once so the profile
+materialises, and install Scoop into it, which is itself a no-admin user-scope
+install. Then register a runner against this repository under that user with
+the lane's label, minting the registration token from the repository's own
+Actions API.
+
+Whether the runner is registered as a service under that account or run
+interactively in that user's session is the operator's call. The lane does not
+inspect how the runner was installed. It reads the identity it actually runs
+as, so a wrong choice surfaces as a named refusal on the first dispatch rather
+than as silently privileged evidence.
+
+The Windows Sandbox row is unrelated to all of the above and serves a different
+proof. It needs administrator rights and a reboot, and the feature's state
+cannot even be read from an unelevated session, so it is reported here as
+unverified rather than as disabled.
+
 ## Steps
 
 ## Parallelization
