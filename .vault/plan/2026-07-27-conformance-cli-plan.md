@@ -67,6 +67,8 @@ Lift the test-trapped conformance facts into importable typed libraries under sr
 - [x] `P02.S45` - bind the registry prorrata percentage formula to the domain prorrata function with a parity gate over ratios that discriminate between the two roundings, closing the two-authorities condition that hid the rounding defect; `src/cadrumo/domain/iva/_prorrata.py`.
 - [x] `P02.S47` - reconcile the zero-volume prorrata branch between the two M303 revisions, where the older revision returns zero and would zero every deduction for a fully-taxable trader who declared no prorrata volumes, grounding the correction as the newer revision already does; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes`.
 - [x] `P02.S48` - correct the prorrata module docstring and rounding comment which cite the autoconsumo article rather than the article that actually establishes the formula and the upward rounding, so a reader sent to it finds the rule; `src/cadrumo/domain/iva/_prorrata.py`.
+- [ ] `P02.S58` - correct the especial-prorrata mandatory predicate which applies a strict greater-than where the law says exceeds by ten percent or more, so exact equality currently fails to trip a mandatory regime switch; `src/cadrumo/domain/iva/_prorrata.py`.
+- [ ] `P02.S59` - declare the full-right-to-deduct article on the prorrata formula legal refs of both M303 revisions rather than only on the enclosing construct, as a coherent two-revision change; `src/cadrumo/_data/registry/aeat/modelos/303`.
 
 ### Phase `P03` - conformance governance CLI in dev
 
@@ -81,6 +83,10 @@ Ship the python -m dev.registry.conformance Typer trio: report, coverage, audit 
 - [x] `P03.S39` - coerce the review status at the stamp writer function boundary so handing it the core enum member raises instead of writing an operator signoff, and prove the refusal leaves the manifest byte-identical; `dev/registry/conformance/_stamp.py`.
 - [x] `P03.S42` - gate the operator backlog rather than the pending backlog by adding a shrink-only ceiling on revisions lacking operator review, so the one number CI protects cannot be moved by an act the tool can perform; `dev/registry/conformance/manager.py`.
 - [x] `P03.S46` - render the reviewer attribution with its review tier attached so an agent-tier review naming a person cannot be read as an operator signoff when scanning rows; `dev/registry/conformance/manager.py`.
+- [x] `P03.S53` - apply the vocabulary refusal to the effective review status resolved from the manifest, not only the requested one, so an agent cannot re-attribute an existing operator signoff to itself while leaving an authorship-only write legal; `dev/registry/conformance/_stamp.py`.
+- [ ] `P03.S54` - write and roll back the manifest through raw bytes so a refused stamp truly restores the file rather than rewriting every line ending, and assert the restoration on bytes instead of normalised text; `dev/registry/conformance/_stamp.py`.
+- [ ] `P03.S55` - reconcile the reviewer column between the text and JSON surfaces so one key name never carries two different values, and refuse a reviewer value containing the tier separator so the qualified form stays unambiguously parseable; `dev/registry/conformance/manager.py`.
+- [ ] `P03.S57` - compare a recorded baseline against the committed one and surface every counter moving in the weakening direction, and re-anchor the seed invariant to a freshly measured ceiling so the first genuine operator signoff does not red it; `dev/registry/conformance/manager.py`.
 
 ### Phase `P04` - boundary hardening and gates
 
@@ -92,6 +98,7 @@ Make the one-way src/dev boundary enforceable, wire the CI gate, and regenerate 
 - [x] `P04.S21` - wire a conformance recipe invoking python -m dev.registry.conformance report and audit into the task runner; `justfile`.
 - [x] `P04.S27` - widen the dev-path literal detection to the realistic PROJECT_ROOT join, os.path.join, f-string and backslash forms, invert the test that pins the hole open, and mirror the missing shipped conftest case, remediating the review finding dev-path-literal-hole; `src/cadrumo/tests/test_dev_path_isolation.py`.
 - [x] `P04.S41` - consolidate the boundary detection onto the single hygiene scanner authority the ADR chose, deleting the duplicated inline import detector and its stale pending-ruling heading while keeping the injectable-root proof local; `src/cadrumo/tests/test_dev_path_isolation.py`.
+- [ ] `P04.S56` - pin the two detector branches whose individual mutation flips nothing with fixtures for an interpolated device path and an interpolated mid-path segment, and either delete the two redundant branches or correct the docstring that credits one with protection a different mechanism delivers; `dev/import_hygiene_scan.py`.
 
 ### Phase `P05` - verification and closeout
 
@@ -102,10 +109,11 @@ Run the real gates, persist the first conformance report as an audit, and close 
 - [ ] `P05.S24` - run the fresh-context campaign-close honesty review and track every surfaced item as a new step or a formally deferred follow-up; `.vault/audit`.
 - [x] `P05.S32` - amend the ADR boundary wording to name every wheel-shipped module under src/cadrumo and rule the two open questions on single-versus-dual boundary-detector authority and on whether the filing-year grounding resolver belongs on the public registry facade; `.vault/adr`.
 - [x] `P05.S37` - extend the fragment placement refusal to the remaining legally load-bearing revision scalars legal_refs, orden_aplicabilidad and valid_to, closing the last instance of the readability hazard the governance refusal proved worth closing; `src/cadrumo/domain/calculations/registry/_loader.py`.
-- [ ] `P05.S49` - absorb the three tree-wide gate regressions this campaign caused, moving the module marker above the assignment, replacing the bare encoding literal with the shared constant, and extracting a cohesive concern out of each module that broke its size ceiling rather than lifting the ceiling; `src/cadrumo/domain/calculations/registry/_schema.py`.
+- [x] `P05.S49` - absorb the three tree-wide gate regressions this campaign caused, moving the module marker above the assignment, replacing the bare encoding literal with the shared constant, and extracting a cohesive concern out of each module that broke its size ceiling rather than lifting the ceiling; `src/cadrumo/domain/calculations/registry/_schema.py`.
 - [x] `P05.S50` - eliminate the monkeypatch machinery from the burned-version ledger tests and the registry snapshot freshness tests without weakening what either test proves, honouring the recorded trap that a threaded authority parameter lets a naive cache key stop colliding so the behavioural test passes with the defect present; `src/cadrumo/application/filing/tests/test_registry_snapshot_freshness.py`.
 - [x] `P05.S51` - eliminate the fake-named bindings from the sanitizer residual-identity test, reconcile the test-debt baseline the same test broke, and replace the bare encoding literal in the legal attribution screen; `src/cadrumo/adapters/inbound/sanitizer/tests`.
 - [ ] `P05.S52` - reconcile the registry revision diff test whose changed-formula expectation this campaign moved when it corrected the prorrata rounding on both M303 revisions, fixing whichever side is actually wrong rather than re-anchoring the test to make it pass; `src/cadrumo/application/registry/tests/test_diff.py`.
+- [ ] `P05.S60` - widen or retire the single-filing-year M303 regression that pinned only the newer revision, which is what let the older revision keep returning a zero prorrata percentage undetected; `src/cadrumo/domain/calculations/registry/tests`.
 
 ## Parallelization
 
