@@ -40,6 +40,18 @@ def test_scoop_workflow_declares_the_native_release_row() -> None:
     assert "Get-Command scoop" in preflight["run"]
     assert 'foreach ($required in @("apps", "buckets", "shims"))' in preflight["run"]
     assert "WindowsBuiltInRole]::Administrator" in preflight["run"]
+    # An elevation check alone is not the privilege gate this topology needs:
+    # under UAC an administrator account runs with a filtered token that reports
+    # IsInRole false, so membership must be read from the group itself. The
+    # well-known SID keeps that read locale-independent, and a failure to
+    # determine membership must refuse rather than assume the safe answer.
+    assert 'Get-LocalGroupMember -SID "S-1-5-32-544"' in preflight["run"]
+    assert "refusing rather than assuming it is not" in preflight["run"]
+    # Pin the whole guard, not the expressions it is built from. Both arms also
+    # appear in the refusal message that explains which one fired, so pinning
+    # them individually is satisfied by that message alone and leaves the guard
+    # itself defeatable in silence.
+    assert "if ($memberSid -eq $identity.User.Value -or $tokenGroups -contains $memberSid) {" in preflight["run"]
     # The daemon stays in Linux-container mode for the standing Linux runners,
     # so a reintroduced docker-mode gate would refuse this lane forever.
     assert "docker" not in preflight["run"]

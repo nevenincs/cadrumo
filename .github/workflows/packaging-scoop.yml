@@ -99,16 +99,51 @@ jobs:
           }
           # The container previously supplied the privilege boundary. Natively
           # that boundary IS the dedicated low-privilege runner user, so an
-          # elevated lane is a topology error and must refuse rather than
-          # silently mint evidence from an administrator profile.
+          # administrator lane is a topology error and must refuse rather than
+          # silently mint evidence from a privileged profile.
           $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
           $principal = New-Object Security.Principal.WindowsPrincipal($identity)
           if ($principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
             throw (
               "the Scoop lane must run as the dedicated non-admin runner user; " +
-              "got elevated identity $($identity.Name). Re-install the runner " +
-              "service under a standard local user."
+              "got ELEVATED identity $($identity.Name). Re-install the runner " +
+              "under a standard local user."
             )
+          }
+          # IsInRole alone is NOT the check the topology needs. Under UAC an
+          # administrator account runs with a filtered token that reports
+          # IsInRole false and does not even carry the Administrators SID, so
+          # the clause above passes for a full administrator and would let the
+          # lane mint evidence from exactly the profile it means to exclude.
+          # Membership is therefore read from the group itself, by well-known
+          # SID so the check does not depend on the machine's locale, and any
+          # failure to determine membership refuses: a privilege gate that
+          # cannot read the privilege must not assume the safe answer.
+          try {
+            $administrators = @(Get-LocalGroupMember -SID "S-1-5-32-544" -ErrorAction Stop)
+          }
+          catch {
+            throw (
+              "cannot determine whether the lane user is an administrator " +
+              "($($_.Exception.Message)); refusing rather than assuming it is not"
+            )
+          }
+          $tokenGroups = @($identity.Groups | ForEach-Object { $_.Value })
+          foreach ($member in $administrators) {
+            $memberSid = [string]$member.SID.Value
+            if ($memberSid -eq $identity.User.Value -or $tokenGroups -contains $memberSid) {
+              $how = if ($memberSid -eq $identity.User.Value) {
+                "directly"
+              } else {
+                "through the group $($member.Name)"
+              }
+              throw (
+                "the Scoop lane must run as the dedicated non-admin runner " +
+                "user; $($identity.Name) is an administrator $how. Create a " +
+                "standard local user for the lane and re-install the runner " +
+                "under it."
+              )
+            }
           }
 
       - name: Verify source workflow identity
