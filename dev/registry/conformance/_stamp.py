@@ -22,6 +22,24 @@ the governing decision explicitly keeps legal. The friction is the feature:
 operator signoff stays a human act on the file, and this tool cannot manufacture
 one.
 
+The narrowing is ENFORCED, not annotated
+----------------------------------------
+
+The paragraph above is a claim about what this module refuses, so it is only
+true if something refuses. For a while nothing did: the narrowed vocabulary was
+a TYPE HINT on :func:`stamp_revision` and every line downstream read
+``.value`` off whatever object it was handed. The core
+:class:`~cadrumo.core.RevisionReviewStatus` is one import away, carries a
+``.value``, and is the enum a caller reaches for first because it lives in
+``cadrumo.core`` — so a three-line driver written to spare somebody ninety
+manifest edits wrote a completed operator signoff naming an agent, and neither
+the schema probe nor the post-write reload could object, because the SCHEMA
+legitimately accepts ``operator_reviewed``. Only this CLI refuses it, so this
+CLI must refuse it where values actually arrive. :func:`stamp_revision` now
+coerces the requested status through :class:`StampableReviewStatus` before any
+other work, and the refusal names the value and the path a real signoff takes.
+A type hint governs a type checker; the coercion governs the file on disk.
+
 Why the stamp is manifest-only
 ------------------------------
 
@@ -98,6 +116,13 @@ class StampableReviewStatus(StrEnum):
     deliberate absence of ``operator_reviewed``. The narrowing is what makes the
     CLI's accepted-value list honest at the parse boundary — offering a choice
     the tool would always refuse teaches nothing.
+
+    Because the values ARE the core values, this class is also the coercion
+    :func:`stamp_revision` applies to whatever it is handed: a caller passing
+    the core ``AGENT_REVIEWED`` member, or the bare string, resolves to the
+    member here and is served, while ``operator_reviewed`` in any spelling
+    raises. The refusal therefore keys on the VALUE a manifest would carry, not
+    on which enum class the caller happened to import.
     """
 
     PENDING_REVIEW = "pending_review"
@@ -293,13 +318,15 @@ def stamp_revision(
         The :class:`StampResult` describing what changed.
 
     Raises:
-        StampError: Nothing was supplied to write, an authorship claim was
-            supplied together with its clearing, an identity names nobody, the
-            revision is not a compiled record in the tree, the resulting stamp
-            is one the schema refuses, or the written tree no longer loads. In
-            the last case the manifest is restored to its previous bytes before
-            the error is raised.
+        StampError: The requested review status is outside the vocabulary this
+            CLI may write, nothing was supplied to write, an authorship claim
+            was supplied together with its clearing, an identity names nobody,
+            the revision is not a compiled record in the tree, the resulting
+            stamp is one the schema refuses, or the written tree no longer
+            loads. In the last case the manifest is restored to its previous
+            bytes before the error is raised.
     """
+    review_status = _stampable_status(review_status)
     if engineered_by is not None and clear_engineered_by:
         raise StampError("engineered_by and clear_engineered_by contradict each other; supply one")
     if not any((engineered_by, clear_engineered_by, review_status, reviewed_by, reviewed_at)):
@@ -345,6 +372,42 @@ def stamp_revision(
         written=rendered,
         removed=removed,
     )
+
+
+def _stampable_status(value: StampableReviewStatus | None) -> StampableReviewStatus | None:
+    """Coerce a requested review status into the vocabulary this CLI may WRITE.
+
+    The first statement of :func:`stamp_revision`, because it is the one
+    argument whose annotation is load-bearing rather than descriptive. Every
+    other refusal in this module protects the FILE — that it stays valid TOML,
+    that the loader still accepts it, that a reviewer is not recorded against a
+    review the status denies. This one protects the CLAIM, and the schema
+    cannot help: ``operator_reviewed`` is a legal registry value, so a manifest
+    carrying it compiles cleanly and the post-write reload passes. The refusal
+    exists only here, which is why it must be a statement and not a type hint.
+
+    Coercion rather than an identity check on purpose. The narrowed enum's
+    values are byte-identical to the core ones, so the core ``AGENT_REVIEWED``
+    member and the bare string both resolve to a served member; only the value
+    a manifest would actually carry decides. A check like
+    ``isinstance(value, StampableReviewStatus)`` would instead refuse a
+    perfectly honest caller for importing the other enum, and teach them to
+    reach past this function rather than through it.
+    """
+    if value is None:
+        return None
+    try:
+        return StampableReviewStatus(value)
+    except ValueError as exc:
+        accepted = ", ".join(repr(member.value) for member in StampableReviewStatus)
+        raise StampError(
+            f"refusing to write review_status {value!r}: this CLI writes only {accepted}. "
+            f"{RevisionReviewStatus.OPERATOR_REVIEWED.value!r} is absent by decision, not by "
+            "omission: this CLI is agent-driven, and an agent recording a human's signoff is the "
+            "dishonesty the conformance surface exists to detect. Passing the core "
+            "RevisionReviewStatus member does not make the claim true. The operator signs off by "
+            "editing the revision's revision.toml directly, which the registry schema accepts.",
+        ) from exc
 
 
 def _named_identity(value: str | None, field: str) -> str | None:

@@ -418,6 +418,93 @@ def test_the_cli_refuses_operator_reviewed_and_names_what_it_accepts() -> None:
     assert "agent_reviewed" in result.output
 
 
+def test_stamp_refuses_the_core_operator_reviewed_member_handed_past_the_annotation(
+    registry_copy: Path,
+) -> None:
+    """The narrowing must survive a caller who imports the OTHER enum.
+
+    ``StampableReviewStatus`` narrows the vocabulary in the CLI's parse layer,
+    but ``stamp_revision`` is exported and ``RevisionReviewStatus`` is one
+    import away in ``cadrumo.core`` — the enum a driver script reaches for
+    first. While the narrowing was only a type hint this call SUCCEEDED and left
+    a manifest claiming a completed operator signoff naming an agent, and
+    nothing downstream could object: the registry schema legitimately accepts
+    ``operator_reviewed``, so the pre-write probe and the post-write reload both
+    passed. The refusal exists only at this boundary, so only this boundary can
+    prove it.
+
+    The byte-identical assertion is the load-bearing half. A refusal that raised
+    after rewriting the manifest would leave the false claim on disk and satisfy
+    a ``pytest.raises`` alone.
+    """
+    manifest = _manifest_of(registry_copy)
+    before = manifest.read_bytes()
+
+    with pytest.raises(StampError, match="refusing to write review_status"):
+        stamp_revision(
+            _STAMPED_MODELO,
+            _STAMPED_REVISION,
+            review_status=RevisionReviewStatus.OPERATOR_REVIEWED,  # type: ignore[arg-type]
+            reviewed_by="agent:conformance-cli-gate",
+            reviewed_at=date(2026, 7, 28),
+            registry_root=registry_copy,
+        )
+
+    assert manifest.read_bytes() == before
+    revision = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert revision.review_status is RevisionReviewStatus.PENDING_REVIEW
+    assert revision.reviewed_by is None
+
+
+def test_the_stamp_refusal_keys_on_the_value_not_on_which_enum_was_imported(
+    registry_copy: Path,
+) -> None:
+    """The paired half: the SAME core enum's agent member is served, not refused.
+
+    Without this, a coercion that rejected every ``RevisionReviewStatus`` member
+    outright would satisfy the refusal test above while breaking every honest
+    caller, and no assertion in this file would notice. What must be refused is
+    the CLAIM a manifest would carry, never the class the caller imported.
+    """
+    result = stamp_revision(
+        _STAMPED_MODELO,
+        _STAMPED_REVISION,
+        review_status=RevisionReviewStatus.AGENT_REVIEWED,  # type: ignore[arg-type]
+        reviewed_by="agent:conformance-cli-gate",
+        reviewed_at=date(2026, 7, 28),
+        registry_root=registry_copy,
+    )
+
+    assert result.written["review_status"] == '"agent_reviewed"'
+    revision = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert revision.review_status is RevisionReviewStatus.AGENT_REVIEWED
+
+
+@pytest.mark.parametrize("spelling", ["operator_reviewed", "OPERATOR_REVIEWED", "reviewed", ""])
+def test_stamp_refuses_an_out_of_vocabulary_status_string_without_touching_the_manifest(
+    registry_copy: Path,
+    spelling: str,
+) -> None:
+    """A bare string reaches the same coercion, and a wrong one never reaches disk.
+
+    Before the coercion these raised a bare ``AttributeError`` from deep inside
+    the merge, which named neither the accepted vocabulary nor the reason
+    ``operator_reviewed`` is absent from it.
+    """
+    manifest = _manifest_of(registry_copy)
+    before = manifest.read_bytes()
+
+    with pytest.raises(StampError, match="this CLI writes only"):
+        stamp_revision(
+            _STAMPED_MODELO,
+            _STAMPED_REVISION,
+            review_status=spelling,  # type: ignore[arg-type]
+            registry_root=registry_copy,
+        )
+
+    assert manifest.read_bytes() == before
+
+
 def test_governance_keys_track_the_shipped_field_set() -> None:
     """The writer's key set IS the loader's, not a second copy of it."""
     assert set(GOVERNANCE_KEYS) == set(REVISION_GOVERNANCE_FIELDS)
