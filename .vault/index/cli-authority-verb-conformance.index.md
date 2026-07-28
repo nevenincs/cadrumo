@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-authority-verb-conformance'
-date: '2026-07-27'
-modified: '2026-07-27'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S01]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S02]]'
@@ -154,6 +154,42 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-W04-P14-S122]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W04-P14-S123]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W04-P14-S124]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P15-S125]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P15-S126]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P15-S128]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P15-S129]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P15-S130]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P15-S131]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P15-S132]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P15-S133]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P15-S134]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P15-S135]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P15-S136]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P15-S137]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P15-S138]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P15-S238]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S139]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S140]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S141]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S142]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S143]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S144]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S145]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S146]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S147]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S148]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S149]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S150]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S151]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S152]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S153]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S154]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S155]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S156]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S157]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S158]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S159]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S160]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W05-P16-S223]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P18-S177]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P18-S178]]'
@@ -433,6 +469,42 @@ Auto-generated index of all documents tagged with `#cli-authority-verb-conforman
 - `2026-07-15-cli-authority-verb-conformance-W06-P20-S293` - Escalate to the owning TUI campaign that the committed wizard package initialiser imports an untracked results module, so a clean checkout of HEAD cannot import the wizard or run the shipped CLI
 - `2026-07-15-cli-authority-verb-conformance-W06-P20-S294` - Land the proven MCP identity seeding fix once the wizard results module is committed, so both transports report the same schema count and the parity assertion is no longer comparing two equally blind sets
 - `2026-07-15-cli-authority-verb-conformance-W06-P20-S295` - Closed as unnecessary, a peer fix bridged the payload-name filter by importing the wizard result classes into a walked module, so enrolment is filename-filtered still and the divergence ended when that bridge landed
+- `2026-07-15-cli-authority-verb-conformance-W05-P15-S125` - Remove schema registrations for lock, rekey, legacy recovery, and sandbox-use commands
+- `2026-07-15-cli-authority-verb-conformance-W05-P15-S126` - Define secret-free schemas for passphrase change, recovery status, create, rotate, verify, and flat recover
+- `2026-07-15-cli-authority-verb-conformance-W05-P15-S128` - Replace flat scoped reset with reset start, status, and resume schemas
+- `2026-07-15-cli-authority-verb-conformance-W05-P15-S129` - Remove evidence-link input and evidence-update output fields from ledger link
+- `2026-07-15-cli-authority-verb-conformance-W05-P15-S130` - Remove modelo audit replay result schema and public command key
+- `2026-07-15-cli-authority-verb-conformance-W05-P15-S131` - Retire the modelo audit replayed event token after all consumers move to check results
+- `2026-07-15-cli-authority-verb-conformance-W05-P15-S132` - Update write-policy tokens for the accepted destructive and read-only command paths
+- `2026-07-15-cli-authority-verb-conformance-W05-P15-S133` - Update the authoritative command manifest to the accepted paths and remove legacy keys
+- `2026-07-15-cli-authority-verb-conformance-W05-P15-S134` - Update nested command-path token handling and examples for passphrase, recovery, auth, and reset groups
+- `2026-07-15-cli-authority-verb-conformance-W05-P15-S135` - Replace the rekey recovery diagnostic with config passphrase change
+- `2026-07-15-cli-authority-verb-conformance-W05-P15-S136` - Replace verify-recovery terminology with config recovery verify in the recovery contract
+- `2026-07-15-cli-authority-verb-conformance-W05-P15-S137` - Assert exact new schema keys, removed-key absence, exclusivity, and secret-free results
+- `2026-07-15-cli-authority-verb-conformance-W05-P15-S138` - Update root fallback write classification without accepting removed command paths
+- `2026-07-15-cli-authority-verb-conformance-W05-P15-S238` - Remove certificate backend selectors and replay-specific fields from every payload and schema projection while preserving independent master-key keyring custody contracts
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S139` - Replace removed command, option, help, risk, and error nodes with accepted English grammar
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S140` - Replace removed command, option, help, risk, and error nodes with accepted Spanish grammar
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S141` - Replace removed command, option, help, risk, and error nodes with accepted Catalan grammar
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S142` - Replace removed command, option, help, risk, and error nodes with accepted Hungarian grammar
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S143` - Reconcile intentional identical-locale declarations after the grammar migration
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S144` - Require four-locale parity and reject orphaned locale nodes for removed grammar
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S145` - Classify passphrase, recovery, reset start and resume, portable profile export, and subject-access export under exact risk keys, with both cleartext export purposes carrying the same handoff classification
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S146` - Replace stale help records with accepted profile, recovery, certificate, reset, ledger, and audit descriptions
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S147` - Update remaining operator-surface contract notes to the accepted grammar and authority semantics
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S148` - Replace flat reset and legacy custody next actions with registered accepted commands
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S149` - Assert operator help, risk, mutability, schema, and live-registration inventories remain exact mirrors
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S150` - Prove suggestions resolve only to accepted registered commands
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S151` - Reject removed command strings in diagnostics, help, errors, and schema metadata
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S152` - Replace sandbox-use identity gating with canonical config switch handling
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S153` - Derive exact nested passphrase, recovery, auth, reset, ledger, and audit inputs from accepted schemas
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S154` - Remove legacy MCP tool keys and dispatch only accepted CLI mirrors
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S155` - Assert MCP descriptors and dispatch mirror accepted keys and reject removed keys
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S156` - Assert MCP risk annotations match the operator risk table
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S157` - Assert MCP mutability distinguishes read-only status from destructive operations
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S158` - Prove canonical switch identity gating and removed sandbox-use unavailability
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S159` - Prove generated MCP input schemas for every accepted changed command
+- `2026-07-15-cli-authority-verb-conformance-W05-P16-S160` - Refresh command-search expectations only for accepted keys and reject removed tokens
 
 ### plan
 
