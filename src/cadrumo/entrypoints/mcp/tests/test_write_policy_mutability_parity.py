@@ -39,6 +39,41 @@ def test_a_submit_present_send_leaf_must_declare_live_write() -> None:
             )
 
 
+def test_the_destructive_axis_separates_a_status_verb_from_its_destructive_siblings() -> None:
+    """Inside one mutating family, ``destructive`` is what distinguishes the verbs.
+
+    Mutability is declared per FAMILY, so a status verb inside a mutating
+    family is NOT read-only: ``config.reset.status`` reports
+    ``read_only=False`` exactly as ``start`` and ``resume`` do. Reading the
+    read-only flag as the separator therefore gets this family wrong, and an
+    agent deciding whether to ask a human before running a reset verb needs
+    the separation that does exist.
+
+    That separation is the destructive axis, and this pins it: a status read
+    is non-destructive while starting and resuming a reset are destructive.
+    Both halves are asserted, so the case fails if the family collapses in
+    either direction - if status became destructive, or if start and resume
+    stopped being.
+    """
+
+    status = command_classification("config.reset.status")
+    start = command_classification("config.reset.start")
+    resume = command_classification("config.reset.resume")
+
+    # The read-only flag does NOT separate them, which is why it must not be read as if it did.
+    assert (status.read_only, start.read_only, resume.read_only) == (False, False, False)
+
+    # The destructive flag does.
+    assert status.destructive is False
+    assert start.destructive is True
+    assert resume.destructive is True
+
+    # Every one of them carries a declared row, so the flags above are declared
+    # facts rather than the all-false default an unclassified key would report.
+    for key in ("config.reset.status", "config.reset.start", "config.reset.resume"):
+        assert declared_risk(key) is not None, f"{key} has no declared risk row"
+
+
 def _path_to_command_key(path: str) -> str:
     tokens = path.replace("-", "_").split()
     # ``app`` verbs drop the root in the command key; ``config`` verbs keep it.
