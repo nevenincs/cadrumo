@@ -56,6 +56,7 @@ Submodules
    cadrumo.core._external_oracle_corpus
    cadrumo.core._foreign_asset_obligation
    cadrumo.core._fsync
+   cadrumo.core._fts_query
    cadrumo.core._google_credential_source
    cadrumo.core._hex
    cadrumo.core._iban

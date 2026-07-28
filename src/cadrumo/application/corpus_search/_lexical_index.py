@@ -32,6 +32,7 @@ from collections.abc import Iterable, Iterator
 from pathlib import Path
 from typing import Protocol
 
+from ...core import fts_or_group
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.resources import bundled_path
 from ._models import CorpusChunk, CorpusDocument, CorpusIndexBuildResult, LexicalSearchHit
@@ -325,9 +326,7 @@ def search_lexical(
         )
     stemmer = _spanish_stemmer()
     stemmed_terms = stemmer.stemWords(folded_terms)
-    match_expression = (
-        f"text_folded : ({_fts_or_group(folded_terms)}) OR text_stemmed : ({_fts_or_group(stemmed_terms)})"
-    )
+    match_expression = f"text_folded : ({fts_or_group(folded_terms)}) OR text_stemmed : ({fts_or_group(stemmed_terms)})"
     connection = sqlite3.connect(database_path)
     try:
         rows = connection.execute(
@@ -352,17 +351,6 @@ def search_lexical(
         )
         for rank, row in enumerate(rows)
     )
-
-
-def _fts_or_group(terms: Iterable[str]) -> str:
-    unique: list[str] = []
-    seen: set[str] = set()
-    for term in terms:
-        cleaned = term.strip()
-        if cleaned and cleaned not in seen:
-            seen.add(cleaned)
-            unique.append(cleaned)
-    return " OR ".join(f'"{term}"' for term in unique)
 
 
 __all__ = [

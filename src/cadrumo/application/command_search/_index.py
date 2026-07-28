@@ -33,6 +33,7 @@ from typing import TYPE_CHECKING, Protocol, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...core import fts_or_group
 from ..corpus_search import (
     CorpusSearchDependencyError,
     CorpusSearchInputError,
@@ -155,17 +156,6 @@ def _fts5_available() -> bool:
         connection.close()
 
 
-def _fts_or_group(terms: Iterable[str]) -> str:
-    unique: list[str] = []
-    seen: set[str] = set()
-    for term in terms:
-        cleaned = term.strip()
-        if cleaned and cleaned not in seen:
-            seen.add(cleaned)
-            unique.append(cleaned)
-    return " OR ".join(f'"{term}"' for term in unique)
-
-
 class CommandIndex:
     """A hybrid searchable index over the command corpus.
 
@@ -255,7 +245,7 @@ class CommandIndex:
     def _search_fts_keys(self, folded_terms: Sequence[str]) -> list[str]:
         assert self._connection is not None
         stemmed_terms = _stem_terms(self._stemmer, folded_terms)
-        match = _fts_or_group([*folded_terms, *stemmed_terms])
+        match = fts_or_group([*folded_terms, *stemmed_terms])
         if not match:
             return []
         # The per-column BM25 weights ride as bind parameters (the column order is
