@@ -41,6 +41,7 @@ Land the per-revision governance stamp end to end: core enum, strict revision sc
 - [x] `P01.S33` - refuse a blank or whitespace-only reviewed_by and engineered_by so a stamp cannot claim signoff while naming nobody, bound reviewed_at against a future date, and tighten the bundled-tree invariant from not-null to non-blank; `src/cadrumo/domain/calculations/registry/_schema.py`.
 - [x] `P01.S34` - derive the governance field set from a marker on the field declarations so a fifth governance scalar enrols itself into the placement refusal instead of silently escaping it; `src/cadrumo/domain/calculations/registry/_schema.py`.
 - [x] `P01.S35` - derive the embedded core-type set for the compiled cache key from the compiled models annotations rather than a remembered hand list, or assert the derived set is a subset of the list, covering the ten unenrolled types including the core Modelo enum; `src/cadrumo/domain/calculations/registry/_compiled_cache.py`.
+- [ ] `P01.S43` - add a fixed lower bound to the signoff horizon so a review dated before the revision existed refuses, mirroring the ceiling that already catches the far-future sentinel; `src/cadrumo/domain/calculations/registry/_schema.py`.
 
 ### Phase `P02` - fact lifts into src libraries
 
@@ -54,13 +55,16 @@ Lift the test-trapped conformance facts into importable typed libraries under sr
 - [x] `P02.S10` - add the per-revision conformance profile composer with strict typed row models, composing model-law coverage, support matrix, registry-scope diagnostics, authorization state, external grounding, and governance stamps; `src/cadrumo/application/registry/_conformance.py`.
 - [x] `P02.S11` - add structure-and-wiring tests for the classification-coherence checker grounded in the live registry tree; `src/cadrumo/domain/calculations/registry/tests/test_classification_coherence.py`.
 - [x] `P02.S12` - add structure-and-wiring tests for the conformance profile composer, asserting provenance fields and degraded-mode labelling, never author-invented numeric expectations; `src/cadrumo/application/registry/tests/test_conformance_profile.py`.
-- [ ] `P02.S25` - widen the oracle attribution rule to read the payload declared modelo and filing year rather than keying solely on the filename, once the malformed payload and the casilla 44 modelling have landed, so the corpus enters the honesty relation without false positives; `src/cadrumo/domain/calculations/registry/_external_grounding.py`.
+- [x] `P02.S25` - widen the oracle attribution rule to read the payload declared modelo and filing year rather than keying solely on the filename, once the malformed payload and the casilla 44 modelling have landed, so the corpus enters the honesty relation without false positives; `src/cadrumo/domain/calculations/registry/_external_grounding.py`.
 - [x] `P02.S26` - restore an independent registry-grounded oracle for the fichero-BOE required-applicable set so a relaxation of the predicate in either direction flips an assertion, remediating the review finding required-set-oracle-collapse; `src/cadrumo/application/filing/tests`.
 - [x] `P02.S28` - parse each bundled oracle payload through a strict typed model so the declared source_kind token actually hydrates and an unknown token refuses at the boundary, removing the last untyped mapping read in the grounding fold; `src/cadrumo/domain/calculations/registry/_external_grounding.py`.
 - [x] `P02.S30` - split the scenario input figures out of the M303 prorrata oracle expected-by-casilla map and rename the payload to carry its filing year so its genuine expected figure enters the honesty relation; `src/cadrumo/_data/corpus/manual_oracles`.
 - [x] `P02.S31` - correct the prorrata percentage rounding from the shared integer code, which rounds half-up, to a rounding that always rounds upward as LIVA article 104.Dos.2 requires, adding the new rounding code rather than changing the shared vocabulary; `src/cadrumo/_data/registry/aeat/modelos/303`.
 - [x] `P02.S36` - bind the classification finding detail bound to the field it mirrors and add the missing case whose single blocker exceeds it so the truncation branch is proven rather than reasoned; `src/cadrumo/domain/calculations/registry/_classification_coherence.py`.
 - [ ] `P02.S38` - declare the prorrata percentage casilla in the external grounding claims now that both preconditions of the oracle-evidence rule are satisfied and verified, so the AEAT manual figure becomes an enforced independent check; `src/cadrumo/_data/registry/aeat/modelos/303`.
+- [x] `P02.S40` - take the filing-year grounding resolver off the public registry facade or rename it so it cannot be mistaken for the law-determined resolver, implementing the ADR ruling that currently has no code; `src/cadrumo/domain/calculations/registry/__init__.py`.
+- [ ] `P02.S44` - carry the validated label onto the classification row and finding models so a degraded read stays labelled when its findings are flattened, implementing the ADR ruling on row-level labelling; `src/cadrumo/domain/calculations/registry/_classification_coherence.py`.
+- [ ] `P02.S45` - bind the registry prorrata percentage formula to the domain prorrata function with a parity gate over ratios that discriminate between the two roundings, closing the two-authorities condition that hid the rounding defect; `src/cadrumo/domain/iva/_prorrata.py`.
 
 ### Phase `P03` - conformance governance CLI in dev
 
@@ -72,6 +76,9 @@ Ship the python -m dev.registry.conformance Typer trio: report, coverage, audit 
 - [x] `P03.S16` - add the stamp verb writing the per-revision governance scalars with vocabulary and coherence validation; `dev/registry/conformance/_stamp.py`.
 - [x] `P03.S17` - add dev-side CLI behaviour tests covering every verb, the ratchet, the vacuity refusal, and the degraded-mode labelling; `dev/tests/test_registry_conformance_cli.py`.
 - [x] `P03.S29` - surface unattributed oracle payloads and unmatched evidence as report and coverage rows with a shrink-only floor so the attribution gap gains a reader instead of remaining a field nothing consumes; `dev/registry/conformance`.
+- [ ] `P03.S39` - coerce the review status at the stamp writer function boundary so handing it the core enum member raises instead of writing an operator signoff, and prove the refusal leaves the manifest byte-identical; `dev/registry/conformance/_stamp.py`.
+- [ ] `P03.S42` - gate the operator backlog rather than the pending backlog by adding a shrink-only ceiling on revisions lacking operator review, so the one number CI protects cannot be moved by an act the tool can perform; `dev/registry/conformance/manager.py`.
+- [ ] `P03.S46` - render the reviewer attribution with its review tier attached so an agent-tier review naming a person cannot be read as an operator signoff when scanning rows; `dev/registry/conformance/manager.py`.
 
 ### Phase `P04` - boundary hardening and gates
 
@@ -82,6 +89,7 @@ Make the one-way src/dev boundary enforceable, wire the CI gate, and regenerate 
 - [ ] `P04.S20` - regenerate the API reference stubs for the new src modules via the apidocs scaffold CLI and land the deltas with the source change; `docs/api`.
 - [x] `P04.S21` - wire a conformance recipe invoking python -m dev.registry.conformance report and audit into the task runner; `justfile`.
 - [x] `P04.S27` - widen the dev-path literal detection to the realistic PROJECT_ROOT join, os.path.join, f-string and backslash forms, invert the test that pins the hole open, and mirror the missing shipped conftest case, remediating the review finding dev-path-literal-hole; `src/cadrumo/tests/test_dev_path_isolation.py`.
+- [ ] `P04.S41` - consolidate the boundary detection onto the single hygiene scanner authority the ADR chose, deleting the duplicated inline import detector and its stale pending-ruling heading while keeping the injectable-root proof local; `src/cadrumo/tests/test_dev_path_isolation.py`.
 
 ### Phase `P05` - verification and closeout
 
@@ -91,7 +99,7 @@ Run the real gates, persist the first conformance report as an audit, and close 
 - [ ] `P05.S23` - run the first real conformance report over the bundled registry and persist the findings as a vault audit document; `.vault/audit`.
 - [ ] `P05.S24` - run the fresh-context campaign-close honesty review and track every surfaced item as a new step or a formally deferred follow-up; `.vault/audit`.
 - [x] `P05.S32` - amend the ADR boundary wording to name every wheel-shipped module under src/cadrumo and rule the two open questions on single-versus-dual boundary-detector authority and on whether the filing-year grounding resolver belongs on the public registry facade; `.vault/adr`.
-- [ ] `P05.S37` - extend the fragment placement refusal to the remaining legally load-bearing revision scalars legal_refs, orden_aplicabilidad and valid_to, closing the last instance of the readability hazard the governance refusal proved worth closing; `src/cadrumo/domain/calculations/registry/_loader.py`.
+- [x] `P05.S37` - extend the fragment placement refusal to the remaining legally load-bearing revision scalars legal_refs, orden_aplicabilidad and valid_to, closing the last instance of the readability hazard the governance refusal proved worth closing; `src/cadrumo/domain/calculations/registry/_loader.py`.
 
 ## Parallelization
 
