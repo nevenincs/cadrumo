@@ -46,12 +46,8 @@ from dev.registry.conformance.manager import baseline_path
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 _REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
-_COMMITTED_FLOORS: Final[dict[str, int]] = json.loads(
-    baseline_path().read_text(encoding="utf-8")
-)["floors"]
-_COMPOSED_REVISIONS_FLOOR_PATTERN: Final = re.compile(
-    r"floor population=composed_revisions current=(\d+)"
-)
+_COMMITTED_FLOORS: Final[dict[str, int]] = json.loads(baseline_path().read_text(encoding="utf-8"))["floors"]
+_COMPOSED_REVISIONS_FLOOR_PATTERN: Final = re.compile(r"floor population=composed_revisions current=(\d+)")
 
 
 @pytest.mark.timeout(600)

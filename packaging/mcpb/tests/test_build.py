@@ -352,9 +352,7 @@ def test_build_contains_exact_wheels_and_canonical_digest_binding(
         bootstrap = archive.read("src/server.py").decode()
         launcher = archive.read("src/_serve.py").decode()
     # The staged constraints file pins the transitive closure from the tested lock.
-    constraint_lines = [
-        line for line in constraints.splitlines() if line and not line.startswith("#")
-    ]
+    constraint_lines = [line for line in constraints.splitlines() if line and not line.startswith("#")]
     assert constraint_lines
     assert all("==" in line for line in constraint_lines)
     expected_sha256 = {

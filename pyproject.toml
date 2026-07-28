@@ -420,6 +420,13 @@ extend-exclude = [
   # docs-migration probe scripts, not package code.
   "add_frontmatter.py",
   "test_docs.py",
+  # Ruff 0.16 formats Python blocks embedded in Markdown. The `.vault/` corpus
+  # and `.agents/` handovers are removable development scaffolding whose code
+  # blocks are historical records of what a decision looked like when it was
+  # taken; reformatting them rewrites the record and is barred by the vaultspec
+  # hand-edit rules. Narrative docs under `docs/` stay in scope.
+  ".vault",
+  ".agents",
 ]
 
 [tool.ruff.lint]
@@ -508,6 +515,10 @@ convention = "google"
 # The shard-plugin gate collect-probes via `sys.executable -m pytest` with a
 # fixed argv over in-test-authored sample modules.
 "dev/quality/tests/test_shard.py" = ["S603"]
+# The conformance-gate anti-vacuity proof drives `sys.executable -m
+# dev.registry.conformance` with a fixed argv plus a tmp_path-authored seeded
+# baseline; no untrusted input reaches subprocess.
+"dev/tests/test_registry_conformance_gate.py" = ["S603"]
 # The release audit-state gate resolves `gh` via `shutil.which` (or accepts an
 # explicit resolved path for tests) before invoking it with a fixed argv;
 # ruff's S603 heuristic cannot see the resolved-executable contract.

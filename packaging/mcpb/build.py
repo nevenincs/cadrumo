@@ -255,8 +255,7 @@ def load_manifest() -> dict[str, object]:
     if not isinstance(author, dict) or author.get("name") != PRODUCT_AUTHOR_NAME:
         observed = author.get("name") if isinstance(author, dict) else author
         raise ManifestError(
-            "manifest.json author.name must be the derived product author "
-            f"'{PRODUCT_AUTHOR_NAME}', got {observed!r}",
+            f"manifest.json author.name must be the derived product author '{PRODUCT_AUTHOR_NAME}', got {observed!r}",
         )
     if data["manifest_version"] != "0.4":
         raise ManifestError("manifest.json must use MCPB manifest_version 0.4")

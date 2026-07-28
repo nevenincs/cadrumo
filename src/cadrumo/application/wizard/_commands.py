@@ -98,6 +98,7 @@ _SETUP_CHECKPOINT: dict[FlowMode, CheckpointAvailability] = {
 
 # KWARGS-RATIONALE-flow-runner: keyword-only frontend seam injected by the caller.
 
+
 def _choice(values: list[str], *, case_sensitive: bool = True) -> typer._click.types.ParamType:
     """Wrap ``click.Choice`` and present it as ``typer._click.types.ParamType``.
 
@@ -1698,7 +1699,7 @@ def _execute_wizard_command(
             accept_defaults=accept_defaults,
             profile_name=profile_name,
             profile_id=profile_id,
-                checkpoint_store=checkpoint_store,
+            checkpoint_store=checkpoint_store,
         )
     except ValidationError as exc:
         raise _wizard_validation_bad(flow, exc) from exc
