@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cross-period-prorrata'
 date: '2026-07-05'
-modified: '2026-07-15'
+modified: '2026-07-28'
 related:
   - "[[2026-07-01-iva-complexity-hardening-scope-adr]]"
   - "[[2026-07-01-iva-complexity-hardening-scope-research]]"
@@ -14,6 +14,7 @@ related:
   - "[[2026-07-01-iva-bienes-inversion-regularizacion-adr]]"
   - '[[2026-07-06-cross-period-prorrata-research]]'
 ---
+
 # `cross-period-prorrata` adr: `Cross-period prorrata model: provisional carry, in-year apportionment, settlement regularisation` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -61,6 +62,36 @@ any annual volume rollup. A semantic-search hit for
 entry — no such module exists at HEAD.
 
 This ADR decides the cross-period model so the deferral has a buildable design.
+
+**Amendment: two premises this record relied on were true of one M303 revision
+only.** The survey above records the substrate computing the general percentage
+with ceiling rounding, and the M303 registry defaulting to full deduction when no
+volumes are declared. Both were later measured false in part, and the model this
+record decides rests on them, so they are corrected here rather than left as a
+stale premise.
+
+The registry declared the shared half-up integer rounding on the prorrata
+percentage formula while the substrate rounded up, so one legally defined
+quantity was computed two ways and the two bundled manual examples did not
+discriminate between them. The registry now declares a distinct always-upward
+rounding code on both live revisions, taught to both interpreters of the rounding
+vocabulary so the workbook transport and the calculate path cannot diverge, with
+the shared half-up code left intact for its other consumer. The two authorities
+are now bound by a parity gate over ratios proven to separate the two roundings.
+
+The full-deduction default held on the 2023 revision only; the 2009 revision
+returned zero for a blank declaration, which asserts a total loss of the deduction
+right against a taxpayer who declared no fact supporting it, and which this
+record's own carry then seeds as the next ejercicio's provisional rate. The
+applicable articles are unamended across both revision windows, so the divergence
+was a defect rather than different law, and both revisions now return the
+full-deduction default. The single-revision regression that let the defect survive
+was retired into a two-revision gate.
+
+Neither correction changes any decision above; both make the premises true. The
+grounding, measurements and mutation evidence are in
+`2026-07-27-conformance-cli-P02-S31`, `2026-07-27-conformance-cli-P02-S47`,
+`2026-07-27-conformance-cli-P02-S59` and `2026-07-27-conformance-cli-P05-S60`.
 
 ## Considerations
 

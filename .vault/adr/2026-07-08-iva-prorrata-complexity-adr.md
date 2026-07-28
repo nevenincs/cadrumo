@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#iva-prorrata-complexity'
 date: '2026-07-08'
-modified: '2026-07-17'
+modified: '2026-07-28'
 related:
   - '[[2026-07-08-iva-prorrata-complexity-audit]]'
   - '[[2026-07-07-prorrata-especial-adr]]'
@@ -11,6 +11,7 @@ related:
   - '[[2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-research]]'
   - '[[2026-07-06-cross-period-prorrata-research]]'
 ---
+
 
 # `iva-prorrata-complexity` adr: `art-103.Dos.2 mandatory-especial advisory emit audience` | (**status:** `accepted`)
 
@@ -129,11 +130,19 @@ never derived.
 - No fabricated figures: the prompt branch carries NO amounts; the check branch
   carries only totals computed from operator-declared facts through the
   canonical resolver.
-- The threshold semantics stay the builder's: `is_especial_mandatory` fires on
-  strictly-greater-than `especial * 1.10`, and its pinned boundary tests treat
-  exactly +10% as silent. (The statute reads "exceda en un 10 por ciento o
-  más"; the substrate owns that boundary reading — this ADR consumes it and
-  does not re-open it.)
+- The threshold semantics stay the builder's, and the substrate owns that
+  boundary reading — this ADR consumes it and does not re-open it. AMENDED: the
+  boundary reading this constraint recorded, strictly-greater-than with exactly
+  the margin treated as silent, has since been corrected in the substrate and no
+  longer describes HEAD. The parenthetical note that the statute reads "exceda en
+  un 10 por ciento o mas" was the live divergence, and it is closed: reaching the
+  margin now suffices, and the margin itself is resolved from the filing year
+  because the provision has two redactions across the served window. The ruling
+  and its alternatives are in `2026-07-07-prorrata-especial-adr` decision D4,
+  grounded by `2026-07-27-conformance-cli-P02-S58`. Nothing in this record's own
+  decision changes: the emit-audience ruling consumes whatever boundary the
+  substrate owns, and the pinned boundary tests referenced above were corrected
+  with the substrate rather than preserved.
 - Sectorized registers (LIVA arts. 9.1.c/101) are a NAMED DEFERRAL: the
   art-103.Dos.2 comparison composes per sector (each sector carries its own
   regime and percentage), and v1 of this emit scopes to the whole-entity

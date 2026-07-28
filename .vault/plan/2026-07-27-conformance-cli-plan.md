@@ -8,6 +8,9 @@ tier: L2
 related:
   - '[[2026-07-27-conformance-cli-adr]]'
   - '[[2026-07-27-conformance-cli-research]]'
+  - '[[2026-07-07-prorrata-especial-adr]]'
+  - '[[2026-07-08-iva-prorrata-complexity-adr]]'
+  - '[[2026-07-05-cross-period-prorrata-adr]]'
 ---
 
 <!-- LINK RULES:
@@ -69,6 +72,8 @@ Lift the test-trapped conformance facts into importable typed libraries under sr
 - [x] `P02.S48` - correct the prorrata module docstring and rounding comment which cite the autoconsumo article rather than the article that actually establishes the formula and the upward rounding, so a reader sent to it finds the rule; `src/cadrumo/domain/iva/_prorrata.py`.
 - [x] `P02.S58` - correct the especial-prorrata mandatory predicate which applies a strict greater-than where the law says exceeds by ten percent or more, so exact equality currently fails to trip a mandatory regime switch; `src/cadrumo/domain/iva/_prorrata.py`.
 - [x] `P02.S59` - declare the full-right-to-deduct article on the prorrata formula legal refs of both M303 revisions rather than only on the enclosing construct, as a coherent two-revision change; `src/cadrumo/_data/registry/aeat/modelos/303`.
+- [ ] `P02.S72` - model the M303 regularizacion prorrata cuota casilla as computed with the AEAT manual figure as its external oracle expectation, the under-declaration-shape gap that fell out of tracking when its tracking step was re-scoped to other work; `src/cadrumo/_data/registry/aeat/modelos/303`.
+- [ ] `P02.S80` - lift the export-format closed set from a bare Literal on the export-layout schema to a core StrEnum so the per-modelo support matrix and the per-revision conformance fold compare enum members rather than each re-spelling the same tokens; `src/cadrumo/core`.
 
 ### Phase `P03` - conformance governance CLI in dev
 
@@ -92,6 +97,8 @@ Ship the python -m dev.registry.conformance Typer trio: report, coverage, audit 
 - [x] `P03.S64` - read the declared review status off the compiled revision the writer already loads rather than off the manifest text, so the signoff guard stops depending on the fragment refusal it exists to complement; `dev/registry/conformance/_stamp.py`.
 - [x] `P03.S65` - give the stamp CLI command an injectable registry root so its own date defaulting and error translation can be exercised without writing to the shipped registry, and correct the coverage pragma that calls a reachable branch unreachable; `dev/registry/conformance/cli.py`.
 - [ ] `P03.S67` - refuse a stamp write against the bundled registry tree or require the root explicitly, closing the hazard that let a test mutation write a fabricated review into the shipped modelo manifest; `dev/registry/conformance/cli.py`.
+- [ ] `P03.S77` - rebase the three population-pinned governance ceilings onto ratios or deltas so an honest new revision does not red the only gate and force the operator to assert they are weakening the ratchet; `dev/registry/conformance/manager.py`.
+- [ ] `P03.S79` - retire the dev registry matrix package whose manager recomputes ten capability fields the public build_support_matrix already returns on ModeloEntry, sweeping its test-lane entry, its tests, the two shipped docstrings that cite it as their mirror and the planted-import fixtures naming it; `dev/registry/matrix`.
 
 ### Phase `P04` - boundary hardening and gates
 
@@ -105,6 +112,7 @@ Make the one-way src/dev boundary enforceable, wire the CI gate, and regenerate 
 - [x] `P04.S41` - consolidate the boundary detection onto the single hygiene scanner authority the ADR chose, deleting the duplicated inline import detector and its stale pending-ruling heading while keeping the injectable-root proof local; `src/cadrumo/tests/test_dev_path_isolation.py`.
 - [x] `P04.S56` - pin the two detector branches whose individual mutation flips nothing with fixtures for an interpolated device path and an interpolated mid-path segment, and either delete the two redundant branches or correct the docstring that credits one with protection a different mechanism delivers; `dev/import_hygiene_scan.py`.
 - [ ] `P04.S68` - write the two sibling audit baselines and the generated api stubs through explicit newline handling, and fix the stub drift check which reads with universal newlines so a translated stub compares equal to the writer that translated it; `dev/docs/apidocs/manager.py`.
+- [ ] `P04.S78` - give the conformance tool a reachable operator page covering the stamp vocabulary, the operator-signoff hand-edit path, the registry-root flag and the baseline re-record procedure, since the prose exists only inside module docstrings; `docs`.
 
 ### Phase `P05` - verification and closeout
 
@@ -112,7 +120,7 @@ Run the real gates, persist the first conformance report as an audit, and close 
 
 - [x] `P05.S22` - run the full-tree collect-only gate and the scoped registry, filing, and dev suites, recording failure signatures and triaging owner vs peer churn; `src/cadrumo`.
 - [x] `P05.S23` - run the first real conformance report over the bundled registry and persist the findings as a vault audit document; `.vault/audit`.
-- [ ] `P05.S24` - run the fresh-context campaign-close honesty review and track every surfaced item as a new step or a formally deferred follow-up; `.vault/audit`.
+- [x] `P05.S24` - run the fresh-context campaign-close honesty review and track every surfaced item as a new step or a formally deferred follow-up; `.vault/audit`.
 - [x] `P05.S32` - amend the ADR boundary wording to name every wheel-shipped module under src/cadrumo and rule the two open questions on single-versus-dual boundary-detector authority and on whether the filing-year grounding resolver belongs on the public registry facade; `.vault/adr`.
 - [x] `P05.S37` - extend the fragment placement refusal to the remaining legally load-bearing revision scalars legal_refs, orden_aplicabilidad and valid_to, closing the last instance of the readability hazard the governance refusal proved worth closing; `src/cadrumo/domain/calculations/registry/_loader.py`.
 - [x] `P05.S49` - absorb the three tree-wide gate regressions this campaign caused, moving the module marker above the assignment, replacing the bare encoding literal with the shared constant, and extracting a cohesive concern out of each module that broke its size ceiling rather than lifting the ceiling; `src/cadrumo/domain/calculations/registry/_schema.py`.
@@ -123,6 +131,12 @@ Run the real gates, persist the first conformance report as an audit, and close 
 - [x] `P05.S61` - extract the verification-predicate concern out of the registry schema module, which now sits one line under its size ceiling so the next peer edit reds a gate they did not break; `src/cadrumo/domain/calculations/registry/_schema.py`.
 - [ ] `P05.S66` - take the whole verification-predicate concern out of the registry schema module in one commit that also owns and removes its size-budget baseline entry, since the concern is larger than the pinned band allows and half-taking it would scatter one concept across two modules; `src/cadrumo/domain/calculations/registry/_schema.py`.
 - [ ] `P05.S69` - measure and gate the tree-wide terminator drift where over a thousand tracked files carry on-disk bytes differing from their committed bytes while git diff stays silent, so the class is bounded rather than known only anecdotally; `dev/audit`.
+- [x] `P05.S70` - replace the operator real name with a non-identifying stand-in throughout the conformance CLI test module, closing the committed privacy violation this campaign introduced which reds the per-push lane; `dev/tests/test_registry_conformance_cli.py`.
+- [x] `P05.S71` - restate the two test docstrings that cite this project development records as self-contained engineering reasoning and move the discovery-waiver process note out of source, honouring the one-way rule that code never cites the vault; `dev/tests/test_registry_conformance_gate.py`.
+- [x] `P05.S73` - author a decision record governing the IVA prorrata corrections this campaign made and list it on the plan, since eleven steps changed computed tax outcomes under an ADR that authorises only a governance surface; `.vault/adr`.
+- [x] `P05.S74` - rule the capability-fact duplication between the conformance composer and the registry matrix CLI, which independently recompute the same predicates, applying the single-authority answer this campaign already chose for the boundary detector; `dev/registry/matrix/manager.py`.
+- [x] `P05.S75` - correct the two step records that misstate their own state, one claiming this campaign left the tree-wide gates clear and one closing while its stated precondition had not landed; `.vault/exec`.
+- [ ] `P05.S76` - open a follow-up feature tracking the four measurement-audit recommendations so ninety unreviewed revisions, twenty-four classification divergences and five unused schema axes have an owner rather than living as prose; `.vault`.
 
 ## Parallelization
 

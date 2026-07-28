@@ -3,13 +3,14 @@ tags:
   - '#adr'
   - '#prorrata-especial'
 date: '2026-07-07'
-modified: '2026-07-17'
+modified: '2026-07-28'
 related:
   - "[[2026-07-05-cross-period-prorrata-adr]]"
   - "[[2026-07-01-iva-complexity-hardening-scope-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-adr]]"
   - '[[2026-07-10-prorrata-especial-research]]'
 ---
+
 
 # `prorrata-especial` adr: `Prorrata especial per-input classification (LIVA arts 103.Dos/106): 100/0/prorrata deduction and the +10% mandatory-especial advisory` | (**status:** `accepted`)
 
@@ -116,6 +117,43 @@ mandatory-especial comparison advisory (needs especial to exist)."
   `no-silent-under-declaration`).
 - Blocking refusal on the +10% breach (REJECTED) — would refuse a legitimately
   in-progress filing whose especial election has not yet been recorded.
+
+**D4 — How the art. 103.Dos.2 margin is read across the served window
+(amendment).** The gate above is stated as a single multiple, and that is wrong
+in two ways this record now corrects. The provision has TWO redactions: the
+original, in force 1 January 1993, requiring the general total to exceed the
+especial total "en un 20 por 100" with no inclusive wording, and the current one
+introduced by Ley 28/2014, in force 1 January 2015, requiring it to exceed "en un
+10 por ciento o mas". The M303 revision serving this substrate opens at filing
+year 2009 with no minimum-supported-year floor above it, so the served window
+straddles the cutover. The shipped predicate was a hybrid — the new figure with
+the old exclusive comparison — and therefore wrong for every year in the window.
+
+- **A year-resolved rule (CHOSEN).** The predicate takes the filing year and
+  resolves both the margin and whether reaching it suffices from a single typed
+  rule, which the settlement advisory and the classify-to-enable prompt also read,
+  so the operator prose and the behaviour cannot disagree and the notice context
+  names which redaction produced the obligation.
+- Correcting only the comparison operator (REJECTED). It satisfies the literal
+  defect but leaves the predicate wrong by a whole factor for 2009 through 2014,
+  while making its own claim to implement the provision true for only part of its
+  range.
+- Refusing for pre-2015 years (REJECTED). It converts a wrong answer into a
+  raised error on a filing-relevant advisory path and breaks calculation for those
+  years outright.
+
+The constraint above that the multiple stays a single corpus-grounded constant is
+superseded by this amendment: the current redaction's figure and inclusiveness are
+grounded on the bundled corpus, whose art. 103 entry now carries the amendment
+note as required text, while the repealed twenty-percent figure is grounded at its
+declaration on the law as originally enacted — a consolidated text carries only
+the text in force, so a bundled-corpus gate cannot honestly assert it. The
+grounding and the mutation evidence are in `2026-07-27-conformance-cli-P02-S58`;
+the module's article attributions were corrected alongside it in
+`2026-07-27-conformance-cli-P02-S48`. One consequence is accepted: the predicate
+now requires a filing year from every caller, and nothing yet stops a caller
+passing the year the calculation runs rather than the year the deductions belong
+to.
 
 ## Constraints
 

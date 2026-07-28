@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#conformance-cli'
 date: '2026-07-27'
-modified: '2026-07-27'
+modified: '2026-07-28'
 related:
   - '[[2026-07-27-conformance-cli-research]]'
   - '[[2026-07-01-verification-power-adr]]'
@@ -11,6 +11,7 @@ related:
   - '[[2026-04-21-casilla-schema-completeness-adr]]'
   - '[[2026-07-02-arch-remediation-registry-format-adr]]'
 ---
+
 
 # `conformance-cli` adr: `derived conformance facts in src, governance CLI in dev, one-way boundary` | (**status:** `accepted`)
 
@@ -149,6 +150,45 @@ src-side test importing `dev.*` is not a boundary violation, because a test
 module is wheel-excluded and the scan's own imports have no bearing on the
 shipped surface it measures.
 
+Capability-fact ownership is likewise SINGLE-AUTHORITY, and the owner is the
+shipped support matrix rather than either conformance surface. The
+`dev.registry.matrix` manager recomputes ten fields — the latest-revision
+selection, the revision count and valid-from, calc-grade, manifest presence, the
+two export-format predicates, extractor presence and extraction-profile count —
+every one of which the public `build_support_matrix` already returns on
+`ModeloEntry`, derived from the same primitives by the same expressions; the dev
+module's own See Also block names that builder. It is RETIRED rather than
+rewired: its single `report` verb renders a table the operator support-matrix
+verb already renders from the shipped authority, and the conformance `report`
+verb already carries the same probe for EVERY revision as a strict superset, with
+a registry-root flag and row-level degraded-mode labelling the matrix has
+neither of.
+
+Two alternatives were rejected. Delegating the dev manager to the conformance
+composer's per-revision `_capability_facts` closes four of the ten fields and
+leaves the latest-revision SELECTION — the axis the whole matrix is keyed on —
+still forked dev-side, and that fold carries no extractor boolean, only a count.
+Declaring the duplication deliberate behind a divergence gate is refused on the
+same ground as the boundary detector above: these copies have already diverged
+(the dev row lacks title, calculation class, supported revisions, renames,
+deprecations and portal cross-references; the per-revision fold dropped the
+extractor boolean for a count), so a gate would institutionalise a fork instead
+of deleting it.
+
+The residue after the retirement is a type gap, not a second authority. Two sites
+still spell the export-format tokens as bare strings — the per-modelo
+latest-revision roll-up and the per-revision conformance fold — but they answer
+different questions and are not substitutable, so neither is promotable into the
+other. What forces the re-spelling is that the export-format closed set is
+declared as a bare `Literal` on the export-layout schema rather than a `StrEnum`
+in `core`, against the closed-value-set rule this record already invokes. Lifting
+that axis is the durable fix and is tracked separately from the retirement.
+Retiring the module also corrects two prose references that point the wrong way
+across the boundary this record hardens: the shipped support-matrix module and
+its test both document themselves as mirroring the dev matrix. Neither is an
+import nor a path read, so the gate does not fire, but a shipped module naming
+dev scaffolding as its origin of truth is this ADR's arrow reversed.
+
 **Degraded-mode labelling is row-level, not container-level.** A `--no-validate`
 read stamps EVERY emitted row and finding as unvalidated, never only the
 enclosing audit object. A container-level flag is lost the moment a renderer
@@ -204,6 +244,15 @@ absence makes the backlog visible instead of laundering it into prose.
 - Risk: the conformance profile is only as honest as its inputs; the report
   must label heuristic findings (prose-mined backlog) and degraded modes
   (`--no-validate`) so a green row is never mistaken for operator authority.
+- `dev.registry.matrix` is retired as a forked capability authority: contributors
+  read the same columns from the conformance `report` verb or the operator
+  support-matrix verb, both strict supersets of it. Its dev test-lane entry, its
+  own tests, and the two shipped docstrings citing it as their mirror move with
+  it; the synthetic planted-import fixtures naming it need a live module name.
+- The export-format closed set stays a bare `Literal` on the export-layout
+  schema, so the two surviving legitimate predicate sites still re-spell its
+  tokens until that axis is lifted to a core `StrEnum`. Accepted as a separate,
+  narrower change rather than folded into the retirement.
 - Risk: a stamp vocabulary too coarse for future needs (e.g. per-casilla
   review) — accepted; casilla-level stamping at ~15,774 entries is
   unmanageable and revision granularity matches the unit of legal validity.
