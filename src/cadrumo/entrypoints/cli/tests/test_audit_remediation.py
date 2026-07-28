@@ -11,6 +11,7 @@ import click
 import pytest
 from click.testing import Result
 
+from ....core.paths import PROJECT_ROOT
 from ....tests import leaf_name
 from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
@@ -195,11 +196,22 @@ _TYPER_HELP_SURFACE_CALLABLES = frozenset({"Typer", "Option", "Argument", "comma
 
 def test_typer_help_sources_are_direct_translations() -> None:
     failures: list[str] = []
-    for module in Path("src/cadrumo").rglob("*.py"):
+    scanned = 0
+    # Anchor the scan on PROJECT_ROOT rather than the relative ``src/cadrumo``:
+    # a relative corpus scans nothing whenever the working directory is not the
+    # repo root, greening this gate by walking an empty tree. The floor below is
+    # the tripwire for that collapse and for a package relocation.
+    for module in (PROJECT_ROOT / "src" / "cadrumo").rglob("*.py"):
         if module.name.startswith(("test_", "_test_")):
             continue
+        scanned += 1
         tree = ast.parse(module.read_text(encoding="utf-8"), filename=str(module))
         failures.extend(_typer_help_violations(tree, module=module))
+    assert scanned > 500, (
+        f"scanned only {scanned} modules under src/cadrumo; the scan corpus collapsed (a wrong "
+        "working directory or a package relocation), so an empty failure list would mean "
+        "'nothing was checked' rather than 'nothing is wrong'"
+    )
     assert failures == []
 
 
