@@ -35,6 +35,7 @@ corroborated field from one the read never covered.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import typer
 
@@ -42,6 +43,12 @@ from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from .._common import _emit_envelope, _state
 from ._censo_payloads import CensoPullDivergencePayload, CensoPullFactPayload, CensoPullResult
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from ....application.user_profile import CensalReconciliation
+    from ....domain.user_profile import UserProfileFact
 
 censo_app = typer.Typer(
     help=tr(
@@ -194,26 +201,10 @@ def censo_pull(
         )
         for path, value in reconciliation.divergences
     )
-    # The read's third outcome. The reconciliation emits a path the profile
-    # already holds at the authority's value as neither an adoption nor a
-    # disagreement, because it is a no-op to WRITE; it is not a no-op to
-    # REPORT. Derived here from the projection rather than re-decided, so
-    # the split stays the authority's.
-    #
-    # Scoped to the adoptable paths, because the projection also carries the
-    # fiscal identity, which the reconciliation consumes to decide whether
-    # the read belongs to this profile at all and then skips. It is not an
-    # outcome of the reconciliation, so it belongs in none of the three
-    # lists: calling it unchanged would tell an operator whose profile
-    # carries no identity yet - the ordinary first-read case, which the
-    # ownership guard deliberately allows - that AEAT agrees with a value
-    # they never recorded.
-    adoptable = frozenset(CENSAL_ADOPTABLE_PATHS)
-    decided = {fact.path for fact in reconciliation.adopted} | {path for path, _ in reconciliation.divergences}
-    unchanged = tuple(
-        CensoPullFactPayload(path=fact.path, value=str(fact.value), source=fact.source)
-        for fact in projected
-        if fact.path in adoptable and fact.path not in decided
+    unchanged = _unchanged_facts(
+        projected=projected,
+        reconciliation=reconciliation,
+        adoptable_paths=CENSAL_ADOPTABLE_PATHS,
     )
     result = CensoPullResult(
         applied=apply,
@@ -222,13 +213,12 @@ def censo_pull(
         unchanged=unchanged,
         divergences=divergences,
     )
-    lines = [f"applied\t{str(apply).lower()}", f"source_url\t{read.source_url}"]
-    lines.extend(f"adopted\t{row.path}\t{row.value}" for row in adopted)
-    lines.extend(f"unchanged\t{row.path}\t{row.value}" for row in unchanged)
-    lines.extend(
-        f"divergence\t{row.path}\tprofile={'<cleared>' if row.profile_value is None else row.profile_value}"
-        f"\taeat={row.aeat_value}"
-        for row in divergences
+    lines = _pull_lines(
+        applied=apply,
+        source_url=str(read.source_url),
+        adopted=adopted,
+        unchanged=unchanged,
+        divergences=divergences,
     )
     # Fold every notice into the text output too. The envelope renders
     # `notices` only in JSON mode, so a diagnostic left off `lines` is
@@ -247,6 +237,56 @@ def censo_pull(
     )
 
 
+def _unchanged_facts(
+    *,
+    projected: Iterable[UserProfileFact],
+    reconciliation: CensalReconciliation,
+    adoptable_paths: Iterable[str],
+) -> tuple[CensoPullFactPayload, ...]:
+    """Project the read's third outcome: paths already at the authority's value.
+
+    The reconciliation emits a path the profile already holds at AEAT's value
+    as neither an adoption nor a disagreement, because it is a no-op to WRITE.
+    It is not a no-op to REPORT. This derives that set from the projection
+    rather than re-deciding it, so the split stays the authority's.
+
+    Scoped to the adoptable paths, because the projection also carries the
+    fiscal identity, which the reconciliation consumes to decide whether the
+    read belongs to this profile at all and then skips. It is not an outcome
+    of the reconciliation, so it belongs in none of the three lists: calling
+    it unchanged would tell an operator whose profile carries no identity yet
+    — the ordinary first-read case, which the ownership guard deliberately
+    allows — that AEAT agrees with a value they never recorded.
+    """
+    adoptable = frozenset(adoptable_paths)
+    decided = {fact.path for fact in reconciliation.adopted} | {path for path, _ in reconciliation.divergences}
+    return tuple(
+        CensoPullFactPayload(path=fact.path, value=str(fact.value), source=fact.source)
+        for fact in projected
+        if fact.path in adoptable and fact.path not in decided
+    )
+
+
+def _pull_lines(
+    *,
+    applied: bool,
+    source_url: str,
+    adopted: tuple[CensoPullFactPayload, ...],
+    unchanged: tuple[CensoPullFactPayload, ...],
+    divergences: tuple[CensoPullDivergencePayload, ...],
+) -> list[str]:
+    """Render the pull's tab-separated text rows, one per outcome."""
+    lines = [f"applied\t{str(applied).lower()}", f"source_url\t{source_url}"]
+    lines.extend(f"adopted\t{row.path}\t{row.value}" for row in adopted)
+    lines.extend(f"unchanged\t{row.path}\t{row.value}" for row in unchanged)
+    lines.extend(
+        f"divergence\t{row.path}\tprofile={'<cleared>' if row.profile_value is None else row.profile_value}"
+        f"\taeat={row.aeat_value}"
+        for row in divergences
+    )
+    return lines
+
+
 def _values_are_withheld(row: CensoPullDivergencePayload) -> bool:
     """Return whether the envelope will mask this row's values before the operator sees them.
 
@@ -261,6 +301,32 @@ def _values_are_withheld(row: CensoPullDivergencePayload) -> bool:
 
     sides = [row.aeat_value] + ([] if row.profile_value is None else [row.profile_value])
     return any(redact_for_cli_output(side) != side for side in sides)
+
+
+def _divergence_notice(
+    rows: tuple[CensoPullDivergencePayload, ...],
+    *,
+    code: str,
+    locale_key: str,
+    default: str,
+    suggestion: str | None,
+) -> Notice | None:
+    """Build one divergence warning, or ``None`` when no row falls in its class.
+
+    The three divergence classes render the same way — count the rows, name
+    their paths, carry both on the notice context — and differ only in which
+    rows they select and what they tell the operator to do about them.
+    """
+    if not rows:
+        return None
+    axes = ", ".join(row.path for row in rows)
+    return Notice(
+        severity=NoticeSeverity.WARNING,
+        code=code,
+        message=tr(locale_key, default=default, count=len(rows), axes=axes),
+        suggestion=suggestion,
+        context={"count": str(len(rows)), "axes": axes},
+    )
 
 
 def _pull_notices(
@@ -280,66 +346,60 @@ def _pull_notices(
     told it was not re-added, rather than to guess from a message about
     values they never declared.
     """
+    return [*_divergence_notices(divergences), *_tier_notices(applied=applied, adopted=adopted)]
+
+
+def _divergence_notices(divergences: tuple[CensoPullDivergencePayload, ...]) -> list[Notice]:
+    """Warn about each class of disagreement the read surfaced.
+
+    A disagreement over a VALUE and a disagreement over a DELETION read
+    differently to the operator, so they are separate notices. Someone who
+    deliberately emptied a field and sees it named again deserves to be told
+    it was not re-added, rather than to guess from a message about values
+    they never declared.
+    """
     notices: list[Notice] = []
-    contested = tuple(row for row in divergences if row.profile_value is not None)
-    cleared = tuple(row for row in divergences if row.profile_value is None)
-    if contested:
-        axes = ", ".join(row.path for row in contested)
-        notices.append(
-            Notice(
-                severity=NoticeSeverity.WARNING,
-                code="config.profile.censo.pull.divergences",
-                message=tr(
-                    "cli.config.profile.censo.pull_divergences_notice",
-                    default=(
-                        "AEAT reports {count} field(s) differently from your declared answer: {axes}. "
-                        "Your answer stands; resolve each one yourself."
-                    ),
-                    count=len(contested),
-                    axes=axes,
-                ),
-                suggestion="aeat config profile edit",
-                context={"count": str(len(contested)), "axes": axes},
+    for rows, code, locale_key, default, suggestion in (
+        (
+            tuple(row for row in divergences if row.profile_value is not None),
+            "config.profile.censo.pull.divergences",
+            "cli.config.profile.censo.pull_divergences_notice",
+            (
+                "AEAT reports {count} field(s) differently from your declared answer: {axes}. "
+                "Your answer stands; resolve each one yourself."
             ),
-        )
-    withheld = tuple(row for row in divergences if _values_are_withheld(row))
-    if withheld:
-        axes = ", ".join(row.path for row in withheld)
-        notices.append(
-            Notice(
-                severity=NoticeSeverity.WARNING,
-                code="config.profile.censo.pull.values_withheld",
-                message=tr(
-                    "cli.config.profile.censo.pull_withheld_notice",
-                    default=(
-                        "The values for {count} field(s) are withheld from output: {axes}. "
-                        "Compare them yourself against AEAT; this tool will not print them."
-                    ),
-                    count=len(withheld),
-                    axes=axes,
-                ),
-                context={"count": str(len(withheld)), "axes": axes},
+            "aeat config profile edit",
+        ),
+        (
+            tuple(row for row in divergences if _values_are_withheld(row)),
+            "config.profile.censo.pull.values_withheld",
+            "cli.config.profile.censo.pull_withheld_notice",
+            (
+                "The values for {count} field(s) are withheld from output: {axes}. "
+                "Compare them yourself against AEAT; this tool will not print them."
             ),
-        )
-    if cleared:
-        axes = ", ".join(row.path for row in cleared)
-        notices.append(
-            Notice(
-                severity=NoticeSeverity.WARNING,
-                code="config.profile.censo.pull.cleared",
-                message=tr(
-                    "cli.config.profile.censo.pull_cleared_notice",
-                    default=(
-                        "AEAT still holds a value for {count} field(s) you cleared: {axes}. "
-                        "They were left empty; clearing them here does not change AEAT's record."
-                    ),
-                    count=len(cleared),
-                    axes=axes,
-                ),
-                suggestion="aeat config profile edit",
-                context={"count": str(len(cleared)), "axes": axes},
+            None,
+        ),
+        (
+            tuple(row for row in divergences if row.profile_value is None),
+            "config.profile.censo.pull.cleared",
+            "cli.config.profile.censo.pull_cleared_notice",
+            (
+                "AEAT still holds a value for {count} field(s) you cleared: {axes}. "
+                "They were left empty; clearing them here does not change AEAT's record."
             ),
-        )
+            "aeat config profile edit",
+        ),
+    ):
+        notice = _divergence_notice(rows, code=code, locale_key=locale_key, default=default, suggestion=suggestion)
+        if notice is not None:
+            notices.append(notice)
+    return notices
+
+
+def _tier_notices(*, applied: bool, adopted: tuple[CensoPullFactPayload, ...]) -> list[Notice]:
+    """State what the run actually did: enrolled at the verified tier, or previewed."""
+    notices: list[Notice] = []
     if applied and adopted:
         notices.append(
             Notice(

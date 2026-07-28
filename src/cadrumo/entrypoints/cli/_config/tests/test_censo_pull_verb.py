@@ -241,13 +241,33 @@ def test_the_fiscal_identity_is_reported_in_none_of_the_three_outcomes() -> None
     Scoping the derivation to the adoptable paths is what keeps the three
     outcomes about fields the reconciliation actually decides.
     """
-    from .....application.user_profile import CENSAL_ADOPTABLE_PATHS
+    from .....application.user_profile import CENSAL_ADOPTABLE_PATHS, CensalReconciliation
+    from .....domain.user_profile import UserProfileFact
 
     assert "identity.tax_id" not in CENSAL_ADOPTABLE_PATHS
-    source = inspect.getsource(_censo_file.censo_pull)
-    # The derivation must filter on the adoptable set, not on the projection.
-    assert "adoptable = frozenset(CENSAL_ADOPTABLE_PATHS)" in source
-    assert "if fact.path in adoptable and fact.path not in decided" in source
+    adoptable_path = next(iter(sorted(CENSAL_ADOPTABLE_PATHS)))
+
+    # A real projection carrying BOTH the ownership identity and an ordinary
+    # adoptable path, against a reconciliation that decided neither.
+    projected = (
+        UserProfileFact(path="identity.tax_id", value="12345678Z"),
+        UserProfileFact(path=adoptable_path, value="corroborated"),
+    )
+    unchanged = _censo_file._unchanged_facts(
+        projected=projected,
+        reconciliation=CensalReconciliation(),
+        adoptable_paths=CENSAL_ADOPTABLE_PATHS,
+    )
+
+    reported = {row.path for row in unchanged}
+    assert "identity.tax_id" not in reported, (
+        "the fiscal identity was reported as corroborated; on a profile carrying no identity yet "
+        "that tells the operator AEAT agrees with a value they never recorded"
+    )
+    assert adoptable_path in reported, (
+        "an adoptable path the reconciliation left undecided must still be reported unchanged, "
+        "or this test would pass against a derivation that reports nothing at all"
+    )
 
 
 def test_a_divergence_whose_values_are_masked_says_so() -> None:
