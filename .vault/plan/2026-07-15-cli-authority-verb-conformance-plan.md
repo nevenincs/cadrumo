@@ -305,20 +305,20 @@ Move every machine and human contract to the new grammar and regenerate owned ou
 
 Update typed envelopes, operation mappings, write-policy tokens, and static command inventories to the hard-cutover paths.
 
-- [ ] `W05.P15.S125` - Remove schema registrations for lock, rekey, legacy recovery, and sandbox-use commands; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
-- [ ] `W05.P15.S126` - Define secret-free schemas for passphrase change, recovery status, create, rotate, verify, and flat recover; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
-- [ ] `W05.P15.S128` - Replace flat scoped reset with reset start, status, and resume schemas; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
-- [ ] `W05.P15.S129` - Remove evidence-link input and evidence-update output fields from ledger link; `src/cadrumo/entrypoints/cli/_ledger_payloads.py`.
-- [ ] `W05.P15.S130` - Remove modelo audit replay result schema and public command key; `src/cadrumo/entrypoints/cli/_modelo_aux_payloads.py`.
-- [ ] `W05.P15.S131` - Retire the modelo audit replayed event token after all consumers move to check results; `src/cadrumo/domain/buckets/_event.py`.
-- [ ] `W05.P15.S132` - Update write-policy tokens for the accepted destructive and read-only command paths; `src/cadrumo/application/storage_write_policy.py`.
-- [ ] `W05.P15.S133` - Update the authoritative command manifest to the accepted paths and remove legacy keys; `src/cadrumo/application/operator_surface/_manifest.py`.
-- [ ] `W05.P15.S134` - Update nested command-path token handling and examples for passphrase, recovery, auth, and reset groups; `src/cadrumo/entrypoints/cli/_errors.py`.
-- [ ] `W05.P15.S135` - Replace the rekey recovery diagnostic with config passphrase change; `src/cadrumo/adapters/persistence/storage/master_key/_master_key.py`.
-- [ ] `W05.P15.S136` - Replace verify-recovery terminology with config recovery verify in the recovery contract; `src/cadrumo/adapters/persistence/storage/master_key/_recovery_facade.py`.
+- [x] `W05.P15.S125` - Remove schema registrations for lock, rekey, legacy recovery, and sandbox-use commands; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
+- [x] `W05.P15.S126` - Define secret-free schemas for passphrase change, recovery status, create, rotate, verify, and flat recover; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
+- [x] `W05.P15.S128` - Replace flat scoped reset with reset start, status, and resume schemas; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
+- [x] `W05.P15.S129` - Remove evidence-link input and evidence-update output fields from ledger link; `src/cadrumo/entrypoints/cli/_ledger_payloads.py`.
+- [x] `W05.P15.S130` - Remove modelo audit replay result schema and public command key; `src/cadrumo/entrypoints/cli/_modelo_aux_payloads.py`.
+- [x] `W05.P15.S131` - Retire the modelo audit replayed event token after all consumers move to check results; `src/cadrumo/domain/buckets/_event.py`.
+- [x] `W05.P15.S132` - Update write-policy tokens for the accepted destructive and read-only command paths; `src/cadrumo/application/storage_write_policy.py`.
+- [x] `W05.P15.S133` - Update the authoritative command manifest to the accepted paths and remove legacy keys; `src/cadrumo/application/operator_surface/_manifest.py`.
+- [x] `W05.P15.S134` - Update nested command-path token handling and examples for passphrase, recovery, auth, and reset groups; `src/cadrumo/entrypoints/cli/_errors.py`.
+- [x] `W05.P15.S135` - Replace the rekey recovery diagnostic with config passphrase change; `src/cadrumo/adapters/persistence/storage/master_key/_master_key.py`.
+- [x] `W05.P15.S136` - Replace verify-recovery terminology with config recovery verify in the recovery contract; `src/cadrumo/adapters/persistence/storage/master_key/_recovery_facade.py`.
 - [x] `W05.P15.S137` - Assert exact new schema keys, removed-key absence, exclusivity, and secret-free results; `src/cadrumo/entrypoints/cli/tests/test_json_schema_conformance.py`.
-- [ ] `W05.P15.S138` - Update root fallback write classification without accepting removed command paths; `src/cadrumo/entrypoints/cli/tests/test_root_fallback_write_guard.py`.
-- [ ] `W05.P15.S238` - Remove certificate backend selectors and replay-specific fields from every payload and schema projection while preserving independent master-key keyring custody contracts; `src/cadrumo/entrypoints/cli/_config_payloads.py; src/cadrumo/entrypoints/cli/_modelo_aux_payloads.py; src/cadrumo/entrypoints/cli/tests/test_json_schema_conformance.py`.
+- [x] `W05.P15.S138` - Update root fallback write classification without accepting removed command paths; `src/cadrumo/entrypoints/cli/tests/test_root_fallback_write_guard.py`.
+- [x] `W05.P15.S238` - Remove certificate backend selectors and replay-specific fields from every payload and schema projection while preserving independent master-key keyring custody contracts; `src/cadrumo/entrypoints/cli/_config_payloads.py; src/cadrumo/entrypoints/cli/_modelo_aux_payloads.py; src/cadrumo/entrypoints/cli/tests/test_json_schema_conformance.py`.
 
 ### Phase `W05.P16` - Migrate locales and operator metadata
 
