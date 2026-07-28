@@ -54,6 +54,7 @@ Submodules
    cadrumo.application._config_reset_models
    cadrumo.application._config_reset_repository
    cadrumo.application._errors
+   cadrumo.application._journal_repository
    cadrumo.application._state_projection_auth
    cadrumo.application._state_projection_readiness
    cadrumo.application._workflow_auth_models

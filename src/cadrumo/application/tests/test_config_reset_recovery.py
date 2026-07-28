@@ -105,7 +105,7 @@ _CRASH_HARNESS = _SETTINGS_PREAMBLE + dedent(
             return trace
         if frame.f_code.co_name not in {"create_exclusive", "save"}:
             return trace
-        if not frame.f_code.co_filename.endswith("_config_reset_repository.py"):
+        if not frame.f_code.co_filename.endswith(("_config_reset_repository.py", "_journal_repository.py")):
             return trace
         if durable_target_phase() == phase_by_boundary[boundary]:
             os._exit(91)
