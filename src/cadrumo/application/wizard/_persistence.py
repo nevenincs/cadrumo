@@ -397,19 +397,35 @@ def descendant_answers_from_record(record: UserProfileRecord | None) -> dict[str
     answers: dict[str, str] = {DESCENDANTS_COUNT_PAGE_ID: str(len(descendientes))}
     for index, descendant in enumerate(descendientes):
         prefix = f"{DESCENDANTS_GROUP_ID}{REPEATING_INSTANCE_SEPARATOR}{index}"
-        answers[f"{prefix}.birth-date"] = descendant.birth_date.isoformat()
-        if descendant.adoption_date is not None:
-            answers[f"{prefix}.adoption-date"] = descendant.adoption_date.isoformat()
-        if descendant.discapacidad_grado is not None:
-            answers[f"{prefix}.discapacidad"] = str(descendant.discapacidad_grado)
-        answers[f"{prefix}.convivencia"] = "true" if descendant.convive_con_contribuyente else "false"
-        answers[f"{prefix}.custodia-compartida"] = "true" if descendant.custodia_compartida else "false"
-        if descendant.meses_madre_trabajo_2024 > 0:
-            answers[f"{prefix}.meses-madre-trabajo"] = str(descendant.meses_madre_trabajo_2024)
-        if descendant.gastos_guarderia_euros > 0:
-            answers[f"{prefix}.gastos-guarderia"] = str(descendant.gastos_guarderia_euros)
-        if descendant.nif is not None:
-            answers[f"{prefix}.nif"] = descendant.nif
+        answers.update(_descendant_instance_answers(descendant, prefix=prefix))
+    return answers
+
+
+def _descendant_instance_answers(descendant: DescendantInfo, *, prefix: str) -> dict[str, str]:
+    """Emit one descendant's page-keyed answers under its instance prefix.
+
+    An absent optional field emits NO answer rather than a stored default,
+    which is what keeps a save-then-resume round-trip reconstructing an
+    identical fact set on both legs.
+    """
+    answers = {
+        f"{prefix}.birth-date": descendant.birth_date.isoformat(),
+        f"{prefix}.convivencia": "true" if descendant.convive_con_contribuyente else "false",
+        f"{prefix}.custodia-compartida": "true" if descendant.custodia_compartida else "false",
+    }
+    optional: tuple[tuple[str, object | None], ...] = (
+        ("adoption-date", descendant.adoption_date.isoformat() if descendant.adoption_date is not None else None),
+        ("discapacidad", descendant.discapacidad_grado),
+        # Both are counts whose zero means "none recorded", so zero emits no
+        # answer at all rather than a literal "0" the resume walk would commit.
+        (
+            "meses-madre-trabajo",
+            descendant.meses_madre_trabajo_2024 if descendant.meses_madre_trabajo_2024 > 0 else None,
+        ),
+        ("gastos-guarderia", descendant.gastos_guarderia_euros if descendant.gastos_guarderia_euros > 0 else None),
+        ("nif", descendant.nif),
+    )
+    answers.update({f"{prefix}.{page_id}": str(value) for page_id, value in optional if value is not None})
     return answers
 
 

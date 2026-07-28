@@ -30,6 +30,7 @@ frozen page literals below, never at a ``tr()`` call site.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from typing import TYPE_CHECKING
 
 from ...core.flows import REPEATING_INSTANCE_SEPARATOR, CopyRefKind, FlowWidgetKind
 from ...core.identity import IdentityError, validate_identity
@@ -47,6 +48,9 @@ from ..flows import (
     register_answer_validator,
     register_cross_field_validator,
 )
+
+if TYPE_CHECKING:
+    from datetime import date
 
 _FAMILIA_SECTION_ID = "familia"
 
@@ -233,24 +237,55 @@ def _validate_descendant_adoption_dates(answers: Mapping[str, str]) -> tuple[Val
     validated), so parsing succeeds; a page id and instance index are the
     only context — never the raw date.
     """
-    verdicts: list[ValidationVerdict] = []
     today = today_madrid()
     prefix_root = f"{DESCENDANTS_GROUP_ID}{REPEATING_INSTANCE_SEPARATOR}"
-    for key, raw in answers.items():
-        if not key.startswith(prefix_root) or not key.endswith(f".{_ADOPTION_DATE_PAGE_ID}") or not raw:
-            continue
-        instance = key[len(prefix_root) :].split(".", 1)[0]
-        birth_raw = answers.get(f"{prefix_root}{instance}.{_BIRTH_DATE_PAGE_ID}", "")
-        adoption = parse_iso8601_date(raw)
-        if adoption is None:
-            continue
-        if adoption > today:
-            verdicts.append(ValidationVerdict.failed(_ADOPTION_IN_FUTURE_LOCALE_KEY, instance=instance))
-            continue
-        birth = parse_iso8601_date(birth_raw) if birth_raw else None
-        if birth is not None and adoption < birth:
-            verdicts.append(ValidationVerdict.failed(_ADOPTION_BEFORE_BIRTH_LOCALE_KEY, instance=instance))
+    verdicts = [
+        verdict
+        for instance, raw in _adoption_date_answers(answers, prefix_root=prefix_root)
+        if (
+            verdict := _adoption_date_verdict(
+                raw,
+                birth_raw=answers.get(f"{prefix_root}{instance}.{_BIRTH_DATE_PAGE_ID}", ""),
+                instance=instance,
+                today=today,
+            )
+        )
+        is not None
+    ]
     return tuple(verdicts) if verdicts else (ValidationVerdict.passed(),)
+
+
+def _adoption_date_answers(answers: Mapping[str, str], *, prefix_root: str) -> list[tuple[str, str]]:
+    """Yield each populated adoption-date answer as its (instance, raw) pair."""
+    return [
+        (key[len(prefix_root) :].split(".", 1)[0], raw)
+        for key, raw in answers.items()
+        if key.startswith(prefix_root) and key.endswith(f".{_ADOPTION_DATE_PAGE_ID}") and raw
+    ]
+
+
+def _adoption_date_verdict(
+    raw: str,
+    *,
+    birth_raw: str,
+    instance: str,
+    today: date,
+) -> ValidationVerdict | None:
+    """Judge one instance's adoption date, or ``None`` when it is sound.
+
+    A future adoption date is reported on its own; only a past one is then
+    compared against the birth date, so an operator is told the one thing
+    wrong with the value rather than two overlapping refusals.
+    """
+    adoption = parse_iso8601_date(raw)
+    if adoption is None:
+        return None
+    if adoption > today:
+        return ValidationVerdict.failed(_ADOPTION_IN_FUTURE_LOCALE_KEY, instance=instance)
+    birth = parse_iso8601_date(birth_raw) if birth_raw else None
+    if birth is not None and adoption < birth:
+        return ValidationVerdict.failed(_ADOPTION_BEFORE_BIRTH_LOCALE_KEY, instance=instance)
+    return None
 
 
 register_cross_field_validator(DESCENDANT_ADOPTION_VALIDATOR_ID, _validate_descendant_adoption_dates)

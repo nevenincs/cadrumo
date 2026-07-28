@@ -112,24 +112,35 @@ def attach_format_hints(definition: FlowDefinition) -> FlowDefinition:
     """
     sections: list[FlowSection] = []
     for section in definition.sections:
-        items: list[object] = []
-        changed = False
-        for item in section.items:
-            update: dict[str, object] = {}
-            if isinstance(item, FlowPage):
-                hint_key = PAGE_FORMAT_HINTS.get(item.id)
-                if hint_key is not None and item.format_hint is None:
-                    update["format_hint"] = CopyRef(kind=CopyRefKind.LOCALE_KEY, ref=hint_key)
-                widget_kind = PAGE_WIDGET_KINDS.get(item.id)
-                if widget_kind is not None and item.widget is not widget_kind:
-                    update["widget"] = widget_kind
-            if update:
-                items.append(item.model_copy(update=update))
-                changed = True
-            else:
-                items.append(item)
-        sections.append(section.model_copy(update={"items": tuple(items)}) if changed else section)
+        updates = [_page_overrides(item) for item in section.items]
+        if not any(updates):
+            sections.append(section)
+            continue
+        items = tuple(
+            item.model_copy(update=update) if update else item
+            for item, update in zip(section.items, updates, strict=True)
+        )
+        sections.append(section.model_copy(update={"items": items}))
     return definition.model_copy(update={"sections": tuple(sections)})
+
+
+def _page_overrides(item: object) -> dict[str, object]:
+    """Return the field updates one item needs, empty when it passes through.
+
+    A declared hint yields a CopyRef only when the page carries none, so a
+    future catalogue- or bridge-supplied hint wins over this fallback; a
+    declared widget kind applies only when it actually differs.
+    """
+    if not isinstance(item, FlowPage):
+        return {}
+    update: dict[str, object] = {}
+    hint_key = PAGE_FORMAT_HINTS.get(item.id)
+    if hint_key is not None and item.format_hint is None:
+        update["format_hint"] = CopyRef(kind=CopyRefKind.LOCALE_KEY, ref=hint_key)
+    widget_kind = PAGE_WIDGET_KINDS.get(item.id)
+    if widget_kind is not None and item.widget is not widget_kind:
+        update["widget"] = widget_kind
+    return update
 
 
 __all__ = [
