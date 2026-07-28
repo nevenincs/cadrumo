@@ -27,7 +27,7 @@ tolerance = "0.01"
 rounding = "money-2"
 min_coverage = "0"
 discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "ley-37-1992:art-104", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 # Five of the reconciled leaves are additionally grounded against an independent
 # AEAT authority: the Manual practico IVA 2024, Cap. 9 "Liquidacion primer
@@ -44,4 +44,21 @@ source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-
 # individual boxes the operator files are wrong. See
 # test_m303_2024_regimen_general_manual_worked_example.py and
 # corpus/manual_oracles/modelo-303-2024-regimen-general-recargo-intracomunitaria-importacion.json.
-externally_grounded_casilla_ids = ["09", "11", "29", "33", "37"]
+#
+# A sixth leaf, iva.prorrata-porcentaje, is grounded against a second bundled
+# AEAT authority: the Manual practico IVA 2025, Cap. 5 "Deducciones y
+# devoluciones", apartado "Prorrata general" (pag. 137-138), whose alquiler de
+# viviendas y locales example states the definitive percentage outright — "(25.000
+# / 45.000) x 100 = 55,5555%. Se redondea en exceso = 56%". The bundled payload
+# corpus/manual_oracles/modelo-303-2025-prorrata-general-regularizacion.json
+# carries that 56 as its only expected value, and the engine reproduces it from
+# the manual's own annual volume givens. Until now the figure was evidence the
+# honesty relation saw but no revision claimed, so nothing enforced it; declaring
+# it here turns the manual's number into a checked independent oracle. The
+# percentage is a deduction-rate leaf that multiplies into every cuota deducible,
+# so a wrong rate silently rescales the whole deducible side while the totals it
+# feeds stay internally consistent — the same compensating-error gap the five
+# leaves above close for the devengado and deducible sums. Grounded on THIS
+# revision only: no bundled oracle covers a filing year that resolves to
+# 2009-y-siguientes, so declaring it there would be a claim without evidence.
+externally_grounded_casilla_ids = ["09", "11", "29", "33", "37", "iva.prorrata-porcentaje"]

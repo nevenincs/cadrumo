@@ -31,6 +31,7 @@ from ....domain.calculations.registry import (
     InputKind,
     ModeloRevision,
     ParameterDefinition,
+    RegistryRoundingCode,
     RegistrySnapshot,
     binding_aggregation_op,
     binding_row_set_selector,
@@ -75,14 +76,25 @@ _ACQUISITION_MIRROR_BINDING_SUFFIX: Final[str] = "-adquisicion"
 
 def _rounding_rule_for(
     formula: FormulaDefinition,
-) -> tuple[Literal["money", "integer", "none"], int | None]:
-    """Map a registry rounding code to (rule_name, scale)."""
+) -> tuple[Literal["money", "integer", "integer-ceiling", "none"], int | None]:
+    """Map a registry rounding code to (rule_name, scale).
+
+    The workbook is the SECOND interpreter of the registry rounding
+    vocabulary: :func:`domain.calculations.registry._formula_runtime_ops.apply_rounding`
+    evaluates it on the calculate path, and this renderer emits the live
+    spreadsheet equivalent. A code handled in one and not the other makes
+    the pull path and the calculate path disagree on the same casilla, so
+    every :class:`~domain.calculations.registry.RegistryRoundingCode`
+    member must be answered here.
+    """
     if formula.rounding is None:
         return ("none", None)
-    if formula.rounding == "money-2":
+    if formula.rounding == RegistryRoundingCode.MONEY_2:
         return ("money", 2)
-    if formula.rounding == "integer":
+    if formula.rounding == RegistryRoundingCode.INTEGER:
         return ("integer", 0)
+    if formula.rounding == RegistryRoundingCode.INTEGER_CEILING:
+        return ("integer-ceiling", 0)
     raise CalcSheetsEngineError(
         "unsupported registry rounding code",
         context={"formula_id": formula.id},
@@ -93,6 +105,13 @@ def _rounding_rule_for(
 def _wrap_rounded(expression: str, *, rule: str, scale: int | None) -> str:
     if rule == "none" or scale is None:
         return expression
+    if rule == "integer-ceiling":
+        # Spreadsheet counterpart of decimal.ROUND_CEILING: CEILING(x, 1)
+        # takes x to the next whole unit up and leaves an already-integral
+        # x untouched, matching LIVA art. 104.Dos ("se redondeará en la
+        # unidad superior"). ROUND(x, 0) would round the ratio to the
+        # NEAREST unit and understate the deduction below the half.
+        return f"CEILING({expression},1)"
     return f"ROUND({expression},{scale})"
 
 

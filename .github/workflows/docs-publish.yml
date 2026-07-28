@@ -1,0 +1,109 @@
+# Documentation delivery, downstream of publication and never inside it.
+#
+# Docs publication is a release CONSEQUENCE, not a release GATE. A strict
+# multi-root site build inside the publication path would let a documentation
+# defect strand a half-published release: the index upload is irreversible, so a
+# failure after it cannot be unwound, and blocking on a rebuildable artifact
+# trades a recoverable problem for an unrecoverable one. This workflow therefore
+# runs AFTER a release is published, alerts loudly when it fails, and never
+# blocks or unwinds the release that triggered it.
+#
+# Staleness is the cost of that choice and is bounded rather than denied: the
+# download page falls back to its offline channel table when the payload is
+# absent, so it degrades to a floor and never to a lie.
+#
+# INERT UNTIL PROVISIONED. The deploy role does not exist yet (operator decision
+# OP-3), and the publisher additionally refuses to run under CI by design. Both
+# are deliberate: this workflow is authored so the shape is reviewable and its
+# conformance is gated, and it refuses instructively rather than failing
+# obscurely until the role and the protected environment exist.
+name: Cadrumo Docs Publish
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      source_commit:
+        description: Commit to build the documentation from (defaults to the release target)
+        required: false
+        default: ""
+        type: string
+
+concurrency:
+  group: cadrumo-docs-publish
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish-docs:
+    name: Build and publish the documentation site
+    runs-on: [self-hosted, Linux, X64]
+    # The protected environment is the product boundary on a shared runner
+    # fleet: the role is assumable only from this repository and this
+    # environment, so a sibling product's job on the same host cannot assume it.
+    environment: docs
+    permissions:
+      # OIDC federation only. No cloud credential is ever stored, so there is no
+      # secret at rest for a co-resident job to read.
+      id-token: write
+      contents: read
+    steps:
+      - name: Require the deploy role before anything else
+        env:
+          DOCS_DEPLOY_ROLE: ${{ vars.CADRUMO_DOCS_DEPLOY_ROLE }}
+        run: |
+          if [[ -z "$DOCS_DEPLOY_ROLE" ]]; then
+            cat >&2 <<'EOF'
+          REFUSED: documentation publication is not provisioned.
+
+          This workflow is inert until the operator completes OP-3:
+
+            1. Create the OIDC identity provider for this forge in the cloud account.
+            2. Create a least-privilege docs role trusting THIS repository and the
+               `docs` environment only. Permissions: object list/put/delete on the
+               one documentation bucket, invalidation create/get on the one
+               distribution, and stack describe. Nothing wider.
+            3. Create the `docs` environment and set the variable
+               CADRUMO_DOCS_DEPLOY_ROLE to the role identifier.
+
+          Until then the documentation site is published by a human from a local
+          cloud session, which remains supported after provisioning.
+          EOF
+            exit 1
+          fi
+          echo "Docs deploy role configured; proceeding."
+
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          # Build from the released commit, not from whatever main holds now: the
+          # documentation must describe the release that triggered this run.
+          ref: ${{ inputs.source_commit || github.event.release.target_commitish }}
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+
+      - name: Sync frozen development environment
+        run: uv sync --frozen
+
+      - name: Publish the documentation site
+        env:
+          DOCS_DEPLOY_ROLE: ${{ vars.CADRUMO_DOCS_DEPLOY_ROLE }}
+        run: |
+          uv run --no-sync python -m dev.deploy.docs_static_site publish \
+            --confirm publish-cadrumo-docs
+
+      - name: Alert on failure without touching the release
+        if: failure()
+        run: |
+          # Loud, and only that. The release is already published and every
+          # channel already serves it; unwinding a release because its
+          # documentation failed to build would convert a bounded staleness into
+          # an unbounded outage.
+          echo "::error::Documentation publication failed. The release is unaffected and remains published." >&2
+          echo "The download page falls back to its offline channel table until the next successful publish." >&2

@@ -23,7 +23,7 @@ from pydantic import (
     model_validator,
 )
 
-from ....core import Period, TaxDomain
+from ....core import REVIEWED_REVISION_REVIEW_STATUSES, Period, RevisionReviewStatus, TaxDomain
 from ....core.aggregation import BindingAggregation, BindingSourceKind, BindingTypedEnumKind
 from ....core.classification import SensitivityClass
 from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
@@ -133,6 +133,8 @@ __all__ = [
 
 from ._convenio import ConvenioAuthority
 from ._schema_base import (
+    GOVERNANCE_STAMP,
+    MANIFEST_ONLY,
     CalculationClass,
     DateAxis,
     EvidenceTier,
@@ -141,10 +143,13 @@ from ._schema_base import (
     ModeloFilingCapability,
     RegistryModel,
     ReviewStatus,
+    RevisionReviewStatusField,
     SensitivityClassField,
     SourceCitation,
     SourceCitationText,
     SourceRefs,
+    governance_stamp_fields,
+    manifest_only_fields,
 )
 from ._schema_extraction import BboxAnchorSpec, ExtractionProfileDefinition, ExtractionTargetDefinition
 from ._schema_formula import (
@@ -1233,18 +1238,25 @@ class ModeloRevision(RegistryModel):
 
     The field is mandatory at validation time: every revision must cite the
     Ordenes that approve or amend the form for its applicability window.
+
+    The governance stamp — ``engineered_by``, ``review_status``, ``reviewed_by``,
+    ``reviewed_at`` — is the revision's *declared* provenance. Authorship and
+    signoff are facts about the people and agents who built the revision, so
+    nothing in the tree can derive them. The whole block is optional and its
+    absence reads as :attr:`RevisionReviewStatus.PENDING_REVIEW`: an unstamped
+    revision is a visible unreviewed backlog entry, never a silent pass.
     """
 
     id: RevisionId
     label: str | None = None
     valid_from: date
-    valid_to: date | None = None
+    valid_to: Annotated[date | None, MANIFEST_ONLY] = None
     period_selector: PeriodSelector
-    legal_refs: LegalRefs
+    legal_refs: Annotated[LegalRefs, MANIFEST_ONLY]
     source_refs: SourceRefs
     # Required by validate_orden_aplicabilidad; kept default-empty so the
     # validator can report a grounded registry failure instead of a parse error.
-    orden_aplicabilidad: tuple[LegalRefId, ...] = ()
+    orden_aplicabilidad: Annotated[tuple[LegalRefId, ...], MANIFEST_ONLY] = ()
     parameters: tuple[ParameterDefinition, ...] = ()
     casillas: tuple[CasillaDefinition, ...] = ()
     formulas: tuple[FormulaDefinition, ...] = ()
@@ -1267,12 +1279,145 @@ class ModeloRevision(RegistryModel):
     verification_predicates: tuple[VerificationPredicateDefinition, ...] = ()
     continuidad_validation: Literal["advisory", "strict"] = "advisory"
     casilla_continuidad_evolutions: tuple[CasillaContinuidadEvolutionDefinition, ...] = ()
+    engineered_by: Annotated[str | None, GOVERNANCE_STAMP] = None
+    review_status: Annotated[RevisionReviewStatusField, GOVERNANCE_STAMP] = RevisionReviewStatus.PENDING_REVIEW
+    reviewed_by: Annotated[str | None, GOVERNANCE_STAMP] = None
+    reviewed_at: Annotated[date | None, GOVERNANCE_STAMP] = None
+
+    @field_validator("engineered_by", "reviewed_by")
+    @classmethod
+    def _attribution_names_somebody(cls, value: str | None, info: ValidationInfo) -> str | None:
+        """Refuse an attribution that is declared but names nobody.
+
+        A length constraint counts whitespace, so ``reviewed_by = "   "`` would
+        satisfy one while leaving the claim exactly as unfalsifiable as the
+        omission :meth:`_validate_governance_stamp` refuses — and a blank
+        reviewer renders in a conformance report as a signed-off revision.
+        Omission is the honest way to say nobody reviewed it.
+        """
+        if value is not None and not value.strip():
+            raise RegistryValidationError(
+                f"revision governance field {info.field_name!r} must name somebody; "
+                f"omit the field instead of declaring it blank",
+            )
+        return value
+
+    @field_validator("reviewed_at")
+    @classmethod
+    def _reviewed_at_is_within_the_signoff_horizon(cls, value: date | None) -> date | None:
+        """Refuse a signoff date no auditor could ever check.
+
+        See :data:`REVISION_REVIEW_DATE_CEILING` for why the horizon is a fixed
+        calendar date rather than a reading of the local clock.
+        """
+        if value is not None and value >= REVISION_REVIEW_DATE_CEILING:
+            raise RegistryValidationError(
+                f"revision governance field 'reviewed_at' is {value.isoformat()}, beyond the signoff horizon "
+                f"{REVISION_REVIEW_DATE_CEILING.isoformat()}; a review dated there records no signoff anyone can check",
+            )
+        return value
 
     @model_validator(mode="after")
     def _validate_window(self) -> ModeloRevision:
         if self.valid_to is not None and self.valid_to < self.valid_from:
             raise RegistryValidationError("revision valid_to must be on or after valid_from")
         return self
+
+    @model_validator(mode="after")
+    def _validate_governance_stamp(self) -> ModeloRevision:
+        """Bind the reviewer identity to the claim that a review happened.
+
+        A reviewed status without a reviewer or a date is an unfalsifiable
+        claim, and a reviewer recorded against ``pending_review`` is a review
+        the status denies. Both directions refuse so the stamp cannot say one
+        thing on the status axis and another on the attribution axis.
+        """
+        companions = {"reviewed_by": self.reviewed_by, "reviewed_at": self.reviewed_at}
+        if self.review_status in REVIEWED_REVISION_REVIEW_STATUSES:
+            missing = sorted(name for name, value in companions.items() if value is None)
+            if missing:
+                raise RegistryValidationError(
+                    f"revision {self.id!r} declares review_status={self.review_status.value!r} but omits "
+                    f"{missing!r}; a reviewed revision must name its reviewer and the date of review",
+                )
+            return self
+        present = sorted(name for name, value in companions.items() if value is not None)
+        if present:
+            raise RegistryValidationError(
+                f"revision {self.id!r} declares review_status="
+                f"{RevisionReviewStatus.PENDING_REVIEW.value!r} but also declares {present!r}; "
+                f"record the review by advancing review_status, or drop the reviewer fields",
+            )
+        return self
+
+
+REVISION_REVIEW_DATE_CEILING: date = date(2100, 1, 1)
+"""Exclusive upper bound on a governance stamp's ``reviewed_at`` signoff date.
+
+A signoff dated beyond any living reviewer's horizon is not a signoff: it is a
+sentinel or a template artefact wearing a date, and it renders in a conformance
+report as an operator countersignature. The bound refuses that class.
+
+The ceiling is a fixed calendar date rather than a reading of the local clock,
+deliberately. The registry is the authority behind every calculation the
+application performs, so a validation rule that consults the wall clock makes
+the shipped tree's validity a property of the machine that loads it: a
+container whose clock is behind reality, or a stamp written the other side of a
+timezone boundary, would refuse the whole registry and take the product with
+it. A false refusal here costs incomparably more than a missed absurd date, and
+a fixed ceiling is identical on every machine in every year.
+
+The bound is therefore an absurdity floor, not a freshness check: it catches the
+sentinel (``3999-12-31``, ``9999-12-31``) that no auditor could ever check, and
+deliberately does not catch a near-future typo. Freshness is a governance
+question for the dev-side conformance audit, where consulting the clock costs
+one contributor a re-run rather than bricking the registry.
+"""
+
+
+REVISION_GOVERNANCE_FIELDS: frozenset[str] = governance_stamp_fields(ModeloRevision)
+"""The :class:`ModeloRevision` fields that make up the declared governance stamp.
+
+The stamp is an authorship and signoff claim about a whole revision, so it must
+be readable in one place: the revision's own ``revision.toml`` manifest. The
+loader refuses these keys anywhere else in the fragment tree, and this set is
+that refusal's sole input.
+
+Derived from the :data:`GOVERNANCE_STAMP` marker on the field declarations
+rather than hand-listed. A hand-written list catches a rename - the names stop
+matching real fields - but cannot catch an *addition*: a fifth governance
+scalar added to the model and forgotten here would stay absent from the refusal
+and become silently declarable in any of the section fragments, where the
+merged value wins and ``revision.toml`` still reads unstamped. Marking the
+field is now the whole of enrolling it.
+
+This set is the stamp VOCABULARY, narrower than
+:data:`REVISION_MANIFEST_ONLY_FIELDS`: it is what the conformance tooling reads
+as declared provenance and what the stamp writer emits, so a field pinned to
+the manifest for legal-grounding reasons must not appear here.
+"""
+
+REVISION_MANIFEST_ONLY_FIELDS: frozenset[str] = manifest_only_fields(ModeloRevision)
+"""Every :class:`ModeloRevision` field that may be declared only in ``revision.toml``.
+
+A superset of :data:`REVISION_GOVERNANCE_FIELDS` by construction, since
+:class:`GovernanceStampMarker` is a :class:`ManifestOnlyMarker`. Beyond the
+governance stamp it carries the legally load-bearing scalars: ``legal_refs``
+(the law the revision stands on), ``orden_aplicabilidad`` (the ordenes that
+approve the form for its window) and ``valid_to`` (the date the revision stops
+applying).
+
+Those three share the governance stamp's readability hazard and raise its
+stakes. A revision compiles from its manifest plus up to several hundred
+section fragments, and ``orden_aplicabilidad`` is an append array, so a fragment
+declaring one silently ADDS an approving orden the manifest never names;
+``valid_to`` and ``legal_refs`` merge in wherever the manifest is silent, so a
+fragment thousands deep can close a revision's validity window or supply its
+entire legal grounding while ``revision.toml`` reads as though it did neither.
+Governance provenance and legal grounding are different subjects, which is why
+they are different markers, but the placement guarantee they need is the same
+one, and the loader refuses both sets in the same place.
+"""
 
 
 class ModeloDefinition(RegistryModel):

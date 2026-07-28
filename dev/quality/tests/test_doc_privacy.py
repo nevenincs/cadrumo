@@ -30,6 +30,7 @@ faster than reading every tracked file in Python.
 
 from __future__ import annotations
 
+import re
 import subprocess
 from pathlib import Path
 
@@ -96,12 +97,51 @@ _BANNED_PATTERNS: tuple[str, ...] = (
     r"\b100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\.[0-9]{1,3}\.[0-9]{1,3}\b",
 )
 
+# Cross-project infrastructure identifiers. A DIFFERENT class from the operator
+# tokens above: not personally identifying, but belonging to the account or to a
+# sibling product rather than to this repository. This repository is public and
+# carries its own concerns only, so a leak here is a disclosure question and not
+# a tidiness one.
+#
+# On why this is split between shapes and fragment tokens, which is the honest
+# part: shape detection works only where a shape is distinctive. A cloud role
+# identifier is unmistakable. A DNS zone or cloud account id is thirty-two hex
+# characters, which is indistinguishable from an index job id, a document
+# internal id, or a library digest -- measured at eighty-two legitimate
+# occurrences in this tree, so banning that shape would produce noise that gets
+# silenced rather than corrected. Known values are therefore banned by fragment
+# token, exactly as the operator tokens are, and the shape rules cover only what
+# a shape can honestly identify.
+#
+# What this cannot catch, stated rather than implied: an identifier belonging to
+# a sibling product whose value nobody recorded here. The detector narrows the
+# window; only the discipline of naming account dependencies abstractly closes
+# it.
+_BANNED_CROSS_PROJECT_LITERALS: tuple[str, ...] = (
+    _token("7c9544cd48f5393b", "d9c0ced07c587eb3"),  # account DNS zone id
+    _token("5147c4292ed2ddca", "fdcbd4f0828e7436"),  # account CDN/DNS account id
+    _token("neve-nincs", "-docs"),  # operator's private planning vault repository
+    _token("adaline.ns.", "cloudflare.com"),  # account nameserver
+    _token("todd.ns.", "cloudflare.com"),  # account nameserver
+)
+
+# ERE patterns for cross-project shapes that ARE distinctive enough to match on
+# form. Kept deliberately narrow for the reason above.
+_BANNED_CROSS_PROJECT_PATTERNS: tuple[str, ...] = (
+    # Cloud role identifiers: an account number is embedded in the ARN itself.
+    r"arn:aws:iam::[0-9]{12}:",
+)
+
 # Exact (relative-path, token) exemptions for genuine functional survivors, each
 # with a stated reason. Empty today: the scrub left no functional survivor that
 # still carries a banned token. A future functional survivor (e.g. a runner name
 # that GitHub's registry requires verbatim) is recorded here, never by weakening
 # the token list.
 _ALLOWLIST: dict[tuple[str, str], str] = {}
+
+#: Untracked binaries and build outputs are read as text, so a size ceiling
+#: keeps an accidental large artifact from stalling the gate.
+_MAX_SCANNED_BYTES: int = 2_000_000
 
 
 def _git_grep(root: Path, args: list[str]) -> list[str]:
@@ -117,6 +157,50 @@ def _git_grep(root: Path, args: list[str]) -> list[str]:
     if result.returncode not in (0, 1):
         raise RuntimeError(f"git grep failed: {result.stderr}")
     return [line for line in result.stdout.splitlines() if line]
+
+
+def _untracked_files(root: Path) -> list[str]:
+    """Return untracked, non-ignored paths -- the half ``git grep`` cannot see.
+
+    ``git grep`` reads the tracked tree, so a file that has never been added is
+    invisible to it. That is not a theoretical gap: this campaign's own records
+    carried an account DNS zone id while untracked, and the gate was green for
+    the whole time they did. It can only ever have caught that leak after the
+    commit introducing it, by which point removing it is a history rewrite
+    rather than an edit.
+    """
+    result = subprocess.run(
+        ["git", "ls-files", "--others", "--exclude-standard"],  # noqa: S607 - git from PATH like every dev gate
+        cwd=root,
+        capture_output=True,
+        text=True,
+        errors="replace",
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"git ls-files failed: {result.stderr}")
+    return [line for line in result.stdout.splitlines() if line]
+
+
+def _scan_untracked(root: Path, needles: tuple[str, ...], patterns: tuple[str, ...]) -> list[str]:
+    """Return ``path:line`` hits for banned shapes in untracked files."""
+    offenders: list[str] = []
+    compiled = [re.compile(pattern) for pattern in patterns]
+    for relative in _untracked_files(root):
+        path = root / relative
+        try:
+            if path.stat().st_size > _MAX_SCANNED_BYTES:
+                continue
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except (OSError, ValueError):
+            continue
+        for number, line in enumerate(text.splitlines(), start=1):
+            for needle in needles:
+                if needle in line:
+                    offenders.append(f"[{needle!r}] {relative}:{number}")
+            for pattern in compiled:
+                if pattern.search(line):
+                    offenders.append(f"[/{pattern.pattern}/] {relative}:{number}")
+    return offenders
 
 
 def _is_allowlisted(hit: str, token: str) -> bool:
@@ -218,3 +302,85 @@ def test_no_operator_identifying_tokens_in_tracked_files() -> None:
         "(host/login/path/network data must not ship) or, for a genuine "
         "functional survivor, record it in _ALLOWLIST with a reason:\n" + "\n".join(sorted(offenders))
     )
+
+
+def test_the_cross_project_token_sets_are_not_empty() -> None:
+    """An emptied set disarms this half while leaving the gate green."""
+    assert len(_BANNED_CROSS_PROJECT_LITERALS) >= 3
+    assert _BANNED_CROSS_PROJECT_PATTERNS
+
+
+def test_no_cross_project_identifier_in_tracked_files() -> None:
+    """This repository is public and carries its own concerns only.
+
+    Account-level and sibling-product identifiers belong in the operator's
+    private notes, not here, so a leak is a disclosure question rather than a
+    tidiness one.
+    """
+    root = _repo_root()
+    offenders: list[str] = []
+    for token in _BANNED_CROSS_PROJECT_LITERALS:
+        offenders.extend(f"[{token!r}] {hit}" for hit in _git_grep(root, ["-F", "-e", token]))
+    for pattern in _BANNED_CROSS_PROJECT_PATTERNS:
+        offenders.extend(f"[/{pattern}/] {hit}" for hit in _git_grep(root, ["-E", "-e", pattern]))
+    assert not offenders, (
+        "Cross-project infrastructure identifiers found in committed text. Name the "
+        "account dependency abstractly and keep the value in private notes:\n" + "\n".join(sorted(offenders))
+    )
+
+
+def test_no_banned_shape_in_untracked_files() -> None:
+    """The half a tracked-only scan cannot see, and the shape of the real breach.
+
+    This campaign's own records carried an account DNS zone id while untracked,
+    and the gate was green throughout. A tracked-only scan can only catch that
+    after the commit that introduces it, when removal is a history rewrite.
+    """
+    root = _repo_root()
+    offenders = _scan_untracked(
+        root,
+        _BANNED_LITERALS + _BANNED_CROSS_PROJECT_LITERALS,
+        _BANNED_PATTERNS + _BANNED_CROSS_PROJECT_PATTERNS,
+    )
+    assert not offenders, (
+        "Banned tokens found in untracked files. Scrub them BEFORE committing; "
+        "after the commit, removal is a history rewrite:\n" + "\n".join(sorted(offenders))
+    )
+
+
+def test_the_untracked_scan_finds_a_planted_leak(tmp_path: Path) -> None:
+    """Anti-tautology against an injectable root, not the real tree.
+
+    Without this the untracked scan passes because it read nothing just as
+    readily as because the tree is clean, and those look identical.
+    """
+    for argv in (["git", "init", "-q"], ["git", "config", "user.email", "p@example.invalid"]):
+        subprocess.run(argv, cwd=tmp_path, check=True, capture_output=True)  # noqa: S603 - fixed git argv in a temp repo
+
+    planted = tmp_path / "notes.md"
+    planted.write_text(f"zone {_BANNED_CROSS_PROJECT_LITERALS[0]}\n", encoding="utf-8")
+    hits = _scan_untracked(tmp_path, _BANNED_CROSS_PROJECT_LITERALS, ())
+    assert any("notes.md" in hit for hit in hits), "an untracked leak must be found"
+
+    # Ignored files are not scanned: they are not candidates for commit.
+    (tmp_path / ".gitignore").write_text("secret.md\n", encoding="utf-8")
+    (tmp_path / "secret.md").write_text(f"zone {_BANNED_CROSS_PROJECT_LITERALS[0]}\n", encoding="utf-8")
+    ignored = _scan_untracked(tmp_path, _BANNED_CROSS_PROJECT_LITERALS, ())
+    assert not any("secret.md" in hit for hit in ignored), "an ignored file cannot reach a commit"
+
+
+def test_the_untracked_scan_matches_shape_patterns_too(tmp_path: Path) -> None:
+    """Both halves of the ban - fixed tokens and shapes - reach untracked files."""
+    subprocess.run(
+        ["git", "init", "-q"],  # noqa: S607 - git resolved from PATH like every dev gate
+        cwd=tmp_path,
+        check=True,
+        capture_output=True,
+    )
+    # Assembled from fragments like every other banned value: a literal here
+    # would be a real hit in a tracked file and this gate would flag itself,
+    # which is exactly what it did on the first draft of this test.
+    planted = _token("arn:aws", ":iam::123456789012:role/example")
+    (tmp_path / "role.tf").write_text(f'role = "{planted}"\n', encoding="utf-8")
+    hits = _scan_untracked(tmp_path, (), _BANNED_CROSS_PROJECT_PATTERNS)
+    assert any("role.tf" in hit for hit in hits)

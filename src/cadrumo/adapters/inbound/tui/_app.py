@@ -450,7 +450,7 @@ def run_flow_tui(
     never mistake an aborted flow for a completed one.
 
     ``on_app_ready`` is invoked with the constructed :class:`FlowTuiApp`
-    after construction and before :meth:`FlowTuiApp.run`, so a caller can
+    after construction and before :func:`~textual.app.App.run`, so a caller can
     capture the app handle to drive a frontend affordance — the locale
     rebuild (:meth:`FlowTuiApp.rebuild_for_locale`) from inside its
     ``on_answer_committed`` hook — without constructing the app itself and

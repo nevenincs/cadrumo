@@ -23,7 +23,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import date
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import ROUND_CEILING, ROUND_HALF_UP, Decimal
 from enum import StrEnum
 from functools import cache
 from pathlib import Path
@@ -34,6 +34,7 @@ from ._casilla_membership import undeclared_casilla_ids
 from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._ids import CasillaId, validated_casilla_id
 from ._schema import DatedValue, ModeloRevision, ParameterDefinition
+from ._schema_rounding import RegistryRoundingCode
 
 if TYPE_CHECKING:
     from _typeshed import SupportsAllComparisons
@@ -251,18 +252,32 @@ def resolve_parameter(parameter: ParameterDefinition, date_context: Mapping[str,
     return matches[0].value
 
 
-def apply_rounding(value: Decimal, rounding: str | None) -> Decimal:
+def apply_rounding(value: Decimal, rounding: RegistryRoundingCode | None) -> Decimal:
     """Apply a registry rounding rule to a decimal formula result.
 
     ``money-2`` uses :func:`core.money.round_to_cents`; ``integer`` uses
-    half-up quantization for registry-authored integer targets.
+    half-up quantization for registry-authored integer targets;
+    ``integer-ceiling`` quantizes with :data:`decimal.ROUND_CEILING` for
+    the targets whose governing provision takes the result to the next
+    unit up rather than to the nearest one (LIVA art. 104.Dos, "se
+    redondeará en la unidad superior"). ``ROUND_CEILING`` leaves an
+    already-integral value untouched, so a 50 % ratio stays 50.
+
+    ``ROUND_CEILING`` moves toward positive infinity, which differs from
+    away-from-zero for a negative operand. Every ``integer-ceiling``
+    target today is a registry-constrained non-negative percentage
+    (``sign = "non_negative"``, ``min_value = "0"``), so the two readings
+    coincide; a future negative-capable target must state which reading
+    its provision means before enrolling here.
     """
     if rounding is None:
         return value
-    if rounding == "money-2":
+    if rounding == RegistryRoundingCode.MONEY_2:
         return _round_to_cents(value)
-    if rounding == "integer":
-        return value.quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+    if rounding == RegistryRoundingCode.INTEGER:
+        return value.quantize(_ONE, rounding=ROUND_HALF_UP)
+    if rounding == RegistryRoundingCode.INTEGER_CEILING:
+        return value.quantize(_ONE, rounding=ROUND_CEILING)
     raise RegistryValidationError(f"unsupported rounding rule {rounding!r}")
 
 

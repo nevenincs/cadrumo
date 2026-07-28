@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import urllib.error
-import urllib.request
 from pathlib import Path
 from typing import Any, Final, cast
 
@@ -17,6 +15,7 @@ from dev.packaging.installed_tax_oracle import (
     TARGET_CASILLA,
 )
 from dev.packaging.python_cohort import PythonCohort, load_python_cohort
+from dev.release.version_identity import VersionIdentityError, pypi_projects_owning
 
 _UTF_8: Final[str] = "utf-8"
 _PYPI_PROJECTS: Final[tuple[str, ...]] = (
@@ -113,28 +112,23 @@ def _write_outputs(path: Path, cohort: PythonCohort) -> None:
 
 
 def assert_pypi_destinations_absent(cohort: PythonCohort) -> None:
-    """Fail before upload when any destination already owns the cohort version."""
-    for project in _PYPI_PROJECTS:
-        url = f"https://pypi.org/pypi/{project}/{cohort.version}/json"
-        request = urllib.request.Request(  # fixed HTTPS PyPI endpoint.
-            url,
-            headers={"Accept": "application/json"},
-        )
-        try:
-            with urllib.request.urlopen(request, timeout=20) as response:  # noqa: S310
-                response.read(1)
-        except urllib.error.HTTPError as exc:
-            if exc.code == 404:
-                continue
-            raise SystemExit(
-                f"PyPI destination check failed for {project}: HTTP {exc.code}",
-            ) from exc
-        except urllib.error.URLError as exc:
-            raise SystemExit(
-                f"PyPI destination check failed for {project}: {exc.reason}",
-            ) from exc
+    """Fail before upload when any index already owns the cohort version.
+
+    This is the index slice of the question, kept for the ``--check-pypi``
+    caller. It delegates the probe rather than repeating it: the publication
+    path asks the WHOLE question through
+    :func:`dev.release.version_identity.assert_version_available`, which covers
+    the tag and release namespaces, the monotonic floor, and the burned ledger
+    as well. Two implementations of one probe is how the narrow question came to
+    be asked in isolation, so there is exactly one.
+    """
+    try:
+        owning = pypi_projects_owning(cohort.version, projects=_PYPI_PROJECTS)
+    except VersionIdentityError as exc:
+        raise SystemExit(str(exc)) from exc
+    if owning:
         raise SystemExit(
-            f"PyPI already contains {project} {cohort.version}; refusing overwrite",
+            f"PyPI already contains {', '.join(owning)} {cohort.version}; refusing overwrite",
         )
 
 
@@ -148,20 +142,22 @@ def main() -> int:
     parser.add_argument("--check-pypi", action="store_true")
     # The immutable release cohort's installed behaviour is proven per-OS by the
     # DistributionEvidence rows (readiness gate), not by this per-OS-smoke-build
-    # evidence, so the publish path re-points here for ONLY the pre-upload PyPI
-    # destination guard + the version/path outputs, skipping the smoke-build
-    # evidence binding that does not apply to the sealed cohort's bytes.
-    parser.add_argument("--check-pypi-only", action="store_true")
+    # evidence, so the publish path re-points here for ONLY the version/path
+    # outputs, skipping the smoke-build evidence binding that does not apply to
+    # the sealed cohort's bytes. Destination ownership is no longer asked here:
+    # dev.release.version_identity asks it of EVERY destination, and asking a
+    # partial version of the same question in a second place is how the tag and
+    # release namespaces went unchecked while the index check passed.
+    parser.add_argument("--emit-version-only", action="store_true")
     args = parser.parse_args()
-    if args.check_pypi_only:
+    if args.emit_version_only:
         cohort = load_python_cohort(args.cohort_dir)
-        assert_pypi_destinations_absent(cohort)
         if args.github_output is not None:
             _write_outputs(args.github_output, cohort)
         print(json.dumps({"version": cohort.version, "source_commit": cohort.source_commit}, sort_keys=True))
         return 0
     if args.evidence_file is None or args.expected_source_commit is None:
-        raise SystemExit("--evidence-file and --expected-source-commit are required unless --check-pypi-only")
+        raise SystemExit("--evidence-file and --expected-source-commit are required unless --emit-version-only")
     cohort = validate_promotion(
         args.cohort_dir,
         args.evidence_file,

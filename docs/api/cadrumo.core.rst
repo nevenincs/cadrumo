@@ -52,6 +52,7 @@ Submodules
    cadrumo.core._config_support
    cadrumo.core._config_timeouts
    cadrumo.core._credentials
+   cadrumo.core._external_oracle_corpus
    cadrumo.core._foreign_asset_obligation
    cadrumo.core._fsync
    cadrumo.core._google_credential_source
@@ -72,6 +73,7 @@ Submodules
    cadrumo.core._refund_election
    cadrumo.core._rescate_type
    cadrumo.core._result_disposition
+   cadrumo.core._revision_review
    cadrumo.core._tax_domain
    cadrumo.core._toml
    cadrumo.core.aggregation

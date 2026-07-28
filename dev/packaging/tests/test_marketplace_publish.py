@@ -21,8 +21,10 @@ import pytest
 
 from dev.packaging.marketplace_publish import (
     MarketplacePublishError,
+    assert_supersession_complete,
     merge_marketplace_index,
     publish_cohort_plugins,
+    superseded_names,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -377,3 +379,218 @@ def test_merge_replaces_an_entry_the_cohort_renames_rather_than_duplicating_it()
             "published_by": "cadrumo",
         }
     ]
+
+
+def _superseding_cohort(tmp_path: Path, *, name: str, retires: list[str], body: str = "new") -> Path:
+    """A cohort that claims ``name`` and declares ``retires`` superseded."""
+    cohort = tmp_path / f"cohort-{name}-supersedes"
+    _write_index(
+        cohort,
+        {
+            "name": "neve",
+            "description": "account marketplace",
+            "owner": {"name": "publisher"},
+            "supersedes": retires,
+            "plugins": [{"name": name, "source": f"./plugins/{name}"}],
+        },
+    )
+    _write_plugin(cohort, name, body=body)
+    return cohort
+
+
+def test_a_rename_claims_the_new_name_and_retires_the_old_one(tmp_path: Path) -> None:
+    """One publication, never a state where both identities are live.
+
+    The retired entry carries no recorded publisher because it predates
+    ownership tracking, which is exactly the claimable case: under the unchanged
+    rule this cohort could already overwrite it wholesale, so retiring it grants
+    no authority the tool did not have.
+    """
+    marketplace = tmp_path / "marketplace"
+    _write_index(
+        marketplace,
+        {
+            "name": "neve",
+            "description": "old identity",
+            "owner": {"name": "publisher"},
+            "plugins": [{"name": "aeat", "source": "./plugins/aeat"}],
+        },
+    )
+    _write_plugin(marketplace, "aeat", body="old")
+
+    publish_cohort_plugins(
+        marketplace=marketplace, cohort=_superseding_cohort(tmp_path, name="cadrumo", retires=["aeat"])
+    )
+
+    names = [entry["name"] for entry in _read_index(marketplace)["plugins"]]
+    assert names == ["cadrumo"], "the retired identity must not remain live alongside the new one"
+    assert not (marketplace / "plugins" / "aeat").exists(), "the retired subtree must go with its entry"
+    assert (marketplace / "plugins" / "cadrumo" / "marker.txt").read_text(encoding=_UTF_8) == "new"
+
+
+def test_a_siblings_plugin_can_never_be_superseded(tmp_path: Path) -> None:
+    """The guard that exists because a wholesale replacement deleted every sibling.
+
+    Supersession must not become the delete authority that incident produced, so
+    a name another product recorded itself as publishing is refused outright.
+    """
+    marketplace = tmp_path / "marketplace"
+    _write_index(
+        marketplace,
+        {
+            "name": "neve",
+            "description": "account marketplace",
+            "owner": {"name": "publisher"},
+            "plugins": [{"name": "vaultspec", "source": "./plugins/vaultspec", "published_by": "vaultspec"}],
+        },
+    )
+    _write_plugin(marketplace, "vaultspec", body="sibling")
+
+    with pytest.raises(MarketplacePublishError, match="published by another product"):
+        publish_cohort_plugins(
+            marketplace=marketplace,
+            cohort=_superseding_cohort(tmp_path, name="cadrumo", retires=["vaultspec"]),
+        )
+    assert (marketplace / "plugins" / "vaultspec" / "marker.txt").read_text(encoding=_UTF_8) == "sibling"
+    assert [entry["name"] for entry in _read_index(marketplace)["plugins"]] == ["vaultspec"]
+
+
+def test_superseding_is_idempotent_once_the_entry_is_gone(tmp_path: Path) -> None:
+    """The declaration ships in every later cohort, so it must re-run cleanly.
+
+    This is why supersession is declared rather than executed once by hand: a
+    replay finds nothing to retire and says so by doing nothing, while the
+    declaration keeps refusing any later attempt to resurrect the name.
+    """
+    marketplace = tmp_path / "marketplace"
+    _write_index(
+        marketplace,
+        {"name": "neve", "description": "d", "owner": {"name": "publisher"}, "plugins": []},
+    )
+    cohort = _superseding_cohort(tmp_path, name="cadrumo", retires=["aeat"])
+    publish_cohort_plugins(marketplace=marketplace, cohort=cohort)
+    publish_cohort_plugins(marketplace=marketplace, cohort=cohort)
+    assert [entry["name"] for entry in _read_index(marketplace)["plugins"]] == ["cadrumo"]
+
+
+def test_claiming_and_superseding_one_name_is_refused(tmp_path: Path) -> None:
+    """The two verbs disagree; preferring either silently is worse than refusing."""
+    marketplace = tmp_path / "marketplace"
+    _write_index(marketplace, {"name": "neve", "description": "d", "owner": {"name": "p"}, "plugins": []})
+    with pytest.raises(MarketplacePublishError, match="both declares and supersedes"):
+        publish_cohort_plugins(
+            marketplace=marketplace,
+            cohort=_superseding_cohort(tmp_path, name="cadrumo", retires=["cadrumo"]),
+        )
+
+
+def test_a_malformed_supersedes_declaration_refuses(tmp_path: Path) -> None:
+    """A declaration that cannot be read must not be read as "retire nothing"."""
+    marketplace = tmp_path / "marketplace"
+    _write_index(marketplace, {"name": "neve", "description": "d", "owner": {"name": "p"}, "plugins": []})
+    cohort = _superseding_cohort(tmp_path, name="cadrumo", retires=[])
+    index = _read_index(cohort)
+    index["supersedes"] = "aeat"
+    _write_index(cohort, index)
+    with pytest.raises(MarketplacePublishError, match="list of non-empty plugin names"):
+        publish_cohort_plugins(marketplace=marketplace, cohort=cohort)
+
+
+def test_the_shipped_cohort_manifest_retires_the_former_product_identity() -> None:
+    """The declaration must actually ship, or the mechanism protects nothing.
+
+    The live marketplace still carries the pre-rename identity, and its entry
+    records no publisher, so any product could claim that name today. This is
+    the declaration that retires it on the first publication and keeps refusing
+    its resurrection on every later one.
+    """
+    manifest = Path(__file__).resolve().parents[3] / "packaging" / "marketplace" / _INDEX
+    index = json.loads(manifest.read_text(encoding=_UTF_8))
+    assert superseded_names(index) == frozenset({"aeat"})
+    declared = {entry["name"] for entry in index["plugins"]}
+    assert "aeat" not in declared, "the retired identity must not also be claimed"
+    assert "cadrumo" in declared
+
+
+def _published_marketplace(tmp_path: Path, *, plugins: list[dict[str, Any]], **index: Any) -> Path:
+    marketplace = tmp_path / "verified"
+    document: dict[str, Any] = {
+        "name": "neve",
+        "description": "account marketplace",
+        "owner": {"name": "publisher"},
+        "plugins": plugins,
+    }
+    document.update(index)
+    _write_index(marketplace, document)
+    return marketplace
+
+
+def test_the_preflight_passes_once_the_retired_identity_is_gone(tmp_path: Path) -> None:
+    """The permit case, or the refusals below prove nothing."""
+    marketplace = _published_marketplace(tmp_path, plugins=[{"name": "cadrumo", "source": "./plugins/cadrumo"}])
+    assert_supersession_complete(
+        marketplace=marketplace,
+        cohort=_superseding_cohort(tmp_path, name="cadrumo", retires=["aeat"]),
+    )
+
+
+def test_the_preflight_refuses_while_the_retired_entry_is_live(tmp_path: Path) -> None:
+    """Two identities for one product must never both be published."""
+    marketplace = _published_marketplace(
+        tmp_path,
+        plugins=[{"name": "cadrumo", "source": "./plugins/cadrumo"}, {"name": "aeat", "source": "./plugins/aeat"}],
+    )
+    with pytest.raises(MarketplacePublishError, match="still live in the marketplace index"):
+        assert_supersession_complete(
+            marketplace=marketplace,
+            cohort=_superseding_cohort(tmp_path, name="cadrumo", retires=["aeat"]),
+        )
+
+
+def test_the_preflight_refuses_an_unreferenced_retired_tree(tmp_path: Path) -> None:
+    """A tree with no index entry is still fetchable by direct path.
+
+    Dropping the entry but leaving the directory looks clean in the index and
+    still serves the old identity to anyone who knows the path.
+    """
+    marketplace = _published_marketplace(tmp_path, plugins=[{"name": "cadrumo", "source": "./plugins/cadrumo"}])
+    _write_plugin(marketplace, "aeat", body="orphaned")
+    with pytest.raises(MarketplacePublishError, match="remain on disk without an index entry"):
+        assert_supersession_complete(
+            marketplace=marketplace,
+            cohort=_superseding_cohort(tmp_path, name="cadrumo", retires=["aeat"]),
+        )
+
+
+@pytest.mark.parametrize(
+    ("overrides", "fragment"),
+    [
+        pytest.param({"description": "the aeat tax assistant"}, "description", id="description"),
+        pytest.param({"owner": {"name": "AEAT tax assistant project"}}, "owner.name", id="owner-name"),
+    ],
+)
+def test_the_preflight_refuses_metadata_that_still_names_the_retired_identity(
+    overrides: dict[str, Any],
+    fragment: str,
+    tmp_path: Path,
+) -> None:
+    """A half-renamed marketplace cannot tell a reader which half is true."""
+    marketplace = _published_marketplace(
+        tmp_path,
+        plugins=[{"name": "cadrumo", "source": "./plugins/cadrumo"}],
+        **overrides,
+    )
+    with pytest.raises(MarketplacePublishError, match=fragment):
+        assert_supersession_complete(
+            marketplace=marketplace,
+            cohort=_superseding_cohort(tmp_path, name="cadrumo", retires=["aeat"]),
+        )
+
+
+def test_a_cohort_that_retires_nothing_is_not_checked(tmp_path: Path) -> None:
+    """The preflight is scoped to declared retirements, not a general scan."""
+    marketplace = _published_marketplace(
+        tmp_path,
+        plugins=[{"name": "cadrumo", "source": "./plugins/cadrumo"}, {"name": "aeat", "source": "./plugins/aeat"}],
+    )
+    assert_supersession_complete(marketplace=marketplace, cohort=_cohort(tmp_path, name="cadrumo", body="x"))

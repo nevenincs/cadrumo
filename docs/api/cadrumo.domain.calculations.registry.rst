@@ -29,6 +29,7 @@ Submodules
    cadrumo.domain.calculations.registry._censo_modelos
    cadrumo.domain.calculations.registry._checker_oracle_flow
    cadrumo.domain.calculations.registry._citation_blocklist
+   cadrumo.domain.calculations.registry._classification_coherence
    cadrumo.domain.calculations.registry._compiled_cache
    cadrumo.domain.calculations.registry._constructs
    cadrumo.domain.calculations.registry._convenio
@@ -41,6 +42,7 @@ Submodules
    cadrumo.domain.calculations.registry._errors
    cadrumo.domain.calculations.registry._export
    cadrumo.domain.calculations.registry._export_parse
+   cadrumo.domain.calculations.registry._external_grounding
    cadrumo.domain.calculations.registry._filed_state
    cadrumo.domain.calculations.registry._formula_initial_values
    cadrumo.domain.calculations.registry._formula_runtime

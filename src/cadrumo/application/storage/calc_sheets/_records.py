@@ -227,7 +227,7 @@ class SheetFormulaCell(BaseModel):
     formula: str = Field(min_length=1)
     casilla_id: CasillaId
     rounding_scale: int | None = Field(default=None, ge=0, le=12)
-    rounding_rule: Literal["money", "integer", "none"]
+    rounding_rule: Literal["money", "integer", "integer-ceiling", "none"]
     note: str | None = None
 
 
@@ -498,7 +498,7 @@ class SheetProvenanceRow(BaseModel):
     display_number: str
     casilla_label: str
     formula_id: FormulaId | None = None
-    rounding_rule: Literal["money", "integer", "none"]
+    rounding_rule: Literal["money", "integer", "integer-ceiling", "none"]
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
     target_address: SheetCellAddress

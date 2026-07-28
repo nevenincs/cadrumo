@@ -1,0 +1,77 @@
+"""Modelo registry conformance governance surface (not shipped in the wheel).
+
+Answers "what is the state of modelo X, what drifted, what is unreviewed" for
+every modelo revision the registry declares, by rendering the shipped
+conformance fact libraries rather than recomputing them. Review and engineering
+provenance is the one axis nothing can derive, so it is DECLARED per revision
+and written from here; every other signal is derived and therefore never staler
+than the tree.
+
+Run via ``python -m dev.registry.conformance``:
+
+* ``report [--json]`` — every conformance axis, one row per modelo revision.
+* ``coverage [--json]`` — per-axis measured counts against real populations.
+* ``audit [--check]`` — the ratchet comparison; ``--check`` is the only gating
+  exit in the whole surface.
+* ``stamp`` — write a revision's declared governance scalars.
+
+``report`` and ``coverage`` always exit 0, deliberately: they show a picture
+that is currently bad, and a report that refused to render would leave the
+backlog unread. A fact earns gate teeth when its worklist empties, not before.
+
+Major declarations:
+
+* :class:`~dev.registry.conformance.manager.ConformanceReport` — the rendered
+  per-revision report.
+* :class:`~dev.registry.conformance.manager.CoverageReport` — per-axis coverage.
+* :class:`~dev.registry.conformance.manager.ConformanceAuditResult` — the
+  ratchet comparison against the committed baseline.
+* :func:`~dev.registry.conformance.manager.load_conformance_report` — composes
+  the bundled registry's report, validated or degraded.
+
+See Also:
+    :func:`~application.registry.audit_bundled_registry_conformance`
+        Shipped composer this package renders.
+    :mod:`~dev.registry.conformance.cli`
+        Typer surface for the four verbs.
+    :mod:`~dev.registry.matrix`
+        Sibling registry capability-matrix report.
+"""
+
+from __future__ import annotations
+
+from .manager import (
+    AUDITED_LOCALES,
+    NOT_MEASURED,
+    ConformanceAuditResult,
+    ConformanceBaseline,
+    ConformanceReport,
+    CoverageReport,
+    build_conformance_report,
+    build_coverage_report,
+    check_conformance_ratchet,
+    load_baseline,
+    load_conformance_report,
+    render_audit,
+    render_coverage,
+    render_report,
+    reset_conformance_cache,
+)
+
+__all__ = [
+    "AUDITED_LOCALES",
+    "NOT_MEASURED",
+    "ConformanceAuditResult",
+    "ConformanceBaseline",
+    "ConformanceReport",
+    "CoverageReport",
+    "build_conformance_report",
+    "build_coverage_report",
+    "check_conformance_ratchet",
+    "load_baseline",
+    "load_conformance_report",
+    "render_audit",
+    "render_coverage",
+    "render_report",
+    "reset_conformance_cache",
+]

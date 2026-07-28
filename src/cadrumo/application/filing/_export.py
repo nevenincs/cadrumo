@@ -77,6 +77,7 @@ from ...domain.calculations.registry import (
     xml_dictionary_entries,
 )
 from ...domain.filing import (
+    CasillaCollection,
     FilingExportError,
     FilingExportValidationError,
     ModeloCasillaProvenance,
@@ -1001,6 +1002,63 @@ def rendered_casilla_ids(
     )
 
 
+def required_applicable_casilla_ids(
+    manifest: CalculationCompletenessManifest,
+    *,
+    collection: CasillaCollection,
+    representable: frozenset[CasillaId],
+) -> frozenset[CasillaId]:
+    """Return the casillas that must carry a value in a complete fichero-BOE export.
+
+    A casilla is *required-applicable* when it declares a formula (a calculation
+    RESULT) or is schema-required, AND the official export record files a slot for
+    it at this filing's disposition (``representable``).  Optional operator-input
+    casillas — retenciones, prior payments, deductions the taxpayer may
+    legitimately not have — declare neither a formula nor a ``required`` flag, so
+    they are excluded: a blank slot for them is a valid zero, not a
+    structurally-thin file.
+
+    This is the single derivation authority behind the completeness gate
+    (:func:`assert_export_mirrors_manifest`), so a change to the required-set
+    semantics propagates to every production consumer in one place.
+
+    The regression tests deliberately do NOT consume this function as their
+    expectation: they pin it against an independent partition read straight off the
+    :class:`CasillaCollection`. A test whose expected set comes from the subject
+    itself can only detect that the subject was called, never that its semantics
+    changed -- and a relaxation here silently drops a casilla out of the pre-write
+    gate, letting a structurally-thin fichero-BOE ship behind a valid SHA-256
+    digest. Do not "de-duplicate" the tests onto this function.
+
+    Args:
+        manifest: Revision's
+            :class:`~domain.calculations.registry.CalculationCompletenessManifest`.
+        collection: :class:`~domain.filing.CasillaCollection` for the modelo,
+            supplying ``formula`` and ``required`` for each declared casilla.
+        representable: Casilla IDs the official export record files a slot for
+            at this filing's disposition; see :func:`boe_representable_casilla_ids`.
+
+    Returns:
+        Frozen set of casilla IDs that must carry a real value before the
+        fichero-BOE bytes are written.
+
+    See Also:
+        :func:`boe_representable_casilla_ids`
+            Derives the ``representable`` argument from the export layout and headers.
+        :func:`assert_export_mirrors_manifest`
+            Gate that enforces this required set before writing bytes.
+    """
+    return (
+        frozenset(
+            casilla.casilla_id
+            for casilla in manifest.casillas
+            if (schema := collection.get(casilla.casilla_id)) is not None
+            and (schema.formula is not None or schema.required)
+        )
+        & representable
+    )
+
+
 def assert_export_mirrors_manifest(
     layout: ExportLayoutDefinition,
     *,
@@ -1073,12 +1131,11 @@ def assert_export_mirrors_manifest(
     # required set (grounded in the AEAT casilla semantics, e.g. Modelo 131 casillas
     # 02/08/09/12/14).
     collection = schema_provider.get_collection(draft.modelo)
-    required_applicable = {
-        casilla.casilla_id
-        for casilla in manifest.casillas
-        if (schema := collection.get(casilla.casilla_id)) is not None
-        and (schema.formula is not None or schema.required)
-    } & representable
+    required_applicable = required_applicable_casilla_ids(
+        manifest,
+        collection=collection,
+        representable=representable,
+    )
     missing = sorted(required_applicable - rendered)
     if not missing:
         return
@@ -1212,5 +1269,6 @@ __all__ = [
     "export_draft",
     "render_layout",
     "rendered_casilla_ids",
+    "required_applicable_casilla_ids",
     "verify_export",
 ]

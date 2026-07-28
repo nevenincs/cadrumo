@@ -140,6 +140,16 @@ from ...domain.calculations.registry import (
     verify_workbook_backend as _verify_workbook_backend,
 )
 from ...domain.period import calculation_filing_date as _calculation_filing_date
+from ._conformance import (
+    LatestRevisionSupportProbe,
+    RegistryConformanceProfile,
+    RevisionCapabilityFacts,
+    RevisionConformanceRow,
+    RevisionGovernanceStamp,
+    RevisionModelLawCoverage,
+    audit_bundled_registry_conformance,
+    build_registry_conformance_profile,
+)
 from ._corpus import (
     RegistryCitationArticleProjection,
     RegistryCitationReferenceProjection,
@@ -665,6 +675,7 @@ __all__ = [
     "CasillaDiff",
     "FiledStateVerificationReport",
     "FormulaDiff",
+    "LatestRevisionSupportProbe",
     "ParameterDiff",
     "RegistryApplicationError",
     "RegistryApplicationInputError",
@@ -675,6 +686,7 @@ __all__ = [
     "RegistryCitationsListCommand",
     "RegistryCitationsListReport",
     "RegistryCitationsVerificationReport",
+    "RegistryConformanceProfile",
     "RegistryCorpusIssueProjection",
     "RegistryManualId",
     "RegistryManualPartProjection",
@@ -693,7 +705,13 @@ __all__ = [
     "RegistryTopicProjection",
     "RegistryTreeReport",
     "RenumberedCasilla",
+    "RevisionCapabilityFacts",
+    "RevisionConformanceRow",
+    "RevisionGovernanceStamp",
+    "RevisionModelLawCoverage",
+    "audit_bundled_registry_conformance",
     "audit_registry_oracles",
+    "build_registry_conformance_profile",
     "diff_registry_revisions",
     "inspect_registry_tree",
     "list_registry_citations",

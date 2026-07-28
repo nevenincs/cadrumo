@@ -4,6 +4,9 @@
   "owner": {
     "name": "CADRUMO tax assistant project"
   },
+  "supersedes": [
+    "aeat"
+  ],
   "plugins": [
     {
       "name": "cadrumo",

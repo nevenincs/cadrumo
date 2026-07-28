@@ -313,3 +313,56 @@ def test_cadrumo_human_command_forms_are_rejected(surface: str) -> None:
 def test_former_aeat_product_forms_are_rejected(surface: str, expected_family: str) -> None:
     """Former imports, modules, distributions, and paths remain prohibited."""
     assert expected_family in _prohibited_aeat_product_forms(surface)
+
+
+def test_the_version_identity_guard_runs_before_the_cohort_is_built() -> None:
+    """Seal time asks the same question publication asks, but earlier.
+
+    Refusing here costs one re-run. Refusing at publication Gate 2 is the last
+    check before an irreversible index upload, and refusing nowhere is how a
+    version that a destination already owned reached that upload. Ordering is
+    the assertion that matters: a guard placed after the build would let a
+    doomed cohort be sealed and published from.
+    """
+    document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
+    build = document["jobs"]["build-release-cohort"]
+    names = [str(step.get("name", "")) for step in build["steps"]]
+    surface = "\n".join(str(step.get("run", "")) for step in build["steps"] if "run" in step)
+
+    assert "dev.release.version_identity" in surface, "seal time must ask the identity authority"
+    guard = next(i for i, name in enumerate(names) if "already owns" in name)
+    cohort_build = next(i for i, name in enumerate(names) if "Build the immutable full release cohort" in name)
+    assert guard < cohort_build, "the guard must refuse before the cohort exists, not after"
+    # One authority, not a second implementation: the same module the
+    # publication gate invokes, so the two answers cannot disagree.
+    assert "dev.release.version_identity" in surface
+    assert "--repository" in surface
+
+
+def test_the_seal_guard_uses_the_seal_scope_not_the_publication_scope() -> None:
+    """Sealing is not shipping, and conflating them stopped every build.
+
+    The publication scope additionally requires the version to exceed the
+    manifest floor. Between releases the declared version EQUALS that floor,
+    because the bump has not happened yet, so applying the publication scope
+    here refused every packaging run in exactly the interval this lane works in.
+    Every collision check still applies at seal scope; only the did-you-bump
+    question is deferred to publication, where it means what it says.
+    """
+    document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
+    build = document["jobs"]["build-release-cohort"]
+    # Comment lines are excluded deliberately. The first version of this test
+    # matched the whole run surface, and passed against a mutated workflow
+    # because the explanatory COMMENT above the invocation contains the very
+    # string it asserted. A gate satisfied by its own prose proves nothing.
+    commands = [
+        line.strip()
+        for step in build["steps"]
+        if "run" in step
+        for line in str(step["run"]).splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    ]
+    invocation = "\n".join(commands)
+    assert "dev.release.version_identity" in invocation
+    assert "--scope seal" in commands, "the seal lane must not enforce the publication floor"
+    assert "--scope publish" not in commands, "the publication scope refuses every build between releases"

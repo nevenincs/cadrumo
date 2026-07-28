@@ -2,14 +2,23 @@
 
 Ground truth: bundled AEAT Manual practico IVA 2025, Capitulo 5, prorrata
 general worked example, `corpus/manuals/iva/2025/source.pdf#Pag.137-138`,
-declared in `corpus/manual_oracles/modelo-303-prorrata-general-regularizacion.json`.
+declared in `corpus/manual_oracles/modelo-303-2025-prorrata-general-regularizacion.json`.
 
 The test seeds the manual's raw inputs, not values produced by the formula under
 test: prior-year operations 32.000/12.000 produce the manual's provisional 73%;
 current-year operations 25.000/20.000 produce the manual's definitive 56%; first
 three quarters carry 1.280 EUR supported IVA and the fourth quarter carries
 160 EUR. The expected values asserted below are the manual's own stated figures:
-934,40; 716,80; 217,60; 89,60; -128,00; and the bundled casilla figures.
+934,40; 716,80; 217,60; 89,60; -128,00; and the bundled casilla figure.
+
+Only the definitive percentage is read from the payload's
+`expected_by_casilla_id`, because that map is reserved for casillas the registry
+engine computes and a verification expectation reconciles. The annual volumes
+are the scenario's GIVENS (input_kind=manual) and the casilla-44 regularizacion
+is produced by the prorrata_regularizacion source resolver rather than by a
+registry formula, so all three ride here as named constants quoting the manual
+directly - the same shape the other seven manual figures in this module already
+use.
 
 See Also:
     :func:`~application.calculations._prorrata_regularizacion.project_prorrata_regularizacion_feed`
@@ -55,7 +64,7 @@ from .._prorrata_regularizacion import project_prorrata_regularizacion_feed
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _ORACLE_PATH = Path(
-    bundled_path("corpus", "manual_oracles", "modelo-303-prorrata-general-regularizacion.json"),
+    bundled_path("corpus", "manual_oracles", "modelo-303-2025-prorrata-general-regularizacion.json"),
 )
 _PORCENTAJE_ID: CasillaId = validated_casilla_id("iva.prorrata-porcentaje", surface="test casilla id")
 _VOLUMEN_TOTAL_ID: CasillaId = validated_casilla_id("iva.prorrata-volumen-total", surface="test casilla id")
@@ -70,7 +79,16 @@ _PRIOR_YEAR_SIN_DERECHO = Decimal("12000.00")
 _FIRST_THREE_QUARTERS_INPUT_IVA = Decimal("1280.00")
 _FOURTH_QUARTER_INPUT_IVA = Decimal("160.00")
 
+#: The manual's current-year 'n' operations: locales 25.000 EUR con derecho and
+#: viviendas 20.000 EUR exentas sin derecho, so the annual total volume is
+#: 45.000 EUR. Scenario givens fed to the engine, not values checked against it.
+_MANUAL_CURRENT_YEAR_CON_DERECHO = Decimal("25000.00")
+_MANUAL_CURRENT_YEAR_TOTAL = Decimal("45000.00")
+
 _MANUAL_PROVISIONAL_PERCENTAGE = Decimal("73")
+#: "Exceso de deduccion: 217,60" carried into Modelo 303 casilla 44 as a lower
+#: deduction, hence the negative sign on the filing box.
+_MANUAL_CASILLA_44_REGULARIZACION = Decimal("-217.60")
 _MANUAL_FIRST_THREE_QUARTERS_DEDUCTION = Decimal("934.40")
 _MANUAL_FIRST_THREE_QUARTERS_CORRECT_DEDUCTION = Decimal("716.80")
 _MANUAL_EXCESS_DEDUCTION = Decimal("217.60")
@@ -126,8 +144,8 @@ def _m303_prorrata_percentage_from_manual_annual_volumes(payload: dict[str, Any]
     snapshot = resources().modelos.authority.snapshot("303", filing_year=payload["filing_year"], period="4T")
     binding_values = _m303_zero_bindings()
     manual_volume_inputs = {
-        _VOLUMEN_TOTAL_ID: _oracle_expected(payload, _VOLUMEN_TOTAL_ID),
-        _VOLUMEN_CON_DERECHO_ID: _oracle_expected(payload, _VOLUMEN_CON_DERECHO_ID),
+        _VOLUMEN_TOTAL_ID: _MANUAL_CURRENT_YEAR_TOTAL,
+        _VOLUMEN_CON_DERECHO_ID: _MANUAL_CURRENT_YEAR_CON_DERECHO,
     }
     inputs = {
         **resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
@@ -173,9 +191,7 @@ def test_m303_prorrata_regularizacion_reproduces_aeat_manual_oracle() -> None:
         cuotas_soportadas_deducibles=_FIRST_THREE_QUARTERS_INPUT_IVA,
         prorrata_provisional_pct=provisional.percentage,
         prorrata_definitiva_pct=definitive_percentage,
-        operaciones_sin_derecho_deduccion=(
-            _oracle_expected(payload, _VOLUMEN_TOTAL_ID) - _oracle_expected(payload, _VOLUMEN_CON_DERECHO_ID)
-        ),
+        operaciones_sin_derecho_deduccion=(_MANUAL_CURRENT_YEAR_TOTAL - _MANUAL_CURRENT_YEAR_CON_DERECHO),
     )
     result = projection.result
     assert result.direccion is RegularizacionProrrataDireccion.INGRESO
@@ -183,7 +199,7 @@ def test_m303_prorrata_regularizacion_reproduces_aeat_manual_oracle() -> None:
     assert result.deduccion_definitiva == _MANUAL_FIRST_THREE_QUARTERS_CORRECT_DEDUCTION
     assert -result.importe == _MANUAL_EXCESS_DEDUCTION
     assert projection.modelo_303_casilla_44_id == _CASILLA_44_ID
-    assert projection.modelo_303_casilla_44_value == _oracle_expected(payload, _CASILLA_44_ID)
+    assert projection.modelo_303_casilla_44_value == _MANUAL_CASILLA_44_REGULARIZACION
 
     fourth_quarter = classify_input_deduction(
         InputClassification.COMMON,

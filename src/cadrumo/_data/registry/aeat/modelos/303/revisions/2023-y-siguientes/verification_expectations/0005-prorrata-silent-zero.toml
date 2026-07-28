@@ -2,12 +2,25 @@
 #
 # Casilla 44 is the annual settlement regularizacion for the definitive
 # prorrata percentage (LIVA art. 105.Cuatro). The governed
-# `PRORRATA_REGULARIZACION` binding row is provisioned for registry consumers,
-# but casilla 44 stays manual until the live resolver and calculation-order seam
-# can materialise current-year values. When annual prorrata volumes are declared,
-# a zero/absent casilla 44 would otherwise let the verify gate grant
-# verified_complete with no finding even though the provisional carry and annual
-# regularizacion must be confirmed.
+# `PRORRATA_REGULARIZACION` binding row and its live resolver are BOTH in
+# service: the calculation-order seam materialises the four current-year source
+# casillas and the resolver feeds casilla 44 as a bound input on the calculate
+# path. Casilla 44 nonetheless stays `input_kind = "manual"` with no formula,
+# and that is deliberate rather than pending: art. 105.Cuatro derives it from
+# the PROVISIONAL percentage (art. 105.Uno, the PRIOR year's definitive, held in
+# the profile-scoped prorrata register) and from the year's cuotas soportadas
+# across the regularised quarters (art. 105.Seis). Neither is a casilla of this
+# revision, so the value is not expressible as a single-period registry formula,
+# and the cross-period carry is owned by the binding + resolver mechanism alone -
+# adding a formula would model one value twice. Whether the casilla should
+# therefore DECLARE `input_kind = "bound"` against
+# `modelo-303-prorrata-regularizacion-casilla-44`, so the registry states the
+# linkage that the resolver currently makes in application code, is an open
+# mechanism-ownership question and not a defect in this predicate.
+#
+# When annual prorrata volumes are declared, a zero/absent casilla 44 would
+# otherwise let the verify gate grant verified_complete with no finding even
+# though the provisional carry and annual regularizacion must be confirmed.
 #
 # ADVISORY (non-blocking): a zero regularizacion can be legitimate once the
 # operator has confirmed the provisional carry and definitive calculation, so

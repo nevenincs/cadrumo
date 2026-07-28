@@ -45,8 +45,19 @@ def test_broad_serial_passes_exclude_the_perf_gate() -> None:
     as-is; the two broad serial passes must carry ``not perf``.
     """
     justfile = (_REPO_ROOT / "justfile").read_text(encoding="utf-8")
-    assert '-m "integration and serial and not perf" -n0' in justfile
-    assert '"integration and serial" -n0' not in justfile.replace('"integration and serial and not perf" -n0', "")
+    # Asserted by intent rather than by an exact expression. The literal form
+    # broke when an unrelated change added "and not os_keychain" to these lanes,
+    # which excluded MORE than the policy demands and so satisfied it -- the
+    # test failed on a compliant justfile. Any broad serial pass must exclude
+    # perf; further exclusions are somebody else's policy and not this gate's.
+    broad = [
+        line.strip()
+        for line in justfile.splitlines()
+        if '-m "integration and serial' in line and "test_installed_oracles.py" not in line
+    ]
+    assert broad, "no broad serial pass found; this gate would be measuring nothing"
+    for line in broad:
+        assert "not perf" in line, f"broad serial pass does not exclude the benchmark: {line}"
 
 
 def test_perf_marker_is_registered() -> None:
