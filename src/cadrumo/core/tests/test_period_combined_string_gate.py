@@ -373,9 +373,14 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
             "its text-mode render, and operator-chosen --output filenames. Every command in these "
             "captures passes the canonical split grammar (--year YYYY --period CODE) and every "
             "envelope carries the typed {filing_year, code} period, so no period input depends "
-            "on the combined form"
+            "on the combined form. Scoped by text to exactly those three generated shapes, NOT "
+            "to the whole tree: an unscoped bucket here silently allowed a genuine period INPUT "
+            "anywhere under _sequences/, and in doing so defeated every narrower sibling rule "
+            "below whose reason claims a token appearing elsewhere in the same capture still "
+            "fails. Those claims are only true while this rule carries a text scope."
         ),
         pattern_names=frozenset({"year-qualified quarterly token"}),
+        text=_text(r'"name": "\d+-\d{4}-[1-4]T"' r"|" r"name\\t\d+-\d{4}-[1-4]T" r"|" r"\.boe"),
     ),
     AllowlistRule(
         path=_path(
@@ -494,6 +499,48 @@ def test_repo_has_no_unallowlisted_combined_period_strings() -> None:
 
     assert not findings, "Unallowlisted combined period strings:\n" + "\n".join(
         finding.format() for finding in findings
+    )
+
+
+def test_allowlist_still_refuses_a_period_input_in_every_bucket_it_covers() -> None:
+    """Prove the allowlist discriminates rather than merely being satisfied.
+
+    A green scan proves nothing on its own: an allowlist rule broad enough to
+    cover its bucket wholesale produces exactly the same green while permitting
+    the input the gate exists to forbid. That regression is not hypothetical --
+    an unscoped ``docs/_sequences/`` bucket did precisely this, and because it
+    matched by path alone it also silently defeated every narrower sibling rule
+    whose reason claims a token elsewhere in the same capture still fails.
+
+    So the corpus floor and the hostile-input probe below are the load-bearing
+    assertions. Sample tokens are built by concatenation because a literal one
+    in this module would be flagged by the gate itself.
+    """
+    corpus = _tracked_text_files()
+    assert len(corpus) > 500, (
+        f"combined-period gate scanned only {len(corpus)} files; the scan corpus collapsed, "
+        "so a green result above would mean 'nothing was checked' rather than 'nothing is wrong'"
+    )
+
+    year = "2026"
+    quarter = "-1T"
+    benign_display_name = f'        "name": "303-{year}{quarter}",'
+    benign_export_path = f'        "output_path": "modelo-130-{year}{quarter}.boe",'
+    hostile_period_input = f'        "period": "{year}{quarter}",'
+
+    covered_capture = "docs/_sequences/how-to/filing-spine/filing-spine-file.json"
+    pattern_name = "year-qualified quarterly token"
+
+    assert _is_allowlisted(covered_capture, pattern_name, benign_display_name), (
+        "the generated work-unit display name is the shape these captures legitimately carry; "
+        "refusing it would make the gate unusable"
+    )
+    assert _is_allowlisted(covered_capture, pattern_name, benign_export_path), (
+        "the canonical fichero-BOE export filename is operator-chosen output, not period input"
+    )
+    assert not _is_allowlisted(covered_capture, pattern_name, hostile_period_input), (
+        "a combined period INPUT inside a recorded capture must still fail: this is the exact "
+        "form the gate kills, and allowing it here is what an unscoped path bucket does"
     )
 
 
