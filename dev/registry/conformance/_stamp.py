@@ -56,10 +56,21 @@ name and date, which the governing decision calls underivable by construction,
 so nothing in the tree can reconstruct what was overwritten.
 
 The vocabulary check is therefore applied to the status the write would RESOLVE
-TO. When the manifest declares a status outside :class:`StampableReviewStatus`
+TO. When the revision declares a status outside :class:`StampableReviewStatus`
 and the request touches any review-axis field, the write is refused and the
 caller is sent to the manifest, which is the same door a real signoff comes
 through.
+
+That declared status is read off the COMPILED revision rather than off the
+manifest text. The two agree today, and only because the loader refuses
+governance keys declared in a section fragment — which is the laundering path
+that refusal exists to close, so a guard resting on it is resting on the
+mechanism it exists to complement. In the one case the readings could diverge —
+a signoff reaching the compiled record from somewhere the manifest does not show
+— the manifest reading falls through to "nothing declared" and PERMITS the write.
+The compiled record is the authority every consumer of this registry sees, this
+module already loads it to prove the revision exists, and reading one field off
+it costs nothing.
 
 ERASURE is refused by the same rule, deliberately. Returning a signed revision
 to ``pending_review`` does red the ratchet — it raises the operator backlog —
@@ -409,7 +420,7 @@ def stamp_revision(
 
     manifest = revision_manifest_path(modelo, revision, registry_root=registry_root)
     modelo_dir = manifest.parent.parent.parent
-    _assert_revision_is_compiled(modelo_dir, modelo=modelo, revision=revision)
+    compiled = _assert_revision_is_compiled(modelo_dir, modelo=modelo, revision=revision)
 
     # BYTES, not text. ``read_text`` decodes under universal newlines and
     # ``write_text`` re-encodes under the platform's, so a read/write pair on
@@ -422,7 +433,7 @@ def stamp_revision(
     original = original_bytes.decode(UTF_8_ENCODING)
     declared = _declared_governance(manifest, original, revision)
     _assert_review_axis_is_writable(
-        declared.review_status,
+        compiled.review_status,
         manifest=manifest,
         requested=(review_status, reviewed_by, reviewed_at),
     )
@@ -503,7 +514,7 @@ def _stampable_status(value: StampableReviewStatus | None) -> StampableReviewSta
 
 
 def _assert_review_axis_is_writable(
-    declared_status: str | None,
+    declared_status: RevisionReviewStatus,
     *,
     manifest: Path,
     requested: tuple[object, ...],
@@ -513,11 +524,23 @@ def _assert_review_axis_is_writable(
     The companion to :func:`_stampable_status`, and the half that guards the
     file rather than the argument. That function coerces the REQUESTED status,
     so it fires only when a status is supplied; this one reads the status the
-    manifest already DECLARES, which is what an omitted argument falls through
+    revision already DECLARES, which is what an omitted argument falls through
     to. A lone reviewer write against a declared ``operator_reviewed`` therefore
     reached disk while the requested-status coercion was the only guard —
     re-attributing a human's signoff to an agent, invisibly to every gate,
     while destroying a name and date nothing in the tree can reconstruct.
+
+    The status comes off the COMPILED revision, not off the manifest text. Both
+    readings agree today, and they agree only because the loader refuses
+    governance keys declared in a section fragment — which is the laundering path
+    that refusal exists to close. A guard whose correctness rests on the
+    mechanism it exists to complement is circular: it would fall through to
+    "nothing declared" and PERMIT the write in exactly the case the two readings
+    diverge, which is the case where a signoff arrived from somewhere the
+    manifest does not show. Since :func:`_assert_revision_is_compiled` already
+    loads the definition to prove the revision exists, reading the authority's
+    own value costs nothing. The manifest text is still parsed, for the merge and
+    for the line editor, which are genuinely about the FILE this writer edits.
 
     Scoped to the REVIEW AXIS on purpose. ``engineered_by`` is absent from
     :data:`_REVIEW_AXIS_ARGUMENTS` because authorship is orthogonal to signoff:
@@ -531,8 +554,10 @@ def _assert_review_axis_is_writable(
     it.
 
     Args:
-        declared_status: The review status the manifest currently declares, or
-            :data:`None` when it declares none.
+        declared_status: The review status the COMPILED revision carries. Never
+            absent: the schema fails closed to ``pending_review``, so "declares
+            nothing" arrives as the in-vocabulary value it means rather than as a
+            :data:`None` this guard would have to interpret.
         manifest: The manifest being stamped, named in the refusal so the caller
             is pointed at the file rather than at a flag.
         requested: The review-axis argument values, in
@@ -547,11 +572,11 @@ def _assert_review_axis_is_writable(
     touched = [name for name, value in zip(_REVIEW_AXIS_ARGUMENTS, requested, strict=True) if value is not None]
     if not touched:
         return
-    if declared_status is None or declared_status in {member.value for member in StampableReviewStatus}:
+    if declared_status.value in {member.value for member in StampableReviewStatus}:
         return
     raise StampError(
         f"refusing to touch {touched!r}: {manifest} already declares review_status "
-        f"{declared_status!r}, which is outside the vocabulary this CLI writes "
+        f"{declared_status.value!r}, which is outside the vocabulary this CLI writes "
         f"({', '.join(repr(member.value) for member in StampableReviewStatus)}). Restating the review "
         "axis here would re-attribute a signoff this tool could not have made, and would overwrite a "
         "reviewer identity and date that are underivable by construction, so nothing could restore "
@@ -684,22 +709,30 @@ def _assert_reviewer_is_not_tier_shaped(value: str | None) -> None:
     )
 
 
-def _assert_revision_is_compiled(modelo_dir: Path, *, modelo: str, revision: str) -> None:
+def _assert_revision_is_compiled(modelo_dir: Path, *, modelo: str, revision: str) -> ModeloRevision:
     """Confirm the revision exists as a COMPILED record, never as a directory listing.
 
     A subdirectory-blind read of this registry has twice produced wrong verdicts,
     so the revision must be present in the loaded :class:`ModeloDefinition`.
     Re-used after the write as the proof that the loader still accepts the tree.
+
+    The compiled revision is RETURNED rather than discarded. It is the authority
+    on what this revision declares, this function already holds it, and the
+    effective-status guard needs exactly one field off it — so handing it back
+    costs nothing and removes the guard's dependency on a second reading of the
+    same facts. See :func:`_assert_review_axis_is_writable`.
     """
     try:
         definition = load_modelo_directory(modelo_dir)
     except RegistryError as exc:
         raise StampError(f"modelo {modelo}: registry refuses to load the modelo: {exc}") from exc
-    if revision not in definition.revisions:
+    compiled = definition.revisions.get(revision)
+    if compiled is None:
         raise StampError(
             f"modelo {modelo}: the loaded tree declares no revision {revision!r}; declared revisions "
             f"are {sorted(definition.revisions)}",
         )
+    return compiled
 
 
 def _declared_governance(manifest: Path, text: str, revision: str) -> _Stamp:

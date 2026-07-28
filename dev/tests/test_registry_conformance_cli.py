@@ -1212,6 +1212,79 @@ def test_an_authorship_claim_on_an_operator_signed_revision_is_still_served(
     assert revision.reviewed_at == date(2026, 7, 1)
 
 
+def test_the_review_axis_guard_reads_the_status_the_compiled_revision_carries(
+    operator_signed_copy: Path,
+) -> None:
+    """The guard's input is the AUTHORITY, not a second reading of the manifest.
+
+    The compiled revision is what every consumer of this registry sees, and the
+    writer already loads it to prove the revision exists. Reading the declared
+    status off the manifest text instead made the guard agree with the authority
+    only because the loader refuses governance keys declared in a section
+    fragment — the laundering path that refusal exists to close — so the guard's
+    correctness rested on the mechanism it exists to complement.
+
+    This asserts the two facts that make the swap meaningful: the compiled record
+    carries the signoff, and the writer refuses on it.
+    """
+    compiled = load_modelo_directory(operator_signed_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert compiled.review_status is RevisionReviewStatus.OPERATOR_REVIEWED
+
+    with pytest.raises(StampError, match=f"already declares review_status '{compiled.review_status.value}'"):
+        stamp_revision(
+            _STAMPED_MODELO,
+            _STAMPED_REVISION,
+            reviewed_by="agent:opus-executor",
+            reviewed_at=date(2026, 7, 28),
+            registry_root=operator_signed_copy,
+        )
+
+
+def test_a_governance_stamp_hidden_in_a_fragment_never_reaches_the_writer(registry_copy: Path) -> None:
+    """The exhibit for why the guard reads the compiled record.
+
+    A section fragment declaring the revision table with an operator signoff is
+    the laundering shape: it would win the merge, so the compiled revision would
+    claim a completed human review while ``revision.toml`` reads unstamped. The
+    loader refuses it today, which is why the manifest text and the compiled
+    record cannot currently disagree — and is precisely why a guard reading the
+    manifest text was circular, since the case it would mis-handle is the case
+    that refusal exists to prevent.
+
+    Two assertions with different jobs. The write MUST NOT land, which stays true
+    whichever mechanism refuses it. And the refusal today is the LOADER's, which
+    is the tripwire: if that ever changes, this construction has become live and
+    the compiled-status guard is what stands in front of it, so the second
+    assertion failing is a signal to read this test rather than to delete it.
+    """
+    manifest = _manifest_of(registry_copy)
+    before = manifest.read_bytes()
+    laundered = manifest.parent / "casillas" / "zzz-laundered.toml"
+    laundered.write_text(
+        f'[revisions."{_STAMPED_REVISION}"]\n'
+        'review_status = "operator_reviewed"\n'
+        'reviewed_by = "Gergely Wootsch (operator)"\n'
+        "reviewed_at = 2026-07-01\n",
+        encoding=UTF_8_ENCODING,
+    )
+
+    with pytest.raises(StampError) as refusal:
+        stamp_revision(
+            _STAMPED_MODELO,
+            _STAMPED_REVISION,
+            reviewed_by="agent:opus-executor",
+            reviewed_at=date(2026, 7, 28),
+            registry_root=registry_copy,
+        )
+
+    assert manifest.read_bytes() == before
+    assert "must be declared in the revision's revision.toml manifest" in str(refusal.value), (
+        "the loader no longer refuses a governance stamp declared in a fragment; the compiled record "
+        "and the manifest text can now disagree, which is the case the review-axis guard reads the "
+        "compiled record to survive"
+    )
+
+
 def test_the_review_axis_guard_reads_the_vocabulary_and_not_one_hardcoded_status(
     registry_copy: Path,
 ) -> None:
