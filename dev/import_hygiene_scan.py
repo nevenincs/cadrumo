@@ -4,6 +4,19 @@ Discovery-phase tool: builds an inventory of cross-package private imports,
 shim/re-export modules, and redundantly re-exported symbols across
 ``src/cadrumo``. READ-ONLY: it does not modify production code.
 
+It is also the SINGLE AUTHORITY for the one-way ``src/cadrumo`` -> ``dev/``
+boundary, in both the shapes that boundary breaks in: Family 5 detects a
+shipped module IMPORTING ``dev.*``, and Family 6 detects a shipped module
+building a PATH into the ``dev/`` tree at runtime. The two are one rule with
+two syntaxes -- ``dev/`` ships in neither the wheel nor the sdist, so a shipped
+module reaching it by either route is broken for every installed user -- and
+they live together here so a fix to one cannot silently leave the other behind.
+Consumers assert against these functions rather than re-implementing them; the
+boundary gate under ``src/cadrumo/tests`` is one such consumer, and its
+importing ``dev.*`` is not itself a violation, because a test module is
+wheel-excluded and a scanner's own imports have no bearing on the shipped
+surface it measures.
+
 Re-run with:
 
     python dev/import_hygiene_scan.py [--json OUT.json] [--top N]
@@ -20,6 +33,7 @@ import tomllib
 from collections import Counter, defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass, field
+from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
@@ -520,6 +534,295 @@ def find_dev_tooling_import_violations(
 
 
 # ---------------------------------------------------------------------------
+# Violation family 6: shipped module building a path into the unshipped dev tree
+# ---------------------------------------------------------------------------
+
+# Leading segments that carry no path identity of their own.
+_RELATIVE_MARKERS: Final[frozenset[str]] = frozenset({".", ".."})
+
+# Callables that assemble a filesystem path from separate segment arguments, so
+# a bare "dev" argument names the dev directory. `join` is deliberately gated on
+# an arity of two or more: `sep.join(iterable)` is a string operation with a
+# single argument and must never be read as a path assembly.
+_SEGMENT_JOIN_CALLABLES: Final[frozenset[str]] = frozenset({"join"})
+_PATH_FACTORY_CALLABLES: Final[frozenset[str]] = frozenset(
+    {
+        "Path",
+        "PurePath",
+        "PosixPath",
+        "PurePosixPath",
+        "WindowsPath",
+        "PureWindowsPath",
+        "joinpath",
+    }
+)
+
+
+class DevPathForm(StrEnum):
+    """The syntactic shape a shipped module used to reach into ``dev/``."""
+
+    LITERAL = "literal"
+    PATH_JOIN = "path_join"
+    CALL_JOIN = "call_join"
+    FSTRING = "fstring"
+
+
+@dataclass
+class DevPathReachViolation:
+    """A shipped module under ``src/`` that builds a path into the ``dev/`` tree."""
+
+    module_path: str
+    lineno: int
+    form: DevPathForm
+    detail: str
+
+
+def _posix_segments(value: str) -> list[str]:
+    r"""Split ``value`` into path segments on either separator.
+
+    Windows and POSIX separators are folded together so ``"dev\\x.json"`` and
+    ``"dev/x.json"`` are the same path to this scanner.
+    """
+    return value.replace("\\", "/").split("/")
+
+
+def names_dev_directory(value: str) -> bool:
+    """True if ``value`` is a *relative* path whose leading component is ``dev``.
+
+    Segment-aware, never a substring test. Three discriminations carry the
+    precision of this whole family:
+
+    * An **absolute** ``/dev/...`` value is a POSIX device node, not the repo
+      tree. Shipped code opens ``"/dev/tty"`` to read a secret without echo and
+      is correct to do so; firing there would red the gate on sound code and
+      teach the next author to weaken it.
+    * A segment must **equal** ``dev``. ``devengada``, ``devolucion``,
+      ``device`` and ``dev.example.com`` are all near-misses this codebase
+      really contains.
+    * ``dev`` must be used as a **directory** -- something has to follow it. A
+      bare ``"dev"`` string carries no path meaning on its own; it is caught by
+      the join forms below, which supply the surrounding path context.
+
+    A value containing a newline is prose (a docstring or a message), never a
+    path literal, and is rejected; docstrings are skipped wholesale by
+    :func:`_docstring_constant_ids`. A single-line NON-docstring string that
+    begins with a dev path -- an assertion message, say -- is still reported.
+    That is deliberate: narrowing further (rejecting any value containing a
+    space) would let ``"dev/my baseline.json"`` through, and in a hard-zero
+    boundary gate an over-fire costs a reword while an under-fire ships a
+    broken wheel. A shipped module has no business naming the dev tree even in
+    prose.
+    """
+    if not value or "\n" in value or "\r" in value:
+        return False
+    normalised = value.replace("\\", "/")
+    if normalised.startswith("/"):
+        return False
+    segments = normalised.split("/")
+    index = 0
+    while index < len(segments) and segments[index] in _RELATIVE_MARKERS:
+        index += 1
+    return index + 1 < len(segments) and segments[index] == DEV_TOOLING_ROOT
+
+
+def _continues_into_dev_directory(text: str) -> bool:
+    """True for an f-string tail like ``"/dev/x.json"`` that follows a root interpolation.
+
+    Read only for a constant segment PRECEDED by an interpolation, where the
+    leading separator joins onto an interpolated root rather than marking an
+    absolute path. That preceding-interpolation requirement is what keeps a
+    plain ``f"/dev/null"`` out: with nothing interpolated before it, the value
+    is an absolute device path and is judged by :func:`names_dev_directory`.
+    """
+    segments = _posix_segments(text)
+    return len(segments) >= 2 and segments[0] == "" and segments[1] == DEV_TOOLING_ROOT
+
+
+def _is_bare_dev_segment(node: ast.expr) -> bool:
+    """True if ``node`` is the string constant ``"dev"``."""
+    return isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value == DEV_TOOLING_ROOT
+
+
+def _divided_dev_segment(node: ast.BinOp) -> str | None:
+    """Return a detail string if ``node`` is a ``pathlib`` join onto ``"dev"``.
+
+    Matches ``PROJECT_ROOT / "dev"`` -- the realistic form of this violation,
+    since a bare ``open("dev/x.json")`` is CWD-relative and would not survive a
+    single test run from outside the repo root. ``PROJECT_ROOT`` is exported
+    from ``cadrumo.core.paths``, so a shipped module can anchor a fully working
+    dev-tree read this way and break only once installed as a wheel.
+
+    Both operands are checked: ``Path.__rtruediv__`` makes ``"dev" / root`` a
+    valid join too. Only the BARE ``"dev"`` segment matches here; a
+    ``root / "dev/x.json"`` operand is already a dev path literal and is
+    reported once, by :func:`names_dev_directory`, rather than twice.
+    """
+    if not isinstance(node.op, ast.Div):
+        return None
+    if _is_bare_dev_segment(node.right) or _is_bare_dev_segment(node.left):
+        return f'{ast.unparse(node)!s} (path join onto "{DEV_TOOLING_ROOT}")'
+    return None
+
+
+def _called_function_name(func: ast.expr) -> str | None:
+    """Return the trailing callable name of ``func``, or ``None`` if unreadable."""
+    if isinstance(func, ast.Attribute):
+        return func.attr
+    if isinstance(func, ast.Name):
+        return func.id
+    return None
+
+
+def _call_assembled_dev_segment(node: ast.Call) -> str | None:
+    """Return a detail string if ``node`` assembles a path from a ``"dev"`` segment.
+
+    Covers ``os.path.join(root, "dev", "x.json")`` and the ``Path(root, "dev")``
+    / ``root.joinpath("dev")`` factory forms. ``join`` requires two or more
+    arguments so ``"".join(parts)`` -- a string operation, not a path assembly
+    -- can never match.
+    """
+    name = _called_function_name(node.func)
+    if name is None:
+        return None
+    if name in _SEGMENT_JOIN_CALLABLES:
+        if len(node.args) < 2:
+            return None
+    elif name not in _PATH_FACTORY_CALLABLES:
+        return None
+    if not node.args:
+        return None
+    if any(_is_bare_dev_segment(arg) for arg in node.args):
+        return f'{name}(...) with a "{DEV_TOOLING_ROOT}" path segment'
+    return None
+
+
+def _joined_str_dev_parts(node: ast.JoinedStr) -> list[str]:
+    """Return every constant part of an f-string that reaches into ``dev/``.
+
+    An f-string hides the reach from a constant scan: ``f"{root}/dev/x.json"``
+    stores the segment as the constant ``"/dev/x.json"``, which starts with a
+    separator and matches no ``dev/`` prefix.
+    """
+    parts: list[str] = []
+    interpolated = False
+    for part in node.values:
+        if isinstance(part, ast.FormattedValue):
+            interpolated = True
+            continue
+        if not isinstance(part, ast.Constant) or not isinstance(part.value, str):
+            continue
+        text = part.value
+        if names_dev_directory(text) or (interpolated and _continues_into_dev_directory(text)):
+            parts.append(text)
+    return parts
+
+
+def _docstring_constant_ids(tree: ast.Module) -> set[int]:
+    """Return the node ids of every module, class, and function docstring.
+
+    A docstring is documentation, never a runtime path read. Several shipped
+    modules legitimately name ``dev/`` tooling in their prose (the terminology
+    handbook authoring tool, the corpus extractor), and that prose must not be
+    read as a dependency.
+    """
+    ids: set[int] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Module | ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef):
+            continue
+        if not node.body:
+            continue
+        first = node.body[0]
+        if isinstance(first, ast.Expr) and isinstance(first.value, ast.Constant) and isinstance(first.value.value, str):
+            ids.add(id(first.value))
+    return ids
+
+
+def dev_path_hits(tree: ast.Module) -> list[tuple[int, DevPathForm, str]]:
+    """Return every ``(lineno, form, detail)`` dev-tree reach in one parsed module."""
+    skip = _docstring_constant_ids(tree)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.JoinedStr):
+            skip.update(id(part) for part in node.values if isinstance(part, ast.Constant))
+
+    hits: list[tuple[int, DevPathForm, str]] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.JoinedStr):
+            hits.extend((node.lineno, DevPathForm.FSTRING, text) for text in _joined_str_dev_parts(node))
+        elif isinstance(node, ast.BinOp):
+            detail = _divided_dev_segment(node)
+            if detail is not None:
+                hits.append((node.lineno, DevPathForm.PATH_JOIN, detail))
+        elif isinstance(node, ast.Call):
+            detail = _call_assembled_dev_segment(node)
+            if detail is not None:
+                hits.append((node.lineno, DevPathForm.CALL_JOIN, detail))
+        elif (
+            isinstance(node, ast.Constant)
+            and isinstance(node.value, str)
+            and id(node) not in skip
+            and names_dev_directory(node.value)
+        ):
+            hits.append((node.lineno, DevPathForm.LITERAL, node.value))
+    return hits
+
+
+def find_dev_path_reach_violations(
+    py_files: Iterable[Path],
+    *,
+    src_root: Path = SRC_ROOT,
+    exclude_globs: tuple[str, ...] | None = None,
+) -> list[DevPathReachViolation]:
+    r"""Return every SHIPPED module under ``src_root`` that builds a ``dev/`` path.
+
+    This is the metadata loophole an import scan alone cannot see: a module
+    reading a dev artifact at runtime does not import ``dev.*`` but is just as
+    broken for every installed user, because ``dev/`` ships in neither the
+    wheel nor the sdist. Family 5 catches the code dependency; this family
+    catches the data dependency.
+
+    Four forms are detected, because the boundary breaks in all four and a
+    scanner covering only the first is a scanner that cannot see the realistic
+    case:
+
+    * ``literal`` -- ``"dev/baseline.json"``, ``"./dev/..."``, ``"..\dev\..."``
+    * ``path_join`` -- ``PROJECT_ROOT / "dev" / "baseline.json"``
+    * ``call_join`` -- ``os.path.join(root, "dev", ...)``, ``Path(root, "dev")``
+    * ``fstring`` -- ``f"{root}/dev/baseline.json"``
+
+    **Construction is the trigger, not the read.** A reach is reported where
+    the path is BUILT, without requiring an adjacent ``open``/``read_text``
+    call. Demanding proof of a read would reopen the hole this family exists to
+    close: a module constant assigned once and consumed elsewhere (exactly how
+    the real baselines in the excluded test tree are written) would then pass
+    while depending on a dev artifact at runtime. A shipped module has no
+    legitimate reason to name the dev tree at all.
+
+    Scoped to SHIPPED modules on the same reasoning as Family 5, and the
+    boundary is read from the packaging config rather than restated.
+
+    Args:
+        py_files: Module files to scan.
+        src_root: Source root used to resolve shipped status and relative paths.
+        exclude_globs: Wheel exclude globs; read from the packaging config when
+            omitted.
+    """
+    globs = wheel_exclude_globs() if exclude_globs is None else exclude_globs
+    violations: list[DevPathReachViolation] = []
+    for path in py_files:
+        if not is_shipped_module(path, src_root=src_root, exclude_globs=globs):
+            continue
+        rel = path.relative_to(src_root).as_posix()
+        try:
+            tree = ast.parse(path.read_text(encoding=_UTF_8), filename=str(path))
+        except (OSError, SyntaxError, UnicodeDecodeError):
+            continue
+        violations.extend(
+            DevPathReachViolation(rel, lineno, form, detail) for lineno, form, detail in dev_path_hits(tree)
+        )
+    return sorted(violations, key=lambda v: (v.module_path, v.lineno, v.form, v.detail))
+
+
+# ---------------------------------------------------------------------------
 # Violation family 2: shim / pure re-export / alias modules
 # ---------------------------------------------------------------------------
 
@@ -887,6 +1190,7 @@ def main() -> int:
     fix_classes = classify_fix_strategy(priv_violations, facades)
     underscore_in_all = find_underscore_in_all_violations(facades)
     dev_tooling_imports = find_dev_tooling_import_violations(py_files)
+    dev_path_reaches = find_dev_path_reach_violations(py_files)
 
     # ---- Reporting ----
     print(f"Scanned {len(py_files)} .py files under {PKG_ROOT}")
@@ -962,6 +1266,13 @@ def main() -> int:
         print(f"  [{kind}] {v.importer_path}:{v.lineno} -> {v.target_mod}")
     print()
 
+    print(f"=== FAMILY 6: shipped modules building a path into the dev tree: {len(dev_path_reaches)} total ===")
+    print("  (the metadata half of the same boundary: no import statement, but the module still")
+    print("   depends on an artifact absent from the wheel; move it under src/cadrumo/_data/)")
+    for reach in dev_path_reaches:
+        print(f"  [{reach.form}] {reach.module_path}:{reach.lineno} -> {reach.detail!r}")
+    print()
+
     print(f"=== FIX STRATEGY: precondition promotions vs. simple consumer rewrites ({len(fix_classes)} pairs) ===")
     needs_promotion = [f for f in fix_classes if not f.already_in_facade]
     simple_rewrite = [f for f in fix_classes if f.already_in_facade]
@@ -1005,6 +1316,7 @@ def main() -> int:
     print(f"  distinct owning packages needing >=1 promotion: {len(promo_by_owner)}")
     print(f"  underscore-named __all__ entries (Family 4): {len(underscore_in_all)}")
     print(f"  shipped modules importing dev/ tooling (Family 5): {len(dev_tooling_imports)}")
+    print(f"  shipped modules reaching a dev/ path (Family 6): {len(dev_path_reaches)}")
     print()
 
     if args.json:
@@ -1056,6 +1368,15 @@ def main() -> int:
                     "is_dynamic": v.is_dynamic,
                 }
                 for v in dev_tooling_imports
+            ],
+            "dev_path_reach_violations": [
+                {
+                    "module_path": reach.module_path,
+                    "lineno": reach.lineno,
+                    "form": str(reach.form),
+                    "detail": reach.detail,
+                }
+                for reach in dev_path_reaches
             ],
             "underscore_in_all_violations": [
                 {"package": v.package, "path": v.path, "name": v.name} for v in underscore_in_all
