@@ -56,3 +56,39 @@ quality rules bar. It is carried into the unrelated-failure record under S208 ra
 here.
 
 The semantic code index was degraded throughout this Phase: the service reported `Source code sections: 466` against 3982 tracked Python files while declaring its code generation succeeded. No absence recorded here rests on a semantic miss.
+
+## Re-measurement at HEAD bc80aa2808 (all nine ratchet modules)
+
+FAILED. Four of nine ratchets red. All four violations committed by concurrent campaigns;
+none is owned by this feature surface. The three failures from the original reading
+(TUI theme marker, calculations relation-prefill marker, filing registry-snapshot mock+patch)
+were all fixed by their owning campaigns before this re-run.
+
+Command: `uv run --no-sync pytest` over the nine ratchet modules: `test_no_skip_xfail.py`,
+`test_mock_inventory.py`, `test_monkeypatch_inventory.py`, `test_no_tautology.py`,
+`test_filename_live_marker_lint.py`, `test_test_inventory.py`, `test_relative_imports_only.py`,
+`test_no_broad_exception_raises.py`, `test_no_bare_except.py`.
+Collected 99, 95 passed, 4 failed, exit line `4 failed, 95 passed in 63.64s`, exit code 1,
+at HEAD `bc80aa2808`.
+
+Monkeypatch inventory: `dev/deploy/tests/test_publish_authority.py` uses `monkeypatch` fixture.
+Committed by `b6a10f9105 feat(deploy): bind the docs publish authority to the delivery environment`.
+Peer-owned (deploy campaign).
+
+Relative imports: `src/cadrumo/entrypoints/mcp/tests/test_stdio_lifetime.py:478` uses
+`import cadrumo` (absolute intra-package import). Committed by
+`faa8643ece feat(mcp): anchor the stdio server's lifetime to its client`.
+Peer-owned (MCP campaign).
+
+Mock inventory: `dev/docs/apidocs/tests/test_manager.py` and `dev/docs/tests/test_api_stubs.py`
+contain banned stub helper definitions. Committed by
+`9f59f32595 fix(gates): make the stub drift check see the terminators its own writer translated`.
+Peer-owned (docs/apidocs campaign).
+
+Skip/xfail: `src/cadrumo/entrypoints/mcp/tests/test_stdio_lifetime.py:608,734` contain
+skip shortcuts. Same file and same commit as the relative-imports failure.
+Peer-owned (MCP campaign).
+
+The five clean ratchets (tautology, test inventory, broad exception raises, bare except,
+marker integrity) confirm the ratchet corpus reaches real modules. None of the four failures
+is in this feature's modules.

@@ -39,3 +39,10 @@ error-code registry race described in the S185 record. The suite passed unchange
 commit settled.
 
 The semantic code index was degraded throughout this Phase: the service reported `Source code sections: 466` against 3982 tracked Python files while declaring its code generation succeeded. No absence recorded here rests on a semantic miss.
+
+## Re-measurement at HEAD bc80aa2808
+
+SATISFIED. Command: `uv run --no-sync pytest -m integration
+src/cadrumo/entrypoints/cli/tests/test_root_grammar_invariants.py`.
+Collected 17, 17 passed, exit line `17 passed in 17.20s`, exit code 0, at HEAD `bc80aa2808`.
+Same count as the original reading; no retired verbs re-mounted.

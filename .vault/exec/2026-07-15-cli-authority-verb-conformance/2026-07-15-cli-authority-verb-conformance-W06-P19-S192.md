@@ -91,3 +91,35 @@ things currently hold that line: the comment marking the import load-bearing, an
 live-leaf-versus-registry gate, which fails when either key goes missing. The gate is
 the real guard; the comment is a courtesy. Confirmed by running the gate, not by
 reading it.
+
+## Full-suite run at HEAD bc80aa2808
+
+PARTIALLY SATISFIED. The CLI-specific gates (test_cli_reference_conformance.py,
+test_cli_tree.py, test_cli_anchor_parity.py) pass. The broader `dev/docs/tests/`
+suite has 3 peer-owned failures.
+
+Command: `uv run --no-sync pytest dev/docs/tests/ --tb=short`.
+Collected 151, 148 passed, 3 failed, exit line `3 failed, 148 passed in 682.84s`,
+exit code 1, at HEAD `bc80aa2808`.
+
+Failure 1: `test_env_reference.py::test_generated_page_is_fresh` — the generated
+environment-overrides reference page is stale. The MCP stdio watchdog setting
+(`CADRUMO_MCP_STDIO_WATCHDOG`) was added by commit `faa8643ece feat(mcp): anchor the
+stdio server's lifetime to its client` without regenerating the docs page. Peer-owned
+(MCP campaign).
+
+Failure 2: `test_env_reference.py::test_settings_fields_all_present_in_env_example` —
+`CADRUMO_MCP_STDIO_WATCHDOG` is present in Settings but absent from `env/.env.example`.
+Same root cause and same owning commit as failure 1.
+
+Failure 3: `test_docs_build_full_scope.py::test_sphinx_nitpicky_build_is_clean` —
+Sphinx `-n -W` build fails on four warnings from peer commits: inline literal
+formatting in `_fts_query.py` (commit `286db29da0`), unresolved cross-reference in
+`_export_parity.py` (commit `914c59ad07`), unresolved cross-reference in
+`_bundle_export_operation.py` (commit `279bd29bfc`), and a dangling attribute reference
+to `ModeloSupportMatrixEntry.is_deprecated` in `_classification_coherence.py` (commit
+`8bec35ac37`). None of these modules belong to the cli-authority-verb-conformance
+surface.
+
+The three CLI-specific reference gates this step was originally scoped to are all green
+at this HEAD. No failure is owned by this feature.

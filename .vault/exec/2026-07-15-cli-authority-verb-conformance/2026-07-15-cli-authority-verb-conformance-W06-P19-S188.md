@@ -39,3 +39,10 @@ output shapes; the S192 one is the only surface comparing the LIVE leaf set agai
 Reading this green result as proof that every leaf has a schema would be a false green.
 
 The semantic code index was degraded throughout this Phase: the service reported `Source code sections: 466` against 3982 tracked Python files while declaring its code generation succeeded. No absence recorded here rests on a semantic miss.
+
+## Re-measurement at HEAD bc80aa2808
+
+SATISFIED. Command: `uv run --no-sync pytest -m integration
+src/cadrumo/entrypoints/cli/tests/test_json_schema_conformance.py`.
+Collected 161, 161 passed, exit line `161 passed in 15.27s`, exit code 0, at HEAD `bc80aa2808`.
+Same count as the original reading.

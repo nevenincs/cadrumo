@@ -49,3 +49,9 @@ The corpus size is quoted for both scopes so the green feature-owned result cann
 as a zero-file run: 534 source files and 11 tooling files were actually formatted-checked.
 
 The semantic code index was degraded throughout this Phase: the service reported `Source code sections: 466` against 3982 tracked Python files while declaring its code generation succeeded. No absence recorded here rests on a semantic miss.
+
+## Re-measurement at HEAD bc80aa2808
+
+SATISFIED. Command: `uv run --no-sync ruff check src/cadrumo/entrypoints/cli/` and
+`uv run --no-sync ruff format --check src/cadrumo/entrypoints/cli/`.
+Both exit code 0, at HEAD `bc80aa2808`. The feature-owned surface remains lint-clean.

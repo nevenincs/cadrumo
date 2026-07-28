@@ -60,3 +60,11 @@ failure this Phase measured belongs to a concurrent campaign, to uncommitted pee
 machine.
 
 The semantic code index was degraded throughout this Phase: the service reported `Source code sections: 466` against 3982 tracked Python files while declaring its code generation succeeded. No absence recorded here rests on a semantic miss.
+
+## Re-measurement at HEAD bc80aa2808
+
+CONFIRMED. Ruff and vault check both pass over the feature-owned surface.
+`uv run --no-sync ruff check src/cadrumo/entrypoints/cli/` exits 0.
+`uv run --no-sync vaultspec-core vault check all` exits 0 for this feature's vault documents.
+No feature-owned regression identified. The attribution conclusion from the original reading
+holds: every failing lane belongs to a concurrent campaign.

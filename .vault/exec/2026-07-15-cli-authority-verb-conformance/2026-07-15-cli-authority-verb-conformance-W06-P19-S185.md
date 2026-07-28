@@ -50,3 +50,10 @@ this Step exists to catch.
 The semantic code index was degraded throughout this Phase: the service reported
 `Source code sections: 466` against 3982 tracked Python files while declaring its code
 generation succeeded. No absence recorded here rests on a semantic miss.
+
+## Re-measurement at HEAD bc80aa2808
+
+SATISFIED. Command: `uv run --no-sync pytest -m integration
+src/cadrumo/entrypoints/cli/tests/test_lazy_command_tree.py`.
+Collected 7, 7 passed, exit line `7 passed in 19.87s`, exit code 0, at HEAD `bc80aa2808`.
+The integration-marked subset is all-green. No failures.

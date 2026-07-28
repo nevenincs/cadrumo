@@ -59,3 +59,22 @@ The semantic half of that question is covered under S205 and S206, and the seman
 degraded.
 
 The semantic code index was degraded throughout this Phase: the service reported `Source code sections: 466` against 3982 tracked Python files while declaring its code generation succeeded. No absence recorded here rests on a semantic miss.
+
+## Re-measurement at HEAD bc80aa2808
+
+SATISFIED (AMBER). One additional clone pair appeared since the original reading.
+Command: `uv run --no-sync python -m dev.audit.duplication`.
+Output line `duplication: 13 clones, 0.08% duplicated lines.`, exit code 0, at HEAD `bc80aa2808`.
+
+The thirteen pairs, by owning module: two censal-datos modules sharing a preamble block
+(new pair since original reading, from censal-datos campaign); two registry oracle modules
+sharing a preamble; a TUI form screen against a TUI manager screen, and the form screen
+against itself; two modelo work payload modules; a ledger LLM CLI module against itself;
+an attachments service against itself; a calendar models module against itself; a calculation
+source staging module against itself; a ledger models module against itself; a renta gasto
+ledger against a renta income ledger; an impatriado income ledger against that renta income
+ledger; and a diagnostics run-health module against itself.
+
+None of the thirteen pairs is in this feature's modules. The discrimination probes from the
+original reading remain valid: the runner has not changed and the test seams it exposes are
+unchanged.

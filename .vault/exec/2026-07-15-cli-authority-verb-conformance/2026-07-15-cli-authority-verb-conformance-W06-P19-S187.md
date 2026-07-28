@@ -56,3 +56,12 @@ The remaining 351 cases pass, so path and argument conformance over the live tre
 clean.
 
 The semantic code index was degraded throughout this Phase: the service reported `Source code sections: 466` against 3982 tracked Python files while declaring its code generation succeeded. No absence recorded here rests on a semantic miss.
+
+## Re-measurement at HEAD bc80aa2808
+
+SATISFIED. The previously uncommitted peer edit that caused the single failure was committed
+and its sequence-contract grammar corrected by the time of this re-run. Command:
+`uv run --no-sync pytest -m integration src/cadrumo/entrypoints/cli/tests/test_documented_command_conformance.py`.
+Collected 354, 354 passed, exit line `354 passed in 9.21s`, exit code 0, at HEAD `bc80aa2808`.
+Two tests were added to the suite since the original reading (354 vs 352), consistent with new
+documented verbs landing. No failures. The feature surface is clean.

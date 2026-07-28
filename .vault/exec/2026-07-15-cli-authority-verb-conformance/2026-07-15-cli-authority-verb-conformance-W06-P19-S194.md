@@ -60,3 +60,13 @@ config package from its own tests. That direction is the one this feature's boun
 about, so it is flagged for the owning campaign even though this feature did not create it.
 
 The semantic code index was degraded throughout this Phase: the service reported `Source code sections: 466` against 3982 tracked Python files while declaring its code generation succeeded. No absence recorded here rests on a semantic miss.
+
+## Re-measurement at HEAD bc80aa2808
+
+SATISFIED. Both broken contracts from the previous reading were fixed by their owning
+campaigns between `c293706ce3` and this HEAD. Command: `uv run --no-sync lint-imports`.
+Result line `Contracts: 5 kept, 0 broken`, exit code 0, at HEAD `bc80aa2808`.
+Analyzed 3668 files, 17633 dependencies. All five layering contracts now keep:
+registry-must-not-import-renta, domain-must-not-import-adapters, domain-must-not-import-application,
+core-must-not-import-outer-layers, and AEAT layered architecture. The TUI adapters-to-entrypoints
+edges recorded in the previous reading were resolved by the TUI campaign before this re-run.
