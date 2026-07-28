@@ -156,8 +156,32 @@ literal = "100"
 [[revisions.2009-y-siguientes.formulas.expression.args.args]]
 casilla_id = "iva.prorrata-volumen-total"
 
+# No prorrata-volume data declared (volumen-total = 0) means no exempt-without-
+# right operations limit the deduction, so the prorrata percentage defaults to
+# 100 (full right to deduct, LIVA art. 94) — never 0, which would zero every
+# deduction and block a fully-taxable trader's filing (defect C2). A trader who
+# genuinely applies prorrata declares the volume casillas, and the computed
+# branch above takes over.
+#
+# The branch is grounded in art. 102.Uno, which makes the regla de prorrata
+# apply only where the sujeto pasivo performs deduction-granting and
+# non-granting operations "conjuntamente"; with no volumes declared that
+# antecedent is unmet, art. 104.Uno's percentage limitation never bites, and
+# the input tax is deductible in full. A percentage of 0 is the art. 104.Dos
+# answer only when the NUMERATOR is zero while the denominator is positive —
+# the volumen-total > 0 case the computed branch above already handles — so
+# returning 0 here asserts a total loss of the deduction right on a taxpayer
+# who declared no fact supporting it.
+#
+# This revision governs filing years 2009-2022 and the applicable law is
+# identical to 2023-y-siguientes across both windows: art. 102 was last amended
+# by Ley 3/2006 (in force 01/01/2006, before this window opens), and art. 104's
+# only later amendment, Ley 22/2013 (in force 01/01/2014), touches apartado
+# Tres.1º and leaves apartado Uno, the fraction and the rounding paragraph
+# untouched. The divergence with 2023-y-siguientes was therefore a defect in
+# this revision, not a reflection of different law.
 [[revisions.2009-y-siguientes.formulas.expression.args]]
-literal = "0"
+literal = "100"
 
 [[revisions.2009-y-siguientes.formulas]]
 id = "modelo-303-compensacion-aplicada-periodo"
