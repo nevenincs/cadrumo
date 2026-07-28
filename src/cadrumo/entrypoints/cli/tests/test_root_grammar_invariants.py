@@ -181,6 +181,15 @@ def test_retired_custody_spellings_absent_from_source_and_docs() -> None:
     if sequences.is_dir():
         scanned.extend(sequences.rglob("*.seq"))
 
+    # Floor the scan corpus: a relocation of the source tree or docs would empty
+    # this walk and pass identically to a clean tree, so the retired-spelling guard
+    # below would be silently vacuous.
+    assert len(scanned) > 500, (
+        f"scanned only {len(scanned)} source/locale/doc files under {src_root} and {docs_root}; "
+        "the scan corpus collapsed (a package relocation or rename), so an empty offender list "
+        "would mean 'nothing was checked' rather than 'nothing is wrong'"
+    )
+
     # Rejection-probe tests legitimately carry a retired spelling to prove the
     # CLI refuses it; they are the enforcement, not a citation.
     exempt = {
@@ -293,6 +302,15 @@ def test_retired_reset_and_sandbox_spellings_absent_from_source_and_docs() -> No
     sequences = docs_root / "_sequences"
     if sequences.is_dir():
         scanned.extend(sequences.rglob("*.seq"))
+
+    # Floor the scan corpus: a relocation of the source tree or docs would empty
+    # this walk and pass identically to a clean tree, so the retired-spelling guard
+    # below would be silently vacuous.
+    assert len(scanned) > 500, (
+        f"scanned only {len(scanned)} source/locale/doc files under {src_root} and {docs_root}; "
+        "the scan corpus collapsed (a package relocation or rename), so an empty offender list "
+        "would mean 'nothing was checked' rather than 'nothing is wrong'"
+    )
 
     # Rejection-probe tests legitimately carry a retired spelling to prove the
     # CLI refuses it; they are the enforcement, not a citation.

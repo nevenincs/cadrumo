@@ -5,6 +5,7 @@ tags:
   - '#cli-authority-verb-conformance'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S01]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S02]]'
@@ -253,6 +254,8 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S214]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S215]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S216]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S217]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S218]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S219]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S220]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S221]]'
@@ -286,6 +289,9 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S294]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S295]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S296]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S297]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S298]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S299]]'
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
   - '[[2026-07-15-cli-authority-verb-conformance-audit]]'
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
@@ -582,6 +588,8 @@ Auto-generated index of all documents tagged with `#cli-authority-verb-conforman
 - `2026-07-15-cli-authority-verb-conformance-W06-P20-S214` - Confirm no removed CLI spelling survives in source, locales, tests, docs, schemas, MCP, or suggestions
 - `2026-07-15-cli-authority-verb-conformance-W06-P20-S215` - Confirm certificate custody, ledger evidence, portable export, hashing, namespaces, filed capture, LLM review, registry projection, and duplication execution each have one canonical owner and no parallel writer, resolver, parser, or command path
 - `2026-07-15-cli-authority-verb-conformance-W06-P20-S216` - Audit every amended ADR decision, including delete-only certificate cutover, atomic ledger evidence, live export routing, 18 plus 4 hashing consolidation, backend replay removal, namespace adoption, filed capture, LLM review, registry as-of behavior, and truthful duplication infrastructure, against code and objective evidence
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S217` - Rebuild the feature index after all plan, execution, audit, ADR, research, and reference artifacts are final
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S218` - Run the plan structural check and refuse closure while any Step remains open or malformed
 - `2026-07-15-cli-authority-verb-conformance-W06-P20-S267` - Verify each open W05 Step against its named surface before checking it, never inferring satisfaction from the live command tree alone
 - `2026-07-15-cli-authority-verb-conformance-W06-P20-S268` - Complete the W06.P18 and W06.P19 evidence, refusing to close any Step whose execution record lacks a command, a non-zero collected count, an exit line, and a HEAD reference
 - `2026-07-15-cli-authority-verb-conformance-W06-P20-S269` - Decide in a follow-on ADR the criterion by which a command path is profile-bound, then reconcile the 48 unguarded mutation-shaped leaves against it per verb
@@ -607,6 +615,9 @@ Auto-generated index of all documents tagged with `#cli-authority-verb-conforman
 - `2026-07-15-cli-authority-verb-conformance-W06-P20-S291` - Route the filing export-field overlap predicate onto the registry copy, the only admissible canonical home across that layer boundary
 - `2026-07-15-cli-authority-verb-conformance-W06-P20-S292` - Extract the shared journal-repository file substrate, noting the two classes are constraint-shape divergent so this is extraction rather than replacement
 - `2026-07-15-cli-authority-verb-conformance-W06-P20-S296` - Guard the load-bearing wizard schema re-exports against a tidy-up deletion, since the re-export idiom looks redundant and removing it silently drops both profile verbs from the MCP surface
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S297` - Give every corpus-scanning emptiness gate a non-zero subject floor, or prove per gate that its corpus cannot silently empty, since 87 in-surface gates assert an offender list empty without proving they scanned anything and a path rename would green them while the forbidden condition survives
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S298` - Remove the two feature-owned size-budget regressions this campaign introduced, the payload module pushed to 1251 by the wizard-bridge guard comment and the config help builder pushed to 195 by the custody and audit rows, since the campaign close claims no feature-owned regression exists
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S299` - Bound the shelled gettext build in the catalogue-drift POT fixture with a timeout so an upstream hang surfaces as a named failure instead of wedging the documentation lane indefinitely, since the call currently passes no timeout and the hang reproduces at zero workers
 
 ### plan
 

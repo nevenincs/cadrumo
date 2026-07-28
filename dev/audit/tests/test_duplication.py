@@ -229,6 +229,17 @@ def test_only_one_jscpd_invocation_exists_in_the_tree() -> None:
     executable_suffixes = {".py", ".sh", ".bash", ".ps1", ".cmd", ".bat"}
     candidates = [rel for rel in tracked if Path(rel).name == "justfile" or Path(rel).suffix in executable_suffixes]
 
+    # Subject floor. This is the runner whose own drifting second copy produced the
+    # original false-green; a collapse of the tracked-file enumeration would leave
+    # ``candidates`` empty and pass ``builders == []`` while a second invocation
+    # survived unseen. Assert the corpus is populated so an empty builder list means
+    # "one runner" rather than "nothing was searched".
+    assert len(candidates) > 50, (
+        f"enumerated only {len(candidates)} executable tracked files; the tree scan collapsed, "
+        "so an empty builder list below would mean 'nothing was searched' rather than "
+        "'exactly one runner exists'"
+    )
+
     # The one canonical runner, and this test itself: the runner holds the
     # real invocation constant, and this test holds the "jscpd@" literal it
     # searches WITH -- code, not prose, so the docstring exclusion cannot

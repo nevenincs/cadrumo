@@ -6,7 +6,7 @@ import pytest
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-PROJECT_ROOT = Path(__file__).resolve().parents[4]
+PROJECT_ROOT = Path(__file__).resolve().parents[5]
 RUNTIME_SURFACES = (
     PROJECT_ROOT / "src" / "cadrumo",
     PROJECT_ROOT / "env",
@@ -59,7 +59,16 @@ def _runtime_text_files() -> list[Path]:
             if path.name.startswith("test_") or path.name == "conftest.py":
                 continue
             files.append(path)
-    return sorted(files)
+    scanned = sorted(files)
+    # Floor at the corpus source. The leak scan asserts an empty offender list; a
+    # relocation of the runtime surfaces would empty this walk and pass identically
+    # to a clean tree, so the retired-phrase guard would be silently vacuous.
+    assert len(scanned) > 500, (
+        f"scanned only {len(scanned)} runtime text files under {[str(r) for r in RUNTIME_SURFACES]}; "
+        "the scan corpus collapsed (a package relocation or rename), so an empty leak list "
+        "would mean 'nothing was checked' rather than 'nothing is wrong'"
+    )
+    return scanned
 
 
 def test_retired_cli_command_phrases_do_not_leak_into_runtime_surfaces() -> None:
