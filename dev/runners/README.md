@@ -156,6 +156,27 @@ cohort-seal failure rather than as a missing-tool error. Installing into the
 volume rather than the container's writable layer is the whole point: a
 recreated container keeps the tools.
 
+**Homebrew is a third class again: a whole tree, not a binary or a package.**
+The Homebrew acquisition lane runs `brew` from the canonical
+`/home/linuxbrew/.linuxbrew/bin/brew`, and the stock image has no Homebrew at
+all — a rebuilt container fails that lane's very first step,
+`Verify declared Homebrew release row`, on `test -x "$BREW_PATH"`. Install it
+into the volume and symlink the canonical path at it, so a rebuild keeps the
+tree:
+
+```bash
+sudo apt-get install -y build-essential procps file git
+sudo mkdir -p /home/runner/tools/linuxbrew && sudo chown runner:runner /home/runner/tools/linuxbrew
+sudo ln -sfn /home/runner/tools/linuxbrew /home/linuxbrew
+git clone https://github.com/Homebrew/brew /home/linuxbrew/.linuxbrew/Homebrew
+mkdir -p /home/linuxbrew/.linuxbrew/bin
+ln -sfn ../Homebrew/bin/brew /home/linuxbrew/.linuxbrew/bin/brew
+/home/linuxbrew/.linuxbrew/bin/brew update --force
+```
+
+Clone with full history: a `--depth=1` clone leaves `brew --version` reporting
+"shallow or no git repository" and Homebrew refuses to work from it.
+
 **Some gaps are apt packages, not binaries.** The dev lane runs `pyright`, whose
 bundled node needs `libatomic.so.1`; the stock image does not carry it, and
 without it the lane dies `exit 127` with `error while loading shared libraries:
