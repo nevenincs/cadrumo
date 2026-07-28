@@ -84,9 +84,9 @@ Ship the python -m dev.registry.conformance Typer trio: report, coverage, audit 
 - [x] `P03.S42` - gate the operator backlog rather than the pending backlog by adding a shrink-only ceiling on revisions lacking operator review, so the one number CI protects cannot be moved by an act the tool can perform; `dev/registry/conformance/manager.py`.
 - [x] `P03.S46` - render the reviewer attribution with its review tier attached so an agent-tier review naming a person cannot be read as an operator signoff when scanning rows; `dev/registry/conformance/manager.py`.
 - [x] `P03.S53` - apply the vocabulary refusal to the effective review status resolved from the manifest, not only the requested one, so an agent cannot re-attribute an existing operator signoff to itself while leaving an authorship-only write legal; `dev/registry/conformance/_stamp.py`.
-- [ ] `P03.S54` - write and roll back the manifest through raw bytes so a refused stamp truly restores the file rather than rewriting every line ending, and assert the restoration on bytes instead of normalised text; `dev/registry/conformance/_stamp.py`.
-- [ ] `P03.S55` - reconcile the reviewer column between the text and JSON surfaces so one key name never carries two different values, and refuse a reviewer value containing the tier separator so the qualified form stays unambiguously parseable; `dev/registry/conformance/manager.py`.
-- [ ] `P03.S57` - compare a recorded baseline against the committed one and surface every counter moving in the weakening direction, and re-anchor the seed invariant to a freshly measured ceiling so the first genuine operator signoff does not red it; `dev/registry/conformance/manager.py`.
+- [x] `P03.S54` - write and roll back the manifest through raw bytes so a refused stamp truly restores the file rather than rewriting every line ending, and assert the restoration on bytes instead of normalised text; `dev/registry/conformance/_stamp.py`.
+- [x] `P03.S55` - reconcile the reviewer column between the text and JSON surfaces so one key name never carries two different values, and refuse a reviewer value containing the tier separator so the qualified form stays unambiguously parseable; `dev/registry/conformance/manager.py`.
+- [x] `P03.S57` - compare a recorded baseline against the committed one and surface every counter moving in the weakening direction, and re-anchor the seed invariant to a freshly measured ceiling so the first genuine operator signoff does not red it; `dev/registry/conformance/manager.py`.
 
 ### Phase `P04` - boundary hardening and gates
 
@@ -104,8 +104,8 @@ Make the one-way src/dev boundary enforceable, wire the CI gate, and regenerate 
 
 Run the real gates, persist the first conformance report as an audit, and close with a fresh-context honesty review.
 
-- [ ] `P05.S22` - run the full-tree collect-only gate and the scoped registry, filing, and dev suites, recording failure signatures and triaging owner vs peer churn; `src/cadrumo`.
-- [ ] `P05.S23` - run the first real conformance report over the bundled registry and persist the findings as a vault audit document; `.vault/audit`.
+- [x] `P05.S22` - run the full-tree collect-only gate and the scoped registry, filing, and dev suites, recording failure signatures and triaging owner vs peer churn; `src/cadrumo`.
+- [x] `P05.S23` - run the first real conformance report over the bundled registry and persist the findings as a vault audit document; `.vault/audit`.
 - [ ] `P05.S24` - run the fresh-context campaign-close honesty review and track every surfaced item as a new step or a formally deferred follow-up; `.vault/audit`.
 - [x] `P05.S32` - amend the ADR boundary wording to name every wheel-shipped module under src/cadrumo and rule the two open questions on single-versus-dual boundary-detector authority and on whether the filing-year grounding resolver belongs on the public registry facade; `.vault/adr`.
 - [x] `P05.S37` - extend the fragment placement refusal to the remaining legally load-bearing revision scalars legal_refs, orden_aplicabilidad and valid_to, closing the last instance of the readability hazard the governance refusal proved worth closing; `src/cadrumo/domain/calculations/registry/_loader.py`.
@@ -114,6 +114,7 @@ Run the real gates, persist the first conformance report as an audit, and close 
 - [x] `P05.S51` - eliminate the fake-named bindings from the sanitizer residual-identity test, reconcile the test-debt baseline the same test broke, and replace the bare encoding literal in the legal attribution screen; `src/cadrumo/adapters/inbound/sanitizer/tests`.
 - [x] `P05.S52` - reconcile the registry revision diff test whose changed-formula expectation this campaign moved when it corrected the prorrata rounding on both M303 revisions, fixing whichever side is actually wrong rather than re-anchoring the test to make it pass; `src/cadrumo/application/registry/tests/test_diff.py`.
 - [ ] `P05.S60` - widen or retire the single-filing-year M303 regression that pinned only the newer revision, which is what let the older revision keep returning a zero prorrata percentage undetected; `src/cadrumo/domain/calculations/registry/tests`.
+- [ ] `P05.S61` - extract the verification-predicate concern out of the registry schema module, which now sits one line under its size ceiling so the next peer edit reds a gate they did not break; `src/cadrumo/domain/calculations/registry/_schema.py`.
 
 ## Parallelization
 

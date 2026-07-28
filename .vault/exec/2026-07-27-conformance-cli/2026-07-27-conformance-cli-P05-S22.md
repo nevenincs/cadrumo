@@ -1,0 +1,96 @@
+---
+tags:
+  - '#exec'
+  - '#conformance-cli'
+date: '2026-07-28'
+modified: '2026-07-28'
+step_id: 'S22'
+related:
+  - "[[2026-07-27-conformance-cli-plan]]"
+---
+
+<!-- FRONTMATTER RULES:
+     tags: one directory tag (hardcoded #exec) and one feature tag.
+     Replace conformance-cli with a kebab-case feature tag, e.g. #foo-bar.
+     Additional tags may be appended below the required pair.
+
+     modified: CLI-maintained last-modified stamp; set at scaffold time,
+     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
+
+     step_id is the originating Step's canonical identifier, e.g. S01.
+     The S22 and 2026-07-27-conformance-cli-plan placeholders are machine-filled by
+     `vaultspec-core vault add exec`; do not fill them by hand.
+
+     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
+     parent plan.
+
+     DO NOT add fields beyond those scaffolded; metadata lives
+     only in the frontmatter. -->
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
+     - NEVER use [[wiki-links]] or markdown links in the document body.
+     - NEVER reference file paths in the body. If you must name a source file,
+       class, or function, use inline backtick code: `src/module.py`. -->
+
+<!-- STEP RECORD:
+     This file represents one Step from the originating plan. Identified
+     by its canonical leaf identifier (S##) and ancestor display path.
+     The run the full-tree collect-only gate and the scoped registry, filing, and dev suites, recording failure signatures and triaging owner vs peer churn and ## Scope
+
+- `src/cadrumo` placeholders below are machine-filled
+     by `vaultspec-core vault add exec` from the originating Step row;
+     do not fill them by hand. -->
+
+# run the full-tree collect-only gate and the scoped registry, filing, and dev suites, recording failure signatures and triaging owner vs peer churn
+
+## Scope
+
+- `src/cadrumo`
+
+## Description
+
+- Run the full-tree collect-only gate and confirm clean collection.
+- Run the scoped suites over every tree this campaign touched.
+- Triage each failure to its owner rather than reporting a count.
+- Absorb every failure this campaign caused, and attribute the rest.
+
+## Outcome
+
+Full-tree collection is clean: 15015 tests collected of 18353, 3338 deselected by
+marker, zero collection errors. That is the signal that matters most in a shared
+worktree, because a broken import at HEAD blocks every concurrent campaign rather
+than only this one.
+
+Sixteen failures across the scoped suites triaged into three groups. Seven were
+not real: four error-registry assertions and the loader cache-isolation test, each
+of which passes in isolation (28 passed and 11 passed respectively). Those were
+peers committing registry sources during a thirteen-minute parallel run, and the
+cache key folds those bytes, so the race is structural rather than a defect.
+
+Five were this campaign's own and were absorbed rather than deferred: a module
+marker declared after a constant, a bare encoding literal, two modules that broke
+their size ceilings, and a docstring citing a development record. The size
+breaches were fixed by extraction, not by lifting a ceiling.
+
+Four were peer-owned and were fixed anyway on an explicit operator directive to
+clear all substitution machinery from the tree: two monkeypatch sites, a pair of
+fake-named bindings that turned out to be a positive control needing only a
+rename, and an import-hygiene ratchet that needed no new debt because a public
+facade already exposed what the import wanted.
+
+## Notes
+
+One failure remains and is genuinely another campaign's: a module marker declared
+after an assignment in a docs-sequences test. It is a one-line move available to
+its owner, and this campaign's half of that gate is clear.
+
+A methodological error worth recording. The first capture piped pytest through
+`tail` before the background file was written, so the log carried only the summary
+lines and every failure body was lost. Attribution then required re-running the
+unattributed tests individually. Truncating before the write, rather than after,
+destroys exactly the diagnostic the run was for.
+
+The triage itself is the point of this Step rather than the count. Two of the
+groups look identical in a summary line, and only re-running in isolation
+distinguishes a peer's mid-run commit from a real regression.
