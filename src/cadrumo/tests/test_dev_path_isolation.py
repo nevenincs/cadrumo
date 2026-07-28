@@ -46,6 +46,19 @@ proof — a firing proof alone cannot show the difference between a precise
 detector and one that fires on everything.  A vacuity floor asserts the live
 scan visited a realistic number of shipped modules so an empty-scan false-pass
 can never read as a clean tree.
+
+The standard this module holds itself to is stronger than "every form has a
+test": **every discriminating branch of the shared detector must flip at least
+one test here when it is removed.**  Form coverage alone does not deliver that.
+Three branches once satisfied it while being individually droppable — the
+``join`` arity guard, the newline rejection, and the left-hand operand of a
+path join — because the fixtures that exercised their neighbours produced the
+same verdict with the branch gone.  Each now has a proof written to isolate it:
+a one-argument ``join`` whose sole argument is the bare ``"dev"`` constant, a
+multi-line NON-docstring string (docstring fixtures are skipped before the
+newline check is reached), and a ``"dev" / root`` join with the segment on the
+left.  When adding a branch to the detector, add the fixture that fails without
+it — not merely one that covers the same form.
 """
 
 from __future__ import annotations
@@ -370,6 +383,27 @@ def test_path_scanner_catches_project_root_anchored_join(tmp_path: Path) -> None
     assert violations[0].lineno == 3
 
 
+def test_path_scanner_catches_the_reversed_join_operand(tmp_path: Path) -> None:
+    """``"dev" / root`` MUST fire — the segment can sit on either side of the join.
+
+    ``Path.__rtruediv__`` makes a bare ``"dev"`` on the LEFT of the operator a
+    valid join, so a detector reading only the right operand has a hole an
+    author reaches by writing the expression the other way round.  Without this
+    proof the left-operand branch is droppable: removing it flips no other test
+    in this module, which is exactly how a preserved-but-unproven branch
+    disappears in the next refactor.
+    """
+    violations = _scan_planted_paths(
+        tmp_path,
+        "cadrumo/reversed_join.py",
+        'from cadrumo.core.paths import PROJECT_ROOT\n\nBASELINE = "dev" / PROJECT_ROOT\n',
+    )
+
+    assert [v.form for v in violations] == [DevPathForm.PATH_JOIN], (
+        f"a dev segment on the LEFT of a path join was missed; violations={violations!r}"
+    )
+
+
 def test_path_scanner_catches_call_assembled_dev_segment(tmp_path: Path) -> None:
     """``os.path.join``, the ``Path(...)`` factory and ``joinpath`` MUST all fire."""
     violations = _scan_planted_paths(
@@ -476,6 +510,45 @@ def test_path_scanner_does_not_fire_on_string_join(tmp_path: Path) -> None:
     )
 
     assert violations == [], f"the scanner read a string join as a path assembly: {violations!r}"
+
+
+def test_path_scanner_does_not_fire_on_a_single_argument_join_of_dev(tmp_path: Path) -> None:
+    """``"x".join("dev")`` is a string operation, and the arity guard is what proves it.
+
+    This is the case the arity-of-two-or-more guard exists for, and the only
+    one that distinguishes it: a one-argument ``join`` whose sole argument IS
+    the bare ``"dev"`` constant.  The two-argument path-assembly forms are
+    permitted by the guard anyway and the ``"".join(parts)`` case has no bare
+    ``"dev"`` argument to match, so neither can tell whether the guard is
+    present.  Deleting the guard flips no other test in this module — this one
+    is the pin that makes it load-bearing.
+    """
+    violations = _scan_planted_paths(
+        tmp_path,
+        "cadrumo/single_arg_join.py",
+        'def label():\n    return "x".join("dev")\n',
+    )
+
+    assert violations == [], f"a one-argument string join was read as a path assembly: {violations!r}"
+
+
+def test_path_scanner_does_not_fire_on_multiline_prose_outside_a_docstring(tmp_path: Path) -> None:
+    """A multi-line string naming ``dev/`` is prose, even when it is not a docstring.
+
+    The docstring skip only reaches module, class and function docstrings.  A
+    multi-line assertion message or module constant that happens to begin with
+    a dev path is prose too, and the newline rejection is what carries that —
+    a path literal never contains a line break.  Deleting that rejection flips
+    no other test here, because every other prose fixture is a docstring and
+    is skipped before the check is reached.
+    """
+    violations = _scan_planted_paths(
+        tmp_path,
+        "cadrumo/multiline_prose.py",
+        'MESSAGE = "dev/import_hygiene_baseline.json\\nis maintained by the dev-side scanner"\n',
+    )
+
+    assert violations == [], f"the scanner read multi-line prose as a dev-tree dependency: {violations!r}"
 
 
 def test_path_scanner_does_not_fire_on_prose_naming_dev_tooling(tmp_path: Path) -> None:
