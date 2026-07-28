@@ -73,7 +73,7 @@ Lift the test-trapped conformance facts into importable typed libraries under sr
 - [x] `P02.S58` - correct the especial-prorrata mandatory predicate which applies a strict greater-than where the law says exceeds by ten percent or more, so exact equality currently fails to trip a mandatory regime switch; `src/cadrumo/domain/iva/_prorrata.py`.
 - [x] `P02.S59` - declare the full-right-to-deduct article on the prorrata formula legal refs of both M303 revisions rather than only on the enclosing construct, as a coherent two-revision change; `src/cadrumo/_data/registry/aeat/modelos/303`.
 - [x] `P02.S72` - model the M303 regularizacion prorrata cuota casilla as computed with the AEAT manual figure as its external oracle expectation, the under-declaration-shape gap that fell out of tracking when its tracking step was re-scoped to other work; `src/cadrumo/_data/registry/aeat/modelos/303`.
-- [ ] `P02.S80` - lift the export-format closed set from a bare Literal on the export-layout schema to a core StrEnum so the per-modelo support matrix and the per-revision conformance fold compare enum members rather than each re-spelling the same tokens; `src/cadrumo/core`.
+- [x] `P02.S80` - lift the export-format closed set from a bare Literal on the export-layout schema to a core StrEnum so the per-modelo support matrix and the per-revision conformance fold compare enum members rather than each re-spelling the same tokens; `src/cadrumo/core`.
 
 ### Phase `P03` - conformance governance CLI in dev
 
@@ -112,7 +112,7 @@ Make the one-way src/dev boundary enforceable, wire the CI gate, and regenerate 
 - [x] `P04.S41` - consolidate the boundary detection onto the single hygiene scanner authority the ADR chose, deleting the duplicated inline import detector and its stale pending-ruling heading while keeping the injectable-root proof local; `src/cadrumo/tests/test_dev_path_isolation.py`.
 - [x] `P04.S56` - pin the two detector branches whose individual mutation flips nothing with fixtures for an interpolated device path and an interpolated mid-path segment, and either delete the two redundant branches or correct the docstring that credits one with protection a different mechanism delivers; `dev/import_hygiene_scan.py`.
 - [x] `P04.S68` - write the two sibling audit baselines and the generated api stubs through explicit newline handling, and fix the stub drift check which reads with universal newlines so a translated stub compares equal to the writer that translated it; `dev/docs/apidocs/manager.py`.
-- [ ] `P04.S78` - give the conformance tool a reachable operator page covering the stamp vocabulary, the operator-signoff hand-edit path, the registry-root flag and the baseline re-record procedure, since the prose exists only inside module docstrings; `docs`.
+- [x] `P04.S78` - give the conformance tool a reachable operator page covering the stamp vocabulary, the operator-signoff hand-edit path, the registry-root flag and the baseline re-record procedure, since the prose exists only inside module docstrings; `docs`.
 
 ### Phase `P05` - verification and closeout
 
