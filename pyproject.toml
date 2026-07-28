@@ -773,6 +773,7 @@ convention = "google"
 "src/cadrumo/entrypoints/cli/tests/test_config_recovery_lifecycle.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_profile_login_session_lifecycle.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_lazy_command_tree.py" = ["S603"]
+"src/cadrumo/entrypoints/cli/tests/test_json_schema_conformance.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/_command_group_import_support.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_live_read_subgroups.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_root_fallback_write_guard.py" = ["S603"]
