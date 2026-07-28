@@ -25,11 +25,11 @@ import pytest
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaFieldKind, CasillaId, validated_casilla_id
 from ....domain.filing import FilingExportError
-from .._export import (
+from .._export import export_draft
+from .._export_parity import (
     _assert_casilla_metadata_fidelity,
     _assert_record_order_fidelity,
     boe_representable_casilla_ids,
-    export_draft,
     rendered_casilla_ids,
     required_applicable_casilla_ids,
 )

@@ -167,9 +167,9 @@ from ._export import (
     export_draft,
     export_layout_renderability_reason,
     render_layout,
-    required_applicable_casilla_ids,
     verify_export,
 )
+from ._export_parity import required_applicable_casilla_ids
 from ._history_models import ModeloHistory, ModeloHistoryEntry
 from ._history_repository import ModeloHistoryRepository
 from ._import import JustificanteImportResult, import_filing_from_justificante
