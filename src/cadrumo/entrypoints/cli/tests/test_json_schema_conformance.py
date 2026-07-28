@@ -18,11 +18,12 @@ from __future__ import annotations
 import ast
 from collections.abc import Callable, Sequence
 from pathlib import Path
-from typing import Any, Protocol, TypeGuard, cast
+from typing import Any, Protocol, TypeGuard, cast, get_args
 
 import click
 import pytest
 import typer
+from pydantic import BaseModel
 from typer.main import get_command as _typer_get_command
 
 # ``config.profile.create`` / ``config.profile.edit`` register in
@@ -46,6 +47,7 @@ from ...schema_surface import GROUP_CALLBACK_SCHEMA_KEYS, SCHEMA_KEY_BY_CLI_PATH
 # import here the registry is empty when this test module collects.
 from .. import _config_payloads as _config_payloads
 from .. import _config_sandbox_payloads as _config_sandbox_payloads
+from .._config_payloads import ConfigRecoveryCreateResult
 from ._lazy_command_tree import materialise_lazy_subcommands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -658,3 +660,220 @@ def test_report_payload_mirror_accepts_full_dump(
         "on the round-trip; mirror the field so the advisory reaches the JSON envelope"
     )
     assert len(payload.stale_draft_revision_references) == len(report.stale_draft_revision_references)
+
+
+# ---------------------------------------------------------------------
+# Custody contract gate: exact keys, exclusivity, and secret-free results
+# ---------------------------------------------------------------------
+
+#: Field names that would *be* a secret value rather than describe one.
+#:
+#: Derived from the confidentiality contract, not from the current tree: a
+#: result field under one of these names carries key material, a passphrase,
+#: or recovery words onto an operator envelope. Metadata *about* a secret
+#: (``has_secret``, ``secret_store_dir``, ``recovery_fingerprint``) is not a
+#: secret and is deliberately absent from this set.
+_SECRET_BEARING_FIELD_NAMES = frozenset(
+    {
+        "passphrase",
+        "new_passphrase",
+        "old_passphrase",
+        "current_passphrase",
+        "password",
+        "mnemonic",
+        "recovery_mnemonic",
+        "recovery_code",
+        "recovery_codes",
+        "recovery_words",
+        "recovery_phrase",
+        "seed_phrase",
+        "secret",
+        "secret_value",
+        "private_key",
+        "master_key",
+        "key_material",
+        "plaintext",
+    }
+)
+
+#: Accepted custody and reset schema keys and their exact declared field sets.
+#:
+#: Enrolment gate: every field on a custody envelope must be non-secret by
+#: inspection, so adding a field to one of these results must fail here and be
+#: reviewed rather than silently reaching an operator envelope.
+_CUSTODY_SCHEMA_FIELDS: dict[str, frozenset[str]] = {
+    "config.passphrase.change": frozenset({"secret_store_dir", "changed"}),
+    "config.recover": frozenset({"recovery_path", "secret_store_dir", "recovered"}),
+    "config.recovery.status": frozenset({"recovery_path", "recovery_enrolled", "recovery_fingerprint"}),
+    "config.recovery.create": frozenset({"recovery_path", "recovery_fingerprint", "rotated"}),
+    "config.recovery.rotate": frozenset({"recovery_path", "recovery_fingerprint", "rotated"}),
+    "config.recovery.verify": frozenset({"recovery_path", "verified", "recovery_fingerprint"}),
+    "config.reset.start": frozenset({"operation"}),
+    "config.reset.status": frozenset({"operation"}),
+    "config.reset.resume": frozenset({"operation"}),
+}
+
+#: Command-result keys retired by the accepted verb grammar.
+#:
+#: These commands were removed outright with no alias, so a registration under
+#: any of these keys is a resurrected contract for a door that no longer exists.
+_REMOVED_SCHEMA_KEYS = frozenset(
+    {
+        "config.lock",
+        "config.unlock",
+        "config.rekey",
+        "config.show-recovery",
+        "config.show_recovery",
+        "config.verify-recovery",
+        "config.verify_recovery",
+        "config.reset",
+        "config.profile.sandbox.use",
+        "modelo.audit.replay",
+    }
+)
+
+
+def _nested_model_types(annotation: object) -> tuple[type[BaseModel], ...]:
+    """Return every pydantic model reachable from one field annotation.
+
+    Unwraps ``Optional``/union, list, tuple, and mapping parameters so a
+    secret nested inside a container or an optional sub-payload is still
+    reached by the recursive scan.
+    """
+    found: list[type[BaseModel]] = []
+    if isinstance(annotation, type) and issubclass(annotation, BaseModel):
+        found.append(annotation)
+    for argument in get_args(annotation):
+        found.extend(_nested_model_types(argument))
+    return tuple(found)
+
+
+def _secret_bearing_field_paths(model: type[BaseModel]) -> tuple[str, ...]:
+    """Return dotted paths of every secret-bearing field reachable from ``model``.
+
+    Recurses through nested payload models so a secret cannot hide one level
+    below the registered result. Cycles are broken by a visited set.
+    """
+    offending: list[str] = []
+    stack: list[tuple[type[BaseModel], str]] = [(model, model.__name__)]
+    visited: set[type[BaseModel]] = set()
+    while stack:
+        current, prefix = stack.pop()
+        if current in visited:
+            continue
+        visited.add(current)
+        for field_name, field in current.model_fields.items():
+            if field_name.lower() in _SECRET_BEARING_FIELD_NAMES:
+                offending.append(f"{prefix}.{field_name}")
+            for nested in _nested_model_types(field.annotation):
+                stack.append((nested, f"{prefix}.{field_name}"))
+    return tuple(sorted(offending))
+
+
+def test_no_registered_schema_serialises_secret_material() -> None:
+    """No registered result schema may carry key material onto an envelope.
+
+    Scans every registered :class:`OutputSchema` — and every payload model
+    nested inside one — for a field named as a secret *value*. A passphrase,
+    recovery phrase, or private key reaching a ``--json`` envelope is a hard
+    confidentiality defect: envelopes are printed to terminals, piped into
+    agent transcripts, and captured in operator logs.
+
+    The registry is materialised through the live command tree first, so a
+    lazily-imported payload module cannot hide a secret behind a partially
+    populated registry (an empty scan would otherwise read as a clean pass).
+    """
+    _walk_cli_command_paths(_live_app())
+
+    offenders: dict[str, tuple[str, ...]] = {}
+    for command_path, schema in sorted(SCHEMA_REGISTRY.items()):
+        paths = _secret_bearing_field_paths(schema)
+        if paths:
+            offenders[command_path] = paths
+
+    assert not offenders, "Registered schemas serialise secret material:\n" + "\n".join(
+        f"  - {command_path}: {', '.join(paths)}" for command_path, paths in sorted(offenders.items())
+    )
+
+
+def test_secret_field_scan_detects_a_planted_secret() -> None:
+    """The secret scan must fail when a secret field is actually present.
+
+    Anti-tautology proof for :func:`test_no_registered_schema_serialises_secret_material`.
+    A name-based scan passes trivially if the predicate never matches, so plant
+    a secret both directly and one level down a nested payload and require the
+    scan to report each. Without this, a broken matcher would render the
+    confidentiality gate silently vacuous.
+    """
+
+    class _PlantedNested(BaseModel):
+        mnemonic: str
+
+    class _PlantedResult(BaseModel):
+        recovery_path: str
+        passphrase: str
+        nested: _PlantedNested | None = None
+
+    found = _secret_bearing_field_paths(_PlantedResult)
+
+    assert "_PlantedResult.passphrase" in found, f"direct secret field not detected; scan returned {found}"
+    assert any(path.endswith(".mnemonic") for path in found), f"nested secret field not detected; scan returned {found}"
+    assert not _secret_bearing_field_paths(ConfigRecoveryCreateResult), (
+        "the live recovery-create envelope must remain secret-free"
+    )
+
+
+def test_custody_schema_keys_are_registered_with_distinct_schemas() -> None:
+    """Each accepted custody and reset key resolves to its own result schema.
+
+    Exclusivity matters because these keys are the operator contract for
+    distinct custody operations: two keys sharing one schema class would let a
+    ``verify`` result be read as a ``rotate`` result, and a missing key means a
+    custody door emits no documented envelope at all.
+    """
+    _walk_cli_command_paths(_live_app())
+
+    missing = sorted(key for key in _CUSTODY_SCHEMA_FIELDS if key not in SCHEMA_REGISTRY)
+    assert not missing, f"accepted custody/reset schema keys are not registered: {missing}"
+
+    by_schema: dict[str, list[str]] = {}
+    for key in _CUSTODY_SCHEMA_FIELDS:
+        by_schema.setdefault(SCHEMA_REGISTRY[key].__name__, []).append(key)
+    shared = {name: sorted(keys) for name, keys in by_schema.items() if len(keys) > 1}
+    assert not shared, f"custody keys share a result schema, collapsing distinct contracts: {shared}"
+
+
+def test_custody_result_fields_are_enrolled() -> None:
+    """Every field on a custody envelope is explicitly enrolled and non-secret.
+
+    Change-detection gate on the confidentiality-critical surface: a new field
+    added to a passphrase, recovery, or reset result must fail here and be
+    reviewed before it can reach an operator envelope. The enrolled sets are
+    the audited secret-free shapes; a drift in either direction is reported.
+    """
+    _walk_cli_command_paths(_live_app())
+
+    drift: list[str] = []
+    for key, expected in sorted(_CUSTODY_SCHEMA_FIELDS.items()):
+        schema = SCHEMA_REGISTRY[key]
+        actual = frozenset(schema.model_fields)
+        if actual != expected:
+            added = sorted(actual - expected)
+            removed = sorted(expected - actual)
+            drift.append(f"  - {key} ({schema.__name__}): unenrolled={added} missing={removed}")
+
+    assert not drift, "custody result field sets drifted from their enrolled secret-free shapes:\n" + "\n".join(drift)
+
+
+def test_removed_command_schema_keys_are_absent() -> None:
+    """No result schema may be registered under a retired command key.
+
+    The lock, rekey, flat scoped reset, legacy show/verify-recovery,
+    sandbox-use, and modelo audit replay doors were removed with no alias.
+    A registration under one of those keys resurrects a contract for a command
+    an operator cannot invoke, and would hand an agent a dead instruction.
+    """
+    _walk_cli_command_paths(_live_app())
+
+    resurrected = sorted(_REMOVED_SCHEMA_KEYS & set(SCHEMA_REGISTRY))
+    assert not resurrected, f"retired command keys are registered again: {resurrected}"
