@@ -56,12 +56,26 @@ The service does report the shortfall honestly in its own search response, which
 
 ## Recommendations
 
-- Do not attempt to mint the Linux arm64 row against any existing cohort. The one consumable candidate fails an ancestry check that cannot be repaired, and the failure is a correct refusal rather than an obstacle to route around.
+**Superseded the same day.** The recommendations below were written while the row was believed unreachable without an operator release act. The operator authorised that act, it was carried out, and the chain is broken. What follows records both the original guidance and what actually happened, because a reader arriving later would otherwise conclude the row is still blocked.
 
-- Treat the remaining plan step as operator-gated and leave it open until a release cycle begins. It becomes actionable the moment the Stage 0 bump lands: bump, run the smoke to produce a cohort on a commit that is on main, then dispatch the acquisition gate for all three rows.
+### Closed
 
-- Do not loosen the seal-time version guard to unblock the smoke lane. The refusal is the guard doing its job; the resolution is the bump, and weakening the check would remove the protection that makes a skipped bump cheap to discover.
+- **Do not mint against an existing cohort** — still correct, and now moot. A fresh cohort exists, built on a commit that is on main, so the ancestry refusal no longer applies to it.
 
-- Keep container entrypoints out of ephemeral directories. The restored runner holds its entrypoint in its own state volume; the provisioning knowledge behind that is still undocumented, and documenting it in the runner operations directory is the outstanding follow-up.
+- **The version deadlock is broken.** The declarations were bumped to the first computed release version, which release-please derived from the manifest floor rather than anyone choosing it, and which the identity guard confirmed free on every destination before it was applied. A cohort has since sealed twice at that version — the refusal that killed every run since the reset is gone, and reproducibly so. Seven surfaces moved; the bundle manifest deliberately did not, because its tracked value is a sentinel the version gate requires to stay put.
 
-- Repair the semantic code index before any further code work that the discovery mandate governs. An ordinary reindex does not converge it, so it needs a clean rebuild rather than another incremental pass, and until then an absent search result is not evidence of absence.
+- **The seal guard was not weakened**, which was the substantive risk in this whole area. It refused correctly throughout; the resolution was to satisfy it, not to soften it.
+
+### Opened by doing the work
+
+- **The runbook contradicted the gates in three places**, each proven against the implementations and since corrected: it instructed bumping a surface whose gate requires the opposite, it gated the bump on a check only a post-bump release can satisfy, and it asserted a fixed evidence-row obligation where the required set is derived from the channels a release claims. A separate arithmetic error — claiming eight CI-minted rows including four homebrew, where the descriptor declares three — was residue from the platform drop and would have stranded an operator hunting a row no lane can mint.
+
+- **A rebuilt CI container silently loses three classes of dependency**: a binary the workflows assume present, a system package a lane's toolchain links against, and an entire package-manager tree. None announced itself as a missing dependency; each surfaced as an unrelated-looking failure — a version-gate refusal, a lane exit code, and a first-step path check. All three are now documented with verification commands.
+
+- **The formula this feature exists to fix was unshippable as specified.** The guarded form failed the strict formula audit on the macOS leg, and it had never been audited before because the existing macOS evidence row was minted from a cohort predating the guard. Fixed in the generator, with the pin rewritten to anchor on the whole guard-opening line — the bare condition also appears inside the corrected form, so the obvious assertion would have passed while pinning nothing.
+
+### Still open
+
+- The evidence row itself is not yet minted. What blocks it now is only the remaining run, not a structural refusal.
+
+- The local readiness signal remains misleading: no check binds the cohort's version to the declared one, so a green surface-consistency line can report a version the declarations have moved past. Worth one assertion; it is a signal defect, not a shipping hazard.
