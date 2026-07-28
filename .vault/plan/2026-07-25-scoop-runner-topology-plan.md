@@ -54,7 +54,9 @@ do not add it to Administrators. Sign in as that user once so the profile
 materialises, and install Scoop into it, which is itself a no-admin user-scope
 install. Then register a runner against this repository under that user with
 the lane's label, minting the registration token from the repository's own
-Actions API.
+Actions API. None of that needs a restart: registering a runner is an unzip and
+a service registration, which is why the fleet's existing runners were stood up
+without one.
 
 Whether the runner is registered as a service under that account or run
 interactively in that user's session is the operator's call. The lane does not
@@ -63,9 +65,21 @@ as, so a wrong choice surfaces as a named refusal on the first dispatch rather
 than as silently privileged evidence.
 
 The Windows Sandbox row is unrelated to all of the above and serves a different
-proof. It needs administrator rights and a reboot, and the feature's state
-cannot even be read from an unelevated session, so it is reported here as
-unverified rather than as disabled.
+proof. Its feature state was first recorded here as unreadable without
+elevation, which was wrong: the optional-feature inventory is readable over WMI
+from an ordinary session, and it reports `Containers-DisposableClientVM`
+disabled with no sandbox executable present, confirming the earlier operator
+finding rather than leaving it unverified.
+
+Enabling it needs administrator rights. Whether it also needs a restart is not
+settled here. The feature it layers on is already installed and running, since
+the virtual-machine platform, the hypervisor platform, and Hyper-V are all
+enabled on this host, so a restart is not the foregone conclusion it would be
+on a bare machine. The enable call reports whether a restart is pending in its
+own result and takes a flag to suppress one, so the operator should read that
+answer rather than schedule a reboot in advance. This matters because a restart
+here is not cheap: it takes down the CI runners and every agent session on the
+box.
 
 ## Steps
 
