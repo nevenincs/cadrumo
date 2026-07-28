@@ -356,12 +356,12 @@ Use the mandatory structured documentation workflow to update guides and referen
 
 - [ ] `W05.P17.S161` - Invoke the mandatory vaultspec-documentation workflow and keep its render-and-verify gate active for this Phase; `docs/`.
 - [x] `W05.P17.S162` - Rewrite data-access protection procedures for passphrase, recovery, logout, quarantine, and reset; `docs/how-to/protect-data-access.md`.
-- [ ] `W05.P17.S163` - Rewrite authentication procedures for login, logout, reset, and backend-free certificate secrets; `docs/how-to/authenticate-with-aeat.md`.
-- [ ] `W05.P17.S164` - Rewrite profile setup and navigation for exact switch labels and strong logout; `docs/how-to/profile-setup.md`.
-- [ ] `W05.P17.S165` - Rewrite ledger evidence guidance to separate attach from invoice-only link; `docs/how-to/ledger-evidence.md`.
+- [x] `W05.P17.S163` - Rewrite authentication procedures for login, logout, reset, and backend-free certificate secrets; `docs/how-to/authenticate-with-aeat.md`.
+- [x] `W05.P17.S164` - Rewrite profile setup and navigation for exact switch labels and strong logout; `docs/how-to/profile-setup.md`.
+- [x] `W05.P17.S165` - Rewrite ledger evidence guidance to separate attach from invoice-only link; `docs/how-to/ledger-evidence.md`.
 - [ ] `W05.P17.S166` - Rewrite bank-import examples to separate evidence attach from invoice link; `docs/how-to/import-bank-statements.md`.
-- [ ] `W05.P17.S167` - Align the how-to index with logout, passphrase, recovery, and reset lifecycle terminology; `docs/how-to/index.md`.
-- [ ] `W05.P17.S168` - Align the command and configuration overview with the accepted hierarchy and security semantics; `docs/reference/commands-and-configuration.md`.
+- [x] `W05.P17.S167` - Align the how-to index with logout, passphrase, recovery, and reset lifecycle terminology; `docs/how-to/index.md`.
+- [x] `W05.P17.S168` - Align the command and configuration overview with the accepted hierarchy and security semantics; `docs/reference/commands-and-configuration.md`.
 - [ ] `W05.P17.S169` - Regenerate data-access sequence goldens from real accepted commands; `docs/_sequences/how-to/protect-data-access/`.
 - [ ] `W05.P17.S170` - Regenerate authentication sequence goldens for login, logout, reset, and certificate secrets; `docs/_sequences/how-to/authenticate-with-aeat/`.
 - [ ] `W05.P17.S171` - Regenerate bank-import sequence goldens for attach and invoice link; `docs/_sequences/how-to/import-bank-statements/`.
@@ -445,7 +445,7 @@ Run the formal code-review skill, reconcile findings, and prove every accepted A
 - [ ] `W06.P20.S267` - Verify each open W05 Step against its named surface before checking it, never inferring satisfaction from the live command tree alone; `.vault/plan/2026-07-15-cli-authority-verb-conformance-plan.md`.
 - [ ] `W06.P20.S268` - Complete the W06.P18 and W06.P19 evidence, refusing to close any Step whose execution record lacks a command, a non-zero collected count, an exit line, and a HEAD reference; `.vault/exec/`.
 - [ ] `W06.P20.S269` - Decide in a follow-on ADR the criterion by which a command path is profile-bound, then reconcile the 48 unguarded mutation-shaped leaves against it per verb; `src/cadrumo/application/storage_write_policy.py`.
-- [ ] `W06.P20.S270` - Remove the permissive not-read-only default for unknown command keys, or prove every gate resting on it still discriminates an absent key from a live write verb; `src/cadrumo/application/operator_surface/_classification.py`.
+- [x] `W06.P20.S270` - Remove the permissive not-read-only default for unknown command keys, or prove every gate resting on it still discriminates an absent key from a live write verb; `src/cadrumo/application/operator_surface/_classification.py`.
 - [x] `W06.P20.S271` - Assert structurally that an execution record carries a populated Outcome before its Step may be checked, since the vault check passes empty scaffolds; `.vault/exec/`.
 - [x] `W06.P20.S272` - Commit the plan file alongside execution records in every closure commit, and land the 31 closures currently held only in the working tree; `.vault/plan/2026-07-15-cli-authority-verb-conformance-plan.md`.
 - [ ] `W06.P20.S273` - Make a stale import-linter ignore fail loudly and distinctly from a contract breach, so an aborted run cannot read as a quiet one; `.importlinter`.
@@ -453,14 +453,14 @@ Run the formal code-review skill, reconcile findings, and prove every accepted A
 - [x] `W06.P20.S275` - Teach the documented-command conformance parser to recognise a blocked-row marker rather than reading its prose as a command path; `src/cadrumo/entrypoints/cli/tests/test_documented_command_conformance.py`.
 - [ ] `W06.P20.S276` - Attribute the two P18 failures before any closure, 8 in the passphrase and recovery lifecycle suite and 22 in the MCP parity suite, separating the expected keychain remainder from real defects; `src/cadrumo/entrypoints/cli/_config/tests/; src/cadrumo/entrypoints/mcp/tests/`.
 - [x] `W06.P20.S277` - Seed the profile-key registry on the MCP path itself rather than relying on a wizard import side effect, and prove whoami through a real stdio subprocess client; `src/cadrumo/entrypoints/mcp/`.
-- [ ] `W06.P20.S278` - Give the namespace-registry adoption gate an anti-vacuity floor and every production root, since it currently finds zero subjects and asserts an empty list; `src/cadrumo/application/tests/test_namespace_registry_adoption.py`.
+- [x] `W06.P20.S278` - Give the namespace-registry adoption gate an anti-vacuity floor and every production root, since it currently finds zero subjects and asserts an empty list; `src/cadrumo/application/tests/test_namespace_registry_adoption.py`.
 - [x] `W06.P20.S279` - Refer the config CLI module size breach to the peer TUI campaign that caused it, since the module stood at 1254 lines inside budget before the manager-from-create commit added 134; `src/cadrumo/entrypoints/cli/_config/__init__.py`.
 - [x] `W06.P20.S280` - Remove the retired evidence-bundle replay from the modelo-390 records-audit sequence prose, which contradicts its own blocked annotation; `docs/_sequences/contracts/how-to/modelo-390/`.
 - [x] `W06.P20.S281` - Resolve the seven unallowlisted tokens reddening the period combined-string gate at HEAD; `src/cadrumo/tests/`.
 - [x] `W06.P20.S282` - Remove the two Code-Stands-Alone violations, a feature tag in a hashing test docstring and vault stems in the duplication disposition fields; `src/cadrumo/core/tests/test_hashing_adoption.py; dev/audit/duplication_dispositions.toml`.
-- [ ] `W06.P20.S283` - Give every set-asserting gate an anti-vacuity floor, asserting the subject count is non-zero before asserting the property, across the write-guard parity, namespace-adoption and tree-walk gates; `src/cadrumo/`.
+- [x] `W06.P20.S283` - Give every set-asserting gate an anti-vacuity floor, asserting the subject count is non-zero before asserting the property, across the write-guard parity, namespace-adoption and tree-walk gates; `src/cadrumo/`.
 - [x] `W06.P20.S284` - Assert the accepted period tokens on the error envelope structured context rather than on rendered prose, so a wording pass cannot red the grammar cases; `src/cadrumo/entrypoints/cli/tests/test_ledger_period_grammar.py`.
-- [ ] `W06.P20.S285` - Ground the HITL confirmation key against the live descriptor set at the gate itself, so the permissive default cannot auto-approve an unclassified mutation if a future caller passes an unvalidated key; `src/cadrumo/entrypoints/mcp/_hitl.py`.
+- [x] `W06.P20.S285` - Ground the HITL confirmation key against the live descriptor set at the gate itself, so the permissive default cannot auto-approve an unclassified mutation if a future caller passes an unvalidated key; `src/cadrumo/entrypoints/mcp/_hitl.py`.
 - [ ] `W06.P20.S286` - Return the operator-output test probe and the wizard results schemas to their owning campaigns, since a test module registering a production schema key breaks 128 assertions and 19 setup errors while untracked; `src/cadrumo/application/operator_output/; src/cadrumo/application/wizard/`.
 - [ ] `W06.P20.S287` - Identify the docs-lane workers reporting node-down abnormal termination, four at 24 workers and two at 4, letting a parallel run complete rather than killing it and capturing verbosely so each worker's lines are attributable; `dev/docs/tests/test_docs_build.py`.
 - [x] `W06.P20.S288` - Retire the M100 casilla-accessor hand-copy onto the public numeric_casilla_value it duplicates, in a module already importing both that ops module and the error class the copy raises; `src/cadrumo/domain/calculations/registry/_formula_runtime.py`.

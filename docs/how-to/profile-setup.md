@@ -37,6 +37,15 @@ Logging in changes which local ledger, modelo drafts, and filing markers `aeat
 app` commands use. The login verb is `aeat config login`, not `aeat config
 profile login`.
 
+Name the profile exactly. `aeat config login` accepts a profile UUID or the
+exact label, and nothing else: a partial name, a different capitalisation, or a
+shortened form is refused rather than guessed at. Omit the name to log in to
+the profile already selected. The refusal is deliberate - guessing which
+taxpayer you meant is how filings end up under the wrong one.
+
+Log out with `aeat config logout` when you finish. Logout closes the storage
+session and clears the active-profile selection; it deletes nothing.
+
 ## Decide your facts before you start
 
 Profile setup asks a series of questions. Most are conditional: the answers you

@@ -74,7 +74,8 @@ Who the taxpayer is, and the facts that decide what you owe.
 :link: profile-setup
 :link-type: doc
 
-Create, inspect, switch, export, import, rename, or delete taxpayer profiles.
+Create, inspect, export, import, rename, or delete taxpayer profiles, and log
+in to the one you want active.
 :::
 
 :::{grid-item-card} Authenticate with AEAT
@@ -102,7 +103,7 @@ Ask which modelos apply to you and why, from your saved profile facts.
 :link: protect-data-access
 :link-type: doc
 
-Set up a recovery key, change or recover your passphrase, lock, or reset.
+Set up a recovery key, change or recover your passphrase, log out, or reset.
 :::
 
 ::::
