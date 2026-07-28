@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#test-harness-honesty'
-date: '2026-07-27'
-modified: '2026-07-27'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-07-25-test-harness-honesty-S01]]'
   - '[[2026-07-25-test-harness-honesty-S04]]'
@@ -20,6 +20,7 @@ related:
   - '[[2026-07-25-test-harness-honesty-adr]]'
   - '[[2026-07-25-test-harness-honesty-false-green-gates-audit]]'
   - '[[2026-07-25-test-harness-honesty-plan]]'
+  - '[[2026-07-28-test-harness-honesty-rag-service-start-refused-by-witness-timeout-audit]]'
 ---
 
 # `test-harness-honesty` feature index
@@ -35,6 +36,7 @@ Auto-generated index of all documents tagged with `#test-harness-honesty`.
 ### audit
 
 - `2026-07-25-test-harness-honesty-false-green-gates-audit` - `test-harness-honesty` audit: `false-green gate audit`
+- `2026-07-28-test-harness-honesty-rag-service-start-refused-by-witness-timeout-audit` - `test-harness-honesty` audit: `The discovery service cannot start under fleet load, and reports the timeout as an identity failure`
 
 ### exec
 
