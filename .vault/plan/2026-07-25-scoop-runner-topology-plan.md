@@ -151,6 +151,28 @@ infrastructure change with a blast radius well outside a runner-topology
 decision. It is named here only because it is the precondition this plan's
 acquisition row actually waits on.
 
+That exit-127 was traced further, on the runner itself, so the handoff carries
+facts rather than a symptom. The `pyright` console script is a thin Python
+wrapper that runs the real analyser as JavaScript, so it needs both a Node
+binary and the analyser's own npm package. On the Linux runner container:
+neither `node` nor `npm` is on PATH, though the runner image ships working Node
+20 and Node 24 under its externals directory, and the wrapper's own bootstrap
+cache already holds a working Node 26. The npm registry and PyPI both answer
+HTTP 200 from inside the container, so egress is not blocked. What is missing is
+the analyser's npm package, which has never landed in that cache.
+
+The wrapper prefers a Node found on PATH and falls back to its bootstrap cache,
+and that cached Node runs, so the failure is not simply an absent interpreter.
+Why the package never installs is not pinned, and pinning it means creating a
+virtual environment inside a peer campaign's live runner to reproduce, which is
+where this stops. The lane's own workspace from the failed run has already been
+cleaned up, so the artefact is gone.
+
+Worth noting for whoever takes it: nothing here is a code regression. The
+analyser entered the dev command surface and the dependency group long ago, so
+the change is environmental, and the cheapest thing to try first is putting the
+runner image's existing Node on PATH for that lane.
+
 ## Context
 
 Accepted ADR carrying no plan. Rules which runner executes the Scoop evidence lane, orthogonal to where Scoop manifests live, which the account-distribution-standard ADR settles.
