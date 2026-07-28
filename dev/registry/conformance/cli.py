@@ -1,7 +1,7 @@
 """Developer CLI for modelo registry conformance governance.
 
 A dev / maintenance module CLI invoked as ``python -m dev.registry.conformance``,
-mirroring the ``dev.registry.matrix``, ``cadrumo.locales`` and
+mirroring the ``dev.registry.newmodelo``, ``cadrumo.locales`` and
 ``dev.docs.terminology_handbook`` precedents. It is NOT part of the operator
 ``aeat config`` / ``aeat app`` surface, so it does not bear on the
 two-CLI-roots architecture rule; like ``apidocs`` it emits plain English
@@ -53,8 +53,9 @@ See Also:
         Pure folds and renderers behind every verb here.
     :func:`~application.registry.audit_bundled_registry_conformance`
         Shipped composer the manager reads.
-    :mod:`~dev.registry.matrix.cli`
-        Sibling registry capability-matrix CLI.
+    :mod:`~entrypoints.cli._modelo_discovery_cli`
+        Operator-facing support-matrix command over the same shipped capability
+        authority ``report`` probes per revision.
 """
 
 from __future__ import annotations

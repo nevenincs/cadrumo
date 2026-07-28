@@ -34,8 +34,8 @@ See Also:
         Shipped composer this package renders.
     :mod:`~dev.registry.conformance.cli`
         Typer surface for the four verbs.
-    :mod:`~dev.registry.matrix`
-        Sibling registry capability-matrix report.
+    :func:`~domain.calculations.registry.build_support_matrix`
+        Shipped per-modelo capability authority the report's support probe reads.
 """
 
 from __future__ import annotations

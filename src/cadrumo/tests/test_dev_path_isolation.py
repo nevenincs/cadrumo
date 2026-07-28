@@ -246,11 +246,11 @@ def test_import_scanner_catches_planted_static_dev_import(tmp_path: Path) -> Non
     violations = _scan_planted_imports(
         tmp_path,
         "cadrumo/shipped_module.py",
-        "from dev.registry.matrix import manager\n",
+        "from dev.registry.conformance import manager\n",
     )
 
     assert [(v.importer_path, v.target_mod, v.is_dynamic) for v in violations] == [
-        ("cadrumo/shipped_module.py", "dev.registry.matrix", False)
+        ("cadrumo/shipped_module.py", "dev.registry.conformance", False)
     ], f"the scanner failed to catch a planted static dev import; it detected {violations!r}"
 
 
@@ -270,11 +270,11 @@ def test_import_scanner_catches_planted_dynamic_dev_import(tmp_path: Path) -> No
     violations = _scan_planted_imports(
         tmp_path,
         "cadrumo/dynamic_import.py",
-        'import importlib\n\ndef load_manager():\n    return importlib.import_module("dev.registry.matrix.manager")\n',
+        'import importlib\n\ndef load_manager():\n    return importlib.import_module("dev.registry.conformance.manager")\n',
     )
 
     dynamic_hits = [(v.importer_path, v.target_mod) for v in violations if v.is_dynamic]
-    assert dynamic_hits == [("cadrumo/dynamic_import.py", "dev.registry.matrix.manager")], (
+    assert dynamic_hits == [("cadrumo/dynamic_import.py", "dev.registry.conformance.manager")], (
         f"dynamic dev import was not caught; all violations={violations!r}"
     )
 

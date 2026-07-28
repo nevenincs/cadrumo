@@ -7,8 +7,12 @@ roll-up of "what does modelo X actually support", derived entirely from the load
 hand-maintained. It composes existing registry primitives rather than
 re-implementing them:
 
-* calc-grade / manifest / export-format / extractor detection mirrors
-  ``dev.registry.matrix`` (contributor-facing capability probe);
+* calc-grade / manifest / export-format / extractor detection reads the latest
+  revision's declared closure, completeness manifest, export layouts, and
+  extraction profiles. This module is the SOLE authority for those predicates:
+  a contributor-facing copy of them shipped in the developer tooling for a
+  while, recomputing every field this row already carries from the same
+  primitives, and was retired rather than delegated once the fork was measured;
 * rename tracking reads the revision's already-declared
   :class:`~domain.calculations.registry.CasillaContinuidadEvolutionDefinition`
   entries (the ``casilla_continuidad_evolutions`` field);

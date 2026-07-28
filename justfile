@@ -410,7 +410,7 @@ test-integration:
 # `src/cadrumo/tests/test_dev_tree_lane_coverage.py`, which fails when a new
 # test directory appears under `dev/` that no lane names.
 test-dev-tooling:
-    @uv run --no-sync pytest -q -m "(unit or integration) and not resident_service" dev/audit/tests dev/deploy/tests dev/env/tests dev/tests dev/registry/matrix/tests dev/registry/newmodelo/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests
+    @uv run --no-sync pytest -q -m "(unit or integration) and not resident_service" dev/audit/tests dev/deploy/tests dev/env/tests dev/tests dev/registry/newmodelo/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests
 
 # Enrol the tests that query the resident vaultspec-rag search service. Held out
 # of every other lane by the `resident_service` marker, because the service is a
