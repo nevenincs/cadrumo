@@ -54,3 +54,29 @@ def test_every_source_module_has_a_stub() -> None:
         messages.append(f"Stubs whose content differs from the generator ({len(drift.stale_stubs)}):\n  {listed}")
 
     assert not messages, "\n\n".join(messages)
+
+
+def test_the_committed_stub_tree_carries_untranslated_terminators() -> None:
+    """No committed stub on disk carries a translated terminator.
+
+    The correspondence gate above reads generated content through the manager,
+    which now compares bytes; this reads the real committed files directly, so
+    it stays true even if the generator's own comparison were ever loosened
+    again. It is the read nothing in the tree performed: on 2026-07-28, 60 of
+    the 1240 stubs here carried CRLF while every git-shaped review reported the
+    tree clean, because ``.gitattributes`` normalises to LF on the index side.
+
+    The carriage-return assertion is decisive only on a platform whose line
+    separator is not already LF, which is where the drift was measured; on a
+    line-feed platform it holds trivially and costs nothing.
+    """
+    stubs = sorted(_DOCS_API.glob("*.rst"))
+    assert stubs, f"no stub files found under {_DOCS_API}; this gate scanned nothing"
+
+    translated = [stub.name for stub in stubs if b"\r\n" in stub.read_bytes()]
+
+    assert not translated, (
+        f"{len(translated)} of {len(stubs)} committed stubs carry translated terminators, so their "
+        f"on-disk bytes differ from their committed bytes and no diff can show it; "
+        f"run `python -m dev.docs.apidocs scaffold` to rewrite them: {translated[:10]}"
+    )

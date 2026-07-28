@@ -64,6 +64,33 @@ _EXCLUDED_FILENAMES: frozenset[str] = frozenset({"conftest.py"})
 _UTF_8: str = UTF_8_ENCODING
 
 
+def _stub_is_current(path: Path, content: str) -> bool:
+    """Return True when *path* holds exactly the bytes *content* serialises to.
+
+    The comparison is on BYTES. ``Path.read_text`` opens in universal-newline
+    mode, so it folds ``\\r\\n`` to ``\\n`` before the caller sees anything: a
+    stub whose terminators were translated after checkout decodes to the same
+    string as the canonical LF content and compares EQUAL. The repository's
+    ``.gitattributes`` normalises to LF on the index side as well, so ``git
+    diff`` is silent on the same file. A text comparison therefore leaves the
+    translated stub invisible to every reader there is.
+
+    That was not hypothetical. Measured on 2026-07-28 against the committed
+    tree: 60 of 1240 stubs under ``docs/api/`` carried CRLF on disk while
+    ``python -m dev.docs.apidocs scaffold --check`` reported the tree
+    conformant. The writer that translated them was this module's own, so the
+    check could not see the drift it was itself introducing.
+
+    Args:
+        path: An existing stub file.
+        content: The canonical generated RST for that stub.
+
+    Returns:
+        True when the file's bytes are exactly the UTF-8 LF encoding of *content*.
+    """
+    return path.read_bytes() == content.encode(_UTF_8)
+
+
 class ApiStubManager:
     """Manage Sphinx ``automodule`` RST stubs under ``docs/api/``.
 
@@ -333,10 +360,14 @@ class ApiStubManager:
 
         for filename, content in expected_contents.items():
             path = self.docs_api / filename
-            if path.is_file() and path.read_text(encoding=_UTF_8) == content:
+            if path.is_file() and _stub_is_current(path, content):
                 unchanged += 1
                 continue
-            path.write_text(content, encoding=_UTF_8)
+            # newline="\n" pins the terminator. The default translates every
+            # "\n" to the platform separator on write, which is what put CRLF
+            # into 60 committed stubs; sibling generators under dev/docs/
+            # already write this way.
+            path.write_text(content, encoding=_UTF_8, newline="\n")
             written += 1
 
         removed_names: list[str] = []
@@ -374,8 +405,7 @@ class ApiStubManager:
         stale = sorted(
             Path(filename).stem
             for filename, expected in expected_contents.items()
-            if (self.docs_api / filename).is_file()
-            and (self.docs_api / filename).read_text(encoding=_UTF_8) != expected
+            if (self.docs_api / filename).is_file() and not _stub_is_current(self.docs_api / filename, expected)
         )
         return DriftResult(missing_stubs=missing, orphan_stubs=orphans, stale_stubs=stale)
 
