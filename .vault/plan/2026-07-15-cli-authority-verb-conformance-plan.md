@@ -399,25 +399,25 @@ Exercise every canonical authority with real encrypted storage, processes, locks
 
 Materialize the CLI, prove schema, locale, docs, and MCP agreement, rerun clone and semantic duplication checks, and execute attributable quality gates.
 
-- [ ] `W06.P19.S185` - Materialize the complete lazy CLI tree in a fresh process and assert every leaf path is unique; `src/cadrumo/entrypoints/cli/tests/test_lazy_command_tree.py`.
-- [ ] `W06.P19.S186` - Compare the materialized tree with the accepted additions and removals and fail on unplanned leaf loss; `src/cadrumo/entrypoints/cli/tests/test_root_grammar_invariants.py`.
-- [ ] `W06.P19.S187` - Run documented-command path and argument conformance against the live tree; `src/cadrumo/entrypoints/cli/tests/test_documented_command_conformance.py`.
-- [ ] `W06.P19.S188` - Run JSON schema registration and output conformance for every live leaf; `src/cadrumo/entrypoints/cli/tests/test_json_schema_conformance.py`.
-- [ ] `W06.P19.S189` - Run self-referential CLI string conformance and reject every removed spelling; `src/cadrumo/entrypoints/cli/tests/test_self_referential_string_conformance.py`.
+- [x] `W06.P19.S185` - Materialize the complete lazy CLI tree in a fresh process and assert every leaf path is unique; `src/cadrumo/entrypoints/cli/tests/test_lazy_command_tree.py`.
+- [x] `W06.P19.S186` - Compare the materialized tree with the accepted additions and removals and fail on unplanned leaf loss; `src/cadrumo/entrypoints/cli/tests/test_root_grammar_invariants.py`.
+- [x] `W06.P19.S187` - Run documented-command path and argument conformance against the live tree; `src/cadrumo/entrypoints/cli/tests/test_documented_command_conformance.py`.
+- [x] `W06.P19.S188` - Run JSON schema registration and output conformance for every live leaf; `src/cadrumo/entrypoints/cli/tests/test_json_schema_conformance.py`.
+- [x] `W06.P19.S189` - Run self-referential CLI string conformance and reject every removed spelling; `src/cadrumo/entrypoints/cli/tests/test_self_referential_string_conformance.py`.
 - [x] `W06.P19.S190` - Run suggestion and next-action conformance against the live tree; `src/cadrumo/entrypoints/cli/tests/test_suggestion_command_conformance.py`.
-- [ ] `W06.P19.S191` - Run four-locale catalogue and rendered-help coverage for every changed path; `src/cadrumo/locales/tests/`.
-- [ ] `W06.P19.S192` - Run generated CLI reference and static-tree conformance; `dev/docs/tests/`.
+- [x] `W06.P19.S191` - Run four-locale catalogue and rendered-help coverage for every changed path; `src/cadrumo/locales/tests/`.
+- [x] `W06.P19.S192` - Run generated CLI reference and static-tree conformance; `dev/docs/tests/`.
 - [ ] `W06.P19.S193` - Run the mandatory documentation render-and-verify workflow after final command materialization; `docs/`.
-- [ ] `W06.P19.S194` - Run a fresh uncached import graph and require all five contracts; `.importlinter`.
-- [ ] `W06.P19.S195` - Run Ruff against every feature-owned Python file; `src/cadrumo/`.
+- [x] `W06.P19.S194` - Run a fresh uncached import graph and require all five contracts; `.importlinter`.
+- [x] `W06.P19.S195` - Run Ruff against every feature-owned Python file; `src/cadrumo/`.
 - [ ] `W06.P19.S196` - Run the complete feature-owned real-behavior test inventory; `src/cadrumo/`.
-- [ ] `W06.P19.S197` - Run the feature-surface-gate skill against only feature-owned paths; `.`.
-- [ ] `W06.P19.S198` - Run repository ratchets for skips, test doubles, monkeypatching, tautology, markers, and discovery drift; `src/cadrumo/tests/`.
+- [x] `W06.P19.S197` - Run the feature-surface-gate skill against only feature-owned paths; `.`.
+- [x] `W06.P19.S198` - Run repository ratchets for skips, test doubles, monkeypatching, tautology, markers, and discovery drift; `src/cadrumo/tests/`.
 - [ ] `W06.P19.S199` - Run full collect-only and classify every collection failure by owner; `src/cadrumo/`.
 - [ ] `W06.P19.S200` - Run the complete unit suite and record the attributable result; `src/cadrumo/`.
 - [ ] `W06.P19.S201` - Run the complete serial integration suite and record the attributable result; `src/cadrumo/`.
 - [ ] `W06.P19.S202` - Run the complete documentation build and conformance gate; `docs/`.
-- [ ] `W06.P19.S203` - Run the authoritative typed duplication runner and require zero clones for green, clone findings for amber, and unavailable, failed, timed-out, non-zero, or unparseable execution for explicit amber-unavailable without false green; `dev/audit/duplication.py; dev/audit/report.py; justfile`.
+- [x] `W06.P19.S203` - Run the authoritative typed duplication runner and require zero clones for green, clone findings for amber, and unavailable, failed, timed-out, non-zero, or unparseable execution for explicit amber-unavailable without false green; `dev/audit/duplication.py; dev/audit/report.py; justfile`.
 - [x] `W06.P19.S204` - Dispatch a fresh Luna xhigh agent swarm over every audited functionality cluster; `src/cadrumo/`.
 - [ ] `W06.P19.S205` - Rerun Vaultspec-RAG semantic searches across certificate custody, ledger evidence, export, hashing, replay, namespaces, filed capture, LLM review, registry queries, and duplication infrastructure; `src/cadrumo/; dev/audit/`.
 - [x] `W06.P19.S206` - Confirm every semantic candidate with exact declaration, import, export, caller, writer, persistence, CLI, schema, locale, test, documentation, and generated-artifact searches before classification; `src/cadrumo/; dev/; docs/; .github/; justfile`.
