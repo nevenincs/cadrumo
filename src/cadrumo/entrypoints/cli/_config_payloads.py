@@ -14,14 +14,12 @@ from typing import TYPE_CHECKING
 
 from pydantic import ConfigDict
 
-from ...application.wizard import ConfigProfileCreateResult as ConfigProfileCreateResult
-from ...application.wizard import ConfigProfileEditResult as ConfigProfileEditResult
 from ._schemas import OutputSchema, register_schema
 
-# LOAD-BEARING re-exports: `_ensure_result_schemas_registered` populates the
-# registry from ``*payload*`` modules under `_PAYLOAD_PACKAGES` only, and the
-# wizard module declaring these two schemas is under neither - without this import
-# both verbs drop off the MCP surface. `register_schema` is idempotent per class.
+# The two wizard-owned profile result schemas register through the sibling
+# `_wizard_payloads` module, NOT here: the `config` group imports this module at
+# group-resolution time, so importing the wizard from here pulled its whole
+# dependency tail into every `config` verb and reddened the cold-start guard.
 
 if TYPE_CHECKING:
     from ...application.auth import AuthConfigureResult
