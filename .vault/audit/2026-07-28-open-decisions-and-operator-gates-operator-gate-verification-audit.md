@@ -256,6 +256,76 @@ This is recorded because it gates any further coding on this campaign, and
 because the failure mode — a completed job reporting success over an empty index
 — defeats the status signal an agent would normally trust.
 
+### correction-the-producer-existed-and-the-gate-was-red | critical | the earlier finding named the wrong mechanism, and the truth was worse
+
+Correcting the `r6-supersession-producer-missing` finding above rather than
+rewriting it, because the conclusion it drove was right and the mechanism it
+named was wrong, and the difference matters to anyone reading this later.
+
+That finding claimed no producer existed anywhere. A producer did exist: the
+checked-in scaffold carries the declaration and a gate asserts it. The claim came
+from a search that returned nothing, and the search was wrong rather than the
+tree: ripgrep skips dotfile directories by default, and the declaration lives
+under `.claude-plugin/`. An earlier directory listing missed it the same way. The
+empty result was read as absence when it was only invisibility — the exact
+failure the "a clean negative is not evidence" discipline exists to prevent,
+committed while writing a finding about a silent no-op.
+
+The true state was worse than the reported one, and had three independent
+defects. The generator did not emit the declaration although the scaffold carried
+it, so the drift gate binding those two was RED at HEAD and had been since the
+commit that introduced the feature. The gate meant to prove the producer asserted
+against the checked-in scaffold rather than the emitted cohort, so it passed while
+the artifact a release actually pushes declared nothing. And the preflight matched
+the retired name as a bare substring of the marketplace description, which
+necessarily names AEAT the tax authority, so declaring the retirement would have
+refused every publication permanently — failing closed in the shape that reads as
+the guard working.
+
+The conclusion the original finding reached therefore stands and is strengthened:
+the ruling was inert, and the manifest is genuinely the wrong home, which the
+validator measurement proves independently of any of this.
+
+### supersession-now-lands-end-to-end | medium | S07 is discharged by mechanism rather than by a manual edit
+
+All three defects are fixed and the retirement now reaches publication. The
+declaration moved to a sidecar beside the manifest, which the publisher reads and
+the merge drops from the published document, so the served manifest keeps exactly
+the shape the strict validator accepts. The producer gate now asserts against the
+emitted tree, and a mutation removing the emission turns it red, so it is a real
+gate rather than a restatement. The preflight distinguishes an identity field,
+where a bare token is stale branding, from prose, where only identity-shaped forms
+count, and a test pins the generator's own bilingual description as permitted.
+
+Proven against a marketplace in the live shape — the stale entry present and
+carrying no publisher. The preflight refuses while it is live; publishing removes
+both the index entry and its tree; the published manifest stays validator-clean;
+the preflight then passes; and a republish is idempotent. So S07 no longer needs
+the manual marketplace edit it was written to request: the retirement happens on
+the first publication and is re-verified on every later one.
+
+### full-history-scan-with-a-real-scanner | medium | 59 findings, all false positives, no credential ever committed
+
+The S10 review was completed with an industry scanner rather than the seven-family
+expression recorded earlier. Gitleaks scanned 17,269 commits and 684 MB of history
+against its full rule set and reported 59 findings, every one from the single
+`generic-api-key` entropy heuristic.
+
+All 59 triage to domain identifiers. They are variables and fields named
+`*_key` or `*_token` holding ordinary strings: registry `header_key` and
+`profile_key` entries in modelo TOML, a `period_token` that is a typed enum field
+rather than a value at all, namespace-registry names such as `workflow_state` and
+`user_profile_value`, and `object_key_hmac` values in test fixtures, which are
+storage lookup HMACs and not credentials. The heuristic fires on the assignment
+shape, not on anything secret.
+
+Two independent instruments therefore agree: the structural seven-family scan
+found zero, and the heuristic scanner found zero after triage. That is a stronger
+answer than either alone, and it is the substantive question S10 exists to ask.
+The instrument still differs from the one the row names, and that difference is
+recorded rather than smoothed over: this scanner has no issuer-side validation and
+no partner-pattern catalogue, so it is a strong negative and not the platform's.
+
 ## Recommendations
 
 Re-ground S09 as discharged, citing the absence of any default-branch write
@@ -296,11 +366,22 @@ Clarify who may open branches and pull requests before enabling automated
 security fixes, and pin the Actions references as a scoped change before
 requiring SHA pinning.
 
-Amend the supersession ruling before writing its producer half. The decision it
-needs is where the retirement is declared, given that the file it currently
-names is validated by an external oracle that rejects the field and ignores it
-at load. Relocating the declaration to a cohort-side artefact preserves every
-property the ruling argued for; keeping it in the manifest costs either the
-validation gate or a red build. No code should land against the ruling until
-that amendment exists, because the consumer half is already correct and would
-otherwise be paired with a producer that cannot pass the tree's own gates.
+Amend the supersession ruling to record where the retirement is declared. The
+implementation has landed and is proven end-to-end, but the ruling still names
+the manifest, and the code now uses a sidecar because the manifest's external
+validator rejects the field and ignores it at load. The decision the amendment
+carries is that relocation, and the reason is measured rather than preferred.
+Until it is written, the record and the tree disagree about a shipped mechanism.
+
+Run gitleaks in CI over the incoming diff. The full-history pass is a one-time
+answer and it came back clean, but nothing currently prevents the next commit
+from introducing what the sweep just proved absent. A diff-scoped run is cheap,
+and the 59 false positives should be pinned as a baseline so the signal stays
+readable rather than trained-away.
+
+Raise the cohort-build toolchain pin or the local uv, independently of this
+campaign. The clean-source reproducibility test refuses with "release cohort
+requires uv 0.11.29, got 0.11.31", so no cohort can be built on this host as
+configured, which also means the serial marketplace oracle cannot exercise the
+retirement end-to-end here. That is a release-pipeline blocker sitting outside
+this plan and worth its own row.
