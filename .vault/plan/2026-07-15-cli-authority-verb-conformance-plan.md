@@ -381,7 +381,7 @@ Run focused real-behavior evidence, whole-surface conformance, duplication re-au
 
 Exercise every canonical authority with real encrypted storage, processes, locks, certificate services, and CLI invocation.
 
-- [ ] `W06.P18.S177` - Run focused pointer, switch, logout, reset, and bootstrap-policy suites against real persisted state; `src/cadrumo/entrypoints/cli/tests/`.
+- [x] `W06.P18.S177` - Run focused pointer, switch, logout, reset, and bootstrap-policy suites against real persisted state; `src/cadrumo/entrypoints/cli/tests/`.
 - [x] `W06.P18.S178` - Run passphrase and recovery lifecycle suites against real encrypted vaults and secure input channels; `src/cadrumo/entrypoints/cli/_config/tests/`.
 - [x] `W06.P18.S179` - Run auth and certificate suites against real storage and provider boundaries; `src/cadrumo/application/auth/tests/`.
 - [x] `W06.P18.S180` - Run ledger attach, atomic invoice-link, LLM split inheritance, and failure-rollback suites and prove no generic evidence bypass or partial child commit can execute; `src/cadrumo/application/ledger/tests/`.
