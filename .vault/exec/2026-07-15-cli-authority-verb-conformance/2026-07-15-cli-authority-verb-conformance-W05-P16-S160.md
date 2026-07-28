@@ -59,3 +59,31 @@ The named golden passes. Its expectations resolve to accepted keys and carry no 
 ## Notes
 
 No code change was required by this Step. The implementing change had already landed under the successor plans this document was rescoped into, so the row was stale rather than unexecuted. The Step is closed as verified-satisfied against its named surface, per the Wave W06 instruction that each open W05 Step be verified against that surface before being checked and never inferred from the live command tree alone.
+
+## Corrected 2026-07-28
+
+The Outcome above is half right, and the wrong half matters.
+
+Right: the golden's expectations did resolve to accepted keys and carried no
+retired token. Wrong: the implication that the golden therefore guards the
+search surface against retired keys. It did not. Every assertion in the module
+was about ranking order, and a retired key ranks perfectly well, so a removed
+door left in the descriptor set would have passed unremarked. The record
+described a protection that did not exist.
+
+The module also carried a test that could not fail: it asserted a non-empty
+string literal, and its own comment conceded it was "not an assertion of
+behaviour". A tautological test in a golden set is worse than no test, because
+it reads as coverage.
+
+Both are now closed. The retired hard-cutover keys are asserted absent from the
+live descriptor set, as exact keys and as trailing segments so a re-registration
+under a different parent is caught, with the suffix sweep matching full paths
+because `config auth apoderado clear` is a retained command whose leaf token
+collides with the retired `auth clear`. The tautological test is replaced by the
+claim the module docstring actually makes -- that the headline results hold
+without the search extra, in whichever retrieval mode is installed.
+
+All seven retired keys are confirmed absent today against a positive control, so
+this landed as a ratchet rather than a red. Verified by mutation that the
+membership check discriminates.

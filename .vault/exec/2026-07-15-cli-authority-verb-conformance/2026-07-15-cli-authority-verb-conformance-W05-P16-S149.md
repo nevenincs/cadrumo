@@ -61,3 +61,33 @@ This mirror is what makes the preceding metadata rows durable rather than point-
 ## Notes
 
 No code change was required by this Step. The implementing change had already landed under the successor plans this document was rescoped into, so the row was stale rather than unexecuted. The Step is closed as verified-satisfied against its named surface, per the Wave W06 instruction that each open W05 Step be verified against that surface before being checked and never inferred from the live command tree alone.
+
+## Corrected 2026-07-28
+
+The Outcome above overstates what the gate did, and the overstatement is the
+kind this campaign exists to catch: it describes a mirror the gate did not
+implement.
+
+It claimed "a command present in the help surface but absent from the risk
+table, or registered as a schema without a live registration, fails the gate".
+Neither held. Before this correction the module asserted exactly one thing --
+that the `OperatorSurfaceContract` declares the families and sub-verbs the live
+Click tree mounts. It read neither the help surface, nor the risk table, nor the
+schema registry.
+
+The help-versus-risk claim is not merely unimplemented, it is false as stated:
+26 live commands carry no risk row today, so a gate enforcing it would have been
+red. That absence is designed rather than drift -- `classify` derives safe
+without a row, so read-only verbs are intentionally undeclared -- which means
+the row's own "exact mirrors" wording is wrong for two of its five inventories
+and could only be satisfied by declaring rows that say nothing.
+
+What has now landed is the direction that is genuinely a defect: no risk row may
+outlive the command it classifies. An orphan row survives a verb removal
+silently and reads to the next author as evidence the door is still mounted.
+Verified by mutation with a retired custody verb.
+
+The other inventories the row names are not in this file. Schema-versus-live is
+already asserted by the registered-schema gate, and the risk and mutability
+mirrors against the MCP annotations are separate rows owned by the MCP surface.
+This record should not be read as claiming this module asserts all five.

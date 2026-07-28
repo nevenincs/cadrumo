@@ -62,3 +62,42 @@ This surface is one of the three the hand-sweep hazard names, and it is under CI
 ## Notes
 
 No code change was required by this Step. The implementing change had already landed under the successor plans this document was rescoped into, so the row was stale rather than unexecuted. The Step is closed as verified-satisfied against its named surface, per the Wave W06 instruction that each open W05 Step be verified against that surface before being checked and never inferred from the live command tree alone.
+
+## Accuracy correction 2026-07-28
+
+The Outcome above is inaccurate on three of the seven surfaces it names, and the
+row is therefore not closeable as verified-satisfied.
+
+It states the help records "cite the accepted grammar across the profile,
+authentication, recovery, certificate, reset, ledger, and audit surfaces".
+Measured against the module, `recovery`, `certificate` and `audit` appear zero
+times, and no help entry cites any command under those families. The claim was
+presumably read off the row's own wording rather than off the surface.
+
+What is true, and worth keeping, is the narrower half. Every command the curated
+help does cite resolves live and uses the accepted grammar -- the reset
+lifecycle appears in its nested `start`/`status`/`resume` form, not the flat
+scoped spelling, and no retired custody verb appears anywhere. That half is
+under CI enforcement by the suggestion-conformance gate, whose scanner is itself
+proven against a synthetic dead citation.
+
+So under the reading "replace stale help records", the row is satisfied. Under
+the reading "the six named areas carry accepted descriptions", it is not, and
+cannot be closed from this cluster: every `HelpEntry.description` is a `tr()`
+locale key, so adding recovery, certificate and audit entries means authoring
+new keys across all four locale catalogues and the intentional-identical
+allowlist. Those files are another agent's scope in this phase split.
+
+The row stays checked rather than being reopened unilaterally. It was closed on
+the narrower reading, which is defensible and which the evidence supports, and
+reversing another author's judgement on a row that is arguably satisfied is not
+a call to make from inside a correction. What is not defensible is the sentence
+naming three surfaces the module does not mention, so that is corrected here and
+flagged for adjudication.
+
+Two ways to settle it. Either the curated help gains recovery, certificate and
+audit entries, which needs the locale rows and so belongs with their owner; or
+the curated surface is affirmed as a deliberate workflow subset -- it teaches a
+path through the product rather than enumerating the command inventory -- and
+the row's wording is corrected. The second looks more likely right: "an entry
+per family" may be the wrong goal rather than an unfinished one.
