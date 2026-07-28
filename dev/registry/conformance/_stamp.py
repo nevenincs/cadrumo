@@ -881,8 +881,23 @@ def _apply_governance(text: str, revision: str, rendered: dict[str, str]) -> str
     header = f'[revisions."{revision}"]'
     try:
         start = next(index for index, line in enumerate(lines) if line.strip() == header)
-    except StopIteration as exc:  # pragma: no cover - _declared_governance proves the table exists
-        raise StampError(f"revision manifest has no {header} header line") from exc
+    except StopIteration as exc:
+        # REACHABLE, and it used to carry a pragma claiming otherwise on the
+        # ground that ``_declared_governance`` proves the table exists. That
+        # proves the table exists in PARSED TOML, never that any line matches
+        # this one exact spelling. Measured: both ``[revisions.'<id>']`` and
+        # ``[ revisions."<id>" ]`` parse to the same key, load through the real
+        # registry loader, and miss here. The line editor needs a literal line to
+        # edit, so the narrow match stays and the message names the requirement
+        # instead of leaving the caller with a manifest the loader accepts and
+        # this writer cannot address.
+        raise StampError(
+            f"{header} is not present as a whole line in the revision manifest. This writer edits the "
+            f"manifest line by line so a hand-authored file stays reviewable, so it needs the table "
+            f"header written in exactly that form; an equivalent TOML spelling such as a single-quoted "
+            f"or space-padded header parses to the same table and loads cleanly, but cannot be located "
+            f"here. Rewrite the header line in the canonical form and stamp again.",
+        ) from exc
 
     end = next(
         (index for index in range(start + 1, len(lines)) if lines[index].startswith("[")),

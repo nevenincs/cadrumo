@@ -37,7 +37,7 @@ import os
 import re
 import shutil
 from collections.abc import Sequence
-from datetime import date
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
@@ -1707,3 +1707,121 @@ def test_stamp_trims_a_padded_identity_before_writing_it(registry_copy: Path) ->
 
     revision = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
     assert revision.engineered_by == "conformance-cli gate"
+
+
+# --------------------------------------------------------------------------- #
+# stamp: the Typer command layer, exercised end to end
+# --------------------------------------------------------------------------- #
+
+
+def _stamp_cli(root: Path, *arguments: str) -> object:
+    """Invoke the real ``stamp`` verb against a byte copy of a shipped modelo tree."""
+    return CliRunner().invoke(
+        app,
+        ["stamp", _STAMPED_MODELO, _STAMPED_REVISION, *arguments, "--registry-root", str(root)],
+    )
+
+
+def test_the_stamp_command_defaults_the_review_date_to_today(registry_copy: Path) -> None:
+    """The command layer's own logic, exercised through the real app for the first time.
+
+    ``stamp_revision`` has always accepted a registry root and this verb never
+    passed one, so the only CLI-level stamp coverage that could exist was a
+    refusal caught at the parse boundary: the today-defaulting of ``reviewed_at``
+    and the translation of a writer refusal into a parameter error had no
+    end-to-end test of any kind. Neither is reachable from the writer's own tests,
+    because neither lives in the writer.
+
+    The flip is sharp because the schema requires a date alongside a reviewed
+    status: without the default this same invocation is refused rather than
+    served, so the exit code and the compiled date move together.
+    """
+    result = _stamp_cli(registry_copy, "--review-status", "agent_reviewed", "--reviewed-by", "agent:opus-executor")
+
+    assert result.exit_code == 0, result.stdout
+    revision = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert revision.review_status is RevisionReviewStatus.AGENT_REVIEWED
+    assert revision.reviewed_at == datetime.now(tz=UTC).date()
+    # Echoed back, so the written value is never implicit to the caller.
+    assert f"reviewed_at={revision.reviewed_at.isoformat()}" in result.stdout
+
+
+def test_the_stamp_command_turns_a_writer_refusal_into_a_parameter_error(registry_copy: Path) -> None:
+    """A refusal must reach the operator as an instructive parameter error.
+
+    Without the translation the writer's exception escapes the command and the
+    caller meets a traceback: same refusal, no message they can act on, and a
+    different exit code. Both halves are asserted, so removing the translation
+    flips the code AND the visible reason.
+    """
+    manifest = _manifest_of(registry_copy)
+    before = manifest.read_bytes()
+
+    result = _stamp_cli(registry_copy, "--engineered-by", "   ")
+
+    assert result.exit_code == 2, result.output
+    assert "names nobody" in result.output
+    assert manifest.read_bytes() == before
+
+
+def test_the_stamp_command_refuses_to_re_attribute_an_operator_signoff(operator_signed_copy: Path) -> None:
+    """The S53 refusal, confirmed through the real app rather than at the writer.
+
+    The finding was reported as reproduced end to end and could not be
+    re-confirmed that way, because the verb exposed no registry root and the only
+    tree it could reach was the shipped one. With a root it reaches a copy, so the
+    refusal is now proved on the surface an operator actually drives — and on
+    bytes, because a refusal raised after the rewrite would leave the
+    re-attributed signoff on disk and still produce a non-zero exit.
+    """
+    manifest = _manifest_of(operator_signed_copy)
+    before = manifest.read_bytes()
+
+    result = _stamp_cli(operator_signed_copy, "--reviewed-by", "agent:opus-executor", "--reviewed-at", "2026-07-28")
+
+    assert result.exit_code != 0
+    assert "already declares review_status 'operator_reviewed'" in result.output
+    assert manifest.read_bytes() == before
+    revision = load_modelo_directory(operator_signed_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert revision.reviewed_by == "Gergely Wootsch (operator)"
+
+
+@pytest.mark.parametrize(
+    "spelling",
+    [f"[revisions.'{_STAMPED_REVISION}']", f'[ revisions."{_STAMPED_REVISION}" ]'],
+)
+def test_a_header_the_loader_accepts_but_the_line_editor_cannot_address_is_refused(
+    registry_copy: Path,
+    spelling: str,
+) -> None:
+    """The branch a coverage pragma called unreachable, reached.
+
+    The pragma's stated ground was that the governance read proves the table
+    exists. It proves the table exists in PARSED TOML, and the line editor
+    compares against one exact spelling of the header LINE. Both spellings here
+    are valid TOML for the same table, and the assertion that the tree still LOADS
+    is the load-bearing one: it is what makes the manifest a real authoring state
+    rather than a broken file the pre-write check would have caught first.
+
+    It fails safe, so the cost was never a bad write — it was a comment telling
+    the next reader a branch cannot happen when it can, and a caller left with a
+    manifest the registry accepts and this writer says it has no header for.
+    """
+    manifest = _manifest_of(registry_copy)
+    canonical = f'[revisions."{_STAMPED_REVISION}"]'
+    rewritten = manifest.read_text(encoding=UTF_8_ENCODING).replace(canonical, spelling, 1)
+    manifest.write_bytes(rewritten.encode(UTF_8_ENCODING))
+    before = manifest.read_bytes()
+
+    revision = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert revision.id == _STAMPED_REVISION, "the rewritten header must still compile, or this proves nothing"
+
+    with pytest.raises(StampError, match="is not present as a whole line"):
+        stamp_revision(
+            _STAMPED_MODELO,
+            _STAMPED_REVISION,
+            engineered_by="conformance-cli gate",
+            registry_root=registry_copy,
+        )
+
+    assert manifest.read_bytes() == before

@@ -260,6 +260,16 @@ def stamp(
         datetime | None,
         typer.Option("--reviewed-at", formats=["%Y-%m-%d"], help="Date of review. Defaults to today."),
     ] = None,
+    registry_root: Annotated[
+        Path | None,
+        typer.Option(
+            "--registry-root",
+            help=(
+                "Registry tree root to stamp. Defaults to the bundled AEAT tree. Present so this verb "
+                "can be exercised against a copy instead of the shipped registry."
+            ),
+        ),
+    ] = None,
 ) -> None:
     """Write one modelo revision's declared governance provenance.
 
@@ -277,6 +287,14 @@ def stamp(
     written, and the whole modelo is re-loaded through the real loader
     afterwards; a manifest the loader would reject is restored to its previous
     bytes rather than left on disk.
+
+    ``--registry-root`` exists so this command can be run at all without writing
+    to the shipped registry. The writer has always accepted a root and this verb
+    never passed one, so every CLI-level behaviour here — the today-defaulting of
+    the review date, the translation of a writer refusal into a parameter error —
+    had no end-to-end coverage of any kind, and a finding about the writer could
+    not be reproduced through the real app. The containment check is relative to
+    whatever root it is given, so pointing it at a copy loses no safety.
     """
     resolved_date = reviewed_at.date() if reviewed_at is not None else None
     if review_status is StampableReviewStatus.AGENT_REVIEWED and resolved_date is None:
@@ -301,6 +319,7 @@ def stamp(
             review_status=review_status,
             reviewed_by=reviewed_by,
             reviewed_at=resolved_date,
+            registry_root=registry_root,
         )
     except StampError as exc:
         raise typer.BadParameter(str(exc)) from exc
