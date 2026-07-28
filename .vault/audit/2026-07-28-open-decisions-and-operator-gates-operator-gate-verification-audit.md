@@ -426,6 +426,38 @@ the account-scoped names, the matching variables already exist under those names
 the publish steps refuse instructively while the secrets are absent, and the third
 product-prefixed secret is orphaned and safe to delete once the two are created.
 
+### keychain-leak-located-in-the-cli-custody-lane | high | reproducible, and the process-side twin of it is already fixed
+
+The accumulation left unexplained above is now located and reproducible. Measured
+by counting session entries in the OS credential store either side of a single
+narrow lane: `test_config_custody_profile_lifecycle.py` runs six tests and leaves
+**two** session keys behind. The profile unit lane, measured the same way, leaks
+none, which is why the earlier pass found nothing.
+
+The store also climbed from six entries to twenty-two during this session's own
+test runs, so the rate is not incidental — it is fast enough to refill the store
+and re-block the custody cases well inside ordinary development.
+
+The shape of the defect is worth stating precisely, because it is half-solved
+already. A session has two halves: an in-process binding and a key in the OS
+credential store. The root test configuration carries a careful autouse fixture
+that evicts the in-process half a test bound itself, and it is selective by
+session identity so it cannot strand a module-scoped runtime. Nothing does the
+equivalent for the keychain half, so it survives the test, the run, and the
+machine's reboot.
+
+This is a test-hygiene gap and NOT a production defect, which matters for where
+the fix belongs. A persisted session key outliving the process is exactly what
+the login design intends — that is the whole point of custody — so production is
+behaving correctly and only the tests are failing to clean up after themselves.
+
+The fix is not landed here deliberately. Enumerating credentials to find what a
+test created is platform-specific and belongs beside the existing eviction
+fixture, and the host was saturated at 93 percent CPU by unrelated container
+load, so a change to shared test infrastructure could not be exercised across
+the lanes it would touch. Landing an unverified fixture into a tree several
+agents are working in is the worse trade.
+
 ## Recommendations
 
 Re-ground S09 as discharged, citing the absence of any default-branch write
@@ -479,13 +511,14 @@ from introducing what the sweep just proved absent. A diff-scoped run is cheap,
 and the 59 false positives should be pinned as a baseline so the signal stays
 readable rather than trained-away.
 
-Find and close the session-key leak, because the store will refill and re-block
-this row. The measurement to start from is the one taken here: count the session
-entries before and after a lane, and run the integration and CLI lanes rather than
-the unit lane, which leaked none. The durable fix is that whatever mints a session
-in a test removes it at teardown, so the machine-global store is left as the test
-found it. Until that lands, the periodic prune is a chore this row will keep
-paying.
+Close the session-key leak beside the existing in-process eviction fixture, since
+it is now located: `test_config_custody_profile_lifecycle.py` leaks two entries
+per six tests, and the store climbed from six to twenty-two during one session of
+ordinary test runs. Give the keychain half the same treatment the in-process half
+already has — remove what a test minted, at teardown, leaving the machine-global
+store as the test found it. Verify it by the same before-and-after count on that
+named lane, which makes the fix self-proving rather than assumed, and run it on a
+quiet host so the result is not confounded by load.
 
 Re-word S04's rationale. It attributes the blockage to the agent's session context
 and prescribes an interactive desktop session, and both are wrong: the store
