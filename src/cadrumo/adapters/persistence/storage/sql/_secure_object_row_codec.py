@@ -238,28 +238,31 @@ def secure_object_list_item_from_raw_row(
     schema_version = int(row.schema_version)
     written_at = row.written_at
     payload_wire = bytes(row.payload)
+
+    def unreadable(reason: str) -> SecureObjectUnreadable:
+        """Report this row as unreadable, carrying the identity every reason shares.
+
+        Every failure mode below reports the SAME row identity and differs
+        only in why it could not be read, so the seven shared fields are
+        bound once here. Fault isolation is the point: a caller iterating
+        many rows can attribute a failure to its own row and keep going.
+        """
+        return SecureObjectUnreadable(
+            namespace=namespace,
+            row_id=row_id,
+            object_key=object_key,
+            classification=classification_str,
+            schema_version=schema_version,
+            written_at=written_at,
+            reason=reason,
+        )
+
     try:
         classification = SensitivityClass(classification_str)
     except ValueError:
-        return SecureObjectUnreadable(
-            namespace=namespace,
-            row_id=row_id,
-            object_key=object_key,
-            classification=classification_str,
-            schema_version=schema_version,
-            written_at=written_at,
-            reason=f"unknown classification {classification_str!r}",
-        )
+        return unreadable(f"unknown classification {classification_str!r}")
     if classification is not expected_class:
-        return SecureObjectUnreadable(
-            namespace=namespace,
-            row_id=row_id,
-            object_key=object_key,
-            classification=classification_str,
-            schema_version=schema_version,
-            written_at=written_at,
-            reason=f"classification {classification.value!r} does not match expected {expected_class.value!r}",
-        )
+        return unreadable(f"classification {classification.value!r} does not match expected {expected_class.value!r}")
     try:
         ensure_schema_version_readable(
             namespace=namespace,
@@ -267,15 +270,7 @@ def secure_object_list_item_from_raw_row(
             current_version=max_supported_version,
         )
     except EnvelopeVersionError as exc:
-        return SecureObjectUnreadable(
-            namespace=namespace,
-            row_id=row_id,
-            object_key=object_key,
-            classification=classification_str,
-            schema_version=schema_version,
-            written_at=written_at,
-            reason=resolve_error_message(exc),
-        )
+        return unreadable(resolve_error_message(exc))
     try:
         enforce_registered_row_schema(
             namespace=namespace,
@@ -283,30 +278,14 @@ def secure_object_list_item_from_raw_row(
             definition=namespace_definition,
         )
     except EnvelopeVersionError as exc:
-        return SecureObjectUnreadable(
-            namespace=namespace,
-            row_id=row_id,
-            object_key=object_key,
-            classification=classification_str,
-            schema_version=schema_version,
-            written_at=written_at,
-            reason=resolve_error_message(exc),
-        )
+        return unreadable(resolve_error_message(exc))
     try:
         payload_plain = decrypt_secure_object_payload(
             payload_wire,
             associated_data=secure_object_payload_aad(namespace, object_key, schema_version),
         )
     except DecryptionError as exc:
-        return SecureObjectUnreadable(
-            namespace=namespace,
-            row_id=row_id,
-            object_key=object_key,
-            classification=classification_str,
-            schema_version=schema_version,
-            written_at=written_at,
-            reason=str(exc),
-        )
+        return unreadable(str(exc))
     if not verify_revision_self_consistency(
         namespace=namespace,
         object_key=object_key,
@@ -318,15 +297,7 @@ def secure_object_list_item_from_raw_row(
         ciphertext_hash=row.ciphertext_hash,
         previous_payload_hash=row.previous_payload_hash,
     ):
-        return SecureObjectUnreadable(
-            namespace=namespace,
-            row_id=row_id,
-            object_key=object_key,
-            classification=classification_str,
-            schema_version=schema_version,
-            written_at=written_at,
-            reason="revision lineage self-consistency check failed",
-        )
+        return unreadable("revision lineage self-consistency check failed")
     if schema_version < max_supported_version:
         try:
             payload_plain = upgrade_secure_object_payload(
@@ -336,15 +307,7 @@ def secure_object_list_item_from_raw_row(
                 to_version=max_supported_version,
             )
         except Exception as exc:
-            return SecureObjectUnreadable(
-                namespace=namespace,
-                row_id=row_id,
-                object_key=object_key,
-                classification=classification_str,
-                schema_version=schema_version,
-                written_at=written_at,
-                reason=resolve_error_message(exc) if isinstance(exc, EnvelopeVersionError) else str(exc),
-            )
+            return unreadable(resolve_error_message(exc) if isinstance(exc, EnvelopeVersionError) else str(exc))
     return SecureObjectRecord(
         namespace=namespace,
         object_key=object_key,

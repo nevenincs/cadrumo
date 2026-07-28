@@ -408,6 +408,27 @@ class _ResumeTargetOutcome(NamedTuple):
     blocked: bool
 
 
+def _vanished_target_outcome(target: ConfigResetTarget) -> _ResumeTargetOutcome:
+    """Reconcile a target the assessment no longer finds on disk.
+
+    A target already snapshotted absent, or one already in the deleting
+    phase, is where it should be and needs no change. Anything else was
+    removed out of band below the deleting phase: re-snapshot it as absent
+    so this resume pauses once on the state change and the next one
+    converges. Leaving it existing would pause every resume forever.
+    """
+    if not target.exists_at_snapshot or target.phase is ConfigResetTargetPhase.DELETING:
+        return _ResumeTargetOutcome(target=target, changed=False, blocked=False)
+    vanished = _update_target(
+        target,
+        exists_at_snapshot=False,
+        fingerprint=None,
+        label=None,
+        status_at_snapshot=None,
+    )
+    return _ResumeTargetOutcome(target=vanished, changed=True, blocked=False)
+
+
 def _resume_target_outcome(
     target: ConfigResetTarget,
     assessment: BucketDeletionAssessment,
@@ -416,19 +437,7 @@ def _resume_target_outcome(
     retention_override_reason: str | None,
 ) -> _ResumeTargetOutcome:
     if not assessment.exists:
-        if not target.exists_at_snapshot or target.phase is ConfigResetTargetPhase.DELETING:
-            return _ResumeTargetOutcome(target=target, changed=False, blocked=False)
-        # The target was removed out of band below the deleting phase. Re-snapshot it
-        # as absent so this resume pauses once on the state change and the next one
-        # converges; leaving it existing would pause every resume forever.
-        vanished = _update_target(
-            target,
-            exists_at_snapshot=False,
-            fingerprint=None,
-            label=None,
-            status_at_snapshot=None,
-        )
-        return _ResumeTargetOutcome(target=vanished, changed=True, blocked=False)
+        return _vanished_target_outcome(target)
     current_fingerprint = assessment.fingerprint
     assert current_fingerprint is not None
     fingerprint_changed = (
