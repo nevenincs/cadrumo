@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#arch-remediation-crash-window'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-07-02-arch-remediation-crash-window-P01-S01]]'
   - '[[2026-07-02-arch-remediation-crash-window-P01-S02]]'

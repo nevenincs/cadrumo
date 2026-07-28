@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#homebrew-arm64-pac-ret'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-07-22-homebrew-arm64-pac-ret-adr]]'
   - '[[2026-07-25-homebrew-arm64-pac-ret-plan]]'

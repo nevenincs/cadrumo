@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#renta-region-deductibility'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-07-04-renta-region-deductibility-adr]]'
 ---

@@ -331,10 +331,10 @@ Move all four locale catalogues plus help, risk, error, and MCP mirrors to the a
 - [x] `W05.P16.S143` - Reconcile intentional identical-locale declarations after the grammar migration; `src/cadrumo/locales/_intentional_identical.json`.
 - [x] `W05.P16.S144` - Require four-locale parity and reject orphaned locale nodes for removed grammar; `src/cadrumo/locales/tests/test_audit.py`.
 - [x] `W05.P16.S145` - Classify passphrase, recovery, reset start and resume, portable profile export, and subject-access export under exact risk keys, with both cleartext export purposes carrying the same handoff classification; `src/cadrumo/application/operator_surface/_risk_table.py`.
-- [x] `W05.P16.S146` - Replace stale help records with accepted profile, recovery, certificate, reset, ledger, and audit descriptions; `src/cadrumo/application/operator_surface/_help.py`.
+- [ ] `W05.P16.S146` - Replace stale help records with accepted profile, recovery, certificate, reset, ledger, and audit descriptions; `src/cadrumo/application/operator_surface/_help.py`.
 - [x] `W05.P16.S147` - Update remaining operator-surface contract notes to the accepted grammar and authority semantics; `src/cadrumo/application/operator_surface/_contract.py`.
 - [x] `W05.P16.S148` - Replace flat reset and legacy custody next actions with registered accepted commands; `src/cadrumo/core/errors/registry/_application_part1.py`.
-- [x] `W05.P16.S149` - Assert operator help, risk, mutability, schema, and live-registration inventories remain exact mirrors; `src/cadrumo/entrypoints/cli/tests/test_operator_surface_contract_drift.py`.
+- [ ] `W05.P16.S149` - Assert operator help, risk, mutability, schema, and live-registration inventories remain exact mirrors; `src/cadrumo/entrypoints/cli/tests/test_operator_surface_contract_drift.py`.
 - [x] `W05.P16.S150` - Prove suggestions resolve only to accepted registered commands; `src/cadrumo/entrypoints/cli/tests/test_suggestion_command_conformance.py`.
 - [x] `W05.P16.S151` - Reject removed command strings in diagnostics, help, errors, and schema metadata; `src/cadrumo/entrypoints/cli/tests/test_self_referential_string_conformance.py`.
 - [x] `W05.P16.S152` - Replace sandbox-use identity gating with canonical config switch handling; `src/cadrumo/entrypoints/mcp/_identity_gate.py`.
@@ -345,7 +345,7 @@ Move all four locale catalogues plus help, risk, error, and MCP mirrors to the a
 - [x] `W05.P16.S157` - Assert MCP mutability distinguishes read-only status from destructive operations; `src/cadrumo/entrypoints/mcp/tests/test_write_policy_mutability_parity.py`.
 - [x] `W05.P16.S158` - Prove canonical switch identity gating and removed sandbox-use unavailability; `src/cadrumo/entrypoints/mcp/tests/test_identity_gate.py`.
 - [x] `W05.P16.S159` - Prove generated MCP input schemas for every accepted changed command; `src/cadrumo/entrypoints/mcp/tests/test_input_schema.py`.
-- [x] `W05.P16.S160` - Refresh command-search expectations only for accepted keys and reject removed tokens; `src/cadrumo/application/command_search/tests/test_command_ranking_golden.py`.
+- [ ] `W05.P16.S160` - Refresh command-search expectations only for accepted keys and reject removed tokens; `src/cadrumo/application/command_search/tests/test_command_ranking_golden.py`.
 - [x] `W05.P16.S223` - Re-arm MCP identity confirmation when canonical profile logout clears the active taxpayer; `src/cadrumo/entrypoints/mcp/_identity_gate.py; src/cadrumo/entrypoints/mcp/tests/test_identity_gate.py`.
 
 ### Phase `W05.P17` - Rewrite and regenerate user documentation

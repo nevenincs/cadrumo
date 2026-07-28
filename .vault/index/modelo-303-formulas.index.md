@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-303-formulas'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-04-17-modelo-303-casilla-rules-research]]'
   - '[[2026-04-17-modelo-303-formulas-adr]]'

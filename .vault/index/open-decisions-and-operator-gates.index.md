@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#open-decisions-and-operator-gates'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-07-25-open-decisions-and-operator-gates-plan]]'
   - '[[2026-07-25-open-decisions-and-operator-gates-three-rulings-audit]]'

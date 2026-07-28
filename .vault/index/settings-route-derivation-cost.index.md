@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#settings-route-derivation-cost'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-07-25-settings-route-derivation-cost-research]]'
 ---

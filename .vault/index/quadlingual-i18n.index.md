@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#quadlingual-i18n'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-05-01-quadlingual-i18n-adr]]'
   - '[[2026-05-01-quadlingual-i18n-reference]]'

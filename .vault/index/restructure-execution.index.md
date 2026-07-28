@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#restructure-execution'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2025-05-22-restructure-execution-P01-S01]]'
   - '[[2025-05-22-restructure-execution-W02-P11-S46]]'

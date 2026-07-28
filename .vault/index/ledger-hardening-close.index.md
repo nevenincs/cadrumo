@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ledger-hardening-close'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-06-11-ledger-hardening-close-audit]]'
   - '[[2026-06-11-ledger-hardening-close-pass-2-audit]]'

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#agent-rule-consolidation'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-06-01-agent-rule-consolidation-adr]]'
   - '[[2026-06-01-agent-rule-consolidation-research]]'

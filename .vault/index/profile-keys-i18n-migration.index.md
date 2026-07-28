@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#profile-keys-i18n-migration'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2025-02-13-profile-keys-i18n-migration-adr]]'
   - '[[2025-02-13-profile-keys-i18n-migration-exec]]'

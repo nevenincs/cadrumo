@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#secure-storage-api'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-05-22-secure-storage-api-review-audit]]'
 ---

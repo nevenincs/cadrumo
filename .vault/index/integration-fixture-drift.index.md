@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#integration-fixture-drift'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-07-08-integration-fixture-drift-audit]]'
   - '[[2026-07-08-integration-fixture-drift-plan]]'

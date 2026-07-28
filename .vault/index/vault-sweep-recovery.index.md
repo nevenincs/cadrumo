@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#vault-sweep-recovery'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-07-25-vault-sweep-recovery-f7e1f9a5-classification-audit]]'
 ---

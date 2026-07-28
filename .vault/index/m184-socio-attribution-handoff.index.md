@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m184-socio-attribution-handoff'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-07-09-m184-socio-attribution-handoff-adr]]'
   - '[[2026-07-09-m184-socio-attribution-handoff-audit]]'

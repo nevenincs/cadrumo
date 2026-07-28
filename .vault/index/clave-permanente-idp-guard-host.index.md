@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#clave-permanente-idp-guard-host'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-07-10-clave-permanente-idp-guard-host-adr]]'
   - '[[2026-07-10-clave-permanente-idp-guard-host-research]]'

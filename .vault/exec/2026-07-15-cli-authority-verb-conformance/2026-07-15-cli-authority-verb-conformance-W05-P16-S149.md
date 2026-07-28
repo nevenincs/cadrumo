@@ -62,6 +62,23 @@ This mirror is what makes the preceding metadata rows durable rather than point-
 
 No code change was required by this Step. The implementing change had already landed under the successor plans this document was rescoped into, so the row was stale rather than unexecuted. The Step is closed as verified-satisfied against its named surface, per the Wave W06 instruction that each open W05 Step be verified against that surface before being checked and never inferred from the live command tree alone.
 
+### Adjudicated 2026-07-28: row reopened
+
+The row requires the operator help, risk, mutability, schema and live-
+registration inventories to be asserted as exact mirrors. The correction found
+the gate asserts none of that — it compares the contract against the live tree
+and nothing further — so the row's requirement is unmet and it reopens.
+
+Carried forward for whoever takes it: the correction also established that the
+help-versus-risk half is false AS STATED, because 26 live commands carry no risk
+row by design. A gate written to the row's literal wording would therefore be
+red on landing. That is a defect in the row, not only in the gate, so the
+implementer must either scope the mirror to the inventories that genuinely are
+total, or record why a partial mirror is the correct contract. Writing the gate
+to the literal text and then relaxing it until it passes is the failure mode to
+avoid here: it would leave an assertion that looks like a mirror and enforces
+nothing.
+
 ## Corrected 2026-07-28
 
 The Outcome above overstates what the gate did, and the overstatement is the

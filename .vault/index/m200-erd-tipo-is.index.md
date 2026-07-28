@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m200-erd-tipo-is'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-05-27-m200-erd-tipo-is-S01]]'
   - '[[2026-06-04-m200-erd-tipo-is-adr]]'

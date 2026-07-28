@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#bucket-manifest-durability'
-date: '2026-07-27'
-modified: '2026-07-27'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-07-25-bucket-manifest-durability-adr]]'
 ---

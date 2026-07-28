@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#submission-safety-sweep'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-04-16-submission-safety-sweep-adr-audit]]'
   - '[[2026-04-16-submission-safety-sweep-adr]]'

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#descendant-profile-axis'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-05-27-descendant-profile-axis-adr]]'
   - '[[2026-06-04-descendant-profile-axis-research]]'

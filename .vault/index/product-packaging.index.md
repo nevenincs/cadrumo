@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#product-packaging'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-06-28-product-packaging-adr]]'
   - '[[2026-06-28-product-packaging-reference]]'

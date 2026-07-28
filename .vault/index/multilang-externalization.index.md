@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#multilang-externalization'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-07-12-multilang-externalization-adr]]'
   - '[[2026-07-12-multilang-externalization-research]]'

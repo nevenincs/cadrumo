@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-100-renta-full-calc'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-04-27-modelo-100-renta-full-calc-adr]]'
   - '[[2026-04-27-modelo-100-renta-full-calc-plan]]'

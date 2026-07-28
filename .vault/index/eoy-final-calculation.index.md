@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#eoy-final-calculation'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-06-21-eoy-final-calculation-audit]]'
   - '[[2026-06-22-eoy-final-calculation-P01-S01]]'

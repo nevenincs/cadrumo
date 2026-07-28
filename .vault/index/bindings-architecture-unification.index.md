@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#bindings-architecture-unification'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-06-26-bindings-architecture-unification-adr]]'
   - '[[2026-06-26-bindings-architecture-unification-audit]]'

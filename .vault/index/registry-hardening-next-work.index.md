@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-hardening-next-work'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-06-02-registry-hardening-next-work-W05-P09-S41]]'
   - '[[2026-06-02-registry-hardening-next-work-W05-P09-S42]]'

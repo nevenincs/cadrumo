@@ -60,6 +60,24 @@ The named golden passes. Its expectations resolve to accepted keys and carry no 
 
 No code change was required by this Step. The implementing change had already landed under the successor plans this document was rescoped into, so the row was stale rather than unexecuted. The Step is closed as verified-satisfied against its named surface, per the Wave W06 instruction that each open W05 Step be verified against that surface before being checked and never inferred from the live command tree alone.
 
+### Adjudicated 2026-07-28: row reopened
+
+The row requires the command-search expectations to reject removed tokens. The
+correction found every assertion in the golden is about ranking ORDER, and a
+retired key ranks perfectly well, so a removed door left in the descriptor set
+passes unremarked. The row's stated protection does not exist and it reopens.
+
+The module also carried a test asserting a non-empty string literal. That is
+tautological by construction — it cannot fail while the module imports — and it
+is the clearest possible instance of a check that cannot distinguish a healthy
+surface from a broken one. It should be removed or given a real subject as part
+of closing this row, not left as apparent coverage.
+
+The implementer should confirm the new assertion by mutation: introduce a
+retired key into the descriptor set and prove the golden reds, then remove it.
+A rejection test that has never seen a rejection is the same class of evidence
+as the ranking assertions this correction found.
+
 ## Corrected 2026-07-28
 
 The Outcome above is half right, and the wrong half matters.

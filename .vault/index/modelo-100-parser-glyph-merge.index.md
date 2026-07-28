@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-100-parser-glyph-merge'
-date: '2026-07-27'
-modified: '2026-07-27'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-07-26-modelo-100-parser-glyph-merge-adr]]'
 ---

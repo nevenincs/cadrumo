@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#export-publication'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-07-17-export-publication-S01]]'
   - '[[2026-07-17-export-publication-S02]]'

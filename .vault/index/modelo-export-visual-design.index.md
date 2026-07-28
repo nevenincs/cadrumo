@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-export-visual-design'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-06-03-modelo-export-visual-design-adr]]'
   - '[[2026-06-04-modelo-export-visual-design-research]]'

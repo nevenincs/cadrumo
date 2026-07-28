@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#locale-scaffold-fstring'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-05-31-locale-scaffold-fstring-S01]]'
   - '[[2026-05-31-locale-scaffold-fstring-adr]]'

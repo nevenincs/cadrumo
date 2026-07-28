@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#declaracion-profile-printed-box-scope'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-07-25-declaracion-profile-printed-box-scope-S01]]'
   - '[[2026-07-25-declaracion-profile-printed-box-scope-S02]]'

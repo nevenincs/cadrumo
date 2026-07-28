@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#renta-cuota-chain-rollout'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-05-06-renta-cuota-chain-rollout-adr]]'
   - '[[2026-05-06-renta-cuota-chain-rollout-plan]]'

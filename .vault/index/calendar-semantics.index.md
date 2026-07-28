@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#calendar-semantics'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-06-12-calendar-semantics-code-review-audit]]'
 ---

@@ -63,6 +63,25 @@ This surface is one of the three the hand-sweep hazard names, and it is under CI
 
 No code change was required by this Step. The implementing change had already landed under the successor plans this document was rescoped into, so the row was stale rather than unexecuted. The Step is closed as verified-satisfied against its named surface, per the Wave W06 instruction that each open W05 Step be verified against that surface before being checked and never inferred from the live command tree alone.
 
+### Adjudicated 2026-07-28: row reopened
+
+The correction flagged this row for adjudication rather than reversing another
+author's judgement from inside a correction, which was the right restraint. The
+adjudication is that the row reopens.
+
+The row names six surfaces: profile, recovery, certificate, reset, ledger and
+audit. Measured against `application/operator_surface/_help.py`, `profile`
+appears 38 times, `ledger` 60 and `reset` 14, while `recovery`, `certificate`
+and `audit` appear zero times each. The positive control matters: the same tool,
+pattern and path that returned nothing for the missing three returned real
+counts for the present three, so the absence is a fact about the module rather
+than a failed search.
+
+The narrower reading the row was closed under is defensible as far as it goes,
+and half the named surfaces are genuinely done. But a row that enumerates six
+surfaces is not satisfied by three, and leaving it checked would record a
+coverage claim the module does not support. Reopened for the remaining three.
+
 ## Accuracy correction 2026-07-28
 
 The Outcome above is inaccurate on three of the seven surfaces it names, and the

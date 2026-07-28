@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ledger-evidence-atomicity'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-07-17-ledger-evidence-atomicity-P01-S01]]'
   - '[[2026-07-17-ledger-evidence-atomicity-P01-S02]]'

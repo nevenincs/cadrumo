@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#import-centralization'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-07-01-import-centralization-W01-P02-S01]]'
   - '[[2026-07-01-import-centralization-W01-P03-S02]]'

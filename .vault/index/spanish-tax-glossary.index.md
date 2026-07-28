@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#spanish-tax-glossary'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-05-19-spanish-tax-glossary-reference]]'
 ---

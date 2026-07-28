@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-period-code-union'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
   - '[[2026-06-04-registry-period-code-union-research]]'

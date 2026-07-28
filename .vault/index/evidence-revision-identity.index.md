@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#evidence-revision-identity'
-date: '2026-07-27'
-modified: '2026-07-27'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-07-24-evidence-revision-identity-adr]]'
   - '[[2026-07-25-evidence-revision-identity-S01]]'

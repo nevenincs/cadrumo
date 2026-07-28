@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#docs-cli-sequences'
-date: '2026-07-27'
-modified: '2026-07-27'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-07-13-docs-cli-sequences-W01-P01-S01]]'
   - '[[2026-07-13-docs-cli-sequences-W01-P01-S02]]'

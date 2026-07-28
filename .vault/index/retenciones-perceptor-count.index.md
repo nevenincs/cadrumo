@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#retenciones-perceptor-count'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-06-24-retenciones-perceptor-count-P01-S01]]'
   - '[[2026-06-24-retenciones-perceptor-count-P01-S02]]'

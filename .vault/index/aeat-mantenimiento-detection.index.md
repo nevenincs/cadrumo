@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#aeat-mantenimiento-detection'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-04-13-aeat-mantenimiento-detection-adr]]'
   - '[[2026-04-13-aeat-mantenimiento-detection-audit]]'

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#binding-vocabulary-cli-cohesion'
-date: '2026-07-25'
-modified: '2026-07-25'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-W01-P01-S01]]'
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-W01-P01-S02]]'
