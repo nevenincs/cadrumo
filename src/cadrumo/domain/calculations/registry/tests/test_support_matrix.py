@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import pytest
 
+from .....core import ExportLayoutFormat
 from .. import bundled_authority
 from .._support_matrix import ModeloEntry, build_support_matrix
 
@@ -167,8 +168,8 @@ def test_build_support_matrix_is_never_a_fabricated_positive() -> None:
         assert entry.revision_count == len(modelo.revisions)
         assert entry.latest_revision_id == revision.id
         assert entry.latest_revision_valid_from == revision.valid_from
-        assert entry.has_fixed_width_export == ("fixed_width" in expected_formats)
-        assert entry.has_xml_dictionary_export == ("xml_dictionary" in expected_formats)
+        assert entry.has_fixed_width_export == (ExportLayoutFormat.FIXED_WIDTH in expected_formats)
+        assert entry.has_xml_dictionary_export == (ExportLayoutFormat.XML_DICTIONARY in expected_formats)
         assert entry.has_extractor == bool(revision.extraction_profiles)
         assert entry.extraction_profile_count == len(revision.extraction_profiles)
         assert entry.has_completeness_manifest == (revision.completeness_manifest is not None)

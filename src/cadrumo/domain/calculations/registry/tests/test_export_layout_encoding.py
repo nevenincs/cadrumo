@@ -13,6 +13,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from .....core import ExportLayoutFormat
 from ..._export_field_kind import CasillaFieldKind
 from .._schema import (
     ExportFieldDefinition,
@@ -55,7 +56,7 @@ def test_layout_with_one_encoding_validates() -> None:
 
     layout = ExportLayoutDefinition(
         id="layout.single",
-        format="fixed_width",
+        format=ExportLayoutFormat.FIXED_WIDTH,
         source_refs=("aeat-src-1",),
         legal_refs=("ley-37-1992:art-1",),
         records=(
@@ -71,7 +72,7 @@ def test_layout_with_alias_encodings_validates() -> None:
 
     layout = ExportLayoutDefinition(
         id="layout.aliased",
-        format="fixed_width",
+        format=ExportLayoutFormat.FIXED_WIDTH,
         source_refs=("aeat-src-1",),
         legal_refs=("ley-37-1992:art-1",),
         records=(
@@ -90,7 +91,7 @@ def test_layout_with_mixed_canonical_encodings_rejected() -> None:
     with pytest.raises(ValidationError, match="inconsistent encodings"):
         ExportLayoutDefinition(
             id="layout.mixed",
-            format="fixed_width",
+            format=ExportLayoutFormat.FIXED_WIDTH,
             source_refs=("aeat-src-1",),
             legal_refs=("ley-37-1992:art-1",),
             records=(
@@ -105,10 +106,10 @@ def test_xml_dictionary_layout_skips_record_encoding_check() -> None:
 
     layout = ExportLayoutDefinition(
         id="layout.xml",
-        format="xml_dictionary",
+        format=ExportLayoutFormat.XML_DICTIONARY,
         dictionary_source_ref="aeat-dict-1",
         source_refs=("aeat-dict-1",),
         legal_refs=("ley-37-1992:art-1",),
         records=(),
     )
-    assert layout.format == "xml_dictionary"
+    assert layout.format is ExportLayoutFormat.XML_DICTIONARY

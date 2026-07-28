@@ -46,6 +46,7 @@ from datetime import date
 
 from pydantic import BaseModel, ConfigDict
 
+from ....core import ExportLayoutFormat
 from ._authority import ValidatedRegistryAuthority
 from ._ids import ModeloId, RevisionId
 from ._record_design_coverage import calculation_closure_casilla_ids
@@ -256,8 +257,8 @@ def _entry_for_modelo(modelo: ModeloDefinition) -> ModeloEntry:
         supported_revision_ids=supported_revision_ids,
         calc_grade=bool(closure),
         has_completeness_manifest=revision.completeness_manifest is not None,
-        has_fixed_width_export="fixed_width" in export_formats,
-        has_xml_dictionary_export="xml_dictionary" in export_formats,
+        has_fixed_width_export=ExportLayoutFormat.FIXED_WIDTH in export_formats,
+        has_xml_dictionary_export=ExportLayoutFormat.XML_DICTIONARY in export_formats,
         has_extractor=bool(revision.extraction_profiles),
         extraction_profile_count=len(revision.extraction_profiles),
         renames=renames,

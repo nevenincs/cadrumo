@@ -51,7 +51,7 @@ from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogue
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Modelo, Period, RefundElection, ResultDisposition, result_disposition_is_refund
+from ...core import ExportLayoutFormat, Modelo, Period, RefundElection, ResultDisposition, result_disposition_is_refund
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId
 from ...core.logging import get_logger
@@ -834,7 +834,7 @@ def _persist_exported_draft(
     _export_layout = _export_subview.export_layouts[0] if _export_subview.export_layouts else None
     completeness_unverified = (
         _export_layout is not None
-        and _export_layout.format == "fixed_width"
+        and _export_layout.format is ExportLayoutFormat.FIXED_WIDTH
         and _export_subview.completeness_manifest is None
     )
 

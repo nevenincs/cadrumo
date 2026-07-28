@@ -5,10 +5,11 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping
 from decimal import Decimal
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import BeforeValidator, Field, field_validator, model_validator
 
+from ....core import ExportLayoutFormat
 from ....core.aggregation import RelationAggregation
 from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
 from ._errors import RegistryValidationError
@@ -41,6 +42,7 @@ __all__ = [
     "CasillaDefinition",
     "ExportFieldDefinition",
     "ExportLayoutDefinition",
+    "ExportLayoutFormatValue",
     "ExportRecordDefinition",
     "RecordDiscriminator",
     "RelationDefinition",
@@ -722,9 +724,37 @@ class ExportRecordDefinition(RegistryModel):
         return value
 
 
+def _coerce_export_layout_format(value: object) -> object:
+    """Coerce a TOML string literal to the canonical export-layout format member.
+
+    Registry models validate in STRICT mode, so a bare ``"fixed_width"`` read out
+    of a manifest is not silently accepted as the enum it spells. Hydration is
+    therefore explicit at the boundary, which is where the registry authority
+    rule puts it: the TOML tree stays free-form text and the compiled objects
+    carry typed members. Same shape as the input-kind coercion beside it, and the
+    refusal names the accepted set rather than leaving an author with a bare
+    type error.
+    """
+    if isinstance(value, ExportLayoutFormat):
+        return value
+    if isinstance(value, str):
+        try:
+            return ExportLayoutFormat(value)
+        except ValueError:
+            raise RegistryValidationError(
+                f"export layout format {value!r} is not a recognised ExportLayoutFormat member; "
+                f"expected one of {[member.value for member in ExportLayoutFormat]}",
+            ) from None
+    raise RegistryValidationError(f"export layout format must be a string, got {type(value).__name__!r}")
+
+
+ExportLayoutFormatValue = Annotated[ExportLayoutFormat, BeforeValidator(_coerce_export_layout_format)]
+"""Annotated export-layout format that hydrates TOML string literals to members."""
+
+
 class ExportLayoutDefinition(RegistryModel):
     id: ExportLayoutId
-    format: Literal["fixed_width", "xml_dictionary"] = "fixed_width"
+    format: ExportLayoutFormatValue = ExportLayoutFormat.FIXED_WIDTH
     dictionary_source_ref: SourceRefId | None = None
     source_refs: SourceRefs
     legal_refs: LegalRefs
@@ -732,7 +762,7 @@ class ExportLayoutDefinition(RegistryModel):
 
     @model_validator(mode="after")
     def _validate_layout_format(self) -> ExportLayoutDefinition:
-        if self.format == "xml_dictionary":
+        if self.format is ExportLayoutFormat.XML_DICTIONARY:
             if self.dictionary_source_ref is None:
                 raise RegistryValidationError(f"export layout {self.id!r} must declare dictionary_source_ref")
             if self.dictionary_source_ref not in self.source_refs:
@@ -758,7 +788,7 @@ class ExportLayoutDefinition(RegistryModel):
         records tuple is typically empty), so this check is a no-op
         for them.
         """
-        if self.format != "fixed_width":
+        if self.format is not ExportLayoutFormat.FIXED_WIDTH:
             return self
         normalised: dict[str, str] = {}
         for record in self.records:

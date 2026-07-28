@@ -12,6 +12,7 @@ from xml.etree.ElementTree import Element
 
 from defusedxml import ElementTree
 
+from ....core import ExportLayoutFormat
 from ....core.decimal import normalize_decimal_separators
 from ....core.external_constants import LATIN_1_ENCODING as _LATIN_1_ENCODING
 from ....core.parsing import parse_bool as _core_parse_bool
@@ -70,7 +71,7 @@ def parse_export_payload(
     sources: Mapping[str, SourceReference] | None = None,
 ) -> ParsedExportPayload:
     """Parse a complete AEAT payload and return a :class:`ParsedExportPayload`."""
-    if layout.format == "xml_dictionary":
+    if layout.format is ExportLayoutFormat.XML_DICTIONARY:
         return _parse_xml_dictionary_payload(layout, payload, source_root=source_root, sources=sources)
 
     cursor = 0

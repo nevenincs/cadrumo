@@ -7,6 +7,7 @@ from itertools import pairwise
 
 import pytest
 
+from .....core import ExportLayoutFormat
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .. import (
@@ -299,7 +300,7 @@ def test_committed_modelo_232_envelope_export_layout_declares_every_revision_wit
     modelo, _ = _load_modelo_232()
     for revision in modelo.revisions.values():
         assert revision.export_layouts, revision.id
-        assert revision.export_layouts[0].format == "fixed_width", revision.id
+        assert revision.export_layouts[0].format is ExportLayoutFormat.FIXED_WIDTH, revision.id
 
 
 def test_committed_modelo_232_envelope_export_layout_carries_envelope_header_and_footer() -> None:

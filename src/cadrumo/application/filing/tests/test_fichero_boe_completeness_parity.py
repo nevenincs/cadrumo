@@ -22,6 +22,7 @@ from typing import Any
 
 import pytest
 
+from ....core import ExportLayoutFormat
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaFieldKind, CasillaId, validated_casilla_id
 from ....domain.filing import FilingExportError
@@ -286,7 +287,7 @@ def test_no_manifest_casilla_is_representable_only_via_binding_rows() -> None:
         manifest = revision.completeness_manifest
         assert manifest is not None, modelo
         layout = sorted(revision.export_layouts, key=lambda item: item.id)[0]
-        assert layout.format == "fixed_width", modelo
+        assert layout.format is ExportLayoutFormat.FIXED_WIDTH, modelo
 
         casilla_field_ids = {
             field.casilla_id

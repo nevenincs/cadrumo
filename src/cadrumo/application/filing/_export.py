@@ -55,6 +55,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import (
+    ExportLayoutFormat,
     Period,
 )
 from ...core.decimal import coerce_decimal
@@ -355,11 +356,11 @@ def export_layout_renderability_reason(
     """Return why ``layout`` cannot currently produce local declaration bytes."""
     if layout is None:
         return "the registry snapshot has no complete export_layouts definition"
-    if layout.format == "xml_dictionary":
+    if layout.format is ExportLayoutFormat.XML_DICTIONARY:
         if layout.dictionary_source_ref is None:
             return f"XML dictionary export layout {layout.id!r} declares no dictionary source"
         return None
-    if layout.format != "fixed_width":
+    if layout.format is not ExportLayoutFormat.FIXED_WIDTH:
         return f"export layout {layout.id!r} uses unsupported format {layout.format!r}"
     if not layout.records:
         return f"export layout {layout.id!r} declares no export records"
@@ -475,7 +476,7 @@ def verify_export(
 
 
 def _declaracion_export_format(layout: ExportLayoutDefinition) -> DeclaracionExportFormat:
-    if layout.format == "xml_dictionary":
+    if layout.format is ExportLayoutFormat.XML_DICTIONARY:
         return DeclaracionExportFormat.XML_DICTIONARY
     return DeclaracionExportFormat.FICHERO_BOE
 
@@ -487,7 +488,7 @@ def _render_export_layout(
     headers: dict[str, str],
     schema_provider: RegistrySchemaAccessor,
 ) -> bytes:
-    if layout.format == "xml_dictionary":
+    if layout.format is ExportLayoutFormat.XML_DICTIONARY:
         return render_xml_dictionary_layout(layout, draft=draft, headers=headers, schema_provider=schema_provider)
     return _render_layout(layout, draft=draft, headers=headers)
 
@@ -881,7 +882,7 @@ def _exported_casilla_provenance(
     draft: ModeloDraft,
     schema_provider: RegistrySchemaAccessor,
 ) -> tuple[ModeloCasillaProvenance, ...]:
-    if layout.format == "xml_dictionary":
+    if layout.format is ExportLayoutFormat.XML_DICTIONARY:
         entries = xml_dictionary_entries(
             layout,
             source_root=schema_provider.source_root,

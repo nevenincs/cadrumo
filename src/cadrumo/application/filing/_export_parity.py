@@ -54,7 +54,7 @@ See Also:
 
 from __future__ import annotations
 
-from ...core import ResultDisposition, result_disposition_is_refund
+from ...core import ExportLayoutFormat, ResultDisposition, result_disposition_is_refund
 from ...domain.calculations.registry import (
     CalculationCompletenessManifest,
     CasillaFieldKind,
@@ -117,7 +117,7 @@ def boe_representable_casilla_ids(
     official filed record does not carry, so it is out of scope for the ``.boe``
     parity gate rather than a drift.
     """
-    if layout.format == "xml_dictionary":
+    if layout.format is ExportLayoutFormat.XML_DICTIONARY:
         entries = xml_dictionary_entries(
             layout,
             source_root=schema_provider.source_root,
@@ -273,7 +273,7 @@ def assert_export_mirrors_manifest(
     Each dimension is a hard, enumerated :class:`FilingExportError`; a structural
     divergence is a failure, never a warning.
     """
-    if layout.format != "fixed_width":
+    if layout.format is not ExportLayoutFormat.FIXED_WIDTH:
         return
     _assert_record_order_fidelity(modelo=draft.modelo, layout=layout, headers=headers)
     representable = boe_representable_casilla_ids(layout, headers=headers, schema_provider=schema_provider)

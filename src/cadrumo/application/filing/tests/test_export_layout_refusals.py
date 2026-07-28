@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import ExportLayoutFormat
 from ....domain.filing import FilingExportError
 from ....domain.submission import ModeloDraftStatus
 from .. import (
@@ -71,7 +72,7 @@ def test_xml_dictionary_layout_is_renderable_for_modelo_100() -> None:
     provider = _schema_provider(filing_year=2024, period="0A", modelos=("100",))
     layout = provider.get_subview("100").export_layouts[0]
 
-    assert layout.format == "xml_dictionary"
+    assert layout.format is ExportLayoutFormat.XML_DICTIONARY
     assert export_layout_renderability_reason("100", layout) is None
 
 

@@ -8,6 +8,7 @@ from functools import cache
 
 import pytest
 
+from .....core import ExportLayoutFormat
 from .....core.paths import PROJECT_ROOT
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED
@@ -397,7 +398,7 @@ def test_committed_modelo_349_export_layout_declares_three_fixed_width_records()
     assert len(revision.export_layouts) == 1
     layout = revision.export_layouts[0]
     assert layout.id == "modelo-349-fichero-2020"
-    assert layout.format == "fixed_width"
+    assert layout.format is ExportLayoutFormat.FIXED_WIDTH
 
     record_types = {record.record_type: record for record in layout.records}
     assert set(record_types) == {"declarante", "operador", "rectificacion"}

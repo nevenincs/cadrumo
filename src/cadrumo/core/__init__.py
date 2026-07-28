@@ -63,6 +63,8 @@ See Also:
         by the shipped terminology search and the unshipped authoring tooling.
     :class:`ExternalOracleCorpus`: Bundled AEAT-authoritative oracle corpus that
         supplies an expected casilla value for independent reconciliation.
+    :class:`ExportLayoutFormat`: Wire shape a registry export layout declares,
+        closing the value set every export consumer used to re-spell.
 """
 
 from __future__ import annotations
@@ -90,6 +92,7 @@ from ._credentials import (
     assess_passphrase_strength,
     character_class_count,
 )
+from ._export_layout_format import ExportLayoutFormat
 from ._external_oracle_corpus import ExternalOracleCorpus
 from ._google_credential_source import GoogleCredentialSourceKind
 from ._hex import HEX_PATTERN_64, HEX_PATTERN_128
@@ -260,6 +263,7 @@ __all__: list[str] = [
     "CompatibilityRegime",
     "ConceptLifecycle",
     "ConvenioOverrideKind",
+    "ExportLayoutFormat",
     "ExternalOracleCorpus",
     "ForeignAssetDeclarationThreshold",
     "ForeignAssetObligationGroup",

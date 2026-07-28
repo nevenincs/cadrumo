@@ -39,7 +39,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import M145_COMMUNICATION_RECORD_NAMESPACE
-from ...core import STRICT_FROZEN_CONFIG, CasillaId, validated_casilla_id_map
+from ...core import STRICT_FROZEN_CONFIG, CasillaId, ExportLayoutFormat, validated_casilla_id_map
 from ...core.decimal import coerce_decimal_strict
 from ...core.errors import resolve_error_message
 from ...core.hashing import content_hash_hex, sha256_hex
@@ -814,7 +814,7 @@ def export_m145_communication_record(
     )
     resolved_layout = resolve_export_layout(snapshot)
     layout = resolved_layout.layout
-    if layout.format != "fixed_width":
+    if layout.format is not ExportLayoutFormat.FIXED_WIDTH:
         raise M145CommunicationRecordExportError(
             f"Modelo 145 export layout {layout.id!r} uses unsupported format {layout.format!r}",
             context={"export_layout_id": layout.id, "format": layout.format, "reason": "unsupported_format"},
