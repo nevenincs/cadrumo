@@ -123,6 +123,20 @@ precondition is cleared by the packaging campaign, which is where that work is
 tracked. Dispatching this row before a green smoke run exists produces a
 refusal at the source-identity gate, not a green acquisition.
 
+The cause of that missing green smoke run was traced so whoever picks it up
+does not repeat the search. The Linux wheel leg fails because the packaging
+campaign's `dev` lane exits 127 on a `pyright --version` call inside its
+freshly built lane venv, which is a missing executable rather than a product
+failure, and the same exit-127 class was already recorded against the macOS
+oracle leg. Every other lane in that run passed, including both Docker lanes
+and all three immutable-cohort oracle legs.
+
+That is the packaging campaign's surface, not this one's, and it is left there
+deliberately: repairing a lane venv on a shared runner host is an
+infrastructure change with a blast radius well outside a runner-topology
+decision. It is named here only because it is the precondition this plan's
+acquisition row actually waits on.
+
 ## Context
 
 Accepted ADR carrying no plan. Rules which runner executes the Scoop evidence lane, orthogonal to where Scoop manifests live, which the account-distribution-standard ADR settles.
