@@ -131,11 +131,18 @@ def test_formula_is_deterministic_and_binds_the_real_cohort(
     # native macOS arm64 keeps the hardening) and builds argon2-cffi-bindings
     # with isolation off against the venv cffi, so it no longer uses the bare
     # virtualenv_install_with_resources.
+    # Pinned as a MODIFIER `if`, not a block: `brew audit --strict` fails a
+    # block `if` with a single-line body (Style/IfUnlessModifier), and that
+    # audit is a hard gate on the macOS acquisition leg, so the block form
+    # made the formula unshippable.
     assert (
-        "if OS.linux? && Hardware::CPU.arm?\n"
-        '      ENV["HOMEBREW_CCCFG"] = ENV["HOMEBREW_CCCFG"].to_s.delete("b")\n'
-        "    end"
+        'ENV["HOMEBREW_CCCFG"] = ENV["HOMEBREW_CCCFG"].to_s.delete("b") if OS.linux? && Hardware::CPU.arm?'
     ) in formula
+    # The block form opens the guard on its own line; the modifier form never
+    # does. Anchoring on that whole line keeps this a real check -- the bare
+    # condition string also appears in the modifier line, so asserting on it
+    # alone would be satisfied by the very form this pins.
+    assert "\n    if OS.linux? && Hardware::CPU.arm?\n" not in formula
     assert (
         'venv.pip_install resources.reject { |r| ["argon2-cffi-bindings", "cryptography"].include?(r.name) }'
     ) in formula

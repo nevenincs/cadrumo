@@ -440,9 +440,10 @@ def generate_formula(
     # cc shim injects via HOMEBREW_CCCFG "b". Drop it on Linux arm64 only, so
     # no compiled C extension carries retaa there; native macOS arm64 executes
     # pointer authentication fine and keeps the hardening.
-    if OS.linux? && Hardware::CPU.arm?
-      ENV["HOMEBREW_CCCFG"] = ENV["HOMEBREW_CCCFG"].to_s.delete("b")
-    end
+    # Written as a modifier `if`: `brew audit --strict` rejects a block `if`
+    # whose body is a single line (Style/IfUnlessModifier), and that audit is a
+    # hard gate on the macOS acquisition leg.
+    ENV["HOMEBREW_CCCFG"] = ENV["HOMEBREW_CCCFG"].to_s.delete("b") if OS.linux? && Hardware::CPU.arm?
     venv = virtualenv_create(libexec, "python3.13")
     # argon2-cffi-bindings and cryptography each run cffi at build time: an
     # isolated PEP 517 build installs a fresh cffi into a pip build-isolation
