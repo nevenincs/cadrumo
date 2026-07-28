@@ -449,7 +449,7 @@ Run the formal code-review skill, reconcile findings, and prove every accepted A
 - [x] `W06.P20.S271` - Assert structurally that an execution record carries a populated Outcome before its Step may be checked, since the vault check passes empty scaffolds; `.vault/exec/`.
 - [x] `W06.P20.S272` - Commit the plan file alongside execution records in every closure commit, and land the 31 closures currently held only in the working tree; `.vault/plan/2026-07-15-cli-authority-verb-conformance-plan.md`.
 - [x] `W06.P20.S273` - Make a stale import-linter ignore fail loudly and distinctly from a contract breach, so an aborted run cannot read as a quiet one; `.importlinter`.
-- [ ] `W06.P20.S274` - Resolve the two broken layered contracts with their owning campaigns, without widening the ignore list; `.importlinter`.
+- [x] `W06.P20.S274` - Resolve the two broken layered contracts with their owning campaigns, without widening the ignore list; `.importlinter`.
 - [x] `W06.P20.S275` - Teach the documented-command conformance parser to recognise a blocked-row marker rather than reading its prose as a command path; `src/cadrumo/entrypoints/cli/tests/test_documented_command_conformance.py`.
 - [ ] `W06.P20.S276` - Attribute the two P18 failures before any closure, 8 in the passphrase and recovery lifecycle suite and 22 in the MCP parity suite, separating the expected keychain remainder from real defects; `src/cadrumo/entrypoints/cli/_config/tests/; src/cadrumo/entrypoints/mcp/tests/`.
 - [x] `W06.P20.S277` - Seed the profile-key registry on the MCP path itself rather than relying on a wizard import side effect, and prove whoami through a real stdio subprocess client; `src/cadrumo/entrypoints/mcp/`.
