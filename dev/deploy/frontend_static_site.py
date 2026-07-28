@@ -8,6 +8,7 @@ import shutil
 from pathlib import Path
 
 from dev.deploy.docs_static_site import (
+    _CI_MARKERS,
     CANONICAL_DOCS_BASE_URL,
     CANONICAL_SITE_DOMAIN,
     STACK_REGION,
@@ -17,7 +18,6 @@ from dev.deploy.docs_static_site import (
     _endpoint_response,
     _invalidate_distribution_paths,
     _repo_root,
-    _require_human_publish_environment,
     _required_executable,
     _run,
     _stack_target,
@@ -163,6 +163,30 @@ def _verify_public_delivery(target: DeploymentTarget) -> None:
             raise SystemExit(
                 f"Endpoint check failed for {url}: expected HTTP {expected_status}, received HTTP {actual_status}.",
             )
+
+
+def _require_human_publish_environment() -> None:
+    """Refuse a landing publish from any automated environment, unconditionally.
+
+    The documentation publisher now accepts a provisioned automated authority.
+    This one has none and is not merely waiting for one: the two publishers are
+    deliberately independent verbs, no workflow publishes the landing page, and
+    no deploy role is scoped to it. There is consequently no automated identity
+    here for a conditional permission to be granted to, so the refusal stays
+    absolute rather than mirroring the documentation guard's shape.
+
+    Keeping the two guards separate is the point. Sharing one would silently
+    extend the documentation site's automated authority to a surface that was
+    never granted any, which is exactly the surprise publish both guards exist
+    to prevent.
+    """
+    markers = tuple(name for name in _CI_MARKERS if name in os.environ)
+    if markers:
+        raise SystemExit(
+            "Refusing Cadrumo landing publish from an automated environment "
+            f"({', '.join(markers)}): the landing page has no automated publish authority "
+            "and is published only from a local human session.",
+        )
 
 
 def _publish(aws: str, repo_root: Path) -> int:
