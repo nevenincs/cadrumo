@@ -206,6 +206,56 @@ because every workflow currently references actions by tag, so turning it on
 would break each of them until they are pinned; it is worth doing as its own
 scoped change, not as a side effect of this audit.
 
+### r6-declaration-fails-the-strict-validator | critical | the ruled mechanism cannot be implemented where it says to implement it
+
+Implementation of the producer half was authorised and attempted, and it does
+not work as specified. The ruling puts the supersession declaration in the
+cohort's marketplace manifest, and the merge tool carries that manifest into the
+published index verbatim. That manifest is governed by a live external oracle:
+the generator's own source comments record that every field it emits is one
+`claude plugin validate --strict` accepts, and a shipped test runs that oracle
+whenever the CLI is present.
+
+The conflict was measured rather than assumed. Two real marketplace trees were
+generated from the production emitter, identical except that one carried
+`supersedes` listing the retired identity. Validated unpiped so the exit status
+is the command's own: the control passes `--strict` with exit 0, and the variant
+fails with exit 1, reporting `Unknown field 'supersedes'. Claude Code ignores it
+at load time`. Without `--strict` the variant passes with that warning.
+
+Two consequences follow. The declaration is not merely unvalidated in that file,
+it is *ignored* by the consumer the file exists for, so the manifest is the wrong
+home for it on its own terms. And shipping it there forces a choice between a red
+validation gate and dropping `--strict`, which would retire a genuine oracle to
+accommodate a field that does not belong to it.
+
+The sound resolution is to move the declaration off the validated manifest and
+onto a cohort-side artefact the publisher reads directly, leaving the published
+marketplace document validator-clean. The ruling's durability rationale survives
+that move intact, because it rests on the declaration shipping with every cohort
+rather than on residing in that particular file, and the existing invariant check
+already reads the retirement set from the cohort rather than from the published
+index. This is an amendment to the ruling, not an implementation detail, so it is
+named here and left for a decision record rather than settled in code.
+
+### rag-code-index-desynchronised | high | discovery was unusable and its repair is throttled by host load
+
+The mandatory pre-coding discovery gate could not be satisfied during this
+session. The code index reported `succeeded` while holding zero searchable
+sections, and its hash metadata simultaneously claimed the tree was indexed, so
+incremental runs embedded only the handful of changed files and could never
+repair it. Two deliberately unrelated probes both returned no results, which is
+the honest failure rather than the confident-garbage one, but unusable either
+way.
+
+Automatic updates were stopped, the code index was cleared, and a genuine full
+rebuild is underway across 4702 files. It is progressing at roughly ten files a
+minute against a host sitting at 94 percent CPU under container load, which puts
+completion hours out rather than minutes. The rebuild must not be interrupted.
+This is recorded because it gates any further coding on this campaign, and
+because the failure mode — a completed job reporting success over an empty index
+— defeats the status signal an agent would normally trust.
+
 ## Recommendations
 
 Re-ground S09 as discharged, citing the absence of any default-branch write
@@ -245,3 +295,12 @@ exists to surface.
 Clarify who may open branches and pull requests before enabling automated
 security fixes, and pin the Actions references as a scoped change before
 requiring SHA pinning.
+
+Amend the supersession ruling before writing its producer half. The decision it
+needs is where the retirement is declared, given that the file it currently
+names is validated by an external oracle that rejects the field and ignores it
+at load. Relocating the declaration to a cohort-side artefact preserves every
+property the ruling argued for; keeping it in the manifest costs either the
+validation gate or a red build. No code should land against the ruling until
+that amendment exists, because the consumer half is already correct and would
+otherwise be paired with a producer that cannot pass the tree's own gates.
