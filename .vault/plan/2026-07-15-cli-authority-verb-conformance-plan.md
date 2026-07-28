@@ -25,13 +25,15 @@ related:
 
 # `cli-authority-verb-conformance` plan
 
-## Status: rescoped and split
+## Status: resumed, and this document is the live tracking surface
 
-This plan is SUPERSEDED. It stands at 64 of 254 steps complete and has been rescoped and split into six smaller, individually-closeable successor plans. It is not abandoned and it is not complete; every unlanded step below remains honestly unchecked and now lives in a successor plan instead. The rescope record `2026-07-17-cli-authority-verb-conformance-audit` documents the disposition, and the duplication-authority audit's cluster table is the successor index.
+This plan was rescoped and split on 2026-07-17 into six smaller, individually-closeable successor plans, and was marked SUPERSEDED at 64 of 254 steps. Both halves of that disposition have since been overtaken and the header is corrected here rather than left standing, because a reader who trusts it will work the wrong document.
 
-Successor plan stems, in execution order: `2026-07-17-duplication-evidence-repair-plan`, `2026-07-17-auth-cert-recovery-custody-plan`, `2026-07-17-all-profile-reset-plan`, `2026-07-17-ledger-evidence-atomicity-plan`, `2026-07-17-export-publication-plan`, `2026-07-17-cli-authority-quality-backlog-plan`.
+All six successors are complete: `2026-07-17-duplication-evidence-repair-plan` (7 of 7), `2026-07-17-auth-cert-recovery-custody-plan` (56 of 56), `2026-07-17-all-profile-reset-plan` (32 of 32), `2026-07-17-ledger-evidence-atomicity-plan` (23 of 23), `2026-07-17-export-publication-plan` (19 of 19), and `2026-07-17-cli-authority-quality-backlog-plan` (27 of 27). The work they carried is done, so the "work its successors" instruction now points at six closed documents.
 
-Landed and carried forward as done: the architecture-measurement prerequisite (W01), the active-profile pointer and strong-logout cluster (W02.P04), authentication custody (W02.P06), certificate custody (W02.P07), and passphrase and recovery custody (W02.P21). Do not re-execute steps from this document; work its successors.
+Execution resumed against THIS plan afterwards, which is why its own count has moved from the 64 the header quoted to a materially higher figure, and why the campaign-close honesty review of 2026-07-25 enumerates this document's open Steps as the campaign's remaining surface. Waves W01 through W04 are complete and evidenced; W05 and W06 carry the remainder.
+
+The instruction that stands: work this plan, and verify each open W05 Step against its NAMED SURFACE before checking it rather than inferring satisfaction from the live command tree. The close review established why - the single W05 Step it actually checked against its surface was the one genuinely undone, and it was concealing a fail-open in the profile-bound write guard.
 
 ## Wave `W01` - Restore trustworthy architecture measurement
 
