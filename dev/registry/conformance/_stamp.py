@@ -40,6 +40,39 @@ coerces the requested status through :class:`StampableReviewStatus` before any
 other work, and the refusal names the value and the path a real signoff takes.
 A type hint governs a type checker; the coercion governs the file on disk.
 
+The refusal keys on the EFFECTIVE status, not only the requested one
+--------------------------------------------------------------------
+
+Coercing the REQUESTED status closed the CREATION of a false operator claim and
+left its ATTRIBUTION writable — and attribution is the whole content of the
+claim, because a status alone names nobody. With no status supplied the
+coercion never fires, the merge falls through to the status the manifest
+already declares, and a lone ``--reviewed-by`` writes the reviewer identity
+against a DECLARED ``operator_reviewed``. A manifest then names an agent as the
+operator's signatory, and that is worse than the creation case in two ways. It
+is SILENT to every gate: the operator ceiling counts revisions LACKING a
+signoff, and this revision still has one. And it DESTROYS the real operator's
+name and date, which the governing decision calls underivable by construction,
+so nothing in the tree can reconstruct what was overwritten.
+
+The vocabulary check is therefore applied to the status the write would RESOLVE
+TO. When the manifest declares a status outside :class:`StampableReviewStatus`
+and the request touches any review-axis field, the write is refused and the
+caller is sent to the manifest, which is the same door a real signoff comes
+through.
+
+ERASURE is refused by the same rule, deliberately. Returning a signed revision
+to ``pending_review`` does red the ratchet — it raises the operator backlog —
+but it reds it AFTER the name and the date are already gone, and a loud alarm
+over unrecoverable data is not a substitute for a closed door. The ratchet
+catches destruction; only the refusal prevents it.
+
+Authorship stays ORTHOGONAL. ``engineered_by`` on an operator-signed revision
+is legal and leaves the signoff untouched: who built a revision is a different
+fact from who signed it off, and a blanket "the resolved status must be
+stampable" rule would refuse an honest authorship claim for a reason that has
+nothing to do with authorship.
+
 Why the stamp is manifest-only
 ------------------------------
 
@@ -147,6 +180,11 @@ is chosen here, and a field the emit order does not name is appended rather than
 dropped — an unordered field is a cosmetic gap, an unwritable one is a
 capability hole.
 """
+
+#: The arguments that restate a revision's review CLAIM. A request touching any
+#: of them is governed by the effective-status guard; ``engineered_by`` is
+#: deliberately absent, because authorship is a different fact from signoff.
+_REVIEW_AXIS_ARGUMENTS: Final[tuple[str, ...]] = ("review_status", "reviewed_by", "reviewed_at")
 
 #: Registry path segment pattern. A segment carrying a separator, a parent
 #: reference, or a drive letter would escape the registry root on join, so the
@@ -319,12 +357,13 @@ def stamp_revision(
 
     Raises:
         StampError: The requested review status is outside the vocabulary this
-            CLI may write, nothing was supplied to write, an authorship claim
-            was supplied together with its clearing, an identity names nobody,
-            the revision is not a compiled record in the tree, the resulting
-            stamp is one the schema refuses, or the written tree no longer
-            loads. In the last case the manifest is restored to its previous
-            bytes before the error is raised.
+            CLI may write, the manifest already DECLARES a status outside it and
+            the request touches the review axis, nothing was supplied to write,
+            an authorship claim was supplied together with its clearing, an
+            identity names nobody, the revision is not a compiled record in the
+            tree, the resulting stamp is one the schema refuses, or the written
+            tree no longer loads. In the last case the manifest is restored to
+            its previous bytes before the error is raised.
     """
     review_status = _stampable_status(review_status)
     if engineered_by is not None and clear_engineered_by:
@@ -343,6 +382,11 @@ def stamp_revision(
 
     original = manifest.read_text(encoding=UTF_8_ENCODING)
     declared = _declared_governance(manifest, original, revision)
+    _assert_review_axis_is_writable(
+        declared.review_status,
+        manifest=manifest,
+        requested=(review_status, reviewed_by, reviewed_at),
+    )
     resolved = _resolve_stamp(
         declared,
         engineered_by=engineered_by,
@@ -378,13 +422,21 @@ def _stampable_status(value: StampableReviewStatus | None) -> StampableReviewSta
     """Coerce a requested review status into the vocabulary this CLI may WRITE.
 
     The first statement of :func:`stamp_revision`, because it is the one
-    argument whose annotation is load-bearing rather than descriptive. Every
-    other refusal in this module protects the FILE — that it stays valid TOML,
-    that the loader still accepts it, that a reviewer is not recorded against a
-    review the status denies. This one protects the CLAIM, and the schema
-    cannot help: ``operator_reviewed`` is a legal registry value, so a manifest
-    carrying it compiles cleanly and the post-write reload passes. The refusal
-    exists only here, which is why it must be a statement and not a type hint.
+    argument whose annotation is load-bearing rather than descriptive. Most
+    refusals in this module protect the FILE — that it stays valid TOML, that
+    the loader still accepts it, that a reviewer is not recorded against a
+    review the status denies. This one protects the CLAIM the caller STATES,
+    and the schema cannot help: ``operator_reviewed`` is a legal registry value,
+    so a manifest carrying it compiles cleanly and the post-write reload passes.
+    The refusal exists only here, which is why it must be a statement and not a
+    type hint.
+
+    It is HALF the guard, and knowing which half matters. This function fires
+    only when a status is supplied; an omitted one falls through to whatever the
+    manifest declares, so a lone reviewer write against a declared
+    ``operator_reviewed`` never reaches this coercion at all.
+    :func:`_assert_review_axis_is_writable` is the other half and reads the
+    EFFECTIVE status off the file.
 
     Coercion rather than an identity check on purpose. The narrowed enum's
     values are byte-identical to the core ones, so the core ``AGENT_REVIEWED``
@@ -408,6 +460,64 @@ def _stampable_status(value: StampableReviewStatus | None) -> StampableReviewSta
             "RevisionReviewStatus member does not make the claim true. The operator signs off by "
             "editing the revision's revision.toml directly, which the registry schema accepts.",
         ) from exc
+
+
+def _assert_review_axis_is_writable(
+    declared_status: str | None,
+    *,
+    manifest: Path,
+    requested: tuple[object, ...],
+) -> None:
+    """Refuse to restate a review claim this CLI could not have written itself.
+
+    The companion to :func:`_stampable_status`, and the half that guards the
+    file rather than the argument. That function coerces the REQUESTED status,
+    so it fires only when a status is supplied; this one reads the status the
+    manifest already DECLARES, which is what an omitted argument falls through
+    to. A lone reviewer write against a declared ``operator_reviewed`` therefore
+    reached disk while the requested-status coercion was the only guard —
+    re-attributing a human's signoff to an agent, invisibly to every gate,
+    while destroying a name and date nothing in the tree can reconstruct.
+
+    Scoped to the REVIEW AXIS on purpose. ``engineered_by`` is absent from
+    :data:`_REVIEW_AXIS_ARGUMENTS` because authorship is orthogonal to signoff:
+    recording who built an operator-signed revision changes no claim about who
+    reviewed it, and a blanket "the resolved status must be stampable" rule
+    would refuse that honest write for a reason unrelated to it.
+
+    The predicate is the VOCABULARY, never the single value ``operator_reviewed``,
+    so a fourth status added to :class:`~cadrumo.core.RevisionReviewStatus`
+    without being added here enrols itself in the refusal instead of escaping
+    it.
+
+    Args:
+        declared_status: The review status the manifest currently declares, or
+            :data:`None` when it declares none.
+        manifest: The manifest being stamped, named in the refusal so the caller
+            is pointed at the file rather than at a flag.
+        requested: The review-axis argument values, in
+            :data:`_REVIEW_AXIS_ARGUMENTS` order.
+
+    Raises:
+        StampError: The declared status is outside the vocabulary this CLI may
+            write and the request touches the review axis. Erasure is refused by
+            the same rule as substitution: the ratchet catches destruction only
+            after the underivable identity is already gone.
+    """
+    touched = [name for name, value in zip(_REVIEW_AXIS_ARGUMENTS, requested, strict=True) if value is not None]
+    if not touched:
+        return
+    if declared_status is None or declared_status in {member.value for member in StampableReviewStatus}:
+        return
+    raise StampError(
+        f"refusing to touch {touched!r}: {manifest} already declares review_status "
+        f"{declared_status!r}, which is outside the vocabulary this CLI writes "
+        f"({', '.join(repr(member.value) for member in StampableReviewStatus)}). Restating the review "
+        "axis here would re-attribute a signoff this tool could not have made, and would overwrite a "
+        "reviewer identity and date that are underivable by construction, so nothing could restore "
+        "them. Both advancing and clearing that claim are edits to the manifest, made by the same hand "
+        "that made the claim. engineered_by is unaffected and remains writable.",
+    )
 
 
 def _named_identity(value: str | None, field: str) -> str | None:

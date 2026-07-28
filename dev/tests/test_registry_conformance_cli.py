@@ -760,6 +760,147 @@ def test_stamp_refuses_an_out_of_vocabulary_status_string_without_touching_the_m
     assert manifest.read_bytes() == before
 
 
+_OPERATOR_SIGNOFF = """engineered_by = "the operator, by hand"
+review_status = "operator_reviewed"
+reviewed_by = "Gergely Wootsch (operator)"
+reviewed_at = 2026-07-01
+"""
+
+
+@pytest.fixture
+def operator_signed_copy(registry_copy: Path) -> Path:
+    """A real modelo copy whose revision carries a hand-authored operator signoff.
+
+    Seeded by appending the four scalars to the manifest, which is exactly the
+    path the governing decision keeps legal for the operator: the schema accepts
+    ``operator_reviewed`` and this CLI cannot write it, so a genuine signoff can
+    only ever arrive as a hand edit. The seed is proved to have compiled before
+    any test reads it, so a test asserting a refusal cannot be passing because
+    the fixture never established the state it refuses to touch.
+    """
+    manifest = _manifest_of(registry_copy)
+    manifest.write_text(
+        manifest.read_text(encoding=UTF_8_ENCODING).rstrip("\n") + "\n" + _OPERATOR_SIGNOFF,
+        encoding=UTF_8_ENCODING,
+    )
+    revision = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert revision.review_status is RevisionReviewStatus.OPERATOR_REVIEWED
+    assert revision.reviewed_by == "Gergely Wootsch (operator)"
+    return registry_copy
+
+
+@pytest.mark.parametrize(
+    ("label", "arguments"),
+    [
+        ("substitution", {"reviewed_by": "agent:opus-executor", "reviewed_at": date(2026, 7, 28)}),
+        ("reviewer_alone", {"reviewed_by": "agent:opus-executor"}),
+        ("date_alone", {"reviewed_at": date(2026, 7, 28)}),
+        ("erasure", {"review_status": StampableReviewStatus.PENDING_REVIEW}),
+        ("downgrade", {"review_status": StampableReviewStatus.AGENT_REVIEWED, "reviewed_by": "agent:x"}),
+    ],
+)
+def test_stamp_refuses_to_touch_the_review_axis_of_an_operator_signed_revision(
+    operator_signed_copy: Path,
+    label: str,
+    arguments: dict[str, object],
+) -> None:
+    """The effective status governs, not only the requested one.
+
+    Coercing the REQUESTED status closed the creation of a false operator claim
+    and left its ATTRIBUTION writable. With no status supplied the coercion
+    never fires and the merge falls through to the status the manifest already
+    declares, so a lone ``reviewed_by`` wrote an agent's name against a declared
+    ``operator_reviewed``: a manifest naming an agent as the operator's
+    signatory. Nothing could see it — the operator ceiling counts revisions
+    LACKING a signoff and this one still had one — and the overwritten identity
+    and date are underivable, so nothing could restore them either.
+
+    ``erasure`` is parametrised alongside substitution deliberately. Clearing a
+    signoff DOES red the ratchet, but only after the name is already gone, so
+    the ratchet catches the destruction while only this refusal prevents it.
+
+    The byte assertion is the load-bearing half: a refusal raised after the
+    rewrite would leave the false claim on disk and still satisfy
+    ``pytest.raises``.
+    """
+    manifest = _manifest_of(operator_signed_copy)
+    before = manifest.read_bytes()
+
+    with pytest.raises(StampError, match="already declares review_status 'operator_reviewed'"):
+        stamp_revision(
+            _STAMPED_MODELO,
+            _STAMPED_REVISION,
+            registry_root=operator_signed_copy,
+            **arguments,  # type: ignore[arg-type]
+        )
+
+    assert manifest.read_bytes() == before, label
+    revision = load_modelo_directory(operator_signed_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert revision.review_status is RevisionReviewStatus.OPERATOR_REVIEWED
+    assert revision.reviewed_by == "Gergely Wootsch (operator)"
+    assert revision.reviewed_at == date(2026, 7, 1)
+
+
+def test_an_authorship_claim_on_an_operator_signed_revision_is_still_served(
+    operator_signed_copy: Path,
+) -> None:
+    """The paired half: authorship is ORTHOGONAL to signoff and must stay writable.
+
+    Without this, a blanket "the resolved status must be stampable" rule would
+    satisfy every refusal above while refusing an honest ``engineered_by`` write
+    for a reason that has nothing to do with authorship, and no other assertion
+    in this file would notice. Who built a revision is a different fact from who
+    signed it off, so the write is served AND the signoff survives it intact.
+    """
+    result = stamp_revision(
+        _STAMPED_MODELO,
+        _STAMPED_REVISION,
+        engineered_by="conformance-cli campaign",
+        registry_root=operator_signed_copy,
+    )
+
+    assert result.written["engineered_by"] == '"conformance-cli campaign"'
+    assert result.removed == ()
+    revision = load_modelo_directory(operator_signed_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert revision.engineered_by == "conformance-cli campaign"
+    assert revision.review_status is RevisionReviewStatus.OPERATOR_REVIEWED
+    assert revision.reviewed_by == "Gergely Wootsch (operator)"
+    assert revision.reviewed_at == date(2026, 7, 1)
+
+
+def test_the_review_axis_guard_reads_the_vocabulary_and_not_one_hardcoded_status(
+    registry_copy: Path,
+) -> None:
+    """A revision inside the vocabulary is untouched by the guard.
+
+    The guard's predicate is membership of :class:`StampableReviewStatus`, never
+    the single token ``operator_reviewed``, so a fourth status added to the core
+    vocabulary without being added here enrols itself in the refusal. The other
+    direction has to hold too: a revision already stamped ``agent_reviewed`` is
+    a claim this CLI DID make, so restating it must remain legal or the tool
+    could never correct its own record.
+    """
+    stamp_revision(
+        _STAMPED_MODELO,
+        _STAMPED_REVISION,
+        review_status=StampableReviewStatus.AGENT_REVIEWED,
+        reviewed_by="agent:first",
+        reviewed_at=date(2026, 7, 27),
+        registry_root=registry_copy,
+    )
+
+    stamp_revision(
+        _STAMPED_MODELO,
+        _STAMPED_REVISION,
+        reviewed_by="agent:second",
+        registry_root=registry_copy,
+    )
+
+    revision = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert revision.review_status is RevisionReviewStatus.AGENT_REVIEWED
+    assert revision.reviewed_by == "agent:second"
+
+
 def test_governance_keys_track_the_shipped_field_set() -> None:
     """The writer's key set IS the loader's, not a second copy of it."""
     assert set(GOVERNANCE_KEYS) == set(REVISION_GOVERNANCE_FIELDS)
