@@ -24,8 +24,10 @@ readiness row.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import date as _date
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import typer
 
@@ -79,6 +81,13 @@ from ._overview_rendering import (
     overview_prepare_output,
     render_cli_overview_status_lines,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
+
+    from ...application.user_profile import ProfileRepository
+    from ...application.workflow import ProfileBucketPointer as _ProfileBucketPointer
+    from ...domain.deadlines import TaxpayerProfile
 
 logger = get_logger(__name__)
 
@@ -659,6 +668,92 @@ def overview_calendar(
     )
 
 
+def _setup_incomplete_disclosure(
+    setup_incomplete: Sequence[_ProfileBucketPointer],
+) -> tuple[list[str], list[Notice]]:
+    """Name every setup-incomplete profile the multi-profile view cannot render.
+
+    Such a profile is not workable, so it has no filing calendar — but it
+    must not vanish silently from the view. Each is named on a stable
+    machine line, and one non-blocking advisory rides the typed Notice
+    channel.
+    """
+    lines = [f"profile_setup_incomplete\t{pointer.bucket_id}\t{pointer.label}" for pointer in setup_incomplete]
+    if not setup_incomplete:
+        return lines, []
+    labels = ", ".join(pointer.label for pointer in setup_incomplete)
+    notice = Notice(
+        severity=NoticeSeverity.INFO,
+        code="overview.calendar.setup_incomplete",
+        message=tr("cli.overview.calendar.setup_incomplete_notice", count=len(setup_incomplete), labels=labels),
+        suggestion="aeat config profile status",
+        context={"count": str(len(setup_incomplete)), "labels": labels},
+    )
+    return lines, [notice]
+
+
+@dataclass(frozen=True)
+class _ProfileCalendarInputs:
+    """Everything one profile's calendar is built from, read in one session."""
+
+    taxpayer: TaxpayerProfile
+    raw_values: Mapping[str, object]
+    events: tuple[OverviewCalendarEvent, ...]
+    filing_evidence: tuple[OverviewCalendarFilingEvidence, ...]
+    work_units: tuple[WorkUnit, ...]
+    live_censo_verified_profile_keys: tuple[str, ...] | None
+
+
+def _profile_calendar_inputs(
+    repository: ProfileRepository,
+    bucket_id: str,
+    *,
+    rng: OverviewCalendarRange,
+    label: str,
+) -> _ProfileCalendarInputs | None:
+    """Read one profile's calendar inputs, or ``None`` when the bucket is unreadable.
+
+    An unreadable bucket is skipped with a warning rather than aborting the
+    scan, so one damaged profile does not deny every other profile its
+    calendar. The per-loader degradation notices are dropped here: the
+    multi-profile view already degrades per profile and renders many
+    calendars in one payload, and each loader still returns schedule-only
+    evidence rather than raising.
+    """
+    from ...application.user_profile import (
+        profile_storage_session,
+        projection_for_taxpayer,
+        record_to_values,
+    )
+
+    try:
+        with profile_storage_session(bucket_id):
+            record = repository.load(bucket_id)
+            taxpayer = projection_for_taxpayer(record.record, tax_id_default="00000000T")
+            live_events, _ = _local_live_calendar_events(bucket_id, rng, expected_tax_id=taxpayer.tax_id)
+            modelo_record_events, _ = _local_modelo_record_calendar_events(
+                bucket_id,
+                rng,
+                expected_tax_id=taxpayer.tax_id,
+            )
+            events = (*live_events, *modelo_record_events)
+            filing_evidence, _ = _local_calendar_filing_evidence(bucket_id, events, expected_tax_id=taxpayer.tax_id)
+            work_units, _ = _local_modelo_work_units(bucket_id)
+            return _ProfileCalendarInputs(
+                taxpayer=taxpayer,
+                raw_values=record_to_values(record.record),
+                events=events,
+                filing_evidence=filing_evidence,
+                work_units=work_units,
+                live_censo_verified_profile_keys=_live_censo_verified_profile_keys(record.record),
+            )
+    except typer.BadParameter:
+        raise
+    except Exception:
+        logger.warning("overview calendar: skipping unreadable profile %s (%s)", bucket_id, label, exc_info=True)
+        return None
+
+
 def _overview_calendar_all_profiles(
     ctx: typer.Context,
     *,
@@ -677,9 +772,6 @@ def _overview_calendar_all_profiles(
     """
     from ...application.user_profile import (
         ProfileRepository,
-        profile_storage_session,
-        projection_for_taxpayer,
-        record_to_values,
     )
     from ...application.workflow import list_profile_buckets
     from ...domain.user_profile import UserProfileStatus
@@ -701,73 +793,27 @@ def _overview_calendar_all_profiles(
     # calendar — but it must not vanish silently from the multi-profile view.
     # Name each excluded profile on a stable machine line and surface one
     # non-blocking advisory on the typed Notice channel.
-    all_coverage_notices: list[Notice] = []
-    for pointer in setup_incomplete:
-        all_lines.append(f"profile_setup_incomplete\t{pointer.bucket_id}\t{pointer.label}")
-    if setup_incomplete:
-        _labels = ", ".join(pointer.label for pointer in setup_incomplete)
-        all_coverage_notices.append(
-            Notice(
-                severity=NoticeSeverity.INFO,
-                code="overview.calendar.setup_incomplete",
-                message=tr(
-                    "cli.overview.calendar.setup_incomplete_notice",
-                    count=len(setup_incomplete),
-                    labels=_labels,
-                ),
-                suggestion="aeat config profile status",
-                context={"count": str(len(setup_incomplete)), "labels": _labels},
-            ),
-        )
+    incomplete_lines, all_coverage_notices = _setup_incomplete_disclosure(setup_incomplete)
+    all_lines.extend(incomplete_lines)
     all_calendars: list[dict[str, object]] = []
 
     repository = ProfileRepository()
     for bucket_id, pointer in sorted(active_buckets.items(), key=lambda kv: kv[1].label):
-        try:
-            with profile_storage_session(bucket_id):
-                record = repository.load(bucket_id)
-                raw_values = record_to_values(record.record)
-                taxpayer = projection_for_taxpayer(record.record, tax_id_default="00000000T")
-                live_censo_verified_profile_keys = _live_censo_verified_profile_keys(record.record)
-                # The multi-profile view already degrades per profile (it skips an
-                # unreadable one below) and renders many calendars in one payload,
-                # so the per-loader degradation notices are dropped here; each
-                # loader still returns schedule-only evidence rather than raising.
-                live_events, _ = _local_live_calendar_events(bucket_id, rng, expected_tax_id=taxpayer.tax_id)
-                modelo_record_events, _ = _local_modelo_record_calendar_events(
-                    bucket_id,
-                    rng,
-                    expected_tax_id=taxpayer.tax_id,
-                )
-                events = (*live_events, *modelo_record_events)
-                filing_evidence, _ = _local_calendar_filing_evidence(
-                    bucket_id,
-                    events,
-                    expected_tax_id=taxpayer.tax_id,
-                )
-                work_units, _ = _local_modelo_work_units(bucket_id)
-        except typer.BadParameter:
-            raise
-        except Exception:
-            logger.warning(
-                "overview calendar: skipping unreadable profile %s (%s)",
-                bucket_id,
-                pointer.label,
-                exc_info=True,
-            )
+        inputs = _profile_calendar_inputs(repository, bucket_id, rng=rng, label=pointer.label)
+        if inputs is None:
             all_lines.append(f"profile_skipped\t{bucket_id}\t{pointer.label}")
             continue
 
         cal = build_overview_calendar(
-            taxpayer,
+            inputs.taxpayer,
             rng,
             today=today,
-            raw_values=raw_values,
+            raw_values=inputs.raw_values,
             show_suppressed=show_suppressed,
-            events=events,
-            filing_evidence=filing_evidence,
-            work_units=work_units,
-            live_censo_verified_profile_keys=live_censo_verified_profile_keys,
+            events=inputs.events,
+            filing_evidence=inputs.filing_evidence,
+            work_units=inputs.work_units,
+            live_censo_verified_profile_keys=inputs.live_censo_verified_profile_keys,
         )
 
         if cal.warnings and not allow_incomplete:
