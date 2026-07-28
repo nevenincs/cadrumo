@@ -32,7 +32,7 @@ import click
 import pytest
 from typer.main import get_command as _typer_get_command
 
-from ....application.operator_surface import get_operator_surface_contract
+from ....application.operator_surface import COMMAND_RISK, get_operator_surface_contract
 from ._lazy_command_tree import materialise_lazy_subcommands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -144,3 +144,36 @@ def test_operator_surface_contract_covers_the_live_tree() -> None:
                 lines.append(f"[{root} {child}] contract sub-verbs with NO live CLI mount: {sub_orphan}")
 
     assert not lines, "OperatorSurfaceContract drifted from the live CLI tree:\n" + "\n".join(lines)
+
+
+def test_no_risk_row_outlives_the_command_it_classifies() -> None:
+    """Every declared risk row resolves to a command the surface still exposes.
+
+    This is deliberately ONE-DIRECTIONAL, and the direction matters.
+
+    An orphan risk row -- a declaration for a command that no longer exists --
+    is pure drift: it survives a verb removal silently, and the next reader
+    takes it for evidence that the door is still mounted. Nothing else in the
+    tree catches it, because no consumer looks up a key that never arrives.
+
+    The reverse is NOT asserted, because an absent row is a designed state
+    rather than a gap. ``classify`` derives safe for a command with no row, so
+    read-only verbs are intentionally undeclared, and today 26 of them are --
+    the overview reports, the citation reads, ``config check``, ``contract``.
+    Asserting an exact mirror would therefore fail against correct data and
+    would have to be "fixed" by declaring rows that say nothing, which is how a
+    risk table stops meaning anything. The classification tests own the other
+    direction, where absence is checked as behaviour rather than inventory.
+    """
+    from ...mcp import build_tool_descriptors
+
+    live_keys = {descriptor.command_key for descriptor in build_tool_descriptors()}
+    assert live_keys, "descriptor set is empty, so this gate would pass while checking nothing"
+    assert COMMAND_RISK, "risk table is empty, so this gate would pass while checking nothing"
+
+    orphans = sorted(key for key in COMMAND_RISK if key not in live_keys)
+
+    assert not orphans, (
+        f"risk rows classify commands the surface no longer exposes: {orphans}. A removed verb must take "
+        "its risk declaration with it, or the table asserts a door that is not there"
+    )
