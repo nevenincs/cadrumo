@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#declaracion-real-render-verification'
 date: '2026-07-26'
-modified: '2026-07-27'
+modified: '2026-07-28'
 tier: L2
 related:
   - '[[2026-07-25-declaracion-profile-printed-box-scope-adr]]'
@@ -55,22 +55,22 @@ Measure and bound route R12, the filer-chosen render language
 
 Open defects and decisions this campaign measured but did not close
 
-- [ ] `P04.S15` - Populate form_number on the remaining inert blank-box guards, seven armed from AEAT instructions and three Modelo 193 targets blocked for want of any published box number or specimen; `src/cadrumo/_data/registry/aeat/modelos`.
+- [x] `P04.S15` - Populate form_number on the remaining inert blank-box guards, seven armed from AEAT instructions and three Modelo 193 targets blocked for want of any published box number or specimen; `src/cadrumo/_data/registry/aeat/modelos`.
 - [x] `P04.S16` - Scope the M100 parser follow-on ADR covering the shared pdfplumber primitive, the estate-wide named_label capture contract, and the M100 floor under D2; `.vault/adr`.
 - [x] `P04.S17` - Decide whether Modelo 202 is enrolled in casilla-level reconcile, now that its profile is confirmed to exist and D5 governs enrolment; `.vault/adr, src/cadrumo/application/modelo`.
 - [x] `P04.S18` - Decide whether verify_declaracion is wired or deleted, a modelo-agnostic comparison mechanism characterised as an abandoned partial build but whose disposition is still untaken; `src/cadrumo/application/verification`.
 - [x] `P04.S19` - Correct the Modelo 100 sidecar manifests to declare both sanitiser constants, since the length-preserving sanitiser wrote two forms while the manifests name one; `src/cadrumo/tests/fixtures/justificantes/100`.
 - [x] `P04.S20` - Wire D4 so it stays true, by having the real-render gate import the production profile selector rather than hand-copying its logic; `src/cadrumo/adapters/inbound/declaracion/tests`.
-- [ ] `P04.S21` - Bring the borrador and n26 fixture corpora under the provenance discipline, since neither carries sidecars nor gate coverage and their generators do not set the producer signature the gate's discriminator depends on; `src/cadrumo/tests/fixtures/borrador, src/cadrumo/domain/calculations/registry/tests`.
+- [x] `P04.S21` - Bring the borrador and n26 fixture corpora under the provenance discipline, since neither carries sidecars nor gate coverage and their generators do not set the producer signature the gate's discriminator depends on; `src/cadrumo/tests/fixtures/borrador, src/cadrumo/domain/calculations/registry/tests`.
 - [x] `P04.S22` - Measure the ledger evidence text layer against a size-aware segmentation change, the second and more consequential unmeasured consumer since it reads taxpayer financial documents; `src/cadrumo/application/ledger`.
 - [x] `P04.S23` - Find a size-aware mechanism that leaves the ledger evidence path byte-identical, or scope it to the declaracion entry point instead of the shared primitive; `src/cadrumo/adapters/inbound/pdf, src/cadrumo/adapters/inbound/declaracion`.
 - [x] `P04.S24` - Correct the seven decl.ejercicio targets declared value_kind amount on what is a tax year, a schema mis-declaration rather than a guard gap; `src/cadrumo/_data/registry/aeat/modelos`.
-- [ ] `P04.S25` - Make every synthetic fixture generator set the canonical producer signature, since only one of three does and the provenance gate's discriminator rests on that invariant holding; `src/cadrumo/tests/fixtures`.
+- [x] `P04.S25` - Make every synthetic fixture generator set the canonical producer signature, since only one of three does and the provenance gate's discriminator rests on that invariant holding; `src/cadrumo/tests/fixtures`.
 - [x] `P04.S26` - Anchor numeric_casilla on form_number rather than record-design number, closing at scale the same defect D1 corrected for the blank-box guard; `src/cadrumo/adapters/inbound/declaracion`.
 - [x] `P04.S27` - Implement the word-level Modelo 100 fix inside the parser, after re-running the committed real-render gate with the size attribute to clear the bbox word-ordering risk; `src/cadrumo/adapters/inbound/declaracion`.
-- [ ] `P04.S28` - Rule whether enum is a claim about the value space or merely a hint, since the schema enforces no enum-versus-text distinction and the answer decides whether the four flagged targets are defects or documentation; `src/cadrumo/_data/registry/aeat/modelos`.
+- [x] `P04.S28` - Rule whether enum is a claim about the value space or merely a hint, since the schema enforces no enum-versus-text distinction and the answer decides whether the four flagged targets are defects or documentation; `src/cadrumo/_data/registry/aeat/modelos`.
 - [x] `P04.S29` - Register the Modelo 100 coverage floor as an evidence gap under D2, since three specimens from one filer with every box populated cannot ground one; `.vault/exec, src/cadrumo/_data/registry/aeat/modelos/100`.
-- [ ] `P04.S30` - Declare verify_declaracion's reference-implementation role in its own docstring so it is not deleted as dead code, since three production modules cite it as the canonical scoping policy; `src/cadrumo/application/verification`.
+- [x] `P04.S30` - Declare verify_declaracion's reference-implementation role in its own docstring so it is not deleted as dead code, since three production modules cite it as the canonical scoping policy; `src/cadrumo/application/verification`.
 
 ## Description
 

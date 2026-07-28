@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#declaracion-real-render-verification'
-date: '2026-07-27'
-modified: '2026-07-27'
+date: '2026-07-28'
+modified: '2026-07-28'
 related:
   - '[[2026-07-26-declaracion-real-render-verification-P01-S01]]'
   - '[[2026-07-26-declaracion-real-render-verification-P01-S02]]'

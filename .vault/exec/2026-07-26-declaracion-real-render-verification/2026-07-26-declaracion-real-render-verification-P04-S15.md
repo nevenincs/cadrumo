@@ -57,3 +57,17 @@ One claim was withdrawn during this work. An earlier pass reported Modelo 349's 
 Registry and declaracion suites: 3265 passed, 1 failed. The failure asserts on an empty-string source_ref literal originating in a reconcile module this work never touched, proven pre-existing rather than assumed so.
 
 The semantic code index remained truncated throughout, roughly 1027 chunks against roughly 4546 files while reporting itself healthy. Every claim here rests on loading the registry through the authority or on reading bundled corpus text.
+
+## Re-verified and closed, 2026-07-28
+
+Confirmed at HEAD rather than inherited, and the blocked state is now enforced rather than recorded in prose. The Step is closed on that basis.
+
+The seven are armed in committed history, not merely in a working tree, checked by reading the files out of HEAD directly. That distinction matters here because a working tree carries peers' uncommitted work and would have shown the same result either way.
+
+Modelo 193 remains blocked and no number was invented. The sweep behind that negative was widened and its instrument was corrected. This record previously said "two bundled instruction files"; there are nine Modelo 193 files across the diseño-de-registro and instruction trees, and the word "casilla" appears in none of them. One of them, the nota informativa, has no extracted-text sibling and had never been read at all -- 49,009 characters were extracted from it directly, with zero occurrences.
+
+The first version of that sweep was unsound and would have produced the right answer for the wrong reason. It searched only markdown extractions, and Modelo 180's evidence -- the sweep's own precedent -- lives in HTML. It would therefore have "confirmed" no box numbers exist for Modelo 180 either. The instrument was validated against Modelo 180 first, where it correctly finds Casilla01 through 03, and only then was the Modelo 193 negative accepted. A clean grep is not evidence until the tool is shown to find the thing where it exists.
+
+The blocked set is now asserted rather than described. A gate walks the estate and requires the unguarded monetary target set to equal exactly the three Modelo 193 rows, so a newly-added unguarded target fails instead of shipping silently, and arming Modelo 193 later also fails -- closing an evidence gap should be a deliberate edit, not a quiet behaviour change. The seven armed values are pinned against the AEAT documents that state them rather than against the registry, so the assertion checks the registry instead of restating it. Both directions were confirmed by mutation: removing one form_number flips both assertions, and the registry was restored byte-exactly.
+
+The scope line names the registry tree only, and the gate lands in the declaracion adapter tests instead. The registry half of this Step was already complete; what was left was making the blocked state survive, and a record that only the vault holds is the thing this campaign has repeatedly found going stale.
