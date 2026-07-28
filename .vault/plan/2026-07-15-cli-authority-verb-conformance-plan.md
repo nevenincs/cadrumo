@@ -334,7 +334,7 @@ Move all four locale catalogues plus help, risk, error, and MCP mirrors to the a
 - [ ] `W05.P16.S146` - Replace stale help records with accepted profile, recovery, certificate, reset, ledger, and audit descriptions; `src/cadrumo/application/operator_surface/_help.py`.
 - [x] `W05.P16.S147` - Update remaining operator-surface contract notes to the accepted grammar and authority semantics; `src/cadrumo/application/operator_surface/_contract.py`.
 - [x] `W05.P16.S148` - Replace flat reset and legacy custody next actions with registered accepted commands; `src/cadrumo/core/errors/registry/_application_part1.py`.
-- [ ] `W05.P16.S149` - Assert operator help, risk, mutability, schema, and live-registration inventories remain exact mirrors; `src/cadrumo/entrypoints/cli/tests/test_operator_surface_contract_drift.py`.
+- [x] `W05.P16.S149` - Assert operator help, risk, mutability, schema, and live-registration inventories remain exact mirrors; `src/cadrumo/entrypoints/cli/tests/test_operator_surface_contract_drift.py`.
 - [x] `W05.P16.S150` - Prove suggestions resolve only to accepted registered commands; `src/cadrumo/entrypoints/cli/tests/test_suggestion_command_conformance.py`.
 - [x] `W05.P16.S151` - Reject removed command strings in diagnostics, help, errors, and schema metadata; `src/cadrumo/entrypoints/cli/tests/test_self_referential_string_conformance.py`.
 - [x] `W05.P16.S152` - Replace sandbox-use identity gating with canonical config switch handling; `src/cadrumo/entrypoints/mcp/_identity_gate.py`.
@@ -345,7 +345,7 @@ Move all four locale catalogues plus help, risk, error, and MCP mirrors to the a
 - [x] `W05.P16.S157` - Assert MCP mutability distinguishes read-only status from destructive operations; `src/cadrumo/entrypoints/mcp/tests/test_write_policy_mutability_parity.py`.
 - [x] `W05.P16.S158` - Prove canonical switch identity gating and removed sandbox-use unavailability; `src/cadrumo/entrypoints/mcp/tests/test_identity_gate.py`.
 - [x] `W05.P16.S159` - Prove generated MCP input schemas for every accepted changed command; `src/cadrumo/entrypoints/mcp/tests/test_input_schema.py`.
-- [ ] `W05.P16.S160` - Refresh command-search expectations only for accepted keys and reject removed tokens; `src/cadrumo/application/command_search/tests/test_command_ranking_golden.py`.
+- [x] `W05.P16.S160` - Refresh command-search expectations only for accepted keys and reject removed tokens; `src/cadrumo/application/command_search/tests/test_command_ranking_golden.py`.
 - [x] `W05.P16.S223` - Re-arm MCP identity confirmation when canonical profile logout clears the active taxpayer; `src/cadrumo/entrypoints/mcp/_identity_gate.py; src/cadrumo/entrypoints/mcp/tests/test_identity_gate.py`.
 
 ### Phase `W05.P17` - Rewrite and regenerate user documentation
@@ -448,12 +448,12 @@ Run the formal code-review skill, reconcile findings, and prove every accepted A
 - [ ] `W06.P20.S272` - Commit the plan file alongside execution records in every closure commit, and land the 31 closures currently held only in the working tree; `.vault/plan/2026-07-15-cli-authority-verb-conformance-plan.md`.
 - [ ] `W06.P20.S273` - Make a stale import-linter ignore fail loudly and distinctly from a contract breach, so an aborted run cannot read as a quiet one; `.importlinter`.
 - [ ] `W06.P20.S274` - Resolve the two broken layered contracts with their owning campaigns, without widening the ignore list; `.importlinter`.
-- [ ] `W06.P20.S275` - Teach the documented-command conformance parser to recognise a blocked-row marker rather than reading its prose as a command path; `src/cadrumo/entrypoints/cli/tests/test_documented_command_conformance.py`.
+- [x] `W06.P20.S275` - Teach the documented-command conformance parser to recognise a blocked-row marker rather than reading its prose as a command path; `src/cadrumo/entrypoints/cli/tests/test_documented_command_conformance.py`.
 - [ ] `W06.P20.S276` - Attribute the two P18 failures before any closure, 8 in the passphrase and recovery lifecycle suite and 22 in the MCP parity suite, separating the expected keychain remainder from real defects; `src/cadrumo/entrypoints/cli/_config/tests/; src/cadrumo/entrypoints/mcp/tests/`.
 - [x] `W06.P20.S277` - Seed the profile-key registry on the MCP path itself rather than relying on a wizard import side effect, and prove whoami through a real stdio subprocess client; `src/cadrumo/entrypoints/mcp/`.
 - [ ] `W06.P20.S278` - Give the namespace-registry adoption gate an anti-vacuity floor and every production root, since it currently finds zero subjects and asserts an empty list; `src/cadrumo/application/tests/test_namespace_registry_adoption.py`.
 - [ ] `W06.P20.S279` - Refer the config CLI module size breach to the peer TUI campaign that caused it, since the module stood at 1254 lines inside budget before the manager-from-create commit added 134; `src/cadrumo/entrypoints/cli/_config/__init__.py`.
-- [ ] `W06.P20.S280` - Remove the retired evidence-bundle replay from the modelo-390 records-audit sequence prose, which contradicts its own blocked annotation; `docs/_sequences/contracts/how-to/modelo-390/`.
+- [x] `W06.P20.S280` - Remove the retired evidence-bundle replay from the modelo-390 records-audit sequence prose, which contradicts its own blocked annotation; `docs/_sequences/contracts/how-to/modelo-390/`.
 - [x] `W06.P20.S281` - Resolve the seven unallowlisted tokens reddening the period combined-string gate at HEAD; `src/cadrumo/tests/`.
 - [x] `W06.P20.S282` - Remove the two Code-Stands-Alone violations, a feature tag in a hashing test docstring and vault stems in the duplication disposition fields; `src/cadrumo/core/tests/test_hashing_adoption.py; dev/audit/duplication_dispositions.toml`.
 - [ ] `W06.P20.S283` - Give every set-asserting gate an anti-vacuity floor, asserting the subject count is non-zero before asserting the property, across the write-guard parity, namespace-adoption and tree-walk gates; `src/cadrumo/`.
