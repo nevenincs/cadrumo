@@ -76,7 +76,7 @@ Ship the python -m dev.registry.conformance Typer trio: report, coverage, audit 
 - [x] `P03.S16` - add the stamp verb writing the per-revision governance scalars with vocabulary and coherence validation; `dev/registry/conformance/_stamp.py`.
 - [x] `P03.S17` - add dev-side CLI behaviour tests covering every verb, the ratchet, the vacuity refusal, and the degraded-mode labelling; `dev/tests/test_registry_conformance_cli.py`.
 - [x] `P03.S29` - surface unattributed oracle payloads and unmatched evidence as report and coverage rows with a shrink-only floor so the attribution gap gains a reader instead of remaining a field nothing consumes; `dev/registry/conformance`.
-- [ ] `P03.S39` - coerce the review status at the stamp writer function boundary so handing it the core enum member raises instead of writing an operator signoff, and prove the refusal leaves the manifest byte-identical; `dev/registry/conformance/_stamp.py`.
+- [x] `P03.S39` - coerce the review status at the stamp writer function boundary so handing it the core enum member raises instead of writing an operator signoff, and prove the refusal leaves the manifest byte-identical; `dev/registry/conformance/_stamp.py`.
 - [ ] `P03.S42` - gate the operator backlog rather than the pending backlog by adding a shrink-only ceiling on revisions lacking operator review, so the one number CI protects cannot be moved by an act the tool can perform; `dev/registry/conformance/manager.py`.
 - [ ] `P03.S46` - render the reviewer attribution with its review tier attached so an agent-tier review naming a person cannot be read as an operator signoff when scanning rows; `dev/registry/conformance/manager.py`.
 
