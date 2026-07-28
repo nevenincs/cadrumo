@@ -45,7 +45,7 @@ from ....domain.transactions import (
 )
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...modelo._verification_actions import _assert_evidence_covers_snapshot
+from .. import assert_evidence_covers_snapshot
 from .._ledger_filing_snapshot import (
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
@@ -253,7 +253,7 @@ def test_no_silent_omission_guard_refuses_uncovered_evidence() -> None:
         captured_at=_NOW,
     )
     with pytest.raises(ModeloError, match="does not cover"):
-        _assert_evidence_covers_snapshot(snapshot, empty_evidence)
+        assert_evidence_covers_snapshot(snapshot, empty_evidence)
 
     # A faithful capture passes the guard.
     good = compute_ledger_filing_evidence(
@@ -264,7 +264,7 @@ def test_no_silent_omission_guard_refuses_uncovered_evidence() -> None:
         legal_refs=_LEGAL_REFS,
         source_refs=_SOURCE_REFS,
     )
-    _assert_evidence_covers_snapshot(snapshot, good)  # no raise
+    assert_evidence_covers_snapshot(snapshot, good)  # no raise
 
 
 def test_evidence_row_strict_json_roundtrip_all_fields() -> None:
