@@ -77,3 +77,50 @@ and a crash that ends the lane, and those are very different defects.
 Whether the lane finishes green is NOT settled here and belongs to the
 full-lane row. This row establishes which worker died, on which test, and that
 the run proceeds afterwards.
+
+## Correction at HEAD `c7f0be2c6824161ec7831341aeb6baea9bad8186`: survivable was wrong, and the cause is upstream
+
+SUPERSEDES the survivability claim above. The attribution stands; the
+conclusion drawn from it does not, and the real cause is better than either.
+
+WHAT I MISSED BY REPORTING TOO EARLY. I recorded the run as recovering because
+I watched one worker die and be replaced. Left running, a SECOND worker died on
+the SAME test: `gw2` at 96 per cent, then `gw1` at 99 per cent, both on
+`test_catalogue_msgids_match_current_source[es]`. After the second death the
+lane emitted nothing for 66 minutes. So the deaths are reproducible and
+test-specific, and the lane does eventually wedge - which is what the earlier
+attempts saw and reported, and what I contradicted on one death's evidence.
+
+THE CAUSE IS NOT PARALLELISM. Run the module SERIALLY with no workers at all
+and it still hangs, dying on pytest's own timeout inside
+`subprocess.communicate` -> `WaitForSingleObject`. A defect that reproduces at
+`-n0` cannot be worker contention.
+
+THE CAUSE IS AN UNBOUNDED SHELLED BUILD. The module's POT fixture calls
+`extract_pot`, which runs `python -m sphinx -b gettext` over the user-scope page
+set via `subprocess.run(...)` with NO timeout argument. On this host that build
+does not return. Everything else follows: serially pytest's timeout eventually
+fires, and under xdist the unresponsive worker is reaped and reported as
+`node down: Not properly terminated`. The node-down is a SYMPTOM of the hang,
+not an independent defect.
+
+Two hypotheses I formed and killed rather than shipping. The `-j` parallelism in
+that command looked like a nested-parallelism culprit, but the build helper's own
+docstring records that Sphinx parallel workers need `os.fork` and every `-j`
+value degrades to serial on win32, so the knob changes nothing here. And a piped
+stdout deadlock looked plausible, but the call passes no `capture_output` and no
+pipes at all, so the streams are inherited and there is no buffer to fill.
+
+WHAT IS ESTABLISHED, and what is not. Established: the hang reproduces serially,
+it is in the shelled gettext build, and the call sets no timeout. NOT
+established: why that Sphinx build does not return on this host. Naming a reason
+would be a guess and none is offered.
+
+The actionable defect independent of the underlying hang is the missing bound. A
+gate that shells a build with no timeout converts any upstream hang into an
+indefinite lane wedge with no diagnostic, which is precisely how this cost three
+prior attempts and two premature verdicts, mine included.
+
+Command: `uv run --no-sync pytest dev/docs/tests/test_docs_catalogue_drift.py
+-n0 -m "" -p no:cacheprovider`, terminated by the harness timeout with a
+`+++ Timeout +++` banner and a stack in `subprocess.communicate`.
