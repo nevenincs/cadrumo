@@ -377,17 +377,8 @@ class LocaleManager:
             raise LocaleError(f"Invalid locale key: {dotted_key!r}")
 
         data = self.load_locale(locale_path)
-        cursor: LocaleNode = data
-        for part in parts[:-1]:
-            if not isinstance(cursor, dict) or part not in cursor:
-                raise LocaleError(f"Locale key not found: {dotted_key!r}; run locale scaffold first")
-            cursor = cursor[part]
-        if not isinstance(cursor, dict):
-            raise LocaleError(f"Cannot set {dotted_key!r}: parent path resolves to a leaf")
+        cursor = _resolve_leaf_parent(data, parts, dotted_key=dotted_key)
         leaf_exists = parts[-1] in cursor
-        existing = cursor.get(parts[-1])
-        if isinstance(existing, dict):
-            raise LocaleError(f"Cannot set {dotted_key!r}: it resolves to a namespace")
 
         if leaf_exists:
             # The mapping was strictly parsed and the leaf resolved above.
@@ -579,6 +570,30 @@ _STALE_CLI_EXECUTABLE_RE = re.compile(r"\bcadrumo(?=[ \t\r\n]+(?:app|config|manu
 def _normalise_product_identity_references(value: str) -> str:
     """Align command examples with the canonical human executable."""
     return _STALE_CLI_EXECUTABLE_RE.sub(PRODUCT_IDENTITY.cli_executable, value)
+
+
+def _resolve_leaf_parent(
+    data: dict[str, LocaleNode],
+    parts: list[str],
+    *,
+    dotted_key: str,
+) -> dict[str, LocaleNode]:
+    """Walk to the mapping that owns ``parts[-1]``, refusing every wrong shape.
+
+    Each refusal names what the path actually resolved to, so an operator
+    who addressed a namespace, a leaf's child, or a key the catalogue has
+    not scaffolded yet is told which of those happened.
+    """
+    cursor: LocaleNode = data
+    for part in parts[:-1]:
+        if not isinstance(cursor, dict) or part not in cursor:
+            raise LocaleError(f"Locale key not found: {dotted_key!r}; run locale scaffold first")
+        cursor = cursor[part]
+    if not isinstance(cursor, dict):
+        raise LocaleError(f"Cannot set {dotted_key!r}: parent path resolves to a leaf")
+    if isinstance(cursor.get(parts[-1]), dict):
+        raise LocaleError(f"Cannot set {dotted_key!r}: it resolves to a namespace")
+    return cursor
 
 
 def _normalise_product_identity_node(value: LocaleNode) -> LocaleNode:
