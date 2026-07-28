@@ -24,11 +24,9 @@
 #
 # One recorded disposition per clone group jscpd currently observes in the
 # production tree (`src/cadrumo`). The clone COUNT is advisory debt, not an
-# elimination mandate: per ADR 2026-07-15-cli-authority-verb-conformance-adr
-# and the 2026-07-16-cli-authority-verb-conformance-duplication-authority-audit,
-# jscpd output identifies candidates for semantic inspection, never a
-# consolidation verdict. This file records the honest disposition of each
-# candidate.
+# elimination mandate: jscpd output identifies candidates for semantic
+# inspection, never a consolidation verdict. This file records the honest
+# disposition of each candidate.
 #
 # This file is reconciled against a live `just audit-duplication` run, not
 # hand-maintained prose: entries for groups a later consolidation resolved are
@@ -38,9 +36,9 @@
 # an opinion about.
 #
 # Every `[[group]]` carries exactly one `classification`:
-#   * cluster-owned     - the group belongs to a named actionable cluster
-#                         already tracked by the campaign plan; `owner` names
-#                         the cluster and its plan phase.
+#   * cluster-owned     - the group belongs to a named actionable
+#                         consolidation cluster already in flight; `owner`
+#                         names that cluster.
 #   * intentional       - a recorded intentional non-consolidation: either an
 #                         ADR "Intentional non-consolidations" entry or a
 #                         constraint-divergent pair the substitutability
@@ -60,8 +58,6 @@ duplicated_pct = "0.07"
 files_analyzed = 1311
 source_root = "src/cadrumo"
 count_is_advisory = true
-governing_adr = "2026-07-15-cli-authority-verb-conformance-adr"
-governing_audit = "2026-07-16-cli-authority-verb-conformance-duplication-authority-audit"
 
 # What this record does NOT cover, stated so its silence is not read as
 # evidence of absence:
@@ -97,12 +93,12 @@ advisory_residue = 6
 actionable = 1
 
 # ---------------------------------------------------------------------------
-# cluster-owned: tracked by a named actionable cluster in the campaign plan
+# cluster-owned: tracked by a named actionable consolidation cluster
 # ---------------------------------------------------------------------------
 
 [[group]]
 classification = "cluster-owned"
-owner = "LLM review workflow (W03.P24.S250-S253)"
+owner = "LLM review workflow consolidation"
 where = ["entrypoints/cli/_ledger_llm_cli.py [762-790]", "entrypoints/cli/_ledger_llm_cli.py [694-720]"]
 rationale = "Distributed LLM-review routing block; the other three instances this cluster previously carried have consolidated, leaving this last one pending the shared typed workflow."
 
