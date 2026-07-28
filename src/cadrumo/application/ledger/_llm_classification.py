@@ -87,6 +87,7 @@ from ._actions_split_merge import split_transaction_with_classified_children
 from ._evidence import MediaKind, PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
 from ._evidence_advisory import printed_iva_advisory
 from ._evidence_input import (
+    EvidenceInput,
     cloud_evidence_read_permitted,
     resolve_attachment_evidence_input,
     resolve_purchase_invoice_evidence_input,
@@ -192,6 +193,39 @@ class _ResolvedEvidence:
         return bool(self.images)
 
 
+def _bytes_bearing_evidence_input(
+    evidence_id: str | None,
+    attachment_ids: tuple[str, ...],
+    *,
+    store: AttachmentStore,
+    settings: Settings,
+    bucket_id: str,
+) -> tuple[EvidenceInput, str]:
+    """Resolve the document bytes to read, and the reference they came from.
+
+    Only the evidence-record id space carries document bytes; the same field
+    may legitimately hold a catalogue-invoice id, which does not (see
+    ``_evidence_reference``). A reference that cannot supply bytes therefore
+    falls through to the row's own attachments rather than refusing a row
+    that does hold a readable document.
+    """
+    record = (
+        find_bytes_bearing_evidence_record(
+            evidence_id,
+            evidence_records=PurchaseInvoiceEvidenceService(settings=settings).list_all(bucket_id=bucket_id),
+        )
+        if evidence_id is not None
+        else None
+    )
+    if record is not None:
+        return resolve_purchase_invoice_evidence_input(record, store=store), record.evidence_id
+    if attachment_ids:
+        reference = attachment_ids[0]
+        return resolve_attachment_evidence_input(reference, store=store), reference
+    assert evidence_id is not None  # narrowed by the caller's no-evidence early return
+    raise refuse_reference_without_document_bytes(evidence_id)
+
+
 def _resolve_evidence(
     transaction: Transaction,
     *,
@@ -219,28 +253,13 @@ def _resolve_evidence(
     if evidence_id is None and not attachment_ids:
         return None
     store = AttachmentStore(objects=secure_object_repository_for_bucket(bucket_id, settings))
-    # Only the evidence-record id space carries document bytes; the same field may
-    # legitimately hold a catalogue-invoice id, which does not (see
-    # `_evidence_reference`). A reference that cannot supply bytes therefore falls
-    # through to the row's own attachments rather than refusing a row that does hold
-    # a readable document.
-    record = (
-        find_bytes_bearing_evidence_record(
-            evidence_id,
-            evidence_records=PurchaseInvoiceEvidenceService(settings=settings).list_all(bucket_id=bucket_id),
-        )
-        if evidence_id is not None
-        else None
+    evidence_input, reference = _bytes_bearing_evidence_input(
+        evidence_id,
+        attachment_ids,
+        store=store,
+        settings=settings,
+        bucket_id=bucket_id,
     )
-    if record is not None:
-        evidence_input = resolve_purchase_invoice_evidence_input(record, store=store)
-        reference = record.evidence_id
-    elif attachment_ids:
-        reference = attachment_ids[0]
-        evidence_input = resolve_attachment_evidence_input(reference, store=store)
-    else:
-        assert evidence_id is not None  # narrowed by the no-evidence early return above
-        raise refuse_reference_without_document_bytes(evidence_id)
     if evidence_input.media_kind is MediaKind.PDF:
         try:
             text = extract_evidence_text(evidence_input)
