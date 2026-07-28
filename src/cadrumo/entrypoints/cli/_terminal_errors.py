@@ -163,34 +163,69 @@ def _localise_parse_failure(exc: BaseException, detail: str, locale: str) -> tup
     refusal names the accepted set the CLI-boundary contract requires, and the
     message renders in the parse-time-resolved ``locale``.
     """
+    for recognise in (
+        _missing_argument_failure,
+        _unknown_option_failure,
+        _invalid_choice_failure,
+        _unknown_command_failure,
+    ):
+        localised = recognise(exc, detail, locale)
+        if localised is not None:
+            return localised
+    return None
+
+
+def _missing_argument_failure(exc: BaseException, detail: str, locale: str) -> tuple[str, dict[str, str]] | None:
+    """Recognise click's missing-argument failure."""
     from ...core.i18n import tr
 
-    if _has_base(exc, "MissingParameter"):
-        parameter = _parameter_hint(exc) or _first_quoted(detail) or ""
-        facts = _drop_empty({"parameter": parameter})
-        return tr("cli.common.errors.parse_missing_argument", locale=locale, parameter=parameter), facts
+    if not _has_base(exc, "MissingParameter"):
+        return None
+    parameter = _parameter_hint(exc) or _first_quoted(detail) or ""
+    facts = _drop_empty({"parameter": parameter})
+    return tr("cli.common.errors.parse_missing_argument", locale=locale, parameter=parameter), facts
+
+
+def _unknown_option_failure(exc: BaseException, _detail: str, locale: str) -> tuple[str, dict[str, str]] | None:
+    """Recognise an unknown or misused option, carrying click's own suggestions."""
+    from ...core.i18n import tr
+
     option_name = getattr(exc, "option_name", None)
-    if option_name and (_has_base(exc, "NoSuchOption") or _has_base(exc, "BadOptionUsage")):
-        facts = {"option": str(option_name)}
-        possibilities = getattr(exc, "possibilities", None)
-        if possibilities:
-            facts["suggestions"] = ", ".join(str(candidate) for candidate in possibilities)
-        message = tr("cli.common.errors.parse_unknown_option", locale=locale, option=facts["option"])
-        return message, facts
+    if not option_name or not (_has_base(exc, "NoSuchOption") or _has_base(exc, "BadOptionUsage")):
+        return None
+    facts = {"option": str(option_name)}
+    possibilities = getattr(exc, "possibilities", None)
+    if possibilities:
+        facts["suggestions"] = ", ".join(str(candidate) for candidate in possibilities)
+    return tr("cli.common.errors.parse_unknown_option", locale=locale, option=facts["option"]), facts
+
+
+def _invalid_choice_failure(exc: BaseException, detail: str, locale: str) -> tuple[str, dict[str, str]] | None:
+    """Recognise an invalid Choice value, carrying the accepted set.
+
+    The accepted set is what the CLI-boundary contract requires a refusal to
+    name, so it is parsed out of click's own rendering rather than dropped.
+    """
+    from ...core.i18n import tr
+
     choice = _CHOICE_DETAIL_RE.search(detail)
-    if choice is not None:
-        accepted = ", ".join(match.group(1) for match in _FIRST_QUOTED_RE.finditer(choice.group("accepted")))
-        facts = _drop_empty(
-            {"value": choice.group(1), "accepted": accepted, "parameter": _parameter_hint(exc)},
-        )
-        message = tr("cli.common.errors.parse_invalid_choice", locale=locale, value=choice.group(1), accepted=accepted)
-        return message, facts
+    if choice is None:
+        return None
+    accepted = ", ".join(match.group(1) for match in _FIRST_QUOTED_RE.finditer(choice.group("accepted")))
+    facts = _drop_empty({"value": choice.group(1), "accepted": accepted, "parameter": _parameter_hint(exc)})
+    message = tr("cli.common.errors.parse_invalid_choice", locale=locale, value=choice.group(1), accepted=accepted)
+    return message, facts
+
+
+def _unknown_command_failure(_exc: BaseException, detail: str, locale: str) -> tuple[str, dict[str, str]] | None:
+    """Recognise an unknown command name."""
+    from ...core.i18n import tr
+
     unknown_command = _NO_SUCH_COMMAND_RE.search(detail)
-    if unknown_command is not None:
-        command = unknown_command.group(1)
-        message = tr("cli.common.errors.parse_unknown_command", locale=locale, command=command)
-        return message, {"command": command}
-    return None
+    if unknown_command is None:
+        return None
+    command = unknown_command.group(1)
+    return tr("cli.common.errors.parse_unknown_command", locale=locale, command=command), {"command": command}
 
 
 def _drop_empty(facts: dict[str, str | None]) -> dict[str, str]:
