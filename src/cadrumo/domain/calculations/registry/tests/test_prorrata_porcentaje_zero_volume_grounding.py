@@ -171,6 +171,64 @@ def test_registry_and_domain_agree_on_the_no_volume_branch(filing_year: int) -> 
     assert _registry_percentage(filing_year, Decimal("0"), Decimal("0")) == domain_percentage
 
 
+#: LIVA art. 94 is headed "Operaciones cuya realización origina el derecho a la
+#: deducción". It is the article that decides which operations grant the right,
+#: so it supplies both the membership rule for the art. 104.Dos regla-1.ª
+#: numerator and the full-deduction consequence this branch rests on.
+_FULL_RIGHT_TO_DEDUCT_ARTICLE = "ley-37-1992:art-94"
+
+_PRORRATA_PORCENTAJE_FORMULA_ID = "modelo-303-iva-prorrata-porcentaje"
+
+
+def _prorrata_formula_legal_refs(filing_year: int) -> tuple[str, ...]:
+    """The prorrata percentage formula's own declared legal refs for one filing year."""
+    snapshot = resources().modelos.authority.snapshot("303", filing_year=filing_year, period="4T")
+    formula = next(f for f in snapshot.revision.formulas if f.id == _PRORRATA_PORCENTAJE_FORMULA_ID)
+    return tuple(formula.legal_refs)
+
+
+@pytest.mark.parametrize("filing_year", _LIVE_FILING_YEARS)
+def test_prorrata_formula_declares_the_full_right_to_deduct_article(filing_year: int) -> None:
+    """The article the branch's consequence rests on must be declared on the formula itself.
+
+    Carrying art. 94 only on the enclosing construct leaves a reader of this
+    formula unable to see why a blank declaration yields a full deduction, and
+    unable to see which article decides what enters the numerator. The
+    dependency is the formula's, so the declaration is too.
+    """
+    refs = _prorrata_formula_legal_refs(filing_year)
+    revision_id = resources().modelos.authority.snapshot("303", filing_year=filing_year, period="4T").revision.id
+
+    assert _FULL_RIGHT_TO_DEDUCT_ARTICLE in refs, (
+        f"M303 {revision_id}: the prorrata percentage formula declares {refs!r} and omits "
+        f"{_FULL_RIGHT_TO_DEDUCT_ARTICLE!r}, the article that determines which operations "
+        "originate the right to deduct and therefore both what the art. 104.Dos numerator "
+        "counts and why a no-volume declaration leaves the deduction whole"
+    )
+
+
+def test_both_live_revisions_declare_the_same_prorrata_formula_grounding() -> None:
+    """One legal question, two revisions, one set of citations.
+
+    Art. 94's only amendment (art. 10.14 of Real Decreto-ley 7/2021, in force
+    01-07-2021) rewrites apartado Uno número 1.º letra c, the exempt-operations
+    enumeration, and leaves the chapeau and the sujetas-y-no-exentas rule this
+    formula rests on untouched. Nothing in either window's applicable law can
+    justify a different citation set, so a divergence is drift.
+    """
+    by_revision = {
+        resources().modelos.authority.snapshot("303", filing_year=year, period="4T").revision.id: frozenset(
+            _prorrata_formula_legal_refs(year),
+        )
+        for year in _LIVE_FILING_YEARS
+    }
+
+    assert len(by_revision) == len(_LIVE_FILING_YEARS), "the probe years must resolve to distinct revisions"
+    assert len(set(by_revision.values())) == 1, (
+        f"the live M303 revisions ground the prorrata percentage formula differently: {by_revision}"
+    )
+
+
 @pytest.mark.parametrize("filing_year", _LIVE_FILING_YEARS)
 def test_a_wholly_exempt_trader_still_resolves_to_no_deduction_right(filing_year: int) -> None:
     """Prove the branch is a branch, not a blanket 100.

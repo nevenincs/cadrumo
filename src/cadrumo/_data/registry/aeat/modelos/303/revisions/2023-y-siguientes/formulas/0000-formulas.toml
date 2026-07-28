@@ -141,11 +141,32 @@ casilla_id = "iva.cuota-deducible-total"
 # nearest one: 55,2 % is a 56 % deduction right. The shared "integer" code is
 # half-up and would have returned 55, understating the deduction for every
 # ratio whose fractional part is at or below one half.
+#
+# LIVA art. 94 ("Operaciones cuya realizacion origina el derecho a la
+# deduccion") is declared here, not only on the enclosing construct, because
+# this formula depends on it twice and neither dependency is visible from art.
+# 104 alone. It supplies the membership rule for the numerator, since art.
+# 104.Dos regla 1a counts exactly "las entregas de bienes y prestaciones de
+# servicios que originen el derecho a la deduccion" and art. 94 is the article
+# that determines which those are; and it carries the no-volume branch below,
+# where art. 102.Uno leaves the regla de prorrata inapplicable and the input tax
+# stays deductible in full under arts. 92 and 94. Art. 94 has two redactions:
+# the original and the one in force from 01-07-2021 (art. 10.14 of Real
+# Decreto-ley 7/2021, BOE-A-2021-6872), which rewrites only apartado Uno numero
+# 1o letra c, the exempt-operations enumeration. The chapeau and the
+# sujetas-y-no-exentas rule this formula rests on are untouched, so the
+# grounding is identical across this revision's window and 2009-y-siguientes.
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-iva-prorrata-porcentaje"
 target_casilla_id = "iva.prorrata-porcentaje"
 rounding = "integer-ceiling"
-legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-102", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+legal_refs = [
+    "ley-37-1992:art-104",
+    "ley-37-1992:art-102",
+    "ley-37-1992:art-94",
+    "rd-1624-1992:art-71",
+    "orden-eha-3786-2008:art-1",
+]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2023-y-siguientes.formulas.source_citations]]
