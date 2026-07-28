@@ -4800,6 +4800,11 @@ cli:
     allow_identical_reason_help: Per què aquesta cadena és legítimament idèntica a
       l'anglès.
     app_help: Auditar i generar catàlegs de traducció
+    audit:
+      locale_help: Limita l'analisi de traduccio local als idiomes seleccionats.
+      modelo_help: Limita l'analisi de traduccio local a un id de model.
+      modelos_help: Inclou l'estat de traduccio local de cada model en mode directori.
+      revision_help: Limita l'analisi de traduccio local a un id de revisio.
     canonicalize_product_identity:
       locale_help: Actualitzeu només aquest catàleg d'idioma compatible.
     modelo:
@@ -4860,6 +4865,9 @@ cli:
         live_filed_capture: Descarregar declaracions presentades en viu des de l'AEAT.
         live_filed_capture_sources: Mostrar les fonts disponibles per a la descàrrega.
         live_filed_list: Llistar declaracions presentades capturades de l'AEAT.
+        modelo_audit_check: Comprova les evidències incloses d'una revisió de declaració.
+        modelo_audit_export: Exporta l'auditoria d'evidències d'una revisió de declaració.
+        modelo_audit_show: Mostra l'auditoria d'evidències d'una revisió de declaració.
         modelo_bindings: Gestionar les vinculacions d'un model fiscal.
         modelo_describe: Descriure l'estructura d'un model fiscal.
         modelo_list: Llistar els models fiscals disponibles.
@@ -4878,9 +4886,6 @@ cli:
         section_modelo: Models fiscals
         section_overview: Estat general
         section_review_and_registry: Revisió i registre
-        modelo_audit_show: 'Mostra l''auditoria d''evidències d''una revisió de declaració.'
-        modelo_audit_check: 'Comprova les evidències incloses d''una revisió de declaració.'
-        modelo_audit_export: 'Exporta l''auditoria d''evidències d''una revisió de declaració.'
       config:
         auth_configure: Configurar el proveïdor d'autenticació amb l'AEAT.
         auth_logout: Tancar les sessions locals d'autenticació i conservar la configuració.
@@ -4916,6 +4921,7 @@ cli:
         profile_login: Inicia la sessió en un perfil i el converteix en l'actiu.
         profile_logout: Tanca la sessió del perfil actiu.
         profile_rename: Reanomenar un perfil de contribuent.
+        profile_sar: Exporta un paquet de dades d'accés de l'interessat.
         profile_show: Mostrar les dades del perfil actiu.
         profile_status: Mostrar l'estat del perfil actiu.
         recover: Recupera l'accés local amb una frase de recuperació.
@@ -4934,7 +4940,6 @@ cli:
         section_first_run: Primera execució
         section_profile_inspection: Inspecció del perfil
         section_profile_lifecycle: Cicle de vida del perfil
-        profile_sar: 'Exporta un paquet de dades d''accés de l''interessat.'
       root:
         diagnostics_live_filed: Diagnosticar les declaracions presentades capturades
           en viu.
