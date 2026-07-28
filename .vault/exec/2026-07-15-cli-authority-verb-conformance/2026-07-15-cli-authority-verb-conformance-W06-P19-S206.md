@@ -82,3 +82,13 @@ One correction to how this Step's result should be read. It is SATISFIED as a
 confirmation method, not as evidence that no unconfirmed candidate remains: the
 fresh scan surfaces 25 cross-file collision groups that have NOT been through
 the substitutability pre-filter. They are a named residue, not a clean sheet.
+
+Command and result for the structural scan cited above, added because the
+evidence bar asks for the invocation and not only its corpus. The scanner was
+run as a standalone module against the production tree:
+`python ast_twin_scan.py` over `src/cadrumo`, production modules only, 70-node
+floor. Result line: `corpus: 1411 production modules, 4250 bodies hashed, 0
+unparseable` followed by `collision groups: 39 total, 25 spanning more than one
+file`, exit code 0. Its discrimination proof printed first and must pass or the
+run aborts: `discrimination: twins collide = True (want True); control collides
+= False (want False)`.

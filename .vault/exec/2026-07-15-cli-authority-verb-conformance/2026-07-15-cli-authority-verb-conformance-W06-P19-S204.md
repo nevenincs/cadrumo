@@ -169,3 +169,13 @@ per-cluster adjudication, which is the honest handover rather than a finding.
 The instrument's limit, restated because it governs how the null is read: it
 collides only exactly-equal normalised bodies, so one extra guard clause or a
 reordered statement pair defeats it. A hit is strong evidence; a null is weak.
+
+Command and result for the structural scan cited above, added because the
+evidence bar asks for the invocation and not only its corpus. The scanner was
+run as a standalone module against the production tree:
+`python ast_twin_scan.py` over `src/cadrumo`, production modules only, 70-node
+floor. Result line: `corpus: 1411 production modules, 4250 bodies hashed, 0
+unparseable` followed by `collision groups: 39 total, 25 spanning more than one
+file`, exit code 0. Its discrimination proof printed first and must pass or the
+run aborts: `discrimination: twins collide = True (want True); control collides
+= False (want False)`.

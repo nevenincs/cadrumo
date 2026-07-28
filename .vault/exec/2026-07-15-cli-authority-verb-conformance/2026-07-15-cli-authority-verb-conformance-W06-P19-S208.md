@@ -118,3 +118,17 @@ not re-measured here and are carried forward as recorded, still attributed
 elsewhere. The Step's claim was never that the tree is green; it was that this
 campaign's surface is not what is red, and that claim is strengthened rather
 than weakened by the contracts having since gone green.
+
+Command and result for the structural scan cited above, added because the
+evidence bar asks for the invocation and not only its corpus. The scanner was
+run as a standalone module against the production tree:
+`python ast_twin_scan.py` over `src/cadrumo`, production modules only, 70-node
+floor. Result line: `corpus: 1411 production modules, 4250 bodies hashed, 0
+unparseable` followed by `collision groups: 39 total, 25 spanning more than one
+file`, exit code 0. Its discrimination proof printed first and must pass or the
+run aborts: `discrimination: twins collide = True (want True); control collides
+= False (want False)`.
+
+Command and result for the layering re-measurement cited above:
+`uv run --no-sync lint-imports`, result line `Contracts: 5 kept, 0 broken`,
+exit code 0, analysing 3668 files and 17633 dependencies.
