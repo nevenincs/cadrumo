@@ -3,15 +3,25 @@ tags:
   - '#plan'
   - '#delivery-pipeline-audit'
 date: '2026-07-25'
-modified: '2026-07-25'
+modified: '2026-07-28'
 tier: L1
 related:
   - '[[2026-07-24-delivery-pipeline-audit-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `delivery-pipeline-audit` plan
 
-- [ ] `S01` - D1, hold pypi-upload.yml under its narrow written charter naming the tracked deletion issue in its header comment, adding no new capability in the interim and keeping it behind CADRUMO_PUBLISH_ENABLED, tracked as GitHub issue 618; `.github/workflows/pypi-upload.yml`.
+- [x] `S01` - D1, hold pypi-upload.yml under its narrow written charter naming the tracked deletion issue in its header comment, adding no new capability in the interim and keeping it behind CADRUMO_PUBLISH_ENABLED, tracked as GitHub issue 618; `.github/workflows/pypi-upload.yml`.
 - [ ] `S02` - D1 trigger, delete pypi-upload.yml with its conformance test and its three PyPI Trusted Publishing registrations upon the first successful publish-release Gate 3 PyPI publication, blocked until that publication happens; `.github/workflows/pypi-upload.yml, dev/packaging/tests/`.
 - [x] `S03` - D2, relocate sync_aeat_record_design_corpus to dev/corpus in one atomic explicit-path commit tagged relocation:sync_aeat_record_design_corpus covering the module move, the new package init, the consumer import, and any self-naming strings, with collect-only observed clean immediately before the commit; `dev/packaging/sync_aeat_record_design_corpus.py, dev/corpus/`.
 - [x] `S04` - D2 follow-up, relocate extract_manual_corpus_text under the same home as a second atomic commit tagged relocation:extract_manual_corpus_text sweeping the two justfile recipes, the sidecar-freshness tests, the self-referencing instructive strings, and the path comments in _validate_evidence and pyproject; `dev/packaging/extract_manual_corpus_text.py, dev/corpus/, justfile, pyproject.toml`.
