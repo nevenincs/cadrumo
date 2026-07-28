@@ -19,13 +19,9 @@ from .....core.resources import bundled_path
 from .. import _loader
 from .._errors import RegistryLoadError
 from .._loader import load_modelo_directory, load_registry_tree
-from .._schema import (
-    REVISION_GOVERNANCE_FIELDS,
-    REVISION_REVIEW_DATE_CEILING,
-    REVISION_REVIEW_DATE_FLOOR,
-    ModeloRevision,
-)
+from .._schema import REVISION_GOVERNANCE_FIELDS, ModeloRevision
 from .._schema_base import GOVERNANCE_STAMP, governance_stamp_fields
+from .._schema_governance import REVISION_REVIEW_DATE_CEILING, REVISION_REVIEW_DATE_FLOOR
 from ._loader_directory_mode_support import (
     _standard_manifest_text,
     _standard_revision_preamble_text,
