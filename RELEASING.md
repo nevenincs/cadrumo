@@ -586,8 +586,8 @@ uv run --no-sync python -c "from dev.release.readiness import REQUIRED_DISTRIBUT
 | `claude-desktop-plugin` | Operator: `emit_real_client_evidence` | Manual (operator real-client capture) |
 | `claude-desktop-mcpb` | Operator: `emit_real_client_evidence` | Manual (operator real-client capture) |
 
-**Aggregating the rows:** the eight CI-minted rows (three `python-*`, `scoop-windows-x86-64`,
-four `homebrew-*`) ride their runs' draft evidence releases
+**Aggregating the rows:** the seven CI-minted rows (three `python-*`, `scoop-windows-x86-64`,
+three `homebrew-*`) ride their runs' draft evidence releases
 (`evidence-<lane>-<run id>`) as flat `{row_id}-{evidence_id}.json` assets. Collect
 them into `var/distribution-install-readiness/` with:
 
@@ -653,10 +653,10 @@ and prints a full prerequisite checklist if not. Nothing is uploaded.
 checks, each acquisition run (`packaging-scoop.yml` / `packaging-homebrew.yml`,
 `workflow_dispatch`, same repo, success). Downloads and hash-verifies the **sealed**
 release cohort archive (`cadrumo-release-cohort.tar.gz` from the smoke evidence draft
-— the single source of every channel's bytes, PyPI included) and aggregates all
-eleven `DistributionEvidence` rows from their authoritative drafts: 3 python from the
-smoke draft, 1 scoop, 3 homebrew, and the 4 operator `claude-*` rows from the
-evidence release. The per-OS smoke build cohorts are deliberately NOT part of the
+— the single source of every channel's bytes, PyPI included) and aggregates every
+required `DistributionEvidence` row from its authoritative draft — up to 3 python from
+the smoke draft, 1 scoop, 3 homebrew, and the 4 operator `claude-*` rows, as the
+claimed channels demand — from the evidence release. The per-OS smoke build cohorts are deliberately NOT part of the
 publication chain. Re-points `promote_python_cohort --emit-version-only` at the sealed
 cohort's `python/` bytes to guard the PyPI version against overwrite and emit the
 version. Runs `dev.release.readiness --json --skip-network --cohort-dir
@@ -674,8 +674,8 @@ fail-closed `evidence_release leak-sweep` over everything about to be attached
   exact bytes every other channel ships and the oracle-emit legs proved) via
   `uv publish --trusted-publishing always` (OIDC; no API token needed once configured).
 - Creates `gh release create vX.Y.Z --target <source_commit>` attaching every file
-  found in the release-cohort directory (13 files) plus the eleven verified evidence
-  rows and the three per-lane evidence manifests, so the published release is
+  found in the release-cohort directory (13 files) plus every verified evidence
+  row and the per-lane evidence manifests, so the published release is
   self-evidencing and draft GC can never orphan a shipped audit trail. An empty asset
   set fails hard.
 - Pushes `scoop/cadrumo.json` to this repository's own `bucket/cadrumo.json` using the
