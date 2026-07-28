@@ -111,8 +111,28 @@ def list_profile_key_records() -> tuple[ProfileKey, ...]:
     """Return the full :data:`PROFILE_KEYS` tuple in registry order.
 
     Each element is a :class:`ProfileKey` describing one profile field.
+
+    The registry is populated by the wizard catalogue's import side effect,
+    so this reader imports the wizard before reading rather than trusting an
+    unrelated caller to have done it. The CLI root callback also registers
+    the catalogue, but only on the paths that reach past its early returns,
+    which leaves every other reader depending on whichever module happened
+    to import the wizard first. The import is function-local so nothing is
+    paid at module load and the command-tree cold-start budget is untouched.
     """
+    _ensure_profile_keys_registered()
     return _get_profile_keys()
+
+
+def _ensure_profile_keys_registered() -> None:
+    """Import the wizard catalogue so the compiled profile keys are pushed.
+
+    Idempotent: the import system runs the registration side effect once and
+    every later call is a dict lookup in ``sys.modules``.
+    """
+    from ..wizard import _catalogue as _wizard_catalogue
+
+    _ = _wizard_catalogue
 
 
 def list_profile_value_rows(
