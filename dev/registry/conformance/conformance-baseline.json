@@ -4,13 +4,9 @@
     "locale_unavailable_modelos": 0,
     "modelo_scope_classification_findings": 24,
     "required_coverage_gap_rows": 0,
-    "revisions_without_engineered_by": 90,
-    "revisions_without_operator_review": 90,
     "scope_diagnostics": 0,
     "unattributed_oracle_payloads": 0,
     "unmatched_oracle_evidence": 0,
-    "unreviewed_revisions": 90,
-    "untranslated_locale_labels": 21609,
     "unused_declared_axes": 5
   },
   "floors": {
@@ -18,11 +14,17 @@
     "bundled_oracle_payloads": 21,
     "composed_modelos": 73,
     "composed_revisions": 90,
-    "declared_grounding_claims": 58,
+    "declared_grounding_claims": 59,
     "reconciled_casillas": 1261
   },
-  "note": "First capture of the conformance ratchet, taken at HEAD 33129cc83f. Registry DATA and the bundled oracle corpus were both at HEAD with no working-tree modification, so no peer WIP is folded into these counters; peer edits were present on the registry schema and governance-stamp test modules only, which change no registry declaration. The M303 prorrata oracle rename and its scenario-input split had just landed, which is why unattributed_oracle_payloads and grounding_findings both capture as zero after reading 1 and 3 respectively earlier the same day. Amended 2026-07-28 to seed the new revisions_without_operator_review ceiling. That key alone was added, at the value a real audit --record measured (90, every revision in the tree, since nothing carries an operator signoff); no other counter was re-recorded. A full capture at that moment would additionally have raised the declared_grounding_claims floor from 58 to 59, which belongs to the peer step that landed the M303 prorrata percentage oracle and is that step's record to make, not this one's.",
-  "recorded_at": "2026-07-27",
+  "note": "Re-recorded for the counter-family split. The three review counters and the locale counter were shrink-only ceilings pinned at the full population, so the ninety-first revision reddened all three and the only sanctioned way past the refusal was the flag reserved for a deliberately suspicious capture. They are now grow-only progress floors counting the work DONE, whose values are the exact arithmetic inverse of the ceilings they replace at this population: reviewed 90-90=0, operator-reviewed 90-90=0, engineered_by 90-90=0, translated leaves 47376-21609=25767. No retained ceiling moved. The declared_grounding_claims floor rises 58 to 59, folding in the M303 prorrata percentage oracle that landed committed earlier in this campaign, which the prior capture's own record predicted the next capture would take. Peer working-tree edits on the M303 tree at capture time were comments and one verification predicate; neither declares a grounding claim, verified by inspection.",
+  "progress": {
+    "operator_reviewed_revisions": 0,
+    "reviewed_revisions": 0,
+    "revisions_with_engineered_by": 0,
+    "translated_locale_labels": 25767
+  },
+  "recorded_at": "2026-07-28",
   "review_cadence": "revisit whenever a stamping or grounding campaign lands",
   "source": "python -m dev.registry.conformance audit --record"
 }

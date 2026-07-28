@@ -148,7 +148,10 @@ def audit(
         bool,
         typer.Option(
             "--check",
-            help="Gate: exit 1 when a backlog counter grew past its ceiling or a population fell below its floor.",
+            help=(
+                "Gate: exit 1 when a defect counter grew past its ceiling, a measurement population "
+                "fell below its floor, or recorded provenance fell below its progress floor."
+            ),
         ),
     ] = False,
     record: Annotated[
@@ -177,22 +180,34 @@ def audit(
 ) -> None:
     """Compare the current conformance counters against the committed baseline.
 
-    Two directions are checked and reported separately, because they fail for
-    opposite reasons. A CEILING violation means a backlog or defect count GREW:
-    somebody added an unreviewed revision, a grounding finding, a classification
-    incoherence. A FLOOR violation means a measurement population FELL: the run
-    examined fewer revisions, casillas, oracle payloads, or locale leaves than
-    the baseline proves it must, so every clean ceiling above it is vacuous and
-    cannot be trusted. Floors are reported first for that reason.
+    Three directions are checked and reported separately, because they fail for
+    different reasons and want different responses.
+
+    A CEILING violation means a DEFECT count grew: a grounding finding, a
+    classification incoherence, an unattributed oracle payload. A VACUITY FLOOR
+    violation means a measurement population FELL — fewer revisions, casillas,
+    oracle payloads, or locale leaves than the baseline proves the run must
+    reach — so every clean counter beside it is vacuous and cannot be trusted,
+    which is why it is reported first. A PROGRESS FLOOR violation means declared
+    provenance or translation was LOST: a signoff erased, an authorship claim
+    dropped, a translated leaf deleted. For the review axis that work is
+    underivable by construction, so nothing in the tree can reconstruct it.
+
+    Population growth is deliberately NOT gated. The review and translation
+    counters used to be shrink-only ceilings pinned at the full population, so
+    the ninety-first revision reddened all three at once and the only sanctioned
+    way past the refusal was the flag that says a capture is deliberately
+    suspicious. Counting the work DONE instead of the work OUTSTANDING separates
+    the two terms: a new revision moves the population and leaves progress alone.
 
     Without ``--check`` this is a screen and exits 0 whatever it finds.
 
     ``--record`` is compared against the baseline already on disk in the same
-    two directions, and refuses a capture that would raise a ceiling or lower a
-    floor unless ``--accept-weakening`` says so. The floor direction is why: a
-    raised ceiling shows up on the census and the next honest capture pulls it
-    back, while a floor lowered by a capture taken over a half-landed tree is
-    silent forever and disarms the anti-vacuity check permanently.
+    three directions and refuses a capture that weakens any of them unless
+    ``--accept-weakening`` says so. The floor directions are why the guard
+    exists: a raised ceiling shows up on the census and the next honest capture
+    pulls it back, while a floor lowered by a capture taken over a half-landed
+    tree is silent forever.
     """
     if check and record:
         raise SystemExit(

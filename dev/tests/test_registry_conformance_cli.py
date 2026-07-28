@@ -69,6 +69,7 @@ from ..registry.conformance.cli import app
 from ..registry.conformance.manager import (
     NOT_MEASURED,
     ConformanceBaseline,
+    ConformanceProgressFloors,
     ConformanceReport,
     baseline_path,
     baseline_weakenings,
@@ -589,13 +590,13 @@ def test_audit_check_passes_at_the_committed_baseline() -> None:
 
 def test_audit_check_fails_when_one_ceiling_is_lowered(tmp_path: Path) -> None:
     """Same command, same tree, one moved counter: the exit code MUST flip."""
-    seeded = _baseline_with(tmp_path / "lowered.json", ceiling="unreviewed_revisions", delta=-1)
+    seeded = _baseline_with(tmp_path / "lowered.json", ceiling="modelo_scope_classification_findings", delta=-1)
     result = CliRunner().invoke(app, ["audit", "--check", "--baseline", str(seeded)])
 
     assert result.exit_code == 1, result.stdout
     assert "passed=false" in result.stdout
     assert "violation kind=ratchet" in result.stdout
-    assert "unreviewed_revisions grew" in result.stdout
+    assert "modelo_scope_classification_findings grew" in result.stdout
 
 
 def test_audit_check_fails_when_one_floor_is_raised(tmp_path: Path) -> None:
@@ -679,47 +680,51 @@ def _ceiling_line(rendered: str, counter: str) -> str:
     return next(line for line in rendered.splitlines() if line.startswith(f"ceiling counter={counter} "))
 
 
+def _progress_line(rendered: str, counter: str) -> str:
+    return next(line for line in rendered.splitlines() if line.startswith(f"progress counter={counter} "))
+
+
 def _baseline_captured_from(report: ConformanceReport, path: Path) -> ConformanceBaseline:
     """Capture a baseline from ``report`` through the real recording path."""
     record_baseline(report, note="captured by the conformance CLI gate", recorded_at="2026-07-28", path=path)
     return load_baseline(path)
 
 
-def test_an_agent_review_sweep_empties_the_pending_ceiling_but_not_the_operator_ceiling(
+def test_an_agent_review_sweep_fills_the_review_floor_but_not_the_operator_floor(
     validated_report: ConformanceReport,
 ) -> None:
     """The act the CLI is DESIGNED to allow must not read as progress on the gated number.
 
     ``stamp --review-status agent_reviewed`` is a legitimate verb an agent may
-    run across every revision in the tree. Doing so drives the pending census to
-    zero. If that census is the only gated review counter, the one number CI
-    protects reaches zero without a single human signoff, and the three-state
-    vocabulary collapses back into the two-state laundering it was introduced to
-    remove. The operator counter must sit still through exactly that sweep.
+    run across every revision in the tree. Doing so drives the review floor to
+    the full registry. If that were the only gated review counter, the one number
+    CI protects would read complete without a single human signoff, and the
+    three-state vocabulary would collapse back into the two-state laundering it
+    was introduced to remove. The operator floor must sit still through exactly
+    that sweep.
     """
     total = validated_report.revision_count
     swept = _with_review_statuses(validated_report, [RevisionReviewStatus.AGENT_REVIEWED] * total)
 
     rendered = render_audit(check_conformance_ratchet(swept, load_baseline()))
 
-    assert "ceiling counter=unreviewed_revisions current=0 " in rendered
-    assert f"current={total} " in _ceiling_line(rendered, "revisions_without_operator_review")
-    # The sweep is not itself a regression: nothing grew, so the audit still
-    # passes. What must not happen is the operator backlog reading as cleared.
+    assert f"current={total} " in _progress_line(rendered, "reviewed_revisions")
+    assert "progress counter=operator_reviewed_revisions current=0 " in rendered
+    # The sweep is not itself a regression: nothing was lost, so the audit still
+    # passes. What must not happen is the operator floor reading as satisfied.
     assert check_conformance_ratchet(swept, load_baseline()).passed
 
 
-def test_a_lost_operator_signoff_reds_the_operator_ceiling_the_pending_ceiling_cannot_see(
+def test_a_lost_operator_signoff_reds_the_operator_floor_the_review_floor_cannot_see(
     validated_report: ConformanceReport,
     tmp_path: Path,
 ) -> None:
-    """The decisive flip: one regression, invisible to the old counter, caught by the new.
+    """The decisive flip: one regression, invisible to the broader counter, caught by the narrow one.
 
-    Both states are fully agent-or-operator reviewed, so the pending census is
-    zero in each and ``unreviewed_revisions`` is flat across the regression. The
-    only difference is that one revision's operator signoff became an agent
-    review. Before this ceiling existed the audit passed on that; it must now
-    fail, and it must name the counter that moved.
+    Both states are fully agent-or-operator reviewed, so ``reviewed_revisions``
+    is the full registry in each and is flat across the regression. The only
+    difference is that one revision's operator signoff became an agent review.
+    The audit must fail on it and must name the counter that moved.
     """
     total = validated_report.revision_count
     signed = _with_review_statuses(
@@ -736,54 +741,56 @@ def test_a_lost_operator_signoff_reds_the_operator_ceiling_the_pending_ceiling_c
 
     result = check_conformance_ratchet(regressed, baseline)
     assert not result.passed
-    assert any(
-        item == f"revisions_without_operator_review grew from {total - 10} to {total - 9}"
-        for item in result.ratchet_violations
-    ), result.ratchet_violations
-    # The old counter is blind to it: zero pending in both states.
-    assert all("unreviewed_revisions" not in item for item in result.ratchet_violations)
+    # Asserted as the WHOLE violation set, not with a substring exclusion: the
+    # broad counter's name is a suffix of the narrow one, so
+    # "reviewed_revisions fell" matches the operator sentence too and an
+    # exclusion phrased that way is a false negative waiting to happen.
+    moved = [item.split(" fell", 1)[0] for item in result.progress_violations]
+    assert moved == ["operator_reviewed_revisions"], result.progress_violations
+    assert result.progress_violations[0].startswith("operator_reviewed_revisions fell from 10 to 9")
+    assert not result.ratchet_violations
 
 
-def test_the_operator_ceiling_gates_the_real_cli_at_the_committed_baseline(tmp_path: Path) -> None:
+def test_the_operator_floor_gates_the_real_cli_at_the_committed_baseline(tmp_path: Path) -> None:
     """The new counter has teeth in the shipped verb, not only in a fold.
 
-    Same command, same tree, one lowered ceiling: the exit code flips. Without
-    this the field could be committed, rendered, and never actually consulted by
-    the gate.
+    Same command, same tree, one raised floor: the exit code flips. Without this
+    the field could be committed, rendered, and never actually consulted by the
+    gate.
     """
-    seeded = _baseline_with(tmp_path / "lowered.json", ceiling="revisions_without_operator_review", delta=-1)
+    seeded = _baseline_with(tmp_path / "raised.json", progress="operator_reviewed_revisions", delta=1)
     result = CliRunner().invoke(app, ["audit", "--check", "--baseline", str(seeded)])
 
     assert result.exit_code == 1, result.stdout
-    assert "revisions_without_operator_review grew" in result.stdout
+    assert "violation kind=progress" in result.stdout
+    assert "operator_reviewed_revisions fell" in result.stdout
 
 
-def test_the_committed_operator_ceiling_equals_what_the_tool_measures(
+def test_the_committed_operator_floor_equals_what_the_tool_measures(
     validated_report: ConformanceReport,
     tmp_path: Path,
 ) -> None:
-    """A ceiling above the measurement licenses a regression the gate cannot see.
+    """A floor below the measurement licenses a regression the gate cannot see.
 
-    Anchored to a FRESH measurement, not to another committed number. The
-    previous form asserted the operator ceiling equalled the ``composed_revisions``
-    floor, which is a CENSUS FACT — true only while nothing in the tree carries
-    an operator signoff — dressed as a seeding rule. It would have failed on the
-    campaign's first genuine signoff, for a reason having nothing to do with
-    seeding, and the cheapest fix available to whoever met that failure would
-    have been to delete it.
+    Anchored to a FRESH measurement, not to another committed number. An earlier
+    form of this test asserted the operator counter equalled the
+    ``composed_revisions`` floor, which is a CENSUS FACT — true only while
+    nothing in the tree carries an operator signoff — dressed as a seeding rule.
+    It would have failed on the campaign's first genuine signoff for a reason
+    having nothing to do with seeding.
 
-    The invariant that survives is the one worth keeping: the committed ceiling
-    equals what the tool measures right now. Above the measurement is headroom,
-    and a revision can lose its signoff inside it without the gate noticing.
-    Below it the gate is already red. Either way the answer is to re-record the
-    baseline, which is what the failure message should send a reader to do.
+    The invariant that survives is the one worth keeping: the committed floor
+    equals what the tool measures right now. Below the measurement is slack, and
+    a revision can lose its signoff inside it without the gate noticing; above it
+    the gate is already red. Either way the answer is to re-record the baseline,
+    which is what the failure message should send a reader to do.
     """
     measured = _baseline_captured_from(validated_report, tmp_path / "measured.json")
     committed = load_baseline()
 
-    assert committed.ceilings.revisions_without_operator_review == (
-        measured.ceilings.revisions_without_operator_review
-    ), "the committed operator ceiling has drifted from the measurement; re-record the baseline"
+    assert committed.progress.operator_reviewed_revisions == (measured.progress.operator_reviewed_revisions), (
+        "the committed operator floor has drifted from the measurement; re-record the baseline"
+    )
 
 
 def _report_with_one_more_grounding_finding(report: ConformanceReport) -> ConformanceReport:
@@ -794,19 +801,26 @@ def _report_with_one_more_grounding_finding(report: ConformanceReport) -> Confor
 def _report_with_one_fewer_revision(report: ConformanceReport) -> ConformanceReport:
     """Return the real report having composed one revision fewer: a LOWERED floor.
 
-    The census is moved with the count so the two never disagree, and a
-    ``pending_review`` row is the one dropped so the ceilings MOVE DOWNWARD while
-    the floor moves down too. A capture of this report therefore strengthens two
-    ceilings and weakens one floor at once, which is the mixture the guard has
-    to read correctly rather than a single unambiguous movement.
+    Deliberately a MIXED movement, not a single unambiguous one. Alongside the
+    dropped revision the seeded report carries one classification finding fewer
+    and one agent-reviewed revision more, so a capture of it STRENGTHENS a
+    ceiling and STRENGTHENS a progress floor while weakening one vacuity floor.
+    A guard that refused any movement at all would satisfy the refusal assertion
+    just as well, so the mixture is what makes the direction separation provable
+    across all three counter families rather than assumed.
+
+    The census is moved with the count so the two never disagree, and the
+    revision that survives as agent-reviewed is one the real tree left pending.
     """
     census = dict(report.review_status_census)
-    census[RevisionReviewStatus.PENDING_REVIEW.value] -= 1
+    census[RevisionReviewStatus.PENDING_REVIEW.value] -= 2
+    census[RevisionReviewStatus.AGENT_REVIEWED.value] += 1
     return report.model_copy(
         update={
             "rows": report.rows[:-1],
             "revision_count": report.revision_count - 1,
             "review_status_census": census,
+            "modelo_scope_classification_finding_count": report.modelo_scope_classification_finding_count - 1,
         },
     )
 
@@ -848,9 +862,9 @@ def test_recording_refuses_a_capture_that_lowers_a_floor(
     then on a genuinely half-read tree passes the anti-vacuity check that exists
     to catch precisely that.
 
-    The seeded report strengthens two ceilings while lowering one floor, so this
-    also asserts the guard reads the two directions separately instead of
-    refusing any movement at all.
+    The seeded report strengthens one ceiling and one progress floor while
+    lowering one vacuity floor, so this also asserts the guard reads all three
+    directions separately instead of refusing any movement at all.
     """
     path = tmp_path / "committed.json"
     _baseline_captured_from(validated_report, path)
@@ -867,16 +881,21 @@ def test_recording_refuses_a_capture_that_lowers_a_floor(
     assert "composed_revisions would fall" in str(refusal.value)
     assert load_baseline(path).floors.composed_revisions == validated_report.revision_count
 
-    # The two directions are read separately: the strengthened ceilings must not
-    # be reported as weakenings, or the guard is refusing movement rather than
-    # weakening and the refusal teaches nothing.
+    # The three directions are read separately: the strengthened ceiling and the
+    # strengthened progress floor must not be reported as weakenings, or the
+    # guard is refusing movement rather than weakening and the refusal teaches
+    # nothing.
     candidate = _baseline_captured_from(shrunken, tmp_path / "candidate.json")
     committed = load_baseline(path)
     total = validated_report.revision_count
     assert baseline_weakenings(candidate, committed) == (
         f"floor composed_revisions would fall from {total} to {total - 1}, demanding less measurement",
     )
-    assert candidate.ceilings.unreviewed_revisions < committed.ceilings.unreviewed_revisions
+    assert (
+        candidate.ceilings.modelo_scope_classification_findings
+        < committed.ceilings.modelo_scope_classification_findings
+    )
+    assert candidate.progress.reviewed_revisions > committed.progress.reviewed_revisions
 
 
 def test_recording_a_strengthened_baseline_needs_no_acceptance(
@@ -1002,13 +1021,22 @@ def test_the_committed_baseline_on_disk_matches_its_committed_terminators() -> N
     )
 
 
-def _baseline_with(path: Path, *, ceiling: str | None = None, floor: str | None = None, delta: int = 0) -> Path:
+def _baseline_with(
+    path: Path,
+    *,
+    ceiling: str | None = None,
+    floor: str | None = None,
+    progress: str | None = None,
+    delta: int = 0,
+) -> Path:
     """Write a copy of the committed baseline with exactly one counter moved."""
     raw = json.loads(baseline_path().read_text(encoding=UTF_8_ENCODING))
     if ceiling is not None:
         raw["ceilings"][ceiling] += delta
     if floor is not None:
         raw["floors"][floor] += delta
+    if progress is not None:
+        raw["progress"][progress] += delta
     path.write_text(json.dumps(raw, indent=2), encoding=UTF_8_ENCODING)
     return path
 
@@ -1857,6 +1885,177 @@ def test_a_header_the_loader_accepts_but_the_line_editor_cannot_address_is_refus
         )
 
     assert manifest.read_bytes() == before
+
+
+# --------------------------------------------------------------------------- #
+# audit: a growing registry versus a regressing one
+# --------------------------------------------------------------------------- #
+
+
+def _report_with_one_more_revision(report: ConformanceReport) -> ConformanceReport:
+    """Return the real report as if a ninety-first revision had landed unstamped.
+
+    The row is a real composed row re-keyed, so every derived count it feeds
+    moves the way a genuine addition would; the census and the population move
+    with it, and the new revision declares no governance because that is what a
+    peer landing a revision mid-campaign actually produces.
+    """
+    pending = RevisionReviewStatus.PENDING_REVIEW.value
+    arrival = report.rows[-1].model_copy(
+        update={"revision": f"{report.rows[-1].revision}-arriving", "review_status": pending},
+    )
+    census = dict(report.review_status_census)
+    census[pending] += 1
+    return report.model_copy(
+        update={
+            "rows": (*report.rows, arrival),
+            "revision_count": report.revision_count + 1,
+            "review_status_census": census,
+        },
+    )
+
+
+def _report_with_locale_labels(
+    report: ConformanceReport,
+    *,
+    required_delta: int,
+    translated_delta: int,
+) -> ConformanceReport:
+    """Return the real report with the FIRST audited locale's leaf counts moved.
+
+    One locale only, so the registry-wide sums move by exactly the deltas asked
+    for and the assertion can name the arithmetic instead of a magic number.
+    """
+    first, *rest = report.locale_axis
+    moved = first.model_copy(
+        update={
+            "labels_required": first.labels_required + required_delta,
+            "labels_translated": first.labels_translated + translated_delta,
+        },
+    )
+    return report.model_copy(update={"locale_axis": (moved, *rest)})
+
+
+def test_a_ninety_first_revision_landing_unstamped_leaves_the_gate_green(
+    validated_report: ConformanceReport,
+    tmp_path: Path,
+) -> None:
+    """The immediate failure this Step exists to remove, simulated end to end.
+
+    Under the retired shape all three review counters were shrink-only ceilings
+    pinned at the full population, so this exact arrival took every one of them
+    past its ceiling and reddened the only gating exit the surface has. Recording
+    the new state was then refused unless the operator asserted a deliberate
+    weakening, so an honest registry addition and a loosening of the ratchet came
+    through the same door.
+
+    The population moves and the recorded work does not, which is the whole
+    content of the fix, so both halves are asserted: the gate passes AND every
+    progress floor is byte-identical across the arrival. Asserting only the pass
+    would hold just as well if the counters had been deleted.
+    """
+    grown = _report_with_one_more_revision(validated_report)
+
+    assert grown.revision_count == validated_report.revision_count + 1
+    result = check_conformance_ratchet(grown, load_baseline())
+
+    assert result.passed, result.violations
+    # Read through the real capture path rather than a helper mirroring it: a
+    # second copy of the projection would agree with a broken original.
+    before = _baseline_captured_from(validated_report, tmp_path / "before.json").progress
+    after = _baseline_captured_from(grown, tmp_path / "after.json").progress
+    for field_name in ConformanceProgressFloors.model_fields:
+        assert getattr(after, field_name) == getattr(before, field_name), field_name
+
+
+def test_a_new_revision_stays_green_even_once_the_stamping_campaign_is_underway(
+    validated_report: ConformanceReport,
+    tmp_path: Path,
+) -> None:
+    """The case that decides between progress floors and a ratio ceiling.
+
+    At today's total backlog a ratio ceiling would survive the arrival by
+    coincidence: ninety of ninety unreviewed is a fraction of 1.0, and
+    ninety-one of ninety-one is still 1.0. The choice only shows once the
+    campaign has made progress, so this seeds a baseline at forty agent-reviewed
+    revisions of ninety and then lands the ninety-first unstamped.
+
+    The backlog fraction genuinely worsens — that is asserted here rather than
+    reasoned, because it is the premise of the ruling — and the gate stays green
+    anyway, because the recorded work is intact. A ratio ceiling would red on
+    every peer's registry addition for the whole duration of the campaign this
+    surface exists to support, which is the same complaint arriving later and
+    harder to read.
+    """
+    total = validated_report.revision_count
+    underway = _with_review_statuses(
+        validated_report,
+        [RevisionReviewStatus.AGENT_REVIEWED] * 40 + [RevisionReviewStatus.PENDING_REVIEW] * (total - 40),
+    )
+    baseline = _baseline_captured_from(underway, tmp_path / "underway.json")
+    grown = _report_with_one_more_revision(underway)
+    grown_progress = _baseline_captured_from(grown, tmp_path / "grown.json").progress
+
+    before = baseline.progress.reviewed_revisions / underway.revision_count
+    after = grown_progress.reviewed_revisions / grown.revision_count
+    assert after < before, "the seeded arrival must genuinely worsen the reviewed fraction, or this proves nothing"
+
+    result = check_conformance_ratchet(grown, baseline)
+    assert result.passed, result.violations
+    assert grown_progress.reviewed_revisions == baseline.progress.reviewed_revisions
+
+
+def test_a_lost_translation_reds_the_gate_even_while_the_registry_grows(
+    validated_report: ConformanceReport,
+    tmp_path: Path,
+) -> None:
+    """The other direction, and it must survive the growth that used to mask nothing.
+
+    The retired ceiling capped leaves left UNTRANSLATED, which every new casilla
+    raises by one per audited locale — so it reddened on registry growth and said
+    nothing about translation being lost. The floor counts leaves ACTUALLY
+    TRANSLATED, so the two cases separate: here the required population grows by
+    five and one authored leaf is deleted at the same time, and the gate reds on
+    the deletion rather than on the growth.
+
+    The paired case below is what makes this non-vacuous: the same growth without
+    the deletion must stay green, or the floor would just be the old ceiling
+    wearing a new name.
+    """
+    baseline = _baseline_captured_from(validated_report, tmp_path / "committed.json")
+    regressed = _report_with_locale_labels(validated_report, required_delta=5, translated_delta=-1)
+
+    result = check_conformance_ratchet(regressed, baseline)
+
+    assert not result.passed
+    assert any(
+        item.startswith(
+            f"translated_locale_labels fell from {validated_report.translated_locale_labels} to "
+            f"{validated_report.translated_locale_labels - 1}",
+        )
+        for item in result.progress_violations
+    ), result.progress_violations
+    assert not result.ratchet_violations, "growth in required leaves must not read as a defect"
+
+
+def test_new_casillas_adding_untranslated_leaves_leave_the_gate_green(
+    validated_report: ConformanceReport,
+    tmp_path: Path,
+) -> None:
+    """The paired half: registry growth alone must not red the translation gate.
+
+    Every new casilla adds one required leaf per audited locale and translates
+    none of them, which is exactly the movement the retired ceiling punished.
+    Without this case the floor above could be satisfied by a counter that simply
+    never fires.
+    """
+    baseline = _baseline_captured_from(validated_report, tmp_path / "committed.json")
+    grown = _report_with_locale_labels(validated_report, required_delta=5, translated_delta=0)
+
+    assert grown.audited_locale_leaves == validated_report.audited_locale_leaves + 5
+    result = check_conformance_ratchet(grown, baseline)
+
+    assert result.passed, result.violations
 
 
 # --------------------------------------------------------------------------- #
