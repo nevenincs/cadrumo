@@ -502,7 +502,9 @@ gh workflow run packaging-claude.yml \
 Each workflow verifies source-run identity (success, `packaging-smoke.yml`, `push`,
 `main`, same repo, matching `head_sha`) before proceeding.
 
-- `packaging-scoop.yml` (self-hosted Windows, disposable Windows container):
+- `packaging-scoop.yml` (self-hosted Windows, native, pinned to the
+  `windows-scoop`-labelled runner so it lands in the dedicated non-admin runner
+  user's own Scoop profile and never touches the fleet's Docker daemon):
   hash-verifies and installs
   the smoke draft's cohorts, generates the Scoop manifest, runs the oracles, and
   publishes the `scoop-windows-x86-64` `DistributionEvidence` row onto its own sealed

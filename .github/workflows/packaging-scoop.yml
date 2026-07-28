@@ -1,10 +1,19 @@
 # Clean Scoop acquisition gate for the immutable Cadrumo Python cohort.
-# The clean acquisition runs inside a disposable Windows container. Runs on
-# the self-hosted fleet ONLY (operator mandate 2026-07-21: no hosted/cloud
-# runners, ever — expense control is absolute). The self-hosted Windows host
-# does not currently run docker in Windows-container mode, so this leg fails
-# fast and free at its docker-mode preflight until a container-mode window is
-# scheduled or the harness is adapted; the preflight must not be weakened.
+# The clean acquisition runs NATIVELY, in the Scoop profile of a dedicated
+# non-admin runner user. Runs on the self-hosted fleet ONLY (operator mandate
+# 2026-07-21: no hosted/cloud runners, ever — expense control is absolute) and
+# schedules only onto the `windows-scoop`-labelled runner, so the fleet's one
+# Docker daemon stays permanently in Linux-container mode and the standing
+# Linux runners are never torn down for a container-mode switch.
+#
+# Scoop is a user-scope, no-admin package manager: a real acquisition needs a
+# normal Windows user profile, PowerShell, and network, not a container, so
+# containerization adds isolation but no evidentiary value here. The preflight
+# is therefore retargeted, never weakened — it still fails fast and free, now
+# on the surface native execution actually depends on (AMD64, a resolvable
+# Scoop profile, and a genuinely non-elevated identity), and the post-smoke
+# binding check refuses any evidence that does not bind to this run's own
+# generated manifest.
 
 name: Cadrumo Scoop Acquisition
 
@@ -30,8 +39,8 @@ permissions:
 
 jobs:
   cadrumo-scoop-acquisition:
-    name: Cadrumo / Windows / x64 / Scoop Container
-    runs-on: [self-hosted, Windows, X64]
+    name: Cadrumo / Windows / x64 / Scoop Native
+    runs-on: [self-hosted, Windows, X64, windows-scoop]
     timeout-minutes: 90
     # Release-asset transport: evidence rides the run's own draft release, so
     # this uploader job (and only this job) needs contents:write.
@@ -68,18 +77,38 @@ jobs:
             Set-Content -LiteralPath (Join-Path $root "run-context.json") -Encoding UTF8
           "ready=true" | Add-Content -LiteralPath $env:GITHUB_OUTPUT
 
-      - name: Verify declared Windows container release row
+      - name: Verify declared Windows native release row
         shell: powershell
         run: |
           if ($env:PROCESSOR_ARCHITECTURE -ne "AMD64") {
             throw "Scoop release row requires AMD64; got $env:PROCESSOR_ARCHITECTURE"
           }
-          if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
-            throw "docker is unavailable"
+          if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
+            throw (
+              "scoop is unavailable to the lane user. Install Scoop into this " +
+              "runner user's own profile (https://scoop.sh); the lane installs " +
+              "user-scope and must never require admin."
+            )
           }
-          $serverOs = (docker version --format "{{.Server.Os}}").Trim()
-          if ($serverOs -ne "windows") {
-            throw "Docker must run Windows containers; got '$serverOs'"
+          $scoopRoot = if ($env:SCOOP) { $env:SCOOP } else { Join-Path $env:USERPROFILE "scoop" }
+          foreach ($required in @("apps", "buckets", "shims")) {
+            $path = Join-Path $scoopRoot $required
+            if (-not (Test-Path -LiteralPath $path -PathType Container)) {
+              throw "the lane user's Scoop profile is incomplete: missing '$required' under $scoopRoot"
+            }
+          }
+          # The container previously supplied the privilege boundary. Natively
+          # that boundary IS the dedicated low-privilege runner user, so an
+          # elevated lane is a topology error and must refuse rather than
+          # silently mint evidence from an administrator profile.
+          $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+          $principal = New-Object Security.Principal.WindowsPrincipal($identity)
+          if ($principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+            throw (
+              "the Scoop lane must run as the dedicated non-admin runner user; " +
+              "got elevated identity $($identity.Name). Re-install the runner " +
+              "service under a standard local user."
+            )
           }
 
       - name: Verify source workflow identity
@@ -197,7 +226,13 @@ jobs:
             throw "Scoop source manifest generation failed"
           }
 
-      - name: Stage token-free container harness
+      # The harness runs out of this staged copy, never the checked-out
+      # workspace, so the exercised tree carries no credentials and no repo
+      # state beyond the three modules it executes. `constraint_effect` is one
+      # of them: the smoke asserts the Scoop-installed venv landed on the
+      # manifest's pinned closure BEFORE the tax oracle mints evidence on it,
+      # so omitting it fails the lane at that assertion with an import error.
+      - name: Stage token-free smoke harness
         shell: powershell
         run: |
           $harness = Join-Path $env:CADRUMO_SCOOP_ROOT "harness"
@@ -209,6 +244,7 @@ jobs:
             -Destination (Join-Path $packaging "__init__.py")
           foreach ($file in @(
             "smoke_scoop.ps1",
+            "constraint_effect.py",
             "installed_tax_oracle.py",
             "installed_mcp_oracle.py"
           )) {
@@ -217,20 +253,74 @@ jobs:
               -Destination (Join-Path $packaging $file)
           }
 
-      - name: Install and exercise Cadrumo inside a Windows container
+      # Host mode stages its own throwaway bucket over a `file:` URI from the
+      # verified cohort, runs the full install-update-uninstall-reinstall cycle
+      # plus the oracles, and owns the profile reset: it refuses to start over a
+      # pre-existing app or persisted state, and its cleanup removes every app,
+      # bucket, and persist entry the run introduced, verifying their absence
+      # before it writes pass evidence. That is what keeps successive
+      # acquisitions independent on a profile that is not disposable.
+      - name: Install and exercise Cadrumo in the lane user's Scoop profile
         shell: powershell
         run: |
           & "$env:CADRUMO_SCOOP_ROOT/harness/dev/packaging/smoke_scoop.ps1" `
-            -Mode Container `
-            -ContainerImage mcr.microsoft.com/windows/servercore:ltsc2022 `
+            -Mode Host `
             -CohortDir "$env:CADRUMO_SCOOP_ROOT/cohort" `
             -ManifestPath "$env:CADRUMO_SCOOP_ROOT/source-manifest.json" `
             -EvidenceDir "$env:CADRUMO_SCOOP_ROOT/evidence" `
-            -AppName cadrumo-scoop-acquisition `
-            -TimeoutMinutes 60
+            -AppName cadrumo-scoop-acquisition
 
-      # The container mounts the evidence dir writable, so the oracle JSONs land
-      # host-visible here. The verified full release cohort was already
+      # In Container mode the orchestrator verified the child's identity and
+      # source binding before returning. Running the smoke directly leaves no
+      # such orchestrator, so the lane asserts the same bindings here: the
+      # evidence must be a passing NATIVE run of THIS run's generated manifest
+      # that cleaned up after itself, and it must not claim a container identity
+      # it cannot have had.
+      - name: Verify the smoke evidence binds to this run
+        shell: powershell
+        run: |
+          $evidenceRoot = "$env:CADRUMO_SCOOP_ROOT/evidence"
+          $evidencePath = Join-Path $evidenceRoot "scoop-evidence.json"
+          if (-not (Test-Path -LiteralPath $evidencePath -PathType Leaf)) {
+            $failurePath = Join-Path $evidenceRoot "scoop-failure.json"
+            if (Test-Path -LiteralPath $failurePath -PathType Leaf) {
+              throw (Get-Content -LiteralPath $failurePath -Raw)
+            }
+            throw "the Scoop smoke produced no evidence"
+          }
+          $evidence = Get-Content -LiteralPath $evidencePath -Raw | ConvertFrom-Json
+          $expectedManifestHash = (
+            Get-FileHash `
+              -LiteralPath "$env:CADRUMO_SCOOP_ROOT/source-manifest.json" `
+              -Algorithm SHA256
+          ).Hash.ToLowerInvariant()
+          if ($evidence.status -ne "passed") {
+            throw "Scoop smoke evidence is not a passing run: $($evidence.status)"
+          }
+          if ($evidence.mode -ne "Host") {
+            throw "Scoop smoke evidence is not a native run: $($evidence.mode)"
+          }
+          if ($evidence.container_identity_verified -ne $false) {
+            throw "native Scoop evidence must not claim a verified container identity"
+          }
+          if ($evidence.orchestration_nonce) {
+            throw "native Scoop evidence must not carry a container orchestration nonce"
+          }
+          if ($evidence.source_manifest_sha256 -ne $expectedManifestHash) {
+            throw (
+              "Scoop evidence binds a different source manifest: expected " +
+              "$expectedManifestHash, got $($evidence.source_manifest_sha256)"
+            )
+          }
+          if ($evidence.cleanup_status -ne "passed") {
+            throw "the Scoop lane did not verify its own profile cleanup"
+          }
+          if (-not $evidence.runtime_identity) {
+            throw "Scoop evidence records no runtime identity"
+          }
+
+      # The oracle JSONs land under the evidence root. The verified full
+      # release cohort was already
       # extracted alongside the python cohort; mint the sanctioned flat
       # distribution-evidence record for the scoop row from the real captured
       # oracle JSONs (no re-run, no fabrication).
