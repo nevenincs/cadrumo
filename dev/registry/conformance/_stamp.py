@@ -96,6 +96,17 @@ write the whole modelo is re-loaded through the real loader; if it refuses, the
 original bytes are restored and the refusal is raised. A state the loader would
 reject is therefore unreachable through this path.
 
+"The original bytes" is meant literally, and for a while it was not true. The
+manifest was read with ``read_text`` and restored with ``write_text``, so on
+Windows the restore expanded every LF to CRLF: measured on the bundled Modelo
+130 manifest, 422 bytes and eight LF terminators came back as 430 bytes and
+eight CRLF ones. The only test exercising the real restore compared
+``read_text``, which normalises away the very difference the claim is about, and
+the two byte-identity assertions guarding it sit on the PRE-WRITE refusal path
+where nothing was written and are trivially true there. Reading and writing
+through raw bytes makes the sentence true, and the successful write now touches
+the governance lines only rather than rewriting the file's every terminator.
+
 See Also:
     :class:`~cadrumo.core.RevisionReviewStatus`
         Closed review vocabulary this writer narrows for agent use.
@@ -380,7 +391,15 @@ def stamp_revision(
     modelo_dir = manifest.parent.parent.parent
     _assert_revision_is_compiled(modelo_dir, modelo=modelo, revision=revision)
 
-    original = manifest.read_text(encoding=UTF_8_ENCODING)
+    # BYTES, not text. ``read_text`` decodes under universal newlines and
+    # ``write_text`` re-encodes under the platform's, so a read/write pair on
+    # Windows silently expands every LF to CRLF: the shipped manifests are LF, so
+    # a "restore" rewrote all eight lines of one and a successful stamp rewrote
+    # every line rather than the governance ones. ``git diff`` reads clean
+    # through ``text=auto`` normalisation while the working tree carries a
+    # whole-file rewrite, which is how it survived three review rounds.
+    original_bytes = manifest.read_bytes()
+    original = original_bytes.decode(UTF_8_ENCODING)
     declared = _declared_governance(manifest, original, revision)
     _assert_review_axis_is_writable(
         declared.review_status,
@@ -400,12 +419,12 @@ def stamp_revision(
     rendered = resolved.rendered()
     dropped = declared.declared_keys() - resolved.declared_keys()
     removed = tuple(key for key in GOVERNANCE_KEYS if key in dropped)
-    manifest.write_text(_apply_governance(original, revision, rendered), encoding=UTF_8_ENCODING)
+    manifest.write_bytes(_apply_governance(original, revision, rendered).encode(UTF_8_ENCODING))
 
     try:
         _assert_revision_is_compiled(modelo_dir, modelo=modelo, revision=revision)
     except StampError:
-        manifest.write_text(original, encoding=UTF_8_ENCODING)
+        manifest.write_bytes(original_bytes)
         raise
 
     reset_conformance_cache()
@@ -693,7 +712,15 @@ def _apply_governance(text: str, revision: str, rendered: dict[str, str]) -> str
     hand-authored multi-line array in the file and bury the one-line stamp in an
     unreviewable diff. Only whole ``key = value`` lines for the four governance
     keys are touched; every other line is passed through byte for byte.
+
+    "Byte for byte" includes the LINE TERMINATOR, which is why the joiner is
+    read off the input rather than assumed. ``splitlines`` discards the
+    terminator it split on, so re-joining with a fixed LF would silently rewrite
+    every line of a CRLF manifest — the same whole-file rewrite, arriving from
+    the other direction, that writing through ``write_text`` produced on an LF
+    one.
     """
+    newline = "\r\n" if "\r\n" in text else "\n"
     lines = text.splitlines()
     header = f'[revisions."{revision}"]'
     try:
@@ -713,7 +740,7 @@ def _apply_governance(text: str, revision: str, rendered: dict[str, str]) -> str
     rebuilt = [*lines[:start], lines[start], *body, "", *lines[end:]]
     while rebuilt and not rebuilt[-1].strip():
         rebuilt.pop()
-    return "\n".join(rebuilt) + "\n"
+    return newline.join(rebuilt) + newline
 
 
 def _is_governance_line(line: str) -> bool:

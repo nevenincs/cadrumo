@@ -14,7 +14,15 @@ absence-is-not-zero rule is proved by rendering two reports differing only in a
 oracle attribution gap is proved by injecting one real gap record and watching
 it reach all three surfaces that must show it; and the stamp rollback is proved
 by making the post-write reload genuinely fail and asserting the manifest went
-back.
+back ON BYTES.
+
+That last one is the campaign's worked example of how a proof rots. It staged a
+malformed sibling fragment before calling the writer, but the pre-write check
+loads the same tree the post-write reload does, so the refusal landed BEFORE any
+write and the restore was never reached. Every assertion still passed, because a
+file that was never written is trivially unchanged. The failure now originates in
+the written bytes themselves, and the mtime is pinned and asserted to MOVE, so
+the case cannot silently slide back into the pre-write branch.
 
 Registry-wide counts are asserted against the committed baseline's own floors
 rather than against literals, because the registry grows: a hard-coded ``90``
@@ -25,6 +33,8 @@ assertion instead of reading it.
 from __future__ import annotations
 
 import json
+import os
+import re
 import shutil
 from collections.abc import Sequence
 from datetime import date
@@ -986,36 +996,140 @@ def test_returning_a_revision_to_the_backlog_drops_the_reviewer(registry_copy: P
     assert revision.reviewed_at is None
 
 
-def test_stamp_restores_the_manifest_when_the_written_tree_no_longer_loads(registry_copy: Path) -> None:
-    """The rollback is proved by a reload that genuinely fails, not by a stubbed one.
+def _non_governance_lines(raw: bytes) -> list[bytes]:
+    """Split on the raw LF byte, keeping each line's remaining terminator bytes.
 
-    A malformed sibling fragment is dropped into the revision directory AFTER the
-    pre-write check has been shown to pass, so the failure lands in the
-    post-write reload — the only place the restore can be exercised. Without the
-    restore the manifest would carry the new stamp and this assertion flips.
+    Splitting the raw bytes rather than decoding leaves a CRLF line carrying its
+    trailing carriage return, so a run that rewrote the file's terminators
+    produces different elements here even though the decoded text is identical.
+    The governance predicate is written out independently rather than imported from
+    the writer, so this comparison cannot agree with a broken implementation by
+    sharing its definition of which lines may move.
+
+    Trailing empty elements are dropped because the writer deliberately collapses
+    a manifest to exactly one terminating newline, and the shipped manifests end
+    with a blank line. That is a one-byte EOF normalisation, not the whole-file
+    terminator rewrite this comparison exists to catch, and the caller asserts
+    the terminator count separately so dropping them here hides neither.
+    """
+    pattern = re.compile(rf"\s*(?:{'|'.join(GOVERNANCE_KEYS)})\s*=")
+    lines = [line for line in raw.split(b"\n") if not pattern.match(line.decode(UTF_8_ENCODING))]
+    while lines and not lines[-1].strip():
+        lines.pop()
+    return lines
+
+
+def _pin_mtime(path: Path) -> float:
+    """Set a distant fixed mtime and return it, so a write is observable.
+
+    The pre-write refusal and the post-write restore leave byte-identical files,
+    so bytes alone cannot say which branch ran. A write moves the mtime and a
+    refusal does not, which distinguishes them without a mock, a patch, or a
+    hook in production code.
+    """
+    os.utime(path, (1_000_000_000, 1_000_000_000))
+    return path.stat().st_mtime
+
+
+def test_a_malformed_sibling_fragment_is_refused_before_anything_is_written(registry_copy: Path) -> None:
+    """A tree that already fails to load is refused by the PRE-write check.
+
+    Kept as its own case because it used to be mislabelled as the rollback
+    proof. It is a real and useful refusal — a tree the loader rejects must not
+    be stamped — but nothing is written on this path, so its manifest assertion
+    is true whatever the restore does. Naming it for the branch it actually
+    exercises stops the next reader inheriting the same misreading.
     """
     manifest = _manifest_of(registry_copy)
-    stamp_revision(
-        _STAMPED_MODELO,
-        _STAMPED_REVISION,
-        engineered_by="first stamp",
-        registry_root=registry_copy,
-    )
-    before = manifest.read_text(encoding=UTF_8_ENCODING)
+    before = manifest.read_bytes()
+    original_mtime = _pin_mtime(manifest)
 
     broken = manifest.parent / "casillas" / "zzzz-broken.toml"
     broken.write_text("this is not valid TOML = = =\n", encoding=UTF_8_ENCODING)
 
-    with pytest.raises(StampError):
+    with pytest.raises(StampError, match="registry refuses to load the modelo"):
         stamp_revision(
             _STAMPED_MODELO,
             _STAMPED_REVISION,
-            engineered_by="second stamp that must not survive",
+            engineered_by="a stamp that must not survive",
             registry_root=registry_copy,
         )
 
-    assert manifest.read_text(encoding=UTF_8_ENCODING) == before
-    assert "second stamp that must not survive" not in before
+    assert manifest.stat().st_mtime == original_mtime, "the pre-write refusal must not touch the file"
+    assert manifest.read_bytes() == before
+
+
+def test_stamp_restores_the_manifest_when_the_written_tree_no_longer_loads(registry_copy: Path) -> None:
+    """The rollback, proved by a reload the WRITE ITSELF makes fail.
+
+    The failure has to originate in the written bytes, because the pre-write
+    check loads the same tree the post-write reload does: any breakage staged
+    beforehand is caught before a byte is written, and the restore never runs.
+    An identity carrying an interior newline is the honest trigger. It survives
+    the trim, which strips only the ends; the schema probe accepts it, because a
+    newline in a string is nothing pydantic objects to; and the rendered basic
+    string then carries a literal newline, which TOML forbids. So the manifest
+    the writer produced is one the loader rejects — exactly the event the
+    two-phase design exists for — and the restore is what keeps it off disk.
+
+    Two assertions carry the proof. The mtime is pinned first and must MOVE,
+    which is what pins this test to the post-write branch: without it the case
+    silently degrades into the pre-write one, which is the trap the previous
+    version of this test fell into and passed under for three review rounds. And
+    the comparison is on BYTES, not ``read_text``, which decodes under universal
+    newlines and normalises away the exact difference the module's "the original
+    bytes are restored" claim is about: on Windows the restore expanded all
+    eight LF terminators of this manifest to CRLF and grew it from 422 to 430
+    bytes, and the text comparison called that clean.
+    """
+    manifest = _manifest_of(registry_copy)
+    before = manifest.read_bytes()
+    original_mtime = _pin_mtime(manifest)
+
+    with pytest.raises(StampError, match="registry refuses to load the modelo"):
+        stamp_revision(
+            _STAMPED_MODELO,
+            _STAMPED_REVISION,
+            engineered_by="a stamp\nthat must not survive",
+            registry_root=registry_copy,
+        )
+
+    assert manifest.stat().st_mtime != original_mtime, "the restore was never reached; nothing was written"
+    assert manifest.read_bytes() == before
+    assert b"must not survive" not in before
+
+
+def test_a_successful_stamp_leaves_every_other_line_byte_identical(registry_copy: Path) -> None:
+    """The writer claims a line editor; this measures whether it is one.
+
+    The rollback assertion above can only ever exercise the restore. A
+    SUCCESSFUL write was never measured on bytes at all, and it was the worse
+    case: writing through ``write_text`` rewrote every terminator in the file, so
+    a one-line stamp landed as a whole-file rewrite. In a shared worktree that is
+    invisible in review, because ``git diff`` normalises line endings under
+    ``text=auto`` while the working tree carries the rewrite.
+
+    Comparing the non-governance lines as raw byte slices is what flips: under a
+    terminator rewrite every single element differs, while under a true line edit
+    none do.
+    """
+    manifest = _manifest_of(registry_copy)
+    before = manifest.read_bytes()
+
+    stamp_revision(
+        _STAMPED_MODELO,
+        _STAMPED_REVISION,
+        engineered_by="conformance-cli gate",
+        review_status=StampableReviewStatus.AGENT_REVIEWED,
+        reviewed_by="agent:conformance-cli-gate",
+        reviewed_at=date(2026, 7, 27),
+        registry_root=registry_copy,
+    )
+    after = manifest.read_bytes()
+
+    assert after != before, "the stamp must actually have written something"
+    assert _non_governance_lines(after) == _non_governance_lines(before)
+    assert after.count(b"\x0d\x0a") == before.count(b"\x0d\x0a")
 
 
 def test_stamp_refuses_an_identifier_that_would_escape_the_registry_root(registry_copy: Path) -> None:
