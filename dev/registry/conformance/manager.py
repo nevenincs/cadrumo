@@ -43,16 +43,30 @@ Four reading rules are load-bearing, and every renderer below preserves them.
 * **The degraded label rides on every row.** ``registry_validated`` is emitted
   per row, never only on the envelope, so a filtered or re-sorted rendering
   cannot present a degraded row as validated authority.
-* **A reviewer never renders without its tier.** ``reviewed_by`` is free text by
-  necessity — reviewer identity cannot be constrained to a vocabulary — so
+* **A reviewer never renders without its tier, under ONE key name.**
+  ``reviewed_by`` is free text by necessity — reviewer identity cannot be
+  constrained to a vocabulary — so
   ``--review-status agent_reviewed --reviewed-by "<a person's name>"`` writes
   cleanly and is a legitimate stamp. The status column is honest about it and
   the reviewer column is not, and a reader scanning ninety rows reads the name.
-  The text row therefore renders the reviewer as ``<status>:<name>``, so the two
-  columns cannot be read independently; the JSON payload keeps the raw
-  ``reviewed_by`` and carries the joined form alongside it as
-  ``reviewed_by_attribution``. This closes the PRESENTATION half only. Nothing
-  here can make an attribution TRUE, and no gate should pretend otherwise.
+  Both surfaces therefore carry ``reviewed_by_attribution``, the reviewer joined
+  to the tier that claimed them, and it carries the SAME value in each.
+
+  The first attempt at this rendered the joined form in text under the key
+  ``reviewed_by`` while JSON's ``reviewed_by`` stayed the raw name, so one key
+  name carried two different values depending on which surface you read — and
+  the surface a program reads was the bare one, which is the reading the join
+  exists to prevent. Text now names the joined field exactly as the payload does
+  and does not emit a bare reviewer column at all; the payload still carries the
+  raw ``reviewed_by``, because it is the datum the manifest declares, documented
+  as a field to read beside its attribution rather than alone.
+
+  The attribution is parseable at its FIRST separator whatever the name
+  contains, so ``agent:opus-executor`` is unambiguous and stays legal. What the
+  writer refuses is a reviewer whose own leading segment is a status token: such
+  a value, read raw, is indistinguishable from an already-qualified attribution.
+  This closes the PRESENTATION half only. Nothing here can make an attribution
+  TRUE, and no gate should pretend otherwise.
 
 One double-count is worth naming because the shipped composer warns about it:
 ``modelo_scope_classification_findings`` is a MODELO-level count repeated on
@@ -1070,10 +1084,14 @@ def render_report(report: ConformanceReport) -> str:
                 registry_validated=row.registry_validated,
                 review_status=row.review_status,
                 engineered_by=row.engineered_by,
-                # The TIER-QUALIFIED form, deliberately, not the raw name: a
-                # scanning reader takes in one reviewer column, and a bare name
-                # under an agent-tier review reads as an operator signoff.
-                reviewed_by=row.reviewed_by_attribution,
+                # Named EXACTLY as the payload names it, and carrying exactly
+                # what the payload carries. Rendering the joined form under the
+                # key ``reviewed_by`` — while the payload's ``reviewed_by`` held
+                # the raw name — made one key name mean two different things
+                # across two surfaces, and the surface a program reads was the
+                # bare one. No bare reviewer column is emitted here: the joined
+                # form contains the name, so nothing is lost by omitting it.
+                reviewed_by_attribution=row.reviewed_by_attribution,
                 reviewed_at=row.reviewed_at,
                 calc_grade=row.calc_grade,
                 casillas=row.casillas,
@@ -1261,6 +1279,14 @@ def reviewer_attribution(review_status: str, reviewed_by: str | None) -> str | N
     ``operator_reviewed`` by convention, which is a rule a reader has to know
     before the column is safe — and the reader who does not know it is the one
     this join exists to protect.
+
+    The result is parseable at its FIRST separator, whatever the reviewer name
+    contains: no status value carries a colon, so everything before the first
+    one is the tier and everything after it is the name. A reviewer such as
+    ``agent:opus-executor`` is therefore unambiguous and stays legal. The
+    hazard the writer refuses is narrower and is about the RAW field, not this
+    one: a reviewer whose own leading segment is a status token reads, on its
+    own, as an already-qualified attribution.
     """
     if reviewed_by is None:
         return None

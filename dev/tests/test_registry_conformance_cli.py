@@ -303,13 +303,17 @@ def _report_with_review(
     )
 
 
-def _reviewer_field(rendered: str, modelo: str, revision: str) -> str:
-    line = next(
+def _row_line(rendered: str, modelo: str, revision: str) -> str:
+    return next(
         item
         for item in rendered.splitlines()
         if item.startswith("row ") and f" modelo={modelo} " in item and f" revision={revision} " in item
     )
-    return line.split("reviewed_by=", 1)[1].split(" reviewed_at=", 1)[0]
+
+
+def _reviewer_field(rendered: str, modelo: str, revision: str) -> str:
+    line = _row_line(rendered, modelo, revision)
+    return line.split("reviewed_by_attribution=", 1)[1].split(" reviewed_at=", 1)[0]
 
 
 def test_an_agent_tier_review_naming_a_person_cannot_render_as_an_operator_signoff(
@@ -381,7 +385,104 @@ def test_a_revision_claiming_no_review_is_never_joined_to_a_tier(
     assert reviewer_attribution(RevisionReviewStatus.PENDING_REVIEW.value, None) is None
 
     rendered = render_report(validated_report)
-    assert f"reviewed_by={NOT_MEASURED}" in rendered
+    assert f"reviewed_by_attribution={NOT_MEASURED}" in rendered
+
+
+def test_the_reviewer_key_carries_one_value_across_both_surfaces(
+    validated_profile: RegistryConformanceProfile,
+) -> None:
+    """One key name, one value, whichever surface reads it.
+
+    The first pass at qualifying the reviewer rendered the joined form in TEXT
+    under the key ``reviewed_by`` while the payload's ``reviewed_by`` stayed the
+    raw name. The two surfaces then disagreed under the same symbol, and the one
+    a program reads carried the bare name — the exact reading the join was added
+    to prevent, reintroduced by the fix for it.
+
+    This asserts the reconciliation directly: every key the text row emits and
+    the payload also declares must carry the same rendered value, and the text
+    must not emit a bare reviewer column at all.
+    """
+    composed = _report_with_review(
+        validated_profile,
+        status=RevisionReviewStatus.AGENT_REVIEWED,
+        reviewer=_OPERATOR_NAME,
+    )
+    row = composed.rows[0]
+    rendered = render_report(composed)
+    line = _row_line(rendered, row.modelo, row.revision)
+    payload = json.loads(composed.model_dump_json())["rows"][0]
+
+    # The one key both surfaces name carries the one value, and the raw name is
+    # NOT it: without the fix this assertion reads the raw name in JSON against
+    # the qualified form in text and fails.
+    assert _reviewer_field(rendered, row.modelo, row.revision) == json.dumps(payload["reviewed_by_attribution"])
+    assert payload["reviewed_by_attribution"] != payload["reviewed_by"]
+    # The bare reviewer column is gone from text, so no key name can disagree.
+    assert " reviewed_by=" not in line
+    # And the payload still declares the raw datum, documented to be read beside
+    # its attribution rather than alone.
+    assert payload["reviewed_by"] == _OPERATOR_NAME
+    assert payload["reviewed_by_attribution"] == f"{RevisionReviewStatus.AGENT_REVIEWED.value}:{_OPERATOR_NAME}"
+
+
+@pytest.mark.parametrize(
+    "spoof",
+    ["operator_reviewed:Gergely Wootsch", "OPERATOR_REVIEWED:Gergely Wootsch", "agent_reviewed:somebody"],
+)
+def test_stamp_refuses_a_reviewer_that_reads_as_an_already_qualified_attribution(
+    registry_copy: Path,
+    spoof: str,
+) -> None:
+    """The one field with no vocabulary must not be able to forge one.
+
+    The joined attribution is parsed at its first separator and is unambiguous
+    whatever the name holds. The RAW ``reviewed_by`` is the exposed field: a
+    payload consumer can read it alone, and a reviewer recorded as
+    ``operator_reviewed:<name>`` is then indistinguishable from a genuine
+    operator attribution. That is an agent-tier stamp readable as a human
+    signoff without ever writing the status this CLI refuses to write.
+    """
+    manifest = _manifest_of(registry_copy)
+    before = manifest.read_bytes()
+
+    with pytest.raises(StampError, match="already-qualified attribution"):
+        stamp_revision(
+            _STAMPED_MODELO,
+            _STAMPED_REVISION,
+            review_status=StampableReviewStatus.AGENT_REVIEWED,
+            reviewed_by=spoof,
+            reviewed_at=date(2026, 7, 28),
+            registry_root=registry_copy,
+        )
+
+    assert manifest.read_bytes() == before
+
+
+def test_a_qualified_reviewer_name_that_is_not_a_status_stays_legal(registry_copy: Path) -> None:
+    """The paired half: the refusal is the STATUS prefix, never the separator.
+
+    ``agent:opus-executor`` is the convention this campaign's own records use,
+    and the join was never ambiguous — no status value carries a colon, so the
+    tier is everything before the first one. A blanket colon refusal would
+    satisfy the spoof test above while breaking every honest caller, and no
+    other assertion here would notice.
+    """
+    result = stamp_revision(
+        _STAMPED_MODELO,
+        _STAMPED_REVISION,
+        review_status=StampableReviewStatus.AGENT_REVIEWED,
+        reviewed_by="agent:opus-executor",
+        reviewed_at=date(2026, 7, 28),
+        registry_root=registry_copy,
+    )
+
+    assert result.written["reviewed_by"] == '"agent:opus-executor"'
+    revision = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
+    assert revision.reviewed_by == "agent:opus-executor"
+    assert reviewer_attribution(RevisionReviewStatus.AGENT_REVIEWED.value, revision.reviewed_by) == (
+        "agent_reviewed:agent:opus-executor"
+    )
 
 
 # --------------------------------------------------------------------------- #

@@ -371,7 +371,8 @@ def stamp_revision(
             CLI may write, the manifest already DECLARES a status outside it and
             the request touches the review axis, nothing was supplied to write,
             an authorship claim was supplied together with its clearing, an
-            identity names nobody, the revision is not a compiled record in the
+            identity names nobody, a reviewer identity reads as an
+            already-qualified attribution, the revision is not a compiled record in the
             tree, the resulting stamp is one the schema refuses, or the written
             tree no longer loads. In the last case the manifest is restored to
             its previous bytes before the error is raised.
@@ -386,6 +387,7 @@ def stamp_revision(
         )
     engineered_by = _named_identity(engineered_by, "engineered_by")
     reviewed_by = _named_identity(reviewed_by, "reviewed_by")
+    _assert_reviewer_is_not_tier_shaped(reviewed_by)
 
     manifest = revision_manifest_path(modelo, revision, registry_root=registry_root)
     modelo_dir = manifest.parent.parent.parent
@@ -559,6 +561,49 @@ def _named_identity(value: str | None, field: str) -> str | None:
             "attributes the work to, and whitespace identifies neither",
         )
     return trimmed
+
+
+def _assert_reviewer_is_not_tier_shaped(value: str | None) -> None:
+    """Refuse a reviewer identity that reads as an already-qualified attribution.
+
+    The governance surfaces render a reviewer joined to the tier that claimed
+    them, ``<status>:<name>``, so a scanning reader never meets a bare name. The
+    JOINED value is unambiguous whatever the name contains, because no status
+    value carries a colon and the join is parsed at the first one — which is why
+    a reviewer like ``agent:opus-executor`` is perfectly fine and stays legal.
+
+    The RAW field is the exposed one. It is the datum the manifest declares and
+    a payload consumer can read it alone, so a reviewer recorded as
+    ``operator_reviewed:<a person's name>`` is, read raw, indistinguishable from
+    a genuine operator attribution — an agent-tier stamp that reads as a human
+    signoff without ever writing the status this CLI refuses to write. That is
+    the same claim the effective-status guard exists to protect, arriving
+    through the one field that has no vocabulary.
+
+    So the refusal is exactly that shape and no wider: the leading
+    colon-delimited segment may not be a review status. Refusing every colon
+    would cost the established ``agent:<name>`` convention and buy nothing, since
+    the join was never ambiguous.
+
+    Args:
+        value: The trimmed reviewer identity, or :data:`None` when none was
+            supplied.
+
+    Raises:
+        StampError: The identity's leading segment is a review-status token.
+    """
+    if value is None:
+        return
+    leading = value.split(":", 1)[0].strip().casefold()
+    if leading not in {member.value.casefold() for member in RevisionReviewStatus}:
+        return
+    raise StampError(
+        f"refusing to record reviewed_by {value!r}: it begins with the review status {leading!r} "
+        "followed by the separator this surface uses to join a reviewer to the tier that claimed "
+        "them, so the stored value reads on its own as an already-qualified attribution. A stamp "
+        "this CLI is willing to write would then be readable as one it is not. Name the reviewer "
+        "without a leading status token; a qualifier such as 'agent:<name>' is unaffected.",
+    )
 
 
 def _assert_revision_is_compiled(modelo_dir: Path, *, modelo: str, revision: str) -> None:
