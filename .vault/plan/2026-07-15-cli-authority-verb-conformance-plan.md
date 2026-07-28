@@ -471,7 +471,7 @@ Run the formal code-review skill, reconcile findings, and prove every accepted A
 - [x] `W06.P20.S293` - Escalate to the owning TUI campaign that the committed wizard package initialiser imports an untracked results module, so a clean checkout of HEAD cannot import the wizard or run the shipped CLI; `src/cadrumo/application/wizard/__init__.py`.
 - [x] `W06.P20.S294` - Land the proven MCP identity seeding fix once the wizard results module is committed, so both transports report the same schema count and the parity assertion is no longer comparing two equally blind sets; `src/cadrumo/entrypoints/mcp/_server.py; src/cadrumo/entrypoints/mcp/_harness_tools.py; src/cadrumo/application/wizard/_compiler.py`.
 - [x] `W06.P20.S295` - Closed as unnecessary, a peer fix bridged the payload-name filter by importing the wizard result classes into a walked module, so enrolment is filename-filtered still and the divergence ended when that bridge landed; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
-- [ ] `W06.P20.S296` - Guard the load-bearing wizard schema re-exports against a tidy-up deletion, since the re-export idiom looks redundant and removing it silently drops both profile verbs from the MCP surface; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
+- [x] `W06.P20.S296` - Guard the load-bearing wizard schema re-exports against a tidy-up deletion, since the re-export idiom looks redundant and removing it silently drops both profile verbs from the MCP surface; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
 
 ## Description
 
