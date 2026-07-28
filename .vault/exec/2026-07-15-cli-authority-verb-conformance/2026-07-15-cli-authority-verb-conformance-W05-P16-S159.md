@@ -9,39 +9,6 @@ related:
   - "[[2026-07-15-cli-authority-verb-conformance-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace cli-authority-verb-conformance with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S159 and 2026-07-15-cli-authority-verb-conformance-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Prove generated MCP input schemas for every accepted changed command and ## Scope
-
-- `src/cadrumo/entrypoints/mcp/tests/test_input_schema.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Prove generated MCP input schemas for every accepted changed command
 
 ## Scope
@@ -50,12 +17,31 @@ related:
 
 ## Description
 
-- Run the input-schema tests and confirm generated schemas exist for the accepted changed commands.
+- Read what the existing sweep actually binds, finding it iterates whatever is exposable rather than a named set.
+- Establish that a command dropping out of that set removes itself from the sweep without failing it.
+- Name the eight accepted changed commands and assert each is exposable before asserting its shape.
+- Assert each derives a typed non-bag schema at its resolved nested path.
+- Read one family for its real parameters, since a correct path proves nothing about the contents.
+- Correct a guessed contrast after the test caught it, using the measured parameter sets.
 
 ## Outcome
 
-The named gate passes with seven tests, proving the generated per-verb input schemas for the accepted commands. Together with the derivation reading, this closes the row from both ends: the schemas are derived from the live tree, and the derivation is proven to produce usable schemas for the changed verbs rather than merely running.
+The row's commands were covered incidentally and are now covered by name.
+
+The existing sweep asserts a shape over every exposable key and floors the count at two hundred. That is real but it does not bind these commands: it iterates whatever happens to be exposable, so a command silently dropping out removes itself from the sweep, and the floor absorbs the loss without a failure. Measured, all eight accepted keys do derive typed non-bag schemas today, at correctly resolved three-segment paths.
+
+The membership assertion is the addition that matters. Each of the eight is asserted exposable BEFORE its shape is asserted, so disappearance becomes a red test rather than a smaller corpus.
+
+A second case reads one family for its contents, because every assertion in the sweep holds for a schema that resolved the right path and read none of its parameters. The reset family discriminates itself: an operation id addresses an EXISTING operation, so `status` and `resume` take one while `start`, which creates the operation, does not. A derivation emitting one parameter set for the whole group fails this.
+
+That case is also where this step's own error was caught, and the correction is worth recording. The first version asserted `config.reset.status` takes no operation id, on an assumption from a parameter COUNT rather than a reading of the names. The test failed immediately. Measured, `status` takes exactly `operation_id`, and it is `start` that takes none. The assertion was rewritten from the measured parameter sets. A guess that had happened to be true would have shipped as a pinned fact.
+
+`uv run --no-sync pytest` over the three modified modules reported `46 passed in 24.36s`, and the full MCP suite under an explicit marker expression reported `285 passed, 6 warnings in 83.02s`. `ruff check`, `ruff format --check` and `ty check` all reported clean.
 
 ## Notes
 
-No code change was required by this Step. The implementing change had already landed under the successor plans this document was rescoped into, so the row was stale rather than unexecuted. The Step is closed as verified-satisfied against its named surface, per the Wave W06 instruction that each open W05 Step be verified against that surface before being checked and never inferred from the live command tree alone.
+The source-side row is satisfied by a generic derivation, and the two are worth keeping distinct. The module names none of these families because it walks the real command tree, which is why a hand-enumerated schema cannot drift here. The test naming them is not a duplicate of that: derivation makes the schemas correct by construction, membership makes their PRESENCE non-optional, and only the second catches a command leaving the surface.
+
+The mutation proof for the membership assertion used a key that is not registered, and it failed as intended.
+
+Not verified: that the derived schemas match what the CLI would accept at runtime for these eight commands. The schemas are read from the same click tree the CLI dispatches on, so the parameters agree by construction, but no invocation was made.
