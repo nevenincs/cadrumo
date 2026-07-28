@@ -1,19 +1,55 @@
 """Tests for :func:`~cadrumo.application.registry.diff_registry_revisions`.
 
-Grounds the diff against the two *real* Modelo 303 revisions shipped in the
-bundled registry (``2009-y-siguientes`` and ``2023-y-siguientes``): every
-expected count and identifier below was read directly off the registry TOML
-tree (via ``diff_registry_revisions`` itself against a known real revision
-pair), never hand-computed from a synthetic fixture. This proves the diff
-surfaces real, known rulebook changes rather than asserting against arbitrary
-values manufactured by the test author.
+Grounds the diff against *real* revision pairs shipped in the bundled registry
+-- the two Modelo 303 revisions (``2009-y-siguientes`` and
+``2023-y-siguientes``) and, for the legal-grounding dimension, the two Modelo
+180 revisions (``2019-2022`` and ``2023-y-siguientes``). Every expected count
+and identifier below was read off the registry TOML tree, never hand-computed
+from a synthetic fixture, so the diff is proven against real, known rulebook
+changes rather than values manufactured by the test author.
+
+Choosing an anchor
+------------------
+Reading the expectations off the tool's own output is how this module was first
+written, and it is exactly how a *defect* becomes a pinned expectation. The
+prorrata percentage formula was once asserted here as a changed formula. It was
+never a rulebook change: the two revisions declared different no-volume-data
+branches -- 0 against 100 -- because the older one carried a defect that zeroed
+a fully-taxable trader's deduction. Correcting it made the two revisions agree,
+the anchor vanished, and this module red. The formula had no unique claim on
+any tracked dimension either; it duplicated coverage a surviving anchor already
+had.
+
+So an anchor now has to earn its place by being STRUCTURALLY FORCED, not merely
+observed to differ:
+
+* ``modelo-303-iva-cuota-devengada-total`` differs because the 2023 revision
+  sums a casilla the 2009 revision does not have. That casilla is reported as
+  added by the same diff, and the assertion below reads the coupling rather
+  than restating the identifier -- a total that sums a new summand cannot be
+  identical across the pair, so convergence would require deleting a real 2023
+  casilla.
+* ``modelo-303-iva-resultado`` differs in ``legal_refs`` because each revision
+  cites the orden that approved its own form version. Two ordenes published
+  sixteen years apart do not converge.
+* ``modelo-180-base-total`` / ``modelo-180-retenciones-total`` differ in
+  ``legal_refs`` ALONE, adding Orden HFP/1284/2023. They are the only witness
+  in the bundled registry for that dimension: strike the ``legal_refs``
+  comparison out of the diff and no Modelo 303 assertion notices, because the
+  M303 formulas that differ in ``legal_refs`` also differ in expression.
+
+The rounding dimension has no witness at all. No revision pair in the bundled
+registry diverges in rounding alone, so that comparison is unproven here and a
+reader must not take the checks below as covering it. Fabricating a divergence
+to close the gap would be inventing a rulebook change; the honest statement is
+that the witness does not exist yet.
 """
 
 from __future__ import annotations
 
 import pytest
 
-from ....domain.calculations.registry import RegistrySnapshotError
+from ....domain.calculations.registry import ModeloRevision, RegistrySnapshotError, bundled_authority
 from .. import RegistryApplicationInputError, diff_registry_revisions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -23,6 +59,54 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 # modelo's real, declared revision boundaries -- not synthetic fixtures.
 _M303_PRE_YEAR = 2022
 _M303_POST_YEAR = 2023
+
+# Modelo 180's two real revisions, split by Orden HFP/1284/2023.
+_M180_PRE_YEAR = 2022
+_M180_POST_YEAR = 2023
+
+
+def _revision_pair(modelo: str, from_year: int, to_year: int) -> tuple[ModeloRevision, ModeloRevision]:
+    """Return both revisions of ``modelo`` straight from the registry authority.
+
+    Read through the authority rather than through the diff report, so an
+    assertion about what the diff SHOULD have found is grounded in the registry
+    itself and not in the diff's own projection of it.
+    """
+    authority = bundled_authority()
+    return (
+        authority.snapshot(modelo, filing_year=from_year, period="1T" if modelo == "303" else "0A").revision,
+        authority.snapshot(modelo, filing_year=to_year, period="1T" if modelo == "303" else "0A").revision,
+    )
+
+
+def _formula_fingerprint(revision: ModeloRevision) -> dict[str, tuple[dict[str, object], frozenset[str], str]]:
+    """Return ``{formula_id: (expression, legal_refs, rounding)}`` for one revision.
+
+    The three dimensions the diff declares it tracks, read off the schema.
+    """
+    return {
+        formula.id: (
+            formula.expression.model_dump(mode="json"),
+            frozenset(formula.legal_refs),
+            str(formula.rounding),
+        )
+        for formula in revision.formulas
+    }
+
+
+def _referenced_casilla_ids(expression: object) -> set[str]:
+    """Return every casilla id an expression projection reads, at any depth."""
+    found: set[str] = set()
+    if not isinstance(expression, dict):
+        return found
+    casilla_id = expression.get("casilla_id")
+    if isinstance(casilla_id, str):
+        found.add(casilla_id)
+    arguments = expression.get("args")
+    if isinstance(arguments, list):
+        for argument in arguments:
+            found |= _referenced_casilla_ids(argument)
+    return found
 
 
 def test_diff_registry_revisions_reports_no_change_within_one_revision() -> None:
@@ -66,27 +150,138 @@ def test_diff_registry_revisions_surfaces_real_added_casillas() -> None:
     assert report.renumbered_casillas == ()
 
 
-def test_diff_registry_revisions_surfaces_real_changed_formulas() -> None:
-    """Formulas whose target casilla persists across both revisions but whose
-    expression, rounding, or legal grounding changed are reported as changed,
-    never as a spurious add/remove pair.
+def test_diff_registry_revisions_surfaces_a_formula_that_gained_a_new_summand() -> None:
+    """The devengada total differs BECAUSE the 2023 revision sums a new casilla.
+
+    The strongest anchor available: the assertion reads the coupling instead of
+    restating the identifier.  The 2023 revision introduces the property
+    developer self-consumption cuota, the same diff reports that casilla as
+    added, and the total that sums it therefore cannot match the older
+    revision's.  Making the two agree would mean deleting a real 2023 casilla,
+    which is why this anchor does not decay the way an observed-to-differ one
+    does.
     """
     report = diff_registry_revisions("303", from_year=_M303_PRE_YEAR, to_year=_M303_POST_YEAR)
 
-    changed_ids = {formula.id for formula in report.changed_formulas}
-    assert "modelo-303-iva-cuota-devengada-total" in changed_ids
-    assert "modelo-303-iva-prorrata-porcentaje" in changed_ids
-    assert "modelo-303-iva-resultado" in changed_ids
-
-    cuota_devengada_diff = next(
+    devengada = next(
         formula for formula in report.changed_formulas if formula.id == "modelo-303-iva-cuota-devengada-total"
     )
-    assert cuota_devengada_diff.target_casilla_id == "iva.cuota-devengada-total"
-    # A genuinely changed formula must differ in at least one tracked
-    # dimension (expression, or legal_refs) between the two revisions.
-    assert cuota_devengada_diff.from_expression != cuota_devengada_diff.to_expression or set(
-        cuota_devengada_diff.from_legal_refs
-    ) != set(cuota_devengada_diff.to_legal_refs)
+    assert devengada.target_casilla_id == "iva.cuota-devengada-total"
+
+    added_casilla_ids = {casilla.id for casilla in report.added_casillas}
+    new_summands = _referenced_casilla_ids(devengada.to_expression) - _referenced_casilla_ids(devengada.from_expression)
+
+    assert new_summands & added_casilla_ids, (
+        "the devengada total is reported as changed, but none of the casillas it gained "
+        f"({sorted(new_summands)}) is one the same diff reports as added "
+        f"({sorted(added_casilla_ids)}) -- the anchor has lost the structural reason it was chosen"
+    )
+    assert "iva.autoconsumo.promotor.cuota" in new_summands
+
+
+def test_diff_registry_revisions_surfaces_a_formula_regrounded_on_a_later_orden() -> None:
+    """The resultado formula cites the orden that approved its own form version.
+
+    Each M303 revision grounds this formula in the orden that approved the form
+    it belongs to, and the two ordenes are sixteen years apart.  A citation
+    swap between two dated, separately published ordenes is not something a
+    later correction converges, so the divergence is durable in a way an
+    incidental expression difference is not.
+    """
+    report = diff_registry_revisions("303", from_year=_M303_PRE_YEAR, to_year=_M303_POST_YEAR)
+
+    resultado = next(formula for formula in report.changed_formulas if formula.id == "modelo-303-iva-resultado")
+
+    assert resultado.target_casilla_id == "iva.resultado"
+    assert "orden-eha-3786-2008:art-1" in set(resultado.from_legal_refs) - set(resultado.to_legal_refs)
+    assert "orden-hac-819-2024:art-1" in set(resultado.to_legal_refs) - set(resultado.from_legal_refs)
+
+
+def test_diff_registry_revisions_surfaces_a_formula_that_changed_only_its_legal_grounding() -> None:
+    """Modelo 180's totals differ in ``legal_refs`` ALONE, and only this notices.
+
+    Both M303 formulas that differ in ``legal_refs`` also differ in expression,
+    so deleting the ``legal_refs`` comparison from the diff leaves every M303
+    assertion green while the diff has silently stopped tracking a dimension it
+    documents.  The M180 pair is the bundled registry's only witness: Orden
+    HFP/1284/2023 regrounds the two declaration totals without touching a
+    single operand.
+    """
+    report = diff_registry_revisions("180", from_year=_M180_PRE_YEAR, to_year=_M180_POST_YEAR)
+
+    changed = {formula.id: formula for formula in report.changed_formulas}
+    assert {"modelo-180-base-total", "modelo-180-retenciones-total"} <= set(changed)
+
+    for formula_id in ("modelo-180-base-total", "modelo-180-retenciones-total"):
+        diff = changed[formula_id]
+        assert diff.from_expression == diff.to_expression, (
+            f"{formula_id} was chosen as the legal-grounding witness because its expression is "
+            "untouched; it now differs in expression too, so it no longer isolates the dimension"
+        )
+        assert set(diff.to_legal_refs) - set(diff.from_legal_refs) == {"orden-hfp-1284-2023:art-7"}
+
+
+def test_diff_registry_revisions_classifies_every_changed_formula_as_changed() -> None:
+    """A changed formula is never reported as a spurious add/remove pair.
+
+    The claim the module makes about the whole set rather than about one
+    anchor: every reported change names a formula present in BOTH revisions,
+    appears in neither the added nor the removed list, and genuinely differs in
+    a tracked dimension when the two revisions are read straight off the
+    registry authority instead of out of the diff's own projection.
+    """
+    report = diff_registry_revisions("303", from_year=_M303_PRE_YEAR, to_year=_M303_POST_YEAR)
+    from_revision, to_revision = _revision_pair("303", _M303_PRE_YEAR, _M303_POST_YEAR)
+    before = _formula_fingerprint(from_revision)
+    after = _formula_fingerprint(to_revision)
+
+    changed_ids = {formula.id for formula in report.changed_formulas}
+    assert changed_ids, "the M303 revision pair must surface at least one changed formula"
+    assert changed_ids <= set(before) & set(after), (
+        f"changed formulas absent from one revision: {sorted(changed_ids - (set(before) & set(after)))}"
+    )
+    assert changed_ids.isdisjoint(report.added_formulas)
+    assert changed_ids.isdisjoint(report.removed_formulas)
+
+    undifferentiated = sorted(formula_id for formula_id in changed_ids if before[formula_id] == after[formula_id])
+    assert undifferentiated == [], (
+        f"the diff reported {undifferentiated} as changed while the registry declares them identical "
+        "in expression, legal_refs and rounding"
+    )
+
+
+def test_diff_registry_revisions_stays_silent_on_a_formula_both_revisions_share() -> None:
+    """A formula identical in all three tracked dimensions is NOT reported.
+
+    The silence half.  Without it a diff that reported every common formula as
+    changed would satisfy every firing assertion above.  The prorrata
+    percentage is the concrete anchor, and it is one for a legal reason rather
+    than an observed one: LIVA art. 102 was last amended before this revision
+    window opens and art. 104's later amendment leaves its fraction and
+    rounding paragraph untouched, so the same rule binds both windows and the
+    two revisions are supposed to declare it identically.  This formula used to
+    be asserted as CHANGED, which is what pinned the older revision's defect in
+    place until it was corrected.
+    """
+    report = diff_registry_revisions("303", from_year=_M303_PRE_YEAR, to_year=_M303_POST_YEAR)
+    from_revision, to_revision = _revision_pair("303", _M303_PRE_YEAR, _M303_POST_YEAR)
+    before = _formula_fingerprint(from_revision)
+    after = _formula_fingerprint(to_revision)
+
+    prorrata = "modelo-303-iva-prorrata-porcentaje"
+    assert before[prorrata] == after[prorrata], (
+        "both revisions must declare the prorrata percentage identically; the applicable "
+        "LIVA articles are unamended across the two windows"
+    )
+
+    changed_ids = {formula.id for formula in report.changed_formulas}
+    assert prorrata not in changed_ids
+
+    shared = {formula_id for formula_id in set(before) & set(after) if before[formula_id] == after[formula_id]}
+    assert shared, "the vacuity floor: the pair must share at least one identical formula"
+    assert shared.isdisjoint(changed_ids), (
+        f"the diff reported formulas the registry declares identical: {sorted(shared & changed_ids)}"
+    )
 
 
 def test_diff_registry_revisions_surfaces_real_added_bindings() -> None:
