@@ -36,8 +36,7 @@ from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...adapters.persistence.storage.master_key import NIST_PASSPHRASE_MIN_LENGTH
-from ...core import PassphraseStrength, assess_passphrase_strength
+from ...core import NIST_PASSPHRASE_MIN_LENGTH, PassphraseStrength, assess_passphrase_strength
 from ...core.errors import CadrumoError
 from ...domain.user_profile import UserProfileStatus, new_profile_id
 from ..workflow import workflow_state_repository
@@ -56,9 +55,10 @@ PASSPHRASE_MINIMUM_LENGTH: Final[int] = NIST_PASSPHRASE_MIN_LENGTH
 """The enforced verifier minimum, re-exposed for operator-facing surfaces.
 
 A credential screen needs this to give live feedback while the operator
-types. Re-exporting it here keeps the inbound adapter on the application
-facade instead of importing from the persistence adapter directly, while
-the value itself stays owned by the master-key provider that enforces it.
+types. Re-exposing it on the application facade keeps the inbound adapter
+off :mod:`cadrumo.core` internals for a value it only ever reads through a
+registration flow; the policy itself is owned by
+:data:`~cadrumo.core.NIST_PASSPHRASE_MIN_LENGTH`.
 """
 
 

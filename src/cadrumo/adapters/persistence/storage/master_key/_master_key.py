@@ -57,7 +57,7 @@ if TYPE_CHECKING:
     from .....core.config import Settings
     from ._bucket_session import BucketSession
 
-from .....core import resolve_active_bucket_id
+from .....core import NIST_PASSPHRASE_MIN_LENGTH, resolve_active_bucket_id
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.locks import exclusive_file_lock
 from .....core.logging import get_logger
@@ -111,9 +111,6 @@ from ._master_key_tax_id import looks_like_real_tax_id as looks_like_real_tax_id
 from ._provider_session import exit_provider_session
 
 _MASTER_KEY_AAD: Final[bytes] = b"cadrumo.master-key.v1"
-
-NIST_PASSPHRASE_MIN_LENGTH: Final[int] = 8
-"""NIST SP 800-63B §5.1.1.1 verifier-side minimum passphrase length."""
 
 _log = get_logger(__name__)
 

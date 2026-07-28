@@ -73,36 +73,21 @@ forbidden_modules =
 # crosses this boundary any longer. Only sanctioned test/fixture edges remain,
 # pinned individually below so a new non-deferred production edge is still caught.
 ignore_imports =
-    # ── W09: sanctioned cross-layer test/fixture/oracle edges (roundtrip discipline) ──
-    # ── conftest profile-key eager registration (wizard import side-effect; test scaffolding) ──
-    cadrumo.domain.calculations.registry.tests.conftest -> cadrumo.application.wizard
-    cadrumo.domain.contribuyente.conftest -> cadrumo.application.wizard
-    # ── DB-16: per-domain repositories wrap the secure-storage substrate ──
-    # Sanctioned by the secure-persistence-foundation ADR series
-    # (2026-04-30-secure-persistence-foundation-adr, Wave-3/4 per-domain
-    # repository pattern; e.g. domain.justificante._repository is Phase 4).
-    # SecureBoundRepository is SQL/crypto-coupled so its base cannot move to
-    # core; the repositories are deliberately co-located with their domain.
-    cadrumo.domain.calculations.registry.tests.test_cross_boundary_roundtrip -> cadrumo.application.workflow
-    cadrumo.domain.calculations.registry.tests.test_detail_record_modelo_coverage -> cadrumo.application.storage.calc_sheets
-    cadrumo.domain.invoices.tests.test_reconciliation -> cadrumo.application.invoices
-    cadrumo.domain.modelos.tests.test_work_unit -> cadrumo.application.modelo
-    # ── registry/modelo test files pulling application fixtures (test-topology refactor) ──
-    # W10: import-centralization refactor moved these test files onto the
-    # top-level application.modelo / application.aggregation re-exports
-    # (service-imports-via-top-level-reexports), so the prior private-submodule
-    # ignores (._semantic_role_resolution, ._renta_income_ledger) went stale.
-    cadrumo.domain.calculations.registry.tests.test_modelo_100_registry_roles_capital_gains -> cadrumo.application.modelo
-    cadrumo.domain.calculations.registry.tests.test_modelo_100_registry_roles_prevision_social -> cadrumo.application.modelo
-    cadrumo.domain.calculations.registry.tests._ledger_iva_aggregation_support -> cadrumo.application.calculations
-    cadrumo.domain.calculations.registry.tests.test_binding_coverage_breadth -> cadrumo.application.aggregation
-    cadrumo.domain.calculations.registry.tests.test_binding_coverage_breadth -> cadrumo.application.modelo._calculation_actions
-    cadrumo.domain.calculations.registry.tests.test_ledger_renta_income_binding -> cadrumo.application.aggregation
-    # W04.P08.S47: source-connectivity gate joins the domain registry inventory
-    # against the live-mesh disposition taxonomy (application.aggregation public set).
-    cadrumo.domain.calculations.registry.tests.test_source_enrollment -> cadrumo.application.aggregation
-    cadrumo.domain.calculations.registry.tests.test_referential_integrity_part4 -> cadrumo.application.diagnostics
-    cadrumo.domain.modelos.tests.test_work_unit -> cadrumo.application.user_profile
+    # ── aeat-roundtrip-discipline carve-out (test-file-only) ──────────────
+    # Domain test/conftest modules legitimately import application services
+    # for fixture setup, oracle replay, and cross-boundary roundtrip suites
+    # (real dependencies, not mocks). This was an enumerated per-test-file
+    # list that went stale on every test rename or topology move — the same
+    # churn the sibling domain-not-adapters and layered contracts already
+    # retired in favour of these wildcards. Production domain -> application
+    # coupling is zero and the wildcards are scoped to test packages, so a
+    # new production edge still fails loudly here. See
+    # `2026-07-08-importlinter-test-carveout-adr`.
+    cadrumo.domain.**.tests.** -> cadrumo.application.**
+    # conftest.py modules sitting directly in a domain subpackage (not nested
+    # under a tests/ folder) are the same fixture pattern — e.g. the profile-key
+    # eager registration that imports application.wizard for its side effect.
+    cadrumo.domain.**.conftest -> cadrumo.application.**
 
 [importlinter:contract:domain-not-adapters]
 name = Domain must not import adapters
@@ -251,6 +236,10 @@ ignore_imports =
     cadrumo.application.tests.** -> cadrumo.adapters.**
     cadrumo.application.**.tests.** -> cadrumo.adapters.**
     cadrumo.application.**.tests.** -> cadrumo.entrypoints.**
+    # The inbound TUI screens are driven end-to-end by their own tests through
+    # the CLI frontend that composes them — the same fixture pattern one layer
+    # further out.
+    cadrumo.adapters.**.tests.** -> cadrumo.entrypoints.**
     cadrumo.core.tests.** -> cadrumo.domain.**
     cadrumo.core.**.tests.** -> cadrumo.domain.**
     cadrumo.core.tests.** -> cadrumo.application.**
@@ -264,13 +253,19 @@ ignore_imports =
     # test modules that route through the shared cadrumo.tests.* fixture helpers
     # (cadrumo.tests is a cross-cutting test-support package, not a declared
     # layer) which themselves transitively reach a forbidden outer layer.
-    cadrumo.domain.**.tests.** -> cadrumo.tests.cli_runner
-    cadrumo.application.tests.** -> cadrumo.tests.cli_runner
-    cadrumo.application.**.tests.** -> cadrumo.tests.cli_runner
+    cadrumo.domain.**.tests.** -> cadrumo.tests.**
+    cadrumo.application.tests.** -> cadrumo.tests.**
+    cadrumo.application.**.tests.** -> cadrumo.tests.**
     cadrumo.domain.**.tests.** -> cadrumo.locales
     # ── D9 follow-up: local-import lifts made these concrete storage edges
     #    import-linter-visible; pin exact targets, not broad source modules. ──
     cadrumo.application.modelo._m145_communication_records -> cadrumo.adapters.persistence.storage
+    cadrumo.application.modelo._reconciliation_records -> cadrumo.adapters.persistence.storage
+    # The sandbox notice reads a bucket manifest through the storage primitives
+    # behind function-local imports, deliberately keeping the heavier
+    # repository stack off the notice path.
+    cadrumo.application.operator_output._sandbox_notice -> cadrumo.adapters.persistence.storage
+    cadrumo.application.operator_output._sandbox_notice -> cadrumo.adapters.persistence.storage.bucket
     cadrumo.application.modelo._review_package_recipient_encryption -> cadrumo.adapters.persistence.storage
     cadrumo.application.modelo._review_package_recipient_encryption -> cadrumo.adapters.persistence.storage.crypto
     cadrumo.application.modelo._review_package_recipient_registry -> cadrumo.adapters.persistence.storage
@@ -533,6 +528,7 @@ ignore_imports =
     cadrumo.application.ledger._actions_split_merge -> cadrumo.adapters.persistence.profile.transactions
     cadrumo.application.ledger._preflight -> cadrumo.adapters.persistence.profile.transactions
     cadrumo.application.modelo._art109_activity_income -> cadrumo.adapters.persistence.profile.transactions
+    cadrumo.application.modelo._ledger_drift_gate -> cadrumo.adapters.persistence.profile.transactions
     cadrumo.application.modelo._calculation_actions -> cadrumo.adapters.persistence.profile.transactions
     cadrumo.application.modelo._calculation_preparation -> cadrumo.adapters.persistence.profile.transactions
     cadrumo.application.modelo._m349_ledger_guard -> cadrumo.adapters.persistence.profile.transactions

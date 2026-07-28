@@ -116,10 +116,24 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
             r"test_parser_boundary_synthetic_models|test_parser_privacy_redaction|"
             r"test_parser_synthetic_fixtures|test_verification_chain_part1|"
             r"test_verification_chain_part2|test_verification_chain_part3|"
-            r"test_verification_chain_m\d+(?:_historical)?|test_real_render_extraction_coverage"
+            r"test_verification_chain_m\d+(?:_historical)?|test_real_render_extraction_coverage|"
+            r"test_extraction_word_order_independence"
             r")\.py$"
         ),
         reason="declaracion parser corpus tests pin external justificante fixture filenames and source labels",
+    ),
+    AllowlistRule(
+        path=_path(r"^src/cadrumo/adapters/inbound/sanitizer/fixtures\.py$"),
+        reason=(
+            "the known-sanitised SHA catalogue annotates each digest with the committed "
+            "justificante PDF filename it was computed from, so a reader can tell which "
+            "fixture a hex string belongs to. The tokens are on-disk fixture filenames in "
+            "comments; the module holds no period value and parses no period input. Scoped "
+            "by text to lines naming a .pdf so a genuine combined-period token elsewhere in "
+            "this module still fails."
+        ),
+        pattern_names=frozenset({"year-qualified quarterly token", "calendar quarter token"}),
+        text=_text(r"\.pdf"),
     ),
     AllowlistRule(
         path=_path(r"^src/cadrumo/adapters/inbound/justificante/tests/test_parser\.py$"),

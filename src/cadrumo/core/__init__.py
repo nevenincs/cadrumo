@@ -85,6 +85,7 @@ from ._config_state_root import FormerProductStateError
 from ._credentials import (
     LENGTH_ALONE_IS_STRONG,
     LENGTH_FAIR_FLOOR,
+    NIST_PASSPHRASE_MIN_LENGTH,
     PassphraseStrength,
     assess_passphrase_strength,
     character_class_count,
@@ -236,6 +237,7 @@ __all__: list[str] = [
     "M347_THRESHOLD_EUR",
     "MODELO_720_FOREIGN_ASSET_CLASS_CODES",
     "MODELO_720_REDECLARATION_INCREASE_THRESHOLD_EUR",
+    "NIST_PASSPHRASE_MIN_LENGTH",
     "NON_REGISTRY_MODELOS",
     "OFFICIAL_M210_TIPO_RENTA_CODES",
     "OFX_EXTRA",
