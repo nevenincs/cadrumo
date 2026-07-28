@@ -30,9 +30,9 @@ from ._schema import (
     ParameterDefinition,
     RelationDefinition,
     SupportRemovalDecisionDefinition,
-    VerificationExpectationDefinition,
     WorkbookParityReference,
 )
+from ._schema_verification import VerificationExpectationDefinition
 from ._validate_revision_identity import _collect_record_id_lists
 
 

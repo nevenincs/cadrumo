@@ -23,8 +23,8 @@ from .._schema import (
     FormulaExpression,
     InputKind,
     RelationDefinition,
-    VerificationExpectationDefinition,
 )
+from .._schema_verification import VerificationExpectationDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

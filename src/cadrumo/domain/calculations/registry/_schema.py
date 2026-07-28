@@ -8,7 +8,6 @@ generated output envelopes.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from typing import Annotated, Literal
@@ -65,6 +64,7 @@ from ._schema_governance import (
 from ._schema_input_kind import InputKind, InputKindValue
 from ._schema_rounding import RegistryRoundingCode as RegistryRoundingCode
 from ._schema_rounding import RegistryRoundingCodeValue
+from ._schema_verification import RegistryVerificationPolicy, VerificationExpectationDefinition
 
 __all__ = [
     "AlgorithmBindingDefinition",
@@ -432,71 +432,6 @@ class WorkbookParityReference(RegistryModel):
         if self.workbook_source not in self.source_refs:
             raise RegistryValidationError(
                 f"workbook parity reference {self.id!r} source_refs must include workbook_source",
-            )
-        return self
-
-
-class VerificationExpectationDefinition(RegistryModel):
-    id: VerificationExpectationId
-    computed_casilla_ids: tuple[CasillaId, ...]
-    reconcile_when_present_casilla_ids: tuple[CasillaId, ...] = ()
-    externally_grounded_casilla_ids: tuple[CasillaId, ...] = ()
-    reconciliation_total_casilla_ids: Mapping[Literal["ingresar", "devolver"], CasillaId] = Field(
-        default_factory=dict,
-    )
-    tolerance: DecimalValue
-    rounding: str
-    min_coverage: DecimalValue = Field(ge=Decimal("0"), le=Decimal("1"))
-    discrepancy_causes: tuple[
-        Literal["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"],
-        ...,
-    ] = Field(min_length=1)
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
-
-    @field_validator("computed_casilla_ids")
-    @classmethod
-    def _computed_casilla_ids_unique(cls, value: tuple[CasillaId, ...]) -> tuple[CasillaId, ...]:
-        if len(set(value)) != len(value):
-            raise RegistryValidationError("verification expectation computed_casilla_ids must be unique")
-        return value
-
-    @field_validator("reconcile_when_present_casilla_ids")
-    @classmethod
-    def _reconcile_when_present_unique(cls, value: tuple[CasillaId, ...]) -> tuple[CasillaId, ...]:
-        if len(set(value)) != len(value):
-            raise RegistryValidationError(
-                "verification expectation reconcile_when_present_casilla_ids must be unique",
-            )
-        return value
-
-    @field_validator("externally_grounded_casilla_ids")
-    @classmethod
-    def _externally_grounded_unique(cls, value: tuple[CasillaId, ...]) -> tuple[CasillaId, ...]:
-        if len(set(value)) != len(value):
-            raise RegistryValidationError(
-                "verification expectation externally_grounded_casilla_ids must be unique",
-            )
-        return value
-
-    @model_validator(mode="after")
-    def _reconcile_when_present_disjoint(self) -> VerificationExpectationDefinition:
-        overlap = set(self.reconcile_when_present_casilla_ids) & set(self.computed_casilla_ids)
-        if overlap:
-            raise RegistryValidationError(
-                "verification expectation reconcile_when_present_casilla_ids must be disjoint from "
-                f"computed_casilla_ids (overlap: {sorted(overlap)})",
-            )
-        return self
-
-    @model_validator(mode="after")
-    def _externally_grounded_subset(self) -> VerificationExpectationDefinition:
-        reconciled = set(self.computed_casilla_ids) | set(self.reconcile_when_present_casilla_ids)
-        outside = set(self.externally_grounded_casilla_ids) - reconciled
-        if outside:
-            raise RegistryValidationError(
-                "verification expectation externally_grounded_casilla_ids must be a subset of "
-                f"computed_casilla_ids | reconcile_when_present_casilla_ids (outside: {sorted(outside)})",
             )
         return self
 
@@ -1378,37 +1313,6 @@ class RegistryCatalogues(RegistryModel):
     sources: Mapping[SourceRefId, SourceReference]
     parameters: Mapping[str, LegalParameter] = Field(default_factory=dict)
     convenio: ConvenioAuthority = Field(default_factory=ConvenioAuthority.empty)
-
-
-@dataclass(frozen=True, slots=True)
-class RegistryVerificationPolicy:
-    """Folded verification policy across a snapshot's verification expectations.
-
-    Owns the registry-grounded projection (union of computed casilla ids, the
-    union of reconcile-when-present casilla ids, the strictest tolerance, the
-    strictest coverage floor) so the application verification surface consumes
-    it rather than re-deriving the fold.
-
-    ``computed_casilla_ids`` are the coverage-gated reconciliation targets: a
-    filing that fails to reconcile them below ``min_coverage`` is NEEDS_REVIEW.
-    ``reconcile_when_present_casilla_ids`` are value-reconciled when the filing
-    prints them (a filed-vs-computed divergence surfaces a discrepancy) but are
-    excluded from the coverage denominator, so enrolling a situational casilla
-    can never lower coverage and flip a legitimate filing's verdict.
-
-    ``externally_grounded_casilla_ids`` is the third, orthogonal axis: of the
-    casillas a filing reconciles (``computed_casilla_ids`` or
-    ``reconcile_when_present_casilla_ids``), which have an AEAT-authoritative
-    independent oracle expected value backing their reconciliation, rather than
-    only the app's own engine.
-    """
-
-    expectation_ids: tuple[VerificationExpectationId, ...]
-    computed_casilla_ids: frozenset[CasillaId]
-    reconcile_when_present_casilla_ids: frozenset[CasillaId]
-    externally_grounded_casilla_ids: frozenset[CasillaId]
-    tolerance: Decimal
-    min_coverage: Decimal
 
 
 class RegistrySnapshot(RegistryModel):

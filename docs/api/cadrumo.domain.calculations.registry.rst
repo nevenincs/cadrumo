@@ -91,6 +91,7 @@ Submodules
    cadrumo.domain.calculations.registry._schema_rounding
    cadrumo.domain.calculations.registry._schema_scalars
    cadrumo.domain.calculations.registry._schema_surfaces
+   cadrumo.domain.calculations.registry._schema_verification
    cadrumo.domain.calculations.registry._snapshot
    cadrumo.domain.calculations.registry._source_evidence_fingerprint
    cadrumo.domain.calculations.registry._support_matrix

@@ -479,16 +479,15 @@ from ._schema import (
     RegistryCatalogues,
     RegistrySnapshot,
     RegistrySnapshotRef,
-    RegistryVerificationPolicy,
     RelationDefinition,
     SourceReference,
     SupportRemovalDecisionDefinition,
-    VerificationExpectationDefinition,
     VerificationPredicateDefinition,
     WorkbookParityReference,
 )
 from ._schema_input_kind import InputKind, InputKindValue
 from ._schema_rounding import RegistryRoundingCode
+from ._schema_verification import RegistryVerificationPolicy, VerificationExpectationDefinition
 from ._snapshot import build_snapshot
 from ._temporal import select_revision
 from ._validate import RegistryValidator
