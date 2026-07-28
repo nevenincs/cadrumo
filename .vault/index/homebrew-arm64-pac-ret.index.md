@@ -7,7 +7,12 @@ date: '2026-07-28'
 modified: '2026-07-28'
 related:
   - '[[2026-07-22-homebrew-arm64-pac-ret-adr]]'
+  - '[[2026-07-25-homebrew-arm64-pac-ret-S01]]'
+  - '[[2026-07-25-homebrew-arm64-pac-ret-S02]]'
+  - '[[2026-07-25-homebrew-arm64-pac-ret-S03]]'
+  - '[[2026-07-25-homebrew-arm64-pac-ret-S05]]'
   - '[[2026-07-25-homebrew-arm64-pac-ret-plan]]'
+  - '[[2026-07-28-homebrew-arm64-pac-ret-evidence-row-blocker-chain-audit]]'
 ---
 
 # `homebrew-arm64-pac-ret` feature index
@@ -19,6 +24,17 @@ Auto-generated index of all documents tagged with `#homebrew-arm64-pac-ret`.
 ### adr
 
 - `2026-07-22-homebrew-arm64-pac-ret-adr` - `homebrew-arm64-pac-ret` adr: `Homebrew Linux-arm64 drops pac-ret branch protection for Apple-virtualization compatibility` | (**status:** `accepted`)
+
+### audit
+
+- `2026-07-28-homebrew-arm64-pac-ret-evidence-row-blocker-chain-audit` - `homebrew-arm64-pac-ret` audit: `why the Linux arm64 evidence row cannot be minted at current HEAD`
+
+### exec
+
+- `2026-07-25-homebrew-arm64-pac-ret-S01` - Bring the self-hosted Linux ARM64 runner back online, since it was offline at record time and no diagnosis can proceed without it, OPERATOR-GATED as a host action
+- `2026-07-25-homebrew-arm64-pac-ret-S02` - Reproduce the argon2-cffi-bindings 25.1.0 source build dying with exit -4 SIGILL under the Homebrew python 3.13 toolchain, capturing the failing compiler invocation rather than only the installer summary
+- `2026-07-25-homebrew-arm64-pac-ret-S03` - Resolve the toolchain fault so the homebrew-linux-arm64 row builds, without weakening any preflight or pinning around the failure in a way that ships an untested binary to that platform
+- `2026-07-25-homebrew-arm64-pac-ret-S05` - Decide and record whether homebrew-linux-arm64 is claimed or dropped from the support matrix if the toolchain fault proves unresolvable, because an unclaimed row must not silently read as an untested claim
 
 ### plan
 
