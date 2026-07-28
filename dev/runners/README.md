@@ -128,6 +128,54 @@ ssh <macos-build-host> '
 
 (Copy `cleanup-macos.sh` to the runner root first, e.g. `scp dev/runners/cleanup-macos.sh <macos-build-host>:~/actions-runner/`.)
 
+## Linux container provisioning (`runner-entry-linux.sh`)
+
+The two Linux runners are containers built from the stock
+`ghcr.io/actions/actions-runner` image, so everything that makes them *these*
+runners lives outside the image. Two rules follow, and both were learned by
+outage rather than by design.
+
+**The entrypoint belongs in the runner's own state volume, never on a host
+path.** `runner-entry-linux.sh` is copied to `/home/runner/entry.sh` inside the
+`cadrumo-runner-state-<n>` volume and the container is created with
+`--entrypoint /home/runner/entry.sh`. A container whose entrypoint is
+bind-mounted from a scratch or temp directory dies the moment that directory is
+cleaned up: Docker recreates the missing bind source as an empty **directory**,
+exec fails, and the container exits **127** and stays down *even with*
+`--restart always`. The tell is a mount whose source is a temp path, which
+`Test-Path` reports as existing while reading it errors with "is a directory".
+
+**Tools the image does not ship belong in the volume too**, under
+`/home/runner/tools/bin`, which the entrypoint prepends to `PATH`. The image
+carries `jq`, `git`, `curl`, `tar` and the docker client; it does **not** carry
+`gh`. Workflows install `just` and `uv` themselves through actions, but nothing
+installs `gh` — it is assumed present, as it is on GitHub-hosted runners. When
+it is absent, `dev.release.version_identity` fails its forge check with
+`REFUSED: forge check needs the gh CLI on PATH`, which surfaces mid-release as a
+cohort-seal failure rather than as a missing-tool error. Installing into the
+volume rather than the container's writable layer is the whole point: a
+recreated container keeps the tools.
+
+Recreate a Linux runner like this (the volume already holds `config.sh`,
+`run.sh`, `.runner`, `.credentials`, and `.env`, so it does **not** re-register):
+
+```bash
+docker create --name cadrumo-runner-linux-2 --restart always \
+  --user runner -w /home/runner \
+  -v cadrumo-runner-state-2:/home/runner \
+  -v /run/host-services/docker.proxy.sock:/var/run/docker.sock \
+  -e RUNNER_MANUALLY_TRAP_SIG=1 -e ACTIONS_RUNNER_PRINT_LOG_TO_STDOUT=1 \
+  --entrypoint /home/runner/entry.sh ghcr.io/actions/actions-runner:latest
+```
+
+Verify with `docker exec <container> bash -lc 'command -v gh && gh --version'`
+before trusting the runner with a release lane.
+
+Do **not** keep a broken container around as a rollback: `cleanup-linux.sh`
+runs `docker container prune` on every job completion, which removes *stopped*
+containers, so a retained-but-stopped container is reaped by the next job that
+finishes anywhere on the host.
+
 ## Restart discipline
 
 **Never restart a runner mid-job.** Poll busy state first and only restart an
