@@ -112,6 +112,18 @@ The byte-identical line is the load-bearing half and is asserted in the durable 
 a refusal that raised AFTER rewriting the manifest would leave the false claim on disk and
 still satisfy a bare `pytest.raises`.
 
+CORRECTION, recorded by the S53 to S57 pass. Both byte-identity assertions added here sit
+on the PRE-WRITE refusal path, where nothing is written, so they are trivially true and
+prove only that the refusal precedes the write — which is worth pinning, but is not what
+the module's separate claim that a failed write is "restored to its previous bytes" is
+about. That claim was FALSE at the time: the writer read with `read_text` and restored with
+`write_text`, which on Windows expanded every LF to CRLF, taking the bundled Modelo 130
+manifest from 422 bytes and eight LF terminators to 430 bytes and eight CRLF ones. The only
+test exercising the restore compared `read_text`, which normalises the difference away —
+and it turned out not to reach the restore at all, because it staged its failure before the
+pre-write check. Step S54 moves the writer onto raw bytes, re-points the assertion onto
+bytes, and triggers the post-write failure from the written bytes themselves.
+
 Full dev CLI module under the DEFAULT selector, before and after:
 
 ```

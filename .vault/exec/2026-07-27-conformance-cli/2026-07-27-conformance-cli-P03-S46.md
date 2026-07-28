@@ -58,9 +58,20 @@ that claimed to would be a worse lie than the one it replaced.
 
 What is closable is the PRESENTATION. The text row now renders the reviewer as
 `<status>:<name>`, so the two columns cannot be read independently; the payload keeps the
-raw `reviewed_by` and carries the joined form as `reviewed_by_attribution`, so a JSON
-consumer filtering on the reviewer alone reaches the same qualified answer rather than the
-bare name.
+raw `reviewed_by` and carries the joined form as `reviewed_by_attribution`.
+
+CORRECTION, recorded by the S53 to S57 pass. The final sentence of this section as
+originally written — "so a JSON consumer filtering on the reviewer alone reaches the same
+qualified answer rather than the bare name" — was FALSE, and the fourth review round caught
+it. The joined form was carried under a NEW key. A consumer filtering on `reviewed_by`, the
+reviewer field, alone still reached the raw name; only a consumer that already knew to read
+`reviewed_by_attribution` reached the qualified one. Worse, the change left one key name
+carrying two different values across the two surfaces: text rendered `reviewed_by` as the
+qualified form while the payload's `reviewed_by` stayed raw. Step S55 reconciles them — the
+text row now names the joined field `reviewed_by_attribution` exactly as the payload does
+and emits no bare reviewer column — and adds a writer refusal for a reviewer whose leading
+segment is a status token, which was the remaining way to forge a qualified-looking raw
+value. The claim above is corrected rather than deleted so the overclaim stays visible.
 
 The join is applied to EVERY tier, not only to `agent_reviewed`. Qualifying one tier and
 leaving the other bare would make a bare name mean `operator_reviewed` by convention, which
