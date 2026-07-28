@@ -91,6 +91,37 @@ deadline. This is the same class of defect the parent plan's open rows already
 describe: the service reports a state that reads as a definite negative when the
 honest answer is that it could not tell in the time it allowed itself.
 
+### Correction: the repeated stops are deliberate peer shutdowns, not crashes
+
+An earlier reading of this same evidence treated the service's repeated
+disappearance as instability of unknown cause. That was wrong, and the
+correction changes the remedy rather than refining it. The service log records
+an explicit initiator for every shutdown, and tonight's entries name four
+separate worktrees issuing `vaultspec-rag server stop` against the one
+machine-global instance: the discovery service's own main worktree seven times,
+its `jobs-tui` worktree once, the companion tool's worktree twice, and this tree
+once. These are `reason=cli_terminate`, not faults.
+
+The conclusion is structural, not incidental. A campaign is actively developing
+the discovery service itself, and its ordinary loop, stop the service, run the
+integration suite, start it again, necessarily destroys any index another
+repository is building, because the service and its index are machine-global
+while the campaigns are not. There is no failure here to wait out.
+
+### The rebuild attempted from this tree left the index worse than it found it
+
+Acting on the truncated-index reading, this tree queued a full rebuild. A peer
+shutdown landed while that rebuild was mid-flight. The prior generations, which
+were degraded but partially present, are now gone: all three axes report `not
+indexed yet`, vault documents fell from 16961 to 0, and the 57392 code sections
+left behind are an orphan of the killed job rather than a usable index.
+
+The retry is therefore not merely unproductive but destructive, and repeating it
+under contention would keep clearing partial indexes while competing for the
+single GPU encode slot with the peer's test suite. Recording this because the
+natural instinct on seeing a truncated index, rebuild it, is the wrong move
+while another campaign holds the service.
+
 ## Recommendations
 
 These bind the discovery service's own repository, not this tree, and are
