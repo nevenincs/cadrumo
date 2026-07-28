@@ -20,7 +20,8 @@ Legal sources (Ley 37/1992 del IVA, BOE-A-1992-28740):
   the rule into two modalities: *prorrata general* (arts. 104-105) is the
   default, and *prorrata especial* (art. 106) applies on election or, per
   art. 103.Dos.2.º, whenever the year's deductible cuotas under the general
-  regime exceed those under the especial regime by ten percent or more.
+  regime exceed those under the especial regime by the margin in force for
+  that filing year.
 
 * **Art. 104.Dos** ("La prorrata general") — general prorrata formula:
   ``deductible_percentage = operaciones_con_derecho / total_operaciones``.
@@ -43,9 +44,16 @@ Legal sources (Ley 37/1992 del IVA, BOE-A-1992-28740):
   only rounding clause in the whole of Ley 37/1992.
 
 * **Art. 103.Dos.2.º** — prorrata especial is mandatory whenever the
-  year's total deductible cuotas under the general regime "exceda en un 10
-  por ciento o más" those under the especial regime. See
-  :func:`is_especial_mandatory` for the threshold this module applies.
+  year's total deductible cuotas under the general regime exceed those
+  under the especial regime by the statutory margin. The provision is NOT
+  invariant across the filing years this module serves: the original
+  redaction (in force to 31-12-2014) read "exceda en un 20 por 100 del que
+  resultaría", while Ley 28/2014 art. 1.26 (BOE-A-2014-12329, in force from
+  01-01-2015) replaced it with "exceda en un 10 por ciento o más del que
+  resultaría" — lowering the margin *and* making it inclusive. See
+  :func:`is_especial_mandatory`, which selects on the filing year, and
+  :func:`especial_mandatory_rule`, which reports the margin that
+  selection applied.
 
 * **Art. 9.1.c** — sectoral separation (``régimen de sectores
   diferenciados``) applies when the taxpayer's activities form two or more
@@ -85,7 +93,9 @@ from pydantic import (
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.external_constants import (
-    PRORRATA_ESPECIAL_MANDATORY_MULTIPLE,
+    PRORRATA_ESPECIAL_MANDATORY_LEY_28_2014_FIRST_YEAR,
+    PRORRATA_ESPECIAL_MANDATORY_MULTIPLE_FROM_2015,
+    PRORRATA_ESPECIAL_MANDATORY_MULTIPLE_UNTIL_2014,
     PRORRATA_SECTORAL_SEPARATION_SPREAD_PP,
 )
 from ...core.money import round_to_cents as _round_to_cents
@@ -288,6 +298,33 @@ class ProrrataInputDeduction(_ProrrataStrictFrozen):
     deductible_amount: Decimal = Field(..., ge=Decimal("0"))
 
 
+class EspecialMandatoryRule(_ProrrataStrictFrozen):
+    """The LIVA art. 103.Dos.2.º mandatory-especial rule in force for one filing year.
+
+    Art. 103.Dos.2.º is not invariant across the filing years this substrate
+    serves, so the rule is resolved per year by
+    :func:`especial_mandatory_rule` rather than being a single constant.
+    Carrying the comparison shape alongside the figure lets an
+    operator-facing message state the margin AND whether reaching it is
+    enough, without re-deriving either.
+
+    Attributes:
+        year: The filing year the deductions belong to.
+        multiple: The factor the especial-regime deduction is scaled by to
+            obtain the threshold (``1.10`` from 2015, ``1.20`` before).
+        margin_percentage: The same threshold expressed as the percentage
+            the provision names (``10`` from 2015, ``20`` before).
+        inclusive: ``True`` when the provision reads "o más", so a general
+            deduction landing exactly on the threshold already makes the
+            especial regime mandatory.
+    """
+
+    year: Annotated[int, Field(ge=2000, le=2100)]
+    multiple: Decimal = Field(..., gt=Decimal("1"))
+    margin_percentage: Decimal = Field(..., gt=Decimal("0"))
+    inclusive: bool
+
+
 # ---------------------------------------------------------------------------
 # Pure calculators
 # ---------------------------------------------------------------------------
@@ -461,36 +498,79 @@ def classify_input_deduction(
     )
 
 
+def especial_mandatory_rule(year: int) -> EspecialMandatoryRule:
+    """Return the LIVA art. 103.Dos.2.º rule in force for filing ``year``.
+
+    Art. 103.Dos.2.º has had exactly two redactions, and they differ on
+    both axes the predicate reads:
+
+    * Original (Ley 37/1992, BOE-A-1992-28740, in force 01-01-1993 to
+      31-12-2014): "exceda en un 20 por 100 del que resultaría por
+      aplicación de la regla de prorrata especial" — a twenty-percent
+      margin with no "o más", hence EXCLUSIVE.
+    * Current (Ley 28/2014 art. 1.26, BOE-A-2014-12329, in force from
+      01-01-2015): "exceda en un 10 por ciento o más del que resultaría
+      por aplicación de la regla de prorrata especial" — ten percent, and
+      "o más" reaches the margin, hence INCLUSIVE.
+
+    This is the single place the year split is decided, so
+    :func:`is_especial_mandatory` and any operator-facing message quoting
+    the margin cannot drift apart.
+
+    Raises:
+        ProrrataInputError: when the year is outside the supported range.
+    """
+    _validate_year(year)
+    if year >= PRORRATA_ESPECIAL_MANDATORY_LEY_28_2014_FIRST_YEAR:
+        multiple, inclusive = PRORRATA_ESPECIAL_MANDATORY_MULTIPLE_FROM_2015, True
+    else:
+        multiple, inclusive = PRORRATA_ESPECIAL_MANDATORY_MULTIPLE_UNTIL_2014, False
+    margin = (multiple - Decimal("1")) * Decimal("100")
+    return EspecialMandatoryRule(
+        year=year,
+        multiple=multiple,
+        margin_percentage=margin.quantize(Decimal("1")) if margin == margin.to_integral_value() else margin,
+        inclusive=inclusive,
+    )
+
+
 def is_especial_mandatory(
     deduction_under_general: Decimal,
     deduction_under_especial: Decimal,
+    *,
+    year: int,
 ) -> bool:
     """Return True when LIVA art. 103.Dos.2.º forces the prorrata especial regime.
 
-    The provision: the especial regime applies "cuando el montante total
-    de las cuotas deducibles en un año natural por aplicación de la regla
-    de prorrata general exceda en un 10 por ciento o más del que
-    resultaría por aplicación de la regla de prorrata especial" (wording
-    in force since Ley 28/2014, which lowered the margin from twenty
-    percent).
+    The provision in force from filing year 2015 (Ley 28/2014 art. 1.26,
+    BOE-A-2014-12329): the especial regime applies "cuando el montante
+    total de las cuotas deducibles en un año natural por aplicación de la
+    regla de prorrata general exceda en un 10 por ciento o más del que
+    resultaría por aplicación de la regla de prorrata especial". "O más"
+    reaches the margin, so a general deduction landing exactly on it
+    switches the regime: the comparison is ``>=``, not ``>``.
 
-    This function applies the threshold strictly —
-    ``deduction_general > deduction_especial * 1.10`` — so a general
-    deduction landing exactly on the ten-percent margin does not trip it,
-    where the provision's "o más" reads as reaching the margin. The two
-    readings differ only at exact equality; aligning them is a regulated
-    behaviour change and has not been made here.
+    The original redaction (in force to filing year 2014) set the margin at
+    twenty percent and carried no "o más", so for those years the margin
+    must be passed rather than merely reached. ``year`` selects between the
+    two through :func:`especial_mandatory_rule`; it is the filing year the
+    deductions belong to, not the year the calculation is run.
 
-    When the especial deduction is zero this function returns ``True``
-    if the general deduction is positive (the general regime would over-
-    deduct without bound).
+    When the especial deduction is zero this function returns ``True`` if
+    the general deduction is positive: a positive amount exceeds zero
+    without bound, so both redactions agree the regime is mandatory.
+
+    Raises:
+        ProrrataInputError: on a negative deduction amount or a year
+        outside the supported range.
     """
     if deduction_under_general < 0 or deduction_under_especial < 0:
         raise ProrrataInputError("deduction amounts must be non-negative")
+    rule = especial_mandatory_rule(year)
     if deduction_under_especial == 0:
         return deduction_under_general > 0
-    threshold = deduction_under_especial * PRORRATA_ESPECIAL_MANDATORY_MULTIPLE
-    return deduction_under_general > threshold
+    threshold = deduction_under_especial * rule.multiple
+    return deduction_under_general >= threshold if rule.inclusive else deduction_under_general > threshold
 
 
 # ---------------------------------------------------------------------------
@@ -741,6 +821,7 @@ def sum_deductible_amounts(
 
 
 __all__ = (
+    "EspecialMandatoryRule",
     "InputClassification",
     "ProrrataInputDeduction",
     "ProrrataInputs",
@@ -757,6 +838,7 @@ __all__ = (
     "compute_regularizacion_prorrata_anual",
     "compute_sectoral_prorrata",
     "deductible_percentage_for",
+    "especial_mandatory_rule",
     "is_especial_mandatory",
     "requires_sectoral_separation",
     "sum_deductible_amounts",

@@ -207,6 +207,64 @@ def test_liva_art_161_missing_recargo_parameter_raises_iva_catalogue_error() -> 
 
 
 # ---------------------------------------------------------------------------
+# LIVA art 103.Dos.2.º — mandatory prorrata especial margin (20 % → 10 %)
+# ---------------------------------------------------------------------------
+
+
+def test_liva_art_103_legal_entry_quotes_the_current_ten_per_cent_inclusive_margin() -> None:
+    """The catalogue entry must carry the operative sentence verbatim, "o más" included.
+
+    The registry's corpus verification proves the sentence is present in the
+    bundled consolidated Ley 37/1992, so this assertion binds the catalogue to
+    the BOE wording rather than to a paraphrase.
+    """
+    required_text = _legal_entry("iva.toml", "ley-37-1992:art-103")["required_text"]
+    assert any("exceda en un 10 por ciento o más" in t for t in required_text)
+
+
+def test_liva_art_103_corpus_records_the_ley_28_2014_amendment_of_apartado_dos() -> None:
+    """The bundled consolidated text dates the current redaction, so the year split is grounded, not assumed.
+
+    The amendment note names Ley 28/2014 art. 1.26 as the modifier of apartado
+    Dos number 2 — the very subapartado the mandatory-especial predicate reads —
+    which is the evidence that a filing year before the amendment is governed by
+    a different text.
+    """
+    required_text = _legal_entry("iva.toml", "ley-37-1992:art-103")["required_text"]
+    assert any("art. 1.26 de la Ley 28/2014" in t for t in required_text)
+    assert any("apartado 2.2º" in t for t in required_text)
+
+
+def test_liva_art_103_substrate_margins_match_the_two_boe_redactions() -> None:
+    """Both margins and the cutover year must match the BOE figures, not a single blended constant.
+
+    The current figure (10) is the one the bundled corpus quotes; the original
+    figure (20) is the one the Ley 37/1992 publication as enacted carried before
+    Ley 28/2014 lowered it, and 2015 is that law's stated entry into force.
+    """
+    from ....core.external_constants import (
+        PRORRATA_ESPECIAL_MANDATORY_LEY_28_2014_FIRST_YEAR,
+        PRORRATA_ESPECIAL_MANDATORY_MULTIPLE_FROM_2015,
+        PRORRATA_ESPECIAL_MANDATORY_MULTIPLE_UNTIL_2014,
+    )
+    from .._prorrata import especial_mandatory_rule
+
+    declared = (
+        PRORRATA_ESPECIAL_MANDATORY_MULTIPLE_FROM_2015,
+        PRORRATA_ESPECIAL_MANDATORY_MULTIPLE_UNTIL_2014,
+        PRORRATA_ESPECIAL_MANDATORY_LEY_28_2014_FIRST_YEAR,
+    )
+    assert declared == (Decimal("1.10"), Decimal("1.20"), 2015)
+
+    # The margin the predicate reports is the percentage the provision names.
+    assert especial_mandatory_rule(2014).margin_percentage == Decimal("20")
+    assert especial_mandatory_rule(2015).margin_percentage == Decimal("10")
+    # Only the post-amendment text carries "o más", so only it is inclusive.
+    assert especial_mandatory_rule(2015).inclusive is True
+    assert especial_mandatory_rule(2014).inclusive is False
+
+
+# ---------------------------------------------------------------------------
 # LIRPF art 85 — imputación rates (1.1 / 2 / lookback 10)
 # ---------------------------------------------------------------------------
 

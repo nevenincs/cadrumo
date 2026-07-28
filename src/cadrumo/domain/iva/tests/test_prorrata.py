@@ -37,6 +37,7 @@ from .._prorrata import (
     classify_input_deduction,
     compute_prorrata_general,
     compute_sectoral_prorrata,
+    especial_mandatory_rule,
     is_especial_mandatory,
     requires_sectoral_separation,
     sum_deductible_amounts,
@@ -69,17 +70,33 @@ _INPUT_DEDUCTION_CASES = (
     ),
 )
 
+# LIVA art. 103.Dos.2.º cases as ``(year, general, especial, expected)``.
+#
+# From filing year 2015 the provision (Ley 28/2014 art. 1.26, BOE-A-2014-12329)
+# reads "exceda en un 10 por ciento o más", so the ten-percent margin is
+# INCLUSIVE: a general deduction landing exactly on it already makes the
+# especial regime mandatory. Before 2015 the original Ley 37/1992 redaction read
+# "exceda en un 20 por 100" with no "o más", so that twenty-percent margin must
+# be passed rather than merely reached.
 _ESPECIAL_MANDATORY_CASES = (
-    (((Decimal("110.01"), Decimal("100.00")),), True),
-    (
-        (
-            (Decimal("110.00"), Decimal("100.00")),
-            (Decimal("109.99"), Decimal("100.00")),
-        ),
-        False,
-    ),
-    (((Decimal("50.00"), Decimal("0.00")),), True),
-    (((Decimal("0.00"), Decimal("0.00")),), False),
+    # Ley 28/2014 redaction: ten percent, inclusive.
+    (2015, Decimal("110.01"), Decimal("100.00"), True),
+    (2026, Decimal("110.01"), Decimal("100.00"), True),
+    (2015, Decimal("110.00"), Decimal("100.00"), True),
+    (2026, Decimal("110.00"), Decimal("100.00"), True),
+    (2026, Decimal("109.99"), Decimal("100.00"), False),
+    (2026, Decimal("100.00"), Decimal("100.00"), False),
+    # Original redaction: twenty percent, exclusive.
+    (2014, Decimal("120.01"), Decimal("100.00"), True),
+    (2009, Decimal("120.01"), Decimal("100.00"), True),
+    (2014, Decimal("120.00"), Decimal("100.00"), False),
+    (2014, Decimal("110.00"), Decimal("100.00"), False),
+    (2014, Decimal("119.99"), Decimal("100.00"), False),
+    # A zero especial deduction is exceeded without bound under both redactions.
+    (2026, Decimal("50.00"), Decimal("0.00"), True),
+    (2014, Decimal("50.00"), Decimal("0.00"), True),
+    (2026, Decimal("0.00"), Decimal("0.00"), False),
+    (2014, Decimal("0.00"), Decimal("0.00"), False),
 )
 
 _ACCEPTED_PRORRATA_REFERENCE_CASES = (
@@ -254,18 +271,66 @@ def test_classify_input_deduction_cases() -> None:
 
 
 def test_especial_mandatory_cases() -> None:
-    """LIVA art. 103.Dos.2.º strict +10% boundary and zero-deduction defences."""
+    """LIVA art. 103.Dos.2.º per-year margin boundary and zero-deduction defences."""
 
-    for deduction_pairs, expected in _ESPECIAL_MANDATORY_CASES:
-        for general_deduction, especial_deduction in deduction_pairs:
-            assert is_especial_mandatory(general_deduction, especial_deduction) is expected
+    for year, general_deduction, especial_deduction, expected in _ESPECIAL_MANDATORY_CASES:
+        assert is_especial_mandatory(general_deduction, especial_deduction, year=year) is expected, (
+            year,
+            general_deduction,
+            especial_deduction,
+        )
+
+
+def test_especial_mandatory_ten_percent_margin_is_inclusive_from_2015() -> None:
+    """Ley 28/2014 art. 1.26 reads "exceda en un 10 por ciento o más", so the margin is reached, not passed.
+
+    A general-regime deduction of exactly 110 against an especial-regime
+    deduction of 100 exceeds it by exactly ten percent. "O más" includes that
+    boundary, so the especial regime is mandatory. The immediately-below case
+    (109.99, a 9.99 percent excess) must stay outside it, so the assertion
+    cannot be satisfied by a predicate that simply answers ``True``.
+    """
+    assert is_especial_mandatory(Decimal("110.00"), Decimal("100.00"), year=2026) is True
+    assert is_especial_mandatory(Decimal("109.99"), Decimal("100.00"), year=2026) is False
+
+
+def test_especial_mandatory_twenty_percent_margin_is_exclusive_until_2014() -> None:
+    """The original Ley 37/1992 redaction reads "exceda en un 20 por 100" with no "o más".
+
+    Without "o más" the margin must be passed, so exactly 120 against 100 does
+    not trip it while 120.01 does. The 110-against-100 case proves the year
+    split is real: identical amounts are mandatory in 2015 and not in 2014.
+    """
+    assert is_especial_mandatory(Decimal("120.00"), Decimal("100.00"), year=2014) is False
+    assert is_especial_mandatory(Decimal("120.01"), Decimal("100.00"), year=2014) is True
+    assert is_especial_mandatory(Decimal("110.00"), Decimal("100.00"), year=2014) is False
+    assert is_especial_mandatory(Decimal("110.00"), Decimal("100.00"), year=2015) is True
+
+
+def test_especial_mandatory_rule_reports_the_margin_the_predicate_applied() -> None:
+    """The margin an operator message quotes is derived from the multiple the predicate compares against."""
+    for year, multiple, margin, inclusive in (
+        (2014, Decimal("1.20"), Decimal("20"), False),
+        (2015, Decimal("1.10"), Decimal("10"), True),
+        (2026, Decimal("1.10"), Decimal("10"), True),
+    ):
+        rule = especial_mandatory_rule(year)
+        assert (rule.year, rule.multiple, rule.margin_percentage, rule.inclusive) == (year, multiple, margin, inclusive)
 
 
 def test_is_especial_mandatory_rejects_negative_amounts() -> None:
     with pytest.raises(ProrrataInputError, match=r"deduction amounts must be non-negative"):
-        is_especial_mandatory(Decimal("-1"), Decimal("100"))
+        is_especial_mandatory(Decimal("-1"), Decimal("100"), year=2026)
     with pytest.raises(ProrrataInputError, match=r"deduction amounts must be non-negative"):
-        is_especial_mandatory(Decimal("100"), Decimal("-1"))
+        is_especial_mandatory(Decimal("100"), Decimal("-1"), year=2026)
+
+
+def test_is_especial_mandatory_rejects_out_of_range_year() -> None:
+    """The year selects the applicable redaction, so an unsupported year refuses rather than guessing one."""
+    with pytest.raises(ProrrataInputError, match=r"year out of supported range"):
+        is_especial_mandatory(Decimal("200"), Decimal("100"), year=1999)
+    with pytest.raises(ProrrataInputError, match=r"year out of supported range"):
+        especial_mandatory_rule(2101)
 
 
 # ---------------------------------------------------------------------------

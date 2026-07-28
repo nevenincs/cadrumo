@@ -1147,13 +1147,14 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a103"
 published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
-reviewed_at = 2026-07-07
-reviewed_by = "agent-authored from bundled ley-37-1992.html#a103 clases de prorrata; operator to re-stamp"
-notes = "Articulo 103 LIVA: clases de prorrata y criterios de aplicacion. Apartado Uno: la regla de prorrata tiene dos modalidades, general y especial; la general se aplica cuando no concurren las circunstancias del apartado siguiente. Apartado Dos: la prorrata especial es aplicable (1) cuando el sujeto pasivo opta por ella en plazo y forma reglamentarios, o (2) cuando el montante total de las cuotas deducibles del ano natural por la regla general excede en un 10 por ciento o mas del que resultaria por la regla especial (obligacion de especial). Base legal del aviso +10% de prorrata especial obligatoria (PRORRATA_ESPECIAL_MANDATORY_MULTIPLE)."
+reviewed_at = 2026-07-28
+reviewed_by = "agent-authored from bundled ley-37-1992.html#a103 clases de prorrata, amendment history cross-checked against the live BOE consolidated text, the Ley 28/2014 modifying article and the original 1992 publication; operator to re-stamp"
+notes = "Articulo 103 LIVA: clases de prorrata y criterios de aplicacion. Apartado Uno: la regla de prorrata tiene dos modalidades, general y especial; la general se aplica cuando no concurren las circunstancias del apartado siguiente. Apartado Dos: la prorrata especial es aplicable (1) cuando el sujeto pasivo opta por ella en plazo y forma reglamentarios, o (2) cuando el montante total de las cuotas deducibles del ano natural por la regla general excede del que resultaria por la regla especial en el margen legal del ejercicio (obligacion de especial). ATENCION - el apartado Dos numero 2 NO es invariante en la ventana de ejercicios que la aplicacion sirve: la redaccion original de la Ley 37/1992 (en vigor 01-01-1993 a 31-12-2014) exigia que excediera 'en un 20 por 100', sin 'o mas', mientras que el art. 1.26 de la Ley 28/2014 (BOE-A-2014-12329, en vigor desde 01-01-2015) lo sustituyo por 'en un 10 por ciento o mas'. La modificacion rebajo el margen Y lo hizo inclusivo: el preambulo de la Ley 28/2014 lo describe como 'disminuir del 20 al 10 por ciento la diferencia admisible'. Base legal del aviso de prorrata especial obligatoria, cuyo margen se resuelve por ejercicio (PRORRATA_ESPECIAL_MANDATORY_MULTIPLE_FROM_2015, PRORRATA_ESPECIAL_MANDATORY_MULTIPLE_UNTIL_2014, PRORRATA_ESPECIAL_MANDATORY_LEY_28_2014_FIRST_YEAR)."
 required_text = [
     "La regla de prorrata tendrá dos modalidades de aplicación: general y especial.",
     "La regla de prorrata especial será aplicable en los siguientes supuestos:",
     "Cuando el montante total de las cuotas deducibles en un año natural por aplicación de la regla de prorrata general exceda en un 10 por ciento o más del que resultaría por aplicación de la regla de prorrata especial.",
+    "Se modifica el apartado 2.2º por el art. 1.26 de la Ley 28/2014, de 27 de noviembre.",
 ]
 
 [legal."ley-37-1992:art-106"]
