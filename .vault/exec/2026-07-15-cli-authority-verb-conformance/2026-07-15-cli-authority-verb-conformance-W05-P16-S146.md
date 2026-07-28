@@ -120,3 +120,34 @@ the curated surface is affirmed as a deliberate workflow subset -- it teaches a
 path through the product rather than enumerating the command inventory -- and
 the row's wording is corrected. The second looks more likely right: "an entry
 per family" may be the wrong goal rather than an unfinished one.
+
+## Independent re-confirmation 2026-07-28: stays open
+
+Re-measured against the named surface and the finding stands. `profile`, `ledger`
+and `reset` are cited with the accepted grammar; `recovery`, `certificate` and
+`audit` have zero help entries -- confirmed by reading every `HelpEntry` in the
+three curated documents, and by exact search returning real counts for the three
+present families and nothing for the three absent ones, which is a positive
+control against a failed search rather than an empty one.
+
+Separately confirmed that no stale grammar remains and every command the curated
+help does cite resolves live. Command: `uv run --no-sync pytest -p no:cacheprovider
+-n0 -m integration -o addopts=""
+src/cadrumo/entrypoints/cli/tests/test_root_help_shape.py::test_curated_help_command_rows_resolve_in_real_typer_tree
+src/cadrumo/entrypoints/cli/tests/test_root_help_shape.py::test_config_and_app_help_use_curated_subtree_shape`.
+Collected 2, `2 passed in 5.20s`, exit code 0, at HEAD
+`26df176d16ee22107b14d0fcd8043bcf04e0ab18`. The gate discriminates: injecting
+`aeat config lock` into the curated help reds it with `No such command 'lock'`,
+then restored.
+
+The row stays open, and I concur with the prior adjudication rather than closing
+on the narrower reading. Under "replace stale help records" the surface is clean,
+but the row's literal six-surface wording is unmet for three of the six, and
+closing it needs a decision I should not make from here: every `HelpEntry`
+description is a `tr()` locale key, so adding recovery, certificate and audit
+entries means authoring new keys across all four locale catalogues plus the
+intentional-identical allowlist -- the locale steps' scope -- and it embeds an
+unresolved design question about whether the curated overview should enumerate a
+family per surface at all. That belongs in a plan ruling. Left open with the
+evidence, per the instruction that a genuinely-contested row stay open rather
+than be inferred satisfied from the live command tree.

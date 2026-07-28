@@ -105,3 +105,27 @@ without the search extra, in whichever retrieval mode is installed.
 All seven retired keys are confirmed absent today against a positive control, so
 this landed as a ratchet rather than a red. Verified by mutation that the
 membership check discriminates.
+
+## Re-verified and closed 2026-07-28
+
+Re-executed against the named surface and closed. The row's requirement --
+refresh the command-search expectations for accepted keys and reject removed
+tokens -- is met. The ranking expectations resolve to accepted keys:
+`ledger.import` and `quickfile` are both present in the live descriptor set of
+292 keys, confirmed directly. The seven retired hard-cutover keys are asserted
+absent, as exact keys and as trailing segments, and are confirmed absent today
+with no suffix collisions.
+
+Command: `uv run --no-sync pytest -p no:cacheprovider -n0 -m integration -o
+addopts="" src/cadrumo/application/command_search/tests/test_command_ranking_golden.py`.
+Collected 5, `5 passed in 6.22s`, exit code 0, at HEAD
+`26df176d16ee22107b14d0fcd8043bcf04e0ab18`.
+
+Anti-vacuity hardened this pass. The retired-key gate's floor was strengthened
+from a bare non-empty descriptor check to a plausible-size floor: asserting the
+retired keys are absent passes trivially over a truncated descriptor set, not
+only an empty one, so the floor now pins at least 200 keys against the live ~292.
+Proven by two mutations, both restored: raising the floor above the real count
+reds it with `descriptor set resolved only 292 keys`, and injecting a live key
+(`ledger.import`) into the retired set reds it with `searchable again:
+['ledger.import']`. The floor addition is `ruff check` and `ruff format` clean.

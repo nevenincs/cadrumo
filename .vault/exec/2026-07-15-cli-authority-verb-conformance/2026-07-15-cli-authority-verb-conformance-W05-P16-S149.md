@@ -108,3 +108,43 @@ The other inventories the row names are not in this file. Schema-versus-live is
 already asserted by the registered-schema gate, and the risk and mutability
 mirrors against the MCP annotations are separate rows owned by the MCP surface.
 This record should not be read as claiming this module asserts all five.
+
+## Re-verified and closed 2026-07-28
+
+Closed on the partial-mirror contract the reopen note invited: "record why a
+partial mirror is the correct contract."
+
+Command: `uv run --no-sync pytest -p no:cacheprovider -n0 -m integration -o
+addopts="" src/cadrumo/entrypoints/cli/tests/test_operator_surface_contract_drift.py`.
+Collected 2, `2 passed in 4.94s`, exit code 0, at HEAD
+`26df176d16ee22107b14d0fcd8043bcf04e0ab18`.
+
+Anti-vacuity closed this pass. The contract-covers-the-live-tree assertion
+previously computed a symmetric difference over two maps without proving either
+was populated -- the exact false-green vector the close review's
+`instruments-assert-unproven-sets` finding names for this file, where a collapsed
+lazy walk yields a single leaf and the mirror of two empty inventories passes. A
+floor now pins the resolved live surface against its known shape: both pinned
+roots resolved, at least 20 of 23 families, at least 120 of 151 sub-verbs, and a
+non-empty contract. Proven by mutation, restored: truncating each root to a
+single family reds the gate with `live tree resolved only 2 families; the lazy
+walk likely collapsed`. The floor addition is `ruff check` and `ruff format`
+clean.
+
+Why the partial mirror is the correct contract. The row names five inventories
+-- help, risk, mutability, schema, live-registration -- and asks that they remain
+exact mirrors. Two of the five cannot be exact mirrors by design: 26 read-only
+commands carry no risk row, because `classify` derives safe without one, so a
+literal risk or mutability mirror could only be satisfied by declaring rows that
+assert nothing. The single authority the five inventories all build from is the
+`OperatorSurfaceContract`. This gate proves that authority is an exact mirror of
+the live command tree, now non-vacuously, and asserts the one genuine defect
+direction -- no risk row outlives the command it classifies, verified by mutation
+with a retired custody verb. Each derived inventory is proven to mirror the
+authority by its own dedicated sibling gate, all four of them closed: the
+registered-schema conformance for schema, the MCP risk-table parity for risk, the
+MCP write-policy mutability parity for mutability, and the suggestion-command
+conformance for help. Asserting all five literally in this one file would
+duplicate those gates and be false for the intentionally-partial risk and
+mutability inventories. The mirror is compositional; this file owns the
+authority-versus-live-tree edge of it, and now owns it without a vacuity hole.
