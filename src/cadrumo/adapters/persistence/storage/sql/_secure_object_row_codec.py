@@ -206,6 +206,34 @@ def secure_object_record_from_row(
     )
 
 
+def _upgraded_payload(
+    payload_plain: bytes,
+    *,
+    namespace: str,
+    from_version: int,
+    to_version: int,
+) -> tuple[bytes, str | None]:
+    """Chain-upgrade a below-current payload, reporting a failure as a reason.
+
+    Returns ``(payload, None)`` when the payload is already current or the
+    upgrade succeeded, and ``(payload, reason)`` when it failed — the caller
+    turns the reason into an unreadable row rather than raising, so one bad
+    row does not abort a batch.
+    """
+    if from_version >= to_version:
+        return payload_plain, None
+    try:
+        upgraded = upgrade_secure_object_payload(
+            payload_plain,
+            namespace=namespace,
+            from_version=from_version,
+            to_version=to_version,
+        )
+    except Exception as exc:
+        return payload_plain, resolve_error_message(exc) if isinstance(exc, EnvelopeVersionError) else str(exc)
+    return upgraded, None
+
+
 def secure_object_list_item_from_raw_row(
     raw: object,
     *,
@@ -298,16 +326,14 @@ def secure_object_list_item_from_raw_row(
         previous_payload_hash=row.previous_payload_hash,
     ):
         return unreadable("revision lineage self-consistency check failed")
-    if schema_version < max_supported_version:
-        try:
-            payload_plain = upgrade_secure_object_payload(
-                payload_plain,
-                namespace=namespace,
-                from_version=schema_version,
-                to_version=max_supported_version,
-            )
-        except Exception as exc:
-            return unreadable(resolve_error_message(exc) if isinstance(exc, EnvelopeVersionError) else str(exc))
+    payload_plain, upgrade_failure = _upgraded_payload(
+        payload_plain,
+        namespace=namespace,
+        from_version=schema_version,
+        to_version=max_supported_version,
+    )
+    if upgrade_failure is not None:
+        return unreadable(upgrade_failure)
     return SecureObjectRecord(
         namespace=namespace,
         object_key=object_key,
