@@ -395,14 +395,21 @@ def test_no_parallel_bindings_typer_outside_canonical_module() -> None:
         'typer.Typer(name="bindings"',
     )
     offenders: list[Path] = []
+    scanned = 0
     for py_file in cli_root.rglob("*.py"):
         if py_file == canonical:
             continue
         if py_file.name.startswith("test_"):
             continue
+        scanned += 1
         text = py_file.read_text(encoding="utf-8")
         if any(needle in text for needle in forbidden_patterns):
             offenders.append(py_file)
+    assert scanned > 100, (
+        f"scanned only {scanned} CLI modules under {cli_root}; the scan corpus collapsed (a "
+        "package relocation or rename), so an empty offender list would mean 'nothing was "
+        "checked' rather than 'nothing is wrong'"
+    )
     assert offenders == [], f"Parallel bindings Typer outside the canonical _modelo.py: {[str(p) for p in offenders]}"
 
 

@@ -439,9 +439,11 @@ def test_cli_has_no_bare_emit_definition_import_or_call() -> None:
     """
     root = Path("src/cadrumo/entrypoints/cli")
     violations: list[str] = []
+    scanned = 0
     for path in sorted(root.rglob("*.py")):
         if path.name.startswith("test_") or path.name == "conftest.py":
             continue
+        scanned += 1
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         relative = path.as_posix()
         for node in ast.walk(tree):
@@ -459,6 +461,11 @@ def test_cli_has_no_bare_emit_definition_import_or_call() -> None:
                 violations.append(f"{relative}:{node.lineno}: calls _emit")
             elif isinstance(node.func, ast.Attribute) and node.func.attr == "_emit":
                 violations.append(f"{relative}:{node.lineno}: calls attribute _emit")
+    assert scanned > 50, (
+        f"scanned only {scanned} CLI modules under {root}; the scan corpus collapsed (a package "
+        "relocation or rename), so an empty violation list would mean 'nothing was checked' "
+        "rather than 'nothing is wrong'"
+    )
     assert violations == [], (
         "Bare CLI emit route detected; every CLI result must route through "
         "_emit_envelope with a registered OutputSchema. Violations:\n  " + "\n  ".join(violations)
@@ -514,6 +521,7 @@ def test_no_bare_emit_json_success_call() -> None:
     """
     roots = (Path("src/cadrumo/entrypoints/cli"), Path("src/cadrumo/application"))
     violations: list[str] = []
+    scanned = 0
     for root in roots:
         for path in sorted(root.rglob("*.py")):
             if path.name.startswith("test_") or path.name == "conftest.py":
@@ -521,6 +529,7 @@ def test_no_bare_emit_json_success_call() -> None:
             relative = path.as_posix()
             if relative in _EMIT_JSON_SUCCESS_ALLOWED_MODULES:
                 continue
+            scanned += 1
             tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
             for node in ast.walk(tree):
                 if isinstance(node, ast.ImportFrom):
@@ -534,6 +543,11 @@ def test_no_bare_emit_json_success_call() -> None:
                     violations.append(f"{relative}:{node.lineno}: calls emit_json_success")
                 elif isinstance(node.func, ast.Attribute) and node.func.attr == "emit_json_success":
                     violations.append(f"{relative}:{node.lineno}: calls attribute emit_json_success")
+    assert scanned > 200, (
+        f"scanned only {scanned} modules under entrypoints/cli and application; the scan corpus "
+        "collapsed (a package relocation or rename), so an empty violation list would mean "
+        "'nothing was checked' rather than 'nothing is wrong'"
+    )
     assert violations == [], (
         "Bare emit_json_success route detected outside "
         "application.operator_output.emit_operator_json_success; every operator-facing "
