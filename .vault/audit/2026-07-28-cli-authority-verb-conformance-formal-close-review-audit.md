@@ -142,3 +142,40 @@ rerun the semantic sweep row against a healthy instrument.
 Obtain an independent review of the safety, boundary and intent axes. This one
 confirmed rather than re-derived them, and the campaign's own history is that
 inference passes over exactly the defect a check would find.
+
+## Amendment at HEAD `35a46ff4f25664c2895a56e25196e502511722c2`: one instance was ACTIVE, not latent
+
+UPGRADES the systemic finding above. I classified the class as latent on the
+strength of one candidate I read, whose corpus turned out to be 1733 real
+files. Acting on the finding found a live one, so "latent" understated it.
+
+THE SIXTH INSTANCE, and it was silently green. The retired-command-phrase gate
+derived its repository root as `parents[4]` where the file's depth requires
+`parents[5]`. Measured independently rather than taken from the fix: the old
+expression resolves to `<repo>/src`, so the gate's two runtime surfaces became
+`<repo>/src/src/cadrumo` and `<repo>/src/env` - neither of which exists. It
+scanned ZERO files and asserted an empty leak list, passing green, for as long
+as that literal has been wrong.
+
+The floor is what surfaced it. Adding a corpus assertion made the gate fail
+immediately, the root was corrected, and the corrected scan then surfaced one
+genuine match - a module docstring naming the retired command path - resolved by
+rewording so the literal is gone and the meaning survives. Both runtime surfaces
+now resolve and exist, confirmed here directly.
+
+So the class is: systemic, mostly latent, and confirmed to contain at least one
+gate that was already lying. That is a materially stronger finding than the one
+recorded above, and it was only reachable by acting on the recommendation rather
+than filing it.
+
+PROGRESS ON THE REMEDY. 12 gate functions floored across 5 files in the CLI and
+dev-audit surface, each mutation-verified to fail on a collapsed corpus, with
+false positives excluded and their reasons stated - fixed-path reads and
+existence checks cannot silently empty, because a rename raises loudly. I
+verified one floor myself rather than accepting the report: the CLI-module
+corpus helper sees 456 modules and fails at 0 on a relocated root.
+
+The heuristic is now a shipped tool, `dev/audit/vacuity_screen.py`, tracked and
+runnable, rather than the throwaway script this review used. Its current
+worklist is 108 candidates; the in-surface remainder is being worked and the
+owning Step stays open until it is done.
