@@ -55,4 +55,4 @@ Parallel command: `uv run --no-sync pytest -q -p no:cacheprovider -n auto --dist
 
 Collected 286, passed 286, failed 0, skipped 0. Exit line: `286 passed, 6 warnings in 84.81s`, exit code 0. HEAD at run time was `1437055950f5b8f4082d323578294fc32ad1d9fe`.
 
-Serial command: `uv run --no-sync pytest -q -p no:cacheprovider -n0 --tb=no -m "serial and not os_keychain and not external_tool and not perf" src/cadrumo/entrypoints/mcp/tests`. Result pending; serial cases are running at time of record update.
+Serial command: `uv run --no-sync pytest -q -p no:cacheprovider -n0 --tb=no -m "serial and not os_keychain and not external_tool and not perf" src/cadrumo/entrypoints/mcp/tests`. Collected 18, ran 17 passed, 1 skipped, 286 deselected. Exit line: `17 passed, 1 skipped, 286 deselected in 357.02s`, exit code 0. The skip is the POSIX-reparent session test, correctly deselected on Windows. The OS-keychain selection collected nothing.
