@@ -462,8 +462,10 @@ The push to `main` automatically triggers the `Cadrumo Packaging Smoke` workflow
 - Three per-OS smoke legs (Linux X64, Windows X64, macOS ARM64) proving wheel
   installation, bundled data, extras, split, and browser lanes.
 - `build-release-cohort`: builds the **one immutable release cohort** on exactly
-  CPython 3.13 / uv 0.11.29 from a fresh clean clone with `SOURCE_DATE_EPOCH` and
-  `PYTHONHASHSEED=0`. The cohort holds 13 files: 6 Python dist files,
+  CPython 3.13, under any uv, from a fresh clean clone with `SOURCE_DATE_EPOCH` and
+  `PYTHONHASHSEED=0`. The uv version is recorded in the cohort's build identity
+  rather than pinned, so reproducibility is checked by comparing build identities
+  instead of being enforced by refusing to build when the toolchain moves. The cohort holds 13 files: 6 Python dist files,
   `python-cohort.json`, 2 Claude plugin zips, `cadrumo.json` (Scoop manifest),
   `cadrumo.rb` (Homebrew formula), `cadrumo-X.Y.Z.mcpb`, and `release-cohort.json`.
   The cohort id is a SHA-256 over the complete artifact set; CI never rebuilds these
