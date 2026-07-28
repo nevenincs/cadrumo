@@ -57,7 +57,44 @@ class BboxAnchorSpec(RegistryModel):
 
 
 class ExtractionTargetDefinition(RegistryModel):
-    """Per-target descriptor for a registry extraction profile."""
+    """Per-target descriptor for a registry extraction profile.
+
+    ``value_kind`` is a PARSE DIRECTIVE, not a declaration of the target's type.
+    It answers only "how is the captured token turned into a value?", and the
+    parser branches on it exactly one way: ``amount`` gets Spanish-decimal
+    parsing, the blank-box guard and the word-level positional pass, while
+    everything else carries the raw token through unchanged.
+
+    ``enum`` is therefore a documentation refinement of ``text`` and makes no
+    enforceable claim about the value space. Nothing in this schema declares
+    the permitted members of any target's enumeration, so there is no set to
+    validate against and no consumer that would consult one. A reader meeting
+    ``value_kind = "enum"`` should read "expected to be one of a closed set,
+    and nothing checks that", not "constrained".
+
+    The consequence is that ``value_kind`` and ``data_type`` answer different
+    questions and cannot be compared for coherence. A target declaring ``enum``
+    over a casilla whose ``data_type`` is ``text`` or ``integer`` is not
+    incoherent -- the first says how to read the printed token, the second says
+    what the casilla holds. Under this reading such targets are documentation
+    rather than defects, which is why none of them is "corrected" to ``text``.
+
+    Measured 2026-07-28 by walking every profile on every revision through the
+    authority, eight targets declare ``enum`` and all eight sit over ``text`` or
+    ``integer``. Four are on the ``declaracion_pdf`` surface and are the ones
+    this ruling was raised against (Modelo 036 ``decl.event-kind``, Modelo 232
+    ``decl.tipo-ejercicio`` in both revisions, Modelo 840
+    ``decl.tipo-declaracion``). The other four are ``export_record`` targets on
+    Modelo 180, and they are if anything a stronger case for the same reading:
+    no consumer reads ``value_kind`` on that surface at all.
+
+    Making ``enum`` load-bearing later is a real option, but it requires
+    declaring the value space first -- a member list per target, grounded in
+    AEAT's published values -- because a constraint no one can enumerate cannot
+    be enforced. Until then the parser must treat ``enum`` and ``text``
+    identically, which is pinned by
+    ``adapters.inbound.declaracion.tests.test_extraction_value_kind_contract``.
+    """
 
     casilla_id: CasillaId
     match_strategy: Literal["numeric_casilla", "named_label", "bbox_anchored"]
