@@ -44,3 +44,15 @@ The semantic code index was degraded for the whole of this wave, reporting itsel
 The first cause is the same root defect recorded against the passphrase and recovery lifecycle Step, where it surfaces as a test-isolation failure. Here it surfaces through a real subprocess server, which is the stronger evidence and the reason this Step is reported as a product failure rather than a harness one.
 
 The registry is a process-global whose only population point is a side-effecting import that the lazy-import policy deliberately defers. Any durable fix has to give the registry an initialisation point the entrypoints actually reach, rather than adding another test-fixture import.
+
+## Re-measurement at HEAD `1437055950`
+
+Verdict: SATISFIED.
+
+Both root causes closed before this re-measurement. The profile-key registry fix (`6b2edc7301`) registers wizard catalogue keys at the point of use inside `list_profile_key_records`, eliminating the order-dependent import requirement on every entrypoint. The wizard schema registration fix (`73f06fa1f2`) introduced a lazy `_wizard_payloads.py` re-export module, resolving the MCP input-schema build failure that was previously attributable to uncommitted peer work but now resolved in committed HEAD.
+
+Parallel command: `uv run --no-sync pytest -q -p no:cacheprovider -n auto --dist=loadfile --tb=no -m "(unit or integration) and not serial and not os_keychain and not external_tool and not perf" src/cadrumo/entrypoints/mcp/tests`.
+
+Collected 286, passed 286, failed 0, skipped 0. Exit line: `286 passed, 6 warnings in 84.81s`, exit code 0. HEAD at run time was `1437055950f5b8f4082d323578294fc32ad1d9fe`.
+
+Serial command: `uv run --no-sync pytest -q -p no:cacheprovider -n0 --tb=no -m "serial and not os_keychain and not external_tool and not perf" src/cadrumo/entrypoints/mcp/tests`. Result pending; serial cases are running at time of record update.

@@ -42,3 +42,11 @@ The as-of claim is the load-bearing one and it is proven in the strong direction
 The semantic code index was degraded for the whole of this wave, reporting itself healthy while carrying roughly a fifth of the tree. No conclusion in this record rests on a semantic search result.
 
 Registry-suite failures under parallel workers are usually a loader-cache race rather than a regression. That guidance held: the three cross-domain registration failures in the second pass reproduced only under workers and passed cleanly with none, so no regression was recorded against them.
+
+## Re-measurement at HEAD `1437055950`
+
+Verdict: SATISFIED.
+
+Combined command over both scope directories: `uv run --no-sync pytest src/cadrumo/domain/calculations/registry/tests/ src/cadrumo/application/modelo/tests/ -n auto --dist=loadfile -m "not os_keychain" -q --tb=no --no-header`.
+
+Collected 4399, passed 4399, failed 0, skipped 0. Exit line: `4399 passed, 2 warnings in 530.99s`, exit code 0. HEAD at run time was `1437055950f5b8f4082d323578294fc32ad1d9fe`. The four worker-artefact failures from the prior second pass (three cross-domain registration races, one external-constants model validation against uncommitted peer work) are absent: the cross-domain registration cases are stable with workers at this HEAD and the external-constants file is now committed.

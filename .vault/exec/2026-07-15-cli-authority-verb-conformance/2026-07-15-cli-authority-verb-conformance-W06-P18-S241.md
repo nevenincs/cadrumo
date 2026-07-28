@@ -48,3 +48,7 @@ The delegation is real and has spread well past the audited set: the canonical o
 The semantic code index was degraded for the whole of this wave, reporting itself healthy while carrying roughly a fifth of the tree. No conclusion in this record rests on a semantic search result.
 
 One incidental defect surfaced while reading the gate. Its module docstring names this campaign's feature tag, and a tracked configuration file under the development audit tooling carries two fields whose values are a decision-record stem and an audit-record stem. Development records are removable scaffolding and the reference direction is one-way, so tracked source and configuration must not cite them. Neither is a functional defect and neither is in this Step's scope, but both are recorded here because this Step is where they were seen.
+
+## Re-measurement note at HEAD `1437055950`
+
+Both unrelated failures attributed above are closed at the current HEAD. The profile-keys registration defect is resolved by `6b2edc7301`; the combined-period-string gate is confirmed green by `84e55bde57`, which re-ran the gate at HEAD and found `1 passed` where the prior record had `1 failed`. Neither fix touches hashing; the hashing subject remains satisfied and the two unrelated failures no longer cloud the whole-directory result. The scope directories were not re-run in full at this HEAD, but the specific two failing tests are confirmed fixed by their respective owners.

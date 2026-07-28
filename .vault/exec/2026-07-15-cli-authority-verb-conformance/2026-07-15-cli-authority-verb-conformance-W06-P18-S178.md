@@ -47,3 +47,15 @@ The semantic code index was degraded for the whole of this wave, reporting itsel
 The parallel run also emitted a held-serial warning naming 24 serial-marked cases that did not execute in that pass; those were covered by the separate serial pass, which was green.
 
 This finding shares a root cause with the MCP identity failures recorded against the MCP dispatch and identity Step, where the same unregistered-profile-keys error reaches a real subprocess server. The CLI-side symptom is a test-isolation defect; the MCP-side symptom is operator-facing.
+
+## Re-measurement at HEAD `1437055950`
+
+Verdict: SATISFIED.
+
+The root cause closed before this re-measurement. Commit `6b2edc7301` registers wizard catalogue keys at the point of use inside `list_profile_key_records` via a function-local import, eliminating the order-dependent side-effect requirement. All eight auth-round-five failures now pass regardless of module execution order.
+
+Parallel command: `uv run --no-sync pytest -q -p no:cacheprovider -n auto --dist=loadfile --tb=no -m "(unit or integration) and not serial and not os_keychain and not external_tool and not perf" src/cadrumo/entrypoints/cli/_config/tests`.
+
+Collected 182, passed 182, failed 0, skipped 0. Exit line: `182 passed, 6 warnings in 54.07s`, exit code 0. HEAD at run time was `1437055950f5b8f4082d323578294fc32ad1d9fe`.
+
+Serial command: `uv run --no-sync pytest -q -p no:cacheprovider -n0 --tb=no -m "serial and not os_keychain and not external_tool and not perf" src/cadrumo/entrypoints/cli/_config/tests`. Collected 24, passed 24. Exit line: `24 passed, 182 deselected in 45.12s`, exit code 0. The OS-keychain selection collected nothing.
