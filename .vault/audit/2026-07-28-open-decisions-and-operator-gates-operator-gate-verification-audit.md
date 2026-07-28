@@ -390,6 +390,42 @@ so they come from elsewhere, and a measured run of the profile unit lane leaked
 none. What is established is that entries accumulate somewhere and nothing prunes
 them, which is enough to act on without inventing a culprit.
 
+### s08-deferred-by-operator-decision | low | publication stays held, and the row closes as a deferral rather than as done
+
+Put to the operator explicitly rather than assumed, because arming the gate would
+contradict a standing instruction. The decision is to keep publication held while
+the release cycle is settled, and to close the row as a formal deferral.
+
+That distinction is the point. The variable remains unset, the gate still refuses,
+and nothing was published or armed. The row is closed as deferred with its
+condition recorded, not marked done — closing it as done would assert an action
+that deliberately did not happen, which is the failure mode plan status exists to
+prevent.
+
+What unblocks it is unchanged and now written down: the publication hold in the
+accepted post-release distribution record, which the delivery-pipeline work owns.
+The row reopens there rather than here. The verification that matters was already
+taken in this pass — the arming variable is absent and the gate refuses correctly,
+so the held state is the designed state and not an oversight.
+
+### s06-remains-an-operator-action-by-choice | medium | scoped tokens preferred over reusing a personal session token
+
+Also put to the operator, with the one agent-executable shortcut named honestly so
+it could be refused on its merits. That shortcut was to write the current
+command-line session's OAuth token into both secrets: it would work immediately,
+and it carries broad scope across every repository in the account, is bound to one
+person's identity, and breaks on the next re-authentication.
+
+The decision is to mint two fine-grained tokens scoped to exactly the two
+repositories that receive pushes. The row therefore stays open as a genuine
+operator action rather than being closed by a workaround that trades the account's
+blast radius for a green checkbox.
+
+Everything the row depends on is otherwise verified and waiting: the workflows read
+the account-scoped names, the matching variables already exist under those names,
+the publish steps refuse instructively while the secrets are absent, and the third
+product-prefixed secret is orphaned and safe to delete once the two are created.
+
 ## Recommendations
 
 Re-ground S09 as discharged, citing the absence of any default-branch write
