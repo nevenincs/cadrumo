@@ -14,9 +14,13 @@ related:
 
 ## Scope
 
-Why the `homebrew-linux-arm64` distribution-evidence row cannot be minted at current HEAD, established 2026-07-28 while driving the feature's plan to completion. The formula fix itself is not in scope -- it is landed, proven, and closed under the plan's third step. What is in scope is everything standing between that fix and a passing evidence row.
+Why the `homebrew-linux-arm64` distribution-evidence row could not be minted, established 2026-07-28 while driving the feature's plan to completion — and, by the end of the same day, how it was.
 
-Measurements are live reads taken the same day: the forge Actions API for runner and run state, the package index for version ownership, and the acquisition workflow's own gate definitions.
+**Resolved.** The row is minted and verified passing, alongside the other two claimed rows, against a cohort at the first computed release version, with the acquisition run green across every job including the terminal seal. The blocker chain below is retained as the record of what stood in the way, not as a live obstruction; each finding carries its resolution.
+
+The formula fix itself was never in scope here — it was landed and proven earlier under the plan's third step. What this document covers is everything that stood between that fix and its evidence.
+
+Measurements are live reads: the forge Actions API for runner and run state, the package index for version ownership, the acquisition workflow's own gate definitions, and the emitted evidence records read directly rather than inferred from job outcomes.
 
 ## Findings
 
@@ -56,32 +60,36 @@ The service does report the shortfall honestly in its own search response, which
 
 ## Recommendations
 
-**Superseded the same day.** The recommendations below were written while the row was believed unreachable without an operator release act. The operator authorised that act, it was carried out, and the chain is broken. What follows records both the original guidance and what actually happened, because a reader arriving later would otherwise conclude the row is still blocked.
+**Superseded by execution.** These were written while the row looked unreachable without an operator release act. That act was authorised and carried out, and the row now exists. Retained so a reader can see what was believed, what was done, and what it cost.
 
 ### Closed
 
-- **Do not mint against an existing cohort** — still correct, and now moot. A fresh cohort exists, built on a commit that is on main, so the ancestry refusal no longer applies to it.
+- **Do not mint against an existing cohort** — correct, and moot. A fresh cohort was built on a commit that is on main; the ancestry refusal never applied to it.
 
-- **The version deadlock is broken.** The declarations were bumped to the first computed release version, which release-please derived from the manifest floor rather than anyone choosing it, and which the identity guard confirmed free on every destination before it was applied. A cohort has since sealed twice at that version — the refusal that killed every run since the reset is gone, and reproducibly so. Seven surfaces moved; the bundle manifest deliberately did not, because its tracked value is a sentinel the version gate requires to stay put.
+- **The version deadlock is broken.** The declarations were bumped to the first computed release version — derived by release-please from the manifest floor rather than chosen, and confirmed free on every destination before it was applied. Cohorts have since sealed repeatedly at that version.
 
-- **The seal guard was not weakened**, which was the substantive risk in this whole area. It refused correctly throughout; the resolution was to satisfy it, not to soften it.
+- **The seal guard was not weakened**, which was the substantive risk in this area. It refused correctly throughout; the resolution was to satisfy it, not to soften it.
+
+- **The row is minted.** All three claimed rows verify as passing against the same cohort, and the arm64 row was minted independently in two consecutive runs, so it is reproducible rather than a single fortunate pass.
 
 ### Opened by doing the work
 
-- **The runbook contradicted the gates in three places**, each proven against the implementations and since corrected: it instructed bumping a surface whose gate requires the opposite, it gated the bump on a check only a post-bump release can satisfy, and it asserted a fixed evidence-row obligation where the required set is derived from the channels a release claims. A separate arithmetic error — claiming eight CI-minted rows including four homebrew, where the descriptor declares three — was residue from the platform drop and would have stranded an operator hunting a row no lane can mint.
+- **The runbook contradicted the gates in several places**, each proven against the implementations and since corrected: an instruction to bump a surface whose gate requires the opposite; a stop rule gating the bump on a check only a post-bump release can satisfy; a fixed evidence-row obligation where the required set is derived from claimed channels; an arithmetic tally left stale by a platform drop; and an at-a-glance summary omitting a mandatory stage.
 
-- **A rebuilt CI container silently loses three classes of dependency**: a binary the workflows assume present, a system package a lane's toolchain links against, and an entire package-manager tree. None announced itself as a missing dependency; each surfaced as an unrelated-looking failure — a version-gate refusal, a lane exit code, and a first-step path check. All three are now documented with verification commands.
+- **A rebuilt CI container silently loses three distinct classes of dependency** — a binary the workflows assume present, a system library a lane links against, and an entire package-manager tree — none of which announces itself as a missing dependency.
 
-- **The formula this feature exists to fix was unshippable as specified.** The guarded form failed the strict formula audit on the macOS leg, and it had never been audited before because the existing macOS evidence row was minted from a cohort predating the guard. Fixed in the generator, with the pin rewritten to anchor on the whole guard-opening line — the bare condition also appears inside the corrected form, so the obvious assertion would have passed while pinning nothing.
+- **The obvious durability fix for the third was itself wrong.** Placing the package-manager tree in the runner's state volume and symlinking the canonical path at it survives a rebuild and breaks linking, because link traversals resolve against the real path. It fails only after building every resource, which makes it costly to diagnose. That dependency deliberately does not survive a rebuild.
+
+- **The formula this feature exists to fix was unshippable as specified**, failing the strict formula audit on a leg that had never audited the guarded form before.
 
 ### Corrected after review
 
-An earlier revision of this section claimed the local readiness signal needs hardening, on the grounds that no check binds the cohort's version to the declared one. **That recommendation is withdrawn as redundant.** The stale cohort IS refused, by a stronger rule one check earlier: `distribution-evidence-complete` compares the cohort's source COMMIT against the checked-out commit and blocks on mismatch. Commit identity subsumes version identity here — a version match could still pass against a foreign commit, whereas a commit match cannot carry a foreign version, because the cohort's version is derived from the wheel metadata built at that commit. Adding the version assertion would buy nothing, and adding a burned-version check to the local report would duplicate the guard that already runs at both CI gates.
+An earlier revision claimed the local readiness signal needs a check binding the cohort's version to the declared one. **Withdrawn as redundant.** The stale cohort is already refused one check earlier, by source-commit identity, which subsumes it: a version match could pass against a foreign commit, whereas a commit match cannot carry a foreign version, because the cohort's version derives from wheel metadata built at that commit.
 
-What survives is only a presentation point: the surface-consistency line reads PASS while naming a superseded version, which is confusing in isolation even though the report's overall verdict is correctly red for the right reason.
+What survives is presentation only: a surface-consistency line reading PASS while naming a superseded version is confusing in isolation, even though the report's verdict is correctly red.
 
 ### Still open
 
-- The evidence row itself is not yet minted. What blocks it now is only the remaining run, not a structural refusal.
+- A cosmetic residue: 174 translation-catalogue headers still name the abandoned version. No gate binds them and the next catalogue refresh regenerates them from the declared version, so they self-heal.
 
-- A cosmetic residue: 174 translation-catalogue headers still name the abandoned version. No gate binds them, and the next catalogue refresh regenerates them from the declared version, so they self-heal; they are not a release blocker.
+- Fleet capacity: the runner documentation describes two Linux X64 container runners while one is registered, so every workflow on that label serialises through it. This delayed but did not block the work.
