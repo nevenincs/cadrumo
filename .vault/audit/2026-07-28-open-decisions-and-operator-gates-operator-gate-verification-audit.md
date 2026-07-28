@@ -326,6 +326,41 @@ The instrument still differs from the one the row names, and that difference is
 recorded rather than smoothed over: this scanner has no issuer-side validation and
 no partner-pattern catalogue, so it is a strong negative and not the platform's.
 
+### s04-blocked-by-a-saturated-credential-store | high | the row's stated cause is wrong and the prescribed workaround would also fail
+
+S04 says the custody cases cannot be observed because an agent session cannot
+supply the credential, and prescribes an interactive desktop session as the
+remedy. Measured rather than assumed, both halves are wrong, and the row explains
+its own "never observed green on any host" phrasing once corrected.
+
+This session is not the network logon the row assumes: it reports session id 1
+with an interactive CloudAP logon, which is precisely the context the remedy names.
+The suite was run there and all six cases still failed — but on a different error
+than the one that story predicts. The keyring backend resolves correctly, the vault
+service is running, and writing an eight-byte value fails with `CredWrite` error 8,
+"Not enough memory resources are available to process this command". The native
+`cmdkey` fails identically on the same payload, so it is the store rather than the
+caller or the language binding.
+
+The store is saturated: 652 credential entries, backed by 569 files under the
+roaming credential directory and 82 more locally, around 583 KB in total.
+`CredWrite` returns that error once the per-user store exceeds its limit. Host
+resource exhaustion was ruled out in the same pass, with 55.8 GB free virtual
+memory and a top handle count of 13.9 thousand.
+
+Two consequences. Running the suite from the operator's console would not have
+closed these cases either, so the row's prescribed action would have failed and
+looked like the same unexplained wall. And the application's behaviour throughout
+is correct, not defective: login succeeded and degraded to a process-scoped
+session exactly as the split-knowledge design requires, refusing to write key
+material to disk when custody is unavailable.
+
+The remedy is to prune the credential store, which is the owner's decision and not
+an agent's: it holds real logins for design tooling, git, the GitHub CLI and mail,
+so bulk deletion signs the user out of live services. Once a plain
+`keyring.set_password` succeeds on this host, the six cases become runnable and the
+row can be closed on evidence.
+
 ## Recommendations
 
 Re-ground S09 as discharged, citing the absence of any default-branch write
@@ -378,6 +413,12 @@ answer and it came back clean, but nothing currently prevents the next commit
 from introducing what the sweep just proved absent. A diff-scoped run is cheap,
 and the 59 false positives should be pinned as a baseline so the signal stays
 readable rather than trained-away.
+
+Prune the Windows credential store before attempting S04 again, and re-word the
+row: its blocker is not the agent's session context but a saturated store that
+refuses every writer on this host. Confirm the fix with a bare
+`keyring.set_password` rather than by running the suite, so a failure is
+attributed to custody rather than to the code under test.
 
 Raise the cohort-build toolchain pin or the local uv, independently of this
 campaign. The clean-source reproducibility test refuses with "release cohort
