@@ -35,6 +35,7 @@ manifest family and are not distinguished by this gate).
 
 from __future__ import annotations
 
+import atexit
 import contextlib
 import json
 import os
@@ -115,6 +116,7 @@ from ._resources import (
     read_harness_resource,
 )
 from ._result_thinning import BULK_RESOLUTION, ResourceLinkRef, thin_envelope
+from ._stdio_lifetime import arm_stdio_lifetime_watchdog, register_pre_exit_hook
 from ._surface import (
     SURFACE_ENV_VAR,
     SurfaceMode,
@@ -1174,6 +1176,24 @@ def _run_server(
         telemetry = None
         sys.stderr.write(f"cadrumo MCP serving without telemetry (storage root unavailable): {error}\n")
     server: Server = build_server(descriptors, persona=persona, telemetry=telemetry, surface_mode=surface_mode)
+
+    # Anchor the server's lifetime to its client BEFORE the transport starts.
+    # The stdio contract is "exit on stdin EOF", but on Windows an inherited
+    # pipe handle can keep stdin open after the spawning client is gone, so EOF
+    # never arrives and this process - warm caches, registry, and all - runs
+    # forever. Arming must happen here, on the main thread, because resolving
+    # the stdin pipe creator is only safe before the reader has a read pending.
+    # Fails open to EOF-only shutdown when it cannot arm.
+    #
+    # A watchdog reap is an os._exit, which bypasses atexit, so the pre-exit
+    # hook gives the process a bounded window to run the exit functions a normal
+    # shutdown would have - notably releasing the process-global bucket
+    # lockfiles that would otherwise be stranded and block the operator's next
+    # session. It runs in the watchdog's own thread context and therefore cannot
+    # reach a bucket session bound inside an in-flight warm worker; that
+    # residual is documented on register_pre_exit_hook.
+    register_pre_exit_hook(atexit._run_exitfuncs)
+    arm_stdio_lifetime_watchdog()
 
     async def _amain() -> None:
         async with stdio_server() as (read_stream, write_stream):

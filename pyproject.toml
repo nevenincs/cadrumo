@@ -681,6 +681,9 @@ convention = "google"
 # (partial paths resolved from PATH by design), mirroring the src/cadrumo
 # wheel-build gates.
 "dev/packaging/tests/test_cadrumo_data_distribution.py" = ["S603", "S607"]
+# The stdio-lifetime watchdog can only be proven against real spawned processes
+# and real pipes; every argv is a fixed `sys.executable -c <literal>`.
+"src/cadrumo/entrypoints/mcp/tests/test_stdio_lifetime.py" = ["S603", "S607"]
 "src/cadrumo/adapters/persistence/storage/bucket/tests/test_lockfile.py" = ["S603"]
 "src/cadrumo/adapters/persistence/storage/tests/test_substrate_smoke.py" = ["S603"]
 "src/cadrumo/domain/calculations/registry/tests/test_cross_domain_snapshot_registration.py" = ["S603"]

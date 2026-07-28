@@ -201,6 +201,88 @@ def _provision():
     _MARKER.write_text(_cohort_digest(), encoding="utf-8")
 
 
+def _kill_on_close_job():
+    # A Windows Job Object with KILL_ON_JOB_CLOSE. The kernel terminates every
+    # process in the job the moment the last handle to it closes, which happens
+    # automatically when this bootstrap dies for ANY reason - a client kill, a
+    # crash, a lost console. Without it the supervised server below is a plain
+    # child that survives its parent and becomes exactly the orphan the
+    # lifetime work exists to prevent. Returns None when the job cannot be
+    # created, in which case the launch proceeds unsupervised rather than
+    # refusing to serve.
+    import ctypes
+    from ctypes import wintypes
+
+    class _BASIC(ctypes.Structure):
+        _fields_ = (
+            ("PerProcessUserTimeLimit", ctypes.c_int64),
+            ("PerJobUserTimeLimit", ctypes.c_int64),
+            ("LimitFlags", wintypes.DWORD),
+            ("MinimumWorkingSetSize", ctypes.c_size_t),
+            ("MaximumWorkingSetSize", ctypes.c_size_t),
+            ("ActiveProcessLimit", wintypes.DWORD),
+            ("Affinity", ctypes.c_size_t),
+            ("PriorityClass", wintypes.DWORD),
+            ("SchedulingClass", wintypes.DWORD),
+        )
+
+    class _IO(ctypes.Structure):
+        _fields_ = (
+            ("ReadOperationCount", ctypes.c_uint64),
+            ("WriteOperationCount", ctypes.c_uint64),
+            ("OtherOperationCount", ctypes.c_uint64),
+            ("ReadTransferCount", ctypes.c_uint64),
+            ("WriteTransferCount", ctypes.c_uint64),
+            ("OtherTransferCount", ctypes.c_uint64),
+        )
+
+    class _EXTENDED(ctypes.Structure):
+        _fields_ = (
+            ("BasicLimitInformation", _BASIC),
+            ("IoInfo", _IO),
+            ("ProcessMemoryLimit", ctypes.c_size_t),
+            ("JobMemoryLimit", ctypes.c_size_t),
+            ("PeakProcessMemoryUsed", ctypes.c_size_t),
+            ("PeakJobMemoryUsed", ctypes.c_size_t),
+        )
+
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel32.CreateJobObjectW.restype = wintypes.HANDLE
+    job = kernel32.CreateJobObjectW(None, None)
+    if not job:
+        return None
+    info = _EXTENDED()
+    info.BasicLimitInformation.LimitFlags = 0x2000  # KILL_ON_JOB_CLOSE
+    ok = kernel32.SetInformationJobObject(
+        wintypes.HANDLE(job),
+        9,  # JobObjectExtendedLimitInformation
+        ctypes.byref(info),
+        ctypes.sizeof(info),
+    )
+    if not ok:
+        kernel32.CloseHandle(wintypes.HANDLE(job))
+        return None
+    return job
+
+
+def _assign_to_job(job, pid):
+    # Best effort: an assignment failure leaves the child running unsupervised,
+    # which is the pre-existing behaviour, never a refusal to serve.
+    import ctypes
+    from ctypes import wintypes
+
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel32.OpenProcess.restype = wintypes.HANDLE
+    # PROCESS_SET_QUOTA | PROCESS_TERMINATE
+    handle = kernel32.OpenProcess(0x0100 | 0x0001, False, pid)
+    if not handle:
+        return
+    try:
+        kernel32.AssignProcessToJobObject(wintypes.HANDLE(job), wintypes.HANDLE(handle))
+    finally:
+        kernel32.CloseHandle(wintypes.HANDLE(handle))
+
+
 def main():
     python = _venv_python()
     if not _is_provisioned(python):
@@ -212,7 +294,25 @@ def main():
         # command line and it tries to open half of its own interpreter
         # path as the script. Supervise instead; the extra shim process
         # still skips uv resolution on every warm launch.
-        raise SystemExit(subprocess.call([str(python), str(_SERVE)]))
+        #
+        # This supervision is a deliberate, load-bearing cost: it is why the
+        # bundle spends 2 interpreters where a direct exec would spend 1. It
+        # buys correct quoting under spaced install paths AND, via the job
+        # object, a kernel guarantee that the server cannot outlive this
+        # process. The server independently anchors itself to the real MCP
+        # client (it resolves the stdin pipe creator, not this bootstrap), so
+        # the two mechanisms cover different failures: the job object reaps the
+        # child when the bootstrap dies, the client watchdog reaps it when the
+        # whole chain above - including the client - is gone.
+        job = _kill_on_close_job()
+        child = subprocess.Popen([str(python), str(_SERVE)])
+        if job is not None:
+            _assign_to_job(job, child.pid)
+        try:
+            raise SystemExit(child.wait())
+        finally:
+            if child.poll() is None:
+                child.kill()
     os.execv(str(python), [str(python), str(_SERVE)])
 
 

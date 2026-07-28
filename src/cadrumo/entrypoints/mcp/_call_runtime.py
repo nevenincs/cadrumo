@@ -132,17 +132,26 @@ def _terminate_tree(process: subprocess.Popen[str]) -> None:
     A live pull spawns a browser child, so killing only the top process would
     strand it. On Windows ``taskkill /T`` walks the tree; on POSIX the child was
     started in its own session so the whole process group is signalled.
+
+    Every path must kill something. An unresolvable ``taskkill`` (a trimmed
+    ``PATH``, a hardened image) previously returned having terminated nothing at
+    all, so a hung call left its whole tree running and the timeout refusal was a
+    lie. Falling back to ``process.kill()`` still cannot reach a grandchild
+    browser, but killing the direct child is strictly better than killing
+    nothing, and it keeps the supervised contract honest.
     """
     if process.poll() is not None:
         return
     if sys.platform == "win32":
         taskkill = shutil.which("taskkill")
-        if taskkill is not None:
-            subprocess.run(  # noqa: S603 - executable resolved with shutil.which; argv is fixed
-                [taskkill, "/F", "/T", "/PID", str(process.pid)],
-                capture_output=True,
-                check=False,
-            )
+        if taskkill is None:
+            process.kill()
+            return
+        subprocess.run(  # noqa: S603 - executable resolved with shutil.which; argv is fixed
+            [taskkill, "/F", "/T", "/PID", str(process.pid)],
+            capture_output=True,
+            check=False,
+        )
         return
     try:
         os.killpg(os.getpgid(process.pid), signal.SIGKILL)
