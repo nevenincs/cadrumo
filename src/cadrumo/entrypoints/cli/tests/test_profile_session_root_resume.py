@@ -69,6 +69,7 @@ def _unusable_credential_store() -> Iterator[None]:
     finally:
         keyring.set_keyring(previous)
 
+
 _LABEL = "session-operator"
 
 
