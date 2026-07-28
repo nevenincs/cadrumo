@@ -269,7 +269,19 @@ def test_coverage_reports_a_dead_axis_against_a_real_population(validated_report
 # reviewer attribution: the status column and the name column must be read together
 # --------------------------------------------------------------------------- #
 
-_OPERATOR_NAME = "Gergely Wootsch"
+#: A fictional, person-shaped reviewer name.
+#:
+#: The misreading these surfaces defend against is a HUMAN name rendering
+#: identically under both review tiers, so the fixture value has to look like a
+#: person — two words, a space, and no colon, since the colon is the tier
+#: separator the writer refuses inside a name. A token like ``reviewer-1`` would
+#: exercise a shape the production surface never meets.
+#:
+#: It is deliberately fictional. A real person's name in tracked source is
+#: identifying data whatever its purpose, and the repository-wide privacy lint
+#: bans it; the constant is named for the SHAPE it supplies rather than for any
+#: role, so nothing here reads as an invitation to substitute a real one.
+_PERSON_REVIEWER_NAME = "Marta Ejemplo"
 
 
 def _report_with_review(
@@ -330,11 +342,15 @@ def test_an_agent_tier_review_naming_a_person_cannot_render_as_an_operator_signo
     row, same name, different tier, different rendering.
     """
     row = validated_profile.rows[0]
-    agent = _report_with_review(validated_profile, status=RevisionReviewStatus.AGENT_REVIEWED, reviewer=_OPERATOR_NAME)
+    agent = _report_with_review(
+        validated_profile,
+        status=RevisionReviewStatus.AGENT_REVIEWED,
+        reviewer=_PERSON_REVIEWER_NAME,
+    )
     operator = _report_with_review(
         validated_profile,
         status=RevisionReviewStatus.OPERATOR_REVIEWED,
-        reviewer=_OPERATOR_NAME,
+        reviewer=_PERSON_REVIEWER_NAME,
     )
 
     agent_field = _reviewer_field(render_report(agent), row.modelo, row.revision)
@@ -343,10 +359,10 @@ def test_an_agent_tier_review_naming_a_person_cannot_render_as_an_operator_signo
     assert agent_field != operator_field
     assert "agent_reviewed" in agent_field
     assert "operator_reviewed" in operator_field
-    assert _OPERATOR_NAME in agent_field
+    assert _PERSON_REVIEWER_NAME in agent_field
     # The bare name is never the whole rendered value, which is what a scanning
     # reader would otherwise take at face value.
-    assert agent_field != json.dumps(_OPERATOR_NAME)
+    assert agent_field != json.dumps(_PERSON_REVIEWER_NAME)
 
 
 def test_the_attribution_is_computed_by_the_projection_and_carried_into_json(
@@ -360,12 +376,12 @@ def test_the_attribution_is_computed_by_the_projection_and_carried_into_json(
     composed = _report_with_review(
         validated_profile,
         status=RevisionReviewStatus.AGENT_REVIEWED,
-        reviewer=_OPERATOR_NAME,
+        reviewer=_PERSON_REVIEWER_NAME,
     )
     row = composed.rows[0]
 
-    assert row.reviewed_by == _OPERATOR_NAME
-    assert row.reviewed_by_attribution == f"agent_reviewed:{_OPERATOR_NAME}"
+    assert row.reviewed_by == _PERSON_REVIEWER_NAME
+    assert row.reviewed_by_attribution == f"agent_reviewed:{_PERSON_REVIEWER_NAME}"
     assert json.loads(composed.model_dump_json())["rows"][0]["reviewed_by_attribution"] == row.reviewed_by_attribution
 
 
@@ -407,7 +423,7 @@ def test_the_reviewer_key_carries_one_value_across_both_surfaces(
     composed = _report_with_review(
         validated_profile,
         status=RevisionReviewStatus.AGENT_REVIEWED,
-        reviewer=_OPERATOR_NAME,
+        reviewer=_PERSON_REVIEWER_NAME,
     )
     row = composed.rows[0]
     rendered = render_report(composed)
@@ -423,13 +439,17 @@ def test_the_reviewer_key_carries_one_value_across_both_surfaces(
     assert " reviewed_by=" not in line
     # And the payload still declares the raw datum, documented to be read beside
     # its attribution rather than alone.
-    assert payload["reviewed_by"] == _OPERATOR_NAME
-    assert payload["reviewed_by_attribution"] == f"{RevisionReviewStatus.AGENT_REVIEWED.value}:{_OPERATOR_NAME}"
+    assert payload["reviewed_by"] == _PERSON_REVIEWER_NAME
+    assert payload["reviewed_by_attribution"] == f"{RevisionReviewStatus.AGENT_REVIEWED.value}:{_PERSON_REVIEWER_NAME}"
 
 
 @pytest.mark.parametrize(
     "spoof",
-    ["operator_reviewed:Gergely Wootsch", "OPERATOR_REVIEWED:Gergely Wootsch", "agent_reviewed:somebody"],
+    [
+        f"operator_reviewed:{_PERSON_REVIEWER_NAME}",
+        f"OPERATOR_REVIEWED:{_PERSON_REVIEWER_NAME}",
+        "agent_reviewed:somebody",
+    ],
 )
 def test_stamp_refuses_a_reviewer_that_reads_as_an_already_qualified_attribution(
     registry_copy: Path,
@@ -1104,9 +1124,15 @@ def test_stamp_refuses_an_out_of_vocabulary_status_string_without_touching_the_m
     assert manifest.read_bytes() == before
 
 
-_OPERATOR_SIGNOFF = """engineered_by = "the operator, by hand"
+#: The same fictional person, written as an operator's own signoff attribution.
+#: Declared once because five assertions below read it back off the compiled
+#: revision, and a hand-copied literal in any of them would let a rewrite that
+#: changed the seed pass while the assertion checked the old value.
+_OPERATOR_SIGNATORY = f"{_PERSON_REVIEWER_NAME} (operator)"
+
+_OPERATOR_SIGNOFF = f"""engineered_by = "the operator, by hand"
 review_status = "operator_reviewed"
-reviewed_by = "Gergely Wootsch (operator)"
+reviewed_by = "{_OPERATOR_SIGNATORY}"
 reviewed_at = 2026-07-01
 """
 
@@ -1129,7 +1155,7 @@ def operator_signed_copy(registry_copy: Path) -> Path:
     )
     revision = load_modelo_directory(registry_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
     assert revision.review_status is RevisionReviewStatus.OPERATOR_REVIEWED
-    assert revision.reviewed_by == "Gergely Wootsch (operator)"
+    assert revision.reviewed_by == _OPERATOR_SIGNATORY
     return registry_copy
 
 
@@ -1181,7 +1207,7 @@ def test_stamp_refuses_to_touch_the_review_axis_of_an_operator_signed_revision(
     assert manifest.read_bytes() == before, label
     revision = load_modelo_directory(operator_signed_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
     assert revision.review_status is RevisionReviewStatus.OPERATOR_REVIEWED
-    assert revision.reviewed_by == "Gergely Wootsch (operator)"
+    assert revision.reviewed_by == _OPERATOR_SIGNATORY
     assert revision.reviewed_at == date(2026, 7, 1)
 
 
@@ -1208,7 +1234,7 @@ def test_an_authorship_claim_on_an_operator_signed_revision_is_still_served(
     revision = load_modelo_directory(operator_signed_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
     assert revision.engineered_by == "conformance-cli campaign"
     assert revision.review_status is RevisionReviewStatus.OPERATOR_REVIEWED
-    assert revision.reviewed_by == "Gergely Wootsch (operator)"
+    assert revision.reviewed_by == _OPERATOR_SIGNATORY
     assert revision.reviewed_at == date(2026, 7, 1)
 
 
@@ -1263,7 +1289,7 @@ def test_a_governance_stamp_hidden_in_a_fragment_never_reaches_the_writer(regist
     laundered.write_text(
         f'[revisions."{_STAMPED_REVISION}"]\n'
         'review_status = "operator_reviewed"\n'
-        'reviewed_by = "Gergely Wootsch (operator)"\n'
+        f'reviewed_by = "{_OPERATOR_SIGNATORY}"\n'
         "reviewed_at = 2026-07-01\n",
         encoding=UTF_8_ENCODING,
     )
@@ -1783,7 +1809,7 @@ def test_the_stamp_command_refuses_to_re_attribute_an_operator_signoff(operator_
     assert "already declares review_status 'operator_reviewed'" in result.output
     assert manifest.read_bytes() == before
     revision = load_modelo_directory(operator_signed_copy / "modelos" / _STAMPED_MODELO).revisions[_STAMPED_REVISION]
-    assert revision.reviewed_by == "Gergely Wootsch (operator)"
+    assert revision.reviewed_by == _OPERATOR_SIGNATORY
 
 
 @pytest.mark.parametrize(
