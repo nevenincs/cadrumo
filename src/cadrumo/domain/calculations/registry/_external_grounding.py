@@ -74,6 +74,7 @@ from typing import Annotated, Final, Literal
 from pydantic import BaseModel, BeforeValidator, Field, ValidationError
 
 from ....core import STRICT_FROZEN_CONFIG, CasillaId, ExternalOracleCorpus
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.resources import bundled_path
 from ._errors import RegistryValidationError
 from ._ids import ModeloId, RevisionId
@@ -645,7 +646,7 @@ def _parse_oracle_payload(
     """
     model = _ORACLE_PAYLOAD_MODELS[corpus]
     try:
-        payload = model.model_validate(json.loads(payload_path.read_text(encoding="utf-8")))
+        payload = model.model_validate(json.loads(payload_path.read_text(encoding=UTF_8_ENCODING)))
     except ValidationError as exc:
         raise RegistryValidationError(
             f"{payload_path.name}: bundled oracle payload does not satisfy {model.__name__}: {exc}",
