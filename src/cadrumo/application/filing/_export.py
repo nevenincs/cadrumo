@@ -71,6 +71,7 @@ from ...domain.calculations.registry import (
     ExportLayoutDefinition,
     ExportRecordDefinition,
     RegistryValidationError,
+    export_fields_overlap,
     parse_export_payload,
     xml_dictionary_entries,
 )
@@ -575,20 +576,12 @@ def _compatible_binding_field_groups(
     groups: list[list[ExportFieldDefinition]] = []
     for field in sorted(fields, key=lambda item: (item.offset or 0, str(item.id))):
         for group in groups:
-            if not any(_export_fields_overlap(field, existing) for existing in group):
+            if not any(export_fields_overlap(field, existing) for existing in group):
                 group.append(field)
                 break
         else:
             groups.append([field])
     return tuple(tuple(group) for group in groups)
-
-
-def _export_fields_overlap(left: ExportFieldDefinition, right: ExportFieldDefinition) -> bool:
-    if left.offset is None or left.length is None or right.offset is None or right.length is None:
-        return False
-    left_end = left.offset + left.length - 1
-    right_end = right.offset + right.length - 1
-    return left.offset <= right_end and right.offset <= left_end
 
 
 def _record_has_binding_value(

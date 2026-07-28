@@ -275,6 +275,7 @@ from ._export import (
     ResolvedExportLayout,
     derive_export_layouts_from_bindings,
     export_fields_for_casilla,
+    export_fields_overlap,
     resolve_export_layout,
 )
 from ._export_parse import (
@@ -837,6 +838,7 @@ __all__ = [
     "evaluate_profile_conditions",
     "evaluate_remote_operation",
     "export_fields_for_casilla",
+    "export_fields_overlap",
     "expression_binding_refs",
     "expression_casilla_refs",
     "expression_date_binding_refs",

@@ -129,14 +129,14 @@ def derive_export_layouts_from_bindings(revision: ModeloRevision) -> tuple[Expor
                 field
                 for field in record.fields
                 if field.kind == CasillaFieldKind.BINDING
-                or not any(_export_fields_overlap(field, derived_field) for derived_field in derived)
+                or not any(export_fields_overlap(field, derived_field) for derived_field in derived)
             )
             resolved_records.append(record.model_copy(update={"fields": (*base_fields, *derived)}))
         resolved_layouts.append(layout.model_copy(update={"records": tuple(resolved_records)}))
     return tuple(resolved_layouts)
 
 
-def _export_fields_overlap(left: ExportFieldDefinition, right: ExportFieldDefinition) -> bool:
+def export_fields_overlap(left: ExportFieldDefinition, right: ExportFieldDefinition) -> bool:
     if left.offset is None or left.length is None or right.offset is None or right.length is None:
         return False
     left_end = left.offset + left.length - 1
