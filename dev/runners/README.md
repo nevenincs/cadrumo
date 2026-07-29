@@ -194,16 +194,17 @@ rebuild. Reinstall it, and prefer a correct install over a durable one.
 Clone with full history: a `--depth=1` clone leaves `brew --version` reporting
 "shallow or no git repository" and Homebrew refuses to work from it.
 
-**Some gaps are apt packages, not binaries.** The dev lane runs `pyright`, whose
-bundled node needs `libatomic.so.1`; the stock image does not carry it, and
-without it the lane dies `exit 127` with `error while loading shared libraries:
-libatomic.so.1`. A shared library cannot live in the volume the way `gh` does,
-so it must be reinstalled whenever the container is rebuilt:
+**Retired: the `libatomic1` gap.** The dev lane used to run `pyright`, a Python
+wrapper around a JavaScript analyser. With no `node` on `PATH` it downloaded its
+own, and that build needs `libatomic.so.1`, which the stock image does not
+carry; the lane then died `exit 127` with `error while loading shared
+libraries: libatomic.so.1`. Because a shared library cannot live in the volume
+the way `gh` does, it had to be reinstalled by hand on every container rebuild —
+and a rebuild that skipped the step broke the packaging smoke without naming why.
 
-```bash
-docker exec <container> sudo apt-get update -qq
-docker exec <container> sudo apt-get install -y libatomic1
-```
+The type checker is now `pyrefly`, a native binary with no JavaScript runtime
+underneath, so this gap no longer exists and the apt step is retired. Nothing
+needs installing for the dev lane's type check.
 
 Recreate a Linux runner like this (the volume already holds `config.sh`,
 `run.sh`, `.runner`, `.credentials`, and `.env`, so it does **not** re-register):

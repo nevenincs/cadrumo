@@ -62,7 +62,7 @@ class _EnvFileFreeSettings(Settings):
     """A :class:`~cadrumo.core.config.Settings` subclass that never reads a real ``.env`` file.
 
     ``pydantic_settings.BaseSettings.__init__`` accepts a real, documented
-    ``_env_file=None`` per-instance override, but both ``pyright`` and ``ty``
+    ``_env_file=None`` per-instance override, but both ``pyrefly`` and ``ty``
     synthesize a subclass ``__init__`` from its declared fields and drop the
     underscore-prefixed init-only kwargs that hand-written signature carries,
     so ``Settings(_env_file=None)`` reports an unknown-argument error under

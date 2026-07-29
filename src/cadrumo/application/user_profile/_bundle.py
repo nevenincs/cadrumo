@@ -298,6 +298,7 @@ def _build_secure_object_custody_payload(
     )
 
     coverage_manifest = CoverageManifest(
+        # pyrefly: ignore[bad-argument-type]  # reason: StrEnum `.value` widens to `str`, and the manifest declares the closed literal set. The two agree by construction — the enum's members ARE those literals — but the domain model cannot import the adapters-layer enum to say so without inverting the hexagonal direction.
         custody_profile=custody_profile.value,
         carried_namespaces=carried_namespaces,
         excluded_namespaces=excluded_namespaces,

@@ -126,17 +126,17 @@ class EvidenceInput(BaseModel):
         raise NotImplementedError(_REFUSAL_MESSAGE)
 
     @override
-    def model_dump(self, *args: object, **kwargs: object) -> Never:  # pyright: ignore[reportIncompatibleMethodOverride]  # reason: deliberate persistence tripwire
+    def model_dump(self, *args: object, **kwargs: object) -> Never:  # reason: deliberate persistence tripwire
         """Refuse serialization -- decrypted FINANCIAL bytes must never be persisted."""
         raise NotImplementedError(_REFUSAL_MESSAGE)
 
     @override
-    def model_dump_json(self, *args: object, **kwargs: object) -> Never:  # pyright: ignore[reportIncompatibleMethodOverride]  # reason: deliberate persistence tripwire
+    def model_dump_json(self, *args: object, **kwargs: object) -> Never:  # reason: deliberate persistence tripwire
         """Refuse JSON serialization -- decrypted FINANCIAL bytes must never be persisted."""
         raise NotImplementedError(_REFUSAL_MESSAGE)
 
     @override
-    def __iter__(self) -> Never:  # pyright: ignore[reportIncompatibleMethodOverride]  # reason: deliberate persistence tripwire
+    def __iter__(self) -> Never:  # reason: deliberate persistence tripwire
         """Refuse iteration / ``dict()`` -- it would expose the raw ``data`` bytes."""
         raise NotImplementedError(_REFUSAL_MESSAGE)
 

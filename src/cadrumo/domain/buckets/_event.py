@@ -442,7 +442,7 @@ class BucketEventHistoryCatalogue(BaseModel):
     # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-PYDANTIC-METACLASS:
     # pydantic BaseModel.__iter__ override requires a pydantic-v2
     # metaclass-aware base class, which is not yet available.
-    def __iter__(self) -> Iterator[BucketEvent]:  # type: ignore[override]  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]
+    def __iter__(self) -> Iterator[BucketEvent]:  # type: ignore[override]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]
         """Iterate over every :class:`BucketEvent` in insertion order."""
         return iter(self.events.values())
 

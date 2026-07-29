@@ -209,7 +209,7 @@ def _probe_leaf_command() -> ClickCommand:
     probe = typer.Typer()
 
     @probe.command()
-    def run(  # pyright: ignore[reportUnusedFunction]
+    def run(
         cert: Annotated[Path, typer.Option("--cert")] = Path("secrets/cert.p12"),
         tags: Annotated[list[str], typer.Option("--tag")] = ["a", "b"],  # noqa: B006
         colour: Annotated[bool, typer.Option("--colour/--no-colour")] = True,

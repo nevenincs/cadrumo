@@ -325,7 +325,7 @@ class AttachmentCatalogue(BaseModel):
         return cls.model_validate(tuple(attachments))
 
     @override
-    def __iter__(self) -> Iterator[Attachment]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration adapter — yields domain items not field-value tuples
+    def __iter__(self) -> Iterator[Attachment]:  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration adapter — yields domain items not field-value tuples
         """Iterate over catalogue attachments."""
         return iter(self.attachments.values())
 

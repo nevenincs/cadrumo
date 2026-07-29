@@ -630,7 +630,7 @@ class InvoiceCatalogue(BaseModel):
         return cls.model_validate(tuple(invoices))
 
     @override
-    def __iter__(self) -> Iterator[Invoice]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration adapter — yields domain items not field-value tuples
+    def __iter__(self) -> Iterator[Invoice]:  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration adapter — yields domain items not field-value tuples
         """Iterate over catalogue invoices."""
         return iter(self.invoices.values())
 

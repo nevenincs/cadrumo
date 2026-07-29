@@ -114,7 +114,7 @@ env-doctor: env-playwright
     uv run --no-sync python -c "import cadrumo; print(cadrumo.__file__)"
     uv run --no-sync ruff --version
     uv run --no-sync ty --version
-    uv run --no-sync pyright --version
+    uv run --no-sync pyrefly --version
     uv run --no-sync lint-imports --version
     uv run --no-sync deptry --version
     uv run --no-sync vulture --version
@@ -175,7 +175,7 @@ check-style:
 check-format:
     @uv run --no-sync python -m dev.quality.quiet ruff format --check .
 
-# Verify type correctness with ty (full src) and pyright (strict domain + application).
+# Verify type correctness with ty (full src) and pyrefly (strict domain + application).
 # Wrapper emits a signal-only summary grouped by rule and file; silent on success.
 check-types:
     @uv run --no-sync python -m dev.quality.types
@@ -485,7 +485,7 @@ test-coverage:
 
 # ── Advisory audits ──────────────────────────────────────────────────────────
 
-# List every ty + pyright diagnostic verbatim (advisory; always exits 0).
+# List every ty + pyrefly diagnostic verbatim (advisory; always exits 0).
 audit-types:
     @uv run --no-sync python -m dev.quality.types --full
 

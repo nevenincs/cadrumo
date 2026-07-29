@@ -150,7 +150,7 @@ def _is_verify_browser_session_like(obj: object) -> TypeGuard[VerifyBrowserSessi
     :class:`TypeGuard` annotation tells the type checker the narrowed
     type after the guard without relying on
     :func:`isinstance` against a ``@runtime_checkable`` protocol (which
-    pyright flags when a concrete class shares method names but has
+    pyrefly flags when a concrete class shares method names but has
     covariant return types).
     """
     return callable(getattr(obj, "create_context", None)) and callable(getattr(obj, "close", None))
