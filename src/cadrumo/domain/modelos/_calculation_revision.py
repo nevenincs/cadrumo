@@ -805,7 +805,7 @@ class CalculationRevisionCatalogue(BaseModel):
         return tuple(rev for rev in self.revisions.values() if rev.work_unit_id == work_unit_id)
 
     @override
-    def __iter__(self) -> Iterator[CalculationRevision]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration adapter — yields domain items not field-value tuples
+    def __iter__(self) -> Iterator[CalculationRevision]:  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration adapter — yields domain items not field-value tuples
         return iter(self.revisions.values())
 
     def __len__(self) -> int:

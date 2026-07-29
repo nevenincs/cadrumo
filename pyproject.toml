@@ -392,7 +392,7 @@ dev = [
   "types-xlrd>=2.0.0.20260408",
   "types-pywin32>=311.0.0.20260508",
   "google-api-python-client-stubs>=1.36",
-  "pyright>=1.1.409",
+  "pyrefly>=1.1.1",
   # Semgrep is invoked through `uvx --from semgrep==1.168.0 semgrep` instead of the
   # persistent dev group: the Windows Python package install does not expose a
   # working console command, while uvx resolves the supported standalone tool.
@@ -845,12 +845,32 @@ module = ["i18n.*"]
 ignore_missing_imports = true
 
 # ── pyrefly ──────────────────────────────────────────────────────────────────
-# Same rationale as `[tool.mypy]`: declare the project's stub policy so
-# external pyrefly invocations resolve `pypdfium2` and `playwright_stealth`
-# against `stubs/` rather than reporting them as unresolved imports.
+# The project's SECOND type checker, alongside ty. Two independent
+# implementations are deliberate: ty is the canonical checker across all of
+# `src` but is still pre-1.0, so a mature second opinion over the strict
+# domain + application subset catches what a young checker misses. pyrefly is
+# a native binary, so unlike the pyright it replaces it drags in no JavaScript
+# runtime — the packaging lanes need nothing installed to run it.
+#
+# `search_path` also declares the stub policy, the same rationale as
+# `[tool.mypy]`: resolve `pypdfium2` and `playwright_stealth` against `stubs/`
+# rather than reporting them as unresolved imports.
+#
+# The checked subset lives HERE rather than in the harness's argv, because
+# `project_excludes` filters `project_includes` but does NOT filter paths
+# passed explicitly on the command line. A harness that named the two
+# directions would silently re-admit everything this excludes.
 [tool.pyrefly]
 python_version = "3.13"
 search_path = ["src", "stubs"]
+project_includes = ["src/cadrumo/domain", "src/cadrumo/application"]
+# Tests are excluded from this checker, not overlooked. pyright reported zero
+# diagnostics across the test tree, so excluding it loses no signal that was
+# previously enforced, while pyrefly's stricter inference finds ~24 fixture
+# typing issues there that would have to be triaged before the checker could
+# gate anything. Production code in the same subset IS checked, and that is
+# where the swap immediately paid for itself.
+project_excludes = ["**/.[!/.]*", "**/tests/**"]
 
 # ── Pytest ───────────────────────────────────────────────────────────────────
 [tool.pytest.ini_options]

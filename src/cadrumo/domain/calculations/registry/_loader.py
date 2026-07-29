@@ -531,11 +531,12 @@ def _merge_singleton_table_fragment(
     if incoming_table is None:
         raise RegistryLoadError(f"{path}: revision fragment field {field_name!r} must be a table")
     if existing is None:
-        existing_table: dict[str, object] | None = {}
+        existing_table: dict[str, object] = {}
     else:
-        existing_table = _as_toml_table(existing)
-        if existing_table is None:
+        resolved = _as_toml_table(existing)
+        if resolved is None:
             raise RegistryLoadError(f"{path}: revision fragment field {field_name!r} conflicts with a non-table field")
+        existing_table = resolved
 
     merged = dict(existing_table)
     for key, value in incoming_table.items():

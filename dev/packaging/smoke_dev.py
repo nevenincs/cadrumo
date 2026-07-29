@@ -24,7 +24,7 @@ _DEV_COMMANDS: tuple[tuple[str, ...], ...] = (
     ("ruff", "--version"),
     ("pytest", "--version"),
     ("ty", "--version"),
-    ("pyright", "--version"),
+    ("pyrefly", "--version"),
     ("lint-imports", "--version"),
     ("deptry", "--version"),
     ("vulture", "--version"),

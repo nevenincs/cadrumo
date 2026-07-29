@@ -129,11 +129,15 @@ def register_pre_exit_hook(hook: Callable[[], None]) -> None:
     The contract is deliberately weak, and callers must not over-read it. Hooks
     run on a dedicated thread with a hard :data:`_PRE_EXIT_HOOK_TIMEOUT_S`
     deadline and every exception swallowed; a hook that hangs or raises is
-    abandoned and the exit proceeds. Crucially, a hook runs in the watchdog's
-    own thread context, so it observes NO :class:`~contextvars.ContextVar` state
-    bound by other threads - it cannot reach a bucket session bound inside an
-    in-flight warm worker. Registering a hook is therefore a way to release
-    process-global state, never a way to guarantee per-call cleanup.
+    abandoned and the exit proceeds.
+
+    A hook runs on the watchdog's own thread, so it observes NO
+    :class:`~contextvars.ContextVar` state bound by other threads. A hook that
+    must act on state another thread owns has to reach it through a
+    process-wide registry rather than a context lookup - which is why the
+    server's key-zeroisation hook sweeps the live bucket-session registry
+    instead of calling the context-scoped close, and why a hook doing the
+    latter would silently no-op while appearing to work.
 
     Args:
         hook: Zero-argument callable run before the hard exit.

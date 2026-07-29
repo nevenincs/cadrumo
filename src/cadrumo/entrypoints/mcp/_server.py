@@ -47,6 +47,7 @@ from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as distribution_version
 from typing import TYPE_CHECKING
 
+from ...adapters.persistence.storage import close_all_live_bucket_sessions
 from ...application.wizard import ensure_profile_keys_registered
 from ...core import PRODUCT_IDENTITY, FormerProductStateError
 from ._call_runtime import serving_capacity_limiter
@@ -1186,12 +1187,19 @@ def _run_server(
     # Fails open to EOF-only shutdown when it cannot arm.
     #
     # A watchdog reap is an os._exit, which bypasses atexit, so the pre-exit
-    # hook gives the process a bounded window to run the exit functions a normal
-    # shutdown would have - notably releasing the process-global bucket
-    # lockfiles that would otherwise be stranded and block the operator's next
-    # session. It runs in the watchdog's own thread context and therefore cannot
-    # reach a bucket session bound inside an in-flight warm worker; that
-    # residual is documented on register_pre_exit_hook.
+    # hooks give the process a bounded window to do what a normal shutdown
+    # would. Two distinct jobs, in the order that matters most first:
+    #
+    # Zeroise every live bucket session. The watchdog runs on its own daemon
+    # thread, so the ContextVar-scoped close reaches nothing a warm worker
+    # bound - and an in-flight worker is exactly where decrypted key material
+    # lives when a reap fires. The registry sweep is cross-context and is the
+    # only thing that covers it.
+    #
+    # Then run the ordinary exit functions, which release process-global state
+    # such as the bucket lockfiles that would otherwise be stranded and block
+    # the operator's next session.
+    register_pre_exit_hook(close_all_live_bucket_sessions)
     register_pre_exit_hook(atexit._run_exitfuncs)
     arm_stdio_lifetime_watchdog()
 

@@ -62,7 +62,7 @@ from ._modelo_work_options import (
 if TYPE_CHECKING:
     # Annotation-only imports: ``from __future__ import annotations`` keeps these
     # as lazy strings so the state-free CLI surface (test_lazy_command_tree) pays
-    # no runtime registry-import cost, while pyright and the any-param ratchet see
+    # no runtime registry-import cost, while pyrefly and the any-param ratchet see
     # the concrete result/record types instead of a bare ``Any``.
     from ...application.modelo import ModeloWorkCalculationServiceResult
     from ...domain.modelos import CalculationRevision, WorkUnit

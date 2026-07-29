@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-"""Signal-only type-check harness wrapping ty and pyright.
+"""Signal-only type-check harness wrapping ty and pyrefly.
 
-Runs the two project type checkers (``ty`` across ``src`` and ``pyright``
+Runs the two project type checkers (``ty`` across ``src`` and ``pyrefly``
 across the strict ``domain`` + ``application`` subset), then reports only
 actionable signal:
 
@@ -27,7 +27,10 @@ from dataclasses import dataclass
 _CWD = os.getcwd().replace("\\", "/")
 
 TY_TARGET = "src"
-PYRIGHT_TARGETS = ("src/cadrumo/domain", "src/cadrumo/application")
+# pyrefly takes NO path arguments on purpose. Its checked subset and its test
+# exclusion are declared in `[tool.pyrefly]`, and `project_excludes` filters
+# only `project_includes` — a path passed here would bypass the exclusion and
+# silently re-admit the whole test tree.
 _TOP_RULES = 12
 _TOP_FILES = 12
 
@@ -71,13 +74,12 @@ _IRREDUCIBLE_EXTERNAL_GAPS: tuple[_ExternalGap, ...] = (
         "model2vec is the optional cadrumo[search] extra, absent from the type-check env; "
         "no types-model2vec distribution exists.",
     ),
-    _ExternalGap(
-        "application/corpus_search/_model_loader.py",
-        "pyright",
-        "reportMissingImports",
-        "model2vec",
-        "model2vec is the optional cadrumo[search] extra, not installed in the type-check env.",
-    ),
+    # pyrefly needs no counterpart entry: it reports an unresolved optional
+    # import as a warning rather than an error, and this harness collects only
+    # error severity. The entry that stood here named pyright's rule and was
+    # removed with pyright itself — a rule string no checker emits can never
+    # match, so keeping it would have read as active coverage while suppressing
+    # nothing.
 )
 
 
@@ -141,12 +143,17 @@ def collect_ty() -> list[Diagnostic]:
     return diagnostics
 
 
-def collect_pyright() -> list[Diagnostic]:
-    """Run pyright and parse its JSON error-level diagnostics."""
-    result = _run(["pyright", "--outputjson", *PYRIGHT_TARGETS])
+def collect_pyrefly() -> list[Diagnostic]:
+    """Run pyrefly and parse its JSON error-level diagnostics."""
+    result = _run(["pyrefly", "check", "--output-format", "json"])
     payload = result.stdout.strip()
     if not payload:
-        return []
+        # An empty stream is not "clean" — a clean run still prints
+        # `{"errors": []}`. Nothing at all means the checker never produced a
+        # report, so fail loudly instead of reporting a green that was never
+        # measured.
+        sys.stderr.write(result.stderr)
+        raise RuntimeError("pyrefly produced no report; see the captured stderr above")
     try:
         report = json.loads(payload)
     except json.JSONDecodeError:
@@ -154,17 +161,17 @@ def collect_pyright() -> list[Diagnostic]:
         sys.stderr.write(result.stderr)
         raise
     diagnostics: list[Diagnostic] = []
-    for row in report.get("generalDiagnostics", []):
+    for row in report.get("errors", []):
         if row.get("severity") != "error":
             continue
-        start = row.get("range", {}).get("start", {})
         diagnostics.append(
             Diagnostic(
-                checker="pyright",
-                rule=str(row.get("rule", "error")),
-                path=_norm(row.get("file", "?")),
-                line=int(start.get("line", 0)) + 1,
-                message=str(row.get("message", "")).splitlines()[0] if row.get("message") else "",
+                checker="pyrefly",
+                rule=str(row.get("name", "error")),
+                path=_norm(str(row.get("path", "?"))),
+                # pyrefly reports 1-based lines already; pyright's were 0-based.
+                line=int(row.get("line", 0)),
+                message=str(row.get("concise_description") or row.get("description") or "").splitlines()[0],
             ),
         )
     return diagnostics
@@ -198,7 +205,7 @@ def _print_full(diagnostics: list[Diagnostic]) -> None:
 
 def main() -> int:
     """Run both type checkers and emit signal-only output."""
-    parser = argparse.ArgumentParser(description="Signal-only ty + pyright harness.")
+    parser = argparse.ArgumentParser(description="Signal-only ty + pyrefly harness.")
     parser.add_argument(
         "--full",
         action="store_true",
@@ -206,7 +213,7 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    collected = collect_ty() + collect_pyright()
+    collected = collect_ty() + collect_pyrefly()
     suppressed = [d for d in collected if _is_irreducible_external_gap(d)]
     diagnostics = [d for d in collected if not _is_irreducible_external_gap(d)]
 
@@ -233,10 +240,10 @@ def main() -> int:
         return 0
 
     ty_count = sum(1 for d in diagnostics if d.checker == "ty")
-    pyright_count = sum(1 for d in diagnostics if d.checker == "pyright")
-    print(f"check-types: {len(diagnostics)} diagnostics ({ty_count} ty, {pyright_count} pyright)")
+    pyrefly_count = sum(1 for d in diagnostics if d.checker == "pyrefly")
+    print(f"check-types: {len(diagnostics)} diagnostics ({ty_count} ty, {pyrefly_count} pyrefly)")
     _print_group(diagnostics, "ty")
-    _print_group(diagnostics, "pyright")
+    _print_group(diagnostics, "pyrefly")
     print("\nFull detail: just audit-types")
     return 1
 

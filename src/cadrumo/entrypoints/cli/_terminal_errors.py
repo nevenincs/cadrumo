@@ -240,7 +240,7 @@ def _render_click_exception_text(exc: BaseException) -> None:
 
         # The vendored fork's ClickException satisfies the structural
         # contract rich_format_error reads (message, ctx, format_message).
-        rich_utils.rich_format_error(exc)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # reason: structural typing across the two Click runtimes (the vendored fork's ClickException is not an upstream click.ClickException instance)
+        rich_utils.rich_format_error(exc)  # ty: ignore[invalid-argument-type]  # reason: structural typing across the two Click runtimes (the vendored fork's ClickException is not an upstream click.ClickException instance)
     except Exception:  # pragma: no cover - rich unavailable or incompatible
         show = getattr(exc, "show", None)
         if callable(show):

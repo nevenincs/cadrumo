@@ -2,7 +2,7 @@ rules:
   - id: justify-ty-ignore-suppression
     message: |
       Type-checker suppression (`# ty: ignore`, `# type: ignore`,
-      `# pyright: ignore`, `# mypy: ignore`) must include an inline
+      `# pyrefly: ignore`, `# mypy: ignore`) must include an inline
       justification comment naming the rule and the rationale. Format:
       `<code>  # ty: ignore[rule-name]  # reason: <why>`.
       Unjustified suppressions hide upstream typing issues from reviewers
@@ -17,4 +17,4 @@ rules:
         - "src/cadrumo/**/test_*.py"
         - "src/cadrumo/**/_test_*.py"
         - "src/cadrumo/tests/**/*.py"
-    pattern-regex: '#\s*(?:ty|type|pyright|mypy):\s*ignore(?:\[[^\]]+\])?\s*$'
+    pattern-regex: '#\s*(?:ty|type|pyrefly|mypy):\s*ignore(?:\[[^\]]+\])?\s*$'

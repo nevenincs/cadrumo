@@ -123,7 +123,7 @@ class ModeloDraftLike(Protocol):
     this Protocol so the engine can accept either the real draft or any
     Protocol-conforming hand-rolled class in tests.
 
-    Attributes are declared as read-only properties so pyright treats them
+    Attributes are declared as read-only properties so pyrefly treats them
     covariantly and frozen pydantic models satisfy the protocol without
     invariance errors.
     """

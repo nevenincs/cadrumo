@@ -323,7 +323,7 @@ class WorkUnitCatalogue(BaseModel):
         return cls(work_units={str(k): v for k, v in units.items()})
 
     @override
-    def __iter__(self) -> Iterator[WorkUnit]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration adapter — yields domain items not field-value tuples
+    def __iter__(self) -> Iterator[WorkUnit]:  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration adapter — yields domain items not field-value tuples
         """Iterate the loaded work units (not the keys)."""
         return iter(self.work_units.values())
 
