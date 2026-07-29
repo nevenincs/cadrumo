@@ -250,6 +250,7 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S209]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S210]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S211]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S212]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S213]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S214]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S215]]'
@@ -585,6 +586,7 @@ Auto-generated index of all documents tagged with `#cli-authority-verb-conforman
 - `2026-07-15-cli-authority-verb-conformance-W06-P20-S209` - Invoke vaultspec-code-review over the complete feature diff for safety, intent, boundary direction, and test quality
 - `2026-07-15-cli-authority-verb-conformance-W06-P20-S210` - Resolve every in-scope blocker or major finding through its owning implementation Step
 - `2026-07-15-cli-authority-verb-conformance-W06-P20-S211` - Rerun every focused or full gate invalidated by a corrective edit
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S212` - Record a zero-blocker and zero-major formal review verdict
 - `2026-07-15-cli-authority-verb-conformance-W06-P20-S214` - Confirm no removed CLI spelling survives in source, locales, tests, docs, schemas, MCP, or suggestions
 - `2026-07-15-cli-authority-verb-conformance-W06-P20-S215` - Confirm certificate custody, ledger evidence, portable export, hashing, namespaces, filed capture, LLM review, registry projection, and duplication execution each have one canonical owner and no parallel writer, resolver, parser, or command path
 - `2026-07-15-cli-authority-verb-conformance-W06-P20-S216` - Audit every amended ADR decision, including delete-only certificate cutover, atomic ledger evidence, live export routing, 18 plus 4 hashing consolidation, backend replay removal, namespace adoption, filed capture, LLM review, registry as-of behavior, and truthful duplication infrastructure, against code and objective evidence
