@@ -36,6 +36,7 @@ from ..bucket import BucketLockedError
 from ..errors import (
     storage_validation_error as _storage_validation_error,
 )
+from ._live_sessions import register_live_session
 from ._zeroise import zeroise as _zeroise
 
 if TYPE_CHECKING:
@@ -58,6 +59,11 @@ class BucketSession:
     """
 
     __slots__ = (
+        # Required for the weak registration below: a __slots__ class is not
+        # weak-referenceable unless it declares this, and the live-session
+        # registry must hold sessions weakly so it never extends the lifetime of
+        # the key buffers it exists to destroy.
+        "__weakref__",
         "_absolute_deadline",
         "_bucket_id",
         "_dek_buffer",
@@ -98,6 +104,11 @@ class BucketSession:
         self._unsecured_backend = unsecured_backend
         self._sealed = False
         self._engine: Engine | None = None
+        # Registered at construction, not at binding: a session owns key buffers
+        # from this point on, and the emergency-zeroisation path must cover it
+        # whether or not it is ever bound to a context (and whichever thread
+        # binds it). Weak, so this never keeps the buffers alive.
+        register_live_session(self)
 
     @classmethod
     def open(

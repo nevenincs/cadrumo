@@ -42,6 +42,7 @@ from .....core.time import now
 from ..bucket import BucketLockedError
 from ..errors import SecretStoreError
 from ._bucket_session import BucketSession
+from ._live_sessions import close_all_live_bucket_sessions
 
 _log = get_logger(__name__)
 
@@ -197,13 +198,19 @@ def suspend_active_session() -> Iterator[None]:
 
 
 def _close_active_session_at_exit() -> None:
-    """Best-effort close of the active session on interpreter shutdown.
+    """Best-effort close of every live session on interpreter shutdown.
 
     Registered as an :func:`atexit.register` hook below. If a session is
     still bound when the interpreter exits (an interrupted CLI run, a
     crashed test, a long-lived REPL) this hook zeroises the key
     buffers in place so the memory footprint at shutdown does not leak
     cleartext key material.
+
+    Closes the calling context's binding first, then sweeps the process-wide
+    live-session registry. The sweep is what covers a session bound on another
+    thread: ``atexit`` hooks run on the main thread, and by PEP 567 semantics
+    that thread observes no binding a worker made, so the context-scoped close
+    alone would silently leave a worker's keys in memory.
     """
     try:
         close_active_bucket_session()
@@ -211,6 +218,10 @@ def _close_active_session_at_exit() -> None:
         # Interpreter shutdown is a degraded environment; never raise
         # from an atexit hook, but keep a debug breadcrumb for audit.
         _log.debug("active bucket session cleanup failed at interpreter exit error_type=%s", type(exc).__name__)
+    try:
+        close_all_live_bucket_sessions()
+    except Exception as exc:
+        _log.debug("live bucket session sweep failed at interpreter exit error_type=%s", type(exc).__name__)
         return
 
 
