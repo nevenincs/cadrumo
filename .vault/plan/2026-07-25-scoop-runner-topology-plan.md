@@ -20,17 +20,23 @@ related:
      - NEVER use [[wiki-links]] or markdown links in the
        document body. -->
 
+<!-- RETIRED: S01, S02, S03 -->
+
 # `scoop-runner-topology` plan
 
-- [ ] `S01` - Provision a native Windows self-hosted GitHub Actions runner on the workstation under a dedicated non-admin local user with Scoop pre-installed in that user's profile and the runner labelled windows-scoop, because the governing ADR rejected the shared-daemon Windows-container mode switch this row previously named and rules instead that the Docker daemon stays permanently in Linux-container mode so the standing Linux runners are never stopped, OPERATOR-GATED as a host action; `operator action, Windows workstation runner service and dedicated local user`.
 - [x] `S05` - Adapt the Scoop acquisition lane to the ADR-ruled native execution, replacing the docker Windows-container preflight and the Container-mode harness invocation with a native Host-mode invocation pinned to the windows-scoop runner label, a preflight asserting AMD64 plus a resolvable Scoop in the lane user's profile, and a per-run Scoop profile reset that keeps acquisitions independent, and update the structural gate to pin the native shape; `.github/workflows/packaging-scoop.yml, dev/packaging/tests/test_scoop_workflow.py, dev/packaging/smoke_scoop.ps1`.
-- [ ] `S02` - Re-run the clean Scoop acquisition gate once the native windows-scoop host from S01 exists. The source-identity precondition is already SATISFIED, packaging-smoke has four successful runs whose head commits are all ancestors of HEAD, 30387416398 at 35a46ff4f25664c2895a56e25196e502511722c2 being the freshest, and the workflow hard-matches the named run id to that exact 40-character commit so the pair must be named together. The only remaining blocker is the S01 host; `.github/workflows/packaging-scoop.yml`.
-- [ ] `S03` - Enable Windows Sandbox on the Windows host so the install-from-bucket smoke can execute CLI, MCP, update, and persistence behaviour, OPERATOR-GATED as a host action; `operator action, Windows host feature`.
 - [x] `S04` - Record an explicit unaffected-and-why reconciliation against the account-distribution-standard ruling, because this record governs which runner executes the Scoop evidence lane while that record governs where Scoop manifests live, and a reader finding two Scoop decisions with no stated relationship must not have to re-derive the orthogonality; `.vault/adr/2026-07-22-scoop-runner-topology-adr.md`.
 ## Description
 
 Move the Scoop evidence lane onto the execution host the governing ruling
 chose, and record honestly what remains a person's job.
+
+On 2026-07-30, 3 open rows (S01, S02, S03) were removed from this plan and
+migrated to 2026-07-30-open-work-consolidation-plan, which now carries them as
+one ordered flow authorised by 2026-07-30-open-work-consolidation-adr. These
+rows were migrated, not delivered: the reduced row count reflects a change of
+carrier, not a narrowing of scope, and none of the underlying blockers or
+preconditions described below changed as part of this migration.
 
 The lane mints one distribution-evidence row by really installing the tested
 cohort through Scoop, exercising the CLI and MCP oracles against it, updating,
