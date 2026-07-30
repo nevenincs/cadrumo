@@ -4,9 +4,10 @@ tags:
   - '#index'
   - '#post-release-distribution'
 date: '2026-07-28'
-modified: '2026-07-28'
+modified: '2026-07-30'
 body_schema: 'body-v1'
 related:
+  - '[[2026-07-17-post-release-distribution-P01-S03]]'
   - '[[2026-07-17-post-release-distribution-P01-S04]]'
   - '[[2026-07-17-post-release-distribution-P02-S05]]'
   - '[[2026-07-17-post-release-distribution-P02-S06]]'
@@ -66,6 +67,7 @@ Auto-generated index of all documents tagged with `#post-release-distribution`.
 - `2026-07-17-post-release-distribution-P06-S33` - DONE 7d20b2d984, marketplace publish is atomic, the whole cohort validates before any mutation so a refusal leaves the tree byte-identical, and the multi-plugin case that was entirely uncovered now has both a refusal test and a success test. GATE, the pre-fix loop leaves a torn tree so the atomicity test discriminates
 - `2026-07-17-post-release-distribution-P06-S34` - DONE 7d20b2d984, plugin-name collision refuses instead of silently overwriting, index entries carry published_by and a cohort declaring a name another product published is refused, while an unattributed entry stays claimable so the first release adopting it is not deadlocked. GATE, the sibling tree and its attribution both survive a refused takeover
 - `2026-07-17-post-release-distribution-P06-S35` - DONE 7d20b2d984, concurrent publication is closed rather than only recorded, the marketplace push re-clones and re-applies on a rejected push because concurrency groups are per-repository and cannot serialise across product repos, and refuses after three lost races. GATE, a workflow conformance test pins the retry, the re-clone inside the loop, and the fail-closed exhaustion
+- `2026-07-17-post-release-distribution-P01-S03` - RESOLVED 2026-07-28, run 30391339584 at commit 0b4fba14f9 is green across all five jobs including homebrew-linux-arm64, the SIGILL toolchain defect no longer reproduces, evidence lives as a per-run GitHub draft per the aggregation gap named in the plan Description, no further blocker on this row
 
 ### plan
 

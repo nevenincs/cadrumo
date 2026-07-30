@@ -129,3 +129,41 @@ are listed above.
 Held open at HEAD `90c03889b42a475ddac08693704a37f080350270` on operator direction. The work is unperformed, the row
 stays unchecked, and the campaign cannot report itself complete while it does -
 which is the accurate state.
+
+## Disposition 2026-07-30: closed as SUPERSEDED, not satisfied
+
+This row closes SUPERSEDED, not satisfied. The semantic sweep across the ten
+named clusters was never performed and this record makes no claim otherwise.
+
+Three measurements of the instrument were taken across this row's life, each
+worse than the last:
+
+- 2026-07-25 (original attempt): `Source code sections: 466` against 3982
+  tracked Python files, code generation reporting `succeeded`. All ten concept
+  sweeps ran and missed; two unrelated probes returned the same file and
+  offset, the signature of a partial index answering from a tiny candidate
+  pool.
+- 2026-07-28 (re-verification at HEAD `a4534b8a2`): 20 indexed source-code
+  sections against 3742 tracked files, generation still reporting `succeeded`
+  with no degraded reason. A control probe returned the same file three times.
+- 2026-07-28 (final measurement at close): 0 indexed source-code sections and
+  0 vault documents, no index generations reported at all.
+
+The instrument never became trustworthy across any of the three readings, and
+its confident self-report at every reading (`succeeded`, no degraded reasons)
+means the discovery mandate's own refusal-when-unavailable clause never fired
+- the degradation was invisible from the outside at each measurement.
+
+The discovery need this row exists to serve was met by a substitute, not by
+this row's own instrument: the sibling Step `W06.P19.S204`'s structural AST
+swarm covered the DISCOVERY half over 1411 production modules and 4250 hashed
+bodies, its discrimination proven against a hand-built twin pair and an
+unrelated control before any result was trusted. That substitute does not
+retroactively satisfy this row's semantic-sweep instrument, and this closure
+does not claim it does.
+
+The residual work - repairing the RAG index and rerunning the ten named
+cluster probes - is carried forward by `2026-07-30-open-work-consolidation-plan`,
+not abandoned. This row closes here only because the campaign it belongs to is
+closing and the instrument's repair is an operator action outside any
+campaign's implementation scope.

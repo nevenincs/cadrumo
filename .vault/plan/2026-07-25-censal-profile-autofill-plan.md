@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#censal-profile-autofill'
 date: '2026-07-25'
-modified: '2026-07-28'
+modified: '2026-07-30'
 tier: L2
 related:
   - '[[2026-07-25-censal-profile-autofill-adr]]'
@@ -37,7 +37,7 @@ Give an authentication mode somewhere to keep what it needs, on the encrypted pr
 - [x] `P01.S18` - Make the readiness probes no-session contract the subject of a test, asserting the profile read is declined rather than merely survived; `src/cadrumo/application/auth/tests`.
 - [x] `P01.S19` - Hold every auth provider to the identity guard, since each binds a comparable NIF at session bind and an absent expectation silently disarms the downstream session check; `src/cadrumo/application/auth/_sessions.py`.
 - [x] `P01.S20` - Retire the dead censo-derived provenance token and make its gate enumerate the published set rather than naming one member; `src/cadrumo/application/user_profile`.
-- [ ] `P01.S23` - Salvage the authenticated Clave session a post-auth navigation failure was closing unread, so a spent second factor becomes a retryable navigation; `src/cadrumo/adapters/outbound/aeat/auth/_clave_movil.py`.
+- [ ] `P01.S23` - Salvage the authenticated Clave session a post-auth navigation failure was closing unread, so a spent second factor becomes a retryable navigation, fix landed at HEAD in 37e6e931ba and d0e2ca4bea, the offline suite proving persistence mechanics but structurally unable to induce the failure, closure requires one live operator run under CADRUMO_LIVE_TESTS_ENABLED=1 confirming the salvage log line fires and no second approval is requested on retry, verification carried by 2026-07-30-open-work-consolidation-plan; `src/cadrumo/adapters/outbound/aeat/auth/_clave_movil.py`.
 - [x] `P01.S24` - Pin the session-identity comparison the certificate provider's only fail-closed check rests on, asserting the refusal and the per-return wiring rather than the expectation alone; `src/cadrumo/application/auth/tests/test_session_identity_comparison.py`.
 - [x] `P01.S28` - Reproduce whether a certificate provider paired with a cleared profile identity reaches any refusing guard at all, treating the composed two-agent report as unsettled until execution decides it either way, and naming what stops the read if anything does; `src/cadrumo/application/auth/_sessions.py`.
 - [x] `P01.S33` - Rule on whether a schema-required profile field may be cleared or left never-set after creation, the completeness check keying on fact presence rather than value presence while the overview beside it already keys on value, and place the guard where the state is created rather than at each consumer; `src/cadrumo/application/user_profile/_validation.py`.

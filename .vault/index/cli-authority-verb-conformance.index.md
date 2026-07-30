@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#cli-authority-verb-conformance'
 date: '2026-07-28'
-modified: '2026-07-28'
+modified: '2026-07-30'
 body_schema: 'body-v1'
 related:
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S01]]'
@@ -260,6 +260,7 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S219]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S220]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S221]]'
+  - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S222]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S267]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S268]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W06-P20-S269]]'
@@ -620,6 +621,7 @@ Auto-generated index of all documents tagged with `#cli-authority-verb-conforman
 - `2026-07-15-cli-authority-verb-conformance-W06-P20-S297` - Give every corpus-scanning emptiness gate a non-zero subject floor, or prove per gate that its corpus cannot silently empty, since 87 in-surface gates assert an offender list empty without proving they scanned anything and a path rename would green them while the forbidden condition survives
 - `2026-07-15-cli-authority-verb-conformance-W06-P20-S298` - Remove the two feature-owned size-budget regressions this campaign introduced, the payload module pushed to 1251 by the wizard-bridge guard comment and the config help builder pushed to 195 by the custody and audit rows, since the campaign close claims no feature-owned regression exists
 - `2026-07-15-cli-authority-verb-conformance-W06-P20-S299` - Bound the shelled gettext build in the catalogue-drift POT fixture with a timeout so an upstream hang surfaces as a named failure instead of wedging the documentation lane indefinitely, since the call currently passes no timeout and the hang reproduces at zero workers
+- `2026-07-15-cli-authority-verb-conformance-W06-P20-S222` - Mark the plan complete only after every Step, record, gate, blocker, and major finding is closed
 
 ### plan
 

@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#cli-authority-verb-conformance'
 date: '2026-07-15'
-modified: '2026-07-28'
+modified: '2026-07-30'
 tier: L3
 related:
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
@@ -419,7 +419,7 @@ Materialize the CLI, prove schema, locale, docs, and MCP agreement, rerun clone 
 - [x] `W06.P19.S202` - Run the complete documentation build and conformance gate; `docs/`.
 - [x] `W06.P19.S203` - Run the authoritative typed duplication runner and require zero clones for green, clone findings for amber, and unavailable, failed, timed-out, non-zero, or unparseable execution for explicit amber-unavailable without false green; `dev/audit/duplication.py; dev/audit/report.py; justfile`.
 - [x] `W06.P19.S204` - Dispatch a fresh Luna xhigh agent swarm over every audited functionality cluster; `src/cadrumo/`.
-- [ ] `W06.P19.S205` - Rerun Vaultspec-RAG semantic searches across certificate custody, ledger evidence, export, hashing, replay, namespaces, filed capture, LLM review, registry queries, and duplication infrastructure; `src/cadrumo/; dev/audit/`.
+- [x] `W06.P19.S205` - Rerun Vaultspec-RAG semantic searches across certificate custody, ledger evidence, export, hashing, replay, namespaces, filed capture, LLM review, registry queries, and duplication infrastructure, closed as superseded by the withdrawn RAG instrument, not satisfied, residue carried by 2026-07-30-open-work-consolidation-plan; `src/cadrumo/; dev/audit/`.
 - [x] `W06.P19.S206` - Confirm every semantic candidate with exact declaration, import, export, caller, writer, persistence, CLI, schema, locale, test, documentation, and generated-artifact searches before classification; `src/cadrumo/; dev/; docs/; .github/; justfile`.
 - [x] `W06.P19.S207` - Record canonical owner, surviving consumers, removed declarations, bypass disposition, and non-vacuous adoption evidence for every amended functionality cluster; `.vault/audit/`.
 - [x] `W06.P19.S208` - Record unrelated concurrent failures separately without claiming global green; `.vault/exec/`.
@@ -441,7 +441,7 @@ Run the formal code-review skill, reconcile findings, and prove every accepted A
 - [x] `W06.P20.S219` - Run feature-scoped Vaultspec checks and resolve every attributable finding; `.vault/`.
 - [x] `W06.P20.S220` - Run repository-wide Vaultspec checks and triage unrelated residuals honestly; `.vault/`.
 - [x] `W06.P20.S221` - Run the required fresh-context campaign-close honesty review with explicit audits for duplicated authority, vacuous adoption tests, ignored accepted parameters, partial transaction commits, and false-green quality infrastructure; `.vault/audit/`.
-- [ ] `W06.P20.S222` - Mark the plan complete only after every Step, record, gate, blocker, and major finding is closed; `.vault/plan/2026-07-15-cli-authority-verb-conformance-plan.md`.
+- [x] `W06.P20.S222` - Mark the plan complete only after every Step, record, gate, blocker, and major finding is closed; `.vault/plan/2026-07-15-cli-authority-verb-conformance-plan.md`.
 - [x] `W06.P20.S267` - Verify each open W05 Step against its named surface before checking it, never inferring satisfaction from the live command tree alone; `.vault/plan/2026-07-15-cli-authority-verb-conformance-plan.md`.
 - [x] `W06.P20.S268` - Complete the W06.P18 and W06.P19 evidence, refusing to close any Step whose execution record lacks a command, a non-zero collected count, an exit line, and a HEAD reference; `.vault/exec/`.
 - [x] `W06.P20.S269` - Decide in a follow-on ADR the criterion by which a command path is profile-bound, then reconcile the 48 unguarded mutation-shaped leaves against it per verb; `src/cadrumo/application/storage_write_policy.py`.
