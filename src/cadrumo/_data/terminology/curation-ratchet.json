@@ -1,7 +1,7 @@
 {
-  "draft_count": 57,
-  "empty_short_description_count": 57,
-  "recorded_at": "2026-07-27",
+  "draft_count": 99,
+  "empty_short_description_count": 100,
+  "recorded_at": "2026-07-30",
   "review_cadence": "Review after each Terminology Handbook curation pass and before closeout.",
   "source": "python -m dev.docs.terminology_handbook audit"
 }
