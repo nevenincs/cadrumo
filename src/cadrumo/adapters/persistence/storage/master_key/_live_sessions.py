@@ -56,9 +56,9 @@ _lock = threading.Lock()
 def register_live_session(session: BucketSession) -> None:
     """Record ``session`` as a live key holder for emergency zeroisation.
 
-    Called from :meth:`BucketSession.__init__`, so every session that has ever
-    taken ownership of key buffers is covered regardless of how - or whether - it
-    is later bound to a context.
+    Called from the :class:`BucketSession` constructor, so every session that
+    has ever taken ownership of key buffers is covered regardless of how - or
+    whether - it is later bound to a context.
 
     Args:
         session: The freshly constructed session.

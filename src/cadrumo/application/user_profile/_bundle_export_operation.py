@@ -196,11 +196,12 @@ class ProfileBundleExportJournalRepository(JournalRepositoryBase[ProfileBundleEx
     def scan(self) -> ProfileBundleExportJournalScan:
         """Load every readable journal, reporting the unreadable ones separately.
 
-        The isolating counterpart to :meth:`list`. A journal that is corrupt,
-        schema-invalid, identity-mismatched, or unreadable does not abort the
-        walk and does not disappear either: it is reported in
-        ``unreadable`` so the caller can surface it rather than silently
-        skipping a record that may still describe cleartext bytes on disk.
+        The isolating counterpart to :meth:`JournalRepositoryBase.list`. A
+        journal that is corrupt, schema-invalid, identity-mismatched, or
+        unreadable does not abort the walk and does not disappear either: it
+        is reported in ``unreadable`` so the caller can surface it rather
+        than silently skipping a record that may still describe cleartext
+        bytes on disk.
         """
         operations: list[ProfileBundleExportOperation] = []
         unreadable: list[UnreadableExportJournal] = []

@@ -9,9 +9,9 @@ def fts_or_group(terms: Iterable[str]) -> str:
     """Build a SQLite FTS5 ``OR`` group from ``terms``.
 
     Each non-empty term is stripped, de-duplicated preserving first-seen order,
-    quoted, and joined with `` OR ``. An all-empty or empty input yields the empty
-    string. The quoting keeps a term with FTS5-significant characters a single
-    match token.
+    quoted, and joined with the separator ``" OR "``. An all-empty or empty
+    input yields the empty string. The quoting keeps a term with
+    FTS5-significant characters a single match token.
     """
     unique: list[str] = []
     seen: set[str] = set()
