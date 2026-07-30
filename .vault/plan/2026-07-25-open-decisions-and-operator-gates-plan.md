@@ -15,16 +15,6 @@ related:
   - '[[2026-07-25-account-distribution-standard-adr]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 # `open-decisions-and-operator-gates` plan
 
 - [x] `S01` - DECISION OPEN, rule on the code-dedup-sweep ADR which sits at proposed with no plan and no exec records, since dedup work has already landed against it and an unruled record leaves that work ungoverned; `.vault/adr/2026-07-25-code-dedup-sweep-adr.md`.

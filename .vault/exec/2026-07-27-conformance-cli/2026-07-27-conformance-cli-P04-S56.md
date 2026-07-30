@@ -9,39 +9,6 @@ related:
   - "[[2026-07-27-conformance-cli-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace conformance-cli with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S56 and 2026-07-27-conformance-cli-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The pin the two detector branches whose individual mutation flips nothing with fixtures for an interpolated device path and an interpolated mid-path segment, and either delete the two redundant branches or correct the docstring that credits one with protection a different mechanism delivers and ## Scope
-
-- `dev/import_hygiene_scan.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # pin the two detector branches whose individual mutation flips nothing with fixtures for an interpolated device path and an interpolated mid-path segment, and either delete the two redundant branches or correct the docstring that credits one with protection a different mechanism delivers
 
 ## Scope
@@ -49,8 +16,6 @@ related:
 - `dev/import_hygiene_scan.py`
 
 ## Description
-
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
 
 - Plant an f-string device-path fixture in the boundary gate covering both the fully-constant `f"/dev/null"` and the realistic `f"/dev/{name}"`, whose interpolation sits after the device path and must not license it either.
 - Plant a mid-path fixture, `f"{root}-sandbox/dev/notes.json"`, naming a `dev` directory one level below a sibling tree rather than this repository's.
@@ -67,8 +32,6 @@ Dropping the preceding-interpolation requirement moves `f"/dev/null"` from zero 
 The two redundancy rulings are measured rather than asserted. Deleting the absolute-path guard alone produces no behavioural delta on any probe and no failure, confirming it is unreachable as protection today. Widening the relative-marker skip to swallow the empty segment while the guard stands also produces no delta and no failure. Doing both together makes the shipped `/dev/tty` read score a hit and reds three tests including the live-tree gate. The redundancy is therefore conditional, not absolute, so the guard is kept and its docstring corrected; a straight deletion would have left the gate one plausible refactor away from firing on correct shipped code. Re-adding the deleted argument guard produces no delta on any probe, confirming it was dead.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 Semantic-search discovery was explicitly waived by the operator for this Step: the semantic index is broken and its service stopped, so the service was neither started nor queried. Grounding was whole-file reads of the detector and the boundary gate plus targeted pattern search.
 

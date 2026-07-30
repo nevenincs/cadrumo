@@ -9,41 +9,6 @@ related:
   - "[[2026-07-27-canonical-release-pipeline-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace canonical-release-pipeline with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S14 and 2026-07-27-canonical-release-pipeline-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Remove the CI-refusal guard from the docs publisher in the same change that binds the consequence workflow to the protected docs environment, gate: uv run --no-sync pytest dev/deploy/tests -q passes with the guard's absence asserted and the build path exercised under CI markers, deployment against the live stack is BLOCKED on OP-3 and flagged non-local and ## Scope
-
-- `dev/deploy/docs_static_site.py`
-- `dev/deploy/frontend_static_site.py`
-- `dev/deploy/tests/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Remove the CI-refusal guard from the docs publisher in the same change that binds the consequence workflow to the protected docs environment, gate: uv run --no-sync pytest dev/deploy/tests -q passes with the guard's absence asserted and the build path exercised under CI markers, deployment against the live stack is BLOCKED on OP-3 and flagged non-local
 
 ## Scope

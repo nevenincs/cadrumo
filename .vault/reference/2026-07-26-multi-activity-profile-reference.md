@@ -8,25 +8,6 @@ related:
   - "[[2026-07-26-censal-profile-autofill-campaign-close-honesty-review-audit]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #reference) and one feature tag.
-     Replace multi-activity-profile with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
 # `multi-activity-profile` reference: `What already ships for indexed profile rows, and where the declaration and the reader disagree`
 
 Code grounding for the multi-activity decision, read at `1f4cbe8284`. Sources are

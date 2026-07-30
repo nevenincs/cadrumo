@@ -36,4 +36,3 @@ Every registry-driven gate was run and passes: schema lineage, persisted-format 
 The only gate that needed a change was a hardcoded inventory count, whose test name embeds the number; the name and the assertion were moved together so the two cannot drift.
 
 Semantic discovery was unavailable for this work. The vaultspec-rag code index was truncated while reporting itself healthy, and three probes at 120, 300 and 600 second timeouts all expired with the service reporting itself degraded and one then three active index jobs. The service was not restarted. Every statement here rests on reading the owning packages and their exported surfaces directly, and on targeted pattern search against the current tree; a semantic miss would have proven nothing.
-

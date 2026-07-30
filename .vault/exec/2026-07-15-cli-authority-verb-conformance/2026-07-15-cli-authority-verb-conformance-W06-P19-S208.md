@@ -98,7 +98,6 @@ reading of 12. No feature-owned pair in either reading.
 
 No feature-owned regression in any failing lane at HEAD `bc80aa2808`.
 
-
 ## Re-verified 2026-07-28 at HEAD `a4534b8a2bfbf9d9d95eed883f98d2098a437ec0`
 
 Written three days after the sections above, against a tree that has moved. The

@@ -37,7 +37,6 @@ operator path into this mechanism, and none can be opened by wiring an existing
 verb — the input type itself never arrives from an entrypoint. "Zero callers" is
 a symptom; the absent operator surface is the condition.
 
-
 ### three-comparison-mechanisms | high | the distinction it claims is untested by use
 
 Three mechanisms compare declaracion values against expectations, and the
@@ -53,13 +52,11 @@ exercised, because nothing calls it. A boundary asserted in a docstring and
 never crossed in production is the shape that produces parallel authorities in
 this codebase.
 
-
 ### caller-free-confirmed | medium | nothing outside the package's own tests calls it
 
 `verify_declaracion` is referenced only by its own definition, its package
 facade, two docstring cross-references, and its test module. No production
 consumer exists in any other package.
-
 
 ### capability-is-genuine | medium | it is not simply dead code
 

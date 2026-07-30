@@ -9,39 +9,6 @@ related:
   - "[[2026-07-27-canonical-release-pipeline-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace canonical-release-pipeline with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S18 and 2026-07-27-canonical-release-pipeline-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Add the lane-reachability gate asserting every test_*.py under the repository is selected by at least one declared pytest lane, computing reachability from pyproject testpaths, justfile recipes, and every workflow pytest invocation with both the path scope AND the marker expression modeled, since this incident's tests were excluded twice over, gate: uv run --no-sync pytest dev/ci/tests -q -k reachability passes and its injectable-root self-test plants an orphaned test file and asserts the gate reds and ## Scope
-
-- `dev/ci/tests/test_lane_reachability.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Add the lane-reachability gate asserting every test_*.py under the repository is selected by at least one declared pytest lane, computing reachability from pyproject testpaths, justfile recipes, and every workflow pytest invocation with both the path scope AND the marker expression modeled, since this incident's tests were excluded twice over, gate: uv run --no-sync pytest dev/ci/tests -q -k reachability passes and its injectable-root self-test plants an orphaned test file and asserts the gate reds
 
 ## Scope
@@ -103,5 +70,3 @@ asserted an exact marker string that an unrelated change had since extended with
 a further exclusion, so it failed against a lane that over-satisfied its own
 policy. It now asserts the policy by intent, with the reason recorded, so the
 next added exclusion does not break it again.
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->

@@ -9,41 +9,6 @@ related:
   - "[[2026-07-27-canonical-release-pipeline-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace canonical-release-pipeline with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S06 and 2026-07-27-canonical-release-pipeline-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Prove every destination step idempotent against its own prior success so a re-dispatch of the same cohort converges, using clobber or skip-existing semantics per destination, gate: uv run --no-sync pytest dev/release/tests dev/packaging/tests -q -k idempot passes over the helper functions, end-to-end re-dispatch convergence needs CI and is flagged non-local and ## Scope
-
-- `.github/workflows/publish-release.yml`
-- `dev/packaging/marketplace_publish.py`
-- `dev/release/tests/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Prove every destination step idempotent against its own prior success so a re-dispatch of the same cohort converges, using clobber or skip-existing semantics per destination, gate: uv run --no-sync pytest dev/release/tests dev/packaging/tests -q -k idempot passes over the helper functions, end-to-end re-dispatch convergence needs CI and is flagged non-local
 
 ## Scope
@@ -100,5 +65,3 @@ input and was trivially true. Both were deleted, and the rule was split out of
 the network shell as a pure function so the real implementation is exercised
 against real rows. The refactor was prompted by the bad test rather than the
 other way round, which is the useful part to record.
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->

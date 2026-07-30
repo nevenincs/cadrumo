@@ -12,7 +12,6 @@ related:
   - '[[2026-07-02-arch-remediation-registry-format-adr]]'
 ---
 
-
 # `conformance-cli` adr: `derived conformance facts in src, governance CLI in dev, one-way boundary` | (**status:** `accepted`)
 
 ## Problem Statement

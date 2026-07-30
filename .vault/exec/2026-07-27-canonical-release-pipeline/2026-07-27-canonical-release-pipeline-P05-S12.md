@@ -9,39 +9,6 @@ related:
   - "[[2026-07-27-canonical-release-pipeline-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace canonical-release-pipeline with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S12 and 2026-07-27-canonical-release-pipeline-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Widen the privacy scan scope from the tracked tree to tracked plus staged plus untracked-not-ignored files, gate: the same pytest invocation passes with a self-test that plants a violating untracked file in an injectable temporary repository root and asserts the gate reds, proving the extension is not tautological against the real repo state and ## Scope
-
-- `dev/quality/tests/test_doc_privacy.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Widen the privacy scan scope from the tracked tree to tracked plus staged plus untracked-not-ignored files, gate: the same pytest invocation passes with a self-test that plants a violating untracked file in an injectable temporary repository root and asserts the gate reds, proving the extension is not tautological against the real repo state
 
 ## Scope
@@ -84,5 +51,3 @@ belt-and-braces only, since it is per-clone, absent on a fresh clone, and
 bypassable. A continuous-integration checkout materialises no untracked files,
 so this extension protects the machines that run the gate rather than the
 pipeline. One ungated push remains the window, and only discipline closes it.
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->

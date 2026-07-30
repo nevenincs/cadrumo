@@ -11,7 +11,6 @@ related:
   - '[[2026-07-10-prorrata-especial-research]]'
 ---
 
-
 # `prorrata-especial` adr: `Prorrata especial per-input classification (LIVA arts 103.Dos/106): 100/0/prorrata deduction and the +10% mandatory-especial advisory` | (**status:** `accepted`)
 
 ## Problem Statement

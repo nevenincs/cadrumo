@@ -9,39 +9,6 @@ related:
   - "[[2026-07-15-cli-authority-verb-conformance-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace cli-authority-verb-conformance with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S216 and 2026-07-15-cli-authority-verb-conformance-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Audit every amended ADR decision, including delete-only certificate cutover, atomic ledger evidence, live export routing, 18 plus 4 hashing consolidation, backend replay removal, namespace adoption, filed capture, LLM review, registry as-of behavior, and truthful duplication infrastructure, against code and objective evidence and ## Scope
-
-- `.vault/adr/2026-07-15-cli-authority-verb-conformance-adr.md` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Audit every amended ADR decision, including delete-only certificate cutover, atomic ledger evidence, live export routing, 18 plus 4 hashing consolidation, backend replay removal, namespace adoption, filed capture, LLM review, registry as-of behavior, and truthful duplication infrastructure, against code and objective evidence
 
 ## Scope

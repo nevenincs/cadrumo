@@ -15,16 +15,6 @@ related:
   - '[[2026-07-17-post-release-distribution-audit]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 <!-- RETIRED: S01, S02, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19, S20, S21, S22, S23, S24, S25 -->
 
 # `post-release-distribution` plan
@@ -50,11 +40,9 @@ Run cohort-bound installed-behavior oracles on every claimed operating-system ro
 
 Publish the tested cohort through the protected workflow and reacquire the exact bytes from every advertised public endpoint. Blocked by held operator publish approval and by public-registry reacquisition access.
 
-
 ### Phase `P04` - Publish availability documentation and audit against public evidence
 
 Write availability language and the support matrix only for channels with passing post-public evidence, and audit every artifact claim against retained installed-behavior and public-reacquisition evidence. Blocked until the reacquisition evidence exists.
-
 
 ### Phase `P05` - Harness-identity brand migration (operator-gated)
 

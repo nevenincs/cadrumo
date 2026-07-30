@@ -41,4 +41,3 @@ Two failures during authoring were real information rather than noise, and both 
 The type checker reports no errors. It warns about private-symbol use from the test module, matching the existing sibling reconcile test that imports the same internal entry point.
 
 Semantic discovery was unavailable for this work. The vaultspec-rag code index was truncated while reporting itself healthy, and three probes at 120, 300 and 600 second timeouts all expired with the service reporting itself degraded and one then three active index jobs. The service was not restarted. Every statement here rests on reading the owning packages and their exported surfaces directly, and on targeted pattern search against the current tree; a semantic miss would have proven nothing.
-

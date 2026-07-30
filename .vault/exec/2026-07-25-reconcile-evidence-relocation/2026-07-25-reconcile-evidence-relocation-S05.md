@@ -36,4 +36,3 @@ The overflowing payload value is deleted rather than migrated, and no read path 
 Storage order is the object-key digest order rather than the reconciliation order, so the sort is load-bearing rather than cosmetic; the tie-break on the event id keeps two runs sharing an instant in a stable order.
 
 Semantic discovery was unavailable for this work. The vaultspec-rag code index was truncated while reporting itself healthy, and three probes at 120, 300 and 600 second timeouts all expired with the service reporting itself degraded and one then three active index jobs. The service was not restarted. Every statement here rests on reading the owning packages and their exported surfaces directly, and on targeted pattern search against the current tree; a semantic miss would have proven nothing.
-

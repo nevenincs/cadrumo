@@ -9,41 +9,6 @@ related:
   - "[[2026-07-27-canonical-release-pipeline-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace canonical-release-pipeline with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S02 and 2026-07-27-canonical-release-pipeline-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Extend the destination guard into one all-destination version-identity authority checking the three PyPI projects, the v-tag and release namespace including drafts, the monotonic manifest floor, and the burned ledger, refusing with the owning destination named, gate: uv run --no-sync pytest dev/release/tests -q -k version_identity passes with one refusal case exercised per destination class plus the burned-version and floor refusals and ## Scope
-
-- `dev/release/promote_python_cohort.py`
-- `dev/release/version_identity.py`
-- `dev/release/tests/test_promote_python_cohort.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Extend the destination guard into one all-destination version-identity authority checking the three PyPI projects, the v-tag and release namespace including drafts, the monotonic manifest floor, and the burned ledger, refusing with the owning destination named, gate: uv run --no-sync pytest dev/release/tests -q -k version_identity passes with one refusal case exercised per destination class plus the burned-version and floor refusals
 
 ## Scope
@@ -97,5 +62,3 @@ Discovery substitution as recorded for the preceding Step: the semantic
 discovery service was unusable, so discovery was performed manually and
 exhaustively. No all-destination ownership authority existed; the only
 version-ownership code asked one index over the network and raised on conflict.
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->

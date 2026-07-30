@@ -12,7 +12,6 @@ related:
   - '[[2026-07-06-cross-period-prorrata-research]]'
 ---
 
-
 # `iva-prorrata-complexity` adr: `art-103.Dos.2 mandatory-especial advisory emit audience` | (**status:** `accepted`)
 
 ## Problem Statement

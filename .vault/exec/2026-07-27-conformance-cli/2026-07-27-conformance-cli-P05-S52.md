@@ -9,39 +9,6 @@ related:
   - "[[2026-07-27-conformance-cli-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace conformance-cli with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S52 and 2026-07-27-conformance-cli-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The reconcile the registry revision diff test whose changed-formula expectation this campaign moved when it corrected the prorrata rounding on both M303 revisions, fixing whichever side is actually wrong rather than re-anchoring the test to make it pass and ## Scope
-
-- `src/cadrumo/application/registry/tests/test_diff.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # reconcile the registry revision diff test whose changed-formula expectation this campaign moved when it corrected the prorrata rounding on both M303 revisions, fixing whichever side is actually wrong rather than re-anchoring the test to make it pass
 
 ## Scope
@@ -49,8 +16,6 @@ related:
 - `src/cadrumo/application/registry/tests/test_diff.py`
 
 ## Description
-
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
 
 - Diagnose the vanished changed-formula anchor against both revisions read through the registry authority and against the two commits this campaign landed on the prorrata percentage.
 - Retire the prorrata anchor and re-anchor the devengada total on its coupling to a casilla the same diff reports as added, so the assertion reads the structural reason rather than restating an identifier.
@@ -71,8 +36,6 @@ Six mutations of the diff machinery were measured through a meta-path redirect t
 Dropping the expression comparison removes the devengada total from the changed set and fails exactly one test. Dropping the legal-grounding comparison empties the Modelo 180 changed set and fails exactly one test, the new witness. Reporting every common formula as changed fails two, the set-level classification claim and the silence half. Misclassifying changed formulas into the added list leaves the changed set completely unchanged and is caught only by the new disjointness claim, a dimension nothing covered before. The clean run is `13 passed`, the owning package is `56 passed in 23.90s` exit 0, and all thirteen collect under the default selector.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 Semantic-search discovery was explicitly waived by the operator for this Step: the semantic index is broken and its service stopped, so the service was neither started nor queried. Grounding was whole-file reads of the diff implementation and its test, direct probes of both revision pairs through the registry authority, and the history of the two commits that moved the formula.
 

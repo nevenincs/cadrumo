@@ -9,40 +9,6 @@ related:
   - "[[2026-07-27-canonical-release-pipeline-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace canonical-release-pipeline with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S15 and 2026-07-27-canonical-release-pipeline-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Codify the release runbook with the bump-first release-please step, the docs consequence, the distribution-complete tripwire, and the 0.1.0 first-version expectation, sweeping user docs where they describe the release flow, gate: uv run --no-sync pytest dev/docs/tests -m docs -q and the documented-command conformance test pass and ## Scope
-
-- `docs/`
-- `dev/docs/tests/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Codify the release runbook with the bump-first release-please step, the docs consequence, the distribution-complete tripwire, and the 0.1.0 first-version expectation, sweeping user docs where they describe the release flow, gate: uv run --no-sync pytest dev/docs/tests -m docs -q and the documented-command conformance test pass
 
 ## Scope
@@ -86,5 +52,3 @@ provide. That file is untouched by this campaign, was last changed by an
 operator bulk commit, and resolving it needs a domain decision about which audit
 verbs should exist. It is reported rather than absorbed, and this Step does not
 claim that suite green.
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->

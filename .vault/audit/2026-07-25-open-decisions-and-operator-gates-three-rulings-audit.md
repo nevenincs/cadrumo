@@ -132,7 +132,6 @@ standing. Corrections were appended beside the reasoning they correct rather tha
 replacing it, so a later reader can see both what was believed and what was
 measured.
 
-
 ### execution-halted-on-the-discovery-gate | critical | the index collapsed a second time, so the remaining new-mechanism work is refused
 
 Execution of the three plans stopped short of the supersede transition and the

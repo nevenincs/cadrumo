@@ -59,7 +59,6 @@ this Phase treated it as a defect in the query rather than a finding.
 
 The semantic code index was degraded throughout this Phase: the service reported `Source code sections: 466` against 3982 tracked Python files while declaring its code generation succeeded. No absence recorded here rests on a semantic miss.
 
-
 ## Re-verified 2026-07-28 at HEAD `a4534b8a2bfbf9d9d95eed883f98d2098a437ec0`
 
 Written three days after the sections above, against a tree that has moved. The

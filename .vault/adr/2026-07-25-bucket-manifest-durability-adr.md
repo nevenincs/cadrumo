@@ -310,7 +310,6 @@ read as making a larger one.
   unowned. The durable-implies-floor predicate that record asked for has since landed and is
   no longer open.
 
-
 ### Ruling
 
 Ruled `accepted` on the chosen option — enrollment with the floor machinery plus

@@ -9,40 +9,6 @@ related:
   - "[[2026-07-27-canonical-release-pipeline-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace canonical-release-pipeline with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S04 and 2026-07-27-canonical-release-pipeline-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Replace the check-pypi-only destination guard in Gate 2 with the all-destination authority, gate: uv run --no-sync pytest dev/release/tests -q -k publish_release passes with the conformance test asserting no check-pypi-only invocation remains and the Gate 2 step invokes the authority and ## Scope
-
-- `.github/workflows/publish-release.yml`
-- `dev/release/tests/test_publish_release_workflow.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Replace the check-pypi-only destination guard in Gate 2 with the all-destination authority, gate: uv run --no-sync pytest dev/release/tests -q -k publish_release passes with the conformance test asserting no check-pypi-only invocation remains and the Gate 2 step invokes the authority
 
 ## Scope
@@ -99,5 +65,3 @@ through a pipe.
 The runbook was swept in the same change. Operator instructions naming a flag
 that no longer exists is the same defect class already corrected once in this
 campaign's workflow prose, and leaving it would have reproduced it.
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->

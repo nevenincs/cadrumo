@@ -200,4 +200,3 @@ mismatch forward under a new name.
 
 Submitting the correction is an outward-facing action against a repository the
 account does not own. It is an operator action and is not performed here.
-

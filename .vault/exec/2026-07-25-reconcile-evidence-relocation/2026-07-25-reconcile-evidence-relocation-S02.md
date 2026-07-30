@@ -37,4 +37,3 @@ The N-per-work-unit property was proven to be a real gate rather than an asserti
 A work unit id and an event id are both sixty-four character digests, so the composed key is about one hundred and forty characters and comfortably inside the storage id contract.
 
 Semantic discovery was unavailable for this work. The vaultspec-rag code index was truncated while reporting itself healthy, and three probes at 120, 300 and 600 second timeouts all expired with the service reporting itself degraded and one then three active index jobs. The service was not restarted. Every statement here rests on reading the owning packages and their exported surfaces directly, and on targeted pattern search against the current tree; a semantic miss would have proven nothing.
-

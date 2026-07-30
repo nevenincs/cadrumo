@@ -37,4 +37,3 @@ The equality-not-ceiling requirement is met by inheritance rather than by callin
 The record model and its repository live beside the reconcile service rather than in a new module, matching the shipped IVA-wallet precedent, where the decision repository likewise lives in the application package that owns the concept.
 
 Semantic discovery was unavailable for this work. The vaultspec-rag code index was truncated while reporting itself healthy, and three probes at 120, 300 and 600 second timeouts all expired with the service reporting itself degraded and one then three active index jobs. The service was not restarted. Every statement here rests on reading the owning packages and their exported surfaces directly, and on targeted pattern search against the current tree; a semantic miss would have proven nothing.
-

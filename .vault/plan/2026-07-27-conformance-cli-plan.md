@@ -13,16 +13,6 @@ related:
   - '[[2026-07-05-cross-period-prorrata-adr]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 # `conformance-cli` plan
 
 Ship the modelo schema conformance governance surface: declared per-revision provenance stamps, importable conformance fact libraries under `src/cadrumo`, a `python -m dev.registry.conformance` governance CLI, and a hardened one-way src/dev boundary.

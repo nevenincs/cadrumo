@@ -92,7 +92,6 @@ disposition gate finding from the original reading resolves as: the TUI screen c
 caused the gate to fire was either dispositioned or the pair changed shape between readings.
 No new owner-surface gaps identified.
 
-
 ## Re-verified 2026-07-28 at HEAD `a4534b8a2bfbf9d9d95eed883f98d2098a437ec0`
 
 Written three days after the sections above, against a tree that has moved. The

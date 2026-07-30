@@ -10,16 +10,6 @@ related:
   - '[[2026-07-25-reconcile-evidence-relocation-research]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 # `reconcile-evidence-relocation` plan
 
 - [x] `S01` - Register the MODELO_RECONCILIATION_RECORDS secure-object namespace at AUDIT sensitivity and PROFILE_LOCAL scope and STRUCTURED_CUSTODY disposition, enrolling its durability floor and version and empty upgrader registry at birth as compatibility-lifecycle-checkpoint requires; `src/cadrumo/adapters/persistence/storage/_namespace_registry.py`.

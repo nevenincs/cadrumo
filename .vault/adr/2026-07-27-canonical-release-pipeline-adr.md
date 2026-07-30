@@ -204,7 +204,6 @@ pipeline.
 - Declared supersession in the cohort manifest, executed by the merge tool
   under the unchanged ownership rule. **Chosen.**
 
-
 **Docs/landing coupling (ruling 7).**
 
 - Force-paired deploys. Rejected: neither needs the other's rebuild, and the

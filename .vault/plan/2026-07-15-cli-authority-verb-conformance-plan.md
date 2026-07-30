@@ -11,16 +11,6 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-reference]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 <!-- RETIRED: S38, S39, S40, S41, S42, S53, S94, S95, S115, S117, S127, S184 -->
 
 # `cli-authority-verb-conformance` plan
