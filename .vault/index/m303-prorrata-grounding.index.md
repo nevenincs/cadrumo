@@ -5,6 +5,7 @@ tags:
   - '#m303-prorrata-grounding'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-28-m303-prorrata-grounding-adr]]'
 ---
@@ -17,4 +18,4 @@ Auto-generated index of all documents tagged with `#m303-prorrata-grounding`.
 
 ### adr
 
-- `2026-07-28-m303-prorrata-grounding-adr` - `m303-prorrata-grounding` adr: `correct the M303 prorrata rounding, no-volume branch and mandatory-especial predicate against their binding provisions` | (**status:** `{proposed|accepted|rejected|superseded|deprecated}`)
+- `2026-07-28-m303-prorrata-grounding-adr` - `m303-prorrata-grounding` adr: `a standalone record for the M303 prorrata corrections` | (**status:** `rejected`)

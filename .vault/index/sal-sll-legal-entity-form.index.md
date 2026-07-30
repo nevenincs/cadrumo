@@ -5,6 +5,7 @@ tags:
   - '#sal-sll-legal-entity-form'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-05-27-sal-sll-legal-entity-form-adr]]'
   - '[[2026-06-04-sal-sll-legal-entity-form-research]]'

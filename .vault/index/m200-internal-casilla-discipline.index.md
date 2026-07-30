@@ -5,6 +5,7 @@ tags:
   - '#m200-internal-casilla-discipline'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-06-03-m200-internal-casilla-discipline-P01-S01]]'
   - '[[2026-06-03-m200-internal-casilla-discipline-P01-S02]]'

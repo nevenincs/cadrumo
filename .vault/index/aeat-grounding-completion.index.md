@@ -5,6 +5,7 @@ tags:
   - '#aeat-grounding-completion'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-06-14-aeat-grounding-completion-W01-P01-S01]]'
   - '[[2026-06-14-aeat-grounding-completion-adr]]'

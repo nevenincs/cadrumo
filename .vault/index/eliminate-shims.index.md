@@ -5,6 +5,7 @@ tags:
   - '#eliminate-shims'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-05-13-eliminate-shims-audit]]'
   - '[[2026-05-26-m100-extraction-profile-S29]]'

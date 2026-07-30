@@ -5,6 +5,7 @@ tags:
   - '#classification-harmonization'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-04-20-classification-harmonization-adr]]'
   - '[[2026-04-20-classification-harmonization-plan]]'

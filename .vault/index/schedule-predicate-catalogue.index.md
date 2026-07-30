@@ -5,6 +5,7 @@ tags:
   - '#schedule-predicate-catalogue'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-05-31-schedule-predicate-catalogue-P01-S01]]'
   - '[[2026-05-31-schedule-predicate-catalogue-P01-S02]]'

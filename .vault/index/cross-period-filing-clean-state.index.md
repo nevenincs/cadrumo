@@ -5,6 +5,7 @@ tags:
   - '#cross-period-filing-clean-state'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-06-05-cross-period-filing-clean-state-P01-S01]]'
   - '[[2026-06-05-cross-period-filing-clean-state-P01-S02]]'

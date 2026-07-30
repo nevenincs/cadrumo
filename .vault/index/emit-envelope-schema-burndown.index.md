@@ -5,6 +5,7 @@ tags:
   - '#emit-envelope-schema-burndown'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-05-31-emit-envelope-schema-burndown-W01-P01-S22]]'
   - '[[2026-05-31-emit-envelope-schema-burndown-W01-P02-S32]]'

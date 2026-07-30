@@ -5,6 +5,7 @@ tags:
   - '#purchase-invoice-ocr-extraction-discipline'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-05-30-purchase-invoice-ocr-extraction-discipline-adr]]'
   - '[[2026-06-04-purchase-invoice-ocr-extraction-discipline-research]]'

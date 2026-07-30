@@ -5,6 +5,7 @@ tags:
   - '#dt12-reduccion'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-05-27-dt12-reduccion-S01]]'
   - '[[2026-06-04-dt12-reduccion-adr]]'

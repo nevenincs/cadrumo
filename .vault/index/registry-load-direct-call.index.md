@@ -5,6 +5,7 @@ tags:
   - '#registry-load-direct-call'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-06-01-registry-load-direct-call-audit]]'
 ---

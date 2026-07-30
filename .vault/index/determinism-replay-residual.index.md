@@ -5,6 +5,7 @@ tags:
   - '#determinism-replay-residual'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-01-determinism-replay-residual-P01-S01]]'
   - '[[2026-07-01-determinism-replay-residual-P02-S02]]'

@@ -5,6 +5,7 @@ tags:
   - '#sal-reserva-especial'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-05-27-sal-reserva-especial-S01]]'
   - '[[2026-06-04-sal-reserva-especial-adr]]'

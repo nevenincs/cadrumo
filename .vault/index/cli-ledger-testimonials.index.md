@@ -5,6 +5,7 @@ tags:
   - '#cli-ledger-testimonials'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-06-03-cli-ledger-testimonials-adr]]'
   - '[[2026-06-03-cli-ledger-testimonials-audit]]'

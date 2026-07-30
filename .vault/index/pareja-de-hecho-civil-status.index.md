@@ -5,6 +5,7 @@ tags:
   - '#pareja-de-hecho-civil-status'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-06-03-pareja-de-hecho-civil-status-adr]]'
   - '[[2026-06-03-pareja-de-hecho-civil-status-research]]'

@@ -5,6 +5,7 @@ tags:
   - '#centralized-output-redaction'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-05-28-centralized-output-redaction-W01-P01-S01]]'
   - '[[2026-05-28-centralized-output-redaction-W01-P01-S02]]'

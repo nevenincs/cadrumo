@@ -5,6 +5,7 @@ tags:
   - '#transaction-catalogue'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-04-14-transaction-catalogue-adr]]'
   - '[[2026-04-14-transaction-catalogue-phase1-step1-exec]]'

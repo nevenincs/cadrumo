@@ -5,6 +5,7 @@ tags:
   - '#continuous-review'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-04-20-continuous-review-audit]]'
 ---

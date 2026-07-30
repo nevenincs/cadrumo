@@ -5,6 +5,7 @@ tags:
   - '#cli-backend-boundary'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-05-08-cli-backend-boundary-adr]]'
   - '[[2026-05-08-cli-backend-boundary-plan]]'

@@ -5,6 +5,7 @@ tags:
   - '#integration-tests-ci'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-04-21-integration-tests-ci-adr]]'
   - '[[2026-04-21-integration-tests-ci-plan]]'

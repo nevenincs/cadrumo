@@ -5,6 +5,7 @@ tags:
   - '#m714-limite-conjunto-irpf'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-06-15-m714-limite-conjunto-irpf-adr]]'
   - '[[2026-06-15-m714-limite-conjunto-irpf-research]]'

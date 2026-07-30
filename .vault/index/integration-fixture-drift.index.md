@@ -5,6 +5,7 @@ tags:
   - '#integration-fixture-drift'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-08-integration-fixture-drift-audit]]'
   - '[[2026-07-08-integration-fixture-drift-plan]]'

@@ -5,6 +5,7 @@ tags:
   - '#agent-harness'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-06-30-agent-harness-W01-P01-S55]]'
   - '[[2026-06-30-agent-harness-W01-P01-summary]]'

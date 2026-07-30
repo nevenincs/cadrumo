@@ -5,6 +5,7 @@ tags:
   - '#developer-leakage-emergency'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-05-18-developer-leakage-emergency-audit]]'
 ---

@@ -5,6 +5,7 @@ tags:
   - '#data-output-standardization-scratch-runtime-cleanup'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-13-data-output-standardization-scratch-runtime-cleanup-audit]]'
 ---

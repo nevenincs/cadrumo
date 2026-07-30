@@ -5,6 +5,7 @@ tags:
   - '#iva-exemption-article'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-06-03-iva-exemption-article-adr]]'
   - '[[2026-06-03-iva-exemption-article-research]]'

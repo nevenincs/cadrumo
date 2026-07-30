@@ -5,6 +5,7 @@ tags:
   - '#cadrumo-product-rename-s54-mcpb-real-behavior'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-13-cadrumo-product-rename-s54-mcpb-real-behavior-audit]]'
 ---

@@ -5,6 +5,7 @@ tags:
   - '#release-asset-transport'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-20-release-asset-transport-adr]]'
   - '[[2026-07-20-release-asset-transport-audit]]'

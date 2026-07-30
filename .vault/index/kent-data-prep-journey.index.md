@@ -5,6 +5,7 @@ tags:
   - '#kent-data-prep-journey'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-04-18-operator-data-prep-journey-audit]]'
 ---

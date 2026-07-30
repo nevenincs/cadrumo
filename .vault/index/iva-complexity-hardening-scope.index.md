@@ -5,6 +5,7 @@ tags:
   - '#iva-complexity-hardening-scope'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-01-iva-complexity-hardening-scope-adr]]'
   - '[[2026-07-01-iva-complexity-hardening-scope-research]]'

@@ -5,6 +5,7 @@ tags:
   - '#mcp-hardening-conformance'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-08-mcp-hardening-conformance-audit]]'
   - '[[2026-07-09-mcp-hardening-conformance-audit]]'

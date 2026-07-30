@@ -5,6 +5,7 @@ tags:
   - '#dsl-conditional-predicate'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-05-27-dsl-conditional-predicate-adr]]'
   - '[[2026-06-04-dsl-conditional-predicate-research]]'

@@ -5,6 +5,7 @@ tags:
   - '#pdf-import'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-04-20-pdf-import-adr]]'
   - '[[2026-04-20-pdf-import-phase-1-summary-exec]]'

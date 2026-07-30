@@ -5,6 +5,7 @@ tags:
   - '#browser-leak'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-04-16-chromium-leak-research]]'
   - '[[2026-04-17-browser-leak-adr-audit]]'

@@ -5,6 +5,7 @@ tags:
   - '#code-dedup-sweep'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-25-code-dedup-sweep-S01]]'
   - '[[2026-07-25-code-dedup-sweep-S02]]'

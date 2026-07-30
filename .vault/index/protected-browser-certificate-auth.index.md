@@ -5,6 +5,7 @@ tags:
   - '#protected-browser-certificate-auth'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-16-protected-browser-certificate-auth-P01-S01]]'
   - '[[2026-07-16-protected-browser-certificate-auth-P01-S02]]'

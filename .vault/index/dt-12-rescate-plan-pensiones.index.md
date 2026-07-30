@@ -5,6 +5,7 @@ tags:
   - '#dt-12-rescate-plan-pensiones'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-05-27-dt-12-rescate-plan-pensiones-adr]]'
   - '[[2026-06-04-dt-12-rescate-plan-pensiones-research]]'

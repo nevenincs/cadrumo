@@ -5,6 +5,7 @@ tags:
   - '#modelo-filing-ledger-snapshot'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-06-02-modelo-filing-ledger-snapshot-adr]]'
   - '[[2026-06-04-modelo-filing-ledger-snapshot-research]]'

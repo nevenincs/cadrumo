@@ -5,6 +5,7 @@ tags:
   - '#multi-bucket-test-fixture'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-06-03-multi-bucket-test-fixture-adr]]'
   - '[[2026-06-04-multi-bucket-test-fixture-research]]'

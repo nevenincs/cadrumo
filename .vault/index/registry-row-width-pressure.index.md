@@ -5,6 +5,7 @@ tags:
   - '#registry-row-width-pressure'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-06-04-registry-row-width-pressure-P01-S01]]'
   - '[[2026-06-04-registry-row-width-pressure-P02-S02]]'

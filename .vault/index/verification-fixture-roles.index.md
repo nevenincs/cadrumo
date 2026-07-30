@@ -5,6 +5,7 @@ tags:
   - '#verification-fixture-roles'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-06-01-verification-fixture-roles-adr]]'
   - '[[2026-06-01-verification-fixture-roles-plan]]'

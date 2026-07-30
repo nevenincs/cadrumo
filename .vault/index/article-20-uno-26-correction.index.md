@@ -5,6 +5,7 @@ tags:
   - '#article-20-uno-26-correction'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-11-article-20-uno-26-correction-adr]]'
 ---

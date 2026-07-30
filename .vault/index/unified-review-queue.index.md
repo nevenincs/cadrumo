@@ -5,6 +5,7 @@ tags:
   - '#unified-review-queue'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-04-18-unified-review-queue-adr]]'
   - '[[2026-04-18-unified-review-queue-phase1-summary-exec]]'

@@ -5,6 +5,7 @@ tags:
   - '#live-filed-history-calendar-modelo'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-06-12-live-filed-history-calendar-modelo-code-review-audit]]'
 ---

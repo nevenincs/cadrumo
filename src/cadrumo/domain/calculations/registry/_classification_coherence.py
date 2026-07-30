@@ -467,9 +467,7 @@ def _informative_class_blockers(modelo: ModeloDefinition) -> tuple[str, ...]:
     return tuple(validate_informative_class_invariant(candidate))
 
 
-def _dependency_findings(
-    modelo: ModeloDefinition, *, registry_validated: bool
-) -> list[ClassificationCoherenceFinding]:
+def _dependency_findings(modelo: ModeloDefinition, *, registry_validated: bool) -> list[ClassificationCoherenceFinding]:
     """Report dependency classifications whose two filing flags cannot both hold.
 
     ``conditional_on_economic_activity`` narrows WHEN the taxpayer files the

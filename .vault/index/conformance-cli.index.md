@@ -5,6 +5,7 @@ tags:
   - '#conformance-cli'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-27-conformance-cli-P01-S01]]'
   - '[[2026-07-27-conformance-cli-P01-S02]]'
@@ -36,6 +37,8 @@ related:
   - '[[2026-07-27-conformance-cli-P02-S48]]'
   - '[[2026-07-27-conformance-cli-P02-S58]]'
   - '[[2026-07-27-conformance-cli-P02-S59]]'
+  - '[[2026-07-27-conformance-cli-P02-S72]]'
+  - '[[2026-07-27-conformance-cli-P02-S80]]'
   - '[[2026-07-27-conformance-cli-P03-S13]]'
   - '[[2026-07-27-conformance-cli-P03-S14]]'
   - '[[2026-07-27-conformance-cli-P03-S15]]'
@@ -53,6 +56,9 @@ related:
   - '[[2026-07-27-conformance-cli-P03-S63]]'
   - '[[2026-07-27-conformance-cli-P03-S64]]'
   - '[[2026-07-27-conformance-cli-P03-S65]]'
+  - '[[2026-07-27-conformance-cli-P03-S67]]'
+  - '[[2026-07-27-conformance-cli-P03-S77]]'
+  - '[[2026-07-27-conformance-cli-P03-S79]]'
   - '[[2026-07-27-conformance-cli-P04-S18]]'
   - '[[2026-07-27-conformance-cli-P04-S19]]'
   - '[[2026-07-27-conformance-cli-P04-S20]]'
@@ -60,8 +66,11 @@ related:
   - '[[2026-07-27-conformance-cli-P04-S27]]'
   - '[[2026-07-27-conformance-cli-P04-S41]]'
   - '[[2026-07-27-conformance-cli-P04-S56]]'
+  - '[[2026-07-27-conformance-cli-P04-S68]]'
+  - '[[2026-07-27-conformance-cli-P04-S78]]'
   - '[[2026-07-27-conformance-cli-P05-S22]]'
   - '[[2026-07-27-conformance-cli-P05-S23]]'
+  - '[[2026-07-27-conformance-cli-P05-S24]]'
   - '[[2026-07-27-conformance-cli-P05-S32]]'
   - '[[2026-07-27-conformance-cli-P05-S37]]'
   - '[[2026-07-27-conformance-cli-P05-S49]]'
@@ -70,12 +79,20 @@ related:
   - '[[2026-07-27-conformance-cli-P05-S52]]'
   - '[[2026-07-27-conformance-cli-P05-S60]]'
   - '[[2026-07-27-conformance-cli-P05-S61]]'
+  - '[[2026-07-27-conformance-cli-P05-S66]]'
+  - '[[2026-07-27-conformance-cli-P05-S69]]'
   - '[[2026-07-27-conformance-cli-P05-S70]]'
+  - '[[2026-07-27-conformance-cli-P05-S71]]'
+  - '[[2026-07-27-conformance-cli-P05-S73]]'
+  - '[[2026-07-27-conformance-cli-P05-S74]]'
+  - '[[2026-07-27-conformance-cli-P05-S75]]'
+  - '[[2026-07-27-conformance-cli-P05-S76]]'
   - '[[2026-07-27-conformance-cli-adr]]'
   - '[[2026-07-27-conformance-cli-fact-lifts-and-boundary-gate-audit]]'
   - '[[2026-07-27-conformance-cli-governance-stamp-and-classification-audit]]'
   - '[[2026-07-27-conformance-cli-plan]]'
   - '[[2026-07-27-conformance-cli-research]]'
+  - '[[2026-07-28-conformance-cli-campaign-close-honesty-review-audit]]'
   - '[[2026-07-28-conformance-cli-first-conformance-measurement-audit]]'
 ---
 
@@ -93,6 +110,7 @@ Auto-generated index of all documents tagged with `#conformance-cli`.
 
 - `2026-07-27-conformance-cli-fact-lifts-and-boundary-gate-audit` - `conformance-cli` audit: `fact lifts and boundary gate`
 - `2026-07-27-conformance-cli-governance-stamp-and-classification-audit` - `conformance-cli` audit: `governance stamp and classification coherence`
+- `2026-07-28-conformance-cli-campaign-close-honesty-review-audit` - `conformance-cli` audit: `campaign-close honesty review`
 - `2026-07-28-conformance-cli-first-conformance-measurement-audit` - `conformance-cli` audit: `first conformance measurement`
 
 ### exec
@@ -138,6 +156,8 @@ Auto-generated index of all documents tagged with `#conformance-cli`.
 - `2026-07-27-conformance-cli-P02-S48` - correct the prorrata module docstring and rounding comment which cite the autoconsumo article rather than the article that actually establishes the formula and the upward rounding, so a reader sent to it finds the rule
 - `2026-07-27-conformance-cli-P02-S58` - correct the especial-prorrata mandatory predicate which applies a strict greater-than where the law says exceeds by ten percent or more, so exact equality currently fails to trip a mandatory regime switch
 - `2026-07-27-conformance-cli-P02-S59` - declare the full-right-to-deduct article on the prorrata formula legal refs of both M303 revisions rather than only on the enclosing construct, as a coherent two-revision change
+- `2026-07-27-conformance-cli-P02-S72` - model the M303 regularizacion prorrata cuota casilla as computed with the AEAT manual figure as its external oracle expectation, the under-declaration-shape gap that fell out of tracking when its tracking step was re-scoped to other work
+- `2026-07-27-conformance-cli-P02-S80` - lift the export-format closed set from a bare Literal on the export-layout schema to a core StrEnum so the per-modelo support matrix and the per-revision conformance fold compare enum members rather than each re-spelling the same tokens
 - `2026-07-27-conformance-cli-P03-S39` - coerce the review status at the stamp writer function boundary so handing it the core enum member raises instead of writing an operator signoff, and prove the refusal leaves the manifest byte-identical
 - `2026-07-27-conformance-cli-P03-S42` - gate the operator backlog rather than the pending backlog by adding a shrink-only ceiling on revisions lacking operator review, so the one number CI protects cannot be moved by an act the tool can perform
 - `2026-07-27-conformance-cli-P03-S46` - render the reviewer attribution with its review tier attached so an agent-tier review naming a person cannot be read as an operator signoff when scanning rows
@@ -149,11 +169,17 @@ Auto-generated index of all documents tagged with `#conformance-cli`.
 - `2026-07-27-conformance-cli-P03-S63` - default the review date on a reviewer-only restatement so a re-attributed review cannot inherit the previous reviewer date and record a person as having reviewed on a day they did not
 - `2026-07-27-conformance-cli-P03-S64` - read the declared review status off the compiled revision the writer already loads rather than off the manifest text, so the signoff guard stops depending on the fragment refusal it exists to complement
 - `2026-07-27-conformance-cli-P03-S65` - give the stamp CLI command an injectable registry root so its own date defaulting and error translation can be exercised without writing to the shipped registry, and correct the coverage pragma that calls a reachable branch unreachable
+- `2026-07-27-conformance-cli-P03-S67` - refuse a stamp write against the bundled registry tree or require the root explicitly, closing the hazard that let a test mutation write a fabricated review into the shipped modelo manifest
+- `2026-07-27-conformance-cli-P03-S77` - rebase the three population-pinned governance ceilings onto ratios or deltas so an honest new revision does not red the only gate and force the operator to assert they are weakening the ratchet
+- `2026-07-27-conformance-cli-P03-S79` - retire the dev registry matrix package whose manager recomputes ten capability fields the public build_support_matrix already returns on ModeloEntry, sweeping its test-lane entry, its tests, the two shipped docstrings that cite it as their mirror and the planted-import fixtures naming it
 - `2026-07-27-conformance-cli-P04-S20` - regenerate the API reference stubs for the new src modules via the apidocs scaffold CLI and land the deltas with the source change
 - `2026-07-27-conformance-cli-P04-S41` - consolidate the boundary detection onto the single hygiene scanner authority the ADR chose, deleting the duplicated inline import detector and its stale pending-ruling heading while keeping the injectable-root proof local
 - `2026-07-27-conformance-cli-P04-S56` - pin the two detector branches whose individual mutation flips nothing with fixtures for an interpolated device path and an interpolated mid-path segment, and either delete the two redundant branches or correct the docstring that credits one with protection a different mechanism delivers
+- `2026-07-27-conformance-cli-P04-S68` - write the two sibling audit baselines and the generated api stubs through explicit newline handling, and fix the stub drift check which reads with universal newlines so a translated stub compares equal to the writer that translated it
+- `2026-07-27-conformance-cli-P04-S78` - give the conformance tool a reachable operator page covering the stamp vocabulary, the operator-signoff hand-edit path, the registry-root flag and the baseline re-record procedure, since the prose exists only inside module docstrings
 - `2026-07-27-conformance-cli-P05-S22` - run the full-tree collect-only gate and the scoped registry, filing, and dev suites, recording failure signatures and triaging owner vs peer churn
 - `2026-07-27-conformance-cli-P05-S23` - run the first real conformance report over the bundled registry and persist the findings as a vault audit document
+- `2026-07-27-conformance-cli-P05-S24` - run the fresh-context campaign-close honesty review and track every surfaced item as a new step or a formally deferred follow-up
 - `2026-07-27-conformance-cli-P05-S37` - extend the fragment placement refusal to the remaining legally load-bearing revision scalars legal_refs, orden_aplicabilidad and valid_to, closing the last instance of the readability hazard the governance refusal proved worth closing
 - `2026-07-27-conformance-cli-P05-S49` - absorb the three tree-wide gate regressions this campaign caused, moving the module marker above the assignment, replacing the bare encoding literal with the shared constant, and extracting a cohesive concern out of each module that broke its size ceiling rather than lifting the ceiling
 - `2026-07-27-conformance-cli-P05-S50` - eliminate the monkeypatch machinery from the burned-version ledger tests and the registry snapshot freshness tests without weakening what either test proves, honouring the recorded trap that a threaded authority parameter lets a naive cache key stop colliding so the behavioural test passes with the defect present
@@ -161,7 +187,14 @@ Auto-generated index of all documents tagged with `#conformance-cli`.
 - `2026-07-27-conformance-cli-P05-S52` - reconcile the registry revision diff test whose changed-formula expectation this campaign moved when it corrected the prorrata rounding on both M303 revisions, fixing whichever side is actually wrong rather than re-anchoring the test to make it pass
 - `2026-07-27-conformance-cli-P05-S60` - widen or retire the single-filing-year M303 regression that pinned only the newer revision, which is what let the older revision keep returning a zero prorrata percentage undetected
 - `2026-07-27-conformance-cli-P05-S61` - extract the verification-predicate concern out of the registry schema module, which now sits one line under its size ceiling so the next peer edit reds a gate they did not break
+- `2026-07-27-conformance-cli-P05-S66` - take the whole verification-predicate concern out of the registry schema module in one commit that also owns and removes its size-budget baseline entry, since the concern is larger than the pinned band allows and half-taking it would scatter one concept across two modules
+- `2026-07-27-conformance-cli-P05-S69` - measure and gate the tree-wide terminator drift where over a thousand tracked files carry on-disk bytes differing from their committed bytes while git diff stays silent, so the class is bounded rather than known only anecdotally
 - `2026-07-27-conformance-cli-P05-S70` - replace the operator real name with a non-identifying stand-in throughout the conformance CLI test module, closing the committed privacy violation this campaign introduced which reds the per-push lane
+- `2026-07-27-conformance-cli-P05-S71` - restate the two test docstrings that cite this project development records as self-contained engineering reasoning and move the discovery-waiver process note out of source, honouring the one-way rule that code never cites the vault
+- `2026-07-27-conformance-cli-P05-S73` - author a decision record governing the IVA prorrata corrections this campaign made and list it on the plan, since eleven steps changed computed tax outcomes under an ADR that authorises only a governance surface
+- `2026-07-27-conformance-cli-P05-S74` - rule the capability-fact duplication between the conformance composer and the registry matrix CLI, which independently recompute the same predicates, applying the single-authority answer this campaign already chose for the boundary detector
+- `2026-07-27-conformance-cli-P05-S75` - correct the two step records that misstate their own state, one claiming this campaign left the tree-wide gates clear and one closing while its stated precondition had not landed
+- `2026-07-27-conformance-cli-P05-S76` - open a follow-up feature tracking the four measurement-audit recommendations so ninety unreviewed revisions, twenty-four classification divergences and five unused schema axes have an owner rather than living as prose
 
 ### plan
 

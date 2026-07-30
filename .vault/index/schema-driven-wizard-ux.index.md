@@ -5,6 +5,7 @@ tags:
   - '#schema-driven-wizard-ux'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-05-13-schema-driven-wizard-ux-audit]]'
   - '[[2026-05-13-wizard-ux-transcripts-audit]]'

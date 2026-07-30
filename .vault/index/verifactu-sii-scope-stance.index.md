@@ -5,6 +5,7 @@ tags:
   - '#verifactu-sii-scope-stance'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-02-verifactu-sii-scope-stance-adr]]'
   - '[[2026-07-10-verifactu-sii-scope-stance-research]]'

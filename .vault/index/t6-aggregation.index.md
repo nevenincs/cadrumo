@@ -5,6 +5,7 @@ tags:
   - '#t6-aggregation'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-04-30-t6-aggregation-adr]]'
   - '[[2026-04-30-t6-aggregation-backend-exec]]'

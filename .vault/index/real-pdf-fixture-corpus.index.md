@@ -5,6 +5,7 @@ tags:
   - '#real-pdf-fixture-corpus'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-04-21-real-pdf-fixture-corpus-adr]]'
   - '[[2026-04-21-real-pdf-fixture-corpus-plan]]'

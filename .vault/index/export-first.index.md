@@ -5,6 +5,7 @@ tags:
   - '#export-first'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-04-17-export-first-adr]]'
   - '[[2026-04-17-export-first-roadmap-plan]]'

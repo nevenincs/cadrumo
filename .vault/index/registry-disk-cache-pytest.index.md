@@ -5,6 +5,7 @@ tags:
   - '#registry-disk-cache-pytest'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-07-registry-disk-cache-pytest-adr]]'
   - '[[2026-07-10-registry-disk-cache-pytest-research]]'

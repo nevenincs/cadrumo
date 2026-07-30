@@ -5,6 +5,7 @@ tags:
   - '#calculation-test-oracle-discipline'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-06-01-calculation-test-oracle-discipline-adr]]'
   - '[[2026-06-01-calculation-test-oracle-discipline-research]]'

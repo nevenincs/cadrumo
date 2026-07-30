@@ -5,6 +5,7 @@ tags:
   - '#fresh-cli-persona-repair'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-05-27-fresh-cli-persona-repair-S171]]'
   - '[[2026-05-27-fresh-cli-persona-repair-S175]]'

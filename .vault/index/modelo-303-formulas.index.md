@@ -5,6 +5,7 @@ tags:
   - '#modelo-303-formulas'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-04-17-modelo-303-casilla-rules-research]]'
   - '[[2026-04-17-modelo-303-formulas-adr]]'

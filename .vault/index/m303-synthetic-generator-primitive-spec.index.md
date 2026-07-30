@@ -5,6 +5,7 @@ tags:
   - '#m303-synthetic-generator-primitive-spec'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-06-03-m303-synthetic-generator-primitive-spec-adr]]'
   - '[[2026-06-04-m303-synthetic-generator-primitive-spec-research]]'

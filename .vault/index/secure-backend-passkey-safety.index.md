@@ -5,6 +5,7 @@ tags:
   - '#secure-backend-passkey-safety'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-05-14-secure-backend-passkey-bucket-p01-s01-exec]]'
   - '[[2026-05-14-secure-backend-passkey-bucket-p01-s02-exec]]'

@@ -5,6 +5,7 @@ tags:
   - '#aeat-architecture-review'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-02-aeat-architecture-review-audit]]'
   - '[[2026-07-24-aeat-architecture-review-startup-import-coupling-audit]]'

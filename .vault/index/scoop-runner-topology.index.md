@@ -5,6 +5,7 @@ tags:
   - '#scoop-runner-topology'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-22-scoop-runner-topology-adr]]'
   - '[[2026-07-25-scoop-runner-topology-S04]]'

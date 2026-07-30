@@ -5,6 +5,7 @@ tags:
   - '#test-harness-honesty'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-25-test-harness-honesty-S01]]'
   - '[[2026-07-25-test-harness-honesty-S02]]'

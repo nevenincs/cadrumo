@@ -5,6 +5,7 @@ tags:
   - '#mcpb-signing-publisher'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-17-mcpb-signing-publisher-research]]'
   - '[[2026-07-18-mcpb-signing-publisher-adr]]'

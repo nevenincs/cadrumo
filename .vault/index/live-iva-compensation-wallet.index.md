@@ -5,6 +5,7 @@ tags:
   - '#live-iva-compensation-wallet'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-05-19-live-iva-compensation-wallet-W01-P02-S05]]'
   - '[[2026-05-19-live-iva-compensation-wallet-W01-P02-S06]]'

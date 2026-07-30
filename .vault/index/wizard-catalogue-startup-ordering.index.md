@@ -5,6 +5,7 @@ tags:
   - '#wizard-catalogue-startup-ordering'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-06-03-wizard-catalogue-startup-ordering-adr]]'
   - '[[2026-06-04-wizard-catalogue-startup-ordering-research]]'

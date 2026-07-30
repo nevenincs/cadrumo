@@ -5,6 +5,7 @@ tags:
   - '#modelo-100-anualidades-separate-escala'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-01-modelo-100-anualidades-separate-escala-adr]]'
   - '[[2026-07-01-modelo-100-anualidades-separate-escala-research]]'

@@ -5,6 +5,7 @@ tags:
   - '#cli-lazy-subcommand-mutation'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-09-cli-lazy-subcommand-mutation-adr]]'
   - '[[2026-07-10-cli-lazy-subcommand-mutation-research]]'

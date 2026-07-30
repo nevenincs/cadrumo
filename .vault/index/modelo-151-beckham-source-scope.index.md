@@ -5,6 +5,7 @@ tags:
   - '#modelo-151-beckham-source-scope'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-01-modelo-151-beckham-source-scope-P01-S01]]'
   - '[[2026-07-01-modelo-151-beckham-source-scope-P02-S02]]'

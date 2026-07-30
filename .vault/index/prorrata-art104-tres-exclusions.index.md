@@ -5,6 +5,7 @@ tags:
   - '#prorrata-art104-tres-exclusions'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-07-prorrata-art104-tres-exclusions-adr]]'
   - '[[2026-07-10-prorrata-art104-tres-exclusions-research]]'

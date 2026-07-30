@@ -5,6 +5,7 @@ tags:
   - '#modelo-130-relation-regression'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-05-19-modelo-130-relation-regression-W01-P02-S01]]'
   - '[[2026-05-19-modelo-130-relation-regression-W01-P02-S02]]'

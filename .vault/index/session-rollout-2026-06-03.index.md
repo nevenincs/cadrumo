@@ -5,6 +5,7 @@ tags:
   - '#session-rollout-2026-06-03'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-06-03-session-rollout-2026-06-03-audit]]'
 ---

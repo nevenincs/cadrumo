@@ -5,6 +5,7 @@ tags:
   - '#account-distribution-standard'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-25-account-distribution-standard-S02]]'
   - '[[2026-07-25-account-distribution-standard-S03]]'

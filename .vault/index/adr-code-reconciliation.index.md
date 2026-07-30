@@ -5,6 +5,7 @@ tags:
   - '#adr-code-reconciliation'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-17-adr-code-reconciliation-audit]]'
 ---

@@ -5,6 +5,7 @@ tags:
   - '#ledger-modelo-crossref'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-06-10-ledger-modelo-crossref-P01-S01]]'
   - '[[2026-06-10-ledger-modelo-crossref-P01-S02]]'

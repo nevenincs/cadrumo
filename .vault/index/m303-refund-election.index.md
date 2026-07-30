@@ -5,6 +5,7 @@ tags:
   - '#m303-refund-election'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-06-24-m303-refund-election-adr]]'
   - '[[2026-07-10-m303-refund-election-research]]'

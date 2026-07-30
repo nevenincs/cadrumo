@@ -5,6 +5,7 @@ tags:
   - '#m210-plazo-keying'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-09-m210-plazo-keying-adr]]'
 ---

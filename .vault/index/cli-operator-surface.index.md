@@ -5,6 +5,7 @@ tags:
   - '#cli-operator-surface'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-06-10-cli-operator-crud-matrix-audit]]'
   - '[[2026-06-10-cli-operator-surface-W01-P01-S01]]'

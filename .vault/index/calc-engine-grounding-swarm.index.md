@@ -5,6 +5,7 @@ tags:
   - '#calc-engine-grounding-swarm'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-05-16-calc-engine-grounding-swarm-audit]]'
   - '[[2026-05-31-calc-engine-grounding-restoration-S01]]'

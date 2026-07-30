@@ -5,6 +5,7 @@ tags:
   - '#docs-lifecycle-tutorials'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-13-docs-lifecycle-tutorials-P01-S01]]'
   - '[[2026-07-13-docs-lifecycle-tutorials-P01-S02]]'

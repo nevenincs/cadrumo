@@ -5,6 +5,7 @@ tags:
   - '#product-rename'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-13-product-rename-adr]]'
 ---

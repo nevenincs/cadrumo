@@ -5,6 +5,7 @@ tags:
   - '#standalone-executable-tier'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-25-standalone-executable-tier-adr]]'
   - '[[2026-07-25-standalone-executable-tier-research]]'

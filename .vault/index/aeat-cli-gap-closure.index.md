@@ -5,6 +5,7 @@ tags:
   - '#aeat-cli-gap-closure'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-05-08-aeat-cli-gap-closure-adr]]'
   - '[[2026-06-04-aeat-cli-gap-closure-research]]'

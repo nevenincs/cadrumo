@@ -5,6 +5,7 @@ tags:
   - '#declaracion-real-render-verification'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-26-declaracion-real-render-verification-P01-S01]]'
   - '[[2026-07-26-declaracion-real-render-verification-P01-S02]]'
@@ -26,12 +27,16 @@ related:
   - '[[2026-07-26-declaracion-real-render-verification-P04-S18]]'
   - '[[2026-07-26-declaracion-real-render-verification-P04-S19]]'
   - '[[2026-07-26-declaracion-real-render-verification-P04-S20]]'
+  - '[[2026-07-26-declaracion-real-render-verification-P04-S21]]'
   - '[[2026-07-26-declaracion-real-render-verification-P04-S22]]'
   - '[[2026-07-26-declaracion-real-render-verification-P04-S23]]'
   - '[[2026-07-26-declaracion-real-render-verification-P04-S24]]'
+  - '[[2026-07-26-declaracion-real-render-verification-P04-S25]]'
   - '[[2026-07-26-declaracion-real-render-verification-P04-S26]]'
   - '[[2026-07-26-declaracion-real-render-verification-P04-S27]]'
+  - '[[2026-07-26-declaracion-real-render-verification-P04-S28]]'
   - '[[2026-07-26-declaracion-real-render-verification-P04-S29]]'
+  - '[[2026-07-26-declaracion-real-render-verification-P04-S30]]'
   - '[[2026-07-26-declaracion-real-render-verification-adr]]'
   - '[[2026-07-26-declaracion-real-render-verification-adversarial-verification-of-campaign-claims-audit]]'
   - '[[2026-07-26-declaracion-real-render-verification-campaign-close-honesty-review-audit]]'
@@ -101,6 +106,10 @@ Auto-generated index of all documents tagged with `#declaracion-real-render-veri
 - `2026-07-26-declaracion-real-render-verification-P04-S26` - Anchor numeric_casilla on form_number rather than record-design number, closing at scale the same defect D1 corrected for the blank-box guard
 - `2026-07-26-declaracion-real-render-verification-P04-S27` - Implement the word-level Modelo 100 fix inside the parser, after re-running the committed real-render gate with the size attribute to clear the bbox word-ordering risk
 - `2026-07-26-declaracion-real-render-verification-P04-S29` - Register the Modelo 100 coverage floor as an evidence gap under D2, since three specimens from one filer with every box populated cannot ground one
+- `2026-07-26-declaracion-real-render-verification-P04-S21` - Bring the borrador and n26 fixture corpora under the provenance discipline, since neither carries sidecars nor gate coverage and their generators do not set the producer signature the gate's discriminator depends on
+- `2026-07-26-declaracion-real-render-verification-P04-S25` - Make every synthetic fixture generator set the canonical producer signature, since only one of three does and the provenance gate's discriminator rests on that invariant holding
+- `2026-07-26-declaracion-real-render-verification-P04-S28` - Rule whether enum is a claim about the value space or merely a hint, since the schema enforces no enum-versus-text distinction and the answer decides whether the four flagged targets are defects or documentation
+- `2026-07-26-declaracion-real-render-verification-P04-S30` - Declare verify_declaracion's reference-implementation role in its own docstring so it is not deleted as dead code, since three production modules cite it as the canonical scoping policy
 
 ### plan
 

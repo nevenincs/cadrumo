@@ -5,6 +5,7 @@ tags:
   - '#user-docs-localization'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-18-user-docs-localization-W01-P01-S01]]'
   - '[[2026-07-18-user-docs-localization-W01-P01-S02]]'

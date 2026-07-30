@@ -5,6 +5,7 @@ tags:
   - '#clave-permanente-idp-guard-host'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-10-clave-permanente-idp-guard-host-adr]]'
   - '[[2026-07-10-clave-permanente-idp-guard-host-research]]'

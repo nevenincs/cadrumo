@@ -5,6 +5,7 @@ tags:
   - '#docs-tooling-separation'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-06-14-docs-tooling-separation-S01]]'
   - '[[2026-06-14-docs-tooling-separation-adr]]'

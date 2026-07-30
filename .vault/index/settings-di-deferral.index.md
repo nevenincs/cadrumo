@@ -5,6 +5,7 @@ tags:
   - '#settings-di-deferral'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-06-03-settings-di-deferral-adr]]'
   - '[[2026-06-04-settings-di-deferral-research]]'

@@ -5,6 +5,7 @@ tags:
   - '#calculation-correctness-campaign'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-06-13-calculation-correctness-campaign-audit]]'
 ---

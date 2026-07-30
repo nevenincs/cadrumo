@@ -5,6 +5,7 @@ tags:
   - '#cli-bucket-session-test-isolation'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-06-03-cli-bucket-session-test-isolation-audit]]'
 ---

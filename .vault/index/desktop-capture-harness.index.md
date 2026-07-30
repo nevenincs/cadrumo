@@ -5,6 +5,7 @@ tags:
   - '#desktop-capture-harness'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-21-desktop-capture-harness-adr]]'
   - '[[2026-07-21-desktop-capture-harness-reference]]'

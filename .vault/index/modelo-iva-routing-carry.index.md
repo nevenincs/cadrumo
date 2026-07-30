@@ -5,6 +5,7 @@ tags:
   - '#modelo-iva-routing-carry'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-06-09-modelo-iva-routing-carry-adr]]'
   - '[[2026-06-09-modelo-iva-routing-carry-research]]'

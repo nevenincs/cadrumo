@@ -5,6 +5,7 @@ tags:
   - '#dev-scaffolding'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-04-12-dev-scaffolding-adr]]'
   - '[[2026-04-12-dev-scaffolding-phase1-summary-exec]]'

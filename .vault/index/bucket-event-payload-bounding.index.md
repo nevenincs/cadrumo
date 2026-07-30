@@ -5,6 +5,7 @@ tags:
   - '#bucket-event-payload-bounding'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-25-bucket-event-payload-bounding-adr]]'
   - '[[2026-07-25-bucket-event-payload-bounding-payload-overflow-survey-audit]]'

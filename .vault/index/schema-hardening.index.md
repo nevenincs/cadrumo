@@ -5,6 +5,7 @@ tags:
   - '#schema-hardening'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-05-18-schema-hardening-adr]]'
   - '[[2026-05-18-schema-hardening-nif-coverage-m100-audit]]'

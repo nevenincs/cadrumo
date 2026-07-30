@@ -5,6 +5,7 @@ tags:
   - '#agent-harness-operability-followup'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-02-agent-harness-operability-followup-research]]'
   - '[[2026-07-03-agent-harness-operability-followup-audit]]'

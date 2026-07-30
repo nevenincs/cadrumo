@@ -5,6 +5,7 @@ tags:
   - '#modelo-100-parser-glyph-merge'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-26-modelo-100-parser-glyph-merge-adr]]'
 ---

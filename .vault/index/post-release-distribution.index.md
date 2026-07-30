@@ -5,6 +5,7 @@ tags:
   - '#post-release-distribution'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_schema: 'body-v1'
 related:
   - '[[2026-07-17-post-release-distribution-P01-S04]]'
   - '[[2026-07-17-post-release-distribution-P02-S05]]'
