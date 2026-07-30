@@ -5,7 +5,7 @@ only that the bytes on disk are the bytes that were written -- never that they
 carry what the modelo requires. A draft that silently lost a computed casilla
 still serialises to a well-formed, correctly-digested file whose slots are
 blank: a *structurally-thin* filing. This module holds the assertions that run
-between rendering and :func:`pathlib.Path.write_bytes`, so such a file is
+between rendering and :meth:`pathlib.Path.write_bytes`, so such a file is
 refused before it can exist rather than discovered by AEAT.
 
 Three dimensions are asserted, each a hard enumerated

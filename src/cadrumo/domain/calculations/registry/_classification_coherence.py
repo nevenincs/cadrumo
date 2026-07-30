@@ -44,7 +44,7 @@ profiles" and "0 of 0" are very different claims about the same zero.
 One such dead axis has a structural consequence worth naming: with zero
 :class:`~cadrumo.domain.calculations.registry.SupportRemovalDecisionDefinition`
 declarations anywhere in the tree,
-:attr:`~cadrumo.domain.calculations.registry.ModeloSupportMatrixEntry.is_deprecated`
+:attr:`~cadrumo.domain.calculations.registry.ModeloEntry.is_deprecated`
 is always :data:`False` by construction, so no consumer of it is exercised.
 
 Fixture-sidecar provenance (``real_corpus`` versus ``synthetic_generated``) is a
@@ -467,9 +467,7 @@ def _informative_class_blockers(modelo: ModeloDefinition) -> tuple[str, ...]:
     return tuple(validate_informative_class_invariant(candidate))
 
 
-def _dependency_findings(
-    modelo: ModeloDefinition, *, registry_validated: bool
-) -> list[ClassificationCoherenceFinding]:
+def _dependency_findings(modelo: ModeloDefinition, *, registry_validated: bool) -> list[ClassificationCoherenceFinding]:
     """Report dependency classifications whose two filing flags cannot both hold.
 
     ``conditional_on_economic_activity`` narrows WHEN the taxpayer files the

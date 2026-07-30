@@ -165,6 +165,13 @@ ModeloFilingCapability = Literal["borrador", "renta_ledger_default"]
 """
 
 ReviewStatus = Literal["reviewed"]
+"""The legal catalogue's single-valued human review-stamp vocabulary.
+
+Distinct from :data:`RevisionReviewStatusField` above, which coerces the
+registry's per-revision governance-stamp token and governs a different
+subject.
+"""
+
 DateAxis = Literal["filing_period", "devengo_date", "transaction_date", "invoice_date", "submission_date"]
 EvidenceTier = Literal[
     "legal_authority",
