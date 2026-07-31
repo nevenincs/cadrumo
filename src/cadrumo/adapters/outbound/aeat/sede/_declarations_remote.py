@@ -52,7 +52,7 @@ def extract_csv_from_url(url: str) -> str:
     csv = csv_values[0]
     if not is_aeat_csv(csv):
         raise SedeParseError(
-            f"cotejo URL CSV {csv!r} does not match AEAT shape (expected 8-24 uppercase alphanumeric chars)",
+            f"cotejo URL CSV {csv!r} does not match AEAT shape (expected 8-32 uppercase alphanumeric chars)",
         )
     return csv
 

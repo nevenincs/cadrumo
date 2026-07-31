@@ -33,14 +33,14 @@ from ._errors import BrowserAdapterTypeError, SedeFailureMode, SedeParseError
 
 _log = get_logger(__name__)
 _WHITESPACE_RE = compile(r"\s+")
-_AEAT_CSV_PATTERN = compile(r"[A-Z0-9]{8,24}")
+_AEAT_CSV_PATTERN = compile(r"[A-Z0-9]{8,32}")
 _EXTERNAL = Settings.external_constants()
 
 
 def is_aeat_csv(value: str) -> bool:
     """Return whether ``value`` is one complete AEAT CSV identifier.
 
-    AEAT's documented and observed CSV widths are 8 through 24 uppercase
+    AEAT's documented and observed CSV widths are 8 through 32 uppercase
     alphanumeric characters.  Callers keep their local error translation;
     this helper owns only the shared shape constraint.
     """

@@ -111,14 +111,29 @@ class TestParseExpedienteDetail:
                 base_url=_SEDE_BASE,
             )
 
-    def test_rejects_csv_longer_than_the_shared_constraint(self) -> None:
-        """Do not truncate a 25-character CSV before the strict model validates it."""
+    def test_accepts_the_maximum_length_csv(self) -> None:
+        """The detail parser and ``JustificanteRef`` accept a 32-character CSV."""
         html = (
             '<a href="/wlpl/KATA-APLI/cotejo/CotejoIdSv?CSV='
-            f"{'A' * 25}\">declaracion</a>"
+            f"{'A' * 32}\">declaracion</a>"
         )
 
-        with pytest.raises(SedeParseError, match="no /CotejoIdSv"):
+        ref = parse_expediente_detail(
+            html,
+            expediente_id="202399999999999T",
+            base_url=_SEDE_BASE,
+        )
+
+        assert ref.csv == "A" * 32
+
+    def test_rejects_a_csv_longer_than_the_shared_constraint(self) -> None:
+        """Do not truncate a 33-character CSV before the strict model validates it."""
+        html = (
+            '<a href="/wlpl/KATA-APLI/cotejo/CotejoIdSv?CSV='
+            f"{'A' * 33}\">declaracion</a>"
+        )
+
+        with pytest.raises(SedeParseError, match="does not match the AEAT shape"):
             parse_expediente_detail(
                 html,
                 expediente_id="202399999999999T",

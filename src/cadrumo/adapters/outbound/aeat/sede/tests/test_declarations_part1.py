@@ -534,10 +534,14 @@ class TestExtractCsvFromUrl:
         with pytest.raises(SedeParseError, match="does not match AEAT shape"):
             _extract_csv_from_url(f"{self._COTEJO}AB12")
 
-    def test_too_long_csv_rejected(self) -> None:
-        """Assert a CSV longer than the AEAT maximum is rejected."""
+    def test_maximum_length_csv_extracts(self) -> None:
+        """The audited 32-character maximum remains a valid AEAT CSV."""
+        assert _extract_csv_from_url(f"{self._COTEJO}{'A' * 32}") == "A" * 32
+
+    def test_csv_longer_than_the_maximum_is_rejected(self) -> None:
+        """Assert a 33-character CSV is rejected rather than truncated."""
         with pytest.raises(SedeParseError, match="does not match AEAT shape"):
-            _extract_csv_from_url(f"{self._COTEJO}{'A' * 32}")
+            _extract_csv_from_url(f"{self._COTEJO}{'A' * 33}")
 
     def test_csv_with_special_chars_rejected(self) -> None:
         """Assert a CSV containing path-traversal characters is rejected."""

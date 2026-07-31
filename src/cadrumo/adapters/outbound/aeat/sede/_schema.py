@@ -110,7 +110,7 @@ class JustificanteRef(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    csv: str = Field(min_length=8, max_length=24)
+    csv: str = Field(min_length=8, max_length=32)
     expediente_id: str = Field(min_length=12, max_length=32)
     cotejo_url: AnyHttpUrl
     pdf_url: AnyHttpUrl

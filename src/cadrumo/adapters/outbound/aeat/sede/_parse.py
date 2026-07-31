@@ -21,6 +21,7 @@ from pydantic import AnyHttpUrl
 
 from .....core.config import Settings
 from .....core.logging import get_logger
+from ._adapter_utils import is_aeat_csv
 from ._errors import SedeParseError
 from ._schema import Expediente, JustificanteRef
 
@@ -44,7 +45,7 @@ _IRPF_ENDPOINT: Final[re.Pattern[str]] = re.compile(
 )
 
 _COTEJO_CSV: Final[re.Pattern[str]] = re.compile(
-    rf"{re.escape(_SEDE_PATHS.cotejo_query)}\?CSV=(?P<csv>[A-Z0-9]{{8,24}})(?![A-Z0-9])",
+    rf"{re.escape(_SEDE_PATHS.cotejo_query)}\?CSV=(?P<csv>[A-Z0-9]+)(?![A-Z0-9])",
 )
 
 
@@ -160,6 +161,10 @@ def parse_expediente_detail(
             "session may have expired or the modelo exposes a different verifier",
         )
     csv = match.group("csv")
+    if not is_aeat_csv(csv):
+        raise SedeParseError(
+            f"expediente {expediente_id!r}: cotejo CSV does not match the AEAT shape",
+        )
     cotejo_url = urljoin(base_url, f"{_SEDE_PATHS.cotejo_query}?CSV={csv}")
     pdf_url = urljoin(base_url, f"{_SEDE_PATHS.cotejo_document}?CSV={csv}")
     return JustificanteRef(
