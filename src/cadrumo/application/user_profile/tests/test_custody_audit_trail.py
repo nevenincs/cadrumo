@@ -78,6 +78,7 @@ def test_recovery_create_and_rotate_each_record_their_own_event(tmp_path: Path) 
         assert len(created) == 1, f"expected exactly one create event, got {len(created)}"
         assert created[0].bucket_id == runtime.bucket_id
         assert created[0].object_type is BucketEventObjectType.BUCKET
+        assert created[0].payload_version == 1
         assert created[0].payload["recovery_fingerprint"] == created_fingerprint, (
             "the event must carry the same non-secret fingerprint the operation returned"
         )
@@ -89,6 +90,7 @@ def test_recovery_create_and_rotate_each_record_their_own_event(tmp_path: Path) 
 
         rotated = _events_of(BucketEventType.CUSTODY_RECOVERY_CODE_ROTATED)
         assert len(rotated) == 1, f"expected exactly one rotate event, got {len(rotated)}"
+        assert rotated[0].payload_version == 1
         assert rotated[0].payload["recovery_fingerprint"] == rotated_fingerprint
         assert rotated[0].payload["rotated"] == "true"
         assert len(_events_of(BucketEventType.CUSTODY_RECOVERY_CODE_CREATED)) == 1, (
@@ -108,6 +110,7 @@ def test_passphrase_change_records_an_event(tmp_path: Path) -> None:
         changed = _events_of(BucketEventType.CUSTODY_PASSPHRASE_CHANGED)
         assert len(changed) == 1, f"expected exactly one passphrase-change event, got {len(changed)}"
         assert changed[0].bucket_id == runtime.bucket_id
+        assert changed[0].payload_version == 1
         assert changed[0].payload["secret_store_dir"] == str(result.secret_store_dir)
 
 
@@ -122,6 +125,7 @@ def test_secret_store_recovery_records_an_event(tmp_path: Path) -> None:
 
         recovered = _events_of(BucketEventType.CUSTODY_SECRET_STORE_RECOVERED)
         assert len(recovered) == 1, f"expected exactly one recover event, got {len(recovered)}"
+        assert recovered[0].payload_version == 1
         assert recovered[0].payload["secret_store_dir"] == str(result.secret_store_dir)
 
 
