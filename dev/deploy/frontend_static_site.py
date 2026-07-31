@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import os
 import shutil
+from collections.abc import Mapping
 from pathlib import Path
 
 from dev.deploy.docs_static_site import (
@@ -165,7 +166,7 @@ def _verify_public_delivery(target: DeploymentTarget) -> None:
             )
 
 
-def _require_human_publish_environment() -> None:
+def _require_human_publish_environment(*, environment: Mapping[str, str] | None = None) -> None:
     """Refuse a landing publish from any automated environment, unconditionally.
 
     The documentation publisher now accepts a provisioned automated authority.
@@ -179,8 +180,14 @@ def _require_human_publish_environment() -> None:
     extend the documentation site's automated authority to a surface that was
     never granted any, which is exactly the surprise publish both guards exist
     to prevent.
+
+    Args:
+        environment: DI seam for tests. When ``None`` (production), the
+            check reads the real process environment; a test passes an
+            explicit mapping without mutating real process state.
     """
-    markers = tuple(name for name in _CI_MARKERS if name in os.environ)
+    env = environment if environment is not None else os.environ
+    markers = tuple(name for name in _CI_MARKERS if name in env)
     if markers:
         raise SystemExit(
             "Refusing Cadrumo landing publish from an automated environment "
