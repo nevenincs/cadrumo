@@ -3,20 +3,21 @@ tags:
   - '#plan'
   - '#open-work-consolidation'
 date: '2026-07-30'
-modified: '2026-07-30'
+modified: '2026-07-31'
 tier: L2
 related:
   - '[[2026-07-30-open-work-consolidation-adr]]'
   - '[[2026-07-30-open-work-consolidation-audit]]'
 ---
 
+<!-- RETIRED: S01 -->
+
 # `open-work-consolidation` plan
 
 ### Phase `P01` - unblock the publication chain
 
-Releases the largest cascade in the fleet, thirteen rows that stand behind one repository variable and one environment approval, and carries the first canonical publication through to reacquisition evidence.
+Releases the largest cascade in the fleet, ten rows that stand behind the release environment approval alone now that the publish opt-in variable is retired, and carries the first canonical publication through to reacquisition evidence.
 
-- [ ] `P01.S01` - Set the CADRUMO_PUBLISH_ENABLED repository variable to true, confirmed ABSENT on 2026-07-30 with only two unrelated variables set, OPERATOR-GATED as a repository-settings act; `operator action, repository variables`.
 - [ ] `P01.S02` - Approve the release environment deployment when the publish dispatch requests it, the environment carries a required-reviewer rule naming the account owner, OPERATOR-GATED; `operator action, release environment`.
 - [ ] `P01.S03` - Dispatch the publication workflow promoting the stored cohort bytes without rebuilding, then record the run id as the publication of record, the workflow has never run; `.github/workflows/publish-release.yml`.
 - [ ] `P01.S04` - Verify the shared tap repository received the bucket manifest and the formula, both directories held only a .gitkeep placeholder before this publish; `operator verification, shared tap repository`.

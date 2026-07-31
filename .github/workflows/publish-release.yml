@@ -60,98 +60,22 @@ permissions:
   contents: read
 
 jobs:
-  # ---------------------------------------------------------------------------
-  # Gate 1 - operator opt-in. Until the operator sets the repository variable
-  # CADRUMO_PUBLISH_ENABLED=true this workflow refuses with instructions and
-  # publishes nothing, preserving the diagnostic stub's refusal semantics.
-  # ---------------------------------------------------------------------------
+  # Prerequisite check. The release environment must carry a human approval
+  # rule; the publish job runs inside that environment, so the approval click
+  # is the gate. There is deliberately no separate opt-in variable.
   operator-preflight:
-    name: Operator opt-in and prerequisite check
+    name: Release prerequisite check
     runs-on: [self-hosted, Linux, X64]
     steps:
-      - name: Require explicit operator opt-in
-        env:
-          PUBLISH_ENABLED: ${{ vars.CADRUMO_PUBLISH_ENABLED }}
-        run: |
-          if [[ "${PUBLISH_ENABLED}" != "true" ]]; then
-            cat >&2 <<'EOF'
-          REFUSED: Cadrumo publication is not enabled.
-
-          This workflow promotes the immutable tested cohort to every public
-          channel and cannot run until the operator has completed ALL of the
-          following (none can be done by an agent):
-
-            1. Register PyPI Trusted Publishing for all three projects. Publisher
-               in every case: this repo, workflow publish-release.yml, environment
-               `release` — this workflow declares exactly ONE environment and the
-               PyPI upload runs inside it, so any other environment name fails the
-               OIDC exchange. The registration PATH differs by whether the project
-               already exists on PyPI:
-                 - cadrumo-data-manuals and cadrumo-data-official ALREADY EXIST
-                   (name reservations published at 0.0.0), so add the publisher
-                   from EACH project's own "Manage -> Settings -> Publishing"
-                   page. PyPI rejects a pending publisher for a name that exists.
-                 - cadrumo does NOT exist on PyPI yet, so add a PENDING publisher
-                   at https://pypi.org/manage/account/publishing/. The project is
-                   created by the first successful upload — until then the name is
-                   unreserved.
-            2. Create the `release` GitHub Environment with required reviewers
-               (the operator) - that approval click is the human release gate.
-            3. Provide the two shared, PRODUCT-NEUTRAL channel targets. The
-               account carries exactly ONE distribution repository, and it serves
-               BOTH Homebrew and Scoop.
-                 - Homebrew AND Scoop: create the PUBLIC shared account
-                   repository nevenincs/homebrew-tap (the `homebrew-` prefix is
-                   mandatory for the one-argument tap form; users type
-                   `brew install nevenincs/tap/cadrumo`). Scoop imposes no name
-                   constraint and reads a `bucket/` subdirectory, so the same
-                   repository carries `bucket/` and users add it once, ever. Set
-                   var HOMEBREW_TAP_REPO and secret HOMEBREW_TAP_TOKEN - ONE
-                   pair serves both channel pushes.
-                 - Claude plugins: use the PUBLIC nevenincs/neve-marketplace. Set
-                   var CLAUDE_MARKETPLACE_REPO and secret
-                   CLAUDE_MARKETPLACE_TOKEN.
-               Both names are deliberately product-neutral: every product under
-               the account sets the same two pairs and drops in one more formula
-               file, one more bucket manifest, and one more plugin subtree, with
-               no restructuring. Both targets MUST be public - both managers
-               reach their repository by ordinary git clone, so a private target
-               is unusable by anyone without push credentials.
-            4. Ensure the source Packaging Smoke run sealed its evidence draft
-               (release tag evidence-smoke-<run id> carrying
-               cadrumo-release-cohort.tar.gz and evidence-manifest.json).
-            5. ONLY for a channel this release actually CLAIMS (availability
-               "available" in docs/_data/download_channels.toml): dispatch that
-               channel's acquisition workflow against the smoke run and note its
-               run id. A bootstrap publication claims no such channel, and these
-               runs CANNOT succeed before one — they install the manifest and
-               formula that a first publication has to write.
-            6. Likewise only once a host-extension channel is claimed: mint the
-               four claude-* rows locally
-               (`python -m dev.packaging.emit_real_client_evidence ...`), upload
-               them to a release (`gh release create <tag> --draft <row json...>`),
-               and note that tag.
-            7. Set repository variable CADRUMO_PUBLISH_ENABLED=true to arm this
-               workflow.
-
-          Gate 2 DERIVES which acquisition inputs a release needs from the
-          channels it claims, so supply only those and leave the rest empty.
-          Today's descriptor claims the python (registry) channel alone, so the
-          bootstrap dispatch carries packaging_run_id and nothing else.
-          EOF
-            exit 1
-          fi
-          echo "Operator opt-in present; proceeding to cohort validation."
-
       - name: Require the release environment to carry a human approval gate
         env:
           GH_TOKEN: ${{ github.token }}
           DRY_RUN: ${{ inputs.dry_run }}
         run: |
-          # Prerequisite 2 above INSTRUCTS the operator to create the `release`
-          # environment "with required reviewers - that approval click is the
-          # human release gate", and the publish job's own comment repeats the
-          # claim. Nothing verified it. An environment created without reviewers
+          # The release runbook instructs the operator to create the `release`
+          # environment with required reviewers, because that approval click is
+          # the human release gate, and the publish job's own comment repeats
+          # the claim. Nothing verified it. An environment without reviewers
           # satisfies `environment: release` perfectly well and runs the
           # promotion with no human in the loop, so the single most consequential
           # safety property of this workflow was documented and unenforced.

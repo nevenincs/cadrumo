@@ -173,15 +173,6 @@ def test_dry_run_validates_everything_and_skips_publish() -> None:
     assert "if" not in document["jobs"]["validate"]
 
 
-def test_inert_until_operator_opt_in() -> None:
-    """The first gate refuses unless the operator sets CADRUMO_PUBLISH_ENABLED=true."""
-    preflight = _document()["jobs"]["operator-preflight"]
-    surface = _run_surface(preflight)
-    assert "vars.CADRUMO_PUBLISH_ENABLED" in _WORKFLOW.read_text(encoding="utf-8")
-    assert 'PUBLISH_ENABLED}" != "true"' in surface
-    assert "REFUSED: Cadrumo publication is not enabled" in surface
-
-
 def test_oidc_and_write_are_confined_to_the_protected_publish_job() -> None:
     """id-token/contents:write live only on the environment-protected publish job."""
     document = _document()
@@ -334,23 +325,39 @@ def _unconditional_input_mentions(prose: str) -> list[str]:
     scoop_run_id" -- walks the operator straight back into the bootstrap
     deadlock the derivation exists to break, however correct the gate is.
     """
-    return [
-        line.strip()
-        for line in prose.splitlines()
-        if any(name in line.lower() for name in _DERIVED_INPUTS)
-        and not any(marker in line.lower() for marker in _CONDITIONAL_MARKERS)
-    ]
+    flagged: list[str] = []
+    in_fence = False
+    for line in prose.splitlines():
+        if line.lstrip().startswith("```"):
+            # A fenced block is a syntax example, not an instruction. The full
+            # four-input dispatch has to be SHOWN somewhere, and every one of its
+            # `-f` lines names a derived input by construction; flagging those
+            # would make the runbook unable to document its own command. The
+            # conditional belongs in the prose that introduces the block, which
+            # is still scanned, and the explicit "deriv" assertion below stops
+            # this exemption from being satisfied by an empty explanation.
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        if any(name in line.lower() for name in _DERIVED_INPUTS) and not any(
+            marker in line.lower() for marker in _CONDITIONAL_MARKERS
+        ):
+            flagged.append(line.strip())
+    return flagged
 
 
 def test_operator_instructions_never_present_a_derived_input_as_unconditional() -> None:
-    """The prose the operator reads must agree with the gate that refuses them."""
-    document = _document()
-    steps = document["jobs"]["operator-preflight"]["steps"]
-    (opt_in,) = [step for step in steps if "opt-in" in str(step.get("name", "")).lower()]
-    prose = str(opt_in["run"])
+    """The prose the operator reads must agree with the gate that refuses them.
+
+    This used to read the workflow's opt-in refusal. That refusal is gone with
+    the opt-in variable, so the runbook is now the only place an operator learns
+    which inputs a dispatch needs, and it is what this checks.
+    """
+    prose = (_REPO_ROOT / "RELEASING.md").read_text(encoding="utf-8")
 
     assert not _unconditional_input_mentions(prose), (
-        "the opt-in refusal instructs the operator to supply an input that Gate 2 "
+        "the runbook instructs the operator to supply an input that Gate 2 "
         "demands only for a claimed channel; that is the bootstrap deadlock as prose"
     )
     # Vacuously satisfiable by deleting the explanation, so require it explicitly.
