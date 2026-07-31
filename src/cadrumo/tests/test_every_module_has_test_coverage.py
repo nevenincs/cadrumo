@@ -59,7 +59,6 @@ _EXEMPTIONS: frozenset[str] = frozenset(
         # string arg); the AST walker cannot follow dynamic dispatch.
         # Each is exercised end-to-end via the CLI surface tests under
         # entrypoints/cli/test_*.py that invoke `aeat app <verb> ...`.
-        "src/cadrumo/entrypoints/cli/_exit_codes.py",
         "src/cadrumo/entrypoints/cli/_registry_corpus.py",
         "src/cadrumo/entrypoints/cli/_review.py",
         "src/cadrumo/entrypoints/cli/registry.py",

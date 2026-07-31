@@ -3,7 +3,7 @@
 This module is the single funnel for translating exceptions raised
 inside Typer callbacks into the structured CLI error contract — a
 stable stderr payload (text or JSON) plus a stable :class:`~typer.Exit`
-code drawn from :class:`ExitCode`.
+code drawn from the core error-category registry.
 
 Two narrow boundary exceptions wrap unexpected failures so they reach
 :func:`render_error_text` and
