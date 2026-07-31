@@ -24,9 +24,9 @@ import pytest
 from dev.packaging.constraint_effect import (
     ConstraintDriftError,
     assert_installed_matches_constraints,
-    normalise_distribution_name,
     parse_constraint_lines,
 )
+from dev.packaging._distribution_names import normalise_distribution_name
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -238,3 +238,4 @@ def test_name_normalisation_follows_pep_503() -> None:
     assert normalise_distribution_name("Typing_Extensions") == "typing-extensions"
     assert normalise_distribution_name("zope..interface") == "zope-interface"
     assert normalise_distribution_name("Ruamel__Yaml") == "ruamel-yaml"
+    assert normalise_distribution_name("  Uv...Build__Backend  ") == "uv-build-backend"

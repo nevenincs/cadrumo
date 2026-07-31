@@ -26,7 +26,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import subprocess
 import sys
 from collections.abc import Sequence
@@ -35,6 +34,8 @@ from pathlib import Path
 from typing import Final
 
 from packaging.markers import InvalidMarker, Marker
+
+from dev.packaging._distribution_names import normalise_distribution_name
 
 _UTF_8: Final[str] = "utf-8"
 
@@ -49,7 +50,6 @@ _ENUMERATE_SNIPPET: Final[str] = (
     "}))"
 )
 
-_NAME_NORMALISE: Final[re.Pattern[str]] = re.compile(r"[-_.]+")
 _VERSION_REJECT: Final[str] = " ,<>=!*"
 
 
@@ -71,11 +71,6 @@ class ConstraintPin:
 
     name: str
     versions: frozenset[str]
-
-
-def normalise_distribution_name(name: str) -> str:
-    """Return the PEP 503 normalised name (lowercase, runs of ``-_.`` -> ``-``)."""
-    return _NAME_NORMALISE.sub("-", name.strip().lower())
 
 
 def _marker_is_active(marker_text: str) -> bool:

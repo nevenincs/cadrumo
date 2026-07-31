@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
-import re
 import sys
 import zipfile
 from dataclasses import dataclass
@@ -22,6 +20,8 @@ _REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.append(str(_REPO_ROOT))
 
+from dev.packaging._distribution_names import normalise_distribution_name  # noqa: E402
+from dev.packaging._hashing import sha256_path  # noqa: E402
 from dev.packaging.uv_constraints import export_runtime_constraints  # noqa: E402
 
 _DISTRIBUTIONS = (
@@ -42,18 +42,6 @@ class WheelArtifact:
     requirements: tuple[str, ...]
 
 
-def _normalize_name(value: str) -> str:
-    return re.sub(r"[-_.]+", "-", value).casefold()
-
-
-def _sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
 def _wheel_artifact(cohort_dir: Path, distribution: str, wheel_glob: str) -> WheelArtifact:
     matches = tuple(sorted(cohort_dir.glob(wheel_glob)))
     if len(matches) != 1:
@@ -70,15 +58,15 @@ def _wheel_artifact(cohort_dir: Path, distribution: str, wheel_glob: str) -> Whe
     version = metadata.get("Version")
     if not observed_name or not version:
         raise SystemExit(f"wheel metadata lacks Name or Version: {wheel}")
-    if _normalize_name(observed_name) != distribution:
+    if normalise_distribution_name(observed_name) != distribution:
         raise SystemExit(
-            f"wheel {wheel.name!r} declares {_normalize_name(observed_name)!r}, expected {distribution!r}",
+            f"wheel {wheel.name!r} declares {normalise_distribution_name(observed_name)!r}, expected {distribution!r}",
         )
     return WheelArtifact(
         distribution=distribution,
         version=version,
         path=wheel,
-        sha256=_sha256(wheel),
+        sha256=sha256_path(wheel),
         requirements=tuple(metadata.get_all("Requires-Dist", [])),
     )
 
@@ -91,7 +79,9 @@ def _validate_companion_pins(
     requirements = [Requirement(value) for value in root.requirements]
     for companion in (manuals, official):
         matches = [
-            requirement for requirement in requirements if _normalize_name(requirement.name) == companion.distribution
+            requirement
+            for requirement in requirements
+            if normalise_distribution_name(requirement.name) == companion.distribution
         ]
         if len(matches) != 1:
             raise SystemExit(

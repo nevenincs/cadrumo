@@ -41,7 +41,6 @@ same pattern as :func:`dev.release.readiness.check_no_open_release_blockers`).
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 import re
@@ -55,6 +54,8 @@ from pathlib import Path
 from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
+
+from dev.packaging._hashing import sha256_path
 
 _UTF_8: Final[str] = "utf-8"
 _SHA256_PATTERN: Final[str] = r"^[0-9a-f]{64}$"
@@ -128,15 +129,6 @@ class EvidenceReleaseManifest(BaseModel):
     head_branch: str = Field(min_length=1)
     event: str = Field(min_length=1)
     assets: dict[str, AssetDigest] = Field(min_length=1)
-
-
-def sha256_path(path: Path) -> str:
-    """Return the streamed SHA-256 of one file's bytes."""
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def build_manifest(
@@ -651,7 +643,6 @@ __all__ = [
     "main",
     "parse_evidence_tag",
     "plan_evidence_gc",
-    "sha256_path",
     "sweep_directory_for_leaks",
     "verify_downloaded_assets",
     "write_manifest",

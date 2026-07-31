@@ -29,10 +29,10 @@ from dev.packaging.evidence_release import (
     main,
     parse_evidence_tag,
     plan_evidence_gc,
-    sha256_path,
     verify_downloaded_assets,
     write_manifest,
 )
+from dev.packaging._hashing import sha256_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

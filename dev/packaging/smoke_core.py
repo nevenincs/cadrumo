@@ -22,6 +22,8 @@ from typing import Any, Final
 
 from packaging.requirements import Requirement
 
+from dev.packaging._distribution_names import normalise_distribution_name
+
 from .installed_tax_oracle import run_installed_tax_oracle
 from .python_cohort import (
     COHORT_STAMPED_WHEEL_DATA_PATHS,
@@ -255,17 +257,12 @@ def _run(
     return completed
 
 
-def _normalize_name(name: str) -> str:
-    """Normalize a Python distribution name per PEP 503."""
-    return re.sub(r"[-_.]+", "-", name).lower()
-
-
 def _requirement_name(requirement: str) -> str:
     """Extract the distribution name from a dependency requirement string."""
     match = re.match(r"\s*([A-Za-z0-9_.-]+)", requirement)
     if match is None:
         raise ValueError(f"could not parse requirement name from {requirement!r}")
-    return _normalize_name(match.group(1))
+    return normalise_distribution_name(match.group(1))
 
 
 def _requirement_applies_to_current_platform(requirement: str) -> bool:
@@ -286,7 +283,7 @@ def _dependency_group_name(entry: str | dict[str, Any]) -> str:
     name = entry.get("name")
     if not isinstance(name, str):
         raise ValueError(f"dependency-group entry is missing a string name: {entry!r}")
-    return _normalize_name(name)
+    return normalise_distribution_name(name)
 
 
 def _dependency_group_applies_to_current_platform(entry: str | dict[str, Any]) -> bool:
@@ -307,14 +304,14 @@ def _pyproject_surfaces(repo_root: Path) -> DependencySurfaces:
     with (repo_root / "pyproject.toml").open("rb") as handle:
         pyproject = tomllib.load(handle)
     project = pyproject["project"]
-    project_name = _normalize_name(project["name"])
+    project_name = normalise_distribution_name(project["name"])
     project_requirements = project.get("dependencies", [])
     project_names = {_requirement_name(req) for req in project.get("dependencies", [])}
     project_active_names = {
         _requirement_name(req) for req in project_requirements if _requirement_applies_to_current_platform(req)
     }
     optional_dependencies = project.get("optional-dependencies", {})
-    extras = {_normalize_name(extra) for extra in optional_dependencies}
+    extras = {normalise_distribution_name(extra) for extra in optional_dependencies}
     optional_requirements = [req for requirements in optional_dependencies.values() for req in requirements]
     optional_names = {_requirement_name(req) for req in optional_requirements}
     optional_active_names = {
@@ -410,7 +407,7 @@ def _wheel_metadata(wheel: Path) -> tuple[list[str], set[str]]:
         metadata_name = next(name for name in archive.namelist() if name.endswith(".dist-info/METADATA"))
         metadata = Parser().parsestr(archive.read(metadata_name).decode(_UTF_8))
     return metadata.get_all("Requires-Dist") or [], {
-        _normalize_name(extra) for extra in (metadata.get_all("Provides-Extra") or [])
+        normalise_distribution_name(extra) for extra in (metadata.get_all("Provides-Extra") or [])
     }
 
 
@@ -427,7 +424,7 @@ def _wheel_identity(wheel: Path) -> tuple[str, str]:
     version = metadata.get("Version")
     if not name or not version:
         raise SystemExit(f"wheel metadata is missing Name or Version: {wheel}")
-    return _normalize_name(name), version
+    return normalise_distribution_name(name), version
 
 
 def _assert_complete_wheel_cohort(
@@ -461,9 +458,10 @@ def _assert_complete_wheel_cohort(
         )
     requirements, _extras = _wheel_metadata(wheel)
     exact_pins = {
-        _normalize_name(requirement.name): str(requirement.specifier)
+        normalise_distribution_name(requirement.name): str(requirement.specifier)
         for row in requirements
-        if (requirement := Requirement(row)).marker is None and _normalize_name(requirement.name) in named_companions
+        if (requirement := Requirement(row)).marker is None
+        and normalise_distribution_name(requirement.name) in named_companions
     }
     expected_pins = {name: f"=={root_version}" for name in named_companions}
     if exact_pins != expected_pins:
@@ -649,7 +647,7 @@ def _export_names(output: str, *, repo_root: Path | None = None) -> set[str]:
             local_pyproject = (repo_root / stripped / "pyproject.toml").resolve()
             if local_pyproject.is_file():
                 local = tomllib.loads(local_pyproject.read_text(encoding=_UTF_8))
-                names.add(_normalize_name(local["project"]["name"]))
+                names.add(normalise_distribution_name(local["project"]["name"]))
                 continue
         names.add(_requirement_name(stripped))
     return names
