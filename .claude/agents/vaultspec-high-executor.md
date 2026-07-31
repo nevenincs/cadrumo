@@ -9,6 +9,9 @@ tools:
 - Write
 - Edit
 - Bash
+- SendMessage
+- TaskList
+- TaskUpdate
 model: claude-opus-5
 ---
 
