@@ -39,7 +39,7 @@ from ._errors import RegistryValidationError
 from ._formula_runtime_ops import RegistryUnresolvedOutcomeReason, UnresolvedFormulaOutcomeError
 from ._formula_runtime_ops import numeric_casilla_value as _numeric_casilla_value
 from ._ids import BindingId, CasillaId, ParameterId
-from ._schema import FormulaExpression, ParameterDefinition
+from ._schema import FormulaExpression
 
 if TYPE_CHECKING:
     from ._formula_runtime import _EvalContext
@@ -114,7 +114,7 @@ def evaluate_irnr_resolve_tipo_gravamen(expression: FormulaExpression, ctx: _Eva
 
     baseline_param = ctx.parameters.get(args.baseline_parameter)
     ctx.operand_refs.extend((args.baseline_parameter, args.country_binding))
-    baseline_rate = _m210_baseline_rate(baseline_param, tipo_renta=tipo_renta, year=ctx.filing_year)
+    baseline_rate = _ops.resolve_keyed_bracket(baseline_param, key=tipo_renta, filing_year=ctx.filing_year)
     country = ctx.enum_binding_values.get(args.country_binding) or ""
     override = _resolve_convenio_override(ctx, country=country, tipo_renta=tipo_renta)
 
@@ -206,27 +206,6 @@ def _irnr_resolve_tipo_gravamen_args(expression: FormulaExpression) -> _IrnrReso
         base_casilla_id=base_arg.casilla_id,
         pension_tariff_parameter=pension_tariff_arg.parameter,
     )
-
-
-def _m210_baseline_rate(
-    parameter: ParameterDefinition | None,
-    *,
-    tipo_renta: str,
-    year: int,
-) -> Decimal | None:
-    if parameter is None:
-        return None
-    for entry in parameter.keyed_brackets:
-        if (
-            entry.key == tipo_renta
-            and entry.valid_from.year <= year
-            and (entry.valid_to is None or entry.valid_to.year >= year)
-        ):
-            try:
-                return Decimal(entry.value)
-            except (ArithmeticError, ValueError):
-                return None
-    return None
 
 
 def _resolve_convenio_override(
@@ -369,8 +348,16 @@ def evaluate_m210_resolve_base_imponible(expression: FormulaExpression, ctx: _Ev
     days_fraction = days / Decimal(_m210_days_in_filing_year(ctx.filing_year))
     catastral_value = _numeric_casilla_value(args.catastral_value_casilla_id, ctx)
     if catastral_value > _ZERO:
-        recent_rate = _m210_scalar_parameter_value(args.recent_rate_parameter, ctx)
-        old_rate = _m210_scalar_parameter_value(args.old_rate_parameter, ctx)
+        recent_rate = _ops.resolve_scalar_parameter(
+            args.recent_rate_parameter,
+            ctx,
+            op="m210_resolve_base_imponible",
+        )
+        old_rate = _ops.resolve_scalar_parameter(
+            args.old_rate_parameter,
+            ctx,
+            op="m210_resolve_base_imponible",
+        )
         coefficient = _numeric_casilla_value(args.imputation_coefficient_casilla_id, ctx)
         if coefficient not in {recent_rate, old_rate}:
             raise RegistryValidationError(
@@ -397,8 +384,16 @@ def evaluate_m210_resolve_base_imponible(expression: FormulaExpression, ctx: _Ev
                 "administrative_casilla_id": args.administrative_value_casilla_id,
             },
         )
-    no_catastral_fraction = _m210_scalar_parameter_value(args.no_catastral_fraction_parameter, ctx)
-    recent_rate = _m210_scalar_parameter_value(args.recent_rate_parameter, ctx)
+    no_catastral_fraction = _ops.resolve_scalar_parameter(
+        args.no_catastral_fraction_parameter,
+        ctx,
+        op="m210_resolve_base_imponible",
+    )
+    recent_rate = _ops.resolve_scalar_parameter(
+        args.recent_rate_parameter,
+        ctx,
+        op="m210_resolve_base_imponible",
+    )
     return substitute_value * no_catastral_fraction * recent_rate * days_fraction
 
 
@@ -462,26 +457,6 @@ def _m210_resolve_base_args(expression: FormulaExpression) -> _M210ResolveBaseAr
 
 def _m210_allows_art_24_6_expenses(*, tipo_renta: str, country_code: str) -> bool:
     return tipo_renta == "ue_residente" or country_code in UE_EEA_COUNTRY_CODES
-
-
-def _m210_scalar_parameter_value(parameter_id: ParameterId, ctx: _EvalContext) -> Decimal:
-    parameter = ctx.parameters.get(parameter_id)
-    if parameter is None:
-        raise RegistryValidationError(
-            f"parameter {parameter_id!r} not registered",
-            translated_message="errors.calc.parameter_unknown",
-            context={"parameter_id": parameter_id},
-        )
-    if parameter.data_type not in {"decimal", "money", "integer", "ratio"}:
-        raise RegistryValidationError(
-            f"parameter {parameter_id!r} must be scalar to be used by m210_resolve_base_imponible",
-            translated_message="errors.calc.dispatch_parameter_kind",
-            context={"parameter_id": parameter_id, "op": "m210_resolve_base_imponible"},
-        )
-    value = _ops.resolve_parameter(parameter, ctx.date_context)
-    ctx.operand_refs.append(parameter_id)
-    ctx.operand_values.append(value)
-    return value
 
 
 def _m210_imputation_days(casilla_id: CasillaId, ctx: _EvalContext) -> Decimal:

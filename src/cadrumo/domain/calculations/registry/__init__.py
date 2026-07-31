@@ -295,7 +295,7 @@ from ._formula_runtime import (
     read_parameter,
 )
 from ._formula_initial_values import initial_value_casilla_ids
-from ._formula_runtime_ops import resolve_parameter
+from ._formula_runtime_ops import resolve_keyed_bracket, resolve_parameter
 from ._formula_text_inputs import validate_text_input_targets, validated_text_input_casilla_ids
 from ._groi_oracle import (
     GROI_ORACLE_ID,
@@ -904,6 +904,7 @@ __all__ = [
     "resolve_foreign_asset_binding_row_values",
     "resolve_invoice_binding_row_values",
     "resolve_invoice_binding_values",
+    "resolve_keyed_bracket",
     "resolve_ledger_impatriado_income_aggregation_binding_values",
     "resolve_ledger_irnr_income_aggregation_binding_values",
     "resolve_ledger_iva_aggregation_binding_values",

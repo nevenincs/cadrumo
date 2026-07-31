@@ -58,6 +58,7 @@ _FORMULA_REFERENCE_PUBLIC_NAMES = (
     "expression_parameter_refs",
     "expression_relation_refs",
 )
+_PARAMETER_RESOLUTION_PUBLIC_NAMES = ("resolve_keyed_bracket", "resolve_parameter")
 _MODELO_REGISTRY_PRIVATE_MODULES = ("_bindings", "_errors", "_record_design", "_schema")
 
 
@@ -82,6 +83,13 @@ def test_registry_formula_reference_walkers_are_public_api() -> None:
 
     assert all(hasattr(registry, name) for name in _FORMULA_REFERENCE_PUBLIC_NAMES)
     assert set(_FORMULA_REFERENCE_PUBLIC_NAMES).issubset(exported)
+
+
+def test_registry_parameter_resolution_is_public_api() -> None:
+    exported = set(registry.__all__)
+
+    assert all(hasattr(registry, name) for name in _PARAMETER_RESOLUTION_PUBLIC_NAMES)
+    assert set(_PARAMETER_RESOLUTION_PUBLIC_NAMES).issubset(exported)
 
 
 def test_source_tree_does_not_use_absolute_registry_private_imports() -> None:
