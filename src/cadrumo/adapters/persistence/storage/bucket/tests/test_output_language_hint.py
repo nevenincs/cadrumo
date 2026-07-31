@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from ......core.external_constants import OutputLanguage
 from .._layout import provision_bucket_directory
 from .._output_language_hint import (
     bucket_output_language_hint_path,
@@ -21,7 +22,7 @@ def test_output_language_hint_round_trips_supported_language(tmp_path: Path) -> 
     bucket_id = "11111111-1111-4111-8111-111111111111"
     provision_bucket_directory(tmp_path, bucket_id)
 
-    written = write_bucket_output_language_hint(storage_root=tmp_path, bucket_id=bucket_id, language="CA")
+    written = write_bucket_output_language_hint(storage_root=tmp_path, bucket_id=bucket_id, language=" CA ")
 
     assert written is True
     assert read_bucket_output_language_hint(storage_root=tmp_path, bucket_id=bucket_id) == "ca"
@@ -33,15 +34,26 @@ def test_output_language_hint_round_trips_supported_language(tmp_path: Path) -> 
     )
 
 
-def test_output_language_hint_rejects_invalid_language_without_overwriting(tmp_path: Path) -> None:
+@pytest.mark.parametrize("language", ("", "zz", True))
+def test_output_language_hint_rejects_invalid_language_without_overwriting(tmp_path: Path, language: object) -> None:
     bucket_id = "11111111-1111-4111-8111-111111111111"
     provision_bucket_directory(tmp_path, bucket_id)
     assert write_bucket_output_language_hint(storage_root=tmp_path, bucket_id=bucket_id, language="en") is True
 
-    written = write_bucket_output_language_hint(storage_root=tmp_path, bucket_id=bucket_id, language="zz")
+    written = write_bucket_output_language_hint(storage_root=tmp_path, bucket_id=bucket_id, language=language)
 
     assert written is False
     assert read_bucket_output_language_hint(storage_root=tmp_path, bucket_id=bucket_id) == "en"
+
+
+def test_output_language_hint_round_trips_output_language_enum(tmp_path: Path) -> None:
+    bucket_id = "11111111-1111-4111-8111-111111111111"
+    provision_bucket_directory(tmp_path, bucket_id)
+
+    written = write_bucket_output_language_hint(storage_root=tmp_path, bucket_id=bucket_id, language=OutputLanguage.HU)
+
+    assert written is True
+    assert read_bucket_output_language_hint(storage_root=tmp_path, bucket_id=bucket_id) == OutputLanguage.HU.value
 
 
 def test_output_language_hint_invalid_file_falls_back_to_none(tmp_path: Path) -> None:

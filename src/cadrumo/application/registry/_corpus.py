@@ -30,6 +30,8 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints
 
+from cadrumo.core.config import coerce_output_language_setting
+
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.config import Settings, load_settings
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, output_language, tr
@@ -754,8 +756,10 @@ def _topic_projection(topic: Topic, *, locale: str) -> RegistryTopicProjection:
 def _registry_topic_locale(locale: str | None) -> str:
     if locale is None:
         return output_language()
-    normalized = locale.lower().strip()
-    if normalized not in SUPPORTED_OUTPUT_LANGUAGES:
+    normalized = (
+        coerce_output_language_setting(locale) if isinstance(locale, str) and not isinstance(locale, bool) else None
+    )
+    if normalized is None:
         _LOGGER.warning(
             "registry.topic locale refused",
             extra={
@@ -775,7 +779,7 @@ def _registry_topic_locale(locale: str | None) -> str:
                 "allowed_locales": ", ".join(SUPPORTED_OUTPUT_LANGUAGES),
             },
         )
-    return normalized
+    return normalized.value
 
 
 _LEGAL_KIND_LABELS: Mapping[str, str] = {

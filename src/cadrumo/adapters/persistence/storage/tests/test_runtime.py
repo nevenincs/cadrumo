@@ -14,11 +14,14 @@ from .....core.config import Settings, StorageRouteKind, override_settings
 from .....core.errors import CadrumoError, resolve_error_message
 from .....core.external_constants import OutputLanguage
 from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY, WORKFLOW_STATE_NAMESPACE
+from ..bucket import provision_bucket_directory, write_bucket_output_language_hint
 from ..errors import StorageValidationError
 from ..master_key import BucketSession, activate_session
 from ..runtime import (
     StorageRuntime,
     StorageRuntimeReadinessCode,
+    _normalise_supported_language,
+    _settings_output_language,
     inspect_bucket_storage_runtime,
     inspect_storage_runtime,
 )
@@ -71,6 +74,39 @@ def _sealed_session(bucket_id: str) -> BucketSession:
 
 def _issue_codes(runtime: StorageRuntime) -> tuple[StorageRuntimeReadinessCode, ...]:
     return tuple(issue.code for issue in runtime.readiness.issues)
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    (
+        (" EN ", OutputLanguage.EN.value),
+        ("", None),
+        ("zz", None),
+        (True, None),
+        (OutputLanguage.CA, OutputLanguage.CA.value),
+    ),
+)
+def test_storage_runtime_normalizes_only_supported_language_values(value: object, expected: str | None) -> None:
+    assert _normalise_supported_language(value) == expected
+
+
+def test_storage_runtime_explicit_settings_language_precedes_bucket_hint(tmp_path: Path) -> None:
+    provision_bucket_directory(tmp_path, _BUCKET_A_ID)
+    assert write_bucket_output_language_hint(
+        storage_root=tmp_path,
+        bucket_id=_BUCKET_A_ID,
+        language=OutputLanguage.CA,
+    )
+
+    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=_BUCKET_A_ID):
+        assert _settings_output_language() == OutputLanguage.CA.value
+
+    with override_settings(
+        cadrumo_local_storage_root=tmp_path,
+        cadrumo_active_profile=_BUCKET_A_ID,
+        cadrumo_output_language=" HU ",
+    ):
+        assert _settings_output_language() == OutputLanguage.HU.value
 
 
 def test_runtime_ready_when_route_and_active_session_match(tmp_path: Path) -> None:
