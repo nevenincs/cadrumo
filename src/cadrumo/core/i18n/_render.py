@@ -22,7 +22,7 @@ import i18n
 import yaml
 
 from .._config_state_root import FormerProductStateError
-from ..config import PROJECT_ROOT, _settings_override, load_settings
+from ..config import PROJECT_ROOT, _settings_override, coerce_output_language_setting, load_settings
 from ..errors import CoreError
 from ..external_constants import DEFAULT_OUTPUT_LANGUAGE, OUTPUT_LANGUAGE_ENV_VAR, SUPPORTED_OUTPUT_LANGUAGES
 from ..logging import get_logger
@@ -133,10 +133,8 @@ def _ensure_initialised() -> None:
 
 
 def _normalise_supported_language(value: object) -> str | None:
-    raw = str(value).lower().strip()
-    if raw in SUPPORTED_OUTPUT_LANGUAGES:
-        return raw
-    return None
+    language = coerce_output_language_setting(str(value))
+    return language.value if language is not None else None
 
 
 def output_language() -> str:

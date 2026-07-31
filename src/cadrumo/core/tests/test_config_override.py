@@ -23,7 +23,8 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr, ValidationError
 
-from ..config import load_settings, override_settings
+from ..config import coerce_output_language_setting, load_settings, override_settings
+from ..external_constants import OutputLanguage
 from ..paths import resolve_project_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -33,6 +34,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 # pydantic validation. Using a sentinel keeps Bandit B108 (probable
 # insecure /tmp usage) quiet for this pure-data flow.
 _NONEXISTENT_PATH_PREFIX = "non-existent-sentinel"
+
+
+def test_public_output_language_coercer_normalises_only_supported_catalogue_codes() -> None:
+    """The configuration facade is the one coercion boundary for language codes."""
+    assert coerce_output_language_setting(" EN ") is OutputLanguage.EN
+    assert coerce_output_language_setting("hu") is OutputLanguage.HU
+    assert coerce_output_language_setting("xx") is None
 
 
 def _expected_path(*parts: str) -> Path:

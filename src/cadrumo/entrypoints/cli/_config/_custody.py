@@ -35,8 +35,7 @@ class _LoginSecrets(BaseModel):
 
 def _settings_has_explicit_output_language() -> bool:
     """Return whether the operator pinned a supported output language explicitly."""
-    from ....core.config import load_settings
-    from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+    from ....core.config import coerce_output_language_setting, load_settings
 
     try:
         settings = load_settings()
@@ -44,8 +43,8 @@ def _settings_has_explicit_output_language() -> bool:
         return False
     if "cadrumo_output_language" not in settings.model_fields_set:
         return False
-    raw = str(getattr(settings.cadrumo_output_language, "value", settings.cadrumo_output_language)).strip().lower()
-    return raw in SUPPORTED_OUTPUT_LANGUAGES
+    raw = str(getattr(settings.cadrumo_output_language, "value", settings.cadrumo_output_language))
+    return coerce_output_language_setting(raw) is not None
 
 
 def _hint_via_label(name: str) -> str | None:
