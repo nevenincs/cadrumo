@@ -812,11 +812,20 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.workflow._resume", "application.modelo"),
             ImportEdge("entrypoints.mcp", "entrypoints.mcp._server"),
             ImportEdge("entrypoints.mcp._faithfulness", "core.i18n"),
+            # HITL auto-approve grounding: deferred to keep this module free of a
+            # load-time dependency on the tool-descriptor builder, which reaches
+            # the whole CLI tree -- a documented cold-start reason, not a cycle.
+            ImportEdge("entrypoints.mcp._hitl", "entrypoints.mcp._tools"),
             ImportEdge("entrypoints.mcp._inprocess", "entrypoints.cli"),
             ImportEdge("entrypoints.mcp._input_schema", "entrypoints.cli"),
             ImportEdge("entrypoints.mcp._persona_scope", "core.i18n"),
             ImportEdge("entrypoints.mcp._resources", "application.corpus_search"),
             ImportEdge("entrypoints.mcp._server", "core.i18n"),
+            # Watchdog kill-switch read: deferred inside a bare `except Exception`
+            # fail-open guard so an unreadable settings/dotenv file cannot strip
+            # the server's only lifetime anchor -- hoisting to module scope would
+            # delete that guard's protection against a load-time settings failure.
+            ImportEdge("entrypoints.mcp._stdio_lifetime", "core.config"),
             ImportEdge("entrypoints.mcp._toolsets", "entrypoints.cli"),
             ImportEdge("entrypoints.mcp._tools", "entrypoints.cli"),
             ImportEdge("locales._fstring_registry", "application.wizard"),
@@ -849,7 +858,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
     UnsanctionedClass.DOMAIN_CYCLE_BREAK: 50,
     UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 168,
     UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 37,
-    UnsanctionedClass.APPLICATION_DEFERRAL: 527,
+    UnsanctionedClass.APPLICATION_DEFERRAL: 531,
 }
 
 # Ceiling on the total number of allowlisted edges. Editing the allowlist to add
@@ -869,7 +878,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
 # briefly sat here was retired the same way once the five reconciliation value
 # types moved to the record module that owns them, which removed the cycle
 # rather than documenting it.
-_ALLOWLIST_EDGE_CEILING: int = 482
+_ALLOWLIST_EDGE_CEILING: int = 484
 
 
 def _cadrumo_relative(dotted: str) -> str:

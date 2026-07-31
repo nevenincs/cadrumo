@@ -32,6 +32,7 @@ from ._completeness import (
     iva_regime_required,
     missing_required_field_paths,
 )
+from ._projections import _in_window_order
 
 _ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 """The single accepted date layout: zero-padded ``YYYY-MM-DD``.
@@ -265,8 +266,6 @@ class ProfileValidationService:
         Returns:
             One WARNING per path whose effective fact carries a ``valid_to``.
         """
-        from ._projections import _in_window_order
-
         effective: dict[str, UserProfileFact] = {}
         for fact in _in_window_order(facts):
             effective[fact.path] = fact

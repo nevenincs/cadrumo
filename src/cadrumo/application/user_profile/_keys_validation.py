@@ -30,6 +30,7 @@ from ...domain.contribuyente import (
     optional_profile_keys,
 )
 from ...domain.contribuyente import profile_keys as _get_profile_keys
+from ..wizard import _catalogue as _wizard_catalogue
 from ._completeness import IVA_REGIME_PATH, conditional_profile_required_paths, iva_regime_required
 
 
@@ -117,21 +118,22 @@ def list_profile_key_records() -> tuple[ProfileKey, ...]:
     unrelated caller to have done it. The CLI root callback also registers
     the catalogue, but only on the paths that reach past its early returns,
     which leaves every other reader depending on whichever module happened
-    to import the wizard first. The import is function-local so nothing is
-    paid at module load and the command-tree cold-start budget is untouched.
+    to import the wizard first. The module-level import above pays the cost
+    once at this module's own load, which is already lazy: this module is
+    reached only through the ``application.user_profile`` package's PEP 562
+    ``__getattr__`` ladder, so the cold-start budget is untouched regardless
+    of whether the wizard import sits at module scope or function scope.
     """
     _ensure_profile_keys_registered()
     return _get_profile_keys()
 
 
 def _ensure_profile_keys_registered() -> None:
-    """Import the wizard catalogue so the compiled profile keys are pushed.
+    """Touch the wizard catalogue import so the compiled profile keys are pushed.
 
-    Idempotent: the import system runs the registration side effect once and
-    every later call is a dict lookup in ``sys.modules``.
+    Idempotent: the import system runs the registration side effect once at
+    this module's own (lazy) load, and every later call is a no-op.
     """
-    from ..wizard import _catalogue as _wizard_catalogue
-
     _ = _wizard_catalogue
 
 

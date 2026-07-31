@@ -367,7 +367,11 @@ ignore_imports =
     cadrumo.application.user_profile._custody -> cadrumo.adapters.**
     cadrumo.application.user_profile._custody_carry -> cadrumo.adapters.**
     cadrumo.application.user_profile._language_resolver -> cadrumo.adapters.**
-    cadrumo.application.user_profile._login_session -> cadrumo.adapters.**
+    # ── 2026-04-30-aeat-restructure-adr: the login/logout session lifecycle
+    #    reaches only the master-key session primitives and the persistence
+    #    storage error taxonomy; pinned narrow instead of a wildcard exception ──
+    cadrumo.application.user_profile._login_session -> cadrumo.adapters.persistence.storage.errors
+    cadrumo.application.user_profile._login_session -> cadrumo.adapters.persistence.storage.master_key
     cadrumo.application.user_profile._orchestration -> cadrumo.adapters.**
     cadrumo.application.user_profile._profile_repository -> cadrumo.adapters.**
     cadrumo.application.user_profile._repository -> cadrumo.adapters.**
