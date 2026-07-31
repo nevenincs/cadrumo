@@ -21,6 +21,7 @@ from ......domain.calculations.registry import (
 )
 from ......tests.aeat_literal_fixtures import AEAT_SUFFIX_LOOKALIKE_HOST_CANARY
 from ...browser import Profile, opened_browser_page, shared_playwright_runtime
+from .._adapter_utils import is_aeat_auth_gate_redirect
 from .._errors import SedeNavigationError, SedeParseError
 from .._iva_compensation_wallet import (
     _READ_GUARD_POLICY,
@@ -38,7 +39,6 @@ from .._iva_compensation_wallet_parsing import (
     _wallet_page_shape_context,
     _wallet_row_from_cells,
     discover_iva_compensation_wallet_entrypoint,
-    is_aeat_wallet_auth_gate_redirect,
     parse_iva_compensation_wallet_html,
 )
 
@@ -493,8 +493,8 @@ def test_discover_iva_compensation_wallet_entrypoint_rejects_non_aeat_host() -> 
 
 
 def test_iva_wallet_auth_gate_detector_matches_aeat_4033_redirect() -> None:
-    assert is_aeat_wallet_auth_gate_redirect(_AEAT_AUTH_GATE_URL)
-    assert not is_aeat_wallet_auth_gate_redirect(IVA_COMPENSATION_WALLET_URL)
+    assert is_aeat_auth_gate_redirect(_AEAT_AUTH_GATE_URL)
+    assert not is_aeat_auth_gate_redirect(IVA_COMPENSATION_WALLET_URL)
 
 
 def test_wallet_shape_context_redacts_url_query_and_input_values() -> None:

@@ -35,6 +35,7 @@ from .....domain.calculations.registry import (
 )
 from .._playwright import PlaywrightError
 from ..browser import DefaultBrowserSession, default_browser_session_factory
+from ._adapter_utils import is_aeat_auth_gate_redirect
 from ._auth_state import storage_state_for_session
 from ._browser_constants import (
     PLAYWRIGHT_WAIT_DOMCONTENTLOADED as _WAIT_DOMCONTENTLOADED,
@@ -58,7 +59,6 @@ from ._iva_compensation_wallet_parsing import (
     _wallet_execute_gate_status,
     _wallet_page_shape_context,
     discover_iva_compensation_wallet_entrypoint,
-    is_aeat_wallet_auth_gate_redirect,
     parse_iva_compensation_wallet_html,
 )
 from ._schema import IvaCompensationWalletObservation
@@ -140,7 +140,7 @@ async def fetch_iva_compensation_wallet(
                 target_year=target_period.filing_year,
                 target_period=target_period,
             )
-            if is_aeat_wallet_auth_gate_redirect(page.url):
+            if is_aeat_auth_gate_redirect(page.url):
                 raise SedeNavigationError(
                     "AEAT Pre303 presentation surface rejected the authenticated session with 4033",
                     failure_mode=SedeFailureMode.AUTH_GATE_DETECTED,
@@ -184,7 +184,7 @@ async def fetch_iva_compensation_wallet(
             raise SedeNavigationError(
                 f"Pre303/wallet navigation failed for {_PRE303_PRESENTATION_URL!r} -> {_WALLET_URL!r}: {exc}",
             ) from exc
-        if is_aeat_wallet_auth_gate_redirect(page.url):
+        if is_aeat_auth_gate_redirect(page.url):
             raise SedeNavigationError(
                 "AEAT IVA compensation wallet rejected the authenticated session with 4033",
                 failure_mode=SedeFailureMode.AUTH_GATE_DETECTED,
@@ -255,7 +255,7 @@ async def _open_authenticated_surface(
         try:
             await page.wait_for_url(
                 lambda url: (
-                    target_path in url or is_aeat_wallet_auth_gate_redirect(url) or _is_representation_gate_url(url)
+                    target_path in url or is_aeat_auth_gate_redirect(url) or _is_representation_gate_url(url)
                 ),
                 timeout=settings.cadrumo_browser_navigation_timeout_ms,
             )
@@ -364,7 +364,7 @@ async def _continue_own_name_representation(
         await _assert_own_name_representation_form(page, expected_path=target_path)
         await page.click(_PRE303.representation_submit_selector)
         await page.wait_for_url(
-            lambda url: target_path in url or is_aeat_wallet_auth_gate_redirect(url),
+            lambda url: target_path in url or is_aeat_auth_gate_redirect(url),
             timeout=settings.cadrumo_browser_navigation_timeout_ms,
         )
         await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED)
@@ -807,6 +807,5 @@ __all__ = [
     "PRE303_PRESENTATION_SERVICE_URL",
     "discover_iva_compensation_wallet_entrypoint",
     "fetch_iva_compensation_wallet",
-    "is_aeat_wallet_auth_gate_redirect",
     "parse_iva_compensation_wallet_html",
 ]

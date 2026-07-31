@@ -16,8 +16,10 @@ from collections.abc import Callable, Coroutine, Mapping
 from re import compile
 from typing import TYPE_CHECKING, Any, Protocol
 from unicodedata import category, normalize
+from urllib.parse import urlsplit
 
 from .....core import STRICT_FROZEN_CONFIG
+from .....core.config import Settings
 
 if TYPE_CHECKING:
     from playwright.async_api import Locator, Page
@@ -32,6 +34,7 @@ from ._errors import BrowserAdapterTypeError, SedeFailureMode, SedeParseError
 _log = get_logger(__name__)
 _WHITESPACE_RE = compile(r"\s+")
 _AEAT_CSV_PATTERN = compile(r"[A-Z0-9]{8,24}")
+_EXTERNAL = Settings.external_constants()
 
 
 def is_aeat_csv(value: str) -> bool:
@@ -42,6 +45,31 @@ def is_aeat_csv(value: str) -> bool:
     this helper owns only the shared shape constraint.
     """
     return bool(_AEAT_CSV_PATTERN.fullmatch(value))
+
+
+def is_aeat_auth_gate_redirect(current_url: str) -> bool:
+    """Return whether ``current_url`` is AEAT's configured auth-gate landing.
+
+    The detector accepts the configured AEAT host or a real subdomain, but not
+    a user-info or port-shaped authority that merely ends in that suffix.
+    Callers retain responsibility for translating an affirmative result into
+    their surface-specific navigation error.
+    """
+    if not current_url:
+        return False
+    try:
+        parsed = urlsplit(current_url)
+        if parsed.username is not None or parsed.password is not None or parsed.port is not None:
+            return False
+    except ValueError:
+        return False
+    host = parsed.hostname
+    if host is None:
+        return False
+    host_suffix = _EXTERNAL.aeat.domains.host_suffix.casefold()
+    if host.casefold() != host_suffix and not host.casefold().endswith(f".{host_suffix}"):
+        return False
+    return _EXTERNAL.aeat.sede_paths.auth_gate_4033.casefold() in parsed.path.casefold()
 
 
 class _LocateHelper(Protocol):

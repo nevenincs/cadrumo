@@ -217,19 +217,6 @@ def discover_iva_compensation_wallet_entrypoint(html: str, *, base_url: str) -> 
     return None
 
 
-def is_aeat_wallet_auth_gate_redirect(current_url: str) -> bool:
-    """Return True when wallet navigation lands on AEAT's certificate/auth 4033 page."""
-    if not current_url:
-        return False
-    parsed = urlsplit(current_url)
-    host = parsed.netloc.casefold()
-    host_suffix = _EXTERNAL.aeat.domains.host_suffix.casefold()
-    if host != host_suffix and not host.endswith(f".{host_suffix}"):
-        return False
-    auth_gate_marker = _EXTERNAL.aeat.sede_paths.auth_gate_4033.casefold()
-    return auth_gate_marker in parsed.path.casefold()
-
-
 def _own_name_representation_action_allowed(
     *,
     method: str,
