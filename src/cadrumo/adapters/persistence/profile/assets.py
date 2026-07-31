@@ -22,9 +22,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from ....core.errors import CadrumoError
-from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
-from ....core.time import now
 from ....domain.contribuyente.assets import (
     AmortizacionLedger,
     AssetRecord,
@@ -35,27 +33,16 @@ from ..storage import (
     PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE,
     PROFILE_ASSETS_LEDGER_NAMESPACE,
     SecureObjectRepository,
-    secure_object_logical_path,
-    secure_object_repository_for_active_bucket,
+)
+from ._secure_model_document import (
+    ProfileBareModelSecurePersistence,
+    resolve_profile_secure_object_repository,
 )
 
 _log = get_logger(__name__)
 
 ASSETS_LEDGER_FILENAME = "assets-ledger.secure-object"
 ASSETS_AMORTIZATION_LEDGER_FILENAME = "assets-amortization-ledger.secure-object"
-_ASSETS_SECURE_OBJECT_VERSION = PROFILE_ASSETS_LEDGER_NAMESPACE.schema_version
-_AMORTIZACION_SECURE_OBJECT_VERSION = PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE.schema_version
-_ASSETS_SECURE_OBJECT_SENSITIVITY = PROFILE_ASSETS_LEDGER_NAMESPACE.sensitivity
-_AMORTIZACION_SECURE_OBJECT_SENSITIVITY = PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE.sensitivity
-_ASSETS_NAMESPACE = PROFILE_ASSETS_LEDGER_NAMESPACE.namespace
-_AMORTIZACION_NAMESPACE = PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE.namespace
-_ASSETS_OBJECT_KEY = PROFILE_ASSETS_LEDGER_NAMESPACE.require_default_object_key()
-_AMORTIZACION_OBJECT_KEY = PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE.require_default_object_key()
-
-
-def _secure_object_marker(namespace: str, filename: str) -> Path:
-    return secure_object_logical_path(namespace, filename)
-
 
 def load_assets() -> tuple[AssetRecord, ...]:
     """Load persisted asset records from the encrypted ledger.
@@ -132,17 +119,22 @@ class AssetsLedgerRepository:
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
         """Initialise the repository, defaulting to the active-bucket secure object store."""
-        self._objects = objects if objects is not None else secure_object_repository_for_active_bucket()
+        self._storage = ProfileBareModelSecurePersistence(
+            objects=resolve_profile_secure_object_repository(objects=objects),
+            definition=PROFILE_ASSETS_LEDGER_NAMESPACE,
+            model_type=AssetsLedgerDocument,
+            empty_document=AssetsLedgerDocument,
+        )
 
     @property
     def envelope_path(self) -> Path:
         """Logical path retained for callers that display the storage target."""
-        return _secure_object_marker(_ASSETS_NAMESPACE, ASSETS_LEDGER_FILENAME)
+        return self._storage.logical_path(ASSETS_LEDGER_FILENAME)
 
     @property
     def lock_target(self) -> Path:
         """Logical lock marker; SQL transactions govern writes."""
-        return _secure_object_marker(_ASSETS_NAMESPACE, "assets-ledger.lock")
+        return self._storage.logical_path("assets-ledger.lock")
 
     def load(self) -> AssetsLedgerDocument:
         """Load the ledger, returning an empty document when absent.
@@ -154,27 +146,19 @@ class AssetsLedgerRepository:
             AssetRecordError: When the envelope exists but cannot be loaded or decrypted.
         """
         try:
-            record = self._objects.load(
-                _ASSETS_NAMESPACE,
-                self._object_key,
-                expected_class=_ASSETS_SECURE_OBJECT_SENSITIVITY,
-                max_supported_version=_ASSETS_SECURE_OBJECT_VERSION,
-            )
-            if record is None:
-                return AssetsLedgerDocument()
-            return AssetsLedgerDocument.model_validate_json(record.payload.decode(UTF_8_ENCODING))
+            return self._storage.load()
         except (OSError, CadrumoError) as exc:
             _log.debug(
                 "asset ledger load failed",
                 extra={
-                    "namespace": _ASSETS_NAMESPACE,
-                    "object_key": self._object_key,
+                    "namespace": self._storage.namespace,
+                    "object_key": self._storage.object_key,
                     "error_type": type(exc).__name__,
                 },
             )
             raise AssetRecordError(
-                f"unable to load asset ledger: {self._object_key}",
-                context={"namespace": _ASSETS_NAMESPACE, "object_key": self._object_key},
+                f"unable to load asset ledger: {self._storage.object_key}",
+                context={"namespace": self._storage.namespace, "object_key": self._storage.object_key},
                 translated_message="adapters.persistence.profile.assets.errors.load_asset_ledger_failed",
             ) from exc
 
@@ -189,7 +173,7 @@ class AssetsLedgerRepository:
             document: Ledger document to encrypt and write.
         """
         self._save_unlocked(document)
-        _log.info("saved %d asset records to secure object %s", len(document.assets), self._object_key)
+        _log.info("saved %d asset records to secure object %s", len(document.assets), self._storage.object_key)
 
     def add(self, asset: AssetRecord) -> AssetsLedgerDocument:
         """Atomically add ``asset`` and refuse duplicate identifiers.
@@ -219,18 +203,7 @@ class AssetsLedgerRepository:
         return self.load()
 
     def _save_unlocked(self, document: AssetsLedgerDocument) -> None:
-        self._objects.save(
-            namespace=_ASSETS_NAMESPACE,
-            object_key=self._object_key,
-            classification=_ASSETS_SECURE_OBJECT_SENSITIVITY,
-            schema_version=_ASSETS_SECURE_OBJECT_VERSION,
-            written_at=now(),
-            payload=document.model_dump_json().encode(UTF_8_ENCODING),
-        )
-
-    @property
-    def _object_key(self) -> str:
-        return _ASSETS_OBJECT_KEY
+        self._storage.save(document)
 
 
 class AmortizacionLedgerRepository:
@@ -245,17 +218,22 @@ class AmortizacionLedgerRepository:
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
         """Initialise the repository, defaulting to the active-bucket secure object store."""
-        self._objects = objects if objects is not None else secure_object_repository_for_active_bucket()
+        self._storage = ProfileBareModelSecurePersistence(
+            objects=resolve_profile_secure_object_repository(objects=objects),
+            definition=PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE,
+            model_type=AmortizacionLedger,
+            empty_document=AmortizacionLedger,
+        )
 
     @property
     def envelope_path(self) -> Path:
         """Logical path retained for callers that display the storage target."""
-        return _secure_object_marker(_AMORTIZACION_NAMESPACE, ASSETS_AMORTIZATION_LEDGER_FILENAME)
+        return self._storage.logical_path(ASSETS_AMORTIZATION_LEDGER_FILENAME)
 
     @property
     def lock_target(self) -> Path:
         """Logical lock marker; SQL transactions govern writes."""
-        return _secure_object_marker(_AMORTIZACION_NAMESPACE, "assets-amortization-ledger.lock")
+        return self._storage.logical_path("assets-amortization-ledger.lock")
 
     def load(self) -> AmortizacionLedger:
         """Load the ledger, returning an empty document when absent.
@@ -267,27 +245,19 @@ class AmortizacionLedgerRepository:
             AssetRecordError: When the envelope exists but cannot be loaded or decrypted.
         """
         try:
-            record = self._objects.load(
-                _AMORTIZACION_NAMESPACE,
-                self._object_key,
-                expected_class=_AMORTIZACION_SECURE_OBJECT_SENSITIVITY,
-                max_supported_version=_AMORTIZACION_SECURE_OBJECT_VERSION,
-            )
-            if record is None:
-                return AmortizacionLedger()
-            return AmortizacionLedger.model_validate_json(record.payload.decode(UTF_8_ENCODING))
+            return self._storage.load()
         except (OSError, CadrumoError) as exc:
             _log.debug(
                 "asset amortizacion ledger load failed",
                 extra={
-                    "namespace": _AMORTIZACION_NAMESPACE,
-                    "object_key": self._object_key,
+                    "namespace": self._storage.namespace,
+                    "object_key": self._storage.object_key,
                     "error_type": type(exc).__name__,
                 },
             )
             raise AssetRecordError(
-                f"unable to load amortizacion ledger: {self._object_key}",
-                context={"namespace": _AMORTIZACION_NAMESPACE, "object_key": self._object_key},
+                f"unable to load amortizacion ledger: {self._storage.object_key}",
+                context={"namespace": self._storage.namespace, "object_key": self._storage.object_key},
                 translated_message="adapters.persistence.profile.assets.errors.load_amortizacion_ledger_failed",
             ) from exc
 
@@ -302,24 +272,13 @@ class AmortizacionLedgerRepository:
             ledger: Amortizacion ledger to encrypt and write.
         """
         self._save_unlocked(ledger)
-        _log.info("saved amortizacion ledger to secure object %s", self._object_key)
+        _log.info("saved amortizacion ledger to secure object %s", self._storage.object_key)
 
     def _load_unlocked(self) -> AmortizacionLedger:
         return self.load()
 
     def _save_unlocked(self, ledger: AmortizacionLedger) -> None:
-        self._objects.save(
-            namespace=_AMORTIZACION_NAMESPACE,
-            object_key=self._object_key,
-            classification=_AMORTIZACION_SECURE_OBJECT_SENSITIVITY,
-            schema_version=_AMORTIZACION_SECURE_OBJECT_VERSION,
-            written_at=now(),
-            payload=ledger.model_dump_json().encode(UTF_8_ENCODING),
-        )
-
-    @property
-    def _object_key(self) -> str:
-        return _AMORTIZACION_OBJECT_KEY
+        self._storage.save(ledger)
 
 
 __all__ = [

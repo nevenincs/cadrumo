@@ -24,9 +24,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from ....core.errors import CadrumoError
-from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
-from ....core.time import now
 from ....domain.prorrata_register import (
     ProrrataRegister,
     ProrrataRegisterEntry,
@@ -37,23 +35,15 @@ from ..storage import (
     PROFILE_PRORRATA_REGISTER_NAMESPACE,
     SecureObjectRepository,
     SecureObjectWrite,
-    secure_object_logical_path,
-    secure_object_repository_for_active_bucket,
-    secure_object_repository_for_bucket,
+)
+from ._secure_model_document import (
+    ProfileBareModelSecurePersistence,
+    resolve_profile_secure_object_repository,
 )
 
 _log = get_logger(__name__)
 
 PRORRATA_REGISTER_FILENAME = "prorrata-register.secure-object"
-_REGISTER_SECURE_OBJECT_VERSION = PROFILE_PRORRATA_REGISTER_NAMESPACE.schema_version
-_REGISTER_SECURE_OBJECT_SENSITIVITY = PROFILE_PRORRATA_REGISTER_NAMESPACE.sensitivity
-_REGISTER_NAMESPACE = PROFILE_PRORRATA_REGISTER_NAMESPACE.namespace
-_REGISTER_OBJECT_KEY = PROFILE_PRORRATA_REGISTER_NAMESPACE.require_default_object_key()
-
-
-def _secure_object_marker(namespace: str, filename: str) -> Path:
-    return secure_object_logical_path(namespace, filename)
-
 
 def load_prorrata_register() -> ProrrataRegister:
     """Load the register, returning an empty register when absent.
@@ -118,17 +108,17 @@ class ProrrataRegisterRepository:
                 When neither ``objects`` nor ``bucket_id`` is supplied, defaults
                 to the active-bucket secure object store.
         """
-        if objects is not None:
-            self._objects = objects
-        elif bucket_id is not None:
-            self._objects = secure_object_repository_for_bucket(bucket_id)
-        else:
-            self._objects = secure_object_repository_for_active_bucket()
+        self._storage = ProfileBareModelSecurePersistence(
+            objects=resolve_profile_secure_object_repository(objects=objects, bucket_id=bucket_id),
+            definition=PROFILE_PRORRATA_REGISTER_NAMESPACE,
+            model_type=ProrrataRegister,
+            empty_document=ProrrataRegister,
+        )
 
     @property
     def envelope_path(self) -> Path:
         """Logical path retained for callers that display the storage target."""
-        return _secure_object_marker(_REGISTER_NAMESPACE, PRORRATA_REGISTER_FILENAME)
+        return self._storage.logical_path(PRORRATA_REGISTER_FILENAME)
 
     def load(self) -> ProrrataRegister:
         """Load the register, returning an empty document when absent.
@@ -141,27 +131,19 @@ class ProrrataRegisterRepository:
                 or decrypted.
         """
         try:
-            record = self._objects.load(
-                _REGISTER_NAMESPACE,
-                self._object_key,
-                expected_class=_REGISTER_SECURE_OBJECT_SENSITIVITY,
-                max_supported_version=_REGISTER_SECURE_OBJECT_VERSION,
-            )
-            if record is None:
-                return ProrrataRegister()
-            return ProrrataRegister.model_validate_json(record.payload.decode(UTF_8_ENCODING))
+            return self._storage.load()
         except (OSError, CadrumoError) as exc:
             _log.debug(
                 "prorrata register load failed",
                 extra={
-                    "namespace": _REGISTER_NAMESPACE,
-                    "object_key": self._object_key,
+                    "namespace": self._storage.namespace,
+                    "object_key": self._storage.object_key,
                     "error_type": type(exc).__name__,
                 },
             )
             raise ProrrataRegisterError(
-                f"unable to load prorrata register: {self._object_key}",
-                context={"namespace": _REGISTER_NAMESPACE, "object_key": self._object_key},
+                f"unable to load prorrata register: {self._storage.object_key}",
+                context={"namespace": self._storage.namespace, "object_key": self._storage.object_key},
             ) from exc
 
     def save(self, register: ProrrataRegister) -> None:
@@ -170,11 +152,11 @@ class ProrrataRegisterRepository:
         Args:
             register: Register document to encrypt and write.
         """
-        self._objects.save_many((self.to_secure_object_write(register),))
+        self._storage.save(register)
         _log.info(
             "saved %d prorrata register entries to secure object %s",
             len(register.entries),
-            self._object_key,
+            self._storage.object_key,
         )
 
     def to_secure_object_write(self, register: ProrrataRegister) -> SecureObjectWrite:
@@ -184,15 +166,7 @@ class ProrrataRegisterRepository:
         the filed revision and filing catalogue in one secure-object transaction,
         mirroring the participation-index write pattern.
         """
-        written_at = now()
-        return SecureObjectWrite(
-            namespace=_REGISTER_NAMESPACE,
-            object_key=self._object_key,
-            classification=_REGISTER_SECURE_OBJECT_SENSITIVITY,
-            schema_version=_REGISTER_SECURE_OBJECT_VERSION,
-            written_at=written_at,
-            payload=register.model_dump_json().encode(UTF_8_ENCODING),
-        )
+        return self._storage.to_secure_object_write(register)
 
     def upsert_entry(self, entry: ProrrataRegisterEntry) -> ProrrataRegister:
         """Atomically add or replace ``entry`` by its ``(ejercicio, sector_id)`` key.
@@ -248,11 +222,7 @@ class ProrrataRegisterRepository:
         return updated
 
     def _save_unlocked(self, register: ProrrataRegister) -> None:
-        self._objects.save_many((self.to_secure_object_write(register),))
-
-    @property
-    def _object_key(self) -> str:
-        return _REGISTER_OBJECT_KEY
+        self._storage.save(register)
 
 
 __all__ = [

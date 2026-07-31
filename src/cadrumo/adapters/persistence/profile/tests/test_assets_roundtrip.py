@@ -133,13 +133,13 @@ def test_assets_ledger_dropped_cost_basis_surfaces_at_load(
     from sqlalchemy import select
 
     from ....persistence.storage.sql.session import session_scope
+    from ...storage import PROFILE_ASSETS_LEDGER_NAMESPACE
     from ...storage.crypto import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
     from ...storage.sql import SecureObjectRow
-    from ..assets import _ASSETS_NAMESPACE, _ASSETS_OBJECT_KEY
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="assets-rt-dropped") as profile:
         engine = get_engine(profile.settings)
@@ -149,8 +149,8 @@ def test_assets_ledger_dropped_cost_basis_surfaces_at_load(
 
         with session_scope(engine) as session:
             stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _ASSETS_NAMESPACE,
-                SecureObjectRow.object_key == _ASSETS_OBJECT_KEY,
+                SecureObjectRow.namespace == PROFILE_ASSETS_LEDGER_NAMESPACE.namespace,
+                SecureObjectRow.object_key == PROFILE_ASSETS_LEDGER_NAMESPACE.require_default_object_key(),
             )
             row = session.execute(stmt).scalar_one()
             _h3_aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
@@ -194,13 +194,13 @@ def test_assets_ledger_missing_cost_basis_surfaces_at_load(
     from sqlalchemy import select
 
     from ....persistence.storage.sql.session import session_scope
+    from ...storage import PROFILE_ASSETS_LEDGER_NAMESPACE
     from ...storage.crypto import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
     from ...storage.sql import SecureObjectRow
-    from ..assets import _ASSETS_NAMESPACE, _ASSETS_OBJECT_KEY
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="assets-rt-missing") as profile:
         engine = get_engine(profile.settings)
@@ -209,8 +209,8 @@ def test_assets_ledger_missing_cost_basis_surfaces_at_load(
 
         with session_scope(engine) as session:
             stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _ASSETS_NAMESPACE,
-                SecureObjectRow.object_key == _ASSETS_OBJECT_KEY,
+                SecureObjectRow.namespace == PROFILE_ASSETS_LEDGER_NAMESPACE.namespace,
+                SecureObjectRow.object_key == PROFILE_ASSETS_LEDGER_NAMESPACE.require_default_object_key(),
             )
             row = session.execute(stmt).scalar_one()
             _h3_aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)

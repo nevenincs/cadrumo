@@ -140,13 +140,13 @@ def test_inventory_ledger_dropped_layer_balance_surfaces_at_load(
     from sqlalchemy import select
 
     from ....persistence.storage.sql.session import session_scope
+    from ...storage import PROFILE_INVENTORY_LEDGER_NAMESPACE
     from ...storage.crypto import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
     from ...storage.sql import SecureObjectRow
-    from ..inventory import _INVENTORY_NAMESPACE, _INVENTORY_OBJECT_KEY
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         engine = get_engine(profile.settings)
@@ -156,8 +156,8 @@ def test_inventory_ledger_dropped_layer_balance_surfaces_at_load(
 
         with session_scope(engine) as session:
             stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _INVENTORY_NAMESPACE,
-                SecureObjectRow.object_key == _INVENTORY_OBJECT_KEY,
+                SecureObjectRow.namespace == PROFILE_INVENTORY_LEDGER_NAMESPACE.namespace,
+                SecureObjectRow.object_key == PROFILE_INVENTORY_LEDGER_NAMESPACE.require_default_object_key(),
             )
             row = session.execute(stmt).scalar_one()
             _h3_aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
