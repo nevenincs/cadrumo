@@ -263,33 +263,11 @@ class OperatorStateProjection(BaseModel):
     pending_obligations: tuple[ProjectionObligation, ...] = ()
 
 
-def _resolve_active_profile_label(bucket_id: str | None) -> str | None:
-    """Resolve a bucket UUID to its operator-chosen display name.
-
-    Reads the plaintext profile-bucket manifest (no secret access, no
-    active session required); returns ``None`` when no profile is
-    active or the manifest cannot be located.
-    """
-    if bucket_id is None:
-        return None
-    from .workflow import read_profile_bucket_by_id
-
-    try:
-        pointer = read_profile_bucket_by_id(bucket_id)
-    except (OSError, ValueError) as exc:
-        _log.debug(
-            "state projection: unable to resolve active-profile label",
-            exc_info=exc,
-        )
-        return None
-    return pointer.label if pointer is not None else None
-
-
 def _build_active_profile(health: ActiveProfileHealth) -> ProjectionActiveProfile:
-    """Project the profile-health assessment into the projection sub-record."""
+    """Project one coherent profile-health snapshot into the public record."""
     return ProjectionActiveProfile(
         profile_id=health.active_profile,
-        label=_resolve_active_profile_label(health.active_profile),
+        label=health.active_profile_label,
         health_status=health.status,
         registered_bucket=health.registered_bucket,
         record_present=health.profile_record_present,
