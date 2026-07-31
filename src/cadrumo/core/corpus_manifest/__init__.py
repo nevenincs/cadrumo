@@ -174,6 +174,22 @@ class CorpusManifest(BaseModel):
             raise CorpusManifestError(str(exc)) from exc
 
 
+class _ManifestPayloadValidationError(ValueError):
+    """Base error for an invalid raw manifest payload before I/O translation."""
+
+
+class _MalformedManifestPayloadError(_ManifestPayloadValidationError):
+    """Raw payload cannot be parsed into the manifest schema."""
+
+
+class _UnsupportedManifestVersionError(_ManifestPayloadValidationError):
+    """Raw payload declares a version this consumer cannot admit."""
+
+
+class _TamperedManifestPayloadError(_ManifestPayloadValidationError):
+    """Raw payload's recorded self-digest differs from its canonical body."""
+
+
 class CorpusManifestDiff(BaseModel):
     """Result of comparing a manifest against the live corpus on disk.
 
@@ -250,6 +266,31 @@ def _canonical_manifest_body(
         ],
     }
     return json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+
+
+def _validate_raw_manifest_payload(raw: str | bytes) -> CorpusManifest:
+    """Parse and verify the source-agnostic self-attesting manifest payload.
+
+    Callers retain responsibility for reading their Path or ZIP member and for
+    translating these private validation errors into their public boundary
+    errors. Keeping the validation here ensures both sources apply identical
+    schema, version, canonical-body, and self-digest checks.
+    """
+    try:
+        manifest = CorpusManifest.model_validate_json(raw)
+    except (ValueError, ValidationError) as exc:
+        raise _MalformedManifestPayloadError(str(exc)) from exc
+    if manifest.manifest_version > _MANIFEST_VERSION:
+        raise _UnsupportedManifestVersionError(str(manifest.manifest_version))
+    body = _canonical_manifest_body(
+        manifest_version=manifest.manifest_version,
+        corpus_root_name=manifest.corpus_root_name,
+        generated_at=manifest.generated_at,
+        entries=manifest.entries,
+    )
+    if manifest.manifest_sha256 != _sha256_hex(body):
+        raise _TamperedManifestPayloadError
+    return manifest
 
 
 def build_corpus_manifest(
@@ -406,23 +447,16 @@ def load_corpus_manifest(target: Path) -> CorpusManifest:
         raise FileNotFoundError(target)
     raw = target.read_text(encoding="utf-8")
     try:
-        manifest = CorpusManifest.model_validate_json(raw)
-    except (OSError, ValueError, ValidationError) as exc:
+        manifest = _validate_raw_manifest_payload(raw)
+    except _MalformedManifestPayloadError as exc:
         _logger.error("load_corpus_manifest: structurally invalid manifest at %s", target, exc_info=True)
         raise CorpusManifestError(f"manifest at {target} is structurally invalid: {exc}") from exc
-    if manifest.manifest_version > _MANIFEST_VERSION:
+    except _UnsupportedManifestVersionError as exc:
         raise CorpusManifestError(
-            f"manifest at {target} is at version {manifest.manifest_version}; "
+            f"manifest at {target} is at version {exc}; "
             f"consumer supports up to {_MANIFEST_VERSION}",
-        )
-    body = _canonical_manifest_body(
-        manifest_version=manifest.manifest_version,
-        corpus_root_name=manifest.corpus_root_name,
-        generated_at=manifest.generated_at,
-        entries=manifest.entries,
-    )
-    expected_sha256 = _sha256_hex(body)
-    if manifest.manifest_sha256 != expected_sha256:
+        ) from exc
+    except _TamperedManifestPayloadError as exc:
         _logger.error(
             "load_corpus_manifest: tamper detected in manifest at %s (recorded sha256 does not match body)",
             target,
@@ -430,7 +464,7 @@ def load_corpus_manifest(target: Path) -> CorpusManifest:
         raise CorpusManifestTamperError(
             f"manifest at {target}: recorded manifest_sha256 does not match the body digest "
             "(an attacker may have edited the manifest body without recomputing the digest).",
-        )
+        ) from exc
     _logger.debug(
         "load_corpus_manifest: loaded %r with %d entries from %s",
         manifest.corpus_root_name,
@@ -621,26 +655,18 @@ def _verify_open_corpus_bundle(archive: zipfile.ZipFile) -> CorpusBundleVerifica
 def _load_bundle_manifest(archive: zipfile.ZipFile) -> CorpusManifest:
     raw = archive.read(_BUNDLE_MANIFEST_MEMBER)
     try:
-        manifest = CorpusManifest.model_validate_json(raw)
-    except (ValueError, ValidationError) as exc:
+        return _validate_raw_manifest_payload(raw)
+    except _MalformedManifestPayloadError as exc:
         raise CorpusBundleError(f"embedded manifest is structurally invalid: {exc}") from exc
-    if manifest.manifest_version > _MANIFEST_VERSION:
+    except _UnsupportedManifestVersionError as exc:
         raise CorpusBundleError(
-            f"embedded manifest is at version {manifest.manifest_version}; consumer supports up to {_MANIFEST_VERSION}",
-        )
-    body = _canonical_manifest_body(
-        manifest_version=manifest.manifest_version,
-        corpus_root_name=manifest.corpus_root_name,
-        generated_at=manifest.generated_at,
-        entries=manifest.entries,
-    )
-    expected_sha256 = _sha256_hex(body)
-    if manifest.manifest_sha256 != expected_sha256:
+            f"embedded manifest is at version {exc}; consumer supports up to {_MANIFEST_VERSION}",
+        ) from exc
+    except _TamperedManifestPayloadError as exc:
         raise CorpusManifestTamperError(
             "embedded manifest: recorded manifest_sha256 does not match the body digest "
             "(the manifest member may have been edited without recomputing the digest).",
-        )
-    return manifest
+        ) from exc
 
 
 def assert_corpus_bundle_verifies(bundle_path: Path) -> CorpusManifest:
