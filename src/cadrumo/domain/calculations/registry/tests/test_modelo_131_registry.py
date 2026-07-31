@@ -6,9 +6,9 @@ from typing import Any
 
 import pytest
 
+from .....core import normalise_corpus_text
 from .....core.resources import bundled_path
 from .. import LegalRefId, ModeloDefinition, RegistryCatalogues, build_snapshot
-from .._text import normalise_corpus_text
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

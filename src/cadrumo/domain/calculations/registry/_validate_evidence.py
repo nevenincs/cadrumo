@@ -8,12 +8,12 @@ from collections.abc import Iterable, Mapping
 from functools import lru_cache
 from pathlib import Path
 
+from ....core import normalise_corpus_text
 from ....core.atomic_write import atomic_write_best_effort_text
 from ....core.config import load_settings
 from ....core.hashing import sha256_hex
 from ....core.resources import packaged_data, resolve_companion_binary
 from ._schema import LegalReference, SourceCitation, SourceReference
-from ._text import normalise_corpus_text
 
 _SourceTextCacheKey = tuple[str, str, int, int]
 _NORMALISED_SOURCE_TEXT_CACHE: dict[_SourceTextCacheKey, str] = {}
