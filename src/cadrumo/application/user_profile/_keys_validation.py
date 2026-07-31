@@ -30,7 +30,6 @@ from ...domain.contribuyente import (
     optional_profile_keys,
 )
 from ...domain.contribuyente import profile_keys as _get_profile_keys
-from ..wizard import _catalogue as _wizard_catalogue
 from ._completeness import IVA_REGIME_PATH, conditional_profile_required_paths, iva_regime_required
 
 
@@ -118,22 +117,33 @@ def list_profile_key_records() -> tuple[ProfileKey, ...]:
     unrelated caller to have done it. The CLI root callback also registers
     the catalogue, but only on the paths that reach past its early returns,
     which leaves every other reader depending on whichever module happened
-    to import the wizard first. The module-level import above pays the cost
-    once at this module's own load, which is already lazy: this module is
-    reached only through the ``application.user_profile`` package's PEP 562
-    ``__getattr__`` ladder, so the cold-start budget is untouched regardless
-    of whether the wizard import sits at module scope or function scope.
+    to import the wizard first. The import is function-local so nothing is
+    paid at module load and the command-tree cold-start budget is untouched;
+    see :func:`_ensure_profile_keys_registered` for why moving it to module
+    scope breaks a real import rather than merely costing time.
     """
     _ensure_profile_keys_registered()
     return _get_profile_keys()
 
 
 def _ensure_profile_keys_registered() -> None:
-    """Touch the wizard catalogue import so the compiled profile keys are pushed.
+    """Import the wizard catalogue so the compiled profile keys are pushed.
 
-    Idempotent: the import system runs the registration side effect once at
-    this module's own (lazy) load, and every later call is a no-op.
+    Idempotent: the import system runs the registration side effect once and
+    every later call is a dict lookup in ``sys.modules``.
+
+    This import MUST stay function-local, and the reason is not the cold-start
+    budget it also happens to protect. Hoisting it to module scope deadlocks a
+    real import: this module is reached through the package's own lazy
+    ``__getattr__``, so while that resolver is on the stack the wizard package
+    loads, and ``wizard._status`` imports a name back out of this package that
+    the resolver has not bound yet. The failure is an ``ImportError`` for a
+    name that plainly exists, from a chain that looks acyclic in the static
+    import graph, which is exactly why a graph-based check will keep declaring
+    the hoist safe.
     """
+    from ..wizard import _catalogue as _wizard_catalogue
+
     _ = _wizard_catalogue
 
 
