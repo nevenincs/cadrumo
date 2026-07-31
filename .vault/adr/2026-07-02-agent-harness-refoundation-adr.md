@@ -124,6 +124,23 @@ decision trail.
 
 ### R3 — Grounding surface
 
+**Status: AMENDED by the accepted `2026-07-31-semantic-search-precompile-boundary-adr`.**
+The operator's 2026-07-31 directive clarified that semantic search is a precompile
+step, not a runtime dependency, and an independent audit
+(`2026-07-31-corpus-search-model-cache-capability-gap-audit`) found R3's runtime
+embedding stack silently dropping its model-revision pin and app storage root on
+every load. The amending ADR retires R3's runtime embedding half — the query
+embedder, corpus vector build, and hybrid semantic/lexical fusion — and confines
+shipped retrieval to lexical search over the bundled corpus plus verbatim citation
+resolution; a future laundered, precompiled semantic artefact remains an open
+pathway, not a commitment. R3's INTENT — a grounding tool over the bundled
+BOE/AEAT corpus with citation-resolving resources, served on-host — carries over
+unchanged; only the runtime-embedding mechanism is amended. This is not a
+reversal of R3 or a discovered inconsistency: R3 was a deliberate decision, made
+behind a licence gate later satisfied, and predates the operator's 2026-07-31
+clarification; only its implementation broke its own reproducibility and
+storage-root promises. The original ruling follows for the decision trail.
+
 *Id/topic lookup only (status quo):* citations resolve to metadata, never to legal prose — rejected: the operator cannot read the authoritative text a figure rests on.
 
 *Lexical-only search:* exact citation matching but weak semantic recall — rejected alone: compliance queries need both exact-citation and concept recall.
