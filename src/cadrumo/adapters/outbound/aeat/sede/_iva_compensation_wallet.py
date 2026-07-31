@@ -30,7 +30,6 @@ from .....core.logging import get_logger
 from .....core.time import now
 from .....domain.calculations.registry import (
     RemoteOperation,
-    RemoteStateGuardPolicy,
     assert_remote_operation_allowed,
 )
 from .._playwright import PlaywrightError
@@ -47,18 +46,18 @@ from ._errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from ._iva_compensation_wallet_parsing import (
     _EXTERNAL,
     _PRE303,
-    _SEDE_HOST,
     _WALLET_PATH,
     _WALLET_URL,
+    IVA_COMPENSATION_WALLET_READ_POLICY,
     _assert_own_name_representation_form_html,
     _has_wallet_table,
-    _is_allowed_wallet_host,
     _looks_like_executed_empty_wallet_page,
     _redacted_url,
     _wallet_execute_form_method,
     _wallet_execute_gate_status,
     _wallet_page_shape_context,
     discover_iva_compensation_wallet_entrypoint,
+    is_aeat_wallet_read_url,
     parse_iva_compensation_wallet_html,
 )
 from ._schema import IvaCompensationWalletObservation
@@ -82,21 +81,6 @@ _WALLET_DISCOVERED_ENTRYPOINT_ACTION = _PRE303.wallet_discovered_entrypoint_acti
 _WALLET_EXECUTE_READ_ACTION = _PRE303.wallet_execute_read_action_label
 IVA_COMPENSATION_WALLET_URL = _WALLET_URL
 PRE303_PRESENTATION_SERVICE_URL = _PRE303_PRESENTATION_URL
-_READ_GUARD_POLICY = RemoteStateGuardPolicy(
-    id="aeat-sede-iva-compensation-wallet-read",
-    evidence_tier="official_source_guidance",
-    classification="authenticated_read_surface",
-    allowed_hosts=(_SEDE_HOST,),
-    # Widen to any subdomain under the AEAT apex so a ``www{n}`` load-balancer
-    # dispatch (an authenticated pull landing on a sibling host) is tolerated,
-    # not refused; success detection stays on the wallet path/content.
-    allowed_host_suffixes=(_EXTERNAL.aeat.domains.host_suffix,),
-    allowed_read_post_paths=(_EXTERNAL.aeat.sede_paths.iva_compensation_wallet,),
-    allowed_browser_action_patterns=_EXTERNAL.aeat.live_safety.wallet_browser_action_patterns,
-    synthetic_data_allowed=False,
-    requires_authentication=True,
-    requires_aeat_authorization=True,
-)
 
 
 async def fetch_iva_compensation_wallet(
@@ -449,8 +433,7 @@ async def _select_own_name_actuacion_if_present(page: Page, *, settings: Setting
     if not href:
         return False
     target = urljoin(getattr(page, "url", "") or _WALLET_URL, href)
-    parsed = urlsplit(target)
-    if parsed.path != _EXTERNAL.aeat.sede_paths.iva_compensation_wallet or not _is_allowed_wallet_host(parsed.netloc):
+    if not is_aeat_wallet_read_url(target):
         raise SedeNavigationError(
             "AEAT cartera own-name option did not resolve to the expected wallet surface",
             failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
@@ -790,14 +773,14 @@ def _landed_wallet_url(page: Page) -> str:
 
 def _assert_read_http(method: str, url: str) -> None:
     assert_remote_operation_allowed(
-        _READ_GUARD_POLICY,
+        IVA_COMPENSATION_WALLET_READ_POLICY,
         RemoteOperation(kind="http", method=method, url=AnyUrl(url)),
     )
 
 
 def _assert_read_browser_action(action: str) -> None:
     assert_remote_operation_allowed(
-        _READ_GUARD_POLICY,
+        IVA_COMPENSATION_WALLET_READ_POLICY,
         RemoteOperation(kind="browser_action", action=action),
     )
 

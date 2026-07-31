@@ -20,7 +20,7 @@ from typing import TypedDict
 from urllib.parse import urljoin, urlsplit
 
 from bs4 import BeautifulSoup, Tag
-from pydantic import AnyHttpUrl, TypeAdapter
+from pydantic import AnyHttpUrl, AnyUrl, TypeAdapter
 
 from .....core import Period
 from .....core.config import Settings
@@ -28,6 +28,12 @@ from .....core.decimal import normalize_decimal_separators
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import sha256_hex
 from .....core.i18n import tr
+from .....domain.calculations.registry import (
+    RegistryValidationError,
+    RemoteOperation,
+    RemoteStateGuardPolicy,
+    assert_remote_operation_allowed,
+)
 from ._adapter_utils import normalize_response_text
 from ._errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from ._schema import IvaCompensationWalletObservation, IvaCompensationWalletRow
@@ -43,9 +49,22 @@ _WALLET_PATH = _EXTERNAL.aeat.sede_paths.iva_compensation_wallet
 # directly; it enters through the access selector and is dispatched.
 _WALLET_URL = f"{_EXTERNAL.aeat.domains.sede}{_WALLET_PATH}"
 _SEDE_HOST = urlsplit(_EXTERNAL.aeat.domains.sede).netloc
-_AEAT_HOST_SUFFIX = _EXTERNAL.aeat.domains.host_suffix
 _PRE303 = _EXTERNAL.aeat.pre303
 _PRE303_PRESENTATION_URL = f"{_EXTERNAL.aeat.domains.sede}{_PRE303.presentation_service_path}"
+IVA_COMPENSATION_WALLET_READ_POLICY = RemoteStateGuardPolicy(
+    id="aeat-sede-iva-compensation-wallet-read",
+    evidence_tier="official_source_guidance",
+    classification="authenticated_read_surface",
+    allowed_hosts=(_SEDE_HOST,),
+    # The configured suffix admits whichever AEAT load-balancer host serves
+    # the authenticated read; all operation methods remain guard-controlled.
+    allowed_host_suffixes=(_EXTERNAL.aeat.domains.host_suffix,),
+    allowed_read_post_paths=(_WALLET_PATH,),
+    allowed_browser_action_patterns=_EXTERNAL.aeat.live_safety.wallet_browser_action_patterns,
+    synthetic_data_allowed=False,
+    requires_authentication=True,
+    requires_aeat_authorization=True,
+)
 
 
 def parse_iva_compensation_wallet_html(
@@ -220,18 +239,25 @@ def discover_iva_compensation_wallet_entrypoint(html: str, *, base_url: str) -> 
 def _own_name_representation_action_allowed(
     *,
     method: str,
-    action_path: str,
-    action_host: str,
+    action_url: str,
     landing_url: str,
     expected_path: str,
 ) -> bool:
-    if not _is_allowed_wallet_host(action_host):
+    try:
+        action = urlsplit(action_url)
+        action_path = action.path
+        landing_path = urlsplit(landing_url).path
+    except ValueError:
         return False
     if method == "POST" and action_path == expected_path:
-        return True
-    landing_path = urlsplit(landing_url).path
+        return _wallet_read_url_allowed(action_url, method=method)
     dialogo_path = _EXTERNAL.aeat.clave_movil.dialogo_representacion_path
-    return method == "GET" and landing_path == dialogo_path and action_path == dialogo_path
+    if method != "GET" or landing_path != dialogo_path or action_path != dialogo_path:
+        return False
+    # The representation dispatcher is a browser action, not a wallet HTTP
+    # read. Validate its authority through the registered wallet policy on
+    # the canonical wallet GET, then preserve the dispatcher's exact shape.
+    return _wallet_read_url_allowed(f"{action.scheme}://{action.netloc}{_WALLET_PATH}", method="GET")
 
 
 def _assert_own_name_representation_form_html(html: str, *, landing_url: str, expected_path: str) -> None:
@@ -255,8 +281,7 @@ def _assert_own_name_representation_form_html(html: str, *, landing_url: str, ex
     parsed_action = urlsplit(action)
     if not _own_name_representation_action_allowed(
         method=method,
-        action_path=parsed_action.path,
-        action_host=parsed_action.netloc,
+        action_url=action,
         landing_url=landing_url,
         expected_path=expected_path,
     ):
@@ -454,9 +479,7 @@ def _absolute_audited_wallet_url(raw_url: str, *, base_url: str) -> str | None:
         parsed = urlsplit(candidate)
     except ValueError:
         return None
-    if parsed.path != _EXTERNAL.aeat.sede_paths.iva_compensation_wallet:
-        return None
-    if not _is_allowed_wallet_host(parsed.netloc):
+    if not is_aeat_wallet_read_url(candidate):
         return None
     query = f"?{parsed.query}" if parsed.query else ""
     return f"{parsed.scheme}://{parsed.netloc}{parsed.path}{query}"
@@ -472,21 +495,35 @@ def _wallet_entrypoint_path(raw_url: str) -> str | None:
     return None
 
 
-def _is_allowed_wallet_host(netloc: str) -> bool:
-    """Return whether ``netloc`` is an AEAT host this read may have landed on.
+def is_aeat_wallet_read_url(url: str) -> bool:
+    """Return whether ``url`` is a policy-approved authenticated wallet GET."""
+    try:
+        if urlsplit(url).path != _WALLET_PATH:
+            return False
+    except ValueError:
+        return False
+    return _wallet_read_url_allowed(url, method="GET")
 
-    This was an enumeration of three hosts - www1, www6 and the apex -
-    which is a hand-maintained approximation of "whichever host answered".
-    A fourth numbered host entering the pool was silently refused by it.
 
-    The predicate is now the apex suffix, which ALIGNS this check with the
-    read guard rather than loosening it: the guard already declares
-    ``allowed_host_suffixes``, so it admits any AEAT subdomain today. The
-    enumeration was the stricter of the two and the one that was wrong.
-    """
-    host = netloc.casefold()
-    apex = _AEAT_HOST_SUFFIX.casefold()
-    return host == apex or host.endswith(f".{apex}")
+def _wallet_read_url_allowed(url: str, *, method: str) -> bool:
+    """Apply the wallet's registered guard after rejecting non-host authorities."""
+    try:
+        parsed = urlsplit(url)
+        if (
+            parsed.scheme.casefold() != "https"
+            or parsed.hostname is None
+            or parsed.username is not None
+            or parsed.password is not None
+            or parsed.port is not None
+        ):
+            return False
+        assert_remote_operation_allowed(
+            IVA_COMPENSATION_WALLET_READ_POLICY,
+            RemoteOperation(kind="http", method=method, url=AnyUrl(url)),
+        )
+    except (RegistryValidationError, ValueError):
+        return False
+    return True
 
 
 def _normalised_title(soup: BeautifulSoup) -> str:

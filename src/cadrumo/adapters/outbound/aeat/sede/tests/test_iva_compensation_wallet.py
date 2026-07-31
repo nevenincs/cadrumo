@@ -24,7 +24,6 @@ from ...browser import Profile, opened_browser_page, shared_playwright_runtime
 from .._adapter_utils import is_aeat_auth_gate_redirect
 from .._errors import SedeNavigationError, SedeParseError
 from .._iva_compensation_wallet import (
-    _READ_GUARD_POLICY,
     IVA_COMPENSATION_WALLET_URL,
     PRE303_PRESENTATION_SERVICE_URL,
     _assert_read_browser_action,
@@ -33,12 +32,14 @@ from .._iva_compensation_wallet import (
     _wait_for_wallet_execute_initial_shape,
 )
 from .._iva_compensation_wallet_parsing import (
+    IVA_COMPENSATION_WALLET_READ_POLICY,
     _assert_own_name_representation_form_html,
     _parse_spanish_decimal,
     _wallet_execute_gate_status,
     _wallet_page_shape_context,
     _wallet_row_from_cells,
     discover_iva_compensation_wallet_entrypoint,
+    is_aeat_wallet_read_url,
     parse_iva_compensation_wallet_html,
 )
 
@@ -647,7 +648,7 @@ def test_wallet_read_guard_admits_sibling_load_balancer_host() -> None:
     """An authenticated wallet pull dispatched to a sibling www{n} host is allowed."""
     drifted = f"{_EXTERNAL.aeat.domains.www12}{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"
     result = assert_remote_operation_allowed(
-        _READ_GUARD_POLICY,
+        IVA_COMPENSATION_WALLET_READ_POLICY,
         RemoteOperation(kind="http", method="GET", url=AnyUrl(drifted)),
     )
     assert result.decision == "allowed"
@@ -657,7 +658,7 @@ def test_wallet_read_guard_refuses_non_aeat_host() -> None:
     """Widening to the AEAT apex suffix must not admit an off-AEAT host."""
     with pytest.raises(RegistryValidationError, match="not in allowed read-only hosts"):
         assert_remote_operation_allowed(
-            _READ_GUARD_POLICY,
+            IVA_COMPENSATION_WALLET_READ_POLICY,
             RemoteOperation(kind="http", method="GET", url=AnyUrl("https://attacker.example/read/path")),
         )
 
@@ -706,38 +707,34 @@ class TestLiveSourceUrlAssertion:
             )
 
 
-class TestWalletHostPredicate:
-    """The wallet host check must accept whichever host AEAT dispatched to.
-
-    It was an enumeration of three hosts, which is a hand-maintained
-    approximation of a load balancer's membership and wrong by
-    construction: a fourth numbered host entering the pool was silently
-    refused. Collapsing it to the apex suffix ALIGNS it with the read
-    guard, which already declares ``allowed_host_suffixes`` and therefore
-    already admits any AEAT subdomain. The enumeration was the stricter of
-    the two and the one that was wrong.
-    """
+class TestWalletReadPolicy:
+    """Wallet URL admission is delegated to the registered read policy."""
 
     @pytest.mark.parametrize("origin_name", ["www1", "www2", "www6", "www12", "sede"])
     def test_every_dispatch_host_is_allowed(self, origin_name: str) -> None:
         """No numbered host may be privileged over its siblings."""
-        from .._iva_compensation_wallet_parsing import _is_allowed_wallet_host
-
         external = Settings.external_constants()
-        netloc = urlsplit(getattr(external.aeat.domains, origin_name)).netloc
-        assert _is_allowed_wallet_host(netloc)
+        origin = getattr(external.aeat.domains, origin_name)
+        assert is_aeat_wallet_read_url(f"{origin}{external.aeat.sede_paths.iva_compensation_wallet}")
 
-    @pytest.mark.parametrize("netloc", ["example.invalid", AEAT_SUFFIX_LOOKALIKE_HOST_CANARY, ""])
-    def test_a_non_aeat_host_is_refused(self, netloc: str) -> None:
-        """Aligning with the guard must not admit anything off the AEAT apex.
+    @pytest.mark.parametrize("host", ["example.invalid", AEAT_SUFFIX_LOOKALIKE_HOST_CANARY, ""])
+    def test_a_non_aeat_host_is_refused(self, host: str) -> None:
+        """Neither a foreign nor a suffix-lookalike host is a wallet read."""
+        external = Settings.external_constants()
+        assert not is_aeat_wallet_read_url(f"https://{host}{external.aeat.sede_paths.iva_compensation_wallet}")
 
-        The suffix-lookalike case is the one that matters: a host ENDING in
-        the apex as a substring rather than as a domain suffix must not
-        pass, or the collapse would be a widening rather than an alignment.
-        """
-        from .._iva_compensation_wallet_parsing import _is_allowed_wallet_host
-
-        assert not _is_allowed_wallet_host(netloc)
+    @pytest.mark.parametrize(
+        "authority",
+        [
+            "ignored@sede.agenciatributaria.gob.es",
+            "sede.agenciatributaria.gob.es:443",
+            "sede.agenciatributaria.gob.es:not-a-port",
+        ],
+    )
+    def test_non_host_authorities_are_refused(self, authority: str) -> None:
+        """User-info and ports cannot bypass the wallet read policy."""
+        external = Settings.external_constants()
+        assert not is_aeat_wallet_read_url(f"https://{authority}{external.aeat.sede_paths.iva_compensation_wallet}")
 
     def test_the_wallet_url_names_no_numbered_host(self) -> None:
         """The exported wallet URL must not assert a host the balancer assigns."""
