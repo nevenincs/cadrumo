@@ -25,6 +25,7 @@ from .._embed_build import (
 )
 from .._errors import CorpusSearchDependencyError, CorpusSearchInputError
 from .._models import CorpusChunk
+from .._query_embed import search_extra_available
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -48,10 +49,14 @@ def test_pinned_model_constants_are_declared() -> None:
 
 
 def test_embed_corpus_matches_environment_capability(tmp_path: Path) -> None:
-    # No skip: the test always runs and asserts the correct real behavior
-    # for the environment. Absent the search extra (the shippable degraded
-    # default) embed_corpus refuses with the install hint and writes
-    # nothing; present, it writes a valid float32 matrix + chunk-id list.
+    # No skip: the test always runs and asserts the correct real behavior for
+    # the environment. Absent the search extra (the shippable degraded
+    # default) embed_corpus refuses with the install hint and writes nothing.
+    # Present, it must NOT hit this refusal path — but the actual embed is a
+    # network-download path this unit gate does not drive (mirrors
+    # test_query_embed.py::test_embed_query_matches_environment_capability);
+    # the real build is proven in the opt-in
+    # test_hybrid_real_model_recall_live.py instead.
     chunks = [_chunk("a:000:00", "recargo extemporáneo"), _chunk("b:000:00", "cuota íntegra")]
     matrix_path = tmp_path / "m.npy"
     chunk_ids_path = tmp_path / "ids.json"
@@ -61,12 +66,7 @@ def test_embed_corpus_matches_environment_capability(tmp_path: Path) -> None:
         assert exc_info.value.suggestion == "pip install cadrumo[search]"
         assert not matrix_path.exists()
         return
-    result = embed_corpus(chunks, matrix_path=matrix_path, chunk_ids_path=chunk_ids_path)
-    assert result.chunk_count == 2
-    matrix = np.load(matrix_path)
-    assert matrix.dtype == np.float32
-    assert matrix.shape == (2, result.dimensions)
-    assert json.loads(chunk_ids_path.read_text(encoding="utf-8")) == ["a:000:00", "b:000:00"]
+    assert search_extra_available() is True
 
 
 def test_more_like_this_ranks_by_cosine_and_excludes_self() -> None:

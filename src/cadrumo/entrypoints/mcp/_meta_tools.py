@@ -25,6 +25,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...application.command_search import CommandDoc, CommandIndex, build_command_index
+from ...application.corpus_search import QueryEmbedder
 from ...application.operator_surface import declared_risk
 from ._hitl import ConfirmationPolicy, confirmation_for_tool
 from ._persona_scope import AgentPersona, handoff_denial_message, is_handoff_denied, is_tool_in_persona_scope
@@ -124,13 +125,28 @@ def _command_doc(descriptor: McpToolDescriptor) -> CommandDoc:
     )
 
 
-def build_command_search_index(descriptors: tuple[McpToolDescriptor, ...]) -> CommandIndex:
+def build_command_search_index(
+    descriptors: tuple[McpToolDescriptor, ...],
+    *,
+    enable_semantic: bool = True,
+    query_embedder: QueryEmbedder | None = None,
+) -> CommandIndex:
     """Build the hybrid command-search index over the descriptor set.
 
     Built once per server from the full descriptor set so ``search`` reaches the
-    whole verb universe, not just the advertised surface.
+    whole verb universe, not just the advertised surface. ``enable_semantic`` and
+    ``query_embedder`` are threaded straight through to
+    :func:`~application.command_search.build_command_index` (a test-only
+    override seam that already exists there and is already used by
+    ``test_command_index.py``); both are keyword-only and default to today's
+    production behaviour, so the one production caller (the MCP server) is
+    unaffected.
     """
-    return build_command_index(_command_doc(descriptor) for descriptor in descriptors)
+    return build_command_index(
+        (_command_doc(descriptor) for descriptor in descriptors),
+        enable_semantic=enable_semantic,
+        query_embedder=query_embedder,
+    )
 
 
 def search_commands(

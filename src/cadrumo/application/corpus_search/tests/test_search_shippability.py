@@ -22,6 +22,7 @@ from .._embed_build import embed_corpus
 from .._errors import CorpusSearchDependencyError
 from .._lexical_index import build_lexical_index, iter_corpus_chunks
 from .._models import CorpusChunk
+from .._query_embed import search_extra_available
 from ._corpus_fixture import build_sample_corpus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -70,9 +71,13 @@ def test_lexical_and_citation_modules_import_without_search_extra() -> None:
 
 def test_embed_surface_carries_degraded_mode(tmp_path: Path) -> None:
     # When the search extra is absent (the shipped default) the embed path
-    # refuses with the install hint; when present it must not refuse. Either
-    # way the lexical-only mode above stays live — that is the degraded
-    # no-download contract this gate protects.
+    # refuses with the install hint; that refusal path stays live — the
+    # degraded no-download contract this gate protects. When the extra is
+    # present, the actual embed is a network-download path this unit gate
+    # does not drive (mirrors
+    # test_query_embed.py::test_embed_query_matches_environment_capability);
+    # the real build is proven in the opt-in
+    # test_hybrid_real_model_recall_live.py instead.
     chunks = [
         CorpusChunk(
             chunk_id="a:000:00",
@@ -84,7 +89,7 @@ def test_embed_surface_carries_degraded_mode(tmp_path: Path) -> None:
         )
     ]
     if _MODEL2VEC_PRESENT:
-        embed_corpus(chunks, matrix_path=tmp_path / "m.npy", chunk_ids_path=tmp_path / "ids.json")
+        assert search_extra_available() is True
         return
     with pytest.raises(CorpusSearchDependencyError) as exc_info:
         embed_corpus(chunks, matrix_path=tmp_path / "m.npy", chunk_ids_path=tmp_path / "ids.json")

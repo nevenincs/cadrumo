@@ -1,21 +1,24 @@
-"""End-to-end proof that the REAL potion model fuses semantic recall into search.
+"""Deterministic, network-free half of the hybrid real-model recall proof.
 
-The sibling `test_retrieval.py` proves the fusion MECHANICS (RRF, per-side ranks,
-clean degradation) with injected fixed vectors, so it never downloads the model.
-This test closes the remaining gap the refoundation close deferred (item 2 / H1):
-that the REAL `potion-multilingual-128M` embeddings actually recall a
-semantically-related chunk a lexical query misses — the whole point of shipping
-the semantic half.
+The REAL `potion-multilingual-128M` recall proof — and the runtime build-once
+cache reuse proof — genuinely need the real model and a real network fetch (or
+a warm local cache), so they live in the opt-in sibling
+`test_hybrid_real_model_recall_live.py` instead (gated on
+`CADRUMO_LIVE_TESTS_ENABLED=1`, per `src/cadrumo/tests/README.md`). This module
+covers everything that can be asserted deterministically and without ever
+constructing a live model: that lexical-only retrieval genuinely misses a
+cross-lingual target (the gap the semantic half exists to fill), that
+`hybrid_search` degrades to lexical-only whenever no precomputed corpus vectors
+are supplied — even with a real (but unloaded) `QueryEmbedder` instance passed
+in, since `_semantic_ranks` short-circuits on `embeddings is None` before ever
+calling `embed_query` — and that `ensure_corpus_embeddings` reports the bare-core
+degraded default when the semantic side is explicitly unavailable.
 
-It is gated on `search_extra_available()` rather than skipped: with the
-`cadrumo[search]` extra present it runs the real proof (building a real embedding
-matrix via `embed_corpus` and querying with the real `QueryEmbedder`); without
-it, it asserts the degraded lexical-only contract. Both branches assert real
-behaviour — there is no `skip`/`xfail`.
-
-The shippability/licence gate stays green: this builds its matrix in a tmp dir
-and ships nothing (per `shipped-search-licence-clean` / the "no matrix ships"
-decision — vectors are built behind the extra, never bundled).
+Previously this module branched on `search_extra_available()` to run its real
+proof only when the `cadrumo[search]` extra happened to be importable, which
+made a plain integration run silently reach huggingface.co whenever a host
+had the extra installed with a cold model cache. No test here reaches the
+network any more; the real proof moved to the live-gated sibling module.
 """
 
 from __future__ import annotations
@@ -31,11 +34,8 @@ from .. import (
     RetrievalMode,
     build_lexical_index,
     corpus_search_dir,
-    embed_corpus,
     ensure_corpus_embeddings,
     hybrid_search,
-    load_embeddings,
-    search_extra_available,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -90,43 +90,25 @@ def test_lexical_only_misses_the_cross_lingual_target(tmp_path: Path) -> None:
     assert _TARGET not in {hit.chunk_id for hit in response.hits}
 
 
-def test_real_potion_embeddings_recall_the_target_via_hybrid(tmp_path: Path) -> None:
-    if not search_extra_available():
-        # Without the extra the semantic side cannot run; hybrid_search must
-        # degrade to lexical-only rather than raise. (The real recall proof runs
-        # in the search-extra lane where the model is present.)
-        database_path = _lexical_index(tmp_path)
-        response = hybrid_search(
-            _QUERY,
-            database_path=database_path,
-            query_embedder=QueryEmbedder(),
-            limit=5,
-        )
-        assert response.mode is RetrievalMode.LEXICAL_ONLY
-        return
-
+def test_hybrid_search_degrades_to_lexical_only_without_precomputed_embeddings(tmp_path: Path) -> None:
+    # Even with a real (but unloaded) QueryEmbedder passed in, hybrid_search
+    # degrades to lexical-only whenever no precomputed corpus vectors are
+    # supplied: `_semantic_ranks` short-circuits on `embeddings is None` before
+    # ever calling `embed_query`, so constructing `QueryEmbedder()` here never
+    # loads the model (mirrors
+    # test_query_embed.py::test_construction_is_lazy_and_does_not_load_the_model)
+    # and this assertion holds unconditionally, with no branch on
+    # `search_extra_available()`. The real recall proof (extra present, real
+    # embeddings supplied) lives in the opt-in
+    # test_hybrid_real_model_recall_live.py.
     database_path = _lexical_index(tmp_path)
-    matrix_path = tmp_path / "matrix.npy"
-    chunk_ids_path = tmp_path / "chunk_ids.json"
-    build_result = embed_corpus(_CHUNKS, matrix_path=matrix_path, chunk_ids_path=chunk_ids_path)
-    assert build_result.chunk_count == len(_CHUNKS)
-    assert build_result.dimensions > 0
-
-    matrix, chunk_ids = load_embeddings(matrix_path, chunk_ids_path)
     response = hybrid_search(
         _QUERY,
         database_path=database_path,
-        embeddings=(matrix, chunk_ids),
         query_embedder=QueryEmbedder(),
         limit=5,
     )
-
-    # The real semantic side fused a hit the lexical side could not reach.
-    assert response.mode is RetrievalMode.HYBRID
-    recalled = {hit.chunk_id for hit in response.hits}
-    assert _TARGET in recalled, f"real potion embeddings failed to recall the cross-lingual target: {recalled}"
-    # And it is the top fused hit — semantic recall is decisive here, not noise.
-    assert response.hits[0].chunk_id == _TARGET
+    assert response.mode is RetrievalMode.LEXICAL_ONLY
 
 
 def test_ensure_corpus_embeddings_is_none_without_the_extra(tmp_path: Path) -> None:
@@ -136,28 +118,3 @@ def test_ensure_corpus_embeddings_is_none_without_the_extra(tmp_path: Path) -> N
     with override_settings(cadrumo_local_storage_root=tmp_path):
         assert ensure_corpus_embeddings(semantic_available=False) is None
         assert not (corpus_search_dir() / "corpus-vectors.npy").exists()
-
-
-def test_ensure_corpus_embeddings_builds_once_behind_the_extra(tmp_path: Path) -> None:
-    # The runtime build step: behind the extra, the corpus matrix is built once
-    # into the app cache and reused. A small chunk set stands in for the whole
-    # bundled corpus so the test does not embed thousands of chunks.
-    if not search_extra_available():
-        with override_settings(cadrumo_local_storage_root=tmp_path):
-            assert ensure_corpus_embeddings(corpus_chunks=_CHUNKS) is None
-        return
-
-    with override_settings(cadrumo_local_storage_root=tmp_path):
-        first = ensure_corpus_embeddings(corpus_chunks=_CHUNKS)
-        assert first is not None
-        matrix, chunk_ids = first
-        assert matrix.shape[0] == len(_CHUNKS)
-        assert set(chunk_ids) == {chunk.chunk_id for chunk in _CHUNKS}
-        vector_file = corpus_search_dir() / "corpus-vectors.npy"
-        assert vector_file.exists()
-        first_mtime = vector_file.stat().st_mtime_ns
-
-        # Second call reuses the cached matrix (no rebuild).
-        second = ensure_corpus_embeddings(corpus_chunks=_CHUNKS)
-        assert second is not None
-        assert vector_file.stat().st_mtime_ns == first_mtime

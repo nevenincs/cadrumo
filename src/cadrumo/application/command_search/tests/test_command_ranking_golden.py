@@ -11,8 +11,13 @@ the hybrid retriever's ranking is a pinned contract, not a claim.
 
 The two headline assertions hold with the hybrid retriever active AND in the
 lexical-only degraded mode (per-column BM25 weighting plus the ``quickfile``
-outcome aliases carry them without the ``search`` extra), so this test never
-requires a model download. The run reports which mode was exercised.
+outcome aliases carry them without the ``search`` extra), so the fixture forces
+``enable_semantic=False`` through the same seam ``test_command_index.py`` uses.
+This keeps the whole module deterministic and network-free regardless of
+whether the ``cadrumo[search]`` extra happens to be importable on the host —
+previously ``build_command_search_index`` always built with the semantic side
+on when the extra was present, which reached huggingface.co and wrote into the
+real production ``var/storage/search-models`` cache on a plain integration run.
 """
 
 from __future__ import annotations
@@ -21,23 +26,30 @@ from collections.abc import Callable
 
 import pytest
 
-from ....entrypoints.mcp import build_tool_descriptors
+from ....entrypoints.mcp import McpToolDescriptor, build_tool_descriptors
 
 # The ranking helpers live only on the ``_meta_tools`` private surface (they wrap
 # the ``search`` meta-tool, not a public facade); this golden test is a white-box
 # reach into them to assert the live ranking, registered in the test-only
 # import-hygiene debt allowlist (dev/import_hygiene_test_debt.json).
 from ....entrypoints.mcp._meta_tools import build_command_search_index, search_commands
-from ...corpus_search import search_extra_available
+from ...command_search import CommandIndex
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 
 @pytest.fixture(scope="module")
-def ranker() -> Callable[[str], list[str]]:
-    """Build the live descriptor set and its command index once for the module."""
+def _descriptors_and_index() -> tuple[tuple[McpToolDescriptor, ...], CommandIndex]:
+    """Build the live descriptor set and its lexical-only command index once."""
     descriptors = build_tool_descriptors()
-    index = build_command_search_index(descriptors)
+    index = build_command_search_index(descriptors, enable_semantic=False)
+    return descriptors, index
+
+
+@pytest.fixture(scope="module")
+def ranker(_descriptors_and_index: tuple[tuple[McpToolDescriptor, ...], CommandIndex]) -> Callable[[str], list[str]]:
+    """Rank against the module-scoped descriptor set and lexical-only index."""
+    descriptors, index = _descriptors_and_index
 
     def rank(query: str, *, limit: int = 8) -> list[str]:
         return [hit.command_key for hit in search_commands(query, descriptors=descriptors, index=index, limit=limit)]
@@ -117,18 +129,25 @@ def test_no_retired_command_key_remains_searchable() -> None:
     assert not suffix_hits, f"retired command paths re-registered under a new parent: {suffix_hits}"
 
 
-def test_the_golden_set_reports_which_retrieval_mode_it_exercised(
-    ranker: Callable[[str], list[str]],
+def test_ranker_index_forces_lexical_only_mode(
+    _descriptors_and_index: tuple[tuple[McpToolDescriptor, ...], CommandIndex],
 ) -> None:
-    """The headline queries hold in whichever retrieval mode is installed.
+    """Regression guard for the network-exposure fix.
 
-    This previously asserted a non-empty string literal, which no change to the
-    ranker could ever falsify. What is actually worth pinning is the claim the
-    module docstring makes: that the golden set never requires a model download,
-    so the two headline results must hold in the mode this run has -- and the
-    mode is reported so a reader knows whether the semantic side was live.
+    The two headline assertions above hold in either retrieval mode (the module
+    docstring's claim), so the fixture deliberately forces the semantic side off
+    via ``enable_semantic=False`` -- deterministic and network-free regardless
+    of whether the ``cadrumo[search]`` extra happens to be importable on the
+    host. This pins that choice on the index object itself, so a future edit
+    that drops the ``enable_semantic=False`` argument (silently re-enabling the
+    semantic side, and with it the network reach into the real
+    ``var/storage/search-models`` cache whenever the extra is present) fails
+    loudly here instead of only reproducing on a host that happens to have the
+    extra installed.
     """
-    mode = "hybrid (search extra present)" if search_extra_available() else "lexical-only (degraded)"
-
-    assert ranker("import a bank statement")[0] == "ledger.import", f"headline ranking failed in {mode} mode"
-    assert "quickfile" in ranker("file my quarterly VAT")[:5], f"headline ranking failed in {mode} mode"
+    _descriptors, index = _descriptors_and_index
+    assert index._semantic_enabled is False, (
+        "the golden-set index must build with the semantic side disabled — "
+        "an enabled semantic side reaches the network and the real production "
+        "model cache on any host with the cadrumo[search] extra installed"
+    )
