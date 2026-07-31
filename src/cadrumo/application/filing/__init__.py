@@ -126,6 +126,9 @@ from ...domain.calculations.registry import (
     enum_consumed_binding_ids as _enum_consumed_binding_ids,
 )
 from ...domain.calculations.registry import (
+    expression_binding_refs as _expression_binding_refs,
+)
+from ...domain.calculations.registry import (
     format_noncanonical_casilla_reference,
 )
 from ...domain.calculations.registry import (
@@ -454,10 +457,11 @@ def _filing_period_date(period: _Period) -> date:
 
 
 def _formula_binding_ids(snapshot: _RegistrySnapshot) -> set[_BindingId]:
-    binding_ids: set[_BindingId] = set()
-    for formula in snapshot.revision.formulas:
-        _collect_formula_binding_ids(formula.expression, binding_ids)
-    return binding_ids
+    return {
+        binding_id
+        for formula in snapshot.revision.formulas
+        for binding_id in _expression_binding_refs(formula.expression)
+    }
 
 
 def _bound_casilla_binding_ids(snapshot: _RegistrySnapshot) -> set[_BindingId]:
@@ -560,16 +564,6 @@ def _date_inputs_for_ids(inputs: ModeloInputs, input_ids: set[_BindingId]) -> di
                 raise ModeloBuilderError(f"date binding {binding_id!r} has a non-ISO date value {value!r}")
             date_inputs[binding_id] = parsed
     return date_inputs
-
-
-def _collect_formula_binding_ids(expression: object, binding_ids: set[_BindingId]) -> None:
-    binding = getattr(expression, "binding", None)
-    if binding is not None:
-        if not isinstance(binding, str):
-            raise ModeloBuilderError(f"formula binding reference must be a canonical binding id string: {binding!r}")
-        binding_ids.add(binding)
-    for arg in getattr(expression, "args", ()):
-        _collect_formula_binding_ids(arg, binding_ids)
 
 
 def _decimal_inputs_for_ids[InputId: str](
