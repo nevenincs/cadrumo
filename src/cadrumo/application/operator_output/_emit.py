@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from ...core.json_contract import Notice
+from ...core.json_contract import Notice, validate_registered_result
 from ._sandbox_notice import sandbox_notice_for_active_bucket
 
 __all__ = ["emit_operator_json_success"]
@@ -52,6 +52,7 @@ def emit_operator_json_success(
     """
     from ...core.json_contract import emit_json_success
 
+    validated_result = validate_registered_result(command, result)
     sandbox_notice = sandbox_notice_for_active_bucket()
     resolved_notices: tuple[Notice, ...] = (sandbox_notice, *notices) if sandbox_notice is not None else tuple(notices)
-    emit_json_success(command, result, notices=resolved_notices, active_profile=active_profile)
+    emit_json_success(command, validated_result, notices=resolved_notices, active_profile=active_profile)
