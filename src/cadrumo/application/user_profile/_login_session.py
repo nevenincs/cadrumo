@@ -306,15 +306,14 @@ def _persist_advanced_idle_deadline(
 def _resolve_login_target(name: str) -> ProfileBucketPointer:
     """Resolve a ``login NAME`` target from an unambiguous UUID or exact label.
 
-    Mirrors the accepted profile-selector contract: the immutable bucket
-    UUID, or the exact operator label including a sandbox's canonical
-    ``sandbox:<name>`` label. A bare sandbox short name carries no
-    ``sandbox:`` prefix, so it matches no bucket and is refused rather
-    than implicitly namespaced. A tombstoned UUID falls through to the
-    label resolver, which excludes tombstoned profiles.
+    Delegates to the workflow's one live-profile resolver. That authority
+    accepts the immutable bucket UUID or the exact operator label (including
+    a sandbox's canonical ``sandbox:<name>`` label) and excludes tombstoned
+    buckets for both forms. A bare sandbox short name carries no
+    ``sandbox:`` prefix, so it remains an unknown profile rather than being
+    implicitly namespaced.
     """
-    from ...domain.user_profile import UserProfileStatus
-    from ..workflow import read_profile_bucket, read_profile_bucket_by_id
+    from ..workflow import resolve_profile_bucket
 
     trimmed = name.strip()
     if not trimmed:
@@ -322,10 +321,7 @@ def _resolve_login_target(name: str) -> ProfileBucketPointer:
             translated_message="cli.config.profile.unknown_profile",
             context={"name": name},
         )
-    by_id = read_profile_bucket_by_id(trimmed)
-    if by_id is not None and by_id.status is not UserProfileStatus.TOMBSTONED:
-        return by_id
-    pointer = read_profile_bucket(trimmed)
+    pointer = resolve_profile_bucket(trimmed)
     if pointer is None:
         raise ProfileNotFoundError(
             translated_message="cli.config.profile.unknown_profile",
@@ -335,14 +331,20 @@ def _resolve_login_target(name: str) -> ProfileBucketPointer:
 
 
 def _resolve_selected_target(pointer: BucketPointer | None) -> ProfileBucketPointer:
-    """Resolve the already-selected profile for a bare ``login``."""
-    from ..workflow import read_profile_bucket_by_id
+    """Resolve the already-selected profile for a bare ``login``.
+
+    The same live-profile resolver used for ``login NAME`` is required here:
+    reading a manifest directly by UUID would let a stale pointer select a
+    tombstoned bucket and authenticate it before the lifecycle boundary could
+    refuse the selection.
+    """
+    from ..workflow import resolve_profile_bucket
 
     if pointer is None:
         raise ProfileNotFoundError(
             translated_message="application.user_profile.errors.no_active_profile_selected",
         )
-    resolved = read_profile_bucket_by_id(pointer.bucket_id)
+    resolved = resolve_profile_bucket(pointer.bucket_id)
     if resolved is None:
         raise ProfileNotFoundError(
             translated_message="cli.config.profile.unknown_profile",
