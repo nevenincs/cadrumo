@@ -5352,7 +5352,7 @@ cli:
     detail_help: Habilitar salida detallada.
     errors:
       did_you_mean_command: ¿Quería decir '%{command}'?
-    format_help: 'Formato de salida: text, json, table, csv.'
+    format_help: 'Formato de salida: text, json.'
     help_help: Mostrar la ayuda.
     landing:
       headline: Asistente fiscal CADRUMO

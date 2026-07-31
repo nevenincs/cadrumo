@@ -4963,7 +4963,7 @@ cli:
     detail_help: Enable detailed output.
     errors:
       did_you_mean_command: Did you mean '%{command}'?
-    format_help: 'Output format: text, json, table, csv.'
+    format_help: 'Output format: text, json.'
     help_help: Show help.
     landing:
       headline: CADRUMO Tax Assistant

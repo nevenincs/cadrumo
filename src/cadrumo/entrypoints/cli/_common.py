@@ -34,7 +34,7 @@ import typer
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
-from ...core.output_rendering import render_command_output
+from ...core.output_rendering import OutputFormat, render_command_output
 
 # The application- and domain-layer symbols below are imported lazily,
 # inside the helpers that use them at runtime. A module-level import
@@ -68,19 +68,17 @@ __all__ = [
 # Transport helpers
 # ---------------------------------------------------------------------
 
-_FORMAT_TEXT = "text"
-_FORMAT_JSON = "json"
-_FORMAT_TABLE = "table"
-
-
 def _is_metadata_invocation() -> bool:
     """Return whether the arguments request help or version metadata."""
     return any(argument in {"--help", "-h", "--version", "-V"} for argument in sys.argv[1:])
 
 
-def _format_of(ctx: typer.Context) -> str:
+def _format_of(ctx: typer.Context) -> OutputFormat:
     state = ctx.ensure_object(dict)
-    return state.get("format", _FORMAT_TEXT)
+    format_value = state.get("format", OutputFormat.TEXT)
+    if isinstance(format_value, OutputFormat):
+        return format_value
+    return OutputFormat(format_value)
 
 
 def emit_help_text(ctx: typer.Context) -> None:
@@ -138,8 +136,8 @@ def _emit_envelope(
             drift.
     """
     metadata_invocation = _is_metadata_invocation()
-    format_name = _format_of(ctx)
-    if format_name == _FORMAT_JSON:
+    output_format = _format_of(ctx)
+    if output_format is OutputFormat.JSON:
         if metadata_invocation:
             # The ``--help`` / ``--version`` fast path stays off the
             # sandbox/active-profile resolution entirely — active_profile is
@@ -168,7 +166,7 @@ def _emit_envelope(
         sandbox_notice = sandbox_notice_for_active_bucket()
         if sandbox_notice is not None:
             rendered_lines = (sandbox_banner_line(sandbox_notice), *lines)
-    rendered = render_command_output(format_name=format_name, payload=result, lines=rendered_lines)
+    rendered = render_command_output(format_name=output_format.value, payload=result, lines=rendered_lines)
     if rendered.text:
         typer.echo(rendered.text)
 

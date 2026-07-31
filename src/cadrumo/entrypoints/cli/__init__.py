@@ -52,6 +52,7 @@ from ...core import PRODUCT_IDENTITY as _PRODUCT_IDENTITY
 from ...core import ProfileSessionRefusalReason as _ProfileSessionRefusalReason
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES
 from ...core.i18n import tr
+from ...core.output_rendering import OutputFormat as _OutputFormat
 from ...core.redaction import redact_for_cli_output as _redact_for_cli_output
 from ._command_suggestions import CadrumoTyperGroup as _CadrumoTyperGroup
 from ._command_suggestions import (
@@ -60,7 +61,7 @@ from ._command_suggestions import (
 from ._command_suggestions import (
     register_lazy_subcommand as _register_lazy_subcommand,
 )
-from ._common import _FORMAT_TEXT, _emit_envelope
+from ._common import _emit_envelope
 from ._errors import CliCommandGroupUnavailableError as _CliCommandGroupUnavailableError
 from ._errors import decorate_typer_app as _decorate_typer_app
 from ._language_argv import apply_language_argv_to_environment as _apply_language_argv_to_environment
@@ -137,8 +138,8 @@ def _root(
         help=tr("cli.root.help_help"),
         is_eager=True,
     ),
-    format_: str = typer.Option(
-        _FORMAT_TEXT,
+    format_: _OutputFormat = typer.Option(
+        _OutputFormat.TEXT,
         "--format",
         help=tr("cli.root.format_help"),
     ),
@@ -153,7 +154,7 @@ def _root(
         ctx.with_resource(override_settings(cadrumo_output_language=language))
     _apply_to_root_logger(_resolve_log_level(quiet=quiet, verbose=verbose, debug=debug))
     state = ctx.ensure_object(dict)
-    state["format"] = format_.strip().lower() or _FORMAT_TEXT
+    state["format"] = format_
     if version:
         _emit_version_report_and_exit(detail=detail)
     if help_:
@@ -890,22 +891,24 @@ def _app_root(
         raise typer.Exit()
 
 
-_LAZY_COMMAND_MODULES: frozenset[str] = frozenset(
-    {
-        "._app_agent_workspace",
-        "._app_contract",
-        "._app_diagnostics",
-        "._app_live",
-        "._app_maintenance",
-        "._app_quickfile",
-        "._config",
-        "._ledger",
-        "._modelo",
-        "._overview",
-        "._review",
-        ".registry",
-    },
+_LAZY_COMMAND_REGISTRATIONS: tuple[tuple[str, str, str], ...] = (
+    ("app", "overview", "._overview"),
+    ("app", "contract", "._app_contract"),
+    ("app", "agent", "._app_agent_workspace"),
+    ("app", "diagnostics", "._app_diagnostics"),
+    ("app", "ledger", "._ledger"),
+    ("app", "live", "._app_live"),
+    ("app", "maintenance", "._app_maintenance"),
+    ("app", "modelo", "._modelo"),
+    ("app", "quickfile", "._app_quickfile"),
+    ("app", "registry", ".registry"),
+    ("app", "review", "._review"),
+    (_PRODUCT_IDENTITY.cli_executable, "config", "._config"),
 )
+
+# The dynamic-import guard is derived from the same registrations that wire
+# the command tree, so adding a command cannot leave one security list stale.
+_LAZY_COMMAND_MODULES: frozenset[str] = frozenset(module for _group, _name, module in _LAZY_COMMAND_REGISTRATIONS)
 
 
 def _lazy_loader(module_name: str, group_label: str) -> Callable[[], typer.Typer]:
@@ -947,19 +950,8 @@ def _lazy(group_name: str, name: str, module_name: str) -> None:
 # ---------------------------------------------------------------------
 
 
-_lazy("app", "overview", "._overview")
-_lazy("app", "contract", "._app_contract")
-_lazy("app", "agent", "._app_agent_workspace")
-_lazy("app", "diagnostics", "._app_diagnostics")
-_lazy("app", "ledger", "._ledger")
-_lazy("app", "live", "._app_live")
-_lazy("app", "maintenance", "._app_maintenance")
-_lazy("app", "modelo", "._modelo")
-_lazy("app", "quickfile", "._app_quickfile")
-_lazy("app", "registry", ".registry")
-_lazy("app", "review", "._review")
-
-_lazy(_PRODUCT_IDENTITY.cli_executable, "config", "._config")
+for _group_name, _command_name, _module_name in _LAZY_COMMAND_REGISTRATIONS:
+    _lazy(_group_name, _command_name, _module_name)
 app.add_typer(app_app, name="app")
 _decorate_typer_app(app)
 
