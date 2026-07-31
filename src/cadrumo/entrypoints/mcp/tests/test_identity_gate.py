@@ -18,6 +18,7 @@ import anyio
 import pytest
 
 from ....application.operator_surface import command_classification
+from ....tests import connected_server_and_client_session as connect
 from .._dispatch import tool_name_for_command
 from .._harness_tools import HARNESS_LOAD_TOOL, WHOAMI_TOOL
 from .._identity_gate import (
@@ -182,40 +183,23 @@ def test_elicitation_echo_names_the_label_never_empty() -> None:
 
 
 def _direct_refusal_text(server: Any) -> str:
-    from mcp.types import CallToolRequest, CallToolRequestParams
-
-    handlers = server.request_handlers
-
     async def _drive() -> str:
-        request = CallToolRequest(
-            method="tools/call",
-            params=CallToolRequestParams(name=_MUTATING_TOOL, arguments={}),
-        )
-        result = (await handlers[CallToolRequest](request)).root
-        assert result.isError is True
+        async with connect(server) as session:
+            result = await session.call_tool(_MUTATING_TOOL, {})
+        assert result.is_error is True
         return " ".join(block.text for block in result.content if block.type == "text")
 
     return anyio.run(_drive)
 
 
 def _execute_refusal_text(server: Any) -> str:
-    from mcp.types import CallToolRequest, CallToolRequestParams
-
-    handlers = server.request_handlers
-
     async def _drive() -> str:
-        request = CallToolRequest(
-            method="tools/call",
-            params=CallToolRequestParams(
-                name="execute",
-                arguments={"command_key": _MUTATING_KEY, "arguments": {}},
-            ),
-        )
-        result = (await handlers[CallToolRequest](request)).root
-        assert result.isError is True
+        async with connect(server) as session:
+            result = await session.call_tool("execute", {"command_key": _MUTATING_KEY, "arguments": {}})
+        assert result.is_error is True
         # The execute path carries the refusal inside the error envelope.
-        assert result.structuredContent is not None
-        return str(result.structuredContent["refusal"])
+        assert result.structured_content is not None
+        return str(result.structured_content["refusal"])
 
     return anyio.run(_drive)
 
@@ -252,29 +236,19 @@ def test_a_whoami_read_clears_the_gate_on_the_direct_path() -> None:
             build_server(descriptors)
         return
 
-    from mcp.types import CallToolRequest, CallToolRequestParams
-
     expected_refusal = identity_gate_refusal(_MUTATING_KEY, state=SessionIdentityState())
     assert expected_refusal is not None
 
     server = cast("Any", build_server(descriptors, persona=None))
-    handlers = server.request_handlers
 
     async def _drive() -> None:
-        # A whoami read first, on the same session...
-        whoami = CallToolRequest(
-            method="tools/call",
-            params=CallToolRequestParams(name=WHOAMI_TOOL, arguments={}),
-        )
-        whoami_result = (await handlers[CallToolRequest](whoami)).root
-        assert whoami_result.isError is False
-        # ...so the subsequent mutating call is no longer identity-refused. It may
-        # still fail downstream (e.g. no active profile), but NOT with the gate.
-        mutate = CallToolRequest(
-            method="tools/call",
-            params=CallToolRequestParams(name=_MUTATING_TOOL, arguments={}),
-        )
-        mutate_result = (await handlers[CallToolRequest](mutate)).root
+        async with connect(server) as session:
+            # A whoami read first, on the same session...
+            whoami_result = await session.call_tool(WHOAMI_TOOL, {})
+            assert whoami_result.is_error is False
+            # ...so the subsequent mutating call is no longer identity-refused. It may
+            # still fail downstream (e.g. no active profile), but NOT with the gate.
+            mutate_result = await session.call_tool(_MUTATING_TOOL, {})
         text = " ".join(block.text for block in mutate_result.content if block.type == "text")
         assert expected_refusal not in text
 
@@ -293,26 +267,16 @@ def test_a_harness_load_read_clears_the_gate_on_the_direct_path() -> None:
             build_server(descriptors)
         return
 
-    from mcp.types import CallToolRequest, CallToolRequestParams
-
     expected_refusal = identity_gate_refusal(_MUTATING_KEY, state=SessionIdentityState())
     assert expected_refusal is not None
 
     server = cast("Any", build_server(descriptors, persona=None))
-    handlers = server.request_handlers
 
     async def _drive() -> None:
-        load = CallToolRequest(
-            method="tools/call",
-            params=CallToolRequestParams(name=HARNESS_LOAD_TOOL, arguments={}),
-        )
-        load_result = (await handlers[CallToolRequest](load)).root
-        assert load_result.isError is False
-        mutate = CallToolRequest(
-            method="tools/call",
-            params=CallToolRequestParams(name=_MUTATING_TOOL, arguments={}),
-        )
-        mutate_result = (await handlers[CallToolRequest](mutate)).root
+        async with connect(server) as session:
+            load_result = await session.call_tool(HARNESS_LOAD_TOOL, {})
+            assert load_result.is_error is False
+            mutate_result = await session.call_tool(_MUTATING_TOOL, {})
         text = " ".join(block.text for block in mutate_result.content if block.type == "text")
         assert expected_refusal not in text
 
@@ -332,31 +296,20 @@ def test_identity_state_is_shared_across_the_two_call_paths() -> None:
             build_server(descriptors)
         return
 
-    from mcp.types import CallToolRequest, CallToolRequestParams
-
     expected_refusal = identity_gate_refusal(_MUTATING_KEY, state=SessionIdentityState())
     assert expected_refusal is not None
 
     server = cast("Any", build_server(descriptors, persona=None))
-    handlers = server.request_handlers
 
     async def _drive() -> None:
-        whoami = CallToolRequest(
-            method="tools/call",
-            params=CallToolRequestParams(name=WHOAMI_TOOL, arguments={}),
-        )
-        whoami_result = (await handlers[CallToolRequest](whoami)).root
-        assert whoami_result.isError is False
-        mutate = CallToolRequest(
-            method="tools/call",
-            params=CallToolRequestParams(
-                name="execute",
-                arguments={"command_key": _MUTATING_KEY, "arguments": {}},
-            ),
-        )
-        mutate_result = (await handlers[CallToolRequest](mutate)).root
-        assert mutate_result.structuredContent is not None
-        assert expected_refusal not in str(mutate_result.structuredContent.get("refusal", ""))
+        async with connect(server) as session:
+            whoami_result = await session.call_tool(WHOAMI_TOOL, {})
+            assert whoami_result.is_error is False
+            mutate_result = await session.call_tool(
+                "execute", {"command_key": _MUTATING_KEY, "arguments": {}}
+            )
+        assert mutate_result.structured_content is not None
+        assert expected_refusal not in str(mutate_result.structured_content.get("refusal", ""))
 
     anyio.run(_drive)
 
@@ -381,36 +334,22 @@ def test_strong_logout_re_arms_identity_on_direct_and_execute_paths(
             build_server(descriptors)
         return
 
-    from mcp.types import CallToolRequest, CallToolRequestParams
-
     expected_refusal = identity_gate_refusal(_MUTATING_KEY, state=SessionIdentityState())
     assert expected_refusal is not None
 
     server = cast("Any", build_server(descriptors, persona=None))
-    handlers = server.request_handlers
 
     async def _drive() -> None:
-        whoami = CallToolRequest(
-            method="tools/call",
-            params=CallToolRequestParams(name=WHOAMI_TOOL, arguments={}),
-        )
-        whoami_result = (await handlers[CallToolRequest](whoami)).root
-        assert whoami_result.isError is False
+        async with connect(server) as session:
+            whoami_result = await session.call_tool(WHOAMI_TOOL, {})
+            assert whoami_result.is_error is False
 
-        logout = CallToolRequest(
-            method="tools/call",
-            params=CallToolRequestParams(name=logout_tool, arguments=logout_arguments),
-        )
-        logout_result = (await handlers[CallToolRequest](logout)).root
-        logout_text = " ".join(block.text for block in logout_result.content if block.type == "text")
-        assert expected_refusal not in logout_text
-        assert expected_refusal not in str(logout_result.structuredContent or {})
+            logout_result = await session.call_tool(logout_tool, logout_arguments)
+            logout_text = " ".join(block.text for block in logout_result.content if block.type == "text")
+            assert expected_refusal not in logout_text
+            assert expected_refusal not in str(logout_result.structured_content or {})
 
-        mutate = CallToolRequest(
-            method="tools/call",
-            params=CallToolRequestParams(name=_MUTATING_TOOL, arguments={}),
-        )
-        mutate_result = (await handlers[CallToolRequest](mutate)).root
+            mutate_result = await session.call_tool(_MUTATING_TOOL, {})
         text = " ".join(block.text for block in mutate_result.content if block.type == "text")
         assert text == expected_refusal
 

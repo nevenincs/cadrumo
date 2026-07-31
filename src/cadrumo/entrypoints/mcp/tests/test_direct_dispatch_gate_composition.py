@@ -20,6 +20,7 @@ from typing import Any, cast
 import anyio
 import pytest
 
+from ....tests import connected_server_and_client_session as connect
 from .._dispatch import tool_name_for_command
 from .._meta_tools import gate_refusal
 from .._persona_scope import AgentPersona
@@ -49,33 +50,21 @@ def _descriptor(command_key: str) -> Any:
 
 
 def _direct_call(server: Any, command_key: str) -> Any:
-    """Invoke the real ``tools/call`` handler for one verb; return the CallToolResult."""
-    from mcp.types import CallToolRequest, CallToolRequestParams
-
-    handlers = server.request_handlers
+    """Invoke the real ``tools/call`` path for one verb; return the CallToolResult."""
 
     async def _drive() -> Any:
-        request = CallToolRequest(
-            method="tools/call",
-            params=CallToolRequestParams(name=tool_name_for_command(command_key), arguments={}),
-        )
-        return (await handlers[CallToolRequest](request)).root
+        async with connect(server) as session:
+            return await session.call_tool(tool_name_for_command(command_key), {})
 
     return anyio.run(_drive)
 
 
 def _execute_call(server: Any, command_key: str) -> Any:
     """Invoke the ``execute`` meta-tool for one verb; return the CallToolResult."""
-    from mcp.types import CallToolRequest, CallToolRequestParams
-
-    handlers = server.request_handlers
 
     async def _drive() -> Any:
-        request = CallToolRequest(
-            method="tools/call",
-            params=CallToolRequestParams(name="execute", arguments={"command_key": command_key, "arguments": {}}),
-        )
-        return (await handlers[CallToolRequest](request)).root
+        async with connect(server) as session:
+            return await session.call_tool("execute", {"command_key": command_key, "arguments": {}})
 
     return anyio.run(_drive)
 
@@ -103,13 +92,13 @@ def test_direct_refusal_is_composed_once_by_the_shared_gate(persona: AgentPerson
 
     result = _direct_call(cast("Any", build_server(descriptors, persona=persona)), command_key)
 
-    assert result.isError is True
+    assert result.is_error is True
     # Exactly one refusal, byte-identical to the sole shared-gate composition.
     assert _sole_text(result) == expected
     # Not doubly-wrapped: the scope/handoff refusal is the plain gate string, not
     # an error envelope nesting another refusal. A single text block, no
     # structured envelope, and the refusal token appears exactly once.
-    assert result.structuredContent is None
+    assert result.structured_content is None
     text_blocks = [block for block in result.content if block.type == "text"]
     assert len(text_blocks) == 1
     assert text_blocks[0].text.count(expected) == 1
@@ -135,8 +124,8 @@ def test_direct_and_execute_paths_share_one_refusal(persona: AgentPersona, comma
     direct = _direct_call(cast("Any", build_server(descriptors, persona=persona)), command_key)
     execute = _execute_call(cast("Any", build_server(descriptors, persona=persona)), command_key)
 
-    assert direct.isError is True
-    assert execute.isError is True
+    assert direct.is_error is True
+    assert execute.is_error is True
     # Both entry points resolve the refusal from the same gate_refusal call, so
     # the operator-facing text is byte-identical across the two surfaces.
     assert _sole_text(direct) == expected

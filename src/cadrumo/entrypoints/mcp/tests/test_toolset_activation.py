@@ -17,6 +17,7 @@ from typing import Any, cast
 import anyio
 import pytest
 
+from ....tests import connected_server_and_client_session as connect
 from .._meta_tools import manage_toolsets
 from .._tools import build_tool_descriptors
 from .._toolsets import MAX_ACTIVE_TOOLSETS, Toolset, build_toolsets
@@ -84,32 +85,22 @@ def test_unknown_name_and_action_refuse_instructively() -> None:
 
 
 def test_activating_a_toolset_widens_the_advertised_surface() -> None:
-    from mcp.types import CallToolRequest, CallToolRequestParams, ListToolsRequest
-
     from .._server import build_server
 
     descriptors = build_tool_descriptors()
     server = cast("Any", build_server(descriptors, persona=None))
-    handlers = server.request_handlers
-
-    async def _list_names() -> set[str]:
-        tools = (await handlers[ListToolsRequest](ListToolsRequest(method="tools/list"))).root.tools
-        return {tool.name for tool in tools}
 
     async def _drive() -> None:
-        before = await _list_names()
-        # The core surface does not advertise the long-tail ledger verbs.
-        assert "cadrumo_ledger_add" not in before
-        assert "toolsets" in before
+        async with connect(server) as session:
+            before = {tool.name for tool in (await session.list_tools()).tools}
+            # The core surface does not advertise the long-tail ledger verbs.
+            assert "cadrumo_ledger_add" not in before
+            assert "toolsets" in before
 
-        request = CallToolRequest(
-            method="tools/call",
-            params=CallToolRequestParams(name="toolsets", arguments={"action": "activate", "name": "ledger"}),
-        )
-        result = (await handlers[CallToolRequest](request)).root
-        assert result.isError is False
+            result = await session.call_tool("toolsets", {"action": "activate", "name": "ledger"})
+            assert result.is_error is False
 
-        after = await _list_names()
+            after = {tool.name for tool in (await session.list_tools()).tools}
         # Activation widened the surface: ledger verbs now advertised, core kept.
         assert "cadrumo_ledger_add" in after
         assert "cadrumo_overview_status" in after

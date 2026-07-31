@@ -400,12 +400,11 @@ def _timed_build_server_read(command_key: str, *, timeout_s: float) -> tuple[flo
     Returns (wall seconds, process CPU seconds); the memory transport runs
     entirely inside this process, so ``time.process_time`` covers it.
     """
-    from mcp.shared.memory import create_connected_server_and_client_session as connect
-
     from cadrumo.entrypoints.mcp._dispatch import tool_name_for_command
     from cadrumo.entrypoints.mcp._harness_tools import WHOAMI_TOOL
     from cadrumo.entrypoints.mcp._server import build_server
     from cadrumo.entrypoints.mcp._tools import build_tool_descriptors
+    from cadrumo.tests import connected_server_and_client_session as connect
 
     async def _drive() -> tuple[float, float]:
         server = build_server(build_tool_descriptors())
@@ -420,7 +419,7 @@ def _timed_build_server_read(command_key: str, *, timeout_s: float) -> tuple[flo
             result = await session.call_tool(tool_name, {})
             cpu_elapsed = time.process_time() - cpu_started
             elapsed = time.monotonic() - started
-            if result.isError:
+            if result.is_error:
                 raise ServingPathBenchmarkError(f"MCP-surface read errored for {command_key!r}: {result.content!r}")
             return elapsed, cpu_elapsed
 

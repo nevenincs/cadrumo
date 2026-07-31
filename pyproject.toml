@@ -157,7 +157,10 @@ ofx = [
 # model weights or credentials are ever bundled (per the product-packaging and
 # secure storage).
 agent = [
-  "mcp>=1.12,<2",
+  # 2.x major: carried here by the vaultspec-core>=0.1.55 floor, which requires
+  # mcp>=2.0.0. The shipped `cadrumo-mcp` server runs on this SDK, so any 2.x
+  # API change surfaces in `cadrumo.entrypoints.mcp`, not merely in tooling.
+  "mcp>=2,<3",
   # The stdio MCP server (`cadrumo.entrypoints.mcp._server`) imports anyio directly
   # to run the transport; declare it here rather than relying on it transitively
   # through `mcp`, so the import has a direct owner in the extra that gates the
@@ -343,16 +346,12 @@ dev = [
   # Vault tooling — contributor-only; not imported by src/cadrumo/. vaultspec-rag
   # carries the [mcp] extra here (demoted from the base dependency set): it is
   # developer search tooling, so a published product wheel must not ship it.
-  # HELD at the 0.1.25 floor deliberately. 0.1.55 is the first version that
-  # understands the `body_hash` frontmatter fingerprint, and an older CLI drops
-  # unknown frontmatter keys on rewrite, so a mixed-version corpus silently
-  # loses the stamp on exactly the documents being edited
-  # (nevenincs/vaultspec-core#299). Raising this floor is nevertheless blocked:
-  # vaultspec-core>=0.1.55 requires mcp>=2.0.0 while cadrumo[agent] requires
-  # mcp>=1.12,<2, so the harness upgrade drags the SHIPPED cadrumo-mcp server
-  # onto a new MCP SDK major. That is a product migration with its own testing,
-  # not a tooling bump, and it needs deciding on its own terms.
-  "vaultspec-core>=0.1.25",
+  # 0.1.55 is the first version that understands the `body_hash` frontmatter
+  # fingerprint; older versions drop unknown frontmatter keys on rewrite, so a
+  # mixed-version corpus silently loses the stamp on exactly the documents
+  # being edited (nevenincs/vaultspec-core#299). Operator directive: the
+  # harness tracks latest. This floor is what carried `mcp` to its 2.x major.
+  "vaultspec-core>=0.1.55",
   "vaultspec-rag[mcp]>=0.3.8",
   # Sphinx documentation pipeline — `just docs` builds HTML + Markdown from
   # the Google-style + Sphinx-cross-referenced docstrings under src/cadrumo/.

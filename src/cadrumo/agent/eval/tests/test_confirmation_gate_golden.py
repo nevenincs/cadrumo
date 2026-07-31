@@ -49,7 +49,6 @@ from pathlib import Path
 
 import mcp.types as mcp_types
 import pytest
-from mcp.shared.memory import create_connected_server_and_client_session as connect
 
 from ....application.operator_surface import COMMAND_RISK, CommandRiskDeclaration
 from ....entrypoints.mcp import (
@@ -59,6 +58,7 @@ from ....entrypoints.mcp import (
     build_tool_descriptors,
     confirmation_for_tool,
 )
+from ....tests import connected_server_and_client_session as connect
 from .. import ConfirmationGateCheck, ConfirmationTier, load_scenario, run_golden_scenario
 from ._real_cli_support import valid_cli_commands
 
@@ -167,11 +167,11 @@ def test_export_handoff_confirms_and_is_argument_independent() -> None:
     assert decision_plain is decision_auto_yes
 
     result = _run(_call_tool(descriptor.name, auto_yes_arguments))
-    assert result.isError
+    assert result.is_error
     text = "\n".join(_texts(result))
     assert _EXPORT_STEP in text
     assert len(result.content) == 1
-    assert result.structuredContent is None
+    assert result.structured_content is None
 
 
 def test_read_step_auto_approves() -> None:

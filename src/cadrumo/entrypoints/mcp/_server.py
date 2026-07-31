@@ -149,6 +149,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from mcp.server import Server
+    from mcp.server.context import ServerRequestContext
     from mcp.server.models import InitializationOptions
     from mcp.types import ContentBlock, Tool
 
@@ -454,21 +455,15 @@ def _declined_message(*, command_key: str, decision: ConfirmDecision) -> str:
     )
 
 
-def _client_supports_elicitation(server: Server) -> bool:
+def _client_supports_elicitation(ctx: ServerRequestContext) -> bool:
     """Read the negotiated client capabilities for elicitation support (fail-closed).
 
-    Inside a request handler the lowlevel server exposes the session through
-    ``request_context``; a missing context, missing params, or missing
-    capability all read as unsupported, so the degradation matrix falls back
-    to the safe routes.
+    ``ctx.session.client_capabilities`` is ``None`` when the client declared no
+    capabilities at all; a missing or absent elicitation entry both read as
+    unsupported, so the degradation matrix falls back to the safe routes.
     """
-    try:
-        context = server.request_context
-        params = context.session.client_params
-    except (LookupError, AttributeError):
-        return False
-    capabilities = getattr(params, "capabilities", None)
-    return bool(capabilities is not None and getattr(capabilities, "elicitation", None) is not None)
+    capabilities = ctx.session.client_capabilities
+    return bool(capabilities is not None and capabilities.elicitation is not None)
 
 
 def _record_telemetry(
@@ -524,7 +519,7 @@ def _meta_execute_call_outcome(
 
 
 async def _run_offloop_with_progress[T](
-    server: Server,
+    ctx: ServerRequestContext,
     work: Callable[[], T],
 ) -> T:
     """Run blocking subprocess work off the event loop, heart-beating progress.
@@ -540,10 +535,7 @@ async def _run_offloop_with_progress[T](
     from anyio.to_thread import run_sync
 
     limiter = serving_capacity_limiter()
-    progress_token = None
-    with contextlib.suppress(LookupError, AttributeError):
-        meta = server.request_context.meta
-        progress_token = getattr(meta, "progressToken", None) if meta is not None else None
+    progress_token = ctx.meta.get("progress_token") if ctx.meta is not None else None
 
     if progress_token is None:
         return await run_sync(work, limiter=limiter)
@@ -560,7 +552,7 @@ async def _run_offloop_with_progress[T](
             await anyio.sleep(5)
             elapsed += 5
             with contextlib.suppress(Exception):
-                await server.request_context.session.send_progress_notification(
+                await ctx.session.send_progress_notification(
                     progress_token=progress_token,
                     progress=float(elapsed),
                     total=None,
@@ -604,33 +596,42 @@ def build_server(
     ensure_profile_keys_registered()
 
     from mcp.server import Server
-    from mcp.server.lowlevel.helper_types import ReadResourceContents
     from mcp.types import (
+        CallToolRequestParams,
         CallToolResult,
+        CompleteRequestParams,
+        CompleteResult,
         Completion,
-        CompletionArgument,
         EmbeddedResource,
+        GetPromptRequestParams,
         GetPromptResult,
+        ListPromptsResult,
+        ListResourcesResult,
+        ListResourceTemplatesResult,
+        ListToolsResult,
+        PaginatedRequestParams,
         Prompt,
         PromptArgument,
         PromptMessage,
+        PromptReference,
+        ReadResourceRequestParams,
+        ReadResourceResult,
         Resource,
         ResourceLink,
         ResourceTemplate,
         TextContent,
         TextResourceContents,
     )
-    from pydantic import AnyUrl
 
     def _resource_links(refs: tuple[ResourceLinkRef, ...]) -> list[ResourceLink]:
         """Adapt the thinning ``ResourceLinkRef`` set onto SDK ``resource_link`` items."""
         return [
             ResourceLink(
                 type="resource_link",
-                uri=AnyUrl(ref.uri),
+                uri=ref.uri,
                 name=ref.name,
                 description=ref.description,
-                mimeType=ref.mime_type,
+                mime_type=ref.mime_type,
             )
             for ref in refs
         ]
@@ -752,9 +753,8 @@ def build_server(
         )
         return ToolRunOutcome(envelope=envelope, is_error=is_error)
 
-    server: Server = Server(PRODUCT_IDENTITY.mcp_server)
-
     async def _run_tool_with_progress(
+        ctx: ServerRequestContext,
         descriptor: McpToolDescriptor,
         arguments: dict[str, object],
     ) -> SubprocessToolOutcome:
@@ -765,12 +765,11 @@ def build_server(
         blocking work runs off the event loop so the session keeps serving.
         """
         return await _run_offloop_with_progress(
-            server,
+            ctx,
             partial(_run_tool, descriptor, arguments),
         )
 
-    @server.list_tools()
-    async def _list_tools() -> list[Tool]:
+    async def _on_list_tools(_ctx: ServerRequestContext, _params: PaginatedRequestParams | None) -> ListToolsResult:
         # The harness.load floor tool is advertised first and is never persona-scoped
         # away: it is the universal operating-layer channel that must reach
         # any client, including a minimal tools-only one. The whoami identity tool and
@@ -779,10 +778,11 @@ def build_server(
         # narration, whatever the persona. The per-verb surface is the orientation core
         # plus any active toolset (rebuilt per call so a toolset activation is
         # reflected).
-        return [floor_tool, whoami_tool, *grounding_tools, *_advertised_tools(), *meta_tools]
+        return ListToolsResult(tools=[floor_tool, whoami_tool, *grounding_tools, *_advertised_tools(), *meta_tools])
 
-    @server.call_tool()
-    async def _call_tool(name: str, arguments: dict[str, object]) -> CallToolResult:
+    async def _on_call_tool(ctx: ServerRequestContext, params: CallToolRequestParams) -> CallToolResult:
+        name = params.name
+        arguments = dict(params.arguments) if params.arguments else {}
         # A console identity read (whoami / harness.load) clears the gate:
         # both surface the active-identity block, so either proves the agent has
         # seen who is active. These carry no registry command key, so record here
@@ -796,15 +796,15 @@ def build_server(
             floor_payload = build_harness_floor_payload(persona=persona, identity=build_whoami_identity())
             return CallToolResult(
                 content=[TextContent(type="text", text=render_harness_floor_text(floor_payload))],
-                structuredContent=floor_payload.model_dump(mode="json"),
-                isError=False,
+                structured_content=floor_payload.model_dump(mode="json"),
+                is_error=False,
             )
         if name == WHOAMI_TOOL:
             identity = build_whoami_identity()
             return CallToolResult(
                 content=[TextContent(type="text", text=render_whoami_identity_text(identity))],
-                structuredContent=identity.model_dump(mode="json"),
-                isError=False,
+                structured_content=identity.model_dump(mode="json"),
+                is_error=False,
             )
         if name == CORPUS_SEARCH_TOOL:
             try:
@@ -815,12 +815,12 @@ def build_server(
             except Exception as exc:
                 return CallToolResult(
                     content=[TextContent(type="text", text=f"corpus search unavailable: {exc}")],
-                    isError=True,
+                    is_error=True,
                 )
             return CallToolResult(
                 content=[TextContent(type="text", text=render_corpus_search_text(corpus_payload))],
-                structuredContent=corpus_payload.model_dump(mode="json"),
-                isError=False,
+                structured_content=corpus_payload.model_dump(mode="json"),
+                is_error=False,
             )
         if name == TERMINOLOGY_SEARCH_TOOL:
             try:
@@ -831,12 +831,12 @@ def build_server(
             except Exception as exc:
                 return CallToolResult(
                     content=[TextContent(type="text", text=f"terminology search unavailable: {exc}")],
-                    isError=True,
+                    is_error=True,
                 )
             return CallToolResult(
                 content=[TextContent(type="text", text=render_terminology_search_text(term_payload))],
-                structuredContent=term_payload.model_dump(mode="json"),
-                isError=False,
+                structured_content=term_payload.model_dump(mode="json"),
+                is_error=False,
             )
         if name == _META_SEARCH_TOOL:
             response = search_commands_response(
@@ -847,8 +847,8 @@ def build_server(
             search_payload = response.model_dump(mode="json")
             return CallToolResult(
                 content=[TextContent(type="text", text=json.dumps(search_payload, indent=2))],
-                structuredContent=search_payload,
-                isError=False,
+                structured_content=search_payload,
+                is_error=False,
             )
         if name == _META_DESCRIBE_TOOL:
             describe_key = str(arguments.get("command_key", "") or "")
@@ -856,13 +856,13 @@ def build_server(
             if described is None:
                 return CallToolResult(
                     content=[TextContent(type="text", text=f"unknown command: {describe_key}")],
-                    isError=True,
+                    is_error=True,
                 )
             describe_payload = described.model_dump(mode="json")
             return CallToolResult(
                 content=[TextContent(type="text", text=json.dumps(describe_payload, indent=2))],
-                structuredContent=describe_payload,
-                isError=False,
+                structured_content=describe_payload,
+                is_error=False,
             )
         if name == _META_TOOLSETS_TOOL:
             outcome = manage_toolsets(
@@ -875,16 +875,16 @@ def build_server(
                 # honour list-changed still sees the widened surface on its next
                 # tools/list, so a send failure must not break the call.
                 with contextlib.suppress(Exception):
-                    await server.request_context.session.send_tool_list_changed()
+                    await ctx.session.send_tool_list_changed()
             payload = outcome.model_dump(mode="json")
             return CallToolResult(
                 content=[TextContent(type="text", text=json.dumps(payload, indent=2))],
-                structuredContent=payload,
-                isError=outcome.refused is not None,
+                structured_content=payload,
+                is_error=outcome.refused is not None,
             )
         if name == _META_EXECUTE_TOOL:
             refusal, envelope, thinned_envelope, links, is_error = await _run_offloop_with_progress(
-                server,
+                ctx,
                 partial(
                     _meta_execute_call_outcome,
                     arguments,
@@ -894,40 +894,40 @@ def build_server(
                 ),
             )
             if refusal is not None:
-                return CallToolResult(content=[TextContent(type="text", text=refusal)], isError=True)
+                return CallToolResult(content=[TextContent(type="text", text=refusal)], is_error=True)
             return CallToolResult(
                 content=[TextContent(type="text", text=json.dumps(envelope, indent=2)), *_resource_links(links)],
-                structuredContent=thinned_envelope,
-                isError=is_error,
+                structured_content=thinned_envelope,
+                is_error=is_error,
             )
         descriptor = by_name.get(name)
         if descriptor is None:
-            return CallToolResult(content=[TextContent(type="text", text=f"unknown tool: {name}")], isError=True)
+            return CallToolResult(content=[TextContent(type="text", text=f"unknown tool: {name}")], is_error=True)
         key = command_key_for_tool(name, command_keys=[d.command_key for d in descriptors])
         if key is None:
-            return CallToolResult(content=[TextContent(type="text", text=f"unmapped tool: {name}")], isError=True)
+            return CallToolResult(content=[TextContent(type="text", text=f"unmapped tool: {name}")], is_error=True)
         # The persona-scope, handoff-denial, and permanent live-write gate is
         # composed EXACTLY ONCE, by the single shared :func:`gate_refusal` the
         # ``execute`` meta-path also runs, so a refused call carries one refusal
         # and the two entry points cannot compose divergent (or doubled) refusals.
         gate = gate_refusal(persona=persona, descriptor=descriptor)
         if gate is not None:
-            return CallToolResult(content=[TextContent(type="text", text=gate)], isError=True)
+            return CallToolResult(content=[TextContent(type="text", text=gate)], is_error=True)
         identity_refusal = identity_gate_refusal(key, state=identity_state)
         if identity_refusal is not None:
             _record_telemetry(telemetry, tool_name=name, command_key=key, route="identity_block", is_error=True)
-            return CallToolResult(content=[TextContent(type="text", text=identity_refusal)], isError=True)
+            return CallToolResult(content=[TextContent(type="text", text=identity_refusal)], is_error=True)
         policy = confirmation_for_tool(command_key=key)
         route = resolve_confirm_route(
             policy=policy,
             command_key=key,
-            client_supports_elicitation=_client_supports_elicitation(server),
+            client_supports_elicitation=_client_supports_elicitation(ctx),
         )
         if route in (ConfirmRoute.REFUSE_BLOCKED, ConfirmRoute.REFUSE_NO_CHANNEL):
             _record_telemetry(telemetry, tool_name=name, command_key=key, route=route.value, is_error=True)
             return CallToolResult(
                 content=[TextContent(type="text", text=refusal_message(route, command_key=key))],
-                isError=True,
+                is_error=True,
             )
         route_label = route.value
         if route is ConfirmRoute.ELICIT:
@@ -936,9 +936,9 @@ def build_server(
             # so the person approving a destructive/handoff verb sees whose data
             # it touches and can catch an Erik/Erika mismatch at the gate.
             echo = identity_elicitation_echo(active_profile_label=build_whoami_identity().active_profile)
-            result = await server.request_context.session.elicit(
+            result = await ctx.session.elicit(
                 message=f"{echo}\n\n{request.message}",
-                requestedSchema=request.requested_schema,
+                requested_schema=request.requested_schema,
             )
             decision = decision_from_elicitation(
                 action=str(result.action),
@@ -954,7 +954,7 @@ def build_server(
                             text=_declined_message(command_key=key, decision=decision),
                         ),
                     ],
-                    isError=True,
+                    is_error=True,
                 )
         arguments_json = json.dumps(arguments, ensure_ascii=False, sort_keys=True)
         faith = arguments_faithfulness(arguments_json=arguments_json, window=window, blocking=is_handoff_command(key))
@@ -969,10 +969,10 @@ def build_server(
             )
             return CallToolResult(
                 content=[TextContent(type="text", text=advisory_line(faith))],
-                isError=True,
+                is_error=True,
             )
         started = time.monotonic()
-        outcome = await _run_tool_with_progress(descriptor, arguments)
+        outcome = await _run_tool_with_progress(ctx, descriptor, arguments)
         envelope = outcome.envelope
         is_error = outcome.is_error
         envelope_json = json.dumps(envelope, ensure_ascii=False, sort_keys=True)
@@ -989,7 +989,7 @@ def build_server(
             arguments_text=arguments_json,
             result_text=envelope_json,
         )
-        # Move the verb's declared bulk arrays out of structuredContent to
+        # Move the verb's declared bulk arrays out of structured_content to
         # resource_link URIs a resources-capable client fetches on demand; the text
         # content still carries the full envelope for a client without resources.
         thinned_envelope, links = thin_envelope(key, envelope)
@@ -998,32 +998,32 @@ def build_server(
             content.append(TextContent(type="text", text=advisory_line(faith)))
         content.append(TextContent(type="text", text=json.dumps(envelope, indent=2)))
         content.extend(_resource_links(links))
-        return CallToolResult(content=content, structuredContent=thinned_envelope, isError=is_error)
+        return CallToolResult(content=content, structured_content=thinned_envelope, is_error=is_error)
 
     # Guided-workflow prompt channel: the slash-command surface a client
     # renders for the USER. The catalogue and each prompt's embedded skill (plus
     # the operating rules for orientation) are derived from the shipped harness in
     # ``_prompts.py``; ``get`` returns the operating brief as a user message
     # followed by each embedded document as an ``EmbeddedResource``.
-    @server.list_prompts()
-    async def _list_prompts() -> list[Prompt]:
-        return [
-            Prompt(
-                name=entry.name,
-                title=entry.title,
-                description=entry.description,
-                arguments=[
-                    PromptArgument(name=argument.name, description=argument.description, required=argument.required)
-                    for argument in entry.arguments
-                ],
-            )
-            for entry in build_prompt_catalogue()
-        ]
+    async def _on_list_prompts(_ctx: ServerRequestContext, _params: PaginatedRequestParams | None) -> ListPromptsResult:
+        return ListPromptsResult(
+            prompts=[
+                Prompt(
+                    name=entry.name,
+                    title=entry.title,
+                    description=entry.description,
+                    arguments=[
+                        PromptArgument(name=argument.name, description=argument.description, required=argument.required)
+                        for argument in entry.arguments
+                    ],
+                )
+                for entry in build_prompt_catalogue()
+            ],
+        )
 
-    @server.get_prompt()
-    async def _get_prompt(name: str, arguments: dict[str, str] | None = None) -> GetPromptResult:
+    async def _on_get_prompt(_ctx: ServerRequestContext, params: GetPromptRequestParams) -> GetPromptResult:
         try:
-            document = prompt_document(name, arguments)
+            document = prompt_document(params.name, params.arguments)
         except PromptNotFoundError as exc:
             raise ValueError(str(exc)) from exc
         messages: list[PromptMessage] = [
@@ -1035,8 +1035,8 @@ def build_server(
                 content=EmbeddedResource(
                     type="resource",
                     resource=TextResourceContents(
-                        uri=AnyUrl(embedded.uri),
-                        mimeType=embedded.mime_type,
+                        uri=embedded.uri,
+                        mime_type=embedded.mime_type,
                         text=embedded.text,
                     ),
                 ),
@@ -1049,29 +1049,35 @@ def build_server(
     # set and the three ``cadrumo://<kind>/{name}`` templates are derived from the
     # shipped harness tree in ``_resources.py``; ``read`` resolves a URI to the
     # document text as ``text/markdown``.
-    @server.list_resources()
-    async def _list_resources() -> list[Resource]:
-        return [
-            Resource(
-                uri=AnyUrl(ref.uri),
-                name=ref.name,
-                description=ref.description,
-                mimeType=ref.mime_type,
-            )
-            for ref in list_harness_resources()
-        ]
+    async def _on_list_resources(
+        _ctx: ServerRequestContext, _params: PaginatedRequestParams | None
+    ) -> ListResourcesResult:
+        return ListResourcesResult(
+            resources=[
+                Resource(
+                    uri=ref.uri,
+                    name=ref.name,
+                    description=ref.description,
+                    mime_type=ref.mime_type,
+                )
+                for ref in list_harness_resources()
+            ],
+        )
 
-    @server.list_resource_templates()
-    async def _list_resource_templates() -> list[ResourceTemplate]:
-        return [
-            ResourceTemplate(
-                uriTemplate=template.uri_template,
-                name=template.name,
-                description=template.description,
-                mimeType=template.mime_type,
-            )
-            for template in list_harness_resource_templates()
-        ]
+    async def _on_list_resource_templates(
+        _ctx: ServerRequestContext, _params: PaginatedRequestParams | None
+    ) -> ListResourceTemplatesResult:
+        return ListResourceTemplatesResult(
+            resource_templates=[
+                ResourceTemplate(
+                    uri_template=template.uri_template,
+                    name=template.name,
+                    description=template.description,
+                    mime_type=template.mime_type,
+                )
+                for template in list_harness_resource_templates()
+            ],
+        )
 
     async def _resolve_bulk_resource(kind: HarnessResourceKind, identity: str, uri: str) -> str:
         """Resolve a bucket-scoped resource by re-running its owning read verb.
@@ -1106,34 +1112,45 @@ def build_server(
             raise ValueError(f"resource {uri} resolved no {resolution.result_field} rows")
         return json.dumps(rows, ensure_ascii=False, indent=2)
 
-    @server.read_resource()
-    async def _read_resource(uri: AnyUrl) -> list[ReadResourceContents]:
+    async def _on_read_resource(_ctx: ServerRequestContext, params: ReadResourceRequestParams) -> ReadResourceResult:
+        uri = params.uri
         try:
-            kind, name = parse_resource_uri(str(uri))
+            kind, name = parse_resource_uri(uri)
         except HarnessResourceNotFoundError as exc:
             raise ValueError(str(exc)) from exc
         if kind in BUCKET_SCOPED_RESOURCE_KINDS:
-            text = await _resolve_bulk_resource(kind, name, str(uri))
-            return [ReadResourceContents(content=text, mime_type="application/json")]
+            text = await _resolve_bulk_resource(kind, name, uri)
+            return ReadResourceResult(
+                contents=[TextResourceContents(uri=uri, mime_type="application/json", text=text)],
+            )
         try:
-            content = read_harness_resource(str(uri))
+            content = read_harness_resource(uri)
         except HarnessResourceNotFoundError as exc:
             raise ValueError(str(exc)) from exc
-        return [ReadResourceContents(content=content.text, mime_type=content.ref.mime_type)]
+        return ReadResourceResult(
+            contents=[TextResourceContents(uri=uri, mime_type=content.ref.mime_type, text=content.text)],
+        )
 
     # Argument autocompletion for the guided-workflow prompts: a client
     # completing a prompt argument (filing year, period) gets the accepted
     # values from the typed axes.
-    @server.completion()
-    async def _complete(ref: object, argument: CompletionArgument, context: object) -> Completion | None:
-        from mcp.types import PromptReference
+    async def _on_completion(_ctx: ServerRequestContext, params: CompleteRequestParams) -> CompleteResult:
+        if not isinstance(params.ref, PromptReference):
+            return CompleteResult(completion=Completion(values=[], total=0, has_more=False))
+        values = complete_prompt_argument(params.argument.name, params.argument.value)
+        return CompleteResult(completion=Completion(values=list(values), total=len(values), has_more=False))
 
-        if not isinstance(ref, PromptReference):
-            return None
-        values = complete_prompt_argument(argument.name, argument.value)
-        return Completion(values=list(values), total=len(values), hasMore=False)
-
-    return server
+    return Server(
+        PRODUCT_IDENTITY.mcp_server,
+        on_list_tools=_on_list_tools,
+        on_call_tool=_on_call_tool,
+        on_list_prompts=_on_list_prompts,
+        on_get_prompt=_on_get_prompt,
+        on_list_resources=_on_list_resources,
+        on_list_resource_templates=_on_list_resource_templates,
+        on_read_resource=_on_read_resource,
+        on_completion=_on_completion,
+    )
 
 
 def server_initialization_options(server: Server) -> InitializationOptions:

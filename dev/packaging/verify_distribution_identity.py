@@ -340,7 +340,12 @@ for tool in sdk_tools:
         "identifier": tool.name,
         "description": tool.description,
     })
-    pending = [("inputSchema", tool.inputSchema)]
+    # The Python attribute is snake_case on MCP SDK 2.x; the "inputSchema" label
+    # is NOT a spelling of it. It is the wire-shaped path segment these identity
+    # keys are built from (`<tool>:inputSchema.properties.<name>`), and this
+    # module's inventory digest is pinned, so renaming the string would silently
+    # move the digest while looking like the same cleanup.
+    pending = [("inputSchema", tool.input_schema)]
     while pending:
         path, node = pending.pop()
         if isinstance(node, dict):

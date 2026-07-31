@@ -65,6 +65,7 @@ from ._size_budget import (
     scan_module_lines,
     write_size_budget_baseline,
 )
+from .mcp_session import connected_server_and_client_session
 
 if TYPE_CHECKING:
     from ._justificante_parse_cache import parse_committed_justificante_fixture
@@ -91,6 +92,7 @@ __all__ = [
     "build_limits",
     "callable_key",
     "collection_storage_root",
+    "connected_server_and_client_session",
     "discover_test_control_modules",
     "evaluate_budget",
     "leaf_name",

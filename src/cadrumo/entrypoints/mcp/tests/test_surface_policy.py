@@ -18,6 +18,7 @@ from typing import Any, cast
 import anyio
 import pytest
 
+from ....tests import connected_server_and_client_session as connect
 from .._harness_tools import HARNESS_LOAD_TOOL
 from .._surface import (
     SURFACE_ENV_VAR,
@@ -77,8 +78,6 @@ def test_advertised_descriptors_core_is_a_strict_orientation_subset_of_full() ->
 
 
 def test_built_server_advertises_core_by_default_and_full_on_opt_out() -> None:
-    from mcp.types import ListToolsRequest
-
     from .._server import build_server
 
     descriptors = build_tool_descriptors()
@@ -86,8 +85,8 @@ def test_built_server_advertises_core_by_default_and_full_on_opt_out() -> None:
 
     async def _advertised(mode: SurfaceMode) -> set[str]:
         server = cast("Any", build_server(descriptors, persona=None, surface_mode=mode))
-        handlers = server.request_handlers
-        tools = (await handlers[ListToolsRequest](ListToolsRequest(method="tools/list"))).root.tools
+        async with connect(server) as session:
+            tools = (await session.list_tools()).tools
         return {tool.name for tool in tools}
 
     async def _drive() -> None:
@@ -113,20 +112,14 @@ def test_long_tail_verb_stays_callable_by_name_under_the_core_surface() -> None:
     # reachable by a direct call or the ``execute`` meta-tool - discovered, not
     # removed. An unknown name returns the ``unknown tool`` error; a known but
     # unadvertised name does not.
-    from mcp.types import CallToolRequest, CallToolRequestParams
-
     from .._server import build_server
 
     descriptors = build_tool_descriptors()
     server = cast("Any", build_server(descriptors, persona=None, surface_mode=SurfaceMode.CORE))
-    handlers = server.request_handlers
 
     async def _drive() -> None:
-        request = CallToolRequest(
-            method="tools/call",
-            params=CallToolRequestParams(name="cadrumo_ledger_add", arguments={}),
-        )
-        result = (await handlers[CallToolRequest](request)).root
+        async with connect(server) as session:
+            result = await session.call_tool("cadrumo_ledger_add", {})
         text = " ".join(block.text for block in result.content if block.type == "text")
         assert "unknown tool" not in text.lower()
 
