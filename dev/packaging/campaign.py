@@ -199,7 +199,28 @@ def main(argv: list[str] | None = None) -> int:
 
     if not args.skip_preflight:
         _run_step([sys.executable, "-m", "dev.packaging.dependency_surface"], repo_root, "dependency-surface")
-        preflight_argv = [sys.executable, "-m", "pytest", "dev/packaging/tests", "-q", "--timeout=900"]
+        # Pin a repo-local basetemp. The self-hosted runners execute as the same
+        # OS user as interactive sessions on the same box, so the default
+        # per-user root is shared: two concurrent runs fight over the single
+        # `pytest-current` symlink and one dies in `cleanup_dead_symlinks` with
+        # a permission error AFTER its tests have all passed. Handing pytest an
+        # explicit basetemp skips the numbered-dir rotation and that symlink
+        # entirely. The directory is dedicated to this preflight because pytest
+        # removes whatever it is pointed at.
+        preflight_basetemp = repo_root / "var" / "packaging-smoke" / "pytest-basetemp"
+        # pytest mkdirs the basetemp itself but does NOT create its parents, so a
+        # clean checkout would die with an internal error here: the campaign only
+        # creates `var/packaging-smoke/` later, for the lane logs.
+        preflight_basetemp.parent.mkdir(parents=True, exist_ok=True)
+        preflight_argv = [
+            sys.executable,
+            "-m",
+            "pytest",
+            "dev/packaging/tests",
+            "-q",
+            "--timeout=900",
+            f"--basetemp={preflight_basetemp}",
+        ]
         test_workers = _test_worker_count(args.test_workers)
         if test_workers is not None:
             preflight_argv += ["-n", str(test_workers)]
