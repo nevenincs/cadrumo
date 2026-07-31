@@ -191,6 +191,7 @@ from ._casilla_membership import (
     casilla_noncanonical_reference_tokens,
     casillas_by_id,
     declared_casilla_ids,
+    format_noncanonical_casilla_reference,
     undeclared_casilla_ids,
 )
 from ._profile_grounding import (
@@ -852,6 +853,7 @@ __all__ = [
     "extract_record_design_workbook",
     "fold_observed_requirement_values",
     "fold_sum_or_copy",
+    "format_noncanonical_casilla_reference",
     "gather_observed_requirement_values",
     "generate_parity_tape_path",
     "get_censo_modelo_foundation_contract",

@@ -14,6 +14,7 @@ from .. import (
     RegistryValidationError,
     calculate_registry_snapshot,
     casilla_noncanonical_reference_targets,
+    format_noncanonical_casilla_reference,
     validated_casilla_id,
 )
 
@@ -88,7 +89,10 @@ def test_noncanonical_reference_targets_include_export_refs_without_accepting_th
     )
     export_ref = next(ref for ref in casilla.export_refs if ref != casilla.id)
 
-    assert casilla_noncanonical_reference_targets(snapshot.revision, export_ref) == (casilla.id,)
+    targets = casilla_noncanonical_reference_targets(snapshot.revision, export_ref)
+
+    assert targets == (casilla.id,)
+    assert format_noncanonical_casilla_reference(export_ref, targets) == f"{export_ref!r} -> {casilla.id}"
 
 
 def test_noncanonical_reference_targets_expose_ambiguous_reused_printed_number(
@@ -105,7 +109,13 @@ def test_noncanonical_reference_targets_expose_ambiguous_reused_printed_number(
     )
 
     assert ecpn_casilla.number == liquidacion_casilla.number
-    assert casilla_noncanonical_reference_targets(snapshot.revision, ecpn_casilla.number) == (
+    targets = casilla_noncanonical_reference_targets(snapshot.revision, ecpn_casilla.number)
+
+    assert targets == (
         _M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA,
         _M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA,
+    )
+    assert format_noncanonical_casilla_reference(ecpn_casilla.number, targets) == (
+        f"{ecpn_casilla.number!r} is ambiguous; candidate casilla.id values: "
+        f"{_M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA}, {_M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA}"
     )

@@ -59,6 +59,7 @@ from ...domain.calculations.registry import (
     ModeloRevision,
     casilla_noncanonical_reference_targets,
     declared_casilla_ids,
+    format_noncanonical_casilla_reference,
 )
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.iva import (
@@ -197,7 +198,7 @@ def _reject_non_revision_casilla_values(
             continue
         noncanonical_targets = casilla_noncanonical_reference_targets(registry_revision, casilla_id)
         if noncanonical_targets:
-            noncanonical_details.append(_format_noncanonical_casilla_reference(casilla_id, noncanonical_targets))
+            noncanonical_details.append(format_noncanonical_casilla_reference(casilla_id, noncanonical_targets))
             continue
         unknown_ids.append(casilla_id)
 
@@ -215,13 +216,6 @@ def _reject_non_revision_casilla_values(
             f"unknown casilla.id values: {unknown}",
             context={"modelo": modelo, "revision_id": revision_id, "casilla_ids": unknown},
         )
-
-
-def _format_noncanonical_casilla_reference(token: str, targets: tuple[CasillaId, ...]) -> str:
-    rendered_targets = ", ".join(repr(target) for target in targets)
-    if len(targets) > 1:
-        return f"{token!r} is ambiguous; candidate casilla.id values: {rendered_targets}"
-    return f"{token!r} -> {rendered_targets}"
 
 
 def revision_is_refund_disposition(

@@ -37,6 +37,7 @@ from ...domain.calculations.registry import (
     VerificationPredicateDefinition,
     casilla_noncanonical_reference_targets,
     casillas_by_id,
+    format_noncanonical_casilla_reference,
     undeclared_casilla_ids,
     validated_casilla_id,
 )
@@ -129,7 +130,7 @@ def validate_casilla_input_ids[CasillaKey, CasillaValue](
         noncanonical, unknown_only = _noncanonical_casilla_reference_details(revision, unknown)
         if noncanonical:
             details = "; ".join(
-                _format_noncanonical_casilla_reference(casilla_id, targets)
+                format_noncanonical_casilla_reference(casilla_id, targets)
                 for casilla_id, targets in sorted(noncanonical.items())
             )
             raise RegistryValidationError(
@@ -177,13 +178,6 @@ def validate_casilla_input_ids[CasillaKey, CasillaValue](
             },
         )
     return {casilla_id: value for casilla_id, value in canonical_inputs.items() if isinstance(value, Decimal)}
-
-
-def _format_noncanonical_casilla_reference(token: str, targets: tuple[CasillaId, ...]) -> str:
-    rendered_targets = ", ".join(targets)
-    if len(targets) > 1:
-        return f"{token!r} is ambiguous; candidate casilla.id values: {rendered_targets}"
-    return f"{token!r} -> {rendered_targets}"
 
 
 def _noncanonical_casilla_reference_details(
@@ -259,7 +253,7 @@ def reject_unknown_override_casillas[CasillaKey](
         noncanonical, unknown_only = _noncanonical_casilla_reference_details(snapshot.revision, unknown)
         if noncanonical:
             details = "; ".join(
-                _format_noncanonical_casilla_reference(casilla_id, targets)
+                format_noncanonical_casilla_reference(casilla_id, targets)
                 for casilla_id, targets in sorted(noncanonical.items())
             )
             raise AmendmentOverrideCasillaError(
@@ -343,7 +337,7 @@ def reject_unknown_import_casillas[CasillaKey](
         noncanonical, unknown_only = _noncanonical_casilla_reference_details(snapshot.revision, unknown)
         if noncanonical:
             details = "; ".join(
-                _format_noncanonical_casilla_reference(casilla_id, targets)
+                format_noncanonical_casilla_reference(casilla_id, targets)
                 for casilla_id, targets in sorted(noncanonical.items())
             )
             raise ExternalModeloImportError(

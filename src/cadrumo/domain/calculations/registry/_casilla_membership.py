@@ -102,5 +102,19 @@ def casilla_noncanonical_reference_targets(revision: ModeloRevision, token: str)
     return casilla_noncanonical_reference_tokens(revision).get(token, ())
 
 
+def format_noncanonical_casilla_reference(token: str, targets: tuple[CasillaId, ...]) -> str:
+    """Render a refused metadata token with its canonical casilla candidates.
+
+    ``targets`` comes from :func:`casilla_noncanonical_reference_targets`.
+    A single target is rendered as a correction while multiple targets are
+    rendered as an ambiguity so every boundary explains why it cannot infer an
+    id from a printed number, form number, or export reference.
+    """
+    rendered_targets = ", ".join(targets)
+    if len(targets) > 1:
+        return f"{token!r} is ambiguous; candidate casilla.id values: {rendered_targets}"
+    return f"{token!r} -> {rendered_targets}"
+
+
 def _casilla_metadata_tokens(casilla: CasillaDefinition) -> tuple[str | None, ...]:
     return (casilla.number, casilla.form_number, *casilla.export_refs)

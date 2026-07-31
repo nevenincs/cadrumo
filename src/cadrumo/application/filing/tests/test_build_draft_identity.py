@@ -171,6 +171,7 @@ def test_build_draft_rejects_noncanonical_casilla_reference_token(
         )
 
     assert expected_fragment in str(exc_info.value)
+    assert f"{input_key!r} -> {casilla.id}" in str(exc_info.value)
 
 
 def test_build_draft_rejects_ambiguous_reused_printed_number() -> None:
@@ -188,8 +189,10 @@ def test_build_draft_rejects_ambiguous_reused_printed_number() -> None:
             schema_provider=build_runtime_schema_provider(modelos=("200",), filing_year=2024, period=period),
         )
 
-    assert _M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA in str(exc_info.value)
-    assert _M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA in str(exc_info.value)
+    assert (
+        f"{_M200_AMBIGUOUS_PRINTED_NUMBER!r} is ambiguous; candidate casilla.id values: "
+        f"{_M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA}, {_M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA}"
+    ) in str(exc_info.value)
 
 
 def test_typed_extended_and_event_periods_resolve_filing_date_context() -> None:

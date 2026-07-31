@@ -126,6 +126,9 @@ from ...domain.calculations.registry import (
     enum_consumed_binding_ids as _enum_consumed_binding_ids,
 )
 from ...domain.calculations.registry import (
+    format_noncanonical_casilla_reference,
+)
+from ...domain.calculations.registry import (
     revision_date_binding_ids as _revision_date_binding_ids,
 )
 from ...domain.filing import (
@@ -521,7 +524,7 @@ def _validate_filing_input_keys(
     supplied_noncanonical = tuple(key for key in inputs if key in noncanonical_tokens)
     if supplied_noncanonical:
         details = "; ".join(
-            _format_noncanonical_casilla_reference(key, noncanonical_tokens[key])
+            format_noncanonical_casilla_reference(key, noncanonical_tokens[key])
             for key in sorted(supplied_noncanonical)
         )
         raise ModeloBuilderError(
@@ -536,13 +539,6 @@ def _validate_filing_input_keys(
             f"registry:{snapshot.modelo.id}:{snapshot.revision.id}; unknown keys: "
             f"{', '.join(repr(key) for key in sorted(unknown))}",
         )
-
-
-def _format_noncanonical_casilla_reference(token: str, targets: tuple[_CasillaId, ...]) -> str:
-    rendered_targets = ", ".join(targets)
-    if len(targets) > 1:
-        return f"{token!r} is ambiguous; candidate casilla.id values: {rendered_targets}"
-    return f"{token!r} -> {rendered_targets}"
 
 
 def _date_inputs_for_ids(inputs: ModeloInputs, input_ids: set[_BindingId]) -> dict[_BindingId, date]:
