@@ -110,3 +110,17 @@ class TestParseExpedienteDetail:
                 expediente_id="202399999999999T",
                 base_url=_SEDE_BASE,
             )
+
+    def test_rejects_csv_longer_than_the_shared_constraint(self) -> None:
+        """Do not truncate a 25-character CSV before the strict model validates it."""
+        html = (
+            '<a href="/wlpl/KATA-APLI/cotejo/CotejoIdSv?CSV='
+            f"{'A' * 25}\">declaracion</a>"
+        )
+
+        with pytest.raises(SedeParseError, match="no /CotejoIdSv"):
+            parse_expediente_detail(
+                html,
+                expediente_id="202399999999999T",
+                base_url=_SEDE_BASE,
+            )

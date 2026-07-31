@@ -25,17 +25,13 @@ from pydantic import AnyHttpUrl, BaseModel, Field, field_validator
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core import Modelo, Period
 from .....domain.calculations.registry import CasillaId
+from ._adapter_utils import is_aeat_csv
 from ._errors import SedeValidationError
 
 # AEAT expediente identifiers are <year><sequence><checksum-letter>, e.g.
 # "202310013522456T" (length 16). Observed range: 14-20 characters in
 # the live capture.
 _EXPEDIENTE_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"^[0-9]{4,}[A-Z0-9]+$")
-
-# CSV (Código Seguro de Verificación) is uppercase hex/alphanumeric.
-# Observed: 16 chars ("TUD4V9XAUV7QJ8QV"). Width varies across modelos.
-_CSV_PATTERN: Final[re.Pattern[str]] = re.compile(r"^[A-Z0-9]{8,32}$")
-
 
 class Expediente(BaseModel):
     """One AEAT expediente as listed under *Mis Expedientes*.
@@ -114,7 +110,7 @@ class JustificanteRef(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    csv: str = Field(min_length=8, max_length=32)
+    csv: str = Field(min_length=8, max_length=24)
     expediente_id: str = Field(min_length=12, max_length=32)
     cotejo_url: AnyHttpUrl
     pdf_url: AnyHttpUrl
@@ -124,7 +120,7 @@ class JustificanteRef(BaseModel):
     @classmethod
     def _csv_shape(cls, value: str) -> str:
         """Reject CSV values that do not match the AEAT uppercase alphanumeric pattern."""
-        if value is not None and not _CSV_PATTERN.match(value):
+        if not is_aeat_csv(value):
             raise SedeValidationError(f"csv does not match AEAT shape: {value!r}")
         return value
 

@@ -44,7 +44,7 @@ _IRPF_ENDPOINT: Final[re.Pattern[str]] = re.compile(
 )
 
 _COTEJO_CSV: Final[re.Pattern[str]] = re.compile(
-    rf"{re.escape(_SEDE_PATHS.cotejo_query)}\?CSV=(?P<csv>[A-Z0-9]{{8,32}})",
+    rf"{re.escape(_SEDE_PATHS.cotejo_query)}\?CSV=(?P<csv>[A-Z0-9]{{8,24}})(?![A-Z0-9])",
 )
 
 

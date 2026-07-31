@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from urllib.parse import parse_qs, urlsplit
 
 from pydantic import AnyUrl
@@ -12,9 +11,8 @@ from .....domain.calculations.registry import (
     RemoteStateGuardPolicy,
     assert_remote_operation_allowed,
 )
+from ._adapter_utils import is_aeat_csv
 from ._errors import SedeParseError
-
-_CSV_SHAPE_RE = re.compile(r"^[A-Z0-9]{8,24}$")
 
 
 def assert_read_http(
@@ -52,7 +50,7 @@ def extract_csv_from_url(url: str) -> str:
             f"cotejo URL has {len(csv_values)} CSV values; AEAT only emits one: {url!r}",
         )
     csv = csv_values[0]
-    if not _CSV_SHAPE_RE.match(csv):
+    if not is_aeat_csv(csv):
         raise SedeParseError(
             f"cotejo URL CSV {csv!r} does not match AEAT shape (expected 8-24 uppercase alphanumeric chars)",
         )
