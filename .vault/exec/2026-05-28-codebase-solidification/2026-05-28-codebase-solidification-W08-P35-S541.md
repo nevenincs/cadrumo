@@ -1,10 +1,9 @@
 ---
-step_id: W08.P35.S541
 tags:
   - "#exec"
   - "#codebase-solidification"
 date: 2026-05-31
-modified: '2026-07-17'
+modified: '2026-07-31'
 related:
   - "[[2026-05-28-codebase-solidification-plan]]"
 ---

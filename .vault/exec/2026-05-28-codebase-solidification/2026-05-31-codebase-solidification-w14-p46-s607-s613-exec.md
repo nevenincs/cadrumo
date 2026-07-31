@@ -1,7 +1,6 @@
 ---
-step_id: "S607-S613"
 date: 2026-05-31
-modified: '2026-07-17'
+modified: '2026-07-31'
 campaign: codebase-solidification
 wave: W14
 phase: P46

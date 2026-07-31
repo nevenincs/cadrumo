@@ -3,8 +3,7 @@ tags:
   - '#exec'
   - '#schema-hardening'
 date: '2026-06-02'
-modified: '2026-07-17'
-step_id: 'P01.S07'
+modified: '2026-07-31'
 related:
   - '[[2026-06-02-registry-hardening-next-work-plan]]'
   - '[[2026-06-02-registry-hardening-m200-export-pressure-audit]]'

@@ -3,8 +3,7 @@ tags:
   - "#exec"
   - "#fresh-cli-persona-repair"
 date: '2026-05-27'
-modified: '2026-07-17'
-step_id: S175
+modified: '2026-07-31'
 commit: 51c99c2da
 related:
   - "[[2026-05-21-fresh-cli-persona-repair-plan]]"

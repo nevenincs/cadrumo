@@ -3,8 +3,7 @@ tags:
   - '#exec'
   - '#live-pull-verification-sweep'
 date: '2026-06-13'
-modified: '2026-07-17'
-step_id: 'S08,S10,S26'
+modified: '2026-07-31'
 related:
   - '[[2026-06-12-live-pull-verification-sweep-plan]]'
   - '[[2026-06-12-live-pull-verification-sweep-live-auth-blocker-audit]]'

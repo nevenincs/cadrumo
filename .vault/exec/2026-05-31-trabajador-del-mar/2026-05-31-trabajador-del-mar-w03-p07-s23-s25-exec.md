@@ -1,10 +1,9 @@
 ---
-step_id: "S23,S24,S25"
 tags:
   - "#exec"
   - "#trabajador-del-mar"
 date: "2026-05-31"
-modified: '2026-07-17'
+modified: '2026-07-31'
 related:
   - "[[2026-05-31-trabajador-del-mar-plan]]"
   - "[[2026-05-31-trabajador-del-mar-adr]]"

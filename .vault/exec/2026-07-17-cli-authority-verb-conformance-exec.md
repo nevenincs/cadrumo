@@ -3,8 +3,7 @@ tags:
   - '#exec'
   - '#cli-authority-verb-conformance'
 date: '2026-07-17'
-modified: '2026-07-19'
-step_id: '{S##}'
+modified: '2026-07-31'
 related:
   - "[[2026-07-17-auth-cert-recovery-custody-plan]]"
   - "[[2026-07-15-cli-authority-verb-conformance-adr]]"

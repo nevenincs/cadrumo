@@ -3,8 +3,7 @@ tags:
   - '#exec'
   - '#cli-ledger-testimonials'
 date: '2026-06-10'
-modified: '2026-07-17'
-step_id: P05.S14
+modified: '2026-07-31'
 related:
   - '[[2026-06-03-cli-ledger-testimonials-plan]]'
   - '[[2026-06-09-cli-ledger-testimonials-audit]]'

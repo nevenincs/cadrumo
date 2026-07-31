@@ -1,8 +1,7 @@
 ---
 tags: ["#exec", "#declaracion-extraction-architecture"]
 date: '2026-05-26'
-modified: '2026-07-17'
-step_id: 'W05.P16.S99'
+modified: '2026-07-31'
 related:
   - '[[2026-05-21-declaracion-extraction-architecture-plan]]'
   - '[[2026-05-22-declaracion-extraction-architecture-w04-p08-s86-w04-p09-s27-w04-p10-s29-w05-p11-s37-s95-exec]]'

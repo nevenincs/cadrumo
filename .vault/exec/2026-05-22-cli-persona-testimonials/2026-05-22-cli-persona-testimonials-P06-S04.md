@@ -3,8 +3,7 @@ tags:
   - '#exec'
   - '#cli-persona-testimonials'
 date: '2026-05-22'
-modified: '2026-07-15'
-step_id: 'P06.S04'
+modified: '2026-07-31'
 related:
   - '[[2026-05-21-cli-persona-testimonials-plan]]'
   - '[[2026-05-21-cross-campaign-hardening-audit]]'

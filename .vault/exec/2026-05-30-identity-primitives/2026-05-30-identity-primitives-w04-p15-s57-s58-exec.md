@@ -1,10 +1,9 @@
 ---
-step_id: S57, S58
 tags:
   - '#exec'
   - '#identity-primitives'
 date: '2026-05-30'
-modified: '2026-07-17'
+modified: '2026-07-31'
 related:
   - '[[2026-05-30-identity-primitives-plan]]'
   - '[[2026-05-30-identity-primitives-adr]]'

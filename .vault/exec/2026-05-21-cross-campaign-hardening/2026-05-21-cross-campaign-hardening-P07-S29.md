@@ -1,8 +1,7 @@
 ---
 tags: ["#exec", "#cross-campaign-hardening"]
 date: '2026-05-21'
-modified: '2026-07-17'
-step_id: 'P07.S29'
+modified: '2026-07-31'
 related:
   - '[[2026-05-21-cross-campaign-hardening-plan]]'
   - '[[2026-05-21-cross-campaign-hardening-audit]]'

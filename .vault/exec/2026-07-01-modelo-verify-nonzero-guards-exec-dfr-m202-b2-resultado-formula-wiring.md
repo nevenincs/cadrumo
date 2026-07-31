@@ -3,8 +3,7 @@ tags:
   - '#exec'
   - '#modelo-verify-nonzero-guards'
 date: '2026-07-01'
-modified: '2026-07-17'
-step_id: 'DFR-M202-B2-RESULTADO-FORMULA-WIRING'
+modified: '2026-07-31'
 related:
   - "[[2026-07-01-modelo-verify-nonzero-guards-m202-deferred-items-audit]]"
   - "[[2026-07-01-modelo-verify-nonzero-guards-review-closeout-audit]]"

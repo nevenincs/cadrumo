@@ -3,8 +3,7 @@ tags:
   - "#exec"
   - "#declaracion-extraction-architecture"
 date: "2026-05-28"
-modified: '2026-07-17'
-step_id: "W10.P53.S211"
+modified: '2026-07-31'
 related:
   - "[[2026-05-21-declaracion-extraction-architecture-plan]]"
   - "[[2026-05-28-declaracion-extraction-architecture-W10-P49-S206]]"

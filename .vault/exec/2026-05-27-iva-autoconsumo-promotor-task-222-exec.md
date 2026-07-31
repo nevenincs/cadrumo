@@ -3,8 +3,7 @@ tags:
   - '#exec'
   - '#iva-autoconsumo-promotor'
 date: '2026-05-27'
-modified: '2026-07-17'
-step_id: 'task-222'
+modified: '2026-07-31'
 related:
   - '[[2026-05-19-iva-compensation-chain-plan]]'
   - '[[2026-05-19-iva-compensation-chain-adr]]'

@@ -3,8 +3,7 @@ tags:
   - '#exec'
   - '#live-iva-compensation-wallet'
 date: '2026-05-27'
-modified: '2026-07-17'
-step_id: 'W05.P13.S45'
+modified: '2026-07-31'
 related:
   - '[[2026-05-19-live-iva-compensation-wallet-plan]]'
 ---

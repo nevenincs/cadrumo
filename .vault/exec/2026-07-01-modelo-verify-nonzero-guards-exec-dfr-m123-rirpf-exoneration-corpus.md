@@ -3,8 +3,7 @@ tags:
   - '#exec'
   - '#modelo-verify-nonzero-guards'
 date: '2026-07-01'
-modified: '2026-07-17'
-step_id: 'DFR-M123-RIRPF-EXONERATION-CORPUS'
+modified: '2026-07-31'
 related:
   - "[[2026-07-01-modelo-verify-nonzero-guards-audit]]"
   - "[[2026-06-30-modelo-verify-nonzero-guards-plan]]"

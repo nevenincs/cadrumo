@@ -2,9 +2,8 @@
 tags:
   - "#exec"
   - "#declaracion-extraction-architecture"
-step_id: W07.P22.S160
 date: 2026-05-26
-modified: '2026-07-17'
+modified: '2026-07-31'
 related:
   - "[[2026-05-21-declaracion-extraction-architecture-plan]]"
   - "[[2026-05-26-m100-extraction-profile-S29]]"
