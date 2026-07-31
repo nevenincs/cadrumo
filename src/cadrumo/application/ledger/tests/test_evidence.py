@@ -6,8 +6,10 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
+from ....domain.attachments import load_attachment
 from ....domain.buckets import BucketEventType
 from .._evidence import (
     PurchaseInvoiceEvidencePatch,
@@ -108,6 +110,24 @@ class TestEvidenceEventEmission:
         assert result.record.supplier == "Acme S.L."
         assert result.record.invoice_number == "INV-001"
         assert result.record.media_kind == "pdf"
+
+    def test_add_persists_attachment_custody_and_ledger_provenance(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        pdf_file: Path,
+    ) -> None:
+        svc = _make_svc(isolated_settings, secure_objects)
+
+        result = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_file, actor="operator-A")
+
+        store = AttachmentStore(objects=secure_objects)
+        manifest = load_attachment(store, result.record.attachment_id)
+        assert store.read_bytes(manifest.sha256) == pdf_file.read_bytes()
+        assert manifest.attachment_id == result.record.source_sha256
+        assert manifest.bucket_id == _BUCKET_ID
+        assert manifest.captured_by == "operator-A"
+        assert manifest.source_command == "aeat app ledger evidence add"
 
     def test_remove_result_carries_the_removed_record(
         self,

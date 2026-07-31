@@ -30,6 +30,8 @@ def _build_attachment_manifest(
     bytes_size: int,
     captured_at: datetime,
     bucket_id: str | None,
+    captured_by: str | None,
+    source_command: str | None,
     link_transaction_ids: tuple[str, ...],
     link_invoice_ids: tuple[str, ...],
     metadata: Mapping[str, str] | None,
@@ -46,6 +48,8 @@ def _build_attachment_manifest(
             "mime_type": mime_type,
             "bytes_size": bytes_size,
             "captured_at": captured_at,
+            "captured_by": captured_by,
+            "source_command": source_command,
             "linked_transaction_ids": link_transaction_ids,
             "linked_invoice_ids": link_invoice_ids,
             "bucket_id": bucket_id,
@@ -66,6 +70,8 @@ def _persist_attachment(
     bytes_size: int,
     captured_at: datetime,
     bucket_id: str | None,
+    captured_by: str | None,
+    source_command: str | None,
     link_transaction_ids: tuple[str, ...],
     link_invoice_ids: tuple[str, ...],
     metadata: Mapping[str, str] | None,
@@ -89,6 +95,8 @@ def _persist_attachment(
         bytes_size=bytes_size,
         captured_at=captured_at,
         bucket_id=bucket_id,
+        captured_by=captured_by,
+        source_command=source_command,
         link_transaction_ids=link_transaction_ids,
         link_invoice_ids=link_invoice_ids,
         metadata=metadata,
@@ -108,6 +116,8 @@ def add_attachment(
     mime_type: str,
     captured_at: datetime,
     bucket_id: str | None = None,
+    captured_by: str | None = None,
+    source_command: str | None = None,
     link_transaction_ids: tuple[str, ...] = (),
     link_invoice_ids: tuple[str, ...] = (),
     metadata: Mapping[str, str] | None = None,
@@ -134,6 +144,8 @@ def add_attachment(
         captured_at: Wall-clock timestamp when the bytes were
             captured upstream.
         bucket_id: Optional owning profile bucket for the evidence record.
+        captured_by: Actor that captured or imported the evidence when known.
+        source_command: Operator command or backend that captured the evidence.
         link_transaction_ids: Optional tuple of transaction ids the
             attachment evidences.
         link_invoice_ids: Optional tuple of invoice ids the
@@ -157,6 +169,8 @@ def add_attachment(
         bytes_size=bytes_size,
         captured_at=captured_at,
         bucket_id=bucket_id,
+        captured_by=captured_by,
+        source_command=source_command,
         link_transaction_ids=link_transaction_ids,
         link_invoice_ids=link_invoice_ids,
         metadata=metadata,
@@ -176,6 +190,8 @@ def add_attachment_bytes(
     mime_type: str,
     captured_at: datetime,
     bucket_id: str | None = None,
+    captured_by: str | None = None,
+    source_command: str | None = None,
     link_transaction_ids: tuple[str, ...] = (),
     link_invoice_ids: tuple[str, ...] = (),
     metadata: Mapping[str, str] | None = None,
@@ -202,6 +218,8 @@ def add_attachment_bytes(
         mime_type: MIME type of the fetched bytes.
         captured_at: Wall-clock timestamp when the bytes were captured.
         bucket_id: Optional owning profile bucket for the evidence record.
+        captured_by: Actor that captured or imported the evidence when known.
+        source_command: Operator command or backend that captured the evidence.
         link_transaction_ids: Optional transaction ids the attachment evidences.
         link_invoice_ids: Optional invoice ids the attachment evidences.
         metadata: Optional free-form key/value metadata.
@@ -222,6 +240,8 @@ def add_attachment_bytes(
         bytes_size=len(data),
         captured_at=captured_at,
         bucket_id=bucket_id,
+        captured_by=captured_by,
+        source_command=source_command,
         link_transaction_ids=link_transaction_ids,
         link_invoice_ids=link_invoice_ids,
         metadata=metadata,
