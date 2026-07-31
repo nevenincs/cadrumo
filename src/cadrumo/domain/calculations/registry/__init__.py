@@ -496,7 +496,7 @@ from ._schema_verification import (
     VerificationPredicateDefinition,
 )
 from ._snapshot import build_snapshot
-from ._temporal import select_revision
+from ._temporal import select_revision, select_revision_for_year
 from ._validate import RegistryValidator
 from ._validate_cross_revision import (
     CrossRevisionCasillaDriftSummary,
@@ -937,6 +937,7 @@ __all__ = [
     "save_parity_tape",
     "scan_workbook",
     "select_revision",
+    "select_revision_for_year",
     "selector_as_dict",
     "selector_model_for_source",
     "stamp_bundled_registry_verdict",

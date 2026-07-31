@@ -713,7 +713,7 @@ def _relation_input_guidance_lines(rows) -> tuple[str, ...]:
     return tuple(lines)
 
 
-def _profile_resolved_binding_ids(report) -> frozenset[str]:
+def _profile_resolved_binding_ids(report, *, as_of: date | None) -> frozenset[str]:
     filing_year = getattr(report, "filing_year", None)
     if filing_year is None:
         return frozenset()
@@ -726,6 +726,8 @@ def _profile_resolved_binding_ids(report) -> frozenset[str]:
             bucket_id=bucket_id,
             filing_year=int(filing_year),
             period=getattr(report, "filing_period", None),
+            as_of=as_of,
+            revision_id=str(report.revision),
         )
     except (RegistrySnapshotError, RegistryValidationError, ProfileNotFoundError):
         return frozenset()
@@ -736,7 +738,7 @@ def _bindings_report_for_target(
     *,
     year: int | None,
     period: str | None,
-    as_of: str | None,
+    as_of: date | None,
     deps: _DiscoveryDeps,
 ):
     if year is not None and period is not None:
@@ -745,7 +747,7 @@ def _bindings_report_for_target(
             lambda: registry_bindings_for_scope(
                 target,
                 period=typed_period,
-                as_of=_as_of(as_of),
+                as_of=as_of,
             ),
             bad_parameter_from_error=deps.bad_parameter_from_error,
         )
@@ -754,20 +756,25 @@ def _bindings_report_for_target(
             lambda: registry_bindings_for_year(
                 target,
                 filing_year=year,
-                as_of=_as_of(as_of),
+                as_of=as_of,
             ),
             bad_parameter_from_error=deps.bad_parameter_from_error,
         )
     return _run_query(
-        lambda: registry_bindings(target, period=period, as_of=_as_of(as_of)),
+        lambda: registry_bindings(target, period=period, as_of=as_of),
         bad_parameter_from_error=deps.bad_parameter_from_error,
     )
 
 
-def _binding_list_rows_for_report(report, *, missing: bool) -> tuple[list[BindingListRowPayload], list[str]]:
+def _binding_list_rows_for_report(
+    report,
+    *,
+    missing: bool,
+    as_of: date | None,
+) -> tuple[list[BindingListRowPayload], list[str]]:
     rows = report.rows
     if missing:
-        profile_resolved = _profile_resolved_binding_ids(report)
+        profile_resolved = _profile_resolved_binding_ids(report, as_of=as_of)
         rows = tuple(
             row
             for row in rows
@@ -836,11 +843,18 @@ def _register_bindings_list_command(bindings_app: typer.Typer, deps: _DiscoveryD
         ] = None,
     ) -> None:
         """List bindings across modelos. All filters are optional refinements."""
+        resolved_as_of = _as_of(as_of)
         targets = registry_modelo_codes() if modelo is None else (modelo,)
         per_modelo_reports = []
         for target in targets:
             try:
-                report = _bindings_report_for_target(target, year=year, period=period, as_of=as_of, deps=deps)
+                report = _bindings_report_for_target(
+                    target,
+                    year=year,
+                    period=period,
+                    as_of=resolved_as_of,
+                    deps=deps,
+                )
             except Exception:
                 if modelo is not None:
                     raise
@@ -849,7 +863,11 @@ def _register_bindings_list_command(bindings_app: typer.Typer, deps: _DiscoveryD
         merged_rows: list[BindingListRowPayload] = []
         text_rows: list[str] = []
         for report in per_modelo_reports:
-            report_rows, report_text_rows = _binding_list_rows_for_report(report, missing=missing)
+            report_rows, report_text_rows = _binding_list_rows_for_report(
+                report,
+                missing=missing,
+                as_of=resolved_as_of,
+            )
             merged_rows.extend(report_rows)
             text_rows.extend(report_text_rows)
         result = ModeloBindingsListResult(

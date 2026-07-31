@@ -148,6 +148,31 @@ def test_bindings_list_missing_drops_profile_resolved_bindings() -> None:
     assert missing_ids < full_ids
 
 
+def test_bindings_list_missing_forwards_as_of_to_profile_readiness() -> None:
+    """The missing filter resolves profile readiness at the as-of date."""
+
+    _create_profile()
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "bindings",
+            "list",
+            "--modelo",
+            "100",
+            "--year",
+            "2024",
+            "--missing",
+            "--as-of",
+            "2024-06-30",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    binding_ids = {line.split("\t")[3] for line in result.output.splitlines() if line.startswith("100\t")}
+    assert all("tax-residence-ccaa" not in binding_id for binding_id in binding_ids)
+
+
 def test_bindings_list_labels_profile_sourced_rows_as_profile_facts() -> None:
     """``bindings list`` must not send operators to ledger work for
     profile-sourced Modelo 100 bindings.

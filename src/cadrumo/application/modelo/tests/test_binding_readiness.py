@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -10,6 +11,7 @@ import pytest
 from ....core import Period
 from ....domain.calculations.registry import (
     AmbiguousRevisionSelectionError,
+    RegistryQueryService,
     RegistryValidationError,
     ValidatedRegistryAuthority,
 )
@@ -72,7 +74,8 @@ source_refs = ["test-source-001"]
 _MINIMAL_REVISION_TOML_TEMPLATE = """\
 [revisions."{revision_id}"]
 label = "{label}"
-valid_from = 2025-01-01
+valid_from = {valid_from}
+{valid_to_line}
 period_selector = {{ years = [2025], periods = ["{period}"] }}
 legal_refs = ["test-ley-001:art-1"]
 source_refs = ["test-source-001"]
@@ -113,7 +116,14 @@ source_refs = ["test-source-001"]
 """
 
 
-def _write_year_ambiguous_registry(tmp_path: Path) -> Path:
+def _write_year_ambiguous_registry(
+    tmp_path: Path,
+    *,
+    revisions: tuple[tuple[str, str, str, str, str | None], ...] = (
+        ("2025-1t", "2025 first quarter", "1T", "2025-01-01", None),
+        ("2025-2t", "2025 second quarter", "2T", "2025-01-01", None),
+    ),
+) -> Path:
     registry_root = tmp_path / "registry" / "aeat"
     legal_dir = registry_root / "legal"
     modelos_dir = registry_root / "modelos" / "999"
@@ -128,14 +138,17 @@ def _write_year_ambiguous_registry(tmp_path: Path) -> Path:
     (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
     (modelos_dir / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")
 
-    for revision_id, label, period in (
-        ("2025-1t", "2025 first quarter", "1T"),
-        ("2025-2t", "2025 second quarter", "2T"),
-    ):
+    for revision_id, label, period, valid_from, valid_to in revisions:
         revision_dir = modelos_dir / "revisions" / revision_id
         revision_dir.mkdir(parents=True)
         (revision_dir / "revision.toml").write_text(
-            _MINIMAL_REVISION_TOML_TEMPLATE.format(revision_id=revision_id, label=label, period=period),
+            _MINIMAL_REVISION_TOML_TEMPLATE.format(
+                revision_id=revision_id,
+                label=label,
+                period=period,
+                valid_from=valid_from,
+                valid_to_line="" if valid_to is None else f"valid_to = {valid_to}",
+            ),
             encoding="utf-8",
         )
         for section, template in (
@@ -215,3 +228,40 @@ def test_year_only_binding_readiness_refuses_multiple_covering_revisions(tmp_pat
 
     assert exc_info.value.modelo_id == "999"
     assert exc_info.value.candidate_ids == ("2025-1t", "2025-2t")
+
+
+def test_year_only_report_and_readiness_share_effective_revision_selection(tmp_path: Path) -> None:
+    """Same-year revisions select the effective window before readiness materialises its snapshot."""
+    registry_root = _write_year_ambiguous_registry(
+        tmp_path,
+        revisions=(
+            ("2025-early", "2025 first effective window", "1T", "2025-01-01", "2025-06-30"),
+            ("2025-late", "2025 second effective window", "2T", "2025-07-01", None),
+        ),
+    )
+    authority = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
+    service = RegistryQueryService(authority)
+
+    early_as_of = date(2025, 3, 31)
+    late_as_of = date(2025, 9, 30)
+    early_report = service.bindings_for_year("999", filing_year=2025, as_of=early_as_of)
+    late_report = service.bindings_for_year("999", filing_year=2025, as_of=late_as_of)
+
+    assert (early_report.revision, early_report.period) == ("2025-early", "1T")
+    assert (late_report.revision, late_report.period) == ("2025-late", "2T")
+    assert _annual_period_for_year(authority, modelo="999", filing_year=2025, as_of=early_as_of) == early_report.period
+    assert _annual_period_for_year(authority, modelo="999", filing_year=2025, as_of=late_as_of) == late_report.period
+    assert authority.snapshot(
+        "999",
+        filing_year=2025,
+        period=early_report.period or "",
+        on=early_as_of,
+        revision_id=early_report.revision,
+    ).revision.id == early_report.revision
+    assert authority.snapshot(
+        "999",
+        filing_year=2025,
+        period=late_report.period or "",
+        on=late_as_of,
+        revision_id=late_report.revision,
+    ).revision.id == late_report.revision

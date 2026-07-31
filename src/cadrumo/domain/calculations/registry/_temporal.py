@@ -13,6 +13,40 @@ from ._period_selector_match import selector_token_for_request
 from ._schema import ModeloDefinition, ModeloRevision
 
 
+def select_revision_for_year(
+    modelo: ModeloDefinition,
+    *,
+    filing_year: int,
+    on: date | None = None,
+) -> ModeloRevision:
+    """Select exactly one revision for a filing year and effective date.
+
+    This is the year-only authority for read-only revision-wide surfaces such
+    as bindings discovery.  Callers that already have its revision may
+    materialise a snapshot with that explicit ``revision_id`` rather than
+    independently selecting again.
+    """
+    candidates = [
+        revision
+        for revision in modelo.revisions.values()
+        if revision.period_selector.includes_year(filing_year)
+        and (on is None or (revision.valid_from <= on and (revision.valid_to is None or on <= revision.valid_to)))
+    ]
+    if not candidates:
+        raise NoRevisionForPeriodError(
+            modelo_id=modelo.id,
+            filing_year=filing_year,
+            period="year",
+            revision_id=None,
+        )
+    if len(candidates) > 1:
+        raise AmbiguousRevisionSelectionError(
+            modelo_id=modelo.id,
+            candidate_ids=tuple(revision.id for revision in candidates),
+        )
+    return candidates[0]
+
+
 def select_revision(
     modelo: ModeloDefinition,
     *,

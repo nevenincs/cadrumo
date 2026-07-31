@@ -52,6 +52,7 @@ from ._runtime_graph import (
 from ._schema import CasillaDefinition, ModeloDefinition, ModeloRevision, RelationDefinition, filing_period_from_scope
 from ._schema_input_kind import InputKind
 from ._support_matrix import build_support_matrix
+from ._temporal import select_revision_for_year
 
 #: Bare registry period tokens (``0A``, ``1T``-``4T``, ``01``-``12``,
 #: ``1P``-``4P``, ``EXT-1T``-``EXT-4T``, ``AD-HOC``, ``EVENT-N``) carry
@@ -387,6 +388,18 @@ class RegistryQueryService:
             self._resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
         )
 
+    def bindings_for_year(
+        self,
+        modelo: str,
+        *,
+        filing_year: int,
+        as_of: date | None = None,
+    ) -> ModeloBindingsReport:
+        """Return revision-wide bindings for one filing year and effective date."""
+        return _build_modelo_bindings_report(
+            self._resolve_revision_for_year(modelo, filing_year=filing_year, as_of=as_of),
+        )
+
     def formulas_for_scope(
         self,
         modelo: str,
@@ -552,6 +565,26 @@ class RegistryQueryService:
             revision=snapshot.revision,
             filing_year=filing_year,
             registry_period=registry_period,
+        )
+
+    def _resolve_revision_for_year(
+        self,
+        modelo: str,
+        *,
+        filing_year: int,
+        as_of: date | None,
+    ) -> ResolvedRegistryQueryContext:
+        definition = self._authority.validate_modelo(modelo.strip())
+        revision = select_revision_for_year(definition, filing_year=filing_year, on=as_of)
+        if not revision.period_selector.periods:
+            raise RegistryValidationError(
+                f"modelo {definition.id} revision {revision.id!r} has no period token for filing year {filing_year}",
+            )
+        return ResolvedRegistryQueryContext(
+            definition=definition,
+            revision=revision,
+            filing_year=filing_year,
+            registry_period=revision.period_selector.periods[0],
         )
 
 
