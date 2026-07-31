@@ -23,7 +23,6 @@ as ``aeat --version``.
 
 from __future__ import annotations
 
-import sys
 from collections.abc import Iterable, Mapping, Sequence
 from datetime import date as _date
 from decimal import Decimal
@@ -31,10 +30,12 @@ from typing import TYPE_CHECKING
 
 import typer
 
+from ...core.cli_metadata import is_metadata_invocation
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.output_rendering import OutputFormat, render_command_output
+from ._command_suggestions import INVOCATION_REMAINDER_META_KEY
 
 # The application- and domain-layer symbols below are imported lazily,
 # inside the helpers that use them at runtime. A module-level import
@@ -68,9 +69,11 @@ __all__ = [
 # Transport helpers
 # ---------------------------------------------------------------------
 
-def _is_metadata_invocation() -> bool:
-    """Return whether the arguments request help or version metadata."""
-    return any(argument in {"--help", "-h", "--version", "-V"} for argument in sys.argv[1:])
+
+def _is_metadata_invocation(ctx: typer.Context) -> bool:
+    """Read metadata posture from the invocation captured on ``ctx``."""
+    arguments = tuple(str(token) for token in ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ()))
+    return is_metadata_invocation(arguments)
 
 
 def _format_of(ctx: typer.Context) -> OutputFormat:
@@ -135,7 +138,7 @@ def _emit_envelope(
             notices into ``lines`` themselves so JSON and text cannot
             drift.
     """
-    metadata_invocation = _is_metadata_invocation()
+    metadata_invocation = _is_metadata_invocation(ctx)
     output_format = _format_of(ctx)
     if output_format is OutputFormat.JSON:
         if metadata_invocation:

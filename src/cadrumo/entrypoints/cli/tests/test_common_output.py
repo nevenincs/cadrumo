@@ -6,7 +6,8 @@ import typer.main
 
 from ....core.json_contract import OutputSchema
 from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
-from .._common import _emit_envelope
+from .._command_suggestions import INVOCATION_REMAINDER_META_KEY
+from .._common import _emit_envelope, _is_metadata_invocation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -39,6 +40,20 @@ def test_emit_envelope_text_path_redacts_lines_through_common_renderer(capsys: p
     output = capsys.readouterr().out
     assert _PROFILE_ID not in output
     assert f"profile={CLI_PROFILE_ID_PLACEHOLDER}" in output
+
+
+def test_common_reads_metadata_posture_from_the_cli_context() -> None:
+    """Output metadata posture comes from this invocation, never ambient argv."""
+    app = typer.Typer()
+
+    @app.command()
+    def _noop() -> None: ...
+
+    click_cmd = typer.main.get_command(app)
+    ctx = typer.Context(click_cmd)
+    ctx.meta[INVOCATION_REMAINDER_META_KEY] = ["app", "overview", "--help"]
+
+    assert _is_metadata_invocation(ctx) is True
 
 
 def test_operator_progress_banner_goes_to_stderr_not_stdout(capsys: pytest.CaptureFixture[str]) -> None:

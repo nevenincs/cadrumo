@@ -50,6 +50,7 @@ _configure_stdio_for_utf8()
 
 from ...core import PRODUCT_IDENTITY as _PRODUCT_IDENTITY
 from ...core import ProfileSessionRefusalReason as _ProfileSessionRefusalReason
+from ...core.cli_metadata import is_metadata_invocation as _is_metadata_invocation
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES
 from ...core.i18n import tr
 from ...core.output_rendering import OutputFormat as _OutputFormat
@@ -654,7 +655,7 @@ def _is_introspection_only_invocation(ctx: typer.Context) -> bool:
     from ._command_suggestions import INVOCATION_REMAINDER_META_KEY
 
     remainder = list(ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ()))
-    if any(token in ("--help", "-h") for token in remainder):
+    if _is_metadata_invocation(remainder):
         return True
     # Walk the LEADING non-option tokens through the real command tree;
     # the chain stops at the first option token (everything after it can
@@ -1128,11 +1129,6 @@ def main() -> None:
         progress_sink = operator_progress_sink(_emit_operator_progress)
     with _metadata_state_isolation(arguments), _ensure_help_render_width(), progress_sink:
         app(prog_name=_PRODUCT_IDENTITY.cli_executable)
-
-
-def _is_metadata_invocation(arguments: list[str]) -> bool:
-    """Return whether the arguments request help or version metadata."""
-    return any(argument in {"--help", "-h", "--version", "-V"} for argument in arguments)
 
 
 def _refuse_former_product_state_at_startup() -> None:
