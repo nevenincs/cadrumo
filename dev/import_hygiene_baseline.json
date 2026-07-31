@@ -12,8 +12,7 @@
       "src/cadrumo/domain/calculations/registry/applicability.py",
       "src/cadrumo/domain/deadlines/taxpayer_model.py",
       "src/cadrumo/domain/transactions/_ids.py",
-      "src/cadrumo/entrypoints/cli/_schemas.py",
-      "src/cadrumo/entrypoints/cli/_wizard_payloads.py"
+      "src/cadrumo/entrypoints/cli/_schemas.py"
     ]
   },
   "family3_pinned_duplicate_symbols": {
