@@ -260,7 +260,7 @@ def _register_sandbox_discard_command(app: typer.Typer) -> None:
         )
         from ....application.workflow import read_profile_bucket
         from ....domain.buckets import BucketDeleteRefusedError
-        from .._config_sandbox_payloads import ConfigProfileSandboxDiscardResult, SandboxNamespacePayload
+        from .._config_sandbox_payloads import ConfigProfileSandboxDiscardResult
 
         label = sandbox_label(name)
         pointer = read_profile_bucket(label)
@@ -289,10 +289,7 @@ def _register_sandbox_discard_command(app: typer.Typer) -> None:
             result = ConfigProfileSandboxDiscardResult(
                 dry_run=True,
                 bucket_id=preview.bucket_id,
-                namespaces=[
-                    SandboxNamespacePayload(namespace=row.namespace, row_count=row.row_count)
-                    for row in preview.namespaces
-                ],
+                namespaces=list(preview.namespaces),
             )
             lines = [
                 "dry_run\ttrue",

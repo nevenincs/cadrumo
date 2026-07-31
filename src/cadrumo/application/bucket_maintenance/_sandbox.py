@@ -108,7 +108,13 @@ from ..workflow import (
     read_profile_bucket_by_id,
     workflow_state_repository,
 )
-from ._contracts import ArchiveBucketCommand, BrowseBucketCommand, DeleteBucketCommand, RestoreBucketCommand
+from ._contracts import (
+    ArchiveBucketCommand,
+    BrowseBucketCommand,
+    BucketNamespaceInventoryRow,
+    DeleteBucketCommand,
+    RestoreBucketCommand,
+)
 from ._service import BucketMaintenanceService
 
 #: Reserved operator-visible label prefix identifying a sandbox bucket.
@@ -227,16 +233,7 @@ class PreviewDiscardSandboxResult(BaseModel):
     bucket_id: BucketId
     label: str
     is_active: bool
-    namespaces: tuple[SandboxNamespaceInventoryRow, ...]
-
-
-class SandboxNamespaceInventoryRow(BaseModel):
-    """One namespace row in a sandbox discard preview."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    namespace: str = Field(min_length=1)
-    row_count: int = Field(ge=0)
+    namespaces: tuple[BucketNamespaceInventoryRow, ...]
 
 
 class CreateSandboxCommand(BaseModel):
@@ -483,9 +480,7 @@ def preview_discard_sandbox(command: PreviewDiscardSandboxCommand) -> PreviewDis
         bucket_id=command.bucket_id,
         label=pointer.label,
         is_active=resolve_active_bucket_id() == command.bucket_id,
-        namespaces=tuple(
-            SandboxNamespaceInventoryRow(namespace=row.namespace, row_count=row.row_count) for row in browsed.rows
-        ),
+        namespaces=browsed.rows,
     )
 
 
@@ -746,7 +741,6 @@ __all__ = [
     "SandboxDiscardRefusedError",
     "SandboxMergeRefusedError",
     "SandboxMergeScope",
-    "SandboxNamespaceInventoryRow",
     "SandboxNotArchivedError",
     "SandboxNotFoundError",
     "SandboxSourceNotFoundError",
