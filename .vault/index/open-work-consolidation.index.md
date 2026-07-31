@@ -3,11 +3,12 @@ generated: true
 tags:
   - '#index'
   - '#open-work-consolidation'
-date: '2026-07-30'
-modified: '2026-07-30'
+date: '2026-07-31'
+modified: '2026-07-31'
 body_schema: 'body-v1'
 related:
   - '[[2026-07-30-open-work-consolidation-P05-S28]]'
+  - '[[2026-07-30-open-work-consolidation-P05-S30]]'
   - '[[2026-07-30-open-work-consolidation-adr]]'
   - '[[2026-07-30-open-work-consolidation-audit]]'
   - '[[2026-07-30-open-work-consolidation-plan]]'
@@ -30,6 +31,7 @@ Auto-generated index of all documents tagged with `#open-work-consolidation`.
 ### exec
 
 - `2026-07-30-open-work-consolidation-P05-S28` - Assess whether the same post-auth failure spends a Clave Permanente credential, a question recorded only inline in one step record and tracked nowhere, escalating to a coding campaign with a discovery gate if it proves a defect
+- `2026-07-30-open-work-consolidation-P05-S30` - Rerun the twelve semantic duplication probes and record the delta against the baseline they check for recurrence of, closing the residue of a row that was superseded rather than satisfied
 
 ### plan
 

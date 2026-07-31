@@ -65,7 +65,7 @@ Carries the work that no publication gates, including live user-facing breakage,
 - [ ] `P05.S26` - Delete the three orphaned deployment environments left by the retired second publication lane; `operator action, repository environments`.
 - [ ] `P05.S27` - Verify the Clave session salvage with one live authentication run under the live-tests opt-in, inducing a post-auth navigation failure and confirming the salvage line fires while no second approval is requested on retry, OPERATOR-GATED because the second factor is single-use and device-bound; `operator action, live Clave authentication`.
 - [x] `P05.S28` - Assess whether the same post-auth failure spends a Clave Permanente credential, a question recorded only inline in one step record and tracked nowhere, escalating to a coding campaign with a discovery gate if it proves a defect; `src/cadrumo/adapters/outbound/aeat/auth/_clave_permanente_support.py`.
-- [ ] `P05.S30` - Rerun the twelve semantic duplication probes and record the delta against the baseline they check for recurrence of, closing the residue of a row that was superseded rather than satisfied; `src/cadrumo/, dev/audit/`.
+- [x] `P05.S30` - Rerun the twelve semantic duplication probes and record the delta against the baseline they check for recurrence of, closing the residue of a row that was superseded rather than satisfied; `src/cadrumo/, dev/audit/`.
 - [ ] `P05.S31` - Submit the winget manifest under the corrected package identifier once an asset-bearing dashboard release exists, blocked on that upstream release process rather than on anything here; `operator action, microsoft/winget-pkgs submission`.
 
 ## Description
