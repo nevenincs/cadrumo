@@ -24,7 +24,7 @@ as ``aeat --version``.
 from __future__ import annotations
 
 import sys
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from datetime import date as _date
 from decimal import Decimal
 from typing import TYPE_CHECKING
@@ -348,10 +348,25 @@ class _LedgerPeriodRefusal(typer.BadParameter):
     ``context``, so automation reads the accepted grammar as data rather than
     scraping the rendered range notation, and a wording pass on the message
     cannot change the advertised set.
+
+    Takes the locale key via the keyword ``translated_message`` (with its
+    substitution ``context``) rather than an already-resolved string, matching
+    the project-wide structured-error contract: the key and its context ride on
+    the exception, resolved once here for the click-parse-time rendering, but
+    available unflattened for any later structured consumer.
     """
 
-    def __init__(self, message: str, *, accepted_period_tokens: tuple[str, ...]) -> None:
-        super().__init__(message)
+    def __init__(
+        self,
+        *,
+        translated_message: str,
+        context: Mapping[str, object] | None = None,
+        accepted_period_tokens: tuple[str, ...],
+    ) -> None:
+        resolved_context = dict(context) if context is not None else {}
+        super().__init__(tr(translated_message, **resolved_context))
+        self.translated_message: str = translated_message
+        self.context: dict[str, object] = resolved_context
         self.accepted_period_tokens: tuple[str, ...] = accepted_period_tokens
 
 
@@ -387,7 +402,8 @@ def _canonical_period(period: str, *, year: int) -> Period:
             # clave such as ``1P``): refuse with the AEAT-token guidance below.
 
     raise _LedgerPeriodRefusal(
-        tr("cli.common.errors.period_unrecognised", raw=period),
+        translated_message="cli.common.errors.period_unrecognised",
+        context={"raw": period},
         accepted_period_tokens=_ledger_period_accepted_tokens(),
     )
 

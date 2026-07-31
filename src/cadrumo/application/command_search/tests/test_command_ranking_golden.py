@@ -87,7 +87,7 @@ def test_no_retired_command_key_remains_searchable() -> None:
     # descriptors makes every retired key absent while proving nothing. The live
     # surface carries ~292 command keys, so pin a plausible floor well below that
     # and far above a collapsed lazy walk, catching a truncated set that a bare
-    # non-empty check would wave through.
+    # non-empty check would let slip through unnoticed.
     assert len(keys) >= 200, (
         f"descriptor set resolved only {len(keys)} keys, so this gate would pass while checking nothing"
     )

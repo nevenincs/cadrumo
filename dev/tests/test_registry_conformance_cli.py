@@ -1653,7 +1653,8 @@ def test_stamp_restores_the_manifest_when_the_written_tree_no_longer_loads(regis
     newline in a string is nothing pydantic objects to; and the rendered basic
     string then carries a literal newline, which TOML forbids. So the manifest
     the writer produced is one the loader rejects — exactly the event the
-    two-phase design exists for — and the restore is what keeps it off disk.
+    two-stage write-then-verify design exists for — and the restore is what
+    keeps it off disk.
 
     Two assertions carry the proof. The mtime is pinned first and must MOVE,
     which is what pins this test to the post-write branch: without it the case

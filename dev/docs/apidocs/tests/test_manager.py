@@ -154,10 +154,10 @@ def test_scaffold_writes_line_feed_terminators(tmp_path: pytest.TempPathFactory)
     manager = ApiStubManager(src_cadrumo=src_cadrumo, docs_api=docs_api)
     result = manager.scaffold()
 
-    stubs = sorted(docs_api.glob("*.rst"))
-    assert len(stubs) == result.written, "the scan must cover every stub the run reported writing"
+    rst_paths = sorted(docs_api.glob("*.rst"))
+    assert len(rst_paths) == result.written, "the scan must cover every stub the run reported writing"
 
-    translated = [stub.name for stub in stubs if b"\r\n" in stub.read_bytes()]
+    translated = [rst_path.name for rst_path in rst_paths if b"\r\n" in rst_path.read_bytes()]
     assert not translated, f"the generator translated terminators in {len(translated)} stubs: {translated[:5]}"
 
 
