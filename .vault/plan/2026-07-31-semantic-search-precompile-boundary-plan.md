@@ -4,7 +4,7 @@ tags:
   - '#semantic-search-precompile-boundary'
 date: '2026-07-31'
 modified: '2026-07-31'
-body_hash: 'sha256:7a93a7d64845e4e727e6b61f8c79bb248aecec2a619b65a7430c4031fd196159'
+body_hash: 'sha256:a4e36694de5452d5ea70d4aa667a8e15dac393e1473d940b2420bb16ba8660d8'
 tier: L2
 related:
   - '[[2026-07-31-semantic-search-precompile-boundary-adr]]'
@@ -112,8 +112,8 @@ Executes the semantic-search-precompile-boundary ADR: retire the runtime embeddi
 
 Hand off the in-flight loader-hardening WIP and stamp the R3 amendment so no agent hardens a surface scheduled for deletion and no reader takes the refoundation ADR's semantic half as still in force.
 
-- [ ] `P01.S01` - Report the collision between this ruling and the in-flight loader-hardening WIP to the coordinator and obtain an explicit handoff of the uncommitted changes before any deletion touches those files; `src/cadrumo/application/corpus_search/_model_loader.py`.
-- [ ] `P01.S02` - Annotate ruling R3 of the agent-harness-refoundation ADR as amended by the semantic-search-precompile-boundary ADR, following the existing R2 and R8 amendment-note pattern; `.vault/adr/2026-07-02-agent-harness-refoundation-adr.md`.
+- [x] `P01.S01` - Report the collision between this ruling and the in-flight loader-hardening WIP to the coordinator and obtain an explicit handoff of the uncommitted changes before any deletion touches those files; `src/cadrumo/application/corpus_search/_model_loader.py`.
+- [x] `P01.S02` - Annotate ruling R3 of the agent-harness-refoundation ADR as amended by the semantic-search-precompile-boundary ADR, following the existing R2 and R8 amendment-note pattern; `.vault/adr/2026-07-02-agent-harness-refoundation-adr.md`.
 
 ### Phase `P02` - Atomic rewire and deletion
 
