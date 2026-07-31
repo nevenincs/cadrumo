@@ -20,6 +20,8 @@ from __future__ import annotations
 import re
 from decimal import Decimal, InvalidOperation
 
+from ...core.decimal import normalize_decimal_separators
+
 __all__ = ["printed_iva_advisory"]
 
 # "IVA" followed (within a short gap) by a Spanish- or plain-formatted amount.
@@ -32,9 +34,7 @@ _IVA_AMOUNT = re.compile(
 def _parse_amount(raw: str) -> Decimal | None:
     """Parse a Spanish- or plain-formatted :class:`~decimal.Decimal` string, best-effort."""
     text = raw.strip()
-    if "," in text:
-        # Spanish: dot is the thousands separator, comma the decimal.
-        text = text.replace(".", "").replace(",", ".")
+    text = normalize_decimal_separators(text, strip_thousands="," in text)
     try:
         return Decimal(text)
     except InvalidOperation:
