@@ -4,6 +4,7 @@ tags:
   - '#iva-franquicia-2026-scope'
 date: '2026-07-01'
 modified: '2026-07-17'
+body_hash: 'sha256:dd79d88555fb9319219db8f2ca9fef8c391c7893bdb26cdbd5a61b7667b177d3'
 related:
   - "[[2026-07-01-iva-franquicia-2026-scope-adr]]"
   - "[[2026-04-27-modelo-303-rule-delta-reference]]"

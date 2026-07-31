@@ -4,6 +4,7 @@ tags:
   - "#calc-verification"
 date: "2026-04-21"
 modified: '2026-07-17'
+body_hash: 'sha256:735a9803e2d56702005f4e105a76c2c22a25b81861ece23bfb912a69755f7b87'
 related:
   - "[[2026-04-21-real-pdf-import-umbrella-research]]"
   - "[[2026-04-21-casilla-schema-completeness-adr]]"

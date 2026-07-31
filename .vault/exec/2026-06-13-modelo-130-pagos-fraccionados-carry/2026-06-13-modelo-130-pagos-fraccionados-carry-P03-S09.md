@@ -4,6 +4,7 @@ tags:
   - '#modelo-130-pagos-fraccionados-carry'
 date: '2026-06-13'
 modified: '2026-07-17'
+body_hash: 'sha256:416709f6672e569e12c665d6473339d7f8b875cf9fc9488089805a172e7dfa68'
 step_id: 'S09'
 related:
   - "[[2026-06-13-modelo-130-pagos-fraccionados-carry-plan]]"

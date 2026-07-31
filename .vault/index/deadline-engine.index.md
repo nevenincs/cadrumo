@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:2c4c388691c0cca5669b107117bdf927db3e475794bf871ddfeaf2e94981a3bc'
 related:
   - '[[2026-04-12-deadline-engine-adr]]'
   - '[[2026-04-12-deadline-engine-plan]]'

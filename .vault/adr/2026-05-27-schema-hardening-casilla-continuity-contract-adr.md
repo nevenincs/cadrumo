@@ -4,6 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:f6c0e375594d5eeb7b1bfcaa5f5db9fe27918228db4c25fdc4fd0c45307496b4'
 related:
   - '[[2026-05-27-schema-hardening-casilla-continuity-contract-research]]'
   - '[[2026-05-27-schema-hardening-m100-revision-drift-research]]'

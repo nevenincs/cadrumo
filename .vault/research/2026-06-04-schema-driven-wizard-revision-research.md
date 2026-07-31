@@ -4,6 +4,7 @@ tags:
   - '#schema-driven-wizard-revision'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:a6fbc5eb4cb56b5be3222ab3396b3708750c2164cc54ca7c35098189e61f8890'
 related: []
 related:
   - '[[2026-05-12-schema-driven-wizard-revision-adr]]'

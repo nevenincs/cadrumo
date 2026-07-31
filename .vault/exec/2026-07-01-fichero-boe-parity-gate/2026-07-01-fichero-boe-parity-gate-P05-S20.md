@@ -4,6 +4,7 @@ tags:
   - '#fichero-boe-parity-gate'
 date: '2026-07-02'
 modified: '2026-07-17'
+body_hash: 'sha256:2c5eb350e95d79b7920d91d8851cefd6bc6cd396b8d6c0533deeeef841267e73'
 step_id: 'S20'
 related:
   - "[[2026-07-01-fichero-boe-parity-gate-plan]]"

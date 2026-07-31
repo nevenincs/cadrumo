@@ -4,6 +4,7 @@ tags:
   - '#profile-lifecycle-cli'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:d51d461bf8258c481f07a80aca51fabe715b4f63ffbc8379413adbc6be4a49b8'
 step_id: 'S65'
 related:
   - "[[2026-05-16-profile-lifecycle-cli-plan]]"

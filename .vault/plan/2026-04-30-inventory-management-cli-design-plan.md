@@ -4,6 +4,7 @@ tags:
   - "#inventory-management"
 date: 2026-04-30
 modified: '2026-07-17'
+body_hash: 'sha256:6cd11ed8729e6bcb5fa7f508ed2114615a5e8b9e04bd0c350a73de221467485c'
 related:
   - "[[2026-04-30-inventory-management-cli-design-research]]"
   - "[[2026-04-30-inventory-management-cli-design-adr]]"

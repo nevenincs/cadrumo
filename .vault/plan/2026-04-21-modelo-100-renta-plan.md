@@ -4,6 +4,7 @@ tags:
   - "#modelo-100-renta"
 date: "2026-04-21"
 modified: '2026-07-17'
+body_hash: 'sha256:16b0ac82016418988883920ff6b56aa7dd182013731d7a1ea417ace833796f99'
 related:
   - "[[2026-04-21-modelo-100-renta-adr]]"
   - "[[2026-04-21-modelo-100-renta-research]]"

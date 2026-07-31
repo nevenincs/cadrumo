@@ -4,6 +4,7 @@ tags:
   - '#n26-data-source'
 date: '2026-04-21'
 modified: '2026-07-17'
+body_hash: 'sha256:1e97b898c346fe82f97a00e3cbcb56ab8520492ebcfa0374d2e5cb05f4a96ae2'
 related:
   - '[[2026-04-21-n26-data-source-implementation-adr]]'
   - '[[2026-04-21-n26-data-source-phase-2-plan]]'

@@ -13,6 +13,7 @@ supersedes:
   - '2026-04-24-aeat-cli-wireframe-adr'
 superseded_by: '2026-05-12-cli-workflow-redesign-adr'
 modified: '2026-07-15'
+body_hash: 'sha256:26eaf2ac09b8106a064bd3f341b6b5e10a0913e040f3a25f1a13c023f3d1b6c8'
 ---
 # `aeat-cli-redesign` adr: `user-cli-redesign-review-contract-v6` | (**status:** `superseded`)
 

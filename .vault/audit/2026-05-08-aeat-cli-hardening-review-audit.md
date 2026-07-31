@@ -4,6 +4,7 @@ tags:
   - '#aeat-cli-hardening'
 date: '2026-05-08'
 modified: '2026-07-17'
+body_hash: 'sha256:d9d18a5673e89c2ed096119930b51cff3dba9b3653f10510d2fc2d39efb4768d'
 related:
   - '[[2026-05-08-aeat-cli-hardening-plan]]'
   - '[[2026-05-08-aeat-cli-hardening-inventory-audit]]'

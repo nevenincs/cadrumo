@@ -4,6 +4,7 @@ tags:
   - '#retenciones-perceptor-count'
 date: '2026-06-30'
 modified: '2026-07-17'
+body_hash: 'sha256:1369f6e0a6b8601521c87be6794e33f1f69543a289b30c1872ead6ebf5d3f83d'
 related:
   - "[[2026-06-24-retenciones-perceptor-count-adr]]"
 ---

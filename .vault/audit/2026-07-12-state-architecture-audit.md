@@ -4,6 +4,7 @@ tags:
   - '#state-architecture'
 date: '2026-07-12'
 modified: '2026-07-17'
+body_hash: 'sha256:d12067bcbbae4466dba76b9b24f6b2d9a94442215a8d4ba129bb6fd8549c1864'
 related:
   - "[[2026-05-21-state-architecture-plan]]"
   - "[[2026-05-21-state-architecture-w05-audit]]"

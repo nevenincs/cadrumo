@@ -4,6 +4,7 @@ tags:
   - '#m303-refund-fichero-block'
 date: '2026-07-04'
 modified: '2026-07-17'
+body_hash: 'sha256:230eb6a83fad036e76fe4ed241b79d84d476d6f03b78918bded7d4d97b887e79'
 step_id: 'S03'
 related:
   - "[[2026-06-24-m303-refund-fichero-block-plan]]"

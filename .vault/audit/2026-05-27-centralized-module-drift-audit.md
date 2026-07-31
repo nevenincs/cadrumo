@@ -4,6 +4,7 @@ tags:
   - '#centralized-module-drift'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:e5b8a6e4ab2aa69f613b8e362bdf6815cfd6cf45c493da126feb4d052fbfd0d3'
 related: []
 ---
 

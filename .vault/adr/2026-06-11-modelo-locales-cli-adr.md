@@ -4,6 +4,7 @@ tags:
   - '#modelo-locales-cli'
 date: '2026-06-11'
 modified: '2026-07-17'
+body_hash: 'sha256:7ed0987fcd54bb347e991a3343a53d5f1f8227a778ea708ad1c41c9f1d6ef1b2'
 related:
   - '[[2026-06-11-modelo-locales-cli-research]]'
 ---

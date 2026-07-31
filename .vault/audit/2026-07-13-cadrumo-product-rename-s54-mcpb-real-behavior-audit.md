@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s54-mcpb-real-behavior'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:543e99a21e365c6168ac9860c3e005e151c12bd37a2569080c8166d8e06e2232'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
   - "[[2026-07-12-cadrumo-cli-executable-adr]]"

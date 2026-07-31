@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:2fcf544c1d5dcc58a3165cb15263136e5f3f78872939f9432a100bee29aef2c8'
 related:
   - '[[2026-07-12-cadrumo-google-drive-identity-reference]]'
 ---

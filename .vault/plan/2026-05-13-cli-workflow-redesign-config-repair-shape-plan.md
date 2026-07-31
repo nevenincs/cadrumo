@@ -4,6 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-05-13'
 modified: '2026-07-17'
+body_hash: 'sha256:35c60087dffaac1af1da4867706cca5f13360a297e46c6135ae320913191864b'
 tier: L2
 related:
   - "[[2026-05-13-cli-workflow-redesign-config-repair-shape-adr]]"

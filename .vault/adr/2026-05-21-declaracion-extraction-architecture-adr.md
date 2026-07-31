@@ -11,6 +11,7 @@ related:
   - "[[2026-05-28-declaracion-extraction-architecture-research]]"
   - "[[2026-05-30-declaracion-extraction-architecture-research]]"
 modified: '2026-07-17'
+body_hash: 'sha256:ee742e05fd8a1af44ff0bd558a2b5eada982a8c451576b96b6afe227462c04ad'
 ---
 # `declaracion-extraction-architecture` adr: `registry-driven declaración extraction supersedes per-modelo extractor classes` | (**status:** `accepted`)
 

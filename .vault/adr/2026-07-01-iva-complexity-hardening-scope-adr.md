@@ -10,6 +10,7 @@ related:
   - "[[2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-adr]]"
 superseded_by: '2026-07-07-iva-prorrata-complexity-adr'
 modified: '2026-07-17'
+body_hash: 'sha256:1add8235fa360740e5e2eb68a61ccd062ff4f86d317dcf19554a2922b962d30f'
 ---
 # `iva-complexity-hardening-scope` adr: `Prorrata definitiva annual regularizacion (LIVA arts 105-106): provisional-carry + Q4 regularisation feeding M303 casilla 44 and M390` | (**status:** `superseded`)
 

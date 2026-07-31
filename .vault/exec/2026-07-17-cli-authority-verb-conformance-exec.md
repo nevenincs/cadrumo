@@ -4,6 +4,7 @@ tags:
   - '#cli-authority-verb-conformance'
 date: '2026-07-17'
 modified: '2026-07-31'
+body_hash: 'sha256:5e79aa13f56cf814e3c65a7e1e0d4b338b66474c6cc4fec463e98b8952d9f474'
 related:
   - "[[2026-07-17-auth-cert-recovery-custody-plan]]"
   - "[[2026-07-15-cli-authority-verb-conformance-adr]]"

@@ -4,6 +4,7 @@ tags:
   - '#aeat-restructure'
 date: '2026-05-01'
 modified: '2026-07-17'
+body_hash: 'sha256:ce8f007e27e38a2d73607ef08a6119fe5e01028dd4021f8135c7a67d21e050aa'
 related:
   - '[[2026-04-30-aeat-restructure-adr]]'
   - '[[2026-04-30-aeat-restructure-plan]]'

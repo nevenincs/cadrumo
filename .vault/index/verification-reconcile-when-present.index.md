@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:0efca3eef73707aa524097b176f848706c136b706e0744d3f79fa7ce30eff443'
 related:
   - '[[2026-07-01-verification-reconcile-when-present-adr]]'
   - '[[2026-07-06-verification-reconcile-when-present-research]]'

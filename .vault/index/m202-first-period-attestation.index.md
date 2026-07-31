@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:5bca1a01b05bc5495fa8ea435f9811e280c7500b6d7ad2b438e10cd1eb3f1156'
 related:
   - '[[2026-06-19-m202-first-period-attestation-adr]]'
   - '[[2026-07-06-m202-first-period-attestation-research]]'

@@ -4,6 +4,7 @@ tags:
   - '#iva-compensation-chain'
 date: '2026-07-05'
 modified: '2026-07-17'
+body_hash: 'sha256:0ac4279ac6016e4d026a1e383f415c3c8a3e4ba66f1b424965777109d1f7f026'
 related:
   - "[[2026-05-19-iva-compensation-chain-plan]]"
   - "[[2026-05-19-live-iva-compensation-wallet-plan]]"

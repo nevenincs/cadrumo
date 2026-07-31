@@ -4,6 +4,7 @@ tags:
   - '#arch-remediation-lazy-import-policy'
 date: '2026-07-02'
 modified: '2026-07-17'
+body_hash: 'sha256:f2a480afb2007ab8939630cfee8b5dd8a229f87abec5ba1b6abf2789e2863783'
 step_id: 'S06'
 related:
   - "[[2026-07-02-arch-remediation-lazy-import-policy-plan]]"

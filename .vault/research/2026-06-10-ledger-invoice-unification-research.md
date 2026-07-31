@@ -4,6 +4,7 @@ tags:
   - '#ledger-invoice-unification'
 date: '2026-06-10'
 modified: '2026-07-17'
+body_hash: 'sha256:647d01712fceb59866ff2da8d19d3d22dc88eff124dcfb2662cfe771394eb26e'
 related: []
 ---
 

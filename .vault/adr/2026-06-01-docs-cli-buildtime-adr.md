@@ -7,6 +7,7 @@ related:
   - "[[2026-06-01-docs-cli-buildtime-research]]"
 supersedes:
 modified: '2026-07-17'
+body_hash: 'sha256:2080e375a12177c55955bced3996905aef6fea28c1a1c467188e5453c13e5d91'
 ---
 # `docs-cli-buildtime` adr: build-time CLI reference extraction | (**status:** `accepted`)
 

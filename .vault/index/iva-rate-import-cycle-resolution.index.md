@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:29f785d8d07b9da5128ee6dd0dd0cae6149a8bc7162b24b8274bb1ff3643adbb'
 related:
   - '[[2026-06-02-iva-rate-import-cycle-resolution-adr]]'
   - '[[2026-06-04-iva-rate-import-cycle-resolution-research]]'

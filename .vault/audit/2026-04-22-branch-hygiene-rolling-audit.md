@@ -4,6 +4,7 @@ tags:
   - "#branch-hygiene"
 date: "2026-04-22"
 modified: '2026-07-17'
+body_hash: 'sha256:b0aa970fc13c4203bb224c278b6d7f4fcda33ec5236eb4fbfb5912ee0f700ad2'
 related:
   - "[[2026-04-21-n26-data-source-implementation-adr]]"
 ---

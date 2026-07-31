@@ -4,6 +4,7 @@ tags:
   - "#pdf-import"
 date: "2026-04-20"
 modified: '2026-07-17'
+body_hash: 'sha256:06fb8326d1aada009b1cf9e23b5281c8178d142eb4561c14cc4e620da51b7971'
 related:
   - "[[2026-04-20-pdf-import-adr]]"
   - "[[2026-04-20-pdf-import-research]]"

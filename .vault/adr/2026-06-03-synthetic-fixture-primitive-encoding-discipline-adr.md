@@ -4,6 +4,7 @@ tags:
   - '#synthetic-fixture-primitive-encoding-discipline'
 date: '2026-06-03'
 modified: '2026-07-17'
+body_hash: 'sha256:2474e395b934cab18f9bde17021c4ab8d3e97132a6484779963e0f0996d297ab'
 related:
   - "[[2026-06-02-m303-parser-engine-totals-impedance-adr]]"
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]"

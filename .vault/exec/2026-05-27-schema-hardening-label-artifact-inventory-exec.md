@@ -4,6 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:12f70ebf11ee3de8065d6c6b6b0ef20298b483082008ba953fd499d31013d4af'
 related:
   - '[[2026-05-27-schema-hardening-m100-revision-drift-research]]'
   - '[[2026-05-27-schema-hardening-non-overlap-drift-inventory-exec]]'

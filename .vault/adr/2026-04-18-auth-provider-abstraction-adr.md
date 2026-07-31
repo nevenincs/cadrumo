@@ -4,6 +4,7 @@ tags:
   - '#aeat-auth-providers'
 date: '2026-04-18'
 modified: '2026-07-17'
+body_hash: 'sha256:ecdb118e6e34db0d41bcaa6c9128af05aaa6f5a0903ca1d3106fca8f18a9e842'
 related:
   - "[[2026-04-17-aeat-access-gate-adr]]"
   - "[[2026-04-17-export-first-adr]]"

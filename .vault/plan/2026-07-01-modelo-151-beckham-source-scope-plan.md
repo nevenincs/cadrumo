@@ -4,6 +4,7 @@ tags:
   - '#modelo-151-beckham-source-scope'
 date: '2026-07-01'
 modified: '2026-07-17'
+body_hash: 'sha256:f46773c0261583110401c58c47c84526151cbbdfc41e8002409f3cb6e33e2293'
 tier: L2
 related:
   - '[[2026-07-01-modelo-151-beckham-source-scope-adr]]'

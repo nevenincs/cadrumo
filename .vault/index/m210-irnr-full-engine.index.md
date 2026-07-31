@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:9d67fd881db95fa27dc4867119cd55fe47735b52d1ac6e0d0c39fd59444a0bdc'
 related:
   - '[[2026-05-27-m210-irnr-full-engine-adr]]'
   - '[[2026-06-04-m210-irnr-full-engine-research]]'

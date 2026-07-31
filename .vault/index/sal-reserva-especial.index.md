@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:6584436c295e9d59ac39bf00edda959ea9a975053f0c455288d12f53a48804fc'
 related:
   - '[[2026-05-27-sal-reserva-especial-S01]]'
   - '[[2026-06-04-sal-reserva-especial-adr]]'

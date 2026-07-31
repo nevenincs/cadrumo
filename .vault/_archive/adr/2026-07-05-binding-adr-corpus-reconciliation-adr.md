@@ -4,6 +4,7 @@ tags:
   - '#binding-adr-corpus-reconciliation'
 date: '2026-07-05'
 modified: '2026-07-10'
+body_hash: 'sha256:3537a206976dbe87695cf27c071be487b6070ef6a88b6312d19f7979714f6ff4'
 related:
   - "[[2026-06-26-bindings-architecture-unification-research]]"
   - "[[2026-06-26-binding-adr-corpus-reconciliation-plan]]"

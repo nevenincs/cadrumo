@@ -4,6 +4,7 @@ tags:
   - '#m210-irnr-full-engine'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:2f783e2276897c1df61aeeae78e9da3d48cb0ff9dfd890aad3fc4345fa636df3'
 related:
   - "[[2026-05-27-m210-irnr-full-engine-adr]]"
 ---

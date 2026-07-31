@@ -4,6 +4,7 @@ tags:
   - '#aeat-grounding-completion'
 date: '2026-06-14'
 modified: '2026-07-17'
+body_hash: 'sha256:618b220bb9595a894715c8a4ed8dfa3b32b0d139915791ef205667a8f40678f7'
 related:
   - '[[2026-06-14-aeat-grounding-completion-adr]]'
 ---

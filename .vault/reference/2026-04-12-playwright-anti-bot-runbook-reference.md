@@ -4,6 +4,7 @@ tags:
   - "#playwright-anti-bot"
 date: 2026-04-12
 modified: '2026-07-17'
+body_hash: 'sha256:0a3ad50a571bbb7da99ee2d366367e40e6d97c07a41816d631b7596bd82e9e55'
 title: Operational Runbook - Playwright Anti-Bot
 related:
   - "[[2026-04-12-playwright-anti-bot-adr]]"

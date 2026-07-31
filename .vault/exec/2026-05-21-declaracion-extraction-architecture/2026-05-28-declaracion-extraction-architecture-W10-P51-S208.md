@@ -2,6 +2,7 @@
 step_id: "S208"
 date: 2026-05-28
 modified: '2026-07-17'
+body_hash: 'sha256:93d1ff9f50735af20438140872fe6236b35e033300612b3f2a324cfb584efd8b'
 tags:
   - "#exec"
   - "#declaracion-extraction-architecture"

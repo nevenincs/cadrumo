@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:1788330471bf789d9dc0542b4f1326168173393491495914f132b5be10c6bc5d'
 related:
   - '[[2026-06-01-module-test-coverage-plan]]'
   - '[[2026-06-04-module-test-coverage-adr]]'

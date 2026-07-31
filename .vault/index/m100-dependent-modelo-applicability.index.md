@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:e55491e09c025f82214657d45ed5db42a8356941f4aa815f3453d5e97328ae69'
 related:
   - '[[2026-06-19-m100-dependent-modelo-applicability-adr]]'
   - '[[2026-06-19-m100-dependent-modelo-applicability-research]]'

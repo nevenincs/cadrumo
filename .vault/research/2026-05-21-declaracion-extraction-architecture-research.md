@@ -4,6 +4,7 @@ tags:
   - '#declaracion-extraction-architecture'
 date: '2026-05-21'
 modified: '2026-07-17'
+body_hash: 'sha256:e476b7ed212ead4046e27edcedeac7e72c791bb9b70104e8f74ca282d04b9923'
 related:
   - '[[2026-05-20-branch-reconciliation-audit]]'
 ---

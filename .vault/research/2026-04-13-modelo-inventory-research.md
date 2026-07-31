@@ -7,6 +7,7 @@ tags:
   - "#modelo-inventory"
 date: 2026-04-13
 modified: '2026-07-17'
+body_hash: 'sha256:5145c68a6c122bf2b4c2300864630278b92d7dd5c03634916f008f395aad12f9'
 related:
   - "[[2026-04-12-modelo-303-390-adr]]"
   - "[[2026-04-12-manual-practico-adr]]"

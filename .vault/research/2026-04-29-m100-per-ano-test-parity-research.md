@@ -4,6 +4,7 @@ tags:
   - '#m100-per-ano-test-parity'
 date: '2026-04-29'
 modified: '2026-07-17'
+body_hash: 'sha256:35a943039b321bfc6e0c1252af49b7ddff7ba8657ab4d32be0a1af86a777b812'
 related:
   - "[[2026-04-27-modelo-100-renta-full-calc-adr]]"
 ---

@@ -4,6 +4,7 @@ tags:
   - '#storage-backend-security-review'
 date: '2026-06-14'
 modified: '2026-07-17'
+body_hash: 'sha256:4e191d53fff902d8ea429d73b20bee422e4b739c4b09decf037cdb45de1cdf94'
 related:
   - "[[2026-06-14-storage-backend-security-review-research]]"
 ---

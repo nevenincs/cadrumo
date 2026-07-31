@@ -4,6 +4,7 @@ tags:
   - '#borrador'
 date: '2026-05-13'
 modified: '2026-07-17'
+body_hash: 'sha256:6608bc162e6856ee862a5ba3c5b5a2db54e416860f3f07cf3837985abbca6c32'
 related:
   - "[[2026-05-13-borrador-research]]"
 ---

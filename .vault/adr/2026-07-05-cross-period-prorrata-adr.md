@@ -4,6 +4,7 @@ tags:
   - '#cross-period-prorrata'
 date: '2026-07-05'
 modified: '2026-07-28'
+body_hash: 'sha256:4c7cb0e03b01defecf60e0e79b592967cd509079f100fab4308952e9dd4b7c0b'
 related:
   - "[[2026-07-01-iva-complexity-hardening-scope-adr]]"
   - "[[2026-07-01-iva-complexity-hardening-scope-research]]"

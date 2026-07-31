@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:806328863db012d7b6c50113c256d8b14aae18575ab29ae39217035375f32c5f'
 related:
   - '[[2026-06-03-multi-bucket-test-fixture-adr]]'
   - '[[2026-06-04-multi-bucket-test-fixture-research]]'

@@ -4,6 +4,7 @@ tags:
   - '#protected-browser-certificate-auth'
 date: '2026-07-16'
 modified: '2026-07-17'
+body_hash: 'sha256:69a6bf082d9c30f00ee43ac76349dde406611cffef0e54c9ff381ddf7d67e49d'
 related:
   - '[[2026-04-17-aeat-access-gate-adr]]'
 ---

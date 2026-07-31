@@ -4,6 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-05-21'
 modified: '2026-07-17'
+body_hash: 'sha256:797013f52753e092801338cbba80c3f8ee633914ea7dce324cc1776fa0b561ea'
 related:
   - '[[2026-05-21-state-architecture-plan]]'
   - '[[2026-05-21-state-architecture-testimonial-regression-audit]]'

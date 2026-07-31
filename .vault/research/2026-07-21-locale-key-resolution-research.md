@@ -4,6 +4,7 @@ tags:
   - '#locale-key-resolution'
 date: '2026-07-21'
 modified: '2026-07-21'
+body_hash: 'sha256:a10ca27b051045f99fb3b27c82e98f306f5c9dab29184e0db453c9aec4edb830'
 related:
   - "[[2026-06-11-modelo-locales-cli-adr]]"
   - "[[2026-05-31-locale-scaffold-fstring-adr]]"

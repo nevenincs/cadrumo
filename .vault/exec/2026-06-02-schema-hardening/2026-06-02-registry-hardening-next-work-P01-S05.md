@@ -4,6 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-06-02'
 modified: '2026-07-31'
+body_hash: 'sha256:01136b9dc5e45f153165e8936695312ca8d0a734f24f3027a9d621be08571cc1'
 related:
   - '[[2026-06-02-registry-hardening-next-work-plan]]'
   - '[[2026-06-02-registry-hardening-fragment-headroom-audit]]'

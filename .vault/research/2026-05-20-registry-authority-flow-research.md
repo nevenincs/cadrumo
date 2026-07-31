@@ -4,6 +4,7 @@ tags:
   - '#registry-authority-flow'
 date: '2026-05-20'
 modified: '2026-07-17'
+body_hash: 'sha256:455ec0b5b900fdbde1232e3673b6d30b8cc8a4d3f27f95d3334217a3ceadf401'
 related:
   - "[[2026-05-19-modelo-registry-fragment-architecture-research]]"
 ---

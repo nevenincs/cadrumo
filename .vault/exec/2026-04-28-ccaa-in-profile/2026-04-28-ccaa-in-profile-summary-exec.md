@@ -4,6 +4,7 @@ tags:
   - '#ccaa-in-profile'
 date: '2026-04-28'
 modified: '2026-07-17'
+body_hash: 'sha256:ca266fdbdded35cd20982c821fb1fb5cb3b6a149baa37a3c81144d23a6165b77'
 related:
   - '[[2026-04-28-ccaa-in-profile-research]]'
   - '[[2026-04-28-ccaa-in-profile-adr]]'

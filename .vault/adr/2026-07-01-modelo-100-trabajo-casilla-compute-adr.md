@@ -4,6 +4,7 @@ tags:
   - '#modelo-100-trabajo-casilla-compute'
 date: '2026-07-01'
 modified: '2026-07-17'
+body_hash: 'sha256:5ff371de4036ba74a02d891d8712670d5a3e63f8572abe59f0a50b7982924815'
 related:
   - '[[2026-07-01-modelo-100-trabajo-casilla-compute-research]]'
   - '[[2026-06-15-art20-trabajo-reduccion-compute-adr]]'

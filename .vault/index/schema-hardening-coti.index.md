@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:9661f2929974589bf77b3dc765d1f4c88ce4317554e15da61e47d7f2b0f314bf'
 related:
   - '[[2026-05-22-schema-hardening-coti-P01-S01]]'
   - '[[2026-05-22-schema-hardening-coti-P01-S02]]'

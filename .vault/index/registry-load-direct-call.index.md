@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:f89f42f797d7166bb2ca5fbbd65dc5b38d48fbe153e6395271c6873c2f3fc105'
 related:
   - '[[2026-06-01-registry-load-direct-call-audit]]'
 ---

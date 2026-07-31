@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:fd75e250780154cfe922bd016e14e5c7cbe6257e72711b9da256ec995f93d35a'
 related:
   - '[[2026-07-09-compatibility-lifecycle-P01-S01]]'
   - '[[2026-07-09-compatibility-lifecycle-P01-S02]]'

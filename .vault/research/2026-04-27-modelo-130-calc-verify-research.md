@@ -4,6 +4,7 @@ tags:
   - '#modelo-130-calc-verify'
 date: '2026-04-27'
 modified: '2026-07-17'
+body_hash: 'sha256:119f741e71c02a0f83f2fb8151b4e6ecb852a6f4603e5783fab7925feb3a299e'
 related:
   - "[[2026-04-25-mutation-harness-extension-research]]"
   - "[[2026-04-25-mandatory-citations-research]]"

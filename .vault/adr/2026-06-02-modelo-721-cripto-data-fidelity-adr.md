@@ -4,6 +4,7 @@ tags:
   - '#modelo-721-cripto-data-fidelity'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:0ea8edb64ddb171f64f21e102785e8039149b64e4e091df77f0e0b23aff1b1c7'
 related:
   - "[[2026-06-02-modelo-721-cripto-data-fidelity-research]]"
   - "[[2026-06-02-modelo-multiyear-renta-adr]]"

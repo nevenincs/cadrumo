@@ -4,6 +4,7 @@ tags:
   - '#fresh-cli-persona-repair'
 date: '2026-06-04'
 modified: '2026-07-10'
+body_hash: 'sha256:6a5f461ffc5d44e5b148e1ba2943ef251b2ae18ae565e98fe53331953f75ee61'
 related:
   - "[[2026-06-04-fresh-cli-persona-repair-research]]"
 ---

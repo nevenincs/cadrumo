@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:f705fd53495a8d902ecce005ab900bbf94f7456ef8b0df6af96458b33443690e'
 related:
   - '[[2026-04-18-draft-approval-staleness-adr-audit]]'
   - '[[2026-04-18-draft-approval-staleness-adr]]'

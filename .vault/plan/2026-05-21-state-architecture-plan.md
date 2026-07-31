@@ -4,6 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-05-21'
 modified: '2026-07-17'
+body_hash: 'sha256:9c5c611f163938580dcd6a7d1ed086c394c51dcbe5d7f25fc5be2980d25e8257'
 tier: L3
 related:
   - "[[2026-05-21-profile-uuid-identity-adr]]"

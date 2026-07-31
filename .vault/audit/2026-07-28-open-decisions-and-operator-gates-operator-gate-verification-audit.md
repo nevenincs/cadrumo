@@ -4,6 +4,7 @@ tags:
   - '#open-decisions-and-operator-gates'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_hash: 'sha256:8447956d266e4c1ce475cbefb3df550f9d0cc6cd4422bcbb544feceb0d59f13b'
 related:
   - "[[2026-07-25-open-decisions-and-operator-gates-plan]]"
 ---

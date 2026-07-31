@@ -4,6 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:47fc068ac2807e31769d0b94fb9765bd9323a046992aa527cef49070493166e9'
 step_id: 'S22'
 related:
   - "[[2026-06-02-registry-hardening-next-work-plan]]"

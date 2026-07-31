@@ -4,6 +4,7 @@ tags:
   - '#cross-domain-continuity'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:288b3b6c4000c96df8dd7d5667d547d39b6183b6b962dd6d8866f7a455f10118'
 related:
   - "[[2026-05-26-cross-domain-continuity-adr]]"
   - "[[2026-05-27-cross-domain-continuity-adr]]"

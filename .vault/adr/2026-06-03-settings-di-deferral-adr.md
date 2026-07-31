@@ -4,6 +4,7 @@ tags:
   - '#settings-di-deferral'
 date: '2026-06-03'
 modified: '2026-07-17'
+body_hash: 'sha256:c4bf11c6fdaf6abdc84d7372b53543539751f1b48db27efccafff257b4f37af6'
 related:
   - '[[2026-06-04-settings-di-deferral-research]]'
 ---

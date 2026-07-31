@@ -5,6 +5,7 @@ tags:
   - '#restructure-execution'
 date: 2026-05-27
 modified: '2026-07-17'
+body_hash: 'sha256:4b8d1b47d27e8e0514c3617faf7af3e335b4f205e3f710a05c07eb70ff7dc522'
 commit: 61e29af2a
 related:
   - '[[2025-05-22-restructure-execution-P01-S01]]'

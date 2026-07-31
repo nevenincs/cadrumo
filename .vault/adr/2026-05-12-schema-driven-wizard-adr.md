@@ -7,6 +7,7 @@ related:
   - "[[2026-05-12-schema-driven-wizard-research]]"
   - "[[2026-05-12-schema-driven-wizard-reference]]"
 modified: '2026-07-17'
+body_hash: 'sha256:c105970d3e81d199bd949b9e2ac92827c3e1459aea2f04283f6715a72368f456'
 ---
 # `schema-driven-wizard` adr: `schema-driven-wizard-adr` | (**status:** `accepted`)
 

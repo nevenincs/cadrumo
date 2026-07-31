@@ -4,6 +4,7 @@ tags:
   - '#iva-compensation-chain'
 date: '2026-05-19'
 modified: '2026-07-17'
+body_hash: 'sha256:714f6f39828e88f05b443ce00dc87add481e28088885ffced366dbbc7f97c2b0'
 tier: L2
 related:
   - '[[2026-05-19-iva-compensation-chain-audit-research]]'

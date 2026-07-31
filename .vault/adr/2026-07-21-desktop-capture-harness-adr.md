@@ -4,6 +4,7 @@ tags:
   - '#desktop-capture-harness'
 date: '2026-07-21'
 modified: '2026-07-21'
+body_hash: 'sha256:1654b25d394d484f9bd4ebd8972a422eb98d22b2af4857f81a632de43e90b2e1'
 related:
   - '[[2026-07-21-desktop-capture-harness-reference]]'
   - '[[2026-07-19-post-release-distribution-adr]]'

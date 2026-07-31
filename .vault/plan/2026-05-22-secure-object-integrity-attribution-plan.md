@@ -4,6 +4,7 @@ tags:
   - '#secure-object-integrity'
 date: '2026-05-22'
 modified: '2026-07-17'
+body_hash: 'sha256:2677f7e96df35c06414f7790acd464b75dd7034b08f5871d56bb739b65546723'
 tier: L2
 related:
   - '[[2026-05-13-cli-workflow-redesign-config-repair-shape-adr]]'

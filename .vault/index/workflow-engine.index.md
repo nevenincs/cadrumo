@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:09b50b04932c0e08184ddecf0e820ec30f99fac8eb4c28d84ee625c4bac13b12'
 related:
   - '[[2026-04-12-workflow-engine-adr]]'
   - '[[2026-04-12-workflow-engine-audit]]'

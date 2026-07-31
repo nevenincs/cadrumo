@@ -4,6 +4,7 @@ tags:
   - '#codebase-monolith-decomposition'
 date: '2026-06-05'
 modified: '2026-07-17'
+body_hash: 'sha256:fcb11d711378a7055fb4ba32f7a0bfb419fc9d42c9079e549b9b3e35da727a5b'
 tier: L3
 related:
   - '[[2026-06-05-codebase-monolith-decomposition-adr]]'

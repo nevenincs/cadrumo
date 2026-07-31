@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:cf85a4bfab779c88c77862d15bbb04eaeef7b28717583291f669c8a8ed17a5d9'
 related:
   - '[[2026-06-10-period-revision-resolution-adr]]'
   - '[[2026-06-10-period-revision-resolution-research]]'

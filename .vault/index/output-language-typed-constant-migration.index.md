@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:e62fb9c9ea975b96770bc668bdcdda5ac3e2067f7ff2c9570276e061c4db487f'
 related:
   - '[[2026-06-01-output-language-typed-constant-migration-adr]]'
   - '[[2026-06-04-output-language-typed-constant-migration-research]]'

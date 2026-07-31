@@ -4,6 +4,7 @@ tags:
   - '#secure-object-integrity'
 date: '2026-05-22'
 modified: '2026-07-17'
+body_hash: 'sha256:0c57add3f78edd80e78e9d4cdc0e1c971c3539e865f6900d9bfc4dd58dd78330'
 related:
   - '[[2026-05-22-secure-object-integrity-attribution-plan]]'
   - '[[2026-05-13-cli-workflow-redesign-config-repair-shape-adr]]'

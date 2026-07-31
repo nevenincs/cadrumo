@@ -4,6 +4,7 @@ tags:
   - '#feature-356'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:fb7d93fe2b291be2e992c5a89fb14f4211c7433acc812d7e1b216d673b661c0b'
 related:
   - "[[2026-04-23-feature-356-adr]]"
 ---

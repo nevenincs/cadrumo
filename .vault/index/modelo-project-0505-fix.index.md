@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:6eb9befca5e4f2b5a6d992e1a881b52644bf642d06f61604fd4f4b310aa15956'
 related:
   - '[[2026-05-27-modelo-project-0505-fix-S220]]'
   - '[[2026-06-04-modelo-project-0505-fix-adr]]'

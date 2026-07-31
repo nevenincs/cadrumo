@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:e89afd7ba0eec217c886e7424666031f66bcf6ff9a2744d6dcdb009ed33baa5f'
 related:
   - '[[2026-05-30-security-input-validation-swarm-audit]]'
   - '[[2026-05-30-security-paths-swarm-audit]]'

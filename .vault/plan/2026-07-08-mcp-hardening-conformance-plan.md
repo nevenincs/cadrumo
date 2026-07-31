@@ -4,6 +4,7 @@ tags:
   - '#mcp-protocol-hardening'
 date: '2026-07-08'
 modified: '2026-07-17'
+body_hash: 'sha256:1acef48d0b5554fff5a4468109e671e9c46441c9cb66b418475bdc2e9103d657'
 tier: L2
 related:
   - '[[2026-07-08-mcp-console-review-audit]]'

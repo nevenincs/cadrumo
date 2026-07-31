@@ -4,6 +4,7 @@ tags:
   - '#quadlingual-i18n'
 date: '2026-05-01'
 modified: '2026-07-17'
+body_hash: 'sha256:395ebc1c53e8e726e31a2e7e052a80014951eb54fcad379a8f628001369976e8'
 related:
   - "[[2026-04-12-trilingual-i18n-reference]]"
   - "[[2026-05-01-quadlingual-i18n-research]]"

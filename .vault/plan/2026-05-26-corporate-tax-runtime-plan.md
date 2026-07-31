@@ -4,6 +4,7 @@ tags:
   - '#corporate-tax-runtime'
 date: '2026-05-26'
 modified: '2026-07-17'
+body_hash: 'sha256:317d9535c788a705edf02344a0ac5187e613db741c4b9900ef8ade29ab4660c9'
 tier: L2
 related:
   - '[[2026-05-21-corporate-entity-calculation-adr]]'

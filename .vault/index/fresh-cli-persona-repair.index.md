@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:ced1dd22795ccda951384e782d7c131f32f026966be3a16929c4d2d9d82153bb'
 related:
   - '[[2026-05-27-fresh-cli-persona-repair-S171]]'
   - '[[2026-05-27-fresh-cli-persona-repair-S175]]'

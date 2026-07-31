@@ -5,6 +5,7 @@ tags:
   - '#core-authority'
 date: '2026-05-31'
 modified: '2026-07-17'
+body_hash: 'sha256:e34d309b3b0cce732e70e87a2907f9bd22478bc47af706eef320710b637bfb5c'
 related:
   - '[[2026-05-31-core-authority-plan]]'
   - '[[2026-05-31-core-authority-adr]]'

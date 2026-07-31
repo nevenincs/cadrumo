@@ -4,6 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-05-20'
 modified: '2026-07-17'
+body_hash: 'sha256:23dba885cafcba5c660eaee058fcb3ce1b3da42a4874198f6d82a9c5fe98e08c'
 related:
   - "[[2026-05-19-schema-hardening-role-taxonomy-reference]]"
   - "[[2026-05-19-schema-hardening-m200-role-assignment-audit]]"

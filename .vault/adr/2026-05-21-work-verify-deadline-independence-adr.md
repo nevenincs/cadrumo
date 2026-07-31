@@ -4,6 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-05-21'
 modified: '2026-07-17'
+body_hash: 'sha256:33b5234864668708541beab4e7bd87d608301c40e95ec2259dd5e37d13968d93'
 related:
   - "[[2026-05-21-persona-fleet-round2-findings-audit]]"
   - "[[2026-05-12-cli-workflow-redesign-adr]]"

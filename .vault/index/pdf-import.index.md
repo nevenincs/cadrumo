@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:6ca251d84b66b4199c3de4e5ffe41d90cd1fd47355ea026b21ffc2029e5d226f'
 related:
   - '[[2026-04-20-pdf-import-adr]]'
   - '[[2026-04-20-pdf-import-phase-1-summary-exec]]'

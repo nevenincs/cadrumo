@@ -4,6 +4,7 @@ tags:
   - '#live-write-static-audit'
 date: '2026-04-16'
 modified: '2026-07-17'
+body_hash: 'sha256:4c12e6f48db563d5de45bea76a8ac70631a33c6f3d27ed12a14e02ab8184e74e'
 related:
   - '[[2026-04-16-live-write-static-audit]]'
   - '[[2026-04-16-live-write-static-audit-reference]]'

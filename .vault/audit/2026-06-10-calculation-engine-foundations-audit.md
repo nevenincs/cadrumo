@@ -4,6 +4,7 @@ tags:
   - '#calculation-engine-foundations'
 date: '2026-06-10'
 modified: '2026-07-17'
+body_hash: 'sha256:b507e242ffd6194ea96daf66ca880be1b6b999246caa54493f76062981bd4bc3'
 related: []
 ---
 

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:9c917803d39e2a0aba40340619d671636c2b3ac61d3df056001b4005128a1a97'
 related:
   - '[[2026-07-11-censo-operator-manual-enrolment-P01-S01]]'
   - '[[2026-07-11-censo-operator-manual-enrolment-P01-S02]]'

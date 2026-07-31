@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:b2a497f983a49cdf98aeb1c4cc88092a3c3903148523b480ce730da4fdba90f6'
 related:
   - '[[2026-06-03-m200-internal-casilla-discipline-P01-S01]]'
   - '[[2026-06-03-m200-internal-casilla-discipline-P01-S02]]'

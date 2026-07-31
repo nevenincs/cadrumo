@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s25-runtime-identity'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:129d242c631d05406d62a4e2924cd6e643634c7aa851e39f20c54970a4a635ae'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
 ---

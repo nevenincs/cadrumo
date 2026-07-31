@@ -4,6 +4,7 @@ tags:
   - "#justificante-reframing"
 date: "2026-04-21"
 modified: '2026-07-17'
+body_hash: 'sha256:6ba58ed582441ad80ae8d473e8ab99fea072147253742bd32ff0ede6ac58c5fe'
 related:
   - "[[2026-04-21-justificante-reframing-research]]"
   - "[[2026-04-21-pdf-taxonomy-adr]]"

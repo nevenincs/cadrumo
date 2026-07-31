@@ -4,6 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-05-12'
 modified: '2026-07-17'
+body_hash: 'sha256:e8cf0800a7bc859a8bcb3e6881468d43cfe541571d9af26cc467e9c282231f95'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-domain-harvest-vat-classification-research]]"

@@ -4,6 +4,7 @@ tags:
   - '#calculation-aggregation-taxonomy'
 date: '2026-06-10'
 modified: '2026-07-17'
+body_hash: 'sha256:82df2d04ab70178823823b64fcc28e4e1b1081655f4b00fb0a0f4cfcf1ebc13d'
 related:
   - "[[2026-06-10-calculation-aggregation-taxonomy-research]]"
 ---

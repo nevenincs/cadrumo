@@ -4,6 +4,7 @@ tags:
   - '#repo-health-triage'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:89c0b8de34b0dbff5ffb11e139e664e5c28f3f36435478c24d0258bd958d7693'
 related:
   - '[[2026-06-04-full-repo-health-diagnostics-audit]]'
   - '[[2026-06-04-just-tooling-bootstrap-adr]]'

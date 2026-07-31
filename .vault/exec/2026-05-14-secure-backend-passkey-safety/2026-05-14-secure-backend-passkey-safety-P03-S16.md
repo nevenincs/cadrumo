@@ -4,6 +4,7 @@ tags:
   - '#secure-backend-passkey-safety'
 date: '2026-07-10'
 modified: '2026-07-10'
+body_hash: 'sha256:91205714a1a6d4cf077840a41b216fec63df83f98c9d95f54e038c0b31a11da8'
 step_id: 'S16'
 related:
   - '[[2026-05-14-secure-backend-passkey-bucket-plan]]'

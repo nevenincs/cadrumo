@@ -4,6 +4,7 @@ tags:
   - '#registry-validator-baseline-repair'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:5f26749483b4c7fd582929af79a61a5742c5abf81dac7712522eba6fb6353d1b'
 tier: L1
 related:
   - '[[2026-06-04-registry-validator-baseline-repair-adr]]'

@@ -4,6 +4,7 @@ tags:
   - '#modelo-200-bin-continuity'
 date: '2026-07-10'
 modified: '2026-07-10'
+body_hash: 'sha256:3148ccc46600fa96888cafd05199de59dee4902c5c21ea7032caa6986741fb90'
 related:
   - "[[2026-06-24-modelo-200-bin-continuity-adr]]"
 ---

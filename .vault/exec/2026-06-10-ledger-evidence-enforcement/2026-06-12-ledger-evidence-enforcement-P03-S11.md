@@ -4,6 +4,7 @@ tags:
   - '#ledger-evidence-enforcement'
 date: '2026-06-12'
 modified: '2026-07-17'
+body_hash: 'sha256:0bf1364a0be2e2505642f7af9f92936054119461115c951a482eadeda5e8b78f'
 step_id: 'S11'
 related:
   - '[[2026-06-10-ledger-evidence-enforcement-plan]]'

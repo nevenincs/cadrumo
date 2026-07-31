@@ -4,6 +4,7 @@ tags:
   - '#arch-remediation-registry-format'
 date: '2026-07-02'
 modified: '2026-07-17'
+body_hash: 'sha256:17219eba465d4a89a3746f16b1fc2e214b30e9fc762649917b090b69c05b5610'
 step_id: 'S09'
 related:
   - "[[2026-07-02-arch-remediation-registry-format-plan]]"

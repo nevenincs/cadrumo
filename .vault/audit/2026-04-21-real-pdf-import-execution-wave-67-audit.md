@@ -4,6 +4,7 @@ tags:
   - "#real-pdf-import"
 date: "2026-04-21"
 modified: '2026-07-17'
+body_hash: 'sha256:a861e816a693a992193c5b01ee663199907a59742118731723243978b52ce1ea'
 related:
   - "[[2026-04-21-integration-tests-ci-plan]]"
   - "[[2026-04-21-casilla-schema-completeness-plan]]"

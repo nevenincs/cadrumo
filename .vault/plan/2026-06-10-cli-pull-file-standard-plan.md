@@ -4,6 +4,7 @@ tags:
   - '#cli-pull-file-standard'
 date: '2026-06-10'
 modified: '2026-07-17'
+body_hash: 'sha256:2d6a0560e04f7f5501aab3095e2fb1482cb6103abdecfbbddc34cb56c9821442'
 tier: L2
 related:
   - '[[2026-06-10-cli-pull-file-standard-adr]]'

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:8b2350dd94427bab938fb6b220ef70a02ff17046b55a9fed0ac5dc195c3daeeb'
 related:
   - '[[2026-07-11-article-20-uno-26-correction-adr]]'
 ---

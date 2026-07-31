@@ -5,6 +5,7 @@ tags:
   - '#censo-g313-launcher-fix'
 date: '2026-07-10'
 modified: '2026-07-10'
+body_hash: 'sha256:4f5e4c6354a4f86fa2d492df981c5b5cc03104dc159c45f0678e559ba253b082'
 related:
   - '[[2026-07-10-censo-g313-launcher-fix-P01-S01]]'
   - '[[2026-07-10-censo-g313-launcher-fix-P02-S04]]'

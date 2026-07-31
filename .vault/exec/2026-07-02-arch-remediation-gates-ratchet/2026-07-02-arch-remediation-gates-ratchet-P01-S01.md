@@ -4,6 +4,7 @@ tags:
   - '#arch-remediation-gates-ratchet'
 date: '2026-07-02'
 modified: '2026-07-17'
+body_hash: 'sha256:be510ccf0130ab03989a10bf4bd40cd620a59b32f6493f61d96124d35ccb52e2'
 step_id: 'S01'
 related:
   - '[[2026-07-02-arch-remediation-gates-ratchet-plan]]'

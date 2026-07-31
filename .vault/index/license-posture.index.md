@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:eade7f5a177a8ca864767167ad372df36548978a5ce7c0ece233845652fe95f1'
 related:
   - '[[2026-07-12-license-posture-adr]]'
   - '[[2026-07-12-license-posture-research]]'

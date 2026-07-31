@@ -4,6 +4,7 @@ tags:
   - '#user-docs-localization'
 date: '2026-07-18'
 modified: '2026-07-19'
+body_hash: 'sha256:115d6955b08789c7aaf73b81b353e80ec664216ea83c62e46f147687b45d103c'
 step_id: 'S10'
 related:
   - "[[2026-07-18-user-docs-localization-plan]]"

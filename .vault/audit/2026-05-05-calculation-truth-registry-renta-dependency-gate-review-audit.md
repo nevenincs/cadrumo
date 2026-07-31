@@ -4,6 +4,7 @@ tags:
   - '#calculation-truth-registry'
 date: '2026-05-05'
 modified: '2026-07-17'
+body_hash: 'sha256:dd199d18e92c1d66d559a2135f4a1d545873fc6b5275ed5befa645820f043487'
 related:
   - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
   - '[[2026-05-05-calculation-truth-registry-renta-dependency-gate-exec]]'

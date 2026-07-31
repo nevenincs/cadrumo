@@ -11,6 +11,7 @@ related:
 supersedes:
   - '2026-06-12-first-filer-attestation-adr'
 modified: '2026-07-17'
+body_hash: 'sha256:66c6d11295cd3c2d01343048d125f83f5ebe35de13fbc38bcbfeb274a09a82a6'
 ---
 # `first-filer-attestation` adr: `operator-declared activity-start scoping (supersedes G313 grounding)` | (**status:** `accepted`)
 

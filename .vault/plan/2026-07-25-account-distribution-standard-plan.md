@@ -4,6 +4,7 @@ tags:
   - '#account-distribution-standard'
 date: '2026-07-25'
 modified: '2026-07-30'
+body_hash: 'sha256:cfa181ae0e639cbe856b0320cd512b625d55b2f05f8a4243e24cd5eb3f349b7b'
 tier: L1
 related:
   - '[[2026-07-25-account-distribution-standard-adr]]'

@@ -4,6 +4,7 @@ tags:
   - '#cli-envelope-notice-standardisation'
 date: '2026-06-12'
 modified: '2026-07-17'
+body_hash: 'sha256:9b7c44fd34301d93a5331c813f22ffd76e6f558bb9a61fb51c741a712af39925'
 step_id: 'S06'
 related:
   - '[[2026-06-10-cli-envelope-notice-standardisation-plan]]'

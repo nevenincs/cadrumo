@@ -15,6 +15,7 @@ related:
 supersedes:
   - '2026-07-01-iva-complexity-hardening-scope-adr'
 modified: '2026-07-17'
+body_hash: 'sha256:de6c9b32526bf7e5e4b9d4b0964f1f4bba86c5f7e30c07726bfb8946ebf45c89'
 ---
 # `iva-prorrata-complexity` adr: `IVA prorrata complexity: bind the 4 deferred W06 axis decisions into one collision-clustered implementation campaign` | (**status:** `accepted`)
 

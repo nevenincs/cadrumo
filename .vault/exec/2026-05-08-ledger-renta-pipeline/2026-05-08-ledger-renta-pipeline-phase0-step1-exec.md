@@ -4,6 +4,7 @@ tags:
   - '#ledger-renta-pipeline'
 date: '2026-05-08'
 modified: '2026-07-17'
+body_hash: 'sha256:97a463f79bfaf85c4a5666c63426cef2f49d5746fa3937432eca3df69a3c5849'
 related:
   - "[[2026-05-08-ledger-renta-pipeline-plan]]"
 ---

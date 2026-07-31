@@ -4,6 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-05-12'
 modified: '2026-07-17'
+body_hash: 'sha256:dcacd713b343163b5f3412b995ab4db1cd24b7def9123d3d584705b172e9c5cd'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
 ---

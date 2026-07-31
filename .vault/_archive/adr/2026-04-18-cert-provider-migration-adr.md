@@ -4,6 +4,7 @@ tags:
   - "#cert-provider"
 date: '2026-04-18'
 modified: '2026-07-15'
+body_hash: 'sha256:0a6d386e217205f0adf919f5f1068818ef86e83c377bf19a2ddd64d4bba8d25e'
 related:
   - "[[2026-04-18-cert-provider-migration-research]]"
   - "[[2026-04-18-auth-provider-ecosystem-research]]"

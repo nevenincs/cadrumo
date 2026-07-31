@@ -5,6 +5,7 @@ tags:
   - "#codebase-solidification"
 date: 2026-05-31
 modified: '2026-07-17'
+body_hash: 'sha256:65d3b753361751421b5a29be2aefba96d7338d5a204c5aeb243a03c1b18d3353'
 related:
   - "[[2026-05-28-codebase-solidification-plan]]"
 ---

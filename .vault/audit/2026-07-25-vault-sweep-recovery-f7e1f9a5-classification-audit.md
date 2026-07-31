@@ -4,6 +4,7 @@ tags:
   - '#vault-sweep-recovery'
 date: '2026-07-25'
 modified: '2026-07-25'
+body_hash: 'sha256:c2e6b8d69af745847ae4eb934ccde9e5d6d59d30caaf5eec75448b007e2b3730'
 related:
   - "[[2026-07-09-compatibility-lifecycle-plan]]"
   - "[[2026-07-24-worktree-commit-attribution-audit]]"

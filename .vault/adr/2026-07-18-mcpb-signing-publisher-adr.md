@@ -4,6 +4,7 @@ tags:
   - '#mcpb-signing-publisher'
 date: '2026-07-18'
 modified: '2026-07-19'
+body_hash: 'sha256:c44ce7bd43135b3b717b3d2a37994954aebd740f0fdc3997805acee315a6bf28'
 related:
   - "[[2026-07-17-mcpb-signing-publisher-research]]"
 ---

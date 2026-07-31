@@ -4,6 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-05-13'
 modified: '2026-07-31'
+body_hash: 'sha256:d0078ed7941c2fc176c0bcc9f5dac746e6a75cd7cf8ded4666a8b88180ecddd6'
 related:
   - "[[2026-05-13-cli-workflow-redesign-config-repair-shape-plan]]"
 ---

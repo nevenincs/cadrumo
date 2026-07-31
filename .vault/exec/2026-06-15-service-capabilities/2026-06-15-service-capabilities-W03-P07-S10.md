@@ -4,6 +4,7 @@ tags:
   - '#service-capabilities'
 date: '2026-06-15'
 modified: '2026-07-17'
+body_hash: 'sha256:3aedb245437d3b938b0915d1966e71a8d1353bd215d7b62c03c97db7065e67d7'
 step_id: 'S10'
 related:
   - "[[2026-06-15-service-capabilities-plan]]"

@@ -4,6 +4,7 @@ tags:
   - '#calculation-truth-inventory'
 date: '2026-05-03'
 modified: '2026-07-17'
+body_hash: 'sha256:6479e1ffd54a8368579271ec59d18c8eff6dff1c5c9c61f4a7528fcbee1f1275'
 related:
   - '[[2026-05-01-post-restructure-audit]]'
   - '[[2026-05-01-corpus-data-hydration-review-audit]]'

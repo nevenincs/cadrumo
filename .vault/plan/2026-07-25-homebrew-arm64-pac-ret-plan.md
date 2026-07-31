@@ -4,6 +4,7 @@ tags:
   - '#homebrew-arm64-pac-ret'
 date: '2026-07-25'
 modified: '2026-07-28'
+body_hash: 'sha256:4762346d5c4ecf9f29f6e999a4b440ec15687179e895fb2fac97742573f4a0a4'
 tier: L1
 related:
   - '[[2026-07-22-homebrew-arm64-pac-ret-adr]]'

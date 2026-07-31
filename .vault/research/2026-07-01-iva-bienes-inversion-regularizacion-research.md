@@ -4,6 +4,7 @@ tags:
   - "#iva-bienes-inversion-regularizacion"
 date: "2026-07-01"
 modified: '2026-07-17'
+body_hash: 'sha256:4a4f74e99553d0049b52dad3744acecfa774b467b807efd1a104ee7ef58f3550'
 related:
   - "[[2026-06-19-silent-zero-base-aggregation-adr]]"
   - "[[2026-06-21-m390-iva-carry-boxes-adr]]"

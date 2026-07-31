@@ -4,6 +4,7 @@ tags:
   - '#multilang-externalization'
 date: '2026-07-12'
 modified: '2026-07-17'
+body_hash: 'sha256:13ccd222fc0a0e48d8b42f376fd73393c6d2b49f2e67934ef6f372cf3c9d33f0'
 related:
   - '[[2026-07-12-multilang-externalization-adr]]'
 ---

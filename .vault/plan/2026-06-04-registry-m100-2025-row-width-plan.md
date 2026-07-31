@@ -4,6 +4,7 @@ tags:
   - '#registry-m100-2025-row-width'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:ee7abc00f7bc239ee4f2034e65a6412ebd9a86e96ae52efd7459f29389733885'
 tier: L1
 related:
   - '[[2026-06-04-registry-m100-2025-row-width-adr]]'

@@ -4,6 +4,7 @@ tags:
   - '#ledger-hardening-close'
 date: '2026-06-11'
 modified: '2026-07-17'
+body_hash: 'sha256:0efb3ee2ff16ca650e538eaab626445e04c4b349d0bba3280c35653864e31d14'
 related:
   - '[[2026-06-10-ledger-interface-contract-plan]]'
   - '[[2026-06-10-ledger-invoice-unification-plan]]'

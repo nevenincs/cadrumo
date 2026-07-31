@@ -4,6 +4,7 @@ tags:
   - '#m210-irnr-phase-2-engine'
 date: '2026-07-09'
 modified: '2026-07-10'
+body_hash: 'sha256:6d58b0fb7353556f03d7f91681ff22ba4102e0852917d3849492ca8fcd76807f'
 step_id: 'S05'
 related:
   - "[[2026-05-27-m210-irnr-phase-2-engine-plan]]"

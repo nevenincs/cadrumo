@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:766ceca5aec008e6c4bbb8b3a2d85374bd1088391d9f6d2c64181321c971c36e'
 related:
   - '[[2026-07-02-arch-remediation-gates-ratchet-P01-S01]]'
   - '[[2026-07-02-arch-remediation-gates-ratchet-P01-S02]]'

@@ -4,6 +4,7 @@ tags:
   - '#arch-remediation-ports-inversion'
 date: '2026-07-03'
 modified: '2026-07-03'
+body_hash: 'sha256:6d36aa87ee4c9f19e95cf8f7d2d0304b0192d8b6943c43cf9978f26689a46f90'
 step_id: 'S14'
 related:
   - "[[2026-07-02-arch-remediation-ports-inversion-plan]]"

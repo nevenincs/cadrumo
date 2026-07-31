@@ -4,6 +4,7 @@ tags:
   - '#modelo-enum-hardening'
 date: '2026-06-10'
 modified: '2026-07-17'
+body_hash: 'sha256:e0dc89e8412b5df1db621c7e2c08802f4dbc374fc44aa70ebdaf614cbeb04fad'
 tier: L2
 related:
   - '[[2026-06-10-modelo-enum-hardening-adr]]'

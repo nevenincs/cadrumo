@@ -4,6 +4,7 @@ tags:
   - "#cert-provider"
 date: "2026-04-18"
 modified: '2026-07-17'
+body_hash: 'sha256:7cc859b691ae0ba49cc2f55c637326e0d59c2cc519c2a82df436d34edb3670b7'
 related:
   - '[[2026-07-16-protected-browser-certificate-auth-adr]]'
   - '[[2026-04-18-auth-provider-abstraction-adr]]'

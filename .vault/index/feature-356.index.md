@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:32f770e4e4362e7a6073acb4f13a9486cebc22d2b67dbbccbb1815aa54e6a9d3'
 related:
   - '[[2026-04-23-feature-356-adr]]'
   - '[[2026-04-23-feature-356-phase1-review-exec]]'

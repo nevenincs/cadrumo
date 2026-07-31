@@ -4,6 +4,7 @@ tags:
   - '#residual-cli-hardening'
 date: '2026-06-12'
 modified: '2026-07-17'
+body_hash: 'sha256:c9252f087384cb8dcc32784fb357fd58dde9dddd0d7d49b960dae1332c17d0dd'
 related:
   - '[[2026-06-10-cli-operator-surface-plan]]'
   - '[[2026-06-10-cli-envelope-notice-standardisation-plan]]'

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:8f2be18d441cfca05793736c27d1dc1a8407f00d668802fca785ac92fa56fe5b'
 related:
   - '[[2026-05-30-purchase-invoice-ocr-extraction-discipline-adr]]'
   - '[[2026-06-04-purchase-invoice-ocr-extraction-discipline-research]]'

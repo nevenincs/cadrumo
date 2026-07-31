@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:17d6d5d7f6eb5c7c8d60daae9b9fd886f96d10418f66945a86f20e502465fbde'
 related:
   - '[[2026-05-20-registry-authority-flow-W01-P01-S01]]'
   - '[[2026-05-20-registry-authority-flow-W01-P01-S02]]'

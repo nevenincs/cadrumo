@@ -4,6 +4,7 @@ tags:
   - '#period-grammar-standardisation'
 date: '2026-06-11'
 modified: '2026-07-17'
+body_hash: 'sha256:075211cb6007ae637c579d0123032e3092923fc73eda55a3e3baa26bdf8a7c04'
 related:
   - '[[2026-06-11-period-grammar-standardisation-adr]]'
 ---

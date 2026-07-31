@@ -4,6 +4,7 @@ tags:
   - '#registry-drift-validator-blocking-gap'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:46a0c974faad56d0e5e52a51af315cef357ad32ed13aedc909a0b902195a2863'
 step_id: 'S01'
 related:
   - '[[2026-06-04-registry-drift-validator-blocking-gap-plan]]'

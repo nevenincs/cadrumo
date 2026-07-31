@@ -4,6 +4,7 @@ tags:
   - '#m303-parser-engine-totals-impedance'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:c9f62f1d49385b95d0bd04d7a17527dee29e371bf7fac784de1cebb4cd1470c4'
 related:
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]"
   - "[[2026-06-02-m390-annual-autoconsumo-promotor-source-adr]]"

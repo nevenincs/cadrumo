@@ -4,6 +4,7 @@ tags:
   - '#casilla-reference-ambiguity-hardening'
 date: '2026-06-24'
 modified: '2026-07-17'
+body_hash: 'sha256:12d7a3d1d90e43851e8b2e31f8ed229efecd3bc923b6e651e81086619864fa20'
 related:
   - '[[2026-05-20-registry-casilla-identity-adr]]'
   - '[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]'

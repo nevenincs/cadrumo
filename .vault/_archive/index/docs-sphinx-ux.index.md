@@ -5,6 +5,7 @@ tags:
   - '#docs-sphinx-ux'
 date: '2026-06-15'
 modified: '2026-06-15'
+body_hash: 'sha256:c3ce6789176fe59ab609b0d124334822d5672938956da5e59a7be68c0a4d0a27'
 related:
   - '[[2026-06-04-docs-sphinx-ux-W01-P01-S01]]'
   - '[[2026-06-04-docs-sphinx-ux-W01-P01-S02]]'

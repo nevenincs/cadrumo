@@ -4,6 +4,7 @@ tags:
   - '#scoop-runner-topology'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_hash: 'sha256:1406932245bed5138736961d867134ca8e62a4ecad1acf7dce8a15bbc2edda6b'
 step_id: 'S04'
 related:
   - "[[2026-07-25-scoop-runner-topology-plan]]"

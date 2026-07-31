@@ -4,6 +4,7 @@ tags:
   - '#modelo-720-prior-year-baseline'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:a7229ffa77ebea9e8791cc8ee6e513f5b23ad7f9c3f8c0e543f6c87e8d00f845'
 related:
   - "[[2026-06-02-modelo-720-prior-year-baseline-research]]"
   - "[[2026-06-02-modelo-multiyear-renta-adr]]"

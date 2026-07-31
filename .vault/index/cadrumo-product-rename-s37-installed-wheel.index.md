@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:450cc4ad15ee4ce52f0a30b01b17e8fc17333764b9903540a46785c491d00e11'
 related:
   - '[[2026-07-13-cadrumo-product-rename-s37-installed-wheel-audit]]'
 ---

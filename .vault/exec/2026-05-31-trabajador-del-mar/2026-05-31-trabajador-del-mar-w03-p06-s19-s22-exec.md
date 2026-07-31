@@ -4,6 +4,7 @@ tags:
   - "#trabajador-del-mar"
 date: "2026-05-31"
 modified: '2026-07-31'
+body_hash: 'sha256:c5a5b0fb8566a50b1f30fac8d705f7cb2779bcd713390b5cd188920ade7770fd'
 related:
   - "[[2026-05-31-trabajador-del-mar-plan]]"
   - "[[2026-05-31-trabajador-del-mar-adr]]"

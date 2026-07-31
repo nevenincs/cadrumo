@@ -4,6 +4,7 @@ tags:
   - '#live-parity-oracle'
 date: '2026-05-07'
 modified: '2026-07-17'
+body_hash: 'sha256:21fbf77a9a1ce038d211456343f37f0fb2cef13c8a14e1959ba2d36505610a0b'
 related:
   - '[[2026-05-06-aeat-nif-iva-checker-adapter-adr]]'
   - '[[2026-05-06-live-parity-oracle-backend-adr]]'

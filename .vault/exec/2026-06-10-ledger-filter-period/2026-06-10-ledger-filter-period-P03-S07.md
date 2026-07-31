@@ -4,6 +4,7 @@ tags:
   - '#ledger-filter-period'
 date: '2026-06-12'
 modified: '2026-07-17'
+body_hash: 'sha256:dbd086088093dda4ee4f7ac8fee48b117d27ac217dc1cc2ef953864d923c41fd'
 step_id: 'S07'
 related:
   - "[[2026-06-10-ledger-filter-period-plan]]"

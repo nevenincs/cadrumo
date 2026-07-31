@@ -4,6 +4,7 @@ tags:
   - "#live-write-test-audit"
 date: "2026-04-16"
 modified: '2026-07-17'
+body_hash: 'sha256:00c8d8178a2b3f9bcf4b4f3dd5f1395597dc0d038c1cc0e9db50e18ebfd59140'
 related:
   - "[[2026-04-16-live-write-test-audit-research]]"
 ---

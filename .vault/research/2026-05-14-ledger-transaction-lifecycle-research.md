@@ -4,6 +4,7 @@ tags:
   - "#ledger-transaction-lifecycle"
 date: "2026-05-14"
 modified: '2026-07-17'
+body_hash: 'sha256:6af73d1047f729c2b7e9b9036514a5c8b9b61a126cdbf7c27ed26dfcba3caf9a'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-13-cli-workflow-redesign-epic-plan]]"

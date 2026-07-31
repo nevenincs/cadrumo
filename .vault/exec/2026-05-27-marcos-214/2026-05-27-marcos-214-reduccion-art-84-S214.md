@@ -4,6 +4,7 @@ tags:
   - '#marcos-214'
 date: '2026-05-27'
 modified: '2026-07-31'
+body_hash: 'sha256:93b74e61d50cf034b3247f2ae00ca229c406b1649814a65c61d462d43bf98084'
 related:
   - '[[2026-05-07-renta-full-coverage-plan]]'
 ---

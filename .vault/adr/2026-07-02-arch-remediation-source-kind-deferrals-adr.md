@@ -4,6 +4,7 @@ tags:
   - '#arch-remediation-source-kind-deferrals'
 date: '2026-07-02'
 modified: '2026-07-17'
+body_hash: 'sha256:7993cb1c450d985c11958bb836236e687f018be4f50916d175552f41aeb922be'
 related:
   - "[[2026-07-02-aeat-architecture-review-audit]]"
   - "[[2026-07-02-arch-remediation-program-adr]]"

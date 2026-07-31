@@ -4,6 +4,7 @@ tags:
   - '#bucket-sealed-archive'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:fbb1ec2f9d815d8459c5bd3edc5bffe5a03daa8403d1a3d27f82b4f41c60ae5b'
 related:
   - "[[2026-06-03-bucket-sealed-archive-adr]]"
 ---

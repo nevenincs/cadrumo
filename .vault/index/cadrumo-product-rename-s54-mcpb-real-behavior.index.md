@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:5afea824a4da5f6c680d96db8e48c48a478330c58a7415b8a203817d6ba0d1e4'
 related:
   - '[[2026-07-13-cadrumo-product-rename-s54-mcpb-real-behavior-audit]]'
 ---

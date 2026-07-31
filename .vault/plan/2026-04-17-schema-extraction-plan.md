@@ -7,6 +7,7 @@ tags:
   - "#schema-extraction"
 date: 2026-04-17
 modified: '2026-07-17'
+body_hash: 'sha256:74dcf3e51e0eba819de59a442e5b9497739220e4cf44469d71fc6d6b57ac0ec5'
 related:
   - "[[2026-04-17-schema-extraction-adr]]"
   - "[[2026-04-17-schema-extraction-research]]"

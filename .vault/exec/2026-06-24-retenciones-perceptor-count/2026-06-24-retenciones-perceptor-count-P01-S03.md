@@ -4,6 +4,7 @@ tags:
   - '#retenciones-perceptor-count'
 date: '2026-06-30'
 modified: '2026-07-17'
+body_hash: 'sha256:571d7f7a9527cf0d531856031a5db8d0760fdab33e649ae08745b1367fb87699'
 step_id: 'S03'
 related:
   - "[[2026-06-24-retenciones-perceptor-count-plan]]"

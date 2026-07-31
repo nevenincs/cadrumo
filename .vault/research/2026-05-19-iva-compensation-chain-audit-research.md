@@ -4,6 +4,7 @@ tags:
   - '#iva-compensation-chain'
 date: '2026-05-19'
 modified: '2026-07-17'
+body_hash: 'sha256:1364bd361574ef3a83e610fc45e78b8246cfe4f447f3377e0c4ed21714787f94'
 related: []
 ---
 

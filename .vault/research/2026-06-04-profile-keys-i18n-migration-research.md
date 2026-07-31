@@ -4,6 +4,7 @@ tags:
   - '#profile-keys-i18n-migration'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:e90ff8937d38f88d52aaa7985d1b333dd909148d0d6e97618ebac0ec04814322'
 related: []
 related:
   - '[[2025-02-13-profile-keys-i18n-migration-adr]]'

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:4eadf8fa99a75c40a8794586e2a001a065a4ed074af4c5fa536d7cfa65653fdb'
 related:
   - '[[2026-07-26-declaracion-real-render-verification-P01-S01]]'
   - '[[2026-07-26-declaracion-real-render-verification-P01-S02]]'

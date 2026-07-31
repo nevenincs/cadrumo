@@ -4,6 +4,7 @@ tags:
   - '#iva-classification-enrichment'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:056aad52aced4034e03aeb01ac4db25357dd164930f31908fd5505b9a2134a5e'
 related:
   - "[[2026-04-12-modelo-303-390-adr]]"
   - "[[2026-04-17-modelo-303-formulas-adr]]"

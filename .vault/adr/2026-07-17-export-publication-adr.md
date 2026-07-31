@@ -4,6 +4,7 @@ tags:
   - '#export-publication'
 date: '2026-07-17'
 modified: '2026-07-17'
+body_hash: 'sha256:2ba4d5ca4ef7b503684cde1d45a251927f8445e3592c58b8ac8378a1716c50ec'
 related:
   - "[[2026-07-15-cli-authority-verb-conformance-adr]]"
   - "[[2026-07-17-export-publication-plan]]"

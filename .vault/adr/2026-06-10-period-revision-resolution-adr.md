@@ -4,6 +4,7 @@ tags:
   - '#period-revision-resolution'
 date: '2026-06-10'
 modified: '2026-07-17'
+body_hash: 'sha256:2bfd57aea21b079a3345f2c7a78a7d4bf8b5c98ab7e042dbeb06254d631920e9'
 related:
   - "[[2026-06-10-period-revision-resolution-research]]"
 ---

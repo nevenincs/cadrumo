@@ -4,6 +4,7 @@ tags:
   - '#m303-refund-election'
 date: '2026-07-10'
 modified: '2026-07-10'
+body_hash: 'sha256:7f52eb938e779dd0aea017a1526e51ff3e942c24a37daeed89062f586fd74ac9'
 related:
   - "[[2026-06-24-m303-refund-election-adr]]"
 ---

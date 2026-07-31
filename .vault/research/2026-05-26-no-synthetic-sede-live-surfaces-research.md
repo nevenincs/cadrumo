@@ -4,6 +4,7 @@ tags:
   - '#no-synthetic-sede-live-surfaces'
 date: '2026-05-26'
 modified: '2026-07-17'
+body_hash: 'sha256:ddacf77ad31c3c4622db807f07a7643c44382cb95139ebf0a00630dd76df01a0'
 related:
   - '[[2026-05-21-declaracion-extraction-architecture-plan]]'
   - '[[2026-05-26-declaracion-extraction-auth-gated-acquisition-status-audit]]'

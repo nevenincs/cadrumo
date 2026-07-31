@@ -3,6 +3,7 @@ step_id: "S205"
 feature: declaracion-extraction-architecture
 date: 2026-05-28
 modified: '2026-07-17'
+body_hash: 'sha256:a8adce9bf3e888e3e0542cbe91df3dd34a37022cd9d0f3ad6d95c67e8ec98c19'
 tags:
   - "#exec"
   - "#declaracion-extraction-architecture"

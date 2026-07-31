@@ -4,6 +4,7 @@ tags:
   - '#m303-form-vs-semantic-casilla-dual-keying'
 date: '2026-06-13'
 modified: '2026-07-17'
+body_hash: 'sha256:99cbec0e5f100adda2a29632b48a1dae034f759f1513cc6f9db689ec1c958b69'
 related:
   - "[[2026-06-09-modelo-iva-routing-carry-adr]]"
   - "[[2026-04-17-modelo-303-formulas-adr]]"

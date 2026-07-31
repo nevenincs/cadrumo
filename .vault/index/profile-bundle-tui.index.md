@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:7f128561861beeaec078a08f264560d6a34c4f6e7c921f32b67a75f38a1d0092'
 related:
   - '[[2026-07-24-profile-bundle-tui-adr]]'
   - '[[2026-07-24-profile-bundle-tui-canonical-bundle-path-reference]]'

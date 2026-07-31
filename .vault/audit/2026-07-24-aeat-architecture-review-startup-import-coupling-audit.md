@@ -4,6 +4,7 @@ tags:
   - '#aeat-architecture-review'
 date: '2026-07-24'
 modified: '2026-07-24'
+body_hash: 'sha256:1407e65ac228c13cd0a20ca9fdc5b71aa78ce32fd1402dfc2e3db70d64308f82'
 related: []
 ---
 

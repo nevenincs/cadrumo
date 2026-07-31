@@ -4,6 +4,7 @@ tags:
   - '#ledger-transaction-lifecycle'
 date: '2026-05-14'
 modified: '2026-07-17'
+body_hash: 'sha256:fb8b6d0a1fb500f14e0c3d9ee4b405e7836d221ef6551fb0e20bc30f1fd324d4'
 tier: L2
 related:
   - '[[2026-05-14-ledger-transaction-lifecycle-adr]]'

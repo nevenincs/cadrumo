@@ -4,6 +4,7 @@ tags:
   - '#modelo-303-calc-verify'
 date: '2026-04-27'
 modified: '2026-07-17'
+body_hash: 'sha256:af7f615a2a267dbed8eddb62feadca9c4c3a7d2d4fa6d24c8e9ec56057a1f380'
 related:
   - "[[2026-04-27-modelo-303-calc-verify-adr]]"
   - "[[2026-04-27-modelo-130-calc-verify-adr]]"

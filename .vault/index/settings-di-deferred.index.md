@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:b899ad1786574373923d636fbdc8757e713cee7c864117ce9721249cd5863d9e'
 related:
   - '[[2026-06-03-settings-di-deferred-test-migration-adr]]'
   - '[[2026-06-04-settings-di-deferred-research]]'

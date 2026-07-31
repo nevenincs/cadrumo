@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:78a7a85e47bd855486e1ab1c07ad63441e0d2942bc15950e3ef9e9b5e2aa208b'
 related:
   - '[[2026-06-02-m390-annual-autoconsumo-promotor-source-adr]]'
   - '[[2026-06-04-m390-annual-autoconsumo-promotor-source-research]]'

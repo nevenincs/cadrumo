@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:6ff5f0e731689c4011609ff6859da85cfdbccebeb67142b9d316b614e3fc761a'
 related:
   - '[[2026-04-21-pdf-taxonomy-adr]]'
   - '[[2026-04-21-pdf-taxonomy-plan]]'

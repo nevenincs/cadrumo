@@ -2,6 +2,7 @@
 tags: ['#exec', '#ledger-amount-direction']
 date: '2026-06-12'
 modified: '2026-07-17'
+body_hash: 'sha256:e14f7185d12ea944fdee94c4d688b89c08a28002d69fb948c73478b2f8ebcfa2'
 step_id: 'S07'
 related:
   - '[[2026-06-10-ledger-amount-direction-plan]]'

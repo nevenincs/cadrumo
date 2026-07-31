@@ -4,6 +4,7 @@ tags:
   - '#google-optional-adapter-boundary'
 date: '2026-07-14'
 modified: '2026-07-17'
+body_hash: 'sha256:be18f812f2a8cebd1c417044988462094b8eb3d88af3437706259e66e73f0f6a'
 tier: L1
 related:
   - '[[2026-07-14-google-optional-adapter-boundary-adr]]'

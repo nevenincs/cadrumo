@@ -4,6 +4,7 @@ tags:
   - '#cli-testimonial'
 date: '2026-05-21'
 modified: '2026-07-17'
+body_hash: 'sha256:6829c95c48b93310e5e9817bdb1f703b6d71c227db85867f924b917fce0bd484'
 related:
   - "[[2026-05-21-persona-fleet-round2-findings-audit]]"
   - "[[2026-05-20-testimonial-driven-cli-verification-playbook-reference]]"

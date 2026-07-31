@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:2f825a855758e2161f8071e4938f1dced14b6b89bb0faba56647e11919e60698'
 related:
   - '[[2026-07-24-profile-login-session-W01-P01-S01]]'
   - '[[2026-07-24-profile-login-session-W01-P01-S02]]'

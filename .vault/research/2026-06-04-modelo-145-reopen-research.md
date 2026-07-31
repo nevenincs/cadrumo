@@ -4,6 +4,7 @@ tags:
   - '#modelo-145-reopen'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:17d9206eac6186d12c51e0799b999b12eb8c1361638058b0692c6c9eb077e180'
 related:
   - "[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-plan]]"
   - "[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-adr]]"

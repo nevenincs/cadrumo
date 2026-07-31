@@ -4,6 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-05-14'
 modified: '2026-07-17'
+body_hash: 'sha256:e1d1e863015afa5c71375957251cd35a8225744c2d8177423f4b5ad3e72dea8e'
 related:
   - '[[2026-05-13-cli-workflow-redesign-unexposed-backend-capability-wave-expansion-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-domain-harvest-normatives-adr]]'

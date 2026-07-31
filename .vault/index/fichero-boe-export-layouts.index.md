@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:d3d165f5efd8cd4b68fce709965fbeb38f0135b915fb3c968933d54edf2a9b71'
 related:
   - '[[2026-05-21-fichero-boe-export-layouts-P01-S01]]'
   - '[[2026-05-21-fichero-boe-export-layouts-P01-S02]]'

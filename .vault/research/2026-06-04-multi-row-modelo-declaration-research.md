@@ -4,6 +4,7 @@ tags:
   - '#multi-row-modelo-declaration'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:d7b520b650cd8da6e08d57b5bcc2e3d3a3b67847f6d66fd1bba1510de40a02f2'
 related:
   - "[[2026-05-27-multi-row-modelo-declaration-adr]]"
 ---

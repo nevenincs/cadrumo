@@ -4,6 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-05-14'
 modified: '2026-07-17'
+body_hash: 'sha256:b4accdeb9012988cc04d77080684e1853c02482b724456af05d2b1be868d16d7'
 related:
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
   - '[[2026-05-12-cli-workflow-redesign-bucket-event-history-adr]]'

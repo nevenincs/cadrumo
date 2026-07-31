@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:c4066ed6d49f6c16ab6126d486af88e16ce9daff2c2d56c7a3b7b11dad22970e'
 related:
   - '[[2026-05-08-renta-cuota-integra-autonomic-scale-adr]]'
   - '[[2026-05-08-renta-cuota-integra-autonomic-scale-plan]]'

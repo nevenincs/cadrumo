@@ -2,6 +2,7 @@
 tags: ['#exec', '#modelo-export-evidence-parity']
 date: '2026-06-03'
 modified: '2026-07-17'
+body_hash: 'sha256:48c3a3a7c5c9286904889e850363fb2ea6cb48d8ce011ff3b598c7397a6c7890'
 step_id: 'S06'
 related:
   - '[[2026-06-03-modelo-export-evidence-parity-plan]]'

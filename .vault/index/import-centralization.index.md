@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:32b2bd881f61292927e20d22e6a0c9539d96f71ac3f744a93d85d38353698253'
 related:
   - '[[2026-07-01-import-centralization-W01-P02-S01]]'
   - '[[2026-07-01-import-centralization-W01-P03-S02]]'

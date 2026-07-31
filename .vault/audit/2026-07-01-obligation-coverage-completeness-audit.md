@@ -4,6 +4,7 @@ tags:
   - '#obligation-coverage-completeness'
 date: '2026-07-01'
 modified: '2026-07-17'
+body_hash: 'sha256:2b39204ec8d9c647a9fa153ad23846c6d3f32dd58c51d343007430780af72005'
 related: []
 ---
 

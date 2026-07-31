@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:8d485f27062556c264feceb0b597a3127dc453fa12b5025758a58815266a4775'
 related:
   - '[[2026-06-03-settings-di-deferral-adr]]'
   - '[[2026-06-04-settings-di-deferral-research]]'

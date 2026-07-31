@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:c5b548ad47345e8ce870b665947b6ee8f1a1d3ee68d1bf778e5418adc5f5e97b'
 related:
   - '[[2026-07-25-censal-profile-autofill-P01-S01]]'
   - '[[2026-07-25-censal-profile-autofill-P01-S02]]'

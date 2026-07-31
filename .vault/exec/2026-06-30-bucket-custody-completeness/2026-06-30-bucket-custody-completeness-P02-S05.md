@@ -4,6 +4,7 @@ tags:
   - '#bucket-custody-completeness'
 date: '2026-06-30'
 modified: '2026-07-17'
+body_hash: 'sha256:7825916276f1c54034061ea1a7880ca129e28248e19fbd9a0265ebad4a51bbdb'
 step_id: 'S05'
 related:
   - "[[2026-06-30-bucket-custody-completeness-plan]]"

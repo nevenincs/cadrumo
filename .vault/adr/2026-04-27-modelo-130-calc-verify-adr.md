@@ -4,6 +4,7 @@ tags:
   - '#modelo-130-calc-verify'
 date: '2026-04-27'
 modified: '2026-07-17'
+body_hash: 'sha256:7a6df80d14bd0653203eb2fa9f802f2881658370542065ce203179ef28757662'
 related:
   - "[[2026-04-27-modelo-130-calc-verify-research]]"
   - "[[2026-04-25-mandatory-citations-adr]]"

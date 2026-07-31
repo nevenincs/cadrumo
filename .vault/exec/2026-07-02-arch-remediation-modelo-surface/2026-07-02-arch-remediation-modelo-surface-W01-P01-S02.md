@@ -4,6 +4,7 @@ tags:
   - '#arch-remediation-modelo-surface'
 date: '2026-07-02'
 modified: '2026-07-17'
+body_hash: 'sha256:00e1a35cc1d4a404af52b06a0d425ff418a99328ec2b9a5c55b11ae934cce367'
 step_id: 'S02'
 related:
   - "[[2026-07-02-arch-remediation-modelo-surface-plan]]"

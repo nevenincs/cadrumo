@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:d64b436f0a92646cfc864a6c13e083522ea0d83ee3036117362dfc2b2ab0ff00'
 related:
   - '[[2026-05-16-profile-lifecycle-cli-P02-S18]]'
   - '[[2026-05-16-profile-lifecycle-cli-P02-S19]]'

@@ -4,6 +4,7 @@ tags:
   - '#import-centralization'
 date: '2026-07-01'
 modified: '2026-07-17'
+body_hash: 'sha256:8e2d310b691bdde73794b66e8be2f019e0d6343d7acb205116b4641b5683f0b4'
 related:
   - '[[2026-07-01-import-centralization-adr]]'
 ---

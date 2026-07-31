@@ -4,6 +4,7 @@ tags:
   - '#modelo-addressing-ux'
 date: '2026-06-05'
 modified: '2026-07-17'
+body_hash: 'sha256:4818fbb49a1684d811e464f5f9112354c432118ad884d08cf8f47e4fed1c7dfe'
 tier: L3
 related:
   - '[[2026-06-04-modelo-addressing-ux-adr]]'

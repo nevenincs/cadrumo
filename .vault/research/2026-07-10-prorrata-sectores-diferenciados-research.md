@@ -4,6 +4,7 @@ tags:
   - '#prorrata-sectores-diferenciados'
 date: '2026-07-10'
 modified: '2026-07-10'
+body_hash: 'sha256:26f7e5d5a0c55a022a2b059d3621854604ce5b5854916927763e2fbe77b1f36f'
 related:
   - "[[2026-07-07-prorrata-sectores-diferenciados-adr]]"
 ---

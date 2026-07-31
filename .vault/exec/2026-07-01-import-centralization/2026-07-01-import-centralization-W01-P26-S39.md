@@ -4,6 +4,7 @@ tags:
   - '#import-centralization'
 date: '2026-07-05'
 modified: '2026-07-17'
+body_hash: 'sha256:1bc72c6b3adfa615dd18fe1aa80cd00ac1d2b89e897a14bb35cdb898b4e78958'
 step_id: 'S39'
 related:
   - "[[2026-07-01-import-centralization-plan]]"

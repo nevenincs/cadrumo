@@ -4,6 +4,7 @@ tags:
   - '#size-budget-refactor'
 date: '2026-07-09'
 modified: '2026-07-17'
+body_hash: 'sha256:dee6554150c60a3e9d2955496294f49b53ca4af63b97c9f2b02dc8bb13298f58'
 step_id: 'S16'
 related:
   - "[[2026-07-09-size-budget-refactor-plan]]"

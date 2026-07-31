@@ -4,6 +4,7 @@ tags:
   - '#workbook-parity-charter'
 date: '2026-05-15'
 modified: '2026-07-17'
+body_hash: 'sha256:66fb6d6a1a219270257acf080ac40c25f785b4e4cf8672105e62268eebd8c5db'
 related:
   - "[[2026-05-04-calculation-truth-registry-legal-grounding-review-audit]]"
   - "[[2026-05-14-legal-grounding-audit-reference]]"

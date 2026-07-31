@@ -4,6 +4,7 @@ tags:
   - '#binding-fold-in-carry-unification'
 date: '2026-06-26'
 modified: '2026-07-17'
+body_hash: 'sha256:ac40338561575ff28d9364a6973686e4119b3c5d29c8b3cc68530dcd2541beba'
 related:
   - "[[2026-06-26-bindings-architecture-unification-audit]]"
   - "[[2026-06-26-bindings-architecture-unification-research]]"

@@ -4,6 +4,7 @@ tags:
   - '#output-language-typed-constant-migration'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:3a6abb3f397124a4c15f5bc03bbc4ab15edfc696bd3b3c3b70c19f85a2f4afd0'
 related:
   - "[[2026-06-01-output-language-typed-constant-migration-adr]]"
 ---

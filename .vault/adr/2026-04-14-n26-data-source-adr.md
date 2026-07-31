@@ -4,6 +4,7 @@ tags:
   - "#n26-data-source"
 date: "2026-04-14"
 modified: '2026-07-17'
+body_hash: 'sha256:a227cc6f60491088496abc0eef131149d9ed5573cac92e6864e77204e4c425df'
 related:
   - "[[2026-04-14-n26-data-source-research]]"
   - "[[2026-04-21-n26-data-source-audit]]"

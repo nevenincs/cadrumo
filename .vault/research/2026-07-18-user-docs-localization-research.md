@@ -4,6 +4,7 @@ tags:
   - '#user-docs-localization'
 date: '2026-07-18'
 modified: '2026-07-18'
+body_hash: 'sha256:eced3a5ca42af4f8b9db59848e2872c354f1795466d9f456f339ffd0a7a5798c'
 related:
   - '[[2026-07-12-multilang-externalization-adr]]'
   - '[[2026-06-01-docs-educational-surface-adr]]'

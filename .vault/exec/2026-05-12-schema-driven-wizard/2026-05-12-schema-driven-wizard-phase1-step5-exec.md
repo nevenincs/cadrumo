@@ -4,6 +4,7 @@ tags:
   - '#schema-driven-wizard'
 date: '2026-05-12'
 modified: '2026-07-17'
+body_hash: 'sha256:e724bb27b8adab1a7f4acaf52563e7ffe9d9cfa1139ca9bd51705db5684989db'
 related:
   - "[[2026-05-12-schema-driven-wizard-plan]]"
   - "[[2026-05-12-schema-driven-wizard-adr]]"

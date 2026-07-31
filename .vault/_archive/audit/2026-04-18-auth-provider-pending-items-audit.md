@@ -3,6 +3,7 @@ title: "AuthProvider Ecosystem: Pending Issue Domains"
 tags: ["#audit", "#cert-provider"]
 date: "2026-04-18"
 modified: '2026-07-10'
+body_hash: 'sha256:c5aba08e99412e45e78013866e3e22980e3d38c59584d0d6eb86fdf28c155abc'
 related: []
 ---
 

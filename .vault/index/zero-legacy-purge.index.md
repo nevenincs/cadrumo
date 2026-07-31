@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:feea38e91f87521deb5a2f639dac5066a5454524381c859c55a54d0a6e8ce124'
 related:
   - '[[2026-06-10-zero-legacy-purge-research]]'
 ---

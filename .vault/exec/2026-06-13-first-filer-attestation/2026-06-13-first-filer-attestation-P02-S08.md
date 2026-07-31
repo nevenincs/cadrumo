@@ -4,6 +4,7 @@ tags:
   - '#first-filer-attestation'
 date: '2026-06-13'
 modified: '2026-07-17'
+body_hash: 'sha256:41517eac3a567f5157a130a3d97ce0c7ea62a7379267617ad77368eb8f888d8c'
 step_id: 'S08'
 related:
   - "[[2026-06-13-first-filer-attestation-plan]]"

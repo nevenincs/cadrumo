@@ -4,6 +4,7 @@ tags:
   - '#secure-object-integrity'
 date: '2026-05-22'
 modified: '2026-07-17'
+body_hash: 'sha256:164a8a9b59428fb576f5e8c42b6257208c958030a53b1da499eae42e20c5d9b5'
 step_id: 'S01'
 related:
   - '[[2026-05-22-secure-object-integrity-attribution-plan]]'

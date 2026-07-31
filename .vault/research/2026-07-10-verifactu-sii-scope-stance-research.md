@@ -4,6 +4,7 @@ tags:
   - '#verifactu-sii-scope-stance'
 date: '2026-07-10'
 modified: '2026-07-10'
+body_hash: 'sha256:4e7709ec8d6f8be7a580851966d3631adac189b400b1d3cb06146ee41a1bcddd'
 related:
   - "[[2026-07-02-verifactu-sii-scope-stance-adr]]"
 ---

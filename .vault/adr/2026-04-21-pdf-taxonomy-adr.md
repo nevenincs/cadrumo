@@ -4,6 +4,7 @@ tags:
   - "#pdf-taxonomy"
 date: "2026-04-21"
 modified: '2026-07-17'
+body_hash: 'sha256:247d7b398321be0d696450e5faa559f754f9c20c9986eb7ddacfcc60b3ca46cf'
 related:
   - "[[2026-04-21-pdf-taxonomy-research]]"
   - "[[2026-04-21-real-pdf-import-umbrella-research]]"

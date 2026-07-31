@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:1d1e57da40b09b617ffc077ad163679930b9b39c17d5a1962906485b2dff4378'
 related:
   - '[[2026-06-10-modelo-130-100-continuity-P01-S01]]'
   - '[[2026-06-10-modelo-130-100-continuity-P01-S02]]'

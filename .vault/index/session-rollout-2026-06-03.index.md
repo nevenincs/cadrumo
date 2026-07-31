@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:1999174f1cbbd91cd1b9140d3a006cb10edc680e23fb5502ca83cb4ced2bb8d6'
 related:
   - '[[2026-06-03-session-rollout-2026-06-03-audit]]'
 ---

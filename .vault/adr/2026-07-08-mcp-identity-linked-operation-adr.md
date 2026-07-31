@@ -4,6 +4,7 @@ tags:
   - '#mcp-identity-linked-operation'
 date: '2026-07-08'
 modified: '2026-07-17'
+body_hash: 'sha256:f6ac8dc5733330c02880941dd5c8e3e797a417f18f686edfd097e8164add1fd6'
 related:
   - "[[2026-07-08-mcp-identity-linked-operation-research]]"
   - "[[2026-07-08-mcp-console-review-audit]]"

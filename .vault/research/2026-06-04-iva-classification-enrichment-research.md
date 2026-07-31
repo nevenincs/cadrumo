@@ -4,6 +4,7 @@ tags:
   - '#iva-classification-enrichment'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:c97f27cd9883be68ccb8127d3de9e4a0ab6b2c17433c11f7cfb91a1cf3b82fbb'
 related:
   - "[[2026-05-27-iva-classification-enrichment-adr]]"
 ---

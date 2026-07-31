@@ -4,6 +4,7 @@ tags:
   - '#arch-remediation-crash-window'
 date: '2026-07-02'
 modified: '2026-07-17'
+body_hash: 'sha256:af963772afa9c6953dc8f957e3b4da9c2c31c1182cababac7af2220e7512a0f7'
 tier: L2
 related:
   - '[[2026-07-02-aeat-architecture-review-audit]]'

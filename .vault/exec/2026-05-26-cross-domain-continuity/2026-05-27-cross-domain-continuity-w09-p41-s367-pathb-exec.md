@@ -5,6 +5,7 @@ tags:
   - "#cross-domain-continuity"
 date: 2026-05-27
 modified: '2026-07-17'
+body_hash: 'sha256:fa4671f95378236ecf6e2286a67f4765eddd5d1539ea6e432a5c6d003123bc38'
 related:
   - "[[2026-05-26-cross-domain-continuity-plan]]"
   - "[[2026-05-27-m721-informativa-criptomonedas-research]]"

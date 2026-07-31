@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:f2a29a5ec050b0d56c53a2d8ecebcf35bbd0e042574a5cf0d6698442e99919e2'
 related:
   - '[[2026-07-13-cadrumo-product-rename-s07-identity-contract-audit]]'
 ---

@@ -4,6 +4,7 @@ tags:
   - '#no-synthetic-sede-live-surfaces'
 date: '2026-05-26'
 modified: '2026-07-17'
+body_hash: 'sha256:85a1c2e5fdf8d725dc978c9738f6e0bea07fe7a35c3cb7008588c93ed3d12f98'
 related:
   - '[[2026-05-26-no-synthetic-sede-live-surfaces-research]]'
   - '[[2026-05-07-live-parity-oracle-adr]]'

@@ -4,6 +4,7 @@ tags:
   - '#cli-operator-surface'
 date: '2026-06-10'
 modified: '2026-07-17'
+body_hash: 'sha256:0dbed0502d7864e61385deafd4da0f3bb73f104b6a26eb202fa0f977e0eef138'
 related:
   - '[[2026-06-10-aeat-cli-userdocs-hardening-audit]]'
   - '[[2026-06-04-aeat-cli-userdocs-hardening-plan]]'

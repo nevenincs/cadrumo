@@ -4,6 +4,7 @@ tags:
   - "#ledger-transaction-lifecycle"
 date: '2026-05-14'
 modified: '2026-07-17'
+body_hash: 'sha256:30051308de8c52ebc0eff813b276311353f873bebd01aeb886c998d57e720205'
 related:
   - "[[2026-05-14-ledger-transaction-lifecycle-research]]"
   - "[[2026-05-12-cli-workflow-redesign-adr]]"

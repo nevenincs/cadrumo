@@ -4,6 +4,7 @@ tags:
   - '#borrador'
 date: '2026-05-13'
 modified: '2026-07-17'
+body_hash: 'sha256:56d125546cd2c8289c65b88b156640ed713e5c4f988fc4ffd7dcc50f8dde818b'
 related: []
 ---
 

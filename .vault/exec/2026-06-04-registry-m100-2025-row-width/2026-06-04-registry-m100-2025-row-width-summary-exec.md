@@ -4,6 +4,7 @@ tags:
   - '#registry-m100-2025-row-width'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:03d1eff9bb7cbdde517e0b0a4a20d9f03271c685c191624223f840767fcec6ed'
 related:
   - '[[2026-06-04-registry-m100-2025-row-width-plan]]'
 ---

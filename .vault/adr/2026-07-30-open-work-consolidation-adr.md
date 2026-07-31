@@ -5,6 +5,7 @@ tags:
 date: '2026-07-30'
 modified: '2026-07-30'
 body_schema: 'body-v1'
+body_hash: 'sha256:29695573610f745669ac167bdc3f33bab7524024da56b308bd1adfea7860ac33'
 related:
   - "[[2026-07-30-open-work-consolidation-audit]]"
 ---

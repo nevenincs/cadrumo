@@ -4,6 +4,7 @@ tags:
   - '#exception-restructure'
 date: '2026-05-09'
 modified: '2026-07-17'
+body_hash: 'sha256:edaf40d24d1da38eeafa0442057f0a27ff60902302d1219748a95f9bf4a6a81f'
 related:
   - "[[2026-05-09-exception-restructure-research]]"
   - "[[2026-06-01-semantic-cluster-hardening-plan]]"

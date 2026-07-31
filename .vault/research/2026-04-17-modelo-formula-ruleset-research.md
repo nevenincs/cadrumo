@@ -4,6 +4,7 @@ tags:
   - '#modelo-formulas'
 date: '2026-04-17'
 modified: '2026-07-17'
+body_hash: 'sha256:aaad5514a71bc6ce21eb3516fa79c3e1a78d9f0e8b5d1005bea7acafd39777c9'
 related:
   - '[[2026-04-13-modelo-inventory-adr]]'
   - '[[2026-04-13-modelo-inventory-research]]'

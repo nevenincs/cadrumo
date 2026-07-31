@@ -4,6 +4,7 @@ tags:
   - '#ledger-interface-contract'
 date: '2026-06-11'
 modified: '2026-07-17'
+body_hash: 'sha256:ac0ea551319906427e6efededfae2726cd36652a8b8ffac1aa44ff501227aef5'
 step_id: 'S08'
 related:
   - '[[2026-06-10-ledger-interface-contract-plan]]'

@@ -4,6 +4,7 @@ tags:
   - '#r7-state-scale'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:20aa6ce0ab24840757a538dfef7dabaf1521726b69fbac10075bc18ef4795bf8'
 related:
   - "[[2026-05-29-cross-domain-continuity-audit]]"
 ---

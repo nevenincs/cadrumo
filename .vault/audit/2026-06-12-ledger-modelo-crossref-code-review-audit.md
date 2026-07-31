@@ -2,6 +2,7 @@
 tags: ['#audit', '#ledger-modelo-crossref']
 date: '2026-06-12'
 modified: '2026-07-17'
+body_hash: 'sha256:c43cca4a1dfe7d7e1dbbd0768e01c47dbc9b0c16394fc35f55ee8f765facb729'
 related:
   - '[[2026-06-10-ledger-modelo-crossref-plan]]'
   - '[[2026-06-10-ledger-modelo-crossref-adr]]'

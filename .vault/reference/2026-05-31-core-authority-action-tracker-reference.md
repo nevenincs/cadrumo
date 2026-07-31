@@ -4,6 +4,7 @@ tags:
   - '#core-authority-action-tracker'
 date: '2026-05-31'
 modified: '2026-07-17'
+body_hash: 'sha256:3a2fafe089837b9e751f63d7c808529d701fd006be1db84377978c1b68e26f87'
 related:
   - "[[2026-05-31-core-authority-constants-reference]]"
   - "[[2026-05-31-core-authority-shims-reference]]"

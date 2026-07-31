@@ -5,6 +5,7 @@ metadata:
   type: audit
   date: 2026-05-28
   modified: '2026-07-17'
+  body_hash: 'sha256:ce7509b7c14bed430a20cbd308a4428925732897f946e166526639145afae386'
   tags:
     - "#audit"
     - "#restructure-execution"

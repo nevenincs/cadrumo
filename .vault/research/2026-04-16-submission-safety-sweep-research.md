@@ -4,6 +4,7 @@ tags:
   - "#submission-safety-sweep"
 date: "2026-04-16"
 modified: '2026-07-17'
+body_hash: 'sha256:697e0f010f69ff63fd174f0e938884149310bb26b6396942147e8a2e5836fda6'
 related:
   - "[[2026-04-16-submission-safety-sweep-reference]]"
   - "[[2026-04-16-live-write-static-audit-reference]]"

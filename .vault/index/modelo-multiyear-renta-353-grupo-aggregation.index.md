@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:8f483707849538c6088692e862de48dae5da5f3ff1a7e7b15b9d0cb8fb2b7b96'
 related:
   - '[[2026-06-02-modelo-multiyear-renta-353-grupo-aggregation-adr]]'
   - '[[2026-06-02-modelo-multiyear-renta-353-grupo-aggregation-research]]'

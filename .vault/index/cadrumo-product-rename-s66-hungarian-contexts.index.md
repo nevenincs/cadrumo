@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:886fbf2e50ad469f701dcb33d74232012fdff5704f33b0f0bc158d2a405fbb8b'
 related:
   - '[[2026-07-13-cadrumo-product-rename-s66-hungarian-contexts-audit]]'
 ---

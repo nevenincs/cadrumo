@@ -4,6 +4,7 @@ tags:
   - '#calculation-truth-registry'
 date: '2026-05-06'
 modified: '2026-07-17'
+body_hash: 'sha256:11dc6a0ba2fdaba14611cf66f4365870828cf2eac1318cde3fb8ad8522a5aabb'
 related:
   - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
   - '[[2026-05-06-calculation-truth-registry-modelo-123-construct-workflow-closure-review-audit]]'

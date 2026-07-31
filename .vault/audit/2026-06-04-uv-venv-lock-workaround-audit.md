@@ -4,6 +4,7 @@ tags:
   - '#just-tooling-bootstrap'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:46e752fd97bb9a11d1db9c99ae6b9b3de383abd4783a6ef30c7a710a84469b84'
 related:
   - '[[2026-06-04-just-tooling-bootstrap-research]]'
   - '[[2026-06-04-just-tooling-bootstrap-adr]]'

@@ -4,6 +4,7 @@ tags:
   - '#resource-management-api'
 date: '2026-05-16'
 modified: '2026-07-17'
+body_hash: 'sha256:4569636a2fd421ab89c8be6b3472baeb499cba944c9ed761133e5c55d89c641d'
 tier: L2
 related:
   - '[[2026-05-16-resource-management-api-adr]]'

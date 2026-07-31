@@ -4,6 +4,7 @@ tags:
   - '#audit-concerns-2026-05'
 date: '2026-05-08'
 modified: '2026-07-17'
+body_hash: 'sha256:1f46c608f4e2f547b85b439c7f41659bcef9a58008e3476bc973e059e7462e83'
 related:
   - "[[2026-05-08-renta-cuota-integra-state-scale-plan]]"
   - "[[2026-05-08-renta-cuota-integra-state-scale-adr]]"

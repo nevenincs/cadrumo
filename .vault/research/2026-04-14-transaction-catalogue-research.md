@@ -4,6 +4,7 @@ tags:
   - "#transaction-catalogue"
 date: "2026-04-14"
 modified: '2026-07-17'
+body_hash: 'sha256:79a813c2b8aaa548f7d1e78ff782b0a259b09681bb9d3e471955263343998804'
 related:
   - "[[2026-04-13-p2a-financial-provider-research]]"
   - "[[2026-04-13-p2a-financial-provider-adr]]"

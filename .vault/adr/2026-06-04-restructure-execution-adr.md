@@ -4,6 +4,7 @@ tags:
   - '#restructure-execution'
 date: '2026-06-04'
 modified: '2026-07-10'
+body_hash: 'sha256:49b532ea3b54e0848ea9dbcac865b75de7551232f553162014296243d660d47e'
 related:
   - "[[2026-06-04-restructure-execution-research]]"
 ---

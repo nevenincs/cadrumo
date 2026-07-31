@@ -4,6 +4,7 @@ tags:
   - '#ledger-amount-direction'
 date: '2026-06-10'
 modified: '2026-07-17'
+body_hash: 'sha256:a63d3634aff9d14bc1c69c8654aae5029706387cb544b52eeacef32fc6916885'
 related: []
 ---
 

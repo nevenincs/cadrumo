@@ -4,6 +4,7 @@ tags:
   - '#mcp-identity-linked-operation'
 date: '2026-07-08'
 modified: '2026-07-17'
+body_hash: 'sha256:0336d6f271cd7c4c998b444be3dca9ed3c5691d207e0375b6797789834fac2e6'
 tier: L2
 related:
   - '[[2026-07-08-mcp-identity-linked-operation-adr]]'

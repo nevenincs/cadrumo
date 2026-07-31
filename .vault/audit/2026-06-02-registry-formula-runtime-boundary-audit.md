@@ -4,6 +4,7 @@ tags:
   - '#registry-formula-runtime-boundary'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:943b3bd6d2d2146fd3bc0d1715d744306fed21cfc675e405bde5a2502a90266a'
 related:
   - "[[2026-06-02-registry-hardening-next-work-plan]]"
 ---

@@ -4,6 +4,7 @@ tags:
   - '#profile-setup-flow'
 date: '2026-07-23'
 modified: '2026-07-23'
+body_hash: 'sha256:280e1659fe4bad1a3c18ab7e7888166629ef2f723fc5a5f5941d9f0c2c7c5f73'
 related:
   - "[[2026-07-23-profile-setup-flow-setup-flow-design-hypothesis-research]]"
 ---

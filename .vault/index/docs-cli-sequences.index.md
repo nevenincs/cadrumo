@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:7d3ee715f5e6317278e3d88041d6de1581ab13ac0c540c829e61d244b469dccd'
 related:
   - '[[2026-07-13-docs-cli-sequences-W01-P01-S01]]'
   - '[[2026-07-13-docs-cli-sequences-W01-P01-S02]]'

@@ -4,6 +4,7 @@ tags:
   - '#justificante-parser'
 date: '2026-04-12'
 modified: '2026-07-17'
+body_hash: 'sha256:eaf75dafa64d118fda1ea084cdaec00ac0e6f0bb005b548a383b4f406b09c582'
 related:
   - '[[2026-04-12-justificante-parser-research]]'
   - '[[2026-04-12-justificante-parser-adr]]'

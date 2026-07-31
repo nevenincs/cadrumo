@@ -4,6 +4,7 @@ tags:
   - '#iva-rate-import-cycle-resolution'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:82976dc1274b316a3f4d125daa5151020098a38a88d07091f3bb50a1119df80b'
 related:
   - "[[2026-06-02-iva-rate-import-cycle-resolution-adr]]"
 ---

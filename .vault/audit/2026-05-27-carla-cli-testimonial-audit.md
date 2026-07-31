@@ -4,6 +4,7 @@ tags:
   - '#cli-testimonial'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:15665ac993cd5123b757356c7e7b700d3ee119d43c52a6f82be315741390f36a'
 related:
   - "[[2026-05-27-pedro-cli-testimonial-audit]]"
   - "[[2026-05-27-sergio-cli-testimonial-audit]]"

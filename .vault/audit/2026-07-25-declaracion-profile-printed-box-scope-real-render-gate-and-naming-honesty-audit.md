@@ -4,6 +4,7 @@ tags:
   - '#declaracion-profile-printed-box-scope'
 date: '2026-07-25'
 modified: '2026-07-26'
+body_hash: 'sha256:e3cb48f3a37827861449c8830de01ca5c0299b015149dce4e13fe8a38456c2f7'
 related:
   - "[[2026-07-25-declaracion-profile-printed-box-scope-layout-blind-corpus-audit]]"
   - "[[2026-07-25-declaracion-profile-printed-box-scope-adr]]"

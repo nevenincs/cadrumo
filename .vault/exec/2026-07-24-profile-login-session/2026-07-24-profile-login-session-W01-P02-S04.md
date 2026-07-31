@@ -4,6 +4,7 @@ tags:
   - '#profile-login-session'
 date: '2026-07-24'
 modified: '2026-07-24'
+body_hash: 'sha256:36099a3e8703889f8321de23a94a422fde1bd351ff5651579797eb49443c4b8a'
 step_id: 'S04'
 related:
   - "[[2026-07-24-profile-login-session-plan]]"

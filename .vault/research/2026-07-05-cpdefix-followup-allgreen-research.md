@@ -4,6 +4,7 @@ tags:
   - '#cpdefix-followup-allgreen'
 date: '2026-07-05'
 modified: '2026-07-17'
+body_hash: 'sha256:3e9853ac6591261495b3d83716ebb0d5e0c06be9de4ecf17a2898b3184ae0a76'
 related:
   - "[[2026-06-30-cpdefix-calculation-allgreen-audit]]"
   - "[[2026-07-05-cpdefix-followup-allgreen-adr]]"

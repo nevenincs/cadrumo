@@ -4,6 +4,7 @@ tags:
   - '#cli-ledger-testimonials'
 date: '2026-06-03'
 modified: '2026-07-17'
+body_hash: 'sha256:9185a676878fa803665de54cd0ed8912341d94b9d02d33df21f63afcce72cb41'
 related:
   - '[[2026-05-19-profile-lifecycle-disaster-adr]]'
   - '[[2026-05-26-active-profile-storage-runtime-discovery-audit]]'

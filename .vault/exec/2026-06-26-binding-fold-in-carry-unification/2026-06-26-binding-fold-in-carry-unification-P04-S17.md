@@ -4,6 +4,7 @@ tags:
   - '#binding-fold-in-carry-unification'
 date: '2026-06-26'
 modified: '2026-07-17'
+body_hash: 'sha256:8bfd20555c459789fd1cba456846739f4a883ba636c8b1ae78aeae61fb1f5133'
 step_id: 'S17'
 related:
   - "[[2026-06-26-binding-fold-in-carry-unification-plan]]"

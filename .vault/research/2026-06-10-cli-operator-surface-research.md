@@ -4,6 +4,7 @@ tags:
   - '#cli-operator-surface'
 date: '2026-06-10'
 modified: '2026-07-17'
+body_hash: 'sha256:ef7dbef59165b471f0bd0f6fa38c69c86f0b4d2738bc6e0a2181c0b87cb03743'
 related:
   - '[[2026-06-10-cli-operator-surface-audit]]'
   - '[[2026-06-10-cli-operator-crud-matrix-audit]]'

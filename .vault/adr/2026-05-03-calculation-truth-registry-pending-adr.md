@@ -4,6 +4,7 @@ tags:
   - '#calculation-truth-registry'
 date: '2026-05-03'
 modified: '2026-07-17'
+body_hash: 'sha256:ec06ff06b9425fe3f2bf04099642d40cf47bb10fc845db3d71a1490dc076f6c4'
 related:
   - '[[2026-05-03-calculation-truth-inventory-research]]'
   - '[[2026-05-03-external-tax-definition-engines-reference]]'

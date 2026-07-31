@@ -4,6 +4,7 @@ tags:
   - '#test-harness-honesty'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_hash: 'sha256:eb393ace8473b7439fc7f5837dc8c674d51227bb0889b2d9a39df9ca8b6a23eb'
 related:
   - "[[2026-07-25-test-harness-honesty-plan]]"
 step_id: 'S03'

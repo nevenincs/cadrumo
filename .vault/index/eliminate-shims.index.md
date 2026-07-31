@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:e025ee0fe10679061d2d68916136e092b6dcb3438a3dd2cf1d206548c8a97057'
 related:
   - '[[2026-05-13-eliminate-shims-audit]]'
   - '[[2026-05-26-m100-extraction-profile-S29]]'

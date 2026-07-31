@@ -4,6 +4,7 @@ tags:
   - '#plan-triage-approach'
 date: '2026-06-03'
 modified: '2026-07-17'
+body_hash: 'sha256:388fd36619522e76b6af12fe465b6a1818eff1c4c3b6ec7d36d7d71e852da536'
 related:
   - "[[2026-06-03-executable-parity-evidence-tier-contract-adr]]"
   - "[[2026-06-02-m390-annual-autoconsumo-promotor-source-adr]]"

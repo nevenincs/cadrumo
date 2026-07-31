@@ -4,6 +4,7 @@ tags:
   - '#tax-domain-taxonomy-extension'
 date: '2026-07-04'
 modified: '2026-07-17'
+body_hash: 'sha256:f5ec9967563d9d123a939c76da06c5d2b2b6d200f04f4346e819e924582988e6'
 related:
   - '[[2026-06-30-obligation-coverage-completeness-adr]]'
   - '[[2026-06-30-obligation-coverage-completeness-research]]'

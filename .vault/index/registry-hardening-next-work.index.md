@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:41c7e01605f0f469e3581811dcac687540241d518046e15c37ed011e4aace7b5'
 related:
   - '[[2026-06-02-registry-hardening-next-work-W05-P09-S41]]'
   - '[[2026-06-02-registry-hardening-next-work-W05-P09-S42]]'

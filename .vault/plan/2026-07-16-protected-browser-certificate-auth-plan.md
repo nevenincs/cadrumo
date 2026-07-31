@@ -4,6 +4,7 @@ tags:
   - '#protected-browser-certificate-auth'
 date: '2026-07-16'
 modified: '2026-07-24'
+body_hash: 'sha256:2a5a50d6d7dc54a0a754a6fc0ee563537be0041f84e0442d813f3eb429dfdf20'
 tier: L2
 related:
   - '[[2026-07-16-protected-browser-certificate-auth-adr]]'

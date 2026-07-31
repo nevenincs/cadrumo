@@ -4,6 +4,7 @@ tags:
   - '#fichero-boe-golden-sha-contract-shape'
 date: '2026-06-03'
 modified: '2026-07-17'
+body_hash: 'sha256:c045b9491b5dba55012e7f4b1d9f64268bbb0a09ab1b99fadbbe1498acc7f905'
 related:
   - "[[2026-06-03-synthetic-fixture-primitive-encoding-discipline-adr]]"
   - "[[2026-06-03-m303-synthetic-generator-primitive-spec-adr]]"

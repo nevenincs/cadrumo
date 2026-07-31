@@ -4,6 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-05-22'
 modified: '2026-07-17'
+body_hash: 'sha256:086b3d9cbf5a4c435effc347010b6a92a7f86d0e0d331df0d3090d358613c95c'
 related:
   - '[[2026-05-21-taxpayer-type-applicability-plan]]'
   - '[[2026-05-21-cli-workflow-redesign-W02-S08]]'

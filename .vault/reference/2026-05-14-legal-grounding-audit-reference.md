@@ -4,6 +4,7 @@ tags:
   - '#legal-grounding-audit'
 date: '2026-05-14'
 modified: '2026-07-17'
+body_hash: 'sha256:b49f6837fbec41df18f36debc4c1e23b942ebd7fce25e4570859b9fee9ef56a7'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
 ---

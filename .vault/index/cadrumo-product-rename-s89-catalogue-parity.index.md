@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:5ddb2cf1199a1c92ee4a2b6d7884ce9f8661e860de3a9109aeb9991dbdd273d5'
 related:
   - '[[2026-07-13-cadrumo-product-rename-s89-catalogue-parity-audit]]'
 ---

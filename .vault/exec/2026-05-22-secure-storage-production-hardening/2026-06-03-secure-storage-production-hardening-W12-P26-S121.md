@@ -4,6 +4,7 @@ tags:
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
 modified: '2026-07-17'
+body_hash: 'sha256:a2ee2ade3a2944e0876f25044c90efcd05b7fb9f3bb5d3c4c9030d3a83de2a63'
 step_id: 'S121'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'

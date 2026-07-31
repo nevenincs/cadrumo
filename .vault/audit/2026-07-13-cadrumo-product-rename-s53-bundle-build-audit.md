@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s53-bundle-build'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:9fb035fa758d244612179ce97bffaf2697ee3f857bba70eab71c59b1ec44e4a7'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
   - "[[2026-07-12-cadrumo-cli-executable-adr]]"

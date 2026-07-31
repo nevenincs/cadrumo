@@ -4,6 +4,7 @@ tags:
   - '#error-code-registry'
 date: '2026-04-25'
 modified: '2026-07-17'
+body_hash: 'sha256:2a4e7587a28a9f171707cc4ce1d00e04385d6dde5c735bf117ebbfbc45dccc9a'
 related:
   - "[[2026-04-25-error-code-registry-adr]]"
   - "[[2026-04-25-error-code-registry-research]]"

@@ -4,6 +4,7 @@ tags:
   - '#cli-lazy-subcommand-mutation'
 date: '2026-07-10'
 modified: '2026-07-10'
+body_hash: 'sha256:b7cbceee47553a905fdb1326b9336877b50ce0d4e93fd913f3e9e3379e96367f'
 related:
   - "[[2026-07-09-cli-lazy-subcommand-mutation-adr]]"
 ---

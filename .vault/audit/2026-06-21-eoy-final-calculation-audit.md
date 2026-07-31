@@ -4,6 +4,7 @@ tags:
   - '#eoy-final-calculation'
 date: '2026-06-21'
 modified: '2026-07-17'
+body_hash: 'sha256:d41cfda718e6cb7991df0908672ba079a7a29ee8a70e6d41a47d970786021b71'
 related: []
 ---
 

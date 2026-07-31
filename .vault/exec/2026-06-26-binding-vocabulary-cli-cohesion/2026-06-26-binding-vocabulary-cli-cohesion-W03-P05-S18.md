@@ -4,6 +4,7 @@ tags:
   - '#binding-vocabulary-cli-cohesion'
 date: '2026-07-04'
 modified: '2026-07-17'
+body_hash: 'sha256:a903651b68474144c4e7ea3f8cb0b5119363c959723ec2566df8cb13c62ec4d1'
 step_id: 'S18'
 related:
   - "[[2026-06-26-binding-vocabulary-cli-cohesion-plan]]"

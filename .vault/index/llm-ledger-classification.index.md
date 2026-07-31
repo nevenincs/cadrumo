@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:bedf089613e95a58c0dd307f7433b5db32778f6bb5e384df8a9789ea0d15d854'
 related:
   - '[[2026-06-03-llm-ledger-classification-adr]]'
   - '[[2026-06-03-llm-ledger-classification-plan]]'

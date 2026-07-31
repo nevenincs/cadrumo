@@ -4,6 +4,7 @@ tags:
   - '#test-worker-count-policy'
 date: '2026-07-10'
 modified: '2026-07-10'
+body_hash: 'sha256:9ce17f72fd1b2c126ee835bb1582a4960415c4dd14c6afe6b1d468b3fb7de542'
 related:
   - "[[2026-07-08-test-worker-count-policy-adr]]"
 ---

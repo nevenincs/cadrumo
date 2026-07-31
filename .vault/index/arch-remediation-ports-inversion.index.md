@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:0a3e304c4600f243033946bdebf24e0cad5ee8a72a5f013695168cb62ba5269b'
 related:
   - '[[2026-07-02-arch-remediation-ports-inversion-W01-P01-S01]]'
   - '[[2026-07-02-arch-remediation-ports-inversion-W01-P02-S02]]'

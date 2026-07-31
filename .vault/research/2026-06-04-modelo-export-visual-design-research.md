@@ -4,6 +4,7 @@ tags:
   - '#modelo-export-visual-design'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:2d080bc343d83acf8984323c522d0706215ad42726689e637027974cc4edb888'
 related:
   - "[[2026-06-03-modelo-export-visual-design-adr]]"
 ---

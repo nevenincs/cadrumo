@@ -4,6 +4,7 @@ tags:
   - '#schema-driven-wizard-ux'
 date: '2026-05-13'
 modified: '2026-07-17'
+body_hash: 'sha256:1cc20cc5784330196d3d9b098cbbcf6339b036bb064d4e151933a9402bfaeffc'
 related:
   - "[[2026-05-12-schema-driven-wizard-adr]]"
   - "[[2026-05-13-wizard-ux-transcripts-audit]]"

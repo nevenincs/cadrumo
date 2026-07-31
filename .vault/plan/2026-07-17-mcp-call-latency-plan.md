@@ -4,6 +4,7 @@ tags:
   - '#mcp-call-latency'
 date: '2026-07-17'
 modified: '2026-07-19'
+body_hash: 'sha256:9ac3f58ba47d2517feafd0a4a77ab89b158dcd1e6175076d2b088a15ee7a587e'
 tier: L2
 related:
   - '[[2026-07-17-mcp-call-latency-adr]]'

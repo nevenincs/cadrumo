@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:9a32ed4e2cceeb299f6fb1adbcbdab213b46e828d3a9e5cba80ea2ed078c6ea1'
 related:
   - '[[2026-07-01-iva-bienes-inversion-regularizacion-adr]]'
   - '[[2026-07-01-iva-bienes-inversion-regularizacion-research]]'

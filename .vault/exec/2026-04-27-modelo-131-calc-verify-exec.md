@@ -4,6 +4,7 @@ tags:
   - '#modelo-131-calc-verify'
 date: '2026-04-27'
 modified: '2026-07-17'
+body_hash: 'sha256:c319e9b3fc504e35438fdac1078e9b4b678bdc1d060a92b1eab955fe65bf3ba1'
 related:
   - "[[2026-04-27-modelo-131-calc-verify-plan]]"
 ---

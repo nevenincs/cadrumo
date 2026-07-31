@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:5a48101741bb1dfbe405abbc2f665c09ec8c6d0fe5228a74ac10d38e203bdcbb'
 related:
   - '[[2026-05-20-registry-casilla-identity-P01-S01]]'
   - '[[2026-05-20-registry-casilla-identity-P01-S02]]'

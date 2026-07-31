@@ -4,6 +4,7 @@ tags:
   - '#modelo-export-evidence-parity'
 date: '2026-06-03'
 modified: '2026-07-17'
+body_hash: 'sha256:0fd490bb7bb713d69bced0a58118168b6730fb5134a709eeb57c31f4f7e8517a'
 tier: L3
 related:
   - '[[2026-06-03-modelo-export-evidence-parity-adr]]'

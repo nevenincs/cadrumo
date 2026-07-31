@@ -4,6 +4,7 @@ tags:
   - '#cli-authority-verb-conformance'
 date: '2026-07-17'
 modified: '2026-07-17'
+body_hash: 'sha256:45ce88ca4eee63b146c1f2f20fb8ee76702df06a8a26d0baa913c5a1d6379df6'
 step_id: 'S72'
 related:
   - "[[2026-07-15-cli-authority-verb-conformance-plan]]"

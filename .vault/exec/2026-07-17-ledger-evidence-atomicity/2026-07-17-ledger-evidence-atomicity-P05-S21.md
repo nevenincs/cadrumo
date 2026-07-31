@@ -4,6 +4,7 @@ tags:
   - '#ledger-evidence-atomicity'
 date: '2026-07-24'
 modified: '2026-07-24'
+body_hash: 'sha256:806c4c05c82c1524f5f91d63c450b5d97d5ee5844b1a0990e0c93cfa1cb3b027'
 step_id: 'S21'
 related:
   - "[[2026-07-17-ledger-evidence-atomicity-plan]]"

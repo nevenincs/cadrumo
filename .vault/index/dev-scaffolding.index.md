@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:8e4e2fc37416a7a59b2736cc044e404ab1223e7eae89ea093f46fd8b324a7b24'
 related:
   - '[[2026-04-12-dev-scaffolding-adr]]'
   - '[[2026-04-12-dev-scaffolding-phase1-summary-exec]]'

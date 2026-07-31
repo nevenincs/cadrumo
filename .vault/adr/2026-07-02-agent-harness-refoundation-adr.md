@@ -4,6 +4,7 @@ tags:
   - '#agent-harness-refoundation'
 date: '2026-07-02'
 modified: '2026-07-17'
+body_hash: 'sha256:ca13716e00aa354cc792628531e9c483d794887d84dcfd5838b900339656257d'
 related:
   - "[[2026-07-02-agent-harness-refoundation-research]]"
   - "[[2026-07-03-claude-ecosystem-packaging-adr]]"

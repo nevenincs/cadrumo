@@ -4,6 +4,7 @@ tags:
   - '#json-output-contract'
 date: '2026-04-25'
 modified: '2026-07-17'
+body_hash: 'sha256:e229372979c1d5259fe85f002d401ffdf7ee73d90a148b9692b146aa40af8c41'
 related:
   - '[[2026-04-25-json-output-contract-research]]'
   - '[[2026-04-25-json-output-contract-adr]]'

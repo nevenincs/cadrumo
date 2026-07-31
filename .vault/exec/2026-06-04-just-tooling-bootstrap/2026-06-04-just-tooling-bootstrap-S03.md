@@ -4,6 +4,7 @@ tags:
   - '#just-tooling-bootstrap'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:315abbdfeaeca3fc28ea7f9806e3f99b74d41be0da453d2459e1bf648e4dda84'
 step_id: 'S03'
 related:
   - '[[2026-06-04-just-tooling-bootstrap-plan]]'

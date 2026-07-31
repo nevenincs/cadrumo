@@ -7,6 +7,7 @@ tags:
   - "#modelo-inventory"
 date: 2026-04-17
 modified: '2026-07-17'
+body_hash: 'sha256:6454669c7ebe2b89438e3950aec7966a6b0591ecf2dcad905a85fbf80517587d'
 related:
   - "[[2026-04-17-modelo-inventory-remediation-plan]]"
   - "[[2026-04-17-modelo-inventory-remediation-adr]]"

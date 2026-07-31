@@ -4,6 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-05-19'
 modified: '2026-07-17'
+body_hash: 'sha256:80a40a219a4073674e44ca3d8b62428f8a08d7ce8584641479f61361b63457e6'
 related:
   - "[[2026-05-18-schema-hardening-nif-coverage-m100-audit]]"
   - "[[2026-05-20-schema-hardening-plan]]"

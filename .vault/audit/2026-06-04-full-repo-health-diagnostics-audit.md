@@ -4,6 +4,7 @@ tags:
   - '#repo-health-diagnostics'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:c1df92dacc5eb676beafb23b875e774b6e8106caca7c1c4b821885c20663c328'
 related:
   - '[[2026-06-04-just-tooling-bootstrap-research]]'
   - '[[2026-06-04-just-tooling-bootstrap-adr]]'

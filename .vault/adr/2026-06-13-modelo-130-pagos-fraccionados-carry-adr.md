@@ -4,6 +4,7 @@ tags:
   - '#modelo-130-pagos-fraccionados-carry'
 date: '2026-06-13'
 modified: '2026-07-17'
+body_hash: 'sha256:f2ccf9b71b43d9fe7319d271a5daf4cb75f471e77a32bcac4743e0abe3d8a01d'
 related:
   - '[[2026-06-13-modelo-130-pagos-fraccionados-carry-research]]'
   - "[[2026-06-04-m130-casilla-15-override-adr]]"

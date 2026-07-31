@@ -4,6 +4,7 @@ tags:
   - '#secure-persistence-enforcement'
 date: '2026-05-06'
 modified: '2026-07-17'
+body_hash: 'sha256:cd47c6e6c07caeff5c7dd35620783ea9f8dbb82f975cf3853920df89ff0fe8d0'
 related:
   - '[[2026-05-06-secure-persistence-enforcement-research]]'
   - '[[2026-05-06-secure-persistence-enforcement-adr]]'

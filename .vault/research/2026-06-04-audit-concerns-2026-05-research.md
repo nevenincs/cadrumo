@@ -4,6 +4,7 @@ tags:
   - '#audit-concerns-2026-05'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:78a7e328e2b18523c3b9bc53a25b09836fd6a31e80081c078f78fce062be2e95'
 related:
   - "[[2026-05-08-audit-concerns-2026-05-adr]]"
 ---

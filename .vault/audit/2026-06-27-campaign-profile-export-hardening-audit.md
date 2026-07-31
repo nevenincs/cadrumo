@@ -4,6 +4,7 @@ tags:
   - '#campaign-profile-export-hardening'
 date: '2026-06-27'
 modified: '2026-07-17'
+body_hash: 'sha256:261706c3daa35836092429c149ef97c48393447ae34d43ff638bbc5dfa2be1ed'
 related: []
 ---
 

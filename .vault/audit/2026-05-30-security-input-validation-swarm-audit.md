@@ -4,6 +4,7 @@ tags:
   - '#security-swarm-2026-05-30'
 date: '2026-05-30'
 modified: '2026-07-17'
+body_hash: 'sha256:da3a2e368a12592477b3b2408c07a69371cfb5d7d14bf41d620972069a1fb9f8'
 related:
   - "[[2026-05-30-security-swarm-2026-05-30-audit]]"
   - "[[2026-05-30-security-crypto-swarm-2026-05-30-audit]]"

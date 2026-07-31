@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:e70a77eaddb95c33f5818a1ce6ac3aa17643cbfebb792eb6aab410583e696c7c'
 related:
   - '[[2026-07-13-cadrumo-product-rename-s87-authority-remediation-audit]]'
 ---

@@ -8,6 +8,7 @@ related:
 promoted_to:
   - 'rule:legal-grounding-verifies-bundled-authoritative-corpus'
 modified: '2026-07-17'
+body_hash: 'sha256:28476e36d2104a0bda9914ce77777c70e6bb65736486bfafae196dad4a6adadd'
 ---
 
 # `aeat-grounding-completion` audit: `Campaign-Close Honesty Review — Centralization + Grounding`

@@ -4,6 +4,7 @@ tags:
   - '#justfile-redesign'
 date: '2026-06-09'
 modified: '2026-07-17'
+body_hash: 'sha256:788d983b47b0ead7292e0ddd3bae0fd3ed8d0476454a4672e875d914a80b4e32'
 step_id: 'S19'
 related:
   - "[[2026-06-09-justfile-redesign-plan]]"

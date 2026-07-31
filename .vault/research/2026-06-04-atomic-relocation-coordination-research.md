@@ -4,6 +4,7 @@ tags:
   - '#atomic-relocation-coordination'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:8e21c9415a6f53123557fde4d69113dd88b9dec08fcaac1c7f89bb1d3ca3d2ff'
 related:
   - "[[2026-05-31-atomic-relocation-coordination-adr]]"
 ---

@@ -4,6 +4,7 @@ tags:
   - '#docs-terminology-search'
 date: '2026-07-27'
 modified: '2026-07-27'
+body_hash: 'sha256:cd1ad5c659c823e6f56e70959bc9fa9c7f54ecbc9036e6fc8d2e9083374c30ce'
 related:
   - "[[2026-07-27-docs-terminology-search-modelo-concept-grounding-reference]]"
 ---

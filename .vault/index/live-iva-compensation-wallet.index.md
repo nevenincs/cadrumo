@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:fc15c8dc5498fb0c97c8551cdcad48751de5b00537db7bf355a1c47e931d87b7'
 related:
   - '[[2026-05-19-live-iva-compensation-wallet-W01-P02-S05]]'
   - '[[2026-05-19-live-iva-compensation-wallet-W01-P02-S06]]'

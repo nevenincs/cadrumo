@@ -4,6 +4,7 @@ tags:
   - '#secure-storage-production-hardening'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:658076700020906bb6895ad9d046cdbfdf4724063f671cef88bc85dd072e18bc'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
   - '[[2026-05-27-secure-storage-production-hardening-w12-p21-s83-bucket-event-runtime-default-slice-exec]]'

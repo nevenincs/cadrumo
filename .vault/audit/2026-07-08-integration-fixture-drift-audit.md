@@ -4,6 +4,7 @@ tags:
   - '#integration-fixture-drift'
 date: '2026-07-08'
 modified: '2026-07-17'
+body_hash: 'sha256:d663d804be0d8625499b5bd165441485dc9f386552d8515798bf95cdda5d69ac'
 related:
   - "[[2026-07-08-integration-fixture-drift-plan]]"
   - "[[2026-07-08-gate-drift-reconciliation-audit]]"

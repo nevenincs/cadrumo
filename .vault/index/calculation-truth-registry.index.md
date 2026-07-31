@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:79a429fb0bee669f16f0ee009ae06fd95c961f312a157515791920ac64f53c4a'
 related:
   - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
   - '[[2026-05-03-calculation-truth-registry-phase5-step1-exec]]'

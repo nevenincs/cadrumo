@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:c6043c529df0317ab9cf81257034f5db19b79a1af50b645643909b4b8e1edb1e'
 related:
   - '[[2026-05-20-cli-persona-task-catalogue-reference]]'
   - '[[2026-05-20-cli-state-architecture-research]]'

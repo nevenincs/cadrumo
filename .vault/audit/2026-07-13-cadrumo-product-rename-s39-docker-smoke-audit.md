@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s39-docker-smoke'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:b6710999d0b8e3bcfcff4e9753ce02e4a359a8fa564008641d84777cee50c528'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
   - "[[2026-07-12-cadrumo-cli-executable-adr]]"

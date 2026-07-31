@@ -4,6 +4,7 @@ tags:
   - '#test-harness-honesty'
 date: '2026-07-25'
 modified: '2026-07-25'
+body_hash: 'sha256:42a05804678def9b7ed9aa72018d21b5bac48c8212ac51c98823484a8d600d6e'
 related: []
 ---
 

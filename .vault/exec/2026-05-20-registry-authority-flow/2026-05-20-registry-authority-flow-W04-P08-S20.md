@@ -2,6 +2,7 @@
 tags: ["#exec", "#registry-authority-flow"]
 date: '2026-05-20'
 modified: '2026-07-17'
+body_hash: 'sha256:f82b5cd90db8a0713e8c9e44230f50e552bf5bb1c21942ccc1fb4d819f705027'
 step_id: 'S20'
 related:
   - '[[2026-05-20-registry-authority-flow-plan]]'

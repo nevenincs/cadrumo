@@ -4,6 +4,7 @@ tags:
   - '#cross-domain-continuity'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:335216c93be4bba83ea5e83adb1ccceed2d9b9485d0b590cbd94d0d44864438a'
 related:
   - "[[2026-05-12-cli-workflow-redesign-verified-complete-adr]]"
   - "[[2026-05-21-taxpayer-type-applicability-adr]]"

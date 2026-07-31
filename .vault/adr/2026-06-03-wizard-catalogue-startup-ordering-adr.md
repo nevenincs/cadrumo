@@ -4,6 +4,7 @@ tags:
   - '#wizard-catalogue-startup-ordering'
 date: '2026-06-03'
 modified: '2026-07-17'
+body_hash: 'sha256:67b3e09fc285ad058dea15673e503cdbf6593eecda1a65dbb6000350549e7bd5'
 related:
   - "[[2026-06-02-m303-parser-engine-totals-impedance-adr]]"
   - '[[2026-06-04-wizard-catalogue-startup-ordering-research]]'

@@ -4,6 +4,7 @@ tags:
   - '#secure-storage-production-hardening'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:49e23edf30df688280ac7cbed874e603ea46a04a404ef6627c156cc97ed34ead'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
   - '[[2026-05-27-secure-storage-production-hardening-w12-p21-s86-profile-ledger-runtime-default-slice-exec]]'

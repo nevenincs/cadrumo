@@ -4,6 +4,7 @@ tags:
   - '#counterpart-source-provider'
 date: '2026-07-04'
 modified: '2026-07-10'
+body_hash: 'sha256:37a4a077c480344af308fb290b29e627a58f7c50edaca86dd06410517375b1e8'
 related:
   - '[[2026-06-26-binding-resolver-contract-unification-adr]]'
   - '[[2026-06-26-binding-resolver-contract-unification-research]]'

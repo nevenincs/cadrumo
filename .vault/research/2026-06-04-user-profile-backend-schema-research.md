@@ -4,6 +4,7 @@ tags:
   - '#user-profile-backend-schema'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:bd5f0e5dcfe9c6a7f810a9567343ab14efa73265fb5c5707e45ed70d098323c7'
 related: []
 related:
   - '[[2026-05-07-user-profile-backend-schema-adr]]'

@@ -4,6 +4,7 @@ tags:
   - '#registry-hardening'
 date: '2026-05-21'
 modified: '2026-07-17'
+body_hash: 'sha256:606aff6475d0f961bfd12fdcbed013c5d18313779c8b1285df1fa5e2d8be5ba5'
 related:
   []
 ---

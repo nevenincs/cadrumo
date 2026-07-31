@@ -4,6 +4,7 @@ tags:
   - '#arch-remediation-engine-lifecycle'
 date: '2026-07-02'
 modified: '2026-07-17'
+body_hash: 'sha256:9546363855ab6523ddb2257ea1b1bdfb57128e6d2bc13be459dcb4a70a6f9a8d'
 tier: L2
 related:
   - '[[2026-07-02-aeat-architecture-review-audit]]'

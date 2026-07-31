@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:849249fa46c30217db483b839212ba8c5ffbca7c38c92b44c82244af818a3d0a'
 related:
   - '[[2026-04-13-modelo-inventory-adr]]'
   - '[[2026-04-13-modelo-inventory-audit]]'

@@ -4,6 +4,7 @@ tags:
   - "#aeat-mantenimiento-detection"
 date: 2026-04-13
 modified: '2026-07-17'
+body_hash: 'sha256:d455b16f1c232fdd15c40266ab5a5e297627a5a7750b6a297285ea5f08377331'
 related:
   - "[[2026-04-13-aeat-mantenimiento-detection-research]]"
   - "[[2026-04-12-workflow-engine-adr]]"

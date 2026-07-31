@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:c734868ad4464eedfe26f15c49a2c44d2f033483c7545ae490a498713038b1ef'
 related:
   - '[[2026-05-19-deferred-scope-state-machine-audit]]'
 ---

@@ -4,6 +4,7 @@ tags:
   - '#ledger-input-localization'
 date: '2026-06-10'
 modified: '2026-07-17'
+body_hash: 'sha256:b4647d98a74b1ef74b8538903aeea01dd5b80252c8a2afc5bf179ef4c9e13da0'
 tier: L2
 related:
   - '[[2026-06-10-ledger-input-localization-adr]]'

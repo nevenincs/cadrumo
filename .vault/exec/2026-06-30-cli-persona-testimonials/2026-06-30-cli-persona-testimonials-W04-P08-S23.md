@@ -4,6 +4,7 @@ tags:
   - '#cli-persona-testimonials'
 date: '2026-06-30'
 modified: '2026-07-17'
+body_hash: 'sha256:34f1757eff052c154272bff00b217f37b1351c40c99f3e591439ef38e2b2302d'
 step_id: 'S23'
 related:
   - '[[2026-06-30-cli-persona-testimonials-plan]]'

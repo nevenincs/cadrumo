@@ -4,6 +4,7 @@ tags:
   - '#cli-backend-boundary'
 date: '2026-06-09'
 modified: '2026-07-31'
+body_hash: 'sha256:c3fb7acab7eb8ca58f9f09f73ab3147dd18c04cc62099ca1d26b14c3f7c7be2b'
 related:
   - '[[2026-05-08-cli-backend-boundary-plan]]'
   - '[[2026-05-08-cli-backend-boundary-reference]]'

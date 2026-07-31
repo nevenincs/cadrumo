@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:ff2679fec711c27c2009a8ef98f625c0bad3b1cf949485c1100eda99439abdfe'
 related:
   - '[[2026-05-30-docs-architecture-W01-P02-S06]]'
   - '[[2026-05-30-docs-architecture-W01-P04-S15]]'

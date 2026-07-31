@@ -4,6 +4,7 @@ tags:
   - '#homebrew-arm64-pac-ret'
 date: '2026-07-22'
 modified: '2026-07-22'
+body_hash: 'sha256:0c81ec84257fe69df67575f4287fe13a1c6ea2001cbaf020a16758bb9592b203'
 related:
   - "[[2026-07-21-post-release-distribution-v0-2-1-publication-audit]]"
 ---

@@ -4,6 +4,7 @@ tags:
   - '#filing-architecture-docs'
 date: '2026-06-08'
 modified: '2026-07-17'
+body_hash: 'sha256:083aa1ba55c44fe85c5dbed1fd8f70126b95034d246262ae4e2f707d36d231ad'
 related:
   - "[[2026-06-08-filing-architecture-docs-plan]]"
 ---

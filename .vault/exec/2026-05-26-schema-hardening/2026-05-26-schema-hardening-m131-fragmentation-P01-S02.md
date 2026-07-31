@@ -4,6 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-05-26'
 modified: '2026-07-17'
+body_hash: 'sha256:d7cd52d818b29969ba93c9fd817debf2de60e2ff6db855db7f97ded965361414'
 step_id: 'S02'
 related:
   - '[[2026-05-26-schema-hardening-m131-fragmentation-plan]]'

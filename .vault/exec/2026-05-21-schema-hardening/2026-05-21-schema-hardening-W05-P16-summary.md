@@ -4,6 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-05-21'
 modified: '2026-07-17'
+body_hash: 'sha256:df400b555a36e7a408439cf1f80c812319d4a5ecb0caa743780bff81239006fa'
 related:
   - '[[2026-05-21-schema-hardening-plan]]'
 ---

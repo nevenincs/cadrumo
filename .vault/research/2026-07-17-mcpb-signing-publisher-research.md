@@ -4,6 +4,7 @@ tags:
   - '#mcpb-signing-publisher'
 date: '2026-07-17'
 modified: '2026-07-17'
+body_hash: 'sha256:be5e1098768c6a78654b747c531273be8a977f86174d12a7f82f25d5012c7d5c'
 related:
   - "[[2026-07-15-distribution-installation-readiness-adr]]"
 ---

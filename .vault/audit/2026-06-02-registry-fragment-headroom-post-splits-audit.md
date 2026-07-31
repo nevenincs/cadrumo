@@ -4,6 +4,7 @@ tags:
   - '#registry-fragment-headroom-post-splits'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:338b13c5cc4e111a080d9d3bcee10ab8ba97ccd34741d75769bbe2031084fd6a'
 related:
   - "[[2026-06-02-registry-hardening-next-work-plan]]"
 ---

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:681e30773e9a2646f572a1c58b861a2234cefe01148d02c5d14f69aa7295cd03'
 related:
   - '[[2026-06-02-registry-schema-boundary-audit]]'
   - '[[2026-06-02-registry-schema-boundary-code-review-audit]]'

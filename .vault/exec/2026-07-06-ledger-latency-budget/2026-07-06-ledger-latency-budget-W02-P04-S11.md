@@ -4,6 +4,7 @@ tags:
   - '#ledger-latency-budget'
 date: '2026-07-06'
 modified: '2026-07-17'
+body_hash: 'sha256:8aed151bd4bc0e574c4a0ae40df85a8b82dac8a9e28f56c1a26f56e65be23678'
 step_id: 'S11'
 related:
   - "[[2026-07-06-ledger-perf-optimization-plan]]"

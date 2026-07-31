@@ -4,6 +4,7 @@ tags:
   - '#m303-form-vs-semantic-casilla-dual-keying'
 date: '2026-06-13'
 modified: '2026-07-17'
+body_hash: 'sha256:2700cd4bf7acfcbdbcbec7946cdba2c389920a91ef8300bef54d8aed88026f1a'
 tier: L2
 related:
   - '[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]'

@@ -4,6 +4,7 @@ tags:
   - '#cli-pull-file-standard'
 date: '2026-06-10'
 modified: '2026-07-17'
+body_hash: 'sha256:c2661c70638f755c02d972a3cd09565ec76f1b50aa40e3174ff6876bb8d6ab85'
 related:
   - '[[2026-06-10-cli-pull-file-standard-research]]'
   - '[[2026-06-10-live-justificante-reconcile-adr]]'

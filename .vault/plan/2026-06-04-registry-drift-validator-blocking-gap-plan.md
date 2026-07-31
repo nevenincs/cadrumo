@@ -4,6 +4,7 @@ tags:
   - '#registry-drift-validator-blocking-gap'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:d5de60980ef0acaaf1b3bb8938d4558f426776879e99306d17caf22a462ef798'
 tier: L1
 related:
   - '[[2026-06-04-registry-drift-validator-blocking-gap-adr]]'

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:49ede35305511e36a3a5f7d8ff205888023fe4d499cc7cf1adbac3468451ef1b'
 related:
   - '[[2026-05-19-modelo-registry-fragment-architecture-adr]]'
   - '[[2026-05-19-modelo-registry-fragment-architecture-research]]'

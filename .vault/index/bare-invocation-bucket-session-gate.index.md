@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:d577122620c97da30d409b5a160acca74003bfe86b4c47d39037733762127102'
 related:
   - '[[2026-06-03-bare-invocation-bucket-session-gate-adr]]'
   - '[[2026-06-04-bare-invocation-bucket-session-gate-research]]'

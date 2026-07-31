@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:6c976be9dffd3eaffb99f91006be8b18d0e4c12f559e8f61a9ca5bbcbea32662'
 related:
   - '[[2026-07-13-cadrumo-product-rename-s05-repository-remediation-audit]]'
 ---

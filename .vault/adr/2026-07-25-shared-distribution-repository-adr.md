@@ -12,6 +12,7 @@ related:
 supersedes:
   - '2026-07-25-distribution-repo-topology-adr'
 modified: '2026-07-25'
+body_hash: 'sha256:acd5d86ce24f94f37207990be9bc71132ee38c20abe8ac9fb78d7a87995f9d31'
 ---
 # `shared-distribution-repository` adr: `One shared account distribution repository, superseding the per-product topology and answering the sibling-serving and no-precedent objections` | (**status:** `accepted`)
 

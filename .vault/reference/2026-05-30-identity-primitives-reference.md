@@ -4,6 +4,7 @@ tags:
   - '#identity-primitives'
 date: '2026-05-30'
 modified: '2026-07-17'
+body_hash: 'sha256:cab51137e7609ef46623ee823c1f7dd63b493b3de749554fe61ede5e0c699d70'
 related:
   - "[[2026-05-13-identity-adr]]"
   - "[[2026-05-20-registry-casilla-identity-adr]]"

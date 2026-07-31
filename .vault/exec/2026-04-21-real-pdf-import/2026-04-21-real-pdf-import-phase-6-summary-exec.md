@@ -4,6 +4,7 @@ tags:
   - "#real-pdf-import"
 date: "2026-04-21"
 modified: '2026-07-17'
+body_hash: 'sha256:dc3ea1169ecf7d574bb6f3f113af3d78477d54d15e0c474c140508048e1cba2c'
 related:
   - "[[2026-04-21-modelo-100-renta-plan]]"
   - "[[2026-04-21-real-pdf-import-phase-5-summary-exec]]"

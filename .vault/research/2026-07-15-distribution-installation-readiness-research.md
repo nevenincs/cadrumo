@@ -4,6 +4,7 @@ tags:
   - '#distribution-installation-readiness'
 date: '2026-07-15'
 modified: '2026-07-15'
+body_hash: 'sha256:1b19453216fb2b3c97245853a96fae1723e3d90d3724aa03b51cef67c40c8dbc'
 related:
   - '[[2026-06-28-product-packaging-adr]]'
   - '[[2026-07-03-claude-ecosystem-packaging-adr]]'

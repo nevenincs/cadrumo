@@ -4,6 +4,7 @@ tags:
   - '#user-docs-localization'
 date: '2026-07-18'
 modified: '2026-07-18'
+body_hash: 'sha256:c633026a904db93844b1f4179a63bfc1443e7e185315dd9ac5147cc5b7cf5fd1'
 related:
   - "[[2026-07-18-user-docs-localization-plan]]"
   - "[[2026-07-18-user-docs-localization-adr]]"

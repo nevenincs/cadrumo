@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:c2c82eba074900320e12cdfc527477124f732f1daa2822a36768014fdefe7403'
 related:
   - '[[2026-06-21-m390-iva-carry-boxes-adr]]'
 ---

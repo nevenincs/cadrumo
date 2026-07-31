@@ -4,6 +4,7 @@ tags:
   - '#conformance-cli'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_hash: 'sha256:06b697c4a1928a0990580cbe987c86799f4e3e5ecdd7fdc8c1a9594d1369677d'
 related:
   - "[[2026-07-27-conformance-cli-plan]]"
   - "[[2026-07-27-conformance-cli-adr]]"

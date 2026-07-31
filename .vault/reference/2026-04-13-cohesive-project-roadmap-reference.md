@@ -5,6 +5,7 @@ type: reference
 tags: ["#reference", "#roadmap"]
 date: 2026-04-13
 modified: '2026-07-17'
+body_hash: 'sha256:7e7315b9625569e9e2d2f0276da940213d8f5ba973e0d3413bd08cd18265541d'
 ---
 
 # Cohesive project roadmap (2026-04-13 snapshot)

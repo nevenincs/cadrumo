@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s66-hungarian-catalogue'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:a0e98b4f45e039e1d888d2b6b90554d6d5b5e551e2269bf40d327cd4d30c83ee'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
 ---

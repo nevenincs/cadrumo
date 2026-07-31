@@ -4,6 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-05-12'
 modified: '2026-07-17'
+body_hash: 'sha256:d27743cd57f0d0ac4f2bf5725b838fbc2621c397a4fdc369cbf7c8fa5cdcc545'
 related:
   - "[[2026-05-12-cli-workflow-redesign-ledger-transaction-management-research]]"
   - "[[2026-05-12-cli-workflow-redesign-bucket-adr]]"

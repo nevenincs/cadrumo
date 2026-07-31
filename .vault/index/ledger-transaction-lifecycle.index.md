@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:82c8e86fe78f37f127bcb5660ec843fa8ca0ac9e8fca5cb01a16f32f3496f840'
 related:
   - '[[2026-05-14-ledger-transaction-lifecycle-adr]]'
   - '[[2026-05-14-ledger-transaction-lifecycle-plan]]'

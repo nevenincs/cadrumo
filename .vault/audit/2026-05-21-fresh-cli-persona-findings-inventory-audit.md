@@ -4,6 +4,7 @@ tags:
   - '#cli-testimonial'
 date: '2026-05-21'
 modified: '2026-07-17'
+body_hash: 'sha256:d19898ec90ebbfb03cb4eea1bb5d598988a1fe940809378ad4ee11a26a541a91'
 related:
   - '[[2026-05-21-fresh-cli-persona-testimonials-audit]]'
   - '[[2026-05-21-fresh-cli-persona-testimonial-wave-plan]]'

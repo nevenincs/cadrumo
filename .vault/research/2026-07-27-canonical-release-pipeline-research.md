@@ -4,6 +4,7 @@ tags:
   - '#canonical-release-pipeline'
 date: '2026-07-27'
 modified: '2026-07-27'
+body_hash: 'sha256:2295e13d1b7dbad821a215cb2b72898f0d4a7d7692e61acc49758dcd7bab4f46'
 related:
   - '[[2026-07-27-canonical-release-pipeline-adr]]'
   - '[[2026-07-27-publication-lane-consolidation-adr]]'

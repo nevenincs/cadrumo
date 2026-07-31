@@ -2,6 +2,7 @@
 tags: ["#audit", "#workflow-engine"]
 date: 2026-04-12
 modified: '2026-07-17'
+body_hash: 'sha256:4c1b6c47b6451b4f959dd57318ea568525596359e87c66394b39a67ed7051f5a'
 related:
   - "[[2026-04-12-workflow-engine-adr]]"
   - "[[2026-04-12-workflow-engine-plan]]"

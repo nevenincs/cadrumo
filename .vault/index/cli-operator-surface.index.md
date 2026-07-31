@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:7d86262d72effe67311396a8a42fecb2cf9bd143a3e32ceac627558b52824692'
 related:
   - '[[2026-06-10-cli-operator-crud-matrix-audit]]'
   - '[[2026-06-10-cli-operator-surface-W01-P01-S01]]'

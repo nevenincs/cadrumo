@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:6ac47c6b56f78deaeb22746ed2497118ee13b6a8485e239abd37d9ca1672b7c7'
 related:
   - '[[2026-05-15-linkage-design-audit-audit]]'
   - '[[2026-05-15-linkage-design-audit-plan]]'

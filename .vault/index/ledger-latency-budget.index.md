@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:1e0be3406271e6b334e2ab78e544aa532a343addcd3ba82d207e387e2c4f5858'
 related:
   - '[[2026-07-05-ledger-latency-budget-adr]]'
   - '[[2026-07-06-ledger-latency-budget-W01-P01-S01]]'

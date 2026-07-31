@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:b6a42e2cd27818748d5990b67243c86b27c712b93b10d795cb8968eacb13de7a'
 related:
   - '[[2026-05-27-dt12-reduccion-S01]]'
   - '[[2026-06-04-dt12-reduccion-adr]]'

@@ -4,6 +4,7 @@ tags:
   - '#linkage-tooling-prior-art'
 date: '2026-05-15'
 modified: '2026-07-17'
+body_hash: 'sha256:239f9a6ae1824635a070ea31b63c08748f869fb36fc11037ede637c12efb76a9'
 related:
   - "[[2026-05-15-linkage-design-audit-research]]"
   - "[[2026-05-15-linkage-design-audit-reference]]"

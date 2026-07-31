@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:0e3ff4f5f930cd4f011c9208f6ad39e7e95dd81cd1640badd82319ec2900120a'
 related:
   - '[[2026-06-01-session-honesty-review-audit]]'
 ---

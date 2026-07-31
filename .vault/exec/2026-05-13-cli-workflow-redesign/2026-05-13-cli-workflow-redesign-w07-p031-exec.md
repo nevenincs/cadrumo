@@ -4,6 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-05-13'
 modified: '2026-07-17'
+body_hash: 'sha256:61bf942015b79280217d6c8224fa7d5e8879b8f5a1ae52c5f80ee6b6fd6b5b2e'
 related:
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
   - '[[2026-05-12-cli-workflow-redesign-observability-wrapping-decision-adr]]'

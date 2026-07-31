@@ -4,6 +4,7 @@ tags:
   - '#cli-testimonial'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:ddf4fda3b2fab5bcbfc28d81895c760441c4fca83b37d532d2e57bb573a30950'
 related:
   - "[[2026-05-27-eva-cli-testimonial-audit]]"
 ---

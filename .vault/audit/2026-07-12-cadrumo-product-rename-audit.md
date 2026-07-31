@@ -9,6 +9,7 @@ related:
 promoted_to:
   - 'rule:cadrumo-product-authority-names'
 modified: '2026-07-17'
+body_hash: 'sha256:66b3dc0110f4b56ddf30e0dcfa554160ec1c3eba308d27354d136f3f454d461f'
 ---
 # `cadrumo-product-rename` audit: `Cadrumo rename rolling formal review`
 

@@ -4,6 +4,7 @@ tags:
   - '#test-topology-refactor'
 date: '2026-06-05'
 modified: '2026-07-17'
+body_hash: 'sha256:6f0b3a44650af76de3654446e4dc01ba3c122fb9b8ba653678035f8d6724bc45'
 step_id: 'S38'
 related:
   - '[[2026-06-05-test-topology-refactor-plan]]'

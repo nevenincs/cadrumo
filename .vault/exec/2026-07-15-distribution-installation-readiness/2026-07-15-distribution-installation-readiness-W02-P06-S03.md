@@ -4,6 +4,7 @@ tags:
   - '#distribution-installation-readiness'
 date: '2026-07-17'
 modified: '2026-07-17'
+body_hash: 'sha256:e6117d14192452007457a6e945bedd1864f09f46dc26547ebe89ba10d1462117'
 step_id: 'S03'
 related:
   - "[[2026-07-15-distribution-installation-readiness-plan]]"

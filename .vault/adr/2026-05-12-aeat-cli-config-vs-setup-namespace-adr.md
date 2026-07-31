@@ -4,6 +4,7 @@ tags:
   - '#aeat-cli-config-vs-setup-namespace'
 date: '2026-05-12'
 modified: '2026-07-17'
+body_hash: 'sha256:020e9f0669fe45fd4469ea3c55f36abfacab5213e8ce741cf30574de49a2ec0c'
 related:
   - "[[2026-05-08-aeat-cli-gap-closure-plan]]"
   - "[[2026-05-12-cli-design-research]]"

@@ -4,6 +4,7 @@ tags:
   - "#testing-framework"
 date: 2026-05-13
 modified: '2026-07-17'
+body_hash: 'sha256:5149ff9de347e38272dda01f31a21874c3be4b3a2ad0f211ab393543549ba264'
 related:
   - "[[2026-05-13-schema-driven-wizard-ux-audit]]"
 ---

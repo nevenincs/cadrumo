@@ -4,6 +4,7 @@ tags:
   - "#finding-coverage"
 date: "2026-05-27"
 modified: '2026-07-17'
+body_hash: 'sha256:ae3d18c5897e85d4b19056fb6b53b5d574e074bf70d2b6cde09cef1be29e78fc'
 related:
   - "[[2026-05-27-eva-cli-testimonial-audit]]"
   - "[[2026-05-27-david-cli-testimonial-audit]]"

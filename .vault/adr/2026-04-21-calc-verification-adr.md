@@ -4,6 +4,7 @@ tags:
   - "#calc-verification"
 date: "2026-04-21"
 modified: '2026-07-17'
+body_hash: 'sha256:0c674a97e57a100f81be70caf4afa098c7d5864385fb0a92f9cb769466980ceb'
 related:
   - "[[2026-04-21-calc-verification-research]]"
   - "[[2026-04-21-casilla-schema-completeness-adr]]"

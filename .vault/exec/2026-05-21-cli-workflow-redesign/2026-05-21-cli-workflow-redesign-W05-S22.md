@@ -4,6 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-05-21'
 modified: '2026-07-17'
+body_hash: 'sha256:ff04f43317b1412a0ca20e41d7b6f414a14ede54be1e4a2f5a3c115a79e66969'
 step_id: 'S22'
 related:
   - '[[2026-05-21-state-architecture-plan]]'

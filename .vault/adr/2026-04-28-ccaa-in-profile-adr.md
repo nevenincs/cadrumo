@@ -4,6 +4,7 @@ tags:
   - '#ccaa-in-profile'
 date: '2026-04-28'
 modified: '2026-07-17'
+body_hash: 'sha256:84ee1151cf7b879964b9dfdc44b41bfaeec751497d69c0cb38a23df1e5a80d2f'
 related:
   - '[[2026-04-28-ccaa-in-profile-research]]'
   - '[[2026-04-27-modelo-100-renta-full-calc-adr]]'

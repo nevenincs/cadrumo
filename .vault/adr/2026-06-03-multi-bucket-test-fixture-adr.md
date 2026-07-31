@@ -4,6 +4,7 @@ tags:
   - '#multi-bucket-test-fixture'
 date: '2026-06-03'
 modified: '2026-07-17'
+body_hash: 'sha256:0a0660451b61093d44afb9ae6c18f79c411cadfbd95390b076571c8514795090'
 related:
   - "[[2026-06-03-cli-workflow-redesign-adr]]"
   - "[[2026-06-03-bucket-sealed-archive-adr]]"

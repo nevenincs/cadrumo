@@ -4,6 +4,7 @@ tags:
   - '#calculation-truth-registry'
 date: '2026-05-06'
 modified: '2026-07-17'
+body_hash: 'sha256:e1d19f855353164a4ec4cc07b34f4390ee4b3b39fa9ba46c5783373a65df2057'
 related:
   - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
   - '[[2026-05-06-calculation-truth-registry-modelo-190-application-links-exec]]'

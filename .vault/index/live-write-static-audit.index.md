@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:906b7554045425876043ba5e3ba2f74b878186bc1065de69a5a46b9064d9ade3'
 related:
   - '[[2026-04-16-live-write-static-audit-reference]]'
   - '[[2026-04-16-live-write-static-audit-review-audit]]'

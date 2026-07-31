@@ -4,6 +4,7 @@ tags:
   - '#modelo-303-regimen-simplificado'
 date: '2026-07-10'
 modified: '2026-07-10'
+body_hash: 'sha256:defb7ec89e1b8548aabf4aff4c97abca6be8c54f021fee760e624cc88d33a2f5'
 related:
   - "[[2026-07-01-modelo-303-regimen-simplificado-adr]]"
 ---

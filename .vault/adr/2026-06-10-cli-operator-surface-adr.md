@@ -4,6 +4,7 @@ tags:
   - '#cli-operator-surface'
 date: '2026-06-10'
 modified: '2026-07-17'
+body_hash: 'sha256:2383ebb293fce5972fbc3c7c6f4f3c03fac6795efa0f73ce4683f1e2d2040f71'
 related:
   - '[[2026-06-10-cli-operator-surface-research]]'
   - '[[2026-06-10-cli-operator-surface-audit]]'

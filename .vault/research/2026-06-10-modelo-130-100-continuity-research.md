@@ -4,6 +4,7 @@ tags:
   - '#modelo-130-100-continuity'
 date: '2026-06-10'
 modified: '2026-07-17'
+body_hash: 'sha256:3ccb205dd522faca3fc43fb958e64e3fb1049393d36fb0b0eb89bb47fa6ca035'
 related:
   - "[[2026-06-10-modelo-130-100-continuity-plan]]"
 ---

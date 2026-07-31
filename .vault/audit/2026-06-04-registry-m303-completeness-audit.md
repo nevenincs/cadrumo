@@ -4,6 +4,7 @@ tags:
   - '#registry-hardening-next-work'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:dd2cfb3d740a05649574a5c16c0f5600b5efe1d86b6010a01e48c32918e8d8fa'
 related:
   - '[[2026-06-02-registry-hardening-next-work-plan]]'
   - '[[2026-06-02-suite-redgreen-2026-06-02-plan]]'

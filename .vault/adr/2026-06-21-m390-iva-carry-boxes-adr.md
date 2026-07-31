@@ -4,6 +4,7 @@ tags:
   - '#m390-iva-carry-boxes'
 date: '2026-06-21'
 modified: '2026-07-17'
+body_hash: 'sha256:78da23afa3e341a89975a12f0e906b24b3ccf44f1e13343e6cf8ec355504af3e'
 related:
   - "[[2026-06-21-m303-carry-reconciliation-adr]]"
   - "[[2026-06-21-redeme-company-refund-research]]"

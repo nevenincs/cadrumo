@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:1e1c48341583e598818820218d6d8fa0439d89f52bb1386df449d80467c4e83f'
 related:
   - '[[2026-07-03-y-siguientes-verification-audit]]'
 ---

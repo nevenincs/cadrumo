@@ -4,6 +4,7 @@ tags:
   - '#bindings-interface-hardening'
 date: '2026-06-14'
 modified: '2026-07-17'
+body_hash: 'sha256:fcdb128f2608b9019b8e825d9acffddd1b80885afe20e43c0827969ae3bf2eb6'
 related:
   - "[[2026-06-14-bindings-interface-hardening-adr]]"
   - "[[2026-06-14-bindings-interface-hardening-research]]"

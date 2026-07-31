@@ -4,6 +4,7 @@ tags:
   - '#semantic-cluster-hardening'
 date: '2026-06-01'
 modified: '2026-07-17'
+body_hash: 'sha256:4c9a86bfe6bae309e90bf1a6f3c5dd76ac655e6583b6f51ea1b77a07c7bb28d7'
 tier: L3
 related:
   - '[[2026-06-01-semantic-cluster-hardening-adr]]'

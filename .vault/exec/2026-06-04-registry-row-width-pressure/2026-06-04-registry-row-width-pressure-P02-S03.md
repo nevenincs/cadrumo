@@ -4,6 +4,7 @@ tags:
   - '#registry-row-width-pressure'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:804fb378f4bd1939969faf4e0f7ad0599b27c35e526a1cd74b7169fcb94bd355'
 step_id: 'S03'
 related:
   - '[[2026-06-04-registry-row-width-pressure-plan]]'

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:a9b08230bb0084d5b914a1c31169cd4ee06eacd122d090063c56dc4b704c9433'
 related:
   - '[[2026-06-03-profile-lifecycle-cli-cascade-supersession-adr]]'
   - '[[2026-06-04-profile-lifecycle-cli-cascade-supersession-research]]'

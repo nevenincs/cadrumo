@@ -4,6 +4,7 @@ tags:
   - '#cli-testimonial'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:dafccfd29d070c550f57169a8364b1c129b86490c7219e39150ef431f249ed9d'
 related:
   - "[[2026-05-27-aitor-cli-testimonial-audit]]"
   - "[[2026-05-27-lourdes-cli-testimonial-audit]]"

@@ -4,6 +4,7 @@ tags:
   - '#docs-terminology-search'
 date: '2026-06-10'
 modified: '2026-07-17'
+body_hash: 'sha256:5e28f139908fd0806d5da3382625b043fc49b87d034cff36638a66e62359de8b'
 related:
   - "[[2026-05-30-docs-architecture-adr]]"
   - "[[2026-06-01-docs-educational-surface-adr]]"

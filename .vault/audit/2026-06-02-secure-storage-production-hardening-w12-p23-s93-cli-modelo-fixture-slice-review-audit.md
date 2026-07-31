@@ -4,6 +4,7 @@ tags:
   - '#secure-storage-production-hardening'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:4083958a61c6f5dd1ea616b9cc0558bdccdd76ca90e5e517a95a5393d7a9a1df'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
   - '[[2026-06-02-secure-storage-production-hardening-w12-p23-s93-cli-modelo-fixture-slice-exec]]'

@@ -4,6 +4,7 @@ tags:
   - '#arch-remediation-data-budget'
 date: '2026-07-02'
 modified: '2026-07-17'
+body_hash: 'sha256:48752c9cf5ff400b876e96e232946b26e1f08a6a129d8e9efde9709e980084ce'
 step_id: 'S03'
 related:
   - "[[2026-07-02-arch-remediation-data-budget-plan]]"

@@ -4,6 +4,7 @@ tags:
   - '#all-profile-reset'
 date: '2026-07-17'
 modified: '2026-07-17'
+body_hash: 'sha256:81e9459f7040324d1f741178b6bff38e8d2fd496eed25faae4d093d0fde02776'
 related:
   - "[[2026-07-15-cli-authority-verb-conformance-adr]]"
   - "[[2026-07-17-all-profile-reset-plan]]"

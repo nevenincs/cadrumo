@@ -2,6 +2,7 @@
 step_id: "S01"
 date: 2026-05-27
 modified: '2026-07-17'
+body_hash: 'sha256:61bd3d12a0b859d79ab374bb205474c1b0480cdf3e844aa7739a34dc3e1c246f'
 tags:
   - "#exec"
   - "#descendant-axis"

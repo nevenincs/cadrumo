@@ -4,6 +4,7 @@ tags:
   - '#google-optional-adapter-boundary'
 date: '2026-07-14'
 modified: '2026-07-14'
+body_hash: 'sha256:71f8bb5334caba5df9716de16d23f2aeca97d6373d13a2eb38007fd08a37e721'
 step_id: 'S01'
 related:
   - "[[2026-07-14-google-optional-adapter-boundary-plan]]"

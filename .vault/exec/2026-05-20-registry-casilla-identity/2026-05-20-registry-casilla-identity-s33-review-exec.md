@@ -4,6 +4,7 @@ tags:
   - '#registry-casilla-identity'
 date: '2026-05-20'
 modified: '2026-07-17'
+body_hash: 'sha256:55530b211fd96d685ca78df68f9409c7803fc8c717eb7677933c71aaee375c1e'
 related:
   - '[[2026-05-20-registry-casilla-identity-plan]]'
   - '[[2026-04-28-modelo-200-calc-verify-adr]]'

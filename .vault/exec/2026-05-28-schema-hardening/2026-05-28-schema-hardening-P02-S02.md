@@ -4,6 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:f61dbb0eac187044d4de13baa7ab022cbbfceeca360715b3678dfa013968bd10'
 step_id: 'S02'
 related:
   - "[[2026-05-28-schema-hardening-continuity-conformance-plan]]"

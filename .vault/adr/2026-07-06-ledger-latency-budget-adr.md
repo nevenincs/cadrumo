@@ -7,6 +7,7 @@ related:
   - "[[2026-07-06-ledger-perf-optimization-research]]"
 superseded_by: '2026-07-06-ledger-perf-optimization-adr'
 modified: '2026-07-17'
+body_hash: 'sha256:e49589c49b312e6b1d82c85b84d171791d34184306b111f7fa24659e38dbb9cd'
 ---
 # `ledger-latency-budget` adr: `dirty-set save semantics` | (**status:** `superseded`)
 

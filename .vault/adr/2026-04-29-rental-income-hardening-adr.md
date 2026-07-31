@@ -4,6 +4,7 @@ tags:
   - '#rental-income-hardening'
 date: '2026-04-29'
 modified: '2026-07-17'
+body_hash: 'sha256:1cb6036d4584413b933688ac0f14039e4325de3df33a35931a604b27a6092f78'
 related:
   - "[[2026-04-29-rental-income-hardening-research]]"
   - "[[2026-04-28-modelo-100-renta-full-calc-reference]]"

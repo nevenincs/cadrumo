@@ -4,6 +4,7 @@ tags:
   - '#ledger-renta-pipeline'
 date: '2026-05-08'
 modified: '2026-07-17'
+body_hash: 'sha256:80e1cc1d88b4889511c4a951a5f4fd61c113e5cfa8427923e6968428f5965980'
 related:
   - "[[2026-04-14-transaction-catalogue-review-audit]]"
   - "[[2026-04-17-invoice-catalogue-research]]"

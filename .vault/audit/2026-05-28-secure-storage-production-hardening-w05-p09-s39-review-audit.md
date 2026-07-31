@@ -4,6 +4,7 @@ tags:
   - '#secure-storage-production-hardening'
 date: '2026-05-28'
 modified: '2026-07-17'
+body_hash: 'sha256:43d19aa3a673d2c418b293e34550d86ce728e8279521799b65e63488e5620fb0'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
   - '[[2026-05-28-secure-storage-production-hardening-w05-p09-s36-side-store-inventory-audit]]'

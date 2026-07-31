@@ -4,6 +4,7 @@ tags:
   - '#profile-setup-flow'
 date: '2026-07-23'
 modified: '2026-07-23'
+body_hash: 'sha256:5fbb2be54882d39f6d46354c87cd01b0f1bf81043c08d2b416e09153a8e445e4'
 related:
   - "[[2026-07-23-profile-setup-flow-adr]]"
   - "[[2026-07-23-tui-wizard-substrate-adr]]"

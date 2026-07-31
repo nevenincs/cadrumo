@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:9ab2c4a0d3a08d550227123468811e1f2395768c8ef20168271006b0f9b696ed'
 related:
   - '[[2026-06-24-m303-refund-fichero-block-P01-S01]]'
   - '[[2026-06-24-m303-refund-fichero-block-P01-S02]]'

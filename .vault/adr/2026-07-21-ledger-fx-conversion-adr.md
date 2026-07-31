@@ -9,6 +9,7 @@ related:
 supersedes:
   - '2026-06-02-ledger-fx-conversion-adr'
 modified: '2026-07-21'
+body_hash: 'sha256:1c31bcff3e6d1027ad1a3fe549fd9cf48c2cfdc5ceb540dc2a1af87cdb26f111'
 ---
 # `ledger-fx-conversion` adr: `Dynamic ECB Data Portal resolution replaces the bundled rate snapshot` | (**status:** `accepted`)
 

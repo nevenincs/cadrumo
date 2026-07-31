@@ -4,6 +4,7 @@ tags:
   - '#cpdefix-calculation-allgreen'
 date: '2026-06-30'
 modified: '2026-07-17'
+body_hash: 'sha256:d8dead71a184f06bbda98ba3d46b2dd55d420d683d24edd3e0bfe2eda278ed76'
 related: []
 ---
 

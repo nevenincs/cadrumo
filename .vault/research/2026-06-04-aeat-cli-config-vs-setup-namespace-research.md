@@ -4,6 +4,7 @@ tags:
   - '#aeat-cli-config-vs-setup-namespace'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:a0e063d830446ae51f9a1253a41c8352dabda53b8da77304badbd0b76fe87ec9'
 related:
   - "[[2026-05-12-aeat-cli-config-vs-setup-namespace-adr]]"
 ---

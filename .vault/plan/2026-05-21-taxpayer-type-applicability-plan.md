@@ -4,6 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-05-21'
 modified: '2026-07-17'
+body_hash: 'sha256:4c6222ea9db259c5cb2cd39e7099069683dfd52fc512f901a73687a37328b1fd'
 tier: L3
 related:
   - '[[2026-05-21-taxpayer-type-applicability-adr]]'

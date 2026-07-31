@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:37865de19e007fd4beeac4c71d2824b4d41c9f9cd732f9da25fd3c9d5db3c7ad'
 related:
   - '[[2026-04-21-calc-verification-adr]]'
   - '[[2026-04-21-calc-verification-plan]]'

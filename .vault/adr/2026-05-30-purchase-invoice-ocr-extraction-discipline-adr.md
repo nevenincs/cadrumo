@@ -4,6 +4,7 @@ tags:
   - '#purchase-invoice-ocr-extraction-discipline'
 date: '2026-05-30'
 modified: '2026-07-17'
+body_hash: 'sha256:e629cd832cea5dfbae160319782c7c90c33536d9eff3bf8e590b5b87b05e93bf'
 related:
   - "[[2026-05-30-declaracion-extraction-architecture-research]]"
   - "[[2026-05-12-cli-workflow-redesign-receipt-ocr-pdf-evidence-adr]]"

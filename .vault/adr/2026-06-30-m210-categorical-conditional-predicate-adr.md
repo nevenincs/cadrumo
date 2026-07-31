@@ -4,6 +4,7 @@ tags:
   - '#m210-categorical-conditional-predicate'
 date: '2026-06-30'
 modified: '2026-07-17'
+body_hash: 'sha256:c6607dd6103e9715f28e36a3ce343d58cd824f890ab4e9107061813156c13e86'
 related:
   - "[[2026-06-30-modelo-verify-nonzero-guards-adr]]"
   - "[[2026-06-30-modelo-verify-nonzero-guards-plan]]"

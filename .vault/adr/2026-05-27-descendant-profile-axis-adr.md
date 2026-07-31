@@ -4,6 +4,7 @@ tags:
   - '#descendant-profile-axis'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:4585e6f199cfadb8422ff7d7abfdb0daaeb2506ef7b180321f212cb7defa309d'
 related:
   - "[[2026-05-07-user-profile-backend-schema-adr]]"
   - "[[2026-04-21-modelo-100-renta-adr]]"

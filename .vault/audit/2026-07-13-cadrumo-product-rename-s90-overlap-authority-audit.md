@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s90-overlap-authority'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:2e3e9861f177bfacc311b01bf30ea509a7b6fd328e3541de3eaaa3d091c4f027'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
 ---

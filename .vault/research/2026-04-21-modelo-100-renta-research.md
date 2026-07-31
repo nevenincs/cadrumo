@@ -4,6 +4,7 @@ tags:
   - "#modelo-100-renta"
 date: "2026-04-21"
 modified: '2026-07-17'
+body_hash: 'sha256:3c595e51ab7c9411cdc59fa3b1b7fecc9e035627a0921dff9f78133b2a92226d'
 related:
   - "[[2026-04-21-real-pdf-import-umbrella-research]]"
   - "[[2026-04-21-real-pdf-fixture-corpus-adr]]"

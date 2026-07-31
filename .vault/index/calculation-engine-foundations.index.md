@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:7178ee1770ae22e04dfb9febac5aba927321a473b4d59f0b8eb1bee9202cdd59'
 related:
   - '[[2026-06-10-calculation-engine-foundations-W04-P10-S16]]'
   - '[[2026-06-10-calculation-engine-foundations-W04-P11-S35]]'

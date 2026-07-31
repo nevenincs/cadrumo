@@ -4,6 +4,7 @@ tags:
   - '#cli-ledger-testimonials'
 date: '2026-06-09'
 modified: '2026-07-31'
+body_hash: 'sha256:c99a84d10583f35fd68ba4ed1ce474b4e3ff286633d4a1ed7696831e3560e461'
 related:
   - '[[2026-06-03-cli-ledger-testimonials-plan]]'
   - '[[2026-06-09-cli-ledger-testimonials-audit]]'

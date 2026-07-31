@@ -3,6 +3,7 @@ phase: "W04.P20"
 feature: "codebase-solidification"
 date: 2026-05-30
 modified: '2026-07-31'
+body_hash: 'sha256:04fa72f8e14c4da73cd06864c4e7bde887b7cb24775d5daae1dab3f9f1e5ecee'
 agent: coder-beta8
 commit: e30370bdc
 tags:

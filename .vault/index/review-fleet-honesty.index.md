@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:3868536398ebd1219bd92924c1c53cb2297412577596113e7bfd465e14a9d8fa'
 related:
   - '[[2026-07-25-review-fleet-honesty-gate-or-deferral-check-audit]]'
 ---

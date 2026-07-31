@@ -4,6 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-05-21'
 modified: '2026-07-17'
+body_hash: 'sha256:c3e62af23436a7b1e88bd90183cd15926197b87b79f59f46624b51296ecf1f25'
 related:
   - "[[2026-05-21-taxpayer-type-applicability-adr]]"
   - "[[2026-05-21-persona-fleet-round3-findings-audit]]"

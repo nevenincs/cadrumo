@@ -2,6 +2,7 @@
 step_id: S57
 date: 2026-05-31
 modified: '2026-07-17'
+body_hash: 'sha256:4f1a752e3fac3a9cd8b885cfa3ea4bcdc029baef27fde4f4bebe0a7e49e476ef'
 tags:
   - "#exec"
   - "#core-authority"

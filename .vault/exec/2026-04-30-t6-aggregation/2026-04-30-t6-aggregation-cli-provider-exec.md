@@ -4,6 +4,7 @@ tags:
   - "#t6-aggregation"
 date: 2026-04-30
 modified: '2026-07-17'
+body_hash: 'sha256:3b78defdd9be47c07abaeb3a2b9b4b9a5ef4cc6f889afddfa6677ec431838be4'
 related:
   - "[[2026-04-30-t6-aggregation-plan]]"
   - "[[2026-04-30-t6-aggregation-adr]]"

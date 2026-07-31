@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:92c2921dde6dfa19aa705e5e1a37cd5f3c49ffc47409a3698a8dc4b2c41eef58'
 related:
   - '[[2026-05-31-trabajador-del-mar-W01-P01-S01]]'
   - '[[2026-05-31-trabajador-del-mar-W01-P01-S02]]'

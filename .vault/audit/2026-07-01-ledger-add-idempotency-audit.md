@@ -4,6 +4,7 @@ tags:
   - '#ledger-add-idempotency'
 date: '2026-07-01'
 modified: '2026-07-17'
+body_hash: 'sha256:19057e6f872fe50af37760dcc50763633fc22a1bf78f67ed3fe7d4638b6bb659'
 related:
   - "[[2026-06-30-ledger-add-idempotency-plan]]"
 ---

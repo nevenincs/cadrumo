@@ -4,6 +4,7 @@ tags:
   - '#auth-cert-recovery-custody'
 date: '2026-07-17'
 modified: '2026-07-19'
+body_hash: 'sha256:362cd1a338f81406d5c320acdc8b60602ab8e8e233a4aabdef5d01a0fbf472d7'
 step_id: 'S32'
 related:
   - "[[2026-07-17-auth-cert-recovery-custody-plan]]"

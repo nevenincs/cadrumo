@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:0424e1f979af3db40961574249c24bfed27d2812f769544ae3b2b5fa310caa32'
 related:
   - '[[2026-04-12-normatives-adr]]'
   - '[[2026-04-12-normatives-phase1-implementation-exec]]'

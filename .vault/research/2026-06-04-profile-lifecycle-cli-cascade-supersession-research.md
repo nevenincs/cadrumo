@@ -4,6 +4,7 @@ tags:
   - '#profile-lifecycle-cli-cascade-supersession'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:5d1cf0e7ef250a63840f4cbc593a97cdaa53d9084ffa060fbf77a85ed0915d1f'
 related:
   - "[[2026-06-03-profile-lifecycle-cli-cascade-supersession-adr]]"
 ---

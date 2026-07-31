@@ -4,6 +4,7 @@ tags:
   - '#schedule-predicate-catalogue'
 date: '2026-05-31'
 modified: '2026-07-17'
+body_hash: 'sha256:70f9d4ec1910da05f6efa5804fddeff9497c9185075b9c757cbba2fb30b27aee'
 tier: L2
 related:
   - '[[2026-05-31-schedule-predicate-catalogue-adr]]'

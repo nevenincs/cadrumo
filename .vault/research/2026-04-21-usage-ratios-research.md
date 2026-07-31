@@ -4,6 +4,7 @@ tags:
   - "#usage-ratios"
 date: 2026-04-21
 modified: '2026-07-17'
+body_hash: 'sha256:5f9cc6f3ec29ef3e0c5349299df3d848fcf3d87a2e6b094ceafe3b8b4884ea33'
 related:
   - "[[2026-04-17-export-first-adr]]"
   - "[[2026-04-18-category-assignment-cli-adr]]"

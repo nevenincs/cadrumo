@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:83bf4b4f725d55ae4818cb27a169be130f9e267a3365db8b46c0c146b5e284b2'
 related:
   - '[[2026-06-02-registry-applicability-boundary-audit]]'
   - '[[2026-06-02-registry-applicability-boundary-code-review-audit]]'

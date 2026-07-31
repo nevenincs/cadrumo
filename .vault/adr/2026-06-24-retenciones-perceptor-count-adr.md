@@ -4,6 +4,7 @@ tags:
   - '#retenciones-perceptor-count'
 date: '2026-06-24'
 modified: '2026-07-17'
+body_hash: 'sha256:3bdab9bdd661c523e974608bc2c90e0495b51c217a89c26807b7ab36c28059a3'
 related:
   - '[[2026-06-21-eoy-final-calculation-audit]]'
   - '[[2026-06-30-retenciones-perceptor-count-research]]'

@@ -11,6 +11,7 @@ related:
 supersedes:
   - '2026-04-17-pytest-markers-adr'
 modified: '2026-07-17'
+body_hash: 'sha256:a90fc9bbc6771dfb30b619e84d65a00754e045e05342b8dd81c4f61bee2d60d0'
 ---
 # `test-topology-refactor` adr: `hexagonal tests folders with marker-complete metadata-free suites` | (**status:** `accepted`)
 

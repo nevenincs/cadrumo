@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:2c0f0b199d7b7b32316964974575ffd3771eed28502373601471aeb559b07c70'
 related:
   - '[[2026-06-01-docs-cli-buildtime-adr]]'
   - '[[2026-06-01-docs-cli-buildtime-research]]'

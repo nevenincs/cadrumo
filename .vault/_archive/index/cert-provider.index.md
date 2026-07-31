@@ -5,6 +5,7 @@ tags:
   - '#cert-provider'
 date: '2026-06-15'
 modified: '2026-06-28'
+body_hash: 'sha256:6f62609bdc8797f9dc413a24d336fcf2f4f29b6c8c7890f916996af70cf3bedb'
 related:
   - '[[2026-04-18-auth-provider-ecosystem-research]]'
   - '[[2026-04-18-auth-provider-pending-items-audit]]'

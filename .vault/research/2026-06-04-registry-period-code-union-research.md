@@ -4,6 +4,7 @@ tags:
   - '#registry-period-code-union'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:a867ccbab573d72092169a5625d72e5601c450a171355a96aaff511334791952'
 related:
   - "[[2026-06-01-registry-period-code-union-cli-boundary-adr]]"
 ---

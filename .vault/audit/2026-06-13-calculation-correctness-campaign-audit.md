@@ -4,6 +4,7 @@ tags:
   - '#calculation-correctness-campaign'
 date: '2026-06-13'
 modified: '2026-07-17'
+body_hash: 'sha256:6205b573a125bdc6ad96d48500336c1c1153e23db46999306580c003a1a2426a'
 related:
   - "[[2026-06-13-modelo-130-pagos-fraccionados-carry-adr]]"
   - "[[2026-06-13-modelo-130-pagos-fraccionados-carry-plan]]"

@@ -4,6 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-05-14'
 modified: '2026-07-17'
+body_hash: 'sha256:359b08bbd7598abad8775174d64282219f9890bcce6dff1a2fa339f636e73bd3'
 related:
   - "[[2026-04-25-error-code-registry-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-adr]]"

@@ -4,6 +4,7 @@ tags:
   - '#docs-educational-surface'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:ec5545c9782e1b5a55f76a9c8b94db8dc483aa770b07d77e0ba1f91d71c18457'
 related:
   - '[[2026-06-01-docs-educational-surface-adr]]'
 ---

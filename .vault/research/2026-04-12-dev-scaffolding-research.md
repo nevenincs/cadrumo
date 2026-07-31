@@ -4,6 +4,7 @@ tags:
   - "#dev-scaffolding"
 date: 2026-04-12
 modified: '2026-07-17'
+body_hash: 'sha256:1d53a3c01d50bc19f073dd80a7819b2929a72b5764716d045e253f7e85d4461d'
 related:
   - "[[2026-04-12-dev-scaffolding-adr]]"
   - "[[2026-04-12-dev-scaffolding-plan]]"

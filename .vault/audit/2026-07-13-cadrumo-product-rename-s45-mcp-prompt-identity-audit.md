@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s45-mcp-prompt-identity'
 date: '2026-07-13'
 modified: '2026-07-17'
+body_hash: 'sha256:9ef4ce49cee22e3aa42c18dcde0e7772bed6bfbc2f918af1b8d346e31cd55c29'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
 ---

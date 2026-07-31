@@ -4,6 +4,7 @@ tags:
   - '#financial-provider-extraction-discipline'
 date: '2026-05-28'
 modified: '2026-07-17'
+body_hash: 'sha256:28ce9e13f70c8a008ebadf09bc07332c6c56fdf6f698b71a124f4c0ab8591c4a'
 related:
   - "[[2026-05-21-declaracion-extraction-architecture-adr]]"
   - '[[2026-06-04-financial-provider-extraction-discipline-research]]'

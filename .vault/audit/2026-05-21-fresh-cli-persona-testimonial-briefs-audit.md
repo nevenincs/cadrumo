@@ -4,6 +4,7 @@ tags:
   - '#cli-testimonial'
 date: '2026-05-21'
 modified: '2026-07-17'
+body_hash: 'sha256:4928f1223578948ed21e9b27e87b932aa09f1d3b7176d29585448e2863e99a56'
 related:
   - '[[2026-05-21-fresh-cli-persona-testimonial-wave-plan]]'
   - '[[2026-05-20-testimonial-driven-cli-verification-playbook-reference]]'

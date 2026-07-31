@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:517216fd73d41dc64a52754599b33148f2eda93dbddd0baf12ba60dbf378a30c'
 related:
   - '[[2026-06-05-codebase-monolith-decomposition-W01-P01-S01]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W01-P01-S02]]'

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:8ea9cebf746249aed7ee73aa13f931895b42f6081a985d5bee17301383e41f65'
 related:
   - '[[2026-06-15-m714-limite-conjunto-irpf-adr]]'
   - '[[2026-06-15-m714-limite-conjunto-irpf-research]]'

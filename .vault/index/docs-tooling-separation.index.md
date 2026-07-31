@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:cb5ecbf6a6ddd1b5ef1ea39614d4245c02fc437e1eabe8cdabc0e86b3a086299'
 related:
   - '[[2026-06-14-docs-tooling-separation-S01]]'
   - '[[2026-06-14-docs-tooling-separation-adr]]'

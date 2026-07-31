@@ -4,6 +4,7 @@ tags:
   - '#modelo-multiyear-renta'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:a93117e1ccf5754698a133cd008cbb76be2e0013a6ab5fff980b9228f3579c35'
 related:
   - "[[2026-05-21-work-verify-deadline-independence-adr]]"
   - "[[2026-06-02-modelo-200-base-determination-adr]]"

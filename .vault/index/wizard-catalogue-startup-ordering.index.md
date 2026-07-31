@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:4afc03f6ec96127867a78ac4cf9ad6fc2df5056c32706b75716dcc5c29551155'
 related:
   - '[[2026-06-03-wizard-catalogue-startup-ordering-adr]]'
   - '[[2026-06-04-wizard-catalogue-startup-ordering-research]]'

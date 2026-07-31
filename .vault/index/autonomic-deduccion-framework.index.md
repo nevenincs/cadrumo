@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:df9c4f9a1d16c41d322b57acb898a90f4000fbd0a9b7b1beeca76ff77b949e37'
 related:
   - '[[2026-07-04-autonomic-deduccion-framework-adr]]'
 ---

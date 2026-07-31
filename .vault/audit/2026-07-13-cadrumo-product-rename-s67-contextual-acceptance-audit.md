@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s67-contextual-acceptance'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:7c61b0ba4193885f69942d5da8c26b883797b8b46844136c9c381a0e64628761'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
   - "[[2026-07-12-cadrumo-cli-executable-adr]]"

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:b3931fd23a485113e7174823fd5997237139e0e37c2a9155e675596b846d5d54'
 related:
   - '[[2026-05-27-marcos-214-reduccion-art-84-S214]]'
   - '[[2026-06-04-marcos-214-adr]]'

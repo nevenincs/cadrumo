@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:d764ffc6373aaa4ddda3bdba2cd42a4cc7d2e165b07a9332214f50d0d389a2c9'
 related:
   - '[[2026-07-28-registry-governance-backlog-research]]'
 ---

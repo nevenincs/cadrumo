@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:98d8bab2b723a6ddb7a532d558b314b72e8efba3b253efe8aac870772383edc2'
 related:
   - '[[2026-05-08-cli-backend-boundary-adr]]'
   - '[[2026-05-08-cli-backend-boundary-plan]]'

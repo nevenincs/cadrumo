@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:872c60009d3b3f1fe0b98a6d8183da0642480d9e8132c1110717efb4697f4830'
 related:
   - '[[2026-07-02-agent-harness-refoundation-W01-P01-S01]]'
   - '[[2026-07-02-agent-harness-refoundation-W01-P01-S02]]'

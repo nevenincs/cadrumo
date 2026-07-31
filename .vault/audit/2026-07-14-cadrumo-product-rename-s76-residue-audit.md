@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s76-residue'
 date: '2026-07-14'
 modified: '2026-07-17'
+body_hash: 'sha256:295ee9aeae7f3e6d7e901fdbbd4bf914feb0ca62688ba389cc561fce3f1f9fa7'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
 ---

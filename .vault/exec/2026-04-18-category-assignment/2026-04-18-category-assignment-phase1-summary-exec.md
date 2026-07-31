@@ -4,6 +4,7 @@ tags:
   - "#category-assignment"
 date: 2026-04-18
 modified: '2026-07-17'
+body_hash: 'sha256:04f85e78841573790759946b36bc52efb151169c9204120ed60f4c2aa7a6f539'
 related:
   - "[[2026-04-18-category-assignment-cli-plan]]"
   - "[[2026-04-18-category-assignment-phase1-step1-exec]]"

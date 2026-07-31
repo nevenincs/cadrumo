@@ -4,6 +4,7 @@ tags:
   - '#centralized-output-redaction'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:07ba8a129a2d7e4bd7e1307a32e6ea779594c25dc01f3061a9a9fd1b8639d325'
 related:
   - '[[2026-05-28-centralized-output-redaction-plan]]'
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'

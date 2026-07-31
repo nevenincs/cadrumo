@@ -4,6 +4,7 @@ tags:
   - '#docs-tooling-separation'
 date: '2026-06-14'
 modified: '2026-07-17'
+body_hash: 'sha256:a906af7b9d3884e947261aa7fcdb985084c2987f9166f6dbe8da72843363c493'
 related:
   - "[[2026-06-14-docs-tooling-separation-research]]"
 ---

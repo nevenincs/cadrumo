@@ -4,6 +4,7 @@ tags:
   - "#integration-tests-ci"
 date: "2026-04-21"
 modified: '2026-07-17'
+body_hash: 'sha256:84061bba7f559acd1571eaf406a175e03af66a9ffb3b98b45112e9c024ec794c'
 related:
   - "[[2026-04-21-integration-tests-ci-research]]"
   - "[[2026-04-21-real-pdf-fixture-corpus-adr]]"

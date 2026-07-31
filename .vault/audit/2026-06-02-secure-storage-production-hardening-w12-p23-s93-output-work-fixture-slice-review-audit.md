@@ -4,6 +4,7 @@ tags:
   - '#secure-storage-production-hardening'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:ea5e451bf13c710c117de06cc2827559722c6f094ce8dd33f78eb1153adda0b8'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
   - '[[2026-06-02-secure-storage-production-hardening-w12-p23-s93-output-work-fixture-slice-exec]]'

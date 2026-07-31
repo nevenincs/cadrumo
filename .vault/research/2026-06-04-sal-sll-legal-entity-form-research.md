@@ -4,6 +4,7 @@ tags:
   - '#sal-sll-legal-entity-form'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:e51c549bcfee1ffc2d8b5d35cb99ab40f72dd49bc35daab430a6d1c8e236c155'
 related:
   - "[[2026-05-27-sal-sll-legal-entity-form-adr]]"
 ---

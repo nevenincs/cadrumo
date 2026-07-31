@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:f944f94bc9b528a8fbf1d5bebf644166c3c03a80538a7e107dacd883d8a230db'
 related:
   - '[[2026-06-02-modelo-filing-ledger-snapshot-adr]]'
   - '[[2026-06-04-modelo-filing-ledger-snapshot-research]]'

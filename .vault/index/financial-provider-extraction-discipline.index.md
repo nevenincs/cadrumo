@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:ecdbd639051c40c7e30a3624fe66e18534d5b2e0cf285ff5612945ab43b1def4'
 related:
   - '[[2026-05-28-financial-provider-extraction-discipline-adr]]'
   - '[[2026-06-04-financial-provider-extraction-discipline-research]]'

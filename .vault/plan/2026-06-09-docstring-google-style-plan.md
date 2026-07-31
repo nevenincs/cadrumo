@@ -4,6 +4,7 @@ tags:
   - '#docstring-google-style'
 date: '2026-06-09'
 modified: '2026-07-17'
+body_hash: 'sha256:f7e0d8d0aaf0d1a443181e99e9ce26ca548caec2eeed5f21965afc8dd292e5e2'
 tier: L1
 related:
   - '[[2026-05-30-docs-architecture-adr]]'

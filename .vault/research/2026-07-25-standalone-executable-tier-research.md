@@ -4,6 +4,7 @@ tags:
   - '#standalone-executable-tier'
 date: '2026-07-25'
 modified: '2026-07-25'
+body_hash: 'sha256:22f5f81a5653d211d28b3dbb04c00b62b64ff91a1589275e96cc3a714fa6a9dd'
 related:
   - "[[2026-07-25-account-distribution-standard-adr]]"
   - "[[2026-07-20-release-asset-transport-adr]]"

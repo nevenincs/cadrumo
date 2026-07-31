@@ -4,6 +4,7 @@ tags:
   - '#financial-provider-extraction-discipline'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:82577925ae34d0559814047f7ebf894d6e2858e936063c8afbb16a4671287bfc'
 related:
   - "[[2026-05-28-financial-provider-extraction-discipline-adr]]"
 ---

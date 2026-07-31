@@ -7,6 +7,7 @@ tags:
   - "#schema-extraction"
 date: 2026-04-17
 modified: '2026-07-17'
+body_hash: 'sha256:662eb9f0652a4850f3db824f23f4eaaa182faddbb93d4f3bd9126f90a515f056'
 related:
   - "[[2026-04-12-modelo-303-390-research]]"
   - "[[2026-04-13-modelo-inventory-research]]"

@@ -4,6 +4,7 @@ tags:
   - '#spanish-stem-terminology-authority'
 date: '2026-05-19'
 modified: '2026-07-17'
+body_hash: 'sha256:474d6b86a155edc2358da6828f100852d6f49b2ac798e273725993393d6b1e61'
 related:
   - '[[2026-05-19-spanish-tax-glossary-reference]]'
   - '[[2026-07-13-cadrumo-product-rename-s64-spanish-catalogue-audit]]'

@@ -4,6 +4,7 @@ tags:
   - '#error-code-registry'
 date: '2026-04-25'
 modified: '2026-07-17'
+body_hash: 'sha256:b3716cf6640114ec76c9f5f916c55b48904c775ee5ccc8802c3f9678c5c2aa08'
 related:
 ---
 

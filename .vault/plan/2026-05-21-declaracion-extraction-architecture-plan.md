@@ -4,6 +4,7 @@ tags:
   - '#declaracion-extraction-architecture'
 date: '2026-05-21'
 modified: '2026-07-17'
+body_hash: 'sha256:23c467a8ad2700cf87ff4c0c0a56866ff7a07ee59b645509bbe33717fbb15d5a'
 tier: L3
 related:
   - '[[2026-05-21-declaracion-extraction-architecture-adr]]'

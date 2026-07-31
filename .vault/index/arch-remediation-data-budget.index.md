@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:e924d98e45db75ef3cefdb40117ca01313ed2eff8a433ddfee423a6191664a9b'
 related:
   - '[[2026-07-02-arch-remediation-data-budget-S01]]'
   - '[[2026-07-02-arch-remediation-data-budget-S02]]'

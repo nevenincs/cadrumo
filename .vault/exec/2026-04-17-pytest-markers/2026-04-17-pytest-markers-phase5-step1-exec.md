@@ -4,6 +4,7 @@ tags:
   - "#pytest-markers"
 date: 2026-04-17
 modified: '2026-07-17'
+body_hash: 'sha256:66f6a97c8b7918df2efff2a880c0274adab165f43f44827216ae207a7cedc977'
 related:
   - "[[2026-04-17-pytest-markers-plan]]"
   - "[[2026-04-17-pytest-markers-adr]]"

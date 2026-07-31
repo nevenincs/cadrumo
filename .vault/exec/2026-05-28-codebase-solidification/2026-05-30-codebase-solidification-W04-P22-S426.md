@@ -1,6 +1,7 @@
 ---
 date: 2026-05-30
 modified: '2026-07-31'
+body_hash: 'sha256:b51c2f94792b8ebb0199ac231ea507618f471306e84ef71fce367b813371791a'
 agent: coder-delta8
 commit: e7f96f6ec
 tags:

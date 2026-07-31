@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:80d749bd5ed1d7a537a7c933cde50f7d9e8d3026bff72d00fa197fb5576b5ada'
 related:
   - '[[2026-06-05-cross-period-calculation-guards-adr]]'
   - '[[2026-06-05-cross-period-calculation-guards-reference]]'

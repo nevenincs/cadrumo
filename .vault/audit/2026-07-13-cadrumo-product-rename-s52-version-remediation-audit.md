@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s52-version-remediation'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:7c75b05aebc24dde875ef9b775456155b24f1c791ee3c5a1cbac6e9f7c27feb2'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
   - "[[2026-07-12-cadrumo-cli-executable-adr]]"

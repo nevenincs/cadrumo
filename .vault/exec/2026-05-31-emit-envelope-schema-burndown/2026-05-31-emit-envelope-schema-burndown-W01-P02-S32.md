@@ -4,6 +4,7 @@ tags:
   - "#emit-envelope-schema-burndown"
 date: '2026-05-31'
 modified: '2026-07-17'
+body_hash: 'sha256:258699dc490bd3adc3340e5e2d0f95505f79cfb9ec07ffa72cb60bb0345c7374'
 step_id: S32
 related:
   - "[[2026-04-25-json-output-contract-adr]]"

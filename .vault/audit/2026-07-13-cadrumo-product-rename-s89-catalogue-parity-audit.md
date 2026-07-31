@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s89-catalogue-parity'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:d208d7e211055eaa93eba402b34592491b3cde432938269b926d3cd4db646d57'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
 ---

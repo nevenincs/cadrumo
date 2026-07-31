@@ -4,6 +4,7 @@ tags:
   - '#m036-lifecycle-verbs'
 date: '2026-06-03'
 modified: '2026-07-17'
+body_hash: 'sha256:ec41579c8b25cafd34820a08f59671ab77186943a27264032105f77410e2eeb9'
 related:
   - "[[2026-05-12-cli-workflow-redesign-modelo-036-037-foundation-adr]]"
   - "[[2026-05-13-cli-workflow-redesign-epic-plan]]"

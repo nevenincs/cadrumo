@@ -4,6 +4,7 @@ tags:
   - '#fichero-boe-export-layouts'
 date: '2026-05-21'
 modified: '2026-07-17'
+body_hash: 'sha256:74565c2c58061df7c9611eb7b3428f0d209e0776b4cb7c0f3da024d29c09cc57'
 tier: L2
 related:
   - '[[2026-04-22-aeat-fichero-boe-export-adr]]'

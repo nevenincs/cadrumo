@@ -4,6 +4,7 @@ tags:
   - '#llm-client'
 date: '2026-04-12'
 modified: '2026-07-17'
+body_hash: 'sha256:d98eadc5b028078460dc2ecc04a4f4e44a65c719e4a2064f2591b51ab8de3e37'
 related:
   - '[[2026-04-12-llm-client-research]]'
   - '[[2026-04-12-llm-client-adr]]'

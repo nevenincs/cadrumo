@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:d8dc4cc82639c3dc0df0f83a1e735b9241bcbee8981264b60b7a1006231c239e'
 related:
   - '[[2026-07-25-bucket-manifest-durability-adr]]'
 ---

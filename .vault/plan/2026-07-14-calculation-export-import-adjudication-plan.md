@@ -4,6 +4,7 @@ tags:
   - '#calculation-export-import-adjudication'
 date: '2026-07-14'
 modified: '2026-07-17'
+body_hash: 'sha256:fb619c02733c4162b8886bd19c773539cf570bb04eb0789fa7a5b788f52d634f'
 tier: L2
 related:
   - '[[2026-05-03-calculation-truth-registry-pending-adr]]'

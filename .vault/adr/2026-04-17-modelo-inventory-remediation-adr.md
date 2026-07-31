@@ -4,6 +4,7 @@ tags:
   - '#modelo-inventory'
 date: '2026-04-17'
 modified: '2026-07-17'
+body_hash: 'sha256:18e47cd0250a1d1384ad0d6edd5b1d5e600183bfc327563361c0803ac6f69051'
 related:
   - '[[2026-04-17-modelo-inventory-remediation-research]]'
   - '[[2026-04-13-modelo-inventory-adr]]'

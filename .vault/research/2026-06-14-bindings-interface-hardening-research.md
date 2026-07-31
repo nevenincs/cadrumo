@@ -4,6 +4,7 @@ tags:
   - '#bindings-interface-hardening'
 date: '2026-06-14'
 modified: '2026-07-17'
+body_hash: 'sha256:0de0d8d1a51e8176e8db60410daee9a5a1ae608b612bfd6787d74d8fa5ba24d8'
 related:
   - "[[2026-05-20-calculation-source-connectivity-adr]]"
   - "[[2026-06-10-calculation-aggregation-taxonomy-adr]]"

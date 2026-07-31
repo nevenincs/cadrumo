@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:e05b224f42261f744113f0c57aa315ab4e07ae6abbdec7b5dbc466352b25316f'
 related:
   - '[[2026-07-13-cadrumo-product-rename-s65-catalan-catalogue-audit]]'
 ---

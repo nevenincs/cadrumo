@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:e5989f15fe8854a86d50423bf338b3fdf1a6638e8310afef53e4590fd5788c10'
 related:
   - '[[2026-06-02-registry-m123-fragmentation-audit]]'
   - '[[2026-06-02-registry-m123-fragmentation-code-review-audit]]'

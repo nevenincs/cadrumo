@@ -4,6 +4,7 @@ tags:
   - '#quality-hardening-campaign'
 date: '2026-06-09'
 modified: '2026-07-17'
+body_hash: 'sha256:b9588f5ebb45fa162923d5fcd5c3860144709df451900c3d66720a2f5c6360bc'
 related:
   - "[[2026-06-08-repo-health-diagnostics-audit]]"
 ---

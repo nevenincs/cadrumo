@@ -4,6 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-05-13'
 modified: '2026-07-17'
+body_hash: 'sha256:ec9d899fdedac9a116c23ce7ad2effab0545a6f2b11db3c6f96cab40a069cde4'
 related:
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
   - '[[2026-05-13-cli-workflow-redesign-manual-ledger-storage-adr]]'

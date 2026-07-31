@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:764f6dc624ec11055fff578149f4a8fbb24415a7515138ddcd7e107a14bcd9f9'
 related:
   - '[[2026-07-13-cadrumo-product-rename-s64-spanish-contexts-audit]]'
 ---

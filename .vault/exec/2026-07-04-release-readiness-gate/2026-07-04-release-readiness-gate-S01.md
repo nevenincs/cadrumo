@@ -4,6 +4,7 @@ tags:
   - '#release-readiness-gate'
 date: '2026-07-04'
 modified: '2026-07-17'
+body_hash: 'sha256:5adb5c07ddfe31e16ef3bbd605b78620feb6a1a7aaa299aaa7824ea564818675'
 step_id: 'S01'
 related:
   - "[[2026-07-04-release-readiness-gate-plan]]"

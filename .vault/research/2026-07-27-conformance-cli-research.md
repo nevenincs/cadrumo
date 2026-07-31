@@ -4,6 +4,7 @@ tags:
   - '#conformance-cli'
 date: '2026-07-27'
 modified: '2026-07-27'
+body_hash: 'sha256:b01922f3ab2c68c238c2528f576815b07e09ccda2822bab0aa7267f689ddef98'
 related:
   - '[[2026-07-01-verification-power-adr]]'
   - '[[2026-07-01-verification-contract-coverage-audit]]'

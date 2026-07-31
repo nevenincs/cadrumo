@@ -4,6 +4,7 @@ tags:
   - '#modelo-addressing-ux'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:8b60978ad03e6657d4311734bb986e58812e5d0d536f491cf3d8277901ea340f'
 related:
   - '[[2026-06-04-modelo-addressing-ux-research]]'
   - '[[2026-06-03-cli-workflow-redesign-epic-adr]]'

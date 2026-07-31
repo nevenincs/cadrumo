@@ -4,6 +4,7 @@ tags:
   - '#aeat-verify'
 date: '2026-04-24'
 modified: '2026-07-17'
+body_hash: 'sha256:5405ffac8b816de5348890b3e3862af59bf5cdde8c7e4c673d0a060ddde571b8'
 related:
   - "[[2026-04-24-aeat-verify-plan]]"
   - "[[2026-04-24-aeat-verify-adr]]"

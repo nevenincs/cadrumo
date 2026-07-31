@@ -4,6 +4,7 @@ tags:
   - '#modelo-multiyear-renta'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:9ba922d2f0d79dd02fc27282aa5a6b977170cf5d74ce0ee3ac9e34339a4f2020'
 tier: L4
 related:
   - '[[2026-06-02-modelo-multiyear-renta-adr]]'

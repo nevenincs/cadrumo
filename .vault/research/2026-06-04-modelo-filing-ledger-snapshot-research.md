@@ -4,6 +4,7 @@ tags:
   - '#modelo-filing-ledger-snapshot'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:603eecc764de0e081fca35b62bdf771551635e789899ad13cc5c7b815c3fcefb'
 related:
   - "[[2026-06-02-modelo-filing-ledger-snapshot-adr]]"
 ---

@@ -4,6 +4,7 @@ tags:
   - '#iva-autoconsumo-promotor'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:ab361e364097d7ed6e4a7c93e1cb9c87f7da6e2a5e7a29d0d927ea5cf0083a21'
 related:
   - "[[2026-05-27-iva-autoconsumo-promotor-adr]]"
 ---

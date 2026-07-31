@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:ebf0f8b47fb1098cabd7928e1e3efb8e02b1422487e4fe3e57992f88cfaa0458'
 related:
   - '[[2026-04-28-ccaa-in-profile-adr]]'
   - '[[2026-04-28-ccaa-in-profile-code-review-audit]]'

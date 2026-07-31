@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:9590a004ceb1455abbf64181de1010d75d8402b10be0389c51ea6e3ba14621e8'
 related:
   - '[[2026-04-17-pytest-only-testing-adr]]'
   - '[[2026-04-17-pytest-only-testing-research]]'

@@ -4,6 +4,7 @@ tags:
   - '#non-resident-axis'
 date: '2026-06-04'
 modified: '2026-07-10'
+body_hash: 'sha256:1010e1d7795901b965fa2edc385f49a19af16f716c8b9a33c0f371bc2759765c'
 related:
   - "[[2026-06-04-non-resident-axis-research]]"
 ---

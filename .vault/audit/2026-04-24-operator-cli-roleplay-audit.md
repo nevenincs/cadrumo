@@ -4,6 +4,7 @@ tags:
   - "#kent-cli-roleplay"
 date: 2026-04-24
 modified: '2026-07-15'
+body_hash: 'sha256:17eec63e14cb0a2bb1c2f782e6c67690d59b10738706d60f8b8baa83cdc22bc7'
 related:
   - "[[2026-04-18-unified-review-queue-adr]]"
   - "[[2026-04-18-category-assignment-cli-adr]]"

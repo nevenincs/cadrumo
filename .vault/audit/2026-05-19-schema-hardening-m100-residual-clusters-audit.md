@@ -4,6 +4,7 @@ tags:
   - "#schema-hardening"
 date: '2026-05-19'
 modified: '2026-07-17'
+body_hash: 'sha256:0499ad92b4a2309070a9f828f7868687a75473e4a9e92645b63ca1d85e64c9d1'
 related:
   - "[[2026-05-19-schema-hardening-role-taxonomy-reference]]"
   - "[[2026-05-19-schema-hardening-m100-section-inventory-audit]]"

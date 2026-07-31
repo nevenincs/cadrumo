@@ -4,6 +4,7 @@ tags:
   - '#m200-internal-casilla-discipline'
 date: '2026-06-03'
 modified: '2026-07-17'
+body_hash: 'sha256:2e53c6afff26c1afcf52fe074b86cf5cd42aca8cd3aae66f058559431acede46'
 related:
   - "[[2026-06-03-m200-internal-casilla-discipline-research]]"
   - "[[2026-06-02-modelo-200-base-determination-adr]]"

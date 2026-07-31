@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s72-site-identity'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:a2c21c56692b7748cdc1ea4628c8920cd0f9cf790526e12ca0ae1cc7f868a425'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
   - "[[2026-07-12-cadrumo-cli-executable-adr]]"

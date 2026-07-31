@@ -4,6 +4,7 @@ tags:
   - '#renta-calculation-pipeline-coverage'
 date: '2026-05-08'
 modified: '2026-07-17'
+body_hash: 'sha256:48e70fc450f5bf4a22849eb82e12495e980d19f8aebc44eb354276a2f4c3fb32'
 related: []
 ---
 

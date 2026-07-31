@@ -4,6 +4,7 @@ tags:
   - '#modelo-190-percepciones-count'
 date: '2026-06-25'
 modified: '2026-07-17'
+body_hash: 'sha256:fe96b09471e8aea31b05362857c2cb8e54096db104350c20712e28c91a53f8e4'
 tier: L2
 related:
   - '[[2026-06-25-modelo-190-percepciones-count-adr]]'

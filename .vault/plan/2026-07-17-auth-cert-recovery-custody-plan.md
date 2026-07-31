@@ -4,6 +4,7 @@ tags:
   - '#auth-cert-recovery-custody'
 date: '2026-07-17'
 modified: '2026-07-25'
+body_hash: 'sha256:74622989635d96e0efdd41417e61411bd2dfcdaf2266dbc2b4a50c59f9f1efbb'
 tier: L2
 related:
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'

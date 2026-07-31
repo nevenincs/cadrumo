@@ -4,6 +4,7 @@ tags:
   - '#cli-testimonial'
 date: '2026-05-20'
 modified: '2026-07-17'
+body_hash: 'sha256:eddb8b81b69cc7447cf810cfa204bc1846f18bf26cdfb378835321d635c158d5'
 related:
   - "[[2026-05-20-testimonial-driven-cli-verification-playbook-reference]]"
   - "[[2026-05-20-cli-testimonial-findings-inventory-audit]]"

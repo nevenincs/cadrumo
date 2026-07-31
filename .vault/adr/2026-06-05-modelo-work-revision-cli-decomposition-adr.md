@@ -4,6 +4,7 @@ tags:
   - '#modelo-work-revision-cli-decomposition'
 date: '2026-06-05'
 modified: '2026-07-17'
+body_hash: 'sha256:b653090521f1598716f89518f051a575f96fa64d79d65b85ef4355f791adaf2c'
 related:
   - '[[2026-06-04-modelo-addressing-ux-research]]'
   - '[[2026-06-04-modelo-addressing-ux-adr]]'

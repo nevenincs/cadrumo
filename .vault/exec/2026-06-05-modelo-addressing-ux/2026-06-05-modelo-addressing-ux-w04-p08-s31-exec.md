@@ -2,6 +2,7 @@
 tags: ['#exec', '#modelo-addressing-ux']
 date: '2026-06-05'
 modified: '2026-07-17'
+body_hash: 'sha256:0b5a72c70280a3fd7c65286d824a77a4ff6ed56718c062120b9abb07510ec86d'
 step_id: 'S31'
 related:
   - '[[2026-06-05-modelo-addressing-ux-plan]]'

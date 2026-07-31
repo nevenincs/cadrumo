@@ -4,6 +4,7 @@ tags:
   - "#modelo-303-formulas"
 date: 2026-04-17
 modified: '2026-07-17'
+body_hash: 'sha256:d7470d08882da5c8f717962db2d8eab4b77c7f9e330584f251a8dfc0218a3a08'
 related:
   - "[[2026-04-17-modelo-formulas-adr]]"
   - "[[2026-04-17-modelo-formula-ruleset-research]]"

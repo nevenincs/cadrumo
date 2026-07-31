@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:0c672715fc3166d47adda4ab641c02aeaac81beb982a62538ff160cc711b984c'
 related:
   - '[[2026-05-27-inss-art7h-exempt-S186]]'
   - '[[2026-06-04-inss-art7h-exempt-adr]]'

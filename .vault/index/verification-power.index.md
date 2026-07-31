@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:d13d8386dd345f9168aac0d2cc45e50f128a532ab8b303f26a47b3bf1907f568'
 related:
   - '[[2026-07-01-verification-power-adr]]'
   - '[[2026-07-01-verification-power-research]]'

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:4716085d290b2cae23f0dc67b457c7859f9681d473ab7c5ff6d97fdcf5c70101'
 related:
   - '[[2026-06-03-modelo-export-evidence-parity-W01-P01-S01]]'
   - '[[2026-06-03-modelo-export-evidence-parity-W01-P01-S02]]'

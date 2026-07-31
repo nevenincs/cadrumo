@@ -8,6 +8,7 @@ related:
   - "[[2026-06-02-modelo-filing-ledger-snapshot-adr]]"
 superseded_by: '2026-07-21-ledger-fx-conversion-adr'
 modified: '2026-07-21'
+body_hash: 'sha256:212ec15b0135d7e60fe787ec6291ccf54d9de6cfb51bb3614645846033b65cd2'
 ---
 # `ledger-fx-conversion` adr: `ECB euro reference rates as the canonical FX source for ledger-to-modelo conversion` | (**status:** `superseded`)
 

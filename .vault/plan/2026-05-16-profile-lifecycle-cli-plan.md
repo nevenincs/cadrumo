@@ -4,6 +4,7 @@ tags:
   - '#profile-lifecycle-cli'
 date: '2026-05-16'
 modified: '2026-07-17'
+body_hash: 'sha256:08030afbaf7669c2e3495bcf18a6a8c474f5303ac815e52d08670d74d44d483b'
 tier: L2
 related:
   - '[[2026-06-03-profile-lifecycle-cli-cascade-supersession-adr]]'

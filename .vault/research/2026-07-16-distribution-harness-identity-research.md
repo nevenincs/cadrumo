@@ -4,6 +4,7 @@ tags:
   - '#distribution-harness-identity'
 date: '2026-07-16'
 modified: '2026-07-17'
+body_hash: 'sha256:f2614c657fdc42eb52d5070174986a8175aa9f7093959d3fbd58a382ce8e1b4a'
 related:
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
   - '[[2026-07-12-cadrumo-cli-executable-adr]]'

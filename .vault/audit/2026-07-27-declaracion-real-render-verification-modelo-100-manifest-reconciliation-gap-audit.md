@@ -4,6 +4,7 @@ tags:
   - '#declaracion-real-render-verification'
 date: '2026-07-27'
 modified: '2026-07-27'
+body_hash: 'sha256:9cd4a47d3b2b6b3d3a969206cb07c7ef6595c5b01036a14b2bfb9ba8372c9354'
 related:
   - "[[2026-07-26-declaracion-real-render-verification-plan]]"
   - "[[2026-07-26-modelo-100-parser-glyph-merge-adr]]"

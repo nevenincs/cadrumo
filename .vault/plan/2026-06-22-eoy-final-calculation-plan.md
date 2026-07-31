@@ -4,6 +4,7 @@ tags:
   - '#eoy-final-calculation'
 date: '2026-06-22'
 modified: '2026-07-17'
+body_hash: 'sha256:4740479c89653a69a5c34824fc427973200336480136d11d67c95f59032f8c3a'
 tier: L2
 related:
   - '[[2026-06-22-eoy-final-calculation-adr]]'

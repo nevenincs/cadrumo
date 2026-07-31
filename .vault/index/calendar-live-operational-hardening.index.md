@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:1a7586627f2c6e6f2f6b239933e51e048678952eedef05851348e4d166712738'
 related:
   - '[[2026-06-05-calendar-live-operational-hardening-W01-P01-S01]]'
   - '[[2026-06-05-calendar-live-operational-hardening-W01-P01-S02]]'

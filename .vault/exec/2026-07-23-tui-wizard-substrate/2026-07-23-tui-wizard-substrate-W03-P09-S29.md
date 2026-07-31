@@ -4,6 +4,7 @@ tags:
   - '#tui-wizard-substrate'
 date: '2026-07-24'
 modified: '2026-07-24'
+body_hash: 'sha256:0e3ac11e354d30e38d8b5ffd4b03b4aaa6f31124b9c8da863fbd57bace1e3f4d'
 step_id: 'S29'
 related:
   - "[[2026-07-23-tui-wizard-substrate-plan]]"

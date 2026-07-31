@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:f9ca16add8d1581b667ca778c817fe821b163522b899cd68e029ad76cdecef91'
 related:
   - '[[2026-07-02-arch-remediation-program-adr]]'
   - '[[2026-07-05-arch-remediation-program-audit]]'

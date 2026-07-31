@@ -4,6 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:a04edf8046b15b3f5f5178536fe2c24e835367568b1460ccb5e0293e177382d9'
 related:
   - '[[2026-05-27-schema-hardening-placeholder-eradication-plan]]'
   - '[[2026-05-27-schema-hardening-label-artifact-inventory-exec]]'

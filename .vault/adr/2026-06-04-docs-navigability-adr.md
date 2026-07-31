@@ -4,6 +4,7 @@ tags:
   - '#docs-navigability'
 date: '2026-06-04'
 modified: '2026-07-10'
+body_hash: 'sha256:703c05c08b80a17dc9c4a95303fa28f5406a80e0aa4c45d0f37fb377dafbeac8'
 related:
   - "[[2026-06-04-docs-navigability-research]]"
 ---

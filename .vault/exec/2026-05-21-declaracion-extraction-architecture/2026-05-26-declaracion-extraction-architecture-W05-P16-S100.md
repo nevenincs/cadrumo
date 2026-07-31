@@ -2,6 +2,7 @@
 tags: ["#exec", "#declaracion-extraction-architecture"]
 date: '2026-05-26'
 modified: '2026-07-31'
+body_hash: 'sha256:b76be60660e5d8e9c204cb110990137832215f3e876bfb83e6fd7003aa77992d'
 related:
   - '[[2026-05-21-declaracion-extraction-architecture-plan]]'
   - '[[2026-05-26-declaracion-extraction-architecture-w05-p16-backlog-expansion-exec]]'

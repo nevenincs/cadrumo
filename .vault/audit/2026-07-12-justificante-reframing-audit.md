@@ -4,6 +4,7 @@ tags:
   - '#justificante-reframing'
 date: '2026-07-12'
 modified: '2026-07-12'
+body_hash: 'sha256:0e4c590cb446382e92c09ba1a0a6ff3e91bd985126aa26729a3da7d2e54843b0'
 related:
   - "[[2026-04-21-justificante-reframing-plan]]"
   - "[[2026-04-21-justificante-reframing-adr]]"

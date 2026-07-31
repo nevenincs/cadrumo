@@ -4,6 +4,7 @@ tags:
   - '#profile-bundle-tui'
 date: '2026-07-24'
 modified: '2026-07-24'
+body_hash: 'sha256:4efe47a84303f5b95917323835917988266394b932958a77c7002092742f2ed2'
 related:
   - "[[2026-05-27-profile-portability-adr]]"
   - "[[2026-07-23-profile-setup-flow-adr]]"

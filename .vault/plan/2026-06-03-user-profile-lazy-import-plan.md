@@ -4,6 +4,7 @@ tags:
   - '#user-profile-lazy-import'
 date: '2026-06-03'
 modified: '2026-07-17'
+body_hash: 'sha256:46b3196c8b82aeb5e0d4d328b6337ccf3de239007cff5f5fc9e5517383c3e84e'
 tier: L2
 related:
   - '[[2026-06-03-user-profile-lazy-import-adr]]'

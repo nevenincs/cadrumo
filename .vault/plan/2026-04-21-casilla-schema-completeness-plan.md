@@ -4,6 +4,7 @@ tags:
   - "#casilla-schema-completeness"
 date: "2026-04-21"
 modified: '2026-07-17'
+body_hash: 'sha256:cfe63fe5bd63cbf23ef619e99bf137405f978996cd40dad716d8c480145a454b'
 related:
   - "[[2026-04-21-casilla-schema-completeness-adr]]"
   - "[[2026-04-21-casilla-schema-completeness-research]]"

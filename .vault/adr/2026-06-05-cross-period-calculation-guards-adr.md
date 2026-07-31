@@ -4,6 +4,7 @@ tags:
   - '#cross-period-calculation-guards'
 date: '2026-06-05'
 modified: '2026-07-17'
+body_hash: 'sha256:c208746625f15953e063a3c031a724e190326af6e88d0db86a9a8178b8bdd260'
 related:
   - '[[2026-06-05-cross-period-calculation-guards-research]]'
   - '[[2026-06-05-cross-period-calculation-guards-reference]]'

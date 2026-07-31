@@ -4,6 +4,7 @@ tags:
   - '#transient-state-hardcoding'
 date: '2026-07-27'
 modified: '2026-07-27'
+body_hash: 'sha256:00ff4634815ad69171411c1796edb2e788c82ecc7f90e6f309a3de9f33ffbdec'
 related:
   - '[[2026-07-27-transient-state-hardcoding-adr]]'
 ---

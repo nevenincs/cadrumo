@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:fc856216ee3dd245603eef105f0d5c2b754d0c13bc22004649ecfaf7862a3770'
 related:
   - '[[2026-06-10-live-justificante-reconcile-P01-S01]]'
   - '[[2026-06-10-live-justificante-reconcile-P01-S02]]'

@@ -4,6 +4,7 @@ tags:
   - '#registry-governance-backlog'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_hash: 'sha256:b90afa24595e60c9814b37b281dba0bd8f1405fb72069b0a562c69cc99ee8559'
 related:
   - '[[2026-07-28-conformance-cli-first-conformance-measurement-audit]]'
   - '[[2026-07-28-conformance-cli-campaign-close-honesty-review-audit]]'

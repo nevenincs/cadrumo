@@ -2,6 +2,7 @@
 tags: ["#exec", "#calculation-source-connectivity"]
 date: '2026-05-21'
 modified: '2026-07-31'
+body_hash: 'sha256:1c66803e6b0696a79e1a7156ae75e16f0c2c5f9bf66e00622e209e7c5a20e656'
 related:
   - '[[2026-05-20-calculation-source-connectivity-plan]]'
   - '[[2026-05-20-calculation-source-connectivity-adr]]'

@@ -4,6 +4,7 @@ tags:
   - '#cli-testimonial'
 date: '2026-05-21'
 modified: '2026-07-17'
+body_hash: 'sha256:4dbdd5ec82abbb61381664100624604ceb56442fad7af1698a1959c41d63d4b5'
 related:
   - '[[2026-05-21-fresh-cli-persona-repair-plan]]'
   - '[[2026-05-21-fresh-cli-persona-findings-inventory-audit]]'

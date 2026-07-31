@@ -4,6 +4,7 @@ tags:
   - '#profile-output-language'
 date: '2026-05-13'
 modified: '2026-07-17'
+body_hash: 'sha256:4fe12963ee548aadfc397498252ac39f93242f12a5f1dcc035cfe57d06687511'
 related:
   - '[[2026-05-13-cli-workflow-redesign-profile-output-language-adr]]'
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'

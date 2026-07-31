@@ -4,6 +4,7 @@ tags:
   - '#registry-workbook-parity-boundary'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:3ea00df0725daa4902533e044b544da7c97ab0bf5175c92e01e45d7a370fe6b9'
 related:
   - "[[2026-06-02-registry-hardening-next-work-plan]]"
 ---

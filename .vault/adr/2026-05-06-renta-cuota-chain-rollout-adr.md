@@ -4,6 +4,7 @@ tags:
   - '#renta-cuota-chain-rollout'
 date: '2026-05-06'
 modified: '2026-07-10'
+body_hash: 'sha256:be750ff9a43e846ab01b32683858735edf8c93f0f2180b18ff0d007411ccf605'
 related:
   - '[[2026-05-06-renta-cuota-chain-rollout-plan]]'
   - '[[2026-04-21-modelo-100-renta-research]]'

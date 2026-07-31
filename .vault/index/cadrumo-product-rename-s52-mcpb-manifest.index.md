@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:5b814a1183aebf0b17f92f8a792bc2e452b475cb4b9e8ead5f456752cd1ace14'
 related:
   - '[[2026-07-13-cadrumo-product-rename-s52-mcpb-manifest-audit]]'
 ---

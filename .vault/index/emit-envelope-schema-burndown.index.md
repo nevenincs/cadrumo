@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:8f9064ea26b2ed205b154f318cb5397e635c6d0dae48356bd84d093df32673c9'
 related:
   - '[[2026-05-31-emit-envelope-schema-burndown-W01-P01-S22]]'
   - '[[2026-05-31-emit-envelope-schema-burndown-W01-P02-S32]]'

@@ -4,6 +4,7 @@ tags:
   - '#just-tooling-bootstrap'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:cb6b891b108bb6a9e8b6e3155e2832e67e2ee7bf2b8f230c05e41d6e7fd1dd41'
 related:
   - '[[2026-05-15-linkage-tooling-prior-art-research]]'
   - '[[2026-04-30-aeat-restructure-research]]'

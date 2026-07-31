@@ -4,6 +4,7 @@ tags:
   - '#evidence-revision-identity'
 date: '2026-07-24'
 modified: '2026-07-25'
+body_hash: 'sha256:95659e738fa3c1086482ca59c0ea0af4165aa3f2421345b19602b5bb1d8e1ace'
 related:
   - '[[2026-07-25-evidence-revision-identity-operator-walkthrough-audit]]'
 ---

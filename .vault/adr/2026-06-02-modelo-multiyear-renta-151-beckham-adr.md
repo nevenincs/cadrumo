@@ -4,6 +4,7 @@ tags:
   - '#modelo-multiyear-renta-151-beckham'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:cfd9f32aeaa4bb6f198a7ea7ac660eb65c4ebb089ef4e99af483c8e73927c788'
 related:
   - "[[2026-06-02-modelo-multiyear-renta-151-beckham-research]]"
   - "[[2026-06-02-modelo-multiyear-renta-adr]]"

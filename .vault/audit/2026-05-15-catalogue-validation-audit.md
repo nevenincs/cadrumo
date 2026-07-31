@@ -4,6 +4,7 @@ tags:
   - '#catalogue-validation'
 date: '2026-05-15'
 modified: '2026-07-17'
+body_hash: 'sha256:ad95ea54757fa495803b75282a9e49337e2c3eb136bb666ff5498519bc403beb'
 related: []
 ---
 

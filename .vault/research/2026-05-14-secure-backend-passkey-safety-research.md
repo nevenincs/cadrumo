@@ -4,6 +4,7 @@ tags:
   - '#secure-backend-passkey-safety'
 date: '2026-05-14'
 modified: '2026-07-17'
+body_hash: 'sha256:f03fc36e0e0277aec019936f6dfb0fd8bb86c48c19777fdc98cf7828fe407489'
 related:
   - '[[2026-04-12-pr28-storage-retro-research]]'
   - '[[2026-05-08-secure-storage-legacy-path-audit-reference]]'

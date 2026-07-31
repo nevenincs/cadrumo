@@ -4,6 +4,7 @@ tags:
   - '#corporate-tax-runtime'
 date: '2026-06-04'
 modified: '2026-07-10'
+body_hash: 'sha256:f8e8f2cc9baad15c17e6a2c7feecca576b57569ec9e6c9267e36ad4a32a34116'
 related:
   - "[[2026-06-04-corporate-tax-runtime-research]]"
 ---

@@ -4,6 +4,7 @@ tags:
   - '#aeat-cli-gap-discovery'
 date: '2026-05-08'
 modified: '2026-07-17'
+body_hash: 'sha256:b8140ad3605d088f72f9bd0a47950ad67b5673df3be941a59ef72fac617abb54'
 related:
   - "[[2026-05-08-aeat-cli-hardening-plan]]"
   - "[[2026-05-07-config-cli-profile-surface-adr]]"

@@ -4,6 +4,7 @@ tags:
   - '#eliminate-shims'
 date: '2026-06-04'
 modified: '2026-07-10'
+body_hash: 'sha256:55b30fb59f102206772a375f4848f71c44e5c8bad8090fb40bd5614fc6da38f4'
 related:
   - "[[2026-06-04-eliminate-shims-research]]"
 ---

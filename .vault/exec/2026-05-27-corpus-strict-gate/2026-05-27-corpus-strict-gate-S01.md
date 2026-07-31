@@ -5,6 +5,7 @@ tags:
 step_id: "S01"
 date: 2026-05-27
 modified: '2026-07-17'
+body_hash: 'sha256:7d50127060c26b75c6c34d971833a3ad36ec6616ec8bfda315878833522ca292'
 commit: "91b0633fc"
 task: "190"
 related:

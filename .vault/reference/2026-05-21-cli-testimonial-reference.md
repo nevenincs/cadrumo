@@ -4,6 +4,7 @@ tags:
   - '#cli-testimonial'
 date: '2026-05-21'
 modified: '2026-07-17'
+body_hash: 'sha256:4cbdfb1af35f697cfb22fa140e346a4f8e0082721d34863c422914be032ef908'
 related:
   - "[[2026-05-20-cli-state-architecture-research]]"
 ---

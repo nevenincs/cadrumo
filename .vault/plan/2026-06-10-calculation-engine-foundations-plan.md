@@ -4,6 +4,7 @@ tags:
   - '#calculation-engine-foundations'
 date: '2026-06-10'
 modified: '2026-07-15'
+body_hash: 'sha256:051716d745dce3d0d67ecc191b802f42cbefa66f03b1b114df549afa508a8cf0'
 tier: L4
 related:
   - '[[2026-06-10-calculation-engine-foundations-research]]'

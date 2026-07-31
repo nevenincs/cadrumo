@@ -4,6 +4,7 @@ tags:
   - '#modelo-200-bin-continuity'
 date: '2026-06-24'
 modified: '2026-07-17'
+body_hash: 'sha256:5cd7d42b06f4c4462aa91d9f16e5ba906ddf35acaa5e51af858539db9a356f5e'
 related:
   - '[[2026-06-21-eoy-final-calculation-audit]]'
   - '[[2026-07-10-modelo-200-bin-continuity-research]]'

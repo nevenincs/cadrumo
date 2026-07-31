@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:b2d686882d911368f212a2bacf9c43f76fd9c74eb89bf5b681ee112c9004bac3'
 related:
   - '[[2026-07-02-arch-remediation-lazy-import-policy-P01-S01]]'
   - '[[2026-07-02-arch-remediation-lazy-import-policy-P01-S02]]'

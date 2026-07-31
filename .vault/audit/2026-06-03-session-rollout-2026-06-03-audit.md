@@ -4,6 +4,7 @@ tags:
   - '#session-rollout-2026-06-03'
 date: '2026-06-03'
 modified: '2026-07-17'
+body_hash: 'sha256:327e7c6ed228ede8780ef488db4be56050edf79b8bb20c5af5a16fa9a05783ce'
 related:
   - "[[2026-06-03-cli-workflow-redesign-adr]]"
   - "[[2026-06-03-bucket-sealed-archive-adr]]"

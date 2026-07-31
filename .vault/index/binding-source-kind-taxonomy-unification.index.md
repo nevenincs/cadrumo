@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:ca78f40e39c44ce02cee3c27d39849350c5ea7f350a45500625eaa06e27538dd'
 related:
   - '[[2026-06-26-binding-source-kind-taxonomy-unification-P01-S01]]'
   - '[[2026-06-26-binding-source-kind-taxonomy-unification-P01-S02]]'

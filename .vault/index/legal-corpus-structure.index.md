@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:4120c2c591b92929d9143208d3989af89f77d87c3e4adbb75a09274735790cb6'
 related:
   - '[[2026-06-08-legal-corpus-structure-audit]]'
 ---

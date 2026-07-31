@@ -4,6 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:f04b929e91d720646ce09b6cde5e15fbef060a43683e0ce0f30b9e86d14423eb'
 related:
   - '[[2026-05-27-schema-hardening-m202-label-drift-repair-exec]]'
   - '[[2026-05-27-schema-hardening-m100-validation-repair-exec]]'

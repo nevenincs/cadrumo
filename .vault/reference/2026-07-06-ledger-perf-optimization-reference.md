@@ -4,6 +4,7 @@ tags:
   - '#ledger-latency-budget'
 date: '2026-07-06'
 modified: '2026-07-17'
+body_hash: 'sha256:322388764ca2f46d6e567e22cff3638398905f75a1bc133d847b6c1d88b0c6f4'
 related:
   - "[[2026-07-05-ledger-latency-budget-adr]]"
 ---

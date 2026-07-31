@@ -9,6 +9,7 @@ supersedes:
   - '2026-07-10-censo-g313-launcher-fix-adr'
 superseded_by: '2026-07-25-censal-profile-autofill-adr'
 modified: '2026-07-25'
+body_hash: 'sha256:8709b5c88841abff4d185fb67215139d803e4e592a14824440a7bef4c5a0dbfc'
 ---
 # `censo-operator-manual-enrolment` adr: `censal facts are operator-manual; retire the live censo scrape` | (**status:** `superseded`)
 

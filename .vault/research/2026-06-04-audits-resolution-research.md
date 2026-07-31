@@ -4,6 +4,7 @@ tags:
   - '#audits-resolution'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:f6779cbb65d2bd650c7e6e24d027f9972f98f47d437d9c9b8059853cba2dbefb'
 related:
   - "[[2026-05-13-audits-resolution-adr]]"
 ---

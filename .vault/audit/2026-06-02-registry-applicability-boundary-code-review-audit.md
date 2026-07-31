@@ -4,6 +4,7 @@ tags:
   - '#registry-applicability-boundary'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:df55cae8ac5cd67b477218e574d52476b7ecd7ae00937e5979629739c805a1b8'
 related:
   - "[[2026-06-02-registry-hardening-next-work-plan]]"
   - "[[2026-06-02-registry-applicability-boundary-audit]]"

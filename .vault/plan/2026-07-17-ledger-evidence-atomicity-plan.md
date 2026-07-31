@@ -4,6 +4,7 @@ tags:
   - '#ledger-evidence-atomicity'
 date: '2026-07-17'
 modified: '2026-07-25'
+body_hash: 'sha256:1283c964933ccdb3c3be5eb440c3fb72b275faa30ff816d50d1c87bb8239d9d3'
 tier: L2
 related:
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'

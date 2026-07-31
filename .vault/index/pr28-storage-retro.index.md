@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:f4ea569effbf9e4592dbe9cc6871815062559e3b43fc13a6319626790ec19eb2'
 related:
   - '[[2026-04-12-pr28-storage-retro-audit]]'
   - '[[2026-04-12-pr28-storage-retro-research]]'

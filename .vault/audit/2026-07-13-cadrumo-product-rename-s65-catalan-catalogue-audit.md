@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s65-catalan-catalogue'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:6e21cbb8f73350e22b12e64874fed7965c285b02c94e21abdd325ee07664809e'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
 ---

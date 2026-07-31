@@ -4,6 +4,7 @@ tags:
   - '#cli-testimonial'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:b124329ae5f81767641ccf2d0fe16d260c6c0c86f9cc6f6d38cc294e644d4c3a'
 related:
   - "[[2026-05-27-nuria-cli-testimonial-audit]]"
   - "[[2026-05-27-sergio-cli-testimonial-audit]]"

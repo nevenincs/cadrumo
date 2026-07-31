@@ -4,6 +4,7 @@ tags:
   - '#modelo-130-relation-regression'
 date: '2026-05-19'
 modified: '2026-07-17'
+body_hash: 'sha256:df599eefefc6ce44dec2af0ba584a08dc558bc3ee6c13119dfb358f6deeb9efc'
 related:
   - '[[2026-05-19-iva-compensation-chain-audit-research]]'
   - '[[2026-05-19-iva-compensation-chain-adr]]'

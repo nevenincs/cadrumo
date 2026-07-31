@@ -4,6 +4,7 @@ tags:
   - "#calc-engine-grounding-swarm"
 date: '2026-05-31'
 modified: '2026-07-17'
+body_hash: 'sha256:ea9df58acbb1bfd830463f00424dc1271eb1ca2a51c360f8b49ee0e108c64faa'
 step_id: S02
 related:
   - "[[2026-05-16-calc-engine-grounding-swarm-audit]]"

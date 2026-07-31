@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:c55c46dcd434355acb19223122bf46143f3d4d76bed2869011b95d6fad46426a'
 related:
   - '[[2026-04-21-justificante-reframing-adr]]'
   - '[[2026-04-21-justificante-reframing-plan]]'

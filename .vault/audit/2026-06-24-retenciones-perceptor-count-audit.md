@@ -9,6 +9,7 @@ related:
 promoted_to:
   - 'rule:uncommitted-wip-is-not-orphaned'
 modified: '2026-07-17'
+body_hash: 'sha256:e3012f349934e2b35ab8275f7705a6431bb5dd312679b9bed6e8332f28b43817'
 ---
 # `retenciones-perceptor-count` audit: `Shared-worktree WIP-discard incident + RET-1 P02 live-contention; uncommitted is not orphaned`
 

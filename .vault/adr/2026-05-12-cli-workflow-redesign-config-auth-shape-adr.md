@@ -12,6 +12,7 @@ related:
 supersedes:
   - '2026-04-21-auth-cli-adr'
 modified: '2026-07-17'
+body_hash: 'sha256:ce12d5b74e9d2178c890542370db60417582c17fd3696b5f97d8edbaae3ff400'
 ---
 # `cli-workflow-redesign` adr: `Config auth command surface` | (**status:** `accepted`)
 

@@ -4,6 +4,7 @@ tags:
   - '#settings-di-deferred'
 date: '2026-06-03'
 modified: '2026-07-10'
+body_hash: 'sha256:e7068a823e2596ada6e7f39dd92c885f3ef1b8a6f57858cf8065c77dff3836f7'
 related:
   - '[[2026-06-03-plan-triage-approach-adr]]'
   - '[[2026-06-04-settings-di-deferred-research]]'

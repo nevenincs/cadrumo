@@ -4,6 +4,7 @@ tags:
   - "#filing-draft-engine"
 date: 2026-04-12
 modified: '2026-07-17'
+body_hash: 'sha256:d8f370e24262598a88d757dc9bee2ee7609e7f0dca084fc0449b4962c527dced'
 related: []
 ---
 # Filing draft generation engine — research (#39)

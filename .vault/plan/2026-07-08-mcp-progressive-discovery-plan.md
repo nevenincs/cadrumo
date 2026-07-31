@@ -4,6 +4,7 @@ tags:
   - '#mcp-progressive-discovery'
 date: '2026-07-08'
 modified: '2026-07-17'
+body_hash: 'sha256:b4609ed156010d51deae1b68d2e8e3456bbabdf63f5af49c53b8692541629cea'
 tier: L2
 related:
   - '[[2026-07-08-mcp-progressive-discovery-adr]]'

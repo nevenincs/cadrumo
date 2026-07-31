@@ -4,6 +4,7 @@ tags:
   - '#verification-fixture-roles'
 date: '2026-06-01'
 modified: '2026-07-17'
+body_hash: 'sha256:945dfc8574fdccc53fb24dd6580f7015701f5ce9d1add75e6aa085dadd49aa6a'
 tier: L2
 related:
   - '[[2026-06-01-verification-fixture-roles-adr]]'

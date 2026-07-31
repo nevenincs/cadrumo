@@ -4,6 +4,7 @@ tags:
   - "#auth-protocol"
 date: "2026-04-18"
 modified: '2026-07-17'
+body_hash: 'sha256:b7fc1d7b2df5981b4c82a0ce5b88c10156d933ede082682d809eb818814132e6'
 related:
   - "[[2026-04-18-auth-provider-abstraction-adr]]"
   - "[[2026-04-17-aeat-access-gate-adr]]"

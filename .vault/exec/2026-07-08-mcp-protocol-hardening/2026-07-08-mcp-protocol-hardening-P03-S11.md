@@ -4,6 +4,7 @@ tags:
   - '#mcp-protocol-hardening'
 date: '2026-07-10'
 modified: '2026-07-17'
+body_hash: 'sha256:487240cb331760f5b5db44d1fc391dea615622d60ecb2e93c127fe211dbcfb41'
 step_id: 'S11'
 related:
   - "[[2026-07-08-mcp-protocol-hardening-plan]]"

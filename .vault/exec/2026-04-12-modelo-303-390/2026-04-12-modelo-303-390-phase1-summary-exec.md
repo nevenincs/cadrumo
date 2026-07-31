@@ -7,6 +7,7 @@ tags:
   - "#modelo-303-390"
 date: 2026-04-12
 modified: '2026-07-17'
+body_hash: 'sha256:023ca8ab3de2f88f15fd73384704673c3f9c71343f6bdd8687ef8f9230db6dbc'
 related:
   - "[[2026-04-12-modelo-303-390-plan]]"
   - "[[2026-04-12-modelo-303-390-adr]]"

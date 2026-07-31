@@ -4,6 +4,7 @@ tags:
   - '#registry-localization-backend'
 date: '2026-06-08'
 modified: '2026-07-17'
+body_hash: 'sha256:1e85f02006b8bf5ee89860ee734e11ef43204684278aaea8672a74a0fe699ed8'
 related:
   - '[[2026-06-08-registry-localization-backend-plan]]'
 ---

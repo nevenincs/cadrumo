@@ -4,6 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-05-13'
 modified: '2026-07-17'
+body_hash: 'sha256:5d329f54e24c8c158268a001511848a46413f4e741630cb1c053aa4c96b87a36'
 related:
   - '[[2026-05-13-cli-workflow-redesign-manual-ledger-storage-research]]'
   - '[[2026-05-12-cli-workflow-redesign-bucket-adr]]'

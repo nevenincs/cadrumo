@@ -4,6 +4,7 @@ tags:
   - '#agent-harness'
 date: '2026-06-30'
 modified: '2026-07-03'
+body_hash: 'sha256:f39929f2eb97faa7b36bada6a6434c755c5bb714e66b5340a6893972e21eed51'
 related:
   - "[[2026-06-30-agent-harness-research]]"
   - '[[2026-06-10-cli-operator-surface-adr]]'

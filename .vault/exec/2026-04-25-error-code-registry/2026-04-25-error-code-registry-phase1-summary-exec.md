@@ -4,6 +4,7 @@ tags:
   - "#error-code-registry"
 date: 2026-04-25
 modified: '2026-07-17'
+body_hash: 'sha256:b3b839ba38a989393ff709ccd80ca6b7a308d359bc9a85a720fe6cf92ed69949'
 title: "error-code-registry phase1 summary"
 related:
   - "[[2026-04-25-error-code-registry-plan]]"

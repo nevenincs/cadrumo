@@ -4,6 +4,7 @@ tags:
   - '#settings-di-deferral'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:04123619e0fa7bd29e1b6220c9025736afd24ad49e88a7eab59b592e5b120a15'
 related:
   - "[[2026-06-03-settings-di-deferral-adr]]"
 ---

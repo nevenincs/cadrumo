@@ -4,6 +4,7 @@ tags:
   - '#eoy-final-calculation'
 date: '2026-06-22'
 modified: '2026-07-17'
+body_hash: 'sha256:3a27832ba0ad3c1697bb2ff96f1b287bce370a4473500e8cfc7333e341a9e6f5'
 related:
   - '[[2026-06-21-eoy-final-calculation-audit]]'
   - '[[2026-06-30-eoy-final-calculation-research]]'

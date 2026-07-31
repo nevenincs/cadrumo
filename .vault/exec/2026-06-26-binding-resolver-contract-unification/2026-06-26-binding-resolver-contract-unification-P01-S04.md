@@ -4,6 +4,7 @@ tags:
   - '#binding-resolver-contract-unification'
 date: '2026-07-02'
 modified: '2026-07-17'
+body_hash: 'sha256:4e60f6734ff0d713fd3e672991b9ce6198a1c13dda3adce70f91139a021b9b25'
 step_id: 'S04'
 related:
   - "[[2026-06-26-binding-resolver-contract-unification-plan]]"

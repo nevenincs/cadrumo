@@ -4,6 +4,7 @@ tags:
   - '#cli-envelope-notice-standardisation'
 date: '2026-06-10'
 modified: '2026-07-17'
+body_hash: 'sha256:1e156e32c48e734f46dc80a48f4e382abadf70ec6699d1bfcb2b31ac0dfa28be'
 related:
   - '[[2026-06-02-emit-envelope-schema-burndown-adr]]'
   - '[[2026-04-25-json-output-contract-adr]]'

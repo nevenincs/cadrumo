@@ -4,6 +4,7 @@ tags:
   - '#modelo-addressing-ux'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:7d55b0f86b468a2af67a59377959fd9b0c36046e95dfe7e0b29e0f26808298bf'
 step_id: 'S67'
 related:
   - '[[2026-06-04-modelo-addressing-ux-plan]]'

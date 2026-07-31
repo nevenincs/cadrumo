@@ -4,6 +4,7 @@ tags:
   - '#arch-remediation-engine-lifecycle'
 date: '2026-07-06'
 modified: '2026-07-17'
+body_hash: 'sha256:17318b3eae175a1be99e738b7f2f8baf97dc71dbb6d0cae0a7ed44e6420259b6'
 related:
   - "[[2026-07-02-arch-remediation-engine-lifecycle-adr]]"
   - "[[2026-07-02-arch-remediation-program-adr]]"

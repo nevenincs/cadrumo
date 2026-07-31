@@ -5,6 +5,7 @@ tags:
   - '#modelo-303-390'
 date: 2026-05-26
 modified: '2026-07-17'
+body_hash: 'sha256:3695169bed37900e4157de09a23bab4cbfa121900cd8c662575e523152e9d69c'
 related:
   - "[[2026-04-12-modelo-303-390-phase1-task1-exec]]"
 ---

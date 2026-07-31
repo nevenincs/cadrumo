@@ -4,6 +4,7 @@ tags:
   - '#secure-storage-production-hardening'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:8604763aa2e39b2fa68c7dc3bdaae750cc220406ef0b43dc2dbfe539e199fa66'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
   - '[[2026-06-02-secure-storage-production-hardening-w12-p23-s94-explicit-route-guard-exec]]'

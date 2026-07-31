@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:1bbaacb23106337eb659b3a544b120bfcd2614281cf5ef009349fd5a427ac2a7'
 related:
   - '[[2026-05-27-m200-erd-tipo-is-S01]]'
   - '[[2026-06-04-m200-erd-tipo-is-adr]]'

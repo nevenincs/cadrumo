@@ -4,6 +4,7 @@ tags:
   - '#arch-remediation-modelo-surface'
 date: '2026-07-02'
 modified: '2026-07-17'
+body_hash: 'sha256:b4d58f2c080220a39b1bfec4294925cce03853ab2f072530243538228e737e16'
 tier: L3
 related:
   - '[[2026-07-02-aeat-architecture-review-audit]]'

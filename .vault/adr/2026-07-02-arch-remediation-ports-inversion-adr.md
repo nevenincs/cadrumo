@@ -4,6 +4,7 @@ tags:
   - '#arch-remediation-ports-inversion'
 date: '2026-07-02'
 modified: '2026-07-17'
+body_hash: 'sha256:f0ff75a47aa69a5ac8b3c306440cafd64a9d8db13edf10093583007cbfc8246f'
 related:
   - "[[2026-07-02-aeat-architecture-review-audit]]"
   - "[[2026-07-02-arch-remediation-program-adr]]"

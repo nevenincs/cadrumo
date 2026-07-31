@@ -4,6 +4,7 @@ tags:
   - '#censo-g313-launcher-fix'
 date: '2026-07-10'
 modified: '2026-07-15'
+body_hash: 'sha256:aa627e859e5846003902755a4c588d12e2d4b321ff21b96b66e6c7a4b9bd1a8e'
 superseded_by: '2026-07-11-censo-operator-manual-enrolment-adr'
 related:
   - "[[2026-07-10-censo-g313-launcher-fix-research]]"

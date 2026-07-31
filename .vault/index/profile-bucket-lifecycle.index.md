@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:8695d59c3a62e625398760f93b53d81410534158c490986782cb1dea5e2ae3b0'
 related:
   - '[[2026-05-14-profile-bucket-lifecycle-adr]]'
   - '[[2026-06-04-profile-bucket-lifecycle-research]]'

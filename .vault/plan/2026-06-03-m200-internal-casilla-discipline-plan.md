@@ -4,6 +4,7 @@ tags:
   - '#m200-internal-casilla-discipline'
 date: '2026-06-03'
 modified: '2026-07-17'
+body_hash: 'sha256:9a163e82c70b7d4a27f07ef7cb417c5a6f2b33876dc8931dd44e800fe5298f6e'
 tier: L2
 related:
   - '[[2026-06-03-m200-internal-casilla-discipline-adr]]'

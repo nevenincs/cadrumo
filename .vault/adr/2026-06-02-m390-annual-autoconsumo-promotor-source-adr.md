@@ -4,6 +4,7 @@ tags:
   - '#m390-annual-autoconsumo-promotor-source'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:9b5ba853c26f4f590c8eeaebbf9272830ce8eea559bb9c700ff06284f88e49c7'
 related:
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]"
   - "[[2026-06-02-m303-parser-engine-totals-impedance-adr]]"

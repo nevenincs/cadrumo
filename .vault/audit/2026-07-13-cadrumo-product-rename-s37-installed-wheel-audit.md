@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s37-installed-wheel'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:c16f7a6e350cb77ab245132dc5dad125d69cce97aff1f26c961e6f12acb79b49'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
   - "[[2026-07-12-cadrumo-cli-executable-adr]]"

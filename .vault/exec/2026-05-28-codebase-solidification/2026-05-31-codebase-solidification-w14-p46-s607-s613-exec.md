@@ -1,6 +1,7 @@
 ---
 date: 2026-05-31
 modified: '2026-07-31'
+body_hash: 'sha256:d5f81c715982aaa85ca6d3f4c38e056efafffd89d928ab6f03099d81c4db2fd0'
 campaign: codebase-solidification
 wave: W14
 phase: P46

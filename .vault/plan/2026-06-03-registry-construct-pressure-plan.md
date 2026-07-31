@@ -4,6 +4,7 @@ tags:
   - '#registry-construct-pressure'
 date: '2026-06-03'
 modified: '2026-07-17'
+body_hash: 'sha256:10b61beffdfc2b76a6c4597e5c96a7afb8a892fbbd3966cf902a24259a3122f8'
 tier: L2
 related:
   - '[[2026-06-02-registry-hardening-next-work-plan]]'

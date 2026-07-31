@@ -4,6 +4,7 @@ tags:
   - "#transaction-catalogue"
 date: "2026-04-14"
 modified: '2026-07-17'
+body_hash: 'sha256:f44a0bcaacb1ae2480c1429d6fdf3aba9a0f4f5431d3a727b14b470d06a0a7ff'
 related:
   - "[[2026-04-14-transaction-catalogue-research]]"
   - "[[2026-04-14-transaction-catalogue-adr]]"

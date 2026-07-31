@@ -4,6 +4,7 @@ tags:
   - '#secure-storage-production-hardening'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:e4978bd6990e1291d3c4c496c0adb230d5c2690ed386cfcda352e725f12d4c8a'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
   - '[[2026-06-02-secure-storage-production-hardening-w12-p23-s93-cli-ledger-overview-live-slice-exec]]'

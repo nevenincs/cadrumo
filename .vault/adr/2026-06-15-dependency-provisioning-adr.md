@@ -4,6 +4,7 @@ tags:
   - '#dependency-provisioning'
 date: '2026-06-15'
 modified: '2026-07-17'
+body_hash: 'sha256:84457e02e71fda22ea0b3f0d4006e863ed2042ddd8d94c1cc07228bb41c7f67a'
 related:
   - "[[2026-06-15-service-capabilities-research]]"
   - "[[2026-06-15-service-capabilities-adr]]"

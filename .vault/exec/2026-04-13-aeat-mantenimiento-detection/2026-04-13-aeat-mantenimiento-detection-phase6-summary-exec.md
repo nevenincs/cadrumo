@@ -4,6 +4,7 @@ tags:
   - "#aeat-mantenimiento-detection"
 date: 2026-04-13
 modified: '2026-07-17'
+body_hash: 'sha256:717d5b3c1c565e74ccf14fd997eaae983c1a5d7b6117c4da467f74cd4435edea'
 related:
   - "[[2026-04-13-aeat-mantenimiento-detection-plan]]"
 ---

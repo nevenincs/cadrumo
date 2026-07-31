@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:e4fa3dd4b6002caf91b47124b5ed4cf73ec381d106199c1dd7472249978a1d33'
 related:
   - '[[2026-06-01-hexagonal-port-wiring-plan]]'
   - '[[2026-06-04-hexagonal-port-wiring-adr]]'

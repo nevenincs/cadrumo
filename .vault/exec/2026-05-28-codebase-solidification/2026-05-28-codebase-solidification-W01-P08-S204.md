@@ -2,6 +2,7 @@
 step_id: S204
 date: 2026-05-28
 modified: '2026-07-17'
+body_hash: 'sha256:2b44f64213499430c150aac88c112b32beb79092ac7e271ed414d6f3ae354992'
 tags:
   - "#exec"
   - "#codebase-solidification"

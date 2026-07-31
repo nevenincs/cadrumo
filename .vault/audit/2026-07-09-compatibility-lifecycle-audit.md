@@ -4,6 +4,7 @@ tags:
   - '#compatibility-lifecycle'
 date: '2026-07-09'
 modified: '2026-07-10'
+body_hash: 'sha256:83c43ff51e0be25d8b7dd3ee240060a73e6d88cfcdcde3dce149165beb165373'
 related:
   - "[[2026-07-09-compatibility-lifecycle-plan]]"
 ---

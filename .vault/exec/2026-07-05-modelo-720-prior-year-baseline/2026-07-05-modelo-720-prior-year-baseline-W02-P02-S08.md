@@ -4,6 +4,7 @@ tags:
   - '#modelo-720-prior-year-baseline'
 date: '2026-07-05'
 modified: '2026-07-17'
+body_hash: 'sha256:71f222da87b8dfe5a42b24ccbf7528536e5ee185ca35902b85610f69cc020372'
 step_id: 'S08'
 related:
   - "[[2026-07-05-modelo-720-prior-year-baseline-plan]]"

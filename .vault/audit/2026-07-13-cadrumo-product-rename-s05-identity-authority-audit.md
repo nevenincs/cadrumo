@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s05-identity-authority'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:c97fae91b8b93f273eb7359f3da63732e2b3f9a1935abb5ba43907a9ea36798c'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
 ---

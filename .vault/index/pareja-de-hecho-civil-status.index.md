@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:2a200209313df362fd01c5315dbe555ac3175070c51261ef549132dc2e23a065'
 related:
   - '[[2026-06-03-pareja-de-hecho-civil-status-adr]]'
   - '[[2026-06-03-pareja-de-hecho-civil-status-research]]'

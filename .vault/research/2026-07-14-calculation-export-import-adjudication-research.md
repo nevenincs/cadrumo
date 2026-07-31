@@ -4,6 +4,7 @@ tags:
   - '#calculation-export-import-adjudication'
 date: '2026-07-14'
 modified: '2026-07-14'
+body_hash: 'sha256:a24d3a1a2829d7599b6fa14bb9bb53b0f64622aee0fd41e5b80d6b318321cd6e'
 related:
   - "[[2026-05-03-calculation-truth-registry-pending-adr]]"
   - "[[2026-07-14-calculation-export-import-adjudication-reference]]"

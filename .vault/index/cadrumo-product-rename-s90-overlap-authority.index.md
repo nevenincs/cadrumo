@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:9afa6ca4a49e3aacc9fc45e21b049534c4e3178c100f88b67476c29480ebc54d'
 related:
   - '[[2026-07-13-cadrumo-product-rename-s90-overlap-authority-audit]]'
 ---

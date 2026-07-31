@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:02d0692f2b457d1cffe63c92559ef125fa5f64a69d5bf89d390abc15aada206e'
 related:
   - '[[2026-05-27-corpus-strict-gate-S01]]'
   - '[[2026-06-04-corpus-strict-gate-adr]]'

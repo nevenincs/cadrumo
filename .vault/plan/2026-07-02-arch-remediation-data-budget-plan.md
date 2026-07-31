@@ -4,6 +4,7 @@ tags:
   - '#arch-remediation-data-budget'
 date: '2026-07-02'
 modified: '2026-07-17'
+body_hash: 'sha256:ccf982d3e25a73c9502bda239d2d83a33462afcbb6744062e5c523ed8b0ea097'
 tier: L1
 related:
   - '[[2026-07-02-aeat-architecture-review-audit]]'

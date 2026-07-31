@@ -4,6 +4,7 @@ tags:
   - '#schema-driven-wizard-closure'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:c156febd357b4631522bcc1fddf6e71744836187b63130b865d081fe218f94c1'
 related: []
 related:
   - '[[2026-05-12-schema-driven-wizard-closure-adr]]'

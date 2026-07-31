@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:64635f8c819bda289eb832325b2c02f886db69a41ab6f1f228af47f54b9bc6f8'
 related:
   - '[[2026-07-04-google-sa-impersonation-adr]]'
   - '[[2026-07-10-google-sa-impersonation-research]]'

@@ -4,6 +4,7 @@ tags:
   - '#core-authority-indirections-v2'
 date: '2026-05-31'
 modified: '2026-07-17'
+body_hash: 'sha256:db48497a2ed07f0166791efcd545659f0326b23b61ce1fe34347396a57fedd6b'
 related: []
 ---
 

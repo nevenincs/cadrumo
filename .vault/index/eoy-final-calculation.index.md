@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:f0cec4a04e30ae1452176e96c532f1826d0cfd258beb41246e18e39e3e16b3b8'
 related:
   - '[[2026-06-21-eoy-final-calculation-audit]]'
   - '[[2026-06-22-eoy-final-calculation-P01-S01]]'

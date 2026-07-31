@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s86-restored-authority'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:21338bcefcb4a7d5103839db567ec53f6aeb65748e254ad28faa3ca0be9d37f1'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
   - "[[2026-07-12-cadrumo-cli-executable-adr]]"

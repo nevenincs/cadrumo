@@ -4,6 +4,7 @@ tags:
   - '#linkage-design-audit'
 date: '2026-05-18'
 modified: '2026-07-17'
+body_hash: 'sha256:b47a6b7ca72dc209ce938cef8a53719c5cb631eebad664c72717d28b4d4fe24b'
 related:
   - "[[2026-05-15-linkage-design-audit-research]]"
   - "[[2026-05-15-linkage-design-audit-reference]]"

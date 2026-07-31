@@ -4,6 +4,7 @@ tags:
   - '#post-release-distribution'
 date: '2026-07-17'
 modified: '2026-07-30'
+body_hash: 'sha256:85247ea569a2905ea236920c5fcfd5942e9d4ba240ca999b711cebfec650d459'
 tier: L2
 related:
   - '[[2026-07-15-distribution-installation-readiness-adr]]'

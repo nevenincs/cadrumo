@@ -4,6 +4,7 @@ tags:
   - '#centralized-output-redaction'
 date: '2026-05-28'
 modified: '2026-07-17'
+body_hash: 'sha256:f9e73e03ad3fef931886aace850d982c1434b2c7e74c14ced9352b8b1f1fb76f'
 tier: L3
 related:
   - '[[2026-05-28-centralized-output-redaction-research]]'

@@ -4,6 +4,7 @@ tags:
   - '#error-code-registry'
 date: '2026-04-25'
 modified: '2026-07-17'
+body_hash: 'sha256:4da5c2874c02d675c867d2342477ca6d11a23a296fb6d94c372a0565a58e9773'
 related:
   - "[[2026-04-25-error-code-registry-research]]"
   - "[[2026-05-14-cli-workflow-redesign-error-registry-exhaustiveness-invariant-adr]]"

@@ -4,6 +4,7 @@ tags:
   - "#deadline-engine"
 date: 2026-04-12
 modified: '2026-07-17'
+body_hash: 'sha256:02463d4394d852bbd1d3a790ddd7cb6152049ef5139fb7492d6dbaff434303a1'
 related:
   - "[[2026-04-12-deadline-engine-research]]"
   - "[[2026-04-12-deadline-engine-adr]]"

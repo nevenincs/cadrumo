@@ -4,6 +4,7 @@ tags:
   - "#real-pdf-fixture-corpus"
 date: "2026-04-21"
 modified: '2026-07-17'
+body_hash: 'sha256:f8c1d6d388154ab5329f9dedd034e0beadc79991c205b25c23ce4baa7b77c43e'
 related:
   - "[[2026-04-21-real-pdf-fixture-corpus-adr]]"
   - "[[2026-04-21-real-pdf-fixture-corpus-research]]"

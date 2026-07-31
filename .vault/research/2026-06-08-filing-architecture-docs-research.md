@@ -4,6 +4,7 @@ tags:
   - '#filing-architecture-docs'
 date: '2026-06-08'
 modified: '2026-07-17'
+body_hash: 'sha256:12d06ceb4be2cd05ae1b2ff2520626cbc4c53d229c86944aaf1865f7ed7fba6f'
 related:
   - '[[2026-06-08-filing-architecture-docs-adr]]'
 ---

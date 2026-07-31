@@ -4,6 +4,7 @@ tags:
   - "#category-assignment"
 date: '2026-04-18'
 modified: '2026-07-17'
+body_hash: 'sha256:44eec454f853c49a4ed0a49f0fb0da7ebedee6d86a52998f591760b6268cdbcb'
 related:
   - "[[2026-04-18-category-assignment-cli-research]]"
 ---

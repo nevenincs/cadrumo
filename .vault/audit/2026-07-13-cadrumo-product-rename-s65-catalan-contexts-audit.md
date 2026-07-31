@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s65-catalan-contexts'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:e8881f12edba08fbc8c0072ae8a41fa3e6f3a77ecbc062034db69b2795e9e8e2'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
   - "[[2026-07-12-cadrumo-cli-executable-adr]]"

@@ -4,6 +4,7 @@ tags:
   - '#scoop-runner-topology'
 date: '2026-07-25'
 modified: '2026-07-30'
+body_hash: 'sha256:b28635c71353aca09deb9c1d8a7255966f8b65e70e4bf5830388130a1bef4396'
 tier: L1
 related:
   - '[[2026-07-22-scoop-runner-topology-adr]]'

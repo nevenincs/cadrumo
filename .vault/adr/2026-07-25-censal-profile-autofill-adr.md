@@ -8,6 +8,7 @@ related:
 supersedes:
   - '2026-07-11-censo-operator-manual-enrolment-adr'
 modified: '2026-07-25'
+body_hash: 'sha256:4fdbcce6ddc5b63372196ca2db4f0da81adfdd12e4cada6a75a06aced1049d75'
 ---
 # `censal-profile-autofill` adr: `profile-borne auth credentials and a read-only censal autofill` | (**status:** `accepted`)
 

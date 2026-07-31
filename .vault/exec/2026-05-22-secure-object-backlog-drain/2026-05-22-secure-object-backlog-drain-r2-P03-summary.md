@@ -4,6 +4,7 @@ tags:
   - '#secure-object-backlog-drain'
 date: '2026-05-22'
 modified: '2026-07-17'
+body_hash: 'sha256:10f857c393af49bd4953959b3fe69701c06e1518e1c493ab3f53250b87fb672a'
 related:
   - '[[2026-05-22-secure-object-backlog-drain-r2-plan]]'
 ---

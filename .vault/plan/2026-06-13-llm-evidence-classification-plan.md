@@ -4,6 +4,7 @@ tags:
   - '#llm-evidence-classification'
 date: '2026-06-13'
 modified: '2026-07-17'
+body_hash: 'sha256:49eba2685468e6c6339bb3dea96c4d7df57e4d1c6b5b2c3cf294cf3b65cdacac'
 tier: L3
 related:
   - '[[2026-06-10-llm-evidence-classification-adr]]'

@@ -4,6 +4,7 @@ tags:
   - '#agent-harness-content-review'
 date: '2026-07-02'
 modified: '2026-07-17'
+body_hash: 'sha256:f8be67657d79b975fc335dbb0210bc76250693535908727d70c20184fa88b447'
 related:
   - "[[2026-07-02-agent-harness-refoundation-adr]]"
   - "[[2026-07-01-agent-harness-research]]"

@@ -4,6 +4,7 @@ tags:
   - '#iva-compensation-chain'
 date: '2026-07-05'
 modified: '2026-07-17'
+body_hash: 'sha256:b06bdcfc77ec94c46d5b9001d65d690d9d82c40b471eb829449ee561fb4ecd74'
 step_id: 'S03'
 related:
   - "[[2026-05-19-iva-compensation-chain-plan]]"

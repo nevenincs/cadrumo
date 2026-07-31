@@ -4,6 +4,7 @@ tags:
   - '#cli-operator-surface'
 date: '2026-06-10'
 modified: '2026-07-17'
+body_hash: 'sha256:7242f6fb7cb7e410a933cea5e380cbb67154d45c0080751a1184dba2228bd550'
 tier: L3
 related:
   - '[[2026-06-10-cli-operator-surface-adr]]'

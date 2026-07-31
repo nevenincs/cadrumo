@@ -4,6 +4,7 @@ tags:
   - '#docs-terminology-search'
 date: '2026-06-12'
 modified: '2026-07-17'
+body_hash: 'sha256:c03410f2253f4c84a2da6d57596f082876df6a12dd0f0118dec07b422c870c54'
 related:
   - '[[2026-06-10-docs-terminology-search-adr]]'
   - '[[2026-06-10-docs-terminology-search-plan]]'

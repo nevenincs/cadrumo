@@ -4,6 +4,7 @@ tags:
   - "#release-please"
 date: 2026-04-12
 modified: '2026-07-17'
+body_hash: 'sha256:ed18dab8afc59c6cd7e32de01583a97bcec44d591b85b37cd1dcdf8c37a66b70'
 title: release-please phase-2 task-1 — justfile release recipes
 related:
   - "[[2026-04-12-release-please-plan]]"

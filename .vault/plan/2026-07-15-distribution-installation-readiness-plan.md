@@ -4,6 +4,7 @@ tags:
   - '#distribution-installation-readiness'
 date: '2026-07-15'
 modified: '2026-07-19'
+body_hash: 'sha256:301261de636586da141c9c5cf65114f4c8fc7347e20d37c9c2db6c9d9e88127a'
 tier: L3
 related:
   - '[[2026-07-15-distribution-installation-readiness-adr]]'

@@ -4,6 +4,7 @@ tags:
   - '#live-justificante-reconcile'
 date: '2026-06-10'
 modified: '2026-07-17'
+body_hash: 'sha256:03bbd39b742ad0058c1e383565f2be33e913af35b939c5423b289646b89130fe'
 related:
   - '[[2026-06-10-live-justificante-reconcile-research]]'
   - '[[2026-04-25-aeat-verify-adr]]'

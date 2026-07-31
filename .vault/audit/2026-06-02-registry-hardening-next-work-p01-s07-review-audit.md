@@ -4,6 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:72fc869fbc8967ef44253754c7a25f8df04eee61ab06b184b45cc2305d759e9f'
 related:
   - '[[2026-06-02-registry-hardening-next-work-plan]]'
   - '[[2026-06-02-registry-hardening-m200-export-pressure-audit]]'

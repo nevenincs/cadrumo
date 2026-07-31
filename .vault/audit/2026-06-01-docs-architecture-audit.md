@@ -4,6 +4,7 @@ tags:
   - '#docs-architecture'
 date: '2026-06-01'
 modified: '2026-07-17'
+body_hash: 'sha256:db00b5587f784b939036d460d205767d7296b4efcd7c80bc26efc20b13b81fd9'
 related: []
 ---
 

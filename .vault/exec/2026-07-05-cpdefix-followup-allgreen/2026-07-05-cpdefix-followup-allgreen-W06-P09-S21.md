@@ -4,6 +4,7 @@ tags:
   - '#cpdefix-followup-allgreen'
 date: '2026-07-06'
 modified: '2026-07-17'
+body_hash: 'sha256:5e70b00f7b19f4877958eb7554b4eb3c3db05d3a15ff8c026c449d922d8ea4aa'
 step_id: 'S21'
 related:
   - "[[2026-07-05-cpdefix-followup-allgreen-plan]]"

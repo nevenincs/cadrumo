@@ -4,6 +4,7 @@ tags:
   - '#iva-franquicia-2026-scope'
 date: '2026-07-01'
 modified: '2026-07-17'
+body_hash: 'sha256:3f3001ee47a9a31cbf82ede46d837314ec6fbfed978b038adb4e92b8bb255a3f'
 related:
   - "[[2026-07-01-iva-franquicia-2026-scope-research]]"
 ---

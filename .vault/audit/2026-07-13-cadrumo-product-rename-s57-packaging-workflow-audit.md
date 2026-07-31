@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s57-packaging-workflow'
 date: '2026-07-13'
 modified: '2026-07-17'
+body_hash: 'sha256:b3e4ba2efbbec701e6e576ce8c485ae31c1ad39f0e06a2e9b48e6cc7da65ca75'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
 ---

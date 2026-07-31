@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:a339246b9f457dd278ded1eeac5d00d2058a82a3e5687ab333e1fae4eda60fba'
 related:
   - '[[2026-07-20-ci-speed-redesign-adr]]'
 ---

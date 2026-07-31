@@ -4,6 +4,7 @@ tags:
   - '#charter-compliance'
 date: '2026-07-24'
 modified: '2026-07-24'
+body_hash: 'sha256:024e2b62004a7ae89bb64abf4c86bcaf080fcd9b83945d8ecbc19952ab683b5d'
 related: []
 ---
 

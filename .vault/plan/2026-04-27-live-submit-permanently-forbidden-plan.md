@@ -4,6 +4,7 @@ tags:
   - '#live-submit-permanently-forbidden'
 date: '2026-04-27'
 modified: '2026-07-17'
+body_hash: 'sha256:c44fa63dfd6c7ddd42c13023edd954dcb719840648b2b873920594ef09d3e63f'
 related:
   - '[[2026-04-27-live-submit-permanently-forbidden-research]]'
   - '[[2026-04-27-live-submit-permanently-forbidden-adr]]'

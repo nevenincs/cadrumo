@@ -4,6 +4,7 @@ tags:
   - '#cross-domain-continuity'
 date: 2026-05-28
 modified: '2026-07-31'
+body_hash: 'sha256:dd97925d4f02fc1582a11cfd757eff4124e4fb7482fc6df70de22ec26742dda6'
 related:
   - "[[2026-05-26-cross-domain-continuity-plan]]"
   - "[[2026-05-27-source-jurisdiction-axis-adr]]"

@@ -4,6 +4,7 @@ tags:
   - '#iva-autoconsumo-promotor'
 date: '2026-05-27'
 modified: '2026-07-31'
+body_hash: 'sha256:cae8f561c057394e322a4ef9b56cf768db56d68fdb556e03a4210647708fda6d'
 related:
   - '[[2026-05-19-iva-compensation-chain-plan]]'
   - '[[2026-05-19-iva-compensation-chain-adr]]'

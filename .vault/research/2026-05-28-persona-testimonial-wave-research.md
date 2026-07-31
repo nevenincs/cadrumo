@@ -4,6 +4,7 @@ tags:
   - '#persona-testimonial-wave'
 date: '2026-05-28'
 modified: '2026-07-17'
+body_hash: 'sha256:302b14cd435e45dda9729a347cb1d0b105ba8bc86a21542884544b4018501e2e'
 related:
   - "[[2026-05-27-source-jurisdiction-axis-adr]]"
   - "[[2026-05-26-cross-domain-continuity-plan]]"

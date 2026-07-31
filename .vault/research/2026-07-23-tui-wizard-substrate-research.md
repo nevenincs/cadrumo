@@ -4,6 +4,7 @@ tags:
   - '#tui-wizard-substrate'
 date: '2026-07-23'
 modified: '2026-07-23'
+body_hash: 'sha256:b7d72c40baa462930dc3f333355cb779f4fdf261b7de4260a2930654181dfce3'
 related: []
 ---
 

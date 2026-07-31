@@ -4,6 +4,7 @@ tags:
   - '#autonomic-deduccion-auto-trigger'
 date: '2026-07-01'
 modified: '2026-07-17'
+body_hash: 'sha256:671814ddb07f5f7e99e16ca8ac7b983529febc00e82f00ffff81f0a99d1ddde2'
 related:
   - "[[2026-07-01-autonomic-deduccion-auto-trigger-research]]"
   - "[[2026-06-19-m100-dependent-modelo-applicability-adr]]"

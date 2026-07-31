@@ -4,6 +4,7 @@ tags:
   - '#live-pull-verification-sweep'
 date: '2026-06-12'
 modified: '2026-07-15'
+body_hash: 'sha256:ef702defd1b78ad9c9fd07f71508da48d1620d56817f344f02ce35cc27f268dc'
 tier: L4
 related:
   - '[[2026-06-05-live-censo-calendar-reconciliation-plan]]'

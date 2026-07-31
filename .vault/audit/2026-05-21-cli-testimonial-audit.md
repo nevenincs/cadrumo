@@ -4,6 +4,7 @@ tags:
   - '#cli-testimonial'
 date: '2026-05-21'
 modified: '2026-07-17'
+body_hash: 'sha256:45b7878ddccd3c9afbe526fce31a0eee48b98d21697e153f044187a47dfa6158'
 related:
   - "[[2026-05-21-persona-fleet-round3-findings-audit]]"
   - "[[2026-05-21-taxpayer-type-applicability-plan]]"

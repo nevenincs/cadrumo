@@ -4,6 +4,7 @@ tags:
   - "#release-please"
 date: 2026-04-12
 modified: '2026-07-17'
+body_hash: 'sha256:1d69411a543d9ce7322e132f3e3f683ae85d3cf49b8056c0e8c457c3d0aba16f'
 title: Release-please LOCAL-only autorelease — Research
 related:
   - "[[2026-04-12-release-please-adr]]"

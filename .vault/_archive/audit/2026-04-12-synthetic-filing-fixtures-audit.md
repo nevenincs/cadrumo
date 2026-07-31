@@ -6,6 +6,7 @@ tags:
   - "#synthetic-filing-fixtures"
 date: 2026-04-12
 modified: '2026-07-10'
+body_hash: 'sha256:6fb4eca7fd6a9c2b58186db18f81d1e376c0feed01e0583048fdae6f91d4decb'
 related:
   - "[[2026-04-12-synthetic-filing-fixtures-plan]]"
   - "[[2026-04-12-synthetic-filing-fixtures-adr]]"

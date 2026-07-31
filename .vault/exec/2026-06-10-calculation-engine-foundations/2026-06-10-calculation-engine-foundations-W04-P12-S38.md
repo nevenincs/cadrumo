@@ -4,6 +4,7 @@ tags:
   - '#calculation-engine-foundations'
 date: '2026-06-12'
 modified: '2026-07-17'
+body_hash: 'sha256:aff61e178d39a398bc200ab782e1478950d126e08b6cdf06a3c54a2c39fc4b38'
 step_id: 'S38'
 related:
   - '[[2026-06-10-calculation-engine-foundations-plan]]'

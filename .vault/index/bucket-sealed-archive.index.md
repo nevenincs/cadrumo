@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:99785429123fb3550464707171fc1bd6f91696062b4906ab1844861add0548bb'
 related:
   - '[[2026-06-03-bucket-sealed-archive-adr]]'
   - '[[2026-06-04-bucket-sealed-archive-research]]'

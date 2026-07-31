@@ -4,6 +4,7 @@ tags:
   - "#inventory-management"
 date: 2026-04-30
 modified: '2026-07-17'
+body_hash: 'sha256:9dda8fe4405e9d6d442504b38c02755ca45bf5f628c5da87ae2c05e5e72b2543'
 related:
   - "[[2026-04-29-inventory-management-research]]"
   - "[[2026-04-29-inventory-management-adr]]"

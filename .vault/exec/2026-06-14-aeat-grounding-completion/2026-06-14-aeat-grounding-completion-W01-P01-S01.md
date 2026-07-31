@@ -4,6 +4,7 @@ tags:
   - '#aeat-grounding-completion'
 date: '2026-06-14'
 modified: '2026-07-17'
+body_hash: 'sha256:013d22c273e74028391c12a0c11679984573958cdd758e3be08cddd940d796a9'
 step_id: 'S01'
 related:
   - "[[2026-06-14-aeat-grounding-completion-plan]]"

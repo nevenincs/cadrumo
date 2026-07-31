@@ -4,6 +4,7 @@ tags:
   - "#core-authority-types-v2"
 date: "2026-05-31"
 modified: '2026-07-17'
+body_hash: 'sha256:d5e546208bb13bff45f3947bcb402972cdac62815bc5d8d4efa13fcedb2ac563'
 related: []
 ---
 

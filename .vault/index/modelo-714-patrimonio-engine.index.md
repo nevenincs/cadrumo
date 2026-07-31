@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:5cfa80f5775114188352f1901c726ffe90a2f127bc08bff0407ef4a4a0692500'
 related:
   - '[[2026-06-02-modelo-714-patrimonio-engine-adr]]'
   - '[[2026-06-02-modelo-714-patrimonio-engine-research]]'

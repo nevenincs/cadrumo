@@ -4,6 +4,7 @@ tags:
   - '#session-honest-followups'
 date: '2026-06-04'
 modified: '2026-07-10'
+body_hash: 'sha256:ccd5e4dc8e8c441d5843a84231f292ea8ef672a098f1891dd6bb75ddbe2052bb'
 related:
   - "[[2026-06-04-session-honest-followups-research]]"
 ---

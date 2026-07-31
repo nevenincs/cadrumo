@@ -4,6 +4,7 @@ tags:
   - '#modelo-iva-routing-carry'
 date: '2026-06-09'
 modified: '2026-07-17'
+body_hash: 'sha256:10544ae58fa165f236dc2a3d450b44f9b36662215de0eb454c13cbb3a571cb94'
 related:
   - "[[2026-06-09-modelo-iva-routing-carry-research]]"
 ---

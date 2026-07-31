@@ -4,6 +4,7 @@ tags:
   - '#calc-sheets-translator'
 date: '2026-05-14'
 modified: '2026-07-17'
+body_hash: 'sha256:ea1f5a995271c48e03c3665a40a528f61a4da95ff0f17d661f566954ea908ad9'
 related:
 ---
 

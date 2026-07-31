@@ -4,6 +4,7 @@ tags:
   - '#censo-g313-launcher-fix'
 date: '2026-07-10'
 modified: '2026-07-10'
+body_hash: 'sha256:0221fef6c309a45873ac98fb82094a55aa1d4ae4df6d51596becd13ef1ced9b9'
 related:
   - "[[2026-07-10-live-censo-calendar-reconciliation-reference]]"
   - "[[2026-06-05-live-censo-calendar-reconciliation-plan]]"

@@ -4,6 +4,7 @@ tags:
   - "#filing-complementaria"
 date: '2026-04-13'
 modified: '2026-07-17'
+body_hash: 'sha256:165d3be3c24102d1a2202682ef99d98de139a0917b4a120096553a2866a1a198'
 title: Filing Complementaria / Amendment Engine — ADR
 related:
   - "[[2026-04-13-filing-complementaria-research]]"

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:aab93d4673b4f6fa685ff591f0ee62e1b3d7049757397af4431184b94d0ba015'
 related:
   - '[[2026-04-14-n26-data-source-adr]]'
   - '[[2026-04-14-n26-data-source-research]]'

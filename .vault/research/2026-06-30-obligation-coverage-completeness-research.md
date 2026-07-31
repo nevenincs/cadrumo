@@ -4,6 +4,7 @@ tags:
   - '#obligation-coverage-completeness'
 date: '2026-06-30'
 modified: '2026-07-17'
+body_hash: 'sha256:636972e55e77072b8055f66798c69182ee60871aac9b56264a66b6f0854d30f5'
 related:
   - "[[2026-04-12-deadline-engine-adr]]"
   - "[[2026-05-26-cross-domain-continuity-audit]]"

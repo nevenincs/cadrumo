@@ -4,6 +4,7 @@ tags:
   - '#modelo-100-anualidades-separate-escala'
 date: '2026-07-01'
 modified: '2026-07-03'
+body_hash: 'sha256:5f181ecf52c0eccb1571a6393f6035ad52917642b7558f8fe4abdd58f030bfbe'
 related:
   - "[[2026-07-01-modelo-100-anualidades-separate-escala-research]]"
 ---

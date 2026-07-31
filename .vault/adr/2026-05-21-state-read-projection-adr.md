@@ -4,6 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-05-21'
 modified: '2026-07-17'
+body_hash: 'sha256:64feb8ab179493d7a6574c35917156083adb34ca93bbb30f725bd214a622318a'
 related:
   - "[[2026-05-20-cli-state-architecture-research]]"
   - "[[2026-05-21-profile-uuid-identity-adr]]"

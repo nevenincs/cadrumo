@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:95699498bfbd95b981e189dfd702b82215229382592b403c02479ac6997b5807'
 related:
   - '[[2026-05-12-schema-driven-wizard-revision-adr]]'
   - '[[2026-05-12-schema-driven-wizard-revision-phase1-step1-exec]]'

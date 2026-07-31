@@ -4,6 +4,7 @@ tags:
   - '#ledger-interface-contract'
 date: '2026-06-10'
 modified: '2026-07-17'
+body_hash: 'sha256:e5df442c844b28d8566d5dd3451bac29d1982c1b0d40a84d5fde1845c4b38c73'
 tier: L3
 related:
   - '[[2026-06-10-ledger-interface-contract-adr]]'

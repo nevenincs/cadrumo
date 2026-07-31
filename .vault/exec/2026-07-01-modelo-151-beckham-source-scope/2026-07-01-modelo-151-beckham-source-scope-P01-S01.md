@@ -4,6 +4,7 @@ tags:
   - '#modelo-151-beckham-source-scope'
 date: '2026-07-01'
 modified: '2026-07-17'
+body_hash: 'sha256:f07fbfea3aa4834978a586ae9fc10698c1946a09e90c1f35e18063016b12361f'
 step_id: 'S01'
 related:
   - "[[2026-07-01-modelo-151-beckham-source-scope-plan]]"

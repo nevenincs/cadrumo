@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:0882226083d6a4d0f8e4436cc3dc49a7e227f4ff23f2d7df3ce97b334737b5be'
 related:
   - '[[2026-05-21-calculation-grounding-swarm-audit]]'
   - '[[2026-05-21-calculation-grounding-swarm-r2-audit]]'

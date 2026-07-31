@@ -4,6 +4,7 @@ tags:
   - "#release-please"
 date: 2026-04-12
 modified: '2026-07-17'
+body_hash: 'sha256:2b4c2febbdc0cf86352ce1c9440d441e68772bb4852e71371e79a2669bd7091b'
 title: release-please phase-5 summary — gates, review, commit
 related:
   - "[[2026-04-12-release-please-plan]]"

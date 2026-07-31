@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:ffcc07e37b33c12a8242d1fecb15045e12c9ad1e9e65ae29f23d9216839974e0'
 related:
   - '[[2026-06-11-ledger-hardening-close-audit]]'
   - '[[2026-06-11-ledger-hardening-close-pass-2-audit]]'

@@ -4,6 +4,7 @@ tags:
   - '#registry-casilla-identity'
 date: '2026-05-20'
 modified: '2026-07-17'
+body_hash: 'sha256:fa1d3597f29171d7ad2170bffd893c04c60df5a08a7645f3bbd707f141aa8140'
 step_id: 'S19'
 related:
   - '[[2026-05-20-registry-casilla-identity-plan]]'

@@ -1,6 +1,7 @@
 ---
 date: 2026-05-31
 modified: '2026-07-31'
+body_hash: 'sha256:52bf72d3466d1a8f4a668aec3cf3417f83ffdc13a6fd37ab296727602b153ed3'
 tags:
   - "#exec"
   - "#codebase-solidification"

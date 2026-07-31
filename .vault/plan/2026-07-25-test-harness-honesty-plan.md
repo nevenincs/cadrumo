@@ -4,6 +4,7 @@ tags:
   - '#test-harness-honesty'
 date: '2026-07-25'
 modified: '2026-07-28'
+body_hash: 'sha256:d6d97fc1c383dd5ed5105ec7051bb399b6e6d9c26c7c28427aa4ca47fe20a186'
 tier: L1
 related:
   - '[[2026-07-25-test-harness-honesty-false-green-gates-audit]]'

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:e2a23d12a1c37d1047342f6669db4de171046f26e5578812309139d32ce8fd28'
 related:
   - '[[2026-05-08-ledger-renta-pipeline-adr]]'
   - '[[2026-05-08-ledger-renta-pipeline-audit]]'

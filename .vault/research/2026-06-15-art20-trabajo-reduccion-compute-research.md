@@ -4,6 +4,7 @@ tags:
   - '#art20-trabajo-reduccion-compute'
 date: '2026-06-15'
 modified: '2026-07-17'
+body_hash: 'sha256:f5cc822241860d40a352b7e94113c19a9c2b204584264f01b492ab708c1a2f55'
 related:
   - '[[2026-06-15-art20-trabajo-reduccion-compute-adr]]'
 ---

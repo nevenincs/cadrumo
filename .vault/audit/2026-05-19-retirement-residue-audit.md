@@ -4,6 +4,7 @@ tags:
   - '#code-duplication-sweep'
 date: '2026-05-19'
 modified: '2026-07-17'
+body_hash: 'sha256:0ea4b45589b4d9a993ff5966f182d82b1112059632e963a29df3affc29d6c9c9'
 related:
   - "[[2026-05-19-spanish-stem-terminology-authority-adr]]"
 title: "Retirement and Rename Residue Audit"

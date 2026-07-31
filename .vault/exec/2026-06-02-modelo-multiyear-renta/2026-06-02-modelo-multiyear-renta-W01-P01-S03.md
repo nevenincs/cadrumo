@@ -4,6 +4,7 @@ tags:
   - '#modelo-multiyear-renta'
 date: '2026-07-06'
 modified: '2026-07-17'
+body_hash: 'sha256:896c970687912ec9785f25456d4573f726d2a5c1138bdf855b05a8b2b2b79e18'
 step_id: 'S03'
 related:
   - "[[2026-06-02-modelo-multiyear-renta-plan]]"

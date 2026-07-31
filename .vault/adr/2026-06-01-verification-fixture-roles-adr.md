@@ -4,6 +4,7 @@ tags:
   - '#verification-fixture-roles'
 date: '2026-06-01'
 modified: '2026-07-17'
+body_hash: 'sha256:cde610fb96179455b38801de8a098e8efbcbd268b9452758585d7a8122d274dc'
 related:
   - "[[2026-06-01-verification-fixture-roles-research]]"
   - "[[2026-06-01-semantic-cluster-hardening-plan]]"

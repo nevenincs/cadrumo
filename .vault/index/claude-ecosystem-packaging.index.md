@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:5a309711d13d9b2f8e63dbeebc7d3299f0e2f883df32028d6b46630adcc7db90'
 related:
   - '[[2026-07-03-claude-ecosystem-packaging-W01-P01-S01]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W01-P01-S02]]'

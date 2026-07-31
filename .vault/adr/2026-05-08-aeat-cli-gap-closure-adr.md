@@ -4,6 +4,7 @@ tags:
   - '#aeat-cli-gap-closure'
 date: '2026-05-08'
 modified: '2026-07-17'
+body_hash: 'sha256:e3c1c3a3404c904c062b54b036e396661a713751b036f6c5cb1b808e0fa5dcc4'
 related:
   - '[[2026-05-08-aeat-cli-gap-closure-plan]]'
   - '[[2026-05-08-aeat-cli-gap-discovery-audit]]'

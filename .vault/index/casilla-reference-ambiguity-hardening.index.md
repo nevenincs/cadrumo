@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:9f51a3efa09185dee0160eeb4ad493aabc0c65a5f048e089d7c47b29d5bfcb75'
 related:
   - '[[2026-06-24-casilla-reference-ambiguity-hardening-audit]]'
 ---

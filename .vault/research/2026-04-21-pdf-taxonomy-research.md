@@ -4,6 +4,7 @@ tags:
   - "#pdf-taxonomy"
 date: "2026-04-21"
 modified: '2026-07-17'
+body_hash: 'sha256:86b8c8aaea00ead44008624346e9b654dec06478f5d1435c92cb1ac7cd8d4474'
 related:
   - "[[2026-04-21-real-pdf-import-umbrella-research]]"
   - "[[2026-04-12-justificante-parser-adr]]"

@@ -4,6 +4,7 @@ tags:
   - '#cross-period-calculation-guards'
 date: '2026-06-05'
 modified: '2026-07-17'
+body_hash: 'sha256:bb2d4bd20d10ef3d3e05e139ebfc303d187f02df79aeb502f08734351fd003c2'
 related:
   - '[[2026-06-05-cross-period-calculation-guards-reference]]'
   - '[[2026-05-20-calculation-source-connectivity-adr]]'

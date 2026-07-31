@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:9a4718b39515b07dd687d455f42366773e0538a78f4f0f7b047ea0c4232b8374'
 related:
   - '[[2026-06-03-cli-workflow-redesign-epic-adr]]'
   - '[[2026-06-04-cli-workflow-redesign-epic-research]]'

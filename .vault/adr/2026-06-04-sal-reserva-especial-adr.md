@@ -4,6 +4,7 @@ tags:
   - '#sal-reserva-especial'
 date: '2026-06-04'
 modified: '2026-07-10'
+body_hash: 'sha256:9cd37370d0bba7db1c5ebc76c67d97900abd8b835347c3d3cd83e23ef7c7405f'
 related:
   - "[[2026-06-04-sal-reserva-especial-research]]"
 ---

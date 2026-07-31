@@ -4,6 +4,7 @@ tags:
   - '#cross-campaign-hardening'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:9c844d57c814cd4fe33b974ee6d78a43bb83dc06ae3c884f49b4f909b387053a'
 related:
   - "[[2026-05-21-cross-campaign-hardening-plan]]"
   - "[[2026-05-21-cross-campaign-hardening-audit]]"

@@ -1,6 +1,7 @@
 ---
 date: 2026-05-31
 modified: '2026-07-17'
+body_hash: 'sha256:4d2628f354d30c34313a694651f94cdd2c00bc8d6a30dd74d8420a3bfc3efc94'
 tags:
   - '#audit'
   - '#core-authority'

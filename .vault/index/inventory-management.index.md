@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:18e67831fd87f73c589ae4d326a2a11bc3ea3dd6ba80a711a2d1443778d99d88'
 related:
   - '[[2026-04-29-inventory-management-adr]]'
   - '[[2026-04-29-inventory-management-code-review-audit]]'

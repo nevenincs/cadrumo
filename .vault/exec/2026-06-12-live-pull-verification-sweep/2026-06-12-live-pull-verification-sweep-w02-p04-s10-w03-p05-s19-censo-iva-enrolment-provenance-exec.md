@@ -4,6 +4,7 @@ tags:
   - '#live-pull-verification-sweep'
 date: '2026-06-12'
 modified: '2026-07-17'
+body_hash: 'sha256:7715705f679ba25374d4aa48f2bac4727e2204ebc3f35981ddafc1354baa4da0'
 plan: '[[2026-06-12-live-pull-verification-sweep-plan]]'
 step_id: W03.P05.S19
 related_steps:

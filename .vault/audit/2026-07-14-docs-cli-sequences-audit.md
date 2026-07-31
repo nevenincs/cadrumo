@@ -4,6 +4,7 @@ tags:
   - '#docs-cli-sequences'
 date: '2026-07-14'
 modified: '2026-07-14'
+body_hash: 'sha256:9be59cb39528b5286153c60d9a9f5d87787665fe3c3eaf5e4527086ec085dc26'
 related:
   - "[[2026-07-13-docs-cli-sequences-adr]]"
   - "[[2026-07-13-docs-cli-sequences-plan]]"

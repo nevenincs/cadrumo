@@ -4,6 +4,7 @@ tags:
   - '#modelo-200-calc-verify'
 date: '2026-04-28'
 modified: '2026-07-17'
+body_hash: 'sha256:1562dd340e57570995292e4e8898bf9c0f06213ef1b0b918c60aa7201e20dc49'
 related:
   - "[[2026-04-27-modelo-130-calc-verify-research]]"
   - "[[2026-04-28-modelo-180-calc-verify-research]]"

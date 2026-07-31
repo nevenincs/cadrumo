@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s62-descendant'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:9d004ea4d24c3564bb9c24edace1187a78548fb24335195f3ac91559b6a55830'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
   - "[[2026-07-13-cadrumo-product-rename-s62-locale-authority-audit]]"

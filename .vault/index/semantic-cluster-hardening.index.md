@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:5f70450a9feecbfe3ad70f4bebf88400346c83ca1c1a0452eddf069207c12d4d'
 related:
   - '[[2026-06-01-semantic-cluster-hardening-adr]]'
   - '[[2026-06-01-semantic-cluster-hardening-audit]]'

@@ -4,6 +4,7 @@ tags:
   - '#modelo-100-parser-glyph-merge'
 date: '2026-07-26'
 modified: '2026-07-27'
+body_hash: 'sha256:13ed7fb974c3ccde6b93efa02ea6d92d29758a5b61c53c19c742820f59b51250'
 related:
   - "[[2026-07-26-declaracion-real-render-verification-adr]]"
   - '[[2026-07-26-declaracion-real-render-verification-campaign-close-honesty-review-audit]]'

@@ -4,6 +4,7 @@ tags:
   - '#corpus-registry-packaging'
 date: '2026-05-15'
 modified: '2026-07-17'
+body_hash: 'sha256:1c0b5eff6ddd35b40f2cba7b220d24e6640bf486671ded4d3b718bdb465244ee'
 related:
   - "[[2026-05-01-corpus-data-hydration-adr]]"
   - "[[2026-04-21-real-pdf-fixture-corpus-adr]]"

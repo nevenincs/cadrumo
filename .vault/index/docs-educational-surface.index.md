@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:2a621643db0240fef03830881b7b78cfd0b77808765187ccf7ea6ec738a9ec05'
 related:
   - '[[2026-06-01-docs-educational-surface-adr]]'
   - '[[2026-06-02-docs-educational-surface-audit]]'

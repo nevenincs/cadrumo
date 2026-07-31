@@ -4,6 +4,7 @@ tags:
   - '#prorrata-art104-tres-exclusions'
 date: '2026-07-10'
 modified: '2026-07-10'
+body_hash: 'sha256:a3e889377a0974b6968378f10438e4f033b9c964d3f2fbab731f3cf72f8a0ed2'
 related:
   - "[[2026-07-07-prorrata-art104-tres-exclusions-adr]]"
 ---

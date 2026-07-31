@@ -4,6 +4,7 @@ tags:
   - '#binding-source-kind-taxonomy-unification'
 date: '2026-06-26'
 modified: '2026-07-17'
+body_hash: 'sha256:acfceec1c556809586b72c7337223ef6413222b5f14cb0a9a12d43caec4eb868'
 related:
   - '[[2026-06-26-bindings-architecture-unification-audit]]'
   - '[[2026-06-14-bindings-interface-hardening-adr]]'

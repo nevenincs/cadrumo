@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:c406c88341fabb3dac33e44c37debc2dce50f1058a0834b42215a853a3062eb8'
 related:
   - '[[2026-06-09-quality-hardening-campaign-S01]]'
   - '[[2026-06-09-quality-hardening-campaign-S02]]'

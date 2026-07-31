@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s64-descendant'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:7b472b4a52ebf8ceb7aed36d225a2e81c88d8217b95029bcae7f67495b305128'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
   - "[[2026-07-13-cadrumo-product-rename-s64-spanish-catalogue-audit]]"

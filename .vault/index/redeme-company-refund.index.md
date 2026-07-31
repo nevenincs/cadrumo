@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:49473afe0bbb2c1fffad1d7ff6d0af8aa1c4d606ba86726450068f931cabbc4f'
 related:
   - '[[2026-06-21-redeme-company-refund-adr]]'
   - '[[2026-06-21-redeme-company-refund-research]]'

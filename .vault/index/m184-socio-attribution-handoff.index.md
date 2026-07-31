@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:9fc19eae1e1f622f758c8abc75c756de00e959f7c5af96199de879ca422b1239'
 related:
   - '[[2026-07-09-m184-socio-attribution-handoff-adr]]'
   - '[[2026-07-09-m184-socio-attribution-handoff-audit]]'

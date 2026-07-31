@@ -4,6 +4,7 @@ tags:
   - '#verify-ledger-drift-gate'
 date: '2026-07-26'
 modified: '2026-07-26'
+body_hash: 'sha256:e6326736bb0dc1ca18beb921b8c24220673c855bfe2db361417531fa59c87a1a'
 related: []
 ---
 

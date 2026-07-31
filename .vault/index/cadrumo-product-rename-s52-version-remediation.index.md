@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:a3731ea979274bc2fda28a62040ffe0760261b25353b95dbc3ca25d6135f4e23'
 related:
   - '[[2026-07-13-cadrumo-product-rename-s52-version-remediation-audit]]'
 ---

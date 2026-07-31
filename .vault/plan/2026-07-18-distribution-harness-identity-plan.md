@@ -4,6 +4,7 @@ tags:
   - '#distribution-harness-identity'
 date: '2026-07-18'
 modified: '2026-07-19'
+body_hash: 'sha256:12f7a74859091ac3452af29ce5faeef5daf8c88855f10b29c58ccb389e34671b'
 tier: L2
 related:
   - '[[2026-07-16-distribution-harness-identity-adr]]'

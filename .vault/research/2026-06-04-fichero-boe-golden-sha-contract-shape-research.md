@@ -4,6 +4,7 @@ tags:
   - '#fichero-boe-golden-sha-contract-shape'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:5a8d3c6879ae0ac4bd374d7f12bd7dfde09ec32ee6a3a773fd3b259ba6afff33'
 related:
   - "[[2026-06-03-fichero-boe-golden-sha-contract-shape-adr]]"
 ---

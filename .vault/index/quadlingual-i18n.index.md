@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:3e1501abc680143fae799529c41798a3d580101923aaf57f08a02ed288202adf'
 related:
   - '[[2026-05-01-quadlingual-i18n-adr]]'
   - '[[2026-05-01-quadlingual-i18n-reference]]'

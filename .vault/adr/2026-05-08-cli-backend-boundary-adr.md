@@ -4,6 +4,7 @@ tags:
   - '#cli-backend-boundary'
 date: '2026-05-08'
 modified: '2026-07-17'
+body_hash: 'sha256:9addc8edf7a09f9a910ab567a40cdf1b230dd0ecbb5dcf622009601b52fe39a2'
 related:
   - "[[2026-05-08-cli-backend-boundary-research]]"
   - "[[2026-05-12-cli-workflow-redesign-ledger-transaction-management-adr]]"

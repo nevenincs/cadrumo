@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:52b2b3b8b397b00f995f997acef57f60e988a8bd19900aead4fd151b137566b8'
 related:
   - '[[2026-07-23-profile-setup-flow-W01-P01-S01]]'
   - '[[2026-07-23-profile-setup-flow-W01-P01-S02]]'

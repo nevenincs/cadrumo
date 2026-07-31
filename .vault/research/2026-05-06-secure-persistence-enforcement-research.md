@@ -4,6 +4,7 @@ tags:
   - '#secure-persistence-enforcement'
 date: '2026-05-06'
 modified: '2026-07-17'
+body_hash: 'sha256:593b10a87145a7850ade53a376ffc39dbb6cabc3a4c59b0eb3fd3a5a0ab13b9f'
 related:
   - '[[2026-05-05-codebase-sanitization-audit]]'
 ---

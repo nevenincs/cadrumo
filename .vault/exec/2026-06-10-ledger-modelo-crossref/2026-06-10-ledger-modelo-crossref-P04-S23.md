@@ -2,6 +2,7 @@
 tags: ['#exec', '#ledger-modelo-crossref']
 date: '2026-06-12'
 modified: '2026-07-17'
+body_hash: 'sha256:828ffa9d17ce7105b0647ab978e08f7c8c5097f0630def5768855609d50cf7be'
 step_id: 'S23'
 related:
   - '[[2026-06-10-ledger-modelo-crossref-plan]]'

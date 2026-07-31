@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:12cd1b2091c9e31c7d131daf4bb8207d1fbdbea751f75f879f4900ea738ca317'
 related:
   - '[[2026-07-09-size-budget-refactor-P01-S01]]'
   - '[[2026-07-09-size-budget-refactor-P01-S02]]'

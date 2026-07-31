@@ -4,6 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-06-03'
 modified: '2026-07-17'
+body_hash: 'sha256:556b885d30d56fa8f6f24a28ebbea12c03a8c94ada0b1adff717a12e9c84ab2e'
 related:
   - '[[2026-06-03-registry-construct-pressure-plan]]'
 ---

@@ -4,6 +4,7 @@ tags:
   - '#post-cleanup-verification'
 date: '2026-05-31'
 modified: '2026-07-17'
+body_hash: 'sha256:b6858180e67ef045fd09561a97c6e90169e672444671a7e8dd0c2d01658354b0'
 related:
   - "[[2026-05-22-schema-hardening-plan]]"
 ---

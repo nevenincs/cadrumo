@@ -4,6 +4,7 @@ tags:
   - "#export-first"
 date: 2026-04-17
 modified: '2026-07-15'
+body_hash: 'sha256:38258e1a412842be52d45219ea307f9da30db29e9f771e42afd8619a40eedf21'
 related:
   - "[[2026-04-17-export-first-adr]]"
   - '[[2026-04-27-export-first-research]]'

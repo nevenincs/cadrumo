@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:4e04237dba498b838455431d2e7289c715a50e8d28dcda058fe2c675ac20a841'
 related:
   - '[[2026-07-04-remote-telemetry-adr]]'
   - '[[2026-07-10-remote-telemetry-research]]'

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:9e09767d6fcb2fd6d5a6f3e73277f63cd61f1bbcd06f42bf9ede50b449488661'
 related:
   - '[[2026-06-03-m036-lifecycle-verbs-research]]'
 ---

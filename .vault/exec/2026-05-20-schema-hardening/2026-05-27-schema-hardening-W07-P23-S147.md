@@ -3,6 +3,7 @@ step_id: "S147"
 plan: "[[2026-05-20-schema-hardening-plan]]"
 date: 2026-05-27
 modified: '2026-07-17'
+body_hash: 'sha256:c1f64a6fd4ff8c0943e69c735735b3d2213852e699f0bc088593f6f8c2796181'
 tags:
   - "#exec"
   - "#schema-hardening"

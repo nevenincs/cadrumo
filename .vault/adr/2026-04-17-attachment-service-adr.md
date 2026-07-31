@@ -4,6 +4,7 @@ tags:
   - "#attachment-service"
 date: "2026-04-17"
 modified: '2026-07-17'
+body_hash: 'sha256:bc321eed525c1073d151125740cca77aca24a5926585e7f8eec4fa757bb992bb'
 related:
   - "[[2026-04-17-attachment-service-research]]"
   - "[[2026-04-14-transaction-catalogue-adr]]"

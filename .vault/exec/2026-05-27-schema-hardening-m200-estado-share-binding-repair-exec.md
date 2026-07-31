@@ -4,6 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:7a55fa6d45ab68b619c0db97f90a8ceaec8c47f8681ffd12b5ea9c2e0994b05b'
 related:
   - '[[2026-05-27-schema-hardening-m100-revision-drift-research]]'
 ---

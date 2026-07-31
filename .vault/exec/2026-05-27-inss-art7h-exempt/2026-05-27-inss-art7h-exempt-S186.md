@@ -5,6 +5,7 @@ tags:
   - "#inss-art7h-exempt"
 date: 2026-05-27
 modified: '2026-07-17'
+body_hash: 'sha256:acd41e6c23b20f32bee4f5a1b73d76abe9c68d3235bc4838c932284bbc18a528'
 related:
   - "[[2026-05-27-inss-art7h-exempt-S186]]"
 ---

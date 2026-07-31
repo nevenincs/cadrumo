@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:b34af4f346949bb08ad497e912762e7fc8bb8e2857318b01d760825dd5570ca9'
 related:
   - '[[2026-04-25-mutation-harness-extension-adr]]'
   - '[[2026-04-25-mutation-harness-extension-plan]]'

@@ -4,6 +4,7 @@ tags:
   - '#calculation-truth-registry'
 date: '2026-05-06'
 modified: '2026-07-17'
+body_hash: 'sha256:de209edc4b7afa2fe4694a3b09fdf0a79911d53694eb2ea17eaf520177ae76bb'
 related:
   - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
   - '[[2026-05-04-calculation-authority-evidence-tiering-adr]]'

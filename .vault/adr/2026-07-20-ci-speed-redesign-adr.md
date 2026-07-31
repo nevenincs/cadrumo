@@ -4,6 +4,7 @@ tags:
   - '#ci-speed-redesign'
 date: '2026-07-20'
 modified: '2026-07-20'
+body_hash: 'sha256:544878583f031c0da488092ff41d271f40eee814b8e0d0710795019e5a6beff9'
 related:
   - '[[2026-07-20-release-asset-transport-audit]]'
   - '[[2026-07-20-release-asset-transport-reference]]'

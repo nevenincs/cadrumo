@@ -4,6 +4,7 @@ tags:
   - '#open-decisions-and-operator-gates'
 date: '2026-07-25'
 modified: '2026-07-26'
+body_hash: 'sha256:5617704cda4174bcf8c17fc2bf4cdaeb5b3c81a843dfd2baa3b98302a9d175fa'
 related:
   - "[[2026-07-25-open-decisions-and-operator-gates-plan]]"
   - "[[2026-07-25-code-dedup-sweep-adr]]"

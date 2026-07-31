@@ -4,6 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-05-14'
 modified: '2026-07-17'
+body_hash: 'sha256:81c994c1df4868eb059e7b6f70b9eb2c045cac79226d17b91b9fbe73c149aaf1'
 related:
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
   - '[[2026-05-07-user-profile-backend-schema-adr]]'

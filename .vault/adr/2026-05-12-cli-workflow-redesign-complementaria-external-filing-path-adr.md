@@ -4,6 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-05-12'
 modified: '2026-07-17'
+body_hash: 'sha256:8322f1bdb87d2a4c769124e7b9822ee7dd0d6615c640aca4de08fa947808d619'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-complementaria-external-filing-path-research]]"

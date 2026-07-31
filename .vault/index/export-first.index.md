@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:7fda65825d7b76dce6d7997e9da735bb615cf02078640c2ab7eb686b949bbc60'
 related:
   - '[[2026-04-17-export-first-adr]]'
   - '[[2026-04-17-export-first-roadmap-plan]]'

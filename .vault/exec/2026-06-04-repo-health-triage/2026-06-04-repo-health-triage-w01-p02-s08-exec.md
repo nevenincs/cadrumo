@@ -4,6 +4,7 @@ tags:
   - '#repo-health-triage'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:4a96f4c298b3da3a0f10056f1d27c8ebdaf0a9180e877ba4e0ca36282529b654'
 step_id: 'S08'
 related:
   - '[[2026-06-04-repo-health-triage-plan]]'

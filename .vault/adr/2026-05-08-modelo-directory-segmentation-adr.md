@@ -4,6 +4,7 @@ tags:
   - '#calculation-truth-registry'
 date: '2026-05-08'
 modified: '2026-07-17'
+body_hash: 'sha256:97157977e6cb09daab6198189880d8790a52ea32682c2149a6f25e6c048304bd'
 related:
   - "[[2026-05-08-modelo-100-bulk-segmentation-audit]]"
   - "[[2026-05-03-calculation-truth-registry-rebuild-plan]]"

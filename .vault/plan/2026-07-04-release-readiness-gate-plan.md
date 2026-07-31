@@ -4,6 +4,7 @@ tags:
   - '#release-readiness-gate'
 date: '2026-07-04'
 modified: '2026-07-17'
+body_hash: 'sha256:f343e29e848d311bdecaa17374839daf0adcc9dbb5bd9b49b9bfaf807f713bd1'
 tier: L1
 related:
   - '[[2026-07-04-release-readiness-gate-adr]]'

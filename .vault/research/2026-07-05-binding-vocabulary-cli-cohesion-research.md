@@ -4,6 +4,7 @@ tags:
   - '#binding-vocabulary-cli-cohesion'
 date: '2026-07-05'
 modified: '2026-07-17'
+body_hash: 'sha256:4b2cb84c851768782d1b882d7e5ce90f52add4b5687dbd89c384d5ac28e98db0'
 related:
   - "[[2026-06-26-binding-vocabulary-cli-cohesion-adr]]"
 ---

@@ -4,6 +4,7 @@ tags:
   - '#metastate-zero-tolerance'
 date: '2026-06-01'
 modified: '2026-07-17'
+body_hash: 'sha256:4cc0434263f899fca204d8bb22439b78cc7e6d698d239d9580cb3f734289a438'
 related:
   - "[[2026-05-31-coverage-canonicalisation-audit]]"
   - "[[2026-06-01-metastate-zero-tolerance-research]]"

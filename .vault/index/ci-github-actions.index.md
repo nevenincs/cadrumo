@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:2fe3019087ae300e8074e0bc0bae1755ed4c0832fe286a816f8dfa5cdf481336'
 related:
   - '[[2026-04-12-ci-github-actions-adr]]'
   - '[[2026-04-12-ci-github-actions-plan]]'

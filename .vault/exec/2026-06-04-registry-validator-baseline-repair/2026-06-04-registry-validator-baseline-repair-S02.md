@@ -4,6 +4,7 @@ tags:
   - '#registry-validator-baseline-repair'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:ffd72d5013888b5c75426e25d58e5ab95cdcd18588dc6992ac8c2101ca52bc08'
 step_id: 'S02'
 related:
   - '[[2026-06-04-registry-validator-baseline-repair-plan]]'

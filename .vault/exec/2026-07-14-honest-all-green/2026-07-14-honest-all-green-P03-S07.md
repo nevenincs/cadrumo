@@ -4,6 +4,7 @@ tags:
   - '#honest-all-green'
 date: '2026-07-14'
 modified: '2026-07-17'
+body_hash: 'sha256:6ab886c8f0c675ef259e5895d18aa27b1b994f7267675414e3d212b82bc975b4'
 step_id: 'S07'
 related:
   - "[[2026-07-14-honest-all-green-plan]]"

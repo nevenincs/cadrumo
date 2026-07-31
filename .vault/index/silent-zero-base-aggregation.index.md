@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:8d86b91475ab6de9cbe5156d5f36ea8b32eb8400fd6a9cf77ee9f00ee302738a'
 related:
   - '[[2026-06-19-silent-zero-base-aggregation-W01-P01-S01]]'
   - '[[2026-06-19-silent-zero-base-aggregation-W01-P01-S02]]'

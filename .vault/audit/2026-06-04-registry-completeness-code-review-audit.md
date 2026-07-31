@@ -4,6 +4,7 @@ tags:
   - '#registry-hardening-next-work'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:4ecb02e035e0d073a7a95f4bbc5b58ff08cffdffd7637c538149b19991e470c2'
 related:
   - '[[2026-06-02-registry-hardening-next-work-plan]]'
   - '[[2026-06-04-registry-m200-completeness-audit]]'

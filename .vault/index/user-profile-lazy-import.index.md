@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:c35c52a65560edbc1a5c0c4319dc22f16c104a4a918222baee7938043e00056f'
 related:
   - '[[2026-06-03-user-profile-lazy-import-P01-S01]]'
   - '[[2026-06-03-user-profile-lazy-import-P01-S02]]'

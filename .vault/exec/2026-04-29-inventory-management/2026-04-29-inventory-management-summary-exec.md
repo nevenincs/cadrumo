@@ -4,6 +4,7 @@ tags:
   - '#inventory-management'
 date: '2026-04-29'
 modified: '2026-07-17'
+body_hash: 'sha256:dddefdce3fea6aba83774791ba700ab2018653659a736b8c97632d5a446dbe08'
 related:
   - '[[2026-04-29-inventory-management-plan]]'
   - '[[2026-04-29-inventory-management-code-review-audit]]'

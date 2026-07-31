@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:c20d3bc53c8b69f28125671f17e74dd4266f8b03c7d43db77ec0f16a76899e19'
 related:
   - '[[2026-05-31-schedule-predicate-catalogue-P01-S01]]'
   - '[[2026-05-31-schedule-predicate-catalogue-P01-S02]]'

@@ -4,6 +4,7 @@ tags:
   - '#cross-period-prorrata'
 date: '2026-07-06'
 modified: '2026-07-17'
+body_hash: 'sha256:377f13023fc5850bc667fe1f6fbfec5c1212a600ed55fb5041c8b1815ff537ad'
 step_id: 'S16'
 related:
   - "[[2026-07-06-cross-period-prorrata-plan]]"

@@ -4,6 +4,7 @@ tags:
   - '#continuous-review'
 date: '2026-04-20'
 modified: '2026-07-17'
+body_hash: 'sha256:9a24e81d051044eec9b37154b879d74a12a9bad2180ec1b7078e54de82e328b8'
 related:
   - '[[2026-04-18-auth-protocol-adr]]'
 ---

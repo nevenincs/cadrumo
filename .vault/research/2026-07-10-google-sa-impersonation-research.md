@@ -4,6 +4,7 @@ tags:
   - '#google-sa-impersonation'
 date: '2026-07-10'
 modified: '2026-07-10'
+body_hash: 'sha256:ab4926c16c20ed6ceb66e9d6cc854675a4f2d26a9cc3bd1e275fce438e48c0ad'
 related:
   - "[[2026-07-04-google-sa-impersonation-adr]]"
 ---

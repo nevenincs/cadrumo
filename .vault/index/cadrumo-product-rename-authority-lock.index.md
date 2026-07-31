@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:ff96067574dce7c86f3d21ffc37efc9c587fb80bb9dfaff5c3b0f388ad54b538'
 related:
   - '[[2026-07-13-cadrumo-product-rename-authority-lock-audit]]'
 ---

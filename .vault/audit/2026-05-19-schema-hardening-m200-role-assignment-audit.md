@@ -4,6 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-05-19'
 modified: '2026-07-17'
+body_hash: 'sha256:70f40e5a7a5fb072f598695c997b5c53adaefd66b16bc2c255b1f73528afb547'
 related:
   - "[[2026-05-19-schema-hardening-enrollment-campaign-queue-audit]]"
   - "[[2026-05-19-schema-hardening-role-taxonomy-reference]]"

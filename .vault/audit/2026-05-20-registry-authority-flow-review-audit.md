@@ -4,6 +4,7 @@ tags:
   - '#registry-authority-flow'
 date: '2026-05-20'
 modified: '2026-07-17'
+body_hash: 'sha256:b99e15b2597f2c936652c4dde9a93f1c7b5504e6bed4577fc072430ca08dc3c3'
 related:
   - '[[2026-05-20-registry-authority-flow-plan]]'
   - '[[2026-05-20-registry-authority-flow-adr]]'

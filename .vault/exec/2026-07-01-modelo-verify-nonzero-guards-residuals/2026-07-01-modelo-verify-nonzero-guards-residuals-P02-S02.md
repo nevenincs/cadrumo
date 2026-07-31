@@ -4,6 +4,7 @@ tags:
   - '#modelo-verify-nonzero-guards-residuals'
 date: '2026-07-01'
 modified: '2026-07-17'
+body_hash: 'sha256:2392d4afd9f333bf4e0ec7c7d3b8a71c433ea737825b7de631ac589d7f72209b'
 step_id: 'S02'
 related:
   - "[[2026-07-01-modelo-verify-nonzero-guards-residuals-plan]]"

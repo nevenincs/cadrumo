@@ -7,6 +7,7 @@ related:
   - "[[2026-07-12-cadrumo-product-rename-research]]"
 superseded_by: '2026-07-12-cadrumo-cli-executable-adr'
 modified: '2026-07-17'
+body_hash: 'sha256:961099e75f9dfdbba255579cb2ee99c1d4e5b628c84cc513bf7c952ea5443f7c'
 ---
 
 # `cadrumo-product-rename` adr: `Canonical Cadrumo product identity and rename boundary` | (**status:** `superseded`)

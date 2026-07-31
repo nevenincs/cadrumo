@@ -4,6 +4,7 @@ tags:
   - '#censo-operator-manual-enrolment'
 date: '2026-07-11'
 modified: '2026-07-17'
+body_hash: 'sha256:9da5f46f9b467ab1bd0dce4e6a7b1cc99e389c82ef26b748fe8956fe0fc23328'
 step_id: 'S09'
 related:
   - "[[2026-07-11-censo-operator-manual-enrolment-plan]]"

@@ -4,6 +4,7 @@ tags:
   - '#m184-socio-attribution-handoff'
 date: '2026-07-10'
 modified: '2026-07-10'
+body_hash: 'sha256:e9a7676e28e2af4d4c85d3032df0804a6bcd2c5d6873daafed6712a288b36661'
 related:
   - "[[2026-07-09-m184-socio-attribution-handoff-adr]]"
 ---

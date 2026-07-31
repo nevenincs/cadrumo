@@ -4,6 +4,7 @@ tags:
   - '#ledger-operator-hardening'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:5f27d753360aaa2a1be2c2bc849b0d7d2a2e5ea6873581081f257871007cb576'
 related:
   - "[[2026-05-08-ledger-renta-pipeline-adr]]"
   - "[[2026-05-14-ledger-transaction-lifecycle-adr]]"

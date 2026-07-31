@@ -4,6 +4,7 @@ tags:
   - '#modelo-verify-nonzero-guards-residuals'
 date: '2026-07-01'
 modified: '2026-07-17'
+body_hash: 'sha256:29c431e1dfc823bd73fbdde23ca7d8543587a04693e84d001cfdbbc9379e0165'
 tier: L2
 related:
   - '[[2026-07-01-modelo-verify-nonzero-guards-residuals-adr]]'

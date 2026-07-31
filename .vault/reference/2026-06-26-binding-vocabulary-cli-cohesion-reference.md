@@ -4,6 +4,7 @@ tags:
   - '#binding-vocabulary-cli-cohesion'
 date: '2026-06-26'
 modified: '2026-07-17'
+body_hash: 'sha256:4c900fa833d5460566de6a70e534ce60df208d1c7d5a7835f5acb2c40024a382'
 related:
   - "[[2026-06-26-binding-vocabulary-cli-cohesion-adr]]"
   - "[[2026-06-26-bindings-architecture-unification-audit]]"

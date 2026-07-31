@@ -4,6 +4,7 @@ tags:
   - '#user-profile-lazy-import'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:85ab32dde55561b57e4a33867aa6fcff4732ecab6b8e80a724368176077ada22'
 step_id: 'S04'
 related:
   - "[[2026-06-03-user-profile-lazy-import-plan]]"

@@ -4,6 +4,7 @@ tags:
   - "#real-pdf-import"
 date: "2026-04-21"
 modified: '2026-07-17'
+body_hash: 'sha256:434427c5ca73469a62707eea74f04e0c254fcb458a069132baf6dc7da68ed6eb'
 related:
   - "[[2026-04-21-pdf-taxonomy-plan]]"
   - "[[2026-04-21-justificante-reframing-plan]]"

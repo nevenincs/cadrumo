@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:470954b8ca8ea5f6dd8ceaf37e09da217a8276c855bb35adf66385e99a1665a7'
 related:
   - '[[2026-07-08-test-worker-count-policy-adr]]'
   - '[[2026-07-10-test-worker-count-policy-research]]'

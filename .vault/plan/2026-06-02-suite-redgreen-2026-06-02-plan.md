@@ -4,6 +4,7 @@ tags:
   - '#suite-redgreen-2026-06-02'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:b8fe1cb297f9d93b52ce38745df3bb3bcc5dfb19a036c98d1132a7347a892ecf'
 tier: L2
 related:
   - '[[2026-04-21-calc-verification-adr]]'

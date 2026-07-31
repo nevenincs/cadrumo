@@ -4,6 +4,7 @@ tags:
   - '#test-topology-refactor'
 date: '2026-06-05'
 modified: '2026-07-17'
+body_hash: 'sha256:f052561edde84f9fe1e44864057f2ffe05d0fec391d8ac347bf9891bf6213f00'
 related:
   - '[[2026-06-05-test-topology-refactor-adr]]'
   - '[[2026-04-17-pytest-markers-research]]'

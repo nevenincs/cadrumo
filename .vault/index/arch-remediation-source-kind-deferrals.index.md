@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:7a55ffee8037a1dafe88aed163f9523a9352a5884c2d26265ab5a88b653bf70b'
 related:
   - '[[2026-07-02-arch-remediation-source-kind-deferrals-S01]]'
   - '[[2026-07-02-arch-remediation-source-kind-deferrals-S02]]'

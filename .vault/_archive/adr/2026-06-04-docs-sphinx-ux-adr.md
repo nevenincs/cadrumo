@@ -4,6 +4,7 @@ tags:
   - '#docs-sphinx-ux'
 date: '2026-06-04'
 modified: '2026-07-08'
+body_hash: 'sha256:d666f5125b62646ea72b93daf18a16fcf4403a896e1be09c5a9cddedf426447e'
 related:
   - '[[2026-06-04-docs-sphinx-ux-research]]'
   - '[[2026-05-30-docs-architecture-adr]]'

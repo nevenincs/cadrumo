@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:f4a0456826535ee599fa9b65fc21c3b7fb77d68b30a53fb1847131cb732e02cc'
 related:
   - '[[2026-06-03-synthetic-fixture-primitive-encoding-discipline-adr]]'
   - '[[2026-06-04-synthetic-fixture-primitive-encoding-discipline-research]]'

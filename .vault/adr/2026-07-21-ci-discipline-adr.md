@@ -4,6 +4,7 @@ tags:
   - '#ci-discipline'
 date: '2026-07-21'
 modified: '2026-07-21'
+body_hash: 'sha256:00c8128ae7d8a9c73181612c65a183583ef2649db379ab606e3e6cb8439b25c0'
 related:
   - '[[2026-07-21-ci-discipline-reference]]'
   - '[[2026-07-20-ci-speed-redesign-adr]]'

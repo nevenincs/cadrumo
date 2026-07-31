@@ -4,6 +4,7 @@ tags:
   - "#kent-revise-review"
 date: 2026-04-17
 modified: '2026-07-17'
+body_hash: 'sha256:5534fab9ad76e442ca659bc9340ee37b0acd76b2479a3f994af77eb836f1b4fd'
 related:
   - "[[2026-04-17-export-first-adr]]"
   - "[[2026-04-17-export-first-roadmap-plan]]"

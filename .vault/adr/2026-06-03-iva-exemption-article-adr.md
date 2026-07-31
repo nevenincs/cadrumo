@@ -8,6 +8,7 @@ related:
   - "[[2026-05-26-cross-domain-continuity-plan]]"
 superseded_by: '2026-07-11-article-20-uno-26-correction-adr'
 modified: '2026-07-17'
+body_hash: 'sha256:13857199697ae314f8cb7d802e5a32cde68be11d4e29594c433aff4acbff2046'
 ---
 # `iva-exemption-article` adr: `IvaExemptionArticle discriminator on Transaction` | (**status:** `superseded`)
 

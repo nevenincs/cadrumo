@@ -4,6 +4,7 @@ tags:
   - '#fichero-boe-export-layouts'
 date: '2026-05-21'
 modified: '2026-07-17'
+body_hash: 'sha256:3c0637ea3ba1023346ac0a206329fe9c514bf57b720cdd139febce68d1d208ba'
 step_id: 'S07'
 related:
   - '[[2026-05-21-fichero-boe-export-layouts-plan]]'

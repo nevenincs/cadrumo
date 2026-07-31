@@ -4,6 +4,7 @@ tags:
   - '#mandatory-citations'
 date: '2026-04-25'
 modified: '2026-07-17'
+body_hash: 'sha256:86278b04d6369e8113d8061fd3857212b0ccd8bc59f8b8ab8ffda1c6cfd61108'
 related:
   - "[[2026-04-25-mandatory-citations-plan]]"
   - "[[2026-04-25-mandatory-citations-adr]]"

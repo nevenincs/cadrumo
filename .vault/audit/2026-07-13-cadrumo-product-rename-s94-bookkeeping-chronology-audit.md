@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s94-bookkeeping-chronology'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:245e6e45e57086684fab7a0ee4d0f69375c32bf73c0cb6e1f04c69fa0d48cdb1'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
   - "[[2026-07-12-cadrumo-cli-executable-adr]]"

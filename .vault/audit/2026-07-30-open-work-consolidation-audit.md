@@ -5,6 +5,7 @@ tags:
 date: '2026-07-30'
 modified: '2026-07-30'
 body_schema: 'body-v1'
+body_hash: 'sha256:749000d1261e93c3075bc26afa175aaefe5271fcfc51b933e2d3d50ead704479'
 related:
   - "[[2026-07-17-post-release-distribution-plan]]"
   - "[[2026-07-15-cli-authority-verb-conformance-plan]]"

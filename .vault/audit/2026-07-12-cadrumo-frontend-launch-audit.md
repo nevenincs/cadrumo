@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-frontend-launch'
 date: '2026-07-12'
 modified: '2026-07-17'
+body_hash: 'sha256:49feea015984fea62c28b8881132e959bd9a49a5915074b83810f8c6d1e5004f'
 related: []
 ---
 

@@ -4,6 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-05-21'
 modified: '2026-07-17'
+body_hash: 'sha256:e57c13fc03330f595f6ddcb4aaed8a755a34febcf57d6dd3219e398ead391f0c'
 related:
   - "[[2026-05-21-schema-hardening-plan]]"
   - "[[2026-05-21-schema-hardening-semantic-role-sidecar-audit]]"

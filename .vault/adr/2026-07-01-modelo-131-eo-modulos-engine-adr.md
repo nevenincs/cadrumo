@@ -4,6 +4,7 @@ tags:
   - '#modelo-131-eo-modulos-engine'
 date: '2026-07-01'
 modified: '2026-07-17'
+body_hash: 'sha256:cdc92b246c156a61c96aabcae17f0293eca194e2226366dd5f240f7cd799192c'
 related:
   - "[[2026-04-27-modelo-131-calc-verify-adr]]"
   - "[[2026-04-27-modelo-100-renta-full-calc-adr]]"

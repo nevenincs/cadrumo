@@ -4,6 +4,7 @@ tags:
   - '#binding-source-kind-taxonomy-unification'
 date: '2026-07-05'
 modified: '2026-07-17'
+body_hash: 'sha256:3c7b309c66239fdcffac509a049f17373629083450f4f1d24b7db66927a02cb8'
 step_id: 'S08'
 related:
   - "[[2026-06-26-binding-source-kind-taxonomy-unification-plan]]"

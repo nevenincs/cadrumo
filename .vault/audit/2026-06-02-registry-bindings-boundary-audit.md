@@ -4,6 +4,7 @@ tags:
   - '#registry-bindings-boundary'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:e22244a2209b662de07c59f453465e1d97ca732f4a19287be8092a45e90a3b56'
 related:
   - "[[2026-06-02-registry-hardening-next-work-plan]]"
 ---

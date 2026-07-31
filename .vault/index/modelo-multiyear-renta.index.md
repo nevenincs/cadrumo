@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:9437a47bfe3a545912a6ed097c4fe11418546ddf6ee596da40680c1e73b2b2c5'
 related:
   - '[[2026-06-02-modelo-multiyear-renta-W01-P01-S01]]'
   - '[[2026-06-02-modelo-multiyear-renta-W01-P01-S02]]'

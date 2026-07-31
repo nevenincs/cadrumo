@@ -4,6 +4,7 @@ tags:
   - '#adr-code-reconciliation'
 date: '2026-07-17'
 modified: '2026-07-17'
+body_hash: 'sha256:d3e051b0ee96558081665887aeec85d1c4d2ce1d83b83f60ad15291fbfb447e3'
 related:
   - "[[2026-07-04-autonomic-deduccion-framework-adr]]"
   - "[[2026-07-01-modelo-303-regimen-simplificado-adr]]"

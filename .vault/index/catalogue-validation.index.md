@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:15eeda8e2beb47946618f02a49259df4d0c23c07ad17d3fb6662613e5cc3bbaa'
 related:
   - '[[2026-05-15-catalogue-validation-audit]]'
 ---

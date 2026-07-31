@@ -4,6 +4,7 @@ tags:
   - '#m303-prorrata-grounding'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_hash: 'sha256:387c6775d98b7c8660b93f84cdd722d5dde9532883ade23694ff64dbfe32ba6e'
 related:
   - "[[2026-07-27-conformance-cli-plan]]"
   - "[[2026-07-27-conformance-cli-adr]]"

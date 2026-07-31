@@ -4,6 +4,7 @@ tags:
   - '#calculation-test-oracle-discipline'
 date: '2026-06-01'
 modified: '2026-07-17'
+body_hash: 'sha256:0943a73f34f6c918fbbb36a4a3421d5d30dd0f27ab6cc44e95f19fe9f767c0f1'
 related: []
 ---
 

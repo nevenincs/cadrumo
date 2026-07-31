@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:3be9e122e220267f3846cf57e0e68eeaf2914394f03e217cd412c845831778f4'
 related:
   - '[[2026-05-27-iva-autoconsumo-promotor-adr]]'
   - '[[2026-05-27-iva-autoconsumo-promotor-task-222-exec]]'

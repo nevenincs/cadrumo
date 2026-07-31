@@ -4,6 +4,7 @@ tags:
   - '#pipeline-config-topology'
 date: '2026-07-27'
 modified: '2026-07-27'
+body_hash: 'sha256:7e5d7f1fc9e2ce675e34b5da9e1d5353c80130609d55ebb9683087be4b89daa0'
 related:
   - '[[2026-07-27-canonical-release-pipeline-adr]]'
   - '[[2026-07-27-publication-lane-consolidation-adr]]'

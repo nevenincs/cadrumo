@@ -4,6 +4,7 @@ tags:
   - "#draft-approval-staleness"
 date: "2026-04-18"
 modified: '2026-07-17'
+body_hash: 'sha256:5bc8fd7ea004c4ddfa55639c5bd3e6ef37633389faabd67f84075e64bab1a27d'
 related:
   - "[[2026-04-17-export-first-adr]]"
   - "[[2026-04-17-export-first-roadmap-plan]]"

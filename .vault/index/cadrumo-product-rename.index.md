@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:1e9868b3b1b9f240eeb44f81b4689d2221e839afb67ef50bfeb2607dce572ff8'
 related:
   - '[[2026-07-12-cadrumo-product-rename-W01-P01-S01]]'
   - '[[2026-07-12-cadrumo-product-rename-W01-P01-S02]]'

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:50bff37385e15306557deb7b5690c8ddde075a43afe3b56d92e49d6c372b93e4'
 related:
   - '[[2026-07-26-verify-ledger-drift-gate-audit]]'
 ---

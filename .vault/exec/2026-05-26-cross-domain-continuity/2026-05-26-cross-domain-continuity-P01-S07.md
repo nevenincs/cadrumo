@@ -2,6 +2,7 @@
 step_id: S07
 date: 2026-05-27
 modified: '2026-07-17'
+body_hash: 'sha256:9343f79571f1816d2be20683528f0e91e90869b406a2067d848ef07d3a6657c5'
 tags:
   - "#exec"
   - "#cross-domain-continuity"

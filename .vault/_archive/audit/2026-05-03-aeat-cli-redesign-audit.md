@@ -4,6 +4,7 @@ tags:
   - '#aeat-cli-redesign'
 date: '2026-05-03'
 modified: '2026-07-03'
+body_hash: 'sha256:9f1de819415ef55490e95de02440e99692978d302b7d70faf0bf54ffdd08a500'
 related:
   - '[[2026-05-02-aeat-cli-redesign-adr]]'
   - '[[2026-05-02-aeat-cli-redesign-reference]]'

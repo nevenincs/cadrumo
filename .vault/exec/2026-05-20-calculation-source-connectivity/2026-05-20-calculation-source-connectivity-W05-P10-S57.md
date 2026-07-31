@@ -4,6 +4,7 @@ tags:
   - '#calculation-source-connectivity'
 date: '2026-07-04'
 modified: '2026-07-17'
+body_hash: 'sha256:f39b90be372ef2d8b2aed64ea0808b21cd33ebf614b7c630b897f203c96c30ab'
 step_id: 'S57'
 related:
   - "[[2026-05-20-calculation-source-connectivity-plan]]"

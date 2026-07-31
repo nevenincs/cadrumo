@@ -4,6 +4,7 @@ tags:
   - '#exception-restructure'
 date: '2026-05-09'
 modified: '2026-07-17'
+body_hash: 'sha256:c3e5ea598e1d80816343418d9b3deadd2c7c4a0b501329f7792dde1a0bee36fa'
 related:
   - '[[2026-05-09-exception-restructure-phase-1-plan]]'
 ---

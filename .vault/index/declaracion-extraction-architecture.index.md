@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:4c9c7459c2317c0b6cbca8124d133f565bf41e9a81a1241da59be831719ef45c'
 related:
   - '[[2026-05-21-declaracion-extraction-architecture-W02-P02-S44]]'
   - '[[2026-05-21-declaracion-extraction-architecture-W02-P03-S46]]'

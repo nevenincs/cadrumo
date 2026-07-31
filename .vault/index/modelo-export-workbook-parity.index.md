@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:eab7018d41d08440ea46e171d787d4af5e304c7af0a24b1cce86e059ded032b5'
 related:
   - '[[2026-06-03-modelo-export-workbook-parity-adr]]'
   - '[[2026-06-04-modelo-export-workbook-parity-research]]'

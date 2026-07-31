@@ -4,6 +4,7 @@ tags:
   - '#m303-form-vs-semantic-casilla-dual-keying'
 date: '2026-06-13'
 modified: '2026-07-17'
+body_hash: 'sha256:03af97ecb07a6148e0de70c2f898950e2408a83ea0505ad26c723b84fca861fe'
 step_id: 'S18'
 related:
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-plan]]"

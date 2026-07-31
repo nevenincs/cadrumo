@@ -4,6 +4,7 @@ tags:
   - "#playwright-anti-bot"
 date: '2026-04-12'
 modified: '2026-07-10'
+body_hash: 'sha256:726241bfc554da3d063f8ef7069ad2b92b944686707fff212898a06e2699a806'
 title: Playwright Anti-Bot Evasion Strategy
 related:
   - "[[2026-04-12-playwright-anti-bot-research]]"

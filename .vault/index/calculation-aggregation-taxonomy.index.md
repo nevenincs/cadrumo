@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:86473ab84d0f3fbe739cbf8d582be4a0835655db2fee5e85c242da594ed2c406'
 related:
   - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
   - '[[2026-06-10-calculation-aggregation-taxonomy-research]]'

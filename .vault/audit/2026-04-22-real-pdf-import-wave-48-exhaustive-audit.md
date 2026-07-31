@@ -4,6 +4,7 @@ tags:
   - "#real-pdf-import"
 date: 2026-04-22
 modified: '2026-07-17'
+body_hash: 'sha256:9c15c204bd4286c20fc3533383889ba917b7874523406fe63a570fbd1cb6972e'
 related:
   - "[[2026-04-21-real-pdf-import-execution-wave-910-audit]]"
 ---

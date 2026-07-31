@@ -4,6 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:f52125432fe39fe6846844b38f42b5d67a0570031a6ba8326f95cea4e57237bf'
 related:
   - '[[2026-06-02-registry-hardening-next-work-plan]]'
   - '[[2026-06-02-schema-hardening-m100-label-legal-continuity-candidate-research]]'

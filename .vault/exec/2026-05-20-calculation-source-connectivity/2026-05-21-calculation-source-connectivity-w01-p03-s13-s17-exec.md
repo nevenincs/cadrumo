@@ -4,6 +4,7 @@ tags:
   - "#calculation-source-connectivity"
 date: 2026-05-21
 modified: '2026-07-17'
+body_hash: 'sha256:d0765ccbf70fafc75261370b47f017fdd35b313257da268e7b1dd64bb4c27f84'
 plan: 2026-05-20-calculation-source-connectivity-plan
 wave: W01
 phase: W01.P03

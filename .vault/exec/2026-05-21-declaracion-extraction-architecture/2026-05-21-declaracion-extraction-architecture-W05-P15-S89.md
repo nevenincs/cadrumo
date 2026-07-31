@@ -4,6 +4,7 @@ tags:
   - '#declaracion-extraction-architecture'
 date: '2026-05-21'
 modified: '2026-07-17'
+body_hash: 'sha256:bff381fafbc559b807b9290f06493b705c5790976db7cfee75fbbc24f6d20a03'
 step_id: S89
 related:
   - '[[2026-05-21-declaracion-extraction-architecture-plan]]'

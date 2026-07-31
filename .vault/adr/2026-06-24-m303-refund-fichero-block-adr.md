@@ -4,6 +4,7 @@ tags:
   - '#m303-refund-fichero-block'
 date: '2026-06-24'
 modified: '2026-07-17'
+body_hash: 'sha256:a5db6804a06d06c76afeea2eeaa17c9f766b5672f420ea0853898cdd5ab086e3'
 related:
   - '[[2026-06-24-m303-refund-election-adr]]'
   - '[[2026-06-21-m303-carry-reconciliation-adr]]'

@@ -4,6 +4,7 @@ tags:
   - '#m714-limite-conjunto-irpf'
 date: '2026-06-15'
 modified: '2026-07-17'
+body_hash: 'sha256:f494858e7a1ed2c1996977568892175ef343e9b7e95b16f084d02d8678f6954e'
 related:
   - '[[2026-06-15-m714-limite-conjunto-irpf-research]]'
 ---

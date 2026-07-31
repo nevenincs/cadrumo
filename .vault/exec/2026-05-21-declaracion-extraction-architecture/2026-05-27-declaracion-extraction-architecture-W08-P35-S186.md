@@ -1,6 +1,7 @@
 ---
 date: 2026-05-27
 modified: '2026-07-31'
+body_hash: 'sha256:8dc31a04051cb689a316f7f44c57492d8b3c729168e4a6b283f5ba554fdd7b3a'
 tags:
   - "#exec"
   - "#declaracion-extraction-architecture"

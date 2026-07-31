@@ -4,6 +4,7 @@ tags:
   - '#censo-operator-manual-enrolment'
 date: '2026-07-11'
 modified: '2026-07-17'
+body_hash: 'sha256:5cb70ef63d707a8cbb8eb8c59e95841014a8699554268a5fd1c34294d9021741'
 tier: L2
 related:
   - '[[2026-07-11-censo-operator-manual-enrolment-adr]]'

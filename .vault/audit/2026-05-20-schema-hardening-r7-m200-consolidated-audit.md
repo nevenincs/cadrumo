@@ -4,6 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-05-20'
 modified: '2026-07-17'
+body_hash: 'sha256:a7c5e5a54e02c630a66c2cab3951730058f8133ed8b33f694447dbfe0b336be5'
 related:
   - "[[2026-05-20-schema-hardening-verification-ledger-audit]]"
 ---

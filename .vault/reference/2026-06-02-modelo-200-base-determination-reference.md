@@ -4,6 +4,7 @@ tags:
   - '#modelo-200-base-determination'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:74873d38a3df9339d81dd89f1c98debf447924f87b6bfba4da0288d9162f4274'
 related:
   - "[[2026-06-02-modelo-200-base-determination-adr]]"
 ---

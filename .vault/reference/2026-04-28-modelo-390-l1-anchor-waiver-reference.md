@@ -4,6 +4,7 @@ tags:
   - '#modelo-390-calc-verify'
 date: '2026-04-28'
 modified: '2026-07-17'
+body_hash: 'sha256:29ff1f4a22d4d42ca3035891c39b96e4d7ff36801f51fc490618e1d7bca0c277'
 related:
   - "[[2026-04-28-modelo-390-rule-delta-reference]]"
   - "[[2026-04-27-modelo-390-calc-verify-research]]"

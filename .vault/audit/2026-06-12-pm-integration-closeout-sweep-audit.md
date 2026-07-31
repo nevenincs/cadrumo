@@ -4,6 +4,7 @@ tags:
   - '#pm-integration-closeout'
 date: '2026-06-12'
 modified: '2026-07-17'
+body_hash: 'sha256:b28f9781c9488a276dc83938d4957510901bca23f02798c653b8e11c342759a6'
 related:
   - '[[2026-06-10-ledger-amount-direction-plan]]'
   - '[[2026-06-11-period-grammar-standardisation-plan]]'

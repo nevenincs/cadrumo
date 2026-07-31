@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:4b47f8a1c84ad2c8641affc41bc713ddbf2bb5d52023b93d063a8cb9cec863e8'
 related:
   - '[[2026-05-27-dt-12-rescate-plan-pensiones-adr]]'
   - '[[2026-06-04-dt-12-rescate-plan-pensiones-research]]'

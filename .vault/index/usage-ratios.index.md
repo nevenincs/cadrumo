@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:34872aa1baa5bbccbb7c99beb67eba5ab23c4dc58135c456f1bbc49175d9b6c2'
 related:
   - '[[2026-04-21-usage-ratios-adr]]'
   - '[[2026-04-21-usage-ratios-code-review-exec]]'

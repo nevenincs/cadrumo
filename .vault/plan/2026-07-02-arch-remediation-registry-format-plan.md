@@ -4,6 +4,7 @@ tags:
   - '#arch-remediation-registry-format'
 date: '2026-07-02'
 modified: '2026-07-17'
+body_hash: 'sha256:f2c6e88cafe21c3ef032cfde4ef8a5a4a52f0cc8c25151d2bc058e6214b41e6a'
 tier: L2
 related:
   - '[[2026-07-02-aeat-architecture-review-audit]]'

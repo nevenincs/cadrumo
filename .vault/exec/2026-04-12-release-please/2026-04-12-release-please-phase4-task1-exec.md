@@ -4,6 +4,7 @@ tags:
   - "#release-please"
 date: 2026-04-12
 modified: '2026-07-17'
+body_hash: 'sha256:2392a007d381ae67253f2817293bfa2556ea13bab1411a11b8ab9519b0442769'
 title: release-please phase-4 task-1 — tests/test_release_config.py tripwire
 related:
   - "[[2026-04-12-release-please-plan]]"

@@ -4,6 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-05-13'
 modified: '2026-07-17'
+body_hash: 'sha256:799c0c43f61ed25a20733d1e432463d17490448c2b6b0e6203badfe5d02c7cbb'
 related:
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
   - '[[2026-05-12-cli-workflow-redesign-profile-read-path-retirement-adr]]'

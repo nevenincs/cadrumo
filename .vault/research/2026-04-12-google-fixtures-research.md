@@ -4,6 +4,7 @@ tags:
   - "#google-fixtures"
 date: 2026-04-12
 modified: '2026-07-17'
+body_hash: 'sha256:9ba71bbcc34669b46b16eba7f54343ce6ea70af021997364913ff8f8a3542dd3'
 related:
   - "[[2026-04-12-dev-scaffolding-adr]]"
 ---

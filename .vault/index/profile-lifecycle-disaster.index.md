@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:7dedd522329595080253c41a39c0b25b9df6c8c35c3f58322d26d6fd738d88ed'
 related:
   - '[[2026-05-19-profile-lifecycle-disaster-adr]]'
   - '[[2026-05-19-profile-lifecycle-disaster-axis-a-session-activation-research]]'

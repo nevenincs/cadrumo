@@ -4,6 +4,7 @@ tags:
   - '#user-profile-registry-dependencies'
 date: '2026-05-07'
 modified: '2026-07-17'
+body_hash: 'sha256:cb9ce090e9c352d88905a793084a6ed05c37ca95dc99770f6d11475b481eaa22'
 related: []
 ---
 

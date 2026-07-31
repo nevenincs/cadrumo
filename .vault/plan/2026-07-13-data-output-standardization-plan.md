@@ -4,6 +4,7 @@ tags:
   - '#data-output-standardization'
 date: '2026-07-13'
 modified: '2026-07-17'
+body_hash: 'sha256:ff91ec1535d575884a3e4332f1da933fd5fc754a20bb2b1beacf23b35c35b6cf'
 tier: L3
 related:
   - '[[2026-07-13-data-output-standardization-adr]]'

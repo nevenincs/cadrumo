@@ -4,6 +4,7 @@ tags:
   - '#ledger-add-idempotency'
 date: '2026-06-30'
 modified: '2026-07-17'
+body_hash: 'sha256:6bd7830b8a8443f6afcd0eccba20629bfff95b47017f3a8daca81eeccd42f298'
 related:
   - '[[2026-06-10-ledger-interface-contract-adr]]'
   - '[[2026-06-10-ledger-amount-direction-adr]]'

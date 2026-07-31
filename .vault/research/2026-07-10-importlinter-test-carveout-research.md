@@ -4,6 +4,7 @@ tags:
   - '#importlinter-test-carveout'
 date: '2026-07-10'
 modified: '2026-07-10'
+body_hash: 'sha256:b20fc329edb50bb15d3cd2ddeea70f36d7f9dbb0dc290fac5788e9c703f3da6f'
 related:
   - "[[2026-07-08-importlinter-test-carveout-adr]]"
 ---

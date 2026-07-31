@@ -4,6 +4,7 @@ tags:
   - '#trabajador-del-mar'
 date: '2026-05-31'
 modified: '2026-07-17'
+body_hash: 'sha256:42ce7a84e3ab52b29845255deaa4bbb97cea28bd8d2add9799ff0a85c322a46b'
 tier: L3
 related:
   - '[[2026-05-31-trabajador-del-mar-adr]]'

@@ -4,6 +4,7 @@ tags:
   - '#live-iva-compensation-wallet'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:361d88a339cfd52eafbdf50d773cbc673dcae33b97db6353b3b0386e47ff8964'
 step_id: 'S56'
 related:
   - '[[2026-05-19-live-iva-compensation-wallet-plan]]'

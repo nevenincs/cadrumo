@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:778cd222c589f92024f7346bd6f404c1bb5327b90f7a962d74027ce632203240'
 related:
   - '[[2026-07-24-delivery-pipeline-audit-adr]]'
   - '[[2026-07-24-delivery-pipeline-audit-audit]]'

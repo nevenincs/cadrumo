@@ -4,6 +4,7 @@ tags:
   - '#m349-legal-grounding-debt'
 date: '2026-06-03'
 modified: '2026-07-17'
+body_hash: 'sha256:f0319d417ceb3e1c653e2b3996a6d8e654f12138786ac3dd3a4c6084052524ad'
 related:
   - "[[2026-06-03-m349-payable-invoice-authoring-research]]"
 ---

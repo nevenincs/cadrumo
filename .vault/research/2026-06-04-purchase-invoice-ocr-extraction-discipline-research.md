@@ -4,6 +4,7 @@ tags:
   - '#purchase-invoice-ocr-extraction-discipline'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:33d6c8521b6fc6059bd69cba03127851ad8ae58e693a79221f6c770924918d06'
 related: []
 related:
   - '[[2026-05-30-purchase-invoice-ocr-extraction-discipline-adr]]'

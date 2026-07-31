@@ -4,6 +4,7 @@ tags:
   - '#agent-rule-consolidation'
 date: '2026-06-01'
 modified: '2026-07-17'
+body_hash: 'sha256:113b0e1b34408c604c0ec5cfac4c3726387dba158322464070f47a4e7cc47e79'
 related:
   - "[[2026-06-01-agent-rule-consolidation-research]]"
 ---

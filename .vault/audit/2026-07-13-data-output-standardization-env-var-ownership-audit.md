@@ -4,6 +4,7 @@ tags:
   - '#data-output-standardization'
 date: '2026-07-13'
 modified: '2026-07-17'
+body_hash: 'sha256:b9b5b93f14383316caf84d3f05f80a827552e05350a51706fe37aa3a2b29ec24'
 related:
   - '[[2026-07-13-data-output-standardization-adr]]'
   - '[[2026-07-13-data-output-standardization-research]]'

@@ -4,6 +4,7 @@ tags:
   - '#registry-casilla-identity'
 date: '2026-05-20'
 modified: '2026-07-17'
+body_hash: 'sha256:fb4fe5a9a15dedd92a200069778be0bb1d7db9de7ca2ad7fe237df9571ff2010'
 related:
   - "[[2026-05-20-branch-reconciliation-audit]]"
 ---

@@ -4,6 +4,7 @@ tags:
   - '#modelo-100-minimo-descendientes-engine'
 date: '2026-07-10'
 modified: '2026-07-10'
+body_hash: 'sha256:9bc867ad3f5455c9beb656beb52c97cd930f8504a0efce94c01d8e3100a0917a'
 related:
   - "[[2026-07-01-modelo-100-minimo-descendientes-engine-adr]]"
 ---

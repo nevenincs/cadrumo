@@ -4,6 +4,7 @@ tags:
   - '#retired-missing-stamp-bridge'
 date: '2026-06-15'
 modified: '2026-07-15'
+body_hash: 'sha256:3c1aa689ed83d0ae3ce5be0d04f504d88256361a929a59eb81b81496d9767974'
 step_id: 'S17'
 related:
   - "[[2026-06-15-bindings-interface-hardening-plan]]"

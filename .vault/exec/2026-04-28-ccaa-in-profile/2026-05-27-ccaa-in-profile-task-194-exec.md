@@ -2,6 +2,7 @@
 title: "Task #194 — causante_ccaa axis + foral guard"
 date: 2026-05-27
 modified: '2026-07-17'
+body_hash: 'sha256:3dae343f3676d5555ff63e90cf9e9e48fd08ec97fecc550096badbe3b33f9113'
 tags:
   - "#exec"
   - "#ccaa-in-profile"

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:3f90c9e41ba011f1c0171c3ba4a61cbf9db8cd0d9b7641a8e109a0de862f7397'
 related:
   - '[[2026-05-31-locale-scaffold-fstring-S01]]'
   - '[[2026-05-31-locale-scaffold-fstring-adr]]'

@@ -4,6 +4,7 @@ tags:
   - '#ledger-fx-conversion'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:11370f786eee3e541d90061dcd1681b3eed3f579cb2b3fc20b275f29425f34ee'
 related: []
 ---
 

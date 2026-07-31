@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:514153d40887d5712071717d4476a3d2b87e06c3ac57769c2fc25ab7d6c2eca3'
 related:
   - '[[2026-05-13-audits-resolution-adr]]'
   - '[[2026-05-13-audits-resolution-groupa-step1-exec]]'

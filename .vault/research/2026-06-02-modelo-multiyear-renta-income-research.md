@@ -4,6 +4,7 @@ tags:
   - '#modelo-multiyear-renta-income'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:25c3821b4e8afb3fe1e437bc16ca050ff71e7d95c78214cdf47b1607b8cf0cb6'
 related:
   - "[[2026-06-02-modelo-multiyear-renta-adr]]"
 ---

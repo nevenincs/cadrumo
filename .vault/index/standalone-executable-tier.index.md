@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:e402d092511324c333a9db01aef8caa955801e1c5114549243c028121a2255ab'
 related:
   - '[[2026-07-25-standalone-executable-tier-adr]]'
   - '[[2026-07-25-standalone-executable-tier-research]]'

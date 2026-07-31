@@ -4,6 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-05-14'
 modified: '2026-07-17'
+body_hash: 'sha256:9d8124576379ebc4111f62c0a232d398bea1863545cbf2f3115c0440b501cf92'
 related:
   - '[[2026-05-12-cli-workflow-redesign-domain-harvest-normatives-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-app-registry-boundary-adr]]'

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:7f0e5f422df00302164e7c61a74f16b53d898400e333f4de187f8ed4e12302ee'
 related:
   - '[[2026-06-03-suite-redgreen-storage-encryption-P03-summary]]'
   - '[[2026-06-04-storage-encryption-adr]]'

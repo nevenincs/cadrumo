@@ -4,6 +4,7 @@ tags:
   - '#bare-invocation-bucket-session-gate'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:e0ee4adade155475d42a27eb88b81c86ed07a6916e674266c8a930e9b311097a'
 related:
   - "[[2026-06-03-bare-invocation-bucket-session-gate-adr]]"
 ---

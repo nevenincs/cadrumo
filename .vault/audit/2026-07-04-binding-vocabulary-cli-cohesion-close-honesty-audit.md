@@ -4,6 +4,7 @@ tags:
   - '#binding-vocabulary-cli-cohesion-close-honesty'
 date: '2026-07-04'
 modified: '2026-07-17'
+body_hash: 'sha256:48c15647191346c40f797ca35619deadb80f141725b64ca2a0e12167f90a657a'
 related:
   - "[[2026-06-26-binding-vocabulary-cli-cohesion-plan]]"
   - "[[2026-06-26-binding-vocabulary-cli-cohesion-adr]]"

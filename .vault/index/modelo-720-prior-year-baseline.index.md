@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:5ebba02a15d2ac8ec480c49ec0c4a07608e71684a5f1168dae049b93a949e619'
 related:
   - '[[2026-06-02-modelo-720-prior-year-baseline-adr]]'
   - '[[2026-06-02-modelo-720-prior-year-baseline-research]]'

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:927f54da04d4ae266fdec6465d05374738ae77ecf62add81b3f9ae4ee033bdb6'
 related:
   - '[[2026-05-08-aeat-cli-gap-closure-adr]]'
   - '[[2026-06-04-aeat-cli-gap-closure-research]]'

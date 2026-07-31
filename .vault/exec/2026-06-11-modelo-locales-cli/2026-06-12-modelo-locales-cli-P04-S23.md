@@ -2,6 +2,7 @@
 tags: ['#exec', '#modelo-locales-cli']
 date: '2026-06-12'
 modified: '2026-07-17'
+body_hash: 'sha256:df524859d4ab598f2050c4510b564d949b49ab1f53950e2e8a8ea1ef1eb57f64'
 step_id: 'S23'
 related:
   - '[[2026-06-11-modelo-locales-cli-plan]]'

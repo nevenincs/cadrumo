@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:e49bd4161be3f97acd94ca626c4b37ad8f01a84111cbf66ca0dd8304eb7ab859'
 related:
   - '[[2026-06-30-obligation-coverage-completeness-P01-S01]]'
   - '[[2026-06-30-obligation-coverage-completeness-P01-S02]]'

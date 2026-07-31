@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:05cba215541bcf3ea60ed8daf26201e2bd1f2552712fa1acbebc694260a97200'
 related:
   - '[[2026-05-27-multi-row-modelo-declaration-adr]]'
   - '[[2026-06-04-multi-row-modelo-declaration-research]]'

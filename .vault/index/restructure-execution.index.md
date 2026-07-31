@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:3997b95fa0bdee30d6e1eb76b8adee83eefedccc2771ae88c60942f74e07de0d'
 related:
   - '[[2025-05-22-restructure-execution-P01-S01]]'
   - '[[2025-05-22-restructure-execution-W02-P11-S46]]'

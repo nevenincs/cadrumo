@@ -9,6 +9,7 @@ related:
 supersedes:
   - '2026-06-21-redeme-company-refund-adr'
 modified: '2026-07-17'
+body_hash: 'sha256:476853771b3ff2dbe2aa43545047b296ebec60582e43d612640b77a188e6761f'
 ---
 # `m303-refund-election` adr: `Non-REDEME last-period refund opt-in election` | (**status:** `accepted`)
 

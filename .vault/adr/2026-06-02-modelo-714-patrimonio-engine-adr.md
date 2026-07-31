@@ -4,6 +4,7 @@ tags:
   - '#modelo-714-patrimonio-engine'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:ec07fb67c6c3fdb4cc5d3c0188c857f8e8bba5bb61c458ca6fe6975bc70ebe3b'
 related:
   - "[[2026-06-02-modelo-714-patrimonio-engine-research]]"
   - "[[2026-06-02-modelo-multiyear-renta-adr]]"

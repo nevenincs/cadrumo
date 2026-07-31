@@ -4,6 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:a9942af47cb7ec19f8734be67de36670f2b65ad0cd333e465a956558c56e346e'
 related:
   - '[[2026-05-27-schema-hardening-m308-standardization-plan]]'
   - '[[2026-05-27-schema-hardening-m100-validation-repair-exec]]'

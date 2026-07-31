@@ -4,6 +4,7 @@ tags:
   - '#spanish-tax-glossary'
 date: '2026-05-19'
 modified: '2026-07-17'
+body_hash: 'sha256:6b0e20adb5cb01b18194e4718a167a9b0dc25597602d2e8eb7d33dd9e1e1313c'
 related: []
 ---
 

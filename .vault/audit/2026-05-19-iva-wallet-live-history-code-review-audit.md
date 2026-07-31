@@ -4,6 +4,7 @@ tags:
   - '#iva-wallet-live-history'
 date: '2026-05-19'
 modified: '2026-07-17'
+body_hash: 'sha256:3945e7d429ab9165abf8e1ce06e0f222c6412039c4ef81d2177c324cb8ff945e'
 related:
   - '[[2026-04-12-modelo-303-390-research]]'
   - '[[2026-04-12-modelo-303-390-adr]]'

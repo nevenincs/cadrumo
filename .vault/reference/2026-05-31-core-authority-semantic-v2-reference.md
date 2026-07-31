@@ -4,6 +4,7 @@ tags:
   - '#core-authority-semantic-v2'
 date: '2026-05-31'
 modified: '2026-07-17'
+body_hash: 'sha256:4b51a7ddd9628837f80515a9e111f2de1c070d5fc172ed90d95aa67e8a98d648'
 related:
   - "[[2026-05-31-core-authority-enums-reference]]"
   - "[[2026-05-31-core-authority-duplicates-reference]]"

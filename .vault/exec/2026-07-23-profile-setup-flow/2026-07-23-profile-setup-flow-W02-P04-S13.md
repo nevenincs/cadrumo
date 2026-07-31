@@ -4,6 +4,7 @@ tags:
   - '#profile-setup-flow'
 date: '2026-07-23'
 modified: '2026-07-23'
+body_hash: 'sha256:903a39e3b54bc7666e13b1a0197570a76dd06045686941b51516be28833f4f06'
 step_id: 'S13'
 related:
   - "[[2026-07-23-profile-setup-flow-plan]]"

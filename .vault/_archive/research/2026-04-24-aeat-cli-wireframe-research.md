@@ -4,6 +4,7 @@ tags:
   - '#aeat-cli-wireframe'
 date: '2026-04-24'
 modified: '2026-07-03'
+body_hash: 'sha256:2da70d55426bd27192ec8ded8a4deb24aba945f22f9d91361a669b5fd9c53bc4'
 related:
   - "[[2026-04-21-auth-cli-adr]]"
   - "[[2026-04-18-category-assignment-cli-adr]]"

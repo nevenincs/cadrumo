@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:6e667f8c1f47920e17f44dc353dcc58da6295e5f5ad1a79318f947cd7e47970f'
 related:
   - '[[2026-06-12-live-pull-verification-sweep-W01-P01-S01]]'
   - '[[2026-06-12-live-pull-verification-sweep-W01-P01-S02]]'

@@ -4,6 +4,7 @@ tags:
   - '#user-profile-schema'
 date: '2026-05-07'
 modified: '2026-07-17'
+body_hash: 'sha256:8bcfa37063f0a30304aac1980a444c37cd39a3e63faa86eb3378636e3e0695eb'
 related:
   - "[[2026-05-07-user-profile-registry-dependencies-reference]]"
   - "[[2026-05-07-user-profile-filing-export-dependencies-reference]]"

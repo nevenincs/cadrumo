@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:ecc86cad4d5a340e43b7b6f64725e68873a582c87f5fc870f50556ec7df45d34'
 related:
   - '[[2026-07-07-prorrata-sectores-diferenciados-adr]]'
   - '[[2026-07-10-prorrata-sectores-diferenciados-research]]'

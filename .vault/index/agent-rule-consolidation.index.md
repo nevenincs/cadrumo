@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:7522a3dccc68beed839404e143689f9546a31b7b5233a31ca55bf83f5e719b37'
 related:
   - '[[2026-06-01-agent-rule-consolidation-adr]]'
   - '[[2026-06-01-agent-rule-consolidation-research]]'

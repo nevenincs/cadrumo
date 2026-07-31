@@ -4,6 +4,7 @@ tags:
   - '#mcp-identity-linked-operation'
 date: '2026-07-08'
 modified: '2026-07-17'
+body_hash: 'sha256:dbadb5128d815f4b492a19c57140d85adcf2a5be33c088702870723d6283574b'
 step_id: 'S06'
 related:
   - "[[2026-07-08-mcp-identity-linked-operation-plan]]"

@@ -8,6 +8,7 @@ related:
 supersedes:
   - '2026-07-09-m210-irnr-phase-2-engine-adr'
 modified: '2026-07-17'
+body_hash: 'sha256:875ce72d8eff8b95017ba3e2fce6a45ddfceb006375e6062180e89ad315ef7f9'
 ---
 # `m210-irnr-phase-2-engine` adr: `M210 grouped-rentas and source-scope ingestion` | (**status:** `accepted`)
 

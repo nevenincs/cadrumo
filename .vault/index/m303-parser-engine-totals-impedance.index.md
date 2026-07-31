@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:f13f5cd949cd7a15fc47aa3512cfb60937beba89afb74e06bd595dd91f5ae7de'
 related:
   - '[[2026-06-02-m303-parser-engine-totals-impedance-adr]]'
   - '[[2026-06-04-m303-parser-engine-totals-impedance-research]]'

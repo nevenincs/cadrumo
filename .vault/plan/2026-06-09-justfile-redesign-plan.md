@@ -4,6 +4,7 @@ tags:
   - '#justfile-redesign'
 date: '2026-06-09'
 modified: '2026-07-17'
+body_hash: 'sha256:ae30def5753ef4e4652f76084bd685d13e8ef1177d5d281ec3c95349063778e4'
 tier: L1
 related:
   - '[[2026-06-09-justfile-redesign-adr]]'

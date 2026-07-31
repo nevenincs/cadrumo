@@ -5,6 +5,7 @@ tags:
 date: '2026-07-30'
 modified: '2026-07-30'
 body_schema: 'body-v1'
+body_hash: 'sha256:3303f89b2c7f1ade6b88f6a843410fe3785c969211285275b830c094fe3b31eb'
 step_id: 'S222'
 related:
   - "[[2026-07-15-cli-authority-verb-conformance-plan]]"

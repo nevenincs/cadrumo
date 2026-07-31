@@ -4,6 +4,7 @@ tags:
   - '#modelo-130-relation-regression'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:80bfb3fe4b25c1792914255ff259f431654fc1918f03ce6595da0229059d2715'
 step_id: 'S02'
 related:
   - "[[2026-05-19-modelo-130-relation-regression-plan]]"

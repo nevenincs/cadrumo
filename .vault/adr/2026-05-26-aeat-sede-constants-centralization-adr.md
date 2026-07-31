@@ -4,6 +4,7 @@ tags:
   - '#aeat-sede-constants-centralization'
 date: '2026-05-26'
 modified: '2026-07-17'
+body_hash: 'sha256:abc3468d6fb53acbf92766a01387052f57c5b24e9c2f97332a93fa584316aaeb'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-architecture-adr]]'
   - '[[2026-05-26-no-synthetic-sede-live-surfaces-research]]'

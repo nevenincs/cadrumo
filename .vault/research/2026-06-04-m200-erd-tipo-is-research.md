@@ -4,6 +4,7 @@ tags:
   - '#m200-erd-tipo-is'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:f1a999acc1190d3ee5cff9aa8bd9d1ed5afac8e5e6b6639c8d55278889d525a2'
 related: []
 ---
 

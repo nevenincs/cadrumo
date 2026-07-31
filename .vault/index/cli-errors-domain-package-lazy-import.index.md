@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:c6919a70c22fd35179d3c0f5d4c6fc06f44ff5268558f39127efb60d605022a2'
 related:
   - '[[2026-06-03-cli-errors-domain-package-lazy-import-adr]]'
   - '[[2026-06-03-cli-errors-domain-package-lazy-import-plan]]'

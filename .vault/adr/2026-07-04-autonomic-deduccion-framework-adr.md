@@ -4,6 +4,7 @@ tags:
   - '#autonomic-deduccion-framework'
 date: '2026-07-04'
 modified: '2026-07-17'
+body_hash: 'sha256:8d24bdf3dc5e56bf9226972d7993f3015ce337ad82ba68f5f656b334fbc37237'
 related:
   - "[[2026-07-01-autonomic-deduccion-auto-trigger-adr]]"
   - "[[2026-07-01-autonomic-deduccion-auto-trigger-research]]"

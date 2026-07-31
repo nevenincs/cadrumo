@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:c377fcd3dfc06e5c86e570594f5c08013790a19807b38fc910c3609b90a5b800'
 related:
   - '[[2026-06-04-registry-m100-2025-row-width-S01]]'
   - '[[2026-06-04-registry-m100-2025-row-width-S02]]'

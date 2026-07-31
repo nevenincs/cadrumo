@@ -7,6 +7,7 @@ related:
   - "[[2026-06-04-ledger-google-live-export-research]]"
 superseded_by: '2026-07-14-google-optional-adapter-boundary-adr'
 modified: '2026-07-14'
+body_hash: 'sha256:92c002dbbe5a5513fc7acf17cb762fd3ecac6e979e3a102a27cae78b0fe977e2'
 ---
 # `ledger-google-live-export` adr: `warning closeout authority alignment` | (**status:** `superseded`)
 

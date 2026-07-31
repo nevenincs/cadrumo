@@ -4,6 +4,7 @@ tags:
   - '#arch-remediation-program'
 date: '2026-07-06'
 modified: '2026-07-17'
+body_hash: 'sha256:d48e027d2f037142a9c52ba38b0bc8c9972f9370c09de489bad726bd06583c54'
 related:
   - "[[2026-07-02-arch-remediation-program-adr]]"
   - "[[2026-07-05-arch-remediation-program-audit]]"

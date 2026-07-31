@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:b59ee8049c9fd76b55aafc5f086832fd87126d8e1ec4582b65d99f5481c872f1'
 related:
   - '[[2026-06-30-ledger-add-idempotency-P01-S01]]'
   - '[[2026-06-30-ledger-add-idempotency-P01-S02]]'

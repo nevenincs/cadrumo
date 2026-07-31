@@ -4,6 +4,7 @@ tags:
   - '#modelo-work-revision-cli-decomposition'
 date: '2026-06-05'
 modified: '2026-07-17'
+body_hash: 'sha256:f12590a803c8be044aa76a5a8166b145a3166c2c1ea8eb278949a55d7373a690'
 tier: L3
 related:
   - '[[2026-06-05-modelo-work-revision-cli-decomposition-adr]]'

@@ -4,6 +4,7 @@ tags:
   - "#trilingual-i18n"
 date: 2026-04-12
 modified: '2026-07-17'
+body_hash: 'sha256:1affc6365931f9a724243e9a07987e0be4a381b1d14d414241f26a592144f422'
 related:
   - "[[2026-04-12-trilingual-i18n-plan]]"
   - "[[2026-04-12-trilingual-i18n-reference]]"

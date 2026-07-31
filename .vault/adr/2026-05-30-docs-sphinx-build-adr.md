@@ -4,6 +4,7 @@ tags:
   - '#docs-sphinx-build'
 date: '2026-05-30'
 modified: '2026-07-17'
+body_hash: 'sha256:f5465e4466201012853641e0a4d911e6a4bdc6f74689b6ebed64e7f749c3761b'
 related:
   - "[[2026-05-30-docs-architecture-research]]"
   - "[[2026-05-30-docs-architecture-adr]]"

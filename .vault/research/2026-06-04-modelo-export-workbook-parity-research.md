@@ -4,6 +4,7 @@ tags:
   - '#modelo-export-workbook-parity'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:08f87b577aca51140d3532520418f0ea906af9230fb56cebb872c1b21be283cd'
 related: []
 related:
   - '[[2026-06-03-modelo-export-workbook-parity-adr]]'

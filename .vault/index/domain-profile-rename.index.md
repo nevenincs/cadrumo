@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:1f54ff61f2c18a32228169de1e0b3086e919bfad7ae3c5cb93f6fa7676150fe2'
 related:
   - '[[2026-06-03-domain-profile-rename-adr]]'
   - '[[2026-06-04-domain-profile-rename-research]]'

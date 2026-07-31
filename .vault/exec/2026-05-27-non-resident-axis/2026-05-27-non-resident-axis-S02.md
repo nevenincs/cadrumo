@@ -4,6 +4,7 @@ tags:
   - '#non-resident-axis'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:ef843e93c01e18b06d98f07e34455fbd3cb98b51e05e29703d6126868bdf576d'
 step_id: 'S02'
 related:
   - '[[2026-05-27-non-resident-axis-S01]]'

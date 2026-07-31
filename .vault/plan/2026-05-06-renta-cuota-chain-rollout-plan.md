@@ -4,6 +4,7 @@ tags:
   - '#renta-cuota-chain-rollout'
 date: '2026-05-06'
 modified: '2026-07-17'
+body_hash: 'sha256:cc2a8704d8c9bbef5186ad3c7818774143d3da438a034e630687a1541ca994d9'
 related:
   - "[[2026-05-03-calculation-truth-registry-rebuild-plan]]"
   - "[[2026-05-03-calculation-truth-registry-pending-adr]]"

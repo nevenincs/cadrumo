@@ -4,6 +4,7 @@ tags:
   - '#core-authority-enums'
 date: '2026-05-31'
 modified: '2026-07-17'
+body_hash: 'sha256:561d744ffad8008bea53088f1967f2a7459e19e65dadefc63f0d1baf6278c7c4'
 related:
   - "[[2026-05-30-identity-primitives-adr]]"
   - "[[2026-05-30-identity-primitives-reference]]"

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:63dac3020674970db0a2d9c2aefe8573db52c775d0d820bfcb12e364ff9534ee'
 related:
   - '[[2026-04-25-error-code-registry-adr]]'
   - '[[2026-04-25-error-code-registry-code-review-exec]]'

@@ -4,6 +4,7 @@ tags:
   - '#calculation-engine-foundations'
 date: '2026-06-11'
 modified: '2026-07-17'
+body_hash: 'sha256:084302380222a11efeb3fda9b5c5e6130a9b908189227ede9bd1ea21a1da43ae'
 related:
   - '[[2026-06-10-calculation-engine-foundations-plan]]'
   - '[[2026-06-11-calculation-engine-foundations-closeout-audit]]'

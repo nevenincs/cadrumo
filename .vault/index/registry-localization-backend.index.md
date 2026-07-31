@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:5569a965bb9a723242669060c360f90a603eeacf1948eb70fb645f977f54ea6f'
 related:
   - '[[2026-06-08-registry-localization-backend-P01-S01]]'
   - '[[2026-06-08-registry-localization-backend-P01-S02]]'

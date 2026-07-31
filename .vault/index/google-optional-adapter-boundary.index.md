@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:fbbdc7b4ff3f36b2cd7a4229d32582079365e9033f26b1fdec42d0642b13c582'
 related:
   - '[[2026-07-14-google-optional-adapter-boundary-S01]]'
   - '[[2026-07-14-google-optional-adapter-boundary-S02]]'

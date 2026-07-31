@@ -4,6 +4,7 @@ tags:
   - '#ledger-operator-hardening'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:b1a2a73aca918442b3517e032f7f6ff90eac124c8c7a362b00fb5a8c28e54caa'
 related:
   - "[[2026-06-02-ledger-operator-hardening-adr]]"
 ---

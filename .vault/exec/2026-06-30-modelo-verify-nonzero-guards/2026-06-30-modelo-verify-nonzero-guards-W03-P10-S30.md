@@ -4,6 +4,7 @@ tags:
   - '#modelo-verify-nonzero-guards'
 date: '2026-06-30'
 modified: '2026-07-17'
+body_hash: 'sha256:9dedb0990c106858039222740d70fa353a5fc31b9efa6f426210d12bb1904419'
 step_id: 'S30'
 related:
   - "[[2026-06-30-modelo-verify-nonzero-guards-plan]]"

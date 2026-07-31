@@ -4,6 +4,7 @@ tags:
   - '#secure-storage-production-hardening'
 date: '2026-06-03'
 modified: '2026-07-17'
+body_hash: 'sha256:d47ce9e9663eb2407ef46e723d097fe9ca1e3ca10c3a4b4659014a3ebd8615b3'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
   - '[[2026-06-02-secure-storage-production-hardening-w12-p25-s100-scanner-delta-audit]]'

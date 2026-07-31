@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:f6c4aa822b4de31e3350f3cb36395e81fcf566be32fa3f4792e6412f264f3409'
 related:
   - '[[2026-06-25-modelo-190-percepciones-count-P01-S01]]'
   - '[[2026-06-25-modelo-190-percepciones-count-P01-S02]]'

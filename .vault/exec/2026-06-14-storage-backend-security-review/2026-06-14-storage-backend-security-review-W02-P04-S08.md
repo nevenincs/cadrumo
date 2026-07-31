@@ -4,6 +4,7 @@ tags:
   - '#storage-backend-security-review'
 date: '2026-06-15'
 modified: '2026-07-17'
+body_hash: 'sha256:3225b5103c38a9c75270c1d6c2bd8146f42d6520f4a588aff402233a206721b0'
 step_id: 'S08'
 related:
   - "[[2026-06-14-storage-backend-security-review-plan]]"

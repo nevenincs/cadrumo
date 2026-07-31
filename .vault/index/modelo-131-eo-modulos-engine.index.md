@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:110224d42a8d7e325efb05934372f5da3106da82a5c0020d531a139710cc0926'
 related:
   - '[[2026-07-01-modelo-131-eo-modulos-engine-adr]]'
   - '[[2026-07-10-modelo-131-eo-modulos-engine-research]]'

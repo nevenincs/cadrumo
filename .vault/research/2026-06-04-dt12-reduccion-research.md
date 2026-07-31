@@ -4,6 +4,7 @@ tags:
   - '#dt12-reduccion'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:846ea36fbe7c64fa9dcae8b05961275a5d6020d48b199ea9a2b7fcc06460b773'
 related: []
 ---
 

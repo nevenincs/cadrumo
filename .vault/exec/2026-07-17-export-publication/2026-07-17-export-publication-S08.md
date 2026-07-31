@@ -4,6 +4,7 @@ tags:
   - '#export-publication'
 date: '2026-07-17'
 modified: '2026-07-19'
+body_hash: 'sha256:5cf7e4a8b8f9cb84752bfa54b2b22902e9c1401eb6041fcb931822ac1ec34dfc'
 step_id: 'S08'
 related:
   - "[[2026-07-17-export-publication-plan]]"

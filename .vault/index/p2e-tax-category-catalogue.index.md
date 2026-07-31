@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:62dd77f849fabba9150589d9af5b0f94f5cd2a1f4d2b562a71cc2cba01c13a66'
 related:
   - '[[2026-04-13-p2e-tax-category-catalogue-adr]]'
   - '[[2026-04-13-p2e-tax-category-catalogue-phase1-summary-exec]]'

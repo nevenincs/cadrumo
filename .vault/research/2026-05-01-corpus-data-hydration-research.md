@@ -4,6 +4,7 @@ tags:
   - '#corpus-data-hydration'
 date: '2026-05-01'
 modified: '2026-07-17'
+body_hash: 'sha256:4a92b36fbecff3a4e92d90a0c7964658182ab17f97680f6448ac0abff9badbb7'
 related:
   - "[[2026-04-12-manual-practico-adr]]"
   - "[[2026-04-12-normatives-adr]]"

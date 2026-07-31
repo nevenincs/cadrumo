@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:db13ac78fc45c5f45b1ca4062cc013f2b89f6b7afc61a1226789f225a2b18848'
 related:
   - '[[2026-07-23-tui-wizard-substrate-W01-P01-S01]]'
   - '[[2026-07-23-tui-wizard-substrate-W01-P01-S02]]'

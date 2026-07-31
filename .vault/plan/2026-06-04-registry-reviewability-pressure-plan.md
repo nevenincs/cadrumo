@@ -4,6 +4,7 @@ tags:
   - '#registry-reviewability-pressure'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:9bf06c84fcfe094358a6cb3e2c2c9ca98e1101cb56e4d112ea9b632e669e0708'
 tier: L2
 related:
   - '[[2026-06-04-registry-generic-fragmentation-contract-audit]]'

@@ -10,6 +10,7 @@ related:
   - "[[2026-07-17-post-release-distribution-plan]]"
 superseded_by: '2026-07-25-shared-distribution-repository-adr'
 modified: '2026-07-25'
+body_hash: 'sha256:88200953989da151009f8405c80e3337137fea951b178067f6b135688222c0c7'
 ---
 # `distribution-repo-topology` adr: `Distribution channels are shared and product-neutral, and Scoop needs no repository at all` | (**status:** `superseded`)
 

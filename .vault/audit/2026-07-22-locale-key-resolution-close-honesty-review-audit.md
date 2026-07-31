@@ -4,6 +4,7 @@ tags:
   - '#locale-key-resolution'
 date: '2026-07-22'
 modified: '2026-07-22'
+body_hash: 'sha256:6a0c5d70f0ac391f7bbdeb0eaa37a94d494aa80c7eb9d43634b3eec2001d73b0'
 related:
   - "[[2026-07-21-locale-key-resolution-adr]]"
   - "[[2026-07-21-locale-key-resolution-research]]"

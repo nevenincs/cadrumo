@@ -4,6 +4,7 @@ tags:
   - '#secure-storage'
 date: '2026-05-26'
 modified: '2026-07-17'
+body_hash: 'sha256:b20d6acfa824d4468acb57d2b4ab40b68cbfc38125db340d184628ec79b18151'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
   - '[[2026-05-22-secure-storage-production-hardening-architecture-adr]]'

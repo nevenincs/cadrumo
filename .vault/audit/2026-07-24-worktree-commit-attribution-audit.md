@@ -4,6 +4,7 @@ tags:
   - '#worktree-commit-attribution'
 date: '2026-07-24'
 modified: '2026-07-24'
+body_hash: 'sha256:6a1f5890114ddb2d36efcc1edcdd1a313cfc200bb2ce1415eb4f18f8257a82e4'
 related:
   - "[[2026-07-24-ledger-evidence-atomicity-close-honesty-review-audit]]"
   - "[[2026-07-24-auth-cert-recovery-custody-close-honesty-review-audit]]"

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:e0bed0f960c4310b1c602b7ec2079be56dd3b5706ae2ae98c4f4d6b0341e1ce9'
 related:
   - '[[2026-05-27-non-resident-irnr-axis-adr]]'
   - '[[2026-06-04-non-resident-irnr-axis-research]]'

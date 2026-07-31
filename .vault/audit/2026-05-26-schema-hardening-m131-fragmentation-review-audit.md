@@ -4,6 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-05-26'
 modified: '2026-07-17'
+body_hash: 'sha256:6358f0178fa78f79ab740834c8b1854ad054aaaa14cfbd874a31bb805816662b'
 related:
   - '[[2026-05-26-schema-hardening-m131-fragmentation-plan]]'
   - '[[2026-05-26-schema-hardening-m131-fragmentation-inventory-audit]]'

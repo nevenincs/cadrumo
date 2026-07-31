@@ -4,6 +4,7 @@ tags:
   - '#censal-profile-autofill'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_hash: 'sha256:17faf4215283bc5625f65c214e27f9d501d2f1272af83549340b68a1af7b3b8a'
 step_id: 'S30'
 related:
   - "[[2026-07-25-censal-profile-autofill-plan]]"

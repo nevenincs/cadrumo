@@ -4,6 +4,7 @@ tags:
   - '#m303-parser-engine-totals-impedance'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:22300250794a0e7147b41ea6a83161037ca7347b9bade571f1e73e5dfa26da02'
 related:
   - "[[2026-06-02-m303-parser-engine-totals-impedance-adr]]"
 ---

@@ -4,6 +4,7 @@ tags:
   - '#calculation-export-import-adjudication'
 date: '2026-07-14'
 modified: '2026-07-14'
+body_hash: 'sha256:d5e30a9c340a47f10e637a125abaef519c5bc0c8535fd9fae96f728228f34044'
 related:
   - "[[2026-07-14-calculation-export-import-adjudication-plan]]"
 ---

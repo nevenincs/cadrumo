@@ -4,6 +4,7 @@ tags:
   - "#live-write-static-audit"
 date: "2026-04-16"
 modified: '2026-07-17'
+body_hash: 'sha256:b2091c80a2282f174418cb646b3aefaa0857fa450360fdda077af4b47066347b'
 related:
   - "[[2026-04-12-workflow-engine-audit]]"
   - "[[2026-04-13-filing-complementaria-review-audit]]"

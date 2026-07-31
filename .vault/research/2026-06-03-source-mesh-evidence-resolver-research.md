@@ -4,6 +4,7 @@ tags:
   - '#source-mesh-evidence-resolver'
 date: '2026-06-03'
 modified: '2026-07-17'
+body_hash: 'sha256:2d1704ee058bbc9c32a73beed81df862394b312ab410f6c4fbeccb95c4343346'
 related:
   - "[[2026-05-20-calculation-source-connectivity-adr]]"
 ---

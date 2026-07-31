@@ -4,6 +4,7 @@ tags:
   - '#wizard-registration-bootstrap'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:c7cd751610389d35b1e2e70c779408677a0d1c32b6b2ae3b84c410e394c6505a'
 related:
   - "[[2026-06-01-domain-boundary-audit-audit]]"
 ---

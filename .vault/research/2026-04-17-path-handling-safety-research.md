@@ -4,6 +4,7 @@ tags:
   - "#path-handling-safety"
 date: "2026-04-17"
 modified: '2026-07-17'
+body_hash: 'sha256:7ec96591be565c3443ad3e42843c95dd2d568a5fb065f55aec6126e39a33792f'
 related:
   - "[[2026-04-17-path-handling-safety-review-audit]]"
 ---

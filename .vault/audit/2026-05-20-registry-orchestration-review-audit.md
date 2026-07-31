@@ -4,6 +4,7 @@ tags:
   - '#registry-orchestration'
 date: '2026-05-20'
 modified: '2026-07-17'
+body_hash: 'sha256:622cab57617f7b4b86953a640d2fe584ff5b03b1ccc32fca4c4996bb97a82157'
 related:
   - '[[2026-05-19-modelo-registry-fragment-architecture-adr]]'
   - '[[2026-05-19-modelo-registry-fragment-architecture-research]]'

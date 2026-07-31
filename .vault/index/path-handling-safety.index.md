@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:1b8d9e0dfc42743db68775303720606a70ab689597373477ae3033b54c45163a'
 related:
   - '[[2026-04-17-path-handling-safety-adr]]'
   - '[[2026-04-17-path-handling-safety-phase1-plan]]'

@@ -4,6 +4,7 @@ tags:
   - '#quadlingual-i18n-ccaa'
 date: '2026-05-01'
 modified: '2026-07-17'
+body_hash: 'sha256:4e19be1c7b0030667b78f9032276f4a9eec9164aa547e98d75b77759a5ff91a9'
 related:
   - "[[2026-05-01-quadlingual-i18n-research]]"
   - "[[2026-05-01-quadlingual-i18n-adr]]"

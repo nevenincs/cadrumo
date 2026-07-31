@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:540d0ec4bf50dc6785d5e3ede8d9ea357a0a2db232b8d715dd23f54fe4ca05f5'
 related:
   - '[[2026-05-20-calculation-source-connectivity-W01-P01-S01]]'
   - '[[2026-05-20-calculation-source-connectivity-W01-P01-S02]]'

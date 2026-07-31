@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:629e896ad623cd840d65cebf533736a03524d107cdb8b63b541900a2eb3fdfa9'
 related:
   - '[[2026-05-31-core-authority-W01-P01-S01]]'
   - '[[2026-05-31-core-authority-W01-P01-S02]]'

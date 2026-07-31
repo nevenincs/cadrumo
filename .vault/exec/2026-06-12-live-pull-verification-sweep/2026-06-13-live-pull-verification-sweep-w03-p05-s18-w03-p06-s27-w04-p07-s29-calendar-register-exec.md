@@ -2,6 +2,7 @@
 tags: ['#exec', '#live-pull-verification-sweep']
 date: '2026-06-13'
 modified: '2026-07-31'
+body_hash: 'sha256:7120b1d7c8384416e7d610e5b1016102d3866134e6e5fe7f64262148dc3a0ac9'
 related:
   - '[[2026-06-12-live-pull-verification-sweep-plan]]'
   - '[[2026-06-12-live-pull-verification-sweep-code-review-audit]]'

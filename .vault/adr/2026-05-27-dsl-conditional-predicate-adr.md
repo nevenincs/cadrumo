@@ -4,6 +4,7 @@ tags:
   - '#dsl-conditional-predicate'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:0365842d3e7d5444362d2290d4a8fb831e4d7791243883b76fb0802f3ff303f0'
 related:
   - "[[2026-04-21-calc-verification-adr]]"
   - "[[2026-05-26-modelo-130-relation-regression-adr]]"

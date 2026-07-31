@@ -3,6 +3,7 @@ step_id: "S220"
 feature: "modelo-project-0505-fix"
 date: 2026-05-27
 modified: '2026-07-17'
+body_hash: 'sha256:4c656cb82d2e83c7444ec0d74df785c32cb0e6bfb27cc3a8579a5da02b2d066c'
 tags:
   - "#exec"
   - "#modelo-project-0505-fix"

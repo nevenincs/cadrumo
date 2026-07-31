@@ -4,6 +4,7 @@ tags:
   - '#calendar-live-operational-hardening'
 date: '2026-06-05'
 modified: '2026-07-17'
+body_hash: 'sha256:0a2d5abec1cca61a55ff24dea5d40afb855e9233adc1ec45b3333adfe87da026'
 related:
   - '[[2026-06-05-calendar-live-operational-hardening-plan]]'
 ---

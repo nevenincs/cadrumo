@@ -4,6 +4,7 @@ tags:
   - '#modelo-130-100-continuity'
 date: '2026-06-10'
 modified: '2026-07-17'
+body_hash: 'sha256:28c62678881132558d29c91e35453a6d3eab90177245fd2e2325b6e27db9b36b'
 tier: L2
 related:
   - '[[2026-06-09-modelo-iva-routing-carry-adr]]'

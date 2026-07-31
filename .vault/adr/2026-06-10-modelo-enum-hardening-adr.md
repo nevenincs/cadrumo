@@ -4,6 +4,7 @@ tags:
   - '#modelo-enum-hardening'
 date: '2026-06-10'
 modified: '2026-07-17'
+body_hash: 'sha256:3d5e182560456daefbdaca4433be48ae08b7472ab42bd84e8f6915cd27aba78b'
 related:
   - '[[2026-06-10-modelo-enum-hardening-research]]'
 ---

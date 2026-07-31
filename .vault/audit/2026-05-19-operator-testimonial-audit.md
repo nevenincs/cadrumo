@@ -4,6 +4,7 @@ tags:
   - '#operator-testimonial'
 date: '2026-05-19'
 modified: '2026-07-17'
+body_hash: 'sha256:7c10cc7dcd69a1c035be429933095143332186eb0b56c73402c6acc817f2e508'
 related: []
 ---
 

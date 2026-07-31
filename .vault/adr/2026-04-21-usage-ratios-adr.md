@@ -4,6 +4,7 @@ tags:
   - "#usage-ratios"
 date: "2026-04-21"
 modified: '2026-07-17'
+body_hash: 'sha256:10b0cce478bbc0e912f4552b693fcfbcf6c64facb966240899f21e3cebadcc7c'
 related:
   - "[[2026-04-21-usage-ratios-research]]"
   - "[[2026-04-18-category-assignment-cli-adr]]"

@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s51-strict-validation'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:a371003077c14af7145d9614550e8c92fea6f054935c81572d8f1fe014b8db80'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
   - "[[2026-07-12-cadrumo-cli-executable-adr]]"

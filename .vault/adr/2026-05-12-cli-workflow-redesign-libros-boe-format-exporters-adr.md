@@ -4,6 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-05-12'
 modified: '2026-07-17'
+body_hash: 'sha256:cb14140a854ccc8123be329a17ff1a517a511858f6226e14b11dd076a4ba95e7'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-libros-boe-format-exporters-research]]"

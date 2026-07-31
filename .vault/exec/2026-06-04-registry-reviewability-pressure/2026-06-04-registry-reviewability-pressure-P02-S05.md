@@ -4,6 +4,7 @@ tags:
   - '#registry-reviewability-pressure'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:c2019001a06909d5525ee9e6498f484e17bdd888b7028880866425e78a632444'
 step_id: 'S05'
 related:
   - '[[2026-06-04-registry-reviewability-pressure-plan]]'

@@ -4,6 +4,7 @@ tags:
   - '#clave-permanente-idp-guard-host'
 date: '2026-07-10'
 modified: '2026-07-10'
+body_hash: 'sha256:0582cbd86b94bb1e426398891cb65074f9deb36976efd305bdb4d34d8b291299'
 related:
   - "[[2026-07-10-clave-permanente-idp-guard-host-adr]]"
 ---

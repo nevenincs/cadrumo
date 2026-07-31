@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:f2925fce59828b25276fac48e376688c094df369974901d42c43231e6c484818'
 related:
   - '[[2026-07-13-cadrumo-product-rename-s25-runtime-identity-audit]]'
 ---

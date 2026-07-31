@@ -7,6 +7,7 @@ related:
   - "[[2026-07-12-multilang-externalization-research]]"
 supersedes:
 modified: '2026-07-17'
+body_hash: 'sha256:877e21a5e293636dfc3600970da5bddb281a1743a5c87a137697cd219969396d'
 ---
 
 # `multilang-externalization` adr: `runtime localization authority and externalization boundary` | (**status:** `accepted`)

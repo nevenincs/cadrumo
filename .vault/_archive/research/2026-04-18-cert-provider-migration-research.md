@@ -4,6 +4,7 @@ tags:
   - "#cert-provider"
 date: 2026-04-18
 modified: '2026-07-10'
+body_hash: 'sha256:e0d9548f4bd0ab83f9f6879a3b0b52b14f8739948c27982f55b0f29ce25d5955'
 related:
   - "[[2026-04-18-auth-provider-abstraction-adr]]"
 ---

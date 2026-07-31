@@ -4,6 +4,7 @@ tags:
   - '#declaracion-real-render-verification'
 date: '2026-07-26'
 modified: '2026-07-26'
+body_hash: 'sha256:d13bafb2600d14dc6048ce92c84e22dfa672f3615668dd1d86de88114efe619e'
 related:
   - "[[2026-07-26-declaracion-real-render-verification-plan]]"
   - "[[2026-07-25-declaracion-profile-printed-box-scope-real-render-gate-and-naming-honesty-audit]]"

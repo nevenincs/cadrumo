@@ -4,6 +4,7 @@ tags:
   - '#profile-lifecycle-disaster'
 date: '2026-05-19'
 modified: '2026-07-17'
+body_hash: 'sha256:d608d26889c08b14ab76663fac8bc76ed090a6548d354732277aba56f7bfda45'
 related:
   - "[[2026-05-19-operator-blind-dual-testimony-audit]]"
   - "[[2026-05-14-profile-bucket-lifecycle-adr]]"

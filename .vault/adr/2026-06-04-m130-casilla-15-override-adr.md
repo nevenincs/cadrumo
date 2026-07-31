@@ -4,6 +4,7 @@ tags:
   - '#m130-casilla-15-override'
 date: '2026-06-04'
 modified: '2026-07-10'
+body_hash: 'sha256:3bca623f633f8c333ed738e9b2a5c136f9cfed6e4b3712c495a156957794ce74'
 related:
   - "[[2026-06-04-m130-casilla-15-override-research]]"
 ---

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:e5c20cd4931499eca02f262159edc9f536ab6dac8ad3bb32c88ef652d5b1d32d'
 related:
   - '[[2026-06-26-binding-resolver-contract-unification-P01-S01]]'
   - '[[2026-06-26-binding-resolver-contract-unification-P01-S02]]'

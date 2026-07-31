@@ -4,6 +4,7 @@ tags:
   - '#marcos-214'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:85087f239b0f6412eb2ed6e86b415090acb19ae6727ff4d6fc221413b390ebcd'
 related: []
 ---
 

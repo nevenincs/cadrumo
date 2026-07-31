@@ -2,6 +2,7 @@
 tags: ["#exec", "#calculation-truth-registry"]
 date: "2026-05-06"
 modified: '2026-07-17'
+body_hash: 'sha256:d72590026dac155a6c996a76dc43c21b7fdd4e84a87bcd09b7fc1cc62307ac3c'
 related:
   - "[[2026-05-03-calculation-truth-registry-rebuild-plan]]"
   - "[[2026-05-03-calculation-truth-registry-pending-adr]]"

@@ -4,6 +4,7 @@ tags:
   - '#m200-internal-casilla-discipline'
 date: '2026-06-03'
 modified: '2026-07-17'
+body_hash: 'sha256:21f1ef900f2306f704d314a858a61ca1b8f8e115138bbef5aff0b88de7bf281e'
 step_id: 'S06'
 related:
   - "[[2026-06-03-m200-internal-casilla-discipline-plan]]"

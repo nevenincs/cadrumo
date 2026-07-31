@@ -4,6 +4,7 @@ tags:
   - '#cli-persona-testimonials'
 date: '2026-05-22'
 modified: '2026-07-31'
+body_hash: 'sha256:d591b47addc22b1b1bdd9d8f83ba99779f4367b338cc3a982679547fc668408e'
 related:
   - '[[2026-05-21-cli-persona-testimonials-plan]]'
   - '[[2026-05-21-persona-fleet-bug-inventory-audit]]'

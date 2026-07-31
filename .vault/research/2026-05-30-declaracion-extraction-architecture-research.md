@@ -4,6 +4,7 @@ tags:
   - '#declaracion-extraction-architecture'
 date: '2026-05-30'
 modified: '2026-07-17'
+body_hash: 'sha256:587393bdf0348d72602d8d3114a7fd234b5c9c6e8b017d3ec35bed6e6f44d1de'
 related:
   - "[[2026-05-21-declaracion-extraction-architecture-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-receipt-ocr-pdf-evidence-adr]]"

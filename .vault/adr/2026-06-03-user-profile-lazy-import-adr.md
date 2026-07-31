@@ -4,6 +4,7 @@ tags:
   - '#user-profile-lazy-import'
 date: '2026-06-03'
 modified: '2026-07-17'
+body_hash: 'sha256:834acde7c24eacd802381a3c9d7d33a25b36bcea656f9686c1a7df17de7cc25f'
 related:
   - '[[2026-06-03-user-profile-lazy-import-research]]'
   - '[[2026-06-03-bare-invocation-bucket-session-gate-adr]]'

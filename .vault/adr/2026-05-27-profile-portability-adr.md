@@ -4,6 +4,7 @@ tags:
   - '#cross-domain-continuity'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:0ba5c768161e3cd449bc560dfe2fc86956c9517aa392d908ce769216383a4e54'
 related:
   - "[[2026-05-19-profile-lifecycle-disaster-adr]]"
   - "[[2026-05-29-cross-domain-continuity-audit]]"

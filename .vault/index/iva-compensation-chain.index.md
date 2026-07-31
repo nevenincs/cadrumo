@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:b72e968759cbb236bb098b23ae746bbabc17c45d649dd0c4c92877ce17afd738'
 related:
   - '[[2026-05-19-iva-compensation-chain-P01-S01]]'
   - '[[2026-05-19-iva-compensation-chain-P01-S02]]'

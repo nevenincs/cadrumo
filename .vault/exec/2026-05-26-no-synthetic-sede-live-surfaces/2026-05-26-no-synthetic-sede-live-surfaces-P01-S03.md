@@ -4,6 +4,7 @@ tags:
   - '#no-synthetic-sede-live-surfaces'
 date: '2026-05-26'
 modified: '2026-07-17'
+body_hash: 'sha256:74c96e79944f77365ab4bc509307a4c3096a00c947516a9dae9ac13edbcc3a59'
 step_id: 'S03'
 related:
   - '[[2026-05-26-no-synthetic-sede-live-surfaces-plan]]'

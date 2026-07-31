@@ -4,6 +4,7 @@ tags:
   - '#cross-period-filing-clean-state'
 date: '2026-06-05'
 modified: '2026-07-17'
+body_hash: 'sha256:7ed728906f6b5f50c4ff576079f355ecd17b9ab0356480c91f7e8cb3f4c9fef2'
 related:
   - '[[2026-06-05-cross-period-calculation-guards-adr]]'
   - '[[2026-06-05-cross-period-filing-clean-state-research]]'

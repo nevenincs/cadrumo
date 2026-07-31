@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:c73695102c31df020ffa1f969c00fb978b4e7711bedb957a649894fd0eca982e'
 related:
   - '[[2026-05-20-cli-persona-testimonials-audit]]'
   - '[[2026-05-20-cli-persona-testimonials-research]]'

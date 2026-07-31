@@ -4,6 +4,7 @@ tags:
   - '#registry-disk-cache-pytest'
 date: '2026-07-10'
 modified: '2026-07-10'
+body_hash: 'sha256:6c6ec2053aca9eb853d61596fc949dfabc95a19c42932392d0286336a1d838d1'
 related:
   - "[[2026-07-07-registry-disk-cache-pytest-adr]]"
 ---

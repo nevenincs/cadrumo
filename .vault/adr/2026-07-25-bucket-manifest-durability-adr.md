@@ -4,6 +4,7 @@ tags:
   - '#bucket-manifest-durability'
 date: '2026-07-25'
 modified: '2026-07-26'
+body_hash: 'sha256:37697ce5f7f4ecb3d361a07e7aaec217d56f29ca10d53194ae94243918668086'
 related:
   - "[[2026-07-25-code-dedup-sweep-adr]]"
   - "[[2026-07-25-compatibility-checkpoint-adr]]"

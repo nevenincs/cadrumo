@@ -4,6 +4,7 @@ tags:
   - '#renta-cuota-integra-autonomic-scale'
 date: '2026-05-08'
 modified: '2026-07-17'
+body_hash: 'sha256:3e1647072a52adf5dfe464a05b40879ad3ac34ea2ca9dd517b013d978e23e236'
 related:
   - "[[2026-05-08-renta-cuota-integra-autonomic-scale-research]]"
 ---

@@ -4,6 +4,7 @@ tags:
   - "#release-please"
 date: 2026-04-12
 modified: '2026-07-17'
+body_hash: 'sha256:2848d76d6c34eea878d840fcbc3e7c0675543d434343fa28b45fdf6e36c4366c'
 title: release-please local-only — code review audit
 related:
   - "[[2026-04-12-release-please-adr]]"

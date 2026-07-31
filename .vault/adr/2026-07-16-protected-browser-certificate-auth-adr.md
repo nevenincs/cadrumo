@@ -6,6 +6,7 @@ date: '2026-07-16'
 related:
   - '[[2026-07-16-protected-browser-certificate-auth-research]]'
 modified: '2026-07-17'
+body_hash: 'sha256:2175fbbabf22f61ded10c7b5ace643d1b73e8d3a6ad901072d172642a553a716'
 ---
 # `protected-browser-certificate-auth` adr: `protected browser navigation is the sole certificate-session proof` | (**status:** `accepted`)
 

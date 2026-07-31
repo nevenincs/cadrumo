@@ -4,6 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-05-14'
 modified: '2026-07-17'
+body_hash: 'sha256:64333db1a38360c31c2ba30417bdfd8a18f050d7da9020ce4cf55974a2ad7185'
 step_id: 'W51-baseline-deferral'
 related:
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'

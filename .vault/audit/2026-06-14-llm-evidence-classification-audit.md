@@ -4,6 +4,7 @@ tags:
   - '#llm-evidence-classification'
 date: '2026-06-14'
 modified: '2026-07-17'
+body_hash: 'sha256:431a7d0cd8131b7fb5831d8a80500cf51b2ddd76ac85dbb36b807f40752517cf'
 related:
   - "[[2026-06-13-llm-evidence-classification-adr]]"
 ---

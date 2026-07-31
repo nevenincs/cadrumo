@@ -4,6 +4,7 @@ tags:
   - '#renta-full-coverage'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:9a2c4360d43e1d7a6f039b90e4ac660863c3a0aa14deb4686089f41d503b7947'
 related: []
 related:
   - '[[2026-05-07-renta-full-coverage-adr]]'

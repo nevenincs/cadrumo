@@ -4,6 +4,7 @@ tags:
   - '#tributacion-conjunta-individual'
 date: '2026-07-01'
 modified: '2026-07-17'
+body_hash: 'sha256:7c7e5b38f4aa8b21614494db098bed380041aaef6ec730233428578b7a98cc2f'
 related:
   - "[[2026-06-30-tributacion-conjunta-individual-research]]"
 ---

@@ -4,6 +4,7 @@ tags:
   - '#modelo-export-visual-design'
 date: '2026-06-03'
 modified: '2026-07-17'
+body_hash: 'sha256:b868d6fa7695f863c398eb393a1e51330a4658a258e4496f7cd8ff9b7196e766'
 related:
   - "[[2026-06-03-modelo-export-workbook-parity-adr]]"
   - '[[2026-06-04-modelo-export-visual-design-research]]'

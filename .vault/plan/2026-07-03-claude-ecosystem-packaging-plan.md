@@ -4,6 +4,7 @@ tags:
   - '#claude-ecosystem-packaging'
 date: '2026-07-03'
 modified: '2026-07-17'
+body_hash: 'sha256:16d3561250ae08dc5be893e4261c149ee94b7846ba14393031c2652f9064b410'
 tier: L3
 related:
   - '[[2026-07-03-claude-ecosystem-packaging-adr]]'

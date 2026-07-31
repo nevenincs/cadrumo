@@ -4,6 +4,7 @@ tags:
   - '#declaracion-real-render-verification'
 date: '2026-07-27'
 modified: '2026-07-27'
+body_hash: 'sha256:87d7231061ed9eece948d52772e68157b395710838f083f560e1d68050b3fcb7'
 step_id: 'S11'
 related:
   - "[[2026-07-26-declaracion-real-render-verification-plan]]"

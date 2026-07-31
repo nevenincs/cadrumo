@@ -4,6 +4,7 @@ tags:
   - '#arch-remediation-program'
 date: '2026-07-06'
 modified: '2026-07-17'
+body_hash: 'sha256:48ad5b215ecca1c155da5409c195d6e66d4b26f312b0df5760a12a196c5bf527'
 related:
   - "[[2026-07-02-aeat-architecture-review-audit]]"
   - "[[2026-07-02-arch-remediation-program-adr]]"

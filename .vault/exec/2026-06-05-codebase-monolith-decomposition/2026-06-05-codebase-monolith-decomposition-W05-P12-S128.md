@@ -4,6 +4,7 @@ tags:
   - '#codebase-monolith-decomposition'
 date: '2026-06-05'
 modified: '2026-07-17'
+body_hash: 'sha256:aff8543d703f9b5e54bb77812919bcad2d500afa074d95a7f3016f94af494fce'
 step_id: 'S128'
 related:
   - '[[2026-06-05-codebase-monolith-decomposition-plan]]'

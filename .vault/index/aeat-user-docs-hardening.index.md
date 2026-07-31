@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:c4d22158f2bd5fa947dfcad1e2f5b363431fa8ae30c4907fb48eaa7cf1afecbe'
 related:
   - '[[2026-06-16-aeat-user-docs-hardening-S01]]'
   - '[[2026-06-16-aeat-user-docs-hardening-S02]]'

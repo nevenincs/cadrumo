@@ -2,6 +2,7 @@
 step_id: "S177"
 date: 2026-05-27
 modified: '2026-07-17'
+body_hash: 'sha256:ffd55c55ed9bf35f25cd501ca153599bdfc9e3df36eabd91ec0aacc6e2738f55'
 tags:
   - "#exec"
   - "#declaracion-extraction-architecture"

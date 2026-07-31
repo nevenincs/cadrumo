@@ -4,6 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-05-28'
 modified: '2026-07-17'
+body_hash: 'sha256:ff512e35228da7025fc20770d487ea329194cda2e75d05ea375b668072e9b8f2'
 related:
   - '[[2026-05-28-schema-hardening-continuity-conformance-plan]]'
   - '[[2026-05-27-schema-hardening-casilla-continuity-contract-adr]]'

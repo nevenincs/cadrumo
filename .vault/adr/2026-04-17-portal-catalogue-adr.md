@@ -4,6 +4,7 @@ tags:
   - '#portal-catalogue'
 date: '2026-04-17'
 modified: '2026-07-17'
+body_hash: 'sha256:36cb2bbf58d65c1212a68fdc8d246a725661a9f27939d94722ebcc0bb740a712'
 related:
   - '[[2026-04-17-portal-catalogue-research]]'
   - '[[2026-04-13-modelo-inventory-adr]]'

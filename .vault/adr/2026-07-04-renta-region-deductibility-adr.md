@@ -4,6 +4,7 @@ tags:
   - '#renta-region-deductibility'
 date: '2026-07-04'
 modified: '2026-07-10'
+body_hash: 'sha256:55fabda3e82cdb114e1840aa1935670e3a77dfbc71bb1229e635a6578852d86e'
 related:
   - '[[2026-05-20-calculation-source-connectivity-plan]]'
   - '[[2026-05-20-calculation-source-connectivity-adr]]'

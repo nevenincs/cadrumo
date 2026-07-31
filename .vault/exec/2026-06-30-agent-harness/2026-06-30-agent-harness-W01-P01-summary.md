@@ -4,6 +4,7 @@ tags:
   - '#agent-harness'
 date: '2026-06-30'
 modified: '2026-07-17'
+body_hash: 'sha256:944ad13f0e52f73f5c99730aafc49788f2ddd2d9b15ee80ae9db2be1af8a77b8'
 related:
   - "[[2026-06-30-agent-harness-plan]]"
 ---

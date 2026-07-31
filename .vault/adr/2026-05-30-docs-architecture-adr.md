@@ -8,6 +8,7 @@ related:
   - "[[2026-04-17-relative-imports-adr]]"
   - "[[2026-04-25-json-output-contract-adr]]"
 modified: '2026-07-17'
+body_hash: 'sha256:d0ddea06c2c857455360826445d1e6c3bec59decf14997e9461d71ad453f7295'
 ---
 # `docs-architecture` adr: `documentation surface taxonomy and conventions` | (**status:** `accepted`)
 

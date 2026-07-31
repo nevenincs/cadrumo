@@ -4,6 +4,7 @@ tags:
   - '#profile-bundle-tui'
 date: '2026-07-24'
 modified: '2026-07-24'
+body_hash: 'sha256:a7cf9605bf8a8360a0339841da876219f2dcde6334a815cba9dca1ff60c5cf22'
 related:
   - "[[2026-07-24-profile-bundle-tui-adr]]"
 ---

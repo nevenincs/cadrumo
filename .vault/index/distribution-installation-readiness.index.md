@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:cacb6fb402f9a4cfb9afd6bfa062a9232c8bfc4a04e6390bcf58aa9aed6c33d7'
 related:
   - '[[2026-07-15-distribution-installation-readiness-W01-P01-S01]]'
   - '[[2026-07-15-distribution-installation-readiness-W01-P01-S02]]'

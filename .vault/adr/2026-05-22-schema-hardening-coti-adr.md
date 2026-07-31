@@ -4,6 +4,7 @@ tags:
   - '#schema-hardening-coti'
 date: '2026-05-22'
 modified: '2026-07-17'
+body_hash: 'sha256:85e1a78ee1e3d104c62f49da74d1163411d9dd0973f41fd47ab76f232a0f66f2'
 related:
   - '[[2026-05-22-schema-hardening-coti-research]]'
 ---

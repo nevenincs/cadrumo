@@ -4,6 +4,7 @@ tags:
   - '#cross-campaign-hardening'
 date: '2026-05-21'
 modified: '2026-07-17'
+body_hash: 'sha256:f449ff98647b948442973b46f5e734cc88221b951b4a5b0a96b88dc3094b75a1'
 related:
   - '[[2026-05-21-cross-campaign-hardening-plan]]'
   - '[[2026-05-21-persona-fleet-bug-inventory-audit]]'

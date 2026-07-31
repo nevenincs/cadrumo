@@ -4,6 +4,7 @@ tags:
   - '#filing-complementaria'
 date: '2026-04-13'
 modified: '2026-07-17'
+body_hash: 'sha256:a8a3a5181dd0c8c283a14d1ec25ab891b17db95bf5fda79ac4f58ed064f9fde9'
 related:
   - '[[2026-04-13-filing-complementaria-research]]'
   - '[[2026-04-13-filing-complementaria-adr]]'

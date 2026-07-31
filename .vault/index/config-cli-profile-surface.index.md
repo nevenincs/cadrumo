@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:9428358b10155dce3d9e749015930d7180bc29c13787b39007e4ee1e728c5659'
 related:
   - '[[2026-05-07-config-cli-profile-surface-adr]]'
   - '[[2026-06-04-config-cli-profile-surface-research]]'

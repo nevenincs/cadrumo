@@ -4,6 +4,7 @@ tags:
   - '#cli-pull-file-standard'
 date: '2026-06-11'
 modified: '2026-07-17'
+body_hash: 'sha256:040d34bd34805467d2702cfb6945c0848601e4ff54a81b539cf3df896edda706'
 step_id: 'S14'
 related:
   - "[[2026-06-10-cli-pull-file-standard-plan]]"

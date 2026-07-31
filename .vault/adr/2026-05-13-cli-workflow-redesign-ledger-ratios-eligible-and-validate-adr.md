@@ -4,6 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-05-13'
 modified: '2026-07-17'
+body_hash: 'sha256:2a28a27596f8e3b11d2b079e3345b7aeb11ba1f12c68e265d73421af3295a0ba'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-app-ledger-ratios-shape-adr]]"

@@ -4,6 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:3d512fe22435ebbd5d42ad7d3732414d105888141e4f9e7d55aad60862bbd055'
 related:
   - '[[2026-05-27-schema-hardening-m100-revision-drift-research]]'
   - '[[2026-05-20-registry-casilla-identity-research]]'

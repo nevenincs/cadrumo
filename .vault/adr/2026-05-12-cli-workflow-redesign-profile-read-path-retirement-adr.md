@@ -4,6 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-05-12'
 modified: '2026-07-17'
+body_hash: 'sha256:2dd31cd8a32355bc62c4f64ba0cf0c408573068ca7abfe91658c95bdb1f96bb8'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-profile-read-path-retirement-research]]"

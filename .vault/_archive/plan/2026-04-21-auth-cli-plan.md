@@ -4,6 +4,7 @@ tags:
   - "#auth-cli"
 date: "2026-04-21"
 modified: '2026-07-10'
+body_hash: 'sha256:3d31f2ed3530cbe0e76815331799f366e65e902d9e121d47f78ba9a78270fab2'
 related:
   - "[[2026-04-21-auth-cli-adr]]"
   - "[[2026-04-18-auth-protocol-adr]]"

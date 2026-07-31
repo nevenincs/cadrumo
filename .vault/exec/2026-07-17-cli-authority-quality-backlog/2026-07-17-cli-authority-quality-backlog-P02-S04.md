@@ -4,6 +4,7 @@ tags:
   - '#cli-authority-quality-backlog'
 date: '2026-07-17'
 modified: '2026-07-19'
+body_hash: 'sha256:39d16c423b6bad748e52de2151fc88d186c6a5eded423dc32cf720f2e614d43c'
 step_id: 'S04'
 related:
   - "[[2026-07-17-cli-authority-quality-backlog-plan]]"

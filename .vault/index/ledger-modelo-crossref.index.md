@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:abdbf0d44a82abaf01fe08038e7053ba975b6a1a2d10655673ee8f246041e030'
 related:
   - '[[2026-06-10-ledger-modelo-crossref-P01-S01]]'
   - '[[2026-06-10-ledger-modelo-crossref-P01-S02]]'

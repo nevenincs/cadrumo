@@ -4,6 +4,7 @@ tags:
   - "#live-write-static-audit"
 date: 2026-04-16
 modified: '2026-07-17'
+body_hash: 'sha256:f90ee243148ced9c11cd1777500d73af81030454d92e52aa520899e7ff3f8848'
 related:
   - "[[2026-04-16-live-write-static-audit-reference]]"
   - "[[2026-04-12-workflow-engine-audit]]"

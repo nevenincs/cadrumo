@@ -4,6 +4,7 @@ tags:
   - '#modelo-registry-fragments'
 date: '2026-05-19'
 modified: '2026-07-17'
+body_hash: 'sha256:f43dad433a66b34e50ca0319e30eb8d38da3fa7271b80ad8d5153dbab1ef89c9'
 related:
   - '[[2026-05-15-corpus-registry-packaging-research]]'
 ---

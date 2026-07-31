@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:8c08f0d28f6bb662ecfb0121346eaaf9e5538a463dfcb328cb52b7c01687f2cf'
 related:
   - '[[2026-07-21-desktop-capture-harness-adr]]'
   - '[[2026-07-21-desktop-capture-harness-reference]]'

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:31fa465364944d054bf32455269e25dd9cd25de684527be984f745a8bb00753f'
 related:
   - '[[2026-07-01-verification-contract-coverage-audit]]'
 ---

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-30'
 body_schema: 'body-v1'
+body_hash: 'sha256:2f0545abde96483d72f6c2369d9741224f68b48cdc74dbd10f3468de221132f6'
 related:
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S01]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S02]]'

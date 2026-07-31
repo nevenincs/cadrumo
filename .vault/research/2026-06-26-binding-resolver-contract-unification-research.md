@@ -4,6 +4,7 @@ tags:
   - '#binding-resolver-contract-unification'
 date: '2026-06-26'
 modified: '2026-07-17'
+body_hash: 'sha256:a40851d8dc894a366e884bc61c73dddaeaf45b7adcb91bc78fa35ee0d4c9cc90'
 related:
   - "[[2026-06-26-binding-resolver-contract-unification-adr]]"
   - "[[2026-06-26-bindings-architecture-unification-audit]]"

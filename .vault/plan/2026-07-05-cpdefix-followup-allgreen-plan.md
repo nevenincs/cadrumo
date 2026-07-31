@@ -4,6 +4,7 @@ tags:
   - '#cpdefix-followup-allgreen'
 date: '2026-07-05'
 modified: '2026-07-17'
+body_hash: 'sha256:65f24e7570abe933baa1c1193831994e87acce618d031371e17f84bc6d82f07f'
 tier: L3
 related:
   - '[[2026-06-30-cpdefix-calculation-allgreen-audit]]'

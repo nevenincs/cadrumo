@@ -4,6 +4,7 @@ tags:
   - '#registry-m100-row-width-deferrals'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:bac3e452a961632abc2c647b07d93418d1346adb0e4fc8845d6807eca37d2bf7'
 tier: L1
 related:
   - '[[2026-06-04-registry-m100-row-width-deferrals-adr]]'

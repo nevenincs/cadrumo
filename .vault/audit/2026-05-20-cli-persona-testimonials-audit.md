@@ -4,6 +4,7 @@ tags:
   - '#cli-persona-testimonials'
 date: '2026-05-20'
 modified: '2026-07-17'
+body_hash: 'sha256:c1f342dd793a4a5cedc0072a2839a684fc856317f4987485caf08a48f806f947'
 related:
   - '[[2026-05-20-test-fidelity-sweep-audit]]'
 ---

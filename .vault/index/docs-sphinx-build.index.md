@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:51c17037256163645a2c8aacf82aa1b60736a202bbd83fd112aece5342df4901'
 related:
   - '[[2026-05-30-docs-sphinx-build-adr]]'
   - '[[2026-06-04-docs-sphinx-build-research]]'

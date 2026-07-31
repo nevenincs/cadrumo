@@ -4,6 +4,7 @@ tags:
   - '#bindings-interface-hardening'
 date: '2026-06-15'
 modified: '2026-07-17'
+body_hash: 'sha256:370d0e2dad2f6658371c02535caab17c36f5f21d6487c1a3c3795a5f0760f515'
 step_id: 'S25'
 related:
   - "[[2026-06-15-bindings-interface-hardening-plan]]"

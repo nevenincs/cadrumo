@@ -4,6 +4,7 @@ tags:
   - '#cli-testimonial'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:da6d1409fd0c8a0506f900ae3c9dd9cf36918ce7947e0afd58eeeb61879160dc'
 related:
   - "[[2026-05-27-olivia-cli-testimonial-audit]]"
 ---

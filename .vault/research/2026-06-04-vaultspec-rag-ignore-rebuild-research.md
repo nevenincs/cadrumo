@@ -4,6 +4,7 @@ tags:
   - '#vaultspec-rag-ignore-rebuild'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:1618116f94abf418ff1893281c711d6e5a45b2b64bb59342e20c54b668f54c3b'
 related:
   - '[[2026-06-01-semantic-cluster-hardening-audit]]'
 ---

@@ -4,6 +4,7 @@ tags:
   - '#live-justificante-reconcile'
 date: '2026-06-10'
 modified: '2026-07-17'
+body_hash: 'sha256:8ddfbd6849f53436d166e6465a7258c752c5635da4fb4607ca5b48d4b281ba75'
 tier: L2
 related:
   - '[[2026-06-10-live-justificante-reconcile-adr]]'

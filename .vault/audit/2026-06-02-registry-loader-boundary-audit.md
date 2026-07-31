@@ -4,6 +4,7 @@ tags:
   - '#registry-loader-boundary'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:936551733c4dd5801f4d7bd31a393df03d91cd9665268448b1a7af4b8089a60f'
 related:
   - "[[2026-06-02-registry-hardening-next-work-plan]]"
 ---

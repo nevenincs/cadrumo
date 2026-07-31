@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s63-english-catalogue'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:fdc72196f5201219ac919808cc7158b5931c891525173e79b20e809426675789'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
 ---

@@ -4,6 +4,7 @@ tags:
   - "#deferred-scope-state-machine"
 date: "2026-05-19"
 modified: '2026-07-17'
+body_hash: 'sha256:e26920c0035fccb99aa3c42d966c0d9b9dbbb39331d4332afb60d0014cc97ec0'
 related:
   - "[[2026-05-19-spanish-stem-terminology-authority-adr]]"
 ---

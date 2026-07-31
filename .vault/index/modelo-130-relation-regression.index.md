@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:b616635be0a081b4d99926e1c784b483e9116be8f6740b0c8033548b3e4f6102'
 related:
   - '[[2026-05-19-modelo-130-relation-regression-W01-P02-S01]]'
   - '[[2026-05-19-modelo-130-relation-regression-W01-P02-S02]]'

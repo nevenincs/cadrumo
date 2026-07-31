@@ -4,6 +4,7 @@ tags:
   - "#real-pdf-fixture-corpus"
 date: "2026-04-21"
 modified: '2026-07-17'
+body_hash: 'sha256:18ca594e2ea74b9f296ad407dedc2e65e5760e13bf4294e92688a9aef1796304'
 related:
   - "[[2026-04-21-real-pdf-fixture-corpus-research]]"
   - "[[2026-04-21-real-pdf-import-umbrella-research]]"

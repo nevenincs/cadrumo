@@ -4,6 +4,7 @@ tags:
   - '#envelope-conformance-gate'
 date: '2026-06-01'
 modified: '2026-07-17'
+body_hash: 'sha256:3d9e1319ac28dd8e6227d59f2222155d3ed1b7ef8a0733f2a56b169f802f2791'
 related:
   - "[[2026-05-31-coverage-canonicalisation-audit]]"
   - "[[2026-06-01-envelope-conformance-gate-research]]"

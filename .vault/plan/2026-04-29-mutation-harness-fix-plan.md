@@ -4,6 +4,7 @@ tags:
   - '#mutation-harness-fix'
 date: '2026-04-29'
 modified: '2026-07-17'
+body_hash: 'sha256:49667942beeb42c82ba9cac377fbdf3f5bfd06e4decea951f1f6e911eca61e0c'
 related:
   - '[[2026-04-29-mutation-harness-fix-adr]]'
   - '[[2026-04-29-mutation-harness-fix-research]]'

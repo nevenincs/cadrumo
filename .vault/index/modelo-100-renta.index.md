@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:1675a027fa79fbeea9efbb0a95c42176678fc2340c28c582d5be0d96f6c7289f'
 related:
   - '[[2026-04-21-modelo-100-renta-adr]]'
   - '[[2026-04-21-modelo-100-renta-plan]]'

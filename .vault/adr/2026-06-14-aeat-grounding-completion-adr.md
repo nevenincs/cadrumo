@@ -4,6 +4,7 @@ tags:
   - '#aeat-grounding-completion'
 date: '2026-06-14'
 modified: '2026-07-17'
+body_hash: 'sha256:03837f90bf66efbcbc3bed7949afe7c3dc3ff60f6939770247c44a6085852489'
 related:
   - '[[2026-06-14-aeat-grounding-completion-research]]'
   - "[[2026-06-14-legal-grounding-centralization-audit]]"

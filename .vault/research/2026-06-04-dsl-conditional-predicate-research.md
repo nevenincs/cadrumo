@@ -4,6 +4,7 @@ tags:
   - '#dsl-conditional-predicate'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:27f81c4779ebc627770d1e3eb3734f116be0dfd6a1240f6442dfe07566478da6'
 related:
   - "[[2026-05-27-dsl-conditional-predicate-adr]]"
 ---

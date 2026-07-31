@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:abfbc8a69d3aff56fa5923593595093b6db3aa7eef26bfe8d43fcb060cf8207f'
 related:
   - '[[2026-06-04-registry-validator-baseline-repair-S01]]'
   - '[[2026-06-04-registry-validator-baseline-repair-S02]]'

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:e4341127f9acb0f0581bf658a3741efd62940744db7e92feb3ca6108636a590a'
 related:
   - '[[2026-06-01-calculation-test-oracle-discipline-adr]]'
   - '[[2026-06-01-calculation-test-oracle-discipline-research]]'

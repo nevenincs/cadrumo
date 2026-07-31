@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:4ce90924c1fc8ab33ccd4e7959bc50e004dfa406ab745ffc1ecb3c260e745f4c'
 related:
   - '[[2026-04-29-rental-income-hardening-adr]]'
   - '[[2026-04-29-rental-income-hardening-audit]]'

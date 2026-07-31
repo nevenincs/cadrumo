@@ -4,6 +4,7 @@ tags:
   - '#draft-approval-staleness'
 date: '2026-04-18'
 modified: '2026-07-17'
+body_hash: 'sha256:c661d448f95e8d3750716a16b4ebdc209b021d46aa7dc18eb33d01f321b479f1'
 related:
   - '[[2026-04-18-draft-approval-staleness-plan]]'
 ---

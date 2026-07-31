@@ -4,6 +4,7 @@ tags:
   - '#ledger-input-localization'
 date: '2026-06-12'
 modified: '2026-07-17'
+body_hash: 'sha256:0a578d4a366b15444bcc8f439b2e0febfd350cb4c18b3d6a1e6199ccf78354e0'
 step_id: 'S12'
 related:
   - "[[2026-06-10-ledger-input-localization-plan]]"

@@ -4,6 +4,7 @@ tags:
   - '#calculation-truth-registry'
 date: '2026-05-04'
 modified: '2026-07-17'
+body_hash: 'sha256:3a8a153f5c004ae9127d55bddd60c87536bdf39a84fd37598d958c814b798e24'
 related:
   - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
 ---

@@ -2,6 +2,7 @@
 tags: ["#audit", "#user-profile-backend-schema"]
 date: 2026-05-08
 modified: '2026-07-17'
+body_hash: 'sha256:8ee5f75bcf2e8a0b29d34d2ec9a1d21a245e56dffde033a1bcc75a80c3377a2b'
 related:
   - "[[2026-05-07-user-profile-backend-schema-plan]]"
   - "[[2026-05-07-user-profile-backend-schema-adr]]"

@@ -4,6 +4,7 @@ tags:
   - '#post-release-distribution'
 date: '2026-07-19'
 modified: '2026-07-19'
+body_hash: 'sha256:63d233c5e668d224f41fb843a2e808ca7ccc32eaf6ad589e7b8eff382aa3bc00'
 related:
   - "[[2026-07-17-post-release-distribution-plan]]"
 ---

@@ -4,6 +4,7 @@ tags:
   - '#renta-cuota-integra-state-scale'
 date: '2026-05-08'
 modified: '2026-07-17'
+body_hash: 'sha256:e61e89ade735c909e3a03a8ac32ed31f393de865a1c4d23ee5c5298b734b1dcc'
 related:
   - "[[2026-05-08-renta-cuota-integra-state-scale-adr]]"
   - "[[2026-05-08-renta-cuota-integra-state-scale-research]]"

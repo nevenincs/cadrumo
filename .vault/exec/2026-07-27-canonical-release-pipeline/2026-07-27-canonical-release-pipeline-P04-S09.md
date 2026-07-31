@@ -4,6 +4,7 @@ tags:
   - '#canonical-release-pipeline'
 date: '2026-07-27'
 modified: '2026-07-27'
+body_hash: 'sha256:a3da50bc64153b43a7422f813e9125bad66482af0092fa3a5775d26fc1e68095'
 step_id: 'S09'
 related:
   - "[[2026-07-27-canonical-release-pipeline-plan]]"

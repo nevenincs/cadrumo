@@ -4,6 +4,7 @@ tags:
   - '#calendar-semantics'
 date: '2026-06-12'
 modified: '2026-07-17'
+body_hash: 'sha256:f7e87d68ed903a7ee48da462c150970e5ec3552d6f89394e0dd015b0e893a2e1'
 related:
   - '[[2026-06-12-live-pull-verification-sweep-plan]]'
   - '[[2026-06-05-calendar-filing-semantics-adr]]'

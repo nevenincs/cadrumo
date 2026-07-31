@@ -4,6 +4,7 @@ tags:
   - '#registry-toml-parser'
 date: '2026-07-07'
 modified: '2026-07-17'
+body_hash: 'sha256:9ea614369b42804bbf7fa7fa5be02f2489dc6774ff99346f7e4248b5abc9bccf'
 related:
   - '[[2026-07-10-registry-toml-parser-research]]'
 ---

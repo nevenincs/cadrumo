@@ -4,6 +4,7 @@ tags:
   - '#centralized-output-redaction'
 date: '2026-05-28'
 modified: '2026-07-17'
+body_hash: 'sha256:0adff7ac79f98b1260ff275a881bcf5c238c9618705bc774fdd4a2532ff36acd'
 related:
   - '[[2026-05-28-centralized-output-redaction-research]]'
   - '[[2026-04-25-json-output-contract-adr]]'

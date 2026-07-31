@@ -4,6 +4,7 @@ tags:
   - '#audits-resolution'
 date: '2026-05-13'
 modified: '2026-07-17'
+body_hash: 'sha256:219d8ed82298b3ee9349cc1eedeac07f43b22ec7a6c031c976231b52c2539c3a'
 related:
   - "[[2026-05-13-eliminate-shims-audit]]"
   - "[[2026-05-13-schema-driven-wizard-ux-audit]]"

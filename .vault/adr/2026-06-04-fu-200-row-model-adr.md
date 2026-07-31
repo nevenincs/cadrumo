@@ -4,6 +4,7 @@ tags:
   - '#fu-200-row-model'
 date: '2026-06-04'
 modified: '2026-07-10'
+body_hash: 'sha256:32f616150d4a98bee65d342db722906e8c8b0918a190b555bc088e0a7a2468fe'
 related:
   - "[[2026-06-04-fu-200-row-model-research]]"
 ---

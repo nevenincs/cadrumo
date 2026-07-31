@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:ae12e915b809f2dc049e5cf19b46fef06e5c1acc053f1705365c22285a5cd8cb'
 related:
   - '[[2026-04-18-auth-protocol-adr]]'
 ---

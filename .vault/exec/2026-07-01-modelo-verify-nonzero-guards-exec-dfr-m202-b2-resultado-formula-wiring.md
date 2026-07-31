@@ -4,6 +4,7 @@ tags:
   - '#modelo-verify-nonzero-guards'
 date: '2026-07-01'
 modified: '2026-07-31'
+body_hash: 'sha256:4189483a312f3a0741d2f8157393d0cc305a635da4f3cba24c21966cf6ff8231'
 related:
   - "[[2026-07-01-modelo-verify-nonzero-guards-m202-deferred-items-audit]]"
   - "[[2026-07-01-modelo-verify-nonzero-guards-review-closeout-audit]]"

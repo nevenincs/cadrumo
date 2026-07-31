@@ -7,6 +7,7 @@ tags:
   - "#schema-extraction"
 date: '2026-04-17'
 modified: '2026-07-17'
+body_hash: 'sha256:0aaa499823ac4501a147a1400a3f15efdef6d77e70249efaa33ccb8414e50db8'
 related:
   - "[[2026-04-17-schema-extraction-research]]"
   - "[[2026-04-12-modelo-303-390-adr]]"

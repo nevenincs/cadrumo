@@ -4,6 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-05-13'
 modified: '2026-07-17'
+body_hash: 'sha256:5bc2ffafd9e482fa9b8c134f7bc71a525fd68c3d08862990ce526b17ad82dca3'
 related:
   - "[[2026-05-13-cli-workflow-redesign-unexposed-backend-capability-wave-expansion-adr]]"
   - "[[2026-05-13-cli-workflow-redesign-unexposed-backend-capability-audit-research]]"

@@ -4,6 +4,7 @@ tags:
   - '#renta-scope-audit'
 date: '2026-05-07'
 modified: '2026-07-17'
+body_hash: 'sha256:3f702e391b14cd28b3197d435798481185cea2061a475f479e705efe332621db'
 related:
   - "[[2026-05-06-renta-cuota-chain-rollout-plan]]"
   - "[[2026-05-03-calculation-truth-registry-pending-adr]]"

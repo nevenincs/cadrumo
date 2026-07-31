@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:5772c4b458db6eb1c28985fcb96c41027aa3db1eeed591931b07a5964760a37c'
 related:
   - '[[2026-07-07-registry-disk-cache-pytest-adr]]'
   - '[[2026-07-10-registry-disk-cache-pytest-research]]'

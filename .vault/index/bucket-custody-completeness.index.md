@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:a4d7e1dc3bd6787db76376e1101567bf919d793103c77d428a44a3964014f4b7'
 related:
   - '[[2026-06-30-bucket-custody-completeness-P01-S01]]'
   - '[[2026-06-30-bucket-custody-completeness-P01-S02]]'

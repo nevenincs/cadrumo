@@ -4,6 +4,7 @@ tags:
   - "#real-pdf-import"
 date: '2026-04-22'
 modified: '2026-07-17'
+body_hash: 'sha256:47b8c1762e25c1379e50e37de184596fe6b369f2ef8fd9d4fd00e32bf67190f8'
 related:
   - "[[2026-04-17-export-first-adr]]"
   - "[[2026-04-22-citation-blocklist-adr]]"

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:d78a6bc7d500ae473f512b2cd93948a5b33697d223a78859a98e01451050de3c'
 related:
   - '[[2026-06-13-modelo-130-pagos-fraccionados-carry-P01-S01]]'
   - '[[2026-06-13-modelo-130-pagos-fraccionados-carry-P01-S02]]'

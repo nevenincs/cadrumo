@@ -4,6 +4,7 @@ tags:
   - '#m303-iva-resultado-chain'
 date: '2026-06-01'
 modified: '2026-07-17'
+body_hash: 'sha256:8486d20325fbdbcc18547fc5e856e75315c5009a2eeb4f321b379ac2f21e6254'
 related:
   - '[[2026-05-28-codebase-solidification-plan]]'
 ---

@@ -4,6 +4,7 @@ tags:
   - '#modelo-locales-cli'
 date: '2026-06-11'
 modified: '2026-07-17'
+body_hash: 'sha256:35a96ad52291354899049b2986bac9128b652aca831f729f1ddb047d850aac88'
 related:
   - '[[2026-06-08-registry-localization-backend-adr]]'
   - '[[2026-06-11-registry-schema-localization-research]]'

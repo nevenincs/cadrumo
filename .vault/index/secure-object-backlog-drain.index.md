@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:8aec3913c3995794d5a11f882f2a4e46b0677e0021ec33a557ad5f0f42921c58'
 related:
   - '[[2026-05-22-secure-object-backlog-drain-P01-S01]]'
   - '[[2026-05-22-secure-object-backlog-drain-P01-S02]]'

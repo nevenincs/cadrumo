@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:7f243a306c685b0f30676b130fed13802a6d60ba726aad3e39d2c8778da1c7fe'
 related:
   - '[[2026-06-10-ledger-input-localization-P01-S01]]'
   - '[[2026-06-10-ledger-input-localization-P01-S02]]'

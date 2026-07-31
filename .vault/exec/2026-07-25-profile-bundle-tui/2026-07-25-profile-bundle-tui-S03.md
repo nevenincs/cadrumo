@@ -4,6 +4,7 @@ tags:
   - '#profile-bundle-tui'
 date: '2026-07-25'
 modified: '2026-07-25'
+body_hash: 'sha256:3b7f2cc2c6f6d1291f774fb3aeb58384235961851583b527569f41b4803991e9'
 step_id: 'S03'
 related:
   - "[[2026-07-25-profile-bundle-tui-plan]]"

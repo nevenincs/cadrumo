@@ -4,6 +4,7 @@ tags:
   - '#non-resident-irnr-axis'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:265bc28fb1ffb80b05cdad3e872121c436b623fa1f9f85a6238be525f5f8e2c5'
 related:
   - "[[2026-05-07-user-profile-backend-schema-adr]]"
   - "[[2026-05-21-taxpayer-type-applicability-adr]]"

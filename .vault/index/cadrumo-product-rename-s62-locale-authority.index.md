@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:ceacd5f5e12cef5b655681664c8cb2c3f00a73f439abccd78e020fea21d25bda'
 related:
   - '[[2026-07-13-cadrumo-product-rename-s62-locale-authority-audit]]'
 ---

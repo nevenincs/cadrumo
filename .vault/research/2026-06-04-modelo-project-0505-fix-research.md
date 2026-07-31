@@ -4,6 +4,7 @@ tags:
   - '#modelo-project-0505-fix'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:a094f5f467e5b0430c5cc12cf280e7fc6f96f1a82334e3591ea85b9c0e022f6a'
 related: []
 ---
 

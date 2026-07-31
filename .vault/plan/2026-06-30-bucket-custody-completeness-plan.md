@@ -4,6 +4,7 @@ tags:
   - '#bucket-custody-completeness'
 date: '2026-06-30'
 modified: '2026-07-17'
+body_hash: 'sha256:f41f5f2d15936d2375bdab3e4e60e1780daa07e772b2e3e1cfe47b13560aeae6'
 tier: L2
 related:
   - '[[2026-06-30-bucket-custody-completeness-adr]]'

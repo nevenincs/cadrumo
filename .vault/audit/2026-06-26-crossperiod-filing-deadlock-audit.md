@@ -4,6 +4,7 @@ tags:
   - '#crossperiod-filing-deadlock'
 date: '2026-06-26'
 modified: '2026-07-17'
+body_hash: 'sha256:7fc42a2959ff368db5c1a743bd921ee512cb09a4d95d657325dab0368dda2019'
 related:
   - '[[2026-06-19-m100-dependent-modelo-applicability-adr]]'
   - '[[2026-06-19-crossperiod-filing-deadlock-adr]]'

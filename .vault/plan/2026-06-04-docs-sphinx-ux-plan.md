@@ -4,6 +4,7 @@ tags:
   - '#docs-sphinx-ux'
 date: '2026-06-04'
 modified: '2026-07-15'
+body_hash: 'sha256:9450f43510d14ee4719d82d9fac5d3374b1c1f7837cd5c68c172d118114e697a'
 tier: L3
 related:
   - '[[2026-06-04-docs-sphinx-ux-adr]]'

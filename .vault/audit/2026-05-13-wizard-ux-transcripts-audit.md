@@ -2,6 +2,7 @@
 tags: ["#audit", "#schema-driven-wizard-ux"]
 date: 2026-05-13
 modified: '2026-07-17'
+body_hash: 'sha256:43943c0ca1a0ad0d5fd175c33416e97fdfb7425367f7177b4190f515b959f03b'
 related:
   - "[[2026-05-12-schema-driven-wizard-adr]]"
 ---

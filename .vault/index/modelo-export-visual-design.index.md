@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:0123dc341756bc517ec88e6982d1ccb71a6ce9051ec995e2afa5103e63a4c274'
 related:
   - '[[2026-06-03-modelo-export-visual-design-adr]]'
   - '[[2026-06-04-modelo-export-visual-design-research]]'

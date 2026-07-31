@@ -2,6 +2,7 @@
 step_id: S180
 date: 2026-05-27
 modified: '2026-07-17'
+body_hash: 'sha256:c4087102b1faa3da5778920cb263b683c578048893ede86677e7a7195e41cbf4'
 tags:
   - "#exec"
   - "#declaracion-extraction-architecture"

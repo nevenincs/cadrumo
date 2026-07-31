@@ -4,6 +4,7 @@ tags:
   - "#path-handling-safety"
 date: "2026-04-17"
 modified: '2026-07-17'
+body_hash: 'sha256:43b22ad935a4d7229a4fb9f8c4e693b8d238d9536383892226a88c46331cba5d'
 related:
   - "[[2026-04-17-path-handling-safety-phase1-plan]]"
 ---

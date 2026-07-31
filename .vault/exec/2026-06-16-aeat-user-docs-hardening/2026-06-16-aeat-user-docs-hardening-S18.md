@@ -4,6 +4,7 @@ tags:
   - '#aeat-user-docs-hardening'
 date: '2026-07-04'
 modified: '2026-07-17'
+body_hash: 'sha256:354122d3a84c765b9acf52615cea761283a65d4c97ef3d3f46692079cde2ff29'
 step_id: 'S18'
 related:
   - "[[2026-06-16-aeat-user-docs-hardening-plan]]"

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:09dec5d95935355638b094a7ef79cfc48b184f6c54b5f3dc5161d8f37b8879f1'
 related:
   - '[[2026-07-09-m210-plazo-keying-adr]]'
 ---

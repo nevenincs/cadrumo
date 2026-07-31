@@ -4,6 +4,7 @@ tags:
   - "#core-authority-shims"
 date: 2026-05-31
 modified: '2026-07-17'
+body_hash: 'sha256:42c33d03722db3a0acca9863f22a8be6b381f7a2db57ade0ea6feaed6f1daa16'
 related:
   - "[[2026-05-30-identity-primitives-adr]]"
 ---

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:78234052ccf250c029d6752d7fa703ac95bfb9afffcb2e39ae6bef67ce4d54e0'
 related:
   - '[[2026-04-12-release-please-adr]]'
   - '[[2026-04-12-release-please-audit]]'

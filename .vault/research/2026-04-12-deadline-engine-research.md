@@ -4,6 +4,7 @@ tags:
   - "#deadline-engine"
 date: 2026-04-12
 modified: '2026-07-17'
+body_hash: 'sha256:77b35500152630f17c59c963d4e1730ca956a386ec95af821912b1941f9d6d5d'
 title: Filing-Deadline Computation Engine — Research
 related:
   - "[[2026-04-12-deadline-engine-adr]]"

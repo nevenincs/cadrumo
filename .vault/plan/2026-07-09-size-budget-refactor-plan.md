@@ -4,6 +4,7 @@ tags:
   - '#size-budget-refactor'
 date: '2026-07-09'
 modified: '2026-07-17'
+body_hash: 'sha256:5bc1644122e296a6fffd7554e336bc3ba009dc602fef7a9baefba8f26679abfd'
 tier: L2
 related:
   - '[[2026-07-09-size-budget-refactor-adr]]'

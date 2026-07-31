@@ -4,6 +4,7 @@ tags:
   - "#cert-pre-expiry-gate"
 date: 2026-04-13
 modified: '2026-07-17'
+body_hash: 'sha256:d360052ff37165b5506ee568ef3a61ac214d3d3fb0e33744e80583324691bb46'
 title: "Certificate Pre-Expiry Gate — Phase 1 Summary"
 related:
   - "[[2026-04-13-cert-pre-expiry-gate-research]]"

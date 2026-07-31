@@ -4,6 +4,7 @@ tags:
   - '#legal-corpus-structure'
 date: '2026-06-08'
 modified: '2026-07-17'
+body_hash: 'sha256:b7472b6ebf7dd83bcb7d00b5bc0c22af5a1702792ba497334021a345bfb7b834'
 related:
   - '[[2026-05-15-corpus-registry-packaging-adr]]'
   - '[[2026-06-05-test-topology-refactor-adr]]'

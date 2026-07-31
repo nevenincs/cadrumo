@@ -4,6 +4,7 @@ tags:
   - '#live-parity-oracle'
 date: '2026-05-07'
 modified: '2026-07-17'
+body_hash: 'sha256:5ee9fb8b5e561f5721af36ef5834e3aa0518b4dc27d997b1e53072f9ccc665e8'
 related:
   - "[[2026-05-06-oracle-surface-compatibility-adr]]"
   - "[[2026-05-07-aeat-vies-surface-split-ixvi-vs-groi-adr]]"

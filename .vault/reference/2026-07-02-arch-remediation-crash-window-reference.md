@@ -4,6 +4,7 @@ tags:
   - '#arch-remediation-crash-window'
 date: '2026-07-02'
 modified: '2026-07-17'
+body_hash: 'sha256:3e8f53062bea9a0cbeab3e5482dcd264d3b25e9b2a1e6648cf0d7f9a71cc2178'
 related:
   - "[[2026-07-02-aeat-architecture-review-audit]]"
   - "[[2026-07-02-arch-remediation-program-adr]]"

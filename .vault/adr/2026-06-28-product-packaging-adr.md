@@ -4,6 +4,7 @@ tags:
   - '#product-packaging'
 date: '2026-06-28'
 modified: '2026-07-17'
+body_hash: 'sha256:9c9312832455914e7171ce43f66026e267286e1c0e55a4dab1ab0e5734155d5a'
 related:
   - '[[2026-06-28-product-packaging-research]]'
   - '[[2026-06-28-product-packaging-reference]]'

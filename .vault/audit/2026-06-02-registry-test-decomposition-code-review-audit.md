@@ -4,6 +4,7 @@ tags:
   - '#registry-test-decomposition'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:2863c9bb9a1c89e89a1aa1737dd4ccbca379829df69c6e70e204a722246bb893'
 related:
   - "[[2026-06-02-registry-hardening-next-work-plan]]"
   - "[[2026-06-02-registry-test-decomposition-audit]]"

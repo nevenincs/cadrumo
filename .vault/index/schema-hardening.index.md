@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:f3cc0fc560af2d7f0bdfa3607ef9d5c7a1d254e739651eb4ddb533486dd862b1'
 related:
   - '[[2026-05-18-schema-hardening-adr]]'
   - '[[2026-05-18-schema-hardening-nif-coverage-m100-audit]]'

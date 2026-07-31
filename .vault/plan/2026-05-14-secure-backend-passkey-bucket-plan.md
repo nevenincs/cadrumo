@@ -4,6 +4,7 @@ tags:
   - '#secure-backend-passkey-safety'
 date: '2026-05-14'
 modified: '2026-07-17'
+body_hash: 'sha256:f7c5f56fffe61266f5abf6d3d1e17180db5c90f6546c8b93ccd53d631b3d8f48'
 tier: L2
 related:
   - '[[2026-05-14-secure-backend-passkey-safety-research]]'

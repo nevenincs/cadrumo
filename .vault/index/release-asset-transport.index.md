@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:35193d88aeab27bac24ef700c69cb95ae5344298bcd3e0d64190b0dd365d031d'
 related:
   - '[[2026-07-20-release-asset-transport-adr]]'
   - '[[2026-07-20-release-asset-transport-audit]]'

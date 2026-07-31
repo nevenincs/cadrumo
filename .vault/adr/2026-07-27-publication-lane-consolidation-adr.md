@@ -4,6 +4,7 @@ tags:
   - '#publication-lane-consolidation'
 date: '2026-07-27'
 modified: '2026-07-27'
+body_hash: 'sha256:7fcd51c49602b3518b9c0c5248e6515a324a7ed4a6ab4c8f812d6a77c3e874e3'
 related:
   - '[[2026-07-27-canonical-release-pipeline-adr]]'
   - '[[2026-07-27-canonical-release-pipeline-research]]'

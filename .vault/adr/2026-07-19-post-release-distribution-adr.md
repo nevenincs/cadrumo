@@ -4,6 +4,7 @@ tags:
   - '#post-release-distribution'
 date: '2026-07-19'
 modified: '2026-07-19'
+body_hash: 'sha256:1783d8137d0edc65a696ad508013095c2e00ec10905a9c80e1ad513888d66410'
 related:
   - "[[2026-07-15-distribution-installation-readiness-adr]]"
   - "[[2026-07-16-distribution-harness-identity-adr]]"

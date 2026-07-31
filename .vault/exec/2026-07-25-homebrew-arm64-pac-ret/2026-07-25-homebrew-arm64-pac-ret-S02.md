@@ -4,6 +4,7 @@ tags:
   - '#homebrew-arm64-pac-ret'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_hash: 'sha256:2dadd6e2f8b96dbffcba60f102aca8747f561f0e4b556f019d245e6883863819'
 step_id: 'S02'
 related:
   - "[[2026-07-25-homebrew-arm64-pac-ret-plan]]"

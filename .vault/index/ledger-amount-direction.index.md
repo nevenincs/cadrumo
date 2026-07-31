@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:7313dbc16513f0e63b4cc07f871e1d4097e625fdc236892e834d906a83537a79'
 related:
   - '[[2026-06-10-ledger-amount-direction-adr]]'
   - '[[2026-06-10-ledger-amount-direction-plan]]'

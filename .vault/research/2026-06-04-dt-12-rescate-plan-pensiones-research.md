@@ -4,6 +4,7 @@ tags:
   - '#dt-12-rescate-plan-pensiones'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:780c84bd75237599cbcbf23451087628633c60a59cce4739ec8030c5680b1615'
 related:
   - "[[2026-05-27-dt-12-rescate-plan-pensiones-adr]]"
 ---

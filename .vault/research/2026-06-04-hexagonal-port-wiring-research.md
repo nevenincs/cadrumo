@@ -4,6 +4,7 @@ tags:
   - '#hexagonal-port-wiring'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:d0e09d92e586761a310f28089f264e8a2d1f656a04f0e1ee72f16c12dc957384'
 related: []
 ---
 

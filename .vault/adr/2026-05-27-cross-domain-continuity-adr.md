@@ -4,6 +4,7 @@ tags:
   - '#cross-domain-continuity'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:4bc13c0d7c40256b4609fcc2d3fc7d8941179313285fde929739dd944fb4ccb5'
 related:
   - "[[2026-04-20-classification-harmonization-adr]]"
   - "[[2026-05-26-cross-domain-continuity-plan]]"

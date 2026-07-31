@@ -4,6 +4,7 @@ tags:
   - '#live-submit-permanently-forbidden-code-review'
 date: '2026-04-27'
 modified: '2026-07-17'
+body_hash: 'sha256:cc18418f6ccae99bfdd2bf29a9d94a3a0f7f016069c7cfa1c17aeaf159e17243'
 related:
   - "[[2026-04-27-live-submit-permanently-forbidden-plan]]"
   - "[[2026-04-27-live-submit-permanently-forbidden-adr]]"

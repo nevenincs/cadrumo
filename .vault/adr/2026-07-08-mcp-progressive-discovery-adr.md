@@ -4,6 +4,7 @@ tags:
   - '#mcp-progressive-discovery'
 date: '2026-07-08'
 modified: '2026-07-17'
+body_hash: 'sha256:d8305ce732eae676123a8673dc179397235a15c0aa75491b60cabdf3d9ccd11b'
 related:
   - "[[2026-07-08-mcp-progressive-discovery-research]]"
   - "[[2026-07-02-agent-harness-refoundation-adr]]"

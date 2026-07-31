@@ -4,6 +4,7 @@ tags:
   - '#session-honest-followups'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:6f6affe80dd31bfbe2c914477101aa6f64f514c722881f13e2b7fa8ce39a417b'
 tier: L2
 related:
   - '[[2026-06-02-suite-redgreen-2026-06-02-plan]]'

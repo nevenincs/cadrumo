@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:20d8415ca59e6c495010872d1550180eedc8b8d2e7b061a0fb1e7b9bf807918b'
 related:
   - '[[2026-07-08-mcp-hardening-conformance-plan]]'
   - '[[2026-07-08-mcp-protocol-hardening-P01-S01]]'

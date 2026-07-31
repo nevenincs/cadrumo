@@ -4,6 +4,7 @@ tags:
   - "#profile-lifecycle-disaster"
 date: '2026-05-19'
 modified: '2026-07-17'
+body_hash: 'sha256:323d74a89a19990438b8d1be16147dd3540095aee26d1a596d10411e70b2d146'
 related:
   - "[[2026-05-19-operator-blind-fumbler-testimony-audit]]"
   - "[[2026-05-19-operator-blind-newcomer-testimony-audit]]"

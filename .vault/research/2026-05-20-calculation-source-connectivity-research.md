@@ -2,6 +2,7 @@
 tags: ["#research", "#calculation-source-connectivity"]
 date: "2026-05-20"
 modified: '2026-07-17'
+body_hash: 'sha256:7b97a62734388602f4fd920b4202c056b3a49566267f925f0ae25f265408e3a0'
 related:
   - "[[2026-05-20-cli-testimonial-findings-inventory-audit]]"
 ---

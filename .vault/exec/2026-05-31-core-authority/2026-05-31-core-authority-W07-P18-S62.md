@@ -5,6 +5,7 @@ tags:
 step_id: S62
 date: '2026-05-31'
 modified: '2026-07-17'
+body_hash: 'sha256:8e693cfeb75de7a2c0ac2dee1684fce11415854759bc6e0dddc7192ce1b95ced'
 related:
   - '[[2026-05-31-core-authority-plan]]'
   - '[[2026-05-31-core-authority-adr]]'

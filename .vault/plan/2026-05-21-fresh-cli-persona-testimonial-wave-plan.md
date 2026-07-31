@@ -4,6 +4,7 @@ tags:
   - '#cli-testimonial'
 date: '2026-05-21'
 modified: '2026-07-17'
+body_hash: 'sha256:0ee4b37e87bbb95971e54a056234b468a8c67d4d592686b0882d5f9a9181a36b'
 tier: L2
 related:
   - '[[2026-05-20-testimonial-driven-cli-verification-playbook-reference]]'

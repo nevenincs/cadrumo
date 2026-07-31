@@ -4,6 +4,7 @@ tags:
   - '#live-submit-permanently-forbidden'
 date: '2026-04-27'
 modified: '2026-07-17'
+body_hash: 'sha256:003bb93f79fb3510af237cdbc30659938dc6dbb82063ef0edec74111bfdecf58'
 related:
   - '[[2026-04-27-live-submit-permanently-forbidden-research]]'
   - '[[2026-04-27-security-storage-audit-audit]]'

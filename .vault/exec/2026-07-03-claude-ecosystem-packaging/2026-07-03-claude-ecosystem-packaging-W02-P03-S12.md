@@ -4,6 +4,7 @@ tags:
   - '#claude-ecosystem-packaging'
 date: '2026-07-03'
 modified: '2026-07-17'
+body_hash: 'sha256:e03519d550bedf515de54302ccfb0be0c778b88890eb0ca9412c122bd939d24a'
 step_id: 'S12'
 related:
   - "[[2026-07-03-claude-ecosystem-packaging-plan]]"

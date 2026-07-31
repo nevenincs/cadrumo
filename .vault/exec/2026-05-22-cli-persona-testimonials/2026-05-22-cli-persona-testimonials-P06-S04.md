@@ -4,6 +4,7 @@ tags:
   - '#cli-persona-testimonials'
 date: '2026-05-22'
 modified: '2026-07-31'
+body_hash: 'sha256:66566133d9ae7cf6d4f0dac03e2b454fdf471866107f214c3008c248a79e2491'
 related:
   - '[[2026-05-21-cli-persona-testimonials-plan]]'
   - '[[2026-05-21-cross-campaign-hardening-audit]]'

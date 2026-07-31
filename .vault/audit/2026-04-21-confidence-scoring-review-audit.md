@@ -4,6 +4,7 @@ tags:
   - "#confidence-scoring"
 date: "2026-04-21"
 modified: '2026-07-17'
+body_hash: 'sha256:3aab4953f22dd43e6a4f1bb052faacea58f0adf8cb2af072b137d07a1d35c4d4'
 related:
   - "[[2026-04-18-unclassified-state-adr]]"
 ---

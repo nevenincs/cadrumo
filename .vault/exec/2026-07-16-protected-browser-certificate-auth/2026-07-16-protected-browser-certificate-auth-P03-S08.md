@@ -4,6 +4,7 @@ tags:
   - '#protected-browser-certificate-auth'
 date: '2026-07-16'
 modified: '2026-07-17'
+body_hash: 'sha256:e5c054996ce39c63fbbbe2cd8d542e9ab8828beb473583358702014778daacf6'
 step_id: 'S08'
 related:
   - "[[2026-07-16-protected-browser-certificate-auth-plan]]"

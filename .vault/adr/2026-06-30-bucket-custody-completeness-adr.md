@@ -4,6 +4,7 @@ tags:
   - '#bucket-custody-completeness'
 date: '2026-06-30'
 modified: '2026-07-17'
+body_hash: 'sha256:b6b4bc5ec0bc1e34f5e24f8a384acbecfee201b8143e35f6d5df283adaf11fa4'
 related:
   - "[[2026-06-30-bucket-custody-completeness-research]]"
   - '[[2026-05-27-profile-portability-adr]]'

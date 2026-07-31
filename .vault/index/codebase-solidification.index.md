@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:c666bd5cddf1464b16a8c3e68fff6f44001ab4c89d24b11db5eb724aedb2674d'
 related:
   - '[[2026-05-28-codebase-solidification-W01-P01-S01]]'
   - '[[2026-05-28-codebase-solidification-W01-P01-S02]]'

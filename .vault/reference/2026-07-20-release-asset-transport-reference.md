@@ -4,6 +4,7 @@ tags:
   - '#release-asset-transport'
 date: '2026-07-20'
 modified: '2026-07-20'
+body_hash: 'sha256:5362efe29bb09a8832c0c1af7dfd714a7f785253e54ecc8c8d99a791c7d28545'
 related:
   - "[[2026-07-20-release-asset-transport-adr]]"
 ---

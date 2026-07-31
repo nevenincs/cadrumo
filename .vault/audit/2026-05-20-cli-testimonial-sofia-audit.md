@@ -4,6 +4,7 @@ tags:
   - '#cli-testimonial'
 date: '2026-05-20'
 modified: '2026-07-17'
+body_hash: 'sha256:8d0c6e43acc4267815b035089a9f23cbff113e2b437d2de060fe71fdc826bdd0'
 related:
   - "[[2026-05-20-schema-hardening-verification-ledger-audit]]"
 ---

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:5063d49916fc1367a8876ef9e986e6f38843f5a27d9004af93c07d022056fe07'
 related:
   - '[[2026-07-01-autonomic-deduccion-auto-trigger-adr]]'
   - '[[2026-07-01-autonomic-deduccion-auto-trigger-research]]'

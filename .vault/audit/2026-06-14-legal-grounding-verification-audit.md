@@ -4,6 +4,7 @@ tags:
   - '#legal-grounding-verification'
 date: '2026-06-14'
 modified: '2026-07-17'
+body_hash: 'sha256:38f8f2fb8c32129bc507756788dfcbd1f56bb47c75f7e2537f118f511fea5b3e'
 related: []
 ---
 

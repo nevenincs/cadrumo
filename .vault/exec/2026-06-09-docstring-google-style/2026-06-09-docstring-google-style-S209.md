@@ -4,6 +4,7 @@ tags:
   - '#docstring-google-style'
 date: '2026-07-10'
 modified: '2026-07-10'
+body_hash: 'sha256:bcbbfc5acca4880c3d48ccc4f9ea5becd33d2330b012ed456a63894e53dbbec2'
 step_id: 'S209'
 related:
   - "[[2026-06-09-docstring-google-style-plan]]"

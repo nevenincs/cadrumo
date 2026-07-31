@@ -4,6 +4,7 @@ tags:
   - '#registry-construct-pressure'
 date: '2026-06-03'
 modified: '2026-07-17'
+body_hash: 'sha256:5be133fb6a676591f674774b89a46f083e33b5f9cc64f4aa9d6d1a13345d261a'
 related:
   - '[[2026-06-03-registry-construct-pressure-plan]]'
   - '[[2026-06-03-registry-construct-pressure-audit]]'

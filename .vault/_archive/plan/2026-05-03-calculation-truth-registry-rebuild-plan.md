@@ -4,6 +4,7 @@ tags:
   - '#retired-calculation-truth-registry-rebuild-plan'
 date: '2026-05-03'
 modified: '2026-07-15'
+body_hash: 'sha256:76ad87cbf0f3310f6f1d3ab614387596cee9b3d43524fb1c8fcef38abe20f202'
 related:
   - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
   - '[[2026-05-03-calculation-truth-inventory-research]]'

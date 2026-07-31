@@ -4,6 +4,7 @@ tags:
   - '#locale-scaffold-fstring'
 date: '2026-05-31'
 modified: '2026-07-17'
+body_hash: 'sha256:a0dc5633b993863d8afbf678bd4eddd6edfb36c3bd9a9a0316439d0fa24250ef'
 related: []
 ---
 

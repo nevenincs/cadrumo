@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:7fdfb12ec2dc9a97b33d9b6242e4a53d27b0561fdfb11cf514f52ec74c590e2d'
 related:
   - '[[2026-05-22-secure-object-integrity-P01-S01]]'
   - '[[2026-05-22-secure-object-integrity-P01-S02]]'

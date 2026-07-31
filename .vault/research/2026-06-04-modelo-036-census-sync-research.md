@@ -4,6 +4,7 @@ tags:
   - '#modelo-036-census-sync'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:d333a9b9baa8accca4599f0c8e4a7d1d8ac021a53aafe2dc69a3d6dd8d770688'
 related: []
 related:
   - '[[2026-06-03-modelo-036-census-sync-adr]]'

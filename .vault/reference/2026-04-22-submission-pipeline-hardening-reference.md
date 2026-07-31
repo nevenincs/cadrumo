@@ -7,6 +7,7 @@ tags:
   - "#submission-pipeline-hardening"
 date: 2026-04-22
 modified: '2026-07-17'
+body_hash: 'sha256:75bfe1613f7cb3c9a35244edc801a421d0545c9f69903f7cb31986ecec315a88'
 related:
   - "[[2026-04-17-export-first-adr]]"
   - "[[2026-04-22-aeat-fichero-boe-export-adr]]"

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:d76a4050815e88ccd3a279f21aa6c4056f8cb320f40c5a4cce8062f4cffe4b98'
 related:
   - '[[2026-06-01-cli-typed-arg-hint-audit]]'
 ---

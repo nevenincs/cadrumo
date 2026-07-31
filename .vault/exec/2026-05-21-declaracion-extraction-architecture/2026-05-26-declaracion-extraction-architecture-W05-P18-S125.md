@@ -4,6 +4,7 @@ tags:
   - '#declaracion-extraction-architecture'
 date: '2026-05-26'
 modified: '2026-07-31'
+body_hash: 'sha256:c4c5f911c0f39b0055c1df538e65c7592b4418e017345175dad056f38a07a738'
 related:
   - '[[2026-05-21-declaracion-extraction-architecture-plan]]'
   - '[[2026-05-26-no-synthetic-sede-live-surfaces-research]]'

@@ -4,6 +4,7 @@ tags:
   - '#cross-domain-continuity'
 date: '2026-05-27'
 modified: '2026-07-31'
+body_hash: 'sha256:32c0a15e3627b79f3c23c96642ef0f6f5456b145eeb3e7dd0502f4a83097c8c9'
 related:
   - '[[2026-05-27-schema-hardening-m200-estado-share-binding-repair-exec]]'
   - '[[2026-05-26-cross-domain-continuity-plan]]'

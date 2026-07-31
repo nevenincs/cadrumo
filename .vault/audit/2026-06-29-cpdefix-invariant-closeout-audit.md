@@ -4,6 +4,7 @@ tags:
   - '#cpdefix-invariant-closeout'
 date: '2026-06-29'
 modified: '2026-07-17'
+body_hash: 'sha256:a9b645a6d39840d776b629873a517af46ea1db970e6c5b1cc865b0975e332aaf'
 related: []
 ---
 

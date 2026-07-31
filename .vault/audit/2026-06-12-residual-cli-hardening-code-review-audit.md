@@ -4,6 +4,7 @@ tags:
   - '#residual-cli-hardening'
 date: '2026-06-12'
 modified: '2026-07-17'
+body_hash: 'sha256:23f4859e70e75d9ac372b746d9ebfbc089a8924c90067b246e1010a35ec05986'
 related:
   - '[[2026-06-12-residual-cli-hardening-triage-audit]]'
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'

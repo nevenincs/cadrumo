@@ -4,6 +4,7 @@ tags:
   - '#resource-management-api'
 date: '2026-05-16'
 modified: '2026-07-17'
+body_hash: 'sha256:e2f957621a4f92b9cbd61b9cd63baacf2fe7f9c24077f5ebe5ef356e20a0a121'
 related:
   - "[[2026-05-16-resource-management-api-research]]"
   - "[[2026-05-15-corpus-registry-packaging-adr]]"

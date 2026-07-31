@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:2554a53182f7ad0f709247c95fa1ecb7efb247e99cbc0aa9e8ecd0bfa1741f7b'
 related:
   - '[[2026-05-08-renta-cuota-integra-state-scale-adr]]'
   - '[[2026-05-08-renta-cuota-integra-state-scale-plan]]'

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:3234e07fe47cf64b647372c65bd0007f52ef117ab44ceaca480e55433734dd1f'
 related:
   - '[[2026-07-01-fichero-boe-parity-gate-P01-S01]]'
   - '[[2026-07-01-fichero-boe-parity-gate-P01-S02]]'

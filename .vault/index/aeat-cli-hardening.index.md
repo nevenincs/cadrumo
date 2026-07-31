@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:e335116d12a453c39caed0e46a14701f7c62f68084b49a92c3027c2412ff7114'
 related:
   - '[[2026-05-08-aeat-cli-hardening-adr]]'
   - '[[2026-05-08-aeat-cli-hardening-inventory-audit]]'

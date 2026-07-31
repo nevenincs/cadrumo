@@ -4,6 +4,7 @@ tags:
   - '#remote-telemetry'
 date: '2026-07-10'
 modified: '2026-07-15'
+body_hash: 'sha256:94264b9a8d6a902d948e8e19edd6d11bea66f5bb9137ca1d349b105191783ac5'
 related:
   - "[[2026-07-04-remote-telemetry-adr]]"
 ---

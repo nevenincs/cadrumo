@@ -4,6 +4,7 @@ tags:
   - '#ci-github-actions'
 date: '2026-04-12'
 modified: '2026-07-17'
+body_hash: 'sha256:8533f74bff799a9058e0de98c64c37d4c5ce46e1436cea5c62f03f85959b0d6e'
 related:
   - '[[2026-04-12-ci-github-actions-plan]]'
   - '[[2026-04-12-ci-github-actions-adr]]'

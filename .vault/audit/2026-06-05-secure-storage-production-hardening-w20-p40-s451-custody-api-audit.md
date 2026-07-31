@@ -4,6 +4,7 @@ tags:
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
 modified: '2026-07-17'
+body_hash: 'sha256:edc01139b8dba6556fa62878f87d126b1365d6c790d5dc144866a6bc7346b1ca'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
   - '[[2026-05-14-secure-backend-passkey-custody-adr]]'

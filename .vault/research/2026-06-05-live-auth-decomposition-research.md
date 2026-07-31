@@ -4,6 +4,7 @@ tags:
   - '#live-auth-decomposition'
 date: '2026-06-05'
 modified: '2026-07-17'
+body_hash: 'sha256:1f5989c367d258a47c47f90f01906dbc64048cce0589d9271f13783e3196d808'
 related:
   - "[[2026-06-04-repo-health-triage-research]]"
   - "[[2026-06-04-repo-health-triage-live-auth-split-invariants-audit]]"

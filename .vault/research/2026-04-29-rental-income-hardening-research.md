@@ -4,6 +4,7 @@ tags:
   - '#rental-income-hardening'
 date: '2026-04-29'
 modified: '2026-07-17'
+body_hash: 'sha256:0a4f58a6d571e3687c00c60697f821234a01e55713530f1d220a7a0f3b370c91'
 related: []
 ---
 

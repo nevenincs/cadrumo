@@ -4,6 +4,7 @@ tags:
   - '#renta-full-coverage'
 date: '2026-05-07'
 modified: '2026-07-17'
+body_hash: 'sha256:e6276b70a00946ed50cf0072eb531c305a70e92e8e8edd668d247caf1c122de4'
 related:
   - "[[2026-05-07-renta-scope-audit-audit]]"
   - "[[2026-05-06-renta-cuota-chain-rollout-plan]]"

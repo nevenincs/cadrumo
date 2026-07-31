@@ -4,6 +4,7 @@ tags:
   - "#cert-pre-expiry-gate"
 date: 2026-04-13
 modified: '2026-07-16'
+body_hash: 'sha256:4cf695d250e83d3ec3f026fb689075954e464db681b1f977110d08a7c23e8ec5'
 title: "Certificate Pre-Expiry Health Check + Workflow Gate — Implementation Plan"
 related:
   - "[[2026-04-13-cert-pre-expiry-gate-research]]"

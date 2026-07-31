@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename'
 date: '2026-07-15'
 modified: '2026-07-15'
+body_hash: 'sha256:066ccd8433f30af4fcc46db4797834f103f597c2fdb208bc2ecc1b174e5e39dc'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
   - "[[2026-07-14-cadrumo-product-rename-s76-residue-audit]]"

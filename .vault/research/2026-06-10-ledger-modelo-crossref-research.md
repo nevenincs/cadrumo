@@ -4,6 +4,7 @@ tags:
   - '#ledger-modelo-crossref'
 date: '2026-06-10'
 modified: '2026-07-17'
+body_hash: 'sha256:b2ccb5be1fdea748a48cda19a58c60bdac1e8554c0427dd18e205f2ed29dbf2a'
 related: []
 ---
 

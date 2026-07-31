@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:bc92ccce0b36b80c0806db15103f3bd07dc51a843cd793414722f5e9abcf3d15'
 related:
   - '[[2026-06-02-wizard-registration-bootstrap-adr]]'
   - '[[2026-06-02-wizard-registration-bootstrap-research]]'

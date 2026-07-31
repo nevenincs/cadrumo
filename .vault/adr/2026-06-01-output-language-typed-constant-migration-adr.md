@@ -4,6 +4,7 @@ tags:
   - '#output-language-typed-constant-migration'
 date: '2026-06-01'
 modified: '2026-07-17'
+body_hash: 'sha256:d0e32254dcda1e764f12dd9796851dff17a9f5178b6d1f8dd28652e49e20ec63'
 related:
   - "[[2026-06-01-registry-period-code-union-cli-boundary-adr]]"
   - "[[2026-05-27-schema-hardening-casilla-continuity-contract-adr]]"

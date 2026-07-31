@@ -4,6 +4,7 @@ tags:
   - '#secure-storage-production-hardening'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:b768bb061864fcabe961abd033197c44dd3a6e1eb653b986d4892ada53a4db7d'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
   - '[[2026-05-27-application-namespace-registry-adoption-reference]]'

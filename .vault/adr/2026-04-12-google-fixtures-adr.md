@@ -4,6 +4,7 @@ tags:
   - "#google-fixtures"
 date: 2026-04-12
 modified: '2026-07-17'
+body_hash: 'sha256:c96a09fa62d3d6190b3952f58137498133bb79c6f3903dc1c61671267d375375'
 related:
   - "[[2026-04-12-google-fixtures-research]]"
 ---

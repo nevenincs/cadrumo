@@ -4,6 +4,7 @@ tags:
   - "#hexagonal-port-necessity"
 date: "2026-05-31"
 modified: '2026-07-17'
+body_hash: 'sha256:9319de26c2838b26f77dffce6739b7e42488d8bd33c66f610e0c0bce72255367'
 related:
   - "[[2026-05-31-core-authority-W06-P16-S50]]"
   - "[[2026-05-31-core-authority-W06-P16-S51]]"

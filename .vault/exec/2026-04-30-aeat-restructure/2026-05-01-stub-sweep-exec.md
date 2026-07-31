@@ -4,6 +4,7 @@ tags:
   - '#aeat-restructure'
 date: '2026-05-01'
 modified: '2026-07-17'
+body_hash: 'sha256:2e79f15aac481f3f90d6fc4b4243e6d4c145fab9e5b0dd6515a2da79fde01778'
 related:
   - "[[2026-04-30-aeat-restructure-plan]]"
   - "[[2026-04-30-aeat-restructure-step-13-missing-impl-audit-exec]]"

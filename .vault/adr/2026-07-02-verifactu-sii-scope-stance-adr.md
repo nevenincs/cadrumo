@@ -4,6 +4,7 @@ tags:
   - '#verifactu-sii-scope-stance'
 date: '2026-07-02'
 modified: '2026-07-17'
+body_hash: 'sha256:5b05c863721326a5c617f7d9c3b753a68c1b632a3223741b44b02d301fba5f20'
 related:
   - "[[2026-05-21-sii-digital-iva-ledger-adr]]"
   - "[[2026-04-27-live-submit-permanently-forbidden-adr]]"

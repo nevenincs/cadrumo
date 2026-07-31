@@ -4,6 +4,7 @@ tags:
   - "#schema-hardening"
 date: 2026-05-20
 modified: '2026-07-17'
+body_hash: 'sha256:16ff2a2d77c916869aefc3eff21920bc2d8ed9d78bb146cb3a35117fa94cc5ee'
 related:
   - "[[2026-05-20-schema-hardening-r7-m100-batch-1-audit]]"
   - "[[2026-05-20-schema-hardening-r7-m100-batch-2-audit]]"

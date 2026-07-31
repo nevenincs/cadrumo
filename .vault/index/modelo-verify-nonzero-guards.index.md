@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:43d1d2b06f60cfd06fb96f9fabd5c992ddf4584bd2875ce9e80a859e07e53d56'
 related:
   - '[[2026-06-30-modelo-verify-nonzero-guards-W01-P01-S01]]'
   - '[[2026-06-30-modelo-verify-nonzero-guards-W01-P01-S02]]'

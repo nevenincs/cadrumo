@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:d9fdb4a0fef4e2ff65e9558d26fe171a294344349b1c042fb9a5cf9118eaf553'
 related:
   - '[[2026-06-04-registry-reviewability-pressure-P01-S01]]'
   - '[[2026-06-04-registry-reviewability-pressure-P01-S02]]'

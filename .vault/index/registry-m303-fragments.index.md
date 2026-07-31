@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:48772f279786c8cc84130fee02a9f55e1940cd16122b6969ed64351bec8e753e'
 related:
   - '[[2026-06-02-registry-m303-fragments-code-review-audit]]'
 ---

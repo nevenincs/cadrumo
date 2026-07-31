@@ -2,6 +2,7 @@
 tags: ['#exec', '#modelo-work-revision-cli-decomposition']
 date: '2026-06-05'
 modified: '2026-07-17'
+body_hash: 'sha256:afb8d8bed81c4946529f09cc16adfd2bd4a662682fb178e614ad09de36b99aa5'
 step_id: 'S07'
 related:
   - '[[2026-06-05-modelo-work-revision-cli-decomposition-plan]]'

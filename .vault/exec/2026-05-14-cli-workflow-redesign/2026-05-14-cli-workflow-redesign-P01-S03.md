@@ -4,6 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-07-04'
 modified: '2026-07-17'
+body_hash: 'sha256:69abc9afcf1a4d53364afc2fdc09b6fccf7ad752dd0309244398e5d5f34ece62'
 step_id: 'S03'
 related:
   - "[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-plan]]"

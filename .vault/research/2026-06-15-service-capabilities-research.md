@@ -4,6 +4,7 @@ tags:
   - '#service-capabilities'
 date: '2026-06-15'
 modified: '2026-07-17'
+body_hash: 'sha256:f239ed19f1d594c6549fafc621fc1ec7ce807e54b45ae02a7d34c1d61d1e04c3'
 related: []
 ---
 

@@ -4,6 +4,7 @@ tags:
   - '#calc-sheets-parity'
 date: '2026-05-14'
 modified: '2026-07-17'
+body_hash: 'sha256:c2a54ba4fd9c7fc9eaea1c3d7895218c730d1a30bc132188d72f1b5160b6ab58'
 related:
   - "[[2026-05-14-calc-sheets-translator-audit]]"
 ---

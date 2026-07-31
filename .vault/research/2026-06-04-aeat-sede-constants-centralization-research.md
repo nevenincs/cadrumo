@@ -4,6 +4,7 @@ tags:
   - '#aeat-sede-constants-centralization'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:10aa97acb1a74ea65a16fd55f677e0d534d9ea63452097f6652b47dd803f42e4'
 related:
   - "[[2026-05-26-aeat-sede-constants-centralization-adr]]"
 ---

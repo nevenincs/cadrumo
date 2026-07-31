@@ -4,6 +4,7 @@ tags:
   - '#arch-remediation-gates-ratchet'
 date: '2026-07-02'
 modified: '2026-07-17'
+body_hash: 'sha256:644a1f90024441e963bff76db096c03926eb2501ffe3c7330d1c4c4122002637'
 tier: L2
 related:
   - '[[2026-07-02-aeat-architecture-review-audit]]'

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:3c5be2f68373e447eb5e29ca3febda26376f001ce8fc07d8223c0463d8144a45'
 related:
   - '[[2026-07-02-aeat-architecture-review-audit]]'
   - '[[2026-07-24-aeat-architecture-review-startup-import-coupling-audit]]'

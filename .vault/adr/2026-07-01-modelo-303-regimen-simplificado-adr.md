@@ -4,6 +4,7 @@ tags:
   - '#modelo-303-regimen-simplificado'
 date: '2026-07-01'
 modified: '2026-07-17'
+body_hash: 'sha256:2a14228e1b466b5e99e91babbba5f826a2c5daf3796a53cb8e706c9176d38533'
 related:
   - '[[2026-05-27-khalid-cli-testimonial-audit]]'
   - '[[2026-04-12-modelo-303-390-adr]]'

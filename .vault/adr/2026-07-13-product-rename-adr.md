@@ -4,6 +4,7 @@ tags:
   - '#product-rename'
 date: '2026-07-13'
 modified: '2026-07-17'
+body_hash: 'sha256:7bbbc6e98e7f4c907f9a85a3b7d1f9ef03e1441691c93aee3611fa6660ca9408'
 related:
   - '[[2026-07-12-cadrumo-cli-executable-adr]]'
   - '[[2026-07-12-cadrumo-product-rename-research]]'

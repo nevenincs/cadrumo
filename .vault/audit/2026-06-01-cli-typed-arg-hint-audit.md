@@ -4,6 +4,7 @@ tags:
   - '#cli-typed-arg-hint'
 date: '2026-06-01'
 modified: '2026-07-17'
+body_hash: 'sha256:768df03ba6057d638bb1f3d346d8fad1633f82a2a8ff17f65be481ca704c1028'
 related:
   - "[[2026-05-28-codebase-solidification-plan]]"
 ---

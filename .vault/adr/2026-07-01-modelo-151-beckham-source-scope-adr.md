@@ -4,6 +4,7 @@ tags:
   - '#modelo-151-beckham-source-scope'
 date: '2026-07-01'
 modified: '2026-07-17'
+body_hash: 'sha256:93296aab3bd0a9d381e24195b994f968951170fe0c38409fe995cf240afb030d'
 related:
   - '[[2026-06-02-modelo-multiyear-renta-151-beckham-adr]]'
   - '[[2026-05-27-source-jurisdiction-axis-adr]]'

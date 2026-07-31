@@ -4,6 +4,7 @@ tags:
   - '#mcp-console-review'
 date: '2026-07-08'
 modified: '2026-07-17'
+body_hash: 'sha256:15cf8a58ac1a3fba2105d8f96dd19503999fa9fcf125bbed5d92128890c92e09'
 related:
   - '[[2026-07-08-mcp-progressive-discovery-adr]]'
   - '[[2026-07-08-mcp-protocol-hardening-adr]]'

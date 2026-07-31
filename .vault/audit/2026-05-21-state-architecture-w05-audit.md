@@ -4,6 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-05-21'
 modified: '2026-07-17'
+body_hash: 'sha256:b30aca46af474004346b5405c6b1a9c65d7cd2adec342d7c0b512c749a43abd8'
 related:
   - "[[2026-05-21-state-architecture-plan]]"
   - "[[2026-05-21-profile-state-aggregate-adr]]"

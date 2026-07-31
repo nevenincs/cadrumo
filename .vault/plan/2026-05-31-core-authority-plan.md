@@ -4,6 +4,7 @@ tags:
   - '#core-authority'
 date: '2026-05-31'
 modified: '2026-07-17'
+body_hash: 'sha256:7b8c0dac8a36dd1f0e6956201c7ad7f194bd74e76e116e42238397031b6c226d'
 tier: L4
 related:
   - '[[2026-05-31-core-authority-adr]]'

@@ -4,6 +4,7 @@ tags:
   - '#live-parity-oracle'
 date: '2026-05-06'
 modified: '2026-07-17'
+body_hash: 'sha256:1857f3a78e8d6d04113cce521dfac421057c344041f441aa8c56ea5f217b1b0c'
 related:
   - '[[2026-05-06-live-parity-oracle-backend-adr]]'
   - '[[2026-05-03-calculation-truth-registry-pending-adr]]'

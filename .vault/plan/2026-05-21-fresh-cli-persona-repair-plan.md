@@ -4,6 +4,7 @@ tags:
   - '#cli-testimonial'
 date: '2026-05-21'
 modified: '2026-07-17'
+body_hash: 'sha256:65b06d9f0d6e9078dce3bda7d44307d171cc376edc7f878eed610080b85a4a6f'
 tier: L2
 related:
   - '[[2026-05-21-fresh-cli-persona-findings-inventory-audit]]'

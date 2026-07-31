@@ -4,6 +4,7 @@ tags:
   - '#prorrata-art105-cinco-interrupted'
 date: '2026-07-07'
 modified: '2026-07-17'
+body_hash: 'sha256:16aadb89f68d992a6058f46bb29b2d48d7d973971fd2067e3d168f2179e3438e'
 related:
   - "[[2026-07-05-cross-period-prorrata-adr]]"
   - "[[2026-07-01-iva-complexity-hardening-scope-adr]]"

@@ -4,6 +4,7 @@ tags:
   - "#declaracion-extraction-architecture"
 date: "2026-05-26"
 modified: '2026-07-31'
+body_hash: 'sha256:e45cc62fe5309d9f9c1f1260372530353d0e549fe29f5c677c8cc8cd1b6f4a36'
 related:
   - "[[2026-05-21-declaracion-extraction-architecture-adr]]"
   - "[[2026-05-21-declaracion-extraction-architecture-plan]]"

@@ -4,6 +4,7 @@ tags:
   - '#cross-period-filing-clean-state'
 date: '2026-06-05'
 modified: '2026-07-17'
+body_hash: 'sha256:07bcd6f122c41a07ce9b83d04b345eaa747ca49f46c963e09dbdaf0a2ffb9864'
 related:
   - '[[2026-06-05-cross-period-filing-clean-state-research]]'
   - '[[2026-06-02-modelo-filing-ledger-snapshot-adr]]'

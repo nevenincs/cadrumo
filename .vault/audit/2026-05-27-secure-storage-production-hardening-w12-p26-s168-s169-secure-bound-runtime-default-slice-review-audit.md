@@ -4,6 +4,7 @@ tags:
   - '#secure-storage-production-hardening'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:c87f5efced430c91efbe7af62986251765c97ac2ee8469306a21ab5605d927a1'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
   - '[[2026-05-27-secure-storage-production-hardening-w12-p26-s168-secure-bound-contract-runtime-default-slice-exec]]'

@@ -11,6 +11,7 @@ related:
   - '[[2026-05-26-securestorage-repair-policy-adr-adjudication-research]]'
 supersedes:
 modified: '2026-07-17'
+body_hash: 'sha256:26a12021754863dd4ea8ac679efab729c1e16283f892fa318b0403f68945a0d4'
 ---
 # `cli-workflow-redesign` adr: `config repair shape` | (**status:** `accepted`)
 

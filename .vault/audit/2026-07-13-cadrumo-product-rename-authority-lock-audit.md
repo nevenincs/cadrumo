@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-authority-lock'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:946465155354117fea7418c9703cdaf4f749699fa43a175c0658da787ebcdc4c'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
 ---

@@ -4,6 +4,7 @@ tags:
   - '#descendant-profile-axis'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:b08b9c5a495c6bf63b45cfd6d489f7af5d94e28ebf8ccbf7efe3429b5d337f84'
 related:
   - "[[2026-05-27-descendant-profile-axis-adr]]"
 ---

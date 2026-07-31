@@ -4,6 +4,7 @@ tags:
   - '#conformance-cli'
 date: '2026-07-28'
 modified: '2026-07-28'
+body_hash: 'sha256:39e2e23df2b754aff233d1b7c29006df688e599c78c85f6fadb532d3824da96f'
 step_id: 'S78'
 related:
   - "[[2026-07-27-conformance-cli-plan]]"

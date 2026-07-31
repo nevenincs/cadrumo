@@ -4,6 +4,7 @@ tags:
   - '#open-decisions-and-operator-gates'
 date: '2026-07-25'
 modified: '2026-07-28'
+body_hash: 'sha256:9c834b7231b145ff194f4a63487be38cdc2007a73defaf4bd248faf2d94af730'
 tier: L1
 related:
   - '[[2026-07-25-test-harness-honesty-plan]]'

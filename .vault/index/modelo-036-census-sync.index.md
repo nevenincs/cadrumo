@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:9241a12c9b65ad70072b5794de6f925b10428b21ba20990b8f74b0cbd5809946'
 related:
   - '[[2026-06-03-modelo-036-census-sync-adr]]'
   - '[[2026-06-04-modelo-036-census-sync-research]]'

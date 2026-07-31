@@ -4,6 +4,7 @@ tags:
   - '#calc-engine-session-snapshot'
 date: '2026-05-15'
 modified: '2026-07-17'
+body_hash: 'sha256:2ee9e5e72b07297cf0a581de6dd1a2fb32f4974b2948b4acf31d91adb6eaac4b'
 related: []
 ---
 

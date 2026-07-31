@@ -4,6 +4,7 @@ tags:
   - '#modelo-131-eo-modulos-engine'
 date: '2026-07-10'
 modified: '2026-07-10'
+body_hash: 'sha256:1c375c136bf54dca4abbf337dd901e7abf50ae09fa295907fb506e7fd4d53ada'
 related:
   - "[[2026-07-01-modelo-131-eo-modulos-engine-adr]]"
 ---

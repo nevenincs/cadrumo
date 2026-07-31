@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:ebe3f60857b8dbe865dc95518c328744ef2cbe6b9e903b1d795207ba2fe83019'
 related:
   - '[[2026-07-07-registry-toml-parser-adr]]'
   - '[[2026-07-10-registry-toml-parser-research]]'

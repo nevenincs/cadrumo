@@ -4,6 +4,7 @@ tags:
   - '#live-pull-verification-sweep'
 date: '2026-06-13'
 modified: '2026-07-31'
+body_hash: 'sha256:e0ad5b978584c6bc4e8a7c768b1d52fac50f896285124f6485cb8e4fb830cb27'
 related:
   - '[[2026-06-12-live-pull-verification-sweep-plan]]'
   - '[[2026-06-12-live-pull-verification-sweep-live-auth-blocker-audit]]'

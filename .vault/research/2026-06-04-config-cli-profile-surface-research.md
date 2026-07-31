@@ -4,6 +4,7 @@ tags:
   - '#config-cli-profile-surface'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:55a9b71357fdb522b268e3c99210ba0b9ca53729a2b1272ceb65091160558046'
 related:
   - "[[2026-05-07-config-cli-profile-surface-adr]]"
 ---

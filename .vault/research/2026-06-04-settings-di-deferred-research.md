@@ -4,6 +4,7 @@ tags:
   - '#settings-di-deferred'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:a5eb139413bd475f5b019d1dc9d0dbb8578e6602618ab2957fcf466e462314a6'
 related:
   - "[[2026-06-03-settings-di-deferred-test-migration-adr]]"
 ---

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:3e89781246103d0a5bc36e25d6e9b333bea2a82af22c5040b4b7e72a417fb341'
 related:
   - '[[2026-07-26-compatibility-enrollment-deadlock-adr]]'
   - '[[2026-07-26-compatibility-enrollment-deadlock-vacuity-screen-triage-audit]]'

@@ -4,6 +4,7 @@ tags:
   - '#user-profile-backend-schema'
 date: '2026-05-07'
 modified: '2026-07-17'
+body_hash: 'sha256:9fe3101402e83944d7d05cbced7b8ba535ceb3cb1959ff4b372a9e2376199b5e'
 related:
   - "[[2026-05-07-user-profile-schema-research]]"
   - "[[2026-05-07-user-profile-registry-dependencies-reference]]"

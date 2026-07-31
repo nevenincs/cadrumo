@@ -4,6 +4,7 @@ tags:
   - '#docs-architecture'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:8ac18e0e2fa9afaf244c0d6b94f43b133d4619969756957e080eed20997ac0d1'
 step_id: 'S61'
 related:
   - "[[2026-05-30-docs-architecture-plan]]"

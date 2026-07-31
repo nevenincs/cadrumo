@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:3e1676998d0894c0cf8f0991f574343708361eb7712444a75fd940f5f9fb6815'
 related:
   - '[[2026-04-17-portal-catalogue-adr]]'
   - '[[2026-04-17-portal-catalogue-plan]]'

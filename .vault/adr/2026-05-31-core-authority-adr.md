@@ -4,6 +4,7 @@ tags:
   - '#core-authority'
 date: '2026-05-31'
 modified: '2026-07-17'
+body_hash: 'sha256:db3139077fed526ff118641dfdb44869622f4d74f31eb8ff769e1de5e7d98d6d'
 related:
   - "[[2026-05-31-core-authority-action-tracker-v2-reference]]"
   - "[[2026-05-31-core-authority-types-v2-reference]]"

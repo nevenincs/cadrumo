@@ -4,6 +4,7 @@ tags:
   - '#inventory-management'
 date: '2026-04-29'
 modified: '2026-07-17'
+body_hash: 'sha256:123b5f544d6581468a0b33dcd4c102979b7c370e28b1246c02704c4405ac1abd'
 related:
   - '[[2026-04-27-modelo-100-renta-full-calc-adr]]'
   - '[[2026-04-27-security-storage-audit-audit]]'

@@ -4,6 +4,7 @@ tags:
   - '#bindings-architecture-unification'
 date: '2026-06-26'
 modified: '2026-07-17'
+body_hash: 'sha256:6e8df703f281fa80c46429e22f0cb315ae64a64990a12983648a92ae0d0eafa3'
 related:
   - '[[2026-06-14-bindings-interface-hardening-adr]]'
   - '[[2026-06-15-bindings-interface-hardening-audit]]'

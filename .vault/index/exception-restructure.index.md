@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:3004b3013c7a73e9e0d0541ddf2a2a4ece725cc96c7c87396ed0982370975bd3'
 related:
   - '[[2026-05-09-exception-restructure-adr]]'
   - '[[2026-05-09-exception-restructure-phase-1-plan]]'

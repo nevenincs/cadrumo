@@ -4,6 +4,7 @@ tags:
   - '#storage-encryption'
 date: '2026-06-04'
 modified: '2026-07-10'
+body_hash: 'sha256:2fa12c663cb9f506c7abb7bb46594b2df7b37626bad0efba59455b135c6791e2'
 related:
   - "[[2026-06-04-storage-encryption-research]]"
 ---

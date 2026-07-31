@@ -4,6 +4,7 @@ tags:
   - '#bare-invocation-bucket-session-gate'
 date: '2026-06-03'
 modified: '2026-07-17'
+body_hash: 'sha256:5810eb34b49a5de3b5d5acf0ba05c87c99fe5b6ed081491a3df75bbe0a921a29'
 related:
   - "[[2026-06-03-wizard-catalogue-startup-ordering-adr]]"
   - "[[2026-06-02-m303-parser-engine-totals-impedance-adr]]"

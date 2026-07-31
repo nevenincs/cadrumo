@@ -4,6 +4,7 @@ tags:
   - '#executable-parity-evidence-tier-contract'
 date: '2026-06-03'
 modified: '2026-07-17'
+body_hash: 'sha256:499fab161dd9603fe33f2b3d4f8f0846ed117ea956fb927490587cb5a6c1193e'
 related:
   - "[[2026-06-03-bare-invocation-bucket-session-gate-adr]]"
   - "[[2026-06-02-m303-parser-engine-totals-impedance-adr]]"

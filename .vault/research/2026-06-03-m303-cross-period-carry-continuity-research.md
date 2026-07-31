@@ -4,6 +4,7 @@ tags:
   - '#m303-cross-period-carry-continuity'
 date: '2026-06-03'
 modified: '2026-07-17'
+body_hash: 'sha256:151344d33bed91356f0057b5d20bad0a8ac7183cccc480898afe4dd41943143c'
 related:
   - '[[2026-06-03-m303-synthetic-generator-primitive-spec-adr]]'
   - '[[2026-06-03-synthetic-fixture-primitive-encoding-discipline-adr]]'

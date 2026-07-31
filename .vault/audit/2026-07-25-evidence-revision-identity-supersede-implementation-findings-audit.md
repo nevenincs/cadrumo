@@ -4,6 +4,7 @@ tags:
   - '#evidence-revision-identity'
 date: '2026-07-25'
 modified: '2026-07-26'
+body_hash: 'sha256:38c954380aeab32c00052d3523270be0fe58087304f2bd5242940b27508287cb'
 related:
   - "[[2026-07-24-evidence-revision-identity-adr]]"
   - "[[2026-07-25-evidence-revision-identity-plan]]"

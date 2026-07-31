@@ -4,6 +4,7 @@ tags:
   - '#m349-payable-invoice-authoring'
 date: '2026-06-03'
 modified: '2026-07-17'
+body_hash: 'sha256:f1279d91d45488ec8cf2e47bc41aafa43874b22f00c5b540d9175e8c4e06653a'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-06-03-m349-legal-grounding-debt-research]]"

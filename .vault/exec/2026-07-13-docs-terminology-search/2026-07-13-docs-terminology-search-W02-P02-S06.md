@@ -4,6 +4,7 @@ tags:
   - '#docs-terminology-search'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:5ff8b6cd9768dd02e079fb88b37ddb9c941f882cdf54457040c66699f791c775'
 step_id: 'S06'
 related:
   - "[[2026-07-13-docs-terminology-search-plan]]"

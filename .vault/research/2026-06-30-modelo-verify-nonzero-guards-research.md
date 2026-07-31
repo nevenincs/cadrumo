@@ -4,6 +4,7 @@ tags:
   - '#modelo-verify-nonzero-guards'
 date: '2026-06-30'
 modified: '2026-07-17'
+body_hash: 'sha256:e4c0cac33784ca83e16a29559a0a75ff669da7b0839dbe036b0999957e511666'
 related:
   - "[[2026-07-02-agent-harness-refoundation-adr]]"
   - "[[2026-06-02-modelo-200-base-determination-adr]]"

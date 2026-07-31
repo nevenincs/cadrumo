@@ -4,6 +4,7 @@ tags:
   - '#google-optional-adapter-boundary'
 date: '2026-07-14'
 modified: '2026-07-14'
+body_hash: 'sha256:6385ab0fb4e7a06c0d799f63becf70986a557153c30d91d62fb3493f508a0638'
 related:
   - "[[2026-07-14-google-oauth-audit]]"
   - "[[2026-07-12-google-oauth-adr]]"

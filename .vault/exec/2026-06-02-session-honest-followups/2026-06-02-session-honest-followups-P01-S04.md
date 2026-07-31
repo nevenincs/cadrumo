@@ -4,6 +4,7 @@ tags:
   - '#session-honest-followups'
 date: '2026-07-05'
 modified: '2026-07-17'
+body_hash: 'sha256:fc2e2a3851fcb2adc82c82023b8c742923d666af5c3d0f49f45bc8e0ceff52c3'
 step_id: 'S04'
 related:
   - "[[2026-06-02-session-honest-followups-plan]]"

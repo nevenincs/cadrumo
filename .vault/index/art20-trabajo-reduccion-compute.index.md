@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:86d63d83b0876e5758aa36d283e06a3a1d4764143272fbabac5a3928b52f7b8c'
 related:
   - '[[2026-06-15-art20-trabajo-reduccion-compute-adr]]'
   - '[[2026-06-15-art20-trabajo-reduccion-compute-research]]'

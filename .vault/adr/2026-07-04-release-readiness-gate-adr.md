@@ -4,6 +4,7 @@ tags:
   - '#release-readiness-gate'
 date: '2026-07-04'
 modified: '2026-07-17'
+body_hash: 'sha256:b8bb3389f1a33186e1694474a1c8ce0d31bd40d868f41defcc3e742cb9cf51e0'
 related:
   - '[[2026-07-06-release-readiness-gate-research]]'
   - '[[2026-07-15-distribution-installation-readiness-adr]]'

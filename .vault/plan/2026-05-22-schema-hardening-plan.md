@@ -4,6 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-05-22'
 modified: '2026-07-17'
+body_hash: 'sha256:fa0f0c331ade7c2950cb0f4d83e1f542f537dbc395bbf7e60247bdf95c79b1ee'
 tier: L2
 related:
   - '[[2026-05-22-schema-hardening-adr]]'

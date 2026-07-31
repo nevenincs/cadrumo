@@ -4,6 +4,7 @@ tags:
   - "#exception-restructure"
 date: 2026-05-09
 modified: '2026-07-17'
+body_hash: 'sha256:52d985f421760a373066f345bb4cae4ec8e6e068358018d56ac8b72d2f468203'
 related:
   - "[[2026-05-09-exception-restructure-research]]"
   - "[[2026-05-09-exception-restructure-adr]]"

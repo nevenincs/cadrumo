@@ -4,6 +4,7 @@ tags:
   - '#iva-prorrata-complexity'
 date: '2026-07-08'
 modified: '2026-07-28'
+body_hash: 'sha256:24e4c9f6f36bd0a010b0e501a19110fb6ba0b799fc0413b40886d1dd884db5d6'
 related:
   - '[[2026-07-08-iva-prorrata-complexity-audit]]'
   - '[[2026-07-07-prorrata-especial-adr]]'

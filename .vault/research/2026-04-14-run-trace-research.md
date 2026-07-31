@@ -6,6 +6,7 @@ tags:
   - "#run-trace"
 date: 2026-04-14
 modified: '2026-07-17'
+body_hash: 'sha256:e42436d575d374b8a1c231d12fb57a92ebb78ad8e52ccce372eae2a8bbdc0d7a'
 related:
   - "[[2026-04-12-workflow-engine-research]]"
   - "[[2026-04-12-workflow-engine-adr]]"

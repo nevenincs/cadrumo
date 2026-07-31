@@ -4,6 +4,7 @@ tags:
   - '#secure-object-integrity'
 date: '2026-05-22'
 modified: '2026-07-17'
+body_hash: 'sha256:b88bd49f0e6e7765f609bb3bcdea01376d457046bd8ff06c0ead8f12dcf0fb64'
 related:
   - '[[2026-05-22-secure-object-integrity-attribution-plan]]'
   - '[[2026-05-21-secure-object-database-drift-research]]'

@@ -4,6 +4,7 @@ tags:
   - '#declaracion-profile-printed-box-scope'
 date: '2026-07-25'
 modified: '2026-07-25'
+body_hash: 'sha256:b19ae57ab3029e9364e274bfd9cfcb16c7d93dc7e97925ff3b485c4e5cfd5a05'
 tier: L1
 related:
   - '[[2026-07-25-declaracion-profile-printed-box-scope-adr]]'

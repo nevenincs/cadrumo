@@ -4,6 +4,7 @@ tags:
   - "#unclassified-state"
 date: '2026-04-18'
 modified: '2026-07-17'
+body_hash: 'sha256:92f9eaf0f04c61155c9bfddf9f3b7685d90825640cf2c840afcbbfc5a526812f'
 related:
   - "[[2026-04-18-unclassified-state-research]]"
   - "[[2026-04-14-transaction-catalogue-adr]]"

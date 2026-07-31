@@ -4,6 +4,7 @@ tags:
   - '#module-test-coverage'
 date: '2026-06-04'
 modified: '2026-07-10'
+body_hash: 'sha256:cc37419f21be54c887169ab42ba3174f19a38367ce69683912848f5571c69f47'
 related:
   - "[[2026-06-04-module-test-coverage-research]]"
 ---

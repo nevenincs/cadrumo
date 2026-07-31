@@ -4,6 +4,7 @@ tags:
   - '#delivery-pipeline-audit'
 date: '2026-07-25'
 modified: '2026-07-25'
+body_hash: 'sha256:13d48a58cb0bf567e76d8d8708a4fded8b17c89a9d1368b7f24b891899f085f0'
 step_id: 'S07'
 related:
   - "[[2026-07-25-delivery-pipeline-audit-plan]]"

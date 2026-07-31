@@ -4,6 +4,7 @@ tags:
   - '#ledger-invoice-unification'
 date: '2026-06-11'
 modified: '2026-07-17'
+body_hash: 'sha256:86c71a18144e846ec8fa78b55b11a7b6dd8d78d84633f4eb5962ed3037a592d3'
 step_id: 'S12'
 related:
   - '[[2026-06-10-ledger-invoice-unification-plan]]'

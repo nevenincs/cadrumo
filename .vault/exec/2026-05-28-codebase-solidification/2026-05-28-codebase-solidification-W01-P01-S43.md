@@ -2,6 +2,7 @@
 step_id: S43
 date: 2026-05-28
 modified: '2026-07-17'
+body_hash: 'sha256:d663b3737bf5ff84d1cac5b8c018d82be59bc5334cb115e65c546ce6524a26a2'
 tags:
   - "#exec"
   - "#codebase-solidification"

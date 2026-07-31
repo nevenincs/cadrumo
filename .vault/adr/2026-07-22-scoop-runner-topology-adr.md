@@ -4,6 +4,7 @@ tags:
   - '#scoop-runner-topology'
 date: '2026-07-22'
 modified: '2026-07-28'
+body_hash: 'sha256:1ecf65d91b175b9bbb77acc391a50dc397ea7efec9ee44400d9b2e6d00afe393'
 related:
   - "[[2026-07-21-post-release-distribution-v0-2-1-publication-audit]]"
 ---

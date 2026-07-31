@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:e86e44238d25cf14b52a2e4d74ff8f0ba54b9b168f6de1173b7851aa4fb1f307'
 related:
   - '[[2026-06-05-modelo-work-revision-cli-decomposition-adr]]'
   - '[[2026-06-05-modelo-work-revision-cli-decomposition-code-review-audit]]'

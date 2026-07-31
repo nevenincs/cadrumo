@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:aa8d332b2278bbb38edc626cbcb78823cc33bf6fd41b85bbcc355fe45f2e897d'
 related:
   - '[[2026-07-17-auth-cert-recovery-custody-P01-S01]]'
   - '[[2026-07-17-auth-cert-recovery-custody-P01-S02]]'

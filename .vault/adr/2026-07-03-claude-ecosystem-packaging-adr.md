@@ -4,6 +4,7 @@ tags:
   - '#claude-ecosystem-packaging'
 date: '2026-07-03'
 modified: '2026-07-16'
+body_hash: 'sha256:5d8b73001d8810486ece14ca2a5d8f0eb361261b071553d5a15af1cd0237502e'
 related:
   - "[[2026-07-03-claude-ecosystem-packaging-research]]"
   - "[[2026-07-02-agent-harness-refoundation-adr]]"

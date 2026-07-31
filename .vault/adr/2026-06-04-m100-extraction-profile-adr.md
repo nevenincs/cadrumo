@@ -4,6 +4,7 @@ tags:
   - '#m100-extraction-profile'
 date: '2026-06-04'
 modified: '2026-07-10'
+body_hash: 'sha256:f165e639e1d5b2bc6eabbf4fe566e158d64fe830402c0dc817a4373caa986b8f'
 related:
   - "[[2026-06-04-m100-extraction-profile-research]]"
 ---

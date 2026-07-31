@@ -6,6 +6,7 @@ tags:
   - "#workflow-engine"
 date: 2026-04-12
 modified: '2026-07-17'
+body_hash: 'sha256:a4a7ea70e1d56c5acaa107bee6333dfec72a75f80b3eaf24c35d7ca953f3a776'
 related:
   - "[[2026-04-12-workflow-engine-research]]"
   - "[[2026-04-12-workflow-engine-adr]]"

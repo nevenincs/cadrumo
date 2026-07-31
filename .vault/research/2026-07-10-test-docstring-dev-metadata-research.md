@@ -4,6 +4,7 @@ tags:
   - '#test-docstring-dev-metadata'
 date: '2026-07-10'
 modified: '2026-07-10'
+body_hash: 'sha256:a0d85777937dd18b2b6e761cb940fdc1fe47651daadda54954eae6118633e910'
 related:
   - "[[2026-07-08-test-docstring-dev-metadata-adr]]"
 ---

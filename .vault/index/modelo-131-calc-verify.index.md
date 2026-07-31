@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:c3c86d3a1fecad5356fe0233542d1f0fff7236251e84d784a5ab04f1d941dec4'
 related:
   - '[[2026-04-27-modelo-131-calc-verify-adr]]'
   - '[[2026-04-27-modelo-131-calc-verify-exec]]'

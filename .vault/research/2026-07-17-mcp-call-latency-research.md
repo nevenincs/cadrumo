@@ -4,6 +4,7 @@ tags:
   - '#mcp-call-latency'
 date: '2026-07-17'
 modified: '2026-07-19'
+body_hash: 'sha256:2b1efe74e3198dd06640064e5118ff80710026e720a266d89d35c9016c70b1e7'
 related:
   - '[[2026-07-17-mcp-service-robustness-research]]'
 ---

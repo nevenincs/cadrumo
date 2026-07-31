@@ -2,6 +2,7 @@
 tags: ['#exec', '#codebase-monolith-decomposition']
 date: '2026-06-05'
 modified: '2026-07-17'
+body_hash: 'sha256:a817ed8c4abba32c3fe706c6af955ca619d532c396c17f996d654618db00c816'
 step_id: 'S17'
 related:
   - '[[2026-06-05-codebase-monolith-decomposition-plan]]'

@@ -4,6 +4,7 @@ tags:
   - '#docs-sphinx-ux'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:029c45c6fc0716f14a2438691b24015d64d175dfa5d9ed653976ea9cb27f9fd7'
 step_id: 'S04'
 related:
   - '[[2026-06-04-docs-sphinx-ux-plan]]'

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:7ced31eeccd6ab100655f93b97a4e35bdc759ac3ecd7b40933b58ee649b87654'
 related:
   - '[[2026-06-10-cli-envelope-notice-standardisation-adr]]'
   - '[[2026-06-10-cli-envelope-notice-standardisation-exec]]'

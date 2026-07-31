@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:af215e4d7ab9a2bcb210d77321bf1d8216abf638eefcffc11ab461ffe3c1ae12'
 related:
   - '[[2026-06-01-metastate-zero-tolerance-adr]]'
   - '[[2026-06-01-metastate-zero-tolerance-research]]'

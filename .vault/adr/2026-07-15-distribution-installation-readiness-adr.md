@@ -4,6 +4,7 @@ tags:
   - '#distribution-installation-readiness'
 date: '2026-07-15'
 modified: '2026-07-17'
+body_hash: 'sha256:6ad3b5191ee95af97c6b4b58ca8d6495b6c754adad821916b0dc097b5029d39d'
 related:
   - '[[2026-07-15-distribution-installation-readiness-research]]'
   - '[[2026-07-15-distribution-installation-readiness-reference]]'

@@ -7,6 +7,7 @@ related:
   - "[[2026-07-12-google-oauth-research]]"
 supersedes:
 modified: '2026-07-17'
+body_hash: 'sha256:1e1b86d82b7f00ff5d536d878859f35527d9ac24e5b3769dcaaab88920725ac1'
 ---
 
 # `google-oauth` adr: `remote ciphertext manifest mirror boundary` | (**status:** `accepted`)

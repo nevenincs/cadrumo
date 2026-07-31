@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:b47bf5e9a983b7411280daaa70595f7f46133533ef3c99f241a1cb907d021889'
 related:
   - '[[2026-05-12-cli-workflow-redesign-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-apoderamientos-surface-adr]]'

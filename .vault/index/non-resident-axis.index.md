@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:f76acc56712b85ced81b0a37d6658776606ecb806fb298fa43e688a535efe80a'
 related:
   - '[[2026-05-27-non-resident-axis-S01]]'
   - '[[2026-05-27-non-resident-axis-S02]]'

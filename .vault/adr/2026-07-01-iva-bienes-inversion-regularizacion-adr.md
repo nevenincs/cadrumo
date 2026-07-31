@@ -4,6 +4,7 @@ tags:
   - "#iva-bienes-inversion-regularizacion"
 date: "2026-07-01"
 modified: '2026-07-17'
+body_hash: 'sha256:e8d3670f57596cab3d0757dd96b64c185146a8ceaad4e2387764f6caa40021f8'
 related:
   - "[[2026-07-01-iva-bienes-inversion-regularizacion-research]]"
   - "[[2026-06-19-silent-zero-base-aggregation-adr]]"

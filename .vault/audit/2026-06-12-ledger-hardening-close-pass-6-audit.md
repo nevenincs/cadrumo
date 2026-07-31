@@ -4,6 +4,7 @@ tags:
   - '#ledger-hardening-close'
 date: '2026-06-12'
 modified: '2026-07-17'
+body_hash: 'sha256:015f1838f509161ada199fdf8e9ab88deaac7f60f580d28f1093a7d7938d192c'
 related:
   - '[[2026-06-10-ledger-amount-direction-plan]]'
   - '[[2026-06-10-ledger-evidence-enforcement-plan]]'

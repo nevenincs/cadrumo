@@ -2,6 +2,7 @@
 tags: ["#exec", "#user-profile-backend-schema"]
 date: 2026-05-08
 modified: '2026-07-17'
+body_hash: 'sha256:e4440e23a24555665faef37277c1ff794172c2d84ed98e2adcfc3f0063c2a483'
 related:
   - "[[2026-05-07-user-profile-backend-schema-plan]]"
   - "[[2026-05-07-user-profile-backend-schema-adr]]"

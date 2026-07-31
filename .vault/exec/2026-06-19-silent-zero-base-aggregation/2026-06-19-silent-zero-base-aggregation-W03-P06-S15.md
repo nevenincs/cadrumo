@@ -4,6 +4,7 @@ tags:
   - '#silent-zero-base-aggregation'
 date: '2026-06-20'
 modified: '2026-07-17'
+body_hash: 'sha256:7ab9f077ce75ce537c9ffaba223c815bde7b59be298f3460c1111b44ecc177fd'
 step_id: 'S15'
 related:
   - "[[2026-06-19-silent-zero-base-aggregation-plan]]"

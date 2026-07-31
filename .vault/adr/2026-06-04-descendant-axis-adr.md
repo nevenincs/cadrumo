@@ -4,6 +4,7 @@ tags:
   - '#descendant-axis'
 date: '2026-06-04'
 modified: '2026-07-10'
+body_hash: 'sha256:c8f1e5f0dcf7a33e8922f18fa5011a7f766819e56b4791ccbd065c5e1525b051'
 related:
   - "[[2026-06-04-descendant-axis-research]]"
 ---

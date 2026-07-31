@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:88f230635db68bb23fe03f326899bac65d814dcb038ea0445c83824e6469877b'
 related:
   - '[[2026-07-25-open-decisions-and-operator-gates-plan]]'
   - '[[2026-07-25-open-decisions-and-operator-gates-three-rulings-audit]]'

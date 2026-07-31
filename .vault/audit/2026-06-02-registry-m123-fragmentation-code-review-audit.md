@@ -4,6 +4,7 @@ tags:
   - '#registry-m123-fragmentation'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:9384e6d9efa70941ab40077b9170d0192009145ca44d0efc6212e37be6540ca8'
 related:
   - "[[2026-06-02-registry-hardening-next-work-plan]]"
   - "[[2026-06-02-registry-m123-fragmentation-audit]]"

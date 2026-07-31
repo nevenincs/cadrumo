@@ -9,6 +9,7 @@ related:
 supersedes:
   - '2026-06-03-iva-exemption-article-adr'
 modified: '2026-07-11'
+body_hash: 'sha256:09e870e710bae96a6d4c291cde041ca30b866c74cd47844ee04c88360820253e'
 ---
 # `article-20-uno-26-correction` adr: `Remove the Article 20.Uno.26 deductible casilla-61 route` | (**status:** `accepted`)
 

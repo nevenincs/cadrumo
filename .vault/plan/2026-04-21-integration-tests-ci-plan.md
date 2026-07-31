@@ -4,6 +4,7 @@ tags:
   - "#integration-tests-ci"
 date: "2026-04-21"
 modified: '2026-07-17'
+body_hash: 'sha256:1a3ea5787268fe5fcf3fd18b1d7ea396c3fc016506d2c86ac07672ad85cee70c'
 related:
   - "[[2026-04-21-integration-tests-ci-adr]]"
   - "[[2026-04-21-integration-tests-ci-research]]"

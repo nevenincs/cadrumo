@@ -2,6 +2,7 @@
 tags: ["#plan", "#aeat-cli-hardening"]
 date: '2026-05-08'
 modified: '2026-07-15'
+body_hash: 'sha256:7a5ff107ee346f790eafbbf1259d69f77f16b946474fea07a5a5e03e2aa5341b'
 related:
   - "[[2026-05-07-user-profile-backend-schema-plan]]"
   - "[[2026-05-07-config-cli-profile-surface-adr]]"

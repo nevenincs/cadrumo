@@ -4,6 +4,7 @@ tags:
   - '#modelo-123-calc-verify'
 date: '2026-04-27'
 modified: '2026-07-17'
+body_hash: 'sha256:282c4bd8eef99e464b6ec46fa53b2adbd074f21ac70cfe14ad6d8b3f88b9b440'
 related:
   - '[[2026-04-27-modelo-123-calc-verify-plan]]'
   - '[[2026-04-27-modelo-123-rule-delta-reference]]'

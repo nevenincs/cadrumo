@@ -4,6 +4,7 @@ tags:
   - '#secure-storage-production-hardening'
 date: '2026-06-06'
 modified: '2026-07-17'
+body_hash: 'sha256:b62a9d12c2e316f7e662d5f61093ce10be46e265e436b2eba8d8b455d62a9eff'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
   - '[[2026-05-21-fresh-cli-persona-findings-inventory-audit]]'

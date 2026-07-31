@@ -4,6 +4,7 @@ tags:
   - '#prorrata-especial'
 date: '2026-07-10'
 modified: '2026-07-10'
+body_hash: 'sha256:046064fc6bfe4d0d801c1cc0fdc65993547e48ed416d114e12cf7fa069afa48c'
 related:
   - "[[2026-07-07-prorrata-especial-adr]]"
 ---

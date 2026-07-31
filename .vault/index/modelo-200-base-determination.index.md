@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:1ab81df5baa40334574711bbda625b21e58752f1a4689ae84d0ddeccc8ee73b0'
 related:
   - '[[2026-06-02-modelo-200-base-determination-adr]]'
   - '[[2026-06-02-modelo-200-base-determination-reference]]'

@@ -4,6 +4,7 @@ tags:
   - '#autonomic-deduccion-auto-trigger'
 date: '2026-07-01'
 modified: '2026-07-17'
+body_hash: 'sha256:2a25dece55cd2f3690d9d4bbec62568be7462ae1db0863ac3fc48991ece918cf'
 related:
   - '[[2026-06-04-m100-marriage-date-axis-adr]]'
   - '[[2026-06-19-m100-dependent-modelo-applicability-adr]]'

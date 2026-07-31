@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:c73618345710d29cd9b2a725d10569b0cc1cd28749b0354f9bb169ca29f1ad9b'
 related:
   - '[[2026-05-12-aeat-cli-config-vs-setup-namespace-adr]]'
   - '[[2026-06-04-aeat-cli-config-vs-setup-namespace-research]]'

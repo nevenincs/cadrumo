@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s52-mcpb-manifest'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:e0ec5eeb0fb419509dc842d68569f97aaba47a8db165a8ca76cef30e3b8bab5c'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
   - "[[2026-07-12-cadrumo-cli-executable-adr]]"

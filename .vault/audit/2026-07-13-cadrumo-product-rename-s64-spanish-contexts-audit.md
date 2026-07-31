@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s64-spanish-contexts'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:b38c52aa8ee7ccb783e2eabf7b48701a489dea79d718cc1a29ab1550aed26ef4'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
   - "[[2026-07-12-cadrumo-cli-executable-adr]]"

@@ -11,6 +11,7 @@ related:
   - '[[2026-04-27-auth-cli-research]]'
 superseded_by: '2026-05-12-cli-workflow-redesign-config-auth-shape-adr'
 modified: '2026-07-17'
+body_hash: 'sha256:7c2a1dc64a4c3d42edd8a40a2e5e1f510f7a2d364cac1ff3496dc4e1c8d4fcdf'
 ---
 # `auth-cli` adr: `issue-285 aeat auth login / list-providers / status / logout` | (**status:** `superseded`)
 

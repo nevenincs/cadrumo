@@ -4,6 +4,7 @@ tags:
   - '#legal-grounding-centralization'
 date: '2026-06-14'
 modified: '2026-07-17'
+body_hash: 'sha256:05bf7d75daaf6ac3d3a4d798a97c7fd5ee47cb30ca62c1b8f14f7e1c95b1e1ba'
 step_id: 'S01'
 related:
   - "[[2026-06-14-legal-grounding-centralization-plan]]"

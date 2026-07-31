@@ -4,6 +4,7 @@ tags:
   - '#aeat-cli-hardening'
 date: '2026-05-08'
 modified: '2026-07-17'
+body_hash: 'sha256:0805dec1264594903210fca0d5906c75fb179fb0866b7eaa6084b0bc00832de4'
 related:
   - '[[2026-05-08-aeat-cli-hardening-plan]]'
 ---

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:1240158d680f5d23b8c818bd48ba809acc7fa625d09e267506944dd4027a85e1'
 related:
   - '[[2026-05-19-spanish-stem-terminology-authority-adr]]'
 ---

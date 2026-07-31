@@ -4,6 +4,7 @@ tags:
   - '#mcp-progressive-discovery'
 date: '2026-07-08'
 modified: '2026-07-17'
+body_hash: 'sha256:9170b187f4e5d6b75174be0d5f7bf342da89195ef44b3f73ff1d0100153808fa'
 related:
   - '[[2026-07-08-mcp-progressive-discovery-adr]]'
   - '[[2026-07-08-mcp-progressive-discovery-plan]]'

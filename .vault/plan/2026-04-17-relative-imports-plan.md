@@ -4,6 +4,7 @@ tags:
   - "#relative-imports"
 date: 2026-04-17
 modified: '2026-07-17'
+body_hash: 'sha256:e494e580e1f1ea2f6411c99c56255c957499e63013bf5c6b182284abf95c62c8'
 related:
   - "[[2026-04-17-relative-imports-adr]]"
   - "[[2026-04-17-relative-imports-research]]"

@@ -4,6 +4,7 @@ tags:
   - '#corpus-registry-packaging'
 date: '2026-05-16'
 modified: '2026-07-17'
+body_hash: 'sha256:54822cb5999a839f245da7343bd77ae6a2ca3b0a2d886825af38955c27350200'
 related:
   - "[[2026-05-15-corpus-registry-packaging-plan]]"
   - "[[2026-05-15-corpus-registry-packaging-adr]]"

@@ -4,6 +4,7 @@ tags:
   - '#user-docs-localization'
 date: '2026-07-18'
 modified: '2026-07-19'
+body_hash: 'sha256:c7a3e53822955c6a558a20b8d8be35b2c966b74606cd768eb606bb421817483f'
 tier: L3
 related:
   - '[[2026-07-18-user-docs-localization-adr]]'

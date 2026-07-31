@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:e2dc7a830f36677bea3be905c20938153f25142369f647b2fd1e00064a443dcd'
 related:
   - '[[2026-05-27-descendant-axis-S01]]'
   - '[[2026-06-04-descendant-axis-adr]]'

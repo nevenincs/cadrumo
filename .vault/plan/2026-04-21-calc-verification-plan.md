@@ -4,6 +4,7 @@ tags:
   - "#calc-verification"
 date: "2026-04-21"
 modified: '2026-07-17'
+body_hash: 'sha256:8c68ddaccaf2e8510c5d521c2151680f080f963946fb264c0b053bee1c61ee54'
 related:
   - "[[2026-04-21-calc-verification-adr]]"
   - "[[2026-04-21-calc-verification-research]]"

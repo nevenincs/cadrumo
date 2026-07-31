@@ -4,6 +4,7 @@ tags:
   - '#codebase-health-remediation'
 date: '2026-07-21'
 modified: '2026-07-21'
+body_hash: 'sha256:fd95a5c3520539b4d64b80d691e366ea6260c05aa2194a2935d5fa34d3c9dc72'
 related:
   - "[[2026-07-17-adr-code-reconciliation-audit]]"
 ---

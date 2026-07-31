@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:775ebeef6e2abd2abcac83030fff20fe3f917fdf51a44924158f38d0cffcd265'
 related:
   - '[[2026-06-04-registry-drift-validator-blocking-gap-S01]]'
   - '[[2026-06-04-registry-drift-validator-blocking-gap-S02]]'

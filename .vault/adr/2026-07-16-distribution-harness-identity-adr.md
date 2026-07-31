@@ -4,6 +4,7 @@ tags:
   - '#distribution-harness-identity'
 date: '2026-07-16'
 modified: '2026-07-17'
+body_hash: 'sha256:7a7e4815ed059adcab93912ce4b0f609fb48e04b4c2503fb8d499b6ec62ee03c'
 related:
   - '[[2026-07-16-distribution-harness-identity-research]]'
   - '[[2026-07-15-distribution-installation-readiness-adr]]'

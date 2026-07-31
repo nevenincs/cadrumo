@@ -4,6 +4,7 @@ tags:
   - '#modelo-100-renta-full-calc'
 date: '2026-04-27'
 modified: '2026-07-17'
+body_hash: 'sha256:74e75e5b67d91129a70176c191df72695c403a91848aea55fb883a74c0f4caf2'
 related:
   - "[[2026-04-21-modelo-100-renta-research]]"
   - "[[2026-04-21-modelo-100-renta-adr]]"

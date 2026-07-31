@@ -4,6 +4,7 @@ tags:
   - '#vat-rate-shadow-sweep'
 date: '2026-05-06'
 modified: '2026-07-17'
+body_hash: 'sha256:78e71ceb214d30b17e30124ee6eeeb44838732c0d3c2e67fc836b9904025a400'
 related:
   - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
   - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'

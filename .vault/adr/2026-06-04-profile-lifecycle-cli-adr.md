@@ -4,6 +4,7 @@ tags:
   - '#profile-lifecycle-cli'
 date: '2026-06-04'
 modified: '2026-07-10'
+body_hash: 'sha256:abc411eee187b2ecf386df9cc2e08b658d0c458318cd26bbf200aa79582c3aa9'
 related:
   - "[[2026-06-04-profile-lifecycle-cli-research]]"
 ---

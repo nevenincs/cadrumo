@@ -4,6 +4,7 @@ tags:
   - '#cli-authority-quality-backlog'
 date: '2026-07-17'
 modified: '2026-07-24'
+body_hash: 'sha256:c6658cfe0cc88f81054374a8060532b152ac8ca84c1a14dac34413f7efbc73c1'
 tier: L2
 related:
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'

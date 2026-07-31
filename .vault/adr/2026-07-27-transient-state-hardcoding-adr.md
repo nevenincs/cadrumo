@@ -4,6 +4,7 @@ tags:
   - '#transient-state-hardcoding'
 date: '2026-07-27'
 modified: '2026-07-27'
+body_hash: 'sha256:a4614b45b68a68e8b96d567f8b2dfccb053c9f1f47edee7307cdacb03b9f7b2c'
 related:
   - "[[2026-07-27-transient-state-hardcoding-research]]"
   - '[[2026-07-25-test-harness-honesty-false-green-gates-audit]]'

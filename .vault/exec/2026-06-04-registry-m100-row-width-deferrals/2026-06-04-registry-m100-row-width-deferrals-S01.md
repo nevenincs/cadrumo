@@ -4,6 +4,7 @@ tags:
   - '#registry-m100-row-width-deferrals'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:4c9cccec0a8daef844f47c98477233b93b6ec80ed7bd33adfe012f2ed768b150'
 step_id: 'S01'
 related:
   - '[[2026-06-04-registry-m100-row-width-deferrals-plan]]'

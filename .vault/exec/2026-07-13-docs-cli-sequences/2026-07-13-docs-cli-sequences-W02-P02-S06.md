@@ -4,6 +4,7 @@ tags:
   - '#docs-cli-sequences'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:c5b3d907a47dae42c0ac9e1c84fa04958496fa3ed9b6520dced5d00abaf3edff'
 step_id: 'S06'
 related:
   - "[[2026-07-13-docs-cli-sequences-plan]]"

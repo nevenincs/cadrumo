@@ -4,6 +4,7 @@ tags:
   - '#settings-route-derivation-cost'
 date: '2026-07-25'
 modified: '2026-07-25'
+body_hash: 'sha256:ecd37413aa3f3ed4da4ecb8d88ec049a4f357d37fc683d1e56b2f29b1cfccfdd'
 related:
   - "[[2026-07-05-ledger-latency-budget-adr]]"
 ---

@@ -4,6 +4,7 @@ tags:
   - '#hu-translation'
 date: '2026-05-28'
 modified: '2026-07-17'
+body_hash: 'sha256:1281f76935fd1658383998e6fe695f49ac627f59260fb2eb6cdf9e3eb3a6bfc0'
 related: []
 ---
 

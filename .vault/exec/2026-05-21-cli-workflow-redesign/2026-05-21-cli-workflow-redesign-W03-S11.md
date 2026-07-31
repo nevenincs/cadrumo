@@ -4,6 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-05-22'
 modified: '2026-07-17'
+body_hash: 'sha256:7f54bd6ef0e12819edab4d804f6f8fbde28b2ad1bb2ec4cb93049140ec540601'
 step_id: 'S11'
 related:
   - '[[2026-05-21-taxpayer-type-applicability-plan]]'

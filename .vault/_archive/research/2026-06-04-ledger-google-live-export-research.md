@@ -4,6 +4,7 @@ tags:
   - '#ledger-google-live-export'
 date: '2026-06-04'
 modified: '2026-07-14'
+body_hash: 'sha256:23ebe2407b9849212020b544bf682361b5bb55c944f19e3959b32cf02712b388'
 related:
   - '[[2026-07-14-google-optional-adapter-boundary-adr]]'
 ---

@@ -4,6 +4,7 @@ tags:
   - '#m210-categorical-conditional-predicate'
 date: '2026-07-06'
 modified: '2026-07-17'
+body_hash: 'sha256:3c2175e97103b43fba8a6bed0cd03463b793d77567f00398262a8bfe224158d6'
 related: []
 ---
 

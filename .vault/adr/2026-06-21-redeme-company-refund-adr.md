@@ -8,6 +8,7 @@ related:
   - "[[2026-06-19-iva-compensation-override-cli-adr]]"
 superseded_by: '2026-06-24-m303-refund-election-adr'
 modified: '2026-07-17'
+body_hash: 'sha256:5112f4e28965562cabd44201ae0b3f26cbc075a0f6d7fe6e5379b18f873bb061'
 ---
 # `redeme-company-refund` adr: `Modelo 303 refund (devolución) disposition: eligibility-gated election + refund-account axis` | (**status:** `superseded`)
 

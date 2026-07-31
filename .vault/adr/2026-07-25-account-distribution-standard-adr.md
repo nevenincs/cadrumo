@@ -4,6 +4,7 @@ tags:
   - '#account-distribution-standard'
 date: '2026-07-25'
 modified: '2026-07-25'
+body_hash: 'sha256:cf90cf933c166246314019e76ca521536796ab775242f990775d3c0ad2053b36'
 related:
   - "[[2026-07-25-distribution-repo-topology-adr]]"
   - "[[2026-04-12-release-please-adr]]"

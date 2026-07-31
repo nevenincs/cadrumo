@@ -4,6 +4,7 @@ tags:
   - '#llm-classification-workflow'
 date: '2026-06-14'
 modified: '2026-07-17'
+body_hash: 'sha256:f1b3aaa9d5747b5513d0d2e44625bd13100fbe919b1420dc9b54045a46e50c30'
 related:
   - "[[2026-06-14-llm-classification-workflow-adr]]"
 ---

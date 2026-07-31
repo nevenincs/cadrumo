@@ -4,6 +4,7 @@ tags:
   - '#eu-locale'
 date: '2026-06-04'
 modified: '2026-07-10'
+body_hash: 'sha256:0d9edfe567da58b9b0ec2258001d00cb6010ce1efefcc3466b436d82d0b5db50'
 related:
   - "[[2026-06-04-eu-locale-research]]"
 ---

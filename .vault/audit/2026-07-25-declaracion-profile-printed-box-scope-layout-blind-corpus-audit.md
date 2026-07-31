@@ -4,6 +4,7 @@ tags:
   - '#declaracion-profile-printed-box-scope'
 date: '2026-07-25'
 modified: '2026-07-25'
+body_hash: 'sha256:95ec02a8ca24e36ea41103c035a1433fd30a2a4ed6118398ab10bb7ae00640f1'
 related:
   - "[[2026-07-25-declaracion-profile-printed-box-scope-plan]]"
   - "[[2026-07-25-declaracion-profile-printed-box-scope-adr]]"

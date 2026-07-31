@@ -4,6 +4,7 @@ tags:
   - '#license-posture'
 date: '2026-07-12'
 modified: '2026-07-17'
+body_hash: 'sha256:6f860dfd2a3fb11cda7ce0a1b555e1fcd3361ecb515fa8ecde02c401630e68a6'
 related: []
 ---
 

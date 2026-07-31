@@ -4,6 +4,7 @@ tags:
   - '#legacy-cleanup'
 date: '2026-04-18'
 modified: '2026-07-17'
+body_hash: 'sha256:10405f30bfa21d4e1056c37df242e85896602531607dea690d454c352707db3a'
 related:
   - '[[2026-04-18-rename-corpus-review-schema-adr]]'
   - '[[2026-04-18-rename-corpus-review-implementation-plan]]'

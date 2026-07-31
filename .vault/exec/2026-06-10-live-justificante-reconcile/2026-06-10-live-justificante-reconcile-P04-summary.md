@@ -4,6 +4,7 @@ tags:
   - '#live-justificante-reconcile'
 date: '2026-06-10'
 modified: '2026-07-17'
+body_hash: 'sha256:037464f29d2a8db10688ccee62434494c36270edb1e277d34d90eb83996a62a2'
 related:
   - '[[2026-06-10-live-justificante-reconcile-plan]]'
 ---

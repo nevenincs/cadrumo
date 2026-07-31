@@ -4,6 +4,7 @@ tags:
   - '#mcp-protocol-hardening'
 date: '2026-07-08'
 modified: '2026-07-17'
+body_hash: 'sha256:04b271c8b304a5d7829d635d83e5010f1916a5a991cf4ff5e847423729acd3e3'
 related:
   - "[[2026-07-08-mcp-protocol-hardening-research]]"
   - "[[2026-07-02-agent-harness-refoundation-adr]]"

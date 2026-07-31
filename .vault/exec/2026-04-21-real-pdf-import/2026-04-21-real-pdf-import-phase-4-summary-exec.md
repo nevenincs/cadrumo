@@ -4,6 +4,7 @@ tags:
   - "#real-pdf-import"
 date: "2026-04-21"
 modified: '2026-07-17'
+body_hash: 'sha256:c3778ec828fe0f7c74ab2cfb371dcb53c5b0efe198bb88a57ba090bae2664460'
 related:
   - "[[2026-04-21-casilla-schema-completeness-plan]]"
   - "[[2026-04-21-real-pdf-import-phase-3-summary-exec]]"

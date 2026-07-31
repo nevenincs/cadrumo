@@ -4,6 +4,7 @@ tags:
   - '#domain-boundary-audit'
 date: '2026-06-01'
 modified: '2026-07-04'
+body_hash: 'sha256:62b4445164ba8b06475698cde1569e85fb053eb23b90c9170d421597978a8ebe'
 tier: L3
 related:
   - '[[2026-06-01-domain-boundary-audit-adr]]'

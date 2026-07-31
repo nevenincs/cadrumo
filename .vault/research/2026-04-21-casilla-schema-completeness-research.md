@@ -4,6 +4,7 @@ tags:
   - "#casilla-schema-completeness"
 date: "2026-04-21"
 modified: '2026-07-17'
+body_hash: 'sha256:daa4c82a91db8ba1642d157be6cd59d1d4bd21fc4a6eeb77f41d5e0d3fdd6079'
 related:
   - "[[2026-04-21-real-pdf-import-umbrella-research]]"
   - "[[2026-04-21-pdf-taxonomy-adr]]"

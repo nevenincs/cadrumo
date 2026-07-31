@@ -4,6 +4,7 @@ tags:
   - '#profile-lifecycle-disaster'
 date: '2026-05-19'
 modified: '2026-07-17'
+body_hash: 'sha256:c8c74d0eb20c6a82744f16678205d5908d2b3d0ccd327832034632863e34458d'
 related:
   - "[[2026-05-19-profile-lifecycle-disaster-axis-a-session-activation-research]]"
   - "[[2026-05-19-profile-lifecycle-disaster-axis-e-failure-mode-research]]"

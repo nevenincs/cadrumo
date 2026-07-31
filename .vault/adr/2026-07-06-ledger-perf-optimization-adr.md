@@ -11,6 +11,7 @@ related:
 supersedes:
   - '2026-07-06-ledger-latency-budget-adr'
 modified: '2026-07-17'
+body_hash: 'sha256:430de795c80d17eb537d635ab9dfad4e7ac8e90aa1ee1442b0dcf7f9c1cde447'
 ---
 # `ledger-perf-optimization` adr: `write-path serialization cost: dirty-set save vs serialization-carry cache` | (**status:** `accepted`)
 

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:4067b9bfac6e67c75a8d8d443686e0e5f52a72cc18dec29042b1bbc686c5bb76'
 related:
   - '[[2026-05-26-no-synthetic-sede-live-surfaces-P01-S01]]'
   - '[[2026-05-26-no-synthetic-sede-live-surfaces-P01-S02]]'

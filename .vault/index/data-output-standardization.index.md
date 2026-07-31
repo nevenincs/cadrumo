@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:5c80a8a3a0e3a01a74dc6c4cd5d35601e9b38f386ae9d5cc60e851a062ea2fd8'
 related:
   - '[[2026-07-13-data-output-standardization-W01-P01-S01]]'
   - '[[2026-07-13-data-output-standardization-W01-P01-S02]]'

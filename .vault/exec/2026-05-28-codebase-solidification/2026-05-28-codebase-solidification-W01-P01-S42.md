@@ -2,6 +2,7 @@
 step_id: S42
 date: 2026-05-28
 modified: '2026-07-17'
+body_hash: 'sha256:f3a40ed37ad4939aa055d80dee438d3981ae99c283627a703bb48c5920085cd3'
 tags:
   - "#exec"
   - "#codebase-solidification"

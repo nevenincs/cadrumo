@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s55-release-guidance'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:43ef3cddcd0e98cdc0336104d4549bb061f77e9cf72fc7f9afb60925f543a654'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
   - "[[2026-07-12-cadrumo-cli-executable-adr]]"

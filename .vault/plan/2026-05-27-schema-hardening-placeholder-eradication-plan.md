@@ -4,6 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:59fdcc97781911bdfad35afb67c9ce145d92f41f4421d2081e5540141474d0c9'
 tier: L2
 related:
   - '[[2026-05-27-schema-hardening-label-artifact-inventory-exec]]'

@@ -4,6 +4,7 @@ tags:
   - '#llm-ledger-classification'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:6d53a35ecf06f71651510bfc5c00caf25d1e6dec95da0bf209ed321d06cbca40'
 tier: L2
 related:
   - '[[2026-06-04-llm-ledger-classification-adr]]'

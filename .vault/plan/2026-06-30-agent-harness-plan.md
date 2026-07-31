@@ -4,6 +4,7 @@ tags:
   - '#agent-harness'
 date: '2026-06-30'
 modified: '2026-07-17'
+body_hash: 'sha256:df1b5fda78a688b726f01bc423e01ab005fda58c93141d36118ade9d9222ff5c'
 tier: L3
 related:
   - '[[2026-07-02-agent-harness-refoundation-adr]]'

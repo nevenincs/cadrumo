@@ -4,6 +4,7 @@ tags:
   - '#frontend-legal-compliance'
 date: '2026-07-12'
 modified: '2026-07-17'
+body_hash: 'sha256:01f2932f3b43ae7a590560ac3171c4f8b451962a435d2a3a787d55c3b1a7f003'
 related: []
 ---
 

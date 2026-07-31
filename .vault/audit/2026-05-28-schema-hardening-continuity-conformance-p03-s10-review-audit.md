@@ -4,6 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:4a22df69e383535567d0bee9206584b88e5e1236e7abf67cd188eb8d51c9adf4'
 related:
   - '[[2026-05-28-schema-hardening-continuity-conformance-plan]]'
   - '[[2026-05-19-modelo-registry-fragment-architecture-adr]]'

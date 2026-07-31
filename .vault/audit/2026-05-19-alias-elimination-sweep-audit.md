@@ -4,6 +4,7 @@ tags:
   - "#alias-elimination-sweep"
 date: "2026-05-19"
 modified: '2026-07-17'
+body_hash: 'sha256:61e39fd1d624865475242cdf55d3defc4b38fc18d10064c8e7555581ee2ea901'
 related:
   - "[[2026-05-19-spanish-stem-terminology-authority-adr]]"
 ---

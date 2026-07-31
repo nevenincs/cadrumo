@@ -4,6 +4,7 @@ tags:
   - '#cli-workflow-redesign'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:e383a79e2149589a5e863c31a8105e24cc55f41906205aa9e9618ad80b65d68c'
 step_id: 'S0832'
 related:
   - "[[2026-05-13-cli-workflow-redesign-epic-plan]]"

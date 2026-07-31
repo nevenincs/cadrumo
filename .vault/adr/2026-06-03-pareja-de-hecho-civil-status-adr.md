@@ -4,6 +4,7 @@ tags:
   - '#pareja-de-hecho-civil-status'
 date: '2026-06-03'
 modified: '2026-07-17'
+body_hash: 'sha256:013890982f6241692542e468f8cbe193da096ddf07982fc25ce88715aea62449'
 related:
   - "[[2026-06-03-pareja-de-hecho-civil-status-research]]"
   - "[[2026-05-26-cross-domain-continuity-plan]]"

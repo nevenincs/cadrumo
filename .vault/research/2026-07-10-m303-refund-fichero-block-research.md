@@ -4,6 +4,7 @@ tags:
   - '#m303-refund-fichero-block'
 date: '2026-07-10'
 modified: '2026-07-10'
+body_hash: 'sha256:bffd70aa1b980d3723a125b61ded47a690aa53f96ff7bed67d38874ec516624a'
 related:
   - "[[2026-06-24-m303-refund-fichero-block-adr]]"
 ---

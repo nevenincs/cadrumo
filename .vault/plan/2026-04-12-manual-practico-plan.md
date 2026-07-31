@@ -4,6 +4,7 @@ tags:
   - '#manual-practico'
 date: '2026-04-12'
 modified: '2026-07-17'
+body_hash: 'sha256:356e5ef0e7450009d78e0e16126ebcb4a806b9a4c5c2807d385aed6ba8782161'
 related:
   - '[[2026-04-12-manual-practico-research]]'
   - '[[2026-04-12-manual-practico-adr]]'

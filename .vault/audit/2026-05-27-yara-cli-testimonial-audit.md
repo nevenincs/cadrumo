@@ -4,6 +4,7 @@ tags:
   - '#cli-testimonial'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:e9a96008adaee330b33154ff674c44120bba4dd0165232b54371b8129bf52d14'
 related:
   - "[[2026-05-27-lourdes-cli-testimonial-audit]]"
   - "[[2026-05-27-sergio-cli-testimonial-audit]]"

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:a2323d99822124bf69d30264f6fdcc6bf2925b9532f0a33e2fa331bcf0a21250'
 related:
   - '[[2026-06-09-docstring-google-style-S01]]'
   - '[[2026-06-09-docstring-google-style-S02]]'

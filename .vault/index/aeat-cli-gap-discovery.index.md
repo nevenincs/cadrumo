@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:c58f9fd9b637f5d715a00e5a8235a8a322a28b344366833518df69f43b1c82cc'
 related:
   - '[[2026-05-08-aeat-cli-gap-discovery-audit]]'
 ---

@@ -4,6 +4,7 @@ tags:
   - '#secure-object-integrity'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:ca239f7899b4362cc05e0891bca835e388b224d9c864df8e3fae38ada48b98e9'
 related: []
 ---
 

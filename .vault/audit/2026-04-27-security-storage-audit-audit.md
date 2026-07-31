@@ -4,6 +4,7 @@ tags:
   - '#security-storage-audit'
 date: '2026-04-27'
 modified: '2026-07-17'
+body_hash: 'sha256:38c39c718a7248cd0a52dca17b9e95659dc8f36bdaa98215868677cb0ba288ae'
 related:
   - '[[2026-04-17-path-handling-safety-review-audit]]'
   - '[[2026-04-21-run-trace-rolling-audit]]'

@@ -4,6 +4,7 @@ tags:
   - '#registry-authority-flow'
 date: '2026-05-20'
 modified: '2026-07-17'
+body_hash: 'sha256:0825d4f3d53b7854d751983114ee1ab650465f1f37a1c87c838a7e570cb91540'
 tier: L3
 related:
   - '[[2026-05-20-registry-authority-flow-adr]]'

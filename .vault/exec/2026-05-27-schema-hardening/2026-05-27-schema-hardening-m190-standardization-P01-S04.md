@@ -4,6 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:ef587f7a575f48152900483ddeddd84992adde764c9a80c8e09f04ffbd516d00'
 step_id: 'S04'
 related:
   - '[[2026-05-27-schema-hardening-m190-standardization-plan]]'

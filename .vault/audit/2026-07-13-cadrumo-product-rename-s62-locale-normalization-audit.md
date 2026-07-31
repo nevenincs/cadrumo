@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s62-locale-normalization'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:1730292e5bbd6d6799f21640041571b7d9b5eb062041ad2a0927151a9a4c3c92'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
   - "[[2026-07-12-cadrumo-cli-executable-adr]]"

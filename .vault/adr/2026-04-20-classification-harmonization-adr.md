@@ -4,6 +4,7 @@ tags:
   - "#classification-harmonization"
 date: "2026-04-20"
 modified: '2026-07-17'
+body_hash: 'sha256:1531648e7037c7ef357a5e966ee5740c5e44cf6967d22d711d3d9dd618283973'
 related:
   - "[[2026-04-20-classification-harmonization-research]]"
   - "[[2026-04-18-unclassified-state-adr]]"

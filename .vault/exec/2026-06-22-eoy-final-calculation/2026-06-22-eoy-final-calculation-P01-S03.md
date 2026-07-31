@@ -4,6 +4,7 @@ tags:
   - '#eoy-final-calculation'
 date: '2026-06-24'
 modified: '2026-07-17'
+body_hash: 'sha256:3eddc955e57b24710a3de89f9f1e5d4fb8eae8aec22a8775d166af8f8d4ded31'
 step_id: 'S03'
 related:
   - "[[2026-06-22-eoy-final-calculation-plan]]"

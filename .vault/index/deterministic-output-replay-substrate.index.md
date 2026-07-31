@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:7417e87e47081f1440841120231ef89f934a516088150157913944ec301ae4d2'
 related:
   - '[[2026-06-30-deterministic-output-replay-substrate-adr]]'
   - '[[2026-06-30-deterministic-output-replay-substrate-research]]'

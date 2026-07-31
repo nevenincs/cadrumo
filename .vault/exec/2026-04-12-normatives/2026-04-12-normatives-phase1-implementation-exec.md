@@ -4,6 +4,7 @@ tags:
   - "#normatives"
 date: 2026-04-12
 modified: '2026-07-17'
+body_hash: 'sha256:26c96be32a010bf8d4ab8b142eb5067d226f175cb9dff2cd8d5c76454653c6ee'
 related:
   - "[[2026-04-12-normatives-plan]]"
   - "[[2026-04-12-normatives-adr]]"

@@ -4,6 +4,7 @@ tags:
   - '#declaracion-profile-printed-box-scope'
 date: '2026-07-25'
 modified: '2026-07-25'
+body_hash: 'sha256:aad3c3f765612b7ee6cb3b436d4132ba1a95371447135fbfe4570bad27d96091'
 related:
   - "[[2026-07-25-declaracion-profile-printed-box-scope-research]]"
   - "[[2026-06-02-m303-parser-engine-totals-impedance-adr]]"

@@ -4,6 +4,7 @@ tags:
   - '#modelo-multiyear-renta-353-grupo-aggregation'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:0265db9b23cf6258d86045fc761d009d749b905c6f88318d74d309d863e2b896'
 related:
   - "[[2026-06-02-modelo-multiyear-renta-adr]]"
 ---

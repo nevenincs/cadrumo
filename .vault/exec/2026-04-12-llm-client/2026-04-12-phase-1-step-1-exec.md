@@ -4,6 +4,7 @@ tags:
   - '#llm-client'
 date: '2026-04-12'
 modified: '2026-07-17'
+body_hash: 'sha256:27be7fcbc5763b9a577f117bcb66b67d0775ce9341118e8a49d29f1f0d9ac7e0'
 related:
   - '[[2026-04-12-llm-client-plan]]'
 ---

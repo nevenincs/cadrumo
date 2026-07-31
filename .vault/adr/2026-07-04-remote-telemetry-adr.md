@@ -4,6 +4,7 @@ tags:
   - '#remote-telemetry'
 date: '2026-07-04'
 modified: '2026-07-17'
+body_hash: 'sha256:68fe3e7b4ed4deaf445703145d60969d6990ce525cc774424b9daa864718e1ba'
 related:
   - "[[2026-06-10-llm-evidence-classification-adr]]"
   - '[[2026-07-10-remote-telemetry-research]]'

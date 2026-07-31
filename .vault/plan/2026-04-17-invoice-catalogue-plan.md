@@ -4,6 +4,7 @@ tags:
   - "#invoice-catalogue"
 date: "2026-04-17"
 modified: '2026-07-17'
+body_hash: 'sha256:058ccdd39fed11395ec10af12c8042162902466e3df413c0eb9e1bb381d0c696'
 related:
   - "[[2026-04-17-invoice-catalogue-adr]]"
   - "[[2026-04-17-invoice-catalogue-research]]"

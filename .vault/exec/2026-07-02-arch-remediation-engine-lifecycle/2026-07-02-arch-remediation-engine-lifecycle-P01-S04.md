@@ -4,6 +4,7 @@ tags:
   - '#arch-remediation-engine-lifecycle'
 date: '2026-07-02'
 modified: '2026-07-17'
+body_hash: 'sha256:fc4e8c234f97f277efbb174be75874f3b159351a96f8544fc04e526a95b308ef'
 step_id: 'S04'
 related:
   - "[[2026-07-02-arch-remediation-engine-lifecycle-plan]]"

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:97822c51e9eca63e8379cce5f89ba529747bf8b638e3a1f25cd20088b6efe7db'
 related:
   - '[[2026-04-13-cert-pre-expiry-gate-adr]]'
   - '[[2026-04-13-cert-pre-expiry-gate-phase1-summary-exec]]'

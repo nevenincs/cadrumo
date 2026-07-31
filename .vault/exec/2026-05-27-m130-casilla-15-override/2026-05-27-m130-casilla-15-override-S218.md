@@ -3,6 +3,7 @@ step_id: "S218"
 feature: "m130-casilla-15-override"
 date: 2026-05-27
 modified: '2026-07-17'
+body_hash: 'sha256:ded89d5d1ea915e1047230fe25b8302850bed2d268f54fa316601184e3c9ac87'
 tags:
   - "#exec"
   - "#m130-casilla-15-override"

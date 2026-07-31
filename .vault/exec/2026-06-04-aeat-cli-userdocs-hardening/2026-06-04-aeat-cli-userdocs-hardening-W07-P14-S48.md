@@ -4,6 +4,7 @@ tags:
   - '#aeat-cli-userdocs-hardening'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:5b937f8d1051ddd3addd49681cfa1e54863d98c8b7cd4b7bed7139e3e45b96dc'
 step_id: 'S48'
 related:
   - '[[2026-06-04-aeat-cli-userdocs-hardening-plan]]'

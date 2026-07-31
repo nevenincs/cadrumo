@@ -4,6 +4,7 @@ tags:
   - '#modelo-720-prior-year-baseline'
 date: '2026-07-05'
 modified: '2026-07-17'
+body_hash: 'sha256:a0705e24304f662e57e401281f4d1ca93e4c7b0cd96166bca5fc1a5fbde42446'
 tier: L3
 related:
   - '[[2026-06-02-modelo-720-prior-year-baseline-adr]]'

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:64255353eb72aa91436ae9126eb5177d91e96caeffa2323f044bee6dd9f8c7f9'
 related:
   - '[[2026-06-04-docs-sphinx-ux-W01-P01-S01]]'
   - '[[2026-06-04-docs-sphinx-ux-W01-P01-S02]]'

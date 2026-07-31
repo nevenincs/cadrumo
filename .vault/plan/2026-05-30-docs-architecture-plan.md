@@ -4,6 +4,7 @@ tags:
   - '#docs-architecture'
 date: '2026-05-30'
 modified: '2026-07-17'
+body_hash: 'sha256:08ac965b6ff53973a5eb899025d4559d138b8de80c883c596006c24dacd6d3bf'
 tier: L4
 related:
   - '[[2026-05-30-docs-architecture-research]]'

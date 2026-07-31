@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:f0c85160b2d79a99ab3677374ecaf78cbd6f45be2810421dab5797772d9efaf7'
 related:
   - '[[2026-07-25-declaracion-profile-printed-box-scope-S01]]'
   - '[[2026-07-25-declaracion-profile-printed-box-scope-S02]]'

@@ -4,6 +4,7 @@ tags:
   - '#cli-design'
 date: '2026-05-12'
 modified: '2026-07-17'
+body_hash: 'sha256:7c290b266e80facaa20bb728f5b18c77ca8e2af54abfb996725d4386aecf75f3'
 related:
   - "[[2026-05-10-cli-structural-localization-audit]]"
   - "[[2026-04-12-workflow-engine-adr]]"

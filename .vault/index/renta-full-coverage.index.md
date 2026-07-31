@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:1275c74a6b6c8e34aaa897f11e145ea9e1dc97e07cff4b07a4e40cb704fdd565'
 related:
   - '[[2026-05-07-renta-full-coverage-adr]]'
   - '[[2026-05-07-renta-full-coverage-plan]]'

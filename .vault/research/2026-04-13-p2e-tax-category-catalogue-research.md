@@ -4,6 +4,7 @@ tags:
   - "#p2e-tax-category-catalogue"
 date: "2026-04-13"
 modified: '2026-07-17'
+body_hash: 'sha256:5310dddc7e35ed113a66818628ba5f4e5449dc686f7b645834111b1b52e42162'
 related:
   - "[[2026-04-13-p2e-tax-category-catalogue-adr]]"
   - "[[2026-04-13-p2e-tax-category-catalogue-plan]]"

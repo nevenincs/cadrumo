@@ -4,6 +4,7 @@ tags:
   - '#modelo-verify-nonzero-guards'
 date: '2026-06-30'
 modified: '2026-07-17'
+body_hash: 'sha256:82c6cc4ea7710764901880bcb399fdf7179c583adc877679cf740d6f844a1f44'
 tier: L3
 related:
   - '[[2026-06-30-modelo-verify-nonzero-guards-adr]]'

@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s87-authority-remediation'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:9d422f32be602b1e8308b3d3f27f7f2d0b967db5dac9e4ae26dd97eaf9ef3edc'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
   - "[[2026-07-12-cadrumo-cli-executable-adr]]"

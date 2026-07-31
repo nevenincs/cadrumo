@@ -4,6 +4,7 @@ tags:
   - '#cli-testimonial'
 date: '2026-05-21'
 modified: '2026-07-17'
+body_hash: 'sha256:2865d0606d5d572c6bb10a2abb9e649041a263fbcd26a389d9f9ee9996ef2674'
 related:
   - "[[2026-05-20-cli-persona-task-catalogue-reference]]"
 ---

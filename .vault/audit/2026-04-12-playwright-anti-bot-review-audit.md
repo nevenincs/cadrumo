@@ -4,6 +4,7 @@ tags:
   - '#playwright-anti-bot'
 date: '2026-04-12'
 modified: '2026-07-17'
+body_hash: 'sha256:ccc9520592c8f23db37320a3c9c7b365c23918671ffddbb968bbc467f8d3f79e'
 title: Playwright Anti-Bot Evasion Code Review
 related:
   - '[[2026-04-12-playwright-anti-bot-plan]]'

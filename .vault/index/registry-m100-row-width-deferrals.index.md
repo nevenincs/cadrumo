@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:1d7069bcfbb2e6f004d5e90fdba0f4aa95631829656edeacf770f92f95ff51bb'
 related:
   - '[[2026-06-04-registry-m100-row-width-deferrals-S01]]'
   - '[[2026-06-04-registry-m100-row-width-deferrals-S02]]'

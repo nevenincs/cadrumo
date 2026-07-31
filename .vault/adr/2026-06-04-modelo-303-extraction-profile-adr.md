@@ -4,6 +4,7 @@ tags:
   - '#modelo-303-extraction-profile'
 date: '2026-06-04'
 modified: '2026-07-10'
+body_hash: 'sha256:506441d0e2c8fc8ce0e16afa1622489081e3777ea424017f9ca0a8e418a1f586'
 related:
   - "[[2026-06-04-modelo-303-extraction-profile-research]]"
 ---

@@ -4,6 +4,7 @@ tags:
   - "#p2a-financial-provider"
 date: "2026-04-13"
 modified: '2026-07-17'
+body_hash: 'sha256:6a1991354fdc9c7ff7171e9dc8287f6d6bf21b79a54647436ebae8f4b5c9137d'
 related:
   - "[[2026-04-13-p2a-financial-provider-research]]"
   - "[[2026-04-13-p2a-financial-provider-adr]]"

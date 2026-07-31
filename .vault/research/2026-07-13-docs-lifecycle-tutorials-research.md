@@ -4,6 +4,7 @@ tags:
   - '#docs-lifecycle-tutorials'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:ff720a80e4fcfc1a2e6c831f56960c5fac670dd8fdd74522c6eaa5e9f230e0a9'
 related:
   - '[[2026-05-30-docs-architecture-adr]]'
   - '[[2026-06-01-docs-educational-surface-adr]]'

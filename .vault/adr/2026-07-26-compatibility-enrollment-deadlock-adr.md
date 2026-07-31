@@ -4,6 +4,7 @@ tags:
   - '#compatibility-enrollment-deadlock'
 date: '2026-07-26'
 modified: '2026-07-26'
+body_hash: 'sha256:0751a7d2a9c44c9482bd9fa6fde62bcd4a84c06d1f845e11abb21f19618ada10'
 related:
   - "[[2026-07-25-bucket-manifest-durability-adr]]"
   - "[[2026-07-25-compatibility-checkpoint-adr]]"

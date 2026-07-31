@@ -4,6 +4,7 @@ tags:
   - '#profile-setup-flow'
 date: '2026-07-24'
 modified: '2026-07-24'
+body_hash: 'sha256:d206eac6ce87b344c44c056ea0a18bed50e0125235aae42c0825541f26eba66c'
 related:
   - "[[2026-07-23-profile-setup-flow-plan]]"
   - "[[2026-07-23-tui-wizard-substrate-plan]]"

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:37cf8981b73dc63ef8b5f5066eee8264ceb4e0e5dca91ad08235937c7e7366bd'
 related:
   - '[[2026-07-12-cadrumo-cli-executable-adr]]'
   - '[[2026-07-12-cadrumo-cli-executable-audit]]'

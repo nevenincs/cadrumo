@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:c6c712dbc177c369dd69fc76a45020d4063590411c9b6c223e233f2fde575565'
 related:
   - '[[2026-04-21-real-pdf-fixture-corpus-adr]]'
   - '[[2026-04-21-real-pdf-fixture-corpus-plan]]'

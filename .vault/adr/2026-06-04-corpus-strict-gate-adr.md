@@ -4,6 +4,7 @@ tags:
   - '#corpus-strict-gate'
 date: '2026-06-04'
 modified: '2026-07-10'
+body_hash: 'sha256:4e2c32d6917a1b34f995e85d5f96dc7028c5ad7532a35cc785a450b93dc389fb'
 related:
   - "[[2026-06-04-corpus-strict-gate-research]]"
 ---

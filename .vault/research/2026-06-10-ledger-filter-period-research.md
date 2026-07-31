@@ -4,6 +4,7 @@ tags:
   - '#ledger-filter-period'
 date: '2026-06-10'
 modified: '2026-07-17'
+body_hash: 'sha256:7fb8c319e562806ab509425f0292b6dc690bf404ddd229d75296412d9c3111a7'
 related:
   - '[[2026-06-10-cli-operator-surface-adr]]'
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'

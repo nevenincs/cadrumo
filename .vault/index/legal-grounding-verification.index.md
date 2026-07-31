@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:c62b04558a4890d06b88c8cfd936ff43ccab39ae1744743c7c2c5a88f100f001'
 related:
   - '[[2026-06-14-legal-grounding-verification-audit]]'
 ---

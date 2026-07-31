@@ -4,6 +4,7 @@ tags:
   - '#cross-period-prorrata'
 date: '2026-07-06'
 modified: '2026-07-17'
+body_hash: 'sha256:3f964e9a4fb7fdc84fcf2b27fe56138b4b144062677a9ec4eaf9b67d281beb2b'
 related: []
 ---
 

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:c27410a0c3e55de0f62164f59a9e4117ae65f3913a7d02b01ecc8601bb549ef9'
 related:
   - '[[2026-07-08-gate-drift-reconciliation-audit]]'
   - '[[2026-07-08-gate-drift-reconciliation-plan]]'

@@ -4,6 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:273f976242240db3ecf35cbc34a326baae63adeda3ab968d40688c2669cf0a53'
 related:
   - '[[2026-05-27-schema-hardening-m720-standardization-plan]]'
   - '[[2026-05-27-schema-hardening-m720-standardization-inventory-audit]]'

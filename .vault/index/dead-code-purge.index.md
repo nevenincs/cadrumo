@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:a806bef768e590c8f8aaa720741082e240fa6026aac8a2ae4a88bd25ee8fa45a'
 related:
   - '[[2026-06-13-dead-code-purge-audit]]'
 ---

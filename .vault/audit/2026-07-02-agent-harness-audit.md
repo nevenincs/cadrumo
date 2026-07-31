@@ -6,6 +6,7 @@ date: '2026-07-02'
 promoted_to:
   - 'rule:subagent-commits-require-explicit-pathspec'
 modified: '2026-07-17'
+body_hash: 'sha256:3747b13ea0f72ad5c56613dc71b6c127ad5dd23a36144ecebc3ed12fc4b674a0'
 ---
 # `agent-harness` audit: `git index sweep incident 84f84166f`
 

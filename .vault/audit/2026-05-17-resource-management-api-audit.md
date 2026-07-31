@@ -4,6 +4,7 @@ tags:
   - '#resource-management-api'
 date: '2026-05-17'
 modified: '2026-07-17'
+body_hash: 'sha256:ade5fd39d8865b68f643001da049152ae191cb69dd0737254fc87947e0192405'
 related:
   - "[[2026-05-16-resource-management-api-plan]]"
   - "[[2026-05-16-resource-management-api-adr]]"

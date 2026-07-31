@@ -4,6 +4,7 @@ tags:
   - '#modelo-190-percepciones-count'
 date: '2026-06-30'
 modified: '2026-07-17'
+body_hash: 'sha256:c99915f3bd88603b914185734b5bfdb1d408f36188cab4b391074c3faa57bac9'
 step_id: 'S09'
 related:
   - "[[2026-06-25-modelo-190-percepciones-count-plan]]"

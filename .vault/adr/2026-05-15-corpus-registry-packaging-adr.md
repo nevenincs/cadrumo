@@ -4,6 +4,7 @@ tags:
   - '#corpus-registry-packaging'
 date: '2026-05-15'
 modified: '2026-07-17'
+body_hash: 'sha256:e4f0c29fdd76a4078f3f7b9cf632b8116c304b927c69106e431f7eb118e2aef3'
 related:
   - "[[2026-05-15-corpus-registry-packaging-research]]"
   - "[[2026-05-01-corpus-data-hydration-adr]]"

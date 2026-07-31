@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:b4091fb7350eb5abdbdc355268f63ac6e28859658fab112ff537c4ecca60cdb9'
 related:
   - '[[2026-07-08-released-data-durability-adr]]'
   - '[[2026-07-08-released-data-durability-research]]'

@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s66-hungarian-contexts'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:ded09783fb86ecf7a23305666331a3c585bf18c4a8ecc020efdb3dfea72420ee'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
   - "[[2026-07-12-cadrumo-cli-executable-adr]]"

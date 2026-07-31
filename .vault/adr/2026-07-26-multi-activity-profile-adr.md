@@ -4,6 +4,7 @@ tags:
   - '#multi-activity-profile'
 date: '2026-07-26'
 modified: '2026-07-30'
+body_hash: 'sha256:3676277469724331ae26ace2fb23163cfc61d6a91634ef10d9d848131e16cc29'
 related:
   - "[[2026-05-27-multi-row-modelo-declaration-adr]]"
   - "[[2026-07-25-censal-profile-autofill-plan]]"

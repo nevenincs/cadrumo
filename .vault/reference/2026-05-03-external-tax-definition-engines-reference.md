@@ -4,6 +4,7 @@ tags:
   - '#external-tax-definition-engines'
 date: '2026-05-03'
 modified: '2026-07-17'
+body_hash: 'sha256:895a3db015cac79f89861ed4db08fedfb8db42663608034c0cd18ee29b9f3559'
 related:
   - '[[2026-05-03-calculation-truth-inventory-research]]'
 ---

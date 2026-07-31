@@ -10,6 +10,7 @@ related:
   - "[[2026-04-18-unified-review-queue-adr]]"
 superseded_by: '2026-05-02-aeat-cli-redesign-adr'
 modified: '2026-07-15'
+body_hash: 'sha256:7ec6c1db9cf6ef5ce9a61593eb153a5d1857e0e8e1890fc12822b990ab7449ac'
 ---
 # `aeat-cli-wireframe` adr: `kent-first cli language system and root wireframe` | (**status:** `superseded`)
 

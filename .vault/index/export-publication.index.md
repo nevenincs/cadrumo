@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:9054ed5560e3cdf33378b63a247d82fff90296354496b029add70299d0e5fbb0'
 related:
   - '[[2026-07-17-export-publication-S01]]'
   - '[[2026-07-17-export-publication-S02]]'

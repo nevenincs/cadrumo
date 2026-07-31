@@ -5,6 +5,7 @@ tags:
   - '#quality-hardening-campaign'
 date: '2026-06-10'
 modified: '2026-07-17'
+body_hash: 'sha256:188f6a25bc948daae400373a78409725d14b0bcfa622d62f411075ca699826d8'
 related:
   - '[[2026-06-09-quality-hardening-campaign-audit]]'
 ---

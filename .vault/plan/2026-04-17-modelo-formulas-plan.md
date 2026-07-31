@@ -4,6 +4,7 @@ tags:
   - '#modelo-formulas'
 date: '2026-04-17'
 modified: '2026-07-17'
+body_hash: 'sha256:17af030a9ecfb3ac0928345f8e187a04472afb42bcaa7fd112f8599562ce58ac'
 related:
   - '[[2026-04-17-modelo-formulas-adr]]'
   - '[[2026-04-17-modelo-formula-ruleset-research]]'

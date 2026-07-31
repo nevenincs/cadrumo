@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:80df01d7e33b6b4163a6d133049689d3744fa0f10e33d1b6b63bfdf76c5b5268'
 related:
   - '[[2026-06-04-modelo-addressing-ux-adr]]'
   - '[[2026-06-04-modelo-addressing-ux-code-review-audit]]'

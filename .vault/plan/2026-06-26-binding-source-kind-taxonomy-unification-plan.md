@@ -4,6 +4,7 @@ tags:
   - '#binding-source-kind-taxonomy-unification'
 date: '2026-06-26'
 modified: '2026-07-10'
+body_hash: 'sha256:7153e47830daed19b6e42c5829d58e7b41d1f9f81fa2e8e0c42c09077d64b4a6'
 tier: L2
 related:
   - '[[2026-06-26-binding-source-kind-taxonomy-unification-adr]]'

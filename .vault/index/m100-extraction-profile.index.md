@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:e91354c6bdfec9fa3ca6cdad009f416cfc524b6e2711b096adffddcd4c93284b'
 related:
   - '[[2026-05-26-m100-extraction-profile-S01]]'
   - '[[2026-06-04-m100-extraction-profile-adr]]'

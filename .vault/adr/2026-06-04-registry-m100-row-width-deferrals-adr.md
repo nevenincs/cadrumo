@@ -4,6 +4,7 @@ tags:
   - '#registry-m100-row-width-deferrals'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:2423f0b75689c245974616aaca7b0bafda6e3564ab4cd56c76b771503f3d631b'
 related:
   - '[[2026-06-04-registry-m100-row-width-deferrals-research]]'
   - "[[2026-06-04-registry-row-width-pressure-audit]]"

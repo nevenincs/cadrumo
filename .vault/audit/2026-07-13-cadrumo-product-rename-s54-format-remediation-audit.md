@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s54-format-remediation'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:ad3e90b848be591396723a50e5b0c25f467e6a8c37a7cf201b93a5a299bb6291'
 related:
   - "[[2026-07-13-cadrumo-product-rename-s54-mcpb-real-behavior-audit]]"
   - "[[2026-07-12-cadrumo-product-rename-plan]]"

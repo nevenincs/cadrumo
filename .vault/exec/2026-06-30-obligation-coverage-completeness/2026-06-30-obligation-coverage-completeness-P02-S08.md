@@ -4,6 +4,7 @@ tags:
   - '#obligation-coverage-completeness'
 date: '2026-07-01'
 modified: '2026-07-17'
+body_hash: 'sha256:440f9c42d5f8adedce26f988d1ff27267edf246869ca4b043cf8f26adfe1cc09'
 step_id: 'S08'
 related:
   - "[[2026-06-30-obligation-coverage-completeness-plan]]"

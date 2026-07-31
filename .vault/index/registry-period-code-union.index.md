@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:4c427c3b74dbf78a131574e6682a5bc2adb6a35c0732eae1e5b6447145818bf8'
 related:
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
   - '[[2026-06-04-registry-period-code-union-research]]'

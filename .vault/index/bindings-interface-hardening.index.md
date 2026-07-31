@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:36efeaebffeeb392312a586097e99ac0882dd41459712e4fce08f6ddb3040b3e'
 related:
   - '[[2026-06-14-bindings-interface-hardening-adr]]'
   - '[[2026-06-14-bindings-interface-hardening-reference]]'

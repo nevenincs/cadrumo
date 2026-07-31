@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:5beadf041a30263518be3d012b301935ed9e385fc2742195738834b8edae7db7'
 related:
   - '[[2026-05-19-retirement-residue-audit]]'
 ---

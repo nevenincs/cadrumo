@@ -4,6 +4,7 @@ tags:
   - "#trilingual-i18n"
 date: 2026-04-12
 modified: '2026-07-17'
+body_hash: 'sha256:e02854b7a4112a9cf02fbf7a8f842679db5adc289c9775fa3a08ab50e9db241d'
 related:
   - "[[2026-04-12-trilingual-i18n-adr]]"
 ---

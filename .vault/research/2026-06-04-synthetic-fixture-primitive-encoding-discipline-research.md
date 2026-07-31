@@ -4,6 +4,7 @@ tags:
   - '#synthetic-fixture-primitive-encoding-discipline'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:3d711a4781bdba6678b5cbf88f0a76c9b03697a25d1a38264f1ad89e83cefa0d'
 related:
   - "[[2026-06-03-synthetic-fixture-primitive-encoding-discipline-adr]]"
 ---

@@ -4,6 +4,7 @@ tags:
   - '#agent-harness-refoundation'
 date: '2026-07-02'
 modified: '2026-07-17'
+body_hash: 'sha256:5377c71ce72b61c6f016007f2de3be439749d4ae88bb0c190b35ecfeeba71f54'
 step_id: 'S16'
 related:
   - "[[2026-07-02-agent-harness-refoundation-plan]]"

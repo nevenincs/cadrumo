@@ -6,6 +6,7 @@ date: '2026-05-20'
 related:
   - "[[2026-05-20-registry-authority-flow-research]]"
 modified: '2026-07-17'
+body_hash: 'sha256:72f243ed724b950f5f95751d38e8392e014e478e239581e179387ed30525b09b'
 ---
 # `registry-authority-flow` adr: validated authority as the registry orchestration boundary | (**status:** `accepted`)
 

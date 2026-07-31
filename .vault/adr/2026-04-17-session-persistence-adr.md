@@ -4,6 +4,7 @@ tags:
   - "#session-persistence"
 date: "2026-04-17"
 modified: '2026-07-17'
+body_hash: 'sha256:c219d9e92efc26e232fa195346c376253391c418686a56eb777b7e080ed1c946'
 related:
   - "[[2026-04-17-aeat-access-gate-adr]]"
   - '[[2026-07-16-protected-browser-certificate-auth-adr]]'

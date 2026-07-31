@@ -4,6 +4,7 @@ tags:
   - '#docs-navigability'
 date: '2026-06-01'
 modified: '2026-07-17'
+body_hash: 'sha256:3ffdf7d791c6124a777b97c65ed76956fe33adc76d7c4479bb1abd2b63a43887'
 tier: L3
 related:
   - '[[2026-05-30-docs-architecture-plan]]'

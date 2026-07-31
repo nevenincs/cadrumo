@@ -4,6 +4,7 @@ tags:
   - '#centralized-output-redaction'
 date: '2026-05-28'
 modified: '2026-07-17'
+body_hash: 'sha256:011dd067899a97b9752999d9a5d6c7bd57ef3b5f31c5fb7402cac21c284b211e'
 related:
   - '[[2026-04-25-json-output-contract-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-output-rendering-normalization-adr]]'

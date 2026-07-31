@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:cc66ce51d3eed169e5445158806c79b81589be97d8bc43da074cbb7af3580055'
 related:
   - '[[2026-06-24-retenciones-perceptor-count-P01-S01]]'
   - '[[2026-06-24-retenciones-perceptor-count-P01-S02]]'

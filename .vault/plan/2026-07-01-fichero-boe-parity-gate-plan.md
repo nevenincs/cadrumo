@@ -4,6 +4,7 @@ tags:
   - '#fichero-boe-parity-gate'
 date: '2026-07-01'
 modified: '2026-07-17'
+body_hash: 'sha256:ce27ec36aefb18db5d45ab53435ad8654add70159a99a40c54614d0dc961c49c'
 tier: L2
 related:
   - '[[2026-07-01-fichero-boe-parity-gate-adr]]'

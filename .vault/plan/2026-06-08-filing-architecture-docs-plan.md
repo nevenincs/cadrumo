@@ -4,6 +4,7 @@ tags:
   - '#filing-architecture-docs'
 date: '2026-06-08'
 modified: '2026-07-17'
+body_hash: 'sha256:bcbfd4b4255e9415dfc46e21faf04d8cacf4012b5c89595da21052a4fd356be3'
 tier: L3
 related:
   - '[[2026-06-08-filing-architecture-docs-research]]'

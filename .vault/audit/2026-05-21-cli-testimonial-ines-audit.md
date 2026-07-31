@@ -4,6 +4,7 @@ tags:
   - '#cli-testimonial'
 date: '2026-05-21'
 modified: '2026-07-17'
+body_hash: 'sha256:cd4d7feffc7f83e7342e0599914733a067852f4b613acd5faa2e9d1cf4d9c8ac'
 related:
   - "[[2026-05-20-cli-testimonial-findings-inventory-audit]]"
 ---

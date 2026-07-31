@@ -4,6 +4,7 @@ tags:
   - '#silent-zero-base-aggregation'
 date: '2026-06-20'
 modified: '2026-07-17'
+body_hash: 'sha256:0b5ddbb0a9d4cbbbeee8d77d155d4bed9384f13ea53344ae7e43d7575a03ce9f'
 related:
   - "[[2026-06-19-silent-zero-base-aggregation-adr]]"
 ---

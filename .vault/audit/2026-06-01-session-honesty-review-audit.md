@@ -4,6 +4,7 @@ tags:
   - '#session-honesty-review'
 date: '2026-06-01'
 modified: '2026-07-17'
+body_hash: 'sha256:8e649582c55541107539112e425dd2e834b8588dbae8dfc8ba005304615ca533'
 related:
   - "[[2026-06-01-test-suite-performance-audit]]"
   - "[[2026-05-31-atomic-relocation-coordination-adr]]"

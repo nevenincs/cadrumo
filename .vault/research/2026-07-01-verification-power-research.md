@@ -4,6 +4,7 @@ tags:
   - '#verification-power'
 date: '2026-07-01'
 modified: '2026-07-17'
+body_hash: 'sha256:2807f7e840ae22ddd92a6e4a0af588fb973cef9668e1798a53d137ac6afad669'
 related:
   - '[[2026-07-01-verification-reconcile-when-present-adr]]'
   - '[[2026-07-01-verification-contract-coverage-audit]]'

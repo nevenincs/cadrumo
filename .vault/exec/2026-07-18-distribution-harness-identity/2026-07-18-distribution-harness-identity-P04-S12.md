@@ -4,6 +4,7 @@ tags:
   - '#distribution-harness-identity'
 date: '2026-07-18'
 modified: '2026-07-19'
+body_hash: 'sha256:5a13fb983853253b2646adccff568ca236d8f2f9392518d2d8ca1e0e5d0b4946'
 step_id: 'S12'
 related:
   - "[[2026-07-18-distribution-harness-identity-plan]]"

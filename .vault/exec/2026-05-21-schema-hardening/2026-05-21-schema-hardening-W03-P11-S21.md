@@ -2,6 +2,7 @@
 tags: ["#exec", "#schema-hardening"]
 date: "2026-05-21"
 modified: '2026-07-31'
+body_hash: 'sha256:6151dcaa131ae9cc762b73f3f5e43d956b959a1e13542323459428236238be24'
 related:
   - "[[2026-05-21-schema-hardening-plan]]"
 ---

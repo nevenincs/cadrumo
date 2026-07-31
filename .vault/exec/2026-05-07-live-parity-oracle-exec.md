@@ -4,6 +4,7 @@ tags:
   - '#live-parity-oracle'
 date: '2026-05-08'
 modified: '2026-07-17'
+body_hash: 'sha256:71c8aeebd7a2bcf2786d3287ac57351fb236ba660ea6c3bbf958217b5fec3843'
 related:
   - "[[2026-05-07-live-parity-oracle-plan]]"
   - "[[2026-05-07-live-parity-oracle-adr]]"

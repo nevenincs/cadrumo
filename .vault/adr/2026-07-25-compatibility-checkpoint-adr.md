@@ -4,6 +4,7 @@ tags:
   - '#compatibility-checkpoint'
 date: '2026-07-25'
 modified: '2026-07-25'
+body_hash: 'sha256:334c14832c484d8e6426dae6d1c04a396bdd6fb23a0b12c15007487dbee81747'
 related:
   - "[[2026-07-09-compatibility-lifecycle-adr]]"
   - "[[2026-07-08-released-data-durability-adr]]"

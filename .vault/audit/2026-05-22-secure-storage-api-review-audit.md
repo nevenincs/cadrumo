@@ -4,6 +4,7 @@ tags:
   - '#secure-storage-api'
 date: '2026-05-22'
 modified: '2026-07-17'
+body_hash: 'sha256:7f5521cfe40411ef62269c938c8d489e9ee0621c504ae974a556592f65a5ed59'
 related:
   - '[[2026-05-06-secure-persistence-enforcement-adr]]'
   - '[[2026-05-14-secure-backend-passkey-custody-adr]]'

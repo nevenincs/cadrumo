@@ -10,6 +10,7 @@ related:
   - "[[2026-04-13-filing-complementaria-adr]]"
 superseded_by: '2026-06-05-test-topology-refactor-adr'
 modified: '2026-07-17'
+body_hash: 'sha256:0ea829c754c0a108b45349f8f5e4a47b3243081ae7e06b2392a7ec94bc8f19fe'
 issue: "#163"
 charter: "#116"
 ---

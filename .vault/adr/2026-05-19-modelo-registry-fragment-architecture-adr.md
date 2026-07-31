@@ -4,6 +4,7 @@ tags:
   - '#modelo-registry-fragments'
 date: '2026-05-19'
 modified: '2026-07-17'
+body_hash: 'sha256:1f1e0c629fe109a2a1fc54cc92c90b138ec986041c071886b79fefa65147caf4'
 related:
   - '[[2026-05-19-modelo-registry-fragment-architecture-research]]'
 ---

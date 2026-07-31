@@ -2,6 +2,7 @@
 step_id: S369
 date: 2026-05-30
 modified: '2026-07-17'
+body_hash: 'sha256:96beacf2e360952c50593467c956a702d56e7da29f0515597a238fd6613a5d44'
 tags:
   - "#exec"
   - "#codebase-solidification"

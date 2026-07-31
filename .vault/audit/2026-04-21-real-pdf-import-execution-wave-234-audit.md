@@ -4,6 +4,7 @@ tags:
   - "#real-pdf-import"
 date: "2026-04-21"
 modified: '2026-07-17'
+body_hash: 'sha256:fd234e78dfba78b82c84e61a041bf6b33011426ca0c4c4a21584984027486ce4'
 related:
   - "[[2026-04-21-real-pdf-fixture-corpus-plan]]"
   - "[[2026-04-21-calc-verification-plan]]"

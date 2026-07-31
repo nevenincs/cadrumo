@@ -4,6 +4,7 @@ tags:
   - '#censo-g313-launcher-fix'
 date: '2026-07-10'
 modified: '2026-07-10'
+body_hash: 'sha256:d33ccfbc1bd4ad3976fc0753d16db3446cfe801cff32f9714928a6c54b726b2e'
 tier: L2
 related:
   - '[[2026-07-10-censo-g313-launcher-fix-adr]]'

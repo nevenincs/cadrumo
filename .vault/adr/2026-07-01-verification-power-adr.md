@@ -4,6 +4,7 @@ tags:
   - '#verification-power'
 date: '2026-07-01'
 modified: '2026-07-17'
+body_hash: 'sha256:04b0c107b0baaccda1ea2ad495e5878e50b308172b4bbf3b1681585c0f4deeab'
 related:
   - '[[2026-07-01-verification-power-research]]'
   - '[[2026-07-01-verification-reconcile-when-present-adr]]'

@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:f7598fa8f51534573ed8968435ea33101f54088b1505f7e81adb5acfb22bcd3a'
 related:
   - '[[2026-05-21-cross-campaign-hardening-P01-S02]]'
   - '[[2026-05-21-cross-campaign-hardening-P01-S03]]'

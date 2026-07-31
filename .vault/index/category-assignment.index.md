@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:4cf7c5232c1dc3c4e0335c67d65b0cc716fd5697de8c95f9f2d485ed0e4524dc'
 related:
   - '[[2026-04-18-category-assignment-cli-adr]]'
   - '[[2026-04-18-category-assignment-cli-plan]]'

@@ -7,6 +7,7 @@ related:
   - "[[2026-06-12-first-filer-attestation-research]]"
 superseded_by: '2026-06-13-first-filer-attestation-adr'
 modified: '2026-07-17'
+body_hash: 'sha256:ca6db73cbbc5a2c9bf9101a0b989773862cb39036b20b79ded71212a30743462'
 ---
 # `first-filer-attestation` adr: `censo-grounded activity-start scoping` | (**status:** `superseded`)
 

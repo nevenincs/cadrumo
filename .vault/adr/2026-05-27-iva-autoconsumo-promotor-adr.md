@@ -4,6 +4,7 @@ tags:
   - '#iva-autoconsumo-promotor'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:a946892c4bbeee714b0f24d059e64d7dd55179dc41bde0ec1bb5ba54e9507ce4'
 related:
   - "[[2026-04-12-modelo-303-390-adr]]"
   - "[[2026-04-17-modelo-formulas-adr]]"

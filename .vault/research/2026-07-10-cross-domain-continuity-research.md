@@ -4,6 +4,7 @@ tags:
   - '#cross-domain-continuity'
 date: '2026-07-10'
 modified: '2026-07-17'
+body_hash: 'sha256:e47997300a80136b8cb63586a82ffee39bad0813fa8a1129b97d9228ec605eea'
 related:
   - "[[2026-07-10-cross-domain-continuity-reference]]"
   - "[[2026-06-03-iva-exemption-article-adr]]"

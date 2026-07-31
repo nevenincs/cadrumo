@@ -4,6 +4,7 @@ tags:
   - '#source-jurisdiction-axis'
 date: '2026-05-28'
 modified: '2026-07-17'
+body_hash: 'sha256:17810d723b72fd260c0e04b7bf0c11bffdb9fe24707392108c7af8c57def7bdc'
 related:
   - "[[2026-05-27-source-jurisdiction-axis-adr]]"
   - "[[2026-05-27-m210-irnr-full-engine-adr]]"

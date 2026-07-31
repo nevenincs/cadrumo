@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:96bb51461c40e331b5ba6d3ec2bae42633d2a9f4d7f41bb7ee8b15ff17218565'
 related:
   - '[[2026-07-27-conformance-cli-P01-S01]]'
   - '[[2026-07-27-conformance-cli-P01-S02]]'

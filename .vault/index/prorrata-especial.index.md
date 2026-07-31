@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:f513a3e5c20dfdfb83fae78ee4d4c28f2514414afb97e98836acccf87cf72687'
 related:
   - '[[2026-07-07-prorrata-especial-adr]]'
   - '[[2026-07-10-prorrata-especial-research]]'

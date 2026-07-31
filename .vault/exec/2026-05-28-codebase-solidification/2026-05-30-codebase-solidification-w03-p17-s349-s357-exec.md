@@ -4,6 +4,7 @@ phase: P17
 wave: W03
 date: 2026-05-30
 modified: '2026-07-31'
+body_hash: 'sha256:9c46c9f14ad0373e4eb00917d232319c3e026a31a971a2e5334564f5dc1f4fda'
 agent: coder-epsilon7
 commit: 4c2f9c77e
 tags:

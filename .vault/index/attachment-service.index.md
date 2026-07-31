@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:63faeeb0a952a040cf4d7e3d4f98a2fb582b003435a12904830f58de0610cd6d'
 related:
   - '[[2026-04-17-attachment-service-adr]]'
   - '[[2026-04-17-attachment-service-audit]]'

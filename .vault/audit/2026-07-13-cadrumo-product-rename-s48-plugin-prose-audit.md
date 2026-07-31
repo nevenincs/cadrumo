@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s48-plugin-prose'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:6761b7451c5bb4a00d84551b692df5cd90c6011cd5d17015ae8b339358c564b9'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
   - "[[2026-07-12-cadrumo-cli-executable-adr]]"

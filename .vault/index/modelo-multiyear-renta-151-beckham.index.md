@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:0395a9db55bc7fd227794c316b49a83be0dff20d331a7a2b0269dd1dc29563bf'
 related:
   - '[[2026-06-02-modelo-multiyear-renta-151-beckham-adr]]'
   - '[[2026-06-02-modelo-multiyear-renta-151-beckham-research]]'

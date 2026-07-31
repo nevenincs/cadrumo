@@ -4,6 +4,7 @@ tags:
   - '#calculation-truth-registry'
 date: '2026-05-06'
 modified: '2026-07-17'
+body_hash: 'sha256:3a0044578600da59454b0c3ec200657769ea577c0f07382c21a205256a6411c4'
 related:
   - '[[2026-05-06-calculation-truth-registry-modelo-180-workflow-linkage-exec]]'
   - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'

@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s66-descendant'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:7a5839e8123adc616ec4242ed85d3bcd81e9987c2242cab695b2454bd41c2cb2'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
 ---

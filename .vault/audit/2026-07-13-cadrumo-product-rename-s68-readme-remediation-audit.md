@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename-s68-readme-remediation'
 date: '2026-07-13'
 modified: '2026-07-13'
+body_hash: 'sha256:8165fccb8c3432aeb09eefc1a0a20a4699f6038f80001c787a09f453df58a255'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
   - "[[2026-07-12-cadrumo-cli-executable-adr]]"

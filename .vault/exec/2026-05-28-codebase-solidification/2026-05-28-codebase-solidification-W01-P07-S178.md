@@ -5,6 +5,7 @@ tags:
 step_id: S178
 date: '2026-05-28'
 modified: '2026-07-17'
+body_hash: 'sha256:be06d7d5fef7052e59994f91d8d3b4b1e3f832fe6f7aabb3bec343f8ba377ac7'
 related:
   - "[[2026-05-28-codebase-solidification-plan]]"
   - "[[2026-05-27-centralized-module-drift-audit]]"

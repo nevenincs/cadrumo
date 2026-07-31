@@ -4,6 +4,7 @@ tags:
   - '#agent-harness-operability-followup'
 date: '2026-07-03'
 modified: '2026-07-03'
+body_hash: 'sha256:3c2d2d1c6d70f2efd84592b04e854388d552a7418716ebe6095cfb986a4e7f3f'
 related:
   - '[[2026-07-02-agent-harness-operability-followup-research]]'
   - '[[2026-07-02-agent-harness-refoundation-adr]]'

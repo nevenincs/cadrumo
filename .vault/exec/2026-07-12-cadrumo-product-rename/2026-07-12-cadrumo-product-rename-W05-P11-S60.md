@@ -4,6 +4,7 @@ tags:
   - '#cadrumo-product-rename'
 date: '2026-07-12'
 modified: '2026-07-17'
+body_hash: 'sha256:c69361223ad520d857fac886bfdb201f8eaab868739f3f197bc0f72e9dea5b40'
 step_id: 'S60'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"

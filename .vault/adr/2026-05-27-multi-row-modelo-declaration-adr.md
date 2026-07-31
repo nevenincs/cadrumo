@@ -4,6 +4,7 @@ tags:
   - '#multi-row-modelo-declaration'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:f5fdde0ce4b3af5d90421b51d34b62bf70f8603741eb5ba8cf6242c8e3a8ace7'
 related:
   - "[[2026-05-12-cli-workflow-redesign-modelo-work-units-adr]]"
   - "[[2026-04-13-modelo-inventory-adr]]"

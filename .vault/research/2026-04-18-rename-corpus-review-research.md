@@ -4,6 +4,7 @@ tags:
   - "#rename-corpus-review"
 date: 2026-04-18
 modified: '2026-07-17'
+body_hash: 'sha256:311ba3dab05e8d111f930e1f30dd7a92e389223907ed620de463d5ae447cd8e5'
 related:
   - "[[2026-04-12-manual-practico-adr]]"
 ---

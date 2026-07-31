@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:803de087744673ee65e9e68425b2353cd9ab0a898affe35b21035210323f2155'
 related:
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-W01-P01-S01]]'
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-W01-P01-S02]]'

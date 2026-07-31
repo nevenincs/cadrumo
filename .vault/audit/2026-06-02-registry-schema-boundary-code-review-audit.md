@@ -4,6 +4,7 @@ tags:
   - '#registry-schema-boundary'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:d01bf6ebe090502b4c94b55cb7802d2dfc963a5f8d9fb4e22bfe5b671fdf2367'
 related:
   - "[[2026-06-02-registry-hardening-next-work-plan]]"
   - "[[2026-06-02-registry-schema-boundary-audit]]"

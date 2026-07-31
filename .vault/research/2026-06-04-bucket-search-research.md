@@ -4,6 +4,7 @@ tags:
   - '#bucket-search'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:7d2c49108bd92e38ca1d67cd2b80f7f40ce51fd8f82f0d5c470e3df6ee4a9e79'
 related:
   - "[[2026-05-12-cli-workflow-redesign-bucket-adr]]"
 ---

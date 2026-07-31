@@ -4,6 +4,7 @@ tags:
   - '#arch-remediation-lazy-import-policy'
 date: '2026-07-02'
 modified: '2026-07-17'
+body_hash: 'sha256:36619b8b11e013d3ccaba48d822d5e768739768cd2ed3d4791472d568d5153f6'
 tier: L2
 related:
   - '[[2026-07-02-aeat-architecture-review-audit]]'

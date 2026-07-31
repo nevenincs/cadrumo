@@ -4,6 +4,7 @@ tags:
   - '#compatibility-lifecycle'
 date: '2026-07-09'
 modified: '2026-07-10'
+body_hash: 'sha256:b83ff0ea74729f17130c14ef75fa74ff50111a0af0ea514e5a49e8a12c9db4a4'
 tier: L2
 related:
   - '[[2026-07-09-compatibility-lifecycle-adr]]'

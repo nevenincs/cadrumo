@@ -4,6 +4,7 @@ tags:
   - '#obligation-coverage-completeness'
 date: '2026-06-30'
 modified: '2026-07-17'
+body_hash: 'sha256:8ede649f26edff767b4d58661d90457fd03bb181ec5f3e600c4750d15fb626d3'
 tier: L2
 related:
   - '[[2026-06-30-obligation-coverage-completeness-adr]]'

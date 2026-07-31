@@ -4,6 +4,7 @@ tags:
   - '#portal-catalogue'
 date: '2026-04-17'
 modified: '2026-07-17'
+body_hash: 'sha256:19ead9467cbb50086e00fb73b8971f5840e9d15605d006950e3592dbbda57255'
 related:
   - '[[2026-04-17-portal-catalogue-adr]]'
   - '[[2026-04-17-portal-catalogue-research]]'

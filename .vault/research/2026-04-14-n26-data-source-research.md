@@ -4,6 +4,7 @@ tags:
   - "#n26-data-source"
 date: "2026-04-14"
 modified: '2026-07-17'
+body_hash: 'sha256:a0e28c741029a04090c4dfa6459b19f2d18df8feeaeb5f11038e263586da6be2'
 related:
   - "[[2026-04-14-n26-data-source-adr]]"
   - "[[2026-04-13-p2a-financial-provider-adr]]"

@@ -4,6 +4,7 @@ phase: P16
 wave: W03
 date: 2026-05-30
 modified: '2026-07-31'
+body_hash: 'sha256:b6617b99644e8bd69c91c25b3dda44f3a8032e5b1d6d4296397131d9d15aeda6'
 agent: coder-delta7
 commit: bea5a414f
 tags:

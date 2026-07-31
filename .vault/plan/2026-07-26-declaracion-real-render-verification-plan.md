@@ -4,6 +4,7 @@ tags:
   - '#declaracion-real-render-verification'
 date: '2026-07-26'
 modified: '2026-07-28'
+body_hash: 'sha256:dea681eace89228bac290d51583bd2f0670be0b19df0da64cdde23c486b2257e'
 tier: L2
 related:
   - '[[2026-07-25-declaracion-profile-printed-box-scope-adr]]'

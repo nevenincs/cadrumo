@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:791d1e6115ae29f174ed820e3338b590b42c8a4d3e500b0c389d645aea94a54f'
 related:
   - '[[2026-05-16-calc-engine-grounding-swarm-audit]]'
   - '[[2026-05-31-calc-engine-grounding-restoration-S01]]'

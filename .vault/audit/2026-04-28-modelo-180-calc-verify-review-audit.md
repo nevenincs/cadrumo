@@ -4,6 +4,7 @@ tags:
   - '#modelo-180-calc-verify'
 date: '2026-04-28'
 modified: '2026-07-17'
+body_hash: 'sha256:32fa5375e16c1cd3330f1b2d0a1bbd4b871e4a4aca2fff49f724495904cd0e8c'
 related:
   - "[[2026-04-28-modelo-180-calc-verify-plan]]"
   - "[[2026-04-28-modelo-180-calc-verify-adr]]"

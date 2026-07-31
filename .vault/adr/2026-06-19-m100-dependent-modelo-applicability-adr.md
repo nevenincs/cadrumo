@@ -4,6 +4,7 @@ tags:
   - '#m100-dependent-modelo-applicability'
 date: '2026-06-19'
 modified: '2026-07-17'
+body_hash: 'sha256:07d668c88a0f2ba7d4e2451a6bb7991a6f706649217c99225be2109e051fe60b'
 related:
   - '[[2026-06-19-m100-dependent-modelo-applicability-research]]'
 ---

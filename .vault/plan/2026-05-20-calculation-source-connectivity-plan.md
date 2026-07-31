@@ -4,6 +4,7 @@ tags:
   - '#calculation-source-connectivity'
 date: '2026-05-20'
 modified: '2026-07-17'
+body_hash: 'sha256:878d9f66b2f43d85e84212306b0b5f478661cbf10ef50da3765e75ac29e953dd'
 tier: L3
 related:
   - '[[2026-05-20-calculation-source-connectivity-research]]'

@@ -4,6 +4,7 @@ tags:
   - '#pension-rescate-dt12-classification'
 date: '2026-07-01'
 modified: '2026-07-17'
+body_hash: 'sha256:a5fcd72cb7a33ffeac8f7c121935c7ef0f381b6aa428afdffe6c8b7e5952aa13'
 related:
   - '[[2026-07-01-pension-rescate-dt12-classification-adr]]'
   - '[[2026-05-27-dt-12-rescate-plan-pensiones-adr]]'

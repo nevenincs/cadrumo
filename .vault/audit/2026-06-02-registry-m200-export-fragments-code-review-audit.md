@@ -4,6 +4,7 @@ tags:
   - '#registry-m200-export-fragments'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:7dfd318e8412dd0a6874e6f5fd18119c5cec4a766fa1fb41ac6c3c5e5d58b539'
 related:
   - "[[2026-06-02-registry-hardening-next-work-plan]]"
   - "[[2026-06-02-registry-hardening-m200-export-pressure-audit]]"

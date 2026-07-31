@@ -4,6 +4,7 @@ tags:
   - '#cli-testimonial'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:b24200ccec217dc013a59c65f650c101356507b85d1ded8b3b9696742d07d66d'
 related:
   - "[[2026-05-27-mateo-cli-testimonial-audit]]"
   - "[[2026-05-27-sergio-cli-testimonial-audit]]"

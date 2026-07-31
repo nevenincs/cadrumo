@@ -2,6 +2,7 @@
 step_id: S206
 date: 2026-05-28
 modified: '2026-07-17'
+body_hash: 'sha256:aa7f3fb8e57e1145fcc9f7ae51baa5797809d865e023c8f1bd7eaee88c1848db'
 tags:
   - "#exec"
   - "#declaracion-extraction-architecture"

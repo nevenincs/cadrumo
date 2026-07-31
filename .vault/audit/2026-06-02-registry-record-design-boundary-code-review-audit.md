@@ -4,6 +4,7 @@ tags:
   - '#registry-record-design-boundary'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:a7f03729ec2e37768ab952fc5e820ca408d76efddfc31e2b10e7dd92f9adedc8'
 related:
   - "[[2026-06-02-registry-hardening-next-work-plan]]"
   - "[[2026-06-02-registry-record-design-boundary-audit]]"

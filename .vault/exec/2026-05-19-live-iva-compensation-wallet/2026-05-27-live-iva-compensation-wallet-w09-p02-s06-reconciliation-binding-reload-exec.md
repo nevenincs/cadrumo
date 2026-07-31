@@ -4,6 +4,7 @@ tags:
   - '#live-iva-compensation-wallet'
 date: '2026-05-27'
 modified: '2026-07-17'
+body_hash: 'sha256:783ae63b36d9854c95bc51b6cbca17f16279274b612e178410294fe6c0e7e7b1'
 related:
   - '[[2026-05-19-live-iva-compensation-wallet-plan]]'
   - '[[2026-05-26-modelo-130-relation-regression-plan]]'

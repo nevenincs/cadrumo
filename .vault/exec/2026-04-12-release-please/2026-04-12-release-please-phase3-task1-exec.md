@@ -4,6 +4,7 @@ tags:
   - "#release-please"
 date: 2026-04-12
 modified: '2026-07-17'
+body_hash: 'sha256:1da9a270757ae2005b1bae5ff47e874142bdfa3a423e2629d8dd610a7910d62c'
 title: release-please phase-3 task-1 — CLAUDE.md conventional-commits mandate
 related:
   - "[[2026-04-12-release-please-plan]]"

@@ -4,6 +4,7 @@ tags:
   - "#release-please"
 date: 2026-04-12
 modified: '2026-07-17'
+body_hash: 'sha256:31269be54885be0f162e36273a78af03161097a405dec3c484a7cdecc743ef85'
 title: release-please phase-1 task-1 — config + manifest + changelog + releasing.md
 related:
   - "[[2026-04-12-release-please-plan]]"

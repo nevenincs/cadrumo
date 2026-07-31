@@ -4,6 +4,7 @@ tags:
   - '#security-supply-chain-2026-05-30'
 date: '2026-05-30'
 modified: '2026-07-17'
+body_hash: 'sha256:fbcd45a3966c09d7d04bae6b3a65c4f589d9a0edc72fd19bc3d4db74878f861f'
 related: []
 ---
 

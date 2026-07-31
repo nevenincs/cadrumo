@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:89b1699e4d70f0345c9c154dea3410caecb86884e1d19c2dc87aefa825855e23'
 related:
   - '[[2026-06-02-registry-fragment-headroom-post-splits-audit]]'
   - '[[2026-06-02-registry-fragment-headroom-post-splits-code-review-audit]]'

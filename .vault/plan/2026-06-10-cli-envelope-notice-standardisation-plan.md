@@ -4,6 +4,7 @@ tags:
   - '#cli-envelope-notice-standardisation'
 date: '2026-06-10'
 modified: '2026-07-17'
+body_hash: 'sha256:018293fd602549317201b729b807bf266927884b05fc8bf1371379bf69c30212'
 tier: L3
 related:
   - '[[2026-06-10-cli-envelope-notice-standardisation-adr]]'

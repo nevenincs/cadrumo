@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:ef46239dff77df1638403451730fedb10ed1bb6e94bb997a3e8633f933a0e29a'
 related:
   - '[[2026-06-04-m303-form-vs-semantic-casilla-dual-keying-research]]'
   - '[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-P01-S01]]'

@@ -4,6 +4,7 @@ tags:
   - '#core-authority-constants'
 date: '2026-05-31'
 modified: '2026-07-17'
+body_hash: 'sha256:36f629d1a5cc7ef6b33acfec01fb9aa98ca98673641fa98fae26ffe7fdbb6a65'
 related: []
 ---
 

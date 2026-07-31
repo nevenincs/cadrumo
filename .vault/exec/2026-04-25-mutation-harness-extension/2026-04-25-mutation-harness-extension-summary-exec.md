@@ -4,6 +4,7 @@ tags:
   - '#mutation-harness-extension'
 date: '2026-04-25'
 modified: '2026-07-17'
+body_hash: 'sha256:eef3d58797ee25bd00dc05d0e6a7e5eec1aca65556e9df03ea1647b175f855b7'
 related:
   - "[[2026-04-25-mutation-harness-extension-plan]]"
   - "[[2026-04-25-mutation-harness-extension-adr]]"

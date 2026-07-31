@@ -4,6 +4,7 @@ tags:
   - '#censal-profile-autofill'
 date: '2026-07-25'
 modified: '2026-07-30'
+body_hash: 'sha256:2a4b68103ad7aef00f9e9a66fde63eed017b03789824d65dd92421404d77ec40'
 tier: L2
 related:
   - '[[2026-07-25-censal-profile-autofill-adr]]'

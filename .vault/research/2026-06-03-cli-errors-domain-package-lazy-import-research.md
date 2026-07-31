@@ -4,6 +4,7 @@ tags:
   - '#cli-errors-domain-package-lazy-import'
 date: '2026-06-03'
 modified: '2026-07-17'
+body_hash: 'sha256:05d04fb95dca6317547ffe1ae3c0b55a71be5c270a1561bebbfde0fb48567e50'
 related:
   - '[[2026-06-03-user-profile-lazy-import-adr]]'
 ---

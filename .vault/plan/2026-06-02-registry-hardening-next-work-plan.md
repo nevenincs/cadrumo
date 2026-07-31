@@ -4,6 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-06-02'
 modified: '2026-07-17'
+body_hash: 'sha256:693a7d7adc3e2a1d77f0f0d7b6f58e944124dcf990f43f2c44d6de49b402e764'
 tier: L3
 related:
   - '[[2026-06-02-registry-hardening-next-work-health-audit]]'

@@ -4,6 +4,7 @@ tags:
   - '#distribution-installation-readiness'
 date: '2026-07-15'
 modified: '2026-07-17'
+body_hash: 'sha256:a99f7f81df6945a17625022cfb1dc69a00dd296370e1cd4ac0b0e557c7b4cdf8'
 related:
   - "[[2026-07-15-distribution-installation-readiness-plan]]"
   - "[[2026-07-16-distribution-harness-identity-adr]]"

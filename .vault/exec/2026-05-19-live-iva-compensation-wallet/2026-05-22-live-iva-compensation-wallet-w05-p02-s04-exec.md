@@ -4,6 +4,7 @@ tags:
   - '#live-iva-compensation-wallet'
 date: '2026-05-22'
 modified: '2026-07-31'
+body_hash: 'sha256:f57d7875ba382f60278888ed06601d1fcde80fa04c5e9992411bcb79403e7041'
 related:
   - '[[2026-05-19-live-iva-compensation-wallet-plan]]'
   - '[[2026-05-21-secure-object-database-drift-research]]'

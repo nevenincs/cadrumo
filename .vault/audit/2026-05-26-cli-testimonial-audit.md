@@ -4,6 +4,7 @@ tags:
   - '#cli-testimonial'
 date: '2026-05-26'
 modified: '2026-07-17'
+body_hash: 'sha256:69271d56208c3edacc179304616a1d5f61493639432b72449bfa5c4aff056cba'
 related:
   - "[[2026-05-21-cli-testimonial-audit]]"
   - "[[2026-05-21-persona-fleet-round3-findings-audit]]"

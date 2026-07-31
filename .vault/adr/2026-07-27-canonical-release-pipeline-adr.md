@@ -4,6 +4,7 @@ tags:
   - '#canonical-release-pipeline'
 date: '2026-07-27'
 modified: '2026-07-27'
+body_hash: 'sha256:72b5f040c000033a9b7dd2c3f7113d22be27dafd66df5efa3b0a0292835805e5'
 related:
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
   - '[[2026-07-19-post-release-distribution-adr]]'

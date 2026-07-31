@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:d4037640f416715fc015ec17102a863b3b401b83912337aa80f14ea186ecd0af'
 related:
   - '[[2026-06-04-registry-row-width-pressure-P01-S01]]'
   - '[[2026-06-04-registry-row-width-pressure-P02-S02]]'

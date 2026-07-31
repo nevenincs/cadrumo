@@ -4,6 +4,7 @@ tags:
   - '#cli-operator-surface'
 date: '2026-06-12'
 modified: '2026-07-17'
+body_hash: 'sha256:6a6a9c0d12cd14ba9b4f93cf6c1429f25258f91ed7b4fec221e4e26cec5a4233'
 step_id: 'S29'
 related:
   - '[[2026-06-10-cli-operator-surface-plan]]'

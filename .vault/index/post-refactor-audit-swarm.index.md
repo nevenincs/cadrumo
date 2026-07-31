@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:7c173c1787ea7ce0ba2487ea811d4cc9b4d29de56f91e08d29a1972c26f6e8bc'
 related:
   - '[[2026-06-15-post-refactor-audit-swarm-audit]]'
 ---

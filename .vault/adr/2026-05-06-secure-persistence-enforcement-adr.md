@@ -4,6 +4,7 @@ tags:
   - '#secure-persistence-enforcement'
 date: '2026-05-06'
 modified: '2026-07-17'
+body_hash: 'sha256:d9464b83d2de19e5f67da7737eed175c4137449dd030b718c35f7124522d1825'
 related:
   - '[[2026-05-06-secure-persistence-enforcement-research]]'
   - '[[2026-05-14-profile-bucket-lifecycle-adr]]'

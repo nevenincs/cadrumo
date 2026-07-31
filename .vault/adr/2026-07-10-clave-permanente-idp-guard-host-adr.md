@@ -4,6 +4,7 @@ tags:
   - '#clave-permanente-idp-guard-host'
 date: '2026-07-10'
 modified: '2026-07-17'
+body_hash: 'sha256:ba47c4a6d7e5d8b08104722106de10f4c9c962f54faf993e03a846819ab0e34b'
 related:
   - "[[2026-05-06-live-parity-oracle-backend-adr]]"
   - "[[2026-04-18-auth-provider-abstraction-adr]]"

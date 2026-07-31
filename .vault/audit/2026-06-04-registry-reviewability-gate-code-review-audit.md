@@ -4,6 +4,7 @@ tags:
   - '#schema-hardening'
 date: '2026-06-04'
 modified: '2026-07-17'
+body_hash: 'sha256:88b5174ec8da7e312ebceb2fc5678641b7af4a1b680b364c59d378661c1a5e9e'
 related:
   - '[[2026-06-02-registry-hardening-next-work-plan]]'
   - '[[2026-06-04-registry-reviewability-gate-headroom-audit]]'

@@ -4,6 +4,7 @@ tags:
   - '#arch-remediation-source-kind-deferrals'
 date: '2026-07-02'
 modified: '2026-07-17'
+body_hash: 'sha256:23fb5a17b57a5ac2e167090613c6b23fc7e7d9bfafaf0c03c9ec6476df9b8207'
 step_id: 'S08'
 related:
   - "[[2026-07-02-arch-remediation-source-kind-deferrals-plan]]"

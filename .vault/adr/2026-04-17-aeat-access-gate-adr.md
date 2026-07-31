@@ -4,6 +4,7 @@ tags:
   - '#aeat-access-gate'
 date: 2026-04-17
 modified: '2026-07-17'
+body_hash: 'sha256:d4b2c9aac80244e877c51087d107e5ffad35c841ea511ee3c5e7cf3b80afdb0f'
 title: "Live AEAT Access Blocker & Verification Gate"
 related:
   - "[[2026-04-13-cert-pre-expiry-gate-adr]]"

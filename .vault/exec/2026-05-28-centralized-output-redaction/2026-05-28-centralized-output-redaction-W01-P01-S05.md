@@ -4,6 +4,7 @@ tags:
   - '#centralized-output-redaction'
 date: '2026-05-28'
 modified: '2026-07-17'
+body_hash: 'sha256:d102349fcfec3c3344e28c7a1813ced4d229854052512d55c9a38b21cb3ce75a'
 step_id: 'S05'
 related:
   - '[[2026-05-28-centralized-output-redaction-plan]]'

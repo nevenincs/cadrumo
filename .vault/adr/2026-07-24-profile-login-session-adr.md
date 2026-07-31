@@ -4,6 +4,7 @@ tags:
   - '#profile-login-session'
 date: '2026-07-24'
 modified: '2026-07-24'
+body_hash: 'sha256:0a2bf0499c4a8b8ce778001ad95bf95cdc412f73f98be55d7a950d7136bfe31f'
 related:
   - "[[2026-07-15-cli-authority-verb-conformance-adr]]"
   - "[[2026-05-14-secure-backend-passkey-custody-adr]]"

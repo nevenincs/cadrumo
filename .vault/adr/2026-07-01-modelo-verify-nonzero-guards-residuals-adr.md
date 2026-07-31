@@ -4,6 +4,7 @@ tags:
   - '#modelo-verify-nonzero-guards-residuals'
 date: '2026-07-01'
 modified: '2026-07-17'
+body_hash: 'sha256:1c1af303499661c47c2e4dc239e197c9f7eb1cb5e0ff46ca19ad4a21f5256a68'
 related:
   - "[[2026-07-01-modelo-verify-nonzero-guards-residuals-research]]"
   - "[[2026-07-01-modelo-verify-nonzero-guards-m202-deferred-items-audit]]"

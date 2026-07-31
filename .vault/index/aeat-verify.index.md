@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:7191def042a73a990d83f68f15a01ecc4925df038b3109dd6451d4e79af05871'
 related:
   - '[[2026-04-22-aeat-verify-exec]]'
   - '[[2026-04-24-aeat-verify-adr]]'

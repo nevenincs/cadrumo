@@ -4,6 +4,7 @@ tags:
   - "#path-handling-safety"
 date: "2026-04-17"
 modified: '2026-07-17'
+body_hash: 'sha256:2767a2a625f8a912437b89ec0937075415e5c53b10804ab3e154e6ffe1d2a164'
 related:
   - "[[2026-04-17-path-handling-safety-adr]]"
   - "[[2026-04-17-path-handling-safety-research]]"

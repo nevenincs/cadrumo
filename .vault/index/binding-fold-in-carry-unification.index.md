@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:9d801cbe1ff21b19296260c93563c70100c43c70a23a5896d7c39c0ba52c0562'
 related:
   - '[[2026-06-26-binding-fold-in-carry-unification-P01-S01]]'
   - '[[2026-06-26-binding-fold-in-carry-unification-P01-S02]]'

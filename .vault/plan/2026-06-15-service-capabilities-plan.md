@@ -4,6 +4,7 @@ tags:
   - '#service-capabilities'
 date: '2026-06-15'
 modified: '2026-07-17'
+body_hash: 'sha256:d709cf7e971867ef4f11a951abb83514d66efe2998fbf056241aa2fc3d3a4963'
 tier: L3
 related:
   - '[[2026-06-15-service-capabilities-research]]'

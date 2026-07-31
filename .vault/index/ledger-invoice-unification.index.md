@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:dcc9439ee698e1f68cd2c47b7228afbda280fa71f7286d7f17af432ce4281e2f'
 related:
   - '[[2026-06-10-ledger-invoice-unification-P01-S01]]'
   - '[[2026-06-10-ledger-invoice-unification-P01-S02]]'

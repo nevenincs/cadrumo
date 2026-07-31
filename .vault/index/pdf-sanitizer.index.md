@@ -6,6 +6,7 @@ tags:
 date: '2026-07-28'
 modified: '2026-07-28'
 body_schema: 'body-v1'
+body_hash: 'sha256:d3edc688ad6e0834cce744c5b03ac4c86d6563ed079ff297adde4a367a91b411'
 related:
   - '[[2026-04-25-pdf-sanitizer-adr]]'
   - '[[2026-04-25-pdf-sanitizer-plan]]'
