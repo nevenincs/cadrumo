@@ -16,10 +16,11 @@ from pydantic import ConfigDict
 
 from ._schemas import OutputSchema, register_schema
 
-# The two wizard-owned profile result schemas register through the sibling
-# `_wizard_payloads` module, NOT here: the `config` group imports this module at
-# group-resolution time, so importing the wizard from here pulled its whole
-# dependency tail into every `config` verb and reddened the cold-start guard.
+# The two wizard-owned profile result schemas register through the manifest's
+# explicit lazy schema-owner table, NOT here: the `config` group imports this
+# module at group-resolution time, so importing the wizard from here would pull
+# its whole dependency tail into every `config` verb and redden the cold-start
+# guard.
 
 if TYPE_CHECKING:
     from ...application.auth import AuthConfigureResult
@@ -790,9 +791,9 @@ class BucketHistoryResult(OutputSchema):
 # ``config.profile.create`` / ``config.profile.edit`` are declared at their real
 # producer in :mod:`application.wizard._results`, which sits below this package in
 # the hexagonal direction and cannot construct a class defined up here. They
-# register through the sibling :mod:`_wizard_payloads`, which the payload walk
-# imports. There is NO wizard re-export HERE: it moved out so the ``config``
-# group stopped pulling the wizard dependency tail into every ``config`` verb.
+# register through the manifest's lazy canonical-owner table. There is NO
+# wizard import HERE: the ``config`` group must not pull the wizard dependency
+# tail into every ``config`` verb.
 
 
 @register_schema("config.profile.export")

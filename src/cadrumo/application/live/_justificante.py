@@ -69,7 +69,7 @@ from ...adapters.persistence.storage import (
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period
 from ...core.external_constants import UTF_8_ENCODING
-from ...core.hashing import sha256_hex
+from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.identity import BucketId
 from ._errors import LiveApplicationInputError
 from ._snapshot_base import (
@@ -77,7 +77,6 @@ from ._snapshot_base import (
     SnapshotLifecycleState,
     SnapshotNotFoundError,
     SnapshotService,
-    derive_snapshot_id_from_json,
     enforce_snapshot_state_invariants,
 )
 
@@ -191,7 +190,7 @@ def derive_justificante_capture_snapshot_id(
     re-filed period (a different signed PDF) yields a new id that
     supersedes the prior ACTIVE snapshot on the same axis.
     """
-    return derive_snapshot_id_from_json(
+    return content_hash_hex(
         {
             "modelo": modelo,
             "filing_year": filing_year,

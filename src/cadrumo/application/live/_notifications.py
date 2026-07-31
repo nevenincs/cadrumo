@@ -42,7 +42,7 @@ from ...adapters.outbound.aeat.sede import NotificationsSnapshot, RemoteNotifica
 from ...adapters.persistence.storage import LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE, secure_object_repository_for_bucket
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings, load_settings
-from ...core.hashing import sha256_hex
+from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.identity import BucketId, SnapshotId
 from ...core.time import now
 from ._errors import LiveApplicationInputError
@@ -50,7 +50,6 @@ from ._snapshot_base import (
     SecureSnapshotRepository,
     SnapshotNotFoundError,
     StatelessSnapshotService,
-    derive_snapshot_id_from_json,
 )
 
 
@@ -89,7 +88,7 @@ def _derive_snapshot_id(
 ) -> str:
     identity = _normalise_authenticated_identity(authenticated_identity)
     if identity is not None:
-        return derive_snapshot_id_from_json(
+        return content_hash_hex(
             {
                 "snapshot": snapshot.model_dump(mode="json"),
                 "authenticated_identity": identity,

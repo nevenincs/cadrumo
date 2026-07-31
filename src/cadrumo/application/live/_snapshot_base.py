@@ -31,7 +31,6 @@ Design notes:
 
 from __future__ import annotations
 
-import json
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from datetime import datetime
@@ -50,7 +49,6 @@ from ...adapters.persistence.storage import (
 )
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
 from ...core.errors import CadrumoError
-from ...core.hashing import sha256_hex
 from ...core.time import now
 from ._errors import LiveApplicationInputError
 
@@ -110,26 +108,6 @@ class SnapshotRepository[TPayload: BaseModel](Protocol):
     def resolve(self, snapshot_id: str) -> TPayload: ...
 
     def save(self, snapshot: TPayload) -> None: ...
-
-
-type _CanonicalValue = str | int | float | bool | list[_CanonicalValue] | dict[str, _CanonicalValue] | None
-
-
-def derive_snapshot_id_from_json(parts: dict[str, _CanonicalValue]) -> str:
-    """Return a SHA-256 content-addressed id for a canonical JSON dict.
-
-    ``parts`` is serialized with ``sort_keys=True``, ASCII-safe, and the
-    compact ``(",", ":")`` separator, then hashed. Callers must pre-coerce
-    Decimals / datetimes / typed-IDs to JSON-safe scalars; the helper does
-    not introspect Pydantic models.
-    """
-    canonical = json.dumps(
-        parts,
-        ensure_ascii=True,
-        sort_keys=True,
-        separators=(",", ":"),
-    )
-    return sha256_hex(canonical.encode("utf-8"))
 
 
 def enforce_snapshot_state_invariants(
@@ -524,6 +502,5 @@ __all__ = [
     "SnapshotRepository",
     "SnapshotService",
     "StatelessSnapshotService",
-    "derive_snapshot_id_from_json",
     "enforce_snapshot_state_invariants",
 ]

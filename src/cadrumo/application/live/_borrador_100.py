@@ -33,6 +33,7 @@ from ...adapters.persistence.storage import (
 )
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period
+from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId
 from ...domain.calculations.registry import BindingId
 from ._errors import LiveApplicationInputError
@@ -41,7 +42,6 @@ from ._snapshot_base import (
     SnapshotLifecycleState,
     SnapshotNotFoundError,
     SnapshotService,
-    derive_snapshot_id_from_json,
     enforce_snapshot_state_invariants,
 )
 
@@ -116,10 +116,10 @@ def derive_borrador_100_snapshot_id(
     """Return the content-addressed id for one Modelo 100 borrador capture.
 
     The canonical-JSON shape is preserved exactly so existing on-disk
-    snapshot ids remain valid: routing through
-    ``derive_snapshot_id_from_json`` does not change the hashed bytes.
+    snapshot ids remain valid: the core canonical JSON hash does not change
+    the hashed bytes.
     """
-    return derive_snapshot_id_from_json(
+    return content_hash_hex(
         {
             "modelo": Modelo.M100.value,
             "filing_year": filing_year,

@@ -17,6 +17,7 @@ from ....adapters.persistence.storage import (
 )
 from ....adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
 from ....core.errors import CadrumoError
+from ....core.hashing import content_hash_hex
 from ....core.identity import BucketId
 from ....tests.secure_sql import isolated_runtime_profile
 from .._borrador_100 import Borrador100SnapshotRepository, BorradorSnapshotNotFoundError
@@ -27,7 +28,6 @@ from .._snapshot_base import (
     SnapshotNotFoundError,
     SnapshotRepository,
     SnapshotService,
-    derive_snapshot_id_from_json,
     enforce_snapshot_state_invariants,
 )
 
@@ -183,7 +183,7 @@ class ProbeService(SnapshotService[ProbeSnapshot, _ProbeCaptureRequest]):
 
     @override
     def _derive_snapshot_id(self, capture: _ProbeCaptureRequest) -> str:
-        return derive_snapshot_id_from_json(
+        return content_hash_hex(
             {
                 "axis_label": capture.axis_label,
                 "captured_at": capture.captured_at.isoformat(),
@@ -311,48 +311,6 @@ def test_active_snapshot_passes_with_no_pointers_or_audit() -> None:
         discarded_at=None,
         discarded_by="",
     )
-
-
-# ---- Snapshot id determinism tests ---------------------------------------
-
-
-def test_derive_snapshot_id_is_deterministic() -> None:
-    parts: dict[str, Any] = {
-        "axis_label": "renta-2025",
-        "captured_at": _CAPTURED_AT.isoformat(),
-        "payload_text": "alpha",
-    }
-    assert derive_snapshot_id_from_json(parts) == derive_snapshot_id_from_json(dict(parts))
-
-
-def test_derive_snapshot_id_is_order_independent() -> None:
-    a = derive_snapshot_id_from_json(
-        {"axis_label": "renta-2025", "captured_at": _CAPTURED_AT.isoformat(), "payload_text": "alpha"},
-    )
-    b = derive_snapshot_id_from_json(
-        {"payload_text": "alpha", "captured_at": _CAPTURED_AT.isoformat(), "axis_label": "renta-2025"},
-    )
-    assert a == b
-
-
-def test_derive_snapshot_id_changes_on_trivial_perturbation() -> None:
-    base: dict[str, Any] = {
-        "axis_label": "renta-2025",
-        "captured_at": _CAPTURED_AT.isoformat(),
-        "payload_text": "alpha",
-    }
-    base_id = derive_snapshot_id_from_json(base)
-    assert base_id != derive_snapshot_id_from_json({**base, "payload_text": "alpha "})
-    assert base_id != derive_snapshot_id_from_json({**base, "axis_label": "renta-2026"})
-    assert base_id != derive_snapshot_id_from_json(
-        {**base, "captured_at": (_CAPTURED_AT + timedelta(seconds=1)).isoformat()},
-    )
-
-
-def test_derive_snapshot_id_is_sha256_hex() -> None:
-    derived = derive_snapshot_id_from_json({"axis_label": "x", "captured_at": "y", "payload_text": "z"})
-    assert len(derived) == 64
-    assert all(ch in "0123456789abcdef" for ch in derived)
 
 
 # ---- SnapshotService roundtrip tests -------------------------------------
