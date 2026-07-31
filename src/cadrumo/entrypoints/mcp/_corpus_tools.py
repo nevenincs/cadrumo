@@ -126,13 +126,22 @@ def corpus_search_payload_from_response(response: RetrievalResponse) -> CorpusSe
     return CorpusSearchPayload(query=response.query, mode=response.mode, results=rows)
 
 
-def build_corpus_search_payload(query: str, *, limit: int = _DEFAULT_LIMIT) -> CorpusSearchPayload:
+def build_corpus_search_payload(
+    query: str, *, limit: int = _DEFAULT_LIMIT, semantic_available: bool | None = None
+) -> CorpusSearchPayload:
     """Run grounding retrieval for ``query`` and return the tool payload.
+
+    Args:
+        query: The free-text query or an exact citation id.
+        limit: Maximum number of hits.
+        semantic_available: Optional override forwarded to
+            :func:`~application.corpus_search.search_corpus` (test isolation);
+            ``None`` probes the real environment.
 
     Returns:
         A :class:`CorpusSearchPayload`.
     """
-    response = search_corpus(query, limit=limit)
+    response = search_corpus(query, limit=limit, semantic_available=semantic_available)
     return corpus_search_payload_from_response(response)
 
 

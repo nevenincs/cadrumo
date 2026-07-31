@@ -88,10 +88,10 @@ def test_render_text_lists_results_and_uris() -> None:
 def test_tool_descriptor_is_read_only_with_query_input() -> None:
     tool = cast("Any", build_corpus_search_tool())
     assert tool.name == CORPUS_SEARCH_TOOL
-    assert tool.annotations.readOnlyHint is True
-    assert tool.annotations.destructiveHint is False
-    assert "query" in tool.inputSchema["required"]
-    assert tool.inputSchema["additionalProperties"] is False
+    assert tool.annotations.read_only_hint is True
+    assert tool.annotations.destructive_hint is False
+    assert "query" in tool.input_schema["required"]
+    assert tool.input_schema["additionalProperties"] is False
 
 
 def _seed_small_index(source_stem: str) -> None:
@@ -148,10 +148,17 @@ def test_citation_uri_round_trips_from_search_payload_to_resource_resolver() -> 
 
 def test_build_payload_runs_real_lexical_retrieval(tmp_path: Path) -> None:
     # A free-text query over the pre-seeded index returns ranked hits with
-    # corpus URIs, in the shipped lexical-only degraded mode (no vectors).
+    # corpus URIs, in the shipped lexical-only degraded mode (no vectors). The
+    # explicit ``semantic_available=False`` runtime input keeps this
+    # assertion stable even in an env where the ``search`` extra happens to
+    # be installed and the potion model resolves over the network — mirrors
+    # the same seam ``test_ensure_corpus_embeddings_is_none_without_the_extra``
+    # already uses at the application layer.
     with override_settings(cadrumo_local_storage_root=tmp_path):
         _seed_small_index("ley-58-2003-art-27")
-        payload = build_corpus_search_payload("recargo declaración extemporánea", limit=5)
+        payload = build_corpus_search_payload(
+            "recargo declaración extemporánea", limit=5, semantic_available=False
+        )
     assert payload.mode is RetrievalMode.LEXICAL_ONLY
     assert payload.results
     assert payload.results[0].uri.startswith("cadrumo://corpus/")

@@ -119,7 +119,13 @@ def ensure_corpus_embeddings(
     return load_embeddings(matrix_path, ids_path)
 
 
-def search_corpus(query: str, *, limit: int = _DEFAULT_LIMIT, settings: Settings | None = None) -> RetrievalResponse:
+def search_corpus(
+    query: str,
+    *,
+    limit: int = _DEFAULT_LIMIT,
+    settings: Settings | None = None,
+    semantic_available: bool | None = None,
+) -> RetrievalResponse:
     """Run grounding retrieval for ``query`` over the bundled corpus.
 
     Provisions the lexical index (build-once cache), loads precomputed vectors
@@ -130,13 +136,23 @@ def search_corpus(query: str, *, limit: int = _DEFAULT_LIMIT, settings: Settings
         query: The free-text query or an exact citation id.
         limit: Maximum number of hits.
         settings: Optional settings override (test isolation).
+        semantic_available: Optional override for whether the semantic
+            (``model2vec``) side may run, forwarded to
+            :func:`ensure_corpus_embeddings`. ``None`` (the default) probes
+            the real environment via :func:`search_extra_available`; a test
+            passes an explicit ``False`` to make degraded lexical-only mode a
+            controlled input rather than an environment hope (mirrors
+            :func:`ensure_corpus_embeddings`'s own test seam).
 
     Returns:
         A :class:`RetrievalResponse`.
     """
     database_path = ensure_corpus_index(settings)
-    embeddings = ensure_corpus_embeddings(settings)
-    embedder = QueryEmbedder(settings=settings) if embeddings is not None and search_extra_available() else None
+    embeddings = ensure_corpus_embeddings(settings, semantic_available=semantic_available)
+    resolved_semantic_available = (
+        search_extra_available() if semantic_available is None else semantic_available
+    )
+    embedder = QueryEmbedder(settings=settings) if embeddings is not None and resolved_semantic_available else None
     return hybrid_search(
         query,
         database_path=database_path,
