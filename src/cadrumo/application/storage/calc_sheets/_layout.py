@@ -35,7 +35,7 @@ closed-form `lookup_bracket` expansion.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from typing import Literal
@@ -48,13 +48,16 @@ from ....domain.calculations.registry import (
     BracketEntry,
     CasillaDefinition,
     CasillaId,
-    FormulaExpression,
     InputKind,
     ModeloRevision,
     ParameterDefinition,
     ParameterId,
     RelationId,
     RevisionId,
+    expression_binding_refs,
+    expression_date_binding_refs,
+    expression_parameter_refs,
+    expression_relation_refs,
 )
 from ._errors import CalcSheetsEngineError
 from ._records import (
@@ -174,36 +177,6 @@ def _undeclared_layout_reference(reference_kind: str) -> CalcSheetsEngineError:
     )
 
 
-def _walk_expression_parameters(expression: FormulaExpression) -> Iterable[ParameterId]:
-    if expression.parameter is not None:
-        yield expression.parameter
-    if expression.dispatch_table is not None:
-        yield from expression.dispatch_table.values()
-    for child in expression.args:
-        yield from _walk_expression_parameters(child)
-
-
-def _walk_expression_bindings(expression: FormulaExpression) -> Iterable[BindingId]:
-    if expression.binding is not None:
-        yield expression.binding
-    for child in expression.args:
-        yield from _walk_expression_bindings(child)
-
-
-def _walk_expression_relations(expression: FormulaExpression) -> Iterable[RelationId]:
-    if expression.relation is not None:
-        yield expression.relation
-    for child in expression.args:
-        yield from _walk_expression_relations(child)
-
-
-def _walk_expression_date_bindings(expression: FormulaExpression) -> Iterable[BindingId]:
-    if expression.date_binding is not None:
-        yield expression.date_binding
-    for child in expression.args:
-        yield from _walk_expression_date_bindings(child)
-
-
 def _referenced_date_bindings(revision: ModeloRevision) -> tuple[BindingId, ...]:
     seen: dict[BindingId, None] = {}
     formulas = {formula.id: formula for formula in revision.formulas}
@@ -211,7 +184,7 @@ def _referenced_date_bindings(revision: ModeloRevision) -> tuple[BindingId, ...]
         if casilla.formula is None:
             continue
         formula = formulas[casilla.formula]
-        for binding in _walk_expression_date_bindings(formula.expression):
+        for binding in expression_date_binding_refs(formula.expression):
             seen.setdefault(binding, None)
     return tuple(seen)
 
@@ -223,7 +196,7 @@ def _referenced_relations(revision: ModeloRevision) -> tuple[RelationId, ...]:
         if casilla.formula is None:
             continue
         formula = formulas[casilla.formula]
-        for relation in _walk_expression_relations(formula.expression):
+        for relation in expression_relation_refs(formula.expression):
             seen.setdefault(relation, None)
     return tuple(seen)
 
@@ -235,7 +208,7 @@ def _referenced_parameters(revision: ModeloRevision) -> tuple[ParameterId, ...]:
         if casilla.formula is None:
             continue
         formula = formulas[casilla.formula]
-        for parameter in _walk_expression_parameters(formula.expression):
+        for parameter in expression_parameter_refs(formula.expression):
             seen.setdefault(parameter, None)
     return tuple(seen)
 
@@ -247,7 +220,7 @@ def _referenced_bindings(revision: ModeloRevision) -> tuple[BindingId, ...]:
         if casilla.formula is None:
             continue
         formula = formulas[casilla.formula]
-        for binding in _walk_expression_bindings(formula.expression):
+        for binding in expression_binding_refs(formula.expression):
             seen.setdefault(binding, None)
     return tuple(seen)
 

@@ -12,6 +12,7 @@ at the unit level so refactors fail fast.
 from __future__ import annotations
 
 from decimal import Decimal
+from graphlib import CycleError
 
 import pytest
 
@@ -24,8 +25,10 @@ from .._runtime_graph import (
     expression_casilla_refs,
     expression_parameter_refs,
     expression_relation_refs,
+    formula_evaluation_order,
 )
 from .._schema import FormulaExpression, ModeloRevision
+from .._validate_formulas import validate_formula_dag
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -54,6 +57,11 @@ def _m210_2025_revision() -> ModeloRevision:
     # shape assertions are independent of unrelated peer modelo churn.
     modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     return next(modelo for modelo in modelos if modelo.id == "210").revisions["2025"]
+
+
+def _m130_2025_revision() -> ModeloRevision:
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    return next(modelo for modelo in modelos if modelo.id == "130").revisions["2019-y-siguientes"]
 
 
 def test_expression_casilla_refs_returns_direct_leaf() -> None:
@@ -148,6 +156,36 @@ def test_expression_relation_refs_walks_nested_args() -> None:
         "modelo-130-rel-base-1t",
         "modelo-130-rel-base-2t",
     )
+
+
+def test_formula_evaluation_order_preserves_the_committed_modelo_130_settlement_chain() -> None:
+    """The official M130 settlement chain must evaluate inputs before its final result."""
+
+    order = formula_evaluation_order(_m130_2025_revision())
+
+    assert order.index("03") < order.index("04") < order.index("07") < order.index("12")
+    assert order.index("12") < order.index("14") < order.index("17") < order.index("19")
+
+
+def test_formula_dag_validation_refuses_a_cycle_through_the_canonical_order_builder() -> None:
+    """A cycle injected into the real M130 settlement chain has no valid evaluation order."""
+
+    revision = _m130_2025_revision()
+    formulas = tuple(
+        formula.model_copy(update={"expression": FormulaExpression(casilla_id="19")})
+        if formula.target_casilla_id == "03"
+        else formula
+        for formula in revision.formulas
+    )
+    cyclic_revision = revision.model_copy(update={"formulas": formulas})
+
+    with pytest.raises(CycleError):
+        formula_evaluation_order(cyclic_revision)
+
+    failures = validate_formula_dag("modelo 130", cyclic_revision)
+
+    assert len(failures) == 1
+    assert failures[0].startswith("modelo 130: formula graph cycle:")
 
 
 def test_enum_consumed_binding_ids_reads_current_irnr_resolve_tipo_gravamen_country_arg() -> None:

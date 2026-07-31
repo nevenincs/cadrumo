@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from .. import expression_casilla_refs
 from ._modelo_100_legal_refs_support import (
     _AUTONOMIC_DEDUCTION_ART_77_REF,
     _BASE_IMPONIBLE_AHORRO_CASILLA,
@@ -23,7 +24,6 @@ from ._modelo_100_legal_refs_support import (
     _STATE_DEDUCTION_ART_67_REF,
     _casilla_id,
     _casilla_ids,
-    _expression_casilla_refs,
     _modelo_100_snapshot,
 )
 
@@ -38,7 +38,7 @@ def test_modelo_100_savings_base_includes_current_capital_mobiliario() -> None:
         )
 
         assert _SAVINGS_BASE_ART_49_REF in formula.legal_refs, filing_year
-        assert _CAPITAL_MOBILIARIO_AHORRO_CASILLA in _expression_casilla_refs(formula.expression), filing_year
+        assert _CAPITAL_MOBILIARIO_AHORRO_CASILLA in expression_casilla_refs(formula.expression), filing_year
 
 
 def test_modelo_100_donation_deduction_surface_cites_art_68_3() -> None:

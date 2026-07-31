@@ -435,6 +435,8 @@ from ._runtime_graph import (
     expression_binding_refs,
     expression_casilla_refs,
     expression_date_binding_refs,
+    expression_parameter_refs,
+    expression_relation_refs,
     input_casilla_id_map,
     revision_date_binding_ids,
 )
@@ -842,6 +844,8 @@ __all__ = [
     "expression_binding_refs",
     "expression_casilla_refs",
     "expression_date_binding_refs",
+    "expression_parameter_refs",
+    "expression_relation_refs",
     "extract_record_design",
     "extract_record_design_pdf",
     "extract_record_design_pdf_bytes",

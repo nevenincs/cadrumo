@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from functools import cache
 from pathlib import Path
-from typing import Any
 
 import pytest
 
@@ -894,13 +893,3 @@ _SAVINGS_BASE_ART_49_ONLY_ROLES = frozenset(
         "irpf_saldo_neto_rdto_capital_mobiliario_resto_pendiente",
     }
 )
-
-
-def _expression_casilla_refs(expression: Any) -> frozenset[CasillaId]:
-    refs: set[CasillaId] = set()
-    casilla_id = getattr(expression, "casilla_id", None)
-    if casilla_id is not None:
-        refs.add(casilla_id)
-    for arg in getattr(expression, "args", ()):
-        refs.update(_expression_casilla_refs(arg))
-    return frozenset(refs)

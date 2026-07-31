@@ -79,7 +79,6 @@ from ._modelo_100_registry_support import (
     _STATE_INTEGRAL_QUOTA_ART_62_REF,
     _casilla_id,
     _casilla_ids,
-    _expression_casilla_refs,
     _loaded_registry,
     _modelo_100_snapshot,
 )
@@ -160,7 +159,6 @@ __all__ = [
     "_STATE_INTEGRAL_QUOTA_ART_62_REF",
     "_casilla_id",
     "_casilla_ids",
-    "_expression_casilla_refs",
     "_loaded_registry",
     "_modelo_100_snapshot",
     "calculation_closure_legal_refs",
