@@ -694,7 +694,11 @@ def _setup_incomplete_disclosure(
 
 @dataclass(frozen=True)
 class _ProfileCalendarInputs:
-    """Everything one profile's calendar is built from, read in one session."""
+    """Everything one profile's calendar is built from, read in one session.
+
+    Carries the profile's :class:`TaxpayerProfile` snapshot alongside its
+    calendar events, filing evidence, and work units.
+    """
 
     taxpayer: TaxpayerProfile
     raw_values: Mapping[str, object]
