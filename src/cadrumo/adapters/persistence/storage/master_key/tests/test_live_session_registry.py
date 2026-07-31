@@ -7,6 +7,11 @@ asserts on the buffers themselves, never on a call count - a sweep that "ran" bu
 left cleartext key bytes in memory is the failure this guards against.
 """
 
+# INTENTIONAL: unit because "live" here names the in-process registry of open
+# bucket sessions, not a live AEAT surface. These tests contact no network and
+# drive real in-memory key buffers only; the filename collides with the
+# test_live_* convention for AEAT tests without sharing its meaning.
+
 from __future__ import annotations
 
 import threading

@@ -40,6 +40,12 @@ from ._custody import register_custody_commands
 from ._descendiente import register_descendiente_commands
 from ._manager_dispatch import register_lazy_wizard_leaf as _register_lazy_wizard_leaf
 from ._profile_bundle import register_profile_bundle_commands
+
+# `_resolve_preflight_revision_id` moved to `_profile_inspect` alongside the
+# preflight verb, but this package remains its import site: a consumer already
+# reaches it through here, and the extraction was meant to be facade-preserving.
+# Keeping the re-export is what makes that true rather than merely claimed.
+from ._profile_inspect import _resolve_preflight_revision_id as _resolve_preflight_revision_id
 from ._profile_inspect import register_profile_inspect_commands as _register_profile_inspect_commands
 from ._profile_readiness import _read_profile_record
 from ._repair_cli import register_repair_maintenance_commands
