@@ -4,15 +4,13 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import date
-from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
 from .....core.resources import resources
 from .. import CasillaId, validated_casilla_id
-from .._authority import ValidatedRegistryAuthority
-from .._errors import AmbiguousRevisionSelectionError, NoRevisionForPeriodError, RegistryValidationError
+from .._errors import NoRevisionForPeriodError, RegistryValidationError
 from .._queries import (
     BindingSelectorQueryProjection,
     ModeloFormulaRow,
@@ -21,132 +19,14 @@ from .._queries import (
 )
 from .._query_reports import ModeloBindingsReport, ModeloCasillaDetailReport
 from .._schema import InputKind
-from ._loader_directory_mode_support import write_fragmented_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _INPUT_CASILLA: CasillaId = validated_casilla_id("01", surface="_INPUT_CASILLA")
 _TARGET_CASILLA: CasillaId = validated_casilla_id("02", surface="_TARGET_CASILLA")
 
-_MINIMAL_CATALOGUE_TOML = """\
-[legal."test-ley-001:art-1"]
-evidence_tier = "legal_authority"
-authority = "boe"
-kind = "ley"
-corpus_ref = "corpus/test/test-ley-001.html#a1"
-document_id = "BOE-T-001"
-article = "1"
-permalink = "https://example.com/test"
-effective_from = 2025-01-01
-review_status = "reviewed"
-reviewed_at = 2025-01-01
-reviewed_by = "registry-test"
-required_text = ["test provision text"]
-
-[sources."test-source-001"]
-evidence_tier = "layout_authority"
-authority = "aeat"
-kind = "record_design"
-corpus_path = "corpus/test/test-source-001.pdf"
-sha256 = "44f8354494a5ba03ba1792a8d3e9c534c47a9181980fde7a3f44b06ef2ae7c7f"
-bytes = 1000
-retrieved_at = 2025-01-01
-source_url = "https://example.com/test-source"
-review_status = "reviewed"
-
-[sources."test-source-002"]
-evidence_tier = "official_source_guidance"
-authority = "aeat"
-kind = "instructions"
-corpus_path = "corpus/test/test-source-002.pdf"
-sha256 = "44f8354494a5ba03ba1792a8d3e9c534c47a9181980fde7a3f44b06ef2ae7c7f"
-bytes = 1000
-retrieved_at = 2025-01-01
-source_url = "https://example.com/test-source-002"
-review_status = "reviewed"
-"""
-
-_MINIMAL_MANIFEST_TOML = """\
-[modelo]
-id = "999"
-title = "Query ambiguity test modelo"
-official_name = "Query ambiguity test modelo"
-tax_domain = "iva"
-cadence = "quarterly"
-jurisdiction = "ES-AEAT"
-legal_refs = ["test-ley-001:art-1"]
-source_refs = ["test-source-001"]
-"""
-
-_MINIMAL_REVISION_TOML_TEMPLATE = """\
-[revisions."{revision_id}"]
-label = "{label}"
-valid_from = 2025-01-01
-period_selector = {{ years = [2025], periods = ["{period}"] }}
-legal_refs = ["test-ley-001:art-1"]
-source_refs = ["test-source-001"]
-orden_aplicabilidad = ["test-ley-001:art-1"]
-
-[[revisions."{revision_id}".application_links]]
-id = "test-filing-link"
-surface = "filing"
-consumer = "cli.app"
-requires_snapshot = true
-legal_refs = ["test-ley-001:art-1"]
-source_refs = ["test-source-002"]
-
-[[revisions."{revision_id}".casillas]]
-id = "01"
-number = "01"
-label = "Test casilla"
-section = ["test"]
-data_type = "integer"
-legal_refs = ["test-ley-001:art-1"]
-source_refs = ["test-source-001"]
-
-[[revisions."{revision_id}".workbook_parity_refs]]
-id = "test-workbook-001"
-workbook_source = "test-source-001"
-fixture_id = "test-fixture-001"
-formula_coverage = "record_design_layout"
-runner_required = false
-tolerance = "0.00"
-legal_refs = ["test-ley-001:art-1"]
-source_refs = ["test-source-001"]
-"""
-
-
 def _service() -> RegistryQueryService:
     return RegistryQueryService(resources().modelos.authority)
-
-
-def _write_year_ambiguous_registry(tmp_path: Path) -> Path:
-    registry_root = tmp_path / "registry" / "aeat"
-    legal_dir = registry_root / "legal"
-    modelos_dir = registry_root / "modelos" / "999"
-    legal_dir.mkdir(parents=True)
-    modelos_dir.mkdir(parents=True)
-    corpus_file = tmp_path / "corpus" / "test" / "test-source-001.pdf"
-    corpus_file.parent.mkdir(parents=True)
-    corpus_file.write_bytes(b"x" * 1000)
-    (corpus_file.parent / "test-source-002.pdf").write_bytes(b"x" * 1000)
-    (corpus_file.parent / "test-ley-001.html").write_text("<html>test provision text</html>", encoding="utf-8")
-
-    (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
-    (modelos_dir / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")
-
-    for revision_id, label, period in (
-        ("2025-1t", "2025 first quarter", "1T"),
-        ("2025-2t", "2025 second quarter", "2T"),
-    ):
-        revision_dir = modelos_dir / "revisions" / revision_id
-        revision_dir.mkdir(parents=True)
-        write_fragmented_revision(
-            revision_dir,
-            _MINIMAL_REVISION_TOML_TEMPLATE.format(revision_id=revision_id, label=label, period=period),
-        )
-
-    return registry_root
 
 
 @pytest.mark.parametrize("period", ("2026Q1", "2026-Q4", "2026-03", "2026"))
@@ -346,36 +226,22 @@ def test_casillas_accepts_censo_event_period_token() -> None:
     assert report.rows
 
 
-def test_bindings_for_year_resolves_the_year_covering_revision() -> None:
-    """``bindings_for_year`` selects the revision covering the filing year.
+def test_bindings_for_scope_resolves_the_law_determined_revision() -> None:
+    """``bindings_for_scope`` selects the revision fixed by year and period.
 
     Modelo 100 carries one revision per renta year. Resolving by year
-    must return the 2024 revision's binding ids, not the latest
-    revision's.
+    and annual period must return the 2024 revision's binding ids, not
+    the latest revision's.
     """
 
     service = _service()
 
-    report = service.bindings_for_year("100", filing_year=2024)
+    report = service.bindings_for_scope("100", filing_year=2024, period="0A")
 
     assert report.code == "100"
     assert report.filing_year == 2024
     assert report.rows
     assert all(row.binding_id.startswith("renta-2024-") for row in report.rows)
-
-
-def test_bindings_for_year_refuses_multiple_year_covering_revisions(tmp_path: Path) -> None:
-    """A year-only binding query cannot pick among several period-specific revisions."""
-
-    registry_root = _write_year_ambiguous_registry(tmp_path)
-    authority = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
-    service = RegistryQueryService(authority)
-
-    with pytest.raises(AmbiguousRevisionSelectionError) as exc_info:
-        service.bindings_for_year("999", filing_year=2025)
-
-    assert exc_info.value.modelo_id == "999"
-    assert exc_info.value.candidate_ids == ("2025-1t", "2025-2t")
 
 
 def test_binding_rows_report_decimal_input_channel_for_typed_enum_binding() -> None:
@@ -389,7 +255,7 @@ def test_binding_rows_report_decimal_input_channel_for_typed_enum_binding() -> N
 
     service = _service()
 
-    report = service.bindings_for_year("100", filing_year=2024)
+    report = service.bindings_for_scope("100", filing_year=2024, period="0A")
     row = next(r for r in report.rows if "estimacion-directa-es-normal" in r.binding_id)
 
     assert row.typed_enum == "EstimacionDirectaModalidad"

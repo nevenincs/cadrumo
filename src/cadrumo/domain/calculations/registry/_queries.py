@@ -20,7 +20,7 @@ from pydantic import BaseModel, ConfigDict
 from ....core import BindingSourceKind, Modelo, Period, TaxDomain
 from ._authority import ValidatedRegistryAuthority
 from ._binding_selector_utils import boolean_binding_encoded_values
-from ._errors import AmbiguousRevisionSelectionError, RegistryValidationError
+from ._errors import RegistryValidationError
 from ._ids import BindingId, RelationId
 from ._period_selector_match import registry_period_for_request, selector_token_for_request
 from ._query_reports import (
@@ -400,51 +400,6 @@ class RegistryQueryService:
             self._resolve_revision_for_scope(modelo, filing_year=filing_year, period=period, as_of=as_of),
         )
 
-    def bindings_for_year(
-        self,
-        modelo: str,
-        *,
-        filing_year: int,
-        as_of: date | None = None,
-    ) -> ModeloBindingsReport:
-        """Return a :class:`~domain.calculations.registry._query_reports.ModeloBindingsReport` for ``filing_year``.
-
-        ``bindings`` with no period resolves the *latest* revision,
-        which for a multi-revision modelo (e.g. Modelo 100, one
-        revision per renta year) reports binding ids for the wrong
-        year. This method instead selects the revision whose
-        ``period_selector`` covers ``filing_year`` — the same revision
-        a work unit created for the same ``(modelo, filing_year)``
-        resolves — so the reported binding ids are the ones the
-        calculation will accept.
-        """
-        definition = self._authority.validate_modelo(modelo.strip())
-        covering = [
-            revision
-            for revision in definition.revisions.values()
-            if revision.period_selector.includes_year(filing_year)
-            and (
-                as_of is None
-                or (revision.valid_from <= as_of and (revision.valid_to is None or revision.valid_to >= as_of))
-            )
-        ]
-        if not covering:
-            raise RegistryValidationError(f"modelo {definition.id} has no revision covering filing year {filing_year}")
-        if len(covering) > 1:
-            raise AmbiguousRevisionSelectionError(
-                modelo_id=str(definition.id),
-                candidate_ids=tuple(revision.id for revision in covering),
-            )
-        revision = covering[0]
-        return ModeloBindingsReport(
-            code=str(definition.id),
-            revision=str(revision.id),
-            filing_year=filing_year,
-            filing_period=None,
-            period=None,
-            rows=_binding_rows(revision, modelo=str(definition.id)),
-        )
-
     def bindings(
         self,
         modelo: str,
@@ -457,8 +412,8 @@ class RegistryQueryService:
         A *binding* maps a financial-data source to a casilla or formula
         input. For year-specific binding ids (e.g. when a multi-revision
         modelo publishes different binding names per renta year) prefer
-        ``bindings_for_year`` or ``bindings_for_scope`` so the resolved
-        revision matches the one the calculation engine will use.
+        ``bindings_for_scope`` so the resolved revision matches the one
+        the calculation engine will use.
 
         Args:
             modelo: Short numeric identifier for the modelo (e.g. ``"130"``).
