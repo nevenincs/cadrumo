@@ -16,7 +16,6 @@ corrupt and fails the same byte-integrity gate as any other missing source.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from functools import lru_cache
 from pathlib import Path
 
 from ....core.hashing import hash_file
@@ -47,8 +46,7 @@ def verify_source_file(root: Path, source: SourceReference) -> None:
             raise RegistryValidationError(f"source {source.id!r} missing corpus file {source.corpus_path!r}")
         present_path = companion_path
 
-    stat = present_path.stat()
-    length, actual_sha256 = _source_file_fingerprint(str(present_path), stat.st_size, stat.st_mtime_ns)
+    actual_sha256, length = hash_file(present_path)
     if length != source.bytes:
         raise RegistryValidationError(f"source {source.id!r} byte count mismatch")
     if actual_sha256 != source.sha256:
@@ -99,13 +97,6 @@ def _resolve_corpus_path(root: Path, source: SourceReference) -> Path:
     if packaged.is_file():
         return packaged
     return direct
-
-
-@lru_cache(maxsize=2048)
-def _source_file_fingerprint(path: str, byte_count: int, modified_ns: int) -> tuple[int, str]:
-    del byte_count, modified_ns
-    hex_digest, length = hash_file(Path(path))
-    return length, hex_digest
 
 
 def verify_source_catalogue(root: Path, sources: Mapping[str, SourceReference]) -> None:
