@@ -26,10 +26,16 @@ from ._errors import BucketEventValidationError
 
 _HEX_64_PATTERN = r"^[0-9a-f]{64}$"
 
-_EventId = Annotated[
+BucketEventId = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=64, max_length=64, pattern=_HEX_64_PATTERN),
 ]
+"""Lowercase 64-character SHA-256 identifier of a bucket event.
+
+Content-addressed from the full event body, so structurally identical
+emissions collapse to one id. Public because every CLI history transport
+projects this identity and must not re-declare its shape.
+"""
 BucketActorLabel = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=64),
@@ -359,7 +365,7 @@ class BucketEvent(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    event_id: _EventId
+    event_id: BucketEventId
     bucket_id: _ProfileName
     event_type: BucketEventType
     occurred_at: datetime

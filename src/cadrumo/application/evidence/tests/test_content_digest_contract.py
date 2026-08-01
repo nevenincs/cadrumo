@@ -54,7 +54,7 @@ class TestEvidenceRecordRefPayloadDigest:
 
     def test_valid_hex64_digest_is_accepted(self) -> None:
         payload = EvidenceRecordRefPayload(
-            object_type=BucketEventObjectType.WORK_UNIT.value,
+            object_type=BucketEventObjectType.WORK_UNIT,
             object_id="wu-1",
             content_sha256=_VALID_DIGEST,
             payload_size_bytes=3,
@@ -66,7 +66,7 @@ class TestEvidenceRecordRefPayloadDigest:
     def test_non_hex64_digest_is_refused(self, digest: str) -> None:
         with pytest.raises(ValidationError):
             EvidenceRecordRefPayload(
-                object_type=BucketEventObjectType.WORK_UNIT.value,
+                object_type=BucketEventObjectType.WORK_UNIT,
                 object_id="wu-1",
                 content_sha256=digest,
                 payload_size_bytes=3,
@@ -86,7 +86,7 @@ class TestEvidenceRecordRefPayloadDigest:
             payload_accepts = True
             try:
                 EvidenceRecordRefPayload(
-                    object_type=BucketEventObjectType.WORK_UNIT.value,
+                    object_type=BucketEventObjectType.WORK_UNIT,
                     object_id="wu-1",
                     content_sha256=candidate,
                     payload_size_bytes=3,

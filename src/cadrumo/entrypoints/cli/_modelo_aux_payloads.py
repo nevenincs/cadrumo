@@ -15,8 +15,21 @@ catalogue metadata; this module only pins CLI transport shapes.
 
 from __future__ import annotations
 
+from datetime import datetime
+
+from pydantic import Field
+
+from ...application.evidence import BundleId, BundleVerificationState
 from ...core.aggregation import RetencionClave
-from ...core.identity import ContentDigest
+from ...core.identity import BucketId, ContentDigest
+from ...domain.buckets import (
+    BucketActorLabel,
+    BucketEventId,
+    BucketEventObjectType,
+    BucketEventType,
+)
+from ...domain.modelos import CalculationRevisionId, FilingRecordId, WorkUnitId
+from ._decimal_wire import NonNegativeDecimalWireText
 from ._schemas import OutputSchema, register_schema
 
 
@@ -36,9 +49,9 @@ class WithholdingClaveBreakdownPayload(OutputSchema):
     """
 
     clave: RetencionClave
-    percepcion_count: int
-    percibido_total: str
-    retencion_total: str
+    percepcion_count: int = Field(ge=0)
+    percibido_total: NonNegativeDecimalWireText
+    retencion_total: NonNegativeDecimalWireText
 
 
 class EvidenceRecordRefPayload(OutputSchema):
@@ -50,10 +63,10 @@ class EvidenceRecordRefPayload(OutputSchema):
     application model would refuse.
     """
 
-    object_type: str
-    object_id: str
+    object_type: BucketEventObjectType
+    object_id: str = Field(min_length=1, max_length=128)
     content_sha256: ContentDigest
-    payload_size_bytes: int
+    payload_size_bytes: int = Field(ge=0)
 
 
 class EvidenceBundleCheckFindingPayload(OutputSchema):
@@ -69,17 +82,17 @@ class ModeloAuditShowResult(OutputSchema):
     """Evidence bundle manifest render result (audit show)."""
 
     operation: str = "modelo.audit.show"
-    bundle_id: str
-    manifest_version: int
-    bucket_id: str
-    work_unit_id: str
-    calculation_revision_id: str | None = None
-    filing_record_id: str | None = None
-    verification_state: str
-    completeness_ratio: float
+    bundle_id: BundleId
+    manifest_version: int = Field(ge=1)
+    bucket_id: BucketId
+    work_unit_id: WorkUnitId
+    calculation_revision_id: CalculationRevisionId | None = None
+    filing_record_id: FilingRecordId | None = None
+    verification_state: BundleVerificationState
+    completeness_ratio: float = Field(ge=0.0, le=1.0)
     records: list[EvidenceRecordRefPayload]
-    created_at: str
-    notes: str = ""
+    created_at: datetime
+    notes: str = Field(default="", max_length=2000)
 
 
 @register_schema("modelo.audit.check")
@@ -87,9 +100,9 @@ class ModeloAuditCheckResult(OutputSchema):
     """Evidence bundle integrity re-verification result (audit check)."""
 
     operation: str = "modelo.audit.check"
-    bundle_id: str
-    verification_state: str
-    completeness_ratio: float
+    bundle_id: BundleId
+    verification_state: BundleVerificationState
+    completeness_ratio: float = Field(ge=0.0, le=1.0)
     findings: list[EvidenceBundleCheckFindingPayload]
 
 
@@ -102,22 +115,22 @@ class ModeloAuditExportResult(OutputSchema):
     """
 
     operation: str = "modelo.audit.export"
-    bucket_id: str
-    bundle_id: str
-    output: str
-    verification_state: str
-    records: int
+    bucket_id: BucketId
+    bundle_id: BundleId
+    output: str = Field(min_length=1)
+    verification_state: BundleVerificationState
+    records: int = Field(ge=0)
 
 
 class WorkUnitHistoryEventPayload(OutputSchema):
     """One event row in a work-unit history stream."""
 
-    event_id: str
-    occurred_at: str
-    event_type: str
-    object_type: str
-    object_id: str
-    actor: str
+    event_id: BucketEventId
+    occurred_at: datetime
+    event_type: BucketEventType
+    object_type: BucketEventObjectType
+    object_id: str = Field(min_length=1, max_length=128)
+    actor: BucketActorLabel
     payload: dict[str, str]
 
 

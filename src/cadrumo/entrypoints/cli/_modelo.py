@@ -845,9 +845,9 @@ def work_history(
         events=[
             WorkUnitHistoryEventPayload(
                 event_id=event.event_id,
-                occurred_at=event.occurred_at.isoformat(),
-                event_type=event.event_type.value,
-                object_type=event.object_type.value,
+                occurred_at=event.occurred_at,
+                event_type=event.event_type,
+                object_type=event.object_type,
                 object_id=event.object_id,
                 actor=event.actor,
                 payload=event.payload,
