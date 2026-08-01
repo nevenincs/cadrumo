@@ -26,6 +26,8 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
+from pydantic import Field, model_validator
+
 from ...core import Period
 from ...domain.calculations.registry import BindingId
 from ._schemas import OutputSchema, register_schema
