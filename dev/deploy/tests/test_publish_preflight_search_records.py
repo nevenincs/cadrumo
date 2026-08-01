@@ -86,14 +86,14 @@ async def _inject_one_record_per_kind(index: object) -> None:
 def _build_in_place(site: Path, inject: object) -> None:
     """Build ``site``'s index with the CWD held inside the scratch tree.
 
-    The chdir is a containment measure, not decoration.
-    :func:`build_search_index` opens ``async with PagefindIndex()``, and the
-    context manager's exit performs a SECOND, unpathed ``write_files()`` that
-    lands in the process CWD -- so a build run from the repo root deposits a
-    ~10,000-file ``pagefind/`` tree there (gitignored, but real). Holding the
-    CWD inside the scratch tree keeps this suite from doing that. The
-    double-write itself is a pre-existing defect in the build path, reported
-    separately; it is not this module's to fix.
+    Plain isolation now. It was originally containment: an unpathed second
+    ``write_files()`` on the index's context exit deposited a ~10,000-file
+    ``pagefind/`` tree in the process CWD on every build. That is fixed at the
+    source -- the output path is configured on the index, so the exit performs
+    the one aimed write -- and pinned by
+    ``dev/docs/tests/test_pagefind_index_write_target``. The chdir stays
+    because a suite that builds indexes should not depend on where it was
+    invoked from.
     """
     with contextlib.chdir(site.parent):
         build_search_index(site, inject=inject)  # type: ignore[arg-type]

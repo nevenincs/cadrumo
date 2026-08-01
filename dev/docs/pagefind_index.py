@@ -315,22 +315,35 @@ async def _run_index(
 ) -> int:
     """Index ``html_root`` with Pagefind and write the per-language index.
 
-    Returns the number of pages Pagefind indexed from the directory pass.
+    The output path is configured on the index rather than passed to an explicit
+    ``write_files`` call, because ``PagefindIndex.__aexit__`` writes the index
+    itself on a clean exit. An explicit write PLUS the context exit produced TWO
+    writes: the intended one, and a second with no path, which Pagefind resolves
+    against the process working directory. A docs build run from the repository
+    root therefore deposited a full second copy of the index -- roughly ten
+    thousand files -- at the repo root on every run. It was gitignored, which
+    hid the symptom without fixing the cause; the rule barring a committed
+    search index exists because such a tree was once committed from exactly that
+    path.
+
+    Returns:
+        The number of pages Pagefind indexed from the directory pass.
     """
     from pagefind.index import PagefindIndex
 
     _mark_excluded_pages(html_root)
     _mark_page_display_classes(html_root)
     output_path = html_root / "pagefind"
-    async with PagefindIndex() as index:
+    # Configured, not written explicitly: the context exit performs the one
+    # write, into <html_root>/pagefind/, so the built site serves the index
+    # alongside its pages (an uncommitted artifact) and nothing lands in the
+    # process working directory.
+    async with PagefindIndex(config={"output_path": str(output_path)}) as index:
         response = await index.add_directory(str(html_root))
         if inject is not None:
             # Injection seam: the custom-record step adds the unified search
             # records and relevance weights here, before the index is written.
             await inject(index)
-        # Write the chunked, per-language index into <html_root>/pagefind/ so
-        # the built site serves it alongside its pages (an uncommitted artifact).
-        await index.write_files(output_path=str(output_path))
     # The directory-pass response is a dict carrying the indexed page count.
     if isinstance(response, dict):
         return int(response.get("page_count", 0) or 0)
