@@ -4,7 +4,7 @@ tags:
   - '#user-docs-search-consolidation'
 date: '2026-08-01'
 modified: '2026-08-01'
-body_hash: 'sha256:d8a7ff335694d5f15df8e8886a46c78928f49b521bebbcfc96a1930f7a62fab9'
+body_hash: 'sha256:e833c632471753306bb58d9f6b41860bd4a2cf1f6f531cb3e624807059dfa4e5'
 tier: L2
 related:
   - '[[2026-07-31-semantic-search-precompile-boundary-plan]]'
@@ -49,7 +49,7 @@ Prove the multilingual recall claim against the built site, keep every existing 
 Make the deployed site carry the decided search contract: the pages-only env value is retired for full mode on every root, the built language roots become reachable live, and a deployment-parity gate makes any future silent re-narrowing of the shipped contract a loud failure.
 
 - [x] `P04.S10` - Retire the pages-only CADRUMO_DOCS_PAGEFIND_MODE deploy value so every root builds the full record-injected index, updating the deploy-environment test to pin full mode; `dev/deploy/docs_static_site.py`.
-- [x] `P04.S11` - Add a deployment-parity gate asserting per root that the root's own loaded language index carries the full record corpus with record-count parity across the en, es, ca, and hu roots, so an env value or a language pin can never silently narrow any root's shipped contract; `dev/docs/tests/`.
+- [x] `P04.S11` - Add a deployment-parity gate that builds at least one localized root and asserts against the built artefact that every root's own loaded language index carries the full record corpus with count parity across the en, es, ca, and hu roots, never asserting at the injector-decision level or against an English-only fixture, so an env value or a language pin can never silently narrow any root's shipped contract; `dev/docs/tests/`.
 - [ ] `P04.S12` - Close the gap that leaves the built language roots unreachable on the live site and prove es, ca, and hu roots respond after deploy; `dev/deploy/docs_static_site.py`.
 - [ ] `P04.S13` - Redeploy and live-verify the full-mode index, the casilla destination pages, and the language roots, recording the live checks in the exec record; `dev/deploy/`.
 - [ ] `P04.S19` - Make the record-injection language follow the build language with the card summary preferring the root language's description, so every localized root's records land in the index its palette loads, correcting the module's stale per-language docstring in the same change and citing the localized-root artefact measurement in the exec record; `dev/docs/pagefind_inject.py`.
@@ -65,7 +65,7 @@ Deliver the operator's core ask that no record kind ever served: project the leg
 
 ## Parallelization
 
-Execution order is P01, then P04, then P05, then P02, then P03; document order preserves append-only identifiers and does not encode sequence. P01 leads: S01 may land at any time in a coordinated sync window, and S02 gates rung-2 dispatch (P02) on the boundary campaign's close. P04 is the cheapest reader-facing win and goes first after P01: S10 and S11 in parallel, then S19 (the ADR Update 3 injection-language fix, conditional on the pending localized-root measurement confirming the predicted gap and landing before any publish if it does), then S12, then S13 which needs all of them. P05 follows P04 so its live verification lands on a full-mode site: S14 then S15, S16 and S17 after S15 in parallel. Within P02 the order is S03 then S04, then S05 and S06 in parallel, then S07, which is the final measurement and must run after P04 and P05 so the baseline reflects the deployed ladder. P03 runs last: S08 after everything lands (its probes run per language root), S09 as the final close. No step here may touch the boundary plan's deletion targets under `src/cadrumo/application/corpus_search/` or `command_search/`.
+Execution order is P01, then P04, then P05, then P02, then P03; document order preserves append-only identifiers and does not encode sequence. P01 leads: S01 may land at any time in a coordinated sync window, and S02 gates rung-2 dispatch (P02) on the boundary campaign's close. P04 is the cheapest reader-facing win and goes first after P01: S10 first, then S19 (the ADR Update 3 injection-language fix, conditional on the localized-root measurement confirming the predicted gap and landing before any publish if it does), then S11 with or after S19 (the per-root artefact gate lands with or after the fix per the born-red lesson, never before), then S12, then S13 which needs all of them. P05 follows P04 so its live verification lands on a full-mode site: S14 then S15, S16 and S17 after S15 in parallel. Within P02 the order is S03 then S04, then S05 and S06 in parallel, then S07, which is the final measurement and must run after P04 and P05 so the baseline reflects the deployed ladder. P03 runs last: S08 after everything lands (its probes run per language root), S09 as the final close. No step here may touch the boundary plan's deletion targets under `src/cadrumo/application/corpus_search/` or `command_search/`.
 
 ## Verification
 
