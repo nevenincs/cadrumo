@@ -15,6 +15,7 @@ carried its own copy, so such a change moved only one.
 
 from __future__ import annotations
 
+import inspect
 from collections.abc import Iterator
 from contextlib import contextmanager
 
@@ -38,6 +39,42 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _NAMESPACE = "cadrumo.integrity.agreement"
 _READABLE_KEYS = ("agreement-readable-one", "agreement-readable-two")
 _CORRUPT_KEY = "agreement-corrupt"
+
+
+def test_every_integrity_surface_routes_through_the_shared_probe() -> None:
+    """No integrity surface opens ciphertext itself; all three call the probe.
+
+    DISCRIMINATING, and the only assertion here that survives a re-inlining
+    mutation. The behavioural tests below compare the three surfaces' OUTPUT,
+    so a byte-identical copy of the probe pasted back into one surface leaves
+    them all green -- the outputs still agree, they are just computed three
+    times again. This assertion is what notices, and it is therefore the one
+    that proves the deduplication rather than merely the behaviour.
+    """
+    from .. import _secure_object_integrity as integrity_module
+
+    surfaces = (
+        integrity_module.quarantine_unreadable_rows,
+        integrity_module.probe_namespace_integrity,
+        integrity_module.iter_namespace_decryptability,
+    )
+
+    for surface in surfaces:
+        source = inspect.getsource(surface)
+        assert "probe_row_decryptability(" in source, (
+            f"{surface.__name__} does not route through the shared decryptability probe"
+        )
+        assert "decrypt_secure_object_payload(" not in source, (
+            f"{surface.__name__} opens ciphertext directly instead of delegating to the shared probe"
+        )
+        assert "secure_object_payload_aad(" not in source, (
+            f"{surface.__name__} rebuilds the row-identity AAD instead of delegating to the shared probe"
+        )
+
+    # The probe itself is the one place that may do those things.
+    probe_source = inspect.getsource(integrity_module.probe_row_decryptability)
+    assert "decrypt_secure_object_payload(" in probe_source
+    assert "secure_object_payload_aad(" in probe_source
 
 
 @contextmanager
