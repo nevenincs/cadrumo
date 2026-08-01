@@ -4,7 +4,7 @@ tags:
   - '#user-docs-search-consolidation'
 date: '2026-08-01'
 modified: '2026-08-01'
-body_hash: 'sha256:6831320ac7ea66c8d55ccc295732ffd350a91009ccd5e85e9313804ec09c6b92'
+body_hash: 'sha256:fa50b655e33bb5b43cde93b81bd464c8e8bdc4205fd9b9238e45e5fd3c219900'
 tier: L2
 related:
   - '[[2026-07-31-semantic-search-precompile-boundary-plan]]'
@@ -40,8 +40,9 @@ Deliver the fired rung-2 verdict: a pinned licence-clean static-embedding model 
 
 Prove the multilingual recall claim against the built site, keep every existing search gate green, and run the mandated fresh-context honesty review before the campaign is declared structurally complete.
 
-- [ ] `P03.S08` - Prove multilingual query recall on the built site with Spanish, Catalan, and Hungarian queries recalling concept and casilla records through the behavioural search gates; `dev/docs/tests/`.
+- [ ] `P03.S08` - Prove multilingual query recall with Spanish, Catalan, and Hungarian queries recalling concept and casilla records through the behavioural gates on the built site, then re-run the same probes against the deployed site so a CI-built full-mode pass can never mask a pages-mode live site; `dev/docs/tests/`.
 - [ ] `P03.S09` - Run the fresh-context honesty review against the closure summary and persist it as a vault audit, closing or formally deferring every surfaced item; `.vault/audit/`.
+- [ ] `P03.S18` - Sweep for surviving artefacts of the overtaken audit campaigns beyond the two named commits, grounding the sweep with vaultspec-rag over both code and vault and confirming each candidate site with rg, and record the result with any remediation opened as new steps; `.vault/audit/`.
 
 ### Phase `P04` - Deployed-contract remediation
 

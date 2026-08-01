@@ -5,7 +5,7 @@ tags:
 date: '2026-08-01'
 modified: '2026-08-01'
 body_schema: 'body-v1'
-body_hash: 'sha256:5fabf8109dd07ed0b2237f59e6bdbe8c15811f105e27c99702eb8929f22dd0af'
+body_hash: 'sha256:a66a4c0e007aaa76994038c19669a509952e98052fbcc86eda8479738eaee10f'
 related:
   - "[[2026-07-31-semantic-search-precompile-boundary-adr]]"
   - "[[2026-06-10-docs-terminology-search-adr]]"
@@ -105,3 +105,17 @@ An independent read-only investigation, verified against the tree and the live s
 **The operator's hook assumption, restated without hedge.** No vaultspec-rag verb emits a deployable artefact: the preprocess hooks feed vaultspec-rag's OWN dev-box index so the sweep can mine the corpus, and everything shippable is compiled by this repo's `dev/docs/` pipeline. The Considerations paragraph's "holds in substance" is retired in favour of this plain statement.
 
 The live 404 on `/_generated/casillas/303.html` is deployment staleness (the destination pages landed at HEAD after the last deploy) and is closed by the redeploy step. The companion plan gains two phases for this update (deployed-contract remediation, legal record kind), sequenced before rung-2 so the final miss-rate baseline is measured against the ladder a reader actually reaches.
+
+
+## Update 2 (2026-08-01): operator scope clarification and the misattribution teardown
+
+The operator's follow-up directive sharpens scope and adds one requirement; this update rules on both. Original text stands; this update governs where sharper.
+
+**Scope boundary, read precisely.** "A legal grounding rag search from the cadrumo plugin" is OUT of scope: that is the agent-facing product capability the boundary ADR deletes, and its deletion is hereby re-confirmed with the door closed on revival. Legal material as a searchable USER-DOCS record remains IN scope: the operator's own specification for the docs feature names "the bundled actual legal and modelo and casilla definitions" as the search data, so the LEGAL record kind ruled in Update 1 (plan phase P05) proceeds. These are two different things - a runtime RAG capability in the product versus precompiled legal records in the docs index - and this record refuses to collapse them into one exclusion. vaultspec-rag itself remains exactly what the operator restated: the dev-side semantic discovery surface over the vault and the code, used by agents and by the docs compile, shipped nowhere.
+
+**Live outcome is the acceptance bar.** The operator's overriding requirement - meaningful search over the user docs must ACTUALLY EXIST for a live reader - ratifies the Update 1 ordering (deployed-contract remediation first, machinery later) and hardens two plan surfaces: S08 now re-runs its multilingual recall probes against the DEPLOYED site so a full-mode CI build can never green-mask a pages-mode live site, and the deployment-parity gate plus the S13 live checks are the standing guard that the shipped contract equals the decided contract.
+
+**The misattributed artefacts, ruled on individually.** The two commits R7 diagnosed were mapped file by file against the boundary plan's staged sweep at HEAD:
+- `4dd9810c8f` (loader hardening executed after the ADR declined it): its `_model_loader.py`, `_embed_build.py`, and `test_query_embed.py` changes are all inside the boundary plan's staged deletion set; its `pyproject.toml` delta (the explicit dependency declaration the overtaken audit recommended) is retired by the boundary plan's packaging step that deletes the `search` extra and its pins. Fully covered; nothing survives.
+- `71a89d0d2d` (ranking centralization executed after the ADR resolved the finding by deletion): the module it created (`_ranking.py`, `test_ranking.py`) is staged for deletion, and every consumer it rewired (`command_search/_index.py`, `corpus_search/__init__.py`, `_retrieval.py`, `_embed_build.py`) is inside the boundary plan's rewire-and-delete commit. Fully covered; nothing survives.
+No separate teardown campaign is opened: opening one would duplicate the boundary plan's staged work, the exact double-authority failure R7 diagnosed. What this feature adds instead is the residual sweep (new step P03.S18): a vaultspec-rag-grounded pass over BOTH code and vault for artefacts of the overtaken audit recommendations BEYOND the two named commits, each candidate confirmed with rg, findings recorded and remediated as new steps. The sweep runs after the boundary plan lands so it measures the post-deletion tree, not the mid-sweep one.
