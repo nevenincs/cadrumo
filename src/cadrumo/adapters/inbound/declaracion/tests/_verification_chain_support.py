@@ -8,6 +8,7 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import Period
 from .....core.resources import resources
 from .....domain.calculations.registry import (
     BindingId,
@@ -29,6 +30,7 @@ from .....domain.calculations.registry import (
 from .....domain.calculations.registry import (
     resolve_relation_values_from_observations as resolve_relation_values_from_observations,
 )
+from .....domain.period import calculation_filing_date
 from .....tests import FIXTURES_DIR
 from .....tests.registry_observations import registry_grounded_observations
 from .. import DeclaracionParseError, parse_declaracion
@@ -494,23 +496,5 @@ _COMPUTED_CASILLAS_M131: frozenset[CasillaId] = _casilla_ids(
 
 
 def _period_to_date(year: int, period: str) -> date:
-    """Convert a filing year and AEAT period string to the last date of that period.
-
-    Used as the ``filing_period`` date context for ``calculate_registry_snapshot``.
-    """
-    period_upper = period.upper()
-    if period_upper == "1T":
-        return date(year, 3, 31)
-    if period_upper == "2T":
-        return date(year, 6, 30)
-    if period_upper == "3T":
-        return date(year, 9, 30)
-    if period_upper in ("4T", "0A"):
-        return date(year, 12, 31)
-    if len(period_upper) == 2 and period_upper.isdigit():
-        month = int(period_upper)
-        import calendar
-
-        last_day = calendar.monthrange(year, month)[1]
-        return date(year, month, last_day)
-    return date(year, 12, 31)
+    """Resolve verification context through the typed period/date authority."""
+    return calculation_filing_date(Period.from_year_and_code(year, period))
