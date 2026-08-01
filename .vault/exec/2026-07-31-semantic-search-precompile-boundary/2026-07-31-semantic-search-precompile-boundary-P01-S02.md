@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#semantic-search-precompile-boundary'
 date: '2026-07-31'
-modified: '2026-07-31'
+modified: '2026-08-01'
 body_schema: 'body-v1'
-body_hash: 'sha256:61dbca20ce7be5ccee5edd20fb9df9eabf74996a528c30ecacf9206f5f955127'
+body_hash: 'sha256:39d956c0ae5539709ed48cab16834b65eb18d19ee553f88fd3539182062e8e49'
 step_id: 'S02'
 related:
   - "[[2026-07-31-semantic-search-precompile-boundary-plan]]"

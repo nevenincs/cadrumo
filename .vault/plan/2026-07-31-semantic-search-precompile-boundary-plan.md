@@ -4,7 +4,7 @@ tags:
   - '#semantic-search-precompile-boundary'
 date: '2026-07-31'
 modified: '2026-08-01'
-body_hash: 'sha256:90336aad1917d7cd270f359d2a70a90910b56c54438b937401320da251903caf'
+body_hash: 'sha256:71b1cf0d11fadcac074b0a805080fe416301775e7a85fce75725af2db4386831'
 tier: L2
 related:
   - '[[2026-07-31-semantic-search-precompile-boundary-adr]]'
@@ -119,19 +119,19 @@ Hand off the in-flight loader-hardening WIP and stamp the R3 amendment so no age
 
 One atomic explicit-pathspec commit rewires every consumer to lexical plus citation retrieval and deletes the semantic modules with their tests and apidocs stubs, so no intermediate tree state has a shipped surface importing a removed capability.
 
-- [ ] `P02.S03` - Rewire search_corpus and hybrid retrieval to lexical plus citation only, deleting the embedder wiring, vector loading, and semantic fusion, and reconcile every RetrievalMode consumer to the narrowed member set; `src/cadrumo/application/corpus_search/_runtime.py`.
-- [ ] `P02.S04` - Delete _model_loader.py, _query_embed.py, and _embed_build.py together with their facade exports and error-surface references; `src/cadrumo/application/corpus_search/`.
-- [ ] `P02.S05` - Rewire the command-search index to per-column BM25 plus token-overlap only, deleting the model2vec semantic side, the RRF fusion, and the query_embedder parameter on the meta-tools builder; `src/cadrumo/application/command_search/_index.py`.
-- [ ] `P02.S06` - Delete test_embed_build.py, test_query_embed.py, test_hybrid_real_model_recall.py, and test_hybrid_real_model_recall_live.py, and rewrite the semantic branches of the surviving corpus-search and command-search tests against the lexical-only shape; `src/cadrumo/application/corpus_search/tests/`.
-- [ ] `P02.S07` - Regenerate the apidocs stubs for the deleted modules, verify clean collect-only, and land the whole phase as one atomic explicit-pathspec commit; `docs/api/`.
+- [x] `P02.S03` - Rewire search_corpus and hybrid retrieval to lexical plus citation only, deleting the embedder wiring, vector loading, and semantic fusion, and reconcile every RetrievalMode consumer to the narrowed member set; `src/cadrumo/application/corpus_search/_runtime.py`.
+- [x] `P02.S04` - Delete _model_loader.py, _query_embed.py, and _embed_build.py together with their facade exports and error-surface references; `src/cadrumo/application/corpus_search/`.
+- [x] `P02.S05` - Rewire the command-search index to per-column BM25 plus token-overlap only, deleting the model2vec semantic side, the RRF fusion, and the query_embedder parameter on the meta-tools builder; `src/cadrumo/application/command_search/_index.py`.
+- [x] `P02.S06` - Delete test_embed_build.py, test_query_embed.py, test_hybrid_real_model_recall.py, and test_hybrid_real_model_recall_live.py, and rewrite the semantic branches of the surviving corpus-search and command-search tests against the lexical-only shape; `src/cadrumo/application/corpus_search/tests/`.
+- [x] `P02.S07` - Regenerate the apidocs stubs for the deleted modules, verify clean collect-only, and land the whole phase as one atomic explicit-pathspec commit; `docs/api/`.
 
 ### Phase `P03` - Packaging and diagnostics retirement
 
 Remove the search extra and its dependency pins, promote the stemmer to core, and retire the dead dependency error with its registry row and locale keys through the owning CLIs.
 
-- [ ] `P03.S08` - Delete the search optional extra with its model2vec, huggingface-hub, and numpy pins, prune the all aggregate, promote snowballstemmer into the core dependency set, and refresh the lockfile; `pyproject.toml`.
-- [ ] `P03.S09` - Retire CorpusSearchDependencyError together with its error-registry row, and remove its locale keys through the locales CLI leaving scaffold check clean; `src/cadrumo/core/errors/registry/_application_part1.py`.
-- [ ] `P03.S10` - Sweep every remaining install hint naming the retired extra from production strings, the extras-reporting half of this step being vacated by ADR Update 1 because config check never named a search extra; `src/cadrumo/`.
+- [x] `P03.S08` - Delete the search optional extra with its model2vec, huggingface-hub, and numpy pins, prune the all aggregate, promote snowballstemmer into the core dependency set, and refresh the lockfile; `pyproject.toml`.
+- [x] `P03.S09` - Retire CorpusSearchDependencyError together with its error-registry row, and remove its locale keys through the locales CLI leaving scaffold check clean; `src/cadrumo/core/errors/registry/_application_part1.py`.
+- [x] `P03.S10` - Sweep every remaining install hint naming the retired extra from production strings, the extras-reporting half of this step being vacated by ADR Update 1 because config check never named a search extra; `src/cadrumo/`.
 
 ### Phase `P04` - Surface truth sweep and verification
 
