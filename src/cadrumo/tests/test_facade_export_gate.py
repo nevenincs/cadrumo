@@ -165,37 +165,87 @@ def test_scanner_recovers_the_known_historical_breaks() -> None:
     assert {b.target for b in broken.mirror} == {"cadrumo.core"}
 
 
-def test_scanner_reads_git_not_the_working_tree(tmp_path: Path) -> None:
-    """The scan must not consult the filesystem for module content.
+def _run_git(args: list[str], *, cwd: Path) -> None:
+    subprocess.run(["git", *args], cwd=cwd, capture_output=True, check=True)
 
-    Planting a facade break in the working tree must NOT change the result for a
-    pinned revision. Without this, the gate would inherit exactly the blindness
-    it exists to remove -- an enumeration performed against a partially-repaired
-    tree reports the repaired symbols as sound while reading as a HEAD audit.
-    """
-    head = subprocess.run(
+
+def _init_fixture_repo(root: Path) -> str:
+    """Create a throwaway repo holding one sound facade, and return its commit."""
+    pkg = root / "src" / "cadrumo" / "zzz_probe"
+    pkg.mkdir(parents=True)
+    (pkg / "_models.py").write_text("class Present:\n    pass\n", encoding="utf-8")
+    (pkg / "__init__.py").write_text(
+        'from ._models import Present\n\n__all__ = ["Present"]\n',
+        encoding="utf-8",
+    )
+    _run_git(["init", "-q"], cwd=root)
+    _run_git(["config", "user.email", "gate@example.invalid"], cwd=root)
+    _run_git(["config", "user.name", "facade gate fixture"], cwd=root)
+    _run_git(["add", "-A"], cwd=root)
+    _run_git(["commit", "-q", "-m", "sound facade"], cwd=root)
+    return subprocess.run(
         ["git", "rev-parse", "HEAD"],
-        cwd=REPO_ROOT,
+        cwd=root,
         capture_output=True,
         text=True,
         check=True,
     ).stdout.strip()
-    before = scan(head)
 
-    planted = REPO_ROOT / "src" / "cadrumo" / "core" / "observability" / "__init__.py"
-    original = planted.read_text(encoding="utf-8")
-    try:
-        planted.write_text(
-            original + "\nfrom ._models import ZzzPlantedSymbolThatDoesNotExist\n",
-            encoding="utf-8",
-        )
-        after = scan(head)
-    finally:
-        planted.write_text(original, encoding="utf-8")
 
+def test_scanner_reads_git_not_the_working_tree(tmp_path: Path) -> None:
+    """The scan must not consult the filesystem for module content.
+
+    Runs entirely inside a throwaway repository. An earlier version of this test
+    planted the break in this project's own ``cadrumo.core.observability``
+    facade and restored it in a ``finally``, which was a genuine fleet hazard:
+    concurrent agents importing that module during the window hit an
+    ImportError they could not attribute, a hard kill would have left the module
+    broken, and a peer's pathspec commit of that path inside the window would
+    have committed the planted break to HEAD -- a pathspec commit takes
+    working-tree content. Never mutate a tracked, shared, imported file to make
+    a test's point.
+
+    The isolated repo also makes the assertion stronger rather than weaker.
+    Planting an *untracked* file here would prove nothing: the scanner
+    enumerates through ``git ls-tree``, so an untracked path is invisible to a
+    filesystem-reading implementation too, and the check would pass vacuously.
+    The property under test is whether module CONTENT comes from the blob or
+    from disk, so the planted change has to live in a file the scan already
+    enumerates.
+    """
+    rev = _init_fixture_repo(tmp_path)
+    before = scan(rev, repo_root=tmp_path)
+    assert before.forward == [], "the fixture facade should start sound"
+
+    facade = tmp_path / "src" / "cadrumo" / "zzz_probe" / "__init__.py"
+    facade.write_text(
+        'from ._models import Present, ZzzPlantedAbsentSymbol\n\n__all__ = ["Present"]\n',
+        encoding="utf-8",
+    )
+
+    after = scan(rev, repo_root=tmp_path)
     assert after.forward == before.forward, (
         "the scan changed when the working tree changed, so it is reading the "
         "filesystem rather than the pinned revision"
+    )
+
+    # Non-vacuity: the planted break must be detectable at all. Committing it
+    # and re-scanning the NEW revision has to surface it -- otherwise the
+    # unchanged result above would prove nothing about where content is read
+    # from, only that the break was undetectable either way.
+    _run_git(["add", "-A"], cwd=tmp_path)
+    _run_git(["commit", "-q", "-m", "plant an absent symbol"], cwd=tmp_path)
+    committed_rev = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+
+    once_committed = scan(committed_rev, repo_root=tmp_path)
+    assert [b.symbol for b in once_committed.forward] == ["ZzzPlantedAbsentSymbol"], (
+        "the planted break is not detected even once committed, so the unchanged-on-disk assertion above is vacuous"
     )
 
 
