@@ -88,16 +88,14 @@ class CommandHit(BaseModel):
 
 
 class _SpanishStemmer(Protocol):
-    """The optional stemmer method consumed by the command index."""
+    """The one stemmer method consumed by the command index."""
 
     def stemWords(self, words: list[str]) -> list[str]: ...  # noqa: N802 - third-party API
 
 
-def _spanish_stemmer() -> _SpanishStemmer | None:
-    try:
-        import snowballstemmer
-    except ModuleNotFoundError:
-        return None
+def _spanish_stemmer() -> _SpanishStemmer:
+    import snowballstemmer
+
     # CAST-RATIONALE-SPANISH-STEMMER-PROTOCOL: snowballstemmer ships no static
     # return protocol, while this boundary consumes only its stemWords method.
     return cast(  # nosemgrep: no-cast-in-domain-application reason: untyped library result satisfies _SpanishStemmer.
@@ -106,13 +104,13 @@ def _spanish_stemmer() -> _SpanishStemmer | None:
     )
 
 
-def _stem_terms(stemmer: _SpanishStemmer | None, terms: Sequence[str]) -> list[str]:
-    if stemmer is None or not terms:
+def _stem_terms(stemmer: _SpanishStemmer, terms: Sequence[str]) -> list[str]:
+    if not terms:
         return list(terms)
     return list(stemmer.stemWords(list(terms)))
 
 
-def _column_text(stemmer: _SpanishStemmer | None, raw: str) -> str:
+def _column_text(stemmer: _SpanishStemmer, raw: str) -> str:
     """Store a tier as raw plus stemmed text so one column matches both forms.
 
     Keeps the raw (diacritics-folded by the tokenizer) text alongside its

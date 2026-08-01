@@ -6353,8 +6353,6 @@ errors:
       Comproveu els arguments o executeu `aeat --help`.
     refused_config_reset_unconfirmed: El restabliment de la configuració no s'ha confirmat.
       Torna a executar l'ordre confirmant l'operació.
-    refused_corpus_search_dependency: Aquesta operació de cerca al corpus necessita
-      els components opcionals de cerca semàntica; instal·leu-los i torneu-ho a provar.
     refused_corpus_search_input: No s'ha pogut satisfer la sol·licitud de cerca al
       corpus.
     refused_diagnostic_model_invariant: 'Refusat: invariant del model de diagnòstic

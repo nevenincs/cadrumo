@@ -82,6 +82,11 @@ dependencies = [
   # registry tree with proven byte-identical output; zero transitive
   # dependencies, MIT license, prebuilt wheels including win_amd64.
   "rtoml>=0.13.0,<1",
+  # Spanish Snowball stemmer for the grounding-search FTS5 stemmed column
+  # (bundled-corpus retrieval and the command-search index). Small, pure-Python,
+  # BSD, no transitive weight. Core rather than optional so the lexical index
+  # has ONE shape on every install and carries no unstemmed degraded branch.
+  "snowballstemmer>=2.2,<4",
   # Persistence
   "sqlalchemy>=2.0.36,<3",
   # CLI
@@ -167,27 +172,13 @@ agent = [
   # server runtime.
   "anyio>=4.5,<5",
 ]
-# On-host grounding search stack (the corpus-search hybrid retrieval surface).
-# The lexical index (stdlib sqlite3 FTS5) and the structured citation lookup run
-# with no extra dependency, so a bare-core install keeps the degraded,
-# lexical-only mode. This extra gates only the SEMANTIC half: model2vec supplies
-# the potion-multilingual-128M static query embedder (MIT code and weights, no
-# torch/onnxruntime), snowballstemmer the Spanish stemmed FTS column, and numpy
-# the precomputed-vector cosine search. Neither the ~0.5 GB model weights NOR
-# the derived corpus-vector matrix (.npy) are ever bundled in the wheel (the
-# shipped-search-licence-clean gate forbids both): the corpus vectors are BUILT
-# behind this extra on first use by `ensure_corpus_embeddings` into an
-# app-controlled cache, and a bare-core install keeps the degraded lexical-only
-# mode. huggingface-hub is declared directly (not left as an incidental
-# transitive dependency of model2vec's own tokenizers>=0.20 floor) because
-# `_model_loader.load_static_model` imports and calls it directly to pin the
-# model revision and root the download under the app-controlled cache dir.
-search = [
-  "model2vec>=0.8,<1",
-  "huggingface-hub>=0.24,<2",
-  "snowballstemmer>=2.2,<4",
-  "numpy>=1.26,<3",
-]
+# The on-host grounding search stack needs no extra: the lexical index (stdlib
+# sqlite3 FTS5 plus the core `snowballstemmer` stemmed column) and the
+# structured citation lookup run on every install. There is no `search` extra —
+# the runtime embedding stack it gated (model2vec, huggingface-hub, numpy) was
+# retired, so the product ships no semantic runtime and reaches no model host.
+# Semantic search is a dev-side precompile step whose laundered output ships
+# with the documentation.
 # Convenience aggregate: every capability-gated integration at once. The corpus
 # companions need no entry here because every command-bearing install requires
 # them through the base dependency closure.
@@ -197,7 +188,6 @@ all = [
   "cadrumo[anthropic]",
   "cadrumo[ofx]",
   "cadrumo[agent]",
-  "cadrumo[search]",
 ]
 
 [build-system]
@@ -1059,17 +1049,11 @@ ignore_decorators = [
 # distributions with no importable code the scanner can see; the corpus locator
 # reaches their shared `cadrumo_data` namespace package dynamically through
 # `importlib.resources` (the corpus-binary resolution seam).
-# `model2vec` / `huggingface-hub`: the optional search loader imports both
-# modules deliberately through `importlib` so a bare-core installation retains
-# lexical-only search; deptry cannot observe that capability-gated dynamic
-# import for either module.
 DEP002 = [
   "cadrumo",
   "cadrumo-data-manuals",
   "cadrumo-data-official",
   "formulas",
-  "huggingface-hub",
-  "model2vec",
   "python-dotenv",
   "rich",
   "tzdata",

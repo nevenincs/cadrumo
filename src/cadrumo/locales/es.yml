@@ -6394,8 +6394,6 @@ errors:
       Compruebe los argumentos o ejecute `aeat --help`.
     refused_config_reset_unconfirmed: El restablecimiento de la configuración no se
       confirmó. Vuelve a ejecutar el comando confirmando la operación.
-    refused_corpus_search_dependency: Esta operación de búsqueda en el corpus necesita
-      los componentes opcionales de búsqueda semántica; instálelos y reinténtelo.
     refused_corpus_search_input: No se pudo satisfacer la solicitud de búsqueda en
       el corpus.
     refused_diagnostic_model_invariant: 'Rechazado: invariante del modelo de diagnóstico

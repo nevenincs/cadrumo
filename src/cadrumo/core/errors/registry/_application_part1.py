@@ -63,17 +63,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.corpus_search._errors.CorpusSearchDependencyError",
-        ErrorCode(
-            code="REFUSED_CORPUS_SEARCH_DEPENDENCY",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_corpus_search_dependency",
-            default_suggestion='pip install "cadrumo[search]"',
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.application.live._errors.LiveApplicationError",
         ErrorCode(
             code="ERROR_APPLICATION_LIVE",

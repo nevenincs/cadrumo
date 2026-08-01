@@ -6254,8 +6254,6 @@ errors:
       Ellenőrizze az argumentumokat, vagy futtassa a `aeat --help` parancsot.
     refused_config_reset_unconfirmed: A konfigurációs visszaállítást nem erősítette
       meg. Futtassa újra a parancsot, megerősítve a műveletet.
-    refused_corpus_search_dependency: Ez a korpuszkeresési művelet az opcionális szemantikus
-      keresési összetevőket igényli; telepítse őket, és próbálja újra.
     refused_corpus_search_input: A korpuszkeresési kérés nem teljesíthető.
     refused_diagnostic_model_invariant: A DiagnosticCheck konstrukciós invariánsa
       sérült; ellenőrizze, hogy az elmaradás/figyelmeztetés sorokban pontosan az egyik

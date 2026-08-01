@@ -75,8 +75,11 @@ _CORE_ABSENT_NAMES = {
 # dependencies of a base dependency, even though they are ALSO declared under an
 # optional extra (a name collision). Without this carve-out the
 # "optional-leaked-into-core" export check would false-positive on the shared
-# name. ``numpy`` is pulled into core by ``formulas`` (a base dependency, the
-# workbook-parity oracle) and is independently listed in the ``search`` extra.
+# name. ``numpy`` is a permitted-but-not-required core presence: it is no longer
+# declared under any extra (the ``search`` extra that listed it was retired with
+# the runtime embedding stack) and no longer resolves into the product closure,
+# so this entry now only tolerates it arriving transitively in a real built
+# environment rather than asserting that it does.
 # ``anyio`` is pulled into core by ``httpx`` (a base dependency) and is declared
 # in the ``agent`` extra because the stdio MCP server imports it directly.
 # ``pillow`` is pulled into core by the base ``pdfplumber`` and ``pikepdf`` PDF

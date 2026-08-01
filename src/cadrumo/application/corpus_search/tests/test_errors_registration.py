@@ -5,8 +5,8 @@ category envelope — a ``REFUSED`` input/dependency refusal, an ``ERROR`` base 
 rather than collapsing into the generic ``INTERNAL`` unexpected-boundary path
 (the same mis-classification the exit-6 hint fix addressed). These tests lock
 that: each class binds a registered code, the envelope carries the right
-category, and the raise-site ergonomics (free-form message, dict context, the
-install-hint suggestion) survive the promotion.
+category, and the raise-site ergonomics (free-form message, dict context,
+a raise-site suggestion) survive the promotion.
 """
 
 from __future__ import annotations
@@ -14,13 +14,13 @@ from __future__ import annotations
 import pytest
 
 from ....core.errors import CadrumoError, ErrorCategory, build_error_envelope
-from .._errors import CorpusSearchDependencyError, CorpusSearchError, CorpusSearchInputError
+from .._errors import CorpusSearchError, CorpusSearchInputError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_all_corpus_errors_are_registry_bound_cadrumo_errors() -> None:
-    for cls in (CorpusSearchError, CorpusSearchInputError, CorpusSearchDependencyError):
+    for cls in (CorpusSearchError, CorpusSearchInputError):
         assert issubclass(cls, CadrumoError)
         assert cls.code.code  # a bound, registered ErrorCode
 
@@ -37,15 +37,16 @@ def test_input_error_renders_as_refused_not_internal() -> None:
     assert "INTERNAL" not in envelope.category
 
 
-def test_dependency_error_carries_its_install_hint_suggestion() -> None:
-    error = CorpusSearchDependencyError(
-        "semantic query embedder needs the search extra",
-        suggestion='pip install "cadrumo[search]"',
+def test_raise_site_suggestion_overrides_the_registered_default() -> None:
+    error = CorpusSearchInputError(
+        "unknown citation id",
+        context={"citation_id": "ley-58-2003:art-999"},
+        suggestion="aeat app registry citations list",
     )
     envelope = build_error_envelope(error)
     assert envelope.category == ErrorCategory.REFUSED.value
     # The raise-site suggestion overrides the registered default and survives.
-    assert envelope.suggestion == 'pip install "cadrumo[search]"'
+    assert envelope.suggestion == "aeat app registry citations list"
 
 
 def test_context_stays_a_dict_even_when_unset() -> None:

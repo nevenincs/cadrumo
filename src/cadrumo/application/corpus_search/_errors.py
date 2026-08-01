@@ -9,7 +9,10 @@ Each class binds one registered ``ErrorCode`` (declared in
 localized envelope message; the free-form constructor ``message`` stays as the
 developer-facing ``str(exc)`` detail and the specifics ride on ``context`` — the
 same ``context`` / ``suggestion`` ergonomics the MCP tool layer already projects
-onto the envelope (the install hint, the offending query/limit/ref).
+onto the envelope (the offending query/limit/ref).
+
+There is no dependency refusal here: the retrieval surface needs no optional
+package, so it can never refuse for want of one.
 """
 
 from __future__ import annotations
@@ -46,21 +49,7 @@ class CorpusSearchInputError(CorpusSearchError):
     """
 
 
-class CorpusSearchDependencyError(CorpusSearchError):
-    """Raised when an operation needs the capability-gated ``search`` extra.
-
-    The lexical index and the citation lookup run on the standard library
-    plus ``snowballstemmer`` and are always importable. Only the
-    build-time embedding precompute and the runtime query embedder need
-    the semantic stack (``model2vec``), which rides the ``cadrumo[search]``
-    extra; when it is absent the surface refuses with an install hint
-    (``suggestion``) rather than crashing, and the degraded lexical-only
-    mode stays live.
-    """
-
-
 __all__ = [
-    "CorpusSearchDependencyError",
     "CorpusSearchError",
     "CorpusSearchInputError",
 ]

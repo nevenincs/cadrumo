@@ -5937,8 +5937,6 @@ errors:
       command's arguments or run `aeat --help`.
     refused_config_reset_unconfirmed: The configuration reset was not confirmed. Re-run
       the command confirming the operation.
-    refused_corpus_search_dependency: This corpus-search operation needs the optional
-      semantic-search components; install them and retry.
     refused_corpus_search_input: The corpus search request could not be satisfied.
     refused_diagnostic_model_invariant: A DiagnosticCheck construction invariant was
       violated; check that exactly one of next_action or dead_end is set for fail/warn
