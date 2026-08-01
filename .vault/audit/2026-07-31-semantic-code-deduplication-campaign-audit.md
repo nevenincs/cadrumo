@@ -3,8 +3,9 @@ tags:
   - '#audit'
   - '#code-deduplication'
 date: '2026-07-31'
-modified: '2026-07-31'
+modified: '2026-08-01'
 body_schema: 'body-v1'
+body_hash: 'sha256:e202f739bd73149f6a54f1cfc262ef364c83b2fc08651d2a472ba55e07c0b27d'
 ---
 
 # Semantic code-deduplication campaign audit
@@ -72,6 +73,9 @@ Fifteen paired semantic concepts over agent/search/MCP surfaces identified three
 The corpus RRF is the strict superset: it accepts arbitrary lexical and semantic rank maps plus explicit damping, while command search intentionally limits its candidate universe to lexical hits. Filtering command semantic ranks to those lexical keys before calling the shared helper preserves that constraint and its lexical-rank/key tie break. No new architectural dependency is required—command search already imports query embedding and capability surfaces through the public `application.corpus_search` facade. Real behavior is covered in `application/command_search/tests/test_command_index.py:85,92` and `test_command_ranking_golden.py:48,56`, alongside corpus ranking tests in `application/corpus_search/tests/test_embed_build.py:72` and `test_retrieval.py:31`. Corpus ranking arrived in `819276398c`; the command copies followed in `38778ae9c`.
 
 Remediate by creating one corpus-search ranking module that exports L2 normalization, reciprocal-rank fusion, and `RRF_K` through the public facade. Repoint all three L2 consumers and both fusion sites, retaining command search's lexical-key filter. Preserve and extend the independent golden tests to pin the restricted candidate universe and deterministic ties.
+
+
+**Adjudication update (2026-08-01):** this finding is resolved by DELETION, not by the remediation above. The accepted `2026-07-31-semantic-search-precompile-boundary-adr` retires the semantic halves of both corpus search and command search outright; the duplicated L2/RRF mechanics are removed rather than centralized, which the ADR's consequences section states explicitly. Commit `71a89d0d2d` (refactor(search): centralize semantic ranking, 2026-08-01 06:53) implemented the centralization remediation after the ADR's acceptance because no annotation existed here; the module it created (`corpus_search/_ranking.py`) is deleted by the in-flight boundary plan. Do not re-land the centralization. Reconciliation ruling: `2026-08-01-user-docs-search-consolidation-adr`.
 
 ### sede-csv-validator-constraint-drift | high | declarations capture rejects CSVs valid elsewhere in the same Sede boundary
 
