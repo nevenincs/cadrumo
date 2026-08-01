@@ -20,6 +20,7 @@ from ...core.external_constants import (
     DEFAULT_CURRENCY,
 )
 from ...core.identity import BucketId, TransactionId
+from ...core.parsing import normalise_iso_3166_alpha2_jurisdiction
 from ...domain.iva import (
     EUMemberState,
     InputClassification,
@@ -66,13 +67,15 @@ def _validate_iso_3166_jurisdiction(value: str | None) -> str | None:
     :class:`ManualLedgerTransactionPatch`, :class:`LedgerTransactionPayload`,
     and :class:`LedgerTransactionReviewPayload` as a shared ``@field_validator``
     body, replacing four identical inline copies.
+
+    The shape policy itself is owned by
+    :func:`~core.parsing.normalise_iso_3166_alpha2_jurisdiction`, shared with
+    :meth:`domain.transactions.Transaction._validate_source_jurisdiction`, so
+    the application and domain boundaries cannot drift apart on which
+    jurisdiction tokens they accept. This wrapper exists only to keep the
+    application-layer :class:`ValueError` boundary.
     """
-    if value is None:
-        return None
-    normalised = value.strip()
-    if len(normalised) != 2 or not normalised.isalpha() or normalised != normalised.upper():
-        raise ValueError("source_jurisdiction must be a two-letter ISO 3166-1 alpha-2 uppercase code")
-    return normalised
+    return normalise_iso_3166_alpha2_jurisdiction(value)
 
 
 class ManualLedgerTransactionCommand(BaseModel):

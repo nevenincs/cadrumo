@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CoreValidationError
+from ...core.parsing import normalise_iso_4217_currency
 from ...core.time import validate_utc_aware
 from ._errors import TransactionValidationError
 
@@ -134,7 +135,8 @@ class RawTransaction(BaseModel):
             :attr:`currency`. Flow direction is carried solely by
             :attr:`domain.transactions.Transaction.direction`; the
             sign is never stored on the amount.
-        currency: Three-letter ISO 4217 currency code, uppercase.
+        currency: Three-letter ISO 4217 currency code, uppercase. Trimmed and
+            uppercased before validation, so a padded source cell is accepted.
         counterparty: Optional counterparty descriptor; trimmed and
             collapsed to ``None`` when blank.
         description: Non-blank narrative.
@@ -181,14 +183,23 @@ class RawTransaction(BaseModel):
             )
         return value
 
-    @field_validator("currency")
+    @field_validator("currency", mode="before")
     @classmethod
-    def _normalize_currency(cls, value: str) -> str:
-        """Uppercase and assert ``currency`` is a three-letter ISO 4217 code."""
-        normalized = value.strip().upper()
-        if len(normalized) != 3 or not normalized.isalpha():
-            raise TransactionValidationError("currency must be a three-letter ISO 4217 code")
-        return normalized
+    def _normalize_currency(cls, value: object) -> str:
+        """Trim, uppercase, and assert ``currency`` is a three-letter ISO 4217 code.
+
+        Runs in ``mode="before"`` so normalisation precedes the
+        ``min_length`` / ``max_length`` field constraint: a padded source cell
+        (``" usd "``) normalises to ``"USD"`` here rather than being refused
+        for its padding, which is what the CSV and OFX ingest boundaries have
+        always done. Delegates the shape policy to
+        :func:`~core.parsing.normalise_iso_4217_currency` so every inbound
+        surface and this persisted record share one definition.
+        """
+        try:
+            return normalise_iso_4217_currency(value)
+        except CoreValidationError as exc:
+            raise TransactionValidationError(str(exc)) from exc
 
     @field_validator("counterparty")
     @classmethod

@@ -28,9 +28,10 @@ from pydantic import BaseModel, Field
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.config import load_settings
-from .....core.errors import resolve_error_message
+from .....core.errors import CoreValidationError, resolve_error_message
 from .....core.external_constants import CSV_ENCODING_FALLBACK_CHAIN
 from .....core.logging import get_logger
+from .....core.parsing import normalise_iso_4217_currency
 from .....domain.transactions import SourceFormat, TransactionDirection
 from ._base import (
     FinancialProvider,
@@ -603,19 +604,26 @@ def _currency_from_aliases(
     aliases: tuple[str, ...],
     context: str,
 ) -> str:
-    """Resolve, default, and validate the optional currency column."""
+    """Resolve, default, and validate the optional currency column.
+
+    The ISO 4217 shape policy is owned by
+    :func:`~core.parsing.normalise_iso_4217_currency`, shared with the OFX
+    statement header and with the persisted
+    :class:`~domain.transactions.RawTransaction`; only the column-naming
+    context of the refusal is built here.
+    """
     header = _find_column(lookup, aliases)
     if header is None:
         return default_currency()
     raw = coerce_cell_text(raw_fields.get(header, ""))
     if not raw:
         return default_currency()
-    normalized = raw.upper()
-    if len(normalized) != 3 or not normalized.isalpha():
+    try:
+        return normalise_iso_4217_currency(raw)
+    except CoreValidationError as exc:
         raise FinancialValidationError(
             f"{context} currency column {header!r} must be a three-letter ISO 4217 code; got {raw!r}",
-        )
-    return normalized
+        ) from exc
 
 
 def _typed_value_from_aliases(

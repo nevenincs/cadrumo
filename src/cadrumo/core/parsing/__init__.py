@@ -9,6 +9,10 @@ Public surface
 * :func:`parse_iso8601_date` — parse an ISO-8601 date string (``YYYY-MM-DD``).
 * :func:`parse_ddmmyyyy_date` — parse a Spanish day-first date string
   (``DD-MM-YYYY`` or ``DD/MM/YYYY``).
+* :func:`normalise_iso_4217_currency` — normalise a raw currency token to its
+  uppercase ISO 4217 code.
+* :func:`normalise_iso_3166_alpha2_jurisdiction` — validate a source
+  jurisdiction as an ISO 3166-1 alpha-2 code.
 
 The implementation modules still own underscore-prefixed helpers for
 package-local tests and tightly scoped internal consumers. This package
@@ -20,6 +24,10 @@ from __future__ import annotations
 
 from datetime import date
 
+from ._codes import (
+    normalise_iso_3166_alpha2_jurisdiction,
+    normalise_iso_4217_currency,
+)
 from ._dates import (
     _parse_ddmmyyyy_date as _parse_ddmmyyyy_date_impl,
 )
@@ -41,6 +49,8 @@ def parse_ddmmyyyy_date(raw: str | None) -> date | None:
 
 
 __all__ = [
+    "normalise_iso_3166_alpha2_jurisdiction",
+    "normalise_iso_4217_currency",
     "parse_bool",
     "parse_date",
     "parse_ddmmyyyy_date",
