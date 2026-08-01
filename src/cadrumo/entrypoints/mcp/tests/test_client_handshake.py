@@ -19,8 +19,8 @@ import mcp.types as mcp_types
 import pytest
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
-from mcp.shared.memory import create_connected_server_and_client_session as connect
 
+from ....tests import connected_server_and_client_session as connect
 from .._dispatch import tool_name_for_command
 from .._harness_tools import HARNESS_LOAD_TOOL
 from .._server import build_server
@@ -60,7 +60,7 @@ def test_in_process_client_initializes_lists_and_round_trips_a_read_only_call() 
     assert {"search", "execute"} <= set(names)
     assert tool_name_for_command("contract") in names
     # The shipped read-only floor tool avoids depending on a second executable.
-    assert result.isError is False
+    assert result.is_error is False
     assert result.content
 
 
@@ -80,9 +80,9 @@ async def _stdio_handshake() -> _HandshakeObservation:
         tools = await session.list_tools()
         call = await session.call_tool(HARNESS_LOAD_TOOL, {})
         return {
-            "server_name": initialized.serverInfo.name,
+            "server_name": initialized.server_info.name,
             "resource_uris": tuple(str(item.uri) for item in resources.resources),
-            "template_uris": tuple(item.uriTemplate for item in templates.resourceTemplates),
+            "template_uris": tuple(item.uri_template for item in templates.resource_templates),
             "prompt_names": tuple(item.name for item in prompts.prompts),
             "tool_names": tuple(item.name for item in tools.tools),
             "call": call,
@@ -113,5 +113,5 @@ def test_stdio_subprocess_client_proves_cadrumo_identity_and_round_trip() -> Non
 
     call = observed["call"]
     assert isinstance(call, mcp_types.CallToolResult)
-    assert call.isError is False
+    assert call.is_error is False
     assert call.content

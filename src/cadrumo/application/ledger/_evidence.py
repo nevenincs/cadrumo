@@ -70,7 +70,7 @@ from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId
 from ...core.time import now as _utc_now
 from ...domain import canonical_decimal_string
-from ...domain.attachments import Attachment, AttachmentKind, AttachmentSource
+from ...domain.attachments import AttachmentKind, AttachmentSource, add_attachment
 from ...domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepositoryProtocol,
@@ -450,26 +450,23 @@ class PurchaseInvoiceEvidenceService:
             )
         media_kind = _resolve_media_kind(resolved)
         now = _utc_now()
-        # Store the bytes in the encrypted AttachmentStore (active bucket) so they live
-        # in secure storage; `source_path` is never the byte source thereafter
-        # (sensitive-financial-data-secure-storage-only).
+        # The attachment service is the single manifest and encrypted-byte write
+        # authority. Ledger retains its narrow PDF/image admission, stable source
+        # provenance, and evidence-specific audit lifecycle around that custody write.
         store = AttachmentStore(objects=secure_object_repository_for_bucket(bucket_id, self._settings))
-        digest, bytes_size = store.put_file(resolved)
-        store.write_manifest(
-            Attachment(
-                attachment_id=digest,
-                kind=_attachment_kind_for(media_kind),
-                source=AttachmentSource.LOCAL_FILE,
-                source_reference=str(resolved),
-                sha256=digest,
-                mime_type=_SUFFIX_MIME[resolved.suffix.lower()],
-                bytes_size=bytes_size,
-                captured_at=now,
-                bucket_id=bucket_id,
-                captured_by=actor,
-                source_command="aeat app ledger evidence add",
-            ),
+        attachment = add_attachment(
+            store,
+            path=resolved,
+            kind=_attachment_kind_for(media_kind),
+            source=AttachmentSource.LOCAL_FILE,
+            source_reference=str(resolved),
+            mime_type=_SUFFIX_MIME[resolved.suffix.lower()],
+            captured_at=now,
+            bucket_id=bucket_id,
+            captured_by=actor,
+            source_command="aeat app ledger evidence add",
         )
+        digest = attachment.attachment_id
         records = _load(self._settings, bucket_id)
         existing_ids = {existing.evidence_id for existing in records}
         for disambiguator in range(_ID_DISAMBIGUATION_CAP):

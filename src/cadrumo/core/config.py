@@ -57,9 +57,9 @@ from ._config_support import (
     StorageRouteClassification,
     StorageRouteKind,  # noqa: F401 - public re-export from cadrumo.core.config
     TuiAppearance,
+    coerce_output_language_setting,
     unwrap_optional_secret,  # noqa: F401 - public re-export from cadrumo.core.config
 )
-from ._config_support import coerce_output_language_setting as _coerce_output_language_setting
 from ._config_support import default_aeat_sede_origin as _default_aeat_sede_origin
 from ._config_support import default_aeat_sede_origin_with_slash as _default_aeat_sede_origin_with_slash
 from ._config_support import (
@@ -312,7 +312,7 @@ class Settings(CadrumoMcpServingSettings):
     # ── Multilingual i18n ───────────────────────────────────────────────────
     cadrumo_output_language: Annotated[
         OutputLanguage | None,
-        BeforeValidator(_coerce_output_language_setting),
+        BeforeValidator(coerce_output_language_setting),
     ] = Field(
         default=DEFAULT_OUTPUT_LANGUAGE,
         description=(

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Mapping
 from functools import cache
 from typing import Protocol
 
@@ -10,12 +10,11 @@ import pytest
 
 from .....core.aggregation import RelationAggregationOp
 from .....core.resources import bundled_path
-from .. import binding_source_casilla_ids
+from .. import binding_source_casilla_ids, expression_binding_refs, expression_relation_refs
 from .._binding_selector_utils import selector_as_dict
 from .._errors import RegistryValidationError
 from .._relation_aggregation import relation_aggregation_op
 from .._relations import relation_source_requirements
-from .._runtime_graph import expression_relation_refs
 from .._schema import (
     DataBindingDefinition,
     DependencyClassificationDefinition,
@@ -62,19 +61,10 @@ def _algorithm_relation_refs(revision: ModeloRevision) -> set[str]:
     }
 
 
-def _walk_expression(expression: object) -> Iterator[object]:
-    yield expression
-    for arg in getattr(expression, "args", ()) or ():
-        yield from _walk_expression(arg)
-
-
 def _formula_binding_refs(revision: ModeloRevision) -> set[str]:
     refs: set[str] = set()
     for formula in revision.formulas:
-        for node in _walk_expression(formula.expression):
-            binding_ref = getattr(node, "binding", None)
-            if binding_ref:
-                refs.add(str(binding_ref))
+        refs.update(expression_binding_refs(formula.expression))
     return refs
 
 

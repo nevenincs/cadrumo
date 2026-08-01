@@ -29,11 +29,10 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...adapters.persistence.storage import StorageValidationError
 from ...agent import iter_personas, operator_rules_text
 from ...application.user_profile import TAX_ID_FACT_PATH
 from ...application.wizard import ensure_profile_keys_registered
-from ...application.workflow import assess_active_profile_health_with_session, read_profile_bucket_by_id
+from ...application.workflow import assess_active_profile_health_with_session
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...core.i18n import tr
 from ._persona_scope import AgentPersona
@@ -252,11 +251,12 @@ def build_whoami_identity() -> WhoamiIdentity:
     Wraps the active-profile health assessment
     (:func:`~application.workflow.assess_active_profile_health_with_session`): its
     ``status`` is the ``readiness`` and its ``next_action`` the recovery
-    step. The display LABEL is resolved from the plaintext bucket manifest
-    (:func:`~application.workflow.read_profile_bucket_by_id`) - the same
-    non-secret name the envelope-spine ``active_profile`` carries, never the
-    redacted bucket/profile UUID the health projection's ``active_profile``
-    field holds. ``tax_id_present`` is derived from the health projection: a
+    step. The display LABEL is captured by the same health assessment - the
+    same non-secret name the envelope-spine ``active_profile`` carries, never
+    the redacted bucket/profile UUID the health projection's
+    ``active_profile`` field holds. Reusing that captured value prevents a
+    manifest change between health assessment and identity rendering from
+    mixing two profile snapshots. ``tax_id_present`` is derived from the health projection: a
     tax id is on file when the profile record is present and the canonical
     ``identity.tax_id`` fact path (:data:`~application.user_profile.TAX_ID_FACT_PATH`)
     is not among the missing required fields, so it reports correctly even for
@@ -275,16 +275,9 @@ def build_whoami_identity() -> WhoamiIdentity:
     """
     ensure_profile_keys_registered()
     health = assess_active_profile_health_with_session()
-    label: str | None = None
-    if health.active_profile is not None:
-        try:
-            pointer = read_profile_bucket_by_id(health.active_profile)
-        except (OSError, ValueError, StorageValidationError):
-            pointer = None
-        label = pointer.label if pointer is not None else None
     tax_id_present = health.profile_record_present and TAX_ID_FACT_PATH not in health.missing_required
     return WhoamiIdentity(
-        active_profile=label,
+        active_profile=health.active_profile_label,
         tax_id_present=tax_id_present,
         readiness=health.status,
         next_action=health.next_action,

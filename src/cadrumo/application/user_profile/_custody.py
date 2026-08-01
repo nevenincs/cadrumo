@@ -64,11 +64,9 @@ from ...core.config import Settings, load_settings
 from ...core.logging import get_logger
 from ...core.time import now as utc_now
 from ...domain.buckets import (
-    BucketEvent,
     BucketEventObjectType,
     BucketEventType,
-    append_bucket_event,
-    derive_bucket_event_id,
+    emit_bucket_event,
 )
 
 _RECOVERY_WRAP_FILENAME = "master.recovery.key"
@@ -194,29 +192,19 @@ def _emit_custody_event(
     if bucket_id is None:
         _log.debug("custody audit event %s not recorded: no active profile", event_type.value)
         return
-    occurred_at = utc_now()
-    event = BucketEvent(
-        event_id=derive_bucket_event_id(
+    try:
+        events = BucketEventHistoryRepository()
+        emit_bucket_event(
+            repository=events,
             bucket_id=bucket_id,
             event_type=event_type,
-            occurred_at=occurred_at,
+            occurred_at=utc_now(),
             actor=_CUSTODY_ACTOR,
             object_type=BucketEventObjectType.BUCKET,
             object_id=bucket_id,
             payload=payload,
-        ),
-        bucket_id=bucket_id,
-        event_type=event_type,
-        occurred_at=occurred_at,
-        actor=_CUSTODY_ACTOR,
-        object_type=BucketEventObjectType.BUCKET,
-        object_id=bucket_id,
-        payload_version=1,
-        payload=payload,
-    )
-    try:
-        events = BucketEventHistoryRepository()
-        events.save(append_bucket_event(events.load(), event))
+            payload_version=1,
+        )
     except StorageValidationError:
         _log.debug(
             "custody audit event %s not recorded: profile storage is locked",

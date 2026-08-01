@@ -7,6 +7,7 @@ tools:
 - Grep
 - Read
 - Bash
+- SendMessage
 model: claude-opus-5
 ---
 

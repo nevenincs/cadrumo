@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.resources import bundled_path
+from .. import resolve_keyed_bracket
 from .._convenio import load_convenio_authority
 from .._errors import RegistryValidationError
 from .._formula_runtime import calculate_registry_snapshot
@@ -138,3 +139,30 @@ def test_irnr_resolve_tipo_gravamen_resolves_dividend_baseline_rate() -> None:
     assert result.unresolved_outcomes == ()
     assert result.values[_M210_TIPO_GRAVAMEN_CASILLA] == Decimal("0.19")
     assert result.values["cuota_integra"] == Decimal("190.00")
+
+
+def test_keyed_bracket_resolution_rejects_overlapping_official_m210_rate_windows() -> None:
+    """A contradictory rate row must not silently replace Art. 25.1.f's 19% dividend rate."""
+    snapshot = _current_m210_snapshot()
+    parameter = next(parameter for parameter in snapshot.revision.parameters if parameter.id == "m210-tipo-gravamen-2025")
+    dividend = next(entry for entry in parameter.keyed_brackets if entry.key == "dividend")
+
+    assert resolve_keyed_bracket(parameter, key="dividend", filing_year=2025) == Decimal("0.19")
+
+    overlapping = parameter.model_copy(
+        update={
+            "keyed_brackets": (
+                *parameter.keyed_brackets,
+                dividend.model_copy(update={"value": Decimal("0.24"), "valid_from": date(2025, 6, 1)}),
+            )
+        }
+    )
+    with pytest.raises(RegistryValidationError, match="expected exactly one keyed bracket") as exc_info:
+        resolve_keyed_bracket(overlapping, key="dividend", filing_year=2025)
+
+    assert exc_info.value.context == {
+        "parameter_id": "m210-tipo-gravamen-2025",
+        "key": "dividend",
+        "filing_year": "2025",
+        "match_count": "2",
+    }

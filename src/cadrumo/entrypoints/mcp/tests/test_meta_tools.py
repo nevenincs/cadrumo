@@ -198,7 +198,7 @@ def test_build_meta_sdk_tools_exposes_search_execute_toolsets_and_describe() -> 
     names = {tool.name for tool in tools}
     assert names == {"search", "execute", "toolsets", "describe"}
     for tool in tools:
-        assert tool.inputSchema["type"] == "object"
+        assert tool.input_schema["type"] == "object"
     product_descriptions = [tool.description for tool in tools if tool.name in {"search", "execute", "describe"}]
     for description in product_descriptions:
         assert description is not None

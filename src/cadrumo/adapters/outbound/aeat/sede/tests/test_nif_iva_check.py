@@ -22,6 +22,7 @@ from ......domain.calculations.registry import (
     RemoteOperation,
     assert_remote_operation_allowed,
 )
+from .._adapter_utils import is_aeat_auth_gate_redirect
 from .._nif_iva_check import (
     _READ_GUARD_POLICY,
     DEFAULT_NIF_IVA_TIMEOUT_MS,
@@ -30,7 +31,6 @@ from .._nif_iva_check import (
     SedeNifIvaCheckObservation,
     _assert_query_browser_action,
     extract_verdict_from_response_text,
-    is_aeat_auth_gate_redirect,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -165,6 +165,19 @@ def test_auth_gate_detector_rejects_non_aeat_hosts() -> None:
 
     assert not is_aeat_auth_gate_redirect("https://example.com/erro4033.html")
     assert not is_aeat_auth_gate_redirect("")
+
+
+@pytest.mark.parametrize(
+    "authority",
+    [
+        "ignored@sede.agenciatributaria.gob.es",
+        "sede.agenciatributaria.gob.es:443",
+        "sede.agenciatributaria.gob.es:not-a-port",
+    ],
+)
+def test_auth_gate_detector_rejects_non_host_authorities(authority: str) -> None:
+    """A credential or port-shaped authority cannot impersonate the AEAT host."""
+    assert not is_aeat_auth_gate_redirect(f"https://{authority}{_AEAT.sede_paths.auth_gate_4033}")
 
 
 def test_nif_iva_read_guard_admits_sibling_load_balancer_host() -> None:

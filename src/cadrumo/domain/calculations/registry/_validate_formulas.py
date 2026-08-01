@@ -15,10 +15,10 @@ See Also:
 
 from __future__ import annotations
 
-from graphlib import CycleError, TopologicalSorter
+from graphlib import CycleError
 
 from ._ids import BindingId, CasillaId, RelationId
-from ._runtime_graph import expression_casilla_refs
+from ._runtime_graph import formula_evaluation_order
 from ._schema import FormulaExpression, ModeloRevision
 
 
@@ -30,15 +30,8 @@ def validate_formula_dag(scope: str, revision: ModeloRevision) -> list[str]:
     computed target participate in the DAG; registry membership and reference
     existence are handled by :func:`validate_formula_expression`.
     """
-    formula_targets = {formula.target_casilla_id for formula in revision.formulas}
-    sorter: TopologicalSorter[str] = TopologicalSorter()
-    for formula in revision.formulas:
-        dependencies = [
-            casilla for casilla in expression_casilla_refs(formula.expression) if casilla in formula_targets
-        ]
-        sorter.add(formula.target_casilla_id, *dependencies)
     try:
-        tuple(sorter.static_order())
+        formula_evaluation_order(revision)
     except CycleError as exc:
         return [f"{scope}: formula graph cycle: {exc}"]
     return []

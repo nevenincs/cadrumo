@@ -35,32 +35,12 @@ from . import _formula_runtime_ops as _ops
 from ._errors import RegistryValidationError
 from ._formula_runtime_ops import numeric_casilla_value as _numeric_casilla_value
 from ._ids import CasillaId, ParameterId
-from ._schema import FormulaExpression, ParameterDefinition
+from ._schema import FormulaExpression
 
 if TYPE_CHECKING:
     from ._formula_runtime import _EvalContext
 
 _ZERO = Decimal("0")
-
-
-def _scalar_parameter_value(parameter_id: ParameterId, ctx: _EvalContext, *, op: str) -> Decimal:
-    parameter = ctx.parameters.get(parameter_id)
-    if parameter is None:
-        raise RegistryValidationError(
-            f"parameter {parameter_id!r} not registered",
-            translated_message="errors.calc.parameter_unknown",
-            context={"parameter_id": parameter_id},
-        )
-    if parameter.data_type not in {"decimal", "money", "integer", "ratio"}:
-        raise RegistryValidationError(
-            f"parameter {parameter_id!r} must be scalar to be used by {op}",
-            translated_message="errors.calc.dispatch_parameter_kind",
-            context={"parameter_id": parameter_id, "op": op},
-        )
-    value = _ops.resolve_parameter(parameter, ctx.date_context)
-    ctx.operand_refs.append(parameter_id)
-    ctx.operand_values.append(value)
-    return value
 
 
 def _read_modulos_indice(casilla_id: CasillaId, ctx: _EvalContext) -> Decimal:
@@ -146,39 +126,6 @@ def _m131_resolve_modulos_previo_args(expression: FormulaExpression) -> _M131Res
     )
 
 
-def _m131_modulos_coefficient(
-    parameter: ParameterDefinition | None,
-    *,
-    epigrafe: str,
-    modulo_index: int,
-    year: int,
-) -> Decimal | None:
-    """Look up the (epígrafe, módulo) coefficient in the M131 keyed-bracket table.
-
-    Returns ``None`` when the composite key has no row for the filing year —
-    the epígrafe is not (yet) part of the first-slice tabled activities, or
-    the module slot does not apply to that activity. A ``None`` result is the
-    engine's "not table-driven" signal; the caller returns ``Decimal('0')``
-    rather than raising, because :func:`evaluate_m131_resolve_modulos_previo`
-    feeds an internal-only advisory-support casilla, not a filed casilla — the
-    official casilla 01 stays reachable as a manual operator input and the
-    registry-declared advisory predicate surfaces the gap
-    (no-silent-under-declaration), never a silent computed zero standing in
-    for the filed figure.
-    """
-    if parameter is None:
-        return None
-    key = f"{epigrafe}:{modulo_index}"
-    for entry in parameter.keyed_brackets:
-        in_window = entry.valid_from.year <= year and (entry.valid_to is None or entry.valid_to.year >= year)
-        if entry.key == key and in_window:
-            try:
-                return Decimal(entry.value)
-            except (ArithmeticError, ValueError):
-                return None
-    return None
-
-
 def evaluate_m131_resolve_modulos_previo(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
     """Resolve the M131/M100 estimación-objetiva Fase 1ª rendimiento neto previo.
 
@@ -214,11 +161,10 @@ def evaluate_m131_resolve_modulos_previo(expression: FormulaExpression, ctx: _Ev
         units = _numeric_casilla_value(modulo_casilla_id, ctx)
         if units == _ZERO:
             continue
-        coefficient = _m131_modulos_coefficient(
+        coefficient = _ops.resolve_keyed_bracket(
             parameter,
-            epigrafe=epigrafe,
-            modulo_index=modulo_index,
-            year=ctx.filing_year,
+            key=f"{epigrafe}:{modulo_index}",
+            filing_year=ctx.filing_year,
         )
         if coefficient is None:
             # This módulo slot has no row for the declared epígrafe (either the
@@ -349,11 +295,10 @@ def evaluate_m131_resolve_modulos_minoracion_empleo(expression: FormulaExpressio
     ctx.operand_refs.append(args.coefficient_parameter)
     if not epigrafe or coefficient_parameter is None:
         return _ZERO
-    modulo_1_coefficient = _m131_modulos_coefficient(
+    modulo_1_coefficient = _ops.resolve_keyed_bracket(
         coefficient_parameter,
-        epigrafe=epigrafe,
-        modulo_index=1,
-        year=ctx.filing_year,
+        key=f"{epigrafe}:1",
+        filing_year=ctx.filing_year,
     )
     if modulo_1_coefficient is None:
         return _ZERO
@@ -361,7 +306,7 @@ def evaluate_m131_resolve_modulos_minoracion_empleo(expression: FormulaExpressio
     actual = _numeric_casilla_value(args.modulo_1_actual_casilla_id, ctx)
     anterior = _numeric_casilla_value(args.modulo_1_anterior_casilla_id, ctx)
     incremento = actual - anterior if anterior > _ZERO and actual > anterior else _ZERO
-    incremento_rate = _scalar_parameter_value(
+    incremento_rate = _ops.resolve_scalar_parameter(
         args.incremento_rate_parameter,
         ctx,
         op="m131_resolve_modulos_minoracion_empleo",
@@ -430,32 +375,6 @@ def _m131_resolve_modulos_indice_exceso_args(expression: FormulaExpression) -> _
     )
 
 
-def _m131_modulos_cuantia_exceso(
-    parameter: ParameterDefinition | None,
-    *,
-    epigrafe: str,
-    year: int,
-) -> Decimal | None:
-    """Look up the índice-de-exceso cuantía threshold for an epígrafe (keyed-bracket table).
-
-    Mirrors :func:`_m131_modulos_coefficient` — exact-match lookup on the
-    epígrafe key, no interval-overlap semantics, because the domain is a
-    discrete per-activity catalogue (Orden HAC/1347/2024 Anexo II,
-    instrucción 2.3.b.3). Returns ``None`` when the epígrafe has no
-    índice-de-exceso row tabled yet.
-    """
-    if parameter is None:
-        return None
-    for entry in parameter.keyed_brackets:
-        in_window = entry.valid_from.year <= year and (entry.valid_to is None or entry.valid_to.year >= year)
-        if entry.key == epigrafe and in_window:
-            try:
-                return Decimal(entry.value)
-            except (ArithmeticError, ValueError):
-                return None
-    return None
-
-
 def evaluate_m131_resolve_modulos_indice_exceso(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
     """Resolve the M131/M100 estimación-objetiva Fase 3ª índice corrector de exceso.
 
@@ -511,11 +430,11 @@ def evaluate_m131_resolve_modulos_indice_exceso(expression: FormulaExpression, c
     ctx.operand_refs.append(args.cuantia_parameter)
     if not epigrafe or cuantia_parameter is None or minorado <= _ZERO:
         return minorado
-    cuantia = _m131_modulos_cuantia_exceso(cuantia_parameter, epigrafe=epigrafe, year=ctx.filing_year)
+    cuantia = _ops.resolve_keyed_bracket(cuantia_parameter, key=epigrafe, filing_year=ctx.filing_year)
     if cuantia is None or minorado <= cuantia:
         return minorado
     ctx.operand_values.append(cuantia)
-    indice = _scalar_parameter_value(
+    indice = _ops.resolve_scalar_parameter(
         args.indice_exceso_parameter,
         ctx,
         op="m131_resolve_modulos_indice_exceso",
@@ -717,10 +636,10 @@ def evaluate_m131_resolve_modulos_indices_generales(expression: FormulaExpressio
         cuantia_parameter = ctx.parameters.get(args.cuantia_parameter)
         ctx.operand_refs.append(args.cuantia_parameter)
         if cuantia_parameter is not None and rendimiento > _ZERO:
-            cuantia = _m131_modulos_cuantia_exceso(cuantia_parameter, epigrafe=epigrafe, year=ctx.filing_year)
+            cuantia = _ops.resolve_keyed_bracket(cuantia_parameter, key=epigrafe, filing_year=ctx.filing_year)
             if cuantia is not None and rendimiento > cuantia:
                 ctx.operand_values.append(cuantia)
-                indice = _scalar_parameter_value(
+                indice = _ops.resolve_scalar_parameter(
                     args.indice_exceso_parameter,
                     ctx,
                     op="m131_resolve_modulos_indices_generales",

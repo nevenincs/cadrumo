@@ -48,9 +48,9 @@ from pathlib import Path
 
 import pytest
 from mcp.server import Server
-from mcp.shared.memory import create_connected_server_and_client_session as connect
 
 from ....core.config import DEV_TEST_DATABASE_PASSWORD
+from ....tests import connected_server_and_client_session as connect
 from ....tests import temporary_env
 from .._dispatch import tool_name_for_command
 from .._harness_tools import WHOAMI_TOOL
@@ -136,7 +136,7 @@ async def _warm_call_with_concurrent_list(tool_name: str, arguments: dict[str, o
         listed = await session.list_tools()
         list_answered = bool(listed.tools)
         result = await in_flight
-        return list_answered, not bool(result.isError)
+        return list_answered, not bool(result.is_error)
 
 
 def test_warm_in_process_verb_is_served_with_the_loop_free() -> None:
@@ -194,8 +194,8 @@ def _warm_read(server: Server, tool_name: str, arguments: dict[str, object]) -> 
             # read before the session-opening verb.
             await session.call_tool(WHOAMI_TOOL, {})
             result = await session.call_tool(tool_name, arguments)
-            assert result.structuredContent is not None
-            return dict(result.structuredContent)
+            assert result.structured_content is not None
+            return dict(result.structured_content)
 
     return asyncio.run(_drive())
 

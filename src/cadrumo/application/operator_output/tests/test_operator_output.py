@@ -23,35 +23,15 @@ from pathlib import Path
 import pytest
 
 from ....core.config import override_settings
-from ....core.json_contract import NoticeSeverity, OutputSchema
+from ....core.json_contract import NoticeSeverity, OutputSchemaError
 from ....tests.secure_sql import isolated_profile_storage_root
+from ...wizard import ConfigProfileCreateResult
 from .. import emit_operator_json_success, sandbox_banner_line, sandbox_notice_for_active_bucket
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MANIFEST_CREATED_AT = datetime(2026, 7, 25, 9, 0, 0, tzinfo=UTC)
 _SANDBOX_CODE = "config.profile.sandbox.active_indicator"
-
-
-class _ProbeResult(OutputSchema):
-    """Throwaway result schema, local to this test module.
-
-    Deliberately NOT bound with ``register_schema``. The emit funnel takes the
-    command path as an opaque string and never consults ``SCHEMA_REGISTRY``, so
-    registration contributed nothing to what these tests assert — while the
-    decorator ran at IMPORT time and left ``operator_output.tests.probe`` in a
-    process-global registry permanently.
-
-    That key names no CLI command, and the MCP input-schema builder resolves
-    every registered key against the Typer tree, refusing an unresolvable one
-    rather than shipping an argument-free schema. So importing this module
-    poisoned that build for the whole session: any run whose collected set
-    included both this file and the MCP tests failed ~128 of them, with or
-    without xdist workers. ``register_schema``'s own contract says to register
-    concrete command leaves only; this was not one.
-    """
-
-    label: str
 
 
 def _write_bucket_manifest(root: Path, *, bucket_id: str, label: str) -> None:
@@ -151,13 +131,13 @@ def test_emit_operator_json_success_prepends_sandbox_notice_when_active(
 
     bucket_id = "9a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9"
     caller_notice = Notice(severity=NoticeSeverity.INFO, code="probe.caller_notice", message="caller-supplied")
-    result = _ProbeResult(label="probe")
+    result = ConfigProfileCreateResult(profile_name="probe", status="created", active_profile="probe")
 
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         _write_bucket_manifest(storage_root, bucket_id=bucket_id, label="sandbox:emit-probe")
         with override_settings(cadrumo_active_profile=bucket_id):
             emit_operator_json_success(
-                "operator_output.tests.probe",
+                "config.profile.create",
                 result,
                 notices=(caller_notice,),
                 active_profile="probe",
@@ -166,7 +146,7 @@ def test_emit_operator_json_success_prepends_sandbox_notice_when_active(
     document = json.loads(capsys.readouterr().out)
     codes = [notice["code"] for notice in document["notices"]]
     assert codes == [_SANDBOX_CODE, "probe.caller_notice"]
-    assert document["result"]["label"] == "probe"
+    assert document["result"]["profile_name"] == "probe"
 
 
 def test_emit_operator_json_success_omits_sandbox_notice_when_not_sandbox(
@@ -178,13 +158,13 @@ def test_emit_operator_json_success_omits_sandbox_notice_when_not_sandbox(
 
     bucket_id = "1c2d3e4f-5061-7283-94a5-b6c7d8e9f0a1"
     caller_notice = Notice(severity=NoticeSeverity.INFO, code="probe.caller_notice", message="caller-supplied")
-    result = _ProbeResult(label="probe")
+    result = ConfigProfileCreateResult(profile_name="probe", status="created", active_profile="probe")
 
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         _write_bucket_manifest(storage_root, bucket_id=bucket_id, label="operator")
         with override_settings(cadrumo_active_profile=bucket_id):
             emit_operator_json_success(
-                "operator_output.tests.probe",
+                "config.profile.create",
                 result,
                 notices=(caller_notice,),
                 active_profile="probe",
@@ -193,3 +173,28 @@ def test_emit_operator_json_success_omits_sandbox_notice_when_not_sandbox(
     document = json.loads(capsys.readouterr().out)
     codes = [notice["code"] for notice in document["notices"]]
     assert codes == ["probe.caller_notice"]
+
+
+def test_emit_operator_json_success_refuses_an_unregistered_command(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The operator funnel cannot wrap an arbitrary result under a command key."""
+    result = ConfigProfileCreateResult(profile_name="probe", status="created", active_profile="probe")
+
+    with pytest.raises(OutputSchemaError, match="has no registered output schema"):
+        emit_operator_json_success("operator_output.tests.probe", result)
+
+    assert capsys.readouterr().out == ""
+
+
+def test_emit_operator_json_success_refuses_a_result_outside_the_registered_schema(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A registered command cannot use the envelope to bypass strict result fields."""
+    with pytest.raises(OutputSchemaError, match="does not conform to the registered schema"):
+        emit_operator_json_success(
+            "config.profile.create",
+            {"profile_name": "probe", "status": 1, "active_profile": "probe"},
+        )
+
+    assert capsys.readouterr().out == ""

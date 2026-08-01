@@ -13,6 +13,7 @@ manifest.
 
 from __future__ import annotations
 
+import json
 import zipfile
 from collections.abc import Set as AbstractSet
 from datetime import UTC, datetime
@@ -23,9 +24,11 @@ import pytest
 from .. import (
     CorpusBundleError,
     CorpusBundleVerificationError,
+    CorpusManifestError,
     CorpusManifestTamperError,
     assert_corpus_bundle_verifies,
     build_corpus_bundle,
+    load_corpus_manifest,
     verify_corpus_bundle,
 )
 
@@ -178,8 +181,6 @@ def test_verify_corpus_bundle_raises_tamper_error_when_manifest_digest_mismatche
     """Mutating the embedded manifest's recorded ``manifest_sha256`` (without
     recomputing it) must trip the self-attesting digest check, exactly as
     :func:`load_corpus_manifest` does for the on-disk sidecar form."""
-    import json
-
     _corpus_root, bundle_path = _build_bundle(tmp_path)
 
     with zipfile.ZipFile(bundle_path, "r") as archive:
@@ -191,6 +192,44 @@ def test_verify_corpus_bundle_raises_tamper_error_when_manifest_digest_mismatche
     _rewrite_bundle(bundle_path, mutate={"corpus.manifest.json": tampered_manifest})
 
     with pytest.raises(CorpusManifestTamperError, match="manifest_sha256"):
+        verify_corpus_bundle(bundle_path)
+
+
+@pytest.mark.parametrize(
+    ("raw_payload", "manifest_changes", "file_error", "bundle_error", "message"),
+    (
+        (b'{"manifest_version":', None, CorpusManifestError, CorpusBundleError, "structurally invalid"),
+        (None, {"manifest_version": 2}, CorpusManifestError, CorpusBundleError, "at version 2"),
+        (None, {"manifest_sha256": "0" * 64}, CorpusManifestTamperError, CorpusManifestTamperError, "manifest_sha256"),
+    ),
+    ids=("malformed", "future-version", "tampered"),
+)
+def test_path_and_bundle_reject_the_same_invalid_manifest_payload(
+    tmp_path: Path,
+    raw_payload: bytes | None,
+    manifest_changes: dict[str, int | str] | None,
+    file_error: type[Exception],
+    bundle_error: type[Exception],
+    message: str,
+) -> None:
+    """Both real I/O forms must reject each defective raw payload consistently."""
+    corpus_root, bundle_path = _build_bundle(tmp_path)
+    with zipfile.ZipFile(bundle_path, "r") as archive:
+        payload = json.loads(archive.read("corpus.manifest.json"))
+
+    if manifest_changes is not None:
+        payload.update(manifest_changes)
+        raw_payload = json.dumps(payload).encode("utf-8")
+
+    assert raw_payload is not None
+
+    manifest_path = corpus_root / "corpus.manifest.json"
+    manifest_path.write_bytes(raw_payload)
+    _rewrite_bundle(bundle_path, mutate={"corpus.manifest.json": raw_payload})
+
+    with pytest.raises(file_error, match=message):
+        load_corpus_manifest(manifest_path)
+    with pytest.raises(bundle_error, match=message):
         verify_corpus_bundle(bundle_path)
 
 

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import re
 import sys
 import tarfile
@@ -16,6 +15,13 @@ from urllib.parse import urlparse
 
 from packaging.markers import Marker
 from packaging.requirements import Requirement
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.append(str(_REPO_ROOT))
+
+from dev.packaging._distribution_names import normalise_distribution_name  # noqa: E402
+from dev.packaging._hashing import sha256_path  # noqa: E402
 
 _COMPANIONS = (
     ("cadrumo-data-manuals", "cadrumo_data_manuals"),
@@ -120,23 +126,11 @@ class SdistArtifact:
     requirements: tuple[str, ...]
 
 
-def _sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
 def _one(cohort_dir: Path, pattern: str) -> Path:
     matches = tuple(sorted(cohort_dir.glob(pattern)))
     if len(matches) != 1:
         raise SystemExit(f"expected one artifact matching {pattern!r}; got {[path.name for path in matches]!r}")
     return matches[0].resolve(strict=True)
-
-
-def _normalize_name(value: str) -> str:
-    return re.sub(r"[-_.]+", "-", value).casefold()
 
 
 def _sdist_artifact(
@@ -163,7 +157,7 @@ def _sdist_artifact(
     if (
         not name
         or not version
-        or _normalize_name(name) != _normalize_name(expected_name)
+        or normalise_distribution_name(name) != normalise_distribution_name(expected_name)
         or version != expected_version
     ):
         raise SystemExit(
@@ -174,7 +168,7 @@ def _sdist_artifact(
         path=path,
         name=name,
         version=version,
-        sha256=_sha256(path),
+        sha256=sha256_path(path),
         requirements=tuple(metadata.get_all("Requires-Dist", [])),
     )
 
@@ -185,7 +179,7 @@ def _validate_companion_pins(root: SdistArtifact, companions: tuple[SdistArtifac
         matches = [
             requirement
             for requirement in requirements
-            if _normalize_name(requirement.name) == _normalize_name(companion.name)
+            if normalise_distribution_name(requirement.name) == normalise_distribution_name(companion.name)
         ]
         if len(matches) != 1:
             raise SystemExit(f"root sdist must declare exactly one dependency on {companion.name}")

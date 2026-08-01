@@ -17,6 +17,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from dev.packaging._hashing import sha256_path
 from dev.packaging.evidence_release import (
     MANIFEST_ASSET_NAME,
     MANIFEST_SCHEMA,
@@ -29,7 +30,6 @@ from dev.packaging.evidence_release import (
     main,
     parse_evidence_tag,
     plan_evidence_gc,
-    sha256_path,
     verify_downloaded_assets,
     write_manifest,
 )

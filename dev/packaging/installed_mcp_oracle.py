@@ -174,9 +174,9 @@ def _content_text(result: CallToolResult) -> str:
 
 
 def _structured(result: CallToolResult, *, operation: str) -> dict[str, Any]:
-    if result.isError:
+    if result.is_error:
         raise InstalledMcpOracleError(f"{operation} failed: {_content_text(result)}")
-    payload = result.structuredContent
+    payload = result.structured_content
     if not isinstance(payload, dict):
         raise InstalledMcpOracleError(f"{operation} returned no structured object")
     return payload
@@ -233,7 +233,7 @@ async def _call_tool(
             tool_name=tool_name,
             command_key=command_key,
             duration_seconds=round(time.monotonic() - started, 3),
-            is_error=bool(result.isError),
+            is_error=bool(result.is_error),
             status=str(payload.get("status")) if payload.get("status") is not None else None,
         ),
     )
@@ -291,9 +291,9 @@ async def _run_protocol(
             initialized = await session.initialize()
             listed = await session.list_tools()
         floor_tools = tuple(sorted(tool.name for tool in listed.tools))
-        if initialized.serverInfo.name != "cadrumo":
+        if initialized.server_info.name != "cadrumo":
             raise InstalledMcpOracleError(
-                f"expected MCP server name 'cadrumo', got {initialized.serverInfo.name!r}",
+                f"expected MCP server name 'cadrumo', got {initialized.server_info.name!r}",
             )
         if not {_EXECUTE_TOOL, _TOOLSETS_TOOL, _WHOAMI_TOOL} <= set(floor_tools):
             raise InstalledMcpOracleError(
@@ -451,7 +451,7 @@ async def _run_protocol(
             )
 
         async with asyncio.timeout(timeout_seconds):
-            resource = await session.read_resource(AnyUrl(observations_resource))
+            resource = await session.read_resource(str(AnyUrl(observations_resource)))
         if len(resource.contents) != 1 or not isinstance(resource.contents[0], TextResourceContents):
             raise InstalledMcpOracleError(
                 f"observations resource returned unexpected contents: {resource.contents!r}",
@@ -481,7 +481,7 @@ async def _run_protocol(
     return InstalledMcpEvidence(
         requested_executable=str(server),
         resolved_executable=str(server.resolve()),
-        server_name=initialized.serverInfo.name,
+        server_name=initialized.server_info.name,
         storage_root=str(storage_root.resolve()),
         work_unit_id=work_unit_id,
         calculation_revision_id=calculation_revision_id,

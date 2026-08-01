@@ -42,8 +42,10 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
+from ....application.bucket_maintenance import BucketNamespaceInventoryRow
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from .._config_sandbox_payloads import ConfigProfileSandboxDiscardResult
 from ._profile_lifecycle_support import create_profile_via_cli
 from .envelope_helpers import unwrap_envelope_notices, unwrap_schema_envelope
 
@@ -255,6 +257,12 @@ def test_sandbox_discard_dry_run_reports_the_active_sandbox_flag() -> None:
     previewed = _invoke(("config", "profile", "sandbox", "discard", "active-preview", "--dry-run"))
     assert previewed.exit_code == 0, previewed.output
     assert "would_discard_active\ttrue" in previewed.output
+
+
+def test_sandbox_discard_payload_reuses_the_bucket_inventory_row_contract() -> None:
+    """The registered discard payload exposes the bucket-owned inventory row exactly."""
+    annotation = ConfigProfileSandboxDiscardResult.model_fields["namespaces"].annotation
+    assert annotation == list[BucketNamespaceInventoryRow]
 
 
 def test_sandbox_discard_dry_run_unknown_name_refuses() -> None:

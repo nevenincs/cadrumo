@@ -5,6 +5,9 @@ Every registered result is a strict :class:`OutputSchema`.
 
 from __future__ import annotations
 
+from pydantic import Field
+
+from ...application.bucket_maintenance import BucketNamespaceInventoryRow
 from ._config_payloads import ProfilePointerPayload
 from ._schemas import OutputSchema, register_schema
 
@@ -35,18 +38,6 @@ class ConfigProfileSandboxListResult(OutputSchema):
     sandboxes: list[ProfilePointerPayload]
 
 
-class SandboxNamespacePayload(OutputSchema):
-    """One secure-object namespace row in a sandbox discard preview.
-
-    Mirrors :class:`~cadrumo.application.bucket_maintenance.SandboxNamespaceInventoryRow`:
-    only the namespace name and stored-row count, never decrypted payload
-    material.
-    """
-
-    namespace: str
-    row_count: int
-
-
 @register_schema("config.profile.sandbox.discard")
 class ConfigProfileSandboxDiscardResult(OutputSchema):
     """JSON envelope for ``aeat config profile sandbox discard``.
@@ -60,7 +51,7 @@ class ConfigProfileSandboxDiscardResult(OutputSchema):
     dry_run: bool = False
     bucket_id: str
     previous_label: str | None = None
-    namespaces: list[SandboxNamespacePayload] = []
+    namespaces: list[BucketNamespaceInventoryRow] = Field(default_factory=list)
 
 
 @register_schema("config.profile.sandbox.prune")

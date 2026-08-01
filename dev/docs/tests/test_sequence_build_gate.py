@@ -32,14 +32,14 @@ from dev.docs.sequence_build_gate import (
     should_emit_cli_tree,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
+
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 
 #: A captured package version in a golden. Value-shaped, not a bare number:
 #: it must match the product banner form so an unrelated numeric in captured
 #: output can never be mistaken for a version.
 _VERSION_LITERAL_RE = re.compile(r"CADRUMO \d+\.\d+\.\d+")
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
 
 def _artifact(root: Path) -> Path:

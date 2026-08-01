@@ -191,6 +191,7 @@ from ._casilla_membership import (
     casilla_noncanonical_reference_tokens,
     casillas_by_id,
     declared_casilla_ids,
+    format_noncanonical_casilla_reference,
     undeclared_casilla_ids,
 )
 from ._profile_grounding import (
@@ -295,7 +296,7 @@ from ._formula_runtime import (
     read_parameter,
 )
 from ._formula_initial_values import initial_value_casilla_ids
-from ._formula_runtime_ops import resolve_parameter
+from ._formula_runtime_ops import resolve_keyed_bracket, resolve_parameter
 from ._formula_text_inputs import validate_text_input_targets, validated_text_input_casilla_ids
 from ._groi_oracle import (
     GROI_ORACLE_ID,
@@ -435,6 +436,8 @@ from ._runtime_graph import (
     expression_binding_refs,
     expression_casilla_refs,
     expression_date_binding_refs,
+    expression_parameter_refs,
+    expression_relation_refs,
     input_casilla_id_map,
     revision_date_binding_ids,
 )
@@ -493,7 +496,7 @@ from ._schema_verification import (
     VerificationPredicateDefinition,
 )
 from ._snapshot import build_snapshot
-from ._temporal import select_revision
+from ._temporal import select_revision, select_revision_for_year
 from ._validate import RegistryValidator
 from ._validate_cross_revision import (
     CrossRevisionCasillaDriftSummary,
@@ -842,12 +845,15 @@ __all__ = [
     "expression_binding_refs",
     "expression_casilla_refs",
     "expression_date_binding_refs",
+    "expression_parameter_refs",
+    "expression_relation_refs",
     "extract_record_design",
     "extract_record_design_pdf",
     "extract_record_design_pdf_bytes",
     "extract_record_design_workbook",
     "fold_observed_requirement_values",
     "fold_sum_or_copy",
+    "format_noncanonical_casilla_reference",
     "gather_observed_requirement_values",
     "generate_parity_tape_path",
     "get_censo_modelo_foundation_contract",
@@ -900,6 +906,7 @@ __all__ = [
     "resolve_foreign_asset_binding_row_values",
     "resolve_invoice_binding_row_values",
     "resolve_invoice_binding_values",
+    "resolve_keyed_bracket",
     "resolve_ledger_impatriado_income_aggregation_binding_values",
     "resolve_ledger_irnr_income_aggregation_binding_values",
     "resolve_ledger_iva_aggregation_binding_values",
@@ -930,6 +937,7 @@ __all__ = [
     "save_parity_tape",
     "scan_workbook",
     "select_revision",
+    "select_revision_for_year",
     "selector_as_dict",
     "selector_model_for_source",
     "stamp_bundled_registry_verdict",

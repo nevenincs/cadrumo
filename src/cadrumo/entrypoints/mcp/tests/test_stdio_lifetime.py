@@ -35,10 +35,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-if TYPE_CHECKING:
-    from pathlib import Path
-
 from cadrumo.entrypoints.mcp._stdio_lifetime import (
+    _GRACE_SECONDS,
     PARENT_PID_ENV,
     STDIO_WATCHDOG_ENV,
     arm_stdio_lifetime_watchdog,
@@ -48,6 +46,9 @@ from cadrumo.entrypoints.mcp._stdio_lifetime import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 _MODULE = "cadrumo.entrypoints.mcp._stdio_lifetime"
 _RESOLVER_SNIPPET = f"from {_MODULE} import resolve_stdin_client_pid;print(resolve_stdin_client_pid(), flush=True)"
@@ -475,10 +476,11 @@ def _orphanable_spawn() -> tuple[str, dict[str, str]]:
     import sysconfig
     from pathlib import Path as _Path
 
-    import cadrumo
-
     base = getattr(sys, "_base_executable", None) or sys.executable
-    src_root = _Path(cadrumo.__file__).resolve().parent.parent
+    # Derived from this test module's own location (four parents up: tests ->
+    # mcp -> entrypoints -> cadrumo -> src) rather than an absolute `import
+    # cadrumo`, so the relative-imports gate stays satisfied.
+    src_root = _Path(__file__).resolve().parents[4]
     roots = [str(src_root), sysconfig.get_paths()["purelib"]]
     existing = os.environ.get("PYTHONPATH")
     if existing:
@@ -598,14 +600,29 @@ def test_posix_parent_map_resolves_this_process_ancestry() -> None:
 
 
 def test_posix_worker_reaps_itself_when_reparented(tmp_path: Path) -> None:
-    """Killing the parent reaps a POSIX worker through the reparent signal.
+    """Killing the parent reaps the worker through the POSIX reparent signal.
 
-    The POSIX counterpart of the Windows ancestor-death reap: an intermediary
-    spawns the worker and is then killed, so the worker is reparented to init and
-    must exit rather than serve on with no client.
+    An intermediary spawns the worker and is then killed, so the worker is
+    reparented to init and must exit rather than serve on with no client.
+
+    This scenario is POSIX-only by design, and Windows is not deselected but
+    asserted: there the discovered-ancestor fallback grace-prunes any ancestor
+    that dies inside the grace window, treating it as a transient spawn helper
+    rather than termination intent. This test kills the intermediary the
+    instant the worker arms, which is squarely inside that window, so the
+    documented Windows behaviour is to keep serving. Asserting a reap there
+    would contradict :func:`test_fallback_grace_window_prunes_transient_ancestor`,
+    which pins exactly that survival. The Windows branch therefore asserts the
+    grace window is real, which is the property that makes the scenario
+    inapplicable, rather than skipping or asserting a falsehood.
     """
     if sys.platform == "win32":
-        pytest.skip("POSIX reparent contract; the Windows path is covered by the anchor tests")
+        assert _GRACE_SECONDS > 0, (
+            "the discovered-ancestor fallback prunes an ancestor that dies inside the grace "
+            "window, so this reparent scenario cannot reap on Windows; a zero grace window "
+            "would make it applicable and this test would need a real Windows arm"
+        )
+        return
 
     worker_code = textwrap.dedent(
         f"""
@@ -731,7 +748,13 @@ def test_real_server_exits_when_client_dies_despite_a_leaked_stdin_pipe() -> Non
     is proven by the reparent test above.
     """
     if sys.platform != "win32":
-        pytest.skip("the leaked-pipe condition is Windows-specific; POSIX is covered by the reparent test")
+        # The leaked-pipe reproduction depends on Windows named-pipe
+        # creator resolution (GetNamedPipeServerProcessId); POSIX has no
+        # portable equivalent (see resolve_stdin_client_pid's own contract),
+        # and the reparent test above proves the POSIX abandonment case for
+        # real instead.
+        assert resolve_stdin_client_pid() is None
+        return
 
     client_code = textwrap.dedent(
         """

@@ -16,6 +16,8 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
+from cadrumo.core.config import coerce_output_language_setting
+
 from ....core.config import (
     Settings,
     StorageRouteKind,
@@ -23,7 +25,7 @@ from ....core.config import (
     load_settings,
     settings_for_active_profile_bucket,
 )
-from ....core.external_constants import DEFAULT_OUTPUT_LANGUAGE, SUPPORTED_OUTPUT_LANGUAGES
+from ....core.external_constants import DEFAULT_OUTPUT_LANGUAGE
 from ....core.logging import get_logger
 from ....core.storage_route_guidance import EXPLICIT_DATABASE_URL_PROFILE_RECOVERY
 from ....core.time import now as _utc_now
@@ -242,10 +244,10 @@ def _settings_output_language() -> str:
 
 
 def _normalise_supported_language(value: object) -> str | None:
-    raw = str(getattr(value, "value", value)).strip().lower()
-    if raw in SUPPORTED_OUTPUT_LANGUAGES:
-        return raw
-    return None
+    if isinstance(value, bool) or not isinstance(value, str):
+        return None
+    normalized = coerce_output_language_setting(value)
+    return normalized.value if normalized is not None else None
 
 
 def _active_bucket_output_language_hint(settings: Settings) -> str | None:

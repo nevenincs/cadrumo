@@ -34,6 +34,7 @@ import pydantic
 import pytest
 
 from .....core import (
+    ABSENT_SECURE_OBJECT_REVISION_ID,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
@@ -41,6 +42,7 @@ from .....core import (
 from .....core.external_constants import UTF_8_ENCODING
 from .....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
 from .....tests.secure_sql import isolated_runtime_profile
+from ....persistence.storage.errors import SecureObjectRevisionConflictError
 from ....persistence.storage.sql.engine import get_engine
 from ..prorrata_register import ProrrataRegisterRepository
 
@@ -142,6 +144,19 @@ def test_register_upsert_replaces_entry_by_key(tmp_path: Path) -> None:
         assert register.entry_for(2024) == settled
 
 
+def test_register_secure_object_write_keeps_a_conflicted_batch_atomic(tmp_path: Path) -> None:
+    """The prorrata write remains composable in the real secure-object transaction."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="prorrata-rt-transaction") as profile:
+        repository = ProrrataRegisterRepository()
+        write = repository.to_secure_object_write(_populated_register())
+        conflicting = write.model_copy(update={"expected_revision_id": ABSENT_SECURE_OBJECT_REVISION_ID})
+
+        with pytest.raises(SecureObjectRevisionConflictError):
+            profile.repository.save_many((write, conflicting))
+
+        assert repository.load() == ProrrataRegister()
+
+
 def test_register_corrupted_percentage_surfaces_at_load(tmp_path: Path) -> None:
     """Anti-tautology: corrupting a persisted percentage must surface at load.
 
@@ -155,13 +170,13 @@ def test_register_corrupted_percentage_surfaces_at_load(tmp_path: Path) -> None:
     from sqlalchemy import select
 
     from ....persistence.storage.sql.session import session_scope
+    from ...storage import PROFILE_PRORRATA_REGISTER_NAMESPACE
     from ...storage.crypto import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
     from ...storage.sql import SecureObjectRow
-    from ..prorrata_register import _REGISTER_NAMESPACE, _REGISTER_OBJECT_KEY
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="prorrata-rt-corrupt") as profile:
         engine = get_engine(profile.settings)
@@ -171,8 +186,8 @@ def test_register_corrupted_percentage_surfaces_at_load(tmp_path: Path) -> None:
 
         with session_scope(engine) as session:
             stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _REGISTER_NAMESPACE,
-                SecureObjectRow.object_key == _REGISTER_OBJECT_KEY,
+                SecureObjectRow.namespace == PROFILE_PRORRATA_REGISTER_NAMESPACE.namespace,
+                SecureObjectRow.object_key == PROFILE_PRORRATA_REGISTER_NAMESPACE.require_default_object_key(),
             )
             row = session.execute(stmt).scalar_one()
             aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
@@ -202,13 +217,13 @@ def test_register_missing_regime_surfaces_at_load(tmp_path: Path) -> None:
     from sqlalchemy import select
 
     from ....persistence.storage.sql.session import session_scope
+    from ...storage import PROFILE_PRORRATA_REGISTER_NAMESPACE
     from ...storage.crypto import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
     from ...storage.sql import SecureObjectRow
-    from ..prorrata_register import _REGISTER_NAMESPACE, _REGISTER_OBJECT_KEY
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="prorrata-rt-missing") as profile:
         engine = get_engine(profile.settings)
@@ -217,8 +232,8 @@ def test_register_missing_regime_surfaces_at_load(tmp_path: Path) -> None:
 
         with session_scope(engine) as session:
             stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _REGISTER_NAMESPACE,
-                SecureObjectRow.object_key == _REGISTER_OBJECT_KEY,
+                SecureObjectRow.namespace == PROFILE_PRORRATA_REGISTER_NAMESPACE.namespace,
+                SecureObjectRow.object_key == PROFILE_PRORRATA_REGISTER_NAMESPACE.require_default_object_key(),
             )
             row = session.execute(stmt).scalar_one()
             aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)

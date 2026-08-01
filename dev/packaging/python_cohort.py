@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import shutil
 import subprocess
@@ -15,6 +14,9 @@ from pathlib import Path
 from typing import Any, Final
 
 from packaging.requirements import Requirement
+
+from dev.packaging._distribution_names import normalise_distribution_name
+from dev.packaging._hashing import sha256_path
 
 _UTF_8: Final[str] = "utf-8"
 _MANIFEST_NAME: Final[str] = "python-cohort.json"
@@ -95,14 +97,6 @@ def _run(argv: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
     return completed
 
 
-def _sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
 def _single(directory: Path, pattern: str, *, label: str) -> Path:
     matches = tuple(sorted(directory.glob(pattern)))
     if len(matches) != 1:
@@ -126,7 +120,7 @@ def _wheel_identity(wheel: Path) -> tuple[str, str, tuple[str, ...]]:
     if not name or not version:
         raise SystemExit(f"wheel metadata lacks Name or Version: {wheel}")
     return (
-        name.casefold().replace("_", "-"),
+        normalise_distribution_name(name),
         version,
         tuple(metadata.get_all("Requires-Dist") or ()),
     )
@@ -151,7 +145,7 @@ def _sdist_identity(sdist: Path) -> tuple[str, str, tuple[str, ...]]:
     if not name or not version:
         raise SystemExit(f"sdist metadata lacks Name or Version: {sdist}")
     return (
-        name.casefold().replace("_", "-"),
+        normalise_distribution_name(name),
         version,
         tuple(metadata.get_all("Requires-Dist") or ()),
     )
@@ -166,7 +160,7 @@ def _validate_companion_pins(
     parsed = tuple(Requirement(row) for row in requirements)
     for companion in _DISTRIBUTIONS[1:]:
         matches = tuple(
-            requirement for requirement in parsed if requirement.name.casefold().replace("_", "-") == companion
+            requirement for requirement in parsed if normalise_distribution_name(requirement.name) == companion
         )
         if len(matches) != 1:
             raise SystemExit(
@@ -401,7 +395,7 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
         "cadrumo-data-official": official_wheel.name,
         "cadrumo-data-official-sdist": official_sdist.name,
     }
-    sha256 = {name: _sha256(output / filename) for name, filename in artifacts.items()}
+    sha256 = {name: sha256_path(output / filename) for name, filename in artifacts.items()}
     manifest = output / _MANIFEST_NAME
     manifest.write_text(
         json.dumps(
@@ -464,7 +458,7 @@ def load_python_cohort(directory: Path) -> PythonCohort:
         artifact = (cohort_dir / filename).resolve(strict=True)
         if artifact.parent != cohort_dir:
             raise SystemExit(f"cohort artifact escapes its directory: {artifact}")
-        actual = _sha256(artifact)
+        actual = sha256_path(artifact)
         if actual != digest:
             raise SystemExit(
                 f"cohort artifact digest mismatch for {name!r}: expected {digest}, got {actual}",
@@ -510,7 +504,7 @@ def digest_install_target(name: str, artifact: Path, *, extras: tuple[str, ...] 
     ``archive_info``), so the fragment is the enforceable digest channel.
     """
     resolved = artifact.resolve(strict=True)
-    digest = hashlib.sha256(resolved.read_bytes()).hexdigest()
+    digest = sha256_path(resolved)
     extras_suffix = f"[{','.join(extras)}]" if extras else ""
     return f"{name}{extras_suffix} @ {resolved.as_uri()}#sha256={digest}"
 
@@ -583,7 +577,7 @@ def _verify_direct_urls(
             raise SystemExit(
                 f"{name} installed digest drifted: expected {expected_sha}, recorded {recorded_sha!r}",
             )
-        origin_sha = hashlib.sha256(artifact.resolve(strict=True).read_bytes()).hexdigest()
+        origin_sha = sha256_path(artifact.resolve(strict=True))
         if origin_sha != expected_sha:
             raise SystemExit(
                 f"{name} origin bytes drifted after install: expected {expected_sha}, hashed {origin_sha}",

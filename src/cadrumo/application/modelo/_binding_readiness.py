@@ -25,13 +25,16 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
+
 from ...core import Period
 from ...core.logging import get_logger
 from ...domain.calculations.registry import (
-    AmbiguousRevisionSelectionError,
+    NoRevisionForPeriodError,
     RegistrySnapshotError,
     RegistryValidationError,
     ValidatedRegistryAuthority,
+    select_revision_for_year,
 )
 from ...domain.user_profile import ProfileNotFoundError
 from ._profile_binding import resolve_profile_sourced_bindings
@@ -46,6 +49,8 @@ def profile_resolvable_binding_ids(
     bucket_id: str,
     filing_year: int,
     period: Period | None,
+    as_of: date | None = None,
+    revision_id: str | None = None,
 ) -> frozenset[str]:
     """Return binding ids resolvable from the active profile's stored facts.
 
@@ -74,6 +79,7 @@ def profile_resolvable_binding_ids(
             authority,
             modelo=modelo,
             filing_year=filing_year,
+            as_of=as_of,
         )
     )
     if resolved_period is None:
@@ -83,6 +89,8 @@ def profile_resolvable_binding_ids(
             modelo,
             filing_year=filing_year,
             period=resolved_period,
+            on=as_of,
+            revision_id=revision_id,
         )
     except RegistrySnapshotError as exc:
         _log.debug(
@@ -113,7 +121,13 @@ def profile_resolvable_binding_ids(
     )
 
 
-def _annual_period_for_year(authority: ValidatedRegistryAuthority, *, modelo: str, filing_year: int) -> str | None:
+def _annual_period_for_year(
+    authority: ValidatedRegistryAuthority,
+    *,
+    modelo: str,
+    filing_year: int,
+    as_of: date | None = None,
+) -> str | None:
     """Return a registry period token a snapshot for ``filing_year`` accepts.
 
     With no ``--period`` the operator wants the revision covering the
@@ -122,9 +136,8 @@ def _annual_period_for_year(authority: ValidatedRegistryAuthority, *, modelo: st
     resolves. The binding *set* is revision-wide, so the period choice
     does not change which bindings the revision declares.
 
-    Raises:
-        AmbiguousRevisionSelectionError: When more than one revision covers the
-            requested year and no period is available to select between them.
+    The shared temporal selector resolves same-year revision windows using
+    ``as_of`` before this helper chooses the revision's first legal period.
     """
     try:
         definition = authority.validate_modelo(modelo.strip())
@@ -138,17 +151,10 @@ def _annual_period_for_year(authority: ValidatedRegistryAuthority, *, modelo: st
             exc,
         )
         return None
-    covering = [
-        revision for revision in definition.revisions.values() if revision.period_selector.includes_year(filing_year)
-    ]
-    if not covering:
+    try:
+        revision = select_revision_for_year(definition, filing_year=filing_year, on=as_of)
+    except NoRevisionForPeriodError:
         return None
-    if len(covering) > 1:
-        raise AmbiguousRevisionSelectionError(
-            modelo_id=str(definition.id),
-            candidate_ids=tuple(revision.id for revision in covering),
-        )
-    revision = covering[0]
     periods = revision.period_selector.periods
     return periods[0] if periods else None
 

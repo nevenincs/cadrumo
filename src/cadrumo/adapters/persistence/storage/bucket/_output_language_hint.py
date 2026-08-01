@@ -11,9 +11,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from cadrumo.core.config import coerce_output_language_setting
+
 from .....core import fsync_parent_dir
 from .....core.atomic_write import atomic_write_text
-from .....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, UTF_8_ENCODING
+from .....core.external_constants import UTF_8_ENCODING
 from .....core.logging import get_logger
 from .._namespace_registry import BUCKET_OUTPUT_LANGUAGE_HINT_FILENAME
 from ._layout import bucket_paths
@@ -23,10 +25,10 @@ _log = get_logger(__name__)
 
 def normalize_output_language_hint(value: object) -> str | None:
     """Return ``value`` as a supported output-language code, or ``None``."""
-    raw = str(value).strip().lower()
-    if raw in SUPPORTED_OUTPUT_LANGUAGES:
-        return raw
-    return None
+    if isinstance(value, bool) or not isinstance(value, str):
+        return None
+    normalized = coerce_output_language_setting(value)
+    return normalized.value if normalized is not None else None
 
 
 def bucket_output_language_hint_path(*, storage_root: Path, bucket_id: str) -> Path:

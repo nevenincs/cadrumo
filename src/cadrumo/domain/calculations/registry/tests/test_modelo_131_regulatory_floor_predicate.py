@@ -6,10 +6,10 @@ from functools import cache
 
 import pytest
 
+from .....core import normalise_corpus_text
 from .....core.resources import bundled_path
 from .._loader import load_registry_tree
 from .._schema import ModeloDefinition, RegistryCatalogues
-from .._text import normalise_corpus_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

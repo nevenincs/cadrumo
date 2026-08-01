@@ -20,6 +20,7 @@ Submodules
    cadrumo.adapters.outbound.aeat.auth._clave_movil
    cadrumo.adapters.outbound.aeat.auth._clave_movil_metadata
    cadrumo.adapters.outbound.aeat.auth._clave_movil_page_flow
+   cadrumo.adapters.outbound.aeat.auth._clave_movil_salvage
    cadrumo.adapters.outbound.aeat.auth._clave_movil_support
    cadrumo.adapters.outbound.aeat.auth._clave_permanente
    cadrumo.adapters.outbound.aeat.auth._clave_permanente_metadata

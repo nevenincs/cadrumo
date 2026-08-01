@@ -849,7 +849,7 @@ def verification_report_notices(report) -> list[Notice]:
     — a contract break against
     :func:`cadrumo.core.json_contract.derive_status`, which derives the
     envelope ``status`` from notice severity in lock-step with the
-    ``ExitCode`` table. Each
+    core error-category exit mapping. Each
     :class:`~cadrumo.domain.modelos.ModeloVerificationFinding` becomes one
     :class:`~cadrumo.core.json_contract.Notice`.
 

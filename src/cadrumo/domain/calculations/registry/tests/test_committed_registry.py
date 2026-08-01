@@ -127,6 +127,8 @@ def test_committed_modelo_115_registry_snapshot_calculates_rental_withholding(
     entries = {entry.target_casilla_id: entry for entry in result.entries}
     assert entries["03"].operand_refs == ("02", "irpf.urban_rental_withholding_rate")
     assert entries["03"].operand_casilla_refs == ("02",)
+    assert entries["03"].operand_values == (Decimal("1250.50"), Decimal("19"))
+    assert entries["03"].value == Decimal("237.60")
     assert {"rd-439-2007:art-100"} <= set(entries["03"].legal_refs)
     assert {"aeat-modelo-115-180-folleto-actividades"} <= set(entries["03"].source_refs)
     assert entries["05"].operand_refs == ("03", "04")

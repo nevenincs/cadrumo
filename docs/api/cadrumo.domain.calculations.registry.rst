@@ -96,7 +96,6 @@ Submodules
    cadrumo.domain.calculations.registry._source_evidence_fingerprint
    cadrumo.domain.calculations.registry._support_matrix
    cadrumo.domain.calculations.registry._temporal
-   cadrumo.domain.calculations.registry._text
    cadrumo.domain.calculations.registry._toml_helpers
    cadrumo.domain.calculations.registry._validate
    cadrumo.domain.calculations.registry._validate_algorithms

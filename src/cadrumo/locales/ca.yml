@@ -1445,8 +1445,6 @@ application:
         errors:
           parameter_no_dated_value: El motor d'exportació de fulls de càlcul no ha
             trobat cap valor de paràmetre vigent per a la data de meritació.
-          parameter_not_scalar: El motor d'exportació de fulls de càlcul esperava
-            un paràmetre escalar, però ha rebut un paràmetre de taula.
           unsupported_rounding: El motor d'exportació de fulls de càlcul ha trobat
             una regla d'arrodoniment del registre no admesa.
         guide:
@@ -5307,7 +5305,7 @@ cli:
     detail_help: Habilita la sortida detallada.
     errors:
       did_you_mean_command: Volíeu dir '%{command}'?
-    format_help: 'Format de sortida: text, json, table, csv.'
+    format_help: 'Format de sortida: text, json.'
     help_help: Mostra l'ajuda.
     landing:
       headline: Assistent fiscal CADRUMO
@@ -6353,8 +6351,6 @@ errors:
       Comproveu els arguments o executeu `aeat --help`.
     refused_config_reset_unconfirmed: El restabliment de la configuració no s'ha confirmat.
       Torna a executar l'ordre confirmant l'operació.
-    refused_corpus_search_dependency: Aquesta operació de cerca al corpus necessita
-      els components opcionals de cerca semàntica; instal·leu-los i torneu-ho a provar.
     refused_corpus_search_input: No s'ha pogut satisfer la sol·licitud de cerca al
       corpus.
     refused_diagnostic_model_invariant: 'Refusat: invariant del model de diagnòstic

@@ -20,22 +20,8 @@ from __future__ import annotations
 
 import os
 
-from ...core.external_constants import OUTPUT_LANGUAGE_ENV_VAR, SUPPORTED_OUTPUT_LANGUAGES, OutputLanguage
-
-
-def _normalise_supported_language_for_argv(value: str) -> OutputLanguage | None:
-    """Lower-case and trim ``value``; return its :class:`OutputLanguage` member.
-
-    Unsupported values return ``None`` so the canonical Typer ``Choice`` on the
-    root callback remains the single authority that refuses an invalid value with
-    the accepted-set hint — this pre-parse only forwards a value the catalogue
-    already supports, hydrated to the typed member at this boundary.
-    """
-    raw = value.strip().lower()
-    if raw in SUPPORTED_OUTPUT_LANGUAGES:
-        return OutputLanguage(raw)
-    return None
-
+from ...core.config import coerce_output_language_setting
+from ...core.external_constants import OUTPUT_LANGUAGE_ENV_VAR, OutputLanguage
 
 _LANGUAGE_FLAGS: tuple[str, ...] = ("--language", "--lang", "--output-language")
 _LANGUAGE_FLAG_PREFIXES: tuple[str, ...] = ("--language=", "--lang=", "--output-language=")
@@ -57,13 +43,13 @@ def _language_from_argv(argv: list[str]) -> OutputLanguage | None:
         token = argv[index]
         if token in _LANGUAGE_FLAGS:
             if index + 1 < len(argv):
-                normalised = _normalise_supported_language_for_argv(argv[index + 1])
+                normalised = coerce_output_language_setting(argv[index + 1])
                 if normalised is not None:
                     return normalised
             index += 2
             continue
         if token.startswith(_LANGUAGE_FLAG_PREFIXES):
-            normalised = _normalise_supported_language_for_argv(token.split("=", 1)[1])
+            normalised = coerce_output_language_setting(token.split("=", 1)[1])
             if normalised is not None:
                 return normalised
         index += 1

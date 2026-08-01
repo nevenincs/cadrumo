@@ -31,34 +31,12 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-import html as _html_mod
 import json
-import re
 import sys
-import unicodedata
 from pathlib import Path
 from typing import Final
 
-# --- inline normalise_corpus_text from cadrumo.domain.calculations.registry._text ---
-# Inlined here to avoid importing the cadrumo package (which triggers pydantic
-# settings initialisation and fails outside an installed state-root environment).
-# This MUST stay byte-identical to the production function in _text.py; update
-# both when the normalisation logic changes.
-_HTML_TAG_RE = re.compile(r"<[a-zA-Z!/?][^<>\s]{0,200}>")
-_COMBINING_MARK_RE = re.compile(r"[̀-ͯ]+")
-_WHITESPACE_RE = re.compile(r"\s+")
-
-
-def _normalise_corpus_text(text: str) -> str:
-    """Normalise corpus text for citation-presence checks.
-
-    Byte-identical to :func:`cadrumo.domain.calculations.registry._text.normalise_corpus_text`.
-    """
-    decoded = _html_mod.unescape(text).replace("\xa0", " ")
-    without_tags = _HTML_TAG_RE.sub(" ", decoded)
-    without_marks = _COMBINING_MARK_RE.sub("", unicodedata.normalize("NFKD", without_tags))
-    return _WHITESPACE_RE.sub(" ", without_marks).strip().lower()
-
+from cadrumo.core import normalise_corpus_text
 
 _UTF_8: Final[str] = "utf-8"
 _SCHEMA_VERSION: Final[int] = 2
@@ -192,7 +170,7 @@ def extract_all(*, check: bool = False) -> int:
             rel = pdf_path.relative_to(_REPO_ROOT).as_posix()
             print(f"Extracting {rel} ...")
             raw_text = _extract_raw_text(pdf_path)
-            normalised = _normalise_corpus_text(raw_text)
+            normalised = normalise_corpus_text(raw_text)
             sidecar_path = _write_sidecar(pdf_path, sha256, normalised)
             print(f"  -> {sidecar_path.relative_to(_REPO_ROOT).as_posix()}")
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import click
 import pytest
 
 from ....application.registry import (
@@ -12,6 +13,7 @@ from ....application.registry import (
 )
 from ....core.config import override_settings
 from ....core.resources import bundled_path
+from ....tests.cli_runner import cadrumo_click_command
 from ..registry import _resolve_parity_store_root
 from ._registry_cli_fixtures import (
     _isolated_registry_cli_backend,
@@ -379,7 +381,15 @@ def test_registry_retained_commands_reject_command_local_json_flag() -> None:
     assert "No such option" in result.output
 
 
-def test_registry_commands_refuse_unsupported_root_output_format() -> None:
+def test_root_output_format_is_typed_and_refuses_invalid_values_before_dispatch(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    command = cadrumo_click_command()
+    command.get_help(click.Context(command))
+    parser_help = capsys.readouterr().out
+    assert "<text|json>" in parser_help
+    assert "Formato de salida: text, json." in parser_help
+
     result = invoke_cached_cli(
         [
             "--format",
@@ -393,9 +403,6 @@ def test_registry_commands_refuse_unsupported_root_output_format() -> None:
     )
 
     assert result.exit_code == 2
-    assert "Refused." in result.output
-    assert (
-        "output format is not supported" in result.output
-        or "formato de salida solicitado no es compatible" in result.output
-    )
-    assert "unexpected internal error" not in result.output.lower()
+    assert "Invalid value" in result.output
+    assert "'text'" in result.output and "'json'" in result.output
+    assert "Refused." not in result.output

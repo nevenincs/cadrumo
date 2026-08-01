@@ -9,13 +9,15 @@ import sys
 from pathlib import Path
 
 import pytest
-from dev.corpus.extract_manual_corpus_text import _extract_raw_text, _normalise_corpus_text
+from dev.corpus.extract_manual_corpus_text import _extract_raw_text
 from dev.docs.preprocess import (
     EXTRACTED_JSON_SUFFIX,
     EXTRACTED_TEXT_SUFFIX,
     PreprocessOutput,
 )
 from dev.docs.preprocess._html import HTML_EXTRACTOR_ID, build_outputs
+
+from cadrumo.core import normalise_corpus_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -247,7 +249,7 @@ def test_pdf_corpus_text_sidecars_equal_current_production_extraction() -> None:
             # differences); it is enforced on the generation platform only.
             continue
 
-        expected = _normalise_corpus_text(_extract_raw_text(source_path))
+        expected = normalise_corpus_text(_extract_raw_text(source_path))
         if normalised_text != expected:
             failures.append(rel_sidecar)
 

@@ -6,16 +6,6 @@ Covers two behavioural contracts:
    source PDF's sha256 matches the sidecar, and refuses (returns ``None``) when
    it does not — proving the sha256 guard is live end-to-end and that
    :func:`packaged_data` resolution actually finds the sidecar.
-
-2. The ``_normalise_corpus_text`` function inlined in
-   ``dev/corpus/extract_manual_corpus_text.py`` is byte-equal to the
-   canonical :func:`normalise_corpus_text` in :mod:`cadrumo.domain.calculations.registry._text`
-   over a battery of representative inputs, so a future edit to either side that
-   does not mirror to the other fails loudly.
-
-These tests live here (inside the registry test package) so they can use
-intra-package relative imports for the private symbols they exercise, in
-accordance with ``service-imports-via-top-level-reexports``.
 """
 
 from __future__ import annotations
@@ -26,7 +16,6 @@ from pathlib import Path
 
 import pytest
 
-from .._text import normalise_corpus_text
 from .._validate_evidence import _read_manual_pdf_sidecar
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -89,72 +78,4 @@ def test_manual_pdf_corpus_text_sidecar_mismatch_returns_none() -> None:
     assert result_mismatch is None, (
         f"_read_manual_pdf_sidecar returned non-None for mismatched bytes "
         f"(corpus_path={corpus_path!r}); stale text must be refused"
-    )
-
-
-def test_corpus_text_normaliser_inlined_copy_is_byte_equal_to_canonical() -> None:
-    """The inlined _normalise_corpus_text in the build script is byte-equal to the canonical.
-
-    ``dev/corpus/extract_manual_corpus_text.py`` inlines
-    :func:`normalise_corpus_text` from
-    :mod:`cadrumo.domain.calculations.registry._text` to avoid triggering cadrumo
-    package initialisation (pydantic Settings) in a plain ``python -m`` invocation.
-    The two implementations must produce identical output: any future edit to either
-    side that does not mirror to the other would silently change the normalised text
-    in the shipped sidecars vs. what the runtime validator compares against.
-
-    The battery covers every branch in the normaliser:
-
-    - HTML tag stripping: tags removed, non-tag ``<`` (followed by space/digit) kept
-    - HTML entity unescaping: ``&amp;`` ``&lt;`` ``&gt;`` ``&nbsp;``
-    - Combining-mark stripping via NFKD: U+0300-U+036F combining diacritics
-    - NBSP ``\\xa0`` → space
-    - Whitespace collapsing
-    - Lowercasing
-    """
-    from dev.corpus.extract_manual_corpus_text import (  # type: ignore[reportMissingImports]  # dev/ tooling module; resolves at runtime, not on the type-check src roots
-        _normalise_corpus_text as inlined,
-    )
-
-    battery: list[str] = [
-        # HTML tag stripping
-        "<b>bold</b> and <em>italic</em> text",
-        "<p>paragraph</p>",
-        # Non-tag ``<`` must pass through (no letter immediately follows ``<``)
-        "menos de < 500 euros anuales",
-        "comparación: a < b y c > d",
-        # HTML entities
-        "precio &amp; impuesto",
-        "importe &lt; 100 &euro;",
-        "sección &gt; 3",
-        "&nbsp;espacio&nbsp;",
-        # Combining marks U+0300-U+036F (NFKD decomposition + strip)
-        "café",  # precomposed é (U+00E9)
-        "café",  # e + combining acute (U+0301)
-        "ño",  # n + combining tilde (U+0303)
-        "àb́ĉ",  # multiple combining marks
-        # NBSP
-        "no\xa0breaking\xa0space",
-        # Whitespace collapsing
-        "  multiple   internal   spaces  ",
-        "line\n\nbreak\ttab",
-        # Lowercasing
-        "UPPERCASE and MixedCase",
-        # Mixed: entity + tag + combining + NBSP
-        "&lt;b&gt;café\xa0au\xa0lait&lt;/b&gt;",
-        # Empty and whitespace-only
-        "",
-        "   ",
-    ]
-
-    mismatches: list[str] = []
-    for text in battery:
-        canon = normalise_corpus_text(text)
-        inline = inlined(text)
-        if canon != inline:
-            mismatches.append(f"input={text!r}\n  canonical={canon!r}\n  inlined={inline!r}")
-
-    assert not mismatches, (
-        f"{len(mismatches)} input(s) produced different output between canonical "
-        f"and inlined normalise_corpus_text:\n" + "\n".join(mismatches)
     )

@@ -49,6 +49,7 @@ from ._adapter_utils import (
     _LocateHelper,
     _SedeCheckerModel,
     assert_query_browser_action_for,
+    is_aeat_auth_gate_redirect,
     make_locate_helper,
     nif_check_operation_tail,
     normalize_response_text,
@@ -66,7 +67,6 @@ from ._errors import BrowserAdapterTypeError, SedeError, SedeFailureMode, SedeNa
 
 logger = get_logger(__name__)
 _EXTERNAL = Settings.external_constants()
-_AEAT_AUTH_GATE_4033_PATH = _EXTERNAL.aeat.sede_paths.auth_gate_4033
 _AEAT_HOST_SUFFIX = _EXTERNAL.aeat.domains.host_suffix
 _GROI_AUTH_UNLOCK_DESCRIPTOR = _EXTERNAL.aeat.oracles.groi_auth_unlock_descriptor
 _NIF_IVA_AUTH_LOCKED_DESCRIPTOR = _EXTERNAL.aeat.oracles.nif_iva_auth_locked_descriptor
@@ -493,25 +493,6 @@ async def _check_single_nif(
     return extract_verdict_from_response_text(body_text)
 
 
-def is_aeat_auth_gate_redirect(current_url: str) -> bool:
-    """Return True when the live page URL points at AEAT's 4033 / 403 error page.
-
-    AEAT redirects unauthenticated requests to the form servlet to its
-    centralized 4033 auth-gate path (HTTP 200 OK landing on a 403-titled
-    page). The detector keys off the configured path and host suffix so
-    it stays specific to that exact failure mode. Other AEAT errors are
-    intentionally not matched.
-    """
-    if not current_url:
-        return False
-    parsed = urlsplit(current_url)
-    host = parsed.netloc.casefold()
-    host_suffix = _AEAT_HOST_SUFFIX.casefold()
-    if host != host_suffix and not host.endswith(f".{host_suffix}"):
-        return False
-    return _AEAT_AUTH_GATE_4033_PATH.casefold() in parsed.path.casefold()
-
-
 def extract_verdict_from_response_text(body_text: str) -> Literal["valid", "invalid", "unknown"]:
     """Parse the AEAT-rendered verdict from response body text.
 
@@ -635,5 +616,4 @@ __all__ = [
     "SedeNifIvaCheckObservation",
     "collect_nif_iva_check_observations",
     "extract_verdict_from_response_text",
-    "is_aeat_auth_gate_redirect",
 ]

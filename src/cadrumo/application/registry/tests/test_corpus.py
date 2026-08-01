@@ -5,12 +5,14 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
+from typing import cast
 
 import pytest
 from pydantic import ValidationError
 
 from ....core.config import override_settings
 from ....core.errors import build_error_envelope
+from ....core.external_constants import OutputLanguage
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.resources import resources
 from ....core.topics import Topic, TopicCatalogue
@@ -152,7 +154,7 @@ def test_topic_projection_resolves_central_output_language_override() -> None:
 def test_topic_projection_accepts_explicit_supported_locale() -> None:
     report = list_registry_manuals(
         RegistryManualsListCommand(manual=RegistryManualId.RENTA, year=2025),
-        locale="es",
+        locale=" ES ",
     )
 
     topics = {topic.slug: topic for topic in report.topics}
@@ -160,13 +162,27 @@ def test_topic_projection_accepts_explicit_supported_locale() -> None:
     assert topics["iva-regime"].body.startswith("Régimen IVA aplicable al contribuyente")
 
 
-def test_topic_projection_rejects_unknown_locale_with_application_error(caplog: pytest.LogCaptureFixture) -> None:
+def test_topic_projection_accepts_output_language_enum() -> None:
+    report = list_registry_manuals(
+        RegistryManualsListCommand(manual=RegistryManualId.RENTA, year=2025),
+        locale=OutputLanguage.EN,
+    )
+
+    topics = {topic.slug: topic for topic in report.topics}
+    assert topics["iva-regime"].title == "IVA regime"
+
+
+@pytest.mark.parametrize("locale", ("", "zz"))
+def test_topic_projection_rejects_invalid_string_locale_with_application_error(
+    caplog: pytest.LogCaptureFixture,
+    locale: str,
+) -> None:
     caplog.set_level(logging.WARNING, logger="cadrumo.application.registry._corpus")
 
     with pytest.raises(RegistryApplicationInputError) as exc_info:
         list_registry_manuals(
             RegistryManualsListCommand(manual=RegistryManualId.RENTA, year=2025),
-            locale="zz",
+            locale=locale,
         )
 
     assert exc_info.value.translated_message == "application.registry.errors.invalid_topic_locale"
@@ -174,15 +190,31 @@ def test_topic_projection_rejects_unknown_locale_with_application_error(caplog: 
     assert envelope.code == "REFUSED_APPLICATION_REGISTRY_INPUT"
     assert envelope.context == {
         "registry_service": "registry.topics",
-        "locale_code": "zz",
+        "locale_code": locale,
         "allowed_locales": ", ".join(SUPPORTED_OUTPUT_LANGUAGES),
     }
     records = [record for record in caplog.records if getattr(record, "registry_service", "") == "registry.topics"]
     assert len(records) == 1
     record = records[0]
     assert record.levelno == logging.WARNING
-    assert record.__dict__["registry_locale"] == "zz"
+    assert record.__dict__["registry_locale"] == locale
     assert record.__dict__["registry_allowed_locales"] == SUPPORTED_OUTPUT_LANGUAGES
+
+
+def test_topic_projection_refuses_boolean_locale_with_application_error(caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level(logging.WARNING, logger="cadrumo.application.registry._corpus")
+
+    with pytest.raises(RegistryApplicationInputError) as exc_info:
+        list_registry_manuals(
+            RegistryManualsListCommand(manual=RegistryManualId.RENTA, year=2025),
+            locale=cast(str, True),
+        )
+
+    assert exc_info.value.context == {
+        "registry_service": "registry.topics",
+        "locale_code": True,
+        "allowed_locales": ", ".join(SUPPORTED_OUTPUT_LANGUAGES),
+    }
 
 
 def test_registry_input_error_builds_central_error_envelope() -> None:

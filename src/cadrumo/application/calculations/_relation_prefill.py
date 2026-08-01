@@ -79,6 +79,7 @@ from ...domain.calculations.registry import (
     RelationDefinition,
     RelationId,
     SourceRefId,
+    expression_relation_refs,
     materialize_relation_binding_values,
     relation_source_requirements,
     resolve_observed_requirement_value,
@@ -699,18 +700,11 @@ def _resolve_available_relation_values(
 
 
 def _formula_relation_ids(snapshot: RegistrySnapshot) -> frozenset[RelationId]:
-    relation_ids: set[RelationId] = set()
-    for formula in snapshot.revision.formulas:
-        _collect_expression_relation_ids(formula.expression, relation_ids)
-    return frozenset(relation_ids)
-
-
-def _collect_expression_relation_ids(expression: object, relation_ids: set[RelationId]) -> None:
-    relation_id = getattr(expression, "relation", None)
-    if relation_id is not None:
-        relation_ids.add(relation_id)
-    for arg in getattr(expression, "args", ()):
-        _collect_expression_relation_ids(arg, relation_ids)
+    return frozenset(
+        relation_id
+        for formula in snapshot.revision.formulas
+        for relation_id in expression_relation_refs(formula.expression)
+    )
 
 
 def _unresolved_relation_diagnostics(

@@ -47,6 +47,16 @@ _PAYLOAD_PACKAGES: tuple[str, ...] = (
     "cadrumo.entrypoints.cli._config",
 )
 
+# Result schemas normally live beside their CLI transport emitters and are
+# found by the payload-package walk above. A small number are correctly owned
+# below the application boundary, where their producers construct them. Keep
+# those owners explicit rather than creating a CLI re-export merely to satisfy
+# a filename-driven scanner. These imports occur only while building the
+# capability manifest/MCP surface, never during command parsing or dispatch.
+_LAZY_SCHEMA_OWNER_MODULES: tuple[str, ...] = (
+    "cadrumo.application.wizard._results",
+)
+
 
 class SchemaModuleLoadFailure(BaseModel):
     """One payload module that failed to import during registry population.
@@ -106,6 +116,11 @@ def _ensure_result_schemas_registered(
                     importlib.import_module(module_name)  # nosem
                 except Exception as exc:
                     failures.append(SchemaModuleLoadFailure(module=module_name, error=f"{type(exc).__name__}: {exc}"))
+    for module_name in _LAZY_SCHEMA_OWNER_MODULES:
+        try:
+            importlib.import_module(module_name)  # nosem
+        except Exception as exc:
+            failures.append(SchemaModuleLoadFailure(module=module_name, error=f"{type(exc).__name__}: {exc}"))
     return tuple(failures)
 
 

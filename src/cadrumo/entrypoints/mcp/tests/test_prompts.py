@@ -22,6 +22,7 @@ import pytest
 
 from ....agent import iter_skill_documents, operator_rules_text
 from ....core import accepted_period_codes, accepted_period_patterns
+from ....tests import connected_server_and_client_session as connect
 from .._completions import complete_prompt_argument
 from .._prompts import (
     ORIENTATION_PROMPT_NAME,
@@ -96,55 +97,38 @@ def test_server_lists_and_serves_every_prompt() -> None:
             build_server(())
         return
 
-    from mcp.types import (
-        CompleteRequest,
-        CompleteRequestParams,
-        CompletionArgument,
-        GetPromptRequest,
-        GetPromptRequestParams,
-        ListPromptsRequest,
-        PromptReference,
-    )
+    from mcp.types import PromptReference
 
     # An empty descriptor set exercises the prompt handlers without building the
     # CLI tool descriptors (the prompt channel is independent of the tool surface).
     server = cast("Any", build_server(()))
-    handlers = server.request_handlers
     skill_texts = _shipped_skill_texts()
 
     async def _drive() -> None:
-        listed = (await handlers[ListPromptsRequest](ListPromptsRequest(method="prompts/list"))).root.prompts
-        assert {prompt.name for prompt in listed} == {entry.name for entry in build_prompt_catalogue()}
-        workflow = next(prompt for prompt in listed if prompt.name != ORIENTATION_PROMPT_NAME)
-        period_argument = next(argument for argument in workflow.arguments or [] if argument.name == "period")
-        assert (period_argument.description or "").startswith("The AEAT period code.")
-        assert all(pattern in (period_argument.description or "") for pattern in accepted_period_patterns())
-        assert "ANUAL" not in (period_argument.description or "")
+        async with connect(server) as session:
+            listed = (await session.list_prompts()).prompts
+            assert {prompt.name for prompt in listed} == {entry.name for entry in build_prompt_catalogue()}
+            workflow = next(prompt for prompt in listed if prompt.name != ORIENTATION_PROMPT_NAME)
+            period_argument = next(argument for argument in workflow.arguments or [] if argument.name == "period")
+            assert (period_argument.description or "").startswith("The AEAT period code.")
+            assert all(pattern in (period_argument.description or "") for pattern in accepted_period_patterns())
+            assert "ANUAL" not in (period_argument.description or "")
 
-        completion = (
-            await handlers[CompleteRequest](
-                CompleteRequest(
-                    method="completion/complete",
-                    params=CompleteRequestParams(
-                        ref=PromptReference(type="ref/prompt", name=workflow.name),
-                        argument=CompletionArgument(name="period", value=""),
-                    ),
-                ),
-            )
-        ).root.completion
-        assert tuple(completion.values) == _PERIOD_COMPLETIONS
+            completion = (
+                await session.complete(
+                    ref=PromptReference(type="ref/prompt", name=workflow.name),
+                    argument={"name": "period", "value": ""},
+                )
+            ).completion
+            assert tuple(completion.values) == _PERIOD_COMPLETIONS
 
-        request = GetPromptRequest(
-            method="prompts/get",
-            params=GetPromptRequestParams(name="cadrumo-preparar-modelo-130"),
-        )
-        result = (await handlers[GetPromptRequest](request)).root
+            result = await session.get_prompt("cadrumo-preparar-modelo-130")
         assert result.messages[0].content.type == "text"
         assert result.messages[0].content.text.strip()
         resource_message = result.messages[1]
         assert resource_message.content.type == "resource"
         assert str(resource_message.content.resource.uri) == "cadrumo://skill/cadrumo-preparar-modelo-130"
-        assert resource_message.content.resource.mimeType == "text/markdown"
+        assert resource_message.content.resource.mime_type == "text/markdown"
         assert resource_message.content.resource.text == skill_texts["cadrumo-preparar-modelo-130"]
 
     anyio.run(_drive)
@@ -158,17 +142,11 @@ def test_server_get_prompt_orientation_embeds_the_rules() -> None:
             build_server(())
         return
 
-    from mcp.types import GetPromptRequest, GetPromptRequestParams
-
     server = cast("Any", build_server(()))
-    handlers = server.request_handlers
 
     async def _drive() -> None:
-        request = GetPromptRequest(
-            method="prompts/get",
-            params=GetPromptRequestParams(name=ORIENTATION_PROMPT_NAME),
-        )
-        result = (await handlers[GetPromptRequest](request)).root
+        async with connect(server) as session:
+            result = await session.get_prompt(ORIENTATION_PROMPT_NAME)
         embedded = [message.content.resource.text for message in result.messages if message.content.type == "resource"]
         assert operator_rules_text() in embedded
 
@@ -183,18 +161,22 @@ def test_server_get_prompt_unknown_name_is_a_protocol_error() -> None:
             build_server(())
         return
 
-    from mcp.types import GetPromptRequest, GetPromptRequestParams
+    from mcp.types import GetPromptRequestParams
 
+    # The registered handler itself is asserted directly here (not through a real
+    # client session): the contract under test is that the SDK-independent
+    # ``PromptNotFoundError`` translates to a raw ``ValueError`` at the handler
+    # boundary (the shape a JSON-RPC dispatch turns into a clean protocol error
+    # for the client) - a call-site detail the dispatcher, not this test, is
+    # responsible for wrapping. The handler ignores its context argument entirely
+    # (see ``_on_get_prompt``), so no real session is needed to invoke it.
     server = cast("Any", build_server(()))
-    handlers = server.request_handlers
+    entry = server.get_request_handler("prompts/get")
+    assert entry is not None
 
     async def _drive() -> None:
-        request = GetPromptRequest(
-            method="prompts/get",
-            params=GetPromptRequestParams(name="no-such-workflow"),
-        )
         with pytest.raises(ValueError, match="no-such-workflow"):
-            await handlers[GetPromptRequest](request)
+            await entry.handler(cast("Any", None), GetPromptRequestParams(name="no-such-workflow"))
 
     anyio.run(_drive)
 

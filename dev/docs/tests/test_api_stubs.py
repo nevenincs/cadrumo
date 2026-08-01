@@ -70,13 +70,13 @@ def test_the_committed_stub_tree_carries_untranslated_terminators() -> None:
     separator is not already LF, which is where the drift was measured; on a
     line-feed platform it holds trivially and costs nothing.
     """
-    stubs = sorted(_DOCS_API.glob("*.rst"))
-    assert stubs, f"no stub files found under {_DOCS_API}; this gate scanned nothing"
+    rst_paths = sorted(_DOCS_API.glob("*.rst"))
+    assert rst_paths, f"no stub files found under {_DOCS_API}; this gate scanned nothing"
 
-    translated = [stub.name for stub in stubs if b"\r\n" in stub.read_bytes()]
+    translated = [rst_path.name for rst_path in rst_paths if b"\r\n" in rst_path.read_bytes()]
 
     assert not translated, (
-        f"{len(translated)} of {len(stubs)} committed stubs carry translated terminators, so their "
+        f"{len(translated)} of {len(rst_paths)} committed stubs carry translated terminators, so their "
         f"on-disk bytes differ from their committed bytes and no diff can show it; "
         f"run `python -m dev.docs.apidocs scaffold` to rewrite them: {translated[:10]}"
     )

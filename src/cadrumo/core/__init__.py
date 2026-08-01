@@ -178,6 +178,7 @@ from .compatibility_lifecycle import (
     unfloored_durable_formats,
     unknown_floor_keys,
 )
+from .corpus_text import normalise_corpus_text
 from .external_constants import M347_THRESHOLD_EUR
 from .product_identity import AEAT_AUTHORITY_SHORT_NAME, PRODUCT_IDENTITY, IdentityReferent, ProductIdentity
 from .secure_object_write import (
@@ -326,6 +327,7 @@ __all__: list[str] = [
     "misclassified_floor_keys",
     "modelo_has_codified_amendment_regime",
     "modelo_has_codified_disposition",
+    "normalise_corpus_text",
     "optional_extra_available",
     "optional_extra_for_module",
     "parse_toml_text",

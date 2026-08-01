@@ -1,8 +1,8 @@
 """Serving-path gate tests over the real ``build_server`` handlers.
 
 Drives the real MCP server in-process through the SDK's memory transport
-(``create_connected_server_and_client_session``) - a real client, a real server,
-no mocks - for the gates that short-circuit before the CLI subprocess: the
+(:func:`cadrumo.tests.connected_server_and_client_session`) - a real client, a
+real server, no mocks - for the gates that short-circuit before the CLI subprocess: the
 persona handoff-deny boundary, the handoff faithfulness block, the meta-execute
 fail-close, and payload-free telemetry. The post-dispatch advisory and the
 grounding-window pass are exercised against the exact serving-path gate functions
@@ -24,8 +24,8 @@ from pathlib import Path
 import mcp.types as mcp_types
 import pytest
 from mcp.client.session import ElicitationFnT
-from mcp.shared.memory import create_connected_server_and_client_session as connect
 
+from ....tests import connected_server_and_client_session as connect
 from .._dispatch import tool_name_for_command
 from .._faithfulness import SessionGroundingWindow, arguments_faithfulness
 from .._persona_scope import AgentPersona
@@ -124,7 +124,7 @@ def test_handoff_leaves_are_denied_to_preparer_and_reconciler_but_not_verifier()
 
 def test_direct_denied_handoff_call_refuses_with_the_denial_message() -> None:
     result = _run(_call(AgentPersona.MODELO_PREPARER, _EXPORT_TOOL, {}))
-    assert result.isError
+    assert result.is_error
     text = "\n".join(_texts(result))
     # The denial names the command and the owning verifier persona (interpolated).
     assert "modelo.export" in text
@@ -138,7 +138,7 @@ def test_faithfulness_blocks_an_ungrounded_amount_at_a_handoff_verb() -> None:
     result = _run(
         _call(None, _FILE_TOOL, {"notes": _UNGROUNDED_AMOUNT}, elicit=_accept_confirmation),
     )
-    assert result.isError
+    assert result.is_error
     text = "\n".join(_texts(result))
     assert _UNGROUNDED_AMOUNT in text
     # A block returns a single advisory content block, not a dispatched envelope.
@@ -221,7 +221,7 @@ def test_confirm_elicitation_refuses_over_the_wire_when_not_confirmed(
     # client answers with a non-proceed action. The gate must refuse BEFORE any
     # dispatch — decline, cancel, and accept-without-confirm all fail closed.
     result = _run(_call(None, _EXPORT_TOOL, {}, elicit=elicit))
-    assert result.isError
+    assert result.is_error
     text = "\n".join(_texts(result))
     assert "modelo.export" in text
     # The refusal is the not-confirmed message carrying the concrete decision,
@@ -245,5 +245,5 @@ def test_meta_execute_fail_closes_a_handoff_tier_confirm() -> None:
     # The meta path runs synchronously (no elicitation channel), so a handoff-tier
     # CONFIRM fails closed with the no-channel refusal rather than proceeding.
     result = _run(_call(None, "execute", {"command_key": "modelo.export", "arguments": {}}))
-    assert result.isError
+    assert result.is_error
     assert "modelo.export" in "\n".join(_texts(result))

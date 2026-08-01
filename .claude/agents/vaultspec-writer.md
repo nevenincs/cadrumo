@@ -9,6 +9,7 @@ tools:
 - Write
 - Edit
 - Bash
+- SendMessage
 model: claude-opus-5
 ---
 

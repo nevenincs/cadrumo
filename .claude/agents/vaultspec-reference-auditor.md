@@ -7,6 +7,7 @@ tools:
 - Grep
 - Read
 - Bash
+- SendMessage
 model: claude-sonnet-5
 ---
 

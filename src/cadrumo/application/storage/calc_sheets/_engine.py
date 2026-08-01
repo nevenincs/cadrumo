@@ -15,7 +15,6 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping
 from datetime import date
-from decimal import Decimal
 from typing import Final, Literal
 
 from ....core import BindingSourceKind, Period
@@ -30,13 +29,14 @@ from ....domain.calculations.registry import (
     FormulaDefinition,
     InputKind,
     ModeloRevision,
-    ParameterDefinition,
     RegistryRoundingCode,
     RegistrySnapshot,
+    RegistryValidationError,
     binding_aggregation_op,
     binding_row_set_selector,
     casillas_by_id,
     relation_source_requirements,
+    resolve_parameter,
 )
 from ....domain.period import calculation_filing_date
 from ._errors import CalcSheetsEngineError
@@ -360,35 +360,6 @@ def _formula_cells(
     return tuple(cells)
 
 
-def _resolve_scalar(parameter: ParameterDefinition, today: date) -> Decimal:
-    """Pick the dated scalar value valid on `today`.
-
-    The engine emits the value at the snapshot's filing-period anchor
-    so the workbook shows the parameter as it was at the filing date.
-    Bracket-table parameters do not pass through this helper.
-    """
-    if parameter.data_type == "bracket_table":
-        raise CalcSheetsEngineError(
-            "parameter has no scalar value",
-            context={"parameter_id": parameter.id, "data_type": parameter.data_type},
-            translated_message="application.storage.calc_sheets.engine.errors.parameter_not_scalar",
-        )
-    chosen: Decimal | None = None
-    for dated in parameter.values:
-        if dated.valid_from > today:
-            continue
-        if dated.valid_to is not None and dated.valid_to < today:
-            continue
-        chosen = dated.value
-    if chosen is None:
-        raise CalcSheetsEngineError(
-            "parameter has no dated value valid for requested date",
-            context={"parameter_id": parameter.id, "valid_on": today.isoformat()},
-            translated_message="application.storage.calc_sheets.engine.errors.parameter_no_dated_value",
-        )
-    return chosen
-
-
 def _tariff_tables(
     revision: ModeloRevision,
     layout: SheetLayout,
@@ -438,7 +409,14 @@ def _tariff_tables(
                 # scalar ``values`` a keyed_bracket_table does not carry, and would
                 # otherwise crash the whole workbook export.
                 continue
-            scalar = _resolve_scalar(definition, filing_date)
+            try:
+                scalar = resolve_parameter(definition, {"filing_period": filing_date})
+            except RegistryValidationError as exc:
+                raise CalcSheetsEngineError(
+                    "parameter has no dated value valid for requested date",
+                    context={"parameter_id": definition.id, "valid_on": filing_date.isoformat()},
+                    translated_message="application.storage.calc_sheets.engine.errors.parameter_no_dated_value",
+                ) from exc
             scalar_data_type: Literal["decimal", "money", "integer", "ratio"] = raw_dt
             tables.append(
                 SheetTariffTable(

@@ -898,30 +898,27 @@ def test_removed_command_schema_keys_are_absent() -> None:
 
 
 # ---------------------------------------------------------------------
-# Wizard-bridge deletion guard (fresh subprocess)
+# Canonical wizard-schema owner guard (fresh subprocess)
 # ---------------------------------------------------------------------
 #
 # ``config.profile.create`` / ``config.profile.edit`` are declared in
-# ``application.wizard._results`` -- below every payload package -- and reach the
-# CLI capability manifest ONLY because the re-export bridge ``_wizard_payloads.py``
-# is a ``*payload*``-named module the discovery walk imports. Deleting or emptying
-# that bridge is SILENT: the walk records a failure for a broken module and nothing
-# at all for a deleted one, so both profile verbs drop off the ``aeat app contract``
-# surface with no error.
+# ``application.wizard._results`` -- below every payload package -- are imported
+# through the manifest's explicit lazy schema-owner table. This keeps command
+# startup cold while allowing the capability surface to discover the schemas at
+# their actual producer, without a CLI forwarding module.
 #
 # The in-process gates in this file CANNOT catch that: this module imports the
 # wizard package at the top to seed the registry itself (see the module header
-# import), so the two schemas are present regardless of the bridge. Only a FRESH
+# import), so the two schemas are present regardless of the owner table. Only a FRESH
 # interpreter that never imports the wizard package can measure the real
 # dependency, which is why this guard runs in a subprocess. Measured: the MCP
-# surface no longer depends on the bridge (``_server`` imports the wizard package
-# at module level for the identity fix, self-seeding the schemas); the
-# CLI-contract/manifest surface still does, so the guard is scoped to it.
+# surface may seed the schemas through unrelated imports; the CLI-contract/manifest
+# surface therefore needs a fresh-process guard scoped to its own lazy owner.
 _PROFILE_SCHEMA_KEYS = ("config.profile.create", "config.profile.edit")
-_WIZARD_BRIDGE_MODULE = "cadrumo.entrypoints.cli._wizard_payloads"
+_WIZARD_SCHEMA_OWNER_MODULE = "cadrumo.application.wizard._results"
 
 
-def _probe_script(*, block_bridge: bool) -> str:
+def _probe_script(*, block_schema_owner: bool) -> str:
     """Render the fresh-interpreter probe script that builds the CLI manifest."""
     return textwrap.dedent(
         """
@@ -930,12 +927,12 @@ def _probe_script(*, block_bridge: bool) -> str:
             del os.environ[_k]
         os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = tempfile.mkdtemp()
         os.environ["CADRUMO_ACTIVE_PROFILE"] = " "
-        bridge = "cadrumo.entrypoints.cli._wizard_payloads"
+        schema_owner = "cadrumo.application.wizard._results"
         if {block!r} == "block":
             class _Block:
                 def find_spec(self, name, path, target=None):
-                    if name == bridge:
-                        raise ModuleNotFoundError("blocked for the deletion guard")
+                    if name == schema_owner:
+                        raise ModuleNotFoundError("blocked for the schema-owner guard")
                     return None
             sys.meta_path.insert(0, _Block())
         # Warm the lazy core exports so a cold-start config resolution does not hit
@@ -945,26 +942,26 @@ def _probe_script(*, block_bridge: bool) -> str:
 
         # The guard must not import the wizard package itself: building the payload
         # walk entrypoint must leave it unimported, so any later wizard import comes
-        # from the BRIDGE during the walk, not from the guard seeding its own subject.
+        # from the canonical owner during the walk, not from the guard seeding its own subject.
         wizard_before_walk = "cadrumo.application.wizard" in sys.modules
         commands = {ref.command for ref in command_schema_refs()}
         present = [key for key in ("config.profile.create", "config.profile.edit") if key in commands]
         print("RESULT " + json.dumps({"present": present, "wizard_before_walk": wizard_before_walk}))
         """
-    ).replace("{block!r}", repr("block" if block_bridge else "keep"))
+    ).replace("{block!r}", repr("block" if block_schema_owner else "keep"))
 
 
-def _profile_schema_keys_in_fresh_process(*, block_bridge: bool) -> tuple[frozenset[str], bool]:
+def _profile_schema_keys_in_fresh_process(*, block_schema_owner: bool) -> tuple[frozenset[str], bool]:
     """Build the CLI capability manifest in a clean interpreter and report the result.
 
     Returns ``(present_profile_keys, wizard_package_self_seeded)``. The subprocess
-    never imports the wizard package, so the bridge module is the sole registrar of
-    the two profile schemas on this surface; ``block_bridge`` simulates the bridge
-    being deleted/emptied via a meta-path finder rather than touching the file,
-    which in this shared worktree every peer would see.
+    never imports the wizard package, so the canonical results module is the sole
+    registrar of the two profile schemas on this surface. ``block_schema_owner``
+    simulates a failed lazy import via a meta-path finder rather than touching a
+    file that every peer would see.
     """
     completed = subprocess.run(
-        [sys.executable, "-c", _probe_script(block_bridge=block_bridge)],
+        [sys.executable, "-c", _probe_script(block_schema_owner=block_schema_owner)],
         capture_output=True,
         text=True,
         timeout=180,
@@ -980,46 +977,46 @@ def _profile_schema_keys_in_fresh_process(*, block_bridge: bool) -> tuple[frozen
     return frozenset(payload["present"]), bool(payload["wizard_before_walk"])
 
 
-def test_wizard_profile_schemas_reach_the_manifest_only_via_the_bridge_module() -> None:
-    """The wizard-owned profile schemas must reach the CLI manifest via the bridge.
+def test_wizard_profile_schemas_reach_the_manifest_from_their_canonical_owner() -> None:
+    """The wizard-owned profile schemas reach the manifest from their producer.
 
     Runs in a fresh interpreter that does NOT import the wizard package, so
-    ``_wizard_payloads.py`` is the sole registrar of ``config.profile.create`` and
-    ``config.profile.edit`` on the ``aeat app contract`` surface. The guard first
+    ``application.wizard._results`` is the sole registrar of
+    ``config.profile.create`` and ``config.profile.edit`` on the ``aeat app
+    contract`` surface. The guard first
     proves it did not self-seed the wizard package (a guard that seeds its own
     subject is the very defect it exists to catch), then that both schemas are
-    present. If the bridge is deleted or emptied both keys silently vanish and this
-    reds, naming the keys and the importer to restore.
+    present. If the canonical owner is omitted from the lazy table, both keys
+    silently vanish and this reds, naming the owner to restore.
     """
-    present, wizard_before_walk = _profile_schema_keys_in_fresh_process(block_bridge=False)
+    present, wizard_before_walk = _profile_schema_keys_in_fresh_process(block_schema_owner=False)
 
     assert not wizard_before_walk, (
         "the guard imported the wizard package before running the payload walk, so it seeds its own "
-        "subject and can no longer prove the bridge is load-bearing; the CLI-contract path must reach "
-        "the profile schemas through `_wizard_payloads`, never by importing `application.wizard` directly"
+        "subject and can no longer prove the lazy owner is load-bearing; the CLI-contract path must reach "
+        "the profile schemas through their canonical `_results` module during the manifest walk"
     )
     missing = sorted(key for key in _PROFILE_SCHEMA_KEYS if key not in present)
     assert not missing, (
-        f"wizard-owned profile schemas absent from the CLI capability manifest: {missing}. They "
-        f"register only through the re-export bridge `{_WIZARD_BRIDGE_MODULE}`; if it was deleted or "
-        "emptied by a tidy-up, restore its `ConfigProfileCreateResult` / `ConfigProfileEditResult` "
-        "re-exports so the payload-discovery walk registers both profile verbs again"
+        f"wizard-owned profile schemas absent from the CLI capability manifest: {missing}. The "
+        f"lazy schema-owner table must import `{_WIZARD_SCHEMA_OWNER_MODULE}` so the producer's "
+        "decorators register both profile verbs during manifest construction"
     )
 
 
-def test_deleting_the_bridge_module_drops_both_profile_schemas() -> None:
-    """Anti-tautology proof: without the bridge, both profile schemas disappear.
+def test_missing_canonical_schema_owner_drops_both_profile_schemas() -> None:
+    """Anti-tautology proof: without the canonical owner, both schemas disappear.
 
-    Blocks the bridge module in a fresh interpreter and confirms both keys drop
+    Blocks the canonical owner in a fresh interpreter and confirms both keys drop
     from the CLI manifest. Without this, the guard above could pass on a registry
-    seeded some other way and carry no information; this proves the bridge is the
-    load-bearing registrar and that the guard reds on its removal.
+    seeded some other way and carry no information; this proves the explicit lazy
+    owner import is load-bearing and that the guard reds on its removal.
     """
-    present, _ = _profile_schema_keys_in_fresh_process(block_bridge=True)
+    present, _ = _profile_schema_keys_in_fresh_process(block_schema_owner=True)
 
     assert "config.profile.create" not in present, (
-        "config.profile.create survived the bridge's removal, so the guard cannot detect a deletion"
+        "config.profile.create survived the canonical owner's removal, so the guard cannot detect an omission"
     )
     assert "config.profile.edit" not in present, (
-        "config.profile.edit survived the bridge's removal, so the guard cannot detect a deletion"
+        "config.profile.edit survived the canonical owner's removal, so the guard cannot detect an omission"
     )

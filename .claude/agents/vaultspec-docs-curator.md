@@ -10,6 +10,7 @@ tools:
 - Write
 - Edit
 - Bash
+- SendMessage
 model: claude-sonnet-5
 ---
 

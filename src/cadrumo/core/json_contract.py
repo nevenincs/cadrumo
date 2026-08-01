@@ -37,7 +37,7 @@ from collections.abc import Callable, Mapping, Sequence
 from enum import StrEnum
 from typing import IO, Any, Protocol, cast, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict, Field, RootModel
+from pydantic import BaseModel, ConfigDict, Field, RootModel, ValidationError
 
 from .errors import CadrumoError
 from .logging import get_logger
@@ -504,6 +504,26 @@ def _jsonable_payload(payload: object) -> object:
     return payload
 
 
+def validate_registered_result(command: str, result: object) -> OutputSchema | OutputRootSchema[Any]:
+    """Validate one operator result against the schema registered for ``command``.
+
+    The low-level JSON emitter intentionally remains a transport primitive for
+    metadata and diagnostic surfaces. Operator command output must enter
+    through this check so an envelope cannot claim a registered command while
+    carrying an arbitrary result shape.
+    """
+    schema = SCHEMA_REGISTRY.get(command)
+    if schema is None:
+        raise OutputSchemaError(f"operator JSON command {command!r} has no registered output schema")
+    payload = result.model_dump(mode="python") if isinstance(result, BaseModel) else result
+    try:
+        return schema.model_validate(payload)
+    except ValidationError as error:
+        raise OutputSchemaError(
+            f"operator JSON result does not conform to the registered schema for {command!r}",
+        ) from error
+
+
 __all__ = [
     "ENVELOPE_SCHEMA_VERSION",
     "SCHEMA_REGISTRY",
@@ -518,4 +538,5 @@ __all__ = [
     "emit_json_document",
     "emit_json_success",
     "register_schema",
+    "validate_registered_result",
 ]

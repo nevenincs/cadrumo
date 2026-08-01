@@ -1326,8 +1326,6 @@ application:
         errors:
           parameter_no_dated_value: The spreadsheet export engine could not find a
             parameter value valid for the filing date.
-          parameter_not_scalar: The spreadsheet export engine expected a scalar parameter
-            but received a table parameter.
           unsupported_rounding: The spreadsheet export engine found an unsupported
             registry rounding rule.
         guide:
@@ -4963,7 +4961,7 @@ cli:
     detail_help: Enable detailed output.
     errors:
       did_you_mean_command: Did you mean '%{command}'?
-    format_help: 'Output format: text, json, table, csv.'
+    format_help: 'Output format: text, json.'
     help_help: Show help.
     landing:
       headline: CADRUMO Tax Assistant
@@ -5937,8 +5935,6 @@ errors:
       command's arguments or run `aeat --help`.
     refused_config_reset_unconfirmed: The configuration reset was not confirmed. Re-run
       the command confirming the operation.
-    refused_corpus_search_dependency: This corpus-search operation needs the optional
-      semantic-search components; install them and retry.
     refused_corpus_search_input: The corpus search request could not be satisfied.
     refused_diagnostic_model_invariant: A DiagnosticCheck construction invariant was
       violated; check that exactly one of next_action or dead_end is set for fail/warn

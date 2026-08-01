@@ -1455,8 +1455,6 @@ application:
         errors:
           parameter_no_dated_value: El motor de exportación de hojas de cálculo no
             encontró un valor de parámetro vigente para la fecha de devengo.
-          parameter_not_scalar: El motor de exportación de hojas de cálculo esperaba
-            un parámetro escalar, pero recibió un parámetro de tabla.
           unsupported_rounding: El motor de exportación de hojas de cálculo encontró
             una regla de redondeo del registro no admitida.
         guide:
@@ -5352,7 +5350,7 @@ cli:
     detail_help: Habilitar salida detallada.
     errors:
       did_you_mean_command: ¿Quería decir '%{command}'?
-    format_help: 'Formato de salida: text, json, table, csv.'
+    format_help: 'Formato de salida: text, json.'
     help_help: Mostrar la ayuda.
     landing:
       headline: Asistente fiscal CADRUMO
@@ -6394,8 +6392,6 @@ errors:
       Compruebe los argumentos o ejecute `aeat --help`.
     refused_config_reset_unconfirmed: El restablecimiento de la configuración no se
       confirmó. Vuelve a ejecutar el comando confirmando la operación.
-    refused_corpus_search_dependency: Esta operación de búsqueda en el corpus necesita
-      los componentes opcionales de búsqueda semántica; instálelos y reinténtelo.
     refused_corpus_search_input: No se pudo satisfacer la solicitud de búsqueda en
       el corpus.
     refused_diagnostic_model_invariant: 'Rechazado: invariante del modelo de diagnóstico

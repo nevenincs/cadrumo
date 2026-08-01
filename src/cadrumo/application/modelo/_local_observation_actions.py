@@ -41,6 +41,7 @@ from ...domain.calculations.registry import (
     RegistryValidationError,
     casilla_noncanonical_reference_targets,
     casillas_by_id,
+    format_noncanonical_casilla_reference,
     undeclared_casilla_ids,
     validated_casilla_id,
 )
@@ -192,7 +193,8 @@ def _canonical_casilla_values[CasillaKey](
         }
         if noncanonical:
             details = "; ".join(
-                f"{casilla_id!r} -> {', '.join(targets)}" for casilla_id, targets in sorted(noncanonical.items())
+                format_noncanonical_casilla_reference(casilla_id, targets)
+                for casilla_id, targets in sorted(noncanonical.items())
             )
             raise ModeloLocalObservationError(
                 f"local observation casillas must use canonical casilla.id values; refused aliases: {details}",

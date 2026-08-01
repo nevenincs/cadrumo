@@ -5,10 +5,10 @@ from __future__ import annotations
 from collections.abc import Mapping
 from pathlib import Path
 
+from ....core import normalise_corpus_text
 from ._citation_blocklist import CitationSource, find_known_bad
 from ._errors import RegistryValidationError
 from ._schema import LegalReference
-from ._text import normalise_corpus_text
 
 _SOURCE_BY_KIND: dict[str, CitationSource] = {
     "ley": "ley",

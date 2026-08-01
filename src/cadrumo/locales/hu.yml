@@ -1384,8 +1384,6 @@ application:
         errors:
           parameter_no_dated_value: A táblázatexportáló motor nem talált az elszámolási
             dátumra érvényes paraméterértéket.
-          parameter_not_scalar: A táblázatexportáló motor skalár paramétert várt,
-            de táblázatos paramétert kapott.
           unsupported_rounding: A táblázatexportáló motor nem támogatott nyilvántartási
             kerekítési szabályt talált.
         guide:
@@ -5260,7 +5258,7 @@ cli:
     detail_help: Részletes kimenet engedélyezése.
     errors:
       did_you_mean_command: 'Erre gondolt: %{command}?'
-    format_help: 'Kimeneti formátum: text, json, table, csv.'
+    format_help: 'Kimeneti formátum: text, json.'
     help_help: Súgó megjelenítése.
     landing:
       headline: CADRUMO Adóasszisztens
@@ -6254,8 +6252,6 @@ errors:
       Ellenőrizze az argumentumokat, vagy futtassa a `aeat --help` parancsot.
     refused_config_reset_unconfirmed: A konfigurációs visszaállítást nem erősítette
       meg. Futtassa újra a parancsot, megerősítve a műveletet.
-    refused_corpus_search_dependency: Ez a korpuszkeresési művelet az opcionális szemantikus
-      keresési összetevőket igényli; telepítse őket, és próbálja újra.
     refused_corpus_search_input: A korpuszkeresési kérés nem teljesíthető.
     refused_diagnostic_model_invariant: A DiagnosticCheck konstrukciós invariánsa
       sérült; ellenőrizze, hogy az elmaradás/figyelmeztetés sorokban pontosan az egyik

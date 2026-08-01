@@ -68,6 +68,12 @@ _ALLOWLIST = {
     "cadrumo.application.bucket_maintenance._sandbox.SandboxSourceNotFoundError": (
         "sandbox seed-source lookup miss; intentionally local to sandbox lifecycle orchestration"
     ),
+    "cadrumo.core.corpus_manifest._ManifestPayloadValidationError": (
+        "private manifest-payload validation carrier; raised only inside _validate_raw_manifest_payload so the "
+        "file loader and the bundle loader apply identical schema/version/digest checks, and converted by every "
+        "caller into the registry-bound CorpusManifestError / CorpusBundleError / CorpusManifestTamperError "
+        "before leaving the module"
+    ),
     "cadrumo.application.invoices._bulk_import._RowParseError": (
         "private row parser control-flow carrier; converted to BulkInvoiceImportRowFailure before leaving the module"
     ),

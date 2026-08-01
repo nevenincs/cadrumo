@@ -37,15 +37,14 @@ from ._errors import (
     StorageCorruptionError,
 )
 from ._integrity import verify_content_hash
+from ._object_name import build_provider_object_name, provider_object_hmac_prefix, sanitize_provider_object_label
 from ._records import ProviderKind, ProviderObjectMetadata, ProviderProbeReport
 
 _logger = get_logger(__name__)
 
-_HMAC_PREFIX_LEN = 8
 _FILE_EXTENSION = ".bin"
 _SIDECAR_EXTENSION = ".meta.json"
 _PROBE_NAMESPACE = "_probe"
-_DEFAULT_LABEL = "object"
 
 
 def _validate_namespace(namespace: str) -> str:
@@ -80,22 +79,8 @@ def _validate_hmac(object_key_hmac: str) -> str:
     return cleaned
 
 
-def _validate_label(label: str) -> str:
-    cleaned = label.strip()
-    if not cleaned:
-        return _DEFAULT_LABEL
-    safe = "".join(c if c.isalnum() or c in "-_." else "-" for c in cleaned)
-    return safe[:64] or _DEFAULT_LABEL
-
-
-def _filename(object_key_hmac: str, label: str, *, extension: str = _FILE_EXTENSION) -> str:
-    """Build the canonical filename ``<hmac_prefix_8>--<label><extension>``."""
-    prefix = object_key_hmac[:_HMAC_PREFIX_LEN]
-    return f"{prefix}--{label}{extension}"
-
-
 def _sidecar_filename(object_key_hmac: str, label: str) -> str:
-    return _filename(object_key_hmac, label, extension=_SIDECAR_EXTENSION)
+    return build_provider_object_name(object_key_hmac, label, extension=_SIDECAR_EXTENSION)
 
 
 class LocalFileSystemProvider:
@@ -145,7 +130,7 @@ class LocalFileSystemProvider:
         namespace_dir = self._root / namespace
         if not namespace_dir.is_dir():
             return None
-        prefix = object_key_hmac[:_HMAC_PREFIX_LEN]
+        prefix = provider_object_hmac_prefix(object_key_hmac)
         for entry in namespace_dir.iterdir():
             if entry.is_file() and entry.name.startswith(f"{prefix}--") and entry.suffix == _FILE_EXTENSION:
                 return entry
@@ -200,7 +185,7 @@ class LocalFileSystemProvider:
         """
         namespace_clean = _validate_namespace(namespace)
         hmac_clean = _validate_hmac(object_key_hmac)
-        label_clean = _validate_label(label)
+        label_clean = sanitize_provider_object_label(label)
         if not content_hash.strip():
             raise OutboundStorageValidationError(
                 "content_hash must not be blank",
@@ -209,7 +194,11 @@ class LocalFileSystemProvider:
 
         namespace_dir = self._ensure_namespace_dir(namespace_clean)
         existing_path = self._resolve_object_path(namespace_clean, hmac_clean)
-        if existing_path is not None and existing_path.name != _filename(hmac_clean, label_clean):
+        if existing_path is not None and existing_path.name != build_provider_object_name(
+            hmac_clean,
+            label_clean,
+            extension=_FILE_EXTENSION,
+        ):
             # Label drifted; the rename is part of put() semantics. The
             # coordinator's diff classifier handles "did label change"
             # via the rename-detection path on push.
@@ -219,7 +208,11 @@ class LocalFileSystemProvider:
             existing_path.unlink(missing_ok=True)
             existing_sidecar.unlink(missing_ok=True)
 
-        target_path = namespace_dir / _filename(hmac_clean, label_clean)
+        target_path = namespace_dir / build_provider_object_name(
+            hmac_clean,
+            label_clean,
+            extension=_FILE_EXTENSION,
+        )
         sidecar_path = namespace_dir / _sidecar_filename(hmac_clean, label_clean)
 
         try:

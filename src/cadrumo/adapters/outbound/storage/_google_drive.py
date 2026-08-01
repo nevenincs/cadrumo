@@ -53,12 +53,11 @@ from ._errors import (
     OutboundStorageValidationError,
 )
 from ._integrity import verify_content_hash
+from ._object_name import build_provider_object_name, provider_object_hmac_prefix, sanitize_provider_object_label
 from ._records import ProviderKind, ProviderObjectMetadata, ProviderProbeReport
 
 _FOLDER_MIME = "application/vnd.google-apps.folder"
-_HMAC_PREFIX_LEN = 8
 _FILE_EXTENSION = ".bin"
-_DEFAULT_LABEL = "object"
 _PROBE_NAMESPACE = "_probe"
 # Drive `appProperties` ownership marker. The provider stamps this key
 # onto every folder + file it creates and refuses to touch any entry
@@ -95,18 +94,6 @@ def _validate_hmac(object_key_hmac: str) -> str:
             translated_message="adapters.outbound.storage.google_drive.errors.object_key_hmac_blank",
         )
     return cleaned
-
-
-def _safe_label(label: str) -> str:
-    cleaned = label.strip()
-    if not cleaned:
-        return _DEFAULT_LABEL
-    safe = "".join(c if c.isalnum() or c in "-_." else "-" for c in cleaned)
-    return safe[:64] or _DEFAULT_LABEL
-
-
-def _filename(object_key_hmac: str, label: str) -> str:
-    return f"{object_key_hmac[:_HMAC_PREFIX_LEN]}--{label}{_FILE_EXTENSION}"
 
 
 def _translate_http_error(error: Exception, *, action: str) -> OutboundStorageError:
@@ -414,7 +401,7 @@ class GoogleDriveProvider:
             or ``None`` when no marker-verified match exists.
         """
         service = self._get_service()
-        prefix = object_key_hmac[:_HMAC_PREFIX_LEN]
+        prefix = provider_object_hmac_prefix(object_key_hmac)
         query = f"'{namespace_folder_id}' in parents and name contains '{prefix}--' and trashed=false"
         response = self._execute(
             service.files().list(
@@ -494,12 +481,12 @@ class GoogleDriveProvider:
                 "content_hash must not be blank",
                 translated_message="adapters.outbound.storage.google_drive.errors.content_hash_blank",
             )
-        label_clean = _safe_label(label)
+        label_clean = sanitize_provider_object_label(label)
 
         service = self._get_service()
         namespace_folder_id = self._resolve_namespace_folder(namespace_clean)
         assert namespace_folder_id is not None  # create=True so always populated
-        target_name = _filename(hmac_clean, label_clean)
+        target_name = build_provider_object_name(hmac_clean, label_clean, extension=_FILE_EXTENSION)
         existing = self._find_file(namespace_folder_id, hmac_clean)
 
         media_body = _build_media_body(payload)

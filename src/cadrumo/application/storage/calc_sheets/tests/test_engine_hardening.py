@@ -8,8 +8,8 @@ import pytest
 
 from .....core.config import override_settings
 from .....core.resources import resources
-from .....domain.calculations.registry import FormulaDefinition, ParameterDefinition
-from .._engine import _resolve_scalar, _rounding_rule_for, build_export_plan
+from .....domain.calculations.registry import FormulaDefinition, RegistrySnapshot
+from .._engine import _rounding_rule_for, build_export_plan
 from .._errors import CalcSheetsEngineError
 from .._records import RelationValues
 
@@ -78,22 +78,52 @@ def test_unsupported_rounding_error_omits_raw_rounding_token() -> None:
     assert error.context == {"formula_id": "formula-sensitive"}
 
 
-def test_missing_scalar_value_error_uses_translated_message_and_structured_context() -> None:
-    parameter = ParameterDefinition(
-        id="parameter-without-current-value",
-        data_type="money",
-        unit="EUR",
-        legal_refs=("ley-58-2003:art-29",),
-        source_refs=("aeat-source-test",),
+def _m130_snapshot_with_scalar_tariff_values(*, values: tuple[object, ...]) -> RegistrySnapshot:
+    snapshot = resources().modelos.authority.snapshot("130", filing_year=2025, period="1T")
+    parameter_id = "irpf.direct_estimation_fractional_payment_rate"
+    revision = snapshot.revision.model_copy(
+        update={
+            "parameters": tuple(
+                parameter.model_copy(update={"values": values}) if parameter.id == parameter_id else parameter
+                for parameter in snapshot.revision.parameters
+            ),
+        },
     )
+    return snapshot.model_copy(update={"revision": revision})
+
+
+def test_missing_scalar_value_error_uses_translated_message_and_structured_context() -> None:
+    snapshot = _m130_snapshot_with_scalar_tariff_values(values=())
 
     with pytest.raises(CalcSheetsEngineError) as raised:
-        _resolve_scalar(parameter, date(2025, 12, 31))
+        build_export_plan(snapshot)
 
     error = raised.value
     assert str(error) == "parameter has no dated value valid for requested date"
     assert error.translated_message == "application.storage.calc_sheets.engine.errors.parameter_no_dated_value"
     assert error.context == {
-        "parameter_id": "parameter-without-current-value",
-        "valid_on": "2025-12-31",
+        "parameter_id": "irpf.direct_estimation_fractional_payment_rate",
+        "valid_on": "2025-03-31",
     }
+
+
+def test_overlapping_scalar_parameter_windows_refuse_export_through_engine_boundary() -> None:
+    source = resources().modelos.authority.snapshot("130", filing_year=2025, period="1T")
+    parameter = next(
+        item for item in source.revision.parameters if item.id == "irpf.direct_estimation_fractional_payment_rate"
+    )
+    assert len(parameter.values) == 1
+    conflicting = parameter.values[0].model_copy(update={"value": parameter.values[0].value + 1})
+    snapshot = _m130_snapshot_with_scalar_tariff_values(values=(parameter.values[0], conflicting))
+
+    with pytest.raises(CalcSheetsEngineError) as raised:
+        build_export_plan(snapshot)
+
+    error = raised.value
+    assert error.translated_message == "application.storage.calc_sheets.engine.errors.parameter_no_dated_value"
+    assert error.context == {
+        "parameter_id": "irpf.direct_estimation_fractional_payment_rate",
+        "valid_on": "2025-03-31",
+    }
+    assert error.__cause__ is not None
+    assert "expected exactly one dated value, found 2" in str(error.__cause__)

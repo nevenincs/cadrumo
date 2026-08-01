@@ -23,9 +23,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from ....core.errors import CadrumoError
-from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
-from ....core.time import now
 from ....domain.contribuyente.inventory import (
     InventoryLedger,
     InventoryLedgerDocument,
@@ -35,22 +33,15 @@ from ....domain.contribuyente.inventory import (
 from ..storage import (
     PROFILE_INVENTORY_LEDGER_NAMESPACE,
     SecureObjectRepository,
-    secure_object_logical_path,
-    secure_object_repository_for_active_bucket,
+)
+from ._secure_model_document import (
+    ProfileBareModelSecurePersistence,
+    resolve_profile_secure_object_repository,
 )
 
 _log = get_logger(__name__)
 
 INVENTORY_LEDGER_FILENAME = "inventory-ledger.secure-object"
-_SECURE_OBJECT_VERSION = PROFILE_INVENTORY_LEDGER_NAMESPACE.schema_version
-_INVENTORY_NAMESPACE = PROFILE_INVENTORY_LEDGER_NAMESPACE.namespace
-_INVENTORY_SENSITIVITY = PROFILE_INVENTORY_LEDGER_NAMESPACE.sensitivity
-_INVENTORY_OBJECT_KEY = PROFILE_INVENTORY_LEDGER_NAMESPACE.require_default_object_key()
-
-
-def _secure_object_marker(namespace: str, filename: str) -> Path:
-    return secure_object_logical_path(namespace, filename)
-
 
 def load_inventory() -> tuple[InventoryLedger, ...]:
     """Load inventory ledgers from the encrypted ledger.
@@ -136,17 +127,22 @@ class InventoryLedgerRepository:
                 engine; production callers leave it ``None`` and the
                 repository self-resolves from settings.
         """
-        self._objects = objects if objects is not None else secure_object_repository_for_active_bucket()
+        self._storage = ProfileBareModelSecurePersistence(
+            objects=resolve_profile_secure_object_repository(objects=objects),
+            definition=PROFILE_INVENTORY_LEDGER_NAMESPACE,
+            model_type=InventoryLedgerDocument,
+            empty_document=InventoryLedgerDocument,
+        )
 
     @property
     def envelope_path(self) -> Path:
         """Logical path retained for callers that display the storage target."""
-        return _secure_object_marker(_INVENTORY_NAMESPACE, INVENTORY_LEDGER_FILENAME)
+        return self._storage.logical_path(INVENTORY_LEDGER_FILENAME)
 
     @property
     def lock_target(self) -> Path:
         """Logical lock marker; SQL transactions govern writes."""
-        return _secure_object_marker(_INVENTORY_NAMESPACE, "inventory-ledger.lock")
+        return self._storage.logical_path("inventory-ledger.lock")
 
     def load(self) -> InventoryLedgerDocument:
         """Load the ledger, returning an empty document when absent.
@@ -158,27 +154,19 @@ class InventoryLedgerRepository:
             InventoryLedgerError: When the envelope exists but cannot be loaded or decrypted.
         """
         try:
-            record = self._objects.load(
-                _INVENTORY_NAMESPACE,
-                self._object_key,
-                expected_class=_INVENTORY_SENSITIVITY,
-                max_supported_version=_SECURE_OBJECT_VERSION,
-            )
-            if record is None:
-                return InventoryLedgerDocument()
-            return InventoryLedgerDocument.model_validate_json(record.payload.decode(UTF_8_ENCODING))
+            return self._storage.load()
         except (OSError, CadrumoError) as exc:
             _log.debug(
                 "inventory ledger load failed",
                 extra={
-                    "namespace": _INVENTORY_NAMESPACE,
-                    "object_key": self._object_key,
+                    "namespace": self._storage.namespace,
+                    "object_key": self._storage.object_key,
                     "error_type": type(exc).__name__,
                 },
             )
             raise InventoryLedgerError(
-                f"unable to load inventory ledger: {self._object_key}",
-                context={"namespace": _INVENTORY_NAMESPACE, "object_key": self._object_key},
+                f"unable to load inventory ledger: {self._storage.object_key}",
+                context={"namespace": self._storage.namespace, "object_key": self._storage.object_key},
                 translated_message="adapters.persistence.profile.inventory.errors.load_inventory_ledger_failed",
             ) from exc
 
@@ -193,7 +181,7 @@ class InventoryLedgerRepository:
             document: Ledger document to encrypt and write.
         """
         self._save_unlocked(document)
-        _log.info("saved %d inventory ledgers to secure object %s", len(document.ledgers), self._object_key)
+        _log.info("saved %d inventory ledgers to secure object %s", len(document.ledgers), self._storage.object_key)
 
     def create(self, ledger: InventoryLedger) -> InventoryLedgerDocument:
         """Atomically create ``ledger`` and refuse duplicate actividad/year pairs.
@@ -266,18 +254,7 @@ class InventoryLedgerRepository:
         return self.load()
 
     def _save_unlocked(self, document: InventoryLedgerDocument) -> None:
-        self._objects.save(
-            namespace=_INVENTORY_NAMESPACE,
-            object_key=self._object_key,
-            classification=_INVENTORY_SENSITIVITY,
-            schema_version=_SECURE_OBJECT_VERSION,
-            written_at=now(),
-            payload=document.model_dump_json().encode(UTF_8_ENCODING),
-        )
-
-    @property
-    def _object_key(self) -> str:
-        return _INVENTORY_OBJECT_KEY
+        self._storage.save(document)
 
 
 __all__ = [

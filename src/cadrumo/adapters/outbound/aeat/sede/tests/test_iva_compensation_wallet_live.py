@@ -25,6 +25,7 @@ from .._iva_compensation_wallet import (
     PRE303_PRESENTATION_SERVICE_URL,
     fetch_iva_compensation_wallet,
 )
+from .._iva_compensation_wallet_parsing import is_aeat_wallet_read_url
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]
 
@@ -47,14 +48,13 @@ def _assert_source_url_is_a_wallet_read(source_url: str) -> None:
     than the invariant, since a stronger one could not be exercised here
     either and would only re-occupy the same slot.
     """
+    if is_aeat_wallet_read_url(source_url):
+        return
     external = Settings.external_constants()
     landed = urlsplit(source_url)
-    host_suffix = external.aeat.domains.host_suffix
-    apex = urlsplit(host_suffix).netloc or host_suffix
-    if not landed.netloc.casefold().endswith(apex.casefold()):
-        pytest.fail(f"live IVA wallet source URL is not under the AEAT apex: {landed.netloc!r}")
     if landed.path != external.aeat.sede_paths.iva_compensation_wallet:
         pytest.fail(f"live IVA wallet source URL is not the wallet route: {landed.path!r}")
+    pytest.fail(f"live IVA wallet source URL is not under the AEAT apex: {source_url!r}")
 
 
 @pytest.mark.asyncio

@@ -125,10 +125,11 @@ def _command_doc(descriptor: McpToolDescriptor) -> CommandDoc:
 
 
 def build_command_search_index(descriptors: tuple[McpToolDescriptor, ...]) -> CommandIndex:
-    """Build the hybrid command-search index over the descriptor set.
+    """Build the lexical command-search index over the descriptor set.
 
     Built once per server from the full descriptor set so ``search`` reaches the
-    whole verb universe, not just the advertised surface.
+    whole verb universe, not just the advertised surface. The index is fully
+    offline: it loads no model and reaches no network.
     """
     return build_command_index(_command_doc(descriptor) for descriptor in descriptors)
 
@@ -142,10 +143,10 @@ def search_commands(
 ) -> tuple[MetaSearchResult, ...]:
     """Rank the command surface against ``query`` for the ``search`` meta-tool.
 
-    Backed by the hybrid command index (FTS5 lexical + Spanish stemming +
-    diacritics folding, degrading to token overlap on a minimal install), so a
-    concept query bridges the operator's vocabulary to the command's own tokens
-    where a bare substring match would miss it. Each result carries the
+    Backed by the lexical command index (per-column FTS5 BM25 + Spanish
+    stemming + diacritics folding, degrading to token overlap on a minimal
+    install), so a concept query bridges the operator's vocabulary to the
+    command's own tokens where a bare substring match would miss it. Each result carries the
     mutability hints AND the per-verb input schema so
     it is actionable in one further ``execute`` round-trip. ``index`` may be a
     prebuilt index (the server builds it once); when omitted it is built from
@@ -208,9 +209,8 @@ def search_commands_response(
     Returns the same capped page as :func:`search_commands` alongside the full
     match count over the whole verb corpus, so the client sees whether the page
     truncated the result set. ``total_matches`` counts every command key the index
-    matches (capped internally at the corpus size, never a semantic backend - that
-    is a later step); ``truncated`` and the recovery ``hint`` follow from it. A
-    blank query returns the empty response.
+    matches, capped internally at the corpus size; ``truncated`` and the recovery
+    ``hint`` follow from it. A blank query returns the empty response.
 
     Returns:
         The :class:`MetaSearchResponse` for ``query``.

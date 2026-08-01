@@ -191,9 +191,12 @@ def test_verify_fails_when_manifest_digest_tampered_without_recomputation(tmp_pa
     with zipfile.ZipFile(bundle_path, "r") as archive:
         manifest_bytes = archive.read("corpus.manifest.json")
     payload = json.loads(manifest_bytes)
-    # Flip the self-attesting digest without recomputing it -- this trips the
-    # tamper check inside verify_corpus_bundle before the signature is even
-    # considered, which is exactly the ordering this module documents.
+    # Flip the self-attesting digest without recomputing it. Two independent
+    # layers would each refuse this bundle -- the manifest tamper check and the
+    # signature over the manifest bytes -- and the assertion below observes only
+    # that verification failed, not which layer refused first. Read it as "a
+    # tampered bundle does not verify"; the tamper check's own coverage lives in
+    # test_manifest.py and test_bundle.py, which assert the error type directly.
     payload["manifest_sha256"] = "0" * 64
     tampered_manifest = json.dumps(payload).encode("utf-8")
 

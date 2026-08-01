@@ -7,6 +7,7 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import normalise_corpus_text
 from .....core.resources import bundled_path
 from .....tests.registry_observations import registry_grounded_modelo_observation
 from .. import (
@@ -21,7 +22,6 @@ from .. import (
 )
 from .._binding_selector_utils import selector_as_dict
 from .._bindings import RegistryModeloObservation
-from .._text import normalise_corpus_text
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

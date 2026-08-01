@@ -11,7 +11,7 @@ import subprocess
 import sys
 import urllib.error
 import urllib.request
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from http.client import HTTPException, HTTPSConnection
 from pathlib import Path
@@ -114,10 +114,19 @@ def _required_executable(name: str) -> str:
     return executable
 
 
-def _site_build_environment() -> dict[str, str]:
-    """Return the deployment-specific strict docs build environment."""
+def _site_build_environment(*, base_environment: Mapping[str, str] | None = None) -> dict[str, str]:
+    """Return the deployment-specific strict docs build environment.
+
+    Args:
+        base_environment: DI seam for tests. When ``None`` (production), the
+            deploy-specific keys are layered over the real process
+            environment; a test passes an explicit mapping to prove the
+            deploy-specific keys are fixed regardless of what surrounds them,
+            without mutating real process state.
+    """
+    base = base_environment if base_environment is not None else os.environ
     return {
-        **os.environ,
+        **base,
         "CADRUMO_DOCS_BASE_URL": CANONICAL_DOCS_BASE_URL,
         "CADRUMO_DOCS_JOBS": "1",
         "CADRUMO_DOCS_PAGEFIND_MODE": "pages",
@@ -560,7 +569,7 @@ def _verify_public_delivery(target: DeploymentTarget) -> None:
         )
 
 
-def _require_authorized_publish_environment() -> None:
+def _require_authorized_publish_environment(*, environment: Mapping[str, str] | None = None) -> None:
     """Permit an automated publish only from the provisioned delivery environment.
 
     A blanket continuous-integration refusal used to stand here, and it is
@@ -587,11 +596,18 @@ def _require_authorized_publish_environment() -> None:
     The variable's environment scoping is an operator provisioning property, not
     something this process can verify from the inside; it is the same trust the
     workflow's own role assumption rests on.
+
+    Args:
+        environment: DI seam for tests. When ``None`` (production), the
+            check reads the real process environment; a test passes an
+            explicit mapping to exercise a marker/role combination without
+            mutating real process state.
     """
-    markers = tuple(name for name in _CI_MARKERS if name in os.environ)
+    env = environment if environment is not None else os.environ
+    markers = tuple(name for name in _CI_MARKERS if name in env)
     if not markers:
         return
-    if os.environ.get(_DEPLOY_ROLE_VARIABLE, "").strip():
+    if env.get(_DEPLOY_ROLE_VARIABLE, "").strip():
         return
     raise SystemExit(
         "Refusing Cadrumo documentation publish from an unprovisioned automated environment "
@@ -610,9 +626,17 @@ def _provision(aws: str, repo_root: Path) -> int:
     return 0
 
 
-def _publish(aws: str, repo_root: Path) -> int:
-    """Build, validate, upload, and invalidate the fixed Cadrumo documentation site."""
-    _require_authorized_publish_environment()
+def _publish(aws: str, repo_root: Path, *, environment: Mapping[str, str] | None = None) -> int:
+    """Build, validate, upload, and invalidate the fixed Cadrumo documentation site.
+
+    Args:
+        aws: Path to the AWS CLI executable.
+        repo_root: Repository root the build and sync commands run from.
+        environment: DI seam for tests, forwarded to
+            :func:`_require_authorized_publish_environment`. ``None``
+            (production) reads the real process environment.
+    """
+    _require_authorized_publish_environment(environment=environment)
     _authenticated_account_id(aws, repo_root)
     target = _stack_target(aws, repo_root)
     _verify_distribution_alias(aws, repo_root, target.distribution_id)

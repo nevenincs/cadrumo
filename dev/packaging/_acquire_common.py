@@ -28,6 +28,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, NoReturn
 
+from dev.packaging._hashing import sha256_path
 from dev.packaging.cohort_manifest import LoadedReleaseCohort
 from dev.packaging.evidence import CommandTranscript
 from dev.packaging.python_cohort import PythonCohort
@@ -37,7 +38,6 @@ if TYPE_CHECKING:
     from dev.packaging.installed_tax_oracle import InstalledTaxEvidence
 
 _UTF_8: Final[str] = "utf-8"
-_CHUNK: Final[int] = 1024 * 1024
 
 # The distributions the promoted Python cohort carries as installable wheels,
 # each keyed by the exact ``python-cohort.json`` digest name. A public
@@ -154,15 +154,6 @@ def require_command_succeeded(
 def sha256_bytes(data: bytes) -> str:
     """Return the hex SHA-256 digest of an in-memory byte string."""
     return hashlib.sha256(data).hexdigest()
-
-
-def sha256_path(path: Path) -> str:
-    """Return the hex SHA-256 digest of a file without loading it whole."""
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(_CHUNK), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def verify_artifact_digest(
@@ -538,7 +529,6 @@ __all__ = [
     "require_command_succeeded",
     "run_installed_behavior_oracles",
     "sha256_bytes",
-    "sha256_path",
     "venv_bin_dir",
     "venv_executable",
     "verify_artifact_digest",

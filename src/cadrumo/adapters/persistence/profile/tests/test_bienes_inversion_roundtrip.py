@@ -107,13 +107,13 @@ def test_register_corrupted_prorrata_surfaces_at_load(tmp_path: Path) -> None:
     from sqlalchemy import select
 
     from ....persistence.storage.sql.session import session_scope
+    from ...storage import PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE
     from ...storage.crypto import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
     from ...storage.sql import SecureObjectRow
-    from ..bienes_inversion import _REGISTER_NAMESPACE, _REGISTER_OBJECT_KEY
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bi-rt-corrupt") as profile:
         engine = get_engine(profile.settings)
@@ -123,8 +123,8 @@ def test_register_corrupted_prorrata_surfaces_at_load(tmp_path: Path) -> None:
 
         with session_scope(engine) as session:
             stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _REGISTER_NAMESPACE,
-                SecureObjectRow.object_key == _REGISTER_OBJECT_KEY,
+                SecureObjectRow.namespace == PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.namespace,
+                SecureObjectRow.object_key == PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.require_default_object_key(),
             )
             row = session.execute(stmt).scalar_one()
             aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
@@ -154,13 +154,13 @@ def test_register_missing_cuota_surfaces_at_load(tmp_path: Path) -> None:
     from sqlalchemy import select
 
     from ....persistence.storage.sql.session import session_scope
+    from ...storage import PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE
     from ...storage.crypto import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
     from ...storage.sql import SecureObjectRow
-    from ..bienes_inversion import _REGISTER_NAMESPACE, _REGISTER_OBJECT_KEY
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bi-rt-missing") as profile:
         engine = get_engine(profile.settings)
@@ -169,8 +169,8 @@ def test_register_missing_cuota_surfaces_at_load(tmp_path: Path) -> None:
 
         with session_scope(engine) as session:
             stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _REGISTER_NAMESPACE,
-                SecureObjectRow.object_key == _REGISTER_OBJECT_KEY,
+                SecureObjectRow.namespace == PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.namespace,
+                SecureObjectRow.object_key == PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.require_default_object_key(),
             )
             row = session.execute(stmt).scalar_one()
             aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)

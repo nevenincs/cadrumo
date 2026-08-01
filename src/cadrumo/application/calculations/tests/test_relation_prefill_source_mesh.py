@@ -254,6 +254,18 @@ def test_unresolved_non_formula_relation_with_materialised_slot_is_not_flagged(t
     )
 
 
+def test_formula_relation_ids_traverses_committed_m100_settlement_expression() -> None:
+    """The relation prefill path must retain both real M100 instalment relation leaves."""
+    from .._relation_prefill import _formula_relation_ids
+
+    formula_relation_ids = _formula_relation_ids(_snapshot("100", 2024, "0A"))
+
+    assert {
+        "renta-2024-rel-130-pagos-fraccionados",
+        "renta-2024-rel-131-pagos-fraccionados",
+    }.issubset(formula_relation_ids)
+
+
 def test_operator_manual_relation_detail_is_a_debug_breadcrumb_not_a_warning(
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,

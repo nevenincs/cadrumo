@@ -74,6 +74,13 @@ def test_date_binding_ids_identifies_m100_birth_date() -> None:
     assert _M100_BIRTH_DATE_BINDING in _date_binding_ids(snap)
 
 
+def test_formula_binding_ids_traverses_nested_committed_m100_expression() -> None:
+    """The filing replay path must retain the nested direct-estimation binding leaf."""
+    snap = _m100_snapshot()
+
+    assert _M100_ESTIMACION_DIRECTA_NORMAL_BINDING in _formula_binding_ids(snap)
+
+
 def test_relation_ids_identifies_m100_pago_fraccionado_relations() -> None:
     """The M130/M131 instalment relations must be discoverable for replay."""
     snap = _m100_snapshot()

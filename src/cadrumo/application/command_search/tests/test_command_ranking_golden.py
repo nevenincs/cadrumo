@@ -7,12 +7,15 @@ finding ``command-search-lexical-only-mis-ranks``): a cold agent searching
 ``ledger.import`` on the shared token "import", and the composite ``quickfile``
 was invisible to outcome-phrased queries like "file my quarterly VAT". Both are
 asserted here against the live descriptor set (``build_tool_descriptors()``), so
-the hybrid retriever's ranking is a pinned contract, not a claim.
+the retriever's ranking is a pinned contract, not a claim.
 
-The two headline assertions hold with the hybrid retriever active AND in the
-lexical-only degraded mode (per-column BM25 weighting plus the ``quickfile``
-outcome aliases carry them without the ``search`` extra), so this test never
-requires a model download. The run reports which mode was exercised.
+Per-column BM25 weighting plus the ``quickfile`` outcome aliases carry both
+headline assertions on their own, which is what makes the shipped lexical-only
+index sufficient. The module is deterministic and network-free on every host
+because the index has no optional half to switch on: the shipped product loads
+no embedding model at all, a boundary
+``test_search_shippability.py::test_shipped_search_surface_imports_no_embedding_runtime``
+pins by name.
 """
 
 from __future__ import annotations
@@ -21,23 +24,30 @@ from collections.abc import Callable
 
 import pytest
 
-from ....entrypoints.mcp import build_tool_descriptors
+from ....entrypoints.mcp import McpToolDescriptor, build_tool_descriptors
 
 # The ranking helpers live only on the ``_meta_tools`` private surface (they wrap
 # the ``search`` meta-tool, not a public facade); this golden test is a white-box
 # reach into them to assert the live ranking, registered in the test-only
 # import-hygiene debt allowlist (dev/import_hygiene_test_debt.json).
 from ....entrypoints.mcp._meta_tools import build_command_search_index, search_commands
-from ...corpus_search import search_extra_available
+from ...command_search import CommandIndex
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 
 @pytest.fixture(scope="module")
-def ranker() -> Callable[[str], list[str]]:
-    """Build the live descriptor set and its command index once for the module."""
+def _descriptors_and_index() -> tuple[tuple[McpToolDescriptor, ...], CommandIndex]:
+    """Build the live descriptor set and its command index once."""
     descriptors = build_tool_descriptors()
     index = build_command_search_index(descriptors)
+    return descriptors, index
+
+
+@pytest.fixture(scope="module")
+def ranker(_descriptors_and_index: tuple[tuple[McpToolDescriptor, ...], CommandIndex]) -> Callable[[str], list[str]]:
+    """Rank against the module-scoped descriptor set and index."""
+    descriptors, index = _descriptors_and_index
 
     def rank(query: str, *, limit: int = 8) -> list[str]:
         return [hit.command_key for hit in search_commands(query, descriptors=descriptors, index=index, limit=limit)]
@@ -87,7 +97,7 @@ def test_no_retired_command_key_remains_searchable() -> None:
     # descriptors makes every retired key absent while proving nothing. The live
     # surface carries ~292 command keys, so pin a plausible floor well below that
     # and far above a collapsed lazy walk, catching a truncated set that a bare
-    # non-empty check would wave through.
+    # non-empty check would let slip through unnoticed.
     assert len(keys) >= 200, (
         f"descriptor set resolved only {len(keys)} keys, so this gate would pass while checking nothing"
     )
@@ -115,20 +125,3 @@ def test_no_retired_command_key_remains_searchable() -> None:
         key for key in keys for retired_key in retired if key != retired_key and key.endswith("." + retired_key)
     )
     assert not suffix_hits, f"retired command paths re-registered under a new parent: {suffix_hits}"
-
-
-def test_the_golden_set_reports_which_retrieval_mode_it_exercised(
-    ranker: Callable[[str], list[str]],
-) -> None:
-    """The headline queries hold in whichever retrieval mode is installed.
-
-    This previously asserted a non-empty string literal, which no change to the
-    ranker could ever falsify. What is actually worth pinning is the claim the
-    module docstring makes: that the golden set never requires a model download,
-    so the two headline results must hold in the mode this run has -- and the
-    mode is reported so a reader knows whether the semantic side was live.
-    """
-    mode = "hybrid (search extra present)" if search_extra_available() else "lexical-only (degraded)"
-
-    assert ranker("import a bank statement")[0] == "ledger.import", f"headline ranking failed in {mode} mode"
-    assert "quickfile" in ranker("file my quarterly VAT")[:5], f"headline ranking failed in {mode} mode"

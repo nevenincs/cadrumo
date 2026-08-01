@@ -33,7 +33,7 @@ import json
 import os
 import time
 from collections.abc import Mapping, Sequence
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -323,8 +323,8 @@ async def run_live_session_async(
     try:
         import mcp.types as mcp_types
         from mcp import ClientSession, StdioServerParameters
+        from mcp.client.session import ClientRequestContext
         from mcp.client.stdio import stdio_client
-        from mcp.shared.context import RequestContext
     except ImportError as exc:  # pragma: no cover - exercised only without the extra
         raise LiveHarnessError(_MCP_INSTALL_HINT) from exc
 
@@ -332,13 +332,12 @@ async def run_live_session_async(
     narrations: list[LiveNarrationRecord] = []
     elicitations: list[LiveElicitationRecord] = []
 
-    # KWARGS-ANY-RATIONALE-MCP-REQUEST-CONTEXT: the MCP SDK request context is generic over session metadata.
     async def _on_elicitation(
-        context: RequestContext[ClientSession, Any],
+        context: ClientRequestContext,
         params: mcp_types.ElicitRequestParams,
     ) -> mcp_types.ElicitResult | mcp_types.ErrorData:
         message = str(getattr(params, "message", ""))
-        schema = getattr(params, "requestedSchema", None) or {}
+        schema = getattr(params, "requested_schema", None) or {}
         action, content = elicitation_responder(message, schema if isinstance(schema, Mapping) else {})
         elicitations.append(
             LiveElicitationRecord(
@@ -372,7 +371,7 @@ async def run_live_session_async(
                 LiveToolSpec(
                     name=tool.name,
                     description=tool.description or "",
-                    input_schema_json=json.dumps(tool.inputSchema or {}, ensure_ascii=False, sort_keys=True),
+                    input_schema_json=json.dumps(tool.input_schema or {}, ensure_ascii=False, sort_keys=True),
                 )
                 for tool in listed.tools
             )

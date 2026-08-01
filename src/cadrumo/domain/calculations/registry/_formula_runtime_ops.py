@@ -252,6 +252,76 @@ def resolve_parameter(parameter: ParameterDefinition, date_context: Mapping[str,
     return matches[0].value
 
 
+def resolve_scalar_parameter(parameter_id: str, ctx: _EvalContext, *, op: str) -> Decimal:
+    """Resolve a scalar parameter and record its runtime provenance.
+
+    Formula-operation families share the same scalar type contract and must
+    record the parameter id alongside the resolved Decimal in their common
+    evaluation context.  Keeping both actions together prevents a successful
+    lookup from escaping the explainability surface.
+    """
+    parameter = ctx.parameters.get(parameter_id)
+    if parameter is None:
+        raise RegistryValidationError(
+            f"parameter {parameter_id!r} not registered",
+            translated_message="errors.calc.parameter_unknown",
+            context={"parameter_id": parameter_id},
+        )
+    if parameter.data_type not in {"decimal", "money", "integer", "ratio"}:
+        raise RegistryValidationError(
+            f"parameter {parameter_id!r} must be scalar to be used by {op}",
+            translated_message="errors.calc.dispatch_parameter_kind",
+            context={"parameter_id": parameter_id, "op": op},
+        )
+    value = resolve_parameter(parameter, ctx.date_context)
+    ctx.operand_refs.append(parameter_id)
+    ctx.operand_values.append(value)
+    return value
+
+
+def resolve_keyed_bracket(
+    parameter: ParameterDefinition | None,
+    *,
+    key: str,
+    filing_year: int,
+) -> Decimal | None:
+    """Resolve one keyed-bracket row for a filing year.
+
+    A missing parameter or key is the caller's explicit "not tabled" signal;
+    overlapping matching windows are a contradictory registry definition and
+    therefore fail closed instead of selecting an arbitrary first row.
+    """
+    if parameter is None:
+        return None
+    if parameter.data_type != "keyed_bracket_table":
+        raise RegistryValidationError(
+            f"parameter {parameter.id!r} must declare data_type='keyed_bracket_table' to resolve a keyed bracket",
+            translated_message="errors.calc.dispatch_parameter_kind",
+            context={"parameter_id": parameter.id, "op": "resolve_keyed_bracket"},
+        )
+    matches = [
+        entry
+        for entry in parameter.keyed_brackets
+        if entry.key == key
+        and entry.valid_from.year <= filing_year
+        and (entry.valid_to is None or filing_year <= entry.valid_to.year)
+    ]
+    if not matches:
+        return None
+    if len(matches) != 1:
+        raise RegistryValidationError(
+            f"parameter {parameter.id!r} key {key!r} expected exactly one keyed bracket for filing year "
+            f"{filing_year}, found {len(matches)}",
+            context={
+                "parameter_id": parameter.id,
+                "key": key,
+                "filing_year": str(filing_year),
+                "match_count": str(len(matches)),
+            },
+        )
+    return matches[0].value
+
+
 def apply_rounding(value: Decimal, rounding: RegistryRoundingCode | None) -> Decimal:
     """Apply a registry rounding rule to a decimal formula result.
 

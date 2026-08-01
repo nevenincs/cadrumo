@@ -546,23 +546,6 @@ def _evaluate_expression(
     resolved_date_bindings: Mapping[BindingId, date] = date_binding_values or {}
     resolved_text_values: Mapping[CasillaId, str] = text_values or {}
     resolved_convenio: ConvenioAuthority = convenio if convenio is not None else ConvenioAuthority.empty()
-    if expression.op is None:
-        return _evaluate_leaf(
-            expression,
-            values=values,
-            binding_values=binding_values,
-            parameters=parameters,
-            date_context=date_context,
-            relation_values=relation_values,
-            unresolved_relation_ids=unresolved_relation_ids,
-            unresolved_binding_ids=unresolved_binding_ids,
-            unresolved_casilla_ids=unresolved_casilla_ids,
-            operand_refs=operand_refs,
-            operand_casilla_refs=operand_casilla_refs,
-            operand_values=operand_values,
-            date_binding_values=resolved_date_bindings,
-            filing_year=filing_year,
-        )
     ctx = _EvalContext(
         values=values,
         binding_values=binding_values,
@@ -581,6 +564,8 @@ def _evaluate_expression(
         text_values=resolved_text_values,
         convenio=resolved_convenio,
     )
+    if expression.op is None:
+        return _evaluate_leaf(expression, ctx)
     op = expression.op
     if op == "lookup_bracket":
         return _evaluate_lookup_bracket(expression, ctx)
@@ -787,7 +772,7 @@ def _evaluate_m100_resolve_renta_inmobiliaria_imputada(
         return _ZERO
 
     effective_days = mixed_use_days if mixed_use else disposal_days
-    year_days = _m100_scalar_parameter_value(args.year_days_parameter, ctx, op=op)
+    year_days = _ops.resolve_scalar_parameter(args.year_days_parameter, ctx, op=op)
     _m100_validate_imputation_days(
         effective_days,
         casilla_id=args.mixed_use_days_casilla_id if mixed_use else args.disposal_days_casilla_id,
@@ -817,8 +802,8 @@ def _evaluate_m100_resolve_renta_inmobiliaria_imputada(
             )
         share = disposal_percentage / Decimal("100")
 
-    recent_rate = _m100_scalar_parameter_value(args.recent_rate_parameter, ctx, op=op)
-    old_rate = _m100_scalar_parameter_value(args.old_rate_parameter, ctx, op=op)
+    recent_rate = _ops.resolve_scalar_parameter(args.recent_rate_parameter, ctx, op=op)
+    old_rate = _ops.resolve_scalar_parameter(args.old_rate_parameter, ctx, op=op)
     rate = recent_rate if is_revised else old_rate
     return catastral_value * rate * (effective_days / year_days) * share
 
@@ -915,26 +900,6 @@ def _m100_validate_imputation_days(
             translated_message="errors.calc.m100_art85_imputation_days_invalid",
             context={"casilla_id": casilla_id, "value": str(days), "max_days": str(max_days)},
         )
-
-
-def _m100_scalar_parameter_value(parameter_id: ParameterId, ctx: _EvalContext, *, op: str) -> Decimal:
-    parameter = ctx.parameters.get(parameter_id)
-    if parameter is None:
-        raise RegistryValidationError(
-            f"parameter {parameter_id!r} not registered",
-            translated_message="errors.calc.parameter_unknown",
-            context={"parameter_id": parameter_id},
-        )
-    if parameter.data_type not in {"decimal", "money", "integer", "ratio"}:
-        raise RegistryValidationError(
-            f"parameter {parameter_id!r} must be scalar to be used by {op}",
-            translated_message="errors.calc.dispatch_parameter_kind",
-            context={"parameter_id": parameter_id, "op": op},
-        )
-    value = _ops.resolve_parameter(parameter, ctx.date_context)
-    ctx.operand_refs.append(parameter_id)
-    ctx.operand_values.append(value)
-    return value
 
 
 #: Índice-corrector casilla count the M100 estimación-objetiva agraria Fase 3ª
@@ -1135,35 +1100,6 @@ def _m303_resolve_modulos_iva_cuota_devengada_args(
     )
 
 
-def _m303_modulos_iva_coefficient(
-    parameter: ParameterDefinition | None,
-    *,
-    epigrafe: str,
-    modulo_index: int,
-    year: int,
-) -> Decimal | None:
-    """Look up the (epígrafe, módulo) IVA cuota-devengada coefficient in the keyed-bracket table.
-
-    Mirrors :func:`_m131_modulos_coefficient` for the M303 régimen-simplificado
-    de IVA cuota-devengada-por-unidad table (Orden HAC/1347/2024 Anexo I,
-    grounded in ``registry-calculation-legal-grounding``). Returns ``None``
-    when the composite key has no row for the filing year — the epígrafe is
-    not (yet) part of the first-slice tabled activities, or the módulo slot
-    does not apply to that activity.
-    """
-    if parameter is None:
-        return None
-    key = f"{epigrafe}:{modulo_index}"
-    for entry in parameter.keyed_brackets:
-        in_window = entry.valid_from.year <= year and (entry.valid_to is None or entry.valid_to.year >= year)
-        if entry.key == key and in_window:
-            try:
-                return Decimal(entry.value)
-            except (ArithmeticError, ValueError):
-                return None
-    return None
-
-
 def _evaluate_m303_resolve_modulos_iva_cuota_devengada(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
     """Resolve the M303 régimen-simplificado de IVA cuota devengada por operaciones corrientes.
 
@@ -1198,11 +1134,10 @@ def _evaluate_m303_resolve_modulos_iva_cuota_devengada(expression: FormulaExpres
         units = _numeric_casilla_value(modulo_casilla_id, ctx)
         if units == _ZERO:
             continue
-        coefficient = _m303_modulos_iva_coefficient(
+        coefficient = _ops.resolve_keyed_bracket(
             parameter,
-            epigrafe=epigrafe,
-            modulo_index=modulo_index,
-            year=ctx.filing_year,
+            key=f"{epigrafe}:{modulo_index}",
+            filing_year=ctx.filing_year,
         )
         if coefficient is None:
             # This módulo slot has no row for the declared epígrafe (either
@@ -1277,18 +1212,11 @@ def _evaluate_m303_resolve_modulos_iva_cuota_minima_pct(expression: FormulaExpre
     parameter = ctx.parameters.get(args.percentage_parameter)
     if not epigrafe or parameter is None:
         return _ZERO
-    for entry in parameter.keyed_brackets:
-        in_window = entry.valid_from.year <= ctx.filing_year and (
-            entry.valid_to is None or entry.valid_to.year >= ctx.filing_year
-        )
-        if entry.key == epigrafe and in_window:
-            try:
-                value = Decimal(entry.value)
-            except (ArithmeticError, ValueError):
-                return _ZERO
-            ctx.operand_values.append(value)
-            return value
-    return _ZERO
+    value = _ops.resolve_keyed_bracket(parameter, key=epigrafe, filing_year=ctx.filing_year)
+    if value is None:
+        return _ZERO
+    ctx.operand_values.append(value)
+    return value
 
 
 def _evaluate_lookup_parameter_by_entity_type(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
@@ -1341,25 +1269,8 @@ def _evaluate_lookup_parameter_by_entity_type(expression: FormulaExpression, ctx
             },
         )
     scalar_param_id = dispatch_table[dispatch_key]
-    scalar_param = ctx.parameters.get(scalar_param_id)
-    if scalar_param is None:
-        raise RegistryValidationError(
-            f"parameter {scalar_param_id!r} not registered",
-            translated_message="errors.calc.parameter_unknown",
-            context={"parameter_id": scalar_param_id},
-        )
-    if scalar_param.data_type == "bracket_table":
-        raise RegistryValidationError(
-            f"parameter {scalar_param_id!r} declares data_type='bracket_table'; "
-            f"lookup_parameter_by_entity_type requires a scalar parameter (decimal / money / integer / ratio)",
-            translated_message="errors.calc.dispatch_parameter_kind",
-            context={"parameter_id": scalar_param_id, "op": op},
-        )
-    result = _ops.resolve_parameter(scalar_param, ctx.date_context)
     ctx.operand_refs.append(binding_arg.binding)
-    ctx.operand_refs.append(scalar_param_id)
-    ctx.operand_values.append(result)
-    return result
+    return _ops.resolve_scalar_parameter(scalar_param_id, ctx, op=op)
 
 
 def _evaluate_lookup_bracket_by_entity_type(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
@@ -1489,51 +1400,35 @@ def _evaluate_age_at_year_end(expression: FormulaExpression, ctx: _EvalContext) 
     return age
 
 
-def _evaluate_leaf(
-    expression: FormulaExpression,
-    *,
-    values: Mapping[CasillaId, Decimal],
-    binding_values: Mapping[BindingId, Decimal],
-    parameters: Mapping[str, ParameterDefinition],
-    date_context: Mapping[str, date],
-    relation_values: Mapping[RelationId, Decimal],
-    unresolved_relation_ids: frozenset[RelationId],
-    unresolved_casilla_ids: set[CasillaId],
-    operand_refs: list[str],
-    operand_casilla_refs: list[CasillaId],
-    operand_values: list[Decimal],
-    unresolved_binding_ids: frozenset[BindingId] = frozenset(),
-    date_binding_values: Mapping[BindingId, date] | None = None,
-    filing_year: int = 0,
-) -> Decimal:
+def _evaluate_leaf(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
     if expression.literal is not None:
         return expression.literal
     if expression.casilla_id is not None:
-        if expression.casilla_id not in values:
-            if expression.casilla_id in unresolved_casilla_ids:
+        if expression.casilla_id not in ctx.values:
+            if expression.casilla_id in ctx.unresolved_casilla_ids:
                 raise _UnresolvedFormulaDependencyError((expression.casilla_id,))
             raise RegistryValidationError(
                 f"casilla {expression.casilla_id!r} referenced before evaluation",
                 translated_message="errors.calc.casilla_referenced_before_evaluation",
                 context={"casilla_id": expression.casilla_id},
             )
-        value = values[expression.casilla_id]
-        operand_refs.append(expression.casilla_id)
-        operand_casilla_refs.append(expression.casilla_id)
-        operand_values.append(value)
+        value = ctx.values[expression.casilla_id]
+        ctx.operand_refs.append(expression.casilla_id)
+        ctx.operand_casilla_refs.append(expression.casilla_id)
+        ctx.operand_values.append(value)
         return value
     if expression.binding is not None:
-        if expression.binding not in binding_values:
-            if expression.binding in unresolved_binding_ids:
+        if expression.binding not in ctx.binding_values:
+            if expression.binding in ctx.unresolved_binding_ids:
                 raise _UnresolvedFormulaDependencyError((expression.binding,))
             raise RegistryValidationError(
                 f"binding {expression.binding!r} has no supplied value",
                 translated_message="errors.calc.binding_value_missing",
                 context={"binding_id": expression.binding},
             )
-        value = binding_values[expression.binding]
-        operand_refs.append(expression.binding)
-        operand_values.append(value)
+        value = ctx.binding_values[expression.binding]
+        ctx.operand_refs.append(expression.binding)
+        ctx.operand_values.append(value)
         return value
     if expression.date_binding is not None:
         # A date_binding leaf is consumed exclusively by the age_at_year_end op.
@@ -1547,23 +1442,19 @@ def _evaluate_leaf(
             context={"binding_id": str(expression.date_binding)},
         )
     if expression.parameter is not None:
-        parameter = parameters[expression.parameter]
-        value = _ops.resolve_parameter(parameter, date_context)
-        operand_refs.append(expression.parameter)
-        operand_values.append(value)
-        return value
+        return _ops.resolve_scalar_parameter(expression.parameter, ctx, op="formula_parameter")
     if expression.relation is not None:
-        if expression.relation not in relation_values:
-            if expression.relation in unresolved_relation_ids:
+        if expression.relation not in ctx.relation_values:
+            if expression.relation in ctx.unresolved_relation_ids:
                 raise _UnresolvedFormulaDependencyError((expression.relation,))
             raise RegistryValidationError(
                 f"relation {expression.relation!r} has no supplied value",
                 translated_message="errors.calc.relation_value_missing",
                 context={"relation_id": expression.relation},
             )
-        value = relation_values[expression.relation]
-        operand_refs.append(expression.relation)
-        operand_values.append(value)
+        value = ctx.relation_values[expression.relation]
+        ctx.operand_refs.append(expression.relation)
+        ctx.operand_values.append(value)
         return value
     raise RegistryValidationError(
         "empty formula expression",

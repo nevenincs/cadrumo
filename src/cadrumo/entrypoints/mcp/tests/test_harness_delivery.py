@@ -20,6 +20,7 @@ import anyio
 import pytest
 
 from ....agent import iter_operator_rules, iter_personas, iter_skill_documents, operator_rules_text
+from ....tests import connected_server_and_client_session as connect
 from .._harness_tools import (
     HARNESS_LOAD_TOOL,
     WHOAMI_TOOL,
@@ -177,41 +178,26 @@ def test_floor_tool_and_resources_are_wired_into_the_built_server() -> None:
             build_server(descriptors)
         return
 
-    from mcp.types import (
-        ListResourcesRequest,
-        ListResourceTemplatesRequest,
-        ListToolsRequest,
-        ReadResourceRequest,
-        ReadResourceRequestParams,
-    )
-    from pydantic import AnyUrl
-
     server = cast("Any", build_server(descriptors, persona=AgentPersona.VERIFIER))
-    handlers = server.request_handlers
 
     async def _drive() -> None:
-        tools = (await handlers[ListToolsRequest](ListToolsRequest(method="tools/list"))).root.tools
-        assert HARNESS_LOAD_TOOL in {tool.name for tool in tools}
+        async with connect(server) as session:
+            tools = (await session.list_tools()).tools
+            assert HARNESS_LOAD_TOOL in {tool.name for tool in tools}
 
-        resources = (await handlers[ListResourcesRequest](ListResourcesRequest(method="resources/list"))).root.resources
-        assert {str(resource.uri) for resource in resources} == {ref.uri for ref in list_harness_resources()}
+            resources = (await session.list_resources()).resources
+            assert {str(resource.uri) for resource in resources} == {ref.uri for ref in list_harness_resources()}
 
-        templates = (
-            await handlers[ListResourceTemplatesRequest](
-                ListResourceTemplatesRequest(method="resources/templates/list"),
-            )
-        ).root.resourceTemplates
-        assert {template.uriTemplate for template in templates} == {
-            template.uri_template for template in list_harness_resource_templates()
-        }
+            templates = (await session.list_resource_templates()).resource_templates
+            assert {template.uri_template for template in templates} == {
+                template.uri_template for template in list_harness_resource_templates()
+            }
 
-        request = ReadResourceRequest(
-            method="resources/read",
-            params=ReadResourceRequestParams(uri=AnyUrl(resource_uri(HarnessResourceKind.PERSONA, "cadrumo-verifier"))),
-        )
-        contents = (await handlers[ReadResourceRequest](request)).root.contents
-        assert contents[0].mimeType == "text/markdown"
-        assert contents[0].text == _shipped_persona_text("cadrumo-verifier")
+            contents = (
+                await session.read_resource(resource_uri(HarnessResourceKind.PERSONA, "cadrumo-verifier"))
+            ).contents
+            assert contents[0].mime_type == "text/markdown"
+            assert contents[0].text == _shipped_persona_text("cadrumo-verifier")
 
     anyio.run(_drive)
 
@@ -225,21 +211,15 @@ def test_floor_tool_call_returns_the_active_persona_payload() -> None:
             build_server(descriptors)
         return
 
-    from mcp.types import CallToolRequest, CallToolRequestParams
-
     server = cast("Any", build_server(descriptors, persona=AgentPersona.VERIFIER))
-    handlers = server.request_handlers
 
     async def _drive() -> None:
-        request = CallToolRequest(
-            method="tools/call",
-            params=CallToolRequestParams(name=HARNESS_LOAD_TOOL, arguments={}),
-        )
-        result = (await handlers[CallToolRequest](request)).root
-        assert result.isError is False
-        assert result.structuredContent is not None
-        assert result.structuredContent["operator_rules"] == operator_rules_text()
-        assert result.structuredContent["active_persona"]["text"] == _shipped_persona_text("cadrumo-verifier")
+        async with connect(server) as session:
+            result = await session.call_tool(HARNESS_LOAD_TOOL, {})
+        assert result.is_error is False
+        assert result.structured_content is not None
+        assert result.structured_content["operator_rules"] == operator_rules_text()
+        assert result.structured_content["active_persona"]["text"] == _shipped_persona_text("cadrumo-verifier")
         assert operator_rules_text() in result.content[0].text
 
     anyio.run(_drive)
@@ -301,12 +281,10 @@ def test_whoami_is_always_advertised_and_never_persona_scoped_away() -> None:
             build_server(descriptors)
         return
 
-    from mcp.types import ListToolsRequest
-
     async def _advertised(persona: AgentPersona | None, mode: SurfaceMode) -> set[str]:
         server = cast("Any", build_server(descriptors, persona=persona, surface_mode=mode))
-        handlers = server.request_handlers
-        tools = (await handlers[ListToolsRequest](ListToolsRequest(method="tools/list"))).root.tools
+        async with connect(server) as session:
+            tools = (await session.list_tools()).tools
         return {tool.name for tool in tools}
 
     async def _drive() -> None:
@@ -327,22 +305,16 @@ def test_whoami_tool_call_returns_the_active_profile_label(tmp_path: Any) -> Non
             build_server(descriptors)
         return
 
-    from mcp.types import CallToolRequest, CallToolRequestParams
-
     with isolated_runtime_profile(tmp_path=tmp_path, label="Erika") as profile:
         server = cast("Any", build_server(descriptors, persona=None))
-        handlers = server.request_handlers
 
         async def _drive() -> None:
-            request = CallToolRequest(
-                method="tools/call",
-                params=CallToolRequestParams(name=WHOAMI_TOOL, arguments={}),
-            )
-            result = (await handlers[CallToolRequest](request)).root
-            assert result.isError is False
-            assert result.structuredContent is not None
-            assert result.structuredContent["active_profile"] == "Erika"
-            assert result.structuredContent["active_profile"] != profile.bucket_id
+            async with connect(server) as session:
+                result = await session.call_tool(WHOAMI_TOOL, {})
+            assert result.is_error is False
+            assert result.structured_content is not None
+            assert result.structured_content["active_profile"] == "Erika"
+            assert result.structured_content["active_profile"] != profile.bucket_id
             assert "Erika" in result.content[0].text
 
         anyio.run(_drive)
@@ -358,21 +330,15 @@ def test_floor_response_carries_the_active_identity_block(tmp_path: Any) -> None
             build_server(descriptors)
         return
 
-    from mcp.types import CallToolRequest, CallToolRequestParams
-
     with isolated_runtime_profile(tmp_path=tmp_path, label="Erika"):
         server = cast("Any", build_server(descriptors, persona=None))
-        handlers = server.request_handlers
 
         async def _drive() -> None:
-            request = CallToolRequest(
-                method="tools/call",
-                params=CallToolRequestParams(name=HARNESS_LOAD_TOOL, arguments={}),
-            )
-            result = (await handlers[CallToolRequest](request)).root
-            assert result.isError is False
-            assert result.structuredContent is not None
-            assert result.structuredContent["identity"]["active_profile"] == "Erika"
+            async with connect(server) as session:
+                result = await session.call_tool(HARNESS_LOAD_TOOL, {})
+            assert result.is_error is False
+            assert result.structured_content is not None
+            assert result.structured_content["identity"]["active_profile"] == "Erika"
 
         anyio.run(_drive)
 

@@ -38,6 +38,7 @@ from pydantic import ConfigDict, RootModel
 
 if TYPE_CHECKING:
     from .observability import RunContextInfo
+from .cli_metadata import is_metadata_invocation
 from .redaction import redact_for_log
 
 _CONFIGURED = False
@@ -116,8 +117,7 @@ def _is_cli_metadata_invocation() -> bool:
     executable_names = {program.name.lower(), program.parent.name.lower()}
     if not executable_names.intersection({"aeat", "aeat.exe"}):
         return False
-    arguments = sys.argv[1:]
-    return any(argument in {"--help", "-h", "--version", "-V"} for argument in arguments)
+    return is_metadata_invocation(sys.argv[1:])
 
 
 _SENSITIVE_KEY_SET = frozenset(pattern.lower() for pattern in SCRUB_FIELD_PATTERNS)

@@ -23,18 +23,19 @@ as ``aeat --version``.
 
 from __future__ import annotations
 
-import sys
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from datetime import date as _date
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
 import typer
 
+from ...core.cli_metadata import is_metadata_invocation
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
-from ...core.output_rendering import render_command_output
+from ...core.output_rendering import OutputFormat, render_command_output
+from ._command_suggestions import INVOCATION_REMAINDER_META_KEY
 
 # The application- and domain-layer symbols below are imported lazily,
 # inside the helpers that use them at runtime. A module-level import
@@ -68,19 +69,19 @@ __all__ = [
 # Transport helpers
 # ---------------------------------------------------------------------
 
-_FORMAT_TEXT = "text"
-_FORMAT_JSON = "json"
-_FORMAT_TABLE = "table"
+
+def _is_metadata_invocation(ctx: typer.Context) -> bool:
+    """Read metadata posture from the invocation captured on ``ctx``."""
+    arguments = tuple(str(token) for token in ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ()))
+    return is_metadata_invocation(arguments)
 
 
-def _is_metadata_invocation() -> bool:
-    """Return whether the arguments request help or version metadata."""
-    return any(argument in {"--help", "-h", "--version", "-V"} for argument in sys.argv[1:])
-
-
-def _format_of(ctx: typer.Context) -> str:
+def _format_of(ctx: typer.Context) -> OutputFormat:
     state = ctx.ensure_object(dict)
-    return state.get("format", _FORMAT_TEXT)
+    format_value = state.get("format", OutputFormat.TEXT)
+    if isinstance(format_value, OutputFormat):
+        return format_value
+    return OutputFormat(format_value)
 
 
 def emit_help_text(ctx: typer.Context) -> None:
@@ -137,9 +138,9 @@ def _emit_envelope(
             notices into ``lines`` themselves so JSON and text cannot
             drift.
     """
-    metadata_invocation = _is_metadata_invocation()
-    format_name = _format_of(ctx)
-    if format_name == _FORMAT_JSON:
+    metadata_invocation = _is_metadata_invocation(ctx)
+    output_format = _format_of(ctx)
+    if output_format is OutputFormat.JSON:
         if metadata_invocation:
             # The ``--help`` / ``--version`` fast path stays off the
             # sandbox/active-profile resolution entirely — active_profile is
@@ -168,7 +169,7 @@ def _emit_envelope(
         sandbox_notice = sandbox_notice_for_active_bucket()
         if sandbox_notice is not None:
             rendered_lines = (sandbox_banner_line(sandbox_notice), *lines)
-    rendered = render_command_output(format_name=format_name, payload=result, lines=rendered_lines)
+    rendered = render_command_output(format_name=output_format.value, payload=result, lines=rendered_lines)
     if rendered.text:
         typer.echo(rendered.text)
 
@@ -348,10 +349,25 @@ class _LedgerPeriodRefusal(typer.BadParameter):
     ``context``, so automation reads the accepted grammar as data rather than
     scraping the rendered range notation, and a wording pass on the message
     cannot change the advertised set.
+
+    Takes the locale key via the keyword ``translated_message`` (with its
+    substitution ``context``) rather than an already-resolved string, matching
+    the project-wide structured-error contract: the key and its context ride on
+    the exception, resolved once here for the click-parse-time rendering, but
+    available unflattened for any later structured consumer.
     """
 
-    def __init__(self, message: str, *, accepted_period_tokens: tuple[str, ...]) -> None:
-        super().__init__(message)
+    def __init__(
+        self,
+        *,
+        translated_message: str,
+        context: Mapping[str, object] | None = None,
+        accepted_period_tokens: tuple[str, ...],
+    ) -> None:
+        resolved_context = dict(context) if context is not None else {}
+        super().__init__(tr(translated_message, **resolved_context))
+        self.translated_message: str = translated_message
+        self.context: dict[str, object] = resolved_context
         self.accepted_period_tokens: tuple[str, ...] = accepted_period_tokens
 
 
@@ -387,7 +403,8 @@ def _canonical_period(period: str, *, year: int) -> Period:
             # clave such as ``1P``): refuse with the AEAT-token guidance below.
 
     raise _LedgerPeriodRefusal(
-        tr("cli.common.errors.period_unrecognised", raw=period),
+        translated_message="cli.common.errors.period_unrecognised",
+        context={"raw": period},
         accepted_period_tokens=_ledger_period_accepted_tokens(),
     )
 

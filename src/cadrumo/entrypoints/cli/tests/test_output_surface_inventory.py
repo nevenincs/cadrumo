@@ -37,7 +37,6 @@ _ALLOWED_DIRECT_OUTPUTS = {
     # ClickException usage message. They cannot route through the rich path
     # they are the fallback for.
     ("entrypoints/cli/_terminal_errors.py", "write"),
-    ("entrypoints/cli/_exit_codes.py", "typer.echo"),
     ("application/wizard/_commands.py", "typer.echo"),
     # Group help fallback: renders the click-generated help text verbatim,
     # not operator data subject to redaction.

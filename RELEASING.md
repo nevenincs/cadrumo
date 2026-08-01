@@ -5,10 +5,10 @@ This runbook covers the complete release lifecycle for Cadrumo maintainers.
 **`.github/workflows/publish-release.yml` is the sole publication authority.** It
 promotes an immutable, CI-tested release cohort to every public channel — PyPI, GitHub
 Release, Scoop bucket, Homebrew tap, and the Claude plugin marketplace — without
-rebuilding any artifact. The workflow is inert until the operator sets
-`CADRUMO_PUBLISH_ENABLED=true` and completes the one-time channel prerequisites below.
+rebuilding any artifact. The workflow requires the one-time channel prerequisites below, and the
+protected `release` environment's approval click is the human gate.
 
-Dispatching publish-release.yml with `dry_run=true` runs Gate 1 (operator opt-in) and
+Dispatching publish-release.yml with `dry_run=true` runs Gate 1 (prerequisite check) and
 Gate 2 (validate) fully but skips Gate 3 (publish), so the validate-everything-publish-
 nothing diagnostic lives on the single authority. The former validate-only `publish.yml`
 stub was retired.
@@ -49,7 +49,7 @@ does not govern active naming. The following sources define the release mechanic
 - [`.github/workflows/publish-release.yml`](.github/workflows/publish-release.yml) —
   the sole upload authority: manual dispatch, protected `release` environment with
   required reviewers, OIDC Trusted Publishing, promote-without-rebuild from the
-  retained cohort bytes. Refuses to run until `CADRUMO_PUBLISH_ENABLED=true` is set.
+  retained cohort bytes.
 - [`.github/workflows/packaging-smoke.yml`](.github/workflows/packaging-smoke.yml) —
   runs the three-OS artifact checks, builds the immutable full release cohort once per
   run and publishes it (`cadrumo-release-cohort.tar.gz`) to the run's draft evidence
@@ -250,10 +250,9 @@ restructuring. No publication writes to any product repository's default branch.
    - Repository variable `CLAUDE_MARKETPLACE_REPO` to its slug
    - Repository secret `CLAUDE_MARKETPLACE_TOKEN` to a PAT with write access
 
-5. Set repository variable `CADRUMO_PUBLISH_ENABLED=true` to arm the workflow.
-
-Without `CADRUMO_PUBLISH_ENABLED=true` the workflow refuses with a detailed prerequisite
-list and uploads nothing.
+The workflow is armed as soon as these prerequisites exist; there is no separate
+opt-in variable. The `release` environment's required-reviewer approval is the
+human gate on a real publication.
 
 ### Self-hosted runner fleet
 
@@ -616,9 +615,14 @@ gh release create vX.Y.Z-evidence --draft --notes "claude-* rows" \
   var/distribution-install-readiness/claude-*.json
 ```
 
-Then dispatch `Publish Cadrumo release` with the four run/release inputs — the smoke
-run (3 python rows + sealed cohort), the Scoop and Homebrew acquisition runs from
-Stage 2 (their rows), and the evidence release tag above:
+Then dispatch `Publish Cadrumo release`. Gate 2 **derives** which acquisition inputs a
+release actually needs from the channels that release claims, so supply only those and
+leave the rest empty — an input the release does not claim is not an omission. A
+descriptor claiming the python (registry) channel alone carries `packaging_run_id` and
+nothing else. The full four-input form below applies only when the release claims the
+Scoop, Homebrew and Claude channels too: the smoke run (3 python rows + sealed cohort),
+the Scoop and Homebrew acquisition runs from Stage 2 (their rows), and the evidence
+release tag above:
 
 ```console
 gh workflow run publish-release.yml \
@@ -646,8 +650,9 @@ every required row against the sealed cohort — so the local
 
 The workflow runs three sequential jobs:
 
-**Gate 1 — operator opt-in.** Refuses unless `CADRUMO_PUBLISH_ENABLED=true` is set,
-and prints a full prerequisite checklist if not. Nothing is uploaded.
+**Gate 1 — prerequisite check.** Confirms the `release` environment carries a
+required-reviewer rule, since that approval click is the human release gate.
+Fails closed on a real publication; a dry run warns and proceeds.
 
 **Gate 2 — validate (no rebuild).** Verifies the source run identity (success,
 `packaging-smoke.yml`, `push`, `main`, same repo, matching `head_sha`) and, with parity

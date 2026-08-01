@@ -24,7 +24,7 @@ from ....adapters.persistence.storage.master_key import (
     profile_session_path,
     record_login_failure,
 )
-from ....core import ProfileSessionRefusalReason, read_pointer, resolve_active_bucket_id
+from ....core import BucketPointer, ProfileSessionRefusalReason, read_pointer, resolve_active_bucket_id
 from ....core.config import load_settings
 from ....core.resources import resources
 from ....core.time import now as _now
@@ -37,7 +37,12 @@ from .._login_session import (
     login_profile,
     resume_active_profile_session,
 )
-from .._orchestration import profile_create_storage_span, register_active_profile
+from .._orchestration import (
+    delete_profile_with_lifecycle_span,
+    profile_create_storage_span,
+    register_active_profile,
+)
+from .._profile_pointer_transaction import active_profile_pointer_transaction
 from .conftest import lay_down_session_for_live_login, require_keychain_custody
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -159,6 +164,27 @@ class TestFirstLogin:
         _create_profile(schema, profile_id=_PROFILE_A, label="Known operator")
         with pytest.raises(ProfileNotFoundError):
             login_profile(name="no-such-profile")
+
+    def test_bare_login_refuses_a_tombstoned_selected_profile_before_authentication(
+        self,
+        schema: ProfileSchemaDefinition,
+        _storage_root: Path,
+    ) -> None:
+        """A stale selected pointer cannot reopen a deleted taxpayer bucket."""
+        _create_profile(schema, profile_id=_PROFILE_A, label="Deleted operator")
+        delete_profile_with_lifecycle_span(_PROFILE_A)
+        close_active_bucket_session()
+        tombstoned_pointer = BucketPointer(bucket_id=_PROFILE_A, schema_version=1)
+        with active_profile_pointer_transaction() as transaction:
+            transaction.write(tombstoned_pointer)
+
+        with pytest.raises(ProfileNotFoundError):
+            login_profile()
+
+        # The lifecycle refusal occurs before master-key authentication, so it
+        # cannot leave a live session or mutate the operator's original pointer.
+        assert current_active_bucket_session() is None
+        assert read_pointer(_storage_root) == tombstoned_pointer
 
 
 @pytest.mark.os_keychain

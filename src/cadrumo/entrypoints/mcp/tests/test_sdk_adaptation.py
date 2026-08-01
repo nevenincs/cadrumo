@@ -31,10 +31,10 @@ def test_descriptors_adapt_to_sdk_tools_with_annotations() -> None:
 
     contract = by_name["cadrumo_contract"]
     assert contract.annotations is not None
-    assert contract.annotations.readOnlyHint is True
-    assert contract.inputSchema["type"] == "object"
-    assert contract.outputSchema
-    contract_properties = contract.outputSchema["properties"]
+    assert contract.annotations.read_only_hint is True
+    assert contract.input_schema["type"] == "object"
+    assert contract.output_schema
+    contract_properties = contract.output_schema["properties"]
     assert set(contract_properties) == {
         "schema_version",
         "command",
@@ -46,12 +46,12 @@ def test_descriptors_adapt_to_sdk_tools_with_annotations() -> None:
     assert contract_properties["command"]["const"] == "contract"
 
     calculate = by_name["cadrumo_modelo_work_calculate"]
-    assert calculate.outputSchema
-    calculate_properties = calculate.outputSchema["properties"]
+    assert calculate.output_schema
+    calculate_properties = calculate.output_schema["properties"]
     assert calculate_properties["command"]["const"] == "modelo.work.calculate"
     assert "calculation_revision_id" in calculate_properties["result"]["properties"]
 
     remove = by_name["cadrumo_ledger_remove"]
     assert remove.annotations is not None
-    assert remove.annotations.readOnlyHint is False
-    assert remove.annotations.destructiveHint is True
+    assert remove.annotations.read_only_hint is False
+    assert remove.annotations.destructive_hint is True

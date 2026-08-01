@@ -424,6 +424,15 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             # wizard surface; no cycle exists. Delete this entry when the
             # one-shot wizard surface and the projection are retired.
             ImportEdge("application.flows._wizard_projection", "application.wizard"),
+            # Proven by ImportError, not inspection: this consumer is reached
+            # through the user_profile package's lazy __getattr__, so hoisting
+            # this to module scope loads the wizard while that resolver is on
+            # the stack, and wizard._status then imports a name back out of
+            # user_profile that the resolver has not bound yet. The static
+            # import graph shows no cycle, which is why a graph-based check
+            # declares the hoist safe -- it was tried, and it broke
+            # `import cadrumo.application.workflow` outright.
+            ImportEdge("application.user_profile._keys_validation", "application.wizard"),
             # login -> orchestration: a genuine cycle break. Orchestration
             # imports close_profile_session_artefacts from the login module,
             # so login cannot reach orchestration's selection and
@@ -553,7 +562,6 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.calculations._relation_prefill", "domain.calculations.registry"),
             ImportEdge("application.calculations._relation_prefill", "domain.deadlines"),
             ImportEdge("application.calculations._relation_prefill", "domain.user_profile"),
-            ImportEdge("application.corpus_search._embed_build", "application.corpus_search._errors"),
             ImportEdge("application.corpus_search._lexical_index", "application.corpus_search._errors"),
             ImportEdge("application.diagnostics", "adapters.outbound.aeat.browser"),
             ImportEdge("application.diagnostics", "adapters.persistence.storage"),
@@ -812,11 +820,20 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.workflow._resume", "application.modelo"),
             ImportEdge("entrypoints.mcp", "entrypoints.mcp._server"),
             ImportEdge("entrypoints.mcp._faithfulness", "core.i18n"),
+            # HITL auto-approve grounding: deferred to keep this module free of a
+            # load-time dependency on the tool-descriptor builder, which reaches
+            # the whole CLI tree -- a documented cold-start reason, not a cycle.
+            ImportEdge("entrypoints.mcp._hitl", "entrypoints.mcp._tools"),
             ImportEdge("entrypoints.mcp._inprocess", "entrypoints.cli"),
             ImportEdge("entrypoints.mcp._input_schema", "entrypoints.cli"),
             ImportEdge("entrypoints.mcp._persona_scope", "core.i18n"),
             ImportEdge("entrypoints.mcp._resources", "application.corpus_search"),
             ImportEdge("entrypoints.mcp._server", "core.i18n"),
+            # Watchdog kill-switch read: deferred inside a bare `except Exception`
+            # fail-open guard so an unreadable settings/dotenv file cannot strip
+            # the server's only lifetime anchor -- hoisting to module scope would
+            # delete that guard's protection against a load-time settings failure.
+            ImportEdge("entrypoints.mcp._stdio_lifetime", "core.config"),
             ImportEdge("entrypoints.mcp._toolsets", "entrypoints.cli"),
             ImportEdge("entrypoints.mcp._tools", "entrypoints.cli"),
             ImportEdge("locales._fstring_registry", "application.wizard"),
@@ -849,7 +866,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
     UnsanctionedClass.DOMAIN_CYCLE_BREAK: 50,
     UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 168,
     UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 37,
-    UnsanctionedClass.APPLICATION_DEFERRAL: 527,
+    UnsanctionedClass.APPLICATION_DEFERRAL: 532,
 }
 
 # Ceiling on the total number of allowlisted edges. Editing the allowlist to add
@@ -869,7 +886,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
 # briefly sat here was retired the same way once the five reconciliation value
 # types moved to the record module that owns them, which removed the cycle
 # rather than documenting it.
-_ALLOWLIST_EDGE_CEILING: int = 482
+_ALLOWLIST_EDGE_CEILING: int = 485
 
 
 def _cadrumo_relative(dotted: str) -> str:

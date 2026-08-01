@@ -9,7 +9,8 @@ from pydantic import SecretStr
 
 from ....adapters.persistence.storage import SecureObjectRepository, has_active_bucket_session
 from ....adapters.persistence.storage.bucket import bucket_paths, manifest_path
-from ....application.user_profile import UserProfileLifecycleRepository
+from ....application.state_projection import _build_active_profile
+from ....application.user_profile import UserProfileLifecycleRepository, rename_profile
 from ....core import BucketPointer, pointer_path, read_pointer, write_pointer
 from ....core.config import override_settings
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
@@ -67,6 +68,24 @@ def test_active_profile_health_reports_missing_profile_record(tmp_path: Path) ->
     assert health.status == "missing_profile_record"
     assert health.repairable_by_clearing_pointer is True
     assert health.next_action == "aeat config repair profile --clear-active --yes"
+
+
+def test_profile_health_keeps_its_label_snapshot_private_after_a_real_rename(tmp_path: Path) -> None:
+    """Projection labels stay coherent with the health verdict that produced them."""
+    with isolated_runtime_profile(
+        tmp_path=tmp_path,
+        bucket_id=_BUCKET_ID,
+        label=_PROFILE_LABEL,
+    ) as profile:
+        _seed_ready_profile_record(_BUCKET_ID, profile.repository)
+        health = assess_active_profile_health()
+
+        rename_profile(profile_id=_BUCKET_ID, new_label="Renamed Operator")
+        projected = _build_active_profile(health)
+
+    assert health.active_profile_label == _PROFILE_LABEL
+    assert projected.label == _PROFILE_LABEL
+    assert "active_profile_label" not in health.model_dump(mode="json")
 
 
 def test_active_profile_health_none_status_suggests_create_when_no_profile_is_registered(

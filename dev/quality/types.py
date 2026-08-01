@@ -59,28 +59,18 @@ class _ExternalGap:
 
 # Documented, reviewed suppression for genuinely-irreducible external
 # dependency / third-party-stub IMPORT gaps — deliberately NOT a tech-debt
-# baseline. Each entry is a proven optional-dep / missing-stub import that no
-# in-source escape (``# type: ignore`` / ``cast`` / ``Any``) and no local stub
+# baseline. Each entry would be a proven optional-dep / missing-stub import that
+# no in-source escape (``# type: ignore`` / ``cast`` / ``Any``) and no local stub
 # can resolve within the two checkers' constraints. The match is intentionally
 # tight — (path suffix, checker, rule, message substring) — so a NEW diagnostic
-# in these files under any other rule or naming ANY other symbol is still a hard
-# failure. Reviewed 2026-07-04.
-_IRREDUCIBLE_EXTERNAL_GAPS: tuple[_ExternalGap, ...] = (
-    _ExternalGap(
-        "application/corpus_search/_model_loader.py",
-        "ty",
-        "unresolved-import",
-        "model2vec",
-        "model2vec is the optional cadrumo[search] extra, absent from the type-check env; "
-        "no types-model2vec distribution exists.",
-    ),
-    # pyrefly needs no counterpart entry: it reports an unresolved optional
-    # import as a warning rather than an error, and this harness collects only
-    # error severity. The entry that stood here named pyright's rule and was
-    # removed with pyright itself — a rule string no checker emits can never
-    # match, so keeping it would have read as active coverage while suppressing
-    # nothing.
-)
+# under any other rule or naming ANY other symbol is still a hard failure.
+#
+# The set is EMPTY and every import gap is currently a hard failure. The one
+# entry it carried suppressed the ``model2vec`` unresolved-import in the
+# corpus-search model loader; that loader was deleted with the runtime embedding
+# stack, so the suppression it needed no longer has a subject. Reviewed
+# 2026-08-01.
+_IRREDUCIBLE_EXTERNAL_GAPS: tuple[_ExternalGap, ...] = ()
 
 
 def _is_irreducible_external_gap(diagnostic: Diagnostic) -> bool:

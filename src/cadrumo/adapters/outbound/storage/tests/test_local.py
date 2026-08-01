@@ -67,6 +67,23 @@ def test_put_creates_namespace_and_writes_payload_atomically(provider: LocalFile
     assert sidecar.is_file()
 
 
+def test_put_uses_the_canonical_safe_provider_object_name(provider: LocalFileSystemProvider) -> None:
+    """A real local write keeps the shared HMAC-prefix and label rendering contract."""
+    payload = b"object-name-kernel"
+    metadata = provider.put(
+        "ledger_transaction",
+        "abcdef0123456789",
+        payload,
+        content_hash=_hash(payload),
+        label=" payroll Q1/2026 ",
+    )
+
+    target = Path(metadata.provider_object_id)
+    assert target.is_file()
+    assert target.name == "abcdef01--payroll-Q1-2026.bin"
+    assert target.with_name(target.stem + ".meta.json").is_file()
+
+
 def test_put_sidecar_write_is_atomic_and_preserves_prior_content_on_failure(
     provider: LocalFileSystemProvider,
 ) -> None:

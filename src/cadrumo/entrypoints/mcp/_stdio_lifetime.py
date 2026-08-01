@@ -64,6 +64,8 @@ import threading
 import time
 from collections.abc import Callable
 
+from ...core.external_constants import UTF_8_ENCODING as _UTF_8
+
 logger = logging.getLogger(__name__)
 
 #: Operator kill switch. Declared as the ``cadrumo_mcp_stdio_watchdog`` field on
@@ -694,7 +696,7 @@ def _posix_parent_map() -> dict[int, int] | None:
                 if not name.isdigit():
                     continue
                 try:
-                    with open(f"{proc_root}/{name}/stat", encoding="utf-8") as handle:
+                    with open(f"{proc_root}/{name}/stat", encoding=_UTF_8) as handle:
                         fields = handle.read().rsplit(")", 1)[-1].split()
                     # After the comm field, fields are: state, ppid, ...
                     parents[int(name)] = int(fields[1])

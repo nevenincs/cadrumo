@@ -51,9 +51,9 @@ def test_negotiated_capability_set_is_pinned() -> None:
     # tools.listChanged IS declared: the console emits tools/list_changed on a
     # toolset activation. The remaining list-changed / subscribe sub-flags stay
     # off and are pinned so a future capability shift cannot land silently.
-    assert capabilities.tools.listChanged is True
-    assert capabilities.prompts.listChanged is False
-    assert capabilities.resources.listChanged is False
+    assert capabilities.tools.list_changed is True
+    assert capabilities.prompts.list_changed is False
+    assert capabilities.resources.list_changed is False
     assert capabilities.resources.subscribe is False
 
     # No experimental capabilities are declared.
