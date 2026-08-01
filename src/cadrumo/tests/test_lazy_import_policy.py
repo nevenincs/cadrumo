@@ -562,7 +562,6 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("application.calculations._relation_prefill", "domain.calculations.registry"),
             ImportEdge("application.calculations._relation_prefill", "domain.deadlines"),
             ImportEdge("application.calculations._relation_prefill", "domain.user_profile"),
-            ImportEdge("application.corpus_search._embed_build", "application.corpus_search._errors"),
             ImportEdge("application.corpus_search._lexical_index", "application.corpus_search._errors"),
             ImportEdge("application.diagnostics", "adapters.outbound.aeat.browser"),
             ImportEdge("application.diagnostics", "adapters.persistence.storage"),

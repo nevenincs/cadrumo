@@ -3,32 +3,31 @@
 Confirms the wheel ships the light, licence-clean data (the extracted
 corpus triples the index builds from) and NOT the heavy model footprint:
 no model weights, no onnxruntime, no caches, no precompiled index. Also
-confirms the degraded, no-download mode is importable without the search
-extra and that the FTS index build is deterministic. Real-behavior only:
-no skips, tmp_path SQLite, assertions on the packaged-data tree that
-SHIPS rather than on any optional runtime download.
+confirms the shipped retrieval surface carries no embedding runtime at all
+and that the FTS index build is deterministic. Real-behavior only: no skips,
+tmp_path SQLite, assertions on the packaged-data tree that SHIPS.
 """
 
 from __future__ import annotations
 
+import ast
 import importlib
-import importlib.util
 from pathlib import Path
 
 import pytest
 
 from ....core.resources import bundled_path
-from .._embed_build import embed_corpus
-from .._errors import CorpusSearchDependencyError
 from .._lexical_index import build_lexical_index, iter_corpus_chunks
-from .._models import CorpusChunk
-from .._query_embed import search_extra_available
 from ._corpus_fixture import build_sample_corpus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PACKAGE_ROOT = Path(__file__).resolve().parents[1]
-_MODEL2VEC_PRESENT = importlib.util.find_spec("model2vec") is not None
+
+#: Third-party runtimes the shipped retrieval surface must never import: the
+#: product carries no semantic runtime, so no model loader, no hub client, and
+#: no vector maths may reach a production module.
+_FORBIDDEN_RUNTIME_IMPORTS = frozenset({"model2vec", "huggingface_hub", "numpy", "onnxruntime", "torch"})
 
 # Model-weight / runtime / cache artifacts that must never ship in the wheel.
 _FORBIDDEN_SUFFIXES = frozenset(
@@ -58,42 +57,57 @@ def _iter_files(root: Path):
             yield path
 
 
-def test_lexical_and_citation_modules_import_without_search_extra() -> None:
-    # The degraded lexical-only mode must import with no semantic stack; a
-    # real import-machinery check, not a mock.
+def test_retrieval_surface_imports_on_a_bare_core_install() -> None:
+    # The whole shipped retrieval surface must import with no optional stack;
+    # a real import-machinery check, not a mock.
     for module in (
         "cadrumo.application.corpus_search._lexical_index",
         "cadrumo.application.corpus_search._citation_lookup",
+        "cadrumo.application.corpus_search._retrieval",
+        "cadrumo.application.corpus_search._runtime",
         "cadrumo.application.corpus_search",
+        "cadrumo.application.command_search",
     ):
         assert importlib.import_module(module) is not None
 
 
-def test_embed_surface_carries_degraded_mode(tmp_path: Path) -> None:
-    # When the search extra is absent (the shipped default) the embed path
-    # refuses with the install hint; that refusal path stays live — the
-    # degraded no-download contract this gate protects. When the extra is
-    # present, the actual embed is a network-download path this unit gate
-    # does not drive (mirrors
-    # test_query_embed.py::test_embed_query_matches_environment_capability);
-    # the real build is proven in the opt-in
-    # test_hybrid_real_model_recall_live.py instead.
-    chunks = [
-        CorpusChunk(
-            chunk_id="a:000:00",
-            corpus_ref="corpus/normatives/html/x.html#a1",
-            source_path="corpus/normatives/html/x.html",
-            doc_title="X",
-            ordinal=0,
-            text="texto",
-        )
+def _production_search_modules() -> list[Path]:
+    """Every shipped module of the two search packages (tests excluded)."""
+    command_search_root = _PACKAGE_ROOT.parent / "command_search"
+    modules = [
+        path
+        for root in (_PACKAGE_ROOT, command_search_root)
+        for path in root.rglob("*.py")
+        if "tests" not in path.relative_to(root).parts and "__pycache__" not in path.parts
     ]
-    if _MODEL2VEC_PRESENT:
-        assert search_extra_available() is True
-        return
-    with pytest.raises(CorpusSearchDependencyError) as exc_info:
-        embed_corpus(chunks, matrix_path=tmp_path / "m.npy", chunk_ids_path=tmp_path / "ids.json")
-    assert exc_info.value.suggestion == "pip install cadrumo[search]"
+    # Anti-vacuity floor: an empty or collapsed walk would pass the import gate
+    # below while checking nothing.
+    assert len(modules) >= 8, f"expected the shipped search modules, walked only {len(modules)}"
+    return modules
+
+
+def _imported_root_packages(path: Path) -> set[str]:
+    """Return the root package name of every import in ``path``, deferred ones included."""
+    roots: set[str] = set()
+    for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+        if isinstance(node, ast.Import):
+            roots.update(alias.name.split(".")[0] for alias in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+            roots.add(node.module.split(".")[0])
+    return roots
+
+
+def test_shipped_search_surface_imports_no_embedding_runtime() -> None:
+    # The product ships no semantic runtime: no production search module may
+    # import a model loader, a hub client, or vector maths — including behind a
+    # function-local or TYPE_CHECKING import, which an import-machinery probe
+    # would miss. Reintroducing one fails here by name.
+    offenders = {
+        path.relative_to(_PACKAGE_ROOT.parent).as_posix(): sorted(forbidden)
+        for path in _production_search_modules()
+        if (forbidden := _imported_root_packages(path) & _FORBIDDEN_RUNTIME_IMPORTS)
+    }
+    assert not offenders, f"shipped search surface must import no embedding runtime, found: {offenders}"
 
 
 def test_corpus_search_package_ships_no_model_artifacts() -> None:

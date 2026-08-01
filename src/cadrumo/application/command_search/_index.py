@@ -1,24 +1,19 @@
-"""Hybrid command index: per-column BM25 lexical + model2vec semantic, RRF-fused.
+"""Lexical command index: per-column BM25 over the command corpus.
 
 Ranks a free-text query against the command corpus so the ``search`` meta-tool
-bridges the operator's natural vocabulary to a command's own tokens. Three
-cooperating parts, the same shape the corpus grounding search uses:
+bridges the operator's natural vocabulary to a command's own tokens:
 
 * a per-column FTS5 lexical index that weights the command KEY and TOOL NAME
   above curated OUTCOME ALIASES above the human DESCRIPTION above the per-verb
   HELP, so a homonym token in a low-value column no longer outranks the correct
   command whose key carries it (the ``import`` mis-rank the review found);
-* a model2vec semantic side (behind the capability-gated ``cadrumo[search]``
-  extra, reused through the ``corpus_search`` public facade) that embeds the
-  command docs and the query into one vector space and cosine-ranks them, so a
-  concept query reaches the right verb across a Spanish/English or
-  concept/verb vocabulary gap the stemmer cannot bridge;
-* Reciprocal Rank Fusion (RRF, ``k=60``) over the two rankings.
+* Spanish stemming and diacritics folding on every column, so a morphological
+  or accent variant still recalls its command.
 
-The semantic side is a strict enhancement: when the ``search`` extra (or SQLite
-FTS5) is absent, :meth:`CommandIndex.search` degrades cleanly — FTS5 BM25 alone,
-then a pure-Python token-overlap scorer — so a minimal install always ranks
-better than a bare substring match and never hard-fails.
+When SQLite FTS5 is unavailable :meth:`CommandIndex.search` degrades cleanly to
+a pure-Python token-overlap scorer, so a minimal install always ranks better
+than a bare substring match and never hard-fails. The index loads no model and
+reaches no network on any install.
 
 The index is SDK-independent and pure (it takes plain command documents), so it
 is unit-tested directly without the MCP transport.
@@ -29,23 +24,11 @@ from __future__ import annotations
 import re
 import sqlite3
 from collections.abc import Iterable, Sequence
-from typing import TYPE_CHECKING, Protocol, cast
+from typing import Protocol, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core import fts_or_group
-from ..corpus_search import (
-    RRF_K,
-    CorpusSearchDependencyError,
-    CorpusSearchInputError,
-    QueryEmbedder,
-    l2_normalise,
-    reciprocal_rank_fusion,
-    search_extra_available,
-)
-
-if TYPE_CHECKING:
-    import numpy as np
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -88,7 +71,7 @@ class CommandDoc(BaseModel):
 
     @property
     def combined_text(self) -> str:
-        """The union of every tier, for the semantic embedding and token fallback."""
+        """The union of every tier, for the degraded token-overlap fallback."""
         parts = (self.key_and_name, self.description, self.aliases, self.help)
         return " ".join(part for part in parts if part)
 
@@ -156,33 +139,20 @@ def _fts5_available() -> bool:
 
 
 class CommandIndex:
-    """A hybrid searchable index over the command corpus.
+    """A lexical searchable index over the command corpus.
 
-    Fuses a per-column FTS5 BM25 lexical ranking with a model2vec semantic
-    cosine ranking via RRF; both degrade cleanly (FTS5-only, then token-overlap
-    only) so a minimal install keeps a working ``search``. :meth:`search`
-    returns ranked :class:`CommandHit` records for a free-text query.
+    Ranks by per-column FTS5 BM25, degrading cleanly to a pure-Python
+    token-overlap scorer when FTS5 is absent, so a minimal install keeps a
+    working ``search``. :meth:`search` returns ranked :class:`CommandHit`
+    records for a free-text query.
     """
 
-    def __init__(
-        self,
-        docs: Sequence[CommandDoc],
-        *,
-        query_embedder: QueryEmbedder | None = None,
-        enable_semantic: bool = True,
-    ) -> None:
+    def __init__(self, docs: Sequence[CommandDoc]) -> None:
         self._docs = tuple(docs)
         self._stemmer = _spanish_stemmer()
         self._connection: sqlite3.Connection | None = None
         if _fts5_available():
             self._connection = self._build_fts(self._docs)
-        # The semantic side is off unless the ``search`` extra is present AND
-        # there is a corpus to embed; the doc matrix is built lazily on the first
-        # search so an index that is never searched pays no model-load cost.
-        self._semantic_enabled = enable_semantic and bool(self._docs) and search_extra_available()
-        self._semantic_ready = False
-        self._embedder = query_embedder
-        self._doc_matrix: np.ndarray | None = None
 
     def _build_fts(self, docs: Sequence[CommandDoc]) -> sqlite3.Connection:
         connection = sqlite3.connect(":memory:")
@@ -215,30 +185,25 @@ class CommandIndex:
         """Return up to ``limit`` ranked command hits for ``query``.
 
         A blank query or one with no searchable terms returns no hits. The
-        lexical side ranks the matching commands (per-column BM25, or
-        token-overlap when FTS5 is absent); the semantic side re-ranks that
-        candidate set by cosine similarity when the ``search`` extra is present;
-        the two rankings are RRF-fused. When the semantic side is unavailable the
-        fused order is exactly the lexical order.
+        matching commands are ranked by per-column BM25, or by token overlap
+        when FTS5 is absent. ``score`` is the reciprocal of the one-based rank,
+        so it is positive and strictly decreasing across the page on either
+        path (the two paths' own scales are not comparable, so neither is
+        surfaced raw).
         """
         folded_terms = [term for term in _WORD_RE.findall(query.lower()) if len(term) >= _MIN_TERM_LEN]
         if not folded_terms or limit <= 0:
             return ()
-        lexical_keys = self._lexical_ranked_keys(folded_terms)
-        if not lexical_keys:
-            return ()
-        semantic_rank_by_key = self._semantic_rank_by_key(query)
-        lexical_rank_by_key = {key: rank for rank, key in enumerate(lexical_keys)}
-        fused = reciprocal_rank_fusion(
-            lexical_rank_by_key,
-            semantic_rank_by_key,
-            rrf_k=RRF_K,
-            candidate_ids=lexical_rank_by_key,
-        )[:limit]
+        ranked_keys = self._lexical_ranked_keys(folded_terms)[:limit]
         tool_name_by_key = {doc.command_key: doc.tool_name for doc in self._docs}
         return tuple(
-            CommandHit(command_key=key, tool_name=tool_name_by_key[key], rank=rank, score=score)
-            for rank, (key, score) in enumerate(fused)
+            CommandHit(
+                command_key=key,
+                tool_name=tool_name_by_key[key],
+                rank=rank,
+                score=1.0 / (rank + 1),
+            )
+            for rank, key in enumerate(ranked_keys)
         )
 
     def _lexical_ranked_keys(self, folded_terms: Sequence[str]) -> list[str]:
@@ -275,50 +240,6 @@ class CommandIndex:
         scored.sort(key=lambda item: (-item[0], item[1]))
         return [command_key for _overlap, _ordinal, command_key in scored]
 
-    def _semantic_rank_by_key(self, query: str) -> dict[str, int]:
-        """Return the cosine rank of every doc for ``query``, or ``{}`` when off.
-
-        Degrades to an empty ranking whenever the semantic side cannot run — the
-        ``search`` extra absent, no embeddable corpus, or a live embed refusal —
-        so :meth:`search` falls back to the lexical order.
-        """
-        if not self._semantic_enabled:
-            return {}
-        self._ensure_semantic_matrix()
-        if self._doc_matrix is None or self._embedder is None:
-            return {}
-        import numpy as np
-
-        try:
-            query_vector = self._embedder.embed_query(query)
-        except (CorpusSearchDependencyError, CorpusSearchInputError):
-            return {}
-        query_unit = l2_normalise(np.asarray(query_vector, dtype=np.float32).reshape(1, -1))[0]
-        similarities = self._doc_matrix @ query_unit
-        order = np.argsort(-similarities)
-        return {self._docs[int(index)].command_key: rank for rank, index in enumerate(order)}
-
-    def _ensure_semantic_matrix(self) -> None:
-        if self._semantic_ready:
-            return
-        self._semantic_ready = True
-        import numpy as np
-
-        try:
-            embedder = self._embedder if self._embedder is not None else QueryEmbedder()
-            vectors = [embedder.embed_query(doc.combined_text) for doc in self._docs]
-        except (CorpusSearchDependencyError, CorpusSearchInputError):
-            self._semantic_enabled = False
-            return
-        self._embedder = embedder
-        self._doc_matrix = l2_normalise(np.asarray(np.vstack(vectors), dtype=np.float32))
-
-
-def build_command_index(
-    docs: Iterable[CommandDoc],
-    *,
-    query_embedder: QueryEmbedder | None = None,
-    enable_semantic: bool = True,
-) -> CommandIndex:
+def build_command_index(docs: Iterable[CommandDoc]) -> CommandIndex:
     """Build a :class:`CommandIndex` from the command documents."""
-    return CommandIndex(tuple(docs), query_embedder=query_embedder, enable_semantic=enable_semantic)
+    return CommandIndex(tuple(docs))

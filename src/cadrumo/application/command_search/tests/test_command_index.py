@@ -5,9 +5,9 @@ recalls a command through Spanish stemming and diacritics folding where an exact
 token-overlap match misses it; per-column BM25 weighting ranks a key-tier hit
 above the same token buried in the help tier; and the degraded (no-FTS5) mode
 still ranks by term overlap so a minimal install keeps a working ``search``. Uses
-a small synthetic corpus so the properties are deterministic, and disables the
-semantic side so the lexical contract is asserted in isolation regardless of
-whether the ``search`` extra is installed.
+a small synthetic corpus so the properties are deterministic. The index has one
+shape on every install - it loads no model and reaches no network - so nothing
+here needs an environment-dependent seam.
 """
 
 from __future__ import annotations
@@ -48,8 +48,8 @@ _DOCS = (
 
 
 def _index(docs: tuple[CommandDoc, ...] = _DOCS) -> CommandIndex:
-    """Build a lexical-only index so the assertions do not depend on the extra."""
-    return build_command_index(docs, enable_semantic=False)
+    """Build the index over a fixture corpus."""
+    return build_command_index(docs)
 
 
 def _token_overlap_only(docs: tuple[CommandDoc, ...], query: str) -> set[str]:

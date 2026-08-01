@@ -29,13 +29,12 @@ class RetrievalMode(StrEnum):
     """How a retrieval response was produced.
 
     ``CITATION`` — the query was an exact citation id, short-circuited to the
-    structured lookup; ``HYBRID`` — lexical FTS5 fused with semantic cosine;
-    ``LEXICAL_ONLY`` — the degraded no-model mode (search extra absent or no
-    precomputed vectors supplied).
+    structured lookup; ``LEXICAL_ONLY`` — the ranked FTS5 lexical search over
+    the bundled corpus. These are the only two shapes the product ships: the
+    shipped retrieval surface loads no model and computes no vectors.
     """
 
     CITATION = "citation"
-    HYBRID = "hybrid"
     LEXICAL_ONLY = "lexical_only"
 
 
@@ -107,16 +106,6 @@ class CitationResolution(BaseModel):
     verbatim_text: _Text
 
 
-class SimilarChunk(BaseModel):
-    """One cosine-nearest chunk for the more-like-this primitive."""
-
-    model_config = _STRICT_FROZEN
-
-    chunk_id: _Text
-    rank: int = Field(ge=0)
-    similarity: float
-
-
 class CorpusIndexBuildResult(BaseModel):
     """Summary of one lexical-index build."""
 
@@ -127,27 +116,14 @@ class CorpusIndexBuildResult(BaseModel):
     chunk_count: int = Field(ge=0)
 
 
-class CorpusEmbeddingBuildResult(BaseModel):
-    """Summary of one build-time embedding precompute."""
-
-    model_config = _STRICT_FROZEN
-
-    matrix_path: _Text
-    chunk_ids_path: _Text
-    chunk_count: int = Field(ge=0)
-    dimensions: int = Field(ge=1)
-    embedding_model_id: _Text
-    embedding_model_revision: _Text
-
-
 class RetrievalHit(BaseModel):
-    """One fused hybrid-retrieval result over the corpus.
+    """One ranked lexical-retrieval result over the corpus.
 
     ``text`` is the verbatim chunk prose (the snippet source); ``corpus_ref``
     grounds it in the bundled source (and is the ``cadrumo://corpus/{ref}`` key
-    that resolves the full verbatim text). ``score`` is the fused RRF score;
-    ``lexical_rank`` / ``semantic_rank`` record the per-side contribution
-    (``None`` when a side did not surface the chunk).
+    that resolves the full verbatim text). ``score`` is the FTS5 BM25 relevance,
+    sign-flipped so a larger value is a better match; ``lexical_rank`` is the
+    hit's zero-based position in the lexical ranking.
     """
 
     model_config = _STRICT_FROZEN
@@ -159,16 +135,14 @@ class RetrievalHit(BaseModel):
     score: float = Field(ge=0.0)
     rank: int = Field(ge=0)
     lexical_rank: int | None = None
-    semantic_rank: int | None = None
 
 
 class RetrievalResponse(BaseModel):
     """The typed result of one corpus retrieval.
 
-    ``mode`` records how the response was produced (citation short-circuit,
-    hybrid, or lexical-only degraded). ``citation`` carries the resolved
-    citation when ``mode`` is ``CITATION``; otherwise ``hits`` carries the
-    ranked results.
+    ``mode`` records how the response was produced (citation short-circuit or
+    ranked lexical search). ``citation`` carries the resolved citation when
+    ``mode`` is ``CITATION``; otherwise ``hits`` carries the ranked results.
     """
 
     model_config = _STRICT_FROZEN
@@ -183,11 +157,9 @@ __all__ = [
     "CitationResolution",
     "CorpusChunk",
     "CorpusDocument",
-    "CorpusEmbeddingBuildResult",
     "CorpusIndexBuildResult",
     "LexicalSearchHit",
     "RetrievalHit",
     "RetrievalMode",
     "RetrievalResponse",
-    "SimilarChunk",
 ]

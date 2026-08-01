@@ -90,11 +90,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "self.path.open",
     ): "payload-free local session telemetry; appends per-call trajectory metadata JSON lines, no sensitive/user data",
     (
-        "src/cadrumo/application/corpus_search/_embed_build.py",
-        "embed_corpus",
-        "chunk_ids_path.write_text",
-    ): "corpus-search embedding index build; writes public corpus chunk-id metadata, no user data",
-    (
         "src/cadrumo/agent/eval/_flywheel.py",
         "write_promoted_scenario",
         "path.write_text",

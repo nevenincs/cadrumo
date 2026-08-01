@@ -1,4 +1,4 @@
-"""Runtime corpus-search service: provision the index and run hybrid search.
+"""Runtime corpus-search service: provision the index and run grounding search.
 
 The MCP console tools and resources consume grounding through one service
 entry, :func:`search_corpus`, so the protocol layer never re-derives the
@@ -6,40 +6,27 @@ retrieval wiring. On first use the lexical index is built once from the
 bundled corpus into an app-controlled cache under the Settings storage root
 and reused thereafter (the corpus is static, so a present index is current).
 
-Precomputed corpus vectors are loaded when they have been shipped/materialised
-into the same cache directory; absent them (or the ``search`` extra) the
-service runs in lexical-only + citation mode, the shippable degraded default.
+Retrieval is fully offline: the FTS5 lexical ranking and the exact-citation
+lookup need no model, no vectors, and no network. The service has no degraded
+mode because it has no optional half to degrade from.
 
 See Also:
-    :func:`~application.corpus_search.hybrid_search`
+    :func:`~application.corpus_search.run_retrieval`
         Retrieval primitive this runtime service provisions and calls.
-    :func:`~application.corpus_search.ensure_corpus_embeddings`
-        Build-once semantic-vector cache behind the ``cadrumo[search]`` extra.
-    :class:`~application.corpus_search.QueryEmbedder`
-        Live-query embedder used only when semantic vectors are available.
 """
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from ...core.config import Settings, load_settings
 from ._citation_lookup import bundled_citation_lookup
-from ._embed_build import embed_corpus, load_embeddings
 from ._lexical_index import build_lexical_index, iter_corpus_chunks
-from ._models import CorpusChunk, RetrievalResponse
-from ._query_embed import QueryEmbedder, search_extra_available, search_model_cache_dir
-from ._retrieval import hybrid_search
-
-if TYPE_CHECKING:
-    import numpy as np
+from ._models import RetrievalResponse
+from ._retrieval import run_retrieval
 
 _INDEX_SUBDIR = "corpus-search"
 _INDEX_FILENAME = "corpus.sqlite"
-_VECTORS_FILENAME = "corpus-vectors.npy"
-_VECTOR_IDS_FILENAME = "corpus-chunk-ids.json"
 
 _DEFAULT_LIMIT = 8
 
@@ -70,94 +57,28 @@ def ensure_corpus_index(settings: Settings | None = None) -> Path:
     return database_path
 
 
-def load_corpus_embeddings(settings: Settings | None = None) -> tuple[np.ndarray, tuple[str, ...]] | None:
-    """Load precomputed corpus vectors from the cache, or ``None`` if not present."""
-    directory = corpus_search_dir(settings)
-    matrix_path = directory / _VECTORS_FILENAME
-    ids_path = directory / _VECTOR_IDS_FILENAME
-    if not matrix_path.exists() or not ids_path.exists():
-        return None
-    return load_embeddings(matrix_path, ids_path)
-
-
-def ensure_corpus_embeddings(
-    settings: Settings | None = None,
-    *,
-    semantic_available: bool | None = None,
-    corpus_chunks: Iterable[CorpusChunk] | None = None,
-) -> tuple[np.ndarray, tuple[str, ...]] | None:
-    """Return the corpus vectors, building them once behind the ``search`` extra.
-
-    This is the runtime build step for the semantic half (the decision recorded
-    for the S79/S87 question): corpus vectors are BUILT behind the ``cadrumo[search]``
-    extra on first use, never shipped in the wheel (``shipped-search-licence-clean``
-    keeps the wheel free of the ~0.5 GB model weights and the derived matrix). It
-    mirrors :func:`ensure_corpus_index`: the first call is the one slow build (it
-    downloads/loads the potion model and encodes every bundled chunk into an
-    app-controlled cache); every later call finds the cached matrix and returns
-    immediately, and a present matrix is current because the bundled corpus is
-    static.
-
-    Returns ``None`` — the shippable lexical-only default — whenever the extra is
-    absent, so a bare-core install never triggers a model download.
-    """
-    if semantic_available is None:
-        semantic_available = search_extra_available()
-    if not semantic_available:
-        return None
-    directory = corpus_search_dir(settings)
-    matrix_path = directory / _VECTORS_FILENAME
-    ids_path = directory / _VECTOR_IDS_FILENAME
-    if not matrix_path.exists() or not ids_path.exists():
-        directory.mkdir(parents=True, exist_ok=True)
-        embed_corpus(
-            corpus_chunks if corpus_chunks is not None else iter_corpus_chunks(),
-            matrix_path=matrix_path,
-            chunk_ids_path=ids_path,
-            cache_dir=search_model_cache_dir(settings),
-        )
-    return load_embeddings(matrix_path, ids_path)
-
-
 def search_corpus(
     query: str,
     *,
     limit: int = _DEFAULT_LIMIT,
     settings: Settings | None = None,
-    semantic_available: bool | None = None,
 ) -> RetrievalResponse:
     """Run grounding retrieval for ``query`` over the bundled corpus.
 
-    Provisions the lexical index (build-once cache), loads precomputed vectors
-    when present, and fuses lexical, semantic, and exact-citation retrieval —
-    degrading to lexical-only when the semantic stack is unavailable.
+    Provisions the lexical index (build-once cache) and runs the exact-citation
+    short-circuit over the ranked FTS5 lexical search.
 
     Args:
         query: The free-text query or an exact citation id.
         limit: Maximum number of hits.
         settings: Optional settings override (test isolation).
-        semantic_available: Optional override for whether the semantic
-            (``model2vec``) side may run, forwarded to
-            :func:`ensure_corpus_embeddings`. ``None`` (the default) probes
-            the real environment via :func:`search_extra_available`; a test
-            passes an explicit ``False`` to make degraded lexical-only mode a
-            controlled input rather than an environment hope (mirrors
-            :func:`ensure_corpus_embeddings`'s own test seam).
 
     Returns:
         A :class:`RetrievalResponse`.
     """
-    database_path = ensure_corpus_index(settings)
-    embeddings = ensure_corpus_embeddings(settings, semantic_available=semantic_available)
-    resolved_semantic_available = (
-        search_extra_available() if semantic_available is None else semantic_available
-    )
-    embedder = QueryEmbedder(settings=settings) if embeddings is not None and resolved_semantic_available else None
-    return hybrid_search(
+    return run_retrieval(
         query,
-        database_path=database_path,
-        embeddings=embeddings,
-        query_embedder=embedder,
+        database_path=ensure_corpus_index(settings),
         citation_lookup=bundled_citation_lookup(),
         limit=limit,
     )
@@ -166,8 +87,6 @@ def search_corpus(
 __all__ = [
     "corpus_index_path",
     "corpus_search_dir",
-    "ensure_corpus_embeddings",
     "ensure_corpus_index",
-    "load_corpus_embeddings",
     "search_corpus",
 ]

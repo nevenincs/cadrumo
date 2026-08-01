@@ -14,12 +14,9 @@ Submodules
    :maxdepth: 4
 
    cadrumo.application.corpus_search._citation_lookup
-   cadrumo.application.corpus_search._embed_build
    cadrumo.application.corpus_search._errors
    cadrumo.application.corpus_search._lexical_index
-   cadrumo.application.corpus_search._model_loader
    cadrumo.application.corpus_search._models
-   cadrumo.application.corpus_search._query_embed
    cadrumo.application.corpus_search._retrieval
    cadrumo.application.corpus_search._runtime
    cadrumo.application.corpus_search._terminology

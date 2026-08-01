@@ -1,11 +1,12 @@
-"""The ``cadrumo_corpus_search`` grounding tool: hybrid search over the legal corpus.
+"""The ``cadrumo_corpus_search`` grounding tool: lexical search over the legal corpus.
 
 The grounding surface reaches the model as a read-only console tool that
 searches the bundled BOE/AEAT corpus and returns grounded hits — each carrying
-its ``corpus_ref``, title, a verbatim snippet, the fused relevance score, and
+its ``corpus_ref``, title, a verbatim snippet, the BM25 relevance score, and
 a ``cadrumo://corpus/{ref}`` URI a resources-capable client can read to pull the
 full verbatim text. An exact citation id short-circuits straight to the
-resolved authoritative text.
+resolved authoritative text. The search is fully offline: no model, no vectors,
+no network.
 
 Like ``_harness_tools`` / ``_resources``, this module is SDK-independent pure
 functions over typed models: :func:`corpus_search_payload_from_response` and
@@ -74,7 +75,7 @@ class CorpusCitationResult(BaseModel):
 class CorpusSearchPayload(BaseModel):
     """The grounding tool's structured result.
 
-    ``mode`` records how the response was produced (``citation`` / ``hybrid`` /
+    ``mode`` records how the response was produced (``citation`` /
     ``lexical_only``). For a citation query ``citation`` is populated and
     ``results`` is empty; otherwise ``results`` carries the ranked hits.
     """
@@ -126,23 +127,17 @@ def corpus_search_payload_from_response(response: RetrievalResponse) -> CorpusSe
     return CorpusSearchPayload(query=response.query, mode=response.mode, results=rows)
 
 
-def build_corpus_search_payload(
-    query: str, *, limit: int = _DEFAULT_LIMIT, semantic_available: bool | None = None
-) -> CorpusSearchPayload:
+def build_corpus_search_payload(query: str, *, limit: int = _DEFAULT_LIMIT) -> CorpusSearchPayload:
     """Run grounding retrieval for ``query`` and return the tool payload.
 
     Args:
         query: The free-text query or an exact citation id.
         limit: Maximum number of hits.
-        semantic_available: Optional override forwarded to
-            :func:`~application.corpus_search.search_corpus` (test isolation);
-            ``None`` probes the real environment.
 
     Returns:
         A :class:`CorpusSearchPayload`.
     """
-    response = search_corpus(query, limit=limit, semantic_available=semantic_available)
-    return corpus_search_payload_from_response(response)
+    return corpus_search_payload_from_response(search_corpus(query, limit=limit))
 
 
 def render_corpus_search_text(payload: CorpusSearchPayload) -> str:

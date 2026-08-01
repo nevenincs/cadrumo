@@ -41,11 +41,10 @@ def _hit(chunk_id: str, score: float) -> RetrievalHit:
         score=score,
         rank=0,
         lexical_rank=0,
-        semantic_rank=None,
     )
 
 
-def test_payload_maps_hybrid_hits_with_corpus_uris() -> None:
+def test_payload_maps_ranked_hits_with_corpus_uris() -> None:
     response = RetrievalResponse(
         query="recargo",
         mode=RetrievalMode.LEXICAL_ONLY,
@@ -148,17 +147,12 @@ def test_citation_uri_round_trips_from_search_payload_to_resource_resolver() -> 
 
 def test_build_payload_runs_real_lexical_retrieval(tmp_path: Path) -> None:
     # A free-text query over the pre-seeded index returns ranked hits with
-    # corpus URIs, in the shipped lexical-only degraded mode (no vectors). The
-    # explicit ``semantic_available=False`` runtime input keeps this
-    # assertion stable even in an env where the ``search`` extra happens to
-    # be installed and the potion model resolves over the network — mirrors
-    # the same seam ``test_ensure_corpus_embeddings_is_none_without_the_extra``
-    # already uses at the application layer.
+    # corpus URIs. The shipped surface has one retrieval shape on every host —
+    # no extra to probe, no model to resolve — so this needs no environment
+    # seam to stay deterministic.
     with override_settings(cadrumo_local_storage_root=tmp_path):
         _seed_small_index("ley-58-2003-art-27")
-        payload = build_corpus_search_payload(
-            "recargo declaración extemporánea", limit=5, semantic_available=False
-        )
+        payload = build_corpus_search_payload("recargo declaración extemporánea", limit=5)
     assert payload.mode is RetrievalMode.LEXICAL_ONLY
     assert payload.results
     assert payload.results[0].uri.startswith("cadrumo://corpus/")

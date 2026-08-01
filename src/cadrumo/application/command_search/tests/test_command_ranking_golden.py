@@ -7,17 +7,15 @@ finding ``command-search-lexical-only-mis-ranks``): a cold agent searching
 ``ledger.import`` on the shared token "import", and the composite ``quickfile``
 was invisible to outcome-phrased queries like "file my quarterly VAT". Both are
 asserted here against the live descriptor set (``build_tool_descriptors()``), so
-the hybrid retriever's ranking is a pinned contract, not a claim.
+the retriever's ranking is a pinned contract, not a claim.
 
-The two headline assertions hold with the hybrid retriever active AND in the
-lexical-only degraded mode (per-column BM25 weighting plus the ``quickfile``
-outcome aliases carry them without the ``search`` extra), so the fixture forces
-``enable_semantic=False`` through the same seam ``test_command_index.py`` uses.
-This keeps the whole module deterministic and network-free regardless of
-whether the ``cadrumo[search]`` extra happens to be importable on the host —
-previously ``build_command_search_index`` always built with the semantic side
-on when the extra was present, which reached huggingface.co and wrote into the
-real production ``var/storage/search-models`` cache on a plain integration run.
+Per-column BM25 weighting plus the ``quickfile`` outcome aliases carry both
+headline assertions on their own, which is what makes the shipped lexical-only
+index sufficient. The module is deterministic and network-free on every host
+because the index has no optional half to switch on: the shipped product loads
+no embedding model at all, a boundary
+``test_search_shippability.py::test_shipped_search_surface_imports_no_embedding_runtime``
+pins by name.
 """
 
 from __future__ import annotations
@@ -40,15 +38,15 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 @pytest.fixture(scope="module")
 def _descriptors_and_index() -> tuple[tuple[McpToolDescriptor, ...], CommandIndex]:
-    """Build the live descriptor set and its lexical-only command index once."""
+    """Build the live descriptor set and its command index once."""
     descriptors = build_tool_descriptors()
-    index = build_command_search_index(descriptors, enable_semantic=False)
+    index = build_command_search_index(descriptors)
     return descriptors, index
 
 
 @pytest.fixture(scope="module")
 def ranker(_descriptors_and_index: tuple[tuple[McpToolDescriptor, ...], CommandIndex]) -> Callable[[str], list[str]]:
-    """Rank against the module-scoped descriptor set and lexical-only index."""
+    """Rank against the module-scoped descriptor set and index."""
     descriptors, index = _descriptors_and_index
 
     def rank(query: str, *, limit: int = 8) -> list[str]:
@@ -127,27 +125,3 @@ def test_no_retired_command_key_remains_searchable() -> None:
         key for key in keys for retired_key in retired if key != retired_key and key.endswith("." + retired_key)
     )
     assert not suffix_hits, f"retired command paths re-registered under a new parent: {suffix_hits}"
-
-
-def test_ranker_index_forces_lexical_only_mode(
-    _descriptors_and_index: tuple[tuple[McpToolDescriptor, ...], CommandIndex],
-) -> None:
-    """Regression guard for the network-exposure fix.
-
-    The two headline assertions above hold in either retrieval mode (the module
-    docstring's claim), so the fixture deliberately forces the semantic side off
-    via ``enable_semantic=False`` -- deterministic and network-free regardless
-    of whether the ``cadrumo[search]`` extra happens to be importable on the
-    host. This pins that choice on the index object itself, so a future edit
-    that drops the ``enable_semantic=False`` argument (silently re-enabling the
-    semantic side, and with it the network reach into the real
-    ``var/storage/search-models`` cache whenever the extra is present) fails
-    loudly here instead of only reproducing on a host that happens to have the
-    extra installed.
-    """
-    _descriptors, index = _descriptors_and_index
-    assert index._semantic_enabled is False, (
-        "the golden-set index must build with the semantic side disabled — "
-        "an enabled semantic side reaches the network and the real production "
-        "model cache on any host with the cadrumo[search] extra installed"
-    )
