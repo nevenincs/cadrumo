@@ -66,6 +66,7 @@ from ._engine import (
     DeadlineEngine,
     ScheduleProducer,
     applies_to,
+    classify_obligation_status,
     compute_obligation_schedule,
     explain,
     next_deadline,
@@ -112,13 +113,14 @@ from ._models import (
     is_ue_eee_country_code,
     resolve_multiple_pagadores_reduced_limit,
 )
-from ._plazo import resolve_filing_closes_on
+from ._plazo import resolve_filing_closes_on, resolve_filing_window
 from ._profiles import taxpayer_profile_from_mapping
 from ._recargo import (
     build_recovery_for_overdue,
     completed_months_late,
     load_recargo_bands,
     resolve_recargo_band,
+    twelve_month_anniversary,
 )
 
 __all__ = [
@@ -154,6 +156,7 @@ __all__ = [
     "TaxpayerProfile",
     "applies_to",
     "build_recovery_for_overdue",
+    "classify_obligation_status",
     "completed_months_late",
     "compute_obligation_schedule",
     "evaluate_multiple_pagadores_obligation",
@@ -166,8 +169,10 @@ __all__ = [
     "next_business_day",
     "next_deadline",
     "resolve_filing_closes_on",
+    "resolve_filing_window",
     "resolve_multiple_pagadores_reduced_limit",
     "resolve_recargo_band",
     "shift_deadline",
     "taxpayer_profile_from_mapping",
+    "twelve_month_anniversary",
 ]

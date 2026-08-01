@@ -11,8 +11,12 @@ from __future__ import annotations
 
 from datetime import date
 from functools import lru_cache
+from typing import TYPE_CHECKING
 
 from ...core import Period
+
+if TYPE_CHECKING:
+    from ..calculations.registry import DeadlineWindowDefinition
 
 
 def resolve_filing_closes_on(modelo: str, filing_year: int, period: Period) -> date | None:
@@ -48,11 +52,37 @@ def resolve_filing_closes_on(modelo: str, filing_year: int, period: Period) -> d
         The :class:`~datetime.date` on which the filing window closes,
         or ``None`` if not found.
     """
-    return _resolve_closes_on_cached(modelo, filing_year, period)
+    window = resolve_filing_window(modelo, filing_year, period)
+    return None if window is None else window.closes_on
 
 
 @lru_cache(maxsize=256)
-def _resolve_closes_on_cached(modelo: str, filing_year: int, period: Period) -> date | None:
+def resolve_filing_window(modelo: str, filing_year: int, period: Period) -> DeadlineWindowDefinition | None:
+    """Return the registry deadline window for a modelo+year+period, or ``None``.
+
+    This is the single matching authority for "which registry deadline window
+    covers this filing target". Every consumer — the extemporaneidad surface
+    that needs only :attr:`closes_on`, and the overview calendar that also
+    needs ``opens_on`` and ``payment_cutoff_on`` — resolves through here, so a
+    change to the year/token matching rule or to the no-window behaviour can
+    never move one surface without the other.
+
+    Matching rule: the registry window's period must carry the same filing year
+    and the same bare registry period token as the requested ``period`` (e.g.
+    ``"1T"``, ``"0A"``, ``"01"``). No following-year or future-year window is
+    ever borrowed when an exact match is absent.
+
+    Args:
+        modelo: Agencia Estatal de Administración Tributaria (AEAT) modelo code
+            (e.g. ``"130"``, ``"303"``).
+        filing_year: Tax year for which the filing target was created.
+        period: The typed filing period to match.
+
+    Returns:
+        The matching
+        :class:`~cadrumo.domain.calculations.registry.DeadlineWindowDefinition`,
+        or ``None`` when the registry declares no window for the combination.
+    """
     from ...core.resources import resources
     from ..calculations.registry import RegistryError
 
@@ -67,8 +97,8 @@ def _resolve_closes_on_cached(modelo: str, filing_year: int, period: Period) -> 
             continue
         wp = window.period
         if wp.filing_year == filing_year and wp.registry_token == period.registry_token:
-            return window.closes_on
+            return window
     return None
 
 
-__all__ = ["resolve_filing_closes_on"]
+__all__ = ["resolve_filing_closes_on", "resolve_filing_window"]

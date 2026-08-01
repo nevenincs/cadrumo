@@ -54,6 +54,8 @@ from ...domain.deadlines import ObligationStatus as _ObligationStatus
 from ...domain.deadlines import Schedule as _Schedule
 from ...domain.deadlines import ScheduleProducer as _ScheduleProducer
 from ...domain.deadlines import TaxpayerProfile as _TaxpayerProfile
+from ...domain.deadlines import classify_obligation_status as _classify_obligation_status
+from ...domain.deadlines import resolve_filing_window as _resolve_filing_window
 from ...domain.deadlines import shift_deadline as _shift_deadline
 from ...domain.modelos import WorkUnit as _WorkUnit
 from ...domain.modelos import WorkUnitState as _WorkUnitState
@@ -146,30 +148,15 @@ def _work_unit_key(unit: _WorkUnit) -> tuple[str, int, str]:
     return (str(unit.modelo), unit.filing_year, unit.period.registry_token)
 
 
-def _work_unit_window_matches(unit: _WorkUnit, window: object) -> bool:
-    period = getattr(window, "period", None)
-    if period is None:
-        return False
-    return (
-        getattr(period, "filing_year", None) == unit.filing_year
-        and getattr(period, "registry_token", None) == unit.period.registry_token
-    )
-
-
 def _registry_window_for_work_unit(unit: _WorkUnit) -> DeadlineWindowDefinition | None:
-    """Return a registry deadline window for ``unit`` when one is bundled."""
-    from ...core.resources import resources
-    from ...domain.calculations.registry import RegistryError
+    """Return a registry deadline window for ``unit`` when one is bundled.
 
-    authority = resources().modelos.authority
-    try:
-        windows = authority.deadline_windows(unit.filing_year)
-    except RegistryError:
-        return None
-    for modelo, _revision, window in windows:
-        if modelo == str(unit.modelo) and _work_unit_window_matches(unit, window):
-            return window
-    return None
+    Window matching belongs to the deadline domain, which owns the year/token
+    rule and the no-window behaviour. Overview is a projection: it consumes the
+    same window the extemporaneidad surface consumes and reads the ``opens_on``
+    and ``payment_cutoff_on`` fields that surface does not need.
+    """
+    return _resolve_filing_window(str(unit.modelo), unit.filing_year, unit.period)
 
 
 def _work_unit_window_dates(unit: _WorkUnit) -> tuple[date, date, date | None]:
@@ -212,16 +199,17 @@ def _local_work_unit_status(
     today: date,
     due_soon_days: int,
 ) -> _ObligationStatus:
+    """Classify a local work unit, applying overview's filing gate first.
+
+    The filing-pointer gate is overview's own concern and is the only
+    intentional difference from the deadline engine's classification: a unit
+    the operator has already filed locally is FILED regardless of dates. Every
+    date boundary past that gate is the deadline domain's to decide, so it is
+    delegated rather than restated.
+    """
     if _work_unit_has_filing_pointers(unit):
         return _ObligationStatus.FILED
-    if today > closes_on:
-        return _ObligationStatus.OVERDUE
-    if today == closes_on:
-        return _ObligationStatus.DUE_TODAY
-    delta = (closes_on - today).days
-    if 1 <= delta <= due_soon_days:
-        return _ObligationStatus.DUE_SOON
-    return _ObligationStatus.UPCOMING
+    return _classify_obligation_status(closes_on, today, due_soon_days)
 
 
 def _filing_evidence_with_work_unit_pointers(

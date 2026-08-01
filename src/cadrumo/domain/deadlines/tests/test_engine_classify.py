@@ -1,6 +1,6 @@
-"""Focused unit tests for deadlines._engine._classify.
+"""Focused unit tests for deadlines._engine.classify_obligation_status.
 
-`_classify` maps a window's ``closes_on`` date + the reference
+`classify_obligation_status` maps a window's ``closes_on`` date + the reference
 ``today`` + the configured ``due_soon_days`` into one of four
 ``ObligationStatus`` outcomes (OVERDUE, DUE_TODAY, DUE_SOON,
 UPCOMING). Previously exercised indirectly through `test_engine.py`'s
@@ -23,7 +23,7 @@ from datetime import date
 import pytest
 
 from .. import ObligationStatus
-from .._engine import _classify
+from .._engine import classify_obligation_status
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -36,26 +36,26 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def test_classify_returns_overdue_when_today_is_after_close() -> None:
     """A window whose close date is in the past is OVERDUE regardless
     of the due-soon configuration."""
-    assert _classify(closes_on=date(2026, 1, 1), today=date(2026, 1, 2), due_soon_days=14) is ObligationStatus.OVERDUE
+    assert classify_obligation_status(closes_on=date(2026, 1, 1), today=date(2026, 1, 2), due_soon_days=14) is ObligationStatus.OVERDUE
 
 
 def test_classify_returns_due_today_when_today_equals_close() -> None:
     """today == closes_on yields DUE_TODAY (not DUE_SOON or OVERDUE)."""
     assert (
-        _classify(closes_on=date(2026, 1, 31), today=date(2026, 1, 31), due_soon_days=14) is ObligationStatus.DUE_TODAY
+        classify_obligation_status(closes_on=date(2026, 1, 31), today=date(2026, 1, 31), due_soon_days=14) is ObligationStatus.DUE_TODAY
     )
 
 
 def test_classify_returns_due_soon_inside_window() -> None:
     """A window closing in 7 days with due_soon_days=14 is DUE_SOON."""
     assert (
-        _classify(closes_on=date(2026, 1, 31), today=date(2026, 1, 24), due_soon_days=14) is ObligationStatus.DUE_SOON
+        classify_obligation_status(closes_on=date(2026, 1, 31), today=date(2026, 1, 24), due_soon_days=14) is ObligationStatus.DUE_SOON
     )
 
 
 def test_classify_returns_upcoming_outside_window() -> None:
     """A window closing in 30 days with due_soon_days=14 is UPCOMING."""
-    assert _classify(closes_on=date(2026, 1, 31), today=date(2026, 1, 1), due_soon_days=14) is ObligationStatus.UPCOMING
+    assert classify_obligation_status(closes_on=date(2026, 1, 31), today=date(2026, 1, 1), due_soon_days=14) is ObligationStatus.UPCOMING
 
 
 # ---------------------------------------------------------------------------
@@ -68,7 +68,7 @@ def test_classify_due_soon_boundary_lower_bound_is_tomorrow() -> None:
     DUE_SOON. A regression that flipped the lower-bound predicate
     from ``1 <= delta`` to ``2 <= delta`` would silently move
     "tomorrow" from DUE_SOON to DUE_TODAY-or-similar."""
-    assert _classify(closes_on=date(2026, 1, 2), today=date(2026, 1, 1), due_soon_days=14) is ObligationStatus.DUE_SOON
+    assert classify_obligation_status(closes_on=date(2026, 1, 2), today=date(2026, 1, 1), due_soon_days=14) is ObligationStatus.DUE_SOON
 
 
 def test_classify_due_soon_boundary_upper_bound_is_inclusive() -> None:
@@ -76,7 +76,7 @@ def test_classify_due_soon_boundary_upper_bound_is_inclusive() -> None:
     A regression that flipped ``<= due_soon_days`` to ``<
     due_soon_days`` would silently move "exactly 14 days from now"
     from DUE_SOON to UPCOMING."""
-    assert _classify(closes_on=date(2026, 1, 15), today=date(2026, 1, 1), due_soon_days=14) is ObligationStatus.DUE_SOON
+    assert classify_obligation_status(closes_on=date(2026, 1, 15), today=date(2026, 1, 1), due_soon_days=14) is ObligationStatus.DUE_SOON
 
 
 def test_classify_one_day_past_due_soon_upper_bound_is_upcoming() -> None:
@@ -84,7 +84,7 @@ def test_classify_one_day_past_due_soon_upper_bound_is_upcoming() -> None:
     UPCOMING. Pinning this boundary together with the inclusive-
     upper-bound test above locks the ``1 <= delta <= due_soon_days``
     predicate against off-by-one drift in either direction."""
-    assert _classify(closes_on=date(2026, 1, 16), today=date(2026, 1, 1), due_soon_days=14) is ObligationStatus.UPCOMING
+    assert classify_obligation_status(closes_on=date(2026, 1, 16), today=date(2026, 1, 1), due_soon_days=14) is ObligationStatus.UPCOMING
 
 
 # ---------------------------------------------------------------------------
@@ -96,7 +96,7 @@ def test_classify_due_soon_days_zero_disables_due_soon_window() -> None:
     """With due_soon_days=0 the ``1 <= delta <= 0`` predicate is
     always false, so any future delta classifies as UPCOMING and the
     DUE_SOON outcome becomes unreachable."""
-    assert _classify(closes_on=date(2026, 1, 2), today=date(2026, 1, 1), due_soon_days=0) is ObligationStatus.UPCOMING
+    assert classify_obligation_status(closes_on=date(2026, 1, 2), today=date(2026, 1, 1), due_soon_days=0) is ObligationStatus.UPCOMING
 
 
 def test_classify_due_today_wins_before_delta_math_runs() -> None:
@@ -105,7 +105,7 @@ def test_classify_due_today_wins_before_delta_math_runs() -> None:
     zero or negative — the DUE_TODAY arm never falls through to the
     delta math."""
     assert (
-        _classify(closes_on=date(2026, 1, 15), today=date(2026, 1, 15), due_soon_days=0) is ObligationStatus.DUE_TODAY
+        classify_obligation_status(closes_on=date(2026, 1, 15), today=date(2026, 1, 15), due_soon_days=0) is ObligationStatus.DUE_TODAY
     )
 
 
@@ -113,4 +113,4 @@ def test_classify_overdue_wins_before_due_today_when_today_strictly_greater() ->
     """Strict ordering: ``today > closes_on`` runs first; the
     DUE_TODAY arm only fires on exact equality. A single day past
     close yields OVERDUE regardless of due_soon_days."""
-    assert _classify(closes_on=date(2026, 1, 1), today=date(2026, 1, 2), due_soon_days=0) is ObligationStatus.OVERDUE
+    assert classify_obligation_status(closes_on=date(2026, 1, 1), today=date(2026, 1, 2), due_soon_days=0) is ObligationStatus.OVERDUE
