@@ -104,11 +104,18 @@ def _pattern_failures(error: ValidationError, field: str) -> list[dict[str, obje
 
 
 def test_both_projections_accept_the_same_valid_grounding() -> None:
-    """SUPPORTING: a well-formed reference pair survives both projections.
+    """POSITIVE CONTROL: a well-formed reference pair survives both projections.
 
     This passes under mutation (the loose ``tuple[str, ...]`` annotation also
-    accepts valid references), so it is context, not proof. It exists to show
-    the tightened annotation does not refuse legitimate grounding.
+    accepts valid references), so it is not proof that the fix landed. Its job
+    is to remove the opposite ambiguity: without it, an annotation that
+    rejected *everything* would satisfy the refusal tests below identically to
+    one that rejects the right thing.
+
+    Scope note: ``LegalRefId`` / ``SourceRefId`` are SHAPE contracts with no
+    existence check. A well-formed but nonexistent reference
+    (``totally-made-up:art-999``) is accepted here by design; closing that is a
+    separate concern from the shape parity these tests pin.
     """
     row = _row()
     detail = _detail()

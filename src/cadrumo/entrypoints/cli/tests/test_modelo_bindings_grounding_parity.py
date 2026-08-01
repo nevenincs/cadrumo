@@ -116,11 +116,27 @@ def test_both_rows_expose_the_same_grounding_constraint(field: str) -> None:
     assert list_field.metadata == preview_field.metadata
 
 
+def test_both_rows_accept_well_formed_grounding() -> None:
+    """POSITIVE CONTROL: valid grounding is accepted and carried through.
+
+    Without this, the refusal tests below are ambiguous: a field annotated
+    with a type that rejected *everything* would satisfy them identically to
+    one that rejects the right thing. This proves the constraint discriminates
+    rather than merely refusing.
+    """
+    for factory in (_list_row, _preview_row):
+        row = factory()
+        assert row.legal_refs == (_VALID_LEGAL_REF,)
+        assert row.source_refs == (_VALID_SOURCE_REF,)
+
+
 def test_both_rows_reject_a_malformed_legal_ref() -> None:
     """SUPPORTING: a bad legal ref is refused on both surfaces.
 
     Passes under mutation (both rows already carried ``LegalRefId``). It
-    records the provenance contract the shared model now owns.
+    records the provenance contract the shared model now owns. The assertion
+    names the constraint that fired (``string_pattern_mismatch`` on
+    ``legal_refs``) so an unrelated refusal cannot read as proof.
     """
     for factory in (_list_row, _preview_row):
         with pytest.raises(ValidationError) as error:
@@ -131,13 +147,19 @@ def test_both_rows_reject_a_malformed_legal_ref() -> None:
         )
 
 
-def test_both_rows_require_non_empty_grounding() -> None:
+@pytest.mark.parametrize("field", ("legal_refs", "source_refs"))
+def test_both_rows_require_non_empty_grounding(field: str) -> None:
     """SUPPORTING: empty provenance tuples are refused on both surfaces.
 
-    Passes under mutation for the same reason as above; documents that the
-    shared model preserves the ``min_length=1`` grounding requirement.
+    Passes under mutation; documents that the shared model preserves the
+    ``min_length=1`` grounding requirement. Asserts the specific ``too_short``
+    constraint on the named field rather than a bare ``ValidationError``: a
+    refusal raised for some unrelated reason would otherwise read as proof
+    that the grounding requirement is enforced.
     """
     for factory in (_list_row, _preview_row):
-        for field in ("legal_refs", "source_refs"):
-            with pytest.raises(ValidationError):
-                factory(**{field: ()})
+        with pytest.raises(ValidationError) as error:
+            factory(**{field: ()})
+        assert any(
+            entry["type"] == "too_short" and field in entry["loc"] for entry in error.value.errors()
+        )
