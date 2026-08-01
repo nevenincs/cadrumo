@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
@@ -32,6 +32,7 @@ from ....adapters.persistence.storage.bucket import (
     BucketPaths,
     bucket_paths,
     manifest_path,
+    read_bucket_output_language_hint,
     read_manifest,
     write_manifest,
 )
@@ -50,7 +51,7 @@ from ...workflow import (
     read_profile_bucket,
     read_profile_bucket_by_id,
 )
-from .. import active_profile_pointer_transaction
+from .. import active_profile_pointer_transaction, fact_value
 from .._integrity import ProfileIntegrityError
 from .._orchestration import ProfileAlreadyRegisteredError, profile_create_storage_span, profile_storage_session
 from .._profile_repository import ProfileRepository
@@ -197,6 +198,29 @@ def test_create_load_roundtrip_preserves_the_aggregate(_backend: Path) -> None:
     canonical = KdfParams.default()
     assert loaded.kdf_params.model_dump(exclude={"salt"}) == canonical.to_manifest_params().model_dump(exclude={"salt"})
     assert KdfParams.model_validate(loaded.kdf_params.model_dump())
+
+
+def test_output_language_hint_and_live_projection_share_effective_fact_policy(_backend: Path) -> None:
+    """A later output-language window wins through the durable hint and live reader.
+
+    The declaration order is intentionally the reverse of the effective dates.
+    Creating the profile persists the bucket hint through the repository; loading
+    it under its real bucket session reaches the live profile reader. Both must
+    select the later Catalan declaration, rather than merely the last tuple item.
+    """
+    facts = (
+        *_VALID_FACTS,
+        UserProfileFact(path="preferences.output_language", value="ca", valid_from=date(2025, 1, 1)),
+        UserProfileFact(path="preferences.output_language", value="en", valid_from=date(2019, 1, 1)),
+    )
+    repository = ProfileRepository()
+
+    created = _create(repository, label="Windowed Language", facts=facts)
+
+    assert read_bucket_output_language_hint(storage_root=_backend, bucket_id=created.profile_id) == "ca"
+    with profile_storage_session(created.profile_id):
+        loaded = repository.load(created.profile_id)
+    assert fact_value(loaded.record, "preferences.output_language") == "ca"
 
 
 def test_create_refuses_a_duplicate_tax_id(_backend: Path) -> None:
