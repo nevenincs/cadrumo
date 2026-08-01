@@ -19,7 +19,6 @@ from unicodedata import category, normalize
 from urllib.parse import urlsplit
 
 from .....core import STRICT_FROZEN_CONFIG
-from .....core import is_aeat_csv as _core_is_aeat_csv
 from .....core.config import Settings
 from .....core.external_constants import PDF_MIME_TYPE
 
@@ -35,18 +34,18 @@ from ._errors import BrowserAdapterTypeError, JustificanteFetchError, SedeFailur
 
 _log = get_logger(__name__)
 _WHITESPACE_RE = compile(r"\s+")
+_AEAT_CSV_PATTERN = compile(r"[A-Z0-9]{8,32}")
 _EXTERNAL = Settings.external_constants()
 
 
 def is_aeat_csv(value: str) -> bool:
     """Return whether ``value`` is one complete AEAT CSV identifier.
 
-    Delegates to the canonical :func:`core.is_aeat_csv` contract so the sede
-    adapters, the inbound justificante extractor, and the public verifier
-    cannot drift on what width AEAT actually issues. Re-exported here because
-    the sede modules already import their shape helpers from this module.
+    AEAT's documented and observed CSV widths are 8 through 32 uppercase
+    alphanumeric characters.  Callers keep their local error translation;
+    this helper owns only the shared shape constraint.
     """
-    return _core_is_aeat_csv(value)
+    return bool(_AEAT_CSV_PATTERN.fullmatch(value))
 
 
 def is_aeat_auth_gate_redirect(current_url: str) -> bool:
