@@ -155,6 +155,8 @@ def _descendiente_row_lines(descendientes: tuple[DescendantInfo, ...]) -> list[s
                     f"discapacidad={descendant.discapacidad_grado if descendant.discapacidad_grado is not None else 0}",
                     f"convivencia={str(descendant.convive_con_contribuyente).lower()}",
                     f"custodia={str(descendant.custodia_compartida).lower()}",
+                    f"meses_madre_trabajo_2024={descendant.meses_madre_trabajo_2024}",
+                    f"gastos_guarderia_euros={descendant.gastos_guarderia_euros}",
                     f"nif={descendant.nif or '-'}",
                 ),
             ),
@@ -168,7 +170,7 @@ def _emit_descendiente_list(
     descendientes: tuple[DescendantInfo, ...],
 ) -> None:
     """Emit the active profile's declared descendant set as the list envelope."""
-    from .._config_payloads import ConfigProfileDescendienteListResult, ProfileDescendientePayload
+    from .._config_descendiente_payloads import ConfigProfileDescendienteListResult, ProfileDescendientePayload
 
     result = ConfigProfileDescendienteListResult(
         profile=pointer.label,
@@ -176,11 +178,13 @@ def _emit_descendiente_list(
         descendientes=[
             ProfileDescendientePayload(
                 index=index,
-                birth_date=descendant.birth_date.isoformat(),
-                adoption_date=descendant.adoption_date.isoformat() if descendant.adoption_date else None,
+                birth_date=descendant.birth_date,
+                adoption_date=descendant.adoption_date,
                 discapacidad_grado=descendant.discapacidad_grado,
                 convive_con_contribuyente=descendant.convive_con_contribuyente,
                 custodia_compartida=descendant.custodia_compartida,
+                meses_madre_trabajo_2024=descendant.meses_madre_trabajo_2024,
+                gastos_guarderia_euros=descendant.gastos_guarderia_euros,
                 nif=descendant.nif,
             )
             for index, descendant in enumerate(descendientes)
@@ -419,7 +423,7 @@ def descendiente_add(
     combined = (*existing, *new_rows)
     _write_descendientes(pointer.bucket_id, combined)
 
-    from .._config_payloads import ConfigProfileDescendienteAddResult
+    from .._config_descendiente_payloads import ConfigProfileDescendienteAddResult
 
     result = ConfigProfileDescendienteAddResult(
         profile=pointer.label,
@@ -490,7 +494,7 @@ def descendiente_remove(
     remaining = tuple(d for i, d in enumerate(existing) if i != index)
     _write_descendientes(pointer.bucket_id, remaining)
 
-    from .._config_payloads import ConfigProfileDescendienteRemoveResult
+    from .._config_descendiente_payloads import ConfigProfileDescendienteRemoveResult
 
     result = ConfigProfileDescendienteRemoveResult(
         profile=pointer.label,

@@ -767,25 +767,6 @@ class ApoderadoCheckResult(OutputSchema):
     granted_scopes: list[str] | None = None
 
 
-@register_schema("config.bucket.history")
-class BucketHistoryResult(OutputSchema):
-    """JSON envelope for ``aeat config profile history``.
-
-    The envelope token ``config.bucket.history`` is a stable machine API and
-    is intentionally retained after the operator-facing verb moved from
-    ``config bucket history`` to ``config profile history`` (D1 family).
-    """
-
-    operation: str
-    bucket_id: str
-    event_types: list[str] | None = None
-    since: str | None = None
-    until: str | None = None
-    object_id: str | None = None
-    actor: str | None = None
-    events: list[dict[str, object]]
-
-
 # Profile wizard / lifecycle verb result schemas
 #
 # ``config.profile.create`` / ``config.profile.edit`` are declared at their real
@@ -1185,50 +1166,6 @@ class AuthDiagnosticsReportResult(OutputSchema):
 
 
 # Descendiente verb result schemas
-
-
-class ProfileDescendientePayload(OutputSchema):
-    """One declared descendant row in the ``config profile descendiente`` surface.
-
-    Mirrors :class:`~cadrumo.domain.contribuyente.DescendantInfo` as plain JSON;
-    ``index`` is the 0-based position :func:`~cadrumo.domain.contribuyente.descendant_list_from_facts`
-    assigns, the same index ``descendiente remove`` addresses.
-    """
-
-    index: int
-    birth_date: str
-    adoption_date: str | None = None
-    discapacidad_grado: int | None = None
-    convive_con_contribuyente: bool
-    custodia_compartida: bool
-    nif: str | None = None
-
-
-@register_schema("config.profile.descendiente.add")
-class ConfigProfileDescendienteAddResult(OutputSchema):
-    """JSON envelope for ``aeat config profile descendiente add``."""
-
-    profile: str
-    added: int
-    total: int
-
-
-@register_schema("config.profile.descendiente.list")
-class ConfigProfileDescendienteListResult(OutputSchema):
-    """JSON envelope for ``aeat config profile descendiente list``."""
-
-    profile: str
-    total: int
-    descendientes: list[ProfileDescendientePayload] = []
-
-
-@register_schema("config.profile.descendiente.remove")
-class ConfigProfileDescendienteRemoveResult(OutputSchema):
-    """JSON envelope for ``aeat config profile descendiente remove``."""
-
-    profile: str
-    removed_index: int
-    total: int
 
 
 class CensoFileFactPayload(OutputSchema):

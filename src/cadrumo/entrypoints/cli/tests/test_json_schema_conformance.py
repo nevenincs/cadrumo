@@ -49,6 +49,8 @@ from ...schema_surface import GROUP_CALLBACK_SCHEMA_KEYS, SCHEMA_KEY_BY_CLI_PATH
 # decorators populate SCHEMA_REGISTRY before the gate inspects it.
 # The CLI loads these lazily at dispatch time, so without an explicit
 # import here the registry is empty when this test module collects.
+from .. import _config_bucket_history_payloads as _config_bucket_history_payloads
+from .. import _config_descendiente_payloads as _config_descendiente_payloads
 from .. import _config_payloads as _config_payloads
 from .. import _config_sandbox_payloads as _config_sandbox_payloads
 from .._config_payloads import ConfigRecoveryCreateResult
