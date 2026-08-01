@@ -35,6 +35,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.core._aeat_csv
    cadrumo.core._amendment_kind_regime
    cadrumo.core._auth_provider
    cadrumo.core._bucket_pointer

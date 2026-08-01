@@ -71,6 +71,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ._aeat_csv import (
+    AEAT_CSV_MAX_LENGTH,
+    AEAT_CSV_MIN_LENGTH,
+    AEAT_CSV_PATTERN,
+    is_aeat_csv,
+)
 from ._amendment_kind_regime import (
     AmendmentKindRegime,
     AmendmentLiabilityDirection,
@@ -131,6 +137,7 @@ from ._period import (
     PeriodError,
     PeriodKind,
     RegistryPeriodCode,
+    RegistrySelectorPeriodCode,
     StandardPeriodCode,
     accepted_period_codes,
     accepted_period_patterns,
@@ -178,9 +185,15 @@ from .compatibility_lifecycle import (
     unfloored_durable_formats,
     unknown_floor_keys,
 )
-from .corpus_text import normalise_corpus_text
+from .corpus_text import CorpusAnchorResolutionError, normalise_corpus_text, resolve_anchored_extracted_unit
 from .external_constants import M347_THRESHOLD_EUR
-from .product_identity import AEAT_AUTHORITY_SHORT_NAME, PRODUCT_IDENTITY, IdentityReferent, ProductIdentity
+from .product_identity import (
+    AEAT_AUTHORITY_SHORT_NAME,
+    PRODUCT_IDENTITY,
+    IdentityReferent,
+    ProductIdentity,
+    normalise_product_identity_references,
+)
 from .secure_object_write import (
     ABSENT_SECURE_OBJECT_REVISION_ID,
     DEFAULT_WRITE_PROVENANCE,
@@ -205,13 +218,8 @@ if TYPE_CHECKING:
     )
     from ._foreign_asset_obligation import (
         FOREIGN_ASSET_CLASS_OBLIGATION_GROUP,
-        FOREIGN_ASSET_DECLARATION_THRESHOLDS,
         MODELO_720_FOREIGN_ASSET_CLASS_CODES,
-        MODELO_720_REDECLARATION_INCREASE_THRESHOLD_EUR,
-        ForeignAssetDeclarationThreshold,
         ForeignAssetObligationGroup,
-        foreign_asset_class_declaration_threshold,
-        foreign_asset_declaration_threshold,
         foreign_asset_obligation_group,
     )
     from ._fsync import fsync_parent_dir
@@ -223,6 +231,9 @@ __all__: list[str] = [
     "ABSENT_SECURE_OBJECT_REVISION_ID",
     "ACTIONABLE_POST_FILING_EVENT_KINDS",
     "AEAT_AUTHORITY_SHORT_NAME",
+    "AEAT_CSV_MAX_LENGTH",
+    "AEAT_CSV_MIN_LENGTH",
+    "AEAT_CSV_PATTERN",
     "ANTHROPIC_EXTRA",
     "ART_104_TRES_AUTO_DERIVED_EXCLUSIONS",
     "ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS",
@@ -231,7 +242,6 @@ __all__: list[str] = [
     "DEFAULT_WRITE_PROVENANCE",
     "FETCH_GATED_M210_TIPO_RENTA_CODES",
     "FOREIGN_ASSET_CLASS_OBLIGATION_GROUP",
-    "FOREIGN_ASSET_DECLARATION_THRESHOLDS",
     "GOOGLE_EXTRA",
     "HEX_PATTERN_64",
     "HEX_PATTERN_128",
@@ -241,7 +251,6 @@ __all__: list[str] = [
     "M210_TIPO_RENTA_CODE_PROJECTION",
     "M347_THRESHOLD_EUR",
     "MODELO_720_FOREIGN_ASSET_CLASS_CODES",
-    "MODELO_720_REDECLARATION_INCREASE_THRESHOLD_EUR",
     "NIST_PASSPHRASE_MIN_LENGTH",
     "NON_REGISTRY_MODELOS",
     "OFFICIAL_M210_TIPO_RENTA_CODES",
@@ -265,9 +274,9 @@ __all__: list[str] = [
     "CompatibilityRegime",
     "ConceptLifecycle",
     "ConvenioOverrideKind",
+    "CorpusAnchorResolutionError",
     "ExportLayoutFormat",
     "ExternalOracleCorpus",
-    "ForeignAssetDeclarationThreshold",
     "ForeignAssetObligationGroup",
     "FormerProductStateError",
     "GoogleCredentialSourceKind",
@@ -294,6 +303,7 @@ __all__: list[str] = [
     "ProrrataRegisterRegime",
     "RefundElection",
     "RegistryPeriodCode",
+    "RegistrySelectorPeriodCode",
     "RescateType",
     "ResultDisposition",
     "RevisionReviewStatus",
@@ -315,19 +325,19 @@ __all__: list[str] = [
     "derive_result_disposition",
     "exclusive_file_lock",
     "expected_floor",
-    "foreign_asset_class_declaration_threshold",
-    "foreign_asset_declaration_threshold",
     "foreign_asset_obligation_group",
     "freeze_toml",
     "freeze_toml_value",
     "fsync_parent_dir",
     "fts_or_group",
     "iban_mod_97",
+    "is_aeat_csv",
     "lineage_obligations",
     "misclassified_floor_keys",
     "modelo_has_codified_amendment_regime",
     "modelo_has_codified_disposition",
     "normalise_corpus_text",
+    "normalise_product_identity_references",
     "optional_extra_available",
     "optional_extra_for_module",
     "parse_toml_text",
@@ -342,6 +352,7 @@ __all__: list[str] = [
     "require_optional_extra",
     "resolve_active_bucket_id",
     "resolve_amendment_kind_regime",
+    "resolve_anchored_extracted_unit",
     "resolve_repository_bucket_id",
     "restore_pointer",
     "result_disposition_casilla_ids",
@@ -380,13 +391,8 @@ def __getattr__(name: str) -> object:
         return pid_is_alive
     if name in (
         "FOREIGN_ASSET_CLASS_OBLIGATION_GROUP",
-        "FOREIGN_ASSET_DECLARATION_THRESHOLDS",
         "MODELO_720_FOREIGN_ASSET_CLASS_CODES",
-        "MODELO_720_REDECLARATION_INCREASE_THRESHOLD_EUR",
-        "ForeignAssetDeclarationThreshold",
         "ForeignAssetObligationGroup",
-        "foreign_asset_class_declaration_threshold",
-        "foreign_asset_declaration_threshold",
         "foreign_asset_obligation_group",
     ):
         from . import _foreign_asset_obligation
