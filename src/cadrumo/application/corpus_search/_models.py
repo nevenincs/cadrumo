@@ -43,8 +43,8 @@ class CorpusChunk(BaseModel):
 
     A chunk is a paragraph-bounded slice of a single extracted unit (an
     article or disposition). ``chunk_id`` is deterministic given the same
-    corpus, so a rebuilt index re-mints byte-identical ids and the shipped
-    embedding matrix stays row-aligned with the lexical index.
+    corpus, so a rebuilt index re-mints byte-identical ids and a chunk id
+    held across a rebuild still resolves.
     """
 
     model_config = _STRICT_FROZEN

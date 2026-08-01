@@ -1,13 +1,13 @@
 """Build-time FTS5 lexical index over the bundled BOE/AEAT corpus.
 
-The index is the lexical half of the R3 hybrid grounding surface. It is
-built from the already-bundled ``*.extracted.json`` corpus triples (the
-same triples the registry legal catalogue grounds against, read through
-the :mod:`~core.resources` boundary) into a caller-supplied SQLite
-path. No dependency beyond the standard library ``sqlite3`` (FTS5 is
-present in every standard CPython build) and ``snowballstemmer`` (a
-pure-Python Spanish Snowball stemmer) is required, so this module is
-importable in the degraded, no-download mode.
+The index is the ranking half of the grounding surface, alongside the
+exact-citation lookup. It is built from the already-bundled
+``*.extracted.json`` corpus triples (the same triples the registry legal
+catalogue grounds against, read through the :mod:`~core.resources`
+boundary) into a caller-supplied SQLite path. No dependency beyond the
+standard library ``sqlite3`` (FTS5 is present in every standard CPython
+build) and the core ``snowballstemmer`` (a pure-Python Spanish Snowball
+stemmer) is required, so this module imports and runs on every install.
 
 Two searchable columns ride each chunk: ``text_folded`` (searched with
 the ``unicode61 remove_diacritics 2`` tokenizer, so ``recargo`` matches
@@ -295,9 +295,9 @@ def search_lexical(
 
     The query is matched against both the diacritic-folded column (raw
     terms) and the Spanish-stemmed column (stemmed terms), unioned, and
-    ranked by FTS5 BM25. This is the lexical-recall primitive; the R3
-    hybrid fusion (RRF with the semantic side) is layered on top in the
-    retrieval module.
+    ranked by FTS5 BM25. This is the ranking primitive the retrieval
+    module wraps with the exact-citation short-circuit; nothing is fused
+    on top of it.
 
     Args:
         database_path: A lexical index built by :func:`build_lexical_index`.
