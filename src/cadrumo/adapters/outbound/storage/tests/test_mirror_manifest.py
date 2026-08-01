@@ -495,3 +495,64 @@ def _three_revision_manifest_pair(
         assert remote_manifest is not None
         local_manifest = build_remote_mirror_namespace_manifest(namespace, tuple(repo.iter_all_records_raw()))
         return remote_manifest, local_manifest
+
+
+def test_manifest_refuses_child_objects_from_another_namespace() -> None:
+    """A manifest describes one namespace, so a foreign child is not representable.
+
+    Each child entry carries its own ``namespace`` and nothing bound it to the
+    parent's, while ``inspect_remote_mirror_download`` fetches by the *child's*
+    value. A manifest named ``target`` holding a child named ``foreign`` therefore
+    inspected clean and would pull another namespace's ciphertext under the
+    target's identity.
+    """
+    from .._records import RemoteMirrorObjectManifest
+
+    def _entry(namespace: str) -> RemoteMirrorObjectManifest:
+        return RemoteMirrorObjectManifest(
+            namespace=namespace,
+            object_key_hmac="a" * 64,
+            classification="FINANCIAL",
+            schema_version=1,
+            byte_length=10,
+            ciphertext_hash="b" * 64,
+            row_written_at=datetime(2026, 1, 1, tzinfo=UTC),
+        )
+
+    with pytest.raises(ValidationError, match="foreign namespaces"):
+        RemoteMirrorNamespaceManifest(
+            namespace="target",
+            object_count=1,
+            objects=(_entry("foreign"),),
+        )
+
+    # The matching-namespace manifest is unaffected.
+    manifest = RemoteMirrorNamespaceManifest(
+        namespace="target",
+        object_count=1,
+        objects=(_entry("target"),),
+    )
+    assert manifest.objects[0].namespace == manifest.namespace
+
+
+def test_manifest_refuses_a_mixed_namespace_object_set() -> None:
+    """One foreign child among genuine ones is refused, and the refusal names it."""
+    from .._records import RemoteMirrorObjectManifest
+
+    def _entry(namespace: str, key_char: str) -> RemoteMirrorObjectManifest:
+        return RemoteMirrorObjectManifest(
+            namespace=namespace,
+            object_key_hmac=key_char * 64,
+            classification="FINANCIAL",
+            schema_version=1,
+            byte_length=10,
+            ciphertext_hash="b" * 64,
+            row_written_at=datetime(2026, 1, 1, tzinfo=UTC),
+        )
+
+    with pytest.raises(ValidationError, match="smuggled"):
+        RemoteMirrorNamespaceManifest(
+            namespace="target",
+            object_count=2,
+            objects=(_entry("target", "a"), _entry("smuggled", "c")),
+        )

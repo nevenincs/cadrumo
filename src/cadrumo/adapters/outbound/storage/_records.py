@@ -147,7 +147,7 @@ class RemoteMirrorNamespaceManifest(BaseModel):
 
     @model_validator(mode="after")
     def _enforce_object_key_uniqueness_and_count(self) -> RemoteMirrorNamespaceManifest:
-        """Refuse duplicate object keys and a ``object_count`` that disagrees with ``objects``.
+        """Refuse foreign-namespace children, duplicate object keys, and a disagreeing ``object_count``.
 
         Comparison in
         :mod:`adapters.outbound.storage._mirror_manifest` keys both manifests
@@ -157,7 +157,22 @@ class RemoteMirrorNamespaceManifest(BaseModel):
         corruption rather than a representable state; refusing it here makes a
         tampered or torn remote manifest fail closed through the
         :class:`OutboundStorageIntegrityError` the loader already raises.
+
+        The namespace binding closes the same class of hole one level up. A
+        manifest describes exactly one namespace, but each child carried its
+        own ``namespace`` field that nothing checked against the parent, and
+        the download path fetches by the *child's* value. A manifest named
+        ``target`` holding a child named ``foreign`` therefore inspected clean
+        and pulled another namespace's ciphertext under the target's identity.
+        Binding the two here means the confusion cannot be represented at all,
+        rather than being caught separately by each consumer.
         """
+        foreign = sorted({entry.namespace for entry in self.objects if entry.namespace != self.namespace})
+        if foreign:
+            raise ValueError(
+                f"remote mirror manifest for namespace {self.namespace!r} "
+                f"records objects from foreign namespaces: {foreign}",
+            )
         keys = [entry.object_key_hmac for entry in self.objects]
         duplicates = sorted({key for key in keys if keys.count(key) > 1})
         if duplicates:
