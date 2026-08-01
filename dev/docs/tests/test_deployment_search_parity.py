@@ -75,14 +75,15 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 _BUILT_HTML = _REPO_ROOT / "docs" / "_build" / "html"
 _PAGEFIND_YML = _REPO_ROOT / "docs" / "pagefind.yml"
 
-#: Record kinds the ADR decides the shipped index carries. A kind absent from
-#: the built index means a reader cannot reach that surface at all.
+#: Record kinds the shipped index is required to carry. A kind absent from the
+#: built index means a reader cannot reach that surface at all.
 #:
 #: This set is the deployment contract's inventory, so it must grow with the
-#: contract: the ADR's Update 1 rules a fifth LEGAL kind that no injector emits
-#: yet, and the step that builds it must add it here. A gate whose inventory
-#: silently lags the contract stops covering the newest surface while still
-#: reporting green — the same shape as the defect this module exists to catch.
+#: contract: a fifth LEGAL record kind is already decided but no injector emits
+#: it yet, and whichever change builds it must add it here. A gate whose
+#: inventory silently lags the contract stops covering the newest surface while
+#: still reporting green — the same shape as the defect this module exists to
+#: catch.
 _DECIDED_RECORD_KINDS = frozenset({"concept", "casilla", "cli"})
 
 #: Real records per kind for the bounded injection (see the module docstring).
