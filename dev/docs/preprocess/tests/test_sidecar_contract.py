@@ -159,6 +159,17 @@ def test_tampered_sidecar_is_rejected(tmp_path: Path) -> None:
         load_sidecar(source_copy)
 
 
+@pytest.mark.parametrize("source_relpath", ("/etc/passwd", "../outside.html", "C:/secret/file.html", "dir\\file.html"))
+def test_schema_refuses_non_repository_source_provenance(source_relpath: str) -> None:
+    """Sidecars may name only canonical POSIX-relative paths from the repository root."""
+    output = build_outputs(_WORKED_EXAMPLE_HTML, repo_root=_REPO_ROOT)[0]
+    payload = output.model_dump(mode="json")
+    payload["source_relpath"] = source_relpath
+
+    with pytest.raises(ValueError, match="canonical POSIX-relative repository path"):
+        PreprocessOutput.model_validate(payload)
+
+
 def test_sidecar_paths_disambiguate_by_full_filename() -> None:
     """Two sources differing only by extension get distinct sidecar names.
 
