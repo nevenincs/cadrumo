@@ -49,6 +49,7 @@ from .....domain.calculations.registry import (
     RegistryValidationError,
     RemoteStateGuardPolicy,
     previous_filing_observation_requirements,
+    registry_snapshot_id,
     relation_source_requirements,
 )
 from .._playwright import BrowserContext, Page, Playwright, PlaywrightError
@@ -952,8 +953,14 @@ async def _capture_filed_declaration_observation_from_row(
         casillas=casillas,
         metadata=metadata,
         extraction_coverage=extraction_coverage,
-        registry_snapshot_id=(
-            f"{snapshot.modelo.id}:{snapshot.revision.id}:{declaration.ejercicio}:{declaration.period.registry_token}"
+        # Year and period come from the DECLARATION, not the snapshot: stamping
+        # what the document itself declares is what lets a later comparison
+        # against the law-resolved snapshot detect a coordinate mismatch.
+        registry_snapshot_id=registry_snapshot_id(
+            modelo=snapshot.modelo.id,
+            revision_id=snapshot.revision.id,
+            filing_year=declaration.ejercicio,
+            period=declaration.period.registry_token,
         ),
     )
 

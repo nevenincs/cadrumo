@@ -980,6 +980,7 @@ __all__ = [
     "ProjectionModeloReadiness",
     "ProjectionObligation",
     "ProjectionWorkspaceSummary",
+    "build_auth_readiness",
     "build_operator_state_projection",
     "build_pending_obligations",
     "modelo_requires_ledger_preflight",

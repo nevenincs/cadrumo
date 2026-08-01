@@ -57,7 +57,10 @@ def test_modelo_100_registry_scenarios_cover_direct_estimation_modes_and_payment
     ]
 
     for report in reports:
-        assert report.registry_snapshot_id == "100:2025:0A"
+        # Four coordinates: modelo, revision, filing year, period. The revision
+        # id and the filing year are both "2025" here, which reads as a repeat
+        # but is not one -- a revision named for one year serves later years too.
+        assert report.registry_snapshot_id == "100:2025:2025:0A"
         provenance_mismatches = [
             f"{cmp.target_casilla_id}: {cmp.detail}"
             for cmp in report.comparisons

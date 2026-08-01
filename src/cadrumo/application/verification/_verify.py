@@ -36,6 +36,8 @@ from ...domain.calculations.registry import (
     ValidatedRegistryAuthority,
     calculate_registry_snapshot,
     declared_casilla_ids,
+    registry_snapshot_id,
+    registry_snapshot_id_for,
 )
 from ...domain.period import calculation_filing_date
 from ._errors import VerificationError
@@ -231,7 +233,7 @@ def verify_declaracion(
     return VerificationVerdict(
         modelo=declaracion.modelo,
         period=period,
-        registry_snapshot_id=f"registry:{snapshot.modelo.id}:{snapshot.revision.id}",
+        registry_snapshot_id=registry_snapshot_id_for(snapshot),
         verification_expectation_ids=policy.expectation_ids,
         status=status,
         discrepancies=classified,
@@ -298,8 +300,17 @@ def _assert_snapshot_ref_matches(
 
 
 def _snapshot_ref_context(modelo: str, revision_id: str, modelo_year: int, period: str) -> str:
-    """Return an operator-facing registry snapshot coordinate."""
-    return f"registry:{modelo}:{revision_id}:{modelo_year}:{period}"
+    """Return an operator-facing registry snapshot coordinate.
+
+    Uses the same identifier the verdict carries, so the two refs named in a
+    mismatch diagnostic are directly comparable to the id in the report.
+    """
+    return registry_snapshot_id(
+        modelo=modelo,
+        revision_id=revision_id,
+        filing_year=modelo_year,
+        period=period,
+    )
 
 
 def _decimal_extracted_values(declaracion: InboundDeclaracionObservation) -> dict[CasillaId, Decimal]:

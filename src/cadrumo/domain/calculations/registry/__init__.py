@@ -501,6 +501,7 @@ from ._schema_verification import (
     VerificationPredicateDefinition,
 )
 from ._snapshot import build_snapshot
+from ._snapshot_coordinate import registry_snapshot_id, registry_snapshot_id_for
 from ._temporal import select_revision, select_revision_for_year
 from ._validate import RegistryValidator
 from ._validate_cross_revision import (
@@ -897,6 +898,8 @@ __all__ = [
     "read_parameter",
     "register_cross_domain_snapshot_check",
     "registry_scalar_value_type",
+    "registry_snapshot_id",
+    "registry_snapshot_id_for",
     "relation_aggregation_op",
     "relation_source_requirements",
     "remote_state_policy_from_cross_reference",

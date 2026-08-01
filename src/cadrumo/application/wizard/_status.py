@@ -13,6 +13,7 @@ from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG, resolve_active_bucket_id
 from ...domain.deadlines import TaxpayerProfile
+from ..state_projection import build_auth_readiness
 from ..user_profile import (
     iva_regime_required,
     list_profile_key_records,
@@ -93,8 +94,25 @@ def build_wizard_status(state: WorkflowState) -> WizardStatusReport:
 
     profile_ready = identity_ready and enrolment_ready
 
-    auth_provider = state.auth.provider or ""
-    login_ready = state.auth.authenticated_at is not None
+    # Project the auth fields from the canonical readiness authority rather
+    # than reading state.auth directly. Copying the persisted selector
+    # verbatim republishes an unrecognised provider as though it were a real
+    # one, and treating any non-null authenticated_at as readiness reports a
+    # session for a provider that cannot be used -- a certificate selection
+    # whose certificate is gone reads as "session ready". The canonical
+    # projection fails closed on both counts and does not expose the raw
+    # invalid selector.
+    auth_readiness = build_auth_readiness(
+        state,
+        provider_kind=None,
+        provider_kind_is_authoritative=False,
+        requested_provider=None,
+        probe_live_backend=False,
+        credential_bucket_id=None,
+        certificate_credentials=None,
+    )
+    auth_provider = auth_readiness.provider
+    login_ready = auth_readiness.authenticated
     return WizardStatusReport(
         active_profile=resolve_active_bucket_id(),
         profile_ready=profile_ready,
