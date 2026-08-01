@@ -5,7 +5,7 @@ tags:
 date: '2026-08-01'
 modified: '2026-08-01'
 body_schema: 'body-v1'
-body_hash: 'sha256:dba5d17e4a3f32ea46b089dd4a0a17c802dc71906ae17b85564d17d83d26d408'
+body_hash: 'sha256:bb61e54c1d23779d549a41a7c17cb589687346a45e4f9421396a86738d19cff6'
 step_id: 'S11'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -78,3 +78,5 @@ The gate injects four real records per kind rather than the full 7,890. The proj
 A missing built-HTML tree fails the gate rather than skipping it, so an absent artefact can never read as a pass.
 
 Observed while running the gate, and pre-existing: every index build writes a stray Pagefind directory at the repository root. The index context manager writes a second time on exit with no output path, so the write lands relative to the working directory. It is gitignored and untracked, so nothing can be committed by accident, but it is unwanted output from every build and no step owns it.
+
+Grounded by semantic search over the codebase, not by searching for the environment variable's name. That distinction mattered here: searching by meaning for where record injection is disabled, and for anything that already asserts what the built index contains, surfaced an existing sweep that walks the injected corpus against a built site and checks every target resolves to a real page and anchor. A search for the variable name would never have reached it, because it names neither the variable nor the mode. That sweep is sound rather than silently passing - it builds its own site, asserts the output exists, and explicitly refuses a run where a whole record kind was skipped - and it checks target resolvability, which is a different axis from the deployment contract this gate covers. So the two are complementary and no pre-existing gate covered the contract. The same search by meaning confirmed injection can be disabled at exactly one production call site, that the deploy build environment is constructed in exactly one place, and that the localized roots have no second build path.
