@@ -4,7 +4,7 @@ tags:
   - '#user-docs-search-consolidation'
 date: '2026-08-01'
 modified: '2026-08-01'
-body_hash: 'sha256:b9dfa6b8832b441e938d26b81b438a378cfb5c702da4fe7b765988098810e803'
+body_hash: 'sha256:d8a7ff335694d5f15df8e8886a46c78928f49b521bebbcfc96a1930f7a62fab9'
 tier: L2
 related:
   - '[[2026-07-31-semantic-search-precompile-boundary-plan]]'
@@ -40,7 +40,7 @@ Deliver the fired rung-2 verdict: a pinned licence-clean static-embedding model 
 
 Prove the multilingual recall claim against the built site, keep every existing search gate green, and run the mandated fresh-context honesty review before the campaign is declared structurally complete.
 
-- [ ] `P03.S08` - Prove multilingual query recall with Spanish, Catalan, and Hungarian queries recalling concept and casilla records through the behavioural gates on the built site, then re-run the same probes against the deployed site so a CI-built full-mode pass can never mask a pages-mode live site; `dev/docs/tests/`.
+- [ ] `P03.S08` - Prove per-root multilingual recall with worked-example queries in each of the four languages recalling concept and casilla records on every language root through the behavioural gates on the built site, then re-run the same probes against the deployed roots so a CI pass can never mask a broken live root; `dev/docs/tests/`.
 - [ ] `P03.S09` - Run the fresh-context honesty review against the closure summary and persist it as a vault audit, closing or formally deferring every surfaced item; `.vault/audit/`.
 - [ ] `P03.S18` - Sweep for surviving artefacts of the overtaken audit campaigns beyond the two named commits and for incomplete-landing residue on the search surface, grounding the sweep with vaultspec-rag over both code and vault and confirming each candidate site with rg, and record the result with any remediation opened as new steps, noting instances already closed at HEAD by their commit rather than re-opening them; `.vault/audit/`.
 
@@ -49,9 +49,10 @@ Prove the multilingual recall claim against the built site, keep every existing 
 Make the deployed site carry the decided search contract: the pages-only env value is retired for full mode on every root, the built language roots become reachable live, and a deployment-parity gate makes any future silent re-narrowing of the shipped contract a loud failure.
 
 - [x] `P04.S10` - Retire the pages-only CADRUMO_DOCS_PAGEFIND_MODE deploy value so every root builds the full record-injected index, updating the deploy-environment test to pin full mode; `dev/deploy/docs_static_site.py`.
-- [x] `P04.S11` - Add a deployment-parity gate asserting the built site's pagefind entry carries every decided record kind and every language root, so an env value can never silently re-narrow the shipped contract again; `dev/docs/tests/`.
+- [x] `P04.S11` - Add a deployment-parity gate asserting per root that the root's own loaded language index carries the full record corpus with record-count parity across the en, es, ca, and hu roots, so an env value or a language pin can never silently narrow any root's shipped contract; `dev/docs/tests/`.
 - [ ] `P04.S12` - Close the gap that leaves the built language roots unreachable on the live site and prove es, ca, and hu roots respond after deploy; `dev/deploy/docs_static_site.py`.
 - [ ] `P04.S13` - Redeploy and live-verify the full-mode index, the casilla destination pages, and the language roots, recording the live checks in the exec record; `dev/deploy/`.
+- [ ] `P04.S19` - Make the record-injection language follow the build language with the card summary preferring the root language's description, so every localized root's records land in the index its palette loads, correcting the module's stale per-language docstring in the same change and citing the localized-root artefact measurement in the exec record; `dev/docs/pagefind_inject.py`.
 
 ### Phase `P05` - Legal-corpus record kind
 
@@ -64,17 +65,17 @@ Deliver the operator's core ask that no record kind ever served: project the leg
 
 ## Parallelization
 
-Execution order is P01, then P04, then P05, then P02, then P03; document order preserves append-only identifiers and does not encode sequence. P01 leads: S01 may land at any time in a coordinated sync window, and S02 gates rung-2 dispatch (P02) on the boundary campaign's close. P04 is the cheapest reader-facing win and goes first after P01: S10 and S11 in parallel, then S12, then S13 which needs both. P05 follows P04 so its live verification lands on a full-mode site: S14 then S15, S16 and S17 after S15 in parallel. Within P02 the order is S03 then S04, then S05 and S06 in parallel, then S07, which is the final measurement and must run after P04 and P05 so the baseline reflects the deployed ladder. P03 runs last: S08 after everything lands on the built site, S09 as the final close. No step here may touch the boundary plan's deletion targets under `src/cadrumo/application/corpus_search/` or `command_search/`.
+Execution order is P01, then P04, then P05, then P02, then P03; document order preserves append-only identifiers and does not encode sequence. P01 leads: S01 may land at any time in a coordinated sync window, and S02 gates rung-2 dispatch (P02) on the boundary campaign's close. P04 is the cheapest reader-facing win and goes first after P01: S10 and S11 in parallel, then S19 (the ADR Update 3 injection-language fix, conditional on the pending localized-root measurement confirming the predicted gap and landing before any publish if it does), then S12, then S13 which needs all of them. P05 follows P04 so its live verification lands on a full-mode site: S14 then S15, S16 and S17 after S15 in parallel. Within P02 the order is S03 then S04, then S05 and S06 in parallel, then S07, which is the final measurement and must run after P04 and P05 so the baseline reflects the deployed ladder. P03 runs last: S08 after everything lands (its probes run per language root), S09 as the final close. No step here may touch the boundary plan's deletion targets under `src/cadrumo/application/corpus_search/` or `command_search/`.
 
 ## Verification
 
 - The synced shipped-search-licence-clean rule carries the licence-and-provenance scoping in every generated provider copy, and vaultspec-core sync reports clean.
-- The deploy environment pins full mode, and the deployment-parity gate fails when the built pagefind entry misses a decided record kind or a language root.
-- Live checks pass and are recorded: the deployed pagefind entry carries the injected record kinds, `/_generated/casillas/303.html` resolves, and the es, ca, and hu roots respond.
+- The deploy environment pins full mode, and the per-root deployment-parity gate fails when any root's own loaded language index misses the full record corpus or record-count parity across the en, es, ca, and hu roots breaks.
+- Live checks pass and are recorded: every deployed root's pagefind entry carries the injected record corpus in that root's language, `/_generated/casillas/303.html` resolves, and the es, ca, and hu roots respond.
 - The legal record kind ships with D1-conformant targets, its parity gate proves anchor existence and destination-grounding coverage, and the target-resolution gate refuses any relevance target id no injector emits, so the dead-target count at HEAD is zero.
 - The committed rung-2 matrix is int8, within the 1-3 MB bound scoped by the 2026-06-10 ADR, stamped with model id, licence, revision, and vocabulary fingerprint, and the extended licence gate fails when any stamp field is absent or the model licence is not MIT or Apache-2.0.
 - The wheel content is unchanged: the matrix ships in the built docs only, proven by the packaging content gates.
 - The re-taken held-out miss-rate report is committed and its figure is compared against the 0.1875 baseline in the exec record.
-- Spanish, Catalan, and Hungarian palette queries recall the worked-example concept and casilla records on the built site, recorded by the behavioural gates.
+- Worked-example queries in each of the four languages recall the concept and casilla records on every language root, on the built site and re-probed on the deployed roots, recorded by the behavioural gates.
 - The docs build gates, the target-resolvability gates, and the Playwright ranking gates stay green.
 - The fresh-context honesty review audit exists in the vault with every surfaced item closed or formally deferred before the campaign is declared complete.
