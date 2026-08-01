@@ -33,8 +33,7 @@ from ...adapters.persistence.storage import (
     BUCKET_DB_DIRNAME,
     StorageCustodyProfile,
 )
-from ...adapters.persistence.storage.bucket import acquire_lock, release_lock
-from ...adapters.persistence.storage.master_key import KdfParams
+from ...adapters.persistence.storage.bucket import ManifestKdfParams, acquire_lock, release_lock
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.product_identity import PRODUCT_IDENTITY
 from ...core.time import now
@@ -126,10 +125,30 @@ _RECOVERY_WRAP_SALT_BYTES = 16
 
 #: Argon2 version and derived-key length the recovery-wrap member implies but
 #: does not carry on the wire. The export path derives under Argon2id v1.3 with
-#: a 32-byte output, so the reader pins both and lets the canonical
-#: :class:`KdfParams` window reject anything that does not match.
+#: a 32-byte output.
 _RECOVERY_WRAP_ARGON2_VERSION = 19
 _RECOVERY_WRAP_OUTPUT_BYTES = 32
+
+#: Security FLOOR the recovery-archive reader enforces on an archive's enrolled
+#: Argon2 parameters.
+#:
+#: DELIBERATELY INDEPENDENT of the new-enrolment window in
+#: :class:`~adapters.persistence.storage.master_key.KdfParams`, and it must stay
+#: that way: reading an archive asks "were these parameters strong enough when
+#: this archive was written", which is a floor, while enrolment asks "are these
+#: the parameters we mint today", which is a window. Binding the reader to the
+#: enrolment window means the next OWASP cost bump refuses every archive written
+#: before it -- on the operator's last-resort path to their own encrypted data.
+#:
+#: Consequences, both intended:
+#: - Parameters STRONGER than today's enrolment ceiling are accepted. A stronger
+#:   KDF is not a threat; refusing it would be the defect.
+#: - These values must never be RAISED. Raising them strands every archive
+#:   enrolled under the older floor. A weak-parameter concern is fixed in the
+#:   WRITER, which mints the enrolment baseline.
+_RECOVERY_READ_MIN_MEMORY_COST_KIB = 19 * 1024
+_RECOVERY_READ_MIN_TIME_COST = 2
+_RECOVERY_READ_MIN_PARALLELISM = 1
 
 
 def ensure_archive_schema_readable(archive_schema_version: int) -> None:
@@ -1288,26 +1307,33 @@ def _recovery_wrap_bytes(salt: bytes, *, memory_cost: int, time_cost: int, paral
     ).encode(UTF_8_ENCODING)
 
 
-def _recovery_wrap_kdf(payload: bytes) -> KdfParams:
-    """Decode a sealed archive's recovery-wrap member into canonical Argon2id parameters.
+def _recovery_wrap_kdf(payload: bytes) -> ManifestKdfParams:
+    """Decode a sealed archive's enrolled Argon2id parameters, enforcing a security floor.
 
     The recovery-wrap member is attacker-reachable: it rides inside the archive
     an importer was handed, so its Argon2 costs decide how much work an offline
-    brute force of the operator's passphrase must do. Validation therefore runs
-    through :class:`~adapters.persistence.storage.master_key.KdfParams` -- the
-    same OWASP-baseline window the substrate enforces everywhere else -- rather
-    than a local "is it positive" check, so a tampered archive cannot drive the
-    importer's KDF into a weaker regime than the exporter is allowed to mint.
+    brute force of the operator's passphrase must do. A local "is it positive"
+    check is therefore not enough -- ``memory_cost=1`` would be accepted.
+
+    Validation deliberately uses the ENROLLED-artefact record
+    (:class:`~adapters.persistence.storage.bucket.ManifestKdfParams`, which
+    carries whatever parameters an artefact was written under) plus an explicit
+    floor, rather than the new-enrolment window in
+    :class:`~adapters.persistence.storage.master_key.KdfParams`. Reading asks
+    whether the parameters were strong enough when the archive was written;
+    enrolment asks whether they are what we mint today. Those are different
+    questions, and binding the reader to the enrolment window would refuse every
+    previously-written archive at the next cost bump.
 
     ``version`` and ``output_length`` are not carried in the wire member; they
     are pinned to the Argon2id v1.3 / 32-byte contract the export path derives
-    under, and the canonical model rejects anything else.
+    under.
     """
     try:
         raw = json.loads(payload.decode(UTF_8_ENCODING))
         if raw.get("kdf") != "argon2id":
             raise ValueError("unsupported recovery-wrap kdf")
-        return KdfParams(
+        params = ManifestKdfParams(
             algorithm="argon2id",
             version=_RECOVERY_WRAP_ARGON2_VERSION,
             memory_cost=int(raw["memory_cost"]),
@@ -1316,7 +1342,14 @@ def _recovery_wrap_kdf(payload: bytes) -> KdfParams:
             salt=base64.b64decode(raw["salt_b64"].encode("ascii"), validate=True),
             output_length=_RECOVERY_WRAP_OUTPUT_BYTES,
         )
+        if (
+            params.memory_cost < _RECOVERY_READ_MIN_MEMORY_COST_KIB
+            or params.time_cost < _RECOVERY_READ_MIN_TIME_COST
+            or params.parallelism < _RECOVERY_READ_MIN_PARALLELISM
+        ):
+            raise ValueError("recovery-wrap argon2 parameters below the security floor")
     except Exception as exc:
         raise BucketImportError(
             translated_message="application.bucket_maintenance.errors.import_recovery_wrap_invalid",
         ) from exc
+    return params

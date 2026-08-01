@@ -1,15 +1,20 @@
-"""Recovery-wrap KDF parity with the canonical Argon2id parameter window.
+"""Recovery-wrap Argon2id parameters: a security floor, not an enrolment window.
 
 The recovery-wrap member rides inside a sealed archive an importer was handed,
 so its Argon2 costs are attacker-reachable: they decide how much work an
-offline brute force of the operator's passphrase must do. These tests pin the
-reader to the canonical
-:class:`~adapters.persistence.storage.master_key.KdfParams` window rather than
-a local "is it positive" check.
+offline brute force of the operator's passphrase must do. The reader must
+therefore refuse weak costs -- but it must NOT refuse an archive merely because
+its enrolled parameters differ from what we mint today, because a sealed
+archive is the operator's last-resort path to their own encrypted financial
+data.
+
+These tests pin both halves: below-floor parameters are refused, and parameters
+outside the current new-enrolment window (including stronger ones, and by
+extension any set enrolled before a future cost bump) still open.
 
 Real behaviour throughout: the real recovery-wrap encoder, the real reader, the
-real canonical validator, and the real sealed-archive writer/reader for the
-wire path. Nothing is mocked or stubbed.
+real parameter records, and the real sealed-archive writer/reader for the wire
+path. Nothing is mocked or stubbed.
 """
 
 from __future__ import annotations
@@ -31,7 +36,13 @@ from ....adapters.persistence.storage.master_key import (
     KdfParams,
 )
 from ....domain.buckets import BucketImportError
-from .._service import _recovery_wrap_bytes, _recovery_wrap_kdf
+from .._service import (
+    _RECOVERY_READ_MIN_MEMORY_COST_KIB,
+    _RECOVERY_READ_MIN_PARALLELISM,
+    _RECOVERY_READ_MIN_TIME_COST,
+    _recovery_wrap_bytes,
+    _recovery_wrap_kdf,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -76,9 +87,9 @@ def _reader_accepts(*, memory_cost: int, time_cost: int, parallelism: int, salt:
 def test_audit_probe_weak_parameters_are_refused() -> None:
     """The audit's literal probe: memory=1, time=1, parallelism=1, 1-byte salt.
 
-    Before the canonical routing this returned a usable parameter set, letting a
-    tampered archive drive the importer's KDF into a regime the substrate
-    rejects everywhere else.
+    DISCRIMINATING. Before the fix this returned a usable parameter set, letting
+    a tampered archive drive the importer's KDF into a regime an offline brute
+    force clears cheaply.
     """
     payload = _recovery_wrap_bytes(b"x", memory_cost=1, time_cost=1, parallelism=1)
 
@@ -87,7 +98,12 @@ def test_audit_probe_weak_parameters_are_refused() -> None:
 
 
 def test_exporter_minted_parameters_round_trip() -> None:
-    """What the export path actually mints must stay readable (no stranding)."""
+    """What the export path actually mints must stay readable (no stranding).
+
+    SUPPORTING: passes both before and after the fix, since the exporter mints
+    the enrolment baseline either way. It exists to prove the tightening strands
+    nothing, not to prove the tightening happened.
+    """
     payload = _recovery_wrap_bytes(
         _SALT,
         memory_cost=ARGON2_MEMORY_COST_KIB,
@@ -107,59 +123,100 @@ def test_exporter_minted_parameters_round_trip() -> None:
 
 
 @pytest.mark.parametrize(
+    ("label", "memory_cost", "time_cost", "parallelism"),
+    [
+        ("memory above enrolment ceiling", 2 * 1024 * 1024, ARGON2_TIME_COST, ARGON2_PARALLELISM),
+        ("time above enrolment ceiling", ARGON2_MEMORY_COST_KIB, 32, ARGON2_PARALLELISM),
+        ("parallelism above enrolment ceiling", ARGON2_MEMORY_COST_KIB, ARGON2_TIME_COST, 16),
+        ("stronger on every axis", 2 * 1024 * 1024, 32, 16),
+    ],
+)
+def test_archive_enrolled_stronger_than_today_still_imports(
+    label: str,
+    memory_cost: int,
+    time_cost: int,
+    parallelism: int,
+) -> None:
+    """An archive enrolled ABOVE today's enrolment window must still open.
+
+    DISCRIMINATING. This is the whole point of reading through the enrolled
+    record plus a floor rather than the new-enrolment window: a stronger KDF is
+    not a threat, and refusing it would be the defect. These parameter sets are
+    all rejected by the new-enrolment ``KdfParams`` window, so a reader bound to
+    that window refuses them.
+
+    It is also the standing proxy for the hazard that has no direct test today:
+    the reader and the enrolment window must be free to differ, so raising the
+    enrolment floor cannot refuse a previously-written archive.
+    """
+    assert not _canonical_accepts(
+        memory_cost=memory_cost,
+        time_cost=time_cost,
+        parallelism=parallelism,
+        salt=_SALT,
+    ), f"{label}: precondition -- this set must be outside the new-enrolment window"
+
+    assert _reader_accepts(
+        memory_cost=memory_cost,
+        time_cost=time_cost,
+        parallelism=parallelism,
+        salt=_SALT,
+    ), f"{label}: recovery reader refused an archive enrolled with STRONGER parameters"
+
+
+def test_reader_floor_never_exceeds_the_enrolment_floor() -> None:
+    """The reader's floor stays at or below the enrolment floor.
+
+    DISCRIMINATING. This is the structural guard against the failure that costs
+    an operator their data: if a future OWASP bump raises the enrolment floor
+    and someone raises the reader floor to match, every archive enrolled under
+    the old floor becomes unopenable. The reader floor must lag, never lead.
+    """
+    assert _RECOVERY_READ_MIN_MEMORY_COST_KIB <= ARGON2_MEMORY_COST_KIB
+    assert _RECOVERY_READ_MIN_TIME_COST <= ARGON2_TIME_COST
+    assert _RECOVERY_READ_MIN_PARALLELISM <= ARGON2_PARALLELISM
+
+
+@pytest.mark.parametrize(
     ("label", "memory_cost", "time_cost", "parallelism", "salt"),
     [
-        ("baseline", ARGON2_MEMORY_COST_KIB, ARGON2_TIME_COST, ARGON2_PARALLELISM, _SALT),
-        ("all-weak", 1, 1, 1, b"x"),
-        ("memory below floor", 1024, ARGON2_TIME_COST, ARGON2_PARALLELISM, _SALT),
-        ("memory one below floor", ARGON2_MEMORY_COST_KIB - 1, ARGON2_TIME_COST, ARGON2_PARALLELISM, _SALT),
-        ("memory above ceiling", 1024 * 1024 + 1, ARGON2_TIME_COST, ARGON2_PARALLELISM, _SALT),
-        ("time below floor", ARGON2_MEMORY_COST_KIB, 1, ARGON2_PARALLELISM, _SALT),
-        ("time above ceiling", ARGON2_MEMORY_COST_KIB, 17, ARGON2_PARALLELISM, _SALT),
-        ("parallelism above ceiling", ARGON2_MEMORY_COST_KIB, ARGON2_TIME_COST, 9, _SALT),
+        ("all-weak", 1, 1, 1, _SALT),
+        ("memory far below floor", 1024, ARGON2_TIME_COST, ARGON2_PARALLELISM, _SALT),
+        ("memory one below floor", _RECOVERY_READ_MIN_MEMORY_COST_KIB - 1, ARGON2_TIME_COST, ARGON2_PARALLELISM, _SALT),
+        ("time below floor", ARGON2_MEMORY_COST_KIB, _RECOVERY_READ_MIN_TIME_COST - 1, ARGON2_PARALLELISM, _SALT),
+        ("parallelism below floor", ARGON2_MEMORY_COST_KIB, ARGON2_TIME_COST, 0, _SALT),
         ("salt too short", ARGON2_MEMORY_COST_KIB, ARGON2_TIME_COST, ARGON2_PARALLELISM, b"s" * 15),
         ("salt too long", ARGON2_MEMORY_COST_KIB, ARGON2_TIME_COST, ARGON2_PARALLELISM, b"s" * 17),
         ("salt empty", ARGON2_MEMORY_COST_KIB, ARGON2_TIME_COST, ARGON2_PARALLELISM, b""),
-        ("max memory", 1024 * 1024, ARGON2_TIME_COST, ARGON2_PARALLELISM, _SALT),
-        ("max time", ARGON2_MEMORY_COST_KIB, 16, ARGON2_PARALLELISM, _SALT),
-        ("max parallelism", ARGON2_MEMORY_COST_KIB, ARGON2_TIME_COST, 8, _SALT),
     ],
 )
-def test_reader_window_equals_canonical_window(
+def test_below_floor_parameters_are_refused(
     label: str,
     memory_cost: int,
     time_cost: int,
     parallelism: int,
     salt: bytes,
 ) -> None:
-    """The reader admits exactly the canonical window -- no wider, no narrower.
+    """Parameters weaker than the security floor are refused.
 
-    This is the anti-divergence invariant. A future cost-bump to ``KdfParams``
-    that the recovery reader does not track fails here, in both directions.
+    DISCRIMINATING. Preserves the security win: the pre-fix reader accepted any
+    positive cost, so a tampered archive could drive the importer's KDF into a
+    regime an offline brute force clears cheaply.
     """
-    canonical = _canonical_accepts(
+    assert not _reader_accepts(
         memory_cost=memory_cost,
         time_cost=time_cost,
         parallelism=parallelism,
         salt=salt,
-    )
-    reader = _reader_accepts(
-        memory_cost=memory_cost,
-        time_cost=time_cost,
-        parallelism=parallelism,
-        salt=salt,
-    )
-
-    assert reader == canonical, (
-        f"{label}: recovery reader accepts={reader} but canonical KdfParams accepts={canonical}"
-    )
+    ), f"{label}: recovery reader accepted parameters below the security floor"
 
 
 def test_weak_parameters_are_refused_off_the_real_archive_wire(tmp_path: Path) -> None:
     """A tampered archive carrying weak costs is refused after a real wire round trip.
 
-    Uses the real sealed-archive writer and reader so the refusal is proven at
-    the boundary an attacker actually reaches, not only at the decoder helper.
+    DISCRIMINATING. Uses the real sealed-archive writer and reader so the
+    refusal is proven at the boundary an attacker actually reaches, not only at
+    the decoder helper.
     """
     archive = tmp_path / "weak.cadrumo-bucket.tar.gz"
     write_sealed_archive(
@@ -184,7 +241,10 @@ def test_weak_parameters_are_refused_off_the_real_archive_wire(tmp_path: Path) -
 
 
 def test_exporter_parameters_survive_the_real_archive_wire(tmp_path: Path) -> None:
-    """The exporter's own parameters survive the same real wire path unchanged."""
+    """The exporter's own parameters survive the same real wire path unchanged.
+
+    SUPPORTING: a no-stranding control, green under both implementations.
+    """
     archive = tmp_path / "baseline.cadrumo-bucket.tar.gz"
     write_sealed_archive(
         archive,
@@ -216,7 +276,10 @@ def test_exporter_parameters_survive_the_real_archive_wire(tmp_path: Path) -> No
 
 
 def test_non_argon2id_kdf_is_refused() -> None:
-    """A recovery wrap naming another KDF is refused before any derivation."""
+    """A recovery wrap naming another KDF is refused before any derivation.
+
+    SUPPORTING: the algorithm guard predates this change and is unaffected by it.
+    """
     payload = _recovery_wrap_bytes(
         _SALT,
         memory_cost=ARGON2_MEMORY_COST_KIB,
