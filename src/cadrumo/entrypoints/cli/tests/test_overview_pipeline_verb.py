@@ -16,10 +16,14 @@ cross-domain pipeline-health dashboard's operator contract from #238:
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
+from ....application.overview import ModeloReadinessState
+from .._overview_payloads import OverviewPipelineModeloPayload
 from ._modelo_work_ux_support import _create_profile, _invoke
 from ._modelo_work_ux_support import _isolated_cli_backend as _isolated_cli_backend
 from .envelope_helpers import unwrap_schema_envelope as _payload
@@ -197,3 +201,37 @@ def test_pipeline_is_read_only_and_safe_to_run_repeatedly(_isolated_cli_backend:
     assert first.exit_code == 0, first.output
     assert second.exit_code == 0, second.output
     assert _payload(first.output) == _payload(second.output)
+
+
+def test_pipeline_modelo_row_enforces_the_canonical_readiness_contract() -> None:
+    """The transport row must refuse what :class:`ModeloHealthRow` refuses.
+
+    ``state`` is a closed ``ModeloReadinessState`` and both finding counts are
+    cardinalities. The CLI row redeclared them as a free string and unbounded
+    integers, so a bogus readiness state or a negative count could cross the
+    ``overview.pipeline`` envelope.
+    """
+    row = OverviewPipelineModeloPayload(
+        modelo="130",
+        state=ModeloReadinessState.NOT_STARTED,
+        summary="nothing calculated yet",
+        next_command="aeat app modelo work create",
+    )
+    assert json.loads(row.model_dump_json())["state"] == ModeloReadinessState.NOT_STARTED.value
+
+    base = {
+        "modelo": "130",
+        "state": ModeloReadinessState.NOT_STARTED,
+        "summary": "s",
+        "next_command": "c",
+    }
+    for label, override in (
+        ("unknown readiness state", {"state": "bogus"}),
+        ("negative blocking count", {"blocking_finding_count": -1}),
+        ("negative warning count", {"warning_finding_count": -1}),
+    ):
+        try:
+            OverviewPipelineModeloPayload(**(base | override))
+        except ValidationError:
+            continue
+        pytest.fail(f"{label} was accepted by the transport row")
