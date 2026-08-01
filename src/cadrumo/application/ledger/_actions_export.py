@@ -13,6 +13,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+from ...core.atomic_write import atomic_write_bytes
 from ...core.hashing import content_hash_hex
 
 if TYPE_CHECKING:
@@ -108,7 +109,7 @@ def export_ledger_transactions(
         export_format=command.export_format,
     )
     if command.output_path is not None:
-        command.output_path.write_bytes(serialized.payload)
+        atomic_write_bytes(command.output_path, serialized.payload)
     export_id = _ledger_export_id(
         bucket_id=command.bucket_id,
         export_format=command.export_format.value,

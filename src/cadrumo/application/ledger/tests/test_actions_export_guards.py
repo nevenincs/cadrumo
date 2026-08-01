@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 import pytest
 
 from ._action_test_support import (
@@ -24,6 +26,8 @@ from ._action_test_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_STALE_EXPORT_BYTES = b"STALE-BUT-COMPLETE-PRIOR-EXPORT\n"
 
 
 def test_export_ledger_transactions_event_payload_stays_bounded_for_large_exports(
@@ -137,3 +141,53 @@ def test_export_ledger_transactions_writes_output_before_export_event(
     assert [event.event_type for event in event_repository.load().for_bucket(_BUCKET_ID)] == [
         BucketEventType.LEDGER_TRANSACTION_CREATED,
     ]
+    assert sorted(tmp_path.glob("*.tmp")) == []
+
+
+def test_export_ledger_transactions_replaces_prior_export_atomically(
+    secure_objects: SecureObjectRepository,
+    tmp_path: Path,
+) -> None:
+    """A prior export file is swapped out, never overwritten in place.
+
+    An operator hands the exported file to a gestor, so a torn write behind
+    a name that already existed is the failure this pins. A hard link keeps
+    a durable handle on the prior inode: an in-place write is observable
+    through it, an atomic stage-and-replace is not. The successful write
+    must still emit the export event.
+    """
+    transaction_repository, event_repository = _repositories(secure_objects)
+    create_manual_transaction(
+        ManualLedgerTransactionCommand(
+            bucket_id=_BUCKET_ID,
+            booked_date=date(2026, 5, 1),
+            amount=Decimal("25.00"),
+            direction=TransactionDirection.OUTGOING,
+            description="export row",
+            idempotency_key="export-atomic-replace",
+        ),
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+        occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+    )
+
+    output_path = tmp_path / "ledger-export.csv"
+    output_path.write_bytes(_STALE_EXPORT_BYTES)
+    witness = tmp_path / "ledger-export-witness.csv"
+    os.link(output_path, witness)
+    assert output_path.stat().st_ino == witness.stat().st_ino
+
+    result = export_ledger_transactions(
+        LedgerExportCommand(bucket_id=_BUCKET_ID, output_path=output_path),
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+        occurred_at=datetime(2026, 5, 2, 9, 0, tzinfo=UTC),
+    )
+
+    assert output_path.read_bytes() == result.payload
+    assert witness.read_bytes() == _STALE_EXPORT_BYTES
+    assert output_path.stat().st_ino != witness.stat().st_ino
+    assert sorted(tmp_path.glob("*.tmp")) == []
+    assert event_repository.load().for_bucket(_BUCKET_ID)[-1].event_type is (
+        BucketEventType.LEDGER_TRANSACTION_EXPORTED
+    )

@@ -13,12 +13,15 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Iterable, Iterator
 from pathlib import Path
+from typing import Protocol
 
 import httpx
 from pydantic import AnyHttpUrl, BaseModel, ValidationError
 
 from ...core import STRICT_FROZEN_CONFIG
+from ...core.atomic_write import atomic_write_stream, atomic_write_text
 from ...core.config import Settings, load_settings
 from ...core.hashing import hash_file
 from ...core.logging import get_logger
@@ -33,6 +36,12 @@ _logger = get_logger(__name__)
 _CHUNK_SIZE = 65_536
 _PDF_FILENAME = "source.pdf"
 _MANIFEST_FILENAME = "manifest.json"
+
+
+class _ChunkHasher(Protocol):
+    """Minimal hash interface needed while staging a streamed download."""
+
+    def update(self, data: bytes, /) -> object: ...
 
 
 class PartSpec(BaseModel):
@@ -207,9 +216,7 @@ def _stream_to_file(url: str, destination: Path) -> tuple[str, int]:
     sha256 hash in flight so the caller never needs to re-read the
     file from disk to verify it.
     """
-    destination.parent.mkdir(parents=True, exist_ok=True)
     sha = hashlib.sha256()
-    length = 0
     with httpx.stream(
         "GET",
         url,
@@ -217,14 +224,17 @@ def _stream_to_file(url: str, destination: Path) -> tuple[str, int]:
         timeout=load_settings().cadrumo_manuals_http_timeout_s,
     ) as response:
         response.raise_for_status()
-        with destination.open("wb") as out:
-            for chunk in response.iter_bytes(_CHUNK_SIZE):
-                if not chunk:
-                    continue
-                out.write(chunk)
-                sha.update(chunk)
-                length += len(chunk)
+        length = atomic_write_stream(destination, _hashing_chunks(response.iter_bytes(_CHUNK_SIZE), sha))
     return sha.hexdigest(), length
+
+
+def _hashing_chunks(chunks: Iterable[bytes], sha: _ChunkHasher) -> Iterator[bytes]:
+    """Yield non-empty source chunks while recording their content hash."""
+    for chunk in chunks:
+        if not chunk:
+            continue
+        sha.update(chunk)
+        yield chunk
 
 
 def write_manifest(manifest_path: Path, manifest: FetchedManualPart) -> None:
@@ -238,9 +248,9 @@ def write_manifest(manifest_path: Path, manifest: FetchedManualPart) -> None:
         ManifestError: If the file cannot be written due to an OS error.
     """
     try:
-        manifest_path.parent.mkdir(parents=True, exist_ok=True)
         payload = manifest.model_dump(mode="json")
-        manifest_path.write_text(
+        atomic_write_text(
+            manifest_path,
             json.dumps(payload, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
