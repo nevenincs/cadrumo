@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine, Mapping
 from re import compile
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Any, Literal, Protocol
 from unicodedata import category, normalize
 from urllib.parse import urlsplit
 
@@ -192,6 +192,72 @@ def normalize_response_text(text: str) -> str:
     return _WHITESPACE_RE.sub(" ", without_accents.casefold()).strip()
 
 
+SPANISH_NEGATIVE_VERDICT_MARKERS: tuple[str, ...] = (
+    "no consta",
+    "no valido",
+    "no es valido",
+    "no es un nif valido",
+    "el campo nif no es un nif valido",
+    "no identificado",
+    "no esta identificado",
+    "no se encuentra identificado",
+    "operador no identificado",
+    "invalid",
+)
+"""Normalised AEAT phrases that reject an identity, shared by every checker.
+
+Every sede identity checker reads the same Spanish rejection vocabulary off
+the same AEAT template family, so the negative table is one contract rather
+than a per-driver table. It is deliberately the union of the phrases observed
+across the checkers: a driver that omits one classifies an explicit rejection
+as ``unknown`` at best, and -- when a generic ``valido`` substring survives in
+its positive table -- as ``valid``, turning a refusal into a false pass.
+
+Markers are matched against :func:`normalize_response_text` output, so they
+are casefolded, unaccented, and whitespace-collapsed.
+"""
+
+
+type SedeVerdict = Literal["valid", "invalid", "unknown"]
+"""Closed verdict vocabulary every sede identity checker reports."""
+
+
+def extract_marker_verdict(
+    body_text: str,
+    *,
+    positive_markers: tuple[str, ...],
+    negative_markers: tuple[str, ...] = SPANISH_NEGATIVE_VERDICT_MARKERS,
+) -> SedeVerdict:
+    """Classify an AEAT response body as ``valid``, ``invalid``, or ``unknown``.
+
+    Negative markers are tested first and win outright. AEAT phrases a
+    rejection by negating the same word it uses to affirm (``no es un NIF
+    válido``), so a positive-first or negative-incomplete parser reads an
+    explicit refusal as a pass. Precedence, not marker richness, is what makes
+    the classification safe.
+
+    Args:
+        body_text: Raw response body text scraped from the AEAT page.
+        positive_markers: Driver-specific phrases that affirm the identity.
+            Positive vocabulary is surface-specific (a GROI registration
+            phrase does not affirm a VIES NIF-IVA), so it stays per driver.
+        negative_markers: Rejection phrases; defaults to the shared
+            :data:`SPANISH_NEGATIVE_VERDICT_MARKERS` contract.
+
+    Returns:
+        ``"invalid"`` on any negative marker, ``"valid"`` on any positive
+        marker, ``"unknown"`` for empty or structurally unanswerable text.
+    """
+    normalized = normalize_response_text(body_text)
+    if not normalized:
+        return "unknown"
+    if any(marker in normalized for marker in negative_markers):
+        return "invalid"
+    if any(marker in normalized for marker in positive_markers):
+        return "valid"
+    return "unknown"
+
+
 def registry_failure_message(exc: BaseException) -> str:
     """Build a registry-facing error string enriched with the failure_mode context field.
 
@@ -297,9 +363,12 @@ def nif_check_operation_tail(expected: Mapping[str, object]) -> tuple[RemoteOper
 
 
 __all__ = [
+    "SPANISH_NEGATIVE_VERDICT_MARKERS",
+    "SedeVerdict",
     "_LocateHelper",
     "_SedeCheckerModel",
     "assert_query_browser_action_for",
+    "extract_marker_verdict",
     "first_visible_locator",
     "make_locate_helper",
     "nif_check_operation_tail",
