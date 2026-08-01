@@ -35,25 +35,7 @@ if TYPE_CHECKING:
         StatusRecoveryView,
     )
     from ....application.workflow import WorkflowState
-    from ....core.classification import SensitivityClass
     from ....domain.user_profile import UserProfileRecord
-
-
-_MASK_KEYWORDS: frozenset[str] = frozenset(
-    {
-        "password",
-        "passphrase",
-        "secret",
-        "secreto",
-        "contraseña",
-        "clave",
-        "private_key",
-        "private key",
-        "token",
-        "api_key",
-        "apikey",
-    },
-)
 
 
 def present_status_tui(ctx: typer.Context) -> bool:
@@ -214,12 +196,17 @@ def _build_fact_rows(record: UserProfileRecord | None) -> tuple[StatusFactRow, .
     """Project the active profile record into masked/labelled fact rows.
 
     Labels resolve through the profile schema's per-field description; a
-    path with no schema field falls back to the raw dotted path. A fact is
-    masked when its schema field is ``SECRET``-classed or its path/label is
-    password/key-like, so no secret-shaped value reaches the screen.
+    path with no schema field falls back to the raw dotted path.
+
+    The masking decision is delegated to ``mask_profile_field``, the one
+    authority the profile overview also uses. This surface previously
+    carried its own keyword policy, which omitted ``credential`` and so
+    printed the Cl@ve credential inputs (``auth.dni_nie``,
+    ``auth.numero_soporte``, ``auth.fecha_validez``) in clear while the
+    overview masked them.
     """
     from ....adapters.inbound.tui import StatusFactRow
-    from ....application.user_profile import record_to_path_values
+    from ....application.user_profile import mask_profile_field, record_to_path_values
     from ....domain.user_profile import (
         UserProfileError,
         load_user_profile_schema,
@@ -239,22 +226,16 @@ def _build_fact_rows(record: UserProfileRecord | None) -> tuple[StatusFactRow, .
             field_def = schema.field(path)
         except UserProfileError:
             label = path
-            masked = _is_masked(path=path, label=path, sensitivity=None)
+            masked = mask_profile_field(path=path, label=path, sensitivity=None)
         else:
             label = field_def.description or path
-            masked = _is_masked(path=path, label=label, sensitivity=field_def.sensitivity)
+            masked = mask_profile_field(
+                path=path,
+                label=label,
+                sensitivity=field_def.sensitivity,
+            )
         rows.append(StatusFactRow(label=label, value=value, masked=masked))
     return tuple(rows)
-
-
-def _is_masked(*, path: str, label: str, sensitivity: SensitivityClass | None) -> bool:
-    """Decide whether a fact value must be masked on screen."""
-    from ....core.classification import SensitivityClass
-
-    if sensitivity is SensitivityClass.SECRET:
-        return True
-    haystack = f"{path} {label}".casefold()
-    return any(keyword in haystack for keyword in _MASK_KEYWORDS)
 
 
 __all__ = ["build_status_page_data", "present_status_tui"]

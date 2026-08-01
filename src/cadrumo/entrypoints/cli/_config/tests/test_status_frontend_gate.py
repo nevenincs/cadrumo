@@ -71,9 +71,10 @@ def test_presenter_module_exposes_a_read_only_builder() -> None:
 
 
 def test_secret_classed_field_is_masked() -> None:
+    from .....application.user_profile import mask_profile_field
     from .....core.classification import SensitivityClass
 
-    assert _status_frontend._is_masked(
+    assert mask_profile_field(
         path="identity.tax_id",
         label="NIF",
         sensitivity=SensitivityClass.SECRET,
@@ -89,17 +90,133 @@ def test_secret_classed_field_is_masked() -> None:
     ],
 )
 def test_password_or_key_like_field_is_masked(path: str, label: str) -> None:
-    assert _status_frontend._is_masked(path=path, label=label, sensitivity=None)
+    from .....application.user_profile import mask_profile_field
+
+    assert mask_profile_field(path=path, label=label, sensitivity=None)
 
 
 def test_plain_identity_field_is_not_masked() -> None:
+    from .....application.user_profile import mask_profile_field
     from .....core.classification import SensitivityClass
 
-    assert not _status_frontend._is_masked(
+    assert not mask_profile_field(
         path="identity.tax_id",
         label="NIF",
         sensitivity=SensitivityClass.IDENTITY,
     )
+
+
+# ── one masking authority: status must not diverge from the overview ────────
+
+
+def test_status_surface_holds_no_private_masking_policy() -> None:
+    """The status frontend must own no masking policy of its own.
+
+    DISCRIMINATING, on the mechanism rather than the output. It
+    previously carried a private ``_MASK_KEYWORDS`` set and an
+    ``_is_masked`` twin of the overview's decision; the two drifted, and
+    the drift ran in the unsafe direction -- the status set omitted
+    ``credential``, so this surface printed the Cl@ve credential inputs
+    in clear while the overview masked them.
+
+    Asserting on the absence of a second policy, rather than on masked
+    output, is deliberate: a re-introduced private policy that happened
+    to agree with the canonical one today would satisfy any output-shaped
+    assertion while restoring the drift hazard tomorrow.
+    """
+    assert not hasattr(_status_frontend, "_is_masked")
+    assert not hasattr(_status_frontend, "_MASK_KEYWORDS")
+
+
+@pytest.mark.parametrize(
+    "path",
+    ["auth.dni_nie", "auth.numero_soporte", "auth.fecha_validez"],
+)
+def test_clave_credential_inputs_mask_on_the_real_shipped_schema(path: str) -> None:
+    """The Cl@ve credential inputs mask under the schema really shipped.
+
+    DISCRIMINATING. These are encrypted-profile credential inputs whose
+    shipped descriptions call them exactly that. Label and sensitivity
+    are read from the real schema, not a stand-in, so this fails if
+    either the masking policy or the shipped wording stops covering them.
+
+    It asserts the masking DECISION for each named field, not the absence
+    of a secret from rendered output: a field simply missing from a
+    fixture would satisfy an output-shaped assertion while remaining
+    unmasked in production.
+    """
+    from .....application.user_profile import mask_profile_field
+    from .....domain.user_profile import load_user_profile_schema
+
+    field_def = load_user_profile_schema().field(path)
+    label = field_def.description or path
+    assert mask_profile_field(path=path, label=label, sensitivity=field_def.sensitivity), (
+        f"credential input {path!r} rendered unmasked"
+    )
+
+
+def test_every_shipped_schema_field_masks_identically_on_both_surfaces() -> None:
+    """No shipped field may mask on one surface and not the other.
+
+    SUPPORTING as currently written. Both surfaces now call the same
+    function, so this cannot fail while that holds -- it is a structural
+    restatement, not an independent measurement, and it passes under the
+    keyword-policy mutation. Its value is forward-looking: it fails the
+    day someone re-forks the decision, which the mechanism test above
+    catches more directly.
+
+    It walks every field the real schema declares rather than a sample,
+    so a field added later is covered without touching this test.
+    """
+    from .....application.user_profile import mask_profile_field
+    from .....application.user_profile._overview import mask_profile_field as overview_decision
+    from .....domain.user_profile import load_user_profile_schema
+
+    schema = load_user_profile_schema()
+    divergent: list[str] = []
+    for section in schema.sections:
+        for field in section.fields:
+            path = f"{section.key}.{field.key}"
+            label = field.description or path
+            status_masked = mask_profile_field(path=path, label=label, sensitivity=field.sensitivity)
+            if status_masked != overview_decision(path=path, label=field.description, sensitivity=field.sensitivity):
+                divergent.append(path)
+    assert not divergent, f"masking diverges between overview and status for: {divergent}"
+
+
+def test_unknown_field_falls_back_to_the_keyword_policy() -> None:
+    """A path the schema does not know still masks on its name alone.
+
+    DISCRIMINATING on the ``credential`` keyword. The status builder
+    passes ``sensitivity=None`` for an unrecognised path, so the keyword
+    branch is the only thing standing between a stray credential-shaped
+    fact and the screen. The negative case (``unknown.city``) is
+    supporting: it pins that the policy is not simply mask-everything.
+    """
+    from .....application.user_profile import mask_profile_field
+
+    assert mask_profile_field(path="unknown.api_credential", label="unknown.api_credential", sensitivity=None)
+    assert mask_profile_field(path="unknown.private_key", label="unknown.private_key", sensitivity=None)
+    assert not mask_profile_field(path="unknown.city", label="unknown.city", sensitivity=None)
+
+
+@pytest.mark.parametrize(
+    "fragment",
+    ["api_key", "apikey", "private_key", "private key"],
+)
+def test_bare_key_keyword_still_subsumes_the_compound_key_names(fragment: str) -> None:
+    """Trimming bare ``key`` from the policy must not unmask compound keys.
+
+    DISCRIMINATING on the ``key`` keyword. The canonical set lists
+    ``key`` and deliberately omits ``api_key`` / ``apikey`` /
+    ``private_key`` / ``private key`` because ``key`` already subsumes
+    them. That subsumption is load-bearing -- the pre-fix status set
+    listed the compounds explicitly, so consolidating onto bare ``key``
+    silently relies on it -- and is pinned here rather than assumed.
+    """
+    from .....application.user_profile import mask_profile_field
+
+    assert mask_profile_field(path=f"vault.{fragment}", label=fragment, sensitivity=None)
 
 
 # ── fact rows over a real record and the real schema ────────────────────────

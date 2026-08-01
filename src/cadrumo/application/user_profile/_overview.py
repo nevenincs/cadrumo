@@ -61,11 +61,32 @@ does not leak how long the secret is.
 """
 
 _MASK_KEYWORDS: Final[frozenset[str]] = frozenset(
-    {"password", "passphrase", "secret", "token", "key", "credential"},
+    {
+        "password",
+        "passphrase",
+        "secret",
+        "secreto",
+        "contraseña",
+        "clave",
+        "credential",
+        "token",
+        "key",
+    },
 )
 """Substrings that mark a field secret-shaped even when the schema does
 not class it ``SECRET``. Defence in depth: a field added without the
-right sensitivity still masks if it is named like a credential."""
+right sensitivity still masks if it is named like a credential.
+
+Both English and Spanish stems are carried because profile field
+descriptions are authored in either language, and a surface that only
+knew one of them would unmask the other's fields.
+
+Bare ``key`` deliberately subsumes the compound key names --
+``api_key``, ``apikey``, ``private_key``, ``private key`` -- so they are
+not listed separately. That subsumption is load-bearing rather than
+incidental, and is pinned by a test: trimming ``key`` from this set
+would silently unmask every compound key field.
+"""
 
 
 class ProfileFieldView(BaseModel):
@@ -132,8 +153,29 @@ class ProfileOverview(BaseModel):
         return not self.missing_required
 
 
-def _mask_field(*, path: str, label: str, sensitivity: SensitivityClass | None) -> bool:
-    """Decide whether a value must be masked before it reaches a surface."""
+def mask_profile_field(*, path: str, label: str, sensitivity: SensitivityClass | None) -> bool:
+    """Decide whether a profile field's value must be masked before display.
+
+    This is the single masking authority for every surface that projects
+    profile facts -- the overview behind the manager landing page and the
+    read-only status page alike. It is deliberately public and shared:
+    two surfaces that decide confidentiality independently will diverge,
+    and the direction that divergence takes is a surface exposing a value
+    its sibling protects.
+
+    A field masks when the schema classes it ``SECRET``, or -- defence in
+    depth -- when its path or label reads like a credential.
+
+    Args:
+        path: Dotted schema path of the field, e.g. ``auth.dni_nie``.
+        label: Operator-facing description, or the path when none exists.
+        sensitivity: Declared sensitivity, or ``None`` for a field the
+            schema does not know (masking then rests on the keywords).
+
+    Returns:
+        Whether the value must be replaced with
+        :data:`MASKED_PLACEHOLDER` before it reaches an operator.
+    """
     if sensitivity is SensitivityClass.SECRET:
         return True
     haystack = f"{path} {label}".casefold()
@@ -179,7 +221,11 @@ def build_profile_overview(
         for field in section.fields:
             path = f"{section.key}.{field.key}"
             raw = values.get(path)
-            masked = _mask_field(path=path, label=field.description, sensitivity=field.sensitivity)
+            masked = mask_profile_field(
+                path=path,
+                label=field.description,
+                sensitivity=field.sensitivity,
+            )
             present = raw is not None and raw != ""
             field_views.append(
                 ProfileFieldView(
@@ -212,4 +258,5 @@ __all__ = [
     "ProfileOverview",
     "ProfileSectionView",
     "build_profile_overview",
+    "mask_profile_field",
 ]

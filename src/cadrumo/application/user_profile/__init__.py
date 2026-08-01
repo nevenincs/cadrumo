@@ -247,6 +247,7 @@ if TYPE_CHECKING:
         ProfileOverview,
         ProfileSectionView,
         build_profile_overview,
+        mask_profile_field,
     )
     from ._preflight import ProfilePreflightService
     from ._profile_pointer_transaction import active_profile_pointer_transaction
@@ -455,6 +456,7 @@ _LAZY_EXPORTS: dict[str, str] = {
                 "ProfileOverview",
                 "ProfileSectionView",
                 "build_profile_overview",
+                "mask_profile_field",
             ),
         ),
         (
@@ -638,6 +640,7 @@ __all__ = [
     "list_profile_key_records",
     "login_profile",
     "logout_active_profile",
+    "mask_profile_field",
     "missing_filing_baseline_flags",
     "open_censo_divergences",
     "prepare_profile_export",
