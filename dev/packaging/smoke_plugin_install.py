@@ -11,7 +11,6 @@ oracle, never from model narration.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 import shutil
@@ -28,6 +27,7 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 from cadrumo.agent import materialise_marketplace  # noqa: E402
+from dev.packaging._hashing import sha256_path  # noqa: E402
 from dev.packaging.installed_mcp_oracle import run_installed_mcp_oracle  # noqa: E402
 from dev.packaging.python_cohort import PythonCohort, load_python_cohort  # noqa: E402
 
@@ -84,14 +84,6 @@ def _tool_result_verdict(debug_text: str, session_stdout: str) -> str:
         raise SystemExit(f"Claude client session reported is_error=true: {result_text}")
     dispatch_index = debug_text.rfind(f"tool={_CLIENT_TOOL_NAME}")
     return debug_text[dispatch_index : dispatch_index + 400].strip()
-
-
-def _sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def _run(
@@ -170,7 +162,7 @@ def _verify_installed_cohort(plugin_root: Path, cohort: PythonCohort) -> dict[st
     for distribution, filename in artifacts.items():
         if not isinstance(filename, str) or Path(filename).name != filename:
             raise SystemExit(f"installed plugin artifact path is invalid: {filename!r}")
-        observed[distribution] = _sha256(retained_path.parent / filename)
+        observed[distribution] = sha256_path(retained_path.parent / filename)
     if observed != expected_sha256:
         raise SystemExit("installed plugin cohort bytes do not match the tested cohort")
     return retained
