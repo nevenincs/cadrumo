@@ -886,7 +886,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
 # briefly sat here was retired the same way once the five reconciliation value
 # types moved to the record module that owns them, which removed the cycle
 # rather than documenting it.
-_ALLOWLIST_EDGE_CEILING: int = 485
+_ALLOWLIST_EDGE_CEILING: int = 484
 
 
 def _cadrumo_relative(dotted: str) -> str:
