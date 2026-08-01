@@ -15,8 +15,12 @@ command emitters keep one payload import surface.
 
 from __future__ import annotations
 
-from pydantic import Field
+from datetime import datetime
 
+from pydantic import Field, model_validator
+
+from ...application.ledger import LLMProvider
+from ...domain.transactions import BusinessClassification, LedgerClassificationRule
 from ._decimal_wire import DecimalWireText
 from ._schemas import OutputSchema, register_schema
 
@@ -34,13 +38,26 @@ class ClassificationRulePayload(OutputSchema):
     values run before higher ones.
     """
 
-    rule_id: str
-    description_pattern: str
-    classification: str
+    rule_id: str = Field(min_length=64, max_length=64)
+    description_pattern: str = Field(min_length=1)
+    classification: BusinessClassification
     category_id: str | None = None
-    priority: int
-    actor: str
-    created_at: str
+    priority: int = Field(ge=1)
+    actor: str = Field(min_length=1)
+    created_at: datetime
+
+    @model_validator(mode="after")
+    def _validate_canonical_rule(self) -> ClassificationRulePayload:
+        LedgerClassificationRule(
+            rule_id=self.rule_id,
+            description_pattern=self.description_pattern,
+            classification=self.classification,
+            category_id=self.category_id,
+            priority=self.priority,
+            created_at=self.created_at,
+            actor=self.actor,
+        )
+        return self
 
 
 @register_schema("ledger.rule.add")
@@ -80,8 +97,8 @@ class RuleApplyMatchPayload(OutputSchema):
 
     transaction_id: str
     description: str
-    matched_rule_id: str
-    classification: str
+    matched_rule_id: str = Field(min_length=64, max_length=64)
+    classification: BusinessClassification
 
 
 class RuleApplyAppliedPayload(OutputSchema):
@@ -97,8 +114,8 @@ class RuleApplyAppliedPayload(OutputSchema):
     """
 
     transaction_id: str
-    matched_rule_id: str
-    classification: str
+    matched_rule_id: str = Field(min_length=64, max_length=64)
+    classification: BusinessClassification
 
 
 @register_schema("ledger.rule.apply")
@@ -139,8 +156,8 @@ class LLMProviderAvailabilityPayload(OutputSchema):
     not spawn the provider CLI or send transaction data to a cloud service.
     """
 
-    provider: str
-    cli_binary: str
+    provider: LLMProvider
+    cli_binary: str = Field(min_length=1)
     available: bool
     resolved_path: str | None = None
 
