@@ -23,6 +23,7 @@ from ...core.external_constants import (
     MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR,
     WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR,
 )
+from ...core.time import validate_utc_aware
 from ..contribuyente import (
     UE_EEA_COUNTRY_CODES,
     FiscalResidency,
@@ -907,7 +908,10 @@ class Schedule(BaseModel):
         obligations: Tuple of :class:`ModeloDeadline` ordered by
             ``(closes_on, modelo, period)``.
         generated_at: UTC timestamp of when :meth:`DeadlineEngine.compute`
-            built this schedule. The only non-deterministic field.
+            built this schedule. The only non-deterministic field, and
+            validated as UTC-aware rather than merely documented as such:
+            a naive or offset timestamp on filing evidence is ambiguous
+            about the day a window opened or closed.
     """
 
     model_config = _STRICT_FROZEN
@@ -916,3 +920,10 @@ class Schedule(BaseModel):
     year: int = Field(ge=1900, le=2999)
     obligations: tuple[ModeloDeadline, ...]
     generated_at: datetime
+
+    @field_validator("generated_at")
+    @classmethod
+    def _require_utc_generated_at(cls, value: datetime) -> datetime:
+        """Route the stamp through the canonical UTC-aware contract."""
+        return validate_utc_aware(value)
+
