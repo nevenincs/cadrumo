@@ -19,12 +19,19 @@ results stay authoritative while these classes expose JSON-safe
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import TYPE_CHECKING, Literal
 
 from pydantic import Field
 
 from ...core import Period
 from ...core.identity import BucketId
+from ...domain.buckets import (
+    BucketActorLabel,
+    BucketEventId,
+    BucketEventObjectType,
+    BucketEventType,
+)
 from ...domain.calculations.registry import (
     BindingId,
     CasillaId,
@@ -41,6 +48,7 @@ from ...domain.modelos import (
     VerificationReportId,
     WorkUnitId,
 )
+from ._decimal_wire import DecimalWireText
 from ._modelo_aux_payloads import (
     EvidenceBundleCheckFindingPayload,
     EvidenceRecordRefPayload,
@@ -1019,26 +1027,39 @@ class ModeloCompareResult(OutputSchema):
 
 
 class ModeloLifecycleEventPayload(OutputSchema):
-    """One bucket event in the modelo history output."""
+    """One bucket event in the modelo history output.
 
-    event_id: str
-    event_type: str
-    occurred_at: str
-    actor: str
-    object_type: str
-    object_id: str
+    Projects :class:`~cadrumo.domain.buckets.BucketEvent` through the identity
+    aliases and closed enums that package already exports, rather than
+    re-declaring their shape as free strings. Enum members and ``datetime``
+    values render to the same JSON the former hand-built mapping emitted, so the
+    wire form is unchanged.
+    """
+
+    event_id: BucketEventId
+    event_type: BucketEventType
+    occurred_at: datetime
+    actor: BucketActorLabel
+    object_type: BucketEventObjectType
+    object_id: str = Field(min_length=1, max_length=128)
     payload: dict[str, str]
 
 
 @register_schema("modelo.history")
 class ModeloHistoryResult(OutputSchema):
-    """Chronological modelo lifecycle history result."""
+    """Chronological modelo lifecycle history result.
+
+    ``period`` stays a free token: the filter accepts registry period codes and
+    the censo lifecycle words (``alta`` / ``modificacion`` / ``baja``), and an
+    unmatched token legitimately yields an empty history rather than a refusal.
+    Only its blankness is constrained.
+    """
 
     operation: str = "modelo.history"
-    modelo: str
-    year: int | None
-    period: str | None
-    count: int
+    modelo: str = Field(min_length=1)
+    year: int | None = Field(default=None, ge=2000, le=2099)
+    period: str | None = Field(default=None, min_length=1)
+    count: int = Field(ge=0)
     events: list[ModeloLifecycleEventPayload]
 
 
@@ -1064,10 +1085,10 @@ class M130AccumulatedPayload(OutputSchema):
     per-casilla path is :class:`CasillaObservationPayload`.
     """
 
-    ingresos: str
-    gastos: str
-    rendimiento_neto: str
-    pagos_fraccionados: str
+    ingresos: DecimalWireText
+    gastos: DecimalWireText
+    rendimiento_neto: DecimalWireText
+    pagos_fraccionados: DecimalWireText
 
 
 class M100ProjectionPayload(OutputSchema):

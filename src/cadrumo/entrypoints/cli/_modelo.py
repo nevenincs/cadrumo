@@ -1200,10 +1200,10 @@ def modelo_history(
         events=[
             ModeloLifecycleEventPayload(
                 event_id=e.event_id,
-                event_type=e.event_type.value,
-                occurred_at=e.occurred_at.isoformat(),
+                event_type=e.event_type,
+                occurred_at=e.occurred_at,
                 actor=e.actor,
-                object_type=e.object_type.value,
+                object_type=e.object_type,
                 object_id=e.object_id,
                 payload=dict(e.payload),
             )
