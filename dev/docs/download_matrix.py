@@ -45,7 +45,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, model_validator
 
 from dev.packaging.cohort_manifest import ArtifactKind
 
@@ -448,6 +448,20 @@ class DownloadLatest(BaseModel):
     assets: tuple[DownloadAsset, ...] = Field(min_length=1)
 
 
+_HTTP_URL_ADAPTER = TypeAdapter(AnyHttpUrl)
+
+
+def _release_download_base_url(value: str) -> str:
+    """Return one canonical HTTPS release directory URL suitable for asset projection."""
+    try:
+        parsed = _HTTP_URL_ADAPTER.validate_python(value)
+    except ValidationError as exc:
+        raise ValueError("release_base_url must be a canonical HTTPS URL without query or fragment components") from exc
+    if parsed.scheme != "https" or parsed.query is not None or parsed.fragment is not None:
+        raise ValueError("release_base_url must be a canonical HTTPS URL without query or fragment components")
+    return str(parsed).rstrip("/")
+
+
 def build_download_latest(
     *,
     cohort_manifest_path: Path,
@@ -463,7 +477,7 @@ def build_download_latest(
     from dev.packaging.cohort_manifest import CohortManifest
 
     manifest = CohortManifest.model_validate_json(cohort_manifest_path.read_text(encoding=_UTF_8))
-    base = release_base_url.rstrip("/") if release_base_url else None
+    base = _release_download_base_url(release_base_url) if release_base_url else None
     assets = tuple(
         DownloadAsset(
             name=record.name,
