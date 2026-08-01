@@ -4,7 +4,7 @@ tags:
   - '#filing-period-casilla-channel'
 date: '2026-08-01'
 modified: '2026-08-01'
-body_hash: 'sha256:6f24c85e7d2e1f66db353135415df38a55d49f4f47f529a9aa984d750a162a9d'
+body_hash: 'sha256:57241e05149541ec22d0641d7462fe90802e1af3bc78ff2d7aeeff59a99c2e61'
 tier: L2
 related:
   - '[[2026-08-01-filing-period-casilla-channel-adr]]'
@@ -48,16 +48,16 @@ Deliver the period-token fill, the adopted three-package typed-scalar routing se
 
 Fix the calculate-boundary override routing, retire the dead ordinal projection, and reconcile the predicate-validator text gates to family-derived membership.
 
-- [ ] `P02.S10` - Derive the calculate-boundary override text-channel membership from registry_scalar_value_type instead of the text literal; `src/cadrumo/application/modelo/_calculate_input.py`.
-- [ ] `P02.S11` - Retire declaration_period_ordinal and its ordinal table with their tests (zero production consumers confirmed at HEAD, no sweep needed); `src/cadrumo/core/_period.py`.
-- [ ] `P02.S12` - Reconcile the casilla_equals predicate text gates to family-derived membership with instructive refusals; `src/cadrumo/domain/calculations/registry/_validate_verification_predicates.py`.
+- [x] `P02.S10` - Derive the calculate-boundary override text-channel membership from registry_scalar_value_type instead of the text literal; `src/cadrumo/application/modelo/_calculate_input.py`.
+- [x] `P02.S11` - Retire declaration_period_ordinal and its ordinal table with their tests (zero production consumers confirmed at HEAD, no sweep needed); `src/cadrumo/core/_period.py`.
+- [x] `P02.S12` - Reconcile the casilla_equals predicate text gates to family-derived membership with instructive refusals; `src/cadrumo/domain/calculations/registry/_validate_verification_predicates.py`.
 
 ### Phase `P03` - refresh goldens and unblock the docs publish
 
 Move the committed cli-sequence goldens from the ordinal to the token and prove the strict docs build green so the authorised publish can proceed.
 
-- [ ] `P03.S13` - Refresh the cli-sequence goldens moving decl.periodo values 1 through 4 to 1T through 4T across the 54 occurrences; `docs/_sequences`.
-- [ ] `P03.S14` - Prove the strict docs build and documented-command conformance gates green and report the publish unblocked; `dev/docs/tests/test_docs_build.py`.
+- [x] `P03.S13` - Refresh the cli-sequence goldens moving decl.periodo values 1 through 4 to 1T through 4T across the 54 occurrences; `docs/_sequences`.
+- [x] `P03.S14` - Prove the strict docs build and documented-command conformance gates green and report the publish unblocked; `dev/docs/tests/test_docs_build.py`.
 
 ### Phase `P04` - track the named follow-ups
 
