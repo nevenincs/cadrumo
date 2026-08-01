@@ -654,7 +654,7 @@ def build_server(
     # reachable through the ``execute`` meta-tool and a direct call by name -
     # it is discovered, not listed.
     meta_tools = build_meta_sdk_tools()
-    # The hybrid command-search index backing the ``search`` meta-tool, built
+    # The lexical command-search index backing the ``search`` meta-tool, built
     # once over the FULL descriptor set so discovery reaches every verb, not
     # only the advertised surface.
     command_index = build_command_search_index(descriptors)
