@@ -43,7 +43,6 @@ from __future__ import annotations
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal, Protocol
@@ -59,6 +58,7 @@ from ...core.resources import bundled_path
 # cross-domain snapshot check required by Modelo 100 snapshots.
 from ...domain.calculations.registry import (
     CalculationCompletenessManifest,
+    CasillaConstraints,
     CasillaDefinition,
     CasillaId,
     ExportLayoutDefinition,
@@ -69,10 +69,12 @@ from ...domain.calculations.registry import (
     ModeloRevision,
     RegistrySnapshot,
     RegistrySnapshotError,
+    RegistryValidationError,
     SourceReference,
     SourceRefId,
     ValidatedRegistryAuthority,
     expression_casilla_refs,
+    registry_scalar_value_type,
     revision_reference_identity_failures,
 )
 from ...domain.filing import CasillaCollection, CasillaSchema, ModeloBuilderError
@@ -108,8 +110,8 @@ class RegistryCasillaSchema(BaseModel):
     """Filing schema projection for one registry casilla.
 
     Strict, frozen pydantic v2 projection preserving typed IDs,
-    ``Decimal`` bounds, and the regulatory grounding (``legal_refs``,
-    ``source_refs``) from the authoritative
+    complete :class:`~domain.calculations.registry.CasillaConstraints` contract
+    and regulatory grounding (``legal_refs``, ``source_refs``) from the authoritative
     :class:`~domain.calculations.registry.CasillaDefinition`.
     """
 
@@ -122,8 +124,7 @@ class RegistryCasillaSchema(BaseModel):
     formula_input_casilla_ids: tuple[CasillaId, ...]
     legal_refs: tuple[LegalRefId, ...]
     source_refs: tuple[SourceRefId, ...]
-    min_value: Decimal | None = None
-    max_value: Decimal | None = None
+    constraints: CasillaConstraints | None = None
     default: object | None = None
 
 
@@ -665,11 +666,6 @@ def _casilla_schema(
     if formula is not None:
         formula_id = formula.id
         formula_input_casilla_ids = tuple(dict.fromkeys(expression_casilla_refs(formula.expression)))
-    min_value: Decimal | None = None
-    max_value: Decimal | None = None
-    if casilla.constraints is not None:
-        min_value = casilla.constraints.min_value
-        max_value = casilla.constraints.max_value
     return RegistryCasillaSchema(
         casilla_id=casilla.id,
         value_type=registry_value_type(casilla.data_type),
@@ -678,8 +674,7 @@ def _casilla_schema(
         formula_input_casilla_ids=formula_input_casilla_ids,
         legal_refs=casilla.legal_refs,
         source_refs=casilla.source_refs,
-        min_value=min_value,
-        max_value=max_value,
+        constraints=casilla.constraints,
     )
 
 
@@ -694,32 +689,14 @@ def registry_value_type(data_type: str) -> str:
         ModeloBuilderError: When ``data_type`` is not a supported registry
             casilla type.
     """
-    if data_type in {"decimal", "money", "ratio"}:
-        return "decimal"
-    if data_type in {"integer", "year"}:
-        return "int"
-    if data_type in {
-        "text",
-        "nif",
-        "nif_iva",
-        "name",
-        "period_code",
-        "country_code",
-        "province_code",
-        "municipality_code",
-        "postal_code",
-        "iban",
-    }:
-        return "str"
-    if data_type == "boolean":
-        return "bool"
-    if data_type == "date":
-        return "date"
-    raise ModeloBuilderError(
-        f"unsupported registry casilla data type {data_type!r}",
-        translated_message="application.filing.runtime.errors.unsupported_casilla_data_type",
-        context={"data_type": data_type},
-    )
+    try:
+        return registry_scalar_value_type(data_type)
+    except RegistryValidationError as exc:
+        raise ModeloBuilderError(
+            str(exc),
+            translated_message="application.filing.runtime.errors.unsupported_casilla_data_type",
+            context={"data_type": data_type},
+        ) from exc
 
 
 __all__ = [

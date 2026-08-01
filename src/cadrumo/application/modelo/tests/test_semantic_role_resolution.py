@@ -89,17 +89,54 @@ def test_declaration_period_inputs_refuse_ambiguous_semantic_role() -> None:
         )
 
 
-def test_declaration_period_inputs_project_real_registry_quarter_ordinal() -> None:
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=2025, period="1T")
+@pytest.mark.parametrize(
+    ("period_code", "expected_token"),
+    [("1T", "1T"), ("3T", "3T")],
+)
+def test_declaration_period_inputs_project_real_registry_period_token(
+    period_code: str,
+    expected_token: str,
+) -> None:
+    """The ``filing_period`` role lands on the string channel as the AEAT token.
+
+    The casilla declares ``data_type = "period_code"``, so its value belongs on
+    the typed text-scalar channel; the Decimal channel carries only the
+    int-family ``filing_year`` role.
+    """
+    snapshot = resources().modelos.authority.snapshot("303", filing_year=2025, period=period_code)
     filing_period = next(casilla for casilla in snapshot.revision.casillas if casilla.semantic_role == "filing_period")
+    filing_year = next(casilla for casilla in snapshot.revision.casillas if casilla.semantic_role == "filing_year")
 
     resolved = binding_resolution.resolve_declaration_period_inputs(
         snapshot.revision,
         filing_year=2025,
-        period=Period.from_year_and_code(2025, "1T"),
+        period=Period.from_year_and_code(2025, period_code),
     )
 
-    assert resolved[filing_period.id] == Decimal("1")
+    assert resolved.text_casilla_inputs[filing_period.id] == expected_token
+    assert filing_period.id not in resolved.casilla_inputs
+    assert resolved.casilla_inputs[filing_year.id] == Decimal("2025")
+
+
+def test_declaration_period_inputs_express_an_extended_oss_period() -> None:
+    """An ``EXT-`` quarter is expressible; the retired ordinal projection was not.
+
+    ``Period.declaration_period_ordinal`` returns ``None`` for every extended
+    OSS/IOSS token, so the previous ordinal fill raised for Modelo 369 rather
+    than producing a value. The token is total over every declared period form.
+    """
+    snapshot = resources().modelos.authority.snapshot("369", filing_year=2025, period="EXT-1T")
+    filing_period = next(casilla for casilla in snapshot.revision.casillas if casilla.semantic_role == "filing_period")
+    period = Period.from_year_and_code(2025, "EXT-1T")
+    assert period.declaration_period_ordinal is None
+
+    resolved = binding_resolution.resolve_declaration_period_inputs(
+        snapshot.revision,
+        filing_year=2025,
+        period=period,
+    )
+
+    assert resolved.text_casilla_inputs[filing_period.id] == "EXT-1T"
 
 
 def _snapshot_with_duplicate_role(

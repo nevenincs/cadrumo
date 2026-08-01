@@ -206,14 +206,12 @@ class ModeloValidator:
             if not isinstance(value.value, Decimal | int):
                 continue
             numeric = Decimal(value.value) if isinstance(value.value, int) else value.value
-            if casilla.min_value is not None and numeric < casilla.min_value:
-                out.append(self._range_finding(value.casilla_id, "below"))
-            if casilla.max_value is not None and numeric > casilla.max_value:
-                out.append(self._range_finding(value.casilla_id, "above"))
+            if casilla.constraints is not None and casilla.constraints.violates(numeric) is not None:
+                out.append(self._range_finding(value.casilla_id))
         return out
 
     @staticmethod
-    def _range_finding(casilla_id: CasillaId, direction: str) -> ModeloValidationFinding:
+    def _range_finding(casilla_id: CasillaId) -> ModeloValidationFinding:
         return ModeloValidationFinding(
             casilla_id=casilla_id,
             severity=BaseSeverity.ERROR,

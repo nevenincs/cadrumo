@@ -423,16 +423,18 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         ),
         **dict(prepared.backend_casilla_inputs or {}),
     }
-    resolved_inputs = _resolve_calculation_inputs(
+    channel_inputs = _resolve_calculation_inputs(
         revision=snapshot.revision,
         filing_year=work_unit.filing_year,
         period=work_unit.period,
         backend_casilla_inputs=backend_casilla_inputs,
         resolved_bindings=prepared.channels.bindings,
         casilla_inputs=prepared.casilla_inputs,
+        text_casilla_inputs=text_casilla_inputs,
     )
+    resolved_inputs = channel_inputs.casilla_inputs
 
-    resolved_text_inputs = validated_text_input_casilla_ids(text_casilla_inputs or {})
+    resolved_text_inputs = validated_text_input_casilla_ids(channel_inputs.text_casilla_inputs)
 
     engine_result = calculate_registry_snapshot(
         snapshot,

@@ -32,6 +32,10 @@ _M303_SOPORTADO_INTERIORES_CASILLA: CasillaId = validated_casilla_id(
     "iva.soportado.interiores",
     surface="_M303_SOPORTADO_INTERIORES_CASILLA",
 )
+_M303_PRORRATA_VOLUME_CASILLA: CasillaId = validated_casilla_id(
+    "iva.prorrata-volumen-con-derecho",
+    surface="_M303_PRORRATA_VOLUME_CASILLA",
+)
 _M390_EJERCICIO_CASILLA: CasillaId = validated_casilla_id("decl.ejercicio", surface="_M390_EJERCICIO_CASILLA")
 
 
@@ -90,6 +94,29 @@ def test_modelo_build_draft_projects_registry_backed_draft(
     assert draft.modelo == modelo
     assert draft.period == period
     assert draft.profile_tax_id == "12345678Z"
+
+
+def test_modelo_303_build_draft_blocks_negative_prorrata_volume() -> None:
+    """Registry IVA prorrata volume non-negativity keeps the draft blocking."""
+    period = Period.from_year_and_code(2025, "1T")
+    draft = build_draft(
+        modelo="303",
+        period=period,
+        profile=_profile(),
+        inputs={
+            _M303_REPERCUTIDO_GENERAL_BASE_CASILLA: Decimal("10000.00"),
+            _M303_SOPORTADO_INTERIORES_CASILLA: Decimal("200.00"),
+            _M303_PRORRATA_VOLUME_CASILLA: Decimal("-1"),
+            "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
+        },
+        schema_provider=build_runtime_schema_provider(modelos=("303",)),
+    )
+
+    assert draft.status is ModeloDraftStatus.BORRADOR
+    assert any(
+        finding.code == "casilla-out-of-range" and finding.casilla_id == _M303_PRORRATA_VOLUME_CASILLA
+        for finding in draft.findings
+    )
 
 
 def test_modelo_390_export_produces_fichero_boe_from_real_registry(tmp_path: Path) -> None:

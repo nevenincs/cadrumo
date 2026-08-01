@@ -97,6 +97,22 @@ def test_refs_survive_projection(
         )
 
 
+def test_complete_constraints_survive_projection() -> None:
+    """Filing schemas carry the registry's complete constraint contract verbatim."""
+    snapshot = resources().modelos.authority.snapshot(
+        _TEST_MODELO,
+        filing_year=_TEST_YEAR,
+        period=_TEST_PERIOD.registry_token,
+    )
+    source_constraints = {casilla.id: casilla.constraints for casilla in snapshot.revision.casillas}
+    provider = build_runtime_schema_provider(modelos=[_TEST_MODELO], filing_year=_TEST_YEAR, period=_TEST_PERIOD)
+    schemas = provider.get_collection(_TEST_MODELO).all()
+
+    assert any(constraints is not None and constraints.sign != "any" for constraints in source_constraints.values())
+    for schema in schemas:
+        assert schema.constraints == source_constraints[schema.casilla_id]
+
+
 def test_subview_catalogue_ref_ids_survive_projection() -> None:
     """RegistryModeloSubview must carry the same catalogue refs as the source snapshot."""
     snapshot = resources().modelos.authority.snapshot(

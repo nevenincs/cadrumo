@@ -25,6 +25,7 @@ from .._renta_web_open_oracle import (
     _overall_verdict,
     _parse_decimal_text,
     equivalent_renta_web_open_value,
+    serialize_renta_web_open_replay_decimal,
     validate_renta_web_open_expected_casilla_ids,
 )
 from .._schema import LiveCrossReferenceDecision
@@ -242,6 +243,17 @@ def test_parse_decimal_text_handles_spanish_locale_and_invalid_inputs() -> None:
         ("1.234.567,89", Decimal("1234567.89")),
     ):
         assert _parse_decimal_text(raw) == expected, raw
+
+
+def test_replay_decimal_serialization_reuses_production_parser_rules() -> None:
+    """Capture expectations retain the same NBSP, blank, and malformed policy as replay."""
+    for raw, expected in (
+        ("5\xa0956.65", "5956.65"),
+        ("1.234,56", "1234.56"),
+        ("", None),
+        ("not-a-number", None),
+    ):
+        assert serialize_renta_web_open_replay_decimal(raw) == expected, raw
 
 
 # ---------------------------------------------------------------------------

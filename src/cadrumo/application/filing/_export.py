@@ -58,6 +58,7 @@ from ...core import (
     ExportLayoutFormat,
     Period,
 )
+from ...core.atomic_write import atomic_write_bytes
 from ...core.decimal import coerce_decimal
 from ...core.hashing import sha256_file, sha256_hex
 from ...core.logging import get_logger
@@ -333,8 +334,7 @@ def export_draft(
             manifest=subview.completeness_manifest,
             casilla_metadata=subview.casilla_record_metadata,
         )
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_bytes(payload)
+    atomic_write_bytes(output_path, payload)
     digest = sha256_hex(payload)
     return DeclaracionExportResult(
         draft_id=draft.draft_id,

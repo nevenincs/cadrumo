@@ -20,6 +20,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from .....adapters.outbound.aeat.export._formats._record_spec import RecordFieldSpec
 from .....core import BindingSourceKind
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.resources import bundled_path
@@ -151,9 +152,9 @@ def _binding(
 @pytest.mark.parametrize(
     ("left_offset", "left_length", "right_offset", "right_length"),
     (
-        pytest.param(None, 5, 0, 5, id="left-offset"),
-        pytest.param(0, None, 0, 5, id="left-length"),
-        pytest.param(0, 5, None, 5, id="right-offset"),
+        pytest.param(None, 5, 1, 5, id="left-offset"),
+        pytest.param(1, None, 1, 5, id="left-length"),
+        pytest.param(1, 5, None, 5, id="right-offset"),
     ),
 )
 def test_export_fields_overlap_returns_false_when_position_is_incomplete(
@@ -169,9 +170,9 @@ def test_export_fields_overlap_returns_false_when_position_is_incomplete(
 
 
 def test_export_fields_overlap_detects_partial_overlap() -> None:
-    """Fields a[0..4] and b[3..7] share positions 3 and 4."""
-    left = _field(field_id="a", offset=0, length=5)
-    right = _field(field_id="b", offset=3, length=5)
+    """Fields a[1..5] and b[4..8] share positions 4 and 5."""
+    left = _field(field_id="a", offset=1, length=5)
+    right = _field(field_id="b", offset=4, length=5)
 
     assert export_fields_overlap(left, right) is True
 
@@ -184,16 +185,16 @@ def test_export_fields_overlap_detects_full_overlap_when_offsets_match() -> None
 
 
 def test_export_fields_overlap_returns_false_for_adjacent_fields() -> None:
-    """a[0..4] ends at position 4; b[5..9] starts at 5 — no shared cell."""
-    left = _field(field_id="a", offset=0, length=5)
-    right = _field(field_id="b", offset=5, length=5)
+    """a[1..5] ends at position 5; b[6..10] starts at 6 — no shared cell."""
+    left = _field(field_id="a", offset=1, length=5)
+    right = _field(field_id="b", offset=6, length=5)
 
     assert export_fields_overlap(left, right) is False
 
 
 def test_export_fields_overlap_returns_false_for_separated_fields() -> None:
-    left = _field(field_id="a", offset=0, length=5)
-    right = _field(field_id="b", offset=20, length=5)
+    left = _field(field_id="a", offset=1, length=5)
+    right = _field(field_id="b", offset=21, length=5)
 
     assert export_fields_overlap(left, right) is False
 
@@ -201,6 +202,24 @@ def test_export_fields_overlap_returns_false_for_separated_fields() -> None:
 # ---------------------------------------------------------------------------
 # binding_export_selector
 # ---------------------------------------------------------------------------
+
+
+def test_every_fixed_width_export_surface_refuses_zero_offset() -> None:
+    """A registry layout cannot declare a coordinate its binding or BOE wire model rejects."""
+    with pytest.raises(ValidationError):
+        _field(offset=0, length=1)
+    with pytest.raises(ValidationError):
+        BindingFixedExportSelector(record="DPA", offset=0, length=1, data_type="text")
+    with pytest.raises(ValidationError):
+        RecordFieldSpec.model_validate(
+            {
+                "offset": 0,
+                "length": 1,
+                "field_id": "field",
+                "kind": "alphanumeric",
+                "justification": "left",
+            },
+        )
 
 
 def test_binding_export_selector_accepts_fixed_field_shape() -> None:

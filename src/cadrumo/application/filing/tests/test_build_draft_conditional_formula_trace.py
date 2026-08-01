@@ -82,7 +82,9 @@ def _modelo_303_1t_inputs() -> ModeloInputs:
     the engine cuota bindings below. ``decl.ejercicio`` / ``decl.periodo`` are
     the informational casillas the calculate path projects from the work unit's
     ``(filing_year, period)`` axes; they ride into the draft via the persisted
-    ``input_values_by_casilla_id``.
+    ``input_values_by_casilla_id``. ``decl.periodo`` is declared
+    ``data_type = "period_code"``, so it carries the AEAT token ``"1T"`` on the
+    typed text-scalar channel, not a quarter ordinal on the Decimal channel.
     """
     return {
         _M303_REPERCUTIDO_GENERAL_CUOTA_BINDING: Decimal("210.00"),
@@ -94,7 +96,7 @@ def _modelo_303_1t_inputs() -> ModeloInputs:
         _M303_AUTOCONSUMO_PROMOTOR_BASE_BINDING: Decimal("0.00"),
         _M303_STATE_ATTRIBUTION_RATIO_BINDING: Decimal("100"),
         _DECL_EJERCICIO_CASILLA: Decimal("2026"),
-        _DECL_PERIODO_CASILLA: Decimal("1"),
+        _DECL_PERIODO_CASILLA: "1T",
     }
 
 

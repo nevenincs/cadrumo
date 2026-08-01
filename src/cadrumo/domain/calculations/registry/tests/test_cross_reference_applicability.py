@@ -284,11 +284,8 @@ def test_user_profile_contract_rejects_typoed_predicate_field() -> None:
     deadline-window predicate validation.
     """
 
-    from ....user_profile import (
-        UserProfileRegistryContractSeverity,
-        load_user_profile_schema,
-        validate_user_profile_registry_contract,
-    )
+    from .....core.errors import BaseSeverity
+    from ....user_profile import load_user_profile_schema, validate_user_profile_registry_contract
 
     modelo_349, _ = _committed_modelo("349")
     revision = modelo_349.revisions["2020-y-siguientes"]
@@ -326,7 +323,7 @@ def test_user_profile_contract_rejects_typoed_predicate_field() -> None:
         if issue.surface == "cross_reference_applicability" and issue.selector == "iva.roi_enrolled_X"
     ]
     assert matching, "validator did not catch the typo'd predicate field"
-    assert matching[0].severity is UserProfileRegistryContractSeverity.ERROR
+    assert matching[0].severity is BaseSeverity.ERROR
     assert matching[0].construct_id == "modelo-349-groi-spanish-counterparty-check"
 
 

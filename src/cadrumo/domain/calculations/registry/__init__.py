@@ -428,6 +428,7 @@ from ._renta_web_open_oracle import (
     RentaWebOpenSyntheticProfile,
     equivalent_renta_web_open_value,
     parse_renta_web_open_live_payload,
+    serialize_renta_web_open_replay_decimal,
     validate_renta_web_open_expected_casilla_ids,
     validate_renta_web_open_expected_casilla_values,
 )
@@ -451,6 +452,7 @@ from ._schema import (
     CalculationCompletenessCasilla,
     CalculationCompletenessManifest,
     CasillaContinuidadEvolutionDefinition,
+    CasillaConstraints,
     CasillaDefinition,
     CasillaFieldKind,
     CasillaFieldKindValue,
@@ -475,6 +477,7 @@ from ._schema import (
     ModeloFilingCapability,
     ModeloRevision,
     ModeloScheduleDefinition,
+    OneBasedExportOffset,
     ParameterDefinition,
     PeriodSelector,
     ProfilePredicateDefinition,
@@ -486,6 +489,7 @@ from ._schema import (
     SupportRemovalDecisionDefinition,
     WorkbookParityReference,
 )
+from ._schema_scalars import registry_scalar_value_type, validate_registry_text_scalar
 from ._schema_input_kind import InputKind, InputKindValue
 from ._schema_rounding import RegistryRoundingCode
 from ._schema_verification import (
@@ -571,6 +575,7 @@ __all__ = [
     "BracketEntry",
     "CalculationCompletenessCasilla",
     "CalculationCompletenessManifest",
+    "CasillaConstraints",
     "CasillaContinuidadEvolutionDefinition",
     "CasillaDefinition",
     "CasillaFieldKind",
@@ -679,6 +684,7 @@ __all__ = [
     "ModeloSupportMatrixReport",
     "ModeloSupportRemovalRecord",
     "NoRevisionForPeriodError",
+    "OneBasedExportOffset",
     "OracleAttributionGap",
     "OracleEnvironment",
     "OracleId",
@@ -887,6 +893,7 @@ __all__ = [
     "profile_condition_matches",
     "read_parameter",
     "register_cross_domain_snapshot_check",
+    "registry_scalar_value_type",
     "relation_aggregation_op",
     "relation_source_requirements",
     "remote_state_policy_from_cross_reference",
@@ -940,6 +947,7 @@ __all__ = [
     "select_revision_for_year",
     "selector_as_dict",
     "selector_model_for_source",
+    "serialize_renta_web_open_replay_decimal",
     "stamp_bundled_registry_verdict",
     "summarize_non_overlapping_cross_revision_casilla_drift",
     "taxpayer_model_is_declared",
@@ -960,6 +968,7 @@ __all__ = [
     "validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition",
     "validate_ledger_renta_income_aggregation_binding_definition",
     "validate_registry_scope",
+    "validate_registry_text_scalar",
     "validate_renta_web_open_expected_casilla_ids",
     "validate_renta_web_open_expected_casilla_values",
     "validate_retenciones_aggregation_binding",

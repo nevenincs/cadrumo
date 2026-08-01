@@ -162,7 +162,11 @@ def _period_schema_provider() -> CasillaSchemaProvider:
     return build_runtime_schema_provider(filing_year=_PERIOD.filing_year, period=_PERIOD)
 
 
-def _draft(schema_provider: CasillaSchemaProvider | None = None) -> ModeloDraft:
+def _draft(
+    schema_provider: CasillaSchemaProvider | None = None,
+    *,
+    retenciones: Decimal = Decimal("100"),
+) -> ModeloDraft:
     return build_draft(
         modelo="130",
         period=_PERIOD,
@@ -171,7 +175,7 @@ def _draft(schema_provider: CasillaSchemaProvider | None = None) -> ModeloDraft:
             _M130_CASILLA_01: Decimal("12500.00"),
             _M130_CASILLA_02: Decimal("3500.00"),
             _M130_CASILLA_05: Decimal("250"),
-            _M130_CASILLA_06: Decimal("100"),
+            _M130_CASILLA_06: retenciones,
             _M130_CASILLA_08: Decimal("2000"),
             _M130_CASILLA_10: Decimal("10"),
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
@@ -247,6 +251,17 @@ def test_build_draft_uses_registry_snapshot_for_modelo_130() -> None:
     assert values[_M130_CASILLA_19].formula_trace_casilla_ids == _M130_RESULT_TRACE
 
 
+def test_build_draft_blocks_negative_modelo_130_retenciones() -> None:
+    """Registry C06 non-negativity prevents a filing-ready Modelo 130 draft."""
+    draft = _draft(retenciones=Decimal("-100"))
+
+    assert draft.status is ModeloDraftStatus.BORRADOR
+    assert any(
+        finding.code == "casilla-out-of-range" and finding.casilla_id == _M130_CASILLA_06
+        for finding in draft.findings
+    )
+
+
 def test_binding_provenance_rejects_empty_registry_refs() -> None:
     """A bound filing value cannot be projected from an ungrounded binding definition."""
 
@@ -292,6 +307,34 @@ def test_build_draft_uses_registry_snapshot_for_modelo_111() -> None:
     assert values[_M111_CASILLA_28].kind is ModeloValueKind.COMPUTED
     assert values[_M111_CASILLA_28].formula_trace_casilla_ids == _M111_CASILLA_28_TRACE
     assert values[_M111_CASILLA_30].formula_trace_casilla_ids == _M111_CASILLA_30_TRACE
+
+
+def test_build_draft_blocks_negative_modelo_111_retenciones() -> None:
+    """Registry C06 non-negativity prevents a filing-ready Modelo 111 draft."""
+    draft = build_draft(
+        modelo="111",
+        period=_PERIOD,
+        profile=_profile(),
+        inputs={
+            _M111_CASILLA_03: Decimal("180.25"),
+            _M111_CASILLA_06: Decimal("-12.10"),
+            _M111_CASILLA_09: Decimal("300.00"),
+            _M111_CASILLA_12: Decimal("14.40"),
+            _M111_CASILLA_15: Decimal("25.00"),
+            _M111_CASILLA_18: Decimal("0.50"),
+            _M111_CASILLA_21: Decimal("7.00"),
+            _M111_CASILLA_24: Decimal("8.00"),
+            _M111_CASILLA_27: Decimal("9.00"),
+            _M111_CASILLA_29: Decimal("40.00"),
+        },
+        schema_provider=_unscoped_schema_provider(),
+    )
+
+    assert draft.status is ModeloDraftStatus.BORRADOR
+    assert any(
+        finding.code == "casilla-out-of-range" and finding.casilla_id == _M111_CASILLA_06
+        for finding in draft.findings
+    )
 
 
 def test_build_draft_uses_registry_snapshot_for_modelo_115() -> None:

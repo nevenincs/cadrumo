@@ -132,7 +132,13 @@ from ...domain.calculations.registry import (
     format_noncanonical_casilla_reference,
 )
 from ...domain.calculations.registry import (
+    registry_scalar_value_type as _registry_scalar_value_type,
+)
+from ...domain.calculations.registry import (
     revision_date_binding_ids as _revision_date_binding_ids,
+)
+from ...domain.calculations.registry import (
+    validate_registry_text_scalar as _validate_registry_text_scalar,
 )
 from ...domain.filing import (
     APPROVAL_BASIS_VERSION,
@@ -248,7 +254,7 @@ def build_draft(
             f"{snapshot.revision.id!r}",
         )
     casilla_ids = set(_declared_casilla_ids(snapshot.revision))
-    text_casilla_ids = _text_casilla_ids(snapshot)
+    text_casilla_data_types = _text_casilla_data_types(snapshot)
     bindings = {binding.id: binding for binding in snapshot.revision.bindings}
     calculation_binding_ids = _formula_binding_ids(snapshot) | _bound_casilla_binding_ids(snapshot)
     enum_binding_ids = _enum_consumed_binding_ids(snapshot.revision)
@@ -262,8 +268,8 @@ def build_draft(
         accepted_ids=casilla_ids | set(bindings) | relation_ids,
         snapshot=snapshot,
     )
-    casilla_inputs = _decimal_inputs_for_ids(inputs, casilla_ids - text_casilla_ids)
-    text_casilla_inputs = _text_inputs_for_ids(inputs, text_casilla_ids)
+    casilla_inputs = _decimal_inputs_for_ids(inputs, casilla_ids - set(text_casilla_data_types))
+    text_casilla_inputs = _text_inputs_for_ids(inputs, text_casilla_data_types)
     binding_inputs = _decimal_inputs_for_ids(inputs, decimal_binding_ids)
     enum_binding_inputs = _string_inputs_for_ids(inputs, enum_binding_ids)
     # Date bindings (e.g. taxpayer birth_date for age_at_year_end) and period
@@ -498,9 +504,13 @@ def _relation_ids(snapshot: _RegistrySnapshot) -> set[_RelationId]:
     return {relation.id for relation in snapshot.revision.relations}
 
 
-def _text_casilla_ids(snapshot: _RegistrySnapshot) -> set[_CasillaId]:
-    """Collect declared casillas that travel on the registry text-input channel."""
-    return {casilla.id for casilla in snapshot.revision.casillas if casilla.data_type == "text"}
+def _text_casilla_data_types(snapshot: _RegistrySnapshot) -> dict[_CasillaId, str]:
+    """Map casillas assigned to the registry's typed text-scalar channel."""
+    return {
+        casilla.id: casilla.data_type
+        for casilla in snapshot.revision.casillas
+        if _registry_scalar_value_type(casilla.data_type) == "str"
+    }
 
 
 def _validate_filing_input_keys(
@@ -579,18 +589,18 @@ def _decimal_inputs_for_ids[InputId: str](
     return decimal_inputs
 
 
-def _text_inputs_for_ids(inputs: ModeloInputs, input_ids: set[_CasillaId]) -> dict[_CasillaId, str]:
+def _text_inputs_for_ids(inputs: ModeloInputs, input_data_types: Mapping[_CasillaId, str]) -> dict[_CasillaId, str]:
     text_inputs: dict[_CasillaId, str] = {}
-    for input_id in input_ids:
+    for input_id, data_type in input_data_types.items():
         value = inputs.get(input_id)
         if value is None:
             continue
         if not isinstance(value, str):
             raise ModeloBuilderError(f"text casilla input {input_id!r} must be a string")
-        stripped = value.strip()
-        if not stripped:
-            raise ModeloBuilderError(f"text casilla input {input_id!r} must be a non-empty string")
-        text_inputs[input_id] = stripped
+        try:
+            text_inputs[input_id] = _validate_registry_text_scalar(data_type, value)
+        except _RegistryValidationError as exc:
+            raise ModeloBuilderError(f"text casilla input {input_id!r} is invalid: {exc}") from exc
     return text_inputs
 
 

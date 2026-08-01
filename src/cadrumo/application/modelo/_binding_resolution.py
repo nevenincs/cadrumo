@@ -28,6 +28,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass, field
 from decimal import Decimal
 
 from ...core import BindingSourceKind as _BindingSourceKind
@@ -198,20 +199,37 @@ def lift_previous_filing_casilla_overrides_to_bindings(
     return _lift_previous_filing_casilla_overrides_to_bindings(revision, casilla_inputs, resolved_bindings)
 
 
+@dataclass(frozen=True, slots=True)
+class DeclarationPeriodInputs:
+    """Work-unit metadata projected onto its two typed engine channels.
+
+    ``casilla_inputs`` carries the int-family ``filing_year`` role on the Decimal
+    channel; ``text_casilla_inputs`` carries the string-family ``filing_period``
+    role, whose registry ``data_type = "period_code"`` binds it to the typed
+    text-scalar channel and its ``period_code`` validator.
+    """
+
+    casilla_inputs: dict[CasillaId, Decimal] = field(default_factory=dict)
+    text_casilla_inputs: dict[CasillaId, str] = field(default_factory=dict)
+
+
 def resolve_declaration_period_inputs(
     revision: ModeloRevision,
     *,
     filing_year: int,
     period: _Period,
-) -> dict[CasillaId, Decimal]:
+) -> DeclarationPeriodInputs:
     """Resolve work-unit period metadata into informational casilla inputs.
 
     The :class:`ModeloRevision` supplies the
     informational casillas eligible for metadata projection. Only casillas with
     unique ``filing_year`` or ``filing_period`` semantic roles are populated. The
-    :class:`~cadrumo.core.Period` registry token is mapped to the ordinal expected
-    by the registry snapshot; unsupported tokens or non-informational role
-    targets raise :class:`~cadrumo.domain.modelos.ModeloError`.
+    ``filing_year`` role lands as a :class:`~decimal.Decimal` and the
+    ``filing_period`` role as the canonical :class:`~cadrumo.core.Period`
+    registry token (``"1T"``, ``"EXT-1T"``), which is the form AEAT accepts and
+    the only representation total over every declared period. A
+    non-informational role target raises
+    :class:`~cadrumo.domain.modelos.ModeloError`.
 
     See Also:
         :func:`~cadrumo.application.modelo._semantic_role_resolution.casilla_id_for_unique_revision_semantic_role`:
@@ -358,23 +376,18 @@ def _resolve_declaration_period_inputs(
     *,
     filing_year: int,
     period: _Period,
-) -> dict[CasillaId, Decimal]:
+) -> DeclarationPeriodInputs:
     """Return informational-casilla inputs sourced from work-unit metadata."""
     resolved: dict[CasillaId, Decimal] = {}
     filing_year_id = _informational_semantic_role_casilla_id(revision, "filing_year")
     if filing_year_id is not None:
         resolved[filing_year_id] = Decimal(filing_year)
 
+    resolved_text: dict[CasillaId, str] = {}
     filing_period_id = _informational_semantic_role_casilla_id(revision, "filing_period")
     if filing_period_id is not None:
-        ordinal = period.declaration_period_ordinal
-        if ordinal is None:
-            raise ModeloError(
-                f"work-unit period {period.registry_token!r} has no registry period ordinal; "
-                f"cannot resolve informational casilla {filing_period_id!r}",
-            )
-        resolved[filing_period_id] = Decimal(ordinal)
-    return resolved
+        resolved_text[filing_period_id] = period.registry_token
+    return DeclarationPeriodInputs(casilla_inputs=resolved, text_casilla_inputs=resolved_text)
 
 
 def _informational_semantic_role_casilla_id(revision: ModeloRevision, semantic_role: str) -> CasillaId | None:
@@ -395,6 +408,7 @@ def _informational_semantic_role_casilla_id(revision: ModeloRevision, semantic_r
 
 
 __all__ = [
+    "DeclarationPeriodInputs",
     "lift_previous_filing_casilla_overrides_to_bindings",
     "reject_binding_channel_mismatch",
     "resolve_available_bound_inputs_by_casilla_id",

@@ -6,13 +6,10 @@ from collections.abc import Callable
 
 import pytest
 
+from .....core.errors import BaseSeverity
 from .....core.resources import bundled_path
 from ....deadlines import IVARegime, ModeloEnrollment, TaxpayerProfile
-from ....user_profile import (
-    UserProfileRegistryContractSeverity,
-    load_user_profile_schema,
-    validate_user_profile_registry_contract,
-)
+from ....user_profile import load_user_profile_schema, validate_user_profile_registry_contract
 from .. import (
     RegistryValidationError,
     RegistryValidator,
@@ -98,7 +95,7 @@ def test_filing_schedule_predicate_with_unknown_field_is_reported_as_contract_er
 
     matching = [i for i in report.issues if i.surface == "filing_schedule" and i.selector == "unknown_predicate_field"]
     assert matching, f"expected a filing_schedule issue for unknown_predicate_field; issues={report.issues}"
-    assert matching[0].severity is UserProfileRegistryContractSeverity.ERROR
+    assert matching[0].severity is BaseSeverity.ERROR
 
 
 def test_deadline_window_predicate_with_unknown_field_is_reported_as_contract_error(
@@ -117,4 +114,4 @@ def test_deadline_window_predicate_with_unknown_field_is_reported_as_contract_er
 
     matching = [i for i in report.issues if i.surface == "deadline_window" and i.selector == "unknown_predicate_field"]
     assert matching, f"expected a deadline_window issue for unknown_predicate_field; issues={report.issues}"
-    assert matching[0].severity is UserProfileRegistryContractSeverity.ERROR
+    assert matching[0].severity is BaseSeverity.ERROR

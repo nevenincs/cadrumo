@@ -20,7 +20,15 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 if TYPE_CHECKING:  # pragma: no cover — type-only import
     from ...core import Period
     from ...core.identity import SubjectTaxId
-    from ..calculations.registry import BindingId, CasillaId, FormulaId, LegalRefId, RelationId, SourceRefId
+    from ..calculations.registry import (
+        BindingId,
+        CasillaConstraints,
+        CasillaId,
+        FormulaId,
+        LegalRefId,
+        RelationId,
+        SourceRefId,
+    )
 
 
 @runtime_checkable
@@ -40,8 +48,8 @@ class CasillaSchema(Protocol):
         legal_refs: Regulatory citations grounding this casilla's
             definition (BOE / AEAT permalinks).
         source_refs: Source-material citations backing this casilla.
-        min_value / max_value: Inclusive ``Decimal`` bounds for
-            numeric casillas; ``None`` if unbounded.
+        constraints: Complete registry-owned numeric and text constraint
+            contract, or ``None`` when the casilla is unconstrained.
         default: Default value used when the casilla is required
             and no input was supplied.
     """
@@ -82,13 +90,8 @@ class CasillaSchema(Protocol):
         ...
 
     @property
-    def min_value(self) -> Decimal | None:
-        """Return the inclusive lower bound, if any."""
-        ...
-
-    @property
-    def max_value(self) -> Decimal | None:
-        """Return the inclusive upper bound, if any."""
+    def constraints(self) -> CasillaConstraints | None:
+        """Return the complete registry-owned constraint contract, if any."""
         ...
 
     @property
