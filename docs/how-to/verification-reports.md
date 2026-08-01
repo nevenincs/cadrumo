@@ -162,7 +162,8 @@ expects you to do. The common kinds of blocking finding:
   earlier period that is missing or unconfirmed. Record or confirm that earlier
   filing first. If you had no obligation in that earlier period because you had
   not started your activity yet, set your activity-start date on the profile so
-  the dependency is scoped out (replace `me` with your profile name):
+  the dependency is scoped out. Name your own profile in place of
+  `docs-sequence-sandbox`:
 
   ```{cli-sequence} verification-reports-scope-dependency
   :verify: Confirm setting the activity-start date on the profile succeeds.
