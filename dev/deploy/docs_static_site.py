@@ -11,7 +11,7 @@ import subprocess
 import sys
 import urllib.error
 import urllib.request
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from http.client import HTTPException, HTTPSConnection
 from pathlib import Path
@@ -602,6 +602,98 @@ def _public_delivery_checks(target: DeploymentTarget) -> tuple[tuple[str, int], 
     )
 
 
+def _published_body(url: str) -> bytes:
+    """Return one published artefact's body, under the same HTTPS guard as the status checks.
+
+    Shared by both publishers: the status checks in :func:`_endpoint_response`
+    deliberately discard the body, so a content assertion needs its own read.
+    """
+    parsed = urlsplit(url)
+    if parsed.scheme != "https" or parsed.hostname is None:
+        raise SystemExit(f"Endpoint check requires a complete HTTPS URL: {url}")
+    path = parsed.path or "/"
+    connection = HTTPSConnection(parsed.hostname, port=parsed.port, timeout=_ENDPOINT_TIMEOUT_SECONDS)
+    try:
+        connection.request("GET", path, headers={"User-Agent": "cadrumo-docs-delivery-check"})
+        response = connection.getresponse()
+        body = response.read()
+        if response.status != 200:
+            raise SystemExit(f"Published artefact is not served at {url}: HTTP {response.status}.")
+        return body
+    except (HTTPException, TimeoutError, OSError) as exc:
+        raise SystemExit(f"Endpoint check could not reach {url}: {exc}") from exc
+    finally:
+        connection.close()
+
+
+def _indexed_entry_counts(payload: bytes, *, origin: str) -> dict[str, int]:
+    """Return ``{language: page_count}`` from a ``pagefind-entry.json`` body."""
+    try:
+        document = json.loads(payload)
+    except json.JSONDecodeError as exc:
+        raise SystemExit(f"{origin} is not valid JSON: {exc}") from exc
+    languages = document.get("languages") if isinstance(document, dict) else None
+    if not isinstance(languages, dict) or not languages:
+        raise SystemExit(f"{origin} declares no index languages; it is not a Pagefind entry document.")
+    return {str(name): int(split["page_count"]) for name, split in languages.items()}
+
+
+def _assert_served_index_matches_build(*, built: Path, served: bytes, label: str) -> None:
+    """Require the served index to carry exactly what the validated build carried.
+
+    The preflight has already refused a record-free build, so the local entry is
+    known to carry records. Requiring the SERVED counts to equal the BUILT counts
+    therefore proves the published index carries them too -- without hardcoding a
+    record total that would rot on the next corpus change.
+
+    This is the check the status codes cannot make. A root serving a record-free
+    index answers 200 on every URL the delivery checks probe, which is exactly
+    how a pages-only index shipped and stayed shipped: everything answered, and
+    nothing read what it answered with.
+    """
+    if not built.is_file():
+        raise SystemExit(f"{label}: no built Pagefind entry at {built} to compare the published one against.")
+    expected = _indexed_entry_counts(built.read_bytes(), origin=f"{label} built entry {built}")
+    actual = _indexed_entry_counts(served, origin=f"{label} published entry")
+    if actual != expected:
+        raise SystemExit(
+            f"{label}: the published search index does not match the build that was validated. "
+            f"Built {expected}, published {actual}. A published count below the built one means the "
+            "upload is incomplete or a stale index is being served; either way a reader is searching "
+            "an index this publish never approved.",
+        )
+
+
+def _verify_published_search_index(
+    html_root: Path,
+    *,
+    base_url: str = CANONICAL_DOCS_BASE_URL,
+    fetch: Callable[[str], bytes] = _published_body,
+) -> None:
+    """Require every published root to serve the search index its build produced.
+
+    Args:
+        html_root: The built site root the publish uploaded from.
+        base_url: DI seam. Production uses the canonical docs URL.
+        fetch: DI seam for the HTTPS body read, so the comparison can be proven
+            against real built artefacts without standing up a TLS endpoint.
+    """
+    roots: tuple[tuple[str, Path, str], ...] = (
+        (f"{base_url}/", html_root, "docs root"),
+        *tuple(
+            (f"{base_url}/{language}/", html_root / language, f"localized root {language!r}")
+            for language in _localized_languages()
+        ),
+    )
+    for root_url, built_root, label in roots:
+        served = fetch(f"{root_url}pagefind/pagefind-entry.json")
+        _assert_served_index_matches_build(
+            built=built_root / "pagefind" / "pagefind-entry.json",
+            served=served,
+            label=label,
+        )
+
+
 def _verify_public_delivery(target: DeploymentTarget) -> None:
     """Require the canonical, legacy, missing, and private-origin responses."""
     checks = _public_delivery_checks(target)
@@ -701,6 +793,7 @@ def _publish(aws: str, repo_root: Path, *, environment: Mapping[str, str] | None
     _sync_site(aws, repo_root, html_root, target.bucket)
     _invalidate_distribution_paths(aws, repo_root, target.distribution_id, _DOCS_INVALIDATION_PATHS)
     _verify_public_delivery(target)
+    _verify_published_search_index(html_root)
     print(f"Published {CANONICAL_DOCS_BASE_URL}/", flush=True)
     return 0
 

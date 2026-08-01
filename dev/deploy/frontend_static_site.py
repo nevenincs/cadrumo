@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import shutil
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from pathlib import Path
 
 from dev.deploy.docs_static_site import (
@@ -18,6 +19,7 @@ from dev.deploy.docs_static_site import (
     _aws_base_command,
     _endpoint_response,
     _invalidate_distribution_paths,
+    _published_body,
     _repo_root,
     _required_executable,
     _run,
@@ -30,6 +32,10 @@ _PAGE_CACHE_CONTROL = "public, max-age=300, must-revalidate"
 # Vite content-hashes everything under assets/, so those objects never change
 # in place and can be cached forever without invalidation.
 _ASSET_CACHE_CONTROL = "public, max-age=31536000, immutable"
+#: An ``assets/`` bundle referenced by the built page, captured by filename. The
+#: served document is required to reference the same names, which is what
+#: separates "the site answered" from "the site serves what was just published".
+_ASSET_REFERENCE_RE = re.compile(r"""(?:src|href)=["'][^"']*?assets/([A-Za-z0-9._-]+\.(?:js|css))["']""")
 _DEPLOYMENT_BUILD_OUTPUT = "build"
 _REQUIRED_ARTIFACTS = (
     "index.html",
@@ -150,6 +156,62 @@ def _invalidate_site(aws: str, repo_root: Path, distribution_id: str) -> None:
     _invalidate_distribution_paths(aws, repo_root, distribution_id, _INVALIDATION_PATHS)
 
 
+def _referenced_asset_names(index_html: str) -> frozenset[str]:
+    """Return the ``assets/`` filenames an ``index.html`` loads.
+
+    Matches the hashed bundle names the build stamps into ``src``/``href``. Names
+    only, not paths, so the same set is comparable between the built file and the
+    served page regardless of how each spells the prefix.
+    """
+    return frozenset(match.group(1) for match in _ASSET_REFERENCE_RE.finditer(index_html))
+
+
+def _verify_published_landing_page(
+    dist_root: Path,
+    *,
+    base_url: str = CANONICAL_SITE_URL,
+    fetch: Callable[[str], bytes] = _published_body,
+) -> None:
+    """Fetch the published landing root and require it to be the page just built.
+
+    Args:
+        dist_root: The build the publish uploaded from.
+        base_url: DI seam. Production uses the canonical site URL.
+        fetch: DI seam for the HTTPS body read, so the comparison can be proven
+            against a real build without standing up a TLS endpoint.
+    """
+    served = fetch(f"{base_url}/").decode("utf-8", errors="replace")
+    _verify_served_page_is_the_built_page(dist_root, page=served)
+
+
+def _verify_served_page_is_the_built_page(dist_root: Path, *, page: str) -> None:
+    """Require the served landing page to load the bundles this build produced.
+
+    The status checks establish that something answered 200. They cannot tell a
+    working page from one whose bundles 404 -- a blank landing page answers 200
+    exactly like a correct one. Comparing the asset references proves the page a
+    visitor receives is the page that was just built and validated, which also
+    catches a stale cached document surviving the invalidation.
+
+    Derived from the built ``index.html`` rather than a hardcoded marker string,
+    so the check cannot rot when the page copy changes.
+    """
+    built = dist_root / "index.html"
+    expected = _referenced_asset_names(built.read_text(encoding="utf-8", errors="replace"))
+    if not expected:
+        raise SystemExit(
+            f"Built landing page {built} references no bundled assets; there is nothing to verify "
+            "the served page against, so the delivery check would prove nothing.",
+        )
+    missing = sorted(name for name in expected if name not in page)
+    if missing:
+        raise SystemExit(
+            f"The served landing page does not reference the bundle(s) {missing} this build produced. "
+            "A visitor is being served a different document than the one just published — most likely a "
+            "stale cached page — so the page may render blank while every endpoint check still answers 200.",
+        )
+
+
 def _verify_public_delivery(target: DeploymentTarget) -> None:
     """Require the landing root, intact docs, and a private origin."""
     checks = (
@@ -207,6 +269,7 @@ def _publish(aws: str, repo_root: Path) -> int:
     _sync_site(aws, repo_root, dist_root, target.bucket)
     _invalidate_site(aws, repo_root, target.distribution_id)
     _verify_public_delivery(target)
+    _verify_published_landing_page(dist_root)
     print(f"Published {CANONICAL_SITE_URL}/", flush=True)
     return 0
 
