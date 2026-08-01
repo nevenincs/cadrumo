@@ -20,6 +20,9 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any
+from urllib.parse import urlsplit
+
+from pydantic import AnyUrl
 
 from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings
@@ -27,6 +30,11 @@ from .....core.hashing import sha256_hex
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.time import now
+from .....domain.calculations.registry import (
+    RemoteOperation,
+    RemoteStateGuardPolicy,
+    assert_remote_operation_allowed,
+)
 from .._playwright import PlaywrightError
 from ..browser import default_browser_session_factory
 from ._adapter_utils import assert_pdf_response as _assert_pdf_response
@@ -52,9 +60,65 @@ log = get_logger(__name__)
 
 _EXTERNAL = Settings.external_constants()
 _SEDE_BASE = _EXTERNAL.aeat.domains.www6
+_SEDE_HOST = urlsplit(_SEDE_BASE).netloc
+_AEAT_HOST_SUFFIX = _EXTERNAL.aeat.domains.host_suffix
 _RESUMEN_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.expedientes_resumen}"
 
 DEFAULT_EXPAND_TIMEOUT_MS: int = 10_000
+
+
+# The walker navigates to URLs it did NOT construct. ``Expediente.detail_url``
+# comes from an ``href`` on the resumen page, and the parser deliberately
+# preserves a supplied external netloc, so a page that AEAT did not author --
+# or a fixture -- can name any host it likes. This session is authenticated:
+# navigating it off the AEAT apex sends AEAT session cookies to a host of the
+# page's choosing.
+#
+# Every adjacent authenticated reader (declarations, censal, IVA wallet)
+# already preflights each GET against a policy. This walker did not, so it was
+# the one authenticated sede reader that would follow an arbitrary absolute
+# URL. Same shape as the declarations read policy: exact numbered host plus the
+# AEAT apex suffix, because AEAT load-balances the authenticated surface across
+# its ``www{n}`` pool and pinning one host would refuse a legitimate dispatch.
+#
+# ``allowed_browser_action_patterns`` is deliberately EMPTY. The walker drives
+# no controls: it only navigates and fetches. An empty tuple means any future
+# browser action added here fails the guard until it is declared, which is the
+# refusal we want rather than a gap.
+_READ_GUARD_POLICY = RemoteStateGuardPolicy(
+    id="aeat-sede-expedientes-walker-read",
+    evidence_tier="official_source_guidance",
+    classification="authenticated_read_surface",
+    allowed_hosts=(_SEDE_HOST,),
+    allowed_host_suffixes=(_AEAT_HOST_SUFFIX,),
+    synthetic_data_allowed=False,
+    requires_authentication=True,
+    requires_aeat_authorization=True,
+)
+
+
+def _assert_read_http(method: str, url: str) -> None:
+    """Refuse a wire-crossing read the walker policy does not admit."""
+    assert_remote_operation_allowed(
+        _READ_GUARD_POLICY,
+        RemoteOperation(kind="http", method=method, url=AnyUrl(url)),
+    )
+
+
+async def _goto_guarded(page: Any, url: str) -> None:
+    """Navigate to ``url`` only if the policy admits it, then re-assert the landing.
+
+    Both halves matter. The requested URL is guarded because it may have come
+    from a page rather than from this module. The LANDED URL is re-asserted
+    because AEAT answers with a redirect chain, and a redirect is a second
+    chance to leave the allowed host set -- checking only the request would
+    guard the intent and not the outcome.
+    """
+    _assert_read_http("GET", url)
+    await page.goto(url, wait_until=_WAIT_DOMCONTENTLOADED)
+    landed = getattr(page, "url", "") or ""
+    if landed:
+        _assert_read_http("GET", landed)
 
 
 @asynccontextmanager
@@ -132,7 +196,7 @@ async def walk_expedientes_tree(
     settings = settings or Settings()
     async with _open_browser_page(session, settings) as (_context, page):
         try:
-            await page.goto(_RESUMEN_URL, wait_until=_WAIT_DOMCONTENTLOADED)
+            await _goto_guarded(page, _RESUMEN_URL)
         except PlaywrightError as exc:
             raise SedeNavigationError(f"goto {_RESUMEN_URL!r} failed: {exc}") from exc
 
@@ -178,11 +242,14 @@ async def resolve_justificante_ref(
         # per-year endpoint without this is fine when cookies are
         # fresh but fails intermittently after idle periods.
         try:
-            await page.goto(_RESUMEN_URL, wait_until=_WAIT_DOMCONTENTLOADED)
-        except Exception as _exc:
+            await _goto_guarded(page, _RESUMEN_URL)
+        except PlaywrightError as _exc:
             log.debug("sede walker: warm-up goto %s suppressed: %s", _RESUMEN_URL, _exc, exc_info=True)
+        # Guarded BEFORE the navigation: detail_url came off a page, not from
+        # this module, so a refusal here must prevent the request rather than
+        # report it afterwards.
         try:
-            await page.goto(detail_url, wait_until=_WAIT_DOMCONTENTLOADED)
+            await _goto_guarded(page, detail_url)
         except PlaywrightError as exc:
             raise SedeNavigationError(f"goto expediente detail {detail_url!r} failed: {exc}") from exc
         html = await page.content()
@@ -227,11 +294,14 @@ async def capture_justificante(
     detail_url = str(expediente.detail_url)
     async with _open_browser_page(session, settings) as (context, page):
         try:
-            await page.goto(_RESUMEN_URL, wait_until=_WAIT_DOMCONTENTLOADED)
-        except Exception as _exc:
+            await _goto_guarded(page, _RESUMEN_URL)
+        except PlaywrightError as _exc:
             log.debug("sede walker: warm-up goto %s suppressed: %s", _RESUMEN_URL, _exc, exc_info=True)
+        # Guarded BEFORE the navigation: detail_url came off a page, not from
+        # this module, so a refusal here must prevent the request rather than
+        # report it afterwards.
         try:
-            await page.goto(detail_url, wait_until=_WAIT_DOMCONTENTLOADED)
+            await _goto_guarded(page, detail_url)
         except PlaywrightError as exc:
             raise SedeNavigationError(f"goto expediente detail {detail_url!r} failed: {exc}") from exc
         detail_html = await page.content()
@@ -241,6 +311,10 @@ async def capture_justificante(
             base_url=_SEDE_BASE,
         )
 
+        # ``JustificanteRef`` carries an absolute ``AnyHttpUrl``; guard it for
+        # the same reason as the detail URL rather than trusting that this
+        # module built it.
+        _assert_read_http("GET", str(ref.pdf_url))
         pdf_response = await context.request.get(str(ref.pdf_url))
         content_type = pdf_response.headers.get("content-type", "")
         body = await pdf_response.body()
