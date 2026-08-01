@@ -35,6 +35,7 @@ from .....domain.calculations.registry import (
 )
 from .._playwright import BrowserContext, Page, PlaywrightError
 from ._adapter_utils import assert_pdf_response as _assert_pdf_response
+from ._adapter_utils import landed_origin as _landed_origin
 from ._browser_constants import (
     PLAYWRIGHT_WAIT_DOMCONTENTLOADED as _WAIT_DOMCONTENTLOADED,
 )
@@ -112,15 +113,32 @@ def _origin_of(landed_url: str | None) -> str:
     derived from, and for the same reason: the record is what a value is
     defended with later.
 
-    Falls back to the origin the navigation was issued against when the
-    landed URL is unusable, because that is then the best true answer
-    available rather than a preference.
+    REFUSES when the landing is unusable, rather than falling back to the
+    origin the navigation was issued against.
+
+    That fallback used to be defended as "the best true answer available",
+    and the defence does not hold. Its truth is guaranteed only in the case
+    where it is never needed: AEAT load-balances the authenticated session
+    across its numbered pool, so precisely when the landing cannot be read is
+    when there is no evidence the read stayed on the requested host. The
+    fallback is therefore a guess printed in the same field as a measurement,
+    and a downstream reader cannot tell the two apart.
+
+    An origin that cannot be established is missing evidence, and missing
+    evidence must read as missing. The censal reader already refused for this
+    reason; this conforms to it.
+
+    Raises:
+        SedeNavigationError: When the landing carries no usable scheme + host.
     """
-    if landed_url:
-        landed = urlsplit(landed_url)
-        if landed.scheme and landed.netloc:
-            return f"{landed.scheme}://{landed.netloc}"
-    return _SEDE_BASE
+    origin = _landed_origin(landed_url)
+    if origin is None:
+        raise SedeNavigationError(
+            "AEAT declarations read landed on no usable origin "
+            f"(landed URL: {landed_url!r}); the host that answered cannot be "
+            "established, so no source URL can be recorded for this capture",
+        )
+    return origin
 
 
 def _listing_url_for(origin: str, *, modelo: str, ejercicio: int) -> str:

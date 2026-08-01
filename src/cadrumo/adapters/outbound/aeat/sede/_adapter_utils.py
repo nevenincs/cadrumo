@@ -185,6 +185,27 @@ def make_locate_helper(
     return _locate
 
 
+def landed_origin(landed_url: str | None) -> str | None:
+    """Return the ``scheme://host`` a read actually landed on, or ``None``.
+
+    The single extraction every sede reader uses to answer "which host
+    answered this read". Returns ``None`` when the landing carries no usable
+    scheme and host -- an empty or absent ``page.url``, ``about:blank``, or a
+    relative path -- leaving the REFUSAL to the caller, which is the only
+    layer that knows what its surface is allowed to do with the absence.
+
+    Callers must not substitute a constructed origin for a ``None`` result.
+    A recorded URL is a claim about where a read happened, and a read whose
+    host cannot be established has no such claim to make.
+    """
+    if not landed_url:
+        return None
+    landed = urlsplit(landed_url)
+    if not landed.scheme or not landed.netloc:
+        return None
+    return f"{landed.scheme}://{landed.netloc}"
+
+
 def response_media_type(content_type: str) -> str:
     """Return the bare media type from a ``Content-Type`` header value.
 
@@ -425,6 +446,7 @@ __all__ = [
     "assert_query_browser_action_for",
     "extract_marker_verdict",
     "first_visible_locator",
+    "landed_origin",
     "make_locate_helper",
     "nif_check_operation_tail",
     "normalize_response_text",
