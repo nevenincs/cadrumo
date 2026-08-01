@@ -16,6 +16,7 @@ catalogue metadata; this module only pins CLI transport shapes.
 from __future__ import annotations
 
 from ...core.aggregation import RetencionClave
+from ...core.identity import ContentDigest
 from ._schemas import OutputSchema, register_schema
 
 
@@ -41,11 +42,17 @@ class WithholdingClaveBreakdownPayload(OutputSchema):
 
 
 class EvidenceRecordRefPayload(OutputSchema):
-    """One record reference entry inside an evidence bundle manifest."""
+    """One record reference entry inside an evidence bundle manifest.
+
+    JSON projection of :class:`EvidenceRecordRef`. ``content_sha256`` keeps
+    the canonical :data:`~core.identity.ContentDigest` constraint the record
+    carries, so the machine-facing boundary cannot emit a digest the
+    application model would refuse.
+    """
 
     object_type: str
     object_id: str
-    content_sha256: str
+    content_sha256: ContentDigest
     payload_size_bytes: int
 
 

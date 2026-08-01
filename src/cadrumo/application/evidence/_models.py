@@ -32,7 +32,7 @@ from ...core import STRICT_FROZEN_CONFIG
 from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
-from ...core.identity import BucketId
+from ...core.identity import BucketId, ContentDigest
 from ...core.time import now
 from ...domain.buckets import BucketEventObjectType
 from ...domain.modelos import (
@@ -114,7 +114,9 @@ class EvidenceRecordRef(BaseModel):
 
     ``object_type`` names the :class:`BucketEventObjectType` of the
     record; ``object_id`` is its stable store key; ``content_sha256`` is
-    the SHA-256 hex digest of the record's raw payload bytes;
+    the canonical :data:`~core.identity.ContentDigest` of the record's raw
+    payload bytes, so a non-hex digest is refused on construction rather
+    than at the later verification pass that recomputes it;
     ``payload_size_bytes`` is the byte count used for
     completeness-ratio calculation.
     """
@@ -123,7 +125,7 @@ class EvidenceRecordRef(BaseModel):
 
     object_type: BucketEventObjectType
     object_id: str = Field(min_length=1, max_length=128)
-    content_sha256: str = Field(min_length=64, max_length=64)
+    content_sha256: ContentDigest
     payload_size_bytes: int = Field(ge=0)
 
 
