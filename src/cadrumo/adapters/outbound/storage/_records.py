@@ -25,7 +25,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG
 
@@ -144,6 +144,32 @@ class RemoteMirrorNamespaceManifest(BaseModel):
     latest_revision_id: _StorageRevisionId | None = None
     latest_revision_written_at: datetime | None = None
     objects: tuple[RemoteMirrorObjectManifest, ...]
+
+    @model_validator(mode="after")
+    def _enforce_object_key_uniqueness_and_count(self) -> RemoteMirrorNamespaceManifest:
+        """Refuse duplicate object keys and a ``object_count`` that disagrees with ``objects``.
+
+        Comparison in
+        :mod:`adapters.outbound.storage._mirror_manifest` keys both manifests
+        by ``object_key_hmac``, so a repeated key would silently discard every
+        earlier row and hide the revision conflict it carried. The key is one
+        object's identity within a namespace, so a repeat is manifest
+        corruption rather than a representable state; refusing it here makes a
+        tampered or torn remote manifest fail closed through the
+        :class:`OutboundStorageIntegrityError` the loader already raises.
+        """
+        keys = [entry.object_key_hmac for entry in self.objects]
+        duplicates = sorted({key for key in keys if keys.count(key) > 1})
+        if duplicates:
+            raise ValueError(
+                f"remote mirror manifest repeats object_key_hmac entries: {duplicates}",
+            )
+        if self.object_count != len(self.objects):
+            raise ValueError(
+                f"remote mirror manifest object_count {self.object_count} "
+                f"disagrees with {len(self.objects)} recorded objects",
+            )
+        return self
 
 
 class RemoteMirrorIssue(BaseModel):
