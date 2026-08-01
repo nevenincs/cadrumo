@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -19,7 +20,9 @@ from typing import Final
 _UTF_8: Final[str] = "utf-8"
 _CORPUS = Path("src/cadrumo/application/ledger/tests/_evidence_corpus")
 _UA = "cadrumo-fixtures/1.0 (evidence test corpus; contact: maintainers)"
-_CLEAN_LICENCES = {"public domain", "cc0", "cc-by", "cc-by-sa", "pd", "pd-old", "cc-pd-mark"}
+_CLEAN_LICENCE_PATTERN = re.compile(
+    r"(?:public domain|cc0|cc[- ]by(?:[- ]sa)?|pd(?:-old(?:-\d+)?)?|cc-pd-mark)(?:\s+\d+(?:\.\d+)*)?",
+)
 _MAX_BYTES = 4_000_000
 
 
@@ -37,8 +40,8 @@ def _download(url: str) -> bytes:
 
 
 def _licence_is_clean(short: str) -> bool:
-    low = short.strip().lower()
-    return any(low.startswith(c) for c in _CLEAN_LICENCES)
+    normalized = " ".join(short.strip().lower().split())
+    return _CLEAN_LICENCE_PATTERN.fullmatch(normalized) is not None
 
 
 def _search(query: str, mime_prefixes: tuple[str, ...], limit: int = 20) -> list[dict[str, str]]:
