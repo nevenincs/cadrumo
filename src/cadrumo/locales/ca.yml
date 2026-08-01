@@ -1445,8 +1445,6 @@ application:
         errors:
           parameter_no_dated_value: El motor d'exportació de fulls de càlcul no ha
             trobat cap valor de paràmetre vigent per a la data de meritació.
-          parameter_not_scalar: El motor d'exportació de fulls de càlcul esperava
-            un paràmetre escalar, però ha rebut un paràmetre de taula.
           unsupported_rounding: El motor d'exportació de fulls de càlcul ha trobat
             una regla d'arrodoniment del registre no admesa.
         guide:

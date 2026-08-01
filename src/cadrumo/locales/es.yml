@@ -1455,8 +1455,6 @@ application:
         errors:
           parameter_no_dated_value: El motor de exportación de hojas de cálculo no
             encontró un valor de parámetro vigente para la fecha de devengo.
-          parameter_not_scalar: El motor de exportación de hojas de cálculo esperaba
-            un parámetro escalar, pero recibió un parámetro de tabla.
           unsupported_rounding: El motor de exportación de hojas de cálculo encontró
             una regla de redondeo del registro no admitida.
         guide:

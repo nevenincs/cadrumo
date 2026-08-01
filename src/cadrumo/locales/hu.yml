@@ -1384,8 +1384,6 @@ application:
         errors:
           parameter_no_dated_value: A táblázatexportáló motor nem talált az elszámolási
             dátumra érvényes paraméterértéket.
-          parameter_not_scalar: A táblázatexportáló motor skalár paramétert várt,
-            de táblázatos paramétert kapott.
           unsupported_rounding: A táblázatexportáló motor nem támogatott nyilvántartási
             kerekítési szabályt talált.
         guide:

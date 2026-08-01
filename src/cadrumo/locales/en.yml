@@ -1326,8 +1326,6 @@ application:
         errors:
           parameter_no_dated_value: The spreadsheet export engine could not find a
             parameter value valid for the filing date.
-          parameter_not_scalar: The spreadsheet export engine expected a scalar parameter
-            but received a table parameter.
           unsupported_rounding: The spreadsheet export engine found an unsupported
             registry rounding rule.
         guide:
