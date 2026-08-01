@@ -94,7 +94,15 @@ class ModeloDescribeReport(BaseModel):
 
 
 class ModeloCasillaRow(BaseModel):
-    """One row in a casilla listing for a resolved modelo revision."""
+    """One row in a casilla listing for a resolved modelo revision.
+
+    ``legal_refs`` and ``source_refs`` carry the canonical
+    :data:`~domain.calculations.registry.LegalRefId` /
+    :data:`~domain.calculations.registry.SourceRefId` annotations, identical to
+    the ones :class:`ModeloCasillaDetailReport` declares for the same grounding.
+    The list and detail projections describe one casilla's provenance, so a
+    reference shape the detail report refuses must not pass through the list.
+    """
 
     model_config = ConfigDict(frozen=True)
 
@@ -108,8 +116,8 @@ class ModeloCasillaRow(BaseModel):
     formula: str | None
     binding: BindingId | None
     form_number: str | None
-    legal_refs: tuple[str, ...]
-    source_refs: tuple[str, ...]
+    legal_refs: tuple[LegalRefId, ...]
+    source_refs: tuple[SourceRefId, ...]
     localized_labels: dict[str, str] = Field(default_factory=dict)
     localized_help: dict[str, str] = Field(default_factory=dict)
 
