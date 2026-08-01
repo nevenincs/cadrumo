@@ -289,7 +289,7 @@ def _validate_raw_manifest_payload(raw: str | bytes) -> CorpusManifest:
         entries=manifest.entries,
     )
     if manifest.manifest_sha256 != _sha256_hex(body):
-        raise _TamperedManifestPayloadError
+        raise _TamperedManifestPayloadError()
     return manifest
 
 
