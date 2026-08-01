@@ -4,7 +4,7 @@ tags:
   - '#user-docs-search-consolidation'
 date: '2026-08-01'
 modified: '2026-08-01'
-body_hash: 'sha256:e10f42ffba2cd1536eeab6d4a5d32d19b341832ea471bd9f1570cb15347c7bf5'
+body_hash: 'sha256:890fb25a91d4833e5f56b5b2b557833356678c9b23e152838f0cb73864572fc9'
 tier: L2
 related:
   - '[[2026-07-31-semantic-search-precompile-boundary-plan]]'
@@ -42,7 +42,7 @@ Prove the multilingual recall claim against the built site, keep every existing 
 
 - [ ] `P03.S08` - Prove multilingual query recall with Spanish, Catalan, and Hungarian queries recalling concept and casilla records through the behavioural gates on the built site, then re-run the same probes against the deployed site so a CI-built full-mode pass can never mask a pages-mode live site; `dev/docs/tests/`.
 - [ ] `P03.S09` - Run the fresh-context honesty review against the closure summary and persist it as a vault audit, closing or formally deferring every surfaced item; `.vault/audit/`.
-- [ ] `P03.S18` - Sweep for surviving artefacts of the overtaken audit campaigns beyond the two named commits and for incomplete-landing residue on the search surface, including the known orphan apidocs stub docs/api/cadrumo.domain.calculations.registry._text.rst, grounding the sweep with vaultspec-rag over both code and vault and confirming each candidate site with rg, and record the result with any remediation opened as new steps; `.vault/audit/`.
+- [ ] `P03.S18` - Sweep for surviving artefacts of the overtaken audit campaigns beyond the two named commits and for incomplete-landing residue on the search surface, grounding the sweep with vaultspec-rag over both code and vault and confirming each candidate site with rg, and record the result with any remediation opened as new steps, noting instances already closed at HEAD by their commit rather than re-opening them; `.vault/audit/`.
 
 ### Phase `P04` - Deployed-contract remediation
 
