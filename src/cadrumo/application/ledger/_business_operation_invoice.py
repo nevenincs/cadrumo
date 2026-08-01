@@ -50,7 +50,7 @@ from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId
 from ...core.money import round_to_cents
-from ...core.parsing import parse_iso8601_date
+from ...core.parsing import normalise_iso_4217_currency, parse_iso8601_date
 from ...core.time import now as _utc_now
 from ...domain import canonical_decimal_string
 from ...domain.buckets import (
@@ -174,10 +174,10 @@ class BusinessOperationInvoice(BaseModel):
     invoice_number: str = Field(min_length=1, max_length=100)
     invoice_date: str = Field(min_length=10, max_length=10)
     currency: str = Field(default=DEFAULT_CURRENCY, min_length=3, max_length=3)
-    taxable_base: Decimal = Field(default=Decimal("0"))
+    taxable_base: Decimal = Field(default=Decimal("0"), ge=0)
     iva_rate: Decimal | None = Field(default=None)
-    iva_amount: Decimal = Field(default=Decimal("0"))
-    total_amount: Decimal = Field(default=Decimal("0"))
+    iva_amount: Decimal = Field(default=Decimal("0"), ge=0)
+    total_amount: Decimal = Field(default=Decimal("0"), ge=0)
     # Euro-conversion stamp for a foreign-currency invoice, resolved at entry
     # from the ECB reference rate. Both are absent for a EUR invoice (already
     # euro) and for a foreign invoice whose rate could not be resolved -- which
@@ -197,6 +197,37 @@ class BusinessOperationInvoice(BaseModel):
     @classmethod
     def _normalise_country_code(cls, v: str | None) -> str | None:
         return v.upper() if v is not None else None
+
+    @field_validator("currency", mode="before")
+    @classmethod
+    def _normalise_currency(cls, v: object) -> object:
+        """Normalise the currency through the canonical ISO-4217 owner.
+
+        Runs ``mode="before"`` because the field's own length constraint
+        would otherwise fire on a padded token and never reach the
+        normaliser -- the contract :func:`normalise_iso_4217_currency`
+        documents for exactly this shape of caller.
+        """
+        if v is None:
+            return v
+        return normalise_iso_4217_currency(v)
+
+    @field_validator("invoice_date", "fx_rate_date")
+    @classmethod
+    def _require_real_calendar_date(cls, v: str | None) -> str | None:
+        """Reject a ten-character string that is not a date.
+
+        The length constraint alone measures width, not validity: it admits
+        ``"2026-99-99"`` for having ten characters while rejecting a real but
+        shorter rendering. These stamps drive the FX lookup and the filing
+        period a business operation lands in, so a non-date that survives
+        persistence is discovered only when something later tries to read it
+        as a date.
+        """
+        if v is None:
+            return v
+        parse_iso8601_date(v)
+        return v
 
     @property
     def taxable_base_eur(self) -> Decimal | None:
@@ -531,9 +562,13 @@ class _BusinessOperationInvoiceService:
             invoice_date=invoice_date,
             rate_provider=rate_provider,
         )
-        # Normalise country_code to the stored (upper) form so the id derives
-        # from the same value the record persists (the model upper-cases it).
+        # Normalise every field the model normalises to its stored form BEFORE
+        # deriving the id, so the content digest is taken over the same values
+        # the record persists. A normalising validator that is not mirrored
+        # here silently content-addresses the raw input instead ("usd" vs the
+        # stored "USD"), and the id stops identifying its own record.
         normalised_country_code = country_code.upper() if country_code is not None else None
+        currency = normalise_iso_4217_currency(currency)
         records = _load(self._settings, self.source_kind, bucket_id)
         existing_ids = {existing.invoice_id for existing in records}
         for disambiguator in range(_ID_DISAMBIGUATION_CAP):
