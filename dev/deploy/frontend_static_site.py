@@ -84,6 +84,18 @@ def _validate_site_artifacts(dist_root: Path) -> None:
         raise SystemExit(
             f"Landing page build is missing bundled assets under {_DEPLOYMENT_BUILD_OUTPUT}/assets/.",
         )
+    # "Some bundle exists" is not "the page's bundles exist". A build whose
+    # index.html names a file that was never written passes the check above so
+    # long as any .js and .css are present -- including leftovers from an
+    # earlier build -- and then serves a blank page. The references are what the
+    # browser actually requests, so they are what must resolve.
+    referenced = _referenced_asset_names((dist_root / "index.html").read_text(encoding="utf-8", errors="replace"))
+    unresolved = sorted(name for name in referenced if not (assets / name).is_file())
+    if unresolved:
+        raise SystemExit(
+            f"Landing page index.html references bundle(s) {unresolved} that do not exist under "
+            f"{_DEPLOYMENT_BUILD_OUTPUT}/assets/; the published page would request them and render blank.",
+        )
 
 
 def _sync_pass(
