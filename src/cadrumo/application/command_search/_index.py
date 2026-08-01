@@ -35,9 +35,12 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ...core import fts_or_group
 from ..corpus_search import (
+    RRF_K,
     CorpusSearchDependencyError,
     CorpusSearchInputError,
     QueryEmbedder,
+    l2_normalise,
+    reciprocal_rank_fusion,
     search_extra_available,
 )
 
@@ -52,10 +55,6 @@ _WORD_RE = re.compile(r"\w+", re.UNICODE)
 #: ``a``, the conjunctions ``y``/``o``, a stray ``I``) yet spuriously match a
 #: long help column, so they are dropped from the query before ranking.
 _MIN_TERM_LEN = 2
-
-#: RRF damping constant. The canonical k=60 keeps a strong hit on one ranker
-#: from being drowned by the other ranker's long tail.
-RRF_K = 60
 
 #: Per-column BM25 weights, descending by discriminative value: the command key
 #: and tool name carry the verb-level vocabulary and rank highest; curated
@@ -229,7 +228,13 @@ class CommandIndex:
         if not lexical_keys:
             return ()
         semantic_rank_by_key = self._semantic_rank_by_key(query)
-        fused = self._reciprocal_rank_fusion(lexical_keys, semantic_rank_by_key)[:limit]
+        lexical_rank_by_key = {key: rank for rank, key in enumerate(lexical_keys)}
+        fused = reciprocal_rank_fusion(
+            lexical_rank_by_key,
+            semantic_rank_by_key,
+            rrf_k=RRF_K,
+            candidate_ids=lexical_rank_by_key,
+        )[:limit]
         tool_name_by_key = {doc.command_key: doc.tool_name for doc in self._docs}
         return tuple(
             CommandHit(command_key=key, tool_name=tool_name_by_key[key], rank=rank, score=score)
@@ -288,7 +293,7 @@ class CommandIndex:
             query_vector = self._embedder.embed_query(query)
         except (CorpusSearchDependencyError, CorpusSearchInputError):
             return {}
-        query_unit = _l2_normalise(np.asarray(query_vector, dtype=np.float32).reshape(1, -1))[0]
+        query_unit = l2_normalise(np.asarray(query_vector, dtype=np.float32).reshape(1, -1))[0]
         similarities = self._doc_matrix @ query_unit
         order = np.argsort(-similarities)
         return {self._docs[int(index)].command_key: rank for rank, index in enumerate(order)}
@@ -306,40 +311,7 @@ class CommandIndex:
             self._semantic_enabled = False
             return
         self._embedder = embedder
-        self._doc_matrix = _l2_normalise(np.asarray(np.vstack(vectors), dtype=np.float32))
-
-    def _reciprocal_rank_fusion(
-        self,
-        lexical_keys: Sequence[str],
-        semantic_rank_by_key: dict[str, int],
-    ) -> list[tuple[str, float]]:
-        """RRF-fuse the lexical and semantic rankings over the lexical candidate set.
-
-        The candidate universe is the lexically-matched commands; the semantic
-        side contributes its rank for those candidates (so it re-orders them,
-        breaking homonym ties, without ballooning the matched set the overflow
-        signal counts). Ties break deterministically by lexical rank then key.
-        """
-        lexical_rank_by_key = {key: rank for rank, key in enumerate(lexical_keys)}
-        scores: dict[str, float] = {}
-        for key, lexical_rank in lexical_rank_by_key.items():
-            score = 1.0 / (RRF_K + lexical_rank + 1)
-            semantic_rank = semantic_rank_by_key.get(key)
-            if semantic_rank is not None:
-                score += 1.0 / (RRF_K + semantic_rank + 1)
-            scores[key] = score
-        return sorted(
-            scores.items(),
-            key=lambda item: (-item[1], lexical_rank_by_key[item[0]], item[0]),
-        )
-
-
-def _l2_normalise(matrix: np.ndarray) -> np.ndarray:
-    import numpy as np
-
-    norms = np.linalg.norm(matrix, axis=1, keepdims=True)
-    norms[norms == 0.0] = 1.0
-    return matrix / norms
+        self._doc_matrix = l2_normalise(np.asarray(np.vstack(vectors), dtype=np.float32))
 
 
 def build_command_index(

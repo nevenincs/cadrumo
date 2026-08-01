@@ -56,7 +56,8 @@ from ._models import (
     SimilarChunk,
 )
 from ._query_embed import QueryEmbedder, search_extra_available, search_model_cache_dir
-from ._retrieval import PER_SIDE_CAP, RRF_K, hybrid_search
+from ._ranking import RRF_K, l2_normalise, reciprocal_rank_fusion
+from ._retrieval import PER_SIDE_CAP, hybrid_search
 from ._runtime import (
     corpus_index_path,
     corpus_search_dir,
@@ -105,11 +106,13 @@ __all__ = [
     "ensure_corpus_index",
     "hybrid_search",
     "iter_corpus_chunks",
+    "l2_normalise",
     "load_corpus_embeddings",
     "load_embeddings",
     "load_terminology_concepts",
     "lookup_terminology",
     "more_like_this",
+    "reciprocal_rank_fusion",
     "search_corpus",
     "search_extra_available",
     "search_lexical",

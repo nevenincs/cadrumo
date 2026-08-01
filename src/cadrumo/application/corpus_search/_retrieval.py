@@ -31,14 +31,10 @@ from ._errors import CorpusSearchDependencyError, CorpusSearchInputError
 from ._lexical_index import search_lexical
 from ._models import LexicalSearchHit, RetrievalHit, RetrievalMode, RetrievalResponse
 from ._query_embed import QueryEmbedder
+from ._ranking import RRF_K, l2_normalise, reciprocal_rank_fusion
 
 if TYPE_CHECKING:
     import numpy as np
-
-#: RRF constant. The canonical k=60 dampens the contribution of low-ranked
-#: results so a strong hit on one side is not drowned by a long tail on the
-#: other.
-RRF_K = 60
 
 #: Per-side result cap before fusion; a generous top-N keeps fusion cheap.
 PER_SIDE_CAP = 50
@@ -101,7 +97,7 @@ def hybrid_search(
         per_side_cap=per_side_cap,
     )
 
-    fused = _reciprocal_rank_fusion(lexical_rank_by_id, semantic_rank_by_id, rrf_k=rrf_k)[:limit]
+    fused = reciprocal_rank_fusion(lexical_rank_by_id, semantic_rank_by_id, rrf_k=rrf_k)[:limit]
     hits = _assemble_hits(
         fused=fused,
         lexical_hits=lexical_hits,
@@ -151,40 +147,11 @@ def _cosine_ranked_ids(
         )
     if matrix.size == 0:
         return []
-    normalised = _l2_normalise(np.asarray(matrix, dtype=np.float32))
-    query_unit = _l2_normalise(np.asarray(query_vector, dtype=np.float32).reshape(1, -1))[0]
+    normalised = l2_normalise(np.asarray(matrix, dtype=np.float32))
+    query_unit = l2_normalise(np.asarray(query_vector, dtype=np.float32).reshape(1, -1))[0]
     similarities = normalised @ query_unit
     order = np.argsort(-similarities)[:top_k]
     return [chunk_ids[int(index)] for index in order]
-
-
-def _l2_normalise(matrix: np.ndarray) -> np.ndarray:
-    import numpy as np
-
-    norms = np.linalg.norm(matrix, axis=1, keepdims=True)
-    norms[norms == 0.0] = 1.0
-    return matrix / norms
-
-
-def _reciprocal_rank_fusion(
-    lexical_rank_by_id: dict[str, int],
-    semantic_rank_by_id: dict[str, int],
-    *,
-    rrf_k: int,
-) -> list[tuple[str, float]]:
-    """Fuse two rankings by RRF; return ``(chunk_id, score)`` best-first.
-
-    Ties break deterministically by lexical rank, then by chunk id, so the
-    fused order is stable across runs.
-    """
-    scores: dict[str, float] = {}
-    for rank_by_id in (lexical_rank_by_id, semantic_rank_by_id):
-        for chunk_id, rank in rank_by_id.items():
-            scores[chunk_id] = scores.get(chunk_id, 0.0) + 1.0 / (rrf_k + rank + 1)
-    return sorted(
-        scores.items(),
-        key=lambda item: (-item[1], lexical_rank_by_id.get(item[0], len(scores)), item[0]),
-    )
 
 
 def _assemble_hits(
@@ -242,6 +209,5 @@ def _fetch_chunk_meta(database_path: Path, chunk_ids: Sequence[str]) -> dict[str
 
 __all__ = [
     "PER_SIDE_CAP",
-    "RRF_K",
     "hybrid_search",
 ]

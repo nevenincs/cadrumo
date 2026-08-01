@@ -36,6 +36,7 @@ from typing import TYPE_CHECKING
 from ...core.external_constants import UTF_8_ENCODING
 from ._model_loader import load_static_model, model_dimensions
 from ._models import CorpusChunk, CorpusEmbeddingBuildResult, SimilarChunk
+from ._ranking import l2_normalise
 
 if TYPE_CHECKING:
     import numpy as np
@@ -175,7 +176,7 @@ def more_like_this(
             context={"query_chunk_id": query_chunk_id},
         ) from exc
 
-    normalised = _l2_normalise(np.asarray(matrix, dtype=np.float32))
+    normalised = l2_normalise(np.asarray(matrix, dtype=np.float32))
     similarities = normalised @ normalised[query_index]
     order = np.argsort(-similarities)
     results: list[SimilarChunk] = []
@@ -193,14 +194,6 @@ def more_like_this(
         if len(results) >= top_k:
             break
     return tuple(results)
-
-
-def _l2_normalise(matrix: np.ndarray) -> np.ndarray:
-    import numpy as np
-
-    norms = np.linalg.norm(matrix, axis=1, keepdims=True)
-    norms[norms == 0.0] = 1.0
-    return matrix / norms
 
 
 __all__ = [
