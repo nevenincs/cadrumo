@@ -5286,6 +5286,7 @@ cli:
       workbook_count: Nº libros (workbooks)
       workbook_parity_ref_count: Nº referencias de paridad de libro
       workbook_path: Ruta del libro
+      failed_declaration_count: 'Número de declaraciones fallidas'
     observation_help: Manifiesto cifrado de observación de declaración presentada
       que se va a verificar
     parity_app_help: Ejecutar escenarios y cintas de paridad para comprobaciones manuales

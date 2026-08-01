@@ -5243,6 +5243,7 @@ cli:
       workbook_count: llibres de treball
       workbook_parity_ref_count: refs de paritat del llibre
       workbook_path: ruta del llibre de treball
+      failed_declaration_count: 'Nombre de declaracions fallides'
     observation_help: Manifest xifrat d'observació de declaració presentada que cal
       verificar
     parity_app_help: Executar escenaris i cintes de paritat per a comprovacions manuals

@@ -5196,6 +5196,7 @@ cli:
       workbook_count: Munkafüzetek száma
       workbook_parity_ref_count: Munkafüzet paritás-hivatkozások száma
       workbook_path: Munkafüzet elérési útja
+      failed_declaration_count: 'Sikertelen bevallások száma'
     observation_help: A titkosított benyújtott bevallás megfigyelési manifesztje az
       ellenőrzéshez.
     parity_app_help: Forgatókönyv- és szalag-paritásfuttató a kézi számítások ellenőrzéséhez.

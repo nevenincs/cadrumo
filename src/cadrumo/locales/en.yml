@@ -4898,6 +4898,7 @@ cli:
       workbook_count: Workbook count
       workbook_parity_ref_count: Workbook parity ref count
       workbook_path: Workbook path
+      failed_declaration_count: 'Failed declaration count'
     observation_help: Encrypted filed-declaration observation manifest to verify
     parity_app_help: Scenario and tape parity runner for manual calculation checks
     parity_output_help: Destination JSON file for the generated parity tape

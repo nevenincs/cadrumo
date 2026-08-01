@@ -279,6 +279,31 @@ class IvaWalletCaptureHistoryResult(OutputSchema):
     captured_count: int
     calculation_observation_count: int
     reloaded_history_count: int
+    # Evidence fidelity carried from
+    # :class:`IvaCompensationHistoryCaptureReport`. Without the failure fields a
+    # partial capture presented its counts with no way to tell that some
+    # declarations were never read; the path/ref/key fields let an operator
+    # confirm what the counts are counting.
+    casilla_count: int = Field(default=0, ge=0)
+    observation_paths: list[str] = []
+    artefact_refs: list[str] = []
+    calculation_observation_keys: list[str] = []
+    failed_declaration_count: int = Field(default=0, ge=0)
+    failed_declarations: list[str] = []
+
+    @model_validator(mode="after")
+    def _failure_count_agrees_with_named_failures(self) -> IvaWalletCaptureHistoryResult:
+        """A reported failure count must be backed by the declarations it counts.
+
+        The point of carrying both is that a partial capture cannot present a
+        bare number; a count without its names would reinstate exactly that.
+        """
+        if self.failed_declarations and self.failed_declaration_count != len(self.failed_declarations):
+            raise ValueError(
+                f"failed_declaration_count {self.failed_declaration_count} disagrees with "
+                f"{len(self.failed_declarations)} named failed declarations",
+            )
+        return self
 
 
 class LiveIvaSurfaceOutcomePayload(OutputSchema):
