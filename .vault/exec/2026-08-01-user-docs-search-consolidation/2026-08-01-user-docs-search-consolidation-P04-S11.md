@@ -5,7 +5,7 @@ tags:
 date: '2026-08-01'
 modified: '2026-08-01'
 body_schema: 'body-v1'
-body_hash: 'sha256:302eb6e14a83b85e84fe9da6212583670a96d66172b525fb04fda55e00580321'
+body_hash: 'sha256:dba5d17e4a3f32ea46b089dd4a0a17c802dc71906ae17b85564d17d83d26d408'
 step_id: 'S11'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -68,6 +68,8 @@ Language-root coverage is asserted against the publisher's real check list: ever
 Verification, all real counts: the gate module runs 5 tests, passing in 78 seconds - short enough to actually run, which matters because a gate slow enough to be deselected is a false green of its own. The full-corpus alternative was measured at 890 seconds.
 
 Mutation proof: restoring the `pages` deploy value fails 4 of the 5, including the artefact reads (`the deployed index carries no records of kind(s) ['casilla', 'cli', 'concept']` and `kinds [...] are absent from the written fragments`). The fifth, language-root publish coverage, is orthogonal to the index mode and correctly stays green. Restoring the value returns all 5 to green.
+
+On the localized roots, which the plan treats as a separate gap: the publisher already builds each one, validates that it carries an index page and substantive index data, syncs it under the documentation prefix, and requires it to answer 200 after publish. The delivery function rewrites a trailing-slash request to the root's index page and the distribution declares no origin path, so the mapping is intact end to end. A localized user-scope build was run directly against the deploy's own out-dir form and Sphinx reported success, and the repository's existing per-language nitpicky gates passed for Spanish, Catalan, and Hungarian in the same session. What remains unproven is only the localized root's injected-record artefact, because the injection phase outlasted the measurement window; the resolver assertion covers the decision for every language.
 
 ## Notes
 
