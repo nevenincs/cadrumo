@@ -43,7 +43,9 @@ from ...domain.deadlines import (
     DeadlineValidationError,
     NoDeadlineWindowsError,
     TaxpayerProfile,
+    twelve_month_anniversary,
 )
+from ...domain.retention import TAX_RECORD_RETENTION_FLOOR_YEARS, add_prescription_years
 from ._errors import OverviewExplainError
 
 if TYPE_CHECKING:
@@ -367,11 +369,11 @@ def _out_of_plazo_warning(
     if not matching_windows:
         return None
     closes_on = max(window.closes_on for window in matching_windows)
-    twelve_month_boundary = _add_years(closes_on, 1)
+    twelve_month_boundary = twelve_month_anniversary(closes_on)
     if today < twelve_month_boundary:
         return None
     days_late = (today - closes_on).days
-    prescription_boundary = _add_years(closes_on, 4)
+    prescription_boundary = add_prescription_years(closes_on, TAX_RECORD_RETENTION_FLOOR_YEARS)
     prescription_state = (
         "inside the ordinary four-year LGT arts. 66-67 prescription horizon"
         if today <= prescription_boundary
@@ -399,13 +401,6 @@ def _deadline_window_matches(
         mode=window.applicability_condition_mode,
     )
     return condition_text is not None
-
-
-def _add_years(value: date, years: int) -> date:
-    try:
-        return value.replace(year=value.year + years)
-    except ValueError:
-        return value.replace(year=value.year + years, month=2, day=28)
 
 
 __all__ = [

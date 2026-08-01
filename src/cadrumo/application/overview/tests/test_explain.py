@@ -9,7 +9,7 @@ boundary refusals; the per-persona derivation matrix lives in
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 
 import pytest
 from pydantic import ValidationError
@@ -21,9 +21,11 @@ from ....domain.deadlines import (
     IrpfIncomeCategory,
     IVARegime,
     TaxpayerProfile,
+    twelve_month_anniversary,
 )
+from ....domain.retention import TAX_RECORD_RETENTION_FLOOR_YEARS, add_prescription_years
 from .._errors import OverviewExplainError
-from .._explain import OverviewExplain, build_overview_explain
+from .._explain import OverviewExplain, _out_of_plazo_warning, build_overview_explain
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -172,6 +174,36 @@ def test_explain_historical_modelo_100_carries_out_of_plazo_warning() -> None:
     assert "four-year LGT arts. 66-67 prescription horizon" in result.out_of_plazo_warning
 
 
+def test_explain_historical_warning_uses_the_recargo_anniversary_with_its_inclusive_boundary() -> None:
+    """Overview warning starts on the same legal anniversary that recargo resolves."""
+    closes_on = date(2023, 6, 30)
+    anniversary = twelve_month_anniversary(closes_on)
+
+    before = build_overview_explain(_autonomo_profile(), modelo="100", year=2022, today=anniversary - timedelta(days=1))
+    on_anniversary = build_overview_explain(_autonomo_profile(), modelo="100", year=2022, today=anniversary)
+
+    assert anniversary == date(2024, 6, 30)
+    assert before.out_of_plazo_warning is None
+    assert on_anniversary.out_of_plazo_warning is not None
+
+
+def test_explain_historical_warning_uses_the_retention_prescription_boundary() -> None:
+    closes_on = date(2023, 6, 30)
+    prescription_boundary = add_prescription_years(closes_on, TAX_RECORD_RETENTION_FLOOR_YEARS)
+
+    on_boundary = build_overview_explain(_autonomo_profile(), modelo="100", year=2022, today=prescription_boundary)
+    after_boundary = build_overview_explain(
+        _autonomo_profile(),
+        modelo="100",
+        year=2022,
+        today=prescription_boundary + timedelta(days=1),
+    )
+
+    assert prescription_boundary == date(2027, 6, 30)
+    assert "inside the ordinary four-year" in (on_boundary.out_of_plazo_warning or "")
+    assert "after the ordinary four-year" in (after_boundary.out_of_plazo_warning or "")
+
+
 def test_explain_recent_modelo_100_does_not_emit_out_of_plazo_warning() -> None:
     """A just-closed M100 window is not the historical stale-year case."""
 
@@ -221,3 +253,33 @@ def test_explain_721_depends_on_crypto_abroad_threshold_fact() -> None:
     assert result.applicable is True
     assert result.profile_facts["bienes_extranjero_above_threshold"] is False
     assert result.profile_facts["monedas_virtuales_extranjero_above_threshold"] is True
+
+
+def test_out_of_plazo_warning_delegates_its_date_arithmetic() -> None:
+    """DISCRIMINATING: the warning must reach the canonical date helpers.
+
+    Both retired local helpers AGREED with their canonical replacements on
+    every date the suite exercises -- `_add_years(x, 1)` matches
+    `twelve_month_anniversary` away from the leap edge, and `_add_years(x, 4)`
+    matches `add_prescription_years` at four years everywhere. Re-inlining the
+    retired arithmetic therefore leaves every outcome assertion in this module
+    green (measured: 14 passed with the duplicate restored), so no assertion on
+    the warning's TEXT or its boundaries can defend this consolidation.
+
+    The compiled name references can. A restated implementation names its own
+    local helper and neither canonical one.
+    """
+    referenced = _out_of_plazo_warning.__code__.co_names
+
+    assert "twelve_month_anniversary" in referenced, (
+        "the twelve-month boundary must come from domain.deadlines."
+        f"twelve_month_anniversary; referenced names were {referenced}"
+    )
+    assert "add_prescription_years" in referenced, (
+        "the prescription boundary must come from domain.retention."
+        f"add_prescription_years; referenced names were {referenced}"
+    )
+    assert "TAX_RECORD_RETENTION_FLOOR_YEARS" in referenced, (
+        "the four-year horizon must be read from the grounded retention "
+        f"constant, not written as a literal; referenced names were {referenced}"
+    )
