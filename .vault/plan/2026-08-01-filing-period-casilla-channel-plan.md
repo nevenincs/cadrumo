@@ -4,7 +4,7 @@ tags:
   - '#filing-period-casilla-channel'
 date: '2026-08-01'
 modified: '2026-08-01'
-body_hash: 'sha256:57241e05149541ec22d0641d7462fe90802e1af3bc78ff2d7aeeff59a99c2e61'
+body_hash: 'sha256:77575301edb98d0a5fdd9cf1f23b201ecb506353343faffcae9f8488fd61071c'
 tier: L2
 related:
   - '[[2026-08-01-filing-period-casilla-channel-adr]]'
@@ -63,8 +63,8 @@ Move the committed cli-sequence goldens from the ordinal to the token and prove 
 
 Open the deferred work as explicit tracked items per the operator's issues-over-latent-drift directive.
 
-- [ ] `P04.S15` - Open a tracked issue for the observation channel's type-expressiveness gap: strictly-Decimal CasillaObservation.value cannot express text-family values and emits a plausible-looking structural Decimal zero for them instead; `.vault/audit/2026-08-01-filing-period-casilla-channel-audit.md`.
-- [ ] `P04.S16` - Confirm with the M369 landing campaign that the token fill unblocks EXT-period validation and hand the end-to-end coverage back to it; `src/cadrumo/_data/registry/aeat/modelos/369`.
+- [x] `P04.S15` - Open a tracked issue for the observation channel's type-expressiveness gap: strictly-Decimal CasillaObservation.value cannot express text-family values and emits a plausible-looking structural Decimal zero for them instead; `.vault/audit/2026-08-01-filing-period-casilla-channel-audit.md`.
+- [x] `P04.S16` - Confirm with the M369 landing campaign that the token fill unblocks EXT-period validation and hand the end-to-end coverage back to it; `src/cadrumo/_data/registry/aeat/modelos/369`.
 
 ## Parallelization
 
