@@ -7,15 +7,16 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import BindingSourceKind, Period
+from ....core import BindingSourceKind, ForeignAssetObligationGroup, Period
 from ....core.aggregation import BindingAggregation, BindingAggregationOp
-from ....core.external_constants import MODELO_720_REPORTING_THRESHOLD_EUR
+from ....core.resources import resources
 from ....domain.calculations.registry import (
     DataBindingDefinition,
     ModeloRevision,
     PeriodSelector,
     resolve_foreign_asset_binding_row_values,
 )
+from ..._foreign_asset_thresholds import foreign_asset_declaration_thresholds
 from .._foreign_assets import (
     ForeignAssetClass,
     ForeignAssetClassRollup,
@@ -72,6 +73,11 @@ def _m720_revision() -> ModeloRevision:
         period_selector=PeriodSelector(year_from=2013, periods=("0A",)),
         legal_refs=_M720_LEGAL_REFS,
         source_refs=_M720_SOURCE_REFS,
+        parameters=resources().modelos.authority.snapshot(
+            "720",
+            filing_year=2025,
+            period="0A",
+        ).revision.parameters,
         bindings=tuple(_m720_row_binding(binding_id, row_field) for binding_id, row_field in _M720_ROW_BINDINGS),
     )
 
@@ -226,8 +232,9 @@ class TestAggregateBasic:
 
 
 class TestThreshold720:
-    def test_threshold_is_canonical_50000(self) -> None:
-        assert Decimal("50000.00") == MODELO_720_REPORTING_THRESHOLD_EUR
+    def test_threshold_is_resolved_from_the_2025_registry_revision(self) -> None:
+        thresholds = foreign_asset_declaration_thresholds(modelo="720", filing_year=2025)
+        assert thresholds[ForeignAssetObligationGroup.CUENTAS].initial_declaration_floor_eur == Decimal("50000.00")
 
     def test_declarable_strict_above_50000(self) -> None:
         observations = (_obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="50000.01", asset_external_id="A1"),)

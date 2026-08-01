@@ -35,7 +35,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _DECIMAL_CONSTANT_CASES = (
     ("M347_THRESHOLD_EUR", "3005.06"),
-    ("MODELO_720_REPORTING_THRESHOLD_EUR", "50000.00"),
     ("ART_7P_EXEMPTION_CAP_EUR", "60100"),
     ("MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR", "1500"),
     ("WORK_INCOME_GENERAL_DECLARATION_LIMIT_EUR", "22000"),
@@ -486,7 +485,6 @@ def test_no_bare_threshold_decimal_literals_in_consumers(source_tree_ast: Mappin
     offenders: list[str] = []
     for relative_path, literal, replacement in (
         ("src/cadrumo/application/aggregation/_counterpart.py", "3005.06", "M347_THRESHOLD_EUR"),
-        ("src/cadrumo/application/aggregation/_foreign_assets.py", "50000.00", "MODELO_720_REPORTING_THRESHOLD_EUR"),
         ("src/cadrumo/domain/renta/_maritime_exemption.py", "60100", "ART_7P_EXEMPTION_CAP_EUR"),
         (
             "src/cadrumo/domain/deadlines/_models.py",

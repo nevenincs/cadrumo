@@ -543,12 +543,6 @@ IVA_BIEN_INVERSION_INMUEBLE_DIVISOR: Final[Decimal] = Decimal("10")
 #: excluded. Binding provision: Art. 108.Dos.5.º LIVA (Ley 37/1992).
 IVA_BIEN_ESCASO_VALOR_UMBRAL_EUR: Final[Decimal] = Decimal("3005.06")
 
-#: Modelo 720 declaration floor per regulatory obligation ``bloque``. Binding provision: RD 1065/2007
-#: arts. 42 bis/ter/quater (added by RD 1558/2012) under LGT DA 18ª — each block
-#: (cuentas / valores-seguros / inmuebles) carries an independent 50.000 € umbral.
-#: An obligation block is declarable iff its aggregate valuation strictly exceeds this amount.
-MODELO_720_REPORTING_THRESHOLD_EUR: Final[Decimal] = Decimal("50000.00")
-
 #: IAE art. 82.1.c net-turnover exemption ceiling for Modelo 840 threshold
 #: continuity. Binding provision: TRLRHL RDL 2/2004 art. 82.1.c ("importe
 #: neto de la cifra de negocios inferior a 1.000.000 de euros"). The gate is
