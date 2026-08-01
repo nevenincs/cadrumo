@@ -4,7 +4,7 @@ tags:
   - '#user-docs-search-consolidation'
 date: '2026-08-01'
 modified: '2026-08-01'
-body_hash: 'sha256:e833c632471753306bb58d9f6b41860bd4a2cf1f6f531cb3e624807059dfa4e5'
+body_hash: 'sha256:801865389a1cce1018ff256609e05dbcecdcb25d2fdb8a0767866844e41538fa'
 tier: L2
 related:
   - '[[2026-07-31-semantic-search-precompile-boundary-plan]]'
@@ -52,7 +52,7 @@ Make the deployed site carry the decided search contract: the pages-only env val
 - [x] `P04.S11` - Add a deployment-parity gate that builds at least one localized root and asserts against the built artefact that every root's own loaded language index carries the full record corpus with count parity across the en, es, ca, and hu roots, never asserting at the injector-decision level or against an English-only fixture, so an env value or a language pin can never silently narrow any root's shipped contract; `dev/docs/tests/`.
 - [ ] `P04.S12` - Close the gap that leaves the built language roots unreachable on the live site and prove es, ca, and hu roots respond after deploy; `dev/deploy/docs_static_site.py`.
 - [ ] `P04.S13` - Redeploy and live-verify the full-mode index, the casilla destination pages, and the language roots, recording the live checks in the exec record; `dev/deploy/`.
-- [ ] `P04.S19` - Make the record-injection language follow the build language with the card summary preferring the root language's description, so every localized root's records land in the index its palette loads, correcting the module's stale per-language docstring in the same change and citing the localized-root artefact measurement in the exec record; `dev/docs/pagefind_inject.py`.
+- [x] `P04.S19` - Make the record-injection language follow the build language with the card summary preferring the root language's description, so every localized root's records land in the index its palette loads, correcting the module's stale per-language docstring in the same change and citing the localized-root artefact measurement in the exec record; `dev/docs/pagefind_inject.py`.
 
 ### Phase `P05` - Legal-corpus record kind
 
