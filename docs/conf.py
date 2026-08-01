@@ -640,7 +640,7 @@ nitpick_ignore_regex = [
     # real CamelCase class.
     (
         r"py:.*",
-        r"^(T|K|V|Key|KT|VT|RT|_T|T_co|T_contra|TPayload|PayloadT|PayloadT_co|ResultT|RecordT|PayloadType|CasillaKey|CasillaValue|BindingKey|ExpectedKey|CheckerObservation|ObservationT)$",
+        r"^(T|K|V|Key|KT|VT|RT|_T|T_co|T_contra|TPayload|PayloadT|PayloadT_co|ResultT|RecordT|PayloadType|CasillaKey|CasillaValue|BindingKey|ExpectedKey|CheckerObservation|ObservationT|DocumentT)$",
     ),
     # SQLAlchemy column/type vocabulary referenced from the encrypted-column
     # adapters; resolved online via the vendored sqlalchemy inventory under its
