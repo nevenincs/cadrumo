@@ -39,6 +39,7 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "_calc_sheets_pull.py",
         "_calc_sheets_support.py",  # shared modelo-130 registry snapshot fixture builder
         "_document_link_resolver.py",  # follow-up contract: scope-compatible Drive doclink resolution
+        "_drive_entries.py",  # shared Drive owned-entry query escaping, lookup/backfill policy, and id validation
         "_drive_media_server.py",  # contract: real local Drive media endpoint for resolver roundtrips
         "_errors.py",
         "_impersonation.py",  # service-account impersonation credential source
@@ -58,6 +59,7 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "test_compute_from_pull.py",
         "test_document_link_resolver.py",  # follow-up contract: doclink resolver scope-refusal + parse contract
         "test_document_link_resolve_roundtrip.py",  # contract: doclink fetch-and-encrypt-or-refuse over real storage
+        "test_drive_entries.py",  # contract: shared owned-entry query escaping, id validation, ownership policy
         "test_drive_folder_listing.py",  # contract: Drive-folder bulk listing/filter/pagination/refusal
         "test_drive_folder_bulk_fetch_roundtrip.py",  # contract: folder sweep fetch-and-encrypt-or-refuse
         "test_grid_resize.py",
