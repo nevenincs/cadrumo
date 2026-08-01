@@ -165,8 +165,10 @@ def _require_cohort_aware_marketplace_materialiser() -> None:
 
     if "cohort" not in inspect.signature(materialise_marketplace).parameters:
         raise SystemExit(
-            "clean source marketplace materialiser cannot embed the immutable "
-            "Python cohort; complete W02.P06.S25 before release assembly",
+            "clean source marketplace materialiser cannot embed the immutable Python cohort: "
+            "cadrumo.agent.materialise_marketplace accepts no 'cohort' argument, so the built "
+            "plugin would ship without pinned wheels. Give it a 'cohort' parameter that it "
+            "forwards to materialise_plugin, then re-run release assembly.",
         )
 
 
