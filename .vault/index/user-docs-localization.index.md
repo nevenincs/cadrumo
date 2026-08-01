@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#user-docs-localization'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-01'
+modified: '2026-08-01'
 body_schema: 'body-v1'
-body_hash: 'sha256:4b7371547ec121b1aca903e80079379014a2094d029ad2f54f1d471a36172ebe'
+body_hash: 'sha256:c56a5c19c8f6f35263274cd405d4b1bdc1b1ee36a436c779a1ed1b526502a4a3'
 related:
   - '[[2026-07-18-user-docs-localization-W01-P01-S01]]'
   - '[[2026-07-18-user-docs-localization-W01-P01-S02]]'
@@ -34,6 +34,7 @@ related:
   - '[[2026-07-18-user-docs-localization-audit]]'
   - '[[2026-07-18-user-docs-localization-plan]]'
   - '[[2026-07-18-user-docs-localization-research]]'
+  - '[[2026-08-01-user-docs-localization-catalogue-drift-audit]]'
 ---
 
 # `user-docs-localization` feature index
@@ -49,6 +50,7 @@ Auto-generated index of all documents tagged with `#user-docs-localization`.
 ### audit
 
 - `2026-07-18-user-docs-localization-audit` - `user-docs-localization` audit: `campaign close honesty review`
+- `2026-08-01-user-docs-localization-catalogue-drift-audit` - `user-docs-localization` audit: `translation catalogues were complete against stale source: the masked drift, the tracked backlog, and the gate lesson`
 
 ### exec
 

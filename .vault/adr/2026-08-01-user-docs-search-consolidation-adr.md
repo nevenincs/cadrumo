@@ -5,7 +5,7 @@ tags:
 date: '2026-08-01'
 modified: '2026-08-01'
 body_schema: 'body-v1'
-body_hash: 'sha256:6a4527db977d02503cf68c88828061d308d8b2ae0093f1d096e5d5e99bf71a49'
+body_hash: 'sha256:54978334613a6701f9c4513367f634fb08280c6c3d45aaa289b4a31ed3eff1a0'
 related:
   - "[[2026-07-31-semantic-search-precompile-boundary-adr]]"
   - "[[2026-06-10-docs-terminology-search-adr]]"
@@ -150,3 +150,14 @@ Two how-to pages (`how-to/verification-reports`, `how-to/modelo-130`) fail the d
 **Publish adjudication.** The publish proceeds WITHOUT waiting for the framework change. The two coherence reds are harness-model artefacts, not reader-facing defects: the rendered pages are correct, every sequence is golden-verified standalone, the cover-to-cover reader skips collapsed setup by the rendering contract, and the literal-minded reader who re-runs it meets an instructive refusal that names its own remedy - not corruption, not silence. Green is NOT being redefined: the publish evidence MUST name the two red coherence runs and cite this adjudication, so the red is recorded, adjudicated, and temporary rather than silently waved through.
 
 **Ownership and handoff.** The once-per-page premise with page-scoped seed captures belongs to the sequence-framework campaign (the `docs-cli-sequences` surface), which amends or extends `2026-07-13-docs-cli-sequences-adr` when implementing and whose fix un-reds the two pages and immunises the latent sharing pages. This feature carries only the publish-record annotation requirement; it absorbs no framework or docs-content steps.
+
+
+## Update 5 (2026-08-01): the translation-drift adjudication; publish-evidence contract extended
+
+**A premise of Update 3 is corrected.** The "roughly 46 percent prose translation" figure this record inherited from the briefing was WRONG - and wrong in an instructive direction: the catalogues were 100 percent complete against STALE source. Readers were served confident translations of English that had been rewritten under them since 2026-07-25 (drift across 22 of 58 pages), and the completeness gate stayed green because it measured the catalogue against itself rather than against current source. The resync surfaced the truth with zero translations lost: per language, 3123 total, 3022 translated, 40 fuzzy, 61 untranslated. Update 3's L4 reasoning survives strengthened: honest English fallback inside a localized root is not merely "normal in-progress localization", it is strictly better than the confidently wrong translations the live site would otherwise keep serving.
+
+**The operator's ruling, recorded: publish now, track the 303.** The 101 strings per language needing HUMAN translation are named, per-page, in the audit `2026-08-01-user-docs-localization-catalogue-drift-audit`, which also carries the no-fabrication mandate - agents MUST NOT invent Catalan or Hungarian strings; a fabricated translation is a defect shipped in a language no agent here can verify - and notes the five mechanical `download.md` punctuation alignments per language as trivially clearable. The backlog belongs to the `user-docs-localization` feature line through its gettext catalogues; this feature absorbs no translation steps. The red `test_docs_localization.py` gate is the backlog's enforcement teeth: it cannot silently rot.
+
+**The publish-evidence contract is extended.** The requirement set for the two coherence reds in Update 4 now covers the 6 localization-gate failures (3 untranslated-delta, 3 punctuation-stale), for the same reason in the same words: green is not redefined; the red is named and adjudicated in the publish record, citing this update and the drift audit. The masking mechanism itself - the third observed-surface false-green of this one day, after the Update 3 addendum's blind-gate trio and the pages-mode env - is recorded as the drift audit's durable gate-design finding.
+
+**Operational note for the publish procedure**, reported honestly and not claimed as reproduced: the cli-sequence check runs a nested pool of child interpreters under Sphinx and wedged once under heavy concurrent load (about 15ms CPU across 45s, zero output, orphaned subprocess). Message extraction no longer runs it, but a production docs build still does, and `dev/docs/sequence_build_gate.py` states no production path sets the opt-out. If the publish build ever stalls with zero output, that pool is the first place to look.
