@@ -371,6 +371,31 @@ def test_required_real_client_row_needs_a_real_session(tmp_path: Path) -> None:
         )
 
 
+@pytest.mark.parametrize(
+    "session",
+    (
+        {"connected": False, "status": "passed", "tool_called": "cadrumo_modelo_work_calculate"},
+        {"connected": True, "status": "error", "tool_called": "cadrumo_modelo_work_calculate"},
+        {"connected": True, "status": "passed", "tool_called": None},
+    ),
+)
+def test_required_real_client_row_refuses_an_unsuccessful_session(tmp_path: Path, session: dict[str, object]) -> None:
+    """A disconnected, errored, or tool-less real-client record cannot mint PASSED evidence."""
+    cohort = _release_cohort(tmp_path / "cohort")
+
+    with pytest.raises(ValueError, match="connected, passed session"):
+        build_client_evidence(
+            row_id="claude-desktop-mcpb",
+            cohort=cohort,
+            mcp_evidence=_mcp_evidence(),
+            launch_transcript=_launch_transcript(tmp_path),
+            client=_client(),
+            acquisition=AcquisitionIdentity(mechanism="mcpb", source="github-release"),
+            destination=_destination(cohort),
+            real_client_session=session,
+        )
+
+
 def test_required_real_client_rows_match_readiness() -> None:
     """The guard's required-row set stays in lock-step with the readiness authority.
 
