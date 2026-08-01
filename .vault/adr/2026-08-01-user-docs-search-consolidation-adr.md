@@ -5,7 +5,7 @@ tags:
 date: '2026-08-01'
 modified: '2026-08-01'
 body_schema: 'body-v1'
-body_hash: 'sha256:0238cec17d8407848aa46378c91648b69694200a0eceded0c7d79624c7742542'
+body_hash: 'sha256:5fabf8109dd07ed0b2237f59e6bdbe8c15811f105e27c99702eb8929f22dd0af'
 related:
   - "[[2026-07-31-semantic-search-precompile-boundary-adr]]"
   - "[[2026-06-10-docs-terminology-search-adr]]"
@@ -90,3 +90,18 @@ The operator's directive and the corpus's oldest accepted doctrine coincide exac
 - Multilingual expectations are pinned to what is built: query-level recall in four languages, English pages, Spanish authoritative labels. A future localised-site ambition is a separate decision.
 - The two 2026-08-01 commits' work products are acknowledged as overtaken, not refuted: `4dd9810c8f` correctly implemented a recommendation that was valid when written; `71a89d0d2d` correctly deduplicated a surface that was live when audited. Their deletion by the boundary plan is the ruling working as intended.
 - A future ADR wanting open-vocabulary semantic recall (rung 3 or a search service) must supersede both this record and the boundary ADR explicitly.
+
+
+## Update 1 (2026-08-01): deployed-contract ground truth folded in
+
+An independent read-only investigation, verified against the tree and the live site, corrects three factual premises of this record; the rulings survive but two claims are amended. Original text above is preserved; this update governs where they conflict.
+
+**The deployed contract is pages-only, and no decision authorised it.** `dev/deploy/docs_static_site.py:132` sets `CADRUMO_DOCS_PAGEFIND_MODE=pages` for every deploy root, and `dev/docs/build.py` skips the record-injection seam entirely in that mode; the live pagefind entry carries one language and 75 pages. The concept, casilla, and CLI record kinds this ADR describes as shipped are BUILT but have never reached a reader: R1's "substantially shipped" is corrected to "substantially built; the deployment discards the record kinds". The mode arrived inside an env-key rename commit (`3dd9e8611e`) with no ADR naming it - an unadjudicated env value acting as de facto architecture, the same unowned-authority class as R7's causes. RULING: the deployed contract is FULL mode on every root, adjudicated here; a deployment-parity gate asserts the built site's pagefind entry carries every decided record kind and every language root, extending the 2026-07-15 lesson (silent target breakage needs a gate that observes the shipped artefact) from record targets to the deployment contract itself.
+
+**The legal corpus - the operator's first-named domain - has no record kind at all.** The committed relevance mapping carries 398 `legal:` target ids (measured at HEAD; the majority of all targets) pointing at real BOE provisions: the dev-side sweep genuinely mined the legal corpus, and the injector, which emits only `concept:`, `casilla-record:`, `cli:`, and `cli-option:` ids, discards every one of them - compiled, then thrown away, so the 2026-07-13 D2 widening bought the reader nothing. RULING: a fifth record kind, LEGAL, is added under the 2026-07-15 contract - the legal catalogue's provisions project onto a generated per-law reference surface (the casilla-pages pattern: one shared anchor authority, D1-conformant site-relative targets, BOE permalinks rendered at the destination, a per-kind parity gate with destination-grounding coverage) - and the target-resolution gate is extended to refuse any relevance target id no injector emits, closing the dead-target class structurally.
+
+**R4 is amended: localised page roots exist and are in scope.** The deploy matrix already builds per-language site roots (es, ca, hu) from committed gettext catalogues (`dev/docs/i18n.py`, `_build_language_roots`), each with its own Pagefind index; the live roots 404. R4's sentence "translated documentation PAGES are not part of this deliverable" is WITHDRAWN as contrary to the built surface: publishing the existing language roots is part of this deliverable, and the multilingual statement becomes query-level recall PLUS the per-language roots the deploy matrix builds. Growing the ~46 percent translation coverage remains its own authoring workstream, as before.
+
+**The operator's hook assumption, restated without hedge.** No vaultspec-rag verb emits a deployable artefact: the preprocess hooks feed vaultspec-rag's OWN dev-box index so the sweep can mine the corpus, and everything shippable is compiled by this repo's `dev/docs/` pipeline. The Considerations paragraph's "holds in substance" is retired in favour of this plain statement.
+
+The live 404 on `/_generated/casillas/303.html` is deployment staleness (the destination pages landed at HEAD after the last deploy) and is closed by the redeploy step. The companion plan gains two phases for this update (deployed-contract remediation, legal record kind), sequenced before rung-2 so the final miss-rate baseline is measured against the ladder a reader actually reaches.

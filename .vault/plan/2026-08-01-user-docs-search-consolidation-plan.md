@@ -4,7 +4,7 @@ tags:
   - '#user-docs-search-consolidation'
 date: '2026-08-01'
 modified: '2026-08-01'
-body_hash: 'sha256:8a70b180930b2741eb88dfcbeade7e457a35de5f59bfdb0e7b9294c786887924'
+body_hash: 'sha256:6831320ac7ea66c8d55ccc295732ffd350a91009ccd5e85e9313804ec09c6b92'
 tier: L2
 related:
   - '[[2026-07-31-semantic-search-precompile-boundary-plan]]'
@@ -15,7 +15,7 @@ related:
 
 ## Description
 
-Executes the user-docs-search-consolidation ADR: the user-facing documentation search architecture is affirmed as the project's one semantic-search deliverable, and this plan completes it. The corpus detangle the ADR ruled (adjudication annotations on the two 2026-07-31 audits, R6 dispositions) was executed at ruling time and is not re-planned here; what remains is the shipped-search-licence-clean rule amendment (R5), the rung-2 semantic layer whose IMPLEMENT-RUNG-2 verdict the 2026-07-13 docs-terminology-search ADR fired and nothing delivered, and the verification close. This plan starts where the in-flight semantic-search-precompile-boundary plan ends and duplicates none of its deletion steps: every step here is docs-side (dev docs tooling, shipped docs assets, terminology data), disjoint from the product tree that plan deletes.
+Executes the user-docs-search-consolidation ADR and its Update 1: the user-facing documentation search architecture is affirmed as the project's one semantic-search deliverable, and this plan completes it against the measured deployed ground truth. The corpus detangle the ADR ruled (adjudication annotations on the two 2026-07-31 audits, R6 dispositions) was executed at ruling time and is not re-planned here. What remains: the shipped-search-licence-clean rule amendment (R5), the deployed-contract remediation Update 1 adjudicates (the pages-only env value never decided by any ADR, the unreachable language roots, the stale live site), the legal-corpus record kind no shipped surface ever carried despite hundreds of compiled legal relevance targets, the rung-2 semantic layer whose IMPLEMENT-RUNG-2 verdict the 2026-07-13 docs-terminology-search ADR fired and nothing delivered, and the verification close. This plan starts where the in-flight semantic-search-precompile-boundary plan ends and duplicates none of its deletion steps: every step here is docs-side or deploy-side, disjoint from the product tree that plan deletes.
 
 ## Steps
 
@@ -43,13 +43,34 @@ Prove the multilingual recall claim against the built site, keep every existing 
 - [ ] `P03.S08` - Prove multilingual query recall on the built site with Spanish, Catalan, and Hungarian queries recalling concept and casilla records through the behavioural search gates; `dev/docs/tests/`.
 - [ ] `P03.S09` - Run the fresh-context honesty review against the closure summary and persist it as a vault audit, closing or formally deferring every surfaced item; `.vault/audit/`.
 
+### Phase `P04` - Deployed-contract remediation
+
+Make the deployed site carry the decided search contract: the pages-only env value is retired for full mode on every root, the built language roots become reachable live, and a deployment-parity gate makes any future silent re-narrowing of the shipped contract a loud failure.
+
+- [ ] `P04.S10` - Retire the pages-only CADRUMO_DOCS_PAGEFIND_MODE deploy value so every root builds the full record-injected index, updating the deploy-environment test to pin full mode; `dev/deploy/docs_static_site.py`.
+- [ ] `P04.S11` - Add a deployment-parity gate asserting the built site's pagefind entry carries every decided record kind and every language root, so an env value can never silently re-narrow the shipped contract again; `dev/docs/tests/`.
+- [ ] `P04.S12` - Close the gap that leaves the built language roots unreachable on the live site and prove es, ca, and hu roots respond after deploy; `dev/deploy/docs_static_site.py`.
+- [ ] `P04.S13` - Redeploy and live-verify the full-mode index, the casilla destination pages, and the language roots, recording the live checks in the exec record; `dev/deploy/`.
+
+### Phase `P05` - Legal-corpus record kind
+
+Deliver the operator's core ask that no record kind ever served: project the legal catalogue's provisions into a fifth typed record kind with D1-conformant destinations on a generated legal reference surface, reconcile the hundreds of dead legal relevance targets to the new ids, and close the dead-target class in the gate.
+
+- [ ] `P05.S14` - Build the generated legal reference surface rendering per-law pages with per-provision anchors from one shared slug authority, each entry carrying its BOE permalink and catalogue metadata; `dev/docs/`.
+- [ ] `P05.S15` - Project the legal catalogue into the fifth search record kind with D1-conformant targets on the new surface and inject it beside the existing kinds with declared weights; `dev/docs/pagefind_inject.py`.
+- [ ] `P05.S16` - Reconcile the committed legal relevance targets to the new record ids and extend the target-resolution gate to refuse any target id no injector emits; `src/cadrumo/_data/terminology/relevance/`.
+- [ ] `P05.S17` - Add the legal per-kind parity gate proving anchor existence and destination-grounding coverage for every projected provision record; `dev/docs/tests/`.
+
 ## Parallelization
 
-P01 leads: S01 may land at any time in a coordinated sync window, and S02 is the hard gate on all of P02 (the boundary plan owns the product tree until its honesty review closes). Within P02 the order is S03 then S04, then S05 and S06 in parallel (disjoint files), then S07 which needs the full ladder. P03 runs last: S08 after P02 lands in the built site, S09 as the final close. No step here may touch the boundary plan's deletion targets under `src/cadrumo/application/corpus_search/` or `command_search/`.
+Execution order is P01, then P04, then P05, then P02, then P03; document order preserves append-only identifiers and does not encode sequence. P01 leads: S01 may land at any time in a coordinated sync window, and S02 gates rung-2 dispatch (P02) on the boundary campaign's close. P04 is the cheapest reader-facing win and goes first after P01: S10 and S11 in parallel, then S12, then S13 which needs both. P05 follows P04 so its live verification lands on a full-mode site: S14 then S15, S16 and S17 after S15 in parallel. Within P02 the order is S03 then S04, then S05 and S06 in parallel, then S07, which is the final measurement and must run after P04 and P05 so the baseline reflects the deployed ladder. P03 runs last: S08 after everything lands on the built site, S09 as the final close. No step here may touch the boundary plan's deletion targets under `src/cadrumo/application/corpus_search/` or `command_search/`.
 
 ## Verification
 
 - The synced shipped-search-licence-clean rule carries the licence-and-provenance scoping in every generated provider copy, and vaultspec-core sync reports clean.
+- The deploy environment pins full mode, and the deployment-parity gate fails when the built pagefind entry misses a decided record kind or a language root.
+- Live checks pass and are recorded: the deployed pagefind entry carries the injected record kinds, `/_generated/casillas/303.html` resolves, and the es, ca, and hu roots respond.
+- The legal record kind ships with D1-conformant targets, its parity gate proves anchor existence and destination-grounding coverage, and the target-resolution gate refuses any relevance target id no injector emits, so the dead-target count at HEAD is zero.
 - The committed rung-2 matrix is int8, within the 1-3 MB bound scoped by the 2026-06-10 ADR, stamped with model id, licence, revision, and vocabulary fingerprint, and the extended licence gate fails when any stamp field is absent or the model licence is not MIT or Apache-2.0.
 - The wheel content is unchanged: the matrix ships in the built docs only, proven by the packaging content gates.
 - The re-taken held-out miss-rate report is committed and its figure is compared against the 0.1875 baseline in the exec record.
