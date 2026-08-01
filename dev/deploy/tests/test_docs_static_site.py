@@ -19,8 +19,10 @@ from dev.deploy.docs_static_site import (
     _language_site_url,
     _localized_languages,
     _refresh_download_latest,
+    _site_build_environment,
     _validate_language_roots,
 )
+from dev.docs.build import pagefind_index_mode
 from dev.docs.i18n import TARGET_LANGUAGES
 
 from cadrumo.core.external_constants import OutputLanguage
@@ -69,11 +71,31 @@ def test_language_build_command_reuses_the_driver_language_and_out_dir_flags(tmp
 
 
 def test_language_build_environment_points_the_base_url_at_the_language_root() -> None:
-    """Each localized build carries the page-only Pagefind contract and its own base URL."""
+    """Each localized build carries the full Pagefind contract and its own base URL."""
     env = _language_build_environment("hu")
     assert env["CADRUMO_DOCS_BASE_URL"] == f"{CANONICAL_DOCS_BASE_URL}/hu"
-    assert env["CADRUMO_DOCS_PAGEFIND_MODE"] == "pages"
+    assert env["CADRUMO_DOCS_PAGEFIND_MODE"] == "full"
     assert env["CADRUMO_DOCS_JOBS"] == "1"
+
+
+def test_every_deploy_root_pins_the_full_record_injected_search_contract() -> None:
+    """English and every localized root deploy the record-injected index, not pages alone.
+
+    The deployed contract is ``full`` on every root. Read through
+    :func:`pagefind_index_mode` - the build's own resolver - rather than
+    comparing the raw string, so this pins the contract the build will actually
+    select rather than a value that merely looks right.
+
+    An ambient ``pages`` in the publishing session must not narrow it either,
+    which is why the deploy layer pins the key explicitly instead of relying on
+    the build default; the hostile base below is the proof.
+    """
+    hostile_base = {"CADRUMO_DOCS_PAGEFIND_MODE": "pages"}
+
+    assert pagefind_index_mode(_site_build_environment(base_environment={})) == "full"
+    assert pagefind_index_mode(_site_build_environment(base_environment=hostile_base)) == "full"
+    for language in _localized_languages():
+        assert pagefind_index_mode(_language_build_environment(language)) == "full"
 
 
 def test_validate_language_roots_accepts_a_complete_matrix(tmp_path: Path) -> None:

@@ -322,10 +322,37 @@ async def _inject_records(
     )
 
 
+def _bounded_to_sample(materialised: _Materialised, sample_per_kind: int) -> _Materialised:
+    """Return the materialised records capped at ``sample_per_kind`` per kind.
+
+    The records kept are real projections — real targets, meta, filters, and
+    weights — so a caller working over the bound still exercises the production
+    record shape; only the row count shrinks. The per-kind counters are recut to
+    what is actually carried, so the stats never over-report the injection.
+    """
+    kept: list[SearchRecord] = []
+    seen: dict[str, int] = {}
+    for record in materialised.records:
+        kind = record.kind.value
+        if seen.get(kind, 0) >= sample_per_kind:
+            continue
+        seen[kind] = seen.get(kind, 0) + 1
+        kept.append(record)
+    return _Materialised(
+        records=kept,
+        concepts=min(materialised.concepts, sample_per_kind),
+        casillas=min(materialised.casillas, sample_per_kind),
+        cli_commands=min(materialised.cli_commands, sample_per_kind),
+        cli_options=min(materialised.cli_options, sample_per_kind),
+        cli_skipped_reason=materialised.cli_skipped_reason,
+    )
+
+
 def build_record_injector(
     repo_root: Path,
     *,
     on_complete: Callable[[InjectionStats], None] | None = None,
+    sample_per_kind: int | None = None,
 ) -> InjectCallback:
     """Return the injection callback for the post-build index pass.
 
@@ -337,6 +364,14 @@ def build_record_injector(
         repo_root: Repository root (for the relevance file).
         on_complete: Optional sink for the :class:`InjectionStats` (a caller
             that wants the counts, since the seam itself returns no value).
+        sample_per_kind: Optional cap on records injected per record kind.
+            Production leaves this ``None`` and injects everything. The
+            deployment-parity gate bounds it, because writing the full corpus
+            costs about fifteen minutes while the property it checks — that
+            every decided kind reaches the shipped index — is settled by a
+            handful of real records per kind. The projections, the injection
+            path, and the written artefact stay real; only the row count is
+            bounded, and the row count is not what that gate asserts.
 
     Returns:
         An async callback suitable for ``build_search_index(..., inject=...)``.
@@ -345,6 +380,8 @@ def build_record_injector(
 
     async def _inject(index: PagefindIndex) -> None:
         materialised = _materialise_records()
+        if sample_per_kind is not None:
+            materialised = _bounded_to_sample(materialised, sample_per_kind)
         stats = await _inject_records(index, materialised, relevance)
         if on_complete is not None:
             on_complete(stats)

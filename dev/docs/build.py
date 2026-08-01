@@ -9,7 +9,7 @@ import subprocess
 import sys
 import tempfile
 import xml.etree.ElementTree as ET
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
@@ -27,6 +27,7 @@ from dev.docs.download_matrix import inject_download_matrix
 
 if TYPE_CHECKING:
     from dev.docs.pagefind_index import InjectCallback
+    from dev.docs.pagefind_inject import InjectionStats
 
 DOC_SUFFIXES = {".md", ".rst"}
 PY_SUFFIX = ".py"
@@ -447,6 +448,42 @@ def pagefind_index_mode(env: Mapping[str, str]) -> str:
     return raw
 
 
+def resolve_record_injector(
+    repo_root: Path,
+    env: Mapping[str, str],
+    *,
+    on_complete: Callable[[InjectionStats], None] | None = None,
+    sample_per_kind: int | None = None,
+) -> InjectCallback | None:
+    """Resolve one environment's Pagefind contract into an injection callback.
+
+    The single place a build environment decides whether the shipped index
+    carries the injected concept/casilla/CLI records: ``full`` returns the real
+    record injector, ``pages`` returns ``None`` and the index carries the
+    rendered pages alone. It is a named function rather than a branch inside
+    :func:`compile_search_index` so the deployment-parity gate can observe the
+    real decision for the real deploy environment instead of re-deriving the
+    mapping — a re-derived copy would agree with itself while the build shipped
+    something else, which is precisely how a ``pages`` deploy value discarded
+    every injected record from the published site unnoticed.
+
+    Args:
+        repo_root: Repository root (for the committed relevance file).
+        env: The build environment whose contract is being resolved.
+        on_complete: Optional sink for the injection stats.
+        sample_per_kind: Optional bound on records per kind, forwarded to the
+            injector. Production leaves it ``None`` (every record).
+
+    Returns:
+        The injection callback, or ``None`` under the ``pages`` contract.
+    """
+    from dev.docs.pagefind_inject import build_record_injector
+
+    if pagefind_index_mode(env) == "pages":
+        return None
+    return build_record_injector(repo_root, on_complete=on_complete, sample_per_kind=sample_per_kind)
+
+
 #: Sitemaps.org urlset namespace for the deployment sitemap.
 _SITEMAP_NS = "http://www.sitemaps.org/schemas/sitemap/0.9"
 
@@ -664,17 +701,16 @@ def compile_search_index(
     """
     ensure_isolated_storage_root()
     from dev.docs.pagefind_index import PagefindUnavailableError, build_search_index
-    from dev.docs.pagefind_inject import InjectionStats, build_record_injector
 
     captured: list[InjectionStats] = []
     if injector is not None:
         resolved_injector = injector
-    elif pagefind_index_mode(os.environ) == "pages":
-        # Deployment ``pages`` contract: index the rendered HTML pages only,
-        # skipping the custom-record injection seam entirely.
-        resolved_injector = None
     else:
-        resolved_injector = build_record_injector(repo_root, on_complete=captured.append)
+        resolved_injector = resolve_record_injector(
+            repo_root,
+            os.environ,
+            on_complete=captured.append,
+        )
     try:
         outcome = build_search_index(html_root, inject=resolved_injector)
     except PagefindUnavailableError as exc:

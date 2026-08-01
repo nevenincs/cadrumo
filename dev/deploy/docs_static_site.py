@@ -117,6 +117,18 @@ def _required_executable(name: str) -> str:
 def _site_build_environment(*, base_environment: Mapping[str, str] | None = None) -> dict[str, str]:
     """Return the deployment-specific strict docs build environment.
 
+    The Pagefind contract is pinned to ``full`` on every deploy root, English
+    and localized alike: the deployed index carries the injected concept,
+    casilla, and CLI records, not the rendered pages alone. It is pinned
+    explicitly rather than left to the build default so an ambient
+    ``CADRUMO_DOCS_PAGEFIND_MODE`` in the publishing session cannot narrow the
+    shipped search contract — ``base`` is the real process environment in
+    production, and these keys are layered over it.
+
+    The value is decided, not incidental: a ``pages`` value arrived here inside
+    an unrelated env-key rename and silently discarded every injected record
+    from the published site for as long as it stood.
+
     Args:
         base_environment: DI seam for tests. When ``None`` (production), the
             deploy-specific keys are layered over the real process
@@ -129,7 +141,7 @@ def _site_build_environment(*, base_environment: Mapping[str, str] | None = None
         **base,
         "CADRUMO_DOCS_BASE_URL": CANONICAL_DOCS_BASE_URL,
         "CADRUMO_DOCS_JOBS": "1",
-        "CADRUMO_DOCS_PAGEFIND_MODE": "pages",
+        "CADRUMO_DOCS_PAGEFIND_MODE": "full",
     }
 
 
@@ -260,9 +272,11 @@ def _language_build_command(language: str, out_dir: Path) -> list[str]:
 def _language_build_environment(language: str) -> dict[str, str]:
     """Return the deploy build environment for one localized site root.
 
-    The shared deployment environment (serial workers, page-only Pagefind
-    contract) with the canonical base URL pointed at the language's own root so
-    the per-language sitemap and canonical/OpenGraph URLs are correct.
+    The shared deployment environment (serial workers, full record-injected
+    Pagefind contract) with the canonical base URL pointed at the language's own
+    root so the per-language sitemap and canonical/OpenGraph URLs are correct.
+    Each localized root therefore carries the injected records too: a reader on
+    ``/es/`` searches the same record kinds as a reader on the English root.
     """
     return {**_site_build_environment(), "CADRUMO_DOCS_BASE_URL": _language_site_url(language)}
 
@@ -543,15 +557,25 @@ def _endpoint_response(url: str) -> tuple[int, dict[str, str]]:
         connection.close()
 
 
-def _verify_public_delivery(target: DeploymentTarget) -> None:
-    """Require the canonical, legacy, missing, and private-origin responses."""
-    checks = (
+def _public_delivery_checks(target: DeploymentTarget) -> tuple[tuple[str, int], ...]:
+    """Return the post-publish endpoint checks as ``(url, expected status)`` pairs.
+
+    Named separately from the run so the deployment-parity gate can assert the
+    published surface is covered — every localized root among them — without
+    reaching the network.
+    """
+    return (
         (f"{CANONICAL_DOCS_BASE_URL}/", 200),
         *tuple((f"{_language_site_url(language)}/", 200) for language in _localized_languages()),
         (_LEGACY_DOCS_URL, 308),
         (f"{CANONICAL_DOCS_BASE_URL}/{_MISSING_DOCS_PATH}", 404),
         (f"https://{target.bucket}.s3.{STACK_REGION}.amazonaws.com/docs/index.html", 403),
     )
+
+
+def _verify_public_delivery(target: DeploymentTarget) -> None:
+    """Require the canonical, legacy, missing, and private-origin responses."""
+    checks = _public_delivery_checks(target)
     legacy_headers: dict[str, str] | None = None
     for url, expected_status in checks:
         actual_status, headers = _endpoint_response(url)
