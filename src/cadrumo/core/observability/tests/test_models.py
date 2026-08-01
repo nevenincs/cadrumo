@@ -94,7 +94,7 @@ _PAYLOAD_VARIANTS = (
     RunEventPayload(cache_hit=CacheHitPayload(cache_name="iva", key="2025")),
     RunEventPayload(error=ErrorPayload(error_type="X", message="boom")),
     RunEventPayload(step=StepBoundaryPayload(step_id="s1", label="t")),
-    RunEventPayload(workflow_link=WorkflowLinkPayload(workflow_run_id="abc")),
+    RunEventPayload(workflow_link=WorkflowLinkPayload(workflow_run_id="abcdef0123456789")),
     RunEventPayload(generic=GenericPayload(fields=(("k", "v"),))),
 )
 
@@ -178,3 +178,79 @@ class TestRunEventAndTrace:
         )
         rebuilt = RunTrace.model_validate_json(trace.model_dump_json())
         assert rebuilt == trace
+
+
+class TestRunIdentity:
+    """The run identity is one canonical shape across every observability record.
+
+    ``run_id`` is minted as 16 lowercase hex characters. That shape was
+    previously enforced only in :mod:`core.observability._store` — at the
+    point of *persistence* — so a malformed identity could be built into a
+    :class:`RunEvent`, a :class:`RunTrace`, or a
+    :class:`WorkflowLinkPayload` and only fail later, or never, if the
+    record was passed around without being written.
+    """
+
+    _CANONICAL = "abcdef0123456789"
+    _MALFORMED = ("abc", "", "ABCDEF0123456789", "abcdef012345678g", "abcdef01234567890", "../etc")
+
+    def test_workflow_link_refuses_malformed_run_id(self) -> None:
+        """A workflow link cannot carry a run id the workflow engine could not mint."""
+        from .. import WorkflowLinkPayload
+
+        for bad in self._MALFORMED:
+            with pytest.raises(ValidationError):
+                WorkflowLinkPayload(workflow_run_id=bad)
+        assert WorkflowLinkPayload(workflow_run_id=self._CANONICAL).workflow_run_id == self._CANONICAL
+
+    def test_run_event_refuses_malformed_run_id(self) -> None:
+        """A persisted event row cannot carry a malformed owning-run identity."""
+
+        def _build(run_id: str) -> RunEvent:
+            return RunEvent(
+                run_id=run_id,
+                step_id="step-0",
+                kind=RunEventKind.NAVIGATION,
+                payload=RunEventPayload(navigation=NavigationPayload(url="https://example.test")),
+                timestamp=_AWARE_STARTED_AT,
+                module=_MODULE,
+            )
+
+        for bad in self._MALFORMED:
+            with pytest.raises(ValidationError):
+                _build(bad)
+        assert _build(self._CANONICAL).run_id == self._CANONICAL
+
+    def test_run_trace_refuses_malformed_run_id(self) -> None:
+        """A trace record cannot carry a malformed run identity.
+
+        The store derives ``runs_dir / run_id``, so an unconstrained id here is
+        also the path-traversal surface the store guard exists to close — note
+        ``"../etc"`` among the refused values.
+        """
+        for bad in self._MALFORMED:
+            with pytest.raises(ValidationError):
+                _make_trace(run_id=bad)
+        assert _make_trace(run_id=self._CANONICAL).run_id == self._CANONICAL
+
+    def test_replay_of_carries_the_same_identity(self) -> None:
+        """``replay_of`` names another run, so it is the same identity type."""
+        for bad in self._MALFORMED:
+            with pytest.raises(ValidationError):
+                _make_trace(replay_of=bad)
+        assert _make_trace(replay_of=self._CANONICAL).replay_of == self._CANONICAL
+
+    def test_minted_run_ids_satisfy_the_canonical_shape(self) -> None:
+        """The declared shape is the shape the minter actually produces.
+
+        Without this the pattern could drift away from ``_mint_run_id`` and the
+        constraint would reject every genuine run rather than only bad ones.
+        """
+        import re
+
+        from .. import RUN_ID_PATTERN
+        from .._context import _mint_run_id
+
+        pattern = re.compile(RUN_ID_PATTERN)
+        for _ in range(50):
+            assert pattern.fullmatch(_mint_run_id())

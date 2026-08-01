@@ -57,6 +57,7 @@ from ._golden import (
     validate_captured_envelope,
 )
 from ._models import (
+    RUN_ID_PATTERN,
     ArgumentRecord,
     ArgumentSource,
     AssertionPayload,
@@ -68,6 +69,7 @@ from ._models import (
     RunEvent,
     RunEventKind,
     RunEventPayload,
+    RunId,
     RunOutcome,
     RunTrace,
     StepBoundaryPayload,
@@ -93,6 +95,7 @@ __all__ = [
     "MASK_SENTINEL",
     "REPLAY_ACTIVE_ENV_VAR",
     "RUN_CONTEXT_VAR",
+    "RUN_ID_PATTERN",
     "STEP_CONTEXT_VAR",
     "AeatCorpusDriftError",
     "ArgumentRecord",
@@ -112,6 +115,7 @@ __all__ = [
     "RunEvent",
     "RunEventKind",
     "RunEventPayload",
+    "RunId",
     "RunOutcome",
     "RunTrace",
     "RunTracePersistenceError",
