@@ -56,6 +56,7 @@ from ._model import (
     UsageRatioProfile,
     UsageRatioReference,
     resolve_user_ratio,
+    validate_usage_ratio_bound,
     validate_usage_ratio_reference,
 )
 from ._service import (
@@ -76,5 +77,6 @@ __all__ = [
     "resolve_user_ratio",
     "usage_ratio_bucket_lock",
     "usage_ratios_object_key",
+    "validate_usage_ratio_bound",
     "validate_usage_ratio_reference",
 ]

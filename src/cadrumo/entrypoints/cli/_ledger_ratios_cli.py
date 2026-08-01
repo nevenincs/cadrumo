@@ -169,7 +169,7 @@ def ratios_list(
     )
     from ...application.user_profile import CensoSyncService
     from ...domain.usage_ratios import CensoRatioMismatchError
-    from ._ledger_payloads import RatiosListResult
+    from ._ledger_payloads import RatiosListResult, RatiosRowPayload
 
     bucket_id, profile_id = _ratios_bucket_and_profile()
     raw_afectacion = None
@@ -187,21 +187,20 @@ def ratios_list(
         _log.debug("ledger ratios censo mismatch surfaced as warning", exc_info=True)
         censo_mismatch = str(exc)
         profile = load_usage_ratios(bucket_id=bucket_id)
-    rows = [{"category": category.value, "ratio": str(ratio)} for category, ratio in profile.ratios.items()]
-    payload = {
-        "bucket_id": bucket_id,
-        "rows": rows,
-        "count": len(rows),
-        "censo_mismatch": censo_mismatch,
-    }
+    rows = [RatiosRowPayload(category=category, ratio=str(ratio)) for category, ratio in profile.ratios.items()]
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
     if censo_mismatch is not None:
         lines.append(f"censo_mismatch\t{censo_mismatch}")
-    lines.extend(f"{row['category']}\t{row['ratio']}" for row in rows)
+    lines.extend(f"{row.category.value}\t{row.ratio}" for row in rows)
     _emit_envelope(
         ctx,
         command="ledger.ratios.list",
-        result=RatiosListResult.model_validate(payload),
+        result=RatiosListResult(
+            bucket_id=bucket_id,
+            rows=rows,
+            count=len(rows),
+            censo_mismatch=censo_mismatch,
+        ),
         lines=lines,
     )
 
@@ -258,11 +257,10 @@ def ratios_set(
         )
         if warning is not None:
             _emit_ratios_censo_override_warning(bucket_id=bucket_id, warning=warning)
-    payload = {"bucket_id": bucket_id, "category": category_enum.value, "ratio": str(parsed)}
     _emit_envelope(
         ctx,
         command="ledger.ratios.set",
-        result=RatiosSetResult.model_validate(payload),
+        result=RatiosSetResult(bucket_id=bucket_id, category=category_enum, ratio=str(parsed)),
         lines=(f"bucket\t{bucket_id}", f"{category_enum.value}\t{parsed}"),
     )
 
@@ -310,11 +308,10 @@ def ratios_unset(
         prior=prior,
         new=None,
     )
-    payload = {"bucket_id": bucket_id, "category": category_enum.value, "ratio": ""}
     _emit_envelope(
         ctx,
         command="ledger.ratios.unset",
-        result=RatiosUnsetResult.model_validate(payload),
+        result=RatiosUnsetResult(bucket_id=bucket_id, category=category_enum, ratio=""),
         lines=(f"bucket\t{bucket_id}", f"{category_enum.value}\t<unset>"),
     )
 
@@ -338,26 +335,34 @@ def ratios_eligible(
     """List every ``SpendingCategory`` that may carry a per-category proportional-deduction override."""
     _activate_subcommand_output_language(ctx, output_language)
     from ...application.ledger import list_eligible_ratios_for_bucket
-    from ._ledger_payloads import RatiosEligibleResult
+    from ._ledger_payloads import RatiosEligibleResult, RatiosEligibleRowPayload
 
     bucket_id = _ratios_bucket_id()
     rows = list_eligible_ratios_for_bucket(bucket_id=bucket_id)
-    payload = {
-        "bucket_id": bucket_id,
-        "rows": [row.model_dump(mode="json") for row in rows],
-        "count": len(rows),
-    }
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
     for row in rows:
         default = "" if row.default_ratio is None else str(row.default_ratio)
         override_marker = "X" if row.override_present else "."
+        kind_text = row.proportionality_kind.value
         lines.append(
-            f"{row.category.value}\t{row.proportionality_kind}\tdefault={default or '-'}\toverride={override_marker}",
+            f"{row.category.value}\t{kind_text}\tdefault={default or '-'}\toverride={override_marker}",
         )
     _emit_envelope(
         ctx,
         command="ledger.ratios.eligible",
-        result=RatiosEligibleResult.model_validate(payload),
+        result=RatiosEligibleResult(
+            bucket_id=bucket_id,
+            rows=[
+                RatiosEligibleRowPayload(
+                    category=row.category,
+                    proportionality_kind=row.proportionality_kind,
+                    default_ratio=None if row.default_ratio is None else str(row.default_ratio),
+                    override_present=row.override_present,
+                )
+                for row in rows
+            ],
+            count=len(rows),
+        ),
         lines=lines,
     )
 
@@ -381,11 +386,10 @@ def ratios_validate(
     """Validate per-category usage-ratio overrides against eligibility and bound rules without mutating state."""
     _activate_subcommand_output_language(ctx, output_language)
     from ...application.ledger import validate_ratios_for_bucket
-    from ._ledger_payloads import RatiosValidateResult
+    from ._ledger_payloads import RatiosValidateFindingPayload, RatiosValidateResult
 
     bucket_id = _ratios_bucket_id()
     report = validate_ratios_for_bucket(bucket_id=bucket_id)
-    payload = report.model_dump(mode="json")
     lines = [
         f"bucket\t{bucket_id}",
         f"profile_present\t{report.profile_present}",
@@ -400,7 +404,21 @@ def ratios_validate(
     _emit_envelope(
         ctx,
         command="ledger.ratios.validate",
-        result=RatiosValidateResult.model_validate(payload),
+        result=RatiosValidateResult(
+            bucket_id=report.bucket_id,
+            profile_present=report.profile_present,
+            eligible_count=report.eligible_count,
+            overrides_count=report.overrides_count,
+            missing_overrides=list(report.missing_overrides),
+            findings=[
+                RatiosValidateFindingPayload(
+                    category=finding.category,
+                    kind=finding.kind,
+                    detail=finding.detail,
+                )
+                for finding in report.findings
+            ],
+        ),
         lines=lines,
     )
 

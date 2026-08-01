@@ -30,8 +30,33 @@ __all__ = [
     "UsageRatioProfile",
     "UsageRatioReference",
     "resolve_user_ratio",
+    "validate_usage_ratio_bound",
     "validate_usage_ratio_reference",
 ]
+
+
+def validate_usage_ratio_bound(ratio: Decimal, *, label: str) -> Decimal:
+    """Return ``ratio`` when it lies in the closed interval ``[0, 1]``, else raise.
+
+    The single authority for the usage-ratio range. Both the persisted
+    :class:`UsageRatioProfile` and every transport surface that carries a
+    usage ratio route their bound check through this function, so the
+    interval is declared once rather than re-stated per call site.
+
+    Args:
+        ratio: Candidate usage ratio.
+        label: Human-readable subject named in the refusal (a category id
+            for the persisted profile, a field name at a transport edge).
+
+    Returns:
+        The same ``ratio`` when it is within ``[0, 1]``.
+
+    Raises:
+        UsageRatioValidationError: When ``ratio`` falls outside ``[0, 1]``.
+    """
+    if not (Decimal("0") <= ratio <= Decimal("1")):
+        raise UsageRatioValidationError(f"usage ratio for {label!r} must be in [0, 1] (got {ratio})")
+    return ratio
 
 
 _USER_RATIO_KINDS: frozenset[ProportionalityKind] = frozenset(
@@ -89,8 +114,7 @@ class UsageRatioProfile(BaseModel):
         # validator runs (both via JSON parse and via Python constructor); the
         # bound check here covers the remaining domain.
         for category, ratio in value.items():
-            if not (Decimal("0") <= ratio <= Decimal("1")):
-                raise UsageRatioValidationError(f"usage ratio for {category.value!r} must be in [0, 1] (got {ratio})")
+            validate_usage_ratio_bound(ratio, label=category.value)
         # Canonicalise key order so two equal profiles serialise to identical bytes.
         # operator's ``var/financial/usage-ratios.json`` is a candidate for git-tracking;
         # stable ordering prevents spurious diffs when ratios are toggled.

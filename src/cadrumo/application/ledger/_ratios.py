@@ -21,6 +21,7 @@ from ...adapters.persistence.profile.usage_ratios import load_usage_ratios, save
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.identity import BucketId
 from ...domain.categories import (
+    ProportionalityKind,
     ProportionalityRule,
     SpendingCategory,
     SpendingCategoryFamily,
@@ -55,7 +56,7 @@ class EligibleCategoryRow(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     category: SpendingCategory
-    proportionality_kind: str = Field(min_length=1)
+    proportionality_kind: ProportionalityKind
     default_ratio: Decimal | None = Field(default=None)
     override_present: bool
 
@@ -96,7 +97,7 @@ def eligible_ratio_categories(profile: UsageRatioProfile) -> tuple[EligibleCateg
         rows.append(
             EligibleCategoryRow(
                 category=category,
-                proportionality_kind=rule.kind.value,
+                proportionality_kind=rule.kind,
                 default_ratio=rule.default_ratio,
                 override_present=category in profile.ratios,
             ),

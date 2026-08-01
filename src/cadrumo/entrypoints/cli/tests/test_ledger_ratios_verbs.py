@@ -93,3 +93,97 @@ def test_ledger_ratios_unset_refuses_when_no_override_exists() -> None:
 
     result = _invoke(["app", "ledger", "ratios", "unset", "material_oficina"])
     assert result.exit_code != 0, result.output
+
+
+def test_ratios_payloads_refuse_unknown_category_and_kind() -> None:
+    """The ratios transport payloads reuse the canonical closed sets.
+
+    ``category`` is a :class:`SpendingCategory` and ``proportionality_kind``
+    a :class:`ProportionalityKind`. Before these fields were typed from the
+    canonical enums the machine-facing payload accepted any string, so an
+    unknown category or rule kind crossed the CLI boundary intact.
+    """
+    from pydantic import ValidationError
+
+    from ....domain.categories import ProportionalityKind, SpendingCategory
+    from .._ledger_ratios_payloads import RatiosEligibleRowPayload, RatiosRowPayload
+
+    with pytest.raises(ValidationError):
+        RatiosRowPayload(category="unknown-category", ratio="0.5")
+
+    with pytest.raises(ValidationError):
+        RatiosEligibleRowPayload(
+            category=SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ,
+            proportionality_kind="bogus",
+            override_present=False,
+        )
+
+    # A canonical member is accepted and still serialises to its plain string.
+    row = RatiosRowPayload(category=SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ, ratio="0.5")
+    assert row.model_dump(mode="json")["category"] == "suministros_home_office_luz"
+    eligible = RatiosEligibleRowPayload(
+        category=SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ,
+        proportionality_kind=ProportionalityKind.USAGE_RATIO_HOME_AREA,
+        override_present=False,
+    )
+    assert eligible.model_dump(mode="json")["proportionality_kind"] == "usage_ratio_home_area"
+
+
+def test_ratios_payload_ratio_is_bound_by_the_domain_authority() -> None:
+    """A transport ratio outside ``[0, 1]`` is refused, using the domain's own band.
+
+    The persisted :class:`UsageRatioProfile` enforces ``[0, 1]``; before this
+    change the transport row accepted ``"-1"``, so a malformed ratio reached a
+    machine consumer that the persisted profile would have rejected.
+    """
+    from pydantic import ValidationError
+
+    from ....domain.categories import SpendingCategory
+    from .._ledger_ratios_payloads import RatiosRowPayload
+
+    for bad in ("-1", "2", "1.5", "not-a-decimal"):
+        with pytest.raises(ValidationError):
+            RatiosRowPayload(category=SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ, ratio=bad)
+
+    for good in ("0", "0.30", "1"):
+        assert (
+            RatiosRowPayload(
+                category=SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ,
+                ratio=good,
+            ).ratio
+            == good
+        )
+
+
+def test_ratios_validate_finding_requires_kind_and_detail() -> None:
+    """An empty finding is indistinguishable from no finding, so it is refused."""
+    from pydantic import ValidationError
+
+    from ....domain.categories import SpendingCategory
+    from .._ledger_ratios_payloads import RatiosValidateFindingPayload
+
+    with pytest.raises(ValidationError):
+        RatiosValidateFindingPayload(
+            category=SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ,
+            kind="missing_override",
+            detail="",
+        )
+
+    with pytest.raises(ValidationError):
+        RatiosValidateFindingPayload(
+            category=SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ,
+            kind="",
+            detail="no override persisted",
+        )
+
+
+def test_usage_ratio_bound_is_a_single_shared_authority() -> None:
+    """The persisted profile and the transport edge share one range check."""
+    from decimal import Decimal
+
+    from ....domain.usage_ratios import UsageRatioValidationError, validate_usage_ratio_bound
+
+    assert validate_usage_ratio_bound(Decimal("0.3"), label="ratio") == Decimal("0.3")
+    for bad in (Decimal("-0.01"), Decimal("1.01")):
+        with pytest.raises(UsageRatioValidationError):
+            validate_usage_ratio_bound(bad, label="ratio")

@@ -16,31 +16,88 @@ validate results.
 
 from __future__ import annotations
 
+from decimal import Decimal, InvalidOperation
+
+from pydantic import Field, field_validator
+
+from ...domain.categories import ProportionalityKind, SpendingCategory
+from ...domain.usage_ratios import UsageRatioValidationError, validate_usage_ratio_bound
 from ._schemas import OutputSchema, register_schema
 
 
-class RatiosRowPayload(OutputSchema):
-    """One per-category usage-ratio row."""
+def _validated_ratio_text(value: str, *, field: str) -> str:
+    """Return ``value`` when it is a decimal inside the canonical ``[0, 1]`` band.
 
-    category: str
+    The ratio crosses the wire as text so the exact operator-entered scale
+    survives JSON, but the band itself is not re-stated here: the check
+    routes through
+    :func:`~domain.usage_ratios.validate_usage_ratio_bound`, the one
+    authority the persisted :class:`UsageRatioProfile` also uses.
+    """
+    try:
+        parsed = Decimal(value)
+    except InvalidOperation as exc:
+        raise ValueError(f"{field} must be a decimal string (got {value!r})") from exc
+    if not parsed.is_finite():
+        raise ValueError(f"{field} must be a finite decimal (got {value!r})")
+    try:
+        validate_usage_ratio_bound(parsed, label=field)
+    except UsageRatioValidationError as exc:
+        raise ValueError(str(exc)) from exc
+    return value
+
+
+class RatiosRowPayload(OutputSchema):
+    """One per-category usage-ratio row.
+
+    ``category`` reuses the canonical
+    :class:`~domain.categories.SpendingCategory` closed set and ``ratio``
+    is bound to ``[0, 1]`` through the domain authority, so an unknown
+    category or an out-of-band ratio is refused at the transport edge
+    instead of crossing it.
+    """
+
+    category: SpendingCategory
     ratio: str
+
+    @field_validator("ratio")
+    @classmethod
+    def _check_ratio(cls, value: str) -> str:
+        return _validated_ratio_text(value, field="ratio")
 
 
 class RatiosEligibleRowPayload(OutputSchema):
-    """One ``ledger ratios eligible`` row (D2)."""
+    """One ``ledger ratios eligible`` row (D2).
 
-    category: str
-    proportionality_kind: str
+    ``proportionality_kind`` reuses the canonical
+    :class:`~domain.categories.ProportionalityKind` enum rather than
+    restating the rule vocabulary as free text.
+    """
+
+    category: SpendingCategory
+    proportionality_kind: ProportionalityKind
     default_ratio: str | None = None
     override_present: bool
 
+    @field_validator("default_ratio")
+    @classmethod
+    def _check_default_ratio(cls, value: str | None) -> str | None:
+        if value is None or value == "":
+            return value
+        return _validated_ratio_text(value, field="default_ratio")
+
 
 class RatiosValidateFindingPayload(OutputSchema):
-    """One ``ledger ratios validate`` finding row (D2)."""
+    """One ``ledger ratios validate`` finding row (D2).
 
-    category: str
-    kind: str
-    detail: str = ""
+    A finding exists to name a problem, so ``kind`` and ``detail`` must
+    both carry text; an empty finding is indistinguishable from no
+    finding at all.
+    """
+
+    category: SpendingCategory
+    kind: str = Field(min_length=1)
+    detail: str = Field(min_length=1)
 
 
 @register_schema("ledger.ratios.list")
@@ -58,8 +115,13 @@ class RatiosSetResult(OutputSchema):
     """JSON envelope for ``aeat app ledger ratios set``."""
 
     bucket_id: str
-    category: str
+    category: SpendingCategory
     ratio: str
+
+    @field_validator("ratio")
+    @classmethod
+    def _check_ratio(cls, value: str) -> str:
+        return _validated_ratio_text(value, field="ratio")
 
 
 @register_schema("ledger.ratios.unset")
@@ -67,7 +129,8 @@ class RatiosUnsetResult(OutputSchema):
     """JSON envelope for ``aeat app ledger ratios unset``."""
 
     bucket_id: str
-    category: str
+    category: SpendingCategory
+    #: Empty after a successful unset — the override no longer exists.
     ratio: str = ""
 
 
@@ -92,5 +155,5 @@ class RatiosValidateResult(OutputSchema):
     profile_present: bool
     eligible_count: int
     overrides_count: int
-    missing_overrides: list[str] = []
+    missing_overrides: list[SpendingCategory] = []
     findings: list[RatiosValidateFindingPayload] = []
