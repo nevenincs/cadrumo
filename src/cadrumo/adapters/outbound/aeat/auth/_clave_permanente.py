@@ -59,6 +59,7 @@ from .....core.config import Settings as _Settings
 from .....core.config import unwrap_optional_secret
 from .....core.logging import get_logger
 from .....core.time import now
+from .....domain.calculations.registry import canonical_remote_hostname
 from .._playwright import PlaywrightTimeoutError
 from . import _session_store
 from ._authenticator import AEAT_SESSION_IDLE_TTL
@@ -71,12 +72,18 @@ from ._authenticator_types import (
     BrowserSessionLike,
     _is_exact_active_provider_session,
 )
-from ._browser_lifecycle import _CloseIntentBarrier, close_owned_browser_context, close_owned_browser_session
+from ._browser_lifecycle import _CloseIntentBarrier
 from ._clave_permanente_metadata import ClavePermanenteSessionMetadata
 from ._clave_permanente_support import ClavePermanenteFailureMode
 from ._clave_permanente_support import classify_identity as _classify_identity
 from ._clave_permanente_support import clave_permanente_configuration_error as _configuration_error
 from ._clave_permanente_support import clave_permanente_login_error as _login_error
+from ._clave_provider_common import (
+    close_clave_browser_session,
+    close_clave_context,
+    default_sede_target_url,
+    verification_probe_url,
+)
 from ._errors import AeatLoginAssertionError, AuthConfigurationError, AuthProviderCleanupError
 from ._providers import (
     ClavePermanenteLoginAssertionDetail,
@@ -348,8 +355,7 @@ class ClavePermanenteAuthProvider:
         return raw
 
     def _default_target_url(self) -> str:
-        external = self._settings.external_constants()
-        return f"{external.aeat.domains.www6}{external.aeat.sede_paths.expedientes_resumen}"
+        return default_sede_target_url(self._settings)
 
     def _selector_url(self, target_path: str) -> str:
         template = self._settings.aeat_clave_permanente_sede_access_url_template
@@ -369,11 +375,12 @@ class ClavePermanenteAuthProvider:
         resolved_target_url: str | None,
         target_path: str,
     ) -> str:
-        if explicit_target_url:
-            return self._selector_url(target_path)
-        if resolved_target_url and target_path in resolved_target_url:
-            return resolved_target_url
-        return resolved_target_url or self._selector_url(target_path)
+        return verification_probe_url(
+            explicit_target_url=explicit_target_url,
+            resolved_target_url=resolved_target_url,
+            target_path=target_path,
+            selector_url_for=self._selector_url,
+        )
 
     def _is_authenticated_aeat_landing(self, *, landing_url: str, target_path: str) -> bool:
         """Return True for a protected AEAT page reached after Cl@ve dispatch."""
@@ -383,7 +390,14 @@ class ClavePermanenteAuthProvider:
             parsed = urlsplit(landing_url)
         except ValueError:
             return False
-        host = parsed.netloc.casefold()
+        # The authority is decided by the one canonical helper, never by
+        # ``parsed.netloc``: that string still ends in the AEAT suffix when a
+        # credential prefix rides in front of it, so
+        # ``https://evil@www6.agenciatributaria.gob.es/`` was read as a
+        # protected AEAT landing.
+        host = canonical_remote_hostname(landing_url)
+        if host is None:
+            return False
         host_suffix = external.aeat.domains.host_suffix.casefold()
         if host != host_suffix and not host.endswith(f".{host_suffix}"):
             return False
@@ -426,17 +440,17 @@ class ClavePermanenteAuthProvider:
         return closed
 
     async def _close_context(self, context: BrowserContextLike | None, *, reason: str) -> bool:
-        return await close_owned_browser_context(
+        return await close_clave_context(
             context,
-            timeout_ms=self._settings.cadrumo_browser_close_timeout_ms,
+            settings=self._settings,
             logger=log,
             owner=f"ClavePermanenteAuthProvider:{reason}",
         )
 
     async def _close_browser_session(self, session: BrowserSessionLike | None) -> bool:
-        return await close_owned_browser_session(
+        return await close_clave_browser_session(
             session,
-            timeout_ms=self._settings.cadrumo_browser_close_timeout_ms,
+            settings=self._settings,
             logger=log,
             owner="ClavePermanenteAuthProvider",
         )

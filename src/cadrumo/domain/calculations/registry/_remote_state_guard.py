@@ -14,7 +14,13 @@ from urllib.parse import urlparse
 from pydantic import AnyUrl, BaseModel, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG
-from ._aeat_hosts import first_aeat_host, is_aeat_host, is_sanctioned_gov_idp_host
+from ._aeat_hosts import (
+    REMOTE_READ_SCHEME,
+    canonical_remote_hostname,
+    first_aeat_host,
+    is_aeat_host,
+    is_sanctioned_gov_idp_host,
+)
 from ._errors import RegistryValidationError
 from ._schema import LiveCrossReferenceDecision
 
@@ -422,8 +428,37 @@ def _evaluate_http(policy: RemoteStateGuardPolicy, operation: RemoteOperation) -
     )
     if method not in _READ_ONLY_HTTP_METHODS and not read_post_allowed:
         return _blocked(policy, f"AEAT remote write method {method!r} is forbidden")
-    host = operation.url.host
-    if host is None or not _host_within_policy(policy, host):
+    # Scheme, user-info and port are decided by the one canonical authority
+    # helper, not by ``operation.url.host`` — that attribute reports a host
+    # with user-info and any port already stripped, so a credentialed or
+    # off-port authority reads as a plain AEAT host and slips the allow-list.
+    #
+    # The URL is re-canonicalised from its serialised form because pydantic
+    # normalises the authority at model construction.
+    #
+    # ACCEPTED EQUIVALENCE — an explicit DEFAULT port. ``AnyUrl`` erases
+    # ``:443`` from an https URL before the guard runs, so ``https://host:443/``
+    # is admitted as ``https://host/``. This is deliberate, not an unclosed
+    # hole: the two denote the same origin, so admitting them alike is what a
+    # URL type should do. The alternative — widening ``RemoteOperation.url`` to
+    # ``str`` to preserve the raw text — would trade a typed boundary for a
+    # distinction that carries no security difference.
+    #
+    # Everything that DOES carry a difference is refused: every non-default
+    # port survives serialisation and is rejected, as is every user-info
+    # authority and every non-``https`` scheme. Note the string-level callers
+    # of the same helper (the Cl@ve landing predicates) never see pydantic
+    # normalisation and so refuse an explicit ``:443`` outright; the two
+    # populations agree on every authority that differs in origin.
+    raw_url = str(operation.url)
+    host = canonical_remote_hostname(raw_url)
+    if host is None:
+        return _blocked(
+            policy,
+            f"AEAT remote authority {raw_url!r} is not a bare {REMOTE_READ_SCHEME} host "
+            "(scheme, user-info or port refused)",
+        )
+    if not _host_within_policy(policy, host):
         return _blocked(policy, f"AEAT host {host!r} is not in allowed read-only hosts")
     text = f"{operation.url} {operation.action or ''}".lower()
     action = _first_declared_forbidden_action(policy, text)

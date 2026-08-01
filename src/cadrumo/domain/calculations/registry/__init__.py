@@ -44,6 +44,7 @@ See Also:
 # package during validation bootstrap.
 from __future__ import annotations
 
+from ._aeat_hosts import REMOTE_READ_SCHEME, canonical_remote_hostname
 from ._aeat_nif_iva_oracle import AeatNifIvaCheckerOracle, AeatNifIvaObservation
 from ._ids import (
     ApplicationLinkId,
@@ -555,6 +556,7 @@ __all__ = [
     "KNOWN_VERIFICATION_PREDICATE_OPERATORS",
     "LEDGER_BINDING_SOURCE_KINDS",
     "MODELO_303_IVA_COMPENSATION_BINDING_ID",
+    "REMOTE_READ_SCHEME",
     "REQUIRED_COVERAGE_TIERS",
     "REVISION_GOVERNANCE_FIELDS",
     "REVISION_MANIFEST_ONLY_FIELDS",
@@ -814,6 +816,7 @@ __all__ = [
     "calculation_closure_casilla_ids",
     "calculation_closure_legal_refs",
     "calculation_closure_record_design_metadata",
+    "canonical_remote_hostname",
     "casilla_noncanonical_reference_targets",
     "casilla_noncanonical_reference_tokens",
     "casillas_by_id",
