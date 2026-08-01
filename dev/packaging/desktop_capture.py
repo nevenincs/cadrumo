@@ -33,6 +33,7 @@ independently testable functions.
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import subprocess
 import time
@@ -40,10 +41,12 @@ import urllib.error
 import urllib.request
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any, Final
 
 _UTF_8: Final[str] = "utf-8"
+_NUMERIC_TOKEN_PATTERN: Final[re.Pattern[str]] = re.compile(r"(?<![0-9A-Za-z])\d(?:[\d., ]*\d)?(?![0-9A-Za-z])")
 _POWERSHELL: Final[str] = shutil.which("powershell.exe") or r"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
 
 # The Store AppUserModelId and the running-process signature of Claude Desktop.
@@ -326,14 +329,87 @@ def extract_target_value(reply_text: str, *, target_value: str) -> bool:
 
     The canonical prompt asks for Modelo 200 cuota íntegra (casilla
     ``DP200014:00562`` = ``23000.00``); the reply proving a real tool call
-    contains that exact figure. Matching is on the digit string with optional
-    thousands separators, so ``23000.00``, ``23,000.00`` and ``23.000,00`` all
-    satisfy it.
+    contains that exact figure. Each numeric token is normalized independently,
+    so ``23000.00``, ``23,000.00`` and ``23.000,00`` satisfy it but a larger or
+    embedded digit sequence cannot.
     """
-    integer_part, _, fraction = target_value.partition(".")
-    compact = reply_text.replace(",", "").replace(" ", "").replace(".", "")
-    needle = integer_part + fraction
-    return needle in compact
+    expected = _normalise_numeric_token(target_value)
+    if expected is None:
+        raise DesktopCaptureError(f"target value is not a canonical numeric value: {target_value!r}")
+    return any(
+        observed == expected
+        for token in _NUMERIC_TOKEN_PATTERN.finditer(reply_text)
+        if (observed := _normalise_numeric_token(token.group())) is not None
+    )
+
+
+def _normalise_numeric_token(token: str) -> Decimal | None:
+    """Parse one bounded desktop numeric token without collapsing its value.
+
+    A single separator with one or two trailing digits is decimal; a separator
+    followed by a three-digit group is thousands only when every group is valid.
+    Mixed separators use the rightmost separator as decimal.  Ambiguous forms
+    such as ``2300.000`` are refused instead of being treated as ``2300000``.
+    """
+    compact = token.replace("\xa0", " ").strip()
+    if not compact or not re.fullmatch(r"\d(?:[\d., ]*\d)?", compact):
+        return None
+    dot_count = compact.count(".")
+    comma_count = compact.count(",")
+    if dot_count and comma_count:
+        decimal_separator = "." if compact.rfind(".") > compact.rfind(",") else ","
+        grouping_separator = "," if decimal_separator == "." else "."
+        integer_part, fractional_part = compact.rsplit(decimal_separator, 1)
+        if not 1 <= len(fractional_part) <= 2 or grouping_separator in fractional_part or " " in fractional_part:
+            return None
+        digits = _integer_digits(integer_part, grouping_separator)
+        if digits is None:
+            return None
+        canonical = f"{digits}.{fractional_part}"
+    else:
+        separator = "." if dot_count else "," if comma_count else ""
+        if not separator:
+            digits = _integer_digits(compact, None)
+            if digits is None:
+                return None
+            canonical = digits
+        else:
+            parts = compact.split(separator)
+            if len(parts) == 2 and 1 <= len(parts[1]) <= 2:
+                digits = _integer_digits(parts[0], None)
+                if digits is None or not parts[1].isdigit():
+                    return None
+                canonical = f"{digits}.{parts[1]}"
+            else:
+                digits = _grouped_integer_digits(compact, separator)
+                if digits is None:
+                    return None
+                canonical = digits
+    try:
+        return Decimal(canonical)
+    except InvalidOperation:
+        return None
+
+
+def _grouped_integer_digits(value: str, separator: str) -> str | None:
+    """Return valid grouped integer digits, rejecting malformed separators."""
+    groups = value.split(separator)
+    if not groups or not 1 <= len(groups[0]) <= 3 or not groups[0].isdigit():
+        return None
+    if any(len(group) != 3 or not group.isdigit() for group in groups[1:]):
+        return None
+    return "".join(groups)
+
+
+def _integer_digits(value: str, grouping_separator: str | None) -> str | None:
+    """Return digits from an ungrouped or consistently grouped integer portion."""
+    if " " in value:
+        if grouping_separator is not None and grouping_separator in value:
+            return None
+        return _grouped_integer_digits(value, " ")
+    if grouping_separator is None:
+        return value if value.isdigit() else None
+    return _grouped_integer_digits(value, grouping_separator)
 
 
 @dataclass
