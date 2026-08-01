@@ -13,12 +13,14 @@ The records are materialised by the deterministic projections (concept cards
 from the Handbook, casilla projections from the registry authority, CLI
 surface records from the live command tree) and funnelled through the uniform
 :class:`~dev.docs.terminology._unified_record.SearchRecord`. Each record is
-injected once per language section it carries, with the per-language
-description as the searchable content, so Pagefind's es/en/ca/hu index splits
-each receive the record in their own language. Typed metadata (kind,
-concept id/domain, modelo/casilla.id, command path) rides on the record
-for the palette term card, and ``kind``/``domain`` filters let the palette
-narrow by surface.
+injected ONCE, into the language of the root being built, with content
+carrying every language's description (see :func:`_content_for`). It is not
+injected once per language section: Pagefind's reader loads only the index
+matching the page's own language, so a record duplicated into the other three
+splits would be unreachable weight, while a record placed in a split the root
+never loads would be invisible. Typed metadata (kind, concept id/domain,
+modelo/casilla.id, command path) rides on the record for the palette term
+card, and ``kind``/``domain`` filters let the palette narrow by surface.
 
 Ranking: every record carries a base ranking weight from the unified
 projection (tier ordering - concepts outrank navigation outranks full
@@ -185,16 +187,11 @@ def _sort_key(weight: float) -> str:
     return f"{round(weight * _SORT_SCALE):08d}"
 
 
-#: The docs build pins the page language to English (conf.py), so Pagefind
-#: loads only the English index on a reader's page. A custom record must be
-#: injected into THAT index to be discoverable from a page; a record placed in
-#: a non-loaded language index (es/ca/hu) is invisible to the palette. So every
-#: record is injected once, into this primary language, with its content
-#: carrying the title plus EVERY language's description - the Spanish term, the
-#: English gloss, and the Catalan/Hungarian forms all become matchable tokens
-#: in the one loaded index, giving cross-lingual term matching without relying
-#: on a separately-loaded language index.
-_PRIMARY_LANGUAGE = OutputLanguage.EN
+#: The injection language when a caller names none: the English root's own
+#: language. Every localized root passes its OWN build language instead (see
+#: :func:`build_record_injector`), because Pagefind loads only the index
+#: matching the reader's page language.
+_DEFAULT_INJECTION_LANGUAGE = OutputLanguage.EN
 
 
 def _content_for(record: SearchRecord) -> str:
@@ -222,21 +219,27 @@ def _content_for(record: SearchRecord) -> str:
 _SUMMARY_MAX_CHARS: Final[int] = 160
 
 
-def _summary_for(record: SearchRecord) -> str:
+def _summary_for(record: SearchRecord, language: OutputLanguage = _DEFAULT_INJECTION_LANGUAGE) -> str:
     """A clean single-language one-line summary for the card display.
 
-    Prefers the English description (the docs build's page language); falls back
-    to the always-present Spanish text. Whitespace is collapsed and the result
-    is truncated so the palette never renders the multilingual search blob.
+    Prefers the description in the ROOT's own language, so a reader on the
+    Spanish root reads a Spanish card; falls back to English, then to the
+    always-present Spanish text, when the record carries no section for the
+    root language. Whitespace is collapsed and the result is truncated so the
+    palette never renders the multilingual search blob.
     """
-    text = record.descriptions.get(OutputLanguage.EN) or record.description_es
+    text = record.descriptions.get(language) or record.descriptions.get(OutputLanguage.EN) or record.description_es
     collapsed = " ".join(text.split())
     if len(collapsed) > _SUMMARY_MAX_CHARS:
         collapsed = collapsed[: _SUMMARY_MAX_CHARS - 1].rstrip() + "…"
     return collapsed
 
 
-def _meta_for(record: SearchRecord, weight: float) -> dict[str, str]:
+def _meta_for(
+    record: SearchRecord,
+    weight: float,
+    language: OutputLanguage = _DEFAULT_INJECTION_LANGUAGE,
+) -> dict[str, str]:
     """Build the typed Pagefind meta map for the palette term card."""
     meta: dict[str, str] = {
         "kind": record.kind.value,
@@ -247,7 +250,7 @@ def _meta_for(record: SearchRecord, weight: float) -> dict[str, str]:
         # display/crumb axis, never re-derived heuristically in the renderer.
         "display_class": derive_display_class(record).value,
         "title": record.title,
-        "summary": _summary_for(record),
+        "summary": _summary_for(record, language),
         "weight": f"{weight:.6f}",
     }
     md = record.metadata
@@ -282,6 +285,7 @@ async def _inject_records(
     index: PagefindIndex,
     materialised: _Materialised,
     relevance: dict[str, float],
+    language: OutputLanguage = _DEFAULT_INJECTION_LANGUAGE,
 ) -> InjectionStats:
     written = 0
     boosts = 0
@@ -290,26 +294,27 @@ async def _inject_records(
         weight = _effective_weight(record, relevance)
         if record.id in relevance:
             boosts += 1
-        meta = _meta_for(record, weight)
+        meta = _meta_for(record, weight, language)
         filters = _filters_for(record)
         sort = {"weight": _sort_key(weight)}
-        # Inject once, into the primary (page) language index, with content
-        # carrying every language's description so the record is discoverable
-        # from a reader's English page yet matchable by the Spanish term and
-        # the other-language forms.
+        # Inject once, into the index this ROOT's pages are indexed under -- the
+        # only index the reader's palette loads -- with content carrying every
+        # language's description, so the record is reachable from this root's
+        # pages and still matchable by the Spanish term and the other-language
+        # forms.
         content = _content_for(record)
         if not content:
             continue
         await index.add_custom_record(
             url=record.target,
             content=content,
-            language=_PRIMARY_LANGUAGE.value,
+            language=language.value,
             meta=meta,
             filters=filters,
             sort=sort,
         )
         written += 1
-        languages.add(_PRIMARY_LANGUAGE.value)
+        languages.add(language.value)
     return InjectionStats(
         concepts=materialised.concepts,
         casillas=materialised.casillas,
@@ -351,17 +356,26 @@ def _bounded_to_sample(materialised: _Materialised, sample_per_kind: int) -> _Ma
 def build_record_injector(
     repo_root: Path,
     *,
+    language: OutputLanguage = _DEFAULT_INJECTION_LANGUAGE,
     on_complete: Callable[[InjectionStats], None] | None = None,
     sample_per_kind: int | None = None,
 ) -> InjectCallback:
     """Return the injection callback for the post-build index pass.
 
     The callback materialises every unified search record, applies the
-    committed relevance boost when present, and injects one custom record per
-    language section so each Pagefind language split receives the record.
+    committed relevance boost when present, and injects each record ONCE into
+    the ``language`` index -- the one index this root's palette loads.
 
     Args:
         repo_root: Repository root (for the relevance file).
+        language: The language of the root being built, which is the index the
+            records are injected into. Pagefind's reader auto-loads only the
+            index matching the page's own language, so a localized root whose
+            records landed in another language's split would ship rendered
+            prose alone: its palette would never fetch the record index at all.
+            The caller resolves this from the build language rather than
+            defaulting it, so English and localized roots carry the same
+            record corpus in the index each one actually loads.
         on_complete: Optional sink for the :class:`InjectionStats` (a caller
             that wants the counts, since the seam itself returns no value).
         sample_per_kind: Optional cap on records injected per record kind.
@@ -382,7 +396,7 @@ def build_record_injector(
         materialised = _materialise_records()
         if sample_per_kind is not None:
             materialised = _bounded_to_sample(materialised, sample_per_kind)
-        stats = await _inject_records(index, materialised, relevance)
+        stats = await _inject_records(index, materialised, relevance, language)
         if on_complete is not None:
             on_complete(stats)
 

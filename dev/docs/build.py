@@ -20,6 +20,7 @@ _ROOT_FOR_DIRECT_INVOCATION = Path(__file__).resolve().parents[2]
 if str(_ROOT_FOR_DIRECT_INVOCATION) not in sys.path:
     sys.path.insert(0, str(_ROOT_FOR_DIRECT_INVOCATION))
 
+from cadrumo.core.external_constants import OutputLanguage
 from dev.docs.apidocs import ApiStubManager
 from dev.docs.cli_reference import generate_cli_reference
 from dev.docs.download_matrix import descriptor_path as _download_descriptor_path
@@ -421,6 +422,37 @@ def docs_build_jobs(env: Mapping[str, str]) -> str:
 _PAGEFIND_MODES = ("full", "pages")
 
 
+def docs_build_language(env: Mapping[str, str]) -> OutputLanguage:
+    """Resolve the language this docs root is being built in.
+
+    ``CADRUMO_DOCS_LANGUAGE`` is the single language signal for a build: the
+    ``--language`` flag sets it (see :func:`main`), and ``docs/conf.py`` reads
+    the same key to set Sphinx's ``language``, which is what puts ``lang="es"``
+    on every rendered page and therefore what Pagefind indexes those pages
+    under. Reading it here keeps the injected records in the same index as the
+    pages of the root that carries them.
+
+    Args:
+        env: The build environment mapping to read the language from.
+
+    Returns:
+        The build language; English when the key is absent (the default root).
+
+    Raises:
+        SystemExit: If the value is not a known output language, matching
+            ``conf.py``'s own refusal so a mistyped root fails loudly on both
+            surfaces rather than silently building English.
+    """
+    raw = env.get("CADRUMO_DOCS_LANGUAGE")
+    if raw is None:
+        return OutputLanguage.EN
+    try:
+        return OutputLanguage(raw)
+    except ValueError:
+        valid = ", ".join(sorted(member.value for member in OutputLanguage))
+        raise SystemExit(f"CADRUMO_DOCS_LANGUAGE must be one of {valid}; got {raw!r}.") from None
+
+
 def pagefind_index_mode(env: Mapping[str, str]) -> str:
     """Resolve the Pagefind indexing contract from the deployment override.
 
@@ -460,7 +492,13 @@ def resolve_record_injector(
     The single place a build environment decides whether the shipped index
     carries the injected concept/casilla/CLI records: ``full`` returns the real
     record injector, ``pages`` returns ``None`` and the index carries the
-    rendered pages alone. It is a named function rather than a branch inside
+    rendered pages alone. It also decides WHICH language index those records
+    land in, and it resolves that from the same environment the pages are built
+    from (:func:`docs_build_language`) rather than pinning English: a localized
+    root's pages are indexed under their own language, and Pagefind's reader
+    loads only the index matching the page it is on, so records pinned to
+    English would leave every localized root shipping rendered prose alone.
+    It is a named function rather than a branch inside
     :func:`compile_search_index` so the deployment-parity gate can observe the
     real decision for the real deploy environment instead of re-deriving the
     mapping — a re-derived copy would agree with itself while the build shipped
@@ -469,7 +507,8 @@ def resolve_record_injector(
 
     Args:
         repo_root: Repository root (for the committed relevance file).
-        env: The build environment whose contract is being resolved.
+        env: The build environment whose contract is being resolved — both the
+            index mode and the build language the records are injected under.
         on_complete: Optional sink for the injection stats.
         sample_per_kind: Optional bound on records per kind, forwarded to the
             injector. Production leaves it ``None`` (every record).
@@ -481,7 +520,12 @@ def resolve_record_injector(
 
     if pagefind_index_mode(env) == "pages":
         return None
-    return build_record_injector(repo_root, on_complete=on_complete, sample_per_kind=sample_per_kind)
+    return build_record_injector(
+        repo_root,
+        language=docs_build_language(env),
+        on_complete=on_complete,
+        sample_per_kind=sample_per_kind,
+    )
 
 
 #: Sitemaps.org urlset namespace for the deployment sitemap.
