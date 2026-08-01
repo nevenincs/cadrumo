@@ -93,15 +93,25 @@ class ModeloDescribeReport(BaseModel):
     source_refs: tuple[SourceRefId, ...]
 
 
-class ModeloCasillaRow(BaseModel):
-    """One row in a casilla listing for a resolved modelo revision.
+class CasillaGroundingReport(BaseModel):
+    """Semantic identity and regulatory grounding of one casilla.
 
-    ``legal_refs`` and ``source_refs`` carry the canonical
+    The casilla *list* row and the casilla *detail* report describe the same
+    casilla. Everything a reader needs to identify it and to justify its value
+    -- its id, number, label, section path, value shape, input kind,
+    requiredness, its bound binding, its localized labels/help, and its
+    ``legal_refs`` / ``source_refs`` grounding -- is declared once here, so the
+    two projections cannot disagree about the same casilla.
+
+    Before this base existed the list row typed its references as unconstrained
+    ``tuple[str, ...]`` while the detail report used the canonical
     :data:`~domain.calculations.registry.LegalRefId` /
-    :data:`~domain.calculations.registry.SourceRefId` annotations, identical to
-    the ones :class:`ModeloCasillaDetailReport` declares for the same grounding.
-    The list and detail projections describe one casilla's provenance, so a
-    reference shape the detail report refuses must not pass through the list.
+    :data:`~domain.calculations.registry.SourceRefId`, so a reference shape the
+    detail projection refused passed silently through operator list JSON.
+
+    Subclasses add only what genuinely differs: the resolved formula reference
+    and form number for a listing row, the query context and full formula
+    expression for a detail view.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -113,13 +123,22 @@ class ModeloCasillaRow(BaseModel):
     data_type: str
     input_kind: InputKind
     required: bool
-    formula: str | None
     binding: BindingId | None
-    form_number: str | None
     legal_refs: tuple[LegalRefId, ...]
     source_refs: tuple[SourceRefId, ...]
     localized_labels: dict[str, str] = Field(default_factory=dict)
     localized_help: dict[str, str] = Field(default_factory=dict)
+
+
+class ModeloCasillaRow(CasillaGroundingReport):
+    """One row in a casilla listing for a resolved modelo revision.
+
+    Adds the listing-shaped formula reference and the official form number to
+    the shared :class:`CasillaGroundingReport` identity and grounding.
+    """
+
+    formula: str | None
+    form_number: str | None
 
 
 class ModeloCasillasReport(BaseModel):
@@ -135,28 +154,19 @@ class ModeloCasillasReport(BaseModel):
     rows: tuple[ModeloCasillaRow, ...]
 
 
-class ModeloCasillaDetailReport(BaseModel):
-    """Full semantic detail for one casilla on a resolved modelo revision."""
+class ModeloCasillaDetailReport(CasillaGroundingReport):
+    """Full semantic detail for one casilla on a resolved modelo revision.
 
-    model_config = ConfigDict(frozen=True)
+    Adds the resolving query context and the full formula reference plus its
+    expression to the shared :class:`CasillaGroundingReport` identity and
+    grounding.
+    """
 
     code: str
     revision: str
     filing_year: int | None
     filing_period: Period | None = None
     period: str | None
-    casilla_id: CasillaId
-    number: str
-    label: str
-    localized_labels: dict[str, str] = Field(default_factory=dict)
-    localized_help: dict[str, str] = Field(default_factory=dict)
-    section: tuple[str, ...]
-    data_type: str
-    input_kind: InputKind
-    required: bool
-    legal_refs: tuple[LegalRefId, ...]
-    source_refs: tuple[SourceRefId, ...]
-    binding: BindingId | None
     formula_id: FormulaId | None
     formula_expression: Mapping[str, object] | None
 

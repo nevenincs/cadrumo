@@ -16,12 +16,28 @@ import pytest
 from pydantic import ValidationError
 
 from .. import CasillaId, validated_casilla_id
-from .._query_reports import ModeloCasillaDetailReport, ModeloCasillaRow
+from .._query_reports import CasillaGroundingReport, ModeloCasillaDetailReport, ModeloCasillaRow
 from .._schema import InputKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _CASILLA: CasillaId = validated_casilla_id("01", surface="_CASILLA")
+
+#: Casilla identity and grounding both projections must describe identically.
+_SHARED_GROUNDING_FIELDS = (
+    "casilla_id",
+    "number",
+    "label",
+    "section",
+    "data_type",
+    "input_kind",
+    "required",
+    "binding",
+    "legal_refs",
+    "source_refs",
+    "localized_labels",
+    "localized_help",
+)
 
 _VALID_LEGAL_REF = "ley-35-2006:art-27"
 _VALID_SOURCE_REF = "aeat-manual-renta-2024"
@@ -78,8 +94,22 @@ def _detail(
     )
 
 
+def _pattern_failures(error: ValidationError, field: str) -> list[dict[str, object]]:
+    """Return the pattern-mismatch entries this error raised for *field*."""
+    return [
+        entry
+        for entry in error.errors()
+        if entry["type"] == "string_pattern_mismatch" and field in entry["loc"]
+    ]
+
+
 def test_both_projections_accept_the_same_valid_grounding() -> None:
-    """A well-formed reference pair survives both projections unchanged."""
+    """SUPPORTING: a well-formed reference pair survives both projections.
+
+    This passes under mutation (the loose ``tuple[str, ...]`` annotation also
+    accepts valid references), so it is context, not proof. It exists to show
+    the tightened annotation does not refuse legitimate grounding.
+    """
     row = _row()
     detail = _detail()
 
@@ -90,37 +120,76 @@ def test_both_projections_accept_the_same_valid_grounding() -> None:
 
 
 def test_list_row_refuses_the_legal_ref_the_detail_report_refuses() -> None:
-    """The list row must not admit a legal ref the detail report rejects."""
+    """DISCRIMINATING: the list row rejects a legal ref on the pattern constraint.
+
+    Fails when ``ModeloCasillaRow.legal_refs`` is the loose ``tuple[str, ...]``:
+    the bad value is then accepted and no error is raised at all. The assertion
+    cites the constraint this fix adds (``string_pattern_mismatch`` located on
+    ``legal_refs``) rather than merely observing that *some* error occurred, so
+    a sibling constraint firing elsewhere cannot satisfy it.
+    """
     with pytest.raises(ValidationError) as detail_error:
         _detail(legal_refs=(_INVALID_LEGAL_REF,))
 
     with pytest.raises(ValidationError) as row_error:
         _row(legal_refs=(_INVALID_LEGAL_REF,))
 
-    assert "legal_refs" in str(detail_error.value)
-    assert "legal_refs" in str(row_error.value)
+    assert _pattern_failures(detail_error.value, "legal_refs")
+    assert _pattern_failures(row_error.value, "legal_refs")
 
 
 def test_list_row_refuses_the_source_ref_the_detail_report_refuses() -> None:
-    """The list row must not admit a source ref the detail report rejects."""
+    """DISCRIMINATING: the list row rejects a source ref on the pattern constraint.
+
+    Fails when ``ModeloCasillaRow.source_refs`` is the loose ``tuple[str, ...]``.
+    Cites ``string_pattern_mismatch`` on ``source_refs`` for the same reason as
+    the legal-ref case above.
+    """
     with pytest.raises(ValidationError) as detail_error:
         _detail(source_refs=(_INVALID_SOURCE_REF,))
 
     with pytest.raises(ValidationError) as row_error:
         _row(source_refs=(_INVALID_SOURCE_REF,))
 
-    assert "source_refs" in str(detail_error.value)
-    assert "source_refs" in str(row_error.value)
+    assert _pattern_failures(detail_error.value, "source_refs")
+    assert _pattern_failures(row_error.value, "source_refs")
 
 
 @pytest.mark.parametrize("field", ("legal_refs", "source_refs"))
 def test_list_and_detail_declare_one_grounding_annotation(field: str) -> None:
-    """Pin the annotations equal so the two projections cannot drift apart.
+    """SUPPORTING: the two projections agree on the reference annotation.
 
-    Without this the reference constraint can be relaxed on one projection
-    while every behavioural test that only exercises the other stays green.
+    This is an anti-drift guard, not proof: it also passes if BOTH sides are
+    relaxed back to ``tuple[str, ...]`` together. The proof that each side is
+    actually constrained lives in the two refusal tests above, which assert
+    the absolute behaviour rather than the relative agreement.
     """
     row_annotation = ModeloCasillaRow.model_fields[field].annotation
     detail_annotation = ModeloCasillaDetailReport.model_fields[field].annotation
 
     assert row_annotation == detail_annotation
+
+
+@pytest.mark.parametrize("report_model", (ModeloCasillaRow, ModeloCasillaDetailReport))
+def test_both_projections_derive_from_one_grounding_model(report_model: type) -> None:
+    """DISCRIMINATING: each projection derives from the shared grounding model.
+
+    Fails when either projection re-declares the casilla's identity and
+    grounding independently (the pre-fix shape). Unlike the annotation
+    equality above, this cannot be satisfied by two separate declarations
+    that merely happen to agree.
+    """
+    assert issubclass(report_model, CasillaGroundingReport)
+
+
+@pytest.mark.parametrize("field", _SHARED_GROUNDING_FIELDS)
+def test_grounding_fields_are_declared_only_on_the_shared_model(field: str) -> None:
+    """DISCRIMINATING: the shared grounding fields live on the shared model.
+
+    Fails when a projection shadows a shared field with its own declaration,
+    which is how the two views would drift apart again while each still
+    validates its own inputs.
+    """
+    assert field in CasillaGroundingReport.model_fields
+    assert field not in vars(ModeloCasillaRow).get("__annotations__", {})
+    assert field not in vars(ModeloCasillaDetailReport).get("__annotations__", {})
